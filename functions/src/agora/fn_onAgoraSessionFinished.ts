@@ -30,14 +30,14 @@ export const onAgoraSessionFinished = onDocumentUpdated(
 		if (!isNewlyFinishedSession(before, after)) return;
 
 		try {
-			const didAggregate = await writeSessionAggregates(after.sessionId);
-			if (didAggregate) {
+			const themes = await writeSessionAggregates(after.sessionId);
+			if (themes) {
 				// Student count mirrors what writeSessionAggregates counted; a
 				// re-read here would race late writes, and participantCount on the
 				// session already excludes nothing — so recount is done inside the
 				// aggregation and the stats use the session's own counter, which
 				// the join transaction has kept AI-free all along.
-				await bumpAgoraStats(after, after.participantCount);
+				await bumpAgoraStats(after, after.participantCount, themes);
 			}
 		} catch (error) {
 			logError(error, {

@@ -5,6 +5,7 @@ import type {
 	AgoraSessionFlow,
 	AgoraStage,
 	AgoraStagePlan,
+	AgoraThemeChoice,
 	ChallengeOutcome,
 	ChallengePhase,
 	JoinClassRequest,
@@ -37,6 +38,8 @@ export interface CreateSessionRequest {
 	/** The ordered stage list; absent means the legacy order */
 	stagePlan?: AgoraStagePlan;
 	identity?: AgoraIdentityMode;
+	/** The look the room wears by default; absent means AGORA_DEFAULT_THEME */
+	theme?: AgoraThemeChoice;
 }
 
 export interface CreateSessionResponse {

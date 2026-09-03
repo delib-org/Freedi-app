@@ -64,6 +64,14 @@ system: Mithril has no pipeline for either, and the single global import in
 `mock/surfaces.html` is the contrast gauntlet — it imports the real
 stylesheets, so a stylesheet you delete must be removed from there too.
 
+Looks: every colour is a token on `:root`, and a look is one override block
+keyed on `data-session-theme` (`_theme-candy-block`, `_theme-custom-block`,
+`_theme-civic-block`). `lib/theme.ts` paints the attribute; `lib/looks.ts`
+is the student's picks and builds; shared-types `agoraTheme.ts` decides who
+wins. Add a saturated surface to the on-dark registry in `tokens.scss` AND to
+the `.on-light` islands in each look block. `npx tsx scripts/e2e-looks.mjs`
+walks pick → build → borrow → teacher re-dress through the real rules.
+
 ## Verifying
 
 ```bash

@@ -7,9 +7,11 @@ import {
 	boolean,
 	enum_,
 	record,
+	nullable,
 	InferOutput,
 } from 'valibot';
 import { AgoraCamp, AgoraStage } from './agoraEnums';
+import { AgoraCustomThemeSchema, AgoraThemeChoiceSchema } from './agoraTheme';
 
 export const AgoraValueScoreSchema = object({
 	characterId: string(),
@@ -120,6 +122,20 @@ export const AgoraParticipantSchema = object({
 	),
 	/** `${proposalId}--${helperUid}` → createdAt of the newest thread message read */
 	seenThreads: optional(record(string(), number())),
+	/**
+	 * The look this person chose to wear, if they chose. Absent means "the
+	 * room's" (AgoraSession.theme). Written by the student's own client; a
+	 * classmate's look is copied in whole so it survives its maker rebuilding.
+	 */
+	theme: optional(nullable(AgoraThemeChoiceSchema)),
+	/**
+	 * The look this person BUILT — separate from what they wear, so a student
+	 * who tries a preset for a moment does not pull their creation off the
+	 * class list. One per student; rebuilding replaces it. Every participant
+	 * in the room reads all participant docs already, so the union of these IS
+	 * the class style list, with no extra listener and no extra collection.
+	 */
+	builtTheme: optional(nullable(AgoraCustomThemeSchema)),
 	joinedAt: number(),
 	lastActive: number(),
 });

@@ -4,8 +4,12 @@ import { getUserState, ensureUser } from '../../lib/user';
 import { createSession } from '../../lib/callables';
 import { fetchTeacherDashboard, listTopicPackages, type TeacherDashboard } from '../../lib/teacher';
 import { StagePlanEditor } from './StagePlanEditor';
+import { lookDots, PRESET_SEEDS } from '../../components/LookPicker';
 import {
+	AGORA_DEFAULT_THEME,
+	AGORA_THEME_PRESETS,
 	AgoraDeviceMode,
+	AgoraThemePreset,
 	AgoraIdentityMode,
 	AgoraSessionFlow,
 	AgoraSessionMode,
@@ -38,9 +42,16 @@ export function StartGame(): m.Component {
 	let selectedClassId: string | null = null;
 	let deviceMode: AgoraDeviceMode = AgoraDeviceMode.individual;
 	let identity: AgoraIdentityMode = 'pseudonym';
+	let look: AgoraThemePreset = AGORA_DEFAULT_THEME;
 	let creating = false;
 	let createFailed = false;
 	let showKnobs = false;
+
+	// Auth settles in two beats — anonymous first, the teacher's Google account
+	// a moment later. Reading the library on the first beat left this screen
+	// with no scenarios to offer, which silently forced quick mode.
+	let loadedForUid: string | null = null;
+	let refilling = false;
 
 	let quickTitle = '';
 	let quickQuestion = '';
@@ -57,6 +68,7 @@ export function StartGame(): m.Component {
 	async function load(): Promise<void> {
 		try {
 			const user = await ensureUser();
+			loadedForUid = user.uid;
 			const [loadedTopics, dashboard] = await Promise.all([
 				listTopicPackages(user.uid),
 				fetchTeacherDashboard().catch((error: unknown) => {
@@ -72,9 +84,22 @@ export function StartGame(): m.Component {
 				selectedClassId = routeClass;
 			}
 			if (topics.length === 1) selectedTopicId = topics[0].topicPackageId;
-			// A teacher with no scenario yet is most likely here for a quick game,
-			// and the dashboard's quick-game door says so explicitly
-			if (topics.length === 0 || m.route.param('mode') === 'quick') mode = 'quick';
+			// Arrived by tapping a scenario on the shelf: that choice IS the
+			// answer to the first question on this screen, so hold it. A link to
+			// a scenario that is no longer ready falls back to the picker rather
+			// than starting a game the teacher did not choose.
+			const routeTopic = m.route.param('topic');
+			const carried = routeTopic
+				? (topics.find((topic) => topic.topicPackageId === routeTopic) ?? null)
+				: null;
+			if (carried) {
+				selectedTopicId = carried.topicPackageId;
+				mode = 'scenario';
+			} else if (topics.length === 0 || m.route.param('mode') === 'quick') {
+				// A teacher with no scenario yet is most likely here for a quick
+				// game, and the dashboard's quick-game door says so explicitly
+				mode = 'quick';
+			}
 		} catch (error) {
 			console.error('[Teacher] Loading start-game data failed:', error);
 		}
@@ -116,6 +141,7 @@ export function StartGame(): m.Component {
 						}),
 				deviceMode,
 				identity,
+				theme: { preset: look },
 				stagePlan: plans[mode],
 				...(selectedClassId ? { classId: selectedClassId } : {}),
 				...(flow ? { flow } : {}),
@@ -149,7 +175,13 @@ export function StartGame(): m.Component {
 
 	return {
 		view() {
-			const { tier, loading } = getUserState();
+			const { tier, loading, user } = getUserState();
+			if (user && !refilling && loadedForUid !== null && loadedForUid !== user.uid) {
+				refilling = true;
+				void load().finally(() => {
+					refilling = false;
+				});
+			}
 			if (loading || !loaded) {
 				return m(
 					'.shell',
@@ -286,6 +318,31 @@ export function StartGame(): m.Component {
 							'p.home-explanation',
 							t(identity === 'named' ? 'startGame.identity_named_hint' : 'startGame.identity_hint'),
 						),
+					]),
+
+					// How the game looks — the room's default; each student may still
+					// pick their own, or build one, and the class list grows from that
+					m('.stack', [
+						m('p.teacher__section-title', t('startGame.look')),
+						m(
+							'.teacher__mode-row',
+							AGORA_THEME_PRESETS.map((preset) =>
+								m(
+									'button.btn',
+									{
+										key: preset,
+										type: 'button',
+										class: look === preset ? 'btn--primary' : 'btn--secondary',
+										'aria-pressed': look === preset ? 'true' : 'false',
+										onclick: () => {
+											look = preset;
+										},
+									},
+									[lookDots(PRESET_SEEDS[preset]), ' ', t(`look.${preset}`)],
+								),
+							),
+						),
+						m('p.home-explanation', t('startGame.look_hint')),
 					]),
 
 					m('.stack', [

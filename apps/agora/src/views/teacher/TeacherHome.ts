@@ -32,6 +32,28 @@ export function TeacherHome(): m.Component {
 	let sessions: AgoraSession[] = [];
 	let aggregates = new Map<string, AgoraClassAggregate>();
 	let loaded = false;
+	/**
+	 * Whose library is on screen. Auth settles in two beats — an anonymous
+	 * account first, the teacher's Google one a moment later — and the dashboard
+	 * used to read the library on the first beat and never again: the header
+	 * said "teacher" while the shelf below it said "no scenarios yet". The uid
+	 * the data belongs to is the thing to watch.
+	 */
+	let loadedForUid: string | null = null;
+	let refilling = false;
+	/** The scenario this teacher is about to run. Chosen on the shelf, and
+	 *  carried to the start screen by the button under it. */
+	let chosenTopicId: string | null = null;
+
+	/** Refill the shelf when auth settles on a different account than it was
+	 *  filled for. Guarded so a burst of redraws cannot stack reads. */
+	function refillIfAccountChanged(uid: string | undefined): void {
+		if (!uid || refilling || loadedForUid === null || loadedForUid === uid) return;
+		refilling = true;
+		void load().finally(() => {
+			refilling = false;
+		});
+	}
 
 	async function provisionDefaultTopic(creatorId: string): Promise<AgoraTopicPackage | null> {
 		try {
@@ -68,6 +90,7 @@ export function TeacherHome(): m.Component {
 	async function load(): Promise<void> {
 		try {
 			const user = await ensureUser();
+			loadedForUid = user.uid;
 
 			let loadedTopics = await listTopicPackages(user.uid);
 			loadedTopics = await Promise.all(loadedTopics.map((pkg) => healArtwork(pkg)));
@@ -148,6 +171,95 @@ export function TeacherHome(): m.Component {
 		);
 	}
 
+	/**
+	 * A shelf row. Tapping it does the one thing that scenario is ready for:
+	 * a finished scenario opens the start screen already holding it, an
+	 * unfinished one opens where it can be finished. The cog beside it is the
+	 * way in to the scenario's own settings — a sibling button, never nested,
+	 * so it cannot swallow the row's tap.
+	 */
+	function scenarioRow(topic: AgoraTopicPackage): m.Children {
+		const ready = topic.status === AgoraTopicStatus.ready;
+		const chosen = ready && chosenTopicId === topic.topicPackageId;
+		const statusId = `scenario-status-${topic.topicPackageId}`;
+
+		return m(
+			'li.scenario-row',
+			{
+				key: topic.topicPackageId,
+				class: [ready ? '' : 'scenario-row--draft', chosen ? 'scenario-row--chosen' : '']
+					.join(' ')
+					.trim(),
+			},
+			[
+				m(
+					'button.scenario-row__use',
+					{
+						type: 'button',
+						'aria-label': t(ready ? 'dashboard.scenario_choose' : 'dashboard.scenario_finish', {
+							title: topic.title,
+						}),
+						'aria-pressed': ready ? (chosen ? 'true' : 'false') : undefined,
+						'aria-describedby': statusId,
+						onclick: () => {
+							if (ready) {
+								chosenTopicId = topic.topicPackageId;
+
+								return;
+							}
+							m.route.set(`/teach/topic/${topic.topicPackageId}`);
+						},
+					},
+					[
+						m(
+							'span.scenario-row__tile',
+							m(Icon, { name: chosen ? 'check' : ready ? 'tunnel' : 'edit', size: 22 }),
+						),
+						m('span.scenario-row__text', [
+							m('span.scenario-row__title', topic.title),
+							m('span.scenario-row__meta', { id: statusId }, [
+								m(
+									'span.scenario-row__status',
+									{
+										class: [
+											ready ? '' : 'scenario-row__status--draft',
+											chosen ? 'scenario-row__status--chosen' : '',
+										]
+											.join(' ')
+											.trim(),
+									},
+									chosen
+										? t('dashboard.scenario_chosen')
+										: t(ready ? 'editor.ready' : 'editor.draft'),
+								),
+								ready ? null : m('span.scenario-row__sub', t('dashboard.scenario_draft_sub')),
+							]),
+						]),
+					],
+				),
+				m(
+					'button.scenario-row__settings',
+					{
+						type: 'button',
+						'aria-label': t('dashboard.scenario_settings', { title: topic.title }),
+						title: t('dashboard.scenario_settings', { title: topic.title }),
+						onclick: () => m.route.set(`/teach/topic/${topic.topicPackageId}`),
+					},
+					m(Icon, { name: 'cog', size: 20 }),
+				),
+			],
+		);
+	}
+
+	/** Finished scenarios first: the shelf is a picker now, and the pickable
+	 *  ones belong on top. */
+	function shelfOrder(list: readonly AgoraTopicPackage[]): AgoraTopicPackage[] {
+		const rank = (topic: AgoraTopicPackage): number =>
+			topic.status === AgoraTopicStatus.ready ? 0 : 1;
+
+		return [...list].sort((a, b) => rank(a) - rank(b));
+	}
+
 	function classCard(agoraClass: TeacherDashboard['classes'][number]): m.Children {
 		const aggregate = aggregates.get(agoraClass.classId);
 		const summary = aggregate ? advancementSummary(aggregate) : null;
@@ -188,7 +300,13 @@ export function TeacherHome(): m.Component {
 
 	return {
 		view() {
-			const { tier, loading, signInError } = getUserState();
+			const { tier, loading, signInError, user } = getUserState();
+			refillIfAccountChanged(user?.uid);
+			const chosen =
+				topics.find(
+					(topic) =>
+						topic.topicPackageId === chosenTopicId && topic.status === AgoraTopicStatus.ready,
+				) ?? null;
 
 			if (loading) {
 				return m(
@@ -246,23 +364,53 @@ export function TeacherHome(): m.Component {
 				m('.shell__content', { style: { gap: 'var(--space-xl)' } }, [
 					m('h2', t('teacher.title')),
 
-					m(
-						'button.btn.btn--primary.btn--full.btn--lg',
-						{ onclick: () => m.route.set('/teach/start') },
-						t('dashboard.start_game'),
-					),
-					// The quick game is the door most non-teachers are looking for —
-					// a room deciding one thing, no scenario. Behind the scenario
-					// switch on the next screen it was invisible; here it is a door.
-					m(
-						'button.btn.btn--secondary.btn--full',
-						{ onclick: () => m.route.set('/teach/start?mode=quick') },
-						t('dashboard.start_quick'),
-					),
-
 					!loaded
 						? m('.spinner')
 						: [
+								// The shelf leads. Choosing today's lesson is what a teacher
+								// opens this page to do, and it used to sit under two lists
+								// of status — behind a duplicate "start a game" button that
+								// only led to the same choice made somewhere else.
+								m('.stack', [
+									m('p.teacher__section-title', t('dashboard.scenarios')),
+									topics.length === 0
+										? m('p.home-explanation', t('teacher.no_topics'))
+										: [
+												m('p.home-explanation', t('dashboard.scenarios_hint')),
+												m(
+													'ul.scenario-list',
+													{ role: 'list' },
+													shelfOrder(topics).map(scenarioRow),
+												),
+												// The way on, and the only one: it appears once a
+												// scenario is chosen, right where the choice was made,
+												// and it says which lesson it opens.
+												chosen
+													? m(
+															'button.btn.btn--primary.btn--full.btn--lg.scenario-list__go',
+															{
+																onclick: () =>
+																	m.route.set('/teach/start', { topic: chosen.topicPackageId }),
+															},
+															t('dashboard.scenario_use', { title: chosen.title }),
+														)
+													: null,
+											],
+									m(
+										'button.btn.btn--secondary.btn--full',
+										{ onclick: () => m.route.set('/teach/new') },
+										t('teacher.create_topic'),
+									),
+								]),
+
+								// The quick game is the door most non-teachers are looking
+								// for — a room deciding one thing, no scenario.
+								m(
+									'button.btn.btn--secondary.btn--full',
+									{ onclick: () => m.route.set('/teach/start?mode=quick') },
+									t('dashboard.start_quick'),
+								),
+
 								classes.length > 0
 									? m('.stack', [
 											m('p.teacher__section-title', t('dashboard.my_classes')),
@@ -276,43 +424,6 @@ export function TeacherHome(): m.Component {
 											m('.stack', sessions.map(sessionRow)),
 										])
 									: null,
-
-								m('.stack', [
-									m('p.teacher__section-title', t('dashboard.scenarios')),
-									topics.length === 0
-										? m('p.home-explanation', t('teacher.no_topics'))
-										: m(
-												'.stack',
-												topics.map((topic) =>
-													m(
-														'.teacher__topic-option',
-														{
-															key: topic.topicPackageId,
-															onclick: () => m.route.set(`/teach/topic/${topic.topicPackageId}`),
-															role: 'button',
-															tabindex: 0,
-														},
-														[
-															m('strong', topic.title),
-															m('.editor__row', [
-																m(
-																	'span.values__score',
-																	topic.status === AgoraTopicStatus.ready
-																		? t('editor.ready')
-																		: t('editor.draft'),
-																),
-																m(Icon, { name: 'edit', size: 16 }),
-															]),
-														],
-													),
-												),
-											),
-									m(
-										'button.btn.btn--secondary.btn--full',
-										{ onclick: () => m.route.set('/teach/new') },
-										t('teacher.create_topic'),
-									),
-								]),
 							],
 				]),
 			]);

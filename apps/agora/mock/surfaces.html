@@ -9,12 +9,19 @@
 			// of the CSS proves nothing about the app.
 			import '../src/styles/global.scss';
 			import '../src/styles/components.scss';
-			// The civic palette, so the gauntlet can be run in either theme —
-			// `?theme=civic` paints every surface below in Odyssey's colours.
+			// The other looks, so the gauntlet can be run in any of them —
+			// `?theme=civic` paints every surface below in Odyssey's colours,
+			// `?theme=candy` in the default look, `?theme=custom` in a look
+			// built from seeds (the block's own defaults stand in for a
+			// student's picks). No parameter is the token file's base, which is
+			// the `purple` look.
 			import '../src/styles/theme-civic.scss';
+			import '../src/styles/theme-candy.scss';
+			import '../src/styles/theme-custom.scss';
 
-			if (new URLSearchParams(location.search).get('theme') === 'civic') {
-				document.documentElement.dataset.sessionTheme = 'civic';
+			const theme = new URLSearchParams(location.search).get('theme');
+			if (theme === 'civic' || theme === 'candy' || theme === 'custom') {
+				document.documentElement.dataset.sessionTheme = theme;
 			}
 		</script>
 		<style>
@@ -28,7 +35,7 @@
 				max-width: 420px;
 				margin-inline: auto;
 			}
-			.gauntlet h2 {
+			.gauntlet > h2 {
 				/* The harness's own captions clear the type floor too, so a run of
 				   type-audit.mjs over this page reports only real app failures */
 				font-size: 1rem;
@@ -51,6 +58,82 @@
 			in tokens.scss fails out loud instead of waiting for a screenshot.
 		-->
 		<div class="gauntlet">
+			<!-- The candy look paints every proposal its own colour by number
+			     (data-hue); a numeral on a point and a name on a callout must
+			     survive every one of the twelve. Inert under the other looks. -->
+			<h2>a proposal in each of its colours</h2>
+			<div style="display:flex;flex-wrap:wrap;gap:8px">
+				<button class="board__point" data-hue="0" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">0</span></button>
+				<button class="board__point board__point--lead" data-hue="1" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">1</span></button>
+				<button class="board__point" data-hue="2" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">2</span></button>
+				<button class="board__point" data-hue="3" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">3</span></button>
+				<button class="board__point" data-hue="4" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">4</span></button>
+				<button class="board__point" data-hue="5" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">5</span></button>
+				<button class="board__point" data-hue="6" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">6</span></button>
+				<button class="board__point" data-hue="7" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">7</span></button>
+				<button class="board__point" data-hue="8" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">8</span></button>
+				<button class="board__point" data-hue="9" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">9</span></button>
+				<button class="board__point" data-hue="10" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">10</span></button>
+				<button class="board__point" data-hue="11" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">11</span></button>
+				<button class="board__point" data-hue="12" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">12</span></button>
+			</div>
+			<div class="stall" data-hue="3">
+				<button class="stall__head">
+					<span class="stall__num">3</span>
+					<span class="stall__preview">אספה לאומית שבה לכל מעמד יש קול שווה</span>
+					<span class="stall__chips"><span class="stall__chip stall__chip--rated">דירגתם</span></span>
+				</button>
+			</div>
+			<button class="board__callout board__callout--above" data-hue="4" style="position:static;transform:none;width:auto">
+				<p class="board__callout-text">מס על הכנסה במקום מס על הלחם</p>
+				<span class="board__callout-foot">
+					<span class="board__callout-score board__num">+52%</span>
+					<span class="board__callout-by">פנס אמיץ</span>
+				</span>
+				<span class="board__callout-more"><span class="board__callout-more-text">למה?</span></span>
+			</button>
+			<div class="board__waiting-chip" data-hue="9">
+				<span class="board__author">פנס שקט</span>
+				<span class="board__waiting-text">עוד לא דורגה</span>
+			</div>
+			<h2>the workshop drawers, one colour per tool</h2>
+			<div class="workbench__section workbench__section--ideas workbench__section--collapsible">
+				<button class="workbench__head workbench__head--button"><span class="workbench__icon">💡</span><span class="workbench__title">הצעות שיפור שקיבלתם</span><span class="workbench__count">2</span><span class="workbench__chevron"></span></button>
+			</div>
+			<div class="workbench__section workbench__section--characters workbench__section--collapsible">
+				<button class="workbench__head workbench__head--button"><span class="workbench__icon">🎭</span><span class="workbench__title">שאלו את בני התקופה</span><span class="workbench__chevron"></span></button>
+			</div>
+			<div class="workbench__section workbench__section--needs workbench__section--collapsible">
+				<button class="workbench__head workbench__head--button"><span class="workbench__icon">🧭</span><span class="workbench__title">להיזכר בצרכים של שני הצדדים</span><span class="workbench__chevron"></span></button>
+			</div>
+			<h2>the five faces, at rest and pressed</h2>
+			<div class="rate-scale">
+				<button class="rate-scale__option rate-scale__option--strong-against"><span class="rate-scale__label">ממש לא בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--against"><span class="rate-scale__label">לא בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--abstain"><span class="rate-scale__label">נמנעים</span></button>
+				<button class="rate-scale__option rate-scale__option--for"><span class="rate-scale__label">בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--strong-for"><span class="rate-scale__label">מאוד בעד</span></button>
+			</div>
+			<div class="rate-scale">
+				<button class="rate-scale__option rate-scale__option--strong-against rate-scale__option--selected"><span class="rate-scale__label">ממש לא בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--against rate-scale__option--selected"><span class="rate-scale__label">לא בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--abstain rate-scale__option--selected"><span class="rate-scale__label">נמנעים</span></button>
+				<button class="rate-scale__option rate-scale__option--for rate-scale__option--selected"><span class="rate-scale__label">בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--strong-for rate-scale__option--selected"><span class="rate-scale__label">מאוד בעד</span></button>
+			</div>
+			<div class="card question__ask">
+				<span class="question__icon">💬</span>
+				<h2 class="question__title">מה אתם צריכים מהמזגן?</h2>
+				<p class="question__explanation">משפט אחד או שניים.</p>
+				<p class="question__closed">השאלה נסגרה</p>
+			</div>
+			<div class="card question__answer" data-hue="2">
+				<div class="question__answer-head">
+					<span class="question__number">תשובה 2</span>
+					<span class="question__agreement">+0.6 · 4 דירגו</span>
+				</div>
+				<p class="question__answer-text">בריחה מהירה</p>
+			</div>
 			<h2>my message bubble</h2>
 			<div class="thread">
 				<div class="thread__list">
@@ -73,6 +156,28 @@
 						<span class="thread__who">פנס חכם</span>
 						<p class="thread__text">הודעה של חבר/ה לכיתה</p>
 						<span class="thread__time">11:42</span>
+					</div>
+				</div>
+			</div>
+
+			<h2>my screen's paper — resting, and with an unsaved draft</h2>
+			<div class="my-screen">
+				<div class="my-screen__paper">
+					<div class="my-screen__paper-row">
+						<textarea class="my-screen__text" rows="2">נכריז על מלוכה חוקתית: המלך יישאר, והמסים יאושרו באספה נבחרת.</textarea>
+						<button class="my-screen__pen" aria-label="עריכת הטקסט">✏️</button>
+					</div>
+					<div class="my-screen__paper-foot">
+						<span class="my-screen__saved">✓ נשמר</span>
+					</div>
+				</div>
+				<div class="my-screen__paper my-screen__paper--dirty">
+					<div class="my-screen__paper-row">
+						<textarea class="my-screen__text" rows="2">נכריז על מלוכה חוקתית — ונוסיף ועדת בוררות לסכסוכי קרקע.</textarea>
+						<button class="my-screen__pen" aria-label="עריכת הטקסט">✏️</button>
+					</div>
+					<div class="my-screen__paper-foot">
+						<button class="btn btn--primary my-lantern__save">עדכון ההצעה</button>
 					</div>
 				</div>
 			</div>
@@ -112,6 +217,38 @@
 						<p>מה צריך לעשות? כתבו הצעה שגם מלוכנים וגם יעקובינים יוכלו לחיות איתה.</p>
 					</div>
 				</div>
+				<!-- The brief the proposal is written against: a WHITE island on
+				     the desk's saturated fill. It is here because it was shipped
+				     white-on-white — the desk is on-dark, the card is not. -->
+				<div class="carried carried--open">
+					<button class="carried__toggle" aria-expanded="true" aria-label="הסתרה">
+						<span class="carried__icon">💬</span>
+						<span class="carried__title">מה אמר החדר עד כה</span>
+						<span class="carried__fold"></span>
+					</button>
+					<div class="carried__list">
+						<div class="carried__item">
+							<p class="carried__from">מתוך: איך מנהלים את המזגן?</p>
+							<p class="carried__summary">הכיתה מסכימה שצריך שעות מיזוג קבועות.</p>
+							<div class="cp-bands cp-bands--brief">
+								<div class="cp-band cp-band--emerging">
+									<div class="cp-band__head">
+										<span class="cp-band__face">🌱</span>
+										<span class="cp-band__label">הסכמה מתגבשת</span>
+									</div>
+									<p class="cp-band__text">יש תמיכה בשעות קבועות, אבל רק ארבעה דירגו — עוד מוקדם לומר שזו עמדת הכיתה.</p>
+								</div>
+								<div class="cp-band cp-band--contested">
+									<div class="cp-band__head">
+										<span class="cp-band__face">⚡</span>
+										<span class="cp-band__label">שנוי במחלוקת</span>
+									</div>
+									<p class="cp-band__text">הכיתה חלוקה על מי מחליט מתי מדליקים.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
 				<textarea class="my-lantern__textarea write-desk__textarea" placeholder="אנחנו מציעים ש…"></textarea>
 				<div class="delib__actions">
 					<button class="btn btn--primary btn--full btn--lg write-desk__cta" disabled>
@@ -140,6 +277,26 @@
 				<button class="rate-scale__option rate-scale__option--for">
 					<span class="rate-scale__emoji">🙂</span><span class="rate-scale__label">בעד</span>
 				</button>
+			</div>
+
+			<h2>the gap invitation — one ask, the rules as chips</h2>
+			<div class="gap-prompt" id="gap-prompt">
+				<p class="gap-prompt__insight">
+					<span class="icon icon--inline">💡</span> מה יחזק את ההצעה?
+				</p>
+				<div class="gap-prompt__rules">
+					<span class="gap-prompt__rule"
+						><span class="icon icon--inline">🌉</span> טוב לשני המחנות</span
+					>
+					<span class="gap-prompt__rule"
+						><span class="icon icon--inline">🛠️</span> לחזק, לא לתקוף</span
+					>
+				</div>
+				<textarea class="gap-prompt__textarea" rows="2" placeholder="כתבו רעיון אחד…"></textarea>
+				<div class="gap-prompt__actions">
+					<button class="btn btn--primary">שליחת רעיון</button>
+					<button class="text-link text-link--quiet">ממשיכים הלאה</button>
+				</div>
 			</div>
 
 			<h2>the HUD</h2>
@@ -521,6 +678,55 @@
 				</div>
 			</div>
 
+			<h2>scenario shelf — ready row, draft row, teacher bar</h2>
+			<ul class="scenario-list">
+				<li class="scenario-row">
+					<button class="scenario-row__use" type="button">
+						<span class="scenario-row__tile"></span>
+						<span class="scenario-row__text">
+							<span class="scenario-row__title">המהפכה הצרפתית — 1789</span>
+							<span class="scenario-row__meta">
+								<span class="scenario-row__status">מוכן</span>
+							</span>
+						</span>
+					</button>
+					<button class="scenario-row__settings" type="button"></button>
+				</li>
+				<li class="scenario-row scenario-row--chosen">
+					<button class="scenario-row__use" type="button" aria-pressed="true">
+						<span class="scenario-row__tile"></span>
+						<span class="scenario-row__text">
+							<span class="scenario-row__title">מים בעיר</span>
+							<span class="scenario-row__meta">
+								<span class="scenario-row__status scenario-row__status--chosen">נבחר</span>
+							</span>
+						</span>
+					</button>
+					<button class="scenario-row__settings" type="button"></button>
+				</li>
+				<li class="scenario-row scenario-row--draft">
+					<button class="scenario-row__use" type="button">
+						<span class="scenario-row__tile"></span>
+						<span class="scenario-row__text">
+							<span class="scenario-row__title">מים בנגב</span>
+							<span class="scenario-row__meta">
+								<span class="scenario-row__status scenario-row__status--draft">טיוטה</span>
+								<span class="scenario-row__sub">עוד לא מוכן לכיתה — פתחו כדי להשלים</span>
+							</span>
+						</span>
+					</button>
+					<button class="scenario-row__settings" type="button"></button>
+				</li>
+			</ul>
+			<div class="teacher-bar">
+				<button class="teacher-bar__back" type="button"></button>
+				<span class="teacher-bar__title">המהפכה הצרפתית — 1789</span>
+				<div class="teacher-bar__trailing">
+					<span class="teacher-bar__unsaved">שינויים שלא נשמרו</span>
+					<span class="values__score">טיוטה</span>
+				</div>
+			</div>
+
 			<h2>class roster — row, career drawer, PIN note</h2>
 			<div class="roster__row-wrap">
 				<div class="roster__row roster__row--open">
@@ -564,6 +770,62 @@
 					<span>10</span>
 					<span>14</span>
 					<span class="roster__stat--points">53</span>
+				</div>
+			</div>
+
+			<h2>question record — the answers banded by C_p</h2>
+			<div class="card">
+				<p class="question__summary">הכיתה מסכימה שצריך לקבוע שעות מיזוג קבועות, וחלוקה על מי מחליט.</p>
+				<div class="cp-bands">
+					<div class="cp-band cp-band--strong">
+						<div class="cp-band__head">
+							<span class="cp-band__face">💪</span>
+							<span class="cp-band__label">הסכמה איתנה</span>
+							<span class="cp-band__score">C_p +0.52</span>
+							<span class="cp-band__count">2 תשובות</span>
+						</div>
+						<p class="cp-band__text">כמעט כולם רוצים שעות מיזוג קבועות ומוסכמות מראש.</p>
+						<ul class="cp-band__answers">
+							<li class="cp-band__answer">
+								<span class="cp-band__who">נמר אמיץ</span>
+								<span class="cp-band__answer-text">לקבוע שעות מיזוג קבועות</span>
+								<span class="cp-band__meta">C_p +0.55 · 18 דירגו</span>
+							</li>
+						</ul>
+					</div>
+					<div class="cp-band cp-band--emerging">
+						<div class="cp-band__head">
+							<span class="cp-band__face">🌱</span>
+							<span class="cp-band__label">הסכמה מתגבשת</span>
+							<span class="cp-band__score">C_p +0.18</span>
+							<span class="cp-band__count">1 תשובות</span>
+						</div>
+						<p class="cp-band__text">יש תמיכה, אבל רק ארבעה דירגו — עוד מוקדם לומר שזו עמדת הכיתה.</p>
+					</div>
+					<div class="cp-band cp-band--contested">
+						<div class="cp-band__head">
+							<span class="cp-band__face">⚡</span>
+							<span class="cp-band__label">שנוי במחלוקת</span>
+							<span class="cp-band__score">C_p -0.22</span>
+							<span class="cp-band__count">1 תשובות</span>
+						</div>
+						<p class="cp-band__text">הכיתה חלוקה על מי מחליט מתי מדליקים.</p>
+					</div>
+					<div class="cp-band cp-band--unrated">
+						<div class="cp-band__head">
+							<span class="cp-band__face">😴</span>
+							<span class="cp-band__label">טרם נשקל</span>
+							<span class="cp-band__count">1 תשובות</span>
+						</div>
+						<p class="cp-band__text">אף אחד עוד לא דירג את אלה.</p>
+					</div>
+				</div>
+				<p class="cp-bands__explain">C_p הוא ממוצע הדירוגים פחות קנס על אי־ודאות.</p>
+				<div class="question__answer-head">
+					<span class="cp-chip cp-chip--strong">הסכמה איתנה</span>
+					<span class="cp-chip cp-chip--emerging">הסכמה מתגבשת</span>
+					<span class="cp-chip cp-chip--contested">שנוי במחלוקת</span>
+					<span class="cp-chip cp-chip--unrated">טרם נשקל</span>
 				</div>
 			</div>
 

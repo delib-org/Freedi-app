@@ -12,6 +12,7 @@ import {
 } from 'valibot';
 import { AgoraStage, AGORA_STAGE_ORDER } from './agoraEnums';
 import { CutoffBy } from '../results/ResultsSettings';
+import { AgoraCpBandSummarySchema } from './questionSummary';
 import { sessionRunsVoting } from './sessionFlow';
 import type { AgoraSessionFlow } from './sessionFlow';
 import type { AgoraSessionMode } from './agoraEnums';
@@ -52,7 +53,7 @@ export const AGORA_VOTING_TRIGGER = {
 	MIN_RATERS: 3,
 } as const;
 
-/** Which answers of a question stage travel forward */
+/** Which answers of a question stage travel forward; `all` carries every answer */
 export const AgoraQuestionSelectionSchema = object({
 	cutoffBy: enum_(CutoffBy),
 	/** `topOptions`: how many */
@@ -99,6 +100,13 @@ export const AgoraCarriedAnswerSchema = object({
 	statement: string(),
 	/** Net agreement it held when the stage closed, −1…1 */
 	mean: number(),
+	/**
+	 * C_p — the same net agreement with the confidence penalty applied, as
+	 * the evaluation pipeline wrote it. Absent on outcomes stored before the
+	 * banded record existed, and on an answer whose first rating is still in
+	 * flight; `cpOf` falls back to `mean` in both cases.
+	 */
+	consensus: optional(number()),
 	raters: number(),
 	/** Present in `named` sessions only */
 	anonName: optional(string()),
@@ -111,6 +119,12 @@ export const AgoraStageOutcomeSchema = object({
 	selected: array(AgoraCarriedAnswerSchema),
 	/** AI summary of the selected answers (fixture text when no model is configured) */
 	summary: optional(string()),
+	/**
+	 * The same answers read band by band, strongest C_p first — what the room
+	 * is actually behind, told apart from what it merely leaned toward.
+	 * Absent on outcomes computed before the banded record existed.
+	 */
+	bands: optional(array(AgoraCpBandSummarySchema)),
 	computedAt: number(),
 });
 
@@ -392,8 +406,9 @@ export function resolveQuestionSelection(item: AgoraStagePlanItem): AgoraQuestio
 /**
  * Rank a question stage's answers by net agreement and apply the admin's
  * cutoff. Unrated answers sort last and are never carried by a threshold;
- * a top-N cutoff still takes them when nothing else is there. The teacher
- * panel previews with this, the server closes with this — one arithmetic.
+ * a top-N cutoff still takes them when nothing else is there, and `all`
+ * carries everything in that order. The teacher panel previews with this,
+ * the server closes with this — one arithmetic.
  */
 export function rankCarriedAnswers(rows: readonly AgoraCarriedAnswer[]): AgoraCarriedAnswer[] {
 	return [...rows].sort((a, b) => {
@@ -412,6 +427,7 @@ export function selectCarriedAnswers(
 	selection: AgoraQuestionSelection,
 ): AgoraCarriedAnswer[] {
 	const ranked = rankCarriedAnswers(rows);
+	if (selection.cutoffBy === CutoffBy.all) return ranked;
 	if (selection.cutoffBy === CutoffBy.aboveThreshold) {
 		return ranked.filter((row) => row.raters > 0 && row.mean >= selection.cutoffNumber);
 	}

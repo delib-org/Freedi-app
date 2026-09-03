@@ -151,3 +151,275 @@
 		text-align: center;
 	}
 }
+
+// --- The scenario shelf (/teach) ---
+//
+// The shelf used to be a list of doors into the editor: every tap went to the
+// text, and nothing on the screen let a teacher say "this is the one we run
+// today". A row now does the one thing its scenario is ready for — a finished
+// one opens the start screen already holding it, an unfinished one opens where
+// it can be finished — and the cog beside it keeps the way into the settings.
+//
+// Two sibling buttons, never nested: a button inside a button is invalid, and
+// a cog inside the row's own click is the thing that swallows taps.
+
+// The icon-only buttons on these screens: a square you can hit with a thumb,
+// no label, no .btn padding (which would stretch one glyph into an oval).
+%agora-icon-button {
+	inline-size: 44px;
+	block-size: 44px;
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--text-secondary);
+	border-radius: var(--radius-tile);
+	cursor: pointer;
+	transition:
+		background-color var(--motion-fast) ease,
+		color var(--motion-fast) ease,
+		transform var(--motion-fast) var(--ease-spring);
+
+	&:hover {
+		background: color-mix(in srgb, var(--mine) 8%, transparent);
+		color: var(--mine-ink);
+	}
+
+	&:active {
+		transform: scale(0.94);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+}
+
+.scenario-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.scenario-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	min-block-size: 64px;
+	padding-inline-end: var(--space-xs);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-card);
+	transition: border-color var(--motion-fast) ease;
+
+	&:has(.scenario-row__use:hover) {
+		border-color: var(--border-lantern);
+	}
+
+	// A draft is not disabled — it is the row the teacher still has work on,
+	// so it reads as unfinished paper rather than as a locked door.
+	&--draft {
+		border-style: dashed;
+		border-color: var(--border-strong);
+		box-shadow: none;
+	}
+
+	// The lesson this teacher is about to run. A filled tint and a lantern
+	// ring, the same way a committed choice is said on the start screen —
+	// hover is a maybe, this is a decision.
+	&--chosen {
+		border-color: var(--lantern);
+		background: var(--bg-inset);
+		box-shadow:
+			inset 0 0 0 1px var(--lantern),
+			var(--glow-lantern);
+	}
+
+	&__use {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		min-block-size: 56px;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		border: 0;
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		text-align: start;
+		border-radius: inherit;
+		cursor: pointer;
+		transition: transform var(--motion-fast) var(--ease-spring);
+
+		&:active {
+			transform: scale(0.985);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	&__tile {
+		inline-size: 40px;
+		block-size: 40px;
+		flex: 0 0 auto;
+		display: grid;
+		place-items: center;
+		border-radius: var(--radius-tile);
+		background: var(--peer-tile);
+		color: var(--mine-ink);
+		transition:
+			background-color var(--motion-fast) ease,
+			color var(--motion-fast) ease;
+	}
+
+	&__use:hover &__tile {
+		background: var(--mine-strong);
+		color: #fff; // on --mine-strong, and an icon carries no text contrast duty
+	}
+
+	&--chosen &__tile {
+		background: var(--mine-strong);
+		color: #fff; // an icon, so no text-contrast duty
+	}
+
+	&--draft &__tile {
+		background: var(--bg-inset);
+		color: var(--text-muted);
+	}
+
+	&--draft &__use:hover &__tile {
+		background: var(--bg-inset);
+		color: var(--mine-ink);
+	}
+
+	&__text {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--text-primary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&--draft &__title {
+		color: var(--text-secondary);
+	}
+
+	&__meta {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		flex-wrap: wrap;
+	}
+
+	&__status {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-full);
+		padding: 2px var(--space-sm);
+
+		// Tinted FILL, never warning-coloured text: --warning is defined as a
+		// fill and there is no --warning-ink to pair with it.
+		&--draft {
+			color: var(--text-primary);
+			border-color: var(--warning);
+			background: color-mix(in srgb, var(--warning) 18%, transparent);
+		}
+
+		&--chosen {
+			color: var(--text-primary);
+			border-color: var(--lantern);
+			background: color-mix(in srgb, var(--lantern) 18%, transparent);
+		}
+	}
+
+	&__sub {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+	}
+
+	&__settings {
+		@extend %agora-icon-button;
+	}
+}
+
+.scenario-list__go {
+	margin-block-start: var(--space-sm);
+}
+
+// --- The bar on a teacher's long form ---
+//
+// The authoring screens are one tall scroll and the way out lived in a header
+// that scrolled away with the first paragraph. This one sticks.
+.teacher-bar {
+	position: sticky;
+	inset-block-start: 0;
+	z-index: var(--z-header);
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	// Out past .shell's padding so the bar reaches the screen edges and hugs
+	// the top rather than floating a gap above itself.
+	margin-inline: calc(-1 * var(--space-md));
+	margin-block-start: calc(-1 * var(--space-md));
+	padding-inline: var(--space-md);
+	padding-block: var(--space-xs);
+	padding-block-start: max(var(--space-xs), env(safe-area-inset-top, 0px));
+	background: var(--bg-page);
+	border-block-end: 1px solid var(--border-subtle);
+
+	&__back {
+		@extend %agora-icon-button;
+	}
+
+	// The arrow points the way out, and the way out swaps sides with the script
+	[dir='rtl'] &__back .icon {
+		transform: scaleX(-1);
+	}
+
+	&__title {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		font-family: var(--font-display);
+		font-weight: 700;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__trailing {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__unsaved {
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+		border: 1px solid var(--warning);
+		background: color-mix(in srgb, var(--warning) 18%, transparent);
+		border-radius: var(--radius-full);
+		padding: 2px var(--space-sm);
+	}
+}

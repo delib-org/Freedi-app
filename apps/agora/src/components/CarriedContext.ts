@@ -2,6 +2,7 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import { Icon } from './Icon';
 import { Collapsible } from './Collapsible';
+import { CpBands } from './CpBands';
 import {
 	closedQuestionItems,
 	type AgoraSession,
@@ -16,9 +17,10 @@ export interface CarriedContextAttrs {
 }
 
 /**
- * What the room said in the question stages before this one — the selected
- * answers and the summary — folded into every later screen, so the work a
- * stage produced is never something a player has to leave the stage to find.
+ * What the room said in the question stages before this one — the overall
+ * line and the answers banded by C_p — folded into every later screen, so
+ * the work a stage produced is never something a player has to leave the
+ * stage to find, and how firmly the room held it travels with it.
  * Renders nothing when there is nothing carried.
  */
 export function CarriedContext(
@@ -44,11 +46,16 @@ export function CarriedContext(
 							open = !open;
 						},
 						'aria-expanded': String(open),
+						// The fold is a chevron, not a word: "Hide" next to a title
+						// that already says what the card is spent a line saying
+						// what one turned triangle says. Screen readers still get
+						// the verb, which is the half that was carrying meaning.
+						'aria-label': t(open ? 'carried.hide' : 'carried.show'),
 					},
 					[
 						m('span.carried__icon', { 'aria-hidden': 'true' }, m(Icon, { name: 'talk', size: 18 })),
 						m('span.carried__title', t('carried.title')),
-						m('span.carried__fold', t(open ? 'carried.hide' : 'carried.show')),
+						m('span.carried__fold', { 'aria-hidden': 'true' }),
 					],
 				),
 				open
@@ -64,15 +71,11 @@ export function CarriedContext(
 										m('p.carried__from', t('carried.from', { title: item.title ?? '' })),
 										outcome.summary ? m('p.carried__summary', outcome.summary) : null,
 										outcome.selected.length > 0
-											? m(
-													'ul.carried__answers',
-													outcome.selected.map((answer) =>
-														m('li.carried__answer', { key: answer.statementId }, [
-															answer.anonName ? m('span.carried__who', answer.anonName) : null,
-															m('span.carried__text', answer.statement),
-														]),
-													),
-												)
+											? m(CpBands, {
+													answers: outcome.selected,
+													bands: outcome.bands,
+													brief: true,
+												})
 											: null,
 									]);
 								}),

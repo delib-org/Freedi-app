@@ -18,8 +18,10 @@ import { isRTL, t, tCount } from '../lib/i18n';
 import { celebrateOnce } from '../lib/celebration';
 // The map's arithmetic lives beside the milestone detector that reads it, so
 // the dashed zone and the cheer for entering it can never drift apart
-import { campLean } from '../lib/boardGeometry';
+import { campLean, inBridgeZone } from '../lib/boardGeometry';
+import { finaleCheers } from '../lib/finaleCheers';
 import type { AgoraProposal } from '../lib/proposals';
+import { proposalHue } from '../lib/looks';
 
 export interface ResultsBoardAttrs {
 	sessionId: string;
@@ -61,6 +63,14 @@ interface BoardPoint {
 	rank: number;
 	isMine: boolean;
 	isLead: boolean;
+	/** Standing in the goal — the whole class behind it, both camps evenly */
+	scored: boolean;
+	/**
+	 * The candy hue this proposal wears everywhere (lib/looks.ts): its number
+	 * on the square, or 0 for mine, which is always raspberry. Painted as a
+	 * `data-hue` attribute the candy stylesheet keys on; other looks ignore it.
+	 */
+	hue: number;
 }
 
 /** The five bucket faces, most against to most for */
@@ -74,7 +84,6 @@ const BUCKET_ICONS: readonly IconName[] = [
 /* Rank is carried by the CSS class, not by three different drawings — one
  * medal tinted gold/silver/bronze says the same thing and stays in family. */
 const MEDAL_RANKS = ['gold', 'silver', 'bronze'] as const;
-const PODIUM_SIZE = 3;
 const COUNT_MS = 40;
 
 /** Point geometry, in percent of the plot box unless named px */
@@ -211,6 +220,7 @@ export function ResultsBoard(
 	initialVnode: m.Vnode<ResultsBoardAttrs>,
 ): m.Component<ResultsBoardAttrs> {
 	const cheerKey = `agora_${initialVnode.attrs.sessionId}_boardcheer`;
+	const goalKey = `agora_${initialVnode.attrs.sessionId}_boardgoal`;
 
 	let openId = '';
 	/**
@@ -257,17 +267,27 @@ export function ResultsBoard(
 	}
 
 	/**
-	 * One cheer, the first time a student sees their own proposal on the
-	 * podium. The once-per-sitting guard (and its sessionStorage) lives in
-	 * lib/celebration.ts — components don't touch storage.
+	 * The finale's cheers, each at most once per sitting. The once-per-sitting
+	 * guard (and its sessionStorage) lives in lib/celebration.ts — components
+	 * don't touch storage. Which cheers are owed is decided by finaleCheers(),
+	 * which is pure so it can be tested in node.
 	 */
 	function cheerOnce(points: BoardPoint[]): void {
-		const mine = points.find((point) => point.isMine);
-		if (!mine || mine.rank > PODIUM_SIZE || mine.consensus === undefined) return;
-		celebrateOnce(cheerKey, {
-			message: t('board.cheer_podium', { rank: mine.rank }),
-			detail: mine.proposal.statement,
-		});
+		for (const cheer of finaleCheers(points)) {
+			if (cheer.kind === 'goal') {
+				celebrateOnce(goalKey, {
+					kind: 'goal',
+					sound: 'goal',
+					message: t(cheer.point.isMine ? 'board.goal_mine' : 'board.goal_class'),
+					detail: cheer.point.proposal.statement,
+				});
+			} else {
+				celebrateOnce(cheerKey, {
+					message: t('board.cheer_podium', { rank: cheer.point.rank }),
+					detail: cheer.point.proposal.statement,
+				});
+			}
+		}
 	}
 
 	/**
@@ -295,7 +315,7 @@ export function ResultsBoard(
 		const { proposals, scores, census, userId } = attrs;
 
 		const points: BoardPoint[] = [];
-		for (const proposal of proposals) {
+		for (const [index, proposal] of proposals.entries()) {
 			// A proposal nobody rated has no score doc at all, and it still belongs
 			// on the board — it just cannot be placed on the field yet
 			const score = scores[proposal.statementId];
@@ -316,6 +336,8 @@ export function ResultsBoard(
 				rank: 0,
 				isMine: proposal.creatorId === userId,
 				isLead: false,
+				scored: inBridgeZone(score),
+				hue: proposal.creatorId === userId ? 0 : proposalHue(index + 1),
 			});
 		}
 
@@ -364,12 +386,14 @@ export function ResultsBoard(
 	}
 
 	function pointAria(point: BoardPoint, topic: AgoraTopicPackage): string {
-		return t('board.point_aria', {
+		const base = t('board.point_aria', {
 			rank: point.rank,
 			author: point.isMine ? t('board.you') : point.proposal.anonName,
 			n: point.percent,
 			side: sideLabel(point, topic),
 		});
+
+		return point.scored ? `${base}, ${t('board.point_scored')}` : base;
 	}
 
 	/** The short line tying a callout back to the point it belongs to */
@@ -422,6 +446,7 @@ export function ResultsBoard(
 			{
 				type: 'button',
 				class: above ? 'board__callout--above' : 'board__callout--below',
+				'data-hue': String(point.hue),
 				style: {
 					insetInlineStart: inlineStart,
 					maxHeight: `calc(${room}% - ${gap + EDGE_PAD}px)`,
@@ -468,9 +493,11 @@ export function ResultsBoard(
 			{
 				key: point.proposal.statementId,
 				type: 'button',
+				'data-hue': String(point.hue),
 				class: [
 					point.isMine ? 'board__point--mine' : undefined,
 					point.isLead ? 'board__point--lead' : undefined,
+					point.scored ? 'board__point--scored' : undefined,
 					selected ? 'board__point--selected' : undefined,
 					openId && !selected ? 'board__point--dimmed' : undefined,
 				]
@@ -497,6 +524,14 @@ export function ResultsBoard(
 						)
 					: null,
 				m('span.board__point-rank', { 'aria-hidden': 'true' }, String(point.rank)),
+				// In the net: the point wears the ball
+				point.scored
+					? m(
+							'span.board__point-ball',
+							{ 'aria-hidden': 'true' },
+							m(Icon, { name: 'ball', size: 13 }),
+						)
+					: null,
 			],
 		);
 	}
@@ -554,7 +589,7 @@ export function ResultsBoard(
 				},
 				[
 					helpRow(m('span.board__help-ramp'), t('board.help_up')),
-					helpRow(m('span.board__help-zone'), t('board.help_zone')),
+					helpRow(m('span.board__help-goal'), t('board.help_zone')),
 					helpRow(
 						[
 							m('span.board__help-dot.board__help-dot--sm'),
@@ -627,16 +662,30 @@ export function ResultsBoard(
 				// says MORE than it ever did: both axes, in one sentence, for the
 				// one reader who cannot see the ramp
 				m('.board__plot', { role: 'group', 'aria-label': t('board.plot_aria') }, [
-					// The goal made into a place: whole-class backing, high agreement
-					m('.board__bridge-zone', [
-						m(
-							'.board__bridge-chip',
-							m('span.board__bridge-label', [
-								m(Icon, { name: 'trophy', size: 14 }),
-								m('span', t('board.zone_bridge')),
-							]),
-						),
-					]),
+					// The goal made into a place — and drawn as one: posts, crossbar
+					// and net at the top centre of the field, where a proposal has
+					// the whole class behind it. The box is BRIDGE_ZONE (lib/
+					// boardGeometry.ts) in CSS; the net billows when something is in
+					// it. Nothing here is for a screen reader: the plot's own label
+					// names the place, and a scored point says so in its own name.
+					m(
+						'.board__goal',
+						{
+							'aria-hidden': 'true',
+							class: placed.some((point) => point.scored) ? 'board__goal--scored' : undefined,
+						},
+						[
+							m('.board__goal-net'),
+							m('.board__goal-line'),
+							m(
+								'.board__goal-chip',
+								m('span.board__goal-label', [
+									m(Icon, { name: 'ball', size: 14 }),
+									m('span', t('board.zone_goal')),
+								]),
+							),
+						],
+					),
 					m('.board__grid-zero'),
 					m('.board__grid-centre'),
 					placed.length === 0
@@ -852,7 +901,7 @@ export function ResultsBoard(
 		const leader = points.find((candidate) => candidate.isLead);
 		const behind = leader ? leader.percent - point.percent : 0;
 
-		return m('.board__detail', [
+		return m('.board__detail', { 'data-hue': String(point.hue) }, [
 			// The headline of the sub-screen: the score this whole page is about,
 			// at the size of the thing being explained
 			m('.board__detail-hero', [
@@ -980,12 +1029,16 @@ export function ResultsBoard(
 			m(
 				'.board__waiting-list',
 				waiting.map((point) =>
-					m('span.board__waiting-chip', { key: point.proposal.statementId }, [
-						point.isMine
-							? m('span.board__you', t('board.you'))
-							: m('span.board__author', point.proposal.anonName),
-						m('span.board__waiting-text', point.proposal.statement),
-					]),
+					m(
+						'span.board__waiting-chip',
+						{ key: point.proposal.statementId, 'data-hue': String(point.hue) },
+						[
+							point.isMine
+								? m('span.board__you', t('board.you'))
+								: m('span.board__author', point.proposal.anonName),
+							m('span.board__waiting-text', point.proposal.statement),
+						],
+					),
 				),
 			),
 		]);

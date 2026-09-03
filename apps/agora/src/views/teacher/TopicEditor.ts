@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { stalledBanner } from '../../components/StalledBanner';
+import { TeacherBar } from '../../components/TeacherBar';
 import {
 	fetchTopicPackage,
 	saveTopicEditorFields,
@@ -27,6 +28,8 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 	let loadFailed = false;
 	let saving = false;
 	let savedFlash = false;
+	/** Edits made since the last confirmed save. What back has to ask about. */
+	let dirty = false;
 	const uploadProgress: Record<string, number> = {};
 	const imageUploadProgress: Record<string, number> = {};
 
@@ -67,6 +70,7 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 		saveTopicEditorFields(topicPackageId, fields)
 			.then(() => {
 				if (pkg) pkg = { ...pkg, ...fields, lastUpdate: Date.now() };
+				dirty = false;
 				savedFlash = true;
 				setTimeout(() => {
 					savedFlash = false;
@@ -80,6 +84,22 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 				saving = false;
 				m.redraw();
 			});
+	}
+
+	/**
+	 * Leaving with unsaved edits. `confirm` offers two answers, so the safe one
+	 * is the default: OK saves and goes, Cancel stays. A teacher who typed a
+	 * paragraph into their own lesson has never meant to throw it away.
+	 */
+	function goBack(): void {
+		if (!dirty) {
+			m.route.set('/teach');
+
+			return;
+		}
+		if (!window.confirm(t('editor.leave_unsaved'))) return;
+		save();
+		m.route.set('/teach');
 	}
 
 	function uploadVideo(scene: AgoraScene, file: File): void {
@@ -156,6 +176,7 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			const characters = [...pkg.characters] as [AgoraCharacter, AgoraCharacter];
 			characters[index] = { ...character, ...patch };
 			pkg = { ...pkg, characters };
+			dirty = true;
 		};
 
 		return m('.card.stack', { key: character.characterId }, [
@@ -217,6 +238,7 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 				candidate.sceneId === scene.sceneId ? { ...candidate, ...patch } : candidate,
 			);
 			pkg = { ...pkg, scenes };
+			dirty = true;
 		};
 		const progress = uploadProgress[scene.sceneId];
 		const imageProgress = imageUploadProgress[scene.sceneId];
@@ -330,13 +352,17 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			const current = pkg;
 
 			return m('.shell', [
-				m('.home-header', [
-					m(
-						'span.values__score',
-						current.status === AgoraTopicStatus.ready ? t('editor.ready') : t('editor.draft'),
-					),
-					m('button.btn.btn--ghost', { onclick: () => m.route.set('/teach') }, t('common.back')),
-				]),
+				m(TeacherBar, {
+					title: current.title,
+					onBack: goBack,
+					trailing: [
+						dirty ? m('span.teacher-bar__unsaved', t('editor.unsaved')) : null,
+						m(
+							'span.values__score',
+							current.status === AgoraTopicStatus.ready ? t('editor.ready') : t('editor.draft'),
+						),
+					],
+				}),
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 					m('h2', t('editor.title')),
 					m('input.text-input.code-input', {
@@ -344,17 +370,20 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 						style: { letterSpacing: 'normal', textTransform: 'none' },
 						oninput: (event: InputEvent) => {
 							pkg = { ...current, title: (event.target as HTMLInputElement).value };
+							dirty = true;
 						},
 					}),
 
 					m('label.teacher__section-title', t('editor.framing')),
 					textArea(current.framingText, 3, (next) => {
 						pkg = { ...current, framingText: next };
+						dirty = true;
 					}),
 
 					m('label.teacher__section-title', t('editor.challenge')),
 					textArea(current.challengeQuestion, 2, (next) => {
 						pkg = { ...current, challengeQuestion: next };
+						dirty = true;
 					}),
 
 					m('h3', t('editor.characters')),
@@ -369,10 +398,10 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 						current.scenes.map((scene) => sceneEditor(scene)),
 					),
 
-					// A save wedged offline must not read as saved — this is the
-					// confirmed-write clock's voice on a screen with no HUD
-					stalledBanner(),
-					m('.delib__actions', [
+					m('.editor__actions', [
+						// A save wedged offline must not read as saved — this is the
+						// confirmed-write clock's voice on a screen with no HUD
+						stalledBanner(),
 						m(
 							'button.btn.btn--secondary',
 							{ disabled: saving, onclick: () => save() },

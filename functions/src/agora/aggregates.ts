@@ -8,11 +8,13 @@ import {
 	AgoraSession,
 	AgoraStudentAggregate,
 	AgoraStudentGameRow,
+	AgoraThemeTally,
 	emptyAgoraPoints,
 	emptyClassAggregate,
 	emptyStudentAggregate,
 	mergeClassGame,
 	mergeStudentGame,
+	tallyAgoraThemes,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 
@@ -41,10 +43,10 @@ function periodKeysFor(timestampMs: number): { day: string; month: string; year:
  * to ended) and Firestore retries triggers at-least-once, so without the
  * guard a game would count twice.
  *
- * Returns true when this call actually did the folding (the caller bumps the
+ * Returns the room's theme tally when this call actually did the folding (the caller bumps the
  * period stats exactly then).
  */
-export async function writeSessionAggregates(sessionId: string): Promise<boolean> {
+export async function writeSessionAggregates(sessionId: string): Promise<AgoraThemeTally | null> {
 	const sessionRef = db.collection(Collections.agoraSessions).doc(sessionId);
 
 	// Participants are read before the transaction — they are final once a
@@ -64,7 +66,7 @@ export async function writeSessionAggregates(sessionId: string): Promise<boolean
 	return db.runTransaction(async (transaction) => {
 		const sessionSnap = await transaction.get(sessionRef);
 		const session = sessionSnap.data() as AgoraSession | undefined;
-		if (!session || session.aggregatedAt !== undefined) return false;
+		if (!session || session.aggregatedAt !== undefined) return null;
 
 		const now = Date.now();
 		const playedAt = session.classScore?.computedAt ?? now;
@@ -121,7 +123,10 @@ export async function writeSessionAggregates(sessionId: string): Promise<boolean
 
 		transaction.update(sessionRef, { aggregatedAt: now, lastUpdate: now });
 
-		return true;
+		// How the room dressed, counted from the same participant reads — the
+		// one thing the company asked to learn from a finished game that is
+		// not a score
+		return tallyAgoraThemes(session, students);
 	});
 }
 
@@ -134,7 +139,11 @@ export async function writeSessionAggregates(sessionId: string): Promise<boolean
  * inside a transaction (the questionProgressWriter technique), so a class that
  * plays five games in a month still counts once that month.
  */
-export async function bumpAgoraStats(session: AgoraSession, studentCount: number): Promise<void> {
+export async function bumpAgoraStats(
+	session: AgoraSession,
+	studentCount: number,
+	themes: AgoraThemeTally,
+): Promise<void> {
 	try {
 		const periodKeys = periodKeysFor(session.classScore?.computedAt ?? Date.now());
 		const periods: Array<{ key: string; type: string }> = [
@@ -157,6 +166,14 @@ export async function bumpAgoraStats(session: AgoraSession, studentCount: number
 					gamesFinished: FieldValue.increment(1),
 					[outcomeField]: FieldValue.increment(1),
 					studentsReached: FieldValue.increment(studentCount),
+					// Which look people actually played in — the favourite-design
+					// question, answered per student rather than per room
+					'byTheme.candy': FieldValue.increment(themes.worn.candy),
+					'byTheme.purple': FieldValue.increment(themes.worn.purple),
+					'byTheme.custom': FieldValue.increment(themes.worn.custom),
+					'byTheme.built': FieldValue.increment(themes.built),
+					'byTheme.borrowed': FieldValue.increment(themes.borrowed),
+					[`byRoomTheme.${themes.sessionDefault}`]: FieldValue.increment(1),
 					lastUpdate: now,
 				},
 				{ merge: true },

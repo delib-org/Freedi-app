@@ -21,12 +21,18 @@ import { TeacherInstructions } from './TeacherInstructions';
 import { StagePlanEditor } from './StagePlanEditor';
 import { planItemLabel } from '../../components/StageNav';
 import { rankedAnswers } from '../QuestionStage';
+import { CpBands, bandClassOf, bandLabelOf } from '../../components/CpBands';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { CountdownTimer } from '../../components/CountdownTimer';
 import { QRShare } from '../../components/QRShare';
+import { LookPicker } from '../../components/LookPicker';
+import { classLooks } from '../../lib/looks';
 import {
 	AgoraParticipant,
+	AgoraSessionMode,
 	AgoraStage,
+	AgoraThemeChoice,
+	resolveAgoraTheme,
 	AgoraStagePlanItem,
 	AgoraSession,
 	ChallengePhase,
@@ -41,7 +47,7 @@ import {
 	selectCarriedAnswers,
 } from '@freedi/shared-types';
 import { AgoraProposal } from '../../lib/proposals';
-import { setVotingSettings } from '../../lib/teacher';
+import { setSessionTheme, setVotingSettings } from '../../lib/teacher';
 import { getVotingState, listenToVoting, stopVotingListeners } from '../../lib/voting';
 import {
 	endRound,
@@ -167,6 +173,14 @@ function classProgressCard(
 	]);
 }
 
+/** The ballot select's plain values → the shared enum; anything unknown is the default */
+function votingCutoffFromSelectValue(value: string): CutoffBy {
+	if (value === 'threshold') return CutoffBy.aboveThreshold;
+	if (value === 'all') return CutoffBy.all;
+
+	return CutoffBy.topOptions;
+}
+
 /**
  * How the vote will run, set while the class is still deliberating.
  *
@@ -184,7 +198,9 @@ function votingSettingsCard(
 ): m.Children {
 	const selection = settings?.selection;
 	const enabled = planOwnsVoting || settings?.enabled !== false;
-	const byThreshold = selection?.cutoffBy === CutoffBy.aboveThreshold;
+	const cutoffBy = selection?.cutoffBy ?? CutoffBy.topOptions;
+	const byThreshold = cutoffBy === CutoffBy.aboveThreshold;
+	const byAll = cutoffBy === CutoffBy.all;
 	const topX = selection?.numberOfResults ?? AGORA_VOTING.DEFAULT_TOP_X;
 	const cutoff = selection?.cutoffNumber ?? AGORA_VOTING.DEFAULT_CUTOFF_CP;
 	const winThreshold = settings?.winningConsensusThreshold;
@@ -199,7 +215,7 @@ function votingSettingsCard(
 		...(planOwnsVoting ? {} : { enabled }),
 		selection: {
 			resultsBy: ResultsBy.consensus,
-			cutoffBy: byThreshold ? CutoffBy.aboveThreshold : CutoffBy.topOptions,
+			cutoffBy,
 			numberOfResults: topX,
 			cutoffNumber: cutoff,
 		},
@@ -235,64 +251,70 @@ function votingSettingsCard(
 									patch({
 										selection: {
 											resultsBy: ResultsBy.consensus,
-											cutoffBy:
-												(event.target as HTMLSelectElement).value === 'threshold'
-													? CutoffBy.aboveThreshold
-													: CutoffBy.topOptions,
+											cutoffBy: votingCutoffFromSelectValue(
+												(event.target as HTMLSelectElement).value,
+											),
 											numberOfResults: topX,
 											cutoffNumber: cutoff,
 										},
 									}),
 							},
 							[
-								m('option', { value: 'top', selected: !byThreshold }, t('teacher.voting_mode_top')),
+								m(
+									'option',
+									{ value: 'top', selected: !byThreshold && !byAll },
+									t('teacher.voting_mode_top'),
+								),
 								m(
 									'option',
 									{ value: 'threshold', selected: byThreshold },
 									t('teacher.voting_mode_threshold'),
 								),
+								m('option', { value: 'all', selected: byAll }, t('teacher.voting_mode_all')),
 							],
 						),
 					]),
 
-					byThreshold
-						? m('label.voting-settings__row', [
-								m('span', t('teacher.voting_threshold')),
-								m('input[type=number]', {
-									value: cutoff,
-									step: '0.05',
-									min: '-1',
-									max: '1',
-									disabled: saving,
-									onchange: (event: Event) =>
-										patch({
-											selection: {
-												resultsBy: ResultsBy.consensus,
-												cutoffBy: CutoffBy.aboveThreshold,
-												numberOfResults: topX,
-												cutoffNumber: Number((event.target as HTMLInputElement).value),
-											},
-										}),
-								}),
-							])
-						: m('label.voting-settings__row', [
-								m('span', t('teacher.voting_top_x')),
-								m('input[type=number]', {
-									value: topX,
-									min: String(AGORA_VOTING.MIN_TOP_X),
-									max: String(AGORA_VOTING.MAX_TOP_X),
-									disabled: saving,
-									onchange: (event: Event) =>
-										patch({
-											selection: {
-												resultsBy: ResultsBy.consensus,
-												cutoffBy: CutoffBy.topOptions,
-												numberOfResults: Number((event.target as HTMLInputElement).value),
-												cutoffNumber: cutoff,
-											},
-										}),
-								}),
-							]),
+					byAll
+						? null
+						: byThreshold
+							? m('label.voting-settings__row', [
+									m('span', t('teacher.voting_threshold')),
+									m('input[type=number]', {
+										value: cutoff,
+										step: '0.05',
+										min: '-1',
+										max: '1',
+										disabled: saving,
+										onchange: (event: Event) =>
+											patch({
+												selection: {
+													resultsBy: ResultsBy.consensus,
+													cutoffBy: CutoffBy.aboveThreshold,
+													numberOfResults: topX,
+													cutoffNumber: Number((event.target as HTMLInputElement).value),
+												},
+											}),
+									}),
+								])
+							: m('label.voting-settings__row', [
+									m('span', t('teacher.voting_top_x')),
+									m('input[type=number]', {
+										value: topX,
+										min: String(AGORA_VOTING.MIN_TOP_X),
+										max: String(AGORA_VOTING.MAX_TOP_X),
+										disabled: saving,
+										onchange: (event: Event) =>
+											patch({
+												selection: {
+													resultsBy: ResultsBy.consensus,
+													cutoffBy: CutoffBy.topOptions,
+													numberOfResults: Number((event.target as HTMLInputElement).value),
+													cutoffNumber: cutoff,
+												},
+											}),
+									}),
+								]),
 
 					// Blank means "the most-voted proposal wins, full stop"
 					m('label.voting-settings__row', [
@@ -361,7 +383,9 @@ function formatMean(mean: number): string {
 /**
  * The live answers of the question the room is on, ranked by net agreement,
  * with the ones that would travel forward marked — the same arithmetic the
- * server closes the stage with.
+ * server closes the stage with — over the C_p banding of those same carried
+ * answers, so the teacher can see what the room is actually behind before
+ * deciding to move on.
  */
 function questionPanel(
 	session: AgoraSession,
@@ -375,12 +399,19 @@ function questionPanel(
 	);
 	const outcome = session.stageState?.[item.itemId]?.outcome;
 
+	const carriedRows = ranked.filter((row) => carried.has(row.statementId));
+
 	return m('.card.stack.teacher-answers', [
 		m('.class-progress__head', [
 			m('p.teacher__section-title', t('teacher.answers_title')),
 			m('span.class-progress__count', String(ranked.length)),
 		]),
 		outcome?.summary ? m('p.question__summary', outcome.summary) : null,
+		// What the room is behind, banded by C_p — live while the question is
+		// open (the bands, no prose), and the AI's record once it closes.
+		carriedRows.length > 0
+			? m(CpBands, { answers: outcome?.selected ?? carriedRows, bands: outcome?.bands })
+			: null,
 		ranked.length === 0
 			? m('p.home-explanation', t('question.waiting_for_answers'))
 			: m(
@@ -395,6 +426,9 @@ function questionPanel(
 							[
 								m('.teacher-answers__head', [
 									row.anonName ? m('span.question__who', row.anonName) : null,
+									row.raters > 0
+										? m(`span.${bandClassOf(row).split(' ').join('.')}`, bandLabelOf(row))
+										: null,
 									m(
 										'span.question__agreement',
 										row.raters > 0
@@ -675,6 +709,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let advanceFailed = false;
 	let savingSettings = false;
 	let challenging = false;
+	let savingLook = false;
 	let userId = '';
 	let editingPlan: AgoraStagePlanItem[] | null = null;
 	let savingPlan = false;
@@ -689,6 +724,19 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			})
 			.finally(() => {
 				savingSettings = false;
+				m.redraw();
+			});
+	}
+
+	function saveLook(choice: AgoraThemeChoice): void {
+		if (savingLook) return;
+		savingLook = true;
+		setSessionTheme(sessionId, choice)
+			.catch((error: unknown) => {
+				console.error('[Teacher] Saving the class look failed:', error);
+			})
+			.finally(() => {
+				savingLook = false;
 				m.redraw();
 			});
 	}
@@ -1022,6 +1070,24 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									m('span.values__score', `${t('teacher.proposals_count')}: ${proposals.length}`),
 								]),
 								triggerLine(current, next?.stage === AgoraStage.voting),
+							])
+						: null,
+
+					// The room's look: the two presets and whatever the class has
+					// built so far. Every phone that has not chosen its own follows
+					// this; the teacher can also crown a student's creation as the
+					// class look. A civic square wears Odyssey's and is not asked.
+					session.sessionMode !== AgoraSessionMode.civic
+						? m('.card.stack.teacher-look', [
+								m('p.teacher__section-title', t('teacher.look_title')),
+								m('p.teacher-look__hint', t('teacher.look_hint')),
+								m(LookPicker, {
+									current: resolveAgoraTheme(session, null),
+									classLooks: classLooks(participants, undefined),
+									onWear: (choice) => {
+										if (choice) saveLook(choice);
+									},
+								}),
 							])
 						: null,
 

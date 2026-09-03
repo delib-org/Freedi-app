@@ -267,6 +267,13 @@ describe('selectCarriedAnswers', () => {
 		).toEqual(['b', 'd', 'a', 'c']);
 	});
 
+	it('carries every answer, ranked, when the cutoff is all', () => {
+		expect(
+			selectCarriedAnswers(rows, { cutoffBy: CutoffBy.all, numberOfResults: 1, cutoffNumber: 0.95 })
+				.map((row) => row.statementId),
+		).toEqual(['b', 'd', 'a', 'c']);
+	});
+
 	it('never carries an unrated answer over a threshold', () => {
 		expect(
 			selectCarriedAnswers(rows, { cutoffBy: CutoffBy.aboveThreshold, numberOfResults: 3, cutoffNumber: 0 })

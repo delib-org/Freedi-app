@@ -79,6 +79,38 @@ service cloud.firestore {
     // Sessions: created via callable only. The teacher may update live-control
     // fields directly; everyone in the class reads the session doc (it is the
     // single source of truth for stage/round state).
+    // === Agora looks (see shared-types agoraTheme.ts) ===
+    // A seed is one `#rrggbb`; a custom look is four seeds, a short name and
+    // its maker; a choice is a preset name, plus the look when it is custom.
+    // Null is a cleared field and is fine everywhere.
+    function agoraHexColour(value) {
+      return value is string && value.matches('^#[0-9a-fA-F]{6}$');
+    }
+    function agoraThemeSeedsValid(seeds) {
+      return seeds is map &&
+             seeds.keys().hasOnly(['page', 'mine', 'peer', 'go']) &&
+             seeds.keys().hasAll(['page', 'mine', 'peer', 'go']) &&
+             agoraHexColour(seeds.page) && agoraHexColour(seeds.mine) &&
+             agoraHexColour(seeds.peer) && agoraHexColour(seeds.go);
+    }
+    function agoraCustomThemeValid(look) {
+      return look == null ||
+             (look is map &&
+              look.keys().hasOnly(['name', 'authorId', 'seeds', 'font', 'createdAt']) &&
+              look.name is string && look.name.size() >= 1 && look.name.size() <= 24 &&
+              look.authorId is string && look.createdAt is number &&
+              (!('font' in look) || (look.font is string && look.font.size() <= 40)) &&
+              agoraThemeSeedsValid(look.seeds));
+    }
+    function agoraThemeChoiceValid(choice) {
+      return choice == null ||
+             (choice is map &&
+              choice.keys().hasOnly(['preset', 'custom']) &&
+              (choice.preset in ['candy', 'purple', 'custom']) &&
+              (choice.preset != 'custom' || 'custom' in choice) &&
+              agoraCustomThemeValid(choice.get('custom', null)));
+    }
+
     match /agoraSessions/{sessionId} {
       allow read: if isAuthenticated();
       allow create, delete: if false;
@@ -126,6 +158,11 @@ service cloud.firestore {
                          resource.data.get('stageState', {}) &&
                        request.resource.data.get('identity', '') ==
                          resource.data.get('identity', '') &&
+                       // The room's look is the teacher's to set, live. The
+                       // shape is pinned here because every client parses the
+                       // session doc with a strict schema: one malformed write
+                       // would brick every open tab in the room.
+                       agoraThemeChoiceValid(request.resource.data.get('theme', null)) &&
                        request.resource.data.get('agreement', {}) ==
                          resource.data.get('agreement', {}) &&
                        request.resource.data.get('roundNumber', -1) ==
@@ -195,7 +232,11 @@ service cloud.firestore {
                        // agoraJoinSession. A client that could edit it would be
                        // crediting someone else's career with this game's points.
                        request.resource.data.get('memberId', '') ==
-                         resource.data.get('memberId', '');
+                         resource.data.get('memberId', '') &&
+                       // The look they wear and the look they built. Bounded
+                       // so a client cannot park a novel in a colour name.
+                       agoraThemeChoiceValid(request.resource.data.get('theme', null)) &&
+                       agoraCustomThemeValid(request.resource.data.get('builtTheme', null));
     }
 
     // Proposal scores (bridging/plausibility): server-computed only.

@@ -1,0 +1,394 @@
+// ============================================================================
+// Looks — the style sheet, the picker cards, the builder and its preview
+//
+// A look is shown as its four seeds in a row of discs; the discs ARE the
+// preview. The one place colour is set inline in this app is here: a disc
+// painted with a seed value is data, not styling, the same way a meter's
+// width is. Everything around the discs is tokens.
+// ============================================================================
+
+// --- The four discs ---
+.look-dots {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+
+	&__dot {
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		border: 1.5px solid rgba(0, 0, 0, 0.12);
+		box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+	}
+
+	// The paper is nearly white, so its disc is all edge
+	&__dot--page {
+		border-color: rgba(0, 0, 0, 0.22);
+	}
+}
+
+// --- The style button in the stage nav ---
+.stage-nav__look {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	flex-shrink: 0;
+	padding: var(--space-xs) var(--space-sm);
+	border: 1.5px solid var(--border-subtle);
+	border-radius: 999px;
+	background: var(--surface-raised);
+	color: var(--text-secondary);
+	font: inherit;
+	font-size: var(--font-size-xs);
+	cursor: pointer;
+
+	&:hover {
+		border-color: var(--border-lantern);
+		color: var(--text-primary);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+}
+
+// --- The sheet ---
+.look-sheet {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal);
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	padding: var(--space-md);
+	background: var(--bg-overlay);
+
+	@media (min-width: 640px) {
+		align-items: center;
+	}
+
+	&__panel {
+		width: min(100%, 520px);
+		max-height: 92dvh;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		padding: var(--space-lg);
+		border-radius: var(--radius-lg);
+		background: var(--surface-raised);
+		box-shadow: var(--shadow-raised);
+	}
+
+	&__head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__title {
+		font-size: var(--font-size-xl);
+	}
+
+	&__hint {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+}
+
+// --- The picker ---
+.look-picker {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__following {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	&__grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+		gap: var(--space-sm);
+	}
+}
+
+.look-card {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-xs);
+	min-height: 84px;
+	padding: var(--space-sm) var(--space-md);
+	border: 2px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--surface-raised);
+	color: var(--text-primary);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	transition:
+		border-color var(--motion-fast) ease,
+		box-shadow var(--motion-fast) ease,
+		transform var(--motion-fast) var(--ease-spring);
+
+	&:hover {
+		border-color: var(--border-lantern);
+		transform: translateY(-1px);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+
+	// The one I am wearing: the ring is MINE's colour, the way an active tab is
+	&--on {
+		border-color: var(--mine);
+		box-shadow:
+			0 0 0 2px var(--mine),
+			var(--glow-lantern);
+	}
+
+	&--build {
+		justify-content: center;
+		align-items: center;
+		border-style: dashed;
+		color: var(--text-secondary);
+	}
+
+	&__name {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-sm);
+		line-height: 1.2;
+	}
+
+	&__by {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	&__plus {
+		font-size: var(--font-size-2xl);
+		line-height: 1;
+		color: var(--mine);
+	}
+}
+
+// --- The builder ---
+.look-builder {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	&__field {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__label {
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	&__seed {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__swatches {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__actions {
+		display: flex;
+		gap: var(--space-sm);
+		flex-wrap: wrap;
+
+		.btn {
+			flex: 1;
+		}
+	}
+}
+
+.look-swatch {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	border: 2px solid rgba(0, 0, 0, 0.12);
+	box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.14);
+	cursor: pointer;
+	transition: transform var(--motion-fast) var(--ease-spring);
+
+	&:hover {
+		transform: scale(1.08);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+
+	&--on {
+		border-color: var(--ink);
+		box-shadow:
+			inset 0 -3px 0 rgba(0, 0, 0, 0.14),
+			0 0 0 2px var(--surface-raised),
+			0 0 0 4px var(--ink);
+	}
+}
+
+// A face, shown in itself: the sample word set in the face, its name under it
+.look-builder__fonts {
+	display: flex;
+	gap: var(--space-sm);
+	overflow-x: auto;
+	padding-block: var(--space-xs);
+	scrollbar-width: none;
+}
+
+.look-font {
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	min-inline-size: 96px;
+	padding: var(--space-sm) var(--space-md);
+	border: 2px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--surface-raised);
+	color: var(--text-primary);
+	cursor: pointer;
+	transition:
+		border-color var(--motion-fast) ease,
+		box-shadow var(--motion-fast) ease;
+
+	&:hover {
+		border-color: var(--border-lantern);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+
+	&--on {
+		border-color: var(--mine);
+		box-shadow: 0 0 0 2px var(--mine);
+	}
+
+	// Inherits the chip's font-family — that is the whole point of the chip
+	&__sample {
+		font-size: var(--font-size-xl);
+		line-height: 1.1;
+	}
+
+	// The name is always in the app's own face, so it can be read
+	&__name {
+		font-family: var(--font-body);
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		white-space: nowrap;
+	}
+}
+
+// The preview paints itself from the seeds set on its own root — the same
+// derivations the custom block uses on the page, in miniature. Dark ink here
+// is the candy ink, because every paper swatch is light.
+.look-preview {
+	--preview-ink: #3b1f47;
+
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	border-radius: var(--radius-lg);
+	background: var(--seed-page);
+	border: 1px solid color-mix(in srgb, var(--seed-mine) 20%, transparent);
+	box-shadow: 0 4px 0 color-mix(in srgb, var(--seed-mine) 14%, white);
+
+	&__bubble {
+		align-self: flex-start;
+		max-width: 80%;
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-md);
+		font-family: var(--font-body);
+		font-weight: 700;
+		font-size: var(--font-size-sm);
+		line-height: 1.4;
+	}
+
+	// The mine bubble is set in the display face, so a chosen font shows here too
+	&__bubble--mine {
+		align-self: flex-end;
+		font-family: var(--font-display);
+		background: var(--seed-mine);
+		color: #ffffff;
+		box-shadow: 0 3px 0 color-mix(in srgb, var(--seed-mine) 70%, black);
+	}
+
+	&__bubble--peer {
+		background: #ffffff;
+		color: var(--preview-ink);
+		border: 2px solid var(--seed-peer);
+	}
+
+	&__row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__meter {
+		flex: 1;
+		height: 12px;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--seed-go) 22%, white);
+		overflow: hidden;
+
+		span {
+			display: block;
+			width: 66%;
+			height: 100%;
+			border-radius: inherit;
+			background: var(--seed-go);
+		}
+	}
+
+	&__go {
+		padding: 0.3em 0.9em;
+		border-radius: 999px;
+		background: var(--seed-go);
+		color: color-mix(in srgb, var(--seed-go) 25%, black);
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-xs);
+	}
+}
+
+// --- The lobby door and the teacher's card share the picker; only their frames differ ---
+.lobby__look {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	align-items: center;
+	text-align: center;
+}
+
+.teacher-look {
+	&__hint {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+}

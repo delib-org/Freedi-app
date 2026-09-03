@@ -14,6 +14,7 @@ import {
 import { VotingStageSettingsSchema, VotingStateSchema } from '../vote/votingStageSettings';
 import { VotingGameStateSchema } from '../vote/challengeGame';
 import { AgoraSessionFlowSchema } from './sessionFlow';
+import { AgoraThemeChoiceSchema } from './agoraTheme';
 import {
 	AgoraCarriedAnswerSchema,
 	AgoraStagePlanSchema,
@@ -251,6 +252,13 @@ export const AgoraSessionSchema = object({
 	/** Position in the resolved plan. Server-owned; absent on sessions without a plan. */
 	stageIndex: optional(number()),
 	identity: optional(AgoraIdentityModeSchema),
+	/**
+	 * The look the room wears by default — the teacher's pick, at creation or
+	 * live from the console. Teacher-writable (see firestore.rules). Absent
+	 * means AGORA_DEFAULT_THEME; a student's own pick on their participant
+	 * doc outranks it. Never read on civic sessions, which wear Odyssey's.
+	 */
+	theme: optional(nullable(AgoraThemeChoiceSchema)),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),

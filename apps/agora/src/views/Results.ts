@@ -2,6 +2,7 @@ import m from 'mithril';
 import { t, tCount } from '../lib/i18n';
 import { ConvergenceResults } from './ConvergenceResults';
 import { AgreementResults } from './AgreementResults';
+import { InstallOffer } from '../components/InstallOffer';
 import { EraMap } from '../components/EraMap';
 import { VideoScene } from '../components/VideoScene';
 import { formatPoints } from '../components/PointsPill';
@@ -602,6 +603,10 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 								finale: true,
 							})
 						: classHalf,
+
+					// The game's last word: take it home. Offered here and only
+					// here — after the score, never over the square.
+					m(InstallOffer),
 				]),
 			]);
 		},

@@ -44,8 +44,8 @@ console.log('MARKED READY');
 
 // Back at teacher home the new package is listed and selectable
 await page.goto('http://localhost:3009/#!/teach', { waitUntil: 'domcontentloaded' });
-await page.waitForSelector('.teacher__topic-option', { timeout: 10000 });
-const topics = await page.locator('.teacher__topic-option strong').allTextContents();
+await page.waitForSelector('.scenario-row', { timeout: 10000 });
+const topics = await page.locator('.scenario-row__title').allTextContents();
 console.log('TOPIC LIST:', topics);
 await page.screenshot({ path: 'agora-authoring.png', fullPage: true });
 

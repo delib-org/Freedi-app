@@ -3,7 +3,7 @@ import { t } from '../lib/i18n';
 import { ensureUser, signInWithHandoff } from '../lib/user';
 import { joinClass, joinSession } from '../lib/callables';
 import { findSessionByCode } from '../lib/teacher';
-import { ODYSSEY_THEME, rememberSessionTheme } from '../lib/theme';
+import { paintTheme, rememberTheme } from '../lib/theme';
 import {
 	AgoraDeviceMode,
 	AgoraSessionStatus,
@@ -105,8 +105,8 @@ export function JoinSession(
 		// lets the square be the right colour on its first frame.
 		const theme = m.route.param('theme');
 		if (theme === 'odyssey') {
-			rememberSessionTheme(ODYSSEY_THEME);
-			document.documentElement.dataset.sessionTheme = ODYSSEY_THEME;
+			paintTheme({ kind: 'civic' });
+			rememberTheme({ kind: 'civic' });
 		}
 
 		const handoff = m.route.param('handoff');

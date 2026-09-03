@@ -18,6 +18,8 @@ import {
 	AgoraStagePlan,
 	AgoraStagePlanItem,
 	AgoraStagePlanSchema,
+	AgoraThemeChoice,
+	AgoraThemeChoiceSchema,
 	AgoraTopicPackage,
 	AgoraTopicStatus,
 	SourceApp,
@@ -58,6 +60,23 @@ interface Request {
 	/** The ordered stage list. Absent means the legacy order for the flow. */
 	stagePlan?: AgoraStagePlan;
 	identity?: AgoraIdentityMode;
+	/** The look the room wears by default; absent means AGORA_DEFAULT_THEME */
+	theme?: AgoraThemeChoice;
+}
+
+/**
+ * The look is the teacher's to choose and the schema's to shape: the client
+ * parses the session doc strictly, so a malformed theme written here would
+ * brick every tab that later joins the room.
+ */
+function sanitizeTheme(theme: unknown): AgoraThemeChoice | undefined {
+	if (theme === undefined || theme === null) return undefined;
+	const parsed = safeParse(AgoraThemeChoiceSchema, theme);
+	if (!parsed.success) {
+		throw new HttpsError('invalid-argument', 'Invalid theme');
+	}
+
+	return parsed.output;
 }
 
 /** Sanity bounds on the teacher's flow knobs — a 40-round lesson is a typo */
@@ -209,7 +228,9 @@ export const agoraCreateSession = onCall(
 			flow,
 			stagePlan,
 			identity,
+			theme,
 		} = request.data ?? {};
+		const roomTheme = sanitizeTheme(theme);
 		const quickGame = quick !== undefined ? parseQuick(quick) : undefined;
 		if (!quickGame && (!topicPackageId || typeof topicPackageId !== 'string')) {
 			throw new HttpsError('invalid-argument', 'topicPackageId or quick is required');
@@ -372,6 +393,7 @@ export const agoraCreateSession = onCall(
 					? { stagePlan: planWithStatements, stageIndex: 0, stageState: {} }
 					: {}),
 				...(identity ? { identity } : {}),
+				...(roomTheme ? { theme: roomTheme } : {}),
 				stage: AgoraStage.lobby,
 				roundNumber: 0,
 				participantCount: 0,

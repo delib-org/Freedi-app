@@ -2,12 +2,16 @@ import m from 'mithril';
 import { t, getLang } from '../../lib/i18n';
 import { generateTopicPackage } from '../../lib/callables';
 import { LanguagePicker } from '../../components/LanguagePicker';
+import { TeacherBar } from '../../components/TeacherBar';
 
 /** Teacher enters a topic; the AI drafts the full journey for review */
 export function TopicWizard(): m.Component {
 	let topic = '';
 	let generating = false;
 	let error = false;
+	/** A teacher who leaves mid-generation must not be yanked back when the
+	 *  draft lands: the package is still created, and shows up on the shelf. */
+	let alive = true;
 
 	function generate(): void {
 		if (generating || topic.trim().length < 2) return;
@@ -15,7 +19,7 @@ export function TopicWizard(): m.Component {
 		error = false;
 		generateTopicPackage({ topic: topic.trim(), language: getLang() })
 			.then((result) => {
-				m.route.set(`/teach/topic/${result.topicPackageId}`);
+				if (alive) m.route.set(`/teach/topic/${result.topicPackageId}`);
 			})
 			.catch((err: unknown) => {
 				console.error('[Wizard] Generation failed:', err);
@@ -28,14 +32,17 @@ export function TopicWizard(): m.Component {
 	}
 
 	return {
+		onremove() {
+			alive = false;
+		},
 		view() {
 			return m('.shell', [
-				m('.home-header', [
-					m(LanguagePicker),
-					m('button.btn.btn--ghost', { onclick: () => m.route.set('/teach') }, t('common.back')),
-				]),
+				m(TeacherBar, {
+					title: t('wizard.title'),
+					onBack: () => m.route.set('/teach'),
+					trailing: m(LanguagePicker),
+				}),
 				m('.shell__content', { style: { justifyContent: 'center', gap: 'var(--space-xl)' } }, [
-					m('h2.text-center', t('wizard.title')),
 					m('.card.stack', [
 						m('p.home-card__text', t('wizard.topic_label')),
 						m('input.text-input', {

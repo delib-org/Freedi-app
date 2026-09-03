@@ -1389,13 +1389,20 @@
 		background: linear-gradient(to top, var(--danger), var(--gold) 50%, var(--success));
 	}
 
-	// A thumbnail of the bridge zone
-	&__help-zone {
+	// A thumbnail of the goal: posts, crossbar, net, open at the goal line
+	&__help-goal {
 		width: 2.25rem;
 		height: 1.25rem;
-		border-radius: var(--radius-sm);
-		background: color-mix(in srgb, var(--success) 30%, transparent);
-		border: 2px dashed var(--success-deep);
+		border: 3px solid var(--goal-post);
+		border-block-end: 0;
+		border-radius: 3px 3px 0 0;
+		box-shadow:
+			0 0 0 1px var(--success-deep),
+			inset 0 0 0 1px var(--success-deep);
+		background:
+			repeating-linear-gradient(45deg, var(--goal-mesh) 0 1px, transparent 1px 5px),
+			repeating-linear-gradient(-45deg, var(--goal-mesh) 0 1px, transparent 1px 5px),
+			color-mix(in srgb, var(--success) 30%, transparent);
 	}
 
 	// The dot trio that teaches "bigger = more of the class rated it"
@@ -1557,38 +1564,70 @@
 		border-inline-start: 1px dashed var(--border-strong);
 	}
 
-	// The win condition drawn as a place on the field.
+	// The win condition drawn as a place on the field — and the place is a
+	// GOAL. Top centre is where a proposal has the whole class behind it, and
+	// a kid does not need that explained once it has posts, a crossbar and a
+	// net: a point in there has SCORED. The box is the box the dashed zone
+	// used to be (BRIDGE_ZONE in lib/boardGeometry.ts — change one, change
+	// the other): the net fills it, the posts and crossbar are its border,
+	// and the goal line is the open bottom edge, where the sign hangs.
 	//
-	// The zone sits at the height where the field is ALREADY green, so a green
-	// zone on a green ground is the whole problem. Three separators solve it
-	// without inventing a hue: the fill is roughly double the field's own
-	// saturation at that height (a visible step of the same water), the border
-	// is solid-coloured --success at 2px (~4.6:1 against the tint, and a drawn
-	// edge where the wash is weather), and the label is a WHITE chip — reversed
-	// polarity, the highest-contrast object anywhere up there. The border also
-	// survives forced-colors mode, where both washes are deleted outright.
-	&__bridge-zone {
+	// The zone sits at the height where the field is ALREADY green, so the
+	// net's fill is a visible step of the same water rather than a new hue,
+	// the mesh is drawn in --success-deep (the rung that clears 4.6:1 on the
+	// greenest stop — --success itself argues with its own background at
+	// 2.9:1), and the posts are white with a --success-deep keyline so they
+	// hold on the palest stop of the ramp and in forced-colors mode, where
+	// every wash is deleted outright.
+	&__goal {
 		position: absolute;
 		inset-inline-start: 28%;
 		width: 44%;
 		inset-block-end: 62%;
 		inset-block-start: 0;
-		background: color-mix(in srgb, var(--success) 22%, transparent);
-		// --success-deep, not --success: the zone's own fill lands on top of the
-		// greenest part of the field, and a --success line drawn on that is
-		// 2.9:1 — a border that argues with its own background. The deep rung
-		// clears 4.6:1 there and is unmistakably the same green.
-		border: 2px dashed var(--success-deep);
-		border-radius: var(--radius-md);
+		// Posts and crossbar: three sides. The goal line stays open.
+		border: 5px solid var(--goal-post);
+		border-block-end: 0;
+		border-radius: 7px 7px 0 0;
+		box-shadow:
+			0 0 0 1.5px var(--success-deep),
+			inset 0 0 0 1.5px var(--success-deep);
 		pointer-events: none;
 	}
 
-	// Straddling the zone's LOWER edge, not sitting inside its top: the top of
-	// the zone is where the best-scoring proposal lands, and a label parked
-	// there covers the one point the whole map is about. On the threshold it
-	// reads as the sign over the gate — and the points it might still meet are
-	// the ones on their way in.
-	&__bridge-chip {
+	// Two diagonal hairline grids crossing into diamonds — a net, not a
+	// pattern — over a fill one step deeper than the field beneath it
+	&__goal-net {
+		position: absolute;
+		inset: 0;
+		background:
+			repeating-linear-gradient(45deg, var(--goal-mesh) 0 1px, transparent 1px 9px),
+			repeating-linear-gradient(-45deg, var(--goal-mesh) 0 1px, transparent 1px 9px),
+			color-mix(in srgb, var(--success) 22%, transparent);
+		transform-origin: 50% 0;
+	}
+
+	// Something is in the net: it billows once, the way a net does
+	&__goal--scored &__goal-net {
+		animation: board-net-bulge 900ms ease-out both;
+	}
+
+	// The threshold itself, dashed like the zone's old edge — it is the one
+	// line on the field a point can still be on its way across
+	&__goal-line {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: 0;
+		height: 0;
+		border-block-start: 2px dashed var(--success-deep);
+	}
+
+	// Straddling the goal LINE, not sitting under the crossbar: the top of the
+	// goal is where the best-scoring proposal lands, and a label parked there
+	// covers the one point the whole map is about. On the threshold it reads
+	// as the sign over the gate — and the points it might still meet are the
+	// ones on their way in.
+	&__goal-chip {
 		position: absolute;
 		inset-inline: 0;
 		inset-block-end: 0;
@@ -1597,13 +1636,16 @@
 		transform: translateY(50%);
 	}
 
-	&__bridge-label {
+	// A WHITE chip in every look — reversed polarity, the highest-contrast
+	// object anywhere up there. --goal-post rather than --bg-card-solid on
+	// purpose: the civic card is navy, and green ink on navy is not a sign.
+	&__goal-label {
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
 		padding: 2px var(--space-sm);
 		border-radius: var(--radius-full);
-		background: var(--bg-card-solid);
+		background: var(--goal-post);
 		border: 1px solid var(--success-deep);
 		box-shadow: var(--shadow-card);
 		font-family: var(--font-display);
@@ -1673,6 +1715,12 @@
 		&--dimmed {
 			opacity: 0.45;
 		}
+
+		// In the net. Nothing on the point itself moves — its transform is its
+		// position — so the arrival is played by the ball it wears.
+		&--scored {
+			z-index: 2;
+		}
 	}
 
 	&__point-rank {
@@ -1686,6 +1734,25 @@
 		inset-block-end: 100%;
 		font-size: var(--font-size-base);
 		line-height: 1;
+	}
+
+	// The ball a scored point wears, at its foot: a white disc with the seams
+	// inked dark in every look, ringed in the goal's own green so it stays an
+	// object on a candy-coloured point as much as on a white one
+	&__point-ball {
+		position: absolute;
+		inset-block-end: -7px;
+		inset-inline-end: -7px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 19px;
+		height: 19px;
+		border-radius: 50%;
+		background: var(--goal-post);
+		color: var(--goal-ball-ink);
+		box-shadow: 0 0 0 1.5px var(--success-deep);
+		animation: board-ball-pop var(--motion-slow) var(--ease-spring) both;
 	}
 
 	// --- the callout the sketch asks for ----------------------------------------------
@@ -2210,9 +2277,39 @@
 	.board__eyebrow,
 	.board__you,
 	.board__detail-sub,
-	.board__bridge-label,
+	.board__goal-label,
 	.helpers-board__col {
 		letter-spacing: normal;
+	}
+}
+
+// The net gives, then settles. scaleY from the crossbar down: a net bulges
+// away from the frame it hangs from.
+@keyframes board-net-bulge {
+	0% {
+		transform: scaleY(1);
+	}
+
+	30% {
+		transform: scaleY(1.08);
+	}
+
+	65% {
+		transform: scaleY(0.97);
+	}
+
+	100% {
+		transform: scaleY(1);
+	}
+}
+
+@keyframes board-ball-pop {
+	from {
+		transform: scale(0);
+	}
+
+	to {
+		transform: scale(1);
 	}
 }
 
@@ -2255,7 +2352,9 @@
 	.board__callout,
 	.board__detail,
 	.board__help-pop,
-	.board-detail {
+	.board-detail,
+	.board__goal--scored .board__goal-net,
+	.board__point-ball {
 		animation: none;
 	}
 }

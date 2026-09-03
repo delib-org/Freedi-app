@@ -1,17 +1,23 @@
 // The stage plan: the student's stage navigator, the question stage, the
-// carried context card, the agreement results, the teacher's plan rail and
-// the plan editor. Imported by components.scss; do not import directly.
+// C_p bands a question leaves behind, the carried context card, the
+// agreement results, the teacher's plan rail and the plan editor.
+// Imported by components.scss; do not import directly.
 
 // --- Stage navigator: the journey as doors ---
 .stage-nav {
 	position: sticky;
 	inset-block-start: 0;
 	z-index: var(--z-header);
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
 	padding: var(--space-xs) var(--space-md);
 	background: var(--bg-card-solid);
 	border-block-end: 1px solid var(--border-subtle);
 
 	&__row {
+		flex: 1 1 auto;
+		min-inline-size: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -228,6 +234,150 @@
 	}
 }
 
+// --- C_p bands: what the room is behind, by how firmly it holds it ---
+.cp-bands {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__explain {
+		@include type-meta;
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	// The brief: the same bands with the figures, the counts, the explainer
+	// and the raw answers left out (see CpBands.ts). What is left is a face, a
+	// label and the one sentence that says where the room stands — so the card
+	// can sit on the writing desk without burying the pen.
+	&--brief .cp-band {
+		padding: var(--space-xs) var(--space-sm);
+	}
+}
+
+.cp-band {
+	padding: var(--space-sm) var(--space-md);
+	border-radius: var(--radius-tile);
+	background: var(--bg-inset);
+	// The stripe carries the band's colour; the label carries its ink. The
+	// two are separate because the fill hues (--success, --warning) are not
+	// readable as text on the inset — see the token file's own warnings.
+	border-inline-start: 3px solid var(--band-edge, var(--text-secondary));
+
+	&--strong {
+		--band-edge: var(--success);
+		--band-ink: var(--success-ink);
+	}
+
+	&--emerging {
+		--band-edge: var(--mine);
+		--band-ink: var(--mine-ink);
+	}
+
+	&--contested {
+		--band-edge: var(--warning);
+		--band-ink: var(--text-primary);
+	}
+
+	&--unrated {
+		--band-edge: var(--border-subtle);
+		--band-ink: var(--text-secondary);
+	}
+
+	&__head {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: var(--space-xs) var(--space-sm);
+	}
+
+	// The face reads first and from across a room, so it is set above the
+	// label it introduces. Emoji paint their own colours — no ink token here,
+	// and nothing for the contrast gauntlet to measure.
+	&__face {
+		font-size: 1.25rem;
+		line-height: 1;
+	}
+
+	&__label {
+		font-weight: 700;
+		color: var(--band-ink, var(--text-primary));
+	}
+
+	&__score,
+	&__count,
+	&__meta {
+		@include type-meta;
+		color: var(--text-secondary);
+	}
+
+	&__count {
+		margin-inline-start: auto;
+	}
+
+	&__text {
+		margin: var(--space-xs) 0 0;
+		white-space: pre-wrap;
+	}
+
+	&__answers {
+		margin: var(--space-sm) 0 0;
+		padding-inline-start: 1.2em;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__answer {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-xs);
+	}
+
+	&__answer-text {
+		@include proposal-voice;
+	}
+
+	&__who {
+		@include type-meta;
+		font-weight: 700;
+		color: var(--peer-ink, var(--text-secondary));
+	}
+}
+
+// The band an answer sits in, as a chip on the answer's own card. Same split
+// as the band card: the ring may wear the fill hue, the label may not.
+.cp-chip {
+	@include type-meta;
+	padding: 1px var(--space-sm);
+	border-radius: 999px;
+	font-weight: 700;
+	white-space: nowrap;
+	color: var(--band-ink, var(--text-primary));
+	border: 1px solid var(--band-edge, var(--border-subtle));
+
+	&--strong {
+		--band-edge: var(--success);
+		--band-ink: var(--success-ink);
+	}
+
+	&--emerging {
+		--band-edge: var(--mine);
+		--band-ink: var(--mine-ink);
+	}
+
+	&--contested {
+		--band-edge: var(--warning);
+		--band-ink: var(--text-primary);
+	}
+
+	&--unrated {
+		--band-edge: var(--border-subtle);
+		--band-ink: var(--text-secondary);
+	}
+}
+
 // --- Carried context: what the room said before ---
 .carried {
 	border: 1.5px solid var(--border-subtle);
@@ -258,9 +408,32 @@
 		font-weight: 700;
 	}
 
+	// The same chevron chip as the proposal dock and the accepted-ideas
+	// drawer — students have already learned this affordance twice. Drawn
+	// with borders rather than a glyph, so it stays RTL-safe: it rotates
+	// about the vertical, which reads the same in both directions.
 	&__fold {
-		@include type-meta;
-		color: var(--text-secondary);
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 24px;
+		height: 24px;
+		border-radius: var(--radius-full);
+		border: 1px solid var(--border-subtle);
+		transition: transform var(--motion-base) var(--ease-camera);
+
+		&::before {
+			content: '';
+			width: 7px;
+			height: 7px;
+			border-right: 2px solid var(--text-secondary);
+			border-bottom: 2px solid var(--text-secondary);
+			transform: translateY(-2px) rotate(45deg);
+		}
+	}
+
+	&--open &__fold {
+		transform: rotate(180deg);
 	}
 
 	&__list {
@@ -585,6 +758,16 @@
 		border: 1.5px solid var(--border-subtle);
 		border-radius: var(--radius-tile);
 		background: var(--bg-card-solid);
+		// A moved row slides to its new place (FLIP in StagePlanEditor); the displaced neighbour glides
+		transition: transform var(--motion-base) var(--ease-camera);
+
+		// The row the teacher moved springs, and glows for a beat so the eye lands on it
+		&--moved {
+			transition: transform var(--motion-base) var(--ease-spring);
+			animation: plan-editor-settle var(--motion-slow) ease-out both;
+			position: relative;
+			z-index: 1;
+		}
 
 		&--frozen {
 			background: var(--bg-inset);
@@ -632,6 +815,25 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+
+		// The title is the door to its own text field — a bare button that reads as a label
+		&--editable {
+			padding: 0;
+			border: 0;
+			background: none;
+			font: inherit;
+			font-size: var(--font-size-sm);
+			text-align: start;
+			cursor: text;
+			text-decoration: underline dotted;
+			text-underline-offset: 3px;
+
+			&:hover,
+			&:focus-visible {
+				color: var(--text-primary);
+				text-decoration-style: solid;
+			}
+		}
 	}
 
 	&__actions {
@@ -710,5 +912,23 @@
 	&__errors {
 		margin: 0;
 		padding-inline-start: 1.2em;
+	}
+}
+
+@keyframes plan-editor-settle {
+	from {
+		box-shadow: 0 0 0 3px var(--mine-soft, rgba(29, 85, 171, 0.25));
+	}
+
+	to {
+		box-shadow: 0 0 0 0 transparent;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.plan-editor__item,
+	.plan-editor__item--moved {
+		transition: none;
+		animation: none;
 	}
 }

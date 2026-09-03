@@ -3,7 +3,9 @@ import { t } from '../lib/i18n';
 import { Icon } from '../components/Icon';
 import { RateScale } from '../components/RateScale';
 import { CarriedContext } from '../components/CarriedContext';
+import { CpBands, bandClassOf, bandLabelOf } from '../components/CpBands';
 import { stalledBanner } from '../components/StalledBanner';
+import { proposalHue } from '../lib/looks';
 import {
 	getDeliberationState,
 	listenToDeliberation,
@@ -44,6 +46,7 @@ function toRow(answer: AgoraProposal, named: boolean): AgoraCarriedAnswer {
 		statementId: answer.statementId,
 		statement: answer.statement,
 		mean: raters > 0 ? (answer.evaluation?.averageEvaluation ?? 0) : 0,
+		...(raters > 0 && typeof answer.consensus === 'number' ? { consensus: answer.consensus } : {}),
 		raters,
 		...(named && answer.anonName ? { anonName: answer.anonName } : {}),
 	};
@@ -136,22 +139,7 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 								m('p.teacher__section-title', t('question.outcome_title')),
 								outcome.summary ? m('p.question__summary', outcome.summary) : null,
 								outcome.selected.length > 0
-									? m(
-											'ol.question__selected',
-											outcome.selected.map((answer) =>
-												m('li.question__selected-item', { key: answer.statementId }, [
-													answer.anonName ? m('span.question__who', answer.anonName) : null,
-													m('span.question__selected-text', answer.statement),
-													m(
-														'span.question__agreement',
-														t('question.net_agreement', {
-															value: formatMean(answer.mean),
-															n: answer.raters,
-														}),
-													),
-												]),
-											),
-										)
+									? m(CpBands, { answers: outcome.selected, bands: outcome.bands })
 									: m('p.home-explanation', t('question.no_answers')),
 							])
 						: null,
@@ -177,6 +165,9 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 									m(
 										'button.btn.btn--primary.btn--full',
 										{
+											// "Sent" is a state, not a refusal: the candy look paints
+											// it lime rather than greyed-out
+											class: mine !== undefined && !changed && !saving ? 'btn--done' : undefined,
 											disabled: saving || !draft.trim() || (mine !== undefined && !changed),
 											onclick: () => void submit(),
 										},
@@ -208,33 +199,44 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 											const row = toRow(answer, named);
 											const showNumbers = closed || myRating !== undefined;
 
-											return m('.card.question__answer', { key: answer.statementId }, [
-												m('.question__answer-head', [
-													named && answer.anonName
-														? m('span.question__who', answer.anonName)
-														: m(
-																'span.question__number',
-																t('question.answer_number', { n: index + 1 }),
-															),
-													showNumbers && row.raters > 0
-														? m(
-																'span.question__agreement',
-																t('question.net_agreement', {
-																	value: formatMean(row.mean),
-																	n: row.raters,
-																}),
-															)
-														: null,
-												]),
-												m('p.question__answer-text', answer.statement),
-												closed || !mine
-													? null
-													: m(RateScale, {
-															session,
-															proposalId: answer.statementId,
-															parentId: item.statementId,
-														}),
-											]);
+											return m(
+												'.card.question__answer',
+												// Its own colour in the candy look, by number — see lib/looks.ts
+												{ key: answer.statementId, 'data-hue': String(proposalHue(index + 1)) },
+												[
+													m('.question__answer-head', [
+														named && answer.anonName
+															? m('span.question__who', answer.anonName)
+															: m(
+																	'span.question__number',
+																	t('question.answer_number', { n: index + 1 }),
+																),
+														showNumbers && row.raters > 0
+															? [
+																	m(
+																		`span.${bandClassOf(row).split(' ').join('.')}`,
+																		bandLabelOf(row),
+																	),
+																	m(
+																		'span.question__agreement',
+																		t('question.net_agreement', {
+																			value: formatMean(row.mean),
+																			n: row.raters,
+																		}),
+																	),
+																]
+															: null,
+													]),
+													m('p.question__answer-text', answer.statement),
+													closed || !mine
+														? null
+														: m(RateScale, {
+																session,
+																proposalId: answer.statementId,
+																parentId: item.statementId,
+															}),
+												],
+											);
 										}),
 									),
 					]),

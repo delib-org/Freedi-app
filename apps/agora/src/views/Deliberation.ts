@@ -27,6 +27,7 @@ import {
 } from '../lib/squareOrder';
 import { browserSubPageDeps, createSubPage } from '../lib/subPage';
 import { sessionDraft } from '../lib/draftStore';
+import { proposalHue } from '../lib/looks';
 import { subscribeNotificationDetectors } from '../lib/notifications';
 
 /** Which conversation the student is standing in, when they are in one. */
@@ -76,7 +77,7 @@ import {
 	supportSinceEdit,
 	type SupportSinceEdit,
 } from '../lib/improvementSignals';
-import { NeedsPeek } from '../components/NeedsBoard';
+import { NeedsBoard, NeedsPeek, peekFaces } from '../components/NeedsBoard';
 import { CarriedContext } from '../components/CarriedContext';
 import { getCurrentPlanIndex } from '../lib/session';
 import {
@@ -284,6 +285,14 @@ function workbenchSection(
 	opts?: {
 		count?: number;
 		variant?: 'edit' | 'plain';
+		/**
+		 * Which tool this drawer is — the candy look paints each one its own
+		 * colour, so the sheet reads as three different drawers and not three
+		 * copies of one
+		 */
+		tone?: 'ideas' | 'characters' | 'needs';
+		/** Something drawn in place of the icon chip: the two sides' portraits */
+		faces?: m.Children;
 		/** Pass a toggle to make the head an accordion handle */
 		open?: boolean;
 		onToggle?: () => void;
@@ -296,7 +305,9 @@ function workbenchSection(
 	const head: m.Children = [
 		// The drawn icon, not the icon's NAME: this chip printed the literal
 		// string "idea" from the day the emoji set became a component
-		m('span.workbench__icon', { 'aria-hidden': 'true' }, m(Icon, { name: icon, size: 20 })),
+		opts?.faces
+			? m('span.workbench__icon.workbench__icon--faces', { 'aria-hidden': 'true' }, opts.faces)
+			: m('span.workbench__icon', { 'aria-hidden': 'true' }, m(Icon, { name: icon, size: 20 })),
 		m('span.workbench__title', title),
 		opts?.count !== undefined && opts.count > 0
 			? m('span.workbench__count', String(opts.count))
@@ -314,6 +325,7 @@ function workbenchSection(
 		{
 			class: [
 				opts?.variant ? `workbench__section--${opts.variant}` : undefined,
+				opts?.tone ? `workbench__section--${opts.tone}` : undefined,
 				collapsible ? 'workbench__section--collapsible' : undefined,
 				collapsible && !open ? 'workbench__section--closed' : undefined,
 			]
@@ -460,7 +472,16 @@ export function Deliberation(
 		gapPrompt = { proposalId, kind: value >= 1 ? 'keep' : 'gap' };
 	}
 
-	/** The invitation's fold-out: insight framing, the both-camps question, a composer */
+	/**
+	 * The invitation's fold-out: one ask, the two rules as chips, a composer.
+	 *
+	 * It used to ask four times — a two-sentence framing, the both-camps
+	 * question, the don't-attack line, and then a placeholder that asked it
+	 * again. A student who has just pressed a face is one tap from writing;
+	 * they are not going to read a paragraph first. So the ask is a single
+	 * line, and the two things that shape a good idea — serve everyone, build
+	 * rather than attack — ride as chips a glance can take in.
+	 */
 	function gapPromptCard(live: AgoraSession, proposal: AgoraProposal): m.Children {
 		if (gapPrompt?.proposalId !== proposal.statementId) return null;
 		const keep = gapPrompt.kind === 'keep';
@@ -473,8 +494,22 @@ export function Deliberation(
 					'p.gap-prompt__insight',
 					iconLabel('idea', t(keep ? 'delib.gap_keep' : 'delib.gap_insight')),
 				),
-				keep ? null : m('p.gap-prompt__question', t('delib.help_question')),
-				keep ? null : m('p.gap-prompt__hint', t('delib.help_dont_attack')),
+				// The rules ride with the ask that needs them. "Keep" asks what
+				// to preserve — there is nothing there to attack, and nothing to
+				// bridge either.
+				keep
+					? null
+					: m('.gap-prompt__rules', [
+							m(
+								'span.gap-prompt__rule',
+								iconLabel(
+									'bridge',
+									t(getSessionFlow().stances ? 'delib.gap_rule_both' : 'delib.gap_rule_open'),
+									14,
+								),
+							),
+							m('span.gap-prompt__rule', iconLabel('improve', t('delib.gap_rule_build'), 14)),
+						]),
 				m('textarea.gap-prompt__textarea', {
 					value: gapDraft,
 					rows: 2,
@@ -556,6 +591,8 @@ export function Deliberation(
 	const reviewBusy: Record<string, boolean> = {};
 	/** The elders' chips: an optional helper, so it starts folded */
 	let charactersOpen = false;
+	/** The needs reminder unfolds by default: improving is writing too (2026-08-10) */
+	let needsOpen = true;
 	/**
 	 * The received-improvements accordion. null = follow the feedback: fresh
 	 * suggestions open it by themselves, and once a student closes it their
@@ -579,10 +616,11 @@ export function Deliberation(
 		chatPage.open({ proposalId, helperUid, role });
 	}
 	/**
-	 * The proposal dock: my workshop is no longer a screen you travel to, it
-	 * is a notebook docked at the bottom of every place. Collapsed it shows a
-	 * one-line peek of my text (or what needs me); tapping lifts the whole
-	 * workshop over the room I'm standing in.
+	 * The proposal dock: a notebook docked at the bottom of every place BUT
+	 * my own — my screen's proposal is already a live field, so a bar that
+	 * lifts a second copy of it over the first is a room too many. Collapsed
+	 * the dock shows a one-line peek of my text (or what needs me); tapping
+	 * lifts the box I type into over the room I'm standing in.
 	 *
 	 * Collapsed-by-default is the point — the workshop used to occupy the
 	 * mine screen whether or not it had anything to say. It never opens by
@@ -737,11 +775,29 @@ export function Deliberation(
 	}
 
 	/**
-	 * The My screen's edit handle: lift the dock and put the cursor straight
-	 * in the box. A tap that says "edit the text" has earned the keyboard —
-	 * the dock's own bar has not, so it still opens without taking focus.
+	 * Am I standing on my own screen? It is the one room whose proposal is
+	 * already a live field, so it carries no dock and every handle that says
+	 * "take me to the pen" lands in that field instead of lifting a sheet
+	 * over the screen the student is reading.
+	 */
+	function onMyScreen(): boolean {
+		return screen !== 'results' && (screen === 'my' || cycle.step === 'mine');
+	}
+
+	/**
+	 * Anything that says "edit the text": on my own screen the paper IS the
+	 * pen, so this only puts the caret in it (and scrolls it into view, since
+	 * the handle may be a character's advice far down the page). Everywhere
+	 * else it lifts the dock and puts the cursor straight in the box — a tap
+	 * that says "edit the text" has earned the keyboard, where the dock's own
+	 * bar has not, so that still opens without taking focus.
 	 */
 	function openEditBox(): void {
+		if (onMyScreen()) {
+			focusOnMy = 'textarea.my-screen__text';
+
+			return;
+		}
 		if (!dockOpen) resetDockScroll = true;
 		dockOpen = true;
 		focusDockTextarea = true;
@@ -1199,21 +1255,12 @@ export function Deliberation(
 	 * The one part of the workshop that travels: the always-editable proposal
 	 * text and its single save action. It rides in the dock, so a student can
 	 * fix a sentence from the square or from a classmate's stall without
-	 * losing the room they are standing in. Everything else that used to share
-	 * this card now lives on the My screen (see myWorkshop).
+	 * losing the room they are standing in. On the My screen the same draft is
+	 * edited in the paper at the head of the page instead (see minePaper);
+	 * everything else that used to share this card lives there too.
 	 */
 	function proposalEditBox(live: AgoraSession, myProposal: AgoraProposal): m.Children {
-		// Seed / re-seed the draft when the proposal changes underneath —
-		// without clobbering what the student is currently typing
-		if (mineDraftBase !== myProposal.statement) {
-			if (mineDraft.trim() === '' || mineDraft === mineDraftBase) {
-				mineDraft = myProposal.statement;
-			}
-			mineDraftBase = myProposal.statement;
-		}
-		const text = mineDraft.trim();
-		const changed =
-			text !== myProposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+		seedMineDraft(myProposal);
 
 		// No header: the dock's own bar already says "my proposal", and a live
 		// textarea is its own invitation to type — the "you can edit anytime"
@@ -1232,51 +1279,169 @@ export function Deliberation(
 						rememberMineDraft();
 					},
 				}),
-				m('.delib__actions', [
-					m(
-						'button.btn.btn--primary.my-lantern__save',
-						{
-							disabled: !changed || submitting,
-							onclick: () => {
-								submitting = true;
-								submitProposal(
-									live,
-									initialVnode.attrs.myParticipant.anonName,
-									text,
-									myProposal.statementId,
-								)
-									.then(() => {
-										// Saved — the mirror has nothing left to protect
-										forgetMineDraft();
-										// The baseline for the direction chip is stamped by the
-										// server on this same save (onAgoraProposalWritten).
-										// QUIET on purpose: the button below flips to "✓ saved",
-										// and whether this save deserved glitter is the server's
-										// call — a credited revision comes back as a
-										// notification and celebrates from there. The old
-										// same-every-save glitter taught that saving is the
-										// achievement and drowned out the real moments.
-									})
-									.catch((error: unknown) => {
-										console.error('[Delib] Update proposal failed:', error);
-									})
-									.finally(() => {
-										submitting = false;
-										m.redraw();
-									});
-							},
-						},
-						// The button states its own condition instead of apologising
-						// in a line underneath. A greyed button with no reason reads
-						// as "broken" (playtests: students tapped it twice and gave
-						// up) — but "✓ saved" is a true status, and the first
-						// keystroke flips it to the live action, which teaches the
-						// rule at the exact moment it starts to matter.
-						changed ? t('delib.update_proposal') : iconLabel('check', t('delib.update_saved')),
-					),
-				]),
+				m('.delib__actions', mineSaveButton(live, myProposal)),
 			]),
 		]);
+	}
+
+	/**
+	 * Seed / re-seed the draft when the proposal changes underneath — without
+	 * clobbering what the student is currently typing. Shared by the two
+	 * places the same draft is edited from: the dock's box and the My
+	 * screen's paper.
+	 */
+	function seedMineDraft(myProposal: AgoraProposal): void {
+		if (mineDraftBase === myProposal.statement) return;
+		if (mineDraft.trim() === '' || mineDraft === mineDraftBase) {
+			mineDraft = myProposal.statement;
+		}
+		mineDraftBase = myProposal.statement;
+	}
+
+	/** Is what I have typed a real, savable change? */
+	function mineDraftChanged(myProposal: AgoraProposal): boolean {
+		const text = mineDraft.trim();
+
+		return text !== myProposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+	}
+
+	/**
+	 * The ONE action the draft has, wherever the draft is being typed.
+	 *
+	 * The button states its own condition instead of apologising in a line
+	 * underneath. A greyed button with no reason reads as "broken" (playtests:
+	 * students tapped it twice and gave up) — but "✓ saved" is a true status,
+	 * and the first keystroke flips it to the live action, which teaches the
+	 * rule at the exact moment it starts to matter.
+	 */
+	function mineSaveButton(live: AgoraSession, myProposal: AgoraProposal): m.Children {
+		const changed = mineDraftChanged(myProposal);
+
+		return m(
+			'button.btn.btn--primary.my-lantern__save',
+			{
+				disabled: !changed || submitting,
+				onclick: () => {
+					submitting = true;
+					submitProposal(
+						live,
+						initialVnode.attrs.myParticipant.anonName,
+						mineDraft.trim(),
+						myProposal.statementId,
+					)
+						.then(() => {
+							// Saved — the mirror has nothing left to protect
+							forgetMineDraft();
+							// The baseline for the direction chip is stamped by the
+							// server on this same save (onAgoraProposalWritten).
+							// QUIET on purpose: the button below flips to "✓ saved",
+							// and whether this save deserved glitter is the server's
+							// call — a credited revision comes back as a
+							// notification and celebrates from there. The old
+							// same-every-save glitter taught that saving is the
+							// achievement and drowned out the real moments.
+						})
+						.catch((error: unknown) => {
+							console.error('[Delib] Update proposal failed:', error);
+						})
+						.finally(() => {
+							submitting = false;
+							m.redraw();
+						});
+				},
+			},
+			changed ? t('delib.update_proposal') : iconLabel('check', t('delib.update_saved')),
+		);
+	}
+
+	/**
+	 * The proposal at the head of my own screen, as a WRITING SURFACE.
+	 *
+	 * It used to be a heading with an "edit the text" button under it — a
+	 * label promising an affordance instead of showing one, and the pen it
+	 * promised lifted a sheet up from the bottom of the screen over the
+	 * screen the student was already reading their own words on. Two rooms
+	 * for one sentence.
+	 *
+	 * Now the sentence sits in the field it is edited in: the caret goes
+	 * where the words are, and the pen is a handle for that caret — icon
+	 * alone, because the paper under it already says what it does. This is
+	 * also why the My screen carries no dock: the notebook exists to bring
+	 * the pen into rooms that have none, and this room IS the pen.
+	 */
+	function minePaper(live: AgoraSession, myProposal: AgoraProposal): m.Children {
+		seedMineDraft(myProposal);
+		const changed = mineDraftChanged(myProposal);
+
+		return m('.my-screen__paper', { class: changed ? 'my-screen__paper--dirty' : undefined }, [
+			m('.my-screen__paper-row', [
+				m('textarea.my-screen__text', {
+					value: mineDraft,
+					rows: 2,
+					maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
+					placeholder: t('delib.placeholder'),
+					'aria-label': t('delib.my_proposal'),
+					// The field is the sentence, so it is as tall as the
+					// sentence — a fixed box would either clip a paragraph or
+					// hold empty ruled space under a one-liner. Mithril redraws
+					// synchronously after an input event, so onupdate is where
+					// every keystroke's regrow actually happens.
+					oncreate: (vnode: m.VnodeDOM) => growPaper(vnode.dom as HTMLTextAreaElement),
+					onupdate: (vnode: m.VnodeDOM) => growPaper(vnode.dom as HTMLTextAreaElement),
+					oninput: (event: InputEvent) => {
+						mineDraft = (event.target as HTMLTextAreaElement).value;
+						rememberMineDraft();
+					},
+				}),
+				// A pointer has nothing to aim at on a textarea that already
+				// looks like paper, and a keyboard reaches the field by tab —
+				// so this is the mouse's handle, and it is named for the
+				// screen reader rather than labelled on screen.
+				m(
+					'button.my-screen__pen',
+					{
+						type: 'button',
+						'aria-label': t('delib.edit_text'),
+						title: t('delib.edit_text'),
+						onclick: (event: Event) => {
+							const paper = (event.currentTarget as HTMLElement).closest('.my-screen__paper');
+							focusPaper(paper?.querySelector<HTMLTextAreaElement>('textarea'));
+						},
+					},
+					m(Icon, { name: 'edit', size: 18 }),
+				),
+			]),
+			m(
+				'.my-screen__paper-foot',
+				// Resting, the save is a STATUS and not a control: a greyed button
+				// reads as broken (playtests: students tapped it twice and gave
+				// up), and the resting state of this screen should be the
+				// student's own sentence, not a dead pill under it. The first
+				// keystroke turns the line into the real action, which teaches the
+				// rule at the exact moment it starts to matter.
+				changed
+					? mineSaveButton(live, myProposal)
+					: m(
+							'span.my-screen__saved',
+							{ role: 'status' },
+							iconLabel('check', t('delib.update_saved')),
+						),
+			),
+		]);
+	}
+
+	/** A textarea as tall as what it holds. */
+	function growPaper(area: HTMLTextAreaElement | null): void {
+		if (!area) return;
+		area.style.height = 'auto';
+		area.style.height = `${area.scrollHeight}px`;
+	}
+
+	/** Put the caret at the END of the sentence — nobody edits from the top. */
+	function focusPaper(area: HTMLTextAreaElement | null | undefined): void {
+		if (!area) return;
+		area.focus();
+		area.setSelectionRange(area.value.length, area.value.length);
 	}
 
 	/**
@@ -1415,22 +1580,9 @@ export function Deliberation(
 		return [
 			// The student's own sentence at the top, in the proposal voice — this
 			// screen IS their proposal, so the words they wrote head it, not a
-			// label the app supplied. The way into the text sits beside it; the
-			// pen itself lives in the dock, so this is a handle and not a second
-			// editor.
-			m('.my-screen__head', [
-				m('h3.my-screen__title', [
-					// A screen reader arrives at a bare sentence otherwise, with
-					// nothing saying whose it is
-					m('span.sr-only', `${t('delib.my_proposal')}: `),
-					myProposal.statement,
-				]),
-				m(
-					'button.btn.btn--secondary.my-screen__edit',
-					{ onclick: openEditBox },
-					iconLabel('edit', t('delib.edit_text')),
-				),
-			]),
+			// label the app supplied. And they head it as a WRITING SURFACE
+			// rather than as a title with a door beside it (see minePaper).
+			minePaper(live, myProposal),
 			ratingsMoved > 0
 				? m(
 						'p.my-lantern__moved',
@@ -1447,6 +1599,7 @@ export function Deliberation(
 			revisionJourney(myProposal),
 			workbenchSection('idea', t('delib.suggestions_received'), suggestionsSection(myProposal), {
 				headId: DOCK_FEEDBACK_HEAD_ID,
+				tone: 'ideas',
 				// Waiting decisions AND unread replies — everything in the
 				// section that still wants the owner's eyes
 				count: openCount + ownerThreadUnread(myProposal),
@@ -1466,6 +1619,7 @@ export function Deliberation(
 							: t('delib.ask_elders'),
 						askSection(live, myProposal, topic),
 						{
+							tone: 'characters',
 							// The badge says the council already spoke — the elders read
 							// every proposal on their own, and a folded section with no
 							// sign of life reads as an empty room.
@@ -1484,25 +1638,39 @@ export function Deliberation(
 			// Open by default (explicit call, 2026-08-10): improving is writing
 			// too, and the two sides' needs are its raw material. It sits last
 			// in the sheet, so standing open costs the primary zone nothing.
+			// The same drawer as the two above it — it used to be a dashed
+			// footer with its own toggle, and a third shape for the third tool
+			// read as a different kind of thing. The two sides' portraits take
+			// the icon chip's place: whose needs are under here IS the question.
 			!getSessionFlow().needs
 				? null
-				: m(
-						'.workbench__section.workbench__section--plain',
-						m(NeedsPeek, { topic, defaultOpen: true }),
+				: workbenchSection(
+						'thought',
+						t('needs.board_title'),
+						m(NeedsBoard, { topic, hideTitle: true }),
+						{
+							tone: 'needs',
+							faces: peekFaces(topic),
+							open: needsOpen,
+							onToggle: () => {
+								needsOpen = !needsOpen;
+							},
+						},
 					),
 		];
 	}
 
 	/**
-	 * The notebook docked at the bottom of every place: a collapsed bar that
-	 * shows a line of my own text (or warns that an edit is unsaved), and the
-	 * edit box sliding up over the room when it's tapped.
+	 * The notebook docked at the bottom of every place except my own: a
+	 * collapsed bar that shows a line of my own text (or warns that an edit is
+	 * unsaved), and the edit box sliding up over the room when it's tapped.
 	 *
-	 * The dock carries ONE thing now — the box I type into. Everything that
-	 * needs reading rather than typing moved to the My screen: a sheet lifted
-	 * over another room is the wrong place to read your classmates' ideas in,
-	 * and a dock that promised feedback and opened onto a textarea was a
-	 * broken promise.
+	 * The dock carries ONE thing — the box I type into. Everything that needs
+	 * reading rather than typing lives on the My screen: a sheet lifted over
+	 * another room is the wrong place to read your classmates' ideas in, and a
+	 * dock that promised feedback and opened onto a textarea was a broken
+	 * promise. And on the My screen the box itself is unnecessary, because the
+	 * proposal is already sitting in one there (see minePaper).
 	 */
 	function proposalDock(live: AgoraSession, myProposal: AgoraProposal): m.Children {
 		const unsaved =
@@ -1616,7 +1784,10 @@ export function Deliberation(
 		const target = (vnode.dom as HTMLElement).querySelector<HTMLElement>(focusOnMy);
 		if (!target) return;
 		focusOnMy = '';
-		target.focus();
+		// The paper is a field, and a field entered from a "fix this" handle
+		// wants the caret after the last word, not before the first
+		if (target instanceof HTMLTextAreaElement) focusPaper(target);
+		else target.focus();
 		target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
 		// ...and say WHICH row was promised. Landing on a screenful of drawers
 		// with the cursor silently parked on one of them is not an answer.
@@ -2105,6 +2276,9 @@ export function Deliberation(
 			{
 				key: proposal.statementId,
 				class: open ? 'stall--open' : undefined,
+				// The candy look paints every proposal its own colour by number
+				// (see lib/looks.ts proposalHue); the other looks ignore this
+				'data-hue': String(proposalHue(number)),
 				oncreate: (vnode: m.VnodeDOM) => {
 					if (opts.flip) rememberRow(vnode.dom as HTMLElement, proposal.statementId);
 					spotlightHelped(vnode.dom as HTMLElement, proposal.statementId);
@@ -2717,16 +2891,21 @@ export function Deliberation(
 			}
 
 			// ---------- SCREEN: MY (a screen, not a step) ----------
-			// My workshop: what the class did with my last save, the
-			// improvements classmates sent me, the elders I can ask and the two
-			// sides' needs. The pen itself is in the dock below, reachable from
-			// here and from every other room — so this screen is for reading and
-			// deciding, and the box is for writing.
+			// My workshop: my sentence in the field it is written in, what the
+			// class did with my last save, the improvements classmates sent me,
+			// the elders I can ask and the two sides' needs.
+			//
+			// The ONE room with no dock (2026-09-03): a notebook docked at the
+			// bottom exists to carry the pen into rooms that have none, and this
+			// room's first object is the pen. Docking it here meant the student's
+			// own sentence appeared twice on one screen — once as a heading they
+			// could not touch, once inside a bar that had to be lifted over the
+			// heading to touch it.
 			//
 			// Standing here does NOT advance the lap; the mine STEP simply lands
 			// on it and adds the one way onward.
 			if (myConfirmedProposal && (screen === 'my' || cycle.step === 'mine')) {
-				return m(`.shell.shell--delib.shell--mode-mine.shell--place-mine${shellClass}`, [
+				return m('.shell.shell--delib.shell--mode-mine.shell--place-mine', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myConfirmedProposal),
@@ -2747,8 +2926,6 @@ export function Deliberation(
 								)
 							: null,
 					]),
-					scrim,
-					dock,
 				]);
 			}
 

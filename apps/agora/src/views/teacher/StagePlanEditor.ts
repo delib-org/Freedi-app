@@ -53,14 +53,78 @@ export const PLAN_ERROR_KEYS: Record<StagePlanError, string> = {
  */
 export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 	let openItemId: string | null = null;
+	/** The question whose title input should take focus on its next mount */
+	let focusItemId: string | null = null;
 	let addOpen = false;
+
+	/**
+	 * Moving a stage re-sorts the list, and a row that teleports makes the
+	 * teacher lose their place. FLIP: remember where every row sat, let
+	 * Mithril reorder the DOM, put each row back where the eye left it and
+	 * release it to slide home. Armed only by a move — opening a row's
+	 * options or adding a stage also shifts rows, and that displacement is
+	 * not a re-sort.
+	 *
+	 * offsetTop, not getBoundingClientRect: scrolling must not read as motion.
+	 */
+	const rowTops = new Map<string, number>();
+	let flipArmed = false;
+	let movedItemId: string | null = null;
+	const reducedMotion =
+		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	const rememberRow = (dom: HTMLElement, itemId: string): void => {
+		rowTops.set(itemId, dom.offsetTop);
+	};
+
+	const flipRow = (dom: HTMLElement, itemId: string, flip: boolean): void => {
+		const now = dom.offsetTop;
+		const before = rowTops.get(itemId);
+		rowTops.set(itemId, now);
+		if (!flip || before === undefined || reducedMotion) return;
+		const delta = before - now;
+		if (Math.abs(delta) < 2) return;
+		// Drop the glow first and force a reflow, so a row moved twice in a row glows twice
+		dom.classList.remove('plan-editor__item--moved');
+		void dom.offsetWidth;
+		if (itemId === movedItemId) dom.classList.add('plan-editor__item--moved');
+		// Frame 1: no transition, sitting at the old place
+		dom.style.transition = 'none';
+		dom.style.transform = `translateY(${delta}px)`;
+		requestAnimationFrame(() => {
+			// Frame 2: hand the transition back to the stylesheet and let go
+			dom.style.transition = '';
+			dom.style.transform = '';
+		});
+	};
+
+	/** The select's plain values → the shared enum; anything unknown is the default */
+	const cutoffFromSelectValue = (value: string): CutoffBy => {
+		if (value === 'threshold') return CutoffBy.aboveThreshold;
+		if (value === 'all') return CutoffBy.all;
+
+		return CutoffBy.topOptions;
+	};
+
+	const openForTyping = (itemId: string): void => {
+		openItemId = itemId;
+		focusItemId = itemId;
+	};
 
 	return {
 		view(vnode) {
 			const { items, hasCharacters, frozenCount, onChange, showPresets = false } = vnode.attrs;
 			const options = { hasCharacters, frozenCount };
-			const dispatch = (event: PlanEditorEvent): void =>
+			const dispatch = (event: PlanEditorEvent): void => {
+				if (event.kind === 'move') {
+					flipArmed = true;
+					movedItemId = event.itemId;
+				}
 				onChange(planEditorReduce(items, event, options));
+			};
+			// Hooks run after this view; they see the value the move armed, and the next render starts clean
+			const flip = flipArmed;
+			flipArmed = false;
 			const errors = validateStagePlan(items, { hasCharacters });
 			const addable = addableStages(items, { hasCharacters });
 
@@ -78,6 +142,7 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 			const questionOptions = (item: AgoraStagePlanItem): m.Children => {
 				const selection = item.selection ?? defaultQuestionSelection();
 				const byThreshold = selection.cutoffBy === CutoffBy.aboveThreshold;
+				const byAll = selection.cutoffBy === CutoffBy.all;
 
 				return m('.plan-editor__options', [
 					m('label.plan-editor__field', [
@@ -86,6 +151,11 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 							value: item.title ?? '',
 							maxlength: AGORA_STAGE_PLAN.MAX_TITLE_LENGTH,
 							placeholder: t('startGame.quick_question_ph'),
+							oncreate: (node: m.VnodeDOM) => {
+								if (focusItemId !== item.itemId) return;
+								focusItemId = null;
+								(node.dom as HTMLInputElement).focus();
+							},
 							oninput: (event: InputEvent) =>
 								dispatch({
 									kind: 'patch',
@@ -120,10 +190,7 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 										patch: {
 											selection: {
 												...selection,
-												cutoffBy:
-													(event.target as HTMLSelectElement).value === 'threshold'
-														? CutoffBy.aboveThreshold
-														: CutoffBy.topOptions,
+												cutoffBy: cutoffFromSelectValue((event.target as HTMLSelectElement).value),
 											},
 										},
 									}),
@@ -131,7 +198,7 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 							[
 								m(
 									'option',
-									{ value: 'top', selected: !byThreshold },
+									{ value: 'top', selected: !byThreshold && !byAll },
 									t('startGame.plan_cutoff_top'),
 								),
 								m(
@@ -139,35 +206,38 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 									{ value: 'threshold', selected: byThreshold },
 									t('startGame.plan_cutoff_threshold'),
 								),
+								m('option', { value: 'all', selected: byAll }, t('startGame.plan_cutoff_all')),
 							],
 						),
-						byThreshold
-							? [
-									m('span', t('startGame.plan_cutoff_min')),
-									numberInput(
-										selection.cutoffNumber,
-										{ min: '-1', max: '1', step: '0.05' },
-										(next) =>
-											dispatch({
-												kind: 'patch',
-												itemId: item.itemId,
-												patch: { selection: { ...selection, cutoffNumber: next } },
-											}),
-									),
-								]
-							: [
-									m('span', t('startGame.plan_cutoff_n')),
-									numberInput(
-										selection.numberOfResults,
-										{ min: '1', max: '10', step: '1' },
-										(next) =>
-											dispatch({
-												kind: 'patch',
-												itemId: item.itemId,
-												patch: { selection: { ...selection, numberOfResults: next } },
-											}),
-									),
-								],
+						byAll
+							? null
+							: byThreshold
+								? [
+										m('span', t('startGame.plan_cutoff_min')),
+										numberInput(
+											selection.cutoffNumber,
+											{ min: '-1', max: '1', step: '0.05' },
+											(next) =>
+												dispatch({
+													kind: 'patch',
+													itemId: item.itemId,
+													patch: { selection: { ...selection, cutoffNumber: next } },
+												}),
+										),
+									]
+								: [
+										m('span', t('startGame.plan_cutoff_n')),
+										numberInput(
+											selection.numberOfResults,
+											{ min: '1', max: '10', step: '1' },
+											(next) =>
+												dispatch({
+													kind: 'patch',
+													itemId: item.itemId,
+													patch: { selection: { ...selection, numberOfResults: next } },
+												}),
+										),
+									],
 					]),
 				]);
 			};
@@ -250,6 +320,8 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 							'li.plan-editor__item',
 							{
 								key: item.itemId,
+								oncreate: (node: m.VnodeDOM) => rememberRow(node.dom as HTMLElement, item.itemId),
+								onupdate: (node: m.VnodeDOM) => flipRow(node.dom as HTMLElement, item.itemId, flip),
 								class:
 									[
 										frozen ? 'plan-editor__item--frozen' : '',
@@ -264,12 +336,20 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 									m('span.plan-editor__index', String(index + 1)),
 									m('span.plan-editor__name', [
 										m('span.plan-editor__kind', t(`stage.${item.stage}`)),
-										item.stage === AgoraStage.question
-											? m(
-													'span.plan-editor__title',
-													untitled ? t('startGame.plan_untitled') : planItemLabel(item),
-												)
-											: null,
+										item.stage !== AgoraStage.question
+											? null
+											: frozen
+												? m('span.plan-editor__title', planItemLabel(item))
+												: m(
+														'button.plan-editor__title.plan-editor__title--editable',
+														{
+															type: 'button',
+															'aria-label': t('startGame.plan_question_title'),
+															'aria-expanded': String(open),
+															onclick: () => openForTyping(item.itemId),
+														},
+														untitled ? t('startGame.plan_untitled') : planItemLabel(item),
+													),
 									]),
 									frozen
 										? m(
@@ -362,9 +442,13 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 													key: stage,
 													type: 'button',
 													onclick: () => {
-														dispatch({ kind: 'add', stage });
+														const before = new Set(items.map((item) => item.itemId));
+														const next = planEditorReduce(items, { kind: 'add', stage }, options);
 														addOpen = false;
-														if (stage === AgoraStage.question) openItemId = null;
+														// A new question opens straight into its title — there is nothing to do with it until it has one
+														const added = next.find((item) => !before.has(item.itemId));
+														if (added && stage === AgoraStage.question) openForTyping(added.itemId);
+														onChange(next);
 													},
 												},
 												t(`stage.${stage}`),

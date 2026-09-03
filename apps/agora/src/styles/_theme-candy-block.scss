@@ -1,0 +1,251 @@
+@use 'tokens' as *;
+
+// ============================================================================
+// The Candy look — the default
+//
+// Vibrant candy-shop colours on a cotton-candy page: raspberry is MINE,
+// blueberry is a classmate's stroke, lime is "go", grape is a count, and
+// tangerine and blueberry are the two camps. The grammar of Purple Agora
+// (tokens.scss) is untouched: MINE is still the one saturated family on the
+// screen and a classmate's card is still white paper — only the hues moved,
+// and the furniture got a candy edge.
+//
+// HOW THIS WORKS: same as the civic block. Every colour in the app is a
+// custom property on :root, so re-pointing the properties repaints the whole
+// app without touching a component rule. The attribute is set on the document
+// element by lib/theme.ts.
+//
+// THE SIGNATURE is a hard bottom edge. A candy button is a gummy: a flat
+// face over a darker slab, 4px tall, no blur — press it and it sinks onto the
+// slab. Cards get the same edge in the page's own tint, which is what makes a
+// white card on a pink page read as a sweet sitting on paper rather than a
+// form field. Shadows are raspberry-tinted for the same reason the purple
+// look's were purple: a grey shadow on a tinted page reads as dirt.
+//
+// CONTRAST: this look opens no new debt. Every fill that carries white text
+// clears 4.5:1 on its own — raspberry --mine at 4.82, --mine-strong 5.94,
+// grape counts 5.95, blueberry 5.24 — so the ACCEPTED ledger in
+// scripts/contrast-audit.mjs gains nothing from it, and `npm run contrast`
+// runs the gauntlet under `?theme=candy` to keep it that way. The gloss on a
+// candy surface is a 15%-white veil: bright enough to read as sugar, and
+// below the alpha at which the audit counts a veil as a background.
+//
+// The custom look (_theme-custom-block.scss) borrows every rule in this file
+// and re-points the four seed-driven families on top, which is why the
+// selectors below match both attributes.
+// ============================================================================
+
+@mixin ink-on-candy {
+  --text-primary: #3b1f47;
+  --text-secondary: #6b4a78;
+  --text-muted: #7a5a86;
+  --ink: #3b1f47;
+  --border-subtle: rgba(216, 27, 122, 0.16);
+  --border-strong: rgba(216, 27, 122, 0.36);
+  --border-lantern: rgba(216, 27, 122, 0.6);
+  --bg-inset: rgba(216, 27, 122, 0.07);
+  --lantern-glow: var(--mine-ink);
+  --mine-glow: var(--mine-ink);
+  --peer-glow: #0c3977;
+}
+
+:root[data-session-theme='candy'],
+:root[data-session-theme='custom'] {
+  // --- Page: cotton candy ---
+  // Tinted, which Purple Agora forbids itself — and the reason it forbids it
+  // is answered here by the card edge: a white card no longer needs a white
+  // page to be an object, because its slab makes it one.
+  --bg-page: #fff5fa;
+  --bg-page-high: #ffe4f2;
+  --bg-card: rgba(255, 255, 255, 0.94);
+  --bg-card-solid: #ffffff;
+  --bg-overlay: rgba(90, 20, 70, 0.5);
+
+  --parchment: #ffffff;
+  --parchment-dim: #fff0f7;
+
+  --surface-raised: #ffffff;
+  --surface-veil: rgba(255, 255, 255, 0.94);
+  --surface-tint: #fff7fb;
+  --surface-flare: #ffffff;
+
+  // --- MINE: raspberry ---
+  --mine-light: #ff6ec0; // highlights, gradient tops — NEVER under text
+  --mine: #d81b7a;       // the signature hue — white on it 4.82:1
+  --mine-strong: #be186b; // filled controls — 5.94:1
+  --mine-deep: #971355;   // borders, pressed, gradient bottoms — 8.27:1
+  --mine-ink: #770f43;    // raspberry TEXT on the page — 10.2:1
+
+  // --- OTHERS: blueberry strokes on white paper ---
+  --peer-surface: var(--bg-card-solid);
+  --peer-tile: #dcebff;
+  --peer: #1668d8;        // white on it 5.24:1
+  --peer-strong: #135cbe; // 6.36:1
+  --peer-deep: #0f4997;
+
+  // --- Accents ---
+  --mint: #3ddc84;        // lime: meters and the current lap — never under white
+  --mint-deep: #1fae5f;
+  --mint-ink: #0a3a20;    // dark label on a lime fill
+  --pink: #7b2ff2;        // grape: notification counts, white on it 5.95:1
+  --gold: #ffd400;        // lemon drop
+  --amber: #ff9f1c;       // orange slice
+
+  // --- Marks ---
+  --mark-edited: #fff1c2;
+  --mark-helped: #d8fbe6;
+
+  // --- Camps: tangerine vs blueberry, grape in between ---
+  --camp-left: #ff8c1a;
+  --camp-left-strong: #ab5300; // white on it 5.29:1
+  --camp-left-glow: #8c4d0e;   // camp TEXT on the page — 6.2:1
+  --camp-right: #1668d8;
+  --camp-right-strong: #135cbe;
+  --camp-right-glow: #0c3977;
+  --camp-center: #a648d8;
+  --camp-center-glow: #5b2877;
+
+  // --- Washes: a breath of colour that fades into the page ---
+  --wash-mine-high: #ffe4f2;
+  --wash-mine-mid: #fff5fa;
+  --wash-mine-low: #fff5fa;
+  --wash-peer-high: #e4f0ff;
+  --wash-peer-mid: #fff5fa;
+  --wash-peer-low: #fff5fa;
+  --wash-square-high: #fff0c2;
+  --wash-square-mid: #fff5fa;
+  --wash-square-low: #fff5fa;
+
+  // --- Semantic ---
+  --success: #12803f;      // white on it 5.0:1
+  --success-deep: #0d5a2c;
+  --success-ink: #0d5a2c;  // the same assent as text on the page
+  --danger: #d62839;       // cherry — FILL only, 4.97:1 under white
+  --danger-ink: #961c28;   // the same alarm as text on the page
+  --warning: #b36f14;
+
+  @include ink-on-candy;
+  --text-on-lantern: #ffffff;
+
+  // --- Depth: the gummy edge ---
+  --shadow-card: 0 4px 0 #fbdcec, 0 12px 26px -12px rgba(216, 27, 122, 0.28);
+  --shadow-raised: 0 6px 0 #f6cfe3, 0 18px 40px -14px rgba(216, 27, 122, 0.35);
+  --shadow-mine: 0 5px 0 var(--mine-deep), 0 16px 30px -12px rgba(216, 27, 122, 0.55);
+  --glow-lantern: 0 8px 20px -6px rgba(216, 27, 122, 0.55);
+  --glow-marker: 0 0 12px rgba(255, 110, 192, 0.7);
+  --glow-mint: 0 8px 20px -6px rgba(31, 174, 95, 0.8);
+
+  // --- Gradients ---
+  // Vertical, not the purple look's 150deg: a candy is lit from above, and
+  // the gloss is a band across its top edge rather than a corner flare.
+  //
+  // The two ramps that carry TEXT open below --mine, and the reason is the
+  // dimmed white the app puts on them: a timestamp or a hint on my bubble
+  // is 75%-alpha white, and on --mine that measures 3.22:1. The purple look
+  // carries that as debt; this one does not. #a8155f is the rung where a
+  // 75% white clears 4.5 (4.56:1), and --mine-deep clears it at 5.19:1. The
+  // hero opens on --mine-strong because the writing desk lays a sheen over
+  // it, and solid white over that veil on --mine-strong is 4.71:1.
+  --grad-mine: linear-gradient(180deg, var(--mine-light) 0%, var(--mine) 55%, var(--mine-deep) 100%);
+  --grad-mine-text: linear-gradient(180deg, #a8155f 0%, var(--mine-deep) 100%);
+  --grad-mine-hero: linear-gradient(180deg, var(--mine-strong) 0%, var(--mine-deep) 100%);
+  --grad-mine-aa: linear-gradient(180deg, var(--mine-strong) 0%, var(--mine-deep) 100%);
+  --grad-mine-selected: linear-gradient(180deg, var(--mine) 0%, var(--mine-strong) 100%);
+  // The sugar gloss. 15% and no more: the contrast audit counts a veil above
+  // that alpha as a background, and a brighter band would put the dock's
+  // title back on the debt ledger this look was built to stay off.
+  --grad-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.15), transparent 55%);
+
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+}
+
+// --- The candy signature, on the two things a student presses most ---
+:root[data-session-theme='candy'],
+:root[data-session-theme='custom'] {
+  // A gummy: flat face, hard slab, sinks when pressed. The base rule's lift
+  // on hover and squash on press are replaced, not stacked.
+  .btn--primary {
+    box-shadow:
+      0 4px 0 var(--mine-deep),
+      0 10px 20px -8px rgba(216, 27, 122, 0.5);
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      background: var(--mine-strong);
+      box-shadow:
+        0 5px 0 var(--mine-deep),
+        0 14px 24px -8px rgba(216, 27, 122, 0.55);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(3px);
+      background: var(--mine-strong);
+      box-shadow:
+        0 1px 0 var(--mine-deep),
+        0 4px 10px -4px rgba(216, 27, 122, 0.4);
+    }
+
+    // A gummy you cannot press has no slab to sink onto
+    &:disabled {
+      box-shadow: none;
+      transform: none;
+    }
+  }
+
+  .btn--secondary {
+    box-shadow:
+      0 3px 0 #f3d3e3,
+      0 8px 16px -8px rgba(216, 27, 122, 0.25);
+
+    &:active:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #f3d3e3;
+    }
+  }
+
+  .text-input:focus {
+    box-shadow: 0 0 0 3px rgba(216, 27, 122, 0.16);
+  }
+
+  ::selection {
+    background: rgba(255, 110, 192, 0.35);
+  }
+
+  // A sweet-shop sparkle field: every candy hue, a little bigger and a
+  // little brighter than the purple look's, because this page can carry it
+  body::after {
+    background-image:
+      radial-gradient(3px 3px at 12% 30%, rgba(216, 27, 122, 0.22) 50%, transparent 51%),
+      radial-gradient(2.5px 2.5px at 78% 42%, rgba(22, 104, 216, 0.2) 50%, transparent 51%),
+      radial-gradient(3px 3px at 40% 62%, rgba(255, 140, 26, 0.24) 50%, transparent 51%),
+      radial-gradient(2.5px 2.5px at 60% 22%, rgba(61, 220, 132, 0.24) 50%, transparent 51%),
+      radial-gradient(3.5px 3.5px at 25% 76%, rgba(255, 212, 0, 0.4) 50%, transparent 51%),
+      radial-gradient(2.5px 2.5px at 88% 82%, rgba(123, 47, 242, 0.2) 50%, transparent 51%);
+  }
+}
+
+// ============================================================================
+// The light islands — same registry as tokens.scss, candy's ink
+//
+// `.on-light` hands a white island sitting on a saturated surface the dark
+// ink back. The base registry hands back PURPLE's dark ink, whose hairlines
+// and insets are purple-tinted; on a candy page those islands would carry a
+// faint lavender edge inside raspberry bubbles. Same list, this look's ink.
+// The custom block re-points the seed-driven members of this set again.
+// ============================================================================
+:root[data-session-theme='candy'],
+:root[data-session-theme='custom'] {
+  .on-light,
+  .shell--delib .proposal-dock__panel,
+  .write-desk__stuck,
+  .write-desk__selfcheck-chip,
+  .carried,
+  .on-dark .helped__chip:not(.helped__chip--implemented),
+  .thread__msg--mine .helped__chip:not(.helped__chip--implemented),
+  .thread__msg--mine .thread__tag {
+    @include ink-on-candy;
+
+    color: var(--text-primary);
+  }
+}

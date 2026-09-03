@@ -12,6 +12,7 @@ import {
 	AgoraStudentAggregateSchema,
 	AgoraTopicPackage,
 	AgoraTopicPackageSchema,
+	AgoraThemeChoice,
 	VotingStageSettings,
 	AGORA_VOTING,
 	deriveCamp,
@@ -212,6 +213,19 @@ export async function setVotingSettings(
 
 	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
 		votingSettings: clamped,
+		lastUpdate: Date.now(),
+	});
+}
+
+/**
+ * The look the room wears by default. The teacher's to set, live: every phone
+ * that has not chosen a look of its own repaints on the next snapshot. The
+ * shape is pinned by the rules as well as the schema, because every client
+ * parses the session strictly and a malformed theme would brick the room.
+ */
+export async function setSessionTheme(sessionId: string, theme: AgoraThemeChoice): Promise<void> {
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		theme,
 		lastUpdate: Date.now(),
 	});
 }
