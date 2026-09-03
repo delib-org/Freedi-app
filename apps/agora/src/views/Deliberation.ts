@@ -461,7 +461,16 @@ export function Deliberation(
 		gapPrompt = { proposalId, kind: value >= 1 ? 'keep' : 'gap' };
 	}
 
-	/** The invitation's fold-out: insight framing, the both-camps question, a composer */
+	/**
+	 * The invitation's fold-out: one ask, the two rules as chips, a composer.
+	 *
+	 * It used to ask four times — a two-sentence framing, the both-camps
+	 * question, the don't-attack line, and then a placeholder that asked it
+	 * again. A student who has just pressed a face is one tap from writing;
+	 * they are not going to read a paragraph first. So the ask is a single
+	 * line, and the two things that shape a good idea — serve everyone, build
+	 * rather than attack — ride as chips a glance can take in.
+	 */
 	function gapPromptCard(live: AgoraSession, proposal: AgoraProposal): m.Children {
 		if (gapPrompt?.proposalId !== proposal.statementId) return null;
 		const keep = gapPrompt.kind === 'keep';
@@ -474,8 +483,22 @@ export function Deliberation(
 					'p.gap-prompt__insight',
 					iconLabel('idea', t(keep ? 'delib.gap_keep' : 'delib.gap_insight')),
 				),
-				keep ? null : m('p.gap-prompt__question', t('delib.help_question')),
-				keep ? null : m('p.gap-prompt__hint', t('delib.help_dont_attack')),
+				// The rules ride with the ask that needs them. "Keep" asks what
+				// to preserve — there is nothing there to attack, and nothing to
+				// bridge either.
+				keep
+					? null
+					: m('.gap-prompt__rules', [
+							m(
+								'span.gap-prompt__rule',
+								iconLabel(
+									'bridge',
+									t(getSessionFlow().stances ? 'delib.gap_rule_both' : 'delib.gap_rule_open'),
+									14,
+								),
+							),
+							m('span.gap-prompt__rule', iconLabel('improve', t('delib.gap_rule_build'), 14)),
+						]),
 				m('textarea.gap-prompt__textarea', {
 					value: gapDraft,
 					rows: 2,

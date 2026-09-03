@@ -538,14 +538,31 @@
 		font-size: var(--font-size-sm);
 	}
 
-	&__question {
-		color: var(--ink);
-		font-size: var(--font-size-sm);
+	// The two rules as chips instead of two sentences: "good for everyone" and
+	// "build, don't attack" are conditions on the idea, and a condition reads
+	// better as a label on the desk than as prose to get through first.
+	&__rules {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
 	}
 
-	&__hint {
+	&__rule {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
 		color: var(--text-secondary);
 		font-size: var(--font-size-xs);
+		font-weight: 700;
+		white-space: nowrap;
+
+		svg {
+			flex-shrink: 0;
+		}
 	}
 
 	&__textarea {
