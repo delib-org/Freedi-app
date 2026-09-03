@@ -378,7 +378,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.quick_title': 'שם המשחק',
 		'startGame.quick_title_ph': 'למשל: בקרים בבית שלנו',
 		'startGame.quick_question': 'השאלה הראשית',
-		'startGame.quick_question_ph': 'למשל: איך ווש יכולה לקום בזמן בבוקר?',
+		'startGame.quick_question_ph': 'למשל: מה עושים עם זה שכל תלמיד רוצה טמפרטורה אחרת במזגן?',
 		'startGame.quick_explanation': 'הסבר (לא חובה)',
 		'startGame.quick_explanation_ph': 'כמה מילים על למה אנחנו שואלים, ואיך נראית תשובה טובה.',
 		'startGame.identity': 'שמות',
@@ -1254,7 +1254,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.quick_title': 'Game name',
 		'startGame.quick_title_ph': 'e.g. Mornings at our house',
 		'startGame.quick_question': 'The main question',
-		'startGame.quick_question_ph': 'e.g. How can Vosh wake up on time in the morning?',
+		'startGame.quick_question_ph': 'e.g. What do we do when every student wants a different temperature on the AC?',
 		'startGame.quick_explanation': 'Explanation (optional)',
 		'startGame.quick_explanation_ph':
 			'A few words about why we are asking, and what a good answer looks like.',
@@ -2140,7 +2140,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.quick_title': 'اسم اللعبة',
 		'startGame.quick_title_ph': 'مثلًا: الصباح في بيتنا',
 		'startGame.quick_question': 'السؤال الرئيسي',
-		'startGame.quick_question_ph': 'مثلًا: كيف تستطيع فوش أن تستيقظ في الوقت صباحًا؟',
+		'startGame.quick_question_ph': 'مثلًا: ماذا نفعل عندما يريد كل طالب درجة حرارة مختلفة للمكيّف؟',
 		'startGame.quick_explanation': 'شرح (اختياري)',
 		'startGame.quick_explanation_ph': 'كلمات قليلة عن سبب السؤال، وكيف تبدو الإجابة الجيدة.',
 		'startGame.identity': 'الأسماء',
@@ -3028,7 +3028,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.quick_title': 'Nombre del juego',
 		'startGame.quick_title_ph': 'p. ej. Las mañanas en casa',
 		'startGame.quick_question': 'La pregunta principal',
-		'startGame.quick_question_ph': 'p. ej. ¿Cómo puede Vosh levantarse a tiempo por la mañana?',
+		'startGame.quick_question_ph': 'p. ej. ¿Qué hacemos si cada alumno quiere una temperatura distinta en el aire acondicionado?',
 		'startGame.quick_explanation': 'Explicación (opcional)',
 		'startGame.quick_explanation_ph':
 			'Unas palabras sobre por qué preguntamos y cómo es una buena respuesta.',
@@ -3954,7 +3954,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.quick_title': 'Name des Spiels',
 		'startGame.quick_title_ph': 'z. B. Morgens bei uns zu Hause',
 		'startGame.quick_question': 'Die Hauptfrage',
-		'startGame.quick_question_ph': 'z. B. Wie kann Vosh morgens rechtzeitig aufstehen?',
+		'startGame.quick_question_ph': 'z. B. Was machen wir, wenn jedes Kind eine andere Temperatur an der Klimaanlage will?',
 		'startGame.quick_explanation': 'Erklärung (optional)',
 		'startGame.quick_explanation_ph':
 			'Ein paar Worte dazu, warum wir fragen und wie eine gute Antwort aussieht.',
@@ -4888,7 +4888,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.quick_title': 'Naam van het spel',
 		'startGame.quick_title_ph': 'bijv. Ochtenden bij ons thuis',
 		'startGame.quick_question': 'De hoofdvraag',
-		'startGame.quick_question_ph': 'bijv. Hoe kan Vosh ’s ochtends op tijd opstaan?',
+		'startGame.quick_question_ph': 'bijv. Wat doen we als elke leerling een andere temperatuur op de airco wil?',
 		'startGame.quick_explanation': 'Toelichting (optioneel)',
 		'startGame.quick_explanation_ph':
 			'Een paar woorden over waarom we dit vragen en hoe een goed antwoord eruitziet.',
