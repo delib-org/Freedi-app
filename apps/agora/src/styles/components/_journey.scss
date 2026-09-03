@@ -545,34 +545,146 @@
 	flex-direction: column;
 	gap: var(--space-md);
 
-	// The sentence gets the full width, and the way into it sits under it.
-	// Side by side, the button ate a third of the measure and squeezed a
-	// paragraph-length proposal into a six-line ribbon — the student's own
-	// words are the content here, so they are what the row is spent on.
-	&__head {
+	// --- The paper: my sentence in the field it is edited in ---
+	// It used to be a heading with an "edit the text" button under it — a
+	// label promising an affordance rather than showing one. A page of white
+	// cards makes a plain heading read as decoration, so the surface itself
+	// has to say "writable": paper of its own, the mine-purple frame the dock
+	// editor wears, and a pen resting in the corner.
+	&__paper {
 		display: flex;
 		flex-direction: column;
-		align-items: stretch;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		background: var(--bg-card-solid);
+		border: 1px solid color-mix(in srgb, var(--mine) 40%, transparent);
+		border-radius: var(--radius-lg);
+		box-shadow:
+			inset 0 0 0 1px color-mix(in srgb, var(--mine) 10%, transparent),
+			var(--shadow-card);
+		// The whole card is the field's surround, so a tap anywhere in the
+		// margin lands the caret rather than doing nothing
+		cursor: text;
+		transition:
+			border-color var(--motion-fast) ease,
+			box-shadow var(--motion-fast) ease;
+
+		// Being inside it should look different from looking at it
+		&:focus-within {
+			border-color: var(--mine);
+			box-shadow:
+				inset 0 0 0 1px color-mix(in srgb, var(--mine) 28%, transparent),
+				var(--shadow-card);
+		}
+
+		// Unsaved, and it says so LAST — after :focus-within, because the news
+		// that a draft is unsaved outranks the news that the caret is in it,
+		// and the caret is in it for the whole time the draft is unsaved.
+		// Amber and solid: dashed is what a disabled control wears here.
+		&--dirty,
+		&--dirty:focus-within {
+			border-color: var(--warning);
+			box-shadow:
+				inset 0 0 0 1px var(--warning),
+				var(--shadow-card);
+		}
+	}
+
+	// Text and pen on one line, the pen pinned to the far end at the top —
+	// beside the FIRST line of the sentence, wherever RTL puts that
+	&__paper-row {
+		display: flex;
+		align-items: flex-start;
 		gap: var(--space-sm);
 	}
 
-	// The proposal itself heads the screen, so it takes the proposal voice —
-	// the same 18px/700 it wears in the dock, in a stall and in a quote
-	&__title {
-		margin: 0;
+	// The proposal takes the proposal voice — the same 18px/700 it wears in a
+	// stall and in a quote — but as a real field. No box chrome of its own:
+	// the paper around it is the box, and a border inside a border reads as a
+	// disabled input.
+	&__text {
 		@include proposal-voice;
 
 		flex: 1 1 auto;
 		min-width: 0;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: none;
 		color: var(--text-primary);
+		font-family: inherit;
+		resize: none;
+		overflow: hidden;
+
+		&:focus,
+		&:focus-visible {
+			outline: none;
+		}
+
+		&::placeholder {
+			color: var(--text-muted);
+			font-weight: 400;
+		}
 	}
 
-	// A secondary button on purpose: the pen is not what this screen is FOR,
-	// it is what the screen sends you to
-	&__edit {
+	// The mouse's handle for the caret. Icon alone — the paper under it
+	// already says the word, and this screen is Hebrew-first, where a
+	// two-word button label costs more room than the sentence can spare.
+	&__pen {
 		flex: 0 0 auto;
-		align-self: flex-end;
-		padding: 6px var(--space-md);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		// 44px of tap target around a 18px glyph (WCAG 2.5.8)
+		inline-size: 44px;
+		block-size: 44px;
+		margin-block-start: -6px;
+		margin-inline-end: -6px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--mine) 12%, transparent);
+		color: var(--mine-ink);
+		cursor: pointer;
+		transition:
+			background var(--motion-fast) ease,
+			transform var(--motion-fast) ease;
+
+		&:hover {
+			background: color-mix(in srgb, var(--mine) 24%, transparent);
+		}
+
+		&:active {
+			transform: scale(0.94);
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+
+			&:active {
+				transform: none;
+			}
+		}
+	}
+
+	// The save sits under the sentence and at the end of the line: present
+	// enough to be found the moment a keystroke wakes it, quiet enough that
+	// the resting state of the screen is the text and not a button
+	&__paper-foot {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		min-block-size: 28px;
+	}
+
+	// ...and while there is nothing to save, that end of the line carries a
+	// sentence-sized status instead of a control
+	&__saved {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
 	}
 }
 
