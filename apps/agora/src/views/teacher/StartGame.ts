@@ -47,6 +47,12 @@ export function StartGame(): m.Component {
 	let createFailed = false;
 	let showKnobs = false;
 
+	// Auth settles in two beats — anonymous first, the teacher's Google account
+	// a moment later. Reading the library on the first beat left this screen
+	// with no scenarios to offer, which silently forced quick mode.
+	let loadedForUid: string | null = null;
+	let refilling = false;
+
 	let quickTitle = '';
 	let quickQuestion = '';
 	let quickExplanation = '';
@@ -62,6 +68,7 @@ export function StartGame(): m.Component {
 	async function load(): Promise<void> {
 		try {
 			const user = await ensureUser();
+			loadedForUid = user.uid;
 			const [loadedTopics, dashboard] = await Promise.all([
 				listTopicPackages(user.uid),
 				fetchTeacherDashboard().catch((error: unknown) => {
@@ -77,9 +84,22 @@ export function StartGame(): m.Component {
 				selectedClassId = routeClass;
 			}
 			if (topics.length === 1) selectedTopicId = topics[0].topicPackageId;
-			// A teacher with no scenario yet is most likely here for a quick game,
-			// and the dashboard's quick-game door says so explicitly
-			if (topics.length === 0 || m.route.param('mode') === 'quick') mode = 'quick';
+			// Arrived by tapping a scenario on the shelf: that choice IS the
+			// answer to the first question on this screen, so hold it. A link to
+			// a scenario that is no longer ready falls back to the picker rather
+			// than starting a game the teacher did not choose.
+			const routeTopic = m.route.param('topic');
+			const carried = routeTopic
+				? (topics.find((topic) => topic.topicPackageId === routeTopic) ?? null)
+				: null;
+			if (carried) {
+				selectedTopicId = carried.topicPackageId;
+				mode = 'scenario';
+			} else if (topics.length === 0 || m.route.param('mode') === 'quick') {
+				// A teacher with no scenario yet is most likely here for a quick
+				// game, and the dashboard's quick-game door says so explicitly
+				mode = 'quick';
+			}
 		} catch (error) {
 			console.error('[Teacher] Loading start-game data failed:', error);
 		}
@@ -155,7 +175,13 @@ export function StartGame(): m.Component {
 
 	return {
 		view() {
-			const { tier, loading } = getUserState();
+			const { tier, loading, user } = getUserState();
+			if (user && !refilling && loadedForUid !== null && loadedForUid !== user.uid) {
+				refilling = true;
+				void load().finally(() => {
+					refilling = false;
+				});
+			}
 			if (loading || !loaded) {
 				return m(
 					'.shell',

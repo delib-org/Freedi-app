@@ -62,6 +62,7 @@ export type IconName =
 	| 'target'
 	| 'mail'
 	| 'cog'
+	| 'arrow'
 	// the rating scale
 	| 'face-strong-against'
 	| 'face-against'
@@ -175,6 +176,13 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 
 	// Settings: a ring, its hub, and eight teeth — the plainest possible cog,
 	// because at 22px anything cleverer stops reading as one
+	// Points to inline-start in LTR; the stylesheet mirrors it under [dir=rtl],
+	// which is the rule every directional shape here follows.
+	arrow: [
+		['path', { d: 'M20 12H4.6' }],
+		['path', { d: 'M10.8 5.8 4.6 12l6.2 6.2' }],
+	],
+
 	cog: [
 		['circle', { cx: 12, cy: 12, r: 6.2 }],
 		['circle', { cx: 12, cy: 12, r: 2.4 }],

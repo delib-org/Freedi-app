@@ -494,6 +494,26 @@
 
 // --- Topic editor ---
 .editor {
+	// Save and "mark ready" sat at the foot of a very long form, which meant
+	// that from scene three neither of them existed. They ride the bottom edge
+	// now, with the stalled-write banner where the Save button is.
+	&__actions {
+		position: sticky;
+		inset-block-end: 0;
+		z-index: var(--z-header);
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+		margin-inline: calc(-1 * var(--space-md));
+		padding-inline: var(--space-md);
+		padding-block: var(--space-sm);
+		padding-block-end: max(var(--space-sm), env(safe-area-inset-bottom, 0px));
+		background: var(--bg-page);
+		border-block-start: 1px solid var(--border-subtle);
+	}
+
 	&__row {
 		display: flex;
 		gap: var(--space-md);
