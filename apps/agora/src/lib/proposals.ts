@@ -28,6 +28,9 @@ import {
 	Statement,
 	StatementType,
 	isAgoraAiUid,
+	isAgoraHidden,
+	isTeacherEdited,
+	ModeratedDoc,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { trackWrite, clearWriteTracking } from './confirmedWrite';
@@ -63,6 +66,15 @@ export interface AgoraProposal {
 	agoraPreviousText?: string;
 	/** `award` messages: what this moment paid the helper */
 	agoraPointsAwarded?: number;
+	/**
+	 * Taken down by the teacher. Only ever true on the AUTHOR's own copy —
+	 * classmates never receive a hidden doc at all (the text is blank on the
+	 * server anyway; see agoraModeration.ts). The author keeps the row so the
+	 * square does not renumber itself around a gap.
+	 */
+	hidden?: boolean;
+	/** The teacher rewrote (part of) this text */
+	teacherEdited?: boolean;
 	consensus?: number;
 	evaluation?: {
 		agreement?: number;
@@ -162,6 +174,8 @@ function toProposal(data: Record<string, unknown>): AgoraProposal {
 			typeof data.agoraPointsAwarded === 'number' ? data.agoraPointsAwarded : undefined,
 		consensus: typeof data.consensus === 'number' ? data.consensus : undefined,
 		evaluation: data.evaluation as AgoraProposal['evaluation'],
+		...(isAgoraHidden(data as ModeratedDoc) ? { hidden: true } : {}),
+		...(isTeacherEdited(data as ModeratedDoc) ? { teacherEdited: true } : {}),
 	};
 }
 
@@ -186,6 +200,9 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			snapshot.forEach((docSnap) => {
 				if (!docSnap.metadata.hasPendingWrites) serverConfirmed.add(docSnap.id);
 				const item = toProposal(docSnap.data() as Record<string, unknown>);
+				// A classmate's hidden text never enters this state: not the market,
+				// not a thread, not a count. The author keeps theirs, marked.
+				if (item.hidden && item.creatorId !== userId) return;
 				if (item.statementType === StatementType.option) {
 					// Options split by PARENT: the challenge question's are the
 					// square's proposals; any other parent is a question stage's
@@ -593,6 +610,7 @@ export function openSuggestionsBy(proposalId: string, userId: string): number {
 	return (state.suggestions[proposalId] ?? []).filter(
 		(suggestion) =>
 			suggestion.creatorId === userId &&
+			!suggestion.hidden &&
 			// Plain chat never occupies an idea slot — the cap guards unresolved
 			// WORK on the owner's desk, and a chat message asks nothing of them
 			isSuggestionKind(suggestion) &&

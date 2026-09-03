@@ -10,7 +10,7 @@
  */
 import { chromium } from '@playwright/test';
 import { preflight } from './lib/preflight.mjs';
-import { eq, fail, mkPage as makePage, shotter, step } from './lib/e2e.mjs';
+import { eq, fail, mkPage as makePage, shotter, step, passNameDoor } from './lib/e2e.mjs';
 
 await preflight();
 
@@ -77,6 +77,7 @@ for (const [page, label] of [
 	[s2, 'S2'],
 ]) {
 	await page.goto(`${BASE}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(page);
 	await page.waitForSelector('.lobby__name', { timeout: 15000 });
 	console.log(`${label} joined as`, await page.locator('.lobby__name').textContent());
 }

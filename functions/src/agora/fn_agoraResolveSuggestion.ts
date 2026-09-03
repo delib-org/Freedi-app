@@ -13,6 +13,8 @@ import {
 	createAgoraParticipantId,
 	functionConfig,
 	getRandomUID,
+	isAgoraHidden,
+	ModeratedDoc,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { awardCredit } from '../engagement/credits/creditEngine';
@@ -186,6 +188,10 @@ export const agoraResolveSuggestion = onCall(
 				agoraMessageKind?: string;
 				agoraThreadUserId?: string;
 			};
+			// A suggestion the teacher took down cannot be thanked or woven in
+			if (isAgoraHidden(suggestionSnap.data() as ModeratedDoc)) {
+				throw new HttpsError('failed-precondition', 'hidden');
+			}
 			if (suggestion.agoraSessionId !== sessionId) {
 				throw new HttpsError('failed-precondition', 'Suggestion is not part of this session');
 			}

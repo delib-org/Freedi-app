@@ -810,6 +810,86 @@
 					<button class="class-join__alias-option">פנס חכם</button>
 				</div>
 			</div>
+
+			<h2>the teacher's console tabs, and the class list behind them</h2>
+			<div class="teacher-tabs" role="tablist">
+				<button class="teacher-tabs__tab teacher-tabs__tab--on" type="button">הלוח</button>
+				<button class="teacher-tabs__tab" type="button">הכיתה</button>
+				<button class="teacher-tabs__tab" type="button">הודעות <span class="class-panel__badge">2</span></button>
+			</div>
+			<div class="card stack class-panel">
+				<div class="class-panel__table">
+					<div class="class-panel__row class-panel__row--head"><span>שם במשחק</span><span>שם אמיתי</span><span>התקדמות</span><span>דירגו</span><span>נקודות</span><span></span></div>
+					<div class="class-panel__row">
+						<span class="class-panel__name">פנס אמיץ</span>
+						<span class="class-panel__real">טל י.</span>
+						<span class="class-panel__pips"><span class="class-panel__pip class-panel__pip--done">✓</span><span class="class-panel__pip">1/3</span></span>
+						<span>4</span>
+						<span class="roster__stat--points">12</span>
+						<span class="class-panel__actions"><span class="class-panel__idle">שקט 7 דק׳</span><button class="btn btn--sm btn--secondary" type="button">הודעה <span class="class-panel__badge">1</span></button></span>
+					</div>
+					<div class="class-panel__row">
+						<span class="class-panel__name">שועל כחול</span>
+						<span class="class-panel__real class-panel__real--none">לא ניתן</span>
+						<span class="class-panel__pips"><span class="class-panel__pip class-panel__pip--done">✓</span><span class="class-panel__pip class-panel__pip--done">✓</span></span>
+						<span>6</span>
+						<span class="roster__stat--points">20</span>
+						<span class="class-panel__actions"><button class="btn btn--sm btn--secondary" type="button">הודעה</button></span>
+					</div>
+				</div>
+			</div>
+
+			<h2>what the class wrote — a plain line, a reworded one, a hidden one</h2>
+			<div class="card stack messages-panel">
+				<div class="messages-panel__filters">
+					<select class="messages-panel__select"><option>כל התלמידים</option></select>
+					<select class="messages-panel__select"><option>כל הסוגים</option></select>
+				</div>
+				<div class="messages-panel__list">
+					<div class="mod-row">
+						<div class="mod-row__head"><span class="mod-row__who"><span class="class-panel__name">פנס אמיץ</span><span class="class-panel__real"> · טל י.</span></span><span class="mod-row__kind">הצעה</span><span class="thread__time">10:42</span></div>
+						<p class="mod-row__text">להקים מועצה משותפת שתקבע את מחיר הלחם.</p>
+						<div class="mod-row__actions"><button class="btn btn--sm btn--ghost" type="button">לנסח מחדש</button><button class="btn btn--sm btn--ghost" type="button">להוריד</button><button class="btn btn--sm btn--secondary" type="button">הודעה</button></div>
+					</div>
+					<div class="mod-row mod-row--edited">
+						<div class="mod-row__head"><span class="mod-row__who"><span class="class-panel__name">שועל כחול</span></span><span class="mod-row__kind">שיחה</span><span class="thread__time">10:44</span></div>
+						<p class="mod-row__text">אולי כדאי להוסיף גם את הכפריים.</p>
+						<span class="moderation__edited">נוסח מחדש על ידך</span>
+						<div class="mod-row__editor">
+							<p class="voting-settings__hint">למה? התלמיד יקרא את זה.</p>
+							<div class="mod-reason-chips"><button class="mod-reason-chip mod-reason-chip--on" type="button">נא להשתמש בשפה מכבדת</button><button class="mod-reason-chip" type="button">לא קשור לשאלה</button></div>
+						</div>
+					</div>
+					<div class="mod-row mod-row--hidden">
+						<div class="mod-row__head"><span class="mod-row__who"><span class="class-panel__name">נמר ירוק</span></span><span class="mod-row__kind">תשובה</span><span class="thread__time">10:45</span></div>
+						<p class="mod-row__text mod-row__text--hidden">הורד על ידך</p>
+						<div class="mod-row__actions"><button class="btn btn--sm btn--secondary" type="button">להחזיר</button></div>
+					</div>
+				</div>
+			</div>
+
+			<h2>the student's side — a taken-down paper, and the teacher's door</h2>
+			<div class="my-screen__paper my-screen__removed">
+				<p class="my-screen__removed-title">המורה הוריד את הטקסט הזה</p>
+				<p class="my-screen__removed-reason">נא להשתמש בשפה מכבדת</p>
+				<p class="my-screen__removed-hint">קראו למה בהודעה מהמורה, ואפשר לענות שם.</p>
+				<button class="btn btn--secondary" type="button">לפתוח את ההודעה מהמורה</button>
+			</div>
+			<div class="thread__msg thread__msg--mine thread__msg--removed"><p class="thread__text">הורד על ידי המורה</p></div>
+			<div class="thread__msg thread__msg--peer thread__msg--teacher"><span class="thread__who">המורה</span><p class="thread__text">עבודה מצוינת — תמשיכו!</p></div>
+			<button class="stage-nav__mail" type="button">✉<span class="stage-nav__mail-badge">1</span></button>
+			<blockquote class="teacher-thread__removed">המשפט שהורד</blockquote>
+
+			<h2>the projector's corner and camp census</h2>
+			<div class="projector" style="min-height:auto;padding:1rem">
+				<div class="projector__camps">
+					<div class="projector__camp projector__camp--left"><span class="projector__camp-count">7</span><span class="projector__camp-name">הרוזן</span></div>
+					<div class="projector__camp projector__camp--center"><span class="projector__camp-count">3</span><span class="projector__camp-name">באמצע</span></div>
+					<div class="projector__camp projector__camp--right"><span class="projector__camp-count">9</span><span class="projector__camp-name">קמיל</span></div>
+				</div>
+				<ol class="projector__answers"><li class="projector__answer"><span class="projector__answer-num">1</span><p class="projector__answer-text">תשובה על הקיר</p></li></ol>
+				<aside class="projector__code" style="position:static"><span class="projector__code-label">מצטרפים עם הקוד</span><div class="projector__code-value">48213</div><span class="projector__code-count">19 בחדר</span></aside>
+			</div>
 		</div>
 	</body>
 </html>

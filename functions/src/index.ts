@@ -1255,6 +1255,8 @@ export {
 	agoraJoinClass,
 	agoraTeacherRoster,
 	agoraTeacherConsole,
+	agoraTeacherMessage,
+	agoraModerateStatement,
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 	onAgoraSessionFinished,

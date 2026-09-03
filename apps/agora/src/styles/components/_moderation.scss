@@ -1,0 +1,135 @@
+// What a student sees of the teacher's hand: their own text taken down (a
+// notice where the pen was), the "edited by teacher" mark, the door to the
+// teacher's thread beside the stage nav, and the thread sheet itself.
+//
+// Imported by components.scss; do not import directly.
+
+.my-screen__removed {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	align-items: flex-start;
+	border-inline-start: 4px solid var(--danger);
+}
+
+.my-screen__removed-title {
+	margin: 0;
+	font-family: var(--font-display);
+	color: var(--text-primary);
+}
+
+.my-screen__removed-reason {
+	margin: 0;
+	color: var(--text-primary);
+	white-space: pre-wrap;
+}
+
+.my-screen__removed-hint {
+	margin: 0;
+	color: var(--text-secondary);
+	font-size: var(--font-size-sm);
+}
+
+.thread__msg--removed {
+	// The bubble keeps its own ink: dimming it failed the contrast gauntlet
+	border-inline-start: 3px solid var(--danger);
+
+	.thread__text {
+		font-style: italic;
+	}
+}
+
+.question__removed {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	align-items: flex-start;
+}
+
+.moderation__edited {
+	display: inline-block;
+	font-size: var(--font-size-xs);
+	font-family: var(--font-display);
+	letter-spacing: 0.04em;
+	color: var(--text-secondary);
+}
+
+// The door beside the stage nav — drawn only once the teacher has written
+.stage-nav__mail {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-full);
+	background: var(--bg-card-solid);
+	color: var(--text-primary);
+	cursor: pointer;
+	flex-shrink: 0;
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern);
+		outline-offset: 2px;
+	}
+}
+
+.stage-nav__mail-badge {
+	position: absolute;
+	top: -0.3rem;
+	inset-inline-end: -0.3rem;
+	min-width: 1.1rem;
+	height: 1.1rem;
+	padding: 0 0.25rem;
+	border-radius: var(--radius-full);
+	background: var(--danger);
+	color: var(--text-on-lantern);
+	font-size: var(--font-size-xs);
+	font-family: var(--font-display);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+// The thread sheet reuses the look sheet's frame
+.teacher-thread {
+	&__panel {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+	}
+
+	&__icon {
+		display: inline-flex;
+		margin-inline-end: var(--space-xs);
+		vertical-align: middle;
+	}
+
+	&__lines {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		max-height: 50vh;
+		overflow-y: auto;
+	}
+
+	&__composer {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__removed {
+		margin: var(--space-xs) 0 0;
+		padding: var(--space-xs) var(--space-md);
+		border-inline-start: 3px solid var(--danger);
+		color: var(--text-secondary);
+		font-style: italic;
+		white-space: pre-wrap;
+	}
+}
+
+.thread__msg--teacher {
+	border-inline-start: 3px solid var(--lantern);
+}

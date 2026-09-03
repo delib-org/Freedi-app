@@ -261,3 +261,22 @@ export const AGORA_LIMITS = {
 	/** Proposals shown per rating batch */
 	RATING_BATCH_SIZE: 5,
 } as const;
+
+/** A day in milliseconds — the unit the retention windows below are written in */
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Real names typed at the door (`agoraIdentities`) */
+export const AGORA_IDENTITY = {
+	MAX_REAL_NAME: 60,
+	/** How long after a lesson a real name is kept before the TTL policy deletes it */
+	RETENTION_MS: 30 * DAY_MS,
+} as const;
+
+/** The private teacher ↔ student thread (`agoraTeacherMessages`) */
+export const AGORA_TEACHER_MESSAGE = {
+	MAX_TEXT: 500,
+	/** Lines one thread may hold — a conversation, not a chat log */
+	MAX_PER_THREAD: 60,
+	/** The teacher's reason for hiding, shown to the author */
+	MAX_REASON: 200,
+} as const;

@@ -37,6 +37,7 @@ import {
 	cpOf,
 	groupByCpBand,
 	rankByCp,
+	isAgoraHidden,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { callLLM, extractJson, WORKER_MODEL } from '../config/openai-chat';
@@ -224,7 +225,7 @@ export async function closeQuestionStage(
 
 		const answers = answersSnap.docs
 			.map((docSnap) => docSnap.data() as Statement)
-			.filter((statement) => statement.parentId === item.statementId);
+			.filter((statement) => statement.parentId === item.statementId && !isAgoraHidden(statement));
 
 		const rows = rankCarriedAnswers(answers.map((statement) => toCarriedAnswer(statement, named)));
 		const selected = selectCarriedAnswers(rows, resolveQuestionSelection(item));

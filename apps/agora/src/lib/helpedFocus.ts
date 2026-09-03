@@ -83,6 +83,25 @@ export function unregisterThreadNavigator(
 }
 
 /**
+ * The fifth bridge: "your teacher wrote to you". The thread sheet lives on
+ * the game controller, so it is reachable from every stage — a note about
+ * language must be readable on the scene screen it was sent during.
+ */
+let teacherNavigator: (() => void) | null = null;
+
+export function registerTeacherNavigator(navigate: () => void): void {
+	teacherNavigator = navigate;
+}
+
+export function unregisterTeacherNavigator(navigate: () => void): void {
+	if (teacherNavigator === navigate) teacherNavigator = null;
+}
+
+export function requestTeacherFocus(): void {
+	if (teacherNavigator) teacherNavigator();
+}
+
+/**
  * Send the student to whatever a piece of news is ABOUT. One dispatcher, so
  * the toast and the inbox row that carry the same target can never disagree
  * about where it leads.
@@ -98,6 +117,9 @@ export function requestFocus(target: InboxTarget): void {
 			break;
 		case 'market':
 			requestMarketFocus();
+			break;
+		case 'teacher':
+			requestTeacherFocus();
 			break;
 		default:
 			requestMineFocus();

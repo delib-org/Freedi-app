@@ -1,0 +1,173 @@
+// The projector: the students' stage, on the wall. Big type, no HUD, no
+// stage nav, and the join code in a corner on every stage.
+//
+// Imported by components.scss; do not import directly.
+
+.projector {
+	min-height: 100dvh;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-lg);
+	padding: var(--space-lg) var(--space-lg) calc(var(--space-lg) + 5rem);
+	font-size: 125%;
+	background: var(--bg-page);
+	color: var(--text-primary);
+
+	.stage-nav,
+	.delib-hud,
+	.inbox-button,
+	.toast-stack {
+		display: none;
+	}
+
+	.shell {
+		min-height: auto;
+	}
+
+	.shell__content {
+		max-width: 1400px;
+		margin: 0 auto;
+	}
+
+	&__stage {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+		max-width: 1400px;
+		width: 100%;
+		margin: 0 auto;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: var(--font-size-xl);
+		text-align: center;
+	}
+
+	&__code {
+		position: fixed;
+		inset-inline-end: var(--space-lg);
+		bottom: var(--space-lg);
+		z-index: 20;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+		padding: var(--space-md) var(--space-lg);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+	}
+
+	&__code-label {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	&__code-value {
+		font-family: var(--font-display);
+		font-size: 3rem;
+		letter-spacing: 0.15em;
+		color: var(--text-primary);
+		direction: ltr;
+		unicode-bidi: isolate;
+	}
+
+	&__code-count {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__count-line {
+		margin: 0;
+		font-family: var(--font-display);
+		color: var(--text-secondary);
+		text-align: center;
+	}
+
+	&__camps {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: var(--space-md);
+	}
+
+	&__camp {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+		padding: var(--space-lg);
+		border-radius: var(--radius-lg);
+		background: var(--bg-inset);
+		border-top: 6px solid var(--border-subtle);
+
+		&--left {
+			border-top-color: var(--camp-left);
+		}
+
+		&--right {
+			border-top-color: var(--camp-right);
+		}
+	}
+
+	&__camp-count {
+		font-family: var(--font-display);
+		font-size: 3rem;
+		line-height: 1;
+	}
+
+	&__camp-name {
+		color: var(--text-secondary);
+		text-align: center;
+	}
+
+	&__answers {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__answer {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		align-items: start;
+		gap: var(--space-md);
+		padding: var(--space-md);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+	}
+
+	&__answer-num {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--peer);
+	}
+
+	&__answer-text {
+		margin: 0;
+		font-size: var(--font-size-md);
+	}
+
+	.results-board__label,
+	.voting__option {
+		font-size: 1.1em;
+	}
+}
+
+@media (max-width: 900px) {
+	.projector {
+		font-size: 100%;
+
+		&__camps {
+			grid-template-columns: 1fr;
+		}
+	}
+}

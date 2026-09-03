@@ -25,6 +25,8 @@ export {
 	AGORA_ANTI_GAMING,
 	AGORA_VOTING,
 	AGORA_CHALLENGE,
+	AGORA_IDENTITY,
+	AGORA_TEACHER_MESSAGE,
 } from './agoraConstants';
 
 export type {
@@ -313,4 +315,35 @@ export type {
 	TeacherConsoleReport,
 	TeacherConsoleResponse,
 	CreateSessionClassroomFields,
+	TeacherMessageRequest,
+	TeacherMessageResponse,
+	ModerateStatementRequest,
+	ModerateStatementResponse,
 } from './agoraClassroomCallables';
+
+export type { AgoraModeration, ModeratedDoc } from './agoraModeration';
+export {
+	AgoraModerationSchema,
+	isAgoraHidden,
+	isTeacherEdited,
+	isTeacherTouched,
+} from './agoraModeration';
+
+export type { AgoraIdentity } from './agoraIdentity';
+export { AgoraIdentitySchema, createAgoraIdentityId } from './agoraIdentity';
+
+export type {
+	AgoraTeacherMessage,
+	AgoraTeacherMessageFrom,
+	AgoraTeacherMessageKind,
+	AgoraModerationAction,
+	AgoraTeacherPreset,
+} from './agoraTeacherMessage';
+export {
+	AgoraTeacherMessageSchema,
+	AgoraTeacherMessageFromSchema,
+	AgoraTeacherMessageKindSchema,
+	AgoraModerationActionSchema,
+	AGORA_TEACHER_PRESETS,
+	isAgoraTeacherPreset,
+} from './agoraTeacherMessage';

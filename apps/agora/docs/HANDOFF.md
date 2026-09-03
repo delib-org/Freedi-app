@@ -103,6 +103,81 @@ guard still holds.
 - **Verify**: `npx tsx scripts/e2e-stage-plan.mjs` (the Vosh scenario, 53
   assertions), `npm run fast -- --quick --stage=question --open --shot=q`.
 
+## Teacher console (2026-09-03) — names, moderation, notes, projector
+
+Built on `work/2026-09-03`, **NOT deployed**. Four things a teacher can now do
+from `/teach/session/:id`, and the wall can show:
+
+- **Real names, teacher-only.** The join screen asks every student for a real
+  name (skippable; `lib/flows/joinName.ts` decides when; `session.collectRealNames`
+  is the per-lesson switch, default on, never on civic). `agoraJoinSession`
+  writes it to `agoraIdentities/{sessionId}--{uid}` with `teacherId`
+  denormalised — the rule is `resource.data.teacherId == request.auth.uid`,
+  which the console's SDK listener (`sessionId == && teacherId ==`) can prove.
+  Never on the participant doc, never in a statement, never in a log or a
+  prompt. `expiresAt` = lesson end + 30 days for a Firestore **TTL policy that
+  still has to be created** (`gcloud firestore fields ttls update expiresAt
+  --collection-group=agoraIdentities`); the console's "forget names" deletes
+  them now. Named rooms send the typed name as both `displayName` and
+  `realName`.
+- **Moderation.** `agoraModerateStatement` (session teacher only): `hide`
+  blanks `statement` on the world-readable doc, sets the shared `hide` flag
+  (the ballot selector already honours it) plus `agoraModeration.hidden`,
+  flags `agoraScores.hidden`, darkens the `edit` announcements under it, and
+  files the words and the reason on the private thread — the ONLY copy.
+  `restore` reads them back from there. `edit` rewrites and stamps
+  `agoraModeration.editedAt`; `isTeacherTouched(before, after)` (shared-types)
+  makes `fn_onAgoraProposal` skip revision credit, weave credit and the
+  elders for a teacher's write (it still announces a rewrite). Hidden text
+  is out of `classScore`, `agreementResults`, `closeQuestionStage`, the
+  auto-open voting rule and the evaluation trigger (a rating on it moves
+  nothing). Hiding a ballot candidate is refused (`on-ballot`) — close the
+  vote first. Rules pin `hide` + `agoraModeration` and refuse ALL client
+  deletes of agora statements (the teacher's inherited admin subscription
+  used to make `isAuthorized()` a silent hard delete).
+- **Private thread.** `agoraTeacherMessages/{id}`, one doc per line, both
+  keys (`teacherId`, `studentUid`) pinned, readable by either side, written
+  only by `agoraTeacherMessage` (teacher note / student reply, quick
+  phrases as `presetKey` rendered in the student's language, thread capped)
+  and by the moderation callable (notices). NOT in `statements`: that
+  collection is world-readable and every student's deliberation listener
+  pulls the whole session. The student gets an `inAppNotifications` doc
+  (`agora_teacher_*` triggers — in `notificationCopy.ts` `LOOKS` or the
+  client drops it), a toast, an inbox row with target `{kind:'teacher'}`,
+  a mail door beside the stage nav on every stage (`StageNav.mail`), and
+  `components/TeacherThreadSheet.ts` to read and reply.
+- **Console.** `TeacherSession.ts` shrank (voting cards → `VotingCards.ts`,
+  question/trigger → `DeliberationCards.ts`) and grew three tabs: Board
+  (as before), Class (`ClassPanel.ts`: pseudonym → real name, a pip per
+  opened stage from the pure `lib/flows/classProgress.ts`, ratings given,
+  points, idle, unread-reply badge) and Messages (`MessagesPanel.ts`: every
+  student line from the pure `lib/flows/moderationQueue.ts`, reword / take
+  down with reason / put back / message). `StudentThreadDrawer.ts` is the
+  per-student thread. All reads are the listeners the console already held
+  plus `lib/teacherConsole.ts` (identities, threads).
+- **Projector.** `/teach/screen/:id` → `views/teacher/ProjectorScreen.ts`:
+  the room's current stage as a seatless student would see it (lobby map,
+  scenes via `TeacherInstructions {projector:true}`, needs board, camp
+  census, ranked answers by number, the live square, the ballot via
+  `Voting {board, projector}` — reveal follows the class setting — and the
+  results), a join-code strip on every stage, no stage nav, no HUD, no
+  names. `projectorImports.test.ts` pins that it never imports the
+  notification, inbox, seen-state or teacher-console modules. Opened from
+  the console's code panel ("Open projector" / copy link).
+
+**Verify:** `npx tsx scripts/e2e-teacher-console.mjs` (identities + rules,
+thread both ways + classmate refused, hide/restore incl. results exclusion,
+teacher edit pays nothing, marks pinned, no hard delete, forget names,
+projector when vite is up); `npm run fast -- --names --open` puts real
+names on the Class tab; rules in `tests/rules/agora-teacher.test.mjs`.
+
+**Deploy (in this order):** shared-types build → `deploy:rules:prod` →
+functions `agoraJoinSession agoraTeacherMessage agoraModerateStatement
+onAgoraProposalWritten onAgoraEvaluationWritten agoraAdvanceStage
+agoraResolveSuggestion agoraCharacterReview agoraTeacherConsole
+agoraCreateSession` → `deploy:agora` → the TTL policy. New queries are
+equality-only (no composite index expected); never `--force` an index deploy.
+
 ## Current game flow (as implemented)
 
 **Teacher** (`/teach`): Google sign-in → pick a ready topic package → open

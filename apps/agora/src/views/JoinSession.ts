@@ -8,6 +8,7 @@ import {
 	AgoraDeviceMode,
 	AgoraSessionStatus,
 	AgoraSession,
+	AGORA_IDENTITY,
 	AGORA_SESSION,
 } from '@freedi/shared-types';
 import {
@@ -18,6 +19,7 @@ import {
 	type ClassJoinState,
 } from '../lib/flows/classJoin';
 import { ClassJoinPanel } from '../components/ClassJoinPanel';
+import { joinNamePhase } from '../lib/flows/joinName';
 
 type JoinPhase = 'looking' | 'name' | 'team-size' | 'joining' | 'class-join' | 'error';
 
@@ -32,6 +34,8 @@ export function JoinSession(
 	let teamMemberCount = 2;
 	/** `named` rooms: the name this person goes by — asked at the door */
 	let displayName = '';
+	/** What the door asks for: the card name (`named`), or a real name for the teacher alone */
+	let namePhase: 'named' | 'real' | 'none' = 'none';
 	let classJoin: ClassJoinState = INITIAL_CLASS_JOIN;
 
 	/** One entry point for the flow: reduce, then run whatever the step needs. */
@@ -147,9 +151,10 @@ export function JoinSession(
 			}
 
 			// A named room asks who you are before anything else — the name is
-			// what everyone will see on your cards. A class game already has an
-			// alias for you and never asks.
-			if (session.identity === 'named' && !session.classId) {
+			// what everyone will see on your cards. A classroom asks for a real
+			// name too, for the teacher's eyes only (see lib/flows/joinName).
+			namePhase = joinNamePhase(session);
+			if (namePhase !== 'none') {
 				phase = 'name';
 				m.redraw();
 			} else {
@@ -216,14 +221,21 @@ export function JoinSession(
 
 					phase === 'name'
 						? m('.card.stack', [
-								m('h3.text-center', t('join.your_name')),
-								m('p.text-center.home-explanation', t('join.your_name_hint')),
+								m('h3.text-center', t(namePhase === 'named' ? 'join.your_name' : 'join.real_name')),
+								m(
+									'p.text-center.home-explanation',
+									t(namePhase === 'named' ? 'join.your_name_hint' : 'join.real_name_hint'),
+								),
 								m('input.join__name-input', {
 									type: 'text',
 									value: displayName,
-									maxlength: 40,
+									maxlength: namePhase === 'named' ? 40 : AGORA_IDENTITY.MAX_REAL_NAME,
 									autofocus: true,
-									placeholder: t('join.your_name_placeholder'),
+									placeholder: t(
+										namePhase === 'named'
+											? 'join.your_name_placeholder'
+											: 'join.real_name_placeholder',
+									),
 									oninput: (event: InputEvent) => {
 										displayName = (event.target as HTMLInputElement).value;
 									},
@@ -236,6 +248,21 @@ export function JoinSession(
 									{ disabled: !displayName.trim(), onclick: () => void afterName() },
 									t('join.continue'),
 								),
+								// A real name is asked, never demanded: the teacher can still read
+								// the pseudonym off the board and ask out loud
+								namePhase === 'real'
+									? m(
+											'button.btn.btn--ghost.btn--full',
+											{
+												type: 'button',
+												onclick: () => {
+													displayName = '';
+													void afterName();
+												},
+											},
+											t('join.real_name_skip'),
+										)
+									: null,
 							])
 						: null,
 

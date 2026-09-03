@@ -1,6 +1,7 @@
 /* Full manual-style walkthrough: teacher UI + 2 student UIs through every stage.
  * Run: node scripts/walkthrough.mjs (needs emulators + vite on 3009 + seeded demo) */
 import { chromium } from '@playwright/test';
+import { passNameDoor } from './lib/e2e.mjs';
 import { preflight } from './lib/preflight.mjs';
 
 // Fail in seconds with a readable reason instead of minutes with a stack trace
@@ -72,6 +73,7 @@ console.log('SESSION:', sessionId);
 step('STUDENTS: join via code');
 for (const [page, label] of [[s1, 'S1'], [s2, 'S2']]) {
 	await page.goto(`${BASE}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(page);
 	await page.waitForSelector('.lobby__name', { timeout: 15000 });
 	console.log(`${label} in lobby as:`, await page.locator('.lobby__name').textContent());
 }

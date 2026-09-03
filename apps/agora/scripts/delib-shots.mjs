@@ -5,6 +5,7 @@
  * Needs: emulators + vite on 3009 + seeded demo package.
  */
 import { chromium } from '@playwright/test';
+import { passNameDoor } from './lib/e2e.mjs';
 import { mkdirSync } from 'node:fs';
 import { auditPage, report } from './contrast-audit.mjs';
 import { auditType, summarise } from './type-audit.mjs';
@@ -117,6 +118,7 @@ for (const [page, label] of [
 	[s2, 'S2'],
 ]) {
 	await page.goto(`${BASE}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(page);
 	await page.waitForSelector('.lobby__name', { timeout: 20000 });
 	console.log(`${label} joined as`, await page.locator('.lobby__name').textContent());
 }

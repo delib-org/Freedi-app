@@ -9,6 +9,8 @@ export interface TeacherInstructionsAttrs {
 	/** A question stage projects its own question, not a generic prompt */
 	questionTitle?: string;
 	questionExplanation?: string;
+	/** The projector: the students' text only, none of the teacher-facing hints */
+	projector?: boolean;
 }
 
 /** Which scene kinds each scene-stage shows students (mirrors GameController) */
@@ -75,12 +77,13 @@ function stageBody(
 	stage: AgoraStage,
 	topic: AgoraTopicPackage,
 	question?: { title?: string; explanation?: string },
+	projector = false,
 ): m.Children {
 	if (stage === AgoraStage.question) {
 		return m('.teacher-instructions__scene', [
 			m('h4.teacher-instructions__scene-title', question?.title ?? t('stage.question')),
 			question?.explanation ? m('p.teacher-instructions__text', question.explanation) : null,
-			m('p.teacher-instructions__text', t('question.teacher_hint')),
+			projector ? null : m('p.teacher-instructions__text', t('question.teacher_hint')),
 		]);
 	}
 
@@ -103,7 +106,7 @@ function stageBody(
 	}
 
 	if (stage === AgoraStage.voting) {
-		return promptCard('voting.title', 'voting.teacher_hint');
+		return promptCard('voting.title', projector ? 'projector.voting_hint' : 'voting.teacher_hint');
 	}
 
 	return null;
@@ -112,15 +115,17 @@ function stageBody(
 export function TeacherInstructions(): m.Component<TeacherInstructionsAttrs> {
 	return {
 		view(vnode) {
-			const { stage, topic, questionTitle, questionExplanation } = vnode.attrs;
-			const body = stageBody(stage, topic, {
-				title: questionTitle,
-				explanation: questionExplanation,
-			});
+			const { stage, topic, questionTitle, questionExplanation, projector } = vnode.attrs;
+			const body = stageBody(
+				stage,
+				topic,
+				{ title: questionTitle, explanation: questionExplanation },
+				projector === true,
+			);
 			if (!body) return null;
 
 			return m('.card.teacher-instructions', [
-				m('p.teacher__section-title', t('teacher.student_instructions')),
+				projector ? null : m('p.teacher__section-title', t('teacher.student_instructions')),
 				body,
 			]);
 		},

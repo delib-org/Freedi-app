@@ -442,6 +442,14 @@ export function detectThreadMessages(sessionId: string, userId: string): void {
  * next step is another stall.
  */
 function serverNewsTarget(trigger: string, proposalId?: string): InboxTarget {
+	if (
+		trigger === NotificationTriggerType.AGORA_TEACHER_NOTE ||
+		trigger === NotificationTriggerType.AGORA_TEACHER_HIDDEN ||
+		trigger === NotificationTriggerType.AGORA_TEACHER_RESTORED ||
+		trigger === NotificationTriggerType.AGORA_TEACHER_EDITED
+	) {
+		return { kind: 'teacher' };
+	}
 	if (trigger === NotificationTriggerType.AGORA_SUGGESTION_DECLINED) return { kind: 'market' };
 	if (
 		proposalId &&

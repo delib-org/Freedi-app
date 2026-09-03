@@ -13,6 +13,7 @@ import {
 	type AgoraProposal,
 } from '../lib/proposals';
 import { reportStageProgress } from '../lib/session';
+import { requestTeacherFocus } from '../lib/helpedFocus';
 import {
 	AGORA_LIMITS,
 	rankCarriedAnswers,
@@ -62,6 +63,18 @@ function toRow(answer: AgoraProposal, named: boolean): AgoraCarriedAnswer {
  * — what was carried forward and the summary — over the answers as they
  * stood, with the pen and the faces put away.
  */
+/** My answer, taken down by the teacher: a notice and the door to the thread */
+function removedNotice(): m.Children {
+	return m('.question__removed', { role: 'status' }, [
+		m('p.question__mine-text', t('moderation.removed_title')),
+		m(
+			'button.btn.btn--secondary.btn--sm',
+			{ type: 'button', onclick: () => requestTeacherFocus() },
+			t('moderation.talk_to_teacher'),
+		),
+	]);
+}
+
 export function QuestionStage(): m.Component<QuestionStageAttrs> {
 	let draft = '';
 	let draftFor = '';
@@ -147,39 +160,41 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 					// My answer — the pen, or my words as they stand
 					m('.card.stack.question__mine', [
 						m('p.teacher__section-title', t('question.your_answer')),
-						closed
-							? m('p.question__mine-text', mine ? mine.statement : t('question.no_answer_given'))
-							: [
-									m('textarea.question__textarea', {
-										value: draft,
-										rows: 3,
-										maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
-										placeholder: t('question.placeholder'),
-										disabled: saving,
-										oninput: (event: InputEvent) => {
-											draft = (event.target as HTMLTextAreaElement).value;
-										},
-									}),
-									stalledBanner(),
-									saveFailed ? m('p.join__error', t('common.error')) : null,
-									m(
-										'button.btn.btn--primary.btn--full',
-										{
-											// "Sent" is a state, not a refusal: the candy look paints
-											// it lime rather than greyed-out
-											class: mine !== undefined && !changed && !saving ? 'btn--done' : undefined,
-											disabled: saving || !draft.trim() || (mine !== undefined && !changed),
-											onclick: () => void submit(),
-										},
-										saving
-											? t('question.saving_answer')
-											: mine
-												? changed
-													? t('question.update')
-													: t('question.saved')
-												: t('question.save'),
-									),
-								],
+						mine?.hidden
+							? removedNotice()
+							: closed
+								? m('p.question__mine-text', mine ? mine.statement : t('question.no_answer_given'))
+								: [
+										m('textarea.question__textarea', {
+											value: draft,
+											rows: 3,
+											maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
+											placeholder: t('question.placeholder'),
+											disabled: saving,
+											oninput: (event: InputEvent) => {
+												draft = (event.target as HTMLTextAreaElement).value;
+											},
+										}),
+										stalledBanner(),
+										saveFailed ? m('p.join__error', t('common.error')) : null,
+										m(
+											'button.btn.btn--primary.btn--full',
+											{
+												// "Sent" is a state, not a refusal: the candy look paints
+												// it lime rather than greyed-out
+												class: mine !== undefined && !changed && !saving ? 'btn--done' : undefined,
+												disabled: saving || !draft.trim() || (mine !== undefined && !changed),
+												onclick: () => void submit(),
+											},
+											saving
+												? t('question.saving_answer')
+												: mine
+													? changed
+														? t('question.update')
+														: t('question.saved')
+													: t('question.save'),
+										),
+									],
 					]),
 
 					// Everyone else's, live

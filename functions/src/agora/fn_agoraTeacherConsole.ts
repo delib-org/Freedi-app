@@ -169,16 +169,28 @@ export const agoraTeacherConsole = onCall(
 					if (session.teacherId !== uid) {
 						throw new HttpsError('permission-denied', 'Only the session teacher may view this');
 					}
-					const participantSnaps = await db
-						.collection(Collections.agoraParticipants)
-						.where('sessionId', '==', data.sessionId)
-						.get();
+					const [participantSnaps, identitySnaps] = await Promise.all([
+						db
+							.collection(Collections.agoraParticipants)
+							.where('sessionId', '==', data.sessionId)
+							.get(),
+						// The real names, for the report the teacher keeps — this caller is
+						// the session teacher (checked above), the one reader they exist for
+						db
+							.collection(Collections.agoraIdentities)
+							.where('sessionId', '==', data.sessionId)
+							.get(),
+					]);
 					const participants = participantSnaps.docs
 						.map((snap) => snap.data() as AgoraParticipant)
 						.filter((participant) => !participant.isAI)
 						.sort((a, b) => b.points.total - a.points.total);
 
-					return { session, participants };
+					return {
+						session,
+						participants,
+						identities: identitySnaps.docs.map((snap) => snap.data()),
+					};
 				}
 
 				default:

@@ -15,6 +15,16 @@ import { getTopicPackage, loadTopicPackage } from '../lib/topic';
 import { stopValueAnswerListeners } from '../lib/values';
 import { listenToNotifications, stopNotifications } from '../lib/notifications';
 import {
+	hasTeacherThread,
+	listenToTeacherThread,
+	markTeacherThreadSeen,
+	stopTeacherThread,
+	teacherThreadUnread,
+} from '../lib/teacherThread';
+import { registerTeacherNavigator, unregisterTeacherNavigator } from '../lib/helpedFocus';
+import { initInbox } from '../lib/inbox';
+import { TeacherThreadSheet } from '../components/TeacherThreadSheet';
+import {
 	getDeliberationState,
 	listenToDeliberation,
 	stopDeliberationListeners,
@@ -151,6 +161,16 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let navRestored = false;
 	/** The style sheet is open — a modal over whatever stage is on screen */
 	let lookOpen = false;
+	/** The teacher's thread is open — reachable from every stage, toast or not */
+	let teacherOpen = false;
+
+	function openTeacherThread(): void {
+		teacherOpen = true;
+		markTeacherThreadSeen();
+		m.redraw();
+	}
+
+	registerTeacherNavigator(openTeacherThread);
 
 	function beginStageTransition(item: AgoraStagePlanItem): void {
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -192,6 +212,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			window.clearTimeout(transitionTimer);
 			window.clearTimeout(transitionLeaveTimer);
 			stopListening();
+			stopTeacherThread();
+			unregisterTeacherNavigator(openTeacherThread);
 			stopValueAnswerListeners();
 			stopNotifications();
 			// The results recap re-attaches these after the deliberation view
@@ -207,6 +229,10 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			if (userId) {
 				listenToSession(sessionId, userId);
 				listenToNotifications(userId);
+				// The teacher may write on any stage, and the post box must already
+				// be bound to the session when their first note is filed
+				listenToTeacherThread(sessionId, userId);
+				initInbox(sessionId);
 			}
 
 			const { session, participants, myParticipant, participantsLoaded, loading, error } =
@@ -315,6 +341,15 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				m(ToastStack),
 				m(CelebrationOverlay),
 				lookSheet,
+				teacherOpen
+					? m(TeacherThreadSheet, {
+							sessionId,
+							onClose: () => {
+								teacherOpen = false;
+								markTeacherThreadSeen();
+							},
+						})
+					: null,
 				transitionItem !== null
 					? m(StageTransition, {
 							stage: transitionItem.stage,
@@ -332,6 +367,13 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				onSelect: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
 				compact: item.stage === AgoraStage.deliberation && live,
 				look: lookDoor,
+				mail: hasTeacherThread()
+					? {
+							unread: teacherThreadUnread(),
+							onOpen: openTeacherThread,
+							label: t('teacherThread.open'),
+						}
+					: undefined,
 			});
 
 			const pastNotice = live

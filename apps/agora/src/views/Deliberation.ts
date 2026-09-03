@@ -48,9 +48,11 @@ import {
 	unregisterMarketNavigator,
 	registerThreadNavigator,
 	unregisterThreadNavigator,
+	requestTeacherFocus,
 	emphasise,
 } from '../lib/helpedFocus';
 import { initInbox } from '../lib/inbox';
+import { removedTextFor } from '../lib/teacherThread';
 import { EraMapLantern } from '../components/EraMap';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { HelpersBoard } from '../components/HelpersBoard';
@@ -1270,6 +1272,9 @@ export function Deliberation(
 	 * the pen into rooms that have none, and this room IS the pen.
 	 */
 	function minePaper(live: AgoraSession, myProposal: AgoraProposal): m.Children {
+		// Taken down by the teacher: the paper is a notice, not a pen. The
+		// reason and the words live on the private thread; this only points there.
+		if (myProposal.hidden) return removedPaper(myProposal);
 		seedMineDraft(myProposal);
 		const changed = mineDraftChanged(myProposal);
 
@@ -1326,6 +1331,25 @@ export function Deliberation(
 							{ role: 'status' },
 							iconLabel('check', t('delib.update_saved')),
 						),
+			),
+			myProposal.teacherEdited
+				? m('span.moderation__edited', t('moderation.edited_by_teacher'))
+				: null,
+		]);
+	}
+
+	/** My proposal, taken down: what the teacher said, and the door to reply */
+	function removedPaper(myProposal: AgoraProposal): m.Children {
+		const notice = removedTextFor(myProposal.statementId);
+
+		return m('.my-screen__paper.my-screen__removed', { role: 'status' }, [
+			m('p.my-screen__removed-title', iconLabel('again', t('moderation.removed_title'))),
+			notice?.text ? m('p.my-screen__removed-reason', notice.text) : null,
+			m('p.my-screen__removed-hint', t('moderation.removed_hint')),
+			m(
+				'button.btn.btn--secondary',
+				{ type: 'button', onclick: () => requestTeacherFocus() },
+				t('moderation.talk_to_teacher'),
 			),
 		]);
 	}

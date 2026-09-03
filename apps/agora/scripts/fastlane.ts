@@ -52,6 +52,8 @@ interface Args {
 	quick: boolean;
 	/** Which preset plan to send; absent = the session runs the legacy order */
 	plan: 'classic' | 'quickDecision' | null;
+	/** Bots type real names at the door — the teacher's Class tab has something to show */
+	names: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -94,6 +96,7 @@ function parseArgs(argv: string[]): Args {
 		autoSeed: flag('no-seed') === undefined,
 		viewport: flag('mobile') !== undefined ? 'mobile' : 'desktop',
 		quick: flag('quick') !== undefined,
+		names: flag('names') !== undefined,
 		plan:
 			flag('plan') === 'classic'
 				? 'classic'
@@ -114,6 +117,9 @@ function planFor(args: Args): AgoraStagePlanItem[] | undefined {
 	);
 }
 
+/** What the Class tab shows when --names is on — plainly fake, plainly names */
+const DEMO_REAL_NAMES = ['טל י.', 'דנה כ.', 'עומר ל.', 'נועה ב.', 'יובל ש.', 'מאיה ר.', 'איתן ג.', 'רוני א.'];
+
 const args = parseArgs(process.argv.slice(2));
 // A join URL is useless if nothing is serving it, but a plain state build
 // (paste the URL later) does not need vite up at all.
@@ -128,6 +134,7 @@ const result = await fastlane({
 	students: args.students,
 	proposals: args.proposals,
 	ratings: args.ratings,
+	...(args.names ? { realNames: DEMO_REAL_NAMES } : {}),
 	...(args.quick
 		? {
 				quick: {
@@ -217,6 +224,13 @@ async function arrive(selector: string, label: string): Promise<void> {
 }
 
 await page.goto(result.joinUrl, { waitUntil: 'domcontentloaded' });
+
+// The door asks for a real name (for the teacher alone) before the lobby.
+// Skip it: the opened student is a person at a keyboard, not a roster row.
+const nameDoor = page.locator('input.join__name-input');
+if (await nameDoor.waitFor({ state: 'visible', timeout: 4000 }).then(() => true, () => false)) {
+	await page.locator('button.btn--ghost').first().click();
+}
 
 /**
  * The opened student joined AFTER positioning was over, so they have no camp —

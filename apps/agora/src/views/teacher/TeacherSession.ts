@@ -20,33 +20,20 @@ import { Voting } from '../Voting';
 import { TeacherInstructions } from './TeacherInstructions';
 import { StagePlanEditor } from './StagePlanEditor';
 import { planItemLabel } from '../../components/StageNav';
-import { rankedAnswers } from '../QuestionStage';
-import { CpBands, bandClassOf, bandLabelOf } from '../../components/CpBands';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { CountdownTimer } from '../../components/CountdownTimer';
 import { QRShare } from '../../components/QRShare';
 import { LookPicker } from '../../components/LookPicker';
 import { classLooks } from '../../lib/looks';
 import {
-	AgoraParticipant,
 	AgoraSessionMode,
 	AgoraStage,
 	AgoraThemeChoice,
 	resolveAgoraTheme,
 	AgoraStagePlanItem,
-	AgoraSession,
 	ChallengePhase,
-	VotingGameState,
 	VotingStageSettings,
-	AGORA_CHALLENGE,
-	AGORA_VOTING,
-	CutoffBy,
-	ResultsBy,
-	evaluateVotingTrigger,
-	resolveQuestionSelection,
-	selectCarriedAnswers,
 } from '@freedi/shared-types';
-import { AgoraProposal } from '../../lib/proposals';
 import { setSessionTheme, setVotingSettings } from '../../lib/teacher';
 import { getVotingState, listenToVoting, stopVotingListeners } from '../../lib/voting';
 import {
@@ -59,6 +46,26 @@ import {
 	skipSpeaker,
 	startRound,
 } from '../../lib/votingGame';
+import {
+	challengeTurnCard,
+	votingLiveCard,
+	votingSettingsCard,
+	type ChallengeActions,
+} from './VotingCards';
+import { questionPanel, triggerLine } from './DeliberationCards';
+import { ClassPanel, classProgressCard, progressFacts } from './ClassPanel';
+import { MessagesPanel } from './MessagesPanel';
+import { StudentThreadDrawer } from './StudentThreadDrawer';
+import {
+	listenToTeacherConsole,
+	realNameOf,
+	stopTeacherConsole,
+	unreadRepliesTotal,
+} from '../../lib/teacherConsole';
+
+/** The console's three faces: the board, the class, and what the class wrote */
+type ConsoleTab = 'live' | 'class' | 'messages';
+const TABS: readonly ConsoleTab[] = ['live', 'class', 'messages'];
 
 /**
  * Teacher live panel — projector-friendly: the stage rail, class progress,
@@ -69,638 +76,6 @@ import {
  * array the advance callable walks — so the button offered is always one the
  * server will open.
  */
-
-/** Stages where students move through self-paced sub-steps the teacher can't see on the projector */
-const PROGRESS_STAGES = new Set<AgoraStage>([
-	AgoraStage.framing,
-	AgoraStage.perspectives,
-	AgoraStage.needs,
-	AgoraStage.positioning,
-	AgoraStage.question,
-	AgoraStage.deliberation,
-	AgoraStage.voting,
-]);
-
-/** One student's progress within the current stage: done flag + a compact label */
-function participantProgress(
-	participant: AgoraParticipant,
-	item: AgoraStagePlanItem,
-	proposals: readonly AgoraProposal[],
-	answers: readonly AgoraProposal[],
-	voterUids: ReadonlySet<string>,
-): { done: boolean; label: m.Children } {
-	const stage = item.stage;
-	const check = m(Icon, { name: 'check', size: 16 });
-	if (stage === AgoraStage.voting) {
-		const done = voterUids.has(participant.userId);
-
-		return { done, label: done ? check : '—' };
-	}
-	if (stage === AgoraStage.positioning) {
-		const done = participant.campPosition !== undefined;
-
-		return { done, label: done ? check : '—' };
-	}
-	if (stage === AgoraStage.deliberation) {
-		const done = proposals.some((proposal) => proposal.creatorId === participant.userId);
-
-		return { done, label: done ? check : '—' };
-	}
-	if (stage === AgoraStage.question) {
-		const done = answers.some((answer) => answer.creatorId === participant.userId);
-
-		return { done, label: done ? check : '—' };
-	}
-	const progress = participant.stageProgress;
-	// Progress from an earlier stage says nothing about this one
-	if (!progress || progress.stage !== stage) return { done: false, label: '—' };
-	const done = progress.scenesDone >= progress.scenesTotal;
-
-	return {
-		done,
-		label: done ? check : `${progress.scenesDone}/${progress.scenesTotal}`,
-	};
-}
-
-/** Who finished the current stage's self-paced steps — the "can I advance?" card */
-function classProgressCard(
-	item: AgoraStagePlanItem,
-	participants: readonly AgoraParticipant[],
-	proposals: readonly AgoraProposal[],
-	answers: readonly AgoraProposal[],
-	voterUids: ReadonlySet<string>,
-): m.Children {
-	if (!PROGRESS_STAGES.has(item.stage) || participants.length === 0) return null;
-	const entries = participants.map((participant) => ({
-		participant,
-		...participantProgress(participant, item, proposals, answers, voterUids),
-	}));
-	const doneCount = entries.filter((entry) => entry.done).length;
-	const countKey =
-		item.stage === AgoraStage.positioning
-			? 'teacher.positioned_count'
-			: item.stage === AgoraStage.voting
-				? 'teacher.voted_count'
-				: item.stage === AgoraStage.question
-					? 'teacher.answered_count'
-					: 'teacher.finished_count';
-
-	return m('.card.class-progress', [
-		m('.class-progress__head', [
-			m('p.teacher__section-title', t('teacher.class_progress')),
-			m(
-				'span.class-progress__count',
-				{ class: doneCount === entries.length ? 'class-progress__count--all' : undefined },
-				t(countKey, { n: doneCount, total: entries.length }),
-			),
-		]),
-		m(
-			'.class-progress__chips',
-			entries.map((entry) =>
-				m(
-					'span.class-progress__chip',
-					{
-						key: entry.participant.participantId,
-						class: entry.done ? 'class-progress__chip--done' : undefined,
-					},
-					[
-						m('span.class-progress__name', entry.participant.anonName),
-						m('span.class-progress__state', entry.label),
-					],
-				),
-			),
-		),
-	]);
-}
-
-/** The ballot select's plain values → the shared enum; anything unknown is the default */
-function votingCutoffFromSelectValue(value: string): CutoffBy {
-	if (value === 'threshold') return CutoffBy.aboveThreshold;
-	if (value === 'all') return CutoffBy.all;
-
-	return CutoffBy.topOptions;
-}
-
-/**
- * How the vote will run, set while the class is still deliberating.
- *
- * Defaults are live even when the teacher never opens this card: an untouched
- * session votes on the top three by consensus, and the most-voted proposal
- * wins outright. Every control here only narrows that. A session with an
- * explicit plan owns its voting item outright, so the on/off switch is not
- * offered there — remove the stage from the plan instead.
- */
-function votingSettingsCard(
-	settings: VotingStageSettings | undefined,
-	saving: boolean,
-	planOwnsVoting: boolean,
-	onSave: (next: VotingStageSettings) => void,
-): m.Children {
-	const selection = settings?.selection;
-	const enabled = planOwnsVoting || settings?.enabled !== false;
-	const cutoffBy = selection?.cutoffBy ?? CutoffBy.topOptions;
-	const byThreshold = cutoffBy === CutoffBy.aboveThreshold;
-	const byAll = cutoffBy === CutoffBy.all;
-	const topX = selection?.numberOfResults ?? AGORA_VOTING.DEFAULT_TOP_X;
-	const cutoff = selection?.cutoffNumber ?? AGORA_VOTING.DEFAULT_CUTOFF_CP;
-	const winThreshold = settings?.winningConsensusThreshold;
-	const challengeGame = settings?.challengeGame === true;
-	const maxTurns = settings?.challengeMaxTurns ?? AGORA_CHALLENGE.DEFAULT_MAX_TURNS;
-
-	// Spread what is already stored first, so a control this card does not own
-	// — the reveal and live-reorder switches the teacher flips from the live
-	// panel during the vote — is never silently dropped by a save from here.
-	const base = (): VotingStageSettings => ({
-		...settings,
-		...(planOwnsVoting ? {} : { enabled }),
-		selection: {
-			resultsBy: ResultsBy.consensus,
-			cutoffBy,
-			numberOfResults: topX,
-			cutoffNumber: cutoff,
-		},
-		...(winThreshold !== undefined ? { winningConsensusThreshold: winThreshold } : {}),
-	});
-	const patch = (next: Partial<VotingStageSettings>): void => onSave({ ...base(), ...next });
-
-	return m('.card.stack.voting-settings', [
-		m('p.teacher__section-title', t('teacher.voting_settings')),
-
-		planOwnsVoting
-			? null
-			: m('label.voting-settings__row', [
-					m('input[type=checkbox]', {
-						checked: enabled,
-						disabled: saving,
-						onchange: (event: Event) =>
-							patch({ enabled: (event.target as HTMLInputElement).checked }),
-					}),
-					m('span', t('teacher.voting_enabled')),
-				]),
-
-		enabled
-			? [
-					m('p.voting-settings__hint', t('teacher.voting_manual_hint')),
-					m('label.voting-settings__row', [
-						m('span', t('teacher.voting_mode')),
-						m(
-							'select',
-							{
-								disabled: saving,
-								onchange: (event: Event) =>
-									patch({
-										selection: {
-											resultsBy: ResultsBy.consensus,
-											cutoffBy: votingCutoffFromSelectValue(
-												(event.target as HTMLSelectElement).value,
-											),
-											numberOfResults: topX,
-											cutoffNumber: cutoff,
-										},
-									}),
-							},
-							[
-								m(
-									'option',
-									{ value: 'top', selected: !byThreshold && !byAll },
-									t('teacher.voting_mode_top'),
-								),
-								m(
-									'option',
-									{ value: 'threshold', selected: byThreshold },
-									t('teacher.voting_mode_threshold'),
-								),
-								m('option', { value: 'all', selected: byAll }, t('teacher.voting_mode_all')),
-							],
-						),
-					]),
-
-					byAll
-						? null
-						: byThreshold
-							? m('label.voting-settings__row', [
-									m('span', t('teacher.voting_threshold')),
-									m('input[type=number]', {
-										value: cutoff,
-										step: '0.05',
-										min: '-1',
-										max: '1',
-										disabled: saving,
-										onchange: (event: Event) =>
-											patch({
-												selection: {
-													resultsBy: ResultsBy.consensus,
-													cutoffBy: CutoffBy.aboveThreshold,
-													numberOfResults: topX,
-													cutoffNumber: Number((event.target as HTMLInputElement).value),
-												},
-											}),
-									}),
-								])
-							: m('label.voting-settings__row', [
-									m('span', t('teacher.voting_top_x')),
-									m('input[type=number]', {
-										value: topX,
-										min: String(AGORA_VOTING.MIN_TOP_X),
-										max: String(AGORA_VOTING.MAX_TOP_X),
-										disabled: saving,
-										onchange: (event: Event) =>
-											patch({
-												selection: {
-													resultsBy: ResultsBy.consensus,
-													cutoffBy: CutoffBy.topOptions,
-													numberOfResults: Number((event.target as HTMLInputElement).value),
-													cutoffNumber: cutoff,
-												},
-											}),
-									}),
-								]),
-
-					// Blank means "the most-voted proposal wins, full stop"
-					m('label.voting-settings__row', [
-						m('span', t('teacher.voting_win_threshold')),
-						m('input[type=number]', {
-							value: winThreshold ?? '',
-							step: '0.01',
-							min: '-1',
-							max: '1',
-							placeholder: '—',
-							disabled: saving,
-							onchange: (event: Event) => {
-								const raw = (event.target as HTMLInputElement).value;
-								const rest = base();
-								delete rest.winningConsensusThreshold;
-								onSave(raw === '' ? rest : { ...rest, winningConsensusThreshold: Number(raw) });
-							},
-						}),
-					]),
-					m('p.voting-settings__hint', t('teacher.voting_win_threshold_hint')),
-
-					// Whether the ballot can still change once the vote has started.
-					// Off unless the teacher says otherwise: no class agreed in
-					// advance to have its ballot rewritten mid-election.
-					m('label.voting-settings__row', [
-						m('input[type=checkbox]', {
-							checked: challengeGame,
-							disabled: saving,
-							onchange: (event: Event) =>
-								patch({ challengeGame: (event.target as HTMLInputElement).checked }),
-						}),
-						m('span', t('teacher.challenge_game')),
-					]),
-					m('p.voting-settings__hint', t('teacher.challenge_game_hint')),
-
-					challengeGame
-						? m('label.voting-settings__row', [
-								m('span', t('teacher.challenge_max_turns')),
-								m('input[type=number]', {
-									value: maxTurns,
-									min: String(AGORA_CHALLENGE.MIN_MAX_TURNS),
-									max: String(AGORA_CHALLENGE.MAX_TURNS_CEILING),
-									disabled: saving,
-									onchange: (event: Event) =>
-										patch({
-											challengeMaxTurns: Number((event.target as HTMLInputElement).value),
-										}),
-								}),
-							])
-						: null,
-					challengeGame
-						? m('p.voting-settings__hint', t('teacher.challenge_max_turns_hint'))
-						: null,
-				]
-			: null,
-	]);
-}
-
-/** Net agreement as printed on the teacher's lists */
-function formatMean(mean: number): string {
-	const rounded = Math.round(mean * 10) / 10;
-
-	return `${rounded > 0 ? '+' : ''}${rounded.toFixed(1)}`;
-}
-
-/**
- * The live answers of the question the room is on, ranked by net agreement,
- * with the ones that would travel forward marked — the same arithmetic the
- * server closes the stage with — over the C_p banding of those same carried
- * answers, so the teacher can see what the room is actually behind before
- * deciding to move on.
- */
-function questionPanel(
-	session: AgoraSession,
-	item: AgoraStagePlanItem,
-	answers: readonly AgoraProposal[],
-): m.Children {
-	const named = session.identity === 'named';
-	const ranked = rankedAnswers(answers, named);
-	const carried = new Set(
-		selectCarriedAnswers(ranked, resolveQuestionSelection(item)).map((row) => row.statementId),
-	);
-	const outcome = session.stageState?.[item.itemId]?.outcome;
-
-	const carriedRows = ranked.filter((row) => carried.has(row.statementId));
-
-	return m('.card.stack.teacher-answers', [
-		m('.class-progress__head', [
-			m('p.teacher__section-title', t('teacher.answers_title')),
-			m('span.class-progress__count', String(ranked.length)),
-		]),
-		outcome?.summary ? m('p.question__summary', outcome.summary) : null,
-		// What the room is behind, banded by C_p — live while the question is
-		// open (the bands, no prose), and the AI's record once it closes.
-		carriedRows.length > 0
-			? m(CpBands, { answers: outcome?.selected ?? carriedRows, bands: outcome?.bands })
-			: null,
-		ranked.length === 0
-			? m('p.home-explanation', t('question.waiting_for_answers'))
-			: m(
-					'ol.teacher-answers__list',
-					ranked.map((row) =>
-						m(
-							'li.teacher-answers__row',
-							{
-								key: row.statementId,
-								class: carried.has(row.statementId) ? 'teacher-answers__row--carried' : undefined,
-							},
-							[
-								m('.teacher-answers__head', [
-									row.anonName ? m('span.question__who', row.anonName) : null,
-									row.raters > 0
-										? m(`span.${bandClassOf(row).split(' ').join('.')}`, bandLabelOf(row))
-										: null,
-									m(
-										'span.question__agreement',
-										row.raters > 0
-											? t('question.net_agreement', { value: formatMean(row.mean), n: row.raters })
-											: t('results.agreement_unrated'),
-									),
-									carried.has(row.statementId)
-										? m('span.teacher-answers__carried', t('teacher.will_carry'))
-										: null,
-								]),
-								m('p.teacher-answers__text', row.statement),
-							],
-						),
-					),
-				),
-		m('p.voting-settings__hint', t('teacher.answers_hint')),
-	]);
-}
-
-/** The auto-open-voting rule as it stands right now, from the live scores */
-function triggerLine(item: AgoraStagePlanItem, hasVotingNext: boolean): m.Children {
-	const rule = item.votingTrigger;
-	if (!rule?.enabled || !hasVotingNext)
-		return m('p.voting-settings__hint', t('teacher.trigger_off'));
-	const rows = Object.values(getDeliberationState().scores).map((score) => ({
-		statementId: score.statementId,
-		mean: score.classConsensus?.mean ?? 0,
-		n: score.classConsensus?.n ?? 0,
-	}));
-	const verdict = evaluateVotingTrigger(rows, rule);
-	if (verdict.fired) {
-		return m('p.teacher-trigger.teacher-trigger--ready', t('teacher.trigger_ready'));
-	}
-
-	return m(
-		'p.teacher-trigger',
-		t('teacher.trigger_waiting', {
-			single: rule.singleMin.toFixed(2),
-			pair: rule.pairMin.toFixed(2),
-			best: verdict.best === null ? '—' : formatMean(verdict.best),
-			min: rule.minRaters,
-		}),
-	);
-}
-
-/**
- * The controls the teacher holds WHILE the vote is open.
- *
- * Two switches, both off by default. Revealing the tallies is a decision about
- * the room — a running count is an argument, and the leading option gathers
- * votes for leading — so it is the teacher's to make, usually at the close.
- * Live reorder is the flourish that goes with it, and is only offered once the
- * numbers are visible: sorting by a hidden count would leak it.
- *
- * The turnout — how many have voted — is not on this card, because it is never
- * hidden from anyone.
- */
-function votingLiveCard(
-	settings: VotingStageSettings | undefined,
-	voted: number,
-	classSize: number,
-	saving: boolean,
-	challengeLive: boolean,
-	onSave: (next: VotingStageSettings) => void,
-): m.Children {
-	const showResults = settings?.showResults === true;
-	const liveReorder = settings?.liveReorder === true;
-	const patch = (next: Partial<VotingStageSettings>): void => onSave({ ...settings, ...next });
-
-	return m('.card.stack.voting-settings', [
-		m('.voting-settings__head', [
-			m('p.teacher__section-title', t('voting.title')),
-			m(
-				'span.voting-settings__turnout',
-				{
-					class: voted >= classSize && classSize > 0 ? 'voting-settings__turnout--all' : undefined,
-				},
-				t('teacher.voted_count', { n: voted, total: classSize }),
-			),
-		]),
-
-		m('label.voting-settings__row', [
-			m('input[type=checkbox]', {
-				checked: showResults,
-				// A challenge is judged blind, so this switch does nothing while one
-				// is standing. Disable it rather than let the teacher flip a
-				// control and watch the room not change.
-				disabled: saving || challengeLive,
-				onchange: (event: Event) =>
-					patch({ showResults: (event.target as HTMLInputElement).checked }),
-			}),
-			m('span', t('teacher.show_results')),
-		]),
-		challengeLive
-			? m('p.voting-settings__hint', t('teacher.results_locked_during_challenge'))
-			: null,
-
-		m('label.voting-settings__row', [
-			m('input[type=checkbox]', {
-				checked: liveReorder,
-				// Sorting by a number the class cannot see would leak it
-				disabled: saving || !showResults,
-				onchange: (event: Event) =>
-					patch({ liveReorder: (event.target as HTMLInputElement).checked }),
-			}),
-			m('span', t('teacher.live_reorder')),
-		]),
-
-		m(
-			'p.voting-settings__hint',
-			t(showResults ? 'teacher.results_shown_hint' : 'teacher.results_hidden_hint'),
-		),
-	]);
-}
-
-export interface ChallengeActions {
-	start(): void;
-	openFloor(): void;
-	openVote(): void;
-	resolve(): void;
-	skip(): void;
-	next(): void;
-	end(): void;
-}
-
-/**
- * How long the rest of the round will take, in minutes, at the pace this class
- * has actually kept.
- *
- * The rotation is the whole class and a turn costs a minute or two, so a
- * teacher who starts one without this number finds out how long it takes by
- * running out of lesson. Measured rather than assumed: a class that is flying
- * should not be told it is going slowly.
- */
-function paceMinutes(game: VotingGameState): number | null {
-	const done = game.turnIndex;
-	if (done < 1) return null;
-	const remaining = Math.min(game.order.length, game.maxTurns) - done;
-	if (remaining <= 0) return 0;
-	const perTurn = (Date.now() - game.startedAt) / done;
-
-	return Math.max(1, Math.round((perTurn * remaining) / 60_000));
-}
-
-/**
- * The round, run from one card: one primary button that says what happens
- * next, and the ways out beside it.
- *
- * Skip and End sit on every phase on purpose. The failure this round is most
- * likely to meet is a student who has left the room, and recovering from that
- * must cost one tap rather than a decision.
- */
-function challengeTurnCard(
-	game: VotingGameState | null,
-	saving: boolean,
-	actions: ChallengeActions,
-): m.Children {
-	if (!game || game.phase === ChallengePhase.ended) {
-		return m('.card.stack.challenge-turn', [
-			m('p.teacher__section-title', t('teacher.challenge_title')),
-			m(
-				'p.voting-settings__hint',
-				t(game ? 'teacher.challenge_over' : 'teacher.challenge_not_started'),
-			),
-			!game
-				? m(
-						'button.teacher__advance',
-						{ disabled: saving, onclick: () => actions.start() },
-						t('teacher.challenge_start'),
-					)
-				: null,
-		]);
-	}
-
-	const speaker = game.speakerAnonName ?? '';
-	const minutes = paceMinutes(game);
-	const total = Math.min(game.order.length, game.maxTurns);
-	const lastTurn = game.turnIndex + 1 >= total;
-
-	const primary = ((): { label: string; run: () => void; disabled?: boolean } => {
-		switch (game.phase) {
-			case ChallengePhase.idle:
-				return { label: t('teacher.open_floor', { name: speaker }), run: actions.openFloor };
-			case ChallengePhase.floor:
-				return {
-					label: t('teacher.open_vote'),
-					run: actions.openVote,
-					// Nothing to vote on until the student has actually sent something
-					disabled: !game.challengerStatementId,
-				};
-			case ChallengePhase.vote:
-				return { label: t('teacher.close_resolve'), run: actions.resolve };
-			default:
-				return {
-					label: t(lastTurn ? 'teacher.finish_round' : 'teacher.next_speaker'),
-					run: actions.next,
-				};
-		}
-	})();
-
-	return m('.card.stack.challenge-turn', [
-		m('.voting-settings__head', [
-			m('p.teacher__section-title', t('teacher.challenge_title')),
-			m(
-				'span.voting-settings__turnout',
-				t('teacher.challenge_pace_count', { n: game.turnIndex + 1, total }),
-			),
-		]),
-
-		m('p.challenge-turn__speaker', t('teacher.challenge_speaker', { name: speaker })),
-
-		game.phase === ChallengePhase.floor && !game.challengerStatementId
-			? m('p.voting-settings__hint', t('teacher.challenge_waiting_pitch'))
-			: null,
-
-		m(
-			'button.challenge-turn__primary',
-			{ disabled: saving || primary.disabled === true, onclick: () => primary.run() },
-			primary.label,
-		),
-
-		m('.challenge-turn__secondary', [
-			game.phase === ChallengePhase.idle || game.phase === ChallengePhase.floor
-				? m(
-						'button.challenge-turn__minor',
-						{ disabled: saving, onclick: () => actions.skip() },
-						t('teacher.skip_speaker', { name: speaker }),
-					)
-				: null,
-			m(
-				'button.challenge-turn__minor',
-				{ disabled: saving, onclick: () => actions.end() },
-				t('teacher.end_round'),
-			),
-		]),
-
-		minutes !== null
-			? m('p.voting-settings__hint', t('teacher.challenge_pace', { minutes: String(minutes) }))
-			: null,
-
-		roster(game),
-	]);
-}
-
-/** The rotation as the teacher reads it: done, now, passed, skipped, waiting. */
-function roster(game: VotingGameState): m.Children {
-	const shown = Math.min(game.order.length, game.maxTurns);
-	const passed = new Set(game.passedUserIds);
-	const skipped = new Set(game.skippedUserIds);
-
-	return m(
-		'.challenge__roster',
-		game.order.slice(0, shown).map((uid, index) => {
-			const now = index === game.turnIndex;
-			const modifier = now
-				? 'challenge__seat--now'
-				: passed.has(uid)
-					? 'challenge__seat--passed'
-					: skipped.has(uid)
-						? 'challenge__seat--skipped'
-						: index < game.turnIndex
-							? 'challenge__seat--done'
-							: '';
-
-			return m(
-				'span.challenge__seat',
-				{ key: uid, class: modifier || undefined },
-				game.orderNames[index] ?? '',
-			);
-		}),
-	);
-}
 
 export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
@@ -714,6 +89,21 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let editingPlan: AgoraStagePlanItem[] | null = null;
 	let savingPlan = false;
 	let planSaveFailed = false;
+	let tab: ConsoleTab = 'live';
+	/** The student whose private thread is open beside the console, and which text it is about */
+	let drawerUid: string | null = null;
+	let drawerAbout: string | undefined;
+	let projectorLinkCopied = false;
+
+	function openDrawer(studentUid: string, aboutStatementId?: string): void {
+		drawerUid = studentUid;
+		drawerAbout = aboutStatementId;
+	}
+
+	/** The projector: a second tab (or a classroom PC) showing what the students see */
+	function projectorUrl(): string {
+		return `${window.location.origin}/#!/teach/screen/${sessionId}`;
+	}
 
 	function saveVotingSettings(next: VotingStageSettings): void {
 		if (savingSettings) return;
@@ -824,11 +214,18 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			stopListening();
 			stopDeliberationListeners();
 			stopVotingListeners();
+			stopTeacherConsole();
 		},
 
 		view() {
 			// Re-attach on every render (idempotent) — see GameController note.
-			if (userId) listenToSession(sessionId, userId);
+			if (userId) {
+				listenToSession(sessionId, userId);
+				// Every stage: the Messages tab reads answers and threads from the
+				// lobby on, and the results recap projects the same board
+				listenToDeliberation(sessionId, userId);
+				listenToTeacherConsole(sessionId, userId);
+			}
 
 			const { session, participants, loading, error } = getSessionState();
 
@@ -866,17 +263,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			const inDeliberation = current.stage === AgoraStage.deliberation;
 			const inQuestion = current.stage === AgoraStage.question;
-			// The results recap projects the same board and journeys, and they all
-			// read from the deliberation listeners — a teacher who opens (or
-			// refreshes) at results must not project an empty square. The question
-			// panel reads answers off the same listener.
-			const needsDeliberationData =
-				inDeliberation ||
-				inQuestion ||
-				current.stage === AgoraStage.results ||
-				current.stage === AgoraStage.ended;
-			if (needsDeliberationData && userId) listenToDeliberation(sessionId, userId);
-			const { proposals, answersByQuestion } = getDeliberationState();
+			const { proposals, answersByQuestion, studentEvalTimes } = getDeliberationState();
 			const answers =
 				inQuestion && current.statementId ? (answersByQuestion[current.statementId] ?? []) : [];
 
@@ -886,6 +273,98 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const challengePhase = getGame(session)?.phase;
 			const challengeLive =
 				challengePhase === ChallengePhase.vote || challengePhase === ChallengePhase.resolving;
+
+			const facts = progressFacts(proposals, answers, voterUids);
+			// How many texts each student weighed — from the anonymous timeline the
+			// square already streams (evaluator ids only, never values)
+			const ratingsByUid = new Map<string, number>();
+			for (const raters of Object.values(studentEvalTimes)) {
+				for (const rater of raters) {
+					ratingsByUid.set(rater.evaluatorId, (ratingsByUid.get(rater.evaluatorId) ?? 0) + 1);
+				}
+			}
+			const unread = unreadRepliesTotal();
+
+			const tabStrip = m(
+				'.teacher-tabs',
+				{ role: 'tablist' },
+				TABS.map((name) =>
+					m(
+						'button.teacher-tabs__tab',
+						{
+							key: name,
+							type: 'button',
+							role: 'tab',
+							'aria-selected': String(tab === name),
+							class: tab === name ? 'teacher-tabs__tab--on' : undefined,
+							onclick: () => {
+								tab = name;
+							},
+						},
+						[
+							t(`teacher.tab_${name}`),
+							name !== 'live' && unread > 0
+								? m('span.class-panel__badge', { 'aria-hidden': 'true' }, String(unread))
+								: null,
+						],
+					),
+				),
+			);
+
+			const tabPanel =
+				tab === 'class'
+					? m(ClassPanel, {
+							plan,
+							currentIndex,
+							participants,
+							facts,
+							ratingsByUid,
+							onMessage: openDrawer,
+						})
+					: m(MessagesPanel, { session, participants, onMessage: openDrawer });
+
+			const drawerParticipant = drawerUid
+				? participants.find((participant) => participant.userId === drawerUid)
+				: undefined;
+			const drawer =
+				drawerUid && drawerParticipant
+					? m(StudentThreadDrawer, {
+							sessionId,
+							studentUid: drawerUid,
+							anonName: drawerParticipant.anonName,
+							realName: realNameOf(drawerUid),
+							aboutStatementId: drawerAbout,
+							onClose: () => {
+								drawerUid = null;
+								drawerAbout = undefined;
+							},
+						})
+					: null;
+
+			const projectorRow = m('.teacher__mode-row.teacher__projector', [
+				m(
+					'button.btn.btn--secondary.btn--sm',
+					{ type: 'button', onclick: () => window.open(projectorUrl(), '_blank', 'noopener') },
+					[m(Icon, { name: 'era', size: 16 }), ` ${t('teacher.open_projector')}`],
+				),
+				m(
+					'button.btn.btn--ghost.btn--sm',
+					{
+						type: 'button',
+						onclick: () => {
+							void navigator.clipboard?.writeText(projectorUrl()).then(() => {
+								projectorLinkCopied = true;
+								m.redraw();
+								window.setTimeout(() => {
+									projectorLinkCopied = false;
+									m.redraw();
+								}, 2000);
+							});
+						},
+					},
+					t(projectorLinkCopied ? 'teacher.projector_link_copied' : 'teacher.copy_projector_link'),
+				),
+			]);
 
 			const advanceButton = (primary: boolean): m.Children =>
 				next
@@ -999,103 +478,117 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 				return m('.shell.shell--wide', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-						m(Results, { session, topic }),
+						tabStrip,
+						tab === 'live' ? m(Results, { session, topic }) : tabPanel,
+						projectorRow,
 						advanceErrorLine(),
 						advanceButton(false),
 					]),
+					drawer,
 				]);
 			}
 
 			return m('.shell.shell--wide', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 					planRail,
+					tabStrip,
 
-					classProgressCard(current, participants, proposals, answers, voterUids),
+					...(tab !== 'live'
+						? [tabPanel]
+						: [
+								classProgressCard(current, participants, facts),
 
-					topic
-						? m(TeacherInstructions, {
-								stage: current.stage,
-								topic,
-								questionTitle: current.title,
-								questionExplanation: current.explanation,
-							})
-						: null,
-
-					inQuestion ? questionPanel(session, current, answers) : null,
-
-					// Set while the class still deliberates — by the time the ballot
-					// is drawn up the settings have already been read.
-					inDeliberation && (next?.stage === AgoraStage.voting || !planOwnsVoting)
-						? votingSettingsCard(
-								session.votingSettings,
-								savingSettings,
-								planOwnsVoting,
-								saveVotingSettings,
-							)
-						: null,
-
-					// While the vote is open the teacher holds the reveal, and always
-					// sees the tallies themselves — they cannot decide when to show
-					// the room something they cannot see.
-					inVoting
-						? [
-								// The round runs above the ballot: what the teacher taps
-								// next, and who it is waiting on.
-								session.votingSettings?.challengeGame === true
-									? challengeTurnCard(getGame(session), challenging, challengeActions)
+								topic
+									? m(TeacherInstructions, {
+											stage: current.stage,
+											topic,
+											questionTitle: current.title,
+											questionExplanation: current.explanation,
+										})
 									: null,
-								votingLiveCard(
-									session.votingSettings,
-									voterUids.size,
-									participants.length,
-									savingSettings,
-									challengeLive,
-									saveVotingSettings,
-								),
-								m(Voting, {
-									session,
-									myParticipant: participants[0],
-									userId,
-									board: true,
-								}),
-							]
-						: null,
 
-					// Students cycle propose→rate→help on their own; the teacher's
-					// deliberation panel shows progress and the auto-vote rule's state
-					inDeliberation
-						? m('.card.stack', [
-								m('.delib__header', [
-									session.roundEndsAt ? m(CountdownTimer, { endsAt: session.roundEndsAt }) : null,
-									m('span.values__score', `${t('teacher.proposals_count')}: ${proposals.length}`),
-								]),
-								triggerLine(current, next?.stage === AgoraStage.voting),
-							])
-						: null,
+								inQuestion ? questionPanel(session, current, answers) : null,
 
-					// The room's look: the two presets and whatever the class has
-					// built so far. Every phone that has not chosen its own follows
-					// this; the teacher can also crown a student's creation as the
-					// class look. A civic square wears Odyssey's and is not asked.
-					session.sessionMode !== AgoraSessionMode.civic
-						? m('.card.stack.teacher-look', [
-								m('p.teacher__section-title', t('teacher.look_title')),
-								m('p.teacher-look__hint', t('teacher.look_hint')),
-								m(LookPicker, {
-									current: resolveAgoraTheme(session, null),
-									classLooks: classLooks(participants, undefined),
-									onWear: (choice) => {
-										if (choice) saveLook(choice);
-									},
-								}),
-							])
-						: null,
+								// Set while the class still deliberates — by the time the ballot
+								// is drawn up the settings have already been read.
+								inDeliberation && (next?.stage === AgoraStage.voting || !planOwnsVoting)
+									? votingSettingsCard(
+											session.votingSettings,
+											savingSettings,
+											planOwnsVoting,
+											saveVotingSettings,
+										)
+									: null,
+
+								// While the vote is open the teacher holds the reveal, and always
+								// sees the tallies themselves — they cannot decide when to show
+								// the room something they cannot see.
+								inVoting
+									? [
+											// The round runs above the ballot: what the teacher taps
+											// next, and who it is waiting on.
+											session.votingSettings?.challengeGame === true
+												? challengeTurnCard(getGame(session), challenging, challengeActions)
+												: null,
+											votingLiveCard(
+												session.votingSettings,
+												voterUids.size,
+												participants.length,
+												savingSettings,
+												challengeLive,
+												saveVotingSettings,
+											),
+											m(Voting, {
+												session,
+												myParticipant: participants[0],
+												userId,
+												board: true,
+											}),
+										]
+									: null,
+
+								// Students cycle propose→rate→help on their own; the teacher's
+								// deliberation panel shows progress and the auto-vote rule's state
+								inDeliberation
+									? m('.card.stack', [
+											m('.delib__header', [
+												session.roundEndsAt
+													? m(CountdownTimer, { endsAt: session.roundEndsAt })
+													: null,
+												m(
+													'span.values__score',
+													`${t('teacher.proposals_count')}: ${proposals.length}`,
+												),
+											]),
+											triggerLine(current, next?.stage === AgoraStage.voting),
+										])
+									: null,
+
+								// The room's look: the two presets and whatever the class has
+								// built so far. Every phone that has not chosen its own follows
+								// this; the teacher can also crown a student's creation as the
+								// class look. A civic square wears Odyssey's and is not asked.
+								session.sessionMode !== AgoraSessionMode.civic
+									? m('.card.stack.teacher-look', [
+											m('p.teacher__section-title', t('teacher.look_title')),
+											m('p.teacher-look__hint', t('teacher.look_hint')),
+											m(LookPicker, {
+												current: resolveAgoraTheme(session, null),
+												classLooks: classLooks(participants, undefined),
+												onWear: (choice) => {
+													if (choice) saveLook(choice);
+												},
+											}),
+										])
+									: null,
+							]),
 
 					m('.card.teacher__code-panel', [
 						// The join code stays on the board through EVERY stage, so a
 						// latecomer can always join mid-lesson
 						m('p.teacher__section-title', t('teacher.session_code')),
 						m('.teacher__code', session.code),
+						projectorRow,
 						current.stage === AgoraStage.lobby
 							? [m(QRShare, { url: joinUrl }), m('p.lobby__status', t('teacher.scan_to_join'))]
 							: [
@@ -1110,6 +603,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						advanceButton(true) ?? m('p.lobby__status', planItemLabel(current)),
 					]),
 				]),
+				drawer,
 			]);
 		},
 	};

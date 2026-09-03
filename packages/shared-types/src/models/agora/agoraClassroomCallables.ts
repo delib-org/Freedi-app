@@ -149,6 +149,8 @@ export interface TeacherConsoleReport {
 	session: unknown;
 	/** Students only (AI raters excluded), AgoraParticipant JSON */
 	participants: unknown[];
+	/** Real names typed at the door (AgoraIdentity JSON) — teacher-only, may be empty */
+	identities: unknown[];
 }
 
 export type TeacherConsoleResponse =
@@ -162,4 +164,44 @@ export interface CreateSessionClassroomFields {
 	classId?: string;
 	/** Which beats to run — the classroom counterpart of the civic script */
 	flow?: AgoraSessionFlow;
+}
+
+/**
+ * `agoraTeacherMessage` — one line into the private teacher ↔ student thread.
+ * The teacher names the student; a student's reply names nobody (it is their
+ * own thread). Exactly one of `text` / `presetKey` is required.
+ */
+export interface TeacherMessageRequest {
+	sessionId: string;
+	/** Teacher only: which student */
+	studentUid?: string;
+	text?: string;
+	/** A quick phrase (AGORA_TEACHER_PRESETS) — rendered in the student's language */
+	presetKey?: string;
+	/** "About your proposal": the text the note concerns */
+	aboutStatementId?: string;
+}
+
+export interface TeacherMessageResponse {
+	messageId: string;
+}
+
+/** `agoraModerateStatement` — the session teacher's hand on a student's text. */
+export interface ModerateStatementRequest {
+	sessionId: string;
+	action: 'hide' | 'restore' | 'edit' | 'clearLookName' | 'forgetNames';
+	/** hide / restore / edit */
+	statementId?: string;
+	/** hide: shown to the author on the thread, never to the class */
+	reason?: string;
+	/** edit: the replacement wording */
+	text?: string;
+	/** clearLookName: whose custom look name to blank */
+	studentUid?: string;
+}
+
+export interface ModerateStatementResponse {
+	ok: true;
+	/** hide / restore: the resulting state */
+	hidden?: boolean;
 }

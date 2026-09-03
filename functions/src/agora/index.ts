@@ -22,3 +22,5 @@ export { agoraJoinClass } from './fn_agoraJoinClass';
 export { agoraTeacherRoster } from './fn_agoraTeacherRoster';
 export { agoraTeacherConsole } from './fn_agoraTeacherConsole';
 export { onAgoraSessionFinished } from './fn_onAgoraSessionFinished';
+export { agoraTeacherMessage } from './fn_agoraTeacherMessage';
+export { agoraModerateStatement } from './fn_agoraModerateStatement';

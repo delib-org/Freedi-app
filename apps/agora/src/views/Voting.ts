@@ -16,7 +16,8 @@ import {
 
 export interface VotingAttrs {
 	session: AgoraSession;
-	myParticipant: AgoraParticipant;
+	/** Absent on the projector, which has no seat */
+	myParticipant?: AgoraParticipant;
 	userId: string;
 	/** The vote is over (or the player stepped back to it): tallies only */
 	readOnly?: boolean;
@@ -29,6 +30,12 @@ export interface VotingAttrs {
 	 * they cannot decide blind.
 	 */
 	board?: boolean;
+	/**
+	 * The classroom projector: the board's read-only layout, but the reveal
+	 * follows the class setting — this screen is what the STUDENTS see, so it
+	 * must not show a count the teacher has not yet revealed.
+	 */
+	projector?: boolean;
 }
 
 /**
@@ -94,7 +101,7 @@ export function Voting(): m.Component<VotingAttrs> {
 
 	return {
 		view(vnode) {
-			const { session, userId, board = false } = vnode.attrs;
+			const { session, userId, board = false, projector = false } = vnode.attrs;
 			// The projector is never a ballot, whatever the caller said
 			const readOnly = board || vnode.attrs.readOnly === true;
 			const candidates: VotingCandidate[] = session.voting?.candidates ?? [];
@@ -124,7 +131,8 @@ export function Voting(): m.Component<VotingAttrs> {
 			 * The teacher's own board is exempt — they decide when to reveal, and
 			 * cannot decide blind.
 			 */
-			const showResults = board || readOnly || (settings?.showResults === true && !challengeLive);
+			const showResults =
+				(!projector && (board || readOnly)) || (settings?.showResults === true && !challengeLive);
 			// Reordering by a hidden number would leak it, and a ballot that moves
 			// under a voter's finger loses their place.
 			const liveReorder = showResults && settings?.liveReorder === true;

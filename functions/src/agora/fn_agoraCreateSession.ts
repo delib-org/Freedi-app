@@ -60,6 +60,8 @@ interface Request {
 	/** The ordered stage list. Absent means the legacy order for the flow. */
 	stagePlan?: AgoraStagePlan;
 	identity?: AgoraIdentityMode;
+	/** Ask for real names at the door (teacher-only). Absent = on for a lesson. */
+	collectRealNames?: boolean;
 	/** The look the room wears by default; absent means AGORA_DEFAULT_THEME */
 	theme?: AgoraThemeChoice;
 }
@@ -229,6 +231,7 @@ export const agoraCreateSession = onCall(
 			stagePlan,
 			identity,
 			theme,
+			collectRealNames,
 		} = request.data ?? {};
 		const roomTheme = sanitizeTheme(theme);
 		const quickGame = quick !== undefined ? parseQuick(quick) : undefined;
@@ -393,6 +396,7 @@ export const agoraCreateSession = onCall(
 					? { stagePlan: planWithStatements, stageIndex: 0, stageState: {} }
 					: {}),
 				...(identity ? { identity } : {}),
+				collectRealNames: collectRealNames !== false,
 				...(roomTheme ? { theme: roomTheme } : {}),
 				stage: AgoraStage.lobby,
 				roundNumber: 0,

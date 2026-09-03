@@ -15,7 +15,10 @@ import {
 	CivicStanceMeta,
 	Evaluation,
 	AGORA_CIVIC_CENTER_POSITION,
+	AGORA_IDENTITY,
 	AGORA_SESSION,
+	AgoraIdentity,
+	createAgoraIdentityId,
 	createAgoraClassMemberId,
 	createAgoraParticipantId,
 	deriveCamp,
@@ -137,11 +140,52 @@ async function readStanceBaseline(
 	return Object.keys(baseline).length ? baseline : undefined;
 }
 
+/**
+ * The real name typed at the door, kept for the teacher alone. Written to
+ * `agoraIdentities` — never to the participant doc every phone in the room
+ * reads. A blank, a civic session, or a session that opted out all mean:
+ * nothing is written. On a rejoin the first name stands; a re-typed one on
+ * a second device never overwrites it.
+ */
+async function recordIdentity(
+	session: AgoraSession,
+	uid: string,
+	anonName: string,
+	realName: unknown,
+	memberId?: string,
+): Promise<void> {
+	if (typeof realName !== 'string') return;
+	const trimmed = realName.trim().slice(0, AGORA_IDENTITY.MAX_REAL_NAME);
+	if (!trimmed) return;
+	if (session.sessionMode === AgoraSessionMode.civic || session.collectRealNames === false) return;
+
+	const ref = db
+		.collection(Collections.agoraIdentities)
+		.doc(createAgoraIdentityId(session.sessionId, uid));
+	if ((await ref.get()).exists) return;
+	const now = Date.now();
+	const identity: AgoraIdentity = {
+		identityId: ref.id,
+		sessionId: session.sessionId,
+		teacherId: session.teacherId,
+		userId: uid,
+		anonName,
+		realName: trimmed,
+		...(memberId ? { memberId } : {}),
+		createdAt: now,
+		lastUpdate: now,
+		expiresAt: (session.lessonEndsAt ?? now) + AGORA_IDENTITY.RETENTION_MS,
+	};
+	await ref.set(identity);
+}
+
 interface Request {
 	code: string;
 	teamMemberCount?: number;
 	/** `named` sessions only: the name this person goes by */
 	displayName?: string;
+	/** For the teacher alone (`agoraIdentities`) — never on a card */
+	realName?: string;
 }
 
 /** Long enough for a real name, short enough to sit on a card */
@@ -166,7 +210,7 @@ export const agoraJoinSession = onCall(
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
-		const { code, teamMemberCount, displayName } = request.data ?? {};
+		const { code, teamMemberCount, displayName, realName } = request.data ?? {};
 		if (!code || typeof code !== 'string') {
 			throw new HttpsError('invalid-argument', 'code is required');
 		}
@@ -197,6 +241,7 @@ export const agoraJoinSession = onCall(
 			const existing = await participantRef.get();
 			if (existing.exists) {
 				const participant = existing.data() as AgoraParticipant;
+				await recordIdentity(session, uid, participant.anonName, realName, participant.memberId);
 
 				// A voyager seated before camp derivation existed (or before the
 				// centre fallback) can hold no campPosition. Heal it on rejoin, so
@@ -351,6 +396,8 @@ export const agoraJoinSession = onCall(
 
 				return name;
 			});
+
+			await recordIdentity(session, uid, anonName, realName, rosterMember?.memberId);
 
 			// The roster's "last active" column — fire-and-forget: losing it costs
 			// a timestamp, never a seat.

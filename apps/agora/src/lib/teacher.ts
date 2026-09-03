@@ -4,6 +4,7 @@ import {
 	AgoraCamp,
 	AgoraClassAggregate,
 	AgoraClassAggregateSchema,
+	AgoraIdentitySchema,
 	AgoraParticipant,
 	AgoraParticipantSchema,
 	AgoraSession,
@@ -353,6 +354,8 @@ export interface SessionReport {
 	session: AgoraSession;
 	/** Students only — AI raters filtered out */
 	participants: AgoraParticipant[];
+	/** userId → the real name typed at the door; empty when nobody gave one */
+	realNames: Record<string, string>;
 }
 
 /** One finished game, read once — the report screen holds no listeners. */
@@ -369,5 +372,10 @@ export async function fetchSessionReport(sessionId: string): Promise<SessionRepo
 	return {
 		session: parse(AgoraSessionSchema, data.session),
 		participants: parseEach(data.participants ?? [], parseParticipant, 'participant'),
+		realNames: Object.fromEntries(
+			parseEach(data.identities ?? [], (row) => parse(AgoraIdentitySchema, row), 'identity').map(
+				(identity) => [identity.userId, identity.realName],
+			),
+		),
 	};
 }

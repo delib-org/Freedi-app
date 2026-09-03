@@ -10,6 +10,10 @@ import type {
 	ChallengePhase,
 	JoinClassRequest,
 	JoinClassResponse,
+	ModerateStatementRequest,
+	ModerateStatementResponse,
+	TeacherMessageRequest,
+	TeacherMessageResponse,
 	TeacherConsoleRequest,
 	TeacherConsoleResponse,
 	TeacherRosterRequest,
@@ -38,6 +42,8 @@ export interface CreateSessionRequest {
 	/** The ordered stage list; absent means the legacy order */
 	stagePlan?: AgoraStagePlan;
 	identity?: AgoraIdentityMode;
+	/** Ask for real names at the door, for the teacher alone. Absent = on. */
+	collectRealNames?: boolean;
 	/** The look the room wears by default; absent means AGORA_DEFAULT_THEME */
 	theme?: AgoraThemeChoice;
 }
@@ -52,6 +58,8 @@ export interface JoinSessionRequest {
 	teamMemberCount?: number;
 	/** `named` sessions: the name this person goes by */
 	displayName?: string;
+	/** For the teacher alone — never on a card */
+	realName?: string;
 }
 
 export interface JoinSessionResponse {
@@ -256,6 +264,32 @@ export async function rerateStances(request: RerateStancesRequest): Promise<Rera
 	const call = httpsCallable<RerateStancesRequest, RerateStancesResponse>(
 		functions,
 		'agoraRerateStances',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** One line into the private teacher ↔ student thread — either side. */
+export async function teacherMessage(
+	request: TeacherMessageRequest,
+): Promise<TeacherMessageResponse> {
+	const call = httpsCallable<TeacherMessageRequest, TeacherMessageResponse>(
+		functions,
+		'agoraTeacherMessage',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The teacher's hand on a student's text: hide, restore, reword. */
+export async function moderateStatement(
+	request: ModerateStatementRequest,
+): Promise<ModerateStatementResponse> {
+	const call = httpsCallable<ModerateStatementRequest, ModerateStatementResponse>(
+		functions,
+		'agoraModerateStatement',
 	);
 	const result = await call(request);
 

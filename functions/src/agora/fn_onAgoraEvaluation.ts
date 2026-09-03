@@ -30,6 +30,8 @@ import {
 	getRandomUID,
 	isAgoraAiUid,
 	tallyAgoraCamps,
+	isAgoraHidden,
+	ModeratedDoc,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { awardCredit } from '../engagement/credits/creditEngine';
@@ -69,11 +71,13 @@ async function maybeAutoOpenVoting(
 	scores.set(fresh.statementId, fresh);
 
 	const verdict = evaluateVotingTrigger(
-		Array.from(scores.values()).map((score) => ({
-			statementId: score.statementId,
-			mean: score.classConsensus?.mean ?? 0,
-			n: score.classConsensus?.n ?? 0,
-		})),
+		Array.from(scores.values())
+			.filter((score) => score.hidden !== true)
+			.map((score) => ({
+				statementId: score.statementId,
+				mean: score.classConsensus?.mean ?? 0,
+				n: score.classConsensus?.n ?? 0,
+			})),
 		rule,
 	);
 	if (!verdict.fired) return;
@@ -362,6 +366,10 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 			 * wing. Positioning is one-shot in the UI, so this can only ever go
 			 * from unknown to known.
 			 */
+			// A text the teacher took down keeps the score it had: nothing moves,
+			// nothing pays, until it is restored.
+			if (isAgoraHidden(proposalSnap.data() as ModeratedDoc | undefined)) return;
+
 			const creatorId = proposalSnap.data()?.creatorId as string | undefined;
 			const authorSide = creatorId ? campOf.get(creatorId) : undefined;
 			const authorCamp = authorSide ?? AgoraCamp.center;

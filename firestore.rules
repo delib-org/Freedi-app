@@ -158,6 +158,8 @@ service cloud.firestore {
                          resource.data.get('stageState', {}) &&
                        request.resource.data.get('identity', '') ==
                          resource.data.get('identity', '') &&
+                       request.resource.data.get('collectRealNames', true) ==
+                         resource.data.get('collectRealNames', true) &&
                        // The room's look is the teacher's to set, live. The
                        // shape is pinned here because every client parses the
                        // session doc with a strict schema: one malformed write
@@ -237,6 +239,28 @@ service cloud.firestore {
                        // so a client cannot park a novel in a colour name.
                        agoraThemeChoiceValid(request.resource.data.get('theme', null)) &&
                        agoraCustomThemeValid(request.resource.data.get('builtTheme', null));
+    }
+
+    // Real names typed at the door, readable by the session's teacher ONLY.
+    // The console listens with `sessionId == X && teacherId == me`, which is
+    // exactly the per-document equality below — the one shape both runQuery
+    // and the SDK's listen path can prove (unlike `uid in array`, see
+    // agoraClasses). Written by agoraJoinSession, deleted by TTL or by the
+    // teacher's "forget names" — never by a client.
+    match /agoraIdentities/{identityId} {
+      allow read: if isAuthenticated() && resource.data.teacherId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // The private teacher <-> one-student thread. Each side lists with its own
+    // key, and both keys are pinned on every line by the callable that writes
+    // it (agoraTeacherMessage / agoraModerateStatement). A classmate holds
+    // neither key and sees nothing.
+    match /agoraTeacherMessages/{messageId} {
+      allow read: if isAuthenticated() &&
+                     (resource.data.teacherId == request.auth.uid ||
+                      resource.data.studentUid == request.auth.uid);
+      allow write: if false;
     }
 
     // Proposal scores (bridging/plausibility): server-computed only.
@@ -614,7 +638,13 @@ service cloud.firestore {
                // of the proposal lifecycle. A student who could strip it could
                // walk their challenge back into the first-draft credit.
                request.resource.data.get('agoraChallenge', false) ==
-                 resource.data.get('agoraChallenge', false);
+                 resource.data.get('agoraChallenge', false) &&
+               // The teacher's marks and the shared hide flag they mirror: a
+               // student who could clear them would put their own text back.
+               request.resource.data.get('hide', false) ==
+                 resource.data.get('hide', false) &&
+               request.resource.data.get('agoraModeration', {}) ==
+                 resource.data.get('agoraModeration', {});
       }
 
       // Reading requires a session. Not because statements are secret — most
@@ -665,7 +695,12 @@ service cloud.firestore {
                        (isAgoraStatement()
                           ? (isCreator() && agoraServerFieldsUnchanged())
                           : isAllowedToUpdate());
-      allow delete: if request.auth.uid != null && isAuthorized();
+      // Agora text is never deleted from a browser: the teacher takes it down
+      // through agoraModerateStatement (soft, restorable, told to the author).
+      // The session teacher inherits an admin subscription on every proposal
+      // (setupAdminsForStatement), which used to make isAuthorized() a hard
+      // delete with no tombstone and no audit.
+      allow delete: if request.auth.uid != null && !isAgoraStatement() && isAuthorized();
 
       // Civil Activity Hub — join form submissions subcollection.
       // Scoped to the owning question document. Each user owns their own

@@ -7,7 +7,7 @@
  * Run: node scripts/e2e-cycle.mjs (needs emulators + vite on 3009 + seed) */
 import { chromium } from '@playwright/test';
 import { preflight, FIRESTORE_REST, VITE_HOST } from './lib/preflight.mjs';
-import { clearCelebration, eq, fail, mkPage as makePage, shotter, step } from './lib/e2e.mjs';
+import { clearCelebration, eq, fail, mkPage as makePage, shotter, step, passNameDoor } from './lib/e2e.mjs';
 
 // Fail in seconds with a readable reason instead of minutes with a stack trace
 await preflight();
@@ -105,6 +105,7 @@ for (const [page, label] of [
 	[s2, 'S2'],
 ]) {
 	await page.goto(`${BASE}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(page);
 	await page.waitForSelector('.lobby__name', { timeout: 15000 });
 	console.log(`${label} joined as`, await page.locator('.lobby__name').textContent());
 }

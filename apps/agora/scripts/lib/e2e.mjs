@@ -90,3 +90,24 @@ export async function restDoc(path) {
 }
 
 export { FIRESTORE_REST };
+
+/**
+ * The door now asks for a real name (for the teacher alone) before the
+ * lobby. A script driving the join UI meets it on every classroom session;
+ * this answers it — with a name when one is given, otherwise by skipping —
+ * and returns at once when the door is not there (civic squares, opted-out
+ * lessons, a returning student).
+ */
+export async function passNameDoor(page, name = '') {
+	const input = page.locator('input.join__name-input');
+	const appeared = await input
+		.waitFor({ state: 'visible', timeout: 4000 })
+		.then(() => true, () => false);
+	if (!appeared) return;
+	if (name) {
+		await input.fill(name);
+		await page.locator('button.btn--primary').first().click();
+	} else {
+		await page.locator('button.btn--ghost').first().click();
+	}
+}

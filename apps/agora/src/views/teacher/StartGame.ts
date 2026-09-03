@@ -42,6 +42,8 @@ export function StartGame(): m.Component {
 	let selectedClassId: string | null = null;
 	let deviceMode: AgoraDeviceMode = AgoraDeviceMode.individual;
 	let identity: AgoraIdentityMode = 'pseudonym';
+	/** Real names at the door, for the teacher alone — on for a lesson */
+	let collectRealNames = true;
 	let look: AgoraThemePreset = AGORA_DEFAULT_THEME;
 	let creating = false;
 	let createFailed = false;
@@ -141,6 +143,7 @@ export function StartGame(): m.Component {
 						}),
 				deviceMode,
 				identity,
+				collectRealNames,
 				theme: { preset: look },
 				stagePlan: plans[mode],
 				...(selectedClassId ? { classId: selectedClassId } : {}),
@@ -318,6 +321,18 @@ export function StartGame(): m.Component {
 							'p.home-explanation',
 							t(identity === 'named' ? 'startGame.identity_named_hint' : 'startGame.identity_hint'),
 						),
+						// The teacher's own list: who is behind each pseudonym. Never on a
+						// card, never to a classmate — see lib/flows/joinName.
+						m('label.voting-settings__row', [
+							m('input[type=checkbox]', {
+								checked: collectRealNames,
+								onchange: (event: Event) => {
+									collectRealNames = (event.target as HTMLInputElement).checked;
+								},
+							}),
+							m('span', t('startGame.collect_names')),
+						]),
+						m('p.home-explanation', t('startGame.collect_names_hint')),
 					]),
 
 					// How the game looks — the room's default; each student may still
