@@ -376,7 +376,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.mode_quick_hint':
 			'רק שאלה שהחדר מחליט עליה — בלי תרחיש, בלי צדדים. את השלבים בוחרים אתם.',
 		'startGame.quick_title': 'שם המשחק',
-		'startGame.quick_title_ph': 'למשל: בקרים בבית שלנו',
+		'startGame.quick_title_ph': 'למשל: פתרון בעיית המזגן',
 		'startGame.quick_question': 'השאלה הראשית',
 		'startGame.quick_question_ph': 'למשל: מה עושים עם זה שכל תלמיד רוצה טמפרטורה אחרת במזגן?',
 		'startGame.quick_explanation': 'הסבר (לא חובה)',
@@ -1252,7 +1252,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.mode_quick_hint':
 			'Just a question the room is deciding — no scenario, no sides. You choose the stages.',
 		'startGame.quick_title': 'Game name',
-		'startGame.quick_title_ph': 'e.g. Mornings at our house',
+		'startGame.quick_title_ph': 'e.g. Solving the air-conditioning problem',
 		'startGame.quick_question': 'The main question',
 		'startGame.quick_question_ph': 'e.g. What do we do when every student wants a different temperature on the AC?',
 		'startGame.quick_explanation': 'Explanation (optional)',
@@ -2138,7 +2138,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.mode_quick_hint':
 			'مجرد سؤال تقرره الغرفة — بلا سيناريو ولا أطراف. أنت تختار المراحل.',
 		'startGame.quick_title': 'اسم اللعبة',
-		'startGame.quick_title_ph': 'مثلًا: الصباح في بيتنا',
+		'startGame.quick_title_ph': 'مثلًا: حل مشكلة المكيّف',
 		'startGame.quick_question': 'السؤال الرئيسي',
 		'startGame.quick_question_ph': 'مثلًا: ماذا نفعل عندما يريد كل طالب درجة حرارة مختلفة للمكيّف؟',
 		'startGame.quick_explanation': 'شرح (اختياري)',
@@ -3026,7 +3026,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.mode_quick_hint':
 			'Solo una pregunta que la sala decide: sin escenario, sin bandos. Tú eliges las etapas.',
 		'startGame.quick_title': 'Nombre del juego',
-		'startGame.quick_title_ph': 'p. ej. Las mañanas en casa',
+		'startGame.quick_title_ph': 'p. ej. Resolver el problema del aire acondicionado',
 		'startGame.quick_question': 'La pregunta principal',
 		'startGame.quick_question_ph': 'p. ej. ¿Qué hacemos si cada alumno quiere una temperatura distinta en el aire acondicionado?',
 		'startGame.quick_explanation': 'Explicación (opcional)',
@@ -3952,7 +3952,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.mode_quick_hint':
 			'Nur eine Frage, die der Raum entscheidet – kein Szenario, keine Seiten. Du wählst die Phasen.',
 		'startGame.quick_title': 'Name des Spiels',
-		'startGame.quick_title_ph': 'z. B. Morgens bei uns zu Hause',
+		'startGame.quick_title_ph': 'z. B. Das Klimaanlagen-Problem lösen',
 		'startGame.quick_question': 'Die Hauptfrage',
 		'startGame.quick_question_ph': 'z. B. Was machen wir, wenn jedes Kind eine andere Temperatur an der Klimaanlage will?',
 		'startGame.quick_explanation': 'Erklärung (optional)',
@@ -4886,7 +4886,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.mode_quick_hint':
 			'Gewoon een vraag waarover de groep beslist – geen scenario, geen kanten. Jij kiest de fasen.',
 		'startGame.quick_title': 'Naam van het spel',
-		'startGame.quick_title_ph': 'bijv. Ochtenden bij ons thuis',
+		'startGame.quick_title_ph': 'bijv. Het airco-probleem oplossen',
 		'startGame.quick_question': 'De hoofdvraag',
 		'startGame.quick_question_ph': 'bijv. Wat doen we als elke leerling een andere temperatuur op de airco wil?',
 		'startGame.quick_explanation': 'Toelichting (optioneel)',
