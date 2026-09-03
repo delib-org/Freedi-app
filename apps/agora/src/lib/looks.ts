@@ -186,13 +186,18 @@ export async function wearLook(choice: AgoraThemeChoice | null): Promise<void> {
  * again replaces it on the class list, but classmates already wearing the old
  * one keep their copy (see AgoraThemeChoice).
  */
-export async function buildLook(name: string, seeds: AgoraThemeSeeds): Promise<void> {
+export async function buildLook(
+	name: string,
+	seeds: AgoraThemeSeeds,
+	font?: string,
+): Promise<void> {
 	const target = myDoc();
 	if (!target) return;
 	const look: AgoraCustomTheme = {
 		name: name.trim(),
 		authorId: target.userId,
 		seeds,
+		...(font ? { font } : {}),
 		createdAt: Date.now(),
 	};
 	const choice: AgoraThemeChoice = { preset: 'custom', custom: look };

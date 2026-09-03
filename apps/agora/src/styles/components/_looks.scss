@@ -248,6 +248,61 @@
 	}
 }
 
+// A face, shown in itself: the sample word set in the face, its name under it
+.look-builder__fonts {
+	display: flex;
+	gap: var(--space-sm);
+	overflow-x: auto;
+	padding-block: var(--space-xs);
+	scrollbar-width: none;
+}
+
+.look-font {
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	min-inline-size: 96px;
+	padding: var(--space-sm) var(--space-md);
+	border: 2px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--surface-raised);
+	color: var(--text-primary);
+	cursor: pointer;
+	transition:
+		border-color var(--motion-fast) ease,
+		box-shadow var(--motion-fast) ease;
+
+	&:hover {
+		border-color: var(--border-lantern);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+
+	&--on {
+		border-color: var(--mine);
+		box-shadow: 0 0 0 2px var(--mine);
+	}
+
+	// Inherits the chip's font-family — that is the whole point of the chip
+	&__sample {
+		font-size: var(--font-size-xl);
+		line-height: 1.1;
+	}
+
+	// The name is always in the app's own face, so it can be read
+	&__name {
+		font-family: var(--font-body);
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		white-space: nowrap;
+	}
+}
+
 // The preview paints itself from the seeds set on its own root — the same
 // derivations the custom block uses on the page, in miniature. Dark ink here
 // is the candy ink, because every paper swatch is light.
@@ -274,8 +329,10 @@
 		line-height: 1.4;
 	}
 
+	// The mine bubble is set in the display face, so a chosen font shows here too
 	&__bubble--mine {
 		align-self: flex-end;
+		font-family: var(--font-display);
 		background: var(--seed-mine);
 		color: #ffffff;
 		box-shadow: 0 3px 0 color-mix(in srgb, var(--seed-mine) 70%, black);

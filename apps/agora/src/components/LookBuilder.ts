@@ -1,13 +1,15 @@
 import m from 'mithril';
-import { t } from '../lib/i18n';
+import { getLang, t } from '../lib/i18n';
 import { LOOK_SWATCHES, SEED_ORDER, DEFAULT_SEEDS } from '../lib/looks';
+import { fontsFor, fontStack, loadFont, type PlayfulFont } from '../lib/fonts';
 import { AGORA_THEME, AgoraThemeSeeds } from '@freedi/shared-types';
 
 export interface LookBuilderAttrs {
 	/** Where the builder opens: my last look, or candy's seeds for a first one */
 	initialName?: string;
 	initialSeeds?: AgoraThemeSeeds;
-	onSave: (name: string, seeds: AgoraThemeSeeds) => void;
+	initialFont?: string;
+	onSave: (name: string, seeds: AgoraThemeSeeds, font: string | undefined) => void;
 	onCancel: () => void;
 }
 
@@ -34,11 +36,17 @@ export function LookBuilder(
 ): m.Component<LookBuilderAttrs> {
 	let name = initialVnode.attrs.initialName ?? '';
 	let seeds: AgoraThemeSeeds = { ...(initialVnode.attrs.initialSeeds ?? DEFAULT_SEEDS) };
+	let font: string | undefined = initialVnode.attrs.initialFont;
+	// The faces with glyphs for the language on screen; each chip is set in
+	// its own face, so the files are fetched the moment the builder opens
+	const fonts: readonly PlayfulFont[] = fontsFor(getLang());
+	for (const candidate of fonts) void loadFont(candidate.id);
 
 	return {
 		view(vnode) {
 			const { onSave, onCancel } = vnode.attrs;
 			const ready = name.trim().length >= AGORA_THEME.MIN_NAME_LENGTH;
+			const chosenFont = fonts.find((candidate) => candidate.id === font);
 
 			return m('.look-builder', [
 				m(
@@ -49,6 +57,7 @@ export function LookBuilder(
 							'--seed-mine': seeds.mine,
 							'--seed-peer': seeds.peer,
 							'--seed-go': seeds.go,
+							...(chosenFont ? { '--font-display': fontStack(chosenFont) } : {}),
 						},
 					},
 					[
@@ -99,10 +108,56 @@ export function LookBuilder(
 					]),
 				),
 
+				// The face: a row of chips, each set in the face it names, so the
+				// choice is made by eye and not by name. The first chip is the app's
+				// own face — a look does not have to be loud to be yours.
+				m('.look-builder__seed', [
+					m('span.look-builder__label', t('look.seed_font')),
+					m('.look-builder__fonts', { role: 'radiogroup', 'aria-label': t('look.seed_font') }, [
+						m(
+							'button.look-font',
+							{
+								key: 'default',
+								type: 'button',
+								role: 'radio',
+								class: font === undefined ? 'look-font--on' : undefined,
+								'aria-checked': font === undefined ? 'true' : 'false',
+								onclick: () => {
+									font = undefined;
+								},
+							},
+							[
+								m('span.look-font__sample', t('look.font_sample')),
+								m('span.look-font__name', t('look.font_default')),
+							],
+						),
+						...fonts.map((candidate) =>
+							m(
+								'button.look-font',
+								{
+									key: candidate.id,
+									type: 'button',
+									role: 'radio',
+									class: font === candidate.id ? 'look-font--on' : undefined,
+									'aria-checked': font === candidate.id ? 'true' : 'false',
+									style: { fontFamily: fontStack(candidate) },
+									onclick: () => {
+										font = candidate.id;
+									},
+								},
+								[
+									m('span.look-font__sample', t('look.font_sample')),
+									m('span.look-font__name', candidate.family),
+								],
+							),
+						),
+					]),
+				]),
+
 				m('.look-builder__actions', [
 					m(
 						'button.btn.btn--primary',
-						{ disabled: !ready, onclick: () => onSave(name.trim(), seeds) },
+						{ disabled: !ready, onclick: () => onSave(name.trim(), seeds, font) },
 						t('look.wear_it'),
 					),
 					m('button.btn.btn--ghost', { onclick: onCancel }, t('common.cancel')),

@@ -1,3 +1,4 @@
+import { fontById, fontStack, loadFont } from './fonts';
 import {
 	AGORA_DEFAULT_THEME,
 	AgoraResolvedTheme,
@@ -74,6 +75,7 @@ export function paintTheme(resolved: AgoraResolvedTheme): void {
 		if (resolved.kind === 'custom') root.style.setProperty(prop, resolved.custom.seeds[seed]);
 		else root.style.removeProperty(prop);
 	}
+	applyFont(resolved.kind === 'custom' ? resolved.custom.font : undefined);
 
 	const meta = document.querySelector('meta[name="theme-color"]');
 	if (meta) {
@@ -82,6 +84,27 @@ export function paintTheme(resolved: AgoraResolvedTheme): void {
 			resolved.kind === 'custom' ? resolved.custom.seeds.page : THEME_COLORS[attr],
 		);
 	}
+}
+
+/** The face a look asked for, once its file is here; nothing, if it asked for none */
+let wantedFont: string | undefined;
+
+function applyFont(id: string | undefined): void {
+	const root = document.documentElement;
+	wantedFont = id;
+	const font = fontById(id);
+	if (!font) {
+		root.style.removeProperty('--font-display');
+		root.style.removeProperty('--display-weight');
+
+		return;
+	}
+	void loadFont(font.id).then(() => {
+		// The look may have changed while the file was in flight
+		if (wantedFont !== font.id) return;
+		root.style.setProperty('--font-display', fontStack(font));
+		root.style.setProperty('--display-weight', String(font.weight));
+	});
 }
 
 export function rememberTheme(resolved: AgoraResolvedTheme | null): void {

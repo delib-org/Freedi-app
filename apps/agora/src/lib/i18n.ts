@@ -13,6 +13,9 @@ const STORAGE_KEY = 'agora_lang';
  */
 export const translations: Record<LangCode, Record<string, string>> = {
 	he: {
+		'look.seed_font': 'גופן',
+		'look.font_default': 'הרגיל',
+		'look.font_sample': 'אגורה',
 		// --- Looks: the style sheet, the builder, the swatches ---
 		'common.close': 'סגירה',
 		'look.title': 'הסגנון שלכם',
@@ -946,6 +949,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accepted_reminder': 'הצעות שיפור שקיבלתם',
 	},
 	en: {
+		'look.seed_font': 'Font',
+		'look.font_default': 'Regular',
+		'look.font_sample': 'Agora',
 		// --- Looks: the style sheet, the builder, the swatches ---
 		'common.close': 'Close',
 		'look.title': 'Your look',
@@ -1923,6 +1929,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accepted_reminder': 'Improvement suggestions',
 	},
 	ar: {
+		'look.seed_font': 'الخط',
+		'look.font_default': 'العادي',
+		'look.font_sample': 'أغورا',
 		// --- Looks: the style sheet, the builder, the swatches ---
 		'common.close': 'إغلاق',
 		'look.title': 'مظهركم',
@@ -2860,6 +2869,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accepted_reminder': 'اقتراحات تحسين قبلتموها',
 	},
 	es: {
+		'look.seed_font': 'Fuente',
+		'look.font_default': 'Normal',
+		'look.font_sample': 'Agora',
 		// --- Looks: the style sheet, the builder, the swatches ---
 		'common.close': 'Cerrar',
 		'look.title': 'Tu estilo',
@@ -3858,6 +3870,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accepted_reminder': 'Sugerencias de mejora',
 	},
 	de: {
+		'look.seed_font': 'Schrift',
+		'look.font_default': 'Normal',
+		'look.font_sample': 'Agora',
 		// --- Looks: the style sheet, the builder, the swatches ---
 		'common.close': 'Schließen',
 		'look.title': 'Dein Look',
@@ -4873,6 +4888,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accepted_reminder': 'Verbesserungsvorschläge',
 	},
 	nl: {
+		'look.seed_font': 'Lettertype',
+		'look.font_default': 'Gewoon',
+		'look.font_sample': 'Agora',
 		// --- Looks: the style sheet, the builder, the swatches ---
 		'common.close': 'Sluiten',
 		'look.title': 'Jouw stijl',

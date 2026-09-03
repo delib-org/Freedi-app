@@ -11,9 +11,9 @@ export interface LookSheetAttrs {
 	following: boolean;
 	classLooks: readonly ClassLook[];
 	/** My own built look, so "rebuild" opens on it */
-	myLook?: { name: string; seeds: AgoraThemeSeeds };
+	myLook?: { name: string; seeds: AgoraThemeSeeds; font?: string };
 	onWear: (choice: AgoraThemeChoice | null) => void;
-	onBuild: (name: string, seeds: AgoraThemeSeeds) => void;
+	onBuild: (name: string, seeds: AgoraThemeSeeds, font: string | undefined) => void;
 	onClose: () => void;
 }
 
@@ -86,8 +86,9 @@ export function LookSheet(): m.Component<LookSheetAttrs> {
 							: m(LookBuilder, {
 									initialName: myLook?.name,
 									initialSeeds: myLook?.seeds,
-									onSave: (name, seeds) => {
-										onBuild(name, seeds);
+									initialFont: myLook?.font,
+									onSave: (name, seeds, font) => {
+										onBuild(name, seeds, font);
 										mode = 'pick';
 										onClose();
 									},

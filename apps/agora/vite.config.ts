@@ -57,8 +57,25 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
         // Large illustrations (home hero + scene artwork) load on demand — cache
         // them at runtime rather than bloating the install precache.
-        globIgnores: ['**/scenes/**', 'time-machine.webp'],
+        globIgnores: [
+          '**/scenes/**',
+          'time-machine.webp',
+          // The playful faces a look may choose (lib/fonts.ts): a class uses
+          // one or two, so they are fetched on first use and runtime-cached
+          // rather than all ~20 precached on install. Assistant and Alef
+          // stay in the precache — the app cannot draw a word without them.
+          '**/assets/!(assistant|alef)-*.woff2',
+        ],
         runtimeCaching: [
+          {
+            // A chosen face, kept once fetched (see globIgnores above)
+            urlPattern: /\/assets\/[^/]+\.woff2$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'agora-font-cache',
+              expiration: { maxEntries: 40, maxAgeSeconds: 365 * 24 * 60 * 60 },
+            },
+          },
           {
             urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
             handler: 'NetworkFirst',

@@ -98,6 +98,8 @@ try {
 	await pick(2, 'rgb(18, 128, 63)');
 	await pick(3, 'rgb(255, 212, 0)');
 	await student.fill('.look-builder input.text-input', 'Grape Soda');
+	// …and a face with Hebrew glyphs, set in itself on its chip
+	await student.locator('.look-font', { hasText: 'Rubik Moonrocks' }).click();
 	await student.waitForTimeout(300); // Mithril redraws on the next frame
 	await shot(student, '4-builder-grape-soda');
 	await student.click('.look-builder__actions .btn--primary');
@@ -109,6 +111,17 @@ try {
 	const built = await until('built look written', async () => (await participant(sessionId, myUid))?.builtTheme);
 	eq('builtTheme.name', built.name, 'Grape Soda');
 	eq('builtTheme.authorId', built.authorId, myUid);
+	eq('builtTheme.font', built.font, 'rubik-moonrocks');
+	await student.waitForFunction(
+		() => document.documentElement.style.getPropertyValue('--font-display').includes('Rubik Moonrocks'),
+		null,
+		{ timeout: 10_000 },
+	);
+	eq(
+		'a 400-only face is not faux-bolded',
+		await student.evaluate(() => document.documentElement.style.getPropertyValue('--display-weight')),
+		'400',
+	);
 	eq('wearing it', (await participant(sessionId, myUid)).theme.preset, 'custom');
 
 	step('classmate: builds Lemonade through the rules; the student borrows it');
@@ -140,6 +153,11 @@ try {
 	await student.locator('.look-card', { hasText: /Solid purple|סגול מלא/ }).click();
 	await student.waitForTimeout(600);
 	eq('document wears purple', await student.evaluate(() => document.documentElement.dataset.sessionTheme), 'purple');
+	eq(
+		'the face goes with the look',
+		await student.evaluate(() => document.documentElement.style.getPropertyValue('--font-display')),
+		'',
+	);
 	await shot(student, '8-lobby-purple');
 	await student.click('.stage-nav__look');
 	await student.locator('.look-sheet button', { hasText: /class look|הכיתה/ }).click();

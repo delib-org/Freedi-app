@@ -96,9 +96,10 @@ service cloud.firestore {
     function agoraCustomThemeValid(look) {
       return look == null ||
              (look is map &&
-              look.keys().hasOnly(['name', 'authorId', 'seeds', 'createdAt']) &&
+              look.keys().hasOnly(['name', 'authorId', 'seeds', 'font', 'createdAt']) &&
               look.name is string && look.name.size() >= 1 && look.name.size() <= 24 &&
               look.authorId is string && look.createdAt is number &&
+              (!('font' in look) || (look.font is string && look.font.size() <= 40)) &&
               agoraThemeSeedsValid(look.seeds));
     }
     function agoraThemeChoiceValid(choice) {

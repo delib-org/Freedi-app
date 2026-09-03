@@ -233,13 +233,26 @@
       0 3px 0 var(--mine-deep);
   }
 
-  // --- Sticker type: the big words wear a white outline behind the fill ---
+  // --- Sticker type: the big words wear an outline behind the fill ---
+  // 3px, not more: Hebrew counters close up under a fat stroke, and the
+  // first cut at 5px turned the question banner's title to mush. On a light
+  // page the outline is white; on a saturated surface (the question banner,
+  // anything on-dark) it is the surface's deep rung, so white letters read
+  // as lettering rather than as a smear of white on white.
+  --sticker: var(--surface-raised);
+
   h1,
   h2,
   .delib-hud__title,
   .results__total {
     paint-order: stroke fill;
-    -webkit-text-stroke: 5px var(--surface-raised);
+    -webkit-text-stroke: 3px var(--sticker);
+  }
+
+  .on-dark,
+  .question__ask,
+  .write-desk {
+    --sticker: var(--mine-deep);
   }
 
   .results__total {

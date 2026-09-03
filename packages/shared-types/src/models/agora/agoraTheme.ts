@@ -31,6 +31,8 @@ export const AGORA_THEME = {
 	/** A style's name is a label on a chip, not a sentence */
 	MAX_NAME_LENGTH: 24,
 	MIN_NAME_LENGTH: 1,
+	/** A font id is a registry key (apps/agora lib/fonts.ts), never a font-family string */
+	MAX_FONT_ID_LENGTH: 40,
 } as const;
 
 /** `#rrggbb`, lowercase or upper — the only colour syntax a seed may carry */
@@ -67,6 +69,13 @@ export const AgoraCustomThemeSchema = object({
 	/** Who built it — kept on every copy, so a borrowed look still credits its maker */
 	authorId: string(),
 	seeds: AgoraThemeSeedsSchema,
+	/**
+	 * The display face the look wears (titles, buttons, tiles), as a key into
+	 * the client's font registry. Absent means the app's own face. A key the
+	 * client no longer knows falls back to the default rather than failing —
+	 * a look built last term must still open.
+	 */
+	font: optional(pipe(string(), maxLength(AGORA_THEME.MAX_FONT_ID_LENGTH))),
 	createdAt: number(),
 });
 

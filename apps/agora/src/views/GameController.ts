@@ -297,10 +297,14 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							following: !myParticipant?.theme,
 							classLooks: classLooks(participants, userId),
 							myLook: myParticipant?.builtTheme
-								? { name: myParticipant.builtTheme.name, seeds: myParticipant.builtTheme.seeds }
+								? {
+										name: myParticipant.builtTheme.name,
+										seeds: myParticipant.builtTheme.seeds,
+										font: myParticipant.builtTheme.font,
+									}
 								: undefined,
 							onWear: (choice) => void wearLook(choice),
-							onBuild: (name, seeds) => void buildLook(name, seeds),
+							onBuild: (name, seeds, font) => void buildLook(name, seeds, font),
 							onClose: () => {
 								lookOpen = false;
 							},

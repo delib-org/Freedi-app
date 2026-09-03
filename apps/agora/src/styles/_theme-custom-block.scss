@@ -92,6 +92,23 @@
   --glow-marker: 0 0 12px color-mix(in srgb, var(--mine-light) 70%, transparent);
   --glow-mint: 0 8px 20px -6px color-mix(in srgb, var(--mint-deep) 80%, transparent);
 
+  // --- The face the look chose ---
+  // lib/theme.ts sets --font-display and --display-weight inline when the look
+  // names a font. Titles, buttons and tiles are set at 700 in their own rules,
+  // and a display face that ships only a 400 would be faux-bolded — which
+  // smears Hebrew stems — so those rules defer to the weight the face has.
+  h1,
+  h2,
+  h3,
+  .btn,
+  .delib-hud__title,
+  .stall__num,
+  .look-card__name,
+  .question__number,
+  .results__total {
+    font-weight: var(--display-weight, 700);
+  }
+
   // --- Gradients ---
   // Candy's ramps are written in tokens and follow the seeds on their own —
   // except the text ramp, whose top stop is a literal in the candy block
