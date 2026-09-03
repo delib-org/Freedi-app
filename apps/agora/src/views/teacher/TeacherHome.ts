@@ -364,37 +364,13 @@ export function TeacherHome(): m.Component {
 				m('.shell__content', { style: { gap: 'var(--space-xl)' } }, [
 					m('h2', t('teacher.title')),
 
-					m(
-						'button.btn.btn--primary.btn--full.btn--lg',
-						{ onclick: () => m.route.set('/teach/start') },
-						t('dashboard.start_game'),
-					),
-					// The quick game is the door most non-teachers are looking for —
-					// a room deciding one thing, no scenario. Behind the scenario
-					// switch on the next screen it was invisible; here it is a door.
-					m(
-						'button.btn.btn--secondary.btn--full',
-						{ onclick: () => m.route.set('/teach/start?mode=quick') },
-						t('dashboard.start_quick'),
-					),
-
 					!loaded
 						? m('.spinner')
 						: [
-								classes.length > 0
-									? m('.stack', [
-											m('p.teacher__section-title', t('dashboard.my_classes')),
-											m('.dashboard__class-grid', classes.map(classCard)),
-										])
-									: null,
-
-								sessions.length > 0
-									? m('.stack', [
-											m('p.teacher__section-title', t('dashboard.my_games')),
-											m('.stack', sessions.map(sessionRow)),
-										])
-									: null,
-
+								// The shelf leads. Choosing today's lesson is what a teacher
+								// opens this page to do, and it used to sit under two lists
+								// of status — behind a duplicate "start a game" button that
+								// only led to the same choice made somewhere else.
 								m('.stack', [
 									m('p.teacher__section-title', t('dashboard.scenarios')),
 									topics.length === 0
@@ -406,9 +382,9 @@ export function TeacherHome(): m.Component {
 													{ role: 'list' },
 													shelfOrder(topics).map(scenarioRow),
 												),
-												// The way on, where the choice was just made — the
-												// button at the top of this page is a screen away by
-												// the time a teacher reaches the shelf.
+												// The way on, and the only one: it appears once a
+												// scenario is chosen, right where the choice was made,
+												// and it says which lesson it opens.
 												chosen
 													? m(
 															'button.btn.btn--primary.btn--full.btn--lg.scenario-list__go',
@@ -426,6 +402,28 @@ export function TeacherHome(): m.Component {
 										t('teacher.create_topic'),
 									),
 								]),
+
+								// The quick game is the door most non-teachers are looking
+								// for — a room deciding one thing, no scenario.
+								m(
+									'button.btn.btn--secondary.btn--full',
+									{ onclick: () => m.route.set('/teach/start?mode=quick') },
+									t('dashboard.start_quick'),
+								),
+
+								classes.length > 0
+									? m('.stack', [
+											m('p.teacher__section-title', t('dashboard.my_classes')),
+											m('.dashboard__class-grid', classes.map(classCard)),
+										])
+									: null,
+
+								sessions.length > 0
+									? m('.stack', [
+											m('p.teacher__section-title', t('dashboard.my_games')),
+											m('.stack', sessions.map(sessionRow)),
+										])
+									: null,
 							],
 				]),
 			]);
