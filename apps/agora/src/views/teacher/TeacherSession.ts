@@ -252,43 +252,43 @@ function votingSettingsCard(
 					byAll
 						? null
 						: byThreshold
-						? m('label.voting-settings__row', [
-								m('span', t('teacher.voting_threshold')),
-								m('input[type=number]', {
-									value: cutoff,
-									step: '0.05',
-									min: '-1',
-									max: '1',
-									disabled: saving,
-									onchange: (event: Event) =>
-										patch({
-											selection: {
-												resultsBy: ResultsBy.consensus,
-												cutoffBy: CutoffBy.aboveThreshold,
-												numberOfResults: topX,
-												cutoffNumber: Number((event.target as HTMLInputElement).value),
-											},
-										}),
-								}),
-							])
-						: m('label.voting-settings__row', [
-								m('span', t('teacher.voting_top_x')),
-								m('input[type=number]', {
-									value: topX,
-									min: String(AGORA_VOTING.MIN_TOP_X),
-									max: String(AGORA_VOTING.MAX_TOP_X),
-									disabled: saving,
-									onchange: (event: Event) =>
-										patch({
-											selection: {
-												resultsBy: ResultsBy.consensus,
-												cutoffBy: CutoffBy.topOptions,
-												numberOfResults: Number((event.target as HTMLInputElement).value),
-												cutoffNumber: cutoff,
-											},
-										}),
-								}),
-							]),
+							? m('label.voting-settings__row', [
+									m('span', t('teacher.voting_threshold')),
+									m('input[type=number]', {
+										value: cutoff,
+										step: '0.05',
+										min: '-1',
+										max: '1',
+										disabled: saving,
+										onchange: (event: Event) =>
+											patch({
+												selection: {
+													resultsBy: ResultsBy.consensus,
+													cutoffBy: CutoffBy.aboveThreshold,
+													numberOfResults: topX,
+													cutoffNumber: Number((event.target as HTMLInputElement).value),
+												},
+											}),
+									}),
+								])
+							: m('label.voting-settings__row', [
+									m('span', t('teacher.voting_top_x')),
+									m('input[type=number]', {
+										value: topX,
+										min: String(AGORA_VOTING.MIN_TOP_X),
+										max: String(AGORA_VOTING.MAX_TOP_X),
+										disabled: saving,
+										onchange: (event: Event) =>
+											patch({
+												selection: {
+													resultsBy: ResultsBy.consensus,
+													cutoffBy: CutoffBy.topOptions,
+													numberOfResults: Number((event.target as HTMLInputElement).value),
+													cutoffNumber: cutoff,
+												},
+											}),
+									}),
+								]),
 
 					// Blank means "the most-voted proposal wins, full stop"
 					m('label.voting-settings__row', [

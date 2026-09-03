@@ -141,9 +141,7 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 										patch: {
 											selection: {
 												...selection,
-												cutoffBy: cutoffFromSelectValue(
-													(event.target as HTMLSelectElement).value,
-												),
+												cutoffBy: cutoffFromSelectValue((event.target as HTMLSelectElement).value),
 											},
 										},
 									}),
@@ -159,42 +157,38 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 									{ value: 'threshold', selected: byThreshold },
 									t('startGame.plan_cutoff_threshold'),
 								),
-								m(
-									'option',
-									{ value: 'all', selected: byAll },
-									t('startGame.plan_cutoff_all'),
-								),
+								m('option', { value: 'all', selected: byAll }, t('startGame.plan_cutoff_all')),
 							],
 						),
 						byAll
 							? null
 							: byThreshold
-							? [
-									m('span', t('startGame.plan_cutoff_min')),
-									numberInput(
-										selection.cutoffNumber,
-										{ min: '-1', max: '1', step: '0.05' },
-										(next) =>
-											dispatch({
-												kind: 'patch',
-												itemId: item.itemId,
-												patch: { selection: { ...selection, cutoffNumber: next } },
-											}),
-									),
-								]
-							: [
-									m('span', t('startGame.plan_cutoff_n')),
-									numberInput(
-										selection.numberOfResults,
-										{ min: '1', max: '10', step: '1' },
-										(next) =>
-											dispatch({
-												kind: 'patch',
-												itemId: item.itemId,
-												patch: { selection: { ...selection, numberOfResults: next } },
-											}),
-									),
-								],
+								? [
+										m('span', t('startGame.plan_cutoff_min')),
+										numberInput(
+											selection.cutoffNumber,
+											{ min: '-1', max: '1', step: '0.05' },
+											(next) =>
+												dispatch({
+													kind: 'patch',
+													itemId: item.itemId,
+													patch: { selection: { ...selection, cutoffNumber: next } },
+												}),
+										),
+									]
+								: [
+										m('span', t('startGame.plan_cutoff_n')),
+										numberInput(
+											selection.numberOfResults,
+											{ min: '1', max: '10', step: '1' },
+											(next) =>
+												dispatch({
+													kind: 'patch',
+													itemId: item.itemId,
+													patch: { selection: { ...selection, numberOfResults: next } },
+												}),
+										),
+									],
 					]),
 				]);
 			};
