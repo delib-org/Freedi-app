@@ -56,6 +56,44 @@
 			in tokens.scss fails out loud instead of waiting for a screenshot.
 		-->
 		<div class="gauntlet">
+			<!-- The candy look paints every proposal its own colour by number
+			     (data-hue); a numeral on a point and a name on a callout must
+			     survive every one of the twelve. Inert under the other looks. -->
+			<h2>a proposal in each of its colours</h2>
+			<div style="display:flex;flex-wrap:wrap;gap:8px">
+				<button class="board__point" data-hue="0" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">0</span></button>
+				<button class="board__point board__point--lead" data-hue="1" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">1</span></button>
+				<button class="board__point" data-hue="2" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">2</span></button>
+				<button class="board__point" data-hue="3" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">3</span></button>
+				<button class="board__point" data-hue="4" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">4</span></button>
+				<button class="board__point" data-hue="5" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">5</span></button>
+				<button class="board__point" data-hue="6" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">6</span></button>
+				<button class="board__point" data-hue="7" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">7</span></button>
+				<button class="board__point" data-hue="8" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">8</span></button>
+				<button class="board__point" data-hue="9" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">9</span></button>
+				<button class="board__point" data-hue="10" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">10</span></button>
+				<button class="board__point" data-hue="11" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">11</span></button>
+				<button class="board__point" data-hue="12" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">12</span></button>
+			</div>
+			<div class="stall" data-hue="3">
+				<button class="stall__head">
+					<span class="stall__num">3</span>
+					<span class="stall__preview">אספה לאומית שבה לכל מעמד יש קול שווה</span>
+					<span class="stall__chips"><span class="stall__chip stall__chip--rated">דירגתם</span></span>
+				</button>
+			</div>
+			<button class="board__callout board__callout--above" data-hue="4" style="position:static;transform:none;width:auto">
+				<p class="board__callout-text">מס על הכנסה במקום מס על הלחם</p>
+				<span class="board__callout-foot">
+					<span class="board__callout-score board__num">+52%</span>
+					<span class="board__callout-by">פנס אמיץ</span>
+				</span>
+				<span class="board__callout-more"><span class="board__callout-more-text">למה?</span></span>
+			</button>
+			<div class="board__waiting-chip" data-hue="9">
+				<span class="board__author">פנס שקט</span>
+				<span class="board__waiting-text">עוד לא דורגה</span>
+			</div>
 			<h2>my message bubble</h2>
 			<div class="thread">
 				<div class="thread__list">

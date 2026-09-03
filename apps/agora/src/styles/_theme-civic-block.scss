@@ -221,6 +221,28 @@
 }
 
 // ============================================================================
+// The results callout on navy
+//
+// The callout's score is painted --success and its "why?" line --mine-strong,
+// and both are FILL colours in this look (built to sit under white), so as
+// text on a navy panel they measured 2.68:1 and 1.75:1. Found the day the
+// callout joined the gauntlet; the text rungs of the same families fix it.
+// ============================================================================
+:root[data-session-theme='civic'] {
+  .board__callout-score {
+    color: #35d68d; // Odyssey's bright "for" — 9.5:1 on the panel
+
+    &--against {
+      color: var(--danger-ink);
+    }
+  }
+
+  .board__callout-more {
+    color: var(--mine-ink); // gold TEXT, not the gold fill
+  }
+}
+
+// ============================================================================
 // The fields a player writes their own words into
 //
 // Everywhere else, "mine" being a filled surface is the point — it is how

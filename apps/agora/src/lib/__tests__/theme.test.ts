@@ -34,9 +34,16 @@ vi.mock('../session', () => ({ getSessionState: () => sessionState }));
 vi.mock('../user', () => ({ getUserState: () => userState }));
 vi.mock('mithril', () => ({ default: { redraw: () => {} } }));
 
-const { classLooks, isWearing, sameLook, wearLook, buildLook, LOOK_SWATCHES } = await import(
-	'../looks'
-);
+const {
+	classLooks,
+	isWearing,
+	sameLook,
+	wearLook,
+	buildLook,
+	LOOK_SWATCHES,
+	PROPOSAL_HUES,
+	proposalHue,
+} = await import('../looks');
 const { attrOf } = await import('../theme');
 
 const look = (authorId: string, createdAt: number, name = 'Lemonade'): AgoraCustomTheme => ({
@@ -159,6 +166,20 @@ describe('wearing and building', () => {
 		await expect(wearLook({ preset: 'purple' })).resolves.toBeUndefined();
 		expect(spy).toHaveBeenCalled();
 		spy.mockRestore();
+	});
+});
+
+describe('proposalHue', () => {
+	it('gives the first twelve proposals twelve different colours, then wraps', () => {
+		const first = Array.from({ length: PROPOSAL_HUES }, (_unused, index) => proposalHue(index + 1));
+		expect(new Set(first).size).toBe(PROPOSAL_HUES);
+		expect(proposalHue(PROPOSAL_HUES + 1)).toBe(proposalHue(1));
+		expect(proposalHue(1)).toBe(1);
+	});
+
+	it('never yields 0 — that is reserved for mine', () => {
+		expect(proposalHue(0)).toBe(1);
+		expect(proposalHue(-3)).toBe(1);
 	});
 });
 

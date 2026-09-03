@@ -87,6 +87,25 @@ export const DEFAULT_SEEDS: AgoraThemeSeeds = {
 /** The order the seeds are offered in — paper first, then the two inks, then go */
 export const SEED_ORDER: ReadonlyArray<keyof AgoraThemeSeeds> = ['page', 'mine', 'peer', 'go'];
 
+/**
+ * How many proposal hues the candy look carries — see `_theme-candy-game.scss`.
+ * Twelve vivid fills, every one measured to hold white text at AA; raspberry
+ * is not among them, because raspberry is MINE and a classmate's proposal
+ * wearing it would say "yours".
+ */
+export const PROPOSAL_HUES = 12;
+
+/**
+ * The candy hue a numbered proposal wears — on the square, on the results
+ * map, in its callout — so a proposal is the same colour everywhere it
+ * appears. Keyed on the proposal's number (its place in the room's list)
+ * rather than its rank, because a rank moves as the class rates and a
+ * colour that moves with it stops identifying anything. Wraps past twelve.
+ */
+export function proposalHue(number: number): number {
+	return ((Math.max(1, Math.floor(number)) - 1) % PROPOSAL_HUES) + 1;
+}
+
 export interface ClassLook {
 	look: AgoraCustomTheme;
 	/** The maker's name in this room, for the "by …" line */

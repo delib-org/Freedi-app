@@ -22,6 +22,13 @@ against; the values live in `src/styles/tokens.scss` and nowhere else.
 > the gummy edge: a hard 4px slab under buttons and cards, no blur. Candy
 > clears the contrast gauntlet with no entry on the debt ledger; `npm run
 > contrast` runs it under `?theme=candy` to keep it so.
+>
+> Candy also breaks the one law on purpose, for one object: a classmate's
+> PROPOSAL is a sweet of its own colour (`_theme-candy-game.scss`), keyed on
+> its number so the same proposal is the same colour on the square, on the
+> results map and in its callout. Twelve hues, all AA under white, and none
+> of them raspberry — MINE stays the only raspberry thing on the screen, so
+> the law's purpose (I can find mine) survives its letter.
 
 ---
 

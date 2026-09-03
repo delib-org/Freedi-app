@@ -20,6 +20,7 @@ import { celebrateOnce } from '../lib/celebration';
 // the dashed zone and the cheer for entering it can never drift apart
 import { campLean } from '../lib/boardGeometry';
 import type { AgoraProposal } from '../lib/proposals';
+import { proposalHue } from '../lib/looks';
 
 export interface ResultsBoardAttrs {
 	sessionId: string;
@@ -61,6 +62,12 @@ interface BoardPoint {
 	rank: number;
 	isMine: boolean;
 	isLead: boolean;
+	/**
+	 * The candy hue this proposal wears everywhere (lib/looks.ts): its number
+	 * on the square, or 0 for mine, which is always raspberry. Painted as a
+	 * `data-hue` attribute the candy stylesheet keys on; other looks ignore it.
+	 */
+	hue: number;
 }
 
 /** The five bucket faces, most against to most for */
@@ -295,7 +302,7 @@ export function ResultsBoard(
 		const { proposals, scores, census, userId } = attrs;
 
 		const points: BoardPoint[] = [];
-		for (const proposal of proposals) {
+		for (const [index, proposal] of proposals.entries()) {
 			// A proposal nobody rated has no score doc at all, and it still belongs
 			// on the board — it just cannot be placed on the field yet
 			const score = scores[proposal.statementId];
@@ -316,6 +323,7 @@ export function ResultsBoard(
 				rank: 0,
 				isMine: proposal.creatorId === userId,
 				isLead: false,
+				hue: proposal.creatorId === userId ? 0 : proposalHue(index + 1),
 			});
 		}
 
@@ -422,6 +430,7 @@ export function ResultsBoard(
 			{
 				type: 'button',
 				class: above ? 'board__callout--above' : 'board__callout--below',
+				'data-hue': String(point.hue),
 				style: {
 					insetInlineStart: inlineStart,
 					maxHeight: `calc(${room}% - ${gap + EDGE_PAD}px)`,
@@ -468,6 +477,7 @@ export function ResultsBoard(
 			{
 				key: point.proposal.statementId,
 				type: 'button',
+				'data-hue': String(point.hue),
 				class: [
 					point.isMine ? 'board__point--mine' : undefined,
 					point.isLead ? 'board__point--lead' : undefined,
@@ -852,7 +862,7 @@ export function ResultsBoard(
 		const leader = points.find((candidate) => candidate.isLead);
 		const behind = leader ? leader.percent - point.percent : 0;
 
-		return m('.board__detail', [
+		return m('.board__detail', { 'data-hue': String(point.hue) }, [
 			// The headline of the sub-screen: the score this whole page is about,
 			// at the size of the thing being explained
 			m('.board__detail-hero', [
@@ -980,12 +990,16 @@ export function ResultsBoard(
 			m(
 				'.board__waiting-list',
 				waiting.map((point) =>
-					m('span.board__waiting-chip', { key: point.proposal.statementId }, [
-						point.isMine
-							? m('span.board__you', t('board.you'))
-							: m('span.board__author', point.proposal.anonName),
-						m('span.board__waiting-text', point.proposal.statement),
-					]),
+					m(
+						'span.board__waiting-chip',
+						{ key: point.proposal.statementId, 'data-hue': String(point.hue) },
+						[
+							point.isMine
+								? m('span.board__you', t('board.you'))
+								: m('span.board__author', point.proposal.anonName),
+							m('span.board__waiting-text', point.proposal.statement),
+						],
+					),
 				),
 			),
 		]);

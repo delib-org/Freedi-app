@@ -27,6 +27,7 @@ import {
 } from '../lib/squareOrder';
 import { browserSubPageDeps, createSubPage } from '../lib/subPage';
 import { sessionDraft } from '../lib/draftStore';
+import { proposalHue } from '../lib/looks';
 import { subscribeNotificationDetectors } from '../lib/notifications';
 
 /** Which conversation the student is standing in, when they are in one. */
@@ -2105,6 +2106,9 @@ export function Deliberation(
 			{
 				key: proposal.statementId,
 				class: open ? 'stall--open' : undefined,
+				// The candy look paints every proposal its own colour by number
+				// (see lib/looks.ts proposalHue); the other looks ignore this
+				'data-hue': String(proposalHue(number)),
 				oncreate: (vnode: m.VnodeDOM) => {
 					if (opts.flip) rememberRow(vnode.dom as HTMLElement, proposal.statementId);
 					spotlightHelped(vnode.dom as HTMLElement, proposal.statementId);
