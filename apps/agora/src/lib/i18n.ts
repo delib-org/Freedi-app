@@ -394,7 +394,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'question.saved': 'התשובה נשלחה',
 		'question.update': 'עדכון התשובה',
 		'question.saving_answer': 'שולחים את התשובה…',
-		'question.others_title': 'מה ענו האחרים',
+		'question.others_title': 'העריכו הצעות של אחרים',
 		'question.answer_first': 'שלחו קודם תשובה משלכם — ואז ייפתחו התשובות של האחרים.',
 		'question.waiting_for_answers': 'אף אחד עוד לא ענה. תשובות יופיעו כאן כשיגיעו.',
 		'question.no_answers': 'לא ניתנו תשובות.',
@@ -1345,7 +1345,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'question.saved': 'Answer sent',
 		'question.update': 'Update my answer',
 		'question.saving_answer': 'Sending your answer…',
-		'question.others_title': 'What the others answered',
+		'question.others_title': 'Rate other people\u2019s suggestions',
 		'question.answer_first': 'Send your own answer first — then the others’ answers open up.',
 		'question.waiting_for_answers':
 			'Nobody else has answered yet. Answers appear here as they arrive.',
@@ -2307,7 +2307,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'question.saved': 'أُرسلت الإجابة',
 		'question.update': 'تحديث إجابتي',
 		'question.saving_answer': 'جارٍ إرسال إجابتك…',
-		'question.others_title': 'ماذا أجاب الآخرون',
+		'question.others_title': 'قيّموا اقتراحات الآخرين',
 		'question.answer_first': 'أرسل إجابتك أولًا — ثم تُفتح إجابات الآخرين.',
 		'question.waiting_for_answers': 'لم يجب أحد بعد. ستظهر الإجابات هنا عند وصولها.',
 		'question.no_answers': 'لم تُقدَّم إجابات.',
@@ -3268,7 +3268,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'question.saved': 'Respuesta enviada',
 		'question.update': 'Actualizar mi respuesta',
 		'question.saving_answer': 'Enviando tu respuesta…',
-		'question.others_title': 'Qué respondieron los demás',
+		'question.others_title': 'Valorad las propuestas de los demás',
 		'question.answer_first': 'Envía primero tu respuesta; después se abren las de los demás.',
 		'question.waiting_for_answers':
 			'Nadie más ha respondido aún. Las respuestas aparecen aquí al llegar.',
@@ -4270,7 +4270,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'question.saved': 'Antwort gesendet',
 		'question.update': 'Antwort aktualisieren',
 		'question.saving_answer': 'Antwort wird gesendet…',
-		'question.others_title': 'Was die anderen geantwortet haben',
+		'question.others_title': 'Bewertet die Vorschläge der anderen',
 		'question.answer_first':
 			'Sende zuerst deine eigene Antwort – dann öffnen sich die der anderen.',
 		'question.waiting_for_answers':
@@ -5281,7 +5281,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'question.saved': 'Antwoord verstuurd',
 		'question.update': 'Mijn antwoord bijwerken',
 		'question.saving_answer': 'Je antwoord wordt verstuurd…',
-		'question.others_title': 'Wat de anderen antwoordden',
+		'question.others_title': 'Beoordeel de voorstellen van anderen',
 		'question.answer_first':
 			'Verstuur eerst je eigen antwoord – dan gaan de antwoorden van de anderen open.',
 		'question.waiting_for_answers':
