@@ -245,6 +245,14 @@
 		margin: 0;
 		color: var(--text-secondary);
 	}
+
+	// The brief: the same bands with the figures, the counts, the explainer
+	// and the raw answers left out (see CpBands.ts). What is left is a face, a
+	// label and the one sentence that says where the room stands — so the card
+	// can sit on the writing desk without burying the pen.
+	&--brief .cp-band {
+		padding: var(--space-xs) var(--space-sm);
+	}
 }
 
 .cp-band {
@@ -281,6 +289,14 @@
 		align-items: baseline;
 		flex-wrap: wrap;
 		gap: var(--space-xs) var(--space-sm);
+	}
+
+	// The face reads first and from across a room, so it is set above the
+	// label it introduces. Emoji paint their own colours — no ink token here,
+	// and nothing for the contrast gauntlet to measure.
+	&__face {
+		font-size: 1.25rem;
+		line-height: 1;
 	}
 
 	&__label {
@@ -392,9 +408,32 @@
 		font-weight: 700;
 	}
 
+	// The same chevron chip as the proposal dock and the accepted-ideas
+	// drawer — students have already learned this affordance twice. Drawn
+	// with borders rather than a glyph, so it stays RTL-safe: it rotates
+	// about the vertical, which reads the same in both directions.
 	&__fold {
-		@include type-meta;
-		color: var(--text-secondary);
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 24px;
+		height: 24px;
+		border-radius: var(--radius-full);
+		border: 1px solid var(--border-subtle);
+		transition: transform var(--motion-base) var(--ease-camera);
+
+		&::before {
+			content: '';
+			width: 7px;
+			height: 7px;
+			border-right: 2px solid var(--text-secondary);
+			border-bottom: 2px solid var(--text-secondary);
+			transform: translateY(-2px) rotate(45deg);
+		}
+	}
+
+	&--open &__fold {
+		transform: rotate(180deg);
 	}
 
 	&__list {

@@ -132,6 +132,18 @@
     font-weight: 700;
   }
 
+  // The score sits on the sweet's own tint, not on paper. --success is a mid
+  // green picked against white: on a pale blue wrapper it lands at 4.24 and
+  // misses AA. The deep rung of the same hue keeps the meaning — green is up,
+  // red is down — and buys back the ratio on every wrapper colour.
+  .board__callout-score {
+    color: color-mix(in srgb, var(--success) 88%, black);
+
+    &--against {
+      color: color-mix(in srgb, var(--danger) 88%, black);
+    }
+  }
+
   // The detail page opens on the proposal, so the proposal opens in its colour
   .board__detail-statement {
     padding: var(--space-sm) var(--space-md);

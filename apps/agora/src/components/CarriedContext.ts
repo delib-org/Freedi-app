@@ -46,11 +46,16 @@ export function CarriedContext(
 							open = !open;
 						},
 						'aria-expanded': String(open),
+						// The fold is a chevron, not a word: "Hide" next to a title
+						// that already says what the card is spent a line saying
+						// what one turned triangle says. Screen readers still get
+						// the verb, which is the half that was carrying meaning.
+						'aria-label': t(open ? 'carried.hide' : 'carried.show'),
 					},
 					[
 						m('span.carried__icon', { 'aria-hidden': 'true' }, m(Icon, { name: 'talk', size: 18 })),
 						m('span.carried__title', t('carried.title')),
-						m('span.carried__fold', t(open ? 'carried.hide' : 'carried.show')),
+						m('span.carried__fold', { 'aria-hidden': 'true' }),
 					],
 				),
 				open
@@ -66,7 +71,11 @@ export function CarriedContext(
 										m('p.carried__from', t('carried.from', { title: item.title ?? '' })),
 										outcome.summary ? m('p.carried__summary', outcome.summary) : null,
 										outcome.selected.length > 0
-											? m(CpBands, { answers: outcome.selected, bands: outcome.bands })
+											? m(CpBands, {
+													answers: outcome.selected,
+													bands: outcome.bands,
+													brief: true,
+												})
 											: null,
 									]);
 								}),

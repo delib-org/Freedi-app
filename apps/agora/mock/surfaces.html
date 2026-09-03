@@ -11,14 +11,16 @@
 			import '../src/styles/components.scss';
 			// The other looks, so the gauntlet can be run in any of them —
 			// `?theme=civic` paints every surface below in Odyssey's colours,
-			// `?theme=candy` in the default look. No parameter is the token
-			// file's base, which is the `purple` look.
+			// `?theme=candy` in the default look, `?theme=custom` in a look
+			// built from seeds (the block's own defaults stand in for a
+			// student's picks). No parameter is the token file's base, which is
+			// the `purple` look.
 			import '../src/styles/theme-civic.scss';
 			import '../src/styles/theme-candy.scss';
 			import '../src/styles/theme-custom.scss';
 
 			const theme = new URLSearchParams(location.search).get('theme');
-			if (theme === 'civic' || theme === 'candy') {
+			if (theme === 'civic' || theme === 'candy' || theme === 'custom') {
 				document.documentElement.dataset.sessionTheme = theme;
 			}
 		</script>
@@ -181,6 +183,38 @@
 					<span class="write-desk__mission-icon">🎯</span>
 					<div class="write-desk__mission-text">
 						<p>מה צריך לעשות? כתבו הצעה שגם מלוכנים וגם יעקובינים יוכלו לחיות איתה.</p>
+					</div>
+				</div>
+				<!-- The brief the proposal is written against: a WHITE island on
+				     the desk's saturated fill. It is here because it was shipped
+				     white-on-white — the desk is on-dark, the card is not. -->
+				<div class="carried carried--open">
+					<button class="carried__toggle" aria-expanded="true" aria-label="הסתרה">
+						<span class="carried__icon">💬</span>
+						<span class="carried__title">מה אמר החדר עד כה</span>
+						<span class="carried__fold"></span>
+					</button>
+					<div class="carried__list">
+						<div class="carried__item">
+							<p class="carried__from">מתוך: איך מנהלים את המזגן?</p>
+							<p class="carried__summary">הכיתה מסכימה שצריך שעות מיזוג קבועות.</p>
+							<div class="cp-bands cp-bands--brief">
+								<div class="cp-band cp-band--emerging">
+									<div class="cp-band__head">
+										<span class="cp-band__face">🌱</span>
+										<span class="cp-band__label">הסכמה מתגבשת</span>
+									</div>
+									<p class="cp-band__text">יש תמיכה בשעות קבועות, אבל רק ארבעה דירגו — עוד מוקדם לומר שזו עמדת הכיתה.</p>
+								</div>
+								<div class="cp-band cp-band--contested">
+									<div class="cp-band__head">
+										<span class="cp-band__face">⚡</span>
+										<span class="cp-band__label">שנוי במחלוקת</span>
+									</div>
+									<p class="cp-band__text">הכיתה חלוקה על מי מחליט מתי מדליקים.</p>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 				<textarea class="my-lantern__textarea write-desk__textarea" placeholder="אנחנו מציעים ש…"></textarea>
@@ -503,6 +537,7 @@
 				<div class="cp-bands">
 					<div class="cp-band cp-band--strong">
 						<div class="cp-band__head">
+							<span class="cp-band__face">💪</span>
 							<span class="cp-band__label">הסכמה איתנה</span>
 							<span class="cp-band__score">C_p +0.52</span>
 							<span class="cp-band__count">2 תשובות</span>
@@ -518,6 +553,7 @@
 					</div>
 					<div class="cp-band cp-band--emerging">
 						<div class="cp-band__head">
+							<span class="cp-band__face">🌱</span>
 							<span class="cp-band__label">הסכמה מתגבשת</span>
 							<span class="cp-band__score">C_p +0.18</span>
 							<span class="cp-band__count">1 תשובות</span>
@@ -526,6 +562,7 @@
 					</div>
 					<div class="cp-band cp-band--contested">
 						<div class="cp-band__head">
+							<span class="cp-band__face">⚡</span>
 							<span class="cp-band__label">שנוי במחלוקת</span>
 							<span class="cp-band__score">C_p -0.22</span>
 							<span class="cp-band__count">1 תשובות</span>
@@ -534,6 +571,7 @@
 					</div>
 					<div class="cp-band cp-band--unrated">
 						<div class="cp-band__head">
+							<span class="cp-band__face">😴</span>
 							<span class="cp-band__label">טרם נשקל</span>
 							<span class="cp-band__count">1 תשובות</span>
 						</div>

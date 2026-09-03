@@ -105,6 +105,10 @@ try {
 	// along in the carried-context card; the question's own outcome card is a
 	// step back through the navigator.
 	await student.waitForSelector('.carried .cp-band', { timeout: 30_000 });
+	// The card unfolds on a grid-track transition: shooting the moment the
+	// bands exist catches it half open, which is a picture of an animation
+	// rather than of the screen.
+	await student.waitForTimeout(1200);
 	await shot(student, '9-record-carried-forward');
 	await student.locator('.stage-nav__station--done').nth(1).click();
 	await student.waitForSelector('.question__outcome .cp-band', { timeout: 30_000 });

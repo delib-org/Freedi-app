@@ -535,6 +535,10 @@
 // white-on-white all over again.
 .write-desk__stuck,
 .write-desk__selfcheck-chip,
+// ...and the third: the brief the room carried into this stage, a whole white
+// CARD sitting on the desk. Its bands, its summary and its fold label all
+// re-derived from the desk's white ink and shipped invisible.
+.carried,
 // :not(--implemented) — that one is a solid GREEN fill carrying white, so
 // handing it the light ink turns its label back to dark-on-dark
 .on-dark .helped__chip:not(.helped__chip--implemented),
