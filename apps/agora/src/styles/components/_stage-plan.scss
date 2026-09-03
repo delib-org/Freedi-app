@@ -1,6 +1,7 @@
 // The stage plan: the student's stage navigator, the question stage, the
-// carried context card, the agreement results, the teacher's plan rail and
-// the plan editor. Imported by components.scss; do not import directly.
+// C_p bands a question leaves behind, the carried context card, the
+// agreement results, the teacher's plan rail and the plan editor.
+// Imported by components.scss; do not import directly.
 
 // --- Stage navigator: the journey as doors ---
 .stage-nav {
@@ -225,6 +226,121 @@
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
+	}
+}
+
+// --- C_p bands: what the room is behind, by how firmly it holds it ---
+.cp-bands {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__explain {
+		@include type-meta;
+		margin: 0;
+		color: var(--text-secondary);
+	}
+}
+
+.cp-band {
+	padding: var(--space-sm) var(--space-md);
+	border-radius: var(--radius-tile);
+	background: var(--bg-inset);
+	border-inline-start: 3px solid var(--band-edge, var(--text-secondary));
+
+	&--strong {
+		--band-edge: var(--success);
+	}
+
+	&--emerging {
+		--band-edge: var(--mine);
+	}
+
+	&--contested {
+		--band-edge: var(--warning);
+	}
+
+	&--unrated {
+		--band-edge: var(--border-subtle);
+	}
+
+	&__head {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: var(--space-xs) var(--space-sm);
+	}
+
+	&__label {
+		font-weight: 700;
+		color: var(--band-edge, var(--text-primary));
+	}
+
+	&__score,
+	&__count,
+	&__meta {
+		@include type-meta;
+		color: var(--text-secondary);
+	}
+
+	&__count {
+		margin-inline-start: auto;
+	}
+
+	&__text {
+		margin: var(--space-xs) 0 0;
+		white-space: pre-wrap;
+	}
+
+	&__answers {
+		margin: var(--space-sm) 0 0;
+		padding-inline-start: 1.2em;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__answer {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-xs);
+	}
+
+	&__answer-text {
+		@include proposal-voice;
+	}
+
+	&__who {
+		@include type-meta;
+		font-weight: 700;
+		color: var(--peer-ink, var(--text-secondary));
+	}
+}
+
+// The band an answer sits in, as a chip on the answer's own card
+.cp-chip {
+	@include type-meta;
+	padding: 1px var(--space-sm);
+	border-radius: 999px;
+	font-weight: 700;
+	white-space: nowrap;
+	border: 1px solid currentcolor;
+
+	&--strong {
+		color: var(--success-deep);
+	}
+
+	&--emerging {
+		color: var(--mine-ink);
+	}
+
+	&--contested {
+		color: var(--warning);
+	}
+
+	&--unrated {
+		color: var(--text-secondary);
 	}
 }
 
@@ -585,6 +701,16 @@
 		border: 1.5px solid var(--border-subtle);
 		border-radius: var(--radius-tile);
 		background: var(--bg-card-solid);
+		// A moved row slides to its new place (FLIP in StagePlanEditor); the displaced neighbour glides
+		transition: transform var(--motion-base) var(--ease-camera);
+
+		// The row the teacher moved springs, and glows for a beat so the eye lands on it
+		&--moved {
+			transition: transform var(--motion-base) var(--ease-spring);
+			animation: plan-editor-settle var(--motion-slow) ease-out both;
+			position: relative;
+			z-index: 1;
+		}
 
 		&--frozen {
 			background: var(--bg-inset);
@@ -729,5 +855,23 @@
 	&__errors {
 		margin: 0;
 		padding-inline-start: 1.2em;
+	}
+}
+
+@keyframes plan-editor-settle {
+	from {
+		box-shadow: 0 0 0 3px var(--mine-soft, rgba(29, 85, 171, 0.25));
+	}
+
+	to {
+		box-shadow: 0 0 0 0 transparent;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.plan-editor__item,
+	.plan-editor__item--moved {
+		transition: none;
+		animation: none;
 	}
 }

@@ -57,6 +57,47 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 	let focusItemId: string | null = null;
 	let addOpen = false;
 
+	/**
+	 * Moving a stage re-sorts the list, and a row that teleports makes the
+	 * teacher lose their place. FLIP: remember where every row sat, let
+	 * Mithril reorder the DOM, put each row back where the eye left it and
+	 * release it to slide home. Armed only by a move — opening a row's
+	 * options or adding a stage also shifts rows, and that displacement is
+	 * not a re-sort.
+	 *
+	 * offsetTop, not getBoundingClientRect: scrolling must not read as motion.
+	 */
+	const rowTops = new Map<string, number>();
+	let flipArmed = false;
+	let movedItemId: string | null = null;
+	const reducedMotion =
+		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	const rememberRow = (dom: HTMLElement, itemId: string): void => {
+		rowTops.set(itemId, dom.offsetTop);
+	};
+
+	const flipRow = (dom: HTMLElement, itemId: string, flip: boolean): void => {
+		const now = dom.offsetTop;
+		const before = rowTops.get(itemId);
+		rowTops.set(itemId, now);
+		if (!flip || before === undefined || reducedMotion) return;
+		const delta = before - now;
+		if (Math.abs(delta) < 2) return;
+		// Drop the glow first and force a reflow, so a row moved twice in a row glows twice
+		dom.classList.remove('plan-editor__item--moved');
+		void dom.offsetWidth;
+		if (itemId === movedItemId) dom.classList.add('plan-editor__item--moved');
+		// Frame 1: no transition, sitting at the old place
+		dom.style.transition = 'none';
+		dom.style.transform = `translateY(${delta}px)`;
+		requestAnimationFrame(() => {
+			// Frame 2: hand the transition back to the stylesheet and let go
+			dom.style.transition = '';
+			dom.style.transform = '';
+		});
+	};
+
 	/** The select's plain values → the shared enum; anything unknown is the default */
 	const cutoffFromSelectValue = (value: string): CutoffBy => {
 		if (value === 'threshold') return CutoffBy.aboveThreshold;
@@ -74,8 +115,16 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 		view(vnode) {
 			const { items, hasCharacters, frozenCount, onChange, showPresets = false } = vnode.attrs;
 			const options = { hasCharacters, frozenCount };
-			const dispatch = (event: PlanEditorEvent): void =>
+			const dispatch = (event: PlanEditorEvent): void => {
+				if (event.kind === 'move') {
+					flipArmed = true;
+					movedItemId = event.itemId;
+				}
 				onChange(planEditorReduce(items, event, options));
+			};
+			// Hooks run after this view; they see the value the move armed, and the next render starts clean
+			const flip = flipArmed;
+			flipArmed = false;
 			const errors = validateStagePlan(items, { hasCharacters });
 			const addable = addableStages(items, { hasCharacters });
 
@@ -271,6 +320,8 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 							'li.plan-editor__item',
 							{
 								key: item.itemId,
+								oncreate: (node: m.VnodeDOM) => rememberRow(node.dom as HTMLElement, item.itemId),
+								onupdate: (node: m.VnodeDOM) => flipRow(node.dom as HTMLElement, item.itemId, flip),
 								class:
 									[
 										frozen ? 'plan-editor__item--frozen' : '',
