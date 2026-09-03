@@ -374,7 +374,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.mode_quick': 'משחק מהיר',
 		'startGame.mode_scenario_hint': 'תרחיש היסטורי עם דמויות, צדדים וסיפור.',
 		'startGame.mode_quick_hint':
-			'רק שאלה שהחדר מחליט עליה — בלי תרחיש, בלי צדדים. את השלבים בוחרים אתם.',
+			'רק שאלה שהחדר מחליט עליה — בלי תרחיש, בלי צדדים. אתם בוחרים את השלבים.',
 		'startGame.quick_title': 'שם המשחק',
 		'startGame.quick_title_ph': 'למשל: פתרון בעיית המזגן',
 		'startGame.quick_question': 'השאלה הראשית',

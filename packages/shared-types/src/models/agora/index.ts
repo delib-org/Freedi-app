@@ -74,6 +74,29 @@ export {
 	AgoraOutcomeStatsSchema,
 } from './agoraSession';
 
+export type {
+	AgoraThemePreset,
+	AgoraThemeSeeds,
+	AgoraCustomTheme,
+	AgoraThemeChoice,
+	AgoraResolvedTheme,
+	AgoraThemeTally,
+	ThemeSession,
+	ThemeParticipant,
+	TallyParticipant,
+} from './agoraTheme';
+export {
+	AGORA_THEME_PRESETS,
+	AGORA_DEFAULT_THEME,
+	AGORA_THEME,
+	HexColourSchema,
+	AgoraThemeSeedsSchema,
+	AgoraCustomThemeSchema,
+	AgoraThemeChoiceSchema,
+	resolveAgoraTheme,
+	tallyAgoraThemes,
+} from './agoraTheme';
+
 export type { AgoraAgreementResults, AgoraIdentityMode } from './agoraSession';
 export { AgoraAgreementResultsSchema, AgoraIdentityModeSchema } from './agoraSession';
 
