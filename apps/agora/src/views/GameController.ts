@@ -31,7 +31,6 @@ import {
 import { ToastStack } from '../components/Toast';
 import { NeedsBoard } from '../components/NeedsBoard';
 import { CelebrationOverlay } from '../components/Celebration';
-import { InstallHint } from '../components/InstallHint';
 import { StageNav, planItemLabel } from '../components/StageNav';
 import { CarriedContext } from '../components/CarriedContext';
 import { ResultsBoard } from '../components/ResultsBoard';
@@ -311,7 +310,6 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const overlays = [
 				m(ToastStack),
 				m(CelebrationOverlay),
-				m(InstallHint),
 				lookSheet,
 				transitionItem !== null
 					? m(StageTransition, {

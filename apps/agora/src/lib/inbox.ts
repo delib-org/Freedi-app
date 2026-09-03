@@ -1,5 +1,4 @@
 import m from 'mithril';
-import { maybeSuggestInstall } from './install';
 
 /**
  * The square's post box.
@@ -97,9 +96,6 @@ export function addInboxItem(item: Omit<InboxItem, 'read' | 'at'> & { at?: numbe
 	if (items.length > MAX_ITEMS) items.length = MAX_ITEMS;
 	persist();
 	syncAppBadge();
-	// News just landed FOR this player — the moment the home-screen icon's
-	// badge is worth having is the moment to suggest the home screen
-	maybeSuggestInstall();
 }
 
 /** Newest first — the order a post box is read in */

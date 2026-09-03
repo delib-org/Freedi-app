@@ -868,80 +868,75 @@
 	}
 }
 
-// The home-screen suggestion: one card, low on the screen, that exists only
-// after a smart moment asked for it (news landed, or an email cadence was
-// saved) and never comes back the same sitting once answered.
-.install-hint {
-	position: fixed;
-	inset-inline: var(--space-md);
-	// Above the notebook dock, which owns the very bottom of the screen
-	inset-block-end: calc(var(--space-md) + 68px);
-	z-index: calc(var(--z-toast) - 1);
-	display: flex;
-	align-items: flex-start;
-	gap: var(--space-sm);
-	max-width: 420px;
-	margin-inline: auto;
-	padding: var(--space-md);
-	background: var(--bg-card-solid);
+// The home-screen offer: the last card on the results screen. Inline, not
+// floating — it is read after the score, never over it — and it lists what
+// the icon buys instead of asking cold.
+.install-offer {
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--radius-lg);
-	box-shadow: var(--shadow-raised);
+
+	&__head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
 
 	&__icon {
+		flex: 0 0 auto;
+		display: inline-flex;
+		color: var(--mine-ink);
+	}
+
+	&__title {
+		margin: 0;
+		font-family: var(--font-display);
+		color: var(--ink);
+		font-size: var(--font-size-lg);
+	}
+
+	&__lead {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	&__benefits {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__benefit {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-sm);
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+		line-height: 1.45;
+	}
+
+	&__benefit-icon {
 		flex: 0 0 auto;
 		display: inline-flex;
 		color: var(--mine-ink);
 		margin-block-start: 2px;
 	}
 
-	&__body {
-		flex: 1 1 auto;
-		min-width: 0;
-	}
-
-	&__title {
-		display: block;
-		font-family: var(--font-display);
-		color: var(--ink);
+	&__ios {
+		margin: 0;
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-md);
+		background: var(--bg-inset);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
 
-	&__text {
-		margin: 4px 0 0;
-		color: var(--text-secondary);
-		font-size: var(--font-size-xs);
-	}
-
 	&__actions {
-		flex: 0 0 auto;
 		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-		gap: var(--space-xs);
-	}
-
-	&__go {
-		padding: 6px var(--space-md);
-		border: none;
-		border-radius: 999px;
-		background: var(--mine-ink);
-		color: #ffffff;
-		font: inherit;
-		font-size: var(--font-size-xs);
-		font-weight: 700;
-		cursor: pointer;
-	}
-
-	&__later {
-		padding: 4px var(--space-sm);
-		border: none;
-		background: none;
-		color: var(--text-muted);
-		font: inherit;
-		font-size: var(--font-size-xs);
-		text-decoration: underline;
-		cursor: pointer;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-sm);
 	}
 }
 

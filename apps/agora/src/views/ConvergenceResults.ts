@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { AgoraParticipant, AgoraSession } from '@freedi/shared-types';
 import { t } from '../lib/i18n';
+import { InstallOffer } from '../components/InstallOffer';
 
 export interface ConvergenceResultsAttrs {
 	session: AgoraSession;
@@ -81,6 +82,8 @@ export function ConvergenceResults(): m.Component<ConvergenceResultsAttrs> {
 								]),
 						m('p.convergence__counted', t('convergence.counted', { n: String(counted) })),
 					]),
+
+					m(InstallOffer),
 				]),
 			]);
 		},

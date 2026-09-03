@@ -1,28 +1,29 @@
 import m from 'mithril';
 
 /**
- * Home-screen install suggestion, made at a SMART time — never on page load.
+ * Home-screen install offer, made at the END of the game — never on page load
+ * and never mid-play.
  *
- * A cold install banner is furniture; the moment the game has just proven why
- * an icon on the home screen is worth having is when the ask lands. Two such
- * moments call maybeSuggestInstall(): news arriving in the post box (the
- * installed icon will carry that count as a badge), and saving an email
- * cadence (a player arranging to be told about updates plainly intends to
- * come back).
+ * It used to pop up on two "smart moments" (news landing in the post box,
+ * an email cadence being saved), which in practice meant a modal over the
+ * square while a student was still writing. The results screen is where the
+ * ask belongs: the game has just shown what the icon is for — classmates
+ * responding to your idea, a proposal you can keep improving, a next game —
+ * and nothing is interrupted any more.
  *
- * The suggestion shows at most once a sitting, respects a two-week cooldown
- * after a dismissal, and never appears inside an already-installed app.
+ * The offer respects a two-week cooldown after a dismissal, disappears for
+ * the sitting once answered either way, and never appears inside an
+ * already-installed app.
  */
 
-/** Chrome's install prompt, stashed until the smart moment asks for it */
+/** Chrome's install prompt, stashed until the results screen asks for it */
 interface BeforeInstallPromptEvent extends Event {
 	prompt(): Promise<void>;
 	userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
-let hintVisible = false;
-let suggestedThisSitting = false;
+let answeredThisSitting = false;
 
 const DISMISS_KEY = 'agora_install_hint_dismissed';
 const DISMISS_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
@@ -38,7 +39,7 @@ export function initInstallCapture(): void {
 	});
 	window.addEventListener('appinstalled', () => {
 		deferredPrompt = null;
-		hintVisible = false;
+		answeredThisSitting = true;
 		m.redraw();
 	});
 }
@@ -68,20 +69,18 @@ function recentlyDismissed(): boolean {
 	}
 }
 
-/** A smart moment happened — surface the hint if the ground is right. */
-export function maybeSuggestInstall(): void {
-	if (hintVisible || suggestedThisSitting) return;
-	if (isStandalone() || recentlyDismissed()) return;
+/**
+ * Whether the results screen should carry the offer right now. Pure read —
+ * the card renders inline, so there is no "show" state to flip; the screen
+ * simply asks on every draw.
+ */
+export function installOfferAvailable(): boolean {
+	if (answeredThisSitting) return false;
+	if (isStandalone() || recentlyDismissed()) return false;
 	// Nothing to offer: Chrome never volunteered its prompt and this is not
 	// an iOS browser where manual instructions are the only road anyway
-	if (!deferredPrompt && !isIOS()) return;
-	hintVisible = true;
-	suggestedThisSitting = true;
-	m.redraw();
-}
 
-export function installHintVisible(): boolean {
-	return hintVisible;
+	return deferredPrompt !== null || isIOS();
 }
 
 /** Whether the native browser prompt is available (vs. iOS instructions) */
@@ -89,8 +88,8 @@ export function canPromptInstall(): boolean {
 	return deferredPrompt !== null;
 }
 
-export function dismissInstallHint(): void {
-	hintVisible = false;
+export function dismissInstallOffer(): void {
+	answeredThisSitting = true;
 	try {
 		localStorage.setItem(DISMISS_KEY, String(Date.now()));
 	} catch {
@@ -98,12 +97,12 @@ export function dismissInstallHint(): void {
 	}
 }
 
-/** Run the native install prompt. The hint closes either way — the browser's
+/** Run the native install prompt. The offer closes either way — the browser's
  *  own dialog has taken over, and re-asking after a refusal is nagging. */
 export async function promptInstall(): Promise<void> {
 	const prompt = deferredPrompt;
 	deferredPrompt = null;
-	hintVisible = false;
+	answeredThisSitting = true;
 	if (!prompt) return;
 	try {
 		await prompt.prompt();
