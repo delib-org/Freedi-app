@@ -422,6 +422,14 @@
     var(--field-mid) 50%,
     var(--field-for) 100%
   );
+  // The goal at the top of the field (see .board__goal). White posts on
+  // purpose and in every look: the field is a tinted ramp everywhere, and a
+  // white bar on it is a goalpost where a coloured one is a frame. The ball's
+  // seams are inked the same dark in every look — --ink goes white on the
+  // civic navy, and a white ball with white seams is a moon.
+  --goal-post: #ffffff;
+  --goal-mesh: color-mix(in srgb, var(--success-deep) 45%, transparent);
+  --goal-ball-ink: #2b2350;
 
   // --- Motion (camera-move easing; never hard cuts) ---
   --motion-fast: 150ms;
