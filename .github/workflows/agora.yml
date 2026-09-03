@@ -48,9 +48,15 @@ jobs:
       - name: Install root toolchain
         run: npm ci
 
+      # `npm ci`, not `npm install`: the resolver has to be given a tree, not asked
+      # to invent one. On 2026-09-03 vitest 5.0.0 was published mid-morning and the
+      # next push died in npm's arborist ("Cannot read properties of null (reading
+      # 'edgesOut')") while walking the new peer set — a green commit and a red one
+      # with no diff between them. apps/agora/package-lock.json is committed for
+      # this reason; regenerate it with npm >= 11 when dependencies change.
       - name: Install Agora
         working-directory: ./apps/agora
-        run: npm install
+        run: npm ci
 
       - name: Lint
         working-directory: ./apps/agora
