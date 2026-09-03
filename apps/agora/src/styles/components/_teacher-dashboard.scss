@@ -231,6 +231,17 @@
 		box-shadow: none;
 	}
 
+	// The lesson this teacher is about to run. A filled tint and a lantern
+	// ring, the same way a committed choice is said on the start screen —
+	// hover is a maybe, this is a decision.
+	&--chosen {
+		border-color: var(--lantern);
+		background: var(--bg-inset);
+		box-shadow:
+			inset 0 0 0 1px var(--lantern),
+			var(--glow-lantern);
+	}
+
 	&__use {
 		flex: 1 1 auto;
 		min-inline-size: 0;
@@ -275,6 +286,11 @@
 	&__use:hover &__tile {
 		background: var(--mine-strong);
 		color: #fff; // on --mine-strong, and an icon carries no text contrast duty
+	}
+
+	&--chosen &__tile {
+		background: var(--mine-strong);
+		color: #fff; // an icon, so no text-contrast duty
 	}
 
 	&--draft &__tile {
@@ -329,6 +345,12 @@
 			border-color: var(--warning);
 			background: color-mix(in srgb, var(--warning) 18%, transparent);
 		}
+
+		&--chosen {
+			color: var(--text-primary);
+			border-color: var(--lantern);
+			background: color-mix(in srgb, var(--lantern) 18%, transparent);
+		}
 	}
 
 	&__sub {
@@ -339,6 +361,10 @@
 	&__settings {
 		@extend %agora-icon-button;
 	}
+}
+
+.scenario-list__go {
+	margin-block-start: var(--space-sm);
 }
 
 // --- The bar on a teacher's long form ---

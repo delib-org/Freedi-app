@@ -41,6 +41,9 @@ export function TeacherHome(): m.Component {
 	 */
 	let loadedForUid: string | null = null;
 	let refilling = false;
+	/** The scenario this teacher is about to run. Chosen on the shelf, and
+	 *  carried to the start screen by the button under it. */
+	let chosenTopicId: string | null = null;
 
 	/** Refill the shelf when auth settles on a different account than it was
 	 *  filled for. Guarded so a burst of redraws cannot stack reads. */
@@ -177,34 +180,57 @@ export function TeacherHome(): m.Component {
 	 */
 	function scenarioRow(topic: AgoraTopicPackage): m.Children {
 		const ready = topic.status === AgoraTopicStatus.ready;
+		const chosen = ready && chosenTopicId === topic.topicPackageId;
 		const statusId = `scenario-status-${topic.topicPackageId}`;
 
 		return m(
 			'li.scenario-row',
-			{ key: topic.topicPackageId, class: ready ? undefined : 'scenario-row--draft' },
+			{
+				key: topic.topicPackageId,
+				class: [ready ? '' : 'scenario-row--draft', chosen ? 'scenario-row--chosen' : '']
+					.join(' ')
+					.trim(),
+			},
 			[
 				m(
 					'button.scenario-row__use',
 					{
 						type: 'button',
-						'aria-label': t(ready ? 'dashboard.scenario_use' : 'dashboard.scenario_finish', {
+						'aria-label': t(ready ? 'dashboard.scenario_choose' : 'dashboard.scenario_finish', {
 							title: topic.title,
 						}),
+						'aria-pressed': ready ? (chosen ? 'true' : 'false') : undefined,
 						'aria-describedby': statusId,
-						onclick: () =>
-							ready
-								? m.route.set('/teach/start', { topic: topic.topicPackageId })
-								: m.route.set(`/teach/topic/${topic.topicPackageId}`),
+						onclick: () => {
+							if (ready) {
+								chosenTopicId = topic.topicPackageId;
+
+								return;
+							}
+							m.route.set(`/teach/topic/${topic.topicPackageId}`);
+						},
 					},
 					[
-						m('span.scenario-row__tile', m(Icon, { name: ready ? 'tunnel' : 'edit', size: 22 })),
+						m(
+							'span.scenario-row__tile',
+							m(Icon, { name: chosen ? 'check' : ready ? 'tunnel' : 'edit', size: 22 }),
+						),
 						m('span.scenario-row__text', [
 							m('span.scenario-row__title', topic.title),
 							m('span.scenario-row__meta', { id: statusId }, [
 								m(
 									'span.scenario-row__status',
-									{ class: ready ? undefined : 'scenario-row__status--draft' },
-									t(ready ? 'editor.ready' : 'editor.draft'),
+									{
+										class: [
+											ready ? '' : 'scenario-row__status--draft',
+											chosen ? 'scenario-row__status--chosen' : '',
+										]
+											.join(' ')
+											.trim(),
+									},
+									chosen
+										? t('dashboard.scenario_chosen')
+										: t(ready ? 'editor.ready' : 'editor.draft'),
 								),
 								ready ? null : m('span.scenario-row__sub', t('dashboard.scenario_draft_sub')),
 							]),
@@ -276,6 +302,11 @@ export function TeacherHome(): m.Component {
 		view() {
 			const { tier, loading, signInError, user } = getUserState();
 			refillIfAccountChanged(user?.uid);
+			const chosen =
+				topics.find(
+					(topic) =>
+						topic.topicPackageId === chosenTopicId && topic.status === AgoraTopicStatus.ready,
+				) ?? null;
 
 			if (loading) {
 				return m(
@@ -375,6 +406,19 @@ export function TeacherHome(): m.Component {
 													{ role: 'list' },
 													shelfOrder(topics).map(scenarioRow),
 												),
+												// The way on, where the choice was just made — the
+												// button at the top of this page is a screen away by
+												// the time a teacher reaches the shelf.
+												chosen
+													? m(
+															'button.btn.btn--primary.btn--full.btn--lg.scenario-list__go',
+															{
+																onclick: () =>
+																	m.route.set('/teach/start', { topic: chosen.topicPackageId }),
+															},
+															t('dashboard.scenario_use', { title: chosen.title }),
+														)
+													: null,
 											],
 									m(
 										'button.btn.btn--secondary.btn--full',
