@@ -38,6 +38,37 @@ function OutcomeRow({ stats }: { stats: AgoraStatsDoc | null }) {
 	);
 }
 
+/**
+ * Which look the students played in — the favourite-design question. Counted
+ * per student, not per room, because the room's look is the teacher's pick
+ * and a student who changed it is the signal worth having.
+ */
+function LooksRow({ stats }: { stats: AgoraStatsDoc | null }) {
+	const { t } = useTranslation();
+	const byTheme = stats?.byTheme ?? {};
+	const worn: Array<{ key: string; label: string }> = [
+		{ key: 'candy', label: t('Candy') },
+		{ key: 'purple', label: t('Solid purple') },
+		{ key: 'custom', label: t('Own look') },
+	];
+
+	return (
+		<div className={styles.outcomes} aria-label={t('Favourite looks')}>
+			{worn.map((row) => (
+				<Tag key={row.key} status="open" dot>
+					{row.label}: {byTheme[row.key] ?? 0}
+				</Tag>
+			))}
+			<Tag status="frozen">
+				{t('Built a look')}: {byTheme.built ?? 0}
+			</Tag>
+			<Tag status="frozen">
+				{t('Borrowed a look')}: {byTheme.borrowed ?? 0}
+			</Tag>
+		</div>
+	);
+}
+
 /** `/admin/agora` — the Agora classroom game across every school (system admins only). */
 export default function AdminAgora() {
 	const { t } = useTranslation();
@@ -91,6 +122,8 @@ export default function AdminAgora() {
 					<ProgressStat value={stats?.studentsReached ?? 0} label={t('Students reached')} />
 				</div>
 				<OutcomeRow stats={stats} />
+				<h3 className={styles.sectionTitle}>{t('Favourite looks')}</h3>
+				<LooksRow stats={stats} />
 			</section>
 
 			<section aria-label={t('Schools')}>

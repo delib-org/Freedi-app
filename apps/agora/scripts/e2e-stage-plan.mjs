@@ -4,7 +4,8 @@
  * lines up lobby → question → deliberation → voting → results, and asks for
  * names. Three people join with their names. They answer the question and
  * rate each other's answers; the admin moves on and the top answers travel
- * forward with a summary. They propose; the room nearly all loves one
+ * forward with a summary and a C_p-banded record of how firmly the room
+ * held each of them. They propose; the room nearly all loves one
  * proposal, so the vote opens BY ITSELF — for or against that one proposal.
  * Two for, one against: adopted. Results name the decision.
  *
@@ -23,7 +24,7 @@ import { eq, fail, step } from './lib/e2e.mjs';
 import { callable, db, fastlane, signInTeacher, signUpAnonymous } from './lib/fastlane.ts';
 
 const require = createRequire(import.meta.url);
-const { AgoraStage, Collections, CutoffBy, VOTE_AGAINST, stagePlanPreset } = require('@freedi/shared-types');
+const { AgoraStage, Collections, CutoffBy, VOTE_AGAINST, agoraCpBand, stagePlanPreset } = require('@freedi/shared-types');
 const { buildAnswerStatement, buildProposalStatement } = require('../src/lib/statementDocs');
 
 await preflight();
@@ -186,7 +187,7 @@ const answerScore = await db.collection(Collections.agoraScores).doc(answerIds[0
 eq('question answers get no bridging score', answerScore.exists, false);
 
 // ---------------------------------------------------------------------------
-step('3. Moving on closes the question: top answers + summary travel forward');
+step('3. Moving on closes the question: top answers + the banded record travel forward');
 await callable('agoraAdvanceStage', { sessionId, toIndex: 2 }, teacherToken);
 s = await until('question outcome written', async () => {
 	const row = await session(sessionId);
@@ -201,6 +202,43 @@ eq('best answer first', outcome.selected[0].statementId, answerIds[0]);
 eq('second best second', outcome.selected[1].statementId, answerIds[1]);
 eq('named room carries the name', outcome.selected[0].anonName, bots[0].anonName);
 eq('a summary was written', typeof outcome.summary === 'string' && outcome.summary.length > 0, true);
+eq('carried answers carry their C_p', typeof outcome.selected[0].consensus, 'number');
+// The record is banded by C_p, and the bands are OURS: every carried answer
+// appears in exactly one, whatever the model did or did not return.
+eq('the record is banded', Array.isArray(outcome.bands) && outcome.bands.length > 0, true);
+eq(
+	'every band names a real band',
+	outcome.bands.every((band) =>
+		['strong', 'emerging', 'contested', 'unrated'].includes(band.band),
+	),
+	true,
+);
+eq(
+	'bands run strongest first',
+	outcome.bands.every(
+		(band, i) => i === 0 || outcome.bands[i - 1].consensus >= band.consensus,
+	),
+	true,
+);
+eq(
+	'every carried answer sits in exactly one band',
+	outcome.bands.flatMap((band) => band.statementIds).sort().join(','),
+	outcome.selected.map((row) => row.statementId).sort().join(','),
+);
+eq(
+	'each answer is banded where its own C_p puts it',
+	outcome.bands.every((band) =>
+		band.statementIds.every(
+			(id) => agoraCpBand(outcome.selected.find((row) => row.statementId === id)) === band.band,
+		),
+	),
+	true,
+);
+eq(
+	'every band says something',
+	outcome.bands.every((band) => typeof band.text === 'string' && band.text.length > 0),
+	true,
+);
 const closedQuestion = await statement(questionItem.statementId);
 eq('results written on the question Statement', (closedQuestion.results ?? []).length, 2);
 eq('chosen answers marked', (await statement(answerIds[0])).isChosen, true);

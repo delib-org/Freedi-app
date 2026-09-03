@@ -1,6 +1,7 @@
 /* Screens of the stage plan, for eyes: the named join, the question stage
  * (answering, then weighing), the stage navigator with a step back, the
- * teacher's plan rail + answers panel, and the start screen in quick mode.
+ * teacher's plan rail + answers panel + live C_p bands, the closed question's
+ * banded record as the class reads it, and the start screen in quick mode.
  *
  * Run: npx tsx scripts/stage-plan-shots.mjs  →  stage-plan-shots/*.png
  */
@@ -93,6 +94,22 @@ try {
 	await teacher.waitForSelector('.plan-editor', { timeout: 10_000 });
 	await shot(teacher, '7-teacher-edit-upcoming');
 
+	step('teacher: the live C_p bands, then close the question');
+	await teacher.goto(teacherUrl(game.sessionId), { waitUntil: 'domcontentloaded' });
+	await teacher.waitForSelector('.cp-band', { timeout: 30_000 });
+	await shot(teacher, '8-teacher-cp-bands-live');
+	await callable('agoraAdvanceStage', { sessionId: game.sessionId, toIndex: 2 }, game.teacherToken);
+
+	step('student: the record travels — carried context, then the closed question');
+	// The advance moves the student on to the square, where the record rides
+	// along in the carried-context card; the question's own outcome card is a
+	// step back through the navigator.
+	await student.waitForSelector('.carried .cp-band', { timeout: 30_000 });
+	await shot(student, '9-record-carried-forward');
+	await student.locator('.stage-nav__station--done').nth(1).click();
+	await student.waitForSelector('.question__outcome .cp-band', { timeout: 30_000 });
+	await shot(student, '10-question-record-banded');
+
 	step('teacher: start screen in quick mode');
 	await teacher.goto(`${VITE_HOST}/#!/teach/start`, { waitUntil: 'domcontentloaded' });
 	await teacher.waitForSelector('.plan-editor', { timeout: 30_000 });
@@ -101,7 +118,7 @@ try {
 	await teacher.waitForTimeout(300);
 	await teacher.locator('.plan-editor__item button.btn--ghost', { hasText: 'הגדרות' }).first().click();
 	await teacher.waitForTimeout(300);
-	await shot(teacher, '8-start-quick');
+	await shot(teacher, '11-start-quick');
 	console.log(`\n✓ screens in ${DIR}/`);
 } finally {
 	await browser.close();

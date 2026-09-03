@@ -1,0 +1,164 @@
+@use 'tokens' as *;
+
+// ============================================================================
+// A look a student built — grown from four seeds
+//
+// The builder hands the document element four colours as custom properties
+// (`--seed-page`, `--seed-mine`, `--seed-peer`, `--seed-go`; see
+// lib/theme.ts) and this block grows the palette from them with color-mix():
+// the light and deep rungs of each family, the hairlines, the insets, the
+// glows, the gradients. A student picks four swatches and gets a whole
+// coherent look, and nothing in a component rule knows the difference.
+//
+// It stands on the candy block, which matches this attribute too: everything
+// the seeds do not reach — camps, marks, semantic colours, the gummy edge,
+// the ink — is candy's. The seeds are picked from swatches that hold white
+// (mine, peer) or dark ink (go) on their own, which is what lets the derived
+// families below assume the contrast contract instead of proving it; see
+// lib/looks.ts for the measured lists.
+//
+// The defaults here are candy's own seeds, so a `custom` attribute with no
+// seeds set (a remembered look whose seeds failed to restore) paints candy
+// rather than nothing.
+// ============================================================================
+
+@mixin ink-on-custom {
+  --border-subtle: color-mix(in srgb, var(--seed-mine) 16%, transparent);
+  --border-strong: color-mix(in srgb, var(--seed-mine) 36%, transparent);
+  --border-lantern: color-mix(in srgb, var(--seed-mine) 60%, transparent);
+  --bg-inset: color-mix(in srgb, var(--seed-mine) 7%, transparent);
+  --lantern-glow: var(--mine-ink);
+  --mine-glow: var(--mine-ink);
+  --peer-glow: color-mix(in srgb, var(--seed-peer) 55%, black);
+}
+
+:root[data-session-theme='custom'] {
+  --seed-page: #fff5fa;
+  --seed-mine: #d81b7a;
+  --seed-peer: #1668d8;
+  --seed-go: #3ddc84;
+
+  // --- Page ---
+  --bg-page: var(--seed-page);
+  --bg-page-high: color-mix(in srgb, var(--seed-page) 82%, var(--seed-mine));
+  --parchment-dim: color-mix(in srgb, var(--seed-page) 60%, white);
+  --surface-tint: color-mix(in srgb, var(--seed-page) 50%, white);
+
+  // --- MINE ---
+  --mine-light: color-mix(in srgb, var(--seed-mine) 65%, white);
+  --mine: var(--seed-mine);
+  --mine-strong: color-mix(in srgb, var(--seed-mine) 88%, black);
+  --mine-deep: color-mix(in srgb, var(--seed-mine) 70%, black);
+  --mine-ink: color-mix(in srgb, var(--seed-mine) 55%, black);
+
+  // --- OTHERS ---
+  --peer-tile: color-mix(in srgb, var(--seed-peer) 14%, white);
+  --peer: var(--seed-peer);
+  --peer-strong: color-mix(in srgb, var(--seed-peer) 88%, black);
+  --peer-deep: color-mix(in srgb, var(--seed-peer) 70%, black);
+
+  // --- Accents ---
+  --mint: var(--seed-go);
+  --mint-deep: color-mix(in srgb, var(--seed-go) 75%, black);
+  --mint-ink: color-mix(in srgb, var(--seed-go) 25%, black);
+  // A count on a built look is the peer family's deep rung: it must not be
+  // MINE (a count is not mine) and the seeds do not include a fifth colour
+  --pink: var(--peer-deep);
+
+  // --- Washes ---
+  --wash-mine-high: color-mix(in srgb, var(--seed-mine) 12%, var(--seed-page));
+  --wash-mine-mid: var(--seed-page);
+  --wash-mine-low: var(--seed-page);
+  --wash-peer-high: color-mix(in srgb, var(--seed-peer) 12%, var(--seed-page));
+  --wash-peer-mid: var(--seed-page);
+  --wash-peer-low: var(--seed-page);
+  --wash-square-high: color-mix(in srgb, var(--seed-go) 18%, var(--seed-page));
+  --wash-square-mid: var(--seed-page);
+  --wash-square-low: var(--seed-page);
+
+  @include ink-on-custom;
+
+  // --- Depth ---
+  --shadow-card:
+    0 4px 0 color-mix(in srgb, var(--seed-mine) 14%, white),
+    0 12px 26px -12px color-mix(in srgb, var(--seed-mine) 28%, transparent);
+  --shadow-raised:
+    0 6px 0 color-mix(in srgb, var(--seed-mine) 20%, white),
+    0 18px 40px -14px color-mix(in srgb, var(--seed-mine) 35%, transparent);
+  --shadow-mine:
+    0 5px 0 var(--mine-deep),
+    0 16px 30px -12px color-mix(in srgb, var(--seed-mine) 55%, transparent);
+  --glow-lantern: 0 8px 20px -6px color-mix(in srgb, var(--seed-mine) 55%, transparent);
+  --glow-marker: 0 0 12px color-mix(in srgb, var(--mine-light) 70%, transparent);
+  --glow-mint: 0 8px 20px -6px color-mix(in srgb, var(--mint-deep) 80%, transparent);
+
+  // --- Gradients ---
+  // Candy's ramps are written in tokens and follow the seeds on their own —
+  // except the text ramp, whose top stop is a literal in the candy block
+  // (the rung where dimmed white clears AA on raspberry). Here that rung is
+  // grown from the seed instead: 22% black over a swatch that already holds
+  // white at 4.5 puts a 75% white comfortably past it.
+  --grad-mine-text: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--seed-mine) 78%, black) 0%,
+    var(--mine-deep) 100%
+  );
+  --grad-mine-hero: linear-gradient(180deg, var(--mine-strong) 0%, var(--mine-deep) 100%);
+
+  .btn--primary {
+    box-shadow:
+      0 4px 0 var(--mine-deep),
+      0 10px 20px -8px color-mix(in srgb, var(--seed-mine) 50%, transparent);
+
+    &:hover:not(:disabled) {
+      box-shadow:
+        0 5px 0 var(--mine-deep),
+        0 14px 24px -8px color-mix(in srgb, var(--seed-mine) 55%, transparent);
+    }
+
+    &:active:not(:disabled) {
+      box-shadow:
+        0 1px 0 var(--mine-deep),
+        0 4px 10px -4px color-mix(in srgb, var(--seed-mine) 40%, transparent);
+    }
+  }
+
+  .btn--secondary {
+    box-shadow:
+      0 3px 0 color-mix(in srgb, var(--seed-mine) 18%, white),
+      0 8px 16px -8px color-mix(in srgb, var(--seed-mine) 25%, transparent);
+
+    &:active:not(:disabled) {
+      box-shadow: 0 1px 0 color-mix(in srgb, var(--seed-mine) 18%, white);
+    }
+  }
+
+  .text-input:focus {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--seed-mine) 16%, transparent);
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--mine-light) 35%, transparent);
+  }
+
+  body::after {
+    background-image:
+      radial-gradient(3px 3px at 12% 30%, color-mix(in srgb, var(--seed-mine) 22%, transparent) 50%, transparent 51%),
+      radial-gradient(2.5px 2.5px at 78% 42%, color-mix(in srgb, var(--seed-peer) 20%, transparent) 50%, transparent 51%),
+      radial-gradient(3px 3px at 40% 62%, color-mix(in srgb, var(--seed-go) 30%, transparent) 50%, transparent 51%),
+      radial-gradient(2.5px 2.5px at 60% 22%, color-mix(in srgb, var(--seed-peer) 20%, transparent) 50%, transparent 51%),
+      radial-gradient(3.5px 3.5px at 25% 76%, color-mix(in srgb, var(--seed-mine) 30%, transparent) 50%, transparent 51%),
+      radial-gradient(2.5px 2.5px at 88% 82%, color-mix(in srgb, var(--seed-go) 24%, transparent) 50%, transparent 51%);
+  }
+
+  // The light islands again — the seed-driven half of their ink
+  .on-light,
+  .shell--delib .proposal-dock__panel,
+  .write-desk__stuck,
+  .write-desk__selfcheck-chip,
+  .on-dark .helped__chip:not(.helped__chip--implemented),
+  .thread__msg--mine .helped__chip:not(.helped__chip--implemented),
+  .thread__msg--mine .thread__tag {
+    @include ink-on-custom;
+  }
+}

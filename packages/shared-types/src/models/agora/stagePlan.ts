@@ -12,6 +12,7 @@ import {
 } from 'valibot';
 import { AgoraStage, AGORA_STAGE_ORDER } from './agoraEnums';
 import { CutoffBy } from '../results/ResultsSettings';
+import { AgoraCpBandSummarySchema } from './questionSummary';
 import { sessionRunsVoting } from './sessionFlow';
 import type { AgoraSessionFlow } from './sessionFlow';
 import type { AgoraSessionMode } from './agoraEnums';
@@ -99,6 +100,13 @@ export const AgoraCarriedAnswerSchema = object({
 	statement: string(),
 	/** Net agreement it held when the stage closed, −1…1 */
 	mean: number(),
+	/**
+	 * C_p — the same net agreement with the confidence penalty applied, as
+	 * the evaluation pipeline wrote it. Absent on outcomes stored before the
+	 * banded record existed, and on an answer whose first rating is still in
+	 * flight; `cpOf` falls back to `mean` in both cases.
+	 */
+	consensus: optional(number()),
 	raters: number(),
 	/** Present in `named` sessions only */
 	anonName: optional(string()),
@@ -111,6 +119,12 @@ export const AgoraStageOutcomeSchema = object({
 	selected: array(AgoraCarriedAnswerSchema),
 	/** AI summary of the selected answers (fixture text when no model is configured) */
 	summary: optional(string()),
+	/**
+	 * The same answers read band by band, strongest C_p first — what the room
+	 * is actually behind, told apart from what it merely leaned toward.
+	 * Absent on outcomes computed before the banded record existed.
+	 */
+	bands: optional(array(AgoraCpBandSummarySchema)),
 	computedAt: number(),
 });
 

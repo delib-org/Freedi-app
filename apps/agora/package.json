@@ -18,7 +18,7 @@
 		"seed:clear": "npx tsx scripts/seed.ts --clear",
 		"fast": "npx tsx scripts/fastlane.ts",
 		"preflight": "node scripts/lib/preflight.mjs",
-		"contrast": "node scripts/contrast-audit.mjs && node scripts/contrast-audit.mjs \"http://localhost:3009/mock/surfaces.html?theme=civic\"",
+		"contrast": "node scripts/contrast-audit.mjs && node scripts/contrast-audit.mjs \"http://localhost:3009/mock/surfaces.html?theme=candy\" && node scripts/contrast-audit.mjs \"http://localhost:3009/mock/surfaces.html?theme=civic\"",
 		"typesize": "node scripts/type-audit.mjs"
 	},
 	"dependencies": {

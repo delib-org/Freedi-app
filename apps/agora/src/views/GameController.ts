@@ -36,6 +36,9 @@ import { StageNav, planItemLabel } from '../components/StageNav';
 import { CarriedContext } from '../components/CarriedContext';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { StageTransition, hasStageTransition } from '../components/StageTransition';
+import { LookSheet } from '../components/LookSheet';
+import { seedsOf } from '../components/LookPicker';
+import { buildLook, classLooks, wearLook } from '../lib/looks';
 import { Lobby } from './Lobby';
 import { SceneStage } from './SceneStage';
 import { ValueIdentification } from './ValueIdentification';
@@ -49,6 +52,7 @@ import {
 	AgoraSceneKind,
 	AgoraSessionMode,
 	AgoraStage,
+	resolveAgoraTheme,
 	type AgoraStagePlanItem,
 } from '@freedi/shared-types';
 
@@ -146,6 +150,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let transitionLeaveTimer: number | undefined;
 	let nav: StageNavState = INITIAL_STAGE_NAV;
 	let navRestored = false;
+	/** The style sheet is open — a modal over whatever stage is on screen */
+	let lookOpen = false;
 
 	function beginStageTransition(item: AgoraStagePlanItem): void {
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -271,10 +277,42 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const item = plan[viewingIndex] ?? plan[currentIndex];
 			const live = viewingIndex === currentIndex;
 
+			// The look this screen wears, and the door to change it. A civic
+			// square has no door: it wears Odyssey's colours by contract.
+			const currentLook = resolveAgoraTheme(session, myParticipant);
+			const canPickLook = session.sessionMode !== AgoraSessionMode.civic && myParticipant !== null;
+			const lookDoor = canPickLook
+				? {
+						seeds: seedsOf(currentLook),
+						label: t('look.open'),
+						onOpen: () => {
+							lookOpen = true;
+						},
+					}
+				: undefined;
+			const lookSheet =
+				lookOpen && canPickLook
+					? m(LookSheet, {
+							current: currentLook,
+							roomLook: resolveAgoraTheme(session, null),
+							following: !myParticipant?.theme,
+							classLooks: classLooks(participants, userId),
+							myLook: myParticipant?.builtTheme
+								? { name: myParticipant.builtTheme.name, seeds: myParticipant.builtTheme.seeds }
+								: undefined,
+							onWear: (choice) => void wearLook(choice),
+							onBuild: (name, seeds) => void buildLook(name, seeds),
+							onClose: () => {
+								lookOpen = false;
+							},
+						})
+					: null;
+
 			const overlays = [
 				m(ToastStack),
 				m(CelebrationOverlay),
 				m(InstallHint),
+				lookSheet,
 				transitionItem !== null
 					? m(StageTransition, {
 							stage: transitionItem.stage,
@@ -291,6 +329,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				viewingIndex,
 				onSelect: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
 				compact: item.stage === AgoraStage.deliberation && live,
+				look: lookDoor,
 			});
 
 			const pastNotice = live
@@ -309,7 +348,11 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					...overlays,
 					stageNav,
 					pastNotice,
-					m(Lobby, { participants, myParticipant }),
+					m(Lobby, {
+						participants,
+						myParticipant,
+						onOpenLook: lookDoor?.onOpen,
+					}),
 				]);
 			}
 

@@ -1,15 +1,15 @@
-import { safeParse } from 'valibot';
 import { AgoraSessionMode } from '../models/agora/agoraEnums';
 import {
 	AGORA_DEFAULT_THEME,
 	AgoraCustomTheme,
-	AgoraCustomThemeSchema,
-	AgoraThemeChoiceSchema,
 	resolveAgoraTheme,
 	tallyAgoraThemes,
 	TallyParticipant,
 } from '../models/agora/agoraTheme';
 
+// Schema behaviour (hex colours, name trimming and bounds) is tested in
+// apps/agora/src/lib/__tests__/theme.test.ts: this package's jest mocks
+// valibot wholesale, so a schema assertion here would pass for any input.
 const look = (authorId: string, name = 'Lemonade'): AgoraCustomTheme => ({
 	name,
 	authorId,
@@ -80,25 +80,5 @@ describe('tallyAgoraThemes', () => {
 
 	it('an untouched room reports the default', () => {
 		expect(tallyAgoraThemes({}, []).sessionDefault).toBe('candy');
-	});
-});
-
-describe('schemas', () => {
-	it('accepts a well-formed choice and rejects a bad colour', () => {
-		expect(safeParse(AgoraThemeChoiceSchema, { preset: 'candy' }).success).toBe(true);
-		expect(safeParse(AgoraThemeChoiceSchema, { preset: 'neon' }).success).toBe(false);
-		expect(
-			safeParse(AgoraCustomThemeSchema, {
-				...look('u1'),
-				seeds: { ...look('u1').seeds, mine: 'purple' },
-			}).success,
-		).toBe(false);
-	});
-
-	it('trims and bounds the name', () => {
-		const parsed = safeParse(AgoraCustomThemeSchema, { ...look('u1', '  Bubblegum  ') });
-		expect(parsed.success && parsed.output.name).toBe('Bubblegum');
-		expect(safeParse(AgoraCustomThemeSchema, look('u1', 'x'.repeat(25))).success).toBe(false);
-		expect(safeParse(AgoraCustomThemeSchema, look('u1', '   ')).success).toBe(false);
 	});
 });

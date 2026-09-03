@@ -20,12 +20,18 @@ import { TeacherInstructions } from './TeacherInstructions';
 import { StagePlanEditor } from './StagePlanEditor';
 import { planItemLabel } from '../../components/StageNav';
 import { rankedAnswers } from '../QuestionStage';
+import { CpBands, bandClassOf, bandLabelOf } from '../../components/CpBands';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { CountdownTimer } from '../../components/CountdownTimer';
 import { QRShare } from '../../components/QRShare';
+import { LookPicker } from '../../components/LookPicker';
+import { classLooks } from '../../lib/looks';
 import {
 	AgoraParticipant,
+	AgoraSessionMode,
 	AgoraStage,
+	AgoraThemeChoice,
+	resolveAgoraTheme,
 	AgoraStagePlanItem,
 	AgoraSession,
 	VotingStageSettings,
@@ -37,7 +43,7 @@ import {
 	selectCarriedAnswers,
 } from '@freedi/shared-types';
 import { AgoraProposal } from '../../lib/proposals';
-import { setVotingSettings } from '../../lib/teacher';
+import { setSessionTheme, setVotingSettings } from '../../lib/teacher';
 import { getVotingState, listenToVoting, stopVotingListeners, totalVotes } from '../../lib/voting';
 
 /**
@@ -324,7 +330,9 @@ function formatMean(mean: number): string {
 /**
  * The live answers of the question the room is on, ranked by net agreement,
  * with the ones that would travel forward marked — the same arithmetic the
- * server closes the stage with.
+ * server closes the stage with — over the C_p banding of those same carried
+ * answers, so the teacher can see what the room is actually behind before
+ * deciding to move on.
  */
 function questionPanel(
 	session: AgoraSession,
@@ -338,12 +346,19 @@ function questionPanel(
 	);
 	const outcome = session.stageState?.[item.itemId]?.outcome;
 
+	const carriedRows = ranked.filter((row) => carried.has(row.statementId));
+
 	return m('.card.stack.teacher-answers', [
 		m('.class-progress__head', [
 			m('p.teacher__section-title', t('teacher.answers_title')),
 			m('span.class-progress__count', String(ranked.length)),
 		]),
 		outcome?.summary ? m('p.question__summary', outcome.summary) : null,
+		// What the room is behind, banded by C_p — live while the question is
+		// open (the bands, no prose), and the AI's record once it closes.
+		carriedRows.length > 0
+			? m(CpBands, { answers: outcome?.selected ?? carriedRows, bands: outcome?.bands })
+			: null,
 		ranked.length === 0
 			? m('p.home-explanation', t('question.waiting_for_answers'))
 			: m(
@@ -358,6 +373,9 @@ function questionPanel(
 							[
 								m('.teacher-answers__head', [
 									row.anonName ? m('span.question__who', row.anonName) : null,
+									row.raters > 0
+										? m(`span.${bandClassOf(row).split(' ').join('.')}`, bandLabelOf(row))
+										: null,
 									m(
 										'span.question__agreement',
 										row.raters > 0
@@ -409,6 +427,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	/** The server refused (or never received) the last advance — say so on the panel */
 	let advanceFailed = false;
 	let savingSettings = false;
+	let savingLook = false;
 	let userId = '';
 	let editingPlan: AgoraStagePlanItem[] | null = null;
 	let savingPlan = false;
@@ -423,6 +442,19 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			})
 			.finally(() => {
 				savingSettings = false;
+				m.redraw();
+			});
+	}
+
+	function saveLook(choice: AgoraThemeChoice): void {
+		if (savingLook) return;
+		savingLook = true;
+		setSessionTheme(sessionId, choice)
+			.catch((error: unknown) => {
+				console.error('[Teacher] Saving the class look failed:', error);
+			})
+			.finally(() => {
+				savingLook = false;
 				m.redraw();
 			});
 	}
@@ -708,6 +740,24 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									m('span.values__score', `${t('teacher.proposals_count')}: ${proposals.length}`),
 								]),
 								triggerLine(current, next?.stage === AgoraStage.voting),
+							])
+						: null,
+
+					// The room's look: the two presets and whatever the class has
+					// built so far. Every phone that has not chosen its own follows
+					// this; the teacher can also crown a student's creation as the
+					// class look. A civic square wears Odyssey's and is not asked.
+					session.sessionMode !== AgoraSessionMode.civic
+						? m('.card.stack.teacher-look', [
+								m('p.teacher__section-title', t('teacher.look_title')),
+								m('p.teacher-look__hint', t('teacher.look_hint')),
+								m(LookPicker, {
+									current: resolveAgoraTheme(session, null),
+									classLooks: classLooks(participants, undefined),
+									onWear: (choice) => {
+										if (choice) saveLook(choice);
+									},
+								}),
 							])
 						: null,
 

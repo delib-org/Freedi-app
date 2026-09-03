@@ -253,6 +253,11 @@
   // drawn as a line ON a strongly green surface (the map's bridge zone) it
   // falls to 2.9:1, while this clears 4.6:1 there and 8:1 on white.
   --success-deep: #0d5c37;
+  // The green as TEXT, the way --danger-ink is the red as text. On the light
+  // themes that is the deep rung itself; the navy theme re-points it, because
+  // there a dark green label on a dark panel is the very bug --success-deep
+  // was invented to avoid.
+  --success-ink: #0d5c37;
   --danger: #d13d4e;   // FILL only — as text on white it is 4.19:1
   --danger-ink: #b3202f; // the same alarm, readable as text (5.9:1)
   --warning: #b97300; // borders/fills only; warning copy uses --text-primary

@@ -8,11 +8,16 @@
 	position: sticky;
 	inset-block-start: 0;
 	z-index: var(--z-header);
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
 	padding: var(--space-xs) var(--space-md);
 	background: var(--bg-card-solid);
 	border-block-end: 1px solid var(--border-subtle);
 
 	&__row {
+		flex: 1 1 auto;
+		min-inline-size: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -246,22 +251,29 @@
 	padding: var(--space-sm) var(--space-md);
 	border-radius: var(--radius-tile);
 	background: var(--bg-inset);
+	// The stripe carries the band's colour; the label carries its ink. The
+	// two are separate because the fill hues (--success, --warning) are not
+	// readable as text on the inset — see the token file's own warnings.
 	border-inline-start: 3px solid var(--band-edge, var(--text-secondary));
 
 	&--strong {
 		--band-edge: var(--success);
+		--band-ink: var(--success-ink);
 	}
 
 	&--emerging {
 		--band-edge: var(--mine);
+		--band-ink: var(--mine-ink);
 	}
 
 	&--contested {
 		--band-edge: var(--warning);
+		--band-ink: var(--text-primary);
 	}
 
 	&--unrated {
 		--band-edge: var(--border-subtle);
+		--band-ink: var(--text-secondary);
 	}
 
 	&__head {
@@ -273,7 +285,7 @@
 
 	&__label {
 		font-weight: 700;
-		color: var(--band-edge, var(--text-primary));
+		color: var(--band-ink, var(--text-primary));
 	}
 
 	&__score,
@@ -318,29 +330,35 @@
 	}
 }
 
-// The band an answer sits in, as a chip on the answer's own card
+// The band an answer sits in, as a chip on the answer's own card. Same split
+// as the band card: the ring may wear the fill hue, the label may not.
 .cp-chip {
 	@include type-meta;
 	padding: 1px var(--space-sm);
 	border-radius: 999px;
 	font-weight: 700;
 	white-space: nowrap;
-	border: 1px solid currentcolor;
+	color: var(--band-ink, var(--text-primary));
+	border: 1px solid var(--band-edge, var(--border-subtle));
 
 	&--strong {
-		color: var(--success-deep);
+		--band-edge: var(--success);
+		--band-ink: var(--success-ink);
 	}
 
 	&--emerging {
-		color: var(--mine-ink);
+		--band-edge: var(--mine);
+		--band-ink: var(--mine-ink);
 	}
 
 	&--contested {
-		color: var(--warning);
+		--band-edge: var(--warning);
+		--band-ink: var(--text-primary);
 	}
 
 	&--unrated {
-		color: var(--text-secondary);
+		--band-edge: var(--border-subtle);
+		--band-ink: var(--text-secondary);
 	}
 }
 

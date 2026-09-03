@@ -4,8 +4,12 @@ import { getUserState, ensureUser } from '../../lib/user';
 import { createSession } from '../../lib/callables';
 import { fetchTeacherDashboard, listTopicPackages, type TeacherDashboard } from '../../lib/teacher';
 import { StagePlanEditor } from './StagePlanEditor';
+import { lookDots, PRESET_SEEDS } from '../../components/LookPicker';
 import {
+	AGORA_DEFAULT_THEME,
+	AGORA_THEME_PRESETS,
 	AgoraDeviceMode,
+	AgoraThemePreset,
 	AgoraIdentityMode,
 	AgoraSessionFlow,
 	AgoraSessionMode,
@@ -38,6 +42,7 @@ export function StartGame(): m.Component {
 	let selectedClassId: string | null = null;
 	let deviceMode: AgoraDeviceMode = AgoraDeviceMode.individual;
 	let identity: AgoraIdentityMode = 'pseudonym';
+	let look: AgoraThemePreset = AGORA_DEFAULT_THEME;
 	let creating = false;
 	let createFailed = false;
 	let showKnobs = false;
@@ -116,6 +121,7 @@ export function StartGame(): m.Component {
 						}),
 				deviceMode,
 				identity,
+				theme: { preset: look },
 				stagePlan: plans[mode],
 				...(selectedClassId ? { classId: selectedClassId } : {}),
 				...(flow ? { flow } : {}),
@@ -286,6 +292,31 @@ export function StartGame(): m.Component {
 							'p.home-explanation',
 							t(identity === 'named' ? 'startGame.identity_named_hint' : 'startGame.identity_hint'),
 						),
+					]),
+
+					// How the game looks — the room's default; each student may still
+					// pick their own, or build one, and the class list grows from that
+					m('.stack', [
+						m('p.teacher__section-title', t('startGame.look')),
+						m(
+							'.teacher__mode-row',
+							AGORA_THEME_PRESETS.map((preset) =>
+								m(
+									'button.btn',
+									{
+										key: preset,
+										type: 'button',
+										class: look === preset ? 'btn--primary' : 'btn--secondary',
+										'aria-pressed': look === preset ? 'true' : 'false',
+										onclick: () => {
+											look = preset;
+										},
+									},
+									[lookDots(PRESET_SEEDS[preset]), ' ', t(`look.${preset}`)],
+								),
+							),
+						),
+						m('p.home-explanation', t('startGame.look_hint')),
 					]),
 
 					m('.stack', [

@@ -7,7 +7,6 @@ import {
 	AgoraSessionSchema,
 	AgoraParticipantSchema,
 	AgoraStage,
-	AgoraSessionMode,
 	AgoraCampCensus,
 	AgoraStagePlanItem,
 	AgoraStageState,
@@ -19,7 +18,7 @@ import {
 	resolveStagePlan,
 	tallyAgoraCamps,
 } from '@freedi/shared-types';
-import { AGORA_THEME_COLOR, ODYSSEY_THEME, ODYSSEY_THEME_COLOR } from './theme';
+import { applySessionTheme } from './theme';
 import { parse, safeParse } from 'valibot';
 
 export interface SessionState {
@@ -117,38 +116,6 @@ export function getStageState(): Readonly<AgoraStageState> {
 }
 
 /**
- * Dress the app in the colours of the place the player came from.
- *
- * A civic square was opened from an Odyssey island and is usually reached by
- * walking out of one, so arriving in a different palette reads as a different
- * product rather than the next room of the same one. The attribute goes on the
- * document element, next to `dir` and `lang`, because the theme is a property
- * of the whole page and not of any one view.
- *
- * The join route sets this from the gate's own URL before the session has
- * loaded; this call is the correction, and it runs on every snapshot so a
- * session that is re-scripted mid-event repaints with it.
- */
-export function applySessionTheme(session: AgoraSession | null): void {
-	if (typeof document === 'undefined') return;
-	const odyssey = session?.sessionMode === AgoraSessionMode.civic;
-
-	if (odyssey) {
-		document.documentElement.dataset.sessionTheme = ODYSSEY_THEME;
-	} else if (session) {
-		// Only a session we have actually read may take the theme OFF — absent
-		// state must leave the join route's guess alone, or every civic square
-		// flashes purple before its own colours arrive.
-		delete document.documentElement.dataset.sessionTheme;
-	}
-
-	const meta = document.querySelector('meta[name="theme-color"]');
-	if (meta && session) {
-		meta.setAttribute('content', odyssey ? ODYSSEY_THEME_COLOR : AGORA_THEME_COLOR);
-	}
-}
-
-/**
  * The pool the class consensus divides by.
  *
  * The client computes this so the results tab moves the instant a classmate
@@ -194,7 +161,7 @@ export function listenToSession(sessionId: string, userId: string): void {
 			if (parsed.success) {
 				state.session = parsed.output;
 				state.error = null;
-				applySessionTheme(state.session);
+				applySessionTheme(state.session, state.myParticipant);
 				state.loading = false;
 			} else {
 				// A stage this bundle has never heard of is not a broken document
@@ -239,6 +206,9 @@ export function listenToSession(sessionId: string, userId: string): void {
 						participant.participantId === createAgoraParticipantId(sessionId, userId),
 				) ?? null;
 			state.participantsLoaded = true;
+			// My own pick rides on my participant doc, so the look can change on
+			// this snapshot as well as on the session's
+			applySessionTheme(state.session, state.myParticipant);
 			m.redraw();
 		},
 		(error) => {

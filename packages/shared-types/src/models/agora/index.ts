@@ -148,6 +148,22 @@ export {
 	evaluateVotingTrigger,
 } from './stagePlan';
 
+export type {
+	AgoraCpBand,
+	AgoraCpBandSummary,
+	CpBandRow,
+} from './questionSummary';
+export {
+	AGORA_CP_BANDS,
+	AGORA_CP_BAND_ORDER,
+	AgoraCpBandSchema,
+	AgoraCpBandSummarySchema,
+	agoraCpBand,
+	cpOf,
+	groupByCpBand,
+	rankByCp,
+} from './questionSummary';
+
 export type { AgoraSessionFlow, AgoraScoreMode, ResolvedSessionFlow } from './sessionFlow';
 export {
 	AgoraSessionFlowSchema,

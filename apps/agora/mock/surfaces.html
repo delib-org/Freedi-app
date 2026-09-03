@@ -9,12 +9,17 @@
 			// of the CSS proves nothing about the app.
 			import '../src/styles/global.scss';
 			import '../src/styles/components.scss';
-			// The civic palette, so the gauntlet can be run in either theme —
-			// `?theme=civic` paints every surface below in Odyssey's colours.
+			// The other looks, so the gauntlet can be run in any of them —
+			// `?theme=civic` paints every surface below in Odyssey's colours,
+			// `?theme=candy` in the default look. No parameter is the token
+			// file's base, which is the `purple` look.
 			import '../src/styles/theme-civic.scss';
+			import '../src/styles/theme-candy.scss';
+			import '../src/styles/theme-custom.scss';
 
-			if (new URLSearchParams(location.search).get('theme') === 'civic') {
-				document.documentElement.dataset.sessionTheme = 'civic';
+			const theme = new URLSearchParams(location.search).get('theme');
+			if (theme === 'civic' || theme === 'candy') {
+				document.documentElement.dataset.sessionTheme = theme;
 			}
 		</script>
 		<style>
@@ -423,6 +428,58 @@
 					<span>10</span>
 					<span>14</span>
 					<span class="roster__stat--points">53</span>
+				</div>
+			</div>
+
+			<h2>question record — the answers banded by C_p</h2>
+			<div class="card">
+				<p class="question__summary">הכיתה מסכימה שצריך לקבוע שעות מיזוג קבועות, וחלוקה על מי מחליט.</p>
+				<div class="cp-bands">
+					<div class="cp-band cp-band--strong">
+						<div class="cp-band__head">
+							<span class="cp-band__label">הסכמה איתנה</span>
+							<span class="cp-band__score">C_p +0.52</span>
+							<span class="cp-band__count">2 תשובות</span>
+						</div>
+						<p class="cp-band__text">כמעט כולם רוצים שעות מיזוג קבועות ומוסכמות מראש.</p>
+						<ul class="cp-band__answers">
+							<li class="cp-band__answer">
+								<span class="cp-band__who">נמר אמיץ</span>
+								<span class="cp-band__answer-text">לקבוע שעות מיזוג קבועות</span>
+								<span class="cp-band__meta">C_p +0.55 · 18 דירגו</span>
+							</li>
+						</ul>
+					</div>
+					<div class="cp-band cp-band--emerging">
+						<div class="cp-band__head">
+							<span class="cp-band__label">הסכמה מתגבשת</span>
+							<span class="cp-band__score">C_p +0.18</span>
+							<span class="cp-band__count">1 תשובות</span>
+						</div>
+						<p class="cp-band__text">יש תמיכה, אבל רק ארבעה דירגו — עוד מוקדם לומר שזו עמדת הכיתה.</p>
+					</div>
+					<div class="cp-band cp-band--contested">
+						<div class="cp-band__head">
+							<span class="cp-band__label">שנוי במחלוקת</span>
+							<span class="cp-band__score">C_p -0.22</span>
+							<span class="cp-band__count">1 תשובות</span>
+						</div>
+						<p class="cp-band__text">הכיתה חלוקה על מי מחליט מתי מדליקים.</p>
+					</div>
+					<div class="cp-band cp-band--unrated">
+						<div class="cp-band__head">
+							<span class="cp-band__label">טרם נשקל</span>
+							<span class="cp-band__count">1 תשובות</span>
+						</div>
+						<p class="cp-band__text">אף אחד עוד לא דירג את אלה.</p>
+					</div>
+				</div>
+				<p class="cp-bands__explain">C_p הוא ממוצע הדירוגים פחות קנס על אי־ודאות.</p>
+				<div class="question__answer-head">
+					<span class="cp-chip cp-chip--strong">הסכמה איתנה</span>
+					<span class="cp-chip cp-chip--emerging">הסכמה מתגבשת</span>
+					<span class="cp-chip cp-chip--contested">שנוי במחלוקת</span>
+					<span class="cp-chip cp-chip--unrated">טרם נשקל</span>
 				</div>
 			</div>
 

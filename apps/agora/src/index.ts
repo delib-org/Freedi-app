@@ -13,10 +13,14 @@ import '@fontsource/alef/700.css';
 import './styles/global.scss';
 import './styles/components.scss';
 import './styles/icons.scss';
-// Last, so the civic palette re-points tokens the components have already
-// been written against. Inert until the document element carries the
-// attribute — see lib/theme.ts.
+// Last, so the looks re-point tokens the components have already been
+// written against. Each block is inert until the document element carries
+// its attribute — see lib/theme.ts. Candy is the default; custom grows a
+// palette from four seeds and so must come after candy, whose furniture it
+// borrows.
 import './styles/theme-civic.scss';
+import './styles/theme-candy.scss';
+import './styles/theme-custom.scss';
 import { initAuth, completeRedirectSignIn, getUserState } from './lib/user';
 import { initI18n } from './lib/i18n';
 import { initInstallCapture } from './lib/install';
@@ -33,9 +37,9 @@ import { StartGame } from './views/teacher/StartGame';
 import { TeacherClass } from './views/teacher/TeacherClass';
 import { GameReport } from './views/teacher/GameReport';
 
-// Before anything paints: a civic square remembered from an earlier load
-// wears its colours from the first frame rather than flashing the classroom
-// palette while its session document is still in flight.
+// Before anything paints: the look remembered from an earlier load — or the
+// default — is worn from the first frame rather than flashing the token
+// file's base palette while the session document is still in flight.
 applyRememberedTheme();
 
 // Before anything else async: the browser fires beforeinstallprompt once,
