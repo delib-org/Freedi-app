@@ -52,7 +52,7 @@ export const AGORA_VOTING_TRIGGER = {
 	MIN_RATERS: 3,
 } as const;
 
-/** Which answers of a question stage travel forward */
+/** Which answers of a question stage travel forward; `all` carries every answer */
 export const AgoraQuestionSelectionSchema = object({
 	cutoffBy: enum_(CutoffBy),
 	/** `topOptions`: how many */
@@ -392,8 +392,9 @@ export function resolveQuestionSelection(item: AgoraStagePlanItem): AgoraQuestio
 /**
  * Rank a question stage's answers by net agreement and apply the admin's
  * cutoff. Unrated answers sort last and are never carried by a threshold;
- * a top-N cutoff still takes them when nothing else is there. The teacher
- * panel previews with this, the server closes with this — one arithmetic.
+ * a top-N cutoff still takes them when nothing else is there, and `all`
+ * carries everything in that order. The teacher panel previews with this,
+ * the server closes with this — one arithmetic.
  */
 export function rankCarriedAnswers(rows: readonly AgoraCarriedAnswer[]): AgoraCarriedAnswer[] {
 	return [...rows].sort((a, b) => {
@@ -412,6 +413,7 @@ export function selectCarriedAnswers(
 	selection: AgoraQuestionSelection,
 ): AgoraCarriedAnswer[] {
 	const ranked = rankCarriedAnswers(rows);
+	if (selection.cutoffBy === CutoffBy.all) return ranked;
 	if (selection.cutoffBy === CutoffBy.aboveThreshold) {
 		return ranked.filter((row) => row.raters > 0 && row.mean >= selection.cutoffNumber);
 	}

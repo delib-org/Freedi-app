@@ -57,6 +57,14 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 	let focusItemId: string | null = null;
 	let addOpen = false;
 
+	/** The select's plain values → the shared enum; anything unknown is the default */
+	const cutoffFromSelectValue = (value: string): CutoffBy => {
+		if (value === 'threshold') return CutoffBy.aboveThreshold;
+		if (value === 'all') return CutoffBy.all;
+
+		return CutoffBy.topOptions;
+	};
+
 	const openForTyping = (itemId: string): void => {
 		openItemId = itemId;
 		focusItemId = itemId;
@@ -85,6 +93,7 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 			const questionOptions = (item: AgoraStagePlanItem): m.Children => {
 				const selection = item.selection ?? defaultQuestionSelection();
 				const byThreshold = selection.cutoffBy === CutoffBy.aboveThreshold;
+				const byAll = selection.cutoffBy === CutoffBy.all;
 
 				return m('.plan-editor__options', [
 					m('label.plan-editor__field', [
@@ -132,10 +141,9 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 										patch: {
 											selection: {
 												...selection,
-												cutoffBy:
-													(event.target as HTMLSelectElement).value === 'threshold'
-														? CutoffBy.aboveThreshold
-														: CutoffBy.topOptions,
+												cutoffBy: cutoffFromSelectValue(
+													(event.target as HTMLSelectElement).value,
+												),
 											},
 										},
 									}),
@@ -143,7 +151,7 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 							[
 								m(
 									'option',
-									{ value: 'top', selected: !byThreshold },
+									{ value: 'top', selected: !byThreshold && !byAll },
 									t('startGame.plan_cutoff_top'),
 								),
 								m(
@@ -151,9 +159,16 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 									{ value: 'threshold', selected: byThreshold },
 									t('startGame.plan_cutoff_threshold'),
 								),
+								m(
+									'option',
+									{ value: 'all', selected: byAll },
+									t('startGame.plan_cutoff_all'),
+								),
 							],
 						),
-						byThreshold
+						byAll
+							? null
+							: byThreshold
 							? [
 									m('span', t('startGame.plan_cutoff_min')),
 									numberInput(

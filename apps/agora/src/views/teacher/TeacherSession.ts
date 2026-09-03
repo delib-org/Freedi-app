@@ -153,6 +153,14 @@ function classProgressCard(
 	]);
 }
 
+/** The ballot select's plain values → the shared enum; anything unknown is the default */
+function votingCutoffFromSelectValue(value: string): CutoffBy {
+	if (value === 'threshold') return CutoffBy.aboveThreshold;
+	if (value === 'all') return CutoffBy.all;
+
+	return CutoffBy.topOptions;
+}
+
 /**
  * How the vote will run, set while the class is still deliberating.
  *
@@ -170,7 +178,9 @@ function votingSettingsCard(
 ): m.Children {
 	const selection = settings?.selection;
 	const enabled = planOwnsVoting || settings?.enabled !== false;
-	const byThreshold = selection?.cutoffBy === CutoffBy.aboveThreshold;
+	const cutoffBy = selection?.cutoffBy ?? CutoffBy.topOptions;
+	const byThreshold = cutoffBy === CutoffBy.aboveThreshold;
+	const byAll = cutoffBy === CutoffBy.all;
 	const topX = selection?.numberOfResults ?? AGORA_VOTING.DEFAULT_TOP_X;
 	const cutoff = selection?.cutoffNumber ?? AGORA_VOTING.DEFAULT_CUTOFF_CP;
 	const winThreshold = settings?.winningConsensusThreshold;
@@ -179,7 +189,7 @@ function votingSettingsCard(
 		...(planOwnsVoting ? {} : { enabled }),
 		selection: {
 			resultsBy: ResultsBy.consensus,
-			cutoffBy: byThreshold ? CutoffBy.aboveThreshold : CutoffBy.topOptions,
+			cutoffBy,
 			numberOfResults: topX,
 			cutoffNumber: cutoff,
 		},
@@ -215,27 +225,33 @@ function votingSettingsCard(
 									patch({
 										selection: {
 											resultsBy: ResultsBy.consensus,
-											cutoffBy:
-												(event.target as HTMLSelectElement).value === 'threshold'
-													? CutoffBy.aboveThreshold
-													: CutoffBy.topOptions,
+											cutoffBy: votingCutoffFromSelectValue(
+												(event.target as HTMLSelectElement).value,
+											),
 											numberOfResults: topX,
 											cutoffNumber: cutoff,
 										},
 									}),
 							},
 							[
-								m('option', { value: 'top', selected: !byThreshold }, t('teacher.voting_mode_top')),
+								m(
+									'option',
+									{ value: 'top', selected: !byThreshold && !byAll },
+									t('teacher.voting_mode_top'),
+								),
 								m(
 									'option',
 									{ value: 'threshold', selected: byThreshold },
 									t('teacher.voting_mode_threshold'),
 								),
+								m('option', { value: 'all', selected: byAll }, t('teacher.voting_mode_all')),
 							],
 						),
 					]),
 
-					byThreshold
+					byAll
+						? null
+						: byThreshold
 						? m('label.voting-settings__row', [
 								m('span', t('teacher.voting_threshold')),
 								m('input[type=number]', {
