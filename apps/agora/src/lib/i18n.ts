@@ -1090,6 +1090,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'projector.waiting': 'מחכים לראשונה…',
 		'projector.center': 'באמצע',
 		'projector.voting_hint': 'מצביעים בטלפון. הספירה תופיע כשהמורה יחשוף אותה.',
+		'projector.back_to_console': 'חזרה לקונסולה של המורה',
 		'moderation.removed_title': 'המורה הוריד את הטקסט הזה',
 		'moderation.removed_short': 'הורד על ידי המורה',
 		'moderation.removed_hint': 'קראו למה בהודעה מהמורה, ואפשר לענות שם.',
@@ -2240,6 +2241,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'projector.waiting': 'Waiting for the first one…',
 		'projector.center': 'In between',
 		'projector.voting_hint': 'Vote on your phone. The count appears when the teacher reveals it.',
+		'projector.back_to_console': 'Back to the teacher console',
 		'moderation.removed_title': 'Your teacher took this text down',
 		'moderation.removed_short': 'Taken down by your teacher',
 		'moderation.removed_hint': 'Read why in your teacher’s note, and reply there.',
@@ -3346,6 +3348,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'projector.waiting': 'بانتظار الأول…',
 		'projector.center': 'في الوسط',
 		'projector.voting_hint': 'صوّتوا من هواتفكم. تظهر النتيجة عندما يكشفها المعلم.',
+		'projector.back_to_console': 'العودة إلى لوحة المعلم',
 		'moderation.removed_title': 'معلمكم أنزل هذا النص',
 		'moderation.removed_short': 'أنزله معلمكم',
 		'moderation.removed_hint': 'اقرأوا السبب في ملاحظة المعلم، وردّوا هناك.',
@@ -4519,6 +4522,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'projector.center': 'En medio',
 		'projector.voting_hint':
 			'Vota desde tu móvil. El recuento aparece cuando el profesor lo revela.',
+		'projector.back_to_console': 'Volver a la consola del profesor',
 		'moderation.removed_title': 'Tu profesor retiró este texto',
 		'moderation.removed_short': 'Retirado por tu profesor',
 		'moderation.removed_hint': 'Lee el motivo en la nota de tu profesor y responde allí.',
@@ -5712,6 +5716,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'projector.center': 'Dazwischen',
 		'projector.voting_hint':
 			'Stimm auf deinem Handy ab. Das Ergebnis erscheint, wenn die Lehrkraft es aufdeckt.',
+		'projector.back_to_console': 'Zurück zur Lehrkraft-Konsole',
 		'moderation.removed_title': 'Deine Lehrkraft hat diesen Text runtergenommen',
 		'moderation.removed_short': 'Von deiner Lehrkraft runtergenommen',
 		'moderation.removed_hint': 'Lies in der Notiz deiner Lehrkraft, warum – und antworte dort.',
@@ -6890,6 +6895,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'projector.center': 'Ertussenin',
 		'projector.voting_hint':
 			'Stem op je telefoon. De uitslag verschijnt als de docent die onthult.',
+		'projector.back_to_console': 'Terug naar de docentconsole',
 		'moderation.removed_title': 'Je docent heeft deze tekst weggehaald',
 		'moderation.removed_short': 'Weggehaald door je docent',
 		'moderation.removed_hint': 'Lees waarom in het bericht van je docent, en reageer daar.',

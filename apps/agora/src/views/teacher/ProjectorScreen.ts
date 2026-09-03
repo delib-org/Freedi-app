@@ -261,6 +261,13 @@ export function ProjectorScreen(
 			const joinUrl = `${window.location.origin}/join/${session.code}`;
 
 			return m('.projector', { 'data-stage': item.stage, 'data-screen': 'projector' }, [
+				// The way back, for a teacher who opened the wall in their own tab.
+				// Small and in a corner: on the real wall it is a footnote.
+				m(
+					'a.projector__back',
+					{ href: `#!/teach/session/${sessionId}` },
+					`← ${t('projector.back_to_console')}`,
+				),
 				transitionItem !== null
 					? m(StageTransition, {
 							stage: transitionItem.stage,

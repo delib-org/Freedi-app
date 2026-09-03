@@ -171,3 +171,25 @@
 		}
 	}
 }
+
+// The way back to the console — a footnote in the corner, not a control on the wall
+.projector__back {
+	position: fixed;
+	top: var(--space-md);
+	inset-inline-start: var(--space-md);
+	z-index: 20;
+	padding: var(--space-xs) var(--space-md);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-full);
+	background: var(--bg-card-solid);
+	color: var(--text-secondary);
+	font-size: var(--font-size-sm);
+	text-decoration: none;
+
+	&:hover,
+	&:focus-visible {
+		color: var(--text-primary);
+		outline: 2px solid var(--lantern);
+		outline-offset: 2px;
+	}
+}
