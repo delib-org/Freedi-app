@@ -469,7 +469,7 @@ export async function positionStudent(
  * Write a proposal FOR a real (browser) student.
  *
  * The game gates the classmates' side of the deliberation behind having
- * proposed yourself ("write first — then light the lantern"), which is right
+ * proposed yourself ("write first — then add your answer"), which is right
  * pedagogically and means a student who has not written cannot see the rate,
  * feedback or helped screens at all. Handing them a proposal opens every one
  * of them without a single keystroke.
