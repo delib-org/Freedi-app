@@ -75,6 +75,9 @@ export function Voting(): m.Component<VotingAttrs> {
 	 * Only when the ORDER changed. Rows also shift when the reveal adds the
 	 * count column and every row grows — animating that displacement would fling
 	 * the whole list at the moment the teacher is trying to show it something.
+	 *
+	 * The Web Animations API rather than an inline transform, so the row's own
+	 * hover transition and the bar's fill are never fought with.
 	 */
 	function flipRow(dom: HTMLElement, id: string): void {
 		const now = dom.offsetTop;
@@ -82,14 +85,10 @@ export function Voting(): m.Component<VotingAttrs> {
 		rowOffsets.set(id, now);
 		if (before === undefined || reducedMotion || !resorted) return;
 		const delta = before - now;
-		if (Math.abs(delta) < 2) return;
-		// Frame 1: no transition, sitting at the old place
-		dom.style.transition = 'none';
-		dom.style.transform = `translateY(${delta}px)`;
-		requestAnimationFrame(() => {
-			// Frame 2: hand the transition back to the stylesheet and let go
-			dom.style.transition = '';
-			dom.style.transform = '';
+		if (Math.abs(delta) < 2 || typeof dom.animate !== 'function') return;
+		dom.animate([{ transform: `translateY(${delta}px)` }, { transform: 'translateY(0)' }], {
+			duration: 600,
+			easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
 		});
 	}
 
