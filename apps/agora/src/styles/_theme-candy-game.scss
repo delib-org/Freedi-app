@@ -301,3 +301,145 @@
     transform: scale(1);
   }
 }
+
+// ============================================================================
+// The rating scale: a traffic light of sweets
+//
+// Five faces, five colours, red to green with lemon in the middle — the same
+// reading the results field paints (against at the bottom, split across the
+// middle, for at the top), so the face a student presses and the colour
+// their proposal lands on say the same thing. At rest each face is a pale
+// tint of its own colour with its ink at half-black; pressed, it fills.
+// The two ends carry white when filled (cherry 4.97:1, apple 5.0:1), the
+// three bright middles carry the plum ink (tangerine 6.1:1, lemon 10:1, lime
+// 8:1) — measured, and the gauntlet renders all ten states.
+// ============================================================================
+:root[data-session-theme='candy'],
+:root[data-session-theme='custom'] {
+  .rate-scale__option {
+    --opt: var(--peer);
+    --opt-ink-on: #ffffff;
+    --opt-deep: color-mix(in srgb, var(--opt) 70%, black);
+    --opt-ink: color-mix(in srgb, var(--opt) 50%, black);
+
+    background: color-mix(in srgb, var(--opt) 16%, white);
+    border: 2px solid var(--opt);
+    color: var(--opt-ink);
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--opt) 40%, white);
+
+    &:hover {
+      box-shadow:
+        0 5px 0 color-mix(in srgb, var(--opt) 40%, white),
+        0 10px 18px -8px color-mix(in srgb, var(--opt) 50%, transparent);
+    }
+
+    &--strong-against {
+      --opt: #d62839; // cherry
+    }
+
+    &--against {
+      --opt: #ff8c1a; // tangerine
+      --opt-ink-on: #3b1f47;
+    }
+
+    &--abstain {
+      --opt: #ffd400; // lemon
+      --opt-ink-on: #3b1f47;
+    }
+
+    &--for {
+      --opt: #3ddc84; // lime
+      --opt-ink-on: #3b1f47;
+    }
+
+    &--strong-for {
+      --opt: #12803f; // apple
+    }
+  }
+
+  .rate-scale__option--selected {
+    background: var(--opt);
+    border-color: var(--opt-deep);
+    color: var(--opt-ink-on);
+    box-shadow:
+      0 0 0 3px var(--surface-raised),
+      0 0 0 6px var(--opt),
+      0 5px 0 var(--opt-deep);
+  }
+
+  .rate-scale__check {
+    background: var(--opt-deep);
+    color: #ffffff;
+  }
+
+  // --- The question stage: a banner, a sent button, answers in their colours ---
+  .question__ask {
+    @include ink-on-dark;
+
+    background: var(--grad-mine-hero);
+    border-color: var(--mine-deep);
+    box-shadow:
+      0 6px 0 var(--mine-deep),
+      0 18px 40px -14px rgba(216, 27, 122, 0.45);
+  }
+
+  .question__icon {
+    color: var(--gold);
+    filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.2));
+  }
+
+  .question__textarea {
+    border: 2px solid var(--border-strong);
+    background: var(--surface-tint);
+
+    &:focus {
+      outline: none;
+      border-color: var(--mine);
+      box-shadow: 0 0 0 4px rgba(216, 27, 122, 0.16);
+    }
+  }
+
+  // Sent: a lime gummy that says "done", not a greyed-out button that says "no"
+  .btn--done:disabled {
+    background: var(--mint);
+    color: var(--mint-ink);
+    box-shadow: 0 4px 0 var(--mint-deep);
+  }
+
+  .question__count {
+    background: var(--mine);
+    color: #ffffff;
+  }
+
+  .question__answer {
+    border: 2px solid var(--hue-tint, var(--border-subtle));
+    border-inline-start: 8px solid var(--hue, var(--peer));
+    box-shadow:
+      0 4px 0 var(--hue-slab, #fbdcec),
+      0 12px 26px -12px rgba(0, 0, 0, 0.2);
+  }
+
+  .question__number,
+  .question__who {
+    padding: 2px var(--space-sm);
+    border-radius: var(--radius-full);
+    background: var(--hue, var(--peer));
+    color: #ffffff;
+  }
+
+  // --- Confetti in candy hues ---
+  .celebration__spark {
+    &:nth-child(5n + 1) { --spark-color: #d81b7a; }
+    &:nth-child(5n + 2) { --spark-color: #1668d8; }
+    &:nth-child(5n + 3) { --spark-color: #ff8c1a; }
+    &:nth-child(5n + 4) { --spark-color: #3ddc84; }
+    &:nth-child(5n + 5) { --spark-color: #ffd400; }
+  }
+
+  .celebration__card {
+    border: 3px solid var(--mine);
+    box-shadow:
+      0 6px 0 var(--mine-deep),
+      0 0 60px rgba(216, 27, 122, 0.25);
+  }
+}

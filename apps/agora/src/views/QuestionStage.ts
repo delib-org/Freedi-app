@@ -5,6 +5,7 @@ import { RateScale } from '../components/RateScale';
 import { CarriedContext } from '../components/CarriedContext';
 import { CpBands, bandClassOf, bandLabelOf } from '../components/CpBands';
 import { stalledBanner } from '../components/StalledBanner';
+import { proposalHue } from '../lib/looks';
 import {
 	getDeliberationState,
 	listenToDeliberation,
@@ -164,6 +165,9 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 									m(
 										'button.btn.btn--primary.btn--full',
 										{
+											// "Sent" is a state, not a refusal: the candy look paints
+											// it lime rather than greyed-out
+											class: mine !== undefined && !changed && !saving ? 'btn--done' : undefined,
 											disabled: saving || !draft.trim() || (mine !== undefined && !changed),
 											onclick: () => void submit(),
 										},
@@ -195,39 +199,44 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 											const row = toRow(answer, named);
 											const showNumbers = closed || myRating !== undefined;
 
-											return m('.card.question__answer', { key: answer.statementId }, [
-												m('.question__answer-head', [
-													named && answer.anonName
-														? m('span.question__who', answer.anonName)
-														: m(
-																'span.question__number',
-																t('question.answer_number', { n: index + 1 }),
-															),
-													showNumbers && row.raters > 0
-														? [
-																m(
-																	`span.${bandClassOf(row).split(' ').join('.')}`,
-																	bandLabelOf(row),
+											return m(
+												'.card.question__answer',
+												// Its own colour in the candy look, by number — see lib/looks.ts
+												{ key: answer.statementId, 'data-hue': String(proposalHue(index + 1)) },
+												[
+													m('.question__answer-head', [
+														named && answer.anonName
+															? m('span.question__who', answer.anonName)
+															: m(
+																	'span.question__number',
+																	t('question.answer_number', { n: index + 1 }),
 																),
-																m(
-																	'span.question__agreement',
-																	t('question.net_agreement', {
-																		value: formatMean(row.mean),
-																		n: row.raters,
-																	}),
-																),
-															]
-														: null,
-												]),
-												m('p.question__answer-text', answer.statement),
-												closed || !mine
-													? null
-													: m(RateScale, {
-															session,
-															proposalId: answer.statementId,
-															parentId: item.statementId,
-														}),
-											]);
+														showNumbers && row.raters > 0
+															? [
+																	m(
+																		`span.${bandClassOf(row).split(' ').join('.')}`,
+																		bandLabelOf(row),
+																	),
+																	m(
+																		'span.question__agreement',
+																		t('question.net_agreement', {
+																			value: formatMean(row.mean),
+																			n: row.raters,
+																		}),
+																	),
+																]
+															: null,
+													]),
+													m('p.question__answer-text', answer.statement),
+													closed || !mine
+														? null
+														: m(RateScale, {
+																session,
+																proposalId: answer.statementId,
+																parentId: item.statementId,
+															}),
+												],
+											);
 										}),
 									),
 					]),

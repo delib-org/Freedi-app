@@ -33,7 +33,7 @@
 				max-width: 420px;
 				margin-inline: auto;
 			}
-			.gauntlet h2 {
+			.gauntlet > h2 {
 				/* The harness's own captions clear the type floor too, so a run of
 				   type-audit.mjs over this page reports only real app failures */
 				font-size: 1rem;
@@ -93,6 +93,34 @@
 			<div class="board__waiting-chip" data-hue="9">
 				<span class="board__author">פנס שקט</span>
 				<span class="board__waiting-text">עוד לא דורגה</span>
+			</div>
+			<h2>the five faces, at rest and pressed</h2>
+			<div class="rate-scale">
+				<button class="rate-scale__option rate-scale__option--strong-against"><span class="rate-scale__label">ממש לא בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--against"><span class="rate-scale__label">לא בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--abstain"><span class="rate-scale__label">נמנעים</span></button>
+				<button class="rate-scale__option rate-scale__option--for"><span class="rate-scale__label">בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--strong-for"><span class="rate-scale__label">מאוד בעד</span></button>
+			</div>
+			<div class="rate-scale">
+				<button class="rate-scale__option rate-scale__option--strong-against rate-scale__option--selected"><span class="rate-scale__label">ממש לא בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--against rate-scale__option--selected"><span class="rate-scale__label">לא בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--abstain rate-scale__option--selected"><span class="rate-scale__label">נמנעים</span></button>
+				<button class="rate-scale__option rate-scale__option--for rate-scale__option--selected"><span class="rate-scale__label">בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--strong-for rate-scale__option--selected"><span class="rate-scale__label">מאוד בעד</span></button>
+			</div>
+			<div class="card question__ask">
+				<span class="question__icon">💬</span>
+				<h2 class="question__title">מה אתם צריכים מהמזגן?</h2>
+				<p class="question__explanation">משפט אחד או שניים.</p>
+				<p class="question__closed">השאלה נסגרה</p>
+			</div>
+			<div class="card question__answer" data-hue="2">
+				<div class="question__answer-head">
+					<span class="question__number">תשובה 2</span>
+					<span class="question__agreement">+0.6 · 4 דירגו</span>
+				</div>
+				<p class="question__answer-text">בריחה מהירה</p>
 			</div>
 			<h2>my message bubble</h2>
 			<div class="thread">
