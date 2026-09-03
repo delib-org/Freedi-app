@@ -89,6 +89,11 @@ await teacher.reload({ waitUntil: 'domcontentloaded' });
 await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 30000 });
 await teacher.locator('text=המהפכה הצרפתית').first().click();
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
+// Choosing a scenario no longer opens a session — it opens the stage plan,
+// where the teacher orders the journey first. The walk to a live session is
+// two clicks now, and the same CTA carries both of them.
+await teacher.waitForURL(/teach\/start/, { timeout: 20000 });
+await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
 await teacher.waitForSelector('.teacher__code', { timeout: 20000 });
 const code = (await teacher.locator('.teacher__code').textContent()).replace(/\s/g, '');
@@ -181,29 +186,18 @@ const waitForPoints = async (label, page, predicate, what, timeoutMs = 30000) =>
 	}
 };
 
-// The workshop is no longer a screen — it is a notebook docked at the
-// bottom of every place, collapsed until something needs it. Anything that
-// touches the proposal, its feedback or its trays has to lift the sheet
-// first, exactly as a student does.
-const openDock = async (page) => {
-	await page.waitForSelector('.proposal-dock__bar', { timeout: 15000 });
-	const isOpen = () => page.locator('.proposal-dock--open').count().then((n) => n > 0);
-	if (!(await isOpen())) await page.locator('.proposal-dock__bar').click();
-	await page.waitForSelector('.proposal-dock--open .my-lantern--workshop', { timeout: 10000 });
-};
-// Folding it again hands the room back: the scrim behind an open sheet is
-// what makes it modal, and the page under it is not clickable.
-const closeDock = async (page) => {
-	if ((await page.locator('.proposal-dock--open').count()) === 0) return;
-	await page.locator('.proposal-dock__bar').click();
-	await page.locator('.proposal-dock__scrim').waitFor({ state: 'detached', timeout: 5000 });
+// The pen has ONE home (2026-09-03): the paper at the head of my own
+// screen. There is no dock to lift any more — anything that touches the
+// proposal walks to the My tab, exactly as a student does.
+const openPen = async (page) => {
+	await page.locator('.delib-nav__item--mine').click();
+	await page.waitForSelector('.my-screen__paper', { timeout: 15000 });
 };
 
-// The received-improvements accordion lives on the MY SCREEN (the dock
-// keeps only the pen). It folds itself once nothing is waiting (it is a
-// to-do list) — a conversation you want to re-read is one tap in.
+// The received-improvements accordion lives on the same screen. It folds
+// itself once nothing is waiting (it is a to-do list) — a conversation you
+// want to re-read is one tap in.
 const openInbox = async (page) => {
-	await closeDock(page);
 	await page.locator('.delib-nav__item--mine').click();
 	const head = page.locator('.my-screen button.workbench__head').first();
 	if ((await head.getAttribute('aria-expanded')) === 'false') await head.click();
@@ -344,12 +338,11 @@ await shot(s1, '01-A-received-toast');
 await suggest(s1, 'S1(A)', 'אולי להבטיח ייצוג מסוים לאצולה באספה כדי שירגישו שותפים.');
 
 // Feedback NEVER forces a screen change — it waits as a count on the My
-// tab (the dock keeps only the pen since b21fa1cde), and the student
-// decides when to look.
+// tab, and the student decides when to look.
 const navBadge = s1.locator('.delib-nav__item--mine .delib-nav__badge');
 await navBadge.waitFor({ timeout: 10000 });
 eq('A My-tab badge', (await navBadge.textContent()).trim(), '1');
-eq('feedback did not force the sheet open', await s1.locator('.proposal-dock--open').count(), 0);
+eq('feedback did not move the student', await s1.locator('.my-screen').count(), 0);
 await shot(s1, '01b-A-mine-badge-with-news');
 
 // Walk to the My screen, as a student would. There, the received accordion
@@ -473,28 +466,27 @@ eq(
 	await s2.getByRole('button', { name: /^לא תודה$/ }).count(),
 	0,
 );
-// Hand the room back before B is asked to act in it again
 await leaveChat(s2);
-await closeDock(s2);
 
 // ---------- Phase D: A improves the text → B is invited back ----------
 step('PHASE D: A rewrites the proposal with the idea in it → B sees ✨');
-await openDock(s1);
+await openPen(s1);
 // The server stamps the "bridge power before my edit" baseline on a real
 // text change, which is what the direction chip in Phase E reads
 await s1
-	.locator('textarea.my-lantern__textarea')
+	.locator('textarea.my-screen__text')
 	.fill(
 		'נכריז על מלוכה חוקתית: המלך יישאר סמל מאחד אך אספה נבחרת תחוקק ותאשר מסים, ' +
 			'ולצד זה ייקבע לוח זמנים ברור לביטול זכויות היתר של האצולה.',
 	);
 await s1.getByRole('button', { name: /^עדכון ההצעה$/ }).click();
-// The save itself is QUIET now: the button flips to "נשמר" and no glitter
-// fires on the keystroke. Whether the save deserved a celebration is the
-// SERVER's verdict — and this one earns twice: the first credited revision
-// (+1: real text change after B's rating) and the thank-then-revise weave
-// (+1: B was thanked in Phase B). Both arrive as notifications a beat later.
-await s1.getByRole('button', { name: /נשמר/ }).waitFor({ timeout: 10000 });
+// The save itself is QUIET: the button gives way to a "נשמר" STATUS — a
+// control with nothing left to do is not a control — and no glitter fires
+// on the keystroke. Whether the save deserved a celebration is the SERVER's
+// verdict, and this one earns twice: the first credited revision (+1: real
+// text change after B's rating) and the thank-then-revise weave (+1: B was
+// thanked in Phase B). Both arrive as notifications a beat later.
+await s1.locator('.my-screen__saved', { hasText: 'נשמר' }).waitFor({ timeout: 10000 });
 console.log('   ✓ A save acknowledged quietly (no instant glitter)');
 await s1.waitForSelector('.celebration', { timeout: 25000 });
 console.log(
@@ -511,7 +503,6 @@ console.log('S1(A) points after the revision:', afterRevision);
 eq('A revision credit (feedback-gated, first)', afterRevision.revising, 1);
 eq('A weave credit for the thanked idea', afterRevision.proposals, before1.proposals + 1);
 await clearCelebration(s1, 'S1(A)');
-await closeDock(s1);
 
 // The helped proposal visibly moved — B is told, on the card they helped
 await clearCelebration(s2);
@@ -605,7 +596,6 @@ eq('no tier paid below 70 (weave still the only proposals delta)', afterBridge1.
 
 // A's aggregate return signal, measured against a SERVER-stamped baseline.
 // It lives on the My screen — the owner's reading room.
-await closeDock(s1);
 await s1.locator('.delib-nav__item--mine').click();
 await s1.waitForSelector('.my-lantern__moved', { timeout: 15000 });
 // The class AVERAGE, not the bridging score: bridging is blended and damped
@@ -627,11 +617,8 @@ await shot(s1, '10a-A-journey-strip');
 // The baseline used to live in sessionStorage — one refresh erased the
 // direction and left a bare count. It must now survive a reload.
 await s1.reload({ waitUntil: 'domcontentloaded' });
-// A reload lands on a COLLAPSED dock: open is never persisted, because
-// collapsed-by-default is the feature
-await s1.waitForSelector('.proposal-dock__bar', { timeout: 20000 });
-eq('dock starts collapsed after a reload', await s1.locator('.proposal-dock--open').count(), 0);
 // A reload lands wherever the WORK is; the My screen is one tap away
+await s1.waitForSelector('.delib-nav__item--mine', { timeout: 20000 });
 await s1.locator('.delib-nav__item--mine').click();
 await s1
 	.locator('.my-lantern__moved', { hasText: 'התמיכה הממוצעת עלתה' })
@@ -678,7 +665,6 @@ if (!scoreText.includes('התמיכה הממוצעת')) {
 }
 await shot(s1, '07c-A-thread-score-moved');
 await leaveChat(s1);
-await closeDock(s1);
 
 // ---------- Phase F: one open idea at a time, no toggle to get wrong ----------
 step('PHASE F: the conversation decides — idea while the desk is clear, chat while it is not');

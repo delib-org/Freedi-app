@@ -188,7 +188,7 @@ const ARRIVED: Record<string, string> = {
 	valueIdentification: '.scene__title, .shell__content',
 	positioning: 'input.camp-scale__slider',
 	question: '.question__ask',
-	deliberation: '.chat-log, .delib-hud, .proposal-dock__bar',
+	deliberation: '.chat-log, .delib-hud',
 	voting: '.voting__list, .voting__waiting',
 	results: '.results__total, .shell--wide',
 	ended: '.results__total, .shell--wide',

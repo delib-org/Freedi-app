@@ -100,7 +100,7 @@ await page.goto(result.joinUrl, { waitUntil: 'domcontentloaded' });
 // screen (see GameController), so waiting for a deliberation container before
 // writing the camp would wait for the very thing the camp write unlocks.
 await page.waitForSelector(
-	'input.camp-scale__slider, .chat-log, .delib-hud, .proposal-dock__bar',
+	'input.camp-scale__slider, .chat-log, .delib-hud',
 	{ timeout: 40_000 },
 );
 
@@ -112,7 +112,7 @@ const uid = await page.evaluate(
 if (!uid) throw new Error('no uid on the opened student');
 await positionStudent(result.sessionId, uid, 20);
 await proposeAs(result.sessionId, uid, 'שנקים מועצת אזרחים שנבחרת בגורל בכל עיר');
-await page.waitForSelector('.chat-log, .delib-hud, .proposal-dock__bar', { timeout: 40_000 });
+await page.waitForSelector('.chat-log, .delib-hud', { timeout: 40_000 });
 await page.waitForTimeout(3500);
 // A celebration is modal and would sit over every shot
 await page.locator('.celebration__dismiss, .celebration button').first().click({ timeout: 4000 }).catch(() => {});
@@ -149,7 +149,7 @@ await page.screenshot({ path: `${SHOTS}/04-screen.png` });
 // over the bottom of the plot — which is precisely the against half, the half
 // the red is in — so they come off for this one shot.
 const hideDock = await page.addStyleTag({
-	content: '.proposal-dock, .delib-nav { display: none !important; }',
+	content: '.delib-nav { display: none !important; }',
 });
 await page.waitForTimeout(400);
 await page.locator('.board__plot-frame').screenshot({ path: `${SHOTS}/05-field.png` });

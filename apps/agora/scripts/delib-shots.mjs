@@ -101,6 +101,11 @@ for (let attempt = 0; attempt < 6 && !topicReady; attempt++) {
 if (!topicReady) throw new Error('teacher home never listed a topic package');
 await teacher.locator('text=המהפכה הצרפתית').first().click();
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
+// Choosing a scenario no longer opens a session — it opens the stage plan,
+// where the teacher orders the journey first. The walk to a live session is
+// two clicks now, and the same CTA carries both of them.
+await teacher.waitForURL(/teach\/start/, { timeout: 20000 });
+await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
 await teacher.waitForSelector('.teacher__code', { timeout: 20000 });
 const code = (await teacher.locator('.teacher__code').textContent()).replace(/\s/g, '');

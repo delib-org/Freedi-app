@@ -262,9 +262,6 @@ function placeScene(kind: 'mine' | 'rate' | 'help'): m.Children {
 	]);
 }
 
-/** The dock's expandable panel — one id, referenced by both handles */
-const DOCK_PANEL_ID = 'proposal-dock-panel';
-
 /**
  * The received-feedback handle, named so the "feedback is waiting" toast can
  * aim at THIS accordion. It used to be found by position ("the first
@@ -616,41 +613,6 @@ export function Deliberation(
 		chatPage.open({ proposalId, helperUid, role });
 	}
 	/**
-	 * The proposal dock: a notebook docked at the bottom of every place BUT
-	 * my own — my screen's proposal is already a live field, so a bar that
-	 * lifts a second copy of it over the first is a room too many. Collapsed
-	 * the dock shows a one-line peek of my text (or what needs me); tapping
-	 * lifts the box I type into over the room I'm standing in.
-	 *
-	 * Collapsed-by-default is the point — the workshop used to occupy the
-	 * mine screen whether or not it had anything to say. It never opens by
-	 * itself for arriving feedback (the badge says so quietly instead); the
-	 * ONE exception is the intro below.
-	 */
-	let dockOpen = false;
-	/**
-	 * One-shot: right after the very first proposal is submitted the dock
-	 * opens itself once, so "where did my text go?" is answered by watching
-	 * it land in the notebook. Spent as soon as it fires; a refresh loses it.
-	 */
-	let pendingDockIntro = false;
-	/**
-	 * ...but that reveal arrives on the SQUARE, one step later, and a modal
-	 * sheet there would make every student dismiss a card before they can
-	 * rate anything. So the intro is a PEEK, not an opening: no scrim, the
-	 * room stays live behind it, and it folds itself away after a beat —
-	 * unless the student reaches into it, which promotes it to a real open.
-	 */
-	let dockIntro = false;
-	let dockIntroTimer = 0;
-
-	function endDockIntro(fold: boolean): void {
-		if (!dockIntro) return;
-		window.clearTimeout(dockIntroTimer);
-		dockIntro = false;
-		if (fold) dockOpen = false;
-	}
-	/**
 	 * Mirror of the unsaved edit box, and the same protection for the FIRST
 	 * draft: the opening sentence is the most expensive thing a student writes
 	 * all lesson, and a refresh — or the reload that rescues a stuck save —
@@ -716,11 +678,10 @@ export function Deliberation(
 	 * Travel to a helped proposal so its improved text can be re-read and
 	 * re-rated. Same semantics as tapping the Others tab: from the real mine
 	 * step the lap continues to the square (helpedSection lives on the whole
-	 * Others side); from anywhere else, only the dock folds out of the way.
+	 * Others side).
 	 */
 	function goToHelped(proposalId: string): void {
 		focusHelpedId = proposalId;
-		closeDock();
 		screen = 'others';
 		if (cycle.step === 'mine') setCycle({ step: 'rate', rated: 0 });
 		m.redraw();
@@ -734,15 +695,15 @@ export function Deliberation(
 	 * where the tap left it.
 	 */
 	let focusOnMy = '';
-	/** One-shot: the next dock render puts the cursor in the textarea */
-	let focusDockTextarea = false;
 	/**
-	 * The panel is never unmounted, so its scroll position outlives a fold.
-	 * Deliberately reset on a fresh open: reopening two screens deep into
-	 * the elders reads as "the sheet lost my proposal", and the edit box is
-	 * what the notebook is for.
+	 * One-shot: right after the very first proposal is submitted, the My tab
+	 * pulses once. The lap has just walked the student out to the square, and
+	 * "where did my text go?" wants an answer that points at where the text
+	 * actually lives now — the tab, one tap away, rather than a sheet that
+	 * lifts itself over the square before they can rate anything. Spent as
+	 * soon as it fires; a refresh loses it.
 	 */
-	let resetDockScroll = false;
+	let pendingMineReveal = false;
 
 	/**
 	 * "Feedback is waiting" → walk to my own screen with the received drawer
@@ -751,19 +712,10 @@ export function Deliberation(
 	 */
 	function goToMine(): void {
 		suggestionsToggle = true;
-		closeDock();
 		screen = 'my';
 		// The toast promised feedback — land the reader on it
 		focusOnMy = `#${DOCK_FEEDBACK_HEAD_ID}`;
 		m.redraw();
-	}
-
-	/** Fold the notebook. */
-	function closeDock(): boolean {
-		endDockIntro(false);
-		dockOpen = false;
-
-		return true;
 	}
 
 	function rememberMineDraft(): void {
@@ -775,51 +727,18 @@ export function Deliberation(
 	}
 
 	/**
-	 * Am I standing on my own screen? It is the one room whose proposal is
-	 * already a live field, so it carries no dock and every handle that says
-	 * "take me to the pen" lands in that field instead of lifting a sheet
-	 * over the screen the student is reading.
-	 */
-	function onMyScreen(): boolean {
-		return screen !== 'results' && (screen === 'my' || cycle.step === 'mine');
-	}
-
-	/**
-	 * Anything that says "edit the text": on my own screen the paper IS the
-	 * pen, so this only puts the caret in it (and scrolls it into view, since
-	 * the handle may be a character's advice far down the page). Everywhere
-	 * else it lifts the dock and puts the cursor straight in the box — a tap
-	 * that says "edit the text" has earned the keyboard, where the dock's own
-	 * bar has not, so that still opens without taking focus.
+	 * Anything that says "edit the text": the pen has ONE home now, the paper
+	 * at the head of my own screen (see minePaper), so every handle walks
+	 * there and puts the caret in it. From another room that is a tab change
+	 * — the same one tap the nav asks for — and never a sheet lifted over the
+	 * room the student is standing in.
+	 *
+	 * The lap does not move: My is a screen and not a step, so fixing a
+	 * sentence never costs a student their place in the cycle.
 	 */
 	function openEditBox(): void {
-		if (onMyScreen()) {
-			focusOnMy = 'textarea.my-screen__text';
-
-			return;
-		}
-		if (!dockOpen) resetDockScroll = true;
-		dockOpen = true;
-		focusDockTextarea = true;
-	}
-
-	/** The dock bar's own handle — the edit box folds out from here */
-	function toggleDock(): void {
-		if (dockOpen) {
-			closeDock();
-		} else {
-			dockOpen = true;
-			resetDockScroll = true;
-		}
-	}
-
-	/**
-	 * The intro peek reveals; it does not detain. Anything the student aims
-	 * INTO the sheet promotes it to a real, scrimmed open — they came for
-	 * the workshop after all — and stops the fold-away timer.
-	 */
-	function keepDockOpen(): void {
-		endDockIntro(false);
+		screen = 'my';
+		focusOnMy = 'textarea.my-screen__text';
 	}
 
 	registerMineNavigator(goToMine);
@@ -830,7 +749,6 @@ export function Deliberation(
 	 * the same jump the Others tab makes after the laps are done.
 	 */
 	function goToMarket(): void {
-		closeDock();
 		screen = 'others';
 		if (cycle.step === 'done') {
 			setCycle({ round: getSessionFlow().rounds, step: 'help' });
@@ -853,7 +771,6 @@ export function Deliberation(
 			(candidate) => candidate.statementId === proposalId,
 		);
 		if (!proposal) return;
-		closeDock();
 		const owner = proposal.creatorId === userId;
 		screen = owner ? 'my' : 'others';
 		// Standing on a classmate's side without a lap there reads as being
@@ -1008,11 +925,9 @@ export function Deliberation(
 	/** Apply a transition the flow computed: the parts that touch the DOM. */
 	function commitCycle(transition: CycleTransition): void {
 		if (transition.stepChanged) {
-			// Walking into a new place folds the notebook: the room you just
-			// arrived in is what you came to look at
-			closeDock();
-			// ...and folds whatever stall was left open in the room behind me,
-			// so the next room's list opens the same way every time
+			// Walking into a new place folds whatever stall was left open in
+			// the room behind me, so the next room's list opens the same way
+			// every time
 			openStallId = '';
 			if (transition.screen) screen = transition.screen;
 		}
@@ -1047,12 +962,19 @@ export function Deliberation(
 	 *
 	 * My is a screen again (2026-08-11): everything the workshop holds —
 	 * received improvements, the elders, the two sides' needs — is far too
-	 * much to live inside a dock sheet lifted over another room. What stayed
-	 * in the dock is the one thing that has to be reachable from ANY place:
-	 * the box I type my proposal into.
+	 * much to live inside a dock sheet lifted over another room. And since
+	 * 2026-09-03 that includes the pen: this bar is the ONLY way to my own
+	 * text now, which is why the My tab also has to carry the one warning the
+	 * dock used to carry everywhere — an edit I have not saved.
 	 */
 	function delibNav(myProposal: AgoraProposal | undefined): m.Children {
 		if (!myProposal) return null;
+		// The draft mirror outlives a tab change, so an unsaved edit can be
+		// sitting on a screen I am not looking at. The dock used to say so
+		// from the foot of every room; with the dock gone the tab says it, and
+		// a dot outranks the feedback count — news I can act on in one tap
+		// beats news I have to read.
+		const unsaved = mineDraftChanged(myProposal);
 
 		const tab = (
 			id: DelibScreen,
@@ -1061,6 +983,7 @@ export function Deliberation(
 			label: string,
 			badge: number,
 			onclick: () => void,
+			alert = false,
 		): m.Children =>
 			m(
 				`button.delib-nav__item.delib-nav__item--${modifier}`,
@@ -1074,18 +997,31 @@ export function Deliberation(
 					m('span.delib-nav__label', label),
 					// A badge is news from a screen I'm not on; on the screen
 					// itself the content says it better than a number
-					screen !== id && badge > 0 ? m('span.delib-nav__badge', String(badge)) : null,
+					screen !== id && alert
+						? [
+								m('span.delib-nav__dot', { 'aria-hidden': 'true' }),
+								m('span.sr-only', t('delib.draft_unsaved')),
+							]
+						: screen !== id && badge > 0
+							? m('span.delib-nav__badge', String(badge))
+							: null,
 				],
 			);
 
 		return m('nav.delib-nav', [
-			tab('my', 'mine', 'proposal', t('delib.nav_mine'), myFeedbackCount(myProposal), () => {
-				closeDock();
-				screen = 'my';
-				m.redraw();
-			}),
+			tab(
+				'my',
+				'mine',
+				'proposal',
+				t('delib.nav_mine'),
+				myFeedbackCount(myProposal),
+				() => {
+					screen = 'my';
+					m.redraw();
+				},
+				unsaved,
+			),
 			tab('results', 'results', 'chart', t('delib.nav_results'), 0, () => {
-				closeDock();
 				screen = 'results';
 				m.redraw();
 			}),
@@ -1097,7 +1033,6 @@ export function Deliberation(
 				// Proposals I helped moved while I was away — come see
 				attentionCount(),
 				() => {
-					closeDock();
 					screen = 'others';
 					if (cycle.step === 'mine') {
 						setCycle({ step: 'rate', rated: 0 });
@@ -1252,43 +1187,8 @@ export function Deliberation(
 	}
 
 	/**
-	 * The one part of the workshop that travels: the always-editable proposal
-	 * text and its single save action. It rides in the dock, so a student can
-	 * fix a sentence from the square or from a classmate's stall without
-	 * losing the room they are standing in. On the My screen the same draft is
-	 * edited in the paper at the head of the page instead (see minePaper);
-	 * everything else that used to share this card lives there too.
-	 */
-	function proposalEditBox(live: AgoraSession, myProposal: AgoraProposal): m.Children {
-		seedMineDraft(myProposal);
-
-		// No header: the dock's own bar already says "my proposal", and a live
-		// textarea is its own invitation to type — the "you can edit anytime"
-		// line was standing prose about an affordance you can see
-		return m('.card.my-lantern.my-lantern--workshop', [
-			// The primary zone: text + its ONE action, visually bound together
-			m('.workbench__section.workbench__section--edit', [
-				m('textarea.my-lantern__textarea', {
-					value: mineDraft,
-					rows: 4,
-					maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
-					placeholder: t('delib.placeholder'),
-					'aria-label': t('delib.my_proposal'),
-					oninput: (event: InputEvent) => {
-						mineDraft = (event.target as HTMLTextAreaElement).value;
-						rememberMineDraft();
-					},
-				}),
-				m('.delib__actions', mineSaveButton(live, myProposal)),
-			]),
-		]);
-	}
-
-	/**
 	 * Seed / re-seed the draft when the proposal changes underneath — without
-	 * clobbering what the student is currently typing. Shared by the two
-	 * places the same draft is edited from: the dock's box and the My
-	 * screen's paper.
+	 * clobbering what the student is currently typing.
 	 */
 	function seedMineDraft(myProposal: AgoraProposal): void {
 		if (mineDraftBase === myProposal.statement) return;
@@ -1661,120 +1561,6 @@ export function Deliberation(
 	}
 
 	/**
-	 * The notebook docked at the bottom of every place except my own: a
-	 * collapsed bar that shows a line of my own text (or warns that an edit is
-	 * unsaved), and the edit box sliding up over the room when it's tapped.
-	 *
-	 * The dock carries ONE thing — the box I type into. Everything that needs
-	 * reading rather than typing lives on the My screen: a sheet lifted over
-	 * another room is the wrong place to read your classmates' ideas in, and a
-	 * dock that promised feedback and opened onto a textarea was a broken
-	 * promise. And on the My screen the box itself is unnecessary, because the
-	 * proposal is already sitting in one there (see minePaper).
-	 */
-	function proposalDock(live: AgoraSession, myProposal: AgoraProposal): m.Children {
-		const unsaved =
-			mineDraft.trim().length > 0 &&
-			mineDraft.trim() !== myProposal.statement &&
-			mineDraftBase === myProposal.statement;
-
-		// ONE line: the draft I haven't saved outranks the text I have. News
-		// that wants reading (ideas, replies) belongs to the My tab's badge —
-		// this bar only ever opens onto the pen.
-		const sub: m.Children = unsaved
-			? [m('span.proposal-dock__dot', { 'aria-hidden': 'true' }), t('delib.dock_unsaved')]
-			: myProposal.statement;
-		const subClass = unsaved ? 'proposal-dock__sub--alert' : undefined;
-
-		return m(
-			'.proposal-dock',
-			{
-				class: [dockOpen ? 'proposal-dock--open' : '', dockIntro ? 'proposal-dock--intro' : '']
-					.filter(Boolean)
-					.join(' '),
-				// Reaching into the peek means "I actually want this open"
-				onpointerdown: keepDockOpen,
-				onfocusin: keepDockOpen,
-				onkeydown: (event: KeyboardEvent) => {
-					if (event.key !== 'Escape' || !dockOpen) return;
-					if (!closeDock()) return;
-					// Standard disclosure: the handle you opened it with gets
-					// the focus back, never the void behind the sheet
-					document.querySelector<HTMLElement>('.proposal-dock__bar')?.focus();
-				},
-			},
-			[
-				m(
-					'button.proposal-dock__bar',
-					{
-						type: 'button',
-						'aria-expanded': String(dockOpen),
-						'aria-controls': DOCK_PANEL_ID,
-						onclick: () => {
-							toggleDock();
-						},
-					},
-					[
-						// The notebook on the dock is the student's own object and
-						// it is on screen for the whole lap — the one small slot
-						// where the rendered book earns its weight (delib-mock.html
-						// had it here first). 26px is over the render floor.
-						m(
-							'span.proposal-dock__icon',
-							{ 'aria-hidden': 'true' },
-							m(HeroIcon, { name: 'proposal', owner: 'mine', size: 32 }),
-						),
-						m('span.proposal-dock__text', [
-							m('span.proposal-dock__title', t('delib.my_proposal')),
-							m('span.proposal-dock__sub', { class: subClass, role: 'status' }, sub),
-						]),
-						m('span.proposal-dock__chevron', { 'aria-hidden': 'true' }),
-						// Named for the screen reader, since the visible label
-						// ("My proposal") doesn't say what pressing does
-						m('span.sr-only', t(dockOpen ? 'delib.dock_close' : 'delib.dock_open')),
-					],
-				),
-				// Never unmounted: the 0fr→1fr grid transition needs the panel
-				// in the tree, and so does the unsaved draft inside it. `inert`
-				// (not just aria-hidden) keeps its textarea and buttons out of
-				// the tab order while it is folded away.
-				m(
-					'.proposal-dock__panel',
-					{
-						id: DOCK_PANEL_ID,
-						'aria-hidden': String(!dockOpen),
-						inert: dockOpen ? undefined : 'true',
-					},
-					m(
-						'.proposal-dock__inner',
-						{
-							oncreate: onDockPanelRender,
-							onupdate: onDockPanelRender,
-						},
-						proposalEditBox(live, myProposal),
-					),
-				),
-			],
-		);
-	}
-
-	/**
-	 * Once the sheet has actually rendered, start it at the top on a fresh
-	 * open. Focus stays on the handle that opened it, as a disclosure should.
-	 */
-	function onDockPanelRender(vnode: m.VnodeDOM): void {
-		if (!dockOpen) return;
-		const inner = vnode.dom as HTMLElement;
-		if (resetDockScroll) {
-			resetDockScroll = false;
-			inner.scrollTop = 0;
-		}
-		if (!focusDockTextarea) return;
-		focusDockTextarea = false;
-		inner.querySelector<HTMLTextAreaElement>('textarea.my-lantern__textarea')?.focus();
-	}
-
-	/**
 	 * Once the My screen has rendered: if a deep link ("feedback is waiting")
 	 * promised something, put the cursor on it. Walking here by tapping the
 	 * tab promises nothing, so it moves no focus.
@@ -1792,22 +1578,6 @@ export function Deliberation(
 		// ...and say WHICH row was promised. Landing on a screenful of drawers
 		// with the cursor silently parked on one of them is not an answer.
 		if (!reducedMotion) emphasise(target);
-	}
-
-	/**
-	 * The scrim behind an open dock: tapping the dimmed room closes it. The
-	 * intro peek gets none — it is a reveal, and the square behind it must
-	 * stay live so nobody has to dismiss a card to start rating.
-	 */
-	function dockScrim(): m.Children {
-		if (!dockOpen || dockIntro) return null;
-
-		return m('.proposal-dock__scrim', {
-			'aria-hidden': 'true',
-			onclick: () => {
-				closeDock();
-			},
-		});
 	}
 
 	/**
@@ -1845,7 +1615,6 @@ export function Deliberation(
 					'button.btn.btn--secondary',
 					{
 						onclick: () => {
-							closeDock();
 							screen = 'others';
 							if (cycle.step === 'mine') setCycle({ step: 'rate', rated: 0 });
 							m.redraw();
@@ -2410,7 +2179,6 @@ export function Deliberation(
 		onremove() {
 			window.clearTimeout(splashTimer);
 			window.clearTimeout(sentAckTimer);
-			window.clearTimeout(dockIntroTimer);
 			window.clearTimeout(firstSaveTimer);
 			void flushSeenState();
 			stopDeliberationListeners();
@@ -2598,27 +2366,14 @@ export function Deliberation(
 				}),
 			];
 
-			// The notebook rides along on every place, so the dock and the
-			// padding that keeps content clear of it are computed once here
-			const dock = myConfirmedProposal ? proposalDock(live, myConfirmedProposal) : null;
-			const scrim = myConfirmedProposal ? dockScrim() : null;
-			const shellClass = myConfirmedProposal ? '.shell--docked' : '';
-
-			// The one-shot intro peek: fires after the travel splash clears, so
-			// the "here is where your text now lives" reveal isn't spent under
-			// a card the student can't see through — then folds itself away
-			// rather than standing between them and the square.
-			if (pendingDockIntro && myConfirmedProposal && !splash) {
-				pendingDockIntro = false;
-				dockOpen = true;
-				dockIntro = true;
-				dockIntroTimer = window.setTimeout(
-					() => {
-						endDockIntro(true);
-						m.redraw();
-					},
-					reducedMotion ? 2000 : 3200,
-				);
+			// The first write's reveal, fired after the travel splash clears —
+			// under a card the student cannot see through it would be spent on
+			// nothing.
+			if (pendingMineReveal && myConfirmedProposal && !splash) {
+				pendingMineReveal = false;
+				window.setTimeout(() => {
+					emphasise(document.querySelector('.delib-nav__item--mine'));
+				}, 400);
 			}
 
 			// ---------- TAB: RESULTS (a screen, not a step) ----------
@@ -2626,7 +2381,7 @@ export function Deliberation(
 			// sure that is, and the spread behind the number. Live — it moves as
 			// classmates rate. Standing here does NOT advance the lap.
 			if (screen === 'results' && myConfirmedProposal) {
-				return m(`.shell.shell--delib.shell--mode-mine.shell--place-mine${shellClass}`, [
+				return m('.shell.shell--delib.shell--mode-mine.shell--place-mine', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myConfirmedProposal),
@@ -2670,8 +2425,6 @@ export function Deliberation(
 							cycle.step === 'help' ? t('delib.back_to_stand') : t('delib.back_to_square'),
 						),
 					]),
-					scrim,
-					dock,
 				]);
 			}
 
@@ -2833,10 +2586,10 @@ export function Deliberation(
 														forgetFirstDraft();
 														// The first write moves the lap forward
 														setCycle({ step: 'rate', rated: 0 });
-														// ...and the notebook opens itself once on arrival, so
-														// the text visibly LANDS somewhere instead of just
+														// ...and the My tab pulses once on arrival, so the
+														// text visibly LANDS somewhere instead of just
 														// vanishing off the screen it was typed on
-														pendingDockIntro = true;
+														pendingMineReveal = true;
 													})
 													.catch((error: unknown) => {
 														window.clearTimeout(firstSaveTimer);
@@ -2960,7 +2713,7 @@ export function Deliberation(
 					t('delib.to_helping'),
 				);
 
-				return m(`.shell.shell--delib.shell--mode-peer.shell--place-square${shellClass}`, [
+				return m('.shell.shell--delib.shell--mode-peer.shell--place-square', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myConfirmedProposal),
@@ -2998,8 +2751,6 @@ export function Deliberation(
 									onward,
 								],
 					]),
-					scrim,
-					dock,
 				]);
 			}
 
@@ -3034,7 +2785,7 @@ export function Deliberation(
 				// into a row you can read down. No scoreboard here on purpose —
 				// when I come to help, their numbers are noise, and judging a
 				// classmate's score is not the job.
-				return m(`.shell.shell--delib.shell--mode-peer.shell--place-visit${shellClass}`, [
+				return m('.shell.shell--delib.shell--mode-peer.shell--place-visit', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myConfirmedProposal),
@@ -3075,14 +2826,12 @@ export function Deliberation(
 								]
 							: [m('p.text-center.lobby__status', t('delib.no_more')), forward],
 					]),
-					scrim,
-					dock,
 				]);
 			}
 
 			// ---------- DONE: all cycles complete ----------
 			// The ScoreHUD's chart is the data view here — no map scenery needed
-			return m(`.shell.shell--wide.shell--delib.shell--mode-mine.shell--place-mine${shellClass}`, [
+			return m('.shell.shell--wide.shell--delib.shell--mode-mine.shell--place-mine', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 					header,
 					delibNav(myConfirmedProposal),
@@ -3117,8 +2866,6 @@ export function Deliberation(
 						t('delib.keep_helping'),
 					),
 				]),
-				scrim,
-				dock,
 			]);
 		},
 	};

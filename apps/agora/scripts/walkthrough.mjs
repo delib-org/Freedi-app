@@ -55,6 +55,11 @@ try {
 }
 await teacher.locator('text=המהפכה הצרפתית').first().click();
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
+// Choosing a scenario no longer opens a session — it opens the stage plan,
+// where the teacher orders the journey first. The walk to a live session is
+// two clicks now, and the same CTA carries both of them.
+await teacher.waitForURL(/teach\/start/, { timeout: 20000 });
+await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
 await teacher.waitForSelector('.teacher__code', { timeout: 20000 });
 const code = (await teacher.locator('.teacher__code').textContent()).replace(/\s/g, '');
@@ -236,20 +241,20 @@ const suggest = async (page, label, text) => {
 };
 await shot(s2, '05b-workshop-help');
 
-// My workshop is the dock, not a tab: lift it mid-help, then fold it back
-await s1.waitForSelector('.proposal-dock__bar', { timeout: 10000 });
-await s1.locator('.proposal-dock__bar').click();
-await s1.waitForSelector('.proposal-dock--open .my-lantern', { timeout: 5000 });
-console.log('S1 DOCK: lifted the notebook during help');
+// My proposal is a TAB, not a sheet: walk to it mid-help, then walk back
+await s1.waitForSelector('.delib-nav__item--mine', { timeout: 10000 });
+await s1.locator('.delib-nav__item--mine').click();
+await s1.waitForSelector('.my-screen__paper', { timeout: 5000 });
+console.log('S1 MINE: stood at my own paper during help');
 console.log(
 	'S1 NAV CLASSES:',
 	await s1.locator('.delib-nav__item').evaluateAll((els) => els.map((e) => e.className))
 );
-await s1.waitForTimeout(900); // the sheet slides up — shoot it landed, not mid-travel
-await shot(s1, '05c-dock-open-during-help');
-await s1.locator('.proposal-dock__bar').click();
+await s1.waitForTimeout(900); // the screen settles — shoot it landed, not mid-travel
+await shot(s1, '05c-mine-paper-during-help');
+await s1.locator('.delib-nav__item--peer').click();
 await s1.waitForSelector('textarea.text-input', { timeout: 5000 });
-console.log('S1 DOCK: folded, back at the stand');
+console.log('S1 MINE: back at the stand');
 
 await suggest(s2, 'S2', 'כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר, כדי ששני הצדדים יידעו למה לצפות.');
 await suggest(s1, 'S1', 'אולי כדאי להבטיח גם ייצוג לאצולה באספה, כדי שגם הם ירגישו שותפים.');

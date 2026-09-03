@@ -59,6 +59,11 @@ await teacher.reload({ waitUntil: 'domcontentloaded' });
 await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 30000 });
 await teacher.locator('text=המהפכה הצרפתית').first().click();
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
+// Choosing a scenario no longer opens a session — it opens the stage plan,
+// where the teacher orders the journey first. The walk to a live session is
+// two clicks now, and the same CTA carries both of them.
+await teacher.waitForURL(/teach\/start/, { timeout: 20000 });
+await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
 await teacher.waitForSelector('.teacher__code', { timeout: 20000 });
 const code = (await teacher.locator('.teacher__code').textContent()).replace(/\s/g, '');
@@ -118,35 +123,20 @@ await propose(s2, 'נקים אספה לאומית עם רוב לעם ונבטל 
 await clearCelebration(s1);
 await clearCelebration(s2);
 
-const openDock = async (page) => {
-	await page.waitForSelector('.proposal-dock__bar', { timeout: 15000 });
-	if ((await page.locator('.proposal-dock--open').count()) === 0) {
-		await page.locator('.proposal-dock__bar').click();
-	}
-	await page.waitForSelector('.proposal-dock--open .my-lantern--workshop', { timeout: 10000 });
-};
-const closeDock = async (page) => {
-	if ((await page.locator('.proposal-dock--open').count()) === 0) return;
-	await page.locator('.proposal-dock__bar').click();
-	await page.locator('.proposal-dock__scrim').waitFor({ state: 'detached', timeout: 5000 });
-};
-// My own screen: the workshop (what came back, the elders, the needs). The
-// dock above carries only the pen, so everything that wants READING is here.
+// My own screen: the pen and the workshop (what came back, the elders, the
+// needs). Everything about MY proposal — reading it and writing it — is here.
 const goMine = async (page) => {
-	// An open dock scrims the room behind it — read the screen, not through it
-	await closeDock(page);
 	await page.waitForSelector('.delib-nav__item--mine', { timeout: 15000 });
 	if ((await page.locator('.delib-nav__item--mine.delib-nav__item--active').count()) === 0) {
 		await page.locator('.delib-nav__item--mine').click();
 	}
-	// The workshop card moved into the dock (0fef86e75) — the screen's own
-	// stable landmark is its head: my sentence + the edit handle
-	await page.waitForSelector('.my-screen .my-screen__head', { timeout: 10000 });
+	// The screen's stable landmark is the paper at its head: my sentence, in
+	// the field it is written in
+	await page.waitForSelector('.my-screen .my-screen__paper', { timeout: 10000 });
 };
 // Back to the classmates' side — also the only place a badge ABOUT my screen
 // can be read, since a tab never badges the screen you are standing on
 const goOthers = async (page) => {
-	await closeDock(page);
 	await page.locator('.delib-nav__item--peer').click();
 	await page.waitForSelector('.stall-list', { timeout: 15000 });
 };
@@ -198,9 +188,9 @@ await letSeenFlush(s2);
 
 // ---------- Phase 2: owner edits → EDITED chip + re-rate invitation ----------
 step('PHASE 2: A edits the text → B sees EDITED chip + the re-rate invitation');
-await openDock(s1);
+await goMine(s1);
 await s1
-	.locator('textarea.my-lantern__textarea')
+	.locator('textarea.my-screen__text')
 	.fill('נכריז על מלוכה חוקתית: המלך סמל, האספה מחוקקת, וייקבע תקציב שקוף לחצר המלוכה.');
 await s1.getByRole('button', { name: /^עדכון ההצעה$/ }).click();
 // The save is quiet; the FIRST credited revision (B already rated, so the
@@ -211,7 +201,6 @@ console.log(
 	(await s1.locator('.celebration__message').textContent()).trim().slice(0, 60),
 );
 await clearCelebration(s1);
-await closeDock(s1);
 
 const editedChip = s2.locator('.stall__chip--edited').first();
 await editedChip.waitFor({ timeout: 20000 });
@@ -259,10 +248,10 @@ await s1.locator('.thread__msg .btn--primary').first().click();
 await s1.locator('.thread__msg .helped__chip--thanked').waitFor({ timeout: 10000 });
 await s1.locator('.chat-page__back').click();
 await s1.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
-// The pen is in the dock, reachable from the screen I am standing on
-await openDock(s1);
+// The pen is the paper at the head of my own screen
+await goMine(s1);
 await s1
-	.locator('textarea.my-lantern__textarea')
+	.locator('textarea.my-screen__text')
 	.fill(
 		'נכריז על מלוכה חוקתית: המלך סמל, האספה מחוקקת, תקציב שקוף לחצר — ולוח זמנים לביטול זכויות היתר.',
 	);
@@ -300,7 +289,6 @@ await s1.locator('.chat-page__send').click();
 await s1.waitForTimeout(800);
 await s1.locator('.chat-page__back').click();
 await s1.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
-await closeDock(s1);
 console.log('   ✓ A sent a chat reply in the conversation');
 
 // B: toast + unread chip on the stall + Others-side attention

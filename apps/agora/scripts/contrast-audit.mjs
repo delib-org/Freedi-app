@@ -44,8 +44,6 @@ const ACCEPTED = [
 	['p.thread__text', 'rgb(139, 107, 240)', 3.85],
 	['span.thread__time', 'rgb(139, 107, 240)', 2.87],
 	['p.action-hint', 'rgb(139, 107, 240)', 2.87],
-	['span.proposal-dock__title', 'rgb(139, 107, 240)', 3.85],
-	['span.proposal-dock__sub', 'rgb(139, 107, 240)', 2.98],
 	['span.delib-nav__label', 'rgb(139, 107, 240)', 3.85],
 	// White copy on the hero ramp's top stops (--mine-light #a98cf7 and the
 	// sheen washing over it)
@@ -55,7 +53,6 @@ const ACCEPTED = [
 	// The count pink. It replaced --danger, which passed at 4.67:1 — red said
 	// "something broke" about a classmate's reply, which is the friendliest
 	// event in the game, so the hue was worth the ratio.
-	['span.proposal-dock__badge', 'rgb(245, 106, 168)', 2.8],
 	['span.delib-nav__badge', 'rgb(245, 106, 168)', 2.8],
 	['span.stall__chip.stall__chip--unread', 'rgb(245, 106, 168)', 2.8],
 	// The same pink count, on the workshop drawers' feedback badge — it joined

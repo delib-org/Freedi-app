@@ -115,10 +115,9 @@
 // dashed slot reads as "this is where it happens" and keeps its label at full
 // contrast. Both writing surfaces share it so the workshop speaks one language.
 //
-// Written out to four classes on purpose: the dock repaints primary buttons
-// from `.shell--mode-peer .proposal-dock .btn--primary`, and anything shorter
-// loses to it — the saved button comes back filled, with the waiting rule's
-// text colour on top of it.
+// Written out to two full classes on purpose: a room-mode rule that repaints
+// primary buttons beats anything shorter, and the saved button comes back
+// filled with the waiting rule's text colour on top of it.
 .btn.btn--primary.write-desk__cta:disabled,
 .btn.btn--primary.my-lantern__save:disabled {
 	opacity: 1;

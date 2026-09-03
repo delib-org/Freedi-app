@@ -58,7 +58,7 @@ const studentWin = await openWindow(['--window-position=1040,20', '--window-size
 const student = studentWin.page;
 await student.goto(`${VITE_HOST}/#!/join/${run.code}`, { waitUntil: 'domcontentloaded' });
 await student.waitForSelector(
-	'input.camp-scale__slider, .chat-log, .delib-hud, .proposal-dock__bar',
+	'input.camp-scale__slider, .chat-log, .delib-hud',
 	{ timeout: 30000 },
 );
 

@@ -119,6 +119,21 @@
 		box-shadow: 0 0 10px rgba(245, 106, 168, 0.4);
 	}
 
+	// The unsaved-draft mark. A DOT and not a count, because there is only
+	// ever one draft and "1" would invite reading it as one more waiting
+	// idea. Amber, not the badge's pink: this is the tab telling me about
+	// my own unfinished business, not news a classmate sent.
+	&__dot {
+		position: absolute;
+		inset-block-start: -4px;
+		inset-inline-end: -2px;
+		inline-size: 10px;
+		block-size: 10px;
+		border-radius: var(--radius-full);
+		background: var(--warning);
+		box-shadow: 0 0 0 2px var(--surface-veil);
+	}
+
 	@media (max-width: 700px) {
 		position: fixed;
 		inset-inline: 0;
@@ -175,14 +190,6 @@
 		padding-block-end: 96px;
 	}
 
-	// ...and clear of the proposal dock stacked on top of it, when there is
-	// a proposal to dock
-	.shell--delib.shell--docked .shell__content {
-		padding-block-end: calc(
-			var(--delib-nav-h) + var(--dock-bar-h) + var(--space-lg) + env(safe-area-inset-bottom, 0px)
-		);
-	}
-
 	// The bar takes the colour of the room, so the wash reaches the very
 	// bottom of the screen instead of stopping at a white slab
 	.shell--mode-mine .delib-nav {
@@ -194,242 +201,6 @@
 	}
 }
 
-/* --- The proposal dock: my notebook, carried between places ---
-   My workshop used to be a room I travelled to (and, on the mine step, a
-   wall of card that filled the screen whether or not it had anything to
-   say). It is now a bar docked at the bottom of EVERY place: collapsed it
-   shows one line — what needs me, or a peek of my own text — and tapping
-   it lifts the whole workshop over the room I'm standing in.
-
-   The control is neutral chrome with a chevron chip, exactly like
-   .chat-drawer, because students already learned that affordance one
-   screen down. The only ownership colour is the purple fill: this is
-   MINE, sitting at the bottom of a stall that isn't. */
-.proposal-dock {
-	position: fixed;
-	inset-inline: 0;
-	// Parks on the Mine|Others bar's top edge. The nav owns the safe-area
-	// inset — padding it here too would double the gap on notched phones.
-	inset-block-end: calc(var(--delib-nav-h) + env(safe-area-inset-bottom, 0px));
-	// Under the nav, above the scrim: the tabs stay reachable with the
-	// sheet up, so "Others" is always one tap away
-	z-index: calc(var(--z-header) - 1);
-	max-width: 720px;
-	margin-inline: auto;
-	background: var(--bg-card-solid);
-	border-block-start: 1px solid var(--border-subtle);
-	border-start-start-radius: var(--radius-md);
-	border-start-end-radius: var(--radius-md);
-	box-shadow: 0 -4px 20px rgba(70, 45, 150, 0.18);
-	overflow: hidden;
-
-	&__bar {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-		width: 100%;
-		min-height: var(--dock-bar-h);
-		padding: var(--space-sm) var(--space-md);
-		background: transparent;
-		border: none;
-		// The one ownership cue on the chrome: purple = my work
-		border-inline-start: 3px solid var(--mine);
-		cursor: pointer;
-		text-align: start;
-		transition: background var(--motion-fast) ease;
-
-		&:hover,
-		&:focus-visible {
-			background: rgba(83, 60, 160, 0.13);
-		}
-
-		&:focus-visible {
-			outline: 2px solid var(--lantern-deep);
-			outline-offset: -2px;
-		}
-	}
-
-	// The one rendered object in the app that sits on a violet ground rather
-	// than a white one. It needs no chip behind it — a white chip on the dock
-	// reads as a sticker, louder than the icon inside it — but it does need
-	// the shadow: violet glass on a violet bar has nothing to sit against, and
-	// this is what puts it in front of the bar instead of in it.
-	&__icon {
-		display: flex;
-		line-height: 1;
-		flex-shrink: 0;
-		filter: drop-shadow(0 2px 3px rgba(38, 24, 92, 0.35));
-	}
-
-	/* min-width:0 is what lets the sub line actually ellipsize inside flex */
-	&__text {
-		flex: 1;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 1px;
-	}
-
-	/* The LABEL, and it now reads as one: it says "my proposal", which is a
-	   thing the app knows, not a thing the student wrote. It steps back so
-	   the sentence under it can be the loudest text in the bar. */
-	&__title {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: var(--font-size-xs);
-		color: var(--text-muted);
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-	}
-
-	/* My own words, in the proposal voice, on the one strip of chrome that
-	   follows me through every screen of the lap.
-	   TWO lines, not one. Truncation was doing real work here — a visibly cut
-	   peek is the second "there is more under here" cue after the chevron —
-	   and a clamp still truncates, it just does it after enough words to be
-	   worth reading. --dock-bar-h pays for the extra line. */
-	&__sub {
-		@include proposal-voice;
-
-		color: var(--text-primary);
-		display: -webkit-box;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
-		overflow: hidden;
-
-		/* Something is waiting on me — not muted background information */
-		&--alert {
-			color: var(--text-primary);
-			font-weight: 600;
-		}
-	}
-
-	/* Warning copy stays --text-primary; only the dot wears the amber */
-	&__dot {
-		display: inline-block;
-		width: 7px;
-		height: 7px;
-		margin-inline-end: 6px;
-		background: var(--warning);
-		border-radius: var(--radius-full);
-	}
-
-	&__badge {
-		flex-shrink: 0;
-		display: inline-grid;
-		place-items: center;
-		min-width: 20px;
-		height: 20px;
-		padding-inline: 5px;
-		// A notification badge must not wear a camp colour — nor --danger
-		background: var(--pink);
-		color: #ffffff;
-		border-radius: var(--radius-full);
-		font-family: var(--font-body);
-		font-size: var(--font-size-xs);
-		font-weight: 700;
-	}
-
-	// Open, the count is said three times within one screen height: here, in
-	// the sub line's words, and on the feedback section's own chip. The badge
-	// is the peripheral-vision cue for a FOLDED sheet — it has no job once
-	// the list it points at is on screen.
-	&--open &__badge {
-		display: none;
-	}
-
-	/* The same chevron chip as the accepted-ideas drawer, but pointing UP
-	   when closed — this accordion opens upward. Vertical either way, so
-	   the physical border trick stays RTL-safe. */
-	&__chevron {
-		display: grid;
-		place-items: center;
-		flex-shrink: 0;
-		width: 28px;
-		height: 28px;
-		background: var(--bg-card-solid);
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-full);
-		transition: transform var(--motion-base) var(--ease-camera);
-
-		&::before {
-			content: '';
-			width: 8px;
-			height: 8px;
-			border-right: 2px solid var(--text-secondary);
-			border-bottom: 2px solid var(--text-secondary);
-			transform: translateY(2px) rotate(-135deg);
-		}
-	}
-
-	&--open &__chevron {
-		transform: rotate(180deg);
-	}
-
-	/* The 0fr→1fr grid-track trick, as on .chat-drawer: the panel never
-	   leaves the DOM, so an unsaved draft survives every fold and the
-	   motion itself teaches "this is an accordion". */
-	&__panel {
-		display: grid;
-		grid-template-rows: 0fr;
-		transition: grid-template-rows var(--motion-base) var(--ease-camera);
-	}
-
-	&--open &__panel {
-		grid-template-rows: 1fr;
-	}
-
-	&__inner {
-		min-height: 0;
-		overflow-y: auto;
-		// dvh tracks the mobile keyboard and the collapsing URL bar
-		max-height: calc(85dvh - var(--delib-nav-h) - var(--dock-bar-h));
-		// The room behind must not scroll when the sheet hits its end
-		overscroll-behavior: contain;
-		padding: 0 var(--space-md) var(--space-md);
-	}
-
-	/* Inside the sheet the dock IS the frame — a card border here would
-	   draw a second box around the same thing, and the bar overhead
-	   already says "📘 My proposal", so the card's own title would be the
-	   same words twice, six pixels apart. The editable hint stays: it is
-	   the one line of the header that tells you something. */
-	.my-lantern--workshop {
-		border: none;
-		box-shadow: none;
-		padding-inline: 0;
-		background: transparent;
-	}
-
-	.my-lantern__icon,
-	.my-lantern__title {
-		display: none;
-	}
-
-	/* The one-time "your text lives here now" reveal. It is a PEEK: a slice
-	   of the workshop, no scrim, the square still live behind it, gone on
-	   its own after a beat. A full modal sheet here would mean every
-	   student dismisses a card before they can rate anything. */
-	&--intro &__inner {
-		max-height: 38dvh;
-	}
-
-	&__scrim {
-		position: fixed;
-		inset: 0;
-		z-index: calc(var(--z-header) - 2);
-		background: var(--bg-overlay);
-		animation: dock-scrim-in var(--motion-fast) ease;
-	}
-}
-
-@keyframes dock-scrim-in {
-	from {
-		opacity: 0;
-	}
-}
-
 /* --- The bottom half of the game frame ---
    The HUD made the top of a deliberation screen dark chrome. Leaving the
    bottom as two white slabs would have left the screen framed on one side
@@ -438,62 +209,12 @@
    floating between them: that inversion is what makes the stage read as a
    game board rather than a document.
 
-   Strictly the COLLAPSED chrome. The dock's panel is content the moment it
-   opens, so it turns back into a light sheet below. */
+   Strictly the COLLAPSED chrome. */
 .shell--delib {
-	// The dock is purple because it IS my proposal — the one owned object on
-	// a screen full of white ones. The nav is white: it is the app's
-	// furniture, not anybody's property.
-	.proposal-dock {
-		background: var(--grad-mine-text);
-		border-block-start-color: transparent;
-	}
-
+	// The nav is white: it is the app's furniture, not anybody's property.
 	.delib-nav {
 		background: var(--surface-veil);
 		border-block-start-color: var(--border-subtle);
-	}
-
-	.proposal-dock__title {
-		color: #ffffff;
-	}
-
-	// Not a hand-rolled white: the on-dark contract already defines what a
-	// muted label is on a saturated surface, and this one was picked by eye
-	// at 0.68 — which measures 4.27:1.
-	.proposal-dock__sub {
-		color: var(--text-muted);
-
-		&--alert {
-			color: #ffe9b8;
-		}
-	}
-
-	.proposal-dock__bar {
-		&:hover,
-		&:focus-visible {
-			background: rgba(255, 255, 255, 0.1);
-		}
-
-		&:focus-visible {
-			outline-color: #ffffff;
-		}
-	}
-
-	.proposal-dock__chevron {
-		background: rgba(255, 255, 255, 0.12);
-		border-color: rgba(255, 255, 255, 0.32);
-
-		&::before {
-			border-right-color: #ffffff;
-			border-bottom-color: #ffffff;
-		}
-	}
-
-	// Open, the sheet is a working surface again — text is edited in it, so
-	// it goes back to paper. Only the handle overhead stays chrome.
-	.proposal-dock__panel {
-		background: var(--bg-card-solid);
 	}
 
 	// :not(--active) so the muted colour cannot out-specify the white label
@@ -556,55 +277,6 @@
    everywhere and this override has nothing left to override. The one place
    purple would vanish is ON a purple surface, and there the CTA goes mint
    (see --mint in tokens.scss). */
-
-@media (max-width: 700px) {
-	.proposal-dock {
-		// Full-bleed on phones: the 720px column has no margins to respect
-		// down here, and the bar reads as chrome, not as content
-		border-start-start-radius: 0;
-		border-start-end-radius: 0;
-	}
-
-	.proposal-dock--open {
-		border-start-start-radius: var(--radius-md);
-		border-start-end-radius: var(--radius-md);
-	}
-
-	// The nav's rounded top corners were the screen's top edge of chrome.
-	// With the dock parked on them they'd read as two notches under a
-	// square bar — the dock is the top edge now.
-	.shell--docked .delib-nav {
-		border-start-start-radius: 0;
-		border-start-end-radius: 0;
-	}
-}
-
-@media (min-width: 701px) {
-	.proposal-dock {
-		// Desktop keeps the nav inline at the top, so the dock is the only
-		// fixed thing at the bottom
-		inset-block-end: 0;
-
-		&__inner {
-			max-height: 70vh;
-		}
-	}
-
-	.shell--docked .shell__content {
-		padding-block-end: calc(var(--dock-bar-h) + var(--space-lg));
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.proposal-dock__chevron,
-	.proposal-dock__panel {
-		transition: none;
-	}
-
-	.proposal-dock__scrim {
-		animation: none;
-	}
-}
 
 // --- Ownership mode: whose space am I in right now? ---
 // Purple = my workshop, white = a classmate's. The accent is
