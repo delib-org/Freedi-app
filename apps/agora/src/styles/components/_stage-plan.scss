@@ -632,6 +632,25 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+
+		// The title is the door to its own text field — a bare button that reads as a label
+		&--editable {
+			padding: 0;
+			border: 0;
+			background: none;
+			font: inherit;
+			font-size: var(--font-size-sm);
+			text-align: start;
+			cursor: text;
+			text-decoration: underline dotted;
+			text-underline-offset: 3px;
+
+			&:hover,
+			&:focus-visible {
+				color: var(--text-primary);
+				text-decoration-style: solid;
+			}
+		}
 	}
 
 	&__actions {

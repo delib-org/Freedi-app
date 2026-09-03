@@ -53,7 +53,14 @@ export const PLAN_ERROR_KEYS: Record<StagePlanError, string> = {
  */
 export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 	let openItemId: string | null = null;
+	/** The question whose title input should take focus on its next mount */
+	let focusItemId: string | null = null;
 	let addOpen = false;
+
+	const openForTyping = (itemId: string): void => {
+		openItemId = itemId;
+		focusItemId = itemId;
+	};
 
 	return {
 		view(vnode) {
@@ -86,6 +93,11 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 							value: item.title ?? '',
 							maxlength: AGORA_STAGE_PLAN.MAX_TITLE_LENGTH,
 							placeholder: t('startGame.quick_question_ph'),
+							oncreate: (node: m.VnodeDOM) => {
+								if (focusItemId !== item.itemId) return;
+								focusItemId = null;
+								(node.dom as HTMLInputElement).focus();
+							},
 							oninput: (event: InputEvent) =>
 								dispatch({
 									kind: 'patch',
@@ -264,12 +276,20 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 									m('span.plan-editor__index', String(index + 1)),
 									m('span.plan-editor__name', [
 										m('span.plan-editor__kind', t(`stage.${item.stage}`)),
-										item.stage === AgoraStage.question
-											? m(
-													'span.plan-editor__title',
-													untitled ? t('startGame.plan_untitled') : planItemLabel(item),
-												)
-											: null,
+										item.stage !== AgoraStage.question
+											? null
+											: frozen
+												? m('span.plan-editor__title', planItemLabel(item))
+												: m(
+														'button.plan-editor__title.plan-editor__title--editable',
+														{
+															type: 'button',
+															'aria-label': t('startGame.plan_question_title'),
+															'aria-expanded': String(open),
+															onclick: () => openForTyping(item.itemId),
+														},
+														untitled ? t('startGame.plan_untitled') : planItemLabel(item),
+													),
 									]),
 									frozen
 										? m(
@@ -362,9 +382,13 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 													key: stage,
 													type: 'button',
 													onclick: () => {
-														dispatch({ kind: 'add', stage });
+														const before = new Set(items.map((item) => item.itemId));
+														const next = planEditorReduce(items, { kind: 'add', stage }, options);
 														addOpen = false;
-														if (stage === AgoraStage.question) openItemId = null;
+														// A new question opens straight into its title — there is nothing to do with it until it has one
+														const added = next.find((item) => !before.has(item.itemId));
+														if (added && stage === AgoraStage.question) openForTyping(added.itemId);
+														onChange(next);
 													},
 												},
 												t(`stage.${stage}`),
