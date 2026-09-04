@@ -12,7 +12,8 @@ Build: `pdflatex paper && bibtex paper && pdflatex paper && pdflatex paper`
   renders anonymised for double-blind review. Uncomment for the camera-ready.
 - `llm_baseline.tex` — §5.5 (LLM-only baselines), `\input` by paper.tex.
 - `references.bib` — bibliography.
-- `paper.pdf` — current build.
+- `paper.pdf` — current anonymised build (submission form).
+- `paper-with-authors.pdf` — same build with `\iclrfinalcopy` on, showing the author block.
 
 ICLR 2027 deadlines: abstract 18 Sep 2026, paper 25 Sep 2026 (AoE). Main-text limit is a
 strict 9 pages at submission (10 at camera-ready); the current build's main text ends
