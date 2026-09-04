@@ -1,0 +1,23 @@
+\subsection{LLM-only baselines on the live corpus}
+\label{sec:llmonly}
+To test the bare-LLM shortcut on our own instrument, we ran two conditions over the English 100-statement corpus with the same three arrival orders and scorer, and no embeddings, queue, judges or sweeps. \textbf{L1, one-shot batch}: one prompt with all 100 statements returns syntheses and topics (worker and strong model). \textbf{L2, incremental}: statements arrive one at a time; each call sees every current synthesis with all member texts verbatim and answers join/new with a confidence (worker model, 101 calls per run). Table~\ref{tab:llmonly} reports the result, and it is not the one a reader of \S\ref{sec:whynotllm} might expect.
+
+\begin{table}[t]
+\centering\scriptsize
+\caption{Bare-LLM baselines vs the production pipeline on the 100-statement English corpus, identical arrival orders and scorer; mean (range) over seeds $\{42,7,1234\}$. Pipeline row from the certified runs of \S\ref{sec:live}; its wall-clock is dominated by the harness's settle waits and is not comparable.}
+\label{tab:llmonly}
+\resizebox{\linewidth}{!}{\begin{tabular}{lcccccc}
+\toprule
+Condition & Composite & Synth F1 & Pairs clean / false & Topic F1 & Calls; tokens & Cost / run \\
+\midrule
+L1 batch, worker model & 0.933 (0.918--0.949) & 1.000 & 50/50; 0 & 0.832 (0.796--0.873) & 1; 3.8k & \$0.003 \\
+L1 batch, strong model & 0.937 (0.918--0.955) & 1.000 & 50/50; 0 & 0.842 (0.796--0.887) & 1; 3.8k & \$0.028 \\
+L2 incremental, worker & 0.965 (0.937--0.984) & 1.000 & 50/50; 0 & 0.911 (0.844--0.960) & 101; 100k & \$0.029 \\
+Production pipeline & 0.900 (0.884--0.910) & 1.000 & 50/50; 0 & 0.750 (0.711--0.775) & $\sim$2.85/stmt, $O(k)$ tokens & -- \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\emph{The synthesis task is saturated by this corpus.} Every condition, model and seed produced the identical synthesis partition, the 50 ground-truth pairs and nothing else (cross-seed ARI 1.000; all 300 of L2's join/new decisions at confidence $\ge0.86$), exactly as the pipeline does. \emph{The bare model beats the pipeline on theming}, chiefly because it sees the whole set at once: the pipeline's residual is fragmentation (10--17 headings for a true 10), whereas the bare model never produced more than one heading per true theme, and its one systematic loss is a defensible taxonomy disagreement (street trees and community gardens under ``environment'' rather than ``parks''). The strong model bought nothing at 10$\times$ the price.
+
+Three conclusions follow. First, \textbf{the pipeline's justification is operational, not per-decision accuracy}: on a clean corpus that fits in one prompt, judgement alone is exact, which is the ``judgement disposes'' half of our law. What geometry buys is the other half: an online form for the layer that must be order-stable; $O(k)$ rather than $O(n)$ tokens per arrival (L2's per-step prompt grew linearly to 1.6k tokens at $n{=}100$, so its total cost is $\Theta(n^2)$ and its prompts reach the context ceiling and the list-scale regime of Table~\ref{tab:triplets} at $10^3$--$10^4$ statements); robustness where hard pairs exist (\S\ref{sec:live}, \S\ref{sec:replay}); and bounded, cached spend under bursts. Second, \textbf{a benchmark that separates the methods at the synthesis layer remains to be built}: well-formed English paraphrase pairs stress no judge, and the real-data replay, where precision is 74\%, is where judges, gates and sweeps earn their keep. Third, \textbf{theming should be batch, synthesis should be online}: themes only organise the page and are not what participants agreed to, so rebuilding them from the $\le$50 current syntheses in one cheap call is admissible where rebuilding syntheses is not; L2's topic pass over tidy syntheses (F1 0.91) is the design we intend to adopt in place of incremental filing.

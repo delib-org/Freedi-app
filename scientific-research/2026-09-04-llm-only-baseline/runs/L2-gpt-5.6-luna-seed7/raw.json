@@ -1,0 +1,3130 @@
+{
+  "usage": {
+    "calls": 101,
+    "retries": 0,
+    "promptTokens": 91545,
+    "completionTokens": 9320,
+    "reasoningTokens": 3545
+  },
+  "decisions": [
+    {
+      "arrivalIndex": 0,
+      "id": "s010",
+      "groundTruthSynth": "transport/real-time-arrivals",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 1,
+        "reason": "No existing syntheses are available, so the proposal to provide live vehicle tracking in an app is new."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 160,
+        "completion_tokens": 61,
+        "total_tokens": 221,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 10,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 1,
+      "id": "s074",
+      "groundTruthSynth": "culture/neighborhood-libraries",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 1,
+        "reason": "The statement proposes establishing libraries in each district, which is a different specific action from providing live vehicle tracking for transit riders."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 172,
+        "completion_tokens": 69,
+        "total_tokens": 241,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 15,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 2,
+      "id": "s019",
+      "groundTruthSynth": "housing/student-dorms",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes building subsidized student dormitories, which is a distinct action from live transit tracking or establishing local libraries."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 188,
+        "completion_tokens": 77,
+        "total_tokens": 265,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 21,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 3,
+      "id": "s061",
+      "groundTruthSynth": "jobs-and-economy/small-business-loans",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes low-interest financing for small local businesses, which is a distinct action from vehicle tracking, district libraries, and subsidized student dormitories."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 202,
+        "completion_tokens": 86,
+        "total_tokens": 288,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 24,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 4,
+      "id": "s005",
+      "groundTruthSynth": "transport/free-fares-youth",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes free public transportation for students under eighteen, which is a different specific action from vehicle tracking, libraries, student dormitories, or business loans."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 216,
+        "completion_tokens": 98,
+        "total_tokens": 314,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 35,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 5,
+      "id": "s058",
+      "groundTruthSynth": "health/preventive-screening",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes free early-detection health check-up programs, which is a distinct action from all existing syntheses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 235,
+        "completion_tokens": 72,
+        "total_tokens": 307,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 17,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 6,
+      "id": "s008",
+      "groundTruthSynth": "transport/night-service",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes extending transit operating hours on late weekend nights, which is a different specific action from vehicle tracking or fare-free student transit."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 252,
+        "completion_tokens": 97,
+        "total_tokens": 349,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 38,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 7,
+      "id": "s093",
+      "groundTruthSynth": "digital-services/public-wifi",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes providing free public Wi-Fi, which is a distinct action from the existing transit, library, housing, business, healthcare, and student fare proposals."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 268,
+        "completion_tokens": 85,
+        "total_tokens": 353,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 21,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 8,
+      "id": "s063",
+      "groundTruthSynth": "jobs-and-economy/job-retraining",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes funding career retraining programs, which is a distinct action from all existing syntheses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 282,
+        "completion_tokens": 77,
+        "total_tokens": 359,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 25,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 9,
+      "id": "s034",
+      "groundTruthSynth": "public-safety/traffic-calming",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes installing traffic-calming infrastructure near schools, which is a distinct action from all existing syntheses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 302,
+        "completion_tokens": 71,
+        "total_tokens": 373,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 17,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 10,
+      "id": "s035",
+      "groundTruthSynth": "public-safety/community-policing",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes regular neighborhood police patrols, which is a distinct action from all existing syntheses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 318,
+        "completion_tokens": 69,
+        "total_tokens": 387,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 17,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 11,
+      "id": "s079",
+      "groundTruthSynth": "culture/youth-music-programs",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Funding free music lessons for children is a distinct action not covered by any existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 330,
+        "completion_tokens": 64,
+        "total_tokens": 394,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 15,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 12,
+      "id": "s016",
+      "groundTruthSynth": "housing/convert-offices",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Converting vacant commercial buildings into residential housing is a distinct housing action from building subsidized student dormitories near campuses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 343,
+        "completion_tokens": 86,
+        "total_tokens": 429,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 31,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 13,
+      "id": "s085",
+      "groundTruthSynth": "environment-and-waste/ban-single-use-plastic",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes banning single-use plastics, which is a distinct environmental action not represented in any existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 357,
+        "completion_tokens": 72,
+        "total_tokens": 429,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 19,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 14,
+      "id": "s013",
+      "groundTruthSynth": "housing/public-rent-registry",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Creating a public rent registry is a distinct action from building subsidized housing or converting vacant buildings into residences."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 373,
+        "completion_tokens": 86,
+        "total_tokens": 459,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 33,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 15,
+      "id": "s057",
+      "groundTruthSynth": "health/preventive-screening",
+      "verdict": "join",
+      "synthesisIndex": 5,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 5,
+        "confidence": 0.99,
+        "reason": "Both statements propose free health screening or check-up programs for detecting illness at an early stage."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 388,
+        "completion_tokens": 85,
+        "total_tokens": 473,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 35,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 16,
+      "id": "s052",
+      "groundTruthSynth": "health/neighborhood-clinics",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.98,
+        "reason": "Adding local family-health clinics is a different specific action from offering free check-ups or disease-screening campaigns."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 402,
+        "completion_tokens": 93,
+        "total_tokens": 495,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 40,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 17,
+      "id": "s030",
+      "groundTruthSynth": "parks-and-green-space/dog-parks",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 1,
+        "reason": "The statement proposes creating enclosed off-leash dog areas, a specific action not covered by any existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 420,
+        "completion_tokens": 67,
+        "total_tokens": 487,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 16,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 18,
+      "id": "s062",
+      "groundTruthSynth": "jobs-and-economy/small-business-loans",
+      "verdict": "join",
+      "synthesisIndex": 3,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 3,
+        "confidence": 0.98,
+        "reason": "Both statements propose providing affordable credit or loans to small local or neighborhood businesses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 433,
+        "completion_tokens": 84,
+        "total_tokens": 517,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 37,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 19,
+      "id": "s087",
+      "groundTruthSynth": "environment-and-waste/compost-organic-waste",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes separate collection of kitchen scraps for composting, which is a distinct action from banning single-use plastics."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 447,
+        "completion_tokens": 82,
+        "total_tokens": 529,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 27,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 20,
+      "id": "s088",
+      "groundTruthSynth": "environment-and-waste/compost-organic-waste",
+      "verdict": "join",
+      "synthesisIndex": 17,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 17,
+        "confidence": 0.99,
+        "reason": "Both statements propose separately collecting food waste or kitchen scraps for composting."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 465,
+        "completion_tokens": 81,
+        "total_tokens": 546,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 35,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 21,
+      "id": "s076",
+      "groundTruthSynth": "culture/street-festivals",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Organizing frequent public festivals and open-air music events is a different action from funding free music lessons for children."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 478,
+        "completion_tokens": 77,
+        "total_tokens": 555,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 23,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 22,
+      "id": "s001",
+      "groundTruthSynth": "transport/bus-frequency",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes increasing bus frequency during rush hour, which is a different specific action from live tracking, free student fares, or late-night weekend service."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 497,
+        "completion_tokens": 108,
+        "total_tokens": 605,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 46,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 23,
+      "id": "s081",
+      "groundTruthSynth": "environment-and-waste/recycling-pickup",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.98,
+        "reason": "The statement proposes weekly doorstep recycling collection, which is a different specific action from collecting kitchen food scraps for composting."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 511,
+        "completion_tokens": 92,
+        "total_tokens": 603,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 37,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 24,
+      "id": "s089",
+      "groundTruthSynth": "environment-and-waste/air-quality-monitoring",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes installing and publicly reporting air-quality sensors, which is a distinct action from all existing syntheses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 528,
+        "completion_tokens": 74,
+        "total_tokens": 602,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 20,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 25,
+      "id": "s054",
+      "groundTruthSynth": "health/mental-health-services",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes free psychological therapy, a specific mental-health service not covered by any existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 543,
+        "completion_tokens": 67,
+        "total_tokens": 610,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 16,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 26,
+      "id": "s027",
+      "groundTruthSynth": "parks-and-green-space/accessible-playgrounds",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes making playgrounds accessible to children with disabilities, which is a distinct action not covered by any existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 557,
+        "completion_tokens": 79,
+        "total_tokens": 636,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 23,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 27,
+      "id": "s050",
+      "groundTruthSynth": "education/school-meals",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Providing free hot meals to students during the school day is a distinct action not covered by any existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 575,
+        "completion_tokens": 83,
+        "total_tokens": 658,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 30,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 28,
+      "id": "s082",
+      "groundTruthSynth": "environment-and-waste/recycling-pickup",
+      "verdict": "join",
+      "synthesisIndex": 20,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 20,
+        "confidence": 0.99,
+        "reason": "The new statement proposes weekly curbside recycling collection, which is essentially the same specific action as collecting recycling from every doorstep once a week."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 589,
+        "completion_tokens": 95,
+        "total_tokens": 684,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 36,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 29,
+      "id": "s029",
+      "groundTruthSynth": "parks-and-green-space/dog-parks",
+      "verdict": "join",
+      "synthesisIndex": 16,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 16,
+        "confidence": 0.99,
+        "reason": "Both statements propose creating enclosed or fenced off-leash dog areas throughout the city."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 600,
+        "completion_tokens": 86,
+        "total_tokens": 686,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 38,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 30,
+      "id": "s040",
+      "groundTruthSynth": "public-safety/cameras-at-hotspots",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.98,
+        "reason": "Installing surveillance cameras in crime hotspots is a different specific action from assigning neighborhood officers to regular patrols."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 613,
+        "completion_tokens": 84,
+        "total_tokens": 697,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 32,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 31,
+      "id": "s038",
+      "groundTruthSynth": "public-safety/emergency-response-time",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes adding emergency-service stations to reduce response times, which is a distinct action not covered by the existing syntheses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 633,
+        "completion_tokens": 100,
+        "total_tokens": 733,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 43,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 32,
+      "id": "s049",
+      "groundTruthSynth": "education/school-meals",
+      "verdict": "join",
+      "synthesisIndex": 24,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 24,
+        "confidence": 0.99,
+        "reason": "The new statement proposes providing free hot school meals to all pupils, which is essentially the same action as the existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 649,
+        "completion_tokens": 95,
+        "total_tokens": 744,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 39,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 33,
+      "id": "s004",
+      "groundTruthSynth": "transport/protected-bike-lanes",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes creating physically separated cycling lanes, a specific transportation-safety action not covered by any existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 664,
+        "completion_tokens": 68,
+        "total_tokens": 732,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 14,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 34,
+      "id": "s033",
+      "groundTruthSynth": "public-safety/traffic-calming",
+      "verdict": "join",
+      "synthesisIndex": 9,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 9,
+        "confidence": 0.99,
+        "reason": "The statement proposes the same school-area traffic-calming measures—speed bumps and narrowed crossings—as synthesis 9's humps and curb extensions."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 678,
+        "completion_tokens": 109,
+        "total_tokens": 787,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 49,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 35,
+      "id": "s055",
+      "groundTruthSynth": "health/specialist-wait-times",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Reducing waits for specialist appointments is a distinct healthcare access action not covered by the existing syntheses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 689,
+        "completion_tokens": 77,
+        "total_tokens": 766,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 25,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 36,
+      "id": "s031",
+      "groundTruthSynth": "public-safety/street-lighting",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Improving lighting on dark streets and footpaths is a distinct action not covered by any existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 704,
+        "completion_tokens": 72,
+        "total_tokens": 776,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 20,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 37,
+      "id": "s073",
+      "groundTruthSynth": "culture/neighborhood-libraries",
+      "verdict": "join",
+      "synthesisIndex": 1,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 1,
+        "confidence": 0.86,
+        "reason": "Both statements propose establishing public library branches throughout the city's local areas to provide nearby library access."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 718,
+        "completion_tokens": 139,
+        "total_tokens": 857,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 89,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 38,
+      "id": "s064",
+      "groundTruthSynth": "jobs-and-economy/job-retraining",
+      "verdict": "join",
+      "synthesisIndex": 8,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 8,
+        "confidence": 0.99,
+        "reason": "The statement proposes funding retraining or reskilling programs for people changing careers, which is the same specific action as synthesis 8."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 731,
+        "completion_tokens": 92,
+        "total_tokens": 823,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 33,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 39,
+      "id": "s069",
+      "groundTruthSynth": "jobs-and-economy/coworking-spaces",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "No existing synthesis proposes creating subsidized coworking spaces for freelancers, which is a distinct action from business loans, retraining, or housing support."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 742,
+        "completion_tokens": 96,
+        "total_tokens": 838,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 35,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 40,
+      "id": "s059",
+      "groundTruthSynth": "health/elderly-home-care",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes expanding in-home care services for seniors, which is a distinct action from the existing health, housing, and social support proposals."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 760,
+        "completion_tokens": 92,
+        "total_tokens": 852,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 32,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 41,
+      "id": "s083",
+      "groundTruthSynth": "environment-and-waste/solar-on-public-roofs",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Installing solar panels on all public building roofs is a distinct renewable-energy action not proposed in any existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 776,
+        "completion_tokens": 72,
+        "total_tokens": 848,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 19,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 42,
+      "id": "s028",
+      "groundTruthSynth": "parks-and-green-space/accessible-playgrounds",
+      "verdict": "join",
+      "synthesisIndex": 23,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 23,
+        "confidence": 0.99,
+        "reason": "The statement proposes making play areas fully accessible for children with disabilities, which is the same specific action as making every playground accessible."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 796,
+        "completion_tokens": 87,
+        "total_tokens": 883,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 30,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 43,
+      "id": "s009",
+      "groundTruthSynth": "transport/real-time-arrivals",
+      "verdict": "join",
+      "synthesisIndex": 0,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 0,
+        "confidence": 0.99,
+        "reason": "The statement proposes the same specific action as providing riders with a real-time app showing vehicle arrival times."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 813,
+        "completion_tokens": 79,
+        "total_tokens": 892,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 27,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 44,
+      "id": "s078",
+      "groundTruthSynth": "culture/public-art-commissions",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes funding local artists to create public visual artworks, which is distinct from the existing proposals for festivals, music events, or music lessons."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 828,
+        "completion_tokens": 100,
+        "total_tokens": 928,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 39,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 45,
+      "id": "s066",
+      "groundTruthSynth": "jobs-and-economy/cut-permit-bureaucracy",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes streamlining business permits, which is a different action from providing low-interest loans or cheap credit to small businesses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 845,
+        "completion_tokens": 96,
+        "total_tokens": 941,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 39,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 46,
+      "id": "s048",
+      "groundTruthSynth": "education/school-buildings",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes renovating school buildings and instructional spaces, which is a distinct action from the existing school-related proposals."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 861,
+        "completion_tokens": 102,
+        "total_tokens": 963,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 48,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 47,
+      "id": "s099",
+      "groundTruthSynth": "digital-services/single-service-hotline",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes a centralized phone number for city service requests, which is a distinct action not covered by any existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 877,
+        "completion_tokens": 85,
+        "total_tokens": 962,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 29,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 48,
+      "id": "s018",
+      "groundTruthSynth": "housing/renovation-grants",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes subsidizing energy-efficiency upgrades for aging residential flats, which is a distinct action from the existing proposals."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 894,
+        "completion_tokens": 79,
+        "total_tokens": 973,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 23,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 49,
+      "id": "s086",
+      "groundTruthSynth": "environment-and-waste/ban-single-use-plastic",
+      "verdict": "join",
+      "synthesisIndex": 13,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 13,
+        "confidence": 1,
+        "reason": "The new statement proposes banning disposable single-use plastic items at stores and eateries, which is the same specific action as synthesis 13."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 909,
+        "completion_tokens": 50,
+        "total_tokens": 959,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 50,
+      "id": "s036",
+      "groundTruthSynth": "public-safety/community-policing",
+      "verdict": "join",
+      "synthesisIndex": 10,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 10,
+        "confidence": 0.98,
+        "reason": "The statement proposes assigning neighborhood-based officers who know and build relationships with residents, matching regular patrols by local officers familiar with the community."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 922,
+        "completion_tokens": 93,
+        "total_tokens": 1015,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 34,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 51,
+      "id": "s037",
+      "groundTruthSynth": "public-safety/emergency-response-time",
+      "verdict": "join",
+      "synthesisIndex": 26,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 26,
+        "confidence": 0.99,
+        "reason": "The new statement proposes shortening emergency response times by opening additional stations closer to neighborhoods, matching synthesis 26."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 936,
+        "completion_tokens": 92,
+        "total_tokens": 1028,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 39,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 52,
+      "id": "s092",
+      "groundTruthSynth": "digital-services/online-permits",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Enabling every city procedure to be completed online is a distinct digital-government action, not the same as consolidating service requests into one phone number."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 950,
+        "completion_tokens": 97,
+        "total_tokens": 1047,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 36,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 53,
+      "id": "s091",
+      "groundTruthSynth": "digital-services/online-permits",
+      "verdict": "join",
+      "synthesisIndex": 38,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 38,
+        "confidence": 0.99,
+        "reason": "The statement proposes making all municipal procedures and forms available online, which is essentially the same action as enabling every city procedure to be completed over the internet."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 963,
+        "completion_tokens": 92,
+        "total_tokens": 1055,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 30,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 54,
+      "id": "s090",
+      "groundTruthSynth": "environment-and-waste/air-quality-monitoring",
+      "verdict": "join",
+      "synthesisIndex": 21,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 21,
+        "confidence": 0.99,
+        "reason": "The statement proposes installing pollution monitors across the city and publicly reporting their readings, which is essentially the same action as installing citywide air-quality sensors and publishing the data."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 976,
+        "completion_tokens": 98,
+        "total_tokens": 1074,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 33,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 55,
+      "id": "s021",
+      "groundTruthSynth": "parks-and-green-space/neighborhood-parks",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes ensuring nearby green parks, which is a distinct action from the existing proposals about playground accessibility, dog areas, or public events."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 993,
+        "completion_tokens": 96,
+        "total_tokens": 1089,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 36,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 56,
+      "id": "s094",
+      "groundTruthSynth": "digital-services/public-wifi",
+      "verdict": "join",
+      "synthesisIndex": 7,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 7,
+        "confidence": 1,
+        "reason": "The statement proposes the same specific action as synthesis 7: providing free public Wi-Fi in public squares or plazas and community centers."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1010,
+        "completion_tokens": 94,
+        "total_tokens": 1104,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 36,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 57,
+      "id": "s072",
+      "groundTruthSynth": "culture/free-museum-days",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Offering free weekly museum admission is a distinct cultural-access action not essentially the same as any existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1024,
+        "completion_tokens": 93,
+        "total_tokens": 1117,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 41,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 58,
+      "id": "s100",
+      "groundTruthSynth": "digital-services/single-service-hotline",
+      "verdict": "join",
+      "synthesisIndex": 36,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 36,
+        "confidence": 0.99,
+        "reason": "The new statement proposes the same specific action as creating a single phone number for all city service requests."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1040,
+        "completion_tokens": 86,
+        "total_tokens": 1126,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1037,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 34,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 59,
+      "id": "s026",
+      "groundTruthSynth": "parks-and-green-space/community-gardens",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes creating shared community gardens for residents to grow vegetables, which is a distinct action from the existing proposals."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1055,
+        "completion_tokens": 80,
+        "total_tokens": 1135,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1052,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 25,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 60,
+      "id": "s075",
+      "groundTruthSynth": "culture/street-festivals",
+      "verdict": "join",
+      "synthesisIndex": 18,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 18,
+        "confidence": 0.99,
+        "reason": "The statement proposes regularly organizing street festivals and outdoor concerts, which is essentially the same action as frequent public festivals and open-air music events."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1068,
+        "completion_tokens": 94,
+        "total_tokens": 1162,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1065,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 35,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 61,
+      "id": "s011",
+      "groundTruthSynth": "housing/affordable-quota",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes requiring affordable housing units in every new building, which is a distinct action from the existing housing measures."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1081,
+        "completion_tokens": 100,
+        "total_tokens": 1181,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1078,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 45,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 62,
+      "id": "s003",
+      "groundTruthSynth": "transport/protected-bike-lanes",
+      "verdict": "join",
+      "synthesisIndex": 27,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 27,
+        "confidence": 1,
+        "reason": "The statement proposes physically protected bike lanes separated from car traffic, which is the same specific action as synthesis 27."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1097,
+        "completion_tokens": 72,
+        "total_tokens": 1169,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1094,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 17,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 63,
+      "id": "s053",
+      "groundTruthSynth": "health/mental-health-services",
+      "verdict": "join",
+      "synthesisIndex": 22,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 22,
+        "confidence": 0.99,
+        "reason": "The new statement proposes free mental-health counseling, which is essentially the same specific action as providing no-cost psychological therapy services to the public."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1107,
+        "completion_tokens": 90,
+        "total_tokens": 1197,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1104,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 31,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 64,
+      "id": "s060",
+      "groundTruthSynth": "health/elderly-home-care",
+      "verdict": "join",
+      "synthesisIndex": 31,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 31,
+        "confidence": 0.99,
+        "reason": "The statement proposes expanding in-home care for older people so they can remain in their own homes, matching synthesis 31."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1124,
+        "completion_tokens": 95,
+        "total_tokens": 1219,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1121,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 39,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 65,
+      "id": "s042",
+      "groundTruthSynth": "education/smaller-classes",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Capping classroom enrollment to enable more individual attention is a distinct action from the existing proposals about school facilities, meals, or other education services."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1138,
+        "completion_tokens": 95,
+        "total_tokens": 1233,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1135,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 35,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 66,
+      "id": "s071",
+      "groundTruthSynth": "culture/free-museum-days",
+      "verdict": "join",
+      "synthesisIndex": 40,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 40,
+        "confidence": 1,
+        "reason": "The new statement proposes the same specific action of offering free museum admission one day each week."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1154,
+        "completion_tokens": 65,
+        "total_tokens": 1219,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1151,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 15,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 67,
+      "id": "s047",
+      "groundTruthSynth": "education/school-buildings",
+      "verdict": "join",
+      "synthesisIndex": 35,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 35,
+        "confidence": 1,
+        "reason": "The statement proposes the same specific action as modernizing aging school facilities, including classrooms and laboratories."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1168,
+        "completion_tokens": 74,
+        "total_tokens": 1242,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1165,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 23,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 68,
+      "id": "s043",
+      "groundTruthSynth": "education/teacher-pay",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes increasing teacher salaries, which is distinct from the existing proposals about school facilities, class sizes, meals, and other education services."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1179,
+        "completion_tokens": 88,
+        "total_tokens": 1267,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1176,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 28,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 69,
+      "id": "s095",
+      "groundTruthSynth": "digital-services/walk-in-help-desks",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.98,
+        "reason": "The statement proposes in-person help desks to assist residents with online services, which is distinct from moving city procedures and forms online."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1199,
+        "completion_tokens": 98,
+        "total_tokens": 1297,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1196,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 41,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 70,
+      "id": "s065",
+      "groundTruthSynth": "jobs-and-economy/cut-permit-bureaucracy",
+      "verdict": "join",
+      "synthesisIndex": 34,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 34,
+        "confidence": 0.99,
+        "reason": "The statement proposes simplifying business licensing to a single short application, which is essentially the same action as reducing business-permit red tape to one quick application."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1216,
+        "completion_tokens": 98,
+        "total_tokens": 1314,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1213,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 36,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 71,
+      "id": "s006",
+      "groundTruthSynth": "transport/free-fares-youth",
+      "verdict": "join",
+      "synthesisIndex": 4,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 4,
+        "confidence": 0.99,
+        "reason": "The new statement proposes free public transit for school-age children, which is essentially the same action as making public transport free for students under eighteen."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1230,
+        "completion_tokens": 95,
+        "total_tokens": 1325,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1227,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 35,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 72,
+      "id": "s056",
+      "groundTruthSynth": "health/specialist-wait-times",
+      "verdict": "join",
+      "synthesisIndex": 28,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 28,
+        "confidence": 0.99,
+        "reason": "The statement proposes shortening patients' waiting times for specialist appointments, which is essentially the same action as synthesis 28."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1245,
+        "completion_tokens": 80,
+        "total_tokens": 1325,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1242,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 25,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 73,
+      "id": "s041",
+      "groundTruthSynth": "education/smaller-classes",
+      "verdict": "join",
+      "synthesisIndex": 43,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 43,
+        "confidence": 1,
+        "reason": "The new statement proposes reducing class sizes to enable more individual attention, which is the same specific action as capping the number of pupils per classroom."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1257,
+        "completion_tokens": 86,
+        "total_tokens": 1343,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1254,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 27,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 74,
+      "id": "s022",
+      "groundTruthSynth": "parks-and-green-space/neighborhood-parks",
+      "verdict": "join",
+      "synthesisIndex": 39,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 39,
+        "confidence": 0.99,
+        "reason": "Both statements propose ensuring residents have a nearby small green park within a short walking distance of home."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1273,
+        "completion_tokens": 87,
+        "total_tokens": 1360,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1270,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 36,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 75,
+      "id": "s077",
+      "groundTruthSynth": "culture/public-art-commissions",
+      "verdict": "join",
+      "synthesisIndex": 33,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 33,
+        "confidence": 0.99,
+        "reason": "The statement proposes commissioning local artists to create murals and sculptures, which is essentially the same action as paying local artists to create wall paintings and statues around the city."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1286,
+        "completion_tokens": 103,
+        "total_tokens": 1389,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1283,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 39,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 76,
+      "id": "s012",
+      "groundTruthSynth": "housing/affordable-quota",
+      "verdict": "join",
+      "synthesisIndex": 42,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 42,
+        "confidence": 0.99,
+        "reason": "The statement proposes requiring affordable, below-market housing units in every new development, which is the same specific action as synthesis 42."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1301,
+        "completion_tokens": 87,
+        "total_tokens": 1388,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1298,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 29,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 77,
+      "id": "s015",
+      "groundTruthSynth": "housing/convert-offices",
+      "verdict": "join",
+      "synthesisIndex": 12,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 12,
+        "confidence": 0.99,
+        "reason": "Both statements propose converting vacant commercial or office buildings into residential housing."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1310,
+        "completion_tokens": 74,
+        "total_tokens": 1384,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1307,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 29,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 78,
+      "id": "s070",
+      "groundTruthSynth": "jobs-and-economy/coworking-spaces",
+      "verdict": "join",
+      "synthesisIndex": 30,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 30,
+        "confidence": 0.99,
+        "reason": "Both statements propose providing affordable shared coworking offices for freelancers or independent workers."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1321,
+        "completion_tokens": 76,
+        "total_tokens": 1397,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1318,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 29,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 79,
+      "id": "s020",
+      "groundTruthSynth": "housing/student-dorms",
+      "verdict": "join",
+      "synthesisIndex": 2,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 2,
+        "confidence": 0.99,
+        "reason": "The statement proposes low-cost student housing near colleges, which is essentially the same action as building subsidized student dormitories near campuses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1333,
+        "completion_tokens": 94,
+        "total_tokens": 1427,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1330,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 36,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 80,
+      "id": "s080",
+      "groundTruthSynth": "culture/youth-music-programs",
+      "verdict": "join",
+      "synthesisIndex": 11,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 11,
+        "confidence": 0.99,
+        "reason": "The new statement proposes free instrument instruction for children, which is essentially the same action as funding free music lessons for children."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1344,
+        "completion_tokens": 80,
+        "total_tokens": 1424,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1341,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 24,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 81,
+      "id": "s084",
+      "groundTruthSynth": "environment-and-waste/solar-on-public-roofs",
+      "verdict": "join",
+      "synthesisIndex": 32,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 32,
+        "confidence": 0.99,
+        "reason": "The new statement proposes installing photovoltaic systems on municipal buildings, which is the same specific action as putting solar panels on all public-building roofs."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1355,
+        "completion_tokens": 82,
+        "total_tokens": 1437,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1352,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 23,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 82,
+      "id": "s045",
+      "groundTruthSynth": "education/homework-tutoring",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Free after-school homework tutoring for pupils who fall behind is a distinct educational support action not covered by the existing syntheses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1369,
+        "completion_tokens": 95,
+        "total_tokens": 1464,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1366,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 39,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 83,
+      "id": "s025",
+      "groundTruthSynth": "parks-and-green-space/community-gardens",
+      "verdict": "join",
+      "synthesisIndex": 41,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 41,
+        "confidence": 0.99,
+        "reason": "Both statements propose allocating land or plots for shared community vegetable gardens."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1381,
+        "completion_tokens": 76,
+        "total_tokens": 1457,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1378,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 31,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 84,
+      "id": "s032",
+      "groundTruthSynth": "public-safety/street-lighting",
+      "verdict": "join",
+      "synthesisIndex": 29,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 29,
+        "confidence": 0.99,
+        "reason": "The statement proposes improving lighting on poorly lit roads and walkways, which is the same specific action as improving street lighting on dark streets and footpaths."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1394,
+        "completion_tokens": 82,
+        "total_tokens": 1476,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1391,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 20,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 85,
+      "id": "s017",
+      "groundTruthSynth": "housing/renovation-grants",
+      "verdict": "join",
+      "synthesisIndex": 37,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 37,
+        "confidence": 0.99,
+        "reason": "The new statement proposes grants to improve energy efficiency in old apartments, matching the existing synthesis about subsidizing upgrades to aging flats to reduce energy use."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1406,
+        "completion_tokens": 102,
+        "total_tokens": 1508,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1403,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 41,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 86,
+      "id": "s046",
+      "groundTruthSynth": "education/homework-tutoring",
+      "verdict": "join",
+      "synthesisIndex": 46,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 46,
+        "confidence": 0.99,
+        "reason": "The new statement proposes free after-school tutoring for struggling students, which is essentially the same action as synthesis 46."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1421,
+        "completion_tokens": 75,
+        "total_tokens": 1496,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1418,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 20,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 87,
+      "id": "s097",
+      "groundTruthSynth": "digital-services/open-data-portal",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Publishing the city budget and data in an open portal is a distinct transparency action not covered by the existing syntheses."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1435,
+        "completion_tokens": 83,
+        "total_tokens": 1518,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1432,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 28,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 88,
+      "id": "s014",
+      "groundTruthSynth": "housing/public-rent-registry",
+      "verdict": "join",
+      "synthesisIndex": 14,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 14,
+        "confidence": 0.99,
+        "reason": "The new statement proposes a public municipal rent database so renters can compare market rates, which is the same action as creating a public rent registry."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1454,
+        "completion_tokens": 88,
+        "total_tokens": 1542,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1451,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 28,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 89,
+      "id": "s024",
+      "groundTruthSynth": "parks-and-green-space/street-trees",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "The statement proposes planting trees along sidewalks for pedestrian shade, which is a distinct action from the existing park, lighting, and public-space proposals."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1466,
+        "completion_tokens": 101,
+        "total_tokens": 1567,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1463,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 41,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 90,
+      "id": "s067",
+      "groundTruthSynth": "jobs-and-economy/local-hiring",
+      "verdict": "new",
+      "synthesisIndex": null,
+      "model": {
+        "action": "new",
+        "synthesisIndex": null,
+        "confidence": 0.99,
+        "reason": "Requiring city contractors to hire local residents is a distinct employment requirement not covered by any existing synthesis."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1479,
+        "completion_tokens": 83,
+        "total_tokens": 1562,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1476,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 31,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 91,
+      "id": "s098",
+      "groundTruthSynth": "digital-services/open-data-portal",
+      "verdict": "join",
+      "synthesisIndex": 47,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 47,
+        "confidence": 0.99,
+        "reason": "The statement proposes publishing municipal data and spending on a public open-data website, which is essentially the same action as publishing the city budget and data in an open portal."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1496,
+        "completion_tokens": 100,
+        "total_tokens": 1596,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1493,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 35,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 92,
+      "id": "s023",
+      "groundTruthSynth": "parks-and-green-space/street-trees",
+      "verdict": "join",
+      "synthesisIndex": 48,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 48,
+        "confidence": 0.99,
+        "reason": "The statement proposes planting shade trees along streets, which is essentially the same action as lining sidewalks with trees to provide pedestrian shade."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1507,
+        "completion_tokens": 86,
+        "total_tokens": 1593,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1504,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 29,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 93,
+      "id": "s044",
+      "groundTruthSynth": "education/teacher-pay",
+      "verdict": "join",
+      "synthesisIndex": 44,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 44,
+        "confidence": 0.99,
+        "reason": "The new statement proposes raising teacher pay to retain strong educators, which is essentially the same action as synthesis 44."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1522,
+        "completion_tokens": 79,
+        "total_tokens": 1601,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1519,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 24,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 94,
+      "id": "s039",
+      "groundTruthSynth": "public-safety/cameras-at-hotspots",
+      "verdict": "join",
+      "synthesisIndex": 25,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 25,
+        "confidence": 1,
+        "reason": "The new statement proposes installing security cameras at crime hotspots, which is the same specific action as placing surveillance cameras where crime is concentrated."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1532,
+        "completion_tokens": 82,
+        "total_tokens": 1614,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1529,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 26,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 95,
+      "id": "s051",
+      "groundTruthSynth": "health/neighborhood-clinics",
+      "verdict": "join",
+      "synthesisIndex": 15,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 15,
+        "confidence": 0.99,
+        "reason": "The statement proposes opening primary-care clinics in underserved neighborhoods, matching the existing synthesis about adding family-health clinics where access is lacking."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1542,
+        "completion_tokens": 90,
+        "total_tokens": 1632,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1539,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 33,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 96,
+      "id": "s068",
+      "groundTruthSynth": "jobs-and-economy/local-hiring",
+      "verdict": "join",
+      "synthesisIndex": 49,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 49,
+        "confidence": 0.98,
+        "reason": "Both statements require organizations contracted or supplied by the city to employ local residents."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1554,
+        "completion_tokens": 91,
+        "total_tokens": 1645,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1551,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 44,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 97,
+      "id": "s096",
+      "groundTruthSynth": "digital-services/walk-in-help-desks",
+      "verdict": "join",
+      "synthesisIndex": 45,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 45,
+        "confidence": 0.99,
+        "reason": "The statement proposes walk-in help desks providing in-person assistance with the city's online services, matching synthesis 45."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1569,
+        "completion_tokens": 89,
+        "total_tokens": 1658,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1566,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 35,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 98,
+      "id": "s007",
+      "groundTruthSynth": "transport/night-service",
+      "verdict": "join",
+      "synthesisIndex": 6,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 6,
+        "confidence": 0.99,
+        "reason": "The statement proposes the same specific action of providing weekend night transit service for late-night travel."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1583,
+        "completion_tokens": 75,
+        "total_tokens": 1658,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1580,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 25,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "arrivalIndex": 99,
+      "id": "s002",
+      "groundTruthSynth": "transport/bus-frequency",
+      "verdict": "join",
+      "synthesisIndex": 19,
+      "model": {
+        "action": "join",
+        "synthesisIndex": 19,
+        "confidence": 0.99,
+        "reason": "The statement proposes increasing bus frequency during peak times to reduce waiting, which is the same specific action as synthesis 19."
+      },
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1599,
+        "completion_tokens": 76,
+        "total_tokens": 1675,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 1596,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 20,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    }
+  ],
+  "topicPass": {
+    "finishReason": "stop",
+    "usage": {
+      "prompt_tokens": 1570,
+      "completion_tokens": 736,
+      "total_tokens": 2306,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "cache_write_tokens": 1567,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 512,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "content": "{\"topics\":[{\"title\":\"Public transportation and mobility\",\"synthesisIndices\":[0,4,6,19,27]},{\"title\":\"Community, culture and recreation\",\"synthesisIndices\":[1,16,18,23,33,40]},{\"title\":\"Housing and affordability\",\"synthesisIndices\":[2,12,14,37,42]},{\"title\":\"Local economy and employment\",\"synthesisIndices\":[3,8,30,34,49]},{\"title\":\"Health and social care\",\"synthesisIndices\":[5,15,22,28,31]},{\"title\":\"Digital and municipal services\",\"synthesisIndices\":[7,36,38,45,47]},{\"title\":\"Public safety and emergency response\",\"synthesisIndices\":[9,10,25,26,29]},{\"title\":\"Education and schools\",\"synthesisIndices\":[11,24,35,43,44,46]},{\"title\":\"Environment and green infrastructure\",\"synthesisIndices\":[13,17,20,21,32,39,41,48]}]}",
+    "parsed": {
+      "topics": [
+        {
+          "title": "Public transportation and mobility",
+          "synthesisIndices": [
+            0,
+            4,
+            6,
+            19,
+            27
+          ]
+        },
+        {
+          "title": "Community, culture and recreation",
+          "synthesisIndices": [
+            1,
+            16,
+            18,
+            23,
+            33,
+            40
+          ]
+        },
+        {
+          "title": "Housing and affordability",
+          "synthesisIndices": [
+            2,
+            12,
+            14,
+            37,
+            42
+          ]
+        },
+        {
+          "title": "Local economy and employment",
+          "synthesisIndices": [
+            3,
+            8,
+            30,
+            34,
+            49
+          ]
+        },
+        {
+          "title": "Health and social care",
+          "synthesisIndices": [
+            5,
+            15,
+            22,
+            28,
+            31
+          ]
+        },
+        {
+          "title": "Digital and municipal services",
+          "synthesisIndices": [
+            7,
+            36,
+            38,
+            45,
+            47
+          ]
+        },
+        {
+          "title": "Public safety and emergency response",
+          "synthesisIndices": [
+            9,
+            10,
+            25,
+            26,
+            29
+          ]
+        },
+        {
+          "title": "Education and schools",
+          "synthesisIndices": [
+            11,
+            24,
+            35,
+            43,
+            44,
+            46
+          ]
+        },
+        {
+          "title": "Environment and green infrastructure",
+          "synthesisIndices": [
+            13,
+            17,
+            20,
+            21,
+            32,
+            39,
+            41,
+            48
+          ]
+        }
+      ]
+    }
+  }
+}
