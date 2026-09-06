@@ -26,8 +26,7 @@ import { QRShare } from '../../components/QRShare';
 import { LookPicker } from '../../components/LookPicker';
 import { classLooks } from '../../lib/looks';
 import {
-	isCarryStage,
-	isRoundStage,
+	roundSpecOf,
 	AgoraSessionMode,
 	AgoraStage,
 	AgoraThemeChoice,
@@ -265,10 +264,9 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			const inDeliberation = current.stage === AgoraStage.deliberation;
 			const inQuestion = current.stage === AgoraStage.question;
-			const inCarry = isCarryStage(current.stage);
 			const { proposals, answersByQuestion, studentEvalTimes } = getDeliberationState();
 			const answers =
-				inCarry && current.statementId ? (answersByQuestion[current.statementId] ?? []) : [];
+				inQuestion && current.statementId ? (answersByQuestion[current.statementId] ?? []) : [];
 
 			const inVoting = current.stage === AgoraStage.voting;
 			if (inVoting && userId) listenToVoting(sessionId, session.challengeQuestionId, userId);
@@ -517,11 +515,15 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 											topic,
 											questionTitle: current.title,
 											questionExplanation: current.explanation,
+											questionKind: current.kind,
 										})
 									: null,
 
-								inQuestion ? questionPanel(session, current, answers) : null,
-								isRoundStage(current.stage) ? roundPanel(session, current, answers) : null,
+								inQuestion
+									? roundSpecOf(current)
+										? roundPanel(session, current, answers)
+										: questionPanel(session, current, answers)
+									: null,
 
 								// Set while the class still deliberates — by the time the ballot
 								// is drawn up the settings have already been read.

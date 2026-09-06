@@ -1,7 +1,8 @@
 /* The WizCol rounds, end to end.
  *
- * A quick game on the wizcol plan: lobby → intro → story → needs → vision →
- * the square → the vote → results. Four bots write stories, heart each
+ * A quick game on the wizcol plan: lobby → story → needs → vision → the
+ * square → the vote → results — the three rounds are QUESTION items whose
+ * kind sets the evaluation type. Four bots write stories, heart each
  * other's, write needs and visions and weigh them 0…1. Every heart and every
  * rating at or above the half pays the AUTHOR one point, once per reader —
  * a second heart, an un-heart, a redelivered trigger pay nothing more, and
@@ -110,29 +111,32 @@ const { sessionId, bots, teacherToken } = game;
 const [a, b, c, d] = bots;
 let s = await session(sessionId);
 eq('starts in the lobby', s.stage, 'lobby');
-eq('eight stages stored (ended is never stored)', s.stagePlan.length, 8);
-const kinds = s.stagePlan.map((item) => item.stage);
-eq('the plan is the WizCol sequence', kinds.join(' → '), 'lobby → intro → story → myNeeds → vision → deliberation → voting → results');
-const storyItem = s.stagePlan[2];
-const needsItem = s.stagePlan[3];
-const visionItem = s.stagePlan[4];
+eq('seven stages stored (ended is never stored)', s.stagePlan.length, 7);
+const kinds = s.stagePlan.map((item) => (item.stage === 'question' ? `question:${item.kind}` : item.stage));
+eq(
+	'the plan is the WizCol sequence — three question items of a kind',
+	kinds.join(' → '),
+	'lobby → question:story → question:needs → question:vision → deliberation → voting → results',
+);
+const storyItem = s.stagePlan[1];
+const needsItem = s.stagePlan[2];
+const visionItem = s.stagePlan[3];
+eq('round item ids', [storyItem.itemId, needsItem.itemId, visionItem.itemId].join(','), 'round-story,round-needs,round-vision');
 for (const item of [storyItem, needsItem, visionItem]) {
-	eq(`${item.stage} got its Statement`, Boolean(item.statementId), true);
+	eq(`${item.kind} got its Statement`, Boolean(item.statementId), true);
 	const doc = await statement(item.statementId);
-	eq(`${item.stage} Statement kind`, doc.statementType, 'question');
-	eq(`${item.stage} Statement text falls back to the kind`, doc.statement, item.stage);
+	eq(`${item.kind} Statement kind`, doc.statementType, 'question');
+	eq(`${item.kind} Statement text falls back to the kind`, doc.statement, item.kind);
+	eq(`${item.kind} carries no cutoff`, item.selection, undefined);
 }
-eq('no Statement for intro', Boolean(s.stagePlan[1].statementId), false);
 
 // ---------------------------------------------------------------------------
-step('2. The intro has no side effects; the story round opens');
+step('2. The story round opens — a question stage of kind story');
 await advance(sessionId, 1, teacherToken);
 s = await session(sessionId);
-eq('on the intro', s.stage, 'intro');
-eq('intro opened, nothing else written', Object.keys(s.stageState.intro).join(','), 'openedAt');
-await advance(sessionId, 2, teacherToken);
-s = await session(sessionId);
-eq('on the story round', s.stage, 'story');
+eq('on a question stage', s.stage, 'question');
+eq('the story round', s.stagePlan[s.stageIndex].kind, 'story');
+eq('opened, nothing else written', Object.keys(s.stageState['round-story']).join(','), 'openedAt');
 
 const STORIES = [
 	'בכיתה ז׳ כמעט נדרסתי בחצייה ליד בית הספר.',
@@ -174,14 +178,14 @@ eq('a story never enters the square’s economy', storyScore.exists, false);
 
 // ---------------------------------------------------------------------------
 step('3. Moving on closes the story round: every story, ranked by hearts, plus the record');
-await advance(sessionId, 3, teacherToken);
+await advance(sessionId, 2, teacherToken);
 s = await until('story outcome written', async () => {
 	const row = await session(sessionId);
 
-	return row?.stageState?.story?.outcome ? row : null;
+	return row?.stageState?.['round-story']?.outcome ? row : null;
 });
-eq('on the needs round', s.stage, 'myNeeds');
-const storyOutcome = s.stageState.story.outcome;
+eq('on the needs round', s.stagePlan[s.stageIndex].kind, 'needs');
+const storyOutcome = s.stageState['round-story'].outcome;
 eq('every story is carried', storyOutcome.selected.length, 4);
 eq('most-hearted first', storyOutcome.selected[0].statementId, storyIds[0]);
 eq('two hearts second', storyOutcome.selected[1].statementId, storyIds[1]);
@@ -211,14 +215,14 @@ await wait(2500);
 eq('a zero pays nothing', await appreciation(sessionId, c.uid), 0);
 await until('need ratings aggregated', async () => Number((await statement(needIds[0]))?.evaluation?.numberOfEvaluators ?? 0) === 2);
 
-await advance(sessionId, 4, teacherToken);
+await advance(sessionId, 3, teacherToken);
 s = await until('needs outcome written', async () => {
 	const row = await session(sessionId);
 
-	return row?.stageState?.myNeeds?.outcome ? row : null;
+	return row?.stageState?.['round-needs']?.outcome ? row : null;
 });
-eq('on the vision round', s.stage, 'vision');
-const needsOutcome = s.stageState.myNeeds.outcome;
+eq('on the vision round', s.stagePlan[s.stageIndex].kind, 'vision');
+const needsOutcome = s.stageState['round-needs'].outcome;
 eq('every need is carried', needsOutcome.selected.length, 4);
 eq('unrated needs last', needsOutcome.selected[3].statementId, needIds[3]);
 eq('the needs record is a list, one need per line', needsOutcome.summary.includes('\n') || needsOutcome.summary.startsWith('•'), true);
@@ -232,15 +236,15 @@ await rate(s, c, visionItem.statementId, visionIds[1], 0.75);
 await rate(s, b, visionItem.statementId, visionIds[0], 0.5);
 await until('B paid for the vision', async () => (await appreciation(sessionId, b.uid)) === 5);
 
-await advance(sessionId, 5, teacherToken);
+await advance(sessionId, 4, teacherToken);
 s = await until('vision outcome written', async () => {
 	const row = await session(sessionId);
 
-	return row?.stageState?.vision?.outcome ? row : null;
+	return row?.stageState?.['round-vision']?.outcome ? row : null;
 });
 eq('now deliberating', s.stage, 'deliberation');
 eq('deliberation auto-started round 1', s.roundNumber, 1);
-const visionOutcome = s.stageState.vision.outcome;
+const visionOutcome = s.stageState['round-vision'].outcome;
 eq('every vision is carried', visionOutcome.selected.length, 4);
 eq('a merged vision was written', typeof visionOutcome.summary === 'string' && visionOutcome.summary.length > 0, true);
 
@@ -298,7 +302,7 @@ if (viteUp) {
 
 // ---------------------------------------------------------------------------
 step('8. Results: the ledger adds up');
-await advance(sessionId, 7, teacherToken);
+await advance(sessionId, 6, teacherToken);
 s = await until('results computed', async () => {
 	const row = await session(sessionId);
 
@@ -311,7 +315,7 @@ eq('B’s ledger: two hearts, two needs, two visions', await appreciation(sessio
 eq('and is inside the total', aFinal.points.total >= aFinal.points.appreciation, true);
 
 // Legacy presets still stand
-eq('classic still validates', stagePlanPreset('classic').length, 8);
+eq('classic still stands', stagePlanPreset('classic').length, 8);
 eq('quickDecision still validates', stagePlanPreset('quickDecision').length, 5);
 
 console.log(`\n✓ wizcol rounds: all checks passed (session ${sessionId})`);

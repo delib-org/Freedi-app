@@ -6,8 +6,7 @@ import {
 	AgoraSession,
 	AgoraSessionStatus,
 	AgoraStage,
-	isCarryStage,
-	isRoundStage,
+	roundSpecOf,
 	AgoraStagePlan,
 	AgoraStagePlanSchema,
 	AgoraTopicPackage,
@@ -17,7 +16,6 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { buildQuestionStatement } from './questionStage';
-import { buildRoundStatement } from './roundStage';
 import { sanitizeStagePlan } from './stagePlanInput';
 
 interface Request {
@@ -101,7 +99,7 @@ export const agoraUpdateStagePlan = onCall(
 					clean[index] = stored;
 				}
 
-				// New carry items (questions, rounds) get their Statement now; edited
+				// New question items (open or a round) get their Statement now; edited
 				// ones get their text updated. Both are safe inside the transaction:
 				// the ids are deterministic per item and the writes touch only this
 				// session's tree. A round with no title keeps the kind as its text —
@@ -109,19 +107,18 @@ export const agoraUpdateStagePlan = onCall(
 				const existingById = new Map(current.map((item) => [item.itemId, item]));
 				for (let index = frozenUpTo + 1; index < clean.length; index += 1) {
 					const item = clean[index];
-					if (!isCarryStage(item.stage)) continue;
+					if (item.stage !== AgoraStage.question) continue;
 					const previous = existingById.get(item.itemId);
 					if (previous?.statementId) {
 						clean[index] = { ...item, statementId: previous.statementId };
 						transaction.update(db.collection(Collections.statements).doc(previous.statementId), {
-							statement: (item.title ?? '').trim() || (isRoundStage(item.stage) ? item.stage : ''),
+							statement: (item.title ?? '').trim() || (roundSpecOf(item)?.kind ?? ''),
 							description: (item.explanation ?? '').trim(),
 							lastUpdate: Date.now(),
 						});
 						continue;
 					}
-					const build = isRoundStage(item.stage) ? buildRoundStatement : buildQuestionStatement;
-					const statement = build({
+					const statement = buildQuestionStatement({
 						item,
 						sessionId,
 						rootStatementId: session.rootStatementId,

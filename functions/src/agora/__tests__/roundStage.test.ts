@@ -11,7 +11,8 @@ jest.mock('../../config/openai-chat', () => ({
 	WORKER_MODEL: 'test-model',
 }));
 
-import { roundFixture, summariseRound, buildRoundStatement } from '../roundStage';
+import { roundFixture, summariseRound } from '../roundStage';
+import { buildQuestionStatement } from '../questionStage';
 
 const row = (statementId: string, statement: string, mean = 0, raters = 0): AgoraCarriedAnswer => ({
 	statementId,
@@ -24,20 +25,18 @@ const creator = { uid: 't', displayName: 'T', email: null, photoURL: null, isAno
 
 describe('roundFixture — the record without a model', () => {
 	it('lists needs as bullet lines, one per line', () => {
-		expect(
-			roundFixture(AgoraStage.myNeeds, [row('a', 'safe streets'), row('b', 'quiet nights')]),
-		).toBe('• safe streets\n• quiet nights');
+		expect(roundFixture('needs', [row('a', 'safe streets'), row('b', 'quiet nights')])).toBe(
+			'• safe streets\n• quiet nights',
+		);
 	});
 
 	it('joins stories and visions on one line', () => {
-		expect(roundFixture(AgoraStage.story, [row('a', 'once'), row('b', 'twice')])).toBe(
-			'once · twice',
-		);
-		expect(roundFixture(AgoraStage.vision, [row('a', 'we thrive')])).toBe('we thrive');
+		expect(roundFixture('story', [row('a', 'once'), row('b', 'twice')])).toBe('once · twice');
+		expect(roundFixture('vision', [row('a', 'we thrive')])).toBe('we thrive');
 	});
 
 	it('is empty for an empty round', () => {
-		expect(roundFixture(AgoraStage.story, [])).toBe('');
+		expect(roundFixture('story', [])).toBe('');
 	});
 });
 
@@ -47,7 +46,7 @@ describe('summariseRound', () => {
 		delete process.env.OPENAI_API_KEY;
 		try {
 			const summary = await summariseRound(
-				AgoraStage.myNeeds,
+				'needs',
 				'my needs',
 				'How do we wake up?',
 				[row('a', 'sleep', 0.75, 2)],
@@ -60,10 +59,15 @@ describe('summariseRound', () => {
 	});
 });
 
-describe('buildRoundStatement', () => {
+describe('buildQuestionStatement for a round', () => {
 	it('falls back to the kind as the text and keeps the explanation', () => {
-		const built = buildRoundStatement({
-			item: { itemId: 'story', stage: AgoraStage.story, explanation: 'a story, not a position' },
+		const built = buildQuestionStatement({
+			item: {
+				itemId: 'round-story',
+				stage: AgoraStage.question,
+				kind: 'story',
+				explanation: 'a story, not a position',
+			},
 			sessionId: 's1',
 			rootStatementId: 'root',
 			creatorId: 't',
@@ -77,8 +81,13 @@ describe('buildRoundStatement', () => {
 	});
 
 	it('uses the teacher’s title when there is one', () => {
-		const built = buildRoundStatement({
-			item: { itemId: 'vision', stage: AgoraStage.vision, title: 'Our street in 2030' },
+		const built = buildQuestionStatement({
+			item: {
+				itemId: 'round-vision',
+				stage: AgoraStage.question,
+				kind: 'vision',
+				title: 'Our street in 2030',
+			},
 			sessionId: 's1',
 			rootStatementId: 'root',
 			creatorId: 't',

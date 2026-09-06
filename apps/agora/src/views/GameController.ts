@@ -55,7 +55,6 @@ import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
 import { QuestionStage } from './QuestionStage';
 import { RoundStage } from './RoundStage';
-import { IntroStage } from './IntroStage';
 import { Voting } from './Voting';
 import { Results } from './Results';
 import { ReRate } from './ReRate';
@@ -63,8 +62,8 @@ import {
 	AgoraSceneKind,
 	AgoraSessionMode,
 	AgoraStage,
-	isRoundStage,
 	resolveAgoraTheme,
+	roundSpecOf,
 	type AgoraStagePlanItem,
 } from '@freedi/shared-types';
 
@@ -357,8 +356,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					? m(StageTransition, {
 							stage: transitionItem.stage,
 							title:
-								transitionItem.stage === AgoraStage.question || isRoundStage(transitionItem.stage)
-									? transitionItem.title
+								transitionItem.stage === AgoraStage.question
+									? planItemLabel(transitionItem)
 									: undefined,
 							leaving: transitionLeaving,
 						})
@@ -530,25 +529,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					case AgoraStage.question: {
 						if (!myParticipant) return noSeatYet();
 
-						return m(QuestionStage, {
-							session,
-							item,
-							planIndex: viewingIndex,
-							myParticipant,
-							userId,
-							live,
-						});
-					}
-
-					case AgoraStage.intro:
-						return m(IntroStage, { session, userId, live });
-
-					case AgoraStage.story:
-					case AgoraStage.myNeeds:
-					case AgoraStage.vision: {
-						if (!myParticipant) return noSeatYet();
-
-						return m(RoundStage, {
+						return m(roundSpecOf(item) ? RoundStage : QuestionStage, {
 							session,
 							item,
 							planIndex: viewingIndex,

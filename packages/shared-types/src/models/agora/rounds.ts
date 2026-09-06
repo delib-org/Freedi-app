@@ -1,13 +1,13 @@
 /**
- * The WizCol rounds — the beats between the intro and the square.
+ * The WizCol rounds — question stages with a different evaluation type.
  *
- * Each round is the same shape with a different scale: every student writes
- * one text, reads a few classmates' texts (dealt by the square's attention
- * allocator, least-attended first), weighs each on the round's own scale, and
- * the round closes with an AI record that travels into every later stage.
- * The scale is the whole difference between the rounds, so it lives in ONE
- * table both the client and the functions read — a screen that showed hearts
- * for a round the server scored 0…1 would be lying about its own numbers.
+ * A round IS a question item: the same question Statement, the same answer
+ * Statements under it, the same evaluation docs. What changes is the KIND on
+ * the item, and the kind decides everything the screen and the server must
+ * agree on — the default prompt, how many classmates' texts a reader is
+ * dealt, the scale they weigh them on, what pays the author, and what the AI
+ * writes when the round closes. That table lives here, once, so a screen can
+ * never show hearts for a round the server scored 0…1.
  *
  * Every rating is an ordinary evaluation (a −1…+1 number) so the shared
  * pipeline keeps the counts. A like is `1`, an un-like is `0` (never a
@@ -18,17 +18,23 @@
  * challengeQuestionId`, so a 0…1 mean never meets a −1…+1 formula.
  */
 
-import { AgoraStage } from './agoraEnums';
+import { picklist, InferOutput } from 'valibot';
 import { AGORA_CYCLE, AGORA_POINTS } from './agoraConstants';
 import type { AgoraCarriedAnswer } from './stagePlan';
 
-export type AgoraRoundKind = AgoraStage.story | AgoraStage.myNeeds | AgoraStage.vision;
+/**
+ * What a question item asks for. `open` is the plain question stage the
+ * admin writes a title for, rated −1…+1; the three rounds carry their own
+ * prompt and scale. Absent on every item written before rounds existed —
+ * readers MUST treat `undefined` as `open`.
+ */
+export const AgoraQuestionKindSchema = picklist(['open', 'story', 'needs', 'vision']);
 
-export const AGORA_ROUND_KINDS: readonly AgoraRoundKind[] = [
-	AgoraStage.story,
-	AgoraStage.myNeeds,
-	AgoraStage.vision,
-];
+export type AgoraQuestionKind = InferOutput<typeof AgoraQuestionKindSchema>;
+
+export type AgoraRoundKind = Exclude<AgoraQuestionKind, 'open'>;
+
+export const AGORA_ROUND_KINDS: readonly AgoraRoundKind[] = ['story', 'needs', 'vision'];
 
 export const AGORA_ROUND = {
 	/** Stories dealt to each reader — the square's own batch */
@@ -44,14 +50,15 @@ export const AGORA_ROUND = {
 
 export type AgoraUnitRating = (typeof AGORA_ROUND.UNIT_STEPS)[number];
 
-export type AgoraRoundScale = 'like' | 'unit';
+/** How a question item's answers are weighed. `bipolar` is the open question's −1…+1. */
+export type AgoraEvaluationScale = 'bipolar' | 'like' | 'unit';
 
 /** What the AI writes when the round closes */
 export type AgoraRoundSummary = 'stories' | 'needs' | 'merge';
 
 export interface AgoraRoundSpec {
 	kind: AgoraRoundKind;
-	scale: AgoraRoundScale;
+	scale: Exclude<AgoraEvaluationScale, 'bipolar'>;
 	/** Classmates' texts dealt to each reader */
 	sample: number;
 	/** A received rating at or above `minRating` pays the author `points`, once per rater */
@@ -60,15 +67,15 @@ export interface AgoraRoundSpec {
 }
 
 export const AGORA_ROUNDS: Record<AgoraRoundKind, AgoraRoundSpec> = {
-	[AgoraStage.story]: {
-		kind: AgoraStage.story,
+	story: {
+		kind: 'story',
 		scale: 'like',
 		sample: AGORA_ROUND.STORY_SAMPLE,
 		appreciation: { minRating: AGORA_ROUND.LIKE, points: AGORA_POINTS.ROUND_APPRECIATION },
 		summary: 'stories',
 	},
-	[AgoraStage.myNeeds]: {
-		kind: AgoraStage.myNeeds,
+	needs: {
+		kind: 'needs',
 		scale: 'unit',
 		sample: AGORA_ROUND.WIDE_SAMPLE,
 		appreciation: {
@@ -77,8 +84,8 @@ export const AGORA_ROUNDS: Record<AgoraRoundKind, AgoraRoundSpec> = {
 		},
 		summary: 'needs',
 	},
-	[AgoraStage.vision]: {
-		kind: AgoraStage.vision,
+	vision: {
+		kind: 'vision',
 		scale: 'unit',
 		sample: AGORA_ROUND.WIDE_SAMPLE,
 		appreciation: {
@@ -89,13 +96,25 @@ export const AGORA_ROUNDS: Record<AgoraRoundKind, AgoraRoundSpec> = {
 	},
 };
 
-export function isRoundStage(stage: AgoraStage): stage is AgoraRoundKind {
-	return (AGORA_ROUND_KINDS as readonly AgoraStage[]).includes(stage);
+/** The kind of a question item, `open` when it says nothing */
+export function questionKindOf(item: { kind?: AgoraQuestionKind }): AgoraQuestionKind {
+	return item.kind ?? 'open';
 }
 
-/** The stages whose answers hang off their own question Statement and whose record travels forward */
-export function isCarryStage(stage: AgoraStage): boolean {
-	return stage === AgoraStage.question || isRoundStage(stage);
+export function isRoundKind(kind: AgoraQuestionKind): kind is AgoraRoundKind {
+	return kind !== 'open';
+}
+
+/** The round table row for an item, or null for an open question */
+export function roundSpecOf(item: { kind?: AgoraQuestionKind }): AgoraRoundSpec | null {
+	const kind = questionKindOf(item);
+
+	return isRoundKind(kind) ? AGORA_ROUNDS[kind] : null;
+}
+
+/** How this item's answers are weighed */
+export function evaluationScaleOf(item: { kind?: AgoraQuestionKind }): AgoraEvaluationScale {
+	return roundSpecOf(item)?.scale ?? 'bipolar';
 }
 
 /**

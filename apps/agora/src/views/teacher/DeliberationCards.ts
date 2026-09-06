@@ -10,9 +10,9 @@ import {
 	AgoraSession,
 	AgoraStagePlanItem,
 	evaluateVotingTrigger,
-	isRoundStage,
 	resolveQuestionSelection,
 	roundLikes,
+	roundSpecOf,
 	selectCarriedAnswers,
 } from '@freedi/shared-types';
 
@@ -108,8 +108,9 @@ export function roundPanel(
 	item: AgoraStagePlanItem,
 	answers: readonly AgoraProposal[],
 ): m.Children {
-	if (!isRoundStage(item.stage)) return null;
-	const kind = item.stage;
+	const spec = roundSpecOf(item);
+	if (!spec) return null;
+	const kind = spec.kind;
 	const named = session.identity === 'named';
 	const ranked = rankedRoundAnswers(kind, answers, named);
 	const outcome = session.stageState?.[item.itemId]?.outcome;

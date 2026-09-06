@@ -5,11 +5,11 @@ import { Collapsible } from './Collapsible';
 import { CpBands } from './CpBands';
 import { planItemLabel } from './StageNav';
 import {
-	AgoraStage,
-	closedCarryItems,
-	isRoundStage,
+	closedQuestionItems,
 	roundLikes,
+	roundSpecOf,
 	type AgoraCarriedAnswer,
+	type AgoraRoundSpec,
 	type AgoraSession,
 	type AgoraStagePlanItem,
 } from '@freedi/shared-types';
@@ -22,8 +22,8 @@ export interface CarriedContextAttrs {
 }
 
 /** A round's text in the folded "all N" list: hearts for a story, nothing else */
-function roundRow(item: AgoraStagePlanItem, row: AgoraCarriedAnswer): m.Children {
-	const hearts = item.stage === AgoraStage.story ? roundLikes(row) : 0;
+function roundRow(spec: AgoraRoundSpec, row: AgoraCarriedAnswer): m.Children {
+	const hearts = spec.scale === 'like' ? roundLikes(row) : 0;
 
 	return m('li.carried__answer', { key: row.statementId }, [
 		row.statement,
@@ -49,7 +49,7 @@ export function CarriedContext(
 		view(vnode) {
 			const { session, beforeIndex } = vnode.attrs;
 			const stageState = session.stageState ?? {};
-			const items: AgoraStagePlanItem[] = closedCarryItems(session, beforeIndex).filter(
+			const items: AgoraStagePlanItem[] = closedQuestionItems(session, beforeIndex).filter(
 				(item) => stageState[item.itemId]?.outcome !== undefined,
 			);
 			if (items.length === 0) return null;
@@ -84,7 +84,8 @@ export function CarriedContext(
 									const outcome = stageState[item.itemId]?.outcome;
 									if (!outcome) return null;
 
-									if (isRoundStage(item.stage)) {
+									const spec = roundSpecOf(item);
+									if (spec) {
 										const showAll = unfolded.has(item.itemId);
 
 										return m('.carried__item.carried__item--round', { key: item.itemId }, [
@@ -111,7 +112,7 @@ export function CarriedContext(
 																	Collapsible,
 																	m(
 																		'ol.carried__answers',
-																		outcome.selected.map((row) => roundRow(item, row)),
+																		outcome.selected.map((row) => roundRow(spec, row)),
 																	),
 																)
 															: null,

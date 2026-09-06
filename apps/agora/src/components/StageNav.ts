@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
-import { AgoraStage, isRoundStage, type AgoraStagePlanItem } from '@freedi/shared-types';
+import { AgoraStage, questionKindOf, type AgoraStagePlanItem } from '@freedi/shared-types';
 import { Icon, type IconName } from './Icon';
 import { lookDots } from './LookPicker';
 import type { AgoraThemeSeeds } from '@freedi/shared-types';
@@ -37,10 +37,6 @@ const ICONS: Record<AgoraStage, IconName> = {
 	[AgoraStage.valueIdentification]: 'thought',
 	[AgoraStage.positioning]: 'bridge',
 	[AgoraStage.question]: 'talk',
-	[AgoraStage.intro]: 'spark',
-	[AgoraStage.story]: 'edit',
-	[AgoraStage.myNeeds]: 'target',
-	[AgoraStage.vision]: 'trend',
 	[AgoraStage.deliberation]: 'square',
 	[AgoraStage.voting]: 'scales',
 	[AgoraStage.results]: 'flag',
@@ -48,12 +44,16 @@ const ICONS: Record<AgoraStage, IconName> = {
 };
 
 /**
- * What a plan item is called on screen: a question by its title, a round by
- * the admin's title when one was typed, the rest by kind.
+ * What a plan item is called on screen: a question by its title, a round
+ * (a question item of kind story/needs/vision) by the admin's title when one
+ * was typed and by its kind otherwise, the rest by stage.
  */
 export function planItemLabel(item: AgoraStagePlanItem): string {
-	if ((item.stage === AgoraStage.question || isRoundStage(item.stage)) && item.title?.trim()) {
-		return item.title.trim();
+	if (item.stage === AgoraStage.question) {
+		if (item.title?.trim()) return item.title.trim();
+		const kind = questionKindOf(item);
+
+		return kind === 'open' ? t('stage.question') : t(`question.kind_${kind}`);
 	}
 
 	return t(`stage.${item.stage}`);

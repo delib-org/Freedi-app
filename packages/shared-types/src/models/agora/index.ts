@@ -141,7 +141,6 @@ export {
 	isItemOpened,
 	planIndexForStage,
 	closedQuestionItems,
-	closedCarryItems,
 	validateStagePlan,
 	stagePlanPreset,
 	defaultQuestionSelection,
@@ -153,18 +152,22 @@ export {
 } from './stagePlan';
 
 export type {
+	AgoraQuestionKind,
 	AgoraRoundKind,
-	AgoraRoundScale,
+	AgoraEvaluationScale,
 	AgoraRoundSummary,
 	AgoraRoundSpec,
 	AgoraUnitRating,
 } from './rounds';
 export {
+	AgoraQuestionKindSchema,
 	AGORA_ROUND,
 	AGORA_ROUND_KINDS,
 	AGORA_ROUNDS,
-	isRoundStage,
-	isCarryStage,
+	questionKindOf,
+	isRoundKind,
+	roundSpecOf,
+	evaluationScaleOf,
 	isUnitRating,
 	roundLikes,
 	roundAppreciates,

@@ -147,10 +147,10 @@ await position(s1, 15); // A — royalist side
 await position(s2, 85); // B — jacobin side
 
 // The default scenario plan now runs the WizCol rounds between positioning
-// and the square (intro → story → my needs → vision). This script tests the
-// improvement cycle, not the rounds, so the teacher opens each one and moves
-// on — a round with no texts closes empty and carries nothing.
-for (const stage of ['INTRO', 'STORY', 'MY NEEDS', 'VISION']) {
+// and the square — three question items (story, needs, vision). This script
+// tests the improvement cycle, not the rounds, so the teacher opens each one
+// and moves on — a round with no texts closes empty and carries nothing.
+for (const stage of ['STORY', 'NEEDS', 'VISION']) {
 	step(`TEACHER advances → ${stage}`);
 	await advance();
 }
@@ -604,7 +604,10 @@ console.log('S1(A) points after the re-rate:', afterBridge1);
 eq('no tier paid below 70 (weave still the only proposals delta)', afterBridge1.proposals, before1.proposals + 1);
 
 // A's aggregate return signal, measured against a SERVER-stamped baseline.
-// It lives on the My screen — the owner's reading room.
+// It lives on the My screen — the owner's reading room. The revision and the
+// weave credits arrive as two celebrations a beat apart; the second may land
+// after the first was cleared, and a modal card would swallow the tap.
+await clearCelebration(s1, 'S1(A)');
 await s1.locator('.delib-nav__item--mine').click();
 await s1.waitForSelector('.my-lantern__moved', { timeout: 15000 });
 // The class AVERAGE, not the bridging score: bridging is blended and damped

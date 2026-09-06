@@ -1,12 +1,14 @@
 /**
- * The WizCol rounds on the server: their question Statement when a plan is
- * set, and their closing when the room moves on — every text ranked by the
- * round's own scale, and an AI record written for the stages that follow.
+ * The WizCol rounds on the server: the closing of a question item whose
+ * kind is a round — every text ranked by the round's own scale, and an AI
+ * record written for the stages that follow. `closeQuestionStage` sends a
+ * round here; its Statement is built by the same `buildQuestionStatement`
+ * every question item uses.
  *
- * A round's answers are ordinary option Statements under the round's own
- * question Statement, weighed through the shared evaluation pipeline like a
- * question stage's; the scale lives in `AGORA_ROUNDS` (shared-types) so
- * this file and the phones agree on what a heart and a 0…1 step mean.
+ * A round's answers are ordinary option Statements under the item's own
+ * question Statement, weighed through the shared evaluation pipeline like an
+ * open question's; the scale lives in `AGORA_ROUNDS` (shared-types) so this
+ * file and the phones agree on what a heart and a 0…1 step mean.
  *
  * Unlike a question stage, a round carries EVERYTHING — no cutoff, no
  * bands. C_p is meaningless on a 0…1 scale, and the point of a round is
@@ -26,54 +28,14 @@ import {
 	AGORA_ROUNDS,
 	Statement,
 	StatementType,
-	SourceApp,
-	createStatementObject,
 	isAgoraHidden,
-	isRoundStage,
 	rankRoundAnswers,
 	roundLikes,
+	roundSpecOf,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { callLLM, extractJson, WORKER_MODEL } from '../config/openai-chat';
-import { toCarriedAnswer, writeOutcome } from './questionStage';
-
-interface Creator {
-	uid: string;
-	displayName: string;
-	email: string | null;
-	photoURL: string | null;
-	isAnonymous: boolean;
-}
-
-/**
- * The question Statement a round hangs its texts off. A round rarely has a
- * title — the phones render the prompt in the student's own language — so
- * the text falls back to the kind name; nothing student-facing reads it.
- */
-export function buildRoundStatement(params: {
-	item: AgoraStagePlanItem;
-	sessionId: string;
-	rootStatementId: string;
-	creatorId: string;
-	creator: Creator;
-}): Statement | undefined {
-	const built = createStatementObject({
-		statement: (params.item.title ?? '').trim() || params.item.stage,
-		statementType: StatementType.question,
-		parentId: params.rootStatementId,
-		topParentId: params.rootStatementId,
-		parents: [params.rootStatementId],
-		creatorId: params.creatorId,
-		creator: params.creator,
-		sourceApp: SourceApp.AGORA,
-		agoraSessionId: params.sessionId,
-	});
-	if (!built) return undefined;
-
-	const explanation = (params.item.explanation ?? '').trim();
-
-	return explanation ? { ...built, description: explanation } : built;
-}
+import { toCarriedAnswer, writeOutcome } from './carryOutcome';
 
 const SUMMARY_MAX_TOKENS = 600;
 const SUMMARY_TEMPERATURE = 0.3;
@@ -164,8 +126,9 @@ export async function summariseRound(
  * Idempotent: a second close rewrites the same outcome from the same data.
  */
 export async function closeRoundStage(sessionId: string, item: AgoraStagePlanItem): Promise<void> {
-	if (!item.statementId || !isRoundStage(item.stage)) return;
-	const kind = item.stage;
+	const spec = roundSpecOf(item);
+	if (!item.statementId || !spec) return;
+	const { kind } = spec;
 	try {
 		const sessionRef = db.collection(Collections.agoraSessions).doc(sessionId);
 		const [sessionSnap, answersSnap] = await Promise.all([

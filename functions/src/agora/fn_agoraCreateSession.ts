@@ -15,8 +15,6 @@ import {
 	AgoraSessionFlowSchema,
 	AgoraSessionStatus,
 	AgoraStage,
-	isCarryStage,
-	isRoundStage,
 	AgoraStagePlan,
 	AgoraStagePlanItem,
 	AgoraStagePlanSchema,
@@ -37,7 +35,6 @@ import { safeParse } from 'valibot';
 import { logError } from '../utils/errorHandling';
 import { generateUniqueCode } from './joinCodes';
 import { buildQuestionStatement } from './questionStage';
-import { buildRoundStatement } from './roundStage';
 import { sanitizeStagePlan } from './stagePlanInput';
 
 /** A game started by typing the main question — no scenario package behind it */
@@ -368,11 +365,10 @@ export const agoraCreateSession = onCall(
 			const code = await generateUniqueCode();
 			const batch = db.batch();
 
-			// One question Statement per carry item (a question, a round) — the answers' parent
+			// One question Statement per question item (open or a round) — the answers' parent
 			const planWithStatements = cleanPlan?.map((item) => {
-				if (!isCarryStage(item.stage)) return item;
-				const build = isRoundStage(item.stage) ? buildRoundStatement : buildQuestionStatement;
-				const statement = build({
+				if (item.stage !== AgoraStage.question) return item;
+				const statement = buildQuestionStatement({
 					item,
 					sessionId,
 					rootStatementId: rootStatement.statementId,

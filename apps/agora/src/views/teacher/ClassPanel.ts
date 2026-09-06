@@ -53,7 +53,7 @@ export function classProgressCard(
 			m(
 				'span.class-progress__count',
 				{ class: doneCount === entries.length ? 'class-progress__count--all' : undefined },
-				t(progressCountKey(item.stage), { n: doneCount, total: entries.length }),
+				t(progressCountKey(item), { n: doneCount, total: entries.length }),
 			),
 		]),
 		m(
@@ -115,7 +115,7 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 						? m(
 								'span.class-progress__count',
 								{ class: done === participants.length ? 'class-progress__count--all' : undefined },
-								t(progressCountKey(current.stage), { n: done, total: participants.length }),
+								t(progressCountKey(current), { n: done, total: participants.length }),
 							)
 						: null,
 				]),

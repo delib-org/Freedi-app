@@ -16,7 +16,6 @@
  * friends loved cannot pass itself off as the class's position.
  */
 
-import { FieldPath } from 'firebase-admin/firestore';
 import { db } from '../db';
 import {
 	Collections,
@@ -34,7 +33,7 @@ import {
 	resolveQuestionSelection,
 	rankCarriedAnswers,
 	selectCarriedAnswers,
-	statementToSimpleStatement,
+	roundSpecOf,
 	cpOf,
 	groupByCpBand,
 	rankByCp,
@@ -42,6 +41,10 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { callLLM, extractJson, WORKER_MODEL } from '../config/openai-chat';
+import { closeRoundStage } from './roundStage';
+import { toCarriedAnswer, writeOutcome } from './carryOutcome';
+
+export { toCarriedAnswer, writeOutcome } from './carryOutcome';
 
 interface Creator {
 	uid: string;
@@ -51,7 +54,12 @@ interface Creator {
 	isAnonymous: boolean;
 }
 
-/** The question Statement a question item hangs its answers off */
+/**
+ * The question Statement a question item hangs its answers off. A round
+ * rarely has a title — the phones render its prompt in the student's own
+ * language — so its text falls back to the kind; nothing student-facing
+ * reads it.
+ */
 export function buildQuestionStatement(params: {
 	item: AgoraStagePlanItem;
 	sessionId: string;
@@ -60,7 +68,7 @@ export function buildQuestionStatement(params: {
 	creator: Creator;
 }): Statement | undefined {
 	const built = createStatementObject({
-		statement: (params.item.title ?? '').trim(),
+		statement: (params.item.title ?? '').trim() || (roundSpecOf(params.item)?.kind ?? ''),
 		statementType: StatementType.question,
 		parentId: params.rootStatementId,
 		topParentId: params.rootStatementId,
@@ -75,22 +83,6 @@ export function buildQuestionStatement(params: {
 	const explanation = (params.item.explanation ?? '').trim();
 
 	return explanation ? { ...built, description: explanation } : built;
-}
-
-/** An answer row as the closing reads it off the statement doc */
-export function toCarriedAnswer(statement: Statement, named: boolean): AgoraCarriedAnswer {
-	const raters = Number(statement.evaluation?.numberOfEvaluators ?? 0);
-	const mean = raters > 0 ? Number(statement.evaluation?.averageEvaluation ?? 0) : 0;
-	const consensus = Number(statement.consensus ?? Number.NaN);
-
-	return {
-		statementId: statement.statementId,
-		statement: statement.statement,
-		mean: Number.isFinite(mean) ? mean : 0,
-		...(raters > 0 && Number.isFinite(consensus) ? { consensus } : {}),
-		raters,
-		...(named && statement.anonName ? { anonName: statement.anonName } : {}),
-	};
 }
 
 /** The band as the prompt names it — plain words, so the model bands as we do */
@@ -197,40 +189,6 @@ async function summariseAnswers(
 }
 
 /**
- * Stamp a closed carry stage's record: `isChosen` on every answer (the
- * selected ones true), `results` on the question Statement so the main app
- * reads the same choice off the statement tree, and the outcome onto
- * `stageState[itemId]` by field path. One batch, and the same batch for a
- * question and for a round — the two must never stamp differently.
- */
-export async function writeOutcome(params: {
-	sessionId: string;
-	item: AgoraStagePlanItem;
-	answers: readonly Statement[];
-	outcome: AgoraStageOutcome;
-}): Promise<void> {
-	const { sessionId, item, answers, outcome } = params;
-	if (!item.statementId) return;
-	const questionId = item.statementId;
-	const sessionRef = db.collection(Collections.agoraSessions).doc(sessionId);
-	const batch = db.batch();
-	const chosen = new Set(outcome.selected.map((row) => row.statementId));
-	answers.forEach((statement) => {
-		batch.update(db.collection(Collections.statements).doc(statement.statementId), {
-			isChosen: chosen.has(statement.statementId),
-		});
-	});
-	batch.update(db.collection(Collections.statements).doc(questionId), {
-		results: answers
-			.filter((statement) => chosen.has(statement.statementId))
-			.map((statement) => statementToSimpleStatement(statement)),
-		lastUpdate: Date.now(),
-	});
-	batch.update(sessionRef, new FieldPath('stageState', item.itemId, 'outcome'), outcome);
-	await batch.commit();
-}
-
-/**
  * Close a question item: rank its answers, apply the cutoff, write the AI
  * record (overall line + one line per C_p band), and stamp the outcome onto
  * `stageState[itemId]`. Also marks the selected answers `isChosen` and
@@ -244,6 +202,12 @@ export async function closeQuestionStage(
 	item: AgoraStagePlanItem,
 ): Promise<void> {
 	if (!item.statementId) return;
+	// A round is a question item with a different scale — it has its own close
+	if (roundSpecOf(item)) {
+		await closeRoundStage(sessionId, item);
+
+		return;
+	}
 	try {
 		const sessionRef = db.collection(Collections.agoraSessions).doc(sessionId);
 		const [sessionSnap, answersSnap] = await Promise.all([

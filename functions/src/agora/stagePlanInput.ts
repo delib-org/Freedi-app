@@ -4,7 +4,6 @@ import {
 	AgoraStagePlan,
 	AgoraStagePlanItem,
 	AGORA_STAGE_PLAN,
-	isRoundStage,
 	validateStagePlan,
 } from '@freedi/shared-types';
 
@@ -25,6 +24,8 @@ export function sanitizeStagePlan(
 	const clean: AgoraStagePlanItem[] = plan.map((item) => {
 		const next: AgoraStagePlanItem = { itemId: item.itemId.trim(), stage: item.stage };
 		if (item.stage === AgoraStage.question) {
+			// The kind decides the scale; the schema already pinned it to the picklist
+			if (item.kind) next.kind = item.kind;
 			next.title = (item.title ?? '').trim().slice(0, AGORA_STAGE_PLAN.MAX_TITLE_LENGTH);
 			const explanation = (item.explanation ?? '')
 				.trim()
@@ -38,17 +39,6 @@ export function sanitizeStagePlan(
 					cutoffNumber: clamp(item.selection.cutoffNumber, -1, 1),
 				};
 			}
-		}
-		// A round's prompt is optional — the phones carry the default in every
-		// language; a title here overrides it. Never a selection: rounds carry all.
-		if (isRoundStage(item.stage)) {
-			const title = (item.title ?? '').trim().slice(0, AGORA_STAGE_PLAN.MAX_TITLE_LENGTH);
-			if (title) next.title = title;
-			const explanation = (item.explanation ?? '')
-				.trim()
-				.slice(0, AGORA_STAGE_PLAN.MAX_EXPLANATION_LENGTH);
-			if (explanation) next.explanation = explanation;
-			if (item.statementId) next.statementId = item.statementId;
 		}
 		if (item.stage === AgoraStage.deliberation && item.votingTrigger) {
 			next.votingTrigger = {

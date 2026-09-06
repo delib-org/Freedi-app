@@ -21,6 +21,11 @@ function participant(overrides: Partial<AgoraParticipant> = {}): AgoraParticipan
 }
 
 const item = (stage: AgoraStage): AgoraStagePlanItem => ({ itemId: stage, stage });
+const round = (kind: 'story' | 'needs' | 'vision'): AgoraStagePlanItem => ({
+	itemId: `round-${kind}`,
+	stage: AgoraStage.question,
+	kind,
+});
 const facts = {
 	proposalAuthors: new Set(['u']),
 	answerAuthors: new Set<string>(),
@@ -35,20 +40,22 @@ describe('participantProgress — the rounds', () => {
 			ratedByUid: new Map([['u', 2]]),
 			roundSampleCap: 2,
 		};
-		expect(participantProgress(participant(), item(AgoraStage.story), roundFacts)).toEqual({
+		expect(participantProgress(participant(), round('story'), roundFacts)).toEqual({
 			done: true,
 			label: 'check',
 		});
 		expect(
-			participantProgress(participant(), item(AgoraStage.myNeeds), {
+			participantProgress(participant(), round('needs'), {
 				...roundFacts,
 				ratedByUid: new Map([['u', 1]]),
 			}),
 		).toEqual({ done: false, label: { done: 2, total: 3 } });
-		expect(
-			participantProgress(participant({ userId: 'x' }), item(AgoraStage.vision), roundFacts),
-		).toEqual({ done: false, label: { done: 0, total: 3 } });
-		expect(progressCountKey(AgoraStage.story)).toBe('teacher.read_count');
+		expect(participantProgress(participant({ userId: 'x' }), round('vision'), roundFacts)).toEqual({
+			done: false,
+			label: { done: 0, total: 3 },
+		});
+		expect(progressCountKey(round('story'))).toBe('teacher.read_count');
+		expect(progressCountKey(item(AgoraStage.question))).toBe('teacher.answered_count');
 	});
 });
 
@@ -102,8 +109,8 @@ describe('classProgress', () => {
 	});
 
 	it('names the count line per stage', () => {
-		expect(progressCountKey(AgoraStage.voting)).toBe('teacher.voted_count');
-		expect(progressCountKey(AgoraStage.needs)).toBe('teacher.finished_count');
+		expect(progressCountKey(item(AgoraStage.voting))).toBe('teacher.voted_count');
+		expect(progressCountKey(item(AgoraStage.needs))).toBe('teacher.finished_count');
 	});
 
 	it('never reports negative idle time', () => {

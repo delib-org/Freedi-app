@@ -31,39 +31,42 @@ service, expanding agreement, honest disagreement as an achievement.
 Tal's guide *התהליך הדליברטיבי הבסיסי* (WizCol, v2.0) moves a group from
 personal stories to needs, a shared vision, and only then to solutions rated
 on a scale that protects the minority. In Agora that is a **self-paced
-digital sequence** — no tables, no clocks, no spoken turns. The default plan
-for a quick game is now
+digital sequence** — no tables, no clocks, no spoken turns — and it adds NO
+stage kinds: a round is a `question` item with a different evaluation type.
+The default plan for a quick game is now
 
 ```
-lobby → intro → story → myNeeds → vision → deliberation → voting → results
+lobby → question(story) → question(needs) → question(vision) → deliberation → voting → results
 ```
 
-(`stagePlanPreset('wizcol')`), and a scenario game runs its character scenes
-as the prologue (`scenarioWizcol`: lobby, framing, perspectives, needs,
-positioning, then the same tail). `StartGame` seeds both. `classic` and
+(`stagePlanPreset('wizcol')`, item ids `round-story` / `round-needs` /
+`round-vision`), and a scenario game runs its character scenes as the
+prologue (`scenarioWizcol`). `StartGame` seeds both. `classic` and
 `quickDecision` still exist; `AGORA_STAGE_ORDER` is untouched, so plan-less
-and civic sessions run exactly as before.
+and civic sessions run exactly as before. The book's opening (the goal is a
+solution most can live with; listening is the work; what happens at the
+end) lives on the lobby — a student card and the teacher's spoken lines.
 
-- **One shape, three scales.** A round is: write one text → read a few
-  classmates' texts → weigh each on the round's scale → the round closes with
-  an AI record carried into every later stage. The scales live in ONE table,
-  `AGORA_ROUNDS` (shared-types `rounds.ts`): `story` deals 3 and takes a
-  like; `myNeeds` and `vision` deal 6 and take a 0…1 five-step rating.
-  `intro` is three cards (the goal is a solution most can live with,
-  listening is the work, what happens at the end) and stores nothing.
-- **Ordinary Statements, ordinary evaluations.** Each round item gets its
-  own question Statement at plan time (text = `title || kind`; the phones
-  render the prompt from i18n unless the teacher wrote a title). Answers are
-  option Statements under it at `${sessionId}--${uid}--${itemId}`; ratings
-  are evaluations at `${uid}--${answerId}`. A like is `1`, an un-like is `0`
-  — never a delete — so the pipeline's `mean × raters` IS the heart count
-  (`roundLikes`). Unit ratings write their step verbatim. Nothing below the
-  challenge question sees these: camps and C_p are gated on `parentId ===
-  challengeQuestionId`, so a 0…1 mean never meets a −1…+1 formula, and the
-  client never draws `CpBands` for a round.
+- **One item, four kinds.** `item.kind` is `open` (absent — the admin's own
+  question, rated −1…+1, banded C_p record: everything the question stage
+  always did) or `story` / `needs` / `vision`. The kind decides the default
+  prompt, the deal, the scale, what pays the author and what the AI writes,
+  from ONE table both client and functions read: `AGORA_ROUNDS` (shared-types
+  `rounds.ts`, `roundSpecOf(item)`, `evaluationScaleOf(item)`). `story`
+  deals 3 and takes a like; `needs` and `vision` deal 6 and take a 0…1
+  five-step rating. A round may leave `title` blank (`question_needs_title`
+  is for `open` only); the Statement text falls back to the kind.
+- **Ordinary Statements, ordinary evaluations.** Answers are option
+  Statements under the item's question Statement at
+  `${sessionId}--${uid}--${itemId}`; ratings are evaluations at
+  `${uid}--${answerId}`. A like is `1`, an un-like is `0` — never a delete —
+  so the pipeline's `mean × raters` IS the heart count (`roundLikes`). Unit
+  ratings write their step verbatim. Nothing below the challenge question
+  sees these: camps and C_p are gated on `parentId === challengeQuestionId`,
+  and the client never draws `CpBands` for a round.
 - **The reader's deal** is the square's own attention allocator
   (`rankStalls` — least-attended first, per-student tiebreak,
-  `mergeLateArrivals`), frozen per round in sessionStorage
+  `mergeLateArrivals`), frozen per item in sessionStorage
   (`lib/flows/roundFlow.ts`). "Read more" extends it by another sample.
 - **Appreciation pays the author, not the reader.** A like on my story, or a
   rating ≥ 0.5 on my need or my vision, pays me `AGORA_POINTS.ROUND_APPRECIATION`
@@ -72,25 +75,23 @@ and civic sessions run exactly as before.
   re-rating cannot pay twice and a later downgrade never claws back. Round
   ratings do NOT earn the reader's `RATING_CREDIT` — 3 + 6 + 6 would exhaust
   the cap before the square opened. `fn_onAgoraEvaluation` branches on the
-  round item before the square's economy and returns.
-- **Closing a round** (`functions/src/agora/roundStage.ts`, from
-  `advanceSession`'s post-commit hook): every answer travels
-  (`outcome.selected` = all rows by `rankRoundAnswers`), no bands, and the
-  AI record depends on the kind — stories: one warm paragraph on what the
-  class has lived through; needs: a clustered list, one `• need — sentence`
-  per line; vision: ONE merged shared vision. Fixture without a key: the
-  texts joined. `CarriedContext` renders the record (pre-line) plus a folded
-  "all N" list, which is how the needs list and the vision sit beside the
-  deliberation pen and on the results.
-- **Teacher and projector.** The console's class pips read
-  `roundProgress` (one text + the sample); the carry panel shows hearts or
-  means and the record once closed; the projector shows numbered texts,
-  never names. The plan editor offers `wizcol`/`scenarioWizcol` presets, a
-  per-round optional title (placeholder = the default prompt) and
-  explanation, and refuses a second instance of any kind but `question`
-  (`stage_once`).
+  round item before the square's economy and returns; an open question keeps
+  its effort credit.
+- **Closing** goes through `closeQuestionStage` for every question item and
+  dispatches on the kind: open → the banded record as before; a round → every
+  answer travels (`outcome.selected` = all rows by `rankRoundAnswers`), no
+  bands, and the AI record depends on the kind — stories: one warm paragraph
+  on what the class has lived through; needs: a clustered list, one `• need —
+  sentence` per line; vision: ONE merged shared vision. Fixture without a
+  key: the texts joined. `CarriedContext` renders the record (pre-line) plus
+  a folded "all N" list, which is how the needs list and the vision sit beside
+  the deliberation pen and on the results.
+- **Teacher and projector.** The plan editor's question row has a kind
+  select; class pips read `roundProgress` for a round; the carry panel shows
+  hearts or means and the record once closed; the projector shows numbered
+  texts, never names.
 - **Verify:** `npx tsx scripts/e2e-wizcol.mjs`;
-  `npm run fast -- --quick --plan wizcol --stage=story --open`.
+  `npm run fast -- --plan=wizcol --stage=question --open`.
 - **Deploy (hosting first):** shared-types build → functions prebuild →
   `deploy:agora` → `deploy:rules:prod` → `deploy:f:prod -- agoraCreateSession
   agoraUpdateStagePlan agoraAdvanceStage onAgoraEvaluationWritten`.
@@ -569,6 +570,20 @@ clone cannot deploy even after the site exists. Copy `.firebaserc.example`
 (committed, same content minus anything machine-specific) to `.firebaserc`.
 
 ### A hot-reloaded functions emulator stops firing triggers
+
+**Measured 2026-09-06 — it is latency, not death.** Requiring the functions
+bundle takes ~12 s (`time node -e "require('./functions/lib/functions/src/index.js')"`),
+longer than the emulator's default 10 s discovery window, so a fresh
+`emulators:start` may report "User code failed to load" — start it with
+`FUNCTIONS_DISCOVERY_TIMEOUT=90`. And every statement write fans out to a
+dozen `statements/{id}` triggers that the emulator runs one at a time, so
+after a run that wrote many statements an evaluation's event can wait
+40–90 s for its turn (a single timed write on an idle suite: 41 s), while
+every fastlane/e2e deadline is 45–60 s. The data is right when it lands;
+the scripts just stop waiting. Run the heavy suites (`e2e-voting`,
+`e2e-teacher-console`) alone on a drained suite, and read `firebase-debug.log`
+(`Beginning execution` lines) before blaming a trigger. A Firestore emulator
+that "never answers" preflight is the OOM gotcha below — restart that suite.
 
 If Firestore triggers seem not to run — scores never appear, points never move —
 check whether the functions emulator reloaded since the last one fired:

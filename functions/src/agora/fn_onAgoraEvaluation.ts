@@ -34,7 +34,7 @@ import {
 	isAgoraAiUid,
 	tallyAgoraCamps,
 	isAgoraHidden,
-	isRoundStage,
+	roundSpecOf,
 	roundAppreciates,
 	Statement,
 	ModeratedDoc,
@@ -368,16 +368,18 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 			// A WizCol round's text: the appreciated AUTHOR is paid, the reader
 			// is not, and nothing below enters — a 0…1 mean must never meet the
 			// square's −1…+1 formulas.
-			const roundItem = session
+			const questionItem = session
 				? resolveStagePlan(session).find(
-						(item) => isRoundStage(item.stage) && item.statementId === evaluation.parentId,
+						(item) =>
+							item.stage === AgoraStage.question && item.statementId === evaluation.parentId,
 					)
 				: undefined;
-			if (roundItem && isRoundStage(roundItem.stage)) {
+			const roundSpec = questionItem ? roundSpecOf(questionItem) : null;
+			if (roundSpec) {
 				if (after) {
 					await creditRoundAppreciation(
 						sessionId,
-						roundItem.stage,
+						roundSpec.kind,
 						after,
 						event.params.evaluationId,
 					).catch((creditError: unknown) => {

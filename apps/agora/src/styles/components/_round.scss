@@ -4,6 +4,20 @@
 // (see _stage-plan.scss .question) so a student who answered a question
 // already knows where everything is.
 
+.lobby__intro-toggle {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	inline-size: 100%;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: var(--text-primary);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
 .intro {
 	&__ask {
 		text-align: center;

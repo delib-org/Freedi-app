@@ -28,12 +28,11 @@ import {
 	AGORA_LIMITS,
 	AGORA_ROUND,
 	AGORA_ROUNDS,
-	AgoraStage,
-	isRoundStage,
 	isUnitRating,
 	rankRoundAnswers,
 	roundLikes,
 	roundProgress,
+	roundSpecOf,
 	type AgoraCarriedAnswer,
 	type AgoraParticipant,
 	type AgoraRoundKind,
@@ -89,7 +88,8 @@ function removedNotice(): m.Children {
 }
 
 /**
- * One WizCol round: the prompt at the top, my text, then a dealt handful of
+ * One WizCol round — a question item whose kind is `story`, `needs` or
+ * `vision`: the prompt at the top, my text, then a dealt handful of
  * classmates' texts to weigh on the round's own scale — a heart on a story,
  * five steps on a need or a vision. Every text is an ordinary option
  * Statement and every weighing an ordinary evaluation, so the hearts and
@@ -113,9 +113,9 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 	return {
 		view(vnode) {
 			const { session, item, planIndex, myParticipant, userId, live } = vnode.attrs;
-			if (!isRoundStage(item.stage)) return null;
-			const kind: AgoraRoundKind = item.stage;
-			const spec = AGORA_ROUNDS[kind];
+			const spec = roundSpecOf(item);
+			if (!spec) return null;
+			const kind: AgoraRoundKind = spec.kind;
 			listenToDeliberation(session.sessionId, userId);
 
 			const named = session.identity === 'named';
@@ -127,7 +127,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 			);
 			const outcome = session.stageState?.[item.itemId]?.outcome;
 			const closed = !live || outcome !== undefined;
-			const isNeeds = kind === AgoraStage.myNeeds;
+			const isNeeds = kind === 'needs';
 
 			// Pre-fill the pen with what I already wrote, once per text
 			if (mine && draftFor !== `${mine.statementId}:${mine.statement}`) {
@@ -274,7 +274,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 							'span.round__icon',
 							{ 'aria-hidden': 'true' },
 							m(Icon, {
-								name: kind === AgoraStage.story ? 'edit' : isNeeds ? 'target' : 'trend',
+								name: kind === 'story' ? 'edit' : isNeeds ? 'target' : 'trend',
 								size: 28,
 							}),
 						),
@@ -286,7 +286,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 					m(CarriedContext, {
 						session,
 						beforeIndex: planIndex,
-						defaultOpen: kind !== AgoraStage.story,
+						defaultOpen: kind !== 'story',
 					}),
 
 					outcome
@@ -317,14 +317,14 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 								? m('p.round__mine-text', mine ? mine.statement : t('round.no_text_given'))
 								: [
 										isNeeds
-											? m('p.round__lead', { 'aria-hidden': 'true' }, t('round.myNeeds.lead'))
+											? m('p.round__lead', { 'aria-hidden': 'true' }, t('round.needs.lead'))
 											: null,
 										m('textarea.round__textarea', {
 											value: draft,
-											rows: kind === AgoraStage.story ? 5 : 3,
+											rows: kind === 'story' ? 5 : 3,
 											maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
 											placeholder: t(`round.${kind}.placeholder`),
-											'aria-label': isNeeds ? t('round.myNeeds.lead') : t('round.your_text'),
+											'aria-label': isNeeds ? t('round.needs.lead') : t('round.your_text'),
 											disabled: saving,
 											oninput: (event: InputEvent) => {
 												draft = (event.target as HTMLTextAreaElement).value;

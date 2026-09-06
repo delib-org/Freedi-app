@@ -1,8 +1,7 @@
 import {
 	AgoraStage,
-	AGORA_ROUNDS,
-	isRoundStage,
 	roundProgress,
+	roundSpecOf,
 	type AgoraParticipant,
 	type AgoraStagePlanItem,
 } from '@freedi/shared-types';
@@ -20,10 +19,6 @@ export const PROGRESS_STAGES: ReadonlySet<AgoraStage> = new Set<AgoraStage>([
 	AgoraStage.needs,
 	AgoraStage.positioning,
 	AgoraStage.question,
-	AgoraStage.intro,
-	AgoraStage.story,
-	AgoraStage.myNeeds,
-	AgoraStage.vision,
 	AgoraStage.deliberation,
 	AgoraStage.voting,
 ]);
@@ -71,13 +66,10 @@ export function participantProgress(
 		return facts.proposalAuthors.has(participant.userId) ? DONE : NOT_DONE;
 	}
 	if (stage === AgoraStage.question) {
-		return facts.answerAuthors.has(participant.userId) ? DONE : NOT_DONE;
-	}
-	if (isRoundStage(stage)) {
-		const sample = Math.min(
-			AGORA_ROUNDS[stage].sample,
-			facts.roundSampleCap ?? Number.POSITIVE_INFINITY,
-		);
+		const spec = roundSpecOf(item);
+		if (!spec) return facts.answerAuthors.has(participant.userId) ? DONE : NOT_DONE;
+		// A round: the text is in AND the dealt sample is read
+		const sample = Math.min(spec.sample, facts.roundSampleCap ?? Number.POSITIVE_INFINITY);
 		const { done, total } = roundProgress(
 			facts.answerAuthors.has(participant.userId),
 			facts.ratedByUid?.get(participant.userId) ?? 0,
@@ -109,12 +101,14 @@ export function classProgress(
 	return { entries, doneCount: entries.filter((entry) => entry.done).length };
 }
 
-/** Which of the count lines fits the stage */
-export function progressCountKey(stage: AgoraStage): string {
+/** Which of the count lines fits the item */
+export function progressCountKey(item: AgoraStagePlanItem): string {
+	const stage = item.stage;
 	if (stage === AgoraStage.positioning) return 'teacher.positioned_count';
 	if (stage === AgoraStage.voting) return 'teacher.voted_count';
-	if (stage === AgoraStage.question) return 'teacher.answered_count';
-	if (isRoundStage(stage)) return 'teacher.read_count';
+	if (stage === AgoraStage.question) {
+		return roundSpecOf(item) ? 'teacher.read_count' : 'teacher.answered_count';
+	}
 
 	return 'teacher.finished_count';
 }

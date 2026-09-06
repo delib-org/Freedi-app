@@ -30,8 +30,8 @@ import { QRShare } from '../../components/QRShare';
 import { StageTransition, hasStageTransition } from '../../components/StageTransition';
 import { planItemLabel } from '../../components/StageNav';
 import {
-	AGORA_ROUNDS,
 	roundLikes,
+	roundSpecOf,
 	AgoraStage,
 	tallyAgoraCamps,
 	type AgoraSession,
@@ -146,9 +146,49 @@ export function ProjectorScreen(
 				const answers = item.statementId
 					? (getDeliberationState().answersByQuestion[item.statementId] ?? [])
 					: [];
+				const outcome = session.stageState?.[item.itemId]?.outcome;
+				const round = roundSpecOf(item);
+				if (round) {
+					// A WizCol round: numbers, never names — the wall stays anonymous in a named room too
+					const rankedRound = rankedRoundAnswers(round.kind, answers, false);
+					const like = round.scale === 'like';
+
+					return [
+						m(TeacherInstructions, {
+							stage: item.stage,
+							topic,
+							questionTitle: item.title,
+							questionExplanation: item.explanation,
+							questionKind: item.kind,
+							projector: true,
+						}),
+						m('.card.stack', [
+							m('p.projector__count-line', t('projector.texts_count', { n: rankedRound.length })),
+							outcome?.summary ? m('p.round__summary', outcome.summary) : null,
+							rankedRound.length === 0
+								? m('p.home-explanation', t('projector.waiting'))
+								: m(
+										'ol.projector__answers',
+										rankedRound.map((row, index) =>
+											m('li.projector__answer', { key: row.statementId }, [
+												m('span.projector__answer-num', String(index + 1)),
+												m('p.projector__answer-text', [
+													row.statement,
+													row.raters > 0
+														? m(
+																'span.round__figure',
+																like ? ` ♥${roundLikes(row)}` : ` · ${formatUnit(row.mean)}`,
+															)
+														: null,
+												]),
+											]),
+										),
+									),
+						]),
+					];
+				}
 				// Numbers, never names — even in a named room the wall stays anonymous
 				const ranked = rankedAnswers(answers, false);
-				const outcome = session.stageState?.[item.itemId]?.outcome;
 
 				return [
 					m(TeacherInstructions, {
@@ -171,55 +211,6 @@ export function ProjectorScreen(
 										m('li.projector__answer', { key: row.statementId }, [
 											m('span.projector__answer-num', String(index + 1)),
 											m('p.projector__answer-text', row.statement),
-										]),
-									),
-								),
-					]),
-				];
-			}
-
-			case AgoraStage.intro:
-				return m(TeacherInstructions, { stage: item.stage, topic, projector: true });
-
-			case AgoraStage.story:
-			case AgoraStage.myNeeds:
-			case AgoraStage.vision: {
-				const kind = item.stage;
-				const answers = item.statementId
-					? (getDeliberationState().answersByQuestion[item.statementId] ?? [])
-					: [];
-				// Numbers, never names — the wall stays anonymous in a named room too
-				const ranked = rankedRoundAnswers(kind, answers, false);
-				const outcome = session.stageState?.[item.itemId]?.outcome;
-				const like = AGORA_ROUNDS[kind].scale === 'like';
-
-				return [
-					m(TeacherInstructions, {
-						stage: item.stage,
-						topic,
-						questionTitle: item.title,
-						questionExplanation: item.explanation,
-						projector: true,
-					}),
-					m('.card.stack', [
-						m('p.projector__count-line', t('projector.texts_count', { n: ranked.length })),
-						outcome?.summary ? m('p.round__summary', outcome.summary) : null,
-						ranked.length === 0
-							? m('p.home-explanation', t('projector.waiting'))
-							: m(
-									'ol.projector__answers',
-									ranked.map((row, index) =>
-										m('li.projector__answer', { key: row.statementId }, [
-											m('span.projector__answer-num', String(index + 1)),
-											m('p.projector__answer-text', [
-												row.statement,
-												row.raters > 0
-													? m(
-															'span.round__figure',
-															like ? ` ♥${roundLikes(row)}` : ` · ${formatUnit(row.mean)}`,
-														)
-													: null,
-											]),
 										]),
 									),
 								),

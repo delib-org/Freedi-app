@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { AgoraStage, Evaluation } from '@freedi/shared-types';
+import { Evaluation } from '@freedi/shared-types';
 
 /**
  * A tiny in-memory Firestore: enough of `collection().doc().get()` and
@@ -105,7 +105,7 @@ describe('creditRoundAppreciation', () => {
 
 	it('pays the author +1 for a like, once, and files the evaluation in the ledger', async () => {
 		const like = evaluation(1);
-		await creditRoundAppreciation(SESSION, AgoraStage.story, like, like.evaluationId);
+		await creditRoundAppreciation(SESSION, 'story', like, like.evaluationId);
 
 		expect(authorPoints()).toMatchObject({ appreciation: 1, total: 5 });
 		const ledger = store.get(`agoraParticipants/${SESSION}--${AUTHOR}`)
@@ -113,15 +113,15 @@ describe('creditRoundAppreciation', () => {
 		expect(ledger[like.evaluationId]).toBe(true);
 
 		// A redelivered trigger, or a re-like after an un-like: the key is there
-		await creditRoundAppreciation(SESSION, AgoraStage.story, like, like.evaluationId);
+		await creditRoundAppreciation(SESSION, 'story', like, like.evaluationId);
 		expect(authorPoints()).toMatchObject({ appreciation: 1, total: 5 });
 	});
 
 	it('pays nothing below the floor: an un-like, a 0.25 on a need', async () => {
 		const unlike = evaluation(0);
-		await creditRoundAppreciation(SESSION, AgoraStage.story, unlike, unlike.evaluationId);
+		await creditRoundAppreciation(SESSION, 'story', unlike, unlike.evaluationId);
 		const low = evaluation(0.25);
-		await creditRoundAppreciation(SESSION, AgoraStage.myNeeds, low, low.evaluationId);
+		await creditRoundAppreciation(SESSION, 'needs', low, low.evaluationId);
 
 		expect(authorPoints()).toEqual({ valueAccuracy: 0, proposals: 0, helping: 0, total: 4 });
 		expect(updates).toHaveLength(0);
@@ -129,17 +129,17 @@ describe('creditRoundAppreciation', () => {
 
 	it('pays at the unit floor and once more never', async () => {
 		const half = evaluation(0.5);
-		await creditRoundAppreciation(SESSION, AgoraStage.vision, half, half.evaluationId);
+		await creditRoundAppreciation(SESSION, 'vision', half, half.evaluationId);
 		expect(authorPoints()).toMatchObject({ appreciation: 1, total: 5 });
 
 		const raised = evaluation(1);
-		await creditRoundAppreciation(SESSION, AgoraStage.vision, raised, raised.evaluationId);
+		await creditRoundAppreciation(SESSION, 'vision', raised, raised.evaluationId);
 		expect(authorPoints()).toMatchObject({ appreciation: 1, total: 5 });
 	});
 
 	it('never pays an author for liking their own text, nor a hidden text', async () => {
 		const self = evaluation(1, AUTHOR);
-		await creditRoundAppreciation(SESSION, AgoraStage.story, self, self.evaluationId);
+		await creditRoundAppreciation(SESSION, 'story', self, self.evaluationId);
 		expect(authorPoints().total).toBe(4);
 
 		store.set(`statements/${ANSWER}`, {
@@ -150,7 +150,7 @@ describe('creditRoundAppreciation', () => {
 			agoraModeration: { hidden: true },
 		});
 		const like = evaluation(1);
-		await creditRoundAppreciation(SESSION, AgoraStage.story, like, like.evaluationId);
+		await creditRoundAppreciation(SESSION, 'story', like, like.evaluationId);
 		expect(authorPoints().total).toBe(4);
 	});
 });
