@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/react';
 import {
 	isBlockedServiceWorkerCrash,
 	isFirestoreInternalCrash,
+	isLocalRuntime,
 	isTransientAuthNetworkError,
 } from '@freedi/shared-utils';
 import { useLocation, useNavigationType } from 'react-router';
@@ -21,8 +22,13 @@ export function initSentry() {
 	// /statement/:id and /login showed up filed under "wizcol-sign".
 	const sentryDsn = import.meta.env.VITE_SENTRY_DSN_MAIN || import.meta.env.VITE_SENTRY_DSN;
 
-	// Only initialize in production and if we have a valid DSN
+	// Only initialize in production and if we have a valid DSN — and never from
+	// a developer's machine, however the bundle was built. `vite preview`, or a
+	// `.env` copied from prod, both leave PROD true while the page is served
+	// from localhost.
+	const override = import.meta.env.VITE_SENTRY_ENABLE_IN_LOCAL === 'true';
 	if (
+		!isLocalRuntime(override) &&
 		import.meta.env.PROD &&
 		sentryDsn &&
 		sentryDsn !== 'YOUR_SENTRY_DSN_HERE' &&
