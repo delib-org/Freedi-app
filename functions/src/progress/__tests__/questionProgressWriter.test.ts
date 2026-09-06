@@ -71,6 +71,33 @@ describe('recordParticipation', () => {
 		expect(second?.lastActivity).toBe(2000);
 	});
 
+	// The whole class writes the same questionProgress doc. The counters used to
+	// ride inside a transaction that spanned it, which is what timed out under a
+	// simultaneous submit; they now go through a batched increment instead, and
+	// the per-user uniqueness still has to hold across users.
+	it('counts each of many users once, and every one of their events', async () => {
+		const raters = ['user-a', 'user-b', 'user-c'];
+		for (const userId of raters) {
+			// Two events each: the first is their first, the second must not
+			// move the unique counter.
+			for (const now of [10, 20]) {
+				await recordParticipation({
+					statementId: Q,
+					topParentId: TOP,
+					userId,
+					kind: 'evaluated',
+					eventCounter: 'evaluations',
+					now,
+				});
+			}
+		}
+
+		expect(fake.read(Collections.questionProgress, Q)).toMatchObject({
+			evaluated: raters.length,
+			evaluations: raters.length * 2,
+		});
+	});
+
 	it('bumps lastActivity on the top parent without creating counters there', async () => {
 		await recordParticipation({
 			statementId: Q,

@@ -3,9 +3,11 @@
  * (`questionProgress/{statementId}`) and its per-user markers
  * (`questionParticipation/{statementId}--{userId}`).
  *
- * All writes go through Firestore transactions so the UNIQUE counters
- * (`entered` / `suggested` / `evaluated`) flip at most once per user, while
- * the raw event counters (`options` / `evaluations`) count every event.
+ * The UNIQUE counters (`entered` / `suggested` / `evaluated`) flip at most once
+ * per user; the raw event counters (`options` / `evaluations`) count every
+ * event. The transaction that guarantees "at most once" is scoped to the user's
+ * own marker document — see `recordParticipation` for why the shared progress
+ * documents must stay out of it.
  */
 
 import { FieldValue } from 'firebase-admin/firestore';
@@ -123,6 +125,32 @@ function baseProgressFields(statementId: string, ctx: ProgressContext, now: numb
  *
  * `FieldValue.increment(0)` on the untouched counters guarantees a freshly
  * created progress doc is schema-complete (all counters present as 0).
+ *
+ * ## Why the transaction covers only the marker
+ *
+ * This used to be one transaction spanning three documents: the user's marker,
+ * the question's progress doc, and the top parent's. The last two are shared —
+ * EVERY participant's every event writes them — so every rating and every
+ * suggestion in a question queued behind the same two documents, and a whole
+ * group of questions queued behind one top parent. A class submitting together
+ * produced `10 ABORTED: Transaction lock timeout`, and the catch below turned
+ * that into a silently dropped count.
+ *
+ * Only one thing here actually needs read-then-write atomicity: deciding
+ * whether this is the user's FIRST event of this kind. That question is about
+ * one document, private to one user, which nobody else contends for — so the
+ * transaction is scoped to it and the "at most once per user" guarantee is
+ * unchanged, including for two events from the same user racing each other.
+ *
+ * The shared counters then move to a plain batched `increment`, which is atomic
+ * server-side and takes no transaction lock.
+ *
+ * The trade: a crash in the window between the two commits leaves the marker
+ * flipped and the unique counter one short, where before both would have rolled
+ * back together. That is a strictly rarer loss than the one being fixed — the
+ * lock timeout dropped the same count on every contended write — and it errs
+ * toward under-counting, which cannot push a unique counter above the event
+ * counter that bounds it.
  */
 export async function recordParticipation(input: RecordParticipationInput): Promise<void> {
 	const { statementId, userId, kind, eventCounter } = input;
@@ -136,38 +164,44 @@ export async function recordParticipation(input: RecordParticipationInput): Prom
 			.collection(Collections.questionParticipation)
 			.doc(getQuestionParticipationId(statementId, userId));
 
-		await db.runTransaction(async (t) => {
+		// Uncontended: one document per (question, user).
+		const firstTime = await db.runTransaction(async (t) => {
 			const markerSnap = await t.get(participationRef);
 			const marker = markerSnap.exists
 				? (markerSnap.data() as Partial<QuestionParticipation>)
 				: undefined;
-			const firstTime = !marker?.[kind];
+			if (marker?.[kind]) return false;
 
-			const counters: Record<ParticipationKind | ProgressEventCounter, FieldValue> = {
-				entered: FieldValue.increment(0),
-				suggested: FieldValue.increment(0),
-				evaluated: FieldValue.increment(0),
-				options: FieldValue.increment(0),
-				evaluations: FieldValue.increment(0),
-			};
-			if (firstTime) counters[kind] = FieldValue.increment(1);
-			if (eventCounter) counters[eventCounter] = FieldValue.increment(1);
+			const markerDoc: QuestionParticipation = { statementId, userId, [kind]: true };
+			t.set(participationRef, markerDoc, { merge: true });
 
-			if (firstTime) {
-				const markerDoc: QuestionParticipation = { statementId, userId, [kind]: true };
-				t.set(participationRef, markerDoc, { merge: true });
-			}
-			t.set(
-				progressRef,
-				{ ...baseProgressFields(statementId, ctx, now), ...counters },
+			return true;
+		});
+
+		const counters: Record<ParticipationKind | ProgressEventCounter, FieldValue> = {
+			entered: FieldValue.increment(0),
+			suggested: FieldValue.increment(0),
+			evaluated: FieldValue.increment(0),
+			options: FieldValue.increment(0),
+			evaluations: FieldValue.increment(0),
+		};
+		if (firstTime) counters[kind] = FieldValue.increment(1);
+		if (eventCounter) counters[eventCounter] = FieldValue.increment(1);
+
+		const batch = db.batch();
+		batch.set(
+			progressRef,
+			{ ...baseProgressFields(statementId, ctx, now), ...counters },
+			{ merge: true },
+		);
+		if (isRealTopParent(statementId, ctx.topParentId)) {
+			batch.set(
+				db.collection(Collections.questionProgress).doc(ctx.topParentId),
+				baseProgressFields(ctx.topParentId, ctx, now),
 				{ merge: true },
 			);
-
-			if (isRealTopParent(statementId, ctx.topParentId)) {
-				const topRef = db.collection(Collections.questionProgress).doc(ctx.topParentId);
-				t.set(topRef, baseProgressFields(ctx.topParentId, ctx, now), { merge: true });
-			}
-		});
+		}
+		await batch.commit();
 	} catch (error) {
 		logError(error, {
 			operation: 'progress.recordParticipation',
