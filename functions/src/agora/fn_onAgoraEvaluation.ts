@@ -336,10 +336,14 @@ async function recountPerCamp(
 			.where('statementId', '==', statementId),
 	);
 
-	const verdicts = snapshot.docs.map((docSnap) => {
+	// Same shape-assertion caveat as the trigger's guard: a stored row with no
+	// evaluatorId would land in the student histogram as an anonymous rater and
+	// skew every camp reading off it.
+	const verdicts = snapshot.docs.flatMap((docSnap) => {
 		const evaluation = docSnap.data() as Evaluation;
+		if (!evaluation.evaluatorId) return [];
 
-		return { evaluatorId: evaluation.evaluatorId, value: evaluation.evaluation };
+		return [{ evaluatorId: evaluation.evaluatorId, value: evaluation.evaluation }];
 	});
 
 	return tallyEvaluations(verdicts, campOf);
@@ -358,6 +362,12 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 		const before = event.data?.before.exists ? (event.data.before.data() as Evaluation) : null;
 		const evaluation = after ?? before;
 		if (!evaluation?.agoraSessionId) return;
+		// `doc.data() as Evaluation` asserts a shape rather than checking one, so
+		// the two ids below are typed `string` no matter what is actually stored.
+		// Everything downstream feeds them straight to `.doc()` or reads
+		// `.startsWith` off them, so a document missing either — a probe, a
+		// partial write, a hand-edited row — threw instead of being ignored.
+		if (!evaluation.evaluatorId || !evaluation.statementId) return;
 
 		const { agoraSessionId: sessionId, statementId, evaluatorId } = evaluation;
 
