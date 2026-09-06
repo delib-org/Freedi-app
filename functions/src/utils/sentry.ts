@@ -6,8 +6,15 @@
  * reported nothing: errors went to Cloud Logging as structured JSON and stayed
  * there, so a broken function was only ever found by someone going to look.
  *
- * Initialization is a no-op without a DSN, which keeps the emulator, the test
- * suite and any environment that has not been given one completely unaffected.
+ * Initialization is a no-op without a DSN, which keeps the test suite and any
+ * environment that has not been given one completely unaffected.
+ *
+ * It is also a no-op inside the emulator, DSN or not. functions/.env carries a
+ * real DSN so that `npm run deploy:f:*` has one, and the emulator loads that
+ * same file — so a wedged local Firestore or a half-finished branch filed
+ * `environment: development` issues into the production project and spent its
+ * quota. Set SENTRY_ENABLE_IN_EMULATOR=true to report from a local run on
+ * purpose, e.g. when testing this wiring itself.
  */
 
 import * as Sentry from '@sentry/node';
@@ -16,6 +23,11 @@ let initialized = false;
 
 /** True when a DSN is present and usable. */
 function resolveDsn(): string | null {
+	const inEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
+	if (inEmulator && process.env.SENTRY_ENABLE_IN_EMULATOR !== 'true') {
+		return null;
+	}
+
 	const dsn = process.env.SENTRY_DSN_FUNCTIONS || process.env.SENTRY_DSN;
 
 	if (!dsn || !dsn.startsWith('https://') || dsn === 'YOUR_SENTRY_DSN_HERE') {

@@ -1,9 +1,10 @@
 import { initFunctionsSentry, isSentryEnabled, flushSentry } from '../sentry';
 
 /**
- * Sentry must stay completely inert without a DSN. Cloud Functions tests and
- * the emulator run with no SENTRY_DSN, and an initialized @sentry/node keeps
- * background timers alive — which would hang Jest's teardown.
+ * Sentry must stay completely inert without a DSN, and inert in the emulator
+ * even with one — functions/.env carries a real DSN for deploys and the
+ * emulator loads the same file. An initialized @sentry/node also keeps
+ * background timers alive, which would hang Jest's teardown.
  */
 describe('functions Sentry', () => {
 	const saved = { ...process.env };
@@ -28,6 +29,16 @@ describe('functions Sentry', () => {
 
 		process.env.SENTRY_DSN = 'not-a-url';
 		initFunctionsSentry();
+		expect(isSentryEnabled()).toBe(false);
+	});
+
+	it('does not initialize inside the emulator even with a real DSN', () => {
+		process.env.FUNCTIONS_EMULATOR = 'true';
+		process.env.SENTRY_DSN = 'https://abc123@o1.ingest.sentry.io/2';
+		delete process.env.SENTRY_ENABLE_IN_EMULATOR;
+
+		initFunctionsSentry();
+
 		expect(isSentryEnabled()).toBe(false);
 	});
 
