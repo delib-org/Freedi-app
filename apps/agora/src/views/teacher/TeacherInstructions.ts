@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { t } from '../../lib/i18n';
-import { AgoraSceneKind, AgoraStage } from '@freedi/shared-types';
+import { AgoraSceneKind, AgoraStage, isRoundStage } from '@freedi/shared-types';
 import type { AgoraScene, AgoraTopicPackage } from '@freedi/shared-types';
 
 export interface TeacherInstructionsAttrs {
@@ -84,6 +84,25 @@ function stageBody(
 			m('h4.teacher-instructions__scene-title', question?.title ?? t('stage.question')),
 			question?.explanation ? m('p.teacher-instructions__text', question.explanation) : null,
 			projector ? null : m('p.teacher-instructions__text', t('question.teacher_hint')),
+		]);
+	}
+
+	if (stage === AgoraStage.intro) {
+		return m('.teacher-instructions__scenes', [
+			promptCard('intro.goal_title', 'intro.goal_text'),
+			promptCard('intro.listen_title', 'intro.listen_text'),
+			promptCard('intro.end_title', 'intro.end_text'),
+		]);
+	}
+
+	if (isRoundStage(stage)) {
+		return m('.teacher-instructions__scene', [
+			m(
+				'h4.teacher-instructions__scene-title',
+				question?.title?.trim() || t(`round.${stage}.prompt`),
+			),
+			m('p.teacher-instructions__text', question?.explanation?.trim() || t(`round.${stage}.hint`)),
+			projector ? null : m('p.teacher-instructions__text', t(`round.${stage}.teacher_line`)),
 		]);
 	}
 

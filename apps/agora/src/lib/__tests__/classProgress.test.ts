@@ -27,6 +27,31 @@ const facts = {
 	voterUids: new Set(['v']),
 };
 
+describe('participantProgress — the rounds', () => {
+	it('is one text plus the dealt sample, capped by how many classmates wrote', () => {
+		const roundFacts = {
+			...facts,
+			answerAuthors: new Set(['u']),
+			ratedByUid: new Map([['u', 2]]),
+			roundSampleCap: 2,
+		};
+		expect(participantProgress(participant(), item(AgoraStage.story), roundFacts)).toEqual({
+			done: true,
+			label: 'check',
+		});
+		expect(
+			participantProgress(participant(), item(AgoraStage.myNeeds), {
+				...roundFacts,
+				ratedByUid: new Map([['u', 1]]),
+			}),
+		).toEqual({ done: false, label: { done: 2, total: 3 } });
+		expect(
+			participantProgress(participant({ userId: 'x' }), item(AgoraStage.vision), roundFacts),
+		).toEqual({ done: false, label: { done: 0, total: 3 } });
+		expect(progressCountKey(AgoraStage.story)).toBe('teacher.read_count');
+	});
+});
+
 describe('participantProgress', () => {
 	it('reads each stage from its own fact', () => {
 		expect(participantProgress(participant(), item(AgoraStage.deliberation), facts).done).toBe(

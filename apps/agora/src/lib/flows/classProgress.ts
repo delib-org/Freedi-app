@@ -1,4 +1,11 @@
-import { AgoraStage, type AgoraParticipant, type AgoraStagePlanItem } from '@freedi/shared-types';
+import {
+	AgoraStage,
+	AGORA_ROUNDS,
+	isRoundStage,
+	roundProgress,
+	type AgoraParticipant,
+	type AgoraStagePlanItem,
+} from '@freedi/shared-types';
 
 /**
  * Who has finished what — the pure arithmetic behind the teacher's class
@@ -13,6 +20,10 @@ export const PROGRESS_STAGES: ReadonlySet<AgoraStage> = new Set<AgoraStage>([
 	AgoraStage.needs,
 	AgoraStage.positioning,
 	AgoraStage.question,
+	AgoraStage.intro,
+	AgoraStage.story,
+	AgoraStage.myNeeds,
+	AgoraStage.vision,
 	AgoraStage.deliberation,
 	AgoraStage.voting,
 ]);
@@ -32,6 +43,14 @@ export interface ProgressFacts {
 	answerAuthors: ReadonlySet<string>;
 	/** uids that cast a ballot */
 	voterUids: ReadonlySet<string>;
+	/**
+	 * How many of the current item's texts each student weighed — a round
+	 * is done when the text is in and the dealt sample is read. Absent on
+	 * the stages that do not read it.
+	 */
+	ratedByUid?: ReadonlyMap<string, number>;
+	/** How many classmates' texts the current round deals; absent = the round's own sample */
+	roundSampleCap?: number;
 }
 
 const DONE: StageProgress = { done: true, label: 'check' };
@@ -53,6 +72,20 @@ export function participantProgress(
 	}
 	if (stage === AgoraStage.question) {
 		return facts.answerAuthors.has(participant.userId) ? DONE : NOT_DONE;
+	}
+	if (isRoundStage(stage)) {
+		const sample = Math.min(
+			AGORA_ROUNDS[stage].sample,
+			facts.roundSampleCap ?? Number.POSITIVE_INFINITY,
+		);
+		const { done, total } = roundProgress(
+			facts.answerAuthors.has(participant.userId),
+			facts.ratedByUid?.get(participant.userId) ?? 0,
+			sample,
+		);
+		if (done >= total) return DONE;
+
+		return { done: false, label: { done, total } };
 	}
 	const progress = participant.stageProgress;
 	// Progress from an earlier stage says nothing about this one
@@ -81,6 +114,7 @@ export function progressCountKey(stage: AgoraStage): string {
 	if (stage === AgoraStage.positioning) return 'teacher.positioned_count';
 	if (stage === AgoraStage.voting) return 'teacher.voted_count';
 	if (stage === AgoraStage.question) return 'teacher.answered_count';
+	if (isRoundStage(stage)) return 'teacher.read_count';
 
 	return 'teacher.finished_count';
 }

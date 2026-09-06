@@ -63,8 +63,8 @@ export function StartGame(): m.Component {
 	let rounds = defaults.rounds;
 
 	let plans: Record<GameMode, AgoraStagePlanItem[]> = {
-		scenario: stagePlanPreset('classic'),
-		quick: stagePlanPreset('quickDecision'),
+		scenario: stagePlanPreset('scenarioWizcol'),
+		quick: stagePlanPreset('wizcol'),
 	};
 
 	async function load(): Promise<void> {

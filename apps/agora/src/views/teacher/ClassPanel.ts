@@ -19,11 +19,15 @@ export function progressFacts(
 	proposals: readonly AgoraProposal[],
 	answers: readonly AgoraProposal[],
 	voterUids: ReadonlySet<string>,
+	ratedByUid?: ReadonlyMap<string, number>,
 ): ProgressFacts {
 	return {
 		proposalAuthors: new Set(proposals.map((proposal) => proposal.creatorId)),
 		answerAuthors: new Set(answers.map((answer) => answer.creatorId)),
 		voterUids,
+		...(ratedByUid ? { ratedByUid } : {}),
+		// A round cannot ask a student to read more classmates than wrote
+		roundSampleCap: Math.max(0, answers.length - 1),
 	};
 }
 

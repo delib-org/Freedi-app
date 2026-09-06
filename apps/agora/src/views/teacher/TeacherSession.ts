@@ -26,6 +26,8 @@ import { QRShare } from '../../components/QRShare';
 import { LookPicker } from '../../components/LookPicker';
 import { classLooks } from '../../lib/looks';
 import {
+	isCarryStage,
+	isRoundStage,
 	AgoraSessionMode,
 	AgoraStage,
 	AgoraThemeChoice,
@@ -52,7 +54,7 @@ import {
 	votingSettingsCard,
 	type ChallengeActions,
 } from './VotingCards';
-import { questionPanel, triggerLine } from './DeliberationCards';
+import { questionPanel, roundPanel, triggerLine } from './DeliberationCards';
 import { ClassPanel, classProgressCard, progressFacts } from './ClassPanel';
 import { MessagesPanel } from './MessagesPanel';
 import { StudentThreadDrawer } from './StudentThreadDrawer';
@@ -263,9 +265,10 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			const inDeliberation = current.stage === AgoraStage.deliberation;
 			const inQuestion = current.stage === AgoraStage.question;
+			const inCarry = isCarryStage(current.stage);
 			const { proposals, answersByQuestion, studentEvalTimes } = getDeliberationState();
 			const answers =
-				inQuestion && current.statementId ? (answersByQuestion[current.statementId] ?? []) : [];
+				inCarry && current.statementId ? (answersByQuestion[current.statementId] ?? []) : [];
 
 			const inVoting = current.stage === AgoraStage.voting;
 			if (inVoting && userId) listenToVoting(sessionId, session.challengeQuestionId, userId);
@@ -274,7 +277,6 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const challengeLive =
 				challengePhase === ChallengePhase.vote || challengePhase === ChallengePhase.resolving;
 
-			const facts = progressFacts(proposals, answers, voterUids);
 			// How many texts each student weighed — from the anonymous timeline the
 			// square already streams (evaluator ids only, never values)
 			const ratingsByUid = new Map<string, number>();
@@ -283,6 +285,17 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					ratingsByUid.set(rater.evaluatorId, (ratingsByUid.get(rater.evaluatorId) ?? 0) + 1);
 				}
 			}
+			// The same count, restricted to THIS round's texts — a round is done
+			// when the dealt sample is read, not when the square was
+			const answerIds = new Set(answers.map((answer) => answer.statementId));
+			const roundRatedByUid = new Map<string, number>();
+			for (const [statementId, raters] of Object.entries(studentEvalTimes)) {
+				if (!answerIds.has(statementId)) continue;
+				for (const rater of raters) {
+					roundRatedByUid.set(rater.evaluatorId, (roundRatedByUid.get(rater.evaluatorId) ?? 0) + 1);
+				}
+			}
+			const facts = progressFacts(proposals, answers, voterUids, roundRatedByUid);
 			const unread = unreadRepliesTotal();
 
 			const tabStrip = m(
@@ -508,6 +521,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									: null,
 
 								inQuestion ? questionPanel(session, current, answers) : null,
+								isRoundStage(current.stage) ? roundPanel(session, current, answers) : null,
 
 								// Set while the class still deliberates — by the time the ballot
 								// is drawn up the settings have already been read.

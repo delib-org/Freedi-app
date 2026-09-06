@@ -46,6 +46,14 @@ const TRANSITIONS: Partial<Record<AgoraStage, TransitionMeta>> = {
 		labelKey: 'stage.question',
 		lineKey: 'transition.question',
 	},
+	[AgoraStage.intro]: { icon: 'spark', labelKey: 'stage.intro', lineKey: 'transition.intro' },
+	[AgoraStage.story]: { icon: 'edit', labelKey: 'stage.story', lineKey: 'transition.story' },
+	[AgoraStage.myNeeds]: {
+		icon: 'target',
+		labelKey: 'stage.myNeeds',
+		lineKey: 'transition.myNeeds',
+	},
+	[AgoraStage.vision]: { icon: 'trend', labelKey: 'stage.vision', lineKey: 'transition.vision' },
 	[AgoraStage.voting]: { icon: 'scales', labelKey: 'stage.voting', lineKey: 'transition.voting' },
 	[AgoraStage.results]: { icon: 'flag', labelKey: 'stage.results', lineKey: 'transition.results' },
 };

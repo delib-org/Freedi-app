@@ -4,6 +4,7 @@ import {
 	AgoraStagePlan,
 	AgoraStagePlanItem,
 	AGORA_STAGE_PLAN,
+	isRoundStage,
 	validateStagePlan,
 } from '@freedi/shared-types';
 
@@ -37,6 +38,17 @@ export function sanitizeStagePlan(
 					cutoffNumber: clamp(item.selection.cutoffNumber, -1, 1),
 				};
 			}
+		}
+		// A round's prompt is optional — the phones carry the default in every
+		// language; a title here overrides it. Never a selection: rounds carry all.
+		if (isRoundStage(item.stage)) {
+			const title = (item.title ?? '').trim().slice(0, AGORA_STAGE_PLAN.MAX_TITLE_LENGTH);
+			if (title) next.title = title;
+			const explanation = (item.explanation ?? '')
+				.trim()
+				.slice(0, AGORA_STAGE_PLAN.MAX_EXPLANATION_LENGTH);
+			if (explanation) next.explanation = explanation;
+			if (item.statementId) next.statementId = item.statementId;
 		}
 		if (item.stage === AgoraStage.deliberation && item.votingTrigger) {
 			next.votingTrigger = {

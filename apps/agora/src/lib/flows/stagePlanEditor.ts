@@ -12,6 +12,7 @@ import {
 	AGORA_PLANNABLE_STAGES,
 	defaultQuestionSelection,
 	defaultVotingTrigger,
+	isRoundStage,
 	stagePlanPreset,
 	type AgoraStagePlanItem,
 	type AgoraStagePlanPreset,
@@ -65,6 +66,10 @@ function freshItem(stage: AgoraStage, items: readonly AgoraStagePlanItem[]): Ago
 	}
 	if (stage === AgoraStage.deliberation) {
 		return { itemId, stage, votingTrigger: defaultVotingTrigger() };
+	}
+	if (isRoundStage(stage)) {
+		// Title and explanation stay empty: the round then asks in the book's words
+		return { itemId, stage, title: '', explanation: '' };
 	}
 
 	return { itemId, stage };

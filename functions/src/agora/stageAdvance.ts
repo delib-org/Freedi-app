@@ -24,6 +24,7 @@ import {
 	AgoraStageTriggerMode,
 	AGORA_CYCLE,
 	currentPlanIndex,
+	isRoundStage,
 	planIndexForStage,
 	resolveSessionFlow,
 	resolveStagePlan,
@@ -32,6 +33,7 @@ import { logError } from '../utils/errorHandling';
 import { computeSessionResults } from './classScore';
 import { prepareVotingStage } from './votingStage';
 import { closeQuestionStage } from './questionStage';
+import { closeRoundStage } from './roundStage';
 import { computeAgreementResults } from './agreementResults';
 
 export type AdvanceActor =
@@ -136,6 +138,8 @@ export async function advanceSession(
 	try {
 		if (fromItem.stage === AgoraStage.question) {
 			await closeQuestionStage(sessionId, fromItem);
+		} else if (isRoundStage(fromItem.stage)) {
+			await closeRoundStage(sessionId, fromItem);
 		}
 
 		if (toItem.stage === AgoraStage.voting) {

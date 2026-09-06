@@ -24,12 +24,44 @@ describe('planEditorReduce', () => {
 
 	it('offers each single-instance stage once, and character stages only with characters', () => {
 		const quick = stagePlanPreset('quickDecision');
-		expect(addableStages(quick, { hasCharacters: false })).toEqual([AgoraStage.question]);
+		expect(addableStages(quick, { hasCharacters: false })).toEqual([
+			AgoraStage.question,
+			AgoraStage.intro,
+			AgoraStage.story,
+			AgoraStage.myNeeds,
+			AgoraStage.vision,
+		]);
 
 		const noVote = quick.filter((item) => item.stage !== AgoraStage.voting);
 		expect(addableStages(noVote, { hasCharacters: true })).toEqual(
 			expect.arrayContaining([AgoraStage.voting, AgoraStage.framing, AgoraStage.question]),
 		);
+	});
+
+	it('offers the rounds once each, and the wizcol preset replaces the future', () => {
+		const wizcol = stagePlanPreset('wizcol');
+		expect(addableStages(wizcol, { hasCharacters: false })).toEqual([AgoraStage.question]);
+		const noVision = wizcol.filter((item) => item.stage !== AgoraStage.vision);
+		expect(addableStages(noVision, { hasCharacters: false })).toEqual(
+			expect.arrayContaining([AgoraStage.vision, AgoraStage.question]),
+		);
+		const added = planEditorReduce(noVision, { kind: 'add', stage: AgoraStage.vision }, fresh);
+		const vision = added.find((item) => item.stage === AgoraStage.vision);
+		expect(vision).toEqual({
+			itemId: 'vision',
+			stage: AgoraStage.vision,
+			title: '',
+			explanation: '',
+		});
+		expect(validateStagePlan(added, { hasCharacters: false })).toEqual([]);
+
+		const running = { hasCharacters: false, frozenCount: 3 }; // lobby, intro, story are history
+		const swapped = planEditorReduce(
+			stagePlanPreset('quickDecision'),
+			{ kind: 'preset', preset: 'wizcol' },
+			running,
+		);
+		expect(kinds(swapped).slice(0, 3)).toEqual(kinds(stagePlanPreset('quickDecision')).slice(0, 3));
 	});
 
 	it('never moves or removes the fixed ends', () => {

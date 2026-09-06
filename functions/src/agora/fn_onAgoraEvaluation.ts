@@ -1,4 +1,5 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { FieldPath } from 'firebase-admin/firestore';
 import type { Transaction } from 'firebase-admin/firestore';
 import { db } from '../db';
 import {
@@ -7,10 +8,12 @@ import {
 	AgoraParticipant,
 	AgoraProposalScore,
 	AgoraRatingDist,
+	AgoraRoundKind,
 	AgoraSession,
 	AgoraStage,
 	Evaluation,
 	AGORA_POINTS,
+	AGORA_ROUNDS,
 	NotificationTriggerType,
 	StatementType,
 	currentPlanIndex,
@@ -31,6 +34,9 @@ import {
 	isAgoraAiUid,
 	tallyAgoraCamps,
 	isAgoraHidden,
+	isRoundStage,
+	roundAppreciates,
+	Statement,
 	ModeratedDoc,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
@@ -214,6 +220,49 @@ async function creditRatingEffort(
 	});
 }
 
+/**
+ * A like on a story, or a rating at or above the unit floor on a need or a
+ * vision, pays the AUTHOR once. The ledger is a map on the author's own
+ * participant doc keyed by the evaluation id — deterministic per (rater,
+ * text) — so a redelivered trigger, a re-rating, or an un-like then a re-like
+ * all find their key and pay nothing. A later downgrade never claws back:
+ * the appreciation happened, and a toggle must not become a lever.
+ */
+export async function creditRoundAppreciation(
+	sessionId: string,
+	kind: AgoraRoundKind,
+	evaluation: Evaluation,
+	evaluationId: string,
+): Promise<void> {
+	const spec = AGORA_ROUNDS[kind];
+	if (!roundAppreciates(spec, evaluation.evaluation)) return;
+	if (isAgoraAiUid(evaluation.evaluatorId)) return;
+
+	const answerSnap = await db.collection(Collections.statements).doc(evaluation.statementId).get();
+	if (!answerSnap.exists) return;
+	const answer = answerSnap.data() as Statement;
+	if (isAgoraHidden(answer)) return;
+	const authorId = answer.creatorId;
+	if (!authorId || authorId === evaluation.evaluatorId) return;
+
+	const authorRef = db
+		.collection(Collections.agoraParticipants)
+		.doc(createAgoraParticipantId(sessionId, authorId));
+
+	await db.runTransaction(async (transaction) => {
+		const snap = await transaction.get(authorRef);
+		if (!snap.exists) return;
+		const author = snap.data() as AgoraParticipant;
+		if (author.roundAppreciations?.[evaluationId]) return;
+
+		const points = { ...author.points };
+		points.appreciation = (points.appreciation ?? 0) + spec.appreciation.points;
+		points.total += spec.appreciation.points;
+		transaction.update(authorRef, { points, lastActive: Date.now() });
+		transaction.update(authorRef, new FieldPath('roundAppreciations', evaluationId), true);
+	});
+}
+
 function emptyTally(): CampTally {
 	return { sum: 0, n: 0, positiveN: 0, studentDist: emptyDist() };
 }
@@ -315,6 +364,33 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 		try {
 			const sessionSnap = await db.collection(Collections.agoraSessions).doc(sessionId).get();
 			const session = sessionSnap.exists ? (sessionSnap.data() as AgoraSession) : null;
+
+			// A WizCol round's text: the appreciated AUTHOR is paid, the reader
+			// is not, and nothing below enters — a 0…1 mean must never meet the
+			// square's −1…+1 formulas.
+			const roundItem = session
+				? resolveStagePlan(session).find(
+						(item) => isRoundStage(item.stage) && item.statementId === evaluation.parentId,
+					)
+				: undefined;
+			if (roundItem && isRoundStage(roundItem.stage)) {
+				if (after) {
+					await creditRoundAppreciation(
+						sessionId,
+						roundItem.stage,
+						after,
+						event.params.evaluationId,
+					).catch((creditError: unknown) => {
+						logError(creditError, {
+							operation: 'agora.onEvaluationWritten.creditRoundAppreciation',
+							userId: evaluatorId,
+							statementId,
+						});
+					});
+				}
+
+				return;
+			}
 
 			// A brand-new rating (not an edit of one) earns the evaluation
 			// credit — non-blocking, and never fatal to the bridging update.

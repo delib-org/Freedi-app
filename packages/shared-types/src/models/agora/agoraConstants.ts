@@ -157,6 +157,14 @@ export const AGORA_POINTS = {
 	 * is a fee nobody has to earn.
 	 */
 	CHALLENGE_SURVIVED: 3,
+	/**
+	 * A like on my story, or a rating of at least AGORA_ROUND.UNIT_APPRECIATED_MIN
+	 * on my need or my vision, pays me +1 — once per classmate per text (the
+	 * evaluation id is deterministic, so a re-rating cannot pay twice, and a
+	 * later downgrade never claws it back). The reader earns nothing for
+	 * these: the rounds pay the author who was appreciated.
+	 */
+	ROUND_APPRECIATION: 1,
 } as const;
 
 export const AGORA_ANTI_GAMING = {

@@ -14,6 +14,8 @@ import {
 	Unsubscribe,
 } from './firebase';
 import {
+	AGORA_ROUND,
+	type AgoraUnitRating,
 	Collections,
 	AgoraCharacterReview,
 	AgoraCharacterReviewSchema,
@@ -565,15 +567,36 @@ export async function rateProposal(
 }
 
 /**
+ * A heart on a classmate's story. A like is the evaluation `1`, an un-like
+ * is `0` — never a delete: a deleted evaluation re-runs the effort credit
+ * when it comes back and moves the rater count under a reading finger. The
+ * round pays the author on the way up only (see AGORA_POINTS.ROUND_APPRECIATION).
+ */
+export async function likeStatement(
+	session: AgoraSession,
+	parentId: string,
+	statementId: string,
+	liked: boolean,
+): Promise<void> {
+	return rateStatement(
+		session,
+		parentId,
+		statementId,
+		liked ? AGORA_ROUND.LIKE : AGORA_ROUND.UNLIKE,
+	);
+}
+
+/**
  * Rate any option in the session — a proposal under the challenge question
- * or an answer under a question stage. The parent decides which pipeline
- * aggregates it; the shape is the same evaluation either way.
+ * (−1…+1), an answer under a question stage, or a text in a WizCol round
+ * (a like, or a 0…1 step). The parent decides which pipeline aggregates it;
+ * the shape is the same evaluation either way.
  */
 export async function rateStatement(
 	session: AgoraSession,
 	parentId: string,
 	statementId: string,
-	value: AgoraRating,
+	value: AgoraRating | AgoraUnitRating,
 ): Promise<void> {
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');

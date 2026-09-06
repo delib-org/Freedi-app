@@ -6,6 +6,8 @@ import {
 	AgoraSession,
 	AgoraSessionStatus,
 	AgoraStage,
+	isCarryStage,
+	isRoundStage,
 	AgoraStagePlan,
 	AgoraStagePlanSchema,
 	AgoraTopicPackage,
@@ -15,6 +17,7 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { buildQuestionStatement } from './questionStage';
+import { buildRoundStatement } from './roundStage';
 import { sanitizeStagePlan } from './stagePlanInput';
 
 interface Request {
@@ -98,24 +101,27 @@ export const agoraUpdateStagePlan = onCall(
 					clean[index] = stored;
 				}
 
-				// New question items get their Statement now; edited ones get their
-				// text updated. Both are safe inside the transaction: the ids are
-				// deterministic per item and the writes touch only this session's tree.
+				// New carry items (questions, rounds) get their Statement now; edited
+				// ones get their text updated. Both are safe inside the transaction:
+				// the ids are deterministic per item and the writes touch only this
+				// session's tree. A round with no title keeps the kind as its text —
+				// the phones render the prompt from their own language, not from here.
 				const existingById = new Map(current.map((item) => [item.itemId, item]));
 				for (let index = frozenUpTo + 1; index < clean.length; index += 1) {
 					const item = clean[index];
-					if (item.stage !== AgoraStage.question) continue;
+					if (!isCarryStage(item.stage)) continue;
 					const previous = existingById.get(item.itemId);
 					if (previous?.statementId) {
 						clean[index] = { ...item, statementId: previous.statementId };
 						transaction.update(db.collection(Collections.statements).doc(previous.statementId), {
-							statement: (item.title ?? '').trim(),
+							statement: (item.title ?? '').trim() || (isRoundStage(item.stage) ? item.stage : ''),
 							description: (item.explanation ?? '').trim(),
 							lastUpdate: Date.now(),
 						});
 						continue;
 					}
-					const statement = buildQuestionStatement({
+					const build = isRoundStage(item.stage) ? buildRoundStatement : buildQuestionStatement;
+					const statement = build({
 						item,
 						sessionId,
 						rootStatementId: session.rootStatementId,

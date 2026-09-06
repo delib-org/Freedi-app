@@ -1,14 +1,18 @@
 import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { rankedAnswers } from '../QuestionStage';
+import { formatUnit, rankedRoundAnswers } from '../RoundStage';
 import { CpBands, bandClassOf, bandLabelOf } from '../../components/CpBands';
 import { getDeliberationState } from '../../lib/proposals';
 import type { AgoraProposal } from '../../lib/proposals';
 import {
+	AGORA_ROUNDS,
 	AgoraSession,
 	AgoraStagePlanItem,
 	evaluateVotingTrigger,
+	isRoundStage,
 	resolveQuestionSelection,
+	roundLikes,
 	selectCarriedAnswers,
 } from '@freedi/shared-types';
 
@@ -90,6 +94,55 @@ export function questionPanel(
 					),
 				),
 		m('p.voting-settings__hint', t('teacher.answers_hint')),
+	]);
+}
+
+/**
+ * A WizCol round on the teacher's board: every text, most appreciated
+ * first, with its hearts or its percent, and the AI's record once the
+ * round has closed. Nothing "travels forward" selectively — every text is
+ * carried, and no bands: the scale is not C_p's.
+ */
+export function roundPanel(
+	session: AgoraSession,
+	item: AgoraStagePlanItem,
+	answers: readonly AgoraProposal[],
+): m.Children {
+	if (!isRoundStage(item.stage)) return null;
+	const kind = item.stage;
+	const named = session.identity === 'named';
+	const ranked = rankedRoundAnswers(kind, answers, named);
+	const outcome = session.stageState?.[item.itemId]?.outcome;
+	const like = AGORA_ROUNDS[kind].scale === 'like';
+
+	return m('.card.stack.teacher-answers', [
+		m('.class-progress__head', [
+			m('p.teacher__section-title', t(`round.${kind}.read_title`)),
+			m('span.class-progress__count', String(ranked.length)),
+		]),
+		outcome?.summary ? m('p.round__summary', outcome.summary) : null,
+		ranked.length === 0
+			? m('p.home-explanation', t('round.waiting'))
+			: m(
+					'ol.teacher-answers__list',
+					ranked.map((row) =>
+						m('li.teacher-answers__row', { key: row.statementId }, [
+							m('.teacher-answers__head', [
+								row.anonName ? m('span.question__who', row.anonName) : null,
+								m(
+									'span.question__agreement',
+									row.raters > 0
+										? like
+											? t('round.likes_n', { n: roundLikes(row) })
+											: t('round.mean_n', { value: formatUnit(row.mean), n: row.raters })
+										: t('results.agreement_unrated'),
+								),
+							]),
+							m('p.teacher-answers__text', row.statement),
+						]),
+					),
+				),
+		m('p.voting-settings__hint', t(`round.${kind}.teacher_line`)),
 	]);
 }
 

@@ -202,7 +202,7 @@
 	&__who {
 		@include type-meta;
 		font-weight: 700;
-		color: var(--peer-ink, var(--text-secondary));
+		color: var(--text-secondary);
 	}
 
 	&__agreement {
@@ -342,7 +342,7 @@
 	&__who {
 		@include type-meta;
 		font-weight: 700;
-		color: var(--peer-ink, var(--text-secondary));
+		color: var(--text-secondary);
 	}
 }
 
@@ -472,7 +472,7 @@
 	&__who {
 		@include type-meta;
 		font-weight: 700;
-		color: var(--peer-ink, var(--text-secondary));
+		color: var(--text-secondary);
 	}
 }
 

@@ -230,6 +230,7 @@ function myJourneyCard(participant: AgoraParticipant, sessionId: string): m.Chil
 		{ value: points.helping, label: t('results.my_helping') },
 		{ value: points.rating ?? 0, label: t('results.my_rating') },
 		{ value: points.revising ?? 0, label: t('results.my_revising') },
+		{ value: points.appreciation ?? 0, label: t('results.points_appreciation') },
 		{ value: points.proposals, label: t('results.my_proposals') },
 		{ value: points.valueAccuracy, label: t('results.my_values') },
 	];

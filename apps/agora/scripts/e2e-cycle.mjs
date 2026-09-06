@@ -146,6 +146,14 @@ const position = async (page, value) => {
 await position(s1, 15); // A — royalist side
 await position(s2, 85); // B — jacobin side
 
+// The default scenario plan now runs the WizCol rounds between positioning
+// and the square (intro → story → my needs → vision). This script tests the
+// improvement cycle, not the rounds, so the teacher opens each one and moves
+// on — a round with no texts closes empty and carries nothing.
+for (const stage of ['INTRO', 'STORY', 'MY NEEDS', 'VISION']) {
+	step(`TEACHER advances → ${stage}`);
+	await advance();
+}
 step('TEACHER advances → DELIBERATION');
 await advance();
 

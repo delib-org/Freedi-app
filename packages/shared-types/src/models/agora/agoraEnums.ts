@@ -27,6 +27,19 @@ export enum AgoraStage {
 	 * later stage as carried context.
 	 */
 	question = 'question',
+	/**
+	 * The WizCol rounds (docs: apps/agora/docs/HANDOFF.md "WizCol rounds").
+	 * `intro` explains the group's wisdom; the three rounds each ask every
+	 * student to write, read a few classmates' texts, and weigh them on the
+	 * round's own scale — a like on a story, 0…1 on a need or a vision — and
+	 * close with an AI record carried into every later stage. Only ever in an
+	 * explicit plan; a session without one never carries them.
+	 */
+	intro = 'intro',
+	story = 'story',
+	/** The participants' OWN needs — distinct from `needs`, the characters' */
+	myNeeds = 'myNeeds',
+	vision = 'vision',
 }
 
 /**

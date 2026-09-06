@@ -13,6 +13,7 @@ import {
 	AGORA_STAGE_PLAN,
 	defaultQuestionSelection,
 	defaultVotingTrigger,
+	isRoundStage,
 	validateStagePlan,
 	type AgoraStagePlanItem,
 	type AgoraStagePlanPreset,
@@ -42,7 +43,15 @@ export const PLAN_ERROR_KEYS: Record<StagePlanError, string> = {
 	voting_needs_source: 'startGame.plan_error_voting_needs_source',
 	stage_needs_characters: 'startGame.plan_error_stage_needs_characters',
 	question_needs_title: 'startGame.plan_error_question_needs_title',
+	stage_once: 'startGame.plan_error_stage_once',
 	unknown_stage: 'startGame.plan_error_unknown_stage',
+};
+
+const PRESET_LABELS: Record<AgoraStagePlanPreset, string> = {
+	wizcol: 'startGame.plan_preset_wizcol',
+	scenarioWizcol: 'startGame.plan_preset_scenario_wizcol',
+	classic: 'startGame.plan_preset_classic',
+	quickDecision: 'startGame.plan_preset_quick',
 };
 
 /**
@@ -242,6 +251,41 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 				]);
 			};
 
+			// A round's prompt is the book's by default; the admin may say it in
+			// their own words. Never a cutoff: every text is carried.
+			const roundOptions = (item: AgoraStagePlanItem): m.Children =>
+				m('.plan-editor__options', [
+					m('label.plan-editor__field', [
+						m('span', t('startGame.plan_round_title')),
+						m('input.plan-editor__text[type=text]', {
+							value: item.title ?? '',
+							maxlength: AGORA_STAGE_PLAN.MAX_TITLE_LENGTH,
+							placeholder: t(`round.${item.stage}.prompt`),
+							oninput: (event: InputEvent) =>
+								dispatch({
+									kind: 'patch',
+									itemId: item.itemId,
+									patch: { title: (event.target as HTMLInputElement).value },
+								}),
+						}),
+					]),
+					m('label.plan-editor__field', [
+						m('span', t('startGame.plan_round_explanation')),
+						m('textarea.plan-editor__textarea', {
+							value: item.explanation ?? '',
+							rows: 2,
+							maxlength: AGORA_STAGE_PLAN.MAX_EXPLANATION_LENGTH,
+							placeholder: t(`round.${item.stage}.hint`),
+							oninput: (event: InputEvent) =>
+								dispatch({
+									kind: 'patch',
+									itemId: item.itemId,
+									patch: { explanation: (event.target as HTMLTextAreaElement).value },
+								}),
+						}),
+					]),
+				]);
+
 			const deliberationOptions = (item: AgoraStagePlanItem): m.Children => {
 				const rule = item.votingTrigger ?? { ...defaultVotingTrigger(), enabled: false };
 				const patchRule = (next: Partial<typeof rule>): void =>
@@ -290,19 +334,17 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 				showPresets
 					? m('.plan-editor__presets', [
 							m('span.plan-editor__presets-label', t('startGame.plan_presets')),
-							(['quickDecision', 'classic'] as AgoraStagePlanPreset[])
-								.filter((preset) => preset !== 'classic' || hasCharacters)
-								.map((preset) =>
-									m(
-										'button.btn.btn--sm.btn--secondary',
-										{ type: 'button', onclick: () => dispatch({ kind: 'preset', preset }) },
-										t(
-											preset === 'classic'
-												? 'startGame.plan_preset_classic'
-												: 'startGame.plan_preset_quick',
-										),
-									),
+							(
+								(hasCharacters
+									? ['scenarioWizcol', 'classic']
+									: ['wizcol', 'quickDecision']) as AgoraStagePlanPreset[]
+							).map((preset) =>
+								m(
+									'button.btn.btn--sm.btn--secondary',
+									{ type: 'button', onclick: () => dispatch({ kind: 'preset', preset }) },
+									t(PRESET_LABELS[preset]),
 								),
+							),
 						])
 					: null,
 
@@ -312,7 +354,9 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 						const frozen = index < frozenCount;
 						const fixed = item.stage === AgoraStage.lobby || item.stage === AgoraStage.results;
 						const hasOptions =
-							item.stage === AgoraStage.question || item.stage === AgoraStage.deliberation;
+							item.stage === AgoraStage.question ||
+							item.stage === AgoraStage.deliberation ||
+							isRoundStage(item.stage);
 						const open = openItemId === item.itemId;
 						const untitled = item.stage === AgoraStage.question && !(item.title ?? '').trim();
 
@@ -414,6 +458,7 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 								open && !frozen && item.stage === AgoraStage.deliberation
 									? deliberationOptions(item)
 									: null,
+								open && !frozen && isRoundStage(item.stage) ? roundOptions(item) : null,
 							],
 						);
 					}),

@@ -14,6 +14,7 @@ import { AgoraStage, AGORA_STAGE_ORDER } from './agoraEnums';
 import { CutoffBy } from '../results/ResultsSettings';
 import { AgoraCpBandSummarySchema } from './questionSummary';
 import { sessionRunsVoting } from './sessionFlow';
+import { isCarryStage } from './rounds';
 import type { AgoraSessionFlow } from './sessionFlow';
 import type { AgoraSessionMode } from './agoraEnums';
 
@@ -34,7 +35,7 @@ import type { AgoraSessionMode } from './agoraEnums';
  */
 
 export const AGORA_STAGE_PLAN = {
-	MAX_ITEMS: 12,
+	MAX_ITEMS: 16,
 	/** Longest question/explanation the admin may type */
 	MAX_TITLE_LENGTH: 200,
 	MAX_EXPLANATION_LENGTH: 1000,
@@ -176,6 +177,10 @@ export const AGORA_PLANNABLE_STAGES: readonly AgoraStage[] = [
 	AgoraStage.needs,
 	AgoraStage.positioning,
 	AgoraStage.question,
+	AgoraStage.intro,
+	AgoraStage.story,
+	AgoraStage.myNeeds,
+	AgoraStage.vision,
 	AgoraStage.deliberation,
 	AgoraStage.voting,
 	AgoraStage.results,
@@ -288,15 +293,22 @@ export function planIndexForStage(session: StagePlanSession, stage: AgoraStage):
 	return -1;
 }
 
-/** The question items that have closed before `beforeIndex` — the carried context of a stage */
-export function closedQuestionItems(
+/**
+ * The items whose record travels forward — the question stages and the
+ * WizCol rounds — that have closed before `beforeIndex`: the carried context
+ * of a stage.
+ */
+export function closedCarryItems(
 	session: StagePlanSession,
 	beforeIndex: number,
 ): AgoraStagePlanItem[] {
 	return resolveStagePlan(session)
 		.slice(0, Math.max(0, beforeIndex))
-		.filter((item) => item.stage === AgoraStage.question);
+		.filter((item) => isCarryStage(item.stage));
 }
+
+/** @deprecated The rounds carry too — read `closedCarryItems` */
+export const closedQuestionItems = closedCarryItems;
 
 export type StagePlanError =
 	| 'empty'
@@ -310,6 +322,7 @@ export type StagePlanError =
 	| 'voting_needs_source'
 	| 'stage_needs_characters'
 	| 'question_needs_title'
+	| 'stage_once'
 	| 'unknown_stage';
 
 /**
@@ -327,10 +340,17 @@ export function validateStagePlan(
 	if (plan[plan.length - 1].stage !== AgoraStage.results) errors.push('must_end_results');
 
 	const ids = new Set<string>();
+	const kindsSeen = new Set<AgoraStage>();
 	let sourceSeen = false;
 	plan.forEach((item, index) => {
 		if (ids.has(item.itemId)) errors.push('duplicate_item_id');
 		ids.add(item.itemId);
+		// Every kind but `question` runs once: a second story round would hang
+		// a second question Statement off the same prompt and split the record
+		if (item.stage !== AgoraStage.question && kindsSeen.has(item.stage)) {
+			errors.push('stage_once');
+		}
+		kindsSeen.add(item.stage);
 
 		if (!AGORA_PLANNABLE_STAGES.includes(item.stage)) {
 			errors.push(item.stage === AgoraStage.ended ? 'ended_not_allowed' : 'unknown_stage');
@@ -354,13 +374,46 @@ export function validateStagePlan(
 	return Array.from(new Set(errors));
 }
 
-export type AgoraStagePlanPreset = 'classic' | 'quickDecision';
+export type AgoraStagePlanPreset = 'classic' | 'quickDecision' | 'wizcol' | 'scenarioWizcol';
+
+/** The WizCol tail every default plan ends with: intro, three rounds, the square, the vote */
+function wizcolTail(): AgoraStagePlanItem[] {
+	return [
+		{ itemId: AgoraStage.intro, stage: AgoraStage.intro },
+		{ itemId: AgoraStage.story, stage: AgoraStage.story },
+		{ itemId: AgoraStage.myNeeds, stage: AgoraStage.myNeeds },
+		{ itemId: AgoraStage.vision, stage: AgoraStage.vision },
+		{
+			itemId: AgoraStage.deliberation,
+			stage: AgoraStage.deliberation,
+			votingTrigger: defaultVotingTrigger(),
+		},
+		{ itemId: AgoraStage.voting, stage: AgoraStage.voting },
+		{ itemId: AgoraStage.results, stage: AgoraStage.results },
+	];
+}
 
 /**
- * Starting points for the editor. `classic` is the lesson the game has always
- * run; `quickDecision` is a room deciding one thing: ask, propose, vote.
+ * Starting points for the editor. `wizcol` is the default: the WizCol
+ * process as a digital sequence — intro, story, needs, vision, then the
+ * square and the vote. `scenarioWizcol` puts a scenario's character scenes
+ * in front of it as the prologue. `classic` is the lesson the game ran
+ * before; `quickDecision` is a room deciding one thing: ask, propose, vote.
  */
 export function stagePlanPreset(preset: AgoraStagePlanPreset): AgoraStagePlanItem[] {
+	if (preset === 'wizcol') {
+		return [{ itemId: AgoraStage.lobby, stage: AgoraStage.lobby }, ...wizcolTail()];
+	}
+	if (preset === 'scenarioWizcol') {
+		return [
+			{ itemId: AgoraStage.lobby, stage: AgoraStage.lobby },
+			{ itemId: AgoraStage.framing, stage: AgoraStage.framing },
+			{ itemId: AgoraStage.perspectives, stage: AgoraStage.perspectives },
+			{ itemId: AgoraStage.needs, stage: AgoraStage.needs },
+			{ itemId: AgoraStage.positioning, stage: AgoraStage.positioning },
+			...wizcolTail(),
+		];
+	}
 	if (preset === 'classic') {
 		return AGORA_STAGE_ORDER.filter((stage) => stage !== AgoraStage.ended).map((stage) => ({
 			itemId: stage,

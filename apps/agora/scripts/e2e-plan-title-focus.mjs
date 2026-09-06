@@ -38,6 +38,10 @@ try {
 	const quickButton = teacher.locator('.teacher__mode-row button', { hasText: 'משחק מהיר' }).first();
 	if (await quickButton.count()) await quickButton.click();
 	await teacher.waitForTimeout(300);
+	// The quick default is the WizCol plan now (no question item); this script
+	// exercises the question title, so it picks the quick-decision preset.
+	await teacher.locator('.plan-editor__presets button', { hasText: 'החלטה מהירה' }).first().click();
+	await teacher.waitForTimeout(300);
 
 	step('press the untitled question title');
 	const title = teacher.locator('button.plan-editor__title').first();

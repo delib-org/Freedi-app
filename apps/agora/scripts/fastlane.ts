@@ -21,7 +21,7 @@ import { createRequire } from 'node:module';
 import type { AgoraStage } from '@freedi/shared-types';
 import { preflight } from './lib/preflight.mjs';
 import { fastlane, positionStudent, proposeAs, teacherUrl } from './lib/fastlane';
-import type { AgoraStagePlanItem } from '@freedi/shared-types';
+import type { AgoraStagePlanItem, AgoraStagePlanPreset } from '@freedi/shared-types';
 
 // See lib/fastlane.ts — the package is require-only from plain Node
 const { AgoraStage: AgoraStageEnum, stagePlanPreset } = createRequire(import.meta.url)(
@@ -51,7 +51,7 @@ interface Args {
 	/** A quick game (no scenario) on the quick-decision plan, with names */
 	quick: boolean;
 	/** Which preset plan to send; absent = the session runs the legacy order */
-	plan: 'classic' | 'quickDecision' | null;
+	plan: AgoraStagePlanPreset | null;
 	/** Bots type real names at the door — the teacher's Class tab has something to show */
 	names: boolean;
 }
@@ -97,13 +97,28 @@ function parseArgs(argv: string[]): Args {
 		viewport: flag('mobile') !== undefined ? 'mobile' : 'desktop',
 		quick: flag('quick') !== undefined,
 		names: flag('names') !== undefined,
-		plan:
-			flag('plan') === 'classic'
-				? 'classic'
-				: flag('plan') === 'quickDecision' || flag('quick') !== undefined
-					? 'quickDecision'
-					: null,
+		plan: planFlag(flag('plan'), flag('quick') !== undefined),
 	};
+}
+
+const PLAN_PRESETS: readonly AgoraStagePlanPreset[] = [
+	'classic',
+	'quickDecision',
+	'wizcol',
+	'scenarioWizcol',
+];
+
+/** --plan names a preset; a bare --quick means the quick-decision preset, as it always did */
+function planFlag(raw: string | undefined, quick: boolean): AgoraStagePlanPreset | null {
+	if (raw !== undefined && raw !== '') {
+		if (!(PLAN_PRESETS as readonly string[]).includes(raw)) {
+			throw new Error(`Unknown --plan "${raw}". One of: ${PLAN_PRESETS.join(', ')}`);
+		}
+
+		return raw as AgoraStagePlanPreset;
+	}
+
+	return quick ? 'quickDecision' : null;
 }
 
 /** The preset with its question filled in — a plan with an empty question is refused */
@@ -195,6 +210,10 @@ const ARRIVED: Record<string, string> = {
 	valueIdentification: '.scene__title, .shell__content',
 	positioning: 'input.camp-scale__slider',
 	question: '.question__ask',
+	intro: '.intro__card',
+	story: '.round__ask',
+	myNeeds: '.round__ask',
+	vision: '.round__ask',
 	deliberation: '.chat-log, .delib-hud',
 	voting: '.voting__list, .voting__waiting',
 	results: '.results__total, .shell--wide',

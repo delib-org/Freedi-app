@@ -140,7 +140,8 @@ export function GameReport(initialVnode: m.Vnode<{ id: string }>): m.Component<{
 												String(
 													(participant.points.helping ?? 0) +
 														(participant.points.rating ?? 0) +
-														(participant.points.revising ?? 0),
+														(participant.points.revising ?? 0) +
+														(participant.points.appreciation ?? 0),
 												),
 											),
 											m('span.roster__stat--points', String(participant.points.total)),

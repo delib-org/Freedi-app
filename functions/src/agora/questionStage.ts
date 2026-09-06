@@ -25,6 +25,7 @@ import {
 	AgoraCpBandSummary,
 	AgoraSession,
 	AgoraStagePlanItem,
+	AgoraStageOutcome,
 	AgoraTopicPackage,
 	Statement,
 	StatementType,
@@ -77,7 +78,7 @@ export function buildQuestionStatement(params: {
 }
 
 /** An answer row as the closing reads it off the statement doc */
-function toCarriedAnswer(statement: Statement, named: boolean): AgoraCarriedAnswer {
+export function toCarriedAnswer(statement: Statement, named: boolean): AgoraCarriedAnswer {
 	const raters = Number(statement.evaluation?.numberOfEvaluators ?? 0);
 	const mean = raters > 0 ? Number(statement.evaluation?.averageEvaluation ?? 0) : 0;
 	const consensus = Number(statement.consensus ?? Number.NaN);
@@ -196,6 +197,40 @@ async function summariseAnswers(
 }
 
 /**
+ * Stamp a closed carry stage's record: `isChosen` on every answer (the
+ * selected ones true), `results` on the question Statement so the main app
+ * reads the same choice off the statement tree, and the outcome onto
+ * `stageState[itemId]` by field path. One batch, and the same batch for a
+ * question and for a round — the two must never stamp differently.
+ */
+export async function writeOutcome(params: {
+	sessionId: string;
+	item: AgoraStagePlanItem;
+	answers: readonly Statement[];
+	outcome: AgoraStageOutcome;
+}): Promise<void> {
+	const { sessionId, item, answers, outcome } = params;
+	if (!item.statementId) return;
+	const questionId = item.statementId;
+	const sessionRef = db.collection(Collections.agoraSessions).doc(sessionId);
+	const batch = db.batch();
+	const chosen = new Set(outcome.selected.map((row) => row.statementId));
+	answers.forEach((statement) => {
+		batch.update(db.collection(Collections.statements).doc(statement.statementId), {
+			isChosen: chosen.has(statement.statementId),
+		});
+	});
+	batch.update(db.collection(Collections.statements).doc(questionId), {
+		results: answers
+			.filter((statement) => chosen.has(statement.statementId))
+			.map((statement) => statementToSimpleStatement(statement)),
+		lastUpdate: Date.now(),
+	});
+	batch.update(sessionRef, new FieldPath('stageState', item.itemId, 'outcome'), outcome);
+	await batch.commit();
+}
+
+/**
  * Close a question item: rank its answers, apply the cutoff, write the AI
  * record (overall line + one line per C_p band), and stamp the outcome onto
  * `stageState[itemId]`. Also marks the selected answers `isChosen` and
@@ -237,28 +272,14 @@ export async function closeQuestionStage(
 		const language = (topicSnap.data() as AgoraTopicPackage | undefined)?.language ?? 'he';
 		const { summary, bands } = await summariseAnswers(item.title ?? '', selected, language);
 
-		const outcome = {
+		const outcome: AgoraStageOutcome = {
 			selected,
 			...(summary ? { summary } : {}),
 			...(bands.length > 0 ? { bands } : {}),
 			computedAt: Date.now(),
 		};
 
-		const batch = db.batch();
-		const chosen = new Set(selected.map((row) => row.statementId));
-		answers.forEach((statement) => {
-			batch.update(db.collection(Collections.statements).doc(statement.statementId), {
-				isChosen: chosen.has(statement.statementId),
-			});
-		});
-		batch.update(db.collection(Collections.statements).doc(item.statementId), {
-			results: answers
-				.filter((statement) => chosen.has(statement.statementId))
-				.map((statement) => statementToSimpleStatement(statement)),
-			lastUpdate: Date.now(),
-		});
-		batch.update(sessionRef, new FieldPath('stageState', item.itemId, 'outcome'), outcome);
-		await batch.commit();
+		await writeOutcome({ sessionId, item, answers, outcome });
 	} catch (error) {
 		logError(error, {
 			operation: 'agora.closeQuestionStage',

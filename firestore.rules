@@ -212,6 +212,11 @@ service cloud.firestore {
                          resource.data.get('creditedRatings', -1) &&
                        request.resource.data.get('firstProposalAwardedAt', -1) ==
                          resource.data.get('firstProposalAwardedAt', -1) &&
+                       // The round-appreciation ledger (which likes already
+                       // paid this author) is the trigger's; a client that
+                       // could clear a key could be paid for the same like twice.
+                       request.resource.data.get('roundAppreciations', {}) ==
+                         resource.data.get('roundAppreciations', {}) &&
                        request.resource.data.get('isAI', false) ==
                          resource.data.get('isAI', false) &&
                        // Positioning is one-shot, as the UI already assumes

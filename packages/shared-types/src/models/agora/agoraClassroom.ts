@@ -235,12 +235,21 @@ function pointsSum(a: AgoraPoints, b: AgoraPoints): AgoraPoints {
 		helping: a.helping + b.helping,
 		rating: (a.rating ?? 0) + (b.rating ?? 0),
 		revising: (a.revising ?? 0) + (b.revising ?? 0),
+		appreciation: (a.appreciation ?? 0) + (b.appreciation ?? 0),
 		total: a.total + b.total,
 	};
 }
 
 export function emptyAgoraPoints(): AgoraPoints {
-	return { valueAccuracy: 0, proposals: 0, helping: 0, rating: 0, revising: 0, total: 0 };
+	return {
+		valueAccuracy: 0,
+		proposals: 0,
+		helping: 0,
+		rating: 0,
+		revising: 0,
+		appreciation: 0,
+		total: 0,
+	};
 }
 
 export function emptyStudentAggregate(
