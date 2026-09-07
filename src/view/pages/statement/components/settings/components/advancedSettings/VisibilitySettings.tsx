@@ -2,7 +2,6 @@ import { FC } from 'react';
 import { Statement, StatementSettings, SortType } from '@freedi/shared-types';
 import {
 	EyeOff,
-	MessageCircle,
 	GitBranch,
 	Radio,
 	FileText,
@@ -63,14 +62,9 @@ const VisibilitySettings: FC<VisibilitySettingsProps> = ({
 				description={t('Make this statement invisible to non-members')}
 				icon={EyeOff}
 			/>
-			<ToggleSwitch
-				isChecked={settings.hasChat ?? false}
-				onChange={(checked) => handleSettingChange('hasChat', checked)}
-				label={t('Enable Chat')}
-				description={t('Allow members to chat and discuss')}
-				icon={MessageCircle}
-				badge="recommended"
-			/>
+			{/* "Enable Chat" lived here too and wrote the same `hasChat` field as
+			    InstantSettings' "Discussion chat". Two toggles for one flag is a
+			    trap — the hero panel is the single source of truth. */}
 			<ToggleSwitch
 				isChecked={settings.enableTreeView === true}
 				onChange={(checked) => handleSettingChange('enableTreeView', checked)}

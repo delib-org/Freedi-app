@@ -225,7 +225,7 @@ const InstantSettings: FC<InstantSettingsProps> = ({ statement: propStatement })
 					isChecked={settings.hasChat ?? false}
 					onChange={(checked) => toggle('hasChat', checked)}
 					label={t('Discussion chat')}
-					description={t('Let participants talk in a chat alongside the question')}
+					description={t('Let participants discuss the question and comment on each option')}
 					icon={MessageCircle}
 				/>
 				{savedPill('hasChat')}
