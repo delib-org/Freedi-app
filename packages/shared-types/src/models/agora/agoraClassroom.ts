@@ -54,6 +54,14 @@ export const AgoraSchoolSchema = object({
 	schoolId: string(),
 	name: string(),
 	city: optional(string()),
+	/**
+	 * The teachers a sys-admin attached to this school — the ones who may
+	 * open classes in it themselves. `teacherMap` is the `{uid: true}` query
+	 * index, for the same reason as on a class. Absent on schools written
+	 * before teachers could self-serve; read both as empty.
+	 */
+	teacherIds: optional(array(string())),
+	teacherMap: optional(record(string(), boolean())),
 	status: ActiveArchivedSchema,
 	/** Sys-admin uid that opened the school */
 	createdBy: string(),

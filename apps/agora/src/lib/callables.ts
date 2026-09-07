@@ -18,6 +18,8 @@ import type {
 	TeacherConsoleResponse,
 	TeacherRosterRequest,
 	TeacherRosterResponse,
+	TeacherClassRequest,
+	TeacherClassResponse,
 } from '@freedi/shared-types';
 
 /** A game started from a typed main question, with no scenario behind it */
@@ -210,6 +212,20 @@ export async function generateTopicPackage(
  */
 export async function joinClass(request: JoinClassRequest): Promise<JoinClassResponse> {
 	const call = httpsCallable<JoinClassRequest, JoinClassResponse>(functions, 'agoraJoinClass');
+	const result = await call(request);
+
+	return result.data;
+}
+
+/**
+ * A teacher's own classes: open one in a school the admin attached them to,
+ * rename, archive, add or remove a co-teacher — see fn_agoraTeacherClass.
+ */
+export async function teacherClass(request: TeacherClassRequest): Promise<TeacherClassResponse> {
+	const call = httpsCallable<TeacherClassRequest, TeacherClassResponse>(
+		functions,
+		'agoraTeacherClass',
+	);
 	const result = await call(request);
 
 	return result.data;

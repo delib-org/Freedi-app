@@ -324,6 +324,8 @@ export {
 
 export type {
 	ManageSchoolRequest,
+	TeacherClassRequest,
+	TeacherClassResponse,
 	ManageSchoolResponse,
 	OpenClassRequest,
 	OpenClassResponse,

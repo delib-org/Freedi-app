@@ -26,6 +26,39 @@ can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
 
+## Teacher self-serve classes (2026-09-07)
+
+Tal's rule: **the admin creates the school and attaches its teachers; each
+teacher then opens their own classes.** Before this, only a sys-admin could
+open a class (Studio, by teacher email), so a teacher who signed up alone
+saw "which class is playing?" with nothing but the guest journey — and guest
+games have no roster, no careers, no real names on the console.
+
+- **Schools carry their teachers**: `agoraSchools.teacherIds` + the
+  `teacherMap` `{uid: true}` index (same shape as on a class; absent on old
+  docs, read as empty). `agoraAdminManageSchool` gained
+  `assignTeacher`/`removeTeacher` by sign-in email (resolved server-side,
+  never stored); Studio's school page has the "teachers of this school"
+  section.
+- **`agoraTeacherClass`** (teacher callable, full account): `create` in a
+  school whose `teacherMap` holds the caller (the only school is implied;
+  more than one needs `schoolId`); `rename` / `archive` / `addTeacher` (by
+  email) / `removeTeacher` (by uid, never the last one) for the class's own
+  teachers. Class = `gradeLevel` (the grade) + `name` (the label); the
+  unique 6-char class code is issued exactly as on the admin path — one
+  helper serves both.
+- **Dashboard** reports `schools` so the start screen knows whether "new
+  class" is allowed: my classes first, then "＋ new class" (inline form:
+  grade, label, school when there is more than one), then the guest journey
+  last. No school → a quiet "ask your admin" line. The class page keeps
+  rename, archive and co-teachers behind a cog, like the console.
+- Students still claim roster spots with the class code at their first
+  game; nothing changed in the join flow.
+- **Verify:** `npx tsx scripts/e2e-teacher-classes.mjs` (or the extended
+  `e2e-class-career.mjs`); Studio typecheck/build.
+- **Deploy:** functions `agoraAdminManageSchool agoraTeacherClass
+  agoraTeacherConsole`, then `deploy:agora` and the Studio hosting.
+
 ## WizCol rounds (2026-09-06) — the book's process is the default game
 
 Tal's guide *התהליך הדליברטיבי הבסיסי* (WizCol, v2.0) moves a group from

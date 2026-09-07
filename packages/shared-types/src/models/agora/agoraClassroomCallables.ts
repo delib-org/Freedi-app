@@ -11,14 +11,47 @@ import type { AgoraSessionFlow } from './sessionFlow';
 
 /** `agoraAdminManageSchool` — sys-admin only. */
 export interface ManageSchoolRequest {
-	action: 'create' | 'rename' | 'archive';
+	action: 'create' | 'rename' | 'archive' | 'assignTeacher' | 'removeTeacher';
 	schoolId?: string;
 	name?: string;
 	city?: string;
+	/** assignTeacher/removeTeacher: the teacher's sign-in email, looked up server-side */
+	teacherEmail?: string;
 }
 
 export interface ManageSchoolResponse {
 	schoolId: string;
+	/** Present on assignTeacher/removeTeacher — the resolved uid, echoed for the admin UI */
+	teacherUid?: string;
+}
+
+/**
+ * `agoraTeacherClass` — a teacher's own classes. A teacher attached to a
+ * school (its `teacherMap`) opens classes in it; the class's teachers rename,
+ * archive, and add or remove co-teachers. Co-teachers are added by sign-in
+ * email (resolved server-side, never stored) and removed by uid.
+ */
+export type TeacherClassRequest =
+	| {
+			action: 'create';
+			/** Required when the teacher belongs to more than one school */
+			schoolId?: string;
+			/** The label — "ז'2", "the Tuesday group" */
+			name: string;
+			/** The grade — "ז", "10" */
+			gradeLevel?: string;
+	  }
+	| { action: 'rename'; classId: string; name: string; gradeLevel?: string }
+	| { action: 'archive'; classId: string }
+	| { action: 'addTeacher'; classId: string; teacherEmail: string }
+	| { action: 'removeTeacher'; classId: string; teacherUid: string };
+
+export interface TeacherClassResponse {
+	classId: string;
+	/** Present on create — the persistent code students claim roster spots with */
+	classCode?: string;
+	/** Present on addTeacher — the resolved uid */
+	teacherUid?: string;
 }
 
 /** `agoraAdminOpenClass` — sys-admin only. */
@@ -123,6 +156,11 @@ export interface TeacherConsoleDashboard {
 		memberCount: number;
 		schoolId: string;
 	}>;
+	/**
+	 * The schools this teacher is attached to — where they may open classes.
+	 * Empty means "ask your admin": the start screen offers guest games only.
+	 */
+	schools: Array<{ schoolId: string; name: string }>;
 	/** classId → its aggregate doc, when one exists (JSON: plain object) */
 	aggregates: Record<string, unknown>;
 	/** This teacher's sessions, newest first (AgoraSession JSON) */
@@ -135,6 +173,8 @@ export interface TeacherConsoleClassDetail {
 	gradeLevel?: string;
 	classCode: string;
 	schoolName: string;
+	/** Every teacher on the class, by display name — the caller is one of them */
+	teachers: Array<{ uid: string; name: string }>;
 	members: TeacherConsoleMember[];
 	/** memberId → AgoraStudentAggregate JSON */
 	careers: Record<string, unknown>;
