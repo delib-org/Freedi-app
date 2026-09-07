@@ -3,6 +3,7 @@ import {
 	isBlockedServiceWorkerCrash,
 	isFirestoreInternalCrash,
 	isLocalRuntime,
+	isThirdPartyScriptCrash,
 	isTransientAuthNetworkError,
 } from '@freedi/shared-utils';
 import { useLocation, useNavigationType } from 'react-router';
@@ -121,6 +122,13 @@ export function initSentry() {
 				// Filter out workbox-window crashes caused by a stubbed
 				// serviceWorker.register(). Not fixable from app code.
 				if (isBlockedServiceWorkerCrash(event, error)) {
+					return null;
+				}
+
+				// Filter out crashes thrown entirely inside a third-party analytics
+				// bundle (Microsoft Clarity and friends). We do not own that code and
+				// cannot pin its version, so the events are pure noise.
+				if (isThirdPartyScriptCrash(event)) {
 					return null;
 				}
 
