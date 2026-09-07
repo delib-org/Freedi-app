@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { t } from '../../lib/i18n';
+import { getLang, t } from '../../lib/i18n';
 import { getUserState, ensureUser } from '../../lib/user';
 import { fetchSessionReport, type SessionReport } from '../../lib/teacher';
 import { AgoraSessionOutcome } from '@freedi/shared-types';
@@ -63,7 +63,7 @@ export function GameReport(initialVnode: m.Vnode<{ id: string }>): m.Component<{
 			return m('.shell', [
 				m(TeacherNav, {
 					title: t('report.title'),
-					subtitle: new Date(session.createdAt).toLocaleDateString(undefined, {
+					subtitle: new Date(session.createdAt).toLocaleDateString(getLang(), {
 						day: 'numeric',
 						month: 'long',
 						year: 'numeric',

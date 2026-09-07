@@ -206,6 +206,51 @@ guard still holds.
 - **Verify**: `npx tsx scripts/e2e-stage-plan.mjs` (the Vosh scenario, 53
   assertions), `npm run fast -- --quick --stage=question --open --shot=q`.
 
+## Teacher screens simplified (2026-09-07) — one console, a three-line start
+
+Built on `feat/agora-teacher-simplify`, **NOT deployed** (client only: `deploy:agora`).
+Tal's verdict was "not simple enough for the teachers"; the UX audit measured the
+advance button 1,200–1,400px down on every stage and ~48 controls before "Open
+journey" on the start screen, one of them required.
+
+- **Console** (`views/teacher/TeacherSession.ts`): `TeacherNav` carries the join
+  code as a tap-to-copy pill (`code` attr), the projector button and the cog
+  (`menuItems` fold them into the ≡ menu on a phone). `TeacherStrip.ts` is the
+  only navigation — "step i of n · name" (tap = read-only step popover) and the
+  ONE primary button, sticky under the header, a fixed bottom bar ≤600px.
+  `NowCard.ts` opens the board: one sentence (`teacher.now_*`), "3 of 4 finished",
+  chips of the unfinished (tap = thread drawer); the lobby variant is the QR +
+  code + "n joined". Class / "what they wrote" / settings open in
+  `TeacherPanel.ts` — a side panel over the board (no scrim on desktop, a sheet
+  on a phone; the thread drawer still layers over it). The students' words fold
+  behind `.teacher-peek`. Gone: the tab strip, the rail card, the code panel.
+- **Start** (`StartGame.ts`): scenario rows + "my own question" row → class chips
+  → button → muted summary line → a closed "advanced settings" card holding the
+  plan editor, names, devices, colours, rounds. `classChoice` defaults to the
+  route class, else the only class, else `'none'` when the teacher has no school
+  (so a guest teacher's button is live at once); "no class" is never highlighted
+  by default otherwise.
+- **Dashboard** (`TeacherHome.ts`): live-lesson banners first, a dismissable
+  first-run strip (`localStorage agora.teacher.firstRunDismissed`), scenario rows
+  navigate straight to `/teach/start?topic=`, past lessons name the scenario.
+- **Vocabulary**: teacher-side keys say lesson / step / class / agreement; the new
+  `teacherStage.*` block (`lib/teacherSteps.ts`) names steps in the teacher's
+  words while `stage.*` stays the students'. `StagePlanEditor` uses it too.
+- **Styles**: `_teacher-strip.scss`, `_teacher-panel.scss` (new), additions in
+  `_teacher-nav.scss` / `_teacher-dashboard.scss`; tokens `--teacher-nav-h`,
+  `--teacher-strip-h`, `--z-panel`. `.teacher-tabs` deleted. The gauntlet has
+  the new surfaces; `teacher-panels__badge` joined the pink ledger.
+- **Scripts**: the walk is now tap scenario → `/teach/start` → one primary click →
+  `/session`. `.teacher__code` still exists (lobby now card); the cog is
+  `.teacher-nav__cog`; `.teacher-instructions` needs `.teacher-peek__summary`
+  clicked first; the count is `.teacher-now__count(--all)`.
+  `npx tsx scripts/teacher-shots.mjs --out=teacher-shots/after` shoots every
+  teacher screen, desktop and phone (one rated session walked forward — a second
+  rated session never settles behind the first one's trigger backlog).
+- **Gotcha**: a keyed `.map()` spread beside unkeyed siblings makes Mithril throw
+  "vnodes must either all have keys or none" and the dashboard sits on a spinner
+  for ever. Nest the array instead of spreading it.
+
 ## Teacher console (2026-09-03) — names, moderation, notes, projector
 
 Built on `work/2026-09-03`, **NOT deployed**. Four things a teacher can now do

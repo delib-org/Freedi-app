@@ -182,7 +182,7 @@ for (let i = 0; i < 3; i++) {
 		await shot(s1, `00b-values-graded-${i}`);
 	}
 	await teacher
-		.locator('.class-progress__count--all')
+		.locator('.teacher-now__count--all')
 		.waitFor({ timeout: 20000 })
 		.catch(() => console.log(`  (stage ${i}: class progress never read all-done, continuing)`));
 }

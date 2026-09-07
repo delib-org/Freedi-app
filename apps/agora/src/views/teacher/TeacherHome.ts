@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { Icon } from '../../components/Icon';
-import { t } from '../../lib/i18n';
+import { getLang, t } from '../../lib/i18n';
 import { getUserState, signInWithGoogle, ensureUser } from '../../lib/user';
 import {
 	classLabel,
@@ -220,7 +220,7 @@ export function TeacherHome(): m.Component {
 					m('span.dashboard__game-title', lessonTitle(session) ?? ''),
 					m(
 						'span.dashboard__game-date',
-						new Date(session.createdAt).toLocaleDateString(undefined, {
+						new Date(session.createdAt).toLocaleDateString(getLang(), {
 							day: 'numeric',
 							month: 'short',
 						}),

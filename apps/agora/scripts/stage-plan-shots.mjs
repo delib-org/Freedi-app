@@ -87,7 +87,7 @@ try {
 	);
 	await teacher.waitForTimeout(1500);
 	await teacher.goto(teacherUrl(game.sessionId), { waitUntil: 'domcontentloaded' });
-	await teacher.waitForSelector('.teacher-plan', { timeout: 30_000 });
+	await teacher.waitForSelector('.teacher-strip', { timeout: 30_000 });
 	await teacher.waitForSelector('.teacher-answers__row', { timeout: 30_000 });
 	await shot(teacher, '6-teacher-question-board');
 	await teacher.click('.teacher-nav__cog');

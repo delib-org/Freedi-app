@@ -110,11 +110,11 @@ for (const stage of ['FRAMING (intro→tunnel→period)', 'PERSPECTIVES (both si
 	await Promise.all([clickThroughScenes(s1, 'S1'), clickThroughScenes(s2, 'S2')]);
 	// The teacher's class-progress card fills as students finish their scenes
 	await teacher
-		.locator('.class-progress__count--all')
+		.locator('.teacher-now__count--all')
 		.waitFor({ timeout: 15000 });
 	console.log(
 		'TEACHER CLASS PROGRESS:',
-		await teacher.locator('.class-progress__count').textContent()
+		await teacher.locator('.teacher-now__count').textContent()
 	);
 	if (stage.startsWith('FRAMING')) await shot(teacher, '02b-teacher-class-progress');
 }

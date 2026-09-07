@@ -41,6 +41,9 @@ try {
 
 	step('the console, on the needs round');
 	await page.goto(teacherUrl(game.sessionId), { waitUntil: 'domcontentloaded' });
+	// The students' words fold behind the peek now; open it first
+	await page.waitForSelector('.teacher-peek__summary', { timeout: 30_000 });
+	await page.click('.teacher-peek__summary');
 	await page.waitForSelector('.teacher-instructions', { timeout: 30_000 });
 	await page.waitForTimeout(1200);
 	const shown = await page.textContent('.teacher-instructions__scene-title');
