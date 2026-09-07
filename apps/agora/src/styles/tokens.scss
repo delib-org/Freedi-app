@@ -443,6 +443,10 @@
   --z-map: 1;
   --z-content: 10;
   --z-header: 50;
+  // The teacher's side panel: over the board and the sticky strip, under the
+  // student-thread drawer (hard-coded 60 in _teacher-console.scss) that opens
+  // from inside it.
+  --z-panel: 55;
   --z-toast: 90;
   --z-modal: 100;
 
@@ -452,6 +456,21 @@
   // have to agree on their heights, and the page has to know the total to
   // keep its last button clear of both.
   --delib-nav-h: 68px;
+
+  // --- Fixed teacher chrome ---
+  // The console's bar and its control strip stack the same way: the strip
+  // sticks under the bar on desktop, and on a phone it is the fixed bottom
+  // bar the page has to keep its last card clear of.
+  --teacher-nav-h: 56px;
+  --teacher-strip-h: 108px;
+
+  // The disclosure chevron is the `arrow` icon given a quarter turn (there
+  // is no separate chevron glyph). The arrow is drawn pointing LEFT — the
+  // back button's direction — so −90° points it down and +90° up. Held here
+  // so the three folds that use it turn the same way if the glyph is ever
+  // redrawn.
+  --chevron-closed: -90deg;
+  --chevron-open: 90deg;
 }
 
 // ============================================================================

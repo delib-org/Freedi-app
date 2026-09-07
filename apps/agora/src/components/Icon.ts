@@ -63,6 +63,8 @@ export type IconName =
 	| 'mail'
 	| 'cog'
 	| 'arrow'
+	| 'home'
+	| 'menu'
 	// the rating scale
 	| 'face-strong-against'
 	| 'face-against'
@@ -181,6 +183,24 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 	arrow: [
 		['path', { d: 'M20 12H4.6' }],
 		['path', { d: 'M10.8 5.8 4.6 12l6.2 6.2' }],
+	],
+
+	// The way home. A house is the one navigation shape the whole world
+	// already reads, and it is symmetrical, so RTL leaves it alone.
+	home: [
+		[
+			'path',
+			{
+				d: 'M3.6 10.6 12 3.5l8.4 7.1v8.9a1.1 1.1 0 0 1-1.1 1.1h-4.5v-5.4H9.2v5.4H4.7a1.1 1.1 0 0 1-1.1-1.1z',
+			},
+		],
+	],
+
+	// Three rails: everywhere a teacher can walk to from this screen.
+	menu: [
+		['path', { d: 'M4.5 7.5h15' }],
+		['path', { d: 'M4.5 12h15' }],
+		['path', { d: 'M4.5 16.5h15' }],
 	],
 
 	cog: [

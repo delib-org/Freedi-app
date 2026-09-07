@@ -44,6 +44,14 @@ const syncBadgeToIndexedDB = async (count: number): Promise<void> => {
 	try {
 		const openRequest = indexedDB.open('FreeDiNotifications', 1);
 
+		// An open request reports failure through an error event, not a throw, so
+		// the try/catch below never sees it. Without this handler the event bubbles
+		// to window.onerror and gets reported as an app crash — which it is not:
+		// a badge count that cannot be mirrored for the service worker is cosmetic.
+		openRequest.onerror = () => {
+			console.info('[useBadgeSync] Could not open the badge database:', openRequest.error);
+		};
+
 		openRequest.onupgradeneeded = (event) => {
 			const target = event.target as IDBOpenDBRequest;
 			const db = target.result;

@@ -887,8 +887,15 @@
 		gap: var(--space-xs);
 	}
 
+	// The reply box on a .text-input base — a white card to write on, the
+	// same one every other box in the app is. It must not be draggable
+	// sideways: the thread lives inside a sheet, and a textarea resized wide
+	// takes the sheet with it.
 	&__input {
 		background: var(--bg-card-solid);
+		resize: vertical;
+		min-height: 3.5rem;
+		line-height: 1.5;
 	}
 
 	// The clock on a message, quiet and at the end of the bubble

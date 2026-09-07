@@ -12,6 +12,8 @@ import type {
 	JoinClassResponse,
 	ModerateStatementRequest,
 	ModerateStatementResponse,
+	RewordQuestionRequest,
+	RewordQuestionResponse,
 	TeacherMessageRequest,
 	TeacherMessageResponse,
 	TeacherConsoleRequest,
@@ -306,6 +308,22 @@ export async function moderateStatement(
 	const call = httpsCallable<ModerateStatementRequest, ModerateStatementResponse>(
 		functions,
 		'agoraModerateStatement',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/**
+ * The teacher makes the question in front of the room clearer — and says
+ * whether the new words are for this game or for every round like it.
+ */
+export async function rewordQuestion(
+	request: RewordQuestionRequest,
+): Promise<RewordQuestionResponse> {
+	const call = httpsCallable<RewordQuestionRequest, RewordQuestionResponse>(
+		functions,
+		'agoraRewordQuestion',
 	);
 	const result = await call(request);
 

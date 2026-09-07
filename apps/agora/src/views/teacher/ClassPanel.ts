@@ -38,43 +38,6 @@ function labelNode(label: ProgressLabel): m.Children {
 	return `${label.done}/${label.total}`;
 }
 
-/** Who finished the current stage's self-paced steps — the "can I advance?" card on the Live tab */
-export function classProgressCard(
-	item: AgoraStagePlanItem,
-	participants: readonly AgoraParticipant[],
-	facts: ProgressFacts,
-): m.Children {
-	if (!PROGRESS_STAGES.has(item.stage) || participants.length === 0) return null;
-	const { entries, doneCount } = classProgress(item, participants, facts);
-
-	return m('.card.class-progress', [
-		m('.class-progress__head', [
-			m('p.teacher__section-title', t('teacher.class_progress')),
-			m(
-				'span.class-progress__count',
-				{ class: doneCount === entries.length ? 'class-progress__count--all' : undefined },
-				t(progressCountKey(item), { n: doneCount, total: entries.length }),
-			),
-		]),
-		m(
-			'.class-progress__chips',
-			entries.map((entry) =>
-				m(
-					'span.class-progress__chip',
-					{
-						key: entry.participant.participantId,
-						class: entry.done ? 'class-progress__chip--done' : undefined,
-					},
-					[
-						m('span.class-progress__name', entry.participant.anonName),
-						m('span.class-progress__state', labelNode(entry.label)),
-					],
-				),
-			),
-		),
-	]);
-}
-
 export interface ClassPanelAttrs {
 	plan: readonly AgoraStagePlanItem[];
 	currentIndex: number;
@@ -121,54 +84,28 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 				]),
 				participants.length === 0
 					? m('p.home-explanation', t('teacher.no_students_yet'))
-					: m('.class-panel__table', { role: 'table' }, [
-							m('.class-panel__row.class-panel__row--head', { role: 'row' }, [
-								m('span', t('teacher.col_game_name')),
-								m('span', t('teacher.col_real_name')),
-								m('span.class-panel__pips-head', t('teacher.col_progress')),
-								m('span', t('teacher.col_ratings')),
-								m('span', t('teacher.col_points')),
-								m('span'),
-							]),
+					: m(
+							'.class-panel__table',
+							{ role: 'list' },
 							participants.map((participant) => {
 								const real = realNameOf(participant.userId);
 								const unread = unreadRepliesFor(participant.userId);
 								const idle = idleMs(participant, now);
 
-								return m('.class-panel__row', { key: participant.participantId, role: 'row' }, [
-									m('span.class-panel__name', participant.anonName),
-									m(
-										'span.class-panel__real',
-										{ class: real ? undefined : 'class-panel__real--none' },
-										real ?? t('teacher.no_real_name'),
-									),
-									m(
-										'span.class-panel__pips',
-										opened.map((item) => {
-											const progress = participantProgress(participant, item, facts);
-
-											return m(
-												'span.class-panel__pip',
-												{
-													key: item.itemId,
-													class: progress.done ? 'class-panel__pip--done' : undefined,
-													title: t(`stage.${item.stage}`),
-												},
-												labelNode(progress.label),
-											);
-										}),
-									),
-									m('span', String(ratingsByUid.get(participant.userId) ?? 0)),
-									m('span.roster__stat--points', String(participant.points.total)),
-									m('span.class-panel__actions', [
-										idle > IDLE_AFTER_MS && current?.stage !== AgoraStage.lobby
-											? m(
-													'span.class-panel__idle',
-													t('teacher.idle_for', { minutes: Math.round(idle / 60_000) }),
-												)
-											: null,
+								return m(
+									'.class-panel__row',
+									{ key: participant.participantId, role: 'listitem' },
+									[
+										m('.class-panel__who', [
+											m('span.class-panel__name', participant.anonName),
+											m(
+												'span.class-panel__real',
+												{ class: real ? undefined : 'class-panel__real--none' },
+												real ?? t('teacher.no_real_name'),
+											),
+										]),
 										m(
-											'button.btn.btn--sm.btn--secondary',
+											'button.btn.btn--sm.btn--secondary.class-panel__message',
 											{ type: 'button', onclick: () => onMessage(participant.userId) },
 											[
 												t('teacher.message_student'),
@@ -177,10 +114,44 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 													: null,
 											],
 										),
-									]),
-								]);
+										m(
+											'span.class-panel__pips',
+											{ 'aria-label': t('teacher.col_progress') },
+											opened.map((item) => {
+												const progress = participantProgress(participant, item, facts);
+
+												return m(
+													'span.class-panel__pip',
+													{
+														key: item.itemId,
+														class: progress.done ? 'class-panel__pip--done' : undefined,
+														title: t(`teacherStage.${item.stage}`),
+													},
+													labelNode(progress.label),
+												);
+											}),
+										),
+										m('span.class-panel__stats', [
+											`${t('teacher.col_ratings')} ${ratingsByUid.get(participant.userId) ?? 0}`,
+											' · ',
+											m(
+												'span.roster__stat--points',
+												t('roster.points', { points: String(participant.points.total) }),
+											),
+											idle > IDLE_AFTER_MS && current?.stage !== AgoraStage.lobby
+												? [
+														' · ',
+														m(
+															'span.class-panel__idle',
+															t('teacher.idle_for', { minutes: Math.round(idle / 60_000) }),
+														),
+													]
+												: null,
+										]),
+									],
+								);
 							}),
-						]),
+						),
 			]);
 		},
 	};

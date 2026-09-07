@@ -1,8 +1,9 @@
 import m from 'mithril';
-import { t } from '../../lib/i18n';
+import { getLang, t } from '../../lib/i18n';
 import { getUserState, ensureUser } from '../../lib/user';
 import { fetchSessionReport, type SessionReport } from '../../lib/teacher';
 import { AgoraSessionOutcome } from '@freedi/shared-types';
+import { TeacherNav } from '../../components/TeacherNav';
 
 const OUTCOME_KEY: Record<AgoraSessionOutcome, string> = {
 	[AgoraSessionOutcome.success]: 'report.outcome_success',
@@ -60,22 +61,17 @@ export function GameReport(initialVnode: m.Vnode<{ id: string }>): m.Component<{
 			const convergence = session.convergence;
 
 			return m('.shell', [
-				m('.home-header', [
-					m('button.btn.btn--ghost', { onclick: () => m.route.set('/teach') }, t('common.back')),
-				]),
+				m(TeacherNav, {
+					title: t('report.title'),
+					subtitle: new Date(session.createdAt).toLocaleDateString(getLang(), {
+						day: 'numeric',
+						month: 'long',
+						year: 'numeric',
+					}),
+					// A report is read from the class it belongs to as often as from home
+					onBack: () => m.route.set(session.classId ? `/teach/class/${session.classId}` : '/teach'),
+				}),
 				m('.shell__content', { style: { gap: 'var(--space-xl)' } }, [
-					m('.stack', [
-						m('h2', t('report.title')),
-						m(
-							'p.home-explanation',
-							new Date(session.createdAt).toLocaleDateString(undefined, {
-								day: 'numeric',
-								month: 'long',
-								year: 'numeric',
-							}),
-						),
-					]),
-
 					score
 						? m('.card.report__score-card', [
 								m('.report__score-main', [
@@ -148,6 +144,29 @@ export function GameReport(initialVnode: m.Vnode<{ id: string }>): m.Component<{
 										]),
 									),
 								]),
+					]),
+
+					// Where a teacher goes from a summary: back to the class, or straight
+					// into the next lesson with it
+					m('.teacher__mode-row.report__actions', [
+						session.classId
+							? m(
+									'button.btn.btn--secondary',
+									{ type: 'button', onclick: () => m.route.set(`/teach/class/${session.classId}`) },
+									t('report.back_to_class'),
+								)
+							: null,
+						m(
+							'button.btn.btn--primary',
+							{
+								type: 'button',
+								onclick: () =>
+									m.route.set(
+										session.classId ? `/teach/start?classId=${session.classId}` : '/teach/start',
+									),
+							},
+							t(session.classId ? 'report.again' : 'dashboard.start_game'),
+						),
 					]),
 				]),
 			]);

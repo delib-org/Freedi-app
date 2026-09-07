@@ -19,10 +19,15 @@ import { Results } from '../Results';
 import { Voting } from '../Voting';
 import { TeacherInstructions } from './TeacherInstructions';
 import { StagePlanEditor } from './StagePlanEditor';
-import { planItemLabel } from '../../components/StageNav';
+import { TeacherNav, type TeacherNavMenuItem } from '../../components/TeacherNav';
+import { Collapsible } from '../../components/Collapsible';
+import { TeacherStrip, type StripAction } from './TeacherStrip';
+import { nowCard } from './NowCard';
+import { TeacherPanel } from './TeacherPanel';
+import { countedSteps, teacherStepLabel } from '../../lib/teacherSteps';
+import { loadTeacherNav, navClass } from '../../lib/teacherNav';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { CountdownTimer } from '../../components/CountdownTimer';
-import { QRShare } from '../../components/QRShare';
 import { LookPicker } from '../../components/LookPicker';
 import { classLooks } from '../../lib/looks';
 import {
@@ -35,7 +40,7 @@ import {
 	ChallengePhase,
 	VotingStageSettings,
 } from '@freedi/shared-types';
-import { setSessionTheme, setVotingSettings } from '../../lib/teacher';
+import { classLabel, setSessionTheme, setVotingSettings } from '../../lib/teacher';
 import { getVotingState, listenToVoting, stopVotingListeners } from '../../lib/voting';
 import {
 	endRound,
@@ -54,7 +59,8 @@ import {
 	type ChallengeActions,
 } from './VotingCards';
 import { questionPanel, roundPanel, triggerLine } from './DeliberationCards';
-import { ClassPanel, classProgressCard, progressFacts } from './ClassPanel';
+import { liveWeighings } from '../../lib/flows/liveTally';
+import { ClassPanel, progressFacts } from './ClassPanel';
 import { MessagesPanel } from './MessagesPanel';
 import { StudentThreadDrawer } from './StudentThreadDrawer';
 import {
@@ -64,14 +70,18 @@ import {
 	unreadRepliesTotal,
 } from '../../lib/teacherConsole';
 
-/** The console's three faces: the board, the class, and what the class wrote */
-type ConsoleTab = 'live' | 'class' | 'messages';
-const TABS: readonly ConsoleTab[] = ['live', 'class', 'messages'];
+/** The console's side panels: the class, what the class wrote, the settings */
+type Panel = 'class' | 'texts' | 'settings';
 
 /**
- * Teacher live panel — projector-friendly: the stage rail, class progress,
- * stage instructions, the per-stage panel (answers, the auto-vote rule, the
- * ballot), join code + QR, and the one button that opens the next stage.
+ * The teacher's console — one screen.
+ *
+ * The header carries the join code; a strip under it says which step the
+ * room is on and holds the one button that opens the next; the board below
+ * is what is happening now (who has finished, who has not), the stage's own
+ * card, and — folded away — the words the students are reading. The class
+ * list, the texts and the settings open as a panel over the board, so the
+ * button never leaves the screen while the teacher answers a student.
  *
  * Which stage is next comes from the session's resolved plan — the same
  * array the advance callable walks — so the button offered is always one the
@@ -88,11 +98,15 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let savingLook = false;
 	let userId = '';
 	let editingPlan: AgoraStagePlanItem[] | null = null;
-	/** The cog: the board shows the game, the settings wait behind it */
-	let settingsOpen = false;
+	/** Which panel is over the board, if any — one at a time */
+	let panel: Panel | null = null;
+	/** What opened the panel, so closing it hands focus back */
+	let panelOpener: HTMLElement | null = null;
+	/** The students' own words, folded away; unfolds per stage, refolds on the next */
+	let peekOpen = false;
+	let peekStage: string | null = null;
 	let savingPlan = false;
 	let planSaveFailed = false;
-	let tab: ConsoleTab = 'live';
 	/** The student whose private thread is open beside the console, and which text it is about */
 	let drawerUid: string | null = null;
 	let drawerAbout: string | undefined;
@@ -101,6 +115,39 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	function openDrawer(studentUid: string, aboutStatementId?: string): void {
 		drawerUid = studentUid;
 		drawerAbout = aboutStatementId;
+	}
+
+	function openPanel(next: Panel, opener?: EventTarget | null): void {
+		if (panel === next) {
+			closePanel();
+
+			return;
+		}
+		panel = next;
+		panelOpener = opener instanceof HTMLElement ? opener : null;
+	}
+
+	function closePanel(): void {
+		panel = null;
+		const opener = panelOpener;
+		panelOpener = null;
+		// After Mithril has removed the panel, not before
+		window.setTimeout(() => opener?.focus(), 0);
+	}
+
+	function copyProjectorLink(): void {
+		void navigator.clipboard?.writeText(projectorUrl()).then(() => {
+			projectorLinkCopied = true;
+			m.redraw();
+			window.setTimeout(() => {
+				projectorLinkCopied = false;
+				m.redraw();
+			}, 2000);
+		});
+	}
+
+	function openProjector(): void {
+		window.open(projectorUrl(), '_blank', 'noopener');
 	}
 
 	/** The projector: a second tab (or a classroom PC) showing what the students see */
@@ -137,6 +184,11 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	void ensureUser().then((user) => {
 		userId = user.uid;
 		listenToSession(sessionId, user.uid);
+		// The one screen that pays for the bar's list up front: this is where a
+		// teacher switches lessons mid-period, and it is also the only way the
+		// bar can name the class a game belongs to (the session doc holds the
+		// id, not the name).
+		if (!user.isAnonymous) loadTeacherNav();
 		// Macrotask redraw — see GameController note.
 		setTimeout(() => m.redraw(), 0);
 	});
@@ -207,11 +259,6 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			});
 	}
 
-	/** The visible line under the advance button when the server said no */
-	function advanceErrorLine(): m.Children {
-		return advanceFailed ? m('p.join__error', t('teacher.advance_failed')) : null;
-	}
-
 	return {
 		onremove() {
 			stopListening();
@@ -263,6 +310,14 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const topic = getTopicPackage(session.topicPackageId);
 			if (!topic) loadTopicPackage(session.topicPackageId);
 			const hasCharacters = topic ? topic.kind !== 'quick' : true;
+			const steps = countedSteps(plan);
+			const stepIndex = Math.min(currentIndex, steps.length - 1);
+
+			// A new stage refolds the students' words
+			if (peekStage !== current.itemId) {
+				peekStage = current.itemId;
+				peekOpen = false;
+			}
 
 			const inDeliberation = current.stage === AgoraStage.deliberation;
 			const inQuestion = current.stage === AgoraStage.question;
@@ -285,6 +340,14 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					ratingsByUid.set(rater.evaluatorId, (ratingsByUid.get(rater.evaluatorId) ?? 0) + 1);
 				}
 			}
+			// Who has weighed each text, straight off the timeline. The teacher's
+			// figures are server-written and lag by a trigger round-trip; this
+			// says whether the silence is the class or the count (see liveTally).
+			const liveWeighed = liveWeighings(
+				studentEvalTimes,
+				answers.map((answer) => answer.statementId),
+			);
+
 			// The same count, restricted to THIS round's texts — a round is done
 			// when the dealt sample is read, not when the square was
 			const answerIds = new Set(answers.map((answer) => answer.statementId));
@@ -297,44 +360,290 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			}
 			const facts = progressFacts(proposals, answers, voterUids, roundRatedByUid);
 			const unread = unreadRepliesTotal();
+			const ended = current.stage === AgoraStage.ended;
+			const atResults = current.stage === AgoraStage.results || ended;
 
-			const tabStrip = m(
-				'.teacher-tabs',
-				{ role: 'tablist' },
-				TABS.map((name) =>
+			// The header: the lesson's name, the class, the code — and on a phone
+			// the projector and the cog fold into the menu, where they still fit
+			const menuItems: TeacherNavMenuItem[] = [
+				{ icon: 'era', label: t('teacher.open_projector'), onSelect: openProjector },
+				{ icon: 'cog', label: t('teacher.settings_title'), onSelect: () => openPanel('settings') },
+			];
+			const navBar = m(TeacherNav, {
+				title: topic?.title ?? t('teacher.title'),
+				subtitle: (() => {
+					const agoraClass = navClass(session.classId);
+
+					return agoraClass ? classLabel(agoraClass) : undefined;
+				})(),
+				onBack: () => m.route.set(session.classId ? `/teach/class/${session.classId}` : '/teach'),
+				code: session.code,
+				menuItems,
+				trailing: [
 					m(
-						'button.teacher-tabs__tab',
-						{
-							key: name,
-							type: 'button',
-							role: 'tab',
-							'aria-selected': String(tab === name),
-							class: tab === name ? 'teacher-tabs__tab--on' : undefined,
-							onclick: () => {
-								tab = name;
-							},
-						},
-						[
-							t(`teacher.tab_${name}`),
-							name !== 'live' && unread > 0
-								? m('span.class-panel__badge', { 'aria-hidden': 'true' }, String(unread))
-								: null,
-						],
+						'button.btn.btn--secondary.btn--sm.teacher-nav__projector',
+						{ type: 'button', title: t('teacher.projector_hint'), onclick: openProjector },
+						[m(Icon, { name: 'era', size: 20 }), m('span', ` ${t('teacher.open_projector')}`)],
 					),
-				),
-			);
+					atResults
+						? null
+						: m(
+								'button.teacher-nav__cog',
+								{
+									type: 'button',
+									'aria-label': t('teacher.settings_title'),
+									title: t('teacher.settings_title'),
+									'aria-expanded': String(panel === 'settings'),
+									'aria-controls': 'teacher-settings',
+									class: panel === 'settings' ? 'teacher-nav__cog--on' : undefined,
+									onclick: (event: MouseEvent) => openPanel('settings', event.currentTarget),
+								},
+								m(Icon, { name: 'cog', size: 20 }),
+							),
+				],
+			});
 
-			const tabPanel =
-				tab === 'class'
-					? m(ClassPanel, {
-							plan,
-							currentIndex,
-							participants,
-							facts,
-							ratingsByUid,
-							onMessage: openDrawer,
-						})
-					: m(MessagesPanel, { session, participants, onMessage: openDrawer });
+			// The one button. Its label says what it opens, in the teacher's words.
+			const action: StripAction | null = ended
+				? null
+				: {
+						label:
+							current.stage === AgoraStage.lobby
+								? t('teacher.start_journey')
+								: !next || next.stage === AgoraStage.ended
+									? t('teacher.end_game')
+									: t('teacher.open_next', { stage: teacherStepLabel(next) }),
+						onclick: () => handleAdvance(nextIndex),
+						disabled: !next || (current.stage === AgoraStage.lobby && participants.length === 0),
+						busy: advancing,
+					};
+			const strip = m(TeacherStrip, {
+				steps,
+				currentIndex: stepIndex,
+				action,
+				reportRoute: `/teach/report/${sessionId}`,
+				failed: advanceFailed,
+				onRetry: () => handleAdvance(nextIndex),
+			});
+
+			// The two doors beside the board: who is here, and what they wrote
+			const chip = (
+				which: Panel,
+				icon: 'people' | 'talk',
+				label: string,
+				count: number,
+			): m.Children =>
+				m(
+					'button.teacher-panels__chip',
+					{
+						type: 'button',
+						'aria-expanded': String(panel === which),
+						'aria-controls': `teacher-panel-${which}`,
+						class: panel === which ? 'teacher-panels__chip--open' : undefined,
+						onclick: (event: MouseEvent) => openPanel(which, event.currentTarget),
+					},
+					[
+						m(Icon, { name: icon, size: 20 }),
+						m('span', label),
+						m('span.teacher-panels__count', ` · ${count}`),
+						which === 'texts' && unread > 0
+							? m(
+									'span.teacher-panels__badge',
+									{ 'aria-label': t('teacher.unread_n', { n: unread }) },
+									String(unread),
+								)
+							: null,
+					],
+				);
+			const panelChips = m('.teacher-panels', [
+				chip('class', 'people', t('teacher.panel_class'), participants.length),
+				chip(
+					'texts',
+					'talk',
+					t('teacher.panel_texts'),
+					getDeliberationState().proposals.length + answers.length,
+				),
+			]);
+
+			// The students' own words, quoted and folded: a teacher reads along
+			// when they want to, and the board stays about the room otherwise
+			const peek = topic
+				? m('.card.teacher-peek', [
+						m(
+							'button.teacher-peek__summary',
+							{
+								type: 'button',
+								'aria-expanded': String(peekOpen),
+								'aria-controls': 'teacher-peek-body',
+								onclick: () => {
+									peekOpen = !peekOpen;
+								},
+							},
+							[
+								m(Icon, { name: 'watch', size: 20 }),
+								m('span.teacher-peek__label', t('teacher.student_instructions')),
+								m(
+									'span.teacher-peek__chevron',
+									{ class: peekOpen ? 'teacher-peek__chevron--open' : undefined },
+									m(Icon, { name: 'arrow', size: 16 }),
+								),
+							],
+						),
+						peekOpen
+							? m(
+									Collapsible,
+									m('#teacher-peek-body', [
+										m(TeacherInstructions, {
+											stage: current.stage,
+											topic,
+											questionTitle: current.title,
+											questionExplanation: current.explanation,
+											questionKind: current.kind,
+											// The one edit an opened stage takes: the words, when the
+											// room did not understand them.
+											reword: { sessionId, itemId: current.itemId },
+										}),
+									]),
+								)
+							: null,
+					])
+				: null;
+
+			// Behind the cog: the upcoming steps, how the vote opens, the room's
+			// colours, the projector link. A sheet, so the board never moves.
+			const settingsBody = m('.stack', { style: { gap: 'var(--space-lg)' } }, [
+				m('section.teacher-panel__section.stack', [
+					m('p.teacher__section-title', t('teacher.edit_plan')),
+					editingPlan
+						? m('.stack', [
+								m(StagePlanEditor, {
+									items: editingPlan,
+									hasCharacters,
+									frozenCount: currentIndex + 1,
+									onChange: (items) => {
+										editingPlan = items;
+									},
+								}),
+								planSaveFailed ? m('p.join__error', t('teacher.plan_save_failed')) : null,
+								m('.teacher__mode-row', [
+									m(
+										'button.btn.btn--primary',
+										{ disabled: savingPlan, onclick: savePlan },
+										savingPlan ? t('teacher.saving') : t('teacher.save_plan'),
+									),
+									m(
+										'button.btn.btn--secondary',
+										{
+											disabled: savingPlan,
+											onclick: () => {
+												editingPlan = null;
+												planSaveFailed = false;
+											},
+										},
+										t('teacher.cancel_plan'),
+									),
+								]),
+							])
+						: next && next.stage !== AgoraStage.ended
+							? m(
+									'button.btn.btn--secondary',
+									{
+										type: 'button',
+										onclick: () => {
+											editingPlan = plan
+												.filter((item) => item.stage !== AgoraStage.ended)
+												.map((item) => ({ ...item }));
+										},
+									},
+									t('teacher.edit_plan'),
+								)
+							: m('p.lobby__status', t('teacher.plan_locked')),
+				]),
+
+				// How the vote opens — set while the class still deliberates; by the
+				// time the ballot is drawn up the settings have already been read.
+				inDeliberation && (next?.stage === AgoraStage.voting || !planOwnsVoting)
+					? m(
+							'section.teacher-panel__section.stack',
+							votingSettingsCard(
+								session.votingSettings,
+								savingSettings,
+								planOwnsVoting,
+								saveVotingSettings,
+							),
+						)
+					: null,
+
+				// The room's colours: the two presets and whatever the class has
+				// built so far. A civic square wears Odyssey's and is not asked.
+				session.sessionMode !== AgoraSessionMode.civic
+					? m('section.teacher-panel__section.stack.teacher-look', [
+							m('p.teacher__section-title', t('teacher.look_title')),
+							m('p.home-explanation.home-explanation--start', t('teacher.look_hint')),
+							m(LookPicker, {
+								current: resolveAgoraTheme(session, null),
+								classLooks: classLooks(participants, undefined),
+								onWear: (choice) => {
+									if (choice) saveLook(choice);
+								},
+							}),
+						])
+					: null,
+
+				m('section.teacher-panel__section.stack', [
+					m('p.teacher__section-title', t('teacher.open_projector')),
+					m('p.home-explanation.home-explanation--start', t('teacher.projector_hint')),
+					m(
+						'button.btn.btn--secondary.btn--full',
+						{ type: 'button', onclick: copyProjectorLink },
+						t(
+							projectorLinkCopied ? 'teacher.projector_link_copied' : 'teacher.copy_projector_link',
+						),
+					),
+				]),
+			]);
+
+			const sidePanel =
+				panel === 'class'
+					? m(
+							TeacherPanel,
+							{
+								id: 'teacher-panel-class',
+								title: t('teacher.panel_class'),
+								count: participants.length,
+								onClose: closePanel,
+							},
+							m(ClassPanel, {
+								plan,
+								currentIndex,
+								participants,
+								facts,
+								ratingsByUid,
+								onMessage: openDrawer,
+							}),
+						)
+					: panel === 'texts'
+						? m(
+								TeacherPanel,
+								{
+									id: 'teacher-panel-texts',
+									title: t('teacher.panel_texts'),
+									onClose: closePanel,
+								},
+								m(MessagesPanel, { session, participants, onMessage: openDrawer }),
+							)
+						: panel === 'settings'
+							? m(
+									TeacherPanel,
+									{
+										id: 'teacher-settings',
+										title: t('teacher.settings_title'),
+										wide: true,
+										onClose: closePanel,
+									},
+									settingsBody,
+								)
+							: null;
 
 			const drawerParticipant = drawerUid
 				? participants.find((participant) => participant.userId === drawerUid)
@@ -354,103 +663,8 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						})
 					: null;
 
-			const projectorRow = m('.teacher__mode-row.teacher__projector', [
-				m(
-					'button.btn.btn--secondary.btn--sm',
-					{ type: 'button', onclick: () => window.open(projectorUrl(), '_blank', 'noopener') },
-					[m(Icon, { name: 'era', size: 16 }), ` ${t('teacher.open_projector')}`],
-				),
-				m(
-					'button.btn.btn--ghost.btn--sm',
-					{
-						type: 'button',
-						onclick: () => {
-							void navigator.clipboard?.writeText(projectorUrl()).then(() => {
-								projectorLinkCopied = true;
-								m.redraw();
-								window.setTimeout(() => {
-									projectorLinkCopied = false;
-									m.redraw();
-								}, 2000);
-							});
-						},
-					},
-					t(projectorLinkCopied ? 'teacher.projector_link_copied' : 'teacher.copy_projector_link'),
-				),
-			]);
-
-			const advanceButton = (primary: boolean): m.Children =>
-				next
-					? m(
-							primary ? 'button.btn.btn--primary.btn--lg' : 'button.btn.btn--secondary.btn--full',
-							{
-								disabled: (primary && participants.length === 0) || advancing,
-								onclick: () => handleAdvance(nextIndex),
-							},
-							current.stage === AgoraStage.lobby
-								? t('teacher.start_journey')
-								: next.stage === AgoraStage.ended
-									? t('teacher.end_game')
-									: t('teacher.open_next', { stage: planItemLabel(next) }),
-						)
-					: null;
-
-			// The stage rail: every item, the current one lit, the closed ones ticked
-			const planRail = m('.card.stack.teacher-plan', [
-				m('.class-progress__head', [
-					m('p.teacher__section-title', t('teacher.plan_title')),
-					m(
-						'button.teacher-settings__toggle',
-						{
-							type: 'button',
-							'aria-expanded': String(settingsOpen),
-							'aria-label': t('teacher.settings'),
-							title: t('teacher.settings'),
-							class: settingsOpen ? 'teacher-settings__toggle--on' : undefined,
-							onclick: () => {
-								settingsOpen = !settingsOpen;
-							},
-						},
-						m(Icon, { name: 'cog', size: 20 }),
-					),
-				]),
-				m(
-					'ol.teacher-plan__list',
-					plan
-						.filter((item) => item.stage !== AgoraStage.ended)
-						.map((item, index) =>
-							m(
-								'li.teacher-plan__item',
-								{
-									key: item.itemId,
-									class:
-										index < currentIndex
-											? 'teacher-plan__item--done'
-											: index === currentIndex
-												? 'teacher-plan__item--current'
-												: undefined,
-									'aria-current': index === currentIndex ? 'step' : undefined,
-								},
-								[
-									m(
-										'span.teacher-plan__mark',
-										index < currentIndex ? m(Icon, { name: 'check', size: 14 }) : String(index + 1),
-									),
-									m('span.teacher-plan__label', planItemLabel(item)),
-									item.stage === AgoraStage.voting && session.stageState?.[item.itemId]?.trigger
-										? m(
-												'span.teacher-plan__note',
-												t(`teacher.trigger_fired_${session.stageState[item.itemId].trigger}`),
-											)
-										: null,
-								],
-							),
-						),
-				),
-			]);
-
 			// Results/ended: the teacher projects the same transformed map + score
-			if (current.stage === AgoraStage.results || current.stage === AgoraStage.ended) {
+			if (atResults) {
 				if (!topic) {
 					return m(
 						'.shell',
@@ -458,208 +672,86 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					);
 				}
 
-				return m('.shell.shell--wide', [
+				return m('.shell.shell--wide.teacher-console', [
+					navBar,
+					strip,
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-						tabStrip,
-						tab === 'live' ? m(Results, { session, topic }) : tabPanel,
-						projectorRow,
-						advanceErrorLine(),
-						advanceButton(false),
+						panelChips,
+						m(Results, { session, topic }),
 					]),
+					sidePanel,
 					drawer,
 				]);
 			}
 
-			// Behind the cog: the upcoming stages, how the vote runs, the room's
-			// look. The board itself stays the game.
-			const settingsPanel = settingsOpen
-				? m('.card.stack.teacher-settings', [
-						m('.class-progress__head', [
-							m('p.teacher__section-title', t('teacher.settings')),
-							m(
-								'button.btn.btn--sm.btn--ghost',
-								{
-									type: 'button',
-									onclick: () => {
-										settingsOpen = false;
-									},
-								},
-								t('teacher.settings_close'),
-							),
-						]),
-
-						// The stages ahead
-						m('.stack.teacher-settings__section', [
-							m('p.teacher-settings__label', t('teacher.plan_title')),
-							editingPlan
-								? m('.stack', [
-										m(StagePlanEditor, {
-											items: editingPlan,
-											hasCharacters,
-											frozenCount: currentIndex + 1,
-											onChange: (items) => {
-												editingPlan = items;
-											},
-										}),
-										planSaveFailed ? m('p.join__error', t('teacher.plan_save_failed')) : null,
-										m('.teacher__mode-row', [
-											m(
-												'button.btn.btn--primary',
-												{ disabled: savingPlan, onclick: savePlan },
-												savingPlan ? t('teacher.creating') : t('teacher.save_plan'),
-											),
-											m(
-												'button.btn.btn--secondary',
-												{
-													disabled: savingPlan,
-													onclick: () => {
-														editingPlan = null;
-														planSaveFailed = false;
-													},
-												},
-												t('teacher.cancel_plan'),
-											),
-										]),
-									])
-								: next && next.stage !== AgoraStage.ended
-									? m(
-											'button.btn.btn--secondary',
-											{
-												type: 'button',
-												onclick: () => {
-													editingPlan = plan
-														.filter((item) => item.stage !== AgoraStage.ended)
-														.map((item) => ({ ...item }));
-												},
-											},
-											t('teacher.edit_plan'),
-										)
-									: m('p.lobby__status', t('teacher.plan_locked')),
-						]),
-
-						// How the vote runs — set while the class still deliberates; by the
-						// time the ballot is drawn up the settings have already been read.
-						inDeliberation && (next?.stage === AgoraStage.voting || !planOwnsVoting)
-							? votingSettingsCard(
-									session.votingSettings,
-									savingSettings,
-									planOwnsVoting,
-									saveVotingSettings,
-								)
-							: null,
-
-						// The room's look: the two presets and whatever the class has built
-						// so far. Every phone that has not chosen its own follows this; the
-						// teacher can also crown a student's creation as the class look. A
-						// civic square wears Odyssey's and is not asked.
-						session.sessionMode !== AgoraSessionMode.civic
-							? m('.stack.teacher-settings__section.teacher-look', [
-									m('p.teacher-settings__label', t('teacher.look_title')),
-									m('p.teacher-look__hint', t('teacher.look_hint')),
-									m(LookPicker, {
-										current: resolveAgoraTheme(session, null),
-										classLooks: classLooks(participants, undefined),
-										onWear: (choice) => {
-											if (choice) saveLook(choice);
-										},
-									}),
-								])
-							: null,
-					])
-				: null;
-
-			return m('.shell.shell--wide', [
+			return m('.shell.shell--wide.teacher-console', [
+				// On a phone the strip is the last thing in tab order; a keyboard
+				// or switch user gets a door straight to it
+				m('a.skip-link', { href: '#teacher-next' }, t('teacher.skip_to_next')),
+				navBar,
+				strip,
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-					planRail,
-					settingsPanel,
-					tabStrip,
+					panelChips,
 
-					...(tab !== 'live'
-						? [tabPanel]
-						: [
-								classProgressCard(current, participants, facts),
+					nowCard({
+						item: current,
+						participants,
+						facts,
+						joinUrl,
+						code: session.code,
+						onMessage: openDrawer,
+						now: Date.now(),
+					}),
 
-								topic
-									? m(TeacherInstructions, {
-											stage: current.stage,
-											topic,
-											questionTitle: current.title,
-											questionExplanation: current.explanation,
-											questionKind: current.kind,
-										})
+					inQuestion
+						? roundSpecOf(current)
+							? roundPanel(session, current, answers, liveWeighed)
+							: questionPanel(session, current, answers, liveWeighed)
+						: null,
+
+					// While the vote is open the teacher holds the reveal, and always
+					// sees the tallies themselves — they cannot decide when to show
+					// the room something they cannot see.
+					inVoting
+						? [
+								m('p.home-explanation.home-explanation--start', t('teacher.hint_voting')),
+								// The round runs above the ballot: what the teacher taps
+								// next, and who it is waiting on.
+								session.votingSettings?.challengeGame === true
+									? challengeTurnCard(getGame(session), challenging, challengeActions)
 									: null,
+								votingLiveCard(
+									session.votingSettings,
+									voterUids.size,
+									participants.length,
+									savingSettings,
+									challengeLive,
+									saveVotingSettings,
+								),
+								m(Voting, {
+									session,
+									myParticipant: participants[0],
+									userId,
+									board: true,
+								}),
+							]
+						: null,
 
-								inQuestion
-									? roundSpecOf(current)
-										? roundPanel(session, current, answers)
-										: questionPanel(session, current, answers)
-									: null,
+					// Students cycle propose→rate→help on their own; the teacher's
+					// deliberation card shows the count and how the vote will open
+					inDeliberation
+						? m('.card.stack', [
+								m('.delib__header', [
+									session.roundEndsAt ? m(CountdownTimer, { endsAt: session.roundEndsAt }) : null,
+									m('span.values__score', `${t('teacher.proposals_count')}: ${proposals.length}`),
+								]),
+								triggerLine(current, next?.stage === AgoraStage.voting),
+							])
+						: null,
 
-								// While the vote is open the teacher holds the reveal, and always
-								// sees the tallies themselves — they cannot decide when to show
-								// the room something they cannot see.
-								inVoting
-									? [
-											// The round runs above the ballot: what the teacher taps
-											// next, and who it is waiting on.
-											session.votingSettings?.challengeGame === true
-												? challengeTurnCard(getGame(session), challenging, challengeActions)
-												: null,
-											votingLiveCard(
-												session.votingSettings,
-												voterUids.size,
-												participants.length,
-												savingSettings,
-												challengeLive,
-												saveVotingSettings,
-											),
-											m(Voting, {
-												session,
-												myParticipant: participants[0],
-												userId,
-												board: true,
-											}),
-										]
-									: null,
-
-								// Students cycle propose→rate→help on their own; the teacher's
-								// deliberation panel shows progress and the auto-vote rule's state
-								inDeliberation
-									? m('.card.stack', [
-											m('.delib__header', [
-												session.roundEndsAt
-													? m(CountdownTimer, { endsAt: session.roundEndsAt })
-													: null,
-												m(
-													'span.values__score',
-													`${t('teacher.proposals_count')}: ${proposals.length}`,
-												),
-											]),
-											triggerLine(current, next?.stage === AgoraStage.voting),
-										])
-									: null,
-							]),
-
-					m('.card.teacher__code-panel', [
-						// The join code stays on the board through EVERY stage, so a
-						// latecomer can always join mid-lesson
-						m('p.teacher__section-title', t('teacher.session_code')),
-						m('.teacher__code', session.code),
-						projectorRow,
-						current.stage === AgoraStage.lobby
-							? [m(QRShare, { url: joinUrl }), m('p.lobby__status', t('teacher.scan_to_join'))]
-							: [
-									m('p.teacher__section-title', t('teacher.current_stage')),
-									m('h3', planItemLabel(current)),
-								],
-						m('.text-center', [
-							m('span.lobby__count', String(participants.length)),
-							m('p.lobby__status', ` ${t('teacher.participants')}`),
-						]),
-						advanceErrorLine(),
-						advanceButton(true) ?? m('p.lobby__status', planItemLabel(current)),
-					]),
+					peek,
 				]),
+				sidePanel,
 				drawer,
 			]);
 		},

@@ -101,10 +101,8 @@ for (let attempt = 0; attempt < 6 && !topicReady; attempt++) {
 }
 if (!topicReady) throw new Error('teacher home never listed a topic package');
 await teacher.locator('text=המהפכה הצרפתית').first().click();
-await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
-// Choosing a scenario no longer opens a session — it opens the stage plan,
-// where the teacher orders the journey first. The walk to a live session is
-// two clicks now, and the same CTA carries both of them.
+// Tapping a scenario opens the start screen already holding it; the one
+// button there opens the lesson.
 await teacher.waitForURL(/teach\/start/, { timeout: 20000 });
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
@@ -184,7 +182,7 @@ for (let i = 0; i < 3; i++) {
 		await shot(s1, `00b-values-graded-${i}`);
 	}
 	await teacher
-		.locator('.class-progress__count--all')
+		.locator('.teacher-now__count--all')
 		.waitFor({ timeout: 20000 })
 		.catch(() => console.log(`  (stage ${i}: class progress never read all-done, continuing)`));
 }

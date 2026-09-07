@@ -198,8 +198,8 @@ try {
 	await teacher.waitForTimeout(1500);
 	await teacher.goto(teacherUrl(sessionId), { waitUntil: 'domcontentloaded' });
 	// The look lives behind the cog now — the board shows the game, not the settings
-	await teacher.waitForSelector('.teacher-settings__toggle', { timeout: 30_000 });
-	await teacher.locator('.teacher-settings__toggle').click();
+	await teacher.waitForSelector('.teacher-nav__cog', { timeout: 30_000 });
+	await teacher.locator('.teacher-nav__cog').click();
 	await teacher.waitForSelector('.teacher-look .look-card', { timeout: 30_000 });
 	await shot(teacher, '9-teacher-look-card');
 	const cards = await teacher.locator('.teacher-look .look-card').count();

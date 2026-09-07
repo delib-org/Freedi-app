@@ -2,7 +2,7 @@ import m from 'mithril';
 import { t, getLang } from '../../lib/i18n';
 import { generateTopicPackage } from '../../lib/callables';
 import { LanguagePicker } from '../../components/LanguagePicker';
-import { TeacherBar } from '../../components/TeacherBar';
+import { TeacherNav } from '../../components/TeacherNav';
 
 /** Teacher enters a topic; the AI drafts the full journey for review */
 export function TopicWizard(): m.Component {
@@ -37,7 +37,7 @@ export function TopicWizard(): m.Component {
 		},
 		view() {
 			return m('.shell', [
-				m(TeacherBar, {
+				m(TeacherNav, {
 					title: t('wizard.title'),
 					onBack: () => m.route.set('/teach'),
 					trailing: m(LanguagePicker),

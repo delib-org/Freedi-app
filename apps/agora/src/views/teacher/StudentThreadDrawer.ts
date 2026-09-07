@@ -165,7 +165,7 @@ export function StudentThreadDrawer(): m.Component<StudentThreadDrawerAttrs> {
 							),
 						]),
 						m('.teacher-thread__composer', [
-							m('textarea.thread__input', {
+							m('textarea.text-input.thread__input', {
 								value: draft,
 								rows: 2,
 								maxlength: AGORA_TEACHER_MESSAGE.MAX_TEXT,

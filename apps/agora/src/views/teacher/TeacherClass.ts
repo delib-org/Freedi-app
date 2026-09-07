@@ -1,11 +1,12 @@
 import m from 'mithril';
-import { t } from '../../lib/i18n';
+import { getLang, t } from '../../lib/i18n';
 import { getUserState, ensureUser } from '../../lib/user';
 import { teacherRoster, teacherClass } from '../../lib/callables';
 import { classLabel, fetchTeacherClass, type TeacherClassDetail } from '../../lib/teacher';
 import { Icon } from '../../components/Icon';
 import { ClassForm, type ClassFormValue } from '../../components/ClassForm';
 import { advancementSummary, type TeacherConsoleMember } from '@freedi/shared-types';
+import { TeacherNav } from '../../components/TeacherNav';
 
 /**
  * One class: its advancement across games, its roster with each student's
@@ -32,6 +33,18 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 	let addingTeacher = false;
 	let teacherError: string | null = null;
 	let removingUid: string | null = null;
+	let codeCopied = false;
+
+	function copyClassCode(code: string): void {
+		void navigator.clipboard?.writeText(code).then(() => {
+			codeCopied = true;
+			m.redraw();
+			window.setTimeout(() => {
+				codeCopied = false;
+				m.redraw();
+			}, 1600);
+		});
+	}
 
 	async function rename(value: ClassFormValue): Promise<void> {
 		if (savingClass) return;
@@ -351,7 +364,7 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 													[
 														m(
 															'span',
-															new Date(game.playedAt).toLocaleDateString(undefined, {
+															new Date(game.playedAt).toLocaleDateString(getLang(), {
 																day: 'numeric',
 																month: 'short',
 															}),
@@ -421,33 +434,47 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 			}
 
 			const summary = detail.aggregate ? advancementSummary(detail.aggregate) : null;
-			const { members, sessions } = detail;
+			const { members, sessions, classCode } = detail;
 
 			return m('.shell', [
-				m('.home-header', [
-					m('button.btn.btn--ghost', { onclick: () => m.route.set('/teach') }, t('common.back')),
-				]),
+				// The bar says which class this is, so the page no longer repeats it —
+				// and the class's own cog rides along on the bar, where the chrome
+				// of every teacher screen now lives.
+				m(TeacherNav, {
+					title: classLabel(detail),
+					subtitle: detail.schoolName,
+					onBack: () => m.route.set('/teach'),
+					trailing: m(
+						'button.teacher-nav__cog',
+						{
+							type: 'button',
+							'aria-expanded': String(settingsOpen),
+							'aria-label': t('roster.settings'),
+							title: t('roster.settings'),
+							class: settingsOpen ? 'teacher-nav__cog--on' : undefined,
+							onclick: () => {
+								settingsOpen = !settingsOpen;
+							},
+						},
+						m(Icon, { name: 'cog', size: 20 }),
+					),
+				}),
 				m('.shell__content', { style: { gap: 'var(--space-xl)' } }, [
-					m('.stack', [
-						m('.class-progress__head', [
-							m('h2', classLabel(detail)),
+					// The door: what the code is for, the code itself, and a copy button —
+					// the old caption had the digits and no verb
+					m('.card.roster__code-card', [
+						m(
+							'p.home-explanation.home-explanation--start',
+							t('roster.class_code', { code: '' }).trim(),
+						),
+						m('.roster__code-row', [
+							m('.teacher__code', classCode),
 							m(
-								'button.teacher-settings__toggle',
-								{
-									type: 'button',
-									'aria-expanded': String(settingsOpen),
-									'aria-label': t('roster.settings'),
-									title: t('roster.settings'),
-									class: settingsOpen ? 'teacher-settings__toggle--on' : undefined,
-									onclick: () => {
-										settingsOpen = !settingsOpen;
-									},
-								},
-								m(Icon, { name: 'cog', size: 20 }),
+								'button.btn.btn--secondary.btn--sm',
+								{ type: 'button', onclick: () => copyClassCode(classCode) },
+								t(codeCopied ? 'roster.code_copied' : 'roster.copy_code'),
 							),
 						]),
-						detail.schoolName ? m('p.home-explanation', detail.schoolName) : null,
-						m('p.roster__class-code', t('roster.class_code', { code: detail.classCode })),
 					]),
 					settingsOpen ? settingsPanel(detail) : null,
 
@@ -477,9 +504,9 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 						: null,
 
 					m(
-						'button.btn.btn--primary.btn--full',
+						'button.btn.btn--primary.btn--full.btn--lg',
 						{ onclick: () => m.route.set(`/teach/start?classId=${classId}`) },
-						t('dashboard.start_game'),
+						t('roster.start_with_class'),
 					),
 
 					m('.stack', [
@@ -511,7 +538,7 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 											[
 												m(
 													'span',
-													new Date(session.createdAt).toLocaleDateString(undefined, {
+													new Date(session.createdAt).toLocaleDateString(getLang(), {
 														day: 'numeric',
 														month: 'short',
 													}),

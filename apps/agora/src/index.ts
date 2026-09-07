@@ -99,21 +99,47 @@ if (import.meta.env.DEV) {
 	});
 }
 
+/**
+ * A screen that belongs to one id, rebuilt when the id changes.
+ *
+ * Mithril keeps a component instance alive when only the route parameter
+ * moves: /teach/session/A → /teach/session/B re-renders the SAME closure,
+ * which is still holding A's listeners and A's sessionId. Every one of these
+ * screens captures its id at construction, so the router has to hand them a
+ * new instance — a key on the rendered vnode is what asks for one.
+ *
+ * Unreachable until the teacher's navigation bar existed, and the very first
+ * thing it lets a teacher do: walk from one live lesson to another.
+ */
+function byId(component: m.ComponentTypes<{ id: string }>): m.RouteResolver<{ id: string }> {
+	return {
+		render(vnode) {
+			const id = String(vnode.attrs.id);
+
+			// Wrapped in a fragment on purpose: a key is only honoured inside a
+			// keyed list, and a resolver's return value is handed to the diff as
+			// a bare root, where the key would be ignored and the old instance
+			// kept — the very thing this is here to prevent.
+			return [m(component, { key: id, id })];
+		},
+	};
+}
+
 const root = document.getElementById('app');
 
 if (root) {
 	m.route(root, '/', {
 		'/': Home,
 		'/join/:code': JoinSession,
-		'/play/:id': GameController,
+		'/play/:id': byId(GameController),
 		'/teach': TeacherHome,
 		'/teach/new': TopicWizard,
 		'/teach/start': StartGame,
-		'/teach/topic/:id': TopicEditor,
-		'/teach/session/:id': TeacherSession,
-		'/teach/screen/:id': ProjectorScreen,
-		'/teach/class/:id': TeacherClass,
-		'/teach/report/:id': GameReport,
+		'/teach/topic/:id': byId(TopicEditor),
+		'/teach/session/:id': byId(TeacherSession),
+		'/teach/screen/:id': byId(ProjectorScreen),
+		'/teach/class/:id': byId(TeacherClass),
+		'/teach/report/:id': byId(GameReport),
 	});
 	// The banner lives beside the router's root so a crash in any view leaves it standing
 	const bannerHost = document.createElement('div');

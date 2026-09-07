@@ -345,6 +345,8 @@ export type {
 	TeacherMessageResponse,
 	ModerateStatementRequest,
 	ModerateStatementResponse,
+	RewordQuestionRequest,
+	RewordQuestionResponse,
 } from './agoraClassroomCallables';
 
 export type { AgoraModeration, ModeratedDoc } from './agoraModeration';
@@ -354,6 +356,17 @@ export {
 	isTeacherEdited,
 	isTeacherTouched,
 } from './agoraModeration';
+
+export type {
+	AgoraQuestionWording,
+	AgoraTeacherPromptMap,
+	AgoraTeacherPrompts,
+} from './agoraTeacherPrompts';
+export {
+	AgoraQuestionWordingSchema,
+	AgoraTeacherPromptsSchema,
+	applyTeacherPrompts,
+} from './agoraTeacherPrompts';
 
 export type { AgoraIdentity } from './agoraIdentity';
 export { AgoraIdentitySchema, createAgoraIdentityId } from './agoraIdentity';

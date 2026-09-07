@@ -1,7 +1,7 @@
 import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { Icon } from '../../components/Icon';
-import { planItemLabel } from '../../components/StageNav';
+import { teacherStepLabel } from '../../lib/teacherSteps';
 import {
 	addableStages,
 	planEditorReduce,
@@ -168,7 +168,7 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 							m(
 								'option',
 								{ value: kind, selected: questionKindOf(item) === kind },
-								t(kind === 'open' ? 'stage.question' : `question.kind_${kind}`),
+								t(kind === 'open' ? 'teacherStage.question' : `question.kind_${kind}`),
 							),
 						),
 					),
@@ -409,11 +409,11 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 								m('.plan-editor__head', [
 									m('span.plan-editor__index', String(index + 1)),
 									m('span.plan-editor__name', [
-										m('span.plan-editor__kind', t(`stage.${item.stage}`)),
+										m('span.plan-editor__kind', t(`teacherStage.${item.stage}`)),
 										item.stage !== AgoraStage.question
 											? null
 											: frozen
-												? m('span.plan-editor__title', planItemLabel(item))
+												? m('span.plan-editor__title', teacherStepLabel(item))
 												: m(
 														'button.plan-editor__title.plan-editor__title--editable',
 														{
@@ -422,7 +422,7 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 															'aria-expanded': String(open),
 															onclick: () => openForTyping(item.itemId),
 														},
-														untitled ? t('startGame.plan_untitled') : planItemLabel(item),
+														untitled ? t('startGame.plan_untitled') : teacherStepLabel(item),
 													),
 									]),
 									frozen
@@ -525,7 +525,7 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 														onChange(next);
 													},
 												},
-												t(`stage.${stage}`),
+												t(`teacherStage.${stage}`),
 											),
 										),
 									)

@@ -33,6 +33,7 @@ export type { ErrorContext, RetryOptions } from './errorHandling';
 export {
 	isFirestoreInternalCrash,
 	isBlockedServiceWorkerCrash,
+	isThirdPartyScriptCrash,
 	isTransientAuthNetworkError,
 } from './sentryFilters';
 export type {
