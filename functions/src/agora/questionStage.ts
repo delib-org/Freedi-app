@@ -16,7 +16,6 @@
  * friends loved cannot pass itself off as the class's position.
  */
 
-import { FieldPath } from 'firebase-admin/firestore';
 import { db } from '../db';
 import {
 	Collections,
@@ -25,6 +24,7 @@ import {
 	AgoraCpBandSummary,
 	AgoraSession,
 	AgoraStagePlanItem,
+	AgoraStageOutcome,
 	AgoraTopicPackage,
 	Statement,
 	StatementType,
@@ -33,13 +33,18 @@ import {
 	resolveQuestionSelection,
 	rankCarriedAnswers,
 	selectCarriedAnswers,
-	statementToSimpleStatement,
+	roundSpecOf,
 	cpOf,
 	groupByCpBand,
 	rankByCp,
+	isAgoraHidden,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { callLLM, extractJson, WORKER_MODEL } from '../config/openai-chat';
+import { closeRoundStage } from './roundStage';
+import { toCarriedAnswer, writeOutcome } from './carryOutcome';
+
+export { toCarriedAnswer, writeOutcome } from './carryOutcome';
 
 interface Creator {
 	uid: string;
@@ -49,7 +54,12 @@ interface Creator {
 	isAnonymous: boolean;
 }
 
-/** The question Statement a question item hangs its answers off */
+/**
+ * The question Statement a question item hangs its answers off. A round
+ * rarely has a title — the phones render its prompt in the student's own
+ * language — so its text falls back to the kind; nothing student-facing
+ * reads it.
+ */
 export function buildQuestionStatement(params: {
 	item: AgoraStagePlanItem;
 	sessionId: string;
@@ -58,7 +68,7 @@ export function buildQuestionStatement(params: {
 	creator: Creator;
 }): Statement | undefined {
 	const built = createStatementObject({
-		statement: (params.item.title ?? '').trim(),
+		statement: (params.item.title ?? '').trim() || (roundSpecOf(params.item)?.kind ?? ''),
 		statementType: StatementType.question,
 		parentId: params.rootStatementId,
 		topParentId: params.rootStatementId,
@@ -73,22 +83,6 @@ export function buildQuestionStatement(params: {
 	const explanation = (params.item.explanation ?? '').trim();
 
 	return explanation ? { ...built, description: explanation } : built;
-}
-
-/** An answer row as the closing reads it off the statement doc */
-function toCarriedAnswer(statement: Statement, named: boolean): AgoraCarriedAnswer {
-	const raters = Number(statement.evaluation?.numberOfEvaluators ?? 0);
-	const mean = raters > 0 ? Number(statement.evaluation?.averageEvaluation ?? 0) : 0;
-	const consensus = Number(statement.consensus ?? Number.NaN);
-
-	return {
-		statementId: statement.statementId,
-		statement: statement.statement,
-		mean: Number.isFinite(mean) ? mean : 0,
-		...(raters > 0 && Number.isFinite(consensus) ? { consensus } : {}),
-		raters,
-		...(named && statement.anonName ? { anonName: statement.anonName } : {}),
-	};
 }
 
 /** The band as the prompt names it — plain words, so the model bands as we do */
@@ -208,6 +202,12 @@ export async function closeQuestionStage(
 	item: AgoraStagePlanItem,
 ): Promise<void> {
 	if (!item.statementId) return;
+	// A round is a question item with a different scale — it has its own close
+	if (roundSpecOf(item)) {
+		await closeRoundStage(sessionId, item);
+
+		return;
+	}
 	try {
 		const sessionRef = db.collection(Collections.agoraSessions).doc(sessionId);
 		const [sessionSnap, answersSnap] = await Promise.all([
@@ -224,7 +224,7 @@ export async function closeQuestionStage(
 
 		const answers = answersSnap.docs
 			.map((docSnap) => docSnap.data() as Statement)
-			.filter((statement) => statement.parentId === item.statementId);
+			.filter((statement) => statement.parentId === item.statementId && !isAgoraHidden(statement));
 
 		const rows = rankCarriedAnswers(answers.map((statement) => toCarriedAnswer(statement, named)));
 		const selected = selectCarriedAnswers(rows, resolveQuestionSelection(item));
@@ -236,28 +236,14 @@ export async function closeQuestionStage(
 		const language = (topicSnap.data() as AgoraTopicPackage | undefined)?.language ?? 'he';
 		const { summary, bands } = await summariseAnswers(item.title ?? '', selected, language);
 
-		const outcome = {
+		const outcome: AgoraStageOutcome = {
 			selected,
 			...(summary ? { summary } : {}),
 			...(bands.length > 0 ? { bands } : {}),
 			computedAt: Date.now(),
 		};
 
-		const batch = db.batch();
-		const chosen = new Set(selected.map((row) => row.statementId));
-		answers.forEach((statement) => {
-			batch.update(db.collection(Collections.statements).doc(statement.statementId), {
-				isChosen: chosen.has(statement.statementId),
-			});
-		});
-		batch.update(db.collection(Collections.statements).doc(item.statementId), {
-			results: answers
-				.filter((statement) => chosen.has(statement.statementId))
-				.map((statement) => statementToSimpleStatement(statement)),
-			lastUpdate: Date.now(),
-		});
-		batch.update(sessionRef, new FieldPath('stageState', item.itemId, 'outcome'), outcome);
-		await batch.commit();
+		await writeOutcome({ sessionId, item, answers, outcome });
 	} catch (error) {
 		logError(error, {
 			operation: 'agora.closeQuestionStage',

@@ -145,3 +145,17 @@
 	border: 1px dashed var(--border-light);
 	border-radius: var(--radius-md, 12px);
 }
+
+.teacherList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--padding-sm, 8px);
+}
+
+.teacherRow {
+  display: inline-flex;
+  align-items: center;
+}

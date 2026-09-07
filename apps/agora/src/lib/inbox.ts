@@ -24,7 +24,9 @@ export type InboxTarget =
 	/** A classmate's proposal I helped — re-read it, weigh it again */
 	| { kind: 'helped'; proposalId: string }
 	/** The stalls, for news whose next step is "help someone else" */
-	| { kind: 'market' };
+	| { kind: 'market' }
+	/** The private thread with the teacher — a note, or a word about my text */
+	| { kind: 'teacher' };
 
 export interface InboxItem {
 	/** Stable, derived from the CAUSE (message id, notification id, edit clock) */

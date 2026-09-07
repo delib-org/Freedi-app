@@ -38,6 +38,12 @@ export const AgoraPointsSchema = object({
 	 * legacy-docs reason as `rating` — read as `?? 0`.
 	 */
 	revising: optional(number()),
+	/**
+	 * Likes and high ratings received in the WizCol rounds
+	 * (AGORA_POINTS.ROUND_APPRECIATION each). Optional for the same
+	 * legacy-docs reason as `rating` — read as `?? 0`.
+	 */
+	appreciation: optional(number()),
 	total: number(),
 });
 
@@ -103,6 +109,12 @@ export const AgoraParticipantSchema = object({
 	firstProposalAwardedAt: optional(number()),
 	/** How many of this student's ratings have been credited (cap guard) */
 	creditedRatings: optional(number()),
+	/**
+	 * The round-appreciation ledger: evaluation ids that already paid THIS
+	 * author (`${raterUid}--${answerId}`). Server-written, rules-pinned — a
+	 * redelivered trigger or a re-rating finds its key here and pays nothing.
+	 */
+	roundAppreciations: optional(record(string(), boolean())),
 	/**
 	 * Durable per-proposal "what I've acknowledged" watermarks (change-awareness
 	 * chips survive refresh and device switch). Keyed by proposal statementId.

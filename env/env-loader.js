@@ -78,6 +78,11 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       ['OPENAI_FAST_MODEL', 'OPENAI_FAST_MODEL'],
       ['FIND_SIMILAR_STATEMENTS_ENDPOINT', 'FIND_SIMILAR_STATEMENTS_ENDPOINT'],
       ['FIND_SIMILAR_STATEMENTS_ENDPOINT', 'CHECK_SIMILARITIES_ENDPOINT'],
+      // Outgoing mail — survey co-admin invitations are sent from the Next
+      // runtime (src/lib/email/transporter.ts), not from the functions.
+      ['EMAIL_USER', 'EMAIL_USER'],
+      ['EMAIL_PASSWORD', 'EMAIL_PASSWORD'],
+      ['EMAIL_SERVICE', 'EMAIL_SERVICE'],
       // Client-side vars (NEXT_PUBLIC_ prefix)
       ['FIREBASE_API_KEY', 'NEXT_PUBLIC_FIREBASE_API_KEY'],
       ['FIREBASE_AUTH_DOMAIN', 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'],

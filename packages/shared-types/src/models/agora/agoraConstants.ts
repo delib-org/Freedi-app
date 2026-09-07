@@ -157,6 +157,14 @@ export const AGORA_POINTS = {
 	 * is a fee nobody has to earn.
 	 */
 	CHALLENGE_SURVIVED: 3,
+	/**
+	 * A like on my story, or a rating of at least AGORA_ROUND.UNIT_APPRECIATED_MIN
+	 * on my need or my vision, pays me +1 — once per classmate per text (the
+	 * evaluation id is deterministic, so a re-rating cannot pay twice, and a
+	 * later downgrade never claws it back). The reader earns nothing for
+	 * these: the rounds pay the author who was appreciated.
+	 */
+	ROUND_APPRECIATION: 1,
 } as const;
 
 export const AGORA_ANTI_GAMING = {
@@ -260,4 +268,23 @@ export const AGORA_LIMITS = {
 	MAX_IMAGE_BYTES: 5 * 1024 * 1024,
 	/** Proposals shown per rating batch */
 	RATING_BATCH_SIZE: 5,
+} as const;
+
+/** A day in milliseconds — the unit the retention windows below are written in */
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Real names typed at the door (`agoraIdentities`) */
+export const AGORA_IDENTITY = {
+	MAX_REAL_NAME: 60,
+	/** How long after a lesson a real name is kept before the TTL policy deletes it */
+	RETENTION_MS: 30 * DAY_MS,
+} as const;
+
+/** The private teacher ↔ student thread (`agoraTeacherMessages`) */
+export const AGORA_TEACHER_MESSAGE = {
+	MAX_TEXT: 500,
+	/** Lines one thread may hold — a conversation, not a chat log */
+	MAX_PER_THREAD: 60,
+	/** The teacher's reason for hiding, shown to the author */
+	MAX_REASON: 200,
 } as const;

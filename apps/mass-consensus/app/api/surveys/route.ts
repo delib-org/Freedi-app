@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSurvey, getSurveysByCreator, getBatchSurveyStats } from '@/lib/firebase/surveys';
+import {
+  createSurvey,
+  getSurveysByCreator,
+  getBatchSurveyStats,
+  getSurveysSharedWithUser,
+} from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { CreateSurveyRequest } from '@/types/survey';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
@@ -34,7 +39,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const surveys = await getSurveysByCreator(userId);
+    // A user's surveys are the ones they created plus the ones they were
+    // invited to co-administer.
+    const [ownSurveys, shared] = await Promise.all([
+      getSurveysByCreator(userId),
+      getSurveysSharedWithUser(userId),
+    ]);
+
+    const byId = new Map(ownSurveys.map((survey) => [survey.surveyId, survey]));
+    shared.surveys.forEach((survey) => {
+      if (!byId.has(survey.surveyId)) {
+        byId.set(survey.surveyId, survey);
+      }
+    });
+
+    const surveys = Array.from(byId.values()).sort(
+      (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
+    );
 
     // Batch-fetch stats for all surveys in a single query (avoids N+1 problem)
     const surveyIds = surveys.map((s) => s.surveyId);
@@ -44,6 +65,9 @@ export async function GET(request: NextRequest) {
       surveys,
       stats,
       total: surveys.length,
+      // Role the caller holds on each survey they did not create, so the list
+      // can badge shared surveys and hide actions they cannot take.
+      sharedRoles: shared.rolesBySurveyId,
     });
   } catch (error) {
     logger.error('[GET /api/surveys] Error:', error);

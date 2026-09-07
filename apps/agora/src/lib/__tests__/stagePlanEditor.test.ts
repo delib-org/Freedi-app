@@ -32,6 +32,42 @@ describe('planEditorReduce', () => {
 		);
 	});
 
+	it('a round is a question item of a kind: the kind switch clears or restores the cutoff', () => {
+		const wizcol = stagePlanPreset('wizcol');
+		expect(addableStages(wizcol, { hasCharacters: false })).toEqual([AgoraStage.question]);
+		// A fresh question is open, with a cutoff
+		let items = planEditorReduce(wizcol, { kind: 'add', stage: AgoraStage.question }, fresh);
+		const fresh1 = items.find((item) => item.itemId === 'question-1');
+		expect(fresh1?.kind).toBe('open');
+		expect(fresh1?.selection).toBeDefined();
+		// Turned into a vision round it carries every text — no cutoff, no title needed
+		items = planEditorReduce(
+			items,
+			{ kind: 'patch', itemId: 'question-1', patch: { kind: 'vision' } },
+			fresh,
+		);
+		const vision = items.find((item) => item.itemId === 'question-1');
+		expect(vision?.kind).toBe('vision');
+		expect(vision?.selection).toBeUndefined();
+		expect(validateStagePlan(items, { hasCharacters: false })).toEqual([]);
+		// And back to open: the cutoff returns, the title is required again
+		items = planEditorReduce(
+			items,
+			{ kind: 'patch', itemId: 'question-1', patch: { kind: 'open' } },
+			fresh,
+		);
+		expect(items.find((item) => item.itemId === 'question-1')?.selection).toBeDefined();
+		expect(validateStagePlan(items, { hasCharacters: false })).toContain('question_needs_title');
+
+		const running = { hasCharacters: false, frozenCount: 2 }; // lobby, the story round are history
+		const swapped = planEditorReduce(
+			stagePlanPreset('quickDecision'),
+			{ kind: 'preset', preset: 'wizcol' },
+			running,
+		);
+		expect(kinds(swapped).slice(0, 3)).toEqual(kinds(stagePlanPreset('quickDecision')).slice(0, 3));
+	});
+
 	it('never moves or removes the fixed ends', () => {
 		const items = stagePlanPreset('quickDecision');
 		expect(planEditorReduce(items, { kind: 'remove', itemId: 'lobby' }, fresh)).toEqual(items);

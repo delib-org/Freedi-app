@@ -3,12 +3,15 @@ import { Icon } from '../../components/Icon';
 import { t } from '../../lib/i18n';
 import { getUserState, signInWithGoogle, ensureUser } from '../../lib/user';
 import {
+	classLabel,
 	fetchTeacherDashboard,
 	listTopicPackages,
 	patchTopicPackage,
 	saveTopicPackage,
 	type TeacherDashboard,
 } from '../../lib/teacher';
+import { teacherClass } from '../../lib/callables';
+import { ClassForm, type ClassFormValue } from '../../components/ClassForm';
 import {
 	AgoraClassAggregate,
 	AgoraSession,
@@ -29,6 +32,10 @@ import { LanguagePicker } from '../../components/LanguagePicker';
 export function TeacherHome(): m.Component {
 	let topics: AgoraTopicPackage[] = [];
 	let classes: TeacherDashboard['classes'] = [];
+	let schools: TeacherDashboard['schools'] = [];
+	let addClassOpen = false;
+	let creatingClass = false;
+	let addClassError: string | null = null;
 	let sessions: AgoraSession[] = [];
 	let aggregates = new Map<string, AgoraClassAggregate>();
 	let loaded = false;
@@ -109,6 +116,7 @@ export function TeacherHome(): m.Component {
 				if (user.isAnonymous) throw new Error('anonymous');
 				const dashboard = await fetchTeacherDashboard();
 				classes = dashboard.classes;
+				schools = dashboard.schools;
 				sessions = dashboard.sessions;
 				aggregates = dashboard.aggregates;
 			} catch (error) {
@@ -260,6 +268,51 @@ export function TeacherHome(): m.Component {
 		return [...list].sort((a, b) => rank(a) - rank(b));
 	}
 
+	/** Open a class in the teacher's school; the grid picks it up on the reload */
+	async function createClass(value: ClassFormValue): Promise<void> {
+		if (creatingClass) return;
+		creatingClass = true;
+		addClassError = null;
+		m.redraw();
+		try {
+			await teacherClass({
+				action: 'create',
+				name: value.name,
+				...(value.gradeLevel ? { gradeLevel: value.gradeLevel } : {}),
+				...(value.schoolId ? { schoolId: value.schoolId } : {}),
+			});
+			const dashboard = await fetchTeacherDashboard();
+			classes = dashboard.classes;
+			schools = dashboard.schools;
+			aggregates = dashboard.aggregates;
+			addClassOpen = false;
+		} catch (error) {
+			console.error('[Teacher] Creating a class failed:', error);
+			addClassError = t('classForm.error');
+		}
+		creatingClass = false;
+		m.redraw();
+	}
+
+	/** The card that opens the form — the last tile of the grid */
+	function addClassCard(): m.Children {
+		return m(
+			'button.dashboard__class-card.dashboard__class-card--add',
+			{
+				key: 'add-class',
+				type: 'button',
+				'aria-expanded': String(addClassOpen),
+				onclick: () => {
+					addClassOpen = !addClassOpen;
+				},
+			},
+			[
+				m('strong.dashboard__class-name', `＋ ${t('dashboard.add_class')}`),
+				m('span.dashboard__class-meta', schools.map((school) => school.name).join(' · ')),
+			],
+		);
+	}
+
 	function classCard(agoraClass: TeacherDashboard['classes'][number]): m.Children {
 		const aggregate = aggregates.get(agoraClass.classId);
 		const summary = aggregate ? advancementSummary(aggregate) : null;
@@ -273,7 +326,7 @@ export function TeacherHome(): m.Component {
 				tabindex: 0,
 			},
 			[
-				m('strong.dashboard__class-name', agoraClass.name),
+				m('strong.dashboard__class-name', classLabel(agoraClass)),
 				m(
 					'span.dashboard__class-meta',
 					t('dashboard.members', { count: String(agoraClass.memberCount) }),
@@ -411,12 +464,35 @@ export function TeacherHome(): m.Component {
 									t('dashboard.start_quick'),
 								),
 
-								classes.length > 0
+								// My classes: the ones I have, and — in a school the admin attached
+								// me to — a card that opens another. With neither, say what to ask for.
+								classes.length > 0 || schools.length > 0
 									? m('.stack', [
 											m('p.teacher__section-title', t('dashboard.my_classes')),
-											m('.dashboard__class-grid', classes.map(classCard)),
+											m('.dashboard__class-grid', [
+												...classes.map(classCard),
+												schools.length > 0 ? addClassCard() : null,
+											]),
+											addClassOpen
+												? m('.card.stack', [
+														m(ClassForm, {
+															schools,
+															submitLabel: t('classForm.create'),
+															busyLabel: t('classForm.creating'),
+															busy: creatingClass,
+															error: addClassError,
+															onSubmit: (value) => void createClass(value),
+															onCancel: () => {
+																addClassOpen = false;
+															},
+														}),
+													])
+												: null,
 										])
-									: null,
+									: m('.stack', [
+											m('p.teacher__section-title', t('dashboard.my_classes')),
+											m('p.home-explanation', t('dashboard.no_school_text')),
+										]),
 
 								sessions.length > 0
 									? m('.stack', [

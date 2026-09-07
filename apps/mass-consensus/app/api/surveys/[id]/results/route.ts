@@ -7,6 +7,7 @@ import {
   getAllSurveyProgress,
 } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { denySurveyPermission } from '@/lib/auth/surveyAccess';
 import { logger } from '@/lib/utils/logger';
 import { Collections, Statement, StatementType, UserDemographicQuestion } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
@@ -234,15 +235,14 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
 
-    // Verify user owns this survey
+    // Verify the caller may reach this survey
     const survey = await getSurveyById(surveyId);
     if (!survey) {
       return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
     }
 
-    if (survey.creatorId !== userId) {
-      return NextResponse.json({ error: 'You can only view results for your own surveys' }, { status: 403 });
-    }
+    const denied0 = await denySurveyPermission(survey, userId, 'view');
+    if (denied0) return denied0;
 
     // Scope demographic questions to those actually referenced by this
     // survey's current demographic pages. This prevents orphan/duplicate

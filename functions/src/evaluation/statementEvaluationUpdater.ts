@@ -7,7 +7,7 @@
  */
 
 import { logger } from 'firebase-functions/v1';
-import { FieldValue, Timestamp, type Transaction } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { number, parse } from 'valibot';
 import {
 	Collections,
@@ -202,16 +202,36 @@ interface StakeholderAncestors {
  * parent: a question sitting directly under its group is the common shape and
  * does not deserve two reads of one doc. So the usual cost of inheritance is a
  * single extra read per evaluation, and zero when the statement is top-level.
+ *
+ * These reads are deliberately NOT transactional (`ref.get()`, never
+ * `transaction.get()`), and that is the whole point of this function's
+ * existence as a separate unit.
+ *
+ * A transactional read TAKES A LOCK on the document it reads. The parent
+ * question is the same document for every option under it, so reading it
+ * inside the transaction made every rating in a deliberation queue behind
+ * every other one: N students rating N options serialised on one question
+ * doc that this transaction never even writes. On the emulator, whose
+ * locking is pessimistic, that surfaced as `10 ABORTED: Transaction lock
+ * timeout` after two full minutes, and as `3 INVALID_ARGUMENT: Transaction
+ * is invalid or closed` for whichever transaction's lease expired while it
+ * waited. In production it is the same contention wearing retries.
+ *
+ * Nothing here needs the transaction's snapshot. This is configuration — a
+ * stakeholder count and a sampling quality, declared once by an admin and
+ * inherited downward — and no write in this transaction touches it. The
+ * worst a stale read can do is compute one confidence index against a count
+ * an admin changed in the same instant, which the recalculation callable
+ * exists to correct anyway.
  */
 async function readStakeholderAncestors(
-	transaction: Transaction,
 	statementId: string,
 	parentId?: string,
 	topParentId?: string,
 ): Promise<StakeholderAncestors> {
 	const scopeFor = async (id?: string): Promise<StakeholderScope | undefined> => {
 		if (!id || id === statementId) return undefined;
-		const snapshot = await transaction.get(db.collection(Collections.statements).doc(id));
+		const snapshot = await db.collection(Collections.statements).doc(id).get();
 
 		return snapshot.exists ? (snapshot.data() as StakeholderScope) : undefined;
 	};
@@ -331,12 +351,10 @@ async function updateStatementInTransaction(
 			statementData.topParentId = statementData.parentId || statementId;
 		}
 
-		// Read the ancestors that may declare the stakeholder count. This must
-		// happen HERE: Firestore requires every read in a transaction to
-		// precede every write, so it cannot be done lazily at the point of use
-		// further down.
+		// The ancestors that may declare the stakeholder count. A plain read,
+		// not a transactional one, so it takes no lock on the question every
+		// option in the deliberation shares — see readStakeholderAncestors.
 		const ancestors = await readStakeholderAncestors(
-			transaction,
 			statementId,
 			statementData.parentId,
 			statementData.topParentId,

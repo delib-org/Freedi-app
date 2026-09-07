@@ -17,7 +17,7 @@ import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { createRequire } from 'node:module';
 import { preflight, FIRESTORE_REST, VITE_HOST } from './lib/preflight.mjs';
-import { eq, fail, mkPage, shotter, step } from './lib/e2e.mjs';
+import { eq, fail, mkPage, shotter, step, passNameDoor } from './lib/e2e.mjs';
 import { db, fastlane, teacherUrl } from './lib/fastlane.ts';
 
 const require = createRequire(import.meta.url);
@@ -77,6 +77,7 @@ try {
 	step('student: the lobby opens in candy');
 	const student = await mkPage(browser, 'student', { width: 430, height: 900 });
 	await student.goto(game.joinUrl, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(student);
 	await student.waitForSelector('.lobby__look button', { timeout: 30_000 });
 	await student.waitForTimeout(800);
 	eq('document wears candy', await student.evaluate(() => document.documentElement.dataset.sessionTheme), 'candy');
@@ -196,6 +197,9 @@ try {
 	);
 	await teacher.waitForTimeout(1500);
 	await teacher.goto(teacherUrl(sessionId), { waitUntil: 'domcontentloaded' });
+	// The look lives behind the cog now — the board shows the game, not the settings
+	await teacher.waitForSelector('.teacher-settings__toggle', { timeout: 30_000 });
+	await teacher.locator('.teacher-settings__toggle').click();
 	await teacher.waitForSelector('.teacher-look .look-card', { timeout: 30_000 });
 	await shot(teacher, '9-teacher-look-card');
 	const cards = await teacher.locator('.teacher-look .look-card').count();

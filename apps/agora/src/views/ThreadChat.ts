@@ -17,7 +17,7 @@ import { stalledBanner } from '../components/StalledBanner';
 import { diffWords } from '../lib/textDiff';
 import { markThreadSeen } from '../lib/seenState';
 import { RateScale, rateOptionFor } from '../components/RateScale';
-import { requestMineFocus } from '../lib/helpedFocus';
+import { requestMineFocus, requestTeacherFocus } from '../lib/helpedFocus';
 import {
 	reWeighMoment,
 	roundTripAt,
@@ -737,6 +737,23 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		// What HAPPENED, as opposed to what someone said
 		if (isSystemKind(message)) return systemLine(message, role);
 		const mine = message.creatorId === userId;
+		// Taken down by the teacher. Only ever my own — a classmate's hidden
+		// line never reaches this client — so it reads as a note to me.
+		if (message.hidden) {
+			return m(
+				'.thread__msg.thread__msg--mine.thread__msg--removed',
+				{ key: message.statementId, id: `msg-` },
+				[
+					m('p.thread__text', t('moderation.removed_short')),
+					m(
+						'button.btn.btn--ghost.btn--sm',
+						{ type: 'button', onclick: () => requestTeacherFocus() },
+						t('moderation.talk_to_teacher'),
+					),
+					m('span.thread__time', formatMessageTime(message.createdAt)),
+				],
+			);
+		}
 		const decidable =
 			role === 'owner' &&
 			!mine &&
@@ -761,6 +778,9 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					? m('span.thread__tag', iconLabel('idea', t('delib.thread_suggestion_tag')))
 					: null,
 				m('p.thread__text', message.statement),
+				mine && message.teacherEdited
+					? m('span.moderation__edited', t('moderation.edited_by_teacher'))
+					: null,
 				m('span.thread__time', formatMessageTime(message.createdAt)),
 				decidable ? decision(session, proposal, message) : statusChip(message),
 				// Said once, where the button is: a thank-you is not just

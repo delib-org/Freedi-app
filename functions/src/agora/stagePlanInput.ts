@@ -24,6 +24,8 @@ export function sanitizeStagePlan(
 	const clean: AgoraStagePlanItem[] = plan.map((item) => {
 		const next: AgoraStagePlanItem = { itemId: item.itemId.trim(), stage: item.stage };
 		if (item.stage === AgoraStage.question) {
+			// The kind decides the scale; the schema already pinned it to the picklist
+			if (item.kind) next.kind = item.kind;
 			next.title = (item.title ?? '').trim().slice(0, AGORA_STAGE_PLAN.MAX_TITLE_LENGTH);
 			const explanation = (item.explanation ?? '')
 				.trim()

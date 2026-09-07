@@ -14,6 +14,7 @@ import { AgoraStage, AGORA_STAGE_ORDER } from './agoraEnums';
 import { CutoffBy } from '../results/ResultsSettings';
 import { AgoraCpBandSummarySchema } from './questionSummary';
 import { sessionRunsVoting } from './sessionFlow';
+import { AgoraQuestionKindSchema, questionKindOf } from './rounds';
 import type { AgoraSessionFlow } from './sessionFlow';
 import type { AgoraSessionMode } from './agoraEnums';
 
@@ -34,7 +35,7 @@ import type { AgoraSessionMode } from './agoraEnums';
  */
 
 export const AGORA_STAGE_PLAN = {
-	MAX_ITEMS: 12,
+	MAX_ITEMS: 16,
 	/** Longest question/explanation the admin may type */
 	MAX_TITLE_LENGTH: 200,
 	MAX_EXPLANATION_LENGTH: 1000,
@@ -77,7 +78,13 @@ export const AgoraStagePlanItemSchema = object({
 	/** Stable id — the fixed ends are 'lobby' and 'results'; the rest are minted by the editor */
 	itemId: string(),
 	stage: enum_(AgoraStage),
-	/** question: what the room is asked */
+	/**
+	 * question: what it asks for — `open` (the admin's own question, rated
+	 * −1…+1) or one of the WizCol rounds (`story`, `needs`, `vision`), whose
+	 * prompt, scale and record come from `AGORA_ROUNDS`. Absent = `open`.
+	 */
+	kind: optional(AgoraQuestionKindSchema),
+	/** question: what the room is asked (a round may leave it blank — the prompt is the kind's) */
 	title: optional(string()),
 	explanation: optional(string()),
 	/** question: the question Statement, server-created when the plan is set */
@@ -288,7 +295,10 @@ export function planIndexForStage(session: StagePlanSession, stage: AgoraStage):
 	return -1;
 }
 
-/** The question items that have closed before `beforeIndex` — the carried context of a stage */
+/**
+ * The question items — open questions and the WizCol rounds alike — that
+ * have closed before `beforeIndex`: the carried context of a stage.
+ */
 export function closedQuestionItems(
 	session: StagePlanSession,
 	beforeIndex: number,
@@ -346,7 +356,13 @@ export function validateStagePlan(
 		if (AGORA_CHARACTER_STAGES.has(item.stage) && !options.hasCharacters) {
 			errors.push('stage_needs_characters');
 		}
-		if (item.stage === AgoraStage.question && !(item.title ?? '').trim()) {
+		// An open question is nothing without its words; a round carries the
+		// kind's own prompt and may leave the title blank
+		if (
+			item.stage === AgoraStage.question &&
+			questionKindOf(item) === 'open' &&
+			!(item.title ?? '').trim()
+		) {
 			errors.push('question_needs_title');
 		}
 	});
@@ -354,13 +370,48 @@ export function validateStagePlan(
 	return Array.from(new Set(errors));
 }
 
-export type AgoraStagePlanPreset = 'classic' | 'quickDecision';
+export type AgoraStagePlanPreset = 'classic' | 'quickDecision' | 'wizcol' | 'scenarioWizcol';
 
 /**
- * Starting points for the editor. `classic` is the lesson the game has always
- * run; `quickDecision` is a room deciding one thing: ask, propose, vote.
+ * The WizCol tail every default plan ends with: the three rounds as question
+ * items of their kind, then the square and the vote.
+ */
+function wizcolTail(): AgoraStagePlanItem[] {
+	return [
+		{ itemId: 'round-story', stage: AgoraStage.question, kind: 'story' },
+		{ itemId: 'round-needs', stage: AgoraStage.question, kind: 'needs' },
+		{ itemId: 'round-vision', stage: AgoraStage.question, kind: 'vision' },
+		{
+			itemId: AgoraStage.deliberation,
+			stage: AgoraStage.deliberation,
+			votingTrigger: defaultVotingTrigger(),
+		},
+		{ itemId: AgoraStage.voting, stage: AgoraStage.voting },
+		{ itemId: AgoraStage.results, stage: AgoraStage.results },
+	];
+}
+
+/**
+ * Starting points for the editor. `wizcol` is the default: the WizCol
+ * process as a digital sequence — story, needs, vision, then the square and
+ * the vote. `scenarioWizcol` puts a scenario's character scenes
+ * in front of it as the prologue. `classic` is the lesson the game ran
+ * before; `quickDecision` is a room deciding one thing: ask, propose, vote.
  */
 export function stagePlanPreset(preset: AgoraStagePlanPreset): AgoraStagePlanItem[] {
+	if (preset === 'wizcol') {
+		return [{ itemId: AgoraStage.lobby, stage: AgoraStage.lobby }, ...wizcolTail()];
+	}
+	if (preset === 'scenarioWizcol') {
+		return [
+			{ itemId: AgoraStage.lobby, stage: AgoraStage.lobby },
+			{ itemId: AgoraStage.framing, stage: AgoraStage.framing },
+			{ itemId: AgoraStage.perspectives, stage: AgoraStage.perspectives },
+			{ itemId: AgoraStage.needs, stage: AgoraStage.needs },
+			{ itemId: AgoraStage.positioning, stage: AgoraStage.positioning },
+			...wizcolTail(),
+		];
+	}
 	if (preset === 'classic') {
 		return AGORA_STAGE_ORDER.filter((stage) => stage !== AgoraStage.ended).map((stage) => ({
 			itemId: stage,

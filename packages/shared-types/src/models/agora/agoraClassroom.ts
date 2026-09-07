@@ -54,6 +54,14 @@ export const AgoraSchoolSchema = object({
 	schoolId: string(),
 	name: string(),
 	city: optional(string()),
+	/**
+	 * The teachers a sys-admin attached to this school — the ones who may
+	 * open classes in it themselves. `teacherMap` is the `{uid: true}` query
+	 * index, for the same reason as on a class. Absent on schools written
+	 * before teachers could self-serve; read both as empty.
+	 */
+	teacherIds: optional(array(string())),
+	teacherMap: optional(record(string(), boolean())),
 	status: ActiveArchivedSchema,
 	/** Sys-admin uid that opened the school */
 	createdBy: string(),
@@ -235,12 +243,21 @@ function pointsSum(a: AgoraPoints, b: AgoraPoints): AgoraPoints {
 		helping: a.helping + b.helping,
 		rating: (a.rating ?? 0) + (b.rating ?? 0),
 		revising: (a.revising ?? 0) + (b.revising ?? 0),
+		appreciation: (a.appreciation ?? 0) + (b.appreciation ?? 0),
 		total: a.total + b.total,
 	};
 }
 
 export function emptyAgoraPoints(): AgoraPoints {
-	return { valueAccuracy: 0, proposals: 0, helping: 0, rating: 0, revising: 0, total: 0 };
+	return {
+		valueAccuracy: 0,
+		proposals: 0,
+		helping: 0,
+		rating: 0,
+		revising: 0,
+		appreciation: 0,
+		total: 0,
+	};
 }
 
 export function emptyStudentAggregate(

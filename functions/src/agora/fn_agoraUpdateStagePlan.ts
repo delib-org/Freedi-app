@@ -6,6 +6,7 @@ import {
 	AgoraSession,
 	AgoraSessionStatus,
 	AgoraStage,
+	roundSpecOf,
 	AgoraStagePlan,
 	AgoraStagePlanSchema,
 	AgoraTopicPackage,
@@ -98,9 +99,11 @@ export const agoraUpdateStagePlan = onCall(
 					clean[index] = stored;
 				}
 
-				// New question items get their Statement now; edited ones get their
-				// text updated. Both are safe inside the transaction: the ids are
-				// deterministic per item and the writes touch only this session's tree.
+				// New question items (open or a round) get their Statement now; edited
+				// ones get their text updated. Both are safe inside the transaction:
+				// the ids are deterministic per item and the writes touch only this
+				// session's tree. A round with no title keeps the kind as its text —
+				// the phones render the prompt from their own language, not from here.
 				const existingById = new Map(current.map((item) => [item.itemId, item]));
 				for (let index = frozenUpTo + 1; index < clean.length; index += 1) {
 					const item = clean[index];
@@ -109,7 +112,7 @@ export const agoraUpdateStagePlan = onCall(
 					if (previous?.statementId) {
 						clean[index] = { ...item, statementId: previous.statementId };
 						transaction.update(db.collection(Collections.statements).doc(previous.statementId), {
-							statement: (item.title ?? '').trim(),
+							statement: (item.title ?? '').trim() || (roundSpecOf(item)?.kind ?? ''),
 							description: (item.explanation ?? '').trim(),
 							lastUpdate: Date.now(),
 						});

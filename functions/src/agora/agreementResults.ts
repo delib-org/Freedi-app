@@ -18,6 +18,7 @@ import {
 	Statement,
 	StatementType,
 	rankCarriedAnswers,
+	isAgoraHidden,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { computeVoteOutcome } from './classScore';
@@ -44,7 +45,10 @@ export async function computeAgreementResults(sessionId: string): Promise<void> 
 
 		const proposals = proposalsSnap.docs
 			.map((docSnap) => docSnap.data() as Statement)
-			.filter((statement) => statement.parentId === session.challengeQuestionId);
+			.filter(
+				(statement) =>
+					statement.parentId === session.challengeQuestionId && !isAgoraHidden(statement),
+			);
 
 		const rows: AgoraCarriedAnswer[] = proposals.map((statement) => {
 			const consensus = scores.get(statement.statementId)?.classConsensus;

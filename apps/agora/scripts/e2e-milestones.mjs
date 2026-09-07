@@ -4,7 +4,7 @@
  * Run: node scripts/e2e-milestones.mjs */
 import { chromium } from '@playwright/test';
 import { preflight } from './lib/preflight.mjs';
-import { eq, fail, mkPage as makePage, shotter, step } from './lib/e2e.mjs';
+import { eq, fail, mkPage as makePage, shotter, step, passNameDoor } from './lib/e2e.mjs';
 
 await preflight();
 
@@ -93,6 +93,11 @@ try {
 }
 await teacher.locator('text=המהפכה הצרפתית').first().click();
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
+// Choosing a scenario no longer opens a session — it opens the stage plan,
+// where the teacher orders the journey first. The walk to a live session is
+// two clicks now, and the same CTA carries both of them.
+await teacher.waitForURL(/teach\/start/, { timeout: 20000 });
+await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
 await teacher.waitForSelector('.teacher__code', { timeout: 20000 });
 const code = (await teacher.locator('.teacher__code').textContent()).replace(/\s/g, '');
@@ -100,6 +105,7 @@ console.log('JOIN CODE:', code);
 
 for (const page of [sA, sB, sC, sD]) {
 	await page.goto(`${BASE}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(page);
 	await page.waitForSelector('.lobby__name', { timeout: 15000 });
 }
 const advance = async () => {

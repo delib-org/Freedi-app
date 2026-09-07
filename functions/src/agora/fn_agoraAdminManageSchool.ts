@@ -1,4 +1,5 @@
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
+import { FieldValue } from 'firebase-admin/firestore';
 import { db } from '../db';
 import {
 	Collections,
@@ -11,6 +12,7 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { isSystemAdmin } from '../utils/httpAuth';
+import { resolveTeacherUid } from './teacherLookup';
 
 /**
  * Sys-admin school management. Clients cannot write `agoraSchools` at all
@@ -28,7 +30,7 @@ export const agoraAdminManageSchool = onCall(
 			throw new HttpsError('permission-denied', 'System admin required');
 		}
 
-		const { action, schoolId, name, city } = request.data ?? {};
+		const { action, schoolId, name, city, teacherEmail } = request.data ?? {};
 
 		try {
 			if (action === 'create') {
@@ -79,6 +81,30 @@ export const agoraAdminManageSchool = onCall(
 				await schoolRef.update({ status: 'archived', lastUpdate: Date.now() });
 
 				return { schoolId };
+			}
+
+			// The school's teachers: the ones who may open classes in it themselves.
+			// Both halves of the index move in one write, as on a class.
+			if (action === 'assignTeacher') {
+				const teacherUid = await resolveTeacherUid(teacherEmail ?? '');
+				await schoolRef.update({
+					teacherIds: FieldValue.arrayUnion(teacherUid),
+					[`teacherMap.${teacherUid}`]: true,
+					lastUpdate: Date.now(),
+				});
+
+				return { schoolId, teacherUid };
+			}
+
+			if (action === 'removeTeacher') {
+				const teacherUid = await resolveTeacherUid(teacherEmail ?? '');
+				await schoolRef.update({
+					teacherIds: FieldValue.arrayRemove(teacherUid),
+					[`teacherMap.${teacherUid}`]: FieldValue.delete(),
+					lastUpdate: Date.now(),
+				});
+
+				return { schoolId, teacherUid };
 			}
 
 			throw new HttpsError('invalid-argument', 'Unknown action');

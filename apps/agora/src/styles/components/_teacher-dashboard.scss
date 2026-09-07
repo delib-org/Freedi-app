@@ -423,3 +423,34 @@
 		padding: 2px var(--space-sm);
 	}
 }
+
+// --- the "add a class" tile and the class form (new class / rename) ---
+.dashboard__class-card--add {
+	border-style: dashed;
+	text-align: start;
+	color: var(--mine-ink);
+	cursor: pointer;
+	font: inherit;
+
+	&:hover,
+	&:focus-visible {
+		border-color: var(--mine);
+	}
+}
+
+.class-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	&__row {
+		display: grid;
+		grid-template-columns: minmax(120px, 1fr) 2fr;
+		gap: var(--space-md);
+		align-items: end;
+
+		@media (max-width: 600px) {
+			grid-template-columns: 1fr;
+		}
+	}
+}

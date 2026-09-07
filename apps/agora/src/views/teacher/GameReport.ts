@@ -55,7 +55,7 @@ export function GameReport(initialVnode: m.Vnode<{ id: string }>): m.Component<{
 				]);
 			}
 
-			const { session, participants } = report;
+			const { session, participants, realNames } = report;
 			const score = session.classScore;
 			const convergence = session.convergence;
 
@@ -120,6 +120,7 @@ export function GameReport(initialVnode: m.Vnode<{ id: string }>): m.Component<{
 							: m('.report__table', [
 									m('.report__table-head', [
 										m('span', t('report.col_player')),
+										m('span', t('teacher.col_real_name')),
 										m('span', t('report.col_proposals')),
 										m('span', t('report.col_helping')),
 										m('span', t('report.col_total')),
@@ -129,13 +130,18 @@ export function GameReport(initialVnode: m.Vnode<{ id: string }>): m.Component<{
 										// Mithril refuses fragments that mix keyed and unkeyed vnodes.
 										m('.report__table-row', [
 											m('span.report__player', participant.anonName),
+											m(
+												'span.report__real-name',
+												realNames[participant.userId] ?? t('teacher.no_real_name'),
+											),
 											m('span', String(participant.points.proposals)),
 											m(
 												'span',
 												String(
 													(participant.points.helping ?? 0) +
 														(participant.points.rating ?? 0) +
-														(participant.points.revising ?? 0),
+														(participant.points.revising ?? 0) +
+														(participant.points.appreciation ?? 0),
 												),
 											),
 											m('span.roster__stat--points', String(participant.points.total)),

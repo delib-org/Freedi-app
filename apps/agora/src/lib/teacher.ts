@@ -1,9 +1,11 @@
+import { t } from './i18n';
 import { parse } from 'valibot';
 import {
 	Collections,
 	AgoraCamp,
 	AgoraClassAggregate,
 	AgoraClassAggregateSchema,
+	AgoraIdentitySchema,
 	AgoraParticipant,
 	AgoraParticipantSchema,
 	AgoraSession,
@@ -278,8 +280,48 @@ const parseParticipant = (data: unknown): AgoraParticipant => parse(AgoraPartici
 
 export interface TeacherDashboard {
 	classes: TeacherConsoleDashboard['classes'];
+	/** Where this teacher may open classes — empty means "ask your admin" */
+	schools: TeacherConsoleDashboard['schools'];
 	aggregates: Map<string, AgoraClassAggregate>;
 	sessions: AgoraSession[];
+}
+
+export const EMPTY_DASHBOARD: TeacherDashboard = {
+	classes: [],
+	schools: [],
+	aggregates: new Map(),
+	sessions: [],
+};
+
+/** Grades a teacher picks from; stored as the number, shown in the teacher's language */
+export const AGORA_GRADES: readonly string[] = [
+	'1',
+	'2',
+	'3',
+	'4',
+	'5',
+	'6',
+	'7',
+	'8',
+	'9',
+	'10',
+	'11',
+	'12',
+];
+
+/** A stored grade as the screen prints it — a picked grade by its name, anything else as typed */
+export function gradeLabel(gradeLevel: string | undefined): string {
+	const grade = (gradeLevel ?? '').trim();
+	if (!grade) return '';
+
+	return AGORA_GRADES.includes(grade) ? t(`grade.g${grade}`) : grade;
+}
+
+/** "ז' · 2" — the grade first, then the label the teacher gave the class */
+export function classLabel(agoraClass: { name: string; gradeLevel?: string }): string {
+	const grade = gradeLabel(agoraClass.gradeLevel);
+
+	return grade ? `${grade} · ${agoraClass.name}` : agoraClass.name;
 }
 
 /** Everything the /teach dashboard shows, in one round trip. */
@@ -296,6 +338,7 @@ export async function fetchTeacherDashboard(): Promise<TeacherDashboard> {
 
 	return {
 		classes: data.classes ?? [],
+		schools: data.schools ?? [],
 		aggregates,
 		sessions: parseEach(data.sessions ?? [], parseSession, 'session'),
 	};
@@ -307,6 +350,8 @@ export interface TeacherClassDetail {
 	gradeLevel?: string;
 	classCode: string;
 	schoolName: string;
+	/** Every teacher on the class — the reader is one of them */
+	teachers: TeacherConsoleClassDetail['teachers'];
 	members: TeacherConsoleMember[];
 	careers: Map<string, AgoraStudentAggregate>;
 	aggregate: AgoraClassAggregate | null;
@@ -342,6 +387,7 @@ export async function fetchTeacherClass(classId: string): Promise<TeacherClassDe
 		gradeLevel: data.gradeLevel,
 		classCode: data.classCode,
 		schoolName: data.schoolName,
+		teachers: data.teachers ?? [],
 		members: data.members ?? [],
 		careers,
 		aggregate,
@@ -353,6 +399,8 @@ export interface SessionReport {
 	session: AgoraSession;
 	/** Students only — AI raters filtered out */
 	participants: AgoraParticipant[];
+	/** userId → the real name typed at the door; empty when nobody gave one */
+	realNames: Record<string, string>;
 }
 
 /** One finished game, read once — the report screen holds no listeners. */
@@ -369,5 +417,10 @@ export async function fetchSessionReport(sessionId: string): Promise<SessionRepo
 	return {
 		session: parse(AgoraSessionSchema, data.session),
 		participants: parseEach(data.participants ?? [], parseParticipant, 'participant'),
+		realNames: Object.fromEntries(
+			parseEach(data.identities ?? [], (row) => parse(AgoraIdentitySchema, row), 'identity').map(
+				(identity) => [identity.userId, identity.realName],
+			),
+		),
 	};
 }

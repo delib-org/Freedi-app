@@ -31,4 +31,12 @@ export enum NotificationTriggerType {
 	AGORA_REVISION_CREDITED = 'agora_revision_credited',
 	/** The author wove a distinct helper's idea into the text (weave credit paid) */
 	AGORA_WEAVE_CREDITED = 'agora_weave_credited',
+	/** The teacher sent this student a private note */
+	AGORA_TEACHER_NOTE = 'agora_teacher_note',
+	/** The teacher took this student's text down */
+	AGORA_TEACHER_HIDDEN = 'agora_teacher_hidden',
+	/** The teacher put this student's text back */
+	AGORA_TEACHER_RESTORED = 'agora_teacher_restored',
+	/** The teacher rewrote part of this student's text */
+	AGORA_TEACHER_EDITED = 'agora_teacher_edited',
 }

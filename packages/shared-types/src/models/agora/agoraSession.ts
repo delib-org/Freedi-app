@@ -253,6 +253,12 @@ export const AgoraSessionSchema = object({
 	stageIndex: optional(number()),
 	identity: optional(AgoraIdentityModeSchema),
 	/**
+	 * Ask every student for their real name at the door, for the teacher's
+	 * console only (`agoraIdentities`). Server-owned, set at creation. Absent
+	 * means the classroom default: on for a teacher's lesson, never on civic.
+	 */
+	collectRealNames: optional(boolean()),
+	/**
 	 * The look the room wears by default — the teacher's pick, at creation or
 	 * live from the console. Teacher-writable (see firestore.rules). Absent
 	 * means AGORA_DEFAULT_THEME; a student's own pick on their participant

@@ -62,6 +62,8 @@ export enum Collections {
     helperPoints = 'helperPoints',
     surveys = 'surveys',
     surveyProgress = 'surveyProgress',
+    surveyAdmins = 'surveyAdmins',
+    surveyAdminInvitations = 'surveyAdminInvitations',
     adminInvitations = 'adminInvitations',
     viewerLinks = 'viewerLinks',
     documentCollaborators = 'documentCollaborators',
@@ -112,6 +114,8 @@ export enum Collections {
     agoraStudentAggregates = 'agoraStudentAggregates',
     agoraClassAggregates = 'agoraClassAggregates',
     agoraStats = 'agoraStats',
+    agoraIdentities = 'agoraIdentities',
+    agoraTeacherMessages = 'agoraTeacherMessages',
 
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',

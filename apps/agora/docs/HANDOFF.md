@@ -1,7 +1,7 @@
 # Agora — Working Handoff
 
 **Start-here document for continuing work in a fresh chat.** Last updated
-2026-09-02.
+2026-09-06.
 
 Companion docs: `../CLAUDE.md` (the rules of the road — read that first),
 `feedback-cycle.md` (the improvement loop, and the spec `e2e-cycle.mjs`
@@ -25,6 +25,109 @@ rate others, improve each other's ideas — aiming for a solution both camps
 can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
+
+## Teacher self-serve classes (2026-09-07)
+
+Tal's rule: **the admin creates the school and attaches its teachers; each
+teacher then opens their own classes.** Before this, only a sys-admin could
+open a class (Studio, by teacher email), so a teacher who signed up alone
+saw "which class is playing?" with nothing but the guest journey — and guest
+games have no roster, no careers, no real names on the console.
+
+- **Schools carry their teachers**: `agoraSchools.teacherIds` + the
+  `teacherMap` `{uid: true}` index (same shape as on a class; absent on old
+  docs, read as empty). `agoraAdminManageSchool` gained
+  `assignTeacher`/`removeTeacher` by sign-in email (resolved server-side,
+  never stored); Studio's school page has the "teachers of this school"
+  section.
+- **`agoraTeacherClass`** (teacher callable, full account): `create` in a
+  school whose `teacherMap` holds the caller (the only school is implied;
+  more than one needs `schoolId`); `rename` / `archive` / `addTeacher` (by
+  email) / `removeTeacher` (by uid, never the last one) for the class's own
+  teachers. Class = `gradeLevel` (the grade) + `name` (the label); the
+  unique 6-char class code is issued exactly as on the admin path — one
+  helper serves both.
+- **Dashboard** reports `schools` so the start screen knows whether "new
+  class" is allowed: my classes first, then "＋ new class" (inline form:
+  grade, label, school when there is more than one), then the guest journey
+  last. No school → a quiet "ask your admin" line. The class page keeps
+  rename, archive and co-teachers behind a cog, like the console.
+- Students still claim roster spots with the class code at their first
+  game; nothing changed in the join flow.
+- **Verify:** `npx tsx scripts/e2e-teacher-classes.mjs` (or the extended
+  `e2e-class-career.mjs`); Studio typecheck/build.
+- **Deploy:** functions `agoraAdminManageSchool agoraTeacherClass
+  agoraTeacherConsole`, then `deploy:agora` and the Studio hosting.
+
+## WizCol rounds (2026-09-06) — the book's process is the default game
+
+Tal's guide *התהליך הדליברטיבי הבסיסי* (WizCol, v2.0) moves a group from
+personal stories to needs, a shared vision, and only then to solutions rated
+on a scale that protects the minority. In Agora that is a **self-paced
+digital sequence** — no tables, no clocks, no spoken turns — and it adds NO
+stage kinds: a round is a `question` item with a different evaluation type.
+The default plan for a quick game is now
+
+```
+lobby → question(story) → question(needs) → question(vision) → deliberation → voting → results
+```
+
+(`stagePlanPreset('wizcol')`, item ids `round-story` / `round-needs` /
+`round-vision`), and a scenario game runs its character scenes as the
+prologue (`scenarioWizcol`). `StartGame` seeds both. `classic` and
+`quickDecision` still exist; `AGORA_STAGE_ORDER` is untouched, so plan-less
+and civic sessions run exactly as before. The book's opening (the goal is a
+solution most can live with; listening is the work; what happens at the
+end) lives on the lobby — a student card and the teacher's spoken lines.
+
+- **One item, four kinds.** `item.kind` is `open` (absent — the admin's own
+  question, rated −1…+1, banded C_p record: everything the question stage
+  always did) or `story` / `needs` / `vision`. The kind decides the default
+  prompt, the deal, the scale, what pays the author and what the AI writes,
+  from ONE table both client and functions read: `AGORA_ROUNDS` (shared-types
+  `rounds.ts`, `roundSpecOf(item)`, `evaluationScaleOf(item)`). `story`
+  deals 3 and takes a like; `needs` and `vision` deal 6 and take a 0…1
+  five-step rating. A round may leave `title` blank (`question_needs_title`
+  is for `open` only); the Statement text falls back to the kind.
+- **Ordinary Statements, ordinary evaluations.** Answers are option
+  Statements under the item's question Statement at
+  `${sessionId}--${uid}--${itemId}`; ratings are evaluations at
+  `${uid}--${answerId}`. A like is `1`, an un-like is `0` — never a delete —
+  so the pipeline's `mean × raters` IS the heart count (`roundLikes`). Unit
+  ratings write their step verbatim. Nothing below the challenge question
+  sees these: camps and C_p are gated on `parentId === challengeQuestionId`,
+  and the client never draws `CpBands` for a round.
+- **The reader's deal** is the square's own attention allocator
+  (`rankStalls` — least-attended first, per-student tiebreak,
+  `mergeLateArrivals`), frozen per item in sessionStorage
+  (`lib/flows/roundFlow.ts`). "Read more" extends it by another sample.
+- **Appreciation pays the author, not the reader.** A like on my story, or a
+  rating ≥ 0.5 on my need or my vision, pays me `AGORA_POINTS.ROUND_APPRECIATION`
+  (+1) into `points.appreciation`. The ledger is `roundAppreciations` on the
+  AUTHOR's participant doc keyed by evaluation id (rules-pinned), so a
+  re-rating cannot pay twice and a later downgrade never claws back. Round
+  ratings do NOT earn the reader's `RATING_CREDIT` — 3 + 6 + 6 would exhaust
+  the cap before the square opened. `fn_onAgoraEvaluation` branches on the
+  round item before the square's economy and returns; an open question keeps
+  its effort credit.
+- **Closing** goes through `closeQuestionStage` for every question item and
+  dispatches on the kind: open → the banded record as before; a round → every
+  answer travels (`outcome.selected` = all rows by `rankRoundAnswers`), no
+  bands, and the AI record depends on the kind — stories: one warm paragraph
+  on what the class has lived through; needs: a clustered list, one `• need —
+  sentence` per line; vision: ONE merged shared vision. Fixture without a
+  key: the texts joined. `CarriedContext` renders the record (pre-line) plus
+  a folded "all N" list, which is how the needs list and the vision sit beside
+  the deliberation pen and on the results.
+- **Teacher and projector.** The plan editor's question row has a kind
+  select; class pips read `roundProgress` for a round; the carry panel shows
+  hearts or means and the record once closed; the projector shows numbered
+  texts, never names.
+- **Verify:** `npx tsx scripts/e2e-wizcol.mjs`;
+  `npm run fast -- --plan=wizcol --stage=question --open`.
+- **Deploy (hosting first):** shared-types build → functions prebuild →
+  `deploy:agora` → `deploy:rules:prod` → `deploy:f:prod -- agoraCreateSession
+  agoraUpdateStagePlan agoraAdvanceStage onAgoraEvaluationWritten`.
 
 ## Stage plan (2026-09-02) — the stages are the admin's to arrange
 
@@ -102,6 +205,81 @@ guard still holds.
   and conditions each write on `lastUpdateTime`.
 - **Verify**: `npx tsx scripts/e2e-stage-plan.mjs` (the Vosh scenario, 53
   assertions), `npm run fast -- --quick --stage=question --open --shot=q`.
+
+## Teacher console (2026-09-03) — names, moderation, notes, projector
+
+Built on `work/2026-09-03`, **NOT deployed**. Four things a teacher can now do
+from `/teach/session/:id`, and the wall can show:
+
+- **Real names, teacher-only.** The join screen asks every student for a real
+  name (skippable; `lib/flows/joinName.ts` decides when; `session.collectRealNames`
+  is the per-lesson switch, default on, never on civic). `agoraJoinSession`
+  writes it to `agoraIdentities/{sessionId}--{uid}` with `teacherId`
+  denormalised — the rule is `resource.data.teacherId == request.auth.uid`,
+  which the console's SDK listener (`sessionId == && teacherId ==`) can prove.
+  Never on the participant doc, never in a statement, never in a log or a
+  prompt. `expiresAt` = lesson end + 30 days for a Firestore **TTL policy that
+  still has to be created** (`gcloud firestore fields ttls update expiresAt
+  --collection-group=agoraIdentities`); the console's "forget names" deletes
+  them now. Named rooms send the typed name as both `displayName` and
+  `realName`.
+- **Moderation.** `agoraModerateStatement` (session teacher only): `hide`
+  blanks `statement` on the world-readable doc, sets the shared `hide` flag
+  (the ballot selector already honours it) plus `agoraModeration.hidden`,
+  flags `agoraScores.hidden`, darkens the `edit` announcements under it, and
+  files the words and the reason on the private thread — the ONLY copy.
+  `restore` reads them back from there. `edit` rewrites and stamps
+  `agoraModeration.editedAt`; `isTeacherTouched(before, after)` (shared-types)
+  makes `fn_onAgoraProposal` skip revision credit, weave credit and the
+  elders for a teacher's write (it still announces a rewrite). Hidden text
+  is out of `classScore`, `agreementResults`, `closeQuestionStage`, the
+  auto-open voting rule and the evaluation trigger (a rating on it moves
+  nothing). Hiding a ballot candidate is refused (`on-ballot`) — close the
+  vote first. Rules pin `hide` + `agoraModeration` and refuse ALL client
+  deletes of agora statements (the teacher's inherited admin subscription
+  used to make `isAuthorized()` a silent hard delete).
+- **Private thread.** `agoraTeacherMessages/{id}`, one doc per line, both
+  keys (`teacherId`, `studentUid`) pinned, readable by either side, written
+  only by `agoraTeacherMessage` (teacher note / student reply, quick
+  phrases as `presetKey` rendered in the student's language, thread capped)
+  and by the moderation callable (notices). NOT in `statements`: that
+  collection is world-readable and every student's deliberation listener
+  pulls the whole session. The student gets an `inAppNotifications` doc
+  (`agora_teacher_*` triggers — in `notificationCopy.ts` `LOOKS` or the
+  client drops it), a toast, an inbox row with target `{kind:'teacher'}`,
+  a mail door beside the stage nav on every stage (`StageNav.mail`), and
+  `components/TeacherThreadSheet.ts` to read and reply.
+- **Console.** `TeacherSession.ts` shrank (voting cards → `VotingCards.ts`,
+  question/trigger → `DeliberationCards.ts`) and grew three tabs: Board
+  (as before), Class (`ClassPanel.ts`: pseudonym → real name, a pip per
+  opened stage from the pure `lib/flows/classProgress.ts`, ratings given,
+  points, idle, unread-reply badge) and Messages (`MessagesPanel.ts`: every
+  student line from the pure `lib/flows/moderationQueue.ts`, reword / take
+  down with reason / put back / message). `StudentThreadDrawer.ts` is the
+  per-student thread. All reads are the listeners the console already held
+  plus `lib/teacherConsole.ts` (identities, threads).
+- **Projector.** `/teach/screen/:id` → `views/teacher/ProjectorScreen.ts`:
+  the room's current stage as a seatless student would see it (lobby map,
+  scenes via `TeacherInstructions {projector:true}`, needs board, camp
+  census, ranked answers by number, the live square, the ballot via
+  `Voting {board, projector}` — reveal follows the class setting — and the
+  results), a join-code strip on every stage, no stage nav, no HUD, no
+  names. `projectorImports.test.ts` pins that it never imports the
+  notification, inbox, seen-state or teacher-console modules. Opened from
+  the console's code panel ("Open projector" / copy link).
+
+**Verify:** `npx tsx scripts/e2e-teacher-console.mjs` (identities + rules,
+thread both ways + classmate refused, hide/restore incl. results exclusion,
+teacher edit pays nothing, marks pinned, no hard delete, forget names,
+projector when vite is up); `npm run fast -- --names --open` puts real
+names on the Class tab; rules in `tests/rules/agora-teacher.test.mjs`.
+
+**Deploy (in this order):** shared-types build → `deploy:rules:prod` →
+functions `agoraJoinSession agoraTeacherMessage agoraModerateStatement
+onAgoraProposalWritten onAgoraEvaluationWritten agoraAdvanceStage
+agoraResolveSuggestion agoraCharacterReview agoraTeacherConsole
+agoraCreateSession` → `deploy:agora` → the TTL policy. New queries are
+equality-only (no composite index expected); never `--force` an index deploy.
 
 ## Current game flow (as implemented)
 
@@ -425,6 +603,20 @@ clone cannot deploy even after the site exists. Copy `.firebaserc.example`
 (committed, same content minus anything machine-specific) to `.firebaserc`.
 
 ### A hot-reloaded functions emulator stops firing triggers
+
+**Measured 2026-09-06 — it is latency, not death.** Requiring the functions
+bundle takes ~12 s (`time node -e "require('./functions/lib/functions/src/index.js')"`),
+longer than the emulator's default 10 s discovery window, so a fresh
+`emulators:start` may report "User code failed to load" — start it with
+`FUNCTIONS_DISCOVERY_TIMEOUT=90`. And every statement write fans out to a
+dozen `statements/{id}` triggers that the emulator runs one at a time, so
+after a run that wrote many statements an evaluation's event can wait
+40–90 s for its turn (a single timed write on an idle suite: 41 s), while
+every fastlane/e2e deadline is 45–60 s. The data is right when it lands;
+the scripts just stop waiting. Run the heavy suites (`e2e-voting`,
+`e2e-teacher-console`) alone on a drained suite, and read `firebase-debug.log`
+(`Beginning execution` lines) before blaming a trigger. A Firestore emulator
+that "never answers" preflight is the OOM gotcha below — restart that suite.
 
 If Firestore triggers seem not to run — scores never appear, points never move —
 check whether the functions emulator reloaded since the last one fired:

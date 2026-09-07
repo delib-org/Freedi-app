@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
-import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
+import { AgoraStage, questionKindOf, type AgoraStagePlanItem } from '@freedi/shared-types';
 import { Icon, type IconName } from './Icon';
 import { lookDots } from './LookPicker';
 import type { AgoraThemeSeeds } from '@freedi/shared-types';
@@ -20,6 +20,13 @@ export interface StageNavAttrs {
 	 * legend for "why does my screen look like this".
 	 */
 	look?: { seeds: AgoraThemeSeeds; onOpen: () => void; label: string };
+	/**
+	 * The teacher's post: drawn only once the teacher has written, with the
+	 * count of lines not yet read. Beside the look door for the same reason
+	 * that one is there — a door at the end of a scrolling strip is a door you
+	 * cannot see.
+	 */
+	mail?: { unread: number; onOpen: () => void; label: string };
 }
 
 const ICONS: Record<AgoraStage, IconName> = {
@@ -36,9 +43,18 @@ const ICONS: Record<AgoraStage, IconName> = {
 	[AgoraStage.ended]: 'flag',
 };
 
-/** What a plan item is called on screen: a question by its title, the rest by kind */
+/**
+ * What a plan item is called on screen: a question by its title, a round
+ * (a question item of kind story/needs/vision) by the admin's title when one
+ * was typed and by its kind otherwise, the rest by stage.
+ */
 export function planItemLabel(item: AgoraStagePlanItem): string {
-	if (item.stage === AgoraStage.question && item.title?.trim()) return item.title.trim();
+	if (item.stage === AgoraStage.question) {
+		if (item.title?.trim()) return item.title.trim();
+		const kind = questionKindOf(item);
+
+		return kind === 'open' ? t('stage.question') : t(`question.kind_${kind}`);
+	}
 
 	return t(`stage.${item.stage}`);
 }
@@ -55,7 +71,7 @@ export function planItemLabel(item: AgoraStagePlanItem): string {
  */
 export const StageNav: m.Component<StageNavAttrs> = {
 	view(vnode) {
-		const { plan, currentIndex, viewingIndex, onSelect, compact, look } = vnode.attrs;
+		const { plan, currentIndex, viewingIndex, onSelect, compact, look, mail } = vnode.attrs;
 		const stations = plan
 			.map((item, index) => ({ item, index }))
 			.filter(({ item }) => item.stage !== AgoraStage.ended);
@@ -111,6 +127,23 @@ export const StageNav: m.Component<StageNavAttrs> = {
 								onclick: look.onOpen,
 							},
 							lookDots(look.seeds),
+						)
+					: null,
+				mail
+					? m(
+							'button.stage-nav__mail',
+							{
+								type: 'button',
+								'aria-label': mail.label,
+								title: mail.label,
+								onclick: mail.onOpen,
+							},
+							[
+								m(Icon, { name: 'megaphone', size: 18 }),
+								mail.unread > 0
+									? m('span.stage-nav__mail-badge', { 'aria-hidden': 'true' }, String(mail.unread))
+									: null,
+							],
 						)
 					: null,
 			],

@@ -1,6 +1,11 @@
 import m from 'mithril';
 import { t } from '../../lib/i18n';
-import { AgoraSceneKind, AgoraStage } from '@freedi/shared-types';
+import {
+	AgoraSceneKind,
+	AgoraStage,
+	roundSpecOf,
+	type AgoraQuestionKind,
+} from '@freedi/shared-types';
 import type { AgoraScene, AgoraTopicPackage } from '@freedi/shared-types';
 
 export interface TeacherInstructionsAttrs {
@@ -9,6 +14,10 @@ export interface TeacherInstructionsAttrs {
 	/** A question stage projects its own question, not a generic prompt */
 	questionTitle?: string;
 	questionExplanation?: string;
+	/** A question item's kind — a WizCol round shows the book's prompt when no title was typed */
+	questionKind?: AgoraQuestionKind;
+	/** The projector: the students' text only, none of the teacher-facing hints */
+	projector?: boolean;
 }
 
 /** Which scene kinds each scene-stage shows students (mirrors GameController) */
@@ -74,13 +83,38 @@ function promptCard(titleKey: string, hintKey: string): m.Children {
 function stageBody(
 	stage: AgoraStage,
 	topic: AgoraTopicPackage,
-	question?: { title?: string; explanation?: string },
+	question?: { title?: string; explanation?: string; kind?: AgoraQuestionKind },
+	projector = false,
 ): m.Children {
+	// The lobby is where the facilitator opens: why a group is wiser than its
+	// loudest member, and what will happen at the end (the WizCol guide)
+	if (stage === AgoraStage.lobby) {
+		return m('.teacher-instructions__scenes', [
+			promptCard('intro.goal_title', 'intro.goal_text'),
+			promptCard('intro.listen_title', 'intro.listen_text'),
+			promptCard('intro.end_title', 'intro.end_text'),
+		]);
+	}
+
+	const round = question ? roundSpecOf(question) : null;
+	if (stage === AgoraStage.question && round) {
+		const kind = round.kind;
+
+		return m('.teacher-instructions__scene', [
+			m(
+				'h4.teacher-instructions__scene-title',
+				question?.title?.trim() || t(`round.${kind}.prompt`),
+			),
+			m('p.teacher-instructions__text', question?.explanation?.trim() || t(`round.${kind}.hint`)),
+			projector ? null : m('p.teacher-instructions__text', t(`round.${kind}.teacher_line`)),
+		]);
+	}
+
 	if (stage === AgoraStage.question) {
 		return m('.teacher-instructions__scene', [
 			m('h4.teacher-instructions__scene-title', question?.title ?? t('stage.question')),
 			question?.explanation ? m('p.teacher-instructions__text', question.explanation) : null,
-			m('p.teacher-instructions__text', t('question.teacher_hint')),
+			projector ? null : m('p.teacher-instructions__text', t('question.teacher_hint')),
 		]);
 	}
 
@@ -103,7 +137,7 @@ function stageBody(
 	}
 
 	if (stage === AgoraStage.voting) {
-		return promptCard('voting.title', 'voting.teacher_hint');
+		return promptCard('voting.title', projector ? 'projector.voting_hint' : 'voting.teacher_hint');
 	}
 
 	return null;
@@ -112,15 +146,18 @@ function stageBody(
 export function TeacherInstructions(): m.Component<TeacherInstructionsAttrs> {
 	return {
 		view(vnode) {
-			const { stage, topic, questionTitle, questionExplanation } = vnode.attrs;
-			const body = stageBody(stage, topic, {
-				title: questionTitle,
-				explanation: questionExplanation,
-			});
+			const { stage, topic, questionTitle, questionExplanation, questionKind, projector } =
+				vnode.attrs;
+			const body = stageBody(
+				stage,
+				topic,
+				{ title: questionTitle, explanation: questionExplanation, kind: questionKind },
+				projector === true,
+			);
 			if (!body) return null;
 
 			return m('.card.teacher-instructions', [
-				m('p.teacher__section-title', t('teacher.student_instructions')),
+				projector ? null : m('p.teacher__section-title', t('teacher.student_instructions')),
 				body,
 			]);
 		},

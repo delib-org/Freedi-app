@@ -48,7 +48,7 @@
 	&__table-head,
 	&__table-row {
 		display: grid;
-		grid-template-columns: 1fr auto auto auto;
+		grid-template-columns: 1fr 1fr auto auto auto;
 		gap: var(--space-md);
 		align-items: center;
 		padding: var(--space-xs) var(--space-md);

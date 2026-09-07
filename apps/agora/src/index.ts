@@ -32,6 +32,7 @@ import { JoinSession } from './views/JoinSession';
 import { GameController } from './views/GameController';
 import { TeacherHome } from './views/teacher/TeacherHome';
 import { TeacherSession } from './views/teacher/TeacherSession';
+import { ProjectorScreen } from './views/teacher/ProjectorScreen';
 import { TopicWizard } from './views/teacher/TopicWizard';
 import { TopicEditor } from './views/teacher/TopicEditor';
 import { StartGame } from './views/teacher/StartGame';
@@ -105,6 +106,7 @@ if (root) {
 		'/teach/start': StartGame,
 		'/teach/topic/:id': TopicEditor,
 		'/teach/session/:id': TeacherSession,
+		'/teach/screen/:id': ProjectorScreen,
 		'/teach/class/:id': TeacherClass,
 		'/teach/report/:id': GameReport,
 	});

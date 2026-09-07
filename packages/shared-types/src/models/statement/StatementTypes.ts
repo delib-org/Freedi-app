@@ -23,6 +23,7 @@ import {
 	Visibility,
 } from '../TypeEnums';
 import { AgoraMessageKind, AgoraSuggestionStatus } from '../agora/agoraEnums';
+import { AgoraModerationSchema } from '../agora/agoraModeration';
 import { Role } from '../user/UserSettings';
 import { CreatorSchema, MembershipSchema, StepSchema, UserSchema } from '../user/User';
 import { ResultsSettingsSchema } from '../results/ResultsSettings';
@@ -374,6 +375,11 @@ export const StatementSchema = object({
 	// `agoraChallengeTurn` and pinned by rules, so a client cannot strip it and
 	// re-enter the paths it excludes.
 	agoraChallenge: optional(boolean()),
+	// The teacher's marks (hide / restore / edit) — written only by the
+	// agoraModerateStatement callable and pinned by rules, together with the
+	// shared `hide` flag it mirrors. See agoraModeration.ts for why no reason
+	// and no removed text ever sit here.
+	agoraModeration: optional(AgoraModerationSchema),
 	questionnaire: optional(QuestionnaireSchema), // if a statement is a questionnaire, it will have this field
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.

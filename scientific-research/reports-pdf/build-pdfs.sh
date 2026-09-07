@@ -31,4 +31,7 @@ build "$RESEARCH/20206-07-16-Claim-regestry/REPORT-2-HYBRID-PREFERENCE-GEOMETRY.
 build "$RESEARCH/2026-07-24-delta-support-probe/delta-support-probe-method.md" \
       "$HERE/3-probe-sampling-convergence.pdf" \
       "Embedded Probe Sampling for Measuring Convergence on Leading Proposals"
+build "$RESEARCH/2026-08-18-live-synth-accuracy/REPORT-Heschel-real-data-case-study.md" \
+      "$HERE/4-heschel-real-data-case-study.pdf" \
+      "First Contact with Real Data: The Heschel Center Research-to-Impact Question"
 echo "Done."

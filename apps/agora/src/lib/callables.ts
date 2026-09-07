@@ -10,10 +10,16 @@ import type {
 	ChallengePhase,
 	JoinClassRequest,
 	JoinClassResponse,
+	ModerateStatementRequest,
+	ModerateStatementResponse,
+	TeacherMessageRequest,
+	TeacherMessageResponse,
 	TeacherConsoleRequest,
 	TeacherConsoleResponse,
 	TeacherRosterRequest,
 	TeacherRosterResponse,
+	TeacherClassRequest,
+	TeacherClassResponse,
 } from '@freedi/shared-types';
 
 /** A game started from a typed main question, with no scenario behind it */
@@ -38,6 +44,8 @@ export interface CreateSessionRequest {
 	/** The ordered stage list; absent means the legacy order */
 	stagePlan?: AgoraStagePlan;
 	identity?: AgoraIdentityMode;
+	/** Ask for real names at the door, for the teacher alone. Absent = on. */
+	collectRealNames?: boolean;
 	/** The look the room wears by default; absent means AGORA_DEFAULT_THEME */
 	theme?: AgoraThemeChoice;
 }
@@ -52,6 +60,8 @@ export interface JoinSessionRequest {
 	teamMemberCount?: number;
 	/** `named` sessions: the name this person goes by */
 	displayName?: string;
+	/** For the teacher alone — never on a card */
+	realName?: string;
 }
 
 export interface JoinSessionResponse {
@@ -207,6 +217,20 @@ export async function joinClass(request: JoinClassRequest): Promise<JoinClassRes
 	return result.data;
 }
 
+/**
+ * A teacher's own classes: open one in a school the admin attached them to,
+ * rename, archive, add or remove a co-teacher — see fn_agoraTeacherClass.
+ */
+export async function teacherClass(request: TeacherClassRequest): Promise<TeacherClassResponse> {
+	const call = httpsCallable<TeacherClassRequest, TeacherClassResponse>(
+		functions,
+		'agoraTeacherClass',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
 /** Every read the teacher console makes — see fn_agoraTeacherConsole. */
 export async function teacherConsole(
 	request: TeacherConsoleRequest,
@@ -256,6 +280,32 @@ export async function rerateStances(request: RerateStancesRequest): Promise<Rera
 	const call = httpsCallable<RerateStancesRequest, RerateStancesResponse>(
 		functions,
 		'agoraRerateStances',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** One line into the private teacher ↔ student thread — either side. */
+export async function teacherMessage(
+	request: TeacherMessageRequest,
+): Promise<TeacherMessageResponse> {
+	const call = httpsCallable<TeacherMessageRequest, TeacherMessageResponse>(
+		functions,
+		'agoraTeacherMessage',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The teacher's hand on a student's text: hide, restore, reword. */
+export async function moderateStatement(
+	request: ModerateStatementRequest,
+): Promise<ModerateStatementResponse> {
+	const call = httpsCallable<ModerateStatementRequest, ModerateStatementResponse>(
+		functions,
+		'agoraModerateStatement',
 	);
 	const result = await call(request);
 

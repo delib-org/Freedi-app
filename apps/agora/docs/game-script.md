@@ -311,7 +311,15 @@ verdict marking; join code always on the teacher board.
 5. **Personal hook.** The protocol's Round 1 is "tell your own experience, no comments."
    Is there room for a 60-second personal connect before the tunnel ("when were you
    last in a fight where both sides had a point?") — or does it break the fiction?
+   **Answered 2026-09-06:** yes — the WizCol rounds (question items of kind
+   `story → needs → vision`) run after the scenario scenes and before the square
+   in every default plan (HANDOFF "WizCol rounds"). The story is written and
+   liked, not spoken.
 6. **Team mode as the default?** The diagram notes 2–3 students per device "so they
    think together." The book's unit is the table of 3–7 with equal speaking time.
    Team-of-3 per device is closer to the theory than solo play — should individual
    mode be the exception?
+   **Answered 2026-09-06:** the table is NOT the unit in Agora. The book's rounds
+   run as a self-paced digital sequence: each student writes, is dealt a few
+   classmates' texts by the attention allocator, and weighs them. Equal time is
+   kept by the deal, not by a clock.

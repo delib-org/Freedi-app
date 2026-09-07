@@ -1,0 +1,354 @@
+// The WizCol rounds: the intro's three cards, a round's prompt, pen, dealt
+// texts and record, and the two scales a round weighs on — a heart on a
+// story, five steps on a need or a vision. Same bones as the question stage
+// (see _stage-plan.scss .question) so a student who answered a question
+// already knows where everything is.
+
+.lobby__intro-toggle {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	inline-size: 100%;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: var(--text-primary);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.intro {
+	&__ask {
+		text-align: center;
+		gap: var(--space-xs);
+	}
+
+	&__icon,
+	&__card-icon {
+		display: inline-flex;
+		color: var(--mine);
+	}
+
+	&__title {
+		margin: 0;
+	}
+
+	&__lead {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	&__cards {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		counter-reset: intro;
+	}
+
+	&__card {
+		gap: var(--space-sm);
+		counter-increment: intro;
+		border-inline-start: 3px solid var(--mine);
+	}
+
+	&__card-head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+
+		&::before {
+			@include type-meta;
+			content: counter(intro);
+			display: grid;
+			place-items: center;
+			flex-shrink: 0;
+			inline-size: 24px;
+			block-size: 24px;
+			border-radius: var(--radius-full);
+			background: var(--mine-strong);
+			color: var(--text-on-lantern);
+			font-weight: 700;
+		}
+	}
+
+	&__card-title {
+		margin: 0;
+	}
+
+	&__card-text {
+		margin: 0;
+		white-space: pre-wrap;
+	}
+
+	&__ready {
+		@include type-meta;
+		margin: 0;
+		text-align: center;
+		color: var(--text-secondary);
+	}
+}
+
+.round {
+	&__ask {
+		text-align: center;
+		gap: var(--space-xs);
+	}
+
+	&__icon {
+		display: inline-flex;
+		color: var(--mine);
+	}
+
+	&__title {
+		margin: 0;
+	}
+
+	&__explanation {
+		margin: 0;
+		color: var(--text-secondary);
+		white-space: pre-wrap;
+	}
+
+	&__closed {
+		@include type-meta;
+		margin: var(--space-xs) 0 0;
+		color: var(--text-secondary);
+	}
+
+	// The fixed lead of the needs round — the words every need begins with,
+	// printed above the pen rather than inside it so the student's own words
+	// are the only thing stored
+	&__lead {
+		@include proposal-voice;
+		margin: 0;
+		font-weight: 700;
+		color: var(--mine-ink, var(--text-primary));
+	}
+
+	&__textarea {
+		inline-size: 100%;
+		padding: var(--space-sm);
+		border: 1.5px solid var(--border-subtle);
+		border-radius: var(--radius-tile);
+		font: inherit;
+		background: var(--bg-card-solid);
+		color: var(--text-primary);
+		resize: vertical;
+	}
+
+	&__mine-text,
+	&__text-body {
+		@include proposal-voice;
+		margin: 0;
+		white-space: pre-wrap;
+	}
+
+	&__others-head,
+	&__text-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__count {
+		@include type-meta;
+		padding: 2px var(--space-sm);
+		border-radius: 999px;
+		background: var(--bg-inset);
+		color: var(--text-secondary);
+		font-weight: 700;
+
+		&--met {
+			background: var(--mine-strong);
+			color: var(--text-on-lantern);
+		}
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__text {
+		gap: var(--space-sm);
+	}
+
+	&__number,
+	&__who {
+		@include type-meta;
+		font-weight: 700;
+		color: var(--text-secondary);
+	}
+
+	&__figure {
+		@include type-meta;
+		color: var(--text-secondary);
+	}
+
+	// The record: the AI's one paragraph, or the needs list one need per line
+	&__summary {
+		margin: 0;
+		padding: var(--space-sm) var(--space-md);
+		border-inline-start: 3px solid var(--mine);
+		background: var(--bg-inset);
+		border-radius: var(--radius-sm, 8px);
+		white-space: pre-line;
+	}
+
+	&__goal {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-sm);
+		text-align: center;
+	}
+
+	&__goal-line {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+}
+
+// --- a heart on a story ---
+.like-button {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	align-self: flex-start;
+	padding: var(--space-xs) var(--space-md);
+	border: 1.5px solid var(--border-subtle);
+	border-radius: 999px;
+	background: var(--bg-card-solid);
+	color: var(--text-primary);
+	font: inherit;
+	cursor: pointer;
+	transition:
+		background var(--motion-base) var(--ease-camera),
+		transform var(--motion-base) var(--ease-camera);
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: wait;
+	}
+
+	&__heart {
+		font-size: 1.25em;
+		line-height: 1;
+	}
+
+	&__count {
+		@include type-meta;
+		font-weight: 700;
+	}
+
+	&--on {
+		background: var(--mine-strong);
+		border-color: var(--mine-strong);
+		color: var(--text-on-lantern);
+	}
+
+	&:not(:disabled):active {
+		transform: scale(0.96);
+	}
+}
+
+// --- the 0…1 scale of a need or a vision: five steps, one question ---
+.unit-scale {
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: var(--space-xs);
+
+	&__step {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+		padding: var(--space-xs) 2px;
+		border: 1.5px solid var(--border-subtle);
+		border-radius: var(--radius-tile);
+		background: var(--bg-card-solid);
+		color: var(--text-secondary);
+		font: inherit;
+		cursor: pointer;
+		transition: background var(--motion-base) var(--ease-camera);
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: wait;
+		}
+
+		// Each step's pip fills a little more — the scale is readable with
+		// no labels at all, which is how it reads at a glance on a phone
+		@for $i from 0 through 4 {
+			&[data-step='#{$i}'] .unit-scale__pip::after {
+				inline-size: calc(#{$i + 1} * 20%);
+			}
+		}
+	}
+
+	&__pip {
+		position: relative;
+		inline-size: 100%;
+		block-size: 8px;
+		border-radius: 999px;
+		background: var(--bg-inset);
+		overflow: hidden;
+
+		&::after {
+			content: '';
+			position: absolute;
+			inset-block: 0;
+			inset-inline-start: 0;
+			border-radius: inherit;
+			background: var(--mine);
+			opacity: 0.55;
+		}
+	}
+
+	&__label {
+		@include type-meta;
+		text-align: center;
+	}
+
+	&__step--on {
+		border-color: var(--mine-strong);
+		background: var(--mine-strong);
+		color: var(--text-on-lantern);
+
+		.unit-scale__pip {
+			background: color-mix(in srgb, var(--text-on-lantern) 30%, transparent);
+		}
+
+		.unit-scale__pip::after {
+			background: var(--text-on-lantern);
+			opacity: 1;
+		}
+	}
+}
+
+// --- the carried record of a round: "all N" fold ---
+.carried {
+	&__all {
+		@include type-meta;
+		margin: 0 0 var(--space-xs);
+		padding: 0;
+		border: none;
+		background: transparent;
+		color: var(--mine-ink, var(--text-secondary));
+		font: inherit;
+		font-weight: 700;
+		text-decoration: underline;
+		cursor: pointer;
+	}
+
+	&__hearts {
+		@include type-meta;
+		color: var(--text-secondary);
+	}
+}

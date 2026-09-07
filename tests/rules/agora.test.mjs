@@ -82,6 +82,31 @@ describe('agora collections', () => {
 			);
 		});
 
+		it('rejects a student clearing their own round-appreciation ledger', async () => {
+			await seed(env, async (db) => {
+				await setDoc(
+					doc(db, 'agoraParticipants', `${SESSION}--${STUDENT}`),
+					agoraParticipantDoc({
+						sessionId: SESSION,
+						uid: STUDENT,
+						overrides: { roundAppreciations: { 'student-bob--s1--alice--story': true } },
+					}),
+				);
+			});
+
+			const db = env.authenticatedContext(STUDENT).firestore();
+			await assertFails(
+				updateDoc(doc(db, 'agoraParticipants', `${SESSION}--${STUDENT}`), {
+					roundAppreciations: {},
+				}),
+			);
+			await assertSucceeds(
+				updateDoc(doc(db, 'agoraParticipants', `${SESSION}--${STUDENT}`), {
+					lastActive: 1_700_000_002_000,
+				}),
+			);
+		});
+
 		it('rejects a student updating a classmate’s participant doc', async () => {
 			await seed(env, async (db) => {
 				await setDoc(

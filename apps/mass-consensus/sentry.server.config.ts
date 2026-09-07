@@ -3,12 +3,14 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from '@sentry/nextjs';
+import { isLocalRuntime } from '@freedi/shared-utils';
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Only enable Sentry in production
-  enabled: process.env.NODE_ENV === 'production',
+  // Only enable Sentry in production, and never from a developer's
+  // machine: `next start` on localhost is NODE_ENV=production too.
+  enabled: process.env.NODE_ENV === 'production' && !isLocalRuntime(),
 
   // Environment
   environment: process.env.NODE_ENV,

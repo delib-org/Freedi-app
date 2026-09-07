@@ -40,4 +40,13 @@ describe('id helpers', () => {
 		expect(isAgoraAiUid(createAgoraAiRaterUid('char-a', 1))).toBe(true);
 		expect(isAgoraAiUid('some-student-uid')).toBe(false);
 	});
+
+	// Every caller reads the uid off a Firestore document whose shape is
+	// asserted rather than validated, so a stored row may simply not have one.
+	// Throwing there took down a credit path that was written to be non-fatal.
+	it('answers false for a missing uid instead of throwing', () => {
+		expect(isAgoraAiUid(undefined)).toBe(false);
+		expect(isAgoraAiUid(null)).toBe(false);
+		expect(isAgoraAiUid('')).toBe(false);
+	});
 });

@@ -1,8 +1,15 @@
 import m from 'mithril';
 import { getLang, t } from '../../lib/i18n';
 import { getUserState, ensureUser } from '../../lib/user';
-import { createSession } from '../../lib/callables';
-import { fetchTeacherDashboard, listTopicPackages, type TeacherDashboard } from '../../lib/teacher';
+import { createSession, teacherClass } from '../../lib/callables';
+import {
+	classLabel,
+	EMPTY_DASHBOARD,
+	fetchTeacherDashboard,
+	listTopicPackages,
+	type TeacherDashboard,
+} from '../../lib/teacher';
+import { ClassForm, type ClassFormValue } from '../../components/ClassForm';
 import { StagePlanEditor } from './StagePlanEditor';
 import { lookDots, PRESET_SEEDS } from '../../components/LookPicker';
 import {
@@ -36,12 +43,19 @@ type GameMode = 'scenario' | 'quick';
 export function StartGame(): m.Component {
 	let topics: AgoraTopicPackage[] = [];
 	let classes: TeacherDashboard['classes'] = [];
+	let schools: TeacherDashboard['schools'] = [];
+	/** The inline "new class" form, open or not */
+	let newClassOpen = false;
+	let creatingClass = false;
+	let newClassError: string | null = null;
 	let loaded = false;
 	let mode: GameMode = 'scenario';
 	let selectedTopicId: string | null = null;
 	let selectedClassId: string | null = null;
 	let deviceMode: AgoraDeviceMode = AgoraDeviceMode.individual;
 	let identity: AgoraIdentityMode = 'pseudonym';
+	/** Real names at the door, for the teacher alone — on for a lesson */
+	let collectRealNames = true;
 	let look: AgoraThemePreset = AGORA_DEFAULT_THEME;
 	let creating = false;
 	let createFailed = false;
@@ -61,8 +75,8 @@ export function StartGame(): m.Component {
 	let rounds = defaults.rounds;
 
 	let plans: Record<GameMode, AgoraStagePlanItem[]> = {
-		scenario: stagePlanPreset('classic'),
-		quick: stagePlanPreset('quickDecision'),
+		scenario: stagePlanPreset('scenarioWizcol'),
+		quick: stagePlanPreset('wizcol'),
 	};
 
 	async function load(): Promise<void> {
@@ -74,11 +88,12 @@ export function StartGame(): m.Component {
 				fetchTeacherDashboard().catch((error: unknown) => {
 					console.error('[Teacher] Loading classes failed:', error);
 
-					return { classes: [], aggregates: new Map(), sessions: [] } as TeacherDashboard;
+					return EMPTY_DASHBOARD;
 				}),
 			]);
 			topics = loadedTopics.filter((topic) => topic.status === AgoraTopicStatus.ready);
 			classes = dashboard.classes;
+			schools = dashboard.schools;
 			const routeClass = m.route.param('classId');
 			if (routeClass && classes.some((agoraClass) => agoraClass.classId === routeClass)) {
 				selectedClassId = routeClass;
@@ -104,6 +119,32 @@ export function StartGame(): m.Component {
 			console.error('[Teacher] Loading start-game data failed:', error);
 		}
 		loaded = true;
+		m.redraw();
+	}
+
+	/** Open a class in the teacher's school and make it today's class */
+	async function createClass(value: ClassFormValue): Promise<void> {
+		if (creatingClass) return;
+		creatingClass = true;
+		newClassError = null;
+		m.redraw();
+		try {
+			const result = await teacherClass({
+				action: 'create',
+				name: value.name,
+				...(value.gradeLevel ? { gradeLevel: value.gradeLevel } : {}),
+				...(value.schoolId ? { schoolId: value.schoolId } : {}),
+			});
+			const dashboard = await fetchTeacherDashboard();
+			classes = dashboard.classes;
+			schools = dashboard.schools;
+			selectedClassId = result.classId;
+			newClassOpen = false;
+		} catch (error) {
+			console.error('[Teacher] Creating a class failed:', error);
+			newClassError = t('classForm.error');
+		}
+		creatingClass = false;
 		m.redraw();
 	}
 
@@ -141,6 +182,7 @@ export function StartGame(): m.Component {
 						}),
 				deviceMode,
 				identity,
+				collectRealNames,
 				theme: { preset: look },
 				stagePlan: plans[mode],
 				...(selectedClassId ? { classId: selectedClassId } : {}),
@@ -318,6 +360,18 @@ export function StartGame(): m.Component {
 							'p.home-explanation',
 							t(identity === 'named' ? 'startGame.identity_named_hint' : 'startGame.identity_hint'),
 						),
+						// The teacher's own list: who is behind each pseudonym. Never on a
+						// card, never to a classmate — see lib/flows/joinName.
+						m('label.voting-settings__row', [
+							m('input[type=checkbox]', {
+								checked: collectRealNames,
+								onchange: (event: Event) => {
+									collectRealNames = (event.target as HTMLInputElement).checked;
+								},
+							}),
+							m('span', t('startGame.collect_names')),
+						]),
+						m('p.home-explanation', t('startGame.collect_names_hint')),
 					]),
 
 					// How the game looks — the room's default; each student may still
@@ -348,18 +402,45 @@ export function StartGame(): m.Component {
 					m('.stack', [
 						m('p.teacher__section-title', t('startGame.for_class')),
 						m('.start-game__class-row', [
-							choice(t('startGame.guest_game'), selectedClassId === null, () => {
-								selectedClassId = null;
-							}),
 							// No keys here: the guest button shares this fragment, and Mithril
 							// refuses fragments that mix keyed and unkeyed vnodes.
 							...classes.map((agoraClass) =>
-								choice(agoraClass.name, selectedClassId === agoraClass.classId, () => {
+								choice(classLabel(agoraClass), selectedClassId === agoraClass.classId, () => {
 									selectedClassId = agoraClass.classId;
+									newClassOpen = false;
 								}),
 							),
+							// A teacher attached to a school opens a class right here; one
+							// the admin has not attached yet is told what to ask for.
+							schools.length > 0
+								? choice(`＋ ${t('startGame.new_class')}`, newClassOpen, () => {
+										newClassOpen = !newClassOpen;
+									})
+								: null,
+							choice(t('startGame.guest_game'), selectedClassId === null && !newClassOpen, () => {
+								selectedClassId = null;
+								newClassOpen = false;
+							}),
 						]),
-						selectedClassId ? m('p.home-explanation', t('startGame.class_hint')) : null,
+						newClassOpen
+							? m(ClassForm, {
+									schools,
+									submitLabel: t('classForm.create'),
+									busyLabel: t('classForm.creating'),
+									busy: creatingClass,
+									error: newClassError,
+									onSubmit: (value) => void createClass(value),
+									onCancel: () => {
+										newClassOpen = false;
+									},
+								})
+							: null,
+						schools.length === 0 && classes.length === 0
+							? m('p.home-explanation', t('startGame.no_school_hint'))
+							: null,
+						selectedClassId && !newClassOpen
+							? m('p.home-explanation', t('startGame.class_hint'))
+							: null,
 					]),
 
 					m('.stack', [

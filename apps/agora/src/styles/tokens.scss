@@ -452,10 +452,6 @@
   // have to agree on their heights, and the page has to know the total to
   // keep its last button clear of both.
   --delib-nav-h: 68px;
-  // Sized for a quiet uppercase label plus TWO lines of the proposal voice —
-  // the bar's whole job is showing the student their own sentence, and one
-  // 18px line of Hebrew on a 360px phone is about four words.
-  --dock-bar-h: 100px;
 }
 
 // ============================================================================
@@ -507,8 +503,6 @@
 // my own message in a conversation
 .thread__msg--mine,
 .chat-bubble--mine,
-// the notebook carrying my proposal, collapsed
-.shell--delib .proposal-dock,
 // the face I pressed, and the tab I am on
 .rate-scale__option--selected,
 .delib-nav__item--active,
@@ -536,7 +530,6 @@
 // pill — has to hand the ink back, or the on-dark remap paints white text
 // onto white paper. Same registry, opposite direction.
 .on-light,
-.shell--delib .proposal-dock__panel,
 // The desk's two pale panels: the stuck-write notice (which carries a real
 // .btn, and a .btn--secondary is white paper by definition) and the
 // self-check pills. Both are white islands on the one ink-on-dark surface a
