@@ -88,6 +88,8 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let savingLook = false;
 	let userId = '';
 	let editingPlan: AgoraStagePlanItem[] | null = null;
+	/** The cog: the board shows the game, the settings wait behind it */
+	let settingsOpen = false;
 	let savingPlan = false;
 	let planSaveFailed = false;
 	let tab: ConsoleTab = 'live';
@@ -397,85 +399,54 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const planRail = m('.card.stack.teacher-plan', [
 				m('.class-progress__head', [
 					m('p.teacher__section-title', t('teacher.plan_title')),
-					next && next.stage !== AgoraStage.ended && !editingPlan
-						? m(
-								'button.btn.btn--sm.btn--ghost',
-								{
-									onclick: () => {
-										editingPlan = plan
-											.filter((item) => item.stage !== AgoraStage.ended)
-											.map((item) => ({ ...item }));
-									},
-								},
-								t('teacher.edit_plan'),
-							)
-						: null,
+					m(
+						'button.teacher-settings__toggle',
+						{
+							type: 'button',
+							'aria-expanded': String(settingsOpen),
+							'aria-label': t('teacher.settings'),
+							title: t('teacher.settings'),
+							class: settingsOpen ? 'teacher-settings__toggle--on' : undefined,
+							onclick: () => {
+								settingsOpen = !settingsOpen;
+							},
+						},
+						m(Icon, { name: 'cog', size: 20 }),
+					),
 				]),
-				editingPlan
-					? m('.stack', [
-							m(StagePlanEditor, {
-								items: editingPlan,
-								hasCharacters,
-								frozenCount: currentIndex + 1,
-								onChange: (items) => {
-									editingPlan = items;
+				m(
+					'ol.teacher-plan__list',
+					plan
+						.filter((item) => item.stage !== AgoraStage.ended)
+						.map((item, index) =>
+							m(
+								'li.teacher-plan__item',
+								{
+									key: item.itemId,
+									class:
+										index < currentIndex
+											? 'teacher-plan__item--done'
+											: index === currentIndex
+												? 'teacher-plan__item--current'
+												: undefined,
+									'aria-current': index === currentIndex ? 'step' : undefined,
 								},
-							}),
-							planSaveFailed ? m('p.join__error', t('teacher.plan_save_failed')) : null,
-							m('.teacher__mode-row', [
-								m(
-									'button.btn.btn--primary',
-									{ disabled: savingPlan, onclick: savePlan },
-									savingPlan ? t('teacher.creating') : t('teacher.save_plan'),
-								),
-								m(
-									'button.btn.btn--secondary',
-									{
-										disabled: savingPlan,
-										onclick: () => {
-											editingPlan = null;
-											planSaveFailed = false;
-										},
-									},
-									t('teacher.cancel_plan'),
-								),
-							]),
-						])
-					: m(
-							'ol.teacher-plan__list',
-							plan
-								.filter((item) => item.stage !== AgoraStage.ended)
-								.map((item, index) =>
+								[
 									m(
-										'li.teacher-plan__item',
-										{
-											key: item.itemId,
-											class:
-												index < currentIndex
-													? 'teacher-plan__item--done'
-													: index === currentIndex
-														? 'teacher-plan__item--current'
-														: undefined,
-											'aria-current': index === currentIndex ? 'step' : undefined,
-										},
-										[
-											m(
-												'span.teacher-plan__mark',
-												index < currentIndex
-													? m(Icon, { name: 'check', size: 14 })
-													: String(index + 1),
-											),
-											m('span.teacher-plan__label', planItemLabel(item)),
-											item.stage === AgoraStage.voting && session.stageState?.[item.itemId]?.trigger
-												? m(
-														'span.teacher-plan__note',
-														t(`teacher.trigger_fired_${session.stageState[item.itemId].trigger}`),
-													)
-												: null,
-										],
+										'span.teacher-plan__mark',
+										index < currentIndex ? m(Icon, { name: 'check', size: 14 }) : String(index + 1),
 									),
-								),
+									m('span.teacher-plan__label', planItemLabel(item)),
+									item.stage === AgoraStage.voting && session.stageState?.[item.itemId]?.trigger
+										? m(
+												'span.teacher-plan__note',
+												t(`teacher.trigger_fired_${session.stageState[item.itemId].trigger}`),
+											)
+										: null,
+								],
+							),
 						),
+				),
 			]);
 
 			// Results/ended: the teacher projects the same transformed map + score
@@ -499,9 +470,108 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				]);
 			}
 
+			// Behind the cog: the upcoming stages, how the vote runs, the room's
+			// look. The board itself stays the game.
+			const settingsPanel = settingsOpen
+				? m('.card.stack.teacher-settings', [
+						m('.class-progress__head', [
+							m('p.teacher__section-title', t('teacher.settings')),
+							m(
+								'button.btn.btn--sm.btn--ghost',
+								{
+									type: 'button',
+									onclick: () => {
+										settingsOpen = false;
+									},
+								},
+								t('teacher.settings_close'),
+							),
+						]),
+
+						// The stages ahead
+						m('.stack.teacher-settings__section', [
+							m('p.teacher-settings__label', t('teacher.plan_title')),
+							editingPlan
+								? m('.stack', [
+										m(StagePlanEditor, {
+											items: editingPlan,
+											hasCharacters,
+											frozenCount: currentIndex + 1,
+											onChange: (items) => {
+												editingPlan = items;
+											},
+										}),
+										planSaveFailed ? m('p.join__error', t('teacher.plan_save_failed')) : null,
+										m('.teacher__mode-row', [
+											m(
+												'button.btn.btn--primary',
+												{ disabled: savingPlan, onclick: savePlan },
+												savingPlan ? t('teacher.creating') : t('teacher.save_plan'),
+											),
+											m(
+												'button.btn.btn--secondary',
+												{
+													disabled: savingPlan,
+													onclick: () => {
+														editingPlan = null;
+														planSaveFailed = false;
+													},
+												},
+												t('teacher.cancel_plan'),
+											),
+										]),
+									])
+								: next && next.stage !== AgoraStage.ended
+									? m(
+											'button.btn.btn--secondary',
+											{
+												type: 'button',
+												onclick: () => {
+													editingPlan = plan
+														.filter((item) => item.stage !== AgoraStage.ended)
+														.map((item) => ({ ...item }));
+												},
+											},
+											t('teacher.edit_plan'),
+										)
+									: m('p.lobby__status', t('teacher.plan_locked')),
+						]),
+
+						// How the vote runs — set while the class still deliberates; by the
+						// time the ballot is drawn up the settings have already been read.
+						inDeliberation && (next?.stage === AgoraStage.voting || !planOwnsVoting)
+							? votingSettingsCard(
+									session.votingSettings,
+									savingSettings,
+									planOwnsVoting,
+									saveVotingSettings,
+								)
+							: null,
+
+						// The room's look: the two presets and whatever the class has built
+						// so far. Every phone that has not chosen its own follows this; the
+						// teacher can also crown a student's creation as the class look. A
+						// civic square wears Odyssey's and is not asked.
+						session.sessionMode !== AgoraSessionMode.civic
+							? m('.stack.teacher-settings__section.teacher-look', [
+									m('p.teacher-settings__label', t('teacher.look_title')),
+									m('p.teacher-look__hint', t('teacher.look_hint')),
+									m(LookPicker, {
+										current: resolveAgoraTheme(session, null),
+										classLooks: classLooks(participants, undefined),
+										onWear: (choice) => {
+											if (choice) saveLook(choice);
+										},
+									}),
+								])
+							: null,
+					])
+				: null;
+
 			return m('.shell.shell--wide', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 					planRail,
+					settingsPanel,
 					tabStrip,
 
 					...(tab !== 'live'
@@ -523,17 +593,6 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									? roundSpecOf(current)
 										? roundPanel(session, current, answers)
 										: questionPanel(session, current, answers)
-									: null,
-
-								// Set while the class still deliberates — by the time the ballot
-								// is drawn up the settings have already been read.
-								inDeliberation && (next?.stage === AgoraStage.voting || !planOwnsVoting)
-									? votingSettingsCard(
-											session.votingSettings,
-											savingSettings,
-											planOwnsVoting,
-											saveVotingSettings,
-										)
 									: null,
 
 								// While the vote is open the teacher holds the reveal, and always
@@ -577,24 +636,6 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 												),
 											]),
 											triggerLine(current, next?.stage === AgoraStage.voting),
-										])
-									: null,
-
-								// The room's look: the two presets and whatever the class has
-								// built so far. Every phone that has not chosen its own follows
-								// this; the teacher can also crown a student's creation as the
-								// class look. A civic square wears Odyssey's and is not asked.
-								session.sessionMode !== AgoraSessionMode.civic
-									? m('.card.stack.teacher-look', [
-											m('p.teacher__section-title', t('teacher.look_title')),
-											m('p.teacher-look__hint', t('teacher.look_hint')),
-											m(LookPicker, {
-												current: resolveAgoraTheme(session, null),
-												classLooks: classLooks(participants, undefined),
-												onWear: (choice) => {
-													if (choice) saveLook(choice);
-												},
-											}),
 										])
 									: null,
 							]),

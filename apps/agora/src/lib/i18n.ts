@@ -1110,6 +1110,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.collect_names_hint':
 			'מוצג רק בקונסולה שלך ליד שם המשחק של כל תלמיד. אף פעם לא על כרטיס, אף פעם לא לחבר לכיתה.',
 		'teacher.tab_live': 'הלוח',
+		'teacher.settings': 'הגדרות',
+		'teacher.settings_close': 'סגירה',
+		'teacher.plan_locked': 'השלבים נקבעו — המשחק הסתיים.',
 		'teacher.tab_class': 'הכיתה',
 		'teacher.tab_messages': 'הודעות',
 		'teacher.class_title': 'הכיתה',
@@ -2338,6 +2341,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.collect_names_hint':
 			'Shown only on your console next to each game name. Never on a card, never to a classmate.',
 		'teacher.tab_live': 'Board',
+		'teacher.settings': 'Settings',
+		'teacher.settings_close': 'Close',
+		'teacher.plan_locked': 'The stages are set — the game has ended.',
 		'teacher.tab_class': 'Class',
 		'teacher.tab_messages': 'Messages',
 		'teacher.class_title': 'The class',
@@ -3520,6 +3526,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.collect_names_hint':
 			'يظهر فقط في لوحتكم إلى جانب كل اسم لعبة. لا على بطاقة أبداً، ولا لأي زميل.',
 		'teacher.tab_live': 'اللوحة',
+		'teacher.settings': 'الإعدادات',
+		'teacher.settings_close': 'إغلاق',
+		'teacher.plan_locked': 'المراحل محددة — انتهت اللعبة.',
 		'teacher.tab_class': 'الصف',
 		'teacher.tab_messages': 'الرسائل',
 		'teacher.class_title': 'الصف',
@@ -4770,6 +4779,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.collect_names_hint':
 			'Se muestra solo en tu consola, junto a cada nombre de juego. Nunca en una tarjeta, nunca a un compañero.',
 		'teacher.tab_live': 'Tablero',
+		'teacher.settings': 'Ajustes',
+		'teacher.settings_close': 'Cerrar',
+		'teacher.plan_locked': 'Las etapas están fijadas: el juego ha terminado.',
 		'teacher.tab_class': 'Clase',
 		'teacher.tab_messages': 'Mensajes',
 		'teacher.class_title': 'La clase',
@@ -6038,6 +6050,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.collect_names_hint':
 			'Erscheint nur auf deiner Konsole neben jedem Spielnamen. Nie auf einer Karte, nie für Mitschüler.',
 		'teacher.tab_live': 'Tafel',
+		'teacher.settings': 'Einstellungen',
+		'teacher.settings_close': 'Schließen',
+		'teacher.plan_locked': 'Die Phasen stehen fest – das Spiel ist beendet.',
 		'teacher.tab_class': 'Klasse',
 		'teacher.tab_messages': 'Nachrichten',
 		'teacher.class_title': 'Die Klasse',
@@ -7296,6 +7311,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.collect_names_hint':
 			'Alleen zichtbaar op jouw console, naast elke spelnaam. Nooit op een kaart, nooit voor een klasgenoot.',
 		'teacher.tab_live': 'Bord',
+		'teacher.settings': 'Instellingen',
+		'teacher.settings_close': 'Sluiten',
+		'teacher.plan_locked': 'De fasen staan vast – het spel is afgelopen.',
 		'teacher.tab_class': 'Klas',
 		'teacher.tab_messages': 'Berichten',
 		'teacher.class_title': 'De klas',

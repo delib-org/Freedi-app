@@ -932,3 +932,54 @@
 		animation: none;
 	}
 }
+
+// --- the cog on the stages card, and the settings it opens ---
+.teacher-settings {
+	&__toggle {
+		display: inline-grid;
+		place-items: center;
+		inline-size: 40px;
+		block-size: 40px;
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-full);
+		background: var(--bg-card-solid);
+		color: var(--text-secondary);
+		cursor: pointer;
+		transition:
+			background var(--motion-base) var(--ease-camera),
+			color var(--motion-base) var(--ease-camera),
+			transform var(--motion-base) var(--ease-camera);
+
+		&:hover,
+		&:focus-visible {
+			color: var(--mine-ink);
+			border-color: var(--mine);
+		}
+
+		&--on {
+			background: var(--mine-strong);
+			border-color: var(--mine-strong);
+			color: var(--text-on-lantern);
+			transform: rotate(30deg);
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+			&--on {
+				transform: none;
+			}
+		}
+	}
+
+	&__section {
+		padding-block-start: var(--space-md);
+		border-block-start: 1px solid var(--border-subtle);
+	}
+
+	&__label {
+		@include type-meta;
+		margin: 0;
+		font-weight: 700;
+		color: var(--text-secondary);
+	}
+}
