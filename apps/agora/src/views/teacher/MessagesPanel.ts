@@ -138,7 +138,7 @@ export function MessagesPanel(): m.Component<MessagesPanelAttrs> {
 		const busy = busyId === item.statementId;
 
 		return m('.mod-row__editor', [
-			m('textarea.thread__input', {
+			m('textarea.text-input.thread__input', {
 				value: editDraft,
 				rows: 3,
 				maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
