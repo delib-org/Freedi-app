@@ -56,6 +56,7 @@ import {
 	type ChallengeActions,
 } from './VotingCards';
 import { questionPanel, roundPanel, triggerLine } from './DeliberationCards';
+import { liveWeighings } from '../../lib/flows/liveTally';
 import { ClassPanel, classProgressCard, progressFacts } from './ClassPanel';
 import { MessagesPanel } from './MessagesPanel';
 import { StudentThreadDrawer } from './StudentThreadDrawer';
@@ -292,6 +293,14 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					ratingsByUid.set(rater.evaluatorId, (ratingsByUid.get(rater.evaluatorId) ?? 0) + 1);
 				}
 			}
+			// Who has weighed each text, straight off the timeline. The teacher's
+			// figures are server-written and lag by a trigger round-trip; this
+			// says whether the silence is the class or the count (see liveTally).
+			const liveWeighed = liveWeighings(
+				studentEvalTimes,
+				answers.map((answer) => answer.statementId),
+			);
+
 			// The same count, restricted to THIS round's texts — a round is done
 			// when the dealt sample is read, not when the square was
 			const answerIds = new Set(answers.map((answer) => answer.statementId));
@@ -614,8 +623,8 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 								inQuestion
 									? roundSpecOf(current)
-										? roundPanel(session, current, answers)
-										: questionPanel(session, current, answers)
+										? roundPanel(session, current, answers, liveWeighed)
+										: questionPanel(session, current, answers, liveWeighed)
 									: null,
 
 								// While the vote is open the teacher holds the reveal, and always

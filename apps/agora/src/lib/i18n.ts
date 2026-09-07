@@ -660,6 +660,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.answers_hint':
 			'התשובות המסומנות הן אלה שיעברו לשלבים הבאים כשתפתחו אותם, יחד עם סיכום קצר.',
 		'teacher.will_carry': 'עוברת הלאה',
+		// The teacher's figures are server-written and land a round-trip late;
+		// until then the timeline says how many hands are already up.
+		'teacher.counting_n': '{{n}} כבר שקלו — המספר מתעדכן',
+		'teacher.counting_n_one': 'כבר נשקל — המספר מתעדכן',
+		'teacher.catchup_n': 'עוד {{n}} בדרך',
+		'teacher.catchup_n_one': 'עוד אחד בדרך',
+		'teacher.catchup_title': 'הדירוגים נרשמו. המספר המשוקלל מתעדכן כמה שניות אחריהם.',
 		'teacher.answered_count': '{{n}} מתוך {{total}} ענו',
 		'teacher.trigger_off': 'ההצבעה נפתחת כשתלחצו על הכפתור.',
 		'teacher.trigger_waiting':
@@ -1928,6 +1935,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.answers_hint':
 			'Marked answers are the ones that will travel into the next stages when you open it, with a short summary.',
 		'teacher.will_carry': 'travels forward',
+		// The teacher's figures are server-written and land a round-trip late;
+		// until then the timeline says how many hands are already up.
+		'teacher.counting_n': 'Weighed by {{n}} — the figure is catching up',
+		'teacher.counting_n_one': 'Weighed once — the figure is catching up',
+		'teacher.catchup_n': '{{n}} more on the way',
+		'teacher.catchup_n_one': 'One more on the way',
+		'teacher.catchup_title': 'The ratings are in. The figure that averages them lands a few seconds later.',
 		'teacher.answered_count': '{{n}} of {{total}} answered',
 		'teacher.trigger_off': 'The vote opens when you press the button.',
 		'teacher.trigger_waiting':
@@ -3200,6 +3214,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.answers_hint':
 			'الإجابات المعلَّمة هي التي ستنتقل إلى المراحل التالية عند فتحها، مع ملخص قصير.',
 		'teacher.will_carry': 'تنتقل',
+		'teacher.counting_n': 'وزنه {{n}} — الرقم قيد التحديث',
+		'teacher.counting_n_one': 'وُزن مرة — الرقم قيد التحديث',
+		'teacher.catchup_n': '{{n}} في الطريق',
+		'teacher.catchup_n_one': 'واحد آخر في الطريق',
+		'teacher.catchup_title': 'التقييمات وصلت. الرقم الذي يجمعها يظهر بعد ثوانٍ قليلة.',
 		'teacher.answered_count': 'أجاب {{n}} من {{total}}',
 		'teacher.trigger_off': 'يُفتح التصويت عندما تضغط الزر.',
 		'teacher.trigger_waiting':
@@ -4486,6 +4505,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.answers_hint':
 			'Las respuestas marcadas son las que pasarán a las siguientes etapas cuando las abras, con un breve resumen.',
 		'teacher.will_carry': 'pasa adelante',
+		'teacher.counting_n': 'Valorado por {{n}} — la cifra se está actualizando',
+		'teacher.counting_n_one': 'Valorado una vez — la cifra se está actualizando',
+		'teacher.catchup_n': '{{n}} más en camino',
+		'teacher.catchup_n_one': 'Uno más en camino',
+		'teacher.catchup_title': 'Las valoraciones ya llegaron. La cifra que las promedia aparece unos segundos después.',
 		'teacher.answered_count': '{{n}} de {{total}} respondieron',
 		'teacher.trigger_off': 'La votación se abre cuando pulses el botón.',
 		'teacher.trigger_waiting':
@@ -5811,6 +5835,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.answers_hint':
 			'Die markierten Antworten reisen in die nächsten Phasen, wenn du sie öffnest – mit einer kurzen Zusammenfassung.',
 		'teacher.will_carry': 'reist weiter',
+		'teacher.counting_n': 'Von {{n}} gewichtet — die Zahl zieht nach',
+		'teacher.counting_n_one': 'Einmal gewichtet — die Zahl zieht nach',
+		'teacher.catchup_n': '{{n}} weitere unterwegs',
+		'teacher.catchup_n_one': 'Eine weitere unterwegs',
+		'teacher.catchup_title': 'Die Bewertungen sind da. Die Zahl, die sie mittelt, folgt ein paar Sekunden später.',
 		'teacher.answered_count': '{{n}} von {{total}} haben geantwortet',
 		'teacher.trigger_off': 'Die Abstimmung öffnet sich, wenn du den Knopf drückst.',
 		'teacher.trigger_waiting':
@@ -7148,6 +7177,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.answers_hint':
 			'De gemarkeerde antwoorden reizen mee naar de volgende fasen als je die opent, met een korte samenvatting.',
 		'teacher.will_carry': 'reist mee',
+		'teacher.counting_n': 'Door {{n}} gewogen — het getal loopt nog bij',
+		'teacher.counting_n_one': 'Eén keer gewogen — het getal loopt nog bij',
+		'teacher.catchup_n': 'Nog {{n}} onderweg',
+		'teacher.catchup_n_one': 'Nog één onderweg',
+		'teacher.catchup_title': 'De beoordelingen zijn binnen. Het getal dat ze middelt volgt een paar seconden later.',
 		'teacher.answered_count': '{{n}} van {{total}} hebben geantwoord',
 		'teacher.trigger_off': 'De stemming gaat open als jij op de knop drukt.',
 		'teacher.trigger_waiting':
