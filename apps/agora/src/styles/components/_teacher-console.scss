@@ -320,3 +320,37 @@
 		transition: none;
 	}
 }
+
+// --- the runtime guard's banner (src/lib/boot.ts) ---
+.boot-banner {
+	position: sticky;
+	inset-block-start: 0;
+	z-index: 50;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-sm);
+	padding: var(--space-sm) var(--space-md);
+	background: var(--bg-card-solid);
+	border-block-end: 2px solid var(--danger);
+	color: var(--text-primary);
+
+	&__text {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-inline-size: 0;
+	}
+
+	&__detail {
+		@include type-meta;
+		color: var(--text-secondary);
+		overflow-wrap: anywhere;
+	}
+
+	&__actions {
+		display: flex;
+		gap: var(--space-xs);
+	}
+}

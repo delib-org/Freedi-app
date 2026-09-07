@@ -1149,6 +1149,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.collect_names_hint':
 			'מוצג רק בקונסולה שלך ליד שם המשחק של כל תלמיד. אף פעם לא על כרטיס, אף פעם לא לחבר לכיתה.',
 		'teacher.tab_live': 'הלוח',
+		'boot.error_title': 'משהו השתבש',
+		'boot.reload': 'רענון',
+		'boot.dismiss': 'סגירה',
 		'teacher.settings': 'הגדרות',
 		'teacher.settings_close': 'סגירה',
 		'teacher.plan_locked': 'השלבים נקבעו — המשחק הסתיים.',
@@ -2419,6 +2422,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.collect_names_hint':
 			'Shown only on your console next to each game name. Never on a card, never to a classmate.',
 		'teacher.tab_live': 'Board',
+		'boot.error_title': 'Something went wrong',
+		'boot.reload': 'Reload',
+		'boot.dismiss': 'Dismiss',
 		'teacher.settings': 'Settings',
 		'teacher.settings_close': 'Close',
 		'teacher.plan_locked': 'The stages are set — the game has ended.',
@@ -3642,6 +3648,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.collect_names_hint':
 			'يظهر فقط في لوحتكم إلى جانب كل اسم لعبة. لا على بطاقة أبداً، ولا لأي زميل.',
 		'teacher.tab_live': 'اللوحة',
+		'boot.error_title': 'حدث خطأ ما',
+		'boot.reload': 'إعادة تحميل',
+		'boot.dismiss': 'إغلاق',
 		'teacher.settings': 'الإعدادات',
 		'teacher.settings_close': 'إغلاق',
 		'teacher.plan_locked': 'المراحل محددة — انتهت اللعبة.',
@@ -4935,6 +4944,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.collect_names_hint':
 			'Se muestra solo en tu consola, junto a cada nombre de juego. Nunca en una tarjeta, nunca a un compañero.',
 		'teacher.tab_live': 'Tablero',
+		'boot.error_title': 'Algo salió mal',
+		'boot.reload': 'Recargar',
+		'boot.dismiss': 'Cerrar',
 		'teacher.settings': 'Ajustes',
 		'teacher.settings_close': 'Cerrar',
 		'teacher.plan_locked': 'Las etapas están fijadas: el juego ha terminado.',
@@ -6247,6 +6259,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.collect_names_hint':
 			'Erscheint nur auf deiner Konsole neben jedem Spielnamen. Nie auf einer Karte, nie für Mitschüler.',
 		'teacher.tab_live': 'Tafel',
+		'boot.error_title': 'Etwas ist schiefgelaufen',
+		'boot.reload': 'Neu laden',
+		'boot.dismiss': 'Schließen',
 		'teacher.settings': 'Einstellungen',
 		'teacher.settings_close': 'Schließen',
 		'teacher.plan_locked': 'Die Phasen stehen fest – das Spiel ist beendet.',
@@ -7549,6 +7564,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.collect_names_hint':
 			'Alleen zichtbaar op jouw console, naast elke spelnaam. Nooit op een kaart, nooit voor een klasgenoot.',
 		'teacher.tab_live': 'Bord',
+		'boot.error_title': 'Er ging iets mis',
+		'boot.reload': 'Opnieuw laden',
+		'boot.dismiss': 'Sluiten',
 		'teacher.settings': 'Instellingen',
 		'teacher.settings_close': 'Sluiten',
 		'teacher.plan_locked': 'De fasen staan vast – het spel is afgelopen.',
