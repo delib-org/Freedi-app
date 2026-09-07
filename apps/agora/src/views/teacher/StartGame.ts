@@ -10,6 +10,8 @@ import {
 	type TeacherDashboard,
 } from '../../lib/teacher';
 import { ClassForm, type ClassFormValue } from '../../components/ClassForm';
+import { Collapsible } from '../../components/Collapsible';
+import { Icon } from '../../components/Icon';
 import { StagePlanEditor } from './StagePlanEditor';
 import { lookDots, PRESET_SEEDS } from '../../components/LookPicker';
 import {
@@ -29,30 +31,40 @@ import {
 	validateStagePlan,
 } from '@freedi/shared-types';
 import { TeacherNav } from '../../components/TeacherNav';
+import { countedSteps } from '../../lib/teacherSteps';
 
 type GameMode = 'scenario' | 'quick';
 
+/** The scenario list's last row: no scenario, the teacher's own question */
+const OWN_QUESTION = '__own__';
+/** How much of the question becomes the game's name when none was typed */
+const NAME_FROM_QUESTION = 40;
+
 /**
- * Start a game.
+ * Start a lesson — a three-line form.
  *
- * Two ways in. A SCENARIO: pick a ready topic package and the classic lesson
- * runs through its stages. A QUICK GAME: type the question the room is
- * deciding, and there is no scenario at all — no characters, no sides, just
- * the stages the admin lines up. Either way the stage plan below is the
- * game's spine: what runs, in what order, with what rule per stage.
+ * What are we playing (a scenario, or the teacher's own question), which
+ * class, and the button. That is the whole of a first lesson; the rest —
+ * the steps, the names, the devices, the colours, the rounds — is already
+ * set to the usual game and waits under "advanced settings", where a teacher
+ * on their tenth lesson will find it.
+ *
+ * The page used to open with a mode toggle, a stage plan of eleven rows and
+ * six more choices before a button 2,000px down. One of those choices was
+ * required.
  */
 export function StartGame(): m.Component {
 	let topics: AgoraTopicPackage[] = [];
 	let classes: TeacherDashboard['classes'] = [];
 	let schools: TeacherDashboard['schools'] = [];
-	/** The inline "new class" form, open or not */
 	let newClassOpen = false;
 	let creatingClass = false;
 	let newClassError: string | null = null;
 	let loaded = false;
-	let mode: GameMode = 'scenario';
-	let selectedTopicId: string | null = null;
-	let selectedClassId: string | null = null;
+	/** A scenario's id, OWN_QUESTION, or nothing chosen yet */
+	let chosenId: string | null = null;
+	/** A class id, 'none' for a one-off lesson, or nothing chosen yet */
+	let classChoice: string | 'none' | null = null;
 	let deviceMode: AgoraDeviceMode = AgoraDeviceMode.individual;
 	let identity: AgoraIdentityMode = 'pseudonym';
 	/** Real names at the door, for the teacher alone — on for a lesson */
@@ -60,7 +72,8 @@ export function StartGame(): m.Component {
 	let look: AgoraThemePreset = AGORA_DEFAULT_THEME;
 	let creating = false;
 	let createFailed = false;
-	let showKnobs = false;
+	let advancedOpen = false;
+	let moreOpen = false;
 
 	// Auth settles in two beats — anonymous first, the teacher's Google account
 	// a moment later. Reading the library on the first beat left this screen
@@ -80,6 +93,10 @@ export function StartGame(): m.Component {
 		quick: stagePlanPreset('wizcol'),
 	};
 
+	function mode(): GameMode {
+		return chosenId === OWN_QUESTION ? 'quick' : 'scenario';
+	}
+
 	async function load(): Promise<void> {
 		try {
 			const user = await ensureUser();
@@ -95,11 +112,19 @@ export function StartGame(): m.Component {
 			topics = loadedTopics.filter((topic) => topic.status === AgoraTopicStatus.ready);
 			classes = dashboard.classes;
 			schools = dashboard.schools;
+
+			// Which class: the one the dashboard sent us from, else the only one
+			// there is, else — with no class to pick — a one-off lesson. A teacher
+			// with several classes chooses; nothing is highlighted for them.
 			const routeClass = m.route.param('classId');
 			if (routeClass && classes.some((agoraClass) => agoraClass.classId === routeClass)) {
-				selectedClassId = routeClass;
+				classChoice = routeClass;
+			} else if (classes.length === 1) {
+				classChoice = classes[0].classId;
+			} else if (classes.length === 0 && schools.length === 0) {
+				classChoice = 'none';
 			}
-			if (topics.length === 1) selectedTopicId = topics[0].topicPackageId;
+
 			// Arrived by tapping a scenario on the shelf: that choice IS the
 			// answer to the first question on this screen, so hold it. A link to
 			// a scenario that is no longer ready falls back to the picker rather
@@ -109,12 +134,11 @@ export function StartGame(): m.Component {
 				? (topics.find((topic) => topic.topicPackageId === routeTopic) ?? null)
 				: null;
 			if (carried) {
-				selectedTopicId = carried.topicPackageId;
-				mode = 'scenario';
-			} else if (topics.length === 0 || m.route.param('mode') === 'quick') {
-				// A teacher with no scenario yet is most likely here for a quick
-				// game, and the dashboard's quick-game door says so explicitly
-				mode = 'quick';
+				chosenId = carried.topicPackageId;
+			} else if (m.route.param('mode') === 'quick' || topics.length === 0) {
+				chosenId = OWN_QUESTION;
+			} else if (topics.length === 1) {
+				chosenId = topics[0].topicPackageId;
 			}
 		} catch (error) {
 			console.error('[Teacher] Loading start-game data failed:', error);
@@ -139,7 +163,7 @@ export function StartGame(): m.Component {
 			const dashboard = await fetchTeacherDashboard();
 			classes = dashboard.classes;
 			schools = dashboard.schools;
-			selectedClassId = result.classId;
+			classChoice = result.classId;
 			newClassOpen = false;
 		} catch (error) {
 			console.error('[Teacher] Creating a class failed:', error);
@@ -154,13 +178,24 @@ export function StartGame(): m.Component {
 		return rounds !== defaults.rounds ? { rounds } : undefined;
 	}
 
-	function canCreate(): boolean {
-		if (creating) return false;
-		const plan = plans[mode];
-		if (validateStagePlan(plan, { hasCharacters: mode === 'scenario' }).length > 0) return false;
-		if (mode === 'scenario') return selectedTopicId !== null;
+	/** The game's name: what was typed, or the start of the question */
+	function gameTitle(): string {
+		const typed = quickTitle.trim();
+		if (typed) return typed;
+		const question = quickQuestion.trim();
 
-		return quickTitle.trim().length > 0 && quickQuestion.trim().length > 0;
+		return question.length > NAME_FROM_QUESTION
+			? `${question.slice(0, NAME_FROM_QUESTION).trimEnd()}…`
+			: question;
+	}
+
+	function canCreate(): boolean {
+		if (creating || chosenId === null || classChoice === null) return false;
+		const plan = plans[mode()];
+		if (validateStagePlan(plan, { hasCharacters: mode() === 'scenario' }).length > 0) return false;
+		if (mode() === 'quick') return quickQuestion.trim().length > 0;
+
+		return true;
 	}
 
 	async function handleCreate(): Promise<void> {
@@ -171,11 +206,11 @@ export function StartGame(): m.Component {
 		try {
 			const flow = changedFlow();
 			const result = await createSession({
-				...(mode === 'scenario'
-					? { topicPackageId: selectedTopicId as string }
+				...(mode() === 'scenario'
+					? { topicPackageId: chosenId as string }
 					: {
 							quick: {
-								title: quickTitle.trim(),
+								title: gameTitle(),
 								mainQuestion: quickQuestion.trim(),
 								...(quickExplanation.trim() ? { explanation: quickExplanation.trim() } : {}),
 								language: getLang(),
@@ -185,8 +220,8 @@ export function StartGame(): m.Component {
 				identity,
 				collectRealNames,
 				theme: { preset: look },
-				stagePlan: plans[mode],
-				...(selectedClassId ? { classId: selectedClassId } : {}),
+				stagePlan: plans[mode()],
+				...(classChoice && classChoice !== 'none' ? { classId: classChoice } : {}),
 				...(flow ? { flow } : {}),
 			});
 			m.route.set(`/teach/session/${result.sessionId}`);
@@ -198,21 +233,427 @@ export function StartGame(): m.Component {
 		}
 	}
 
-	const choice = (
-		label: string,
-		selected: boolean,
-		onclick: () => void,
-		extraClass?: string,
-	): m.Children =>
+	const choice = (label: string, selected: boolean, onclick: () => void): m.Children =>
 		m(
 			'button.btn',
 			{
 				type: 'button',
-				class: [selected ? 'btn--primary' : 'btn--secondary', extraClass ?? ''].join(' ').trim(),
+				class: selected ? 'btn--primary' : 'btn--secondary',
+				'aria-pressed': selected ? 'true' : 'false',
 				onclick,
 			},
 			label,
 		);
+
+	function textField(
+		label: string,
+		value: string,
+		placeholder: string,
+		maxlength: number,
+		oninput: (next: string) => void,
+		options: { rows?: number; autofocus?: boolean } = {},
+	): m.Children {
+		return m('label.start-game__field', [
+			m('span.start-game__field-label', label),
+			options.rows
+				? m('textarea.text-input', {
+						value,
+						rows: options.rows,
+						maxlength,
+						placeholder,
+						oncreate: options.autofocus
+							? ({ dom }: m.VnodeDOM) => (dom as HTMLTextAreaElement).focus()
+							: undefined,
+						oninput: (event: InputEvent) => oninput((event.target as HTMLTextAreaElement).value),
+					})
+				: m('input.text-input[type=text]', {
+						value,
+						maxlength,
+						placeholder,
+						oninput: (event: InputEvent) => oninput((event.target as HTMLInputElement).value),
+					}),
+		]);
+	}
+
+	/** One row of the "what are we playing" list */
+	function scenarioRow(topic: AgoraTopicPackage): m.Children {
+		const chosen = chosenId === topic.topicPackageId;
+
+		return m(
+			'li.scenario-row',
+			{ key: topic.topicPackageId, class: chosen ? 'scenario-row--chosen' : undefined },
+			m(
+				'button.scenario-row__use',
+				{
+					type: 'button',
+					role: 'radio',
+					'aria-checked': chosen ? 'true' : 'false',
+					onclick: () => {
+						chosenId = topic.topicPackageId;
+					},
+				},
+				[
+					m('span.scenario-row__tile', m(Icon, { name: chosen ? 'check' : 'tunnel', size: 22 })),
+					m('span.scenario-row__text', [
+						m('span.scenario-row__title', topic.title),
+						m('span.scenario-row__meta', m('span.scenario-row__status', t('editor.ready'))),
+					]),
+				],
+			),
+		);
+	}
+
+	function ownQuestionRow(): m.Children {
+		const chosen = chosenId === OWN_QUESTION;
+
+		return m(
+			'li.scenario-row.scenario-row--own',
+			{ key: OWN_QUESTION, class: chosen ? 'scenario-row--chosen' : undefined },
+			m(
+				'button.scenario-row__use',
+				{
+					type: 'button',
+					role: 'radio',
+					'aria-checked': chosen ? 'true' : 'false',
+					onclick: () => {
+						chosenId = OWN_QUESTION;
+					},
+				},
+				[
+					m('span.scenario-row__tile', m(Icon, { name: chosen ? 'check' : 'new', size: 22 })),
+					m('span.scenario-row__text', [
+						m('span.scenario-row__title', t('startGame.mode_quick')),
+						m(
+							'span.scenario-row__meta',
+							m('span.scenario-row__sub', t('startGame.mode_quick_hint')),
+						),
+					]),
+				],
+			),
+		);
+	}
+
+	/** The question, and — behind "more" — the name and the explanation */
+	function ownQuestionFields(): m.Children {
+		return m(
+			Collapsible,
+			m('.stack.start-game__own', [
+				textField(
+					t('startGame.quick_question'),
+					quickQuestion,
+					t('startGame.quick_question_ph'),
+					AGORA_STAGE_PLAN.MAX_TITLE_LENGTH,
+					(next) => {
+						quickQuestion = next;
+					},
+					{ rows: 2, autofocus: true },
+				),
+				m(
+					'button.btn.btn--ghost.btn--sm.start-game__more',
+					{
+						type: 'button',
+						'aria-expanded': String(moreOpen),
+						onclick: () => {
+							moreOpen = !moreOpen;
+						},
+					},
+					t('startGame.more'),
+				),
+				moreOpen
+					? m(
+							Collapsible,
+							m('.stack', [
+								textField(
+									t('startGame.quick_title'),
+									quickTitle,
+									t('startGame.quick_title_ph'),
+									AGORA_STAGE_PLAN.MAX_TITLE_LENGTH,
+									(next) => {
+										quickTitle = next;
+									},
+								),
+								textField(
+									t('startGame.quick_explanation'),
+									quickExplanation,
+									t('startGame.quick_explanation_ph'),
+									AGORA_STAGE_PLAN.MAX_EXPLANATION_LENGTH,
+									(next) => {
+										quickExplanation = next;
+									},
+									{ rows: 3 },
+								),
+							]),
+						)
+					: null,
+			]),
+		);
+	}
+
+	function classChip(
+		label: string,
+		on: boolean,
+		onclick: () => void,
+		modifier?: 'new' | 'none',
+	): m.Children {
+		return m(
+			'button.start-game__class-chip',
+			{
+				type: 'button',
+				role: 'radio',
+				'aria-checked': on ? 'true' : 'false',
+				class: [
+					on ? 'start-game__class-chip--on' : '',
+					modifier ? `start-game__class-chip--${modifier}` : '',
+				]
+					.join(' ')
+					.trim(),
+				onclick,
+			},
+			[on ? m(Icon, { name: 'check', size: 16 }) : null, m('span', label)],
+		);
+	}
+
+	function classLine(): m.Children {
+		return m('.stack', [
+			m('p.teacher__section-title', t('startGame.for_class')),
+			m('.start-game__class-row', { role: 'radiogroup', 'aria-label': t('startGame.for_class') }, [
+				...classes.map((agoraClass) =>
+					classChip(classLabel(agoraClass), classChoice === agoraClass.classId, () => {
+						classChoice = agoraClass.classId;
+						newClassOpen = false;
+					}),
+				),
+				// A teacher attached to a school opens a class right here; one
+				// the admin has not attached yet is told what to ask for.
+				schools.length > 0
+					? classChip(
+							`＋ ${t('startGame.new_class')}`,
+							newClassOpen,
+							() => {
+								newClassOpen = !newClassOpen;
+							},
+							'new',
+						)
+					: null,
+				classChip(
+					t('startGame.guest_game'),
+					classChoice === 'none' && !newClassOpen,
+					() => {
+						classChoice = 'none';
+						newClassOpen = false;
+					},
+					'none',
+				),
+			]),
+			newClassOpen
+				? m(
+						Collapsible,
+						m(ClassForm, {
+							schools,
+							submitLabel: t('classForm.create'),
+							busyLabel: t('classForm.creating'),
+							busy: creatingClass,
+							error: newClassError,
+							onSubmit: (value) => void createClass(value),
+							onCancel: () => {
+								newClassOpen = false;
+							},
+						}),
+					)
+				: null,
+			schools.length === 0 && classes.length === 0
+				? m('p.home-explanation.home-explanation--start', t('startGame.no_school_hint'))
+				: classChoice === null
+					? m('p.home-explanation.home-explanation--start', t('startGame.pick_class_hint'))
+					: null,
+		]);
+	}
+
+	/** What the advanced settings currently say, in one muted line */
+	function summaryLine(): m.Children {
+		const parts = [
+			t('startGame.summary_steps', { n: countedSteps(plans[mode()]).length }),
+			t(identity === 'named' ? 'startGame.identity_named' : 'startGame.identity_pseudonym'),
+			t(
+				deviceMode === AgoraDeviceMode.team
+					? 'startGame.summary_team'
+					: 'startGame.summary_individual',
+			),
+		];
+
+		return m('p.start-game__summary', [
+			`${parts.join(' · ')} — `,
+			m(
+				'button.start-game__change',
+				{
+					type: 'button',
+					onclick: () => {
+						advancedOpen = true;
+						window.setTimeout(() => {
+							const card = document.querySelector<HTMLElement>('.start-game__advanced');
+							const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+							card?.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
+							card?.querySelector<HTMLElement>('.start-game__advanced-summary')?.focus();
+						}, 0);
+					},
+				},
+				t('startGame.change'),
+			),
+		]);
+	}
+
+	function advancedCard(): m.Children {
+		const current = mode();
+
+		return m('.card.start-game__advanced', [
+			m(
+				'button.start-game__advanced-summary',
+				{
+					type: 'button',
+					'aria-expanded': String(advancedOpen),
+					'aria-controls': 'start-game-advanced',
+					onclick: () => {
+						advancedOpen = !advancedOpen;
+					},
+				},
+				[
+					m(Icon, { name: 'cog', size: 20 }),
+					m('span.start-game__advanced-label', t('startGame.advanced')),
+					m(
+						'span.start-game__advanced-chevron',
+						{ class: advancedOpen ? 'start-game__advanced-chevron--open' : undefined },
+						m(Icon, { name: 'arrow', size: 16 }),
+					),
+				],
+			),
+			m('p.start-game__advanced-hint', t('startGame.advanced_hint')),
+			advancedOpen
+				? m(
+						Collapsible,
+						m('#start-game-advanced.stack', { style: { gap: 'var(--space-lg)' } }, [
+							// The steps
+							m('.stack', [
+								m('p.teacher__section-title', t('startGame.plan_title')),
+								m(StagePlanEditor, {
+									items: plans[current],
+									hasCharacters: current === 'scenario',
+									frozenCount: 0,
+									showPresets: true,
+									onChange: (items) => {
+										plans = { ...plans, [current]: items };
+									},
+								}),
+								m('p.home-explanation.home-explanation--start', t('startGame.plan_hint')),
+							]),
+
+							// Who people are to each other
+							m('.stack', [
+								m('p.teacher__section-title', t('startGame.identity')),
+								m('.teacher__mode-row', [
+									choice(t('startGame.identity_pseudonym'), identity === 'pseudonym', () => {
+										identity = 'pseudonym';
+									}),
+									choice(t('startGame.identity_named'), identity === 'named', () => {
+										identity = 'named';
+									}),
+								]),
+								m(
+									'p.home-explanation.home-explanation--start',
+									t(
+										identity === 'named'
+											? 'startGame.identity_named_hint'
+											: 'startGame.identity_hint',
+									),
+								),
+								// The teacher's own list: who is behind each pseudonym. Never on a
+								// card, never to a classmate — see lib/flows/joinName.
+								m('label.voting-settings__row', [
+									m('input[type=checkbox]', {
+										checked: collectRealNames,
+										onchange: (event: Event) => {
+											collectRealNames = (event.target as HTMLInputElement).checked;
+										},
+									}),
+									m('span', t('startGame.collect_names')),
+								]),
+								m('p.home-explanation.home-explanation--start', t('startGame.collect_names_hint')),
+							]),
+
+							// How the class holds the game
+							m('.stack', [
+								m('p.teacher__section-title', t('teacher.device_mode')),
+								m('.teacher__mode-row', [
+									choice(t('teacher.individual'), deviceMode === AgoraDeviceMode.individual, () => {
+										deviceMode = AgoraDeviceMode.individual;
+									}),
+									choice(t('teacher.team'), deviceMode === AgoraDeviceMode.team, () => {
+										deviceMode = AgoraDeviceMode.team;
+									}),
+								]),
+							]),
+
+							// The room's colours — the default; each student may still pick
+							// their own, or build one, and the class list grows from that
+							m('.stack.teacher-look', [
+								m('p.teacher__section-title', t('startGame.look')),
+								m(
+									'.teacher__mode-row',
+									AGORA_THEME_PRESETS.map((preset) =>
+										m(
+											'button.btn',
+											{
+												key: preset,
+												type: 'button',
+												class: look === preset ? 'btn--primary' : 'btn--secondary',
+												'aria-pressed': look === preset ? 'true' : 'false',
+												onclick: () => {
+													look = preset;
+												},
+											},
+											[lookDots(PRESET_SEEDS[preset]), ' ', t(`look.${preset}`)],
+										),
+									),
+								),
+								m('p.home-explanation.home-explanation--start', t('startGame.look_hint')),
+							]),
+
+							// How many rounds the discussion runs
+							m('.stack', [
+								m('.start-game__knob', [
+									m('span.start-game__knob-label', t('startGame.knob_rounds')),
+									m('.start-game__stepper', [
+										m(
+											'button.btn.btn--sm.btn--secondary',
+											{
+												type: 'button',
+												disabled: rounds <= 1,
+												onclick: () => {
+													rounds -= 1;
+												},
+											},
+											'−',
+										),
+										m('span.start-game__stepper-value', String(rounds)),
+										m(
+											'button.btn.btn--sm.btn--secondary',
+											{
+												type: 'button',
+												disabled: rounds >= defaults.rounds,
+												onclick: () => {
+													rounds += 1;
+												},
+											},
+											'+',
+										),
+									]),
+								]),
+								m('p.home-explanation.home-explanation--start', t('startGame.knobs_hint')),
+							]),
+						]),
+					)
+				: null,
+		]);
+	}
 
 	void load();
 
@@ -247,264 +688,32 @@ export function StartGame(): m.Component {
 						m.route.set(fromClass ? `/teach/class/${fromClass}` : '/teach');
 					},
 				}),
-				m('.shell__content', { style: { gap: 'var(--space-xl)' } }, [
-					// Scenario or quick game
+				m('.shell__content.start-game__form', [
+					m('p.home-explanation.home-explanation--start', t('startGame.form_hint')),
+
+					// 1. What are we playing?
 					m('.stack', [
-						m('.teacher__mode-row', [
-							choice(t('startGame.mode_scenario'), mode === 'scenario', () => {
-								mode = 'scenario';
-							}),
-							choice(t('startGame.mode_quick'), mode === 'quick', () => {
-								mode = 'quick';
-							}),
+						m('p.teacher__section-title', t('startGame.what')),
+						m('ul.scenario-list', { role: 'radiogroup', 'aria-label': t('startGame.what') }, [
+							...topics.map(scenarioRow),
+							ownQuestionRow(),
 						]),
-						m(
-							'p.home-explanation',
-							t(mode === 'scenario' ? 'startGame.mode_scenario_hint' : 'startGame.mode_quick_hint'),
-						),
+						chosenId === OWN_QUESTION ? ownQuestionFields() : null,
 					]),
 
-					mode === 'scenario'
-						? m('.stack', [
-								m('p.teacher__section-title', t('teacher.choose_topic')),
-								topics.length === 0
-									? m('.stack', [
-											m('p.home-explanation', t('teacher.no_topics')),
-											m(
-												'button.btn.btn--primary.btn--full',
-												{ onclick: () => m.route.set('/teach/new') },
-												t('teacher.create_topic'),
-											),
-										])
-									: m(
-											'.stack',
-											topics.map((topic) =>
-												m(
-													'.teacher__topic-option',
-													{
-														key: topic.topicPackageId,
-														class:
-															selectedTopicId === topic.topicPackageId
-																? 'teacher__topic-option--selected'
-																: undefined,
-														onclick: () => {
-															selectedTopicId = topic.topicPackageId;
-														},
-														role: 'button',
-														tabindex: 0,
-													},
-													m('strong', topic.title),
-												),
-											),
-										),
-							])
-						: m('.stack.start-game__quick', [
-								m('label.plan-editor__field', [
-									m('span.teacher__section-title', t('startGame.quick_title')),
-									m('input.plan-editor__text[type=text]', {
-										value: quickTitle,
-										maxlength: AGORA_STAGE_PLAN.MAX_TITLE_LENGTH,
-										placeholder: t('startGame.quick_title_ph'),
-										oninput: (event: InputEvent) => {
-											quickTitle = (event.target as HTMLInputElement).value;
-										},
-									}),
-								]),
-								m('label.plan-editor__field', [
-									m('span.teacher__section-title', t('startGame.quick_question')),
-									m('input.plan-editor__text[type=text]', {
-										value: quickQuestion,
-										maxlength: AGORA_STAGE_PLAN.MAX_TITLE_LENGTH,
-										placeholder: t('startGame.quick_question_ph'),
-										oninput: (event: InputEvent) => {
-											quickQuestion = (event.target as HTMLInputElement).value;
-										},
-									}),
-								]),
-								m('label.plan-editor__field', [
-									m('span.teacher__section-title', t('startGame.quick_explanation')),
-									m('textarea.plan-editor__textarea', {
-										value: quickExplanation,
-										rows: 3,
-										maxlength: AGORA_STAGE_PLAN.MAX_EXPLANATION_LENGTH,
-										placeholder: t('startGame.quick_explanation_ph'),
-										oninput: (event: InputEvent) => {
-											quickExplanation = (event.target as HTMLTextAreaElement).value;
-										},
-									}),
-								]),
-							]),
+					// 2. Which class?
+					classLine(),
 
-					// The stages
-					m('.stack', [
-						m('p.teacher__section-title', t('startGame.plan_title')),
-						m('p.home-explanation', t('startGame.plan_hint')),
-						m(StagePlanEditor, {
-							items: plans[mode],
-							hasCharacters: mode === 'scenario',
-							frozenCount: 0,
-							showPresets: true,
-							onChange: (items) => {
-								plans = { ...plans, [mode]: items };
-							},
-						}),
-					]),
-
-					// Who people are to each other
-					m('.stack', [
-						m('p.teacher__section-title', t('startGame.identity')),
-						m('.teacher__mode-row', [
-							choice(t('startGame.identity_pseudonym'), identity === 'pseudonym', () => {
-								identity = 'pseudonym';
-							}),
-							choice(t('startGame.identity_named'), identity === 'named', () => {
-								identity = 'named';
-							}),
-						]),
-						m(
-							'p.home-explanation',
-							t(identity === 'named' ? 'startGame.identity_named_hint' : 'startGame.identity_hint'),
-						),
-						// The teacher's own list: who is behind each pseudonym. Never on a
-						// card, never to a classmate — see lib/flows/joinName.
-						m('label.voting-settings__row', [
-							m('input[type=checkbox]', {
-								checked: collectRealNames,
-								onchange: (event: Event) => {
-									collectRealNames = (event.target as HTMLInputElement).checked;
-								},
-							}),
-							m('span', t('startGame.collect_names')),
-						]),
-						m('p.home-explanation', t('startGame.collect_names_hint')),
-					]),
-
-					// How the game looks — the room's default; each student may still
-					// pick their own, or build one, and the class list grows from that
-					m('.stack', [
-						m('p.teacher__section-title', t('startGame.look')),
-						m(
-							'.teacher__mode-row',
-							AGORA_THEME_PRESETS.map((preset) =>
-								m(
-									'button.btn',
-									{
-										key: preset,
-										type: 'button',
-										class: look === preset ? 'btn--primary' : 'btn--secondary',
-										'aria-pressed': look === preset ? 'true' : 'false',
-										onclick: () => {
-											look = preset;
-										},
-									},
-									[lookDots(PRESET_SEEDS[preset]), ' ', t(`look.${preset}`)],
-								),
-							),
-						),
-						m('p.home-explanation', t('startGame.look_hint')),
-					]),
-
-					m('.stack', [
-						m('p.teacher__section-title', t('startGame.for_class')),
-						m('.start-game__class-row', [
-							// No keys here: the guest button shares this fragment, and Mithril
-							// refuses fragments that mix keyed and unkeyed vnodes.
-							...classes.map((agoraClass) =>
-								choice(classLabel(agoraClass), selectedClassId === agoraClass.classId, () => {
-									selectedClassId = agoraClass.classId;
-									newClassOpen = false;
-								}),
-							),
-							// A teacher attached to a school opens a class right here; one
-							// the admin has not attached yet is told what to ask for.
-							schools.length > 0
-								? choice(`＋ ${t('startGame.new_class')}`, newClassOpen, () => {
-										newClassOpen = !newClassOpen;
-									})
-								: null,
-							choice(t('startGame.guest_game'), selectedClassId === null && !newClassOpen, () => {
-								selectedClassId = null;
-								newClassOpen = false;
-							}),
-						]),
-						newClassOpen
-							? m(ClassForm, {
-									schools,
-									submitLabel: t('classForm.create'),
-									busyLabel: t('classForm.creating'),
-									busy: creatingClass,
-									error: newClassError,
-									onSubmit: (value) => void createClass(value),
-									onCancel: () => {
-										newClassOpen = false;
-									},
-								})
-							: null,
-						schools.length === 0 && classes.length === 0
-							? m('p.home-explanation', t('startGame.no_school_hint'))
-							: null,
-						selectedClassId && !newClassOpen
-							? m('p.home-explanation', t('startGame.class_hint'))
-							: null,
-					]),
-
-					m('.stack', [
-						m('p.teacher__section-title', t('teacher.device_mode')),
-						m('.teacher__mode-row', [
-							choice(t('teacher.individual'), deviceMode === AgoraDeviceMode.individual, () => {
-								deviceMode = AgoraDeviceMode.individual;
-							}),
-							choice(t('teacher.team'), deviceMode === AgoraDeviceMode.team, () => {
-								deviceMode = AgoraDeviceMode.team;
-							}),
-						]),
-					]),
-
-					m('.stack', [
-						m(
-							'button.btn.btn--ghost',
-							{ onclick: () => (showKnobs = !showKnobs) },
-							showKnobs ? t('startGame.hide_knobs') : t('startGame.show_knobs'),
-						),
-						showKnobs
-							? m('.card.stack.start-game__knobs', [
-									m('p.home-explanation', t('startGame.knobs_hint')),
-									m('.start-game__knob', [
-										m('span.start-game__knob-label', t('startGame.knob_rounds')),
-										m('.start-game__stepper', [
-											m(
-												'button.btn.btn--sm.btn--secondary',
-												{
-													disabled: rounds <= 1,
-													onclick: () => {
-														rounds -= 1;
-													},
-												},
-												'−',
-											),
-											m('span.start-game__stepper-value', String(rounds)),
-											m(
-												'button.btn.btn--sm.btn--secondary',
-												{
-													disabled: rounds >= defaults.rounds,
-													onclick: () => {
-														rounds += 1;
-													},
-												},
-												'+',
-											),
-										]),
-									]),
-								])
-							: null,
-					]),
-
+					// 3. The button
 					createFailed ? m('p.join__error', t('common.error')) : null,
 					m(
-						'button.btn.btn--primary.btn--full.btn--lg',
-						{ disabled: !canCreate(), onclick: () => void handleCreate() },
+						'button.btn.btn--primary.btn--full.btn--lg.start-game__go',
+						{ type: 'button', disabled: !canCreate(), onclick: () => void handleCreate() },
 						creating ? t('teacher.creating') : t('teacher.create'),
 					),
+					summaryLine(),
+
+					advancedCard(),
 				]),
 			]);
 		},

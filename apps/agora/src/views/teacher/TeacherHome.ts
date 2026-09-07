@@ -15,7 +15,6 @@ import { ClassForm, type ClassFormValue } from '../../components/ClassForm';
 import {
 	AgoraClassAggregate,
 	AgoraSession,
-	AgoraSessionStatus,
 	AgoraTopicPackage,
 	AgoraTopicStatus,
 	advancementSummary,
@@ -23,13 +22,26 @@ import {
 import { buildDefaultFrenchRevolutionTopic, backfillDefaultArtwork } from '../../lib/defaultTopic';
 import { LanguagePicker } from '../../components/LanguagePicker';
 import { TeacherNav } from '../../components/TeacherNav';
-import { noteTeacherDashboard } from '../../lib/teacherNav';
+import { isSessionLive, noteTeacherDashboard } from '../../lib/teacherNav';
+import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
+import { countedSteps, teacherStepLabel } from '../../lib/teacherSteps';
+
+/** Once dismissed, the three-step strip stays away on this device */
+const FIRST_RUN_KEY = 'agora.teacher.firstRunDismissed';
+
+function firstRunDismissed(): boolean {
+	try {
+		return window.localStorage.getItem(FIRST_RUN_KEY) === '1';
+	} catch {
+		return false;
+	}
+}
 
 /**
- * The teacher's dashboard: my classes (with advancement), my games (live ones
- * to run, finished ones to report on), and the scenario library. Starting a
- * game moved to its own screen (/teach/start) — this page is for seeing where
- * every class stands.
+ * The teacher's dashboard: a lesson that is running now (one tap back into
+ * it), what we are teaching today (a tap on a scenario starts a lesson), my
+ * classes, and past lessons. A teacher opening this page for the first time
+ * also gets the whole of running a lesson in three lines.
  */
 export function TeacherHome(): m.Component {
 	let topics: AgoraTopicPackage[] = [];
@@ -50,9 +62,16 @@ export function TeacherHome(): m.Component {
 	 */
 	let loadedForUid: string | null = null;
 	let refilling = false;
-	/** The scenario this teacher is about to run. Chosen on the shelf, and
-	 *  carried to the start screen by the button under it. */
-	let chosenTopicId: string | null = null;
+	let firstRunHidden = firstRunDismissed();
+
+	function dismissFirstRun(): void {
+		firstRunHidden = true;
+		try {
+			window.localStorage.setItem(FIRST_RUN_KEY, '1');
+		} catch {
+			// A private window forgets; the strip comes back next time, harmlessly
+		}
+	}
 
 	/** Refill the shelf when auth settles on a different account than it was
 	 *  filled for. Guarded so a burst of redraws cannot stack reads. */
@@ -134,32 +153,71 @@ export function TeacherHome(): m.Component {
 		m.redraw();
 	}
 
-	function sessionRow(session: AgoraSession): m.Children {
-		// A scored session is finished even while its status is still open —
-		// the sweep flips status hours later, and "Live" over a final score
-		// reads as a lie.
-		const live =
-			session.classScore === undefined &&
-			(session.status === AgoraSessionStatus.open || session.status === AgoraSessionStatus.live);
-		const className = session.classId
-			? (classes.find((agoraClass) => agoraClass.classId === session.classId)?.name ??
-				t('dashboard.class_gone'))
-			: t('startGame.guest_game');
-		const target = live
-			? `/teach/session/${session.sessionId}`
-			: `/teach/report/${session.sessionId}`;
+	/** The lesson's own name: its scenario's title, or the question a quick game asked */
+	function lessonTitle(session: AgoraSession): string | null {
+		const topic = getTopicPackage(session.topicPackageId);
+		if (!topic) {
+			loadTopicPackage(session.topicPackageId);
 
+			return null;
+		}
+
+		return topic.title;
+	}
+
+	function className(session: AgoraSession): string {
+		return session.classId
+			? (classes.find((agoraClass) => agoraClass.classId === session.classId)?.name ??
+					t('dashboard.class_gone'))
+			: t('startGame.guest_game');
+	}
+
+	/** A lesson running right now — the first thing on the page, and one tap back in */
+	function liveBanner(session: AgoraSession): m.Children {
+		const steps = countedSteps(session.stagePlan ?? []);
+		const stepIndex = Math.min(session.stageIndex ?? 0, Math.max(0, steps.length - 1));
+		const current = steps[stepIndex];
+		const meta = [
+			className(session),
+			lessonTitle(session),
+			current
+				? `${t('teacher.step_of', { i: stepIndex + 1, n: steps.length })} · ${teacherStepLabel(current)}`
+				: null,
+		]
+			.filter(Boolean)
+			.join(' · ');
+
+		return m('.card.dashboard__live', { key: session.sessionId }, [
+			m('.dashboard__live-text', [
+				m('strong.dashboard__live-title', [
+					t('dashboard.live_title'),
+					' ',
+					m('span.dashboard__status-pill.dashboard__status-pill--live', t('dashboard.game_live')),
+				]),
+				m('span.dashboard__live-meta', meta),
+			]),
+			m(
+				'button.btn.btn--primary.btn--lg',
+				{ type: 'button', onclick: () => m.route.set(`/teach/session/${session.sessionId}`) },
+				t('dashboard.back_to_lesson'),
+			),
+		]);
+	}
+
+	/** A finished lesson: the class, what it was about, when, and how it went */
+	function sessionRow(session: AgoraSession): m.Children {
 		return m(
 			'.dashboard__game-row',
 			{
 				key: session.sessionId,
-				onclick: () => m.route.set(target),
+				onclick: () => m.route.set(`/teach/report/${session.sessionId}`),
 				role: 'button',
 				tabindex: 0,
 			},
 			[
 				m('.dashboard__game-main', [
-					m('strong', className),
+					m('strong', className(session)),
+					m('span.dashboard__game-title', lessonTitle(session) ?? ''),
 					m(
 						'span.dashboard__game-date',
 						new Date(session.createdAt).toLocaleDateString(undefined, {
@@ -170,38 +228,51 @@ export function TeacherHome(): m.Component {
 				]),
 				m('.dashboard__game-side', [
 					session.classScore
-						? m('span.dashboard__game-score', String(session.classScore.total))
-						: null,
-					m(
-						'span.dashboard__status-pill',
-						{ class: live ? 'dashboard__status-pill--live' : undefined },
-						t(live ? 'dashboard.game_live' : 'dashboard.game_done'),
-					),
+						? m('span.dashboard__score-pill', String(session.classScore.total))
+						: m('span.dashboard__status-pill', t('dashboard.not_finished')),
 				]),
 			],
 		);
 	}
 
+	/** The three lines that are the whole of running a lesson */
+	function firstRunStrip(): m.Children {
+		return m('.card.dashboard__firstrun', [
+			m('strong.dashboard__firstrun-title', t('dashboard.first_run_title')),
+			m(
+				'ol.dashboard__steps',
+				[1, 2, 3].map((n) =>
+					m('li.dashboard__step', { key: n }, [
+						m('span.dashboard__step-n', String(n)),
+						m('span', t(`dashboard.first_run_${n}`)),
+					]),
+				),
+			),
+			m(
+				'button.dashboard__firstrun-dismiss',
+				{
+					type: 'button',
+					'aria-label': t('dashboard.first_run_dismiss'),
+					onclick: dismissFirstRun,
+				},
+				'✕',
+			),
+		]);
+	}
+
 	/**
-	 * A shelf row. Tapping it does the one thing that scenario is ready for:
-	 * a finished scenario opens the start screen already holding it, an
-	 * unfinished one opens where it can be finished. The cog beside it is the
-	 * way in to the scenario's own settings — a sibling button, never nested,
-	 * so it cannot swallow the row's tap.
+	 * A shelf row is a door. Tapping a finished scenario opens the start
+	 * screen already holding it; an unfinished one opens where it can be
+	 * finished. The cog beside it is the way in to the scenario's own editor —
+	 * a sibling button, never nested, so it cannot swallow the row's tap.
 	 */
 	function scenarioRow(topic: AgoraTopicPackage): m.Children {
 		const ready = topic.status === AgoraTopicStatus.ready;
-		const chosen = ready && chosenTopicId === topic.topicPackageId;
 		const statusId = `scenario-status-${topic.topicPackageId}`;
 
 		return m(
 			'li.scenario-row',
-			{
-				key: topic.topicPackageId,
-				class: [ready ? '' : 'scenario-row--draft', chosen ? 'scenario-row--chosen' : '']
-					.join(' ')
-					.trim(),
-			},
+			{ key: topic.topicPackageId, class: ready ? undefined : 'scenario-row--draft' },
 			[
 				m(
 					'button.scenario-row__use',
@@ -210,42 +281,28 @@ export function TeacherHome(): m.Component {
 						'aria-label': t(ready ? 'dashboard.scenario_choose' : 'dashboard.scenario_finish', {
 							title: topic.title,
 						}),
-						'aria-pressed': ready ? (chosen ? 'true' : 'false') : undefined,
 						'aria-describedby': statusId,
-						onclick: () => {
-							if (ready) {
-								chosenTopicId = topic.topicPackageId;
-
-								return;
-							}
-							m.route.set(`/teach/topic/${topic.topicPackageId}`);
-						},
+						onclick: () =>
+							m.route.set(
+								ready
+									? `/teach/start?topic=${topic.topicPackageId}`
+									: `/teach/topic/${topic.topicPackageId}`,
+							),
 					},
 					[
-						m(
-							'span.scenario-row__tile',
-							m(Icon, { name: chosen ? 'check' : ready ? 'tunnel' : 'edit', size: 22 }),
-						),
+						m('span.scenario-row__tile', m(Icon, { name: ready ? 'tunnel' : 'edit', size: 22 })),
 						m('span.scenario-row__text', [
 							m('span.scenario-row__title', topic.title),
 							m('span.scenario-row__meta', { id: statusId }, [
 								m(
 									'span.scenario-row__status',
-									{
-										class: [
-											ready ? '' : 'scenario-row__status--draft',
-											chosen ? 'scenario-row__status--chosen' : '',
-										]
-											.join(' ')
-											.trim(),
-									},
-									chosen
-										? t('dashboard.scenario_chosen')
-										: t(ready ? 'editor.ready' : 'editor.draft'),
+									{ class: ready ? undefined : 'scenario-row__status--draft' },
+									t(ready ? 'editor.ready' : 'editor.draft'),
 								),
 								ready ? null : m('span.scenario-row__sub', t('dashboard.scenario_draft_sub')),
 							]),
 						]),
+						m('span.scenario-row__arrow', m(Icon, { name: 'arrow', size: 20 })),
 					],
 				),
 				m(
@@ -259,6 +316,33 @@ export function TeacherHome(): m.Component {
 					m(Icon, { name: 'cog', size: 20 }),
 				),
 			],
+		);
+	}
+
+	/** The list's last row: no scenario, the teacher's own question */
+	function ownQuestionRow(): m.Children {
+		return m(
+			'li.scenario-row.scenario-row--own',
+			{ key: 'own-question' },
+			m(
+				'button.scenario-row__use',
+				{
+					type: 'button',
+					'aria-label': t('dashboard.scenario_choose', { title: t('dashboard.start_quick') }),
+					onclick: () => m.route.set('/teach/start?mode=quick'),
+				},
+				[
+					m('span.scenario-row__tile', m(Icon, { name: 'new', size: 22 })),
+					m('span.scenario-row__text', [
+						m('span.scenario-row__title', t('dashboard.start_quick')),
+						m(
+							'span.scenario-row__meta',
+							m('span.scenario-row__sub', t('dashboard.own_question_sub')),
+						),
+					]),
+					m('span.scenario-row__arrow', m(Icon, { name: 'arrow', size: 20 })),
+				],
+			),
 		);
 	}
 
@@ -359,11 +443,6 @@ export function TeacherHome(): m.Component {
 		view() {
 			const { tier, loading, signInError, user } = getUserState();
 			refillIfAccountChanged(user?.uid);
-			const chosen =
-				topics.find(
-					(topic) =>
-						topic.topicPackageId === chosenTopicId && topic.status === AgoraTopicStatus.ready,
-				) ?? null;
 
 			if (loading) {
 				return m(
@@ -412,6 +491,11 @@ export function TeacherHome(): m.Component {
 				]);
 			}
 
+			const live = sessions.filter(isSessionLive);
+			const finished = sessions.filter((session) => !isSessionLive(session));
+			const showFirstRun =
+				!firstRunHidden && sessions.every((session) => session.classScore === undefined);
+
 			return m('.shell', [
 				m(TeacherNav, {
 					title: t('teacher.title'),
@@ -423,49 +507,33 @@ export function TeacherHome(): m.Component {
 					!loaded
 						? m('.spinner')
 						: [
-								// The shelf leads. Choosing today's lesson is what a teacher
-								// opens this page to do, and it used to sit under two lists
-								// of status — behind a duplicate "start a game" button that
-								// only led to the same choice made somewhere else.
+								// A lesson running now leads: the teacher who reloaded
+								// mid-period wants back in, not a shelf. Its own fragment —
+								// keyed rows cannot share a parent with unkeyed siblings.
+								live.map(liveBanner),
+
+								showFirstRun ? firstRunStrip() : null,
+
+								// What are we teaching today? A tap on a scenario is the
+								// whole choice; the start screen opens holding it.
 								m('.stack', [
 									m('p.teacher__section-title', t('dashboard.scenarios')),
 									topics.length === 0
-										? m('p.home-explanation', t('teacher.no_topics'))
-										: [
-												m('p.home-explanation', t('dashboard.scenarios_hint')),
-												m(
-													'ul.scenario-list',
-													{ role: 'list' },
-													shelfOrder(topics).map(scenarioRow),
-												),
-												// The way on, and the only one: it appears once a
-												// scenario is chosen, right where the choice was made,
-												// and it says which lesson it opens.
-												chosen
-													? m(
-															'button.btn.btn--primary.btn--full.btn--lg.scenario-list__go',
-															{
-																onclick: () =>
-																	m.route.set('/teach/start', { topic: chosen.topicPackageId }),
-															},
-															t('dashboard.scenario_use', { title: chosen.title }),
-														)
-													: null,
-											],
+										? m('p.home-explanation.home-explanation--start', t('teacher.no_topics'))
+										: m(
+												'p.home-explanation.home-explanation--start',
+												t('dashboard.scenarios_hint'),
+											),
+									m('ul.scenario-list', { role: 'list' }, [
+										...shelfOrder(topics).map(scenarioRow),
+										ownQuestionRow(),
+									]),
 									m(
-										'button.btn.btn--secondary.btn--full',
-										{ onclick: () => m.route.set('/teach/new') },
+										'button.btn.btn--ghost.btn--sm.dashboard__new-scenario',
+										{ type: 'button', onclick: () => m.route.set('/teach/new') },
 										t('teacher.create_topic'),
 									),
 								]),
-
-								// The quick game is the door most non-teachers are looking
-								// for — a room deciding one thing, no scenario.
-								m(
-									'button.btn.btn--secondary.btn--full',
-									{ onclick: () => m.route.set('/teach/start?mode=quick') },
-									t('dashboard.start_quick'),
-								),
 
 								// My classes: the ones I have, and — in a school the admin attached
 								// me to — a card that opens another. With neither, say what to ask for.
@@ -494,13 +562,16 @@ export function TeacherHome(): m.Component {
 										])
 									: m('.stack', [
 											m('p.teacher__section-title', t('dashboard.my_classes')),
-											m('p.home-explanation', t('dashboard.no_school_text')),
+											m(
+												'p.home-explanation.home-explanation--start',
+												t('dashboard.no_school_text'),
+											),
 										]),
 
-								sessions.length > 0
+								finished.length > 0
 									? m('.stack', [
 											m('p.teacher__section-title', t('dashboard.my_games')),
-											m('.stack', sessions.map(sessionRow)),
+											m('.stack', finished.map(sessionRow)),
 										])
 									: null,
 							],

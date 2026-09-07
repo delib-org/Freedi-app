@@ -1,48 +1,10 @@
-// The teacher's live console beyond the board: the tab strip, the Class
-// tab (pseudonym → real name, a pip per stage), the Messages tab (every
-// line a student wrote, with the teacher's three moves), and the drawer
-// where one student's private thread opens.
+// The teacher's live console beyond the board: the Class panel (pseudonym →
+// real name, a pip per stage), the Messages panel (every line a student
+// wrote, with the teacher's three moves), and the drawer where one student's
+// private thread opens. The strip that replaced the tab row, and the side
+// panel these two now open inside, live in _teacher-strip.scss.
 //
 // Imported by components.scss; do not import directly.
-
-.teacher-tabs {
-	display: flex;
-	gap: var(--space-xs);
-	padding: var(--space-xs);
-	background: var(--bg-inset);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--radius-full);
-
-	&__tab {
-		flex: 1;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-xs);
-		padding: var(--space-sm) var(--space-md);
-		border: 0;
-		border-radius: var(--radius-full);
-		background: transparent;
-		color: var(--text-secondary);
-		font-family: var(--font-display);
-		font-size: var(--font-size-sm);
-		cursor: pointer;
-		transition:
-			background var(--motion-base) ease,
-			color var(--motion-base) ease;
-
-		&--on {
-			background: var(--bg-card-solid);
-			color: var(--text-primary);
-			box-shadow: var(--shadow-card);
-		}
-
-		&:focus-visible {
-			outline: 2px solid var(--lantern);
-			outline-offset: 2px;
-		}
-	}
-}
 
 // --- The Class tab: one row per student ---
 .class-panel {
@@ -139,6 +101,49 @@
 		color: var(--text-on-lantern);
 		font-size: var(--font-size-xs);
 		font-family: var(--font-display);
+	}
+}
+
+// The class table inside the 520px side panel (_teacher-strip.scss): six
+// columns overflow there, so the row folds to two and the pips and actions
+// take a full line each. Scoped on the panel, not the row, so the same
+// component keeps its wide layout wherever else it is hosted.
+// Inside the 520px panel the list is rows, not a table: who (and the door
+// to a private word) on the first line, the stage pips under it, then one
+// labelled line of figures. A six-column grid had nowhere to put its labels.
+.teacher-panel .class-panel {
+	&__row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-areas:
+			'who door'
+			'pips pips'
+			'stats stats';
+		gap: var(--space-xs) var(--space-md);
+		align-items: center;
+	}
+
+	&__who {
+		grid-area: who;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-xs) var(--space-sm);
+		min-inline-size: 0;
+	}
+
+	&__message {
+		grid-area: door;
+	}
+
+	&__pips {
+		grid-area: pips;
+	}
+
+	&__stats {
+		grid-area: stats;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
 	}
 }
 
@@ -313,12 +318,6 @@
 .teacher__projector {
 	justify-content: center;
 	flex-wrap: wrap;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.teacher-tabs__tab {
-		transition: none;
-	}
 }
 
 // --- the runtime guard's banner (src/lib/boot.ts) ---

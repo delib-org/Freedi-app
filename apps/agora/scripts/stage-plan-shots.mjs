@@ -90,7 +90,8 @@ try {
 	await teacher.waitForSelector('.teacher-plan', { timeout: 30_000 });
 	await teacher.waitForSelector('.teacher-answers__row', { timeout: 30_000 });
 	await shot(teacher, '6-teacher-question-board');
-	await teacher.click('.teacher-plan button.btn--ghost');
+	await teacher.click('.teacher-nav__cog');
+	await teacher.locator('.teacher-panel button', { hasText: 'עריכת השלבים' }).click();
 	await teacher.waitForSelector('.plan-editor', { timeout: 10_000 });
 	await shot(teacher, '7-teacher-edit-upcoming');
 
@@ -116,9 +117,11 @@ try {
 
 	step('teacher: start screen in quick mode');
 	await teacher.goto(`${VITE_HOST}/#!/teach/start`, { waitUntil: 'domcontentloaded' });
-	await teacher.waitForSelector('.plan-editor', { timeout: 30_000 });
-	const quickButton = teacher.locator('.teacher__mode-row button', { hasText: 'משחק מהיר' }).first();
-	await quickButton.click();
+	await teacher.waitForSelector('.scenario-list', { timeout: 30_000 });
+	await teacher.locator('.scenario-row--own .scenario-row__use').click();
+	// The plan editor waits behind "advanced settings" now
+	await teacher.locator('.start-game__advanced-summary').click();
+	await teacher.waitForSelector('.plan-editor', { timeout: 10_000 });
 	await teacher.waitForTimeout(300);
 	await teacher.locator('.plan-editor__item button.btn--ghost', { hasText: 'הגדרות' }).first().click();
 	await teacher.waitForTimeout(300);

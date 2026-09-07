@@ -1,0 +1,649 @@
+// The teacher's console, after the 2026-09 simplification: one sticky strip
+// is the console's only navigation (it replaced the rail card, the tab row
+// and the advance button under the code), a popover under it shows the
+// lesson's steps without offering any of them, a "now" card says what the
+// class is doing and who has not finished, two chips open a side panel
+// (the panel itself is _teacher-panel.scss), and the student-facing copy
+// folds away behind a peek.
+//
+// Three saturated objects on the console, and no more: the strip's NEXT
+// (the biggest), the strip's current-step disc, and the unread count on the
+// "מה כתבו" chip. Everything else here is white, an inset tint, or ink.
+//
+// Imported by components.scss; do not import directly. %agora-icon-button
+// is declared in _teacher-dashboard.scss, which components.scss loads first.
+
+// --- The console root ---
+.teacher-console {
+	// The strip's "skip to NEXT" link only exists where the strip is the last
+	// thing in tab order — the fixed bottom bar on a phone.
+	> .skip-link {
+		display: none;
+	}
+
+	@media (max-width: 600px) {
+		// The fixed strip covers the bottom of the page; the last card has to
+		// clear it, plus the home indicator, plus one gap.
+		padding-block-end: calc(var(--teacher-strip-h) + env(safe-area-inset-bottom, 0px) + var(--space-md));
+
+		> .skip-link {
+			display: block;
+		}
+	}
+}
+
+// --- The control strip ---
+.teacher-strip {
+	position: sticky;
+	inset-block-start: calc(var(--teacher-nav-h) + env(safe-area-inset-top, 0px));
+	// Under the bar, over the cards
+	z-index: calc(var(--z-header) - 1);
+	// Full-bleed like the bar above it
+	margin-inline: calc(-1 * var(--space-md));
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-sm) var(--space-md);
+	padding: var(--space-sm) var(--space-md);
+	background: var(--surface-veil);
+	backdrop-filter: blur(6px);
+	border-block-end: 1px solid var(--border-subtle);
+
+	// "שלב 3 מתוך 8 · הצרכים ˅" — a button, because it opens the popover
+	&__step {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		min-block-size: 44px;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: 0 var(--space-sm);
+		background: transparent;
+		border: 0;
+		border-radius: var(--radius-tile);
+		color: var(--text-primary);
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+		transition: background-color var(--motion-fast) ease;
+
+		&:hover {
+			background: color-mix(in srgb, var(--mine) 8%, transparent);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+
+		// "השיעור הסתיים": the same slot, as a span — nothing to open
+		&--static {
+			cursor: default;
+
+			&:hover {
+				background: transparent;
+			}
+		}
+	}
+
+	// The chevron: the arrow icon turned to point down, and up while the
+	// popover is open (the phone block below swaps the two — it opens upward)
+	&__chevron {
+		flex: 0 0 auto;
+		display: inline-flex;
+		color: var(--text-muted);
+		transform: rotate(var(--chevron-closed));
+		transition: transform var(--motion-base) var(--ease-camera);
+	}
+
+	&__step--open &__chevron,
+	&__step[aria-expanded='true'] &__chevron {
+		transform: rotate(var(--chevron-open));
+	}
+
+	// Saturated object #2: the number of the step the class is on
+	&__disc {
+		@include type-meta;
+
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		inline-size: 22px;
+		block-size: 22px;
+		border-radius: 50%;
+		background: var(--mine-strong);
+		color: var(--text-on-lantern);
+		font-family: var(--font-display);
+		font-weight: 700;
+	}
+
+	&__index {
+		flex: 0 0 auto;
+		font-family: var(--font-body);
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__name {
+		flex: 0 1 auto;
+		min-inline-size: 0;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-base);
+		color: var(--text-primary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	// Saturated object #1, and the only primary on the console. The label
+	// never changes width while the advance is in flight: the arrow becomes
+	// the spinner, and the words stay.
+	&__next {
+		flex: 0 0 auto;
+		min-inline-size: 13rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-sm);
+
+	}
+
+	// The arrow points forward. The glyph is drawn pointing left, which IS
+	// forward in Hebrew; a left-to-right script turns it round.
+	&__arrow {
+		flex: 0 0 auto;
+		display: inline-flex;
+
+		[dir='ltr'] & .icon {
+			transform: scaleX(-1);
+		}
+	}
+
+	// The 28px page spinner, shrunk to the arrow's slot and inked for a
+	// filled button — its default purple top would vanish on --mine-strong
+	&__spinner,
+	&__next .spinner {
+		inline-size: 20px;
+		block-size: 20px;
+		margin: 0;
+		border-width: 2px;
+		border-color: color-mix(in srgb, var(--text-on-lantern) 35%, transparent);
+		border-block-start-color: var(--text-on-lantern);
+	}
+
+	// "לא הצלחנו להתקדם — לנסות שוב": a second line, only after a failure
+	&__fail {
+		flex-basis: 100%;
+		margin: 0;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		font-size: var(--font-size-sm);
+		color: var(--danger-ink);
+
+		> .icon {
+			flex: 0 0 auto;
+		}
+	}
+}
+
+// --- The steps popover: the plan, read-only ---
+// Nothing in it is tappable — the strip is the only way forward — so it is a
+// region, not a menu, and focus never enters it.
+.teacher-steps {
+	position: absolute;
+	inset-block-start: 100%;
+	inset-inline-start: var(--space-md);
+	z-index: 1;
+	inline-size: min(22rem, calc(100vw - 2 * var(--space-md)));
+	max-block-size: min(60vh, 28rem);
+	overflow-y: auto;
+	padding: var(--space-sm);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-tile);
+	box-shadow: var(--shadow-raised);
+	animation: teacher-steps-in var(--motion-fast) ease both;
+}
+
+@keyframes teacher-steps-in {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+// The plan rail's chips, stacked: the same list, mark and label as the rail
+// card, laid out as rows. The modifier may sit on the list itself or on a
+// wrapper around it; both read the same.
+.teacher-plan--column {
+	&.teacher-plan__list,
+	.teacher-plan__list {
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.teacher-plan__item {
+		inline-size: 100%;
+		border: 0;
+		border-radius: var(--radius-sm);
+		padding: var(--space-xs) var(--space-sm);
+	}
+
+	// Done: a green disc carrying a tick (an icon, so no text-contrast duty)
+	.teacher-plan__item--done .teacher-plan__mark {
+		background: var(--success);
+		color: var(--text-on-lantern);
+	}
+
+	// Current: a row tint so the eye finds it in a list of eight. The rail's
+	// disc is white on --mine (3.85:1, a debt not on the ledger); in this
+	// list the number sits on --mine-strong instead, the same hue one rung
+	// down, and clears AA.
+	.teacher-plan__item--current {
+		background: color-mix(in srgb, var(--mine) 12%, transparent);
+
+		.teacher-plan__mark {
+			background: var(--mine-strong);
+		}
+	}
+}
+
+// --- The "עכשיו" card ---
+.teacher-now {
+	@media (max-width: 600px) {
+		padding: var(--space-md);
+	}
+
+	// One sentence of what students are doing right now
+	&__doing {
+		margin: 0;
+		font-family: var(--font-body);
+		font-weight: 600;
+		font-size: var(--font-size-lg);
+		color: var(--text-primary);
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	// "3 מתוך 4 סיימו" — the number is the reading, the rest is its caption
+	&__count {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-sm);
+		margin: var(--space-sm) 0 0;
+	}
+
+	&__n {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-3xl);
+		line-height: 1;
+		color: var(--mine-ink);
+	}
+
+	&__of {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-lg);
+		color: var(--text-secondary);
+	}
+
+	// Everyone finished: the number goes green, as text, so it survives navy
+	&__count--all &__n {
+		color: var(--success-ink);
+	}
+
+	// "עוד אף אחד לא נכנס" / "אין תלמידים בשיעור" — no big number for nobody
+	&__empty {
+		margin: var(--space-sm) 0 0;
+		font-size: var(--font-size-base);
+		color: var(--text-secondary);
+	}
+
+	// Who has not finished, idle-longest first. Each chip opens that
+	// student's thread.
+	&__pending {
+		list-style: none;
+		margin: var(--space-md) 0 0;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__chip {
+		min-block-size: 40px;
+		padding: var(--space-xs) var(--space-md);
+		border-radius: var(--radius-full);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		font: inherit;
+		color: var(--text-primary);
+		cursor: pointer;
+		transition:
+			border-color var(--motion-fast) ease,
+			background-color var(--motion-fast) ease;
+
+		&:hover {
+			border-color: var(--lantern);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+
+		// Quiet for five minutes: a warning tint and border, never warning
+		// text — --warning is a fill and has no ink rung
+		&--idle {
+			border-color: var(--warning);
+			background: color-mix(in srgb, var(--warning) 18%, transparent);
+		}
+	}
+
+	&__alias {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-base);
+		color: var(--text-primary);
+	}
+
+	// "שקט 5 דק'" — a mark beside the name, omitted under two minutes
+	&__idle {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		white-space: nowrap;
+	}
+
+	// --- the lobby: QR and code beside the join count ---
+	&__join {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-md);
+		margin-block-start: var(--space-md);
+
+		@media (min-width: 900px) {
+			display: grid;
+			grid-template-columns: auto 1fr;
+			align-items: center;
+			gap: var(--space-xl);
+		}
+
+		// The parchment QR pad and the glowing code are the entry screen's,
+		// reused; only their size in this card is set here
+		.teacher__qr img,
+		.teacher__qr canvas {
+			inline-size: min(280px, 60vw);
+			block-size: auto;
+
+			@media (max-width: 600px) {
+				max-inline-size: 220px;
+			}
+		}
+
+		@media (max-width: 600px) {
+			.teacher__code {
+				font-size: 2.6rem;
+				letter-spacing: 0.2em;
+			}
+		}
+	}
+
+	// The code and its title, and the joined count under them
+	&__door {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	// Joined so far: the same count anatomy, one rung smaller
+	&__count--joined &__n {
+		font-size: var(--font-size-2xl);
+	}
+}
+
+// --- Panel chips: two doors under the strip ---
+.teacher-panels {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-sm);
+
+	&__chip {
+		min-block-size: 44px;
+		padding: 0 var(--space-md);
+		border-radius: var(--radius-full);
+		background: var(--bg-card-solid);
+		border: 1.5px solid var(--border-subtle);
+		box-shadow: var(--shadow-card);
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-base);
+		color: var(--text-primary);
+		cursor: pointer;
+		transition:
+			border-color var(--motion-fast) ease,
+			background-color var(--motion-fast) ease,
+			color var(--motion-fast) ease,
+			box-shadow var(--motion-fast) ease;
+
+		&:hover {
+			border-color: var(--lantern);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+
+		// Open: chrome-active tint, not a fill — inside the budget
+		&--open {
+			border-color: var(--mine);
+			color: var(--mine-ink);
+			background: color-mix(in srgb, var(--mine) 12%, transparent);
+			box-shadow: none;
+
+			&:focus-visible {
+				outline-offset: -2px;
+			}
+		}
+	}
+
+	// "· 4" — how many are behind the door
+	&__count {
+		color: var(--text-secondary);
+		font-weight: 400;
+	}
+
+	// Saturated object #3: unread lines, and only when there are any. Pink
+	// because a count is pink and never --danger (DESIGN §2); each look
+	// remaps --pink to its own.
+	&__badge {
+		@include type-meta;
+
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-inline-size: 20px;
+		block-size: 20px;
+		padding: 0 6px;
+		border-radius: var(--radius-full);
+		background: var(--pink);
+		color: var(--text-on-lantern);
+		font-family: var(--font-display);
+		font-weight: 700;
+	}
+}
+
+// --- "מה התלמידים רואים": the student copy, folded ---
+.teacher-peek {
+	padding: var(--space-md);
+
+	&__summary {
+		inline-size: 100%;
+		min-block-size: 44px;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		background: transparent;
+		border: 0;
+		padding: 0;
+		text-align: start;
+		font: inherit;
+		color: var(--text-primary);
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+
+		// The eye
+		> .icon:first-child {
+			color: var(--text-secondary);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	&__label {
+		flex: 0 0 auto;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-base);
+		transition: color var(--motion-fast) ease;
+	}
+
+	&__summary:hover &__label {
+		color: var(--mine-ink);
+	}
+
+	// The chevron: the arrow icon turned to point down, and up once open.
+	// Last in the row, so it pushes to the far end.
+	&__chevron {
+		flex: 0 0 auto;
+		display: inline-flex;
+		margin-inline-start: auto;
+		color: var(--text-muted);
+		transform: rotate(var(--chevron-closed));
+		transition: transform var(--motion-base) var(--ease-camera);
+
+		&--open {
+			transform: rotate(var(--chevron-open));
+		}
+	}
+
+	// The first scene's title, so the closed card still says what is inside
+	&__preview {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+
+		@media (max-width: 600px) {
+			display: none;
+		}
+	}
+
+	// The open body: the fold measures its own height, so the gap under the
+	// summary is padding inside it rather than a margin it cannot animate
+	> .collapsible {
+		padding-block-start: var(--space-md);
+	}
+
+	.question-reword {
+		margin-block-start: var(--space-md);
+	}
+}
+
+// --- phone: the strip becomes the fixed bottom bar ---
+@media (max-width: 600px) {
+	.teacher-strip {
+		position: fixed;
+		inset-inline: 0;
+		inset-block-end: 0;
+		inset-block-start: auto;
+		z-index: var(--z-header);
+		margin-inline: 0;
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--space-xs);
+		padding: var(--space-sm) var(--space-md) max(var(--space-sm), env(safe-area-inset-bottom, 0px));
+		background: var(--bg-card-solid);
+		border-block-end: 0;
+		border-block-start: 1px solid var(--border-subtle);
+		box-shadow: var(--shadow-raised);
+		backdrop-filter: none;
+
+		&__step {
+			min-block-size: 36px;
+		}
+
+		// The popover opens upward here, so the chevron points up at rest and
+		// turns down while it is open
+		&__chevron {
+			transform: rotate(var(--chevron-open));
+		}
+
+		&__step--open &__chevron,
+		&__step[aria-expanded='true'] &__chevron {
+			transform: rotate(var(--chevron-closed));
+		}
+
+		&__next {
+			min-inline-size: 0;
+			inline-size: 100%;
+		}
+
+		// The failure line sits above the step text
+		&__fail {
+			order: -1;
+		}
+	}
+
+	.teacher-steps {
+		inset-block-start: auto;
+		inset-block-end: 100%;
+		margin-block-end: var(--space-xs);
+	}
+}
+
+// --- reduced motion ---
+// global.scss zeroes every duration; here the things that would still MOVE
+// at zero duration are told not to: the popover appears, the chevrons snap.
+// (The side panel's rule is in _teacher-panel.scss.)
+@media (prefers-reduced-motion: reduce) {
+	.teacher-steps {
+		animation: none;
+		transform: none;
+		opacity: 1;
+	}
+
+	.teacher-strip__chevron,
+	.teacher-peek__chevron,
+	.teacher-strip__step,
+	.teacher-now__chip,
+	.teacher-panels__chip,
+	.teacher-peek__label {
+		transition: none;
+	}
+}

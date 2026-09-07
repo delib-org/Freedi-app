@@ -58,6 +58,11 @@ const ACCEPTED = [
 	// The same pink count, on the workshop drawers' feedback badge — it joined
 	// the gauntlet on 2026-09-03 when the drawers did; the candy look passes it
 	['span.workbench__count', 'rgb(245, 106, 168)', 2.8],
+	// ...and on the teacher console's "מה כתבו" chip, which joined the gauntlet
+	// on 2026-09-07 with the control strip. Same count, same pink, same
+	// reason (DESIGN §2: a count is pink, never --danger); candy and civic
+	// remap --pink and pass it outright.
+	['span.teacher-panels__badge', 'rgb(245, 106, 168)', 2.8],
 ];
 
 /** A failure is accepted only on the same surface, and only if it has not got worse */

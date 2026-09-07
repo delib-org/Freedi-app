@@ -25,10 +25,13 @@
 	padding-block-start: max(var(--space-xs), env(safe-area-inset-top, 0px));
 	background: var(--bg-page);
 	border-block-end: 1px solid var(--border-subtle);
+	// Pinned, so the control strip below it knows where to stick
+	min-block-size: calc(var(--teacher-nav-h) + env(safe-area-inset-top, 0px));
 
 	&__back,
 	&__home,
-	&__switch {
+	&__switch,
+	&__cog {
 		@extend %agora-icon-button;
 	}
 
@@ -69,6 +72,90 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-sm);
+	}
+
+	// --- the live console's trailing three: code pill · projector · cog ---
+
+	// The join code, always in reach, and a tap copies it. An inset tint with
+	// ink rather than a fill: --mine on the pill would be a fourth saturated
+	// object on the console, and on candy the one raspberry thing that means
+	// MINE.
+	&__code {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		block-size: 36px;
+		padding: 0 var(--space-md);
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		border: 1px solid var(--border-strong);
+		color: var(--text-primary);
+		font: inherit;
+		cursor: pointer;
+		transition:
+			border-color var(--motion-fast) ease,
+			background-color var(--motion-fast) ease,
+			transform var(--motion-fast) var(--ease-spring);
+
+		&:hover {
+			border-color: var(--lantern);
+		}
+
+		&:active {
+			transform: scale(0.97);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+
+		// Held for 1600ms after the clipboard write lands. The same
+		// success-tinted fill + dark ink recipe as __live below: never
+		// success-coloured text, which the civic look does not remap.
+		&--copied {
+			border-color: var(--success);
+			background: color-mix(in srgb, var(--success) 18%, transparent);
+		}
+	}
+
+	&__code-label {
+		font-family: var(--font-body);
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__code--copied &__code-label {
+		color: var(--text-primary);
+	}
+
+	// Digits read left-to-right in every script, and isolated so the Hebrew
+	// label beside them does not reorder the pair
+	&__code-digits {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-base);
+		letter-spacing: 0.12em;
+		color: var(--mine-ink);
+		direction: ltr;
+		unicode-bidi: isolate;
+	}
+
+	// The cog while its sheet is open: the same chrome-active tint as the
+	// menu's current row
+	&__cog--on {
+		background: color-mix(in srgb, var(--mine) 12%, transparent);
+		color: var(--mine-ink);
+	}
+
+	// A real .btn (secondary, small) — only its place in the row is set here
+	&__projector {
+		flex: 0 0 auto;
+		white-space: nowrap;
 	}
 
 	// Carried over from the bar this one replaces: an unsaved-work chip the
@@ -213,5 +300,34 @@
 		margin-block-start: var(--space-sm);
 		padding-block-start: var(--space-sm);
 		border-block-start: 1px solid var(--border-subtle);
+	}
+}
+
+// --- phone ---
+// The bar keeps only the code pill (digits, no label); the projector and cog
+// move into the ≡ panel as two rows under "השיעור הזה", rendered by
+// TeacherNav from `menuItems`. Hidden here as well, so a view that renders
+// both placements never shows the pair twice.
+@media (max-width: 600px) {
+	.teacher-nav {
+		&__code-label,
+		&__projector,
+		&__cog {
+			display: none;
+		}
+	}
+}
+
+// Below 380px the subtitle no longer fits beside the pill; the title alone
+// says which lesson this is.
+@media (max-width: 380px) {
+	.teacher-nav__subtitle {
+		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.teacher-nav__code {
+		transition: none;
 	}
 }

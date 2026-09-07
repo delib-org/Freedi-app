@@ -34,9 +34,11 @@ try {
 	);
 	await teacher.waitForTimeout(1500);
 	await teacher.goto(`${VITE_HOST}/#!/teach/start`, { waitUntil: 'domcontentloaded' });
-	await teacher.waitForSelector('.plan-editor', { timeout: 30_000 });
-	const quickButton = teacher.locator('.teacher__mode-row button', { hasText: 'משחק מהיר' }).first();
-	if (await quickButton.count()) await quickButton.click();
+	await teacher.waitForSelector('.scenario-list', { timeout: 30_000 });
+	await teacher.locator('.scenario-row--own .scenario-row__use').click();
+	// The plan editor waits behind "advanced settings" now
+	await teacher.locator('.start-game__advanced-summary').click();
+	await teacher.waitForSelector('.plan-editor', { timeout: 10_000 });
 	await teacher.waitForTimeout(300);
 	// The quick default is the WizCol plan now (no question item); this script
 	// exercises the question title, so it picks the quick-decision preset.

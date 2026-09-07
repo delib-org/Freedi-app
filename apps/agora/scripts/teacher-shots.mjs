@@ -89,13 +89,22 @@ try {
 		await page.waitForFunction(() => typeof window.__agoraDevSignIn === 'function', {
 			timeout: 15_000,
 		});
-		await page.evaluate(
-			(sub) => window.__agoraDevSignIn({ sub, email: `${sub}@example.com`, name: 'דנה המורה' }),
-			`${runId}-teacher`,
-		);
-		// Wait for the page to actually be the teacher's before reloading, or
-		// the reload lands mid sign-in and comes back anonymous.
-		await page.waitForSelector('.teacher-nav__title', { timeout: 60_000 });
+		// The scripted sign-in occasionally lands on the anonymous beat and is
+		// dropped; ask again rather than wait a minute for nothing.
+		for (let attempt = 0; attempt < 3; attempt++) {
+			await page.evaluate(
+				(sub) => window.__agoraDevSignIn({ sub, email: `${sub}@example.com`, name: 'דנה המורה' }),
+				`${runId}-teacher`,
+			);
+			// Wait for the page to actually be the teacher's before reloading, or
+			// the reload lands mid sign-in and comes back anonymous.
+			const signedIn = await page
+				.waitForSelector('.teacher-nav__title', { timeout: 15_000 })
+				.then(() => true)
+				.catch(() => false);
+			if (signedIn) break;
+			if (attempt === 2) throw new Error('teacher sign-in never took');
+		}
 		await page.waitForTimeout(1000);
 		await page.reload({ waitUntil: 'domcontentloaded' });
 	};
@@ -109,9 +118,13 @@ try {
 		await page.waitForSelector('.teacher-nav__title', { timeout: 30_000 });
 		await page.waitForTimeout(2000);
 	};
-	const tab = async (page, name) => {
-		await page.locator('.teacher-tabs__tab').nth(name).click();
+	const panel = async (page, which) => {
+		await page.locator(`.teacher-panels__chip[aria-controls="teacher-panel-${which}"]`).click();
 		await page.waitForTimeout(800);
+	};
+	const closePanel = async (page) => {
+		await page.locator('.teacher-panel__close').click().catch(() => {});
+		await page.waitForTimeout(400);
 	};
 
 	step('desktop');
@@ -127,34 +140,44 @@ try {
 	await page.waitForTimeout(1000);
 	await shot(page, '01-dashboard');
 
-	await go(page, '/teach/start', '.plan-editor, .start-game__quick, .teacher__topic-option');
+	await go(page, '/teach/start', '.scenario-list');
 	await shot(page, '02-start-scenario');
-	await page.locator('.teacher__mode-row .btn').nth(1).click();
+	await page.locator('.scenario-row--own .scenario-row__use').click();
 	await page.waitForTimeout(600);
 	await shot(page, '03-start-quick');
+	await page.locator('.start-game__advanced-summary').click();
+	await page.waitForTimeout(800);
+	await shot(page, '04-start-advanced');
 
 	await console_(page, lobby.sessionId);
 	await shot(page, '10-console-lobby');
-	await page.click('.teacher-settings__toggle');
-	await page.waitForTimeout(600);
+	await page.click('.teacher-nav__cog');
+	await page.waitForTimeout(800);
 	await shot(page, '11-console-lobby-settings');
+	await closePanel(page);
+	await page.locator('.teacher-strip__step').click();
+	await page.waitForTimeout(500);
+	await shot(page, '11b-console-lobby-steps');
 
 	await console_(page, quick.sessionId);
 	await shot(page, '12-console-question-quick');
 
 	await console_(page, delib.sessionId);
 	await shot(page, '13-console-deliberation');
-	await tab(page, 1);
-	await shot(page, '14-console-class-tab');
-	await tab(page, 2);
-	await shot(page, '15-console-messages-tab');
-	await page.locator('.messages-panel button, .moderation-row button').first().click().catch(() => {});
+	await panel(page, 'class');
+	await shot(page, '14-console-class-panel');
+	await panel(page, 'texts');
+	await shot(page, '15-console-texts-panel');
+	await page.locator('.teacher-panel .mod-row button').first().click().catch(() => {});
 	await page.waitForTimeout(600);
-	await shot(page, '16-console-messages-action');
+	await shot(page, '16-console-texts-action');
+	await closePanel(page);
+	await page.locator('.teacher-peek__summary').click();
+	await page.waitForTimeout(800);
+	await shot(page, '16b-console-peek-open');
 
 	await advance(AgoraStage.voting);
 	await console_(page, delib.sessionId);
-	await tab(page, 0);
 	await shot(page, '17-console-voting');
 
 	await advance(AgoraStage.results);
@@ -166,7 +189,7 @@ try {
 	await page.locator('.roster__row').first().click();
 	await page.waitForTimeout(600);
 	await shot(page, '21-class-member-open');
-	await page.click('.teacher-settings__toggle');
+	await page.click('.teacher-nav__cog');
 	await page.waitForTimeout(600);
 	await shot(page, '22-class-settings');
 
@@ -194,7 +217,7 @@ try {
 	await phone.waitForSelector('.dashboard__class-grid', { timeout: 30_000 });
 	await phone.waitForTimeout(1000);
 	await shot(phone, '30-phone-dashboard');
-	await go(phone, '/teach/start', '.plan-editor, .start-game__quick, .teacher__topic-option');
+	await go(phone, '/teach/start', '.scenario-list');
 	await shot(phone, '31-phone-start');
 	await console_(phone, lobby.sessionId);
 	await shot(phone, '32-phone-console-lobby');

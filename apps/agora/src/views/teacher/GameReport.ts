@@ -145,6 +145,29 @@ export function GameReport(initialVnode: m.Vnode<{ id: string }>): m.Component<{
 									),
 								]),
 					]),
+
+					// Where a teacher goes from a summary: back to the class, or straight
+					// into the next lesson with it
+					m('.teacher__mode-row.report__actions', [
+						session.classId
+							? m(
+									'button.btn.btn--secondary',
+									{ type: 'button', onclick: () => m.route.set(`/teach/class/${session.classId}`) },
+									t('report.back_to_class'),
+								)
+							: null,
+						m(
+							'button.btn.btn--primary',
+							{
+								type: 'button',
+								onclick: () =>
+									m.route.set(
+										session.classId ? `/teach/start?classId=${session.classId}` : '/teach/start',
+									),
+							},
+							t(session.classId ? 'report.again' : 'dashboard.start_game'),
+						),
+					]),
 				]),
 			]);
 		},

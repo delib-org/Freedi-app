@@ -938,12 +938,112 @@
 				</div>
 			</div>
 
-			<h2>the teacher's console tabs, and the class list behind them</h2>
-			<div class="teacher-tabs" role="tablist">
-				<button class="teacher-tabs__tab teacher-tabs__tab--on" type="button">הלוח</button>
-				<button class="teacher-tabs__tab" type="button">הכיתה</button>
-				<button class="teacher-tabs__tab" type="button">הודעות <span class="class-panel__badge">2</span></button>
+			<h2>the teacher's console — code pill (and copied), strip, steps, chips, the now card</h2>
+			<!-- The bar's trailing three. The strip and the popover are sticky /
+			     absolute in the app; laid out in the flow here so the surfaces
+			     below them stay measurable. -->
+			<div class="teacher-nav">
+				<button class="teacher-nav__back" type="button"></button>
+				<div class="teacher-nav__titles">
+					<span class="teacher-nav__title">הצרכים שלי</span>
+					<span class="teacher-nav__subtitle">ז'2</span>
+				</div>
+				<div class="teacher-nav__trailing">
+					<button class="teacher-nav__code" type="button" aria-label="קוד כניסה 51586 — לחיצה מעתיקה">
+						<span class="teacher-nav__code-label">קוד</span>
+						<span class="teacher-nav__code-digits">51586</span>
+					</button>
+					<button class="teacher-nav__code teacher-nav__code--copied" type="button">
+						<span class="teacher-nav__code-label">הועתק</span>
+						<span class="teacher-nav__code-digits">51586</span>
+					</button>
+					<button class="btn btn--secondary btn--sm teacher-nav__projector" type="button">למקרן</button>
+					<button class="teacher-nav__cog" type="button" aria-label="הגדרות השיעור"></button>
+				</div>
 			</div>
+			<div class="teacher-strip" style="position:static;margin-inline:0">
+				<button class="teacher-strip__step" type="button" aria-expanded="false">
+					<span class="teacher-strip__disc">3</span>
+					<span class="teacher-strip__index">שלב 3 מתוך 8</span>
+					<span class="teacher-strip__name">הצרכים</span>
+				</button>
+				<button class="btn btn--primary btn--lg teacher-strip__next" type="button">הלאה: הצבעה</button>
+				<p class="teacher-strip__fail" role="alert">לא הצלחנו להתקדם <button class="btn btn--ghost btn--sm" type="button">לנסות שוב</button></p>
+			</div>
+			<div class="teacher-steps" role="region" style="position:static;inline-size:auto;max-block-size:none">
+				<ol class="teacher-plan__list teacher-plan--column">
+					<li class="teacher-plan__item teacher-plan__item--done"><span class="teacher-plan__mark">✓</span><span class="teacher-plan__label">הסיפור</span></li>
+					<li class="teacher-plan__item teacher-plan__item--current" aria-current="step"><span class="teacher-plan__mark">3</span><span class="teacher-plan__label">הצרכים</span></li>
+					<li class="teacher-plan__item"><span class="teacher-plan__mark">4</span><span class="teacher-plan__label">הצבעה</span></li>
+				</ol>
+			</div>
+			<div class="teacher-panels">
+				<button class="teacher-panels__chip" type="button" aria-expanded="false">הכיתה <span class="teacher-panels__count">· 4</span></button>
+				<button class="teacher-panels__chip teacher-panels__chip--open" type="button" aria-expanded="true">מה כתבו <span class="teacher-panels__count">· 12</span> <span class="teacher-panels__badge" aria-label="3 חדשים">3</span></button>
+			</div>
+			<div class="card teacher-now">
+				<p class="teacher-now__doing">התלמידים כותבים מה הם צריכים מהמזגן</p>
+				<p class="teacher-now__count"><strong class="teacher-now__n">3</strong><span class="teacher-now__of">מתוך 4 סיימו</span></p>
+				<ul class="teacher-now__pending">
+					<li><button class="teacher-now__chip teacher-now__chip--idle" type="button"><span class="teacher-now__alias">פנס אמיץ</span><span class="teacher-now__idle">שקט 6 דק'</span></button></li>
+					<li><button class="teacher-now__chip" type="button"><span class="teacher-now__alias">שועל כחול</span><span class="teacher-now__idle">שקט 2 דק'</span></button></li>
+				</ul>
+			</div>
+			<div class="card teacher-now teacher-now--all">
+				<p class="teacher-now__doing">התלמידים מדרגים את ההצעות</p>
+				<p class="teacher-now__count"><strong class="teacher-now__n">4</strong><span class="teacher-now__of">כולם סיימו</span></p>
+			</div>
+			<div class="card teacher-now teacher-now--lobby">
+				<p class="teacher-now__doing">התלמידים נכנסים עם הקוד</p>
+				<p class="teacher-now__empty">עוד אף אחד לא נכנס</p>
+			</div>
+			<div class="card teacher-peek">
+				<button class="teacher-peek__summary" type="button" aria-expanded="false"><span class="teacher-peek__label">מה התלמידים רואים</span><span class="teacher-peek__preview">המטרה · ההקשבה היא העבודה</span></button>
+			</div>
+
+			<h2>the start form — class chips, the summary line, the advanced fold</h2>
+			<div class="start-game__class-row" role="radiogroup">
+				<button class="start-game__class-chip" type="button" role="radio" aria-checked="false">ח'4</button>
+				<button class="start-game__class-chip start-game__class-chip--on" type="button" role="radio" aria-checked="true">ז'2</button>
+				<button class="start-game__class-chip start-game__class-chip--new" type="button" role="radio" aria-checked="false">+ כיתה חדשה</button>
+				<button class="start-game__class-chip start-game__class-chip--none" type="button" role="radio" aria-checked="false">בלי כיתה</button>
+			</div>
+			<p class="start-game__summary">שיעור מלא · 8 שלבים · שמות בדויים — <button class="start-game__change" type="button">לשנות</button></p>
+			<div class="card start-game__advanced">
+				<button class="start-game__advanced-summary" type="button" aria-expanded="false">הגדרות מתקדמות</button>
+				<p class="start-game__advanced-hint">לשיעור הראשון לא צריך לגעת כאן.</p>
+			</div>
+
+			<h2>the dashboard — live banner, first-run strip, a past lesson's score</h2>
+			<div class="card dashboard__live">
+				<div class="dashboard__live-text">
+					<strong class="dashboard__live-title">שיעור פעיל <span class="dashboard__status-pill dashboard__status-pill--live">פעיל</span></strong>
+					<span class="dashboard__live-meta">ז'2 · הצרכים שלי · שלב 3 מתוך 8</span>
+				</div>
+				<button class="btn btn--primary btn--lg" type="button">חזרה לשיעור</button>
+			</div>
+			<div class="card dashboard__firstrun">
+				<strong class="dashboard__firstrun-title">איך מריצים שיעור (45 דק')</strong>
+				<ol class="dashboard__steps">
+					<li class="dashboard__step"><span class="dashboard__step-n">1</span><span>בוחרים תרחיש וכיתה</span></li>
+					<li class="dashboard__step"><span class="dashboard__step-n">2</span><span>התלמידים נכנסים עם הקוד</span></li>
+					<li class="dashboard__step"><span class="dashboard__step-n">3</span><span>לוחצים הלאה בין השלבים</span></li>
+				</ol>
+				<button class="dashboard__firstrun-dismiss" type="button" aria-label="סגירה"></button>
+			</div>
+			<div class="dashboard__game-row">
+				<div class="dashboard__game-main">
+					<strong>ז'2</strong>
+					<span class="dashboard__game-title">הצרכים שלי</span>
+					<span class="dashboard__game-date">3 בספט׳</span>
+				</div>
+				<div class="dashboard__game-side">
+					<span class="dashboard__score-pill">73</span>
+					<span class="dashboard__status-pill">לא הסתיים</span>
+				</div>
+			</div>
+
+			<h2>the class list, as it sits inside the side panel</h2>
 			<div class="card stack class-panel">
 				<div class="class-panel__table">
 					<div class="class-panel__row class-panel__row--head"><span>שם במשחק</span><span>שם אמיתי</span><span>התקדמות</span><span>דירגו</span><span>נקודות</span><span></span></div>

@@ -14,7 +14,28 @@ export interface TeacherNavAttrs {
 	onBack: () => void;
 	/** Status pills, a language picker: whatever the screen wants on the far end */
 	trailing?: m.Children;
+	/**
+	 * The lesson's join code, as a pill that copies itself. On every stage of
+	 * a running lesson a latecomer is one tap away, and the teacher never has
+	 * to scroll to find the five digits.
+	 */
+	code?: string;
+	/**
+	 * Rows for this screen alone, listed first in the ≡ menu under "this
+	 * lesson". On a phone the bar has no room for the projector and the cog,
+	 * so the console hands them over here instead of dropping them.
+	 */
+	menuItems?: readonly TeacherNavMenuItem[];
 }
+
+export interface TeacherNavMenuItem {
+	icon: IconName;
+	label: string;
+	onSelect: () => void;
+}
+
+/** How long the pill says "copied" before it says the code again */
+const COPIED_MS = 1600;
 
 /**
  * The bar at the top of every teacher screen — the way back, the way home,
@@ -35,6 +56,65 @@ const MENU_ID = 'teacher-nav-menu';
 
 export function TeacherNav(): m.Component<TeacherNavAttrs> {
 	let open = false;
+	let copied = false;
+	let copiedTimer: number | undefined;
+
+	function copyCode(code: string, digits: HTMLElement | null): void {
+		const clipboard = navigator.clipboard;
+		if (!clipboard) {
+			selectDigits(digits);
+
+			return;
+		}
+		clipboard
+			.writeText(code)
+			.then(() => {
+				copied = true;
+				window.clearTimeout(copiedTimer);
+				copiedTimer = window.setTimeout(() => {
+					copied = false;
+					m.redraw();
+				}, COPIED_MS);
+				m.redraw();
+			})
+			.catch(() => selectDigits(digits));
+	}
+
+	/** No clipboard (an http origin, an old WebView): leave the digits selected so a long-press copies them */
+	function selectDigits(digits: HTMLElement | null): void {
+		if (!digits) return;
+		const range = document.createRange();
+		range.selectNodeContents(digits);
+		const selection = window.getSelection();
+		selection?.removeAllRanges();
+		selection?.addRange(range);
+	}
+
+	function codePill(code: string): m.Children {
+		return m(
+			'button.teacher-nav__code',
+			{
+				type: 'button',
+				class: copied ? 'teacher-nav__code--copied' : undefined,
+				'aria-label': t('teacher.code_aria', { code }),
+				title: t('teacher.copy_code'),
+				onclick: (event: MouseEvent) => {
+					const digits = (event.currentTarget as HTMLElement).querySelector<HTMLElement>(
+						'.teacher-nav__code-digits',
+					);
+					copyCode(code, digits);
+				},
+			},
+			[
+				m('span.teacher-nav__code-label', [
+					copied ? m(Icon, { name: 'check', size: 16 }) : null,
+					copied ? t('roster.code_copied') : t('teacher.session_code'),
+				]),
+				m('span.teacher-nav__code-digits', code),
+				m('span.sr-only', { 'aria-live': 'polite' }, copied ? t('teacher.code_copied') : ''),
+			],
+		);
+	}
 
 	function toggle(): void {
 		open = !open;
@@ -104,7 +184,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 		});
 	}
 
-	function menu(): m.Children[] {
+	function menu(menuItems: readonly TeacherNavMenuItem[]): m.Children[] {
 		const { classes, loading, loaded, failed } = getTeacherNavState();
 		const live = liveSessions();
 
@@ -125,6 +205,33 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 					},
 				},
 				[
+					// This screen's own doors first — on a phone they have no other home
+					menuItems.length > 0
+						? [
+								m('p.teacher-nav__section', t('nav.this_lesson')),
+								menuItems.map((item, index) =>
+									m(
+										'button.teacher-nav__item.teacher-nav__item--own',
+										{
+											key: `own-${index}`,
+											type: 'button',
+											onclick: () => {
+												open = false;
+												item.onSelect();
+											},
+										},
+										[
+											m('span.teacher-nav__item-icon', m(Icon, { name: item.icon, size: 20 })),
+											m(
+												'span.teacher-nav__item-text',
+												m('span.teacher-nav__item-label', item.label),
+											),
+										],
+									),
+								),
+							]
+						: null,
+
 					m('p.teacher-nav__section', t('nav.live_now')),
 					loading && !loaded
 						? m('.spinner')
@@ -164,8 +271,12 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 	}
 
 	return {
+		onremove() {
+			window.clearTimeout(copiedTimer);
+		},
+
 		view({ attrs }) {
-			const { title, subtitle, onBack, trailing } = attrs;
+			const { title, subtitle, onBack, trailing, code, menuItems = [] } = attrs;
 			const atHome = here() === '/teach';
 
 			return m(
@@ -207,7 +318,9 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 						m('span.teacher-nav__title', title),
 						subtitle ? m('span.teacher-nav__subtitle', subtitle) : null,
 					]),
-					trailing ? m('.teacher-nav__trailing', trailing) : null,
+					code || trailing
+						? m('.teacher-nav__trailing', [code ? codePill(code) : null, trailing])
+						: null,
 					m(
 						'button.teacher-nav__switch',
 						{
@@ -220,7 +333,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 						},
 						m(Icon, { name: 'menu', size: 20 }),
 					),
-					open ? menu() : null,
+					open ? menu(menuItems) : null,
 				],
 			);
 		},
