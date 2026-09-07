@@ -4,6 +4,7 @@ import type { User } from '@freedi/shared-types';
 import { replaceAllParagraphChildren } from '@freedi/shared-utils';
 import { getSurveyById, addQuestionToSurvey } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { denySurveyPermission } from '@/lib/auth/surveyAccess';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { makeMcParagraphDeps } from '@/lib/firebase/paragraphStore';
 import { AddQuestionRequest } from '@/types/survey';
@@ -46,13 +47,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Check ownership
-    if (survey.creatorId !== userId) {
-      return NextResponse.json(
-        { error: 'You can only modify your own surveys' },
-        { status: 403 }
-      );
-    }
+    // Verify the caller may reach this survey
+    const denied0 = await denySurveyPermission(survey, userId, 'edit');
+    if (denied0) return denied0;
 
     const body: AddQuestionRequest = await request.json();
 
@@ -168,13 +165,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Check ownership
-    if (survey.creatorId !== userId) {
-      return NextResponse.json(
-        { error: 'You can only modify your own surveys' },
-        { status: 403 }
-      );
-    }
+    // Verify the caller may reach this survey
+    const denied1 = await denySurveyPermission(survey, userId, 'edit');
+    if (denied1) return denied1;
 
     const body: AddQuestionRequest = await request.json();
 

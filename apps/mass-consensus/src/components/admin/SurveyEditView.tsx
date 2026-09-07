@@ -7,12 +7,14 @@ import SurveyForm from './SurveyForm';
 import SurveyShare from './SurveyShare';
 import SurveyStatusManager from './SurveyStatusManager';
 import SurveyResults from './SurveyResults';
+import SurveyAdminsPanel from './SurveyAdminsPanel';
+import { useSurveyAdmins } from '@/hooks/useSurveyAdmins';
 
 interface SurveyEditViewProps {
   survey: Survey;
 }
 
-type Tab = 'share' | 'status' | 'edit' | 'results';
+type Tab = 'share' | 'status' | 'edit' | 'results' | 'admins';
 
 /**
  * Survey edit view with tabs for sharing, status, and editing
@@ -21,6 +23,10 @@ export default function SurveyEditView({ survey: initialSurvey }: SurveyEditView
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('share');
   const [survey, setSurvey] = useState<Survey>(initialSurvey);
+  // Resolves the caller's own access alongside the roster, so the tabs below
+  // can hide what a view-only admin must not be offered.
+  const roster = useSurveyAdmins(initialSurvey.surveyId);
+  const canEdit = roster.access?.canEdit ?? false;
   // The edit form holds unsaved work. Unmounting it on a tab switch threw
   // that work away without a word — a setting you toggled and then went to
   // check somewhere else was silently back to its old value. So mount it
@@ -83,36 +89,49 @@ export default function SurveyEditView({ survey: initialSurvey }: SurveyEditView
         >
           {t('shareAndPreview')}
         </button>
-        <button
-          onClick={() => selectTab('status')}
-          style={tabButtonStyle(activeTab === 'status')}
-        >
-          {t('status')}
-        </button>
-        <button
-          onClick={() => selectTab('edit')}
-          style={tabButtonStyle(activeTab === 'edit')}
-        >
-          {t('editSurvey')}
-        </button>
+        {canEdit && (
+          <button
+            onClick={() => selectTab('status')}
+            style={tabButtonStyle(activeTab === 'status')}
+          >
+            {t('status')}
+          </button>
+        )}
+        {canEdit && (
+          <button
+            onClick={() => selectTab('edit')}
+            style={tabButtonStyle(activeTab === 'edit')}
+          >
+            {t('editSurvey')}
+          </button>
+        )}
         <button
           onClick={() => selectTab('results')}
           style={tabButtonStyle(activeTab === 'results')}
         >
           {t('results')}
         </button>
+        <button
+          onClick={() => selectTab('admins')}
+          style={tabButtonStyle(activeTab === 'admins')}
+        >
+          {t('admins')}
+        </button>
       </div>
 
       {activeTab === 'share' && <SurveyShare survey={survey} />}
-      {activeTab === 'status' && (
+      {canEdit && activeTab === 'status' && (
         <SurveyStatusManager survey={survey} onStatusChange={handleStatusChange} />
       )}
-      {hasOpenedEditor && (
+      {canEdit && hasOpenedEditor && (
         <div style={{ display: activeTab === 'edit' ? 'block' : 'none' }}>
           <SurveyForm existingSurvey={survey} onSurveyUpdate={setSurvey} />
         </div>
       )}
       {activeTab === 'results' && <SurveyResults survey={survey} />}
+      {activeTab === 'admins' && (
+        <SurveyAdminsPanel surveyId={survey.surveyId} roster={roster} />
+      )}
     </div>
   );
 }

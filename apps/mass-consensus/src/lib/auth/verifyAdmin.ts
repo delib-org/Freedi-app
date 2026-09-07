@@ -71,6 +71,39 @@ export async function verifyToken(token: string): Promise<string | null> {
   }
 }
 
+export interface CallerIdentity {
+  userId: string;
+  /** Lowercased email from the auth token, or null (e.g. anonymous sign-in). */
+  email: string | null;
+  displayName: string;
+}
+
+/**
+ * Verify a Firebase ID token and return the caller's identity, including the
+ * email claim. Invitation acceptance needs the email — a uid alone cannot be
+ * matched against the address an invite was sent to.
+ * @param token - Firebase ID token from Authorization header
+ * @returns Identity if the token is valid, null otherwise
+ */
+export async function verifyIdentity(token: string): Promise<CallerIdentity | null> {
+  try {
+    initializeFirebaseAdmin();
+    const auth = getAuth();
+    const decodedToken = await auth.verifyIdToken(token);
+    const email = decodedToken.email?.trim().toLowerCase() || null;
+
+    return {
+      userId: decodedToken.uid,
+      email,
+      displayName: decodedToken.name?.trim() || email || 'A Freedi admin',
+    };
+  } catch (error) {
+    logError(error, { operation: 'verifyAdmin.verifyIdentity' });
+
+    return null;
+  }
+}
+
 /**
  * Check if a user has admin access to a specific statement
  * @param userId - User ID

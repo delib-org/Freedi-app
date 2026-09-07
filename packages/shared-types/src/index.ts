@@ -569,6 +569,28 @@ export {
   SurveyExplanationPageSchema,
 } from "./models/survey/surveyModel";
 
+// Survey admin / co-admin models
+export type {
+  SurveyAdmin,
+  SurveyAdminInvitation,
+  SurveyAccess,
+  SurveyAccessLevel,
+} from "./models/survey/surveyAdminModel";
+export {
+  SurveyAdminSchema,
+  SurveyAdminInvitationSchema,
+  SurveyAdminRole,
+  SurveyAdminRoleSchema,
+  SurveyAdminInvitationStatus,
+  SurveyAdminInvitationStatusSchema,
+  INVITABLE_SURVEY_ADMIN_ROLES,
+  SURVEY_ADMIN_INVITE_EXPIRY_MS,
+  MAX_PENDING_SURVEY_ADMIN_INVITES,
+  getSurveyAdminId,
+  canEditSurvey,
+  buildSurveyAccess,
+} from "./models/survey/surveyAdminModel";
+
 // MAD Calculation utilities
 export type { MadResult } from "./utils/madCalculation";
 export {
