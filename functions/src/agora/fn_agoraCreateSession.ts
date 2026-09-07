@@ -18,6 +18,7 @@ import {
 	AgoraStagePlan,
 	AgoraStagePlanItem,
 	AgoraStagePlanSchema,
+	applyTeacherPrompts,
 	AgoraThemeChoice,
 	AgoraThemeChoiceSchema,
 	AgoraTopicPackage,
@@ -36,6 +37,7 @@ import { logError } from '../utils/errorHandling';
 import { generateUniqueCode } from './joinCodes';
 import { buildQuestionStatement } from './questionStage';
 import { sanitizeStagePlan } from './stagePlanInput';
+import { loadTeacherPrompts } from './teacherPrompts';
 
 /** A game started by typing the main question — no scenario package behind it */
 export interface QuickGameRequest {
@@ -316,8 +318,11 @@ export const agoraCreateSession = onCall(
 					}
 				: teacherFlow;
 
+			// A teacher who reworded a round "for all my games like this" gets those
+			// words here, on every round item they left blank — see agoraTeacherPrompts.
+			const teacherPrompts = plan ? await loadTeacherPrompts(uid) : undefined;
 			const cleanPlan: AgoraStagePlanItem[] | undefined = plan
-				? sanitizeStagePlan(plan, { hasCharacters: !isQuick })
+				? applyTeacherPrompts(sanitizeStagePlan(plan, { hasCharacters: !isQuick }), teacherPrompts)
 				: undefined;
 			if (isQuick && !cleanPlan) {
 				throw new HttpsError('invalid-argument', 'A quick game needs a stage plan');

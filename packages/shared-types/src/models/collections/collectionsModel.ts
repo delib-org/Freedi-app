@@ -114,6 +114,7 @@ export enum Collections {
     agoraStats = 'agoraStats',
     agoraIdentities = 'agoraIdentities',
     agoraTeacherMessages = 'agoraTeacherMessages',
+    agoraTeacherPrompts = 'agoraTeacherPrompts',
 
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',

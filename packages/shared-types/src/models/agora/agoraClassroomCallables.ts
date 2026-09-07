@@ -245,3 +245,39 @@ export interface ModerateStatementResponse {
 	/** hide / restore: the resulting state */
 	hidden?: boolean;
 }
+
+/**
+ * `agoraRewordQuestion` — the session teacher makes the question in front of
+ * the room clearer, while the room is looking at it.
+ *
+ * The stage plan is frozen from the current item back (`agoraUpdateStagePlan`
+ * refuses to touch it) because an opened item's outcome is already being
+ * computed against it. The WORDS are the exception: they change nothing the
+ * server has counted, and a class that does not understand the question needs
+ * them changed now, not next lesson.
+ *
+ * `scope` is the question the teacher is asked after typing: `session` keeps
+ * the new wording to this one item; `kind` also rewords every other item of
+ * the same round kind in this plan and saves it as the teacher's standing
+ * wording for that kind (see `agoraTeacherPrompts`). `kind` is meaningless
+ * for an `open` question — it has no siblings and no shared prompt — and is
+ * refused there.
+ */
+export interface RewordQuestionRequest {
+	sessionId: string;
+	/** Which plan item — the current one, or any question item */
+	itemId: string;
+	/** The question itself; blank on a round means "back to the book's prompt" */
+	title: string;
+	/** The sentence under it */
+	explanation: string;
+	scope: 'session' | 'kind';
+}
+
+export interface RewordQuestionResponse {
+	ok: true;
+	/** The plan items this reword actually rewrote */
+	itemIds: string[];
+	/** `kind` scope: the wording is now this teacher's default for that round */
+	savedAsDefault: boolean;
+}
