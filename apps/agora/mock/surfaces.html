@@ -158,12 +158,26 @@
 					<p class="round__text-body">בכל חורף המזגן היה מכבה את הכיתה.</p>
 					<button class="like-button like-button--on" aria-pressed="true"><span class="like-button__heart">♥</span><span class="like-button__text">אהבתי</span><span class="like-button__count">3</span></button>
 					<button class="like-button" aria-pressed="false"><span class="like-button__heart">♡</span><span class="like-button__text">לב</span></button>
-					<div class="unit-scale" role="radiogroup">
-						<button class="unit-scale__step" role="radio"><span class="unit-scale__pip"></span><span class="unit-scale__label">בכלל לא</span></button>
-						<button class="unit-scale__step" role="radio"><span class="unit-scale__pip"></span><span class="unit-scale__label">קצת</span></button>
-						<button class="unit-scale__step unit-scale__step--on" role="radio" aria-checked="true"><span class="unit-scale__pip"></span><span class="unit-scale__label">די</span></button>
-						<button class="unit-scale__step" role="radio"><span class="unit-scale__pip"></span><span class="unit-scale__label">מאוד</span></button>
-						<button class="unit-scale__step" role="radio"><span class="unit-scale__pip"></span><span class="unit-scale__label">מאוד מאוד</span></button>
+					<div class="unit-scale">
+						<p class="unit-scale__ask"><span class="unit-scale__question">עד כמה זה חשוב גם לכם?</span><span class="unit-scale__todo">עוד לא בחרתם</span></p>
+						<div class="unit-scale__steps" role="radiogroup">
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="0" tabindex="0"><span class="unit-scale__disc"></span><span class="unit-scale__label">בכלל לא</span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="1" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">קצת</span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="2" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">די</span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="3" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">מאוד</span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="4" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">מאוד מאוד</span></button>
+						</div>
+					</div>
+					<div class="unit-scale unit-scale--answered">
+						<p class="unit-scale__ask"><span class="unit-scale__question">עד כמה גם אתם רוצים את זה?</span></p>
+						<div class="unit-scale__steps" role="radiogroup">
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="0" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">בכלל לא</span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="1" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">קצת</span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="2" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">די</span></button>
+							<button class="unit-scale__step unit-scale__step--on" role="radio" aria-checked="true" data-step="3" tabindex="0"><span class="unit-scale__disc"></span><span class="unit-scale__label">מאוד</span><span class="unit-scale__check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="4" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">מאוד מאוד</span></button>
+						</div>
+						<p class="unit-scale__failed" role="status">התשובה לא נשמרה. אפשר לנסות שוב.</p>
 					</div>
 				</div>
 				<div class="round__others-head">

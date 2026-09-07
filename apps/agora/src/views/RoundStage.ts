@@ -107,7 +107,29 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 	/** The dealt ids, held for the life of the screen (and in sessionStorage) */
 	let deal: string[] | null = null;
 	let dealFor = '';
-	let ratingBusy: string | null = null;
+	/**
+	 * The texts whose rating is in flight, one entry per text.
+	 *
+	 * It used to be a single `ratingBusy` slot for the whole screen, and while
+	 * it held one text, every press on EVERY OTHER card was dropped on the
+	 * floor — no write, no message, nothing. A student rating a column of
+	 * classmates at the speed a 13-year-old actually taps lost most of their
+	 * answers, and the round's own counter then told them they had not read
+	 * them. Ratings of different texts are different documents and have no
+	 * reason to queue behind each other; only a second press on the SAME text
+	 * has to wait. See scripts/e2e-unit-scale.mjs.
+	 */
+	const rating = new Set<string>();
+	/**
+	 * A press that arrived while this text's own write was still going, held
+	 * until it can be sent. Changing your mind is the one thing a rating scale
+	 * exists for, and a student who taps 'quite' and then 'very' half a second
+	 * later must end up on 'very' — not back where the slower press left them.
+	 * Last press wins; only the last one is ever sent.
+	 */
+	const queued = new Map<string, AgoraUnitRating | 'like' | 'unlike'>();
+	/** Texts whose last rating never landed — the card says so rather than swallowing it */
+	const rateFailed = new Set<string>();
 	let reported = '';
 
 	return {
@@ -136,7 +158,9 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 				// A different question: a save error from the last one is not this one's
 				saving = false;
 				saveFailed = false;
-				ratingBusy = null;
+				rating.clear();
+				queued.clear();
+				rateFailed.clear();
 			}
 			pen = nextPen;
 
@@ -207,8 +231,14 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 				statementId: string,
 				value: AgoraUnitRating | 'like' | 'unlike',
 			): Promise<void> {
-				if (!item.statementId || ratingBusy || closed) return;
-				ratingBusy = statementId;
+				if (!item.statementId || closed) return;
+				if (rating.has(statementId)) {
+					queued.set(statementId, value);
+
+					return;
+				}
+				rating.add(statementId);
+				rateFailed.delete(statementId);
 				m.redraw();
 				try {
 					if (value === 'like' || value === 'unlike') {
@@ -218,9 +248,16 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 					}
 				} catch (error) {
 					console.error('[Round] Weighing failed:', error);
+					rateFailed.add(statementId);
 				} finally {
-					ratingBusy = null;
+					rating.delete(statementId);
 					m.redraw();
+				}
+
+				const next = queued.get(statementId);
+				if (next !== undefined) {
+					queued.delete(statementId);
+					await weigh(statementId, next);
 				}
 			}
 
@@ -232,14 +269,16 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 				if (spec.scale === 'like') {
 					return m(LikeButton, {
 						liked: myRating === AGORA_ROUND.LIKE,
-						disabled: ratingBusy === answer.statementId,
+						disabled: rating.has(answer.statementId),
 						onToggle: (liked) => void weigh(answer.statementId, liked ? 'like' : 'unlike'),
 					});
 				}
 
 				return m(UnitScale, {
+					ask: t(`round.${kind}.unit_ask`),
 					value: myRating !== undefined && isUnitRating(myRating) ? myRating : undefined,
-					disabled: ratingBusy === answer.statementId,
+					busy: rating.has(answer.statementId),
+					failed: rateFailed.has(answer.statementId),
 					onPick: (value) => void weigh(answer.statementId, value),
 				});
 			};
