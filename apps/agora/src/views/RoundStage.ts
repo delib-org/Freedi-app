@@ -15,6 +15,7 @@ import {
 	type AgoraProposal,
 } from '../lib/proposals';
 import { reportStageProgress } from '../lib/session';
+import { blankPen, penFor, typedInto, type Pen } from '../lib/flows/penState';
 import { requestTeacherFocus } from '../lib/helpedFocus';
 import {
 	dealRound,
@@ -100,8 +101,7 @@ function removedNotice(): m.Children {
  * away. Never C_p bands — those are a −1…+1 reading and this scale is not.
  */
 export function RoundStage(): m.Component<RoundStageAttrs> {
-	let draft = '';
-	let draftFor = '';
+	let pen: Pen = blankPen;
 	let saving = false;
 	let saveFailed = false;
 	/** The dealt ids, held for the life of the screen (and in sessionStorage) */
@@ -129,11 +129,16 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 			const closed = !live || outcome !== undefined;
 			const isNeeds = kind === 'needs';
 
-			// Pre-fill the pen with what I already wrote, once per text
-			if (mine && draftFor !== `${mine.statementId}:${mine.statement}`) {
-				draftFor = `${mine.statementId}:${mine.statement}`;
-				draft = mine.statement;
+			// Empty for a new question, pre-filled with my own saved answer, and
+			// otherwise left exactly as the student is typing it (lib/flows/penState)
+			const nextPen = penFor(pen, item.itemId, mine);
+			if (nextPen.itemId !== pen.itemId) {
+				// A different question: a save error from the last one is not this one's
+				saving = false;
+				saveFailed = false;
+				ratingBusy = null;
 			}
+			pen = nextPen;
 
 			const rated = new Set(
 				Object.keys(state.myRatings).filter(
@@ -182,7 +187,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 			}
 
 			async function submit(): Promise<void> {
-				const text = draft.trim();
+				const text = pen.text.trim();
 				if (!text || saving || closed) return;
 				saving = true;
 				saveFailed = false;
@@ -219,7 +224,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 				}
 			}
 
-			const changed = draft.trim() !== (mine?.statement ?? '').trim();
+			const changed = pen.text.trim() !== (mine?.statement ?? '').trim();
 			const myRow = mine ? toRow(mine, named) : null;
 
 			const widget = (answer: AgoraProposal): m.Children => {
@@ -320,14 +325,14 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 											? m('p.round__lead', { 'aria-hidden': 'true' }, t('round.needs.lead'))
 											: null,
 										m('textarea.round__textarea', {
-											value: draft,
+											value: pen.text,
 											rows: kind === 'story' ? 5 : 3,
 											maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
 											placeholder: t(`round.${kind}.placeholder`),
 											'aria-label': isNeeds ? t('round.needs.lead') : t('round.your_text'),
 											disabled: saving,
 											oninput: (event: InputEvent) => {
-												draft = (event.target as HTMLTextAreaElement).value;
+												pen = typedInto(pen, (event.target as HTMLTextAreaElement).value);
 											},
 										}),
 										stalledBanner(),
@@ -336,7 +341,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 											'button.btn.btn--primary.btn--full',
 											{
 												class: mine !== undefined && !changed && !saving ? 'btn--done' : undefined,
-												disabled: saving || !draft.trim() || (mine !== undefined && !changed),
+												disabled: saving || !pen.text.trim() || (mine !== undefined && !changed),
 												onclick: () => void submit(),
 											},
 											saving

@@ -79,6 +79,7 @@ npm run check-all              # lint, typecheck, tests, build, contrast, type a
 node scripts/e2e-cycle.mjs     # the whole improvement loop, asserting POINTS in Firestore
 node scripts/e2e-changes.mjs   # NEW/EDITED/IMPROVED chips and seen-state
 node scripts/e2e-stuck-write.mjs  # a write that never reaches the server
+npx tsx scripts/e2e-pen.mjs    # the answer box empties between questions
 npx tsx scripts/load-smoke.ts  # 30 students rating at once
 ```
 
