@@ -122,7 +122,10 @@ const StatementChatMore: FC<Props> = ({
 			await markStatementNotificationsAsReadDB(statement.statementId);
 		}
 
-		navigate(`/statement/${statement.statementId}/chat`, {
+		// The active tab is driven by the `tab` search param, not the path
+		// segment. Without it the screen falls back to `defaultView`, so a
+		// question whose default view is Solutions would swallow this click.
+		navigate(`/statement/${statement.statementId}/chat?tab=chat`, {
 			state: { from: window.location.pathname },
 		});
 	};

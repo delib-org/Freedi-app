@@ -168,7 +168,11 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	}
 
 	const statementAge = new Date().getTime() - statement.createdAt;
-	const hasChildren = parentStatement?.statementSettings?.hasChildren;
+	// The chat bubble is governed by the parent's "Discussion chat" (hasChat)
+	// toggle. Older questions predate that flag, so fall back to the
+	// "Enable Sub-Conversations" (hasChildren) flag that used to gate it.
+	const parentSettings = parentStatement?.statementSettings;
+	const showChat = parentSettings?.hasChat ?? parentSettings?.hasChildren ?? false;
 
 	function handleRightClick(e: React.MouseEvent) {
 		e.preventDefault();
@@ -480,7 +484,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 						</div>
 					</div>
 					<div className={styles.actionsEnd}>
-						{hasChildren && (
+						{showChat && (
 							<div className={styles.chat}>
 								<StatementChatMore statement={statement} />
 							</div>
