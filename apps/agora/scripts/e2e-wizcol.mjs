@@ -234,7 +234,12 @@ const visionIds = await writeRound(s, visionItem, bots, VISIONS);
 await rate(s, a, visionItem.statementId, visionIds[1], 1);
 await rate(s, c, visionItem.statementId, visionIds[1], 0.75);
 await rate(s, b, visionItem.statementId, visionIds[0], 0.5);
-await until('B paid for the vision', async () => (await appreciation(sessionId, b.uid)) === 5);
+// Both raters are at or above the half, so B is paid TWICE for this vision:
+// 4 after the needs round → 6. The old assertion waited for 5, the total
+// between the two payments, and passed only while the pipeline was slow
+// enough to be caught mid-stride — it now lands both inside one poll and 5
+// is never observed. The settled figure is the one worth asserting.
+await until('B paid for both vision ratings', async () => (await appreciation(sessionId, b.uid)) === 6);
 
 await advance(sessionId, 4, teacherToken);
 s = await until('vision outcome written', async () => {
