@@ -22,6 +22,8 @@ import {
 } from '@freedi/shared-types';
 import { buildDefaultFrenchRevolutionTopic, backfillDefaultArtwork } from '../../lib/defaultTopic';
 import { LanguagePicker } from '../../components/LanguagePicker';
+import { TeacherNav } from '../../components/TeacherNav';
+import { noteTeacherDashboard } from '../../lib/teacherNav';
 
 /**
  * The teacher's dashboard: my classes (with advancement), my games (live ones
@@ -119,6 +121,7 @@ export function TeacherHome(): m.Component {
 				schools = dashboard.schools;
 				sessions = dashboard.sessions;
 				aggregates = dashboard.aggregates;
+				noteTeacherDashboard(dashboard);
 			} catch (error) {
 				if (!(error instanceof Error && error.message === 'anonymous')) {
 					console.error('[Teacher] Loading dashboard data failed:', error);
@@ -285,6 +288,7 @@ export function TeacherHome(): m.Component {
 			classes = dashboard.classes;
 			schools = dashboard.schools;
 			aggregates = dashboard.aggregates;
+			noteTeacherDashboard(dashboard);
 			addClassOpen = false;
 		} catch (error) {
 			console.error('[Teacher] Creating a class failed:', error);
@@ -409,14 +413,13 @@ export function TeacherHome(): m.Component {
 			}
 
 			return m('.shell', [
-				m('.home-header', [
-					m(LanguagePicker),
-					m('button.btn.btn--ghost', { onclick: () => m.route.set('/') }, t('common.back')),
-				]),
+				m(TeacherNav, {
+					title: t('teacher.title'),
+					onBack: () => m.route.set('/'),
+					trailing: m(LanguagePicker),
+				}),
 
 				m('.shell__content', { style: { gap: 'var(--space-xl)' } }, [
-					m('h2', t('teacher.title')),
-
 					!loaded
 						? m('.spinner')
 						: [

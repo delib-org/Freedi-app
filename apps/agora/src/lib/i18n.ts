@@ -74,6 +74,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'common.loading': 'טוען...',
 		'common.error': 'משהו השתבש. נסו שוב.',
 		'common.back': 'חזרה',
+		// --- The teacher's navigation bar: back, home, and across to another lesson ---
+		'nav.aria': 'ניווט המורה',
+		'nav.menu': 'מסעות וכיתות',
+		'nav.live_now': 'רץ עכשיו',
+		'nav.no_live': 'אין מסע פעיל כרגע.',
+		'nav.no_classes': 'אין לכם עדיין כיתות.',
+		'nav.load_failed': 'לא הצלחנו לטעון את המסעות שלכם. נסו שוב.',
 		'game.no_seat_title': 'אתם עוד לא במסע הזה',
 		'game.no_seat_body':
 			'המקום שלכם נשמר בדפדפן הזה. אם ניקיתם אותו, פתחתם חלון פרטי או נכנסתם ממכשיר אחר — צריך להצטרף מחדש עם קוד הכיתה.',
@@ -1297,6 +1304,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'common.loading': 'Loading...',
 		'common.error': 'Something went wrong. Please try again.',
 		'common.back': 'Back',
+		// --- The teacher's navigation bar: back, home, and across to another lesson ---
+		'nav.aria': 'Teacher navigation',
+		'nav.menu': 'Journeys and classes',
+		'nav.live_now': 'Running now',
+		'nav.no_live': 'No journey is running right now.',
+		'nav.no_classes': 'You have no classes yet.',
+		'nav.load_failed': "Couldn't load your journeys. Try again.",
 		'game.no_seat_title': 'You are not in this journey yet',
 		'game.no_seat_body':
 			'Your seat is kept in this browser. If it was cleared, opened in a private window, or you came from another device, join again with the class code.',
@@ -2569,6 +2583,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'common.loading': 'جارٍ التحميل...',
 		'common.error': 'حدث خطأ ما. حاولوا مرة أخرى.',
 		'common.back': 'رجوع',
+		// --- The teacher's navigation bar: back, home, and across to another lesson ---
+		'nav.aria': 'تنقّل المعلّم',
+		'nav.menu': 'الرحلات والصفوف',
+		'nav.live_now': 'يجري الآن',
+		'nav.no_live': 'لا توجد رحلة جارية الآن.',
+		'nav.no_classes': 'ليس لديك صفوف بعد.',
+		'nav.load_failed': 'تعذّر تحميل رحلاتك. حاول مرة أخرى.',
 		'game.no_seat_title': 'لم تنضمّوا إلى هذه الرحلة بعد',
 		'game.no_seat_body':
 			'مقعدكم محفوظ في هذا المتصفّح. إذا مُسح، أو فُتح في نافذة خاصة، أو دخلتم من جهاز آخر — انضمّوا من جديد برمز الصف.',
@@ -3796,6 +3817,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'common.loading': 'Cargando...',
 		'common.error': 'Algo salió mal. Inténtalo de nuevo.',
 		'common.back': 'Atrás',
+		// --- The teacher's navigation bar: back, home, and across to another lesson ---
+		'nav.aria': 'Navegación del profesorado',
+		'nav.menu': 'Viajes y clases',
+		'nav.live_now': 'En curso ahora',
+		'nav.no_live': 'No hay ningún viaje en curso.',
+		'nav.no_classes': 'Todavía no tienes clases.',
+		'nav.load_failed': 'No se pudieron cargar tus viajes. Inténtalo de nuevo.',
 		'game.no_seat_title': 'Todavía no estáis en este viaje',
 		'game.no_seat_body':
 			'Vuestro sitio se guarda en este navegador. Si se borró, se abrió en una ventana privada o entrasteis desde otro dispositivo, uníos de nuevo con el código de clase.',
@@ -5093,6 +5121,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'common.loading': 'Wird geladen...',
 		'common.error': 'Etwas ist schiefgelaufen. Bitte erneut versuchen.',
 		'common.back': 'Zurück',
+		// --- The teacher's navigation bar: back, home, and across to another lesson ---
+		'nav.aria': 'Navigation für Lehrkräfte',
+		'nav.menu': 'Reisen und Klassen',
+		'nav.live_now': 'Läuft gerade',
+		'nav.no_live': 'Gerade läuft keine Reise.',
+		'nav.no_classes': 'Sie haben noch keine Klassen.',
+		'nav.load_failed': 'Ihre Reisen konnten nicht geladen werden. Bitte erneut versuchen.',
 		'game.no_seat_title': 'Ihr seid noch nicht in dieser Reise',
 		'game.no_seat_body':
 			'Euer Platz wird in diesem Browser gespeichert. Wurde er gelöscht, in einem privaten Fenster geöffnet oder kommt ihr von einem anderen Gerät — tretet mit dem Klassencode erneut bei.',
@@ -6410,6 +6445,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'common.loading': 'Laden...',
 		'common.error': 'Er ging iets mis. Probeer het opnieuw.',
 		'common.back': 'Terug',
+		// --- The teacher's navigation bar: back, home, and across to another lesson ---
+		'nav.aria': 'Navigatie voor docenten',
+		'nav.menu': 'Reizen en klassen',
+		'nav.live_now': 'Nu bezig',
+		'nav.no_live': 'Er loopt op dit moment geen reis.',
+		'nav.no_classes': 'Je hebt nog geen klassen.',
+		'nav.load_failed': 'Je reizen konden niet worden geladen. Probeer het opnieuw.',
 		'game.no_seat_title': 'Je zit nog niet in deze reis',
 		'game.no_seat_body':
 			'Je plek wordt in deze browser bewaard. Is die gewist, geopend in een privévenster of kom je van een ander apparaat — doe opnieuw mee met de klascode.',

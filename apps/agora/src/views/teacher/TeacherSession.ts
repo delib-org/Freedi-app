@@ -20,6 +20,8 @@ import { Voting } from '../Voting';
 import { TeacherInstructions } from './TeacherInstructions';
 import { StagePlanEditor } from './StagePlanEditor';
 import { planItemLabel } from '../../components/StageNav';
+import { TeacherNav } from '../../components/TeacherNav';
+import { loadTeacherNav, navClass } from '../../lib/teacherNav';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { CountdownTimer } from '../../components/CountdownTimer';
 import { QRShare } from '../../components/QRShare';
@@ -137,6 +139,11 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	void ensureUser().then((user) => {
 		userId = user.uid;
 		listenToSession(sessionId, user.uid);
+		// The one screen that pays for the bar's list up front: this is where a
+		// teacher switches lessons mid-period, and it is also the only way the
+		// bar can name the class a game belongs to (the session doc holds the
+		// id, not the name).
+		if (!user.isAnonymous) loadTeacherNav();
 		// Macrotask redraw — see GameController note.
 		setTimeout(() => m.redraw(), 0);
 	});
@@ -297,6 +304,17 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			}
 			const facts = progressFacts(proposals, answers, voterUids, roundRatedByUid);
 			const unread = unreadRepliesTotal();
+
+			// The way out of the console. Running a lesson was a room with no
+			// doors: this screen had no header at all, so a teacher mid-lesson
+			// could not reach their class, their other lesson, or home.
+			const navBar = m(TeacherNav, {
+				title: topic?.title ?? t('teacher.tab_live'),
+				subtitle: [navClass(session.classId)?.name, planItemLabel(current)]
+					.filter(Boolean)
+					.join(' · '),
+				onBack: () => m.route.set(session.classId ? `/teach/class/${session.classId}` : '/teach'),
+			});
 
 			const tabStrip = m(
 				'.teacher-tabs',
@@ -459,6 +477,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				}
 
 				return m('.shell.shell--wide', [
+					navBar,
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						tabStrip,
 						tab === 'live' ? m(Results, { session, topic }) : tabPanel,
@@ -569,6 +588,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				: null;
 
 			return m('.shell.shell--wide', [
+				navBar,
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 					planRail,
 					settingsPanel,
@@ -586,6 +606,9 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 											questionTitle: current.title,
 											questionExplanation: current.explanation,
 											questionKind: current.kind,
+											// The one edit an opened stage takes: the words, when the
+											// room did not understand them.
+											reword: { sessionId, itemId: current.itemId },
 										})
 									: null,
 

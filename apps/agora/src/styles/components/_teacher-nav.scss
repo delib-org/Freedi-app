@@ -1,0 +1,217 @@
+// The teacher's navigation bar — the way back, the way home, the way across
+//
+// Every teacher screen used to invent its own header, and the live console had
+// none at all: a teacher running a lesson could not get back to the class, to
+// their other class, or to the second lesson running that period. One bar now
+// sits on all of them, and the menu behind it lists the places a teacher
+// actually walks between.
+//
+// It sticks, because the authoring screens are one tall scroll and a header
+// that scrolls away with the first paragraph is not a way out.
+.teacher-nav {
+	position: sticky;
+	inset-block-start: 0;
+	z-index: var(--z-header);
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+	// Out past .shell's padding so the bar reaches the screen edges and hugs
+	// the top rather than floating a gap above itself.
+	margin-inline: calc(-1 * var(--space-md));
+	margin-block-start: calc(-1 * var(--space-md));
+	margin-block-end: var(--space-sm);
+	padding-inline: var(--space-md);
+	padding-block: var(--space-xs);
+	padding-block-start: max(var(--space-xs), env(safe-area-inset-top, 0px));
+	background: var(--bg-page);
+	border-block-end: 1px solid var(--border-subtle);
+
+	&__back,
+	&__home,
+	&__switch {
+		@extend %agora-icon-button;
+	}
+
+	// The arrow points the way out, and the way out swaps sides with the script
+	[dir='rtl'] &__back .icon {
+		transform: scaleX(-1);
+	}
+
+	&__titles {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		line-height: 1.2;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-weight: 700;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	// Where this screen sits: the class a lesson belongs to, the stage the
+	// room is on. Quiet — the title is what a teacher reads.
+	&__subtitle {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__trailing {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	// Carried over from the bar this one replaces: an unsaved-work chip the
+	// authoring screens hang in the trailing slot.
+	&__unsaved {
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+		border: 1px solid var(--warning);
+		background: color-mix(in srgb, var(--warning) 18%, transparent);
+		border-radius: var(--radius-full);
+		padding: 2px var(--space-sm);
+	}
+
+	// --- the menu ---
+
+	// Only while the menu is open, so the bar itself stays under the toast
+	// and celebration layers the game paints over it.
+	&--open {
+		z-index: var(--z-modal);
+	}
+
+	&__scrim {
+		position: fixed;
+		inset: 0;
+		background: rgba(20, 12, 45, 0.28);
+	}
+
+	// Hangs off the bar itself rather than off the viewport, so it lands
+	// under the bar whatever height the bar happens to be.
+	&__panel {
+		position: absolute;
+		inset-block-start: 100%;
+		inset-inline-end: var(--space-md);
+		inline-size: min(22rem, calc(100vw - 2 * var(--space-md)));
+		max-block-size: min(70vh, 34rem);
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		padding: var(--space-sm);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-tile);
+		box-shadow: var(--shadow-raised);
+	}
+
+	&__section {
+		font-size: var(--font-size-sm);
+		font-weight: 700;
+		color: var(--text-secondary);
+		padding: var(--space-xs) var(--space-sm) 0;
+
+		&:not(:first-child) {
+			margin-block-start: var(--space-sm);
+		}
+	}
+
+	&__empty {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		padding: var(--space-xs) var(--space-sm) var(--space-sm);
+	}
+
+	&__item {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		inline-size: 100%;
+		text-align: start;
+		padding: var(--space-sm);
+		border: 0;
+		border-radius: var(--radius-tile);
+		background: transparent;
+		color: var(--text-primary);
+		font: inherit;
+		cursor: pointer;
+		transition: background-color var(--motion-fast) ease;
+
+		&:hover,
+		&:focus-visible {
+			background: color-mix(in srgb, var(--mine) 8%, transparent);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: -2px;
+		}
+
+		// Where you already are. Marked, not hidden: a teacher reading the list
+		// needs to place themselves in it before choosing where to go next.
+		&--current {
+			background: color-mix(in srgb, var(--mine) 12%, transparent);
+			color: var(--mine-ink);
+		}
+	}
+
+	&__item-icon {
+		flex: 0 0 auto;
+		display: inline-flex;
+		color: var(--text-secondary);
+	}
+
+	&__item--current &__item-icon {
+		color: var(--mine-ink);
+	}
+
+	&__item-text {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+		line-height: 1.25;
+	}
+
+	&__item-label {
+		font-weight: 600;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__item-meta {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	// Said with a success-tinted fill and border, never success-coloured text:
+	// --success-deep is defined against white and the civic theme does not
+	// remap it, so as text it vanishes on navy.
+	&__live {
+		color: var(--text-primary);
+		border: 1px solid var(--success);
+		background: color-mix(in srgb, var(--success) 18%, transparent);
+		border-radius: var(--radius-full);
+		padding: 0 var(--space-sm);
+	}
+
+	&__footer {
+		margin-block-start: var(--space-sm);
+		padding-block-start: var(--space-sm);
+		border-block-start: 1px solid var(--border-subtle);
+	}
+}

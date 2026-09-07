@@ -6,6 +6,7 @@ import { classLabel, fetchTeacherClass, type TeacherClassDetail } from '../../li
 import { Icon } from '../../components/Icon';
 import { ClassForm, type ClassFormValue } from '../../components/ClassForm';
 import { advancementSummary, type TeacherConsoleMember } from '@freedi/shared-types';
+import { TeacherNav } from '../../components/TeacherNav';
 
 /**
  * One class: its advancement across games, its roster with each student's
@@ -424,29 +425,30 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 			const { members, sessions } = detail;
 
 			return m('.shell', [
-				m('.home-header', [
-					m('button.btn.btn--ghost', { onclick: () => m.route.set('/teach') }, t('common.back')),
-				]),
+				// The bar says which class this is, so the page no longer repeats it —
+				// and the class's own cog rides along on the bar, where the chrome
+				// of every teacher screen now lives.
+				m(TeacherNav, {
+					title: classLabel(detail),
+					subtitle: detail.schoolName,
+					onBack: () => m.route.set('/teach'),
+					trailing: m(
+						'button.teacher-settings__toggle',
+						{
+							type: 'button',
+							'aria-expanded': String(settingsOpen),
+							'aria-label': t('roster.settings'),
+							title: t('roster.settings'),
+							class: settingsOpen ? 'teacher-settings__toggle--on' : undefined,
+							onclick: () => {
+								settingsOpen = !settingsOpen;
+							},
+						},
+						m(Icon, { name: 'cog', size: 20 }),
+					),
+				}),
 				m('.shell__content', { style: { gap: 'var(--space-xl)' } }, [
 					m('.stack', [
-						m('.class-progress__head', [
-							m('h2', classLabel(detail)),
-							m(
-								'button.teacher-settings__toggle',
-								{
-									type: 'button',
-									'aria-expanded': String(settingsOpen),
-									'aria-label': t('roster.settings'),
-									title: t('roster.settings'),
-									class: settingsOpen ? 'teacher-settings__toggle--on' : undefined,
-									onclick: () => {
-										settingsOpen = !settingsOpen;
-									},
-								},
-								m(Icon, { name: 'cog', size: 20 }),
-							),
-						]),
-						detail.schoolName ? m('p.home-explanation', detail.schoolName) : null,
 						m('p.roster__class-code', t('roster.class_code', { code: detail.classCode })),
 					]),
 					settingsOpen ? settingsPanel(detail) : null,

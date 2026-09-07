@@ -28,6 +28,7 @@ import {
 	stagePlanPreset,
 	validateStagePlan,
 } from '@freedi/shared-types';
+import { TeacherNav } from '../../components/TeacherNav';
 
 type GameMode = 'scenario' | 'quick';
 
@@ -237,12 +238,16 @@ export function StartGame(): m.Component {
 			}
 
 			return m('.shell', [
-				m('.home-header', [
-					m('button.btn.btn--ghost', { onclick: () => m.route.set('/teach') }, t('common.back')),
-				]),
+				m(TeacherNav, {
+					title: t('startGame.title'),
+					// Back to the class this game is being opened for, when the
+					// dashboard sent us here holding one
+					onBack: () => {
+						const fromClass = m.route.param('classId');
+						m.route.set(fromClass ? `/teach/class/${fromClass}` : '/teach');
+					},
+				}),
 				m('.shell__content', { style: { gap: 'var(--space-xl)' } }, [
-					m('h2', t('startGame.title')),
-
 					// Scenario or quick game
 					m('.stack', [
 						m('.teacher__mode-row', [

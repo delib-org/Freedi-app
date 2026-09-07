@@ -714,7 +714,7 @@
 				</div>
 			</div>
 
-			<h2>scenario shelf — ready row, draft row, teacher bar</h2>
+			<h2>scenario shelf — ready row, draft row, the teacher's bar and its menu</h2>
 			<ul class="scenario-list">
 				<li class="scenario-row">
 					<button class="scenario-row__use" type="button">
@@ -754,12 +754,62 @@
 					<button class="scenario-row__settings" type="button"></button>
 				</li>
 			</ul>
-			<div class="teacher-bar">
-				<button class="teacher-bar__back" type="button"></button>
-				<span class="teacher-bar__title">המהפכה הצרפתית — 1789</span>
-				<div class="teacher-bar__trailing">
-					<span class="teacher-bar__unsaved">שינויים שלא נשמרו</span>
+			<!-- The teacher's bar, and the menu behind it. The panel is pinned
+			     under the bar in the app; here it is laid out in the flow so the
+			     surfaces below it stay measurable. -->
+			<div class="teacher-nav">
+				<button class="teacher-nav__back" type="button"></button>
+				<button class="teacher-nav__home" type="button"></button>
+				<div class="teacher-nav__titles">
+					<span class="teacher-nav__title">המהפכה הצרפתית — 1789</span>
+					<span class="teacher-nav__subtitle">ז' · 2 · כיכר הדיון</span>
+				</div>
+				<div class="teacher-nav__trailing">
+					<span class="teacher-nav__unsaved">שינויים שלא נשמרו</span>
 					<span class="values__score">טיוטה</span>
+				</div>
+				<button class="teacher-nav__switch" type="button"></button>
+			</div>
+			<div class="teacher-nav">
+				<div class="teacher-nav__panel" style="position:static;inline-size:auto;max-block-size:none">
+					<p class="teacher-nav__section">רץ עכשיו</p>
+					<button class="teacher-nav__item teacher-nav__item--current" type="button" aria-current="page">
+						<span class="teacher-nav__item-icon"></span>
+						<span class="teacher-nav__item-text">
+							<span class="teacher-nav__item-label">ז' · 2</span>
+							<span class="teacher-nav__item-meta">
+								<span class="teacher-nav__live">חי</span>
+								<span>כיכר הדיון</span>
+							</span>
+						</span>
+					</button>
+					<button class="teacher-nav__item" type="button">
+						<span class="teacher-nav__item-icon"></span>
+						<span class="teacher-nav__item-text">
+							<span class="teacher-nav__item-label">ח' · 4</span>
+							<span class="teacher-nav__item-meta">
+								<span class="teacher-nav__live">חי</span>
+								<span>עמדה על הגשר</span>
+							</span>
+						</span>
+					</button>
+					<p class="teacher-nav__section">הכיתות שלי</p>
+					<button class="teacher-nav__item" type="button">
+						<span class="teacher-nav__item-icon"></span>
+						<span class="teacher-nav__item-text">
+							<span class="teacher-nav__item-label">ז' · 2</span>
+							<span class="teacher-nav__item-meta">3 תלמידים</span>
+						</span>
+					</button>
+					<p class="teacher-nav__empty">אין מסע פעיל כרגע.</p>
+					<div class="teacher-nav__footer">
+						<button class="teacher-nav__item" type="button">
+							<span class="teacher-nav__item-icon"></span>
+							<span class="teacher-nav__item-text">
+								<span class="teacher-nav__item-label">חדר המורה</span>
+							</span>
+						</button>
+					</div>
 				</div>
 			</div>
 

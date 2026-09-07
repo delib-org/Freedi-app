@@ -367,63 +367,6 @@
 	margin-block-start: var(--space-sm);
 }
 
-// --- The bar on a teacher's long form ---
-//
-// The authoring screens are one tall scroll and the way out lived in a header
-// that scrolled away with the first paragraph. This one sticks.
-.teacher-bar {
-	position: sticky;
-	inset-block-start: 0;
-	z-index: var(--z-header);
-	display: flex;
-	align-items: center;
-	gap: var(--space-sm);
-	// Out past .shell's padding so the bar reaches the screen edges and hugs
-	// the top rather than floating a gap above itself.
-	margin-inline: calc(-1 * var(--space-md));
-	margin-block-start: calc(-1 * var(--space-md));
-	padding-inline: var(--space-md);
-	padding-block: var(--space-xs);
-	padding-block-start: max(var(--space-xs), env(safe-area-inset-top, 0px));
-	background: var(--bg-page);
-	border-block-end: 1px solid var(--border-subtle);
-
-	&__back {
-		@extend %agora-icon-button;
-	}
-
-	// The arrow points the way out, and the way out swaps sides with the script
-	[dir='rtl'] &__back .icon {
-		transform: scaleX(-1);
-	}
-
-	&__title {
-		flex: 1 1 auto;
-		min-inline-size: 0;
-		font-family: var(--font-display);
-		font-weight: 700;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	&__trailing {
-		flex: 0 0 auto;
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-	}
-
-	&__unsaved {
-		font-size: var(--font-size-sm);
-		color: var(--text-primary);
-		border: 1px solid var(--warning);
-		background: color-mix(in srgb, var(--warning) 18%, transparent);
-		border-radius: var(--radius-full);
-		padding: 2px var(--space-sm);
-	}
-}
-
 // --- the "add a class" tile and the class form (new class / rename) ---
 .dashboard__class-card--add {
 	border-style: dashed;
