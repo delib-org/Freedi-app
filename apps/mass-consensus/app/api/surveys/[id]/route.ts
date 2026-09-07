@@ -6,6 +6,7 @@ import {
   deleteSurvey,
 } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { denySurveyPermission } from '@/lib/auth/surveyAccess';
 import { UpdateSurveyRequest } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
 
@@ -75,13 +76,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Check ownership
-    if (existingSurvey.creatorId !== userId) {
-      return NextResponse.json(
-        { error: 'You can only update your own surveys' },
-        { status: 403 }
-      );
-    }
+    // Verify the caller may reach this survey
+    const denied0 = await denySurveyPermission(existingSurvey, userId, 'edit');
+    if (denied0) return denied0;
 
     const body: UpdateSurveyRequest = await request.json();
 
@@ -139,13 +136,9 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Check ownership
-    if (existingSurvey.creatorId !== userId) {
-      return NextResponse.json(
-        { error: 'You can only delete your own surveys' },
-        { status: 403 }
-      );
-    }
+    // Verify the caller may reach this survey
+    const denied1 = await denySurveyPermission(existingSurvey, userId, 'edit');
+    if (denied1) return denied1;
 
     const deleted = await deleteSurvey(surveyId);
 

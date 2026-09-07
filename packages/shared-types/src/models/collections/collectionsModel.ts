@@ -62,6 +62,8 @@ export enum Collections {
     helperPoints = 'helperPoints',
     surveys = 'surveys',
     surveyProgress = 'surveyProgress',
+    surveyAdmins = 'surveyAdmins',
+    surveyAdminInvitations = 'surveyAdminInvitations',
     adminInvitations = 'adminInvitations',
     viewerLinks = 'viewerLinks',
     documentCollaborators = 'documentCollaborators',

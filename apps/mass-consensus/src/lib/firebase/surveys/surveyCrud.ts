@@ -16,6 +16,7 @@ import { SURVEYS_COLLECTION, generateSurveyId } from './surveyHelpers';
 import { cascadeSynthesisToggle } from '../synthesis/cascadeSynthesisToggle';
 import { cascadeMinResponseWords } from './cascadeMinResponseWords';
 import { cascadeRatingMode } from './cascadeRatingMode';
+import { deleteSurveyAdminRecords } from './surveyAdmins';
 
 /**
  * Create a new survey
@@ -299,6 +300,15 @@ export async function deleteSurvey(surveyId: string): Promise<boolean> {
 
   try {
     await db.collection(SURVEYS_COLLECTION).doc(surveyId).delete();
+
+    // Drop the co-admin roster too, so a deleted survey leaves no dangling
+    // grants that would resurface if the id were ever reused.
+    try {
+      await deleteSurveyAdminRecords(surveyId);
+    } catch (error) {
+      logger.error('[deleteSurvey] Failed to clear admin records:', surveyId, error);
+    }
+
     logger.info('[deleteSurvey] Deleted survey:', surveyId);
 
     return true;

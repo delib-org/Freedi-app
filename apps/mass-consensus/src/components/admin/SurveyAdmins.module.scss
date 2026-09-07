@@ -1,0 +1,242 @@
+// Survey admins (co-admin roster + email invitations)
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.intro {
+  margin: 0;
+  color: var(--text-secondary, #64748b);
+  font-size: 0.925rem;
+  line-height: 1.6;
+}
+
+// ============================================
+// INVITE FORM
+// ============================================
+
+.inviteForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--card-default, #ffffff);
+  border: 1px solid var(--btn-secondary, #e5e7eb);
+  border-radius: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-body, #475569);
+}
+
+.input,
+.select {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--btn-secondary, #e5e7eb);
+  border-radius: 8px;
+  background: var(--card-default, #ffffff);
+  color: var(--text-body, #475569);
+  font-size: 0.9375rem;
+  font-family: inherit;
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary, #7c9eb2);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.roleHint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.primaryButton {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--btn-primary, #7c9eb2);
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+// ============================================
+// FEEDBACK
+// ============================================
+
+.error,
+.notice {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+// Light red ground with the dark slate body colour — the red tokens are pastel
+// and red-on-red would not clear WCAG AA.
+.error {
+  background: var(--disagree-light, #fca5a5);
+  color: var(--text-primary, #334155);
+}
+
+.notice {
+  background: var(--btn-secondary, #e5e7eb);
+  color: var(--text-body, #475569);
+  word-break: break-all;
+}
+
+// ============================================
+// LISTS
+// ============================================
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-body, #475569);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: var(--card-default, #ffffff);
+  border: 1px solid var(--btn-secondary, #e5e7eb);
+  border-radius: 10px;
+}
+
+.rowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.rowName {
+  font-weight: 600;
+  color: var(--text-body, #475569);
+  overflow-wrap: anywhere;
+}
+
+.rowMeta {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #64748b);
+  overflow-wrap: anywhere;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.badge {
+  padding: 0.25rem 0.625rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--btn-secondary, #e5e7eb);
+  color: var(--text-body, #475569);
+}
+
+.badgeOwner {
+  background: var(--btn-primary, #7c9eb2);
+  color: #ffffff;
+}
+
+.badgeEditor {
+  background: var(--agree, #10b981);
+  color: #ffffff;
+}
+
+// Destructive action. The pastel `--disagree` is too light for text on white,
+// so the red is carried by the border and hover ground, not the label.
+.linkButton {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--disagree, #f87171);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-body, #475569);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--disagree-light, #fca5a5);
+    color: var(--text-primary, #334155);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--disagree, #f87171);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.empty {
+  margin: 0;
+  padding: 1rem;
+  color: var(--text-secondary, #64748b);
+  font-size: 0.9rem;
+  background: var(--background-solid, #f8fafb);
+  border-radius: 10px;
+}
