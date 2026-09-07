@@ -11,6 +11,50 @@ export interface AdminVerificationResult {
 }
 
 /**
+ * Firebase Admin error codes that mean "the caller sent a bad token" rather
+ * than "something went wrong on our side".
+ *
+ * Two things land here constantly: a user whose session expired while a tab
+ * was open, and internet background noise — scanners and uptime probes hitting
+ * the admin API with a junk `Authorization` header. Both are answered correctly
+ * with a 401, and neither is a fault anyone can act on. Reporting them to
+ * Sentry buries real failures under traffic that will never stop arriving.
+ *
+ * Anything NOT listed here — `auth/internal-error`, a failure to reach the
+ * certificate endpoint, a misconfigured service account — is still reported,
+ * because those mean this deployment is broken.
+ */
+const INVALID_TOKEN_CODES = new Set([
+  'auth/argument-error',
+  'auth/id-token-expired',
+  'auth/id-token-revoked',
+  'auth/invalid-id-token',
+  'auth/session-cookie-expired',
+  'auth/session-cookie-revoked',
+  'auth/user-disabled',
+]);
+
+function isInvalidTokenError(error: unknown): boolean {
+  const code = (error as { code?: string } | undefined)?.code;
+
+  return typeof code === 'string' && INVALID_TOKEN_CODES.has(code);
+}
+
+/**
+ * Report a token-verification failure at the right volume: a rejected token is
+ * an info-level fact about the request, everything else is an error.
+ */
+function reportTokenFailure(error: unknown, operation: string): void {
+  if (isInvalidTokenError(error)) {
+    console.info(`[${operation}] Rejected an invalid or expired ID token`);
+
+    return;
+  }
+
+  logError(error, { operation });
+}
+
+/**
  * Verify a Firebase ID token and check if the user has admin privileges
  * @param token - Firebase ID token from Authorization header
  * @returns Verification result with admin status and userId
@@ -43,7 +87,7 @@ export async function verifyAdmin(token: string): Promise<AdminVerificationResul
       userId,
     };
   } catch (error) {
-    logError(error, { operation: 'verifyAdmin.verifyAdmin' });
+    reportTokenFailure(error, 'verifyAdmin.verifyAdmin');
 
     return {
       isAdmin: false,
@@ -66,7 +110,7 @@ export async function verifyToken(token: string): Promise<string | null> {
     const decodedToken = await auth.verifyIdToken(token);
     return decodedToken.uid;
   } catch (error) {
-    logError(error, { operation: 'verifyAdmin.verifyToken' });
+    reportTokenFailure(error, 'verifyAdmin.verifyToken');
     return null;
   }
 }
@@ -98,7 +142,7 @@ export async function verifyIdentity(token: string): Promise<CallerIdentity | nu
       displayName: decodedToken.name?.trim() || email || 'A Freedi admin',
     };
   } catch (error) {
-    logError(error, { operation: 'verifyAdmin.verifyIdentity' });
+    reportTokenFailure(error, 'verifyAdmin.verifyIdentity');
 
     return null;
   }
