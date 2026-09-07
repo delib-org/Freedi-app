@@ -6,6 +6,7 @@
 	"scripts": {
 		"env:dev": "cd ../.. && npm run env:dev",
 		"dev": "npm run env:dev && vite --port 3009",
+		"dev:solo": "npm run env:dev && bash ../../scripts/solo.sh vite --port 3029",
 		"build": "tsc --noEmit && vite build",
 		"preview": "vite preview --port 3009",
 		"typecheck": "tsc --noEmit",
@@ -16,8 +17,11 @@
 		"test:watch": "vitest",
 		"seed": "npx tsx scripts/seed.ts",
 		"seed:clear": "npx tsx scripts/seed.ts --clear",
+		"seed:solo": "bash ../../scripts/solo.sh npx tsx scripts/seed.ts",
 		"fast": "npx tsx scripts/fastlane.ts",
+		"fast:solo": "bash ../../scripts/solo.sh npx tsx scripts/fastlane.ts",
 		"preflight": "node scripts/lib/preflight.mjs",
+		"preflight:solo": "bash ../../scripts/solo.sh node scripts/lib/preflight.mjs",
 		"e2e:challenge": "node scripts/e2e-challenge.mjs",
 		"contrast": "node scripts/contrast-audit.mjs && node scripts/contrast-audit.mjs \"http://localhost:3009/mock/surfaces.html?theme=candy\" && node scripts/contrast-audit.mjs \"http://localhost:3009/mock/surfaces.html?theme=civic\" && node scripts/contrast-audit.mjs \"http://localhost:3009/mock/surfaces.html?theme=custom\"",
 		"typesize": "node scripts/type-audit.mjs"
