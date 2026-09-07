@@ -709,6 +709,27 @@
 		color: var(--mine-ink);
 	}
 
+	// "The count is on its way" — never a figure, so it must not look like
+	// one: no weight, a live dot, and it disappears the moment the aggregate
+	// lands. It says whether the silence is the class or the counting.
+	&__catchup {
+		@include type-meta;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		color: var(--text-secondary);
+		font-weight: 400;
+
+		&::before {
+			content: '';
+			inline-size: 6px;
+			block-size: 6px;
+			border-radius: 999px;
+			background: var(--mine);
+			animation: teacher-answers-pulse 1.6s var(--ease-camera) infinite;
+		}
+	}
+
 	&__text {
 		@include proposal-voice;
 		margin: 0;
@@ -981,5 +1002,23 @@
 		margin: 0;
 		font-weight: 700;
 		color: var(--text-secondary);
+	}
+}
+
+@keyframes teacher-answers-pulse {
+	0%,
+	100% {
+		opacity: 0.35;
+	}
+
+	50% {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.teacher-answers__catchup::before {
+		animation: none;
+		opacity: 0.8;
 	}
 }

@@ -13,6 +13,7 @@ import {
 	type AgoraProposal,
 } from '../lib/proposals';
 import { reportStageProgress } from '../lib/session';
+import { blankPen, penFor, typedInto, type Pen } from '../lib/flows/penState';
 import { requestTeacherFocus } from '../lib/helpedFocus';
 import {
 	AGORA_LIMITS,
@@ -76,8 +77,7 @@ function removedNotice(): m.Children {
 }
 
 export function QuestionStage(): m.Component<QuestionStageAttrs> {
-	let draft = '';
-	let draftFor = '';
+	let pen: Pen = blankPen;
 	let saving = false;
 	let saveFailed = false;
 
@@ -94,11 +94,15 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 			const outcome = session.stageState?.[item.itemId]?.outcome;
 			const closed = !live || outcome !== undefined;
 
-			// Pre-fill the pen with what I already wrote, once per answer text
-			if (mine && draftFor !== `${mine.statementId}:${mine.statement}`) {
-				draftFor = `${mine.statementId}:${mine.statement}`;
-				draft = mine.statement;
+			// Empty for a new question, pre-filled with my own saved answer, and
+			// otherwise left exactly as the student is typing it (lib/flows/penState)
+			const nextPen = penFor(pen, item.itemId, mine);
+			if (nextPen.itemId !== pen.itemId) {
+				// A different question: a save error from the last one is not this one's
+				saving = false;
+				saveFailed = false;
 			}
+			pen = nextPen;
 
 			// Least-rated first, mine excluded, the ones I rated after the ones I did not
 			const ordered = [...others].sort((a, b) => {
@@ -113,7 +117,7 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 			});
 
 			async function submit(): Promise<void> {
-				const text = draft.trim();
+				const text = pen.text.trim();
 				if (!text || saving || closed) return;
 				saving = true;
 				saveFailed = false;
@@ -130,7 +134,7 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 				}
 			}
 
-			const changed = draft.trim() !== (mine?.statement ?? '').trim();
+			const changed = pen.text.trim() !== (mine?.statement ?? '').trim();
 
 			return m('.shell', [
 				m('.shell__content.question', { style: { gap: 'var(--space-lg)' } }, [
@@ -166,13 +170,13 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 								? m('p.question__mine-text', mine ? mine.statement : t('question.no_answer_given'))
 								: [
 										m('textarea.question__textarea', {
-											value: draft,
+											value: pen.text,
 											rows: 3,
 											maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
 											placeholder: t('question.placeholder'),
 											disabled: saving,
 											oninput: (event: InputEvent) => {
-												draft = (event.target as HTMLTextAreaElement).value;
+												pen = typedInto(pen, (event.target as HTMLTextAreaElement).value);
 											},
 										}),
 										stalledBanner(),
@@ -183,7 +187,7 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 												// "Sent" is a state, not a refusal: the candy look paints
 												// it lime rather than greyed-out
 												class: mine !== undefined && !changed && !saving ? 'btn--done' : undefined,
-												disabled: saving || !draft.trim() || (mine !== undefined && !changed),
+												disabled: saving || !pen.text.trim() || (mine !== undefined && !changed),
 												onclick: () => void submit(),
 											},
 											saving

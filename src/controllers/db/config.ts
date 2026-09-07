@@ -225,6 +225,22 @@ setPersistence(auth, browserLocalPersistence)
 		});
 	});
 
+/**
+ * Emulator ports.
+ *
+ * Hardcoded for years, which was fine until two checkouts wanted emulators at
+ * once: only one process can own a port, so the second worktree's app silently
+ * talked to the first worktree's functions and new callables came back 404.
+ * The defaults are the ports everything already uses — the overrides exist so
+ * a second stack can be run alongside without editing this file (see
+ * env/ports.solo.sh).
+ */
+const emulatorPort = (name: string, fallback: number): number => {
+	const configured = import.meta.env[`VITE_EMULATOR_${name}_PORT`];
+
+	return configured ? Number(configured) : fallback;
+};
+
 //development
 if (!isProduction) {
 	console.info('Running on development mode');
@@ -233,8 +249,9 @@ if (!isProduction) {
 		// Check if emulators are already connected to avoid duplicate connections
 		// @ts-ignore - accessing private property for debugging
 		if (!FireStore._settings?.host?.includes('localhost')) {
-			connectFirestoreEmulator(FireStore, 'localhost', 8081);
-			console.info('Connected to Firestore emulator on localhost:8081');
+			const firestorePort = emulatorPort('FIRESTORE', 8081);
+			connectFirestoreEmulator(FireStore, 'localhost', firestorePort);
+			console.info(`Connected to Firestore emulator on localhost:${firestorePort}`);
 		}
 	} catch (error) {
 		logError(error, {
@@ -244,8 +261,9 @@ if (!isProduction) {
 	}
 
 	try {
-		connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-		console.info('Connected to Auth emulator on localhost:9099');
+		const authPort = emulatorPort('AUTH', 9099);
+		connectAuthEmulator(auth, `http://localhost:${authPort}`, { disableWarnings: true });
+		console.info(`Connected to Auth emulator on localhost:${authPort}`);
 	} catch (error) {
 		logError(error, {
 			operation: 'config.unknown',
@@ -254,8 +272,9 @@ if (!isProduction) {
 	}
 
 	try {
-		connectStorageEmulator(storage, 'localhost', 9199);
-		console.info('Connected to Storage emulator on localhost:9199');
+		const storagePort = emulatorPort('STORAGE', 9199);
+		connectStorageEmulator(storage, 'localhost', storagePort);
+		console.info(`Connected to Storage emulator on localhost:${storagePort}`);
 	} catch (error) {
 		logError(error, {
 			operation: 'config.unknown',
@@ -264,8 +283,9 @@ if (!isProduction) {
 	}
 
 	try {
-		connectFunctionsEmulator(functions, 'localhost', 5001);
-		console.info('Connected to Functions emulator on localhost:5001');
+		const functionsPort = emulatorPort('FUNCTIONS', 5001);
+		connectFunctionsEmulator(functions, 'localhost', functionsPort);
+		console.info(`Connected to Functions emulator on localhost:${functionsPort}`);
 	} catch (error) {
 		logError(error, {
 			operation: 'config.unknown',
@@ -284,7 +304,7 @@ export function getFunctionsUrl(): string {
 	const region = 'me-west1';
 
 	if (!isProduction) {
-		return `http://localhost:5001/${projectId}/${region}`;
+		return `http://localhost:${emulatorPort('FUNCTIONS', 5001)}/${projectId}/${region}`;
 	}
 
 	return `https://${region}-${projectId}.cloudfunctions.net`;

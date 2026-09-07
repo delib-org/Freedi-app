@@ -113,3 +113,6 @@ scripts/.cache/
 # Temporary alt-port emulator config (see scripts/runAccuracyBenchmark.ts)
 firebase.altports.json
 firebase.e2e.json
+
+# Emulator data exported by a worktree's own suite (npm run emulators:solo)
+.emulator-data-solo/

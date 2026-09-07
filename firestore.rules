@@ -268,6 +268,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // A teacher's standing wording for the WizCol rounds — their own doc,
+    // keyed by their uid, written by agoraRewordQuestion alone.
+    match /agoraTeacherPrompts/{teacherId} {
+      allow read: if isAuthenticated() && request.auth.uid == teacherId;
+      allow write: if false;
+    }
+
     // Proposal scores (bridging/plausibility): server-computed only.
     match /agoraScores/{statementId} {
       allow read: if isAuthenticated();

@@ -50,9 +50,9 @@ await teacher.waitForTimeout(2500);
 await teacher.goto(`${VITE_HOST}/#!/teach/session/${run.sessionId}`, {
 	waitUntil: 'domcontentloaded',
 });
-await teacher.waitForSelector('.teacher__code-panel button', { timeout: 30000 });
+await teacher.waitForSelector('.teacher-strip__next', { timeout: 30000 });
 // Land them ON the control, not above it
-await teacher.locator('.teacher__code-panel button').scrollIntoViewIfNeeded();
+await teacher.locator('.teacher-strip__next').scrollIntoViewIfNeeded();
 
 // --- Student phone ---------------------------------------------------------
 const studentWin = await openWindow(['--window-position=1040,20', '--window-size=470,920']);

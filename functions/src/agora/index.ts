@@ -5,6 +5,7 @@ export { agoraRerateStances } from './fn_agoraRerateStances';
 export { agoraJoinSession } from './fn_agoraJoinSession';
 export { agoraAdvanceStage } from './fn_agoraAdvanceStage';
 export { agoraUpdateStagePlan } from './fn_agoraUpdateStagePlan';
+export { agoraRewordQuestion } from './fn_agoraRewordQuestion';
 export { agoraGradeValueIdentification } from './fn_agoraGradeValueIdentification';
 export { agoraWritingAssistant } from './fn_agoraWritingAssistant';
 export { agoraSetRound } from './fn_agoraSetRound';

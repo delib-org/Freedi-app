@@ -1,9 +1,10 @@
 import m from 'mithril';
-import { t } from '../../lib/i18n';
+import { t, tCount } from '../../lib/i18n';
 import { rankedAnswers } from '../QuestionStage';
 import { formatUnit, rankedRoundAnswers } from '../RoundStage';
 import { CpBands, bandClassOf, bandLabelOf } from '../../components/CpBands';
 import { getDeliberationState } from '../../lib/proposals';
+import { tallyRow, type RowTally } from '../../lib/flows/liveTally';
 import type { AgoraProposal } from '../../lib/proposals';
 import {
 	AGORA_ROUNDS,
@@ -30,6 +31,37 @@ export function formatMean(mean: number): string {
 }
 
 /**
+ * The figure under a text, and — while the trigger is still counting — what
+ * the teacher can already be told.
+ *
+ * The aggregate is server-written and stays that way; a class that has just
+ * spent a minute rating should not read "not rated yet" for the seconds it
+ * takes to land. `lib/flows/liveTally` decides which of the two is true.
+ */
+function agreementCell(figure: string | null, tally: RowTally): m.Children {
+	if (figure !== null) {
+		return [
+			m('span.question__agreement', figure),
+			tally.state === 'behind'
+				? m(
+						'span.teacher-answers__catchup',
+						{ title: t('teacher.catchup_title') },
+						tCount('teacher.catchup_n', tally.pending),
+					)
+				: null,
+		];
+	}
+
+	return tally.state === 'counting'
+		? m(
+				'span.question__agreement.teacher-answers__catchup',
+				{ title: t('teacher.catchup_title') },
+				tCount('teacher.counting_n', tally.weighed),
+			)
+		: m('span.question__agreement', t('results.agreement_unrated'));
+}
+
+/**
  * The live answers of the question the room is on, ranked by net agreement,
  * with the ones that would travel forward marked — the same arithmetic the
  * server closes the stage with — over the C_p banding of those same carried
@@ -40,6 +72,8 @@ export function questionPanel(
 	session: AgoraSession,
 	item: AgoraStagePlanItem,
 	answers: readonly AgoraProposal[],
+	/** statementId → weighings already on the live timeline (see liveTally) */
+	weighed: ReadonlyMap<string, number>,
 ): m.Children {
 	const named = session.identity === 'named';
 	const ranked = rankedAnswers(answers, named);
@@ -78,11 +112,11 @@ export function questionPanel(
 									row.raters > 0
 										? m(`span.${bandClassOf(row).split(' ').join('.')}`, bandLabelOf(row))
 										: null,
-									m(
-										'span.question__agreement',
+									agreementCell(
 										row.raters > 0
 											? t('question.net_agreement', { value: formatMean(row.mean), n: row.raters })
-											: t('results.agreement_unrated'),
+											: null,
+										tallyRow(row.raters, weighed.get(row.statementId) ?? 0),
 									),
 									carried.has(row.statementId)
 										? m('span.teacher-answers__carried', t('teacher.will_carry'))
@@ -107,6 +141,8 @@ export function roundPanel(
 	session: AgoraSession,
 	item: AgoraStagePlanItem,
 	answers: readonly AgoraProposal[],
+	/** statementId → weighings already on the live timeline (see liveTally) */
+	weighed: ReadonlyMap<string, number>,
 ): m.Children {
 	const spec = roundSpecOf(item);
 	if (!spec) return null;
@@ -130,13 +166,13 @@ export function roundPanel(
 						m('li.teacher-answers__row', { key: row.statementId }, [
 							m('.teacher-answers__head', [
 								row.anonName ? m('span.question__who', row.anonName) : null,
-								m(
-									'span.question__agreement',
+								agreementCell(
 									row.raters > 0
 										? like
 											? t('round.likes_n', { n: roundLikes(row) })
 											: t('round.mean_n', { value: formatUnit(row.mean), n: row.raters })
-										: t('results.agreement_unrated'),
+										: null,
+									tallyRow(row.raters, weighed.get(row.statementId) ?? 0),
 								),
 							]),
 							m('p.teacher-answers__text', row.statement),

@@ -13,10 +13,12 @@ import {
 	functionConfig,
 	currentPlanIndex,
 	resolveStagePlan,
+	applyTeacherPrompts,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { buildQuestionStatement } from './questionStage';
 import { sanitizeStagePlan } from './stagePlanInput';
+import { loadTeacherPrompts } from './teacherPrompts';
 
 interface Request {
 	sessionId: string;
@@ -55,6 +57,10 @@ export const agoraUpdateStagePlan = onCall(
 		}
 
 		try {
+			// A round the teacher adds now takes the same standing wording a round
+			// they start a game with does — read before the transaction opens, it
+			// is the teacher's own doc and nothing in here races it.
+			const teacherPrompts = await loadTeacherPrompts(uid);
 			const sessionRef = db.collection(Collections.agoraSessions).doc(sessionId);
 			const token = request.auth?.token as Record<string, unknown> | undefined;
 			const creator = {
@@ -82,7 +88,10 @@ export const agoraUpdateStagePlan = onCall(
 				const topic = topicSnap.data() as AgoraTopicPackage | undefined;
 				const hasCharacters = topic?.kind !== 'quick';
 
-				const clean = sanitizeStagePlan(parsed.output, { hasCharacters });
+				const clean = applyTeacherPrompts(
+					sanitizeStagePlan(parsed.output, { hasCharacters }),
+					teacherPrompts,
+				);
 
 				// The frozen prefix must be byte-for-byte what is stored (ended is
 				// appended at resolve time, so compare against the resolved plan

@@ -1,7 +1,7 @@
 import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { stalledBanner } from '../../components/StalledBanner';
-import { TeacherBar } from '../../components/TeacherBar';
+import { TeacherNav } from '../../components/TeacherNav';
 import {
 	fetchTopicPackage,
 	saveTopicEditorFields,
@@ -352,11 +352,11 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			const current = pkg;
 
 			return m('.shell', [
-				m(TeacherBar, {
+				m(TeacherNav, {
 					title: current.title,
 					onBack: goBack,
 					trailing: [
-						dirty ? m('span.teacher-bar__unsaved', t('editor.unsaved')) : null,
+						dirty ? m('span.teacher-nav__unsaved', t('editor.unsaved')) : null,
 						m(
 							'span.values__score',
 							current.status === AgoraTopicStatus.ready ? t('editor.ready') : t('editor.draft'),

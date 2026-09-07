@@ -220,6 +220,89 @@
 	}
 }
 
+// --- Rewording the question the room is looking at ---
+.question-reword {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&--open {
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		padding: var(--space-md);
+	}
+
+	&__open {
+		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+		margin: 0;
+	}
+
+	&__hint,
+	&__done {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__done {
+		color: var(--success);
+	}
+
+	&__field {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__text,
+	&__textarea {
+		inline-size: 100%;
+		padding: var(--space-xs) var(--space-sm);
+		border: 1.5px solid var(--border-subtle);
+		border-radius: var(--radius-sm, 8px);
+		font: inherit;
+		background: var(--bg-card-solid);
+		color: var(--text-primary);
+	}
+
+	&__textarea {
+		resize: vertical;
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	// The one question a round is asked before the words are written: these
+	// rounds come round every lesson, so wording that landed should stick.
+	&__scope {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		border-block-start: 1px solid var(--border-subtle);
+		padding-block-start: var(--space-sm);
+	}
+
+	&__scope-title {
+		margin: 0;
+		font-weight: 700;
+		color: var(--text-primary);
+	}
+}
+
 // --- Scoreboard: both camps side by side + the bridge-power meter ---
 .scoreboard {
 	display: flex;

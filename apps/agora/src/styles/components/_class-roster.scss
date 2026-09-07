@@ -187,3 +187,31 @@
 		}
 	}
 }
+
+// The class page's door: what the code is for, the code, and a copy button.
+// The digits reuse the console's `.teacher__code`; the row only lays them out.
+.roster {
+	&__code-card {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__code-row {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-wrap: wrap;
+		gap: var(--space-md);
+
+		.teacher__code {
+			margin: 0;
+		}
+	}
+}
+
+// After a summary: back to the class, or into the next lesson with it
+.report__actions {
+	justify-content: center;
+	margin-block-start: var(--space-lg);
+}

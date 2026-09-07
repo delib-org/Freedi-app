@@ -1,0 +1,156 @@
+// The teacher's side panel: one primitive hosting the class list, the
+// texts, and the cog's settings sheet (_teacher-strip.scss has the chips
+// that open it). Over the board without a scrim on desktop — the strip's
+// NEXT stays in reach and the shadow says "over" — and a full-screen sheet
+// on a phone. One panel at a time; the student-thread drawer
+// (.teacher-drawer, z 60) opens over it from inside the class list.
+//
+// Imported by components.scss; do not import directly. %agora-icon-button
+// is declared in _teacher-dashboard.scss, which components.scss loads first.
+
+// --- The side panel: one primitive for the class, the texts, and the cog ---
+// Over the board without a scrim on desktop: the strip's NEXT stays in
+// reach, and the shadow says "over". A full-screen sheet on a phone.
+.teacher-panel {
+	position: fixed;
+	inset-block: 0;
+	inset-inline-end: 0;
+	z-index: var(--z-panel);
+	inline-size: min(100%, 520px);
+	display: flex;
+	flex-direction: column;
+	background: var(--bg-card-solid);
+	border-inline-start: 1px solid var(--border-subtle);
+	box-shadow: var(--shadow-raised);
+	animation: teacher-panel-in var(--motion-base) var(--ease-camera) both;
+
+	// The panel sits at inline-end, which is the LEFT edge under RTL, so it
+	// arrives from the left
+	[dir='rtl'] & {
+		animation-name: teacher-panel-in-rtl;
+	}
+
+	// The view adds this while the exit animation plays: the same keyframes
+	// run backwards and hold their last frame
+	&--closing {
+		animation-direction: reverse;
+		animation-fill-mode: forwards;
+	}
+
+	// The plan editor's row of arrows needs the extra 40px
+	&--settings {
+		inline-size: min(100%, 560px);
+	}
+
+	&__head {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		border-block-end: 1px solid var(--border-subtle);
+	}
+
+	&__title {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		margin: 0;
+		font-size: var(--font-size-lg);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__count {
+		flex: 0 0 auto;
+		color: var(--text-secondary);
+	}
+
+	&__close {
+		@extend %agora-icon-button;
+	}
+
+	&__body {
+		flex: 1 1 auto;
+		min-block-size: 0;
+		overflow-y: auto;
+		padding: var(--space-md);
+	}
+
+	// The cog sheet's rows: a section title over each control, on --space-lg
+	&--settings &__body > .stack {
+		gap: var(--space-lg);
+	}
+
+	&__section {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	@media (max-width: 600px) {
+		inset: 0;
+		inline-size: 100%;
+		border: 0;
+		box-shadow: none;
+		animation-name: teacher-panel-sheet-in;
+
+		[dir='rtl'] & {
+			animation-name: teacher-panel-sheet-in;
+		}
+
+		&--settings {
+			inline-size: 100%;
+		}
+	}
+}
+
+// While the phone sheet is up the page behind it does not scroll. Desktop
+// keeps its scroll: the panel is non-modal there.
+@media (max-width: 600px) {
+	body.is-panel-open {
+		overflow: hidden;
+	}
+}
+
+@keyframes teacher-panel-in {
+	from {
+		transform: translateX(100%);
+	}
+
+	to {
+		transform: translateX(0);
+	}
+}
+
+@keyframes teacher-panel-in-rtl {
+	from {
+		transform: translateX(-100%);
+	}
+
+	to {
+		transform: translateX(0);
+	}
+}
+
+@keyframes teacher-panel-sheet-in {
+	from {
+		opacity: 0;
+		transform: translateY(24px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+// The panel arrives in place: global.scss zeroes the duration, but a
+// zero-length slide still starts off-screen for a frame.
+@media (prefers-reduced-motion: reduce) {
+	.teacher-panel {
+		animation: none;
+		transform: none;
+		opacity: 1;
+	}
+}

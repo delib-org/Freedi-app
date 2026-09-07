@@ -813,22 +813,64 @@ cd /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/apps/sign
 npm install
 ```
 
-### Step 4: Build Shared Packages
+### Step 4: Copy `.firebaserc`
+It is gitignored, and without it `firebase use` and the deploy targets have nothing to resolve:
 ```bash
-# Build shared-types (required for main app and other apps)
-cd /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/packages/shared-types
-npm run build
+cp /Users/talyaron/Documents/Freedi-app/.firebaserc /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>/
 ```
 
-### Step 5: Verify Setup
+### Step 5: Build Shared Packages
+`shared-types` is the one everything needs, but the main app also imports
+`@freedi/event-core` and `@freedi/engagement-core` — leave those unbuilt and
+`npm run typecheck` fails with TS2307 on files you never touched:
+```bash
+cd /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>
+for p in shared-types event-core engagement-core evidence deliberation-brain; do (cd packages/$p && npm run build); done
+```
+
+### Step 6: Verify Setup
 ```bash
 cd /Users/talyaron/Documents/Freedi-app.worktrees/<worktree-name>
 npm run dev  # Should start without errors
 ```
 
+### Running your own emulators (no collisions)
+
+`firebase.json` names one set of ports, and only one process can own a port. A
+second worktree that starts the default suite does **not** get an error — it
+gets the *first* worktree's emulators, so its new callables come back 404 and
+its seed data lands in someone else's Firestore. Give the worktree its own
+suite instead:
+
+```bash
+npm run emulators:solo          # firebase.solo.json — auth 9119, firestore 8101, functions 5021, UI 5022
+npm run emulators:solo:resume   # same, but --import the data it exported last time
+cd apps/agora && npm run dev:solo   # vite on 3029, wired to the ports above
+```
+
+| suite | config | auth | firestore | functions | UI | hub |
+|---|---|---|---|---|---|---|
+| default | `firebase.json` | 9099 | 8081 | 5001 | 5002 | 4400 |
+| alt | `firebase.alt.json` | 9109 | 8091 | 5011 | 5012 | 4500 |
+| solo | `firebase.solo.json` | 9119 | 8101 | 5021 | 5022 | 4420 |
+
+`env/ports.solo.sh` is the single place the solo ports are written down, and
+`scripts/solo.sh` runs anything with them exported:
+
+```bash
+npm run solo -- npx tsx apps/agora/scripts/seed.ts
+cd apps/agora && npm run seed:solo   # or fast:solo, preflight:solo
+```
+
+Both clients read the ports rather than hardcoding them
+(`VITE_EMULATOR_{AUTH,FIRESTORE,FUNCTIONS,STORAGE,DATABASE}_PORT`), so a
+worktree that wants the solo suite by default — for every vite run, not only
+`*:solo` — writes them into `apps/agora/.env.development.local` and
+`env/.env.development.local`. Mode-specific `.local` files outrank the
+`.env.local` that `npm run env:dev` regenerates, so they survive an env reload.
+
 ### Important Notes
-- **Emulators**: Both worktrees share the same `firebase.json` ports. Only run emulators from ONE worktree at a time.
-- **Port conflicts**: If running apps from both worktrees, use different ports for the worktree version.
+- **Port conflicts**: If running apps from both worktrees, use different ports for the worktree version — e.g. the main app with `npm run dev -- --port 5273`. Vite silently picks the next free port otherwise, which is how you end up reading someone else's app.
 - **List worktrees**: `git worktree list`
 - **Remove worktree**: `git worktree remove <path>`
 
