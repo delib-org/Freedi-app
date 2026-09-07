@@ -22,6 +22,7 @@ import './styles/theme-civic.scss';
 import './styles/theme-candy.scss';
 import './styles/theme-custom.scss';
 import { initSentry } from './lib/sentry';
+import { BootBanner, flushEarlyErrors, installRuntimeGuards, markBooted } from './lib/boot';
 import { initAuth, completeRedirectSignIn, getUserState } from './lib/user';
 import { initI18n } from './lib/i18n';
 import { initInstallCapture } from './lib/install';
@@ -42,6 +43,10 @@ import { GameReport } from './views/teacher/GameReport';
 // Error reporting first, so anything thrown during boot is captured. A crash
 // here happens in front of a classroom, and until now nothing recorded it.
 initSentry();
+// Then the runtime guards: from here on nothing thrown goes unseen or unsaid,
+// and whatever the inline boot guard in index.html caught first is reported.
+installRuntimeGuards();
+flushEarlyErrors();
 
 // Before anything paints: the look remembered from an earlier load — or the
 // default — is worn from the first frame rather than flashing the token
@@ -110,4 +115,10 @@ if (root) {
 		'/teach/class/:id': TeacherClass,
 		'/teach/report/:id': GameReport,
 	});
+	// The banner lives beside the router's root so a crash in any view leaves it standing
+	const bannerHost = document.createElement('div');
+	bannerHost.id = 'boot-banner';
+	root.before(bannerHost);
+	m.mount(bannerHost, BootBanner);
+	markBooted();
 }
