@@ -40,6 +40,16 @@ export function getOpenAI(): OpenAI {
 
 const limiter = pLimit(Number(process.env.LLM_CONCURRENCY ?? DEFAULT_CONCURRENCY));
 
+/**
+ * How much hidden reasoning a GPT-5-family model may do before answering.
+ * `none` is right for classification / extraction with a fixed JSON shape
+ * (moderation, split detection, briefs, paraphrases): measured on
+ * gpt-5.6-luna these prompts spend ~0 reasoning tokens anyway, so the setting
+ * is a guard against the model deciding to think long on an odd input, not a
+ * speed-up on the common path. Ignored for non-reasoning models.
+ */
+export type ReasoningEffort = 'none' | 'low' | 'medium' | 'high';
+
 interface CallOptions {
 	model: string;
 	system?: string;
@@ -47,6 +57,7 @@ interface CallOptions {
 	maxTokens?: number;
 	temperature?: number;
 	jsonMode?: boolean;
+	reasoningEffort?: ReasoningEffort;
 }
 
 /** One turn of a multi-turn chat completion. */
@@ -61,6 +72,7 @@ export interface ChatCallOptions {
 	maxTokens?: number;
 	temperature?: number;
 	jsonMode?: boolean;
+	reasoningEffort?: ReasoningEffort;
 }
 
 /**
@@ -71,8 +83,8 @@ export interface ChatCallOptions {
  */
 export function buildModelParams(
 	model: string,
-	opts: { maxTokens?: number; temperature?: number },
-): Record<string, number> {
+	opts: { maxTokens?: number; temperature?: number; reasoningEffort?: ReasoningEffort },
+): Record<string, number | string> {
 	const maxTokens = opts.maxTokens ?? 1024;
 	if (model.startsWith('gpt-5')) {
 		// Reasoning models spend `max_completion_tokens` on hidden reasoning
@@ -80,10 +92,25 @@ export function buildModelParams(
 		// can be consumed entirely by reasoning, returning empty content (seen
 		// deterministically on long sensitive-topic inputs at 300 tokens).
 		// Callers state the answer budget; reasoning headroom is reserved here.
-		return { max_completion_tokens: maxTokens + REASONING_HEADROOM_TOKENS };
+		return {
+			max_completion_tokens: maxTokens + REASONING_HEADROOM_TOKENS,
+			...(opts.reasoningEffort
+				? { reasoning_effort: reasoningEffortParam(model, opts.reasoningEffort) }
+				: {}),
+		};
 	}
 
 	return { max_tokens: maxTokens, temperature: opts.temperature ?? 0 };
+}
+
+/**
+ * gpt-5.6 accepts `none`; the earlier gpt-5 generation calls the same level
+ * `minimal` and rejects `none`. Exported for tests.
+ */
+export function reasoningEffortParam(model: string, effort: ReasoningEffort): string {
+	if (effort === 'none' && !model.startsWith('gpt-5.6')) return 'minimal';
+
+	return effort;
 }
 
 function isRateLimitError(error: unknown): boolean {

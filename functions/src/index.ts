@@ -71,6 +71,7 @@ import {
 import { findSimilarStatements } from './fn_findSimilarStatements';
 import { detectMultipleSuggestions } from './fn_detectMultipleSuggestions';
 import { mergeStatements } from './fn_mergeStatements';
+import { prepareSuggestion } from './fn_prepareSuggestion';
 import { updateApprovalResults } from './fn_approval';
 import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
@@ -558,6 +559,8 @@ exports.setMapFilter = setMapFilter;
 exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
 exports.detectMultipleSuggestions = wrapMemoryIntensiveHttpFunction(detectMultipleSuggestions);
 exports.mergeStatements = wrapMemoryIntensiveHttpFunction(mergeStatements);
+// One round trip for the MC "Add your idea" flow: moderation + split + similar
+exports.prepareSuggestion = wrapMemoryIntensiveHttpFunction(prepareSuggestion);
 exports.detectStatementType = wrapMemoryIntensiveHttpFunction(detectStatementType);
 
 // PHASE 4 FIX: Metrics and monitoring functions
