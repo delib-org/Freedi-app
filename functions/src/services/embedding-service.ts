@@ -40,6 +40,13 @@ const EMBEDDING_DIMENSIONS = 1536;
 interface EmbedOptions {
 	parentId?: string | null;
 	model?: string;
+	/**
+	 * Embed the text as given, without the LLM brief step. Used by the
+	 * latency-sensitive "first look" of the interactive similarity search;
+	 * stored vectors still come from briefs, so callers that skip it should
+	 * treat a miss as "not sure yet", not "nothing similar".
+	 */
+	skipBrief?: boolean;
 }
 
 async function chooseModel(options?: EmbedOptions): Promise<string> {
@@ -69,13 +76,17 @@ interface APIError {
 /**
  * Get OpenAI client instance
  */
+let _openai: OpenAI | null = null;
+
 function getOpenAI(): OpenAI {
+	if (_openai) return _openai;
 	const apiKey = process.env.OPENAI_API_KEY;
 	if (!apiKey) {
 		throw new Error('Missing OPENAI_API_KEY environment variable');
 	}
+	_openai = new OpenAI({ apiKey });
 
-	return new OpenAI({ apiKey });
+	return _openai;
 }
 
 /**
@@ -107,7 +118,7 @@ class EmbeddingService {
 			// This does NOT change the original statement — `text` is only the
 			// source we derive the brief from. Fail-open: generateBrief returns the
 			// original text on any error.
-			const useBrief = briefEmbeddingsEnabled();
+			const useBrief = briefEmbeddingsEnabled() && !options?.skipBrief;
 			const answerText = useBrief ? await generateBrief(text, context) : text;
 
 			// Combine text with context for context-aware embedding

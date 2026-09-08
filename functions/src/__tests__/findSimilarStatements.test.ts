@@ -56,23 +56,31 @@ describe('findSimilarStatements - Optimized', () => {
 	});
 
 	describe('Content moderation', () => {
-		it('should reject inappropriate content', async () => {
+		it('should reject inappropriate content and discard any search result', async () => {
 			jest.spyOn(aiService, 'checkForInappropriateContent').mockResolvedValue({
 				isInappropriate: true,
+				category: 'profanity',
+			});
+			jest.spyOn(cachedStatementService, 'getCachedParentStatement').mockResolvedValue({
+				statement: 'parent question',
+			} as Partial<Statement> as Statement);
+			// The search runs alongside moderation and would have answered
+			jest.spyOn(cachedAiService, 'getCachedSimilarityResponse').mockResolvedValue({
+				similarStatements: [],
+				userText: 'test user input',
 			});
 
 			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
 
 			expect(mockStatus).toHaveBeenCalledWith(400);
+			expect(mockSend).toHaveBeenCalledTimes(1);
 			expect(mockSend).toHaveBeenCalledWith(
 				expect.objectContaining({
 					ok: false,
 					error: 'Input contains inappropriate content',
+					category: 'profanity',
 				}),
 			);
-
-			// Ensure no further processing happens
-			expect(cachedAiService.getCachedSimilarityResponse).not.toHaveBeenCalled();
 		});
 
 		it('should never cache inappropriate content checks', async () => {

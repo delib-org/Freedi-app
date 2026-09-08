@@ -220,6 +220,9 @@ export async function checkForInappropriateContent(
 			generationConfig: {
 				responseMimeType: 'application/json',
 				temperature: 0, // Deterministic for consistent results
+				// A verdict plus a one-line reason; no hidden deliberation needed.
+				maxOutputTokens: 300,
+				reasoningEffort: 'none',
 			},
 		});
 
@@ -324,7 +327,11 @@ If no similar suggestions found, return: {"ids": []}`;
 
 	try {
 		const model = await getGenerativeAIModel();
-		const result = await model.generateContent(prompt);
+		const result = await model.generateContent({
+			contents: [{ parts: [{ text: prompt }] }],
+			// A short id list; classification, not composition.
+			generationConfig: { maxOutputTokens: 500, reasoningEffort: 'none' },
+		});
 		let responseText = result.response.text();
 
 		// Strip markdown code blocks if present
@@ -747,7 +754,11 @@ Return JSON format:
 If NOT multiple suggestions (single idea), return: {"isMultiple": false, "suggestions": []}`;
 
 		const model = await getGenerativeAIModel();
-		const result = await model.generateContent(prompt);
+		const result = await model.generateContent({
+			contents: [{ parts: [{ text: prompt }] }],
+			// A handful of title/description pairs; extraction, not composition.
+			generationConfig: { maxOutputTokens: 2000, reasoningEffort: 'none' },
+		});
 		let responseText = result.response.text();
 
 		// Strip markdown code blocks if present
@@ -887,7 +898,11 @@ Return JSON format:
 }`;
 
 		const model = await getGenerativeAIModel();
-		const result = await model.generateContent(prompt);
+		const result = await model.generateContent({
+			contents: [{ parts: [{ text: prompt }] }],
+			// Rewriting paragraphs benefits from a little planning, not a lot.
+			generationConfig: { reasoningEffort: 'low' },
+		});
 		let responseText = result.response.text();
 
 		// Strip markdown code blocks if present
