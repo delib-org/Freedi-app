@@ -4292,5 +4292,8 @@
   "No question with that ID. Check the link and try again.": "No question with that ID. Check the link and try again.",
   "The survey's own title": "The survey's own title",
   "Pasted reference": "Pasted reference",
-  "That question was not created by anyone in this organization": "That question was not created by anyone in this organization"
+  "That question was not created by anyone in this organization": "That question was not created by anyone in this organization",
+  "Open the survey": "Open the survey",
+  "Survey settings": "Survey settings",
+  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "This survey lives in Mass Consensus. Studio shows it here; it is run over there."
 }

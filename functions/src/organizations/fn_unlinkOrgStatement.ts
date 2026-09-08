@@ -42,7 +42,9 @@ export const fn_unlinkOrgStatement = onCall(
 			throw new HttpsError('not-found', 'That question is not on this board');
 		}
 		const activity = snap.data() as OrganizationActivity;
-		const demote = await demotableSubscribers(statementId, activity.grantedTo ?? []);
+		// A survey link covered all of its questions; give back all of it.
+		const covered = activity.surveyQuestionIds ?? [statementId];
+		const demote = await demotableSubscribers(covered, activity.grantedTo ?? []);
 
 		await commitInChunks(unlinkActivityWrites(organizationId, statementId, demote, Date.now()));
 
@@ -50,6 +52,7 @@ export const fn_unlinkOrgStatement = onCall(
 			organizationId,
 			statementId,
 			demoted: demote.length,
+			covered: covered.length,
 		});
 
 		return { removed: true };

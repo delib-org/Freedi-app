@@ -3586,5 +3586,8 @@
   "No question with that ID. Check the link and try again.": "Ninguna pregunta con ese ID. Revisa el enlace e inténtalo de nuevo.",
   "The survey's own title": "El título propio de la encuesta",
   "Pasted reference": "Referencia pegada",
-  "That question was not created by anyone in this organization": "Esa pregunta no la creó nadie de esta organización"
+  "That question was not created by anyone in this organization": "Esa pregunta no la creó nadie de esta organización",
+  "Open the survey": "Abrir la encuesta",
+  "Survey settings": "Ajustes de la encuesta",
+  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "Esta encuesta vive en Mass Consensus. Studio la muestra aquí; se gestiona allí."
 }

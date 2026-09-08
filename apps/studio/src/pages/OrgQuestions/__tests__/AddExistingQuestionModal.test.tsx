@@ -6,11 +6,13 @@ import { TranslationProvider } from '@freedi/shared-i18n/react';
 import type { LinkableQuestion } from '@/db/orgActivities';
 
 const linkOrgStatement = vi.fn();
+const recomputeQuestionProgress = vi.fn();
 const useLinkableQuestions = vi.fn();
 const lookupQuestion = vi.fn();
 
 vi.mock('@/db/orgFunctions', () => ({
 	linkOrgStatement: (...args: unknown[]) => linkOrgStatement(...args),
+	recomputeQuestionProgress: (...args: unknown[]) => recomputeQuestionProgress(...args),
 }));
 vi.mock('@/db/orgActivities', () => ({
 	useLinkableQuestions: (...args: unknown[]) => useLinkableQuestions(...args),
@@ -60,6 +62,8 @@ describe('AddExistingQuestionModal', () => {
 		useLinkableQuestions.mockReset();
 		lookupQuestion.mockReset();
 		lookupQuestion.mockResolvedValue(null);
+		recomputeQuestionProgress.mockReset();
+		recomputeQuestionProgress.mockResolvedValue(undefined);
 	});
 	afterEach(cleanup);
 
@@ -172,6 +176,7 @@ describe('AddExistingQuestionModal', () => {
 			linkOrgStatement.mockResolvedValue({
 				activityId: `org-1--${OUTSIDE.statementId}`,
 				statementId: OUTSIDE.statementId,
+				questionIds: [OUTSIDE.statementId],
 			});
 			const { onLinked } = renderModal();
 
@@ -231,6 +236,46 @@ describe('AddExistingQuestionModal', () => {
 			});
 
 			await waitFor(() => expect(screen.getByText(/already on this board/i)).toBeTruthy());
+		});
+
+		it('rebuilds the counters for every question the link covers', async () => {
+			linkOrgStatement.mockResolvedValue({
+				activityId: 'org-1--q-wrapped',
+				statementId: 'q-wrapped',
+				questionIds: ['q-wrapped', 'q-second'],
+			});
+			renderModal();
+
+			fireEvent.change(screen.getByRole('textbox', { name: /find a question/i }), {
+				target: { value: 'https://mc.wizcol.com/s/survey_1712345678901_a1b2c3d' },
+			});
+			fireEvent.click(screen.getByText(/crowd survey/i));
+			fireEvent.click(screen.getByRole('button', { name: /add to organization/i }));
+
+			await waitFor(() => expect(recomputeQuestionProgress).toHaveBeenCalledTimes(2));
+			expect(recomputeQuestionProgress).toHaveBeenCalledWith({ statementId: 'q-wrapped' });
+			expect(recomputeQuestionProgress).toHaveBeenCalledWith({ statementId: 'q-second' });
+		});
+
+		it('still links when an older callable answers without questionIds', async () => {
+			lookupQuestion.mockResolvedValue(OUTSIDE);
+			linkOrgStatement.mockResolvedValue({
+				activityId: `org-1--${OUTSIDE.statementId}`,
+				statementId: OUTSIDE.statementId,
+			});
+			const { onLinked } = renderModal();
+
+			fireEvent.change(screen.getByRole('textbox', { name: /find a question/i }), {
+				target: { value: OUTSIDE.statementId },
+			});
+			await waitFor(() => expect(screen.getByText(/a colleague’s question/i)).toBeTruthy());
+			fireEvent.click(screen.getByText(/a colleague’s question/i));
+			fireEvent.click(screen.getByRole('button', { name: /add to organization/i }));
+
+			await waitFor(() => expect(onLinked).toHaveBeenCalledWith(OUTSIDE.statementId));
+			expect(recomputeQuestionProgress).toHaveBeenCalledWith({
+				statementId: OUTSIDE.statementId,
+			});
 		});
 
 		it('does not look up an id that is already in the list', async () => {

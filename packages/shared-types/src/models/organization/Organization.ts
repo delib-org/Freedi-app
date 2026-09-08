@@ -152,6 +152,19 @@ export const OrganizationActivitySchema = object({
 	 * before it was linked keeps that authority.
 	 */
 	grantedTo: optional(array(string())),
+	/**
+	 * Set when the consultant added a Mass-Consensus SURVEY rather than a bare
+	 * question. The survey is the thing they meant, so the board shows it as one
+	 * crowd-survey activity spanning `surveyQuestionIds` — of which
+	 * `statementId` is the first.
+	 *
+	 * Copied onto the link rather than read live because there is no Firestore
+	 * rule for `surveys` at all: Mass Consensus reads that collection through
+	 * the Admin SDK, and a Studio client cannot see it.
+	 */
+	surveyId: optional(string()),
+	surveyTitle: optional(string()),
+	surveyQuestionIds: optional(array(string())),
 });
 
 export type OrganizationActivity = InferOutput<typeof OrganizationActivitySchema>;

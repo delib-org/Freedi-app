@@ -120,19 +120,39 @@ export function useStatementsByIds(ids: string[]): SnapshotState<Statement[]> {
 }
 
 /**
+ * Progress records for a named set of questions — used for a linked survey,
+ * whose questions are siblings rather than descendants of anything the board
+ * knows, so neither the by-org nor the by-top query finds them.
+ */
+export function useQuestionProgressByIds(statementIds: string[]): SnapshotState<ProgressMap> {
+	return useProgressChunks(statementIds, documentId(), 'progressByIds');
+}
+
+/**
  * Progress records for several top questions at once — the linked-question
  * counterpart of `useQuestionProgressByOrg`, which only finds questions the
  * organization owns. Each chunk listens on `topParentId in [...]`, so a linked
  * question's own record and its activities' records both arrive.
  */
 export function useQuestionProgressByTops(topParentIds: string[]): SnapshotState<ProgressMap> {
-	const key = useMemo(() => [...topParentIds].sort().join(','), [topParentIds]);
-	const idsRef = useRef(topParentIds);
-	idsRef.current = topParentIds;
+	return useProgressChunks(topParentIds, 'topParentId', 'progressByTops');
+}
+
+/** Shared chunked listener behind the two progress readers above. */
+function useProgressChunks(
+	ids: string[],
+	field: string | ReturnType<typeof documentId>,
+	label: string,
+): SnapshotState<ProgressMap> {
+	const key = useMemo(() => `${label}:${[...ids].sort().join(',')}`, [ids, label]);
+	const idsRef = useRef(ids);
+	idsRef.current = ids;
+	const fieldRef = useRef(field);
+	fieldRef.current = field;
 
 	const [state, setState] = useState<SnapshotState<ProgressMap>>({
 		data: {},
-		loading: topParentIds.length > 0,
+		loading: ids.length > 0,
 		error: null,
 	});
 
@@ -158,14 +178,14 @@ export function useQuestionProgressByTops(topParentIds: string[]): SnapshotState
 
 		const unsubscribes = groups.map((group, index) =>
 			onSnapshot(
-				query(collection(db, Collections.questionProgress), where('topParentId', 'in', group)),
+				query(collection(db, Collections.questionProgress), where(fieldRef.current, 'in', group)),
 				(snap) => {
 					perGroup[index] = snap.docs.map((d) => d.data() as QuestionProgress);
 					settled[index] = true;
 					publish();
 				},
 				(error: FirestoreError) => {
-					logError(error, { operation: 'db.useQuestionProgressByTops', metadata: { key } });
+					logError(error, { operation: 'db.useProgressChunks', metadata: { key } });
 					settled[index] = true;
 					setState((prev) => ({ ...prev, loading: false, error }));
 				},

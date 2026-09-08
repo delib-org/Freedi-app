@@ -291,6 +291,11 @@ export interface LinkOrgStatementResult {
 	activityId: string;
 	/** The question actually linked — the caller may have named a survey. */
 	statementId: string;
+	/**
+	 * Every question the link covers — one, or all of a survey's questions.
+	 * Optional: an older deployment of the callable does not send it.
+	 */
+	questionIds?: string[];
 }
 
 export interface RenameOrgActivityRequest {

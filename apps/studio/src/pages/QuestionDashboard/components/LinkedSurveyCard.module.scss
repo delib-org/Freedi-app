@@ -1,0 +1,68 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// A whole Mass-Consensus survey shown as one activity. Layout only — colour
+// and spacing come from the design tokens.
+.card {
+	@include card-base;
+
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	border-inline-start: 4px solid var(--btn-primary);
+}
+
+.header {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-sm);
+}
+
+.icon {
+	font-size: 1.25rem;
+	line-height: 1.2;
+}
+
+.heading {
+	min-width: 0;
+}
+
+.title {
+	margin: 0;
+	font-size: var(--font-size-md);
+	font-weight: 600;
+	color: var(--text-title);
+	overflow-wrap: anywhere;
+}
+
+.meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.25rem 0.5rem;
+	margin: 0.25rem 0 0;
+	font-size: var(--font-size-xs);
+	color: var(--text-meta);
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-sm);
+}
+
+.action {
+	color: var(--btn-primary);
+	font-size: var(--font-size-sm);
+	text-decoration: none;
+
+	&:hover,
+	&:focus-visible {
+		text-decoration: underline;
+	}
+}
+
+.note {
+	margin: 0;
+	font-size: var(--font-size-xs);
+	color: var(--text-meta);
+}
