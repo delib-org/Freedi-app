@@ -127,6 +127,13 @@ describe('prepareSuggestion', () => {
 		const body = send.mock.calls[0][0];
 		expect(body.pieces).toHaveLength(2);
 		expect(body.pieces[0].similarStatements[0].statementId).toBe('match-a');
+		// Whole text: full search. Pieces: quick (no paraphrase round).
+		expect(searchSimilarStatements).toHaveBeenCalledWith(
+			expect.objectContaining({ userInput: 'A and B', quick: false }),
+		);
+		expect(searchSimilarStatements).toHaveBeenCalledWith(
+			expect.objectContaining({ userInput: 'A: a', quick: true }),
+		);
 		// A failed piece search degrades to "nothing similar" rather than failing the request
 		expect(body.pieces[1]).toEqual({ similarStatements: [], userText: 'B: b' });
 	});
