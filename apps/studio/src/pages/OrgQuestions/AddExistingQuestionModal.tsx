@@ -4,7 +4,7 @@ import { StatementType, type Statement } from '@freedi/shared-types';
 import { Button, EmptyState, Input, Skeleton } from '@/components/atomic/atoms';
 import { Tag } from '@/components/atomic/atoms/Tag';
 import { lookupQuestion, useLinkableQuestions, type LinkableQuestion } from '@/db/orgActivities';
-import { linkOrgStatement } from '@/db/orgFunctions';
+import { linkOrgStatement, recomputeQuestionProgress } from '@/db/orgFunctions';
 import { parseQuestionRef, type QuestionRef } from '@/utils/questionRef';
 import { callableMessage } from '../_shared/callableErrors';
 import { logError } from '@/utils/logError';
@@ -149,12 +149,27 @@ export default function AddExistingQuestionModal({
 			// Same as the question's own title → no board name worth storing.
 			const boardName =
 				choice.kind === 'statement' && trimmed === choice.title ? undefined : trimmed || undefined;
-			const { statementId } = await linkOrgStatement({
+			const { statementId, questionIds } = await linkOrgStatement({
 				organizationId,
 				...(choice.kind === 'survey'
 					? { surveyId: choice.surveyId }
 					: { statementId: choice.statementId }),
 				label: boardName,
+			});
+			// A question that predates Studio has no participation counters, and a
+			// freshly seeded record reads as a truthful-looking 0 for a question
+			// that already has answers. Rebuild it from the source collections —
+			// non-blocking, because the board is useful before the numbers land.
+			// `questionIds` is absent if an older deployment of the callable answers
+			// during a rollout; the link itself still succeeded, so fall back
+			// rather than throwing on the way to onLinked.
+			(questionIds ?? [statementId]).forEach((id) => {
+				recomputeQuestionProgress({ statementId: id }).catch((err) => {
+					logError(err, {
+						operation: 'AddExistingQuestionModal.recomputeProgress',
+						statementId: id,
+					});
+				});
 			});
 			onLinked(statementId);
 		} catch (err) {

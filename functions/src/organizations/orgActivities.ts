@@ -135,64 +135,66 @@ export async function loadLinkableStatement(input: {
  * (`surveyWriter.ts`). Clients cannot read `surveys` at all — there is no rule
  * for the collection — so a pasted survey id has to be resolved here.
  */
-export async function resolveSurveyQuestion(surveyId: string): Promise<string> {
+export async function resolveSurveyQuestion(surveyId: string): Promise<Survey> {
 	const snap = await db.collection(Collections.surveys).doc(surveyId).get();
 	if (!snap.exists) {
 		throw new HttpsError('not-found', 'Survey not found');
 	}
 	const survey = snap.data() as Survey;
-	const statementId = survey.questionIds?.[0];
-	if (!statementId) {
+	if (!survey.questionIds?.[0]) {
 		throw new HttpsError('failed-precondition', 'That survey has no questions yet');
 	}
 
-	return statementId;
+	return survey;
 }
 
 export interface LinkActivityWritesInput {
-	statement: Statement;
+	/**
+	 * Every question the link covers. One for a bare question; for a survey,
+	 * all of its questions — the survey is the unit the consultant added, so
+	 * the organization administers it whole. `statements[0]` carries the link
+	 * record and the board card.
+	 */
+	statements: Statement[];
 	organizationId: string;
 	admins: OrgActorMember[];
 	activity: OrganizationActivity;
-	/** True when `questionProgress/{statementId}` already exists. */
-	hasProgress: boolean;
-	/** Subscriptions that already grant admin/creator — never downgrade those. */
-	skipSubscriptionFor: ReadonlySet<string>;
+	/** Statement ids that already have a `questionProgress` doc. */
+	hasProgress: ReadonlySet<string>;
+	/** Per statement, the users whose admin/creator role must not be touched. */
+	skipSubscriptionFor: ReadonlyMap<string, ReadonlySet<string>>;
 	now: number;
 }
 
 /**
  * Batch writes for linking: the link record, an admin subscription per org
- * admin who lacks one, the org's question counter and — only if the question
- * has none yet — a progress seed. The statement document itself is untouched.
+ * admin who lacks one on each covered question, the org's question counter
+ * and a progress seed for any question that has none. The statement documents
+ * themselves are untouched.
  */
 export function linkActivityWrites(input: LinkActivityWritesInput): BatchWrite[] {
-	const { statement, organizationId, admins, activity, hasProgress, skipSubscriptionFor, now } =
+	const { statements, organizationId, admins, activity, hasProgress, skipSubscriptionFor, now } =
 		input;
 	const writes: BatchWrite[] = [];
+	const [head] = statements;
 
-	writes.push((batch) => batch.set(activityRef(organizationId, statement.statementId), activity));
+	writes.push((batch) => batch.set(activityRef(organizationId, head.statementId), activity));
 
-	admins.forEach((admin) => {
-		if (skipSubscriptionFor.has(admin.userId)) return;
-		const sub = buildAdminSubscription(statement, admin, now);
-		writes.push((batch) =>
-			batch.set(
-				db.collection(Collections.statementsSubscribe).doc(sub.statementsSubscribeId),
-				sub,
-				{ merge: true },
-			),
-		);
-	});
+	statements.forEach((statement) => {
+		const held = skipSubscriptionFor.get(statement.statementId) ?? new Set<string>();
+		admins.forEach((admin) => {
+			if (held.has(admin.userId)) return;
+			const sub = buildAdminSubscription(statement, admin, now);
+			writes.push((batch) =>
+				batch.set(
+					db.collection(Collections.statementsSubscribe).doc(sub.statementsSubscribeId),
+					sub,
+					{ merge: true },
+				),
+			);
+		});
 
-	writes.push((batch) =>
-		batch.update(db.collection(Collections.organizations).doc(organizationId), {
-			questionCount: FieldValue.increment(1),
-			lastUpdate: now,
-		}),
-	);
-
-	if (!hasProgress) {
+		if (hasProgress.has(statement.statementId)) return;
 		// A progress doc is per-statement, not per-org: if the question already
 		// belongs to another organization that owning id stays authoritative —
 		// it is what the progress writer would derive from the top parent anyway.
@@ -207,7 +209,15 @@ export function linkActivityWrites(input: LinkActivityWritesInput): BatchWrite[]
 				),
 			),
 		);
-	}
+	});
+
+	// One card on the board, whatever the link covers.
+	writes.push((batch) =>
+		batch.update(db.collection(Collections.organizations).doc(organizationId), {
+			questionCount: FieldValue.increment(1),
+			lastUpdate: now,
+		}),
+	);
 
 	return writes;
 }
@@ -217,20 +227,23 @@ export function linkActivityWrites(input: LinkActivityWritesInput): BatchWrite[]
  * statement. Those are left alone on link and on unlink.
  */
 export async function existingAdminSubscribers(
-	statementId: string,
+	statementIds: string[],
 	userIds: string[],
-): Promise<Set<string>> {
-	const held = new Set<string>();
+): Promise<Map<string, Set<string>>> {
+	const held = new Map<string, Set<string>>();
+	statementIds.forEach((statementId) => held.set(statementId, new Set<string>()));
 	await Promise.all(
-		userIds.map(async (userId) => {
-			const snap = await db
-				.collection(Collections.statementsSubscribe)
-				.doc(`${userId}--${statementId}`)
-				.get();
-			if (!snap.exists) return;
-			const role = (snap.data() as StatementSubscription).role;
-			if (role && ADMIN_SUB_ROLES.has(role)) held.add(userId);
-		}),
+		statementIds.flatMap((statementId) =>
+			userIds.map(async (userId) => {
+				const snap = await db
+					.collection(Collections.statementsSubscribe)
+					.doc(`${userId}--${statementId}`)
+					.get();
+				if (!snap.exists) return;
+				const role = (snap.data() as StatementSubscription).role;
+				if (role && ADMIN_SUB_ROLES.has(role)) held.get(statementId)?.add(userId);
+			}),
+		),
 	);
 
 	return held;
@@ -253,29 +266,37 @@ export async function listOrgLinkedStatementIds(organizationId: string): Promise
  * upgraded to creator since is not the link's to take away.
  */
 export async function demotableSubscribers(
-	statementId: string,
+	statementIds: string[],
 	userIds: string[],
-): Promise<string[]> {
-	const demotable: string[] = [];
+): Promise<Array<{ userId: string; statementId: string }>> {
+	const demotable: Array<{ userId: string; statementId: string }> = [];
 	await Promise.all(
-		userIds.map(async (userId) => {
-			const snap = await db
-				.collection(Collections.statementsSubscribe)
-				.doc(`${userId}--${statementId}`)
-				.get();
-			if (!snap.exists) return;
-			if ((snap.data() as StatementSubscription).role === Role.admin) demotable.push(userId);
-		}),
+		statementIds.flatMap((statementId) =>
+			userIds.map(async (userId) => {
+				const snap = await db
+					.collection(Collections.statementsSubscribe)
+					.doc(`${userId}--${statementId}`)
+					.get();
+				if (!snap.exists) return;
+				if ((snap.data() as StatementSubscription).role === Role.admin) {
+					demotable.push({ userId, statementId });
+				}
+			}),
+		),
 	);
 
 	return demotable;
 }
 
-/** Writes that remove a link: the record, the counter, and the granted subs. */
+/**
+ * Writes that remove a link: the record, the counter, and the subscriptions
+ * the link granted — across every question it covered, which for a survey is
+ * all of its questions.
+ */
 export function unlinkActivityWrites(
 	organizationId: string,
 	statementId: string,
-	demoteUserIds: string[],
+	demotions: ReadonlyArray<{ userId: string; statementId: string }>,
 	now: number,
 ): BatchWrite[] {
 	const writes: BatchWrite[] = [
@@ -286,10 +307,12 @@ export function unlinkActivityWrites(
 				lastUpdate: now,
 			}),
 	];
-	demoteUserIds.forEach((userId) => {
+	demotions.forEach((demotion) => {
 		writes.push((batch) =>
 			batch.update(
-				db.collection(Collections.statementsSubscribe).doc(`${userId}--${statementId}`),
+				db
+					.collection(Collections.statementsSubscribe)
+					.doc(`${demotion.userId}--${demotion.statementId}`),
 				{ role: Role.member, lastUpdate: now },
 			),
 		);

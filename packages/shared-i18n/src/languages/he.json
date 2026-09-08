@@ -4330,5 +4330,8 @@
   "No question with that ID. Check the link and try again.": "אין שאלה עם המזהה הזה. בדקו את הקישור ונסו שוב.",
   "The survey's own title": "הכותרת של הסקר עצמו",
   "Pasted reference": "הפניה שהודבקה",
-  "That question was not created by anyone in this organization": "השאלה הזאת לא נוצרה על ידי אף אחד מהארגון הזה"
+  "That question was not created by anyone in this organization": "השאלה הזאת לא נוצרה על ידי אף אחד מהארגון הזה",
+  "Open the survey": "פתיחת הסקר",
+  "Survey settings": "הגדרות הסקר",
+  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "הסקר הזה חי ב-Mass Consensus. סטודיו מציג אותו כאן; מפעילים אותו שם."
 }

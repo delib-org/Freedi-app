@@ -3707,5 +3707,8 @@
   "No question with that ID. Check the link and try again.": "لا يوجد سؤال بهذا المعرِّف. تحقّق من الرابط وحاول مرة أخرى.",
   "The survey's own title": "عنوان الاستطلاع نفسه",
   "Pasted reference": "المرجع الملصوق",
-  "That question was not created by anyone in this organization": "لم يُنشئ هذا السؤالَ أحدٌ في هذه المؤسسة"
+  "That question was not created by anyone in this organization": "لم يُنشئ هذا السؤالَ أحدٌ في هذه المؤسسة",
+  "Open the survey": "افتح الاستطلاع",
+  "Survey settings": "إعدادات الاستطلاع",
+  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "هذا الاستطلاع يعيش في Mass Consensus. يعرضه الاستوديو هنا، لكنه يُدار هناك."
 }

@@ -33,9 +33,10 @@ import { fn_unlinkOrgStatement } from '../fn_unlinkOrgStatement';
 
 const db = fakeDbFrom(dbModule);
 const mockIsSystemAdmin = isSystemAdmin as jest.MockedFunction<typeof isSystemAdmin>;
-const link = asHandler<Record<string, unknown>, { activityId: string; statementId: string }>(
-	fn_linkOrgStatement,
-);
+const link = asHandler<
+	Record<string, unknown>,
+	{ activityId: string; statementId: string; questionIds: string[] }
+>(fn_linkOrgStatement);
 const rename = asHandler<Record<string, unknown>, { label: string | null }>(fn_renameOrgActivity);
 const unlink = asHandler<Record<string, unknown>, { removed: boolean }>(fn_unlinkOrgStatement);
 
@@ -305,6 +306,7 @@ describe('fn_linkOrgStatement', () => {
 
 	it('adds a survey by resolving it to the question it wraps', async () => {
 		seedQuestion('q-wrapped');
+		seedQuestion('q-extra');
 		db.seed(Collections.surveys, 'survey_1712345678901_a1b2c3d', {
 			surveyId: 'survey_1712345678901_a1b2c3d',
 			title: 'Budget survey',
@@ -314,7 +316,7 @@ describe('fn_linkOrgStatement', () => {
 			lastUpdate: 1,
 		});
 
-		const { statementId } = await link(
+		const { statementId, questionIds } = await link(
 			makeRequest(
 				{ organizationId: ORG, surveyId: 'survey_1712345678901_a1b2c3d', label: 'Budget' },
 				alice,
@@ -322,7 +324,41 @@ describe('fn_linkOrgStatement', () => {
 		);
 
 		expect(statementId).toBe('q-wrapped');
+		expect(questionIds).toEqual(['q-wrapped', 'q-extra']);
 		expect(readActivity(ORG, 'q-wrapped').label).toBe('Budget');
+	});
+
+	it('keeps the survey on the link, so the board can show it as one activity', async () => {
+		seedQuestion('q-wrapped');
+		seedQuestion('q-extra');
+		db.seed(Collections.surveys, 'survey_1712345678901_a1b2c3d', {
+			surveyId: 'survey_1712345678901_a1b2c3d',
+			title: 'Budget survey',
+			creatorId: 'alice',
+			questionIds: ['q-wrapped', 'q-extra'],
+			createdAt: 1,
+			lastUpdate: 1,
+		});
+
+		await link(
+			makeRequest({ organizationId: ORG, surveyId: 'survey_1712345678901_a1b2c3d' }, alice),
+		);
+
+		const activity = readActivity(ORG, 'q-wrapped');
+		expect(activity.surveyId).toBe('survey_1712345678901_a1b2c3d');
+		expect(activity.surveyTitle).toBe('Budget survey');
+		expect(activity.surveyQuestionIds).toEqual(['q-wrapped', 'q-extra']);
+	});
+
+	it('records no survey on a link made from a bare question', async () => {
+		seedQuestion();
+
+		const { questionIds } = await link(
+			makeRequest({ organizationId: ORG, statementId: QUESTION }, alice),
+		);
+
+		expect(questionIds).toEqual([QUESTION]);
+		expect(readActivity().surveyId).toBeUndefined();
 	});
 
 	it('rejects a survey that does not exist', async () => {
