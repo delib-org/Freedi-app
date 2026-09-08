@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
 	collection,
-	doc,
 	documentId,
 	onSnapshot,
 	query,
@@ -12,7 +11,6 @@ import {
 	Collections,
 	Role,
 	StatementType,
-	getOrganizationActivityId,
 	type OrganizationActivity,
 	type QuestionProgress,
 	type Statement,
@@ -20,7 +18,7 @@ import {
 } from '@freedi/shared-types';
 import { db } from '@/firebase';
 import { logError } from '@/utils/logError';
-import { useCollection, useDoc, type SnapshotState } from './hooks';
+import { useCollection, type SnapshotState } from './hooks';
 import type { ProgressMap } from './progress';
 
 /**
@@ -181,24 +179,23 @@ export function useQuestionProgressByTops(topParentIds: string[]): SnapshotState
 /**
  * The link record for one question on one board, or `null` when the question
  * is the organization's own rather than linked.
+ *
+ * Filtered out of the org's link list rather than fetched by id: most questions
+ * have no link record, and a `get` on a document that does not exist is a
+ * failed read, not an empty one — the rule cannot evaluate `resource.data` on a
+ * null resource. The list is one small collection the board already reads.
  */
 export function useOrgActivity(
 	organizationId: string | null | undefined,
 	statementId: string | null | undefined,
 ): SnapshotState<OrganizationActivity | null> {
-	const ref =
-		organizationId && statementId
-			? doc(
-					db,
-					Collections.organizationActivities,
-					getOrganizationActivityId(organizationId, statementId),
-				)
-			: null;
-
-	return useDoc<OrganizationActivity>(
-		ref,
-		`orgActivity:${organizationId ?? 'none'}:${statementId ?? 'none'}`,
+	const { data, loading, error } = useOrgActivities(organizationId);
+	const activity = useMemo(
+		() => data.find((record) => record.statementId === statementId) ?? null,
+		[data, statementId],
 	);
+
+	return { data: statementId ? activity : null, loading, error };
 }
 
 /** A question the signed-in user administers, as offered by the "add existing" picker. */

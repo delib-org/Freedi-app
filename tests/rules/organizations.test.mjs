@@ -204,6 +204,14 @@ describe('organizations', () => {
 			);
 		});
 
+		it('denies — does not error on — a link record that does not exist', async () => {
+			// Every question the org OWNS has no link record. The rule must reach a
+			// clean denial there rather than erroring on `resource.data` of a null
+			// resource, which surfaces client-side as a broken listener.
+			const db = env.authenticatedContext(MEMBER).firestore();
+			await assertFails(getDoc(doc(db, 'organizationActivities', `${ORG}--not-linked`)));
+		});
+
 		it('rejects a client renaming a link, even the org owner', async () => {
 			const db = env.authenticatedContext(OWNER).firestore();
 			await assertFails(

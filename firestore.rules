@@ -1674,7 +1674,13 @@ service cloud.firestore {
     // no content of its own beyond the org-facing label, and the authority it
     // represents lives in statementsSubscribe, not here.
     match /organizationActivities/{activityId} {
-      allow get: if isOrgMember(resource.data.organizationId) || isSystemAdminUser();
+      // `resource != null` first: on a document that does not exist `resource`
+      // is null, and reading `.data` off it is an ERROR in rules, not a denial.
+      // An error propagates to the client as a failed listener rather than a
+      // clean "no such document" — which is what a question with no link record
+      // (i.e. every question the org owns) looks like.
+      allow get: if resource != null &&
+                    (isOrgMember(resource.data.organizationId) || isSystemAdminUser());
       // list: Studio's board query is `where organizationId == X`; scoping the
       // list by resource.data would need a get() per row, exactly as for
       // organizationMembers above.
