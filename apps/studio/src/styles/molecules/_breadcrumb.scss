@@ -13,7 +13,9 @@
 
 	&__list {
 		display: flex;
-		flex-wrap: wrap;
+		// Never wrap: the top bar is a fixed 3.5rem, and a Hebrew question title
+		// is a whole sentence — a wrapped trail spills out of the bar.
+		flex-wrap: nowrap;
 		align-items: center;
 		gap: 0.25rem;
 		margin: 0;
@@ -25,13 +27,26 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.25rem;
-		min-width: 0;
+		min-inline-size: 0;
+		flex: 0 0 auto;
+	}
+
+	// The workspace you are in. Holds the switcher, and is never hidden.
+	&__item--root {
+		flex: 0 1 auto;
+	}
+
+	// The page itself gives up its width first: the H1 below repeats it in full,
+	// so truncating here costs the reader nothing.
+	&__item--current {
+		flex: 0 1 auto;
+		min-inline-size: 0;
 	}
 
 	&__link {
 		@include truncate;
 
-		max-width: 24ch;
+		max-inline-size: 24ch;
 		padding: 0.125rem 0.25rem;
 		border-radius: var(--radius-xs);
 		color: var(--text-meta);
@@ -47,7 +62,7 @@
 	&__current {
 		@include truncate;
 
-		max-width: 24ch;
+		max-inline-size: 40ch;
 		padding: 0.125rem 0.25rem;
 		font-weight: 600;
 		color: var(--text-title);
@@ -61,6 +76,24 @@
 
 		@include rtl {
 			transform: scaleX(-1);
+		}
+	}
+
+	@include tablet-and-below {
+		.breadcrumb__link {
+			max-inline-size: 14ch;
+		}
+
+		.breadcrumb__current {
+			max-inline-size: 24ch;
+		}
+	}
+
+	// On a phone the trail keeps the workspace and the one link back. The page
+	// you are on is the H1 directly beneath it.
+	@include mobile {
+		.breadcrumb__item:not(.breadcrumb__item--root):not(.breadcrumb__item--parent) {
+			display: none;
 		}
 	}
 

@@ -4338,5 +4338,8 @@
   "{{count}} answered": "{{count}} ענו",
   "{{count}} finished": "{{count}} סיימו",
   "answered": "ענו",
-  "finished": "סיימו"
+  "finished": "סיימו",
+  "System admin": "ניהול מערכת",
+  "Events": "אירועים",
+  "Events outside any organization": "אירועים שאינם שייכים לארגון"
 }

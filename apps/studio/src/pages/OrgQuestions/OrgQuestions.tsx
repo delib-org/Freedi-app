@@ -143,7 +143,7 @@ export default function OrgQuestions() {
 	return (
 		<StudioPage
 			breadcrumb={[{ label: t('Questions') }]}
-			title={t('Your questions')}
+			title={t('Questions')}
 			actions={
 				canManage && !isEmpty ? (
 					<>
