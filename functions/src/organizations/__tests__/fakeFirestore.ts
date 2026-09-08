@@ -61,6 +61,8 @@ export interface FakeDb {
 	read: (collection: string, id: string) => Doc | undefined;
 	reset: () => void;
 	collection: (name: string) => FakeCollection;
+	/** Admin SDK bulk read — resolves refs in order, missing ones included. */
+	getAll: (...refs: FakeDocRef[]) => Promise<FakeSnap[]>;
 	batch: () => FakeBatch;
 	runTransaction: <T>(fn: (tx: FakeTx) => Promise<T>) => Promise<T>;
 }
@@ -256,6 +258,7 @@ export function createFakeDb(): FakeDb {
 	return {
 		store,
 		seed: (c, id, data) => void col(c).set(id, { ...data }),
+		getAll: async (...refs: FakeDocRef[]) => refs.map((ref) => snapOf(ref.collection, ref.id)),
 		read: (c, id) => col(c).get(id),
 		reset: () => store.clear(),
 		collection,

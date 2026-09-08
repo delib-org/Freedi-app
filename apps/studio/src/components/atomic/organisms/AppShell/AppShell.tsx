@@ -13,7 +13,10 @@ import { LanguagesEnum } from '@freedi/shared-i18n';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { useAuth } from '@/auth/AuthContext';
 import { useOrg } from '@/org/OrgContext';
-import { OrgSwitcher } from '@/components/atomic/molecules/OrgSwitcher';
+import { useAllOrganizations } from '@/db/orgStatements';
+import { OrgSwitcher, type SwitcherEntry } from '@/components/atomic/molecules/OrgSwitcher';
+import { Breadcrumb, type BreadcrumbItem } from '@/components/atomic/molecules/Breadcrumb';
+import type { StudioScope } from '@/pages/_shared/useStudioScope';
 import { logError } from '@/utils/logError';
 import { useMediaQuery, MEDIA_MOBILE, MEDIA_TABLET_AND_BELOW } from './useMediaQuery';
 
@@ -32,11 +35,19 @@ export interface AppShellNavItem {
 	icon: ReactNode;
 	/** `end` matching for NavLink (default: true for "/" style roots). */
 	end?: boolean;
+	/**
+	 * `system` items are the admin screens, which do NOT live inside the
+	 * workspace named in the trail — so they are set apart and captioned.
+	 */
+	group?: 'system';
 }
 
 export interface AppShellProps {
 	nav: AppShellNavItem[];
-	breadcrumb?: ReactNode;
+	/** The trail after the workspace crumb, which the shell supplies itself. */
+	breadcrumb?: BreadcrumbItem[];
+	/** Which workspace the URL puts you in. `none` renders no trail at all. */
+	scope: StudioScope;
 	children: ReactNode;
 	/** Org accent hue index — reserved; v1 orgs have none, so the default accent is used. */
 	accentIndex?: number;
@@ -73,6 +84,7 @@ function initialsOf(name: string | null | undefined, email: string | null | unde
 const AppShell: FC<AppShellProps> = ({
 	nav,
 	breadcrumb,
+	scope,
 	children,
 	accentIndex,
 	onOrgChange,
@@ -81,7 +93,11 @@ const AppShell: FC<AppShellProps> = ({
 }) => {
 	const { t, currentLanguage, changeLanguage } = useTranslation();
 	const { user, signOut } = useAuth();
-	const { orgs, currentOrgId, memberships, isSystemAdmin } = useOrg();
+	const { orgs, memberships, isSystemAdmin } = useOrg();
+	// A system admin works inside organizations they do not belong to — several
+	// of them have no members at all — so listing only their own memberships
+	// hides exactly the organizations they were sent in to run.
+	const { data: allOrgs } = useAllOrganizations(isSystemAdmin);
 	const navigate = useNavigate();
 
 	const isMobile = useMediaQuery(MEDIA_MOBILE);
@@ -124,6 +140,64 @@ const AppShell: FC<AppShellProps> = ({
 	const nextLanguage = currentLanguage === LanguagesEnum.he ? LanguagesEnum.en : LanguagesEnum.he;
 	const roles = Object.fromEntries(memberships.map((m) => [m.organizationId, m.role]));
 
+	// Every workspace the console holds, in the order the trail treats them as
+	// siblings: the organizations, then your own events, then the admin screens.
+	// Your own organizations lead, so a system admin's list still opens with the
+	// ones they belong to.
+	const mineFirst = isSystemAdmin
+		? [
+				...orgs,
+				...allOrgs.filter(
+					(org) => !orgs.some((mine) => mine.organizationId === org.organizationId),
+				),
+			]
+		: orgs;
+	const entries: SwitcherEntry[] = [
+		...mineFirst.map<SwitcherEntry>((org) => ({
+			id: org.organizationId,
+			kind: 'org',
+			label: org.name,
+			to: `/orgs/${org.organizationId}`,
+			role: roles[org.organizationId],
+		})),
+		{ id: 'personal', kind: 'personal', label: t('Personal'), to: '/personal' },
+		...(isSystemAdmin
+			? [
+					{
+						id: 'system',
+						kind: 'system' as const,
+						label: t('System admin'),
+						to: '/admin/orgs',
+					},
+				]
+			: []),
+	];
+	const currentEntryId =
+		scope.kind === 'org' ? scope.organizationId : scope.kind === 'none' ? null : scope.kind;
+	const switcherKind =
+		scope.kind === 'admin' ? 'system' : scope.kind === 'personal' ? 'personal' : 'org';
+
+	const primaryNav = nav.filter((item) => item.group !== 'system');
+	const systemNav = nav.filter((item) => item.group === 'system');
+
+	const renderNavItems = (items: AppShellNavItem[]) =>
+		items.map((item) => (
+			<NavLink
+				key={item.id}
+				to={item.to}
+				end={item.end}
+				className={({ isActive }) =>
+					clsx('app-shell__nav-item', isActive && 'app-shell__nav-item--active')
+				}
+				title={isRail ? item.label : undefined}
+			>
+				<span className="app-shell__nav-icon" aria-hidden="true">
+					{item.icon}
+				</span>
+				<span className="app-shell__nav-label">{item.label}</span>
+			</NavLink>
+		));
+
 	const style: CSSProperties | undefined =
 		accentIndex !== undefined
 			? ({ '--org-accent': ACCENT_HUES[accentIndex % ACCENT_HUES.length] } as CSSProperties)
@@ -132,6 +206,8 @@ const AppShell: FC<AppShellProps> = ({
 	const shellClasses = clsx(
 		'app-shell',
 		isMobile ? 'app-shell--no-sidebar' : isRail && 'app-shell--rail',
+		scope.kind !== 'none' && 'app-shell--has-trail',
+		nav.length === 0 && 'app-shell--no-nav',
 		className,
 	);
 
@@ -146,18 +222,26 @@ const AppShell: FC<AppShellProps> = ({
 					WizCol <span className="app-shell__brand-accent">Studio</span>
 				</Link>
 
-				<div className="app-shell__org">
-					<OrgSwitcher
-						orgs={orgs}
-						currentOrgId={currentOrgId}
-						roles={roles}
-						canCreate={isSystemAdmin}
-						onChange={(id) => (onOrgChange ? onOrgChange(id) : navigate(`/orgs/${id}`))}
-						onCreate={() => (onCreateOrg ? onCreateOrg() : navigate('/orgs/new'))}
-					/>
-				</div>
-
-				{breadcrumb && <div className="app-shell__breadcrumb">{breadcrumb}</div>}
+				{scope.kind !== 'none' && (
+					<div className="app-shell__breadcrumb">
+						<Breadcrumb
+							items={breadcrumb ?? []}
+							root={
+								<OrgSwitcher
+									entries={entries}
+									currentId={currentEntryId}
+									currentLabel={scope.label}
+									currentKind={switcherKind}
+									canCreate={isSystemAdmin}
+									onSelect={(entry) =>
+										onOrgChange && entry.kind === 'org' ? onOrgChange(entry.id) : navigate(entry.to)
+									}
+									onCreate={() => (onCreateOrg ? onCreateOrg() : navigate('/admin/orgs?new=1'))}
+								/>
+							}
+						/>
+					</div>
+				)}
 
 				<div className="app-shell__user" ref={menuRef}>
 					<button
@@ -224,22 +308,14 @@ const AppShell: FC<AppShellProps> = ({
 
 			<aside className="app-shell__sidebar">
 				<nav className="app-shell__nav" aria-label={t('Main navigation')}>
-					{nav.map((item) => (
-						<NavLink
-							key={item.id}
-							to={item.to}
-							end={item.end}
-							className={({ isActive }) =>
-								clsx('app-shell__nav-item', isActive && 'app-shell__nav-item--active')
-							}
-							title={isRail ? item.label : undefined}
-						>
-							<span className="app-shell__nav-icon" aria-hidden="true">
-								{item.icon}
-							</span>
-							<span className="app-shell__nav-label">{item.label}</span>
-						</NavLink>
-					))}
+					{renderNavItems(primaryNav)}
+
+					{systemNav.length > 0 && (
+						<div className="app-shell__nav-group">
+							<span className="app-shell__nav-group-label">{t('System admin')}</span>
+							{renderNavItems(systemNav)}
+						</div>
+					)}
 				</nav>
 
 				{!isMobile && (

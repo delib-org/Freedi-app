@@ -32,6 +32,8 @@ export interface QuestionCardProps {
 	linked?: boolean;
 	/** The question's own title, when `title` is the name this board gave it. */
 	realTitle?: string;
+	/** A linked crowd survey counts answers and finishes, not suggestions. */
+	isSurvey?: boolean;
 	onOpen?: (questionId: string) => void;
 	/** Router path — renders the card as a link instead of a button. */
 	to?: string;
@@ -49,6 +51,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 	lastActivityAt,
 	linked,
 	realTitle,
+	isSurvey,
 	onOpen,
 	to,
 	className,
@@ -91,7 +94,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 			)}
 
 			<div className="question-card__rollup">
-				<ProgressFunnel counts={progress} variant="full" />
+				<ProgressFunnel counts={progress} variant="full" kind={isSurvey ? 'survey' : 'question'} />
 			</div>
 
 			<p className="question-card__meta">

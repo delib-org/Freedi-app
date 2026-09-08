@@ -143,11 +143,12 @@ export async function POST(
     }
     const db = getFirestoreAdmin();
 
-    // Check if question exists
-    const questionDoc = await db
-      .collection(Collections.statements)
-      .doc(questionId)
-      .get();
+    // The question and the user's evaluation mirror are independent reads;
+    // fetch them together rather than one after the other.
+    const [questionDoc, userEvaluationDoc] = await Promise.all([
+      db.collection(Collections.statements).doc(questionId).get(),
+      db.collection(Collections.userEvaluations).doc(userEvaluationDocId(userId, questionId)).get(),
+    ]);
 
     if (!questionDoc.exists) {
       return NextResponse.json(
@@ -245,12 +246,7 @@ export async function POST(
     // The author's automatic +1 goes through the same deterministic-id path as
     // swiping, so the new option is also filtered out of the author's own deck.
     // The option is brand new, so no evaluation can exist yet; only the
-    // userEvaluations mirror may already exist for this question.
-    const userEvaluationDoc = await db
-      .collection(Collections.userEvaluations)
-      .doc(userEvaluationDocId(userId, questionId))
-      .get();
-
+    // userEvaluations mirror (read above) may already exist for this question.
     // Batch to create solution, evaluation, and update question counters atomically
     const writeBatch = db.batch();
 

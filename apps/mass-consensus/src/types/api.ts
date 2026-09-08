@@ -85,6 +85,39 @@ export interface MultiSuggestionResponse {
 }
 
 /**
+ * Similar suggestions for one piece of a split submission
+ */
+export interface PieceSimilarity {
+  similarStatements: Statement[];
+  userText: string;
+}
+
+/**
+ * Response from the combined prepare endpoint: moderation + split detection +
+ * similar suggestions in one round trip (Cloud Function `prepareSuggestion`)
+ */
+export interface PrepareSuggestionResponse {
+  ok: boolean;
+  multi: {
+    isMultipleSuggestions: boolean;
+    suggestions: DetectedSuggestion[];
+  };
+  similar: {
+    similarStatements: Statement[];
+    userText: string;
+    method?: string;
+    cached?: boolean;
+  };
+  /** Aligned with `multi.suggestions`; only when the client asked for `checkPieces` */
+  pieces?: PieceSimilarity[];
+  flaggedForReview?: boolean;
+  responseTime?: number;
+  error?: string;
+  reason?: string;
+  category?: string;
+}
+
+/**
  * Comment data returned from queries (subset of Statement fields)
  */
 export interface CommentData {

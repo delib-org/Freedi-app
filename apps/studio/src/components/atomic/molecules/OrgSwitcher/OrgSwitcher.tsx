@@ -1,45 +1,105 @@
 import {
+	Fragment,
 	useCallback,
 	useEffect,
 	useId,
 	useRef,
 	useState,
 	type KeyboardEvent,
+	type ReactElement,
 	type FC,
 } from 'react';
 import clsx from 'clsx';
-import type { Organization, OrganizationRole } from '@freedi/shared-types';
+import type { OrganizationRole } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { RoleBadge } from '@/components/atomic/atoms/RoleBadge';
 
 /**
- * OrgSwitcher Molecule — the tenant picker in the top bar.
+ * OrgSwitcher Molecule — the first crumb of the trail: the workspace you are
+ * in, and the way to leave it.
  * Styles: styles/organisms/_org-switcher.scss (.org-switcher)
+ *
+ * It lists every workspace the console holds — the organizations, your own
+ * events, and the system-admin screens — because they are siblings, not
+ * settings. Choosing the one you are already in navigates to its home, which
+ * is what a person clicking their own workspace name expects.
  *
  * Trigger + `role="listbox"` popover. Keyboard: Enter/Space/↓ open,
  * ↑↓ Home End move, letters typeahead, Enter/Space select, Esc closes and
- * returns focus to the trigger. With one org and nothing to create it
+ * returns focus to the trigger. With one workspace and nothing to create it
  * renders as static text (`--single`).
  */
+export type SwitcherEntryKind = 'org' | 'personal' | 'system';
+
+export interface SwitcherEntry {
+	id: string;
+	kind: SwitcherEntryKind;
+	label: string;
+	/** Where choosing it goes. */
+	to: string;
+	/** The caller's role, shown as a badge. Organizations only. */
+	role?: OrganizationRole;
+}
+
 export interface OrgSwitcherProps {
-	orgs: Organization[];
-	currentOrgId: string | null;
-	onChange: (organizationId: string) => void;
-	/** The caller's role per org, shown as a badge in the list. */
-	roles?: Partial<Record<string, OrganizationRole>>;
+	entries: SwitcherEntry[];
+	/** The entry you are in, by id. */
+	currentId: string | null;
+	/** What the trigger says — the scope's own label, which may still be loading. */
+	currentLabel: string;
+	currentKind: SwitcherEntryKind;
+	onSelect: (entry: SwitcherEntry) => void;
 	/** System admins get a "New organization" footer link. */
 	canCreate?: boolean;
 	onCreate?: () => void;
 	className?: string;
 }
 
+/** A person glyph for "Personal", a grid for the system-admin screens. */
+const GLYPHS: Partial<Record<SwitcherEntryKind, ReactElement>> = {
+	personal: (
+		<svg
+			className="org-switcher__glyph"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="1.8"
+			aria-hidden="true"
+		>
+			<circle cx="12" cy="8" r="3.5" />
+			<path d="M5 20a7 7 0 0 1 14 0" />
+		</svg>
+	),
+	system: (
+		<svg
+			className="org-switcher__glyph"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="1.8"
+			aria-hidden="true"
+		>
+			<rect x="3" y="4" width="18" height="16" rx="2" />
+			<path d="M3 10h18M9 4v16" />
+		</svg>
+	),
+};
+
+/** The marker before a name: an accent dot for an org, a glyph otherwise. */
+function Marker({ kind }: { kind: SwitcherEntryKind }) {
+	if (kind === 'org') return <span className="org-switcher__dot" aria-hidden="true" />;
+
+	return GLYPHS[kind] ?? null;
+}
+
 const TYPEAHEAD_RESET_MS = 500;
 
 const OrgSwitcher: FC<OrgSwitcherProps> = ({
-	orgs,
-	currentOrgId,
-	onChange,
-	roles,
+	entries,
+	currentId,
+	currentLabel,
+	currentKind,
+	onSelect,
 	canCreate = false,
 	onCreate,
 	className,
@@ -54,12 +114,11 @@ const OrgSwitcher: FC<OrgSwitcherProps> = ({
 	const [open, setOpen] = useState(false);
 	const currentIndex = Math.max(
 		0,
-		orgs.findIndex((o) => o.organizationId === currentOrgId),
+		entries.findIndex((entry) => entry.id === currentId),
 	);
 	const [activeIndex, setActiveIndex] = useState(currentIndex);
 
-	const current = orgs.find((o) => o.organizationId === currentOrgId) ?? orgs[0];
-	const isSingle = orgs.length <= 1 && !canCreate;
+	const isSingle = entries.length <= 1 && !canCreate;
 
 	const close = useCallback((restoreFocus = true) => {
 		setOpen(false);
@@ -88,8 +147,10 @@ const OrgSwitcher: FC<OrgSwitcherProps> = ({
 	}, [open, activeIndex]);
 
 	const select = (index: number) => {
-		const org = orgs[index];
-		if (org && org.organizationId !== currentOrgId) onChange(org.organizationId);
+		// Choosing the workspace you are already in goes to its home; the trail's
+		// first crumb is the only way back there from a page inside it.
+		const entry = entries[index];
+		if (entry) onSelect(entry);
 		close();
 	};
 
@@ -101,7 +162,7 @@ const OrgSwitcher: FC<OrgSwitcherProps> = ({
 	};
 
 	const handleListKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
-		const last = orgs.length - 1;
+		const last = entries.length - 1;
 		switch (event.key) {
 			case 'ArrowDown':
 				event.preventDefault();
@@ -153,9 +214,9 @@ const OrgSwitcher: FC<OrgSwitcherProps> = ({
 			}, TYPEAHEAD_RESET_MS);
 			const { buffer } = typeahead.current;
 			const start = buffer.length === 1 ? activeIndex + 1 : activeIndex;
-			for (let step = 0; step < orgs.length; step += 1) {
-				const index = (start + step) % orgs.length;
-				if (orgs[index].name.toLowerCase().startsWith(buffer)) {
+			for (let step = 0; step < entries.length; step += 1) {
+				const index = (start + step) % entries.length;
+				if (entries[index].label.toLowerCase().startsWith(buffer)) {
 					setActiveIndex(index);
 
 					return;
@@ -164,13 +225,14 @@ const OrgSwitcher: FC<OrgSwitcherProps> = ({
 		}
 	};
 
-	if (!current && !canCreate) return null;
-
+	// Nowhere to switch to: the workspace still names itself, as static text.
 	if (isSingle) {
 		return (
 			<div className={clsx('org-switcher', 'org-switcher--single', className)}>
-				<span className="org-switcher__dot" aria-hidden="true" />
-				<span className="org-switcher__name">{current?.name}</span>
+				<Marker kind={currentKind} />
+				<span className="org-switcher__name" dir="auto">
+					{currentLabel}
+				</span>
 			</div>
 		);
 	}
@@ -184,12 +246,15 @@ const OrgSwitcher: FC<OrgSwitcherProps> = ({
 				aria-haspopup="listbox"
 				aria-expanded={open}
 				aria-controls={open ? listboxId : undefined}
-				aria-label={t('Switch organization')}
 				onClick={() => (open ? close() : openList())}
 				onKeyDown={handleTriggerKeyDown}
 			>
-				<span className="org-switcher__dot" aria-hidden="true" />
-				<span className="org-switcher__name">{current?.name ?? t('Choose an organization')}</span>
+				<Marker kind={currentKind} />
+				<span className="org-switcher__name" dir="auto">
+					{currentLabel || t('Choose an organization')}
+				</span>
+				{/* Kept out of aria-label so the workspace name stays in the accessible name. */}
+				<span className="org-switcher__sr"> — {t('Switch organization')}</span>
 				<svg
 					className="org-switcher__chevron"
 					viewBox="0 0 24 24"
@@ -213,28 +278,34 @@ const OrgSwitcher: FC<OrgSwitcherProps> = ({
 						aria-activedescendant={`${listboxId}-${activeIndex}`}
 						onKeyDown={handleListKeyDown}
 					>
-						{orgs.map((org, index) => {
-							const isCurrent = org.organizationId === currentOrgId;
-							const role = roles?.[org.organizationId];
+						{entries.map((entry, index) => {
+							const isCurrent = entry.id === currentId;
+							// A rule between kinds: organizations, then your own events,
+							// then the admin screens.
+							const startsGroup = index > 0 && entries[index - 1].kind !== entry.kind;
 
 							return (
-								<li
-									key={org.organizationId}
-									id={`${listboxId}-${index}`}
-									role="option"
-									aria-selected={isCurrent}
-									tabIndex={index === activeIndex ? 0 : -1}
-									className={clsx(
-										'org-switcher__option',
-										isCurrent && 'org-switcher__option--active',
-									)}
-									onClick={() => select(index)}
-									onMouseMove={() => setActiveIndex(index)}
-								>
-									<span className="org-switcher__dot" aria-hidden="true" />
-									<span className="org-switcher__name">{org.name}</span>
-									{role && <RoleBadge role={role} />}
-								</li>
+								<Fragment key={entry.id}>
+									{startsGroup && <li role="presentation" className="org-switcher__divider" />}
+									<li
+										id={`${listboxId}-${index}`}
+										role="option"
+										aria-selected={isCurrent}
+										tabIndex={index === activeIndex ? 0 : -1}
+										className={clsx(
+											'org-switcher__option',
+											isCurrent && 'org-switcher__option--active',
+										)}
+										onClick={() => select(index)}
+										onMouseMove={() => setActiveIndex(index)}
+									>
+										<Marker kind={entry.kind} />
+										<span className="org-switcher__name" dir="auto">
+											{entry.label}
+										</span>
+										{entry.role && <RoleBadge role={entry.role} />}
+									</li>
+								</Fragment>
 							);
 						})}
 					</ul>

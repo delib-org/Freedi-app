@@ -279,19 +279,43 @@ export interface StudioSeedOptionsResult {
 
 export interface LinkOrgStatementRequest {
 	organizationId: string;
-	statementId: string;
+	/** The question to add. Supply this or `surveyId`. */
+	statementId?: string;
+	/** A Mass-Consensus survey, resolved server-side to the question it wraps. */
+	surveyId?: string;
 	/** Org-facing name. Empty → the board shows the question's own title. */
 	label?: string;
 }
 
 export interface LinkOrgStatementResult {
 	activityId: string;
+	/** The question actually linked — the caller may have named a survey. */
+	statementId: string;
+	/**
+	 * Every question the link covers — one, or all of a survey's questions.
+	 * Optional: an older deployment of the callable does not send it.
+	 */
+	questionIds?: string[];
 }
 
 export interface RenameOrgActivityRequest {
 	organizationId: string;
 	statementId: string;
 	label?: string;
+}
+
+export interface StudioSurveyStats {
+	/** Everyone who opened the survey. */
+	entered: number;
+	/** Those who got somewhere in it — what Mass Consensus calls responses. */
+	responded: number;
+	/** Those who reached the end. */
+	completed: number;
+}
+
+export interface SurveyStatsRequest {
+	organizationId: string;
+	surveyIds: string[];
 }
 
 export interface UnlinkOrgStatementRequest {
@@ -345,6 +369,10 @@ export const renameOrgActivity = callable<RenameOrgActivityRequest, { label: str
 
 export const unlinkOrgStatement = callable<UnlinkOrgStatementRequest, { removed: boolean }>(
 	'fn_unlinkOrgStatement',
+);
+
+export const studioSurveyStats = callable<SurveyStatsRequest, Record<string, StudioSurveyStats>>(
+	'fn_studioSurveyStats',
 );
 
 export const nudgeQuestionSubscribers = callable<NudgeRequest, NudgeResult>(

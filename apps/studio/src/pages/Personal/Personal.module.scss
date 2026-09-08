@@ -1,0 +1,62 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Layout only.
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.sectionHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-sm);
+}
+
+.sectionTitle {
+	margin: 0;
+}
+
+.grid {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
+	gap: var(--padding);
+
+	> li > a {
+		display: block;
+		block-size: 100%;
+		text-decoration: none;
+	}
+
+	@include mobile {
+		gap: 0.75rem;
+	}
+}
+
+.list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+
+	> li > a {
+		display: block;
+		text-decoration: none;
+	}
+}
+
+.muted {
+	margin: 0;
+	color: var(--text-meta);
+}
+
+.error {
+	margin: 0;
+	color: var(--text-error);
+}

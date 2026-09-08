@@ -26,12 +26,17 @@ jest.mock('../../db', () => {
 jest.mock('../../utils/httpAuth', () => ({ isSystemAdmin: jest.fn(async () => false) }));
 
 import * as dbModule from '../../db';
+import { isSystemAdmin } from '../../utils/httpAuth';
 import { fn_linkOrgStatement } from '../fn_linkOrgStatement';
 import { fn_renameOrgActivity } from '../fn_renameOrgActivity';
 import { fn_unlinkOrgStatement } from '../fn_unlinkOrgStatement';
 
 const db = fakeDbFrom(dbModule);
-const link = asHandler<Record<string, unknown>, { activityId: string }>(fn_linkOrgStatement);
+const mockIsSystemAdmin = isSystemAdmin as jest.MockedFunction<typeof isSystemAdmin>;
+const link = asHandler<
+	Record<string, unknown>,
+	{ activityId: string; statementId: string; questionIds: string[] }
+>(fn_linkOrgStatement);
 const rename = asHandler<Record<string, unknown>, { label: string | null }>(fn_renameOrgActivity);
 const unlink = asHandler<Record<string, unknown>, { removed: boolean }>(fn_unlinkOrgStatement);
 
@@ -72,6 +77,7 @@ interface SeedQuestionOptions {
 	organizationId?: string;
 	statementType?: string;
 	parentId?: string;
+	parents?: string[];
 }
 
 function seedQuestion(id = QUESTION, options: SeedQuestionOptions = {}): void {
@@ -80,7 +86,8 @@ function seedQuestion(id = QUESTION, options: SeedQuestionOptions = {}): void {
 		statement: 'The real title',
 		statementType: options.statementType ?? 'question',
 		parentId: options.parentId ?? 'top',
-		topParentId: id,
+		topParentId: options.parentId ?? id,
+		...(options.parents ? { parents: options.parents } : {}),
 		creatorId: options.creatorId ?? 'alice',
 		creator: { uid: options.creatorId ?? 'alice', displayName: 'Alice' },
 		createdAt: 1,
@@ -116,6 +123,8 @@ function readSubscription(uid: string, statementId = QUESTION): StatementSubscri
 
 beforeEach(() => {
 	db.reset();
+	mockIsSystemAdmin.mockReset();
+	mockIsSystemAdmin.mockResolvedValue(false);
 	seedOrg();
 	seedMember('alice', OrganizationRole.owner);
 });
@@ -187,7 +196,7 @@ describe('fn_linkOrgStatement', () => {
 		expect(progress.organizationId).toBe(OTHER_ORG);
 	});
 
-	it('rejects a caller who does not administer the question', async () => {
+	it('rejects a question created by someone outside the organization', async () => {
 		seedQuestion(QUESTION, { creatorId: 'carol' });
 		seedMember('bob', OrganizationRole.admin);
 
@@ -198,14 +207,56 @@ describe('fn_linkOrgStatement', () => {
 		expect(readActivity()).toBeUndefined();
 	});
 
-	it('accepts a caller who holds an admin subscription on the question', async () => {
-		seedQuestion(QUESTION, { creatorId: 'carol' });
+	it('accepts a question a fellow org admin created', async () => {
 		seedMember('bob', OrganizationRole.admin);
-		seedSubscription('bob', QUESTION, Role.admin);
+		seedQuestion(QUESTION, { creatorId: 'bob' });
 
-		await link(makeRequest({ organizationId: ORG, statementId: QUESTION }, bob));
+		await link(makeRequest({ organizationId: ORG, statementId: QUESTION }, alice));
 
-		expect(readActivity().addedBy).toBe('bob');
+		expect(readActivity().addedBy).toBe('alice');
+	});
+
+	it('accepts a question created by a system admin', async () => {
+		seedQuestion(QUESTION, { creatorId: 'root' });
+		mockIsSystemAdmin.mockImplementation(async (uid: string) => uid === 'root');
+
+		await link(makeRequest({ organizationId: ORG, statementId: QUESTION }, alice));
+
+		expect(readActivity()).toBeDefined();
+	});
+
+	it('accepts a question nested under one an org admin created', async () => {
+		seedMember('bob', OrganizationRole.admin);
+		seedQuestion('parent-q', { creatorId: 'bob' });
+		seedQuestion(QUESTION, { creatorId: 'carol', parentId: 'parent-q' });
+
+		await link(makeRequest({ organizationId: ORG, statementId: QUESTION }, alice));
+
+		expect(readActivity()).toBeDefined();
+	});
+
+	it('accepts a question deep under an admin question via the parents chain', async () => {
+		seedMember('bob', OrganizationRole.admin);
+		seedQuestion('root-q', { creatorId: 'bob' });
+		seedQuestion(QUESTION, {
+			creatorId: 'carol',
+			parentId: 'mid-q',
+			parents: ['root-q', 'mid-q'],
+		});
+
+		await link(makeRequest({ organizationId: ORG, statementId: QUESTION }, alice));
+
+		expect(readActivity()).toBeDefined();
+	});
+
+	it('rejects a question whose ancestors are all outsiders', async () => {
+		seedQuestion('parent-q', { creatorId: 'carol' });
+		seedQuestion(QUESTION, { creatorId: 'dave', parentId: 'parent-q' });
+
+		await expectHttpsError(
+			link(makeRequest({ organizationId: ORG, statementId: QUESTION }, alice)),
+			'permission-denied',
+		);
 	});
 
 	it('rejects a caller who is not an org admin', async () => {
@@ -251,6 +302,107 @@ describe('fn_linkOrgStatement', () => {
 			link(makeRequest({ organizationId: ORG, statementId: 'nope' }, alice)),
 			'not-found',
 		);
+	});
+
+	it('adds a survey by resolving it to the question it wraps', async () => {
+		seedQuestion('q-wrapped');
+		seedQuestion('q-extra');
+		db.seed(Collections.surveys, 'survey_1712345678901_a1b2c3d', {
+			surveyId: 'survey_1712345678901_a1b2c3d',
+			title: 'Budget survey',
+			creatorId: 'alice',
+			questionIds: ['q-wrapped', 'q-extra'],
+			createdAt: 1,
+			lastUpdate: 1,
+		});
+
+		const { statementId, questionIds } = await link(
+			makeRequest(
+				{ organizationId: ORG, surveyId: 'survey_1712345678901_a1b2c3d', label: 'Budget' },
+				alice,
+			),
+		);
+
+		expect(statementId).toBe('q-wrapped');
+		expect(questionIds).toEqual(['q-wrapped', 'q-extra']);
+		expect(readActivity(ORG, 'q-wrapped').label).toBe('Budget');
+	});
+
+	it('keeps the survey on the link, so the board can show it as one activity', async () => {
+		seedQuestion('q-wrapped');
+		seedQuestion('q-extra');
+		db.seed(Collections.surveys, 'survey_1712345678901_a1b2c3d', {
+			surveyId: 'survey_1712345678901_a1b2c3d',
+			title: 'Budget survey',
+			creatorId: 'alice',
+			questionIds: ['q-wrapped', 'q-extra'],
+			createdAt: 1,
+			lastUpdate: 1,
+		});
+
+		await link(
+			makeRequest({ organizationId: ORG, surveyId: 'survey_1712345678901_a1b2c3d' }, alice),
+		);
+
+		const activity = readActivity(ORG, 'q-wrapped');
+		expect(activity.surveyId).toBe('survey_1712345678901_a1b2c3d');
+		expect(activity.surveyTitle).toBe('Budget survey');
+		expect(activity.surveyQuestionIds).toEqual(['q-wrapped', 'q-extra']);
+	});
+
+	it('records no survey on a link made from a bare question', async () => {
+		seedQuestion();
+
+		const { questionIds } = await link(
+			makeRequest({ organizationId: ORG, statementId: QUESTION }, alice),
+		);
+
+		expect(questionIds).toEqual([QUESTION]);
+		expect(readActivity().surveyId).toBeUndefined();
+	});
+
+	it('rejects a survey that does not exist', async () => {
+		await expectHttpsError(
+			link(makeRequest({ organizationId: ORG, surveyId: 'survey_1_nope' }, alice)),
+			'not-found',
+		);
+	});
+
+	it('rejects a survey with no questions in it', async () => {
+		db.seed(Collections.surveys, 'survey_1712345678901_empty0', {
+			surveyId: 'survey_1712345678901_empty0',
+			title: 'Empty',
+			creatorId: 'alice',
+			questionIds: [],
+			createdAt: 1,
+			lastUpdate: 1,
+		});
+
+		await expectHttpsError(
+			link(makeRequest({ organizationId: ORG, surveyId: 'survey_1712345678901_empty0' }, alice)),
+			'failed-precondition',
+		);
+	});
+
+	it("still applies the eligibility rule to the survey's question", async () => {
+		seedQuestion('q-outsider', { creatorId: 'carol' });
+		db.seed(Collections.surveys, 'survey_1712345678901_out0000', {
+			surveyId: 'survey_1712345678901_out0000',
+			title: 'Outsider survey',
+			creatorId: 'carol',
+			questionIds: ['q-outsider'],
+			createdAt: 1,
+			lastUpdate: 1,
+		});
+
+		await expectHttpsError(
+			link(makeRequest({ organizationId: ORG, surveyId: 'survey_1712345678901_out0000' }, alice)),
+			'permission-denied',
+		);
+	});
+
+	it('requires a statementId or a surveyId', async () => {
+		await expectHttpsError(link(makeRequest({ organizationId: ORG }, alice)), 'invalid-argument');
 	});
 
 	it('lets the same question be linked by two organizations', async () => {
@@ -301,6 +453,7 @@ describe('fn_renameOrgActivity', () => {
 
 describe('fn_unlinkOrgStatement', () => {
 	it('removes the link, the counter and the authority it granted', async () => {
+		seedMember('carol', OrganizationRole.admin);
 		seedQuestion(QUESTION, { creatorId: 'carol' });
 		seedMember('bob', OrganizationRole.admin);
 		seedSubscription('alice', QUESTION, Role.admin);
@@ -316,6 +469,7 @@ describe('fn_unlinkOrgStatement', () => {
 	});
 
 	it('leaves an admin who already administered the question alone', async () => {
+		seedMember('carol', OrganizationRole.admin);
 		seedQuestion(QUESTION, { creatorId: 'carol' });
 		seedMember('bob', OrganizationRole.admin);
 		seedSubscription('bob', QUESTION, Role.creator);

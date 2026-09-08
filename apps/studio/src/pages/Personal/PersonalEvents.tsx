@@ -7,12 +7,11 @@ import { db } from '@/firebase';
 import { Button, Skeleton } from '@/components/atomic/atoms';
 import NewEventModal from '@/components/NewEventModal';
 import { logError } from '@/utils/logError';
-import styles from './OrgPicker.module.scss';
+import styles from './Personal.module.scss';
 
 /**
- * "Personal" section of the org picker — the facilitator's own events
- * (groups they administer outside any organization). Opens the legacy
- * `/events/:id` dashboard.
+ * The facilitator's own events — groups they administer outside any
+ * organization. Opens the `/events/:id` dashboard.
  */
 export default function PersonalEvents() {
 	const { t } = useTranslation();
@@ -45,11 +44,10 @@ export default function PersonalEvents() {
 	}, [user, t]);
 
 	return (
-		<section className={styles.section} aria-labelledby="personal-events-title">
+		// No heading of its own: the page's H1 already says "Events", and the
+		// trail above it says whose.
+		<section className={styles.section} aria-label={t('Events')}>
 			<div className={styles.sectionHeader}>
-				<h2 id="personal-events-title" className={styles.sectionTitle}>
-					{t('Personal')}
-				</h2>
 				<Button
 					text={`+ ${t('New Event')}`}
 					variant="secondary"

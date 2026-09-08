@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
 	collection,
+	doc,
 	documentId,
+	getDoc,
 	onSnapshot,
 	query,
 	where,
@@ -18,6 +20,7 @@ import {
 } from '@freedi/shared-types';
 import { db } from '@/firebase';
 import { logError } from '@/utils/logError';
+import { studioSurveyStats, type StudioSurveyStats } from './orgFunctions';
 import { useCollection, type SnapshotState } from './hooks';
 import type { ProgressMap } from './progress';
 
@@ -118,19 +121,39 @@ export function useStatementsByIds(ids: string[]): SnapshotState<Statement[]> {
 }
 
 /**
+ * Progress records for a named set of questions — used for a linked survey,
+ * whose questions are siblings rather than descendants of anything the board
+ * knows, so neither the by-org nor the by-top query finds them.
+ */
+export function useQuestionProgressByIds(statementIds: string[]): SnapshotState<ProgressMap> {
+	return useProgressChunks(statementIds, documentId(), 'progressByIds');
+}
+
+/**
  * Progress records for several top questions at once — the linked-question
  * counterpart of `useQuestionProgressByOrg`, which only finds questions the
  * organization owns. Each chunk listens on `topParentId in [...]`, so a linked
  * question's own record and its activities' records both arrive.
  */
 export function useQuestionProgressByTops(topParentIds: string[]): SnapshotState<ProgressMap> {
-	const key = useMemo(() => [...topParentIds].sort().join(','), [topParentIds]);
-	const idsRef = useRef(topParentIds);
-	idsRef.current = topParentIds;
+	return useProgressChunks(topParentIds, 'topParentId', 'progressByTops');
+}
+
+/** Shared chunked listener behind the two progress readers above. */
+function useProgressChunks(
+	ids: string[],
+	field: string | ReturnType<typeof documentId>,
+	label: string,
+): SnapshotState<ProgressMap> {
+	const key = useMemo(() => `${label}:${[...ids].sort().join(',')}`, [ids, label]);
+	const idsRef = useRef(ids);
+	idsRef.current = ids;
+	const fieldRef = useRef(field);
+	fieldRef.current = field;
 
 	const [state, setState] = useState<SnapshotState<ProgressMap>>({
 		data: {},
-		loading: topParentIds.length > 0,
+		loading: ids.length > 0,
 		error: null,
 	});
 
@@ -156,14 +179,14 @@ export function useQuestionProgressByTops(topParentIds: string[]): SnapshotState
 
 		const unsubscribes = groups.map((group, index) =>
 			onSnapshot(
-				query(collection(db, Collections.questionProgress), where('topParentId', 'in', group)),
+				query(collection(db, Collections.questionProgress), where(fieldRef.current, 'in', group)),
 				(snap) => {
 					perGroup[index] = snap.docs.map((d) => d.data() as QuestionProgress);
 					settled[index] = true;
 					publish();
 				},
 				(error: FirestoreError) => {
-					logError(error, { operation: 'db.useQuestionProgressByTops', metadata: { key } });
+					logError(error, { operation: 'db.useProgressChunks', metadata: { key } });
 					settled[index] = true;
 					setState((prev) => ({ ...prev, loading: false, error }));
 				},
@@ -252,4 +275,61 @@ export function useLinkableQuestions(
 	}, [data]);
 
 	return { data: questions, loading, error };
+}
+
+/**
+ * One-shot read of a question by id, for the "add by id" box.
+ *
+ * Statements are world-readable, so a pasted id can be shown back to the
+ * consultant before they commit to adding it. Surveys have no read rule at
+ * all — Mass Consensus reads them through the Admin SDK — so a survey id
+ * cannot be previewed here and is resolved by the link callable instead.
+ */
+export async function lookupQuestion(statementId: string): Promise<Statement | null> {
+	const snap = await getDoc(doc(db, Collections.statements, statementId));
+
+	return snap.exists() ? (snap.data() as Statement) : null;
+}
+
+/**
+ * How many people answered each linked crowd survey.
+ *
+ * Not a Firestore listener: `surveyProgress` has no read rule, so the numbers
+ * come from a callable that computes them the way Mass Consensus does. Fetched
+ * once per set of surveys rather than watched — a participation count that is
+ * a minute old is fine, and a live listener here would cost a query per board
+ * render for no visible gain.
+ */
+export function useSurveyStats(
+	organizationId: string | null | undefined,
+	surveyIds: string[],
+): Record<string, StudioSurveyStats> {
+	const key = useMemo(() => [...surveyIds].sort().join(','), [surveyIds]);
+	const idsRef = useRef(surveyIds);
+	idsRef.current = surveyIds;
+	const [stats, setStats] = useState<Record<string, StudioSurveyStats>>({});
+
+	useEffect(() => {
+		const ids = idsRef.current;
+		if (!organizationId || ids.length === 0) {
+			setStats({});
+
+			return;
+		}
+
+		let cancelled = false;
+		studioSurveyStats({ organizationId, surveyIds: ids })
+			.then((result) => {
+				if (!cancelled) setStats(result);
+			})
+			.catch((error) => {
+				logError(error, { operation: 'db.useSurveyStats', metadata: { key } });
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [organizationId, key]);
+
+	return stats;
 }

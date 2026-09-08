@@ -51,6 +51,7 @@ export async function generateBrief(text: string, context?: string): Promise<str
 			maxTokens: 100,
 			temperature: 0,
 			jsonMode: true,
+			reasoningEffort: 'none',
 		});
 		const parsed = JSON.parse(extractJson(raw)) as { brief?: unknown };
 		const brief = typeof parsed.brief === 'string' ? parsed.brief.trim() : '';

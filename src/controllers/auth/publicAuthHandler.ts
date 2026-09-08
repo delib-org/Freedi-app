@@ -150,6 +150,13 @@ export async function handlePublicAutoAuth(): Promise<void> {
 
 	inFlightAutoAuth = (async () => {
 		try {
+			// Firebase restores a persisted session asynchronously, so on a cold
+			// page load `auth.currentUser` is still null for the first few ticks.
+			// Deciding before that resolves signed a returning Google user in
+			// anonymously ON TOP of their own session — they came back as
+			// "Logical Vision" and wrote under that name. Wait for the restore.
+			await auth.authStateReady();
+
 			// Check if already authenticated
 			if (auth.currentUser) {
 				console.info('User already authenticated, skipping auto-auth');

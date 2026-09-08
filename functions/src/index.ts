@@ -71,6 +71,7 @@ import {
 import { findSimilarStatements } from './fn_findSimilarStatements';
 import { detectMultipleSuggestions } from './fn_detectMultipleSuggestions';
 import { mergeStatements } from './fn_mergeStatements';
+import { prepareSuggestion } from './fn_prepareSuggestion';
 import { updateApprovalResults } from './fn_approval';
 import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
@@ -245,6 +246,7 @@ import { fn_createOrgStatement } from './organizations/fn_createOrgStatement';
 import { fn_linkOrgStatement } from './organizations/fn_linkOrgStatement';
 import { fn_renameOrgActivity } from './organizations/fn_renameOrgActivity';
 import { fn_unlinkOrgStatement } from './organizations/fn_unlinkOrgStatement';
+import { fn_studioSurveyStats } from './organizations/fn_studioSurveyStats';
 
 // ── "Start a question with AI" (WizCol Studio): planner, build, scheduled actions ──
 import {
@@ -557,6 +559,8 @@ exports.setMapFilter = setMapFilter;
 exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
 exports.detectMultipleSuggestions = wrapMemoryIntensiveHttpFunction(detectMultipleSuggestions);
 exports.mergeStatements = wrapMemoryIntensiveHttpFunction(mergeStatements);
+// One round trip for the MC "Add your idea" flow: moderation + split + similar
+exports.prepareSuggestion = wrapMemoryIntensiveHttpFunction(prepareSuggestion);
 exports.detectStatementType = wrapMemoryIntensiveHttpFunction(detectStatementType);
 
 // PHASE 4 FIX: Metrics and monitoring functions
@@ -974,6 +978,8 @@ exports.fn_createOrgStatement = fn_createOrgStatement;
 exports.fn_linkOrgStatement = fn_linkOrgStatement;
 exports.fn_renameOrgActivity = fn_renameOrgActivity;
 exports.fn_unlinkOrgStatement = fn_unlinkOrgStatement;
+// How many people answered a linked crowd survey (MC's own numbers)
+exports.fn_studioSurveyStats = fn_studioSurveyStats;
 
 // ── "Start a question with AI" (WizCol Studio) ──
 exports.fn_studioPlanStart = fn_studioPlanStart;

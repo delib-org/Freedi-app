@@ -9,7 +9,7 @@
  * `Compat*` types) is preserved so the ~18 existing callers keep working
  * unchanged. The `model` string callers pass is now an OpenAI model id.
  */
-import { callLLM } from './openai-chat';
+import { callLLM, type ReasoningEffort } from './openai-chat';
 
 // Model tiers. Both overridable via env vars.
 //   - gpt-5.6-terra : heavy reasoning (version AI, integration/synthesis)
@@ -44,6 +44,8 @@ interface CompatGenerationConfig {
 	temperature?: number;
 	maxOutputTokens?: number;
 	responseMimeType?: string;
+	/** Passed through to `callLLM`; see ReasoningEffort in openai-chat. */
+	reasoningEffort?: ReasoningEffort;
 }
 
 export interface CompatModelParams {
@@ -150,6 +152,7 @@ function makeModel(params: CompatModelParams): CompatGenerativeModel {
 				temperature: config.temperature,
 				maxTokens: config.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
 				jsonMode: config.responseMimeType === 'application/json',
+				reasoningEffort: config.reasoningEffort,
 			});
 
 			return wrapText(text);
