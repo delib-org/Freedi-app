@@ -3589,5 +3589,10 @@
   "That question was not created by anyone in this organization": "Esa pregunta no la creó nadie de esta organización",
   "Open the survey": "Abrir la encuesta",
   "Survey settings": "Ajustes de la encuesta",
-  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "Esta encuesta vive en Mass Consensus. Studio la muestra aquí; se gestiona allí."
+  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "Esta encuesta vive en Mass Consensus. Studio la muestra aquí; se gestiona allí.",
+  "{{entered}} opened it · {{responded}} answered · {{completed}} finished": "{{entered}} la abrieron · {{responded}} respondieron · {{completed}} la terminaron",
+  "{{count}} answered": "{{count}} respondieron",
+  "{{count}} finished": "{{count}} terminaron",
+  "answered": "respondieron",
+  "finished": "terminaron"
 }

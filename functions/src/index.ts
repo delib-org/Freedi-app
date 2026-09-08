@@ -245,6 +245,7 @@ import { fn_createOrgStatement } from './organizations/fn_createOrgStatement';
 import { fn_linkOrgStatement } from './organizations/fn_linkOrgStatement';
 import { fn_renameOrgActivity } from './organizations/fn_renameOrgActivity';
 import { fn_unlinkOrgStatement } from './organizations/fn_unlinkOrgStatement';
+import { fn_studioSurveyStats } from './organizations/fn_studioSurveyStats';
 
 // ── "Start a question with AI" (WizCol Studio): planner, build, scheduled actions ──
 import {
@@ -974,6 +975,8 @@ exports.fn_createOrgStatement = fn_createOrgStatement;
 exports.fn_linkOrgStatement = fn_linkOrgStatement;
 exports.fn_renameOrgActivity = fn_renameOrgActivity;
 exports.fn_unlinkOrgStatement = fn_unlinkOrgStatement;
+// How many people answered a linked crowd survey (MC's own numbers)
+exports.fn_studioSurveyStats = fn_studioSurveyStats;
 
 // ── "Start a question with AI" (WizCol Studio) ──
 exports.fn_studioPlanStart = fn_studioPlanStart;

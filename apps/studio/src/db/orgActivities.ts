@@ -20,6 +20,7 @@ import {
 } from '@freedi/shared-types';
 import { db } from '@/firebase';
 import { logError } from '@/utils/logError';
+import { studioSurveyStats, type StudioSurveyStats } from './orgFunctions';
 import { useCollection, type SnapshotState } from './hooks';
 import type { ProgressMap } from './progress';
 
@@ -288,4 +289,47 @@ export async function lookupQuestion(statementId: string): Promise<Statement | n
 	const snap = await getDoc(doc(db, Collections.statements, statementId));
 
 	return snap.exists() ? (snap.data() as Statement) : null;
+}
+
+/**
+ * How many people answered each linked crowd survey.
+ *
+ * Not a Firestore listener: `surveyProgress` has no read rule, so the numbers
+ * come from a callable that computes them the way Mass Consensus does. Fetched
+ * once per set of surveys rather than watched — a participation count that is
+ * a minute old is fine, and a live listener here would cost a query per board
+ * render for no visible gain.
+ */
+export function useSurveyStats(
+	organizationId: string | null | undefined,
+	surveyIds: string[],
+): Record<string, StudioSurveyStats> {
+	const key = useMemo(() => [...surveyIds].sort().join(','), [surveyIds]);
+	const idsRef = useRef(surveyIds);
+	idsRef.current = surveyIds;
+	const [stats, setStats] = useState<Record<string, StudioSurveyStats>>({});
+
+	useEffect(() => {
+		const ids = idsRef.current;
+		if (!organizationId || ids.length === 0) {
+			setStats({});
+
+			return;
+		}
+
+		let cancelled = false;
+		studioSurveyStats({ organizationId, surveyIds: ids })
+			.then((result) => {
+				if (!cancelled) setStats(result);
+			})
+			.catch((error) => {
+				logError(error, { operation: 'db.useSurveyStats', metadata: { key } });
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [organizationId, key]);
+
+	return stats;
 }
