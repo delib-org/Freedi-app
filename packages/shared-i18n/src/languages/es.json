@@ -3594,5 +3594,8 @@
   "{{count}} answered": "{{count}} respondieron",
   "{{count}} finished": "{{count}} terminaron",
   "answered": "respondieron",
-  "finished": "terminaron"
+  "finished": "terminaron",
+  "System admin": "Administración del sistema",
+  "Events": "Eventos",
+  "Events outside any organization": "Eventos fuera de cualquier organización"
 }

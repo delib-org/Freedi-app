@@ -3715,5 +3715,8 @@
   "{{count}} answered": "{{count}} أجابوا",
   "{{count}} finished": "{{count}} أنهوه",
   "answered": "أجابوا",
-  "finished": "أنهوه"
+  "finished": "أنهوه",
+  "System admin": "إدارة النظام",
+  "Events": "الفعاليات",
+  "Events outside any organization": "فعاليات خارج أي مؤسسة"
 }

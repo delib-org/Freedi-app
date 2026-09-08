@@ -60,14 +60,11 @@
 		color: var(--org-accent);
 	}
 
-	&__org {
-		display: flex;
-		min-inline-size: 0;
-		padding-inline-start: var(--space-xs);
-		border-inline-start: 1px solid var(--border-light);
-	}
-
+	// The whole trail, workspace crumb included — one control, no rule between
+	// the organization and the path beneath it.
 	&__breadcrumb {
+		display: flex;
+		align-items: center;
 		flex: 1 1 auto;
 		min-inline-size: 0;
 	}
@@ -317,12 +314,62 @@
 			}
 		}
 
+		// The trail stays on a phone — it is the only thing naming the workspace
+		// once the sidebar has become a tab bar. The brand gives up the room.
 		.app-shell__breadcrumb {
+			display: flex;
+		}
+
+		&.app-shell--has-trail .app-shell__brand {
 			display: none;
+		}
+
+		.app-shell__nav-group {
+			display: contents;
+		}
+
+		.app-shell__nav-group-label {
+			@include visually-hidden;
 		}
 
 		.app-shell__main {
 			padding: var(--space-md);
+		}
+	}
+
+	// The admin screens are not inside the workspace named in the trail, so
+	// they are set below a rule and captioned.
+	&__nav-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+		margin-block-start: var(--space-sm);
+		padding-block-start: var(--space-sm);
+		border-block-start: 1px solid var(--border-light);
+	}
+
+	&__nav-group-label {
+		padding: 0 var(--space-sm) var(--space-xs);
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+	}
+
+	&--rail {
+		.app-shell__nav-group-label {
+			@include visually-hidden;
+		}
+	}
+
+	// A page with no workspace (the picker, an invitation) has no sections
+	// either — it should not carry an empty rail.
+	&--no-nav {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			'topbar'
+			'main';
+
+		.app-shell__sidebar {
+			display: none;
 		}
 	}
 

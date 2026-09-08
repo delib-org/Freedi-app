@@ -98,7 +98,10 @@ export function OrgProvider({ children }: { children: ReactNode }) {
 	const nestedMatch = useMatch('/orgs/:orgId/*');
 	const exactMatch = useMatch('/orgs/:orgId');
 	const urlOrgId = nestedMatch?.params.orgId ?? exactMatch?.params.orgId ?? null;
-	const currentOrgId = urlOrgId ?? orgs[0]?.organizationId ?? null;
+	// Strictly the org in the URL. Falling back to the first org made the shell
+	// claim you were inside org #1 while standing on the picker, an admin screen
+	// or a personal event — the trail would name a workspace you had left.
+	const currentOrgId = urlOrgId;
 
 	const value = useMemo<OrgState>(() => {
 		const currentOrg = orgs.find((o) => o.organizationId === currentOrgId) ?? null;

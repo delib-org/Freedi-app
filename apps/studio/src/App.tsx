@@ -10,6 +10,7 @@ import { lazyWithRetry } from '@/utils/lazyWithRetry';
 import Login from '@/pages/Login';
 import HomeRedirect from '@/pages/HomeRedirect';
 import OrgPicker from '@/pages/OrgPicker/OrgPicker';
+import Personal from '@/pages/Personal/Personal';
 import OrgQuestions from '@/pages/OrgQuestions/OrgQuestions';
 import People from '@/pages/People/People';
 import Invite from '@/pages/Invite/Invite';
@@ -64,6 +65,7 @@ export default function App() {
 						<Route path="/orgs/:orgId/questions/:qId" element={<QuestionDashboard />} />
 						<Route path="/orgs/:orgId/questions/:qId/plan" element={<PlanWithAI />} />
 						<Route path="/orgs/:orgId/questions/:qId/run/:aId" element={<RunView />} />
+						<Route path="/personal" element={<Personal />} />
 						<Route path="/events/:eventId" element={<EventDashboard />} />
 						<Route path="/invite" element={<Invite />} />
 						<Route path="/admin/orgs" element={<AdminOrgs />} />

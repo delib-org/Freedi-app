@@ -3594,5 +3594,8 @@
   "{{count}} answered": "{{count}} beantwoord",
   "{{count}} finished": "{{count}} afgerond",
   "answered": "beantwoord",
-  "finished": "afgerond"
+  "finished": "afgerond",
+  "System admin": "Systeembeheer",
+  "Events": "Evenementen",
+  "Events outside any organization": "Evenementen buiten elke organisatie"
 }
