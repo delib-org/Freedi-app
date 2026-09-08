@@ -12,18 +12,21 @@ import { useGrace } from './_shared/useGrace';
 export default function HomeRedirect() {
 	const { t } = useTranslation();
 	const { orgs, isSystemAdmin, loading } = useOrg();
-	// The system-admin flag arrives on its own snapshot with no loading state,
-	// so an org-less account waits a moment before being sent to the picker.
-	const settled = useGrace(!loading && orgs.length === 0 && !isSystemAdmin);
+	// Both flags arrive on their own snapshots, and the memberships usually come
+	// last — so an empty org list is not yet evidence of anything. Wait for it to
+	// settle before acting on it, or a system admin who belongs to two
+	// organizations is sent to the admin screens every time they open the app.
+	const settled = useGrace(!loading && orgs.length === 0);
 
 	if (loading) return <div className="studio-loading">{t('Loading…')}</div>;
-	if (isSystemAdmin && orgs.length === 0) return <Navigate to="/admin/orgs" replace />;
 	if (orgs.length === 1) return <Navigate to={`/orgs/${orgs[0].organizationId}`} replace />;
-	if (orgs.length === 0 && !settled) return <div className="studio-loading">{t('Loading…')}</div>;
-	// Nothing to pick between: an account with no organizations has exactly one
-	// workspace, and being shown "you are not a member of any organization" as a
-	// home screen tells them nothing they can act on.
-	if (orgs.length === 0) return <Navigate to="/personal" replace />;
+	if (orgs.length > 1) return <Navigate to="/orgs" replace />;
+	if (!settled) return <div className="studio-loading">{t('Loading…')}</div>;
 
-	return <Navigate to="/orgs" replace />;
+	// No organizations at all.
+	if (isSystemAdmin) return <Navigate to="/admin/orgs" replace />;
+
+	// Nothing to pick between: their own events are the only workspace they have,
+	// and "you are not a member of any organization" is not a home screen.
+	return <Navigate to="/personal" replace />;
 }
