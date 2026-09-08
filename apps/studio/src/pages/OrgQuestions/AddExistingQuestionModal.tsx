@@ -1,9 +1,11 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/react';
+import { StatementType, type Statement } from '@freedi/shared-types';
 import { Button, EmptyState, Input, Skeleton } from '@/components/atomic/atoms';
 import { Tag } from '@/components/atomic/atoms/Tag';
-import { useLinkableQuestions, type LinkableQuestion } from '@/db/orgActivities';
+import { lookupQuestion, useLinkableQuestions, type LinkableQuestion } from '@/db/orgActivities';
 import { linkOrgStatement } from '@/db/orgFunctions';
+import { parseQuestionRef, type QuestionRef } from '@/utils/questionRef';
 import { callableMessage } from '../_shared/callableErrors';
 import { logError } from '@/utils/logError';
 import SimpleModal from '../_shared/SimpleModal';
@@ -21,19 +23,27 @@ interface AddExistingQuestionModalProps {
 /** How many matches to render before asking the consultant to narrow the search. */
 const MAX_ROWS = 40;
 
-function matches(question: LinkableQuestion, search: string): boolean {
-	if (!search) return true;
+/**
+ * What the consultant has picked: either a row from their own questions, or
+ * something a pasted id or link resolved to. A survey carries no title —
+ * clients cannot read the surveys collection — so it is shown for what it is
+ * and resolved to a question by the server.
+ */
+type Choice =
+	| { kind: 'statement'; statementId: string; title: string }
+	| { kind: 'survey'; surveyId: string };
 
-	return question.title.toLowerCase().includes(search);
+function choiceKey(choice: Choice): string {
+	return choice.kind === 'survey' ? choice.surveyId : choice.statementId;
 }
 
 /**
  * Adds a question or survey that already exists to this organization's board.
  *
- * The list is the consultant's own questions — the ones they administer —
- * because linking hands the organization's admins authority over the question.
- * The name typed here is the organization's name for it; participants go on
- * seeing the question's own title, which the row shows underneath.
+ * The list is the consultant's own questions. The same box also takes an id or
+ * a pasted link from any of the apps, which is how you reach a question a
+ * colleague in this organization set up, or one nested under theirs — the
+ * server decides whether the organization may have it.
  */
 export default function AddExistingQuestionModal({
 	organizationId,
@@ -45,10 +55,14 @@ export default function AddExistingQuestionModal({
 	const { t, tWithParams } = useTranslation();
 	const searchRef = useRef<HTMLDivElement>(null);
 	const [search, setSearch] = useState('');
-	const [selected, setSelected] = useState<LinkableQuestion | null>(null);
+	const [choice, setChoice] = useState<Choice | null>(null);
 	const [label, setLabel] = useState('');
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState('');
+
+	const [lookingUp, setLookingUp] = useState(false);
+	const [found, setFound] = useState<Statement | null>(null);
+	const [notFound, setNotFound] = useState(false);
 
 	const { data: candidates, loading } = useLinkableQuestions(userId);
 
@@ -58,41 +72,106 @@ export default function AddExistingQuestionModal({
 	);
 	const filtered = useMemo(() => {
 		const needle = search.trim().toLowerCase();
+		if (!needle) return available;
 
-		return available.filter((question) => matches(question, needle));
+		return available.filter((question) => question.title.toLowerCase().includes(needle));
 	}, [available, search]);
 	const shown = filtered.slice(0, MAX_ROWS);
 	const hiddenCount = filtered.length - shown.length;
 
-	const select = (question: LinkableQuestion) => {
-		setSelected(question);
+	// An id or link in the box is looked up as well as filtered on, so a
+	// question the consultant does not own still has a row to click.
+	const pastedRef = useMemo<QuestionRef | null>(() => parseQuestionRef(search), [search]);
+	const pastedIsListed =
+		pastedRef?.kind === 'statement' &&
+		available.some((question) => question.statementId === pastedRef.id);
+
+	useEffect(() => {
+		setFound(null);
+		setNotFound(false);
+		if (!pastedRef || pastedRef.kind !== 'statement' || pastedIsListed) return;
+
+		let cancelled = false;
+		setLookingUp(true);
+		lookupQuestion(pastedRef.id)
+			.then((statement) => {
+				if (cancelled) return;
+				if (statement && statement.statementType === StatementType.question) {
+					setFound(statement);
+				} else {
+					setNotFound(true);
+				}
+			})
+			.catch((err) => {
+				if (cancelled) return;
+				logError(err, { operation: 'AddExistingQuestionModal.lookup', statementId: pastedRef.id });
+				setNotFound(true);
+			})
+			.finally(() => {
+				if (!cancelled) setLookingUp(false);
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [pastedRef, pastedIsListed]);
+
+	const alreadyAdded = pastedRef?.kind === 'statement' && alreadyOnBoard.has(pastedRef.id);
+
+	const chooseFromList = (question: LinkableQuestion) => {
+		setChoice({ kind: 'statement', statementId: question.statementId, title: question.title });
 		setLabel(question.title);
 		setError('');
 	};
 
+	const chooseFound = (statement: Statement) => {
+		setChoice({
+			kind: 'statement',
+			statementId: statement.statementId,
+			title: statement.statement,
+		});
+		setLabel(statement.statement);
+		setError('');
+	};
+
+	const chooseSurvey = (surveyId: string) => {
+		setChoice({ kind: 'survey', surveyId });
+		setLabel('');
+		setError('');
+	};
+
 	const handleAdd = async () => {
-		if (!selected || submitting) return;
+		if (!choice || submitting) return;
 		setSubmitting(true);
 		setError('');
 		try {
 			const trimmed = label.trim();
-			await linkOrgStatement({
+			// Same as the question's own title → no board name worth storing.
+			const boardName =
+				choice.kind === 'statement' && trimmed === choice.title ? undefined : trimmed || undefined;
+			const { statementId } = await linkOrgStatement({
 				organizationId,
-				statementId: selected.statementId,
-				// Same as the question's own title → no board name worth storing.
-				label: trimmed && trimmed !== selected.title ? trimmed : undefined,
+				...(choice.kind === 'survey'
+					? { surveyId: choice.surveyId }
+					: { statementId: choice.statementId }),
+				label: boardName,
 			});
-			onLinked(selected.statementId);
+			onLinked(statementId);
 		} catch (err) {
 			logError(err, {
 				operation: 'AddExistingQuestionModal.link',
 				organizationId,
-				statementId: selected.statementId,
+				metadata: { ref: choiceKey(choice) },
 			});
 			setError(callableMessage(err, t('Could not add the question. Please try again.')));
 			setSubmitting(false);
 		}
 	};
+
+	const selectedKey = choice ? choiceKey(choice) : null;
+
+	const rowClass = (isSelected: boolean) =>
+		isSelected ? `${styles.pickerRow} ${styles.pickerRowSelected}` : styles.pickerRow;
 
 	return (
 		<SimpleModal
@@ -107,7 +186,7 @@ export default function AddExistingQuestionModal({
 					<Button
 						text={t('Add to organization')}
 						variant="primary"
-						disabled={!selected || submitting}
+						disabled={!choice || submitting}
 						loading={submitting}
 						onClick={handleAdd}
 					/>
@@ -117,15 +196,69 @@ export default function AddExistingQuestionModal({
 			<div className={styles.form}>
 				<div ref={searchRef} tabIndex={-1} className={styles.field}>
 					<Input
-						label={t('Find a question')}
+						label={t('Find a question, or paste a link or ID')}
 						value={search}
 						onChange={setSearch}
-						placeholder={t('Search your questions')}
+						placeholder={t('Search, or paste a link from any Freedi app')}
 						fullWidth
 						autoFocus
 						disabled={submitting}
 					/>
 				</div>
+
+				{/* ---- what a pasted id or link resolved to ---- */}
+
+				{alreadyAdded && (
+					<p className={styles.pickerHint} role="status">
+						{t('That question is already on this board.')}
+					</p>
+				)}
+
+				{pastedRef?.kind === 'survey' && !submitting && (
+					<ul className={styles.pickerList} aria-label={t('Pasted reference')}>
+						<li>
+							<button
+								type="button"
+								className={rowClass(selectedKey === pastedRef.id)}
+								onClick={() => chooseSurvey(pastedRef.id)}
+							>
+								<span className={styles.pickerTitle}>{t('Crowd survey')}</span>
+								<Tag outline>{t('By link')}</Tag>
+							</button>
+						</li>
+						<li className={styles.pickerHint}>
+							{t('The question this survey is built around will be added.')}
+						</li>
+					</ul>
+				)}
+
+				{lookingUp && <Skeleton variant="text" />}
+
+				{found && !alreadyAdded && (
+					<ul className={styles.pickerList} aria-label={t('Pasted reference')}>
+						<li>
+							<button
+								type="button"
+								className={rowClass(selectedKey === found.statementId)}
+								disabled={submitting}
+								onClick={() => chooseFound(found)}
+							>
+								<span className={styles.pickerTitle} dir="auto">
+									{found.statement.trim() || t('Untitled')}
+								</span>
+								<Tag outline>{t('By link')}</Tag>
+							</button>
+						</li>
+					</ul>
+				)}
+
+				{notFound && (
+					<p className={styles.pickerHint} role="status">
+						{t('No question with that ID. Check the link and try again.')}
+					</p>
+				)}
+
+				{/* ---- the consultant's own questions ---- */}
 
 				{loading && (
 					<div className={styles.pickerList}>
@@ -135,7 +268,7 @@ export default function AddExistingQuestionModal({
 					</div>
 				)}
 
-				{!loading && available.length === 0 && (
+				{!loading && available.length === 0 && !pastedRef && (
 					<EmptyState
 						icon="🔗"
 						title={t('Nothing to add')}
@@ -146,14 +279,14 @@ export default function AddExistingQuestionModal({
 					/>
 				)}
 
-				{!loading && available.length > 0 && filtered.length === 0 && (
+				{!loading && available.length > 0 && filtered.length === 0 && !pastedRef && (
 					<EmptyState icon="🔍" title={t('No question matches that search.')} compact />
 				)}
 
 				{shown.length > 0 && (
 					<ul className={styles.pickerList} role="listbox" aria-label={t('Your questions')}>
 						{shown.map((question) => {
-							const isSelected = selected?.statementId === question.statementId;
+							const isSelected = selectedKey === question.statementId;
 
 							return (
 								<li key={question.statementId}>
@@ -161,13 +294,9 @@ export default function AddExistingQuestionModal({
 										type="button"
 										role="option"
 										aria-selected={isSelected}
-										className={
-											isSelected
-												? `${styles.pickerRow} ${styles.pickerRowSelected}`
-												: styles.pickerRow
-										}
+										className={rowClass(isSelected)}
 										disabled={submitting}
-										onClick={() => select(question)}
+										onClick={() => chooseFromList(question)}
 									>
 										<span className={styles.pickerTitle} dir="auto">
 											{question.title.trim() || t('Untitled')}
@@ -188,11 +317,12 @@ export default function AddExistingQuestionModal({
 					</p>
 				)}
 
-				{selected && (
+				{choice && (
 					<Input
 						label={t('Name it on this board')}
 						value={label}
 						onChange={setLabel}
+						placeholder={choice.kind === 'survey' ? t("The survey's own title") : undefined}
 						helperText={t('Only this organization sees this name. Participants keep the original.')}
 						fullWidth
 						disabled={submitting}

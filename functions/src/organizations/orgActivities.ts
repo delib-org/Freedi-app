@@ -7,6 +7,7 @@ import {
 	Statement,
 	StatementSubscription,
 	StatementType,
+	Survey,
 	getOrganizationActivityId,
 } from '@freedi/shared-types';
 import { db } from '../db';
@@ -47,15 +48,48 @@ export function normalizeLabel(label: unknown): string | undefined {
 	return trimmed;
 }
 
+/** Ancestors worth consulting when asking who a question sits under. */
+function ancestorIds(statement: Statement): string[] {
+	const ids = [statement.parentId, statement.topParentId, ...(statement.parents ?? [])];
+
+	return Array.from(
+		new Set(
+			ids.filter((id): id is string => Boolean(id) && id !== 'top' && id !== statement.statementId),
+		),
+	);
+}
+
+/** True for a user the organization trusts: one of its admins, or a system admin. */
+async function isTrustedAuthor(
+	userId: string,
+	adminUserIds: ReadonlySet<string>,
+): Promise<boolean> {
+	if (adminUserIds.has(userId)) return true;
+
+	return isSystemAdmin(userId);
+}
+
 /**
- * Loads a statement the caller is allowed to hand to an organization.
+ * Loads a statement the organization is allowed to put on its board.
  *
- * Linking grants every org admin authority over the question, so the caller
- * must already hold that authority themselves: be its creator, hold an admin
- * subscription on it, or be a system admin. Org membership alone is not
- * enough — otherwise any org admin could annex someone else's question.
+ * Eligible when the question was written inside the organization's circle of
+ * trust: created by one of its own admins or by a system admin, or sitting
+ * under a question one of them created. Linking grants every org admin
+ * authority over the question, so this is the line that stops an organization
+ * annexing a stranger's work — while leaving its admins free to put each
+ * other's questions on the shared board without asking.
+ *
+ * Ancestry is read from `parents` and `topParentId` rather than walked one
+ * document at a time: a question nested under an admin's question is eligible
+ * however deep it sits.
  */
-export async function loadLinkableStatement(uid: string, statementId: string): Promise<Statement> {
+export async function loadLinkableStatement(input: {
+	uid: string;
+	organizationId: string;
+	statementId: string;
+	adminUserIds: ReadonlySet<string>;
+}): Promise<Statement> {
+	const { uid, statementId, adminUserIds } = input;
 	const snap = await db.collection(Collections.statements).doc(statementId).get();
 	if (!snap.exists) {
 		throw new HttpsError('not-found', 'Question not found');
@@ -64,18 +98,55 @@ export async function loadLinkableStatement(uid: string, statementId: string): P
 	if (statement.statementType !== StatementType.question) {
 		throw new HttpsError('invalid-argument', 'Only questions and surveys can be added');
 	}
-	if (statement.creatorId === uid) return statement;
 
-	const subSnap = await db
-		.collection(Collections.statementsSubscribe)
-		.doc(`${uid}--${statementId}`)
-		.get();
-	const role = subSnap.exists ? (subSnap.data() as StatementSubscription).role : undefined;
-	if (role && ADMIN_SUB_ROLES.has(role)) return statement;
-
+	// A system admin may place anything; nothing below could widen that.
 	if (await isSystemAdmin(uid)) return statement;
 
-	throw new HttpsError('permission-denied', 'You can only add questions you administer');
+	if (await isTrustedAuthor(statement.creatorId, adminUserIds)) return statement;
+
+	const ancestors = ancestorIds(statement);
+	if (ancestors.length > 0) {
+		const refs = ancestors.map((id) => db.collection(Collections.statements).doc(id));
+		const snaps = await db.getAll(...refs);
+		const creatorIds = Array.from(
+			new Set(
+				snaps
+					.filter((doc) => doc.exists)
+					.map((doc) => (doc.data() as Statement).creatorId)
+					.filter(Boolean),
+			),
+		);
+		for (const creatorId of creatorIds) {
+			if (await isTrustedAuthor(creatorId, adminUserIds)) return statement;
+		}
+	}
+
+	throw new HttpsError(
+		'permission-denied',
+		'That question was not created by anyone in this organization',
+	);
+}
+
+/**
+ * The question a Mass-Consensus survey wraps.
+ *
+ * A survey is not a statement: it points at statements through `questionIds`,
+ * whose first entry is the activity question the survey was built around
+ * (`surveyWriter.ts`). Clients cannot read `surveys` at all — there is no rule
+ * for the collection — so a pasted survey id has to be resolved here.
+ */
+export async function resolveSurveyQuestion(surveyId: string): Promise<string> {
+	const snap = await db.collection(Collections.surveys).doc(surveyId).get();
+	if (!snap.exists) {
+		throw new HttpsError('not-found', 'Survey not found');
+	}
+	const survey = snap.data() as Survey;
+	const statementId = survey.questionIds?.[0];
+	if (!statementId) {
+		throw new HttpsError('failed-precondition', 'That survey has no questions yet');
+	}
+
+	return statementId;
 }
 
 export interface LinkActivityWritesInput {

@@ -7,12 +7,14 @@ import type { LinkableQuestion } from '@/db/orgActivities';
 
 const linkOrgStatement = vi.fn();
 const useLinkableQuestions = vi.fn();
+const lookupQuestion = vi.fn();
 
 vi.mock('@/db/orgFunctions', () => ({
 	linkOrgStatement: (...args: unknown[]) => linkOrgStatement(...args),
 }));
 vi.mock('@/db/orgActivities', () => ({
 	useLinkableQuestions: (...args: unknown[]) => useLinkableQuestions(...args),
+	lookupQuestion: (...args: unknown[]) => lookupQuestion(...args),
 }));
 
 import AddExistingQuestionModal from '../AddExistingQuestionModal';
@@ -56,6 +58,8 @@ describe('AddExistingQuestionModal', () => {
 	beforeEach(() => {
 		linkOrgStatement.mockReset();
 		useLinkableQuestions.mockReset();
+		lookupQuestion.mockReset();
+		lookupQuestion.mockResolvedValue(null);
 	});
 	afterEach(cleanup);
 
@@ -85,7 +89,7 @@ describe('AddExistingQuestionModal', () => {
 	});
 
 	it('links with the board name the user typed', async () => {
-		linkOrgStatement.mockResolvedValue({ activityId: 'org-1--q-budget' });
+		linkOrgStatement.mockResolvedValue({ activityId: 'org-1--q-budget', statementId: 'q-budget' });
 		const { onLinked } = renderModal();
 
 		fireEvent.click(screen.getByRole('option', { name: /spend the budget/i }));
@@ -103,7 +107,7 @@ describe('AddExistingQuestionModal', () => {
 	});
 
 	it('stores no board name when it is left as the question’s own title', async () => {
-		linkOrgStatement.mockResolvedValue({ activityId: 'org-1--q-budget' });
+		linkOrgStatement.mockResolvedValue({ activityId: 'org-1--q-budget', statementId: 'q-budget' });
 		renderModal();
 
 		fireEvent.click(screen.getByRole('option', { name: /spend the budget/i }));
@@ -142,5 +146,101 @@ describe('AddExistingQuestionModal', () => {
 			'disabled',
 			true,
 		);
+	});
+
+	describe('adding by id or link', () => {
+		const OUTSIDE = {
+			statementId: 'Xk29ZmQ4pLv7RtN1sWbC',
+			statement: 'A colleague’s question',
+			statementType: 'question',
+		};
+
+		it('looks up a pasted statement id and offers it', async () => {
+			lookupQuestion.mockResolvedValue(OUTSIDE);
+			renderModal();
+
+			fireEvent.change(screen.getByRole('textbox', { name: /find a question/i }), {
+				target: { value: OUTSIDE.statementId },
+			});
+
+			await waitFor(() => expect(screen.getByText(/a colleague’s question/i)).toBeTruthy());
+			expect(lookupQuestion).toHaveBeenCalledWith(OUTSIDE.statementId);
+		});
+
+		it('links what a pasted link resolved to', async () => {
+			lookupQuestion.mockResolvedValue(OUTSIDE);
+			linkOrgStatement.mockResolvedValue({
+				activityId: `org-1--${OUTSIDE.statementId}`,
+				statementId: OUTSIDE.statementId,
+			});
+			const { onLinked } = renderModal();
+
+			fireEvent.change(screen.getByRole('textbox', { name: /find a question/i }), {
+				target: { value: `https://mc.wizcol.com/q/${OUTSIDE.statementId}` },
+			});
+			await waitFor(() => expect(screen.getByText(/a colleague’s question/i)).toBeTruthy());
+			fireEvent.click(screen.getByText(/a colleague’s question/i));
+			fireEvent.click(screen.getByRole('button', { name: /add to organization/i }));
+
+			await waitFor(() => expect(onLinked).toHaveBeenCalledWith(OUTSIDE.statementId));
+			expect(linkOrgStatement).toHaveBeenCalledWith({
+				organizationId: 'org-1',
+				statementId: OUTSIDE.statementId,
+				label: undefined,
+			});
+		});
+
+		it('sends a pasted survey link as a surveyId, not a statementId', async () => {
+			linkOrgStatement.mockResolvedValue({
+				activityId: 'org-1--q-wrapped',
+				statementId: 'q-wrapped',
+			});
+			const { onLinked } = renderModal();
+
+			fireEvent.change(screen.getByRole('textbox', { name: /find a question/i }), {
+				target: { value: 'https://mc.wizcol.com/s/survey_1712345678901_a1b2c3d' },
+			});
+			fireEvent.click(screen.getByText(/crowd survey/i));
+			fireEvent.click(screen.getByRole('button', { name: /add to organization/i }));
+
+			await waitFor(() => expect(onLinked).toHaveBeenCalledWith('q-wrapped'));
+			expect(linkOrgStatement).toHaveBeenCalledWith({
+				organizationId: 'org-1',
+				surveyId: 'survey_1712345678901_a1b2c3d',
+				label: undefined,
+			});
+			expect(lookupQuestion).not.toHaveBeenCalled();
+		});
+
+		it('says so when the id matches nothing', async () => {
+			lookupQuestion.mockResolvedValue(null);
+			renderModal();
+
+			fireEvent.change(screen.getByRole('textbox', { name: /find a question/i }), {
+				target: { value: 'Xk29ZmQ4pLv7RtN1sWbC' },
+			});
+
+			await waitFor(() => expect(screen.getByText(/no question with that id/i)).toBeTruthy());
+		});
+
+		it('says so when the pasted question is already on the board', async () => {
+			renderModal([BUDGET, HOUSING], ['Xk29ZmQ4pLv7RtN1sWbC']);
+
+			fireEvent.change(screen.getByRole('textbox', { name: /find a question/i }), {
+				target: { value: 'Xk29ZmQ4pLv7RtN1sWbC' },
+			});
+
+			await waitFor(() => expect(screen.getByText(/already on this board/i)).toBeTruthy());
+		});
+
+		it('does not look up an id that is already in the list', async () => {
+			renderModal();
+
+			fireEvent.change(screen.getByRole('textbox', { name: /find a question/i }), {
+				target: { value: 'q-budget' },
+			});
+
+			await waitFor(() => expect(lookupQuestion).not.toHaveBeenCalled());
+		});
 	});
 });

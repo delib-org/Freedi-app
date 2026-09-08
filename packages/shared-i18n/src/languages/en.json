@@ -4283,5 +4283,14 @@
   "generateSolutionsWithAI": "Write {{count}} solutions for me",
   "writingSolutions": "Writing solutions…",
   "generateSolutionsHint": "The AI writes starting solutions you can edit before creating the question",
-  "failedToGenerateSolutions": "No solutions could be generated. Please try again."
+  "failedToGenerateSolutions": "No solutions could be generated. Please try again.",
+  "Find a question, or paste a link or ID": "Find a question, or paste a link or ID",
+  "Search, or paste a link from any Freedi app": "Search, or paste a link from any Freedi app",
+  "By link": "By link",
+  "The question this survey is built around will be added.": "The question this survey is built around will be added.",
+  "That question is already on this board.": "That question is already on this board.",
+  "No question with that ID. Check the link and try again.": "No question with that ID. Check the link and try again.",
+  "The survey's own title": "The survey's own title",
+  "Pasted reference": "Pasted reference",
+  "That question was not created by anyone in this organization": "That question was not created by anyone in this organization"
 }
