@@ -25,16 +25,15 @@
 		"@freedi/evidence": "file:freedi-evidence-1.0.0.tgz",
 		"@freedi/shared-types": "file:freedi-shared-types-1.0.2.tgz",
 		"@sendgrid/mail": "^8.1.6",
-		"@sentry/node": "^9.42.1",
+		"@sentry/node": "^10.73.0",
 		"@sentry/sveltekit": "^10.57.0",
-		"@types/nodemailer": "^7.0.1",
 		"density-clustering": "^1.3.0",
 		"dotenv": "^16.4.5",
 		"firebase-admin": "^12.6.0",
 		"firebase-functions": "^6.3.2",
 		"franc-min": "^5.0.0",
 		"googleapis": "^168.0.0",
-		"nodemailer": "^7.0.6",
+		"nodemailer": "^10.0.1",
 		"openai": "^6.15.0",
 		"p-limit": "^3.1.0",
 		"pako": "^2.1.0",
@@ -58,7 +57,13 @@
 	"private": true,
 	"overrides": {
 		"axios": "^1.16.1",
-		"fast-xml-parser": "^5.8.0"
+		"fast-xml-parser": "^5.8.0",
+		"trim": "^0.0.3",
+		"qs": "^6.16.0",
+		"cookie": "^0.7.2",
+		"form-data": "^4.0.6",
+		"uuid": "^11.1.1",
+		"ts-deepmerge": "^8.0.0"
 	},
 	"bundleDependencies": [
 		"@freedi/shared-types",
