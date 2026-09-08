@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { useAuth } from '@/auth/AuthContext';
 import { useOrg } from '@/org/OrgContext';
 import { useOrgTopQuestions } from '@/db/orgStatements';
-import { useQuestionProgressByOrg } from '@/db/progress';
+import {
+	useOrgActivities,
+	useQuestionProgressByTops,
+	useStatementsByIds,
+} from '@/db/orgActivities';
+import { useQuestionProgressByOrg, type ProgressMap } from '@/db/progress';
 import { Button, EmptyState } from '@/components/atomic/atoms';
 import {
 	QuestionCard,
@@ -14,8 +19,9 @@ import {
 import StudioPage from '../_shared/StudioPage';
 import { useOnboarding } from '../_shared/useOnboarding';
 import { useOrganization } from '../_shared/useOrganization';
-import { useQuestionRollups } from './useQuestionRollups';
+import { useQuestionRollups, type ActivityLabels } from './useQuestionRollups';
 import NewQuestionModal from './NewQuestionModal';
+import AddExistingQuestionModal from './AddExistingQuestionModal';
 import OnboardingCard from './OnboardingCard';
 import styles from './OrgQuestions.module.scss';
 
@@ -33,15 +39,56 @@ export default function OrgQuestions() {
 
 	const questions = useOrgTopQuestions(orgId);
 	const progress = useQuestionProgressByOrg(orgId);
-	const rollups = useQuestionRollups(questions.data, progress.data);
 	const onboarding = useOnboarding(orgId);
+
+	// Linked questions: ones added from elsewhere. They carry no
+	// `organizationId`, so neither the owned-questions query nor the org-wide
+	// progress query finds them — both need a second, id-keyed pass.
+	const activities = useOrgActivities(orgId);
+	const ownedIds = useMemo(
+		() => new Set(questions.data.map((question) => question.statementId)),
+		[questions.data],
+	);
+	const linkedIds = useMemo(
+		() =>
+			activities.data
+				.map((activity) => activity.statementId)
+				.filter((statementId) => !ownedIds.has(statementId)),
+		[activities.data, ownedIds],
+	);
+	const linkedQuestions = useStatementsByIds(linkedIds);
+	const linkedProgress = useQuestionProgressByTops(linkedIds);
+
+	const labels = useMemo<ActivityLabels>(
+		() =>
+			activities.data.reduce<ActivityLabels>((acc, activity) => {
+				acc[activity.statementId] = { label: activity.label };
+
+				return acc;
+			}, {}),
+		[activities.data],
+	);
+	const allQuestions = useMemo(
+		() => [...questions.data, ...linkedQuestions.data],
+		[questions.data, linkedQuestions.data],
+	);
+	const allProgress = useMemo<ProgressMap>(
+		() => ({ ...progress.data, ...linkedProgress.data }),
+		[progress.data, linkedProgress.data],
+	);
+	const rollups = useQuestionRollups(allQuestions, allProgress, labels);
+	const onBoard = useMemo(
+		() => new Set(allQuestions.map((question) => question.statementId)),
+		[allQuestions],
+	);
 
 	const [showClosed, setShowClosed] = useState(false);
 	const [showModal, setShowModal] = useState(false);
+	const [showAddExisting, setShowAddExisting] = useState(false);
 
 	const open = rollups.filter((r) => r.status !== 'closed');
 	const closed = rollups.filter((r) => r.status === 'closed');
-	const loading = questions.loading;
+	const loading = questions.loading || activities.loading || linkedQuestions.loading;
 	const isEmpty = !loading && rollups.length === 0;
 
 	// A question already exists → step 1 is done whatever the stored state says.
@@ -53,6 +100,12 @@ export default function OrgQuestions() {
 	const handleCreated = (statementId: string) => {
 		markStep(1);
 		setShowModal(false);
+		navigate(`/orgs/${orgId}/questions/${statementId}`);
+	};
+
+	const handleLinked = (statementId: string) => {
+		markStep(1);
+		setShowAddExisting(false);
 		navigate(`/orgs/${orgId}/questions/${statementId}`);
 	};
 
@@ -71,6 +124,11 @@ export default function OrgQuestions() {
 							text={`+ ${t('New question')}`}
 							variant="secondary"
 							onClick={() => setShowModal(true)}
+						/>
+						<Button
+							text={t('Add existing')}
+							variant="secondary"
+							onClick={() => setShowAddExisting(true)}
 						/>
 					</>
 				) : undefined
@@ -115,13 +173,22 @@ export default function OrgQuestions() {
 					}
 					secondary={
 						canManage ? (
-							<button
-								type="button"
-								className="empty-state__link"
-								onClick={() => setShowModal(true)}
-							>
-								{t('or write the question yourself')}
-							</button>
+							<span className={styles.emptyLinks}>
+								<button
+									type="button"
+									className="empty-state__link"
+									onClick={() => setShowModal(true)}
+								>
+									{t('or write the question yourself')}
+								</button>
+								<button
+									type="button"
+									className="empty-state__link"
+									onClick={() => setShowAddExisting(true)}
+								>
+									{t('or add one you already have')}
+								</button>
+							</span>
 						) : undefined
 					}
 				/>
@@ -167,6 +234,16 @@ export default function OrgQuestions() {
 					organizationId={orgId}
 					onClose={() => setShowModal(false)}
 					onCreated={handleCreated}
+				/>
+			)}
+
+			{showAddExisting && orgId && user && (
+				<AddExistingQuestionModal
+					organizationId={orgId}
+					userId={user.uid}
+					alreadyOnBoard={onBoard}
+					onClose={() => setShowAddExisting(false)}
+					onLinked={handleLinked}
 				/>
 			)}
 		</StudioPage>

@@ -38,3 +38,25 @@ export function classifyInviteError(error: unknown): InviteErrorKind {
 
 	return 'generic';
 }
+
+/**
+ * Statuses whose message was written for the user by the callable itself
+ * ("That question is already on this board"), as opposed to an internal
+ * failure whose message would only confuse.
+ */
+const EXPLAINED_STATUSES = [
+	'already-exists',
+	'permission-denied',
+	'not-found',
+	'invalid-argument',
+	'failed-precondition',
+];
+
+/** The server's own explanation when it wrote one, else `fallback`. */
+export function callableMessage(error: unknown, fallback: string): string {
+	const code = getErrorCode(error) ?? '';
+	const message = getErrorMessage(error).trim();
+	if (!message) return fallback;
+
+	return EXPLAINED_STATUSES.some((status) => code.endsWith(status)) ? message : fallback;
+}

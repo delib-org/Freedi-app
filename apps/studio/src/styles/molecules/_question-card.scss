@@ -67,7 +67,21 @@
 	}
 
 	&__status {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
 		flex: 0 0 auto;
+	}
+
+	// The question's own title, shown when this board renamed it. Muted and
+	// clamped: it is provenance, not the card's heading.
+	&__real-title {
+		@include line-clamp(1);
+
+		margin: -0.375rem 0 0;
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+		overflow-wrap: anywhere;
 	}
 
 	&__rollup {

@@ -5,6 +5,7 @@ import type { WriteBatch } from 'firebase-admin/firestore';
 import {
 	Collections,
 	ORG_ADMIN_ROLES,
+	OrganizationActivity,
 	OrganizationMember,
 	OrganizationRole,
 	Role,
@@ -122,13 +123,36 @@ export function buildAdminSubscription(
 	};
 }
 
-async function listOrgTopQuestions(organizationId: string): Promise<Statement[]> {
-	const snap = await db
-		.collection(Collections.statements)
-		.where('organizationId', '==', organizationId)
-		.get();
+/**
+ * Every question an organization administers: the ones it owns
+ * (`Statement.organizationId`) plus the ones linked onto its board from
+ * elsewhere (`organizationActivities`). Both kinds must follow the roster, so
+ * a newly promoted admin can open either and a removed member loses both.
+ *
+ * The link ids are read here rather than imported from `orgActivities.ts`,
+ * which imports `buildAdminSubscription` from this file.
+ */
+async function listOrgAdministeredQuestions(organizationId: string): Promise<Statement[]> {
+	const [ownedSnap, linkSnap] = await Promise.all([
+		db.collection(Collections.statements).where('organizationId', '==', organizationId).get(),
+		db
+			.collection(Collections.organizationActivities)
+			.where('organizationId', '==', organizationId)
+			.get(),
+	]);
+	const owned = ownedSnap.docs.map((doc) => doc.data() as Statement);
+	const ownedIds = new Set(owned.map((statement) => statement.statementId));
 
-	return snap.docs.map((doc) => doc.data() as Statement);
+	const linkedIds = linkSnap.docs
+		.map((doc) => (doc.data() as OrganizationActivity).statementId)
+		.filter((statementId) => !ownedIds.has(statementId));
+	if (linkedIds.length === 0) return owned;
+
+	const linked = await Promise.all(
+		linkedIds.map((statementId) => db.collection(Collections.statements).doc(statementId).get()),
+	);
+
+	return owned.concat(linked.filter((snap) => snap.exists).map((snap) => snap.data() as Statement));
 }
 
 export async function commitInChunks(writes: Array<(batch: WriteBatch) => void>): Promise<void> {
@@ -149,7 +173,7 @@ export async function materializeOrgAdminOnTopQuestions(
 	organizationId: string,
 	member: OrganizationMember,
 ): Promise<number> {
-	const questions = await listOrgTopQuestions(organizationId);
+	const questions = await listOrgAdministeredQuestions(organizationId);
 	if (questions.length === 0) return 0;
 
 	const now = Date.now();
@@ -189,7 +213,7 @@ export async function demoteOrgMemberOnTopQuestions(
 	organizationId: string,
 	userId: string,
 ): Promise<number> {
-	const questions = await listOrgTopQuestions(organizationId);
+	const questions = await listOrgAdministeredQuestions(organizationId);
 	if (questions.length === 0) return 0;
 
 	const now = Date.now();

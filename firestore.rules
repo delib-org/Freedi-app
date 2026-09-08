@@ -1675,6 +1675,26 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Questions linked onto an organization's board from elsewhere. Written
+    // exclusively by fn_linkOrgStatement / fn_renameOrgActivity /
+    // fn_unlinkOrgStatement (Admin SDK); clients only read. A link record holds
+    // no content of its own beyond the org-facing label, and the authority it
+    // represents lives in statementsSubscribe, not here.
+    match /organizationActivities/{activityId} {
+      // `resource != null` first: on a document that does not exist `resource`
+      // is null, and reading `.data` off it is an ERROR in rules, not a denial.
+      // An error propagates to the client as a failed listener rather than a
+      // clean "no such document" — which is what a question with no link record
+      // (i.e. every question the org owns) looks like.
+      allow get: if resource != null &&
+                    (isOrgMember(resource.data.organizationId) || isSystemAdminUser());
+      // list: Studio's board query is `where organizationId == X`; scoping the
+      // list by resource.data would need a get() per row, exactly as for
+      // organizationMembers above.
+      allow list: if request.auth != null;
+      allow write: if false;
+    }
+
     // Per-question participation funnel. Counters are maintained by the
     // progress writer in functions/src/progress/ (Admin SDK). Readable by the
     // question's admins (direct or via the top parent) and by members of the

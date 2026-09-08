@@ -10,6 +10,7 @@ import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandli
 import { ERROR_MESSAGES } from '@/constants/common';
 import type { FlowState, SimilarCheckResponse, MultiSuggestionResponse, SplitSuggestion } from '@/types/api';
 import { SuggestionMode } from '@freedi/shared-types';
+import { submitRating } from '@/controllers/swipeController';
 import SimilarSolutions from './SimilarSolutions';
 import EnhancedLoader from './EnhancedLoader';
 import SuccessMessage from './SuccessMessage';
@@ -36,6 +37,19 @@ interface SolutionPromptModalProps {
   requiresSolution?: boolean;
   hasCheckedUserSolutions?: boolean;
   userName?: string;
+  /** Survey session id, so the author's +1 after an automatic merge carries its demographic anchor */
+  surveyId?: string;
+  /**
+   * When the AI detects several answers in one submission, submit them as
+   * separate suggestions without showing the "split?" preview.
+   */
+  autoSplitMultiSuggestions?: boolean;
+  /**
+   * When a similar suggestion already exists, merge into the closest one
+   * without showing the "merge or add new?" screen, then record the author's
+   * +1 on the merged suggestion.
+   */
+  autoMergeSimilar?: boolean;
 }
 
 const MAX_ROWS = 8;
@@ -54,7 +68,10 @@ export default function SolutionPromptModal({
   minWords,
   requiresSolution = false,
   hasCheckedUserSolutions: _hasCheckedUserSolutions = false,
-  userName: _userName,
+  userName,
+  surveyId,
+  autoSplitMultiSuggestions = false,
+  autoMergeSimilar = false,
 }: SolutionPromptModalProps) {
   const { t } = useTranslation();
   const [text, setText] = useState('');
@@ -223,6 +240,12 @@ export default function SolutionPromptModal({
           isRemoved: false,
         }));
 
+        if (autoSplitMultiSuggestions) {
+          // Admin chose automatic splitting: skip the preview entirely
+          await handleConfirmMultiSuggestions(splitSuggestions);
+          return;
+        }
+
         setMultiSuggestions(splitSuggestions);
         // Store similar data for later (after multi-preview)
         setStoredSimilarData(similarData.similarStatements?.length > 0 ? similarData : null);
@@ -237,7 +260,12 @@ export default function SolutionPromptModal({
 
       // No multiple suggestions - check for similar
       if (similarData.similarStatements && similarData.similarStatements.length > 0) {
-        setFlowState({ step: 'similar', data: similarData });
+        if (autoMergeSimilar) {
+          // Admin chose automatic merging: fold into the closest match and +1 it
+          await handleAutoMerge(similarData.similarStatements[0].statementId, text);
+        } else {
+          setFlowState({ step: 'similar', data: similarData });
+        }
       } else {
         // No similar solutions, proceed to submit
         await handleSelectSolution(null, text);
@@ -300,33 +328,131 @@ export default function SolutionPromptModal({
     }
   };
 
-  // Step 2b: Merge solution into existing statement (new default behavior)
+  /**
+   * Merge `solutionText` into an existing suggestion. Returns the id of the
+   * suggestion that now carries the merged content.
+   */
+  const mergeInto = async (targetStatementId: string, solutionText: string): Promise<string> => {
+    console.info('🔀 Merging solution into existing statement:', targetStatementId);
+
+    const response = await fetch(`/api/statements/${questionId}/merge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetStatementId,
+        solutionText,
+        userId,
+        userName,
+      }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new NetworkError(data.error || ERROR_MESSAGES.MERGE_FAILED);
+    }
+
+    const data: { statementId?: string } = await response.json();
+
+    // Track successful merge
+    trackSolutionSubmitted(questionId, userId, false); // false = merged, not created
+
+    return data.statementId ?? targetStatementId;
+  };
+
+  /**
+   * Automatic merge: fold the text into the closest existing suggestion and
+   * record the author's +1 on it. The merge is the real outcome; a failed +1
+   * is logged but does not undo it or block the participant.
+   */
+  const mergeAndAgree = async (targetStatementId: string, solutionText: string): Promise<void> => {
+    const mergedStatementId = await mergeInto(targetStatementId, solutionText);
+
+    try {
+      await submitRating(questionId, mergedStatementId, 1, userId, userName, surveyId);
+    } catch (err) {
+      logError(err, {
+        operation: 'SolutionPromptModal.mergeAndAgree.rate',
+        userId,
+        statementId: mergedStatementId,
+        metadata: { questionId },
+      });
+    }
+  };
+
+  /**
+   * Find the closest existing suggestion for one piece of text, or null when
+   * nothing is similar enough. Any failure counts as "nothing similar" so the
+   * piece is still submitted as a new suggestion.
+   */
+  const findMergeTarget = async (solutionText: string): Promise<string | null> => {
+    try {
+      const response = await fetch(`/api/statements/${questionId}/check-similar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userInput: solutionText, userId }),
+      });
+
+      if (!response.ok) return null;
+
+      const data: SimilarCheckResponse = await response.json();
+
+      return data.similarStatements?.[0]?.statementId ?? null;
+    } catch (err) {
+      logError(err, {
+        operation: 'SolutionPromptModal.findMergeTarget',
+        userId,
+        metadata: { questionId },
+      });
+
+      return null;
+    }
+  };
+
+  /** Create a brand-new suggestion (the author's +1 is written server-side). */
+  const createSuggestion = async (solutionText: string): Promise<void> => {
+    const response = await fetch(`/api/statements/${questionId}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        solutionText,
+        userId,
+        existingStatementId: null,
+      }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new NetworkError(data.error || ERROR_MESSAGES.SUBMIT_FAILED);
+    }
+
+    const data = await response.json();
+    trackSolutionSubmitted(questionId, userId, data.action === 'created');
+  };
+
+  /**
+   * Submit one piece of a split submission: with auto-merge on, merge it into
+   * a similar suggestion when one exists; otherwise create it.
+   */
+  const submitPiece = async (solutionText: string): Promise<void> => {
+    if (autoMergeSimilar) {
+      const target = await findMergeTarget(solutionText);
+      if (target) {
+        await mergeAndAgree(target, solutionText);
+
+        return;
+      }
+    }
+
+    await createSuggestion(solutionText);
+  };
+
+  // Step 2b: Merge solution into existing statement (participant chose "merge")
   const handleMergeSolution = async (targetStatementId: string) => {
     setIsFinalSubmit(true);
     setFlowState({ step: 'submitting' });
 
     try {
-      console.info('🔀 Merging solution into existing statement:', targetStatementId);
-
-      const response = await fetch(`/api/statements/${questionId}/merge`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          targetStatementId,
-          solutionText: text,
-          userId,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new NetworkError(data.error || ERROR_MESSAGES.MERGE_FAILED);
-      }
-
-      await response.json();
-
-      // Track successful merge
-      trackSolutionSubmitted(questionId, userId, false); // false = merged, not created
+      await mergeInto(targetStatementId, text);
 
       setFlowState({
         step: 'success',
@@ -336,6 +462,30 @@ export default function SolutionPromptModal({
     } catch (err) {
       logError(err, {
         operation: 'SolutionPromptModal.handleMergeSolution',
+        userId,
+        metadata: { questionId, targetStatementId },
+      });
+      setError(err instanceof Error ? err.message : (ERROR_MESSAGES.MERGE_FAILED || ERROR_MESSAGES.SUBMIT_FAILED));
+      setFlowState({ step: 'input' });
+    }
+  };
+
+  // Step 2c: Automatic merge (admin turned on autoMergeSimilar)
+  const handleAutoMerge = async (targetStatementId: string, solutionText: string) => {
+    setIsFinalSubmit(true);
+    setFlowState({ step: 'submitting' });
+
+    try {
+      await mergeAndAgree(targetStatementId, solutionText);
+
+      setFlowState({
+        step: 'success',
+        action: 'merged',
+        solutionText,
+      });
+    } catch (err) {
+      logError(err, {
+        operation: 'SolutionPromptModal.handleAutoMerge',
         userId,
         metadata: { questionId, targetStatementId },
       });
@@ -356,29 +506,9 @@ export default function SolutionPromptModal({
     setFlowState({ step: 'submitting' });
 
     try {
-      // Submit each suggestion sequentially
+      // Submit each suggestion sequentially (merging into similar ones when auto-merge is on)
       for (const suggestion of suggestions) {
-        const solutionText = `${suggestion.title}: ${suggestion.description}`;
-
-        const response = await fetch(`/api/statements/${questionId}/submit`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            solutionText,
-            userId,
-            existingStatementId: null,
-            generatedTitle: suggestion.title,
-            generatedDescription: suggestion.description,
-          }),
-        });
-
-        if (!response.ok) {
-          const data = await response.json();
-          throw new NetworkError(data.error || ERROR_MESSAGES.SUBMIT_FAILED);
-        }
-
-        const data = await response.json();
-        trackSolutionSubmitted(questionId, userId, data.action === 'created');
+        await submitPiece(`${suggestion.title}: ${suggestion.description}`);
       }
 
       setFlowState({
@@ -402,8 +532,12 @@ export default function SolutionPromptModal({
   const handleDismissMulti = async () => {
     // Check if we have stored similar data
     if (storedSimilarData && storedSimilarData.similarStatements?.length > 0) {
-      // Show similar solutions
-      setFlowState({ step: 'similar', data: storedSimilarData });
+      if (autoMergeSimilar) {
+        await handleAutoMerge(storedSimilarData.similarStatements[0].statementId, text);
+      } else {
+        // Show similar solutions
+        setFlowState({ step: 'similar', data: storedSimilarData });
+      }
     } else {
       // Submit original directly
       await handleSelectSolution(null, text);

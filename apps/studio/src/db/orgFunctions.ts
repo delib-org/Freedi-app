@@ -277,6 +277,28 @@ export interface StudioSeedOptionsResult {
 	total: number;
 }
 
+export interface LinkOrgStatementRequest {
+	organizationId: string;
+	statementId: string;
+	/** Org-facing name. Empty → the board shows the question's own title. */
+	label?: string;
+}
+
+export interface LinkOrgStatementResult {
+	activityId: string;
+}
+
+export interface RenameOrgActivityRequest {
+	organizationId: string;
+	statementId: string;
+	label?: string;
+}
+
+export interface UnlinkOrgStatementRequest {
+	organizationId: string;
+	statementId: string;
+}
+
 // --- Callables -------------------------------------------------------------
 
 function callable<Req, Res>(name: string): (data: Req) => Promise<Res> {
@@ -311,6 +333,18 @@ export const removeOrgMember = callable<RemoveOrgMemberRequest, RemoveOrgMemberR
 
 export const createOrgStatement = callable<CreateOrgStatementRequest, CreateOrgStatementResult>(
 	'fn_createOrgStatement',
+);
+
+export const linkOrgStatement = callable<LinkOrgStatementRequest, LinkOrgStatementResult>(
+	'fn_linkOrgStatement',
+);
+
+export const renameOrgActivity = callable<RenameOrgActivityRequest, { label: string | null }>(
+	'fn_renameOrgActivity',
+);
+
+export const unlinkOrgStatement = callable<UnlinkOrgStatementRequest, { removed: boolean }>(
+	'fn_unlinkOrgStatement',
 );
 
 export const nudgeQuestionSubscribers = callable<NudgeRequest, NudgeResult>(
