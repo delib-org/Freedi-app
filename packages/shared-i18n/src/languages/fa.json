@@ -4100,5 +4100,8 @@
   "{{count}} answered": "{{count}} پاسخ دادند",
   "{{count}} finished": "{{count}} به پایان رساندند",
   "answered": "پاسخ دادند",
-  "finished": "به پایان رساندند"
+  "finished": "به پایان رساندند",
+  "System admin": "مدیریت سامانه",
+  "Events": "رویدادها",
+  "Events outside any organization": "رویدادهای خارج از هر سازمان"
 }

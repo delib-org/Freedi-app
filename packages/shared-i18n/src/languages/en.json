@@ -4300,5 +4300,8 @@
   "{{count}} answered": "{{count}} answered",
   "{{count}} finished": "{{count}} finished",
   "answered": "answered",
-  "finished": "finished"
+  "finished": "finished",
+  "System admin": "System admin",
+  "Events": "Events",
+  "Events outside any organization": "Events outside any organization"
 }

@@ -16,6 +16,7 @@ import { useStatement } from '@/db/orgStatements';
 import { useOrg } from '@/org/OrgContext';
 import StudioPage from '@/pages/_shared/StudioPage';
 import { useOnboarding } from '@/pages/_shared/useOnboarding';
+import { useBoardTitle } from '@/pages/_shared/useBoardTitle';
 import BuildBar from './components/BuildBar';
 import PlanCard from './components/PlanCard';
 import PlanChat, { type DraftSeed } from './components/PlanChat';
@@ -85,12 +86,13 @@ export default function PlanWithAI() {
 		setTab('chat');
 	}, []);
 
+	const boardTitle = useBoardTitle(orgId, existingMode ? qId : null);
 	const title = existingMode ? t('Plan with AI') : t('Start with AI');
 	const breadcrumb = [
 		{ label: t('Questions'), to: orgHome },
-		...(existingMode && qId
-			? [{ label: question?.statement || t('Question'), to: questionHref(qId) }]
-			: []),
+		// The board's name for it, so a linked question is not called one thing
+		// here and another on its own dashboard.
+		...(existingMode && qId ? [{ label: boardTitle || t('Question'), to: questionHref(qId) }] : []),
 		{ label: title },
 	];
 
