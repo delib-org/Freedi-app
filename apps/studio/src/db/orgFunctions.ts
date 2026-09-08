@@ -304,6 +304,20 @@ export interface RenameOrgActivityRequest {
 	label?: string;
 }
 
+export interface StudioSurveyStats {
+	/** Everyone who opened the survey. */
+	entered: number;
+	/** Those who got somewhere in it — what Mass Consensus calls responses. */
+	responded: number;
+	/** Those who reached the end. */
+	completed: number;
+}
+
+export interface SurveyStatsRequest {
+	organizationId: string;
+	surveyIds: string[];
+}
+
 export interface UnlinkOrgStatementRequest {
 	organizationId: string;
 	statementId: string;
@@ -355,6 +369,10 @@ export const renameOrgActivity = callable<RenameOrgActivityRequest, { label: str
 
 export const unlinkOrgStatement = callable<UnlinkOrgStatementRequest, { removed: boolean }>(
 	'fn_unlinkOrgStatement',
+);
+
+export const studioSurveyStats = callable<SurveyStatsRequest, Record<string, StudioSurveyStats>>(
+	'fn_studioSurveyStats',
 );
 
 export const nudgeQuestionSubscribers = callable<NudgeRequest, NudgeResult>(

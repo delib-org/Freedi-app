@@ -3589,5 +3589,10 @@
   "That question was not created by anyone in this organization": "Die vraag is door niemand in deze organisatie gemaakt",
   "Open the survey": "Enquête openen",
   "Survey settings": "Enquête-instellingen",
-  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "Deze enquête leeft in Mass Consensus. Studio toont hem hier; hij draait daar."
+  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "Deze enquête leeft in Mass Consensus. Studio toont hem hier; hij draait daar.",
+  "{{entered}} opened it · {{responded}} answered · {{completed}} finished": "{{entered}} geopend · {{responded}} beantwoord · {{completed}} afgerond",
+  "{{count}} answered": "{{count}} beantwoord",
+  "{{count}} finished": "{{count}} afgerond",
+  "answered": "beantwoord",
+  "finished": "afgerond"
 }

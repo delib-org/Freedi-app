@@ -3589,5 +3589,10 @@
   "That question was not created by anyone in this organization": "Diese Frage wurde von niemandem in dieser Organisation erstellt",
   "Open the survey": "Umfrage öffnen",
   "Survey settings": "Umfrage-Einstellungen",
-  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "Diese Umfrage lebt in Mass Consensus. Studio zeigt sie hier; betrieben wird sie dort."
+  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "Diese Umfrage lebt in Mass Consensus. Studio zeigt sie hier; betrieben wird sie dort.",
+  "{{entered}} opened it · {{responded}} answered · {{completed}} finished": "{{entered}} geöffnet · {{responded}} geantwortet · {{completed}} abgeschlossen",
+  "{{count}} answered": "{{count}} geantwortet",
+  "{{count}} finished": "{{count}} abgeschlossen",
+  "answered": "geantwortet",
+  "finished": "abgeschlossen"
 }

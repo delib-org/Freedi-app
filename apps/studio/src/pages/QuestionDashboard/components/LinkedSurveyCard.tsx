@@ -1,9 +1,9 @@
-import type { FC } from 'react';
+import { useMemo, type FC } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import type { OrganizationActivity } from '@freedi/shared-types';
 import { ProgressFunnel } from '@/components/atomic/atoms/ProgressFunnel';
 import { Tag } from '@/components/atomic/atoms/Tag';
-import { useQuestionProgressByIds } from '@/db/orgActivities';
+import { useQuestionProgressByIds, useSurveyStats } from '@/db/orgActivities';
 import { sumProgress } from '@/db/progress';
 import { MASS_CONSENSUS_URL } from '@/config';
 import styles from './LinkedSurveyCard.module.scss';
@@ -24,7 +24,20 @@ const LinkedSurveyCard: FC<LinkedSurveyCardProps> = ({ activity }) => {
 	const { t, tWithParams } = useTranslation();
 	const questionIds = activity.surveyQuestionIds ?? [activity.statementId];
 	const { data: progress } = useQuestionProgressByIds(questionIds);
-	const totals = sumProgress(progress);
+	const fallback = sumProgress(progress);
+
+	// Someone who answers through the survey flow leaves a surveyProgress record
+	// and no per-statement trail, so the funnel's own counters would report a
+	// busy survey as untouched. Prefer the numbers Mass Consensus reports.
+	const surveyIds = useMemo(
+		() => (activity.surveyId ? [activity.surveyId] : []),
+		[activity.surveyId],
+	);
+	const stats = useSurveyStats(activity.organizationId, surveyIds);
+	const survey = activity.surveyId ? stats[activity.surveyId] : undefined;
+	const counts = survey
+		? { entered: survey.entered, suggested: survey.responded, evaluated: survey.completed }
+		: { entered: fallback.entered, suggested: fallback.suggested, evaluated: fallback.evaluated };
 
 	const participantUrl = `${MASS_CONSENSUS_URL}/s/${activity.surveyId}`;
 	const adminUrl = `${MASS_CONSENSUS_URL}/admin/surveys/${activity.surveyId}`;
@@ -46,14 +59,16 @@ const LinkedSurveyCard: FC<LinkedSurveyCardProps> = ({ activity }) => {
 				</div>
 			</header>
 
-			<ProgressFunnel
-				counts={{
-					entered: totals.entered,
-					suggested: totals.suggested,
-					evaluated: totals.evaluated,
-				}}
-				variant="full"
-			/>
+			<ProgressFunnel counts={counts} variant="full" kind={survey ? 'survey' : 'question'} />
+			{survey && (
+				<p className={styles.note}>
+					{tWithParams('{{entered}} opened it · {{responded}} answered · {{completed}} finished', {
+						entered: survey.entered,
+						responded: survey.responded,
+						completed: survey.completed,
+					})}
+				</p>
+			)}
 
 			<div className={styles.actions}>
 				<a className={styles.action} href={participantUrl} target="_blank" rel="noreferrer">

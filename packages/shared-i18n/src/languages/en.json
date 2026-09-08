@@ -4295,5 +4295,10 @@
   "That question was not created by anyone in this organization": "That question was not created by anyone in this organization",
   "Open the survey": "Open the survey",
   "Survey settings": "Survey settings",
-  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "This survey lives in Mass Consensus. Studio shows it here; it is run over there."
+  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "This survey lives in Mass Consensus. Studio shows it here; it is run over there.",
+  "{{entered}} opened it · {{responded}} answered · {{completed}} finished": "{{entered}} opened it · {{responded}} answered · {{completed}} finished",
+  "{{count}} answered": "{{count}} answered",
+  "{{count}} finished": "{{count}} finished",
+  "answered": "answered",
+  "finished": "finished"
 }
