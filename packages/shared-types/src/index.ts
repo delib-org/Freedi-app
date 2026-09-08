@@ -146,6 +146,7 @@ export type {
   Organization,
   OrganizationMember,
   OrganizationInvitation,
+  OrganizationActivity,
 } from "./models/organization";
 
 export {
@@ -155,9 +156,11 @@ export {
   OrganizationSchema,
   OrganizationMemberSchema,
   OrganizationInvitationSchema,
+  OrganizationActivitySchema,
   ORG_INVITE_EXPIRY_MS,
   ORG_ADMIN_ROLES,
   getOrganizationMemberId,
+  getOrganizationActivityId,
 } from "./models/organization";
 
 // Per-question participation funnel (server-maintained)

@@ -125,6 +125,7 @@ export enum Collections {
     organizations = 'organizations',
     organizationMembers = 'organizationMembers',
     organizationInvitations = 'organizationInvitations',
+    organizationActivities = 'organizationActivities',
 
     // Per-question participation funnel (server-maintained counters + markers)
     questionProgress = 'questionProgress',

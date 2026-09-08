@@ -163,6 +163,55 @@ describe('organizations', () => {
 		});
 	});
 
+	describe('/organizationActivities', () => {
+		const activity = {
+			activityId: `${ORG}--linked-1`,
+			organizationId: ORG,
+			statementId: 'linked-1',
+			label: 'Budget round',
+			statementTitle: 'How should we spend the budget?',
+			addedBy: OWNER,
+			addedByDisplayName: OWNER,
+			addedAt: NOW,
+			lastUpdate: NOW,
+			grantedTo: [MEMBER],
+		};
+
+		before(async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'organizationActivities', activity.activityId), activity);
+			});
+		});
+
+		it('allows a member to read a link record', async () => {
+			const db = env.authenticatedContext(MEMBER).firestore();
+			await assertSucceeds(getDoc(doc(db, 'organizationActivities', activity.activityId)));
+		});
+
+		it('rejects a non-member reading a link record', async () => {
+			const db = env.authenticatedContext(STRANGER).firestore();
+			await assertFails(getDoc(doc(db, 'organizationActivities', activity.activityId)));
+		});
+
+		it('rejects a client linking a question to an organization', async () => {
+			const db = env.authenticatedContext(OWNER).firestore();
+			await assertFails(
+				setDoc(doc(db, 'organizationActivities', `${ORG}--linked-2`), {
+					...activity,
+					activityId: `${ORG}--linked-2`,
+					statementId: 'linked-2',
+				}),
+			);
+		});
+
+		it('rejects a client renaming a link, even the org owner', async () => {
+			const db = env.authenticatedContext(OWNER).firestore();
+			await assertFails(
+				updateDoc(doc(db, 'organizationActivities', activity.activityId), { label: 'Renamed' }),
+			);
+		});
+	});
+
 	describe('/statements organizationId pin', () => {
 		it('rejects a client create that sets organizationId', async () => {
 			const db = env.authenticatedContext(OWNER).firestore();
