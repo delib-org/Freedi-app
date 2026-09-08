@@ -6,8 +6,9 @@ import { useOrg } from '@/org/OrgContext';
 import { useOrgTopQuestions } from '@/db/orgStatements';
 import {
 	useOrgActivities,
-	useQuestionProgressByTops,
+	useQuestionProgressByIds,
 	useStatementsByIds,
+	useSurveyStats,
 } from '@/db/orgActivities';
 import { useQuestionProgressByOrg, type ProgressMap } from '@/db/progress';
 import { Button, EmptyState } from '@/components/atomic/atoms';
@@ -57,16 +58,43 @@ export default function OrgQuestions() {
 		[activities.data, ownedIds],
 	);
 	const linkedQuestions = useStatementsByIds(linkedIds);
-	const linkedProgress = useQuestionProgressByTops(linkedIds);
+	// A linked question's own progress record is keyed by its statement id, and
+	// its topParentId points at wherever it really lives — so the by-top query
+	// the board uses for its own questions finds nothing for it.
+	const coveredIds = useMemo(
+		() =>
+			Array.from(
+				new Set(
+					activities.data.flatMap(
+						(activity) => activity.surveyQuestionIds ?? [activity.statementId],
+					),
+				),
+			),
+		[activities.data],
+	);
+	const linkedProgress = useQuestionProgressByIds(coveredIds);
+
+	const surveyIds = useMemo(
+		() =>
+			activities.data
+				.map((activity) => activity.surveyId)
+				.filter((id): id is string => Boolean(id)),
+		[activities.data],
+	);
+	const surveyStats = useSurveyStats(orgId, surveyIds);
 
 	const labels = useMemo<ActivityLabels>(
 		() =>
 			activities.data.reduce<ActivityLabels>((acc, activity) => {
-				acc[activity.statementId] = { label: activity.label };
+				acc[activity.statementId] = {
+					label: activity.label,
+					questionIds: activity.surveyQuestionIds ?? [activity.statementId],
+					surveyStats: activity.surveyId ? surveyStats[activity.surveyId] : undefined,
+				};
 
 				return acc;
 			}, {}),
-		[activities.data],
+		[activities.data, surveyStats],
 	);
 	const allQuestions = useMemo(
 		() => [...questions.data, ...linkedQuestions.data],

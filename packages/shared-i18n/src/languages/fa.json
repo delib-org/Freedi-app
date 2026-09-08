@@ -4095,5 +4095,10 @@
   "That question was not created by anyone in this organization": "این پرسش را هیچ‌کس در این سازمان نساخته است",
   "Open the survey": "باز کردن نظرسنجی",
   "Survey settings": "تنظیمات نظرسنجی",
-  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "این نظرسنجی در Mass Consensus زندگی می‌کند. استودیو آن را اینجا نشان می‌دهد؛ اجرایش آنجاست."
+  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "این نظرسنجی در Mass Consensus زندگی می‌کند. استودیو آن را اینجا نشان می‌دهد؛ اجرایش آنجاست.",
+  "{{entered}} opened it · {{responded}} answered · {{completed}} finished": "{{entered}} باز کردند · {{responded}} پاسخ دادند · {{completed}} به پایان رساندند",
+  "{{count}} answered": "{{count}} پاسخ دادند",
+  "{{count}} finished": "{{count}} به پایان رساندند",
+  "answered": "پاسخ دادند",
+  "finished": "به پایان رساندند"
 }

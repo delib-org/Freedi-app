@@ -6,8 +6,10 @@ import { TranslationProvider } from '@freedi/shared-i18n/react';
 import type { OrganizationActivity } from '@freedi/shared-types';
 
 const useQuestionProgressByIds = vi.fn();
+const useSurveyStats = vi.fn();
 vi.mock('@/db/orgActivities', () => ({
 	useQuestionProgressByIds: (...args: unknown[]) => useQuestionProgressByIds(...args),
+	useSurveyStats: (...args: unknown[]) => useSurveyStats(...args),
 }));
 
 import LinkedSurveyCard from '../components/LinkedSurveyCard';
@@ -50,6 +52,8 @@ function renderCard(activity: OrganizationActivity = ACTIVITY) {
 
 describe('LinkedSurveyCard', () => {
 	beforeEach(() => {
+		useSurveyStats.mockReset();
+		useSurveyStats.mockReturnValue({});
 		useQuestionProgressByIds.mockReset();
 		useQuestionProgressByIds.mockReturnValue({
 			data: {
@@ -74,12 +78,27 @@ describe('LinkedSurveyCard', () => {
 		expect(screen.getByText(/2 questions/i)).toBeTruthy();
 	});
 
-	it('sums participation across every question in the survey', () => {
+	it('sums the questions when Mass Consensus has no numbers yet', () => {
 		renderCard();
 
 		expect(useQuestionProgressByIds).toHaveBeenCalledWith(['q-one', 'q-two']);
 		// 10 + 5 entered, 4 + 1 suggested, 2 + 1 evaluated
 		expect(screen.getByLabelText(/15 entered, 5 suggested, 3 evaluated/i)).toBeTruthy();
+	});
+
+	it("prefers Mass Consensus's own count of who answered", () => {
+		// The per-question counters miss survey answers entirely, which is how a
+		// survey with 22 respondents reported nobody.
+		useSurveyStats.mockReturnValue({
+			survey_1712345678901_a1b2c3d: { entered: 26, responded: 22, completed: 15 },
+		});
+		renderCard();
+
+		expect(useSurveyStats).toHaveBeenCalledWith('org-1', ['survey_1712345678901_a1b2c3d']);
+		// A survey's funnel reads answered/finished, not suggested/evaluated.
+		expect(screen.getByLabelText(/26 entered, 22 answered, 15 finished/i)).toBeTruthy();
+		expect(screen.getByText(/26 opened it/i).textContent).toMatch(/22 answered/);
+		expect(screen.getByText(/26 opened it/i).textContent).toMatch(/15 finished/);
 	});
 
 	it('links to the survey and its settings in Mass Consensus', () => {

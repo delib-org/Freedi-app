@@ -3710,5 +3710,10 @@
   "That question was not created by anyone in this organization": "لم يُنشئ هذا السؤالَ أحدٌ في هذه المؤسسة",
   "Open the survey": "افتح الاستطلاع",
   "Survey settings": "إعدادات الاستطلاع",
-  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "هذا الاستطلاع يعيش في Mass Consensus. يعرضه الاستوديو هنا، لكنه يُدار هناك."
+  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "هذا الاستطلاع يعيش في Mass Consensus. يعرضه الاستوديو هنا، لكنه يُدار هناك.",
+  "{{entered}} opened it · {{responded}} answered · {{completed}} finished": "{{entered}} فتحوه · {{responded}} أجابوا · {{completed}} أنهوه",
+  "{{count}} answered": "{{count}} أجابوا",
+  "{{count}} finished": "{{count}} أنهوه",
+  "answered": "أجابوا",
+  "finished": "أنهوه"
 }
