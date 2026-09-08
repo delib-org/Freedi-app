@@ -4092,5 +4092,8 @@
   "No question with that ID. Check the link and try again.": "پرسشی با این شناسه نیست. پیوند را بررسی کنید و دوباره تلاش کنید.",
   "The survey's own title": "عنوان خودِ نظرسنجی",
   "Pasted reference": "ارجاع چسبانده‌شده",
-  "That question was not created by anyone in this organization": "این پرسش را هیچ‌کس در این سازمان نساخته است"
+  "That question was not created by anyone in this organization": "این پرسش را هیچ‌کس در این سازمان نساخته است",
+  "Open the survey": "باز کردن نظرسنجی",
+  "Survey settings": "تنظیمات نظرسنجی",
+  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "این نظرسنجی در Mass Consensus زندگی می‌کند. استودیو آن را اینجا نشان می‌دهد؛ اجرایش آنجاست."
 }

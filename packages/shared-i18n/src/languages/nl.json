@@ -3586,5 +3586,8 @@
   "No question with that ID. Check the link and try again.": "Geen vraag met dat ID. Controleer de link en probeer het opnieuw.",
   "The survey's own title": "De eigen titel van de enquête",
   "Pasted reference": "Geplakte verwijzing",
-  "That question was not created by anyone in this organization": "Die vraag is door niemand in deze organisatie gemaakt"
+  "That question was not created by anyone in this organization": "Die vraag is door niemand in deze organisatie gemaakt",
+  "Open the survey": "Enquête openen",
+  "Survey settings": "Enquête-instellingen",
+  "This survey lives in Mass Consensus. Studio shows it here; it is run over there.": "Deze enquête leeft in Mass Consensus. Studio toont hem hier; hij draait daar."
 }

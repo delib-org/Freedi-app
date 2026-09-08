@@ -8,6 +8,7 @@ import {
 	getOrganizationActivityId,
 } from '@freedi/shared-types';
 import { db } from '../db';
+import type { Statement } from '@freedi/shared-types';
 import { commitInChunks, listOrgAdminMembers, requireOrgRole } from './orgAuth';
 import { getCallerIdentity } from './orgInvites';
 import { loadCallerUser } from './orgStatements';
@@ -37,6 +38,11 @@ interface LinkOrgStatementResult {
 	activityId: string;
 	/** The question actually linked — the caller may have named a survey. */
 	statementId: string;
+	/**
+	 * Every question this link covers: just `statementId`, or all of a survey's
+	 * questions. The caller rebuilds participation counters for each.
+	 */
+	questionIds: string[];
 }
 
 /**
@@ -45,8 +51,12 @@ interface LinkOrgStatementResult {
  * The question is *linked*, not moved: nothing on the statement changes, it
  * keeps its own home and can be linked into more than one organization. What
  * the link does grant is authority — every org admin gets an admin
- * subscription on it — which is why the caller must already administer the
- * question themselves (see `loadLinkableStatement`).
+ * subscription on it — which is why the question has to come from inside the
+ * organization's circle of trust (see `loadLinkableStatement`).
+ *
+ * A Mass-Consensus survey may be named instead of a question. The survey is
+ * then the unit: the link covers every question in it, the board shows it as
+ * one crowd-survey activity, and unlinking gives all of it back.
  */
 export const fn_linkOrgStatement = onCall(
 	{ region: functionConfig.region },
@@ -75,11 +85,14 @@ export const fn_linkOrgStatement = onCall(
 		}
 		const adminUserIds = new Set(admins.map((admin) => admin.userId));
 
-		// A survey is not a statement: resolve it to the question it wraps first,
-		// then everything below treats the two entry points identically.
+		// A survey is not a statement: resolve it to the questions it wraps first,
+		// then everything below treats the two entry points identically. The
+		// survey itself is kept on the link so the board can show it as one
+		// crowd-survey activity — a Studio client cannot read `surveys`.
+		const survey = hasSurvey ? await resolveSurveyQuestion(surveyId as string) : null;
 		const statementId = hasStatement
 			? (request.data.statementId as string)
-			: await resolveSurveyQuestion(surveyId as string);
+			: (survey?.questionIds[0] as string);
 
 		const statement = await loadLinkableStatement({
 			uid: caller.uid,
@@ -87,6 +100,21 @@ export const fn_linkOrgStatement = onCall(
 			statementId,
 			adminUserIds,
 		});
+
+		// A survey is administered whole: its other questions are part of the
+		// same activity, and the board sums their participation.
+		const coveredIds = survey ? survey.questionIds : [statementId];
+		const others = await Promise.all(
+			coveredIds
+				.filter((id) => id !== statementId)
+				.map(async (id) => {
+					const snap = await db.collection(Collections.statements).doc(id).get();
+
+					return snap.exists ? (snap.data() as Statement) : null;
+				}),
+		);
+		const statements = [statement, ...others.filter((s): s is Statement => s !== null)];
+		const coveredStatementIds = statements.map((s) => s.statementId);
 		if (statement.organizationId === organizationId) {
 			throw new HttpsError('already-exists', 'This organization already owns that question');
 		}
@@ -97,15 +125,22 @@ export const fn_linkOrgStatement = onCall(
 
 		const user = await loadCallerUser(caller.uid, caller);
 		const now = Date.now();
-		const [held, progressSnap] = await Promise.all([
+		const [held, progressSnaps] = await Promise.all([
 			existingAdminSubscribers(
-				statementId,
+				coveredStatementIds,
 				admins.map((admin) => admin.userId),
 			),
-			db.collection(Collections.questionProgress).doc(statementId).get(),
+			db.getAll(
+				...coveredStatementIds.map((id) => db.collection(Collections.questionProgress).doc(id)),
+			),
 		]);
+		const hasProgress = new Set(progressSnaps.filter((snap) => snap.exists).map((snap) => snap.id));
 
-		const grantedTo = admins.map((admin) => admin.userId).filter((userId) => !held.has(userId));
+		// Anyone the link promoted on at least one covered question. Unlink
+		// re-checks each question before demoting, so a wider list is harmless.
+		const grantedTo = admins
+			.map((admin) => admin.userId)
+			.filter((userId) => coveredStatementIds.some((id) => !(held.get(id)?.has(userId) ?? false)));
 
 		const activity: OrganizationActivity = {
 			activityId: getOrganizationActivityId(organizationId, statementId),
@@ -119,14 +154,22 @@ export const fn_linkOrgStatement = onCall(
 			grantedTo,
 		};
 		if (trimmedLabel) activity.label = trimmedLabel;
+		if (survey) {
+			activity.surveyId = survey.surveyId;
+			activity.surveyTitle = survey.title;
+			// What was actually covered, not what the survey claims: a question the
+			// survey lists but that no longer exists was granted nothing, and the
+			// board must not go looking for its progress.
+			activity.surveyQuestionIds = coveredStatementIds;
+		}
 
 		await commitInChunks(
 			linkActivityWrites({
-				statement,
+				statements,
 				organizationId,
 				admins,
 				activity,
-				hasProgress: progressSnap.exists,
+				hasProgress,
 				skipSubscriptionFor: held,
 				now,
 			}),
@@ -140,6 +183,10 @@ export const fn_linkOrgStatement = onCall(
 			via: hasStatement ? 'statement' : 'survey',
 		});
 
-		return { activityId: activity.activityId, statementId };
+		return {
+			activityId: activity.activityId,
+			statementId,
+			questionIds: coveredStatementIds,
+		};
 	},
 );
