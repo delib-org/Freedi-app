@@ -1,5 +1,4 @@
 import m from 'mithril';
-import { maybeSuggestInstall } from './install';
 
 /**
  * The square's post box.
@@ -25,7 +24,9 @@ export type InboxTarget =
 	/** A classmate's proposal I helped — re-read it, weigh it again */
 	| { kind: 'helped'; proposalId: string }
 	/** The stalls, for news whose next step is "help someone else" */
-	| { kind: 'market' };
+	| { kind: 'market' }
+	/** The private thread with the teacher — a note, or a word about my text */
+	| { kind: 'teacher' };
 
 export interface InboxItem {
 	/** Stable, derived from the CAUSE (message id, notification id, edit clock) */
@@ -97,9 +98,6 @@ export function addInboxItem(item: Omit<InboxItem, 'read' | 'at'> & { at?: numbe
 	if (items.length > MAX_ITEMS) items.length = MAX_ITEMS;
 	persist();
 	syncAppBadge();
-	// News just landed FOR this player — the moment the home-screen icon's
-	// badge is worth having is the moment to suggest the home screen
-	maybeSuggestInstall();
 }
 
 /** Newest first — the order a post box is read in */

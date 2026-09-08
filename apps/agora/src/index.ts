@@ -13,11 +13,16 @@ import '@fontsource/alef/700.css';
 import './styles/global.scss';
 import './styles/components.scss';
 import './styles/icons.scss';
-// Last, so the civic palette re-points tokens the components have already
-// been written against. Inert until the document element carries the
-// attribute — see lib/theme.ts.
+// Last, so the looks re-point tokens the components have already been
+// written against. Each block is inert until the document element carries
+// its attribute — see lib/theme.ts. Candy is the default; custom grows a
+// palette from four seeds and so must come after candy, whose furniture it
+// borrows.
 import './styles/theme-civic.scss';
+import './styles/theme-candy.scss';
+import './styles/theme-custom.scss';
 import { initSentry } from './lib/sentry';
+import { BootBanner, flushEarlyErrors, installRuntimeGuards, markBooted } from './lib/boot';
 import { initAuth, completeRedirectSignIn, getUserState } from './lib/user';
 import { initI18n } from './lib/i18n';
 import { initInstallCapture } from './lib/install';
@@ -28,6 +33,7 @@ import { JoinSession } from './views/JoinSession';
 import { GameController } from './views/GameController';
 import { TeacherHome } from './views/teacher/TeacherHome';
 import { TeacherSession } from './views/teacher/TeacherSession';
+import { ProjectorScreen } from './views/teacher/ProjectorScreen';
 import { TopicWizard } from './views/teacher/TopicWizard';
 import { TopicEditor } from './views/teacher/TopicEditor';
 import { StartGame } from './views/teacher/StartGame';
@@ -37,10 +43,14 @@ import { GameReport } from './views/teacher/GameReport';
 // Error reporting first, so anything thrown during boot is captured. A crash
 // here happens in front of a classroom, and until now nothing recorded it.
 initSentry();
+// Then the runtime guards: from here on nothing thrown goes unseen or unsaid,
+// and whatever the inline boot guard in index.html caught first is reported.
+installRuntimeGuards();
+flushEarlyErrors();
 
-// Before anything paints: a civic square remembered from an earlier load
-// wears its colours from the first frame rather than flashing the classroom
-// palette while its session document is still in flight.
+// Before anything paints: the look remembered from an earlier load — or the
+// default — is worn from the first frame rather than flashing the token
+// file's base palette while the session document is still in flight.
 applyRememberedTheme();
 
 // Before anything else async: the browser fires beforeinstallprompt once,
@@ -89,19 +99,52 @@ if (import.meta.env.DEV) {
 	});
 }
 
+/**
+ * A screen that belongs to one id, rebuilt when the id changes.
+ *
+ * Mithril keeps a component instance alive when only the route parameter
+ * moves: /teach/session/A → /teach/session/B re-renders the SAME closure,
+ * which is still holding A's listeners and A's sessionId. Every one of these
+ * screens captures its id at construction, so the router has to hand them a
+ * new instance — a key on the rendered vnode is what asks for one.
+ *
+ * Unreachable until the teacher's navigation bar existed, and the very first
+ * thing it lets a teacher do: walk from one live lesson to another.
+ */
+function byId(component: m.ComponentTypes<{ id: string }>): m.RouteResolver<{ id: string }> {
+	return {
+		render(vnode) {
+			const id = String(vnode.attrs.id);
+
+			// Wrapped in a fragment on purpose: a key is only honoured inside a
+			// keyed list, and a resolver's return value is handed to the diff as
+			// a bare root, where the key would be ignored and the old instance
+			// kept — the very thing this is here to prevent.
+			return [m(component, { key: id, id })];
+		},
+	};
+}
+
 const root = document.getElementById('app');
 
 if (root) {
 	m.route(root, '/', {
 		'/': Home,
 		'/join/:code': JoinSession,
-		'/play/:id': GameController,
+		'/play/:id': byId(GameController),
 		'/teach': TeacherHome,
 		'/teach/new': TopicWizard,
 		'/teach/start': StartGame,
-		'/teach/topic/:id': TopicEditor,
-		'/teach/session/:id': TeacherSession,
-		'/teach/class/:id': TeacherClass,
-		'/teach/report/:id': GameReport,
+		'/teach/topic/:id': byId(TopicEditor),
+		'/teach/session/:id': byId(TeacherSession),
+		'/teach/screen/:id': byId(ProjectorScreen),
+		'/teach/class/:id': byId(TeacherClass),
+		'/teach/report/:id': byId(GameReport),
 	});
+	// The banner lives beside the router's root so a crash in any view leaves it standing
+	const bannerHost = document.createElement('div');
+	bannerHost.id = 'boot-banner';
+	root.before(bannerHost);
+	m.mount(bannerHost, BootBanner);
+	markBooted();
 }

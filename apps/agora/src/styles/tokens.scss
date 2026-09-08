@@ -253,6 +253,11 @@
   // drawn as a line ON a strongly green surface (the map's bridge zone) it
   // falls to 2.9:1, while this clears 4.6:1 there and 8:1 on white.
   --success-deep: #0d5c37;
+  // The green as TEXT, the way --danger-ink is the red as text. On the light
+  // themes that is the deep rung itself; the navy theme re-points it, because
+  // there a dark green label on a dark panel is the very bug --success-deep
+  // was invented to avoid.
+  --success-ink: #0d5c37;
   --danger: #d13d4e;   // FILL only — as text on white it is 4.19:1
   --danger-ink: #b3202f; // the same alarm, readable as text (5.9:1)
   --warning: #b97300; // borders/fills only; warning copy uses --text-primary
@@ -417,6 +422,14 @@
     var(--field-mid) 50%,
     var(--field-for) 100%
   );
+  // The goal at the top of the field (see .board__goal). White posts on
+  // purpose and in every look: the field is a tinted ramp everywhere, and a
+  // white bar on it is a goalpost where a coloured one is a frame. The ball's
+  // seams are inked the same dark in every look — --ink goes white on the
+  // civic navy, and a white ball with white seams is a moon.
+  --goal-post: #ffffff;
+  --goal-mesh: color-mix(in srgb, var(--success-deep) 45%, transparent);
+  --goal-ball-ink: #2b2350;
 
   // --- Motion (camera-move easing; never hard cuts) ---
   --motion-fast: 150ms;
@@ -430,6 +443,10 @@
   --z-map: 1;
   --z-content: 10;
   --z-header: 50;
+  // The teacher's side panel: over the board and the sticky strip, under the
+  // student-thread drawer (hard-coded 60 in _teacher-console.scss) that opens
+  // from inside it.
+  --z-panel: 55;
   --z-toast: 90;
   --z-modal: 100;
 
@@ -439,10 +456,21 @@
   // have to agree on their heights, and the page has to know the total to
   // keep its last button clear of both.
   --delib-nav-h: 68px;
-  // Sized for a quiet uppercase label plus TWO lines of the proposal voice —
-  // the bar's whole job is showing the student their own sentence, and one
-  // 18px line of Hebrew on a 360px phone is about four words.
-  --dock-bar-h: 100px;
+
+  // --- Fixed teacher chrome ---
+  // The console's bar and its control strip stack the same way: the strip
+  // sticks under the bar on desktop, and on a phone it is the fixed bottom
+  // bar the page has to keep its last card clear of.
+  --teacher-nav-h: 56px;
+  --teacher-strip-h: 108px;
+
+  // The disclosure chevron is the `arrow` icon given a quarter turn (there
+  // is no separate chevron glyph). The arrow is drawn pointing LEFT — the
+  // back button's direction — so −90° points it down and +90° up. Held here
+  // so the three folds that use it turn the same way if the glyph is ever
+  // redrawn.
+  --chevron-closed: -90deg;
+  --chevron-open: 90deg;
 }
 
 // ============================================================================
@@ -494,8 +522,6 @@
 // my own message in a conversation
 .thread__msg--mine,
 .chat-bubble--mine,
-// the notebook carrying my proposal, collapsed
-.shell--delib .proposal-dock,
 // the face I pressed, and the tab I am on
 .rate-scale__option--selected,
 .delib-nav__item--active,
@@ -523,7 +549,6 @@
 // pill — has to hand the ink back, or the on-dark remap paints white text
 // onto white paper. Same registry, opposite direction.
 .on-light,
-.shell--delib .proposal-dock__panel,
 // The desk's two pale panels: the stuck-write notice (which carries a real
 // .btn, and a .btn--secondary is white paper by definition) and the
 // self-check pills. Both are white islands on the one ink-on-dark surface a
@@ -532,6 +557,10 @@
 // white-on-white all over again.
 .write-desk__stuck,
 .write-desk__selfcheck-chip,
+// ...and the third: the brief the room carried into this stage, a whole white
+// CARD sitting on the desk. Its bands, its summary and its fold label all
+// re-derived from the desk's white ink and shipped invisible.
+.carried,
 // :not(--implemented) — that one is a solid GREEN fill carrying white, so
 // handing it the light ink turns its label back to dark-on-dark
 .on-dark .helped__chip:not(.helped__chip--implemented),

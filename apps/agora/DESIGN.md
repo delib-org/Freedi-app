@@ -8,6 +8,28 @@ against; the values live in `src/styles/tokens.scss` and nowhere else.
 > re-themes — `--lantern` still means "the primary accent" — so read them as
 > roles, never as descriptions of colour.
 
+
+> **Looks (2026-09-03).** The room can now wear one of several looks, and
+> this file describes the token *grammar* every look obeys rather than one
+> palette. `candy` is the default (raspberry MINE, blueberry strokes, lime GO,
+> on a cotton-candy page — `src/styles/_theme-candy-block.scss`); `purple` is
+> the look described below, unchanged; `custom` is a look a student built
+> from four seed colours (`_theme-custom-block.scss` grows the palette with
+> `color-mix()`); `civic` is Odyssey's. Who picks is decided in shared-types
+> (`resolveAgoraTheme`): the person's own choice, then the teacher's, then the
+> default. The one law — MINE is the only saturated family, a classmate's is
+> white — holds in every look; only the hues move. Candy adds one signature,
+> the gummy edge: a hard 4px slab under buttons and cards, no blur. Candy
+> clears the contrast gauntlet with no entry on the debt ledger; `npm run
+> contrast` runs it under `?theme=candy` to keep it so.
+>
+> Candy also breaks the one law on purpose, for one object: a classmate's
+> PROPOSAL is a sweet of its own colour (`_theme-candy-game.scss`), keyed on
+> its number so the same proposal is the same colour on the square, on the
+> results map and in its callout. Twelve hues, all AA under white, and none
+> of them raspberry — MINE stays the only raspberry thing on the screen, so
+> the law's purpose (I can find mine) survives its letter.
+
 ---
 
 ## 1. The one law

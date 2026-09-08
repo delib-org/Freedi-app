@@ -25,6 +25,8 @@ export {
 	AGORA_ANTI_GAMING,
 	AGORA_VOTING,
 	AGORA_CHALLENGE,
+	AGORA_IDENTITY,
+	AGORA_TEACHER_MESSAGE,
 } from './agoraConstants';
 
 export type {
@@ -74,6 +76,29 @@ export {
 	AgoraDebriefSchema,
 	AgoraOutcomeStatsSchema,
 } from './agoraSession';
+
+export type {
+	AgoraThemePreset,
+	AgoraThemeSeeds,
+	AgoraCustomTheme,
+	AgoraThemeChoice,
+	AgoraResolvedTheme,
+	AgoraThemeTally,
+	ThemeSession,
+	ThemeParticipant,
+	TallyParticipant,
+} from './agoraTheme';
+export {
+	AGORA_THEME_PRESETS,
+	AGORA_DEFAULT_THEME,
+	AGORA_THEME,
+	HexColourSchema,
+	AgoraThemeSeedsSchema,
+	AgoraCustomThemeSchema,
+	AgoraThemeChoiceSchema,
+	resolveAgoraTheme,
+	tallyAgoraThemes,
+} from './agoraTheme';
 
 export type { AgoraAgreementResults, AgoraIdentityMode } from './agoraSession';
 export { AgoraAgreementResultsSchema, AgoraIdentityModeSchema } from './agoraSession';
@@ -125,6 +150,46 @@ export {
 	selectCarriedAnswers,
 	evaluateVotingTrigger,
 } from './stagePlan';
+
+export type {
+	AgoraQuestionKind,
+	AgoraRoundKind,
+	AgoraEvaluationScale,
+	AgoraRoundSummary,
+	AgoraRoundSpec,
+	AgoraUnitRating,
+} from './rounds';
+export {
+	AgoraQuestionKindSchema,
+	AGORA_ROUND,
+	AGORA_ROUND_KINDS,
+	AGORA_ROUNDS,
+	questionKindOf,
+	isRoundKind,
+	roundSpecOf,
+	evaluationScaleOf,
+	isUnitRating,
+	roundLikes,
+	roundAppreciates,
+	rankRoundAnswers,
+	roundProgress,
+} from './rounds';
+
+export type {
+	AgoraCpBand,
+	AgoraCpBandSummary,
+	CpBandRow,
+} from './questionSummary';
+export {
+	AGORA_CP_BANDS,
+	AGORA_CP_BAND_ORDER,
+	AgoraCpBandSchema,
+	AgoraCpBandSummarySchema,
+	agoraCpBand,
+	cpOf,
+	groupByCpBand,
+	rankByCp,
+} from './questionSummary';
 
 export type { AgoraSessionFlow, AgoraScoreMode, ResolvedSessionFlow } from './sessionFlow';
 export {
@@ -259,6 +324,8 @@ export {
 
 export type {
 	ManageSchoolRequest,
+	TeacherClassRequest,
+	TeacherClassResponse,
 	ManageSchoolResponse,
 	OpenClassRequest,
 	OpenClassResponse,
@@ -274,4 +341,48 @@ export type {
 	TeacherConsoleReport,
 	TeacherConsoleResponse,
 	CreateSessionClassroomFields,
+	TeacherMessageRequest,
+	TeacherMessageResponse,
+	ModerateStatementRequest,
+	ModerateStatementResponse,
+	RewordQuestionRequest,
+	RewordQuestionResponse,
 } from './agoraClassroomCallables';
+
+export type { AgoraModeration, ModeratedDoc } from './agoraModeration';
+export {
+	AgoraModerationSchema,
+	isAgoraHidden,
+	isTeacherEdited,
+	isTeacherTouched,
+} from './agoraModeration';
+
+export type {
+	AgoraQuestionWording,
+	AgoraTeacherPromptMap,
+	AgoraTeacherPrompts,
+} from './agoraTeacherPrompts';
+export {
+	AgoraQuestionWordingSchema,
+	AgoraTeacherPromptsSchema,
+	applyTeacherPrompts,
+} from './agoraTeacherPrompts';
+
+export type { AgoraIdentity } from './agoraIdentity';
+export { AgoraIdentitySchema, createAgoraIdentityId } from './agoraIdentity';
+
+export type {
+	AgoraTeacherMessage,
+	AgoraTeacherMessageFrom,
+	AgoraTeacherMessageKind,
+	AgoraModerationAction,
+	AgoraTeacherPreset,
+} from './agoraTeacherMessage';
+export {
+	AgoraTeacherMessageSchema,
+	AgoraTeacherMessageFromSchema,
+	AgoraTeacherMessageKindSchema,
+	AgoraModerationActionSchema,
+	AGORA_TEACHER_PRESETS,
+	isAgoraTeacherPreset,
+} from './agoraTeacherMessage';

@@ -36,6 +36,7 @@ export type IconName =
 	// score, results, progress
 	| 'chart'
 	| 'trophy'
+	| 'ball'
 	| 'medal'
 	| 'flag'
 	| 'scales'
@@ -61,6 +62,9 @@ export type IconName =
 	| 'target'
 	| 'mail'
 	| 'cog'
+	| 'arrow'
+	| 'home'
+	| 'menu'
 	// the rating scale
 	| 'face-strong-against'
 	| 'face-against'
@@ -174,6 +178,31 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 
 	// Settings: a ring, its hub, and eight teeth — the plainest possible cog,
 	// because at 22px anything cleverer stops reading as one
+	// Points to inline-start in LTR; the stylesheet mirrors it under [dir=rtl],
+	// which is the rule every directional shape here follows.
+	arrow: [
+		['path', { d: 'M20 12H4.6' }],
+		['path', { d: 'M10.8 5.8 4.6 12l6.2 6.2' }],
+	],
+
+	// The way home. A house is the one navigation shape the whole world
+	// already reads, and it is symmetrical, so RTL leaves it alone.
+	home: [
+		[
+			'path',
+			{
+				d: 'M3.6 10.6 12 3.5l8.4 7.1v8.9a1.1 1.1 0 0 1-1.1 1.1h-4.5v-5.4H9.2v5.4H4.7a1.1 1.1 0 0 1-1.1-1.1z',
+			},
+		],
+	],
+
+	// Three rails: everywhere a teacher can walk to from this screen.
+	menu: [
+		['path', { d: 'M4.5 7.5h15' }],
+		['path', { d: 'M4.5 12h15' }],
+		['path', { d: 'M4.5 16.5h15' }],
+	],
+
 	cog: [
 		['circle', { cx: 12, cy: 12, r: 6.2 }],
 		['circle', { cx: 12, cy: 12, r: 2.4 }],
@@ -224,6 +253,15 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		['path', { d: 'M7 4h10v5.5a5 5 0 0 1-10 0z' }],
 		['path', { d: 'M7 5.5H4.5v1.8A3.2 3.2 0 0 0 7 10.4M17 5.5h2.5v1.8a3.2 3.2 0 0 1-2.5 3.1' }],
 		['path', { d: 'M12 14.5v3.5M8.5 20.5h7' }],
+	],
+
+	// A football, head on: the centre pentagon and the five seams running
+	// off its corners. Just a circle read as a coin; just the pentagon read as
+	// a badge — it is the seams reaching the rim that make it a ball.
+	ball: [
+		['circle', { cx: 12, cy: 12, r: 8.6 }],
+		['path', { d: 'M12 8.4l3.5 2.6-1.3 4.2h-4.4L8.5 11z' }],
+		['path', { d: 'M12 8.4V3.4M15.5 11l4.6-1.6M14.2 15.2l2.8 3.9M9.8 15.2 7 19.1M8.5 11 3.9 9.4' }],
 	],
 
 	// Disc above, ribbon tails below. Hanging the disc from a closed trapezoid

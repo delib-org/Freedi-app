@@ -115,10 +115,9 @@
 // dashed slot reads as "this is where it happens" and keeps its label at full
 // contrast. Both writing surfaces share it so the workshop speaks one language.
 //
-// Written out to four classes on purpose: the dock repaints primary buttons
-// from `.shell--mode-peer .proposal-dock .btn--primary`, and anything shorter
-// loses to it — the saved button comes back filled, with the waiting rule's
-// text colour on top of it.
+// Written out to two full classes on purpose: a room-mode rule that repaints
+// primary buttons beats anything shorter, and the saved button comes back
+// filled with the waiting rule's text colour on top of it.
 .btn.btn--primary.write-desk__cta:disabled,
 .btn.btn--primary.my-lantern__save:disabled {
 	opacity: 1;
@@ -191,6 +190,15 @@
 	// The drawing inherits this, so one chip colour dresses every tool
 	color: var(--text-primary);
 	line-height: 1;
+}
+
+// The two sides' portraits standing in for the chip — they are their own
+// object, so the chip's tile falls away around them
+.workbench__icon--faces {
+	width: auto;
+	height: auto;
+	background: none;
+	border: 0;
 }
 
 .workbench__title {
@@ -538,14 +546,31 @@
 		font-size: var(--font-size-sm);
 	}
 
-	&__question {
-		color: var(--ink);
-		font-size: var(--font-size-sm);
+	// The two rules as chips instead of two sentences: "good for everyone" and
+	// "build, don't attack" are conditions on the idea, and a condition reads
+	// better as a label on the desk than as prose to get through first.
+	&__rules {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
 	}
 
-	&__hint {
+	&__rule {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
 		color: var(--text-secondary);
 		font-size: var(--font-size-xs);
+		font-weight: 700;
+		white-space: nowrap;
+
+		svg {
+			flex-shrink: 0;
+		}
 	}
 
 	&__textarea {
@@ -862,8 +887,15 @@
 		gap: var(--space-xs);
 	}
 
+	// The reply box on a .text-input base — a white card to write on, the
+	// same one every other box in the app is. It must not be draggable
+	// sideways: the thread lives inside a sheet, and a textarea resized wide
+	// takes the sheet with it.
 	&__input {
 		background: var(--bg-card-solid);
+		resize: vertical;
+		min-height: 3.5rem;
+		line-height: 1.5;
 	}
 
 	// The clock on a message, quiet and at the end of the bubble

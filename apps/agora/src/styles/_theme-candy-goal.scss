@@ -1,0 +1,64 @@
+@use 'tokens' as *;
+
+// ============================================================================
+// The Candy look, part three: the goal
+//
+// Candy plays like a game (_theme-candy-game.scss), and the game's win
+// condition is a football goal at the top of the class map (_board.scss).
+// This file gives that goal its candy face: chunkier posts with a shadow
+// under them like every other candy object, a lemon-drop sign, and mowing
+// stripes across the field so the map reads as a pitch at a glance. The
+// geometry is untouched — it belongs to lib/boardGeometry.ts, not to a look.
+// ============================================================================
+
+:root[data-session-theme='candy'],
+:root[data-session-theme='custom'] {
+  // The field is mown
+  .board__plot {
+    background:
+      repeating-linear-gradient(
+        to top,
+        transparent 0 8%,
+        color-mix(in srgb, var(--goal-post) 22%, transparent) 8% 16%
+      ),
+      var(--grad-field),
+      var(--bg-card-solid);
+  }
+
+  // Posts that stand up off the field, the way a candy card stands off the page
+  .board__goal {
+    border-width: 7px;
+    border-radius: 10px 10px 0 0;
+    box-shadow:
+      0 0 0 2px var(--success-deep),
+      inset 0 0 0 2px var(--success-deep),
+      0 4px 0 rgba(0, 0, 0, 0.12);
+  }
+
+  .board__goal-net {
+    --goal-mesh: color-mix(in srgb, var(--success-deep) 55%, transparent);
+  }
+
+  // The sign is a lemon drop: the one candy the proposal hues never use, so
+  // it cannot be mistaken for anybody's point. --success-deep on lemon is
+  // 5.6:1.
+  .board__goal-label {
+    background: var(--gold);
+    border: 2px solid var(--success-deep);
+    box-shadow: 0 3px 0 var(--success-deep);
+  }
+
+  .board__point-ball {
+    box-shadow:
+      0 0 0 2px var(--success-deep),
+      0 2px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  // The stadium card wears the same slab as every candy card, in the goal's green
+  .celebration__card--goal {
+    border: 3px solid var(--success-deep);
+    box-shadow:
+      0 6px 0 var(--success-deep),
+      0 0 60px color-mix(in srgb, var(--success) 35%, transparent);
+  }
+}

@@ -1,4 +1,5 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { FieldPath } from 'firebase-admin/firestore';
 import type { Transaction } from 'firebase-admin/firestore';
 import { db } from '../db';
 import {
@@ -7,10 +8,12 @@ import {
 	AgoraParticipant,
 	AgoraProposalScore,
 	AgoraRatingDist,
+	AgoraRoundKind,
 	AgoraSession,
 	AgoraStage,
 	Evaluation,
 	AGORA_POINTS,
+	AGORA_ROUNDS,
 	NotificationTriggerType,
 	StatementType,
 	currentPlanIndex,
@@ -30,6 +33,11 @@ import {
 	getRandomUID,
 	isAgoraAiUid,
 	tallyAgoraCamps,
+	isAgoraHidden,
+	roundSpecOf,
+	roundAppreciates,
+	Statement,
+	ModeratedDoc,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { awardCredit } from '../engagement/credits/creditEngine';
@@ -69,11 +77,13 @@ async function maybeAutoOpenVoting(
 	scores.set(fresh.statementId, fresh);
 
 	const verdict = evaluateVotingTrigger(
-		Array.from(scores.values()).map((score) => ({
-			statementId: score.statementId,
-			mean: score.classConsensus?.mean ?? 0,
-			n: score.classConsensus?.n ?? 0,
-		})),
+		Array.from(scores.values())
+			.filter((score) => score.hidden !== true)
+			.map((score) => ({
+				statementId: score.statementId,
+				mean: score.classConsensus?.mean ?? 0,
+				n: score.classConsensus?.n ?? 0,
+			})),
 		rule,
 	);
 	if (!verdict.fired) return;
@@ -210,6 +220,49 @@ async function creditRatingEffort(
 	});
 }
 
+/**
+ * A like on a story, or a rating at or above the unit floor on a need or a
+ * vision, pays the AUTHOR once. The ledger is a map on the author's own
+ * participant doc keyed by the evaluation id — deterministic per (rater,
+ * text) — so a redelivered trigger, a re-rating, or an un-like then a re-like
+ * all find their key and pay nothing. A later downgrade never claws back:
+ * the appreciation happened, and a toggle must not become a lever.
+ */
+export async function creditRoundAppreciation(
+	sessionId: string,
+	kind: AgoraRoundKind,
+	evaluation: Evaluation,
+	evaluationId: string,
+): Promise<void> {
+	const spec = AGORA_ROUNDS[kind];
+	if (!roundAppreciates(spec, evaluation.evaluation)) return;
+	if (isAgoraAiUid(evaluation.evaluatorId)) return;
+
+	const answerSnap = await db.collection(Collections.statements).doc(evaluation.statementId).get();
+	if (!answerSnap.exists) return;
+	const answer = answerSnap.data() as Statement;
+	if (isAgoraHidden(answer)) return;
+	const authorId = answer.creatorId;
+	if (!authorId || authorId === evaluation.evaluatorId) return;
+
+	const authorRef = db
+		.collection(Collections.agoraParticipants)
+		.doc(createAgoraParticipantId(sessionId, authorId));
+
+	await db.runTransaction(async (transaction) => {
+		const snap = await transaction.get(authorRef);
+		if (!snap.exists) return;
+		const author = snap.data() as AgoraParticipant;
+		if (author.roundAppreciations?.[evaluationId]) return;
+
+		const points = { ...author.points };
+		points.appreciation = (points.appreciation ?? 0) + spec.appreciation.points;
+		points.total += spec.appreciation.points;
+		transaction.update(authorRef, { points, lastActive: Date.now() });
+		transaction.update(authorRef, new FieldPath('roundAppreciations', evaluationId), true);
+	});
+}
+
 function emptyTally(): CampTally {
 	return { sum: 0, n: 0, positiveN: 0, studentDist: emptyDist() };
 }
@@ -283,10 +336,14 @@ async function recountPerCamp(
 			.where('statementId', '==', statementId),
 	);
 
-	const verdicts = snapshot.docs.map((docSnap) => {
+	// Same shape-assertion caveat as the trigger's guard: a stored row with no
+	// evaluatorId would land in the student histogram as an anonymous rater and
+	// skew every camp reading off it.
+	const verdicts = snapshot.docs.flatMap((docSnap) => {
 		const evaluation = docSnap.data() as Evaluation;
+		if (!evaluation.evaluatorId) return [];
 
-		return { evaluatorId: evaluation.evaluatorId, value: evaluation.evaluation };
+		return [{ evaluatorId: evaluation.evaluatorId, value: evaluation.evaluation }];
 	});
 
 	return tallyEvaluations(verdicts, campOf);
@@ -305,12 +362,47 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 		const before = event.data?.before.exists ? (event.data.before.data() as Evaluation) : null;
 		const evaluation = after ?? before;
 		if (!evaluation?.agoraSessionId) return;
+		// `doc.data() as Evaluation` asserts a shape rather than checking one, so
+		// the two ids below are typed `string` no matter what is actually stored.
+		// Everything downstream feeds them straight to `.doc()` or reads
+		// `.startsWith` off them, so a document missing either — a probe, a
+		// partial write, a hand-edited row — threw instead of being ignored.
+		if (!evaluation.evaluatorId || !evaluation.statementId) return;
 
 		const { agoraSessionId: sessionId, statementId, evaluatorId } = evaluation;
 
 		try {
 			const sessionSnap = await db.collection(Collections.agoraSessions).doc(sessionId).get();
 			const session = sessionSnap.exists ? (sessionSnap.data() as AgoraSession) : null;
+
+			// A WizCol round's text: the appreciated AUTHOR is paid, the reader
+			// is not, and nothing below enters — a 0…1 mean must never meet the
+			// square's −1…+1 formulas.
+			const questionItem = session
+				? resolveStagePlan(session).find(
+						(item) =>
+							item.stage === AgoraStage.question && item.statementId === evaluation.parentId,
+					)
+				: undefined;
+			const roundSpec = questionItem ? roundSpecOf(questionItem) : null;
+			if (roundSpec) {
+				if (after) {
+					await creditRoundAppreciation(
+						sessionId,
+						roundSpec.kind,
+						after,
+						event.params.evaluationId,
+					).catch((creditError: unknown) => {
+						logError(creditError, {
+							operation: 'agora.onEvaluationWritten.creditRoundAppreciation',
+							userId: evaluatorId,
+							statementId,
+						});
+					});
+				}
+
+				return;
+			}
 
 			// A brand-new rating (not an edit of one) earns the evaluation
 			// credit — non-blocking, and never fatal to the bridging update.
@@ -362,6 +454,10 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 			 * wing. Positioning is one-shot in the UI, so this can only ever go
 			 * from unknown to known.
 			 */
+			// A text the teacher took down keeps the score it had: nothing moves,
+			// nothing pays, until it is restored.
+			if (isAgoraHidden(proposalSnap.data() as ModeratedDoc | undefined)) return;
+
 			const creatorId = proposalSnap.data()?.creatorId as string | undefined;
 			const authorSide = creatorId ? campOf.get(creatorId) : undefined;
 			const authorCamp = authorSide ?? AgoraCamp.center;

@@ -1,4 +1,5 @@
 import { chromium } from '@playwright/test';
+import { passNameDoor } from './lib/e2e.mjs';
 import {
   preflight,
   AUTH_HOST,
@@ -48,6 +49,7 @@ const errs = [];
 page.on('pageerror', (e) => errs.push(e.message));
 
 await page.goto(`${VITE_HOST}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+await passNameDoor(page);
 await page.waitForSelector('.lobby__name', { timeout: 15000 });
 console.log('LOBBY OK — anon name:', await page.locator('.lobby__name strong').textContent());
 

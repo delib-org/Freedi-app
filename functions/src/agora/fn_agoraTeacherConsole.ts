@@ -15,6 +15,7 @@ import {
 	TeacherConsoleResponse,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
+import { teacherDisplayNames } from './teacherLookup';
 
 /**
  * Every read the teacher console makes, served server-side.
@@ -67,11 +68,13 @@ export const agoraTeacherConsole = onCall(
 		try {
 			switch (data.view) {
 				case 'dashboard': {
-					const [classSnaps, sessionSnaps] = await Promise.all([
+					const [classSnaps, schoolSnaps, sessionSnaps] = await Promise.all([
 						db
 							.collection(Collections.agoraClasses)
 							.where('teacherIds', 'array-contains', uid)
 							.get(),
+						// The schools this teacher may open classes in
+						db.collection(Collections.agoraSchools).where(`teacherMap.${uid}`, '==', true).get(),
 						db
 							.collection(Collections.agoraSessions)
 							.where('teacherId', '==', uid)
@@ -103,6 +106,11 @@ export const agoraTeacherConsole = onCall(
 							memberCount: agoraClass.memberCount,
 							schoolId: agoraClass.schoolId,
 						})),
+						schools: schoolSnaps.docs
+							.map((snap) => snap.data() as AgoraSchool)
+							.filter((school) => school.status === 'active')
+							.map((school) => ({ schoolId: school.schoolId, name: school.name }))
+							.sort((a, b) => a.name.localeCompare(b.name)),
 						aggregates,
 						sessions: sessionSnaps.docs.map((snap) => snap.data() as AgoraSession),
 					};
@@ -113,9 +121,10 @@ export const agoraTeacherConsole = onCall(
 						throw new HttpsError('invalid-argument', 'classId is required');
 					}
 					const agoraClass = await loadTeacherClass(data.classId, uid);
-					const [schoolSnap, memberSnaps, careerSnaps, aggregateSnap, sessionSnaps] =
+					const [schoolSnap, teachers, memberSnaps, careerSnaps, aggregateSnap, sessionSnaps] =
 						await Promise.all([
 							db.collection(Collections.agoraSchools).doc(agoraClass.schoolId).get(),
+							teacherDisplayNames(agoraClass.teacherIds),
 							db
 								.collection(Collections.agoraClassMembers)
 								.where('classId', '==', data.classId)
@@ -145,6 +154,7 @@ export const agoraTeacherConsole = onCall(
 						...(agoraClass.gradeLevel ? { gradeLevel: agoraClass.gradeLevel } : {}),
 						classCode: agoraClass.classCode,
 						schoolName: (schoolSnap.data() as AgoraSchool | undefined)?.name ?? '',
+						teachers,
 						members: memberSnaps.docs
 							.map((snap) => toTeacherMember(snap.data() as AgoraClassMember))
 							.sort((a, b) => a.alias.localeCompare(b.alias)),
@@ -169,16 +179,28 @@ export const agoraTeacherConsole = onCall(
 					if (session.teacherId !== uid) {
 						throw new HttpsError('permission-denied', 'Only the session teacher may view this');
 					}
-					const participantSnaps = await db
-						.collection(Collections.agoraParticipants)
-						.where('sessionId', '==', data.sessionId)
-						.get();
+					const [participantSnaps, identitySnaps] = await Promise.all([
+						db
+							.collection(Collections.agoraParticipants)
+							.where('sessionId', '==', data.sessionId)
+							.get(),
+						// The real names, for the report the teacher keeps — this caller is
+						// the session teacher (checked above), the one reader they exist for
+						db
+							.collection(Collections.agoraIdentities)
+							.where('sessionId', '==', data.sessionId)
+							.get(),
+					]);
 					const participants = participantSnaps.docs
 						.map((snap) => snap.data() as AgoraParticipant)
 						.filter((participant) => !participant.isAI)
 						.sort((a, b) => b.points.total - a.points.total);
 
-					return { session, participants };
+					return {
+						session,
+						participants,
+						identities: identitySnaps.docs.map((snap) => snap.data()),
+					};
 				}
 
 				default:

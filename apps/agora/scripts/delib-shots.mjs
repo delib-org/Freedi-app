@@ -5,6 +5,7 @@
  * Needs: emulators + vite on 3009 + seeded demo package.
  */
 import { chromium } from '@playwright/test';
+import { passNameDoor } from './lib/e2e.mjs';
 import { mkdirSync } from 'node:fs';
 import { auditPage, report } from './contrast-audit.mjs';
 import { auditType, summarise } from './type-audit.mjs';
@@ -100,6 +101,9 @@ for (let attempt = 0; attempt < 6 && !topicReady; attempt++) {
 }
 if (!topicReady) throw new Error('teacher home never listed a topic package');
 await teacher.locator('text=המהפכה הצרפתית').first().click();
+// Tapping a scenario opens the start screen already holding it; the one
+// button there opens the lesson.
+await teacher.waitForURL(/teach\/start/, { timeout: 20000 });
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
 await teacher.waitForSelector('.teacher__code', { timeout: 20000 });
@@ -112,6 +116,7 @@ for (const [page, label] of [
 	[s2, 'S2'],
 ]) {
 	await page.goto(`${BASE}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(page);
 	await page.waitForSelector('.lobby__name', { timeout: 20000 });
 	console.log(`${label} joined as`, await page.locator('.lobby__name').textContent());
 }
@@ -177,7 +182,7 @@ for (let i = 0; i < 3; i++) {
 		await shot(s1, `00b-values-graded-${i}`);
 	}
 	await teacher
-		.locator('.class-progress__count--all')
+		.locator('.teacher-now__count--all')
 		.waitFor({ timeout: 20000 })
 		.catch(() => console.log(`  (stage ${i}: class progress never read all-done, continuing)`));
 }

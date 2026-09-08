@@ -1,0 +1,490 @@
+// The WizCol rounds: the intro's three cards, a round's prompt, pen, dealt
+// texts and record, and the two scales a round weighs on — a heart on a
+// story, five steps on a need or a vision. Same bones as the question stage
+// (see _stage-plan.scss .question) so a student who answered a question
+// already knows where everything is.
+
+.lobby__intro-toggle {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	inline-size: 100%;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: var(--text-primary);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.intro {
+	&__ask {
+		text-align: center;
+		gap: var(--space-xs);
+	}
+
+	&__icon,
+	&__card-icon {
+		display: inline-flex;
+		color: var(--mine);
+	}
+
+	&__title {
+		margin: 0;
+	}
+
+	&__lead {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	&__cards {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		counter-reset: intro;
+	}
+
+	&__card {
+		gap: var(--space-sm);
+		counter-increment: intro;
+		border-inline-start: 3px solid var(--mine);
+	}
+
+	&__card-head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+
+		&::before {
+			@include type-meta;
+			content: counter(intro);
+			display: grid;
+			place-items: center;
+			flex-shrink: 0;
+			inline-size: 24px;
+			block-size: 24px;
+			border-radius: var(--radius-full);
+			background: var(--mine-strong);
+			color: var(--text-on-lantern);
+			font-weight: 700;
+		}
+	}
+
+	&__card-title {
+		margin: 0;
+	}
+
+	&__card-text {
+		margin: 0;
+		white-space: pre-wrap;
+	}
+
+	&__ready {
+		@include type-meta;
+		margin: 0;
+		text-align: center;
+		color: var(--text-secondary);
+	}
+}
+
+.round {
+	&__ask {
+		text-align: center;
+		gap: var(--space-xs);
+	}
+
+	&__icon {
+		display: inline-flex;
+		color: var(--mine);
+	}
+
+	&__title {
+		margin: 0;
+	}
+
+	&__explanation {
+		margin: 0;
+		color: var(--text-secondary);
+		white-space: pre-wrap;
+	}
+
+	&__closed {
+		@include type-meta;
+		margin: var(--space-xs) 0 0;
+		color: var(--text-secondary);
+	}
+
+	// The fixed lead of the needs round — the words every need begins with,
+	// printed above the pen rather than inside it so the student's own words
+	// are the only thing stored
+	&__lead {
+		@include proposal-voice;
+		margin: 0;
+		font-weight: 700;
+		color: var(--mine-ink, var(--text-primary));
+	}
+
+	&__textarea {
+		inline-size: 100%;
+		padding: var(--space-sm);
+		border: 1.5px solid var(--border-subtle);
+		border-radius: var(--radius-tile);
+		font: inherit;
+		background: var(--bg-card-solid);
+		color: var(--text-primary);
+		resize: vertical;
+	}
+
+	&__mine-text,
+	&__text-body {
+		@include proposal-voice;
+		margin: 0;
+		white-space: pre-wrap;
+	}
+
+	&__others-head,
+	&__text-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__count {
+		@include type-meta;
+		padding: 2px var(--space-sm);
+		border-radius: 999px;
+		background: var(--bg-inset);
+		color: var(--text-secondary);
+		font-weight: 700;
+
+		&--met {
+			background: var(--mine-strong);
+			color: var(--text-on-lantern);
+		}
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__text {
+		gap: var(--space-sm);
+	}
+
+	&__number,
+	&__who {
+		@include type-meta;
+		font-weight: 700;
+		color: var(--text-secondary);
+	}
+
+	&__figure {
+		@include type-meta;
+		color: var(--text-secondary);
+	}
+
+	// The record: the AI's one paragraph, or the needs list one need per line
+	&__summary {
+		margin: 0;
+		padding: var(--space-sm) var(--space-md);
+		border-inline-start: 3px solid var(--mine);
+		background: var(--bg-inset);
+		border-radius: var(--radius-sm, 8px);
+		white-space: pre-line;
+	}
+
+	&__goal {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-sm);
+		text-align: center;
+	}
+
+	&__goal-line {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+}
+
+// --- a heart on a story ---
+.like-button {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	align-self: flex-start;
+	padding: var(--space-xs) var(--space-md);
+	border: 1.5px solid var(--border-subtle);
+	border-radius: 999px;
+	background: var(--bg-card-solid);
+	color: var(--text-primary);
+	font: inherit;
+	cursor: pointer;
+	transition:
+		background var(--motion-base) var(--ease-camera),
+		transform var(--motion-base) var(--ease-camera);
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: wait;
+	}
+
+	&__heart {
+		font-size: 1.25em;
+		line-height: 1;
+	}
+
+	&__count {
+		@include type-meta;
+		font-weight: 700;
+	}
+
+	&--on {
+		background: var(--mine-strong);
+		border-color: var(--mine-strong);
+		color: var(--text-on-lantern);
+	}
+
+	&:not(:disabled):active {
+		transform: scale(0.96);
+	}
+}
+
+// --- the 0…1 scale of a need or a vision: five steps, one question ---
+//
+// It used to be five bars of growing length, one per step, drawn in the
+// accent colour before the student had touched anything. Inside a card that
+// holds a CLASSMATE'S words that reads as a chart of the support the text
+// already has — Tal called them "support indicators", which is precisely the
+// misreading. Three things fix it and all three are needed:
+//
+//   1. the question is PRINTED, not hidden in an aria-label. A row of options
+//      under a question mark cannot be read as a chart.
+//   2. the control sits in its own inset tray, so it is visibly chrome rather
+//      than part of the classmate's text.
+//   3. NOTHING carries the accent until the student presses. Unanswered, the
+//      five discs are grey; answered, exactly one of them is raspberry. A
+//      chart is coloured before you touch it; a control is not — which is
+//      also what makes "have I done this one?" survive a scroll past eight
+//      cards.
+//
+// The magnitude ramp survives as a disc that FILLS (empty ring → solid), not
+// a bar that grows: a fill has no direction, so it says the same thing in
+// Hebrew and in English, and it is not the shape of a chart.
+.unit-scale {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-sm);
+	border-radius: var(--radius-tile);
+	background: var(--bg-inset);
+
+	// A WORD, not a mark — it is the question the whole card is asking, and
+	// the type audit is right to hold it to the 16px rung
+	&__ask {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		margin: 0;
+		font-size: var(--font-size-xs);
+		line-height: 1.3;
+		font-weight: 700;
+		color: var(--text-secondary);
+	}
+
+	&__question {
+		min-inline-size: 0;
+	}
+
+	// The glance answer to "did I do this one?", and it is deliberately the
+	// only thing that DISAPPEARS on being answered — an absence is easier to
+	// scan a column for than a second badge to read
+	&__todo {
+		@include type-meta;
+		flex: 0 0 auto;
+		padding: 1px var(--space-sm);
+		border: 1.5px solid var(--border-strong);
+		border-radius: var(--radius-full);
+		color: var(--text-secondary);
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
+	&__steps {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: var(--space-xs);
+	}
+
+	&__step {
+		position: relative; // anchors the ✓ badge
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+		// A thumb target, and a floor that survives the two-line labels
+		min-block-size: 72px;
+		padding: var(--space-sm) 2px;
+		border: 1.5px solid var(--border-subtle);
+		border-radius: var(--radius-tile);
+		background: var(--bg-card-solid);
+		color: var(--text-secondary);
+		font: inherit;
+		cursor: pointer;
+		transition:
+			background var(--motion-base) var(--ease-camera),
+			border-color var(--motion-base) var(--ease-camera),
+			transform var(--motion-base) var(--ease-camera);
+
+		&[aria-disabled='true'] {
+			cursor: progress;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--mine-ink);
+			outline-offset: 2px;
+		}
+	}
+
+	// How full this step is. Empty ring → solid disc, one channel that a
+	// reader who is not reading the words still gets right.
+	// The disc is drawn in the tile's OWN ink — currentColor, not a token.
+	// A named colour would have to be re-pointed by every look (--peer is a
+	// slate in Purple and a blue in Candy, and a blue disc introduces a hue
+	// that means nothing here), and it would need a second rule to turn white
+	// on the chosen tile. currentColor is both, for free: the muted ink of an
+	// unanswered step, white on the raspberry one.
+	&__disc {
+		position: relative;
+		flex: 0 0 auto;
+		inline-size: 22px;
+		block-size: 22px;
+		border: 2px solid;
+		border-color: color-mix(in srgb, currentColor 65%, transparent);
+		border-radius: var(--radius-full);
+
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			border-radius: inherit;
+			background: currentColor;
+			transform: scale(var(--unit-fill, 0));
+			transition: transform var(--motion-base) var(--ease-camera);
+		}
+	}
+
+	// 0 is an empty ring — "not at all" needs no explaining. The four above it
+	// are spaced so the first filled step is unmistakably filled rather than
+	// a speck.
+	&__step[data-step='0'] { --unit-fill: 0; }
+	&__step[data-step='1'] { --unit-fill: 0.4; }
+	&__step[data-step='2'] { --unit-fill: 0.6; }
+	&__step[data-step='3'] { --unit-fill: 0.8; }
+	&__step[data-step='4'] { --unit-fill: 1; }
+
+	// These are WORDS — "מאוד מאוד" is the difference between the top two
+	// steps and the disc alone does not carry it, so they sit on the 16px
+	// rung the way .rate-scale__label does. At five to a phone row the longest
+	// of them wraps; the box is two lines tall in every tile so the row stays
+	// level whether it wrapped or not.
+	&__label {
+		font-size: var(--font-size-xs);
+		line-height: 1.15;
+		min-block-size: 2.3em;
+		text-align: center;
+	}
+
+	// The one saturated thing in the tray, and only once a student has acted:
+	// the fill, the ✓ and the lift all say the same thing three ways.
+	&__step--on {
+		border-color: var(--mine-deep);
+		background: var(--grad-mine-aa);
+		color: var(--text-on-lantern);
+		transform: translateY(-2px);
+		box-shadow: 0 5px 12px -5px color-mix(in srgb, var(--mine-deep) 65%, transparent);
+
+		// The disc follows currentColor, so it turns white with the label
+	}
+
+	&__check {
+		position: absolute;
+		inset-block-start: -7px;
+		inset-inline-end: -7px;
+		display: grid;
+		place-items: center;
+		inline-size: 18px;
+		block-size: 18px;
+		border-radius: var(--radius-full);
+		background: var(--bg-card-solid);
+		color: var(--mine-ink);
+		box-shadow: 0 1px 3px rgba(70, 45, 150, 0.35);
+	}
+
+	// Hovering IS an act, so the accent is allowed here — and on a phone,
+	// where there is no hover, nothing changes
+	// --on is excluded by name, not by source order: it carries WHITE ink on a
+	// raspberry fill, and a later hover rule of higher specificity would put
+	// dark ink back on it. Same trap as .rate-scale__option--selected.
+	&__step:not(.unit-scale__step--on):not([aria-disabled='true']):hover {
+		border-color: var(--mine);
+		color: var(--mine-ink); // and the disc with it — see __disc
+	}
+
+	&__step:not([aria-disabled='true']):active {
+		transform: scale(0.96);
+	}
+
+	// A rating that never reached the server. Said in words, in the tray it
+	// happened in — a dropped answer is invisible otherwise, and the student
+	// has no way to tell it from one that landed.
+	&__failed {
+		margin: 0;
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		color: var(--danger-ink);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&__step,
+		&__step--on,
+		&__step:not([aria-disabled='true']):active {
+			transform: none;
+			transition: none;
+		}
+
+		&__disc::after {
+			transition: none;
+		}
+	}
+}
+
+// --- the carried record of a round: "all N" fold ---
+.carried {
+	&__all {
+		@include type-meta;
+		margin: 0 0 var(--space-xs);
+		padding: 0;
+		border: none;
+		background: transparent;
+		color: var(--mine-ink, var(--text-secondary));
+		font: inherit;
+		font-weight: 700;
+		text-decoration: underline;
+		cursor: pointer;
+	}
+
+	&__hearts {
+		@include type-meta;
+		color: var(--text-secondary);
+	}
+}

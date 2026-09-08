@@ -12,7 +12,9 @@ import {
 } from 'valibot';
 import { AgoraStage, AGORA_STAGE_ORDER } from './agoraEnums';
 import { CutoffBy } from '../results/ResultsSettings';
+import { AgoraCpBandSummarySchema } from './questionSummary';
 import { sessionRunsVoting } from './sessionFlow';
+import { AgoraQuestionKindSchema, questionKindOf } from './rounds';
 import type { AgoraSessionFlow } from './sessionFlow';
 import type { AgoraSessionMode } from './agoraEnums';
 
@@ -33,7 +35,7 @@ import type { AgoraSessionMode } from './agoraEnums';
  */
 
 export const AGORA_STAGE_PLAN = {
-	MAX_ITEMS: 12,
+	MAX_ITEMS: 16,
 	/** Longest question/explanation the admin may type */
 	MAX_TITLE_LENGTH: 200,
 	MAX_EXPLANATION_LENGTH: 1000,
@@ -52,7 +54,7 @@ export const AGORA_VOTING_TRIGGER = {
 	MIN_RATERS: 3,
 } as const;
 
-/** Which answers of a question stage travel forward */
+/** Which answers of a question stage travel forward; `all` carries every answer */
 export const AgoraQuestionSelectionSchema = object({
 	cutoffBy: enum_(CutoffBy),
 	/** `topOptions`: how many */
@@ -76,7 +78,13 @@ export const AgoraStagePlanItemSchema = object({
 	/** Stable id — the fixed ends are 'lobby' and 'results'; the rest are minted by the editor */
 	itemId: string(),
 	stage: enum_(AgoraStage),
-	/** question: what the room is asked */
+	/**
+	 * question: what it asks for — `open` (the admin's own question, rated
+	 * −1…+1) or one of the WizCol rounds (`story`, `needs`, `vision`), whose
+	 * prompt, scale and record come from `AGORA_ROUNDS`. Absent = `open`.
+	 */
+	kind: optional(AgoraQuestionKindSchema),
+	/** question: what the room is asked (a round may leave it blank — the prompt is the kind's) */
 	title: optional(string()),
 	explanation: optional(string()),
 	/** question: the question Statement, server-created when the plan is set */
@@ -99,6 +107,13 @@ export const AgoraCarriedAnswerSchema = object({
 	statement: string(),
 	/** Net agreement it held when the stage closed, −1…1 */
 	mean: number(),
+	/**
+	 * C_p — the same net agreement with the confidence penalty applied, as
+	 * the evaluation pipeline wrote it. Absent on outcomes stored before the
+	 * banded record existed, and on an answer whose first rating is still in
+	 * flight; `cpOf` falls back to `mean` in both cases.
+	 */
+	consensus: optional(number()),
 	raters: number(),
 	/** Present in `named` sessions only */
 	anonName: optional(string()),
@@ -111,6 +126,12 @@ export const AgoraStageOutcomeSchema = object({
 	selected: array(AgoraCarriedAnswerSchema),
 	/** AI summary of the selected answers (fixture text when no model is configured) */
 	summary: optional(string()),
+	/**
+	 * The same answers read band by band, strongest C_p first — what the room
+	 * is actually behind, told apart from what it merely leaned toward.
+	 * Absent on outcomes computed before the banded record existed.
+	 */
+	bands: optional(array(AgoraCpBandSummarySchema)),
 	computedAt: number(),
 });
 
@@ -274,7 +295,10 @@ export function planIndexForStage(session: StagePlanSession, stage: AgoraStage):
 	return -1;
 }
 
-/** The question items that have closed before `beforeIndex` — the carried context of a stage */
+/**
+ * The question items — open questions and the WizCol rounds alike — that
+ * have closed before `beforeIndex`: the carried context of a stage.
+ */
 export function closedQuestionItems(
 	session: StagePlanSession,
 	beforeIndex: number,
@@ -332,7 +356,13 @@ export function validateStagePlan(
 		if (AGORA_CHARACTER_STAGES.has(item.stage) && !options.hasCharacters) {
 			errors.push('stage_needs_characters');
 		}
-		if (item.stage === AgoraStage.question && !(item.title ?? '').trim()) {
+		// An open question is nothing without its words; a round carries the
+		// kind's own prompt and may leave the title blank
+		if (
+			item.stage === AgoraStage.question &&
+			questionKindOf(item) === 'open' &&
+			!(item.title ?? '').trim()
+		) {
 			errors.push('question_needs_title');
 		}
 	});
@@ -340,13 +370,48 @@ export function validateStagePlan(
 	return Array.from(new Set(errors));
 }
 
-export type AgoraStagePlanPreset = 'classic' | 'quickDecision';
+export type AgoraStagePlanPreset = 'classic' | 'quickDecision' | 'wizcol' | 'scenarioWizcol';
 
 /**
- * Starting points for the editor. `classic` is the lesson the game has always
- * run; `quickDecision` is a room deciding one thing: ask, propose, vote.
+ * The WizCol tail every default plan ends with: the three rounds as question
+ * items of their kind, then the square and the vote.
+ */
+function wizcolTail(): AgoraStagePlanItem[] {
+	return [
+		{ itemId: 'round-story', stage: AgoraStage.question, kind: 'story' },
+		{ itemId: 'round-needs', stage: AgoraStage.question, kind: 'needs' },
+		{ itemId: 'round-vision', stage: AgoraStage.question, kind: 'vision' },
+		{
+			itemId: AgoraStage.deliberation,
+			stage: AgoraStage.deliberation,
+			votingTrigger: defaultVotingTrigger(),
+		},
+		{ itemId: AgoraStage.voting, stage: AgoraStage.voting },
+		{ itemId: AgoraStage.results, stage: AgoraStage.results },
+	];
+}
+
+/**
+ * Starting points for the editor. `wizcol` is the default: the WizCol
+ * process as a digital sequence — story, needs, vision, then the square and
+ * the vote. `scenarioWizcol` puts a scenario's character scenes
+ * in front of it as the prologue. `classic` is the lesson the game ran
+ * before; `quickDecision` is a room deciding one thing: ask, propose, vote.
  */
 export function stagePlanPreset(preset: AgoraStagePlanPreset): AgoraStagePlanItem[] {
+	if (preset === 'wizcol') {
+		return [{ itemId: AgoraStage.lobby, stage: AgoraStage.lobby }, ...wizcolTail()];
+	}
+	if (preset === 'scenarioWizcol') {
+		return [
+			{ itemId: AgoraStage.lobby, stage: AgoraStage.lobby },
+			{ itemId: AgoraStage.framing, stage: AgoraStage.framing },
+			{ itemId: AgoraStage.perspectives, stage: AgoraStage.perspectives },
+			{ itemId: AgoraStage.needs, stage: AgoraStage.needs },
+			{ itemId: AgoraStage.positioning, stage: AgoraStage.positioning },
+			...wizcolTail(),
+		];
+	}
 	if (preset === 'classic') {
 		return AGORA_STAGE_ORDER.filter((stage) => stage !== AgoraStage.ended).map((stage) => ({
 			itemId: stage,
@@ -392,8 +457,9 @@ export function resolveQuestionSelection(item: AgoraStagePlanItem): AgoraQuestio
 /**
  * Rank a question stage's answers by net agreement and apply the admin's
  * cutoff. Unrated answers sort last and are never carried by a threshold;
- * a top-N cutoff still takes them when nothing else is there. The teacher
- * panel previews with this, the server closes with this — one arithmetic.
+ * a top-N cutoff still takes them when nothing else is there, and `all`
+ * carries everything in that order. The teacher panel previews with this,
+ * the server closes with this — one arithmetic.
  */
 export function rankCarriedAnswers(rows: readonly AgoraCarriedAnswer[]): AgoraCarriedAnswer[] {
 	return [...rows].sort((a, b) => {
@@ -412,6 +478,7 @@ export function selectCarriedAnswers(
 	selection: AgoraQuestionSelection,
 ): AgoraCarriedAnswer[] {
 	const ranked = rankCarriedAnswers(rows);
+	if (selection.cutoffBy === CutoffBy.all) return ranked;
 	if (selection.cutoffBy === CutoffBy.aboveThreshold) {
 		return ranked.filter((row) => row.raters > 0 && row.mean >= selection.cutoffNumber);
 	}

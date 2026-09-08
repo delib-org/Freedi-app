@@ -2,6 +2,7 @@ import m from 'mithril';
 import { t, tCount } from '../lib/i18n';
 import { ConvergenceResults } from './ConvergenceResults';
 import { AgreementResults } from './AgreementResults';
+import { InstallOffer } from '../components/InstallOffer';
 import { EraMap } from '../components/EraMap';
 import { VideoScene } from '../components/VideoScene';
 import { formatPoints } from '../components/PointsPill';
@@ -229,6 +230,7 @@ function myJourneyCard(participant: AgoraParticipant, sessionId: string): m.Chil
 		{ value: points.helping, label: t('results.my_helping') },
 		{ value: points.rating ?? 0, label: t('results.my_rating') },
 		{ value: points.revising ?? 0, label: t('results.my_revising') },
+		{ value: points.appreciation ?? 0, label: t('results.points_appreciation') },
 		{ value: points.proposals, label: t('results.my_proposals') },
 		{ value: points.valueAccuracy, label: t('results.my_values') },
 	];
@@ -602,6 +604,10 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 								finale: true,
 							})
 						: classHalf,
+
+					// The game's last word: take it home. Offered here and only
+					// here — after the score, never over the square.
+					m(InstallOffer),
 				]),
 			]);
 		},

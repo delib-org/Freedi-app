@@ -99,6 +99,17 @@ export const SurveySettingsSchema = object({
   suggestionMode: optional(SuggestionModeSchema),
   /** Display mode: swipe for tinder-style, classic for multi-card */
   displayMode: optional(DisplayModeSchema),
+  /**
+   * When the AI detects that one submission holds several distinct answers,
+   * split and submit them automatically instead of asking the participant.
+   */
+  autoSplitMultiSuggestions: optional(boolean()),
+  /**
+   * When the AI finds an existing suggestion that says the same thing in other
+   * words, merge the new text into it automatically (no "merge or add new?"
+   * screen) and record a +1 evaluation of the merged suggestion for the author.
+   */
+  autoMergeSimilar: optional(boolean()),
 });
 
 export type SurveySettings = InferOutput<typeof SurveySettingsSchema>;
@@ -127,6 +138,10 @@ export const QuestionOverrideSettingsSchema = object({
   minResponseWords: optional(number()),
   /** How participants evaluate options for THIS question (agree-disagree | reactions). Cascaded onto the question Statement's statementSettings.ratingMode. */
   ratingMode: optional(RatingModeSchema),
+  /** Override the survey's auto-split behaviour for THIS question */
+  autoSplitMultiSuggestions: optional(boolean()),
+  /** Override the survey's auto-merge behaviour for THIS question */
+  autoMergeSimilar: optional(boolean()),
 });
 
 export type QuestionOverrideSettings = InferOutput<typeof QuestionOverrideSettingsSchema>;
@@ -346,4 +361,6 @@ export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
   askUserForASolutionAfterEvaluation: undefined,
   minResponseWords: undefined,
   ratingMode: undefined,
+  autoSplitMultiSuggestions: undefined,
+  autoMergeSimilar: undefined,
 };

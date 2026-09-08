@@ -114,16 +114,332 @@
 			background: color-mix(in srgb, var(--success) 18%, transparent);
 		}
 	}
+
+	// --- a lesson running right now: the one card that gets the primary ---
+	&__live {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
+		border-inline-start: 4px solid var(--success);
+
+		@media (max-width: 600px) {
+			flex-wrap: wrap;
+
+			// The return button takes the whole second line on a phone
+			> .btn {
+				flex: 1 1 100%;
+			}
+		}
+	}
+
+	&__live-text {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__live-title {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--text-primary);
+	}
+
+	&__live-meta {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	// --- the first-run strip: three steps, quieter than the cards it precedes ---
+	&__firstrun {
+		position: relative;
+		background: var(--surface-tint);
+		box-shadow: none;
+		padding: var(--space-md);
+		// Room for the dismiss cross so the title never runs under it
+		padding-inline-end: calc(var(--space-md) + 44px);
+	}
+
+	&__firstrun-title {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-base);
+		color: var(--text-primary);
+	}
+
+	&__firstrun-dismiss {
+		@extend %agora-icon-button;
+
+		position: absolute;
+		inset-block-start: var(--space-xs);
+		inset-inline-end: var(--space-xs);
+	}
+
+	&__steps {
+		list-style: none;
+		margin: var(--space-sm) 0 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: var(--space-md);
+
+		@media (max-width: 600px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	&__step {
+		display: flex;
+		gap: var(--space-sm);
+		align-items: flex-start;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	// A tile, not a saturated fill: the number says "which", nothing more
+	&__step-n {
+		flex: 0 0 auto;
+		display: inline-grid;
+		place-items: center;
+		inline-size: 28px;
+		block-size: 28px;
+		border-radius: 50%;
+		background: var(--peer-tile);
+		color: var(--mine-ink);
+		font-family: var(--font-display);
+		font-weight: 700;
+	}
+
+	// "+ תרחיש חדש" — a ghost link under the shelf, not a full-width button
+	&__new-scenario {
+		align-self: flex-start;
+	}
+
+	// --- past lessons: class · title · date, and the score as an ink pill ---
+	&__game-title {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		color: var(--text-primary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__score-pill {
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-full);
+		padding: 2px var(--space-sm);
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--mine-ink);
+	}
+}
+
+// A past lesson's first line wraps on a phone: class, title and date do not
+// fit one row at 360px, and a title cut to three letters says nothing.
+@media (max-width: 600px) {
+	.dashboard__game-main {
+		flex-wrap: wrap;
+	}
 }
 
 .start-game {
+	// The three-line form: what, who, go. Lines on --space-lg; inside a line
+	// the label sits --space-sm above its control.
+	&__form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+	}
+
+	&__title {
+		font-size: var(--font-size-xl);
+	}
+
+	&__field {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__field-label {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	// "עוד" — unfolds the name and explanation under the question
+	&__more {
+		align-self: flex-start;
+	}
+
 	&__class-row {
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-sm);
 	}
 
+	// One chip per class. Chrome, so a chosen one is a tint and a ring, not a
+	// fill — the filled thing on this screen is the chosen scenario.
+	&__class-chip {
+		min-block-size: 44px;
+		padding: 0 var(--space-md);
+		border-radius: var(--radius-full);
+		border: 1.5px solid var(--border-subtle);
+		background: var(--bg-card-solid);
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-base);
+		color: var(--text-primary);
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		cursor: pointer;
+		transition:
+			border-color var(--motion-fast) ease,
+			background-color var(--motion-fast) ease,
+			color var(--motion-fast) ease;
+
+		&:hover {
+			border-color: var(--lantern);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+
+		&--on {
+			border-color: var(--mine);
+			color: var(--mine-ink);
+			background: color-mix(in srgb, var(--mine) 12%, transparent);
+
+			// Inside a tinted chip the ring sits within the edge, or a
+			// neighbouring chip clips it
+			&:focus-visible {
+				outline-offset: -2px;
+			}
+		}
+
+		// "+ כיתה חדשה": a door, drawn as unfinished paper
+		&--new {
+			border-style: dashed;
+			color: var(--mine-ink);
+		}
+
+		// "בלי כיתה" looks like any other chip on purpose — it is a real
+		// choice, not a lesser one. The modifier exists so the view can
+		// address it; it paints nothing.
+		&--none {
+			border-style: solid;
+		}
+	}
+
+	&__go {
+		margin-block-start: var(--space-sm);
+	}
+
+	// What the defaults add up to, in one line, with the one way to change them
+	&__summary {
+		text-align: center;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		margin: 0;
+	}
+
+	&__change {
+		background: none;
+		border: 0;
+		padding: 0;
+		font: inherit;
+		color: var(--mine-ink);
+		text-decoration: underline;
+		cursor: pointer;
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	// --- the advanced fold: a quieter card than the form above it ---
+	&__advanced {
+		box-shadow: none;
+		background: var(--surface-tint);
+		padding: var(--space-md);
+	}
+
+	&__advanced-summary {
+		inline-size: 100%;
+		min-block-size: 44px;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		background: transparent;
+		border: 0;
+		padding: 0;
+		text-align: start;
+		font: inherit;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-base);
+		color: var(--text-primary);
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+
+		> .icon:first-child {
+			color: var(--text-secondary);
+		}
+
+		&:hover {
+			color: var(--mine-ink);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	&__advanced-label {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+	}
+
+	// The chevron: the arrow icon turned to point down, and up once open
+	&__advanced-chevron {
+		flex: 0 0 auto;
+		display: inline-flex;
+		color: var(--text-muted);
+		transform: rotate(var(--chevron-closed));
+		transition: transform var(--motion-base) var(--ease-camera);
+
+		&--open {
+			transform: rotate(var(--chevron-open));
+		}
+	}
+
+	&__advanced-hint {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	// The open body sits under the hint; the fold animates its own height
+	&__advanced > .collapsible {
+		padding-block-start: var(--space-lg);
+	}
+
+	// The round knobs, no longer inside their own card
 	&__knobs {
+		display: flex;
+		flex-direction: column;
 		gap: var(--space-sm);
 	}
 
@@ -149,5 +465,279 @@
 		font-size: var(--font-size-lg);
 		min-width: 1.5em;
 		text-align: center;
+	}
+}
+
+// --- The scenario shelf (/teach) ---
+//
+// The shelf used to be a list of doors into the editor: every tap went to the
+// text, and nothing on the screen let a teacher say "this is the one we run
+// today". A row now does the one thing its scenario is ready for — a finished
+// one opens the start screen already holding it, an unfinished one opens where
+// it can be finished — and the cog beside it keeps the way into the settings.
+//
+// Two sibling buttons, never nested: a button inside a button is invalid, and
+// a cog inside the row's own click is the thing that swallows taps.
+
+// The icon-only buttons on these screens: a square you can hit with a thumb,
+// no label, no .btn padding (which would stretch one glyph into an oval).
+%agora-icon-button {
+	inline-size: 44px;
+	block-size: 44px;
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--text-secondary);
+	border-radius: var(--radius-tile);
+	cursor: pointer;
+	transition:
+		background-color var(--motion-fast) ease,
+		color var(--motion-fast) ease,
+		transform var(--motion-fast) var(--ease-spring);
+
+	&:hover {
+		background: color-mix(in srgb, var(--mine) 8%, transparent);
+		color: var(--mine-ink);
+	}
+
+	&:active {
+		transform: scale(0.94);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+}
+
+.scenario-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.scenario-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	min-block-size: 64px;
+	padding-inline-end: var(--space-xs);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-card);
+	transition: border-color var(--motion-fast) ease;
+
+	&:has(.scenario-row__use:hover) {
+		border-color: var(--border-lantern);
+	}
+
+	// A draft is not disabled — it is the row the teacher still has work on,
+	// so it reads as unfinished paper rather than as a locked door.
+	&--draft {
+		border-style: dashed;
+		border-color: var(--border-strong);
+		box-shadow: none;
+	}
+
+	// The lesson this teacher is about to run. A filled tint and a lantern
+	// ring, the same way a committed choice is said on the start screen —
+	// hover is a maybe, this is a decision.
+	&--chosen {
+		border-color: var(--lantern);
+		background: var(--bg-inset);
+		box-shadow:
+			inset 0 0 0 1px var(--lantern),
+			var(--glow-lantern);
+	}
+
+	&__use {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		min-block-size: 56px;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		border: 0;
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		text-align: start;
+		border-radius: inherit;
+		cursor: pointer;
+		transition: transform var(--motion-fast) var(--ease-spring);
+
+		&:active {
+			transform: scale(0.985);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	&__tile {
+		inline-size: 40px;
+		block-size: 40px;
+		flex: 0 0 auto;
+		display: grid;
+		place-items: center;
+		border-radius: var(--radius-tile);
+		background: var(--peer-tile);
+		color: var(--mine-ink);
+		transition:
+			background-color var(--motion-fast) ease,
+			color var(--motion-fast) ease;
+	}
+
+	&__use:hover &__tile {
+		background: var(--mine-strong);
+		color: #fff; // on --mine-strong, and an icon carries no text contrast duty
+	}
+
+	&--chosen &__tile {
+		background: var(--mine-strong);
+		color: #fff; // an icon, so no text-contrast duty
+	}
+
+	&--draft &__tile {
+		background: var(--bg-inset);
+		color: var(--text-muted);
+	}
+
+	&--draft &__use:hover &__tile {
+		background: var(--bg-inset);
+		color: var(--mine-ink);
+	}
+
+	&__text {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--text-primary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&--draft &__title {
+		color: var(--text-secondary);
+	}
+
+	&__meta {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		flex-wrap: wrap;
+	}
+
+	&__status {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-full);
+		padding: 2px var(--space-sm);
+
+		// Tinted FILL, never warning-coloured text: --warning is defined as a
+		// fill and there is no --warning-ink to pair with it.
+		&--draft {
+			color: var(--text-primary);
+			border-color: var(--warning);
+			background: color-mix(in srgb, var(--warning) 18%, transparent);
+		}
+
+		&--chosen {
+			color: var(--text-primary);
+			border-color: var(--lantern);
+			background: color-mix(in srgb, var(--lantern) 18%, transparent);
+		}
+	}
+
+	&__sub {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+	}
+
+	// The row is a door: on a touch screen nothing hovers, so the arrow says
+	// so. The glyph is drawn pointing left, which IS forward in Hebrew; a
+	// left-to-right script turns it round.
+	&__arrow {
+		flex: 0 0 auto;
+		display: inline-flex;
+		color: var(--text-muted);
+
+		[dir='ltr'] & .icon {
+			transform: scaleX(-1);
+		}
+	}
+
+	&__settings {
+		@extend %agora-icon-button;
+	}
+
+	// "שאלה משלי" — the last row, one question and no scenario. Its tile is
+	// the plain --peer-tile like any ready row; pinned so it never drifts
+	// with a future draft/chosen tweak.
+	&--own &__tile {
+		background: var(--peer-tile);
+		color: var(--mine-ink);
+	}
+}
+
+.scenario-list__go {
+	margin-block-start: var(--space-sm);
+}
+
+// --- the "add a class" tile and the class form (new class / rename) ---
+.dashboard__class-card--add {
+	border-style: dashed;
+	text-align: start;
+	color: var(--mine-ink);
+	cursor: pointer;
+	font: inherit;
+
+	&:hover,
+	&:focus-visible {
+		border-color: var(--mine);
+	}
+}
+
+.class-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	&__row {
+		display: grid;
+		grid-template-columns: minmax(120px, 1fr) 2fr;
+		gap: var(--space-md);
+		align-items: end;
+
+		@media (max-width: 600px) {
+			grid-template-columns: 1fr;
+		}
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.start-game__class-chip,
+	.start-game__advanced-chevron {
+		transition: none;
 	}
 }

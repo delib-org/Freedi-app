@@ -44,8 +44,6 @@ const ACCEPTED = [
 	['p.thread__text', 'rgb(139, 107, 240)', 3.85],
 	['span.thread__time', 'rgb(139, 107, 240)', 2.87],
 	['p.action-hint', 'rgb(139, 107, 240)', 2.87],
-	['span.proposal-dock__title', 'rgb(139, 107, 240)', 3.85],
-	['span.proposal-dock__sub', 'rgb(139, 107, 240)', 2.98],
 	['span.delib-nav__label', 'rgb(139, 107, 240)', 3.85],
 	// White copy on the hero ramp's top stops (--mine-light #a98cf7 and the
 	// sheen washing over it)
@@ -55,9 +53,16 @@ const ACCEPTED = [
 	// The count pink. It replaced --danger, which passed at 4.67:1 — red said
 	// "something broke" about a classmate's reply, which is the friendliest
 	// event in the game, so the hue was worth the ratio.
-	['span.proposal-dock__badge', 'rgb(245, 106, 168)', 2.8],
 	['span.delib-nav__badge', 'rgb(245, 106, 168)', 2.8],
 	['span.stall__chip.stall__chip--unread', 'rgb(245, 106, 168)', 2.8],
+	// The same pink count, on the workshop drawers' feedback badge — it joined
+	// the gauntlet on 2026-09-03 when the drawers did; the candy look passes it
+	['span.workbench__count', 'rgb(245, 106, 168)', 2.8],
+	// ...and on the teacher console's "מה כתבו" chip, which joined the gauntlet
+	// on 2026-09-07 with the control strip. Same count, same pink, same
+	// reason (DESIGN §2: a count is pink, never --danger); candy and civic
+	// remap --pink and pass it outright.
+	['span.teacher-panels__badge', 'rgb(245, 106, 168)', 2.8],
 ];
 
 /** A failure is accepted only on the same surface, and only if it has not got worse */
@@ -89,7 +94,24 @@ export async function auditPage(page, { label = 'page', min = AA_NORMAL } = {}) 
 	return page.evaluate(
 		({ AA_NORMAL, AA_LARGE, min }) => {
 			const parseColor = (value) => {
-				const match = /rgba?\(([^)]+)\)/.exec(value ?? '');
+				const text = value ?? '';
+				// color-mix() resolves to `color(srgb r g b / a)`, and a look a
+				// student built is written ENTIRELY in color-mix — so a parser
+				// that only knows rgb() is blind to every surface in it and
+				// reports white text on the page colour it never sat on.
+				const srgb = /color\(srgb\s+([^)]+)\)/.exec(text);
+				if (srgb) {
+					const parts = srgb[1]
+						.split(/[\s/]+/)
+						.filter(Boolean)
+						.map((n) => (n.endsWith('%') ? parseFloat(n) / 100 : parseFloat(n)));
+					const [r, g, b] = parts;
+					const a = parts.length > 3 ? parts[3] : 1;
+
+					return Number.isFinite(r) ? { r: r * 255, g: g * 255, b: b * 255, a } : null;
+				}
+
+				const match = /rgba?\(([^)]+)\)/.exec(text);
 				if (!match) return null;
 				const parts = match[1].split(/[,/]/).map((n) => parseFloat(n));
 				const [r, g, b] = parts;
@@ -102,7 +124,7 @@ export async function auditPage(page, { label = 'page', min = AA_NORMAL } = {}) 
 			const gradientStops = (image) => {
 				if (!image || image === 'none' || !image.includes('gradient')) return [];
 
-				return [...image.matchAll(/rgba?\([^)]+\)/g)]
+				return [...image.matchAll(/(?:rgba?|color)\([^)]+\)/g)]
 					.map((m) => parseColor(m[0]))
 					.filter((c) => c && c.a > 0.15);
 			};

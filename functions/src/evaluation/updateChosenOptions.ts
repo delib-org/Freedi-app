@@ -299,6 +299,21 @@ async function getOptionsUsingMethod(
 		return filtered;
 	}
 
+	if (effectiveCutoffBy === CutoffBy.all) {
+		// No cutoff: every visible option, still ranked by the chosen metric
+		const snapshot = await baseQuery.get();
+
+		if (snapshot.empty) {
+			return [];
+		}
+
+		const options = snapshot.docs
+			.map((doc) => doc.data() as Statement)
+			.filter((opt) => !opt.hide);
+
+		return sortOptionsByResultsBy(options, resultsBy);
+	}
+
 	logger.warn(`getOptionsUsingMethod: Unknown cutoffBy value: ${effectiveCutoffBy}`);
 
 	return undefined;

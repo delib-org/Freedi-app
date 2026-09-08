@@ -16,7 +16,8 @@ import {
 
 export interface VotingAttrs {
 	session: AgoraSession;
-	myParticipant: AgoraParticipant;
+	/** Absent on the projector, which has no seat */
+	myParticipant?: AgoraParticipant;
 	userId: string;
 	/** The vote is over (or the player stepped back to it): tallies only */
 	readOnly?: boolean;
@@ -29,6 +30,12 @@ export interface VotingAttrs {
 	 * they cannot decide blind.
 	 */
 	board?: boolean;
+	/**
+	 * The classroom projector: the board's read-only layout, but the reveal
+	 * follows the class setting — this screen is what the STUDENTS see, so it
+	 * must not show a count the teacher has not yet revealed.
+	 */
+	projector?: boolean;
 }
 
 /**
@@ -75,6 +82,9 @@ export function Voting(): m.Component<VotingAttrs> {
 	 * Only when the ORDER changed. Rows also shift when the reveal adds the
 	 * count column and every row grows — animating that displacement would fling
 	 * the whole list at the moment the teacher is trying to show it something.
+	 *
+	 * The Web Animations API rather than an inline transform, so the row's own
+	 * hover transition and the bar's fill are never fought with.
 	 */
 	function flipRow(dom: HTMLElement, id: string): void {
 		const now = dom.offsetTop;
@@ -82,20 +92,16 @@ export function Voting(): m.Component<VotingAttrs> {
 		rowOffsets.set(id, now);
 		if (before === undefined || reducedMotion || !resorted) return;
 		const delta = before - now;
-		if (Math.abs(delta) < 2) return;
-		// Frame 1: no transition, sitting at the old place
-		dom.style.transition = 'none';
-		dom.style.transform = `translateY(${delta}px)`;
-		requestAnimationFrame(() => {
-			// Frame 2: hand the transition back to the stylesheet and let go
-			dom.style.transition = '';
-			dom.style.transform = '';
+		if (Math.abs(delta) < 2 || typeof dom.animate !== 'function') return;
+		dom.animate([{ transform: `translateY(${delta}px)` }, { transform: 'translateY(0)' }], {
+			duration: 600,
+			easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
 		});
 	}
 
 	return {
 		view(vnode) {
-			const { session, userId, board = false } = vnode.attrs;
+			const { session, userId, board = false, projector = false } = vnode.attrs;
 			// The projector is never a ballot, whatever the caller said
 			const readOnly = board || vnode.attrs.readOnly === true;
 			const candidates: VotingCandidate[] = session.voting?.candidates ?? [];
@@ -125,7 +131,8 @@ export function Voting(): m.Component<VotingAttrs> {
 			 * The teacher's own board is exempt — they decide when to reveal, and
 			 * cannot decide blind.
 			 */
-			const showResults = board || readOnly || (settings?.showResults === true && !challengeLive);
+			const showResults =
+				(!projector && (board || readOnly)) || (settings?.showResults === true && !challengeLive);
 			// Reordering by a hidden number would leak it, and a ballot that moves
 			// under a voter's finger loses their place.
 			const liveReorder = showResults && settings?.liveReorder === true;

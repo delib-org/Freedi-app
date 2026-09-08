@@ -39,6 +39,14 @@ describe('resolveVotingSelection', () => {
 		});
 	});
 
+	it('keeps an everyone-on-the-ballot choice', () => {
+		const settings = {
+			selection: { resultsBy: ResultsBy.consensus, cutoffBy: CutoffBy.all },
+		};
+
+		expect(resolveVotingSelection(settings)).toMatchObject({ cutoffBy: CutoffBy.all });
+	});
+
 	it('keeps a threshold choice', () => {
 		const settings = {
 			selection: {

@@ -609,6 +609,49 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             </label>
           </div>
         </div>
+
+        {/* Automatic AI handling of submissions (survey defaults; overridable per question) */}
+        <div className={styles.formGroup}>
+          <div className={styles.testModeToggle}>
+            <label className={styles.toggleSwitch}>
+              <input
+                type="checkbox"
+                checked={settings.autoSplitMultiSuggestions ?? false}
+                onChange={(e) =>
+                  setSettings({ ...settings, autoSplitMultiSuggestions: e.target.checked })
+                }
+              />
+              <span className={styles.toggleSlider}></span>
+            </label>
+            <span className={styles.toggleLabel}>
+              {t('autoSplitMultiSuggestions') || 'Split multi-answer submissions automatically'}
+            </span>
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+            {t('autoSplitMultiSuggestionsHint') || 'When one submission holds several answers, add each as its own suggestion without asking the participant.'}
+          </p>
+        </div>
+
+        <div className={styles.formGroup}>
+          <div className={styles.testModeToggle}>
+            <label className={styles.toggleSwitch}>
+              <input
+                type="checkbox"
+                checked={settings.autoMergeSimilar ?? false}
+                onChange={(e) =>
+                  setSettings({ ...settings, autoMergeSimilar: e.target.checked })
+                }
+              />
+              <span className={styles.toggleSlider}></span>
+            </label>
+            <span className={styles.toggleLabel}>
+              {t('autoMergeSimilar') || 'Merge similar suggestions automatically'}
+            </span>
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+            {t('autoMergeSimilarHint') || 'When a similar suggestion already exists, merge into it without asking and count the participant as agreeing (+1) with the merged suggestion.'}
+          </p>
+        </div>
       </div>
 
       {/* Synthesis Settings */}

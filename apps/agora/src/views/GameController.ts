@@ -15,6 +15,16 @@ import { getTopicPackage, loadTopicPackage } from '../lib/topic';
 import { stopValueAnswerListeners } from '../lib/values';
 import { listenToNotifications, stopNotifications } from '../lib/notifications';
 import {
+	hasTeacherThread,
+	listenToTeacherThread,
+	markTeacherThreadSeen,
+	stopTeacherThread,
+	teacherThreadUnread,
+} from '../lib/teacherThread';
+import { registerTeacherNavigator, unregisterTeacherNavigator } from '../lib/helpedFocus';
+import { initInbox } from '../lib/inbox';
+import { TeacherThreadSheet } from '../components/TeacherThreadSheet';
+import {
 	getDeliberationState,
 	listenToDeliberation,
 	stopDeliberationListeners,
@@ -31,17 +41,20 @@ import {
 import { ToastStack } from '../components/Toast';
 import { NeedsBoard } from '../components/NeedsBoard';
 import { CelebrationOverlay } from '../components/Celebration';
-import { InstallHint } from '../components/InstallHint';
 import { StageNav, planItemLabel } from '../components/StageNav';
 import { CarriedContext } from '../components/CarriedContext';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { StageTransition, hasStageTransition } from '../components/StageTransition';
+import { LookSheet } from '../components/LookSheet';
+import { seedsOf } from '../components/LookPicker';
+import { buildLook, classLooks, wearLook } from '../lib/looks';
 import { Lobby } from './Lobby';
 import { SceneStage } from './SceneStage';
 import { ValueIdentification } from './ValueIdentification';
 import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
 import { QuestionStage } from './QuestionStage';
+import { RoundStage } from './RoundStage';
 import { Voting } from './Voting';
 import { Results } from './Results';
 import { ReRate } from './ReRate';
@@ -49,6 +62,8 @@ import {
 	AgoraSceneKind,
 	AgoraSessionMode,
 	AgoraStage,
+	resolveAgoraTheme,
+	roundSpecOf,
 	type AgoraStagePlanItem,
 } from '@freedi/shared-types';
 
@@ -146,6 +161,18 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let transitionLeaveTimer: number | undefined;
 	let nav: StageNavState = INITIAL_STAGE_NAV;
 	let navRestored = false;
+	/** The style sheet is open — a modal over whatever stage is on screen */
+	let lookOpen = false;
+	/** The teacher's thread is open — reachable from every stage, toast or not */
+	let teacherOpen = false;
+
+	function openTeacherThread(): void {
+		teacherOpen = true;
+		markTeacherThreadSeen();
+		m.redraw();
+	}
+
+	registerTeacherNavigator(openTeacherThread);
 
 	function beginStageTransition(item: AgoraStagePlanItem): void {
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -187,6 +214,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			window.clearTimeout(transitionTimer);
 			window.clearTimeout(transitionLeaveTimer);
 			stopListening();
+			stopTeacherThread();
+			unregisterTeacherNavigator(openTeacherThread);
 			stopValueAnswerListeners();
 			stopNotifications();
 			// The results recap re-attaches these after the deliberation view
@@ -202,6 +231,10 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			if (userId) {
 				listenToSession(sessionId, userId);
 				listenToNotifications(userId);
+				// The teacher may write on any stage, and the post box must already
+				// be bound to the session when their first note is filed
+				listenToTeacherThread(sessionId, userId);
+				initInbox(sessionId);
 			}
 
 			const { session, participants, myParticipant, participantsLoaded, loading, error } =
@@ -271,15 +304,61 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const item = plan[viewingIndex] ?? plan[currentIndex];
 			const live = viewingIndex === currentIndex;
 
+			// The look this screen wears, and the door to change it. A civic
+			// square has no door: it wears Odyssey's colours by contract.
+			const currentLook = resolveAgoraTheme(session, myParticipant);
+			const canPickLook = session.sessionMode !== AgoraSessionMode.civic && myParticipant !== null;
+			const lookDoor = canPickLook
+				? {
+						seeds: seedsOf(currentLook),
+						label: t('look.open'),
+						onOpen: () => {
+							lookOpen = true;
+						},
+					}
+				: undefined;
+			const lookSheet =
+				lookOpen && canPickLook
+					? m(LookSheet, {
+							current: currentLook,
+							roomLook: resolveAgoraTheme(session, null),
+							following: !myParticipant?.theme,
+							classLooks: classLooks(participants, userId),
+							myLook: myParticipant?.builtTheme
+								? {
+										name: myParticipant.builtTheme.name,
+										seeds: myParticipant.builtTheme.seeds,
+										font: myParticipant.builtTheme.font,
+									}
+								: undefined,
+							onWear: (choice) => void wearLook(choice),
+							onBuild: (name, seeds, font) => void buildLook(name, seeds, font),
+							onClose: () => {
+								lookOpen = false;
+							},
+						})
+					: null;
+
 			const overlays = [
 				m(ToastStack),
 				m(CelebrationOverlay),
-				m(InstallHint),
+				lookSheet,
+				teacherOpen
+					? m(TeacherThreadSheet, {
+							sessionId,
+							onClose: () => {
+								teacherOpen = false;
+								markTeacherThreadSeen();
+							},
+						})
+					: null,
 				transitionItem !== null
 					? m(StageTransition, {
 							stage: transitionItem.stage,
 							title:
-								transitionItem.stage === AgoraStage.question ? transitionItem.title : undefined,
+								transitionItem.stage === AgoraStage.question
+									? planItemLabel(transitionItem)
+									: undefined,
 							leaving: transitionLeaving,
 						})
 					: null,
@@ -291,6 +370,14 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				viewingIndex,
 				onSelect: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
 				compact: item.stage === AgoraStage.deliberation && live,
+				look: lookDoor,
+				mail: hasTeacherThread()
+					? {
+							unread: teacherThreadUnread(),
+							onOpen: openTeacherThread,
+							label: t('teacherThread.open'),
+						}
+					: undefined,
 			});
 
 			const pastNotice = live
@@ -309,7 +396,11 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					...overlays,
 					stageNav,
 					pastNotice,
-					m(Lobby, { participants, myParticipant }),
+					m(Lobby, {
+						participants,
+						myParticipant,
+						onOpenLook: lookDoor?.onOpen,
+					}),
 				]);
 			}
 
@@ -438,7 +529,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					case AgoraStage.question: {
 						if (!myParticipant) return noSeatYet();
 
-						return m(QuestionStage, {
+						return m(roundSpecOf(item) ? RoundStage : QuestionStage, {
 							session,
 							item,
 							planIndex: viewingIndex,

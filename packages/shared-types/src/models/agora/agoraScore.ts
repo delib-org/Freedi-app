@@ -214,6 +214,13 @@ export const AgoraProposalScoreSchema = object({
 	 * too small inflates the score.
 	 */
 	authorPositioned: optional(boolean()),
+	/**
+	 * Mirrors the proposal's moderation state so readers that hold scores but
+	 * not statements (the auto-open voting rule, the teacher's trigger line)
+	 * can leave a hidden proposal out without a second query. Written by the
+	 * moderation callable in the same batch as the statement.
+	 */
+	hidden: optional(boolean()),
 	/** Finite-population class consensus over the student histogram */
 	classConsensus: optional(AgoraClassConsensusSchema),
 	plausibility: optional(AgoraPlausibilitySchema),

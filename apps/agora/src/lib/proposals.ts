@@ -14,6 +14,8 @@ import {
 	Unsubscribe,
 } from './firebase';
 import {
+	AGORA_ROUND,
+	type AgoraUnitRating,
 	Collections,
 	AgoraCharacterReview,
 	AgoraCharacterReviewSchema,
@@ -28,6 +30,9 @@ import {
 	Statement,
 	StatementType,
 	isAgoraAiUid,
+	isAgoraHidden,
+	isTeacherEdited,
+	ModeratedDoc,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { trackWrite, clearWriteTracking } from './confirmedWrite';
@@ -63,6 +68,15 @@ export interface AgoraProposal {
 	agoraPreviousText?: string;
 	/** `award` messages: what this moment paid the helper */
 	agoraPointsAwarded?: number;
+	/**
+	 * Taken down by the teacher. Only ever true on the AUTHOR's own copy —
+	 * classmates never receive a hidden doc at all (the text is blank on the
+	 * server anyway; see agoraModeration.ts). The author keeps the row so the
+	 * square does not renumber itself around a gap.
+	 */
+	hidden?: boolean;
+	/** The teacher rewrote (part of) this text */
+	teacherEdited?: boolean;
 	consensus?: number;
 	evaluation?: {
 		agreement?: number;
@@ -162,6 +176,8 @@ function toProposal(data: Record<string, unknown>): AgoraProposal {
 			typeof data.agoraPointsAwarded === 'number' ? data.agoraPointsAwarded : undefined,
 		consensus: typeof data.consensus === 'number' ? data.consensus : undefined,
 		evaluation: data.evaluation as AgoraProposal['evaluation'],
+		...(isAgoraHidden(data as ModeratedDoc) ? { hidden: true } : {}),
+		...(isTeacherEdited(data as ModeratedDoc) ? { teacherEdited: true } : {}),
 	};
 }
 
@@ -186,6 +202,9 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			snapshot.forEach((docSnap) => {
 				if (!docSnap.metadata.hasPendingWrites) serverConfirmed.add(docSnap.id);
 				const item = toProposal(docSnap.data() as Record<string, unknown>);
+				// A classmate's hidden text never enters this state: not the market,
+				// not a thread, not a count. The author keeps theirs, marked.
+				if (item.hidden && item.creatorId !== userId) return;
 				if (item.statementType === StatementType.option) {
 					// Options split by PARENT: the challenge question's are the
 					// square's proposals; any other parent is a question stage's
@@ -548,15 +567,36 @@ export async function rateProposal(
 }
 
 /**
+ * A heart on a classmate's story. A like is the evaluation `1`, an un-like
+ * is `0` — never a delete: a deleted evaluation re-runs the effort credit
+ * when it comes back and moves the rater count under a reading finger. The
+ * round pays the author on the way up only (see AGORA_POINTS.ROUND_APPRECIATION).
+ */
+export async function likeStatement(
+	session: AgoraSession,
+	parentId: string,
+	statementId: string,
+	liked: boolean,
+): Promise<void> {
+	return rateStatement(
+		session,
+		parentId,
+		statementId,
+		liked ? AGORA_ROUND.LIKE : AGORA_ROUND.UNLIKE,
+	);
+}
+
+/**
  * Rate any option in the session — a proposal under the challenge question
- * or an answer under a question stage. The parent decides which pipeline
- * aggregates it; the shape is the same evaluation either way.
+ * (−1…+1), an answer under a question stage, or a text in a WizCol round
+ * (a like, or a 0…1 step). The parent decides which pipeline aggregates it;
+ * the shape is the same evaluation either way.
  */
 export async function rateStatement(
 	session: AgoraSession,
 	parentId: string,
 	statementId: string,
-	value: AgoraRating,
+	value: AgoraRating | AgoraUnitRating,
 ): Promise<void> {
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
@@ -593,6 +633,7 @@ export function openSuggestionsBy(proposalId: string, userId: string): number {
 	return (state.suggestions[proposalId] ?? []).filter(
 		(suggestion) =>
 			suggestion.creatorId === userId &&
+			!suggestion.hidden &&
 			// Plain chat never occupies an idea slot — the cap guards unresolved
 			// WORK on the owner's desk, and a chat message asks nothing of them
 			isSuggestionKind(suggestion) &&

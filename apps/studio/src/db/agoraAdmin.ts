@@ -71,6 +71,15 @@ export interface AgoraStatsDoc {
 	studentsReached?: number;
 	classesPlayed?: number;
 	byOutcome?: Record<string, number>;
+	/**
+	 * Which look students actually played in — `candy` / `purple` / `custom`
+	 * count students by the look they wore; `built` and `borrowed` count who
+	 * made one and who wore a classmate's. Tallied per finished session by
+	 * the same trigger (shared-types `tallyAgoraThemes`).
+	 */
+	byTheme?: Record<string, number>;
+	/** Which look the teacher set per room — `candy` / `purple` / `custom` */
+	byRoomTheme?: Record<string, number>;
 	lastUpdate?: number;
 }
 

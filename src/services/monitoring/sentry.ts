@@ -2,6 +2,8 @@ import * as Sentry from '@sentry/react';
 import {
 	isBlockedServiceWorkerCrash,
 	isFirestoreInternalCrash,
+	isLocalRuntime,
+	isThirdPartyScriptCrash,
 	isTransientAuthNetworkError,
 } from '@freedi/shared-utils';
 import { useLocation, useNavigationType } from 'react-router';
@@ -21,8 +23,13 @@ export function initSentry() {
 	// /statement/:id and /login showed up filed under "wizcol-sign".
 	const sentryDsn = import.meta.env.VITE_SENTRY_DSN_MAIN || import.meta.env.VITE_SENTRY_DSN;
 
-	// Only initialize in production and if we have a valid DSN
+	// Only initialize in production and if we have a valid DSN — and never from
+	// a developer's machine, however the bundle was built. `vite preview`, or a
+	// `.env` copied from prod, both leave PROD true while the page is served
+	// from localhost.
+	const override = import.meta.env.VITE_SENTRY_ENABLE_IN_LOCAL === 'true';
 	if (
+		!isLocalRuntime(override) &&
 		import.meta.env.PROD &&
 		sentryDsn &&
 		sentryDsn !== 'YOUR_SENTRY_DSN_HERE' &&
@@ -115,6 +122,13 @@ export function initSentry() {
 				// Filter out workbox-window crashes caused by a stubbed
 				// serviceWorker.register(). Not fixable from app code.
 				if (isBlockedServiceWorkerCrash(event, error)) {
+					return null;
+				}
+
+				// Filter out crashes thrown entirely inside a third-party analytics
+				// bundle (Microsoft Clarity and friends). We do not own that code and
+				// cannot pin its version, so the events are pure noise.
+				if (isThirdPartyScriptCrash(event)) {
 					return null;
 				}
 

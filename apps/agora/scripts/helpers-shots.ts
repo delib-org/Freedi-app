@@ -104,7 +104,7 @@ await page.goto(result.joinUrl, { waitUntil: 'domcontentloaded' });
 // screen (see GameController), so waiting for a deliberation container before
 // writing the camp would wait for the very thing the camp write unlocks.
 await page.waitForSelector(
-	'input.camp-scale__slider, .chat-log, .delib-hud, .proposal-dock__bar',
+	'input.camp-scale__slider, .chat-log, .delib-hud',
 	{ timeout: 40_000 },
 );
 
@@ -116,7 +116,7 @@ const uid = await page.evaluate(
 if (!uid) throw new Error('no uid on the opened student');
 await positionStudent(result.sessionId, uid, 20);
 await proposeAs(result.sessionId, uid, 'שנקים מועצת אזרחים שנבחרת בגורל בכל עיר');
-await page.waitForSelector('.chat-log, .delib-hud, .proposal-dock__bar', { timeout: 40_000 });
+await page.waitForSelector('.chat-log, .delib-hud', { timeout: 40_000 });
 await db
 	.collection(Collections.agoraParticipants)
 	.doc(`${result.sessionId}--${uid}`)

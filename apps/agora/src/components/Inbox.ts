@@ -19,7 +19,6 @@ import {
 	loadDigestSettings,
 	saveDigestSettings,
 } from '../lib/digestPrefs';
-import { maybeSuggestInstall } from '../lib/install';
 
 export interface InboxAttrs {
 	/**
@@ -111,9 +110,6 @@ export function Inbox(): m.Component<InboxAttrs> {
 		void saveDigestSettings(uid, settings)
 			.then(() => {
 				digestSaved = true;
-				// A player arranging to hear about updates plainly means to come
-				// back — the other smart moment for the home-screen suggestion
-				if (settings.enabled) maybeSuggestInstall();
 			})
 			.finally(() => {
 				digestSaving = false;

@@ -1,5 +1,5 @@
 /**
- * The game's only sounds, and there are two of them.
+ * The game's only sounds, and there are three of them.
  *
  * Synthesised rather than shipped: an applause sample is a 100KB download on a
  * classroom wifi that already carries thirty clients, and filtered noise with
@@ -112,6 +112,82 @@ export function playApplause(): void {
 		const progress = i / CLAPS;
 		const at = now + progress ** 1.7 * 1.5 + Math.random() * 0.05;
 		clap(audio, at, 0.1 * (1 - progress * 0.75));
+	}
+}
+
+/**
+ * A referee's whistle: one high tone with a fast tremolo, which is the pea
+ * rattling in the barrel — the part that makes it a whistle rather than a
+ * beep — cut short so the roar behind it can arrive.
+ */
+function whistle(audio: AudioContext, at: number): void {
+	const osc = audio.createOscillator();
+	osc.type = 'square';
+	osc.frequency.value = 2650;
+	const tremolo = audio.createOscillator();
+	tremolo.frequency.value = 42;
+	const depth = audio.createGain();
+	depth.gain.value = 0.5;
+	const level = audio.createGain();
+	level.gain.setValueAtTime(0.0001, at);
+	level.gain.exponentialRampToValueAtTime(0.06, at + 0.02);
+	level.gain.setValueAtTime(0.06, at + 0.3);
+	level.gain.exponentialRampToValueAtTime(0.0001, at + 0.4);
+	// Square waves are harsh; a lowpass on the way out takes the buzz off
+	const soften = audio.createBiquadFilter();
+	soften.type = 'lowpass';
+	soften.frequency.value = 4200;
+	tremolo.connect(depth).connect(level.gain);
+	osc.connect(level).connect(soften).connect(audio.destination);
+	osc.start(at);
+	tremolo.start(at);
+	osc.stop(at + 0.42);
+	tremolo.stop(at + 0.42);
+}
+
+/**
+ * A stadium: low, wide noise that swells and settles — the sound of a crowd
+ * on its feet — with the applause scatter riding on top of it. Just under
+ * three seconds: long enough to be a goal, short enough that thirty devices
+ * in one classroom stay a classroom.
+ */
+export function playGoal(): void {
+	if (!isSoundOn()) return;
+	const audio = ctx();
+	if (!audio) return;
+	const now = audio.currentTime;
+	whistle(audio, now);
+
+	const ROAR_LENGTH = 2.8;
+	const length = Math.floor(audio.sampleRate * ROAR_LENGTH);
+	const buffer = audio.createBuffer(1, length, audio.sampleRate);
+	const data = buffer.getChannelData(0);
+	for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+	const source = audio.createBufferSource();
+	source.buffer = buffer;
+	// The crowd is the low band; the claps above carry the highs
+	const body = audio.createBiquadFilter();
+	body.type = 'lowpass';
+	body.frequency.setValueAtTime(500, now);
+	body.frequency.linearRampToValueAtTime(1100, now + 0.9);
+	body.frequency.linearRampToValueAtTime(600, now + ROAR_LENGTH);
+	body.Q.value = 0.7;
+	const level = audio.createGain();
+	level.gain.setValueAtTime(0.0001, now + 0.25);
+	level.gain.exponentialRampToValueAtTime(0.14, now + 0.7);
+	level.gain.setValueAtTime(0.14, now + 1.4);
+	level.gain.exponentialRampToValueAtTime(0.0001, now + ROAR_LENGTH);
+	source.connect(body).connect(level).connect(audio.destination);
+	source.start(now + 0.25);
+
+	const CLAPS = 40;
+	for (let i = 0; i < CLAPS; i++) {
+		const progress = i / CLAPS;
+		clap(
+			audio,
+			now + 0.45 + progress ** 1.5 * 2 + Math.random() * 0.05,
+			0.07 * (1 - progress * 0.6),
+		);
 	}
 }
 

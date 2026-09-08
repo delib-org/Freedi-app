@@ -79,6 +79,38 @@ service cloud.firestore {
     // Sessions: created via callable only. The teacher may update live-control
     // fields directly; everyone in the class reads the session doc (it is the
     // single source of truth for stage/round state).
+    // === Agora looks (see shared-types agoraTheme.ts) ===
+    // A seed is one `#rrggbb`; a custom look is four seeds, a short name and
+    // its maker; a choice is a preset name, plus the look when it is custom.
+    // Null is a cleared field and is fine everywhere.
+    function agoraHexColour(value) {
+      return value is string && value.matches('^#[0-9a-fA-F]{6}$');
+    }
+    function agoraThemeSeedsValid(seeds) {
+      return seeds is map &&
+             seeds.keys().hasOnly(['page', 'mine', 'peer', 'go']) &&
+             seeds.keys().hasAll(['page', 'mine', 'peer', 'go']) &&
+             agoraHexColour(seeds.page) && agoraHexColour(seeds.mine) &&
+             agoraHexColour(seeds.peer) && agoraHexColour(seeds.go);
+    }
+    function agoraCustomThemeValid(look) {
+      return look == null ||
+             (look is map &&
+              look.keys().hasOnly(['name', 'authorId', 'seeds', 'font', 'createdAt']) &&
+              look.name is string && look.name.size() >= 1 && look.name.size() <= 24 &&
+              look.authorId is string && look.createdAt is number &&
+              (!('font' in look) || (look.font is string && look.font.size() <= 40)) &&
+              agoraThemeSeedsValid(look.seeds));
+    }
+    function agoraThemeChoiceValid(choice) {
+      return choice == null ||
+             (choice is map &&
+              choice.keys().hasOnly(['preset', 'custom']) &&
+              (choice.preset in ['candy', 'purple', 'custom']) &&
+              (choice.preset != 'custom' || 'custom' in choice) &&
+              agoraCustomThemeValid(choice.get('custom', null)));
+    }
+
     match /agoraSessions/{sessionId} {
       allow read: if isAuthenticated();
       allow create, delete: if false;
@@ -126,6 +158,13 @@ service cloud.firestore {
                          resource.data.get('stageState', {}) &&
                        request.resource.data.get('identity', '') ==
                          resource.data.get('identity', '') &&
+                       request.resource.data.get('collectRealNames', true) ==
+                         resource.data.get('collectRealNames', true) &&
+                       // The room's look is the teacher's to set, live. The
+                       // shape is pinned here because every client parses the
+                       // session doc with a strict schema: one malformed write
+                       // would brick every open tab in the room.
+                       agoraThemeChoiceValid(request.resource.data.get('theme', null)) &&
                        request.resource.data.get('agreement', {}) ==
                          resource.data.get('agreement', {}) &&
                        request.resource.data.get('roundNumber', -1) ==
@@ -173,6 +212,11 @@ service cloud.firestore {
                          resource.data.get('creditedRatings', -1) &&
                        request.resource.data.get('firstProposalAwardedAt', -1) ==
                          resource.data.get('firstProposalAwardedAt', -1) &&
+                       // The round-appreciation ledger (which likes already
+                       // paid this author) is the trigger's; a client that
+                       // could clear a key could be paid for the same like twice.
+                       request.resource.data.get('roundAppreciations', {}) ==
+                         resource.data.get('roundAppreciations', {}) &&
                        request.resource.data.get('isAI', false) ==
                          resource.data.get('isAI', false) &&
                        // Positioning is one-shot, as the UI already assumes
@@ -195,7 +239,40 @@ service cloud.firestore {
                        // agoraJoinSession. A client that could edit it would be
                        // crediting someone else's career with this game's points.
                        request.resource.data.get('memberId', '') ==
-                         resource.data.get('memberId', '');
+                         resource.data.get('memberId', '') &&
+                       // The look they wear and the look they built. Bounded
+                       // so a client cannot park a novel in a colour name.
+                       agoraThemeChoiceValid(request.resource.data.get('theme', null)) &&
+                       agoraCustomThemeValid(request.resource.data.get('builtTheme', null));
+    }
+
+    // Real names typed at the door, readable by the session's teacher ONLY.
+    // The console listens with `sessionId == X && teacherId == me`, which is
+    // exactly the per-document equality below — the one shape both runQuery
+    // and the SDK's listen path can prove (unlike `uid in array`, see
+    // agoraClasses). Written by agoraJoinSession, deleted by TTL or by the
+    // teacher's "forget names" — never by a client.
+    match /agoraIdentities/{identityId} {
+      allow read: if isAuthenticated() && resource.data.teacherId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // The private teacher <-> one-student thread. Each side lists with its own
+    // key, and both keys are pinned on every line by the callable that writes
+    // it (agoraTeacherMessage / agoraModerateStatement). A classmate holds
+    // neither key and sees nothing.
+    match /agoraTeacherMessages/{messageId} {
+      allow read: if isAuthenticated() &&
+                     (resource.data.teacherId == request.auth.uid ||
+                      resource.data.studentUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    // A teacher's standing wording for the WizCol rounds — their own doc,
+    // keyed by their uid, written by agoraRewordQuestion alone.
+    match /agoraTeacherPrompts/{teacherId} {
+      allow read: if isAuthenticated() && request.auth.uid == teacherId;
+      allow write: if false;
     }
 
     // Proposal scores (bridging/plausibility): server-computed only.
@@ -573,7 +650,13 @@ service cloud.firestore {
                // of the proposal lifecycle. A student who could strip it could
                // walk their challenge back into the first-draft credit.
                request.resource.data.get('agoraChallenge', false) ==
-                 resource.data.get('agoraChallenge', false);
+                 resource.data.get('agoraChallenge', false) &&
+               // The teacher's marks and the shared hide flag they mirror: a
+               // student who could clear them would put their own text back.
+               request.resource.data.get('hide', false) ==
+                 resource.data.get('hide', false) &&
+               request.resource.data.get('agoraModeration', {}) ==
+                 resource.data.get('agoraModeration', {});
       }
 
       // Reading requires a session. Not because statements are secret — most
@@ -624,7 +707,12 @@ service cloud.firestore {
                        (isAgoraStatement()
                           ? (isCreator() && agoraServerFieldsUnchanged())
                           : isAllowedToUpdate());
-      allow delete: if request.auth.uid != null && isAuthorized();
+      // Agora text is never deleted from a browser: the teacher takes it down
+      // through agoraModerateStatement (soft, restorable, told to the author).
+      // The session teacher inherits an admin subscription on every proposal
+      // (setupAdminsForStatement), which used to make isAuthorized() a hard
+      // delete with no tombstone and no audit.
+      allow delete: if request.auth.uid != null && !isAgoraStatement() && isAuthorized();
 
       // Civil Activity Hub — join form submissions subcollection.
       // Scoped to the owning question document. Each user owns their own
@@ -1583,6 +1671,26 @@ service cloud.firestore {
       );
       // Safe to list: only `tokenHash` (sha256) is stored — the raw invite
       // token never touches Firestore, so a listed row is not a credential.
+      allow list: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Questions linked onto an organization's board from elsewhere. Written
+    // exclusively by fn_linkOrgStatement / fn_renameOrgActivity /
+    // fn_unlinkOrgStatement (Admin SDK); clients only read. A link record holds
+    // no content of its own beyond the org-facing label, and the authority it
+    // represents lives in statementsSubscribe, not here.
+    match /organizationActivities/{activityId} {
+      // `resource != null` first: on a document that does not exist `resource`
+      // is null, and reading `.data` off it is an ERROR in rules, not a denial.
+      // An error propagates to the client as a failed listener rather than a
+      // clean "no such document" — which is what a question with no link record
+      // (i.e. every question the org owns) looks like.
+      allow get: if resource != null &&
+                    (isOrgMember(resource.data.organizationId) || isSystemAdminUser());
+      // list: Studio's board query is `where organizationId == X`; scoping the
+      // list by resource.data would need a get() per row, exactly as for
+      // organizationMembers above.
       allow list: if request.auth != null;
       allow write: if false;
     }

@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/atomic/atoms/EmptyState';
 import { Skeleton } from '@/components/atomic/atoms/Skeleton';
 import { ActivityBoard } from '@/components/atomic/molecules/ActivityBoard';
 import { activityUrlResolver } from '@/config';
+import { useOrgActivity } from '@/db/orgActivities';
 import { useScheduledActionsByTop } from '@/db/scheduledActions';
 import { archiveStatement } from '@/db/statements';
 import { useOrg } from '@/org/OrgContext';
@@ -53,6 +54,9 @@ export default function QuestionDashboard() {
 	const data = useQuestionDashboardData(qId);
 	const { question, questionLoading, activities, activitiesLoading, progressById } = data;
 	const { data: scheduled } = useScheduledActionsByTop(orgId, qId);
+	// Present only when this question was added from elsewhere rather than
+	// created here — it carries the name this organization gave it.
+	const { data: activity } = useOrgActivity(orgId, qId);
 
 	const [modal, setModal] = useState<DashboardModal>(null);
 	const [addType, setAddType] = useState<ActivityType | undefined>(undefined);
@@ -159,9 +163,12 @@ export default function QuestionDashboard() {
 		showToast(t('Activity archived'));
 	};
 
+	// The board name when this organization gave the question one, so the trail
+	// reads the same as the card the consultant clicked.
+	const boardTitle = activity?.label?.trim() || question?.statement;
 	const breadcrumb = [
 		{ label: t('Questions'), to: orgHome },
-		{ label: question?.statement || t('Question') },
+		{ label: boardTitle || t('Question') },
 	];
 
 	if (!questionLoading && !question) {
@@ -183,7 +190,7 @@ export default function QuestionDashboard() {
 			<div className={styles.page}>
 				{question ? (
 					<QuestionHeader
-						title={question.statement}
+						title={boardTitle ?? question.statement}
 						description={question.description}
 						rollup={data.rollup}
 						totals={data.totals}
@@ -301,10 +308,16 @@ export default function QuestionDashboard() {
 						<EditQuestionModal
 							isOpen={modal === 'edit'}
 							question={question}
+							activity={activity}
+							organizationId={orgId}
 							onClose={() => setModal(null)}
 							onSaved={() => {
 								setModal(null);
 								showToast(t('Saved'));
+							}}
+							onUnlinked={() => {
+								setModal(null);
+								navigate(`/orgs/${orgId}`);
 							}}
 						/>
 					)}

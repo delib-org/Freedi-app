@@ -1,0 +1,481 @@
+{
+  "usage": {
+    "prompt_tokens": 1669,
+    "completion_tokens": 1828,
+    "total_tokens": 3497,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 1666,
+      "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 642,
+      "audio_tokens": 0,
+      "accepted_prediction_tokens": 0,
+      "rejected_prediction_tokens": 0
+    }
+  },
+  "request": "L1 one-shot",
+  "finishReason": "stop",
+  "content": "{\"syntheses\":[{\"title\":\"Real-time transit arrival tracking\",\"memberIds\":[\"s010\",\"s009\"]},{\"title\":\"Library branch in every neighborhood\",\"memberIds\":[\"s074\",\"s073\"]},{\"title\":\"Subsidized student housing near campuses\",\"memberIds\":[\"s019\",\"s020\"]},{\"title\":\"Low-interest loans for local businesses\",\"memberIds\":[\"s061\",\"s062\"]},{\"title\":\"Free public transit for school-age children\",\"memberIds\":[\"s005\",\"s006\"]},{\"title\":\"Free early-disease screening programs\",\"memberIds\":[\"s058\",\"s057\"]},{\"title\":\"Weekend late-night bus service\",\"memberIds\":[\"s008\",\"s007\"]},{\"title\":\"Free public Wi-Fi\",\"memberIds\":[\"s093\",\"s094\"]},{\"title\":\"Career retraining and reskilling\",\"memberIds\":[\"s063\",\"s064\"]},{\"title\":\"Traffic calming near schools\",\"memberIds\":[\"s034\",\"s033\"]},{\"title\":\"Neighborhood beat police\",\"memberIds\":[\"s035\",\"s036\"]},{\"title\":\"Free music lessons for children\",\"memberIds\":[\"s079\",\"s080\"]},{\"title\":\"Convert vacant commercial buildings to housing\",\"memberIds\":[\"s016\",\"s015\"]},{\"title\":\"Ban single-use plastics\",\"memberIds\":[\"s085\",\"s086\"]},{\"title\":\"Public rent-price registry\",\"memberIds\":[\"s013\",\"s014\"]},{\"title\":\"Primary-care clinics in underserved areas\",\"memberIds\":[\"s052\",\"s051\"]},{\"title\":\"Dog-run areas in every neighborhood\",\"memberIds\":[\"s030\",\"s029\"]},{\"title\":\"Food-scrap collection for composting\",\"memberIds\":[\"s087\",\"s088\"]},{\"title\":\"Regular outdoor festivals and concerts\",\"memberIds\":[\"s076\",\"s075\"]},{\"title\":\"More frequent rush-hour buses\",\"memberIds\":[\"s001\",\"s002\"]},{\"title\":\"Weekly curbside recycling collection\",\"memberIds\":[\"s081\",\"s082\"]},{\"title\":\"Citywide public air-quality monitoring\",\"memberIds\":[\"s089\",\"s090\"]},{\"title\":\"Free mental-health counseling\",\"memberIds\":[\"s054\",\"s053\"]},{\"title\":\"Accessible playgrounds for disabled children\",\"memberIds\":[\"s027\",\"s028\"]},{\"title\":\"Free hot school meals\",\"memberIds\":[\"s050\",\"s049\"]},{\"title\":\"Security cameras at crime hotspots\",\"memberIds\":[\"s040\",\"s039\"]},{\"title\":\"More local emergency-response stations\",\"memberIds\":[\"s038\",\"s037\"]},{\"title\":\"Protected bike lanes\",\"memberIds\":[\"s004\",\"s003\"]},{\"title\":\"Shorter specialist appointment waits\",\"memberIds\":[\"s055\",\"s056\"]},{\"title\":\"Improved street and pathway lighting\",\"memberIds\":[\"s031\",\"s032\"]},{\"title\":\"Subsidized coworking for independent workers\",\"memberIds\":[\"s069\",\"s070\"]},{\"title\":\"Expanded in-home support for seniors\",\"memberIds\":[\"s059\",\"s060\"]},{\"title\":\"Solar panels on public buildings\",\"memberIds\":[\"s083\",\"s084\"]},{\"title\":\"Public art by local artists\",\"memberIds\":[\"s078\",\"s077\"]},{\"title\":\"Simplified business licensing\",\"memberIds\":[\"s066\",\"s065\"]},{\"title\":\"Modernize school buildings and facilities\",\"memberIds\":[\"s048\",\"s047\"]},{\"title\":\"Unified municipal service hotline\",\"memberIds\":[\"s099\",\"s100\"]},{\"title\":\"Complete city procedures online\",\"memberIds\":[\"s092\",\"s091\"]},{\"title\":\"Green park within walking distance\",\"memberIds\":[\"s021\",\"s022\"]},{\"title\":\"Free museum admission one day weekly\",\"memberIds\":[\"s072\",\"s071\"]},{\"title\":\"Affordable-housing requirements in new buildings\",\"memberIds\":[\"s011\",\"s012\"]},{\"title\":\"Smaller class sizes\",\"memberIds\":[\"s042\",\"s041\"]},{\"title\":\"Higher teacher salaries\",\"memberIds\":[\"s043\",\"s044\"]},{\"title\":\"In-person help using online city services\",\"memberIds\":[\"s095\",\"s096\"]},{\"title\":\"Community vegetable gardens\",\"memberIds\":[\"s026\",\"s025\"]},{\"title\":\"Energy-efficiency grants for aging apartments\",\"memberIds\":[\"s018\",\"s017\"]},{\"title\":\"Free after-school tutoring\",\"memberIds\":[\"s045\",\"s046\"]},{\"title\":\"Public open-data and budget portal\",\"memberIds\":[\"s097\",\"s098\"]},{\"title\":\"More street shade trees\",\"memberIds\":[\"s024\",\"s023\"]},{\"title\":\"Local hiring by city contractors\",\"memberIds\":[\"s067\",\"s068\"]}],\"topics\":[{\"title\":\"Transportation\",\"synthesisIndices\":[0,4,6,19,27],\"looseStatementIds\":[]},{\"title\":\"Housing and affordability\",\"synthesisIndices\":[2,12,14,40,45],\"looseStatementIds\":[]},{\"title\":\"Business, jobs and workforce\",\"synthesisIndices\":[3,8,30,34,49],\"looseStatementIds\":[]},{\"title\":\"Health and senior care\",\"synthesisIndices\":[5,15,22,28,31],\"looseStatementIds\":[]},{\"title\":\"Public safety\",\"synthesisIndices\":[9,10,25,26,29],\"looseStatementIds\":[]},{\"title\":\"Education and children\",\"synthesisIndices\":[11,23,24,35,41,42,46],\"looseStatementIds\":[]},{\"title\":\"Environment, parks and waste\",\"synthesisIndices\":[13,16,17,20,21,32,38,44,48],\"looseStatementIds\":[]},{\"title\":\"Culture and community life\",\"synthesisIndices\":[1,18,33,39],\"looseStatementIds\":[]},{\"title\":\"Digital access and city services\",\"synthesisIndices\":[7,36,37,43,47],\"looseStatementIds\":[]}]}",
+  "parsed": {
+    "syntheses": [
+      {
+        "title": "Real-time transit arrival tracking",
+        "memberIds": [
+          "s010",
+          "s009"
+        ]
+      },
+      {
+        "title": "Library branch in every neighborhood",
+        "memberIds": [
+          "s074",
+          "s073"
+        ]
+      },
+      {
+        "title": "Subsidized student housing near campuses",
+        "memberIds": [
+          "s019",
+          "s020"
+        ]
+      },
+      {
+        "title": "Low-interest loans for local businesses",
+        "memberIds": [
+          "s061",
+          "s062"
+        ]
+      },
+      {
+        "title": "Free public transit for school-age children",
+        "memberIds": [
+          "s005",
+          "s006"
+        ]
+      },
+      {
+        "title": "Free early-disease screening programs",
+        "memberIds": [
+          "s058",
+          "s057"
+        ]
+      },
+      {
+        "title": "Weekend late-night bus service",
+        "memberIds": [
+          "s008",
+          "s007"
+        ]
+      },
+      {
+        "title": "Free public Wi-Fi",
+        "memberIds": [
+          "s093",
+          "s094"
+        ]
+      },
+      {
+        "title": "Career retraining and reskilling",
+        "memberIds": [
+          "s063",
+          "s064"
+        ]
+      },
+      {
+        "title": "Traffic calming near schools",
+        "memberIds": [
+          "s034",
+          "s033"
+        ]
+      },
+      {
+        "title": "Neighborhood beat police",
+        "memberIds": [
+          "s035",
+          "s036"
+        ]
+      },
+      {
+        "title": "Free music lessons for children",
+        "memberIds": [
+          "s079",
+          "s080"
+        ]
+      },
+      {
+        "title": "Convert vacant commercial buildings to housing",
+        "memberIds": [
+          "s016",
+          "s015"
+        ]
+      },
+      {
+        "title": "Ban single-use plastics",
+        "memberIds": [
+          "s085",
+          "s086"
+        ]
+      },
+      {
+        "title": "Public rent-price registry",
+        "memberIds": [
+          "s013",
+          "s014"
+        ]
+      },
+      {
+        "title": "Primary-care clinics in underserved areas",
+        "memberIds": [
+          "s052",
+          "s051"
+        ]
+      },
+      {
+        "title": "Dog-run areas in every neighborhood",
+        "memberIds": [
+          "s030",
+          "s029"
+        ]
+      },
+      {
+        "title": "Food-scrap collection for composting",
+        "memberIds": [
+          "s087",
+          "s088"
+        ]
+      },
+      {
+        "title": "Regular outdoor festivals and concerts",
+        "memberIds": [
+          "s076",
+          "s075"
+        ]
+      },
+      {
+        "title": "More frequent rush-hour buses",
+        "memberIds": [
+          "s001",
+          "s002"
+        ]
+      },
+      {
+        "title": "Weekly curbside recycling collection",
+        "memberIds": [
+          "s081",
+          "s082"
+        ]
+      },
+      {
+        "title": "Citywide public air-quality monitoring",
+        "memberIds": [
+          "s089",
+          "s090"
+        ]
+      },
+      {
+        "title": "Free mental-health counseling",
+        "memberIds": [
+          "s054",
+          "s053"
+        ]
+      },
+      {
+        "title": "Accessible playgrounds for disabled children",
+        "memberIds": [
+          "s027",
+          "s028"
+        ]
+      },
+      {
+        "title": "Free hot school meals",
+        "memberIds": [
+          "s050",
+          "s049"
+        ]
+      },
+      {
+        "title": "Security cameras at crime hotspots",
+        "memberIds": [
+          "s040",
+          "s039"
+        ]
+      },
+      {
+        "title": "More local emergency-response stations",
+        "memberIds": [
+          "s038",
+          "s037"
+        ]
+      },
+      {
+        "title": "Protected bike lanes",
+        "memberIds": [
+          "s004",
+          "s003"
+        ]
+      },
+      {
+        "title": "Shorter specialist appointment waits",
+        "memberIds": [
+          "s055",
+          "s056"
+        ]
+      },
+      {
+        "title": "Improved street and pathway lighting",
+        "memberIds": [
+          "s031",
+          "s032"
+        ]
+      },
+      {
+        "title": "Subsidized coworking for independent workers",
+        "memberIds": [
+          "s069",
+          "s070"
+        ]
+      },
+      {
+        "title": "Expanded in-home support for seniors",
+        "memberIds": [
+          "s059",
+          "s060"
+        ]
+      },
+      {
+        "title": "Solar panels on public buildings",
+        "memberIds": [
+          "s083",
+          "s084"
+        ]
+      },
+      {
+        "title": "Public art by local artists",
+        "memberIds": [
+          "s078",
+          "s077"
+        ]
+      },
+      {
+        "title": "Simplified business licensing",
+        "memberIds": [
+          "s066",
+          "s065"
+        ]
+      },
+      {
+        "title": "Modernize school buildings and facilities",
+        "memberIds": [
+          "s048",
+          "s047"
+        ]
+      },
+      {
+        "title": "Unified municipal service hotline",
+        "memberIds": [
+          "s099",
+          "s100"
+        ]
+      },
+      {
+        "title": "Complete city procedures online",
+        "memberIds": [
+          "s092",
+          "s091"
+        ]
+      },
+      {
+        "title": "Green park within walking distance",
+        "memberIds": [
+          "s021",
+          "s022"
+        ]
+      },
+      {
+        "title": "Free museum admission one day weekly",
+        "memberIds": [
+          "s072",
+          "s071"
+        ]
+      },
+      {
+        "title": "Affordable-housing requirements in new buildings",
+        "memberIds": [
+          "s011",
+          "s012"
+        ]
+      },
+      {
+        "title": "Smaller class sizes",
+        "memberIds": [
+          "s042",
+          "s041"
+        ]
+      },
+      {
+        "title": "Higher teacher salaries",
+        "memberIds": [
+          "s043",
+          "s044"
+        ]
+      },
+      {
+        "title": "In-person help using online city services",
+        "memberIds": [
+          "s095",
+          "s096"
+        ]
+      },
+      {
+        "title": "Community vegetable gardens",
+        "memberIds": [
+          "s026",
+          "s025"
+        ]
+      },
+      {
+        "title": "Energy-efficiency grants for aging apartments",
+        "memberIds": [
+          "s018",
+          "s017"
+        ]
+      },
+      {
+        "title": "Free after-school tutoring",
+        "memberIds": [
+          "s045",
+          "s046"
+        ]
+      },
+      {
+        "title": "Public open-data and budget portal",
+        "memberIds": [
+          "s097",
+          "s098"
+        ]
+      },
+      {
+        "title": "More street shade trees",
+        "memberIds": [
+          "s024",
+          "s023"
+        ]
+      },
+      {
+        "title": "Local hiring by city contractors",
+        "memberIds": [
+          "s067",
+          "s068"
+        ]
+      }
+    ],
+    "topics": [
+      {
+        "title": "Transportation",
+        "synthesisIndices": [
+          0,
+          4,
+          6,
+          19,
+          27
+        ],
+        "looseStatementIds": []
+      },
+      {
+        "title": "Housing and affordability",
+        "synthesisIndices": [
+          2,
+          12,
+          14,
+          40,
+          45
+        ],
+        "looseStatementIds": []
+      },
+      {
+        "title": "Business, jobs and workforce",
+        "synthesisIndices": [
+          3,
+          8,
+          30,
+          34,
+          49
+        ],
+        "looseStatementIds": []
+      },
+      {
+        "title": "Health and senior care",
+        "synthesisIndices": [
+          5,
+          15,
+          22,
+          28,
+          31
+        ],
+        "looseStatementIds": []
+      },
+      {
+        "title": "Public safety",
+        "synthesisIndices": [
+          9,
+          10,
+          25,
+          26,
+          29
+        ],
+        "looseStatementIds": []
+      },
+      {
+        "title": "Education and children",
+        "synthesisIndices": [
+          11,
+          23,
+          24,
+          35,
+          41,
+          42,
+          46
+        ],
+        "looseStatementIds": []
+      },
+      {
+        "title": "Environment, parks and waste",
+        "synthesisIndices": [
+          13,
+          16,
+          17,
+          20,
+          21,
+          32,
+          38,
+          44,
+          48
+        ],
+        "looseStatementIds": []
+      },
+      {
+        "title": "Culture and community life",
+        "synthesisIndices": [
+          1,
+          18,
+          33,
+          39
+        ],
+        "looseStatementIds": []
+      },
+      {
+        "title": "Digital access and city services",
+        "synthesisIndices": [
+          7,
+          36,
+          37,
+          43,
+          47
+        ],
+        "looseStatementIds": []
+      }
+    ]
+  }
+}

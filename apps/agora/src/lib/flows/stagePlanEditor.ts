@@ -3,8 +3,10 @@
  * what is frozen. Pure — the component renders and dispatches, this decides.
  *
  * Two fixed ends (lobby first, results last), single instances of every
- * stage but `question`, and a frozen prefix: once a game is running, the
- * items up to and including the current one are history and cannot change.
+ * stage but `question` (a question item's KIND — open, or one of the WizCol
+ * rounds — is a field on the row, not a stage of its own), and a frozen
+ * prefix: once a game is running, the items up to and including the current
+ * one are history and cannot change.
  */
 import {
 	AgoraStage,
@@ -12,6 +14,7 @@ import {
 	AGORA_PLANNABLE_STAGES,
 	defaultQuestionSelection,
 	defaultVotingTrigger,
+	questionKindOf,
 	stagePlanPreset,
 	type AgoraStagePlanItem,
 	type AgoraStagePlanPreset,
@@ -61,7 +64,7 @@ export function mintItemId(stage: AgoraStage, items: readonly AgoraStagePlanItem
 function freshItem(stage: AgoraStage, items: readonly AgoraStagePlanItem[]): AgoraStagePlanItem {
 	const itemId = mintItemId(stage, items);
 	if (stage === AgoraStage.question) {
-		return { itemId, stage, title: '', selection: defaultQuestionSelection() };
+		return { itemId, stage, kind: 'open', title: '', selection: defaultQuestionSelection() };
 	}
 	if (stage === AgoraStage.deliberation) {
 		return { itemId, stage, votingTrigger: defaultVotingTrigger() };
@@ -118,7 +121,17 @@ export function planEditorReduce(
 			const index = indexOf(event.itemId);
 			if (index === -1 || index < frozen) return [...items];
 			const next = [...items];
-			next[index] = { ...items[index], ...event.patch };
+			const merged: AgoraStagePlanItem = { ...items[index], ...event.patch };
+			// A round carries every text and asks in the book's words unless the
+			// admin typed their own; an open question needs its cutoff back
+			if (merged.stage === AgoraStage.question) {
+				if (questionKindOf(merged) === 'open') {
+					merged.selection = merged.selection ?? defaultQuestionSelection();
+				} else {
+					delete merged.selection;
+				}
+			}
+			next[index] = merged;
 
 			return next;
 		}

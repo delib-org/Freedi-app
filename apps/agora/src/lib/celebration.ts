@@ -22,7 +22,14 @@ export interface CelebrationPayload {
 	 * else on purpose: thirty devices in one room means a sound has to earn
 	 * its place, and one that plays for everything earns nothing.
 	 */
-	sound?: 'applause';
+	sound?: 'applause' | 'goal';
+	/**
+	 * The one celebration with a picture of its own. A goal is not a bigger
+	 * hooray — it is the game's win condition drawn as the thing every kid in
+	 * the room already knows how to cheer for, so the card plays the ball into
+	 * the net instead of raining sparks around a sentence.
+	 */
+	kind?: 'goal';
 }
 
 let current: CelebrationPayload | null = null;

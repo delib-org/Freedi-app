@@ -1,6 +1,12 @@
 import m from 'mithril';
 import { t } from '../../lib/i18n';
-import { AgoraSceneKind, AgoraStage } from '@freedi/shared-types';
+import { QuestionReword } from './QuestionReword';
+import {
+	AgoraSceneKind,
+	AgoraStage,
+	roundSpecOf,
+	type AgoraQuestionKind,
+} from '@freedi/shared-types';
 import type { AgoraScene, AgoraTopicPackage } from '@freedi/shared-types';
 
 export interface TeacherInstructionsAttrs {
@@ -9,6 +15,15 @@ export interface TeacherInstructionsAttrs {
 	/** A question stage projects its own question, not a generic prompt */
 	questionTitle?: string;
 	questionExplanation?: string;
+	/** A question item's kind — a WizCol round shows the book's prompt when no title was typed */
+	questionKind?: AgoraQuestionKind;
+	/** The projector: the students' text only, none of the teacher-facing hints */
+	projector?: boolean;
+	/**
+	 * The console only: let the teacher rewrite the question the room is
+	 * looking at. Needs the session and the plan item the words belong to.
+	 */
+	reword?: { sessionId: string; itemId: string };
 }
 
 /** Which scene kinds each scene-stage shows students (mirrors GameController) */
@@ -66,6 +81,31 @@ function promptCard(titleKey: string, hintKey: string): m.Children {
 }
 
 /**
+ * The words a question stage actually puts on the screens: the item's own,
+ * or — for a round the admin left blank — the book's prompt for its kind, in
+ * the reader's language. One function, because the reword editor must open on
+ * exactly the sentences the room is reading.
+ */
+export function questionWording(question?: {
+	title?: string;
+	explanation?: string;
+	kind?: AgoraQuestionKind;
+}): { title: string; explanation: string } {
+	const round = question ? roundSpecOf(question) : null;
+	if (round) {
+		return {
+			title: question?.title?.trim() || t(`round.${round.kind}.prompt`),
+			explanation: question?.explanation?.trim() || t(`round.${round.kind}.hint`),
+		};
+	}
+
+	return {
+		title: question?.title?.trim() || t('stage.question'),
+		explanation: question?.explanation?.trim() ?? '',
+	};
+}
+
+/**
  * Mirrors on the teacher's projector the instructions/narrative the students
  * read for the current stage, so the teacher can read along, narrate and lead
  * a discussion. Scene stages are self-paced per student, so the whole stage's
@@ -74,13 +114,32 @@ function promptCard(titleKey: string, hintKey: string): m.Children {
 function stageBody(
 	stage: AgoraStage,
 	topic: AgoraTopicPackage,
-	question?: { title?: string; explanation?: string },
+	question?: { title?: string; explanation?: string; kind?: AgoraQuestionKind },
+	projector = false,
 ): m.Children {
+	// The lobby is where the facilitator opens: why a group is wiser than its
+	// loudest member, and what will happen at the end (the WizCol guide)
+	if (stage === AgoraStage.lobby) {
+		return m('.teacher-instructions__scenes', [
+			promptCard('intro.goal_title', 'intro.goal_text'),
+			promptCard('intro.listen_title', 'intro.listen_text'),
+			promptCard('intro.end_title', 'intro.end_text'),
+		]);
+	}
+
 	if (stage === AgoraStage.question) {
+		const words = questionWording(question);
+		const round = question ? roundSpecOf(question) : null;
+
 		return m('.teacher-instructions__scene', [
-			m('h4.teacher-instructions__scene-title', question?.title ?? t('stage.question')),
-			question?.explanation ? m('p.teacher-instructions__text', question.explanation) : null,
-			m('p.teacher-instructions__text', t('question.teacher_hint')),
+			m('h4.teacher-instructions__scene-title', words.title),
+			words.explanation ? m('p.teacher-instructions__text', words.explanation) : null,
+			projector
+				? null
+				: m(
+						'p.teacher-instructions__text',
+						round ? t(`round.${round.kind}.teacher_line`) : t('question.teacher_hint'),
+					),
 		]);
 	}
 
@@ -103,7 +162,7 @@ function stageBody(
 	}
 
 	if (stage === AgoraStage.voting) {
-		return promptCard('voting.title', 'voting.teacher_hint');
+		return promptCard('voting.title', projector ? 'projector.voting_hint' : 'voting.teacher_hint');
 	}
 
 	return null;
@@ -112,16 +171,36 @@ function stageBody(
 export function TeacherInstructions(): m.Component<TeacherInstructionsAttrs> {
 	return {
 		view(vnode) {
-			const { stage, topic, questionTitle, questionExplanation } = vnode.attrs;
-			const body = stageBody(stage, topic, {
-				title: questionTitle,
-				explanation: questionExplanation,
-			});
+			const { stage, topic, questionTitle, questionExplanation, questionKind, projector } =
+				vnode.attrs;
+			const body = stageBody(
+				stage,
+				topic,
+				{ title: questionTitle, explanation: questionExplanation, kind: questionKind },
+				projector === true,
+			);
 			if (!body) return null;
 
+			// The pencil belongs to the question stage alone: the scene stages
+			// mirror a package the teacher edits in the topic editor, not here.
+			const editable =
+				projector !== true && vnode.attrs.reword !== undefined && stage === AgoraStage.question;
+
 			return m('.card.teacher-instructions', [
-				m('p.teacher__section-title', t('teacher.student_instructions')),
+				projector ? null : m('p.teacher__section-title', t('teacher.student_instructions')),
 				body,
+				editable && vnode.attrs.reword
+					? m(QuestionReword, {
+							sessionId: vnode.attrs.reword.sessionId,
+							itemId: vnode.attrs.reword.itemId,
+							kind: questionKind,
+							...questionWording({
+								title: questionTitle,
+								explanation: questionExplanation,
+								kind: questionKind,
+							}),
+						})
+					: null,
 			]);
 		},
 	};

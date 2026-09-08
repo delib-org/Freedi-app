@@ -621,10 +621,12 @@
 		font-weight: 700;
 	}
 
-	// --success-deep, not --mint-deep: mint is a FILL colour and falls to
-	// 2.56:1 as text on a white card. This is the same green, said in ink.
+	// --success-ink, not --mint-deep and not --success-deep: mint is a FILL and
+	// falls to 2.56:1 as text on a white card, and --success-deep is a green
+	// mixed against white — on civic's navy card it dropped to 1.71:1. The ink
+	// token is the one each look re-points to its own readable green.
 	&__points {
-		color: var(--success-deep);
+		color: var(--success-ink);
 	}
 
 	// The reveal. Gold for a seat won, plain for one that was not — a rejected

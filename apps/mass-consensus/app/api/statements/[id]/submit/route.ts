@@ -9,6 +9,11 @@ import { countWords } from '@/lib/utils/wordCount';
 import { logResearchAction } from '@/lib/utils/researchLogger';
 import { ResearchAction } from '@freedi/shared-types';
 import { FieldValue } from 'firebase-admin/firestore';
+import {
+  applyEvaluationWrites,
+  upsertEvaluation,
+  userEvaluationDocId,
+} from '@/lib/firebase/evaluations/evaluationWrites';
 import type { Firestore } from 'firebase-admin/firestore';
 
 /**
@@ -19,6 +24,7 @@ async function handleExistingSolution(
   statementId: string,
   questionId: string,
   userId: string,
+  displayName: string,
 ) {
   // Check if statement exists
   const statementDoc = await db
@@ -37,46 +43,43 @@ async function handleExistingSolution(
     return NextResponse.json({ error: 'Solution not found' }, { status: 404 });
   }
 
-  // Create evaluation (+1 for agreement)
-  const evaluationRef = db.collection(Collections.evaluations).doc();
-  const evaluation = {
-    evaluationId: evaluationRef.id,
-    statementId,
-    parentId: questionId,
-    evaluatorId: userId,
-    evaluation: 1, // Auto +1 when user selects this solution
-    createdAt: Date.now(),
-    lastUpdate: Date.now(),
-  };
-
-  // Use FieldValue.increment for atomic counter updates (no stale reads)
+  // +1 for agreement, through the same deterministic-id path as swiping so a
+  // later swipe on this card updates this evaluation instead of adding a second
+  // one, and the card is filtered out of the user's deck.
   const statementRef = db.collection(Collections.statements).doc(statementId);
   const questionRef = db.collection(Collections.statements).doc(questionId);
-  const batch = db.batch();
 
-  batch.set(evaluationRef, evaluation);
-
-  // `consensus` is a score in [-1, 1], not a counter — it used to be
-  // incremented here alongside the evaluation count, which corrupted the field
-  // by one per vote. The onCreateEvaluation trigger owns it and computes it
-  // properly from the stored aggregates.
-  batch.update(statementRef, {
-    evaluations: FieldValue.increment(1),
-    lastUpdate: Date.now(),
-  });
-
-  batch.update(questionRef, {
-    suggestions: FieldValue.increment(1),
-    lastUpdate: Date.now(),
-  });
-
-  await batch.commit();
+  const { evaluationId, created } = await upsertEvaluation(
+    db,
+    {
+      statementId,
+      parentId: questionId,
+      userId,
+      displayName,
+      evaluation: 1,
+    },
+    // Legacy counters, bumped only the first time this user rates this option.
+    // `consensus` is a score in [-1, 1], not a counter — it used to be
+    // incremented here too, which corrupted the field by one per vote. The
+    // onCreateEvaluation trigger owns it and the other aggregates.
+    (transaction) => {
+      transaction.update(statementRef, {
+        evaluations: FieldValue.increment(1),
+        lastUpdate: Date.now(),
+      });
+      transaction.update(questionRef, {
+        suggestions: FieldValue.increment(1),
+        lastUpdate: Date.now(),
+      });
+    },
+  );
 
   return NextResponse.json({
     success: true,
     action: 'evaluated' as const,
     statementId,
-    evaluation,
+    evaluationId,
+    created,
   });
 }
 
@@ -154,6 +157,7 @@ export async function POST(
     }
 
     const questionData = questionDoc.data();
+    const displayName = userName || getAnonymousDisplayName(userId);
 
     // If user selected an existing solution, create evaluation instead
     if (existingStatementId) {
@@ -162,6 +166,7 @@ export async function POST(
         existingStatementId,
         questionId,
         userId,
+        displayName,
       );
     }
 
@@ -211,8 +216,6 @@ export async function POST(
     // Create new solution statement
     const statementRef = db.collection(Collections.statements).doc();
 
-    const displayName = userName || getAnonymousDisplayName(userId);
-
     // MC has a single input field — store it only as `statement` to avoid
     // duplicating the same text as both title and description in downstream views.
     const newSolution = createStatementObject({
@@ -239,17 +242,14 @@ export async function POST(
       );
     }
 
-    // Create automatic +1 evaluation for the new solution
-    const evaluationRef = db.collection(Collections.evaluations).doc();
-    const evaluation = {
-      evaluationId: evaluationRef.id,
-      statementId: statementRef.id,
-      parentId: questionId,
-      evaluatorId: userId,
-      evaluation: 1, // Auto +1 when user creates their own solution
-      createdAt: Date.now(),
-      lastUpdate: Date.now(),
-    };
+    // The author's automatic +1 goes through the same deterministic-id path as
+    // swiping, so the new option is also filtered out of the author's own deck.
+    // The option is brand new, so no evaluation can exist yet; only the
+    // userEvaluations mirror may already exist for this question.
+    const userEvaluationDoc = await db
+      .collection(Collections.userEvaluations)
+      .doc(userEvaluationDocId(userId, questionId))
+      .get();
 
     // Batch to create solution, evaluation, and update question counters atomically
     const writeBatch = db.batch();
@@ -257,8 +257,19 @@ export async function POST(
     // Create new solution
     writeBatch.set(statementRef, newSolution);
 
-    // Create automatic evaluation
-    writeBatch.set(evaluationRef, evaluation);
+    // Create automatic evaluation (+1 when user creates their own solution)
+    const evaluationId = applyEvaluationWrites(
+      writeBatch,
+      db,
+      {
+        statementId: statementRef.id,
+        parentId: questionId,
+        userId,
+        displayName,
+        evaluation: 1,
+      },
+      { userEvaluationExists: userEvaluationDoc.exists },
+    );
 
     // Update parent question using FieldValue.increment for atomic counters
     const questionRef = db.collection(Collections.statements).doc(questionId);
@@ -284,7 +295,7 @@ export async function POST(
       action: 'created' as const,
       statementId: statementRef.id,
       solution: newSolution,
-      evaluation,
+      evaluationId,
     });
   } catch (error) {
     logError(error, {

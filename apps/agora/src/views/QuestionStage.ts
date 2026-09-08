@@ -3,7 +3,9 @@ import { t } from '../lib/i18n';
 import { Icon } from '../components/Icon';
 import { RateScale } from '../components/RateScale';
 import { CarriedContext } from '../components/CarriedContext';
+import { CpBands, bandClassOf, bandLabelOf } from '../components/CpBands';
 import { stalledBanner } from '../components/StalledBanner';
+import { proposalHue } from '../lib/looks';
 import {
 	getDeliberationState,
 	listenToDeliberation,
@@ -11,6 +13,8 @@ import {
 	type AgoraProposal,
 } from '../lib/proposals';
 import { reportStageProgress } from '../lib/session';
+import { blankPen, penFor, typedInto, type Pen } from '../lib/flows/penState';
+import { requestTeacherFocus } from '../lib/helpedFocus';
 import {
 	AGORA_LIMITS,
 	rankCarriedAnswers,
@@ -44,6 +48,7 @@ function toRow(answer: AgoraProposal, named: boolean): AgoraCarriedAnswer {
 		statementId: answer.statementId,
 		statement: answer.statement,
 		mean: raters > 0 ? (answer.evaluation?.averageEvaluation ?? 0) : 0,
+		...(raters > 0 && typeof answer.consensus === 'number' ? { consensus: answer.consensus } : {}),
 		raters,
 		...(named && answer.anonName ? { anonName: answer.anonName } : {}),
 	};
@@ -59,9 +64,20 @@ function toRow(answer: AgoraProposal, named: boolean): AgoraCarriedAnswer {
  * — what was carried forward and the summary — over the answers as they
  * stood, with the pen and the faces put away.
  */
+/** My answer, taken down by the teacher: a notice and the door to the thread */
+function removedNotice(): m.Children {
+	return m('.question__removed', { role: 'status' }, [
+		m('p.question__mine-text', t('moderation.removed_title')),
+		m(
+			'button.btn.btn--secondary.btn--sm',
+			{ type: 'button', onclick: () => requestTeacherFocus() },
+			t('moderation.talk_to_teacher'),
+		),
+	]);
+}
+
 export function QuestionStage(): m.Component<QuestionStageAttrs> {
-	let draft = '';
-	let draftFor = '';
+	let pen: Pen = blankPen;
 	let saving = false;
 	let saveFailed = false;
 
@@ -78,11 +94,15 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 			const outcome = session.stageState?.[item.itemId]?.outcome;
 			const closed = !live || outcome !== undefined;
 
-			// Pre-fill the pen with what I already wrote, once per answer text
-			if (mine && draftFor !== `${mine.statementId}:${mine.statement}`) {
-				draftFor = `${mine.statementId}:${mine.statement}`;
-				draft = mine.statement;
+			// Empty for a new question, pre-filled with my own saved answer, and
+			// otherwise left exactly as the student is typing it (lib/flows/penState)
+			const nextPen = penFor(pen, item.itemId, mine);
+			if (nextPen.itemId !== pen.itemId) {
+				// A different question: a save error from the last one is not this one's
+				saving = false;
+				saveFailed = false;
 			}
+			pen = nextPen;
 
 			// Least-rated first, mine excluded, the ones I rated after the ones I did not
 			const ordered = [...others].sort((a, b) => {
@@ -97,7 +117,7 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 			});
 
 			async function submit(): Promise<void> {
-				const text = draft.trim();
+				const text = pen.text.trim();
 				if (!text || saving || closed) return;
 				saving = true;
 				saveFailed = false;
@@ -114,7 +134,7 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 				}
 			}
 
-			const changed = draft.trim() !== (mine?.statement ?? '').trim();
+			const changed = pen.text.trim() !== (mine?.statement ?? '').trim();
 
 			return m('.shell', [
 				m('.shell__content.question', { style: { gap: 'var(--space-lg)' } }, [
@@ -136,22 +156,7 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 								m('p.teacher__section-title', t('question.outcome_title')),
 								outcome.summary ? m('p.question__summary', outcome.summary) : null,
 								outcome.selected.length > 0
-									? m(
-											'ol.question__selected',
-											outcome.selected.map((answer) =>
-												m('li.question__selected-item', { key: answer.statementId }, [
-													answer.anonName ? m('span.question__who', answer.anonName) : null,
-													m('span.question__selected-text', answer.statement),
-													m(
-														'span.question__agreement',
-														t('question.net_agreement', {
-															value: formatMean(answer.mean),
-															n: answer.raters,
-														}),
-													),
-												]),
-											),
-										)
+									? m(CpBands, { answers: outcome.selected, bands: outcome.bands })
 									: m('p.home-explanation', t('question.no_answers')),
 							])
 						: null,
@@ -159,36 +164,41 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 					// My answer — the pen, or my words as they stand
 					m('.card.stack.question__mine', [
 						m('p.teacher__section-title', t('question.your_answer')),
-						closed
-							? m('p.question__mine-text', mine ? mine.statement : t('question.no_answer_given'))
-							: [
-									m('textarea.question__textarea', {
-										value: draft,
-										rows: 3,
-										maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
-										placeholder: t('question.placeholder'),
-										disabled: saving,
-										oninput: (event: InputEvent) => {
-											draft = (event.target as HTMLTextAreaElement).value;
-										},
-									}),
-									stalledBanner(),
-									saveFailed ? m('p.join__error', t('common.error')) : null,
-									m(
-										'button.btn.btn--primary.btn--full',
-										{
-											disabled: saving || !draft.trim() || (mine !== undefined && !changed),
-											onclick: () => void submit(),
-										},
-										saving
-											? t('question.saving_answer')
-											: mine
-												? changed
-													? t('question.update')
-													: t('question.saved')
-												: t('question.save'),
-									),
-								],
+						mine?.hidden
+							? removedNotice()
+							: closed
+								? m('p.question__mine-text', mine ? mine.statement : t('question.no_answer_given'))
+								: [
+										m('textarea.question__textarea', {
+											value: pen.text,
+											rows: 3,
+											maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
+											placeholder: t('question.placeholder'),
+											disabled: saving,
+											oninput: (event: InputEvent) => {
+												pen = typedInto(pen, (event.target as HTMLTextAreaElement).value);
+											},
+										}),
+										stalledBanner(),
+										saveFailed ? m('p.join__error', t('common.error')) : null,
+										m(
+											'button.btn.btn--primary.btn--full',
+											{
+												// "Sent" is a state, not a refusal: the candy look paints
+												// it lime rather than greyed-out
+												class: mine !== undefined && !changed && !saving ? 'btn--done' : undefined,
+												disabled: saving || !pen.text.trim() || (mine !== undefined && !changed),
+												onclick: () => void submit(),
+											},
+											saving
+												? t('question.saving_answer')
+												: mine
+													? changed
+														? t('question.update')
+														: t('question.saved')
+													: t('question.save'),
+										),
+									],
 					]),
 
 					// Everyone else's, live
@@ -208,33 +218,44 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 											const row = toRow(answer, named);
 											const showNumbers = closed || myRating !== undefined;
 
-											return m('.card.question__answer', { key: answer.statementId }, [
-												m('.question__answer-head', [
-													named && answer.anonName
-														? m('span.question__who', answer.anonName)
-														: m(
-																'span.question__number',
-																t('question.answer_number', { n: index + 1 }),
-															),
-													showNumbers && row.raters > 0
-														? m(
-																'span.question__agreement',
-																t('question.net_agreement', {
-																	value: formatMean(row.mean),
-																	n: row.raters,
-																}),
-															)
-														: null,
-												]),
-												m('p.question__answer-text', answer.statement),
-												closed || !mine
-													? null
-													: m(RateScale, {
-															session,
-															proposalId: answer.statementId,
-															parentId: item.statementId,
-														}),
-											]);
+											return m(
+												'.card.question__answer',
+												// Its own colour in the candy look, by number — see lib/looks.ts
+												{ key: answer.statementId, 'data-hue': String(proposalHue(index + 1)) },
+												[
+													m('.question__answer-head', [
+														named && answer.anonName
+															? m('span.question__who', answer.anonName)
+															: m(
+																	'span.question__number',
+																	t('question.answer_number', { n: index + 1 }),
+																),
+														showNumbers && row.raters > 0
+															? [
+																	m(
+																		`span.${bandClassOf(row).split(' ').join('.')}`,
+																		bandLabelOf(row),
+																	),
+																	m(
+																		'span.question__agreement',
+																		t('question.net_agreement', {
+																			value: formatMean(row.mean),
+																			n: row.raters,
+																		}),
+																	),
+																]
+															: null,
+													]),
+													m('p.question__answer-text', answer.statement),
+													closed || !mine
+														? null
+														: m(RateScale, {
+																session,
+																proposalId: answer.statementId,
+																parentId: item.statementId,
+															}),
+												],
+											);
 										}),
 									),
 					]),

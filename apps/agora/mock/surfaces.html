@@ -9,12 +9,19 @@
 			// of the CSS proves nothing about the app.
 			import '../src/styles/global.scss';
 			import '../src/styles/components.scss';
-			// The civic palette, so the gauntlet can be run in either theme —
-			// `?theme=civic` paints every surface below in Odyssey's colours.
+			// The other looks, so the gauntlet can be run in any of them —
+			// `?theme=civic` paints every surface below in Odyssey's colours,
+			// `?theme=candy` in the default look, `?theme=custom` in a look
+			// built from seeds (the block's own defaults stand in for a
+			// student's picks). No parameter is the token file's base, which is
+			// the `purple` look.
 			import '../src/styles/theme-civic.scss';
+			import '../src/styles/theme-candy.scss';
+			import '../src/styles/theme-custom.scss';
 
-			if (new URLSearchParams(location.search).get('theme') === 'civic') {
-				document.documentElement.dataset.sessionTheme = 'civic';
+			const theme = new URLSearchParams(location.search).get('theme');
+			if (theme === 'civic' || theme === 'candy' || theme === 'custom') {
+				document.documentElement.dataset.sessionTheme = theme;
 			}
 		</script>
 		<style>
@@ -28,7 +35,7 @@
 				max-width: 420px;
 				margin-inline: auto;
 			}
-			.gauntlet h2 {
+			.gauntlet > h2 {
 				/* The harness's own captions clear the type floor too, so a run of
 				   type-audit.mjs over this page reports only real app failures */
 				font-size: 1rem;
@@ -51,6 +58,159 @@
 			in tokens.scss fails out loud instead of waiting for a screenshot.
 		-->
 		<div class="gauntlet">
+			<!-- The candy look paints every proposal its own colour by number
+			     (data-hue); a numeral on a point and a name on a callout must
+			     survive every one of the twelve. Inert under the other looks. -->
+			<h2>a proposal in each of its colours</h2>
+			<div style="display:flex;flex-wrap:wrap;gap:8px">
+				<button class="board__point" data-hue="0" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">0</span></button>
+				<button class="board__point board__point--lead" data-hue="1" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">1</span></button>
+				<button class="board__point" data-hue="2" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">2</span></button>
+				<button class="board__point" data-hue="3" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">3</span></button>
+				<button class="board__point" data-hue="4" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">4</span></button>
+				<button class="board__point" data-hue="5" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">5</span></button>
+				<button class="board__point" data-hue="6" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">6</span></button>
+				<button class="board__point" data-hue="7" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">7</span></button>
+				<button class="board__point" data-hue="8" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">8</span></button>
+				<button class="board__point" data-hue="9" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">9</span></button>
+				<button class="board__point" data-hue="10" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">10</span></button>
+				<button class="board__point" data-hue="11" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">11</span></button>
+				<button class="board__point" data-hue="12" style="position:static;width:36px;height:36px;transform:none"><span class="board__point-rank">12</span></button>
+			</div>
+			<div class="stall" data-hue="3">
+				<button class="stall__head">
+					<span class="stall__num">3</span>
+					<span class="stall__preview">אספה לאומית שבה לכל מעמד יש קול שווה</span>
+					<span class="stall__chips"><span class="stall__chip stall__chip--rated">דירגתם</span></span>
+				</button>
+			</div>
+			<button class="board__callout board__callout--above" data-hue="4" style="position:static;transform:none;width:auto">
+				<p class="board__callout-text">מס על הכנסה במקום מס על הלחם</p>
+				<span class="board__callout-foot">
+					<span class="board__callout-score board__num">+52%</span>
+					<span class="board__callout-by">פנס אמיץ</span>
+				</span>
+				<span class="board__callout-more"><span class="board__callout-more-text">למה?</span></span>
+			</button>
+			<div class="board__waiting-chip" data-hue="9">
+				<span class="board__author">פנס שקט</span>
+				<span class="board__waiting-text">עוד לא דורגה</span>
+			</div>
+			<h2>the workshop drawers, one colour per tool</h2>
+			<div class="workbench__section workbench__section--ideas workbench__section--collapsible">
+				<button class="workbench__head workbench__head--button"><span class="workbench__icon">💡</span><span class="workbench__title">הצעות שיפור שקיבלתם</span><span class="workbench__count">2</span><span class="workbench__chevron"></span></button>
+			</div>
+			<div class="workbench__section workbench__section--characters workbench__section--collapsible">
+				<button class="workbench__head workbench__head--button"><span class="workbench__icon">🎭</span><span class="workbench__title">שאלו את בני התקופה</span><span class="workbench__chevron"></span></button>
+			</div>
+			<div class="workbench__section workbench__section--needs workbench__section--collapsible">
+				<button class="workbench__head workbench__head--button"><span class="workbench__icon">🧭</span><span class="workbench__title">להיזכר בצרכים של שני הצדדים</span><span class="workbench__chevron"></span></button>
+			</div>
+			<h2>the five faces, at rest and pressed</h2>
+			<div class="rate-scale">
+				<button class="rate-scale__option rate-scale__option--strong-against"><span class="rate-scale__label">ממש לא בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--against"><span class="rate-scale__label">לא בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--abstain"><span class="rate-scale__label">נמנעים</span></button>
+				<button class="rate-scale__option rate-scale__option--for"><span class="rate-scale__label">בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--strong-for"><span class="rate-scale__label">מאוד בעד</span></button>
+			</div>
+			<div class="rate-scale">
+				<button class="rate-scale__option rate-scale__option--strong-against rate-scale__option--selected"><span class="rate-scale__label">ממש לא בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--against rate-scale__option--selected"><span class="rate-scale__label">לא בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--abstain rate-scale__option--selected"><span class="rate-scale__label">נמנעים</span></button>
+				<button class="rate-scale__option rate-scale__option--for rate-scale__option--selected"><span class="rate-scale__label">בעד</span></button>
+				<button class="rate-scale__option rate-scale__option--strong-for rate-scale__option--selected"><span class="rate-scale__label">מאוד בעד</span></button>
+			</div>
+			<div class="card question__ask">
+				<span class="question__icon">💬</span>
+				<h2 class="question__title">מה אתם צריכים מהמזגן?</h2>
+				<p class="question__explanation">משפט אחד או שניים.</p>
+				<p class="question__closed">השאלה נסגרה</p>
+			</div>
+			<div class="card question__answer" data-hue="2">
+				<div class="question__answer-head">
+					<span class="question__number">תשובה 2</span>
+					<span class="question__agreement">+0.6 · 4 דירגו</span>
+				</div>
+				<p class="question__answer-text">בריחה מהירה</p>
+			</div>
+			<h2>round: story, need, vision</h2>
+			<div class="round round--story">
+				<div class="card round__ask">
+					<span class="round__icon">✎</span>
+					<h2 class="round__title">איפה פגשת את הנושא בחייך?</h2>
+					<p class="round__explanation">סיפור, לא עמדה.</p>
+					<p class="round__closed">הסבב נסגר</p>
+				</div>
+				<div class="card stack round__mine">
+					<div class="round__text-head">
+						<p class="teacher__section-title">הטקסט שלך</p>
+						<span class="round__figure">3 לבבות</span>
+					</div>
+					<p class="round__lead">בנושא הזה חשוב לי ש…</p>
+					<textarea class="round__textarea" rows="3">כשהייתי בכיתה ז'…</textarea>
+				</div>
+				<div class="card round__text" data-hue="3">
+					<div class="round__text-head">
+						<span class="round__number">טקסט 3</span>
+						<span class="round__figure">75% · 4 שקלו</span>
+					</div>
+					<p class="round__text-body">בכל חורף המזגן היה מכבה את הכיתה.</p>
+					<button class="like-button like-button--on" aria-pressed="true"><span class="like-button__heart">♥</span><span class="like-button__text">אהבתי</span><span class="like-button__count">3</span></button>
+					<button class="like-button" aria-pressed="false"><span class="like-button__heart">♡</span><span class="like-button__text">לב</span></button>
+					<div class="unit-scale">
+						<p class="unit-scale__ask"><span class="unit-scale__question">עד כמה זה חשוב גם לכם?</span><span class="unit-scale__todo">עוד לא בחרתם</span></p>
+						<div class="unit-scale__steps" role="radiogroup">
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="0" tabindex="0"><span class="unit-scale__disc"></span><span class="unit-scale__label">בכלל לא</span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="1" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">קצת</span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="2" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">די</span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="3" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">מאוד</span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="4" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">מאוד מאוד</span></button>
+						</div>
+					</div>
+					<div class="unit-scale unit-scale--answered">
+						<p class="unit-scale__ask"><span class="unit-scale__question">עד כמה גם אתם רוצים את זה?</span></p>
+						<div class="unit-scale__steps" role="radiogroup">
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="0" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">בכלל לא</span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="1" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">קצת</span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="2" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">די</span></button>
+							<button class="unit-scale__step unit-scale__step--on" role="radio" aria-checked="true" data-step="3" tabindex="0"><span class="unit-scale__disc"></span><span class="unit-scale__label">מאוד</span><span class="unit-scale__check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span></button>
+							<button class="unit-scale__step" role="radio" aria-checked="false" data-step="4" tabindex="-1"><span class="unit-scale__disc"></span><span class="unit-scale__label">מאוד מאוד</span></button>
+						</div>
+						<p class="unit-scale__failed" role="status">התשובה לא נשמרה. אפשר לנסות שוב.</p>
+					</div>
+				</div>
+				<div class="round__others-head">
+					<p class="teacher__section-title">סיפורים של אחרים</p>
+					<span class="round__count round__count--met">3 מתוך 3</span>
+					<div class="class-progress__head" style="margin-top:12px"><p class="teacher__section-title">השלבים</p><button class="teacher-settings__toggle" type="button" aria-label="הגדרות">⚙</button><button class="teacher-settings__toggle teacher-settings__toggle--on" type="button" aria-label="הגדרות">⚙</button></div>
+					<p class="teacher-settings__label">הגדרות ההצבעה</p>
+					<div class="boot-banner" role="alert"><div class="boot-banner__text"><strong>משהו השתבש</strong><span class="boot-banner__detail">TypeError: x is not a function</span></div><div class="boot-banner__actions"><button class="btn btn--sm btn--primary" type="button">רענון</button><button class="btn btn--sm btn--ghost" type="button">סגירה</button></div></div>
+					<div class="dashboard__class-grid" style="margin-top:12px"><button class="dashboard__class-card dashboard__class-card--add" type="button"><strong class="dashboard__class-name">＋ כיתה חדשה</strong><span class="dashboard__class-meta">בית הספר</span></button></div>
+					<form class="class-form"><div class="class-form__row"><label class="plan-editor__field class-form__grade"><span class="teacher__section-title">שכבה</span><select class="plan-editor__text"><option>ז'</option></select></label><label class="plan-editor__field class-form__label"><span class="teacher__section-title">כיתה</span><input class="plan-editor__text" type="text" value="2"></label></div></form>
+					<ul class="roster__teachers"><li class="roster__teacher"><span>מורה</span><button class="btn btn--sm btn--ghost" type="button">הסרה</button></li></ul>
+				</div>
+				<div class="round__goal"><p class="round__goal-line">קראת את כולם — תודה.</p></div>
+				<div class="card stack round__outcome">
+					<p class="teacher__section-title">מה הכיתה חוותה</p>
+					<p class="round__summary">• בטיחות בדרך — כמעט כולם כתבו על הדרך לבית הספר.
+• שקט בבוקר — ארבעה תיארו בקרים רועשים.</p>
+				</div>
+			</div>
+			<div class="intro">
+				<div class="card intro__ask">
+					<span class="intro__icon">✦</span>
+					<h2 class="intro__title">איך קבוצה חכמה מהאדם החכם בה</h2>
+					<p class="intro__lead">שלושה דברים לפני שמתחילים.</p>
+				</div>
+				<ol class="intro__cards">
+					<li class="card intro__card" data-step="1">
+						<div class="intro__card-head"><span class="intro__card-icon">⚖</span><h3 class="intro__card-title">המטרה</h3></div>
+						<p class="intro__card-text">לא לנצח בוויכוח, אלא למצוא פתרון שרוב הנוכחים יכולים לחיות איתו.</p>
+					</li>
+				</ol>
+				<p class="intro__ready">סיימתם — מחכים לשאר.</p>
+			</div>
 			<h2>my message bubble</h2>
 			<div class="thread">
 				<div class="thread__list">
@@ -77,29 +237,24 @@
 				</div>
 			</div>
 
-			<h2>the dock (collapsed) and the panel it opens</h2>
-			<div class="shell shell--delib" style="min-height: 0; padding: 0">
-				<div class="proposal-dock" style="position: static">
-					<button class="proposal-dock__bar">
-						<span class="proposal-dock__icon">📘</span>
-						<span class="proposal-dock__text">
-							<span class="proposal-dock__title">ההצעה שלי</span>
-							<span class="proposal-dock__sub">נכריז על מלוכה חוקתית: המלך יישאר…</span>
-						</span>
-						<span class="proposal-dock__badge">2</span>
-						<span class="proposal-dock__chevron"></span>
-					</button>
-					<div class="proposal-dock__panel" style="grid-template-rows: 1fr">
-						<div class="proposal-dock__inner">
-							<div class="workbench__section">
-								<div class="workbench__head">
-									<span class="workbench__icon">💡</span>
-									<span class="workbench__title">הצעות שיפור שקיבלתם</span>
-								</div>
-								<p class="action-hint">הפנס שלכם דולק בכיכר</p>
-								<textarea class="my-lantern__textarea" rows="2">טקסט ההצעה שלי</textarea>
-							</div>
-						</div>
+			<h2>my screen's paper — resting, and with an unsaved draft</h2>
+			<div class="my-screen">
+				<div class="my-screen__paper">
+					<div class="my-screen__paper-row">
+						<textarea class="my-screen__text" rows="2">נכריז על מלוכה חוקתית: המלך יישאר, והמסים יאושרו באספה נבחרת.</textarea>
+						<button class="my-screen__pen" aria-label="עריכת הטקסט">✏️</button>
+					</div>
+					<div class="my-screen__paper-foot">
+						<span class="my-screen__saved">✓ נשמר</span>
+					</div>
+				</div>
+				<div class="my-screen__paper my-screen__paper--dirty">
+					<div class="my-screen__paper-row">
+						<textarea class="my-screen__text" rows="2">נכריז על מלוכה חוקתית — ונוסיף ועדת בוררות לסכסוכי קרקע.</textarea>
+						<button class="my-screen__pen" aria-label="עריכת הטקסט">✏️</button>
+					</div>
+					<div class="my-screen__paper-foot">
+						<button class="btn btn--primary my-lantern__save">עדכון ההצעה</button>
 					</div>
 				</div>
 			</div>
@@ -110,6 +265,38 @@
 					<span class="write-desk__mission-icon">🎯</span>
 					<div class="write-desk__mission-text">
 						<p>מה צריך לעשות? כתבו הצעה שגם מלוכנים וגם יעקובינים יוכלו לחיות איתה.</p>
+					</div>
+				</div>
+				<!-- The brief the proposal is written against: a WHITE island on
+				     the desk's saturated fill. It is here because it was shipped
+				     white-on-white — the desk is on-dark, the card is not. -->
+				<div class="carried carried--open">
+					<button class="carried__toggle" aria-expanded="true" aria-label="הסתרה">
+						<span class="carried__icon">💬</span>
+						<span class="carried__title">מה אמר החדר עד כה</span>
+						<span class="carried__fold"></span>
+					</button>
+					<div class="carried__list">
+						<div class="carried__item">
+							<p class="carried__from">מתוך: איך מנהלים את המזגן?</p>
+							<p class="carried__summary">הכיתה מסכימה שצריך שעות מיזוג קבועות.</p>
+							<div class="cp-bands cp-bands--brief">
+								<div class="cp-band cp-band--emerging">
+									<div class="cp-band__head">
+										<span class="cp-band__face">🌱</span>
+										<span class="cp-band__label">הסכמה מתגבשת</span>
+									</div>
+									<p class="cp-band__text">יש תמיכה בשעות קבועות, אבל רק ארבעה דירגו — עוד מוקדם לומר שזו עמדת הכיתה.</p>
+								</div>
+								<div class="cp-band cp-band--contested">
+									<div class="cp-band__head">
+										<span class="cp-band__face">⚡</span>
+										<span class="cp-band__label">שנוי במחלוקת</span>
+									</div>
+									<p class="cp-band__text">הכיתה חלוקה על מי מחליט מתי מדליקים.</p>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 				<textarea class="my-lantern__textarea write-desk__textarea" placeholder="אנחנו מציעים ש…"></textarea>
@@ -140,6 +327,26 @@
 				<button class="rate-scale__option rate-scale__option--for">
 					<span class="rate-scale__emoji">🙂</span><span class="rate-scale__label">בעד</span>
 				</button>
+			</div>
+
+			<h2>the gap invitation — one ask, the rules as chips</h2>
+			<div class="gap-prompt" id="gap-prompt">
+				<p class="gap-prompt__insight">
+					<span class="icon icon--inline">💡</span> מה יחזק את ההצעה?
+				</p>
+				<div class="gap-prompt__rules">
+					<span class="gap-prompt__rule"
+						><span class="icon icon--inline">🌉</span> טוב לשני המחנות</span
+					>
+					<span class="gap-prompt__rule"
+						><span class="icon icon--inline">🛠️</span> לחזק, לא לתקוף</span
+					>
+				</div>
+				<textarea class="gap-prompt__textarea" rows="2" placeholder="כתבו רעיון אחד…"></textarea>
+				<div class="gap-prompt__actions">
+					<button class="btn btn--primary">שליחת רעיון</button>
+					<button class="text-link text-link--quiet">ממשיכים הלאה</button>
+				</div>
 			</div>
 
 			<h2>the HUD</h2>
@@ -521,6 +728,105 @@
 				</div>
 			</div>
 
+			<h2>scenario shelf — ready row, draft row, the teacher's bar and its menu</h2>
+			<ul class="scenario-list">
+				<li class="scenario-row">
+					<button class="scenario-row__use" type="button">
+						<span class="scenario-row__tile"></span>
+						<span class="scenario-row__text">
+							<span class="scenario-row__title">המהפכה הצרפתית — 1789</span>
+							<span class="scenario-row__meta">
+								<span class="scenario-row__status">מוכן</span>
+							</span>
+						</span>
+					</button>
+					<button class="scenario-row__settings" type="button"></button>
+				</li>
+				<li class="scenario-row scenario-row--chosen">
+					<button class="scenario-row__use" type="button" aria-pressed="true">
+						<span class="scenario-row__tile"></span>
+						<span class="scenario-row__text">
+							<span class="scenario-row__title">מים בעיר</span>
+							<span class="scenario-row__meta">
+								<span class="scenario-row__status scenario-row__status--chosen">נבחר</span>
+							</span>
+						</span>
+					</button>
+					<button class="scenario-row__settings" type="button"></button>
+				</li>
+				<li class="scenario-row scenario-row--draft">
+					<button class="scenario-row__use" type="button">
+						<span class="scenario-row__tile"></span>
+						<span class="scenario-row__text">
+							<span class="scenario-row__title">מים בנגב</span>
+							<span class="scenario-row__meta">
+								<span class="scenario-row__status scenario-row__status--draft">טיוטה</span>
+								<span class="scenario-row__sub">עוד לא מוכן לכיתה — פתחו כדי להשלים</span>
+							</span>
+						</span>
+					</button>
+					<button class="scenario-row__settings" type="button"></button>
+				</li>
+			</ul>
+			<!-- The teacher's bar, and the menu behind it. The panel is pinned
+			     under the bar in the app; here it is laid out in the flow so the
+			     surfaces below it stay measurable. -->
+			<div class="teacher-nav">
+				<button class="teacher-nav__back" type="button"></button>
+				<button class="teacher-nav__home" type="button"></button>
+				<div class="teacher-nav__titles">
+					<span class="teacher-nav__title">המהפכה הצרפתית — 1789</span>
+					<span class="teacher-nav__subtitle">ז' · 2 · כיכר הדיון</span>
+				</div>
+				<div class="teacher-nav__trailing">
+					<span class="teacher-nav__unsaved">שינויים שלא נשמרו</span>
+					<span class="values__score">טיוטה</span>
+				</div>
+				<button class="teacher-nav__switch" type="button"></button>
+			</div>
+			<div class="teacher-nav">
+				<div class="teacher-nav__panel" style="position:static;inline-size:auto;max-block-size:none">
+					<p class="teacher-nav__section">רץ עכשיו</p>
+					<button class="teacher-nav__item teacher-nav__item--current" type="button" aria-current="page">
+						<span class="teacher-nav__item-icon"></span>
+						<span class="teacher-nav__item-text">
+							<span class="teacher-nav__item-label">ז' · 2</span>
+							<span class="teacher-nav__item-meta">
+								<span class="teacher-nav__live">חי</span>
+								<span>כיכר הדיון</span>
+							</span>
+						</span>
+					</button>
+					<button class="teacher-nav__item" type="button">
+						<span class="teacher-nav__item-icon"></span>
+						<span class="teacher-nav__item-text">
+							<span class="teacher-nav__item-label">ח' · 4</span>
+							<span class="teacher-nav__item-meta">
+								<span class="teacher-nav__live">חי</span>
+								<span>עמדה על הגשר</span>
+							</span>
+						</span>
+					</button>
+					<p class="teacher-nav__section">הכיתות שלי</p>
+					<button class="teacher-nav__item" type="button">
+						<span class="teacher-nav__item-icon"></span>
+						<span class="teacher-nav__item-text">
+							<span class="teacher-nav__item-label">ז' · 2</span>
+							<span class="teacher-nav__item-meta">3 תלמידים</span>
+						</span>
+					</button>
+					<p class="teacher-nav__empty">אין מסע פעיל כרגע.</p>
+					<div class="teacher-nav__footer">
+						<button class="teacher-nav__item" type="button">
+							<span class="teacher-nav__item-icon"></span>
+							<span class="teacher-nav__item-text">
+								<span class="teacher-nav__item-label">חדר המורה</span>
+							</span>
+						</button>
+					</div>
+				</div>
+			</div>
+
 			<h2>class roster — row, career drawer, PIN note</h2>
 			<div class="roster__row-wrap">
 				<div class="roster__row roster__row--open">
@@ -567,6 +873,62 @@
 				</div>
 			</div>
 
+			<h2>question record — the answers banded by C_p</h2>
+			<div class="card">
+				<p class="question__summary">הכיתה מסכימה שצריך לקבוע שעות מיזוג קבועות, וחלוקה על מי מחליט.</p>
+				<div class="cp-bands">
+					<div class="cp-band cp-band--strong">
+						<div class="cp-band__head">
+							<span class="cp-band__face">💪</span>
+							<span class="cp-band__label">הסכמה איתנה</span>
+							<span class="cp-band__score">C_p +0.52</span>
+							<span class="cp-band__count">2 תשובות</span>
+						</div>
+						<p class="cp-band__text">כמעט כולם רוצים שעות מיזוג קבועות ומוסכמות מראש.</p>
+						<ul class="cp-band__answers">
+							<li class="cp-band__answer">
+								<span class="cp-band__who">נמר אמיץ</span>
+								<span class="cp-band__answer-text">לקבוע שעות מיזוג קבועות</span>
+								<span class="cp-band__meta">C_p +0.55 · 18 דירגו</span>
+							</li>
+						</ul>
+					</div>
+					<div class="cp-band cp-band--emerging">
+						<div class="cp-band__head">
+							<span class="cp-band__face">🌱</span>
+							<span class="cp-band__label">הסכמה מתגבשת</span>
+							<span class="cp-band__score">C_p +0.18</span>
+							<span class="cp-band__count">1 תשובות</span>
+						</div>
+						<p class="cp-band__text">יש תמיכה, אבל רק ארבעה דירגו — עוד מוקדם לומר שזו עמדת הכיתה.</p>
+					</div>
+					<div class="cp-band cp-band--contested">
+						<div class="cp-band__head">
+							<span class="cp-band__face">⚡</span>
+							<span class="cp-band__label">שנוי במחלוקת</span>
+							<span class="cp-band__score">C_p -0.22</span>
+							<span class="cp-band__count">1 תשובות</span>
+						</div>
+						<p class="cp-band__text">הכיתה חלוקה על מי מחליט מתי מדליקים.</p>
+					</div>
+					<div class="cp-band cp-band--unrated">
+						<div class="cp-band__head">
+							<span class="cp-band__face">😴</span>
+							<span class="cp-band__label">טרם נשקל</span>
+							<span class="cp-band__count">1 תשובות</span>
+						</div>
+						<p class="cp-band__text">אף אחד עוד לא דירג את אלה.</p>
+					</div>
+				</div>
+				<p class="cp-bands__explain">C_p הוא ממוצע הדירוגים פחות קנס על אי־ודאות.</p>
+				<div class="question__answer-head">
+					<span class="cp-chip cp-chip--strong">הסכמה איתנה</span>
+					<span class="cp-chip cp-chip--emerging">הסכמה מתגבשת</span>
+					<span class="cp-chip cp-chip--contested">שנוי במחלוקת</span>
+					<span class="cp-chip cp-chip--unrated">טרם נשקל</span>
+				</div>
+			</div>
+
 			<h2>class join — PIN display and alias picker</h2>
 			<div class="card class-join">
 				<div class="class-join__pin-display">4821</div>
@@ -574,6 +936,186 @@
 					<button class="class-join__alias-option">נמר אמיץ</button>
 					<button class="class-join__alias-option">פנס חכם</button>
 				</div>
+			</div>
+
+			<h2>the teacher's console — code pill (and copied), strip, steps, chips, the now card</h2>
+			<!-- The bar's trailing three. The strip and the popover are sticky /
+			     absolute in the app; laid out in the flow here so the surfaces
+			     below them stay measurable. -->
+			<div class="teacher-nav">
+				<button class="teacher-nav__back" type="button"></button>
+				<div class="teacher-nav__titles">
+					<span class="teacher-nav__title">הצרכים שלי</span>
+					<span class="teacher-nav__subtitle">ז'2</span>
+				</div>
+				<div class="teacher-nav__trailing">
+					<button class="teacher-nav__code" type="button" aria-label="קוד כניסה 51586 — לחיצה מעתיקה">
+						<span class="teacher-nav__code-label">קוד</span>
+						<span class="teacher-nav__code-digits">51586</span>
+					</button>
+					<button class="teacher-nav__code teacher-nav__code--copied" type="button">
+						<span class="teacher-nav__code-label">הועתק</span>
+						<span class="teacher-nav__code-digits">51586</span>
+					</button>
+					<button class="btn btn--secondary btn--sm teacher-nav__projector" type="button">למקרן</button>
+					<button class="teacher-nav__cog" type="button" aria-label="הגדרות השיעור"></button>
+				</div>
+			</div>
+			<div class="teacher-strip" style="position:static;margin-inline:0">
+				<button class="teacher-strip__step" type="button" aria-expanded="false">
+					<span class="teacher-strip__disc">3</span>
+					<span class="teacher-strip__index">שלב 3 מתוך 8</span>
+					<span class="teacher-strip__name">הצרכים</span>
+				</button>
+				<button class="btn btn--primary btn--lg teacher-strip__next" type="button">הלאה: הצבעה</button>
+				<p class="teacher-strip__fail" role="alert">לא הצלחנו להתקדם <button class="btn btn--ghost btn--sm" type="button">לנסות שוב</button></p>
+			</div>
+			<div class="teacher-steps" role="region" style="position:static;inline-size:auto;max-block-size:none">
+				<ol class="teacher-plan__list teacher-plan--column">
+					<li class="teacher-plan__item teacher-plan__item--done"><span class="teacher-plan__mark">✓</span><span class="teacher-plan__label">הסיפור</span></li>
+					<li class="teacher-plan__item teacher-plan__item--current" aria-current="step"><span class="teacher-plan__mark">3</span><span class="teacher-plan__label">הצרכים</span></li>
+					<li class="teacher-plan__item"><span class="teacher-plan__mark">4</span><span class="teacher-plan__label">הצבעה</span></li>
+				</ol>
+			</div>
+			<div class="teacher-panels">
+				<button class="teacher-panels__chip" type="button" aria-expanded="false">הכיתה <span class="teacher-panels__count">· 4</span></button>
+				<button class="teacher-panels__chip teacher-panels__chip--open" type="button" aria-expanded="true">מה כתבו <span class="teacher-panels__count">· 12</span> <span class="teacher-panels__badge" aria-label="3 חדשים">3</span></button>
+			</div>
+			<div class="card teacher-now">
+				<p class="teacher-now__doing">התלמידים כותבים מה הם צריכים מהמזגן</p>
+				<p class="teacher-now__count"><strong class="teacher-now__n">3</strong><span class="teacher-now__of">מתוך 4 סיימו</span></p>
+				<ul class="teacher-now__pending">
+					<li><button class="teacher-now__chip teacher-now__chip--idle" type="button"><span class="teacher-now__alias">פנס אמיץ</span><span class="teacher-now__idle">שקט 6 דק'</span></button></li>
+					<li><button class="teacher-now__chip" type="button"><span class="teacher-now__alias">שועל כחול</span><span class="teacher-now__idle">שקט 2 דק'</span></button></li>
+				</ul>
+			</div>
+			<div class="card teacher-now teacher-now--all">
+				<p class="teacher-now__doing">התלמידים מדרגים את ההצעות</p>
+				<p class="teacher-now__count"><strong class="teacher-now__n">4</strong><span class="teacher-now__of">כולם סיימו</span></p>
+			</div>
+			<div class="card teacher-now teacher-now--lobby">
+				<p class="teacher-now__doing">התלמידים נכנסים עם הקוד</p>
+				<p class="teacher-now__empty">עוד אף אחד לא נכנס</p>
+			</div>
+			<div class="card teacher-peek">
+				<button class="teacher-peek__summary" type="button" aria-expanded="false"><span class="teacher-peek__label">מה התלמידים רואים</span><span class="teacher-peek__preview">המטרה · ההקשבה היא העבודה</span></button>
+			</div>
+
+			<h2>the start form — class chips, the summary line, the advanced fold</h2>
+			<div class="start-game__class-row" role="radiogroup">
+				<button class="start-game__class-chip" type="button" role="radio" aria-checked="false">ח'4</button>
+				<button class="start-game__class-chip start-game__class-chip--on" type="button" role="radio" aria-checked="true">ז'2</button>
+				<button class="start-game__class-chip start-game__class-chip--new" type="button" role="radio" aria-checked="false">+ כיתה חדשה</button>
+				<button class="start-game__class-chip start-game__class-chip--none" type="button" role="radio" aria-checked="false">בלי כיתה</button>
+			</div>
+			<p class="start-game__summary">שיעור מלא · 8 שלבים · שמות בדויים — <button class="start-game__change" type="button">לשנות</button></p>
+			<div class="card start-game__advanced">
+				<button class="start-game__advanced-summary" type="button" aria-expanded="false">הגדרות מתקדמות</button>
+				<p class="start-game__advanced-hint">לשיעור הראשון לא צריך לגעת כאן.</p>
+			</div>
+
+			<h2>the dashboard — live banner, first-run strip, a past lesson's score</h2>
+			<div class="card dashboard__live">
+				<div class="dashboard__live-text">
+					<strong class="dashboard__live-title">שיעור פעיל <span class="dashboard__status-pill dashboard__status-pill--live">פעיל</span></strong>
+					<span class="dashboard__live-meta">ז'2 · הצרכים שלי · שלב 3 מתוך 8</span>
+				</div>
+				<button class="btn btn--primary btn--lg" type="button">חזרה לשיעור</button>
+			</div>
+			<div class="card dashboard__firstrun">
+				<strong class="dashboard__firstrun-title">איך מריצים שיעור (45 דק')</strong>
+				<ol class="dashboard__steps">
+					<li class="dashboard__step"><span class="dashboard__step-n">1</span><span>בוחרים תרחיש וכיתה</span></li>
+					<li class="dashboard__step"><span class="dashboard__step-n">2</span><span>התלמידים נכנסים עם הקוד</span></li>
+					<li class="dashboard__step"><span class="dashboard__step-n">3</span><span>לוחצים הלאה בין השלבים</span></li>
+				</ol>
+				<button class="dashboard__firstrun-dismiss" type="button" aria-label="סגירה"></button>
+			</div>
+			<div class="dashboard__game-row">
+				<div class="dashboard__game-main">
+					<strong>ז'2</strong>
+					<span class="dashboard__game-title">הצרכים שלי</span>
+					<span class="dashboard__game-date">3 בספט׳</span>
+				</div>
+				<div class="dashboard__game-side">
+					<span class="dashboard__score-pill">73</span>
+					<span class="dashboard__status-pill">לא הסתיים</span>
+				</div>
+			</div>
+
+			<h2>the class list, as it sits inside the side panel</h2>
+			<div class="card stack class-panel">
+				<div class="class-panel__table">
+					<div class="class-panel__row class-panel__row--head"><span>שם במשחק</span><span>שם אמיתי</span><span>התקדמות</span><span>דירגו</span><span>נקודות</span><span></span></div>
+					<div class="class-panel__row">
+						<span class="class-panel__name">פנס אמיץ</span>
+						<span class="class-panel__real">טל י.</span>
+						<span class="class-panel__pips"><span class="class-panel__pip class-panel__pip--done">✓</span><span class="class-panel__pip">1/3</span></span>
+						<span>4</span>
+						<span class="roster__stat--points">12</span>
+						<span class="class-panel__actions"><span class="class-panel__idle">שקט 7 דק׳</span><button class="btn btn--sm btn--secondary" type="button">הודעה <span class="class-panel__badge">1</span></button></span>
+					</div>
+					<div class="class-panel__row">
+						<span class="class-panel__name">שועל כחול</span>
+						<span class="class-panel__real class-panel__real--none">לא ניתן</span>
+						<span class="class-panel__pips"><span class="class-panel__pip class-panel__pip--done">✓</span><span class="class-panel__pip class-panel__pip--done">✓</span></span>
+						<span>6</span>
+						<span class="roster__stat--points">20</span>
+						<span class="class-panel__actions"><button class="btn btn--sm btn--secondary" type="button">הודעה</button></span>
+					</div>
+				</div>
+			</div>
+
+			<h2>what the class wrote — a plain line, a reworded one, a hidden one</h2>
+			<div class="card stack messages-panel">
+				<div class="messages-panel__filters">
+					<select class="messages-panel__select"><option>כל התלמידים</option></select>
+					<select class="messages-panel__select"><option>כל הסוגים</option></select>
+				</div>
+				<div class="messages-panel__list">
+					<div class="mod-row">
+						<div class="mod-row__head"><span class="mod-row__who"><span class="class-panel__name">פנס אמיץ</span><span class="class-panel__real"> · טל י.</span></span><span class="mod-row__kind">הצעה</span><span class="thread__time">10:42</span></div>
+						<p class="mod-row__text">להקים מועצה משותפת שתקבע את מחיר הלחם.</p>
+						<div class="mod-row__actions"><button class="btn btn--sm btn--ghost" type="button">לנסח מחדש</button><button class="btn btn--sm btn--ghost" type="button">להוריד</button><button class="btn btn--sm btn--secondary" type="button">הודעה</button></div>
+					</div>
+					<div class="mod-row mod-row--edited">
+						<div class="mod-row__head"><span class="mod-row__who"><span class="class-panel__name">שועל כחול</span></span><span class="mod-row__kind">שיחה</span><span class="thread__time">10:44</span></div>
+						<p class="mod-row__text">אולי כדאי להוסיף גם את הכפריים.</p>
+						<span class="moderation__edited">נוסח מחדש על ידך</span>
+						<div class="mod-row__editor">
+							<p class="voting-settings__hint">למה? התלמיד יקרא את זה.</p>
+							<div class="mod-reason-chips"><button class="mod-reason-chip mod-reason-chip--on" type="button">נא להשתמש בשפה מכבדת</button><button class="mod-reason-chip" type="button">לא קשור לשאלה</button></div>
+						</div>
+					</div>
+					<div class="mod-row mod-row--hidden">
+						<div class="mod-row__head"><span class="mod-row__who"><span class="class-panel__name">נמר ירוק</span></span><span class="mod-row__kind">תשובה</span><span class="thread__time">10:45</span></div>
+						<p class="mod-row__text mod-row__text--hidden">הורד על ידך</p>
+						<div class="mod-row__actions"><button class="btn btn--sm btn--secondary" type="button">להחזיר</button></div>
+					</div>
+				</div>
+			</div>
+
+			<h2>the student's side — a taken-down paper, and the teacher's door</h2>
+			<div class="my-screen__paper my-screen__removed">
+				<p class="my-screen__removed-title">המורה הוריד את הטקסט הזה</p>
+				<p class="my-screen__removed-reason">נא להשתמש בשפה מכבדת</p>
+				<p class="my-screen__removed-hint">קראו למה בהודעה מהמורה, ואפשר לענות שם.</p>
+				<button class="btn btn--secondary" type="button">לפתוח את ההודעה מהמורה</button>
+			</div>
+			<div class="thread__msg thread__msg--mine thread__msg--removed"><p class="thread__text">הורד על ידי המורה</p></div>
+			<div class="thread__msg thread__msg--peer thread__msg--teacher"><span class="thread__who">המורה</span><p class="thread__text">עבודה מצוינת — תמשיכו!</p></div>
+			<button class="stage-nav__mail" type="button">✉<span class="stage-nav__mail-badge">1</span></button>
+			<blockquote class="teacher-thread__removed">המשפט שהורד</blockquote>
+
+			<h2>the projector's corner and camp census</h2>
+			<div class="projector" style="min-height:auto;padding:1rem">
+				<div class="projector__camps">
+					<div class="projector__camp projector__camp--left"><span class="projector__camp-count">7</span><span class="projector__camp-name">הרוזן</span></div>
+					<div class="projector__camp projector__camp--center"><span class="projector__camp-count">3</span><span class="projector__camp-name">באמצע</span></div>
+					<div class="projector__camp projector__camp--right"><span class="projector__camp-count">9</span><span class="projector__camp-name">קמיל</span></div>
+				</div>
+				<ol class="projector__answers"><li class="projector__answer"><span class="projector__answer-num">1</span><p class="projector__answer-text">תשובה על הקיר</p></li></ol>
+				<aside class="projector__code" style="position:static"><span class="projector__code-label">מצטרפים עם הקוד</span><div class="projector__code-value">48213</div><span class="projector__code-count">19 בחדר</span></aside>
 			</div>
 		</div>
 	</body>

@@ -16,6 +16,11 @@ dist/
 coverage/
 *.log
 package-lock.json
+# ...except Agora's. Its CI installs from the lockfile (`npm ci`) so that a
+# package published mid-morning cannot break the afternoon's build — which is
+# exactly what happened when vitest 5.0.0 landed and npm's resolver crashed on
+# its peer graph. Tracked, so drift shows up in `git status`.
+!apps/agora/package-lock.json
 yarn.lock
 # Sentry Config File
 .env.sentry-build-plugin
@@ -108,3 +113,6 @@ scripts/.cache/
 # Temporary alt-port emulator config (see scripts/runAccuracyBenchmark.ts)
 firebase.altports.json
 firebase.e2e.json
+
+# Emulator data exported by a worktree's own suite (npm run emulators:solo)
+.emulator-data-solo/

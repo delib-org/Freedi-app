@@ -5,6 +5,7 @@ import { CarriedContext } from '../components/CarriedContext';
 import { celebrateOnce } from '../lib/celebration';
 import { getStagePlan } from '../lib/session';
 import { VOTE_AGAINST, type AgoraParticipant, type AgoraSession } from '@freedi/shared-types';
+import { InstallOffer } from '../components/InstallOffer';
 
 export interface AgreementResultsAttrs {
 	session: AgoraSession;
@@ -25,7 +26,7 @@ function formatMean(mean: number): string {
  */
 export const AgreementResults: m.Component<AgreementResultsAttrs> = {
 	view(vnode) {
-		const { session, myParticipant } = vnode.attrs;
+		const { session } = vnode.attrs;
 		const agreement = session.agreement;
 
 		if (!agreement) {
@@ -154,7 +155,7 @@ export const AgreementResults: m.Component<AgreementResultsAttrs> = {
 
 				m(CarriedContext, { session, beforeIndex: getStagePlan().length, defaultOpen: false }),
 
-				myParticipant ? null : null,
+				m(InstallOffer),
 			]),
 		]);
 	},

@@ -18,6 +18,10 @@ export interface MergedQuestionSettings {
   showViewProgress: boolean;
   /** Ask user for a solution after completing minimum evaluations */
   askUserForASolutionAfterEvaluation: boolean;
+  /** Split a multi-answer submission automatically instead of asking the participant */
+  autoSplitMultiSuggestions: boolean;
+  /** Merge into a similar existing suggestion automatically and +1 it for the author */
+  autoMergeSimilar: boolean;
 }
 
 /**
@@ -76,6 +80,17 @@ export function getMergedSettings(
 
     // Ask user for a solution after completing minimum evaluations (defaults to false)
     askUserForASolutionAfterEvaluation: questionOverrides?.askUserForASolutionAfterEvaluation ?? false,
+
+    // Automatic AI handling of submissions: per-question override, then survey
+    // default, then off (existing surveys keep asking the participant)
+    autoSplitMultiSuggestions:
+      questionOverrides?.autoSplitMultiSuggestions ??
+      surveySettings.autoSplitMultiSuggestions ??
+      false,
+    autoMergeSimilar:
+      questionOverrides?.autoMergeSimilar ??
+      surveySettings.autoMergeSimilar ??
+      false,
   };
 }
 
@@ -103,6 +118,8 @@ export function isSurveyLevelOverride(
     case 'suggestionMode':
     case 'showViewProgress':
     case 'askUserForASolutionAfterEvaluation':
+    case 'autoSplitMultiSuggestions':
+    case 'autoMergeSimilar':
       return false;
     default:
       return false;

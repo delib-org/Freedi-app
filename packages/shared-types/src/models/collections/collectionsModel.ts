@@ -114,6 +114,9 @@ export enum Collections {
     agoraStudentAggregates = 'agoraStudentAggregates',
     agoraClassAggregates = 'agoraClassAggregates',
     agoraStats = 'agoraStats',
+    agoraIdentities = 'agoraIdentities',
+    agoraTeacherMessages = 'agoraTeacherMessages',
+    agoraTeacherPrompts = 'agoraTeacherPrompts',
 
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',
@@ -123,6 +126,7 @@ export enum Collections {
     organizations = 'organizations',
     organizationMembers = 'organizationMembers',
     organizationInvitations = 'organizationInvitations',
+    organizationActivities = 'organizationActivities',
 
     // Per-question participation funnel (server-maintained counters + markers)
     questionProgress = 'questionProgress',

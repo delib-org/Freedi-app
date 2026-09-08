@@ -33,6 +33,7 @@ export type { ErrorContext, RetryOptions } from './errorHandling';
 export {
 	isFirestoreInternalCrash,
 	isBlockedServiceWorkerCrash,
+	isThirdPartyScriptCrash,
 	isTransientAuthNetworkError,
 } from './sentryFilters';
 export type {
@@ -43,13 +44,12 @@ export type {
 	SentryLikeStacktrace,
 } from './sentryFilters';
 
+// Local-development guard — keeps a laptop out of the production Sentry
+export { isLocalRuntime } from './isLocalRuntime';
+
 // Sentry init options (SDK-agnostic — each app passes these to its own Sentry)
 export { buildSentryOptions, isUsableDsn } from './sentryOptions';
-export type {
-	BuildSentryOptionsArgs,
-	FreediApp,
-	SentryOptionsLike,
-} from './sentryOptions';
+export type { BuildSentryOptionsArgs, FreediApp, SentryOptionsLike } from './sentryOptions';
 
 // Logger
 export { logger, setErrorReporter, setInfoReporter } from './logger';

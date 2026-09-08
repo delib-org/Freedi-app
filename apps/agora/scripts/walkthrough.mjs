@@ -1,6 +1,7 @@
 /* Full manual-style walkthrough: teacher UI + 2 student UIs through every stage.
  * Run: node scripts/walkthrough.mjs (needs emulators + vite on 3009 + seeded demo) */
 import { chromium } from '@playwright/test';
+import { passNameDoor } from './lib/e2e.mjs';
 import { preflight } from './lib/preflight.mjs';
 
 // Fail in seconds with a readable reason instead of minutes with a stack trace
@@ -54,6 +55,9 @@ try {
 	await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 30000 });
 }
 await teacher.locator('text=המהפכה הצרפתית').first().click();
+// Tapping a scenario opens the start screen already holding it; the one
+// button there opens the lesson.
+await teacher.waitForURL(/teach\/start/, { timeout: 20000 });
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
 await teacher.waitForSelector('.teacher__code', { timeout: 20000 });
@@ -67,6 +71,7 @@ console.log('SESSION:', sessionId);
 step('STUDENTS: join via code');
 for (const [page, label] of [[s1, 'S1'], [s2, 'S2']]) {
 	await page.goto(`${BASE}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(page);
 	await page.waitForSelector('.lobby__name', { timeout: 15000 });
 	console.log(`${label} in lobby as:`, await page.locator('.lobby__name').textContent());
 }
@@ -105,11 +110,11 @@ for (const stage of ['FRAMING (intro→tunnel→period)', 'PERSPECTIVES (both si
 	await Promise.all([clickThroughScenes(s1, 'S1'), clickThroughScenes(s2, 'S2')]);
 	// The teacher's class-progress card fills as students finish their scenes
 	await teacher
-		.locator('.class-progress__count--all')
+		.locator('.teacher-now__count--all')
 		.waitFor({ timeout: 15000 });
 	console.log(
 		'TEACHER CLASS PROGRESS:',
-		await teacher.locator('.class-progress__count').textContent()
+		await teacher.locator('.teacher-now__count').textContent()
 	);
 	if (stage.startsWith('FRAMING')) await shot(teacher, '02b-teacher-class-progress');
 }
@@ -236,20 +241,20 @@ const suggest = async (page, label, text) => {
 };
 await shot(s2, '05b-workshop-help');
 
-// My workshop is the dock, not a tab: lift it mid-help, then fold it back
-await s1.waitForSelector('.proposal-dock__bar', { timeout: 10000 });
-await s1.locator('.proposal-dock__bar').click();
-await s1.waitForSelector('.proposal-dock--open .my-lantern', { timeout: 5000 });
-console.log('S1 DOCK: lifted the notebook during help');
+// My proposal is a TAB, not a sheet: walk to it mid-help, then walk back
+await s1.waitForSelector('.delib-nav__item--mine', { timeout: 10000 });
+await s1.locator('.delib-nav__item--mine').click();
+await s1.waitForSelector('.my-screen__paper', { timeout: 5000 });
+console.log('S1 MINE: stood at my own paper during help');
 console.log(
 	'S1 NAV CLASSES:',
 	await s1.locator('.delib-nav__item').evaluateAll((els) => els.map((e) => e.className))
 );
-await s1.waitForTimeout(900); // the sheet slides up — shoot it landed, not mid-travel
-await shot(s1, '05c-dock-open-during-help');
-await s1.locator('.proposal-dock__bar').click();
+await s1.waitForTimeout(900); // the screen settles — shoot it landed, not mid-travel
+await shot(s1, '05c-mine-paper-during-help');
+await s1.locator('.delib-nav__item--peer').click();
 await s1.waitForSelector('textarea.text-input', { timeout: 5000 });
-console.log('S1 DOCK: folded, back at the stand');
+console.log('S1 MINE: back at the stand');
 
 await suggest(s2, 'S2', 'כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר, כדי ששני הצדדים יידעו למה לצפות.');
 await suggest(s1, 'S1', 'אולי כדאי להבטיח גם ייצוג לאצולה באספה, כדי שגם הם ירגישו שותפים.');

@@ -1,0 +1,355 @@
+// The teacher's live console beyond the board: the Class panel (pseudonym →
+// real name, a pip per stage), the Messages panel (every line a student
+// wrote, with the teacher's three moves), and the drawer where one student's
+// private thread opens. The strip that replaced the tab row, and the side
+// panel these two now open inside, live in _teacher-strip.scss.
+//
+// Imported by components.scss; do not import directly.
+
+// --- The Class tab: one row per student ---
+.class-panel {
+	&__table {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__row {
+		display: grid;
+		grid-template-columns: minmax(110px, 1fr) minmax(110px, 1fr) minmax(120px, 2fr) auto auto auto;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+
+		&--head {
+			background: transparent;
+			border-color: transparent;
+			font-family: var(--font-display);
+			font-size: var(--font-size-xs);
+			letter-spacing: 0.06em;
+			text-transform: uppercase;
+			color: var(--text-muted);
+		}
+	}
+
+	&__name {
+		font-family: var(--font-display);
+		color: var(--text-primary);
+	}
+
+	&__real {
+		color: var(--text-secondary);
+
+		&--none {
+			color: var(--text-muted);
+			font-style: italic;
+		}
+	}
+
+	&__pips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	&__pip {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 1.6rem;
+		height: 1.6rem;
+		padding: 0 var(--space-xs);
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+
+		&--done {
+			border-color: var(--success);
+			color: var(--success);
+		}
+	}
+
+	&__actions {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		justify-content: flex-end;
+	}
+
+	&__idle {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		white-space: nowrap;
+	}
+
+	// Danger-red, never a camp colour: a count of things owed to the teacher
+	&__badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 1.25rem;
+		height: 1.25rem;
+		padding: 0 var(--space-xs);
+		margin-inline-start: var(--space-xs);
+		border-radius: var(--radius-full);
+		background: var(--danger);
+		color: var(--text-on-lantern);
+		font-size: var(--font-size-xs);
+		font-family: var(--font-display);
+	}
+}
+
+// The class table inside the 520px side panel (_teacher-strip.scss): six
+// columns overflow there, so the row folds to two and the pips and actions
+// take a full line each. Scoped on the panel, not the row, so the same
+// component keeps its wide layout wherever else it is hosted.
+// Inside the 520px panel the list is rows, not a table: who (and the door
+// to a private word) on the first line, the stage pips under it, then one
+// labelled line of figures. A six-column grid had nowhere to put its labels.
+.teacher-panel .class-panel {
+	&__row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-areas:
+			'who door'
+			'pips pips'
+			'stats stats';
+		gap: var(--space-xs) var(--space-md);
+		align-items: center;
+	}
+
+	&__who {
+		grid-area: who;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-xs) var(--space-sm);
+		min-inline-size: 0;
+	}
+
+	&__message {
+		grid-area: door;
+	}
+
+	&__pips {
+		grid-area: pips;
+	}
+
+	&__stats {
+		grid-area: stats;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+}
+
+// --- The Messages tab ---
+.messages-panel {
+	&__filters {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-sm) var(--space-md);
+	}
+
+	&__select {
+		padding: var(--space-xs) var(--space-sm);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		background: var(--bg-card-solid);
+		color: var(--text-primary);
+		font: inherit;
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+}
+
+.mod-row {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	padding: var(--space-sm) var(--space-md);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-inline-start: 4px solid var(--peer);
+	border-radius: var(--radius-md);
+
+	&--hidden {
+		border-inline-start-color: var(--danger);
+		background: var(--bg-inset);
+	}
+
+	&--edited {
+		border-inline-start-color: var(--lantern);
+	}
+
+	&__head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-sm);
+	}
+
+	&__who {
+		flex: 1;
+	}
+
+	&__kind {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	&__text {
+		margin: 0;
+		white-space: pre-wrap;
+		color: var(--text-primary);
+
+		&--hidden {
+			color: var(--text-muted);
+			font-style: italic;
+		}
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	&__editor {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+}
+
+.mod-reason-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-xs);
+}
+
+.mod-reason-chip {
+	padding: var(--space-xs) var(--space-md);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-full);
+	background: var(--bg-inset);
+	color: var(--text-secondary);
+	font: inherit;
+	font-size: var(--font-size-sm);
+	cursor: pointer;
+
+	&--on {
+		border-color: var(--lantern);
+		color: var(--text-primary);
+		background: var(--bg-card-solid);
+	}
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern);
+		outline-offset: 2px;
+	}
+}
+
+// --- The drawer: one student's thread beside the console ---
+.teacher-drawer__scrim {
+	position: fixed;
+	inset: 0;
+	z-index: 60;
+	background: rgba(20, 16, 40, 0.45);
+	display: flex;
+	justify-content: flex-end;
+}
+
+.teacher-drawer {
+	width: min(100%, 420px);
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+	padding: var(--space-md);
+	background: var(--bg-card-solid);
+	border-inline-start: 1px solid var(--border-subtle);
+	box-shadow: var(--shadow-card);
+	overflow-y: auto;
+
+	&__head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__title {
+		margin: 0;
+		font-size: var(--font-size-md);
+	}
+
+	&__lines {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		flex: 1;
+	}
+
+	&__quick {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+}
+
+.teacher__projector {
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+// --- the runtime guard's banner (src/lib/boot.ts) ---
+.boot-banner {
+	position: sticky;
+	inset-block-start: 0;
+	z-index: 50;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-sm);
+	padding: var(--space-sm) var(--space-md);
+	background: var(--bg-card-solid);
+	border-block-end: 2px solid var(--danger);
+	color: var(--text-primary);
+
+	&__text {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-inline-size: 0;
+	}
+
+	&__detail {
+		@include type-meta;
+		color: var(--text-secondary);
+		overflow-wrap: anywhere;
+	}
+
+	&__actions {
+		display: flex;
+		gap: var(--space-xs);
+	}
+}

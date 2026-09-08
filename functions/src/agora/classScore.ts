@@ -20,6 +20,8 @@ import {
 	pickVoteWinner,
 	tallyVotes,
 	ballotTallyIds,
+	isAgoraHidden,
+	ModeratedDoc,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { callLLM, extractJson, TAXONOMY_MODEL } from '../config/openai-chat';
@@ -308,7 +310,11 @@ export async function computeSessionResults(sessionId: string): Promise<void> {
 		// stage's answers are options too — under their own question — and
 		// must never be plausibility-scored or compete for the lead.
 		const proposals: ProposalRow[] = proposalsSnap.docs
-			.filter((docSnap) => docSnap.data().parentId === session.challengeQuestionId)
+			.filter(
+				(docSnap) =>
+					docSnap.data().parentId === session.challengeQuestionId &&
+					!isAgoraHidden(docSnap.data() as ModeratedDoc),
+			)
 			.map((docSnap) => ({
 				statementId: String(docSnap.data().statementId),
 				text: String(docSnap.data().statement ?? ''),

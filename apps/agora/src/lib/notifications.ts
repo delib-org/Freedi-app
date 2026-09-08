@@ -442,6 +442,14 @@ export function detectThreadMessages(sessionId: string, userId: string): void {
  * next step is another stall.
  */
 function serverNewsTarget(trigger: string, proposalId?: string): InboxTarget {
+	if (
+		trigger === NotificationTriggerType.AGORA_TEACHER_NOTE ||
+		trigger === NotificationTriggerType.AGORA_TEACHER_HIDDEN ||
+		trigger === NotificationTriggerType.AGORA_TEACHER_RESTORED ||
+		trigger === NotificationTriggerType.AGORA_TEACHER_EDITED
+	) {
+		return { kind: 'teacher' };
+	}
 	if (trigger === NotificationTriggerType.AGORA_SUGGESTION_DECLINED) return { kind: 'market' };
 	if (
 		proposalId &&
@@ -731,7 +739,11 @@ export function detectProposalMilestones(sessionId: string, userId: string): voi
 	const score = scores[mine.statementId];
 	if (!score?.classConsensus) return;
 
-	// ---- 1. The bridge zone: the goal, made into a place on the map ----
+	// ---- 1. The goal: the win condition, made into a place on the map ----
+	// The map draws top-centre as a football goal (ResultsBoard), so this is
+	// the moment the ball goes in — the one celebration with a picture of its
+	// own, a whistle and a roar. Once per sitting: a goal replayed on every
+	// rating that keeps it there is a goal that stops meaning anything.
 	const zoneKey = `agora_${sessionId}_zone`;
 	if (inBridgeZone(score) && !sessionStorage.getItem(zoneKey)) {
 		sessionStorage.setItem(zoneKey, '1');
@@ -742,10 +754,11 @@ export function detectProposalMilestones(sessionId: string, userId: string): voi
 			detail: mine.statement,
 		});
 		celebrate({
+			kind: 'goal',
 			message: t('celebrate.bridge_zone'),
 			detail: mine.statement,
 			hint: t('celebrate.bridge_zone_hint'),
-			sound: 'applause',
+			sound: 'goal',
 		});
 	}
 
