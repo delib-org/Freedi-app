@@ -14,6 +14,8 @@ interface VectorSearchOptions {
 	limit?: number;
 	threshold?: number;
 	includeHidden?: boolean;
+	/** Embed the query text as-is, skipping the LLM brief (see EmbedOptions). */
+	skipBrief?: boolean;
 }
 
 const DEFAULT_LIMIT = 10;
@@ -44,7 +46,7 @@ class VectorSearchService {
 		options: VectorSearchOptions = {},
 	): Promise<SimilarStatement[]> {
 		const startTime = Date.now();
-		const { limit = DEFAULT_LIMIT, threshold = DEFAULT_THRESHOLD } = options;
+		const { limit = DEFAULT_LIMIT, threshold = DEFAULT_THRESHOLD, skipBrief = false } = options;
 
 		try {
 			// Generate embedding for user input — with the QUESTION's model, or the
@@ -53,7 +55,7 @@ class VectorSearchService {
 			const { embedding: queryEmbedding } = await embeddingService.generateEmbedding(
 				userInput,
 				questionContext,
-				{ parentId },
+				{ parentId, skipBrief },
 			);
 
 			logger.debug('Query embedding generated', {

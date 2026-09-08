@@ -8,7 +8,15 @@ import { moderationMessageKey } from '@/lib/utils/moderationMessage';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
-import type { FlowState, SimilarCheckResponse, MultiSuggestionResponse, SplitSuggestion } from '@/types/api';
+import type {
+  FlowState,
+  SimilarCheckResponse,
+  MultiSuggestionResponse,
+  SplitSuggestion,
+  DetectedSuggestion,
+  PieceSimilarity,
+  PrepareSuggestionResponse,
+} from '@/types/api';
 import { SuggestionMode } from '@freedi/shared-types';
 import { submitRating } from '@/controllers/swipeController';
 import SimilarSolutions from './SimilarSolutions';
@@ -52,6 +60,14 @@ interface SolutionPromptModalProps {
   autoMergeSimilar?: boolean;
 }
 
+/** The server refused the text (moderation, limit); the user has already been told. */
+class PrepareRefused extends Error {}
+
+interface PieceTarget {
+  text: string;
+  target: string | null;
+}
+
 const MAX_ROWS = 8;
 const LINE_HEIGHT = 24;
 
@@ -80,6 +96,13 @@ export default function SolutionPromptModal({
   const [multiSuggestions, setMultiSuggestions] = useState<SplitSuggestion[]>([]);
   const [storedSimilarData, setStoredSimilarData] = useState<SimilarCheckResponse | null>(null);
   const [isFinalSubmit, setIsFinalSubmit] = useState(false);
+  /**
+   * Per split piece (keyed by SplitSuggestion id): the text the server saw and
+   * the closest existing suggestion it found, or null for none. Lets auto-merge
+   * submit pieces without another similarity round trip. A piece edited in the
+   * preview no longer matches its `text` and is looked up again.
+   */
+  const [pieceTargets, setPieceTargets] = useState<Record<string, PieceTarget>>({});
   const [isQuestionExpanded, setIsQuestionExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -100,6 +123,7 @@ export default function SolutionPromptModal({
       setError(null);
       setMultiSuggestions([]);
       setStoredSimilarData(null);
+      setPieceTargets({});
     }
   }, [isOpen]);
 
@@ -119,13 +143,159 @@ export default function SolutionPromptModal({
     adjustTextareaHeight();
   }, [text]);
 
-  // Step 1: Check for multi-suggestions AND similar solutions in parallel
+  const pieceText = (piece: DetectedSuggestion): string => `${piece.title}: ${piece.description}`;
+
+  /**
+   * Act on what the server found: several answers in one submission, a
+   * similar existing suggestion, or neither. Shared by the one-round-trip
+   * prepare path and the older two-call path.
+   */
+  const applyAnalysis = async (
+    multi: { isMultipleSuggestions: boolean; suggestions: DetectedSuggestion[] },
+    similarData: SimilarCheckResponse,
+    pieces?: PieceSimilarity[],
+  ): Promise<void> => {
+    if (multi.isMultipleSuggestions && multi.suggestions.length > 1) {
+      const stamp = Date.now();
+      const splitSuggestions: SplitSuggestion[] = multi.suggestions.map((s, i) => ({
+        id: `suggestion-${i}-${stamp}`,
+        title: s.title,
+        description: s.description,
+        originalText: s.originalText,
+        isRemoved: false,
+      }));
+
+      const targets: Record<string, PieceTarget> = {};
+      splitSuggestions.forEach((s, i) => {
+        const piece = pieces?.[i];
+        if (piece) {
+          targets[s.id] = {
+            text: pieceText(multi.suggestions[i]),
+            target: piece.similarStatements[0]?.statementId ?? null,
+          };
+        }
+      });
+      setPieceTargets(targets);
+
+      if (autoSplitMultiSuggestions) {
+        // Admin chose automatic splitting: skip the preview entirely
+        await handleConfirmMultiSuggestions(splitSuggestions, targets);
+        return;
+      }
+
+      setMultiSuggestions(splitSuggestions);
+      // Store similar data for later (after multi-preview)
+      const hasSimilar = similarData.similarStatements?.length > 0;
+      setStoredSimilarData(hasSimilar ? similarData : null);
+      setFlowState({
+        step: 'multi-preview',
+        suggestions: splitSuggestions,
+        originalText: text,
+        similarData: hasSimilar ? similarData : undefined,
+      });
+      return;
+    }
+
+    if (similarData.similarStatements && similarData.similarStatements.length > 0) {
+      if (autoMergeSimilar) {
+        // Admin chose automatic merging: fold into the closest match and +1 it
+        await handleAutoMerge(similarData.similarStatements[0].statementId, text);
+      } else {
+        setFlowState({ step: 'similar', data: similarData });
+      }
+    } else {
+      // No similar solutions, proceed to submit
+      await handleSelectSolution(null, text);
+    }
+  };
+
+  /**
+   * One round trip: moderation, split detection and similar suggestions
+   * together. Returns null when the endpoint is not available (not deployed
+   * yet, gateway error), so the caller can use the older two-call path.
+   * Throws for a real refusal (moderation, limit reached), already reported.
+   */
+  const requestPrepare = async (): Promise<PrepareSuggestionResponse | null> => {
+    const response = await fetch(`/api/statements/${questionId}/prepare`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userInput: text, userId, checkPieces: autoMergeSimilar }),
+    });
+
+    if (response.status === 400 || response.status === 403) {
+      const data: PrepareSuggestionResponse = await response.json();
+      const message =
+        response.status === 400
+          ? moderationMessageKey(data.category)
+          : data.error || ERROR_MESSAGES.LIMIT_REACHED;
+      setError(message);
+      setFlowState({ step: 'input' });
+      logError(new ValidationError(message), {
+        operation: 'SolutionPromptModal.requestPrepare',
+        userId,
+        questionId,
+        metadata: { status: response.status, category: data.category },
+      });
+      throw new PrepareRefused();
+    }
+
+    if (!response.ok) {
+      logError(new NetworkError(`prepare returned ${response.status}`), {
+        operation: 'SolutionPromptModal.requestPrepare.fallback',
+        userId,
+        questionId,
+        metadata: { status: response.status },
+      });
+
+      return null;
+    }
+
+    const data: PrepareSuggestionResponse = await response.json();
+
+    return data.ok ? data : null;
+  };
+
+  // Step 1: What does the server make of this text? One round trip when the
+  // combined endpoint is up; the older two parallel calls otherwise.
   const handleCheckSimilar = async () => {
     if (!isValid) return;
 
     setFlowState({ step: 'submitting' });
     setError(null);
 
+    try {
+      const prepared = await requestPrepare();
+      if (prepared) {
+        console.info('✅ prepare result:', {
+          isMultiple: prepared.multi.isMultipleSuggestions,
+          pieces: prepared.multi.suggestions.length,
+          similar: prepared.similar.similarStatements.length,
+          responseTime: prepared.responseTime,
+        });
+        await applyAnalysis(
+          prepared.multi,
+          { ok: true, similarStatements: prepared.similar.similarStatements, userText: prepared.similar.userText },
+          prepared.pieces,
+        );
+
+        return;
+      }
+
+      await handleCheckSimilarLegacy();
+    } catch (err) {
+      if (err instanceof PrepareRefused) return;
+      logError(err, {
+        operation: 'SolutionPromptModal.handleCheckSimilar',
+        userId,
+        questionId,
+      });
+      setError(err instanceof Error ? err.message : ERROR_MESSAGES.CHECK_SIMILAR_FAILED);
+      setFlowState({ step: 'input' });
+    }
+  };
+
+  // Older path: multi-detect and similar-check as two parallel calls
+  const handleCheckSimilarLegacy = async () => {
     try {
       console.info('🚀 Starting parallel API calls for multi-suggestion and similar check...');
 
@@ -229,50 +399,14 @@ export default function SolutionPromptModal({
         });
       }
 
-      // Process results: Multi-suggestion check takes priority
-      if (multiData.ok && multiData.isMultipleSuggestions && multiData.suggestions.length > 1) {
-        // Convert to SplitSuggestion format with IDs
-        const splitSuggestions: SplitSuggestion[] = multiData.suggestions.map((s, i) => ({
-          id: `suggestion-${i}-${Date.now()}`,
-          title: s.title,
-          description: s.description,
-          originalText: s.originalText,
-          isRemoved: false,
-        }));
-
-        if (autoSplitMultiSuggestions) {
-          // Admin chose automatic splitting: skip the preview entirely
-          await handleConfirmMultiSuggestions(splitSuggestions);
-          return;
-        }
-
-        setMultiSuggestions(splitSuggestions);
-        // Store similar data for later (after multi-preview)
-        setStoredSimilarData(similarData.similarStatements?.length > 0 ? similarData : null);
-        setFlowState({
-          step: 'multi-preview',
-          suggestions: splitSuggestions,
-          originalText: text,
-          similarData: similarData.similarStatements?.length > 0 ? similarData : undefined,
-        });
-        return;
-      }
-
-      // No multiple suggestions - check for similar
-      if (similarData.similarStatements && similarData.similarStatements.length > 0) {
-        if (autoMergeSimilar) {
-          // Admin chose automatic merging: fold into the closest match and +1 it
-          await handleAutoMerge(similarData.similarStatements[0].statementId, text);
-        } else {
-          setFlowState({ step: 'similar', data: similarData });
-        }
-      } else {
-        // No similar solutions, proceed to submit
-        await handleSelectSolution(null, text);
-      }
+      await applyAnalysis(
+        { isMultipleSuggestions: multiData.ok && multiData.isMultipleSuggestions, suggestions: multiData.suggestions },
+        similarData,
+        undefined,
+      );
     } catch (err) {
       logError(err, {
-        operation: 'SolutionPromptModal.handleCheckSimilar',
+        operation: 'SolutionPromptModal.handleCheckSimilarLegacy',
         userId,
         questionId,
       });
@@ -433,9 +567,13 @@ export default function SolutionPromptModal({
    * Submit one piece of a split submission: with auto-merge on, merge it into
    * a similar suggestion when one exists; otherwise create it.
    */
-  const submitPiece = async (solutionText: string): Promise<void> => {
+  const submitPiece = async (
+    solutionText: string,
+    precomputedTarget?: string | null,
+  ): Promise<void> => {
     if (autoMergeSimilar) {
-      const target = await findMergeTarget(solutionText);
+      const target =
+        precomputedTarget !== undefined ? precomputedTarget : await findMergeTarget(solutionText);
       if (target) {
         await mergeAndAgree(target, solutionText);
 
@@ -501,15 +639,25 @@ export default function SolutionPromptModal({
   };
 
   // Handle confirming multiple suggestions - submit each one
-  const handleConfirmMultiSuggestions = async (suggestions: SplitSuggestion[]) => {
+  const handleConfirmMultiSuggestions = async (
+    suggestions: SplitSuggestion[],
+    targets: Record<string, PieceTarget> = pieceTargets,
+  ) => {
     setIsFinalSubmit(true);
     setFlowState({ step: 'submitting' });
 
     try {
-      // Submit each suggestion sequentially (merging into similar ones when auto-merge is on)
-      for (const suggestion of suggestions) {
-        await submitPiece(`${suggestion.title}: ${suggestion.description}`);
-      }
+      // All pieces at once. A precomputed merge target is used only while the
+      // piece still reads as the server saw it.
+      await Promise.all(
+        suggestions.map((suggestion) => {
+          const solutionText = `${suggestion.title}: ${suggestion.description}`;
+          const known = targets[suggestion.id];
+          const precomputed = known && known.text === solutionText ? known.target : undefined;
+
+          return submitPiece(solutionText, precomputed);
+        }),
+      );
 
       setFlowState({
         step: 'success',
