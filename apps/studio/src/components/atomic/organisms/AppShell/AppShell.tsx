@@ -13,6 +13,7 @@ import { LanguagesEnum } from '@freedi/shared-i18n';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { useAuth } from '@/auth/AuthContext';
 import { useOrg } from '@/org/OrgContext';
+import { useAllOrganizations } from '@/db/orgStatements';
 import { OrgSwitcher, type SwitcherEntry } from '@/components/atomic/molecules/OrgSwitcher';
 import { Breadcrumb, type BreadcrumbItem } from '@/components/atomic/molecules/Breadcrumb';
 import type { StudioScope } from '@/pages/_shared/useStudioScope';
@@ -93,6 +94,10 @@ const AppShell: FC<AppShellProps> = ({
 	const { t, currentLanguage, changeLanguage } = useTranslation();
 	const { user, signOut } = useAuth();
 	const { orgs, memberships, isSystemAdmin } = useOrg();
+	// A system admin works inside organizations they do not belong to — several
+	// of them have no members at all — so listing only their own memberships
+	// hides exactly the organizations they were sent in to run.
+	const { data: allOrgs } = useAllOrganizations(isSystemAdmin);
 	const navigate = useNavigate();
 
 	const isMobile = useMediaQuery(MEDIA_MOBILE);
@@ -137,8 +142,18 @@ const AppShell: FC<AppShellProps> = ({
 
 	// Every workspace the console holds, in the order the trail treats them as
 	// siblings: the organizations, then your own events, then the admin screens.
+	// Your own organizations lead, so a system admin's list still opens with the
+	// ones they belong to.
+	const mineFirst = isSystemAdmin
+		? [
+				...orgs,
+				...allOrgs.filter(
+					(org) => !orgs.some((mine) => mine.organizationId === org.organizationId),
+				),
+			]
+		: orgs;
 	const entries: SwitcherEntry[] = [
-		...orgs.map<SwitcherEntry>((org) => ({
+		...mineFirst.map<SwitcherEntry>((org) => ({
 			id: org.organizationId,
 			kind: 'org',
 			label: org.name,
