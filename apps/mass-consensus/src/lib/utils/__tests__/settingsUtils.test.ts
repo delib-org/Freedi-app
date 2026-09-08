@@ -1,7 +1,7 @@
 /**
  * Tests for settingsUtils utility functions
  */
-import { SurveySettings, QuestionOverrideSettings } from '@freedi/shared-types';
+import { SurveySettings, QuestionOverrideSettings, SuggestionMode } from '@freedi/shared-types';
 import {
   getMergedSettings,
   isSurveyLevelOverride,
@@ -304,6 +304,25 @@ describe('settingsUtils', () => {
       const merged = getMergedSettings(surveySettings, questionOverrides);
       expect(merged.allowSkipping).toBe(true); // Survey override wins
       expect(merged.allowParticipantsToAddSuggestions).toBe(true); // Question override applies
+    });
+  });
+
+  describe('suggestionMode', () => {
+    it('falls back to restrict for surveys saved without the setting', () => {
+      expect(getMergedSettings(createSurveySettings(), undefined).suggestionMode).toBe(
+        SuggestionMode.restrict,
+      );
+    });
+
+    it('uses the survey default when the question has no override', () => {
+      const surveySettings = createSurveySettings({ suggestionMode: SuggestionMode.encourage });
+      expect(getMergedSettings(surveySettings, {}).suggestionMode).toBe(SuggestionMode.encourage);
+    });
+
+    it('lets the question override the survey default', () => {
+      const surveySettings = createSurveySettings({ suggestionMode: SuggestionMode.encourage });
+      const merged = getMergedSettings(surveySettings, { suggestionMode: SuggestionMode.balanced });
+      expect(merged.suggestionMode).toBe(SuggestionMode.balanced);
     });
   });
 

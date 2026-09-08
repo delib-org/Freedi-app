@@ -431,6 +431,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         userId={userId}
         userName={userName}
         surveyId={surveyId}
+        suggestionMode={mergedSettings?.suggestionMode}
         autoSplitMultiSuggestions={mergedSettings?.autoSplitMultiSuggestions}
         autoMergeSimilar={mergedSettings?.autoMergeSimilar}
       />
@@ -461,6 +462,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         userId={userId}
         userName={userName}
         surveyId={surveyId}
+        suggestionMode={mergedSettings?.suggestionMode}
         autoSplitMultiSuggestions={mergedSettings?.autoSplitMultiSuggestions}
         autoMergeSimilar={mergedSettings?.autoMergeSimilar}
         requiresSolution={requiresSolution}

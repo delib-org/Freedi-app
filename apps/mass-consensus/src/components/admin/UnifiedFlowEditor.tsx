@@ -374,7 +374,8 @@ function QuestionSettingsPanel({
 
   // Get the survey default label for the dropdown
   const getSurveyDefaultLabel = () => {
-    const defaultMode = surveySettings.suggestionMode || SuggestionMode.encourage;
+    // Must match the fallback in getMergedSettings (restrict for surveys without the key)
+    const defaultMode = surveySettings.suggestionMode || SuggestionMode.restrict;
     const labels: Record<string, string> = {
       [SuggestionMode.encourage]: t('suggestionModeEncourage') || 'Encourage New Ideas',
       [SuggestionMode.balanced]: t('suggestionModeBalanced') || 'Balanced',
