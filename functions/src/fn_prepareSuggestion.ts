@@ -112,13 +112,14 @@ export async function prepareSuggestion(request: Request, response: Response): P
 		}
 
 		const threshold = thresholdFor(parentStatement);
-		const search = (text: string) =>
+		const search = (text: string, quick = false) =>
 			searchSimilarStatements({
 				questionId,
 				userInput: text,
 				creatorId: userId,
 				parentStatement,
 				threshold,
+				quick,
 			});
 
 		const [multi, similar] = await Promise.all([
@@ -128,7 +129,8 @@ export async function prepareSuggestion(request: Request, response: Response): P
 
 		let pieces: PieceSimilarity[] | undefined;
 		if (checkPieces && multi.isMultiple && multi.suggestions.length > 1) {
-			const outcomes = await Promise.all(multi.suggestions.map((s) => search(pieceText(s))));
+			// Pieces want a confident merge target, not a wide net: no paraphrase round
+			const outcomes = await Promise.all(multi.suggestions.map((s) => search(pieceText(s), true)));
 			pieces = outcomes.map((outcome, i) =>
 				pieceFromOutcome(outcome, pieceText(multi.suggestions[i])),
 			);
