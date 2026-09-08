@@ -17,17 +17,26 @@ import {
 	linkActivityWrites,
 	loadLinkableStatement,
 	normalizeLabel,
+	resolveSurveyQuestion,
 } from './orgActivities';
 
 interface LinkOrgStatementRequest {
 	organizationId: string;
-	statementId: string;
+	/** The question to add. Supply this or `surveyId`. */
+	statementId?: string;
+	/**
+	 * A Mass-Consensus survey to add, by id. Resolved server-side to the
+	 * question the survey wraps — clients cannot read the surveys collection.
+	 */
+	surveyId?: string;
 	/** Org-facing name. Empty → the board falls back to the question's own title. */
 	label?: string;
 }
 
 interface LinkOrgStatementResult {
 	activityId: string;
+	/** The question actually linked — the caller may have named a survey. */
+	statementId: string;
 }
 
 /**
@@ -43,13 +52,15 @@ export const fn_linkOrgStatement = onCall(
 	{ region: functionConfig.region },
 	async (request: CallableRequest<LinkOrgStatementRequest>): Promise<LinkOrgStatementResult> => {
 		const caller = getCallerIdentity(request);
-		const { organizationId, statementId, label } = request.data ?? {};
+		const { organizationId, surveyId, label } = request.data ?? {};
 
 		if (!organizationId || typeof organizationId !== 'string') {
 			throw new HttpsError('invalid-argument', 'organizationId is required');
 		}
-		if (!statementId || typeof statementId !== 'string') {
-			throw new HttpsError('invalid-argument', 'statementId is required');
+		const hasStatement = typeof request.data?.statementId === 'string' && request.data.statementId;
+		const hasSurvey = typeof surveyId === 'string' && surveyId;
+		if (!hasStatement && !hasSurvey) {
+			throw new HttpsError('invalid-argument', 'statementId or surveyId is required');
 		}
 		const trimmedLabel = normalizeLabel(label);
 
@@ -58,7 +69,24 @@ export const fn_linkOrgStatement = onCall(
 			OrganizationRole.admin,
 		]);
 
-		const statement = await loadLinkableStatement(caller.uid, statementId);
+		const admins = await listOrgAdminMembers(organizationId);
+		if (!admins.some((admin) => admin.userId === caller.uid)) {
+			admins.push(member);
+		}
+		const adminUserIds = new Set(admins.map((admin) => admin.userId));
+
+		// A survey is not a statement: resolve it to the question it wraps first,
+		// then everything below treats the two entry points identically.
+		const statementId = hasStatement
+			? (request.data.statementId as string)
+			: await resolveSurveyQuestion(surveyId as string);
+
+		const statement = await loadLinkableStatement({
+			uid: caller.uid,
+			organizationId,
+			statementId,
+			adminUserIds,
+		});
 		if (statement.organizationId === organizationId) {
 			throw new HttpsError('already-exists', 'This organization already owns that question');
 		}
@@ -69,10 +97,6 @@ export const fn_linkOrgStatement = onCall(
 
 		const user = await loadCallerUser(caller.uid, caller);
 		const now = Date.now();
-		const admins = await listOrgAdminMembers(organizationId);
-		if (!admins.some((admin) => admin.userId === caller.uid)) {
-			admins.push({ ...member, email: user.email ?? '', displayName: user.displayName });
-		}
 		const [held, progressSnap] = await Promise.all([
 			existingAdminSubscribers(
 				statementId,
@@ -113,8 +137,9 @@ export const fn_linkOrgStatement = onCall(
 			statementId,
 			admins: admins.length,
 			labelled: Boolean(trimmedLabel),
+			via: hasStatement ? 'statement' : 'survey',
 		});
 
-		return { activityId: activity.activityId };
+		return { activityId: activity.activityId, statementId };
 	},
 );

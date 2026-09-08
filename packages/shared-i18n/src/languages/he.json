@@ -4321,5 +4321,14 @@
   "generateSolutionsWithAI": "כתבו עבורי {{count}} פתרונות",
   "writingSolutions": "כותבת פתרונות…",
   "generateSolutionsHint": "הבינה המלאכותית כותבת פתרונות פתיחה שאפשר לערוך לפני יצירת השאלה",
-  "failedToGenerateSolutions": "לא הצלחנו לייצר פתרונות. נסו שוב."
+  "failedToGenerateSolutions": "לא הצלחנו לייצר פתרונות. נסו שוב.",
+  "Find a question, or paste a link or ID": "חיפוש שאלה, או הדבקת קישור או מזהה",
+  "Search, or paste a link from any Freedi app": "חיפוש, או הדבקת קישור מכל אפליקציית Freedi",
+  "By link": "לפי קישור",
+  "The question this survey is built around will be added.": "תתווסף השאלה שסביבה נבנה הסקר.",
+  "That question is already on this board.": "השאלה הזאת כבר נמצאת בלוח.",
+  "No question with that ID. Check the link and try again.": "אין שאלה עם המזהה הזה. בדקו את הקישור ונסו שוב.",
+  "The survey's own title": "הכותרת של הסקר עצמו",
+  "Pasted reference": "הפניה שהודבקה",
+  "That question was not created by anyone in this organization": "השאלה הזאת לא נוצרה על ידי אף אחד מהארגון הזה"
 }

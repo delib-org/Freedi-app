@@ -279,13 +279,18 @@ export interface StudioSeedOptionsResult {
 
 export interface LinkOrgStatementRequest {
 	organizationId: string;
-	statementId: string;
+	/** The question to add. Supply this or `surveyId`. */
+	statementId?: string;
+	/** A Mass-Consensus survey, resolved server-side to the question it wraps. */
+	surveyId?: string;
 	/** Org-facing name. Empty → the board shows the question's own title. */
 	label?: string;
 }
 
 export interface LinkOrgStatementResult {
 	activityId: string;
+	/** The question actually linked — the caller may have named a survey. */
+	statementId: string;
 }
 
 export interface RenameOrgActivityRequest {
