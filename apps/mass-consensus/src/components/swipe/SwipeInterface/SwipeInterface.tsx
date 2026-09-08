@@ -430,6 +430,9 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         minWords={question.statementSettings?.minResponseWords}
         userId={userId}
         userName={userName}
+        surveyId={surveyId}
+        autoSplitMultiSuggestions={mergedSettings?.autoSplitMultiSuggestions}
+        autoMergeSimilar={mergedSettings?.autoMergeSimilar}
       />
 
       {/* Comment Modal */}
@@ -457,6 +460,9 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         minWords={question.statementSettings?.minResponseWords}
         userId={userId}
         userName={userName}
+        surveyId={surveyId}
+        autoSplitMultiSuggestions={mergedSettings?.autoSplitMultiSuggestions}
+        autoMergeSimilar={mergedSettings?.autoMergeSimilar}
         requiresSolution={requiresSolution}
         hasCheckedUserSolutions={hasCheckedUserSolutions}
       />

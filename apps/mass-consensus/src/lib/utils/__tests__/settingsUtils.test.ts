@@ -306,4 +306,60 @@ describe('settingsUtils', () => {
       expect(merged.allowParticipantsToAddSuggestions).toBe(true); // Question override applies
     });
   });
+
+  describe('automatic AI handling (autoSplitMultiSuggestions / autoMergeSimilar)', () => {
+    it('defaults both to off so existing surveys keep asking the participant', () => {
+      const merged = getMergedSettings(createSurveySettings(), undefined);
+      expect(merged.autoSplitMultiSuggestions).toBe(false);
+      expect(merged.autoMergeSimilar).toBe(false);
+    });
+
+    it('uses the survey default when the question has no override', () => {
+      const surveySettings = createSurveySettings({
+        autoSplitMultiSuggestions: true,
+        autoMergeSimilar: true,
+      });
+      const merged = getMergedSettings(surveySettings, {});
+      expect(merged.autoSplitMultiSuggestions).toBe(true);
+      expect(merged.autoMergeSimilar).toBe(true);
+    });
+
+    it('lets a question turn a feature on when the survey has it off', () => {
+      const merged = getMergedSettings(createSurveySettings(), {
+        autoSplitMultiSuggestions: true,
+        autoMergeSimilar: true,
+      });
+      expect(merged.autoSplitMultiSuggestions).toBe(true);
+      expect(merged.autoMergeSimilar).toBe(true);
+    });
+
+    it('lets a question turn a feature off when the survey has it on', () => {
+      const surveySettings = createSurveySettings({
+        autoSplitMultiSuggestions: true,
+        autoMergeSimilar: true,
+      });
+      const merged = getMergedSettings(surveySettings, {
+        autoSplitMultiSuggestions: false,
+        autoMergeSimilar: false,
+      });
+      expect(merged.autoSplitMultiSuggestions).toBe(false);
+      expect(merged.autoMergeSimilar).toBe(false);
+    });
+
+    it('resolves the two features independently', () => {
+      const surveySettings = createSurveySettings({ autoMergeSimilar: true });
+      const merged = getMergedSettings(surveySettings, { autoSplitMultiSuggestions: true });
+      expect(merged.autoSplitMultiSuggestions).toBe(true);
+      expect(merged.autoMergeSimilar).toBe(true);
+    });
+
+    it('is never forced by the survey level (per-question control stays enabled)', () => {
+      const surveySettings = createSurveySettings({
+        autoSplitMultiSuggestions: true,
+        autoMergeSimilar: true,
+      });
+      expect(isSurveyLevelOverride(surveySettings, 'autoSplitMultiSuggestions')).toBe(false);
+      expect(isSurveyLevelOverride(surveySettings, 'autoMergeSimilar')).toBe(false);
+    });
+  });
 });

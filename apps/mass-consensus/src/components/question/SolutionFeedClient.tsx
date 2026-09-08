@@ -695,6 +695,8 @@ export default function SolutionFeedClient({
           questionText={question.statement}
           questionDescription={getParagraphsText(question.paragraphs)}
           title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
+          autoSplitMultiSuggestions={mergedSettings?.autoSplitMultiSuggestions}
+          autoMergeSimilar={mergedSettings?.autoMergeSimilar}
         />
 
         {/* Progress/Completion screen */}

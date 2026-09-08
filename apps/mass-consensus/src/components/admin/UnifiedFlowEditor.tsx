@@ -555,6 +555,42 @@ function QuestionSettingsPanel({
         </div>
       </div>
 
+      {/* Automatic AI handling of submissions. Each toggle shows the survey
+          default until the admin overrides it for this question. */}
+      <div className={styles.settingRow}>
+        <div className={styles.testModeToggle}>
+          <label className={styles.toggleSwitch}>
+            <input
+              type="checkbox"
+              checked={questionSetting?.autoSplitMultiSuggestions ?? surveySettings.autoSplitMultiSuggestions ?? false}
+              onChange={(e) => handleToggle('autoSplitMultiSuggestions', e.target.checked)}
+            />
+            <span className={styles.toggleSlider}></span>
+          </label>
+          <span className={styles.toggleLabel}>{t('autoSplitMultiSuggestions') || 'Split multi-answer submissions automatically'}</span>
+        </div>
+        <span className={styles.settingHint}>
+          {t('autoSplitMultiSuggestionsHint') || 'When one submission holds several answers, add each as its own suggestion without asking the participant.'}
+        </span>
+      </div>
+
+      <div className={styles.settingRow}>
+        <div className={styles.testModeToggle}>
+          <label className={styles.toggleSwitch}>
+            <input
+              type="checkbox"
+              checked={questionSetting?.autoMergeSimilar ?? surveySettings.autoMergeSimilar ?? false}
+              onChange={(e) => handleToggle('autoMergeSimilar', e.target.checked)}
+            />
+            <span className={styles.toggleSlider}></span>
+          </label>
+          <span className={styles.toggleLabel}>{t('autoMergeSimilar') || 'Merge similar suggestions automatically'}</span>
+        </div>
+        <span className={styles.settingHint}>
+          {t('autoMergeSimilarHint') || 'When a similar suggestion already exists, merge into it without asking and count the participant as agreeing (+1) with the merged suggestion.'}
+        </span>
+      </div>
+
       {/* Live synthesis per-question override.
           When the survey-level toggle is off, this checkbox is disabled and
           forced to OFF — the survey kill switch wins. */}
