@@ -3698,5 +3698,14 @@
   "generateSolutionsWithAI": "اكتب لي {{count}} حلول",
   "writingSolutions": "جارٍ كتابة الحلول…",
   "generateSolutionsHint": "يكتب الذكاء الاصطناعي حلولًا أولية يمكنك تعديلها قبل إنشاء السؤال",
-  "failedToGenerateSolutions": "تعذّر توليد الحلول. يرجى المحاولة مرة أخرى."
+  "failedToGenerateSolutions": "تعذّر توليد الحلول. يرجى المحاولة مرة أخرى.",
+  "Find a question, or paste a link or ID": "ابحث عن سؤال، أو الصق رابطًا أو معرِّفًا",
+  "Search, or paste a link from any Freedi app": "ابحث، أو الصق رابطًا من أي تطبيق Freedi",
+  "By link": "عبر الرابط",
+  "The question this survey is built around will be added.": "سيُضاف السؤال الذي بُني حوله هذا الاستطلاع.",
+  "That question is already on this board.": "هذا السؤال موجود في اللوحة بالفعل.",
+  "No question with that ID. Check the link and try again.": "لا يوجد سؤال بهذا المعرِّف. تحقّق من الرابط وحاول مرة أخرى.",
+  "The survey's own title": "عنوان الاستطلاع نفسه",
+  "Pasted reference": "المرجع الملصوق",
+  "That question was not created by anyone in this organization": "لم يُنشئ هذا السؤالَ أحدٌ في هذه المؤسسة"
 }

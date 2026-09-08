@@ -3577,5 +3577,14 @@
   "generateSolutionsWithAI": "Escribe {{count}} soluciones por mí",
   "writingSolutions": "Escribiendo soluciones…",
   "generateSolutionsHint": "La IA escribe soluciones iniciales que puedes editar antes de crear la pregunta",
-  "failedToGenerateSolutions": "No se pudieron generar soluciones. Inténtalo de nuevo."
+  "failedToGenerateSolutions": "No se pudieron generar soluciones. Inténtalo de nuevo.",
+  "Find a question, or paste a link or ID": "Busca una pregunta, o pega un enlace o ID",
+  "Search, or paste a link from any Freedi app": "Busca, o pega un enlace de cualquier app de Freedi",
+  "By link": "Por enlace",
+  "The question this survey is built around will be added.": "Se añadirá la pregunta sobre la que se construyó esta encuesta.",
+  "That question is already on this board.": "Esa pregunta ya está en este panel.",
+  "No question with that ID. Check the link and try again.": "Ninguna pregunta con ese ID. Revisa el enlace e inténtalo de nuevo.",
+  "The survey's own title": "El título propio de la encuesta",
+  "Pasted reference": "Referencia pegada",
+  "That question was not created by anyone in this organization": "Esa pregunta no la creó nadie de esta organización"
 }

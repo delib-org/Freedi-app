@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
 	collection,
+	doc,
 	documentId,
+	getDoc,
 	onSnapshot,
 	query,
 	where,
@@ -252,4 +254,18 @@ export function useLinkableQuestions(
 	}, [data]);
 
 	return { data: questions, loading, error };
+}
+
+/**
+ * One-shot read of a question by id, for the "add by id" box.
+ *
+ * Statements are world-readable, so a pasted id can be shown back to the
+ * consultant before they commit to adding it. Surveys have no read rule at
+ * all — Mass Consensus reads them through the Admin SDK — so a survey id
+ * cannot be previewed here and is resolved by the link callable instead.
+ */
+export async function lookupQuestion(statementId: string): Promise<Statement | null> {
+	const snap = await getDoc(doc(db, Collections.statements, statementId));
+
+	return snap.exists() ? (snap.data() as Statement) : null;
 }

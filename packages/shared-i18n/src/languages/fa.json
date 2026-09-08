@@ -4083,5 +4083,14 @@
   "generateSolutionsWithAI": "{{count}} راه‌حل برایم بنویس",
   "writingSolutions": "در حال نوشتن راه‌حل‌ها…",
   "generateSolutionsHint": "هوش مصنوعی راه‌حل‌های اولیه‌ای می‌نویسد که می‌توانید پیش از ساخت پرسش ویرایش کنید",
-  "failedToGenerateSolutions": "راه‌حلی تولید نشد. لطفاً دوباره تلاش کنید."
+  "failedToGenerateSolutions": "راه‌حلی تولید نشد. لطفاً دوباره تلاش کنید.",
+  "Find a question, or paste a link or ID": "پرسشی بیابید، یا پیوند یا شناسه‌ای بچسبانید",
+  "Search, or paste a link from any Freedi app": "جست‌وجو کنید، یا پیوندی از هر برنامه‌ی Freedi بچسبانید",
+  "By link": "از طریق پیوند",
+  "The question this survey is built around will be added.": "پرسشی که این نظرسنجی حول آن ساخته شده افزوده می‌شود.",
+  "That question is already on this board.": "این پرسش هم‌اکنون در این تابلو هست.",
+  "No question with that ID. Check the link and try again.": "پرسشی با این شناسه نیست. پیوند را بررسی کنید و دوباره تلاش کنید.",
+  "The survey's own title": "عنوان خودِ نظرسنجی",
+  "Pasted reference": "ارجاع چسبانده‌شده",
+  "That question was not created by anyone in this organization": "این پرسش را هیچ‌کس در این سازمان نساخته است"
 }
