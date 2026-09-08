@@ -374,7 +374,8 @@ function QuestionSettingsPanel({
 
   // Get the survey default label for the dropdown
   const getSurveyDefaultLabel = () => {
-    const defaultMode = surveySettings.suggestionMode || SuggestionMode.encourage;
+    // Must match the fallback in getMergedSettings (restrict for surveys without the key)
+    const defaultMode = surveySettings.suggestionMode || SuggestionMode.restrict;
     const labels: Record<string, string> = {
       [SuggestionMode.encourage]: t('suggestionModeEncourage') || 'Encourage New Ideas',
       [SuggestionMode.balanced]: t('suggestionModeBalanced') || 'Balanced',
@@ -553,6 +554,42 @@ function QuestionSettingsPanel({
           </label>
           <span className={styles.toggleLabel}>{t('askForSuggestionAfterEvaluation') || 'Ask user to add an answer after completing evaluations'}</span>
         </div>
+      </div>
+
+      {/* Automatic AI handling of submissions. Each toggle shows the survey
+          default until the admin overrides it for this question. */}
+      <div className={styles.settingRow}>
+        <div className={styles.testModeToggle}>
+          <label className={styles.toggleSwitch}>
+            <input
+              type="checkbox"
+              checked={questionSetting?.autoSplitMultiSuggestions ?? surveySettings.autoSplitMultiSuggestions ?? false}
+              onChange={(e) => handleToggle('autoSplitMultiSuggestions', e.target.checked)}
+            />
+            <span className={styles.toggleSlider}></span>
+          </label>
+          <span className={styles.toggleLabel}>{t('autoSplitMultiSuggestions') || 'Split multi-answer submissions automatically'}</span>
+        </div>
+        <span className={styles.settingHint}>
+          {t('autoSplitMultiSuggestionsHint') || 'When one submission holds several answers, add each as its own suggestion without asking the participant.'}
+        </span>
+      </div>
+
+      <div className={styles.settingRow}>
+        <div className={styles.testModeToggle}>
+          <label className={styles.toggleSwitch}>
+            <input
+              type="checkbox"
+              checked={questionSetting?.autoMergeSimilar ?? surveySettings.autoMergeSimilar ?? false}
+              onChange={(e) => handleToggle('autoMergeSimilar', e.target.checked)}
+            />
+            <span className={styles.toggleSlider}></span>
+          </label>
+          <span className={styles.toggleLabel}>{t('autoMergeSimilar') || 'Merge similar suggestions automatically'}</span>
+        </div>
+        <span className={styles.settingHint}>
+          {t('autoMergeSimilarHint') || 'When a similar suggestion already exists, merge into it without asking and count the participant as agreeing (+1) with the merged suggestion.'}
+        </span>
       </div>
 
       {/* Live synthesis per-question override.

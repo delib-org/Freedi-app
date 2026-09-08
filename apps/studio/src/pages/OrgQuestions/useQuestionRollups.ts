@@ -20,11 +20,23 @@ export interface QuestionRollup {
 	activityCount: number;
 	engines: ActivityType[];
 	lastActivityAt?: number;
+	/** True when the question was added from elsewhere rather than created here. */
+	linked?: boolean;
+	/** The question's own title, when the board shows a different name for it. */
+	realTitle?: string;
 }
+
+/**
+ * Board names for linked questions, keyed by statement id. A question absent
+ * from the map is one the organization owns; a present one with no `label`
+ * is linked but unnamed, and keeps its own title on the card.
+ */
+export type ActivityLabels = Record<string, { label?: string }>;
 
 export function computeQuestionRollups(
 	questions: Statement[],
 	progress: ProgressMap,
+	labels: ActivityLabels = {},
 ): QuestionRollup[] {
 	const records = Object.values(progress);
 	const activityCounts = records.reduce<Record<string, number>>((acc, record) => {
@@ -39,10 +51,14 @@ export function computeQuestionRollups(
 		const own = progress[question.statementId];
 		const lastActivityAt =
 			own?.lastActivity || question.lastChildUpdate || question.lastUpdate || undefined;
+		const link = labels[question.statementId];
+		const label = link?.label?.trim();
 
 		return {
 			questionId: question.statementId,
-			title: question.statement,
+			title: label || question.statement,
+			linked: link !== undefined,
+			realTitle: label && label !== question.statement ? question.statement : undefined,
 			status: questionStatusToRunState(question.statementSettings?.questionStatus),
 			progress: {
 				entered: own?.entered ?? 0,
@@ -60,6 +76,10 @@ export function computeQuestionRollups(
 export function useQuestionRollups(
 	questions: Statement[],
 	progress: ProgressMap,
+	labels?: ActivityLabels,
 ): QuestionRollup[] {
-	return useMemo(() => computeQuestionRollups(questions, progress), [questions, progress]);
+	return useMemo(
+		() => computeQuestionRollups(questions, progress, labels),
+		[questions, progress, labels],
+	);
 }

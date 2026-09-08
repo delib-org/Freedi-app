@@ -1,4 +1,4 @@
-import { InferOutput, number, object, string, enum_, optional, nullable } from 'valibot';
+import { InferOutput, array, number, object, string, enum_, optional, nullable } from 'valibot';
 import { Access } from '../TypeEnums';
 
 /**
@@ -116,4 +116,47 @@ export const ORG_ADMIN_ROLES: readonly OrganizationRole[] = [
 /** Build the deterministic doc id for an organization-member record. */
 export function getOrganizationMemberId(organizationId: string, userId: string): string {
 	return `${organizationId}--${userId}`;
+}
+
+/**
+ * A question or survey that already exists elsewhere and has been *linked*
+ * into an organization's board, rather than created by it.
+ *
+ * Owned questions carry `Statement.organizationId` and are found by a plain
+ * equality query. A linked question keeps its own home (its `parentId`,
+ * `topParentId` and `organizationId` are never touched), so the connection
+ * needs a record of its own — which also means the same question can appear
+ * on several organizations' boards at once.
+ *
+ * `label` is the name the organization gives it: it replaces the title on the
+ * Studio board only. Participants keep seeing the question's real title.
+ *
+ * Stored at `organizationActivities/{organizationId}--{statementId}`.
+ * Written exclusively by the organization Cloud Functions; clients only read.
+ */
+export const OrganizationActivitySchema = object({
+	activityId: string(),
+	organizationId: string(),
+	statementId: string(),
+	/** Org-facing name. Absent or empty → the board shows the statement's own title. */
+	label: optional(string()),
+	/** Title at link time, so the board can render before the statement loads. */
+	statementTitle: string(),
+	addedBy: string(),
+	addedByDisplayName: string(),
+	addedAt: number(),
+	lastUpdate: number(),
+	/**
+	 * Users the link itself promoted to admin on the question. Unlinking
+	 * demotes exactly these — anyone who already administered the question
+	 * before it was linked keeps that authority.
+	 */
+	grantedTo: optional(array(string())),
+});
+
+export type OrganizationActivity = InferOutput<typeof OrganizationActivitySchema>;
+
+/** Build the deterministic doc id for an organization-activity link. */
+export function getOrganizationActivityId(organizationId: string, statementId: string): string {
+	return `${organizationId}--${statementId}`;
 }

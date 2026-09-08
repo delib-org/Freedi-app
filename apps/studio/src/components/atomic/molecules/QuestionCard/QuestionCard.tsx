@@ -28,6 +28,10 @@ export interface QuestionCardProps {
 	/** Engines used by the question's activities (deduplicated, max 4 shown). */
 	engines: ActivityType[];
 	lastActivityAt?: number;
+	/** Added from elsewhere rather than created here — shown as a "Linked" tag. */
+	linked?: boolean;
+	/** The question's own title, when `title` is the name this board gave it. */
+	realTitle?: string;
 	onOpen?: (questionId: string) => void;
 	/** Router path — renders the card as a link instead of a button. */
 	to?: string;
@@ -43,6 +47,8 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 	activityCount,
 	engines,
 	lastActivityAt,
+	linked,
+	realTitle,
 	onOpen,
 	to,
 	className,
@@ -73,9 +79,16 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 					)}
 				</h3>
 				<span className="question-card__status">
+					{linked && <Tag outline>{t('Linked')}</Tag>}
 					<StatusPill status={status} />
 				</span>
 			</div>
+
+			{realTitle && (
+				<p className="question-card__real-title" dir="auto" title={realTitle}>
+					{t('Participants see')}: {realTitle}
+				</p>
+			)}
 
 			<div className="question-card__rollup">
 				<ProgressFunnel counts={progress} variant="full" />

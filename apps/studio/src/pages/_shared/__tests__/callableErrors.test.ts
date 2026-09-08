@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { classifyInviteError, getErrorCode, getErrorMessage } from '../callableErrors';
+import {
+	callableMessage,
+	classifyInviteError,
+	getErrorCode,
+	getErrorMessage,
+} from '../callableErrors';
 
 describe('callableErrors', () => {
 	it('reads the code from FunctionsError-like objects', () => {
@@ -30,5 +35,35 @@ describe('callableErrors', () => {
 	it('falls back to generic', () => {
 		expect(classifyInviteError({ code: 'functions/internal' })).toBe('generic');
 		expect(classifyInviteError(undefined)).toBe('generic');
+	});
+});
+
+describe('callableMessage', () => {
+	const fallback = 'Something went wrong.';
+
+	it('passes through a message the callable wrote for the user', () => {
+		const error = Object.assign(new Error('That question is already on this board'), {
+			code: 'functions/already-exists',
+		});
+
+		expect(callableMessage(error, fallback)).toBe('That question is already on this board');
+	});
+
+	it('hides an internal failure behind the fallback', () => {
+		const error = Object.assign(new Error('Cannot read property x of undefined'), {
+			code: 'functions/internal',
+		});
+
+		expect(callableMessage(error, fallback)).toBe(fallback);
+	});
+
+	it('falls back when there is no message at all', () => {
+		const error = Object.assign(new Error('  '), { code: 'functions/not-found' });
+
+		expect(callableMessage(error, fallback)).toBe(fallback);
+	});
+
+	it('falls back for a thrown value that is not an error', () => {
+		expect(callableMessage(undefined, fallback)).toBe(fallback);
 	});
 });

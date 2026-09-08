@@ -605,6 +605,65 @@
 // STEP CONTENT: SOLUTIONS
 // ============================================
 
+.generateRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.generateButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--btn-primary, #5f88e5);
+  background: transparent;
+  border: 2px solid var(--btn-primary, #5f88e5);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover:not(:disabled) {
+    background: rgba(95, 136, 229, 0.08);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.generateSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(95, 136, 229, 0.3);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.generateHint {
+  flex: 1 1 12rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-muted, #718096);
+}
+
+.generateError {
+  font-size: 0.8rem;
+  color: var(--disagree, #e53e3e);
+  margin-bottom: 0.75rem;
+}
+
 .solutionsTextarea {
   width: 100%;
   min-height: 150px;

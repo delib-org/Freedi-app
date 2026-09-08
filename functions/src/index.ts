@@ -242,6 +242,9 @@ import { fn_removeOrgMember } from './organizations/fn_removeOrgMember';
 import { fn_revokeOrgInvite } from './organizations/fn_revokeOrgInvite';
 import { fn_resendOrgInvite } from './organizations/fn_resendOrgInvite';
 import { fn_createOrgStatement } from './organizations/fn_createOrgStatement';
+import { fn_linkOrgStatement } from './organizations/fn_linkOrgStatement';
+import { fn_renameOrgActivity } from './organizations/fn_renameOrgActivity';
+import { fn_unlinkOrgStatement } from './organizations/fn_unlinkOrgStatement';
 
 // ── "Start a question with AI" (WizCol Studio): planner, build, scheduled actions ──
 import {
@@ -967,6 +970,10 @@ exports.fn_removeOrgMember = fn_removeOrgMember;
 exports.fn_revokeOrgInvite = fn_revokeOrgInvite;
 exports.fn_resendOrgInvite = fn_resendOrgInvite;
 exports.fn_createOrgStatement = fn_createOrgStatement;
+// Adding a question that already exists to an organization's board
+exports.fn_linkOrgStatement = fn_linkOrgStatement;
+exports.fn_renameOrgActivity = fn_renameOrgActivity;
+exports.fn_unlinkOrgStatement = fn_unlinkOrgStatement;
 
 // ── "Start a question with AI" (WizCol Studio) ──
 exports.fn_studioPlanStart = fn_studioPlanStart;
