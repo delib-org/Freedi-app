@@ -3669,5 +3669,9 @@
   "youCanNowEditSurvey": "يمكنك الآن عرض هذا الاستطلاع وتحريره.",
   "youCanNowViewSurvey": "يمكنك الآن عرض هذا الاستطلاع ونتائجه.",
   "openSurvey": "فتح الاستطلاع",
-  "backToSurveys": "العودة إلى الاستطلاعات"
+  "backToSurveys": "العودة إلى الاستطلاعات",
+  "generateSolutionsWithAI": "اكتب لي {{count}} حلول",
+  "writingSolutions": "جارٍ كتابة الحلول…",
+  "generateSolutionsHint": "يكتب الذكاء الاصطناعي حلولًا أولية يمكنك تعديلها قبل إنشاء السؤال",
+  "failedToGenerateSolutions": "تعذّر توليد الحلول. يرجى المحاولة مرة أخرى."
 }

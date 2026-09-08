@@ -4054,5 +4054,9 @@
   "youCanNowEditSurvey": "اکنون می‌توانید این نظرسنجی را ببینید و ویرایش کنید.",
   "youCanNowViewSurvey": "اکنون می‌توانید این نظرسنجی و نتایج آن را ببینید.",
   "openSurvey": "باز کردن نظرسنجی",
-  "backToSurveys": "بازگشت به نظرسنجی‌ها"
+  "backToSurveys": "بازگشت به نظرسنجی‌ها",
+  "generateSolutionsWithAI": "{{count}} راه‌حل برایم بنویس",
+  "writingSolutions": "در حال نوشتن راه‌حل‌ها…",
+  "generateSolutionsHint": "هوش مصنوعی راه‌حل‌های اولیه‌ای می‌نویسد که می‌توانید پیش از ساخت پرسش ویرایش کنید",
+  "failedToGenerateSolutions": "راه‌حلی تولید نشد. لطفاً دوباره تلاش کنید."
 }

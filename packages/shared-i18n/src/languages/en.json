@@ -4254,5 +4254,9 @@
   "youCanNowEditSurvey": "You can now view and edit this survey.",
   "youCanNowViewSurvey": "You can now view this survey and its results.",
   "openSurvey": "Open the survey",
-  "backToSurveys": "Back to surveys"
+  "backToSurveys": "Back to surveys",
+  "generateSolutionsWithAI": "Write {{count}} solutions for me",
+  "writingSolutions": "Writing solutions…",
+  "generateSolutionsHint": "The AI writes starting solutions you can edit before creating the question",
+  "failedToGenerateSolutions": "No solutions could be generated. Please try again."
 }

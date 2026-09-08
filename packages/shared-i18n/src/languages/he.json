@@ -4292,5 +4292,9 @@
   "youCanNowEditSurvey": "מעכשיו אפשר לראות ולערוך את הסקר הזה.",
   "youCanNowViewSurvey": "מעכשיו אפשר לראות את הסקר הזה ואת התוצאות שלו.",
   "openSurvey": "פתיחת הסקר",
-  "backToSurveys": "חזרה לסקרים"
+  "backToSurveys": "חזרה לסקרים",
+  "generateSolutionsWithAI": "כתבו עבורי {{count}} פתרונות",
+  "writingSolutions": "כותבת פתרונות…",
+  "generateSolutionsHint": "הבינה המלאכותית כותבת פתרונות פתיחה שאפשר לערוך לפני יצירת השאלה",
+  "failedToGenerateSolutions": "לא הצלחנו לייצר פתרונות. נסו שוב."
 }

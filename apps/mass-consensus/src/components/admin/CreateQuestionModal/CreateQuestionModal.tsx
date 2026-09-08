@@ -6,6 +6,10 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { authedFetch } from '@/lib/api/authedFetch';
 import { logError } from '@/lib/utils/errorHandling';
+import {
+  appendSolutionLines,
+  SUGGESTED_SOLUTIONS_COUNT,
+} from '@/lib/utils/solutionSuggestions';
 import styles from './CreateQuestionModal.module.scss';
 
 interface CreateQuestionModalProps {
@@ -35,7 +39,7 @@ export default function CreateQuestionModal({
   onQuestionCreated,
   defaultParentId,
 }: CreateQuestionModalProps) {
-  const { t } = useTranslation();
+  const { t, tWithParams } = useTranslation();
   const { refreshToken } = useAuth();
 
   // Step state
@@ -60,6 +64,8 @@ export default function CreateQuestionModal({
   // Step 3: Solutions
   const [solutionsText, setSolutionsText] = useState('');
   const [skipSolutions, setSkipSolutions] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   // General state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -112,6 +118,8 @@ export default function CreateQuestionModal({
       setRequireSolutionFirst(true);
       setSolutionsText('');
       setSkipSolutions(false);
+      setIsGenerating(false);
+      setGenerateError(null);
       setError(null);
       setIsCreatingGroup(false);
       setNewGroupName('');
@@ -168,6 +176,65 @@ export default function CreateQuestionModal({
       setError(t('failedToCreateGroup') || 'Failed to create group');
     } finally {
       setCreatingGroup(false);
+    }
+  };
+
+  // Have the AI write the first solutions and paste them into the textarea
+  const handleGenerateSolutions = async () => {
+    if (!selectedGroupId || !questionText.trim() || isGenerating) return;
+
+    setIsGenerating(true);
+    setGenerateError(null);
+
+    try {
+      if (!(await refreshToken())) {
+        setGenerateError(t('sessionExpired') || 'Session expired');
+
+        return;
+      }
+
+      const response = await authedFetch('/api/ai/suggest-solutions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: questionText.trim(),
+          parentId: selectedGroupId,
+          count: SUGGESTED_SOLUTIONS_COUNT,
+          existing: parsedSolutions,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate solutions');
+      }
+
+      const solutions: string[] = Array.isArray(data.solutions) ? data.solutions : [];
+
+      if (solutions.length === 0) {
+        setGenerateError(
+          t('failedToGenerateSolutions') ||
+            'No solutions could be generated. Please try again.'
+        );
+
+        return;
+      }
+
+      setSolutionsText((current) => appendSolutionLines(current, solutions));
+    } catch (err) {
+      logError(err, {
+        operation: 'CreateQuestionModal.handleGenerateSolutions',
+        metadata: { selectedGroupId },
+      });
+      setGenerateError(
+        t('failedToGenerateSolutions') ||
+          'No solutions could be generated. Please try again.'
+      );
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -626,6 +693,39 @@ export default function CreateQuestionModal({
               <p className={styles.stepDescription}>
                 {t('initialSolutionsDesc') || 'Paste solutions separated by new lines'}
               </p>
+
+              <div className={styles.generateRow}>
+                <button
+                  type="button"
+                  className={styles.generateButton}
+                  onClick={handleGenerateSolutions}
+                  disabled={skipSolutions || isGenerating || !canCreate}
+                >
+                  {isGenerating ? (
+                    <>
+                      <span className={styles.generateSpinner} />
+                      {t('writingSolutions') || 'Writing solutions…'}
+                    </>
+                  ) : (
+                    <>
+                      <span aria-hidden="true">✨</span>
+                      {tWithParams('generateSolutionsWithAI', {
+                        count: SUGGESTED_SOLUTIONS_COUNT,
+                      })}
+                    </>
+                  )}
+                </button>
+                <span className={styles.generateHint}>
+                  {t('generateSolutionsHint') ||
+                    'The AI writes starting solutions you can edit before creating the question'}
+                </span>
+              </div>
+
+              {generateError && (
+                <div className={styles.generateError} role="alert">
+                  {generateError}
+                </div>
+              )}
 
               <textarea
                 className={styles.solutionsTextarea}

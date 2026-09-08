@@ -3548,5 +3548,9 @@
   "youCanNowEditSurvey": "Je kunt deze enquête nu bekijken en bewerken.",
   "youCanNowViewSurvey": "Je kunt deze enquête en de resultaten nu bekijken.",
   "openSurvey": "Enquête openen",
-  "backToSurveys": "Terug naar enquêtes"
+  "backToSurveys": "Terug naar enquêtes",
+  "generateSolutionsWithAI": "Schrijf {{count}} oplossingen voor mij",
+  "writingSolutions": "Oplossingen schrijven…",
+  "generateSolutionsHint": "De AI schrijft eerste oplossingen die je kunt bewerken voordat je de vraag aanmaakt",
+  "failedToGenerateSolutions": "Er konden geen oplossingen worden gegenereerd. Probeer het opnieuw."
 }

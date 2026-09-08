@@ -3548,5 +3548,9 @@
   "youCanNowEditSurvey": "Ya puedes ver y editar esta encuesta.",
   "youCanNowViewSurvey": "Ya puedes ver esta encuesta y sus resultados.",
   "openSurvey": "Abrir la encuesta",
-  "backToSurveys": "Volver a las encuestas"
+  "backToSurveys": "Volver a las encuestas",
+  "generateSolutionsWithAI": "Escribe {{count}} soluciones por mí",
+  "writingSolutions": "Escribiendo soluciones…",
+  "generateSolutionsHint": "La IA escribe soluciones iniciales que puedes editar antes de crear la pregunta",
+  "failedToGenerateSolutions": "No se pudieron generar soluciones. Inténtalo de nuevo."
 }

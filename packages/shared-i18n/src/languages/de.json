@@ -3548,5 +3548,9 @@
   "youCanNowEditSurvey": "Sie können diese Umfrage jetzt ansehen und bearbeiten.",
   "youCanNowViewSurvey": "Sie können diese Umfrage und ihre Ergebnisse jetzt ansehen.",
   "openSurvey": "Umfrage öffnen",
-  "backToSurveys": "Zurück zu den Umfragen"
+  "backToSurveys": "Zurück zu den Umfragen",
+  "generateSolutionsWithAI": "Schreibe {{count}} Lösungen für mich",
+  "writingSolutions": "Lösungen werden geschrieben…",
+  "generateSolutionsHint": "Die KI schreibt erste Lösungen, die du vor dem Erstellen der Frage bearbeiten kannst",
+  "failedToGenerateSolutions": "Es konnten keine Lösungen erzeugt werden. Bitte versuche es erneut."
 }
