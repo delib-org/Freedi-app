@@ -29,7 +29,7 @@ export async function covenantService(uid: string, input: unknown): Promise<Cove
 	const questionId = data.questionId;
 	const db = getFirestore();
 
-	return db.runTransaction(async (tx: Transaction) => {
+	const execute = async (tx: Pick<Transaction, 'get' | 'set'>): Promise<CovenantResponse> => {
 		const qRef = db.collection('statements').doc(questionId);
 		const qSnap = await tx.get(qRef);
 		const q = qSnap.data();
@@ -65,49 +65,55 @@ export async function covenantService(uid: string, input: unknown): Promise<Cove
 			scopeCreator ||
 			adminRoles.includes(ownSub?.role) ||
 			adminRoles.includes(scopeSub?.role);
-		const members: CovenantMember[] = [];
-		// A roster is explicitly chosen at review time; subscriptions are never treated as consent.
-		const subs = await tx.get(
-			db.collection('statementsSubscribe').where('statementId', '==', scopeId),
-		);
-		const direct =
-			scopeId === questionId
-				? subs
-				: await tx.get(db.collection('statementsSubscribe').where('statementId', '==', questionId));
-		const banned = new Set(
-			[...subs.docs, ...direct.docs]
-				.filter((d) => d.data().role === 'banned')
-				.map((d) => d.data().userId),
-		);
-		for (const doc of [...subs.docs, ...direct.docs]) {
-			const sub = doc.data();
-			if (
-				validId(sub.userId) &&
-				memberRoles.includes(sub.role) &&
-				!banned.has(sub.userId) &&
-				!members.some((m) => m.uid === sub.userId)
-			)
-				members.push({
-					uid: sub.userId,
-					name: String(
-						sub.user?.displayName || sub.creator?.displayName || sub.displayName || sub.userId,
-					).slice(0, 100),
-				});
-		}
-		for (const item of [q, scope]) {
-			const id = item?.creatorId || item?.creator?.uid;
-			if (validId(id) && !banned.has(id) && !members.some((m) => m.uid === id))
-				members.push({ uid: id, name: String(item?.creator?.displayName || id).slice(0, 100) });
-		}
 		const recordRef = db.collection('covenantWorkflows').doc(questionId);
 		const snapshot = await tx.get(recordRef);
 		const stored = snapshot.data();
-		const reviewSnapshots = await tx.get(recordRef.collection('reviews').orderBy('version'));
+		const reviewSnapshots = await tx.get(
+			recordRef.collection('reviews').orderBy('version', 'desc').limit(1),
+		);
 		const current: CovenantRecord = stored
 			? ({ ...stored, reviews: reviewSnapshots.docs.map((doc) => doc.data()) } as CovenantRecord)
 			: emptyCovenant(questionId, String(q.statement));
-		if (!data.action)
-			return { record: current, members: manager ? members : [], canManage: manager };
+
+		if (!data.action) return { record: current, members: [], canManage: manager };
+		const members: CovenantMember[] = [];
+		if (data.action.type === 'open-review') {
+			// A roster is explicitly chosen at review time; subscriptions are never treated as consent.
+			const subs = await tx.get(
+				db.collection('statementsSubscribe').where('statementId', '==', scopeId),
+			);
+			const direct =
+				scopeId === questionId
+					? subs
+					: await tx.get(
+							db.collection('statementsSubscribe').where('statementId', '==', questionId),
+						);
+			const banned = new Set(
+				[...subs.docs, ...direct.docs]
+					.filter((d) => d.data().role === 'banned')
+					.map((d) => d.data().userId),
+			);
+			for (const doc of [...subs.docs, ...direct.docs]) {
+				const sub = doc.data();
+				if (
+					validId(sub.userId) &&
+					memberRoles.includes(sub.role) &&
+					!banned.has(sub.userId) &&
+					!members.some((m) => m.uid === sub.userId)
+				)
+					members.push({
+						uid: sub.userId,
+						name: String(
+							sub.user?.displayName || sub.creator?.displayName || sub.displayName || sub.userId,
+						).slice(0, 100),
+					});
+			}
+			for (const item of [q, scope]) {
+				const id = item?.creatorId || item?.creator?.uid;
+				if (validId(id) && !banned.has(id) && !members.some((m) => m.uid === id))
+					members.push({ uid: id, name: String(item?.creator?.displayName || id).slice(0, 100) });
+			}
+		}
 		if (!Number.isInteger(data.expectedRevision) || data.expectedRevision !== current.revision)
 			throw new HttpsError('aborted', 'The document changed. Refresh it and try again.');
 		let settings = q.questionSettings || {};
@@ -179,5 +185,13 @@ export async function covenantService(uid: string, input: unknown): Promise<Cove
 		}
 
 		return { record: next, members: manager ? members : [], canManage: manager };
+	};
+	if (data.action) return db.runTransaction(execute);
+
+	return execute({
+		get: ((ref: { get: () => Promise<unknown> }) => ref.get()) as Transaction['get'],
+		set: (() => {
+			throw new Error('Read-only status cannot write.');
+		}) as Transaction['set'],
 	});
 }

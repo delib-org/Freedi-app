@@ -4,7 +4,7 @@
 	flex-direction: column;
 	position: relative;
 	overflow: visible;
-	
+
 	.numberOfVotesMark {
 		color: var(--icons-blue);
 		font-family: 'Patrick Hand', cursive;
@@ -33,7 +33,7 @@
 	border-radius: 1rem;
 }
 
-:global(.thinking-space) .statementVote .numberOfVotesMark {
+.statementVote .numberOfVotesMark {
 	font-family: inherit;
 	background: var(--space-mint);
 	border-radius: 24px;

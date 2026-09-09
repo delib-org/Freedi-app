@@ -1,10 +1,7 @@
+const { projectId } = require('./redesign-environment.cjs');
 // Integration checks use only local demo Firestore. AI responses are explicitly stubbed.
 const assert = require('node:assert/strict');
 const path = require('node:path');
-process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8081';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9399';
-process.env.GCLOUD_PROJECT = 'demo-freedi-redesign';
-process.env.FIREBASE_CONFIG = JSON.stringify({ projectId: 'demo-freedi-redesign' });
 const root = path.resolve(__dirname, '../functions/lib/functions/src');
 const { db } = require(path.join(root, 'db.js'));
 let draftCalls = 0;
@@ -27,7 +24,9 @@ const { act, generate, automaticReady, sourcesHash } = require(
 );
 (async () => {
 	const id = 'process-' + Date.now();
-	const creator = { uid: 'redesign-reviewer', displayName: 'Alex Morgan', isAnonymous: false };
+	const creator = { uid: id + '-facilitator', displayName: 'Alex Morgan', isAnonymous: false };
+	const { getAuth } = require('node:module').createRequire(require('node:path').resolve(__dirname, '../functions/package.json'))('firebase-admin/auth');
+	await getAuth().createUser({uid: creator.uid, email: id + '@example.test', password: 'LocalPreview123!'});
 	const question = {
 		statementId: id,
 		statement: 'How shall we make decisions together?',
@@ -43,6 +42,7 @@ const { act, generate, automaticReady, sourcesHash } = require(
 		lastUpdate: Date.now(),
 	};
 	await db.doc('statements/' + id).set(question);
+	await db.doc('statementsSubscribe/redesign-reviewer--' + id).set({ userId: 'redesign-reviewer', statementId: id, role: 'admin' });
 	const source = {
 		statementId: id + '-option',
 		parentId: id,

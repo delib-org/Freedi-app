@@ -1,58 +1,3 @@
-// Main-app palette shared by every route, workspace and portal.
-:root,
-:root[data-theme],
-.thinking-space {
-	--space-paper: #f6f5f9;
-	--space-surface: #ffffff;
-	--space-sidebar: #f8d9ca;
-	--space-ink: #171816;
-	--space-muted: #686461;
-	--space-line: #e9e5e6;
-	--space-purple: #171816;
-	--space-purple-soft: #c7bbfa;
-	--space-mint: #b9e7d5;
-	--space-green: #304f47;
-	--space-yellow: #ffe17c;
-	--space-yellow-ink: #5d5125;
-	--space-pink: #f4a398;
-	--space-peach: #ffe4d5;
-	--space-coral: #727e53;
-	--space-shadow: 0 8px 30px #17181609;
-	--statementBackground: var(--space-paper);
-	--card-default: var(--space-surface);
-	--h2Color: var(--space-ink);
-	--h3Color: var(--space-ink);
-	--h4Color: var(--space-ink);
-	--text-paragraph: var(--space-ink);
-	--text-headline: var(--space-ink);
-	--text-body: var(--space-ink);
-	--text-title: var(--space-ink);
-	--text-secondary: var(--space-muted);
-	--text-caption: var(--space-muted);
-	--input-active: var(--space-surface);
-}
-:root[data-theme='dark'],
-[data-theme='dark'] .thinking-space {
-	--space-paper: #221e2d;
-	--space-surface: #2d273a;
-	--space-sidebar: #342c29;
-	--space-ink: #f6efff;
-	--space-muted: #c5b8d3;
-	--space-line: #50405f;
-	--space-purple: #f4eee8;
-	--space-purple-soft: #41445c;
-	--space-mint: #254c3e;
-	--space-green: #a5ebcb;
-	--space-yellow: #554222;
-	--space-yellow-ink: #ffe198;
-	--space-pink: #563442;
-	--space-peach: #4e342f;
-	--space-coral: #ffa98f;
-}
-[data-contrast='high'] .thinking-space {
-	--space-line: currentColor;
-	--space-muted: var(--space-ink);
-}
 // Adapt existing application components inside the new workspace only.
 .thinking-space {
 	.page__header {
@@ -71,8 +16,8 @@
 		padding-inline: 0;
 	}
 	.app-header {
-		background: var(--space-paper) !important;
-		color: var(--space-ink) !important;
+		background: var(--space-paper);
+		color: var(--space-ink);
 		border-bottom: 1px solid var(--space-line);
 		box-shadow: none;
 	}
@@ -81,7 +26,7 @@
 		padding: 0 24px;
 	}
 	.app-header button {
-		color: var(--space-ink) !important;
+		color: var(--space-ink);
 	}
 	.app-header svg {
 		color: var(--space-ink);
@@ -133,57 +78,6 @@
 	}
 }
 
-@media (prefers-color-scheme: dark) {
-	:root,
-	.thinking-space {
-		--space-paper: #221e2d;
-		--space-surface: #2d273a;
-		--space-sidebar: #342c29;
-		--space-ink: #f6efff;
-		--space-muted: #c5b8d3;
-		--space-line: #50405f;
-		--space-purple: #f4eee8;
-		--space-purple-soft: #41445c;
-		--space-mint: #254c3e;
-		--space-green: #a5ebcb;
-		--space-yellow: #554222;
-		--space-yellow-ink: #ffe198;
-		--space-pink: #563442;
-		--space-peach: #4e342f;
-		--space-coral: #ffa98f;
-	}
-	:root[data-theme='light'],
-	[data-theme='light'] .thinking-space {
-		--space-paper: #f6f5f9;
-		--space-surface: #ffffff;
-		--space-sidebar: #f8d9ca;
-		--space-ink: #171816;
-		--space-muted: #686461;
-		--space-line: #e9e5e6;
-		--space-purple: #171816;
-		--space-purple-soft: #c7bbfa;
-		--space-mint: #b9e7d5;
-		--space-green: #304f47;
-		--space-yellow: #ffe17c;
-		--space-yellow-ink: #5d5125;
-		--space-pink: #f4a398;
-		--space-peach: #ffe4d5;
-		--space-coral: #727e53;
-		--space-shadow: 0 8px 30px #17181609;
-		--statementBackground: var(--space-paper);
-		--card-default: var(--space-surface);
-		--h2Color: var(--space-ink);
-		--h3Color: var(--space-ink);
-		--h4Color: var(--space-ink);
-		--text-paragraph: var(--space-ink);
-		--text-headline: var(--space-ink);
-		--text-body: var(--space-ink);
-		--text-title: var(--space-ink);
-		--text-secondary: var(--space-muted);
-		--text-caption: var(--space-muted);
-		--input-active: var(--space-surface);
-	}
-}
 
 .thinking-space {
 	.segmented-control {
@@ -228,11 +122,6 @@
 	}
 }
 
-// Keep explicit accessibility preferences above automatic color schemes.
-[data-contrast='high'] .thinking-space {
-	--space-line: currentColor;
-	--space-muted: var(--space-ink);
-}
 
 // Rounded, monochrome navigation echoes the soft panel treatment.
 .thinking-space .segmented-control {
@@ -260,52 +149,6 @@
 	white-space: nowrap;
 }
 
-// One token vocabulary for older controls, current components and body portals.
-:root,
-:root[data-theme],
-.thinking-space {
-	--text-label: var(--space-ink);
-	--placeHolder: var(--space-muted);
-	--surface-background: var(--space-surface);
-	--surface-edit: var(--space-surface);
-	--btn-white-default: var(--space-surface);
-	--btn-white-hover: var(--space-peach);
-	--btn-white-selected: var(--space-mint);
-	--bg-main: var(--space-paper);
-	--bg-secondary: var(--space-surface);
-	--background-secondary: var(--space-surface);
-	--background-tertiary: var(--space-purple-soft);
-	--background-hover: var(--space-peach);
-	--bg-hover: var(--space-peach);
-	--bg-selected: var(--space-purple-soft);
-	--menu-default: var(--space-surface);
-	--header-home: var(--space-mint);
-	--border-primary: var(--space-line);
-	--border-light: var(--space-line);
-	--text-blue: var(--space-ink);
-	--icons-blue: var(--space-ink);
-	--icon-blue: var(--space-ink);
-	--btn-primary: var(--space-ink);
-	--btn-primary-default: var(--space-ink);
-	--btn-primary-text: var(--space-paper);
-	--btn-primary-hover: var(--space-green);
-	--btn-secondary: var(--space-ink);
-	--btn-secondary-default: var(--space-surface);
-	--btn-secondary-hover: var(--space-peach);
-	--button-blue: var(--space-green);
-	--add-btn: var(--space-green);
-	--add-btn-hover: var(--space-ink);
-	--input-background: var(--space-surface);
-	--input-border: var(--space-line);
-	--card-hover: var(--space-peach);
-	--card-question: var(--space-purple-soft);
-	--card-orange: var(--space-peach);
-	--card-purple: var(--space-purple-soft);
-	--card-green: var(--space-mint);
-	--shadow: var(--space-line);
-	--radius-card: 28px;
-	--radius-button: 24px;
-}
 :root {
 	.btn,
 	.button {

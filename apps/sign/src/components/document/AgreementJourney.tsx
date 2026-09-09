@@ -1,9 +1,9 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { DeliberationStatus } from '@freedi/shared-types';
+import { requestDeliberation, AGREEMENT_POLL_MS } from '@/lib/firebase/deliberation';
+import { logError } from '@/lib/utils/errorHandling';
+import { DeliberationStatus, DELIBERATION_LIMITS } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { getFirebaseAuth } from '@/lib/firebase/client';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import styles from './AgreementJourney.module.scss';
 export default function AgreementJourney({
@@ -18,9 +18,6 @@ export default function AgreementJourney({
 	const [data, setData] = useState<DeliberationStatus>();
 	const [error, setError] = useState('');
 	const [busy, setBusy] = useState(false);
-	const appBase =
-		process.env.NEXT_PUBLIC_MAIN_APP_URL ||
-		(process.env.NODE_ENV === 'development' ? 'http://localhost:5189' : 'https://app.wizcol.com');
 	const perform = useCallback(
 		async (action: string, extra: Record<string, unknown> = {}) => {
 			if (!user) return;
@@ -29,35 +26,27 @@ export default function AgreementJourney({
 				setError('');
 			}
 			try {
-				const service = getFunctions(
-					getFirebaseAuth().app,
-					process.env.NEXT_PUBLIC_DELIBERATION_FUNCTIONS_URL || 'me-west1',
-				);
-				const invoke = httpsCallable<Record<string, unknown>, DeliberationStatus>(
-					service,
-					'deliberation',
-				);
-				setData((await invoke({ questionId, documentId, action, ...extra })).data);
+				setData((await requestDeliberation({ questionId, documentId, action, ...extra })).data);
 				setError('');
 			} catch (e) {
-				setError(e instanceof Error ? e.message : 'Could not complete action.');
+				logError(e, { operation: 'AgreementJourney', documentId });
+				setError(t('Could not complete action.'));
 			} finally {
 				if (action !== 'status') setBusy(false);
 			}
 		},
-		[user, questionId, documentId],
+		[user, questionId, documentId, t],
 	);
 	useEffect(() => {
 		void perform('status');
 		const timer = setInterval(() => {
 			if (!document.hidden) void perform('status');
-		}, 20000);
+		}, AGREEMENT_POLL_MS);
 		return () => clearInterval(timer);
 	}, [perform]);
 	const current = data?.agreements.find((a) => a.id === documentId);
 	return (
 		<section className={styles.journey} aria-label={t('Agreement process')}>
-			<a href={`${appBase}/statement/${questionId}?tab=covenant`}>← {t('Back to the question')}</a>
 			<h2>{t('One question. Room for different paths.')}</h2>
 			<p>
 				{t(
@@ -121,7 +110,7 @@ export default function AgreementJourney({
 						>
 							<label>
 								{t('What question or disagreement does this address?')}
-								<textarea name="issue" required maxLength={1500} />
+								<textarea name="issue" required maxLength={DELIBERATION_LIMITS.issueCharacters} />
 							</label>
 							{current.paragraphs.map((p) => (
 								<fieldset key={p.id}>
@@ -129,7 +118,7 @@ export default function AgreementJourney({
 										<input type="checkbox" name={'change-' + p.id} />
 										{t('Change this paragraph')}
 									</label>
-									<textarea name={'text-' + p.id} defaultValue={p.text} maxLength={5000} />
+									<textarea name={'text-' + p.id} defaultValue={p.text} maxLength={DELIBERATION_LIMITS.paragraphCharacters} />
 								</fieldset>
 							))}
 							<button disabled={busy}>{t('Submit proposed changes')}</button>
@@ -161,7 +150,7 @@ export default function AgreementJourney({
 										>
 											<label>
 												{t('Document title')}
-												<input name="title" defaultValue={current.title} required maxLength={200} />
+												<input name="title" defaultValue={current.title} required maxLength={DELIBERATION_LIMITS.titleCharacters} />
 											</label>
 											<label>
 												{t('How should these changes be developed?')}

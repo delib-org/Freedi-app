@@ -1,8 +1,11 @@
+const { appPort, signPort } = require('./redesign-environment.cjs');
+const appBase = `http://localhost:${appPort}`;
+const signBase = `http://localhost:${signPort}`;
 // Run with a question id printed by verify-deliberation.cjs. Uses local demo accounts only.
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
-const { chromium } = require('playwright');
+const { chromium } = require('@playwright/test');
 const questionId = process.argv[2];
 if (!questionId?.startsWith('process-'))
 	throw new Error('Pass a process-* integration fixture id.');
@@ -20,7 +23,7 @@ fs.mkdirSync(output, { recursive: true });
 				? route.continue()
 				: route.abort(),
 		);
-		await page.goto('http://localhost:5189/');
+		await page.goto(appBase + '/');
 		await page.evaluate(async () => {
 			const config = await import('/src/controllers/db/config.ts');
 			const source = await (await fetch('/src/controllers/db/config.ts')).text();
@@ -31,14 +34,21 @@ fs.mkdirSync(output, { recursive: true });
 				'LocalPreview123!',
 			);
 		});
-		await page.goto(`http://localhost:5189/statement/${questionId}?tab=covenant`);
+		await page.goto(`${appBase}/statement/${questionId}?tab=covenant`);
 		await page
 			.getByRole('button', { name: 'Read, improve and evaluate in Sign' })
 			.first()
 			.waitFor();
 		await page.screenshot({ path: path.join(output, 'main.png') });
+        await page.getByRole('tab', { name: 'Maps', exact: true }).first().click();
+        await page.getByRole('button', { name: 'Open map', exact: false }).first().click();
+        await page.waitForURL(`${appBase}/statement-screen/${questionId}/mind-map`);
+        await page.getByRole('button', { name: 'Mind map', exact: true }).waitFor();
+        assert.equal(await page.getByRole('button', { name: 'Mind map', exact: true }).getAttribute('aria-pressed'), 'true');
+        await page.goto(`${appBase}/statement/${questionId}?tab=covenant`);
+
 		await page.getByRole('button', { name: 'Read, improve and evaluate in Sign' }).first().click();
-		await page.waitForURL('http://localhost:3012/**');
+		await page.waitForURL(signBase + '/**');
 		const support = page.getByRole('button', { name: 'Support this wording', exact: true });
 		await support.waitFor();
 		await page.locator('main [id^="paragraph-"]').first().waitFor();
@@ -58,8 +68,8 @@ fs.mkdirSync(output, { recursive: true });
 			false,
 			'Sign mobile overflow',
 		);
-		await page.getByRole('link', { name: 'Back to the question', exact: false }).first().click();
-		await page.waitForURL(`http://localhost:5189/statement/${questionId}?tab=covenant`);
+		await page.getByRole('link', { name: 'Back to the question', exact: false }).click();
+		await page.waitForURL(`${appBase}/statement/${questionId}?tab=covenant`);
 		await page.evaluate(() =>
 			localStorage.setItem('userConfig', JSON.stringify({ chosenLanguage: 'he' })),
 		);
@@ -82,8 +92,11 @@ fs.mkdirSync(output, { recursive: true });
 			output,
 		);
 	} catch (error) {
-		await page.screenshot({ path: path.join(output, 'failure.png'), fullPage: true });
-		console.error(error.message, (await page.locator('body').innerText()).slice(0, 2400));
+		console.error(error);
+		if (!page.isClosed()) {
+			await page.screenshot({ path: path.join(output, 'failure.png'), fullPage: true }).catch(() => {});
+			console.error((await page.locator('body').innerText().catch(() => '')).slice(0, 2400));
+		}
 		process.exitCode = 1;
 	} finally {
 		await browser.close();

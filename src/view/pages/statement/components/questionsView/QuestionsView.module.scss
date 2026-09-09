@@ -318,7 +318,7 @@ $subButtonSize: 48px;
 		flex-shrink: 0;
 	}
 }
-:global(.thinking-space) .onboarding {
+.onboarding {
 	max-width: none;
 	background: var(--space-mint);
 	padding: 24px;
@@ -335,7 +335,7 @@ $subButtonSize: 48px;
 	}
 }
 
-:global(.thinking-space) {
+
 	.onboarding__icon {
 		background: var(--space-surface);
 		color: var(--space-ink);
@@ -357,4 +357,3 @@ $subButtonSize: 48px;
 			color: var(--space-ink);
 		}
 	}
-}

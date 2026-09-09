@@ -94,7 +94,7 @@ export enum QuestionStage {
 
 export enum Access {
 	/**
-	 * Completely unrestricted access - users can join instantly without 
+	 * Completely unrestricted access - users can join instantly without
 	 * providing any information, authentication, or approval
 	 */
 	public = 'public',
@@ -124,7 +124,7 @@ export enum Access {
 	moderated = 'moderated',
 
 	/**
-	 * Invitation-only - users cannot request access and must be 
+	 * Invitation-only - users cannot request access and must be
 	 * directly invited by an administrator to join
 	 */
 	secret = 'secret',
@@ -181,6 +181,7 @@ export enum Screen {
 	options = 'options',
 	questions = 'questions',
 	settings = 'settings',
+	clusterBoard = 'cluster-board',
 	mindMap = 'mind-map',
 	agreementMap = 'agreement-map',
 	polarizationIndex = 'polarization-index',

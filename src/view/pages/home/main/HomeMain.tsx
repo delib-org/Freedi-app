@@ -34,7 +34,11 @@ export default function HomeMain() {
 	const showModal = useAppSelector(selectNewStatementShowModal);
 	const [loading, setLoading] = useState(true);
 	const [filter, setFilter] = useState<'all' | 'groups'>('all');
-	useHomeStatementOverlay(subscriptions);
+	const topLevelSubscriptions = useMemo(
+		() => subscriptions.filter((sub) => (sub.parentId || sub.statement?.parentId) === 'top'),
+		[subscriptions],
+	);
+	useHomeStatementOverlay(topLevelSubscriptions);
 	const { sentinelRef, isLoadingMore, hasMore } = useLazyLoadHomeSubscriptions(
 		filter === 'groups' ? 'topics' : 'discussions',
 	);

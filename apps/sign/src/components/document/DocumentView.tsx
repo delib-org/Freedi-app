@@ -1,4 +1,5 @@
 'use client';
+import { MAIN_APP_URL } from '@/lib/mainApp';
 
 import AgreementJourney from './AgreementJourney';
 import journeyStyles from './AgreementJourney.module.scss';
@@ -187,7 +188,7 @@ export default function DocumentView({
         documentId={document.statementId}
         mode={resolvedIdentityMode}
       >
-      {document.agreementMeta && <a className={journeyStyles.backLink} href={`${process.env.NEXT_PUBLIC_MAIN_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:5189' : 'https://app.wizcol.com')}/statement/${document.agreementMeta.questionId}?tab=covenant`}>← {t('Back to the question')}</a>}
+      {document.agreementMeta && <a className={journeyStyles.backLink} href={`${MAIN_APP_URL}/statement/${document.agreementMeta.questionId}?tab=covenant`}>← {t('Back to the question')}</a>}
       {enableResearchLogging && (
         <ResearchConsentBanner topParentId={document.statementId} />
       )}

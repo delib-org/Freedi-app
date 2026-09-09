@@ -4448,7 +4448,7 @@
   "OUR SHARED AGREEMENT": "OUR SHARED AGREEMENT",
   "A little more us.": "A little more us.",
   "Ideas we shaped together. Concerns we listened to. Words we can stand behind.": "Ideas we shaped together. Concerns we listened to. Words we can stand behind.",
-  "Our אמנה": "Our אמנה",
+  "Our אמנה": "Our covenant",
   "FROM “WHAT IF” TO “WE AGREE”": "FROM “WHAT IF” TO “WE AGREE”",
   "Good decisions grow through conversation.": "Good decisions grow through conversation.",
   "Agreement has room for differences.": "Agreement has room for differences.",
@@ -4463,7 +4463,7 @@
   "Make good ideas better.": "Make good ideas better.",
   "Work through concerns and improve the wording together.": "Work through concerns and improve the wording together.",
   "Put it into shared words.": "Put it into shared words.",
-  "Build an אמנה: a shared agreement people endorse and others can accept without objection.": "Build an אמנה: a shared agreement people endorse and others can accept without objection.",
+  "Build an אמנה: a shared agreement people endorse and others can accept without objection.": "Build an covenant: a shared agreement people endorse and others can accept without objection.",
   "Start with a question.": "Start with a question.",
   "Explore solutions and sub-questions. Each sub-question has its own solutions and can branch further.": "Explore solutions and sub-questions. Each sub-question has its own solutions and can branch further.",
   "Question path": "Question path",
@@ -4586,5 +4586,11 @@
   "The source wording changed. Please submit an updated proposal.": "The source wording changed. Please submit an updated proposal.",
   "Close vote and record the result": "Close vote and record the result",
   "Selected for implementation": "Selected for implementation",
-  "Add a description...": "Add a description…"
+  "Add a description...": "Add a description…",
+  "Could not complete action.": "Could not complete action.",
+  "Explore related ideas, inspect syntheses, and follow the questions that need more work.": "Explore related ideas, inspect syntheses, and follow the questions that need more work.",
+  "Sign-in failed. Open Sign from the question again.": "Sign-in failed. Open Sign from the question again.",
+  "Sub-questions": "Sub-questions",
+  "Themes organize related positions. Synthesis combines equivalent proposals. New compromises need fresh evaluation.": "Themes organize related positions. Synthesis combines equivalent proposals. New compromises need fresh evaluation.",
+  "Welcome": "Welcome"
 }

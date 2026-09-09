@@ -93,10 +93,13 @@
     "dev:redesign": "node scripts/dev-redesign.cjs",
     "dev:redesign:functions": "tsc -p functions/tsconfig.json && node scripts/redesign-functions.cjs",
     "test:covenant": "tsc -p functions/tsconfig.covenant.json && node scripts/verify-covenant-service.cjs",
-    "dev:redesign:auth": "firebase emulators:start --only auth --project demo-freedi-redesign --config firebase.redesign-auth.json",
+    "dev:redesign:auth": "firebase emulators:start --only firestore,auth,storage --project demo-freedi-redesign --config firebase.redesign.json",
     "seed:redesign": "node scripts/seed-redesign.cjs",
     "dev:redesign:sign": "node scripts/dev-redesign-sign.cjs",
-    "test:deliberation": "node scripts/verify-deliberation.cjs"
+    "test:deliberation": "node scripts/verify-deliberation.cjs",
+    "dev:redesign:emulators": "firebase emulators:start --only firestore,auth,storage --project demo-freedi-redesign --config firebase.redesign.json",
+    "test:deliberation:policy": "node scripts/verify-deliberation-policy.cjs",
+    "test:thinking-space:i18n": "node scripts/verify-thinking-space-i18n.cjs"
   },
   "dependencies": {
     "@microsoft/clarity": "^1.0.2",

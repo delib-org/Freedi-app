@@ -1,8 +1,9 @@
-import { randomBytes, createHash } from 'crypto';
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { DELIBERATION_LIMITS } from '../../../packages/shared-types/src/models/covenant/deliberation';
+import { createHash, randomBytes } from 'crypto';
 import { getAuth } from 'firebase-admin/auth';
-import { db } from '../db';
+import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { ALLOWED_ORIGINS } from '../config/cors';
+import { db } from '../db';
 import { questionFor } from './service';
 
 const options = { region: 'me-west1', cors: [...ALLOWED_ORIGINS, 'http://localhost:3012'] };
@@ -10,7 +11,7 @@ const digest = (value: string): string => createHash('sha256').update(value).dig
 export const createAgreementHandoff = onCall(options, async (request) => {
 	if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in first.');
 	const id = request.data?.documentId;
-	if (typeof id !== 'string' || id.includes('/') || id.length > 128)
+	if (typeof id !== 'string' || id.includes('/') || id.length > DELIBERATION_LIMITS.idCharacters)
 		throw new HttpsError('invalid-argument', 'Invalid document.');
 	const document = (await db.collection('statements').doc(id).get()).data();
 	if (!document?.agreementMeta?.questionId)
@@ -20,14 +21,22 @@ export const createAgreementHandoff = onCall(options, async (request) => {
 	await db
 		.collection('agreementHandoffs')
 		.doc(digest(code))
-		.create({ uid: request.auth.uid, documentId: id, expiresAt: Date.now() + 60000 });
+		.create({
+			uid: request.auth.uid,
+			documentId: id,
+			expiresAt: Date.now() + DELIBERATION_LIMITS.handoffTtlMs,
+		});
 
 	return { code };
 });
 export const redeemAgreementHandoff = onCall(options, async (request) => {
 	const code = request.data?.code,
 		id = request.data?.documentId;
-	if (typeof code !== 'string' || code.length > 100 || typeof id !== 'string')
+	if (
+		typeof code !== 'string' ||
+		code.length > DELIBERATION_LIMITS.handoffCodeCharacters ||
+		typeof id !== 'string'
+	)
 		throw new HttpsError('invalid-argument', 'Invalid handoff.');
 	const ref = db.collection('agreementHandoffs').doc(digest(code));
 	const uid = await db.runTransaction(async (tx) => {

@@ -101,7 +101,7 @@
 		}
 		&--active {
 			background: var(--space-purple);
-			color: var(--space-paper) !important;
+			color: var(--space-paper);
 		}
 	}
 	&__spaceIcon {
@@ -316,7 +316,7 @@
 			border: 1px solid var(--space-line);
 			border-radius: 24px;
 			background: var(--space-purple-soft);
-			color: var(--space-purple) !important;
+			color: var(--space-purple);
 			z-index: 15;
 			box-shadow: var(--space-shadow);
 			font-size: 12px;

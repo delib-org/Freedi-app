@@ -1,3 +1,4 @@
+import { logError } from '@/utils/errorHandling';
 import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 import React, { FormEvent, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -8,11 +9,17 @@ import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { createStatement } from '@/controllers/db/statements/createStatement';
 import { setStatementToDB } from '@/controllers/db/statements/writeStatement';
-import { store } from '@/redux/store';
+import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
+import { useMemo } from 'react';
 import styles from './Agreement.module.scss';
 
 export default function OptionImprovement({ statement }: { statement: Statement }) {
-	const parent = useSelector(statementSelectorById(statement.parentId));
+	const dispatch = useAppDispatch();
+	const parentSelector = useMemo(
+		() => statementSelectorById(statement.parentId),
+		[statement.parentId],
+	);
+	const parent = useSelector(parentSelector);
 	const authorization = useAuthorization(parent?.statementId);
 	const { isAuthorized } = authorization;
 	const isAdmin =
@@ -57,10 +64,12 @@ export default function OptionImprovement({ statement }: { statement: Statement 
 			if (!next) throw new Error(t('Could not prepare the draft.'));
 			const saved = await setStatementToDB({ statement: next, parentStatement: parent });
 			if (!saved) throw new Error(t('Could not save the draft. Please try again.'));
-			store.dispatch(setStatement(saved.statement));
+			dispatch(setStatement(saved.statement));
 			navigate(`/statement/${saved.statementId}?tab=chat`);
 		} catch (e) {
-			setError(e instanceof Error ? e.message : t('Could not save the draft.'));
+			if (!(e instanceof Error && e.name === 'AbortError'))
+				logError(e, { operation: 'OptionImprovement' });
+			setError(t('Could not save the draft.'));
 		} finally {
 			setBusy(false);
 		}

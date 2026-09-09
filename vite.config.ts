@@ -87,7 +87,7 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		optimizeDeps: {
-      entries: ['index.html', 'redesign.html'],
+      entries: ['index.html'],
 			include: [
 				'@tiptap/react',
 				'@tiptap/starter-kit',

@@ -11,6 +11,7 @@ export const ALLOWED_ORIGINS = [
 	'https://wizcol-join.web.app',
 	'https://wizcol-join.firebaseapp.com',
 	'https://sign-wizcol.web.app',
+	'https://sign.wizcol.com',
 	'https://sign-wizcol.firebaseapp.com',
 	'https://wizcol-flow.web.app',
 	'https://wizcol-flow.firebaseapp.com',

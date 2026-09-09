@@ -8,7 +8,7 @@ const nextConfig = {
   poweredByHeader: false,
 
   // Standalone output for Docker/Cloud Run deployment
-  output: 'standalone',
+  output: process.env.SIGN_STANDALONE === 'false' ? undefined : 'standalone',
 
   // Transpile shared packages
   transpilePackages: ['@freedi/shared-i18n', '@freedi/shared-utils'],

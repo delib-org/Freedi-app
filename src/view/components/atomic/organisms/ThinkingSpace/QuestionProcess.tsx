@@ -1,17 +1,18 @@
+import { logError } from '@/utils/errorHandling';
 import { useCallback, useEffect, useState } from 'react';
-import { httpsCallable } from 'firebase/functions';
 import { Statement, DeliberationStatus } from '@freedi/shared-types';
-import { functions } from '@/controllers/db/config';
+import {
+	requestDeliberation as call,
+	createAgreementHandoff,
+	DELIBERATION_POLL_MS,
+} from '@/controllers/db/deliberation';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './Agreement.module.scss';
 import processStyles from './QuestionProcess.module.scss';
 
-const call = httpsCallable<Record<string, unknown>, DeliberationStatus>(functions, 'deliberation', {
-	timeout: 540000,
-});
 const signBase =
 	import.meta.env.VITE_SIGN_APP_URL ||
-	(import.meta.env.DEV ? 'http://localhost:3012' : 'https://sign.wizcol.com');
+	(import.meta.env.DEV ? 'http://localhost:3002' : 'https://sign.wizcol.com');
 export default function QuestionProcess({
 	statement,
 	view,
@@ -30,14 +31,16 @@ export default function QuestionProcess({
 			setData((await call({ questionId: statement.statementId })).data);
 			setError('');
 		} catch (e) {
-			setError(e instanceof Error ? e.message : 'Could not load process.');
+			if (!(e instanceof Error && e.name === 'AbortError'))
+				logError(e, { operation: 'QuestionProcess' });
+			setError(t('Could not complete action.'));
 		}
-	}, [statement.statementId]);
+	}, [statement.statementId, t]);
 	useEffect(() => {
 		void refresh();
 		const timer = setInterval(() => {
 			if (!document.hidden) void refresh();
-		}, 15000);
+		}, DELIBERATION_POLL_MS);
 
 		return () => clearInterval(timer);
 	}, [refresh]);
@@ -47,7 +50,9 @@ export default function QuestionProcess({
 		try {
 			setData((await call({ questionId: statement.statementId, action, ...extra })).data);
 		} catch (e) {
-			setError(e instanceof Error ? e.message : 'Could not complete action.');
+			if (!(e instanceof Error && e.name === 'AbortError'))
+				logError(e, { operation: 'QuestionProcess' });
+			setError(t('Could not complete action.'));
 		} finally {
 			setBusy(false);
 		}
@@ -56,15 +61,14 @@ export default function QuestionProcess({
 		setBusy(true);
 		setError('');
 		try {
-			const response = await httpsCallable<{ documentId: string }, { code: string }>(
-				functions,
-				'createAgreementHandoff',
-			)({ documentId });
+			const response = await createAgreementHandoff({ documentId });
 			window.location.assign(
 				`${signBase}/doc/${documentId}#freedi-handoff=${encodeURIComponent(response.data.code)}`,
 			);
 		} catch (e) {
-			setError(e instanceof Error ? e.message : t('Could not open Sign.'));
+			if (!(e instanceof Error && e.name === 'AbortError'))
+				logError(e, { operation: 'QuestionProcess' });
+			setError(t('Could not open Sign.'));
 			setBusy(false);
 		}
 	}
@@ -83,6 +87,8 @@ export default function QuestionProcess({
 				setNotice(t('Invitation link copied'));
 			}
 		} catch (e) {
+			if (!(e instanceof Error && e.name === 'AbortError'))
+				logError(e, { operation: 'QuestionProcess' });
 			if (!(e instanceof Error && e.name === 'AbortError')) setNotice(url);
 		}
 	}

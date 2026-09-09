@@ -146,8 +146,8 @@
 		transform: rotate(-10deg);
 	}
 	&__primary {
-		background: var(--space-ink) !important;
-		color: var(--space-paper) !important;
+		background: var(--space-ink);
+		color: var(--space-paper);
 		box-shadow: 3px 4px 0 color-mix(in srgb, var(--space-ink) 13%, transparent);
 	}
 	&__actions {
@@ -468,51 +468,5 @@
 		&__steps li {
 			font-size: 10px;
 		}
-	}
-}
-
-.journey__fieldset {
-	border: 0;
-	padding: 0;
-	margin: 0;
-	min-width: 0;
-	display: grid;
-	gap: 24px;
-	label {
-		display: grid;
-		gap: 8px;
-		margin-block: 12px;
-	}
-	input[type='checkbox'] {
-		width: 18px;
-		height: 18px;
-	}
-	form {
-		display: grid;
-		gap: 12px;
-	}
-	fieldset {
-		min-width: 0;
-	}
-	a {
-		display: inline-block;
-		margin-block: 8px;
-		text-decoration: underline;
-	}
-}
-
-.journey__covenant {
-	min-width: 0;
-	padding: 16px;
-	.journey__title {
-		flex-wrap: wrap;
-	}
-	.journey__title > div {
-		min-width: 0;
-	}
-	h2,
-	p,
-	blockquote {
-		overflow-wrap: anywhere;
 	}
 }

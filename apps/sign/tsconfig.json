@@ -59,7 +59,7 @@
     "../../packages/shared-i18n/src/**/*.tsx",
     "../../packages/shared-utils/src/**/*.ts",
     ".next-redesign-dev/types/**/*.ts",
-    ".next-redesign-build/types/**/*.ts"
+    ".next-redesign-check/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

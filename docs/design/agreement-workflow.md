@@ -8,7 +8,7 @@ A conversation starts with a question. Its common-ground view offers **Add a sol
 
 The existing `isChosen` result, computed by the app's cutoff mechanism, selects source proposals. We do not replace that calculation with a second ranking. Hidden and integrated originals are excluded; selected synthesis statements remain eligible.
 
-The facilitator can update the summary or generate a document. New questions opt into automation. Existing questions have an explicit automation switch. A scheduled worker runs every 15 minutes. It generates an agreement when every selected proposal has evaluators and Cp ≥ 0.70; this is the working interpretation of the automatic trigger. Summary generation is independently limited to every 24 hours and only runs when selected source wording or composition has changed. Score changes alone do not rewrite a summary. Generation is serialized, retried on failure and deduplicated by source content.
+The facilitator can update the summary or generate a document. Automation is off for every question until a registered facilitator explicitly enables it through the callable. Only server-owned workflow records can enable jobs; client statement flags are rejected by rules and ignored by triggers. A scheduled worker runs every 15 minutes. It generates an agreement when every selected proposal has evaluators and Cp ≥ 0.70; this is the working interpretation of the automatic trigger. Summary generation is independently limited to every 24 hours and only runs when selected source wording or composition has changed. Score changes alone do not rewrite a summary. Generation is serialized and deduplicated by source content. Transient failures get at most three attempts with exponential backoff. Terminal errors, closed questions, revoked facilitator access and disabled jobs leave the queue. Deferred summaries are scheduled for their next eligible time.
 
 The generated document is a real `Statement` with `statementType: agreement`, `isDocument: true` and `parentId` equal to the question. It has canonical paragraph statements, so Sign's existing document editor, paragraph review and suggestions remain available. The main app displays its introduction, Cp and evaluator count, with a button into Sign. Sign links back to the question. The cross-origin handoff uses an authenticated, document-bound, single-use code valid for 60 seconds; Firebase tokens are never placed in URLs.
 
@@ -44,7 +44,7 @@ When one decision is needed, the facilitator selects two or more agreements and 
 - Server-owned collections: `questionDeliberations` (ratings, wording snapshots, source records, proposed changes and ballot results), `agreementHandoffs`.
 - Existing `covenantWorkflows` data and service remain available for compatibility; they are not silently migrated or counted in the new agreement process.
 
-Generation requires `OPENAI_API_KEY`. The default agreement model is `gpt-6-astra`, overridable with `OPENAI_AGREEMENT_MODEL`, using high reasoning effort. This choice follows the [official GPT-6 Astra model documentation](https://developers.openai.com/api/docs/models/gpt-6-astra). Summary generation uses the project's existing fast-model setting. Missing configuration causes a visible error; no fixture document is substituted in real generation.
+Generation requires `OPENAI_API_KEY`. The agreement model defaults to the repository’s `TAXONOMY_MODEL` (`gpt-5.6-terra`), overridable with `OPENAI_AGREEMENT_MODEL`, using high reasoning effort. Model availability must be checked with the deployment account; local tests explicitly stub AI and do not validate remote model access. Summary generation uses the project's existing fast-model setting. Missing configuration causes a visible error; no fixture document is substituted in real generation.
 
 Deploying the feature requires the new callable functions, Firestore trigger, scheduler, security rules and `questionDeliberations` queue index together. Configure `VITE_SIGN_APP_URL`, `NEXT_PUBLIC_MAIN_APP_URL` and, where necessary, `NEXT_PUBLIC_DELIBERATION_FUNCTIONS_URL`. Production defaults are `https://sign.wizcol.com` and `https://app.wizcol.com`; deployments using other domains must override these and include their origins in CORS. Expired one-time handoff records should be cleaned up under the deployment's retention policy.
 
@@ -52,7 +52,7 @@ Deploying the feature requires the new callable functions, Firestore trigger, sc
 
 Install Sign dependencies inside the worktree rather than symlinking another checkout’s `node_modules`. The launcher separates `.next-redesign-dev` and `.next-redesign-build` so development cleanup cannot traverse standalone build links.
 
-Use the isolated `demo-freedi-redesign` namespace. Main app runs on localhost:5189; Sign on localhost:3012; callable gateway on localhost:5309; Auth on 9399; Firestore on 8081.
+Use the isolated `demo-freedi-redesign` namespace. Main app runs on localhost:5189; Sign on localhost:3012; callable gateway on localhost:5309; Auth on 19399; Firestore on 18189; Storage on 19199. Start the dedicated suite with `npm run dev:redesign:emulators`. `firebase.redesign.json` is the shared configuration for all launchers, seed and verification scripts. Conflicting emulator environment variables fail before any writes; neither the default nor solo suite is borrowed.
 
 - `npm run dev:redesign`
 - `npm run dev:redesign:sign`
@@ -62,3 +62,17 @@ Use the isolated `demo-freedi-redesign` namespace. Main app runs on localhost:51
 - `node scripts/verify-deliberation-browser.cjs process-<fixture-id>` checks authenticated Sign handoff, rating, return navigation, Hebrew and mobile layout. Use the fixture id printed by the integration test.
 
 The lightweight HTTP gateway does **not** run Firestore triggers or scheduled jobs. Live automation requires the full Firebase runtime; local tests invoke the service directly. No production deployment or real model call was performed during development.
+
+## AI cost policy
+
+`functions/src/deliberation/policy.ts` reserves each model attempt in a Firestore transaction before contacting the model. UTC daily ceilings are 4 calls per question, 10 per registered facilitator, and 100 for the project, shared across manual and scheduled requests. Failed requests consume reservations. Deduplicated successful inputs consume none. Limits include both summaries and agreement drafts. Scheduler jobs retain the enrolling facilitator’s identity and recheck their membership and account. Change these ceilings deliberately with deployment cost monitoring; the callable cannot raise them.
+
+## Review verification
+
+Run `npm run test:deliberation` and `npm run test:deliberation:policy` against the dedicated suite. AI is explicitly stubbed. The policy suite exercises concurrent budget reservations, anonymous denial, server enrollment, terminal eviction, finite backoff, more blocked jobs than the batch size, and deferred summaries. Run the rules suite with `FIRESTORE_EMULATOR_PORT=18189`.
+
+The retired browser prototype and unreachable covenant editor have been removed. The live workflow uses one agreement document model and Sign; the old covenant callable remains compatible with existing data. Its status response returns only the most recent review and no subscriber roster. Review numbering uses the persisted version number, not the number of reviews loaded.
+
+Local Sign verification uses `.next-redesign-check` with `SIGN_STANDALONE=false`; deployment builds retain standalone output. Use independent worktree dependencies. Reusing a standalone trace directory with symlinks into another checkout can let Next.js cleanup follow those links. Never reuse the old `.next-redesign-build` trace output for local verification.
+
+For a fresh independent checkout, run `npm ci`, then build workspace libraries in order with `npm run build --workspace=@freedi/shared-types --workspace=@freedi/shared-utils --workspace=@freedi/engagement-core --workspace=@freedi/event-core`.

@@ -1,3 +1,4 @@
+import { Screen } from '@freedi/shared-types';
 import { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Statement } from '@freedi/shared-types';
@@ -18,7 +19,7 @@ export default function LiveMapWorkspace({
 	const navigate = useNavigate();
 	const hidden =
 		statement.statementSettings?.showEvaluation !== true &&
-		['agreementMap', 'polarizationIndex'].includes(active);
+		[Screen.agreementMap, Screen.polarizationIndex].includes(active);
 
 	return (
 		<div className={`thinking-space ${styles.workspace}`}>
@@ -40,7 +41,7 @@ export default function LiveMapWorkspace({
 				active={active}
 				onSelect={(id) => navigate(`/statement-screen/${statement.statementId}/${id}`)}
 			>
-				{active === 'clusterBoard' && (
+				{active === Screen.clusterBoard && (
 					<div className={styles.workspace__path}>
 						<button onClick={() => navigate(`/statement/${statement.statementId}?tab=themes`)}>
 							{t('Themes & synthesis')} · {t('Settings')}

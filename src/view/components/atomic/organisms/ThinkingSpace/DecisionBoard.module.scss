@@ -96,7 +96,7 @@
 		background: none;
 		padding: 15px 2px;
 		font-size: 12px;
-		color: var(--space-purple) !important;
+		color: var(--space-purple);
 	}
 	&__invitation {
 		position: relative;
@@ -162,7 +162,7 @@
 		font-size: 11px;
 		margin-top: 18px;
 		padding-top: 18px;
-		color: var(--space-muted) !important;
+		color: var(--space-muted);
 		svg:last-child {
 			margin-inline-start: auto;
 		}

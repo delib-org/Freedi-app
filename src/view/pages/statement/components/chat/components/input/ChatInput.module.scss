@@ -120,7 +120,6 @@
         color: var(--reject, #e74c3c);
     }
 }
-:global(.thinking-space) {
-  .chatInput, .sideChatInput { padding: 12px 8px 16px; background: var(--space-paper); form { background: var(--space-surface); border: 1px solid var(--space-line); border-radius: 26px; box-shadow: var(--space-shadow); padding: 8px; align-items: flex-end; gap: 8px; } form:focus-within { border-color: var(--space-purple); } textarea { border: 0 !important; box-shadow: none; background: transparent; padding: 12px; min-height: 48px; max-height: 180px; overflow-y: auto !important; font-size: 14px; flex: 1; width: 0; } form button { position: static; width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; background: var(--space-purple) !important; color: var(--space-paper) !important; svg { width: 22px; height: 22px; } svg path { fill: var(--space-paper); } } }
+
+  .chatInput, .sideChatInput { padding: 12px 8px 16px; background: var(--space-paper); form { background: var(--space-surface); border: 1px solid var(--space-line); border-radius: 26px; box-shadow: var(--space-shadow); padding: 8px; align-items: flex-end; gap: 8px; } form:focus-within { border-color: var(--space-purple); } textarea { border: 0 !important; box-shadow: none; background: transparent; padding: 12px; min-height: 48px; max-height: 180px; overflow-y: auto !important; font-size: 14px; flex: 1; width: 0; } form button { position: static; width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; background: var(--space-purple); color: var(--space-paper); svg { width: 22px; height: 22px; } svg path { fill: var(--space-paper); } } }
   .replyIndicator { background: var(--space-purple-soft); border-inline-start-color: var(--space-purple); border-radius: 10px; margin-bottom: 8px; }
-}

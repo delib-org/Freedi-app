@@ -252,7 +252,7 @@ $addOptionSize: 60px;
 }
 .whiteIcon,
 .whiteIcon * {
-  color: #fff !important;
+  color: #fff;
   fill: #fff !important;
   stroke: #fff !important;
 }
@@ -375,9 +375,9 @@ $addOptionSize: 60px;
   }
 }
 
-:global(.thinking-space) { .addOptionButton { background: var(--space-purple) !important; color: var(--space-paper) !important; } .addOptionButtonLabel { color: inherit; } }
+ .addOptionButton { background: var(--space-purple); color: var(--space-paper); } .addOptionButtonLabel { color: inherit; }
 
-:global(.thinking-space) {
+
 	.sortButton,
 	.subFabButton {
 		background: var(--space-mint);
@@ -388,10 +388,9 @@ $addOptionSize: 60px;
 	.subFabButton svg,
 	.whiteIcon,
 	.whiteIcon * {
-		color: var(--space-ink) !important;
+		color: var(--space-ink);
 		fill: currentColor;
 	}
 	.sortMenu {
 		border-radius: 24px;
 	}
-}

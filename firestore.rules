@@ -697,14 +697,14 @@ service cloud.firestore {
       // (statementSettingsCont.ts:152, promoteOptionToSubQuestion.ts:66) are
       // updates, not creates, so they are unaffected by this pin.
       allow create: if request.auth.uid != null &&
-                       !request.resource.data.keys().hasAny(['agreementBallot', 'agreementMeta']) &&
+                       !request.resource.data.keys().hasAny(['agreementBallot', 'agreementMeta', 'deliberationEnabled']) &&
                        !setsCreatorRoleOnCreate() &&
                        !setsOrganizationIdOnCreate() &&
                        request.resource.data.creatorId == request.auth.uid;
 
       allow update: if request.auth.uid != null &&
                        !resource.data.keys().hasAny(['agreementBallot']) &&
-                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['agreementMeta', 'agreementBallot']) &&
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['agreementMeta', 'agreementBallot', 'deliberationEnabled']) &&
                        !changesCreatorRole() &&
                        !changesOrganizationId() &&
                        (isAgoraStatement()
@@ -1804,6 +1804,7 @@ service cloud.firestore {
       }
     }
     match /agreementHandoffs/{document=**} { allow read, write: if false; }
+    match /deliberationBudgets/{id=**} { allow read, write: if false; }
     match /questionDeliberations/{document=**} {
       allow read, write: if false;
     }

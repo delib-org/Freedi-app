@@ -1,35 +1,36 @@
+import { Screen } from '@freedi/shared-types';
 import { ReactNode } from 'react';
 import { Translate } from './ThinkingSpace';
 import styles from './MapExplorer.module.scss';
 
 export const mapViews = [
 	{
-		id: 'mindMap',
+		id: Screen.mindMap,
 		group: 'Understand the structure',
 		title: 'Mind map',
 		description: 'Follow questions, solutions and their connections.',
 	},
 	{
-		id: 'subQuestionsMap',
+		id: Screen.subQuestionsMap,
 		group: 'Understand the structure',
 		title: 'Sub-question map',
 		description: 'Follow the questions that help answer this question.',
 	},
 	{
-		id: 'clusterBoard',
+		id: Screen.clusterBoard,
 		group: 'Explore the solutions',
 		title: 'Themes & synthesis',
 		description:
 			'Topics group related solutions. Syntheses combine equivalent wording of the same solution.',
 	},
 	{
-		id: 'agreementMap',
+		id: Screen.agreementMap,
 		group: 'Understand agreement',
 		title: 'Agreement triangle',
 		description: 'Compare support, opposition and the amount of evaluation.',
 	},
 	{
-		id: 'polarizationIndex',
+		id: Screen.polarizationIndex,
 		group: 'Understand agreement',
 		title: 'Polarization',
 		description: 'See where evaluations converge or differ.',

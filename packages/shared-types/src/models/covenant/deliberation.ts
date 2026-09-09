@@ -49,3 +49,20 @@ export interface DeliberationStatus {
 	}>;
 	automatic: boolean;
 }
+
+/** Shared workflow limits; validation and input controls must agree. */
+export const DELIBERATION_LIMITS = {
+ agreementCp: 0.7,
+ issueCharacters: 1500,
+ paragraphCharacters: 5000,
+ titleCharacters: 200,
+ idCharacters: 128,
+ paragraphs: 100,
+ changesPerRequest: 30,
+ ballotAlternatives: 12,
+ pollMs: 30_000,
+ generationTimeoutMs: 9 * 60 * 1000,
+ draftTokens: 12_000,
+ handoffTtlMs: 60_000,
+ handoffCodeCharacters: 100,
+} as const;

@@ -171,11 +171,11 @@ export function applyCovenantAction(
 				'Endorsement threshold must be between 51 and 100 percent.',
 			);
 			requireCondition(
-				state.reviews.length < 100,
+				(latest?.version || 0) < 100,
 				'Review limit reached. Export the review history.',
 			);
 			state.reviews.push({
-				version: state.reviews.length + 1,
+				version: (latest?.version || 0) + 1,
 				title: state.title,
 				clauses: JSON.parse(JSON.stringify(state.clauses)),
 				reviewerIds: [...action.reviewerIds],

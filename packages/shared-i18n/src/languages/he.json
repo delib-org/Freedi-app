@@ -4624,5 +4624,11 @@
   "The source wording changed. Please submit an updated proposal.": "נוסח המקור השתנה. יש להגיש הצעת שינוי מעודכנת.",
   "Close vote and record the result": "סגירת ההצבעה ותיעוד התוצאה",
   "Selected for implementation": "נבחרה ליישום",
-  "Add a description...": "הוסיפו תיאור…"
+  "Add a description...": "הוסיפו תיאור…",
+  "Could not complete action.": "לא ניתן להשלים את הפעולה.",
+  "Explore related ideas, inspect syntheses, and follow the questions that need more work.": "גלו רעיונות קשורים, בדקו ניסוחים מאוחדים ועקבו אחרי השאלות שזקוקות לעבודה נוספת.",
+  "Sign-in failed. Open Sign from the question again.": "הכניסה נכשלה. פתחו שוב את Sign מתוך השאלה.",
+  "Sub-questions": "שאלות משנה",
+  "Themes organize related positions. Synthesis combines equivalent proposals. New compromises need fresh evaluation.": "נושאים מארגנים עמדות קשורות. סינתזה מאחדת הצעות שוות משמעות. פשרות חדשות דורשות הערכה חדשה.",
+  "Welcome": "ברוכים הבאים"
 }

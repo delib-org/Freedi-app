@@ -97,11 +97,11 @@ function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProp
 	if (statement && mapViews.some((view) => view.id === screen)) {
 		const id = screen as MapViewId;
 		const components = {
-			mindMap: MindMap,
-			subQuestionsMap: SubQuestionsMap,
-			clusterBoard: ClusterBoardMap,
-			agreementMap: Triangle,
-			polarizationIndex: PolarizationIndexComp,
+			[Screen.mindMap]: MindMap,
+			[Screen.subQuestionsMap]: SubQuestionsMap,
+			[Screen.clusterBoard]: ClusterBoardMap,
+			[Screen.agreementMap]: Triangle,
+			[Screen.polarizationIndex]: PolarizationIndexComp,
 		};
 		const Component = components[id];
 

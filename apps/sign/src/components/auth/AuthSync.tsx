@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { redeemAgreementHandoff } from '@/lib/firebase/deliberation';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { signInWithCustomToken } from 'firebase/auth';
 import { getFirebaseAuth, anonymousLogin } from '@/lib/firebase/client';
 import { installFirestoreErrorFilter } from '@/lib/firebase/safeSnapshot';
@@ -21,6 +22,7 @@ import { logError } from '@/lib/utils/errorHandling';
  * - Refreshes page when user authenticates to update admin status
  */
 export function AuthSync() {
+	const { t } = useTranslation();
 	const handoffPending = useRef(false);
 	const [handoffError, setHandoffError] = useState('');
 	const isInitialized = useRef(false);
@@ -44,15 +46,7 @@ export function AuthSync() {
 			window.history.replaceState(null, '', window.location.pathname + window.location.search);
 			void (async () => {
 				try {
-					const service = getFunctions(
-						auth.app,
-						process.env.NEXT_PUBLIC_DELIBERATION_FUNCTIONS_URL || 'me-west1',
-					);
-					const redeem = httpsCallable<{ code: string; documentId: string }, { token: string }>(
-						service,
-						'redeemAgreementHandoff',
-					);
-					const result = await redeem({
+					const result = await redeemAgreementHandoff({
 						code,
 						documentId: window.location.pathname.split('/')[2] || '',
 					});
@@ -60,9 +54,10 @@ export function AuthSync() {
 					setCookiesFromUser(login.user);
 					window.location.reload();
 				} catch (e) {
+					logError(e, { operation: 'AuthSync.agreementHandoff' });
 					handoffPending.current = false;
 					setHandoffError(
-						e instanceof Error ? e.message : 'Sign-in failed. Open Sign from the question again.',
+						t('Sign-in failed. Open Sign from the question again.'),
 					);
 				}
 			})();

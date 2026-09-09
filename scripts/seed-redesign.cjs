@@ -1,12 +1,11 @@
+const { projectId } = require('./redesign-environment.cjs');
 // Fictional data, isolated demo project only; preserves existing question edits.
-process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8081';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9399';
 const admin = require(
 	require('node:module')
 		.createRequire(require('node:path').resolve(__dirname, '../functions/package.json'))
 		.resolve('firebase-admin'),
 );
-admin.initializeApp({ projectId: 'demo-freedi-redesign' });
+admin.initializeApp({ projectId });
 (async () => {
 	const uid = 'redesign-reviewer';
 	const user = {

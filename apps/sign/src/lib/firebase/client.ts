@@ -121,7 +121,7 @@ export function getFirebaseFirestore(): Firestore {
     // Connect to Firestore emulator in development
     if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !firestoreEmulatorConnected) {
       try {
-        connectFirestoreEmulator(firestore, 'localhost', 8081);
+        connectFirestoreEmulator(firestore, 'localhost', Number(process.env.NEXT_PUBLIC_EMULATOR_FIRESTORE_PORT || 8081));
         firestoreEmulatorConnected = true;
       } catch {
         // Already connected or emulator not available

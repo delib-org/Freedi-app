@@ -1,11 +1,10 @@
-// Uses only demo-freedi-redesign on local Firestore 8081.
+const { projectId } = require('./redesign-environment.cjs');
+// Uses only demo-freedi-redesign on the isolated redesign emulator suite.
 const assert = require('node:assert/strict');
-process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8081';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
 const base = require('node:path').resolve(__dirname, '../functions');
 const localRequire = require('node:module').createRequire(base + '/package.json');
 const { initializeApp } = localRequire('firebase-admin/app');
-initializeApp({ projectId: 'demo-freedi-redesign' });
+initializeApp({ projectId });
 const { getFirestore } = localRequire('firebase-admin/firestore');
 const db = getFirestore();
 const { covenantService } = require(base + '/lib-covenant/functions/src/covenant/service.js');

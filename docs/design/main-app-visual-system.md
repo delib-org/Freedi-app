@@ -1,13 +1,7 @@
-# One visual language across the main app
+# Main app visual system
 
-The playful redesign applies to the application, not just its landing page or agreement overview.
+The main HTML entry explicitly selects `data-brand="playful"`. The shared design-token package owns this opt-in brand in `packages/shared-styles/src/tokens/_brand-playful.scss`, including semantic aliases, light and dark colors, and high-contrast preferences. Other applications retain their chosen brand. `_thinking-space.scss` contains presentation and layout rules only; a shell never remaps core tokens.
 
-- `_thinking-space.scss` owns the main-app palette: peach, lavender, mint and yellow, with matching dark-mode values. Its root aliases also reach body-mounted menus and dialogs. Existing agreement/opposition scale colors keep their meaning.
-- Questions and groups use `SubGroupCard`: rounded panels, readable titles, separate conversation actions and a clear navigation button. Interactive controls are siblings of the title link, not nested inside it.
-- Question lists use the available content width, expose an add-question action to administrators and collapse to one column on mobile.
-- Buttons, forms, descriptions, creation dialogs, settings sections, notifications and Vote controls use the same surfaces, borders and spacing. Labels remain legible in dark mode; inputs no longer use the old pale-blue italic treatment.
-- Account routes and other secondary protected pages share `AppThinkingSpace`. Statement/home routes retain their existing shell, avoiding nested navigation.
+Component modules own their cards, forms, navigation and spacing. They do not select a parent `.thinking-space` class. Playful color surfaces remain peach, lavender, mint and yellow, with readable themed ink and keyboard focus rings. Motion preference overrides remain explicit. No color-specific `!important` declarations are needed in the new components.
 
-Use semantic palette variables rather than inline statement-type colors for app chrome. Reserve meaning-bearing colors for evaluation and map data. Keep RTL logical spacing, visible keyboard focus and reduced-motion support.
-
-Verification: full main-app build and TypeScript/lint checks; browser review of the populated group list in Hebrew/light/dark/mobile, conversation, proposals, maps, settings, account page and the actual new-question dialog. Creation dialogs were opened without submitting new user content.
+The main application uses a single question hierarchy and agreement workflow; the old standalone `redesign.html` prototype has been removed. All five map views use `Screen` enum values for links and rendering. Sign stays a separate Next.js app. Its single return link uses `NEXT_PUBLIC_MAIN_APP_URL`, falling back to normal Vite localhost:5173 in development; the isolated launcher explicitly selects localhost:5189.

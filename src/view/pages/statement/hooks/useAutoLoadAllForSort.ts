@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { SortType } from '@freedi/shared-types';
 import { bulkLoadStatements } from '@/controllers/db/statements/bulkLoadStatements';
@@ -32,7 +32,8 @@ export function useAutoLoadAllForSort(
 	sort: string | undefined,
 ): { isAutoLoading: boolean } {
 	const dispatch = useDispatch();
-	const fullyLoadedScope = useSelector(fullyLoadedScopeSelector(statementId));
+	const loadedSelector = useMemo(() => fullyLoadedScopeSelector(statementId), [statementId]);
+	const fullyLoadedScope = useSelector(loadedSelector);
 	const [isAutoLoading, setIsAutoLoading] = useState(false);
 	const loadingRef = useRef(false);
 
