@@ -1,3 +1,4 @@
+import type { UpdateData, DocumentData } from 'firebase-admin/firestore';
 import { getFirestore, FieldValue, type Firestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { EMBEDDING_DIMENSIONS } from './embedding-service';
@@ -203,7 +204,7 @@ class EmbeddingCacheService {
 			// Use FieldValue.vector() for Firestore vector search compatibility
 			const vectorValue = FieldValue.vector(embedding);
 
-			const updatePayload: Record<string, unknown> = {
+			const updatePayload: UpdateData<DocumentData> = {
 				embedding: vectorValue,
 				embeddingModel: model,
 				embeddingContext: context || null,
@@ -259,7 +260,7 @@ class EmbeddingCacheService {
 					const vectorValue = FieldValue.vector(item.embedding);
 					const docRef = this.db.collection(this.statementsCollection).doc(item.statementId);
 
-					const payload: Record<string, unknown> = {
+					const payload: UpdateData<DocumentData> = {
 						embedding: vectorValue,
 						embeddingModel: model,
 						embeddingContext: item.context || null,

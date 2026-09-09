@@ -1,3 +1,4 @@
+import type { UpdateData, DocumentData } from 'firebase-admin/firestore';
 /**
  * The challenge round, one turn at a time.
  *
@@ -125,7 +126,7 @@ async function discardChallenger(game: VotingGameState): Promise<void> {
 }
 
 /** Conditional spreads throughout: a stray `undefined` rejects the whole write. */
-function gamePatch(game: VotingGameState): Record<string, unknown> {
+function gamePatch(game: VotingGameState): UpdateData<DocumentData> {
 	return { votingGame: game, lastUpdate: Date.now() };
 }
 
@@ -477,7 +478,7 @@ async function resolveTurn(sessionId: string, session: AgoraSession): Promise<Re
 			updatedAt: Date.now(),
 		};
 
-		const patch: Record<string, unknown> = gamePatch(next);
+		const patch: UpdateData<DocumentData> = gamePatch(next);
 
 		if (verdict.survived) {
 			// The ballot the class now votes on. The challenger is written as a
