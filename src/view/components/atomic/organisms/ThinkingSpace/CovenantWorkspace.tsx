@@ -136,7 +136,7 @@ export default function CovenantWorkspace({
 	const yourPosition = user ? latest?.positions[user.uid] : undefined;
 
 	return (
-		<section aria-label={t('Shared covenant')}>
+		<section aria-label={t('Shared covenant')} className={styles.journey__covenant}>
 			<div className={styles.journey__title}>
 				<div>
 					<span className={styles.journey__eyebrow}>

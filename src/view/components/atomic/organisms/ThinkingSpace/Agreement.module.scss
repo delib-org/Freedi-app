@@ -500,3 +500,19 @@
 		text-decoration: underline;
 	}
 }
+
+.journey__covenant {
+	min-width: 0;
+	padding: 16px;
+	.journey__title {
+		flex-wrap: wrap;
+	}
+	.journey__title > div {
+		min-width: 0;
+	}
+	h2,
+	p,
+	blockquote {
+		overflow-wrap: anywhere;
+	}
+}

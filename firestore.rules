@@ -1793,5 +1793,9 @@ service cloud.firestore {
         allow read, write: if false;
       }
     }
+    // Version-bound covenant records are only served by the authorized callable.
+    match /covenantWorkflows/{document=**} {
+      allow read, write: if false;
+    }
   }
 }

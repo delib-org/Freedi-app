@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "lib-covenant"
+  },
+  "include": [
+    "src/fn_covenant.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "lib",
+    "lib-covenant"
+  ]
+}

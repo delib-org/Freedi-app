@@ -31,6 +31,7 @@ export function APIEndPoint(
 	) {
 		// Use the project ID from the Firebase configuration
 		const port = getEnvVar('VITE_EMULATOR_FUNCTIONS_PORT') || '5001';
+
 		return `http://localhost:${port}/${firebaseConfig.projectId}/${functionConfig.region}/${functionName}${queryString ? '?' : ''}${queryString}`;
 	}
 

@@ -89,7 +89,12 @@
     "seed:wizcol": "FIRESTORE_EMULATOR_HOST=localhost:8081 GCLOUD_PROJECT=freedi-test FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx tsx scripts/seedFromWizcolDump.ts",
     "backup:survey": "npx tsx scripts/exportProdQuestion.ts",
     "restore:survey": "npx tsx scripts/restoreQuestionToProduction.ts",
-    "typecheck:functions": "npm --prefix functions run typecheck"
+    "typecheck:functions": "npm --prefix functions run typecheck",
+    "dev:redesign": "node scripts/dev-redesign.cjs",
+    "dev:redesign:functions": "tsc -p functions/tsconfig.json && node scripts/redesign-functions.cjs",
+    "test:covenant": "tsc -p functions/tsconfig.covenant.json && node scripts/verify-covenant-service.cjs",
+    "dev:redesign:auth": "firebase emulators:start --only auth --project demo-freedi-redesign --config firebase.redesign-auth.json",
+    "seed:redesign": "node scripts/seed-redesign.cjs"
   },
   "dependencies": {
     "@microsoft/clarity": "^1.0.2",

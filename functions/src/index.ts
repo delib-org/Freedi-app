@@ -338,6 +338,8 @@ const corsConfig = isProduction
 			'http://localhost:5177',
 			'http://localhost:5178',
 			'http://localhost:5179',
+			'http://localhost:5189',
+			'http://127.0.0.1:5189',
 		];
 
 /**
@@ -1279,3 +1281,5 @@ export {
 
 // Israeli Odyssey — the voyage that opens onto the civic Agora deliberations
 export { odysseyMintAgoraHandoff, odysseyDigestUnsubscribe, sendOdysseyDigests } from './odyssey';
+
+export { covenantWorkflow } from './fn_covenant';

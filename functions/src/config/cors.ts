@@ -23,6 +23,8 @@ export const ALLOWED_ORIGINS = [
 	'https://freedi-test.firebaseapp.com',
 	// Local development — main app + per-app dev ports (see each apps/*/vite.config.ts)
 	'http://localhost:5173', // main app
+	'http://localhost:5189', // isolated redesign app
+	'http://127.0.0.1:5189',
 	'http://localhost:5174',
 	'http://localhost:5175',
 	'http://localhost:5176',
