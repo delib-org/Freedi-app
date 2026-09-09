@@ -1,6 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
-import { Lightbulb, Sparkles, Layers, Check, RotateCcw } from 'lucide-react';
+import { Lightbulb, Sparkles, Check, RotateCcw } from 'lucide-react';
 import type { ViewLayers } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
@@ -24,6 +24,7 @@ export interface ViewLayersToggleProps {
 }
 
 type LayerKey = keyof ViewLayers;
+type VisibleLayerKey = Extract<LayerKey, 'raw' | 'synth'>;
 
 const ViewLayersToggle: React.FC<ViewLayersToggleProps> = ({
 	layers,
@@ -37,20 +38,19 @@ const ViewLayersToggle: React.FC<ViewLayersToggleProps> = ({
 }) => {
 	const { t } = useTranslation();
 
-	const activeCount = Number(layers.raw) + Number(layers.synth) + Number(layers.cluster);
+	const activeCount = Number(layers.raw) + Number(layers.synth);
 
-	const chips: Array<{ key: LayerKey; label: string; icon: React.ReactNode }> = [
+	const chips: Array<{ key: VisibleLayerKey; label: string; icon: React.ReactNode }> = [
 		{ key: 'raw', label: t('Raw'), icon: <Lightbulb size={14} aria-hidden /> },
 		{ key: 'synth', label: t('Synth'), icon: <Sparkles size={14} aria-hidden /> },
-		{ key: 'cluster', label: t('Cluster'), icon: <Layers size={14} aria-hidden /> },
 	];
 
-	const toggle = (key: LayerKey) => {
+	const toggle = (key: VisibleLayerKey) => {
 		// A layer with no data is not selectable — turning it on would blank the list.
 		if (!available[key]) return;
 		// Never allow turning off the last active layer — the list would go blank.
 		if (layers[key] && activeCount === 1) return;
-		onChange({ ...layers, [key]: !layers[key] });
+		onChange({ ...layers, [key]: !layers[key], cluster: false });
 	};
 
 	return (

@@ -19,7 +19,7 @@ export const mapViews = [
 	{
 		id: Screen.clusterBoard,
 		group: 'Explore the solutions',
-		title: 'Themes & synthesis',
+		title: 'Cluster map',
 		description:
 			'Topics group related solutions. Syntheses combine equivalent wording of the same solution.',
 	},

@@ -1,7 +1,7 @@
 import React, { ReactNode, useMemo } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
-import { StatementType } from '@freedi/shared-types';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { topSubscriptionsSelector } from '@/redux/statements/statementsSlice';
@@ -12,20 +12,32 @@ import {
 	setShowNewStatementModal,
 } from '@/redux/statements/newStatementSlice';
 import ThinkingSpace from './ThinkingSpace';
+import EngagementGuide from '../../molecules/EngagementGuide/EngagementGuide';
+import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
+import { relevantNotifications } from '@/utils/engagementNavigation';
 
 export default function AppThinkingSpace({
 	children,
 	activeId,
 	aside,
+	asideLabel,
 	tools,
+	guideStatement,
+	guideEnabled = true,
 }: {
 	children: ReactNode;
 	activeId?: string;
 	aside?: ReactNode;
+	asideLabel?: string;
 	tools?: ReactNode;
+	guideStatement?: Statement;
+	guideEnabled?: boolean;
 }) {
 	const { t, dir } = useTranslation();
 	const navigate = useNavigate();
+	const location = useLocation();
+	const notifications = useAppSelector(inAppNotificationsSelector);
+	const allStatements = useAppSelector((state) => state.statements.statements);
 	const dispatch = useDispatch();
 	const user = useAppSelector(creatorSelector);
 	const subscriptions = useAppSelector(topSubscriptionsSelector);
@@ -39,8 +51,21 @@ export default function AppThinkingSpace({
 							sub.statementType || sub.statement.statementType,
 						),
 				)
-				.map((sub) => ({ id: sub.statementId, title: sub.statement.statement })),
-		[subscriptions, user?.uid],
+				.map((sub) => ({
+					id: sub.statementId,
+					title: sub.statement.statement,
+					unreadCount: relevantNotifications(notifications, user?.uid).filter(
+						(n) =>
+							!n.read &&
+							(n.parentId === sub.statementId ||
+								allStatements.some(
+									(s) =>
+										s.statementId === n.parentId &&
+										(s.topParentId === sub.statementId || s.parents?.includes(sub.statementId)),
+								)),
+					).length,
+				})),
+		[subscriptions, user?.uid, notifications, allStatements],
 	);
 	const create = (): void => {
 		// New top-level creation is hosted on Home; navigating mounts its modal host.
@@ -60,10 +85,20 @@ export default function AppThinkingSpace({
 			onOpen={(id) => navigate(`/statement/${id}`)}
 			onCreate={create}
 			aside={aside}
+			asideLabel={asideLabel}
 			tools={tools}
 			t={t}
 			dir={dir}
 		>
+			{user && guideEnabled && (guideStatement || location.pathname === '/home') && (
+				<EngagementGuide
+					key={user.uid}
+					userId={user.uid}
+					statement={guideStatement}
+					firstSpaceId={spaces[0]?.id}
+					onCreate={create}
+				/>
+			)}
 			{children}
 		</ThinkingSpace>
 	);

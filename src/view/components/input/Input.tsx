@@ -20,7 +20,7 @@ const Input: React.FC<SearchInputProps> = ({
 	value = '',
 	image,
 	onChange,
-	backgroundColor = '#fff',
+	backgroundColor = 'var(--card-default)',
 	name,
 	autoFocus = false,
 }) => {

@@ -89,3 +89,15 @@
 		}
 	}
 }
+
+.badge {
+	width: auto;
+	padding-inline: 4px;
+	border-radius: 999px;
+	flex-shrink: 0;
+}
+:global(.thinking-space) .badge {
+	background: var(--space-purple);
+	color: var(--space-paper);
+	box-shadow: none;
+}

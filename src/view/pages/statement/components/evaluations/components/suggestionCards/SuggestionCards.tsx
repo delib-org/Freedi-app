@@ -5,7 +5,7 @@ import { Flipper, Flipped } from 'react-flip-toolkit';
 import { setDoc } from 'firebase/firestore';
 
 import { Statement, SortType, Role, StatementType } from '@freedi/shared-types';
-import { Layers, Sparkles, Lightbulb } from 'lucide-react';
+import { Sparkles, Lightbulb } from 'lucide-react';
 
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import {
@@ -96,7 +96,7 @@ const SuggestionCards: FC = () => {
 	);
 	const viewData = useSelector(selectViewData);
 
-	// Three-toggle state — admin sets the default, each user overrides locally.
+	// Raw and synthesis remain list layers. Topic clusters are explored in Maps.
 	const adminDefault = statement?.statementSettings?.condensation?.viewLayers;
 	const { layers, setLayers, hasUserOverride, resetToDefault } = useViewLayers(
 		statement?.statementId,
@@ -106,9 +106,13 @@ const SuggestionCards: FC = () => {
 	// Only layers that actually have data are selectable. Gate the saved toggles
 	// against availability so the list never goes blank: an empty selected layer
 	// (e.g. Synth with no AI proposals yet) falls back to whatever data exists.
-	const availableLayers = useMemo(() => deriveAvailableLayers(viewData), [viewData]);
+	const availableLayers = useMemo(() => {
+		const available = deriveAvailableLayers(viewData);
+
+		return { ...available, cluster: false };
+	}, [viewData]);
 	const effectiveLayers = useMemo(
-		() => gateViewLayers(layers, availableLayers),
+		() => gateViewLayers({ ...layers, cluster: false }, availableLayers),
 		[layers, availableLayers],
 	);
 
@@ -182,8 +186,11 @@ const SuggestionCards: FC = () => {
 	}, [sort, location.search]);
 
 	const hasSynth = plan.topLevelSynths.length > 0;
-	const hasTopics = plan.topicCards.length > 0;
 	const hasRaw = visibleFlatRaw.length > 0;
+	const handleLayersChange = useCallback(
+		(next: typeof layers) => setLayers({ ...next, cluster: false }),
+		[setLayers],
+	);
 
 	const handleSubmit = useCallback(() => {
 		navigate(`/statement/${statementId}/thank-you`);
@@ -215,7 +222,7 @@ const SuggestionCards: FC = () => {
 	);
 
 	if (!statement) return null;
-	if (isQuestion && !hasSynth && !hasTopics && !hasRaw) return null;
+	if (isQuestion && !hasSynth && !hasRaw) return null;
 
 	const isSubmitMode = statement.statementSettings?.isSubmitMode;
 
@@ -233,7 +240,7 @@ const SuggestionCards: FC = () => {
 					isCollapsed={treeFilter.isCollapsed}
 					layers={effectiveLayers}
 					availableLayers={availableLayers}
-					onLayersChange={setLayers}
+					onLayersChange={handleLayersChange}
 					isAdmin={isAdmin}
 					onSetLayersDefault={handleSetDefault}
 					hasLayersOverride={hasUserOverride}
@@ -267,47 +274,7 @@ const SuggestionCards: FC = () => {
 				</>
 			)}
 
-			{hasTopics && (
-				<>
-					<SectionDivider
-						label={t('Clusters')}
-						count={plan.topicCards.length}
-						icon={<Layers size={14} aria-hidden />}
-						variant="topic"
-					/>
-					<div className={styles['suggestions-wrapper']}>
-						{plan.topicCards.map(({ cluster, nestedSynths, directRaw }) => (
-							<div key={cluster.statementId} className={styles['card-wrapper']}>
-								<GroupedSuggestionCard
-									cluster={cluster}
-									mode="both"
-									allowDrillToOriginals
-									pipeline="topic"
-									explicitMembers={directRaw}
-									nestedSlot={
-										nestedSynths.length > 0
-											? nestedSynths.map(({ synth, rawMembers }) => (
-													<GroupedSuggestionCard
-														key={synth.statementId}
-														cluster={synth}
-														mode="both"
-														allowDrillToOriginals
-														pipeline="synthesis"
-														explicitMembers={rawMembers}
-														renderOriginal={renderRaw}
-													/>
-												))
-											: undefined
-									}
-									renderOriginal={renderRaw}
-								/>
-							</div>
-						))}
-					</div>
-				</>
-			)}
-
-			{(hasSynth || hasTopics) && hasRaw && (
+			{hasSynth && hasRaw && (
 				<SectionDivider
 					label={t('Open ideas')}
 					count={visibleFlatRaw.length}

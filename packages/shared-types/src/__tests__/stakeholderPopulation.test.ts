@@ -9,7 +9,9 @@ const withPopulation = (targetPopulation: number): StakeholderScope => ({
 	evaluationSettings: { targetPopulation },
 });
 
-const withMembers = (numberOfMembers: number): StakeholderScope => ({ numberOfMembers });
+const withVoters = (chainEvaluators: number): StakeholderScope => ({
+	evaluation: { chainEvaluators },
+});
 
 describe('resolveStakeholderCount', () => {
 	describe('when nothing is declared', () => {
@@ -52,46 +54,65 @@ describe('resolveStakeholderCount', () => {
 		});
 	});
 
-	describe('inferring from membership', () => {
-		it('uses the group member count when nothing is declared', () => {
-			expect(resolveStakeholderCount({}, {}, withMembers(42))).toEqual({
-				count: 42,
-				source: 'topMembers',
+	describe('inferring from who voted', () => {
+		it("uses the parent question's chain voter count when nothing is declared", () => {
+			expect(resolveStakeholderCount({}, withVoters(2), {})).toEqual({
+				count: 2,
+				source: 'parentVoters',
 				inferred: true,
 			});
 		});
 
-		it('prefers the broadest scope among inferred counts', () => {
-			// The stakeholders of a question are the group holding it, not the
-			// subset of people who happened to subscribe to that one question.
-			expect(resolveStakeholderCount({}, withMembers(8), withMembers(42))).toEqual({
-				count: 42,
-				source: 'topMembers',
+		it('prefers the question the option actually sits under', () => {
+			// chainEvaluators at the parent ALREADY contains the top's voters —
+			// that is what makes it a chain count — so the nearer number is the
+			// complete one, not the narrower one.
+			expect(resolveStakeholderCount({}, withVoters(9), withVoters(4))).toEqual({
+				count: 9,
+				source: 'parentVoters',
+				inferred: true,
+			});
+		});
+
+		it("falls back to the top's voters before giving up", () => {
+			// The window before a question's own count has ever been written.
+			expect(resolveStakeholderCount({}, {}, withVoters(4))).toEqual({
+				count: 4,
+				source: 'topVoters',
 				inferred: true,
 			});
 		});
 
 		it('lets a declaration anywhere beat an inferred count', () => {
-			// "Who signed up" and "who this decision is about" are the same
+			// "Who showed up" and "who this decision is about" are the same
 			// number only by coincidence, so a human's answer always wins.
-			expect(resolveStakeholderCount({}, withPopulation(500), withMembers(42))).toEqual({
+			expect(resolveStakeholderCount({}, withVoters(2), withPopulation(500))).toEqual({
 				count: 500,
-				source: 'parent',
+				source: 'top',
 				inferred: false,
 			});
 		});
 
 		it('never infers from the statement being voted on', () => {
-			// Self is typically the option. Its subscribers are not the
-			// stakeholders of the decision it belongs to.
-			expect(resolveStakeholderCount(withMembers(3), {}, {})).toEqual({ inferred: false });
+			// Self is typically the option, and chainEvaluators is a
+			// question-level fact. An option carrying one is stale data from
+			// when it was a question, not an electorate.
+			expect(resolveStakeholderCount(withVoters(3), {}, {})).toEqual({ inferred: false });
+		});
+
+		it('ignores the subscriber count entirely', () => {
+			// The whole point of the change: opening a page auto-subscribes you,
+			// so members measure traffic. Fifteen subscribers and no votes is
+			// no electorate at all.
+			const subscribed = { numberOfMembers: 15 } as unknown as StakeholderScope;
+			expect(resolveStakeholderCount({}, subscribed, subscribed)).toEqual({ inferred: false });
 		});
 	});
 
 	describe('rejecting counts that are not real headcounts', () => {
 		it.each([0, -1, -500, NaN, Infinity, -Infinity])('rejects %p', (bad) => {
 			expect(resolveStakeholderCount(withPopulation(bad))).toEqual({ inferred: false });
-			expect(resolveStakeholderCount({}, {}, withMembers(bad))).toEqual({ inferred: false });
+			expect(resolveStakeholderCount({}, withVoters(bad), {})).toEqual({ inferred: false });
 		});
 
 		it('rejects a null left behind by clearing the settings field', () => {

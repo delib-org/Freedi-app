@@ -1,0 +1,129 @@
+.sheet {
+	// The sheet molecule owns layout; only the body is styled here.
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding, 1rem);
+}
+
+.chooser {
+	align-self: flex-start;
+}
+
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	min-height: 0;
+
+	&:empty {
+		display: none;
+	}
+}
+
+.footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--padding, 1rem);
+	width: 100%;
+}
+
+.secondaryLink {
+	background: none;
+	border: none;
+	padding: 0.5rem 0;
+	color: var(--btn-primary);
+	font: inherit;
+	font-weight: var(--font-weight-semibold, 600);
+	cursor: pointer;
+	text-align: start;
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+		border-radius: 4px;
+	}
+}
+
+.error {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: var(--padding, 1rem);
+	border-radius: var(--radius-card, 8px);
+	background: var(--card-error, var(--card-default));
+	color: var(--text-error, var(--text-body));
+}
+
+.similar {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding-block-start: 0.5rem;
+	border-block-start: 1px solid var(--border, var(--card-border, transparent));
+}
+
+.similarTitle {
+	margin: 0;
+	font-size: 1rem;
+	color: var(--text-title);
+}
+
+.similarList {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.similarItem {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.75rem;
+	border-radius: var(--radius-card, 8px);
+	background: var(--card-default);
+	box-shadow: var(--shadow-card);
+	border-inline-start: var(--accent-strip-width, 3px) solid var(--option, var(--btn-primary));
+}
+
+.similarText {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	min-width: 0;
+}
+
+.similarHeadline {
+	margin: 0;
+	color: var(--text-title);
+	font-weight: var(--font-weight-semibold, 600);
+}
+
+.similarDescription {
+	margin: 0;
+	color: var(--text-body);
+	font-size: var(--font-size-small, 0.875rem);
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.similarMeta {
+	color: var(--text-body);
+	font-size: var(--font-size-small, 0.875rem);
+	opacity: 0.8;
+}
+
+.similarActions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+}

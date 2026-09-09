@@ -1,4 +1,6 @@
 import React from 'react';
+import { STATEMENT_VIEWS } from './statementPaths';
+import StatementViewRedirect from './StatementViewRedirect';
 import { RouteObject } from 'react-router';
 import { StatementSkeleton } from '@/view/components/atomic/molecules/StatementSkeleton';
 import withSuspense, { withCustomSuspense } from './withSuspense';
@@ -51,6 +53,10 @@ const withLoadingSuspense = (Component: React.LazyExoticComponent<React.Componen
 
 // Define protectedRoutes with lazy loading and skeleton
 export const protectedRoutes: RouteObject[] = [
+	...STATEMENT_VIEWS.map((view) => ({
+		path: `statement/:statementId/${view}`,
+		element: <StatementViewRedirect />,
+	})),
 	{
 		path: 'stage/:statementId',
 		element: <StatementMain />,

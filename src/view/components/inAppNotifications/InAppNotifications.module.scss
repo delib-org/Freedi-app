@@ -63,7 +63,9 @@
 	color: var(--text-body, #555);
 	cursor: pointer;
 	white-space: nowrap;
-	transition: background 0.15s, color 0.15s;
+	transition:
+		background 0.15s,
+		color 0.15s;
 
 	&:hover {
 		background: var(--btn-primary, #5f88e5);
@@ -84,4 +86,29 @@
 	padding: 16px;
 	box-shadow: var(--space-shadow);
 	color: var(--space-ink);
+}
+
+.inAppNotifications {
+	max-height: calc(100dvh - 5rem);
+	overflow-y: auto;
+}
+.header,
+.actions {
+	flex-wrap: wrap;
+}
+.actionBtn {
+	min-height: 44px;
+}
+
+.close {
+	align-self: flex-end;
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
 }

@@ -1,10 +1,13 @@
-import { FC, useRef, KeyboardEvent } from 'react';
+import { FC, useEffect, useRef, KeyboardEvent } from 'react';
 import clsx from 'clsx';
+import UnreadBadge from '@/view/components/unreadBadge/UnreadBadge';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 export interface Segment {
 	id: string;
 	label: string;
 	count?: number;
+	unreadCount?: number;
 }
 
 export interface SegmentedControlProps {
@@ -20,7 +23,20 @@ const SegmentedControl: FC<SegmentedControlProps> = ({
 	onChange,
 	className,
 }) => {
+	const { t } = useTranslation();
 	const tablistRef = useRef<HTMLDivElement>(null);
+
+	// On narrow screens the control becomes a horizontal scroller with a hidden
+	// scrollbar, and a scroller's resting position clips one end — in RTL, the
+	// start. Keep the selected tab in view so the clipped end is never the one
+	// you are looking at.
+	useEffect(() => {
+		const list = tablistRef.current;
+		if (!list) return;
+		const active = list.querySelector<HTMLElement>('[aria-selected="true"]');
+		if (!active) return;
+		active.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+	}, [activeId, segments.length]);
 
 	const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
 		let nextIndex: number | null = null;
@@ -70,6 +86,10 @@ const SegmentedControl: FC<SegmentedControlProps> = ({
 						onKeyDown={(e) => handleKeyDown(e, index)}
 					>
 						{segment.label}
+						<UnreadBadge
+							count={segment.unreadCount ?? 0}
+							ariaLabel={`${segment.unreadCount ?? 0} ${t('unread')}`}
+						/>
 						{segment.count !== undefined && (
 							<span className="segmented-control__count">({segment.count})</span>
 						)}

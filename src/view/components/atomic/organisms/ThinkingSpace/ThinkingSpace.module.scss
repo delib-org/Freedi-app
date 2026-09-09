@@ -17,7 +17,6 @@
 	}
 	button {
 		font-family: inherit;
-		color: inherit;
 		cursor: pointer;
 	}
 	button:focus-visible,
@@ -28,7 +27,7 @@
 		outline-offset: 3px;
 	}
 	button:disabled {
-		opacity: 0.5;
+		opacity: 1;
 		cursor: default;
 	}
 	&__skip {
@@ -373,6 +372,13 @@
 	}
 }
 
+// Give unstyled controls the surrounding ink without outranking a component's
+// own foreground colour. The previous `.space button` declaration overrode
+// primary and coloured button labels whenever their CSS module had one class.
+:where(.space button) {
+	color: inherit;
+}
+
 .space {
 	&__create {
 		background: var(--space-yellow);
@@ -392,4 +398,8 @@
 	&__avatar {
 		border-radius: 40% 50% 38% 48%;
 	}
+}
+
+.space .space__navItem--active {
+	color: var(--space-paper);
 }

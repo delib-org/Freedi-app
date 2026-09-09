@@ -1,10 +1,12 @@
 import React, { ReactNode, useId, useState } from 'react';
 import { ArrowUpRight, ChevronDown, Home, Lightbulb, Menu, Plus, X } from 'lucide-react';
 import styles from './ThinkingSpace.module.scss';
+import UnreadBadge from '@/view/components/unreadBadge/UnreadBadge';
 
 export interface SpaceLink {
 	id: string;
 	title: string;
+	unreadCount?: number;
 }
 export type Translate = (text: string) => string;
 interface ThinkingSpaceProps {
@@ -17,6 +19,7 @@ interface ThinkingSpaceProps {
 	onOpen: (id: string) => void;
 	onCreate: () => void;
 	aside?: ReactNode;
+	asideLabel?: string;
 	tools?: ReactNode;
 	t: Translate;
 	dir?: 'ltr' | 'rtl';
@@ -32,6 +35,7 @@ export default function ThinkingSpace({
 	onOpen,
 	onCreate,
 	aside,
+	asideLabel,
 	tools,
 	t,
 	dir = 'ltr',
@@ -40,6 +44,7 @@ export default function ThinkingSpace({
 	const [ideasOpen, setIdeasOpen] = useState(false);
 	const navId = useId();
 	const asideId = useId();
+	const resolvedAsideLabel = asideLabel || t('Taking shape');
 	const closeAnd = (action: () => void): void => {
 		action();
 		setNavigationOpen(false);
@@ -67,7 +72,7 @@ export default function ThinkingSpace({
 						onClick={() => setIdeasOpen(!ideasOpen)}
 						aria-expanded={ideasOpen}
 						aria-controls={asideId}
-						aria-label={t('Taking shape')}
+						aria-label={resolvedAsideLabel}
 					>
 						<Lightbulb size={21} />
 					</button>
@@ -117,6 +122,11 @@ export default function ThinkingSpace({
 								{space.title.charAt(0).toUpperCase()}
 							</span>
 							<span className={styles.space__linkText}>{space.title}</span>
+							<UnreadBadge
+								count={space.unreadCount ?? 0}
+								maxDisplay={99}
+								ariaLabel={`${space.unreadCount ?? 0} ${t('unread')}`}
+							/>
 						</button>
 					))}
 					{spaces.length === 0 && (
@@ -162,7 +172,7 @@ export default function ThinkingSpace({
 								aria-controls={asideId}
 							>
 								<Lightbulb size={18} />
-								{t('Taking shape')}
+								{resolvedAsideLabel}
 								<ChevronDown size={16} />
 							</button>
 							<aside
@@ -171,7 +181,7 @@ export default function ThinkingSpace({
 								}}
 								id={asideId}
 								className={`${styles.space__aside} ${ideasOpen ? styles['space__aside--open'] : ''}`}
-								aria-label={t('Taking shape')}
+								aria-label={resolvedAsideLabel}
 							>
 								<button
 									className={styles.space__closeBoard}

@@ -1,4 +1,5 @@
-// ViewLayersToggle — three independent layer toggles (Raw / Synth / Cluster)
+// ViewLayersToggle — the proposal-list layers (Raw / Synth). Topic clusters
+// live in Maps, where their relationships can be understood spatially.
 // above the Solutions list. Replaces the old framing switcher. Sticky strip,
 // SCSS-first BEM, design tokens only.
 
@@ -65,11 +66,16 @@
 
     // Active = the layer is shown. Solid primary fill for clear on/off reading.
     &--active {
-      background: var(--btn-primary);
-      color: var(--btn-primary-text, #fff);
+      background: var(--space-ink, var(--btn-primary));
+      color: var(--space-paper, var(--btn-primary-text, #fff));
+
+	  > span,
+	  > svg {
+		color: inherit;
+	  }
 
       &:hover {
-        color: var(--btn-primary-text, #fff);
+		color: var(--space-paper, var(--btn-primary-text, #fff));
         filter: brightness(1.05);
       }
     }
@@ -150,5 +156,21 @@
       background: var(--card-default, #fff);
       border: 1px solid var(--text-body, #333);
     }
+  }
+}
+
+// Match the shell's button-selector specificity so active layer labels keep
+// the inverse ink instead of inheriting dark text on a dark background.
+.view-layers-toggle__chip.view-layers-toggle__chip--active {
+  background: var(--space-ink, var(--btn-primary));
+  color: var(--space-paper, var(--btn-primary-text, #fff));
+
+  > span,
+  > svg {
+    color: inherit;
+  }
+
+  &:hover {
+    color: var(--space-paper, var(--btn-primary-text, #fff));
   }
 }

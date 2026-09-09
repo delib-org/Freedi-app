@@ -29,7 +29,8 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 	const settings = statement.statementSettings || {};
 
 	// State
-	const [joiningEnabled, setJoiningEnabled] = useState(settings.joiningEnabled ?? false);
+	// One switch per setting: joining is toggled in Participation rules and read here.
+	const joiningEnabled = settings.joiningEnabled ?? false;
 	const [singleJoinOnly, setSingleJoinOnly] = useState(settings.singleJoinOnly ?? false);
 	const [minMembers, setMinMembers] = useState(
 		settings.minJoinMembers ?? JOINING.DEFAULT_MIN_MEMBERS,
@@ -58,14 +59,6 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 	);
 
 	// Handlers for join behavior
-	const handleJoiningEnabledChange = useCallback(
-		(enabled: boolean) => {
-			setJoiningEnabled(enabled);
-			handleSettingChange('joiningEnabled', enabled);
-		},
-		[handleSettingChange],
-	);
-
 	const handleSingleJoinOnlyChange = useCallback(
 		(singleOnly: boolean) => {
 			setSingleJoinOnly(singleOnly);
@@ -199,7 +192,6 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 				<JoinBehaviorSettings
 					joiningEnabled={joiningEnabled}
 					singleJoinOnly={singleJoinOnly}
-					onJoiningEnabledChange={handleJoiningEnabledChange}
 					onSingleJoinOnlyChange={handleSingleJoinOnlyChange}
 				/>
 

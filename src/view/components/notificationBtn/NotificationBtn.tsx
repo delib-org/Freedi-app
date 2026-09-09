@@ -1,95 +1,69 @@
 import MailIcon from '@/assets/icons/mailIcon.svg?react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import InAppNotifications from '../inAppNotifications/InAppNotifications';
-import { useSelector, useDispatch } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-import { NotificationType } from '@freedi/shared-types';
-import {
-	inAppNotificationsSelector,
-	markNotificationsAsViewedInList,
-} from '@/redux/notificationsSlice/notificationsSlice';
+import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
+import { relevantNotifications } from '@/utils/engagementNavigation';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './NotificationBtn.module.scss';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
-import { markNotificationsAsViewedInListDB } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
-import { store } from '@/redux/store';
 import UnreadBadge from '../unreadBadge/UnreadBadge';
 
 const NotificationBtn = () => {
 	const creator = useSelector(creatorSelector);
-	const dispatch = useDispatch();
+	const notifications = useSelector(inAppNotificationsSelector);
+	const unreadCount = relevantNotifications(notifications, creator?.uid).filter(
+		(n) => !n.read,
+	).length;
+	const { t } = useTranslation();
+	const [open, setOpen] = useState(false);
+	const buttonRef = useRef<HTMLButtonElement>(null);
+	const panelId = useId();
+	const close = useCallback(() => setOpen(false), []);
+	const wrapperRef = useClickOutside(close);
+	useEffect(() => {
+		const onKey = (event: KeyboardEvent): void => {
+			if (event.key === 'Escape' && open) {
+				close();
+				buttonRef.current?.focus();
+			}
+		};
+		document.addEventListener('keydown', onKey);
 
-	// ✅ Get all notifications (for dropdown display)
-	const allNotificationsList: NotificationType[] = useSelector(inAppNotificationsSelector).filter(
-		(n) => n.creatorId !== creator?.uid,
-	);
-
-	// ✅ Count only UNREAD notifications for badge (with fallback for missing field)
-	const unreadCount = allNotificationsList.filter((n) => !n.read || n.read === undefined).length;
-
-	const [showInAppNotifications, setShowInAppNotifications] = useState(false);
-
-	function handleShowInAppNotifications() {
-		// Prompt for browser notification permission only after explicit user intent.
-		if ('Notification' in window && Notification.permission === 'default') {
-			window.dispatchEvent(new Event('freedi:open-notification-prompt'));
-		}
-
-		setShowInAppNotifications(!showInAppNotifications);
-
-		// ✅ Mark unread notifications as viewed after 2 seconds
-		if (!showInAppNotifications && unreadCount > 0) {
-			setTimeout(() => {
-				// Re-check auth state after the delay — user may have signed out
-				const currentUser = store.getState().creator.creator;
-				if (!currentUser) return;
-
-				const unreadIds = allNotificationsList
-					.filter((n) => !n.read && !n.viewedInList)
-					.map((n) => n.notificationId);
-
-				if (unreadIds.length > 0) {
-					dispatch(markNotificationsAsViewedInList(unreadIds));
-					markNotificationsAsViewedInListDB(unreadIds);
-				}
-			}, 2000);
-		}
-	}
-
-	const handleClickOutside = useCallback(() => {
-		if (showInAppNotifications) setShowInAppNotifications(false);
-	}, [showInAppNotifications, setShowInAppNotifications]);
-
-	const notifRef = useClickOutside(handleClickOutside);
+		return () => document.removeEventListener('keydown', onKey);
+	}, [open, close]);
 
 	return (
-		<div
-			onClick={handleShowInAppNotifications}
-			className={styles.notificationBtn}
-			role="button"
-			tabIndex={0}
-			onKeyDown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') handleShowInAppNotifications();
-			}}
-		>
-			{unreadCount > 0 && (
+		<div className={styles.notificationBtn} ref={wrapperRef}>
+			<button
+				type="button"
+				ref={buttonRef}
+				className={styles.notificationBtn__trigger}
+				aria-label={`${t('Notifications')}${unreadCount ? `: ${unreadCount} ${t('unread')}` : ''}`}
+				aria-expanded={open}
+				aria-controls={open ? panelId : undefined}
+				onClick={() => setOpen(!open)}
+			>
+				<MailIcon />
 				<UnreadBadge
 					count={unreadCount}
+					maxDisplay={99}
 					position="absolute"
-					ariaLabel={`${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`}
+					ariaLabel={`${unreadCount} ${t('unread')}`}
 				/>
-			)}
-			<MailIcon />
-			{showInAppNotifications && (
+			</button>
+			{open && (
 				<div
-					ref={(node) => {
-						if (notifRef) notifRef.current = node;
+					id={panelId}
+					onClick={(event) => {
+						if ((event.target as Element).closest('a')) close();
 					}}
 				>
-					<InAppNotifications />
+					<InAppNotifications onClose={close} />
 				</div>
 			)}
 		</div>
 	);
 };
-
 export default NotificationBtn;

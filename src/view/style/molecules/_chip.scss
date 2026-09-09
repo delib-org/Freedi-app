@@ -1,0 +1,102 @@
+// Chip Molecule — BEM
+// The one chip style for the UX overhaul: sort chips, "12 here", deadline,
+// statement-type accents. React wrapper: atomic/atoms/Chip.
+//
+// DOM:   <button|span class="chip [chip--selected] [chip--muted] [chip--accent] [chip--interactive]">
+//          [<span class="chip__icon">…</span>] <span class="chip__label">…</span> [<span class="chip__count">n</span>]
+//        </button|span>
+// Modifiers:
+//   --interactive  rendered as a <button>; hover/focus ring, 44px touch target
+//   --selected     filled with --btn-primary (aria-pressed="true")
+//   --muted        caption colour, for secondary metadata
+//   --accent       shows a leading dot in var(--chip-accent) (set inline by the wrapper)
+@use '../mixins' as *;
+
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	min-height: 2rem;
+	padding: 0.25rem 0.75rem;
+	border: 1px solid var(--border-light);
+	border-radius: var(--radius-chip);
+	background: var(--card-default);
+	color: var(--text-body);
+	font-family: var(--font-family);
+	font-size: var(--font-size-small);
+	font-weight: var(--font-weight-regular);
+	line-height: 1.2;
+	white-space: nowrap;
+	max-width: 100%;
+
+	&__icon {
+		display: inline-flex;
+		flex-shrink: 0;
+
+		svg {
+			width: 1rem;
+			height: 1rem;
+		}
+	}
+
+	&__label {
+		@include truncate;
+	}
+
+	&__count {
+		opacity: 0.75;
+		font-variant-numeric: tabular-nums;
+	}
+
+	&--accent::before {
+		content: '';
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background: var(--chip-accent, var(--btn-primary));
+		flex-shrink: 0;
+	}
+
+	&--muted {
+		color: var(--text-caption);
+		border-color: transparent;
+		background: transparent;
+	}
+
+	&--interactive {
+		cursor: pointer;
+		// 44px touch target without growing the visual: the padding-block is the
+		// hit area, the visible pill stays 32px because the border sits inside.
+		position: relative;
+		transition:
+			background-color var(--motion-fast) var(--motion-ease),
+			color var(--motion-fast) var(--motion-ease),
+			border-color var(--motion-fast) var(--motion-ease);
+
+		&::after {
+			content: '';
+			position: absolute;
+			inset: -6px 0;
+		}
+
+		&:hover {
+			border-color: var(--btn-primary);
+		}
+
+		@include focus-visible;
+	}
+
+	&--selected {
+		background: var(--btn-primary);
+		border-color: var(--btn-primary);
+		color: var(--white, #fff);
+
+		.chip__count {
+			opacity: 0.9;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}

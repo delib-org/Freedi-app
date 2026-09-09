@@ -3,16 +3,15 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './OptionRooms.module.scss';
 
 interface JoinBehaviorSettingsProps {
+	/** Read from the statement; the switch itself lives in Participation rules. */
 	joiningEnabled: boolean;
 	singleJoinOnly: boolean;
-	onJoiningEnabledChange: (enabled: boolean) => void;
 	onSingleJoinOnlyChange: (singleOnly: boolean) => void;
 }
 
 const JoinBehaviorSettings: FC<JoinBehaviorSettingsProps> = ({
 	joiningEnabled,
 	singleJoinOnly,
-	onJoiningEnabledChange,
 	onSingleJoinOnlyChange,
 }) => {
 	const { t } = useTranslation();
@@ -24,17 +23,9 @@ const JoinBehaviorSettings: FC<JoinBehaviorSettingsProps> = ({
 				{t('How participants can join options')}
 			</p>
 
-			<div className={styles.optionRooms__toggleRow}>
-				<label className={styles.optionRooms__toggleLabel}>
-					<input
-						type="checkbox"
-						checked={joiningEnabled}
-						onChange={(e) => onJoiningEnabledChange(e.target.checked)}
-						className={styles.optionRooms__checkbox}
-					/>
-					<span>{t('Enable joining options')}</span>
-				</label>
-			</div>
+			{!joiningEnabled && (
+				<p className={styles.optionRooms__subsectionDescription}>{t('host.joiningOffHint')}</p>
+			)}
 
 			{joiningEnabled && (
 				<div className={styles.optionRooms__radioGroup}>

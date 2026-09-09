@@ -1,4 +1,12 @@
-import React, { useEffect, useRef, useCallback, useState, memo, useMemo } from 'react';
+import React, {
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useCallback,
+	useState,
+	memo,
+	useMemo,
+} from 'react';
 import MindElixir from 'mind-elixir';
 // Library CSS loads with this lazy chunk instead of the global stylesheet
 import 'mind-elixir/style.css';
@@ -40,6 +48,7 @@ import {
 import type { DropKind } from '../mapHelpers/moveBranch';
 import { FilterType } from '@/controllers/general/sorting';
 import PanZoomControls from './PanZoomControls';
+import { findMapRoot } from '../hooks/useMapFullScreen';
 import styles from './MindElixirMap.module.scss';
 import { logError } from '@/utils/errorHandling';
 import { useSelector } from 'react-redux';
@@ -154,6 +163,34 @@ function MindElixirMap({
 
 	// State for controls panel
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
+	const layoutControlsRef = useRef<HTMLDivElement>(null);
+	const [layoutControlsRight, setLayoutControlsRight] = useState<number>();
+
+	// Keep the layout menu at the physical bottom-right of this map. The app's
+	// RTL sidebar changes the map's viewport edge, so a fixed CSS `right` value
+	// either covered the sidebar or collided with the bottom-left zoom controls.
+	useLayoutEffect(() => {
+		const root = findMapRoot(containerRef.current);
+		if (!root) return;
+
+		const updatePosition = () => {
+			setLayoutControlsRight(
+				Math.max(16, window.innerWidth - root.getBoundingClientRect().right + 16),
+			);
+		};
+		updatePosition();
+		window.addEventListener('resize', updatePosition);
+		document.addEventListener('fullscreenchange', updatePosition);
+		const resizeObserver =
+			typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(updatePosition);
+		resizeObserver?.observe(root);
+
+		return () => {
+			window.removeEventListener('resize', updatePosition);
+			document.removeEventListener('fullscreenchange', updatePosition);
+			resizeObserver?.disconnect();
+		};
+	}, []);
 
 	// Live zoom level (1 = 100%) shown in the floating zoom controls.
 	const [mapScale, setMapScale] = useState(1);
@@ -1521,10 +1558,9 @@ function MindElixirMap({
 				</div>
 			)}
 
-			{/* Persistent zoom controls (bottom-start, clear of the FAB). */}
+			{/* Persistent map controls in the canvas's physical bottom-left corner. */}
 			<PanZoomControls
 				fixed
-				align="start"
 				scale={mapScale}
 				onZoomIn={handleZoomIn}
 				onZoomOut={handleZoomOut}
@@ -1532,12 +1568,17 @@ function MindElixirMap({
 			/>
 
 			{/* Controls Panel */}
-			<div className={styles.controlsPanel}>
+			<div
+				ref={layoutControlsRef}
+				className={styles.controlsPanel}
+				style={layoutControlsRight === undefined ? undefined : { right: layoutControlsRight }}
+			>
 				{!isButtonVisible ? (
 					<button
 						className={styles.mainButton}
 						onClick={() => setIsButtonVisible(true)}
-						aria-label={t('Menu')}
+						aria-label={t('Map layout')}
+						title={t('Map layout')}
 					>
 						<svg
 							width="24"
@@ -1553,6 +1594,7 @@ function MindElixirMap({
 							<line x1="3" y1="12" x2="21" y2="12" />
 							<line x1="3" y1="18" x2="21" y2="18" />
 						</svg>
+						<span className={styles.mainButtonLabel}>{t('Map layout')}</span>
 					</button>
 				) : (
 					<div className={styles.arcButtons}>

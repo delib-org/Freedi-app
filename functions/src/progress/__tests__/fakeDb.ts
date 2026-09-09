@@ -5,7 +5,10 @@
  * limit/startAfter, `getAll`, batches and transactions.
  *
  * `{ _increment: n }` values (the jest.setup FieldValue mock) are applied as
- * numeric increments so counter assertions read naturally.
+ * numeric increments so counter assertions read naturally; `{ _delete: true }`
+ * removes the key. Dot-notation field paths ("evaluation.chainEvaluators")
+ * write into nested objects the way Firestore does, so tests assert on the
+ * shape the app actually reads rather than on a literal dotted key.
  */
 
 type Doc = Record<string, unknown>;
@@ -39,14 +42,44 @@ function isIncrement(value: unknown): value is { _increment: number } {
 	return typeof value === 'object' && value !== null && '_increment' in value;
 }
 
+function isDelete(value: unknown): boolean {
+	return typeof value === 'object' && value !== null && '_delete' in value;
+}
+
+/** Writes `value` at a (possibly dotted) path, creating objects on the way. */
+function setPath(target: Doc, path: string, value: unknown, remove: boolean): void {
+	const segments = path.split('.');
+	let cursor: Doc = target;
+	for (const segment of segments.slice(0, -1)) {
+		const next = cursor[segment];
+		cursor[segment] = typeof next === 'object' && next !== null ? { ...(next as Doc) } : {};
+		cursor = cursor[segment] as Doc;
+	}
+	const leaf = segments[segments.length - 1];
+	if (remove) delete cursor[leaf];
+	else cursor[leaf] = value;
+}
+
+function readPath(source: Doc | undefined, path: string): unknown {
+	let cursor: unknown = source;
+	for (const segment of path.split('.')) {
+		if (typeof cursor !== 'object' || cursor === null) return undefined;
+		cursor = (cursor as Doc)[segment];
+	}
+
+	return cursor;
+}
+
 function applyMerge(existing: Doc | undefined, incoming: Doc, merge: boolean): Doc {
 	const base: Doc = merge && existing ? { ...existing } : {};
 	for (const [key, value] of Object.entries(incoming)) {
 		if (isIncrement(value)) {
-			const current = typeof base[key] === 'number' ? (base[key] as number) : 0;
-			base[key] = current + value._increment;
+			const current = readPath(base, key);
+			setPath(base, key, (typeof current === 'number' ? current : 0) + value._increment, false);
+		} else if (isDelete(value)) {
+			setPath(base, key, undefined, true);
 		} else {
-			base[key] = value;
+			setPath(base, key, value, false);
 		}
 	}
 
@@ -63,6 +96,7 @@ export interface FakeDb {
 		getAll: (...refs: Ref[]) => Promise<Snap[]>;
 		batch: () => {
 			set: (ref: Ref, data: Doc, opts?: { merge?: boolean }) => void;
+			update: (ref: Ref, data: Doc) => void;
 			commit: () => Promise<void>;
 		};
 		runTransaction: <T>(fn: (t: TransactionLike) => Promise<T>) => Promise<T>;
@@ -154,6 +188,7 @@ export function createFakeDb(): FakeDb {
 				return {
 					set: (ref, data, opts) =>
 						ops.push(() => writeDoc(ref.collection, ref.id, data, !!opts?.merge)),
+					update: (ref, data) => ops.push(() => writeDoc(ref.collection, ref.id, data, true)),
 					commit: async () => ops.forEach((op) => op()),
 				};
 			},

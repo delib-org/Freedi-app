@@ -20,6 +20,7 @@ import {
 } from '@freedi/shared-types';
 import { db } from '../db';
 import { logError } from '../utils/errorHandling';
+import { refreshChainVoters } from './chainVoters';
 
 export type ParticipationKind = 'entered' | 'suggested' | 'evaluated';
 export type ProgressEventCounter = 'options' | 'evaluations';
@@ -202,6 +203,13 @@ export async function recordParticipation(input: RecordParticipationInput): Prom
 			);
 		}
 		await batch.commit();
+
+		// The unique-evaluator counter this question and its ancestors keep is
+		// what the electorate is derived from, so refresh the derived number in
+		// the same breath. Awaited rather than fired off: the caller already
+		// treats this whole function as non-blocking, and a detached promise
+		// would race the trigger's shutdown.
+		if (kind === 'evaluated') await refreshChainVoters(statementId);
 	} catch (error) {
 		logError(error, {
 			operation: 'progress.recordParticipation',

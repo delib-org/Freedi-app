@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import SuggestionCards from '../../evaluations/components/suggestionCards/SuggestionCards';
 import styles from './StagePage.module.scss';
@@ -8,10 +8,6 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { StatementContext } from '../../../StatementCont';
 import { Statement, EvaluationUI } from '@freedi/shared-types';
 import Clustering from '../../clustering/Clustering';
-import { useSummarization } from '@/controllers/hooks/useSummarization';
-import { useEditPermission } from '@/controllers/hooks/useEditPermission';
-import SummaryDisplay from '../question/document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';
-import SummarizeModal from '../question/document/MultiStageQuestion/components/SummarizeModal/SummarizeModal';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { Lightbulb, Plus, MessageSquare } from 'lucide-react';
 
@@ -23,9 +19,6 @@ const StagePage = ({ showBottomNav = true }: Props) => {
 	const { t } = useTranslation();
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
-	const { isGenerating, generateSummary } = useSummarization();
-	const { isAdmin } = useEditPermission(statement);
-	const [isModalOpen, setIsModalOpen] = useState(false);
 	const subsSelect = useMemo(
 		() => statementSubsSelector(statement?.statementId),
 		[statement?.statementId],
@@ -54,20 +47,6 @@ const StagePage = ({ showBottomNav = true }: Props) => {
 		};
 	}, []);
 
-	const handleGenerateSummary = async (customPrompt: string, includeSubQuestions: boolean) => {
-		if (!statement) return;
-		const success = await generateSummary(statement.statementId, customPrompt, includeSubQuestions);
-		if (success) {
-			setIsModalOpen(false);
-		}
-	};
-
-	// Type assertion for summary fields
-	const statementWithSummary = statement as Statement & {
-		summary?: string;
-		summaryGeneratedAt?: number;
-	};
-
 	// The "Stage: …" heading used to render here. It read its title from
 	// StatementContext — the same context StatementHeader renders as the page
 	// <h1> — so it was always a verbatim duplicate sitting directly under the
@@ -83,28 +62,6 @@ const StagePage = ({ showBottomNav = true }: Props) => {
 		<>
 			{hasSubStatements ? (
 				<div className={`${styles['stage-page']} wrapper`}>
-					{/* Summary Display */}
-					<SummaryDisplay
-						summary={statementWithSummary?.summary}
-						generatedAt={statementWithSummary?.summaryGeneratedAt}
-						statementId={statement?.statementId}
-						canEdit={isAdmin}
-					/>
-
-					{/* Summarize Button - Only visible to admins */}
-					{statement && isAdmin && (
-						<div className={styles.summarizeWrapper}>
-							<button
-								className={`btn btn--secondary ${isGenerating ? 'btn--disabled' : ''}`}
-								onClick={() => setIsModalOpen(true)}
-								disabled={isGenerating}
-								aria-label={t('Generate AI summary of the discussion')}
-							>
-								{isGenerating ? t('Generating...') : t('Summarize Discussion')}
-							</button>
-						</div>
-					)}
-
 					<StagePageSwitch statement={statement} />
 				</div>
 			) : (
@@ -154,17 +111,6 @@ const StagePage = ({ showBottomNav = true }: Props) => {
 				<div className={styles.bottomNav}>
 					<StatementBottomNav />
 				</div>
-			)}
-
-			{/* Summarize Modal */}
-			{statement && (
-				<SummarizeModal
-					isOpen={isModalOpen}
-					onClose={() => setIsModalOpen(false)}
-					onGenerate={handleGenerateSummary}
-					isLoading={isGenerating}
-					questionTitle={statement.statement}
-				/>
 			)}
 		</>
 	);

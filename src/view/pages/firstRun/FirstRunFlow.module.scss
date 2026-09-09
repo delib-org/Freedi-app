@@ -1,0 +1,80 @@
+.overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	background: color-mix(in srgb, var(--text-title) 45%, transparent);
+	padding: var(--padding);
+	padding-block-end: max(var(--padding), env(safe-area-inset-bottom));
+
+	@media (min-width: 601px) {
+		align-items: center;
+	}
+}
+
+.panel {
+	width: 100%;
+	max-width: 36rem;
+	max-height: 90dvh;
+	overflow-y: auto;
+	background: var(--card-default);
+	color: var(--text-body);
+	border-radius: var(--radius-sheet);
+	box-shadow: var(--shadow-sheet);
+	padding: var(--padding);
+}
+
+.progress {
+	margin: 0 0 0.5rem;
+	font-size: var(--font-size-small);
+	color: var(--text-paragraph);
+}
+
+.step {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+
+	&__title {
+		margin: 0;
+		text-align: start;
+	}
+
+	&__body {
+		margin: 0;
+		line-height: var(--line-height-body);
+	}
+}
+
+.consent {
+	display: flex;
+	gap: 0.75rem;
+	align-items: flex-start;
+	padding: 0.75rem;
+	border: 1px solid var(--border-color, var(--text-blue));
+	border-radius: var(--radius-card);
+	font-size: var(--font-size-small);
+	cursor: pointer;
+
+	input {
+		margin-block-start: 0.2rem;
+		width: 1.125rem;
+		height: 1.125rem;
+		flex: none;
+	}
+}
+
+.error {
+	margin: 0;
+	color: var(--text-error);
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	justify-content: flex-end;
+	margin-block-start: 0.5rem;
+}

@@ -38,6 +38,8 @@
 		margin-inline: auto;
 	}
 	&__nav {
+		position: relative;
+		z-index: 100;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -73,6 +75,7 @@
 	}
 	&__language {
 		position: relative;
+		z-index: 1;
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -90,8 +93,14 @@
 			border-color: color-mix(in srgb, var(--space-ink) 22%, var(--space-line));
 		}
 		&:focus-within {
+			z-index: 2;
 			outline: 3px solid var(--space-ink);
 			outline-offset: 5px;
+		}
+		:global(.language-pill__code) {
+			color: var(--space-paper);
+			background-color: var(--space-ink);
+			box-shadow: 0 1px 3px color-mix(in srgb, var(--space-paper) 30%, transparent);
 		}
 		> svg {
 			width: 18px;

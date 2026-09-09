@@ -1,13 +1,4 @@
-import {
-	object,
-	string,
-	number,
-	boolean,
-	optional,
-	InferOutput,
-	enum_,
-	array,
-} from 'valibot';
+import { object, string, number, boolean, optional, InferOutput, enum_, array } from 'valibot';
 import { UserSchema } from '../user/User';
 
 export const EvaluationSchema = object({
@@ -84,6 +75,17 @@ export const StatementEvaluationSchema = object({
 	// changed. Absent means no bounded population was known and the score is
 	// uncorrected.
 	stakeholderCount: optional(number()),
+	// Questions only. How many distinct people have evaluated anything under
+	// THIS question or any question above it — the deliberation's actual
+	// electorate, as opposed to everyone who happened to load the page. Every
+	// option beneath a question reads its parent's value as N (see
+	// resolveStakeholderCount) so the number costs the evaluation trigger no
+	// extra read: it is already holding the parent document.
+	//
+	// Maintained by functions/src/progress/chainVoters.ts. Absent means nobody
+	// has voted in this question's chain yet, which is honestly no electorate
+	// at all rather than an electorate of zero.
+	chainEvaluators: optional(number()),
 	viewed: optional(number()), //number of users who viewed the evaluation
 	evaluationRandomNumber: optional(number()),
 	selectionFunction: optional(enum_(SelectionFunction)), // it is used for selecting in mass consensus random, voting and top suggestions
@@ -110,44 +112,47 @@ export const StatementEvaluationSettingsSchema = object({
 	// population" and yields the uncorrected formula.
 	targetPopulation: optional(number()),
 	samplingQuality: optional(number()), // q: sampling quality (0-1], default 0.3
-	anchored: optional(object({ //a two-phase process where users propose options, and evaluations always include admin-selected anchored options alongside randomly chosen user options
-		anchored:optional(boolean()), //if true, some statements are anchored to be represented in the evaluation.
-		numberOfAnchoredStatements: optional(number()), //the number of anchored statements in the evaluation (while the others are not anchored)
-		differentiateBetweenAnchoredAndNot: optional(boolean()), //if true, the evaluation will differentiate between anchored and not anchored statements
-		anchorIcon: optional(string()),
-		anchorDescription: optional(string()),
-		anchorLabel: optional(string()),
-	})), //the admin can chose to anchor some of the statements to be evaluated
+	anchored: optional(
+		object({
+			//a two-phase process where users propose options, and evaluations always include admin-selected anchored options alongside randomly chosen user options
+			anchored: optional(boolean()), //if true, some statements are anchored to be represented in the evaluation.
+			numberOfAnchoredStatements: optional(number()), //the number of anchored statements in the evaluation (while the others are not anchored)
+			differentiateBetweenAnchoredAndNot: optional(boolean()), //if true, the evaluation will differentiate between anchored and not anchored statements
+			anchorIcon: optional(string()),
+			anchorDescription: optional(string()),
+			anchorLabel: optional(string()),
+		}),
+	), //the admin can chose to anchor some of the statements to be evaluated
 });
 
 export type StatementEvaluationSettings = InferOutput<typeof StatementEvaluationSettingsSchema>;
 
 export const UserEvaluationSchema = object({
-    // Composite ID: ${userId}--${parentStatementId}
-    userEvaluationId: string(),
+	// Composite ID: ${userId}--${parentStatementId}
+	userEvaluationId: string(),
 
-    // The user who is evaluating (can be anonymous)
-    userId: string(),
+	// The user who is evaluating (can be anonymous)
+	userId: string(),
 
-    // The parent statement/question being evaluated
-    parentStatementId: string(),
+	// The parent statement/question being evaluated
+	parentStatementId: string(),
 
-    // Array of statement IDs that have been evaluated
-    evaluatedOptionsIds: array(string()),
+	// Array of statement IDs that have been evaluated
+	evaluatedOptionsIds: array(string()),
 
-    // Timestamps in milliseconds
-    createdAt: number(),
-    lastUpdated: number(),
+	// Timestamps in milliseconds
+	createdAt: number(),
+	lastUpdated: number(),
 
-    // Optional optimization fields
-    evaluatedCount: optional(number()),
-    totalOptionsAvailable: optional(number()),
-    completedAt: optional(number()),
+	// Optional optimization fields
+	evaluatedCount: optional(number()),
+	totalOptionsAvailable: optional(number()),
+	completedAt: optional(number()),
 
-    /** Whether this evaluation was collected during test/pilot mode */
-    isTestData: optional(boolean()),
-    /** Timestamp when this data was retroactively marked as test data (if applicable) */
-    markedAsTestAt: optional(number()),
-  });
+	/** Whether this evaluation was collected during test/pilot mode */
+	isTestData: optional(boolean()),
+	/** Timestamp when this data was retroactively marked as test data (if applicable) */
+	markedAsTestAt: optional(number()),
+});
 
 export type UserEvaluation = InferOutput<typeof UserEvaluationSchema>;

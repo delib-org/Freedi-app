@@ -217,6 +217,14 @@
   }
 }
 
+// The Thinking Space shell gives every button an inherited ink colour with a
+// more specific selector. Keep selected chips on their inverse colour pair.
+.list-toolbar__chip.list-toolbar__chip--active {
+  background: var(--space-ink, var(--btn-primary));
+  border-color: var(--space-ink, var(--btn-primary));
+  color: var(--space-paper, var(--btn-primary-text, #fff));
+}
+
 @media (prefers-reduced-motion: reduce) {
   .list-toolbar__trigger,
   .list-toolbar__chip,

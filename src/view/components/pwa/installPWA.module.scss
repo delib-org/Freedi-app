@@ -68,7 +68,7 @@
     align-items: center;
     gap: 8px;
     background-color: var(--btn-primary);
-    color: white;
+    color: var(--btn-primary-text);
     border: none;
 
     &:hover {
@@ -78,6 +78,10 @@
     .installIcon {
       width: 18px;
       height: 18px;
+
+      path {
+        fill: currentColor;
+      }
     }
   }
 }

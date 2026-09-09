@@ -7,10 +7,7 @@ import {
 	listenToStatementSubscription,
 } from '@/controllers/db/statements/listenToStatements';
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
-import {
-	listenToInAppNotifications,
-	clearInAppNotifications,
-} from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import { clearInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import {
 	listenToUserDemographicQuestions,
@@ -72,7 +69,6 @@ jest.mock('@/redux/statements/statementsSlice', () => ({
 const chatScreenListeners = [
 	listenToSubStatements,
 	listenToStatementSubscription,
-	listenToInAppNotifications,
 	listenToEvaluations,
 	listenToUserDemographicQuestions,
 	listenToUserDemographicAnswers,

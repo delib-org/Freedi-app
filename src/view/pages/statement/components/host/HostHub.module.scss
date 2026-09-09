@@ -1,0 +1,272 @@
+// Host hub: the facilitator's six section cards (Live now, People, Answers,
+// Results, Settings, Insights) rendered for the `settings` view under the new
+// shell, plus the collapsed Live-now strip mirrored under the question header
+// on desktop.
+
+.root {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-sm) var(--space-md) var(--space-2xl);
+	max-inline-size: 56rem;
+	inline-size: 100%;
+	margin-inline: auto;
+}
+
+.header {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3xs);
+}
+
+.title {
+	font-size: 1.25rem;
+	font-weight: var(--font-weight-semibold);
+	color: var(--text-title);
+	text-align: start;
+	margin: 0;
+}
+
+.caption {
+	margin: 0;
+	color: var(--text-caption);
+	font-size: var(--font-size-small);
+}
+
+.card {
+	border-radius: var(--radius-card);
+	background: var(--card-default);
+	box-shadow: var(--shadow-card);
+	overflow: hidden;
+
+	&--open {
+		outline: 1px solid var(--border-light);
+	}
+}
+
+.cardHeading {
+	margin: 0;
+	font-size: inherit;
+	font-weight: inherit;
+	text-align: start;
+}
+
+.cardToggle {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+	inline-size: 100%;
+	min-block-size: 3.5rem;
+	padding: var(--space-xs) var(--space-sm);
+	border: none;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: -2px;
+	}
+}
+
+.cardIcon {
+	display: grid;
+	place-items: center;
+	inline-size: 2.25rem;
+	block-size: 2.25rem;
+	border-radius: var(--radius-chip);
+	background: var(--surface-background);
+	color: var(--btn-primary);
+	flex-shrink: 0;
+}
+
+.cardText {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
+
+.cardTitle {
+	font-weight: var(--font-weight-semibold);
+	color: var(--text-title);
+}
+
+.cardDescription {
+	color: var(--text-caption);
+	font-size: var(--font-size-small);
+}
+
+.cardChevron {
+	color: var(--text-caption);
+	flex-shrink: 0;
+}
+
+.cardBody {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: 0 var(--space-sm) var(--space-sm);
+	border-block-start: 1px solid var(--border-light);
+	padding-block-start: var(--space-sm);
+}
+
+// --- Live now -----------------------------------------------------------------
+
+.liveGrid {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2xs);
+}
+
+.liveActions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-xs);
+	align-items: center;
+}
+
+.liveDeadline {
+	padding-block-start: var(--space-xs);
+	border-block-start: 1px solid var(--border-light);
+}
+
+// The compact strip under the question header (desktop only). Collapsed to a
+// single summary row by default — seven always-on chips outweighed the
+// question itself; expanded it fans out into the chips a facilitator flips
+// without leaving the room.
+.strip {
+	display: none;
+
+	@media (min-width: 601px) {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--space-2xs);
+		padding: var(--space-2xs) var(--space-md);
+		background: var(--surface-background);
+		border-block-end: 1px solid var(--border-light);
+	}
+}
+
+.stripToggle {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2xs);
+	width: 100%;
+	padding: 0.25rem 0;
+	border: none;
+	background: none;
+	color: var(--text-caption);
+	cursor: pointer;
+	text-align: start;
+
+	&:hover .stripSummary {
+		color: var(--text-body);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+		border-radius: 4px;
+	}
+}
+
+.stripLabel {
+	font-size: var(--font-size-small);
+	font-weight: var(--font-weight-semibold);
+	color: var(--text-caption);
+	margin-inline-end: var(--space-2xs);
+	flex-shrink: 0;
+}
+
+.stripSummary {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-size: var(--font-size-small);
+	color: var(--text-caption);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.stripChevron,
+.stripChevronOpen {
+	flex-shrink: 0;
+	transition: transform var(--motion-base, 200ms) var(--motion-ease, ease);
+}
+
+.stripChevronOpen {
+	transform: rotate(180deg);
+}
+
+.stripControls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-xs);
+	padding-block-end: var(--space-2xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.stripChevron,
+	.stripChevronOpen {
+		transition: none;
+	}
+}
+
+// --- Shared rows --------------------------------------------------------------
+
+.row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-xs);
+}
+
+.rowLabel {
+	flex: 1 1 12rem;
+	color: var(--text-body);
+}
+
+.hint {
+	margin: 0;
+	color: var(--text-caption);
+	font-size: var(--font-size-small);
+}
+
+.linkButton {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-3xs);
+	padding: var(--space-2xs) var(--space-xs);
+	border: 1px solid var(--border-light);
+	border-radius: var(--radius-chip);
+	background: var(--card-default);
+	color: var(--text-body);
+	font: inherit;
+	font-size: var(--font-size-small);
+	text-decoration: none;
+	cursor: pointer;
+
+	&:hover,
+	&:focus-visible {
+		border-color: var(--btn-primary);
+		color: var(--btn-primary);
+	}
+}
+
+.subheading {
+	margin: var(--space-2xs) 0 0;
+	font-size: 1rem;
+	font-weight: var(--font-weight-semibold);
+	color: var(--text-title);
+	text-align: start;
+}
+
+.funnel {
+	padding: var(--space-xs) 0;
+}

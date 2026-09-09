@@ -1,9 +1,6 @@
 import React from 'react';
-import { useDispatch } from 'react-redux';
 import Modal from '@/view/components/modal/Modal';
-import NewStatement from './newStatement/NewStatement';
 import UserDemographicQuestions from './userDemographicQuestions/UserDemographicQuestions';
-import { setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { UserDemographicQuestion, Role } from '@freedi/shared-types';
 
 interface ConditionalModalsProps {
@@ -16,29 +13,14 @@ interface ConditionalModalsProps {
 }
 
 export const ConditionalModals: React.FC<ConditionalModalsProps> = ({
-	showNewStatement,
 	showUserQuestions,
 	userDemographicQuestions,
 	screen,
 	isMassConsensus,
 	role,
 }) => {
-	const dispatch = useDispatch();
-
 	return (
 		<>
-			{showNewStatement && (
-				<Modal
-					closeModal={(e) => {
-						if (e.target === e.currentTarget) {
-							dispatch(setShowNewStatementModal(false));
-						}
-					}}
-				>
-					<NewStatement />
-				</Modal>
-			)}
-
 			{showUserQuestions &&
 				screen !== 'settings' &&
 				!isMassConsensus &&

@@ -17,6 +17,7 @@ import { DB } from '../config';
 import { Collections, NotificationType } from '@freedi/shared-types';
 import {
 	setInAppNotificationsAll,
+	setNotificationFeedOwner,
 	markNotificationAsRead,
 	markNotificationsAsRead,
 	markStatementNotificationsAsRead,
@@ -56,52 +57,57 @@ export function listenToInAppNotifications(): Unsubscribe {
 			limit(100),
 		);
 
-		return onSnapshot(
-			q,
-			// Success callback with error handling inside
-			(inAppNotDBs) => {
-				try {
-					const notifications: NotificationType[] = [];
-					inAppNotDBs.forEach((inAppNotDB) => {
-						const data = inAppNotDB.data();
-						// Convert Firestore Timestamp to milliseconds if it exists
-						const inAppNot = {
+		// Keep the recent history and ALL explicit unread records, even beyond 100.
+		const unreadQuery = query(
+			inAppNotificationsRef,
+			where('userId', '==', user.uid),
+			where('read', '==', false),
+		);
+		const snapshots = new Map<string, NotificationType[]>();
+		let disposed = false;
+		const subscribe = (source: string, notificationQuery: typeof q): Unsubscribe =>
+			onSnapshot(
+				notificationQuery,
+				(snapshot) => {
+					if (disposed || store.getState().creator.creator?.uid !== user.uid) return;
+					const records = snapshot.docs.map((record) => {
+						const data = record.data();
+
+						return {
 							...data,
-							// Convert readAt from Firestore Timestamp to milliseconds if it exists
+							notificationId: record.id,
 							readAt: data.readAt?.toMillis ? data.readAt.toMillis() : data.readAt,
-							// Also ensure createdAt is in milliseconds
 							createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt,
 						} as NotificationType;
-						notifications.push(inAppNot);
 					});
-					store.dispatch(setInAppNotificationsAll(notifications));
-				} catch (error) {
-					logError(error, {
-						operation: 'inAppNotifications.db_inAppNotifications.unknown',
-						metadata: { message: 'Error processing notifications snapshot:' },
-					});
-					// Still allow the listener to continue functioning
-				}
-			},
-			// Error callback for the onSnapshot itself
-			(error: Error & { code?: string }) => {
-				// Permission errors are expected during sign-out when Firebase
-				// revokes the auth token before React cleanup unsubscribes the listener
-				if (
-					error.code === 'permission-denied' ||
-					error.message?.includes('Missing or insufficient permissions')
-				) {
-					store.dispatch(setInAppNotificationsAll([]));
+					snapshots.set(source, records);
+					if (snapshots.size < 2) return;
+					const combined = new Map<string, NotificationType>();
+					// A read from the history takes precedence over a pending unread snapshot.
+					for (const record of [
+						...(snapshots.get('unread') || []),
+						...(snapshots.get('recent') || []),
+					])
+						combined.set(record.notificationId, record);
+					store.dispatch(
+						setInAppNotificationsAll(
+							[...combined.values()].sort((a, b) => b.createdAt - a.createdAt),
+						),
+					);
+					store.dispatch(setNotificationFeedOwner(user.uid));
+				},
+				(error) => {
+					if (disposed || store.getState().creator.creator?.uid !== user.uid) return;
+					if (error.code === 'permission-denied') return;
+					logError(error, { operation: 'inAppNotifications.listen', metadata: { source } });
+				},
+			);
+		const unsubscribers = [subscribe('recent', q), subscribe('unread', unreadQuery)];
 
-					return;
-				}
-
-				logError(error, {
-					operation: 'inAppNotifications.db_inAppNotifications.snapshot',
-					metadata: { message: 'Error in notifications snapshot listener:' },
-				});
-			},
-		);
+		return () => {
+			disposed = true;
+			unsubscribers.forEach((unsubscribe) => unsubscribe());
+		};
 	} catch (error) {
 		logError(error, {
 			operation: 'inAppNotifications.db_inAppNotifications.listenToInAppNotifications',
@@ -204,20 +210,18 @@ export async function markMultipleNotificationsAsReadDB(notificationIds: string[
 			return;
 		}
 
-		// Batch update in Firestore
-		const batch = writeBatch(DB);
-		const now = Date.now();
-		notificationIds.forEach((notificationId) => {
-			const notificationRef = doc(DB, Collections.inAppNotifications, notificationId);
-			batch.update(notificationRef, {
-				read: true,
-				readAt: now,
-			});
-		});
-		await batch.commit();
-
-		// Update in Redux
-		store.dispatch(markNotificationsAsRead(notificationIds));
+		// The unread feed is no longer capped at 100. Respect Firestore's 500-write limit.
+		const uniqueIds = [...new Set(notificationIds)];
+		for (let offset = 0; offset < uniqueIds.length; offset += 450) {
+			const ids = uniqueIds.slice(offset, offset + 450);
+			const batch = writeBatch(DB);
+			const now = Date.now();
+			ids.forEach((id) =>
+				batch.update(doc(DB, Collections.inAppNotifications, id), { read: true, readAt: now }),
+			);
+			await batch.commit();
+			store.dispatch(markNotificationsAsRead(ids));
+		}
 	} catch (error: unknown) {
 		if (isIgnorableFirestoreWriteError(error)) return;
 

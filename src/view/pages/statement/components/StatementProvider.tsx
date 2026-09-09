@@ -1,3 +1,4 @@
+import { useFirstRunPending } from '@/view/pages/firstRun/FirstRunContext';
 import React, { useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { StatementContext } from '../StatementCont';
@@ -49,6 +50,7 @@ export const StatementProvider: React.FC<StatementProviderProps> = ({
 	setNewQuestionType,
 }) => {
 	const dispatch = useDispatch();
+	const firstRunPending = useFirstRunPending();
 
 	const contextValue = useMemo(
 		() => ({
@@ -90,13 +92,13 @@ export const StatementProvider: React.FC<StatementProviderProps> = ({
 				statement={statement}
 				topParentStatement={topParentStatement}
 				showNewStatement={showNewStatement}
-				showUserQuestions={showUserDemographicQuestions}
+				showUserQuestions={showUserDemographicQuestions && !firstRunPending}
 				userDemographicQuestions={userDemographicQuestions}
 				screen={screen}
 				isMassConsensus={isMassConsensus}
 				role={role}
 			/>
-			{isResearchEnabled && researchTopParentId && (
+			{!firstRunPending && isResearchEnabled && researchTopParentId && (
 				<ResearchConsentBanner topParentId={researchTopParentId} />
 			)}
 		</StatementContext.Provider>

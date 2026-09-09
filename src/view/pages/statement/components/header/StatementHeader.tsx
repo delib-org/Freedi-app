@@ -25,6 +25,9 @@ import {
 	questionsSelector,
 } from '@/redux/statements/statementsSlice';
 import styles from '../switch/Switch.module.scss';
+import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { relevantNotifications } from '@/utils/engagementNavigation';
 
 const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
 
@@ -115,6 +118,11 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	);
 
 	const allSubs = useSelector(subsSelect);
+	const notifications = useSelector(inAppNotificationsSelector);
+	const creator = useSelector(creatorSelector);
+	const unreadCount = relevantNotifications(notifications, creator?.uid).filter(
+		(n) => !n.read && n.parentId === statement?.statementId,
+	).length;
 	const options = useSelector(optionsSelect);
 	const questions = useSelector(questionsSelect);
 
@@ -126,7 +134,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 			...(statement?.statementType === StatementType.question
 				? [{ id: 'overview', label: t('Common ground') }]
 				: []),
-			{ id: 'chat', label: t('Conversation'), count: allSubs.length },
+			{ id: 'chat', label: t('Conversation'), count: allSubs.length, unreadCount },
 			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.option)
 				? [{ id: 'options', label: t('Proposals'), count: options.length }]
 				: []),
@@ -143,7 +151,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 		];
 
 		return allSegments;
-	}, [t, allSubs.length, options.length, questions.length, statement]);
+	}, [t, allSubs.length, options.length, questions.length, statement, unreadCount]);
 
 	const showSegmentedControl = MAIN_SCREENS.has(screen);
 

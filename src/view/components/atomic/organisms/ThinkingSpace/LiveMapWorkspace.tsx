@@ -22,7 +22,7 @@ export default function LiveMapWorkspace({
 		[Screen.agreementMap, Screen.polarizationIndex].includes(active);
 
 	return (
-		<div className={`thinking-space ${styles.workspace}`}>
+		<div className={`thinking-space ${styles.workspace}`} data-map-root>
 			<nav className={styles.workspace__path} aria-label={t('Question path')}>
 				{statement.parentId && statement.parentId !== 'top' && (
 					<button onClick={() => navigate(`/statement/${statement.parentId}?tab=overview`)}>

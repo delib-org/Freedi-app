@@ -5,7 +5,7 @@ import {
 	StatementType,
 	ActivationThreshold,
 } from '@freedi/shared-types';
-import { UserPlus, Plus, Target, Lightbulb } from 'lucide-react';
+import { UserPlus, Target, Lightbulb, MessageCircle } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import ToggleSwitch from './ToggleSwitch';
@@ -19,12 +19,18 @@ interface ParticipationSettingsProps {
 		property: keyof StatementSettings,
 		newValue: boolean | string | number,
 	) => void;
+	/**
+	 * The Host hub's hero no longer carries "Discussion chat", so the hub
+	 * renders it here; the legacy page keeps it in the hero.
+	 */
+	showChatToggle?: boolean;
 }
 
 const ParticipationSettings: FC<ParticipationSettingsProps> = ({
 	statement,
 	settings,
 	handleSettingChange,
+	showChatToggle = false,
 }) => {
 	const { t } = useTranslation();
 
@@ -138,21 +144,17 @@ const ParticipationSettings: FC<ParticipationSettingsProps> = ({
 					)}
 				</>
 			)}
-			<ToggleSwitch
-				isChecked={settings.enableAddVotingOption ?? false}
-				onChange={(checked) => handleSettingChange('enableAddVotingOption', checked)}
-				label={t('Add Options in Voting')}
-				description={t('Participants can contribute new options while voting')}
-				icon={Plus}
-				badge="recommended"
-			/>
-			<ToggleSwitch
-				isChecked={settings.enableAddEvaluationOption ?? false}
-				onChange={(checked) => handleSettingChange('enableAddEvaluationOption', checked)}
-				label={t('Add Options in Evaluation')}
-				description={t('Participants can add options during evaluation')}
-				icon={Plus}
-			/>
+			{/* "Allow participants to add answers" (both enableAdd* flags) is ONE
+			    control: in the hero on the legacy page, in Live now on the hub. */}
+			{showChatToggle && (
+				<ToggleSwitch
+					isChecked={settings.hasChat ?? false}
+					onChange={(checked) => handleSettingChange('hasChat', checked)}
+					label={t('Discussion chat')}
+					description={t('Let participants discuss the question and comment on each option')}
+					icon={MessageCircle}
+				/>
+			)}
 		</>
 	);
 };

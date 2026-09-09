@@ -10,7 +10,6 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import {
-	selectNewStatementShowModal,
 	setNewStatementModal,
 	setParentStatement,
 	setNewStatementType,
@@ -21,7 +20,6 @@ import { useLazyLoadHomeSubscriptions } from '../hooks/useLazyLoadHomeSubscripti
 import ConversationHome, {
 	ConversationSummary,
 } from '@/view/components/atomic/organisms/ThinkingSpace/ConversationHome';
-import NewStatement from '../../statement/components/newStatement/NewStatement';
 import styles from './HomeMain.module.scss';
 
 export default function HomeMain() {
@@ -31,7 +29,6 @@ export default function HomeMain() {
 	const user = useAppSelector(creatorSelector);
 	const subscriptions = useAppSelector(statementsSubscriptionsSelector);
 	const statements = useAppSelector(statementsSelector);
-	const showModal = useAppSelector(selectNewStatementShowModal);
 	const [loading, setLoading] = useState(true);
 	const [filter, setFilter] = useState<'all' | 'groups'>('all');
 	const topLevelSubscriptions = useMemo(
@@ -102,11 +99,6 @@ export default function HomeMain() {
 
 	return (
 		<>
-			{showModal && (
-				<div className={styles.addStatementModal}>
-					<NewStatement />
-				</div>
-			)}
 			<ConversationHome
 				conversations={conversations}
 				userName={user?.displayName || ''}

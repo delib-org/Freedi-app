@@ -1,14 +1,21 @@
 import { FC, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Paragraph, ParagraphType, Role, Statement, StatementType } from '@freedi/shared-types';
+import {
+	Paragraph,
+	ParagraphType,
+	QuestionType,
+	Role,
+	Statement,
+	StatementType,
+} from '@freedi/shared-types';
 import Button from '@/view/components/atomic/atoms/Button/Button';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { setStatement, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { logError } from '@/utils/errorHandling';
 import { generateParagraphId } from '@/utils/paragraphUtils';
-import { createStatement } from '@/controllers/db/statements/createStatement';
-import { setStatementToDB } from '@/controllers/db/statements/writeStatement';
+import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { parseBulkOptions } from './parseBulkOptions';
 import styles from './BulkAddOptions.module.scss';
 
@@ -38,6 +45,7 @@ function descriptionToParagraphs(description: string): Paragraph[] | undefined {
 
 const BulkAddOptions: FC<BulkAddOptionsProps> = ({ statement }) => {
 	const { t, dir } = useTranslation();
+	const { currentLanguage } = useUserConfig();
 	const { creator } = useAuthentication();
 	const dispatch = useDispatch();
 	const subscription = useSelector(statementSubscriptionSelector(statement.statementId));
@@ -64,26 +72,17 @@ const BulkAddOptions: FC<BulkAddOptionsProps> = ({ statement }) => {
 			for (let i = 0; i < parsed.length; i++) {
 				const item = parsed[i];
 				try {
-					const newStatement = createStatement({
-						text: item.title,
+					// One writer for every creation path: statement + host subscription + notifications.
+					await createStatementWithSubscription({
+						newStatementParent: statement,
+						title: item.title,
 						paragraphs: descriptionToParagraphs(item.description),
-						parentStatement: statement,
-						statementType: StatementType.option,
-						hasChildren: true,
+						newStatement: { statementType: StatementType.option },
+						newStatementQuestionType: QuestionType.multiStage,
+						currentLanguage,
+						user: creator,
+						dispatch,
 					});
-					if (!newStatement) {
-						throw new Error(`createStatement returned undefined for line ${i + 1}`);
-					}
-
-					const writeResult = await setStatementToDB({
-						statement: newStatement,
-						parentStatement: statement,
-					});
-					if (!writeResult) {
-						throw new Error(`setStatementToDB returned undefined for line ${i + 1}`);
-					}
-
-					dispatch(setStatement(newStatement));
 				} catch (error) {
 					logError(error, {
 						operation: 'BulkAddOptions.handleSubmit',
