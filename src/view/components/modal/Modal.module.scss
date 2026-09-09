@@ -45,3 +45,17 @@
 		opacity: 1;
 	}
 }
+
+:global(:root:has(.thinking-space)) .modal {
+	padding: 16px;
+	box-sizing: border-box;
+	.modalContent {
+		border-radius: 28px;
+		background: var(--space-surface);
+		color: var(--space-ink);
+		box-shadow: var(--space-shadow);
+		max-width: min(720px, 100%);
+		max-height: calc(100dvh - 32px);
+		overflow: auto;
+	}
+}

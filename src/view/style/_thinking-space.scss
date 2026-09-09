@@ -1,4 +1,6 @@
-// Scoped workspace palette. Existing screens outside this shell keep their theme.
+// Main-app palette shared by every route, workspace and portal.
+:root,
+:root[data-theme],
 .thinking-space {
 	--space-paper: #f6f5f9;
 	--space-surface: #ffffff;
@@ -29,6 +31,7 @@
 	--text-caption: var(--space-muted);
 	--input-active: var(--space-surface);
 }
+:root[data-theme='dark'],
 [data-theme='dark'] .thinking-space {
 	--space-paper: #221e2d;
 	--space-surface: #2d273a;
@@ -131,6 +134,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
+	:root,
 	.thinking-space {
 		--space-paper: #221e2d;
 		--space-surface: #2d273a;
@@ -145,9 +149,10 @@
 		--space-yellow: #554222;
 		--space-yellow-ink: #ffe198;
 		--space-pink: #563442;
-	--space-peach: #4e342f;
-	--space-coral: #ffa98f;
+		--space-peach: #4e342f;
+		--space-coral: #ffa98f;
 	}
+	:root[data-theme='light'],
 	[data-theme='light'] .thinking-space {
 		--space-paper: #f6f5f9;
 		--space-surface: #ffffff;
@@ -162,8 +167,8 @@
 		--space-yellow: #ffe17c;
 		--space-yellow-ink: #5d5125;
 		--space-pink: #f4a398;
-	--space-peach: #ffe4d5;
-	--space-coral: #727e53;
+		--space-peach: #ffe4d5;
+		--space-coral: #727e53;
 		--space-shadow: 0 8px 30px #17181609;
 		--statementBackground: var(--space-paper);
 		--card-default: var(--space-surface);
@@ -209,8 +214,18 @@
 }
 
 .thinking-space {
-  h1, h2, h3, h4 { text-align: start; }
-  input::placeholder, textarea::placeholder { color: var(--space-muted); font-size: inherit; opacity: 1; }
+	h1,
+	h2,
+	h3,
+	h4 {
+		text-align: start;
+	}
+	input::placeholder,
+	textarea::placeholder {
+		color: var(--space-muted);
+		font-size: inherit;
+		opacity: 1;
+	}
 }
 
 // Keep explicit accessibility preferences above automatic color schemes.
@@ -220,9 +235,142 @@
 }
 
 // Rounded, monochrome navigation echoes the soft panel treatment.
-.thinking-space .segmented-control { gap: 8px; padding-block: 6px; }
-.thinking-space .segmented-control__segment { padding: 10px 14px; border: 0; border-radius: 24px; }
-.thinking-space .segmented-control__segment--active { background: var(--space-purple); color: var(--space-paper); }
+.thinking-space .segmented-control {
+	gap: 8px;
+	padding-block: 6px;
+}
+.thinking-space .segmented-control__segment {
+	padding: 10px 14px;
+	border: 0;
+	border-radius: 24px;
+}
+.thinking-space .segmented-control__segment--active {
+	background: var(--space-purple);
+	color: var(--space-paper);
+}
 
-.thinking-space .segmented-control { overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; max-width: 100%; }
-.thinking-space .segmented-control__segment { flex-shrink: 0; white-space: nowrap; }
+.thinking-space .segmented-control {
+	overflow-x: auto;
+	justify-content: flex-start;
+	flex-wrap: nowrap;
+	max-width: 100%;
+}
+.thinking-space .segmented-control__segment {
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+// One token vocabulary for older controls, current components and body portals.
+:root,
+:root[data-theme],
+.thinking-space {
+	--text-label: var(--space-ink);
+	--placeHolder: var(--space-muted);
+	--surface-background: var(--space-surface);
+	--surface-edit: var(--space-surface);
+	--btn-white-default: var(--space-surface);
+	--btn-white-hover: var(--space-peach);
+	--btn-white-selected: var(--space-mint);
+	--bg-main: var(--space-paper);
+	--bg-secondary: var(--space-surface);
+	--background-secondary: var(--space-surface);
+	--background-tertiary: var(--space-purple-soft);
+	--background-hover: var(--space-peach);
+	--bg-hover: var(--space-peach);
+	--bg-selected: var(--space-purple-soft);
+	--menu-default: var(--space-surface);
+	--header-home: var(--space-mint);
+	--border-primary: var(--space-line);
+	--border-light: var(--space-line);
+	--text-blue: var(--space-ink);
+	--icons-blue: var(--space-ink);
+	--icon-blue: var(--space-ink);
+	--btn-primary: var(--space-ink);
+	--btn-primary-default: var(--space-ink);
+	--btn-primary-text: var(--space-paper);
+	--btn-primary-hover: var(--space-green);
+	--btn-secondary: var(--space-ink);
+	--btn-secondary-default: var(--space-surface);
+	--btn-secondary-hover: var(--space-peach);
+	--button-blue: var(--space-green);
+	--add-btn: var(--space-green);
+	--add-btn-hover: var(--space-ink);
+	--input-background: var(--space-surface);
+	--input-border: var(--space-line);
+	--card-hover: var(--space-peach);
+	--card-question: var(--space-purple-soft);
+	--card-orange: var(--space-peach);
+	--card-purple: var(--space-purple-soft);
+	--card-green: var(--space-mint);
+	--shadow: var(--space-line);
+	--radius-card: 28px;
+	--radius-button: 24px;
+}
+:root {
+	.btn,
+	.button {
+		border-radius: 24px;
+		min-height: 44px;
+		padding: 10px 20px;
+		font: inherit;
+		box-shadow: none;
+	}
+	.btn--primary,
+	.button--primary,
+	.btn--affirmation {
+		background: var(--space-ink);
+		color: var(--space-paper);
+		border-color: transparent;
+	}
+	.btn--secondary,
+	.button--secondary {
+		background: var(--space-surface);
+		color: var(--space-ink);
+		border: 1px solid var(--space-line);
+	}
+	.card {
+		border-radius: 28px;
+		border-color: var(--space-line);
+		box-shadow: var(--space-shadow);
+	}
+	.modal__content {
+		border-radius: 28px;
+		padding: 24px;
+		background: var(--space-surface);
+		color: var(--space-ink);
+		box-shadow: var(--space-shadow);
+	}
+	.input,
+	.input__field,
+	.textarea,
+	.select {
+		border-radius: 16px;
+		border-color: var(--space-line);
+		background: var(--space-surface);
+		color: var(--space-ink);
+	}
+	:where(button, a, input, textarea, select):focus-visible {
+		outline: 3px solid var(--space-ink);
+		outline-offset: 3px;
+	}
+}
+.thinking-space .wrapper {
+	max-width: 1200px;
+	width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+:root[data-contrast='high'] {
+	--space-line: currentColor;
+	--space-muted: var(--space-ink);
+}
+
+.thinking-space .statement-body__placeholder {
+	border: 1px solid var(--space-line);
+	border-radius: 24px;
+	background: var(--space-surface);
+	color: var(--space-muted);
+	font-style: normal;
+	padding: 20px;
+	min-height: 56px;
+}

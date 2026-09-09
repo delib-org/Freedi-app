@@ -3751,5 +3751,6 @@
   "Summaries update every 24 hours when agreed proposals change. Drafts start when all selected proposals reach 70% Cp.": "De samenvatting wordt elke 24 uur bijgewerkt als gedragen voorstellen veranderen. Een concept ontstaat zodra alle geselecteerde voorstellen 70% Cp halen.",
   "The source wording changed. Please submit an updated proposal.": "De oorspronkelijke tekst is gewijzigd. Dien een bijgewerkt voorstel in.",
   "Close vote and record the result": "Stemming sluiten en resultaat vastleggen",
-  "Selected for implementation": "Gekozen voor uitvoering"
+  "Selected for implementation": "Gekozen voor uitvoering",
+  "Add a description...": "Voeg een beschrijving toe…"
 }

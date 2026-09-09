@@ -4257,5 +4257,6 @@
   "Summaries update every 24 hours when agreed proposals change. Drafts start when all selected proposals reach 70% Cp.": "خلاصه هر 24 ساعت، در صورت تغییر پیشنهادهای مورد توافق، به‌روز می‌شود. پیش‌نویس وقتی ساخته می‌شود که همه پیشنهادهای منتخب به 70% Cp برسند.",
   "The source wording changed. Please submit an updated proposal.": "متن اصلی تغییر کرده است. لطفاً پیشنهاد به‌روزشده بفرستید.",
   "Close vote and record the result": "بستن رأی‌گیری و ثبت نتیجه",
-  "Selected for implementation": "انتخاب‌شده برای اجرا"
+  "Selected for implementation": "انتخاب‌شده برای اجرا",
+  "Add a description...": "توضیحی اضافه کنید…"
 }

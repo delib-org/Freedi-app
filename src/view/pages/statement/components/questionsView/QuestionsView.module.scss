@@ -1,6 +1,9 @@
 .questionsView {
 	width: 100%;
-	padding: 1rem 0;
+	padding: 24px;
+	box-sizing: border-box;
+	max-width: 1200px;
+	margin-inline: auto;
 	position: relative;
 }
 
@@ -10,8 +13,8 @@
 
 .grid {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 1rem;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 24px;
 
 	@media screen and (max-width: 768px) {
 		grid-template-columns: 1fr;
@@ -101,11 +104,7 @@ $subButtonSize: 48px;
 	z-index: 10;
 	// Fade to the theme scrim tokens so the bar stays dark in dark mode
 	// (same pattern as StatementBottomNav)
-	background: linear-gradient(
-		180deg,
-		var(--nav-scrim-from) 0%,
-		var(--nav-scrim-to) 42%
-	);
+	background: linear-gradient(180deg, var(--nav-scrim-from) 0%, var(--nav-scrim-to) 42%);
 
 	@media screen and (max-width: 600px) {
 		width: 100%;
@@ -290,4 +289,72 @@ $subButtonSize: 48px;
 	cursor: default;
 	pointer-events: auto;
 	border: none;
+}
+
+.content {
+	width: 100%;
+	min-width: 0;
+}
+.heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	margin-bottom: 24px;
+	h2 {
+		font-size: clamp(24px, 3vw, 34px);
+		font-weight: 500;
+		margin: 0 0 8px;
+	}
+	p {
+		color: var(--text-secondary);
+		max-width: 60ch;
+		margin: 0;
+	}
+	button {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-shrink: 0;
+	}
+}
+:global(.thinking-space) .onboarding {
+	max-width: none;
+	background: var(--space-mint);
+	padding: 24px;
+	border-radius: 28px;
+}
+@media (max-width: 600px) {
+	.questionsView {
+		padding: 16px;
+	}
+	.heading {
+		align-items: flex-start;
+		flex-direction: column;
+		gap: 16px;
+	}
+}
+
+:global(.thinking-space) {
+	.onboarding__icon {
+		background: var(--space-surface);
+		color: var(--space-ink);
+	}
+	.addButtonWrapper {
+		background: none;
+	}
+	.addButton {
+		background: var(--space-yellow);
+		color: var(--space-ink);
+		box-shadow: var(--space-shadow);
+		svg {
+			color: inherit;
+		}
+	}
+	.fanItem__icon {
+		background: var(--space-mint);
+		svg {
+			color: var(--space-ink);
+		}
+	}
 }

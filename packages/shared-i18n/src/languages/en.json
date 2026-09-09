@@ -4585,5 +4585,6 @@
   "Summaries update every 24 hours when agreed proposals change. Drafts start when all selected proposals reach 70% Cp.": "Summaries update every 24 hours when agreed proposals change. Drafts start when all selected proposals reach 70% Cp.",
   "The source wording changed. Please submit an updated proposal.": "The source wording changed. Please submit an updated proposal.",
   "Close vote and record the result": "Close vote and record the result",
-  "Selected for implementation": "Selected for implementation"
+  "Selected for implementation": "Selected for implementation",
+  "Add a description...": "Add a description…"
 }

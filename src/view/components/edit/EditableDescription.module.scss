@@ -76,3 +76,22 @@
 		display: none;
 	}
 }
+
+:global(.thinking-space) {
+	.description {
+		width: 100%;
+		max-width: 1200px;
+		margin-inline: auto;
+		box-sizing: border-box;
+	}
+	.editableDescription {
+		background: var(--space-surface);
+		border: 1px solid var(--space-line);
+		border-radius: 24px;
+		padding: 20px;
+	}
+	.placeholder {
+		font-style: normal;
+		color: var(--space-muted);
+	}
+}

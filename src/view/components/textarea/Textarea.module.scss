@@ -102,3 +102,12 @@
 	color: var(--text-caption);
 	margin-top: 4px;
 }
+
+:global(:root) {
+ .container { font-family:inherit; gap:8px; }
+ .labelContainer { height:auto; }
+ .labelWrapper { position:static; height:auto; padding:0; background:transparent !important; }
+ .label { position:static; padding:0; color:var(--space-ink); font-size:14px; font-weight:500; white-space:normal; }
+ .inputContainer { border:1px solid var(--space-line); border-radius:16px; padding:16px; background:var(--space-surface); box-sizing:border-box; &:focus-within {outline:2px solid var(--space-ink); outline-offset:2px;} }
+ .textArea { font:inherit; font-style:normal; color:var(--space-ink); min-height:24px; &::placeholder {color:var(--space-muted); font-style:normal;} }
+}

@@ -77,3 +77,16 @@
 		height: 50vh;
 	}
 }
+
+:global(.thinking-space) .statementSettingsForm {
+	gap: 24px;
+	textarea,
+	input[type='text'] {
+		border: 1px solid var(--space-line);
+		border-radius: 16px;
+		background: var(--space-surface);
+		box-shadow: none;
+		font: inherit;
+		box-sizing: border-box;
+	}
+}

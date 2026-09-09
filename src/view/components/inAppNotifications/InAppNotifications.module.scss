@@ -76,3 +76,12 @@
 	padding: 2rem 1rem;
 	color: var(--text-caption);
 }
+
+:global(:root:has(.thinking-space)) .inAppNotifications {
+	background: var(--space-surface);
+	border: 1px solid var(--space-line);
+	border-radius: 24px;
+	padding: 16px;
+	box-shadow: var(--space-shadow);
+	color: var(--space-ink);
+}

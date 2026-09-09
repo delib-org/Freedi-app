@@ -4623,5 +4623,6 @@
   "Summaries update every 24 hours when agreed proposals change. Drafts start when all selected proposals reach 70% Cp.": "הסיכום מתעדכן כל 24 שעות אם ההצעות המוסכמות השתנו. טיוטה נוצרת כשכל ההצעות שנבחרו מגיעות ל־70% Cp.",
   "The source wording changed. Please submit an updated proposal.": "נוסח המקור השתנה. יש להגיש הצעת שינוי מעודכנת.",
   "Close vote and record the result": "סגירת ההצבעה ותיעוד התוצאה",
-  "Selected for implementation": "נבחרה ליישום"
+  "Selected for implementation": "נבחרה ליישום",
+  "Add a description...": "הוסיפו תיאור…"
 }

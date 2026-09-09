@@ -3872,5 +3872,6 @@
   "Summaries update every 24 hours when agreed proposals change. Drafts start when all selected proposals reach 70% Cp.": "يتحدث الملخص كل 24 ساعة إذا تغيّرت المقترحات المتفق عليها. تُنشأ المسودة عندما تبلغ جميع المقترحات المختارة 70% Cp.",
   "The source wording changed. Please submit an updated proposal.": "تغيّر النص الأصلي. يرجى تقديم اقتراح محدّث.",
   "Close vote and record the result": "إغلاق التصويت وتسجيل النتيجة",
-  "Selected for implementation": "اختير للتنفيذ"
+  "Selected for implementation": "اختير للتنفيذ",
+  "Add a description...": "أضيفوا وصفًا…"
 }

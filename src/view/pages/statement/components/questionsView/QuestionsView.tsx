@@ -15,7 +15,6 @@ import SummarizeModal from '../statementTypes/question/document/MultiStageQuesti
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import CompoundIcon from '@/assets/icons/stepsIcon.svg?react';
 import SimpleQuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
-import useStatementColor from '@/controllers/hooks/useStatementColor';
 import styles from './QuestionsView.module.scss';
 import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 import { HelpCircle, Plus, MessageSquare } from 'lucide-react';
@@ -26,7 +25,6 @@ const QuestionsView: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const subscription = useSelector(statementSubscriptionSelector(statement?.statementId));
 	const isAdmin = subscription?.role === Role.admin || subscription?.role === Role.creator;
-	const statementColor = useStatementColor({ statement });
 	const [menuOpen, setMenuOpen] = useState(false);
 	const { isGenerating, generateSummary } = useSummarization();
 	const [isSummarizeModalOpen, setIsSummarizeModalOpen] = useState(false);
@@ -93,6 +91,18 @@ const QuestionsView: FC = () => {
 	return (
 		<>
 			<div className={styles.questionsView}>
+				<header className={styles.heading}>
+					<div>
+						<h2>{t('Questions')}</h2>
+						<p>{t('questionsOnboarding.breakItDownDesc')}</p>
+					</div>
+					{isAdmin && (
+						<button className="btn btn--primary" onClick={handleAddQuestion}>
+							<Plus size={18} />
+							{t('Add a question')}
+						</button>
+					)}
+				</header>
 				{visibleQuestions.length === 0 ? (
 					<div className={styles.onboarding}>
 						<div className={styles.onboarding__step}>
@@ -136,7 +146,7 @@ const QuestionsView: FC = () => {
 						</div>
 					</div>
 				) : (
-					<div className="wrapper">
+					<div className={styles.content}>
 						<SummaryDisplay
 							summary={statementWithSummary?.summary}
 							generatedAt={statementWithSummary?.summaryGeneratedAt}
@@ -219,13 +229,12 @@ const QuestionsView: FC = () => {
 					</div>
 					<button
 						className={`${styles.addButton} ${menuOpen ? styles.addButtonActive : ''}`}
-						style={statementColor}
 						onClick={() => setMenuOpen((open) => !open)}
 						aria-label={t('Add a question')}
 						aria-expanded={menuOpen}
 						aria-haspopup="menu"
 					>
-						<PlusIcon style={{ color: statementColor.color }} />
+						<PlusIcon />
 					</button>
 				</div>
 			</div>

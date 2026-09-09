@@ -91,3 +91,11 @@
 		opacity: 0;
 	}
 }
+
+:global(.thinking-space) .instantSettings {
+	border-radius: 28px;
+	border: 1px solid var(--space-line);
+	background: var(--space-surface);
+	box-shadow: none;
+	padding: 24px;
+}

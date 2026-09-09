@@ -3,15 +3,21 @@ import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { usePublicAccess } from '@/controllers/hooks/usePublicAccess';
 import { setStatement, statementSelector } from '@/redux/statements/statementsSlice';
+import AppThinkingSpace from '@/view/components/atomic/organisms/ThinkingSpace/AppThinkingSpace';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import Page401 from '@/view/pages/page401/Page401';
 import WaitingPage from '@/view/pages/waiting/WaitingPage';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Outlet, useNavigate, useParams } from 'react-router';
+import { Outlet, useNavigate, useParams, useLocation } from 'react-router';
 
 export default function ProtectedLayout() {
 	const { statementId } = useParams();
+	const { pathname } = useLocation();
+	const alreadyFramed =
+		pathname === '/' ||
+		pathname === '/home' ||
+		/^\/(statement|statement-screen|stage|map)(\/|$)/.test(pathname);
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const { isCheckingAccess } = usePublicAccess(statementId);
@@ -52,7 +58,13 @@ export default function ProtectedLayout() {
 
 	return (
 		<AuthProvider>
-			<Outlet />
+			{alreadyFramed ? (
+				<Outlet />
+			) : (
+				<AppThinkingSpace>
+					<Outlet />
+				</AppThinkingSpace>
+			)}
 		</AuthProvider>
 	);
 }

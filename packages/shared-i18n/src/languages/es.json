@@ -3751,5 +3751,6 @@
   "Summaries update every 24 hours when agreed proposals change. Drafts start when all selected proposals reach 70% Cp.": "El resumen se actualiza cada 24 horas si cambian las propuestas acordadas. El borrador se crea cuando todas las seleccionadas alcanzan 70% Cp.",
   "The source wording changed. Please submit an updated proposal.": "El texto original cambió. Envía una propuesta actualizada.",
   "Close vote and record the result": "Cerrar votación y registrar resultado",
-  "Selected for implementation": "Seleccionado para aplicar"
+  "Selected for implementation": "Seleccionado para aplicar",
+  "Add a description...": "Añade una descripción…"
 }

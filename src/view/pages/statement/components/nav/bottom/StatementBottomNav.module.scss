@@ -376,3 +376,22 @@ $addOptionSize: 60px;
 }
 
 :global(.thinking-space) { .addOptionButton { background: var(--space-purple) !important; color: var(--space-paper) !important; } .addOptionButtonLabel { color: inherit; } }
+
+:global(.thinking-space) {
+	.sortButton,
+	.subFabButton {
+		background: var(--space-mint);
+		color: var(--space-ink);
+		box-shadow: var(--space-shadow);
+	}
+	.sortButton svg,
+	.subFabButton svg,
+	.whiteIcon,
+	.whiteIcon * {
+		color: var(--space-ink) !important;
+		fill: currentColor;
+	}
+	.sortMenu {
+		border-radius: 24px;
+	}
+}
