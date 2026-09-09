@@ -213,14 +213,14 @@ const rows: Record<string, readonly string[]> = {
 		'Tu perspectiva tiene un lugar aquí.',
 		'Jouw perspectief hoort hier thuis.',
 	],
-	'Freedi helps communities turn different views into decisions they can stand behind.': [
-		'Freedi helps communities turn different views into decisions they can stand behind.',
-		'פרידי עוזרת לקהילות להפוך דעות שונות להחלטות שאפשר לעמוד מאחוריהן.',
-		'تساعد فريدي المجتمعات على تحويل وجهات النظر المختلفة إلى قرارات يمكنها دعمها.',
-		'فریدی به جامعه‌ها کمک می‌کند دیدگاه‌های متفاوت را به تصمیم‌هایی تبدیل کنند که بتوانند از آن‌ها حمایت کنند.',
-		'Freedi hilft Gemeinschaften, aus unterschiedlichen Sichtweisen Entscheidungen zu entwickeln, hinter denen sie stehen können.',
-		'Freedi ayuda a las comunidades a convertir distintas perspectivas en decisiones que pueden respaldar.',
-		'Freedi helpt gemeenschappen om verschillende perspectieven om te zetten in besluiten waar ze achter kunnen staan.',
+	'WizCol helps communities turn different views into decisions they can stand behind.': [
+		'WizCol helps communities turn different views into decisions they can stand behind.',
+		'וויזקול עוזרת לקהילות להפוך דעות שונות להחלטות שאפשר לעמוד מאחוריהן.',
+		'تساعد ويزكول المجتمعات على تحويل وجهات النظر المختلفة إلى قرارات يمكنها دعمها.',
+		'ویزکول به جامعه‌ها کمک می‌کند دیدگاه‌های متفاوت را به تصمیم‌هایی تبدیل کنند که بتوانند از آن‌ها حمایت کنند.',
+		'WizCol hilft Gemeinschaften, aus unterschiedlichen Sichtweisen Entscheidungen zu entwickeln, hinter denen sie stehen können.',
+		'WizCol ayuda a las comunidades a convertir distintas perspectivas en decisiones que pueden respaldar.',
+		'WizCol helpt gemeenschappen om verschillende perspectieven om te zetten in besluiten waar ze achter kunnen staan.',
 	],
 	'Start with a question.': [
 		'Start with a question.',

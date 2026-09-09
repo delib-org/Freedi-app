@@ -1,11 +1,12 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import {
 	ArrowUpRight,
-	Sprout,
 	Sparkles,
 	MessagesSquare,
 	Layers3,
 	FileHeart,
+	Languages,
+	LogIn,
 	X,
 } from 'lucide-react';
 import type { Translate } from '../ThinkingSpace/ThinkingSpace';
@@ -27,7 +28,7 @@ export default function LandingPage({
 }: LandingPageProps) {
 	const dialog = useRef<HTMLDialogElement>(null);
 	useEffect(() => {
-		document.title = 'Freedi · ' + t('Find a way forward. Together.');
+		document.title = 'WizCol · ' + t('Find a way forward. Together.');
 	}, [t]);
 	const openLogin = (): void => {
 		onLoginIntent?.();
@@ -62,17 +63,31 @@ export default function LandingPage({
 				{t('Skip to content')}
 			</a>
 			<header className={styles.landing__nav}>
-				<a href="#" className={styles.landing__brand} aria-label="Freedi">
-					<span>
-						<Sprout />
-					</span>
-					Freedi.
+				<a href="#" className={styles.landing__brand} aria-label="WizCol">
+					<picture>
+						<source media="(prefers-color-scheme: dark)" srcSet="/brand/wizcol-logo-dark.webp" />
+						<img
+							src="/brand/wizcol-logo.webp"
+							alt="WizCol"
+							width="320"
+							height="230"
+							fetchPriority="high"
+							decoding="async"
+						/>
+					</picture>
 				</a>
 				<nav aria-label={t('Main navigation')}>
 					<a href="#how-it-works">{t('How it works')}</a>
-					{language}
-					<button onClick={openLogin}>
-						{t('Log in')} <ArrowUpRight size={17} />
+					{language && (
+						<span className={styles.landing__language}>
+							<Languages aria-hidden="true" />
+							{language}
+						</span>
+					)}
+					<button onClick={openLogin} aria-label={t('Log in')}>
+						<span className={styles.landing__loginLabel}>{t('Log in')}</span>
+						<LogIn className={styles.landing__loginIcon} aria-hidden="true" />
+						<ArrowUpRight className={styles.landing__loginArrow} size={17} />
 					</button>
 				</nav>
 			</header>
@@ -90,7 +105,7 @@ export default function LandingPage({
 						</h1>
 						<p className={styles.landing__intro}>
 							{t(
-								'Freedi helps communities turn different views into decisions they can stand behind.',
+								'WizCol helps communities turn different views into decisions they can stand behind.',
 							)}
 						</p>
 						<div className={styles.landing__actions}>
@@ -165,7 +180,7 @@ export default function LandingPage({
 				</section>
 			</main>
 			<footer className={styles.landing__footer}>
-				<strong>Freedi.</strong>
+				<strong>WizCol.</strong>
 				<span>{t('A little curiosity. A better possibility.')}</span>
 				<a href="https://delib.org" target="_blank" rel="noreferrer">
 					{t('From the Institute for Deliberative Democracy')} ↗
@@ -186,7 +201,7 @@ export default function LandingPage({
 				>
 					<X />
 				</button>
-				<span className={styles.landing__eyebrow}>Freedi.</span>
+				<span className={styles.landing__eyebrow}>WizCol.</span>
 				<h2 id="landing-login-title">{t('Your perspective belongs here.')}</h2>
 				<div className={styles.landing__login}>
 					{typeof login === 'function' ? login(() => dialog.current?.close()) : login}
