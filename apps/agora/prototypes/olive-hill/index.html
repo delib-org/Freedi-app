@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#243f39"><title>אגורה — גבעת הזיתים</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<canvas id="world" aria-label="גבעה יוונית בתלת־מימד, עם שביל המוביל לבקתה" tabindex="0"></canvas>
+<div class="vignette"></div><div class="frame"></div>
+<header><div class="brand"><span class="emblem">✳</span><div>אגורה<small>גבעת הזיתים</small></div></div><div class="tools"><button id="open-board">▤ לוח ההצעות</button><button id="sound" aria-pressed="false" title="צלילי טבע ומוזיקה">♫ <span>הפעלת צלילים</span></button><button id="quality" title="שינוי איכות התצוגה">איכות גבוהה</button></div></header>
+<aside class="chapter"><span class="eyebrow">פרק ראשון · יוון</span><h1>בצל עץ הזית</h1><p id="objective">לכו בשביל אל האישה החכמה.</p><div class="progress"><i id="progress"></i></div><span id="stage">01 / 03 · הדרך</span></aside>
+<div id="loading" role="status"><span class="loader"></span><p>רוח קלה בין עצי הזית…</p></div>
+<div id="bubble" class="bubble" hidden><span class="speaker">החכמה</span><p id="speech">מה לדעתך הפתרון לבעיה?</p><button id="write">לכתוב על השולחן <span>↙</span></button></div>
+<div id="arrival" hidden>הגעתם לבקתה · לחצו E כדי לשוחח</div>
+<footer><span class="controls">W A S D &nbsp; הליכה <b>·</b> גרירה להסתכלות <b>·</b> E שיחה</span><button id="walk" class="primary">ללכת אל הבקתה <span>←</span></button><span class="location">הרוח נושבת מן הים <span>☀</span></span></footer>
+<div id="mobile"><button data-move="forward" aria-label="קדימה">↑</button><button data-move="left" aria-label="שמאלה">←</button><button data-move="backward" aria-label="אחורה">↓</button><button data-move="right" aria-label="ימינה">→</button></div>
+<dialog id="desk" aria-labelledby="desk-title"><form id="answer-form"><button id="close" type="button" aria-label="סגירה">×</button><span class="eyebrow">תחנה ראשונה · המחשבה שלכם</span><h2 id="desk-title">מה לדעתך הפתרון לבעיה?</h2><p>קחו רגע. כל רעיון מתחיל במילים הראשונות.</p><label for="answer">ההצעה שלי</label><textarea id="answer" maxlength="2000" required placeholder="לדעתי, אפשר…"></textarea><div class="paper-bottom"><small id="count">0 / 2000</small><span>ההצעה נשמרת בדפדפן הזה בלבד</span></div><button class="primary" type="submit">להניח את ההצעה על השולחן <span>←</span></button><p id="save-error" role="alert" hidden>לא הצלחנו לשמור בדפדפן. אפשר להעתיק את התשובה ולנסות שוב.</p></form></dialog>
+<div id="completion" hidden role="status"><span>✦</span><div><strong>הרעיון שלכם הוא תחילתו של שינוי.</strong><p>השלמתם את התחנה הראשונה.</p></div><button id="again">לכתוב מחדש</button><button id="explore">להמשיך לטייל</button></div>
+<dialog id="proposal-board" aria-labelledby="board-title"><div class="board-heading"><div><span class="eyebrow">בצל הזית · חושבים יחד</span><h2 id="board-title">הרעיונות שלנו</h2><p>קראו את ההצעות ובחרו את הפרצוף שמבטא את דעתכם.</p></div><button id="close-board" aria-label="סגירת לוח ההצעות">×</button></div><div id="proposal-notes" class="proposal-notes"></div><div class="board-bottom"><span id="rating-progress">טרם דירגתם הצעות</span><button id="board-write">לכתוב את ההצעה שלי ←</button></div><p class="demo-caption">הצעות האחרים הן דוגמאות לדמו. ההצעה והדירוגים שלכם נשמרים בדפדפן הזה בלבד.</p><p id="board-error" role="alert" hidden>לא הצלחנו לשמור את הדירוג בדפדפן. נסו שוב.</p><p id="board-announcement" class="sr-only" aria-live="polite"></p></dialog>
+<div id="letter-status" role="status" hidden>החכמה: תודה לך! המכתב שלך בדרך ללוח…</div>
+<script type="module" src="main.js"></script>
+</body></html>
