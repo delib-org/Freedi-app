@@ -17,6 +17,7 @@ interface ConversationHomeProps {
 	userName: string;
 	onOpen: (id: string) => void;
 	onCreate: () => void;
+	onCreateGroup?: () => void;
 	onFilterChange?: (filter: 'all' | 'groups') => void;
 	loading?: boolean;
 	more?: React.ReactNode;
@@ -27,6 +28,7 @@ export default function ConversationHome({
 	userName,
 	onOpen,
 	onCreate,
+	onCreateGroup,
 	onFilterChange,
 	loading,
 	more,
@@ -94,6 +96,14 @@ export default function ConversationHome({
 					/>
 				</label>
 			</div>
+			{filter === 'groups' && onCreateGroup && (
+				<div className={styles.home__heading}>
+					<button className={styles.home__new} onClick={onCreateGroup}>
+						<Plus size={17} aria-hidden="true" />
+						{t('Open a new group')}
+					</button>
+				</div>
+			)}
 			{loading ? (
 				<div className={styles.home__empty} role="status">
 					{t('Gathering your conversations…')}
@@ -148,8 +158,20 @@ export default function ConversationHome({
 							? t('Try another word, or clear your search.')
 							: t('Bring a question and a few people. You can figure out the rest together.')}
 					</p>
-					<button onClick={query ? () => setQuery('') : onCreate}>
-						{query ? t('Clear search') : t('Start a conversation')}
+					<button
+						onClick={
+							query
+								? () => setQuery('')
+								: filter === 'groups' && onCreateGroup
+									? onCreateGroup
+									: onCreate
+						}
+					>
+						{query
+							? t('Clear search')
+							: filter === 'groups' && onCreateGroup
+								? t('Open a new group')
+								: t('Start a conversation')}
 					</button>
 				</div>
 			)}

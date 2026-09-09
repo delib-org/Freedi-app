@@ -11,6 +11,7 @@ import {
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import {
 	selectNewStatementShowModal,
+	setNewStatementModal,
 	setParentStatement,
 	setNewStatementType,
 	setShowNewStatementModal,
@@ -83,6 +84,18 @@ export default function HomeMain() {
 		dispatch(setShowNewStatementModal(true));
 	};
 
+	const createGroup = (): void => {
+		dispatch(
+			setNewStatementModal({
+				parentStatement: 'top',
+				newStatement: { statementType: StatementType.group },
+				showModal: true,
+				isLoading: false,
+				error: null,
+			}),
+		);
+	};
+
 	return (
 		<>
 			{showModal && (
@@ -95,6 +108,7 @@ export default function HomeMain() {
 				userName={user?.displayName || ''}
 				onOpen={(id) => navigate(`/statement/${id}`)}
 				onCreate={create}
+				onCreateGroup={createGroup}
 				onFilterChange={setFilter}
 				loading={loading}
 				t={t}
