@@ -1,0 +1,85 @@
+.maps {
+	&__tree {
+		padding: 24px 0;
+		ul {
+			list-style: none;
+			padding-inline-start: 24px;
+			border-inline-start: 2px solid var(--space-line);
+		}
+		> ul {
+			padding-inline-start: 0;
+			border: 0;
+		}
+		li {
+			padding-block: 12px;
+		}
+		summary {
+			cursor: pointer;
+			font-size: 18px;
+			padding: 16px;
+			background: var(--space-purple-soft);
+			border-radius: 16px;
+		}
+		details > button {
+			margin-block: 12px;
+		}
+	}
+	&__solutions {
+		padding: 16px;
+		background: var(--space-peach);
+		border-radius: 24px;
+		margin-block: 16px;
+	}
+	&__solution {
+		margin-block: 12px;
+		padding: 16px;
+		border: 1px solid var(--space-line);
+		border-radius: 16px;
+		background: var(--space-surface);
+		button {
+			text-align: start;
+			line-height: 1.5;
+		}
+		summary {
+			font-size: 13px;
+			margin-top: 8px;
+			padding: 8px;
+			background: var(--space-mint);
+			border-radius: 8px;
+			cursor: pointer;
+		}
+		li {
+			padding-block: 8px;
+			line-height: 1.5;
+		}
+	}
+	&__chart {
+		width: 100%;
+		max-height: 440px;
+		margin-block: 24px;
+		overflow: visible;
+		path {
+			fill: var(--space-peach);
+			stroke: var(--space-muted);
+			stroke-width: 1;
+		}
+		text {
+			font-size: 13px;
+			fill: var(--space-ink);
+		}
+		circle {
+			fill: var(--space-yellow);
+			stroke: var(--space-ink);
+			stroke-width: 1;
+		}
+		g[role='button'] {
+			cursor: pointer;
+		}
+		g[role='button']:focus {
+			outline: 2px solid var(--space-ink);
+		}
+		g[role='button']:hover circle {
+			fill: var(--space-mint);
+		}
+	}
+}

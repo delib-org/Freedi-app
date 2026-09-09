@@ -1,3 +1,6 @@
+import { Lightbulb } from 'lucide-react';
+import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
+import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 import React, { FC, useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { Statement, StatementType } from '@freedi/shared-types';
@@ -67,6 +70,9 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	} = useStatementTypeDetection(statement, isMe);
 
 	const [showReplyInput, setShowReplyInput] = useState(false);
+	const [converting, setConverting] = useState(false);
+	const [conversionError, setConversionError] = useState('');
+	const { isHalted } = useIsProcessHalted(parentStatement);
 	const [replyText, setReplyText] = useState('');
 	const [isEdit, setIsEdit] = useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
@@ -197,6 +203,28 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	);
 
 	const isQuestion = statement.statementType === StatementType.question;
+	const canPropose =
+		_isAuthorized &&
+		!isHalted &&
+		statement.statementType === StatementType.statement &&
+		!!parentStatement &&
+		isStatementTypeAllowedAsChildren(parentStatement, StatementType.option);
+	const makeProposal = async (): Promise<void> => {
+		if (!canPropose || converting) return;
+		setConverting(true);
+		setConversionError('');
+		try {
+			const result = await changeStatementType(statement, StatementType.option, _isAuthorized);
+			if (!result.success)
+				setConversionError(
+					result.error || t('Could not turn this thought into a proposal. Please try again.'),
+				);
+		} catch {
+			setConversionError(t('Could not turn this thought into a proposal. Please try again.'));
+		} finally {
+			setConverting(false);
+		}
+	};
 
 	const nodeClassName = [
 		styles['tree-message-node'],
@@ -273,6 +301,16 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 					>
 						{t('reply')}
 					</button>
+					{canPropose && (
+						<button
+							className={styles['tree-message-node__action-btn']}
+							onClick={makeProposal}
+							disabled={converting}
+						>
+							<Lightbulb size={14} />
+							{converting ? t('Saving...') : t('Make this a proposal')}
+						</button>
+					)}
 					{isQuestion && (
 						<button
 							className={styles['tree-message-node__action-btn']}
@@ -310,6 +348,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 					</button>
 				</div>
 
+				{conversionError && <p role="alert">{conversionError}</p>}
 				{showTypeSuggestion && suggestedType && (
 					<TypeSuggestionBanner
 						statement={statement}

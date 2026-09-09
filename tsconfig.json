@@ -20,6 +20,7 @@
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["src/*"],
+			"@freedi/shared-types": ["packages/shared-types/src/index.ts"],
 			"@freedi/shared-i18n": ["packages/shared-i18n/src/index.ts"],
 			"@freedi/shared-i18n/*": ["packages/shared-i18n/src/*"],
 			"@freedi/shared-utils": ["packages/shared-utils/src/index.ts"],

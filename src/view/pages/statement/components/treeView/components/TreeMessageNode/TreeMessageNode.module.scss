@@ -192,3 +192,11 @@
 		}
 	}
 }
+
+:global(.thinking-space) {
+  .tree-message-node { padding: 18px 14px; border-radius: 14px; margin-block: 4px; background: var(--space-surface); border: 1px solid var(--space-line); }
+  .tree-message-node__author { font-size: 13px; color: var(--space-ink); }
+  .tree-message-node__time { color: var(--space-muted); font-size: 10px; }
+  .tree-message-node__text { font-size: 14px; line-height: 1.75; }
+  .tree-message-node__action-btn { color: var(--space-muted); opacity: 1; padding: 8px; min-height: 36px; border-radius: 8px; &:hover { background: var(--space-purple-soft); color: var(--space-purple); } }
+}

@@ -1,4 +1,5 @@
-import React, { useContext, useMemo, useRef } from 'react';
+import OptionImprovement from '@/view/components/atomic/organisms/ThinkingSpace/OptionImprovement';
+import React, { useContext, useMemo, useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import { Role, Screen, StatementType } from '@freedi/shared-types';
@@ -16,6 +17,7 @@ import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
 import StatementBody from '@/view/components/atomic/molecules/StatementBody/StatementBody';
 import TopAnswersPanel from '../topAnswers/TopAnswersPanel';
+import ConversationWelcome from '@/view/components/atomic/organisms/ThinkingSpace/ConversationWelcome';
 
 interface SwitchProps {
 	activeView: string;
@@ -33,6 +35,10 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 	// of the centered reading column `.page__main` enforces on wide screens.
 	const { screen } = useParams();
 	const isFullBleedScreen = screen === Screen.mindMap;
+
+	useEffect(() => {
+		if (activeView !== 'chat') mainRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+	}, [activeView, statement?.statementId, screen]);
 
 	const subsSelect = useMemo(
 		() => statementSubsSelector(statement?.statementId),
@@ -52,10 +58,14 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 	// The mind map needs every pixel of height for the canvas: the description
 	// editor, the presence row and the onboarding card pushed the graph below
 	// the fold. On that screen the title alone stays.
-	const showReadingHeader = !isFullBleedScreen;
+	const isAgreementView = ['overview', 'themes', 'covenant', 'summary', 'maps'].includes(
+		activeView,
+	);
+	const showReadingHeader = !isFullBleedScreen && !isAgreementView;
 
 	return (
 		<main ref={mainRef} className={`page__main${isFullBleedScreen ? ' page__main--flush' : ''}`}>
+			{showReadingHeader && activeView === 'chat' && <ConversationWelcome t={t} compact />}
 			{showReadingHeader && <OnlineUsers statementId={statement?.statementId} />}
 			{showReadingHeader && statement && <StatementBody host={statement} canEdit={isAdmin} />}
 			{showReadingHeader && allSubs.length === 0 && activeView === 'chat' && (
@@ -102,6 +112,12 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 					<p className={styles.onboarding__cta}>{t('questionOnboarding.getStarted')}</p>
 				</div>
 			)}
+			{showReadingHeader &&
+				activeView === 'chat' &&
+				statement?.statementType === StatementType.option &&
+				!statement.isCluster && (
+					<OptionImprovement key={statement.statementId} statement={statement} />
+				)}
 			<SwitchScreen statement={statement} role={role} activeView={activeView} />
 			{/* Admin control over which answers are marked as leading, and in what
 			    order the list reads. Mounted here rather than inside StagePage
@@ -110,7 +126,7 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 			    Like the join app's facilitator gear, it stays reachable from every
 			    tab of the question — an admin re-ranks the answers while reading the
 			    discussion, not only while standing on the answers list. */}
-			{isAdmin && statement && canHaveAnswers && !isFullBleedScreen && (
+			{isAdmin && statement && canHaveAnswers && !isFullBleedScreen && !isAgreementView && (
 				<TopAnswersPanel statement={statement} />
 			)}
 		</main>

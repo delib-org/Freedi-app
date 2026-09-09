@@ -34,12 +34,6 @@ const ChatInput: FC<Props> = ({
 	const [message, setMessage] = useState('');
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-	useEffect(() => {
-		if (textareaRef.current && !sideChat) {
-			textareaRef.current.focus();
-		}
-	}, [sideChat]);
-
 	// Auto-focus when reply-to is set
 	useEffect(() => {
 		if (replyToStatement && textareaRef.current) {
@@ -60,7 +54,7 @@ const ChatInput: FC<Props> = ({
 				navigator.userAgent,
 			);
 
-			if (e.key === 'Enter' && !e.shiftKey && !_isMobile) {
+			if (e.key === 'Enter' && !e.shiftKey && !_isMobile && !e.nativeEvent.isComposing) {
 				handleSubmitInput(e);
 			}
 		} catch (error) {
@@ -72,6 +66,7 @@ const ChatInput: FC<Props> = ({
 		e: React.FormEvent<HTMLFormElement> | React.KeyboardEvent<HTMLTextAreaElement>,
 	) => {
 		e.preventDefault();
+		if (!message.trim()) return;
 
 		if (replyAsChild && replyToStatement) {
 			// Tree view: create reply as child of the replied-to message
@@ -132,7 +127,7 @@ const ChatInput: FC<Props> = ({
 					}}
 					data-cy="statement-chat-input"
 					className="page__footer__form__input"
-					aria-label="Form Input"
+					aria-label={t('Share a thought')}
 					name="newStatement"
 					ref={textareaRef}
 					onKeyUp={(e) => handleKeyUp(e)}
@@ -143,11 +138,12 @@ const ChatInput: FC<Props> = ({
 						adjustTextareaHeight();
 					}}
 					required
-					placeholder={t('Type your message here...')}
+					placeholder={t('Share a thought, a question, a possibility…')}
 				></textarea>
 				<button
 					type="submit"
-					aria-label="Submit Button"
+					aria-label={t('Send message')}
+					disabled={!message.trim()}
 					style={statementColor}
 					data-cy="statement-chat-send-btn"
 				>

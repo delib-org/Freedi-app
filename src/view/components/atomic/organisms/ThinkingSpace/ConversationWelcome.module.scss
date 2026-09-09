@@ -1,0 +1,158 @@
+.welcome {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 32px 36px;
+	background: var(--space-peach);
+	border-radius: 32px;
+	overflow: hidden;
+	gap: 12px;
+	&__eyebrow {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		color: var(--space-purple);
+		font-size: 9px;
+		letter-spacing: 1.2px;
+		font-weight: 600;
+	}
+	h2 {
+		font-size: clamp(30px, 3.5vw, 48px);
+		font-weight: 300;
+		letter-spacing: -1.5px;
+		line-height: 1.18;
+		margin: 18px 0 12px;
+		max-width: 440px;
+		em {
+			font-family: inherit;
+			font-style: normal;
+			font-weight: 600;
+			color: var(--space-purple);
+		}
+	}
+	p {
+		color: var(--space-muted);
+		font-size: 13px;
+		line-height: 1.6;
+		max-width: 360px;
+		margin: 0;
+	}
+	&__art {
+		position: relative;
+		width: 180px;
+		height: 145px;
+		flex-shrink: 0;
+	}
+	&__bubble {
+		display: grid;
+		place-items: center;
+		position: absolute;
+		width: 92px;
+		height: 84px;
+		background: var(--space-yellow);
+		color: var(--space-yellow-ink);
+		border-radius: 28px 28px 28px 6px;
+		font-family: Georgia, serif;
+		font-size: 95px;
+		line-height: 1;
+		transform: rotate(-12deg);
+		inset-block-start: 10px;
+	}
+	&__flower {
+		position: absolute;
+		font-size: 120px;
+		line-height: 1;
+		color: var(--space-ink);
+		inset-inline-end: 0;
+		inset-block-start: 2px;
+		transform: rotate(10deg);
+	}
+	&__seed {
+		display: grid;
+		place-items: center;
+		position: absolute;
+		width: 70px;
+		height: 70px;
+		background: var(--space-mint);
+		color: var(--space-green);
+		border: 4px solid var(--space-peach);
+		border-radius: 50%;
+		inset-block-end: 0;
+		inset-inline-start: 56px;
+		transform: rotate(12deg);
+	}
+	&__scribble {
+		position: absolute;
+		inset-inline-end: 0;
+		inset-block-end: -8px;
+		font-family: Georgia, serif;
+		color: var(--space-purple);
+		font-size: 45px;
+	}
+	&--compact {
+		padding: 18px 24px;
+		margin: 12px 24px 20px;
+		border-radius: 28px;
+		h2 {
+			font-size: 26px;
+			margin: 8px 0;
+		}
+		p {
+			font-size: 12px;
+		}
+		.welcome__art {
+			width: 110px;
+			height: 90px;
+			transform: scale(0.7);
+			transform-origin: center;
+		}
+		.welcome__eyebrow {
+			font-size: 8px;
+		}
+	}
+	@media (max-width: 700px) {
+		padding: 24px;
+		h2 {
+			font-size: 29px;
+		}
+		&__art {
+			width: 95px;
+			transform: scale(0.65);
+			transform-origin: center;
+			margin-inline-end: -16px;
+		}
+		&__eyebrow {
+			font-size: 8px;
+			letter-spacing: 0.6px;
+		}
+		&--compact {
+			margin: 8px 16px 16px;
+			padding: 16px;
+			h2 {
+				font-size: 23px;
+			}
+			.welcome__art {
+				display: none;
+			}
+		}
+	}
+}
+
+@media (max-width: 700px) { .welcome--compact { display: none; } }
+
+.welcome__botanical { width: 100%; height: 100%; color: var(--space-ink); overflow: visible; }
+
+// A little joy, with movement only when people interact.
+.welcome {
+  background: var(--space-purple-soft);
+  h2 em { display: inline-block; position: relative; z-index: 0; }
+  h2 em::before { content: ''; position: absolute; inset: 54% -5px -2px; background: var(--space-yellow); border-radius: 45% 25% 35% 20%; transform: rotate(-3deg); z-index: -1; }
+  &__art { width: 240px; height: 170px; }
+  &__buddyLeft, &__buddyRight { transform-box: fill-box; transform-origin: center; transition: transform 300ms ease; }
+  &:hover .welcome__buddyLeft { transform: rotate(-5deg) translateY(-3px); }
+  &:hover .welcome__buddyRight { transform: rotate(5deg) translateY(-4px); }
+  &--compact .welcome__art { width: 165px; height: 112px; transform: none; }
+  @media (max-width: 700px) {
+    &__art { width: 104px; height: 130px; transform: none; margin-inline-end: -10px; }
+  }
+}

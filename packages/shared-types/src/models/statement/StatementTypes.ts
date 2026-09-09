@@ -321,6 +321,7 @@ export const StatementSchema = object({
 	 *  organizer suggestions created from the Join app admin UI — these render
 	 *  in a separate "Organizer suggestions" section and carry a badge. */
 	creatorRole: optional(enum_(Role)),
+	isCovenantDraft: optional(boolean()), // A source-linked working draft; does not open signing.
 	isDocument: optional(boolean()), // if true, this statement is treated as a document in Freedi-sign (allows options to be signable)
 	mergedInto: optional(string()), // ID of the statement this was merged into (for tracking merged proposals)
 	replyTo: optional(

@@ -8,6 +8,7 @@ import { Outlet, useLocation, useParams } from 'react-router';
 
 // Redux Store
 import HomeHeader from './HomeHeader';
+import AppThinkingSpace from '@/view/components/atomic/organisms/ThinkingSpace/AppThinkingSpace';
 import {
 	getNewStatementsFromSubscriptions,
 	listenToStatementSubscriptions,
@@ -100,10 +101,9 @@ export default function Home() {
 	}, [user?.uid]);
 
 	return (
-		<main className="page slide-in">
-			{displayHeader && <HomeHeader />}
+		<AppThinkingSpace tools={displayHeader ? <HomeHeader /> : undefined}>
 			<Outlet />
 			{toast && <CreditToast key={toast.id} amount={toast.amount} onComplete={dismissToast} />}
-		</main>
+		</AppThinkingSpace>
 	);
 }

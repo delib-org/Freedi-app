@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
 
 	return {
 		envDir: './env',
+		cacheDir: process.env.FREEDI_VITE_CACHE_DIR || 'node_modules/.vite',
 		plugins: [
 			react(),
 			svgr({
@@ -86,6 +87,7 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		optimizeDeps: {
+      entries: ['index.html', 'redesign.html'],
 			include: [
 				'@tiptap/react',
 				'@tiptap/starter-kit',

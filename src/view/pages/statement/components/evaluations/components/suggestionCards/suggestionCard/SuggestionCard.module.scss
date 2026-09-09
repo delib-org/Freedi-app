@@ -675,3 +675,5 @@
     }
   }
 }
+
+:global(.thinking-space) .statement-evaluation-card { border-radius: 28px; border-block-color: var(--space-line); border-inline-end-color: var(--space-line); box-shadow: var(--space-shadow); padding: 20px; }

@@ -374,3 +374,5 @@ $addOptionSize: 60px;
     animation: none !important;
   }
 }
+
+:global(.thinking-space) { .addOptionButton { background: var(--space-purple) !important; color: var(--space-paper) !important; } .addOptionButtonLabel { color: inherit; } }

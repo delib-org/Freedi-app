@@ -25,9 +25,13 @@ export function APIEndPoint(
 		.join('&');
 
 	// Check if running on localhost
-	if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+	if (
+		typeof window !== 'undefined' &&
+		['localhost', '127.0.0.1'].includes(window.location.hostname)
+	) {
 		// Use the project ID from the Firebase configuration
-		return `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/${functionName}${queryString ? '?' : ''}${queryString}`;
+		const port = getEnvVar('VITE_EMULATOR_FUNCTIONS_PORT') || '5001';
+		return `http://localhost:${port}/${firebaseConfig.projectId}/${functionConfig.region}/${functionName}${queryString ? '?' : ''}${queryString}`;
 	}
 
 	// For production, use the provided environment variable or construct a default one
