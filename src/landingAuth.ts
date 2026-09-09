@@ -14,11 +14,15 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 let configured = false;
 
+function isLocalPreview(): boolean {
+	return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+}
+
 async function ready(): Promise<void> {
 	if (!configured) {
 		configured = true;
 		const port = Number(import.meta.env.VITE_EMULATOR_AUTH_PORT || 9099);
-		if (import.meta.env.DEV && Number.isFinite(port)) {
+		if (isLocalPreview() && Number.isFinite(port)) {
 			connectAuthEmulator(auth, `http://localhost:${port}`, { disableWarnings: true });
 		}
 	}

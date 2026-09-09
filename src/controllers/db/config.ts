@@ -29,6 +29,13 @@ import {
 	shouldSkipIndexedDB,
 } from '@/utils/firestorePersistenceFallback';
 
+function isLocalRuntime(): boolean {
+	return (
+		typeof window !== 'undefined' &&
+		['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+	);
+}
+
 // Helper to detect iOS devices
 function isIOS(): boolean {
 	const userAgent = navigator.userAgent.toLowerCase();
@@ -73,7 +80,7 @@ function initializeWithMemoryCache(app: ReturnType<typeof initializeApp>): Fires
 // Initialize Firestore with appropriate cache settings based on platform
 function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Firestore {
 	const isIOSDevice = isIOS();
-	const isLocalDev = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+	const isLocalDev = isLocalRuntime();
 
 	// In local development, use memory cache to avoid stale data from emulator restarts
 	if (isLocalDev) {
@@ -160,8 +167,7 @@ const app = initializeApp(firebaseConfig);
 // Firebase app initialized
 
 // Inline isProduction check - needed before App Check decision
-const isProductionForAppCheck =
-	typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+const isProductionForAppCheck = typeof window !== 'undefined' && !isLocalRuntime();
 
 // Initialize App Check ONLY in production
 // In development/emulator, App Check debug token exchange fails with Google servers
@@ -180,7 +186,7 @@ let analytics: ReturnType<typeof getAnalytics> | null = null;
 const isProduction =
 	typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
 		? false
-		: typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+		: typeof window !== 'undefined' && !isLocalRuntime();
 
 if (isProduction) {
 	// Check both isSupported and IndexedDB availability before initializing analytics
