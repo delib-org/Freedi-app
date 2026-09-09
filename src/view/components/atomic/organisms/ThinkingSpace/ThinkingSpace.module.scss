@@ -56,27 +56,16 @@
 	&__brand {
 		display: flex;
 		align-items: center;
-		gap: 9px;
+		justify-content: center;
 		border: 0;
 		background: none;
-		font-size: 30px;
-		font-weight: 750;
-		letter-spacing: -1.3px;
 		text-align: start;
-	}
-	&__brandMark {
-		background: var(--space-purple);
-		color: var(--space-paper);
-		width: 39px;
-		height: 39px;
-		border-radius: 14px 14px 14px 4px;
-		display: grid;
-		place-items: center;
-		transform: rotate(-5deg);
-	}
-	&__brandDot {
-		color: var(--space-purple);
-		margin-inline-start: -8px;
+		img {
+			display: block;
+			width: 152px;
+			height: 88px;
+			object-fit: contain;
+		}
 	}
 	&__tagline {
 		color: var(--space-muted);
@@ -325,7 +314,9 @@
 	@media (max-width: 700px) {
 		padding: 0;
 		gap: 0;
-		&__workspace { border-radius: 28px 28px 0 0; }
+		&__workspace {
+			border-radius: 28px 28px 0 0;
+		}
 		flex-direction: column;
 		&__mobileBar {
 			display: flex;
@@ -347,13 +338,9 @@
 			}
 		}
 		&__brand {
-			font-size: 22px;
-			letter-spacing: -0.7px;
-			span {
-				font-size: 12px;
-				font-weight: 400;
-				letter-spacing: 0;
-				color: var(--space-muted);
+			img {
+				width: 94px;
+				height: 48px;
 			}
 		}
 		&__sidebar {
@@ -387,8 +374,22 @@
 }
 
 .space {
-  &__brandMark { background: var(--space-yellow); color: var(--space-ink); box-shadow: 3px 3px 0 var(--space-ink); }
-  &__create { background: var(--space-yellow); border-color: transparent; box-shadow: 0 4px 0 color-mix(in srgb, var(--space-ink) 12%, transparent); }
-  &__noteFlower { color: var(--space-ink); background: var(--space-mint); border-radius: 50%; width: 64px; height: 64px; display: grid; place-items: center; transform: rotate(-10deg); }
-  &__avatar { border-radius: 40% 50% 38% 48%; }
+	&__create {
+		background: var(--space-yellow);
+		border-color: transparent;
+		box-shadow: 0 4px 0 color-mix(in srgb, var(--space-ink) 12%, transparent);
+	}
+	&__noteFlower {
+		color: var(--space-ink);
+		background: var(--space-mint);
+		border-radius: 50%;
+		width: 64px;
+		height: 64px;
+		display: grid;
+		place-items: center;
+		transform: rotate(-10deg);
+	}
+	&__avatar {
+		border-radius: 40% 50% 38% 48%;
+	}
 }

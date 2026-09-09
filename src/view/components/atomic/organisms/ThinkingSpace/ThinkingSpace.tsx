@@ -1,5 +1,5 @@
 import React, { ReactNode, useId, useState } from 'react';
-import { ArrowUpRight, ChevronDown, Home, Lightbulb, Menu, Plus, Sprout, X } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, Home, Lightbulb, Menu, Plus, X } from 'lucide-react';
 import styles from './ThinkingSpace.module.scss';
 
 export interface SpaceLink {
@@ -59,8 +59,8 @@ export default function ThinkingSpace({
 				>
 					<Menu size={21} />
 				</button>
-				<button className={styles.space__brand} onClick={onHome}>
-					<Sprout size={25} /> Freedi<span> / {t('together')}</span>
+				<button className={styles.space__brand} onClick={onHome} aria-label="WizCol">
+					<img src="/brand/wizcol-logo-app.webp" alt="WizCol" width="360" height="240" />
 				</button>
 				{aside ? (
 					<button
@@ -82,11 +82,12 @@ export default function ThinkingSpace({
 				className={`${styles.space__sidebar} ${navigationOpen ? styles['space__sidebar--open'] : ''}`}
 				aria-label={t('Your spaces')}
 			>
-				<button className={styles.space__brand} onClick={() => closeAnd(onHome)}>
-					<span className={styles.space__brandMark}>
-						<Sprout size={27} />
-					</span>
-					Freedi<span className={styles.space__brandDot}>.</span>
+				<button
+					className={styles.space__brand}
+					onClick={() => closeAnd(onHome)}
+					aria-label="WizCol"
+				>
+					<img src="/brand/wizcol-logo-app.webp" alt="" width="360" height="240" />
 				</button>
 				<p className={styles.space__tagline}>{t('Good things start with us.')}</p>
 				<button
@@ -141,7 +142,7 @@ export default function ThinkingSpace({
 					<span className={styles.space__avatar}>{userName.slice(0, 1).toUpperCase() || '?'}</span>
 					<span>
 						<strong>{userName || t('Your profile')}</strong>
-						<small>{t('Your corner of Freedi')}</small>
+						<small>WizCol</small>
 					</span>
 					<ArrowUpRight size={17} />
 				</button>
