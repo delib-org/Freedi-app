@@ -3,6 +3,8 @@ const { withSentryConfig } = require("@sentry/nextjs");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Keep local dev cleanup away from standalone builds and their traced symlinks.
+  distDir: process.env.SIGN_DIST_DIR || '.next',
   poweredByHeader: false,
 
   // Standalone output for Docker/Cloud Run deployment

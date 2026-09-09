@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -18,15 +22,32 @@
         "name": "next"
       }
     ],
-    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
+    "typeRoots": [
+      "./node_modules/@types",
+      "../../node_modules/@types"
+    ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@freedi/shared-types": ["../../packages/shared-types/src/index.ts"],
-      "@freedi/shared-types/*": ["../../packages/shared-types/src/*"],
-      "@freedi/shared-i18n": ["../../packages/shared-i18n/src/index.ts"],
-      "@freedi/shared-i18n/*": ["../../packages/shared-i18n/src/*"],
-      "@freedi/shared-utils": ["../../packages/shared-utils/src/index.ts"],
-      "@freedi/shared-utils/*": ["../../packages/shared-utils/src/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@freedi/shared-types": [
+        "../../packages/shared-types/src/index.ts"
+      ],
+      "@freedi/shared-types/*": [
+        "../../packages/shared-types/src/*"
+      ],
+      "@freedi/shared-i18n": [
+        "../../packages/shared-i18n/src/index.ts"
+      ],
+      "@freedi/shared-i18n/*": [
+        "../../packages/shared-i18n/src/*"
+      ],
+      "@freedi/shared-utils": [
+        "../../packages/shared-utils/src/index.ts"
+      ],
+      "@freedi/shared-utils/*": [
+        "../../packages/shared-utils/src/*"
+      ]
     }
   },
   "include": [
@@ -36,7 +57,9 @@
     ".next/types/**/*.ts",
     "../../packages/shared-i18n/src/**/*.ts",
     "../../packages/shared-i18n/src/**/*.tsx",
-    "../../packages/shared-utils/src/**/*.ts"
+    "../../packages/shared-utils/src/**/*.ts",
+    ".next-redesign-dev/types/**/*.ts",
+    ".next-redesign-build/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

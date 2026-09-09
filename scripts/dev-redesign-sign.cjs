@@ -13,6 +13,7 @@ const child = spawn(
 		stdio: 'inherit',
 		env: {
 			...process.env,
+			SIGN_DIST_DIR: process.argv.includes('--build') ? '.next-redesign-build' : '.next-redesign-dev',
 			FIREBASE_PROJECT_ID: projectId,
 			GCLOUD_PROJECT: projectId,
 			USE_FIREBASE_EMULATOR: 'true',

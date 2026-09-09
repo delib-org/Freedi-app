@@ -50,6 +50,8 @@ Deploying the feature requires the new callable functions, Firestore trigger, sc
 
 ## Local verification
 
+Install Sign dependencies inside the worktree rather than symlinking another checkout’s `node_modules`. The launcher separates `.next-redesign-dev` and `.next-redesign-build` so development cleanup cannot traverse standalone build links.
+
 Use the isolated `demo-freedi-redesign` namespace. Main app runs on localhost:5189; Sign on localhost:3012; callable gateway on localhost:5309; Auth on 9399; Firestore on 8081.
 
 - `npm run dev:redesign`
