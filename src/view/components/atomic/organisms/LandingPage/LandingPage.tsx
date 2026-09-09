@@ -5,6 +5,7 @@ import {
 	MessagesSquare,
 	Layers3,
 	FileHeart,
+	ChevronDown,
 	Languages,
 	LogIn,
 	X,
@@ -82,6 +83,7 @@ export default function LandingPage({
 						<span className={styles.landing__language}>
 							<Languages aria-hidden="true" />
 							{language}
+							<ChevronDown className={styles.landing__languageChevron} aria-hidden="true" />
 						</span>
 					)}
 					<button onClick={openLogin} aria-label={t('Log in')}>

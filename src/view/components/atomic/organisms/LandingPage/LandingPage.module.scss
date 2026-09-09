@@ -72,15 +72,46 @@
 		}
 	}
 	&__language {
+		position: relative;
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		height: 46px;
+		padding-inline: 14px 12px;
+		border: 1px solid var(--space-line);
+		border-radius: 40px;
+		background: var(--space-surface);
+		box-shadow: 0 3px 12px color-mix(in srgb, var(--space-ink) 5%, transparent);
+		transition:
+			transform 160ms ease,
+			border-color 160ms ease;
+		&:hover {
+			transform: translateY(-1px);
+			border-color: color-mix(in srgb, var(--space-ink) 22%, var(--space-line));
+		}
 		&:focus-within {
 			outline: 3px solid var(--space-ink);
 			outline-offset: 5px;
 		}
 		> svg {
-			display: none;
+			width: 18px;
+			height: 18px;
+			flex: 0 0 auto;
+		}
+		label {
+			display: flex;
+			align-items: center;
+		}
+		select {
+			appearance: none;
+			border: 0;
+			outline: 0;
+			background: transparent;
+			color: var(--space-ink);
+			font: inherit;
+			font-weight: 650;
+			line-height: 1;
+			cursor: pointer;
 		}
 	}
 	&__loginIcon {
@@ -440,9 +471,15 @@
 			border: 1px solid var(--space-line);
 			border-radius: 50%;
 			background: var(--space-surface);
+			box-shadow: none;
+			padding: 0;
+			gap: 0;
 			> svg {
 				display: block;
 				width: 21px;
+			}
+			> .landing__languageChevron {
+				display: none;
 			}
 			label {
 				position: absolute;
