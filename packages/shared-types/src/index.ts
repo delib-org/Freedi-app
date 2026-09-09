@@ -948,3 +948,5 @@ export * from "./models/agora";
 export * from "./models/odyssey";
 
 export * from './models/covenant/covenant';
+
+export * from './models/covenant/deliberation';

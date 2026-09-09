@@ -697,11 +697,14 @@ service cloud.firestore {
       // (statementSettingsCont.ts:152, promoteOptionToSubQuestion.ts:66) are
       // updates, not creates, so they are unaffected by this pin.
       allow create: if request.auth.uid != null &&
+                       !request.resource.data.keys().hasAny(['agreementBallot', 'agreementMeta']) &&
                        !setsCreatorRoleOnCreate() &&
                        !setsOrganizationIdOnCreate() &&
                        request.resource.data.creatorId == request.auth.uid;
 
       allow update: if request.auth.uid != null &&
+                       !resource.data.keys().hasAny(['agreementBallot']) &&
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['agreementMeta', 'agreementBallot']) &&
                        !changesCreatorRole() &&
                        !changesOrganizationId() &&
                        (isAgoraStatement()
@@ -712,7 +715,7 @@ service cloud.firestore {
       // The session teacher inherits an admin subscription on every proposal
       // (setupAdminsForStatement), which used to make isAuthorized() a hard
       // delete with no tombstone and no audit.
-      allow delete: if request.auth.uid != null && !isAgoraStatement() && isAuthorized();
+      allow delete: if request.auth.uid != null && !isAgoraStatement() && !resource.data.keys().hasAny(['agreementBallot']) && isAuthorized();
 
       // Civil Activity Hub — join form submissions subcollection.
       // Scoped to the owning question document. Each user owns their own
@@ -1195,8 +1198,15 @@ service cloud.firestore {
     // statementId 'none' rather than deleting, so the counting trigger can
     // decrement; the delete rule is here only for account cleanup.
     match /votes/{voteId} {
+      function agreementBallotOpen(parentId, optionId) {
+        let path = /databases/$(database)/documents/statements/$(parentId);
+        return !exists(path) || !get(path).data.keys().hasAny(['agreementBallot']) ||
+          (get(path).data.get('questionSettings', {}).get('isHalted', false) != true &&
+           (optionId == 'none' || get(/databases/$(database)/documents/statements/$(optionId)).data.parentId == parentId));
+      }
       allow read: if request.auth.uid != null;
       allow create, update: if request.auth.uid != null &&
+                               agreementBallotOpen(request.resource.data.parentId, request.resource.data.statementId) &&
                                request.resource.data.userId == request.auth.uid &&
                                voteId == (request.auth.uid + '--' +
                                           request.resource.data.parentId);
@@ -1792,6 +1802,10 @@ service cloud.firestore {
       match /items/{itemId} {
         allow read, write: if false;
       }
+    }
+    match /agreementHandoffs/{document=**} { allow read, write: if false; }
+    match /questionDeliberations/{document=**} {
+      allow read, write: if false;
     }
     // Version-bound covenant records are only served by the authorized callable.
     match /covenantWorkflows/{document=**} {

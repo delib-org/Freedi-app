@@ -86,7 +86,7 @@ export function buildModelParams(
 	opts: { maxTokens?: number; temperature?: number; reasoningEffort?: ReasoningEffort },
 ): Record<string, number | string> {
 	const maxTokens = opts.maxTokens ?? 1024;
-	if (model.startsWith('gpt-5')) {
+	if (/^gpt-[56]/.test(model)) {
 		// Reasoning models spend `max_completion_tokens` on hidden reasoning
 		// BEFORE emitting content, so a cap sized for the visible answer alone
 		// can be consumed entirely by reasoning, returning empty content (seen

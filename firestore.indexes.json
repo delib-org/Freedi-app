@@ -2151,6 +2151,20 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "questionDeliberations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "dirty",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "lastCheckedAt",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

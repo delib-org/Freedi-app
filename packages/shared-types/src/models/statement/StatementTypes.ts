@@ -322,6 +322,12 @@ export const StatementSchema = object({
 	 *  in a separate "Organizer suggestions" section and carry a badge. */
 	creatorRole: optional(enum_(Role)),
 	isCovenantDraft: optional(boolean()), // A source-linked working draft; does not open signing.
+	deliberationEnabled: optional(boolean()),
+	agreementMeta: optional(object({
+		questionId: string(), familyId: string(), previousId: optional(string()),
+		kind: string(), sourceHash: string(), sourceIds: array(string()), introduction: string(), model: optional(string()),
+	})),
+	agreementBallot: optional(object({ questionId: string(), documentIds: array(string()), hashes: array(string()) })),
 	isDocument: optional(boolean()), // if true, this statement is treated as a document in Freedi-sign (allows options to be signable)
 	mergedInto: optional(string()), // ID of the statement this was merged into (for tracking merged proposals)
 	replyTo: optional(

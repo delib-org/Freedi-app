@@ -3,6 +3,7 @@ export enum StatementType {
 	option = 'option',
 	question = 'question',
 	document = 'document',
+	agreement = 'agreement',
 	group = 'group',
 	comment = 'comment',
 	paragraph = 'paragraph',
@@ -145,6 +146,7 @@ export enum QuestionType {
 export enum QuestionStagesType {
 	singleStage = 'singleStage',
 	document = 'document',
+	agreement = 'agreement',
 }
 
 export enum DocumentType {

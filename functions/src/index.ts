@@ -1283,3 +1283,6 @@ export {
 export { odysseyMintAgoraHandoff, odysseyDigestUnsubscribe, sendOdysseyDigests } from './odyssey';
 
 export { covenantWorkflow } from './fn_covenant';
+
+export { deliberation, queueDeliberation, updateDeliberations } from './deliberation/functions';
+export { createAgreementHandoff, redeemAgreementHandoff } from './deliberation/handoff';
