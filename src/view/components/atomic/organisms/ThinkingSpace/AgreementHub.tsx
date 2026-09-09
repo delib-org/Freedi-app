@@ -5,7 +5,13 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
 import { ArrowUpRight, FileText } from 'lucide-react';
-import { ParagraphType, SortType, Statement, StatementType } from '@freedi/shared-types';
+import {
+	EvaluationUI,
+	ParagraphType,
+	SortType,
+	Statement,
+	StatementType,
+} from '@freedi/shared-types';
 import {
 	statementsSelector,
 	setStatement,
@@ -47,6 +53,12 @@ export default function AgreementHub({
 			(statement.creatorId === authorization.creator.uid ||
 				statement.creator?.uid === authorization.creator.uid));
 	const { isHalted } = useIsProcessHalted(statement);
+	const canAddSolution =
+		isAdmin ||
+		(authorization.isAuthorized &&
+			(statement.evaluationSettings?.evaluationUI === EvaluationUI.voting
+				? statement.statementSettings?.enableAddVotingOption === true
+				: statement.statementSettings?.enableAddEvaluationOption === true));
 	const all = useSelector(statementsSelector);
 	const groupedSelector = useMemo(
 		() => selectGrouped(statement.statementId, 'main'),
@@ -236,9 +248,18 @@ export default function AgreementHub({
 											'Explore solutions and sub-questions. Each sub-question has its own solutions and can branch further.',
 										)}
 									</p>
-									<button className={styles.journey__primary} onClick={() => go('options')}>
-										{t('Explore & improve')} ↗
-									</button>
+									<div className={styles.journey__actions}>
+										<button
+											className={styles.journey__primary}
+											disabled={!canAddSolution || isHalted}
+											onClick={() =>
+												navigate(`/statement/${statement.statementId}?tab=options&compose=solution`)
+											}
+										>
+											+ {t('solutionsOnboarding.addSolution')}
+										</button>
+										<button onClick={() => go('options')}>{t('Explore & improve')} ↗</button>
+									</div>
 								</div>
 								<span className={styles.journey__flower} aria-hidden="true">
 									✳
