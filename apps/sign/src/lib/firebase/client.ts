@@ -89,7 +89,7 @@ export function getFirebaseAuth(): Auth {
     // Connect to auth emulator in development
     if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !authEmulatorConnected) {
       try {
-        connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+        connectAuthEmulator(auth, `http://localhost:${process.env.NEXT_PUBLIC_EMULATOR_AUTH_PORT || '9099'}`, { disableWarnings: true });
         authEmulatorConnected = true;
       } catch {
         // Already connected or emulator not available

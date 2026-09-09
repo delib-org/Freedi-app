@@ -145,6 +145,7 @@ export function createStatement({
 		};
 
 		if (newStatement.statementType === StatementType.question) {
+			newStatement.deliberationEnabled = true;
 			newStatement.questionSettings = {
 				questionType: questionType ?? getDefaultQuestionType(),
 			};

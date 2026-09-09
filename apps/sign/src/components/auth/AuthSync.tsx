@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { signInWithCustomToken } from 'firebase/auth';
 import { getFirebaseAuth, anonymousLogin } from '@/lib/firebase/client';
 import { installFirestoreErrorFilter } from '@/lib/firebase/safeSnapshot';
 import { logError } from '@/lib/utils/errorHandling';
@@ -19,6 +21,8 @@ import { logError } from '@/lib/utils/errorHandling';
  * - Refreshes page when user authenticates to update admin status
  */
 export function AuthSync() {
+	const handoffPending = useRef(false);
+	const [handoffError, setHandoffError] = useState('');
 	const isInitialized = useRef(false);
 	const previousUserId = useRef<string | null>(null);
 	const hasAttemptedAnonymousLogin = useRef(false);
@@ -34,13 +38,42 @@ export function AuthSync() {
 	useEffect(() => {
 		isMountedRef.current = true;
 		const auth = getFirebaseAuth();
+		const code = new URLSearchParams(window.location.hash.slice(1)).get('freedi-handoff');
+		if (code && !handoffPending.current) {
+			handoffPending.current = true;
+			window.history.replaceState(null, '', window.location.pathname + window.location.search);
+			void (async () => {
+				try {
+					const service = getFunctions(
+						auth.app,
+						process.env.NEXT_PUBLIC_DELIBERATION_FUNCTIONS_URL || 'me-west1',
+					);
+					const redeem = httpsCallable<{ code: string; documentId: string }, { token: string }>(
+						service,
+						'redeemAgreementHandoff',
+					);
+					const result = await redeem({
+						code,
+						documentId: window.location.pathname.split('/')[2] || '',
+					});
+					const login = await signInWithCustomToken(auth, result.data.token);
+					setCookiesFromUser(login.user);
+					window.location.reload();
+				} catch (e) {
+					handoffPending.current = false;
+					setHandoffError(
+						e instanceof Error ? e.message : 'Sign-in failed. Open Sign from the question again.',
+					);
+				}
+			})();
+		}
 
 		/**
 		 * Safe anonymous login with mutual exclusion.
 		 * Prevents concurrent calls and skips if component is unmounted.
 		 */
 		const safeAnonymousLogin = async (context: string): Promise<void> => {
-			if (isCreatingAnonymousRef.current || !isMountedRef.current) return;
+			if (handoffPending.current || isCreatingAnonymousRef.current || !isMountedRef.current) return;
 			isCreatingAnonymousRef.current = true;
 			try {
 				await anonymousLogin();
@@ -56,7 +89,7 @@ export function AuthSync() {
 
 		// Subscribe to auth state changes (don't unsubscribe - keep monitoring)
 		const unsubscribe = auth.onAuthStateChanged(async (user) => {
-			if (!isMountedRef.current) return;
+			if (!isMountedRef.current || handoffPending.current) return;
 
 			// Clear any pending auth restore timeout
 			if (authRestoreTimeout.current) {
@@ -76,7 +109,8 @@ export function AuthSync() {
 				// Anonymous users don't need server-side admin checks, so no reload needed
 				// Admins (Google users) need reload so server can check permissions
 				// EXCEPTION: Don't reload on login page - it handles its own redirect
-				const isOnLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
+				const isOnLoginPage =
+					typeof window !== 'undefined' && window.location.pathname === '/login';
 
 				if (needsRefresh && !user.isAnonymous && !isOnLoginPage) {
 					// Small delay to ensure cookies are set
@@ -122,27 +156,30 @@ export function AuthSync() {
 					// shows their name.
 					const wasAuthenticated = Boolean(getCookie('userDisplayName'));
 
-					authRestoreTimeout.current = setTimeout(async () => {
-						if (!auth.currentUser && !hasAttemptedAnonymousLogin.current) {
-							hasAttemptedAnonymousLogin.current = true;
+					authRestoreTimeout.current = setTimeout(
+						async () => {
+							if (!auth.currentUser && !hasAttemptedAnonymousLogin.current) {
+								hasAttemptedAnonymousLogin.current = true;
 
-							if (wasAuthenticated) {
-								// Session expired / could not be restored - sign out honestly
-								// (clears the HttpOnly _uid cookie too) and reload so the
-								// server renders the signed-out state
-								try {
-									await fetch('/api/auth/clear-session', { method: 'POST' });
-								} catch (error) {
-									logError(error, { operation: 'AuthSync.clearStaleSession' });
+								if (wasAuthenticated) {
+									// Session expired / could not be restored - sign out honestly
+									// (clears the HttpOnly _uid cookie too) and reload so the
+									// server renders the signed-out state
+									try {
+										await fetch('/api/auth/clear-session', { method: 'POST' });
+									} catch (error) {
+										logError(error, { operation: 'AuthSync.clearStaleSession' });
+									}
+									document.cookie = 'userId=; path=/; max-age=0';
+									document.cookie = 'userDisplayName=; path=/; max-age=0';
+									window.location.reload();
+								} else {
+									await safeAnonymousLogin('timeout');
 								}
-								document.cookie = 'userId=; path=/; max-age=0';
-								document.cookie = 'userDisplayName=; path=/; max-age=0';
-								window.location.reload();
-							} else {
-								await safeAnonymousLogin('timeout');
 							}
-						}
-					}, wasAuthenticated ? 6000 : 2000);
+						},
+						wasAuthenticated ? 6000 : 2000,
+					);
 
 					isInitialized.current = true;
 				} else if (
@@ -173,12 +210,15 @@ export function AuthSync() {
 
 		// Periodically refresh cookies for authenticated users to prevent expiration
 		// Check every 6 hours and refresh cookies if user is still authenticated
-		const cookieRefreshInterval = setInterval(() => {
-			const user = auth.currentUser;
-			if (user) {
-				setCookiesFromUser(user);
-			}
-		}, 6 * 60 * 60 * 1000); // 6 hours
+		const cookieRefreshInterval = setInterval(
+			() => {
+				const user = auth.currentUser;
+				if (user) {
+					setCookiesFromUser(user);
+				}
+			},
+			6 * 60 * 60 * 1000,
+		); // 6 hours
 
 		// Cleanup subscription and interval on unmount
 		return () => {
@@ -192,7 +232,7 @@ export function AuthSync() {
 	}, []);
 
 	// This component doesn't render anything
-	return null;
+	return handoffError ? <p role="alert">{handoffError}</p> : null;
 }
 
 /**

@@ -1,143 +1,62 @@
-# Redesign correction: from deliberation to an אמנה
+# Question → proposals → maps → agreements → decision
 
-Status: implemented interactive preview, main-app integration and shared covenant review service. Supersedes the conversation-first workflow in the initial Thinking Space design while preserving the accepted playful visual language.
+Implemented in `codex/main-app-playful`, September 9, 2026. This specification supersedes the earlier 80% / non-objection review experiment.
 
-## Purpose
+## The participant journey
 
-Help a community discover broadly agreeable options, improve them by working through concerns, compose a concrete covenant, review its wording, and explicitly take positions on the final version. The unit of success is an increasingly acceptable, grounded agreement, not message volume or votes collected.
+A conversation starts with a question. Its common-ground view offers **Add a solution** followed by **Invite people to participate**. Questions still contain solutions and recursive sub-questions; Maps retains the original mind-map, clustering and other map views, with themes and synthesis under Maps.
 
-## Sources reviewed
+The existing `isChosen` result, computed by the app's cutoff mechanism, selects source proposals. We do not replace that calculation with a second ranking. Hidden and integrated originals are excluded; selected synthesis statements remain eligible.
 
-- Tal Yaron, On Deliberation — Interior Proof (6x9) v2.pdf, Drive file 1VFcRrajQE9eZ5HmzWBYIQRGIo06xe1M4. Relevant sections: chapter 7 (confidence-adjusted ranking, fair sampling, clustering versus synthesis, maps, assisted drafting, convergence, thresholds); chapter 9 (recursive deliberation and summaries); chapter 11 pp. 202–204 (MassConsensus → Sign and comment/improve → consolidate → sign sequence).
-- Supplied local Interior Proof PDF, including visual inspection of pp. 203–204.
-- Existing implementation: consensus utilities and option sorting; synthesis controller; SwitchScreen map routes; multi-stage question summaries; apps/sign document views, comments, versions, and signatures.
+The facilitator can update the summary or generate a document. New questions opt into automation. Existing questions have an explicit automation switch. A scheduled worker runs every 15 minutes. It generates an agreement when every selected proposal has evaluators and Cp ≥ 0.70; this is the working interpretation of the automatic trigger. Summary generation is independently limited to every 24 hours and only runs when selected source wording or composition has changed. Score changes alone do not rewrite a summary. Generation is serialized, retried on failure and deduplicated by source content.
 
-## Principal correction
+The generated document is a real `Statement` with `statementType: agreement`, `isDocument: true` and `parentId` equal to the question. It has canonical paragraph statements, so Sign's existing document editor, paragraph review and suggestions remain available. The main app displays its introduction, Cp and evaluator count, with a button into Sign. Sign links back to the question. The cross-origin handoff uses an authenticated, document-bound, single-use code valid for 60 seconds; Firebase tokens are never placed in URLs.
 
-The current Thinking Space sideboard sorts by creation time and shows mean sentiment. It is a recent-ideas feed, not a discovery tool for broad agreement. Chat is currently the dominant entry point. The draft covenant and the work needed to reach it are absent from the preview.
+## Agreement and exact wording
 
-## Information architecture
+In Sign, participants read the document and then support, remain neutral or oppose its exact wording. Agreement documents use this version-bound Cp control instead of the legacy unversioned whole-document signature footer. Ordinary Sign documents retain their existing signature workflow. The existing shared `calcAgreement` formula calculates Cp; **Cp ≥ 0.70** establishes agreement, independently for every document. This can include opposition. It is not a raw percentage of positive responses, and silence is not a response.
 
-Default entry: Agreement overview. Persistent phase indicator: Explore → Improve → Draft → Review & adopt. These stages describe the process; they do not prohibit revisiting an earlier question. Opening the adoption phase is an authorized process transition, not something implied by a high score.
+A wording hash covers the title and ordered canonical paragraphs. Each response is keyed by document, hash and user; the evaluated text is archived. Editing the document makes the current rating count start from zero. Earlier responses are retained against the earlier wording. Ratings cannot be transferred to new wording by an administrator or AI.
 
-Primary destinations:
+## Versions and alternatives
 
-1. Overview — what is broadly supported, where opposition remains, what needs more evaluation, current covenant version, and next useful contribution.
-2. Options — ranked by the existing confidence-adjusted consensus measure when results are visible. Alternate modes: needs evaluation, concerns to work through, new, and themes. Preserve fair backend sampling for evaluation; do not substitute ranking for a fair evaluation queue.
-3. Conversation — dialogue attached to the relevant question, option, concern, or clause, alongside a general discussion.
-4. Covenant / אמנה — the actual evolving document, initially an explicitly empty draft. Each clause links to its source options, rationale, open concerns, revisions and evaluation evidence.
-5. Summary — established common ground, remaining disagreements, unresolved factual questions, and decisions. Link claims to sources; mark generation time and outdated summaries.
-6. Maps — separate views for question/argument structure and agreement/polarization. Preserve existing map capabilities; do not relabel a topic layout as an opinion-group map. No invented map coordinates or cross-group support metrics where data are unavailable.
+Any participating member can submit a question/disagreement and a bundle of paragraph replacements. Sign shows the bundle to the facilitator, who can create:
 
-## Option workspace
+- **New version**: an improvement in the same document family.
+- **Alternative wording**: a separate path with a new family and a link to its source document.
 
-Show the authored text and version, consensus score distinctly from raw sentiment, evaluator count and uncertainty, and the distribution of expressed positions where actual data support it. Missing counts remain unknown. Opposition is visible even when the aggregate is high.
+Untouched paragraphs are copied exactly. Every new document starts without evaluations. Stale change bundles cannot be applied after their source text changes. Subsequent AI drafts from changed source proposals are versions of the previous generated family. AI does not automatically invent alternatives or treat synthesis as resolution of a substantive disagreement.
 
-Actions: evaluate independently; explain a concern; propose an improved wording; compare revisions; explore source arguments/subquestions; propose inclusion in the covenant.
+For the legislative example, shared constitutional provisions stay identical while the disputed legislative-authority clauses can branch into committee-led and direct-democracy alternatives. Participants can evaluate each independently; several alternatives can pass the agreement threshold.
 
-Concerns link to proposed amendments. A participant can report whether an amendment addresses their concern. A facilitator or AI cannot silently convert a person's objection into consent.
+## Choosing one path
 
-Substantive revisions are new propositions for judgment. Historical ratings remain attached to their version. Show previous support as historical, never automatically endorse new meaning on behalf of previous evaluators.
+Passing Cp establishes agreement with a wording; it does not select the single path a movement will implement. Where local autonomy permits different paths, the alternatives can coexist. This release does not create or reorganize local groups or assign them documents automatically.
 
-## Three distinct operations
+When one decision is needed, the facilitator selects two or more agreements and opens the existing **Vote** interface. Its options contain frozen document texts and hashes. Client rules prevent rewriting or deleting these ballot snapshots. The facilitator can close the vote and record the unique leading option. Empty ballots and ties require further deliberation or voting. Finalization reads the actual vote records, records the chosen document/hash separately from Cp, and closes the ballot to further vote writes. This follows Vote's existing one-choice plurality behavior; it does not invent a different election method or a quorum.
 
-- Cluster by theme: a navigable folder of related but distinct positions. Keep the originals accessible; a theme is not a collective assertion of agreement.
-- Synthesize equivalent proposals: use the existing stance-aware mechanism, preserve source texts and evaluation provenance, count each person once according to the established aggregation rules. Provide source/audit access and existing authorized correction controls. Ambiguous or opposing propositions stay separate.
-- Draft a bridging proposal/covenant clause: compose new wording responding to different needs. This is a new draft for human evaluation, not an equivalence merge. Do not transfer source support as if the new wording had been approved.
+## Runtime and data
 
-## Covenant lifecycle
+- Server: `functions/src/deliberation/` (callable, source triggers, scheduler, handoff).
+- Main UI: `ThinkingSpace/QuestionProcess.tsx`.
+- Sign UI: `apps/sign/src/components/document/AgreementJourney.tsx`.
+- Shared model: `packages/shared-types/src/models/covenant/deliberation.ts`.
+- Server-owned collections: `questionDeliberations` (ratings, wording snapshots, source records, proposed changes and ballot results), `agreementHandoffs`.
+- Existing `covenantWorkflows` data and service remain available for compatibility; they are not silently migrated or counted in the new agreement process.
 
-Draft clauses from selected proposals → collect clause-level comments and amendments → show proposed changes and their reasons → consolidate a version → open explicit review/adoption → preserve an exportable version and its decision record.
+Generation requires `OPENAI_API_KEY`. The default agreement model is `gpt-6-astra`, overridable with `OPENAI_AGREEMENT_MODEL`, using high reasoning effort. This choice follows the [official GPT-6 Astra model documentation](https://developers.openai.com/api/docs/models/gpt-6-astra). Summary generation uses the project's existing fast-model setting. Missing configuration causes a visible error; no fixture document is substituted in real generation.
 
-Do not ask people to sign while the same document is still being silently rewritten. An amendment after adoption produces a new version and a visible renewed review requirement. Preserve the original signed record.
+Deploying the feature requires the new callable functions, Firestore trigger, scheduler, security rules and `questionDeliberations` queue index together. Configure `VITE_SIGN_APP_URL`, `NEXT_PUBLIC_MAIN_APP_URL` and, where necessary, `NEXT_PUBLIC_DELIBERATION_FUNCTIONS_URL`. Production defaults are `https://sign.wizcol.com` and `https://app.wizcol.com`; deployments using other domains must override these and include their origins in CORS. Expired one-time handoff records should be cleaned up under the deployment's retention policy.
 
-Final positions must distinguish endorsement, explicit non-objection, objection, and not yet responded. Reading or silence is not non-objection. The user’s requested target is broad endorsement with the remaining participants not objecting. The book's working threshold is 80% net support and can include opposition; these are different criteria. Make the agreed process rule visible and configurable rather than assuming they are interchangeable. Do not introduce a universal veto rule from the book or silently impose its threshold.
+## Local verification
 
-## Example journey (illustrative, not real participant data)
+Use the isolated `demo-freedi-redesign` namespace. Main app runs on localhost:5189; Sign on localhost:3012; callable gateway on localhost:5309; Auth on 9399; Firestore on 8081.
 
-A courtyard garden attracts support but raises maintenance concerns. The concern opens an improvement discussion. A participant proposes a one-month trial with named volunteers and a spending cap. The revised proposal is evaluated as a new version. If it meets the community's agreed criteria, it becomes a draft covenant clause. Residents review the exact clause, resolve wording concerns, then take positions on the consolidated document. The final record states what was approved, which version, participation and expressed opposition, responsible people, and a review date.
+- `npm run dev:redesign`
+- `npm run dev:redesign:sign`
+- `npm run dev:redesign:functions`
+- Compile functions, then `npm run test:deliberation` for emulator integration checks. AI is explicitly stubbed in this test only.
+- `node --test tests/rules/deliberation.test.mjs tests/rules/votes.test.mjs` checks frozen ballots and authorization.
+- `node scripts/verify-deliberation-browser.cjs process-<fixture-id>` checks authenticated Sign handoff, rating, return navigation, Hebrew and mobile layout. Use the fixture id printed by the integration test.
 
-## Integration priorities
-
-1. Replace the recent-idea sideboard with an agreement overview grounded in existing ranking and visibility permissions; make covenant, summary and maps discoverable.
-2. Expose existing theme/synthesis views with provenance; connect option concerns and revisions to the improvement loop.
-3. Reuse and connect Sign's document, paragraph interactions and versioning rather than inventing a disconnected demo editor. Audit identity, permissions, data ownership and version semantics before integrating writes.
-4. Implement explicit review/adoption transitions and non-objection state if missing. The shared signature enum currently has signed/rejected/viewed, so non-objection cannot be inferred from it.
-5. Validate end-to-end: new idea → fair evaluation → concern → revised option → draft clause → amendment review → version-specific positions → export. Also test hidden results, missing evidence, RTL, mobile, and keyboard access.
-
-## Visual direction
-
-Keep the joyful palette and friendly illustrations. Use delight to encourage contribution and learning. Do not reward agreeing over objecting, depict dissenters as obstacles, or celebrate convergence unless the evidence and process state warrant it. Make the covenant's progress visible through concrete completed work rather than a fabricated completion percentage.
-
-## Implementation delivered in this worktree
-
-- The preview at `/redesign.html` now opens on Common ground and includes the option → concern → revision → clause → amendment → review-version → explicit position → simulated adoption → export journey. The example computes rankings with `calcAgreement`, keeps one evaluation per example participant, and retains old versions without carrying their positions forward. It has themes with inspectable synthesis sources, a dynamic summary and five map views. Example data reset on refresh and are clearly labelled; exported files state that they are not community-approved documents.
-- The actual `src` app has agreement overview, themes/synthesis, covenant, summary and maps tabs. Existing question types and evaluation pages remain available. New question entry defaults to the overview unless a saved default is present.
-- The real overview uses existing condensation visibility and consensus scores, preserves hidden-result ordering, distinguishes unavailable opposition counts, and loads older options through the existing bulk loader. An incomplete load is labelled as such.
-- Facilitators can assemble options into a new shared draft with paragraph-level source IDs and no copied votes. The optional `isCovenantDraft` marker preserves discovery on reload without making the draft immediately signable. Existing routing takes the draft onward to document tools. Option improvements likewise create fresh options with source IDs.
-- Summary generation/editing, synthesis operations, and the real mind map, sub-question map, agreement map and polarization views use the existing services/routes and permissions. Synthesis controls mount on demand.
-
-### Shared covenant workflow
-
-The real question workspace now includes a persistent covenant editor backed by the authenticated `covenantWorkflow` callable. Facilitators select source solutions, amend clauses with reasons, accept participant suggestions and choose a review group explicitly. Source evaluations never become document endorsements.
-
-Each review freezes its title, clauses, source wording, roster and endorsement threshold. Named reviewers record endorsement, non-objection or an objection with a reason. Adoption requires responses from the entire chosen roster, zero objections and the configured 51–100% endorsement threshold. This is agreement among that named review group; it does not claim to represent people outside the roster. Reopening creates a draft; its next review starts with fresh responses and retains the prior record. Markdown exports include wording, provenance, review rule, responses and adoption details.
-
-The server enforces active membership, facilitator authority, note ownership, current revision, current review version and paused/expired decisions. Firestore transactions reject stale concurrent edits. Direct client access to `covenantWorkflows` is denied. Limits are 40 clauses, 200 notes, 500 reviewers and 100 review versions per question.
-
-Existing Sign tools remain accessible under “Other document drafts and Sign tools”. This does not migrate existing signatures into the new review service. No production data or deployment was changed.
-
-### Verification
-
-- Seventeen focused unit tests cover confidence-adjusted ranking, hidden-result ordering, unavailable opposition data, replacement evaluations, fresh revisions, immutable review snapshots, empty-review rejection and ownership of concern resolution.
-- The browser test in `scripts/verify-agreement-workflow.cjs` exercises the full example path, export, synthesis sources, summaries, maps, mobile, and dark RTL.
-- Production build, TypeScript and changed-component lint checks were run.
-- Live smoke checks use only the isolated `demo-freedi-redesign` Firebase emulator namespace. AI generation and clustering callables are not simulated as completed results; their local availability is separately reported.
-
-## Public landing page
-
-The public `/` and `/start` entry now explain Freedi’s purpose and the four-step agreement journey in the shared pastel visual language. Login uses the existing Google and temporary-name flows; authenticated visitors return to `/home` or their saved invitation destination. Existing workspace routes remain unchanged. The standalone `/redesign.html` opens the same landing page with an explicitly labelled example entry; `?view=courtyard` opens the example directly. Landing copy is translated in all seven supported languages.
-
-Verified desktop/mobile layouts, scroll access to all sections, keyboard dismissal of login, temporary-name form access, authenticated redirects, and return visits against the isolated demo emulator.
-
-## Recursive question correction
-
-A conversation begins with a question. Every question exposes candidate solutions and direct sub-questions; opening a sub-question repeats the same process. The preview preserves each question’s evaluations, clauses and review snapshots when navigating through breadcrumbs. New root questions and arbitrarily nested sub-questions start empty. Child support is never copied to the parent. Findings must be used to improve and evaluate the parent answer.
-
-The live overview displays actual `parentId` relationships, question-specific solution ranking, and links to child question workspaces and the existing question creation/list interface. Synthesis themes remain a separate grouping dimension; they are not substituted for the question hierarchy.
-
-## Map navigation
-
-All five maps share the same question scope and a three-part navigation: Structure (mind map, sub-question map), Solutions (topic/synthesis board), Agreement (triangle, polarization). The live map routes render the original components, including the formerly separate cluster board, with return links to the question and map index. Existing editing and data permissions remain in those components; hidden-result questions do not mount agreement or polarization views.
-
-The standalone example provides five interactive map representations using local question and evaluation data. Its triangle uses positive/negative rating weights normalized by the maximum evaluation count, without the original random jitter. Polarization uses mean and mean absolute deviation. Unrated solutions are listed separately. These example views do not implement the original demographic filters, hex aggregation, drag editing, or all canvas controls; those remain available through the real app’s original components.
-
-## Running the full app locally
-
-Worktree: `../Freedi-app.worktrees/main-app-playful`, branch `codex/main-app-playful`.
-
-The complete app is at `http://localhost:5189/`. The design-only example remains at port 5187. The app uses the isolated `demo-freedi-redesign` namespace. The local commands require existing Firestore (8081) and Storage (9199) emulators and installed app/functions dependencies.
-
-Run in separate terminals:
-
-```sh
-npm run dev:redesign:auth
-npm run dev:redesign:functions
-npm run dev:redesign
-```
-
-`npm run seed:redesign` creates fictional courtyard fixtures and a test identity, preserving an existing question's edits. The browser test uses that identity through ordinary Firebase password authentication; it does not intercept or replace authentication responses. Normal visitors can use the landing page's existing temporary-name login and start their own question.
-
-The local HTTP/callable gateway binds only to loopback and refuses non-demo project IDs. It runs actual compiled Firebase handlers, including the covenant workflow and bulk loads. It does **not** emulate Firestore background triggers; use the normal Firebase Functions emulator/deployment for background synthesis jobs and evaluation aggregates. AI operations still need their existing provider configuration. They are connected, but fresh AI generation has not been verified in this local setup.
-
-Validation commands:
-
-```sh
-npm run build
-./node_modules/.bin/tsc -p functions/tsconfig.json
-npm run test:covenant
-node scripts/verify-covenant-browser.cjs
-./node_modules/.bin/jest --watchman=false --runInBand src/view/components/atomic/organisms/ThinkingSpace/__tests__ src/view/pages/redesignPreview/__tests__
-```
-
-The service test covers membership, facilitator gates, amendment ownership, missing responses, blocking objections, adoption, preserved prior versions and concurrent stale writes. Browser checks cover ordinary demo login, clause creation, amendment acceptance, review, position, adoption, reload, export, mobile overflow and Hebrew rendering.
+The lightweight HTTP gateway does **not** run Firestore triggers or scheduled jobs. Live automation requires the full Firebase runtime; local tests invoke the service directly. No production deployment or real model call was performed during development.

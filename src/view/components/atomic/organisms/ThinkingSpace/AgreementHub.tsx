@@ -1,3 +1,4 @@
+import QuestionProcess from './QuestionProcess';
 import CovenantWorkspace from './CovenantWorkspace';
 import { mapViews } from './MapExplorer';
 import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
@@ -202,6 +203,13 @@ export default function AgreementHub({
 		</article>
 	);
 
+	if (!compact && (view === 'summary' || view === 'covenant'))
+		return (
+			<div className={styles.journey}>
+				<QuestionProcess statement={statement} view={view} />
+			</div>
+		);
+
 	return (
 		<div className={`${styles.journey} ${compact ? styles.journey__aside : ''}`}>
 			{compact ? (
@@ -239,6 +247,7 @@ export default function AgreementHub({
 									</button>
 								</nav>
 							)}
+
 							<div className={styles.journey__hero}>
 								<div>
 									<span className={styles.journey__eyebrow}>{t('Question')}</span>
@@ -265,6 +274,7 @@ export default function AgreementHub({
 									✳
 								</span>
 							</div>
+							<QuestionProcess statement={statement} view="overview" />
 							<section className={styles.journey__section} aria-label={t('Sub-questions')}>
 								<div className={styles.journey__title}>
 									<h3>

@@ -69,6 +69,7 @@ export async function getDocumentForSigning(documentId: string): Promise<Stateme
       StatementType.question,
       StatementType.option,
       StatementType.document,
+      StatementType.agreement,
     ];
 
     if (!signableTypes.includes(statement.statementType)) {

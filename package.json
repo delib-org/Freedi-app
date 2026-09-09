@@ -94,7 +94,9 @@
     "dev:redesign:functions": "tsc -p functions/tsconfig.json && node scripts/redesign-functions.cjs",
     "test:covenant": "tsc -p functions/tsconfig.covenant.json && node scripts/verify-covenant-service.cjs",
     "dev:redesign:auth": "firebase emulators:start --only auth --project demo-freedi-redesign --config firebase.redesign-auth.json",
-    "seed:redesign": "node scripts/seed-redesign.cjs"
+    "seed:redesign": "node scripts/seed-redesign.cjs",
+    "dev:redesign:sign": "node scripts/dev-redesign-sign.cjs",
+    "test:deliberation": "node scripts/verify-deliberation.cjs"
   },
   "dependencies": {
     "@microsoft/clarity": "^1.0.2",
