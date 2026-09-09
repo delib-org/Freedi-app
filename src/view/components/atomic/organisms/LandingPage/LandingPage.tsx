@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import {
 	ArrowUpRight,
 	Sprout,
@@ -8,7 +8,7 @@ import {
 	FileHeart,
 	X,
 } from 'lucide-react';
-import { Translate } from '../ThinkingSpace/ThinkingSpace';
+import type { Translate } from '../ThinkingSpace/ThinkingSpace';
 import styles from './LandingPage.module.scss';
 
 interface LandingPageProps {
@@ -16,13 +16,21 @@ interface LandingPageProps {
 	dir?: 'ltr' | 'rtl';
 	login: ReactNode | ((close: () => void) => ReactNode);
 	language?: ReactNode;
+	onLoginIntent?: () => void;
 }
-export default function LandingPage({ t, dir = 'ltr', login, language }: LandingPageProps) {
+export default function LandingPage({
+	t,
+	dir = 'ltr',
+	login,
+	language,
+	onLoginIntent,
+}: LandingPageProps) {
 	const dialog = useRef<HTMLDialogElement>(null);
 	useEffect(() => {
 		document.title = 'Freedi · ' + t('Find a way forward. Together.');
 	}, [t]);
 	const openLogin = (): void => {
+		onLoginIntent?.();
 		dialog.current?.showModal();
 	};
 	const steps = [

@@ -344,6 +344,23 @@
 	&__login {
 		display: grid;
 		gap: 16px;
+		form {
+			display: grid;
+			gap: 10px;
+		}
+		label {
+			font-size: 14px;
+			color: var(--space-muted);
+		}
+		input {
+			width: 100%;
+			border: 1px solid var(--space-line);
+			border-radius: 18px;
+			background: var(--space-surface);
+			color: var(--space-ink);
+			font: inherit;
+			padding: 14px 16px;
+		}
 		button {
 			border: 1px solid var(--space-line);
 			border-radius: 24px;
@@ -351,6 +368,10 @@
 			color: var(--space-ink);
 			padding: 16px;
 			width: 100%;
+			&:disabled {
+				cursor: wait;
+				opacity: 0.55;
+			}
 		}
 		p {
 			font-size: 14px;
