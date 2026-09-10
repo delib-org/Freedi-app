@@ -1,3 +1,9 @@
+import {
+	orderBy,
+	startAfter,
+	type QueryDocumentSnapshot,
+	type DocumentData,
+} from 'firebase/firestore';
 import { t } from './i18n';
 import { parse } from 'valibot';
 import {
@@ -422,5 +428,27 @@ export async function fetchSessionReport(sessionId: string): Promise<SessionRepo
 				(identity) => [identity.userId, identity.realName],
 			),
 		),
+	};
+}
+
+/** Cursor pagination retains access to all past lessons without filling the dashboard. */
+export async function fetchSessionHistory(
+	uid: string,
+	cursor?: QueryDocumentSnapshot<DocumentData>,
+) {
+	const snap = await getDocs(
+		query(
+			collection(db, Collections.agoraSessions),
+			where('teacherId', '==', uid),
+			orderBy('createdAt', 'desc'),
+			...(cursor ? [startAfter(cursor)] : []),
+			limit(25),
+		),
+	);
+
+	return {
+		sessions: snap.docs.map((d) => parse(AgoraSessionSchema, d.data())),
+		cursor: snap.empty ? undefined : snap.docs[snap.docs.length - 1],
+		hasMore: snap.size === 25,
 	};
 }

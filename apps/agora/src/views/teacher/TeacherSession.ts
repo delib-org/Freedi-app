@@ -1,4 +1,4 @@
-import { isVillageMode, sessionJoinUrl } from '../../lib/flows/sessionLinks';
+import { sessionVillageMode, sessionJoinUrl } from '../../lib/flows/sessionLinks';
 import m from 'mithril';
 import { Icon } from '../../components/Icon';
 import { t } from '../../lib/i18n';
@@ -304,7 +304,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const joinUrl = sessionJoinUrl(
 				window.location.origin,
 				session.code,
-				isVillageMode(window.location.search),
+				sessionVillageMode(session.world, window.location.search),
 			);
 			const plan = getStagePlan();
 			const currentIndex = getCurrentPlanIndex();

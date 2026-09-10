@@ -15,11 +15,7 @@ import { VotingStageSettingsSchema, VotingStateSchema } from '../vote/votingStag
 import { VotingGameStateSchema } from '../vote/challengeGame';
 import { AgoraSessionFlowSchema } from './sessionFlow';
 import { AgoraThemeChoiceSchema } from './agoraTheme';
-import {
-	AgoraCarriedAnswerSchema,
-	AgoraStagePlanSchema,
-	AgoraStageStateSchema,
-} from './stagePlan';
+import { AgoraCarriedAnswerSchema, AgoraStagePlanSchema, AgoraStageStateSchema } from './stagePlan';
 import {
 	AgoraStage,
 	AgoraRoundPhase,
@@ -265,6 +261,7 @@ export const AgoraSessionSchema = object({
 	 * doc outranks it. Never read on civic sessions, which wear Odyssey's.
 	 */
 	theme: optional(nullable(AgoraThemeChoiceSchema)),
+	world: optional(picklist(['village', 'classic'])),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),

@@ -1,3 +1,4 @@
+import { sessionVillageMode } from '../lib/flows/sessionLinks';
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { ensureUser } from '../lib/user';
@@ -153,7 +154,7 @@ function storeNav(sessionId: string, state: StageNavState): void {
 
 export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
-	let villageMode = new URLSearchParams(window.location.search).get('world') === 'village';
+	let villageOverride: boolean | undefined;
 	let userId = '';
 	/** Last plan position rendered — a change plays the travel interstitial */
 	let lastIndex: number | null = null;
@@ -241,6 +242,11 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			const { session, participants, myParticipant, participantsLoaded, loading, error } =
 				getSessionState();
+			const villageMode = sessionVillageMode(
+				session?.world,
+				window.location.search,
+				villageOverride,
+			);
 			const flow = getSessionFlow();
 
 			if (loading || (!session && !error)) {
@@ -398,11 +404,13 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					...overlays,
 					stageNav,
 					pastNotice,
-					m(Lobby, {
-						participants,
-						myParticipant,
-						onOpenLook: lookDoor?.onOpen,
-					}),
+					villageMode
+						? m(
+								VillageShell,
+								{ plan, currentIndex, viewingIndex, papers: [] },
+								m(Lobby, { participants, myParticipant, onOpenLook: lookDoor?.onOpen }),
+							)
+						: m(Lobby, { participants, myParticipant, onOpenLook: lookDoor?.onOpen }),
 				]);
 			}
 
@@ -631,7 +639,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					'button.btn.btn--secondary.btn--sm.village-mode-toggle',
 					{
 						onclick: () => {
-							villageMode = !villageMode;
+							villageOverride = !villageMode;
 						},
 						'aria-pressed': villageMode,
 					},

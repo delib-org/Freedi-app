@@ -1,4 +1,3 @@
-import { isVillageMode } from '../../lib/flows/sessionLinks';
 import m from 'mithril';
 import { getLang, t } from '../../lib/i18n';
 import { getUserState, ensureUser } from '../../lib/user';
@@ -73,7 +72,8 @@ export function StartGame(): m.Component {
 	let look: AgoraThemePreset = AGORA_DEFAULT_THEME;
 	let creating = false;
 	let createFailed = false;
-	let advancedOpen = isVillageMode(window.location.search);
+	let world: 'village' | 'classic' = 'village';
+	let advancedOpen = true;
 	let moreOpen = false;
 
 	// Auth settles in two beats — anonymous first, the teacher's Google account
@@ -221,6 +221,7 @@ export function StartGame(): m.Component {
 				identity,
 				collectRealNames,
 				theme: { preset: look },
+				world,
 				stagePlan: plans[mode()],
 				...(classChoice && classChoice !== 'none' ? { classId: classChoice } : {}),
 				...(flow ? { flow } : {}),
@@ -692,6 +693,19 @@ export function StartGame(): m.Component {
 				m('.shell__content.start-game__form', [
 					m('p.home-explanation.home-explanation--start', t('startGame.form_hint')),
 
+					m('.card.stack', [
+						m('h2', 'איך התלמידים יחוו את המפגש?'),
+						m('p', 'הבחירה תחול על כל מי שמצטרף למפגש, גם באמצעות קוד.'),
+						m('.teacher__mode-row', { role: 'group', 'aria-label': 'ממשק התלמידים' }, [
+							choice('כפר תלת־מימדי', world === 'village', () => {
+								world = 'village';
+							}),
+							choice('הממשק הקלאסי', world === 'classic', () => {
+								world = 'classic';
+							}),
+						]),
+					]),
+
 					// 1. What are we playing?
 					m('.stack', [
 						m('p.teacher__section-title', t('startGame.what')),
@@ -705,7 +719,7 @@ export function StartGame(): m.Component {
 					// 2. Which class?
 					classLine(),
 
-					isVillageMode(window.location.search) ? advancedCard() : null,
+					world === 'village' ? advancedCard() : null,
 
 					// 3. The button
 					createFailed ? m('p.join__error', t('common.error')) : null,
@@ -716,7 +730,7 @@ export function StartGame(): m.Component {
 					),
 					summaryLine(),
 
-					!isVillageMode(window.location.search) ? advancedCard() : null,
+					world !== 'village' ? advancedCard() : null,
 				]),
 			]);
 		},

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isVillageMode, sessionJoinUrl } from './sessionLinks';
+import { isVillageMode, sessionJoinUrl, sessionVillageMode } from './sessionLinks';
 
 describe('shared session links', () => {
 	it('preserves the village and a leading-zero code in a directly routable URL', () => {
@@ -14,4 +14,13 @@ describe('shared session links', () => {
 		);
 		expect(isVillageMode('?world=other')).toBe(false);
 	});
+});
+
+it('uses the saved village even when a student enters only the code', () => {
+	expect(sessionVillageMode('village', '')).toBe(true);
+	expect(sessionVillageMode(undefined, '')).toBe(false);
+	expect(sessionVillageMode('classic', '')).toBe(false);
+	expect(sessionVillageMode('classic', '?world=village')).toBe(false);
+	expect(sessionVillageMode(undefined, '?world=village')).toBe(true);
+	expect(sessionVillageMode('village', '', false)).toBe(false);
 });

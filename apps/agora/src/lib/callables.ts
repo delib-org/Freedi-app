@@ -33,6 +33,7 @@ export interface QuickGameRequest {
 }
 
 export interface CreateSessionRequest {
+	world?: 'village' | 'classic';
 	/** A ready scenario — or omit it and send `quick` */
 	topicPackageId?: string;
 	quick?: QuickGameRequest;

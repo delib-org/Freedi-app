@@ -30,3 +30,13 @@ Open `/?world=village` in separate browser profiles (not merely two tabs sharing
 ## Preserved pre-village version
 
 `codex/agora-before-village` points to `f5c1088b3`, immediately before the first olive-hill demo commit (`20eec5386`). It is pushed to origin and preserves the entire repository at that point without rewriting the current development branch.
+
+## Room interface and history
+
+New sessions default to `world: village`. StartGame offers village/classic before creation; the server validates and stores the choice. Students resolve it from the shared session even with a bare join code, and an explicit session choice outranks a URL hint. Old sessions without this field retain their previous behavior. The teacher's join links also use the session choice.
+
+Workbox must exclude `/prototypes/` from its SPA navigation fallback: the village iframe needs its own HTML, not index.html (which correctly refuses framing). Entry explicitly checks for a service-worker update.
+
+Teacher history is a collapsed archive with cursor pagination, month grouping, a class filter and search within loaded lessons. It retains all session data and links to reports/solutions. Expired sessions are no longer live banners; legacy sessions without an expiry age out of the active list after a day. The reusable scenario shelf shows six entries initially with an expand control.
+
+Live verification on 2026-09-10 used the signed-in teacher in the in-app browser and an anonymous student in Firefox, joining by code without a world query. Verified village rendering, synchronized station changes, story and proposal submission visible to the teacher, voting (1/1), matching final decision and lesson closure. Also verified monthly archive groups, title search and opening a previous report. The test lesson is retained under a title prefixed `בדיקת מערכת`.

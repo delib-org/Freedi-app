@@ -52,6 +52,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
+        // The village is a separate HTML document, not the main SPA.
+        navigateFallbackDenylist: [/^\/prototypes\//],
         // webp is in the list for the icon set only (~85 KB of UI chrome that
         // has to be there the instant a stage turns over); the big artwork is
         // webp too, which is what globIgnores below is keeping out.
