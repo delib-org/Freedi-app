@@ -113,7 +113,16 @@ for(const b of document.querySelectorAll('[data-key]')){b.onpointerdown=e=>{e.pr
 for(const s of stations){const b=document.createElement('button');b.textContent=s.name;b.onclick=()=>{destination(s.id);moving=true;};$('preview-stations').append(b);}
 $('preview-stations').hidden=embedded;$('preview-label').hidden=embedded;destination('challenge');
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});document.addEventListener('visibilitychange',()=>{keys.clear();sound.visibility(document.hidden);});
+$('loading').textContent='מכינים את הכפר ומזמינים את החכמים…';
+const characterStatus=document.createElement('div');characterStatus.setAttribute('role','status');
+characterStatus.style.cssText='position:fixed;bottom:115px;right:25px;z-index:3;background:#304734;padding:10px;border-radius:4px;font:14px Arial';
+characterStatus.textContent='הדמויות בדרך…';document.body.append(characterStatus);
+// Let the world open even on a slow connection; report asset failures visibly.
 $('loading').hidden=true;send('agora-village-ready');
+village.ready.then(({failed})=>{
+ if(failed){characterStatus.textContent='חלק מהדמויות לא נטענו. רעננו את הדף כדי לנסות שוב.';}
+ else characterStatus.remove();
+});
 function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.04);last=now;if(document.hidden||uiPaused)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
  if(moving){const dx=selected.ax-camera.position.x,dz=selected.az-camera.position.z,dist=Math.hypot(dx,dz);if(dist>.12){camera.position.x+=dx/dist*dt*4;camera.position.z+=dz/dist*dt*4;const target=Math.atan2(camera.position.x-selected.x,camera.position.z-selected.z);yaw+=Math.atan2(Math.sin(target-yaw),Math.cos(target-yaw))*Math.min(1,dt*3);}else moving=false;}
  const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));if(f||s){const n=Math.hypot(f,s);camera.position.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)/n*dt*4;camera.position.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)/n*dt*4;}
