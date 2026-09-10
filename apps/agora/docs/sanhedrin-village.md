@@ -16,7 +16,7 @@ The standalone scene is explicitly a tour. It does not simulate saving student w
 
 - Native activity panels provide writing and rating over the 3D world. Direct five-face rating on 3D paper, a confirmed-write letter flight, richer character animation and a fully world-integrated writing surface remain future work.
 - The teacher can shorten/reorder the route with the existing editor. A vote still requires a preceding source of proposals. A new teacher interface to preload candidates for a voting-only session has not been added.
-- The dedicated village build (`VITE_DEFAULT_WORLD=village`) now includes the real Agora teacher dashboard, session creation, editable route, student join and session controls. The join URL preserves village mode and uses a hash route supported by static hosting. Google sign-in on the private Sites origin still requires explicit approval to add that origin to Firebase authorized domains. The build uses the existing wizcol-app backend; no backend functions are changed.
+- The dedicated village build (`VITE_DEFAULT_WORLD=village`) now includes the real Agora teacher dashboard, session creation, editable route, student join and session controls. The join URL preserves village mode and uses a hash route supported by static hosting. The canonical deployment is https://agora.wizcol.com (Firebase Hosting site agora-wizcol), using the existing wizcol-app backend and already authorized login domain. Open `https://agora.wizcol.com/?world=village` for the village entry; the normal root keeps the ordinary Agora interface. No authentication-domain changes or backend function deployments are needed. The private Sites preview is not the canonical sign-in entry.
 - Build, TypeScript, lint and the 313 Agora tests pass, including five new route/entry guard tests. No GPU/visual or real-phone performance certification is implied.
 
 ## Local verification
@@ -26,3 +26,7 @@ Start the existing emulator stack and Agora dev server. Run `npm run preflight`,
 ## Facilitator / student entry
 
 Open `/?world=village` in separate browser profiles (not merely two tabs sharing authentication). The facilitator signs in with Google, creates a custom-question game and edits the route; in village mode the route editor is expanded before the create button. Share the code or join link with the second browser. Students join anonymously. The teacher starts and advances stages and sees saved contributions using the existing session controls. The standalone `/village` tour also links to this entry.
+
+## Preserved pre-village version
+
+`codex/agora-before-village` points to `f5c1088b3`, immediately before the first olive-hill demo commit (`20eec5386`). It is pushed to origin and preserves the entire repository at that point without rewriting the current development branch.
