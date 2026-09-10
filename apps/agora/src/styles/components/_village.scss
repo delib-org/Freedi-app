@@ -74,3 +74,16 @@ body:has(.village-library--reading) { overflow:hidden; }
 .village-community__panel { top:138px; }
 .village-board-tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
 .village-board-tabs [aria-pressed="true"] { outline:2px solid #927535; }
+
+// Reserve the HUD and game-control rows outside every open paper or board.
+// Raising their z-index alone leaves them covering the paper's title and buttons.
+.village-shell:has(.village-community) {
+  > .village-shell__activity:not(.village-library--reading) {
+    inset-block-start: 204px;
+    inset-block-end: 100px;
+  }
+  .village-community__panel {
+    top: 204px;
+    bottom: 100px;
+  }
+}
