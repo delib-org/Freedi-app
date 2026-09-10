@@ -142,6 +142,10 @@ export default defineConfig({
   ],
 
   build: {
+    // Keep native module preloads, without a shared polyfill chunk whose own
+    // preload can be discarded across service-worker control transitions.
+    // Browsers without modulepreload still load normal module imports.
+    modulePreload: { polyfill: false },
     target: 'es2020',
     outDir: 'dist',
     rollupOptions: {
