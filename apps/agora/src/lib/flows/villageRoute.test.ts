@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
-import { acceptsVillageEntry, villagePlace } from './villageRoute';
+import {
+	acceptsVillageEntry,
+	acceptsVillageWrite,
+	villageDesk,
+	villagePlace,
+} from './villageRoute';
 
 describe('the village follows the actual session plan', () => {
 	const plan: AgoraStagePlanItem[] = [
@@ -67,5 +72,56 @@ describe('the village follows the actual session plan', () => {
 		]) {
 			expect(acceptsVillageEntry(payload, plan, 3, 3)).toBe(false);
 		}
+	});
+});
+
+describe('personal writing desks', () => {
+	const plan: AgoraStagePlanItem[] = [
+		{ itemId: 'story', stage: AgoraStage.question, kind: 'story' },
+		{ itemId: 'needs', stage: AgoraStage.question, kind: 'needs' },
+		{ itemId: 'idea-a', stage: AgoraStage.deliberation },
+		{ itemId: 'idea-b', stage: AgoraStage.deliberation },
+		{ itemId: 'vote', stage: AgoraStage.voting },
+	];
+	it('invites the appropriate kind of writing without adding writing to voting', () => {
+		expect(plan.map((item) => villageDesk(item)?.label ?? null)).toEqual([
+			'הסיפור שלי',
+			'הצרכים שלי',
+			'ההצעה שלי',
+			'ההצעה שלי',
+			null,
+		]);
+	});
+	it('opens only the live paper, keeping repeated proposal rounds distinct', () => {
+		expect(acceptsVillageWrite({ type: 'agora-village-write', itemId: 'idea-b' }, plan, 3, 3)).toBe(
+			true,
+		);
+		expect(acceptsVillageWrite({ type: 'agora-village-write', itemId: 'idea-a' }, plan, 3, 3)).toBe(
+			false,
+		);
+		expect(acceptsVillageWrite({ type: 'agora-village-write', itemId: 'idea-a' }, plan, 3, 2)).toBe(
+			false,
+		);
+		expect(acceptsVillageWrite({ type: 'agora-village-write', itemId: 'idea-b' }, plan, 2, 3)).toBe(
+			false,
+		);
+		expect(acceptsVillageWrite({ type: 'agora-village-write', itemId: 'vote' }, plan, 4, 4)).toBe(
+			false,
+		);
+	});
+	it('rejects malformed requests and indices outside the plan without throwing', () => {
+		for (const payload of [
+			null,
+			{},
+			{ type: 'advance', itemId: 'story' },
+			{ type: 'agora-village-write', itemId: undefined },
+		]) {
+			expect(acceptsVillageWrite(payload, plan, 0, 0)).toBe(false);
+			expect(acceptsVillageWrite(payload, plan, 5, 5)).toBe(false);
+		}
+		expect(villageDesk(undefined)).toBe(null);
+		expect(
+			acceptsVillageEntry({ type: 'agora-village-enter', itemId: undefined }, plan, 5, 5),
+		).toBe(false);
 	});
 });

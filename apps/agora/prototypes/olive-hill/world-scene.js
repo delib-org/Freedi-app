@@ -1,3 +1,4 @@
+import { createPaperFlight } from './paper-flight.js';
 import * as THREE from './vendor/three.module.js';
 import { Soundscape } from './sound.js';
 import { buildVillage, stations } from './village.js';
@@ -101,21 +102,46 @@ paint([]);return {station,face,paint};
 });
 function paintPapers(papers){stationBoards.find(b=>b.station.id===selected.id)?.paint(papers);}
 canvas.addEventListener('click',event=>{
- if(uiPaused)return;const rect=canvas.getBoundingClientRect();const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1),camera);
+ if(uiPaused||pointerMoved)return;const rect=canvas.getBoundingClientRect();const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1),camera);
+ const desk=village.desks.find(d=>d.station.id===selected.id);
+ if(desk&&deskInfo&&ray.intersectObject(desk.group,true).some(hit=>hit.distance<7)){openPersonalDesk();return;}
  const hit=ray.intersectObjects(stationBoards.map(b=>b.face))[0];const board=stationBoards.find(b=>b.face===hit?.object);
  if(board && embedded)parent.postMessage({type:'agora-village-board',place:board.station.id},location.origin);
 });
 const embedded=new URLSearchParams(location.search).get('embedded')==='1' && window.parent!==window;
 const sound=new Soundscape();
 let selected=stations[0],activeItem='',moving=false,uiPaused=false,yaw=0,pitch=-.04,last=performance.now(),elapsed=0;
-let lastLibraryPresence=null;
+let lastLibraryPresence=null,deskInfo=null,pointerMoved=false;
+function hideDeskBubble(){ $('desk-bubble').hidden=true;document.body.classList.remove('has-desk-bubble'); }
+function openPersonalDesk(){
+ if(uiPaused||!deskInfo)return;
+ if(embedded)send(deskInfo.writable?'agora-village-write':'agora-village-enter');
+ else $('enter').click();
+}
+$('desk-write').onclick=openPersonalDesk;
+function updateDeskBubble(){
+ const guide=characters.find(c=>c.station===selected.id);
+ if(!deskInfo||!guide||uiPaused||Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)>3.5){hideDeskBubble();return;}
+ const anchor=new THREE.Vector3(guide.x,height(guide.x,guide.z)+guide.height+.45,guide.z).project(camera);
+ if(anchor.z< -1||anchor.z>1||Math.abs(anchor.x)>.92){hideDeskBubble();return;}
+ const bubble=$('desk-bubble');bubble.hidden=false;document.body.classList.add('has-desk-bubble');
+ const half=bubble.offsetWidth/2+16;
+ bubble.style.left=`${THREE.MathUtils.clamp((anchor.x*.5+.5)*innerWidth,half,innerWidth-half)}px`;
+ bubble.style.top=`${THREE.MathUtils.clamp((-anchor.y*.5+.5)*innerHeight,bubble.offsetHeight+16,innerHeight-130)}px`;
+ $('desk-speaker').textContent=guide.name;
+ $('desk-invitation').textContent=deskInfo.writable?deskInfo.prompt:'הפתק שלך נשמר. אפשר לפתוח אותו ולקרוא שוב.';
+ $('desk-write').textContent=deskInfo.writable?'לכתוב על הפתק שלי':'לקרוא את הפתק שלי';
+}
+
 const keys=new Set();camera.position.set(0,7.15,26);camera.lookAt(-5,7,12);let angles=new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ');yaw=angles.y;pitch=angles.x;
+const paperFlight=createPaperFlight(scene,camera,itemId=>{const angles=new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ');yaw=angles.y;pitch=angles.x;if(embedded)parent.postMessage({type:'agora-village-landed',itemId},location.origin);});
+window.addEventListener('message',event=>{const d=event.data;if(event.origin!==location.origin||event.source!==parent||!embedded||d?.type!=='agora-village-fly'||d.itemId!==activeItem)return;keys.clear();moving=false;uiPaused=false;paperFlight.start(village.desks.find(b=>b.station.id===d.place),stationBoards.find(b=>b.station.id===d.place),d.itemId);});
 function send(type){if(embedded)parent.postMessage({type,itemId:activeItem},location.origin);}
-function destination(place,label){selected=stations.find(s=>s.id===place)||stations[0];$('station-name').textContent=label||selected.name;$('station-place').textContent=selected.name;$('guide-line').textContent=selected.question;moving=false;}
-window.addEventListener('message',event=>{if(!embedded||event.source!==parent||event.origin!==location.origin||!event.data||typeof event.data!=='object')return;const data=event.data;if(data.type==='agora-village-state'&&typeof data.itemId==='string'&&typeof data.place==='string'){document.body.classList.toggle('has-community',data.community===true);if(activeItem!==data.itemId){activeItem=data.itemId;destination(data.place,typeof data.label==='string'?data.label:'');}if(Array.isArray(data.stationPapers)){for(const board of stationBoards){const entries=data.stationPapers.filter(p=>p && p.place===board.station.id && Array.isArray(p.papers));board.paint(entries.flatMap(e=>e.papers).filter(p=>p&&typeof p.text==='string'&&typeof p.own==='boolean'));}}else if(Array.isArray(data.papers))paintPapers(data.papers.filter(p=>p&&typeof p.text==='string'&&typeof p.own==='boolean'));uiPaused=data.paused===true;if(uiPaused){keys.clear();moving=false;}}});
+function destination(place,label){selected=stations.find(s=>s.id===place)||stations[0];$('station-name').textContent=label||selected.name;$('station-place').textContent=selected.name;$('guide-line').textContent=selected.question;moving=false;hideDeskBubble();if(!embedded){deskInfo=village.desks.some(d=>d.station.id===selected.id)?{label:'הפתק שלי',prompt:'הפתק שלך מחכה על השולחן. איזו הצעה תרצה לכתוב?',writable:true}:null;village.desks.forEach(d=>d.paint('', 'הפתק שלי',d.station.id===selected.id));}}
+window.addEventListener('message',event=>{if(!embedded||event.source!==parent||event.origin!==location.origin||!event.data||typeof event.data!=='object')return;const data=event.data;if(data.type==='agora-village-state'&&typeof data.itemId==='string'&&typeof data.place==='string'){document.body.classList.toggle('has-community',data.community===true);deskInfo=data.desk&&typeof data.desk.label==='string'&&typeof data.desk.prompt==='string'?{label:data.desk.label,prompt:data.desk.prompt,text:typeof data.desk.text==='string'?data.desk.text:'',writable:data.desk.writable===true}:null;if(activeItem!==data.itemId){activeItem=data.itemId;destination(data.place,typeof data.label==='string'?data.label:'');}if(Array.isArray(data.stationPapers)){for(const board of stationBoards){const entries=data.stationPapers.filter(p=>p && p.place===board.station.id && Array.isArray(p.papers));board.paint(entries.flatMap(e=>e.papers).filter(p=>p&&typeof p.text==='string'&&typeof p.own==='boolean'));}}else if(Array.isArray(data.papers))paintPapers(data.papers.filter(p=>p&&typeof p.text==='string'&&typeof p.own==='boolean'));for(const desk of village.desks){const current=desk.station.id===selected.id;const saved=Array.isArray(data.stationPapers)?data.stationPapers.filter(p=>p&&p.place===desk.station.id&&Array.isArray(p.papers)).flatMap(p=>p.papers).find(p=>p&&p.own===true&&typeof p.text==='string')?.text:'';desk.paint(current?deskInfo?.text??'':saved??'',current?deskInfo?.label??'הפתק שלי':'הפתק שלי',current&&!!deskInfo);}uiPaused=data.paused===true;if(uiPaused){keys.clear();moving=false;hideDeskBubble();}}});
 $('travel').onclick=()=>{moving=!moving;canvas.focus();};
 $('enter').onclick=()=>{
- if(embedded){send('agora-village-enter');return;}
+ if(embedded){if(deskInfo)openPersonalDesk();else send('agora-village-enter');return;}
  const guides=characters.filter(c=>c.station===selected.id);
  function showGuide(character){
  const portrait=$('guide-portrait');portrait.hidden=!character;
@@ -133,7 +159,7 @@ $('close-info').onclick=()=>$('preview-info').close();
 $('sound').onclick=async()=>{try{const enabled=await sound.toggle();$('sound').textContent=enabled?'♫ השתקה':'♫ צלילים';}catch{$('sound').textContent='צלילים אינם זמינים';}};
 let lowQuality=false;
 $('quality').onclick=()=>{const low=lowQuality=!lowQuality;renderer.setPixelRatio(low?1:Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=!low;grass.count=low?Math.floor(gn*.55):gn;$('quality').textContent=low?'איכות חסכונית':'איכות גבוהה';};
-let drag=null;canvas.onpointerdown=e=>{if(uiPaused)return;drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);moving=false;};canvas.onpointermove=e=>{if(!drag)return;yaw-=(e.clientX-drag.x)*.004;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-drag.y)*.003,-.7,.55);drag={x:e.clientX,y:e.clientY};};canvas.onpointerup=canvas.onpointercancel=()=>drag=null;
+let drag=null;canvas.onpointerdown=e=>{if(uiPaused)return;pointerMoved=false;drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY};canvas.setPointerCapture(e.pointerId);moving=false;};canvas.onpointermove=e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>6)pointerMoved=true;yaw-=(e.clientX-drag.x)*.004;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-drag.y)*.003,-.7,.55);drag={...drag,x:e.clientX,y:e.clientY};};canvas.onpointerup=canvas.onpointercancel=()=>drag=null;
 addEventListener('keydown',e=>{if(uiPaused||$('preview-info').open)return;if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyE'].includes(e.code)){e.preventDefault();keys.add(e.code);moving=false;if(e.code==='KeyE')$('enter').click();}});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',()=>{keys.clear();drag=null;});
 for(const b of document.querySelectorAll('[data-key]')){b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key);moving=false;};b.onpointerup=b.onpointercancel=()=>keys.delete(b.dataset.key);}
 for(const s of stations){const b=document.createElement('button');b.textContent=s.name;b.onclick=()=>{destination(s.id);moving=true;};$('preview-stations').append(b);}
@@ -149,13 +175,13 @@ village.ready.then(({failed})=>{
  if(failed){characterStatus.textContent='חלק מהדמויות לא נטענו. רעננו את הדף כדי לנסות שוב.';}
  else characterStatus.remove();
 });
-function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.04);last=now;if(document.hidden||uiPaused||$('preview-info').open)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
+function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.04);last=now;if(paperFlight.active){paperFlight.tick(dt);village.tick(camera);renderer.render(scene,camera);return;}if(document.hidden||uiPaused||$('preview-info').open)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
  if(moving){const dx=selected.ax-camera.position.x,dz=selected.az-camera.position.z,dist=Math.hypot(dx,dz);if(dist>.12){camera.position.x+=dx/dist*dt*4;camera.position.z+=dz/dist*dt*4;const guide=characters.find(c=>c.station===selected.id);const target=Math.atan2(camera.position.x-(guide?.x??selected.x),camera.position.z-(guide?.z??selected.z));yaw+=Math.atan2(Math.sin(target-yaw),Math.cos(target-yaw))*Math.min(1,dt*3);}else {moving=false;pitch=-.06;}}
  const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));if(f||s){const n=Math.hypot(f,s);camera.position.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)/n*dt*4;camera.position.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)/n*dt*4;}
  if(!moving&&((Math.abs(camera.position.x)<3.7&&camera.position.z<2.6&&camera.position.z>-3.9)||village.solids.some(o=>Math.abs(camera.position.x-o.x)<o.w&&Math.abs(camera.position.z-o.z)<o.d)))camera.position.copy(old);
  camera.position.x=THREE.MathUtils.clamp(camera.position.x,-45,45);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-20,50);camera.position.y=height(camera.position.x,camera.position.z)+1.75;camera.quaternion.setFromEuler(new THREE.Euler(pitch,yaw,0,'YXZ'));village.tick(camera);
  const insideLibrary=Math.abs(camera.position.z-15)<3.5&&camera.position.x>-25.6&&camera.position.x<-19.6;
  if(embedded&&insideLibrary!==lastLibraryPresence){lastLibraryPresence=insideLibrary;parent.postMessage({type:'agora-village-library-presence',inside:insideLibrary},location.origin);}
- const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;$('enter').textContent=near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←';$('travel').textContent=moving?'לעצור':'ללכת לתחנה';renderer.render(scene,camera);
+ const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;$('enter').textContent=deskInfo?(deskInfo.writable?'לכתוב על הפתק שלי':'לקרוא את הפתק שלי'):near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←';updateDeskBubble();$('travel').textContent=moving?'לעצור':'ללכת לתחנה';renderer.render(scene,camera);
 }
 requestAnimationFrame(frame);

@@ -75,6 +75,27 @@ body:has(.village-library--reading) { overflow:hidden; }
 .village-board-tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
 .village-board-tabs [aria-pressed="true"] { outline:2px solid #927535; }
 
+
+// The writing surface keeps the stage's existing save and feedback controls.
+.village-desk {
+  z-index: 10;
+  &__header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-sm); padding: var(--space-md); border-bottom: 1px solid var(--border-subtle); }
+  &__header h2 { margin: 0; font-size: var(--font-size-xl); }
+  .round__textarea, .question__textarea, .my-screen__text, .write-desk textarea {
+    min-block-size: 200px;
+    background: repeating-linear-gradient(transparent, transparent calc(2em - 1px), var(--border-subtle) calc(2em - 1px), var(--border-subtle) 2em), var(--bg-card-solid);
+    color: var(--text-primary);
+    line-height: 2;
+    border-radius: var(--radius-sm);
+  }
+}
+
+// Keep the board shortcut off the personal paper in the middle of the desk.
+.village-board-open { left: var(--space-md); bottom: var(--space-md); transform: none; }
+@media (max-width: 600px) {
+  .village-board-open { bottom: 150px; max-inline-size: 180px; font-size: var(--font-size-xs); }
+}
+
 // Reserve the HUD and game-control rows outside every open paper or board.
 // Raising their z-index alone leaves them covering the paper's title and buttons.
 .village-shell:has(.village-community) {
@@ -87,3 +108,7 @@ body:has(.village-library--reading) { overflow:hidden; }
     bottom: 100px;
   }
 }
+.village-flight-status { position:absolute; z-index:35; bottom:110px; left:50%; transform:translateX(-50%); background:#233f35; color:#fff6de; padding:12px 24px; border-radius:24px; pointer-events:none; }
+.village-note--landed { outline:3px solid #c6a457; outline-offset:3px; animation:village-note-land .5s ease-out; }
+@keyframes village-note-land { from {transform:translateY(-16px) rotate(-3deg);opacity:.4} to {transform:none;opacity:1} }
+@media(prefers-reduced-motion:reduce) { .village-note--landed {animation:none} }

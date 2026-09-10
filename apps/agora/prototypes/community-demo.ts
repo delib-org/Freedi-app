@@ -210,7 +210,8 @@ m.mount(document.getElementById('demo')!, {
 					plan,
 					currentIndex: 2,
 					viewingIndex,
-					onSelectBook: (id: string) => {
+					onWrite: () => { draft = source.notes(plan[viewingIndex]).find(n=>n.creatorId===uid)?.statement ?? ""; },
+ onSelectBook: (id: string) => {
 						viewingIndex = plan.findIndex((p) => p.itemId === id);
 					},
 					papers: source
@@ -241,7 +242,7 @@ m.mount(document.getElementById('demo')!, {
 					m(
 						'button.btn.btn--primary',
 						{
-							disabled: !draft.trim(),
+							disabled: !draft.trim() || draft.trim() === source.notes(plan[viewingIndex]).find(n=>n.creatorId===uid)?.statement,
 							onclick: () => {
 								write((state) => {
 									const parent = plan[viewingIndex].statementId ?? 'solution';

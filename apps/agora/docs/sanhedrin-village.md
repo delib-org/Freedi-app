@@ -72,3 +72,12 @@ Hidden notes are excluded. Local checks: two-tab comment → notification → th
 component tests for note isolation and one chime per positive balance change.
 The actual authenticated two-participant Firebase flow still needs a staging
 smoke test before production deployment. These changes have not been deployed.
+
+The personal desk now completes the original demo's submit → curved paper flight
+→ station board sequence. VillageShell observes a changed, confirmed own note
+while writing, closes the paper, and waits for the world to report landing before
+opening the community board. Pending Firestore writes do not launch a flight;
+opening existing text or refreshing does not launch one either. The trajectory
+starts at the station's writing desk, targets its board, and respects reduced
+motion. The landed white note is highlighted. The local demo also restores saved
+text when reopening the desk, and edits replace the existing note.

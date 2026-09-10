@@ -42,8 +42,52 @@ export function acceptsVillageEntry(
 
 	return (
 		payload.type === 'agora-village-enter' &&
+		typeof payload.itemId === 'string' &&
 		viewingIndex >= 0 &&
 		viewingIndex <= currentIndex &&
 		plan[viewingIndex]?.itemId === payload.itemId
+	);
+}
+
+/** The desk follows the item, so another question in the same building has its own paper. */
+export function villageDesk(
+	item: AgoraStagePlanItem | undefined,
+): { label: string; prompt: string } | null {
+	if (!item || (item.stage !== AgoraStage.question && item.stage !== AgoraStage.deliberation))
+		return null;
+	const kind = item.stage === AgoraStage.question ? questionKindOf(item) : 'proposal';
+	const copy = {
+		story: { label: 'הסיפור שלי', prompt: 'הפתק שלך מחכה על השולחן. איזה סיפור אישי תרצה לשתף?' },
+		needs: {
+			label: 'הצרכים שלי',
+			prompt: 'מה חשוב לך? כתוב על הפתק שלך את הצרכים שחשוב לך שנכיר.',
+		},
+		vision: { label: 'החזון שלי', prompt: 'איך היית רוצה שייראה העתיד? הפתק שלך מחכה על השולחן.' },
+		open: { label: 'התשובה שלי', prompt: 'מה דעתך? כתוב את התשובה שלך על הפתק שעל השולחן.' },
+		proposal: {
+			label: 'ההצעה שלי',
+			prompt: 'איזה פתרון אתה מציע? כתוב את ההצעה שלך על הפתק שעל השולחן.',
+		},
+	};
+
+	return copy[kind];
+}
+
+export function acceptsVillageWrite(
+	payload: unknown,
+	plan: readonly AgoraStagePlanItem[],
+	currentIndex: number,
+	viewingIndex: number,
+): boolean {
+	if (!payload || typeof payload !== 'object' || !('type' in payload) || !('itemId' in payload))
+		return false;
+
+	return (
+		payload.type === 'agora-village-write' &&
+		typeof payload.itemId === 'string' &&
+		viewingIndex === currentIndex &&
+		viewingIndex >= 0 &&
+		plan[viewingIndex]?.itemId === payload.itemId &&
+		villageDesk(plan[viewingIndex]) !== null
 	);
 }

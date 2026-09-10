@@ -1,6 +1,11 @@
 import m from 'mithril';
 import type { AgoraStagePlanItem } from '@freedi/shared-types';
-import { acceptsVillageEntry, villagePlace } from '../lib/flows/villageRoute';
+import {
+	acceptsVillageEntry,
+	acceptsVillageWrite,
+	villageDesk,
+	villagePlace,
+} from '../lib/flows/villageRoute';
 import { VillageCommunity, type VillageCommunityAttrs } from './VillageCommunity';
 import { planItemLabel } from './StageNav';
 
@@ -8,7 +13,7 @@ interface VillageShellAttrs {
 	stationPapers?: Array<{
 		itemId: string;
 		place: string;
-		papers: Array<{ text: string; own: boolean }>;
+		papers: Array<{ text: string; own: boolean; confirmed?: boolean }>;
 	}>;
 	community?: Omit<
 		VillageCommunityAttrs,
@@ -18,14 +23,20 @@ interface VillageShellAttrs {
 	currentIndex: number;
 	viewingIndex: number;
 	browseFreely?: boolean;
+	onWrite?: () => void;
 	onSelectBook?: (itemId: string) => void;
-	papers: Array<{ text: string; own: boolean }>;
+	papers: Array<{ text: string; own: boolean; confirmed?: boolean }>;
 }
 
 export function VillageShell(): m.Component<VillageShellAttrs> {
 	let frame: HTMLIFrameElement | null = null;
 	let attrs: VillageShellAttrs;
 	let opened = false;
+	let deskOpen = false;
+	let focusDesk = false;
+	let deskBaseline = '';
+	let flightItem = '';
+	let flightTimer: ReturnType<typeof setTimeout> | undefined;
 	let communityOpen = false;
 	let boardRequest = 0;
 	let libraryInside = false;
@@ -44,6 +55,13 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				itemId: item.itemId,
 				place: villagePlace(item),
 				label: planItemLabel(item),
+				desk: villageDesk(item)
+					? {
+							...villageDesk(item),
+							writable: attrs.viewingIndex === attrs.currentIndex,
+							text: attrs.papers.find((paper) => paper.own)?.text ?? '',
+						}
+					: null,
 				paused: opened || communityOpen,
 				community: !!attrs.community,
 				papers: attrs.papers,
@@ -51,6 +69,27 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			},
 			window.location.origin,
 		);
+	}
+	function finishFlight(): void {
+		if (!flightItem) return;
+		flightItem = '';
+		clearTimeout(flightTimer);
+		boardRequest++;
+		communityOpen = true;
+		sync();
+		m.redraw();
+	}
+	function openDesk(): void {
+		if (flightItem) return;
+		const item = attrs.plan[attrs.viewingIndex];
+		if (!item || !villageDesk(item) || attrs.viewingIndex > attrs.currentIndex) return;
+		opened = true;
+		deskOpen = true;
+		deskBaseline = attrs.papers.find((p) => p.own)?.text ?? '';
+		focusDesk = attrs.viewingIndex === attrs.currentIndex;
+		if (focusDesk) attrs.onWrite?.();
+		sync();
+		m.redraw();
 	}
 	function receive(event: MessageEvent<unknown>): void {
 		if (event.origin !== window.location.origin || event.source !== frame?.contentWindow) return;
@@ -93,7 +132,23 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				sync();
 				m.redraw();
 			}
+		} else if (
+			payload &&
+			typeof payload === 'object' &&
+			'type' in payload &&
+			payload.type === 'agora-village-landed' &&
+			'itemId' in payload &&
+			payload.itemId === flightItem
+		) {
+			finishFlight();
+		} else if (acceptsVillageWrite(payload, attrs.plan, attrs.currentIndex, attrs.viewingIndex)) {
+			openDesk();
 		} else if (acceptsVillageEntry(payload, attrs.plan, attrs.currentIndex, attrs.viewingIndex)) {
+			if (villageDesk(attrs.plan[attrs.viewingIndex])) {
+				openDesk();
+
+				return;
+			}
 			opened = true;
 			sync();
 			m.redraw();
@@ -108,18 +163,60 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		onremove() {
 			window.removeEventListener('message', receive);
 			clearTimeout(timer);
+			clearTimeout(flightTimer);
 		},
 		onbeforeupdate(vnode) {
 			attrs = vnode.attrs;
 			const next = attrs.plan[attrs.viewingIndex]?.itemId ?? '';
 			if (next !== itemId) {
+				flightItem = '';
+				clearTimeout(flightTimer);
 				itemId = next;
+				deskOpen = false;
+				focusDesk = false;
 				opened = requestedBook === next;
 				bookOpen = opened;
 				requestedBook = '';
 			}
+			const own = attrs.papers.find((p) => p.own);
+			if (
+				deskOpen &&
+				opened &&
+				own &&
+				own.confirmed !== false &&
+				own.text !== deskBaseline &&
+				own.text.trim()
+			) {
+				deskBaseline = own.text;
+				opened = false;
+				deskOpen = false;
+				focusDesk = false;
+				communityOpen = false;
+				flightItem = next;
+				sync();
+				frame?.contentWindow?.postMessage(
+					{
+						type: 'agora-village-fly',
+						itemId: next,
+						place: villagePlace(attrs.plan[attrs.viewingIndex]),
+					},
+					location.origin,
+				);
+				flightTimer = setTimeout(finishFlight, 5000);
+			}
 		},
-		onupdate: sync,
+		onupdate(vnode) {
+			sync();
+			if (!opened || !focusDesk) return;
+			const input = (vnode.dom as HTMLElement).querySelector<HTMLTextAreaElement>(
+				'.village-desk textarea.round__textarea, .village-desk textarea.question__textarea, .village-desk textarea.my-screen__text, .village-desk .write-desk textarea',
+			);
+			if (input && !input.disabled) {
+				focusDesk = false;
+				input.focus({ preventScroll: true });
+				input.scrollIntoView({ block: 'center' });
+			}
+		},
 		view(vnode) {
 			attrs = vnode.attrs;
 			itemId = attrs.plan[attrs.viewingIndex]?.itemId ?? '';
@@ -128,18 +225,34 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				villagePlace(attrs.plan[attrs.viewingIndex]) === 'library';
 
 			return m('.village-shell', [
+				flightItem
+					? m('div.village-flight-status', { role: 'status' }, 'הפתק שלך בדרך ללוח…')
+					: null,
 				m('.village-shell__toolbar', [
 					m('strong', 'סנהדרין · כפר החכמים'),
 					m(
 						'button.btn.btn--secondary.btn--sm',
 						{
 							onclick: () => {
+								if (!opened && villageDesk(attrs.plan[attrs.viewingIndex])) {
+									openDesk();
+
+									return;
+								}
 								opened = !opened;
+								deskOpen = false;
+								focusDesk = false;
 								bookOpen = false;
 								sync();
 							},
 						},
-						opened ? 'חזרה לכפר' : library ? 'כניסה לספרייה' : 'כניסה ישירה לתחנה',
+						opened
+							? 'חזרה לכפר'
+							: library
+								? 'כניסה לספרייה'
+								: villageDesk(attrs.plan[attrs.viewingIndex])
+									? 'הפתק שלי על השולחן'
+									: 'כניסה ישירה לתחנה',
 					),
 				]),
 				attrs.community
@@ -193,7 +306,11 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 					'.village-shell__activity',
 					{
 						style: { display: opened ? 'block' : 'none' },
-						class: library ? `village-library${bookOpen ? ' village-library--reading' : ''}` : '',
+						class: library
+							? `village-library${bookOpen ? ' village-library--reading' : ''}`
+							: deskOpen
+								? 'village-desk'
+								: '',
 					},
 					library
 						? [
@@ -272,7 +389,26 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 											),
 										],
 							]
-						: vnode.children,
+						: [
+								deskOpen
+									? m('.village-desk__header', [
+											m('h2', villageDesk(attrs.plan[attrs.viewingIndex])?.label ?? 'הפתק שלי'),
+											m(
+												'button.btn.btn--secondary',
+												{
+													onclick: () => {
+														opened = false;
+														deskOpen = false;
+														focusDesk = false;
+														sync();
+													},
+												},
+												'חזרה לשולחן',
+											),
+										])
+									: null,
+								vnode.children,
+							],
 				),
 			]);
 		},

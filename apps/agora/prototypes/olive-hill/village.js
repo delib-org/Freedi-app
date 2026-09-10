@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import { buildWritingDesk } from './writing-desks.js';
 import { buildCharacters } from './characters-2d.js';
 
 export const stations=[
@@ -45,6 +46,8 @@ export function buildVillage({scene,height,manager}){
  const square=floor(0,15,5.2);make(new THREE.TorusGeometry(1.05,.18,8,32).rotateX(Math.PI/2),limestone,square,0,.55,0);make(new THREE.CylinderGeometry(1,1,.48,32),limestone,square,0,.25,0);make(new THREE.CircleGeometry(.87,32).rotateX(-Math.PI/2),material('#80a7a0'),square,0,.51,0);
  // Short paths join each station to a common courtyard.
  for(const s of stations){const verts=[],indices=[];for(let i=0;i<=24;i++){const t=i/24,x=THREE.MathUtils.lerp(0,s.ax,t),z=THREE.MathUtils.lerp(15,s.az,t);const dx=s.ax,dz=s.az-15,l=Math.hypot(dx,dz)||1;for(const side of [-1,1]){const px=x+dz/l*.75*side,pz=z-dx/l*.75*side;verts.push(px,height(px,pz)+.035,pz);}if(i<24){const k=i*2;indices.push(k,k+2,k+1,k+1,k+2,k+3);}}const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.setIndex(indices);geo.computeVertexNormals();make(geo,material('#c4b391'),scene,0,0,0);}
+ const desks=stations.filter(s=>['challenge','story','needs','solution'].includes(s.id)).map(station=>buildWritingDesk({scene,station,height}));
+ solids.push(...desks.map(desk=>desk.solid));
  const characters=buildCharacters({scene,height,manager});
- return {figures:characters.figures,solids,ready:characters.ready,tick:characters.tick};
+ return {desks,figures:characters.figures,solids,ready:characters.ready,tick:characters.tick};
 }

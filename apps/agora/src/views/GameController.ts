@@ -1,3 +1,4 @@
+import { isProposalConfirmed } from '../lib/proposals';
 import { villagePlace } from '../lib/flows/villageRoute';
 import { sessionVillageMode } from '../lib/flows/sessionLinks';
 import m from 'mithril';
@@ -156,6 +157,7 @@ function storeNav(sessionId: string, state: StageNavState): void {
 
 export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
+	let villageWriteRequest = 0;
 	let villageOverride: boolean | undefined;
 	let userId = '';
 	/** Last plan position rendered — a change plays the travel interstitial */
@@ -590,7 +592,13 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							return m(Positioning, { topic, myParticipant, catchUp: true });
 						}
 
-						return m(Deliberation, { session, myParticipant, userId, topic });
+						return m(Deliberation, {
+							session,
+							myParticipant,
+							userId,
+							topic,
+							writeRequest: villageWriteRequest,
+						});
 					}
 
 					case AgoraStage.voting: {
@@ -666,10 +674,14 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 											points: myParticipant.points.total,
 										}
 									: undefined,
+								onWrite: () => {
+									villageWriteRequest++;
+								},
 								onSelectBook: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
 								papers: stationNotes(item).map((p) => ({
 									text: p.statement,
 									own: p.creatorId === userId,
+									confirmed: isProposalConfirmed(p.statementId),
 								})),
 								stationPapers: plan.slice(0, currentIndex + 1).map((p) => ({
 									itemId: p.itemId,

@@ -270,6 +270,14 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 																m(
 																	'button.village-note',
 																	{
+																		class:
+																			note.creatorId === a.userId && (a.boardRequest ?? 0) > 0
+																				? 'village-note--landed'
+																				: '',
+																		oncreate: (v: m.VnodeDOM) => {
+																			if (note.creatorId === a.userId && (a.boardRequest ?? 0) > 0)
+																				(v.dom as HTMLElement).scrollIntoView({ block: 'nearest' });
+																		},
 																		style: {
 																			background:
 																				note.creatorId === a.userId
