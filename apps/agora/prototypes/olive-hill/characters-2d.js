@@ -7,7 +7,7 @@ export const characters = [
   image:new URL('./assets/village-boy.png',import.meta.url).href,
   x:10,z:25,facing:-2.6,height:1.8},
  {id:'elder',station:'challenge',name:'החכמה בבית המדרש',
-  image:new URL('./assets/elder-woman-cutout.png',import.meta.url).href,
+  image:new URL('./assets/elder-woman-front.png',import.meta.url).href,
   x:-12.6,z:9.1,facing:.48,height:2.05},
  {id:'miriam',station:'solution',name:'מרים · חכמה של מעשה',
   image:new URL('./assets/wise-greek-elder.png',import.meta.url).href,

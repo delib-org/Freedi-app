@@ -14,3 +14,7 @@ The planes use image aspect ratios and unlit sRGB colors to avoid skin-tone dist
 ## Completed five-character batch
 
 The five white-background originals supplied next were processed with the same local Vision extraction and white-matte cleanup; no generative face edits. Outputs: `village-ethiopian-cutout.png`, `village-man-cutout.png`, `village-girl-cutout.png`, `village-woman-cutout.png`, `village-sage-cutout.png` under `../assets`. White-matte removal for the white dress is limited to the silhouette boundary. All outputs were inspected together against an olive background and contain real alpha. The six supplied new characters, including Amir, are now integrated. Station encounters offer a choice of portraits when several guides share the place.
+
+## Front-facing elder replacement
+
+`../assets/elder-woman-front.png` replaces the study-house elder using the user's Screenshot 2026-09-10 at 11.15.11.png. Local Vision masking with conservative edge cleanup preserves silver hair and the original face. Inspected on an olive background; real RGBA. Both the world plane and encounter portrait use this single registry asset.
