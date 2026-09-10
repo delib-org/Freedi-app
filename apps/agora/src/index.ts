@@ -57,6 +57,16 @@ applyRememberedTheme();
 // early, and the home-screen suggestion needs it stashed for later.
 initInstallCapture();
 
+// Dedicated village deployments keep teacher and student navigation in this world.
+if (
+	import.meta.env.VITE_DEFAULT_WORLD === 'village' &&
+	!new URLSearchParams(location.search).has('world')
+) {
+	const url = new URL(location.href);
+	url.searchParams.set('world', 'village');
+	history.replaceState(null, '', url);
+}
+
 initAuth();
 // A teacher whose popup was blocked came back via a full page redirect; this
 // is where that round trip is collected. No-op on every other load.

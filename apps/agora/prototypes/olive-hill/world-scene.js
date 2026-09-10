@@ -126,7 +126,7 @@ let drag=null;canvas.onpointerdown=e=>{if(uiPaused)return;drag={x:e.clientX,y:e.
 addEventListener('keydown',e=>{if(uiPaused||$('preview-info').open)return;if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyE'].includes(e.code)){e.preventDefault();keys.add(e.code);moving=false;if(e.code==='KeyE')$('enter').click();}});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',()=>{keys.clear();drag=null;});
 for(const b of document.querySelectorAll('[data-key]')){b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key);moving=false;};b.onpointerup=b.onpointercancel=()=>keys.delete(b.dataset.key);}
 for(const s of stations){const b=document.createElement('button');b.textContent=s.name;b.onclick=()=>{destination(s.id);moving=true;};$('preview-stations').append(b);}
-$('preview-stations').hidden=embedded;$('preview-label').hidden=embedded;destination('challenge');
+$('session-entry').hidden=embedded;$('preview-stations').hidden=embedded;$('preview-label').hidden=embedded;destination('challenge');
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});document.addEventListener('visibilitychange',()=>{keys.clear();sound.visibility(document.hidden);});
 $('loading').textContent='מכינים את הכפר ומזמינים את החכמים…';
 const characterStatus=document.createElement('div');characterStatus.setAttribute('role','status');

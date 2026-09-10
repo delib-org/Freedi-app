@@ -1,3 +1,4 @@
+import { isVillageMode } from '../../lib/flows/sessionLinks';
 import m from 'mithril';
 import { getLang, t } from '../../lib/i18n';
 import { getUserState, ensureUser } from '../../lib/user';
@@ -72,7 +73,7 @@ export function StartGame(): m.Component {
 	let look: AgoraThemePreset = AGORA_DEFAULT_THEME;
 	let creating = false;
 	let createFailed = false;
-	let advancedOpen = false;
+	let advancedOpen = isVillageMode(window.location.search);
 	let moreOpen = false;
 
 	// Auth settles in two beats — anonymous first, the teacher's Google account
@@ -704,6 +705,8 @@ export function StartGame(): m.Component {
 					// 2. Which class?
 					classLine(),
 
+					isVillageMode(window.location.search) ? advancedCard() : null,
+
 					// 3. The button
 					createFailed ? m('p.join__error', t('common.error')) : null,
 					m(
@@ -713,7 +716,7 @@ export function StartGame(): m.Component {
 					),
 					summaryLine(),
 
-					advancedCard(),
+					!isVillageMode(window.location.search) ? advancedCard() : null,
 				]),
 			]);
 		},
