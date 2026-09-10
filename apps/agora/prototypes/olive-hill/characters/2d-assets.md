@@ -10,3 +10,7 @@ The planes use image aspect ratios and unlit sRGB colors to avoid skin-tone dist
 ## Original-pixel extraction: Amir
 
 `../assets/village-boy.png` comes from the user's white-background `Gemini_Generated_Image_kgyg84kgyg84kgyg.jpeg`. Extracted locally with macOS Vision foreground masking, then white-matte edge cleanup. No image regeneration was used. Confirmed real alpha and inspected against an olive background. Amir is at the needs courtyard. The remaining supplied characters are still pending extraction and are not live.
+
+## Completed five-character batch
+
+The five white-background originals supplied next were processed with the same local Vision extraction and white-matte cleanup; no generative face edits. Outputs: `village-ethiopian-cutout.png`, `village-man-cutout.png`, `village-girl-cutout.png`, `village-woman-cutout.png`, `village-sage-cutout.png` under `../assets`. White-matte removal for the white dress is limited to the silhouette boundary. All outputs were inspected together against an olive background and contain real alpha. The six supplied new characters, including Amir, are now integrated. Station encounters offer a choice of portraits when several guides share the place.

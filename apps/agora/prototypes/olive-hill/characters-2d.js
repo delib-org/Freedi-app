@@ -12,6 +12,11 @@ export const characters = [
  {id:'miriam',station:'solution',name:'מרים · חכמה של מעשה',
   image:new URL('./assets/wise-greek-elder.png',import.meta.url).href,
   x:1.8,z:3.55,facing:.09,height:2.2},
+ {id:'woman',station:'story',name:'נעמה · מקשיבה לסיפורים',image:new URL('./assets/village-woman-cutout.png',import.meta.url).href,x:-12.5,z:24,facing:1.9,height:1.9},
+ {id:'sage',station:'council',name:'עזרא · שואל בחוכמה',image:new URL('./assets/village-sage-cutout.png',import.meta.url).href,x:13,z:7,facing:-.5,height:2.05},
+ {id:'ethiopian',station:'needs',name:'רות · מקשיבה למה שחשוב',image:new URL('./assets/village-ethiopian-cutout.png',import.meta.url).href,x:11.6,z:24.5,facing:-2.5,height:1.9},
+ {id:'girl',station:'story',name:'תמר · סקרנית לגלות',image:new URL('./assets/village-girl-cutout.png',import.meta.url).href,x:-10.8,z:24.4,facing:2.5,height:1.75},
+ {id:'man',station:'council',name:'נועם · חושבים יחד',image:new URL('./assets/village-man-cutout.png',import.meta.url).href,x:15,z:7,facing:-.85,height:2.05},
 ];
 
 export function buildCharacters({scene,height,manager}) {

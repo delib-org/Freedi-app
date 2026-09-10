@@ -105,11 +105,16 @@ window.addEventListener('message',event=>{if(!embedded||event.source!==parent||e
 $('travel').onclick=()=>{moving=!moving;canvas.focus();};
 $('enter').onclick=()=>{
  if(embedded){send('agora-village-enter');return;}
- const character=characters.find(c=>c.station===selected.id);
+ const guides=characters.filter(c=>c.station===selected.id);
+ function showGuide(character){
  const portrait=$('guide-portrait');portrait.hidden=!character;
  if(character){portrait.src=character.image;portrait.alt=character.name;}
  else portrait.removeAttribute('src');
  $('encounter-name').textContent=character?.name||selected.name;
+ }
+ showGuide(guides[0]);
+ const choices=$('guide-choices');choices.replaceChildren();choices.hidden=guides.length<2;
+ for(const guide of guides){const b=document.createElement('button');b.textContent=guide.name;b.onclick=()=>showGuide(guide);choices.append(b);}
  $('encounter-question').textContent=selected.question;
  keys.clear();moving=false;$('preview-info').showModal();
 };
