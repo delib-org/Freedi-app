@@ -1,7 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 
-// Add approved portraits here as they arrive. Each has a permanent place and
-// facing direction; the artwork never spins to follow the player.
+// Characters remain upright and turn around the vertical axis to face the viewer.
 export const characters = [
  {id:'boy',station:'needs',name:'אמיר · שואל ומקשיב',
   image:new URL('./assets/village-boy.png',import.meta.url).href,
@@ -39,10 +38,9 @@ export function buildCharacters({scene,height,manager}) {
   for(const person of figures){
    const c=person.userData.character;
    const dx=camera.position.x-c.x,dz=camera.position.z-c.z;
-   const front=(dx*Math.sin(c.facing)+dz*Math.cos(c.facing))/(Math.hypot(dx,dz)||1);
-   // Hide the reverse/edge view instead of showing a mirrored paper person.
-   person.material.opacity=THREE.MathUtils.smoothstep(front,.15,.6);
-   person.visible=front>.15;
+   // Cylindrical billboard: face the camera horizontally without tilting
+   // the character or changing its proportions as the viewer walks around.
+   if(dx*dx+dz*dz>1e-8)person.rotation.y=Math.atan2(dx,dz);
   }
  }};
 }
