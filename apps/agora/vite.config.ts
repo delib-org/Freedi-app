@@ -61,6 +61,9 @@ export default defineConfig({
         globIgnores: [
           '**/scenes/**',
           'time-machine.webp',
+          // Village portraits are optional, high-resolution encounter art.
+          '**/assets/elder-woman-cutout-*.png',
+          '**/assets/wise-greek-elder-*.png',
           // The playful faces a look may choose (lib/fonts.ts): a class uses
           // one or two, so they are fetched on first use and runtime-cached
           // rather than all ~20 precached on install. Assistant and Alef
@@ -68,6 +71,14 @@ export default defineConfig({
           '**/assets/!(assistant|alef)-*.woff2',
         ],
         runtimeCaching: [
+          {
+            urlPattern: /\/assets\/(?:elder-woman-cutout|wise-greek-elder)-[^/]+\.png$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'agora-village-portrait-cache',
+              expiration: { maxEntries: 8, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
           {
             // A chosen face, kept once fetched (see globIgnores above)
             urlPattern: /\/assets\/[^/]+\.woff2$/i,

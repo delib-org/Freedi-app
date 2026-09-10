@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import { Soundscape } from './sound.js';
 import { buildVillage, stations } from './village.js';
+import { characters } from './characters-2d.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('world');
@@ -102,7 +103,16 @@ function send(type){if(embedded)parent.postMessage({type,itemId:activeItem},loca
 function destination(place,label){selected=stations.find(s=>s.id===place)||stations[0];$('station-name').textContent=label||selected.name;$('station-place').textContent=selected.name;$('guide-line').textContent=selected.question;moving=false;}
 window.addEventListener('message',event=>{if(!embedded||event.source!==parent||event.origin!==location.origin||!event.data||typeof event.data!=='object')return;const data=event.data;if(data.type==='agora-village-state'&&typeof data.itemId==='string'&&typeof data.place==='string'){if(activeItem!==data.itemId){activeItem=data.itemId;destination(data.place,typeof data.label==='string'?data.label:'');}if(Array.isArray(data.papers))paintPapers(data.papers.filter(p=>p&&typeof p.text==='string'&&typeof p.own==='boolean'));uiPaused=data.paused===true;if(uiPaused){keys.clear();moving=false;}}});
 $('travel').onclick=()=>{moving=!moving;canvas.focus();};
-$('enter').onclick=()=>{if(embedded)send('agora-village-enter');else{$('preview-info').showModal();}};
+$('enter').onclick=()=>{
+ if(embedded){send('agora-village-enter');return;}
+ const character=characters.find(c=>c.station===selected.id);
+ const portrait=$('guide-portrait');portrait.hidden=!character;
+ if(character){portrait.src=character.image;portrait.alt=character.name;}
+ else portrait.removeAttribute('src');
+ $('encounter-name').textContent=character?.name||selected.name;
+ $('encounter-question').textContent=selected.question;
+ keys.clear();moving=false;$('preview-info').showModal();
+};
 $('close-info').onclick=()=>$('preview-info').close();
 $('sound').onclick=async()=>{try{const enabled=await sound.toggle();$('sound').textContent=enabled?'♫ השתקה':'♫ צלילים';}catch{$('sound').textContent='צלילים אינם זמינים';}};
 let lowQuality=false;
@@ -123,8 +133,8 @@ village.ready.then(({failed})=>{
  if(failed){characterStatus.textContent='חלק מהדמויות לא נטענו. רעננו את הדף כדי לנסות שוב.';}
  else characterStatus.remove();
 });
-function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.04);last=now;if(document.hidden||uiPaused)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
- if(moving){const dx=selected.ax-camera.position.x,dz=selected.az-camera.position.z,dist=Math.hypot(dx,dz);if(dist>.12){camera.position.x+=dx/dist*dt*4;camera.position.z+=dz/dist*dt*4;const target=Math.atan2(camera.position.x-selected.x,camera.position.z-selected.z);yaw+=Math.atan2(Math.sin(target-yaw),Math.cos(target-yaw))*Math.min(1,dt*3);}else moving=false;}
+function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.04);last=now;if(document.hidden||uiPaused||$('preview-info').open)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
+ if(moving){const dx=selected.ax-camera.position.x,dz=selected.az-camera.position.z,dist=Math.hypot(dx,dz);if(dist>.12){camera.position.x+=dx/dist*dt*4;camera.position.z+=dz/dist*dt*4;const guide=characters.find(c=>c.station===selected.id);const target=Math.atan2(camera.position.x-(guide?.x??selected.x),camera.position.z-(guide?.z??selected.z));yaw+=Math.atan2(Math.sin(target-yaw),Math.cos(target-yaw))*Math.min(1,dt*3);}else {moving=false;pitch=-.06;}}
  const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));if(f||s){const n=Math.hypot(f,s);camera.position.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)/n*dt*4;camera.position.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)/n*dt*4;}
  if(!moving&&((Math.abs(camera.position.x)<3.7&&camera.position.z<2.6&&camera.position.z>-3.9)||village.solids.some(o=>Math.abs(camera.position.x-o.x)<o.w&&Math.abs(camera.position.z-o.z)<o.d)))camera.position.copy(old);
  camera.position.x=THREE.MathUtils.clamp(camera.position.x,-45,45);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-20,50);camera.position.y=height(camera.position.x,camera.position.z)+1.75;camera.quaternion.setFromEuler(new THREE.Euler(pitch,yaw,0,'YXZ'));village.tick(camera);

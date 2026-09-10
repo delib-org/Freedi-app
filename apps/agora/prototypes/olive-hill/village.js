@@ -1,17 +1,17 @@
 import * as THREE from './vendor/three.module.js';
-import { GLTFLoader } from './vendor/GLTFLoader.js';
+import { buildCharacters } from './characters-2d.js';
 
 export const stations=[
- {id:'challenge',name:'בית המדרש',short:'האתגר',guide:'עזרא · החכם הסקרן',question:'מה אנחנו יודעים, ומה עוד חשוב לברר?',x:-13,z:6,ax:-10,az:12,icon:'⌂'},
- {id:'story',name:'גינת הסיפורים',short:'הסיפור שלי',guide:'נעמה ואמיר · חברים לדרך',question:'איך האתגר הזה פוגש את החיים שלך?',x:-13,z:23,ax:-9,az:22,icon:'❧'},
- {id:'needs',name:'חצר הצרכים',short:'מה חשוב לי',guide:'רות · מקשיבה למה שחשוב',question:'מה חשוב לך, ועל מה היית רוצה לשמור?',x:10,z:24,ax:7,az:20,icon:'✧'},
+ {id:'challenge',name:'בית המדרש',short:'האתגר',guide:'החכמה · שואלת ומקשיבה',question:'מה אנחנו יודעים, ומה עוד חשוב לברר?',x:-13,z:6,ax:-10,az:12,icon:'⌂'},
+ {id:'story',name:'גינת הסיפורים',short:'הסיפור שלי',guide:'חברים לדרך',question:'איך האתגר הזה פוגש את החיים שלך?',x:-13,z:23,ax:-9,az:22,icon:'❧'},
+ {id:'needs',name:'חצר הצרכים',short:'מה חשוב לי',guide:'מקשיבים למה שחשוב',question:'מה חשוב לך, ועל מה היית רוצה לשמור?',x:10,z:24,ax:7,az:20,icon:'✧'},
  {id:'solution',name:'בית המלאכה לרעיונות',short:'הפתרון שלי',guide:'מרים · חכמה של מעשה',question:'איזה פתרון נותן מקום לצרכים שעלו?',x:1.8,z:3.55,ax:2.2,az:8,icon:'✎'},
- {id:'council',name:'מועצת הכפר',short:'מחליטים יחד',guide:'נועם וחכמי הכפר',question:'מה נבחר לנסות, ואיך נדע שהצלחנו?',x:14,z:5,ax:10.5,az:11,icon:'◒'},
+ {id:'council',name:'מועצת הכפר',short:'מחליטים יחד',guide:'חכמי הכפר',question:'מה נבחר לנסות, ואיך נדע שהצלחנו?',x:14,z:5,ax:10.5,az:11,icon:'◒'},
 ];
 
 export function buildVillage({scene,height,manager}){
  const material=color=>new THREE.MeshStandardMaterial({color,roughness:.93});const limestone=material('#d8c7a5'),wood=material('#70543b'),olive=material('#657653'),paper=material('#f5edda');
- const figures=[],solids=[];const make=(geo,mat,parent,x,y,z)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;};
+ const solids=[];const make=(geo,mat,parent,x,y,z)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;};
  const box=(w,h,d,mat,p,x,y,z)=>make(new THREE.BoxGeometry(w,h,d),mat,p,x,y,z);
  function floor(x,z,r){const g=new THREE.Group();g.position.set(x,height(x,z)+.045,z);scene.add(g);make(new THREE.CylinderGeometry(r,r,.14,48),limestone,g,0,0,0);return g;}
  function table(g,x,z){box(1.7,.12,.85,wood,g,x,.92,z);for(const dx of [-.7,.7])for(const dz of [-.3,.3])box(.1,.92,.1,wood,g,x+dx,.42,z+dz);box(.65,.012,.43,paper,g,x,.991,z);}
@@ -26,29 +26,6 @@ export function buildVillage({scene,height,manager}){
  const square=floor(0,15,5.2);make(new THREE.TorusGeometry(1.05,.18,8,32).rotateX(Math.PI/2),limestone,square,0,.55,0);make(new THREE.CylinderGeometry(1,1,.48,32),limestone,square,0,.25,0);make(new THREE.CircleGeometry(.87,32).rotateX(-Math.PI/2),material('#80a7a0'),square,0,.51,0);
  // Short paths join each station to a common courtyard.
  for(const s of stations){const verts=[],indices=[];for(let i=0;i<=24;i++){const t=i/24,x=THREE.MathUtils.lerp(0,s.ax,t),z=THREE.MathUtils.lerp(15,s.az,t);const dx=s.ax,dz=s.az-15,l=Math.hypot(dx,dz)||1;for(const side of [-1,1]){const px=x+dz/l*.75*side,pz=z-dx/l*.75*side;verts.push(px,height(px,pz)+.035,pz);}if(i<24){const k=i*2;indices.push(k,k+2,k+1,k+1,k+2,k+3);}}const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.setIndex(indices);geo.computeVertexNormals();make(geo,material('#c4b391'),scene,0,0,0);}
- // Blender-authored anatomy, clothing and facial details. URLs are bundled by Vite
- // and remain ordinary relative asset URLs in the standalone private tour.
- const urls={
-  ezra:new URL('./characters/models/ezra.glb',import.meta.url).href,
-  miriam:new URL('./characters/models/miriam.glb',import.meta.url).href,
-  naama:new URL('./characters/models/naama.glb',import.meta.url).href,
-  amir:new URL('./characters/models/amir.glb',import.meta.url).href,
-  ruth:new URL('./characters/models/ruth.glb',import.meta.url).href,
-  noam:new URL('./characters/models/noam.glb',import.meta.url).href,
- };
- const loader=new GLTFLoader(manager);
- const placements=[['ezra',-12,8.7,.15],['naama',-12.5,24,.5],['amir',-11.4,23.8,-.4],['ruth',11,25,-.3],['miriam',1.8,3.55,.15],['noam',15,7,-.4]];
- const ready=Promise.allSettled(placements.map(async([id,x,z,angle])=>{
-  const asset=await loader.loadAsync(urls[id]);const person=asset.scene;
-  person.name=id;person.position.set(x,height(x,z)+.12,z);person.rotation.y=angle;
-  person.traverse(object=>{if(object.isMesh){object.castShadow=true;object.receiveShadow=true;}});
-  person.userData.baseAngle=angle;person.userData.phase=figures.length*.9;
-  scene.add(person);figures.push(person);
- })).then(results=>({loaded:figures.length,failed:results.filter(result=>result.status==='rejected').length}));
- return {figures,solids,ready,tick(){
-  const time=performance.now()*.001;
-  for(const person of figures){
-   person.rotation.y=person.userData.baseAngle+Math.sin(time*.42+person.userData.phase)*.025;
-  }
- }};
+ const characters=buildCharacters({scene,height,manager});
+ return {figures:characters.figures,solids,ready:characters.ready,tick:characters.tick};
 }
