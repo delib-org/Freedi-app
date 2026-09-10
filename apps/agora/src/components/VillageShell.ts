@@ -16,6 +16,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 	let frame: HTMLIFrameElement | null = null;
 	let attrs: VillageShellAttrs;
 	let opened = false;
+	let libraryInside = false;
 	let bookOpen = false;
 	let requestedBook = '';
 	let itemId = '';
@@ -50,6 +51,16 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			unavailable = false;
 			clearTimeout(timer);
 			sync();
+			m.redraw();
+		} else if (
+			payload &&
+			typeof payload === 'object' &&
+			'type' in payload &&
+			payload.type === 'agora-village-library-presence' &&
+			'inside' in payload &&
+			typeof payload.inside === 'boolean'
+		) {
+			libraryInside = payload.inside;
 			m.redraw();
 		} else if (acceptsVillageEntry(payload, attrs.plan, attrs.currentIndex, attrs.viewingIndex)) {
 			opened = true;
@@ -114,7 +125,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 					},
 					onload: sync,
 				}),
-				library && !opened
+				library && libraryInside && !opened
 					? m(
 							'button.village-library__read',
 							{

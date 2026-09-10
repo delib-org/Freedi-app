@@ -2,7 +2,7 @@ import * as THREE from './vendor/three.module.js';
 import { buildCharacters } from './characters-2d.js';
 
 export const stations=[
- {id:'library',name:'הספרייה',short:'לומדים יחד',guide:'בית של ידע',question:'פותחים ספר ומגלים את הסיפור, הדמויות והצרכים.',x:-23,z:15,ax:-23,az:18,icon:'▤'},
+ {id:'library',name:'הספרייה',short:'לומדים יחד',guide:'בית של ידע',question:'פותחים ספר ומגלים את הסיפור, הדמויות והצרכים.',x:-23,z:15,ax:-19.8,az:15,icon:'▤'},
  {id:'challenge',name:'בית המדרש',short:'האתגר',guide:'נועם · חושבים יחד',question:'מה אנחנו יודעים, ומה עוד חשוב לברר?',x:-13,z:6,ax:-10,az:12,icon:'⌂'},
  {id:'story',name:'גינת הסיפורים',short:'הסיפור שלי',guide:'חברים לדרך',question:'איך האתגר הזה פוגש את החיים שלך?',x:-13,z:23,ax:-9,az:22,icon:'❧'},
  {id:'needs',name:'חצר הצרכים',short:'מה חשוב לי',guide:'מקשיבים למה שחשוב',question:'מה חשוב לך, ועל מה היית רוצה לשמור?',x:10,z:24,ax:7,az:20,icon:'✧'},
@@ -21,7 +21,7 @@ export function buildVillage({scene,height,manager}){
  const study=floor(-13,6,4.4);box(7,2.9,.45,limestone,study,0,1.5,-2.4);box(.4,2.9,4.8,limestone,study,-3.3,1.5,0);box(7.4,.3,5.3,limestone,study,0,3.12,0);
  for(const x of [-3.05,-1.1,1.1,3.05]){make(new THREE.CylinderGeometry(.17,.23,2.85,12),limestone,study,x,1.55,2.25);box(.55,.18,.55,limestone,study,x,2.98,2.25);}for(const x of [-1.8,1.8])table(study,x,.7);label(study,'בית המדרש');solids.push({x:-13,z:3.6,w:3.7,d:.5});
  // An open-front library: warm stone, timber shelves and a reading desk.
- const library=floor(-23,15,4.7);
+ const library=floor(-23,15,4.7);library.rotation.y=Math.PI/2;
  box(7.8,.22,6.6,wood,library,0,.15,0);
  box(7.8,3.8,.35,limestone,library,0,1.95,-2.8);
  for(const x of [-3.7,3.7])box(.3,3.8,5.8,limestone,library,x,1.95,0);
@@ -37,7 +37,7 @@ export function buildVillage({scene,height,manager}){
  table(library,0,.7);label(library,'הספרייה',3.55);
  const openBook=new THREE.Group();openBook.position.set(0,1.03,.7);library.add(openBook);
  for(const side of [-1,1]){const page=box(.4,.035,.48,paper,openBook,side*.2,0,0);page.rotation.z=side*.14;}
- solids.push({x:-23,z:12.2,w:4,d:.25});
+ solids.push({x:-25.8,z:15,w:.25,d:4});
  const garden=floor(-13,23,4.0);bench(garden,-2,0,.35);bench(garden,1.5,-1,-.5);bench(garden,.5,2.2,.2);label(garden,'גינת הסיפורים',2.8);for(const x of [-2.5,2.5])box(.12,2.7,.12,wood,garden,x,1.3,2.7);
  const needs=floor(10,24,4);for(const x of [-2.8,2.8])box(.14,3.5,.14,wood,needs,x,1.7,1);box(5.8,.15,.15,wood,needs,0,3.4,1);label(needs,'חצר הצרכים',3.6);
  for(let i=0;i<6;i++){const note=box(.67,.86,.025,material(['#ebd7b6','#d6e0bc','#e8d2c3'][i%3]),needs,-2.25+i*.9,2.65,1);note.rotation.z=(i%2?1:-1)*.06;}bench(needs,-2,-1,.2);bench(needs,2,-1,-.2);
