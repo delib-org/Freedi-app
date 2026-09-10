@@ -21,6 +21,19 @@ describe('the village follows the actual session plan', () => {
 			'council',
 		]);
 	});
+	it('sends learning to the library but personal needs to the courtyard', () => {
+		for (const stage of [
+			AgoraStage.framing,
+			AgoraStage.perspectives,
+			AgoraStage.needs,
+			AgoraStage.positioning,
+		]) {
+			expect(villagePlace({ itemId: stage, stage })).toBe('library');
+		}
+		expect(villagePlace({ itemId: 'personal', stage: AgoraStage.question, kind: 'needs' })).toBe(
+			'needs',
+		);
+	});
 	it('keeps repeated questions distinct even in the same workshop', () => {
 		expect(acceptsVillageEntry({ type: 'agora-village-enter', itemId: 'idea-a' }, plan, 4, 4)).toBe(
 			false,

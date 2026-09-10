@@ -652,6 +652,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								plan,
 								currentIndex,
 								viewingIndex,
+								onSelectBook: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
 								papers:
 									item.stage === AgoraStage.deliberation && live
 										? getDeliberationState()

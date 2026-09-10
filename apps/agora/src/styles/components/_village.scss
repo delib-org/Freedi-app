@@ -7,3 +7,23 @@
 	&__activity { position: absolute; inset-block: 60px var(--space-md); inset-inline: max(var(--space-sm), calc((100% - 960px) / 2)); overflow: auto; background: var(--bg-card-solid); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
 	&__activity .shell { min-block-size: auto; }
 }
+
+.village-library {
+  background: #f7f0df; color: #34493d; border: 5px solid #ab8c60;
+  &__header { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:18px 24px; border-bottom:1px solid #c9b48f; background:#eee3cc; }
+  &__header h2 { margin:0; font-size:32px; }
+  &__intro { padding:12px 28px; max-width:680px; font-size:19px; line-height:1.8; }
+  &__shelf { display:flex; flex-wrap:wrap; justify-content:center; gap:28px; padding:28px 30px 50px; background:linear-gradient(transparent calc(100% - 24px), #78573d calc(100% - 24px), #4e3929); }
+  &__book { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:space-between; gap:20px; width:175px; min-height:235px; padding:24px 20px; background:var(--book-color); color:#fff3cf; border:1px solid #d8be81; border-right:12px solid #0003; border-radius:5px 10px 10px 5px; box-shadow:-6px 4px 0 #e4d6b8,-9px 7px 0 #574734,0 14px 18px #36291840; transform:rotate(-2deg); transition:transform .25s; font:inherit; cursor:pointer; }
+  &__book strong { font-size:23px; }
+  &__book small { font-size:13px; }
+  &__book:hover:not(:disabled), &__book:focus-visible { transform:translateY(-12px) rotate(0); outline:3px solid #bc904b; outline-offset:5px; }
+  &__book:disabled { opacity:.48; cursor:default; }
+  &__book.is-current { box-shadow:-6px 4px 0 #e4d6b8,-9px 7px 0 #574734,0 0 0 4px #d5ae57,0 16px 22px #36291840; }
+  &__ornament { font-size:38px; }
+  &__pages { transform-origin:right center; animation:library-open .55s ease-out; border:10px solid #f9f3e6; }
+  &__pages .scene--immersive { min-height:580px; height:65dvh; }
+}
+@keyframes library-open { from {opacity:0;transform:perspective(1400px) rotateY(-30deg) scale(.94);} to {opacity:1;transform:none;} }
+@media (max-width:600px) { .village-library__book {width:135px;min-height:205px;padding:15px;} .village-library__shelf {gap:22px;padding:20px 12px 40px;} .village-library__header {padding:12px;flex-wrap:wrap;} }
+@media (prefers-reduced-motion:reduce) { .village-library__pages {animation:none;} .village-library__book {transition:none;} }

@@ -1,6 +1,6 @@
 import { AgoraStage, questionKindOf, type AgoraStagePlanItem } from '@freedi/shared-types';
 
-export type VillagePlace = 'challenge' | 'story' | 'needs' | 'solution' | 'council';
+export type VillagePlace = 'library' | 'challenge' | 'story' | 'needs' | 'solution' | 'council';
 
 /** A place is presentation only. The plan item's stable ID remains the data identity. */
 export function villagePlace(item: AgoraStagePlanItem): VillagePlace {
@@ -12,12 +12,13 @@ export function villagePlace(item: AgoraStagePlanItem): VillagePlace {
 		return 'solution';
 	}
 	switch (item.stage) {
+		case AgoraStage.framing:
 		case AgoraStage.perspectives:
-			return 'story';
+			return 'library';
 		case AgoraStage.needs:
 		case AgoraStage.valueIdentification:
 		case AgoraStage.positioning:
-			return 'needs';
+			return 'library';
 		case AgoraStage.deliberation:
 			return 'solution';
 		case AgoraStage.voting:

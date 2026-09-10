@@ -7,6 +7,7 @@ interface VillageShellAttrs {
 	plan: readonly AgoraStagePlanItem[];
 	currentIndex: number;
 	viewingIndex: number;
+	onSelectBook?: (itemId: string) => void;
 	papers: Array<{ text: string; own: boolean }>;
 }
 
@@ -14,6 +15,8 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 	let frame: HTMLIFrameElement | null = null;
 	let attrs: VillageShellAttrs;
 	let opened = false;
+	let bookOpen = false;
+	let requestedBook = '';
 	let itemId = '';
 	let ready = false;
 	let unavailable = false;
@@ -68,13 +71,18 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			const next = attrs.plan[attrs.viewingIndex]?.itemId ?? '';
 			if (next !== itemId) {
 				itemId = next;
-				opened = false;
+				opened = requestedBook === next;
+				bookOpen = opened;
+				requestedBook = '';
 			}
 		},
 		onupdate: sync,
 		view(vnode) {
 			attrs = vnode.attrs;
 			itemId = attrs.plan[attrs.viewingIndex]?.itemId ?? '';
+			const library =
+				!!attrs.plan[attrs.viewingIndex] &&
+				villagePlace(attrs.plan[attrs.viewingIndex]) === 'library';
 
 			return m('.village-shell', [
 				m('.village-shell__toolbar', [
@@ -84,10 +92,11 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 						{
 							onclick: () => {
 								opened = !opened;
+								bookOpen = false;
 								sync();
 							},
 						},
-						opened ? 'חזרה לכפר' : 'כניסה ישירה לתחנה',
+						opened ? 'חזרה לכפר' : library ? 'כניסה לספרייה' : 'כניסה ישירה לתחנה',
 					),
 				]),
 				m('iframe.village-shell__world', {
@@ -112,8 +121,81 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 					: null,
 				m(
 					'.village-shell__activity',
-					{ style: { display: opened ? 'block' : 'none' } },
-					vnode.children,
+					{
+						style: { display: opened ? 'block' : 'none' },
+						class: library ? 'village-library' : '',
+					},
+					library
+						? [
+								m('.village-library__header', [
+									m('div', [m('small', 'כפר החכמים · בית של ידע'), m('h2', 'הספרייה')]),
+									bookOpen
+										? m(
+												'button.btn.btn--secondary',
+												{
+													onclick: () => {
+														bookOpen = false;
+													},
+												},
+												'סגירת הספר · חזרה למדף',
+											)
+										: null,
+								]),
+								bookOpen
+									? m('.village-library__pages', vnode.children)
+									: [
+											m(
+												'p.village-library__intro',
+												'כל ספר פותח חלון לנושא. הספר שהמורה מציג מחכה לכם, ואפשר לשוב גם לספרים שכבר נפתחו.',
+											),
+											m(
+												'.village-library__shelf',
+												attrs.plan.map((item, index) =>
+													villagePlace(item) !== 'library'
+														? null
+														: m(
+																'button.village-library__book',
+																{
+																	key: item.itemId,
+																	disabled: index > attrs.currentIndex,
+																	class: index === attrs.currentIndex ? 'is-current' : '',
+																	style: {
+																		'--book-color': [
+																			'#466762',
+																			'#8d604f',
+																			'#64704c',
+																			'#6e6083',
+																			'#8c713e',
+																		][index % 5],
+																	},
+																	onclick: () => {
+																		if (index > attrs.currentIndex) return;
+																		if (index === attrs.viewingIndex) {
+																			bookOpen = true;
+																		} else {
+																			requestedBook = item.itemId;
+																			attrs.onSelectBook?.(item.itemId);
+																		}
+																	},
+																},
+																[
+																	m('span.village-library__ornament', '❧'),
+																	m('strong', item.title?.trim() || planItemLabel(item)),
+																	m(
+																		'small',
+																		index > attrs.currentIndex
+																			? 'ייפתח בהמשך המפגש'
+																			: index === attrs.currentIndex
+																				? 'המורה מציג עכשיו · פתיחת הספר'
+																				: 'פתוח לקריאה חוזרת',
+																	),
+																],
+															),
+												),
+											),
+										],
+							]
+						: vnode.children,
 				),
 			]);
 		},
