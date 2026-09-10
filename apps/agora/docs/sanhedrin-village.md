@@ -81,3 +81,18 @@ opening existing text or refreshing does not launch one either. The trajectory
 starts at the station's writing desk, targets its board, and respects reduced
 motion. The landed white note is highlighted. The local demo also restores saved
 text when reopening the desk, and edits replace the existing note.
+
+Village notifications now mount the classic Inbox itself and use the existing
+requestFocus dispatcher through a presentation navigator. Teacher destinations
+continue to use their existing route. The classic ThreadChat is also used in the
+local demo, with a local transport adapter for messages, resolutions and seen
+watermarks; the hand-written demo chat was removed. Demo events enter the same
+Inbox storage/deduplication/rendering pipeline. Real sessions keep the existing
+Firebase notification detectors/callables. The detector now includes owners of
+question-answer notes, not only owners of challenge proposals.
+
+Two-tab verification: sent a message from Maya, opened Noam's notification to the
+right thread, replied as Noam, thanked an open suggestion, and checked Maya's
+reply notification, thank-you notification, award line and balance increment.
+Inbox navigation stays inside the village; the conversation is constrained to
+its panel rather than the classic full-screen shell.

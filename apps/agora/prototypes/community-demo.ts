@@ -1,3 +1,5 @@
+import { ThreadChat, type ThreadChatServices } from '../src/views/ThreadChat';
+import { initInbox, addInboxItem } from '../src/lib/inbox';
 import m from 'mithril';
 import {
 	AgoraStage,
@@ -5,7 +7,6 @@ import {
 	AgoraSuggestionStatus,
 	AGORA_POINTS,
 	StatementType,
-	createAgoraThreadKey,
 	type AgoraSession,
 	type AgoraStagePlanItem,
 } from '@freedi/shared-types';
@@ -24,6 +25,7 @@ setLang('he');
 const uid = new URLSearchParams(location.search).get('student') === 'noam' ? 'noam' : 'maya';
 const names: Record<string, string> = { maya: 'מאיה', noam: 'נועם' };
 const key = 'agora-village-community-demo-v1';
+initInbox('local-community-demo-' + uid);
 const plan: AgoraStagePlanItem[] = [
 	{
 		itemId: 'story',
@@ -79,13 +81,16 @@ function write(change: (state: DemoState) => void) {
 	const state = read();
 	change(state);
 	localStorage.setItem(key, JSON.stringify(state));
+	syncNews();
 	m.redraw();
 }
 if (!localStorage.getItem(key)) write(() => {});
-window.addEventListener('storage', () => m.redraw());
+window.addEventListener('storage', () => {
+	syncNews();
+	m.redraw();
+});
 let viewingIndex = 2,
-	draft = '',
-	messageDraft = '';
+	draft = '';
 const session = { sessionId: 'local-community-demo' } as AgoraSession;
 const source: VillageCommunitySource = {
 	notes: (item) => read().notes.filter((n) => n.parentId === (item.statementId ?? 'solution')),
@@ -102,79 +107,97 @@ const source: VillageCommunitySource = {
 	unread: (id, messages, user) =>
 		messages.filter((n) => n.creatorId !== user && n.createdAt > (read().seen[user + id] ?? 0))
 			.length,
-	renderThread: (a) => {
-		const messages = source.messages(a.proposal.statementId, a.helperUid);
-		const seenKey = uid + createAgoraThreadKey(a.proposal.statementId, a.helperUid);
-		const newest = messages.reduce((n, r) => Math.max(n, r.createdAt), 0);
-		if (newest > (read().seen[seenKey] ?? 0)) {
-			const state = read();
-			state.seen[seenKey] = newest;
-			localStorage.setItem(key, JSON.stringify(state));
-		}
-		return m('.stack', [
-			m('button.btn.btn--secondary', { onclick: a.onBack }, 'חזרה ללוח'),
-			m('h3', a.proposal.statement),
-			...messages.map((msg) =>
-				m('.village-note', [
-					m('strong', names[msg.creatorId]),
-					m('p', msg.statement),
-					msg.suggestionStatus === AgoraSuggestionStatus.thanked
-						? m('small', 'נאמרה תודה · המטבע הוענק')
-						: a.role === 'owner' && msg.creatorId !== uid
-							? m(
-									'button.btn.btn--primary',
-									{
-										onclick: () =>
-											write((state) => {
-												const current = state.messages.find(
-													(r) => r.statementId === msg.statementId,
-												);
-												if (
-													!current ||
-													current.suggestionStatus === AgoraSuggestionStatus.thanked ||
-													a.proposal.creatorId !== uid
-												)
-													return;
-												current.suggestionStatus = AgoraSuggestionStatus.thanked;
-												state.points[current.creatorId] =
-													(state.points[current.creatorId] ?? 0) + AGORA_POINTS.SUGGESTION_THANKED;
-											}),
-									},
-									'תודה על השיפור',
-								)
-							: null,
-				]),
-			),
-			m('textarea.text-input', {
-				placeholder: a.role === 'owner' ? 'כתבו תשובה' : 'איך אפשר לשפר את ההצעה?',
-				value: messageDraft,
-				oninput: (e: InputEvent) => {
-					messageDraft = (e.target as HTMLTextAreaElement).value;
-				},
+	renderThread: (a) => m(ThreadChat, { ...a, canEditProposal: false, services: demoServices }),
+};
+function syncNews() {
+	const state = read();
+	for (const msg of state.messages) {
+		const parent = state.notes.find((n) => n.statementId === msg.parentId);
+		if (!parent) continue;
+		const helper = msg.agoraThreadUserId ?? msg.creatorId;
+		const recipient = msg.creatorId === parent.creatorId ? helper : parent.creatorId;
+		const target = { kind: 'thread' as const, proposalId: parent.statementId, helperUid: helper };
+		if (
+			recipient === uid &&
+			msg.creatorId !== uid &&
+			msg.agoraMessageKind !== AgoraMessageKind.award
+		)
+			addInboxItem({
+				id: 'message-' + msg.statementId,
+				trigger:
+					msg.agoraMessageKind === AgoraMessageKind.suggestion
+						? 'agora_suggestion_received'
+						: 'agora_thread_message',
+				detail: msg.statement,
+				at: msg.createdAt,
+				target,
+			});
+		if (msg.creatorId === uid && msg.suggestionStatus === AgoraSuggestionStatus.thanked)
+			addInboxItem({
+				id: 'thanks-' + msg.statementId,
+				trigger: 'agora_suggestion_thanked',
+				detail: 'תודה על השיפור · קיבלת מטבע',
+				at: msg.lastUpdate,
+				target,
+			});
+	}
+}
+const demoServices: ThreadChatServices = {
+	getThreadMessages: (id, helper) => source.messages(id, helper),
+	openSuggestionsBy: (id, user) =>
+		read().messages.filter(
+			(n) =>
+				n.parentId === id &&
+				n.creatorId === user &&
+				n.agoraMessageKind === AgoraMessageKind.suggestion &&
+				(!n.suggestionStatus || n.suggestionStatus === AgoraSuggestionStatus.open),
+		).length,
+	markThreadSeen: (id, at) => {
+		const state = read();
+		if ((state.seen[uid + id] ?? 0) >= at) return;
+		state.seen[uid + id] = at;
+		localStorage.setItem(key, JSON.stringify(state));
+	},
+	submitThreadMessage: async (_session, proposal, _name, text, kind, helper) => {
+		write((state) =>
+			state.messages.push({
+				...note(crypto.randomUUID(), uid, text, proposal.statementId),
+				statementType: StatementType.suggestion,
+				agoraThreadUserId: helper ?? uid,
+				agoraMessageKind: kind,
 			}),
-			m(
-				'button.btn.btn--primary',
-				{
-					disabled: !messageDraft.trim(),
-					onclick: () => {
-						const text = messageDraft.trim();
-						messageDraft = '';
-						write((state) =>
-							state.messages.push({
-								...note(crypto.randomUUID(), uid, text, a.proposal.statementId),
-								statementType: StatementType.suggestion,
-								agoraThreadUserId: a.helperUid,
-								agoraMessageKind:
-									a.role === 'owner' ? AgoraMessageKind.chat : AgoraMessageKind.suggestion,
-							}),
-						);
-					},
-				},
-				'שליחת תגובה',
-			),
-		]);
+		);
+	},
+	resolveSuggestion: async (_session, id, resolution) => {
+		write((state) => {
+			const msg = state.messages.find((n) => n.statementId === id);
+			const parent = state.notes.find((n) => n.statementId === msg?.parentId);
+			if (
+				!msg ||
+				parent?.creatorId !== uid ||
+				msg.creatorId === uid ||
+				msg.agoraMessageKind !== AgoraMessageKind.suggestion ||
+				(msg.suggestionStatus && msg.suggestionStatus !== AgoraSuggestionStatus.open)
+			)
+				return;
+			msg.suggestionStatus = resolution;
+			msg.lastUpdate = Date.now();
+			if (resolution === AgoraSuggestionStatus.thanked) {
+				state.points[msg.creatorId] =
+					(state.points[msg.creatorId] ?? 0) + AGORA_POINTS.SUGGESTION_THANKED;
+				state.messages.push({
+					...note('award-' + id, uid, '', parent.statementId),
+					statementType: StatementType.suggestion,
+					agoraThreadUserId: msg.agoraThreadUserId,
+					agoraMessageKind: AgoraMessageKind.award,
+					agoraPointsAwarded: AGORA_POINTS.SUGGESTION_THANKED,
+				});
+			}
+		});
 	},
 };
+syncNews();
+
 m.mount(document.getElementById('demo')!, {
 	view: () =>
 		m('main', { dir: 'rtl' }, [
@@ -210,8 +233,11 @@ m.mount(document.getElementById('demo')!, {
 					plan,
 					currentIndex: 2,
 					viewingIndex,
-					onWrite: () => { draft = source.notes(plan[viewingIndex]).find(n=>n.creatorId===uid)?.statement ?? ""; },
- onSelectBook: (id: string) => {
+					onWrite: () => {
+						draft =
+							source.notes(plan[viewingIndex]).find((n) => n.creatorId === uid)?.statement ?? '';
+					},
+					onSelectBook: (id: string) => {
 						viewingIndex = plan.findIndex((p) => p.itemId === id);
 					},
 					papers: source
@@ -242,7 +268,10 @@ m.mount(document.getElementById('demo')!, {
 					m(
 						'button.btn.btn--primary',
 						{
-							disabled: !draft.trim() || draft.trim() === source.notes(plan[viewingIndex]).find(n=>n.creatorId===uid)?.statement,
+							disabled:
+								!draft.trim() ||
+								draft.trim() ===
+									source.notes(plan[viewingIndex]).find((n) => n.creatorId === uid)?.statement,
 							onclick: () => {
 								write((state) => {
 									const parent = plan[viewingIndex].statementId ?? 'solution';

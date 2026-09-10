@@ -1,10 +1,8 @@
+import { Inbox } from './Inbox';
+import type { InboxTarget } from '../lib/inbox';
+import { registerPresentationNavigator, unregisterPresentationNavigator } from '../lib/helpedFocus';
 import m from 'mithril';
-import {
-	AgoraStage,
-	createAgoraThreadKey,
-	type AgoraSession,
-	type AgoraStagePlanItem,
-} from '@freedi/shared-types';
+import { AgoraStage, type AgoraSession, type AgoraStagePlanItem } from '@freedi/shared-types';
 import {
 	getDeliberationState,
 	getOwnerThreads,
@@ -50,8 +48,7 @@ export function stationNotes(item: AgoraStagePlanItem): AgoraProposal[] {
 	).filter((p) => !p.hidden);
 }
 export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
-	let board = false,
-		inbox = false;
+	let board = false;
 	let selected: AgoraProposal | undefined;
 	let helper: string | undefined;
 	let previous: number | undefined;
@@ -59,14 +56,53 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 	let gain = 0,
 		timer: ReturnType<typeof setTimeout> | undefined;
 	function close(a: VillageCommunityAttrs) {
-		board = inbox = false;
+		board = false;
 		selected = undefined;
 		helper = undefined;
 		a.onPause(false);
 	}
 
+	let current: VillageCommunityAttrs;
+	function navigateNews(target: InboxTarget): boolean {
+		if (target.kind === 'teacher') return false;
+		const a = current;
+		const notesFor = a.source?.notes ?? stationNotes;
+		const station = a.plan
+			.slice(0, a.currentIndex + 1)
+			.find((p) =>
+				notesFor(p).some((n) =>
+					'proposalId' in target
+						? n.statementId === target.proposalId
+						: target.kind === 'mine'
+							? n.creatorId === a.userId
+							: true,
+				),
+			);
+		if (!station) return false;
+		a.navigate(station.itemId);
+		board = true;
+
+		helper = undefined;
+		selected = undefined;
+		if ('proposalId' in target) {
+			selected = notesFor(station).find((n) => n.statementId === target.proposalId);
+			helper =
+				target.kind === 'thread'
+					? target.helperUid
+					: selected?.creatorId === a.userId
+						? undefined
+						: a.userId;
+		}
+		a.onPause(true);
+		m.redraw();
+
+		return true;
+	}
+
 	return {
 		oninit: ({ attrs: a }) => {
+			current = a;
+			registerPresentationNavigator(navigateNews);
 			if (!a.source) listenToDeliberation(a.session.sessionId, a.userId);
 			previous = a.points;
 		},
@@ -74,7 +110,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			if ((a.boardRequest ?? 0) !== request) {
 				request = a.boardRequest ?? 0;
 				board = true;
-				inbox = false;
+
 				selected = undefined;
 				helper = undefined;
 				a.onPause(true);
@@ -91,9 +127,14 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			previous = a.points;
 		},
 		onupdate: ({ attrs: a }) => {
+			current = a;
+			registerPresentationNavigator(navigateNews);
 			if (!a.source) listenToDeliberation(a.session.sessionId, a.userId);
 		},
-		onremove: () => clearTimeout(timer),
+		onremove: () => {
+			clearTimeout(timer);
+			unregisterPresentationNavigator(navigateNews);
+		},
 		view({ attrs: a }) {
 			const data = a.source ?? {
 				notes: stationNotes,
@@ -109,30 +150,9 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 				: [];
 			if (selected)
 				selected = notes.find((n) => n.statementId === selected?.statementId) ?? selected;
-			const seen = new Set<string>();
-			const alerts = a.plan.slice(0, a.currentIndex + 1).flatMap((station) =>
-				data.notes(station).flatMap((note) => {
-					if (seen.has(note.statementId)) return [];
-					seen.add(note.statementId);
-					const threads =
-						note.creatorId === a.userId
-							? [...data.threads(note.statementId)]
-							: [[a.userId, data.messages(note.statementId, a.userId)] as const];
-
-					return threads.flatMap(([uid, messages]) => {
-						const count = data.unread(
-							createAgoraThreadKey(note.statementId, uid),
-							messages,
-							a.userId,
-						);
-
-						return count ? [{ station, note, uid, count }] : [];
-					});
-				}),
-			);
 			const show = () => {
 				board = true;
-				inbox = false;
+
 				selected = undefined;
 				helper = undefined;
 				a.onPause(true);
@@ -148,19 +168,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 						gain ? m('span.village-coins__gain', `+${gain}`) : null,
 					],
 				),
-				m(
-					'button.village-feedback',
-					{
-						onclick: () => {
-							inbox = true;
-							board = true;
-							selected = undefined;
-							helper = undefined;
-							a.onPause(true);
-						},
-					},
-					`✉ תגובות אליי${alerts.length ? ` · ${alerts.reduce((n, r) => n + r.count, 0)}` : ''}`,
-				),
+				m('.village-inbox', m(Inbox)),
 				m('button.village-board-open', { onclick: show }, 'לוח הפתקים · קריאה ותגובות'),
 				board
 					? m(
@@ -168,10 +176,10 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 							{ role: 'dialog', 'aria-label': 'לוח הפתקים', 'aria-modal': 'true' },
 							[
 								m('header', [
-									m('h2', inbox ? 'תגובות שמחכות לך' : item ? planItemLabel(item) : 'לוח הפתקים'),
+									m('h2', item ? planItemLabel(item) : 'לוח הפתקים'),
 									m('button.btn.btn--secondary', { onclick: () => close(a) }, 'חזרה לכפר'),
 								]),
-								!inbox && !selected && item && stationItems.length > 1
+								!selected && item && stationItems.length > 1
 									? m(
 											'nav.village-board-tabs',
 											{ 'aria-label': 'שאלות בתחנה' },
@@ -190,125 +198,100 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 												),
 										)
 									: null,
-								inbox
-									? [
-											alerts.length ? null : m('p', 'אין תגובות חדשות כרגע.'),
-											...alerts.map((r) =>
+								selected && helper
+									? data.renderThread({
+											canEditProposal: getDeliberationState().proposals.some(
+												(p) => p.statementId === selected?.statementId,
+											),
+											session: a.session,
+											proposal: selected,
+											helperUid: helper,
+											role: selected.creatorId === a.userId ? 'owner' : 'helper',
+											userId: a.userId,
+											anonName: a.anonName,
+											proposalNumber: Math.max(
+												1,
+												notes.findIndex((n) => n.statementId === selected?.statementId) + 1,
+											),
+											onBack: () => {
+												helper = undefined;
+												selected = undefined;
+											},
+										})
+									: selected
+										? [
 												m(
-													'button.village-note',
+													'button.btn.btn--secondary',
 													{
 														onclick: () => {
-															a.navigate(r.station.itemId);
-															inbox = false;
-															selected = r.note;
-															helper = r.uid;
+															selected = undefined;
 														},
 													},
-													[
-														m('strong', planItemLabel(r.station)),
-														m('p', r.note.statement),
-														m('span', `${r.count} תגובות חדשות · לפתיחת הפתק`),
-													],
+													'חזרה ללוח',
 												),
-											),
-										]
-									: selected && helper
-										? data.renderThread({
-												canEditProposal: getDeliberationState().proposals.some(
-													(p) => p.statementId === selected?.statementId,
-												),
-												session: a.session,
-												proposal: selected,
-												helperUid: helper,
-												role: selected.creatorId === a.userId ? 'owner' : 'helper',
-												userId: a.userId,
-												anonName: a.anonName,
-												proposalNumber: Math.max(
-													1,
-													notes.findIndex((n) => n.statementId === selected?.statementId) + 1,
-												),
-												onBack: () => {
-													helper = undefined;
-													selected = undefined;
-												},
-											})
-										: selected
-											? [
-													m(
-														'button.btn.btn--secondary',
-														{
-															onclick: () => {
-																selected = undefined;
-															},
-														},
-														'חזרה ללוח',
-													),
-													m('h3', 'הפתק שלי'),
-													m('p', selected.statement),
-													data.threads(selected.statementId).size
-														? [...data.threads(selected.statementId)].map(([uid, messages], i) =>
-																m(
-																	'button.village-note',
-																	{
-																		onclick: () => {
-																			helper = uid;
-																		},
+												m('h3', 'הפתק שלי'),
+												m('p', selected.statement),
+												data.threads(selected.statementId).size
+													? [...data.threads(selected.statementId)].map(([uid, messages], i) =>
+															m(
+																'button.village-note',
+																{
+																	onclick: () => {
+																		helper = uid;
 																	},
-																	[
-																		`שיחה ${i + 1}`,
-																		m('p', messages[messages.length - 1]?.statement),
-																		'קריאה, תגובה ותודה',
-																	],
-																),
-															)
-														: m('p', 'עדיין לא התקבלו תגובות לפתק שלך.'),
-												]
-											: m(
-													'.village-notes',
-													notes.length
-														? notes.map((note, i) =>
-																m(
-																	'button.village-note',
-																	{
-																		class:
-																			note.creatorId === a.userId && (a.boardRequest ?? 0) > 0
-																				? 'village-note--landed'
-																				: '',
-																		oncreate: (v: m.VnodeDOM) => {
-																			if (note.creatorId === a.userId && (a.boardRequest ?? 0) > 0)
-																				(v.dom as HTMLElement).scrollIntoView({ block: 'nearest' });
-																		},
-																		style: {
-																			background:
-																				note.creatorId === a.userId
-																					? '#fff'
-																					: ['#f5dfce', '#dcebd6', '#dce5f4', '#eedcf1'][i % 4],
-																		},
-																		onclick: () => {
-																			selected = note;
-																			helper = note.creatorId === a.userId ? undefined : a.userId;
-																		},
-																	},
-																	[
-																		m(
-																			'strong',
-																			note.creatorId === a.userId ? 'הפתק שלי' : `פתק ${i + 1}`,
-																		),
-																		m('p', note.statement),
-																		m(
-																			'span',
-																			note.creatorId === a.userId
-																				? 'קריאת התגובות שלי'
-																				: 'קריאה והצעת שיפור',
-																		),
-																	],
-																),
-															)
-														: m(
-																'p',
-																'הפתקים שתכתבו בתחנה יופיעו כאן. חזרו לתחנה כדי לכתוב את שלכם.',
+																},
+																[
+																	`שיחה ${i + 1}`,
+																	m('p', messages[messages.length - 1]?.statement),
+																	'קריאה, תגובה ותודה',
+																],
 															),
-												),
+														)
+													: m('p', 'עדיין לא התקבלו תגובות לפתק שלך.'),
+											]
+										: m(
+												'.village-notes',
+												notes.length
+													? notes.map((note, i) =>
+															m(
+																'button.village-note',
+																{
+																	class:
+																		note.creatorId === a.userId && (a.boardRequest ?? 0) > 0
+																			? 'village-note--landed'
+																			: '',
+																	oncreate: (v: m.VnodeDOM) => {
+																		if (note.creatorId === a.userId && (a.boardRequest ?? 0) > 0)
+																			(v.dom as HTMLElement).scrollIntoView({ block: 'nearest' });
+																	},
+																	style: {
+																		background:
+																			note.creatorId === a.userId
+																				? '#fff'
+																				: ['#f5dfce', '#dcebd6', '#dce5f4', '#eedcf1'][i % 4],
+																	},
+																	onclick: () => {
+																		selected = note;
+																		helper = note.creatorId === a.userId ? undefined : a.userId;
+																	},
+																},
+																[
+																	m(
+																		'strong',
+																		note.creatorId === a.userId ? 'הפתק שלי' : `פתק ${i + 1}`,
+																	),
+																	m('p', note.statement),
+																	m(
+																		'span',
+																		note.creatorId === a.userId
+																			? 'קריאת התגובות שלי'
+																			: 'קריאה והצעת שיפור',
+																	),
+																],
+															),
+														)
+													: m('p', 'הפתקים שתכתבו בתחנה יופיעו כאן. חזרו לתחנה כדי לכתוב את שלכם.'),
+											),
 							],
 						)
 					: null,

@@ -1,3 +1,4 @@
+vi.mock('../Inbox', () => ({ Inbox: vi.fn() }));
 import { describe, it, expect, vi } from 'vitest';
 import { AgoraStage, StatementType, type AgoraSession } from '@freedi/shared-types';
 import type { AgoraProposal } from '../../lib/proposals';

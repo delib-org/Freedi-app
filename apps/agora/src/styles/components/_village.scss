@@ -142,3 +142,18 @@ body:has(.village-library--reading) { overflow:hidden; }
     textarea.text-input { padding: 14px 16px; font-size: 18px; }
   }
 }
+.village-inbox { position:absolute; top:64px; left:16px; z-index:40; }
+.village-inbox .inbox-button { background:#233f35; color:#fff6de; border:1px solid #d4b674; }
+.village-community__panel .chat-page { min-height:0; height:auto; }
+// Reuse the classic conversation's behavior inside the village panel, below its HUD.
+.village-community__panel:has(.shell--chat) { display:flex; flex-direction:column; overflow:hidden; }
+.village-community__panel > header { flex:0 0 auto; }
+.village-community__panel .shell--chat { position:relative; inset:auto; z-index:auto; height:auto; min-height:0; max-height:none; flex:1 1 auto; margin:0; width:100%; background:transparent; }
+.village-community__panel .chat-page { height:100%; overflow:hidden; }
+@media(max-height:800px) {
+ .village-community__panel:has(.shell--chat) { overflow:auto; display:block; }
+ .village-community__panel .shell--chat { overflow:visible; }
+ .village-community__panel .chat-page { height:auto; overflow:visible; }
+ .village-community__panel .chat-page__list { flex:none; min-height:160px; max-height:36dvh; }
+ .village-community__panel .chat-page__composer { flex-shrink:0; }
+}
