@@ -6,3 +6,7 @@ The village now uses two women; the other four await user references. Rejected B
 - `../assets/wise-greek-elder.png`: original demo artwork, reused unchanged.
 
 The planes use image aspect ratios and unlit sRGB colors to avoid skin-tone distortion. They remain fixed in the world and hide at reverse/edge angles. The encounter portrait retains the whole image and original expression; no synthetic face deformation or claim of facial animation. The registry is `../characters-2d.js`.
+
+## Original-pixel extraction: Amir
+
+`../assets/village-boy.png` comes from the user's white-background `Gemini_Generated_Image_kgyg84kgyg84kgyg.jpeg`. Extracted locally with macOS Vision foreground masking, then white-matte edge cleanup. No image regeneration was used. Confirmed real alpha and inspected against an olive background. Amir is at the needs courtyard. The remaining supplied characters are still pending extraction and are not live.

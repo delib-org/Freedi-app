@@ -3,6 +3,9 @@ import * as THREE from './vendor/three.module.js';
 // Add approved portraits here as they arrive. Each has a permanent place and
 // facing direction; the artwork never spins to follow the player.
 export const characters = [
+ {id:'boy',station:'needs',name:'אמיר · שואל ומקשיב',
+  image:new URL('./assets/village-boy.png',import.meta.url).href,
+  x:10,z:25,facing:-2.6,height:1.8},
  {id:'elder',station:'challenge',name:'החכמה בבית המדרש',
   image:new URL('./assets/elder-woman-cutout.png',import.meta.url).href,
   x:-12.6,z:9.1,facing:.48,height:2.05},
