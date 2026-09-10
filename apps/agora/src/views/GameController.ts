@@ -1,3 +1,4 @@
+import { villagePlace } from '../lib/flows/villageRoute';
 import { sessionVillageMode } from '../lib/flows/sessionLinks';
 import m from 'mithril';
 import { t } from '../lib/i18n';
@@ -56,6 +57,7 @@ import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
 import { QuestionStage } from './QuestionStage';
 import { RoundStage } from './RoundStage';
+import { stationNotes } from '../components/VillageCommunity';
 import { VillageShell } from '../components/VillageShell';
 import { Voting } from './Voting';
 import { Results } from './Results';
@@ -656,16 +658,27 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								plan,
 								currentIndex,
 								viewingIndex,
+								community: myParticipant
+									? {
+											session,
+											userId,
+											anonName: myParticipant.anonName,
+											points: myParticipant.points.total,
+										}
+									: undefined,
 								onSelectBook: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
-								papers:
-									item.stage === AgoraStage.deliberation && live
-										? getDeliberationState()
-												.proposals.filter((proposal) => !proposal.hidden)
-												.map((proposal) => ({
-													text: proposal.statement,
-													own: proposal.creatorId === userId,
-												}))
-										: [],
+								papers: stationNotes(item).map((p) => ({
+									text: p.statement,
+									own: p.creatorId === userId,
+								})),
+								stationPapers: plan.slice(0, currentIndex + 1).map((p) => ({
+									itemId: p.itemId,
+									place: villagePlace(p),
+									papers: stationNotes(p).map((n) => ({
+										text: n.statement,
+										own: n.creatorId === userId,
+									})),
+								})),
 							},
 							stageView,
 						)

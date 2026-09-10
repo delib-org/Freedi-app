@@ -44,3 +44,31 @@ Live verification on 2026-09-10 used the signed-in teacher in the in-app browser
 ## Local library preview
 
 Run Vite in `apps/agora` and open `/prototypes/library-demo.html`. This separate development entry has no Firebase connection: all preview books are available from the shelf and its SceneStage/VideoScene content is copied from the existing French Revolution seed. It uses the same VillageShell as the real student controller. Learning stages map to the new library; personal story/needs questions retain their existing places. Future books are disabled and previous books use the existing stage navigation reducer. Verified local walking to the library, opening a book, advancing a scene and opening a previous book. Not deployed to production.
+
+### Station boards and coins (local preview, September 10)
+
+Open `/prototypes/community-demo.html?student=maya` and use its link to open
+`?student=noam` in a second tab. This explicitly labelled, browser-local demo
+uses shared localStorage for the two sample pupils; it never awards real points
+or writes a Firebase session. Send an improvement on the other pupil's note,
+open the upper-left feedback indicator as the recipient, and thank the helper.
+The helper's upper-right gold-coin balance updates across tabs. A refresh keeps
+the balance and cannot award the same thank-you again.
+
+In an actual session, VillageCommunity reads the existing proposals and
+question answers, reuses ThreadChat, submitThreadMessage and the server's
+agoraResolveSuggestion flow, and displays myParticipant.points.total. It does
+not maintain a second currency ledger. A sound plays only on a positive balance
+change after the initial snapshot; the shared sound preference is respected.
+Seen-thread watermarks use the existing participant persistence. Answer notes
+can receive replies and thanks; their text is edited through their original
+station form, not the proposal-specific thread editor.
+
+Every village station has a clickable world-space board. Only plan items already
+unlocked by the teacher can be opened. Multiple questions at the same location
+have separate board tabs. Own notes are white; other notes use pastel paper.
+Hidden notes are excluded. Local checks: two-tab comment → notification → thanks
+→ one coin, balance persistence after refresh, thread/points/route tests, and
+component tests for note isolation and one chime per positive balance change.
+The actual authenticated two-participant Firebase flow still needs a staging
+smoke test before production deployment. These changes have not been deployed.

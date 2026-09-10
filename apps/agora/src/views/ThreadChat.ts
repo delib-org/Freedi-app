@@ -44,6 +44,7 @@ import {
  * conversation by `agoraThreadUserId` (the helper's uid).
  */
 export interface ThreadChatAttrs {
+	canEditProposal?: boolean;
 	session: AgoraSession;
 	proposal: AgoraProposal;
 	/** The helper whose conversation this is — one thread per classmate */
@@ -184,6 +185,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	 * the text, it becomes a box.
 	 */
 	let editing = false;
+	let canEditProposal = true;
 	let editDraft = '';
 	let savingEdit = false;
 	/**
@@ -224,7 +226,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		anonName: string,
 		canEdit: boolean,
 	): m.Children {
-		if (!canEdit) return m('p.chat-page__proposal', proposal.statement);
+		if (!canEdit || !canEditProposal) return m('p.chat-page__proposal', proposal.statement);
 
 		if (!editing) {
 			return m(
@@ -234,7 +236,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					title: t('delib.tap_to_edit'),
 					'aria-label': t('delib.tap_to_edit'),
 					onclick: () => {
-						editing = true;
+						editing = canEditProposal;
 						editDraft = proposal.statement;
 					},
 				},
@@ -363,7 +365,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 							from: message.anonName ?? '',
 							variant: message.statementId.charCodeAt(0) % 2 === 0 ? 1 : 2,
 						};
-						editing = true;
+						editing = canEditProposal;
 						editDraft = proposal.statement;
 
 						resolveSuggestion(
@@ -814,6 +816,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		},
 
 		view(vnode) {
+			canEditProposal = vnode.attrs.canEditProposal !== false;
 			const { session, proposal, helperUid, role, userId, anonName, proposalNumber, onBack } =
 				vnode.attrs;
 			const threadKey = createAgoraThreadKey(proposal.statementId, helperUid);

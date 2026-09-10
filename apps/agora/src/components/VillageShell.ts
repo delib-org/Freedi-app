@@ -1,9 +1,19 @@
 import m from 'mithril';
 import type { AgoraStagePlanItem } from '@freedi/shared-types';
 import { acceptsVillageEntry, villagePlace } from '../lib/flows/villageRoute';
+import { VillageCommunity, type VillageCommunityAttrs } from './VillageCommunity';
 import { planItemLabel } from './StageNav';
 
 interface VillageShellAttrs {
+	stationPapers?: Array<{
+		itemId: string;
+		place: string;
+		papers: Array<{ text: string; own: boolean }>;
+	}>;
+	community?: Omit<
+		VillageCommunityAttrs,
+		'plan' | 'currentIndex' | 'viewingIndex' | 'navigate' | 'onPause'
+	>;
 	plan: readonly AgoraStagePlanItem[];
 	currentIndex: number;
 	viewingIndex: number;
@@ -16,6 +26,8 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 	let frame: HTMLIFrameElement | null = null;
 	let attrs: VillageShellAttrs;
 	let opened = false;
+	let communityOpen = false;
+	let boardRequest = 0;
 	let libraryInside = false;
 	let bookOpen = false;
 	let requestedBook = '';
@@ -32,8 +44,10 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				itemId: item.itemId,
 				place: villagePlace(item),
 				label: planItemLabel(item),
-				paused: opened,
+				paused: opened || communityOpen,
+				community: !!attrs.community,
 				papers: attrs.papers,
+				stationPapers: attrs.stationPapers,
 			},
 			window.location.origin,
 		);
@@ -62,6 +76,23 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		) {
 			libraryInside = payload.inside;
 			m.redraw();
+		} else if (
+			payload &&
+			typeof payload === 'object' &&
+			'type' in payload &&
+			payload.type === 'agora-village-board' &&
+			'place' in payload
+		) {
+			const index = attrs.plan.findIndex(
+				(p, i) => i <= attrs.currentIndex && villagePlace(p) === payload.place,
+			);
+			if (index >= 0 && attrs.community) {
+				attrs.onSelectBook?.(attrs.plan[index].itemId);
+				boardRequest++;
+				communityOpen = true;
+				sync();
+				m.redraw();
+			}
 		} else if (acceptsVillageEntry(payload, attrs.plan, attrs.currentIndex, attrs.viewingIndex)) {
 			opened = true;
 			sync();
@@ -111,6 +142,20 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 						opened ? 'חזרה לכפר' : library ? 'כניסה לספרייה' : 'כניסה ישירה לתחנה',
 					),
 				]),
+				attrs.community
+					? m(VillageCommunity, {
+							...attrs.community,
+							boardRequest,
+							plan: attrs.plan,
+							currentIndex: attrs.currentIndex,
+							viewingIndex: attrs.viewingIndex,
+							navigate: (id: string) => attrs.onSelectBook?.(id),
+							onPause: (value: boolean) => {
+								communityOpen = value;
+								sync();
+							},
+						})
+					: null,
 				m('iframe.village-shell__world', {
 					src: '/prototypes/olive-hill/village.html?embedded=1',
 					title: 'כפר החכמים בתלת־מימד',
