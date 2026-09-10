@@ -55,6 +55,7 @@ import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
 import { QuestionStage } from './QuestionStage';
 import { RoundStage } from './RoundStage';
+import { VillageShell } from '../components/VillageShell';
 import { Voting } from './Voting';
 import { Results } from './Results';
 import { ReRate } from './ReRate';
@@ -152,6 +153,7 @@ function storeNav(sessionId: string, state: StageNavState): void {
 
 export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
+	let villageMode = new URLSearchParams(window.location.search).get('world') === 'village';
 	let userId = '';
 	/** Last plan position rendered — a change plays the travel interstitial */
 	let lastIndex: number | null = null;
@@ -621,7 +623,41 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				}
 			})();
 
-			return m('.game', [...overlays, stageNav, pastNotice, stageView]);
+			return m('.game', [
+				...overlays,
+				stageNav,
+				pastNotice,
+				m(
+					'button.btn.btn--secondary.btn--sm.village-mode-toggle',
+					{
+						onclick: () => {
+							villageMode = !villageMode;
+						},
+						'aria-pressed': villageMode,
+					},
+					villageMode ? 'תצוגה רגילה' : 'כניסה לכפר התלת־מימדי',
+				),
+				villageMode
+					? m(
+							VillageShell,
+							{
+								plan,
+								currentIndex,
+								viewingIndex,
+								papers:
+									item.stage === AgoraStage.deliberation && live
+										? getDeliberationState()
+												.proposals.filter((proposal) => !proposal.hidden)
+												.map((proposal) => ({
+													text: proposal.statement,
+													own: proposal.creatorId === userId,
+												}))
+										: [],
+							},
+							stageView,
+						)
+					: stageView,
+			]);
 		},
 	};
 }

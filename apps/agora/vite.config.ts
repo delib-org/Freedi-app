@@ -134,6 +134,10 @@ export default defineConfig({
     target: 'es2020',
     outDir: 'dist',
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        village: path.resolve(__dirname, 'prototypes/olive-hill/village.html'),
+      },
       output: {
         manualChunks: {
           firebase: ['firebase/app', 'firebase/firestore', 'firebase/auth'],
