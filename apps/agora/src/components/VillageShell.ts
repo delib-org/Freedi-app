@@ -7,6 +7,7 @@ interface VillageShellAttrs {
 	plan: readonly AgoraStagePlanItem[];
 	currentIndex: number;
 	viewingIndex: number;
+	browseFreely?: boolean;
 	onSelectBook?: (itemId: string) => void;
 	papers: Array<{ text: string; own: boolean }>;
 }
@@ -146,7 +147,9 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 									: [
 											m(
 												'p.village-library__intro',
-												'כל ספר פותח חלון לנושא. הספר שהמורה מציג מחכה לכם, ואפשר לשוב גם לספרים שכבר נפתחו.',
+												attrs.browseFreely
+													? 'בחרו ספר מהמדף. אפשר לקרוא ולחזור לכל ספר בכל זמן.'
+													: 'כל ספר פותח חלון לנושא. הספר שהמורה מציג מחכה לכם, ואפשר לשוב גם לספרים שכבר נפתחו.',
 											),
 											m(
 												'.village-library__shelf',
@@ -158,7 +161,10 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 																{
 																	key: item.itemId,
 																	disabled: index > attrs.currentIndex,
-																	class: index === attrs.currentIndex ? 'is-current' : '',
+																	class:
+																		!attrs.browseFreely && index === attrs.currentIndex
+																			? 'is-current'
+																			: '',
 																	style: {
 																		'--book-color': [
 																			'#466762',
@@ -183,11 +189,13 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 																	m('strong', item.title?.trim() || planItemLabel(item)),
 																	m(
 																		'small',
-																		index > attrs.currentIndex
-																			? 'ייפתח בהמשך המפגש'
-																			: index === attrs.currentIndex
-																				? 'המורה מציג עכשיו · פתיחת הספר'
-																				: 'פתוח לקריאה חוזרת',
+																		attrs.browseFreely
+																			? 'פתיחת הספר'
+																			: index > attrs.currentIndex
+																				? 'ייפתח בהמשך המפגש'
+																				: index === attrs.currentIndex
+																					? 'המורה מציג עכשיו · פתיחת הספר'
+																					: 'פתוח לקריאה חוזרת',
 																	),
 																],
 															),

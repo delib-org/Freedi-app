@@ -98,16 +98,10 @@ const plan: AgoraStagePlanItem[] = [
  {itemId:'demo-needs',stage:AgoraStage.needs,title:'הצרכים של הצדדים'},
 ];
 const kinds = [['intro','timeTunnel','periodExplainer'],['perspectiveA','perspectiveB'],['needsQuestion','needsA','needsB']];
-let currentIndex=0, viewingIndex=0, completed=0;
-const channel = new BroadcastChannel('agora-library-local-demo');
-channel.onmessage = ({data}) => { if (Number.isInteger(data.index) && data.index>=0 && data.index<plan.length) {currentIndex=data.index;viewingIndex=data.index;completed=0;m.redraw();} };
-function selectStage(index:number) { currentIndex=index;viewingIndex=index;completed=0;channel.postMessage({index}); }
+const currentIndex = plan.length - 1;
+let viewingIndex = 0;
 m.mount(document.getElementById('demo')!, {view:()=>m('main', [
- m('header', {style:'padding:16px 24px;background:#293f36;color:#fff5dc;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap'},[
-  m('div',[m('strong','המהפכה הצרפתית — הספרייה'),m('div','הדגמה מקומית · מתגי המנחה מדמים את התקדמות המפגש')]),
-  m('div',plan.map((item,index)=>m('button.btn.btn--secondary',{style:'margin:4px', 'aria-pressed':currentIndex===index,onclick:()=>selectStage(index)},item.title))),
-  m('small', {role:'status'},`נקראו ${completed} מסכים בספר הנוכחי`),
- ]),
- m(VillageShell,{plan,currentIndex,viewingIndex,papers:[],onSelectBook:(id:string)=>{viewingIndex=plan.findIndex(p=>p.itemId===id);}},
-  m(SceneStage,{allowReplay:true,key:plan[viewingIndex].itemId,scenes:scenes.filter(s=>kinds[viewingIndex].includes(s.kind)),storageKey:'library-local-'+plan[viewingIndex].itemId,onProgress:(done:number)=>{completed=done;}})),
+ m('header', {style:'padding:12px 24px;background:#293f36;color:#fff5dc'}, m('strong','המהפכה הצרפתית — הספרייה')),
+ m(VillageShell,{plan,currentIndex,viewingIndex,papers:[],browseFreely:true,onSelectBook:(id:string)=>{viewingIndex=plan.findIndex(p=>p.itemId===id);}},
+  m(SceneStage,{allowReplay:true,key:plan[viewingIndex].itemId,scenes:scenes.filter(s=>kinds[viewingIndex].includes(s.kind)),storageKey:'library-local-'+plan[viewingIndex].itemId})),
 ])});
