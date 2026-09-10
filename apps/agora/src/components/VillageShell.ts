@@ -123,7 +123,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 					'.village-shell__activity',
 					{
 						style: { display: opened ? 'block' : 'none' },
-						class: library ? 'village-library' : '',
+						class: library ? `village-library${bookOpen ? ' village-library--reading' : ''}` : '',
 					},
 					library
 						? [

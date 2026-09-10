@@ -500,6 +500,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				switch (item.stage) {
 					case AgoraStage.framing:
 						return m(SceneStage, {
+							allowReplay: villageMode,
 							scenes: scenesOf(
 								AgoraSceneKind.intro,
 								AgoraSceneKind.timeTunnel,
@@ -511,6 +512,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 					case AgoraStage.perspectives:
 						return m(SceneStage, {
+							allowReplay: villageMode,
 							scenes: scenesOf(AgoraSceneKind.perspectiveA, AgoraSceneKind.perspectiveB),
 							storageKey: `agora_${sessionId}_perspectives`,
 							onProgress,
@@ -518,6 +520,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 					case AgoraStage.needs:
 						return m(SceneStage, {
+							allowReplay: villageMode,
 							scenes: scenesOf(
 								AgoraSceneKind.needsQuestion,
 								AgoraSceneKind.needsA,
@@ -565,6 +568,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						 */
 						if (flow.framing && !framingSeen(sessionId)) {
 							return m(SceneStage, {
+								allowReplay: villageMode,
 								scenes: scenesOf(AgoraSceneKind.intro),
 								storageKey: `agora_${sessionId}_framing`,
 								onFinish: () => markFramingSeen(sessionId),

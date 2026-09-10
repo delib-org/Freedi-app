@@ -109,5 +109,5 @@ m.mount(document.getElementById('demo')!, {view:()=>m('main', [
   m('small', {role:'status'},`נקראו ${completed} מסכים בספר הנוכחי`),
  ]),
  m(VillageShell,{plan,currentIndex,viewingIndex,papers:[],onSelectBook:(id:string)=>{viewingIndex=plan.findIndex(p=>p.itemId===id);}},
-  m(SceneStage,{key:plan[viewingIndex].itemId,scenes:scenes.filter(s=>kinds[viewingIndex].includes(s.kind)),storageKey:'library-local-'+plan[viewingIndex].itemId,onProgress:(done:number)=>{completed=done;}})),
+  m(SceneStage,{allowReplay:true,key:plan[viewingIndex].itemId,scenes:scenes.filter(s=>kinds[viewingIndex].includes(s.kind)),storageKey:'library-local-'+plan[viewingIndex].itemId,onProgress:(done:number)=>{completed=done;}})),
 ])});

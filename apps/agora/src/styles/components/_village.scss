@@ -27,3 +27,21 @@
 @keyframes library-open { from {opacity:0;transform:perspective(1400px) rotateY(-30deg) scale(.94);} to {opacity:1;transform:none;} }
 @media (max-width:600px) { .village-library__book {width:135px;min-height:205px;padding:15px;} .village-library__shelf {gap:22px;padding:20px 12px 40px;} .village-library__header {padding:12px;flex-wrap:wrap;} }
 @media (prefers-reduced-motion:reduce) { .village-library__pages {animation:none;} .village-library__book {transition:none;} }
+
+// A book opens a black, viewport-sized reading room, independent of the village panel.
+.village-shell__activity.village-library--reading {
+  position:fixed; inset:0; z-index:1000; border:0; border-radius:0;
+  background:#000; color:#fff; overflow:auto;
+  .village-library__header { min-height:64px; padding:8px 20px; background:#000; border:0; }
+  .village-library__header > div { display:none; }
+  .village-library__header button { margin-inline-start:auto; background:#171717; color:#fff; border:1px solid #555; }
+  .village-library__pages { min-height:calc(100dvh - 64px); display:flex; align-items:center; justify-content:center; padding:16px; border:0; background:#000; animation:none; }
+  .scene--immersive { position:relative; inset:auto; width:min(1100px, 100%); height:auto; min-height:0; max-height:none; flex-shrink:0; background:#000; }
+  .scene__media { flex:none; min-height:0; height:min(48dvh, 56.25vw); }
+  .scene__backdrop, .scene__video { object-position:center; }
+  .scene__title { align-self:center; text-align:center; margin-inline:auto; }
+  .scene__caption { align-items:center; text-align:center; max-height:26dvh; }
+  .scene__actions { width:min(620px, 100%); margin-inline:auto; }
+  .shell { width:min(960px, 100%); background:#000; color:#fff; }
+}
+body:has(.village-library--reading) { overflow:hidden; }
