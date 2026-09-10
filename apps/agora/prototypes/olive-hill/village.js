@@ -2,7 +2,7 @@ import * as THREE from './vendor/three.module.js';
 import { buildCharacters } from './characters-2d.js';
 
 export const stations=[
- {id:'challenge',name:'בית המדרש',short:'האתגר',guide:'החכמה · שואלת ומקשיבה',question:'מה אנחנו יודעים, ומה עוד חשוב לברר?',x:-13,z:6,ax:-10,az:12,icon:'⌂'},
+ {id:'challenge',name:'בית המדרש',short:'האתגר',guide:'נועם · חושבים יחד',question:'מה אנחנו יודעים, ומה עוד חשוב לברר?',x:-13,z:6,ax:-10,az:12,icon:'⌂'},
  {id:'story',name:'גינת הסיפורים',short:'הסיפור שלי',guide:'חברים לדרך',question:'איך האתגר הזה פוגש את החיים שלך?',x:-13,z:23,ax:-9,az:22,icon:'❧'},
  {id:'needs',name:'חצר הצרכים',short:'מה חשוב לי',guide:'מקשיבים למה שחשוב',question:'מה חשוב לך, ועל מה היית רוצה לשמור?',x:10,z:24,ax:7,az:20,icon:'✧'},
  {id:'solution',name:'בית המלאכה לרעיונות',short:'הפתרון שלי',guide:'מרים · חכמה של מעשה',question:'איזה פתרון נותן מקום לצרכים שעלו?',x:1.8,z:3.55,ax:2.2,az:8,icon:'✎'},
