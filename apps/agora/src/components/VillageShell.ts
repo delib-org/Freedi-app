@@ -114,6 +114,19 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 					},
 					onload: sync,
 				}),
+				library && !opened
+					? m(
+							'button.village-library__read',
+							{
+								onclick: () => {
+									opened = true;
+									bookOpen = false;
+									sync();
+								},
+							},
+							'קרא את הספרים',
+						)
+					: null,
 				unavailable && !opened
 					? m(
 							'p.village-shell__notice',
