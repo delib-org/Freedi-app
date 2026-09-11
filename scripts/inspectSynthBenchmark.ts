@@ -78,6 +78,13 @@ const db = getFirestore();
 	let visibleOptions = 0;
 	let withEmbedding = 0;
 	let withoutEmbedding = 0;
+	// Vectors live in statementEmbeddings; older docs may still carry them.
+	const embeddedSnap = await db
+		.collection('statementEmbeddings')
+		.where('parentId', '==', QUESTION_ID)
+		.select('embeddingCreatedAt')
+		.get();
+	const embeddedIds = new Set(embeddedSnap.docs.map((doc) => doc.id));
 	for (const doc of stmtSnap.docs) {
 		const d = doc.data();
 		const derived = d.derivedByPipeline as string | undefined;
@@ -93,7 +100,7 @@ const db = getFirestore();
 			if (d.hide) hiddenOptions++;
 			else visibleOptions++;
 		}
-		if (d.embedding) withEmbedding++;
+		if (embeddedIds.has(doc.id) || d.embedding) withEmbedding++;
 		else withoutEmbedding++;
 	}
 

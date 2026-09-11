@@ -11,7 +11,8 @@
  */
 import { readFileSync } from 'node:fs';
 import { initializeApp, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { embeddingDocRef } from '../src/services/statement-embedding-store';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
 	console.error('Refusing to run without FIRESTORE_EMULATOR_HOST set. Emulator-only.');
@@ -19,10 +20,13 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
 }
 const snapshotPath = process.argv[2];
 if (!snapshotPath) {
-	console.error('Usage: npx tsx scripts/seedQuestionSnapshot.ts scripts/snapshots/<questionId>.json');
+	console.error(
+		'Usage: npx tsx scripts/seedQuestionSnapshot.ts scripts/snapshots/<questionId>.json',
+	);
 	process.exit(1);
 }
-if (getApps().length === 0) initializeApp({ projectId: process.env.GCLOUD_PROJECT ?? 'freedi-test' });
+if (getApps().length === 0)
+	initializeApp({ projectId: process.env.GCLOUD_PROJECT ?? 'freedi-test' });
 const db = getFirestore();
 
 const USER_UID = 'dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY';
@@ -52,22 +56,32 @@ async function main(): Promise<void> {
 	const now = Date.now();
 
 	// Question — synthesis OFF (so live triggers never fire on seed writes).
-	await db.collection('statements').doc(questionId).set({
-		statementId: questionId,
-		statement: questionText,
-		paragraphs: [],
-		statementType: 'question',
-		parentId: 'top',
-		parents: [],
-		topParentId: questionId,
-		creatorId: USER_UID,
-		creator: { uid: USER_UID, displayName: 'Snapshot Seeder', email: 'seed@example.com', photoURL: null, isAnonymous: false, defaultLanguage: 'he' },
-		createdAt: now,
-		lastUpdate: now,
-		lastChildUpdate: now,
-		membership: { access: 'public' },
-		statementSettings: { synthesis: { enabled: false }, liveSynthEnabled: false },
-	});
+	await db
+		.collection('statements')
+		.doc(questionId)
+		.set({
+			statementId: questionId,
+			statement: questionText,
+			paragraphs: [],
+			statementType: 'question',
+			parentId: 'top',
+			parents: [],
+			topParentId: questionId,
+			creatorId: USER_UID,
+			creator: {
+				uid: USER_UID,
+				displayName: 'Snapshot Seeder',
+				email: 'seed@example.com',
+				photoURL: null,
+				isAnonymous: false,
+				defaultLanguage: 'he',
+			},
+			createdAt: now,
+			lastUpdate: now,
+			lastChildUpdate: now,
+			membership: { access: 'public' },
+			statementSettings: { synthesis: { enabled: false }, liveSynthEnabled: false },
+		});
 
 	// Idempotent reset: delete every existing option child first.
 	const existing = await db
@@ -75,9 +89,12 @@ async function main(): Promise<void> {
 		.where('parentId', '==', questionId)
 		.where('statementType', '==', 'option')
 		.get();
-	for (let i = 0; i < existing.docs.length; i += 400) {
+	for (let i = 0; i < existing.docs.length; i += 200) {
 		const batch = db.batch();
-		existing.docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
+		existing.docs.slice(i, i + 200).forEach((d) => {
+			batch.delete(d.ref);
+			batch.delete(embeddingDocRef(d.id));
+		});
 		await batch.commit();
 	}
 	if (existing.size) console.info(`Cleared ${existing.size} existing option children.`);
@@ -98,22 +115,38 @@ async function main(): Promise<void> {
 				parents: [questionId],
 				topParentId: questionId,
 				creatorId: USER_UID,
-				creator: { uid: USER_UID, displayName: 'Snapshot Seeder', email: 'seed@example.com', photoURL: null, isAnonymous: false, defaultLanguage: 'he' },
+				creator: {
+					uid: USER_UID,
+					displayName: 'Snapshot Seeder',
+					email: 'seed@example.com',
+					photoURL: null,
+					isAnonymous: false,
+					defaultLanguage: 'he',
+				},
 				createdAt: now,
 				lastUpdate: now,
 				consensus: 0,
 				totalEvaluators: 0,
 				hide: false,
-				embedding: o.embedding,
 				randomSeed: Math.random(),
 				evaluation: blankEval(),
+			});
+			// Same layout as production: the vector lives in statementEmbeddings.
+			batch.set(embeddingDocRef(o.id), {
+				statementId: o.id,
+				parentId: questionId,
+				embedding: FieldValue.vector(o.embedding),
+				embeddingCreatedAt: now,
+				lastUpdate: now,
 			});
 			seeded++;
 		}
 		await batch.commit();
 		console.info(`  seeded ${Math.min(i + CHUNK, options.length)}/${options.length}…`);
 	}
-	console.info(`✓ Seeded ${seeded}/${options.length} options under ${questionId} (synthesis OFF, pristine).`);
+	console.info(
+		`✓ Seeded ${seeded}/${options.length} options under ${questionId} (synthesis OFF, pristine).`,
+	);
 }
 
 main()

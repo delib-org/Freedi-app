@@ -53,7 +53,6 @@ export const SimilaritySearchMethodSchema = v.picklist([
 
 /**
  * StatementEmbedding - stored embedding for a statement
- * Stored in the statements collection as optional fields
  */
 export const StatementEmbeddingSchema = v.object({
   embedding: v.array(v.number()), // 1536-dimensional vector
@@ -63,6 +62,39 @@ export const StatementEmbeddingSchema = v.object({
 });
 
 export type StatementEmbedding = v.InferOutput<typeof StatementEmbeddingSchema>;
+
+/**
+ * StatementEmbeddingDoc - `statementEmbeddings/{statementId}`.
+ *
+ * Vectors used to live as fields on the statement doc, and every client
+ * listening to a statement downloaded ~57 KB of vector on every change to it.
+ * They now live in this server-only collection, one doc per statement, keyed
+ * by the statement id. `parentId` mirrors the statement's so vector search can
+ * pre-filter by question (`findNearest` needs the filter on the same doc); the
+ * statement update trigger keeps it in sync when a statement moves.
+ *
+ * Vectors are Firestore VectorValues on the server; the schema describes the
+ * plain-array form the Admin SDK hands back after `toArray()`.
+ */
+export const StatementEmbeddingDocSchema = v.object({
+  statementId: v.string(),
+  parentId: v.string(),
+  embedding: v.optional(v.array(v.number())),
+  embeddingModel: v.optional(v.string()),
+  embeddingContext: v.optional(v.nullable(v.string())),
+  embeddingCreatedAt: v.optional(v.number()),
+  /** Short LLM gist of the statement the vector was built from. */
+  embeddingBrief: v.optional(v.string()),
+  /** sha1 of the statement text the vector was built from. */
+  textHash: v.optional(v.string()),
+  /** Text vector + 8 rating dims (hybrid clustering). */
+  hybridEmbedding: v.optional(v.array(v.number())),
+  hybridEmbeddingStale: v.optional(v.boolean()),
+  hybridEmbeddingUpdatedAt: v.optional(v.number()),
+  lastUpdate: v.number(),
+});
+
+export type StatementEmbeddingDoc = v.InferOutput<typeof StatementEmbeddingDocSchema>;
 
 /**
  * SimilarityResult - result from similarity search
