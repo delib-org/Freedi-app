@@ -11,6 +11,8 @@ import {
 	picklist,
 	InferOutput,
 } from 'valibot';
+import { stagePlanPreset } from './stagePlan';
+import type { AgoraStagePlanItem } from './stagePlan';
 import { AgoraSceneKind, AgoraTopicStatus } from './agoraEnums';
 
 /** A value held by a historical character — also the AI grading answer key */
@@ -145,6 +147,8 @@ export const AgoraTopicPackageSchema = object({
 	kind: optional(AgoraTopicKindSchema),
 	/** The teacher's original topic prompt, e.g. "המהפכה הצרפתית" */
 	topic: string(),
+	/** Original teacher intent, retained separately from the editable AI draft. */
+	authoringBrief: optional(object({ statement: string(), description: string() })),
 	/** BCP-47 language code the package content is written in */
 	language: string(),
 	status: enum_(AgoraTopicStatus),
@@ -169,3 +173,10 @@ export const AgoraTopicPackageSchema = object({
 });
 
 export type AgoraTopicPackage = InferOutput<typeof AgoraTopicPackageSchema>;
+
+/** New question-led scenarios use WizCol with only the optional vision omitted. */
+export function topicStagePlan(topic?: Pick<AgoraTopicPackage, 'authoringBrief'>): AgoraStagePlanItem[] {
+	const plan = stagePlanPreset('scenarioWizcol');
+
+	return topic?.authoringBrief ? plan.filter((item) => item.kind !== 'vision') : plan;
+}

@@ -56,6 +56,7 @@ export {
 	AgoraArtworkSchema,
 	AgoraValueAnswerKeySchema,
 	AgoraTopicPackageSchema,
+	topicStagePlan,
 } from './agoraTopicPackage';
 
 export type {

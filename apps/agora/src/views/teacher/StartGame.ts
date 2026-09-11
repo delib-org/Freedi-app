@@ -28,6 +28,7 @@ import {
 	AGORA_STAGE_PLAN,
 	resolveSessionFlow,
 	stagePlanPreset,
+	topicStagePlan,
 	validateStagePlan,
 } from '@freedi/shared-types';
 import { TeacherNav } from '../../components/TeacherNav';
@@ -89,13 +90,17 @@ export function StartGame(): m.Component {
 	const defaults = resolveSessionFlow({ sessionMode: AgoraSessionMode.classroom });
 	let rounds = defaults.rounds;
 
-	let plans: Record<GameMode, AgoraStagePlanItem[]> = {
+	let plans: Record<string, AgoraStagePlanItem[]> = {
 		scenario: stagePlanPreset('scenarioWizcol'),
 		quick: stagePlanPreset('wizcol'),
 	};
 
 	function mode(): GameMode {
 		return chosenId === OWN_QUESTION ? 'quick' : 'scenario';
+	}
+
+	function planKey(): string {
+		return mode() === 'quick' ? 'quick' : (chosenId ?? 'scenario');
 	}
 
 	async function load(): Promise<void> {
@@ -111,6 +116,9 @@ export function StartGame(): m.Component {
 				}),
 			]);
 			topics = loadedTopics.filter((topic) => topic.status === AgoraTopicStatus.ready);
+			for (const topic of topics) {
+				plans[topic.topicPackageId] ??= topicStagePlan(topic);
+			}
 			classes = dashboard.classes;
 			schools = dashboard.schools;
 
@@ -192,7 +200,7 @@ export function StartGame(): m.Component {
 
 	function canCreate(): boolean {
 		if (creating || chosenId === null || classChoice === null) return false;
-		const plan = plans[mode()];
+		const plan = plans[planKey()];
 		if (validateStagePlan(plan, { hasCharacters: mode() === 'scenario' }).length > 0) return false;
 		if (mode() === 'quick') return quickQuestion.trim().length > 0;
 
@@ -222,7 +230,7 @@ export function StartGame(): m.Component {
 				collectRealNames,
 				theme: { preset: look },
 				world,
-				stagePlan: plans[mode()],
+				stagePlan: plans[planKey()],
 				...(classChoice && classChoice !== 'none' ? { classId: classChoice } : {}),
 				...(flow ? { flow } : {}),
 			});
@@ -474,7 +482,7 @@ export function StartGame(): m.Component {
 	/** What the advanced settings currently say, in one muted line */
 	function summaryLine(): m.Children {
 		const parts = [
-			t('startGame.summary_steps', { n: countedSteps(plans[mode()]).length }),
+			t('startGame.summary_steps', { n: countedSteps(plans[planKey()]).length }),
 			t(identity === 'named' ? 'startGame.identity_named' : 'startGame.identity_pseudonym'),
 			t(
 				deviceMode === AgoraDeviceMode.team
@@ -537,12 +545,12 @@ export function StartGame(): m.Component {
 							m('.stack', [
 								m('p.teacher__section-title', t('startGame.plan_title')),
 								m(StagePlanEditor, {
-									items: plans[current],
+									items: plans[planKey()],
 									hasCharacters: current === 'scenario',
 									frozenCount: 0,
 									showPresets: true,
 									onChange: (items) => {
-										plans = { ...plans, [current]: items };
+										plans = { ...plans, [planKey()]: items };
 									},
 								}),
 								m('p.home-explanation.home-explanation--start', t('startGame.plan_hint')),
