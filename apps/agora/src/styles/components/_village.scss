@@ -1,0 +1,159 @@
+.village-mode-toggle { margin: var(--space-sm) var(--space-md); }
+.village-shell {
+	position: relative;
+	&__toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); background: var(--bg-card-solid); }
+	&__world { display: block; inline-size: 100%; block-size: calc(100dvh - 150px); min-block-size: 420px; border: 0; }
+	&__notice { padding: var(--space-md); background: var(--bg-card-solid); color: var(--text-primary); }
+	&__activity { position: absolute; inset-block: 60px var(--space-md); inset-inline: max(var(--space-sm), calc((100% - 960px) / 2)); overflow: auto; background: var(--bg-card-solid); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+	&__activity .shell { min-block-size: auto; }
+}
+
+.village-library {
+  background: #f7f0df; color: #34493d; border: 5px solid #ab8c60;
+  &__header { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:18px 24px; border-bottom:1px solid #c9b48f; background:#eee3cc; }
+  &__header h2 { margin:0; font-size:32px; }
+  &__intro { padding:12px 28px; max-width:680px; font-size:19px; line-height:1.8; }
+  &__shelf { display:flex; flex-wrap:wrap; justify-content:center; gap:28px; padding:28px 30px 50px; background:linear-gradient(transparent calc(100% - 24px), #78573d calc(100% - 24px), #4e3929); }
+  &__book { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:space-between; gap:20px; width:175px; min-height:235px; padding:24px 20px; background:var(--book-color); color:#fff3cf; border:1px solid #d8be81; border-right:12px solid #0003; border-radius:5px 10px 10px 5px; box-shadow:-6px 4px 0 #e4d6b8,-9px 7px 0 #574734,0 14px 18px #36291840; transform:rotate(-2deg); transition:transform .25s; font:inherit; cursor:pointer; }
+  &__book strong { font-size:23px; }
+  &__book small { font-size:13px; }
+  &__book:hover:not(:disabled), &__book:focus-visible { transform:translateY(-12px) rotate(0); outline:3px solid #bc904b; outline-offset:5px; }
+  &__book:disabled { opacity:.48; cursor:default; }
+  &__book.is-current { box-shadow:-6px 4px 0 #e4d6b8,-9px 7px 0 #574734,0 0 0 4px #d5ae57,0 16px 22px #36291840; }
+  &__ornament { font-size:38px; }
+  &__pages { transform-origin:right center; animation:library-open .55s ease-out; border:10px solid #f9f3e6; }
+  &__pages .scene--immersive { min-height:580px; height:65dvh; }
+}
+@keyframes library-open { from {opacity:0;transform:perspective(1400px) rotateY(-30deg) scale(.94);} to {opacity:1;transform:none;} }
+@media (max-width:600px) { .village-library__book {width:135px;min-height:205px;padding:15px;} .village-library__shelf {gap:22px;padding:20px 12px 40px;} .village-library__header {padding:12px;flex-wrap:wrap;} }
+@media (prefers-reduced-motion:reduce) { .village-library__pages {animation:none;} .village-library__book {transition:none;} }
+
+// A book opens a black, viewport-sized reading room, independent of the village panel.
+.village-shell__activity.village-library--reading {
+  position:fixed; inset:0; z-index:1000; border:0; border-radius:0;
+  background:#000; color:#fff; overflow:auto;
+  .village-library__header { min-height:64px; padding:8px 20px; background:#000; border:0; }
+  .village-library__header > div { display:none; }
+  .village-library__header button { margin-inline-start:auto; background:#171717; color:#fff; border:1px solid #555; }
+  .village-library__pages { min-height:calc(100dvh - 64px); display:flex; align-items:center; justify-content:center; padding:16px; border:0; background:#000; animation:none; }
+  .scene--immersive { position:relative; inset:auto; width:min(1100px, 100%); height:auto; min-height:0; max-height:none; flex-shrink:0; background:#000; }
+  .scene__media { flex:none; min-height:0; height:min(48dvh, 56.25vw); }
+  .scene__backdrop, .scene__video { object-position:center; }
+  .scene__title { align-self:center; text-align:center; margin-inline:auto; }
+  .scene__caption { align-items:center; text-align:center; max-height:26dvh; }
+  .scene__actions { width:min(620px, 100%); margin-inline:auto; }
+  .shell { width:min(960px, 100%); background:#000; color:#fff; }
+}
+body:has(.village-library--reading) { overflow:hidden; }
+
+.village-library__read {
+  position:absolute; z-index:4; top:50%; left:50%; transform:translate(-50%, -50%);
+  padding:22px 48px; max-width:calc(100% - 40px); border:2px solid #ead6a4;
+  border-radius:18px; background:#294c3d; color:#fff8e6;
+  font:700 clamp(24px, 4vw, 34px) 'Assistant', sans-serif; white-space:nowrap;
+  box-shadow:0 10px 35px #0007; cursor:pointer;
+  &:hover { background:#38644e; }
+  &:focus-visible { outline:4px solid #fff; outline-offset:5px; }
+}
+
+.village-coins, .village-feedback, .village-board-open { position:absolute; z-index:6; border:1px solid #d4b674; border-radius:24px; background:#233f35; color:#fff6de; box-shadow:0 4px 16px #0003; padding:10px 18px; }
+.village-coins { top:64px; right:16px; display:flex; align-items:center; gap:10px; font-size:24px; pointer-events:none; }
+.village-coins img { width:44px; height:44px; }
+.village-coins__gain { color:#ffe06a; animation:village-coin-gain 2s ease-out; }
+@keyframes village-coin-gain { from {transform:translateY(10px);opacity:1} to {transform:translateY(-24px);opacity:0} }
+.village-feedback { top:64px; left:16px; cursor:pointer; }
+.village-board-open { bottom:100px; left:50%; transform:translateX(-50%); font-size:19px; cursor:pointer; }
+.village-community__panel { position:absolute; z-index:20; inset:58px 12px 12px; overflow:auto; background:#f5efdf; padding:24px; border:4px solid #796342; border-radius:18px; color:#253c32; direction:rtl; }
+.village-community__panel > header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; }
+.village-notes { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:20px; }
+.village-note { display:block; width:100%; border:0; border-radius:3px; padding:24px; margin-bottom:14px; color:#263b33; background:#fff; text-align:right; cursor:pointer; box-shadow:0 5px 14px #45302025; font:inherit; }
+.village-note p { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.8; }
+.village-note span { display:block; border-top:1px solid #0002; padding-top:12px; font-size:14px; }
+@media(max-width:600px) { .village-coins {font-size:18px;right:8px;padding:6px 10px} .village-feedback {left:8px;max-width:52%} .village-community__panel{padding:12px} }
+.village-coins, .village-feedback { z-index:30; }
+.village-community__panel { top:138px; }
+.village-board-tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+.village-board-tabs [aria-pressed="true"] { outline:2px solid #927535; }
+
+
+// The writing surface keeps the stage's existing save and feedback controls.
+.village-desk {
+  z-index: 10;
+  &__header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-sm); padding: var(--space-md); border-bottom: 1px solid var(--border-subtle); }
+  &__header h2 { margin: 0; font-size: var(--font-size-xl); }
+  .round__textarea, .question__textarea, .my-screen__text, .write-desk textarea {
+    min-block-size: 200px;
+    background: repeating-linear-gradient(transparent, transparent calc(2em - 1px), var(--border-subtle) calc(2em - 1px), var(--border-subtle) 2em), var(--bg-card-solid);
+    color: var(--text-primary);
+    line-height: 2;
+    border-radius: var(--radius-sm);
+  }
+}
+
+// Keep the board shortcut off the personal paper in the middle of the desk.
+.village-board-open { left: var(--space-md); bottom: var(--space-md); transform: none; }
+@media (max-width: 600px) {
+  .village-board-open { bottom: 150px; max-inline-size: 180px; font-size: var(--font-size-xs); }
+}
+
+// Reserve the HUD and game-control rows outside every open paper or board.
+// Raising their z-index alone leaves them covering the paper's title and buttons.
+.village-shell:has(.village-community) {
+  > .village-shell__activity:not(.village-library--reading) {
+    inset-block-start: 204px;
+    inset-block-end: 100px;
+  }
+  .village-community__panel {
+    top: 204px;
+    bottom: 100px;
+  }
+}
+.village-flight-status { position:absolute; z-index:35; bottom:110px; left:50%; transform:translateX(-50%); background:#233f35; color:#fff6de; padding:12px 24px; border-radius:24px; pointer-events:none; }
+.village-note--landed { outline:3px solid #c6a457; outline-offset:3px; animation:village-note-land .5s ease-out; }
+@keyframes village-note-land { from {transform:translateY(-16px) rotate(-3deg);opacity:.4} to {transform:none;opacity:1} }
+@media(prefers-reduced-motion:reduce) { .village-note--landed {animation:none} }
+
+// A personal sheet: readable margins around the whole form, not edge-to-edge UI.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk {
+  inset-inline: max(20px, calc((100% - 820px) / 2));
+  inset-block-end: auto;
+  max-block-size: calc(100% - 304px);
+  padding: clamp(20px, 4vw, 44px);
+  background: linear-gradient(135deg, #fffefb, #faf6ed);
+  border: 1px solid #dfd6c4;
+  border-radius: 6px 6px 18px 6px;
+  box-shadow: 0 18px 48px #31281835, 0 3px 0 #e9e0cf;
+  .village-desk__header { padding: 0 0 20px; margin-bottom: 24px; border-color: #ded5c2; }
+  > h2 { margin: 0 0 20px; font-size: clamp(23px, 3vw, 30px); line-height: 1.4; color: #34493d; }
+  textarea.text-input, .round__textarea, .question__textarea, .my-screen__text, .write-desk textarea {
+    display: block; box-sizing: border-box; width: 100%; min-block-size: 190px;
+    padding: 18px 24px; font-size: 19px; line-height: 2;
+    color: #34493d; border: 1px solid #d8cfbc; border-radius: 4px;
+    background: repeating-linear-gradient(transparent 0, transparent 37px, #d8d0bf55 37px, #d8d0bf55 38px), #fffefb;
+    background-origin: content-box; background-clip: padding-box; resize: vertical;
+    &:focus { outline: 2px solid #9aa889; outline-offset: 3px; box-shadow: none; }
+  }
+  > .btn { display: block; margin-top: 22px; margin-inline-start: auto; padding-inline: 30px; }
+}
+@media(max-width:600px) {
+  .village-shell:has(.village-community) > .village-shell__activity.village-desk {
+    inset-inline: 14px;
+    .village-desk__header { gap: 12px; }
+    textarea.text-input { padding: 14px 16px; font-size: 18px; }
+  }
+}
+.village-inbox { position:absolute; top:64px; left:16px; z-index:40; }
+.village-inbox .inbox-button { background:#233f35; color:#fff6de; border:1px solid #d4b674; }
+.village-community__panel .chat-page { min-height:0; height:auto; }
+// Reuse the classic conversation's behavior inside the village panel, below its HUD.
+.village-community__panel:has(.shell--chat) { display:flex; flex-direction:column; overflow:hidden; }
+.village-community__panel > header { flex:0 0 auto; }
+.village-community__panel .shell--chat { position:relative; inset:auto; z-index:auto; height:auto; min-height:0; max-height:none; flex:1 1 auto; margin:0; width:100%; background:transparent; }
+.village-community__panel .chat-page { height:100%; overflow:hidden; }
+@media(max-height:800px) {
+ .village-community__panel:has(.shell--chat) { overflow:auto; display:block; }
+ .village-community__panel .shell--chat { overflow:visible; }
+ .village-community__panel .chat-page { height:auto; overflow:visible; }
+ .village-community__panel .chat-page__list { flex:none; min-height:160px; max-height:36dvh; }
+ .village-community__panel .chat-page__composer { flex-shrink:0; }
+}

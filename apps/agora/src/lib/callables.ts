@@ -33,6 +33,7 @@ export interface QuickGameRequest {
 }
 
 export interface CreateSessionRequest {
+	world?: 'village' | 'classic';
 	/** A ready scenario — or omit it and send `quick` */
 	topicPackageId?: string;
 	quick?: QuickGameRequest;
@@ -177,7 +178,8 @@ export async function challengeTurn(request: ChallengeTurnRequest): Promise<Chal
 }
 
 export interface GenerateTopicPackageRequest {
-	topic: string;
+	statement: string;
+	description: string;
 	language: string;
 }
 

@@ -108,6 +108,8 @@ import {
 } from '@freedi/shared-types';
 
 export interface DeliberationAttrs {
+	/** Open the existing personal paper without advancing the current lap. */
+	writeRequest?: number;
 	session: AgoraSession;
 	myParticipant: AgoraParticipant;
 	userId: string;
@@ -697,6 +699,7 @@ export function Deliberation(
 	 * where the tap left it.
 	 */
 	let focusOnMy = '';
+	let lastWriteRequest = initialVnode.attrs.writeRequest ?? 0;
 	/**
 	 * One-shot: right after the very first proposal is submitted, the My tab
 	 * pulses once. The lap has just walked the student out to the square, and
@@ -2215,6 +2218,11 @@ export function Deliberation(
 
 		view(vnode) {
 			const { session: live, myParticipant, topic } = vnode.attrs;
+			if ((vnode.attrs.writeRequest ?? 0) !== lastWriteRequest) {
+				lastWriteRequest = vnode.attrs.writeRequest ?? 0;
+				chatPage.close();
+				openEditBox();
+			}
 			// Read fresh each render: an organizer may re-script a running event,
 			// and the lap count has to follow without a reload.
 			const flow = getSessionFlow();

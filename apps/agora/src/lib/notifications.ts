@@ -330,9 +330,9 @@ export function detectHelpedImprovements(sessionId: string, userId: string): voi
  */
 export function detectThreadMessages(sessionId: string, userId: string): void {
 	const key = `agora_${sessionId}_received_toastmark`;
-	const { proposals, suggestions } = getDeliberationState();
+	const { proposals, suggestions, answersByQuestion } = getDeliberationState();
 	const mineIds = new Set(
-		proposals
+		[...proposals, ...Object.values(answersByQuestion).flat()]
 			.filter((proposal) => proposal.creatorId === userId)
 			.map((proposal) => proposal.statementId),
 	);

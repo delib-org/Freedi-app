@@ -43,7 +43,16 @@ import {
  * message is a child Statement of the proposal Statement, keyed into one
  * conversation by `agoraThreadUserId` (the helper's uid).
  */
+export interface ThreadChatServices {
+	getThreadMessages: typeof getThreadMessages;
+	openSuggestionsBy: typeof openSuggestionsBy;
+	resolveSuggestion: typeof resolveSuggestion;
+	submitThreadMessage: typeof submitThreadMessage;
+	markThreadSeen: typeof markThreadSeen;
+}
 export interface ThreadChatAttrs {
+	services?: ThreadChatServices;
+	canEditProposal?: boolean;
 	session: AgoraSession;
 	proposal: AgoraProposal;
 	/** The helper whose conversation this is — one thread per classmate */
@@ -183,7 +192,15 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	 * change is right there. Same gesture as every other Freedi surface: tap
 	 * the text, it becomes a box.
 	 */
+	let services: ThreadChatServices = {
+		getThreadMessages,
+		openSuggestionsBy,
+		resolveSuggestion,
+		submitThreadMessage,
+		markThreadSeen,
+	};
 	let editing = false;
+	let canEditProposal = true;
 	let editDraft = '';
 	let savingEdit = false;
 	/**
@@ -224,7 +241,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		anonName: string,
 		canEdit: boolean,
 	): m.Children {
-		if (!canEdit) return m('p.chat-page__proposal', proposal.statement);
+		if (!canEdit || !canEditProposal) return m('p.chat-page__proposal', proposal.statement);
 
 		if (!editing) {
 			return m(
@@ -234,7 +251,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					title: t('delib.tap_to_edit'),
 					'aria-label': t('delib.tap_to_edit'),
 					onclick: () => {
-						editing = true;
+						editing = canEditProposal;
 						editDraft = proposal.statement;
 					},
 				},
@@ -338,13 +355,15 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 				'button.btn.btn--ghost.btn--sm',
 				{
 					onclick: () => {
-						resolveSuggestion(
-							session.sessionId,
-							message.statementId,
-							AgoraSuggestionStatus.declined,
-						).catch((error: unknown) => {
-							console.error('[Chat] Decline suggestion failed:', error);
-						});
+						services
+							.resolveSuggestion(
+								session.sessionId,
+								message.statementId,
+								AgoraSuggestionStatus.declined,
+							)
+							.catch((error: unknown) => {
+								console.error('[Chat] Decline suggestion failed:', error);
+							});
 					},
 				},
 				t('delib.no_thanks'),
@@ -363,22 +382,24 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 							from: message.anonName ?? '',
 							variant: message.statementId.charCodeAt(0) % 2 === 0 ? 1 : 2,
 						};
-						editing = true;
+						editing = canEditProposal;
 						editDraft = proposal.statement;
 
-						resolveSuggestion(
-							session.sessionId,
-							message.statementId,
-							AgoraSuggestionStatus.thanked,
-						).catch((error: unknown) => {
-							// resolveSuggestion has already rolled the decision back; undo
-							// the handoff so the student is not left editing on a promise
-							// that failed.
-							pinnedIdea = null;
-							editing = false;
-							m.redraw();
-							console.error('[Chat] Thank suggestion failed:', error);
-						});
+						services
+							.resolveSuggestion(
+								session.sessionId,
+								message.statementId,
+								AgoraSuggestionStatus.thanked,
+							)
+							.catch((error: unknown) => {
+								// resolveSuggestion has already rolled the decision back; undo
+								// the handoff so the student is not left editing on a promise
+								// that failed.
+								pinnedIdea = null;
+								editing = false;
+								m.redraw();
+								console.error('[Chat] Thank suggestion failed:', error);
+							});
 					},
 				},
 				iconLabel('thanks', t('delib.thank')),
@@ -814,10 +835,18 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		},
 
 		view(vnode) {
+			services = vnode.attrs.services ?? {
+				getThreadMessages,
+				openSuggestionsBy,
+				resolveSuggestion,
+				submitThreadMessage,
+				markThreadSeen,
+			};
+			canEditProposal = vnode.attrs.canEditProposal !== false;
 			const { session, proposal, helperUid, role, userId, anonName, proposalNumber, onBack } =
 				vnode.attrs;
 			const threadKey = createAgoraThreadKey(proposal.statementId, helperUid);
-			const messages = getThreadMessages(proposal.statementId, helperUid);
+			const messages = services.getThreadMessages(proposal.statementId, helperUid);
 
 			// Standing on this page IS reading the conversation
 			if (document.visibilityState === 'visible') {
@@ -825,7 +854,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					(max, message) => (message.creatorId !== userId ? Math.max(max, message.createdAt) : max),
 					0,
 				);
-				if (newest > 0) markThreadSeen(threadKey, newest);
+				if (newest > 0) services.markThreadSeen(threadKey, newest);
 			}
 
 			// ONE open improvement idea at a time, per conversation. With the
@@ -835,7 +864,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			// thanks or no thanks — the box offers the next idea. Helping stays
 			// earnable every lap without anyone queueing ideas nobody asked for.
 			const kind =
-				role === 'helper' && openSuggestionsBy(proposal.statementId, userId) === 0
+				role === 'helper' && services.openSuggestionsBy(proposal.statementId, userId) === 0
 					? AgoraMessageKind.suggestion
 					: AgoraMessageKind.chat;
 			const helperName =
@@ -963,7 +992,8 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 										busy = false;
 										m.redraw();
 									}, SLOW_AFTER_MS);
-									submitThreadMessage(session, proposal, anonName, text, kind, helperUid)
+									services
+										.submitThreadMessage(session, proposal, anonName, text, kind, helperUid)
 										.then(() => {
 											// Confirmed — now the words may leave the box (unless
 											// the student already started typing something new)

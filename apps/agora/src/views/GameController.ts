@@ -1,3 +1,6 @@
+import { isProposalConfirmed } from '../lib/proposals';
+import { villagePlace } from '../lib/flows/villageRoute';
+import { sessionVillageMode } from '../lib/flows/sessionLinks';
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { ensureUser } from '../lib/user';
@@ -55,6 +58,8 @@ import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
 import { QuestionStage } from './QuestionStage';
 import { RoundStage } from './RoundStage';
+import { stationNotes } from '../components/VillageCommunity';
+import { VillageShell } from '../components/VillageShell';
 import { Voting } from './Voting';
 import { Results } from './Results';
 import { ReRate } from './ReRate';
@@ -152,6 +157,8 @@ function storeNav(sessionId: string, state: StageNavState): void {
 
 export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
+	let villageWriteRequest = 0;
+	let villageOverride: boolean | undefined;
 	let userId = '';
 	/** Last plan position rendered — a change plays the travel interstitial */
 	let lastIndex: number | null = null;
@@ -239,6 +246,11 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			const { session, participants, myParticipant, participantsLoaded, loading, error } =
 				getSessionState();
+			const villageMode = sessionVillageMode(
+				session?.world,
+				window.location.search,
+				villageOverride,
+			);
 			const flow = getSessionFlow();
 
 			if (loading || (!session && !error)) {
@@ -396,11 +408,13 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					...overlays,
 					stageNav,
 					pastNotice,
-					m(Lobby, {
-						participants,
-						myParticipant,
-						onOpenLook: lookDoor?.onOpen,
-					}),
+					villageMode
+						? m(
+								VillageShell,
+								{ plan, currentIndex, viewingIndex, papers: [] },
+								m(Lobby, { participants, myParticipant, onOpenLook: lookDoor?.onOpen }),
+							)
+						: m(Lobby, { participants, myParticipant, onOpenLook: lookDoor?.onOpen }),
 				]);
 			}
 
@@ -490,6 +504,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				switch (item.stage) {
 					case AgoraStage.framing:
 						return m(SceneStage, {
+							allowReplay: villageMode,
 							scenes: scenesOf(
 								AgoraSceneKind.intro,
 								AgoraSceneKind.timeTunnel,
@@ -501,6 +516,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 					case AgoraStage.perspectives:
 						return m(SceneStage, {
+							allowReplay: villageMode,
 							scenes: scenesOf(AgoraSceneKind.perspectiveA, AgoraSceneKind.perspectiveB),
 							storageKey: `agora_${sessionId}_perspectives`,
 							onProgress,
@@ -508,6 +524,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 					case AgoraStage.needs:
 						return m(SceneStage, {
+							allowReplay: villageMode,
 							scenes: scenesOf(
 								AgoraSceneKind.needsQuestion,
 								AgoraSceneKind.needsA,
@@ -555,6 +572,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						 */
 						if (flow.framing && !framingSeen(sessionId)) {
 							return m(SceneStage, {
+								allowReplay: villageMode,
 								scenes: scenesOf(AgoraSceneKind.intro),
 								storageKey: `agora_${sessionId}_framing`,
 								onFinish: () => markFramingSeen(sessionId),
@@ -574,7 +592,13 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							return m(Positioning, { topic, myParticipant, catchUp: true });
 						}
 
-						return m(Deliberation, { session, myParticipant, userId, topic });
+						return m(Deliberation, {
+							session,
+							myParticipant,
+							userId,
+							topic,
+							writeRequest: villageWriteRequest,
+						});
 					}
 
 					case AgoraStage.voting: {
@@ -621,7 +645,57 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				}
 			})();
 
-			return m('.game', [...overlays, stageNav, pastNotice, stageView]);
+			return m('.game', [
+				...overlays,
+				stageNav,
+				pastNotice,
+				m(
+					'button.btn.btn--secondary.btn--sm.village-mode-toggle',
+					{
+						onclick: () => {
+							villageOverride = !villageMode;
+						},
+						'aria-pressed': villageMode,
+					},
+					villageMode ? 'תצוגה רגילה' : 'כניסה לכפר התלת־מימדי',
+				),
+				villageMode
+					? m(
+							VillageShell,
+							{
+								plan,
+								currentIndex,
+								viewingIndex,
+								community: myParticipant
+									? {
+											session,
+											userId,
+											anonName: myParticipant.anonName,
+											points: myParticipant.points.total,
+										}
+									: undefined,
+								onWrite: () => {
+									villageWriteRequest++;
+								},
+								onSelectBook: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
+								papers: stationNotes(item).map((p) => ({
+									text: p.statement,
+									own: p.creatorId === userId,
+									confirmed: isProposalConfirmed(p.statementId),
+								})),
+								stationPapers: plan.slice(0, currentIndex + 1).map((p) => ({
+									itemId: p.itemId,
+									place: villagePlace(p),
+									papers: stationNotes(p).map((n) => ({
+										text: n.statement,
+										own: n.creatorId === userId,
+									})),
+								})),
+							},
+							stageView,
+						)
+					: stageView,
+			]);
 		},
 	};
 }
