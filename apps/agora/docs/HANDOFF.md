@@ -26,6 +26,53 @@ can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
 
+## Village personal writing desks (2026-09-10)
+
+`prototypes/olive-hill/writing-desks.js` builds timber desks, a personal paper
+and pen in the writing stations. `world-scene.js` paints confirmed own text,
+anchors a comic invitation to the station guide, and opens the paper from a
+nearby desk click, the bubble, or the keyboard-accessible entry button.
+
+The embedded `agora-village-write` message carries the current plan item ID.
+`VillageShell` checks source/origin and the live item, opens the existing
+RoundStage/QuestionStage/Deliberation writer and focuses it. Deliberation's
+`writeRequest` returns to the personal editor without advancing the lap.
+Past items are read-only through the normal entry route. Repeated questions
+keep distinct IDs. No demo localStorage or parallel proposal persistence is
+used; existing confirmed saves and point awards remain authoritative.
+
+Verified in a separate local session: physical desk click, character bubble,
+story save/reopen, empty needs paper, proposal creation (+3 points), and
+editing the same proposal from the desk. Agora tests (325), lint, typecheck
+and build pass. This is a client-only change; publish Agora hosting when ready.
+
+## Question-led scenario authoring (2026-09-10)
+
+The new-scenario wizard asks for a question (`statement`, max 200) and its
+purpose/context (`description`, max 2000). `agoraGenerateTopicPackage` sends
+both as structured topic data to `topicPrompt.ts`. The prompt follows WizCol
+without vision, stays within the teacher's scope, and no longer requires a
+historical episode, time tunnel or national health gauges. Short illustrative
+voices and needs remain compatible with the existing scenario scenes.
+
+The server pins `title` and `challengeQuestion` to the teacher's statement and
+stores `authoringBrief` separately from the editable AI draft. The editor
+shows the original purpose for review. A missing AI key now returns an error;
+it must never substitute the unrelated French Revolution fixture. Old clients
+sending `{topic, language}` are still accepted during rollout.
+
+`topicStagePlan(topic)` is shared by StartGame and the create-session fallback:
+new packages with an authoring brief use scenarioWizcol with ONLY vision
+removed; older packages keep their defaults. StartGame caches plans by topic
+id so switching scenarios neither leaks vision back in nor loses manual edits.
+Proposal development, mutual improvement, evaluation and further refinement
+remain the existing deliberation cycles before voting.
+
+Validation: Agora lint/typecheck/tests/build; shared-types `agoraTopicPlan` and
+`agoraRounds`; functions `topicGeneration`; `scripts/e2e-authoring.mjs`.
+Deployment requires rebuilding/packing shared-types, deploying
+`agoraGenerateTopicPackage` and `agoraCreateSession`, and Agora hosting.
+
 ## Teacher self-serve classes (2026-09-07)
 
 Tal's rule: **the admin creates the school and attaches its teachers; each

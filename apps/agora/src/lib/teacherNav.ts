@@ -55,6 +55,7 @@ export function getTeacherNavState(): Readonly<TeacherNavState> {
 export function isSessionLive(session: AgoraSession): boolean {
 	return (
 		session.classScore === undefined &&
+		(session.lessonEndsAt ?? session.createdAt + 24 * 60 * 60 * 1000) > Date.now() &&
 		(session.status === AgoraSessionStatus.open || session.status === AgoraSessionStatus.live)
 	);
 }

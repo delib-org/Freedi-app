@@ -52,6 +52,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
+        // The village is a separate HTML document, not the main SPA.
+        navigateFallbackDenylist: [/^\/prototypes\//],
         // webp is in the list for the icon set only (~85 KB of UI chrome that
         // has to be there the instant a stage turns over); the big artwork is
         // webp too, which is what globIgnores below is keeping out.
@@ -61,6 +63,9 @@ export default defineConfig({
         globIgnores: [
           '**/scenes/**',
           'time-machine.webp',
+          // Village portraits are optional, high-resolution encounter art.
+          '**/assets/elder-woman-cutout-*.png',
+          '**/assets/wise-greek-elder-*.png',
           // The playful faces a look may choose (lib/fonts.ts): a class uses
           // one or two, so they are fetched on first use and runtime-cached
           // rather than all ~20 precached on install. Assistant and Alef
@@ -68,6 +73,14 @@ export default defineConfig({
           '**/assets/!(assistant|alef)-*.woff2',
         ],
         runtimeCaching: [
+          {
+            urlPattern: /\/assets\/(?:elder-woman-cutout|wise-greek-elder)-[^/]+\.png$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'agora-village-portrait-cache',
+              expiration: { maxEntries: 8, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
           {
             // A chosen face, kept once fetched (see globIgnores above)
             urlPattern: /\/assets\/[^/]+\.woff2$/i,
@@ -131,9 +144,17 @@ export default defineConfig({
   ],
 
   build: {
+    // Keep native module preloads, without a shared polyfill chunk whose own
+    // preload can be discarded across service-worker control transitions.
+    // Browsers without modulepreload still load normal module imports.
+    modulePreload: { polyfill: false },
     target: 'es2020',
     outDir: 'dist',
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        village: path.resolve(__dirname, 'prototypes/olive-hill/village.html'),
+      },
       output: {
         manualChunks: {
           firebase: ['firebase/app', 'firebase/firestore', 'firebase/auth'],

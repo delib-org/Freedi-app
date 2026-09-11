@@ -28,6 +28,7 @@ import {
 	AGORA_STAGE_PLAN,
 	resolveSessionFlow,
 	stagePlanPreset,
+	topicStagePlan,
 	validateStagePlan,
 } from '@freedi/shared-types';
 import { TeacherNav } from '../../components/TeacherNav';
@@ -72,7 +73,8 @@ export function StartGame(): m.Component {
 	let look: AgoraThemePreset = AGORA_DEFAULT_THEME;
 	let creating = false;
 	let createFailed = false;
-	let advancedOpen = false;
+	let world: 'village' | 'classic' = 'village';
+	let advancedOpen = true;
 	let moreOpen = false;
 
 	// Auth settles in two beats — anonymous first, the teacher's Google account
@@ -88,13 +90,17 @@ export function StartGame(): m.Component {
 	const defaults = resolveSessionFlow({ sessionMode: AgoraSessionMode.classroom });
 	let rounds = defaults.rounds;
 
-	let plans: Record<GameMode, AgoraStagePlanItem[]> = {
+	let plans: Record<string, AgoraStagePlanItem[]> = {
 		scenario: stagePlanPreset('scenarioWizcol'),
 		quick: stagePlanPreset('wizcol'),
 	};
 
 	function mode(): GameMode {
 		return chosenId === OWN_QUESTION ? 'quick' : 'scenario';
+	}
+
+	function planKey(): string {
+		return mode() === 'quick' ? 'quick' : (chosenId ?? 'scenario');
 	}
 
 	async function load(): Promise<void> {
@@ -110,6 +116,9 @@ export function StartGame(): m.Component {
 				}),
 			]);
 			topics = loadedTopics.filter((topic) => topic.status === AgoraTopicStatus.ready);
+			for (const topic of topics) {
+				plans[topic.topicPackageId] ??= topicStagePlan(topic);
+			}
 			classes = dashboard.classes;
 			schools = dashboard.schools;
 
@@ -191,7 +200,7 @@ export function StartGame(): m.Component {
 
 	function canCreate(): boolean {
 		if (creating || chosenId === null || classChoice === null) return false;
-		const plan = plans[mode()];
+		const plan = plans[planKey()];
 		if (validateStagePlan(plan, { hasCharacters: mode() === 'scenario' }).length > 0) return false;
 		if (mode() === 'quick') return quickQuestion.trim().length > 0;
 
@@ -220,7 +229,8 @@ export function StartGame(): m.Component {
 				identity,
 				collectRealNames,
 				theme: { preset: look },
-				stagePlan: plans[mode()],
+				world,
+				stagePlan: plans[planKey()],
 				...(classChoice && classChoice !== 'none' ? { classId: classChoice } : {}),
 				...(flow ? { flow } : {}),
 			});
@@ -472,7 +482,7 @@ export function StartGame(): m.Component {
 	/** What the advanced settings currently say, in one muted line */
 	function summaryLine(): m.Children {
 		const parts = [
-			t('startGame.summary_steps', { n: countedSteps(plans[mode()]).length }),
+			t('startGame.summary_steps', { n: countedSteps(plans[planKey()]).length }),
 			t(identity === 'named' ? 'startGame.identity_named' : 'startGame.identity_pseudonym'),
 			t(
 				deviceMode === AgoraDeviceMode.team
@@ -535,12 +545,12 @@ export function StartGame(): m.Component {
 							m('.stack', [
 								m('p.teacher__section-title', t('startGame.plan_title')),
 								m(StagePlanEditor, {
-									items: plans[current],
+									items: plans[planKey()],
 									hasCharacters: current === 'scenario',
 									frozenCount: 0,
 									showPresets: true,
 									onChange: (items) => {
-										plans = { ...plans, [current]: items };
+										plans = { ...plans, [planKey()]: items };
 									},
 								}),
 								m('p.home-explanation.home-explanation--start', t('startGame.plan_hint')),
@@ -691,6 +701,19 @@ export function StartGame(): m.Component {
 				m('.shell__content.start-game__form', [
 					m('p.home-explanation.home-explanation--start', t('startGame.form_hint')),
 
+					m('.card.stack', [
+						m('h2', 'איך התלמידים יחוו את המפגש?'),
+						m('p', 'הבחירה תחול על כל מי שמצטרף למפגש, גם באמצעות קוד.'),
+						m('.teacher__mode-row', { role: 'group', 'aria-label': 'ממשק התלמידים' }, [
+							choice('כפר תלת־מימדי', world === 'village', () => {
+								world = 'village';
+							}),
+							choice('הממשק הקלאסי', world === 'classic', () => {
+								world = 'classic';
+							}),
+						]),
+					]),
+
 					// 1. What are we playing?
 					m('.stack', [
 						m('p.teacher__section-title', t('startGame.what')),
@@ -704,6 +727,8 @@ export function StartGame(): m.Component {
 					// 2. Which class?
 					classLine(),
 
+					world === 'village' ? advancedCard() : null,
+
 					// 3. The button
 					createFailed ? m('p.join__error', t('common.error')) : null,
 					m(
@@ -713,7 +738,7 @@ export function StartGame(): m.Component {
 					),
 					summaryLine(),
 
-					advancedCard(),
+					world !== 'village' ? advancedCard() : null,
 				]),
 			]);
 		},

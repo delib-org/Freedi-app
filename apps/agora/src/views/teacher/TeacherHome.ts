@@ -3,6 +3,7 @@ import { Icon } from '../../components/Icon';
 import { getLang, t } from '../../lib/i18n';
 import { getUserState, signInWithGoogle, ensureUser } from '../../lib/user';
 import {
+	fetchSessionHistory,
 	classLabel,
 	fetchTeacherDashboard,
 	listTopicPackages,
@@ -52,6 +53,16 @@ export function TeacherHome(): m.Component {
 	let addClassError: string | null = null;
 	let sessions: AgoraSession[] = [];
 	let aggregates = new Map<string, AgoraClassAggregate>();
+	let showAllScenarios = false;
+	let historyOpen = false;
+	let historyLoading = false;
+	let historyError = false;
+	let historyStarted = false;
+	let historyMore = true;
+	let historySearch = '';
+	let historyClass = '';
+	let historyCursor: Awaited<ReturnType<typeof fetchSessionHistory>>['cursor'];
+	let historySessions: AgoraSession[] = [];
 	let loaded = false;
 	/**
 	 * Whose library is on screen. Auth settles in two beats — an anonymous
@@ -63,6 +74,100 @@ export function TeacherHome(): m.Component {
 	let loadedForUid: string | null = null;
 	let refilling = false;
 	let firstRunHidden = firstRunDismissed();
+
+	async function loadHistory(): Promise<void> {
+		const uid = getUserState().user?.uid;
+		if (!uid || historyLoading) return;
+		historyLoading = true;
+		historyError = false;
+		try {
+			const page = await fetchSessionHistory(uid, historyCursor);
+			if (getUserState().user?.uid !== uid) return;
+			historySessions = [...historySessions, ...page.sessions];
+			historyCursor = page.cursor;
+			historyMore = page.hasMore;
+			historyStarted = true;
+		} catch {
+			historyError = true;
+		} finally {
+			historyLoading = false;
+			m.redraw();
+		}
+	}
+
+	function historyPanel(): m.Children {
+		const filtered = historySessions.filter(
+			(s) =>
+				!isSessionLive(s) &&
+				(!historyClass || s.classId === historyClass) &&
+				`${lessonTitle(s) ?? ''} ${className(s)} ${s.code}`
+					.toLocaleLowerCase()
+					.includes(historySearch.toLocaleLowerCase()),
+		);
+		const groups = new Map<string, AgoraSession[]>();
+		for (const session of filtered) {
+			const month = new Date(session.createdAt).toLocaleDateString(getLang(), {
+				year: 'numeric',
+				month: 'long',
+			});
+			groups.set(month, [...(groups.get(month) ?? []), session]);
+		}
+
+		return m('.card.stack', [
+			m(
+				'button.btn.btn--secondary',
+				{
+					'aria-expanded': historyOpen,
+					onclick: () => {
+						historyOpen = !historyOpen;
+						if (historyOpen && !historyStarted) void loadHistory();
+					},
+				},
+				'ארכיון השיעורים והפתרונות',
+			),
+			m('p', 'שיעורי העבר נשמרים לפי חודש וכיתה. בכל שיעור אפשר לפתוח את הדוח והפתרונות שלו.'),
+			historyOpen
+				? m('.stack', [
+						m('input.text-input', {
+							placeholder: 'חיפוש בכותרת, בכיתה או בקוד מתוך השיעורים שנטענו',
+							'aria-label': 'חיפוש בארכיון',
+							value: historySearch,
+							oninput: (e: InputEvent) => {
+								historySearch = (e.target as HTMLInputElement).value;
+							},
+						}),
+						m(
+							'select.text-input',
+							{
+								'aria-label': 'סינון לפי כיתה',
+								value: historyClass,
+								onchange: (e: Event) => {
+									historyClass = (e.target as HTMLSelectElement).value;
+								},
+							},
+							[
+								m('option', { value: '' }, 'כל הכיתות'),
+								...classes.map((c) => m('option', { value: c.classId }, c.name)),
+							],
+						),
+						...[...groups].map(([month, list]) =>
+							m('.stack', [m('h3', month), m('.stack', list.map(sessionRow))]),
+						),
+						!filtered.length && !historyLoading
+							? m('p', 'לא נמצאו שיעורים בהיסטוריה שנטענה. אפשר לטעון שיעורים מוקדמים יותר.')
+							: null,
+						historyError ? m('p[role=alert]', 'הארכיון לא נטען. אפשר לנסות שוב.') : null,
+						historyMore || historyError
+							? m(
+									'button.btn.btn--secondary',
+									{ disabled: historyLoading, onclick: () => void loadHistory() },
+									historyLoading ? 'טוענים…' : 'טעינת שיעורים נוספים',
+								)
+							: null,
+					])
+				: null,
+		]);
+	}
 
 	function dismissFirstRun(): void {
 		firstRunHidden = true;
@@ -118,6 +223,15 @@ export function TeacherHome(): m.Component {
 	async function load(): Promise<void> {
 		try {
 			const user = await ensureUser();
+			if (loadedForUid !== user.uid) {
+				historySessions = [];
+				historyCursor = undefined;
+				historyStarted = false;
+				historyOpen = false;
+				historySearch = '';
+				historyClass = '';
+				historyMore = true;
+			}
 			loadedForUid = user.uid;
 
 			let loadedTopics = await listTopicPackages(user.uid);
@@ -206,15 +320,8 @@ export function TeacherHome(): m.Component {
 
 	/** A finished lesson: the class, what it was about, when, and how it went */
 	function sessionRow(session: AgoraSession): m.Children {
-		return m(
-			'.dashboard__game-row',
-			{
-				key: session.sessionId,
-				onclick: () => m.route.set(`/teach/report/${session.sessionId}`),
-				role: 'button',
-				tabindex: 0,
-			},
-			[
+		return m('.card.stack', { key: session.sessionId }, [
+			m('.dashboard__game-row', [
 				m('.dashboard__game-main', [
 					m('strong', className(session)),
 					m('span.dashboard__game-title', lessonTitle(session) ?? ''),
@@ -223,16 +330,30 @@ export function TeacherHome(): m.Component {
 						new Date(session.createdAt).toLocaleDateString(getLang(), {
 							day: 'numeric',
 							month: 'short',
+							year: 'numeric',
 						}),
 					),
 				]),
-				m('.dashboard__game-side', [
+				m(
+					'.dashboard__game-side',
 					session.classScore
 						? m('span.dashboard__score-pill', String(session.classScore.total))
-						: m('span.dashboard__status-pill', t('dashboard.not_finished')),
-				]),
-			],
-		);
+						: m('span.dashboard__status-pill', 'ללא ציון מסכם'),
+				),
+			]),
+			m('.teacher__mode-row', [
+				m(
+					'button.btn.btn--secondary.btn--sm',
+					{ onclick: () => m.route.set(`/teach/report/${session.sessionId}`) },
+					'דוח השיעור',
+				),
+				m(
+					'button.btn.btn--ghost.btn--sm',
+					{ onclick: () => m.route.set(`/teach/session/${session.sessionId}`) },
+					'המסע והפתרונות',
+				),
+			]),
+		]);
 	}
 
 	/** The three lines that are the whole of running a lesson */
@@ -492,7 +613,7 @@ export function TeacherHome(): m.Component {
 			}
 
 			const live = sessions.filter(isSessionLive);
-			const finished = sessions.filter((session) => !isSessionLive(session));
+			const reusableTopics = topics.filter((topic) => topic.kind !== 'quick');
 			const showFirstRun =
 				!firstRunHidden && sessions.every((session) => session.classScore === undefined);
 
@@ -518,16 +639,31 @@ export function TeacherHome(): m.Component {
 								// whole choice; the start screen opens holding it.
 								m('.stack', [
 									m('p.teacher__section-title', t('dashboard.scenarios')),
-									topics.length === 0
+									reusableTopics.length === 0
 										? m('p.home-explanation.home-explanation--start', t('teacher.no_topics'))
 										: m(
 												'p.home-explanation.home-explanation--start',
 												t('dashboard.scenarios_hint'),
 											),
 									m('ul.scenario-list', { role: 'list' }, [
-										...shelfOrder(topics).map(scenarioRow),
+										...shelfOrder(reusableTopics)
+											.slice(0, showAllScenarios ? undefined : 6)
+											.map(scenarioRow),
 										ownQuestionRow(),
 									]),
+									reusableTopics.length > 6
+										? m(
+												'button.btn.btn--ghost',
+												{
+													onclick: () => {
+														showAllScenarios = !showAllScenarios;
+													},
+												},
+												showAllScenarios
+													? 'הצגת פחות תרחישים'
+													: `כל התרחישים (${reusableTopics.length})`,
+											)
+										: null,
 									m(
 										'button.btn.btn--ghost.btn--sm.dashboard__new-scenario',
 										{ type: 'button', onclick: () => m.route.set('/teach/new') },
@@ -568,12 +704,7 @@ export function TeacherHome(): m.Component {
 											),
 										]),
 
-								finished.length > 0
-									? m('.stack', [
-											m('p.teacher__section-title', t('dashboard.my_games')),
-											m('.stack', finished.map(sessionRow)),
-										])
-									: null,
+								historyPanel(),
 							],
 				]),
 			]);

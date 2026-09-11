@@ -4,6 +4,7 @@ import { VideoScene } from '../components/VideoScene';
 import type { AgoraScene } from '@freedi/shared-types';
 
 export interface SceneStageAttrs {
+	allowReplay?: boolean;
 	/** Ordered scenes of this stage (student-paced) */
 	scenes: AgoraScene[];
 	/** Persist key so a refresh keeps the student's place */
@@ -26,13 +27,20 @@ export interface SceneStageAttrs {
  * the session stage.
  */
 export function SceneStage(): m.Component<SceneStageAttrs> {
+	let replayIndex: number | undefined;
+	let activeKey = '';
+
 	return {
 		view(vnode) {
 			const { scenes, storageKey, epilogue, onProgress, onFinish } = vnode.attrs;
-			const index = Number(sessionStorage.getItem(storageKey) ?? '0');
+			if (activeKey !== storageKey) {
+				activeKey = storageKey;
+				replayIndex = undefined;
+			}
+			const index = replayIndex ?? Number(sessionStorage.getItem(storageKey) ?? '0');
 			const done = index >= scenes.length;
 			// Report on every render — refresh-safe, and the reporter dedupes
-			onProgress?.(Math.min(index, scenes.length), scenes.length);
+			if (replayIndex === undefined) onProgress?.(Math.min(index, scenes.length), scenes.length);
 
 			if (scenes.length === 0 || done) {
 				// Nobody to wait for: the player walks on themselves. Advancing
@@ -56,7 +64,22 @@ export function SceneStage(): m.Component<SceneStageAttrs> {
 					m(
 						'.shell__content.text-center',
 						{ style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
-						[m('.scene__waiting-glow'), m('h3', t('scene.done_waiting')), epilogue ?? null],
+						[
+							m('.scene__waiting-glow'),
+							m('h3', t('scene.done_waiting')),
+							epilogue ?? null,
+							vnode.attrs.allowReplay && scenes.length
+								? m(
+										'button.btn.btn--secondary',
+										{
+											onclick: () => {
+												replayIndex = 0;
+											},
+										},
+										'קריאה מחדש · מהעמוד הראשון',
+									)
+								: null,
+						],
 					),
 				]);
 			}
@@ -71,8 +94,12 @@ export function SceneStage(): m.Component<SceneStageAttrs> {
 				progress: { index: index + 1, total: scenes.length },
 				doneLabel: t('scene.continue'),
 				onDone: () => {
-					sessionStorage.setItem(storageKey, String(index + 1));
-					onProgress?.(Math.min(index + 1, scenes.length), scenes.length);
+					if (replayIndex !== undefined) {
+						replayIndex = index + 1;
+					} else {
+						sessionStorage.setItem(storageKey, String(index + 1));
+						onProgress?.(Math.min(index + 1, scenes.length), scenes.length);
+					}
 					m.redraw();
 				},
 			});

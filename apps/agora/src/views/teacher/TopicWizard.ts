@@ -4,9 +4,11 @@ import { generateTopicPackage } from '../../lib/callables';
 import { LanguagePicker } from '../../components/LanguagePicker';
 import { TeacherNav } from '../../components/TeacherNav';
 
-/** Teacher enters a topic; the AI drafts the full journey for review */
+/** Teacher supplies the question and purpose; AI drafts a scenario for review. */
 export function TopicWizard(): m.Component {
-	let topic = '';
+	let statement = '';
+	let description = '';
+	const canGenerate = (): boolean => statement.trim().length >= 2 && description.trim().length > 0;
 	let generating = false;
 	let error = false;
 	/** A teacher who leaves mid-generation must not be yanked back when the
@@ -14,10 +16,14 @@ export function TopicWizard(): m.Component {
 	let alive = true;
 
 	function generate(): void {
-		if (generating || topic.trim().length < 2) return;
+		if (generating || !canGenerate()) return;
 		generating = true;
 		error = false;
-		generateTopicPackage({ topic: topic.trim(), language: getLang() })
+		generateTopicPackage({
+			statement: statement.trim(),
+			description: description.trim(),
+			language: getLang(),
+		})
 			.then((result) => {
 				if (alive) m.route.set(`/teach/topic/${result.topicPackageId}`);
 			})
@@ -44,23 +50,42 @@ export function TopicWizard(): m.Component {
 				}),
 				m('.shell__content', { style: { justifyContent: 'center', gap: 'var(--space-xl)' } }, [
 					m('.card.stack', [
-						m('p.home-card__text', t('wizard.topic_label')),
+						m('label.home-card__text', { for: 'scenario-statement' }, t('wizard.topic_label')),
 						m('input.text-input', {
+							id: 'scenario-statement',
 							type: 'text',
-							value: topic,
+							maxlength: 200,
+							required: true,
+							value: statement,
 							placeholder: t('wizard.topic_placeholder'),
 							disabled: generating,
 							oninput: (event: InputEvent) => {
-								topic = (event.target as HTMLInputElement).value;
-							},
-							onkeydown: (event: KeyboardEvent) => {
-								if (event.key === 'Enter') generate();
+								statement = (event.target as HTMLInputElement).value;
 							},
 						}),
 						m(
+							'label.home-card__text',
+							{ for: 'scenario-description' },
+							t('wizard.description_label'),
+						),
+						m('textarea.text-input', {
+							id: 'scenario-description',
+							value: description,
+							rows: 5,
+							maxlength: 2000,
+							required: true,
+							placeholder: t('wizard.description_placeholder'),
+							disabled: generating,
+							oninput: (event: InputEvent) => {
+								description = (event.target as HTMLTextAreaElement).value;
+							},
+						}),
+						m('p.home-explanation', t('wizard.method_hint')),
+
+						m(
 							'button.btn.btn--primary.btn--full.btn--lg',
 							{
-								disabled: generating || topic.trim().length < 2,
+								disabled: generating || !canGenerate(),
 								onclick: generate,
 							},
 							generating ? t('wizard.generating') : t('wizard.generate'),
