@@ -1,0 +1,94 @@
+{
+  "source": [
+    "2026-09-04-llm-only-baseline/runs/L2-gpt-5.6-luna-seed42/raw.json",
+    "2026-09-04-llm-only-baseline/runs/L2-gpt-5.6-luna-seed7/raw.json",
+    "2026-09-04-llm-only-baseline/runs/L2-gpt-5.6-luna-seed1234/raw.json"
+  ],
+  "placements": 300,
+  "fit": {
+    "intercept": 167.36547854785476,
+    "slopePerPreviousStatement": 14.76002400240024,
+    "outputPerArrival": 83.38,
+    "topicInputPerStatement": 15.7,
+    "topicOutputPerStatement": 7.326666666666666
+  },
+  "archivedParametersCheck": {
+    "intercept": [
+      167.36547854785462,
+      167.36547854785476,
+      true
+    ],
+    "slope": [
+      14.76002400240024,
+      14.76002400240024,
+      true
+    ],
+    "outputPerArrival": [
+      83.38,
+      83.38,
+      true
+    ],
+    "topicInputPerStatement": [
+      15.7,
+      15.7,
+      true
+    ],
+    "topicOutputPerStatement": [
+      7.326666666666666,
+      7.326666666666666,
+      true
+    ]
+  },
+  "cacheAccounting": {
+    "promptTokens": 274106,
+    "cacheWriteTokens": 172299,
+    "cachedReadTokens": 0,
+    "cacheWriteShare": 0.6285852918214122
+  },
+  "note": "The archived cost formula charged all prompt tokens at $0.20/1M. The usage records show ~all prompt tokens were cache WRITES (billed 1.25× per the model page, retrieved 2026-09-11) and none were cache reads, so the archived dollar figures understate full-list cost by ~25% of the input share.",
+  "projection": [
+    {
+      "N": 100,
+      "inputTokens": 91369,
+      "outputTokens": 9071,
+      "archivedFormulaUsd": 0.029158533333333334,
+      "withCacheWriteSurchargeUsd": 0.03203018333333334
+    },
+    {
+      "N": 200,
+      "inputTokens": 330338,
+      "outputTokens": 18141,
+      "archivedFormulaUsd": 0.08783711467146717,
+      "withCacheWriteSurchargeUsd": 0.09821938166888707
+    },
+    {
+      "N": 500,
+      "inputTokens": 1932846,
+      "outputTokens": 45353,
+      "archivedFormulaUsd": 0.4409931467146715,
+      "withCacheWriteSurchargeUsd": 0.5017410666888705
+    },
+    {
+      "N": 1000,
+      "inputTokens": 7555697,
+      "outputTokens": 90707,
+      "archivedFormulaUsd": 1.6199874935493548,
+      "withCacheWriteSurchargeUsd": 1.8574575084332505
+    },
+    {
+      "N": 5000,
+      "inputTokens": 185378727,
+      "outputTokens": 453533,
+      "archivedFormulaUsd": 37.619985472547256,
+      "withCacheWriteSurchargeUsd": 43.44630254438664
+    },
+    {
+      "N": 10000,
+      "inputTokens": 739758055,
+      "outputTokens": 907067,
+      "archivedFormulaUsd": 149.0400909570957,
+      "withCacheWriteSurchargeUsd": 172.29014259432424
+    }
+  ],
+  "status": "Projection from a 100-statement calibration; N > 100 is extrapolation, not measurement."
+}

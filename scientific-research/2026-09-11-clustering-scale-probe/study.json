@@ -1,0 +1,87 @@
+{
+  "studyId": "2026-09-11-clustering-scale-probe",
+  "protocol": "Claude protocol: a budgeted cost and accuracy probe for proposal clustering (Tal Yaron & Fany Yuval, 11 Sep 2026)",
+  "question": "What do you believe should change in Bowling Green/Warren County in order to make it a better place to live, work and spend time?",
+  "source": {
+    "name": "Pol.is openData — american-assembly.bowling-green",
+    "repository": "https://github.com/compdemocracy/openData",
+    "commit": "3be5785c3f5975d31f4578ee8bbf4426d45b7bf2",
+    "files": {
+      "data/source/bowling-green/comments.csv": "b5d72fbb1b15d66c624da51849aef3d5691358b6ec646035b9ca41c6b9f936f0",
+      "data/source/bowling-green/summary.csv": "35cd93ea32bdc0926351ca093de981ef1af9043fc563d837ef082d509cb89141"
+    },
+    "license": "CC BY 4.0 — attribution to The Computational Democracy Project (Polis)",
+    "eligibility": "moderated == 1, non-empty, first occurrence of each normalised text; author-id dropped"
+  },
+  "seeds": {
+    "ids": 20260911,
+    "querySelection": 42,
+    "fill": 1234,
+    "orders": [42, 7],
+    "scheduling": 20260911,
+    "bootstrap": 42
+  },
+  "budget": {
+    "capUsd": 5,
+    "stageCapsUsd": { "prep": 1, "smoke": 0.25, "main": 3.75 },
+    "note": "main cap = $3 main allocation + $0.75 retry reserve; the hard total is enforced separately"
+  },
+  "judge": {
+    "provider": "openai",
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "model": "gpt-5.6-luna",
+    "reasoningEffort": null,
+    "reasoningEffortNote": "not sent, matching production (functions/src/config/openai-chat.ts buildModelParams); provider default is 'medium' per the model page",
+    "maxCompletionTokens": 4000,
+    "timeoutMs": 180000,
+    "maxAttempts": 2,
+    "concurrency": 2
+  },
+  "embedding": {
+    "model": "text-embedding-3-small",
+    "dimensions": 1536,
+    "contract": "Question: <question>\\nAnswer: <original text>",
+    "briefs": false,
+    "note": "production embeds a generated 5-15 word brief (EMBEDDING_USE_BRIEF defaults true); this minimal probe embeds original text with the same question prefix and makes no brief calls"
+  },
+  "screeningEmbedding": {
+    "model": "text-embedding-3-large",
+    "dimensions": 1536,
+    "use": "annotation shortlist only — never used by method B"
+  },
+  "retrieval": {
+    "k": 15,
+    "threshold": null,
+    "method": "exact cosine over the pool, ties by id; not the production approximate index (findNearest limit 45, floor 0.45)"
+  },
+  "sizes": [100, 200, 500],
+  "queries": { "test": { "match": 10, "none": 10 }, "dev": { "match": 2, "none": 2 } },
+  "pool": { "maxHardDistractors": 8, "anchorPositions": [0.05, 0.5] },
+  "screening": { "topSmall": 25, "topLarge": 25, "topBm25": 15 },
+  "pricing": {
+    "retrievedAt": "2026-09-11",
+    "sources": [
+      "https://developers.openai.com/api/docs/pricing",
+      "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    ],
+    "tier": "Standard (not Batch/Flex/Priority)",
+    "models": {
+      "gpt-5.6-luna": {
+        "inputPerM": 0.2,
+        "cachedInputPerM": 0.02,
+        "outputPerM": 1.2,
+        "cacheWriteMultiplier": 1.25,
+        "longContextThreshold": 272000,
+        "longContextInputMultiplier": 2,
+        "longContextOutputMultiplier": 1.5,
+        "contextWindow": 1050000
+      },
+      "text-embedding-3-small": { "inputPerM": 0.02 },
+      "text-embedding-3-large": { "inputPerM": 0.13 }
+    }
+  },
+  "historicalCalibration": {
+    "baselineRuns": "../2026-09-04-llm-only-baseline/runs/L2-gpt-5.6-luna-seed{42,7,1234}/raw.json",
+    "parametersJson": "/Users/talyaron/Documents/ChatGPT/מאמרים/output/analysis/clustering-scale/parameters.json"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "stage": "main",
+  "total": 240,
+  "completedNow": 240,
+  "skippedExisting": 0,
+  "stop": null,
+  "missing": [],
+  "labelStatus": "provisional",
+  "elapsedSeconds": 248.974,
+  "ledger": {
+    "capUsd": 5,
+    "spentUsd": 0.26933625,
+    "openReservedUsd": 0,
+    "stages": {
+      "prep": {
+        "settledUsd": 0.00477525,
+        "retainedUsd": 0
+      },
+      "smoke": {
+        "settledUsd": 0.0047133,
+        "retainedUsd": 0
+      },
+      "main": {
+        "settledUsd": 0.2598477,
+        "retainedUsd": 0
+      }
+    }
+  },
+  "finishedAt": "2026-09-11T03:55:20.159Z"
+}

@@ -1,0 +1,4976 @@
+# Annotation shortlists (screening aid, seeded candidate order 42)
+
+## #1 p5yca: WKU should consider building a parking structure at the Chestnut St lot.
+
+- pj74t (L1 S1 B1) Parking on the WKU campus should be more accessible to students and visitors.
+- p89sh (L2 S2 B11) Build parking areas.
+- pd3p9 (L3 S3 B18) Better parking around the square would draw in more college students who like to shop but can not find parking downtown.
+- pkqjk (L4 S5 B25) More parking for Fountain Square to become a pedestrian zone.
+- p8zq7 (L5 S11 B28) Build parking garage behind Spencer’s, remove some parking from Ft. Square. Add a green space on top of garage! Soccer field or rooftop food
+- pq3ad (L6 S7 B31) More parking downtown. There are too many reserved spaces which should be available in the evening.
+- ph8pr (L7 S4 B5) Residential Parking Permits for areas near WKU. We can rescue our yards from parking. We pay property taxes for the students' convenience,
+- p5eg6 (L8 S6 B33) There needs to be better access to grocery stores and restaurants from WKU's campus.
+- p5at5 (L9 S12 B29) Downtown redevelopment should retain accessible parking for existing businesses.
+- pf7ei (L10 S10 B36) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pgpc7 (L11 S23 B16) Parking in apartment subdivisions should monitored closely by police. Parking on subdivision streets shouldn't be allowed.
+- p59nj (L12 S14 B45) Owners of large parking lots should be required to break them up with pockets of green space and trees; perhaps create a walkable green path
+- pxra8 (L13 S75 B577) Downtown at the square and adjacent areas should be a pedestrian mall
+- pk47i (L14 S18 B30) The downtown parking garage has been an eyesore for years. It's embarrassing, so fix it!
+- p67wb (L15 S8 B40) WKU should open its facilities to the public once or twice a month to the community, and those in need should be welcome more often.
+- phc7j (L16 S9 B9) Parking lots should be monitored to prevent illegal parking in handicap spaces.
+- pptwk (L17 S17 B38) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- pneud (L18 S44 B15) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- pgmpv (L19 S47 B307) Something needs to be done to improve traffic flow
+- pi9rk (L20 S38 B340) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pqr9z (L21 S36 B17) Extra police, or parking enforcement unit should be on duty during events to maintain legal parking
+- picqu (L22 S16 B56) Make areas around WKU's campus livable for college students. Eliminating section 8 housing will lead to less crime & lower cost of attendance.
+- pcu64 (L23 S31 B244) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- p8hra (L24 S89 B167) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- pnyg7 (L25 S61 B417) The university and city should develop stronger mutually beneficial partnerships.
+- p2wk5 (L26 S15 B26) There should be more healthy food options near/on campus of WKU.
+- pe262 (L30 S20 B27) WKU should upgrade their CIT program to keep up with the times
+- pjbzz (L35 S24 B354) Need to build wider access roads into the city!
+- pkta9 (L34 S19 B52) City officials need to work with WKU admin. to address the noise & public nuisance problems with the frat houses and homeowners downtown.
+- pp8pk (L42 S13 B50) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- p7ms9 (L48 S22 B44) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pwy69 (L53 S40 B3) More sidewalks would be great, but first let’s stop people parking on them. Or stop spending money building them. Whichever.
+- p3y2u (L60 S55 B2) Greenwood Mall parking lot could become a cooperative solar collection for itself and home surrounding
+- pqtft (L91 S117 B4) Kentucky and Adams streets should be two-way roads. Adams St. should be zoned commercial, and Kentucky St. should be zoned residential.
+- pz3q2 (L93 S21 B54) WKU and local community colleges should continue to offer courses that interest those seeking an education, whether or not the courses aid in job placement.
+- pcvs4 (L136 S25 B41) Institute a business development grant that encourages WKU grads to stay in Bowling Green by starting local businesses.
+- pp2tr (L167 S115 B13) Building codes prohibiting trophy houses next to common housing
+- pnspp (L168 S96 B6) The Kentucky Career Center on Chestnut is a great resource to locate employment.
+- prhru (L198 S129 B14) We already have a lot of parks. And the libraries have become a hangout for the homeless. Do something about that problem first
+- pebvm (L220 S326 B10) Bowling Green should consider a program, like Ft Worth Texas's Clean Slate, in which the homeless can earn money by cleaning up the city.
+- pgdt8 (L323 S199 B7) Consider asking low-income or disabled residents what they really need.
+- puuwd (L358 S154 B8) Like Steamers but hate they ruined that historic building
+- p43af (L395 S294 B12) It should be mandatory for all homes/businesses to have visible marking on mailbox and building for their address.
+
+## #2 pptbv: We need mixed-use development in the most disadvantaged areas of BG.
+
+- p3cst (L1 S1 B1) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- padkd (L2 S2 B2) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pbm45 (L3 S3 B69) We need to focus more on the existing housing in BG, including renovations and improvements.
+- psbcj (L4 S20 B494) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pphh2 (L5 S5 B24) We should focus downtown development dollars on rehabilitation and reuse of buildings that can be done so, rather than building new.
+- pif8h (L6 S16 B375) BG needs to redevelop from WKU to the river and beyond. Model after Greenville SC
+- p5rtq (L7 S9 B182) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- puyc3 (L8 S35 B87) We need to renovate the run down businesses and store fronts, instead of building new places
+- p6u6a (L9 S15 B204) Local government, for profit and non profits should work together on housing and economic equality
+- pjrdt (L10 S30 B27) Improved businesses such as banks and groceries in lowest income areas
+- pjq68 (L11 S4 B9) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- phfba (L12 S18 B15) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- p69et (L13 S22 B192) The bypass area must be developed and utilized for new businesses and attractive structures. It is a neglected area that is losing business.
+- pc7zk (L14 S8 B12) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pvdrx (L15 S10 B111) We need to make it worthwhile for builders to create more quality affordable rental units for residents, rather than more luxury units.
+- pqaaf (L16 S75 B462) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- ptahe (L17 S11 B507) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- pqra3 (L18 S43 B117) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- p6xjr (L19 S13 B206) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pgaj7 (L20 S17 B340) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- p4p8j (L21 S69 B88) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- p64wt (L22 S41 B187) More affordable home ownership options.
+- pneud (L23 S116 B431) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- pxra8 (L24 S209 B25) Downtown at the square and adjacent areas should be a pedestrian mall
+- p7whc (L25 S12 B220) BG needs to develop a marketing campaign to draw Warren Co and surrounding counties to downtown for eating, shopping, and entertainment.
+- prqiv (L32 S6 B92) We need to commit more resources to the North-Northeast ends of town. Blue collar people who help make Bowling Green what is. Too neglected.
+- pki7f (L34 S23 B407) Bowling Green needs more access to affordable , healthy, local food sources.
+- ptuye (L39 S14 B517) The population has out grown the infrastructure in bg/ warren county.
+- pzaca (L42 S25 B11) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- p2hkv (L65 S194 B7) Our sidewalks need more connectivity. It's too piecemealed and makes some areas unusable.
+- p4zjr (L74 S181 B8) Bowling Green Government needs more perspective from Millennials. We need ideas for the future not outdated Boomer development ideas.
+- p89sh (L87 S147 B14) Build parking areas.
+- pcrhx (L107 S24 B13) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- p389z (L117 S21 B137) We should be incentivizing higher paying jobs coming to BG. Cost of living is outrunning wages and it's starting to be a problem.
+- p6twv (L150 S291 B5) City Annexed areas need more city services for their tax $$.
+- pqpib (L168 S186 B6) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- pe3gy (L176 S19 B304) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- phsyb (L198 S7 B3) Prevent the development of new housing areas, especially in farm land areas.
+- p6fag (L236 S206 B10) We need to grow the internet infrastructure particularly in growing areas of the county like Alvaton.
+- p792j (L485 S486 B4) Fireworks use in residential areas is out of control with no police presence to enforce the already in place restrictions.
+
+## #3 p5e8k: There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+
+- pmbwe (L1 S5 B6) More roundabouts for intersections
+- p8hra (L2 S1 B5) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- p7yd2 (L3 S4 B38) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- pgmpv (L4 S14 B293) Something needs to be done to improve traffic flow
+- p35n3 (L5 S9 B4) The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+- p572n (L6 S16 B92) A round about would be the best solution to improve traffic flow on Fairview Ave at Keriakes Park.
+- pv2mh (L7 S12 B529) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- phuu3 (L8 S3 B11) The access roads off Scottsville Rd are terrible. They provide constant traffic jams and can be dangerous. We need to budget to fix them.
+- phmk4 (L9 S2 B1) Access Rd, east side of Scottsville Rd. in shopping dist causes congestion. Give right of way to access road or cross streets, not a mix!
+- pcrnf (L10 S8 B36) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- pdhdi (L11 S7 B9) Work,with State to complete a wide loop from Scottsville Road across N I65 to N Natcher Pk way.
+- pyyxz (L12 S18 B593) Impact on traffic flow should be considered with any proposed new developments.
+- pf7ei (L13 S40 B267) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pcu64 (L14 S23 B229) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- pvq7m (L15 S42 B543) many parts of the By-pass can and should be widened
+- pbp7c (L16 S6 B3) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- pt76e (L17 S39 B487) Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+- pjf7t (L18 S17 B343) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pczge (L19 S11 B233) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- pck82 (L20 S28 B222) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- pjbzz (L21 S20 B18) Need to build wider access roads into the city!
+- peddm (L22 S48 B251) The intersection at Taco Bell and KFC is a nightmare
+- p5ku8 (L23 S24 B102) There needs to be a stoplight at the intersection of Shive Lane and Ken Bale Blvd to improve traffic flow. The backups there are awful.
+- ptbq2 (L24 S32 B493) With a circle, widen Fairview with a left-turn lane west of cemetery.
+- p4g7x (L25 S27 B80) Smallhouse Rd (at Campbell Ln) heading into town needs to be widened to have room for three lanes (left turn, straight, right turn).
+- ppe9v (L27 S25 B17) Widen Cemetry Road, Russellville Road, Lover’s Lane, Campbell Lane, The Old ByPass, and Scotsville Road from old ByPass to Natcher Parkway.
+- p3kb6 (L30 S22 B66) Only a traffic circle at Kereiakes Park on Fairview Ave. is required.
+- pwigz (L33 S10 B37) Scottsville Rd should be 4+ lanes between I-65 & Lovers Lane, get rid of the service Rd.
+- pr7y3 (L35 S13 B459) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- paeh8 (L41 S38 B10) Make it a walking city. Sidewalks along the main avenues (scottsville rd, campbell ln, 31 bypass) with plants, benches, art pieces.
+- pav4r (L44 S68 B8) There should be more officers observing intersections.
+- p2hhq (L46 S47 B2) The feeder road at Shive Lane and Scottsville Road need to be closed off. It is very dangerous.
+- p3j36 (L51 S21 B65) We need to block left turns on the busy parts of the by-pass so people don't block everyone else trying to turn.
+- pcuww (L54 S19 B16) Why isn't Nashville Rd between the roundabout and Campbell Ln wider? Getting stuck there at 5 o'clock is a plague.
+- pauwi (L59 S57 B7) The Smokey Bones entrance off of Scottsville Road is extremely dangerous and needs a traffic light.
+- pyei4 (L60 S15 B41) The LEFT turning light at Nashville onto Dishman & the same for Scottsville onto Lovers Ln.. need to be longer to allow more to go through.
+- pq66s (L71 S34 B12) The road closure between Shawnee and Patton Way makes access to Nashville Rd take 3 times as long and is a major annoyance.
+- p78pt (L90 S192 B13) Sidewalks are needed along Gary Farms Blvd
+- prcqc (L159 S127 B15) More advertising should be done along I-65 to promote tourism into Bowling Green.
+- pgvyh (L176 S229 B14) Shade trees should be required plantings along all Greenways
+
+## #4 p8jmp: Bowling Green needs to enforce the separation of church and state and impose taxes on churches that politic from the pulpit
+
+- pge2a (L1 S1 B1) Bowling Green needs a stronger separation of church-mosque-temple and state.
+- pkkkz (L2 S50 B379) A city should have the right to declare itself a sanctuary city.
+- p6u6a (L3 S13 B173) Local government, for profit and non profits should work together on housing and economic equality
+- p92xj (L4 S11 B35) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pgnkw (L5 S25 B315) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- phfba (L6 S8 B49) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- p9ujh (L7 S43 B211) Lease laws should be enacted and enforced in the county as they are in the city.
+- pkeaq (L8 S153 B375) Leash laws should be more strictly enforced in both the city and county
+- p2ib2 (L9 S3 B5) City School taxes are too high , they need to budget more
+- pyr2u (L10 S160 B30) Warren county needs to be "wet". The city is wet but the county is dry.
+- pg2kz (L11 S108 B307) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- pd9yv (L12 S24 B266) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- p98ae (L13 S89 B4) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- pgdsd (L14 S30 B3) The city of Bowling Green should enforce their existing noise ordinance.
+- picza (L15 S9 B6) City residents do not receive adequate return on County Taxes paid.
+- pq8ag (L16 S4 B441) Reduce and/or get rid of the city wage tax.
+- padkd (L17 S69 B216) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p5ref (L18 S22 B150) Encourage connection between the wealthy and the poor
+- p5y22 (L19 S100 B154) Some local politicians abuse their power and get away with more than normal citizens.
+- pgpz3 (L20 S49 B317) Planning and zoning laws should change to encourage small businesses and farms.
+- ppviv (L21 S29 B435) I believe BGISD and WCS should be combined to lower tax payer overheads of multi-administration wastages
+- pq8wz (L22 S42 B25) BG Parks needs more funding from City
+- pb4kx (L23 S10 B10) People want it all, without paying for anything. A healthy community requires taxes people.
+- ppct5 (L24 S19 B426) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- p7ms9 (L25 S128 B187) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pjrdt (L29 S17 B365) Improved businesses such as banks and groceries in lowest income areas
+- pf6t9 (L36 S7 B291) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pahwq (L37 S38 B12) Legalizing marijuana at the state level could produce substantial tax revenue, but if only BG did, it would cause problems.
+- p9622 (L38 S2 B13) You shouldn't be required to pay County taxes if you live in the City (but not the other way around). It makes no sense.
+- pr9y5 (L40 S12 B467) The Fairness Ordinance, as currently proposed, poses insufficient protection for religious conscience and should be revised accordingly.
+- pph7p (L45 S16 B22) Lower taxes by auditing every department for total accountability & make cuts where possible. Stop city government waste.
+- p7eqj (L48 S21 B184) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- pqcdx (L72 S23 B444) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- pjq68 (L77 S20 B364) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pwafd (L102 S26 B11) I should be able to vote in city elections if I pay city taxes, even though I may live in the county.
+- pbbu5 (L134 S14 B233) A private (catholic) high school would be beneficial to all.
+- pgrp6 (L158 S15 B14) Unelected school board officials should not have the power to create, add, or increase "school taxes".
+- pzxfe (L169 S6 B18) If private schools were to get a share of Federal or State education dollars, it would hurt public schools.
+- pps8y (L192 S291 B8) Parking on both sides of the streets in apartment subdivisions should should not be allowed and police need to enforce the law.
+- pfsk9 (L201 S5 B303) Allow parents that take their kids out of public schools to use that money in a private school.
+- pptye (L213 S18 B434) More concerts should be held in Bowling Green
+- pnfi5 (L226 S303 B7) install traffic cameras and enforce running of stop lights. more traffic enforcement means more $$$ for the city.
+- p8h4y (L229 S363 B15) If the state cannot provide good retirement benefits to KRS employees, the county/city should supplement the retirement with a 401k.
+- pu33h (L258 S399 B2) I see a lot of folks with expired tags on cars, both in state and out of state. Police need to enforce the laws and write more tickets.
+- p792j (L306 S390 B9) Fireworks use in residential areas is out of control with no police presence to enforce the already in place restrictions.
+
+## #5 pppcy: All public schools should have an adequate summer feeding program so no child goes hungry.
+
+- pw6rb (L1 S1 B1) No child should go hungry in Bowling Green / Warren County, and it is up to our officials to make sure it doesn’t happen.
+- pdcp3 (L2 S3 B23) More local produce should be incorporated into public school's lunchrooms
+- pirz4 (L3 S11 B346) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- pek7k (L4 S5 B27) Provide a food assistance program for college students as students lots of times do not qualify for food stamps due to living on campus
+- pcqfp (L5 S4 B24) All schools in the county and city should work together to provide the same minimum level of education to students.
+- p9v2v (L6 S10 B193) some children with cultural differences or dietary needs cannot eat a typical lunch at school please provide special diet options.
+- phpnd (L7 S12 B32) Insist that schools at all levels have daily physical activity for all students to help combat the childhood obesity crisis.
+- pki7f (L8 S7 B373) Bowling Green needs more access to affordable , healthy, local food sources.
+- pr4k5 (L9 S21 B464) Bowling Green should work on becoming a more food sustainable city with less food waste and food insecurity
+- puaak (L10 S15 B521) Parents should be able to send their kids to the school district of their choice no matter where they live in Bowling Green/Warren County.
+- pf6t9 (L11 S2 B7) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pmiqq (L12 S9 B15) City schools should be redistricted to more evenly distribute the kids.
+- pp5rm (L13 S61 B418) No family should be homeless in Bowling Green / Warren County, and it is up to our officials to make sure they have options for shelter.
+- perix (L14 S17 B21) Support non-public (or public charter) school choice options, and make choice viable for families of ALL income levels.
+- pqeuz (L15 S18 B447) Arts education should be available in every school in Warren County and other surrounding areas.
+- pjzz6 (L16 S16 B33) The city and county work together to keep the low socieconomic status children out of certain schools. This reduces learning opportunities.
+- p5ryp (L17 S24 B120) After school activity centers for youth with later hours of operation.
+- psh7u (L18 S49 B39) Need new schools in Warren County to keep up with population growth, CTE is falling down, Drakes and Greenwood high are way overcrowded
+- p34uw (L19 S50 B67) Both school districts shamefully manipulate low economic status parents to gain Title I funding. It should stop.
+- pt8p7 (L20 S53 B493) There should be more opportunities for the arts and sciences in the Housing Authority so the students there can rise above!
+- pmti4 (L21 S57 B395) The city & county school districts need to be re-evaluated The yards/houses that touch Potter Grays playground r all County school districts
+- ptcr8 (L22 S36 B498) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- pkezh (L23 S20 B51) Public school systems need to provide more funding for art education programs, such as music, theater, and visual arts.
+- pjrdt (L24 S88 B361) Improved businesses such as banks and groceries in lowest income areas
+- pfin8 (L25 S8 B285) Community Education provides after-school care necessary to working parents. Funding should not be cut.
+- pinkj (L27 S48 B13) Arts-based charter schools
+- p6kxg (L29 S22 B48) High sugar items like pop tarts and chocolate muffins should not be a part of the public school breakfast menu
+- pfsk9 (L32 S14 B4) Allow parents that take their kids out of public schools to use that money in a private school.
+- p9ivq (L33 S6 B188) Bowling Green should have more healthy/clean eating options for those who have limited diets.
+- pmjj8 (L49 S23 B387) We need more Community Farming Programs(where you pay farmers money up front and during harvest you get fresh fruits/veggies, eggs, etc)
+- pkcbm (L55 S104 B3) BG needs more Summer weekend festivals/activities
+- pzxfe (L59 S13 B2) If private schools were to get a share of Federal or State education dollars, it would hurt public schools.
+- pyr6n (L67 S55 B8) Future charter schools would be a financial burden to public school funding, unless they are held to accountability by local school boards.
+- p3zeb (L80 S19 B82) Post-secondary training programs for special education students.
+- pcura (L98 S25 B246) Other counties have school at home on snow days so that kids do not have to make up days. This should be considered for here.
+- pv52p (L147 S203 B10) The WKU Nursing Program should be expanded so we have more nurses
+- ptahe (L177 S266 B6) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- pz34c (L187 S373 B14) Develop a manufacturing Work training program for jail inmates that qualify
+- picza (L210 S295 B5) City residents do not receive adequate return on County Taxes paid.
+- pjrqx (L219 S348 B12) apartment complexes should be required to participate in recycling program
+- pe262 (L247 S171 B11) WKU should upgrade their CIT program to keep up with the times
+- piqt5 (L502 S289 B9) If we cut a major program, WKU would lose in the revenue the program brings in, ultimately costing more money.
+
+## #6 p68um: Take advantage of the wonderful summers in KY and have more outdoor public swimming spaces
+
+- pgrkj (L1 S1 B3) Indoor swimming pools for public use and therapy year around without time restrictions due to special swim leagues. Encourage healthier life
+- p9ztq (L2 S2 B34) There are no public adult swim facilities in Bowling Green for year around physical use. The Lovers Lane Complex should be made available
+- pjk6d (L3 S3 B351) There are large fees with the few currently available indoor pools.
+- pkcbm (L4 S4 B363) BG needs more Summer weekend festivals/activities
+- ph4wf (L5 S5 B308) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- p7438 (L6 S12 B133) The Barren River water front needs to be improved on both sides of the river and include canoeing and kayaking water features in the river.
+- pneud (L7 S10 B401) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- p7ms9 (L8 S21 B142) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pwsqv (L9 S6 B563) Water safety and swim lessons to all k-12 students.
+- pi9rk (L10 S24 B11) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- ps8zr (L11 S9 B12) Schools should provide an opportunity for nonswimming parent/guardians to have water safety and swimming lessons in private setting.
+- pvfj9 (L12 S7 B6) More green spaces. All of our parks have just become sports complexes!
+- pe6hw (L13 S29 B251) A kayak trail from Lampkin Park to Barren River. Improved River access.
+- p2839 (L14 S23 B42) Developing more bike trails into surrounding areas of the city would allow for a more developed both transport and recreational experiences
+- pgdik (L15 S8 B289) Please increase more family friendly activities
+- pkb9k (L16 S18 B2) Bowling Green needs an indoor / outdoor sports event complex/
+- pfnxw (L17 S20 B277) City and county parks departments should provide more programming for adults and seniors.
+- p5ahf (L18 S49 B91) Need more bike lanes and biker friendly resources
+- p6xjr (L19 S13 B128) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- ppgmg (L20 S36 B423) parks and rec should promote and support pickleball for older citizens
+- pq8wz (L21 S15 B437) BG Parks needs more funding from City
+- p6zka (L22 S33 B129) Commitment to healthy lifestyles
+- pe3ap (L23 S14 B248) Continue downtown development to the river. Tourists always seek out parks & restaurants near water.
+- pugud (L24 S25 B520) More bike trails and walking trails would be a great addition.
+- p6c95 (L25 S16 B116) BG needs an indoor tennis option
+- p4p8j (L26 S17 B78) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- p4pb4 (L27 S11 B79) Every citizen should be within 1 mile of some shaded green space.
+- pp8pk (L40 S19 B417) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- pcp9t (L46 S22 B226) More walking/nature trails in our sports-centric parks. Have certain hours where walkers can enjoy the beauty of Paul Walker Golf Course.
+- pu3fh (L136 S197 B7) We need more things to do for ages 1-6. A children’s museum or a small science museum would be wonderful.
+- pq3ad (L149 S100 B9) More parking downtown. There are too many reserved spaces which should be available in the evening.
+- pupnr (L185 S186 B8) city officials might look into layoff practices on jobs in bowling green ky
+- pfq4x (L193 S147 B4) Complete the ky. 185 restructuring project.
+- p6quu (L268 S152 B13) There should be something a work farm for local prisoners to learn to tend gardens, take care of livestock, and learn to be more useful.
+- pfsk9 (L391 S242 B1) Allow parents that take their kids out of public schools to use that money in a private school.
+- p8usw (L396 S153 B14) Local companies that can't fill job openings should recruit from parts of KY w/ high unemployment & pay relocation expenses.
+- pktbx (L399 S355 B15) Internet services should be a public municipality.
+- phc7j (L451 S238 B10) Parking lots should be monitored to prevent illegal parking in handicap spaces.
+- pu2fx (L518 S316 B5) It should not take 3 months to get a gynecologist appointment in this city.
+
+## #7 ptcr8: Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+
+- pe9wi (L1 S1 B20) More youth programs are needed to bring the community together: volunteer organizations, community service, innovative creations labs
+- pwnap (L2 S2 B561) Invest in the youth.
+- pptwk (L3 S3 B432) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- pfnxw (L4 S13 B1) City and county parks departments should provide more programming for adults and seniors.
+- pd4in (L5 S8 B265) There should be a push to improve mental health awareness and availability in Bowling Green.
+- p5ryp (L6 S14 B151) After school activity centers for youth with later hours of operation.
+- pcq7d (L7 S23 B8) We need more activities/places to go for teenagers; basically all there is are places to eat, the mall, and the bowling alley
+- p6wtw (L8 S7 B172) Educate high schoolers on their options after they graduate
+- ps5tz (L9 S5 B15) More technical education programs for non-graduates of high school
+- p4p8j (L10 S33 B2) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pt8p7 (L11 S29 B491) There should be more opportunities for the arts and sciences in the Housing Authority so the students there can rise above!
+- pdckg (L12 S10 B267) Affordable supports for the elderly and aging population are needed in our community.
+- pgcmd (L13 S95 B51) Bowling Green needs more cultural and educational establishments, like sciemce, history and art museums.
+- piq5m (L14 S4 B9) Job training programs for lower income
+- pqra3 (L15 S35 B457) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- phceg (L16 S82 B329) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pqeuz (L17 S26 B445) Arts education should be available in every school in Warren County and other surrounding areas.
+- pcvs4 (L18 S41 B262) Institute a business development grant that encourages WKU grads to stay in Bowling Green by starting local businesses.
+- pjrwf (L19 S12 B16) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- pq457 (L20 S36 B26) Need comprehesive probation rehab programs - include addiction treatment, life & job skills & ideas securing housing, training/job etc
+- pki7f (L21 S18 B43) Bowling Green needs more access to affordable , healthy, local food sources.
+- pnyg7 (L22 S68 B416) The university and city should develop stronger mutually beneficial partnerships.
+- pee6u (L23 S28 B282) More creative learning classes
+- p6u6a (L24 S46 B171) Local government, for profit and non profits should work together on housing and economic equality
+- pek7k (L25 S61 B284) Provide a food assistance program for college students as students lots of times do not qualify for food stamps due to living on campus
+- pi4h5 (L26 S88 B5) BG can’t compete with Nashville or Louisville for young professionals
+- psebg (L28 S15 B12) More weekend activites are needed for YOUNG Seniors, who arent yet ready for Bingo nights.
+- pgdik (L29 S6 B311) Please increase more family friendly activities
+- p3zeb (L30 S11 B13) Post-secondary training programs for special education students.
+- p6j9p (L31 S16 B163) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- pgzys (L34 S40 B6) Rental assistance programs
+- pkg36 (L35 S19 B74) Bowling Green needs Community Enrichment Classes that include woodworking, welding, gardening and general home beautification for hobbyist.
+- pf6t9 (L37 S9 B291) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pptbv (L45 S21 B431) We need mixed-use development in the most disadvantaged areas of BG.
+- p2w5z (L53 S17 B105) For a city of this size, there is too little available in the way of weekend activities for Seniors who are not ready for rocking chairs.
+- pbzyn (L57 S58 B3) Provide accessible transportation for seniors that have difficulty driving
+- pbm45 (L85 S24 B240) We need to focus more on the existing housing in BG, including renovations and improvements.
+- p6jxh (L87 S20 B14) Bowling Green should try to emulate Owensboro's Friday night programs downtown.
+- pu2qt (L106 S22 B512) More free meeting space for nonprofits.
+- pj74t (L192 S246 B4) Parking on the WKU campus should be more accessible to students and visitors.
+- peqy9 (L196 S326 B10) we need transit buses for elderly and disabled in the county and they should be easy to enter and exit/wheelchair accessible
+- prqiv (L237 S25 B477) We need to commit more resources to the North-Northeast ends of town. Blue collar people who help make Bowling Green what is. Too neglected.
+- p5at5 (L259 S198 B7) Downtown redevelopment should retain accessible parking for existing businesses.
+- phtsf (L530 S601 B11) The face of drug dealers has changed. Today most opioid drug dealers are doctors or teenagers in the suburbs ordering from China.
+
+## #8 pw6sg: Big names and corporations get away with too much. We need fairer regulation and level playing fields for the small and big guys alike.
+
+- pgpz3 (L1 S8 B22) Planning and zoning laws should change to encourage small businesses and farms.
+- pc3m2 (L2 S2 B4) Locally owned, small businesses should get incentives and assistance -- not chains and outside investors.
+- p5y22 (L3 S5 B1) Some local politicians abuse their power and get away with more than normal citizens.
+- pkgar (L4 S16 B404) District judges are biased towards large local companies to the detriment of individuals.
+- pgnkw (L5 S3 B342) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- ptn8b (L6 S1 B12) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- p6u6a (L7 S9 B200) Local government, for profit and non profits should work together on housing and economic equality
+- pfgep (L8 S11 B23) Bowling Green has been monopolized by Houchens. Limit their growth they own too much of the city for it to be fair to other businesses
+- phfba (L9 S15 B356) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pjq68 (L10 S6 B95) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- p92xj (L11 S4 B236) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- p9ujh (L12 S20 B247) Lease laws should be enacted and enforced in the county as they are in the city.
+- pb5iz (L13 S13 B109) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- pqra3 (L14 S51 B122) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- pxjmb (L15 S19 B578) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- p7eqj (L16 S18 B211) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- p6r2s (L17 S164 B197) Rental property taxes should be reduced for private landlords to encourage them to develop more, as opposed to large ones like Chandler.
+- puyc3 (L18 S57 B90) We need to renovate the run down businesses and store fronts, instead of building new places
+- p98ae (L19 S12 B238) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- pmz7k (L20 S136 B3) We need more regulation of opioid drugs, both prescribed and illicit.
+- pwu44 (L21 S132 B31) City needs to bar big COs employing from half a dozen temp services to keep 100s ineligble for FMLA due to less than 50 ppl/per 'employer'
+- pvpmr (L22 S74 B550) Most local officials run for office to serve the public good.
+- pbkub (L23 S30 B265) Higher paying jobs- the ability to move up with reasonable raises.
+- pqmg8 (L24 S80 B36) Low-income areas should get beautification money -- not the wealthy who can afford it themselves.
+- pjtja (L25 S64 B393) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- pqcdx (L26 S10 B462) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- pjrdt (L29 S25 B390) Improved businesses such as banks and groceries in lowest income areas
+- p389z (L30 S17 B139) We should be incentivizing higher paying jobs coming to BG. Cost of living is outrunning wages and it's starting to be a problem.
+- pc7zk (L41 S24 B103) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pbstr (L49 S21 B269) Individuals should be treated equally. Higher positions or who you work for should not release anyone from responsibility of their actions.
+- pm8t7 (L51 S14 B415) Regulate the size & brightness of business signs.
+- pycbi (L55 S7 B586) Companies that claim they cannot fill job openings should raise wages and improve working conditions.
+- p95zh (L102 S424 B14) There should be no punishment for small amounts of marijuana possession, in my opinion
+- pcqfp (L127 S239 B10) All schools in the county and city should work together to provide the same minimum level of education to students.
+- pjaji (L131 S85 B5) It would be great if people in neighborhoods could get to know each other better and neighborhoods were like small communities of neighbors.
+- p6zxd (L135 S23 B86) People need to do all their research before accusing local officials of using their influence for personal gain.
+- p5rmi (L154 S167 B8) We need to promote competition in town for Charter. AT&T isn't much better and doesn't serve everywhere. Need more fiber to the homes.
+- pfuyd (L175 S22 B6) big projeck in city sould be vote by people
+- ptnie (L211 S118 B13) The main problem facing is the workforce development. There is over 6500 jobs open in Warren County. This is a big issue.
+- pb8qj (L283 S248 B15) Recycling services need to be expanded & improved. With growing population, think of how much land will become dump sites...Ridiculous!
+- p5ehs (L339 S334 B11) Bowling Green needs more indoor sports facilities, particularly a large complex with multiple indoor soccer fields, for youth.
+- p3y3b (L369 S241 B9) Build more roads!!! Traffic is terrible here for a small city.
+- pu3fh (L415 S534 B7) We need more things to do for ages 1-6. A children’s museum or a small science museum would be wonderful.
+- p8tq3 (L423 S66 B2) There is too much continuous road work going on downtown. They need to get it together.
+
+## #9 pt92d: Most journalists strive to be factual and unbiased, whether or not they succeed in all their writing,
+
+- pzgbm (L1 S1 B1) Opinion pieces without a specific author make it more confusing to determine whether a media source is biased or not.
+- pdgcu (L2 S2 B216) The Bowling Green Daily News is too politically slanted.
+- pvpmr (L3 S5 B537) Most local officials run for office to serve the public good.
+- p35gt (L4 S3 B17) Better/more mass media choices available.
+- p6u6a (L5 S14 B96) Local government, for profit and non profits should work together on housing and economic equality
+- phceg (L6 S127 B290) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- prgqn (L7 S6 B459) City/county officials should disclose to the public via Daily News all connections they have to a project or proposal well before the vote.
+- p5y22 (L8 S54 B75) Some local politicians abuse their power and get away with more than normal citizens.
+- p6zxd (L9 S4 B100) People need to do all their research before accusing local officials of using their influence for personal gain.
+- p6zka (L10 S36 B99) Commitment to healthy lifestyles
+- p6wtw (L11 S13 B97) Educate high schoolers on their options after they graduate
+- ph4wf (L12 S26 B287) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pptwk (L13 S16 B417) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- phfba (L14 S55 B293) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- padkd (L15 S42 B154) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p5ahf (L16 S270 B58) Need more bike lanes and biker friendly resources
+- pupnr (L17 S50 B516) city officials might look into layoff practices on jobs in bowling green ky
+- ph3id (L18 S10 B286) I regularly discuss politics with people I disagree with.
+- p6k4e (L19 S64 B89) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- p8jmp (L20 S131 B128) Bowling Green needs to enforce the separation of church and state and impose taxes on churches that politic from the pulpit
+- pgnkw (L21 S51 B274) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- pjrwf (L22 S7 B337) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- pb38d (L24 S19 B166) It is easy to find a good job in Warren County.
+- pkeaq (L23 S409 B347) Leash laws should be more strictly enforced in both the city and county
+- pz3q2 (L25 S41 B3) WKU and local community colleges should continue to offer courses that interest those seeking an education, whether or not the courses aid in job placement.
+- pcqfp (L37 S22 B201) All schools in the county and city should work together to provide the same minimum level of education to students.
+- p92xj (L49 S21 B136) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pcrhx (L51 S23 B202) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pehyf (L68 S20 B232) The arts are an important component of K-12 education.
+- ptn8b (L84 S11 B494) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- pqeuz (L91 S12 B433) Arts education should be available in every school in Warren County and other surrounding areas.
+- pbstr (L98 S15 B184) Individuals should be treated equally. Higher positions or who you work for should not release anyone from responsibility of their actions.
+- pf6t9 (L121 S18 B244) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pfuyd (L126 S25 B258) big projeck in city sould be vote by people
+- pjq68 (L135 S8 B334) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pc7zk (L143 S9 B192) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- p6j9p (L157 S210 B2) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- pbm45 (L242 S24 B179) We need to focus more on the existing housing in BG, including renovations and improvements.
+- prqiv (L293 S17 B465) We need to commit more resources to the North-Northeast ends of town. Blue collar people who help make Bowling Green what is. Too neglected.
+
+## #10 p4zjr: Bowling Green Government needs more perspective from Millennials. We need ideas for the future not outdated Boomer development ideas.
+
+- p4p8j (L1 S2 B126) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pjq68 (L2 S3 B1) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- padkd (L3 S6 B161) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pi4h5 (L4 S18 B390) BG can’t compete with Nashville or Louisville for young professionals
+- ptahe (L5 S47 B514) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- psbcj (L6 S71 B503) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- ptcr8 (L7 S1 B58) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- puyc3 (L8 S50 B121) We need to renovate the run down businesses and store fronts, instead of building new places
+- p6u6a (L9 S33 B13) Local government, for profit and non profits should work together on housing and economic equality
+- pqra3 (L10 S30 B166) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- phceg (L11 S62 B142) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pptbv (L12 S13 B2) We need mixed-use development in the most disadvantaged areas of BG.
+- pif8h (L13 S38 B75) BG needs to redevelop from WKU to the river and beyond. Model after Greenville SC
+- pxjmb (L14 S66 B26) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- pdckg (L15 S16 B324) Affordable supports for the elderly and aging population are needed in our community.
+- pfnxw (L16 S26 B354) City and county parks departments should provide more programming for adults and seniors.
+- pbxwr (L17 S60 B140) Planning & Zoning need to do a better job of listening & working with residents. It's not next to their house, so they don't care!
+- pptwk (L18 S28 B461) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- pgpz3 (L19 S54 B370) Planning and zoning laws should change to encourage small businesses and farms.
+- pbm45 (L20 S9 B72) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pe9wi (L21 S4 B333) More youth programs are needed to bring the community together: volunteer organizations, community service, innovative creations labs
+- p7whc (L22 S27 B104) BG needs to develop a marketing campaign to draw Warren Co and surrounding counties to downtown for eating, shopping, and entertainment.
+- ph4wf (L23 S19 B160) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- p2w5z (L24 S5 B181) For a city of this size, there is too little available in the way of weekend activities for Seniors who are not ready for rocking chairs.
+- psebg (L25 S21 B504) More weekend activites are needed for YOUNG Seniors, who arent yet ready for Bingo nights.
+- pcrhx (L28 S11 B10) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pzaca (L30 S20 B101) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- p5rtq (L31 S24 B225) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- pwnap (L33 S10 B568) Invest in the youth.
+- pgaj7 (L34 S15 B363) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- pkupf (L35 S8 B426) A senior living community, designed for 50+ residents rather than 75+ & in failing health residents, is needed — and apparently ignored.
+- ptuye (L37 S17 B523) The population has out grown the infrastructure in bg/ warren county.
+- p6xjr (L40 S14 B245) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- p3cst (L43 S12 B24) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- pphh2 (L48 S23 B22) We should focus downtown development dollars on rehabilitation and reuse of buildings that can be done so, rather than building new.
+- pnvfb (L65 S22 B48) Bowling Green needs more pet-friendly housing options for renters.
+- pufe9 (L74 S335 B8) Make all future sidewalks wide enough for multi-use (walking, biking, skateboarding etc)
+- p6wtw (L100 S25 B244) Educate high schoolers on their options after they graduate
+- prqiv (L122 S7 B130) We need to commit more resources to the North-Northeast ends of town. Blue collar people who help make Bowling Green what is. Too neglected.
+- pnbm2 (L156 S321 B3) Recycling services need to be improved and modernized. Current contractor uses outdated equipment, services are messy, company unresponsive.
+- pfwr5 (L214 S68 B6) Warren County should be completely wet, the idea of a “moist” County is outdated and stunting the financial growth and tourism opportunity.
+- pjkts (L228 S212 B15) Highway exits spur development, which would likely lead to undesireable suburban sprawl.
+- phsyb (L350 S49 B14) Prevent the development of new housing areas, especially in farm land areas.
+- pq457 (L351 S375 B4) Need comprehesive probation rehab programs - include addiction treatment, life & job skills & ideas securing housing, training/job etc
+- pddku (L404 S359 B7) Spectrum should have competition and not a monopoly. Rates should be regulated by city county government
+- peety (L426 S539 B11) Everyone needs to research (fluoride)...definitely need this to disappear from our water
+- pvh84 (L492 S232 B5) Homelessness is for the nonprofit sector to deal with, not government.
+- pyr6n (L495 S384 B12) Future charter schools would be a financial burden to public school funding, unless they are held to accountability by local school boards.
+- pqeea (L555 S473 B9) Most drugs except meth should be free & government controlled. See Belgium.
+
+## #11 pdigz: Institutionalize racism is alive and well here. I know because I have experienced it first hand. We need to have a plan.
+
+- p6u6a (L1 S9 B177) Local government, for profit and non profits should work together on housing and economic equality
+- p92xj (L2 S1 B214) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pb9kj (L3 S2 B18) The fact that there is not as much coverage about African American deaths from cocaine as there is about deaths in the white community from opioids, even though there are as many of them, is evidence of institutionalized racism.
+- pfqwv (L4 S7 B315) Law enforcement in Bowling Green and Warren county needs more minority representation
+- pn228 (L5 S8 B419) City/county gov't. (in all of there forms) must reflect the racial/ethnic city/county population demographic to assist in recruitment/growth
+- p98ae (L6 S3 B217) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- p92ce (L7 S91 B213) People in Bowling Green should not be discriminated against based on their sexual orientation.
+- pqcdx (L8 S4 B455) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- pbstr (L9 S10 B251) Individuals should be treated equally. Higher positions or who you work for should not release anyone from responsibility of their actions.
+- padkd (L10 S5 B89) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pgnkw (L11 S22 B331) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- pc7zk (L12 S15 B74) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pqnui (L13 S47 B465) Resources to better integrate immigrants and refugees into the community should be put into place.
+- p4vem (L14 S71 B140) Local law enforcement would benefit from additional training in community relations.
+- pzwn8 (L15 S30 B603) My employer has not been responsive to reports of sexual harassment in the workplace.
+- p5y22 (L16 S57 B160) Some local politicians abuse their power and get away with more than normal citizens.
+- pjzz6 (L17 S59 B386) The city and county work together to keep the low socieconomic status children out of certain schools. This reduces learning opportunities.
+- ptahe (L18 S11 B501) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- p9cba (L19 S29 B220) Reducing poverty will enhance the quality of life for everyone in our community regardless of status.
+- pd4in (L20 S68 B274) There should be a push to improve mental health awareness and availability in Bowling Green.
+- pkgar (L21 S173 B395) District judges are biased towards large local companies to the detriment of individuals.
+- p8hgh (L22 S31 B204) The city should craft a very simple fairness ordinance, saying no discrimination acquiring housing, but not giving LGBTQ EEOC Bypass @work
+- pkkkz (L23 S335 B397) A city should have the right to declare itself a sanctuary city.
+- pgdt8 (L24 S32 B43) Consider asking low-income or disabled residents what they really need.
+- p9ujh (L25 S120 B226) Lease laws should be enacted and enforced in the county as they are in the city.
+- pptbv (L31 S6 B37) We need mixed-use development in the most disadvantaged areas of BG.
+- pmkq5 (L32 S24 B414) Concerts and performing arts activities must reflect the diverse racial/ethnic demographic of the city/county.
+- pqra3 (L38 S65 B3) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- pbxwr (L40 S20 B73) Planning & Zoning need to do a better job of listening & working with residents. It's not next to their house, so they don't care!
+- prqiv (L49 S12 B68) We need to commit more resources to the North-Northeast ends of town. Blue collar people who help make Bowling Green what is. Too neglected.
+- pjaji (L56 S80 B7) It would be great if people in neighborhoods could get to know each other better and neighborhoods were like small communities of neighbors.
+- p66dt (L70 S147 B15) The rental market prices are well beyond an affordable housing level and needs to be addressed given the number of renters in BG.
+- pihfx (L73 S90 B2) The homeless population is getting out of hand. We need to find better methods for curtailing and rehabing and keeping them off the streets.
+- pjq68 (L72 S14 B66) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pw6sg (L79 S23 B99) Big names and corporations get away with too much. We need fairer regulation and level playing fields for the small and big guys alike.
+- pwnap (L80 S16 B562) Invest in the youth.
+- prhru (L87 S141 B11) We already have a lot of parks. And the libraries have become a hangout for the homeless. Do something about that problem first
+- pkvep (L112 S21 B403) I still have to drive out of town to eat Golden Corral.
+- ph3id (L118 S19 B342) I regularly discuss politics with people I disagree with.
+- pbm45 (L135 S13 B41) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pf6t9 (L136 S17 B303) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- p6cyb (L145 S28 B1) Plan for people, not cars. Walking should be enjoyable, not a hazard.
+- pfuyd (L209 S25 B317) big projeck in city sould be vote by people
+- pt76e (L218 S291 B8) Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+- pjf7t (L415 S149 B4) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- phsyb (L424 S18 B355) Prevent the development of new housing areas, especially in farm land areas.
+- prgqn (L477 S244 B9) City/county officials should disclose to the public via Daily News all connections they have to a project or proposal well before the vote.
+- pn9cj (L480 S338 B14) Increase Internet/Cell/Phone service throughout the county. First deal with areas that currently don't have any option.
+- pwy69 (L502 S242 B12) More sidewalks would be great, but first let’s stop people parking on them. Or stop spending money building them. Whichever.
+- p5hhx (L522 S557 B10) We know fentanyl is coming through our post office. Law enforcement should have dogs finding it before it kills the next youth.
+- pczge (L567 S486 B5) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- pw8ht (L589 S564 B13) Doctors should not overreact to the opioid crisis. People in pain shouldn't suffer because others lack self control and abuse the system.
+- ptek7 (L597 S493 B6) We need grocery store competition. Kroger doesn't even try because they don't have to. I'm sick of rotten produce. Let's get a Publix!
+
+## #12 pu3fh: We need more things to do for ages 1-6. A children’s museum or a small science museum would be wonderful.
+
+- pamph (L1 S1 B69) We need more activities for families, such as a large-scale all-in-one kids play arena like All About Kids.
+- pgcmd (L2 S2 B322) Bowling Green needs more cultural and educational establishments, like sciemce, history and art museums.
+- ptzfk (L3 S5 B514) A favorite place to visit (elsewhere) is a park filled with gently used toys (donated). It inspires imagination, creativity and sharing.
+- pe9wi (L4 S4 B288) More youth programs are needed to bring the community together: volunteer organizations, community service, innovative creations labs
+- pzxze (L5 S8 B605) There are not enough family-centered activities to do down town.
+- pgdik (L6 S3 B323) Please increase more family friendly activities
+- pcq7d (L7 S13 B57) We need more activities/places to go for teenagers; basically all there is are places to eat, the mall, and the bowling alley
+- pee6u (L8 S14 B292) More creative learning classes
+- p5ehs (L9 S23 B154) Bowling Green needs more indoor sports facilities, particularly a large complex with multiple indoor soccer fields, for youth.
+- p4p8j (L10 S16 B61) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pt8p7 (L11 S24 B496) There should be more opportunities for the arts and sciences in the Housing Authority so the students there can rise above!
+- pehyf (L12 S6 B293) The arts are an important component of K-12 education.
+- ph4wf (L13 S12 B339) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- p5ryp (L14 S10 B161) After school activity centers for youth with later hours of operation.
+- pb6y8 (L15 S18 B241) The arts enrich our city.
+- pqeuz (L16 S7 B453) Arts education should be available in every school in Warren County and other surrounding areas.
+- ptcr8 (L17 S22 B502) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- pinkj (L18 S42 B363) Arts-based charter schools
+- pfnxw (L19 S15 B311) City and county parks departments should provide more programming for adults and seniors.
+- pkcbm (L21 S19 B386) BG needs more Summer weekend festivals/activities
+- pvzkv (L20 S28 B4) If people are suggesting more advertising for tourists, there needs to be things for tourists to do.
+- pugud (L22 S55 B523) More bike trails and walking trails would be a great addition.
+- pkb9k (L23 S58 B385) Bowling Green needs an indoor / outdoor sports event complex/
+- p2w5z (L24 S27 B109) For a city of this size, there is too little available in the way of weekend activities for Seniors who are not ready for rocking chairs.
+- psebg (L25 S29 B487) More weekend activites are needed for YOUNG Seniors, who arent yet ready for Bingo nights.
+- pwnap (L30 S20 B561) Invest in the youth.
+- pbqst (L31 S17 B71) Need engaging art installations throughout the city. People will be able to experience art, have fun, and share on social media.
+- pgyhw (L34 S9 B1) Better incorporation of university resources in community, including Kentucky Museum.
+- pk22m (L38 S11 B382) Publicizing more cultural activities other than the Bowling Green International Festival.
+- pvfj9 (L39 S21 B540) More green spaces. All of our parks have just become sports complexes!
+- pf6t9 (L50 S25 B303) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pg99d (L53 S60 B11) Local food and small farms are one of BG best attractions.
+- pu4rv (L66 S319 B15) Multi-use sidewalks should have fixtures for skateboards, bikes like small ramps etc.
+- pptwk (L84 S116 B8) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- p68um (L99 S87 B2) Take advantage of the wonderful summers in KY and have more outdoor public swimming spaces
+- pgpz3 (L102 S128 B13) Planning and zoning laws should change to encourage small businesses and farms.
+- pjzz6 (L206 S81 B12) The city and county work together to keep the low socieconomic status children out of certain schools. This reduces learning opportunities.
+- pc3m2 (L241 S228 B14) Locally owned, small businesses should get incentives and assistance -- not chains and outside investors.
+- p3y3b (L287 S214 B5) Build more roads!!! Traffic is terrible here for a small city.
+- paak8 (L294 S288 B6) There is no reason not to spend 6 cents per $100 to eliminate homelessness for hundreds of school children.
+- p95zh (L332 S541 B9) There should be no punishment for small amounts of marijuana possession, in my opinion
+- p7mfn (L395 S361 B7) When you prioritize the safety of people over automobile speed, all kinds of positive things happen. #slowthecars
+- pw6sg (L396 S265 B10) Big names and corporations get away with too much. We need fairer regulation and level playing fields for the small and big guys alike.
+- pfarp (L453 S163 B3) Actually teach HS students useful things.
+
+## #13 pqeyn: We need to carefully preserve agricultural land
+
+- phsyb (L1 S1 B2) Prevent the development of new housing areas, especially in farm land areas.
+- pg99d (L2 S5 B313) Local food and small farms are one of BG best attractions.
+- pnukd (L3 S3 B421) Historic preservation of homes and buildings needs countywide attention to maintain our unique architectural heritage.
+- pgpz3 (L4 S7 B324) Planning and zoning laws should change to encourage small businesses and farms.
+- padkd (L5 S4 B75) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pi9rk (L6 S13 B351) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pr4k5 (L7 S17 B465) Bowling Green should work on becoming a more food sustainable city with less food waste and food insecurity
+- p5rtq (L8 S12 B145) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- p7ms9 (L9 S28 B181) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pmk7t (L10 S9 B405) Too many trees have been torn down to make way for new developments. We should re-plant more trees around Bowling Green.
+- pki7f (L11 S8 B388) Bowling Green needs more access to affordable , healthy, local food sources.
+- pdcp3 (L12 S11 B268) More local produce should be incorporated into public school's lunchrooms
+- phceg (L13 S79 B60) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pbm45 (L14 S6 B25) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pns2r (L15 S37 B20) Farmers shouldn’t need a permit to build a fence.
+- p6zka (L16 S72 B170) Commitment to healthy lifestyles
+- ptahe (L17 S58 B497) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- pgvyh (L18 S133 B328) Shade trees should be required plantings along all Greenways
+- p5ctb (L19 S41 B4) We should think about moving the airport. Too much high dollar land going to waste right now.
+- pg2kz (L21 S66 B311) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- psbcj (L20 S94 B484) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pu9z9 (L22 S215 B519) The travesty going up on Fairview Ave. should never have been allowed
+- puyc3 (L23 S25 B46) We need to renovate the run down businesses and store fronts, instead of building new places
+- p6k4e (L25 S29 B161) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pqaaf (L24 S53 B446) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- ppct5 (L28 S21 B429) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- pvfj9 (L27 S19 B539) More green spaces. All of our parks have just become sports complexes!
+- pxg44 (L32 S20 B570) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pmjj8 (L34 S2 B85) We need more Community Farming Programs(where you pay farmers money up front and during harvest you get fresh fruits/veggies, eggs, etc)
+- p64wt (L41 S23 B150) More affordable home ownership options.
+- pb8qj (L67 S86 B1) Recycling services need to be expanded & improved. With growing population, think of how much land will become dump sites...Ridiculous!
+- pjq68 (L74 S22 B51) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pgdik (L82 S18 B316) Please increase more family friendly activities
+- pptbv (L85 S15 B21) We need mixed-use development in the most disadvantaged areas of BG.
+- p3cst (L89 S16 B74) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- p3285 (L115 S137 B6) We need a WHOLE FOOD store.
+- p6quu (L136 S10 B163) There should be something a work farm for local prisoners to learn to tend gardens, take care of livestock, and learn to be more useful.
+- pntww (L137 S185 B5) We need more pet stores
+- p2ib2 (L153 S353 B12) City School taxes are too high , they need to budget more
+- pvxt4 (L156 S150 B10) We need a health food store.
+- pjbzz (L175 S24 B15) Need to build wider access roads into the city!
+- p6twv (L179 S365 B13) City Annexed areas need more city services for their tax $$.
+- prqiv (L185 S14 B53) We need to commit more resources to the North-Northeast ends of town. Blue collar people who help make Bowling Green what is. Too neglected.
+- p72fq (L270 S335 B14) Local fuel prices need to investigated.
+- pi4wj (L333 S232 B8) We need a real bus system.
+- pudtd (L337 S363 B9) We need faster internet service.
+- p23xg (L404 S198 B3) Whenever land is bought by the city/county, the seller and amount sold for needs to be transparent, rather than “LLC” as listed seller.
+- paxtf (L408 S390 B7) We need a fiber option for internet.
+- p5rmi (L547 S481 B11) We need to promote competition in town for Charter. AT&T isn't much better and doesn't serve everywhere. Need more fiber to the homes.
+
+## #14 pns2r: Farmers shouldn’t need a permit to build a fence.
+
+- p3et2 (L1 S1 B111) Relax restrictions on fencing in Home Owners Associations to promote people keeping animals on leashes or in fenced yards.
+- pgpz3 (L2 S6 B324) Planning and zoning laws should change to encourage small businesses and farms.
+- py2mw (L3 S2 B582) I should be allowed to keep my yard & home in any manner I please.
+- pg2kz (L4 S41 B312) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- pqeyn (L5 S4 B22) We need to carefully preserve agricultural land
+- p9j36 (L6 S7 B215) Better ordinances on keeping animals on leashes or in fenced areas are needed.
+- pcare (L7 S19 B251) There should never be a leash law in the county - neighborhood dogs protect, play with and teach kids. It was a factor in living in county.
+- pgxi5 (L8 S5 B330) I should be allowed to plant flowers in my own yard where ever i want them.
+- pp2tr (L9 S14 B426) Building codes prohibiting trophy houses next to common housing
+- p9ujh (L10 S12 B218) Lease laws should be enacted and enforced in the county as they are in the city.
+- ppct5 (L11 S17 B430) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- pu9z9 (L12 S32 B520) The travesty going up on Fairview Ave. should never have been allowed
+- phsyb (L13 S3 B346) Prevent the development of new housing areas, especially in farm land areas.
+- pbxwr (L14 S44 B64) Planning & Zoning need to do a better job of listening & working with residents. It's not next to their house, so they don't care!
+- pv2a8 (L15 S37 B531) When the city tears up lawns with projects they should be required to do what it takes so that lawns are same quality they were before.
+- pbx3e (L16 S18 B246) Zoning changes should only be made with the consent of a majority of the neighbors in the affected area.
+- pd9yv (L17 S20 B267) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- pgw6z (L18 S13 B329) Pass a No animals on chains in the county.
+- pkeaq (L19 S69 B386) Leash laws should be more strictly enforced in both the city and county
+- phfba (L20 S21 B339) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pkkkz (L21 S334 B390) A city should have the right to declare itself a sanctuary city.
+- pg99d (L22 S36 B314) Local food and small farms are one of BG best attractions.
+- p7eqj (L23 S29 B184) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- pgdsd (L24 S47 B318) The city of Bowling Green should enforce their existing noise ordinance.
+- pkp8t (L26 S25 B392) New home zoning should be for single family dwellings rather than multi-family units (apartments).
+- pzaca (L25 S65 B44) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- puhdq (L30 S16 B524) New buildings should not be built right up to the sidewalk to inhibit seeing around corners when driving.
+- pki7f (L37 S24 B389) Bowling Green needs more access to affordable , healthy, local food sources.
+- p89sh (L42 S53 B2) Build parking areas.
+- pe3gy (L43 S10 B277) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pjtja (L46 S23 B377) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- p9622 (L61 S30 B5) You shouldn't be required to pay County taxes if you live in the City (but not the other way around). It makes no sense.
+- pjbzz (L63 S15 B1) Need to build wider access roads into the city!
+- pzvz6 (L65 S11 B602) People should not be allowed to bring their pets every place or store they go to.
+- pmjj8 (L88 S8 B3) We need more Community Farming Programs(where you pay farmers money up front and during harvest you get fresh fruits/veggies, eggs, etc)
+- pntww (L94 S147 B12) We need more pet stores
+- p3y3b (L103 S166 B4) Build more roads!!! Traffic is terrible here for a small city.
+- p6quu (L108 S9 B170) There should be something a work farm for local prisoners to learn to tend gardens, take care of livestock, and learn to be more useful.
+- pgpc7 (L135 S132 B7) Parking in apartment subdivisions should monitored closely by police. Parking on subdivision streets shouldn't be allowed.
+- pcrhx (L140 S43 B6) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pjq68 (L164 S22 B57) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- paxtf (L239 S349 B14) We need a fiber option for internet.
+- p8ce7 (L323 S252 B10) Build and improve sidewalks in the area of Magnolia Street and 13th to Cabell Drive area for the heavy pedestrian traffic there.
+- p8zq7 (L352 S359 B11) Build parking garage behind Spencer’s, remove some parking from Ft. Square. Add a green space on top of garage! Soccer field or rooftop food
+- p78vr (L357 S505 B9) Build a homeless park w/tiny homes so they can live & not suffer. There should also be a main house to can receive/organize donations
+- p3285 (L401 S195 B13) We need a WHOLE FOOD store.
+- pi4wj (L417 S268 B15) We need a real bus system.
+- pw8ht (L513 S571 B8) Doctors should not overreact to the opioid crisis. People in pain shouldn't suffer because others lack self control and abuse the system.
+
+## #15 pxn3z: city needs to work on water run off when we have a lot of rain.. to many places flood on roadways makes driving very dangerous..
+
+- ph4wf (L1 S7 B138) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pgmpv (L2 S5 B89) Something needs to be done to improve traffic flow
+- pe54w (L3 S30 B21) Work needs to be done on improving litter pick up and encouraging people dispose of their litter correctly.
+- ptuye (L4 S43 B515) The population has out grown the infrastructure in bg/ warren county.
+- p8hra (L5 S36 B101) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- p7438 (L6 S6 B9) The Barren River water front needs to be improved on both sides of the river and include canoeing and kayaking water features in the river.
+- pxg44 (L7 S2 B26) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pcu64 (L8 S26 B122) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- p8tq3 (L9 S4 B54) There is too much continuous road work going on downtown. They need to get it together.
+- p7ms9 (L10 S28 B38) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pt76e (L11 S51 B501) Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+- pv2a8 (L12 S23 B537) When the city tears up lawns with projects they should be required to do what it takes so that lawns are same quality they were before.
+- p5e8k (L13 S96 B183) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- pqaaf (L14 S61 B454) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- pyyxz (L15 S22 B591) Impact on traffic flow should be considered with any proposed new developments.
+- pvq7m (L16 S94 B36) many parts of the By-pass can and should be widened
+- pi9rk (L17 S35 B364) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- p2a6v (L18 S19 B5) Sewer should be required to be run to all new subdivisions and cost should be split between city/county water systems and builders
+- pfuyd (L19 S15 B324) big projeck in city sould be vote by people
+- pjbzz (L20 S3 B377) Need to build wider access roads into the city!
+- p7yd2 (L21 S65 B121) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- p9md3 (L22 S18 B8) County needs to extend water lines in Tuckertown area. About a dozen homes don't have county water or fire hydrants!
+- p5ahf (L23 S122 B179) Need more bike lanes and biker friendly resources
+- pgj3y (L24 S29 B336) Install new sidewalks along major roads, like Three Springs, and city-wide bike routes, to decrease likelihood of accidents
+- phuu3 (L25 S24 B7) The access roads off Scottsville Rd are terrible. They provide constant traffic jams and can be dangerous. We need to budget to fix them.
+- pr7y3 (L27 S8 B475) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- puyc3 (L29 S72 B3) We need to renovate the run down businesses and store fronts, instead of building new places
+- pzaca (L30 S10 B595) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- p3y3b (L31 S9 B158) Build more roads!!! Traffic is terrible here for a small city.
+- padkd (L37 S21 B248) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pjf7t (L39 S11 B83) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pv2mh (L38 S12 B538) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- pe3gy (L44 S13 B300) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pk7ki (L45 S50 B15) Better enforcement of traffic violations. Too many running red lights, parking in fire lanes, cell phone usage while driving
+- pq8wz (L51 S25 B70) BG Parks needs more funding from City
+- pyr2u (L54 S1 B76) Warren county needs to be "wet". The city is wet but the county is dry.
+- pc7zk (L79 S14 B276) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- ppz44 (L89 S261 B13) the Bark Park needs more trees and water access for the smaller dogs area
+- peety (L97 S106 B10) Everyone needs to research (fluoride)...definitely need this to disappear from our water
+- pbm45 (L120 S20 B268) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pwsqv (L122 S17 B29) Water safety and swim lessons to all k-12 students.
+- p2hhq (L197 S156 B4) The feeder road at Shive Lane and Scottsville Road need to be closed off. It is very dangerous.
+- pp9h8 (L202 S109 B6) Either do the speed limit or get over to the right, to many SLOW, out of county drivers clogging up the roadways.
+- p49kb (L253 S44 B2) Driving in this town very dangerous, Drivers Education classes should be required for all new drivers!!!
+- pcq7d (L300 S417 B12) We need more activities/places to go for teenagers; basically all there is are places to eat, the mall, and the bowling alley
+- pfwr5 (L309 S16 B326) Warren County should be completely wet, the idea of a “moist” County is outdated and stunting the financial growth and tourism opportunity.
+- pauwi (L339 S414 B1) The Smokey Bones entrance off of Scottsville Road is extremely dangerous and needs a traffic light.
+- pxgee (L374 S317 B14) 24hr parks would be a huge, and relatively inexpensive, benefit for the many people in our community who work 2nd and 3rd shifts.
+- pfcmk (L420 S358 B11) City should bar non-competes, similar to North Dakota/California, as driving destitution in non-tenure work force. Be heroic destination.
+
+## #16 pugud: More bike trails and walking trails would be a great addition.
+
+- p2839 (L1 S1 B1) Developing more bike trails into surrounding areas of the city would allow for a more developed both transport and recreational experiences
+- p5ahf (L2 S3 B5) Need more bike lanes and biker friendly resources
+- pcp9t (L3 S2 B3) More walking/nature trails in our sports-centric parks. Have certain hours where walkers can enjoy the beauty of Paul Walker Golf Course.
+- puyc6 (L4 S4 B522) I hope BG can one day link the short, scattered bicycle paths.
+- pgj3y (L5 S9 B15) Install new sidewalks along major roads, like Three Springs, and city-wide bike routes, to decrease likelihood of accidents
+- pp8pk (L6 S6 B406) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- pufe9 (L7 S18 B12) Make all future sidewalks wide enough for multi-use (walking, biking, skateboarding etc)
+- pqaaf (L8 S24 B2) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- psbcj (L9 S19 B472) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pi9rk (L10 S23 B313) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pz6eg (L11 S5 B10) Bike lanes that are wide enough to safely ride on without fear of being hit by passing cars.
+- paeh8 (L13 S16 B16) Make it a walking city. Sidewalks along the main avenues (scottsville rd, campbell ln, 31 bypass) with plants, benches, art pieces.
+- pu4rv (L12 S40 B510) Multi-use sidewalks should have fixtures for skateboards, bikes like small ramps etc.
+- pe6hw (L14 S7 B232) A kayak trail from Lampkin Park to Barren River. Improved River access.
+- ph4wf (L15 S10 B292) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- padkd (L16 S43 B163) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p7ms9 (L17 S34 B121) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- p4u89 (L18 S44 B7) Have a Dual Slalom Course, Pump Track & Bike Skills Course co-located by the Low Hollow Mountain Bike Trail at Weldon Peete Park.
+- pmjk5 (L19 S29 B374) More public transportation options--be creative
+- p6xjr (L20 S26 B107) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- p6cyb (L21 S13 B4) Plan for people, not cars. Walking should be enjoyable, not a hazard.
+- pmbwe (L22 S131 B367) More roundabouts for intersections
+- p7438 (L23 S39 B112) The Barren River water front needs to be improved on both sides of the river and include canoeing and kayaking water features in the river.
+- p6k4e (L24 S48 B98) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pfnxw (L25 S20 B260) City and county parks departments should provide more programming for adults and seniors.
+- pvfj9 (L27 S8 B533) More green spaces. All of our parks have just become sports complexes!
+- pgdik (L29 S12 B274) Please increase more family friendly activities
+- p8ce7 (L31 S25 B131) Build and improve sidewalks in the area of Magnolia Street and 13th to Cabell Drive area for the heavy pedestrian traffic there.
+- pjaji (L41 S38 B8) It would be great if people in neighborhoods could get to know each other better and neighborhoods were like small communities of neighbors.
+- p3cst (L47 S11 B34) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- p4pb4 (L51 S14 B57) Every citizen should be within 1 mile of some shaded green space.
+- p7msc (L55 S22 B122) Create pedestrian-only streets.
+- pzaca (L59 S17 B595) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- pwy69 (L60 S33 B9) More sidewalks would be great, but first let’s stop people parking on them. Or stop spending money building them. Whichever.
+- pjbzz (L94 S15 B330) Need to build wider access roads into the city!
+- pge4x (L100 S93 B14) A fresh food grocery store to be built in Delafield and Morgantown rd areas within walking distance of residents.
+- pbaby (L104 S21 B181) Better public transit and runs 24 /7 so people without cars can get to work. Also more stops added in residential areas.
+- p4cji (L360 S375 B11) Police should not focus on Public Intoxication charges for people walking home. We should encourage people to walk -- not drive drunk.
+- pnspp (L388 S510 B6) The Kentucky Career Center on Chestnut is a great resource to locate employment.
+- phyee (L583 S536 B13) SKYPAC needs to bring in younger, more entertaining acts. It will fall apart if they keep only catering to 50+. Could be a great venue.
+
+## #17 pwy69: More sidewalks would be great, but first let’s stop people parking on them. Or stop spending money building them. Whichever.
+
+- pzaca (L1 S1 B34) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- pufe9 (L2 S4 B50) Make all future sidewalks wide enough for multi-use (walking, biking, skateboarding etc)
+- p2hkv (L3 S3 B21) Our sidewalks need more connectivity. It's too piecemealed and makes some areas unusable.
+- pgj3y (L4 S5 B63) Install new sidewalks along major roads, like Three Springs, and city-wide bike routes, to decrease likelihood of accidents
+- p8ce7 (L5 S2 B56) Build and improve sidewalks in the area of Magnolia Street and 13th to Cabell Drive area for the heavy pedestrian traffic there.
+- paeh8 (L6 S17 B66) Make it a walking city. Sidewalks along the main avenues (scottsville rd, campbell ln, 31 bypass) with plants, benches, art pieces.
+- p6cyb (L7 S13 B143) Plan for people, not cars. Walking should be enjoyable, not a hazard.
+- p89sh (L8 S9 B12) Build parking areas.
+- puhdq (L9 S6 B520) New buildings should not be built right up to the sidewalk to inhibit seeing around corners when driving.
+- pps8y (L10 S16 B58) Parking on both sides of the streets in apartment subdivisions should should not be allowed and police need to enforce the law.
+- psbcj (L11 S11 B484) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pu4rv (L12 S24 B42) Multi-use sidewalks should have fixtures for skateboards, bikes like small ramps etc.
+- pg2kz (L13 S18 B29) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- p7msc (L14 S8 B168) Create pedestrian-only streets.
+- pkqjk (L15 S7 B36) More parking for Fountain Square to become a pedestrian zone.
+- p78pt (L16 S19 B15) Sidewalks are needed along Gary Farms Blvd
+- pqaaf (L17 S51 B445) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- pf7ei (L18 S25 B53) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pq3ad (L19 S12 B46) More parking downtown. There are too many reserved spaces which should be available in the evening.
+- p7ms9 (L20 S27 B65) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pgpc7 (L21 S29 B19) Parking in apartment subdivisions should monitored closely by police. Parking on subdivision streets shouldn't be allowed.
+- pugud (L22 S36 B3) More bike trails and walking trails would be a great addition.
+- pxwxs (L23 S89 B580) Create shoulders on the bypass.
+- ppegh (L24 S10 B7) Holly drive needs sidewalks
+- p59nj (L25 S14 B67) Owners of large parking lots should be required to break them up with pockets of green space and trees; perhaps create a walkable green path
+- pwdbv (L26 S22 B33) Some of the roads in the city are not wide enough to put sidewalks in but they do anyway catherine dr is ridiculous
+- pjubs (L30 S32 B10) All new and existing sidewalks should have shade trees
+- phc7j (L32 S15 B9) Parking lots should be monitored to prevent illegal parking in handicap spaces.
+- pqhex (L34 S69 B2) Why has the Police stop enforcing parking regulations? Park any way any direction. Is it time for a separate Traffic Enforcement Division?
+- pd3p9 (L42 S20 B25) Better parking around the square would draw in more college students who like to shop but can not find parking downtown.
+- p8tq3 (L61 S23 B184) There is too much continuous road work going on downtown. They need to get it together.
+- pjbzz (L78 S21 B361) Need to build wider access roads into the city!
+- p5yca (L80 S92 B1) WKU should consider building a parking structure at the Chestnut St lot.
+- pek8y (L123 S88 B4) people need to understand that a STOP sign means STOP, not just slow down and keep going.
+- pp2tr (L171 S138 B14) Building codes prohibiting trophy houses next to common housing
+- ppwgk (L275 S395 B8) We need to SHADE street lamps. This actually increases visibility, reduces glare, and saves energy/ money. Using LEDs would save money, too.
+- psn6u (L322 S321 B11) Should be an interstate exit for the Woodburn area it could help decrease BG congestion and let people bypass BG all together
+- puuwd (L418 S325 B5) Like Steamers but hate they ruined that historic building
+- p43af (L460 S243 B13) It should be mandatory for all homes/businesses to have visible marking on mailbox and building for their address.
+- pnspp (L472 S591 B6) The Kentucky Career Center on Chestnut is a great resource to locate employment.
+
+## #18 pudtd: We need faster internet service.
+
+- paxtf (L1 S1 B1) We need a fiber option for internet.
+- pkzf6 (L2 S2 B6) Bowling Green needs more competitive internet rates.
+- pchi2 (L3 S3 B8) How is it that surrounding counties have county wide high speed internet, yet one third of Warren County residents have slow or no internet?
+- p6fag (L4 S6 B4) We need to grow the internet infrastructure particularly in growing areas of the county like Alvaton.
+- pktbx (L5 S5 B5) Internet services should be a public municipality.
+- pztez (L6 S7 B7) WRECC should provide internet services.
+- pbqbi (L7 S8 B2) More choices when it comes to internet. BGMU has been offering service to businesses for a while, they should expand to offer to residents.
+- pn9cj (L8 S4 B3) Increase Internet/Cell/Phone service throughout the county. First deal with areas that currently don't have any option.
+- pcv53 (L9 S9 B15) BGMU needs to offer residential fiber internet as a UTILITY, using Chattanooga as a perfect example.
+- phjdj (L10 S12 B352) Bowling Green needs more competitive cable rates.
+- pu2kb (L11 S13 B519) Our city should make a bid for Google Fiber to help compete with Spectrum and AT&T.
+- p5rmi (L12 S11 B27) We need to promote competition in town for Charter. AT&T isn't much better and doesn't serve everywhere. Need more fiber to the homes.
+- puvmn (L13 S10 B532) Free WIFI in certain areas - particularly around Fountain Squre
+- paxv3 (L14 S20 B243) competition for cable companies and an end to heir price gouging.
+- p35gt (L15 S15 B114) Better/more mass media choices available.
+- pqnjh (L16 S19 B463) Cable TV providers should include all local channels.
+- pjbzz (L17 S14 B31) Need to build wider access roads into the city!
+- pnkss (L18 S21 B423) Warren county needs to be more proactive about keeping their county maps up to date of new roads or developments especially online. (Google)
+- pddku (L19 S39 B280) Spectrum should have competition and not a monopoly. Rates should be regulated by city county government
+- p5ahf (L20 S77 B34) Need more bike lanes and biker friendly resources
+- ptuye (L21 S25 B513) The population has out grown the infrastructure in bg/ warren county.
+- padzm (L22 S16 B70) Cable companies need competition and not be allowed to raise rates of customers. Once you sign on, that is your rate unless you upgrade.
+- phceg (L23 S153 B76) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pi4wj (L24 S18 B25) We need a real bus system.
+- pgmpv (L25 S17 B331) Something needs to be done to improve traffic flow
+- pxtgq (L39 S33 B11) We should have a commuting service between here & Nashville.
+- pki7f (L42 S24 B398) Bowling Green needs more access to affordable , healthy, local food sources.
+- p6rz9 (L53 S58 B9) I wish we had train service to Nashville
+- pjf7t (L97 S26 B12) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pr7y3 (L184 S22 B473) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- pb2cb (L196 S481 B10) Recycling should be encouraged by not charging for the service
+- pp9h8 (L252 S23 B434) Either do the speed limit or get over to the right, to many SLOW, out of county drivers clogging up the roadways.
+- p28ea (L402 S512 B13) Temp service need to pay higher hourly rate to temp than hiring firm pays their FTE to account for reduced economic security
+- pbjm2 (L457 S360 B14) Warren County residents should not be charged the WASTE WATER SERVICE FEE on their water bills.
+
+## #19 pemdb: Bowling Green needs to pass a resolution in support of medical cannabis.
+
+- peq9z (L1 S1 B1) Medical marijuana should be legal.
+- ptgpf (L2 S2 B503) Recreational marijuana should be legal.
+- pvdxd (L3 S5 B540) Legalizing marijuana would be a boon for the economy.
+- psnvi (L4 S4 B7) Recreational Cannabis in KY offers tourism, increased revenue, job opportunities, and shows massive leadership in the southern region.
+- pr2fm (L5 S3 B467) Legalized Marijuana will not only assist Bowling Green in earning Tax revenue but will decrease the strain on our prison system. Win-Win.
+- pahwq (L6 S6 B220) Legalizing marijuana at the state level could produce substantial tax revenue, but if only BG did, it would cause problems.
+- p95zh (L7 S19 B204) There should be no punishment for small amounts of marijuana possession, in my opinion
+- pvndx (L8 S8 B544) Industrial hemp should be re-legalized to grow in Kentucky.
+- prh9c (L9 S12 B478) Solving the drug crisis should not mean people with health problems/injuries have to suffer with severe pain.
+- p9mdn (L10 S7 B211) Marijuana should not be legalized.
+- pqpib (L11 S10 B460) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- pmz7k (L12 S14 B408) We need more regulation of opioid drugs, both prescribed and illicit.
+- pd4in (L13 S9 B267) There should be a push to improve mental health awareness and availability in Bowling Green.
+- pkkkz (L14 S43 B381) A city should have the right to declare itself a sanctuary city.
+- pyr2u (L15 S289 B28) Warren county needs to be "wet". The city is wet but the county is dry.
+- p92xj (L16 S24 B33) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- p4qh4 (L17 S11 B128) Promote access to mental health treatment, rather than treating addicts as criminals.
+- pmt8i (L18 S27 B404) In order to better combat the opioid epidemic, it is time to view drug addiction as a health problem rather than a criminal justice problem.
+- p5ahf (L19 S139 B138) Need more bike lanes and biker friendly resources
+- pki7f (L20 S13 B39) Bowling Green needs more access to affordable , healthy, local food sources.
+- padkd (L21 S86 B217) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pgnkw (L22 S80 B318) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- p9ivq (L23 S15 B209) Bowling Green should have more healthy/clean eating options for those who have limited diets.
+- pdckg (L24 S21 B269) Affordable supports for the elderly and aging population are needed in our community.
+- p6zka (L25 S37 B174) Commitment to healthy lifestyles
+- pnvfb (L27 S16 B37) Bowling Green needs more pet-friendly housing options for renters.
+- pvxt4 (L29 S18 B549) We need a health food store.
+- pani2 (L36 S23 B223) Law enforcement should send drug possession arrestees for rehabilitation services rather than imprisonment.
+- p6j9p (L41 S20 B162) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- p7zmn (L42 S22 B188) There should be more effort put into teaching students about any potential harmful side effects of drugs, illegal or otherwise.
+- ppgmg (L52 S347 B5) parks and rec should promote and support pickleball for older citizens
+- p3wgr (L66 S17 B12) I would like to see the WKU psych and Medical programs collaborate on mental health research, which is so sadly lacking in today's society.
+- p8849 (L68 S25 B190) Casinos. Bring them here.
+- px9ga (L104 S39 B10) State and federal medical societies are unable or unwilling to police their members regarding the drug dependency problem.
+- pts69 (L109 S176 B11) Funding and support should be given to the existing BG buses, to expand their service area and improve accessibility.
+- pf2rb (L139 S82 B2) Bowling Green City Commission needs to pass an ordinance banning the sale or use of large fireworks in the city limits.
+- pvq7m (L166 S452 B4) many parts of the By-pass can and should be widened
+- pgw6z (L198 S92 B3) Pass a No animals on chains in the county.
+- psj6d (L226 S232 B9) Support more local chefs and brewers! White Squirrel is fantastic and I want to see more of it in BG!
+- prnz3 (L421 S135 B6) Pass a no animals in a hot car ordinance.
+- pi2ex (L461 S361 B14) Pass an ordinance that requires pet owners to pay a fee if their pets are not fixed.
+- p7h4t (L462 S101 B15) BG can link/support hotel/food, recreational/cultural venues in a Tourism Passport, giving discounts when at least 3 are purchased together.
+- prjzc (L508 S598 B13) Go to underground utilities. Scottsville rd and the by-pass look awful.
+- pji76 (L578 S484 B8) There are too many apartments being built. Our economy can't continue to support it. There will be a bust & it might be sooner than later.
+
+## #20 pq8wz: BG Parks needs more funding from City
+
+- p7ms9 (L1 S1 B15) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pfnxw (L2 S2 B4) City and county parks departments should provide more programming for adults and seniors.
+- pvfj9 (L3 S3 B3) More green spaces. All of our parks have just become sports complexes!
+- p99xx (L4 S11 B1) BG needs to increase recycling and trash bins around the parks and parkways to decrease trash and litter
+- ppgmg (L5 S22 B6) parks and rec should promote and support pickleball for older citizens
+- pkcbm (L6 S4 B26) BG needs more Summer weekend festivals/activities
+- pi9rk (L7 S18 B343) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- psbcj (L8 S8 B485) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- p5ahf (L9 S43 B135) Need more bike lanes and biker friendly resources
+- ppz44 (L10 S29 B47) the Bark Park needs more trees and water access for the smaller dogs area
+- p2ib2 (L11 S46 B96) City School taxes are too high , they need to budget more
+- pgdik (L12 S5 B309) Please increase more family friendly activities
+- ptuye (L13 S53 B508) The population has out grown the infrastructure in bg/ warren county.
+- pneud (L14 S42 B411) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- pts69 (L15 S14 B7) Funding and support should be given to the existing BG buses, to expand their service area and improve accessibility.
+- pzaca (L16 S19 B595) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- p6c95 (L17 S52 B19) BG needs an indoor tennis option
+- p6k4e (L18 S10 B17) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pg2kz (L19 S54 B305) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- pkb9k (L20 S88 B31) Bowling Green needs an indoor / outdoor sports event complex/
+- ptahe (L21 S40 B498) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- pc7zk (L22 S9 B248) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- picza (L23 S96 B345) City residents do not receive adequate return on County Taxes paid.
+- prhru (L24 S7 B13) We already have a lot of parks. And the libraries have become a hangout for the homeless. Do something about that problem first
+- p2839 (L25 S24 B90) Developing more bike trails into surrounding areas of the city would allow for a more developed both transport and recreational experiences
+- ph4wf (L26 S15 B87) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pxg44 (L28 S13 B72) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pbm45 (L29 S6 B236) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pfuyd (L30 S17 B301) big projeck in city sould be vote by people
+- padkd (L32 S20 B213) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pjq68 (L44 S16 B366) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pgaj7 (L47 S25 B308) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- pp8pk (L81 S12 B424) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- pxgee (L83 S23 B16) 24hr parks would be a huge, and relatively inexpensive, benefit for the many people in our community who work 2nd and 3rd shifts.
+- pkezh (L85 S72 B10) Public school systems need to provide more funding for art education programs, such as music, theater, and visual arts.
+- pe3ap (L97 S67 B12) Continue downtown development to the river. Tourists always seek out parks & restaurants near water.
+- pms9n (L186 S421 B2) Smoking should not be allowed in public parks.
+- pjbzz (L240 S21 B359) Need to build wider access roads into the city!
+- pfin8 (L343 S137 B8) Community Education provides after-school care necessary to working parents. Funding should not be cut.
+- pyfsz (L356 S308 B11) University management bears more responsibility than federal and state education funding cuts for tuition rising so much over the years.
+- pqbt3 (L370 S451 B5) Mesonet provides valuable and protective weather information and funding for it should not be cut.
+- pyr6n (L384 S368 B14) Future charter schools would be a financial burden to public school funding, unless they are held to accountability by local school boards.
+- p34uw (L409 S532 B9) Both school districts shamefully manipulate low economic status parents to gain Title I funding. It should stop.
+
+## #21 pgdsd: The city of Bowling Green should enforce their existing noise ordinance.
+
+- pd9yv (L1 S1 B1) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- pkta9 (L2 S2 B13) City officials need to work with WKU admin. to address the noise & public nuisance problems with the frat houses and homeowners downtown.
+- phfba (L3 S3 B301) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pkeaq (L4 S23 B353) Leash laws should be more strictly enforced in both the city and county
+- p792j (L5 S11 B16) Fireworks use in residential areas is out of control with no police presence to enforce the already in place restrictions.
+- p9ujh (L6 S7 B161) Lease laws should be enacted and enforced in the county as they are in the city.
+- ppct5 (L7 S5 B411) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- psik2 (L8 S74 B475) stronger enforcement of junk cars in yards and trashy looking yards in general
+- pk7ki (L9 S15 B349) Better enforcement of traffic violations. Too many running red lights, parking in fire lanes, cell phone usage while driving
+- pjtja (L10 S16 B345) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- p9j36 (L11 S10 B158) Better ordinances on keeping animals on leashes or in fenced areas are needed.
+- pqr9z (L12 S97 B447) Extra police, or parking enforcement unit should be on duty during events to maintain legal parking
+- pe54w (L13 S58 B235) Work needs to be done on improving litter pick up and encouraging people dispose of their litter correctly.
+- p3esu (L14 S88 B43) fines for leaving dog feces in public areas needs to be enforced
+- pf2rb (L15 S4 B17) Bowling Green City Commission needs to pass an ordinance banning the sale or use of large fireworks in the city limits.
+- pps8y (L16 S32 B12) Parking on both sides of the streets in apartment subdivisions should should not be allowed and police need to enforce the law.
+- ps9dt (L17 S129 B470) Police do a shameful job of enforcing traffic laws. more tickets = more compliance and more $$$$$.
+- pptye (L18 S8 B421) More concerts should be held in Bowling Green
+- pg2kz (L19 S157 B272) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- pzaca (L20 S46 B595) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- pm8t7 (L21 S62 B368) Regulate the size & brightness of business signs.
+- pbxwr (L22 S42 B199) Planning & Zoning need to do a better job of listening & working with residents. It's not next to their house, so they don't care!
+- pgpc7 (L23 S64 B283) Parking in apartment subdivisions should monitored closely by police. Parking on subdivision streets shouldn't be allowed.
+- pi9rk (L24 S73 B316) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- ptahe (L25 S44 B487) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- p92xj (L28 S6 B8) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- p8jmp (L29 S54 B10) Bowling Green needs to enforce the separation of church and state and impose taxes on churches that politic from the pulpit
+- p6xjr (L30 S20 B116) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pindv (L49 S25 B323) The Bowling Green/Warren County Airport needs to be relocated outside of the city limits.
+- pgnkw (L57 S9 B22) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- pbm45 (L59 S31 B5) We need to focus more on the existing housing in BG, including renovations and improvements.
+- p98ae (L67 S14 B6) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- p78cz (L78 S13 B123) There should be an actual complaint filed by a neighbor before Code Enforcement writes a violation. Stop harassing hardworking citizens.
+- pnfi5 (L94 S92 B11) install traffic cameras and enforce running of stop lights. more traffic enforcement means more $$$ for the city.
+- pv2mh (L97 S17 B524) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- p5hnk (L109 S22 B84) Street lights should be required on residential streets in town. Too many dark corners.
+- pc7zk (L116 S21 B204) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pxjks (L139 S219 B9) City and County should convert existing street lighting to Dark Sky Complaint Lights. #Nomoreorangeglow
+- pb5iz (L147 S12 B181) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- p8tq3 (L184 S19 B146) There is too much continuous road work going on downtown. They need to get it together.
+- p5at5 (L191 S180 B4) Downtown redevelopment should retain accessible parking for existing businesses.
+- pxiz6 (L213 S204 B3) Vaping should not be added to the smoking ordinance.
+- pts69 (L214 S329 B15) Funding and support should be given to the existing BG buses, to expand their service area and improve accessibility.
+- prnz3 (L244 S18 B7) Pass a no animals in a hot car ordinance.
+- p2ya2 (L276 S409 B14) All new and existing single family housing should have at least one shade tree planting
+- pjubs (L303 S562 B2) All new and existing sidewalks should have shade trees
+- pjbzz (L322 S24 B334) Need to build wider access roads into the city!
+
+## #22 pztez: WRECC should provide internet services.
+
+- pktbx (L1 S3 B1) Internet services should be a public municipality.
+- pudtd (L2 S2 B4) We need faster internet service.
+- pbqbi (L3 S7 B15) More choices when it comes to internet. BGMU has been offering service to businesses for a while, they should expand to offer to residents.
+- paxtf (L4 S4 B2) We need a fiber option for internet.
+- pkzf6 (L5 S5 B3) Bowling Green needs more competitive internet rates.
+- pchi2 (L6 S6 B5) How is it that surrounding counties have county wide high speed internet, yet one third of Warren County residents have slow or no internet?
+- pcv53 (L7 S10 B16) BGMU needs to offer residential fiber internet as a UTILITY, using Chattanooga as a perfect example.
+- pn9cj (L8 S1 B18) Increase Internet/Cell/Phone service throughout the county. First deal with areas that currently don't have any option.
+- p6fag (L9 S8 B12) We need to grow the internet infrastructure particularly in growing areas of the county like Alvaton.
+- phjdj (L10 S11 B308) Bowling Green needs more competitive cable rates.
+- p5rmi (L11 S12 B99) We need to promote competition in town for Charter. AT&T isn't much better and doesn't serve everywhere. Need more fiber to the homes.
+- pu2kb (L12 S14 B507) Our city should make a bid for Google Fiber to help compete with Spectrum and AT&T.
+- puvmn (L13 S9 B523) Free WIFI in certain areas - particularly around Fountain Squre
+- paxv3 (L14 S16 B185) competition for cable companies and an end to heir price gouging.
+- pddku (L15 S22 B230) Spectrum should have competition and not a monopoly. Rates should be regulated by city county government
+- pqnjh (L16 S13 B446) Cable TV providers should include all local channels.
+- p35gt (L17 S15 B45) Better/more mass media choices available.
+- pmp68 (L18 S410 B384) BGMU needs to be held accountable for their rates and "averages."
+- padzm (L19 S17 B178) Cable companies need competition and not be allowed to raise rates of customers. Once you sign on, that is your rate unless you upgrade.
+- pikyq (L20 S83 B326) We a true junior college which offers credit / non credit courses like many other states from basket weaving to cyber security
+- pwbe8 (L21 S330 B554) We need more incentives for individual and business solar power
+- pjrdt (L22 S27 B346) Improved businesses such as banks and groceries in lowest income areas
+- p6u6a (L23 S36 B122) Local government, for profit and non profits should work together on housing and economic equality
+- pxg44 (L24 S92 B570) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pnbm2 (L25 S161 B9) Recycling services need to be improved and modernized. Current contractor uses outdated equipment, services are messy, company unresponsive.
+- pe262 (L27 S23 B236) WKU should upgrade their CIT program to keep up with the times
+- pnkss (L30 S20 B397) Warren county needs to be more proactive about keeping their county maps up to date of new roads or developments especially online. (Google)
+- p6twv (L38 S209 B6) City Annexed areas need more city services for their tax $$.
+- pn5bv (L45 S19 B393) Local companies that can't fill job openings & the Workforce Dev't. Board should set up commuter lots and a shuttle service to rural areas.
+- prb8q (L51 S151 B13) Businesses and multi-family dwellings should be required to offer and use recycling services.
+- pjbzz (L67 S18 B338) Need to build wider access roads into the city!
+- pbzyn (L93 S128 B7) Provide accessible transportation for seniors that have difficulty driving
+- pz3q2 (L99 S25 B594) WKU and local community colleges should continue to offer courses that interest those seeking an education, whether or not the courses aid in job placement.
+- pfnxw (L104 S179 B8) City and county parks departments should provide more programming for adults and seniors.
+- p5eg6 (L132 S21 B92) There needs to be better access to grocery stores and restaurants from WKU's campus.
+- pr7y3 (L136 S24 B458) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- pcqfp (L141 S65 B11) All schools in the county and city should work together to provide the same minimum level of education to students.
+- psb2i (L303 S116 B10) Provide regular and affordable daily transport to Nashville Airport from Bowling Green.
+- pani2 (L484 S457 B14) Law enforcement should send drug possession arrestees for rehabilitation services rather than imprisonment.
+
+## #23 pxjks: City and County should convert existing street lighting to Dark Sky Complaint Lights. #Nomoreorangeglow
+
+- ppwgk (L1 S2 B16) We need to SHADE street lamps. This actually increases visibility, reduces glare, and saves energy/ money. Using LEDs would save money, too.
+- p5hnk (L2 S1 B1) Street lights should be required on residential streets in town. Too many dark corners.
+- pm8t7 (L3 S3 B368) Regulate the size & brightness of business signs.
+- pxg44 (L4 S8 B569) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pwbe8 (L5 S23 B551) We need more incentives for individual and business solar power
+- pu42c (L6 S5 B508) Better visibility on roads. Reflectors and better signage
+- p87p6 (L7 S11 B131) Bowling Green should be become a carbon neutral city.
+- pgvyh (L8 S19 B288) Shade trees should be required plantings along all Greenways
+- pi9rk (L9 S17 B316) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pd9yv (L10 S7 B220) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- p7ms9 (L11 S34 B125) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pv2mh (L12 S10 B15) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- pneud (L13 S21 B393) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- prb59 (L14 S25 B457) Require new downtown developments to become LEED certified
+- pgdsd (L15 S6 B2) The city of Bowling Green should enforce their existing noise ordinance.
+- psbcj (L16 S39 B473) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pbp7c (L17 S12 B7) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- padkd (L18 S41 B166) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p3bwu (L19 S4 B36) The city should actually time stoplights correctly during rush hour to prevent complete gridlock
+- pmbwe (L20 S101 B369) More roundabouts for intersections
+- p6xjr (L21 S29 B112) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pu9z9 (L22 S93 B511) The travesty going up on Fairview Ave. should never have been allowed
+- p2ya2 (L23 S65 B9) All new and existing single family housing should have at least one shade tree planting
+- pxra8 (L24 S224 B575) Downtown at the square and adjacent areas should be a pedestrian mall
+- pnfi5 (L25 S44 B11) install traffic cameras and enforce running of stop lights. more traffic enforcement means more $$$ for the city.
+- p3y2u (L27 S16 B45) Greenwood Mall parking lot could become a cooperative solar collection for itself and home surrounding
+- pjubs (L31 S156 B3) All new and existing sidewalks should have shade trees
+- pk7ki (L43 S22 B18) Better enforcement of traffic violations. Too many running red lights, parking in fire lanes, cell phone usage while driving
+- p4pb4 (L48 S9 B61) Every citizen should be within 1 mile of some shaded green space.
+- p6jxh (L53 S13 B102) Bowling Green should try to emulate Owensboro's Friday night programs downtown.
+- ppct5 (L60 S15 B411) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- phfba (L83 S20 B300) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- p5ku8 (L90 S18 B81) There needs to be a stoplight at the intersection of Shive Lane and Ken Bale Blvd to improve traffic flow. The backups there are awful.
+- p792j (L134 S14 B121) Fireworks use in residential areas is out of control with no police presence to enforce the already in place restrictions.
+- pbm45 (L141 S62 B5) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pqy6v (L185 S413 B6) Footbridge from airport to across the street. Pilots running across the road.
+- p8ce7 (L190 S109 B13) Build and improve sidewalks in the area of Magnolia Street and 13th to Cabell Drive area for the heavy pedestrian traffic there.
+- p5at5 (L215 S108 B4) Downtown redevelopment should retain accessible parking for existing businesses.
+- pjbzz (L287 S24 B334) Need to build wider access roads into the city!
+- pbwev (L323 S32 B14) Trick or treating should last longer after dark. Many decorations don't show til then. Also start later, parents can't get home in time!
+- pts69 (L328 S356 B10) Funding and support should be given to the existing BG buses, to expand their service area and improve accessibility.
+- p78cz (L549 S185 B8) There should be an actual complaint filed by a neighbor before Code Enforcement writes a violation. Stop harassing hardworking citizens.
+- pwra8 (L600 S588 B12) Doctors over-prescribing opioids should be sentenced at least as harshly as street dealers if not more harshly due to their knowledge.
+
+## #24 p6u6a: Local government, for profit and non profits should work together on housing and economic equality
+
+- padkd (L1 S3 B57) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p5ref (L2 S2 B135) Encourage connection between the wealthy and the poor
+- pjrdt (L3 S17 B368) Improved businesses such as banks and groceries in lowest income areas
+- pgzys (L4 S42 B323) Rental assistance programs
+- p64wt (L5 S13 B141) More affordable home ownership options.
+- p6j9p (L6 S8 B151) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- pn228 (L7 S36 B413) City/county gov't. (in all of there forms) must reflect the racial/ethnic city/county population demographic to assist in recruitment/growth
+- p9cba (L8 S10 B198) Reducing poverty will enhance the quality of life for everyone in our community regardless of status.
+- pc7zk (L9 S1 B242) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- psbcj (L10 S104 B486) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- phceg (L11 S162 B327) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pr4k5 (L12 S52 B36) Bowling Green should work on becoming a more food sustainable city with less food waste and food insecurity
+- piq5m (L13 S14 B352) Job training programs for lower income
+- pqra3 (L14 S30 B65) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- pptwk (L15 S21 B440) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- pnyg7 (L16 S22 B426) The university and city should develop stronger mutually beneficial partnerships.
+- pgdt8 (L17 S6 B307) Consider asking low-income or disabled residents what they really need.
+- p66dt (L18 S59 B52) The rental market prices are well beyond an affordable housing level and needs to be addressed given the number of renters in BG.
+- p9ujh (L19 S65 B204) Lease laws should be enacted and enforced in the county as they are in the city.
+- pptbv (L20 S11 B439) We need mixed-use development in the most disadvantaged areas of BG.
+- pgaj7 (L21 S37 B303) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- ph4wf (L22 S45 B46) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pwzum (L23 S88 B49) We need to replace "Room at the Inn" services with temporary decent housing connected to aid agencies for the homeless
+- p6k4e (L24 S71 B153) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pqnui (L25 S147 B461) Resources to better integrate immigrants and refugees into the community should be put into place.
+- pbm45 (L28 S9 B17) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pa9ks (L32 S50 B12) Temporary housing for the homeless in the community.
+- pdckg (L38 S25 B261) Affordable supports for the elderly and aging population are needed in our community.
+- p92xj (L40 S19 B192) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pqy2d (L43 S131 B1) Every school has 1-9% homeless people. This is for the government to deal with via economic policy. Not sending to a NGO or giving a shanty
+- pqmg8 (L47 S15 B460) Low-income areas should get beautification money -- not the wealthy who can afford it themselves.
+- pjq68 (L49 S16 B367) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pcqfp (L53 S20 B2) All schools in the county and city should work together to provide the same minimum level of education to students.
+- pjzz6 (L55 S23 B5) The city and county work together to keep the low socieconomic status children out of certain schools. This reduces learning opportunities.
+- pf6t9 (L58 S7 B19) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- p8hgh (L75 S34 B7) The city should craft a very simple fairness ordinance, saying no discrimination acquiring housing, but not giving LGBTQ EEOC Bypass @work
+- p3cst (L76 S12 B89) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- pvh84 (L88 S4 B9) Homelessness is for the nonprofit sector to deal with, not government.
+- pnvfb (L91 S28 B15) Bowling Green needs more pet-friendly housing options for renters.
+- pfuyd (L98 S5 B297) big projeck in city sould be vote by people
+- pu2qt (L99 S18 B517) More free meeting space for nonprofits.
+- ps5tz (L108 S80 B10) More technical education programs for non-graduates of high school
+- pfcmk (L171 S79 B3) City should bar non-competes, similar to North Dakota/California, as driving destitution in non-tenure work force. Be heroic destination.
+- p34uw (L296 S384 B14) Both school districts shamefully manipulate low economic status parents to gain Title I funding. It should stop.
+- p6quu (L324 S61 B8) There should be something a work farm for local prisoners to learn to tend gardens, take care of livestock, and learn to be more useful.
+- pddku (L342 S236 B11) Spectrum should have competition and not a monopoly. Rates should be regulated by city county government
+- pqqyk (L344 S96 B6) Local elected government officials should not be able to hold a seat and also be on the TIF board or other unelected boards.
+- phsyb (L355 S24 B34) Prevent the development of new housing areas, especially in farm land areas.
+- p8tq3 (L431 S154 B4) There is too much continuous road work going on downtown. They need to get it together.
+- pqeea (L529 S434 B13) Most drugs except meth should be free & government controlled. See Belgium.
+
+## #25 pk7ki: Better enforcement of traffic violations. Too many running red lights, parking in fire lanes, cell phone usage while driving
+
+- ps9dt (L1 S2 B75) Police do a shameful job of enforcing traffic laws. more tickets = more compliance and more $$$$$.
+- pav4r (L2 S22 B245) There should be more officers observing intersections.
+- pnfi5 (L3 S1 B1) install traffic cameras and enforce running of stop lights. more traffic enforcement means more $$$ for the city.
+- pu33h (L4 S7 B523) I see a lot of folks with expired tags on cars, both in state and out of state. Police need to enforce the laws and write more tickets.
+- ptaiy (L5 S10 B2) Many drivers fail to stop as traffic lights turn red. As many as 3 cars will travel through an intersection after light has changed to red.
+- pqr9z (L6 S12 B6) Extra police, or parking enforcement unit should be on duty during events to maintain legal parking
+- pgmpv (L7 S3 B58) Something needs to be done to improve traffic flow
+- pqhex (L8 S5 B5) Why has the Police stop enforcing parking regulations? Park any way any direction. Is it time for a separate Traffic Enforcement Division?
+- pc7ap (L9 S23 B57) BG needs to install traffic cameras that help police intersections like Gallatin, TN. This would reduce accidents, traffic flow and add $
+- pkeaq (L10 S52 B390) Leash laws should be more strictly enforced in both the city and county
+- pps8y (L11 S6 B69) Parking on both sides of the streets in apartment subdivisions should should not be allowed and police need to enforce the law.
+- pgpc7 (L12 S15 B29) Parking in apartment subdivisions should monitored closely by police. Parking on subdivision streets shouldn't be allowed.
+- p8hra (L13 S16 B74) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- pd9yv (L14 S34 B281) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- pcu64 (L15 S8 B107) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- phfba (L16 S17 B33) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- phc7j (L17 S20 B24) Parking lots should be monitored to prevent illegal parking in handicap spaces.
+- pbp7c (L19 S9 B3) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- pek8y (L18 S41 B304) people need to understand that a STOP sign means STOP, not just slow down and keep going.
+- p3bwu (L20 S31 B135) The city should actually time stoplights correctly during rush hour to prevent complete gridlock
+- psik2 (L21 S43 B39) stronger enforcement of junk cars in yards and trashy looking yards in general
+- pv2mh (L22 S4 B8) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- pgdsd (L23 S47 B333) The city of Bowling Green should enforce their existing noise ordinance.
+- pt76e (L24 S30 B42) Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+- pe54w (L25 S109 B293) Work needs to be done on improving litter pick up and encouraging people dispose of their litter correctly.
+- pf7ei (L26 S18 B13) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pu42c (L33 S14 B22) Better visibility on roads. Reflectors and better signage
+- pyyxz (L35 S19 B67) Impact on traffic flow should be considered with any proposed new developments.
+- p3y3b (L51 S21 B50) Build more roads!!! Traffic is terrible here for a small city.
+- pq3ad (L55 S29 B9) More parking downtown. There are too many reserved spaces which should be available in the evening.
+- pczge (L59 S28 B11) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- peizm (L65 S13 B302) Driver’s education needs to be more thorough and mandatory before 16 year olds are even allowed to drive home from the courthouse.
+- pr7y3 (L71 S11 B83) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- p5hnk (L79 S36 B7) Street lights should be required on residential streets in town. Too many dark corners.
+- pxn3z (L89 S72 B14) city needs to work on water run off when we have a lot of rain.. to many places flood on roadways makes driving very dangerous..
+- p49kb (L92 S25 B25) Driving in this town very dangerous, Drivers Education classes should be required for all new drivers!!!
+- pd3p9 (L112 S65 B10) Better parking around the square would draw in more college students who like to shop but can not find parking downtown.
+- p8tq3 (L121 S24 B221) There is too much continuous road work going on downtown. They need to get it together.
+- pqy6v (L141 S285 B15) Footbridge from airport to across the street. Pilots running across the road.
+- pn9cj (L222 S49 B4) Increase Internet/Cell/Phone service throughout the county. First deal with areas that currently don't have any option.
+- pqcdx (L223 S151 B12) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+
+## #26 ptgpf: Recreational marijuana should be legal.
+
+- peq9z (L1 S1 B1) Medical marijuana should be legal.
+- pvdxd (L2 S2 B3) Legalizing marijuana would be a boon for the economy.
+- pr2fm (L3 S5 B12) Legalized Marijuana will not only assist Bowling Green in earning Tax revenue but will decrease the strain on our prison system. Win-Win.
+- psnvi (L4 S7 B11) Recreational Cannabis in KY offers tourism, increased revenue, job opportunities, and shows massive leadership in the southern region.
+- pahwq (L5 S4 B9) Legalizing marijuana at the state level could produce substantial tax revenue, but if only BG did, it would cause problems.
+- p95zh (L6 S9 B5) There should be no punishment for small amounts of marijuana possession, in my opinion
+- pemdb (L7 S6 B240) Bowling Green needs to pass a resolution in support of medical cannabis.
+- p9mdn (L8 S3 B2) Marijuana should not be legalized.
+- pvndx (L9 S8 B533) Industrial hemp should be re-legalized to grow in Kentucky.
+- pqeea (L10 S17 B435) Most drugs except meth should be free & government controlled. See Belgium.
+- pqpib (L11 S10 B445) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- pyr2u (L12 S227 B587) Warren county needs to be "wet". The city is wet but the county is dry.
+- pmz7k (L13 S16 B386) We need more regulation of opioid drugs, both prescribed and illicit.
+- pkkkz (L14 S252 B356) A city should have the right to declare itself a sanctuary city.
+- pbnf4 (L15 S27 B184) More nonviolent inmates convicted of drug possession should be set free.
+- prh9c (L16 S42 B461) Solving the drug crisis should not mean people with health problems/injuries have to suffer with severe pain.
+- p8849 (L18 S14 B127) Casinos. Bring them here.
+- pani2 (L17 S12 B164) Law enforcement should send drug possession arrestees for rehabilitation services rather than imprisonment.
+- p4qh4 (L19 S11 B55) Promote access to mental health treatment, rather than treating addicts as criminals.
+- p72mx (L20 S66 B111) Harsher sentences for drug users would help combat the opioid epidemic.
+- pgpz3 (L21 S19 B279) Planning and zoning laws should change to encourage small businesses and farms.
+- pd4in (L22 S13 B215) There should be a push to improve mental health awareness and availability in Bowling Green.
+- p5ahf (L23 S135 B66) Need more bike lanes and biker friendly resources
+- pfwr5 (L24 S55 B263) Warren County should be completely wet, the idea of a “moist” County is outdated and stunting the financial growth and tourism opportunity.
+- p9ujh (L25 S49 B153) Lease laws should be enacted and enforced in the county as they are in the city.
+- pms9n (L26 S23 B381) Smoking should not be allowed in public parks.
+- p2839 (L30 S47 B6) Developing more bike trails into surrounding areas of the city would allow for a more developed both transport and recreational experiences
+- p7zmn (L33 S18 B125) There should be more effort put into teaching students about any potential harmful side effects of drugs, illegal or otherwise.
+- p6xjr (L38 S15 B107) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- ph4wf (L51 S21 B290) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- ptfp6 (L52 S61 B8) Individual unhappiness combined with easy legal and illegal availability of drugs drives the opioid crisis.
+- p7eqj (L75 S20 B118) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- pfuyd (L130 S25 B261) big projeck in city sould be vote by people
+- pptye (L131 S22 B421) More concerts should be held in Bowling Green
+- py2mw (L232 S24 B580) I should be allowed to keep my yard & home in any manner I please.
+- p8r8z (L237 S518 B4) there should be a tenant/landlord grievance department with legal assistance
+- pqr9z (L276 S345 B7) Extra police, or parking enforcement unit should be on duty during events to maintain legal parking
+- p7h4t (L467 S216 B10) BG can link/support hotel/food, recreational/cultural venues in a Tourism Passport, giving discounts when at least 3 are purchased together.
+
+## #27 p4nku: Planning & Zoning Board needs an overhaul. Fewer builders appointed, fairness to opposition, stop rubber stamping by P&Z and City Comm.
+
+- pbxwr (L1 S1 B4) Planning & Zoning need to do a better job of listening & working with residents. It's not next to their house, so they don't care!
+- ptahe (L2 S3 B2) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- pbx3e (L3 S4 B14) Zoning changes should only be made with the consent of a majority of the neighbors in the affected area.
+- p7eqj (L4 S11 B190) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- pjq68 (L5 S9 B371) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pgpz3 (L6 S2 B3) Planning and zoning laws should change to encourage small businesses and farms.
+- ppct5 (L7 S5 B20) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- pt9at (L8 S43 B498) Oversight committees for projects such as TIF. Elected officials should not be able to sit on unelected boards.
+- padkd (L9 S8 B25) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- phfba (L10 S10 B57) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- psbcj (L11 S7 B1) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pu9z9 (L12 S64 B520) The travesty going up on Fairview Ave. should never have been allowed
+- ptn8b (L13 S25 B505) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- pkp8t (L14 S6 B19) New home zoning should be for single family dwellings rather than multi-family units (apartments).
+- pcrhx (L15 S15 B264) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pe3gy (L16 S14 B282) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- p9ujh (L17 S42 B218) Lease laws should be enacted and enforced in the county as they are in the city.
+- pg2kz (L18 S84 B313) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- pv2a8 (L19 S104 B533) When the city tears up lawns with projects they should be required to do what it takes so that lawns are same quality they were before.
+- picza (L20 S141 B350) City residents do not receive adequate return on County Taxes paid.
+- pp2tr (L21 S13 B426) Building codes prohibiting trophy houses next to common housing
+- pzaca (L22 S34 B596) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- p5y22 (L23 S146 B159) Some local politicians abuse their power and get away with more than normal citizens.
+- phqpq (L24 S44 B339) We must ensure historic preservation codes are properly enforced in our historic districts; lack of consistency erodes our unique aesthetic.
+- pw6ik (L25 S51 B551) Need term limits for all local elected officiałs
+- p5rtq (L26 S22 B157) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- p2a6v (L27 S150 B11) Sewer should be required to be run to all new subdivisions and cost should be split between city/county water systems and builders
+- pc7zk (L39 S24 B255) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pgaj7 (L43 S12 B316) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- pvdrx (L49 S23 B15) We need to make it worthwhile for builders to create more quality affordable rental units for residents, rather than more luxury units.
+- phsyb (L50 S17 B340) Prevent the development of new housing areas, especially in farm land areas.
+- pbm45 (L56 S20 B245) We need to focus more on the existing housing in BG, including renovations and improvements.
+- p92xj (L60 S21 B5) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pfuyd (L65 S18 B309) big projeck in city sould be vote by people
+- p98ae (L71 S48 B7) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- pgrp6 (L82 S314 B13) Unelected school board officials should not have the power to create, add, or increase "school taxes".
+- pbkh5 (L87 S250 B10) BGPD needs to work toward community policing, where cops patrol the neighborhoods they live in. Stop incentivizing cops to live in suburbs
+- p3cst (L117 S16 B92) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- pjbzz (L160 S19 B364) Need to build wider access roads into the city!
+- pwy69 (L176 S114 B8) More sidewalks would be great, but first let’s stop people parking on them. Or stop spending money building them. Whichever.
+- pek8y (L288 S278 B6) people need to understand that a STOP sign means STOP, not just slow down and keep going.
+- pzahk (L384 S571 B9) LGBTQ fairness is far-left political idiocy.
+- pezeh (L583 S389 B12) Fewer students per teacher should be a rule. No more than 20; ideal class size of 15. Plenty of teachers are looking for work.
+
+## #28 paak8: There is no reason not to spend 6 cents per $100 to eliminate homelessness for hundreds of school children.
+
+- pvng8 (L1 S6 B537) City had 109 homeless students in 2017, County Had 112. Housing those families temporarily is worth raising tax rate from 1.85% to 1.91%.
+- pj2cj (L2 S1 B1) 7% of Paker-Bennett & 3.7% of Bristow homeless. I will pay 6 cents per $100 income to end homelessness for school-age families via Apt. $
+- pfibi (L3 S2 B268) City should pay 1.2-1.5m per annum for all homeless k-12 student/families a studio apartment at $500 or less. fund by occ tax move to 1.91%
+- pp5rm (L4 S5 B411) No family should be homeless in Bowling Green / Warren County, and it is up to our officials to make sure they have options for shelter.
+- pqy2d (L5 S3 B25) Every school has 1-9% homeless people. This is for the government to deal with via economic policy. Not sending to a NGO or giving a shanty
+- pfzd6 (L6 S24 B10) If city eliminates homelessness via occupational taxes, employers of homeless people need to reimburse city via special occ. tax penalty
+- pa9ks (L7 S9 B175) Temporary housing for the homeless in the community.
+- pw6rb (L8 S10 B548) No child should go hungry in Bowling Green / Warren County, and it is up to our officials to make sure it doesn’t happen.
+- pihfx (L9 S4 B325) The homeless population is getting out of hand. We need to find better methods for curtailing and rehabing and keeping them off the streets.
+- p6j9p (L10 S8 B113) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- pwzum (L11 S33 B568) We need to replace "Room at the Inn" services with temporary decent housing connected to aid agencies for the homeless
+- p6u6a (L12 S21 B121) Local government, for profit and non profits should work together on housing and economic equality
+- p78vr (L13 S14 B132) Build a homeless park w/tiny homes so they can live & not suffer. There should also be a main house to can receive/organize donations
+- pgzys (L14 S46 B298) Rental assistance programs
+- pppcy (L15 S25 B421) All public schools should have an adequate summer feeding program so no child goes hungry.
+- pirz4 (L16 S35 B332) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- p2ib2 (L18 S27 B13) City School taxes are too high , they need to budget more
+- p4csd (L17 S39 B66) SNAP grants for neighborhood improvements should be available in Warren County, not just in the city.
+- perix (L19 S37 B30) Support non-public (or public charter) school choice options, and make choice viable for families of ALL income levels.
+- pebvm (L20 S19 B246) Bowling Green should consider a program, like Ft Worth Texas's Clean Slate, in which the homeless can earn money by cleaning up the city.
+- pqmg8 (L21 S17 B446) Low-income areas should get beautification money -- not the wealthy who can afford it themselves.
+- pwnap (L22 S34 B560) Invest in the youth.
+- pgdt8 (L23 S32 B283) Consider asking low-income or disabled residents what they really need.
+- pt8p7 (L24 S74 B486) There should be more opportunities for the arts and sciences in the Housing Authority so the students there can rise above!
+- pek7k (L25 S55 B252) Provide a food assistance program for college students as students lots of times do not qualify for food stamps due to living on campus
+- pvh84 (L27 S7 B3) Homelessness is for the nonprofit sector to deal with, not government.
+- pf6t9 (L30 S12 B261) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- p9cba (L32 S11 B166) Reducing poverty will enhance the quality of life for everyone in our community regardless of status.
+- pvzzx (L36 S13 B546) Homeless people deserve full size places like studio apartments. Not tiny homes like a smurf would desire in a tiny house park.
+- pjzz6 (L43 S15 B7) The city and county work together to keep the low socieconomic status children out of certain schools. This reduces learning opportunities.
+- pzaca (L46 S30 B4) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- pfsk9 (L52 S16 B23) Allow parents that take their kids out of public schools to use that money in a private school.
+- pcqfp (L57 S20 B221) All schools in the county and city should work together to provide the same minimum level of education to students.
+- pv9w5 (L62 S22 B531) Don't waste $800,000 of tax dollars for a fountain in Lamkin park. Residents would be better served with educational programs for the youth!
+- pgrp6 (L80 S93 B11) Unelected school board officials should not have the power to create, add, or increase "school taxes".
+- pyr6n (L82 S104 B15) Future charter schools would be a financial burden to public school funding, unless they are held to accountability by local school boards.
+- pcetw (L84 S110 B9) The city and county school systems should merge.
+- pbbu5 (L93 S88 B14) A private (catholic) high school would be beneficial to all.
+- pmti4 (L102 S100 B12) The city & county school districts need to be re-evaluated The yards/houses that touch Potter Grays playground r all County school districts
+- psmh7 (L107 S79 B6) The money I earn & spend is all done within the city limits but as a county resident I have NO voice/vote in city politics. Needs to change!
+- picqu (L118 S23 B322) Make areas around WKU's campus livable for college students. Eliminating section 8 housing will lead to less crime & lower cost of attendance.
+- pcura (L171 S18 B21) Other counties have school at home on snow days so that kids do not have to make up days. This should be considered for here.
+- pu3fh (L225 S413 B5) We need more things to do for ages 1-6. A children’s museum or a small science museum would be wonderful.
+- p9v2v (L275 S427 B2) some children with cultural differences or dietary needs cannot eat a typical lunch at school please provide special diet options.
+- p4e3h (L323 S267 B8) Public school could do alternate teaching styles(like Montessori) in a school within a school set up. Not all kids learn the same way.
+
+## #29 ptn8b: There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+
+- p5y22 (L1 S1 B6) Some local politicians abuse their power and get away with more than normal citizens.
+- pix44 (L2 S4 B2) Term limits should be initiated on county executives.
+- pt9at (L3 S16 B490) Oversight committees for projects such as TIF. Elected officials should not be able to sit on unelected boards.
+- p7eqj (L4 S6 B133) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- pqqyk (L5 S7 B449) Local elected government officials should not be able to hold a seat and also be on the TIF board or other unelected boards.
+- pvpmr (L7 S8 B540) Most local officials run for office to serve the public good.
+- pw6ik (L6 S10 B549) Need term limits for all local elected officiałs
+- pjq68 (L8 S3 B343) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- picza (L9 S39 B321) City residents do not receive adequate return on County Taxes paid.
+- pgrp6 (L10 S110 B9) Unelected school board officials should not have the power to create, add, or increase "school taxes".
+- pqcdx (L11 S17 B436) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- pkgar (L12 S30 B358) District judges are biased towards large local companies to the detriment of individuals.
+- pw6sg (L13 S5 B32) Big names and corporations get away with too much. We need fairer regulation and level playing fields for the small and big guys alike.
+- pg2kz (L14 S50 B1) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- ptahe (L15 S31 B491) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- p6zxd (L16 S2 B5) People need to do all their research before accusing local officials of using their influence for personal gain.
+- p9ujh (L17 S27 B168) Lease laws should be enacted and enforced in the county as they are in the city.
+- pfvrw (L18 S26 B273) City/County officials with connections to a project or proposal should abstain from voting on the project or proposal.
+- p54eg (L19 S77 B23) One should not be able to literally "buy" their way into ability to vote in an election in a locality they do not live in. $ don't buy vote
+- pph7p (L20 S21 B418) Lower taxes by auditing every department for total accountability & make cuts where possible. Stop city government waste.
+- pkeaq (L21 S87 B355) Leash laws should be more strictly enforced in both the city and county
+- p4nku (L22 S35 B74) Planning & Zoning Board needs an overhaul. Fewer builders appointed, fairness to opposition, stop rubber stamping by P&Z and City Comm.
+- pd9yv (L23 S33 B228) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- pc7zk (L24 S13 B208) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- phfba (L25 S19 B304) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- psmh7 (L26 S9 B481) The money I earn & spend is all done within the city limits but as a county resident I have NO voice/vote in city politics. Needs to change!
+- pfaf5 (L27 S12 B7) BG police should improve officer training and should be held accountable for abuse of power.
+- prgqn (L29 S11 B464) City/county officials should disclose to the public via Daily News all connections they have to a project or proposal well before the vote.
+- pvvrj (L32 S23 B544) Government should ignore criminal malfeasance/embezzlement of public funds by anyone if little or no funds can be recovered.
+- pfgep (L33 S37 B12) Bowling Green has been monopolized by Houchens. Limit their growth they own too much of the city for it to be fair to other businesses
+- p6u6a (L34 S24 B121) Local government, for profit and non profits should work together on housing and economic equality
+- pqkxf (L39 S22 B444) There should be officers more readily available to the county areas; ex. for domestic violence disputes.
+- p92xj (L40 S20 B157) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pcrhx (L41 S14 B218) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pjtja (L43 S69 B15) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- pbstr (L57 S18 B202) Individuals should be treated equally. Higher positions or who you work for should not release anyone from responsibility of their actions.
+- pfuyd (L76 S15 B272) big projeck in city sould be vote by people
+- pra2h (L108 S32 B8) There is too much bullying in our schools that administrators are ignoring.
+- pb5iz (L119 S25 B188) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- p4rsn (L124 S181 B13) There is not enough done for tourism in Warren Co. We offer much more than Corvettes and we should be promoting other activities.
+- pwbe8 (L196 S331 B4) We need more incentives for individual and business solar power
+- p8tq3 (L269 S36 B14) There is too much continuous road work going on downtown. They need to get it together.
+- p7yd2 (L313 S452 B10) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- pzahk (L409 S540 B3) LGBTQ fairness is far-left political idiocy.
+- pi46q (L574 S355 B11) Wish the airport would get better flights. WheelsUp was cool but need more locations. Sad Owensboro is so far ahead there.
+
+## #30 pr9y5: The Fairness Ordinance, as currently proposed, poses insufficient protection for religious conscience and should be revised accordingly.
+
+- p92xj (L1 S1 B2) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- p8hgh (L2 S5 B6) The city should craft a very simple fairness ordinance, saying no discrimination acquiring housing, but not giving LGBTQ EEOC Bypass @work
+- p5b8r (L3 S4 B3) NO to the "Fairness" Ordinance. Current law is sufficient. ZERO reported instances where LGBTQ people have been discriminated against in BG
+- p98ae (L4 S3 B1) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- pgnkw (L5 S2 B5) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- p92ce (L6 S7 B147) People in Bowling Green should not be discriminated against based on their sexual orientation.
+- pzahk (L7 S16 B11) LGBTQ fairness is far-left political idiocy.
+- pge2a (L8 S8 B278) Bowling Green needs a stronger separation of church-mosque-temple and state.
+- p8jmp (L9 S9 B140) Bowling Green needs to enforce the separation of church and state and impose taxes on churches that politic from the pulpit
+- pkkkz (L10 S42 B358) A city should have the right to declare itself a sanctuary city.
+- pb5iz (L11 S6 B178) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- p9ujh (L12 S13 B158) Lease laws should be enacted and enforced in the county as they are in the city.
+- pfpwf (L13 S21 B263) Bowling Green should pass the Uniform Residential Landlord and Tenant Act (or URLTA) to ensure basic standards for landlords and tenants.
+- pgpz3 (L14 S25 B283) Planning and zoning laws should change to encourage small businesses and farms.
+- phfba (L15 S11 B300) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pbx3e (L16 S27 B196) Zoning changes should only be made with the consent of a majority of the neighbors in the affected area.
+- pd9yv (L17 S10 B222) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- p6u6a (L18 S18 B109) Local government, for profit and non profits should work together on housing and economic equality
+- p9j36 (L19 S15 B155) Better ordinances on keeping animals on leashes or in fenced areas are needed.
+- pxrds (L20 S107 B578) There should be gender-neutral housing options on WKU's campus for LGBTQ+ students.
+- picza (L21 S108 B317) City residents do not receive adequate return on County Taxes paid.
+- pq8ag (L23 S47 B430) Reduce and/or get rid of the city wage tax.
+- pxiz6 (L22 S359 B10) Vaping should not be added to the smoking ordinance.
+- pkgar (L24 S57 B355) District judges are biased towards large local companies to the detriment of individuals.
+- pkeaq (L25 S136 B352) Leash laws should be more strictly enforced in both the city and county
+- pu9z9 (L27 S20 B513) The travesty going up on Fairview Ave. should never have been allowed
+- pf6t9 (L30 S24 B253) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pgdsd (L33 S12 B9) The city of Bowling Green should enforce their existing noise ordinance.
+- p7eqj (L45 S22 B122) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- pyyxz (L75 S150 B7) Impact on traffic flow should be considered with any proposed new developments.
+- pw6sg (L78 S17 B549) Big names and corporations get away with too much. We need fairer regulation and level playing fields for the small and big guys alike.
+- pjtja (L88 S19 B343) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- pbstr (L102 S14 B194) Individuals should be treated equally. Higher positions or who you work for should not release anyone from responsibility of their actions.
+- phsyb (L133 S23 B307) Prevent the development of new housing areas, especially in farm land areas.
+- pf2rb (L160 S55 B15) Bowling Green City Commission needs to pass an ordinance banning the sale or use of large fireworks in the city limits.
+- pv3g6 (L248 S529 B4) Tuckertown area needs fire protection. Currently rated Class 10 expensive insurance. Water lines are close by on Otter Gap & Tuckertown Rds.
+- puvjs (L250 S177 B13) Do SOMETHING about completing the "wrap" downtown, or at least enhance (and that includes restaurant service) what is currently there.
+- pjk6d (L256 S434 B8) There are large fees with the few currently available indoor pools.
+- prnz3 (L351 S72 B12) Pass a no animals in a hot car ordinance.
+- pn9cj (L444 S298 B14) Increase Internet/Cell/Phone service throughout the county. First deal with areas that currently don't have any option.
+
+## #31 p8qss: Smoking should not be allowed within 25 feet of a business.
+
+- pms9n (L1 S1 B1) Smoking should not be allowed in public parks.
+- pxiz6 (L2 S2 B2) Vaping should not be added to the smoking ordinance.
+- pd9yv (L3 S8 B231) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- peq9z (L4 S9 B255) Medical marijuana should be legal.
+- pzvz6 (L5 S3 B11) People should not be allowed to bring their pets every place or store they go to.
+- pkeaq (L6 S53 B361) Leash laws should be more strictly enforced in both the city and county
+- ptgpf (L7 S6 B498) Recreational marijuana should be legal.
+- p9ujh (L8 S46 B169) Lease laws should be enacted and enforced in the county as they are in the city.
+- p9j36 (L9 S25 B166) Better ordinances on keeping animals on leashes or in fenced areas are needed.
+- pwvag (L10 S7 B567) Require businesses to pick up litter they and their customers generate.
+- pz6xn (L11 S22 B595) More healthy restaurants
+- pgdsd (L12 S4 B285) The city of Bowling Green should enforce their existing noise ordinance.
+- pf2rb (L13 S13 B261) Bowling Green City Commission needs to pass an ordinance banning the sale or use of large fireworks in the city limits.
+- pneud (L14 S55 B399) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- pm8t7 (L15 S10 B5) Regulate the size & brightness of business signs.
+- pemdb (L16 S26 B254) Bowling Green needs to pass a resolution in support of medical cannabis.
+- puhdq (L17 S11 B520) New buildings should not be built right up to the sidewalk to inhibit seeing around corners when driving.
+- pxra8 (L18 S137 B577) Downtown at the square and adjacent areas should be a pedestrian mall
+- p95zh (L19 S27 B159) There should be no punishment for small amounts of marijuana possession, in my opinion
+- pi9rk (L20 S85 B323) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- p3esu (L21 S41 B49) fines for leaving dog feces in public areas needs to be enforced
+- p9ivq (L22 S19 B165) Bowling Green should have more healthy/clean eating options for those who have limited diets.
+- pgw6z (L23 S32 B297) Pass a No animals on chains in the county.
+- pe54w (L24 S34 B243) Work needs to be done on improving litter pick up and encouraging people dispose of their litter correctly.
+- pindv (L25 S15 B330) The Bowling Green/Warren County Airport needs to be relocated outside of the city limits.
+- p9mdn (L26 S5 B168) Marijuana should not be legalized.
+- pgnkw (L32 S20 B290) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- ppct5 (L33 S16 B417) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- p4pb4 (L38 S14 B3) Every citizen should be within 1 mile of some shaded green space.
+- prnz3 (L46 S12 B471) Pass a no animals in a hot car ordinance.
+- p792j (L52 S17 B131) Fireworks use in residential areas is out of control with no police presence to enforce the already in place restrictions.
+- pu9z9 (L62 S63 B8) The travesty going up on Fairview Ave. should never have been allowed
+- pf7ei (L65 S37 B14) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pauwi (L71 S18 B181) The Smokey Bones entrance off of Scottsville Road is extremely dangerous and needs a traffic light.
+- pxjmb (L76 S24 B24) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- ptx9s (L95 S23 B506) Traffic and toxic vehicle dependency should NOT be a topic of priority for this city.
+- py2mw (L123 S21 B9) I should be allowed to keep my yard & home in any manner I please.
+- pgxi5 (L142 S73 B7) I should be allowed to plant flowers in my own yard where ever i want them.
+- pnqsw (L147 S89 B4) The speed limit on WKU campus should be increased from 15 miles per hour to 25 miles per hour.
+- p9erh (L185 S205 B13) Bowling Green needs to annex a solid geographic area & thereby eliminating those areas within our city that are not receiving city services.
+- ptky7 (L262 S153 B12) Animated digital business signs are a road hazard. They distract drivers.
+- pwbe8 (L342 S479 B10) We need more incentives for individual and business solar power
+- psmh7 (L410 S168 B15) The money I earn & spend is all done within the city limits but as a county resident I have NO voice/vote in city politics. Needs to change!
+- pwigc (L586 S537 B6) Graves Gilbert has created a healthcare monopoly within Bowling Green and the surrounding areas.
+
+## #32 pnyg7: The university and city should develop stronger mutually beneficial partnerships.
+
+- pptwk (L1 S1 B418) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- pgyhw (L2 S2 B3) Better incorporation of university resources in community, including Kentucky Museum.
+- pjrwf (L3 S3 B11) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- p6u6a (L4 S9 B105) Local government, for profit and non profits should work together on housing and economic equality
+- padkd (L5 S22 B161) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- phceg (L6 S30 B294) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- p6xjr (L7 S7 B107) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pkta9 (L8 S12 B360) City officials need to work with WKU admin. to address the noise & public nuisance problems with the frat houses and homeowners downtown.
+- pz3q2 (L9 S4 B592) WKU and local community colleges should continue to offer courses that interest those seeking an education, whether or not the courses aid in job placement.
+- p5ref (L10 S41 B79) Encourage connection between the wealthy and the poor
+- phhdw (L11 S13 B298) The main purpose of higher education is job training.
+- pif8h (L12 S43 B316) BG needs to redevelop from WKU to the river and beyond. Model after Greenville SC
+- pgcmd (L13 S103 B272) Bowling Green needs more cultural and educational establishments, like sciemce, history and art museums.
+- pcvs4 (L14 S6 B214) Institute a business development grant that encourages WKU grads to stay in Bowling Green by starting local businesses.
+- pqe94 (L15 S8 B4) Bowling Green's refugee, immigrant, and international student population improves the university and the community.
+- p6k4e (L16 S39 B99) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- ph4wf (L17 S16 B291) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- p5eg6 (L18 S11 B74) There needs to be better access to grocery stores and restaurants from WKU's campus.
+- pqra3 (L19 S54 B445) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- p67wb (L20 S5 B88) WKU should open its facilities to the public once or twice a month to the community, and those in need should be welcome more often.
+- p7whc (L21 S36 B8) BG needs to develop a marketing campaign to draw Warren Co and surrounding counties to downtown for eating, shopping, and entertainment.
+- ptcr8 (L22 S32 B488) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- p4p8j (L23 S92 B55) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pcetw (L24 S18 B200) The city and county school systems should merge.
+- pcqfp (L25 S17 B207) All schools in the county and city should work together to provide the same minimum level of education to students.
+- pe262 (L27 S21 B227) WKU should upgrade their CIT program to keep up with the times
+- p3wgr (L30 S23 B39) I would like to see the WKU psych and Medical programs collaborate on mental health research, which is so sadly lacking in today's society.
+- pjq68 (L34 S15 B338) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pb6y8 (L35 S24 B176) The arts enrich our city.
+- pp8pk (L39 S10 B12) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- pyfsz (L41 S19 B7) University management bears more responsibility than federal and state education funding cuts for tuition rising so much over the years.
+- pcrhx (L46 S14 B208) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- p3cst (L84 S20 B32) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- p6r2s (L86 S338 B10) Rental property taxes should be reduced for private landlords to encourage them to develop more, as opposed to large ones like Chandler.
+- pc7zk (L158 S25 B198) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pge2a (L167 S132 B2) Bowling Green needs a stronger separation of church-mosque-temple and state.
+- pbbu5 (L186 S100 B1) A private (catholic) high school would be beneficial to all.
+- p5pav (L284 S237 B9) Older neighborhoods change from owner occupied to rental. Deterioration occurs. Stronger landlord/tenant laws needed!
+- p98s9 (L332 S366 B13) Stronger tenant and renters rights. Landlord accountability for keeping properties in good shape. So many overpriced dilapidated rentals.
+- psik2 (L343 S515 B6) stronger enforcement of junk cars in yards and trashy looking yards in general
+- pz34c (L354 S395 B5) Develop a manufacturing Work training program for jail inmates that qualify
+
+## #33 p3esu: fines for leaving dog feces in public areas needs to be enforced
+
+- pkeaq (L1 S4 B3) Leash laws should be more strictly enforced in both the city and county
+- p9j36 (L2 S3 B25) Better ordinances on keeping animals on leashes or in fenced areas are needed.
+- pcp4q (L3 S8 B4) A fine if your cat or dog is picked up as a stray and is not spayed or neutered in the county.
+- p74wp (L4 S1 B5) Mandatory, expensive fines should be implemented for littering and illegal dumping.
+- pmuac (L5 S6 B6) animal cruelty laws need to exist and be enforced
+- pjtja (L6 S2 B8) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- psik2 (L7 S7 B495) stronger enforcement of junk cars in yards and trashy looking yards in general
+- pe54w (L8 S5 B93) Work needs to be done on improving litter pick up and encouraging people dispose of their litter correctly.
+- pi2ex (L9 S10 B360) Pass an ordinance that requires pet owners to pay a fee if their pets are not fixed.
+- phfba (L10 S12 B86) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pd9yv (L11 S23 B2) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- pwvag (L12 S9 B572) Require businesses to pick up litter they and their customers generate.
+- pgw6z (L13 S21 B345) Pass a No animals on chains in the county.
+- p99xx (L14 S16 B99) BG needs to increase recycling and trash bins around the parks and parkways to decrease trash and litter
+- p3et2 (L15 S17 B147) Relax restrictions on fencing in Home Owners Associations to promote people keeping animals on leashes or in fenced yards.
+- pgdsd (L16 S26 B336) The city of Bowling Green should enforce their existing noise ordinance.
+- p9ujh (L17 S32 B1) Lease laws should be enacted and enforced in the county as they are in the city.
+- pk7ki (L18 S18 B393) Better enforcement of traffic violations. Too many running red lights, parking in fire lanes, cell phone usage while driving
+- pg2kz (L19 S46 B331) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- ppct5 (L20 S13 B438) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- ppz44 (L21 S14 B90) the Bark Park needs more trees and water access for the smaller dogs area
+- pntww (L22 S20 B429) We need more pet stores
+- ps9dt (L23 S40 B490) Police do a shameful job of enforcing traffic laws. more tickets = more compliance and more $$$$$.
+- pqr9z (L24 S37 B467) Extra police, or parking enforcement unit should be on duty during events to maintain legal parking
+- pcare (L25 S11 B277) There should never be a leash law in the county - neighborhood dogs protect, play with and teach kids. It was a factor in living in county.
+- pnvfb (L26 S19 B74) Bowling Green needs more pet-friendly housing options for renters.
+- pynzf (L27 S25 B592) BG has a bad problem with littering. My husband and I fill up to 5 recycle bins every week between downtown and campus, cleaning it all up.
+- pzvz6 (L29 S15 B603) People should not be allowed to bring their pets every place or store they go to.
+- pticx (L31 S24 B511) Make Scott Waste follow their contract - Return trash cans next to the house and not leave them on the sidewalks. Keep BG clean!
+- pms9n (L33 S74 B14) Smoking should not be allowed in public parks.
+- pb2cb (L36 S22 B253) Recycling should be encouraged by not charging for the service
+- p89sh (L109 S83 B11) Build parking areas.
+- pmjk5 (L131 S211 B13) More public transportation options--be creative
+- phqpq (L161 S240 B15) We must ensure historic preservation codes are properly enforced in our historic districts; lack of consistency erodes our unique aesthetic.
+- p9erh (L175 S262 B9) Bowling Green needs to annex a solid geographic area & thereby eliminating those areas within our city that are not receiving city services.
+- phsyb (L304 S99 B10) Prevent the development of new housing areas, especially in farm land areas.
+- pbaby (L396 S193 B7) Better public transit and runs 24 /7 so people without cars can get to work. Also more stops added in residential areas.
+- pktbx (L426 S342 B12) Internet services should be a public municipality.
+
+## #34 pvq7m: many parts of the By-pass can and should be widened
+
+- p35n3 (L1 S15 B4) The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+- ppe9v (L2 S20 B418) Widen Cemetry Road, Russellville Road, Lover’s Lane, Campbell Lane, The Old ByPass, and Scotsville Road from old ByPass to Natcher Parkway.
+- pjbzz (L3 S2 B344) Need to build wider access roads into the city!
+- pxwxs (L4 S9 B580) Create shoulders on the bypass.
+- pgmpv (L5 S5 B295) Something needs to be done to improve traffic flow
+- pck82 (L6 S10 B224) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- pdhdi (L7 S13 B244) Work,with State to complete a wide loop from Scottsville Road across N I65 to N Natcher Pk way.
+- p69et (L8 S8 B115) The bypass area must be developed and utilized for new businesses and attractive structures. It is a neglected area that is losing business.
+- p8hra (L9 S27 B159) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- p4g7x (L10 S12 B8) Smallhouse Rd (at Campbell Ln) heading into town needs to be widened to have room for three lanes (left turn, straight, right turn).
+- p5e8k (L11 S23 B96) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- pfq4x (L12 S173 B278) Complete the ky. 185 restructuring project.
+- pf7ei (L13 S25 B269) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pmbwe (L14 S35 B377) More roundabouts for intersections
+- pyssw (L15 S4 B20) Some county roads, such as Hammett Hill Road, are so narrow it's hard for two cars to pass. Surely they could make them a little wider.
+- pr7y3 (L16 S1 B459) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- pjf7t (L17 S6 B3) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pcrnf (L18 S50 B231) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- pv2mh (L19 S14 B529) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- pwigz (L20 S53 B558) Scottsville Rd should be 4+ lanes between I-65 & Lovers Lane, get rid of the service Rd.
+- pcu64 (L21 S29 B232) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- ptuye (L22 S74 B502) The population has out grown the infrastructure in bg/ warren county.
+- ptbq2 (L23 S24 B492) With a circle, widen Fairview with a left-turn lane west of cemetery.
+- p3y3b (L24 S28 B67) Build more roads!!! Traffic is terrible here for a small city.
+- pxra8 (L25 S113 B576) Downtown at the square and adjacent areas should be a pedestrian mall
+- psn6u (L29 S17 B482) Should be an interstate exit for the Woodburn area it could help decrease BG congestion and let people bypass BG all together
+- pknju (L32 S7 B367) The entire bypass area is an eyesore and there needs to be a concerted effort like a TIF to revitalize this crucial part of town.
+- pczge (L34 S3 B24) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- pyyxz (L36 S16 B590) Impact on traffic flow should be considered with any proposed new developments.
+- pz6eg (L39 S19 B593) Bike lanes that are wide enough to safely ride on without fear of being hit by passing cars.
+- pbp7c (L41 S37 B1) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- pp8pk (L47 S33 B11) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- pcuww (L48 S18 B234) Why isn't Nashville Rd between the roundabout and Campbell Ln wider? Getting stuck there at 5 o'clock is a plague.
+- p3j36 (L70 S11 B2) We need to block left turns on the busy parts of the by-pass so people don't block everyone else trying to turn.
+- prjzc (L89 S78 B9) Go to underground utilities. Scottsville rd and the by-pass look awful.
+- p8tq3 (L96 S22 B164) There is too much continuous road work going on downtown. They need to get it together.
+- pe3gy (L116 S21 B250) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pgaj7 (L126 S92 B13) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- pemdb (L307 S452 B7) Bowling Green needs to pass a resolution in support of medical cannabis.
+- pgw6z (L353 S370 B5) Pass a No animals on chains in the county.
+- p8usw (L440 S342 B10) Local companies that can't fill job openings should recruit from parts of KY w/ high unemployment & pay relocation expenses.
+- pf2rb (L466 S531 B14) Bowling Green City Commission needs to pass an ordinance banning the sale or use of large fireworks in the city limits.
+- pit63 (L485 S580 B12) Some local doctors order too many tests.
+- pi2ex (L553 S592 B15) Pass an ordinance that requires pet owners to pay a fee if their pets are not fixed.
+- prnz3 (L570 S435 B6) Pass a no animals in a hot car ordinance.
+
+## #35 p5sdr: City needs to mandate temp services furnish details of how much they are selling employee labor for, to the employee.
+
+- p28ea (L1 S1 B6) Temp service need to pay higher hourly rate to temp than hiring firm pays their FTE to account for reduced economic security
+- ppaza (L2 S3 B1) Temp svc need to furnish the equivalent of FMLA, despite not having 50 people at one single site.
+- pwu44 (L3 S2 B2) City needs to bar big COs employing from half a dozen temp services to keep 100s ineligble for FMLA due to less than 50 ppl/per 'employer'
+- pjht6 (L4 S13 B363) Minimum wage required for businesses to receive tax credits should be raised to a living wage
+- psppu (L5 S5 B493) Higher minimum wage
+- p88q8 (L6 S18 B192) if there was a law for employers to pay back on bad layoffs and cutbacks
+- pfzd6 (L7 S24 B306) If city eliminates homelessness via occupational taxes, employers of homeless people need to reimburse city via special occ. tax penalty
+- pycbi (L8 S4 B585) Companies that claim they cannot fill job openings should raise wages and improve working conditions.
+- p4j6s (L9 S9 B36) Minimum wage needs to go o $15 per hour
+- pupnr (L10 S7 B527) city officials might look into layoff practices on jobs in bowling green ky
+- pb5iz (L11 S8 B228) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- pmpqg (L13 S10 B402) No business should get tax credit without paying workers at least $10 per hour plus benefits that would increase that to minimum of $15.
+- pwsz7 (L12 S25 B4) City should bar garbage token health plans designed to prevent temp services paying $166/month Obamacare emp. fee. Let ppl get subsidy.
+- p9ujh (L14 S22 B211) Lease laws should be enacted and enforced in the county as they are in the city.
+- p8r8z (L15 S41 B199) there should be a tenant/landlord grievance department with legal assistance
+- pgnkw (L16 S17 B315) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- p92xj (L17 S15 B37) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pmp68 (L18 S121 B41) BGMU needs to be held accountable for their rates and "averages."
+- pq8ag (L19 S6 B444) Reduce and/or get rid of the city wage tax.
+- picza (L20 S59 B346) City residents do not receive adequate return on County Taxes paid.
+- pwqxk (L21 S54 B566) BGDN should publish each month the number of job positions filled / people employed through the Workforce Development Board’s efforts.
+- p72fq (L22 S53 B176) Local fuel prices need to investigated.
+- pbkub (L23 S11 B235) Higher paying jobs- the ability to move up with reasonable raises.
+- p23xg (L24 S85 B69) Whenever land is bought by the city/county, the seller and amount sold for needs to be transparent, rather than “LLC” as listed seller.
+- pzwn8 (L25 S39 B603) My employer has not been responsive to reports of sexual harassment in the workplace.
+- p6u6a (L27 S19 B171) Local government, for profit and non profits should work together on housing and economic equality
+- pfcmk (L31 S14 B295) City should bar non-competes, similar to North Dakota/California, as driving destitution in non-tenure work force. Be heroic destination.
+- p8usw (L33 S23 B200) Local companies that can't fill job openings should recruit from parts of KY w/ high unemployment & pay relocation expenses.
+- piq5m (L35 S21 B351) Job training programs for lower income
+- pqra3 (L36 S16 B462) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- p389z (L38 S12 B109) We should be incentivizing higher paying jobs coming to BG. Cost of living is outrunning wages and it's starting to be a problem.
+- p98ae (L40 S20 B205) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- p6twv (L49 S43 B10) City Annexed areas need more city services for their tax $$.
+- prb8q (L51 S265 B14) Businesses and multi-family dwellings should be required to offer and use recycling services.
+- pnbm2 (L57 S376 B12) Recycling services need to be improved and modernized. Current contractor uses outdated equipment, services are messy, company unresponsive.
+- ptn8b (L58 S84 B9) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- pfgep (L95 S152 B13) Bowling Green has been monopolized by Houchens. Limit their growth they own too much of the city for it to be fair to other businesses
+- pb8qj (L147 S368 B3) Recycling services need to be expanded & improved. With growing population, think of how much land will become dump sites...Ridiculous!
+- p9erh (L196 S82 B5) Bowling Green needs to annex a solid geographic area & thereby eliminating those areas within our city that are not receiving city services.
+- pktbx (L202 S259 B7) Internet services should be a public municipality.
+- pztez (L210 S508 B8) WRECC should provide internet services.
+- p4rsn (L338 S247 B15) There is not enough done for tourism in Warren Co. We offer much more than Corvettes and we should be promoting other activities.
+- pra2h (L365 S382 B11) There is too much bullying in our schools that administrators are ignoring.
+
+## #36 pc3m2: Locally owned, small businesses should get incentives and assistance -- not chains and outside investors.
+
+- pxjmb (L1 S1 B574) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- pgpz3 (L2 S4 B1) Planning and zoning laws should change to encourage small businesses and farms.
+- pcvs4 (L3 S3 B31) Institute a business development grant that encourages WKU grads to stay in Bowling Green by starting local businesses.
+- pw6sg (L4 S5 B8) Big names and corporations get away with too much. We need fairer regulation and level playing fields for the small and big guys alike.
+- pqra3 (L5 S10 B457) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- puyc3 (L6 S6 B26) We need to renovate the run down businesses and store fronts, instead of building new places
+- pg99d (L7 S28 B11) Local food and small farms are one of BG best attractions.
+- p6r2s (L8 S53 B136) Rental property taxes should be reduced for private landlords to encourage them to develop more, as opposed to large ones like Chandler.
+- panhj (L9 S35 B34) We need more businesses like White Squirrel and Nats in BG. They add character to our town. Done with the Olive Garden and Belks.
+- pv68d (L10 S7 B22) The downtown district, especially Fountain Square, should have more retail businesses, not offices.
+- pgnkw (L11 S15 B35) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- p6u6a (L12 S13 B140) Local government, for profit and non profits should work together on housing and economic equality
+- pgaj7 (L13 S29 B295) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- psj6d (L14 S142 B486) Support more local chefs and brewers! White Squirrel is fantastic and I want to see more of it in BG!
+- pphh2 (L15 S12 B426) We should focus downtown development dollars on rehabilitation and reuse of buildings that can be done so, rather than building new.
+- pjrdt (L16 S2 B20) Improved businesses such as banks and groceries in lowest income areas
+- pjq68 (L17 S11 B353) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pfgep (L18 S26 B19) Bowling Green has been monopolized by Houchens. Limit their growth they own too much of the city for it to be fair to other businesses
+- pcp4z (L19 S42 B37) Louisville rd area needs more businesses and restaurants extending out towards the factories to also bring in revenue from Edmonson Co.
+- pqmg8 (L20 S20 B29) Low-income areas should get beautification money -- not the wealthy who can afford it themselves.
+- pbm45 (L21 S46 B217) We need to focus more on the existing housing in BG, including renovations and improvements.
+- p64wt (L22 S36 B121) More affordable home ownership options.
+- p4csd (L23 S70 B85) SNAP grants for neighborhood improvements should be available in Warren County, not just in the city.
+- pfcmk (L24 S104 B280) City should bar non-competes, similar to North Dakota/California, as driving destitution in non-tenure work force. Be heroic destination.
+- p6k4e (L25 S92 B133) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pki7f (L27 S19 B370) Bowling Green needs more access to affordable , healthy, local food sources.
+- p389z (L28 S8 B67) We should be incentivizing higher paying jobs coming to BG. Cost of living is outrunning wages and it's starting to be a problem.
+- pcrhx (L32 S14 B236) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pvdrx (L37 S23 B536) We need to make it worthwhile for builders to create more quality affordable rental units for residents, rather than more luxury units.
+- p7whc (L38 S22 B159) BG needs to develop a marketing campaign to draw Warren Co and surrounding counties to downtown for eating, shopping, and entertainment.
+- p5at5 (L39 S18 B18) Downtown redevelopment should retain accessible parking for existing businesses.
+- pvqds (L42 S21 B544) Bowling Green needs to attract business like Costco and Trader Joe's to keep residents from driving to Nashville on weekends
+- pwbe8 (L43 S16 B6) We need more incentives for individual and business solar power
+- p6xjr (L53 S25 B142) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pgzys (L58 S52 B3) Rental assistance programs
+- pvv6a (L67 S9 B545) Bring a discount grocer to the downtown area.
+- p3cst (L72 S17 B70) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- pjaji (L92 S71 B4) It would be great if people in neighborhoods could get to know each other better and neighborhoods were like small communities of neighbors.
+- pq8ag (L121 S120 B14) Reduce and/or get rid of the city wage tax.
+- puvjs (L162 S24 B527) Do SOMETHING about completing the "wrap" downtown, or at least enhance (and that includes restaurant service) what is currently there.
+- pwvag (L189 S58 B13) Require businesses to pick up litter they and their customers generate.
+- p95zh (L191 S508 B10) There should be no punishment for small amounts of marijuana possession, in my opinion
+- p8r8z (L211 S352 B7) there should be a tenant/landlord grievance department with legal assistance
+- pu3fh (L289 S475 B12) We need more things to do for ages 1-6. A children’s museum or a small science museum would be wonderful.
+- pgw6z (L293 S166 B2) Pass a No animals on chains in the county.
+- pindv (L300 S147 B5) The Bowling Green/Warren County Airport needs to be relocated outside of the city limits.
+- p3y3b (L412 S276 B9) Build more roads!!! Traffic is terrible here for a small city.
+- pu2fx (L565 S505 B15) It should not take 3 months to get a gynecologist appointment in this city.
+
+## #37 pgcmd: Bowling Green needs more cultural and educational establishments, like sciemce, history and art museums.
+
+- pu3fh (L1 S6 B518) We need more things to do for ages 1-6. A children’s museum or a small science museum would be wonderful.
+- pb6y8 (L2 S7 B233) The arts enrich our city.
+- pehyf (L3 S2 B284) The arts are an important component of K-12 education.
+- pt8p7 (L4 S8 B495) There should be more opportunities for the arts and sciences in the Housing Authority so the students there can rise above!
+- pk22m (L5 S5 B3) Publicizing more cultural activities other than the Bowling Green International Festival.
+- pinkj (L7 S26 B351) Arts-based charter schools
+- pkezh (L6 S4 B12) Public school systems need to provide more funding for art education programs, such as music, theater, and visual arts.
+- pgyhw (L8 S3 B326) Better incorporation of university resources in community, including Kentucky Museum.
+- pqeuz (L9 S1 B449) Arts education should be available in every school in Warren County and other surrounding areas.
+- p6xjr (L10 S18 B178) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- ph4wf (L11 S25 B101) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pee6u (L12 S10 B283) More creative learning classes
+- p6k4e (L13 S13 B34) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pkcbm (L14 S21 B33) BG needs more Summer weekend festivals/activities
+- pxg44 (L15 S33 B8) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pkg36 (L16 S9 B85) Bowling Green needs Community Enrichment Classes that include woodworking, welding, gardening and general home beautification for hobbyist.
+- pgdik (L17 S15 B313) Please increase more family friendly activities
+- pe9wi (L18 S11 B280) More youth programs are needed to bring the community together: volunteer organizations, community service, innovative creations labs
+- pc7ve (L19 S54 B1) I would like to see more community art and music programs. For instance, I would love to sign up for a community choir.
+- pcq7d (L20 S77 B259) We need more activities/places to go for teenagers; basically all there is are places to eat, the mall, and the bowling alley
+- padkd (L21 S37 B222) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pzj5g (L22 S84 B2) I would like to see part of the downtown area converted to an "art district". Something similar to the Wynnwood Walls in Miami, FL.
+- pptwk (L23 S20 B17) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- pi9rk (L24 S29 B346) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- puyc3 (L25 S115 B530) We need to renovate the run down businesses and store fronts, instead of building new places
+- pnukd (L33 S24 B79) Historic preservation of homes and buildings needs countywide attention to maintain our unique architectural heritage.
+- pbqst (L35 S16 B4) Need engaging art installations throughout the city. People will be able to experience art, have fun, and share on social media.
+- pptye (L36 S14 B436) More concerts should be held in Bowling Green
+- paeh8 (L51 S73 B13) Make it a walking city. Sidewalks along the main avenues (scottsville rd, campbell ln, 31 bypass) with plants, benches, art pieces.
+- pjrwf (L52 S12 B369) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- p2a8w (L56 S19 B107) Bowling Green is an excellent place to raise a family, shop, worship, get an education, and recreate. I feel safe in most places here in BG.
+- pf6t9 (L57 S17 B293) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- ps5tz (L60 S22 B482) More technical education programs for non-graduates of high school
+- pvqds (L94 S219 B7) Bowling Green needs to attract business like Costco and Trader Joe's to keep residents from driving to Nashville on weekends
+- pvfj9 (L97 S23 B540) More green spaces. All of our parks have just become sports complexes!
+- p7h4t (L123 S32 B11) BG can link/support hotel/food, recreational/cultural venues in a Tourism Passport, giving discounts when at least 3 are purchased together.
+- pknju (L212 S284 B6) The entire bypass area is an eyesore and there needs to be a concerted effort like a TIF to revitalize this crucial part of town.
+- puuwd (L292 S185 B14) Like Steamers but hate they ruined that historic building
+- pc7ap (L335 S463 B10) BG needs to install traffic cameras that help police intersections like Gallatin, TN. This would reduce accidents, traffic flow and add $
+- p9v2v (L364 S306 B5) some children with cultural differences or dietary needs cannot eat a typical lunch at school please provide special diet options.
+- pvzzx (L435 S382 B15) Homeless people deserve full size places like studio apartments. Not tiny homes like a smurf would desire in a tiny house park.
+- pv9w5 (L445 S227 B9) Don't waste $800,000 of tax dollars for a fountain in Lamkin park. Residents would be better served with educational programs for the youth!
+
+## #38 pyssw: Some county roads, such as Hammett Hill Road, are so narrow it's hard for two cars to pass. Surely they could make them a little wider.
+
+- p4g7x (L1 S2 B102) Smallhouse Rd (at Campbell Ln) heading into town needs to be widened to have room for three lanes (left turn, straight, right turn).
+- pvq7m (L2 S5 B8) many parts of the By-pass can and should be widened
+- pjbzz (L3 S3 B1) Need to build wider access roads into the city!
+- ppe9v (L4 S9 B10) Widen Cemetry Road, Russellville Road, Lover’s Lane, Campbell Lane, The Old ByPass, and Scotsville Road from old ByPass to Natcher Parkway.
+- pwdbv (L5 S20 B33) Some of the roads in the city are not wide enough to put sidewalks in but they do anyway catherine dr is ridiculous
+- p35n3 (L6 S32 B24) The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+- pr7y3 (L7 S1 B32) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- p3y3b (L8 S10 B13) Build more roads!!! Traffic is terrible here for a small city.
+- phuu3 (L9 S12 B56) The access roads off Scottsville Rd are terrible. They provide constant traffic jams and can be dangerous. We need to budget to fix them.
+- p5e8k (L10 S22 B41) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- pz6eg (L11 S23 B19) Bike lanes that are wide enough to safely ride on without fear of being hit by passing cars.
+- p8hra (L12 S13 B25) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- pxwxs (L13 S35 B583) Create shoulders on the bypass.
+- pcu64 (L14 S15 B256) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- pcuww (L15 S11 B12) Why isn't Nashville Rd between the roundabout and Campbell Ln wider? Getting stuck there at 5 o'clock is a plague.
+- pgmpv (L16 S7 B314) Something needs to be done to improve traffic flow
+- pjf7t (L17 S4 B3) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- p8iym (L18 S43 B185) Expand Nashville Rd all the way past Chaney’s & Buchanan park. Very dangerous area.. very much so for a school area & young drivers.
+- pck82 (L19 S25 B248) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- ptbq2 (L20 S28 B504) With a circle, widen Fairview with a left-turn lane west of cemetery.
+- pv2mh (L21 S8 B534) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- pufe9 (L22 S56 B53) Make all future sidewalks wide enough for multi-use (walking, biking, skateboarding etc)
+- p7yd2 (L23 S54 B175) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- pczge (L24 S6 B4) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- pp9h8 (L25 S24 B434) Either do the speed limit or get over to the right, to many SLOW, out of county drivers clogging up the roadways.
+- pwj8w (L30 S34 B5) Five lane Cemetery Road from Interchange to By Pass, except four lanes through the Cemetery with median prohibiting left turns.
+- pq66s (L35 S19 B62) The road closure between Shawnee and Patton Way makes access to Nashville Rd take 3 times as long and is a major annoyance.
+- pyyxz (L40 S18 B593) Impact on traffic flow should be considered with any proposed new developments.
+- p2hhq (L42 S102 B9) The feeder road at Shive Lane and Scottsville Road need to be closed off. It is very dangerous.
+- p8tq3 (L54 S17 B36) There is too much continuous road work going on downtown. They need to get it together.
+- pzaca (L58 S21 B597) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- p6cyb (L62 S51 B6) Plan for people, not cars. Walking should be enjoyable, not a hazard.
+- pqtft (L75 S57 B2) Kentucky and Adams streets should be two-way roads. Adams St. should be zoned commercial, and Kentucky St. should be zoned residential.
+- p3j36 (L77 S16 B49) We need to block left turns on the busy parts of the by-pass so people don't block everyone else trying to turn.
+- pe3gy (L91 S14 B31) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- psik2 (L92 S196 B14) stronger enforcement of junk cars in yards and trashy looking yards in general
+- pgw6z (L265 S417 B7) Pass a No animals on chains in the county.
+- pemdb (L359 S502 B15) Bowling Green needs to pass a resolution in support of medical cannabis.
+- prnz3 (L509 S421 B11) Pass a no animals in a hot car ordinance.
+
+## #39 phdiq: Refugees and immigrants are welcome next door.
+
+- ptwgu (L1 S1 B4) Refugee neighbors enrich our city's landscape and we should find more ways to welcome and integrate them into the life of the city.
+- pqnui (L2 S2 B1) Resources to better integrate immigrants and refugees into the community should be put into place.
+- pqe94 (L3 S4 B433) Bowling Green's refugee, immigrant, and international student population improves the university and the community.
+- pnv7k (L4 S5 B401) Our local immigrant population has, overall, been a benefit to our city and county.
+- pkkkz (L5 S17 B357) A city should have the right to declare itself a sanctuary city.
+- prnhy (L6 S3 B2) Refugees should be required to learn and speak english.
+- puqkg (L7 S6 B516) City/County schools should have a minimum one year classroom for immigrant and refugee students so they can learn english, culture and laws
+- pa9ks (L8 S9 B159) Temporary housing for the homeless in the community.
+- p6u6a (L9 S24 B103) Local government, for profit and non profits should work together on housing and economic equality
+- pwzum (L10 S23 B565) We need to replace "Room at the Inn" services with temporary decent housing connected to aid agencies for the homeless
+- peb9c (L11 S8 B8) The very low number of immigrants coming to our county last year was a good thing. Saves costs: Schools, courts, social services-Our taxes!
+- p6j9p (L12 S12 B94) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- pwg82 (L13 S7 B3) Emphasize that ALL immigrants should learn and speak ENGLLISH.
+- padkd (L14 S19 B161) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pjaji (L15 S16 B330) It would be great if people in neighborhoods could get to know each other better and neighborhoods were like small communities of neighbors.
+- pp5rm (L16 S15 B405) No family should be homeless in Bowling Green / Warren County, and it is up to our officials to make sure they have options for shelter.
+- pb38d (L17 S50 B173) It is easy to find a good job in Warren County.
+- phceg (L18 S65 B295) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- p5rtq (L19 S30 B79) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- pgzys (L20 S25 B290) Rental assistance programs
+- pg99d (L21 S67 B269) Local food and small farms are one of BG best attractions.
+- p5ref (L22 S41 B77) Encourage connection between the wealthy and the poor
+- pgnkw (L23 S178 B279) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- p92ce (L24 S89 B142) People in Bowling Green should not be discriminated against based on their sexual orientation.
+- pgdt8 (L25 S13 B274) Consider asking low-income or disabled residents what they really need.
+- pihfx (L27 S14 B317) The homeless population is getting out of hand. We need to find better methods for curtailing and rehabing and keeping them off the streets.
+- pnvfb (L37 S10 B402) Bowling Green needs more pet-friendly housing options for renters.
+- p8usw (L47 S22 B139) Local companies that can't fill job openings should recruit from parts of KY w/ high unemployment & pay relocation expenses.
+- pbm45 (L64 S11 B186) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pptbv (L72 S20 B418) We need mixed-use development in the most disadvantaged areas of BG.
+- pvdrx (L79 S21 B529) We need to make it worthwhile for builders to create more quality affordable rental units for residents, rather than more luxury units.
+- p67wb (L86 S29 B5) WKU should open its facilities to the public once or twice a month to the community, and those in need should be welcome more often.
+- pbxwr (L100 S64 B7) Planning & Zoning need to do a better job of listening & working with residents. It's not next to their house, so they don't care!
+- pp2tr (L138 S76 B6) Building codes prohibiting trophy houses next to common housing
+- phsyb (L161 S18 B304) Prevent the development of new housing areas, especially in farm land areas.
+- pticx (L421 S418 B10) Make Scott Waste follow their contract - Return trash cans next to the house and not leave them on the sidewalks. Keep BG clean!
+- p5hhx (L460 S544 B9) We know fentanyl is coming through our post office. Law enforcement should have dogs finding it before it kills the next youth.
+- pnkpa (L508 S422 B11) A person should not miss rent (say due to a car breakdown) and face eviction in less than 2 weeks (before next payday). Make it 30 days.
+
+## #40 pt8p7: There should be more opportunities for the arts and sciences in the Housing Authority so the students there can rise above!
+
+- pqeuz (L1 S1 B7) Arts education should be available in every school in Warren County and other surrounding areas.
+- pinkj (L2 S3 B4) Arts-based charter schools
+- pehyf (L3 S2 B6) The arts are an important component of K-12 education.
+- pkezh (L4 S4 B21) Public school systems need to provide more funding for art education programs, such as music, theater, and visual arts.
+- pb6y8 (L5 S5 B2) The arts enrich our city.
+- pgcmd (L6 S10 B285) Bowling Green needs more cultural and educational establishments, like sciemce, history and art museums.
+- pc7ve (L7 S20 B216) I would like to see more community art and music programs. For instance, I would love to sign up for a community choir.
+- pee6u (L8 S9 B253) More creative learning classes
+- pe9wi (L9 S6 B249) More youth programs are needed to bring the community together: volunteer organizations, community service, innovative creations labs
+- pirz4 (L10 S42 B19) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- ptcr8 (L11 S13 B491) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- pwnap (L12 S23 B560) Invest in the youth.
+- p6u6a (L13 S17 B25) Local government, for profit and non profits should work together on housing and economic equality
+- p6wtw (L14 S12 B129) Educate high schoolers on their options after they graduate
+- pf6t9 (L15 S8 B264) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- p6j9p (L16 S19 B120) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- pmti4 (L17 S141 B388) The city & county school districts need to be re-evaluated The yards/houses that touch Potter Grays playground r all County school districts
+- phceg (L18 S66 B32) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pgzys (L19 S67 B304) Rental assistance programs
+- pu3fh (L20 S104 B509) We need more things to do for ages 1-6. A children’s museum or a small science museum would be wonderful.
+- ps5tz (L21 S14 B471) More technical education programs for non-graduates of high school
+- padkd (L22 S26 B35) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- perix (L23 S72 B260) Support non-public (or public charter) school choice options, and make choice viable for families of ALL income levels.
+- pkg36 (L24 S30 B358) Bowling Green needs Community Enrichment Classes that include woodworking, welding, gardening and general home beautification for hobbyist.
+- pjrwf (L25 S7 B348) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- pptwk (L27 S11 B423) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- pek7k (L30 S56 B13) Provide a food assistance program for college students as students lots of times do not qualify for food stamps due to living on campus
+- pmkq5 (L31 S45 B10) Concerts and performing arts activities must reflect the diverse racial/ethnic demographic of the city/county.
+- picqu (L32 S22 B5) Make areas around WKU's campus livable for college students. Eliminating section 8 housing will lead to less crime & lower cost of attendance.
+- pcqfp (L34 S16 B23) All schools in the county and city should work together to provide the same minimum level of education to students.
+- pjzz6 (L37 S28 B9) The city and county work together to keep the low socieconomic status children out of certain schools. This reduces learning opportunities.
+- pa9ks (L47 S84 B8) Temporary housing for the homeless in the community.
+- p3zeb (L52 S18 B18) Post-secondary training programs for special education students.
+- pgdik (L56 S25 B286) Please increase more family friendly activities
+- p67wb (L62 S24 B111) WKU should open its facilities to the public once or twice a month to the community, and those in need should be welcome more often.
+- pbm45 (L67 S15 B17) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pk22m (L79 S21 B351) Publicizing more cultural activities other than the Bowling Green International Festival.
+- pvng8 (L108 S222 B3) City had 109 homeless students in 2017, County Had 112. Housing those families temporarily is worth raising tax rate from 1.85% to 1.91%.
+- pnvfb (L136 S31 B12) Bowling Green needs more pet-friendly housing options for renters.
+- pxrds (L139 S108 B1) There should be gender-neutral housing options on WKU's campus for LGBTQ+ students.
+- pj74t (L212 S188 B15) Parking on the WKU campus should be more accessible to students and visitors.
+- pfarp (L233 S59 B14) Actually teach HS students useful things.
+- psnvi (L422 S386 B11) Recreational Cannabis in KY offers tourism, increased revenue, job opportunities, and shows massive leadership in the southern region.
+
+## #41 p6fag: We need to grow the internet infrastructure particularly in growing areas of the county like Alvaton.
+
+- pudtd (L1 S1 B3) We need faster internet service.
+- paxtf (L2 S4 B2) We need a fiber option for internet.
+- pkzf6 (L3 S3 B13) Bowling Green needs more competitive internet rates.
+- pn9cj (L4 S2 B6) Increase Internet/Cell/Phone service throughout the county. First deal with areas that currently don't have any option.
+- pchi2 (L5 S5 B15) How is it that surrounding counties have county wide high speed internet, yet one third of Warren County residents have slow or no internet?
+- pztez (L6 S9 B14) WRECC should provide internet services.
+- pktbx (L7 S6 B12) Internet services should be a public municipality.
+- pbqbi (L8 S7 B25) More choices when it comes to internet. BGMU has been offering service to businesses for a while, they should expand to offer to residents.
+- pu2kb (L9 S15 B528) Our city should make a bid for Google Fiber to help compete with Spectrum and AT&T.
+- pcv53 (L10 S8 B26) BGMU needs to offer residential fiber internet as a UTILITY, using Chattanooga as a perfect example.
+- p5rmi (L11 S13 B75) We need to promote competition in town for Charter. AT&T isn't much better and doesn't serve everywhere. Need more fiber to the homes.
+- puvmn (L12 S10 B1) Free WIFI in certain areas - particularly around Fountain Squre
+- phjdj (L13 S19 B373) Bowling Green needs more competitive cable rates.
+- pnkss (L14 S11 B439) Warren county needs to be more proactive about keeping their county maps up to date of new roads or developments especially online. (Google)
+- ptuye (L15 S12 B4) The population has out grown the infrastructure in bg/ warren county.
+- padkd (L16 S23 B133) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- paxv3 (L17 S92 B272) competition for cable companies and an end to heir price gouging.
+- pcp4z (L18 S178 B294) Louisville rd area needs more businesses and restaurants extending out towards the factories to also bring in revenue from Edmonson Co.
+- p5ahf (L19 S122 B82) Need more bike lanes and biker friendly resources
+- pxg44 (L20 S20 B54) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- p35gt (L21 S37 B154) Better/more mass media choices available.
+- pjbzz (L22 S17 B78) Need to build wider access roads into the city!
+- pcu64 (L23 S67 B299) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- p6k4e (L24 S48 B58) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pjrdt (L25 S34 B31) Improved businesses such as banks and groceries in lowest income areas
+- pbm45 (L40 S18 B88) We need to focus more on the existing housing in BG, including renovations and improvements.
+- p6twv (L50 S169 B8) City Annexed areas need more city services for their tax $$.
+- p6xjr (L51 S22 B218) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pptbv (L53 S24 B9) We need mixed-use development in the most disadvantaged areas of BG.
+- pr7y3 (L61 S14 B38) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- pki7f (L65 S25 B415) Bowling Green needs more access to affordable , healthy, local food sources.
+- p2hkv (L94 S138 B10) Our sidewalks need more connectivity. It's too piecemealed and makes some areas unusable.
+- pe3gy (L108 S16 B11) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pcrhx (L134 S21 B297) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pb8qj (L139 S253 B7) Recycling services need to be expanded & improved. With growing population, think of how much land will become dump sites...Ridiculous!
+- pvndx (L343 S323 B5) Industrial hemp should be re-legalized to grow in Kentucky.
+
+## #42 p396b: Judge/prosecutors should not let influential family of victim push extraordinarily harsh sentences & create more victims, ruined young lives
+
+- pkgar (L1 S2 B361) District judges are biased towards large local companies to the detriment of individuals.
+- p5y22 (L2 S12 B93) Some local politicians abuse their power and get away with more than normal citizens.
+- pbnf4 (L3 S5 B196) More nonviolent inmates convicted of drug possession should be set free.
+- p72mx (L4 S8 B5) Harsher sentences for drug users would help combat the opioid epidemic.
+- pq457 (L5 S13 B432) Need comprehesive probation rehab programs - include addiction treatment, life & job skills & ideas securing housing, training/job etc
+- pmxmt (L6 S3 B391) There need to be harsher punishments for WKU campus rapes/sexual assaults.
+- pv3iy (L7 S1 B529) With jails crowded, it seems many are first time offenders of crimes that hurt no one, nor property. Seems rehab would be better.
+- p95zh (L8 S33 B153) There should be no punishment for small amounts of marijuana possession, in my opinion
+- pqpib (L9 S37 B450) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- pani2 (L10 S6 B176) Law enforcement should send drug possession arrestees for rehabilitation services rather than imprisonment.
+- ptn8b (L11 S21 B498) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- petwp (L12 S10 B255) Crime is worse in Bowling Green / Warren County than it was a decade ago.
+- p4qh4 (L13 S14 B68) Promote access to mental health treatment, rather than treating addicts as criminals.
+- p7eqj (L14 S48 B127) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- pwra8 (L15 S18 B563) Doctors over-prescribing opioids should be sentenced at least as harshly as street dealers if not more harshly due to their knowledge.
+- pbstr (L16 S16 B200) Individuals should be treated equally. Higher positions or who you work for should not release anyone from responsibility of their actions.
+- pu9z9 (L17 S32 B514) The travesty going up on Fairview Ave. should never have been allowed
+- pra2h (L18 S17 B462) There is too much bullying in our schools that administrators are ignoring.
+- pwnap (L19 S29 B561) Invest in the youth.
+- pvead (L20 S26 B534) You can't get a job in this county at a large place of employment if you have OLD DUI's on your record. This is an un-needed punishment!
+- pd4in (L21 S38 B1) There should be a push to improve mental health awareness and availability in Bowling Green.
+- pmuac (L22 S15 B390) animal cruelty laws need to exist and be enforced
+- pmt8i (L23 S50 B388) In order to better combat the opioid epidemic, it is time to view drug addiction as a health problem rather than a criminal justice problem.
+- p7zmn (L24 S53 B134) There should be more effort put into teaching students about any potential harmful side effects of drugs, illegal or otherwise.
+- pkeaq (L25 S71 B358) Leash laws should be more strictly enforced in both the city and county
+- pvvrj (L28 S9 B543) Government should ignore criminal malfeasance/embezzlement of public funds by anyone if little or no funds can be recovered.
+- pfaf5 (L29 S11 B261) BG police should improve officer training and should be held accountable for abuse of power.
+- ptcr8 (L32 S22 B12) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- pqkxf (L34 S4 B446) There should be officers more readily available to the county areas; ex. for domestic violence disputes.
+- pqcdx (L35 S19 B438) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- pnmq4 (L38 S7 B401) Emergency protective orders should not be able to be obtained regarding claims of an incident from a year ago.
+- p5rtq (L41 S197 B8) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- p8w2e (L43 S20 B149) Human trafficking in Bowling Green needs to be investigated by the FBI before it becomes a larger problem swept under the rug.
+- p6zxd (L50 S25 B119) People need to do all their research before accusing local officials of using their influence for personal gain.
+- p4p8j (L52 S149 B6) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- p4vem (L53 S23 B72) Local law enforcement would benefit from additional training in community relations.
+- pgdik (L60 S52 B11) Please increase more family friendly activities
+- p92xj (L85 S24 B152) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pp5rm (L94 S45 B15) No family should be homeless in Bowling Green / Warren County, and it is up to our officials to make sure they have options for shelter.
+- pzxze (L135 S127 B10) There are not enough family-centered activities to do down town.
+- pi4h5 (L150 S223 B7) BG can’t compete with Nashville or Louisville for young professionals
+- pkp8t (L312 S285 B9) New home zoning should be for single family dwellings rather than multi-family units (apartments).
+- puuwd (L417 S337 B4) Like Steamers but hate they ruined that historic building
+- pxwxs (L416 S319 B3) Create shoulders on the bypass.
+- p7msc (L493 S252 B2) Create pedestrian-only streets.
+- p43q5 (L511 S379 B13) Too many apartments in Plano. Nice little country setting I bought my home in forever ruined!
+- psn6u (L557 S399 B14) Should be an interstate exit for the Woodburn area it could help decrease BG congestion and let people bypass BG all together
+
+## #43 p92ce: People in Bowling Green should not be discriminated against based on their sexual orientation.
+
+- p92xj (L1 S4 B137) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- p8hgh (L2 S2 B127) The city should craft a very simple fairness ordinance, saying no discrimination acquiring housing, but not giving LGBTQ EEOC Bypass @work
+- p98ae (L3 S8 B140) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- pgnkw (L4 S13 B275) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- p5b8r (L5 S1 B1) NO to the "Fairness" Ordinance. Current law is sufficient. ZERO reported instances where LGBTQ people have been discriminated against in BG
+- pbstr (L6 S6 B185) Individuals should be treated equally. Higher positions or who you work for should not release anyone from responsibility of their actions.
+- pxrds (L7 S3 B577) There should be gender-neutral housing options on WKU's campus for LGBTQ+ students.
+- pr9y5 (L8 S7 B451) The Fairness Ordinance, as currently proposed, poses insufficient protection for religious conscience and should be revised accordingly.
+- pkkkz (L9 S34 B352) A city should have the right to declare itself a sanctuary city.
+- p6u6a (L10 S21 B98) Local government, for profit and non profits should work together on housing and economic equality
+- pzahk (L11 S5 B597) LGBTQ fairness is far-left political idiocy.
+- pdigz (L12 S114 B219) Institutionalize racism is alive and well here. I know because I have experienced it first hand. We need to have a plan.
+- pp2r6 (L13 S10 B399) More gender-neutral bathrooms need to be seen across BG on WKU's campus, in local businesses, etc.
+- pzwn8 (L14 S11 B3) My employer has not been responsive to reports of sexual harassment in the workplace.
+- p8jmp (L15 S17 B130) Bowling Green needs to enforce the separation of church and state and impose taxes on churches that politic from the pulpit
+- pfqwv (L16 S52 B257) Law enforcement in Bowling Green and Warren county needs more minority representation
+- pd4in (L17 S15 B212) There should be a push to improve mental health awareness and availability in Bowling Green.
+- pqnui (L18 S55 B439) Resources to better integrate immigrants and refugees into the community should be put into place.
+- pqcdx (L19 S18 B428) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- pge2a (L20 S12 B271) Bowling Green needs a stronger separation of church-mosque-temple and state.
+- peq9z (L21 S59 B238) Medical marijuana should be legal.
+- pemdb (L22 S95 B237) Bowling Green needs to pass a resolution in support of medical cannabis.
+- pnvfb (L23 S9 B397) Bowling Green needs more pet-friendly housing options for renters.
+- p95zh (L24 S272 B138) There should be no punishment for small amounts of marijuana possession, in my opinion
+- p9ivq (L25 S22 B145) Bowling Green should have more healthy/clean eating options for those who have limited diets.
+- pp5rm (L36 S20 B401) No family should be homeless in Bowling Green / Warren County, and it is up to our officials to make sure they have options for shelter.
+- p69s8 (L62 S23 B6) Schools should offer more comprehensive sexual education to help lower STD and teen pregnancy rates.
+- pf6t9 (L67 S16 B245) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pptbv (L76 S25 B414) We need mixed-use development in the most disadvantaged areas of BG.
+- puaak (L79 S19 B510) Parents should be able to send their kids to the school district of their choice no matter where they live in Bowling Green/Warren County.
+- pg358 (L102 S14 B264) Sex education should include information about consent, safe sex practices, and STD spread and prevention.
+- pmxmt (L112 S35 B5) There need to be harsher punishments for WKU campus rapes/sexual assaults.
+- pinkj (L203 S271 B2) Arts-based charter schools
+- pjtja (L215 S162 B4) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- pzvz6 (L232 S24 B603) People should not be allowed to bring their pets every place or store they go to.
+
+## #44 pyr2u: Warren county needs to be "wet". The city is wet but the county is dry.
+
+- pfwr5 (L1 S1 B1) Warren County should be completely wet, the idea of a “moist” County is outdated and stunting the financial growth and tourism opportunity.
+- p9ujh (L2 S61 B195) Lease laws should be enacted and enforced in the county as they are in the city.
+- ph4wf (L3 S4 B71) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- ptgpf (L4 S152 B498) Recreational marijuana should be legal.
+- p9md3 (L5 S5 B59) County needs to extend water lines in Tuckertown area. About a dozen homes don't have county water or fire hydrants!
+- p7438 (L6 S3 B63) The Barren River water front needs to be improved on both sides of the river and include canoeing and kayaking water features in the river.
+- pemdb (L7 S380 B12) Bowling Green needs to pass a resolution in support of medical cannabis.
+- p6xjr (L8 S8 B155) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pd9yv (L9 S53 B252) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- pkeaq (L10 S195 B367) Leash laws should be more strictly enforced in both the city and county
+- pgpz3 (L12 S161 B306) Planning and zoning laws should change to encourage small businesses and farms.
+- pqpib (L11 S88 B451) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- pahwq (L13 S309 B203) Legalizing marijuana at the state level could produce substantial tax revenue, but if only BG did, it would cause problems.
+- peq9z (L14 S351 B273) Medical marijuana should be legal.
+- pcp4z (L15 S355 B60) Louisville rd area needs more businesses and restaurants extending out towards the factories to also bring in revenue from Edmonson Co.
+- pm5k9 (L16 S56 B378) Bowling Green & Warren Co. should consolidate into a metro.
+- ptuye (L17 S16 B504) The population has out grown the infrastructure in bg/ warren county.
+- pgsds (L18 S6 B309) County volunteer fire departments need to be upgraded to fit the current population of Warren County.
+- padkd (L19 S23 B200) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p8jmp (L20 S150 B32) Bowling Green needs to enforce the separation of church and state and impose taxes on churches that politic from the pulpit
+- p4csd (L21 S44 B105) SNAP grants for neighborhood improvements should be available in Warren County, not just in the city.
+- puyc3 (L22 S90 B527) We need to renovate the run down businesses and store fronts, instead of building new places
+- phfba (L23 S33 B26) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pmti4 (L24 S42 B395) The city & county school districts need to be re-evaluated The yards/houses that touch Potter Grays playground r all County school districts
+- pvdxd (L25 S362 B536) Legalizing marijuana would be a boon for the economy.
+- p9erh (L28 S7 B40) Bowling Green needs to annex a solid geographic area & thereby eliminating those areas within our city that are not receiving city services.
+- pgmpv (L42 S75 B13) Something needs to be done to improve traffic flow
+- pfuyd (L45 S21 B292) big projeck in city sould be vote by people
+- pxg44 (L46 S22 B56) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pkcbm (L52 S137 B9) BG needs more Summer weekend festivals/activities
+- pif8h (L56 S25 B29) BG needs to redevelop from WKU to the river and beyond. Model after Greenville SC
+- p6k4e (L57 S13 B146) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pindv (L62 S62 B8) The Bowling Green/Warren County Airport needs to be relocated outside of the city limits.
+- pb38d (L68 S11 B211) It is easy to find a good job in Warren County.
+- pkb9k (L84 S201 B14) Bowling Green needs an indoor / outdoor sports event complex/
+- pqeyn (L87 S24 B443) We need to carefully preserve agricultural land
+- pxn3z (L107 S2 B66) city needs to work on water run off when we have a lot of rain.. to many places flood on roadways makes driving very dangerous..
+- pfqwv (L111 S237 B7) Law enforcement in Bowling Green and Warren county needs more minority representation
+- pq8wz (L115 S19 B2) BG Parks needs more funding from City
+- p92xj (L117 S114 B11) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pp8pk (L126 S20 B416) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- p68um (L144 S14 B139) Take advantage of the wonderful summers in KY and have more outdoor public swimming spaces
+- pcrhx (L146 S15 B244) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pjbzz (L153 S12 B349) Need to build wider access roads into the city!
+- pzaca (L190 S10 B595) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- pbm45 (L221 S18 B223) We need to focus more on the existing housing in BG, including renovations and improvements.
+- p6c95 (L254 S133 B3) BG needs an indoor tennis option
+- p4j6s (L265 S417 B10) Minimum wage needs to go o $15 per hour
+- pmp68 (L288 S318 B15) BGMU needs to be held accountable for their rates and "averages."
+- ppegh (L310 S328 B6) Holly drive needs sidewalks
+- phjdj (L312 S346 B4) Bowling Green needs more competitive cable rates.
+- pnkss (L318 S9 B52) Warren county needs to be more proactive about keeping their county maps up to date of new roads or developments especially online. (Google)
+- pkzf6 (L335 S336 B5) Bowling Green needs more competitive internet rates.
+- pwsqv (L450 S17 B564) Water safety and swim lessons to all k-12 students.
+
+## #45 p68hk: Apartments for 55 and older that are upscale and lovely.
+
+- pkupf (L1 S1 B358) A senior living community, designed for 50+ residents rather than 75+ & in failing health residents, is needed — and apparently ignored.
+- pneud (L2 S4 B387) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- pdckg (L3 S5 B215) Affordable supports for the elderly and aging population are needed in our community.
+- pvdrx (L4 S2 B529) We need to make it worthwhile for builders to create more quality affordable rental units for residents, rather than more luxury units.
+- p2w5z (L5 S11 B16) For a city of this size, there is too little available in the way of weekend activities for Seniors who are not ready for rocking chairs.
+- p64wt (L6 S8 B79) More affordable home ownership options.
+- pkp8t (L7 S9 B4) New home zoning should be for single family dwellings rather than multi-family units (apartments).
+- pfnxw (L8 S21 B255) City and county parks departments should provide more programming for adults and seniors.
+- padkd (L9 S10 B156) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- ppgmg (L10 S78 B1) parks and rec should promote and support pickleball for older citizens
+- psebg (L11 S20 B470) More weekend activites are needed for YOUNG Seniors, who arent yet ready for Bingo nights.
+- p4p8j (L12 S31 B48) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pnvfb (L13 S3 B398) Bowling Green needs more pet-friendly housing options for renters.
+- p5rtq (L14 S19 B74) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- pbzyn (L15 S15 B190) Provide accessible transportation for seniors that have difficulty driving
+- pgzys (L16 S22 B286) Rental assistance programs
+- puyc3 (L17 S36 B520) We need to renovate the run down businesses and store fronts, instead of building new places
+- pbm45 (L18 S6 B181) We need to focus more on the existing housing in BG, including renovations and improvements.
+- p3cst (L19 S13 B26) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- pgaj7 (L20 S17 B6) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- psbcj (L21 S117 B469) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pvzzx (L22 S16 B7) Homeless people deserve full size places like studio apartments. Not tiny homes like a smurf would desire in a tiny house park.
+- p43q5 (L24 S7 B3) Too many apartments in Plano. Nice little country setting I bought my home in forever ruined!
+- pjrqx (L23 S28 B336) apartment complexes should be required to participate in recycling program
+- p66dt (L25 S14 B80) The rental market prices are well beyond an affordable housing level and needs to be addressed given the number of renters in BG.
+- pptbv (L31 S23 B414) We need mixed-use development in the most disadvantaged areas of BG.
+- p5pav (L32 S12 B5) Older neighborhoods change from owner occupied to rental. Deterioration occurs. Stronger landlord/tenant laws needed!
+- pji76 (L34 S24 B2) There are too many apartments being built. Our economy can't continue to support it. There will be a bust & it might be sooner than later.
+- p98s9 (L39 S25 B142) Stronger tenant and renters rights. Landlord accountability for keeping properties in good shape. So many overpriced dilapidated rentals.
+- pphh2 (L94 S18 B410) We should focus downtown development dollars on rehabilitation and reuse of buildings that can be done so, rather than building new.
+
+## #46 pu2fx: It should not take 3 months to get a gynecologist appointment in this city.
+
+- p5eeq (L1 S2 B86) Birth control should be an OTC drug- access to it in Kentucky and in Bowling Green is limited for many women.
+- pd4in (L2 S3 B227) There should be a push to improve mental health awareness and availability in Bowling Green.
+- pit63 (L3 S4 B333) Some local doctors order too many tests.
+- pq2c7 (L4 S1 B430) We have an estimated 125,000 people but we still don't have a hospital that is trauma center and have to ship everyone to TN or Louisville.
+- ptahe (L5 S71 B491) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- pjc47 (L6 S10 B339) I feel Bowling Green could benefit with an additional ambulance service. Quicker response, and possibly a lower payment when used.
+- pki7f (L7 S7 B363) Bowling Green needs more access to affordable , healthy, local food sources.
+- p98ae (L8 S12 B159) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- pb8a2 (L9 S9 B189) We need to offer free full panel STD testing to students and low income families
+- p3bwu (L10 S76 B44) The city should actually time stoplights correctly during rush hour to prevent complete gridlock
+- p9ivq (L11 S5 B164) Bowling Green should have more healthy/clean eating options for those who have limited diets.
+- pv52p (L12 S61 B531) The WKU Nursing Program should be expanded so we have more nurses
+- pz6xn (L13 S15 B595) More healthy restaurants
+- pqkxf (L14 S16 B444) There should be officers more readily available to the county areas; ex. for domestic violence disputes.
+- p69s8 (L15 S21 B105) Schools should offer more comprehensive sexual education to help lower STD and teen pregnancy rates.
+- pgmpv (L16 S8 B288) Something needs to be done to improve traffic flow
+- padkd (L17 S57 B173) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pemdb (L18 S79 B252) Bowling Green needs to pass a resolution in support of medical cannabis.
+- pqaaf (L19 S148 B434) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- pkvep (L20 S53 B371) I still have to drive out of town to eat Golden Corral.
+- psbcj (L21 S112 B476) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pdckg (L23 S49 B229) Affordable supports for the elderly and aging population are needed in our community.
+- pwin9 (L22 S35 B558) A clean, efficient public transportation system would be a huge help to those with limited ability or desire to drive.
+- pudtd (L24 S48 B516) We need faster internet service.
+- p6zka (L25 S17 B120) Commitment to healthy lifestyles
+- ptuye (L28 S22 B502) The population has out grown the infrastructure in bg/ warren county.
+- peq9z (L33 S25 B253) Medical marijuana should be legal.
+- pzwn8 (L45 S18 B604) My employer has not been responsive to reports of sexual harassment in the workplace.
+- pcu64 (L51 S14 B220) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- phceg (L53 S290 B14) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pvxt4 (L60 S13 B545) We need a health food store.
+- p8tq3 (L62 S11 B7) There is too much continuous road work going on downtown. They need to get it together.
+- pjbzz (L85 S6 B338) Need to build wider access roads into the city!
+- pc7zk (L102 S19 B208) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pq66s (L117 S60 B5) The road closure between Shawnee and Patton Way makes access to Nashville Rd take 3 times as long and is a major annoyance.
+- p3y3b (L126 S23 B54) Build more roads!!! Traffic is terrible here for a small city.
+- pv2mh (L148 S24 B528) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- p5y22 (L211 S329 B6) Some local politicians abuse their power and get away with more than normal citizens.
+- p2a8w (L229 S120 B13) Bowling Green is an excellent place to raise a family, shop, worship, get an education, and recreate. I feel safe in most places here in BG.
+- pq8ag (L227 S153 B4) Reduce and/or get rid of the city wage tax.
+- pbm45 (L248 S20 B197) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pjaji (L272 S59 B11) It would be great if people in neighborhoods could get to know each other better and neighborhoods were like small communities of neighbors.
+- pqmg8 (L330 S233 B8) Low-income areas should get beautification money -- not the wealthy who can afford it themselves.
+- p68um (L339 S221 B1) Take advantage of the wonderful summers in KY and have more outdoor public swimming spaces
+- pp9h8 (L343 S191 B10) Either do the speed limit or get over to the right, to many SLOW, out of county drivers clogging up the roadways.
+- pc3m2 (L465 S421 B9) Locally owned, small businesses should get incentives and assistance -- not chains and outside investors.
+- pwigz (L493 S461 B12) Scottsville Rd should be 4+ lanes between I-65 & Lovers Lane, get rid of the service Rd.
+- p6quu (L561 S211 B3) There should be something a work farm for local prisoners to learn to tend gardens, take care of livestock, and learn to be more useful.
+- pvead (L566 S457 B15) You can't get a job in this county at a large place of employment if you have OLD DUI's on your record. This is an un-needed punishment!
+- pfsk9 (L590 S380 B2) Allow parents that take their kids out of public schools to use that money in a private school.
+
+## #47 pymzr: A traffic light is needed on Cave Mill in front of Natcher School. Operational on school days, 7:30 to 9 AM & 3 to 4:30 PM.
+
+- pt458 (L1 S1 B1) Need a traffic signal on Cave Mill in front of Natcher School, operating 8-9 AM, 3:30-4:30.
+- pmiz7 (L2 S2 B49) Traffic flow on Cavemill Rd during peek hours (3pm - 5pm)
+- p5ku8 (L3 S3 B64) There needs to be a stoplight at the intersection of Shive Lane and Ken Bale Blvd to improve traffic flow. The backups there are awful.
+- pcu64 (L4 S5 B60) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- pyei4 (L5 S10 B16) The LEFT turning light at Nashville onto Dishman & the same for Scottsville onto Lovers Ln.. need to be longer to allow more to go through.
+- p7yd2 (L6 S15 B59) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- pauwi (L7 S9 B4) The Smokey Bones entrance off of Scottsville Road is extremely dangerous and needs a traffic light.
+- p8hra (L8 S12 B44) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- pbp7c (L9 S8 B40) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- pgmpv (L10 S6 B36) Something needs to be done to improve traffic flow
+- pv2mh (L11 S4 B25) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- p3bwu (L12 S7 B88) The city should actually time stoplights correctly during rush hour to prevent complete gridlock
+- p572n (L13 S26 B55) A round about would be the best solution to improve traffic flow on Fairview Ave at Keriakes Park.
+- pcuww (L14 S18 B247) Why isn't Nashville Rd between the roundabout and Campbell Ln wider? Getting stuck there at 5 o'clock is a plague.
+- pczge (L15 S13 B250) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- peddm (L16 S31 B266) The intersection at Taco Bell and KFC is a nightmare
+- phmk4 (L17 S28 B327) Access Rd, east side of Scottsville Rd. in shopping dist causes congestion. Give right of way to access road or cross streets, not a mix!
+- ptaiy (L18 S11 B5) Many drivers fail to stop as traffic lights turn red. As many as 3 cars will travel through an intersection after light has changed to red.
+- p4g7x (L19 S29 B106) Smallhouse Rd (at Campbell Ln) heading into town needs to be widened to have room for three lanes (left turn, straight, right turn).
+- p35n3 (L20 S75 B85) The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+- p8iym (L21 S21 B68) Expand Nashville Rd all the way past Chaney’s & Buchanan park. Very dangerous area.. very much so for a school area & young drivers.
+- pav4r (L22 S106 B211) There should be more officers observing intersections.
+- p5e8k (L23 S27 B124) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- pt76e (L24 S34 B18) Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+- ptbq2 (L25 S52 B494) With a circle, widen Fairview with a left-turn lane west of cemetery.
+- pyyxz (L26 S20 B41) Impact on traffic flow should be considered with any proposed new developments.
+- p5hnk (L27 S14 B129) Street lights should be required on residential streets in town. Too many dark corners.
+- pk7ki (L28 S16 B71) Better enforcement of traffic violations. Too many running red lights, parking in fire lanes, cell phone usage while driving
+- p3j36 (L30 S25 B94) We need to block left turns on the busy parts of the by-pass so people don't block everyone else trying to turn.
+- p3kb6 (L34 S17 B39) Only a traffic circle at Kereiakes Park on Fairview Ave. is required.
+- pu42c (L36 S22 B513) Better visibility on roads. Reflectors and better signage
+- pwj8w (L35 S23 B561) Five lane Cemetery Road from Interchange to By Pass, except four lanes through the Cemetery with median prohibiting left turns.
+- pdhdi (L39 S32 B12) Work,with State to complete a wide loop from Scottsville Road across N I65 to N Natcher Pk way.
+- pnfi5 (L45 S19 B17) install traffic cameras and enforce running of stop lights. more traffic enforcement means more $$$ for the city.
+- pmn86 (L51 S70 B6) We need look for a Natcher connection on Three Springs or Elrod Rd
+- pq66s (L54 S24 B442) The road closure between Shawnee and Patton Way makes access to Nashville Rd take 3 times as long and is a major annoyance.
+- p78pt (L72 S113 B7) Sidewalks are needed along Gary Farms Blvd
+- pcetw (L146 S283 B11) The city and county school systems should merge.
+- p9j36 (L199 S288 B9) Better ordinances on keeping animals on leashes or in fenced areas are needed.
+- pdckg (L213 S413 B8) Affordable supports for the elderly and aging population are needed in our community.
+- pcura (L216 S64 B2) Other counties have school at home on snow days so that kids do not have to make up days. This should be considered for here.
+- psebg (L244 S324 B15) More weekend activites are needed for YOUNG Seniors, who arent yet ready for Bingo nights.
+- p4e3h (L278 S211 B10) Public school could do alternate teaching styles(like Montessori) in a school within a school set up. Not all kids learn the same way.
+- p7438 (L314 S296 B14) The Barren River water front needs to be improved on both sides of the river and include canoeing and kayaking water features in the river.
+- pgrp6 (L461 S460 B13) Unelected school board officials should not have the power to create, add, or increase "school taxes".
+- pnkpa (L532 S544 B3) A person should not miss rent (say due to a car breakdown) and face eviction in less than 2 weeks (before next payday). Make it 30 days.
+
+## #48 pnfi5: install traffic cameras and enforce running of stop lights. more traffic enforcement means more $$$ for the city.
+
+- pc7ap (L1 S2 B2) BG needs to install traffic cameras that help police intersections like Gallatin, TN. This would reduce accidents, traffic flow and add $
+- ps9dt (L2 S3 B41) Police do a shameful job of enforcing traffic laws. more tickets = more compliance and more $$$$$.
+- pk7ki (L3 S1 B1) Better enforcement of traffic violations. Too many running red lights, parking in fire lanes, cell phone usage while driving
+- pav4r (L4 S12 B199) There should be more officers observing intersections.
+- pgmpv (L5 S4 B33) Something needs to be done to improve traffic flow
+- p3bwu (L6 S10 B74) The city should actually time stoplights correctly during rush hour to prevent complete gridlock
+- p8hra (L7 S16 B40) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- pv2mh (L8 S5 B7) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- ptaiy (L9 S18 B5) Many drivers fail to stop as traffic lights turn red. As many as 3 cars will travel through an intersection after light has changed to red.
+- pmbwe (L10 S54 B384) More roundabouts for intersections
+- pu33h (L11 S31 B27) I see a lot of folks with expired tags on cars, both in state and out of state. Police need to enforce the laws and write more tickets.
+- p5ku8 (L12 S15 B53) There needs to be a stoplight at the intersection of Shive Lane and Ken Bale Blvd to improve traffic flow. The backups there are awful.
+- pbp7c (L13 S13 B6) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- pt76e (L14 S11 B25) Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+- pqhex (L15 S8 B4) Why has the Police stop enforcing parking regulations? Park any way any direction. Is it time for a separate Traffic Enforcement Division?
+- pcu64 (L16 S9 B51) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- pqr9z (L17 S24 B28) Extra police, or parking enforcement unit should be on duty during events to maintain legal parking
+- p3y3b (L18 S6 B29) Build more roads!!! Traffic is terrible here for a small city.
+- pek8y (L19 S53 B3) people need to understand that a STOP sign means STOP, not just slow down and keep going.
+- pcrnf (L20 S84 B49) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- p572n (L21 S55 B47) A round about would be the best solution to improve traffic flow on Fairview Ave at Keriakes Park.
+- pgj3y (L22 S41 B24) Install new sidewalks along major roads, like Three Springs, and city-wide bike routes, to decrease likelihood of accidents
+- p7yd2 (L23 S26 B50) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- pxg44 (L24 S29 B572) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pr7y3 (L25 S7 B45) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- pyyxz (L26 S14 B37) Impact on traffic flow should be considered with any proposed new developments.
+- pps8y (L29 S22 B17) Parking on both sides of the streets in apartment subdivisions should should not be allowed and police need to enforce the law.
+- pu42c (L31 S17 B511) Better visibility on roads. Reflectors and better signage
+- pgdsd (L38 S67 B11) The city of Bowling Green should enforce their existing noise ordinance.
+- pck82 (L49 S25 B42) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- pczge (L52 S19 B10) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- pwy69 (L57 S38 B13) More sidewalks would be great, but first let’s stop people parking on them. Or stop spending money building them. Whichever.
+- p5hnk (L66 S37 B15) Street lights should be required on residential streets in town. Too many dark corners.
+- pzymn (L71 S80 B9) Install a "train" sign visible from the Nashville, Industrial & Russellville road entrances to reroute traffic when a trains are crossing.
+- pjf7t (L75 S23 B351) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pjbzz (L106 S21 B349) Need to build wider access roads into the city!
+- p8tq3 (L116 S20 B170) There is too much continuous road work going on downtown. They need to get it together.
+- pqy6v (L127 S182 B12) Footbridge from airport to across the street. Pilots running across the road.
+- pfqwv (L177 S274 B14) Law enforcement in Bowling Green and Warren county needs more minority representation
+- p78cz (L533 S327 B8) There should be an actual complaint filed by a neighbor before Code Enforcement writes a violation. Stop harassing hardworking citizens.
+
+## #49 pcu64: Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+
+- p8hra (L1 S3 B9) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- pmiz7 (L2 S2 B1) Traffic flow on Cavemill Rd during peek hours (3pm - 5pm)
+- pgmpv (L3 S1 B14) Something needs to be done to improve traffic flow
+- p7yd2 (L4 S9 B3) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- pt76e (L5 S8 B10) Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+- pyyxz (L6 S4 B45) Impact on traffic flow should be considered with any proposed new developments.
+- phuu3 (L7 S23 B16) The access roads off Scottsville Rd are terrible. They provide constant traffic jams and can be dangerous. We need to budget to fix them.
+- p5ku8 (L8 S12 B31) There needs to be a stoplight at the intersection of Shive Lane and Ken Bale Blvd to improve traffic flow. The backups there are awful.
+- pcrnf (L9 S37 B7) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- p572n (L10 S7 B4) A round about would be the best solution to improve traffic flow on Fairview Ave at Keriakes Park.
+- pv2mh (L11 S5 B35) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- p5e8k (L12 S33 B169) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- phmk4 (L13 S17 B11) Access Rd, east side of Scottsville Rd. in shopping dist causes congestion. Give right of way to access road or cross streets, not a mix!
+- pf7ei (L14 S13 B50) Connect business parking lots to reduce unnecessary traffic on main roadways
+- p3bwu (L15 S30 B8) The city should actually time stoplights correctly during rush hour to prevent complete gridlock
+- p3y3b (L16 S11 B39) Build more roads!!! Traffic is terrible here for a small city.
+- pbp7c (L17 S21 B44) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- pcuww (L19 S38 B46) Why isn't Nashville Rd between the roundabout and Campbell Ln wider? Getting stuck there at 5 o'clock is a plague.
+- ppe9v (L18 S42 B441) Widen Cemetry Road, Russellville Road, Lover’s Lane, Campbell Lane, The Old ByPass, and Scotsville Road from old ByPass to Natcher Parkway.
+- p35n3 (L20 S55 B80) The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+- pjbzz (L21 S15 B379) Need to build wider access roads into the city!
+- pck82 (L22 S20 B49) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- pr7y3 (L23 S6 B51) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- p4g7x (L24 S77 B27) Smallhouse Rd (at Campbell Ln) heading into town needs to be widened to have room for three lanes (left turn, straight, right turn).
+- pt458 (L25 S41 B64) Need a traffic signal on Cave Mill in front of Natcher School, operating 8-9 AM, 3:30-4:30.
+- pjf7t (L27 S18 B381) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- ptbq2 (L30 S19 B6) With a circle, widen Fairview with a left-turn lane west of cemetery.
+- pczge (L31 S22 B284) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- p3kb6 (L34 S14 B2) Only a traffic circle at Kereiakes Park on Fairview Ave. is required.
+- pk7ki (L36 S16 B79) Better enforcement of traffic violations. Too many running red lights, parking in fire lanes, cell phone usage while driving
+- pwj8w (L42 S44 B13) Five lane Cemetery Road from Interchange to By Pass, except four lanes through the Cemetery with median prohibiting left turns.
+- pq3ad (L43 S24 B12) More parking downtown. There are too many reserved spaces which should be available in the evening.
+- p8tq3 (L56 S10 B225) There is too much continuous road work going on downtown. They need to get it together.
+- phix2 (L60 S130 B15) The Old Morgantown Rd train crossing needs either an underpass or an overpass
+- pe3gy (L69 S25 B298) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pu9z9 (L74 S27 B5) The travesty going up on Fairview Ave. should never have been allowed
+
+## #50 pek7k: Provide a food assistance program for college students as students lots of times do not qualify for food stamps due to living on campus
+
+- pr4k5 (L1 S5 B12) Bowling Green should work on becoming a more food sustainable city with less food waste and food insecurity
+- pgzys (L2 S7 B11) Rental assistance programs
+- p2wk5 (L3 S1 B3) There should be more healthy food options near/on campus of WKU.
+- phceg (L4 S12 B10) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- p5eg6 (L5 S2 B34) There needs to be better access to grocery stores and restaurants from WKU's campus.
+- pki7f (L6 S3 B27) Bowling Green needs more access to affordable , healthy, local food sources.
+- pppcy (L7 S11 B32) All public schools should have an adequate summer feeding program so no child goes hungry.
+- pdcp3 (L8 S8 B262) More local produce should be incorporated into public school's lunchrooms
+- piq5m (L9 S20 B348) Job training programs for lower income
+- pw6rb (L10 S16 B552) No child should go hungry in Bowling Green / Warren County, and it is up to our officials to make sure it doesn’t happen.
+- p6j9p (L11 S9 B148) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- pptwk (L12 S10 B431) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- p6wtw (L13 S19 B158) Educate high schoolers on their options after they graduate
+- ptcr8 (L14 S17 B498) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- p6u6a (L15 S35 B157) Local government, for profit and non profits should work together on housing and economic equality
+- pjrdt (L16 S28 B361) Improved businesses such as banks and groceries in lowest income areas
+- picqu (L17 S4 B4) Make areas around WKU's campus livable for college students. Eliminating section 8 housing will lead to less crime & lower cost of attendance.
+- pjrwf (L18 S15 B362) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- p9ivq (L19 S6 B200) Bowling Green should have more healthy/clean eating options for those who have limited diets.
+- pikyq (L20 S62 B42) We a true junior college which offers credit / non credit courses like many other states from basket weaving to cyber security
+- ps5tz (L21 S21 B479) More technical education programs for non-graduates of high school
+- pt8p7 (L22 S29 B46) There should be more opportunities for the arts and sciences in the Housing Authority so the students there can rise above!
+- p9v2v (L23 S42 B62) some children with cultural differences or dietary needs cannot eat a typical lunch at school please provide special diet options.
+- pdckg (L24 S47 B261) Affordable supports for the elderly and aging population are needed in our community.
+- p6864 (L25 S34 B140) Wal-Mart and Kroger grocery pick-up should have to accept EBT for the elderly and disabled
+- pj74t (L27 S37 B6) Parking on the WKU campus should be more accessible to students and visitors.
+- pz3q2 (L30 S14 B593) WKU and local community colleges should continue to offer courses that interest those seeking an education, whether or not the courses aid in job placement.
+- p4csd (L33 S18 B101) SNAP grants for neighborhood improvements should be available in Warren County, not just in the city.
+- pd3p9 (L37 S27 B9) Better parking around the square would draw in more college students who like to shop but can not find parking downtown.
+- pmjj8 (L38 S13 B391) We need more Community Farming Programs(where you pay farmers money up front and during harvest you get fresh fruits/veggies, eggs, etc)
+- pz6xn (L39 S23 B595) More healthy restaurants
+- pirz4 (L41 S33 B5) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- p67wb (L44 S22 B139) WKU should open its facilities to the public once or twice a month to the community, and those in need should be welcome more often.
+- p8r8z (L46 S241 B13) there should be a tenant/landlord grievance department with legal assistance
+- pe9wi (L57 S25 B273) More youth programs are needed to bring the community together: volunteer organizations, community service, innovative creations labs
+- pxrds (L63 S113 B8) There should be gender-neutral housing options on WKU's campus for LGBTQ+ students.
+- pe262 (L70 S26 B1) WKU should upgrade their CIT program to keep up with the times
+- p3zeb (L72 S24 B40) Post-secondary training programs for special education students.
+- pcqfp (L95 S53 B7) All schools in the county and city should work together to provide the same minimum level of education to students.
+- pz34c (L119 S247 B2) Develop a manufacturing Work training program for jail inmates that qualify
+- p3285 (L203 S52 B15) We need a WHOLE FOOD store.
+- piqt5 (L247 S116 B14) If we cut a major program, WKU would lose in the revenue the program brings in, ultimately costing more money.
+
+## #51 pi2ex: Pass an ordinance that requires pet owners to pay a fee if their pets are not fixed.
+
+- pcp4q (L1 S1 B26) A fine if your cat or dog is picked up as a stray and is not spayed or neutered in the county.
+- p9j36 (L2 S2 B187) Better ordinances on keeping animals on leashes or in fenced areas are needed.
+- p3esu (L3 S4 B76) fines for leaving dog feces in public areas needs to be enforced
+- pkeaq (L4 S12 B366) Leash laws should be more strictly enforced in both the city and county
+- pgw6z (L5 S6 B11) Pass a No animals on chains in the county.
+- p3et2 (L6 S11 B18) Relax restrictions on fencing in Home Owners Associations to promote people keeping animals on leashes or in fenced yards.
+- pzvz6 (L7 S5 B7) People should not be allowed to bring their pets every place or store they go to.
+- pmuac (L8 S9 B399) animal cruelty laws need to exist and be enforced
+- pntww (L9 S8 B5) We need more pet stores
+- pnvfb (L10 S7 B8) Bowling Green needs more pet-friendly housing options for renters.
+- prnz3 (L11 S3 B1) Pass a no animals in a hot car ordinance.
+- pwvag (L12 S15 B568) Require businesses to pick up litter they and their customers generate.
+- pjtja (L13 S10 B357) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- p74wp (L14 S13 B153) Mandatory, expensive fines should be implemented for littering and illegal dumping.
+- pcare (L15 S14 B231) There should never be a leash law in the county - neighborhood dogs protect, play with and teach kids. It was a factor in living in county.
+- p9ujh (L16 S21 B190) Lease laws should be enacted and enforced in the county as they are in the city.
+- pd9yv (L17 S18 B248) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- psik2 (L18 S23 B485) stronger enforcement of junk cars in yards and trashy looking yards in general
+- pe54w (L19 S20 B260) Work needs to be done on improving litter pick up and encouraging people dispose of their litter correctly.
+- phfba (L20 S16 B318) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pg2kz (L21 S47 B293) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- pb2cb (L22 S43 B206) Recycling should be encouraged by not charging for the service
+- prb8q (L23 S34 B469) Businesses and multi-family dwellings should be required to offer and use recycling services.
+- p99xx (L24 S75 B183) BG needs to increase recycling and trash bins around the parks and parkways to decrease trash and litter
+- pgdsd (L25 S17 B12) The city of Bowling Green should enforce their existing noise ordinance.
+- ppct5 (L27 S19 B423) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- pf2rb (L29 S28 B3) Bowling Green City Commission needs to pass an ordinance banning the sale or use of large fireworks in the city limits.
+- pb4kx (L30 S161 B9) People want it all, without paying for anything. A healthy community requires taxes people.
+- pfpwf (L36 S22 B31) Bowling Green should pass the Uniform Residential Landlord and Tenant Act (or URLTA) to ensure basic standards for landlords and tenants.
+- p92xj (L39 S24 B16) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- p98ae (L43 S31 B15) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- pbjm2 (L65 S27 B10) Warren County residents should not be charged the WASTE WATER SERVICE FEE on their water bills.
+- p88q8 (L78 S187 B2) if there was a law for employers to pay back on bad layoffs and cutbacks
+- p9622 (L98 S33 B6) You shouldn't be required to pay County taxes if you live in the City (but not the other way around). It makes no sense.
+- pwafd (L100 S112 B4) I should be able to vote in city elections if I pay city taxes, even though I may live in the county.
+- pvq7m (L174 S471 B14) many parts of the By-pass can and should be widened
+- pb5iz (L189 S25 B34) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- pxiz6 (L295 S134 B13) Vaping should not be added to the smoking ordinance.
+
+## #52 phea9: If strict dress codes are required, uniforms should be provided by the school system, not eat into the parents possibly small budget.
+
+- puaak (L1 S1 B4) Parents should be able to send their kids to the school district of their choice no matter where they live in Bowling Green/Warren County.
+- pirz4 (L2 S4 B353) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- pcqfp (L3 S2 B251) All schools in the county and city should work together to provide the same minimum level of education to students.
+- p9v2v (L4 S27 B10) some children with cultural differences or dietary needs cannot eat a typical lunch at school please provide special diet options.
+- pfsk9 (L5 S5 B5) Allow parents that take their kids out of public schools to use that money in a private school.
+- perix (L6 S18 B76) Support non-public (or public charter) school choice options, and make choice viable for families of ALL income levels.
+- pf6t9 (L8 S3 B291) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pppcy (L7 S41 B436) All public schools should have an adequate summer feeding program so no child goes hungry.
+- psh7u (L9 S34 B489) Need new schools in Warren County to keep up with population growth, CTE is falling down, Drakes and Greenwood high are way overcrowded
+- pmiqq (L10 S7 B393) City schools should be redistricted to more evenly distribute the kids.
+- p34uw (L11 S54 B9) Both school districts shamefully manipulate low economic status parents to gain Title I funding. It should stop.
+- p4e3h (L12 S57 B24) Public school could do alternate teaching styles(like Montessori) in a school within a school set up. Not all kids learn the same way.
+- pxrrm (L13 S22 B25) Local schools should help make up the pension fund crisis by learning to live with budget cuts.
+- pdcp3 (L14 S11 B50) More local produce should be incorporated into public school's lunchrooms
+- pkezh (L15 S14 B75) Public school systems need to provide more funding for art education programs, such as music, theater, and visual arts.
+- p69s8 (L16 S50 B148) Schools should offer more comprehensive sexual education to help lower STD and teen pregnancy rates.
+- pra2h (L17 S31 B473) There is too much bullying in our schools that administrators are ignoring.
+- p6wtw (L18 S9 B161) Educate high schoolers on their options after they graduate
+- pmti4 (L19 S77 B41) The city & county school districts need to be re-evaluated The yards/houses that touch Potter Grays playground r all County school districts
+- pjzz6 (L20 S8 B368) The city and county work together to keep the low socieconomic status children out of certain schools. This reduces learning opportunities.
+- pek7k (L21 S46 B282) Provide a food assistance program for college students as students lots of times do not qualify for food stamps due to living on campus
+- phpnd (L22 S36 B337) Insist that schools at all levels have daily physical activity for all students to help combat the childhood obesity crisis.
+- pkd6q (L23 S119 B374) In order to combat teen pregnancy and STD rates, high schools in Bowling Green should offer comprehensive, medically accurate sex education.
+- pzxfe (L24 S26 B68) If private schools were to get a share of Federal or State education dollars, it would hurt public schools.
+- pyr6n (L25 S35 B44) Future charter schools would be a financial burden to public school funding, unless they are held to accountability by local school boards.
+- p2ib2 (L27 S20 B1) City School taxes are too high , they need to budget more
+- pqeuz (L29 S25 B53) Arts education should be available in every school in Warren County and other surrounding areas.
+- pbbu5 (L30 S23 B43) A private (catholic) high school would be beneficial to all.
+- phfba (L31 S6 B332) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pcura (L42 S16 B62) Other counties have school at home on snow days so that kids do not have to make up days. This should be considered for here.
+- piq5m (L44 S24 B352) Job training programs for lower income
+- ps5tz (L46 S17 B54) More technical education programs for non-graduates of high school
+- pw6rb (L48 S19 B556) No child should go hungry in Bowling Green / Warren County, and it is up to our officials to make sure it doesn’t happen.
+- psppu (L52 S21 B495) Higher minimum wage
+- pezeh (L54 S13 B289) Fewer students per teacher should be a rule. No more than 20; ideal class size of 15. Plenty of teachers are looking for work.
+- pfin8 (L55 S15 B6) Community Education provides after-school care necessary to working parents. Funding should not be cut.
+- p9ivq (L78 S12 B203) Bowling Green should have more healthy/clean eating options for those who have limited diets.
+- pp2tr (L101 S107 B13) Building codes prohibiting trophy houses next to common housing
+- pqcdx (L105 S10 B3) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- pjaji (L211 S190 B8) It would be great if people in neighborhoods could get to know each other better and neighborhoods were like small communities of neighbors.
+- p9622 (L228 S88 B7) You shouldn't be required to pay County taxes if you live in the City (but not the other way around). It makes no sense.
+- pkvep (L251 S106 B11) I still have to drive out of town to eat Golden Corral.
+- pi4wj (L320 S139 B12) We need a real bus system.
+- p5e8k (L326 S494 B15) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- p3y3b (L463 S435 B14) Build more roads!!! Traffic is terrible here for a small city.
+- pzkag (L494 S508 B2) An unmanned trolley system, possibly solar, might be better long term than buses for some areas.
+
+## #53 pf7ei: Connect business parking lots to reduce unnecessary traffic on main roadways
+
+- pgmpv (L1 S5 B43) Something needs to be done to improve traffic flow
+- pcrnf (L2 S49 B64) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- p8hra (L3 S27 B53) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- p5e8k (L4 S63 B124) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- p59nj (L5 S3 B3) Owners of large parking lots should be required to break them up with pockets of green space and trees; perhaps create a walkable green path
+- pyyxz (L6 S11 B48) Impact on traffic flow should be considered with any proposed new developments.
+- pv2mh (L7 S8 B27) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- pi9rk (L8 S10 B342) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pcu64 (L9 S12 B66) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- p89sh (L10 S1 B13) Build parking areas.
+- pt76e (L11 S38 B24) Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+- pvq7m (L12 S72 B544) many parts of the By-pass can and should be widened
+- pjf7t (L13 S19 B361) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pxra8 (L14 S47 B578) Downtown at the square and adjacent areas should be a pedestrian mall
+- pmbwe (L15 S54 B392) More roundabouts for intersections
+- pdhdi (L16 S64 B259) Work,with State to complete a wide loop from Scottsville Road across N I65 to N Natcher Pk way.
+- phmk4 (L17 S58 B331) Access Rd, east side of Scottsville Rd. in shopping dist causes congestion. Give right of way to access road or cross streets, not a mix!
+- pkqjk (L18 S7 B26) More parking for Fountain Square to become a pedestrian zone.
+- pgj3y (L19 S132 B311) Install new sidewalks along major roads, like Three Springs, and city-wide bike routes, to decrease likelihood of accidents
+- psbcj (L20 S93 B485) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pqaaf (L21 S133 B447) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- p5at5 (L22 S4 B29) Downtown redevelopment should retain accessible parking for existing businesses.
+- p35n3 (L24 S140 B88) The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+- pbp7c (L23 S73 B47) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- p69et (L25 S24 B41) The bypass area must be developed and utilized for new businesses and attractive structures. It is a neglected area that is losing business.
+- pr7y3 (L26 S14 B60) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- padkd (L28 S23 B205) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pjbzz (L29 S16 B359) Need to build wider access roads into the city!
+- pxg44 (L38 S18 B573) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pq3ad (L42 S2 B31) More parking downtown. There are too many reserved spaces which should be available in the evening.
+- p7ms9 (L43 S13 B57) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- p3cst (L47 S22 B49) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- pgpc7 (L48 S25 B16) Parking in apartment subdivisions should monitored closely by police. Parking on subdivision streets shouldn't be allowed.
+- pj74t (L55 S15 B25) Parking on the WKU campus should be more accessible to students and visitors.
+- pd3p9 (L59 S6 B19) Better parking around the square would draw in more college students who like to shop but can not find parking downtown.
+- pk7ki (L69 S35 B8) Better enforcement of traffic violations. Too many running red lights, parking in fire lanes, cell phone usage while driving
+- pps8y (L74 S20 B51) Parking on both sides of the streets in apartment subdivisions should should not be allowed and police need to enforce the law.
+- pc7ap (L87 S183 B2) BG needs to install traffic cameras that help police intersections like Gallatin, TN. This would reduce accidents, traffic flow and add $
+- p8tq3 (L88 S17 B184) There is too much continuous road work going on downtown. They need to get it together.
+- phc7j (L95 S9 B1) Parking lots should be monitored to prevent illegal parking in handicap spaces.
+- pv68d (L120 S21 B534) The downtown district, especially Fountain Square, should have more retail businesses, not offices.
+- pq8ag (L155 S346 B4) Reduce and/or get rid of the city wage tax.
+- pqhex (L160 S90 B6) Why has the Police stop enforcing parking regulations? Park any way any direction. Is it time for a separate Traffic Enforcement Division?
+- pm8t7 (L165 S146 B9) Regulate the size & brightness of business signs.
+- pmd9s (L168 S157 B11) Houston "courtesy police" maintain safety on access rds enforcing right of way & parking/litter rules, assist traffic flow - we need!
+- pfh4q (L180 S123 B7) Junking up highways/roadways with signs should not be the primary way tourism is promoted.
+- pp9h8 (L187 S173 B10) Either do the speed limit or get over to the right, to many SLOW, out of county drivers clogging up the roadways.
+- pwbe8 (L207 S286 B15) We need more incentives for individual and business solar power
+- ptnie (L238 S235 B12) The main problem facing is the workforce development. There is over 6500 jobs open in Warren County. This is a big issue.
+- phhdw (L368 S427 B5) The main purpose of higher education is job training.
+- p8qss (L420 S420 B14) Smoking should not be allowed within 25 feet of a business.
+
+## #54 p5y22: Some local politicians abuse their power and get away with more than normal citizens.
+
+- ptn8b (L1 S1 B7) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- pvpmr (L2 S5 B23) Most local officials run for office to serve the public good.
+- pfaf5 (L3 S3 B1) BG police should improve officer training and should be held accountable for abuse of power.
+- pkgar (L4 S21 B27) District judges are biased towards large local companies to the detriment of individuals.
+- p6zxd (L5 S2 B32) People need to do all their research before accusing local officials of using their influence for personal gain.
+- pqcdx (L6 S13 B448) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- pvvrj (L7 S7 B551) Government should ignore criminal malfeasance/embezzlement of public funds by anyone if little or no funds can be recovered.
+- pw6sg (L8 S4 B2) Big names and corporations get away with too much. We need fairer regulation and level playing fields for the small and big guys alike.
+- pw6ik (L9 S14 B20) Need term limits for all local elected officiałs
+- p7eqj (L10 S6 B156) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- picza (L11 S34 B343) City residents do not receive adequate return on County Taxes paid.
+- pbstr (L12 S12 B226) Individuals should be treated equally. Higher positions or who you work for should not release anyone from responsibility of their actions.
+- pix44 (L13 S27 B354) Term limits should be initiated on county executives.
+- phfba (L14 S16 B326) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pg2kz (L15 S58 B299) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- ps9dt (L16 S33 B484) Police do a shameful job of enforcing traffic laws. more tickets = more compliance and more $$$$$.
+- pfvrw (L17 S68 B296) City/County officials with connections to a project or proposal should abstain from voting on the project or proposal.
+- p396b (L18 S64 B73) Judge/prosecutors should not let influential family of victim push extraordinarily harsh sentences & create more victims, ruined young lives
+- pc7zk (L19 S18 B232) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pqqyk (L20 S9 B37) Local elected government officials should not be able to hold a seat and also be on the TIF board or other unelected boards.
+- petwp (L21 S30 B278) Crime is worse in Bowling Green / Warren County than it was a decade ago.
+- pkeaq (L22 S111 B375) Leash laws should be more strictly enforced in both the city and county
+- pjq68 (L23 S8 B9) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- p54eg (L25 S49 B106) One should not be able to literally "buy" their way into ability to vote in an election in a locality they do not live in. $ don't buy vote
+- p9ujh (L24 S63 B192) Lease laws should be enacted and enforced in the county as they are in the city.
+- p6u6a (L29 S25 B31) Local government, for profit and non profits should work together on housing and economic equality
+- p98ae (L30 S19 B183) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- p92xj (L31 S11 B4) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pqkxf (L35 S24 B456) There should be officers more readily available to the county areas; ex. for domestic violence disputes.
+- p72fq (L43 S134 B15) Local fuel prices need to investigated.
+- pra2h (L49 S15 B469) There is too much bullying in our schools that administrators are ignoring.
+- prgqn (L53 S22 B474) City/county officials should disclose to the public via Daily News all connections they have to a project or proposal well before the vote.
+- pgrp6 (L58 S113 B6) Unelected school board officials should not have the power to create, add, or increase "school taxes".
+- psmh7 (L62 S17 B490) The money I earn & spend is all done within the city limits but as a county resident I have NO voice/vote in city politics. Needs to change!
+- pb5iz (L83 S20 B211) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- pfuyd (L84 S23 B295) big projeck in city sould be vote by people
+- ph3id (L89 S10 B321) I regularly discuss politics with people I disagree with.
+- pq8ag (L98 S66 B10) Reduce and/or get rid of the city wage tax.
+- pxjmb (L130 S117 B12) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- p78cz (L142 S96 B13) There should be an actual complaint filed by a neighbor before Code Enforcement writes a violation. Stop harassing hardworking citizens.
+- ppgmg (L156 S511 B5) parks and rec should promote and support pickleball for older citizens
+- pwbe8 (L204 S477 B3) We need more incentives for individual and business solar power
+- pw8ht (L328 S261 B8) Doctors should not overreact to the opioid crisis. People in pain shouldn't suffer because others lack self control and abuse the system.
+- pjrwf (L336 S194 B14) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- pu2fx (L516 S307 B11) It should not take 3 months to get a gynecologist appointment in this city.
+
+## #55 peqy9: we need transit buses for elderly and disabled in the county and they should be easy to enter and exit/wheelchair accessible
+
+- pbzyn (L1 S1 B5) Provide accessible transportation for seniors that have difficulty driving
+- pwin9 (L2 S3 B560) A clean, efficient public transportation system would be a huge help to those with limited ability or desire to drive.
+- pi4wj (L3 S5 B17) We need a real bus system.
+- pts69 (L4 S4 B10) Funding and support should be given to the existing BG buses, to expand their service area and improve accessibility.
+- pmjk5 (L5 S6 B409) More public transportation options--be creative
+- pbaby (L6 S2 B13) Better public transit and runs 24 /7 so people without cars can get to work. Also more stops added in residential areas.
+- pdckg (L7 S7 B4) Affordable supports for the elderly and aging population are needed in our community.
+- p6864 (L8 S18 B1) Wal-Mart and Kroger grocery pick-up should have to accept EBT for the elderly and disabled
+- pxtgq (L9 S35 B581) We should have a commuting service between here & Nashville.
+- p5ahf (L10 S13 B27) Need more bike lanes and biker friendly resources
+- pzkag (L11 S8 B11) An unmanned trolley system, possibly solar, might be better long term than buses for some areas.
+- pgdt8 (L12 S10 B2) Consider asking low-income or disabled residents what they really need.
+- p2839 (L13 S25 B101) Developing more bike trails into surrounding areas of the city would allow for a more developed both transport and recreational experiences
+- psb2i (L14 S17 B488) Provide regular and affordable daily transport to Nashville Airport from Bowling Green.
+- pgmpv (L15 S12 B326) Something needs to be done to improve traffic flow
+- pgj3y (L17 S24 B325) Install new sidewalks along major roads, like Three Springs, and city-wide bike routes, to decrease likelihood of accidents
+- psbcj (L16 S41 B489) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pgzys (L18 S59 B337) Rental assistance programs
+- padkd (L19 S16 B83) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p6rz9 (L20 S60 B174) I wish we had train service to Nashville
+- pki7f (L21 S37 B393) Bowling Green needs more access to affordable , healthy, local food sources.
+- pn5bv (L22 S20 B417) Local companies that can't fill job openings & the Workforce Dev't. Board should set up commuter lots and a shuttle service to rural areas.
+- pdt4t (L23 S149 B277) Curbside Recycling and/or Recycle Center in South Warren County
+- pugud (L24 S66 B523) More bike trails and walking trails would be a great addition.
+- pvq7m (L25 S45 B545) many parts of the By-pass can and should be widened
+- p6cyb (L29 S14 B167) Plan for people, not cars. Walking should be enjoyable, not a hazard.
+- pj74t (L33 S87 B6) Parking on the WKU campus should be more accessible to students and visitors.
+- p2w5z (L35 S23 B104) For a city of this size, there is too little available in the way of weekend activities for Seniors who are not ready for rocking chairs.
+- pz6eg (L38 S15 B595) Bike lanes that are wide enough to safely ride on without fear of being hit by passing cars.
+- pjbzz (L44 S9 B24) Need to build wider access roads into the city!
+- phc7j (L53 S22 B341) Parking lots should be monitored to prevent illegal parking in handicap spaces.
+- p5at5 (L83 S98 B8) Downtown redevelopment should retain accessible parking for existing businesses.
+- ptcr8 (L91 S47 B9) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- pkupf (L106 S11 B399) A senior living community, designed for 50+ residents rather than 75+ & in failing health residents, is needed — and apparently ignored.
+- pjf7t (L122 S21 B86) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- p3cst (L139 S19 B82) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- pb38d (L165 S203 B3) It is easy to find a good job in Warren County.
+- psn6u (L174 S91 B7) Should be an interstate exit for the Woodburn area it could help decrease BG congestion and let people bypass BG all together
+- p3285 (L242 S432 B15) We need a WHOLE FOOD store.
+- pntww (L244 S302 B14) We need more pet stores
+- ptfp6 (L556 S593 B12) Individual unhappiness combined with easy legal and illegal availability of drugs drives the opioid crisis.
+
+## #56 pw6ik: Need term limits for all local elected officiałs
+
+- pix44 (L1 S1 B1) Term limits should be initiated on county executives.
+- pvpmr (L2 S2 B19) Most local officials run for office to serve the public good.
+- pqqyk (L3 S4 B2) Local elected government officials should not be able to hold a seat and also be on the TIF board or other unelected boards.
+- p5y22 (L4 S9 B21) Some local politicians abuse their power and get away with more than normal citizens.
+- ptn8b (L5 S5 B511) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- p7eqj (L6 S3 B200) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- pt9at (L7 S15 B6) Oversight committees for projects such as TIF. Elected officials should not be able to sit on unelected boards.
+- ptahe (L8 S47 B503) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- p9ujh (L9 S21 B237) Lease laws should be enacted and enforced in the county as they are in the city.
+- pupnr (L10 S60 B530) city officials might look into layoff practices on jobs in bowling green ky
+- p6u6a (L11 S11 B24) Local government, for profit and non profits should work together on housing and economic equality
+- puyc3 (L12 S193 B71) We need to renovate the run down businesses and store fronts, instead of building new places
+- pgrp6 (L13 S121 B343) Unelected school board officials should not have the power to create, add, or increase "school taxes".
+- phfba (L14 S17 B356) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pqcdx (L15 S13 B459) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- p8jmp (L18 S53 B219) Bowling Green needs to enforce the separation of church and state and impose taxes on churches that politic from the pulpit
+- pd9yv (L17 S43 B286) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- picza (L16 S64 B371) City residents do not receive adequate return on County Taxes paid.
+- phceg (L19 S267 B84) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pkeaq (L20 S172 B400) Leash laws should be more strictly enforced in both the city and county
+- padkd (L21 S51 B99) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pph7p (L22 S26 B444) Lower taxes by auditing every department for total accountability & make cuts where possible. Stop city government waste.
+- pbxwr (L23 S94 B82) Planning & Zoning need to do a better job of listening & working with residents. It's not next to their house, so they don't care!
+- pjq68 (L24 S8 B76) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pfuyd (L25 S6 B326) big projeck in city sould be vote by people
+- ppct5 (L36 S24 B440) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- pc7zk (L45 S12 B83) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- p92xj (L48 S10 B225) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- p6zxd (L59 S14 B8) People need to do all their research before accusing local officials of using their influence for personal gain.
+- p9erh (L61 S25 B232) Bowling Green needs to annex a solid geographic area & thereby eliminating those areas within our city that are not receiving city services.
+- pindv (L62 S62 B5) The Bowling Green/Warren County Airport needs to be relocated outside of the city limits.
+- psmh7 (L66 S7 B11) The money I earn & spend is all done within the city limits but as a county resident I have NO voice/vote in city politics. Needs to change!
+- p72fq (L99 S195 B3) Local fuel prices need to investigated.
+- pdcp3 (L129 S136 B15) More local produce should be incorporated into public school's lunchrooms
+- pw6sg (L133 S18 B113) Big names and corporations get away with too much. We need fairer regulation and level playing fields for the small and big guys alike.
+- pxjmb (L137 S73 B12) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- pf2rb (L147 S258 B10) Bowling Green City Commission needs to pass an ordinance banning the sale or use of large fireworks in the city limits.
+- pb5iz (L165 S19 B90) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- pcrhx (L176 S16 B278) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- prgqn (L193 S23 B483) City/county officials should disclose to the public via Daily News all connections they have to a project or proposal well before the vote.
+- p499a (L217 S255 B4) Rent is too expensive inside the city limits.
+- pgdt8 (L227 S22 B53) Consider asking low-income or disabled residents what they really need.
+- pjbzz (L258 S20 B41) Need to build wider access roads into the city!
+- pit63 (L269 S550 B13) Some local doctors order too many tests.
+- pzkag (L465 S458 B7) An unmanned trolley system, possibly solar, might be better long term than buses for some areas.
+- pnv7k (L521 S321 B14) Our local immigrant population has, overall, been a benefit to our city and county.
+- pp2r6 (L573 S394 B9) More gender-neutral bathrooms need to be seen across BG on WKU's campus, in local businesses, etc.
+
+## #57 pfq4x: Complete the ky. 185 restructuring project.
+
+- pdhdi (L1 S1 B6) Work,with State to complete a wide loop from Scottsville Road across N I65 to N Natcher Pk way.
+- pvq7m (L2 S205 B536) many parts of the By-pass can and should be widened
+- pgmpv (L3 S31 B273) Something needs to be done to improve traffic flow
+- p8hra (L4 S30 B130) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- ppe9v (L5 S133 B408) Widen Cemetry Road, Russellville Road, Lover’s Lane, Campbell Lane, The Old ByPass, and Scotsville Road from old ByPass to Natcher Parkway.
+- p5e8k (L6 S38 B66) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- pf7ei (L7 S84 B247) Connect business parking lots to reduce unnecessary traffic on main roadways
+- p69et (L8 S14 B86) The bypass area must be developed and utilized for new businesses and attractive structures. It is a neglected area that is losing business.
+- pxwxs (L9 S241 B579) Create shoulders on the bypass.
+- p35n3 (L10 S203 B23) The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+- pjbzz (L11 S15 B327) Need to build wider access roads into the city!
+- pcu64 (L12 S179 B207) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- p3y3b (L13 S111 B35) Build more roads!!! Traffic is terrible here for a small city.
+- pcrnf (L14 S35 B206) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- pt76e (L15 S220 B480) Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+- pmbwe (L16 S261 B364) More roundabouts for intersections
+- pyyxz (L17 S54 B590) Impact on traffic flow should be considered with any proposed new developments.
+- p572n (L18 S349 B59) A round about would be the best solution to improve traffic flow on Fairview Ave at Keriakes Park.
+- pwigz (L19 S130 B553) Scottsville Rd should be 4+ lanes between I-65 & Lovers Lane, get rid of the service Rd.
+- pck82 (L20 S121 B199) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- pp8pk (L21 S5 B404) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- p8iym (L22 S303 B131) Expand Nashville Rd all the way past Chaney’s & Buchanan park. Very dangerous area.. very much so for a school area & young drivers.
+- phix2 (L23 S351 B295) The Old Morgantown Rd train crossing needs either an underpass or an overpass
+- p7yd2 (L24 S340 B120) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- phuu3 (L25 S65 B302) The access roads off Scottsville Rd are terrible. They provide constant traffic jams and can be dangerous. We need to budget to fix them.
+- pknju (L29 S11 B354) The entire bypass area is an eyesore and there needs to be a concerted effort like a TIF to revitalize this crucial part of town.
+- pxg44 (L30 S6 B568) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- puvjs (L31 S2 B517) Do SOMETHING about completing the "wrap" downtown, or at least enhance (and that includes restaurant service) what is currently there.
+- pr7y3 (L32 S22 B452) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- p8tq3 (L39 S7 B135) There is too much continuous road work going on downtown. They need to get it together.
+- pfuyd (L42 S8 B259) big projeck in city sould be vote by people
+- p3bwu (L45 S378 B3) The city should actually time stoplights correctly during rush hour to prevent complete gridlock
+- pzaca (L49 S19 B595) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- padkd (L53 S10 B157) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p6xjr (L68 S21 B102) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pe3gy (L75 S3 B225) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pgaj7 (L76 S12 B265) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- p6k4e (L82 S16 B93) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pbm45 (L93 S23 B182) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pjq68 (L140 S20 B334) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pphh2 (L141 S25 B412) We should focus downtown development dollars on rehabilitation and reuse of buildings that can be done so, rather than building new.
+- pgyhw (L148 S18 B284) Better incorporation of university resources in community, including Kentucky Museum.
+- phsyb (L160 S24 B300) Prevent the development of new housing areas, especially in farm land areas.
+- pupnr (L167 S4 B2) city officials might look into layoff practices on jobs in bowling green ky
+- prqiv (L250 S9 B464) We need to commit more resources to the North-Northeast ends of town. Blue collar people who help make Bowling Green what is. Too neglected.
+- psnvi (L258 S93 B8) Recreational Cannabis in KY offers tourism, increased revenue, job opportunities, and shows massive leadership in the southern region.
+- p68um (L272 S183 B5) Take advantage of the wonderful summers in KY and have more outdoor public swimming spaces
+- pcvs4 (L331 S17 B211) Institute a business development grant that encourages WKU grads to stay in Bowling Green by starting local businesses.
+- p8usw (L345 S13 B7) Local companies that can't fill job openings should recruit from parts of KY w/ high unemployment & pay relocation expenses.
+- pfvrw (L474 S175 B1) City/County officials with connections to a project or proposal should abstain from voting on the project or proposal.
+- prgqn (L534 S135 B4) City/county officials should disclose to the public via Daily News all connections they have to a project or proposal well before the vote.
+
+## #58 pkgar: District judges are biased towards large local companies to the detriment of individuals.
+
+- p5y22 (L1 S5 B31) Some local politicians abuse their power and get away with more than normal citizens.
+- pw6sg (L2 S1 B553) Big names and corporations get away with too much. We need fairer regulation and level playing fields for the small and big guys alike.
+- p396b (L3 S4 B58) Judge/prosecutors should not let influential family of victim push extraordinarily harsh sentences & create more victims, ruined young lives
+- ptn8b (L4 S3 B504) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- p7eqj (L5 S7 B139) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- p92xj (L6 S2 B165) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pfgep (L7 S32 B270) Bowling Green has been monopolized by Houchens. Limit their growth they own too much of the city for it to be fair to other businesses
+- p9ujh (L8 S24 B177) Lease laws should be enacted and enforced in the county as they are in the city.
+- pgpz3 (L9 S38 B296) Planning and zoning laws should change to encourage small businesses and farms.
+- pb5iz (L10 S16 B194) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- pqcdx (L11 S13 B443) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- pt9at (L12 S58 B494) Oversight committees for projects such as TIF. Elected officials should not be able to sit on unelected boards.
+- p8r8z (L13 S53 B160) there should be a tenant/landlord grievance department with legal assistance
+- pgnkw (L14 S8 B294) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- p4nku (L15 S64 B82) Planning & Zoning Board needs an overhaul. Fewer builders appointed, fairness to opposition, stop rubber stamping by P&Z and City Comm.
+- picza (L16 S52 B331) City residents do not receive adequate return on County Taxes paid.
+- p98ae (L17 S9 B168) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- p6u6a (L18 S22 B33) Local government, for profit and non profits should work together on housing and economic equality
+- pwu44 (L19 S205 B569) City needs to bar big COs employing from half a dozen temp services to keep 100s ineligble for FMLA due to less than 50 ppl/per 'employer'
+- pdigz (L20 S87 B240) Institutionalize racism is alive and well here. I know because I have experienced it first hand. We need to have a plan.
+- pc3m2 (L21 S25 B214) Locally owned, small businesses should get incentives and assistance -- not chains and outside investors.
+- pvpmr (L22 S21 B29) Most local officials run for office to serve the public good.
+- pfqwv (L23 S27 B277) Law enforcement in Bowling Green and Warren county needs more minority representation
+- pqqyk (L24 S11 B37) Local elected government officials should not be able to hold a seat and also be on the TIF board or other unelected boards.
+- p54eg (L25 S113 B91) One should not be able to literally "buy" their way into ability to vote in an election in a locality they do not live in. $ don't buy vote
+- pbstr (L28 S6 B3) Individuals should be treated equally. Higher positions or who you work for should not release anyone from responsibility of their actions.
+- pjq68 (L29 S12 B352) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pdgcu (L30 S17 B238) The Bowling Green Daily News is too politically slanted.
+- pc7zk (L32 S18 B217) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pmiqq (L36 S20 B384) City schools should be redistricted to more evenly distribute the kids.
+- pqkxf (L38 S23 B451) There should be officers more readily available to the county areas; ex. for domestic violence disputes.
+- p88q8 (L42 S19 B150) if there was a law for employers to pay back on bad layoffs and cutbacks
+- p6zxd (L48 S10 B34) People need to do all their research before accusing local officials of using their influence for personal gain.
+- pxjmb (L49 S70 B13) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- pvvrj (L66 S14 B547) Government should ignore criminal malfeasance/embezzlement of public funds by anyone if little or no funds can be recovered.
+- puaak (L72 S28 B8) Parents should be able to send their kids to the school district of their choice no matter where they live in Bowling Green/Warren County.
+- pv68d (L85 S45 B6) The downtown district, especially Fountain Square, should have more retail businesses, not offices.
+- p72fq (L90 S206 B14) Local fuel prices need to investigated.
+- pcp4z (L94 S248 B9) Louisville rd area needs more businesses and restaurants extending out towards the factories to also bring in revenue from Edmonson Co.
+- pit63 (L109 S226 B15) Some local doctors order too many tests.
+- pycbi (L139 S15 B10) Companies that claim they cannot fill job openings should raise wages and improve working conditions.
+- paxv3 (L230 S111 B4) competition for cable companies and an end to heir price gouging.
+- p8usw (L273 S33 B1) Local companies that can't fill job openings should recruit from parts of KY w/ high unemployment & pay relocation expenses.
+- pn5bv (L293 S56 B2) Local companies that can't fill job openings & the Workforce Dev't. Board should set up commuter lots and a shuttle service to rural areas.
+- pf2rb (L297 S319 B11) Bowling Green City Commission needs to pass an ordinance banning the sale or use of large fireworks in the city limits.
+- pzgbm (L333 S156 B7) Opinion pieces without a specific author make it more confusing to determine whether a media source is biased or not.
+- pjk6d (L348 S411 B5) There are large fees with the few currently available indoor pools.
+- padzm (L356 S314 B12) Cable companies need competition and not be allowed to raise rates of customers. Once you sign on, that is your rate unless you upgrade.
+
+## #59 p78pt: Sidewalks are needed along Gary Farms Blvd
+
+- ppegh (L1 S1 B7) Holly drive needs sidewalks
+- p8ce7 (L2 S2 B26) Build and improve sidewalks in the area of Magnolia Street and 13th to Cabell Drive area for the heavy pedestrian traffic there.
+- pgj3y (L3 S6 B1) Install new sidewalks along major roads, like Three Springs, and city-wide bike routes, to decrease likelihood of accidents
+- pufe9 (L4 S4 B22) Make all future sidewalks wide enough for multi-use (walking, biking, skateboarding etc)
+- paeh8 (L5 S5 B2) Make it a walking city. Sidewalks along the main avenues (scottsville rd, campbell ln, 31 bypass) with plants, benches, art pieces.
+- p2hkv (L6 S3 B14) Our sidewalks need more connectivity. It's too piecemealed and makes some areas unusable.
+- psbcj (L7 S8 B477) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- p5ahf (L8 S38 B81) Need more bike lanes and biker friendly resources
+- pvq7m (L9 S55 B540) many parts of the By-pass can and should be widened
+- pjubs (L10 S10 B8) All new and existing sidewalks should have shade trees
+- pxra8 (L11 S45 B577) Downtown at the square and adjacent areas should be a pedestrian mall
+- pqaaf (L12 S32 B435) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- p35n3 (L13 S114 B41) The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+- pf7ei (L14 S26 B259) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pugud (L15 S37 B517) More bike trails and walking trails would be a great addition.
+- pgmpv (L16 S20 B285) Something needs to be done to improve traffic flow
+- pu4rv (L17 S15 B19) Multi-use sidewalks should have fixtures for skateboards, bikes like small ramps etc.
+- padkd (L18 S40 B171) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pp8pk (L19 S18 B412) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- pwy69 (L20 S7 B23) More sidewalks would be great, but first let’s stop people parking on them. Or stop spending money building them. Whichever.
+- pzaca (L21 S9 B17) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- pi9rk (L22 S33 B319) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pxwxs (L23 S47 B581) Create shoulders on the bypass.
+- p8hra (L24 S56 B144) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- pgvyh (L25 S27 B5) Shade trees should be required plantings along all Greenways
+- pjbzz (L29 S14 B337) Need to build wider access roads into the city!
+- pcu64 (L30 S23 B220) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- pxg44 (L31 S16 B570) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- p5e8k (L33 S95 B13) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- puhdq (L34 S12 B518) New buildings should not be built right up to the sidewalk to inhibit seeing around corners when driving.
+- pu42c (L37 S22 B512) Better visibility on roads. Reflectors and better signage
+- pjf7t (L40 S19 B339) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- p59nj (L41 S17 B80) Owners of large parking lots should be required to break them up with pockets of green space and trees; perhaps create a walkable green path
+- pwdbv (L43 S13 B16) Some of the roads in the city are not wide enough to put sidewalks in but they do anyway catherine dr is ridiculous
+- p6cyb (L44 S24 B106) Plan for people, not cars. Walking should be enjoyable, not a hazard.
+- p3cst (L57 S21 B45) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- p7msc (L79 S11 B133) Create pedestrian-only streets.
+- p7yd2 (L91 S168 B10) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- pdckg (L110 S186 B9) Affordable supports for the elderly and aging population are needed in our community.
+- p9j36 (L113 S171 B12) Better ordinances on keeping animals on leashes or in fenced areas are needed.
+- p5ku8 (L121 S77 B11) There needs to be a stoplight at the intersection of Shive Lane and Ken Bale Blvd to improve traffic flow. The backups there are awful.
+- pgpz3 (L134 S192 B4) Planning and zoning laws should change to encourage small businesses and farms.
+- p8tq3 (L162 S25 B149) There is too much continuous road work going on downtown. They need to get it together.
+- pg99d (L167 S170 B3) Local food and small farms are one of BG best attractions.
+- prcqc (L304 S238 B6) More advertising should be done along I-65 to promote tourism into Bowling Green.
+- psebg (L352 S347 B15) More weekend activites are needed for YOUNG Seniors, who arent yet ready for Bingo nights.
+
+## #60 pi46q: Wish the airport would get better flights. WheelsUp was cool but need more locations. Sad Owensboro is so far ahead there.
+
+- p5ctb (L1 S1 B28) We should think about moving the airport. Too much high dollar land going to waste right now.
+- pindv (L2 S2 B9) The Bowling Green/Warren County Airport needs to be relocated outside of the city limits.
+- p7u7v (L3 S3 B5) The airport should be moved to the transpark.
+- psb2i (L4 S4 B13) Provide regular and affordable daily transport to Nashville Airport from Bowling Green.
+- pqy6v (L5 S5 B15) Footbridge from airport to across the street. Pilots running across the road.
+- p6rz9 (L6 S29 B2) I wish we had train service to Nashville
+- pmjk5 (L7 S11 B426) More public transportation options--be creative
+- prv6q (L8 S10 B3) We need an NBA team. I think we should put the arena where the airport is. Think about it.
+- pxtgq (L9 S31 B583) We should have a commuting service between here & Nashville.
+- pcp4z (L10 S76 B281) Louisville rd area needs more businesses and restaurants extending out towards the factories to also bring in revenue from Edmonson Co.
+- pkvep (L11 S59 B417) I still have to drive out of town to eat Golden Corral.
+- p4rsn (L12 S13 B164) There is not enough done for tourism in Warren Co. We offer much more than Corvettes and we should be promoting other activities.
+- p5ahf (L13 S54 B68) Need more bike lanes and biker friendly resources
+- ph4wf (L14 S25 B58) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pgmpv (L15 S16 B347) Something needs to be done to improve traffic flow
+- pif8h (L16 S35 B379) BG needs to redevelop from WKU to the river and beyond. Model after Greenville SC
+- p6xjr (L17 S40 B203) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pmehh (L18 S23 B422) I would love to see a Texas Roadhouse in Bowling Green
+- pqra3 (L19 S30 B22) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- pxg44 (L20 S60 B574) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- p5eg6 (L21 S15 B31) There needs to be better access to grocery stores and restaurants from WKU's campus.
+- pwin9 (L22 S14 B564) A clean, efficient public transportation system would be a huge help to those with limited ability or desire to drive.
+- padkd (L23 S51 B21) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pi9rk (L24 S61 B376) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- p4p8j (L25 S123 B95) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pxjmb (L27 S19 B578) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- pjbzz (L29 S7 B64) Need to build wider access roads into the city!
+- pbaby (L34 S8 B8) Better public transit and runs 24 /7 so people without cars can get to work. Also more stops added in residential areas.
+- prcqc (L38 S17 B486) More advertising should be done along I-65 to promote tourism into Bowling Green.
+- phceg (L43 S175 B1) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pn5bv (L46 S12 B432) Local companies that can't fill job openings & the Workforce Dev't. Board should set up commuter lots and a shuttle service to rural areas.
+- pptwk (L49 S9 B456) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- pjaji (L76 S120 B6) It would be great if people in neighborhoods could get to know each other better and neighborhoods were like small communities of neighbors.
+- p6jxh (L77 S6 B4) Bowling Green should try to emulate Owensboro's Friday night programs downtown.
+- p3y3b (L79 S21 B147) Build more roads!!! Traffic is terrible here for a small city.
+- pp8pk (L93 S18 B447) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- pu42c (L116 S63 B14) Better visibility on roads. Reflectors and better signage
+- pqpib (L158 S377 B10) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- p8tq3 (L185 S22 B11) There is too much continuous road work going on downtown. They need to get it together.
+- p67wb (L200 S20 B89) WKU should open its facilities to the public once or twice a month to the community, and those in need should be welcome more often.
+- pr7y3 (L203 S24 B481) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- p5rmi (L292 S255 B12) We need to promote competition in town for Charter. AT&T isn't much better and doesn't serve everywhere. Need more fiber to the homes.
+- pzahk (L543 S585 B7) LGBTQ fairness is far-left political idiocy.
+
+## #61 piuhz: Doctors who prescribe pain and tranquilizing meds too easily fuel the drug dependency crisis.
+
+- pwra8 (L1 S2 B12) Doctors over-prescribing opioids should be sentenced at least as harshly as street dealers if not more harshly due to their knowledge.
+- pmz7k (L2 S6 B388) We need more regulation of opioid drugs, both prescribed and illicit.
+- pw8ht (L3 S1 B3) Doctors should not overreact to the opioid crisis. People in pain shouldn't suffer because others lack self control and abuse the system.
+- prh9c (L4 S3 B2) Solving the drug crisis should not mean people with health problems/injuries have to suffer with severe pain.
+- px9ga (L5 S5 B5) State and federal medical societies are unable or unwilling to police their members regarding the drug dependency problem.
+- pbeq6 (L6 S4 B1) American comfort and avoidance of any pain or suffering drives the drug dependency problem.
+- ptfp6 (L7 S7 B10) Individual unhappiness combined with easy legal and illegal availability of drugs drives the opioid crisis.
+- pqpib (L8 S9 B14) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- phtsf (L9 S15 B4) The face of drug dealers has changed. Today most opioid drug dealers are doctors or teenagers in the suburbs ordering from China.
+- pmt8i (L10 S8 B19) In order to better combat the opioid epidemic, it is time to view drug addiction as a health problem rather than a criminal justice problem.
+- p72mx (L11 S11 B13) Harsher sentences for drug users would help combat the opioid epidemic.
+- p7zmn (L12 S13 B130) There should be more effort put into teaching students about any potential harmful side effects of drugs, illegal or otherwise.
+- pit63 (L13 S22 B7) Some local doctors order too many tests.
+- p4qh4 (L14 S10 B62) Promote access to mental health treatment, rather than treating addicts as criminals.
+- pani2 (L15 S14 B17) Law enforcement should send drug possession arrestees for rehabilitation services rather than imprisonment.
+- p3fxs (L16 S21 B18) Drug information classes should be given to incoming freshmen of WKU to educate them about the risks and health hazards.
+- peq9z (L17 S12 B247) Medical marijuana should be legal.
+- pemdb (L18 S20 B246) Bowling Green needs to pass a resolution in support of medical cannabis.
+- pd4in (L19 S16 B221) There should be a push to improve mental health awareness and availability in Bowling Green.
+- pv3iy (L20 S24 B528) With jails crowded, it seems many are first time offenders of crimes that hurt no one, nor property. Seems rehab would be better.
+- pq457 (L21 S28 B429) Need comprehesive probation rehab programs - include addiction treatment, life & job skills & ideas securing housing, training/job etc
+- pbnf4 (L22 S19 B9) More nonviolent inmates convicted of drug possession should be set free.
+- pqeea (L23 S18 B437) Most drugs except meth should be free & government controlled. See Belgium.
+- pihfx (L24 S26 B321) The homeless population is getting out of hand. We need to find better methods for curtailing and rehabing and keeping them off the streets.
+- ptgpf (L25 S25 B494) Recreational marijuana should be legal.
+- p5hhx (L28 S23 B80) We know fentanyl is coming through our post office. Law enforcement should have dogs finding it before it kills the next youth.
+- p3wgr (L34 S17 B44) I would like to see the WKU psych and Medical programs collaborate on mental health research, which is so sadly lacking in today's society.
+- phpnd (L44 S83 B15) Insist that schools at all levels have daily physical activity for all students to help combat the childhood obesity crisis.
+- p72fq (L73 S182 B6) Local fuel prices need to investigated.
+- ptx9s (L80 S34 B8) Traffic and toxic vehicle dependency should NOT be a topic of priority for this city.
+- pxrrm (L194 S121 B11) Local schools should help make up the pension fund crisis by learning to live with budget cuts.
+
+## #62 pzvz6: People should not be allowed to bring their pets every place or store they go to.
+
+- p9j36 (L1 S1 B176) Better ordinances on keeping animals on leashes or in fenced areas are needed.
+- pkeaq (L2 S11 B366) Leash laws should be more strictly enforced in both the city and county
+- pgw6z (L3 S4 B304) Pass a No animals on chains in the county.
+- p3et2 (L4 S6 B60) Relax restrictions on fencing in Home Owners Associations to promote people keeping animals on leashes or in fenced yards.
+- pntww (L5 S2 B413) We need more pet stores
+- pcare (L6 S3 B223) There should never be a leash law in the county - neighborhood dogs protect, play with and teach kids. It was a factor in living in county.
+- pnvfb (L7 S7 B416) Bowling Green needs more pet-friendly housing options for renters.
+- pi2ex (L8 S8 B5) Pass an ordinance that requires pet owners to pay a fee if their pets are not fixed.
+- pcp4q (L9 S10 B227) A fine if your cat or dog is picked up as a stray and is not spayed or neutered in the county.
+- p3esu (L10 S12 B59) fines for leaving dog feces in public areas needs to be enforced
+- pms9n (L11 S13 B6) Smoking should not be allowed in public parks.
+- prnz3 (L12 S5 B473) Pass a no animals in a hot car ordinance.
+- pmuac (L13 S9 B399) animal cruelty laws need to exist and be enforced
+- pd9yv (L14 S21 B240) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- pgdsd (L15 S24 B293) The city of Bowling Green should enforce their existing noise ordinance.
+- p8qss (L16 S14 B13) Smoking should not be allowed within 25 feet of a business.
+- pwvag (L17 S16 B567) Require businesses to pick up litter they and their customers generate.
+- p9ujh (L18 S49 B179) Lease laws should be enacted and enforced in the county as they are in the city.
+- pns2r (L19 S20 B411) Farmers shouldn’t need a permit to build a fence.
+- pps8y (L20 S29 B29) Parking on both sides of the streets in apartment subdivisions should should not be allowed and police need to enforce the law.
+- pg2kz (L21 S59 B287) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- prfvz (L22 S84 B468) I think we have enough restaurants.
+- pe54w (L23 S38 B251) Work needs to be done on improving litter pick up and encouraging people dispose of their litter correctly.
+- p9mdn (L24 S31 B178) Marijuana should not be legalized.
+- pxra8 (L25 S290 B579) Downtown at the square and adjacent areas should be a pedestrian mall
+- p4f6c (L26 S17 B76) Recycling centers should be moved out of town.
+- ppz44 (L29 S23 B436) the Bark Park needs more trees and water access for the smaller dogs area
+- pu9z9 (L34 S64 B15) The travesty going up on Fairview Ave. should never have been allowed
+- pjtja (L43 S25 B357) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- py2mw (L52 S15 B16) I should be allowed to keep my yard & home in any manner I please.
+- p6cyb (L55 S19 B119) Plan for people, not cars. Walking should be enjoyable, not a hazard.
+- p92ce (L62 S18 B166) People in Bowling Green should not be discriminated against based on their sexual orientation.
+- pgxi5 (L112 S22 B14) I should be allowed to plant flowers in my own yard where ever i want them.
+- pvxt4 (L178 S91 B3) We need a health food store.
+- p8849 (L208 S119 B1) Casinos. Bring them here.
+- pvv6a (L216 S117 B4) Bring a discount grocer to the downtown area.
+- p3285 (L301 S153 B2) We need a WHOLE FOOD store.
+- p4pb4 (L355 S66 B8) Every citizen should be within 1 mile of some shaded green space.
+- p4j6s (L374 S333 B7) Minimum wage needs to go o $15 per hour
+- prjzc (L377 S584 B11) Go to underground utilities. Scottsville rd and the by-pass look awful.
+- pw6rb (L400 S48 B12) No child should go hungry in Bowling Green / Warren County, and it is up to our officials to make sure it doesn’t happen.
+- pqnui (L422 S285 B10) Resources to better integrate immigrants and refugees into the community should be put into place.
+- pqeuz (L512 S253 B9) Arts education should be available in every school in Warren County and other surrounding areas.
+
+## #63 pani2: Law enforcement should send drug possession arrestees for rehabilitation services rather than imprisonment.
+
+- pv3iy (L1 S2 B530) With jails crowded, it seems many are first time offenders of crimes that hurt no one, nor property. Seems rehab would be better.
+- pbnf4 (L2 S1 B1) More nonviolent inmates convicted of drug possession should be set free.
+- pmt8i (L3 S8 B6) In order to better combat the opioid epidemic, it is time to view drug addiction as a health problem rather than a criminal justice problem.
+- p4qh4 (L4 S5 B15) Promote access to mental health treatment, rather than treating addicts as criminals.
+- pqpib (L5 S3 B20) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- p72mx (L6 S4 B18) Harsher sentences for drug users would help combat the opioid epidemic.
+- pq457 (L7 S6 B434) Need comprehesive probation rehab programs - include addiction treatment, life & job skills & ideas securing housing, training/job etc
+- p95zh (L8 S9 B7) There should be no punishment for small amounts of marijuana possession, in my opinion
+- prh9c (L9 S11 B32) Solving the drug crisis should not mean people with health problems/injuries have to suffer with severe pain.
+- pmz7k (L10 S18 B397) We need more regulation of opioid drugs, both prescribed and illicit.
+- pr2fm (L11 S10 B456) Legalized Marijuana will not only assist Bowling Green in earning Tax revenue but will decrease the strain on our prison system. Win-Win.
+- ptgpf (L12 S16 B496) Recreational marijuana should be legal.
+- pbeq6 (L13 S31 B25) American comfort and avoidance of any pain or suffering drives the drug dependency problem.
+- p4cji (L14 S13 B80) Police should not focus on Public Intoxication charges for people walking home. We should encourage people to walk -- not drive drunk.
+- peq9z (L15 S30 B261) Medical marijuana should be legal.
+- p7zmn (L16 S12 B150) There should be more effort put into teaching students about any potential harmful side effects of drugs, illegal or otherwise.
+- p6quu (L17 S20 B127) There should be something a work farm for local prisoners to learn to tend gardens, take care of livestock, and learn to be more useful.
+- pvdxd (L18 S41 B534) Legalizing marijuana would be a boon for the economy.
+- ptfp6 (L19 S21 B495) Individual unhappiness combined with easy legal and illegal availability of drugs drives the opioid crisis.
+- pqeea (L20 S15 B442) Most drugs except meth should be free & government controlled. See Belgium.
+- p3fxs (L21 S43 B38) Drug information classes should be given to incoming freshmen of WKU to educate them about the risks and health hazards.
+- p4vem (L22 S7 B4) Local law enforcement would benefit from additional training in community relations.
+- pihfx (L23 S19 B334) The homeless population is getting out of hand. We need to find better methods for curtailing and rehabing and keeping them off the streets.
+- pemdb (L24 S49 B260) Bowling Green needs to pass a resolution in support of medical cannabis.
+- pahwq (L25 S46 B187) Legalizing marijuana at the state level could produce substantial tax revenue, but if only BG did, it would cause problems.
+- phtsf (L29 S71 B11) The face of drug dealers has changed. Today most opioid drug dealers are doctors or teenagers in the suburbs ordering from China.
+- pfaf5 (L33 S14 B270) BG police should improve officer training and should be held accountable for abuse of power.
+- pbkh5 (L34 S23 B204) BGPD needs to work toward community policing, where cops patrol the neighborhoods they live in. Stop incentivizing cops to live in suburbs
+- p5hhx (L39 S26 B5) We know fentanyl is coming through our post office. Law enforcement should have dogs finding it before it kills the next youth.
+- pqkxf (L40 S17 B447) There should be officers more readily available to the county areas; ex. for domestic violence disputes.
+- pfqwv (L41 S22 B2) Law enforcement in Bowling Green and Warren county needs more minority representation
+- pphh2 (L54 S100 B3) We should focus downtown development dollars on rehabilitation and reuse of buildings that can be done so, rather than building new.
+- pvvrj (L87 S25 B544) Government should ignore criminal malfeasance/embezzlement of public funds by anyone if little or no funds can be recovered.
+- pvead (L93 S24 B535) You can't get a job in this county at a large place of employment if you have OLD DUI's on your record. This is an un-needed punishment!
+- pnbm2 (L95 S357 B13) Recycling services need to be improved and modernized. Current contractor uses outdated equipment, services are messy, company unresponsive.
+- p88q8 (L163 S136 B14) if there was a law for employers to pay back on bad layoffs and cutbacks
+- puaak (L304 S173 B8) Parents should be able to send their kids to the school district of their choice no matter where they live in Bowling Green/Warren County.
+- p6twv (L338 S404 B12) City Annexed areas need more city services for their tax $$.
+- pztez (L347 S508 B10) WRECC should provide internet services.
+- pktbx (L352 S349 B9) Internet services should be a public municipality.
+
+## #64 pktbx: Internet services should be a public municipality.
+
+- pztez (L1 S6 B1) WRECC should provide internet services.
+- pudtd (L2 S2 B5) We need faster internet service.
+- paxtf (L3 S5 B3) We need a fiber option for internet.
+- pkzf6 (L4 S4 B4) Bowling Green needs more competitive internet rates.
+- pbqbi (L5 S3 B15) More choices when it comes to internet. BGMU has been offering service to businesses for a while, they should expand to offer to residents.
+- pchi2 (L6 S8 B6) How is it that surrounding counties have county wide high speed internet, yet one third of Warren County residents have slow or no internet?
+- pcv53 (L7 S9 B16) BGMU needs to offer residential fiber internet as a UTILITY, using Chattanooga as a perfect example.
+- pn9cj (L8 S1 B18) Increase Internet/Cell/Phone service throughout the county. First deal with areas that currently don't have any option.
+- p6fag (L9 S7 B11) We need to grow the internet infrastructure particularly in growing areas of the county like Alvaton.
+- phjdj (L10 S13 B315) Bowling Green needs more competitive cable rates.
+- pu2kb (L11 S11 B512) Our city should make a bid for Google Fiber to help compete with Spectrum and AT&T.
+- p5rmi (L12 S12 B110) We need to promote competition in town for Charter. AT&T isn't much better and doesn't serve everywhere. Need more fiber to the homes.
+- puvmn (L13 S10 B528) Free WIFI in certain areas - particularly around Fountain Squre
+- paxv3 (L14 S22 B194) competition for cable companies and an end to heir price gouging.
+- pddku (L15 S15 B239) Spectrum should have competition and not a monopoly. Rates should be regulated by city county government
+- pqnjh (L16 S14 B450) Cable TV providers should include all local channels.
+- padzm (L17 S19 B187) Cable companies need competition and not be allowed to raise rates of customers. Once you sign on, that is your rate unless you upgrade.
+- p35gt (L18 S16 B60) Better/more mass media choices available.
+- pmp68 (L19 S234 B390) BGMU needs to be held accountable for their rates and "averages."
+- pzntg (L20 S26 B2) The Public Library "Internet Café" has become a hangout for the homeless, and this has become an issue the community has chosen to ignore.
+- p2a6v (L21 S94 B50) Sewer should be required to be run to all new subdivisions and cost should be split between city/county water systems and builders
+- p6twv (L22 S50 B7) City Annexed areas need more city services for their tax $$.
+- p9md3 (L23 S126 B179) County needs to extend water lines in Tuckertown area. About a dozen homes don't have county water or fire hydrants!
+- p6u6a (L24 S21 B130) Local government, for profit and non profits should work together on housing and economic equality
+- pnkss (L25 S18 B402) Warren county needs to be more proactive about keeping their county maps up to date of new roads or developments especially online. (Google)
+- pnbm2 (L26 S269 B8) Recycling services need to be improved and modernized. Current contractor uses outdated equipment, services are messy, company unresponsive.
+- pmjk5 (L28 S31 B9) More public transportation options--be creative
+- pvpmr (L33 S25 B21) Most local officials run for office to serve the public good.
+- pbaby (L55 S24 B40) Better public transit and runs 24 /7 so people without cars can get to work. Also more stops added in residential areas.
+- pjbzz (L69 S17 B346) Need to build wider access roads into the city!
+- prb8q (L104 S258 B12) Businesses and multi-family dwellings should be required to offer and use recycling services.
+- pf6t9 (L207 S20 B41) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- perix (L209 S113 B13) Support non-public (or public charter) school choice options, and make choice viable for families of ALL income levels.
+- pe3gy (L212 S23 B247) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pms9n (L337 S410 B10) Smoking should not be allowed in public parks.
+- pani2 (L438 S461 B14) Law enforcement should send drug possession arrestees for rehabilitation services rather than imprisonment.
+
+## #65 pu2qt: More free meeting space for nonprofits.
+
+- p6u6a (L1 S2 B100) Local government, for profit and non profits should work together on housing and economic equality
+- pq3ad (L2 S67 B423) More parking downtown. There are too many reserved spaces which should be available in the evening.
+- p5ehs (L3 S55 B69) Bowling Green needs more indoor sports facilities, particularly a large complex with multiple indoor soccer fields, for youth.
+- pvfj9 (L4 S36 B531) More green spaces. All of our parks have just become sports complexes!
+- pe9wi (L5 S3 B227) More youth programs are needed to bring the community together: volunteer organizations, community service, innovative creations labs
+- pkqjk (L6 S104 B357) More parking for Fountain Square to become a pedestrian zone.
+- p64wt (L7 S31 B81) More affordable home ownership options.
+- pfnxw (L8 S15 B254) City and county parks departments should provide more programming for adults and seniors.
+- pneud (L9 S140 B5) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- pi9rk (L10 S81 B310) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- p6j9p (L11 S1 B92) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- pnvfb (L12 S12 B399) Bowling Green needs more pet-friendly housing options for renters.
+- p89sh (L13 S133 B125) Build parking areas.
+- pamph (L14 S23 B161) We need more activities for families, such as a large-scale all-in-one kids play arena like All About Kids.
+- pmjk5 (L15 S103 B372) More public transportation options--be creative
+- pkb9k (L16 S125 B345) Bowling Green needs an indoor / outdoor sports event complex/
+- p67wb (L17 S11 B83) WKU should open its facilities to the public once or twice a month to the community, and those in need should be welcome more often.
+- pa9ks (L18 S6 B155) Temporary housing for the homeless in the community.
+- pqra3 (L19 S37 B444) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- pv68d (L20 S41 B526) The downtown district, especially Fountain Square, should have more retail businesses, not offices.
+- padkd (L21 S42 B157) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- prhru (L22 S61 B460) We already have a lot of parks. And the libraries have become a hangout for the homeless. Do something about that problem first
+- p4csd (L24 S48 B45) SNAP grants for neighborhood improvements should be available in Warren County, not just in the city.
+- pjk6d (L23 S332 B333) There are large fees with the few currently available indoor pools.
+- pxjmb (L25 S25 B572) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- puvmn (L27 S112 B4) Free WIFI in certain areas - particularly around Fountain Squre
+- ph4wf (L28 S16 B288) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- ptcr8 (L29 S4 B488) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- pki7f (L34 S21 B353) Bowling Green needs more access to affordable , healthy, local food sources.
+- pgdik (L35 S5 B268) Please increase more family friendly activities
+- pwzum (L38 S20 B565) We need to replace "Room at the Inn" services with temporary decent housing connected to aid agencies for the homeless
+- pf6t9 (L40 S10 B245) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- p5ryp (L42 S17 B77) After school activity centers for youth with later hours of operation.
+- pdckg (L45 S9 B214) Affordable supports for the elderly and aging population are needed in our community.
+- p5ref (L50 S18 B74) Encourage connection between the wealthy and the poor
+- p59nj (L52 S193 B8) Owners of large parking lots should be required to break them up with pockets of green space and trees; perhaps create a walkable green path
+- pd4in (L59 S14 B212) There should be a push to improve mental health awareness and availability in Bowling Green.
+- pgdt8 (L60 S13 B270) Consider asking low-income or disabled residents what they really need.
+- pjaji (L63 S19 B327) It would be great if people in neighborhoods could get to know each other better and neighborhoods were like small communities of neighbors.
+- pk22m (L75 S7 B342) Publicizing more cultural activities other than the Bowling Green International Festival.
+- pkg36 (L78 S22 B350) Bowling Green needs Community Enrichment Classes that include woodworking, welding, gardening and general home beautification for hobbyist.
+- p8zq7 (L79 S335 B9) Build parking garage behind Spencer’s, remove some parking from Ft. Square. Add a green space on top of garage! Soccer field or rooftop food
+- pihfx (L133 S24 B314) The homeless population is getting out of hand. We need to find better methods for curtailing and rehabing and keeping them off the streets.
+- pvh84 (L155 S8 B532) Homelessness is for the nonprofit sector to deal with, not government.
+- p4pb4 (L174 S73 B1) Every citizen should be within 1 mile of some shaded green space.
+- pbnf4 (L177 S245 B2) More nonviolent inmates convicted of drug possession should be set free.
+- pb8a2 (L340 S299 B7) We need to offer free full panel STD testing to students and low income families
+- pqeea (L488 S423 B3) Most drugs except meth should be free & government controlled. See Belgium.
+- p6tet (L501 S397 B6) Hawaii outlaws billboards tokeep the landscape from being blocked I would love to see Bowling Green billboard free
+
+## #66 psppu: Higher minimum wage
+
+- p4j6s (L1 S1 B1) Minimum wage needs to go o $15 per hour
+- pjht6 (L2 S2 B2) Minimum wage required for businesses to receive tax credits should be raised to a living wage
+- pbkub (L3 S3 B5) Higher paying jobs- the ability to move up with reasonable raises.
+- pycbi (L4 S6 B582) Companies that claim they cannot fill job openings should raise wages and improve working conditions.
+- pmpqg (L5 S4 B12) No business should get tax credit without paying workers at least $10 per hour plus benefits that would increase that to minimum of $15.
+- piq5m (L6 S8 B322) Job training programs for lower income
+- p389z (L7 S5 B9) We should be incentivizing higher paying jobs coming to BG. Cost of living is outrunning wages and it's starting to be a problem.
+- p28ea (L8 S38 B13) Temp service need to pay higher hourly rate to temp than hiring firm pays their FTE to account for reduced economic security
+- phceg (L9 S30 B295) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pjrdt (L10 S9 B337) Improved businesses such as banks and groceries in lowest income areas
+- p6u6a (L11 S10 B104) Local government, for profit and non profits should work together on housing and economic equality
+- pb5iz (L12 S11 B176) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- pgzys (L13 S57 B290) Rental assistance programs
+- pirz4 (L14 S23 B6) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- p88q8 (L15 S58 B128) if there was a law for employers to pay back on bad layoffs and cutbacks
+- pz6xn (L16 S28 B594) More healthy restaurants
+- pgdik (L17 S12 B272) Please increase more family friendly activities
+- ps5tz (L18 S22 B466) More technical education programs for non-graduates of high school
+- pq8ag (L19 S7 B3) Reduce and/or get rid of the city wage tax.
+- p4r2w (L20 S66 B55) Enact rent control laws to stabilize the constant increase in rates.
+- pb38d (L21 S16 B174) It is easy to find a good job in Warren County.
+- p66dt (L22 S36 B85) The rental market prices are well beyond an affordable housing level and needs to be addressed given the number of renters in BG.
+- p64wt (L23 S17 B84) More affordable home ownership options.
+- pupnr (L24 S63 B515) city officials might look into layoff practices on jobs in bowling green ky
+- ptnie (L25 S32 B494) The main problem facing is the workforce development. There is over 6500 jobs open in Warren County. This is a big issue.
+- p9cba (L29 S20 B150) Reducing poverty will enhance the quality of life for everyone in our community regardless of status.
+- pgdt8 (L36 S15 B274) Consider asking low-income or disabled residents what they really need.
+- pki7f (L35 S14 B353) Bowling Green needs more access to affordable , healthy, local food sources.
+- p5ref (L37 S25 B77) Encourage connection between the wealthy and the poor
+- pcqfp (L52 S13 B7) All schools in the county and city should work together to provide the same minimum level of education to students.
+- pqmg8 (L62 S19 B438) Low-income areas should get beautification money -- not the wealthy who can afford it themselves.
+- p5sdr (L90 S21 B81) City needs to mandate temp services furnish details of how much they are selling employee labor for, to the employee.
+- phhdw (L91 S79 B4) The main purpose of higher education is job training.
+- pjrwf (L168 S18 B11) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- pf6t9 (L204 S24 B249) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- puqkg (L228 S324 B10) City/County schools should have a minimum one year classroom for immigrant and refugee students so they can learn english, culture and laws
+- pbstr (L276 S123 B8) Individuals should be treated equally. Higher positions or who you work for should not release anyone from responsibility of their actions.
+
+## #67 p6cyb: Plan for people, not cars. Walking should be enjoyable, not a hazard.
+
+- paeh8 (L1 S9 B14) Make it a walking city. Sidewalks along the main avenues (scottsville rd, campbell ln, 31 bypass) with plants, benches, art pieces.
+- p7msc (L2 S1 B124) Create pedestrian-only streets.
+- p7mfn (L3 S2 B122) When you prioritize the safety of people over automobile speed, all kinds of positive things happen. #slowthecars
+- pqaaf (L4 S37 B4) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- psbcj (L5 S17 B476) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pgj3y (L6 S18 B278) Install new sidewalks along major roads, like Three Springs, and city-wide bike routes, to decrease likelihood of accidents
+- p3cst (L7 S5 B34) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- pufe9 (L8 S31 B8) Make all future sidewalks wide enough for multi-use (walking, biking, skateboarding etc)
+- pz6eg (L9 S3 B6) Bike lanes that are wide enough to safely ride on without fear of being hit by passing cars.
+- padkd (L10 S10 B165) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p5ahf (L11 S42 B69) Need more bike lanes and biker friendly resources
+- pwy69 (L12 S8 B566) More sidewalks would be great, but first let’s stop people parking on them. Or stop spending money building them. Whichever.
+- ptx9s (L13 S60 B503) Traffic and toxic vehicle dependency should NOT be a topic of priority for this city.
+- pxra8 (L14 S54 B577) Downtown at the square and adjacent areas should be a pedestrian mall
+- p8ce7 (L15 S20 B133) Build and improve sidewalks in the area of Magnolia Street and 13th to Cabell Drive area for the heavy pedestrian traffic there.
+- puhdq (L16 S4 B515) New buildings should not be built right up to the sidewalk to inhibit seeing around corners when driving.
+- pugud (L17 S23 B3) More bike trails and walking trails would be a great addition.
+- pf7ei (L18 S27 B252) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pgmpv (L19 S11 B279) Something needs to be done to improve traffic flow
+- p8hra (L20 S38 B137) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- p5e8k (L21 S66 B73) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- p2hkv (L22 S56 B22) Our sidewalks need more connectivity. It's too piecemealed and makes some areas unusable.
+- pbzyn (L23 S29 B197) Provide accessible transportation for seniors that have difficulty driving
+- pyyxz (L24 S26 B591) Impact on traffic flow should be considered with any proposed new developments.
+- p7ms9 (L25 S21 B123) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pp8pk (L29 S13 B410) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- p59nj (L35 S12 B68) Owners of large parking lots should be required to break them up with pockets of green space and trees; perhaps create a walkable green path
+- pwin9 (L36 S22 B557) A clean, efficient public transportation system would be a huge help to those with limited ability or desire to drive.
+- pkqjk (L37 S15 B362) More parking for Fountain Square to become a pedestrian zone.
+- pjf7t (L38 S19 B335) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pzaca (L39 S7 B595) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- p4pb4 (L41 S25 B57) Every citizen should be within 1 mile of some shaded green space.
+- pv2mh (L43 S16 B524) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- pcp9t (L45 S14 B13) More walking/nature trails in our sports-centric parks. Have certain hours where walkers can enjoy the beauty of Paul Walker Golf Course.
+- pr7y3 (L64 S24 B457) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- p4cji (L68 S69 B7) Police should not focus on Public Intoxication charges for people walking home. We should encourage people to walk -- not drive drunk.
+- pjbzz (L70 S6 B333) Need to build wider access roads into the city!
+- pbaby (L75 S35 B9) Better public transit and runs 24 /7 so people without cars can get to work. Also more stops added in residential areas.
+- pyssw (L131 S92 B10) Some county roads, such as Hammett Hill Road, are so narrow it's hard for two cars to pass. Surely they could make them a little wider.
+- pge4x (L162 S214 B11) A fresh food grocery store to be built in Delafield and Morgantown rd areas within walking distance of residents.
+- ptaiy (L195 S264 B15) Many drivers fail to stop as traffic lights turn red. As many as 3 cars will travel through an intersection after light has changed to red.
+- psik2 (L231 S281 B5) stronger enforcement of junk cars in yards and trashy looking yards in general
+- pdigz (L324 S263 B2) Institutionalize racism is alive and well here. I know because I have experienced it first hand. We need to have a plan.
+- ptky7 (L370 S279 B1) Animated digital business signs are a road hazard. They distract drivers.
+- pu33h (L456 S411 B12) I see a lot of folks with expired tags on cars, both in state and out of state. Police need to enforce the laws and write more tickets.
+
+## #68 ppwgk: We need to SHADE street lamps. This actually increases visibility, reduces glare, and saves energy/ money. Using LEDs would save money, too.
+
+- pxjks (L1 S2 B14) City and County should convert existing street lighting to Dark Sky Complaint Lights. #Nomoreorangeglow
+- p5hnk (L2 S1 B9) Street lights should be required on residential streets in town. Too many dark corners.
+- pgvyh (L3 S3 B5) Shade trees should be required plantings along all Greenways
+- pu42c (L4 S6 B3) Better visibility on roads. Reflectors and better signage
+- pxg44 (L5 S5 B571) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pjubs (L6 S13 B4) All new and existing sidewalks should have shade trees
+- pm8t7 (L7 S12 B405) Regulate the size & brightness of business signs.
+- pwbe8 (L8 S9 B46) We need more incentives for individual and business solar power
+- pneud (L9 S15 B421) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- pv2mh (L10 S8 B534) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- p2ya2 (L11 S7 B12) All new and existing single family housing should have at least one shade tree planting
+- pi9rk (L12 S11 B361) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pbp7c (L13 S19 B258) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- p4pb4 (L14 S4 B142) Every citizen should be within 1 mile of some shaded green space.
+- pgj3y (L15 S111 B331) Install new sidewalks along major roads, like Three Springs, and city-wide bike routes, to decrease likelihood of accidents
+- paeh8 (L16 S43 B240) Make it a walking city. Sidewalks along the main avenues (scottsville rd, campbell ln, 31 bypass) with plants, benches, art pieces.
+- p5ahf (L17 S89 B40) Need more bike lanes and biker friendly resources
+- prb59 (L18 S22 B475) Require new downtown developments to become LEED certified
+- p7ms9 (L19 S46 B200) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- p3y2u (L20 S10 B127) Greenwood Mall parking lot could become a cooperative solar collection for itself and home surrounding
+- puhdq (L21 S60 B526) New buildings should not be built right up to the sidewalk to inhibit seeing around corners when driving.
+- p87p6 (L22 S17 B206) Bowling Green should be become a carbon neutral city.
+- p5ku8 (L23 S14 B161) There needs to be a stoplight at the intersection of Shive Lane and Ken Bale Blvd to improve traffic flow. The backups there are awful.
+- pc7ap (L24 S165 B265) BG needs to install traffic cameras that help police intersections like Gallatin, TN. This would reduce accidents, traffic flow and add $
+- p6k4e (L25 S24 B180) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pf7ei (L28 S21 B309) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pzaca (L29 S18 B1) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- pmk7t (L41 S23 B412) Too many trees have been torn down to make way for new developments. We should re-plant more trees around Bowling Green.
+- p3bwu (L46 S16 B16) The city should actually time stoplights correctly during rush hour to prevent complete gridlock
+- pbm45 (L86 S25 B48) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pqmg8 (L94 S20 B18) Low-income areas should get beautification money -- not the wealthy who can afford it themselves.
+- pqy6v (L111 S380 B10) Footbridge from airport to across the street. Pilots running across the road.
+- pck82 (L146 S236 B11) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- pcv53 (L169 S139 B15) BGMU needs to offer residential fiber internet as a UTILITY, using Chattanooga as a perfect example.
+- pjzz6 (L372 S345 B8) The city and county work together to keep the low socieconomic status children out of certain schools. This reduces learning opportunities.
+- pmjj8 (L401 S207 B13) We need more Community Farming Programs(where you pay farmers money up front and during harvest you get fresh fruits/veggies, eggs, etc)
+- p6zxd (L532 S457 B2) People need to do all their research before accusing local officials of using their influence for personal gain.
+- phvk8 (L558 S429 B7) Residents using septic tanks should not be charged for waste water.
+- pfarp (L580 S400 B6) Actually teach HS students useful things.
+
+## #69 pfsk9: Allow parents that take their kids out of public schools to use that money in a private school.
+
+- puaak (L1 S2 B1) Parents should be able to send their kids to the school district of their choice no matter where they live in Bowling Green/Warren County.
+- perix (L2 S4 B15) Support non-public (or public charter) school choice options, and make choice viable for families of ALL income levels.
+- pzxfe (L3 S1 B2) If private schools were to get a share of Federal or State education dollars, it would hurt public schools.
+- pf6t9 (L4 S3 B18) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pbbu5 (L5 S5 B4) A private (catholic) high school would be beneficial to all.
+- pyr6n (L6 S8 B6) Future charter schools would be a financial burden to public school funding, unless they are held to accountability by local school boards.
+- p34uw (L7 S25 B12) Both school districts shamefully manipulate low economic status parents to gain Title I funding. It should stop.
+- p4e3h (L8 S9 B3) Public school could do alternate teaching styles(like Montessori) in a school within a school set up. Not all kids learn the same way.
+- pirz4 (L9 S22 B361) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- pmiqq (L10 S6 B5) City schools should be redistricted to more evenly distribute the kids.
+- pinkj (L11 S19 B25) Arts-based charter schools
+- pjzz6 (L12 S12 B69) The city and county work together to keep the low socieconomic status children out of certain schools. This reduces learning opportunities.
+- psh7u (L13 S37 B75) Need new schools in Warren County to keep up with population growth, CTE is falling down, Drakes and Greenwood high are way overcrowded
+- ps8zr (L14 S24 B9) Schools should provide an opportunity for nonswimming parent/guardians to have water safety and swimming lessons in private setting.
+- pcqfp (L15 S11 B53) All schools in the county and city should work together to provide the same minimum level of education to students.
+- pppcy (L16 S23 B13) All public schools should have an adequate summer feeding program so no child goes hungry.
+- p6wtw (L17 S18 B170) Educate high schoolers on their options after they graduate
+- pcetw (L18 S20 B28) The city and county school systems should merge.
+- p2ib2 (L19 S13 B44) City School taxes are too high , they need to budget more
+- phea9 (L20 S64 B14) If strict dress codes are required, uniforms should be provided by the school system, not eat into the parents possibly small budget.
+- pgrp6 (L21 S16 B31) Unelected school board officials should not have the power to create, add, or increase "school taxes".
+- pwnap (L22 S21 B564) Invest in the youth.
+- pkezh (L23 S10 B21) Public school systems need to provide more funding for art education programs, such as music, theater, and visual arts.
+- pxrrm (L24 S14 B64) Local schools should help make up the pension fund crisis by learning to live with budget cuts.
+- pmti4 (L25 S40 B43) The city & county school districts need to be re-evaluated The yards/houses that touch Potter Grays playground r all County school districts
+- pfin8 (L27 S7 B11) Community Education provides after-school care necessary to working parents. Funding should not be cut.
+- pqeuz (L29 S17 B56) Arts education should be available in every school in Warren County and other surrounding areas.
+- pcura (L32 S15 B8) Other counties have school at home on snow days so that kids do not have to make up days. This should be considered for here.
+- pdcp3 (L39 S27 B10) More local produce should be incorporated into public school's lunchrooms
+- p68um (L208 S242 B7) Take advantage of the wonderful summers in KY and have more outdoor public swimming spaces
+
+## #70 pcp4z: Louisville rd area needs more businesses and restaurants extending out towards the factories to also bring in revenue from Edmonson Co.
+
+- pcrnf (L1 S9 B54) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- puyc3 (L2 S20 B53) We need to renovate the run down businesses and store fronts, instead of building new places
+- p6xjr (L3 S3 B47) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- p69et (L4 S14 B3) The bypass area must be developed and utilized for new businesses and attractive structures. It is a neglected area that is losing business.
+- pjrdt (L5 S1 B37) Improved businesses such as banks and groceries in lowest income areas
+- ph4wf (L6 S8 B2) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pv68d (L7 S4 B44) The downtown district, especially Fountain Square, should have more retail businesses, not offices.
+- pxg44 (L8 S7 B114) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pf7ei (L9 S10 B311) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pxjmb (L10 S19 B577) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- padkd (L11 S25 B242) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pgmpv (L12 S33 B79) Something needs to be done to improve traffic flow
+- p8hra (L13 S39 B89) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- pgpz3 (L15 S67 B43) Planning and zoning laws should change to encourage small businesses and farms.
+- pif8h (L14 S83 B93) BG needs to redevelop from WKU to the river and beyond. Model after Greenville SC
+- pkvep (L16 S73 B398) I still have to drive out of town to eat Golden Corral.
+- pvqds (L17 S29 B113) Bowling Green needs to attract business like Costco and Trader Joe's to keep residents from driving to Nashville on weekends
+- p4p8j (L18 S40 B159) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pxra8 (L19 S131 B579) Downtown at the square and adjacent areas should be a pedestrian mall
+- pqra3 (L20 S44 B469) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- p7whc (L21 S26 B11) BG needs to develop a marketing campaign to draw Warren Co and surrounding counties to downtown for eating, shopping, and entertainment.
+- p35n3 (L22 S159 B87) The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+- pcu64 (L23 S48 B18) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- pr7y3 (L24 S27 B475) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- pvq7m (L25 S156 B549) many parts of the By-pass can and should be widened
+- pdhdi (L30 S13 B290) Work,with State to complete a wide loop from Scottsville Road across N I65 to N Natcher Pk way.
+- p5eg6 (L33 S15 B4) There needs to be better access to grocery stores and restaurants from WKU's campus.
+- pz6xn (L41 S5 B7) More healthy restaurants
+- pjbzz (L44 S18 B373) Need to build wider access roads into the city!
+- puvjs (L46 S12 B533) Do SOMETHING about completing the "wrap" downtown, or at least enhance (and that includes restaurant service) what is currently there.
+- p3cst (L63 S2 B117) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- p8iym (L67 S84 B5) Expand Nashville Rd all the way past Chaney’s & Buchanan park. Very dangerous area.. very much so for a school area & young drivers.
+- pp8pk (L79 S11 B433) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- pge4x (L80 S22 B62) A fresh food grocery store to be built in Delafield and Morgantown rd areas within walking distance of residents.
+- pi4h5 (L83 S122 B9) BG can’t compete with Nashville or Louisville for young professionals
+- prfvz (L94 S23 B10) I think we have enough restaurants.
+- prqiv (L103 S6 B485) We need to commit more resources to the North-Northeast ends of town. Blue collar people who help make Bowling Green what is. Too neglected.
+- pcvs4 (L118 S16 B56) Institute a business development grant that encourages WKU grads to stay in Bowling Green by starting local businesses.
+- pki7f (L141 S24 B84) Bowling Green needs more access to affordable , healthy, local food sources.
+- pvv6a (L151 S21 B1) Bring a discount grocer to the downtown area.
+- p8tq3 (L173 S17 B225) There is too much continuous road work going on downtown. They need to get it together.
+- phix2 (L183 S296 B12) The Old Morgantown Rd train crossing needs either an underpass or an overpass
+- pm5k9 (L200 S162 B8) Bowling Green & Warren Co. should consolidate into a metro.
+- p8849 (L222 S195 B6) Casinos. Bring them here.
+- ppz44 (L245 S444 B13) the Bark Park needs more trees and water access for the smaller dogs area
+- pkgar (L425 S497 B14) District judges are biased towards large local companies to the detriment of individuals.
+- phyee (L555 S540 B15) SKYPAC needs to bring in younger, more entertaining acts. It will fall apart if they keep only catering to 50+. Could be a great venue.
+
+## #71 p4r2w: Enact rent control laws to stabilize the constant increase in rates.
+
+- p66dt (L1 S2 B99) The rental market prices are well beyond an affordable housing level and needs to be addressed given the number of renters in BG.
+- p98s9 (L2 S3 B160) Stronger tenant and renters rights. Landlord accountability for keeping properties in good shape. So many overpriced dilapidated rentals.
+- p9ujh (L3 S4 B4) Lease laws should be enacted and enforced in the county as they are in the city.
+- p499a (L4 S1 B1) Rent is too expensive inside the city limits.
+- pgzys (L5 S13 B298) Rental assistance programs
+- p5pav (L6 S8 B25) Older neighborhoods change from owner occupied to rental. Deterioration occurs. Stronger landlord/tenant laws needed!
+- pfpwf (L7 S7 B270) Bowling Green should pass the Uniform Residential Landlord and Tenant Act (or URLTA) to ensure basic standards for landlords and tenants.
+- p6r2s (L8 S10 B113) Rental property taxes should be reduced for private landlords to encourage them to develop more, as opposed to large ones like Chandler.
+- pvdrx (L9 S6 B529) We need to make it worthwhile for builders to create more quality affordable rental units for residents, rather than more luxury units.
+- p64wt (L10 S11 B98) More affordable home ownership options.
+- pnvfb (L11 S12 B401) Bowling Green needs more pet-friendly housing options for renters.
+- pwijp (L12 S5 B554) Overdevelopment of rental property is detrimental to cities. Renters do not pay property tax. Schools suffer when the tax base is eroded.
+- p8r8z (L13 S36 B150) there should be a tenant/landlord grievance department with legal assistance
+- pjtja (L14 S9 B348) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- padkd (L15 S56 B172) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p6u6a (L16 S26 B117) Local government, for profit and non profits should work together on housing and economic equality
+- phfba (L17 S15 B306) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pgpz3 (L18 S32 B13) Planning and zoning laws should change to encourage small businesses and farms.
+- pa9ks (L19 S71 B170) Temporary housing for the homeless in the community.
+- psppu (L20 S18 B480) Higher minimum wage
+- pdckg (L21 S61 B230) Affordable supports for the elderly and aging population are needed in our community.
+- picqu (L22 S33 B320) Make areas around WKU's campus livable for college students. Eliminating section 8 housing will lead to less crime & lower cost of attendance.
+- pbm45 (L23 S20 B196) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pjht6 (L24 S45 B340) Minimum wage required for businesses to receive tax credits should be raised to a living wage
+- pqra3 (L25 S28 B447) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- pq8ag (L35 S19 B428) Reduce and/or get rid of the city wage tax.
+- p389z (L38 S17 B45) We should be incentivizing higher paying jobs coming to BG. Cost of living is outrunning wages and it's starting to be a problem.
+- pkp8t (L45 S16 B363) New home zoning should be for single family dwellings rather than multi-family units (apartments).
+- pi9rk (L53 S148 B15) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- phsyb (L56 S14 B312) Prevent the development of new housing areas, especially in farm land areas.
+- pmp68 (L57 S41 B8) BGMU needs to be held accountable for their rates and "averages."
+- pkeaq (L59 S90 B5) Leash laws should be more strictly enforced in both the city and county
+- pbkub (L64 S25 B195) Higher paying jobs- the ability to move up with reasonable raises.
+- phjdj (L66 S23 B2) Bowling Green needs more competitive cable rates.
+- pji76 (L81 S22 B341) There are too many apartments being built. Our economy can't continue to support it. There will be a bust & it might be sooner than later.
+- pgdik (L82 S58 B6) Please increase more family friendly activities
+- pnkpa (L84 S24 B18) A person should not miss rent (say due to a car breakdown) and face eviction in less than 2 weeks (before next payday). Make it 30 days.
+- pkzf6 (L98 S60 B3) Bowling Green needs more competitive internet rates.
+- pddku (L103 S30 B7) Spectrum should have competition and not a monopoly. Rates should be regulated by city county government
+- paxv3 (L180 S21 B181) competition for cable companies and an end to heir price gouging.
+- pmuac (L196 S295 B10) animal cruelty laws need to exist and be enforced
+- p792j (L225 S125 B11) Fireworks use in residential areas is out of control with no police presence to enforce the already in place restrictions.
+- p5eeq (L262 S382 B9) Birth control should be an OTC drug- access to it in Kentucky and in Bowling Green is limited for many women.
+- ps9dt (L296 S261 B14) Police do a shameful job of enforcing traffic laws. more tickets = more compliance and more $$$$$.
+- phuu3 (L410 S419 B12) The access roads off Scottsville Rd are terrible. They provide constant traffic jams and can be dangerous. We need to budget to fix them.
+
+## #72 pi4h5: BG can’t compete with Nashville or Louisville for young professionals
+
+- p4p8j (L1 S1 B1) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- phceg (L2 S9 B299) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pvqds (L3 S4 B13) Bowling Green needs to attract business like Costco and Trader Joe's to keep residents from driving to Nashville on weekends
+- padkd (L4 S20 B165) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p5rtq (L5 S28 B84) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- psbcj (L6 S114 B475) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- ptahe (L7 S31 B489) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- ptuye (L8 S11 B500) The population has out grown the infrastructure in bg/ warren county.
+- p4zjr (L9 S34 B65) Bowling Green Government needs more perspective from Millennials. We need ideas for the future not outdated Boomer development ideas.
+- ptcr8 (L10 S12 B6) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- pif8h (L11 S3 B320) BG needs to redevelop from WKU to the river and beyond. Model after Greenville SC
+- p6u6a (L12 S74 B108) Local government, for profit and non profits should work together on housing and economic equality
+- p7whc (L13 S5 B127) BG needs to develop a marketing campaign to draw Warren Co and surrounding counties to downtown for eating, shopping, and entertainment.
+- p389z (L14 S17 B33) We should be incentivizing higher paying jobs coming to BG. Cost of living is outrunning wages and it's starting to be a problem.
+- pptwk (L15 S21 B424) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- p6wtw (L16 S32 B109) Educate high schoolers on their options after they graduate
+- pcvs4 (L17 S42 B217) Institute a business development grant that encourages WKU grads to stay in Bowling Green by starting local businesses.
+- p6xjr (L18 S37 B110) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- puyc3 (L19 S103 B523) We need to renovate the run down businesses and store fronts, instead of building new places
+- pcp4z (L20 S107 B9) Louisville rd area needs more businesses and restaurants extending out towards the factories to also bring in revenue from Edmonson Co.
+- pqra3 (L21 S71 B450) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- pbm45 (L22 S10 B190) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pkcbm (L23 S19 B352) BG needs more Summer weekend festivals/activities
+- ph4wf (L24 S49 B296) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- p66dt (L25 S22 B90) The rental market prices are well beyond an affordable housing level and needs to be addressed given the number of renters in BG.
+- p6rz9 (L28 S6 B4) I wish we had train service to Nashville
+- pg99d (L29 S25 B273) Local food and small farms are one of BG best attractions.
+- pq8wz (L33 S23 B432) BG Parks needs more funding from City
+- pxtgq (L35 S2 B5) We should have a commuting service between here & Nashville.
+- p6jxh (L41 S13 B101) Bowling Green should try to emulate Owensboro's Friday night programs downtown.
+- pptbv (L43 S16 B423) We need mixed-use development in the most disadvantaged areas of BG.
+- pjq68 (L45 S18 B342) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- p2a8w (L52 S15 B22) Bowling Green is an excellent place to raise a family, shop, worship, get an education, and recreate. I feel safe in most places here in BG.
+- pptye (L74 S7 B425) More concerts should be held in Bowling Green
+- pmehh (L76 S24 B373) I would love to see a Texas Roadhouse in Bowling Green
+- psebg (L79 S116 B10) More weekend activites are needed for YOUNG Seniors, who arent yet ready for Bingo nights.
+- pjrwf (L115 S40 B11) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- pq2c7 (L157 S64 B7) We have an estimated 125,000 people but we still don't have a hospital that is trauma center and have to ship everyone to TN or Louisville.
+- prqiv (L165 S14 B470) We need to commit more resources to the North-Northeast ends of town. Blue collar people who help make Bowling Green what is. Too neglected.
+- psb2i (L238 S8 B8) Provide regular and affordable daily transport to Nashville Airport from Bowling Green.
+- p8iym (L290 S61 B2) Expand Nashville Rd all the way past Chaney’s & Buchanan park. Very dangerous area.. very much so for a school area & young drivers.
+- pcuww (L365 S157 B12) Why isn't Nashville Rd between the roundabout and Campbell Ln wider? Getting stuck there at 5 o'clock is a plague.
+- p396b (L398 S565 B14) Judge/prosecutors should not let influential family of victim push extraordinarily harsh sentences & create more victims, ruined young lives
+- pu2kb (L419 S384 B3) Our city should make a bid for Google Fiber to help compete with Spectrum and AT&T.
+- pzymn (L558 S402 B15) Install a "train" sign visible from the Nashville, Industrial & Russellville road entrances to reroute traffic when a trains are crossing.
+
+## #73 p2ya2: All new and existing single family housing should have at least one shade tree planting
+
+- pgvyh (L1 S1 B8) Shade trees should be required plantings along all Greenways
+- pjubs (L2 S2 B1) All new and existing sidewalks should have shade trees
+- pmk7t (L3 S4 B55) Too many trees have been torn down to make way for new developments. We should re-plant more trees around Bowling Green.
+- pneud (L4 S5 B45) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- p4pb4 (L5 S3 B104) Every citizen should be within 1 mile of some shaded green space.
+- pi9rk (L6 S10 B343) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- p59nj (L7 S6 B113) Owners of large parking lots should be required to break them up with pockets of green space and trees; perhaps create a walkable green path
+- padkd (L8 S8 B10) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pxg44 (L9 S7 B574) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- p7ms9 (L10 S9 B161) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- p5rtq (L11 S14 B3) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- pv2a8 (L12 S20 B531) When the city tears up lawns with projects they should be required to do what it takes so that lawns are same quality they were before.
+- pp2tr (L13 S32 B26) Building codes prohibiting trophy houses next to common housing
+- psbcj (L14 S36 B487) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- prb59 (L15 S85 B33) Require new downtown developments to become LEED certified
+- p6k4e (L16 S22 B62) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- ppct5 (L17 S16 B429) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- pkp8t (L18 S21 B2) New home zoning should be for single family dwellings rather than multi-family units (apartments).
+- ppz44 (L19 S23 B441) the Bark Park needs more trees and water access for the smaller dogs area
+- pqeyn (L20 S31 B453) We need to carefully preserve agricultural land
+- p6u6a (L21 S70 B35) Local government, for profit and non profits should work together on housing and economic equality
+- p64wt (L22 S37 B131) More affordable home ownership options.
+- p2a6v (L23 S138 B54) Sewer should be required to be run to all new subdivisions and cost should be split between city/county water systems and builders
+- pjrqx (L24 S147 B369) apartment complexes should be required to participate in recycling program
+- pgaj7 (L25 S17 B305) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- pbm45 (L28 S13 B4) We need to focus more on the existing housing in BG, including renovations and improvements.
+- phsyb (L31 S12 B6) Prevent the development of new housing areas, especially in farm land areas.
+- paeh8 (L33 S25 B202) Make it a walking city. Sidewalks along the main avenues (scottsville rd, campbell ln, 31 bypass) with plants, benches, art pieces.
+- pvfj9 (L60 S11 B540) More green spaces. All of our parks have just become sports complexes!
+- pp8pk (L67 S18 B427) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- pgxi5 (L68 S15 B318) I should be allowed to plant flowers in my own yard where ever i want them.
+- ppwgk (L78 S19 B29) We need to SHADE street lamps. This actually increases visibility, reduces glare, and saves energy/ money. Using LEDs would save money, too.
+- p3cst (L84 S24 B81) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- pgdik (L88 S26 B12) Please increase more family friendly activities
+- p5at5 (L133 S84 B13) Downtown redevelopment should retain accessible parking for existing businesses.
+- pgdsd (L148 S180 B9) The city of Bowling Green should enforce their existing noise ordinance.
+- pa9ks (L152 S146 B15) Temporary housing for the homeless in the community.
+- pgnkw (L280 S273 B7) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- pzxze (L293 S108 B11) There are not enough family-centered activities to do down town.
+- pmnsc (L508 S304 B14) We need a 6 day a week farmer's market that is open at least 5 hours -
+- ppaza (L544 S455 B5) Temp svc need to furnish the equivalent of FMLA, despite not having 50 people at one single site.
+
+## #74 pq457: Need comprehesive probation rehab programs - include addiction treatment, life & job skills & ideas securing housing, training/job etc
+
+- pqpib (L1 S3 B6) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- pv3iy (L2 S1 B27) With jails crowded, it seems many are first time offenders of crimes that hurt no one, nor property. Seems rehab would be better.
+- pani2 (L3 S2 B259) Law enforcement should send drug possession arrestees for rehabilitation services rather than imprisonment.
+- p4qh4 (L4 S4 B13) Promote access to mental health treatment, rather than treating addicts as criminals.
+- pz34c (L5 S10 B21) Develop a manufacturing Work training program for jail inmates that qualify
+- p6j9p (L6 S8 B57) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- pihfx (L7 S7 B123) The homeless population is getting out of hand. We need to find better methods for curtailing and rehabing and keeping them off the streets.
+- piq5m (L8 S5 B1) Job training programs for lower income
+- p6quu (L9 S13 B204) There should be something a work farm for local prisoners to learn to tend gardens, take care of livestock, and learn to be more useful.
+- pgzys (L10 S11 B12) Rental assistance programs
+- pmt8i (L11 S15 B26) In order to better combat the opioid epidemic, it is time to view drug addiction as a health problem rather than a criminal justice problem.
+- p72mx (L12 S23 B211) Harsher sentences for drug users would help combat the opioid epidemic.
+- ptcr8 (L13 S6 B30) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- pwzum (L14 S18 B15) We need to replace "Room at the Inn" services with temporary decent housing connected to aid agencies for the homeless
+- pd4in (L15 S21 B298) There should be a push to improve mental health awareness and availability in Bowling Green.
+- pmz7k (L16 S76 B79) We need more regulation of opioid drugs, both prescribed and illicit.
+- pe9wi (L17 S12 B50) More youth programs are needed to bring the community together: volunteer organizations, community service, innovative creations labs
+- p6u6a (L18 S20 B46) Local government, for profit and non profits should work together on housing and economic equality
+- pbnf4 (L19 S9 B273) More nonviolent inmates convicted of drug possession should be set free.
+- ps5tz (L20 S30 B29) More technical education programs for non-graduates of high school
+- pebvm (L21 S17 B313) Bowling Green should consider a program, like Ft Worth Texas's Clean Slate, in which the homeless can earn money by cleaning up the city.
+- pbeq6 (L22 S36 B269) American comfort and avoidance of any pain or suffering drives the drug dependency problem.
+- pqra3 (L23 S22 B9) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- padkd (L24 S50 B24) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pfnxw (L25 S85 B334) City and county parks departments should provide more programming for adults and seniors.
+- pa9ks (L27 S16 B18) Temporary housing for the homeless in the community.
+- p3wgr (L29 S19 B51) I would like to see the WKU psych and Medical programs collaborate on mental health research, which is so sadly lacking in today's society.
+- pgaj7 (L33 S25 B344) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- p3zeb (L44 S14 B3) Post-secondary training programs for special education students.
+- p4vem (L47 S24 B19) Local law enforcement would benefit from additional training in community relations.
+- pbm45 (L84 S26 B7) We need to focus more on the existing housing in BG, including renovations and improvements.
+- phhdw (L115 S113 B2) The main purpose of higher education is job training.
+- pmjj8 (L164 S138 B5) We need more Community Farming Programs(where you pay farmers money up front and during harvest you get fresh fruits/veggies, eggs, etc)
+- pbxwr (L173 S207 B14) Planning & Zoning need to do a better job of listening & working with residents. It's not next to their house, so they don't care!
+- ppsfb (L268 S356 B10) Greek Life should be monitored on WKU's campus.
+- p4zjr (L395 S324 B4) Bowling Green Government needs more perspective from Millennials. We need ideas for the future not outdated Boomer development ideas.
+- pp2r6 (L487 S437 B8) More gender-neutral bathrooms need to be seen across BG on WKU's campus, in local businesses, etc.
+- pqnjh (L556 S540 B11) Cable TV providers should include all local channels.
+
+## #75 prfvz: I think we have enough restaurants.
+
+- pkvep (L1 S4 B364) I still have to drive out of town to eat Golden Corral.
+- pz6xn (L2 S1 B2) More healthy restaurants
+- puyc3 (L3 S11 B523) We need to renovate the run down businesses and store fronts, instead of building new places
+- pzxze (L4 S7 B3) There are not enough family-centered activities to do down town.
+- p4rsn (L5 S13 B5) There is not enough done for tourism in Warren Co. We offer much more than Corvettes and we should be promoting other activities.
+- pbm45 (L6 S26 B186) We need to focus more on the existing housing in BG, including renovations and improvements.
+- prhru (L7 S44 B464) We already have a lot of parks. And the libraries have become a hangout for the homeless. Do something about that problem first
+- pcp4z (L8 S31 B13) Louisville rd area needs more businesses and restaurants extending out towards the factories to also bring in revenue from Edmonson Co.
+- ptuye (L9 S45 B500) The population has out grown the infrastructure in bg/ warren county.
+- pg99d (L10 S9 B269) Local food and small farms are one of BG best attractions.
+- p4p8j (L11 S22 B9) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pg2kz (L12 S100 B267) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- pzaca (L13 S73 B596) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- pv68d (L14 S23 B530) The downtown district, especially Fountain Square, should have more retail businesses, not offices.
+- pvzkv (L15 S33 B545) If people are suggesting more advertising for tourists, there needs to be things for tourists to do.
+- pxjmb (L16 S24 B575) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- p9ivq (L17 S5 B152) Bowling Green should have more healthy/clean eating options for those who have limited diets.
+- pcq7d (L18 S20 B206) We need more activities/places to go for teenagers; basically all there is are places to eat, the mall, and the bowling alley
+- panhj (L20 S8 B167) We need more businesses like White Squirrel and Nats in BG. They add character to our town. Done with the Olive Garden and Belks.
+- ph4wf (L19 S18 B14) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- ptahe (L21 S160 B488) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- pntww (L22 S30 B400) We need more pet stores
+- pgcmd (L23 S131 B271) Bowling Green needs more cultural and educational establishments, like sciemce, history and art museums.
+- pgdik (L24 S21 B272) Please increase more family friendly activities
+- pmehh (L25 S2 B370) I would love to see a Texas Roadhouse in Bowling Green
+- pr4k5 (L48 S17 B454) Bowling Green should work on becoming a more food sustainable city with less food waste and food insecurity
+- puvjs (L57 S6 B521) Do SOMETHING about completing the "wrap" downtown, or at least enhance (and that includes restaurant service) what is currently there.
+- p5ctb (L59 S154 B7) We should think about moving the airport. Too much high dollar land going to waste right now.
+- pki7f (L64 S3 B356) Bowling Green needs more access to affordable , healthy, local food sources.
+- pvxt4 (L71 S10 B544) We need a health food store.
+- pe3ap (L78 S37 B8) Continue downtown development to the river. Tourists always seek out parks & restaurants near water.
+- psj6d (L83 S16 B477) Support more local chefs and brewers! White Squirrel is fantastic and I want to see more of it in BG!
+- pdcp3 (L89 S14 B220) More local produce should be incorporated into public school's lunchrooms
+- p5eg6 (L100 S19 B4) There needs to be better access to grocery stores and restaurants from WKU's campus.
+- p3cst (L115 S25 B33) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- p3285 (L123 S15 B26) We need a WHOLE FOOD store.
+- pb8qj (L200 S268 B12) Recycling services need to be expanded & improved. With growing population, think of how much land will become dump sites...Ridiculous!
+- pufe9 (L246 S435 B10) Make all future sidewalks wide enough for multi-use (walking, biking, skateboarding etc)
+- pvv6a (L247 S12 B542) Bring a discount grocer to the downtown area.
+- pz6eg (L297 S239 B11) Bike lanes that are wide enough to safely ride on without fear of being hit by passing cars.
+- prv6q (L342 S243 B1) We need an NBA team. I think we should put the arena where the airport is. Think about it.
+- pwdbv (L398 S392 B6) Some of the roads in the city are not wide enough to put sidewalks in but they do anyway catherine dr is ridiculous
+
+## #76 ppz44: the Bark Park needs more trees and water access for the smaller dogs area
+
+- p9j36 (L1 S4 B217) Better ordinances on keeping animals on leashes or in fenced areas are needed.
+- pkeaq (L2 S18 B380) Leash laws should be more strictly enforced in both the city and county
+- pgvyh (L3 S14 B13) Shade trees should be required plantings along all Greenways
+- pneud (L4 S9 B414) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- pq8wz (L5 S1 B50) BG Parks needs more funding from City
+- p7ms9 (L6 S7 B194) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pi9rk (L7 S17 B348) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pntww (L8 S6 B421) We need more pet stores
+- p59nj (L9 S2 B28) Owners of large parking lots should be required to break them up with pockets of green space and trees; perhaps create a walkable green path
+- p7438 (L10 S21 B7) The Barren River water front needs to be improved on both sides of the river and include canoeing and kayaking water features in the river.
+- pnvfb (L11 S10 B68) Bowling Green needs more pet-friendly housing options for renters.
+- pe6hw (L12 S25 B2) A kayak trail from Lampkin Park to Barren River. Improved River access.
+- pjubs (L13 S43 B11) All new and existing sidewalks should have shade trees
+- ph4wf (L14 S15 B3) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pvfj9 (L15 S5 B542) More green spaces. All of our parks have just become sports complexes!
+- p3esu (L16 S12 B73) fines for leaving dog feces in public areas needs to be enforced
+- p99xx (L17 S37 B87) BG needs to increase recycling and trash bins around the parks and parkways to decrease trash and litter
+- pxg44 (L18 S20 B102) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- p3et2 (L19 S26 B130) Relax restrictions on fencing in Home Owners Associations to promote people keeping animals on leashes or in fenced yards.
+- pcp9t (L20 S11 B262) More walking/nature trails in our sports-centric parks. Have certain hours where walkers can enjoy the beauty of Paul Walker Golf Course.
+- p5ahf (L21 S52 B154) Need more bike lanes and biker friendly resources
+- p2ya2 (L22 S31 B122) All new and existing single family housing should have at least one shade tree planting
+- pugud (L23 S24 B525) More bike trails and walking trails would be a great addition.
+- p4p8j (L24 S28 B146) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- psbcj (L25 S46 B488) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pfnxw (L26 S13 B307) City and county parks departments should provide more programming for adults and seniors.
+- p4pb4 (L28 S16 B147) Every citizen should be within 1 mile of some shaded green space.
+- pmk7t (L29 S8 B10) Too many trees have been torn down to make way for new developments. We should re-plant more trees around Bowling Green.
+- pgdik (L31 S19 B318) Please increase more family friendly activities
+- pcare (L41 S3 B18) There should never be a leash law in the county - neighborhood dogs protect, play with and teach kids. It was a factor in living in county.
+- pki7f (L42 S44 B6) Bowling Green needs more access to affordable , healthy, local food sources.
+- pp8pk (L43 S22 B427) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- prhru (L50 S23 B479) We already have a lot of parks. And the libraries have become a hangout for the homeless. Do something about that problem first
+- p9md3 (L67 S117 B1) County needs to extend water lines in Tuckertown area. About a dozen homes don't have county water or fire hydrants!
+- pv3g6 (L87 S397 B5) Tuckertown area needs fire protection. Currently rated Class 10 expensive insurance. Water lines are close by on Otter Gap & Tuckertown Rds.
+- p5eg6 (L152 S210 B8) There needs to be better access to grocery stores and restaurants from WKU's campus.
+- p9erh (L177 S163 B14) Bowling Green needs to annex a solid geographic area & thereby eliminating those areas within our city that are not receiving city services.
+- peety (L198 S438 B9) Everyone needs to research (fluoride)...definitely need this to disappear from our water
+- pknju (L216 S189 B15) The entire bypass area is an eyesore and there needs to be a concerted effort like a TIF to revitalize this crucial part of town.
+- p8iym (L375 S211 B4) Expand Nashville Rd all the way past Chaney’s & Buchanan park. Very dangerous area.. very much so for a school area & young drivers.
+- pbjm2 (L523 S406 B12) Warren County residents should not be charged the WASTE WATER SERVICE FEE on their water bills.
+
+## #77 p34uw: Both school districts shamefully manipulate low economic status parents to gain Title I funding. It should stop.
+
+- pjzz6 (L1 S1 B3) The city and county work together to keep the low socieconomic status children out of certain schools. This reduces learning opportunities.
+- puaak (L2 S5 B4) Parents should be able to send their kids to the school district of their choice no matter where they live in Bowling Green/Warren County.
+- pmiqq (L3 S6 B383) City schools should be redistricted to more evenly distribute the kids.
+- pfsk9 (L4 S2 B6) Allow parents that take their kids out of public schools to use that money in a private school.
+- pzxfe (L5 S3 B604) If private schools were to get a share of Federal or State education dollars, it would hurt public schools.
+- pf6t9 (L6 S4 B34) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pcqfp (L7 S10 B233) All schools in the county and city should work together to provide the same minimum level of education to students.
+- pra2h (L8 S8 B460) There is too much bullying in our schools that administrators are ignoring.
+- perix (L9 S7 B52) Support non-public (or public charter) school choice options, and make choice viable for families of ALL income levels.
+- pirz4 (L10 S18 B338) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- pyr6n (L11 S11 B7) Future charter schools would be a financial burden to public school funding, unless they are held to accountability by local school boards.
+- pppcy (L12 S13 B425) All public schools should have an adequate summer feeding program so no child goes hungry.
+- pcetw (L13 S17 B21) The city and county school systems should merge.
+- pgrp6 (L14 S15 B23) Unelected school board officials should not have the power to create, add, or increase "school taxes".
+- p2ib2 (L16 S12 B27) City School taxes are too high , they need to budget more
+- pqmg8 (L15 S21 B22) Low-income areas should get beautification money -- not the wealthy who can afford it themselves.
+- pmti4 (L17 S20 B2) The city & county school districts need to be re-evaluated The yards/houses that touch Potter Grays playground r all County school districts
+- ppviv (L18 S30 B431) I believe BGISD and WCS should be combined to lower tax payer overheads of multi-administration wastages
+- p5y22 (L19 S39 B120) Some local politicians abuse their power and get away with more than normal citizens.
+- pinkj (L20 S28 B335) Arts-based charter schools
+- psh7u (L21 S25 B478) Need new schools in Warren County to keep up with population growth, CTE is falling down, Drakes and Greenwood high are way overcrowded
+- pqy2d (L22 S56 B5) Every school has 1-9% homeless people. This is for the government to deal with via economic policy. Not sending to a NGO or giving a shanty
+- pc7zk (L23 S19 B30) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- picza (L24 S87 B329) City residents do not receive adequate return on County Taxes paid.
+- p6u6a (L25 S26 B16) Local government, for profit and non profits should work together on housing and economic equality
+- pxrrm (L27 S16 B580) Local schools should help make up the pension fund crisis by learning to live with budget cuts.
+- phea9 (L28 S46 B9) If strict dress codes are required, uniforms should be provided by the school system, not eat into the parents possibly small budget.
+- pw6rb (L30 S14 B549) No child should go hungry in Bowling Green / Warren County, and it is up to our officials to make sure it doesn’t happen.
+- p6wtw (L33 S24 B141) Educate high schoolers on their options after they graduate
+- pkezh (L35 S22 B8) Public school systems need to provide more funding for art education programs, such as music, theater, and visual arts.
+- pfin8 (L51 S9 B1) Community Education provides after-school care necessary to working parents. Funding should not be cut.
+- p9cba (L54 S23 B14) Reducing poverty will enhance the quality of life for everyone in our community regardless of status.
+- p6zxd (L93 S49 B12) People need to do all their research before accusing local officials of using their influence for personal gain.
+- pq8wz (L124 S122 B10) BG Parks needs more funding from City
+- pi9rk (L237 S216 B15) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pek8y (L392 S338 B11) people need to understand that a STOP sign means STOP, not just slow down and keep going.
+- pwy69 (L443 S269 B13) More sidewalks would be great, but first let’s stop people parking on them. Or stop spending money building them. Whichever.
+
+## #78 psnvi: Recreational Cannabis in KY offers tourism, increased revenue, job opportunities, and shows massive leadership in the southern region.
+
+- ptgpf (L1 S1 B3) Recreational marijuana should be legal.
+- pvdxd (L2 S3 B533) Legalizing marijuana would be a boon for the economy.
+- pr2fm (L3 S6 B24) Legalized Marijuana will not only assist Bowling Green in earning Tax revenue but will decrease the strain on our prison system. Win-Win.
+- peq9z (L4 S7 B257) Medical marijuana should be legal.
+- pemdb (L5 S4 B4) Bowling Green needs to pass a resolution in support of medical cannabis.
+- pahwq (L6 S5 B21) Legalizing marijuana at the state level could produce substantial tax revenue, but if only BG did, it would cause problems.
+- pvndx (L7 S2 B536) Industrial hemp should be re-legalized to grow in Kentucky.
+- p95zh (L8 S105 B162) There should be no punishment for small amounts of marijuana possession, in my opinion
+- p8849 (L9 S8 B145) Casinos. Bring them here.
+- pqpib (L10 S13 B451) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- p9mdn (L11 S33 B172) Marijuana should not be legalized.
+- pyr2u (L12 S196 B588) Warren county needs to be "wet". The city is wet but the county is dry.
+- pfwr5 (L13 S17 B19) Warren County should be completely wet, the idea of a “moist” County is outdated and stunting the financial growth and tourism opportunity.
+- pmz7k (L14 S99 B395) We need more regulation of opioid drugs, both prescribed and illicit.
+- p4rsn (L15 S9 B17) There is not enough done for tourism in Warren Co. We offer much more than Corvettes and we should be promoting other activities.
+- prh9c (L16 S163 B467) Solving the drug crisis should not mean people with health problems/injuries have to suffer with severe pain.
+- pi9rk (L17 S42 B325) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- p2839 (L18 S32 B15) Developing more bike trails into surrounding areas of the city would allow for a more developed both transport and recreational experiences
+- p5ahf (L19 S150 B86) Need more bike lanes and biker friendly resources
+- pd4in (L20 S31 B232) There should be a push to improve mental health awareness and availability in Bowling Green.
+- p4qh4 (L21 S16 B77) Promote access to mental health treatment, rather than treating addicts as criminals.
+- pgnkw (L22 S141 B291) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- pg99d (L23 S36 B281) Local food and small farms are one of BG best attractions.
+- pani2 (L24 S75 B184) Law enforcement should send drug possession arrestees for rehabilitation services rather than imprisonment.
+- padkd (L25 S90 B179) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p6xjr (L26 S14 B125) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pvzkv (L34 S21 B544) If people are suggesting more advertising for tourists, there needs to be things for tourists to do.
+- ph4wf (L37 S25 B304) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pe3ap (L38 S24 B243) Continue downtown development to the river. Tourists always seek out parks & restaurants near water.
+- prcqc (L39 S11 B10) More advertising should be done along I-65 to promote tourism into Bowling Green.
+- pb38d (L44 S34 B13) It is easy to find a good job in Warren County.
+- p7whc (L55 S20 B141) BG needs to develop a marketing campaign to draw Warren Co and surrounding counties to downtown for eating, shopping, and entertainment.
+- p68um (L75 S22 B14) Take advantage of the wonderful summers in KY and have more outdoor public swimming spaces
+- pfq4x (L76 S27 B6) Complete the ky. 185 restructuring project.
+- pptwk (L73 S23 B427) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- pp8pk (L112 S19 B414) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- pupnr (L118 S78 B7) city officials might look into layoff practices on jobs in bowling green ky
+- p8usw (L120 S10 B2) Local companies that can't fill job openings should recruit from parts of KY w/ high unemployment & pay relocation expenses.
+- ptahe (L127 S189 B5) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- pptye (L128 S18 B428) More concerts should be held in Bowling Green
+- p7h4t (L140 S12 B1) BG can link/support hotel/food, recreational/cultural venues in a Tourism Passport, giving discounts when at least 3 are purchased together.
+- pgyhw (L155 S15 B301) Better incorporation of university resources in community, including Kentucky Museum.
+- pfh4q (L176 S70 B12) Junking up highways/roadways with signs should not be the primary way tourism is promoted.
+- pt8p7 (L229 S210 B8) There should be more opportunities for the arts and sciences in the Housing Authority so the students there can rise above!
+- p3drm (L369 S281 B9) We need a significantly sized public library branch in the southern end of Warren County near South Warren.
+- pnqsw (L483 S460 B11) The speed limit on WKU campus should be increased from 15 miles per hour to 25 miles per hour.
+
+## #79 pe6hw: A kayak trail from Lampkin Park to Barren River. Improved River access.
+
+- p7438 (L1 S1 B1) The Barren River water front needs to be improved on both sides of the river and include canoeing and kayaking water features in the river.
+- ph4wf (L2 S2 B2) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pugud (L3 S3 B514) More bike trails and walking trails would be a great addition.
+- pp8pk (L4 S5 B9) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- p2839 (L5 S7 B35) Developing more bike trails into surrounding areas of the city would allow for a more developed both transport and recreational experiences
+- pe3ap (L6 S4 B10) Continue downtown development to the river. Tourists always seek out parks & restaurants near water.
+- p6xjr (L7 S6 B121) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- p4p8j (L8 S11 B74) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- p5ahf (L9 S12 B84) Need more bike lanes and biker friendly resources
+- p68um (L10 S13 B105) Take advantage of the wonderful summers in KY and have more outdoor public swimming spaces
+- ppz44 (L11 S21 B3) the Bark Park needs more trees and water access for the smaller dogs area
+- pcp9t (L12 S8 B217) More walking/nature trails in our sports-centric parks. Have certain hours where walkers can enjoy the beauty of Paul Walker Golf Course.
+- pi9rk (L13 S27 B319) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- psbcj (L14 S93 B471) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- puyc6 (L15 S10 B522) I hope BG can one day link the short, scattered bicycle paths.
+- p7ms9 (L16 S32 B133) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pif8h (L17 S17 B6) BG needs to redevelop from WKU to the river and beyond. Model after Greenville SC
+- p4u89 (L18 S25 B4) Have a Dual Slalom Course, Pump Track & Bike Skills Course co-located by the Low Hollow Mountain Bike Trail at Weldon Peete Park.
+- paeh8 (L19 S24 B175) Make it a walking city. Sidewalks along the main avenues (scottsville rd, campbell ln, 31 bypass) with plants, benches, art pieces.
+- padkd (L20 S69 B173) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pqy6v (L21 S118 B448) Footbridge from airport to across the street. Pilots running across the road.
+- pu4rv (L22 S74 B508) Multi-use sidewalks should have fixtures for skateboards, bikes like small ramps etc.
+- pgvyh (L23 S75 B294) Shade trees should be required plantings along all Greenways
+- pxra8 (L24 S179 B575) Downtown at the square and adjacent areas should be a pedestrian mall
+- pdhdi (L25 S28 B233) Work,with State to complete a wide loop from Scottsville Road across N I65 to N Natcher Pk way.
+- pkqjk (L30 S19 B362) More parking for Fountain Square to become a pedestrian zone.
+- pgaj7 (L41 S23 B278) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- pq8wz (L42 S22 B428) BG Parks needs more funding from City
+- pgdik (L46 S18 B280) Please increase more family friendly activities
+- pjrdt (L53 S197 B7) Improved businesses such as banks and groceries in lowest income areas
+- pki7f (L67 S41 B11) Bowling Green needs more access to affordable , healthy, local food sources.
+- p5eg6 (L80 S58 B14) There needs to be better access to grocery stores and restaurants from WKU's campus.
+- pvfj9 (L82 S14 B532) More green spaces. All of our parks have just become sports complexes!
+- pz6eg (L84 S15 B593) Bike lanes that are wide enough to safely ride on without fear of being hit by passing cars.
+- p8hra (L85 S77 B8) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- p4pb4 (L87 S16 B75) Every citizen should be within 1 mile of some shaded green space.
+- pjbzz (L93 S9 B5) Need to build wider access roads into the city!
+- pwsqv (L129 S20 B560) Water safety and swim lessons to all k-12 students.
+- pcrnf (L134 S149 B15) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- p3kb6 (L188 S101 B13) Only a traffic circle at Kereiakes Park on Fairview Ave. is required.
+- phmk4 (L244 S106 B12) Access Rd, east side of Scottsville Rd. in shopping dist causes congestion. Give right of way to access road or cross streets, not a mix!
+
+## #80 pqi69: KASPER is an invasion of privacy that contradicts what HIPAA regulations try to protect.
+
+- pit63 (L1 S11 B322) Some local doctors order too many tests.
+- prh9c (L2 S19 B458) Solving the drug crisis should not mean people with health problems/injuries have to suffer with severe pain.
+- pemdb (L3 S6 B237) Bowling Green needs to pass a resolution in support of medical cannabis.
+- px9ga (L4 S36 B567) State and federal medical societies are unable or unwilling to police their members regarding the drug dependency problem.
+- pu9z9 (L5 S128 B508) The travesty going up on Fairview Ave. should never have been allowed
+- p5y22 (L6 S27 B78) Some local politicians abuse their power and get away with more than normal citizens.
+- pmz7k (L7 S4 B383) We need more regulation of opioid drugs, both prescribed and illicit.
+- p8w2e (L8 S47 B136) Human trafficking in Bowling Green needs to be investigated by the FBI before it becomes a larger problem swept under the rug.
+- p92xj (L9 S16 B1) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- peq9z (L10 S2 B238) Medical marijuana should be legal.
+- p98ae (L11 S49 B141) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- pkkkz (L12 S99 B353) A city should have the right to declare itself a sanctuary city.
+- p8h4y (L13 S38 B127) If the state cannot provide good retirement benefits to KRS employees, the county/city should supplement the retirement with a 401k.
+- pd4in (L14 S21 B212) There should be a push to improve mental health awareness and availability in Bowling Green.
+- pr9y5 (L15 S26 B451) The Fairness Ordinance, as currently proposed, poses insufficient protection for religious conscience and should be revised accordingly.
+- pqpib (L16 S78 B440) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- pwigc (L17 S1 B552) Graves Gilbert has created a healthcare monopoly within Bowling Green and the surrounding areas.
+- pkeaq (L18 S323 B348) Leash laws should be more strictly enforced in both the city and county
+- pfaf5 (L19 S56 B247) BG police should improve officer training and should be held accountable for abuse of power.
+- phfba (L20 S54 B294) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- p9ujh (L21 S53 B150) Lease laws should be enacted and enforced in the county as they are in the city.
+- ptn8b (L22 S55 B492) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- p9j36 (L23 S201 B147) Better ordinances on keeping animals on leashes or in fenced areas are needed.
+- p3et2 (L24 S46 B28) Relax restrictions on fencing in Home Owners Associations to promote people keeping animals on leashes or in fenced yards.
+- pms9n (L25 S96 B378) Smoking should not be allowed in public parks.
+- p3wgr (L28 S5 B32) I would like to see the WKU psych and Medical programs collaborate on mental health research, which is so sadly lacking in today's society.
+- pw8ht (L32 S17 B547) Doctors should not overreact to the opioid crisis. People in pain shouldn't suffer because others lack self control and abuse the system.
+- pnmq4 (L36 S7 B392) Emergency protective orders should not be able to be obtained regarding claims of an incident from a year ago.
+- p5eeq (L52 S12 B66) Birth control should be an OTC drug- access to it in Kentucky and in Bowling Green is limited for many women.
+- pkhk2 (L59 S111 B5) Cops are overzealous in BG. So little crime they try to create trouble. Need to ease off. This city is plenty safe.
+- ptgpf (L61 S14 B489) Recreational marijuana should be legal.
+- p4qh4 (L63 S9 B50) Promote access to mental health treatment, rather than treating addicts as criminals.
+- pwsz7 (L72 S13 B561) City should bar garbage token health plans designed to prevent temp services paying $166/month Obamacare emp. fee. Let ppl get subsidy.
+- pcare (L96 S196 B3) There should never be a leash law in the county - neighborhood dogs protect, play with and teach kids. It was a factor in living in county.
+- pzwn8 (L98 S8 B603) My employer has not been responsive to reports of sexual harassment in the workplace.
+- p3fxs (L106 S22 B29) Drug information classes should be given to incoming freshmen of WKU to educate them about the risks and health hazards.
+- pvvrj (L144 S18 B539) Government should ignore criminal malfeasance/embezzlement of public funds by anyone if little or no funds can be recovered.
+- p67wb (L150 S23 B82) WKU should open its facilities to the public once or twice a month to the community, and those in need should be welcome more often.
+- pq2c7 (L174 S24 B422) We have an estimated 125,000 people but we still don't have a hospital that is trauma center and have to ship everyone to TN or Louisville.
+- pqku3 (L178 S25 B435) Officials that use social media accounts in a professional capacity should not be allowed to block constituents except under rare conditions like being threatened.
+- pvndx (L218 S3 B533) Industrial hemp should be re-legalized to grow in Kentucky.
+- pu2fx (L250 S10 B500) It should not take 3 months to get a gynecologist appointment in this city.
+- pwra8 (L267 S20 B559) Doctors over-prescribing opioids should be sentenced at least as harshly as street dealers if not more harshly due to their knowledge.
+- pqhex (L306 S152 B4) Why has the Police stop enforcing parking regulations? Park any way any direction. Is it time for a separate Traffic Enforcement Division?
+- pw6sg (L321 S15 B546) Big names and corporations get away with too much. We need fairer regulation and level playing fields for the small and big guys alike.
+- p6jxh (L505 S185 B2) Bowling Green should try to emulate Owensboro's Friday night programs downtown.
+- ptek7 (L601 S489 B6) We need grocery store competition. Kroger doesn't even try because they don't have to. I'm sick of rotten produce. Let's get a Publix!
+
+## #81 p4e3h: Public school could do alternate teaching styles(like Montessori) in a school within a school set up. Not all kids learn the same way.
+
+- pcqfp (L1 S2 B268) All schools in the county and city should work together to provide the same minimum level of education to students.
+- pf6t9 (L2 S1 B86) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pee6u (L3 S4 B291) More creative learning classes
+- puaak (L4 S6 B5) Parents should be able to send their kids to the school district of their choice no matter where they live in Bowling Green/Warren County.
+- perix (L5 S13 B7) Support non-public (or public charter) school choice options, and make choice viable for families of ALL income levels.
+- pinkj (L6 S24 B363) Arts-based charter schools
+- pmiqq (L7 S7 B13) City schools should be redistricted to more evenly distribute the kids.
+- pfsk9 (L8 S3 B1) Allow parents that take their kids out of public schools to use that money in a private school.
+- pirz4 (L9 S18 B366) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- pkezh (L10 S9 B14) Public school systems need to provide more funding for art education programs, such as music, theater, and visual arts.
+- pjzz6 (L11 S20 B383) The city and county work together to keep the low socieconomic status children out of certain schools. This reduces learning opportunities.
+- p3zeb (L12 S5 B129) Post-secondary training programs for special education students.
+- p6wtw (L13 S17 B181) Educate high schoolers on their options after they graduate
+- pqeuz (L14 S11 B40) Arts education should be available in every school in Warren County and other surrounding areas.
+- psh7u (L15 S23 B55) Need new schools in Warren County to keep up with population growth, CTE is falling down, Drakes and Greenwood high are way overcrowded
+- puqkg (L16 S31 B22) City/County schools should have a minimum one year classroom for immigrant and refugee students so they can learn english, culture and laws
+- ps8zr (L17 S27 B487) Schools should provide an opportunity for nonswimming parent/guardians to have water safety and swimming lessons in private setting.
+- p9v2v (L18 S47 B99) some children with cultural differences or dietary needs cannot eat a typical lunch at school please provide special diet options.
+- pmti4 (L19 S25 B31) The city & county school districts need to be re-evaluated The yards/houses that touch Potter Grays playground r all County school districts
+- pbbu5 (L20 S14 B33) A private (catholic) high school would be beneficial to all.
+- ps5tz (L21 S15 B41) More technical education programs for non-graduates of high school
+- pt8p7 (L22 S32 B498) There should be more opportunities for the arts and sciences in the Housing Authority so the students there can rise above!
+- pcetw (L23 S30 B21) The city and county school systems should merge.
+- pppcy (L24 S26 B51) All public schools should have an adequate summer feeding program so no child goes hungry.
+- pehyf (L25 S19 B293) The arts are an important component of K-12 education.
+- pzxfe (L27 S12 B77) If private schools were to get a share of Federal or State education dollars, it would hurt public schools.
+- pezeh (L29 S16 B302) Fewer students per teacher should be a rule. No more than 20; ideal class size of 15. Plenty of teachers are looking for work.
+- pyr6n (L30 S21 B8) Future charter schools would be a financial burden to public school funding, unless they are held to accountability by local school boards.
+- pdcp3 (L32 S29 B6) More local produce should be incorporated into public school's lunchrooms
+- pcura (L34 S10 B4) Other counties have school at home on snow days so that kids do not have to make up days. This should be considered for here.
+- pfarp (L35 S8 B306) Actually teach HS students useful things.
+- pamph (L50 S60 B2) We need more activities for families, such as a large-scale all-in-one kids play arena like All About Kids.
+- pfin8 (L64 S22 B66) Community Education provides after-school care necessary to working parents. Funding should not be cut.
+- p6quu (L78 S65 B9) There should be something a work farm for local prisoners to learn to tend gardens, take care of livestock, and learn to be more useful.
+- p6kxg (L89 S154 B3) High sugar items like pop tarts and chocolate muffins should not be a part of the public school breakfast menu
+- pbnf4 (L252 S487 B12) More nonviolent inmates convicted of drug possession should be set free.
+- pwg82 (L281 S443 B11) Emphasize that ALL immigrants should learn and speak ENGLLISH.
+- p8iym (L459 S175 B15) Expand Nashville Rd all the way past Chaney’s & Buchanan park. Very dangerous area.. very much so for a school area & young drivers.
+- prnhy (L518 S539 B10) Refugees should be required to learn and speak english.
+
+## #82 p5rtq: We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+
+- padkd (L1 S1 B25) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pkp8t (L2 S3 B1) New home zoning should be for single family dwellings rather than multi-family units (apartments).
+- puyc3 (L3 S18 B522) We need to renovate the run down businesses and store fronts, instead of building new places
+- p4p8j (L4 S8 B68) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pbm45 (L5 S5 B197) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pptbv (L6 S4 B423) We need mixed-use development in the most disadvantaged areas of BG.
+- pu9z9 (L7 S105 B512) The travesty going up on Fairview Ave. should never have been allowed
+- p5pav (L8 S10 B22) Older neighborhoods change from owner occupied to rental. Deterioration occurs. Stronger landlord/tenant laws needed!
+- pqaaf (L9 S20 B433) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- psbcj (L10 S25 B473) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- phfba (L11 S12 B9) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pwijp (L12 S60 B557) Overdevelopment of rental property is detrimental to cities. Renters do not pay property tax. Schools suffer when the tax base is eroded.
+- ptahe (L13 S45 B488) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- pjaji (L14 S6 B5) It would be great if people in neighborhoods could get to know each other better and neighborhoods were like small communities of neighbors.
+- pnukd (L15 S32 B406) Historic preservation of homes and buildings needs countywide attention to maintain our unique architectural heritage.
+- p6u6a (L16 S43 B117) Local government, for profit and non profits should work together on housing and economic equality
+- ptuye (L17 S24 B500) The population has out grown the infrastructure in bg/ warren county.
+- p3cst (L18 S2 B28) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- p64wt (L19 S28 B97) More affordable home ownership options.
+- pp2tr (L20 S21 B411) Building codes prohibiting trophy houses next to common housing
+- pneud (L21 S55 B398) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- pvdrx (L22 S11 B531) We need to make it worthwhile for builders to create more quality affordable rental units for residents, rather than more luxury units.
+- ppct5 (L23 S26 B414) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- phceg (L24 S152 B304) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pi9rk (L25 S35 B322) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pjq68 (L27 S15 B346) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- p2ya2 (L28 S114 B3) All new and existing single family housing should have at least one shade tree planting
+- phsyb (L29 S9 B313) Prevent the development of new housing areas, especially in farm land areas.
+- p7ms9 (L31 S16 B132) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pc7zk (L38 S7 B20) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pgdik (L44 S33 B8) Please increase more family friendly activities
+- pphh2 (L51 S14 B419) We should focus downtown development dollars on rehabilitation and reuse of buildings that can be done so, rather than building new.
+- pcrhx (L59 S13 B219) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pzxze (L60 S23 B6) There are not enough family-centered activities to do down town.
+- pyyxz (L79 S61 B11) Impact on traffic flow should be considered with any proposed new developments.
+- prb59 (L92 S159 B10) Require new downtown developments to become LEED certified
+- prqiv (L97 S19 B467) We need to commit more resources to the North-Northeast ends of town. Blue collar people who help make Bowling Green what is. Too neglected.
+- prb8q (L134 S289 B2) Businesses and multi-family dwellings should be required to offer and use recycling services.
+- pe3gy (L163 S22 B17) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pjbzz (L186 S17 B339) Need to build wider access roads into the city!
+- pgsds (L188 S185 B4) County volunteer fire departments need to be upgraded to fit the current population of Warren County.
+- ppviv (L212 S323 B15) I believe BGISD and WCS should be combined to lower tax payer overheads of multi-administration wastages
+- pp5rm (L214 S193 B12) No family should be homeless in Bowling Green / Warren County, and it is up to our officials to make sure they have options for shelter.
+- pu4rv (L272 S378 B13) Multi-use sidewalks should have fixtures for skateboards, bikes like small ramps etc.
+- pzkag (L496 S427 B7) An unmanned trolley system, possibly solar, might be better long term than buses for some areas.
+- ppaza (L583 S541 B14) Temp svc need to furnish the equivalent of FMLA, despite not having 50 people at one single site.
+
+## #83 p3y3b: Build more roads!!! Traffic is terrible here for a small city.
+
+- pjbzz (L1 S1 B2) Need to build wider access roads into the city!
+- p8hra (L2 S7 B36) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- pgmpv (L3 S2 B25) Something needs to be done to improve traffic flow
+- phuu3 (L4 S11 B1) The access roads off Scottsville Rd are terrible. They provide constant traffic jams and can be dangerous. We need to budget to fix them.
+- pcu64 (L5 S8 B49) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- pt76e (L6 S13 B17) Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+- pr7y3 (L7 S3 B3) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- ppe9v (L8 S77 B425) Widen Cemetry Road, Russellville Road, Lover’s Lane, Campbell Lane, The Old ByPass, and Scotsville Road from old ByPass to Natcher Parkway.
+- p89sh (L9 S23 B6) Build parking areas.
+- pck82 (L10 S9 B42) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- pvq7m (L11 S53 B543) many parts of the By-pass can and should be widened
+- pv2mh (L12 S5 B22) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- pbp7c (L13 S15 B31) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- pyyxz (L14 S10 B32) Impact on traffic flow should be considered with any proposed new developments.
+- pmbwe (L16 S55 B386) More roundabouts for intersections
+- ptuye (L15 S61 B507) The population has out grown the infrastructure in bg/ warren county.
+- pcrnf (L17 S68 B47) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- p7yd2 (L18 S37 B48) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- pmiz7 (L19 S26 B44) Traffic flow on Cavemill Rd during peek hours (3pm - 5pm)
+- pf7ei (L20 S20 B43) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pjf7t (L21 S4 B38) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pdhdi (L22 S71 B251) Work,with State to complete a wide loop from Scottsville Road across N I65 to N Natcher Pk way.
+- pfq4x (L23 S201 B287) Complete the ky. 185 restructuring project.
+- pyssw (L24 S18 B34) Some county roads, such as Hammett Hill Road, are so narrow it's hard for two cars to pass. Surely they could make them a little wider.
+- pqaaf (L25 S75 B445) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- p8tq3 (L29 S6 B176) There is too much continuous road work going on downtown. They need to get it together.
+- p5ku8 (L30 S19 B51) There needs to be a stoplight at the intersection of Shive Lane and Ken Bale Blvd to improve traffic flow. The backups there are awful.
+- pczge (L33 S16 B40) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- pu42c (L42 S22 B12) Better visibility on roads. Reflectors and better signage
+- pe3gy (L43 S12 B20) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pxg44 (L45 S17 B29) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pk7ki (L56 S21 B55) Better enforcement of traffic violations. Too many running red lights, parking in fire lanes, cell phone usage while driving
+- pnfi5 (L55 S14 B16) install traffic cameras and enforce running of stop lights. more traffic enforcement means more $$$ for the city.
+- psxq8 (L62 S67 B4) Trains blocking major roads, stopping, and shutting down all traffic. This problem needs to be solved.
+- p8ce7 (L67 S36 B5) Build and improve sidewalks in the area of Magnolia Street and 13th to Cabell Drive area for the heavy pedestrian traffic there.
+- p3j36 (L84 S24 B81) We need to block left turns on the busy parts of the by-pass so people don't block everyone else trying to turn.
+- pcrhx (L106 S25 B8) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pgpz3 (L116 S151 B11) Planning and zoning laws should change to encourage small businesses and farms.
+- pu4rv (L200 S422 B15) Multi-use sidewalks should have fixtures for skateboards, bikes like small ramps etc.
+- pg99d (L223 S208 B10) Local food and small farms are one of BG best attractions.
+- pns2r (L232 S467 B7) Farmers shouldn’t need a permit to build a fence.
+- pu3fh (L393 S476 B13) We need more things to do for ages 1-6. A children’s museum or a small science museum would be wonderful.
+- p95zh (L417 S574 B9) There should be no punishment for small amounts of marijuana possession, in my opinion
+- pc3m2 (L454 S333 B14) Locally owned, small businesses should get incentives and assistance -- not chains and outside investors.
+
+## #84 p6zxd: People need to do all their research before accusing local officials of using their influence for personal gain.
+
+- p5y22 (L1 S3 B36) Some local politicians abuse their power and get away with more than normal citizens.
+- prgqn (L2 S2 B3) City/county officials should disclose to the public via Daily News all connections they have to a project or proposal well before the vote.
+- pvpmr (L3 S4 B1) Most local officials run for office to serve the public good.
+- pfvrw (L4 S17 B20) City/County officials with connections to a project or proposal should abstain from voting on the project or proposal.
+- ptn8b (L5 S1 B10) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- pvvrj (L6 S9 B552) Government should ignore criminal malfeasance/embezzlement of public funds by anyone if little or no funds can be recovered.
+- p7eqj (L7 S5 B210) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- pjq68 (L8 S6 B92) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pw6ik (L9 S14 B6) Need term limits for all local elected officiałs
+- pt9at (L10 S27 B29) Oversight committees for projects such as TIF. Elected officials should not be able to sit on unelected boards.
+- pbstr (L11 S18 B272) Individuals should be treated equally. Higher positions or who you work for should not release anyone from responsibility of their actions.
+- pbxwr (L12 S28 B98) Planning & Zoning need to do a better job of listening & working with residents. It's not next to their house, so they don't care!
+- p72fq (L13 S56 B5) Local fuel prices need to investigated.
+- pc7zk (L14 S7 B9) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pupnr (L15 S38 B15) city officials might look into layoff practices on jobs in bowling green ky
+- p54eg (L16 S88 B166) One should not be able to literally "buy" their way into ability to vote in an election in a locality they do not live in. $ don't buy vote
+- p6u6a (L17 S24 B40) Local government, for profit and non profits should work together on housing and economic equality
+- pqqyk (L18 S8 B4) Local elected government officials should not be able to hold a seat and also be on the TIF board or other unelected boards.
+- pkgar (L19 S47 B38) District judges are biased towards large local companies to the detriment of individuals.
+- picza (L20 S69 B376) City residents do not receive adequate return on County Taxes paid.
+- pcrhx (L21 S10 B287) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pfaf5 (L22 S21 B322) BG police should improve officer training and should be held accountable for abuse of power.
+- pqcdx (L23 S20 B463) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- pmp68 (L24 S106 B426) BGMU needs to be held accountable for their rates and "averages."
+- pix44 (L25 S64 B385) Term limits should be initiated on county executives.
+- peety (L35 S203 B2) Everyone needs to research (fluoride)...definitely need this to disappear from our water
+- p92xj (L38 S13 B234) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pw6sg (L39 S11 B126) Big names and corporations get away with too much. We need fairer regulation and level playing fields for the small and big guys alike.
+- p34uw (L40 S201 B11) Both school districts shamefully manipulate low economic status parents to gain Title I funding. It should stop.
+- pgdt8 (L42 S23 B69) Consider asking low-income or disabled residents what they really need.
+- pfuyd (L50 S12 B334) big projeck in city sould be vote by people
+- pqku3 (L58 S16 B41) Officials that use social media accounts in a professional capacity should not be allowed to block constituents except under rare conditions like being threatened.
+- ph3id (L60 S15 B356) I regularly discuss politics with people I disagree with.
+- pdgcu (L74 S19 B297) The Bowling Green Daily News is too politically slanted.
+- pkta9 (L125 S22 B12) City officials need to work with WKU admin. to address the noise & public nuisance problems with the frat houses and homeowners downtown.
+- pb5iz (L126 S25 B105) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- phvk8 (L402 S315 B7) Residents using septic tanks should not be charged for waste water.
+- pcv53 (L475 S500 B14) BGMU needs to offer residential fiber internet as a UTILITY, using Chattanooga as a perfect example.
+- ppwgk (L523 S584 B8) We need to SHADE street lamps. This actually increases visibility, reduces glare, and saves energy/ money. Using LEDs would save money, too.
+- pp2r6 (L590 S467 B13) More gender-neutral bathrooms need to be seen across BG on WKU's campus, in local businesses, etc.
+
+## #85 pkcbm: BG needs more Summer weekend festivals/activities
+
+- pptye (L1 S3 B431) More concerts should be held in Bowling Green
+- pgdik (L2 S2 B6) Please increase more family friendly activities
+- ph4wf (L3 S4 B2) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pzxze (L4 S12 B3) There are not enough family-centered activities to do down town.
+- pk22m (L5 S1 B7) Publicizing more cultural activities other than the Bowling Green International Festival.
+- psebg (L6 S7 B5) More weekend activites are needed for YOUNG Seniors, who arent yet ready for Bingo nights.
+- p6xjr (L7 S8 B10) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pcq7d (L8 S14 B11) We need more activities/places to go for teenagers; basically all there is are places to eat, the mall, and the bowling alley
+- p6jxh (L9 S11 B153) Bowling Green should try to emulate Owensboro's Friday night programs downtown.
+- p68um (L10 S6 B147) Take advantage of the wonderful summers in KY and have more outdoor public swimming spaces
+- p7whc (L11 S9 B58) BG needs to develop a marketing campaign to draw Warren Co and surrounding counties to downtown for eating, shopping, and entertainment.
+- pq8wz (L12 S5 B13) BG Parks needs more funding from City
+- pkb9k (L13 S13 B25) Bowling Green needs an indoor / outdoor sports event complex/
+- p2w5z (L14 S23 B1) For a city of this size, there is too little available in the way of weekend activities for Seniors who are not ready for rocking chairs.
+- pgcmd (L15 S18 B38) Bowling Green needs more cultural and educational establishments, like sciemce, history and art museums.
+- p4p8j (L16 S43 B117) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pfnxw (L17 S19 B293) City and county parks departments should provide more programming for adults and seniors.
+- p5ahf (L18 S45 B128) Need more bike lanes and biker friendly resources
+- pg99d (L19 S16 B303) Local food and small farms are one of BG best attractions.
+- psbcj (L20 S56 B482) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pvzkv (L21 S29 B31) If people are suggesting more advertising for tourists, there needs to be things for tourists to do.
+- pamph (L22 S17 B12) We need more activities for families, such as a large-scale all-in-one kids play arena like All About Kids.
+- p7438 (L23 S69 B74) The Barren River water front needs to be improved on both sides of the river and include canoeing and kayaking water features in the river.
+- pi9rk (L24 S34 B338) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pxra8 (L25 S153 B577) Downtown at the square and adjacent areas should be a pedestrian mall
+- pif8h (L31 S25 B40) BG needs to redevelop from WKU to the river and beyond. Model after Greenville SC
+- pe9wi (L33 S10 B270) More youth programs are needed to bring the community together: volunteer organizations, community service, innovative creations labs
+- p4rsn (L34 S27 B8) There is not enough done for tourism in Warren Co. We offer much more than Corvettes and we should be promoting other activities.
+- pvfj9 (L39 S21 B539) More green spaces. All of our parks have just become sports complexes!
+- pmkq5 (L52 S50 B9) Concerts and performing arts activities must reflect the diverse racial/ethnic demographic of the city/county.
+- p6c95 (L57 S24 B14) BG needs an indoor tennis option
+- p7h4t (L70 S15 B173) BG can link/support hotel/food, recreational/cultural venues in a Tourism Passport, giving discounts when at least 3 are purchased together.
+- p5ehs (L78 S22 B57) Bowling Green needs more indoor sports facilities, particularly a large complex with multiple indoor soccer fields, for youth.
+- pbm45 (L90 S20 B229) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pppcy (L164 S212 B4) All public schools should have an adequate summer feeding program so no child goes hungry.
+- phjdj (L319 S270 B15) Bowling Green needs more competitive cable rates.
+
+## #86 pwzum: We need to replace "Room at the Inn" services with temporary decent housing connected to aid agencies for the homeless
+
+- pa9ks (L1 S1 B1) Temporary housing for the homeless in the community.
+- p6j9p (L2 S2 B2) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- pihfx (L3 S3 B10) The homeless population is getting out of hand. We need to find better methods for curtailing and rehabing and keeping them off the streets.
+- p78vr (L4 S4 B30) Build a homeless park w/tiny homes so they can live & not suffer. There should also be a main house to can receive/organize donations
+- pp5rm (L5 S5 B17) No family should be homeless in Bowling Green / Warren County, and it is up to our officials to make sure they have options for shelter.
+- pgzys (L6 S8 B350) Rental assistance programs
+- p6u6a (L7 S15 B27) Local government, for profit and non profits should work together on housing and economic equality
+- pvzzx (L8 S6 B39) Homeless people deserve full size places like studio apartments. Not tiny homes like a smurf would desire in a tiny house park.
+- pfzd6 (L9 S65 B9) If city eliminates homelessness via occupational taxes, employers of homeless people need to reimburse city via special occ. tax penalty
+- pqy2d (L10 S22 B28) Every school has 1-9% homeless people. This is for the government to deal with via economic policy. Not sending to a NGO or giving a shanty
+- pebvm (L11 S19 B31) Bowling Green should consider a program, like Ft Worth Texas's Clean Slate, in which the homeless can earn money by cleaning up the city.
+- prhru (L12 S14 B29) We already have a lot of parks. And the libraries have become a hangout for the homeless. Do something about that problem first
+- padkd (L13 S25 B12) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pq457 (L14 S27 B15) Need comprehesive probation rehab programs - include addiction treatment, life & job skills & ideas securing housing, training/job etc
+- pbm45 (L15 S9 B5) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pgdt8 (L16 S17 B63) Consider asking low-income or disabled residents what they really need.
+- pvdrx (L17 S11 B106) We need to make it worthwhile for builders to create more quality affordable rental units for residents, rather than more luxury units.
+- puyc3 (L18 S20 B82) We need to renovate the run down businesses and store fronts, instead of building new places
+- p64wt (L19 S52 B179) More affordable home ownership options.
+- pqnui (L20 S70 B470) Resources to better integrate immigrants and refugees into the community should be put into place.
+- p5ref (L21 S33 B174) Encourage connection between the wealthy and the poor
+- p8r8z (L22 S171 B223) there should be a tenant/landlord grievance department with legal assistance
+- p66dt (L23 S38 B33) The rental market prices are well beyond an affordable housing level and needs to be addressed given the number of renters in BG.
+- pqra3 (L24 S16 B111) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- pdckg (L25 S13 B288) Affordable supports for the elderly and aging population are needed in our community.
+- pvh84 (L26 S7 B548) Homelessness is for the nonprofit sector to deal with, not government.
+- pptbv (L28 S24 B58) We need mixed-use development in the most disadvantaged areas of BG.
+- pj2cj (L33 S23 B36) 7% of Paker-Bennett & 3.7% of Bristow homeless. I will pay 6 cents per $100 income to end homelessness for school-age families via Apt. $
+- pvng8 (L34 S76 B6) City had 109 homeless students in 2017, County Had 112. Housing those families temporarily is worth raising tax rate from 1.85% to 1.91%.
+- pfibi (L36 S18 B37) City should pay 1.2-1.5m per annum for all homeless k-12 student/families a studio apartment at $500 or less. fund by occ tax move to 1.91%
+- pnvfb (L42 S10 B14) Bowling Green needs more pet-friendly housing options for renters.
+- pu2qt (L65 S12 B523) More free meeting space for nonprofits.
+- pphh2 (L68 S21 B446) We should focus downtown development dollars on rehabilitation and reuse of buildings that can be done so, rather than building new.
+- pnbm2 (L193 S366 B4) Recycling services need to be improved and modernized. Current contractor uses outdated equipment, services are messy, company unresponsive.
+- pb8qj (L196 S264 B11) Recycling services need to be expanded & improved. With growing population, think of how much land will become dump sites...Ridiculous!
+- p6twv (L201 S136 B3) City Annexed areas need more city services for their tax $$.
+- pztez (L287 S395 B8) WRECC should provide internet services.
+- p4g7x (L387 S294 B13) Smallhouse Rd (at Campbell Ln) heading into town needs to be widened to have room for three lanes (left turn, straight, right turn).
+- pktbx (L392 S341 B7) Internet services should be a public municipality.
+
+## #87 ph3id: I regularly discuss politics with people I disagree with.
+
+- p6u6a (L1 S11 B95) Local government, for profit and non profits should work together on housing and economic equality
+- p5ref (L2 S30 B68) Encourage connection between the wealthy and the poor
+- padkd (L3 S41 B153) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pvpmr (L4 S2 B535) Most local officials run for office to serve the public good.
+- pjaji (L5 S3 B324) It would be great if people in neighborhoods could get to know each other better and neighborhoods were like small communities of neighbors.
+- psbcj (L6 S154 B469) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- ph4wf (L7 S15 B285) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pptwk (L8 S27 B415) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- p5y22 (L10 S6 B73) Some local politicians abuse their power and get away with more than normal citizens.
+- pgpz3 (L9 S44 B275) Planning and zoning laws should change to encourage small businesses and farms.
+- p2a8w (L11 S69 B6) Bowling Green is an excellent place to raise a family, shop, worship, get an education, and recreate. I feel safe in most places here in BG.
+- p8jmp (L12 S36 B127) Bowling Green needs to enforce the separation of church and state and impose taxes on churches that politic from the pulpit
+- pnyg7 (L13 S83 B398) The university and city should develop stronger mutually beneficial partnerships.
+- pfnxw (L14 S75 B252) City and county parks departments should provide more programming for adults and seniors.
+- pdgcu (L15 S8 B215) The Bowling Green Daily News is too politically slanted.
+- pd4in (L16 S35 B210) There should be a push to improve mental health awareness and availability in Bowling Green.
+- pjq68 (L17 S4 B332) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- p6xjr (L18 S61 B97) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- phceg (L19 S305 B288) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pkvep (L20 S20 B358) I still have to drive out of town to eat Golden Corral.
+- p5ahf (L21 S146 B56) Need more bike lanes and biker friendly resources
+- p6k4e (L22 S132 B88) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pqcdx (L23 S14 B428) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- ptahe (L24 S37 B483) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- pb38d (L25 S43 B165) It is easy to find a good job in Warren County.
+- pzaca (L30 S19 B595) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- pf6t9 (L37 S22 B243) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pgdt8 (L39 S18 B268) Consider asking low-income or disabled residents what they really need.
+- p92xj (L41 S16 B135) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pwafd (L42 S17 B548) I should be able to vote in city elections if I pay city taxes, even though I may live in the county.
+- p7eqj (L55 S7 B108) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- psmh7 (L57 S1 B1) The money I earn & spend is all done within the city limits but as a county resident I have NO voice/vote in city politics. Needs to change!
+- pb5iz (L63 S10 B167) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- pjrwf (L80 S21 B335) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- pfuyd (L90 S5 B257) big projeck in city sould be vote by people
+- ptn8b (L101 S12 B492) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- p6zxd (L151 S13 B99) People need to do all their research before accusing local officials of using their influence for personal gain.
+- py2mw (L181 S9 B580) I should be allowed to keep my yard & home in any manner I please.
+- p8tq3 (L331 S25 B130) There is too much continuous road work going on downtown. They need to get it together.
+- pqku3 (L371 S23 B435) Officials that use social media accounts in a professional capacity should not be allowed to block constituents except under rare conditions like being threatened.
+- phsyb (L445 S24 B298) Prevent the development of new housing areas, especially in farm land areas.
+
+## #88 p2a6v: Sewer should be required to be run to all new subdivisions and cost should be split between city/county water systems and builders
+
+- phvk8 (L1 S1 B21) Residents using septic tanks should not be charged for waste water.
+- p9md3 (L2 S5 B12) County needs to extend water lines in Tuckertown area. About a dozen homes don't have county water or fire hydrants!
+- pjrqx (L3 S27 B17) apartment complexes should be required to participate in recycling program
+- padkd (L4 S12 B60) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pv2a8 (L5 S11 B26) When the city tears up lawns with projects they should be required to do what it takes so that lawns are same quality they were before.
+- p6twv (L6 S38 B144) City Annexed areas need more city services for their tax $$.
+- pr7y3 (L7 S8 B45) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- phfba (L8 S10 B326) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- p9ujh (L9 S45 B193) Lease laws should be enacted and enforced in the county as they are in the city.
+- pe3gy (L10 S3 B42) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- ptuye (L11 S51 B509) The population has out grown the infrastructure in bg/ warren county.
+- p6u6a (L12 S50 B145) Local government, for profit and non profits should work together on housing and economic equality
+- pb2cb (L13 S34 B209) Recycling should be encouraged by not charging for the service
+- pdt4t (L14 S37 B260) Curbside Recycling and/or Recycle Center in South Warren County
+- prb8q (L15 S43 B31) Businesses and multi-family dwellings should be required to offer and use recycling services.
+- pmti4 (L16 S48 B404) The city & county school districts need to be re-evaluated The yards/houses that touch Potter Grays playground r all County school districts
+- prb59 (L17 S70 B37) Require new downtown developments to become LEED certified
+- p7eqj (L18 S23 B54) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- p9erh (L19 S21 B189) Bowling Green needs to annex a solid geographic area & thereby eliminating those areas within our city that are not receiving city services.
+- pv3g6 (L20 S242 B57) Tuckertown area needs fire protection. Currently rated Class 10 expensive insurance. Water lines are close by on Otter Gap & Tuckertown Rds.
+- picza (L21 S90 B341) City residents do not receive adequate return on County Taxes paid.
+- ppct5 (L22 S6 B429) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- pu9z9 (L23 S253 B521) The travesty going up on Fairview Ave. should never have been allowed
+- pb8qj (L24 S25 B215) Recycling services need to be expanded & improved. With growing population, think of how much land will become dump sites...Ridiculous!
+- psbcj (L25 S24 B483) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pxn3z (L27 S4 B3) city needs to work on water run off when we have a lot of rain.. to many places flood on roadways makes driving very dangerous..
+- p5rtq (L33 S19 B122) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- puyc3 (L36 S65 B1) We need to renovate the run down businesses and store fronts, instead of building new places
+- pcetw (L40 S109 B4) The city and county school systems should merge.
+- pzaca (L44 S18 B595) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- p7438 (L47 S53 B14) The Barren River water front needs to be improved on both sides of the river and include canoeing and kayaking water features in the river.
+- pbjm2 (L52 S2 B6) Warren County residents should not be charged the WASTE WATER SERVICE FEE on their water bills.
+- pxg44 (L58 S7 B573) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pbm45 (L64 S17 B222) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pjq68 (L65 S20 B363) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pyr2u (L69 S13 B588) Warren county needs to be "wet". The city is wet but the county is dry.
+- pfuyd (L73 S14 B296) big projeck in city sould be vote by people
+- pvdrx (L93 S15 B19) We need to make it worthwhile for builders to create more quality affordable rental units for residents, rather than more luxury units.
+- pcrhx (L98 S22 B244) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pvpmr (L122 S232 B7) Most local officials run for office to serve the public good.
+- pgpc7 (L126 S127 B11) Parking in apartment subdivisions should monitored closely by police. Parking on subdivision streets shouldn't be allowed.
+- p5ref (L144 S173 B8) Encourage connection between the wealthy and the poor
+- p9622 (L152 S16 B33) You shouldn't be required to pay County taxes if you live in the City (but not the other way around). It makes no sense.
+- pjbzz (L155 S9 B357) Need to build wider access roads into the city!
+- pps8y (L156 S157 B9) Parking on both sides of the streets in apartment subdivisions should should not be allowed and police need to enforce the law.
+- p389z (L279 S178 B10) We should be incentivizing higher paying jobs coming to BG. Cost of living is outrunning wages and it's starting to be a problem.
+- pwsqv (L288 S69 B15) Water safety and swim lessons to all k-12 students.
+- pxtgq (L354 S304 B5) We should have a commuting service between here & Nashville.
+- p49kb (L553 S364 B2) Driving in this town very dangerous, Drivers Education classes should be required for all new drivers!!!
+- prnhy (L563 S583 B13) Refugees should be required to learn and speak english.
+
+## #89 pzaca: Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+
+- pwy69 (L1 S1 B25) More sidewalks would be great, but first let’s stop people parking on them. Or stop spending money building them. Whichever.
+- pbm45 (L2 S2 B5) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pphh2 (L3 S6 B17) We should focus downtown development dollars on rehabilitation and reuse of buildings that can be done so, rather than building new.
+- pg2kz (L4 S30 B341) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- puyc3 (L5 S38 B91) We need to renovate the run down businesses and store fronts, instead of building new places
+- psbcj (L6 S8 B496) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- p8ce7 (L7 S3 B32) Build and improve sidewalks in the area of Magnolia Street and 13th to Cabell Drive area for the heavy pedestrian traffic there.
+- pv2a8 (L8 S15 B537) When the city tears up lawns with projects they should be required to do what it takes so that lawns are same quality they were before.
+- p7ms9 (L9 S25 B221) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pqaaf (L10 S42 B463) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- p2hkv (L11 S5 B2) Our sidewalks need more connectivity. It's too piecemealed and makes some areas unusable.
+- pc7zk (L12 S9 B4) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- p8tq3 (L13 S7 B80) There is too much continuous road work going on downtown. They need to get it together.
+- pufe9 (L14 S28 B24) Make all future sidewalks wide enough for multi-use (walking, biking, skateboarding etc)
+- pqmg8 (L15 S22 B40) Low-income areas should get beautification money -- not the wealthy who can afford it themselves.
+- phfba (L16 S29 B364) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pxg44 (L17 S4 B572) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pgj3y (L18 S23 B42) Install new sidewalks along major roads, like Three Springs, and city-wide bike routes, to decrease likelihood of accidents
+- ppct5 (L19 S10 B448) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- pxra8 (L20 S165 B26) Downtown at the square and adjacent areas should be a pedestrian mall
+- pe54w (L21 S37 B308) Work needs to be done on improving litter pick up and encouraging people dispose of their litter correctly.
+- pknju (L22 S32 B412) The entire bypass area is an eyesore and there needs to be a concerted effort like a TIF to revitalize this crucial part of town.
+- pcrnf (L23 S104 B289) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- pf7ei (L24 S78 B326) Connect business parking lots to reduce unnecessary traffic on main roadways
+- p8hra (L25 S63 B233) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- paeh8 (L27 S12 B43) Make it a walking city. Sidewalks along the main avenues (scottsville rd, campbell ln, 31 bypass) with plants, benches, art pieces.
+- pr7y3 (L32 S11 B41) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- pp8pk (L35 S14 B446) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- pv2mh (L38 S16 B49) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- puhdq (L40 S24 B531) New buildings should not be built right up to the sidewalk to inhibit seeing around corners when driving.
+- pgaj7 (L43 S18 B18) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- p3bwu (L44 S200 B3) The city should actually time stoplights correctly during rush hour to prevent complete gridlock
+- p78pt (L45 S72 B15) Sidewalks are needed along Gary Farms Blvd
+- ph4wf (L47 S19 B360) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- p6xjr (L53 S17 B211) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pck82 (L54 S71 B1) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- pmk7t (L57 S21 B427) Too many trees have been torn down to make way for new developments. We should re-plant more trees around Bowling Green.
+- pptbv (L69 S35 B7) We need mixed-use development in the most disadvantaged areas of BG.
+- ppegh (L71 S52 B12) Holly drive needs sidewalks
+- pjubs (L83 S176 B13) All new and existing sidewalks should have shade trees
+- prqiv (L114 S13 B98) We need to commit more resources to the North-Northeast ends of town. Blue collar people who help make Bowling Green what is. Too neglected.
+- p6twv (L146 S289 B6) City Annexed areas need more city services for their tax $$.
+- pjbzz (L154 S20 B63) Need to build wider access roads into the city!
+- paak8 (L323 S270 B9) There is no reason not to spend 6 cents per $100 to eliminate homelessness for hundreds of school children.
+- p6fag (L338 S330 B11) We need to grow the internet infrastructure particularly in growing areas of the county like Alvaton.
+- psmh7 (L347 S204 B14) The money I earn & spend is all done within the city limits but as a county resident I have NO voice/vote in city politics. Needs to change!
+- ppwgk (L382 S440 B10) We need to SHADE street lamps. This actually increases visibility, reduces glare, and saves energy/ money. Using LEDs would save money, too.
+- pfarp (L578 S458 B8) Actually teach HS students useful things.
+
+## #90 ptwgu: Refugee neighbors enrich our city's landscape and we should find more ways to welcome and integrate them into the life of the city.
+
+- phdiq (L1 S1 B3) Refugees and immigrants are welcome next door.
+- pqnui (L2 S2 B4) Resources to better integrate immigrants and refugees into the community should be put into place.
+- pqe94 (L3 S3 B7) Bowling Green's refugee, immigrant, and international student population improves the university and the community.
+- pnv7k (L4 S4 B401) Our local immigrant population has, overall, been a benefit to our city and county.
+- puqkg (L5 S7 B11) City/County schools should have a minimum one year classroom for immigrant and refugee students so they can learn english, culture and laws
+- pkkkz (L6 S15 B356) A city should have the right to declare itself a sanctuary city.
+- p5ref (L7 S31 B85) Encourage connection between the wealthy and the poor
+- p6u6a (L8 S24 B109) Local government, for profit and non profits should work together on housing and economic equality
+- pjaji (L9 S6 B10) It would be great if people in neighborhoods could get to know each other better and neighborhoods were like small communities of neighbors.
+- prnhy (L10 S5 B462) Refugees should be required to learn and speak english.
+- pb6y8 (L11 S12 B1) The arts enrich our city.
+- pr4k5 (L12 S57 B449) Bowling Green should work on becoming a more food sustainable city with less food waste and food insecurity
+- padkd (L13 S8 B166) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p6k4e (L14 S13 B16) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- p9cba (L15 S38 B12) Reducing poverty will enhance the quality of life for everyone in our community regardless of status.
+- pf6t9 (L16 S42 B252) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pptwk (L17 S39 B419) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- p92ce (L18 S147 B148) People in Bowling Green should not be discriminated against based on their sexual orientation.
+- ph4wf (L19 S23 B14) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pg99d (L20 S105 B272) Local food and small farms are one of BG best attractions.
+- pwzum (L21 S70 B565) We need to replace "Room at the Inn" services with temporary decent housing connected to aid agencies for the homeless
+- p5rtq (L22 S10 B87) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- pa9ks (L23 S20 B164) Temporary housing for the homeless in the community.
+- pwg82 (L24 S49 B551) Emphasize that ALL immigrants should learn and speak ENGLLISH.
+- pnyg7 (L25 S28 B403) The university and city should develop stronger mutually beneficial partnerships.
+- p6j9p (L27 S21 B102) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- pgdt8 (L37 S18 B277) Consider asking low-income or disabled residents what they really need.
+- pihfx (L38 S19 B15) The homeless population is getting out of hand. We need to find better methods for curtailing and rehabing and keeping them off the streets.
+- pk22m (L43 S22 B344) Publicizing more cultural activities other than the Bowling Green International Festival.
+- pbm45 (L50 S9 B189) We need to focus more on the existing housing in BG, including renovations and improvements.
+- p67wb (L56 S50 B9) WKU should open its facilities to the public once or twice a month to the community, and those in need should be welcome more often.
+- pnvfb (L57 S16 B402) Bowling Green needs more pet-friendly housing options for renters.
+- pc7zk (L58 S11 B201) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pptbv (L65 S14 B418) We need mixed-use development in the most disadvantaged areas of BG.
+- pb38d (L74 S144 B2) It is easy to find a good job in Warren County.
+- p3cst (L134 S17 B37) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- ppsfb (L285 S348 B5) Greek Life should be monitored on WKU's campus.
+- pbx3e (L290 S130 B6) Zoning changes should only be made with the consent of a majority of the neighbors in the affected area.
+- pjbzz (L333 S25 B330) Need to build wider access roads into the city!
+- pd3p9 (L432 S305 B13) Better parking around the square would draw in more college students who like to shop but can not find parking downtown.
+- p6tet (L480 S431 B8) Hawaii outlaws billboards tokeep the landscape from being blocked I would love to see Bowling Green billboard free
+
+## #91 p35n3: The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+
+- pvq7m (L1 S10 B7) many parts of the By-pass can and should be widened
+- p5e8k (L2 S2 B6) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- p7yd2 (L3 S3 B3) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- p8hra (L4 S1 B2) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- p4g7x (L5 S18 B10) Smallhouse Rd (at Campbell Ln) heading into town needs to be widened to have room for three lanes (left turn, straight, right turn).
+- pjbzz (L6 S12 B362) Need to build wider access roads into the city!
+- pwigz (L7 S6 B21) Scottsville Rd should be 4+ lanes between I-65 & Lovers Lane, get rid of the service Rd.
+- ppe9v (L8 S16 B14) Widen Cemetry Road, Russellville Road, Lover’s Lane, Campbell Lane, The Old ByPass, and Scotsville Road from old ByPass to Natcher Parkway.
+- pgmpv (L9 S13 B41) Something needs to be done to improve traffic flow
+- ptbq2 (L10 S11 B502) With a circle, widen Fairview with a left-turn lane west of cemetery.
+- phmk4 (L11 S5 B12) Access Rd, east side of Scottsville Rd. in shopping dist causes congestion. Give right of way to access road or cross streets, not a mix!
+- pcrnf (L12 S9 B20) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- phuu3 (L13 S8 B24) The access roads off Scottsville Rd are terrible. They provide constant traffic jams and can be dangerous. We need to budget to fix them.
+- peddm (L14 S37 B11) The intersection at Taco Bell and KFC is a nightmare
+- pdhdi (L15 S4 B8) Work,with State to complete a wide loop from Scottsville Road across N I65 to N Natcher Pk way.
+- p5ku8 (L16 S28 B9) There needs to be a stoplight at the intersection of Shive Lane and Ken Bale Blvd to improve traffic flow. The backups there are awful.
+- pcu64 (L17 S15 B73) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- pmbwe (L18 S30 B393) More roundabouts for intersections
+- p2hhq (L19 S26 B4) The feeder road at Shive Lane and Scottsville Road need to be closed off. It is very dangerous.
+- pauwi (L20 S29 B1) The Smokey Bones entrance off of Scottsville Road is extremely dangerous and needs a traffic light.
+- pf7ei (L21 S27 B294) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pr7y3 (L22 S17 B470) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- pjf7t (L23 S36 B364) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pfq4x (L24 S121 B304) Complete the ky. 185 restructuring project.
+- pwj8w (L25 S24 B28) Five lane Cemetery Road from Interchange to By Pass, except four lanes through the Cemetery with median prohibiting left turns.
+- pi9rk (L27 S23 B346) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pbp7c (L28 S7 B5) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- pcuww (L31 S20 B263) Why isn't Nashville Rd between the roundabout and Campbell Ln wider? Getting stuck there at 5 o'clock is a plague.
+- pyssw (L32 S21 B22) Some county roads, such as Hammett Hill Road, are so narrow it's hard for two cars to pass. Surely they could make them a little wider.
+- pyyxz (L33 S25 B591) Impact on traffic flow should be considered with any proposed new developments.
+- pyei4 (L34 S14 B25) The LEFT turning light at Nashville onto Dishman & the same for Scottsville onto Lovers Ln.. need to be longer to allow more to go through.
+- pv2mh (L35 S22 B536) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- prjzc (L72 S19 B15) Go to underground utilities. Scottsville rd and the by-pass look awful.
+- pq2c7 (L92 S42 B13) We have an estimated 125,000 people but we still don't have a hospital that is trauma center and have to ship everyone to TN or Louisville.
+
+## #92 pr7y3: New developments should help pay to widen the roads in the areas where they are increasing traffic.
+
+- pyyxz (L1 S2 B1) Impact on traffic flow should be considered with any proposed new developments.
+- pe3gy (L2 S1 B2) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pjbzz (L3 S4 B17) Need to build wider access roads into the city!
+- p8hra (L4 S10 B68) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- pgmpv (L5 S3 B43) Something needs to be done to improve traffic flow
+- pvq7m (L6 S13 B551) many parts of the By-pass can and should be widened
+- p3y3b (L7 S7 B5) Build more roads!!! Traffic is terrible here for a small city.
+- pcu64 (L8 S8 B101) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- pcrnf (L9 S39 B96) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- pjkts (L10 S35 B386) Highway exits spur development, which would likely lead to undesireable suburban sprawl.
+- p35n3 (L11 S95 B123) The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+- pf7ei (L12 S17 B83) Connect business parking lots to reduce unnecessary traffic on main roadways
+- phuu3 (L13 S19 B16) The access roads off Scottsville Rd are terrible. They provide constant traffic jams and can be dangerous. We need to budget to fix them.
+- p5e8k (L14 S18 B160) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- ppe9v (L15 S56 B27) Widen Cemetry Road, Russellville Road, Lover’s Lane, Campbell Lane, The Old ByPass, and Scotsville Road from old ByPass to Natcher Parkway.
+- pjf7t (L16 S6 B74) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pt76e (L17 S22 B25) Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+- p4g7x (L18 S44 B142) Smallhouse Rd (at Campbell Ln) heading into town needs to be widened to have room for three lanes (left turn, straight, right turn).
+- puhdq (L19 S30 B65) New buildings should not be built right up to the sidewalk to inhibit seeing around corners when driving.
+- ptuye (L20 S50 B518) The population has out grown the infrastructure in bg/ warren county.
+- p69et (L21 S14 B87) The bypass area must be developed and utilized for new businesses and attractive structures. It is a neglected area that is losing business.
+- p7yd2 (L22 S83 B100) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- pyssw (L23 S9 B63) Some county roads, such as Hammett Hill Road, are so narrow it's hard for two cars to pass. Surely they could make them a little wider.
+- pdhdi (L24 S36 B286) Work,with State to complete a wide loop from Scottsville Road across N I65 to N Natcher Pk way.
+- pcp4z (L25 S171 B270) Louisville rd area needs more businesses and restaurants extending out towards the factories to also bring in revenue from Edmonson Co.
+- pi9rk (L27 S25 B366) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pv2mh (L28 S5 B10) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- pgj3y (L29 S85 B14) Install new sidewalks along major roads, like Three Springs, and city-wide bike routes, to decrease likelihood of accidents
+- pzaca (L31 S16 B72) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- padkd (L33 S21 B97) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- p7eqj (L39 S75 B8) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- pczge (L41 S12 B81) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- pxg44 (L45 S15 B50) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- ptbq2 (L58 S62 B15) With a circle, widen Fairview with a left-turn lane west of cemetery.
+- p6k4e (L63 S59 B12) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- p3cst (L68 S20 B42) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- pjq68 (L70 S24 B387) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pc7ap (L72 S74 B9) BG needs to install traffic cameras that help police intersections like Gallatin, TN. This would reduce accidents, traffic flow and add $
+- phsyb (L77 S23 B6) Prevent the development of new housing areas, especially in farm land areas.
+- p8tq3 (L79 S11 B215) There is too much continuous road work going on downtown. They need to get it together.
+- prb59 (L92 S313 B4) Require new downtown developments to become LEED certified
+- pnkss (L107 S34 B3) Warren county needs to be more proactive about keeping their county maps up to date of new roads or developments especially online. (Google)
+- pmk7t (L137 S96 B7) Too many trees have been torn down to make way for new developments. We should re-plant more trees around Bowling Green.
+- psxq8 (L213 S202 B11) Trains blocking major roads, stopping, and shutting down all traffic. This problem needs to be solved.
+- ph8pr (L239 S200 B13) Residential Parking Permits for areas near WKU. We can rescue our yards from parking. We pay property taxes for the students' convenience,
+
+## #93 pd3p9: Better parking around the square would draw in more college students who like to shop but can not find parking downtown.
+
+- pkqjk (L1 S1 B4) More parking for Fountain Square to become a pedestrian zone.
+- pj74t (L2 S3 B6) Parking on the WKU campus should be more accessible to students and visitors.
+- pq3ad (L3 S2 B11) More parking downtown. There are too many reserved spaces which should be available in the evening.
+- p89sh (L4 S4 B27) Build parking areas.
+- pxra8 (L5 S10 B3) Downtown at the square and adjacent areas should be a pedestrian mall
+- p5at5 (L6 S5 B9) Downtown redevelopment should retain accessible parking for existing businesses.
+- p5yca (L8 S11 B51) WKU should consider building a parking structure at the Chestnut St lot.
+- pv68d (L7 S7 B5) The downtown district, especially Fountain Square, should have more retail businesses, not offices.
+- p8zq7 (L9 S14 B12) Build parking garage behind Spencer’s, remove some parking from Ft. Square. Add a green space on top of garage! Soccer field or rooftop food
+- pgpc7 (L10 S13 B30) Parking in apartment subdivisions should monitored closely by police. Parking on subdivision streets shouldn't be allowed.
+- p5eg6 (L11 S17 B54) There needs to be better access to grocery stores and restaurants from WKU's campus.
+- pcrnf (L12 S41 B274) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- pf7ei (L13 S6 B59) Connect business parking lots to reduce unnecessary traffic on main roadways
+- ph8pr (L14 S8 B14) Residential Parking Permits for areas near WKU. We can rescue our yards from parking. We pay property taxes for the students' convenience,
+- pi9rk (L15 S20 B361) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- phc7j (L16 S9 B25) Parking lots should be monitored to prevent illegal parking in handicap spaces.
+- p6xjr (L17 S19 B60) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- p59nj (L18 S18 B83) Owners of large parking lots should be required to break them up with pockets of green space and trees; perhaps create a walkable green path
+- pqr9z (L19 S16 B31) Extra police, or parking enforcement unit should be on duty during events to maintain legal parking
+- pqra3 (L20 S25 B19) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- puvmn (L21 S89 B29) Free WIFI in certain areas - particularly around Fountain Squre
+- pps8y (L22 S12 B66) Parking on both sides of the streets in apartment subdivisions should should not be allowed and police need to enforce the law.
+- psbcj (L23 S74 B17) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pgmpv (L24 S30 B333) Something needs to be done to improve traffic flow
+- p4p8j (L25 S46 B24) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- phceg (L26 S54 B1) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- p7whc (L27 S21 B8) BG needs to develop a marketing campaign to draw Warren Co and surrounding counties to downtown for eating, shopping, and entertainment.
+- pk47i (L31 S15 B10) The downtown parking garage has been an eyesore for years. It's embarrassing, so fix it!
+- pek7k (L40 S64 B7) Provide a food assistance program for college students as students lots of times do not qualify for food stamps due to living on campus
+- picqu (L42 S31 B2) Make areas around WKU's campus livable for college students. Eliminating section 8 housing will lead to less crime & lower cost of attendance.
+- pwy69 (L53 S22 B72) More sidewalks would be great, but first let’s stop people parking on them. Or stop spending money building them. Whichever.
+- pvv6a (L67 S23 B32) Bring a discount grocer to the downtown area.
+- puvjs (L68 S24 B65) Do SOMETHING about completing the "wrap" downtown, or at least enhance (and that includes restaurant service) what is currently there.
+- pb38d (L229 S280 B15) It is easy to find a good job in Warren County.
+- pihfx (L339 S286 B13) The homeless population is getting out of hand. We need to find better methods for curtailing and rehabing and keeping them off the streets.
+
+## #94 p8zq7: Build parking garage behind Spencer’s, remove some parking from Ft. Square. Add a green space on top of garage! Soccer field or rooftop food
+
+- pkqjk (L1 S2 B3) More parking for Fountain Square to become a pedestrian zone.
+- p89sh (L2 S1 B1) Build parking areas.
+- pd3p9 (L3 S3 B4) Better parking around the square would draw in more college students who like to shop but can not find parking downtown.
+- p5yca (L4 S5 B38) WKU should consider building a parking structure at the Chestnut St lot.
+- pq3ad (L5 S4 B37) More parking downtown. There are too many reserved spaces which should be available in the evening.
+- p59nj (L6 S7 B5) Owners of large parking lots should be required to break them up with pockets of green space and trees; perhaps create a walkable green path
+- pi9rk (L7 S12 B327) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pxra8 (L8 S22 B13) Downtown at the square and adjacent areas should be a pedestrian mall
+- pneud (L9 S16 B17) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- pk47i (L10 S6 B2) The downtown parking garage has been an eyesore for years. It's embarrassing, so fix it!
+- p5at5 (L11 S14 B36) Downtown redevelopment should retain accessible parking for existing businesses.
+- p7ms9 (L12 S8 B45) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pj74t (L13 S11 B32) Parking on the WKU campus should be more accessible to students and visitors.
+- pf7ei (L14 S10 B41) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pv68d (L15 S23 B23) The downtown district, especially Fountain Square, should have more retail businesses, not offices.
+- pkb9k (L16 S20 B358) Bowling Green needs an indoor / outdoor sports event complex/
+- p3y2u (L17 S15 B43) Greenwood Mall parking lot could become a cooperative solar collection for itself and home surrounding
+- pvfj9 (L18 S9 B534) More green spaces. All of our parks have just become sports complexes!
+- padkd (L19 S30 B185) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pgpc7 (L20 S27 B27) Parking in apartment subdivisions should monitored closely by police. Parking on subdivision streets shouldn't be allowed.
+- p5ehs (L21 S18 B15) Bowling Green needs more indoor sports facilities, particularly a large complex with multiple indoor soccer fields, for youth.
+- puvmn (L22 S97 B522) Free WIFI in certain areas - particularly around Fountain Squre
+- p6xjr (L23 S29 B135) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pr4tz (L24 S57 B454) Greenwood Mall should be remodeled to attract more buyers.
+- psbcj (L25 S46 B474) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pp8pk (L27 S13 B34) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- pwy69 (L42 S24 B44) More sidewalks would be great, but first let’s stop people parking on them. Or stop spending money building them. Whichever.
+- pr4k5 (L51 S88 B6) Bowling Green should work on becoming a more food sustainable city with less food waste and food insecurity
+- phc7j (L58 S17 B22) Parking lots should be monitored to prevent illegal parking in handicap spaces.
+- puvjs (L60 S21 B521) Do SOMETHING about completing the "wrap" downtown, or at least enhance (and that includes restaurant service) what is currently there.
+- pu2qt (L71 S127 B7) More free meeting space for nonprofits.
+- pjbzz (L72 S25 B12) Need to build wider access roads into the city!
+- p4pb4 (L82 S36 B8) Every citizen should be within 1 mile of some shaded green space.
+- ph8pr (L85 S19 B29) Residential Parking Permits for areas near WKU. We can rescue our yards from parking. We pay property taxes for the students' convenience,
+- p3y3b (L96 S106 B11) Build more roads!!! Traffic is terrible here for a small city.
+- p3285 (L212 S234 B9) We need a WHOLE FOOD store.
+- pvxt4 (L277 S205 B10) We need a health food store.
+- pns2r (L316 S385 B14) Farmers shouldn’t need a permit to build a fence.
+
+## #95 pj2cj: 7% of Paker-Bennett & 3.7% of Bristow homeless. I will pay 6 cents per $100 income to end homelessness for school-age families via Apt. $
+
+- paak8 (L1 S1 B1) There is no reason not to spend 6 cents per $100 to eliminate homelessness for hundreds of school children.
+- pvng8 (L2 S3 B7) City had 109 homeless students in 2017, County Had 112. Housing those families temporarily is worth raising tax rate from 1.85% to 1.91%.
+- pfibi (L3 S2 B3) City should pay 1.2-1.5m per annum for all homeless k-12 student/families a studio apartment at $500 or less. fund by occ tax move to 1.91%
+- p6j9p (L4 S5 B50) I would like to see more aid for the homeless whether: tiny house park, health clinic, rehabilitation, job readiness sources.
+- pp5rm (L5 S7 B20) No family should be homeless in Bowling Green / Warren County, and it is up to our officials to make sure they have options for shelter.
+- pqy2d (L6 S4 B8) Every school has 1-9% homeless people. This is for the government to deal with via economic policy. Not sending to a NGO or giving a shanty
+- pfzd6 (L7 S13 B5) If city eliminates homelessness via occupational taxes, employers of homeless people need to reimburse city via special occ. tax penalty
+- pa9ks (L8 S8 B13) Temporary housing for the homeless in the community.
+- pihfx (L9 S6 B47) The homeless population is getting out of hand. We need to find better methods for curtailing and rehabing and keeping them off the streets.
+- p78vr (L10 S9 B39) Build a homeless park w/tiny homes so they can live & not suffer. There should also be a main house to can receive/organize donations
+- p6u6a (L11 S19 B147) Local government, for profit and non profits should work together on housing and economic equality
+- pgzys (L12 S15 B310) Rental assistance programs
+- pwzum (L13 S12 B41) We need to replace "Room at the Inn" services with temporary decent housing connected to aid agencies for the homeless
+- p4r2w (L14 S130 B101) Enact rent control laws to stabilize the constant increase in rates.
+- p66dt (L15 S24 B130) The rental market prices are well beyond an affordable housing level and needs to be addressed given the number of renters in BG.
+- p64wt (L16 S21 B129) More affordable home ownership options.
+- p6r2s (L17 S46 B143) Rental property taxes should be reduced for private landlords to encourage them to develop more, as opposed to large ones like Chandler.
+- pebvm (L19 S14 B40) Bowling Green should consider a program, like Ft Worth Texas's Clean Slate, in which the homeless can earn money by cleaning up the city.
+- pek7k (L18 S33 B267) Provide a food assistance program for college students as students lots of times do not qualify for food stamps due to living on campus
+- pvzzx (L20 S11 B55) Homeless people deserve full size places like studio apartments. Not tiny homes like a smurf would desire in a tiny house park.
+- p9cba (L21 S16 B188) Reducing poverty will enhance the quality of life for everyone in our community regardless of status.
+- pdckg (L22 S31 B248) Affordable supports for the elderly and aging population are needed in our community.
+- pgaj7 (L23 S30 B292) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- psppu (L24 S27 B487) Higher minimum wage
+- pgdt8 (L25 S20 B15) Consider asking low-income or disabled residents what they really need.
+- pvh84 (L27 S10 B9) Homelessness is for the nonprofit sector to deal with, not government.
+- pqmg8 (L31 S25 B18) Low-income areas should get beautification money -- not the wealthy who can afford it themselves.
+- piq5m (L32 S34 B11) Job training programs for lower income
+- perix (L33 S75 B2) Support non-public (or public charter) school choice options, and make choice viable for families of ALL income levels.
+- pf6t9 (L34 S23 B6) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pjrdt (L39 S43 B14) Improved businesses such as banks and groceries in lowest income areas
+- pbm45 (L40 S22 B217) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pnvfb (L43 S17 B414) Bowling Green needs more pet-friendly housing options for renters.
+- picqu (L56 S18 B332) Make areas around WKU's campus livable for college students. Eliminating section 8 housing will lead to less crime & lower cost of attendance.
+- pb8a2 (L283 S127 B4) We need to offer free full panel STD testing to students and low income families
+- p3drm (L491 S265 B12) We need a significantly sized public library branch in the southern end of Warren County near South Warren.
+- paxv3 (L523 S522 B10) competition for cable companies and an end to heir price gouging.
+
+## #96 p6wtw: Educate high schoolers on their options after they graduate
+
+- ps5tz (L1 S2 B11) More technical education programs for non-graduates of high school
+- phceg (L2 S5 B297) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pjrwf (L3 S1 B343) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- phhdw (L4 S10 B301) The main purpose of higher education is job training.
+- pwnap (L5 S6 B558) Invest in the youth.
+- p8e6q (L6 S15 B140) Recruit and retain the best k-13 teachers graduating from WKU
+- pz3q2 (L7 S7 B592) WKU and local community colleges should continue to offer courses that interest those seeking an education, whether or not the courses aid in job placement.
+- pirz4 (L8 S13 B326) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- p3zeb (L9 S8 B54) Post-secondary training programs for special education students.
+- piq5m (L10 S20 B324) Job training programs for lower income
+- psh7u (L11 S16 B21) Need new schools in Warren County to keep up with population growth, CTE is falling down, Drakes and Greenwood high are way overcrowded
+- pfarp (L12 S3 B255) Actually teach HS students useful things.
+- pee6u (L13 S18 B241) More creative learning classes
+- pikyq (L14 S51 B321) We a true junior college which offers credit / non credit courses like many other states from basket weaving to cyber security
+- ptcr8 (L15 S14 B487) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- pinkj (L16 S40 B323) Arts-based charter schools
+- pqeuz (L17 S11 B435) Arts education should be available in every school in Warren County and other surrounding areas.
+- pe9wi (L18 S17 B237) More youth programs are needed to bring the community together: volunteer organizations, community service, innovative creations labs
+- p4xau (L19 S25 B73) Require 4 yr HS lifeskills class, how to: family finance, file tax, repair/maintain car, repair/maintain home, cook/sew, apply/interview job
+- pcqfp (L20 S4 B212) All schools in the county and city should work together to provide the same minimum level of education to students.
+- pt8p7 (L21 S26 B482) There should be more opportunities for the arts and sciences in the Housing Authority so the students there can rise above!
+- perix (L22 S36 B26) Support non-public (or public charter) school choice options, and make choice viable for families of ALL income levels.
+- puaak (L23 S12 B510) Parents should be able to send their kids to the school district of their choice no matter where they live in Bowling Green/Warren County.
+- pcvs4 (L24 S35 B219) Institute a business development grant that encourages WKU grads to stay in Bowling Green by starting local businesses.
+- pek7k (L25 S50 B245) Provide a food assistance program for college students as students lots of times do not qualify for food stamps due to living on campus
+- pbbu5 (L26 S24 B5) A private (catholic) high school would be beneficial to all.
+- pptwk (L27 S19 B419) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- pehyf (L28 S21 B243) The arts are an important component of K-12 education.
+- pf6t9 (L31 S9 B24) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- p2ib2 (L44 S53 B4) City School taxes are too high , they need to budget more
+- p5ryp (L45 S27 B6) After school activity centers for youth with later hours of operation.
+- pmiqq (L50 S23 B373) City schools should be redistricted to more evenly distribute the kids.
+- p64wt (L61 S90 B1) More affordable home ownership options.
+- pmjk5 (L65 S94 B2) More public transportation options--be creative
+- pqpib (L74 S158 B14) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- p2wk5 (L86 S63 B8) There should be more healthy food options near/on campus of WKU.
+- p3fxs (L89 S142 B3) Drug information classes should be given to incoming freshmen of WKU to educate them about the risks and health hazards.
+- pif8h (L90 S113 B7) BG needs to redevelop from WKU to the river and beyond. Model after Greenville SC
+- peizm (L106 S22 B244) Driver’s education needs to be more thorough and mandatory before 16 year olds are even allowed to drive home from the courthouse.
+- p9ivq (L123 S47 B9) Bowling Green should have more healthy/clean eating options for those who have limited diets.
+- pfin8 (L138 S31 B13) Community Education provides after-school care necessary to working parents. Funding should not be cut.
+- pnvfb (L249 S159 B10) Bowling Green needs more pet-friendly housing options for renters.
+- pxrds (L256 S256 B15) There should be gender-neutral housing options on WKU's campus for LGBTQ+ students.
+- pp5rm (L272 S186 B12) No family should be homeless in Bowling Green / Warren County, and it is up to our officials to make sure they have options for shelter.
+
+## #97 p6xjr: The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+
+- ph4wf (L1 S2 B47) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pe3ap (L2 S1 B5) Continue downtown development to the river. Tourists always seek out parks & restaurants near water.
+- p7438 (L3 S6 B141) The Barren River water front needs to be improved on both sides of the river and include canoeing and kayaking water features in the river.
+- pxra8 (L4 S16 B21) Downtown at the square and adjacent areas should be a pedestrian mall
+- pv68d (L5 S3 B30) The downtown district, especially Fountain Square, should have more retail businesses, not offices.
+- p4p8j (L6 S13 B11) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pif8h (L7 S31 B335) BG needs to redevelop from WKU to the river and beyond. Model after Greenville SC
+- padkd (L8 S14 B185) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pp8pk (L9 S10 B419) Develop the Greenway so that the paved trail is continuous and reaches major parts of the city including the square, WKU, GM, and others.
+- p7whc (L10 S4 B4) BG needs to develop a marketing campaign to draw Warren Co and surrounding counties to downtown for eating, shopping, and entertainment.
+- p5at5 (L11 S9 B25) Downtown redevelopment should retain accessible parking for existing businesses.
+- p6k4e (L13 S15 B128) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pcp4z (L12 S109 B43) Louisville rd area needs more businesses and restaurants extending out towards the factories to also bring in revenue from Edmonson Co.
+- p6jxh (L14 S7 B1) Bowling Green should try to emulate Owensboro's Friday night programs downtown.
+- p69et (L15 S29 B2) The bypass area must be developed and utilized for new businesses and attractive structures. It is a neglected area that is losing business.
+- p2839 (L16 S37 B12) Developing more bike trails into surrounding areas of the city would allow for a more developed both transport and recreational experiences
+- pzxze (L17 S11 B10) There are not enough family-centered activities to do down town.
+- pgcmd (L19 S107 B291) Bowling Green needs more cultural and educational establishments, like sciemce, history and art museums.
+- pkcbm (L18 S62 B15) BG needs more Summer weekend festivals/activities
+- pgdik (L20 S18 B13) Please increase more family friendly activities
+- puvjs (L21 S8 B38) Do SOMETHING about completing the "wrap" downtown, or at least enhance (and that includes restaurant service) what is currently there.
+- pi9rk (L22 S42 B332) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- puyc3 (L23 S48 B529) We need to renovate the run down businesses and store fronts, instead of building new places
+- pzj5g (L24 S28 B7) I would like to see part of the downtown area converted to an "art district". Something similar to the Wynnwood Walls in Miami, FL.
+- p7ms9 (L25 S51 B149) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- pkqjk (L26 S24 B374) More parking for Fountain Square to become a pedestrian zone.
+- pphh2 (L34 S5 B37) We should focus downtown development dollars on rehabilitation and reuse of buildings that can be done so, rather than building new.
+- pq3ad (L35 S25 B27) More parking downtown. There are too many reserved spaces which should be available in the evening.
+- p3cst (L37 S12 B65) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- pptbv (L43 S22 B430) We need mixed-use development in the most disadvantaged areas of BG.
+- pcrhx (L45 S20 B229) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pjq68 (L73 S19 B356) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pzaca (L86 S23 B597) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- pk22m (L109 S21 B14) Publicizing more cultural activities other than the Bowling Green International Festival.
+- px7xx (L110 S89 B6) Bowling Green is in need of an ice rink for recreation and sport.
+- puyc6 (L179 S167 B9) I hope BG can one day link the short, scattered bicycle paths.
+- p8tq3 (L182 S17 B33) There is too much continuous road work going on downtown. They need to get it together.
+- pvv6a (L196 S36 B3) Bring a discount grocer to the downtown area.
+- pmnsc (L400 S393 B8) We need a 6 day a week farmer's market that is open at least 5 hours -
+
+## #98 pg99d: Local food and small farms are one of BG best attractions.
+
+- pki7f (L1 S1 B2) Bowling Green needs more access to affordable , healthy, local food sources.
+- pr4k5 (L2 S6 B4) Bowling Green should work on becoming a more food sustainable city with less food waste and food insecurity
+- pqeyn (L3 S10 B448) We need to carefully preserve agricultural land
+- pdcp3 (L4 S3 B26) More local produce should be incorporated into public school's lunchrooms
+- pgpz3 (L5 S14 B1) Planning and zoning laws should change to encourage small businesses and farms.
+- psj6d (L6 S11 B42) Support more local chefs and brewers! White Squirrel is fantastic and I want to see more of it in BG!
+- p9ivq (L7 S2 B180) Bowling Green should have more healthy/clean eating options for those who have limited diets.
+- pz6xn (L8 S7 B594) More healthy restaurants
+- p2a8w (L9 S8 B61) Bowling Green is an excellent place to raise a family, shop, worship, get an education, and recreate. I feel safe in most places here in BG.
+- ph4wf (L10 S17 B312) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- p6k4e (L11 S25 B135) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pmjj8 (L12 S4 B388) We need more Community Farming Programs(where you pay farmers money up front and during harvest you get fresh fruits/veggies, eggs, etc)
+- p7whc (L13 S5 B155) BG needs to develop a marketing campaign to draw Warren Co and surrounding counties to downtown for eating, shopping, and entertainment.
+- pkcbm (L15 S26 B366) BG needs more Summer weekend festivals/activities
+- psbcj (L14 S85 B482) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pxjmb (L16 S23 B3) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- p6xjr (L17 S22 B142) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- pe3ap (L18 S40 B252) Continue downtown development to the river. Tourists always seek out parks & restaurants near water.
+- pc3m2 (L19 S51 B18) Locally owned, small businesses should get incentives and assistance -- not chains and outside investors.
+- pgcmd (L20 S73 B294) Bowling Green needs more cultural and educational establishments, like sciemce, history and art museums.
+- p4rsn (L21 S56 B98) There is not enough done for tourism in Warren Co. We offer much more than Corvettes and we should be promoting other activities.
+- pb6y8 (L22 S48 B204) The arts enrich our city.
+- pbm45 (L23 S9 B214) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pi9rk (L24 S59 B333) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pnukd (L25 S46 B414) Historic preservation of homes and buildings needs countywide attention to maintain our unique architectural heritage.
+- p2wk5 (L28 S37 B12) There should be more healthy food options near/on campus of WKU.
+- pge4x (L39 S13 B30) A fresh food grocery store to be built in Delafield and Morgantown rd areas within walking distance of residents.
+- pvxt4 (L48 S30 B7) We need a health food store.
+- p3285 (L50 S43 B6) We need a WHOLE FOOD store.
+- pk22m (L56 S24 B362) Publicizing more cultural activities other than the Bowling Green International Festival.
+- p5eg6 (L58 S19 B110) There needs to be better access to grocery stores and restaurants from WKU's campus.
+- prfvz (L59 S18 B469) I think we have enough restaurants.
+- p7h4t (L71 S20 B36) BG can link/support hotel/food, recreational/cultural venues in a Tourism Passport, giving discounts when at least 3 are purchased together.
+- pjq68 (L74 S15 B355) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pek7k (L82 S89 B11) Provide a food assistance program for college students as students lots of times do not qualify for food stamps due to living on campus
+- pvv6a (L101 S21 B545) Bring a discount grocer to the downtown area.
+- puyc6 (L105 S81 B15) I hope BG can one day link the short, scattered bicycle paths.
+- p8e6q (L116 S221 B8) Recruit and retain the best k-13 teachers graduating from WKU
+- pptbv (L120 S16 B430) We need mixed-use development in the most disadvantaged areas of BG.
+- p6quu (L146 S12 B52) There should be something a work farm for local prisoners to learn to tend gardens, take care of livestock, and learn to be more useful.
+- p78pt (L212 S374 B5) Sidewalks are needed along Gary Farms Blvd
+- p95zh (L259 S564 B13) There should be no punishment for small amounts of marijuana possession, in my opinion
+- pirz4 (L264 S202 B9) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- p3y3b (L287 S187 B10) Build more roads!!! Traffic is terrible here for a small city.
+- p572n (L370 S325 B14) A round about would be the best solution to improve traffic flow on Fairview Ave at Keriakes Park.
+
+## #99 pwijp: Overdevelopment of rental property is detrimental to cities. Renters do not pay property tax. Schools suffer when the tax base is eroded.
+
+- p6r2s (L1 S1 B2) Rental property taxes should be reduced for private landlords to encourage them to develop more, as opposed to large ones like Chandler.
+- p5pav (L2 S7 B20) Older neighborhoods change from owner occupied to rental. Deterioration occurs. Stronger landlord/tenant laws needed!
+- pvdrx (L3 S6 B21) We need to make it worthwhile for builders to create more quality affordable rental units for residents, rather than more luxury units.
+- p98s9 (L4 S2 B17) Stronger tenant and renters rights. Landlord accountability for keeping properties in good shape. So many overpriced dilapidated rentals.
+- p5rtq (L5 S12 B121) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- p66dt (L6 S4 B1) The rental market prices are well beyond an affordable housing level and needs to be addressed given the number of renters in BG.
+- pkp8t (L7 S26 B376) New home zoning should be for single family dwellings rather than multi-family units (apartments).
+- pji76 (L8 S19 B354) There are too many apartments being built. Our economy can't continue to support it. There will be a bust & it might be sooner than later.
+- p499a (L9 S3 B87) Rent is too expensive inside the city limits.
+- p4r2w (L10 S5 B99) Enact rent control laws to stabilize the constant increase in rates.
+- p9ujh (L11 S22 B189) Lease laws should be enacted and enforced in the county as they are in the city.
+- pjtja (L12 S21 B361) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- pbm45 (L13 S20 B218) We need to focus more on the existing housing in BG, including renovations and improvements.
+- phfba (L14 S27 B8) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- picza (L15 S10 B337) City residents do not receive adequate return on County Taxes paid.
+- p64wt (L16 S23 B126) More affordable home ownership options.
+- p2ib2 (L17 S9 B62) City School taxes are too high , they need to budget more
+- pjq68 (L18 S11 B357) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- ptahe (L19 S49 B494) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- phsyb (L20 S8 B327) Prevent the development of new housing areas, especially in farm land areas.
+- padkd (L21 S51 B195) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- ppct5 (L22 S28 B424) Bowling Green should have basic zoning mandates in order to beautify decrepit buildings/gravel lawns/general trashiness.
+- p7eqj (L23 S33 B154) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- pqra3 (L24 S29 B459) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- pgzys (L25 S13 B4) Rental assistance programs
+- pcrhx (L27 S15 B239) City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+- pnvfb (L29 S16 B6) Bowling Green needs more pet-friendly housing options for renters.
+- pphh2 (L30 S25 B429) We should focus downtown development dollars on rehabilitation and reuse of buildings that can be done so, rather than building new.
+- pmiqq (L38 S35 B15) City schools should be redistricted to more evenly distribute the kids.
+- pe3gy (L47 S18 B260) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pb4kx (L57 S24 B207) People want it all, without paying for anything. A healthy community requires taxes people.
+- pq8ag (L59 S17 B11) Reduce and/or get rid of the city wage tax.
+- ph8pr (L68 S44 B3) Residential Parking Permits for areas near WKU. We can rescue our yards from parking. We pay property taxes for the students' convenience,
+- p6twv (L88 S61 B10) City Annexed areas need more city services for their tax $$.
+- pzxfe (L104 S37 B14) If private schools were to get a share of Federal or State education dollars, it would hurt public schools.
+- p9622 (L107 S14 B25) You shouldn't be required to pay County taxes if you live in the City (but not the other way around). It makes no sense.
+- pfibi (L108 S59 B5) City should pay 1.2-1.5m per annum for all homeless k-12 student/families a studio apartment at $500 or less. fund by occ tax move to 1.91%
+- pinkj (L120 S190 B12) Arts-based charter schools
+- pck82 (L327 S262 B7) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- p78vr (L374 S391 B13) Build a homeless park w/tiny homes so they can live & not suffer. There should also be a main house to can receive/organize donations
+- prh9c (L386 S523 B9) Solving the drug crisis should not mean people with health problems/injuries have to suffer with severe pain.
+
+## #100 pwbe8: We need more incentives for individual and business solar power
+
+- p3y2u (L1 S1 B8) Greenwood Mall parking lot could become a cooperative solar collection for itself and home surrounding
+- p87p6 (L2 S22 B200) Bowling Green should be become a carbon neutral city.
+- prb59 (L3 S17 B476) Require new downtown developments to become LEED certified
+- pneud (L4 S28 B420) Every new apartment building should have shaded parklike space for refreshment of its tenants
+- padkd (L6 S20 B89) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- phceg (L5 S121 B75) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pi9rk (L7 S9 B359) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pxg44 (L8 S27 B572) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- puyc3 (L9 S25 B61) We need to renovate the run down businesses and store fronts, instead of building new places
+- pgzys (L10 S47 B339) Rental assistance programs
+- p5ahf (L11 S67 B33) Need more bike lanes and biker friendly resources
+- p6u6a (L12 S19 B180) Local government, for profit and non profits should work together on housing and economic equality
+- pgpz3 (L13 S18 B332) Planning and zoning laws should change to encourage small businesses and farms.
+- psbcj (L14 S113 B490) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pr4k5 (L15 S48 B471) Bowling Green should work on becoming a more food sustainable city with less food waste and food insecurity
+- pmjk5 (L16 S146 B411) More public transportation options--be creative
+- pzkag (L17 S32 B3) An unmanned trolley system, possibly solar, might be better long term than buses for some areas.
+- pxjks (L18 S177 B575) City and County should convert existing street lighting to Dark Sky Complaint Lights. #Nomoreorangeglow
+- pgvyh (L19 S54 B335) Shade trees should be required plantings along all Greenways
+- pjrdt (L20 S15 B381) Improved businesses such as banks and groceries in lowest income areas
+- p64wt (L21 S13 B164) More affordable home ownership options.
+- pvzw8 (L22 S8 B551) Bowling Green needs ev car charging stations. There are none available unless you own a Tesla.
+- pgaj7 (L23 S16 B322) I would like to see a revitalization of older parts of Bowling Green, by giving home improvement grants to home owners. Approval process req
+- pb2cb (L24 S40 B240) Recycling should be encouraged by not charging for the service
+- pxjmb (L25 S4 B18) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- ppwgk (L41 S7 B100) We need to SHADE street lamps. This actually increases visibility, reduces glare, and saves energy/ money. Using LEDs would save money, too.
+- pgdik (L48 S3 B324) Please increase more family friendly activities
+- pbm45 (L52 S14 B40) We need to focus more on the existing housing in BG, including renovations and improvements.
+- pjq68 (L62 S6 B66) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pcvs4 (L66 S11 B15) Institute a business development grant that encourages WKU grads to stay in Bowling Green by starting local businesses.
+- pf7ei (L67 S12 B14) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pqra3 (L71 S61 B7) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- p389z (L74 S5 B115) We should be incentivizing higher paying jobs coming to BG. Cost of living is outrunning wages and it's starting to be a problem.
+- pc3m2 (L75 S2 B1) Locally owned, small businesses should get incentives and assistance -- not chains and outside investors.
+- p3cst (L88 S23 B6) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- p5hnk (L168 S10 B156) Street lights should be required on residential streets in town. Too many dark corners.
+- p4pb4 (L188 S21 B137) Every citizen should be within 1 mile of some shaded green space.
+- pm8t7 (L209 S24 B9) Regulate the size & brightness of business signs.
+- p5y22 (L265 S425 B4) Some local politicians abuse their power and get away with more than normal citizens.
+- ptn8b (L343 S137 B12) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- pgrp6 (L484 S508 B10) Unelected school board officials should not have the power to create, add, or increase "school taxes".
+- ptfp6 (L512 S585 B2) Individual unhappiness combined with easy legal and illegal availability of drugs drives the opioid crisis.
+- pfaf5 (L514 S519 B5) BG police should improve officer training and should be held accountable for abuse of power.
+- ptky7 (L532 S306 B13) Animated digital business signs are a road hazard. They distract drivers.
+- p8qss (L550 S515 B11) Smoking should not be allowed within 25 feet of a business.
+
+## #101 p5b8r: NO to the "Fairness" Ordinance. Current law is sufficient. ZERO reported instances where LGBTQ people have been discriminated against in BG
+
+- p8hgh (L1 S1 B2) The city should craft a very simple fairness ordinance, saying no discrimination acquiring housing, but not giving LGBTQ EEOC Bypass @work
+- pr9y5 (L2 S3 B6) The Fairness Ordinance, as currently proposed, poses insufficient protection for religious conscience and should be revised accordingly.
+- p92xj (L3 S2 B5) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- p92ce (L4 S4 B1) People in Bowling Green should not be discriminated against based on their sexual orientation.
+- pzahk (L5 S7 B3) LGBTQ fairness is far-left political idiocy.
+- p98ae (L6 S5 B4) It is embarrassing that our city is the largest in the state not to have a fairness ordinance.
+- pgnkw (L7 S6 B7) A fairness ordinance in Bowling Green would attract new businesses. No one wants to set up show in a town ethically stuck in the 1800s.
+- p9mdn (L8 S61 B160) Marijuana should not be legalized.
+- pkkkz (L9 S150 B357) A city should have the right to declare itself a sanctuary city.
+- p9ujh (L10 S22 B161) Lease laws should be enacted and enforced in the county as they are in the city.
+- pb5iz (L11 S9 B180) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- pbx3e (L12 S138 B198) Zoning changes should only be made with the consent of a majority of the neighbors in the affected area.
+- pgdsd (L13 S18 B12) The city of Bowling Green should enforce their existing noise ordinance.
+- p8jmp (L14 S28 B144) Bowling Green needs to enforce the separation of church and state and impose taxes on churches that politic from the pulpit
+- pd9yv (L15 S21 B223) Noise ordinances should be enacted and enforced in the county as they are in the city.
+- pxrds (L16 S8 B11) There should be gender-neutral housing options on WKU's campus for LGBTQ+ students.
+- pfpwf (L17 S19 B264) Bowling Green should pass the Uniform Residential Landlord and Tenant Act (or URLTA) to ensure basic standards for landlords and tenants.
+- p95zh (L18 S110 B151) There should be no punishment for small amounts of marijuana possession, in my opinion
+- pkgar (L19 S70 B354) District judges are biased towards large local companies to the detriment of individuals.
+- py2mw (L20 S55 B581) I should be allowed to keep my yard & home in any manner I please.
+- pu9z9 (L21 S16 B511) The travesty going up on Fairview Ave. should never have been allowed
+- p6u6a (L22 S13 B114) Local government, for profit and non profits should work together on housing and economic equality
+- pq8ag (L23 S33 B428) Reduce and/or get rid of the city wage tax.
+- pxiz6 (L24 S313 B13) Vaping should not be added to the smoking ordinance.
+- p2a8w (L25 S76 B30) Bowling Green is an excellent place to raise a family, shop, worship, get an education, and recreate. I feel safe in most places here in BG.
+- pzwn8 (L27 S11 B603) My employer has not been responsive to reports of sexual harassment in the workplace.
+- phfba (L28 S17 B299) Bowling Green needs stricter code enforcement on property use and condition in some neighborhoods.
+- pbstr (L31 S10 B196) Individuals should be treated equally. Higher positions or who you work for should not release anyone from responsibility of their actions.
+- pp2r6 (L34 S14 B404) More gender-neutral bathrooms need to be seen across BG on WKU's campus, in local businesses, etc.
+- p9622 (L40 S20 B152) You shouldn't be required to pay County taxes if you live in the City (but not the other way around). It makes no sense.
+- p7eqj (L46 S25 B127) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- pfqwv (L47 S26 B9) Law enforcement in Bowling Green and Warren county needs more minority representation
+- pqcdx (L67 S12 B432) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- pjtja (L79 S34 B10) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- pnvfb (L87 S23 B402) Bowling Green needs more pet-friendly housing options for renters.
+- pf6t9 (L121 S24 B254) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pptbv (L181 S15 B418) We need mixed-use development in the most disadvantaged areas of BG.
+- prnz3 (L220 S38 B14) Pass a no animals in a hot car ordinance.
+- pgsds (L335 S352 B8) County volunteer fire departments need to be upgraded to fit the current population of Warren County.
+- p57k8 (L595 S367 B15) BGDN should publish these BGPD stats weekly – 1) traffic citations 2) vehicle accidents reported; 3) traffic accidents resulting in injury.
+
+## #102 pcrhx: City/county leaders should be cautious of "build it and they will come" mentality for growth and development.
+
+- ptahe (L1 S14 B486) The lack of leadership regarding adequate planning and zoning in BG is discouraging.
+- pe3gy (L2 S2 B235) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pjq68 (L3 S1 B20) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- padkd (L4 S9 B169) We need urban planning to ensure that mixed use housing, shopping and new neighborhoods are created to make our community better
+- pyyxz (L5 S21 B590) Impact on traffic flow should be considered with any proposed new developments.
+- pjkts (L6 S59 B11) Highway exits spur development, which would likely lead to undesireable suburban sprawl.
+- p7ms9 (L7 S7 B131) City/county parks should be focused on creating and maintain green places for residents to join.Avoid cement parking and adding buildings
+- p6xjr (L8 S6 B118) The area of downtown and the riverfront should continue to be developed for entertainment and recreation for both day and night activities.
+- p6k4e (L9 S8 B109) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- ptuye (L10 S15 B497) The population has out grown the infrastructure in bg/ warren county.
+- pphh2 (L11 S3 B21) We should focus downtown development dollars on rehabilitation and reuse of buildings that can be done so, rather than building new.
+- pbxwr (L12 S45 B202) Planning & Zoning need to do a better job of listening & working with residents. It's not next to their house, so they don't care!
+- pbm45 (L13 S10 B194) We need to focus more on the existing housing in BG, including renovations and improvements.
+- p4p8j (L14 S36 B65) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pvdrx (L15 S17 B530) We need to make it worthwhile for builders to create more quality affordable rental units for residents, rather than more luxury units.
+- psbcj (L16 S79 B472) I would like to see a sift in city planning and zoning to make BG a more walkable city with better sidewalk planning
+- pr7y3 (L17 S13 B453) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- p6u6a (L18 S34 B116) Local government, for profit and non profits should work together on housing and economic equality
+- p69et (L19 S25 B102) The bypass area must be developed and utilized for new businesses and attractive structures. It is a neglected area that is losing business.
+- puyc3 (L20 S42 B521) We need to renovate the run down businesses and store fronts, instead of building new places
+- pji76 (L21 S77 B339) There are too many apartments being built. Our economy can't continue to support it. There will be a bust & it might be sooner than later.
+- ph4wf (L22 S26 B297) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- p7whc (L24 S22 B134) BG needs to develop a marketing campaign to draw Warren Co and surrounding counties to downtown for eating, shopping, and entertainment.
+- pvzkv (L23 S43 B543) If people are suggesting more advertising for tourists, there needs to be things for tourists to do.
+- p5rtq (L25 S19 B91) We are loosing the city’s long established neighborhoods to multi family developments that do not fit in with the single family residences
+- phsyb (L27 S18 B10) Prevent the development of new housing areas, especially in farm land areas.
+- pe3ap (L28 S23 B19) Continue downtown development to the river. Tourists always seek out parks & restaurants near water.
+- pqra3 (L36 S55 B6) Need a better way to work with tenants in the downtown district. Too many come and go because they lack business skills.
+- pc7zk (L40 S5 B207) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- p3cst (L48 S11 B43) We need more mixed-use developments so people live closely to all basic needs. Mix business and residential zones and increase walkability.
+- pxjmb (L54 S20 B23) Encourage local business development with grants, etc. For a city this size, it is ridiculous that we have basically one local coffee shop!
+- pfuyd (L55 S12 B269) big projeck in city sould be vote by people
+- pptbv (L69 S16 B7) We need mixed-use development in the most disadvantaged areas of BG.
+- p89sh (L87 S75 B1) Build parking areas.
+- pjbzz (L92 S4 B3) Need to build wider access roads into the city!
+- pn228 (L102 S47 B9) City/county gov't. (in all of there forms) must reflect the racial/ethnic city/county population demographic to assist in recruitment/growth
+- puvjs (L111 S24 B519) Do SOMETHING about completing the "wrap" downtown, or at least enhance (and that includes restaurant service) what is currently there.
+- ptnie (L120 S94 B14) The main problem facing is the workforce development. There is over 6500 jobs open in Warren County. This is a big issue.
+- p3y3b (L127 S38 B2) Build more roads!!! Traffic is terrible here for a small city.
+- psh7u (L155 S182 B12) Need new schools in Warren County to keep up with population growth, CTE is falling down, Drakes and Greenwood high are way overcrowded
+- pfwr5 (L242 S61 B8) Warren County should be completely wet, the idea of a “moist” County is outdated and stunting the financial growth and tourism opportunity.
+- pfgep (L270 S69 B4) Bowling Green has been monopolized by Houchens. Limit their growth they own too much of the city for it to be fair to other businesses
+- pns2r (L313 S448 B5) Farmers shouldn’t need a permit to build a fence.
+- pa8ms (L427 S427 B15) Encourage growth of OTA tv stations. Lots of cord cutters and shavers enjoy the HD content they can get with an antenna.
+- p78vr (L441 S351 B13) Build a homeless park w/tiny homes so they can live & not suffer. There should also be a main house to can receive/organize donations
+
+## #103 p54eg: One should not be able to literally "buy" their way into ability to vote in an election in a locality they do not live in. $ don't buy vote
+
+- p7eqj (L1 S1 B14) Allow residence of an area to vote on new developments that might have impact on them opposed to commissioners/magistrates getting kickbacks
+- psmh7 (L2 S3 B15) The money I earn & spend is all done within the city limits but as a county resident I have NO voice/vote in city politics. Needs to change!
+- pwafd (L3 S2 B1) I should be able to vote in city elections if I pay city taxes, even though I may live in the county.
+- p5y22 (L4 S18 B122) Some local politicians abuse their power and get away with more than normal citizens.
+- ptn8b (L5 S9 B25) There should be greater checks on our County and City executives. They don't wield too much power but they do wield far too much influence.
+- pfvrw (L6 S23 B291) City/County officials with connections to a project or proposal should abstain from voting on the project or proposal.
+- p8jmp (L7 S50 B173) Bowling Green needs to enforce the separation of church and state and impose taxes on churches that politic from the pulpit
+- picza (L8 S58 B338) City residents do not receive adequate return on County Taxes paid.
+- pqmg8 (L9 S17 B456) Low-income areas should get beautification money -- not the wealthy who can afford it themselves.
+- pt9at (L10 S136 B10) Oversight committees for projects such as TIF. Elected officials should not be able to sit on unelected boards.
+- pgrp6 (L11 S42 B307) Unelected school board officials should not have the power to create, add, or increase "school taxes".
+- pjq68 (L12 S10 B361) More citizens need to be involved in the future development of BG. Too many developers who benefit financially are calling the shots.
+- pqqyk (L13 S7 B13) Local elected government officials should not be able to hold a seat and also be on the TIF board or other unelected boards.
+- pw6ik (L14 S11 B549) Need term limits for all local elected officiałs
+- p6u6a (L16 S19 B144) Local government, for profit and non profits should work together on housing and economic equality
+- pix44 (L15 S88 B350) Term limits should be initiated on county executives.
+- p9622 (L17 S5 B3) You shouldn't be required to pay County taxes if you live in the City (but not the other way around). It makes no sense.
+- pg2kz (L18 S51 B23) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- p9ujh (L19 S43 B191) Lease laws should be enacted and enforced in the county as they are in the city.
+- pkgar (L20 S155 B376) District judges are biased towards large local companies to the detriment of individuals.
+- pu9z9 (L21 S135 B519) The travesty going up on Fairview Ave. should never have been allowed
+- puaak (L22 S12 B2) Parents should be able to send their kids to the school district of their choice no matter where they live in Bowling Green/Warren County.
+- pw6sg (L23 S45 B551) Big names and corporations get away with too much. We need fairer regulation and level playing fields for the small and big guys alike.
+- pqcdx (L24 S6 B448) Bowling Green would be better if it didn't have the "Good Ole Boy" system among so many.
+- pjht6 (L25 S125 B357) Minimum wage required for businesses to receive tax credits should be raised to a living wage
+- p23xg (L27 S13 B57) Whenever land is bought by the city/county, the seller and amount sold for needs to be transparent, rather than “LLC” as listed seller.
+- pfuyd (L30 S4 B4) big projeck in city sould be vote by people
+- p92xj (L31 S16 B181) Bowling Green needs a fairness ordinance to protect the rights of its citizens.
+- pb5iz (L33 S20 B210) Working folks need ordinances struck down that prevent them from assembling to bargain for better pay. benefits and working conditions.
+- pc7zk (L35 S24 B229) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- p6zxd (L39 S22 B148) People need to do all their research before accusing local officials of using their influence for personal gain.
+- pvpmr (L40 S8 B540) Most local officials run for office to serve the public good.
+- p64wt (L45 S14 B124) More affordable home ownership options.
+- p5ref (L46 S25 B117) Encourage connection between the wealthy and the poor
+- prgqn (L48 S38 B11) City/county officials should disclose to the public via Daily News all connections they have to a project or proposal well before the vote.
+- pbkh5 (L64 S355 B6) BGPD needs to work toward community policing, where cops patrol the neighborhoods they live in. Stop incentivizing cops to live in suburbs
+- pb4kx (L95 S15 B209) People want it all, without paying for anything. A healthy community requires taxes people.
+- pbkub (L119 S68 B5) Higher paying jobs- the ability to move up with reasonable raises.
+- pfsk9 (L157 S21 B290) Allow parents that take their kids out of public schools to use that money in a private school.
+- pg99d (L171 S185 B8) Local food and small farms are one of BG best attractions.
+- pwin9 (L237 S114 B7) A clean, efficient public transportation system would be a huge help to those with limited ability or desire to drive.
+- pnmq4 (L355 S295 B9) Emergency protective orders should not be able to be obtained regarding claims of an incident from a year ago.
+- puyc6 (L473 S389 B12) I hope BG can one day link the short, scattered bicycle paths.
+
+## #104 pt76e: Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+
+- pgmpv (L1 S1 B3) Something needs to be done to improve traffic flow
+- p8hra (L2 S5 B6) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- pcu64 (L3 S4 B10) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- pyyxz (L4 S2 B5) Impact on traffic flow should be considered with any proposed new developments.
+- pv2mh (L5 S3 B7) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- p7yd2 (L6 S10 B9) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- pmiz7 (L7 S9 B8) Traffic flow on Cavemill Rd during peek hours (3pm - 5pm)
+- p5e8k (L8 S20 B109) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- pf7ei (L9 S11 B44) Connect business parking lots to reduce unnecessary traffic on main roadways
+- p3y3b (L10 S7 B32) Build more roads!!! Traffic is terrible here for a small city.
+- pck82 (L11 S8 B43) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- phuu3 (L12 S32 B53) The access roads off Scottsville Rd are terrible. They provide constant traffic jams and can be dangerous. We need to budget to fix them.
+- pcrnf (L13 S39 B48) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- pbp7c (L14 S15 B41) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- p572n (L15 S29 B12) A round about would be the best solution to improve traffic flow on Fairview Ave at Keriakes Park.
+- p3bwu (L16 S27 B73) The city should actually time stoplights correctly during rush hour to prevent complete gridlock
+- pqaaf (L17 S60 B2) Urban sprawl in Bowling Green is a major problem that has made this city less walking/bike friendly.
+- pr7y3 (L18 S6 B45) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- ptx9s (L19 S24 B37) Traffic and toxic vehicle dependency should NOT be a topic of priority for this city.
+- pjbzz (L20 S18 B353) Need to build wider access roads into the city!
+- phmk4 (L21 S23 B39) Access Rd, east side of Scottsville Rd. in shopping dist causes congestion. Give right of way to access road or cross streets, not a mix!
+- pi9rk (L22 S22 B16) Increase green spaces, especially near mall, to decrease congestion and improve "green" status
+- pvq7m (L23 S46 B542) many parts of the By-pass can and should be widened
+- ptuye (L24 S57 B504) The population has out grown the infrastructure in bg/ warren county.
+- p5ku8 (L25 S12 B13) There needs to be a stoplight at the intersection of Shive Lane and Ken Bale Blvd to improve traffic flow. The backups there are awful.
+- pjf7t (L28 S16 B355) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pk7ki (L32 S19 B55) Better enforcement of traffic violations. Too many running red lights, parking in fire lanes, cell phone usage while driving
+- psxq8 (L35 S35 B1) Trains blocking major roads, stopping, and shutting down all traffic. This problem needs to be solved.
+- pczge (L36 S14 B245) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- pe3gy (L42 S25 B257) New developments should not be approved unless roads and infrastructure capable of handling them are in place.
+- pc7ap (L43 S21 B11) BG needs to install traffic cameras that help police intersections like Gallatin, TN. This would reduce accidents, traffic flow and add $
+- p8tq3 (L55 S13 B175) There is too much continuous road work going on downtown. They need to get it together.
+- pnfi5 (L60 S17 B24) install traffic cameras and enforce running of stop lights. more traffic enforcement means more $$$ for the city.
+- pgpc7 (L62 S101 B15) Parking in apartment subdivisions should monitored closely by police. Parking on subdivision streets shouldn't be allowed.
+- pmd9s (L135 S121 B14) Houston "courtesy police" maintain safety on access rds enforcing right of way & parking/litter rules, assist traffic flow - we need!
+- prhru (L197 S238 B4) We already have a lot of parks. And the libraries have become a hangout for the homeless. Do something about that problem first
+
+## #105 pfarp: Actually teach HS students useful things.
+
+- p4xau (L1 S3 B15) Require 4 yr HS lifeskills class, how to: family finance, file tax, repair/maintain car, repair/maintain home, cook/sew, apply/interview job
+- p6wtw (L2 S1 B120) Educate high schoolers on their options after they graduate
+- ps5tz (L3 S2 B472) More technical education programs for non-graduates of high school
+- phhdw (L4 S12 B305) The main purpose of higher education is job training.
+- pee6u (L5 S6 B246) More creative learning classes
+- p3zeb (L6 S7 B13) Post-secondary training programs for special education students.
+- pz3q2 (L7 S15 B593) WKU and local community colleges should continue to offer courses that interest those seeking an education, whether or not the courses aid in job placement.
+- pjrwf (L8 S4 B344) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- pirz4 (L9 S9 B14) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- pikyq (L10 S34 B324) We a true junior college which offers credit / non credit courses like many other states from basket weaving to cyber security
+- p4e3h (L11 S8 B64) Public school could do alternate teaching styles(like Montessori) in a school within a school set up. Not all kids learn the same way.
+- pcqfp (L12 S5 B16) All schools in the county and city should work together to provide the same minimum level of education to students.
+- pqeuz (L13 S10 B438) Arts education should be available in every school in Warren County and other surrounding areas.
+- pwnap (L14 S16 B560) Invest in the youth.
+- phceg (L15 S21 B23) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pkd6q (L16 S46 B353) In order to combat teen pregnancy and STD rates, high schools in Bowling Green should offer comprehensive, medically accurate sex education.
+- p69s8 (L17 S26 B107) Schools should offer more comprehensive sexual education to help lower STD and teen pregnancy rates.
+- psh7u (L18 S19 B478) Need new schools in Warren County to keep up with population growth, CTE is falling down, Drakes and Greenwood high are way overcrowded
+- pkezh (L19 S23 B355) Public school systems need to provide more funding for art education programs, such as music, theater, and visual arts.
+- piq5m (L20 S32 B327) Job training programs for lower income
+- pinkj (L21 S42 B326) Arts-based charter schools
+- pehyf (L22 S11 B248) The arts are an important component of K-12 education.
+- p8e6q (L23 S17 B144) Recruit and retain the best k-13 teachers graduating from WKU
+- pkg36 (L24 S39 B356) Bowling Green needs Community Enrichment Classes that include woodworking, welding, gardening and general home beautification for hobbyist.
+- pt8p7 (L25 S20 B17) There should be more opportunities for the arts and sciences in the Housing Authority so the students there can rise above!
+- pbbu5 (L26 S25 B194) A private (catholic) high school would be beneficial to all.
+- peizm (L28 S24 B249) Driver’s education needs to be more thorough and mandatory before 16 year olds are even allowed to drive home from the courthouse.
+- pmiqq (L31 S18 B375) City schools should be redistricted to more evenly distribute the kids.
+- pezeh (L32 S13 B26) Fewer students per teacher should be a rule. No more than 20; ideal class size of 15. Plenty of teachers are looking for work.
+- p6quu (L38 S44 B8) There should be something a work farm for local prisoners to learn to tend gardens, take care of livestock, and learn to be more useful.
+- pptwk (L48 S37 B5) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- pwsqv (L52 S47 B12) Water safety and swim lessons to all k-12 students.
+- pek7k (L55 S55 B10) Provide a food assistance program for college students as students lots of times do not qualify for food stamps due to living on campus
+- pf6t9 (L62 S14 B258) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pcura (L78 S22 B222) Other counties have school at home on snow days so that kids do not have to make up days. This should be considered for here.
+- pzaca (L86 S79 B7) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- p3bwu (L101 S345 B9) The city should actually time stoplights correctly during rush hour to prevent complete gridlock
+- pu3fh (L125 S187 B6) We need more things to do for ages 1-6. A children’s museum or a small science museum would be wonderful.
+- pvzkv (L204 S204 B1) If people are suggesting more advertising for tourists, there needs to be things for tourists to do.
+- pck82 (L208 S237 B4) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- pj74t (L278 S217 B11) Parking on the WKU campus should be more accessible to students and visitors.
+- pcare (L285 S323 B2) There should never be a leash law in the county - neighborhood dogs protect, play with and teach kids. It was a factor in living in county.
+- p7mfn (L488 S434 B3) When you prioritize the safety of people over automobile speed, all kinds of positive things happen. #slowthecars
+
+## #106 p9mdn: Marijuana should not be legalized.
+
+- ptgpf (L1 S1 B3) Recreational marijuana should be legal.
+- peq9z (L2 S2 B2) Medical marijuana should be legal.
+- p95zh (L3 S6 B6) There should be no punishment for small amounts of marijuana possession, in my opinion
+- pahwq (L4 S3 B7) Legalizing marijuana at the state level could produce substantial tax revenue, but if only BG did, it would cause problems.
+- pvdxd (L5 S4 B5) Legalizing marijuana would be a boon for the economy.
+- pemdb (L6 S7 B238) Bowling Green needs to pass a resolution in support of medical cannabis.
+- pr2fm (L7 S5 B1) Legalized Marijuana will not only assist Bowling Green in earning Tax revenue but will decrease the strain on our prison system. Win-Win.
+- pxiz6 (L8 S14 B570) Vaping should not be added to the smoking ordinance.
+- pvndx (L9 S8 B4) Industrial hemp should be re-legalized to grow in Kentucky.
+- psnvi (L10 S17 B478) Recreational Cannabis in KY offers tourism, increased revenue, job opportunities, and shows massive leadership in the southern region.
+- prh9c (L11 S20 B460) Solving the drug crisis should not mean people with health problems/injuries have to suffer with severe pain.
+- pmz7k (L12 S16 B384) We need more regulation of opioid drugs, both prescribed and illicit.
+- pms9n (L13 S9 B379) Smoking should not be allowed in public parks.
+- pqpib (L14 S13 B443) With drug use being so prevalent in Warren county, better treatment options need to be offered.
+- pu9z9 (L15 S90 B510) The travesty going up on Fairview Ave. should never have been allowed
+- phsyb (L16 S25 B301) Prevent the development of new housing areas, especially in farm land areas.
+- pkkkz (L17 S152 B354) A city should have the right to declare itself a sanctuary city.
+- p72mx (L18 S28 B107) Harsher sentences for drug users would help combat the opioid epidemic.
+- p7zmn (L19 S12 B122) There should be more effort put into teaching students about any potential harmful side effects of drugs, illegal or otherwise.
+- ptx9s (L20 S24 B500) Traffic and toxic vehicle dependency should NOT be a topic of priority for this city.
+- pyr2u (L21 S269 B587) Warren county needs to be "wet". The city is wet but the county is dry.
+- pgpz3 (L22 S42 B277) Planning and zoning laws should change to encourage small businesses and farms.
+- pqeea (L23 S10 B433) Most drugs except meth should be free & government controlled. See Belgium.
+- pcare (L24 S119 B195) There should never be a leash law in the county - neighborhood dogs protect, play with and teach kids. It was a factor in living in county.
+- pani2 (L25 S15 B162) Law enforcement should send drug possession arrestees for rehabilitation services rather than imprisonment.
+- pbnf4 (L33 S19 B182) More nonviolent inmates convicted of drug possession should be set free.
+- p4qh4 (L48 S18 B51) Promote access to mental health treatment, rather than treating addicts as criminals.
+- pzvz6 (L50 S21 B602) People should not be allowed to bring their pets every place or store they go to.
+- p8qss (L52 S11 B134) Smoking should not be allowed within 25 feet of a business.
+- ptfp6 (L53 S22 B491) Individual unhappiness combined with easy legal and illegal availability of drugs drives the opioid crisis.
+- p9622 (L201 S23 B142) You shouldn't be required to pay County taxes if you live in the City (but not the other way around). It makes no sense.
+
+## #107 pe262: WKU should upgrade their CIT program to keep up with the times
+
+- pikyq (L1 S16 B337) We a true junior college which offers credit / non credit courses like many other states from basket weaving to cyber security
+- pz3q2 (L2 S1 B40) WKU and local community colleges should continue to offer courses that interest those seeking an education, whether or not the courses aid in job placement.
+- ps5tz (L3 S9 B473) More technical education programs for non-graduates of high school
+- pptwk (L4 S2 B29) There should be more cooperation between WKU and Bowling Green, especially for things like internships and community involvement.
+- pv52p (L5 S7 B1) The WKU Nursing Program should be expanded so we have more nurses
+- phhdw (L6 S24 B319) The main purpose of higher education is job training.
+- psh7u (L7 S39 B21) Need new schools in Warren County to keep up with population growth, CTE is falling down, Drakes and Greenwood high are way overcrowded
+- p8e6q (L8 S4 B20) Recruit and retain the best k-13 teachers graduating from WKU
+- phceg (L9 S23 B315) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pnyg7 (L10 S18 B412) The university and city should develop stronger mutually beneficial partnerships.
+- p6wtw (L11 S12 B130) Educate high schoolers on their options after they graduate
+- pjrwf (L12 S13 B355) Higher education is intended to help young people develop into informed, well-rounded citizens who contribute positively to society.
+- piq5m (L13 S28 B340) Job training programs for lower income
+- pee6u (L14 S22 B258) More creative learning classes
+- p67wb (L15 S3 B30) WKU should open its facilities to the public once or twice a month to the community, and those in need should be welcome more often.
+- picqu (L16 S11 B41) Make areas around WKU's campus livable for college students. Eliminating section 8 housing will lead to less crime & lower cost of attendance.
+- pgsds (L17 S81 B305) County volunteer fire departments need to be upgraded to fit the current population of Warren County.
+- pe9wi (L18 S21 B255) More youth programs are needed to bring the community together: volunteer organizations, community service, innovative creations labs
+- pj74t (L19 S20 B17) Parking on the WKU campus should be more accessible to students and visitors.
+- ppsfb (L20 S15 B14) Greek Life should be monitored on WKU's campus.
+- pif8h (L21 S25 B28) BG needs to redevelop from WKU to the river and beyond. Model after Greenville SC
+- ptcr8 (L22 S26 B494) Bowling Green needs more accessible programs for mentorships of young adults and teenagers.
+- pirz4 (L23 S30 B5) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- pd4in (L24 S42 B241) There should be a push to improve mental health awareness and availability in Bowling Green.
+- p5eg6 (L25 S5 B24) There needs to be better access to grocery stores and restaurants from WKU's campus.
+- pgyhw (L29 S14 B310) Better incorporation of university resources in community, including Kentucky Museum.
+- pek7k (L32 S33 B3) Provide a food assistance program for college students as students lots of times do not qualify for food stamps due to living on campus
+- p3wgr (L33 S6 B37) I would like to see the WKU psych and Medical programs collaborate on mental health research, which is so sadly lacking in today's society.
+- pcvs4 (L39 S10 B32) Institute a business development grant that encourages WKU grads to stay in Bowling Green by starting local businesses.
+- p2wk5 (L46 S8 B16) There should be more healthy food options near/on campus of WKU.
+- pkta9 (L51 S17 B39) City officials need to work with WKU admin. to address the noise & public nuisance problems with the frat houses and homeowners downtown.
+- piqt5 (L59 S19 B2) If we cut a major program, WKU would lose in the revenue the program brings in, ultimately costing more money.
+- pz34c (L71 S107 B9) Develop a manufacturing Work training program for jail inmates that qualify
+- pjrqx (L135 S204 B7) apartment complexes should be required to participate in recycling program
+- pebvm (L192 S102 B15) Bowling Green should consider a program, like Ft Worth Texas's Clean Slate, in which the homeless can earn money by cleaning up the city.
+- pmerv (L218 S32 B4) Cutting a major sports program would be the best way for WKU to deal with budget cuts without harming academics.
+- pjtja (L348 S393 B12) Fines and other enforcement actions should be taken against landlords who don't keep up with their properties.
+- pppcy (L358 S300 B10) All public schools should have an adequate summer feeding program so no child goes hungry.
+- padzm (L453 S417 B6) Cable companies need competition and not be allowed to raise rates of customers. Once you sign on, that is your rate unless you upgrade.
+- pek8y (L469 S455 B11) people need to understand that a STOP sign means STOP, not just slow down and keep going.
+- pq66s (L550 S514 B13) The road closure between Shawnee and Patton Way makes access to Nashville Rd take 3 times as long and is a major annoyance.
+- py2mw (L571 S524 B8) I should be allowed to keep my yard & home in any manner I please.
+
+## #108 p8hra: Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+
+- pgmpv (L1 S5 B3) Something needs to be done to improve traffic flow
+- pcu64 (L2 S9 B8) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- p7yd2 (L3 S2 B11) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- pt76e (L4 S17 B9) Traffic congestion is a major problem, so studying traffic flow closely is the first step.
+- phuu3 (L5 S3 B20) The access roads off Scottsville Rd are terrible. They provide constant traffic jams and can be dangerous. We need to budget to fix them.
+- p5e8k (L6 S4 B14) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- pyyxz (L7 S13 B12) Impact on traffic flow should be considered with any proposed new developments.
+- pv2mh (L8 S8 B13) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- pmiz7 (L9 S18 B15) Traffic flow on Cavemill Rd during peek hours (3pm - 5pm)
+- pbp7c (L10 S1 B2) There are too many traffic lights in parts of Bowling Green (for instance, Scottsville Road).
+- pcrnf (L11 S6 B4) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- p35n3 (L12 S12 B5) The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+- p5ku8 (L13 S20 B10) There needs to be a stoplight at the intersection of Shive Lane and Ken Bale Blvd to improve traffic flow. The backups there are awful.
+- pck82 (L14 S15 B49) Traffic improvement on the so-called Bypass. Most cities actually have a bypass. Bowling Green doesn't have one.
+- p3y3b (L16 S16 B39) Build more roads!!! Traffic is terrible here for a small city.
+- phmk4 (L15 S7 B22) Access Rd, east side of Scottsville Rd. in shopping dist causes congestion. Give right of way to access road or cross streets, not a mix!
+- p572n (L17 S30 B17) A round about would be the best solution to improve traffic flow on Fairview Ave at Keriakes Park.
+- pdhdi (L18 S11 B16) Work,with State to complete a wide loop from Scottsville Road across N I65 to N Natcher Pk way.
+- pf7ei (L19 S29 B50) Connect business parking lots to reduce unnecessary traffic on main roadways
+- pjf7t (L20 S19 B380) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pwigz (L21 S10 B43) Scottsville Rd should be 4+ lanes between I-65 & Lovers Lane, get rid of the service Rd.
+- pvq7m (L22 S61 B550) many parts of the By-pass can and should be widened
+- pjbzz (L23 S22 B378) Need to build wider access roads into the city!
+- ppe9v (L24 S25 B26) Widen Cemetry Road, Russellville Road, Lover’s Lane, Campbell Lane, The Old ByPass, and Scotsville Road from old ByPass to Natcher Parkway.
+- p4g7x (L25 S52 B117) Smallhouse Rd (at Campbell Ln) heading into town needs to be widened to have room for three lanes (left turn, straight, right turn).
+- pr7y3 (L28 S14 B51) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- pczge (L30 S24 B284) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- pauwi (L34 S32 B1) The Smokey Bones entrance off of Scottsville Road is extremely dangerous and needs a traffic light.
+- pyei4 (L35 S23 B48) The LEFT turning light at Nashville onto Dishman & the same for Scottsville onto Lovers Ln.. need to be longer to allow more to go through.
+- p8tq3 (L40 S21 B38) There is too much continuous road work going on downtown. They need to get it together.
+- pc7ap (L47 S44 B7) BG needs to install traffic cameras that help police intersections like Gallatin, TN. This would reduce accidents, traffic flow and add $
+- p2hhq (L54 S27 B6) The feeder road at Shive Lane and Scottsville Road need to be closed off. It is very dangerous.
+
+## #109 p8iym: Expand Nashville Rd all the way past Chaney’s & Buchanan park. Very dangerous area.. very much so for a school area & young drivers.
+
+- ppe9v (L1 S14 B443) Widen Cemetry Road, Russellville Road, Lover’s Lane, Campbell Lane, The Old ByPass, and Scotsville Road from old ByPass to Natcher Parkway.
+- pcuww (L2 S1 B8) Why isn't Nashville Rd between the roundabout and Campbell Ln wider? Getting stuck there at 5 o'clock is a plague.
+- pdhdi (L3 S15 B78) Work,with State to complete a wide loop from Scottsville Road across N I65 to N Natcher Pk way.
+- pvq7m (L4 S35 B549) many parts of the By-pass can and should be widened
+- p4g7x (L5 S10 B101) Smallhouse Rd (at Campbell Ln) heading into town needs to be widened to have room for three lanes (left turn, straight, right turn).
+- pwigz (L6 S31 B23) Scottsville Rd should be 4+ lanes between I-65 & Lovers Lane, get rid of the service Rd.
+- p35n3 (L7 S56 B125) The intersection of Scottsville road and entrance to Greenview Hospital needs to be widened
+- pjbzz (L8 S7 B372) Need to build wider access roads into the city!
+- p8hra (L9 S12 B210) Traffic flow needs to be improved throughout Bowling Green, especially on Scottsville Road.
+- p7yd2 (L10 S9 B76) The traffic intersection at Scottsville Rd and Pascoe Blvd needs some immediate attention as far as congestion. It's very unsafe.
+- pcu64 (L11 S6 B77) Traffic congestion on Fairview Ave and Cemetery Rd needs to be improved during evening rush hours.
+- p3y3b (L12 S16 B136) Build more roads!!! Traffic is terrible here for a small city.
+- p2hhq (L13 S13 B27) The feeder road at Shive Lane and Scottsville Road need to be closed off. It is very dangerous.
+- phuu3 (L14 S21 B9) The access roads off Scottsville Rd are terrible. They provide constant traffic jams and can be dangerous. We need to budget to fix them.
+- pfq4x (L15 S247 B311) Complete the ky. 185 restructuring project.
+- pgmpv (L16 S5 B326) Something needs to be done to improve traffic flow
+- pcrnf (L17 S50 B68) Shopping should be spread across all four corners of the county, so the traffic on Scottsville rd and Campbell lane will be improved.
+- pq66s (L18 S3 B3) The road closure between Shawnee and Patton Way makes access to Nashville Rd take 3 times as long and is a major annoyance.
+- ptbq2 (L19 S30 B507) With a circle, widen Fairview with a left-turn lane west of cemetery.
+- p5e8k (L20 S23 B157) There are intersections such as the access road along Scottsville that to be reworked, possibly into roundabout or similar designs.
+- phmk4 (L21 S18 B10) Access Rd, east side of Scottsville Rd. in shopping dist causes congestion. Give right of way to access road or cross streets, not a mix!
+- pcp4z (L22 S83 B12) Louisville rd area needs more businesses and restaurants extending out towards the factories to also bring in revenue from Edmonson Co.
+- p5ku8 (L23 S37 B163) There needs to be a stoplight at the intersection of Shive Lane and Ken Bale Blvd to improve traffic flow. The backups there are awful.
+- pyssw (L24 S32 B591) Some county roads, such as Hammett Hill Road, are so narrow it's hard for two cars to pass. Surely they could make them a little wider.
+- pxwxs (L25 S62 B585) Create shoulders on the bypass.
+- pjf7t (L27 S8 B374) We need well planned service roads, instead of so many driveways directly on streets like Campbell Lane and the By pass.
+- pr7y3 (L29 S4 B480) New developments should help pay to widen the roads in the areas where they are increasing traffic.
+- pczge (L32 S20 B273) Busy roads like the by pass either need turn lanes or block left hand turns except at stop lights.
+- pv2mh (L39 S11 B80) A way to improve Bowling Green and the surrounding areas is to improve traffic flow & circulation by limiting the number of traffic lights.
+- pz6eg (L44 S25 B595) Bike lanes that are wide enough to safely ride on without fear of being hit by passing cars.
+- pyei4 (L49 S22 B72) The LEFT turning light at Nashville onto Dishman & the same for Scottsville onto Lovers Ln.. need to be longer to allow more to go through.
+- p49kb (L63 S2 B1) Driving in this town very dangerous, Drivers Education classes should be required for all new drivers!!!
+- p8tq3 (L66 S17 B41) There is too much continuous road work going on downtown. They need to get it together.
+- p3j36 (L75 S24 B133) We need to block left turns on the busy parts of the by-pass so people don't block everyone else trying to turn.
+- peizm (L79 S19 B294) Driver’s education needs to be more thorough and mandatory before 16 year olds are even allowed to drive home from the courthouse.
+- peyuw (L99 S59 B15) Raise drivers license from 16 to 18 and IMPROVE DRIVERS ED CLASSES in High schools Believe me they are pitiful.
+- ph4wf (L122 S91 B14) Something needs to be done with the river area- river walk, park, restaurants, summer events- to give the communities ways to get together.
+- pi4h5 (L133 S76 B2) BG can’t compete with Nashville or Louisville for young professionals
+- pts69 (L156 S86 B4) Funding and support should be given to the existing BG buses, to expand their service area and improve accessibility.
+- p4p8j (L165 S93 B13) There isn’t enough here to draw young families. We need a beautification of the riverfront and a more walkable city for young professionals
+- pg2kz (L168 S197 B7) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- ppz44 (L260 S332 B5) the Bark Park needs more trees and water access for the smaller dogs area
+- pqhex (L275 S187 B11) Why has the Police stop enforcing parking regulations? Park any way any direction. Is it time for a separate Traffic Enforcement Division?
+- p4e3h (L476 S399 B6) Public school could do alternate teaching styles(like Montessori) in a school within a school set up. Not all kids learn the same way.
+
+## #110 pqbt3: Mesonet provides valuable and protective weather information and funding for it should not be cut.
+
+- pij44 (L1 S2 B3) Consistent, once a month testing of our emergency sirens, not just before potential bad weather.
+- p35gt (L2 S61 B26) Better/more mass media choices available.
+- pfin8 (L3 S3 B1) Community Education provides after-school care necessary to working parents. Funding should not be cut.
+- pg2kz (L4 S21 B5) Too much money is spent on making sure we cut our grass and don't park in the yard.
+- pts69 (L5 S76 B9) Funding and support should be given to the existing BG buses, to expand their service area and improve accessibility.
+- pq8wz (L6 S15 B2) BG Parks needs more funding from City
+- p6k4e (L7 S34 B98) Beautification projects and other quality-of-life enhancements like parks and libraries help attract new residents and industries to our city/county.
+- pqeyn (L8 S16 B434) We need to carefully preserve agricultural land
+- pgzys (L9 S153 B291) Rental assistance programs
+- p4csd (L10 S5 B47) SNAP grants for neighborhood improvements should be available in Warren County, not just in the city.
+- piqt5 (L11 S27 B8) If we cut a major program, WKU would lose in the revenue the program brings in, ultimately costing more money.
+- pd4in (L12 S35 B220) There should be a push to improve mental health awareness and availability in Bowling Green.
+- pztez (L13 S43 B601) WRECC should provide internet services.
+- pxrrm (L14 S26 B579) Local schools should help make up the pension fund crisis by learning to live with budget cuts.
+- pb6y8 (L15 S172 B178) The arts enrich our city.
+- pwbe8 (L16 S190 B551) We need more incentives for individual and business solar power
+- pehyf (L17 S60 B241) The arts are an important component of K-12 education.
+- pirz4 (L18 S62 B324) All students in Warren county should have the best available education, not the Kentucky minimum, at all times.
+- pxn3z (L19 S7 B575) city needs to work on water run off when we have a lot of rain.. to many places flood on roadways makes driving very dangerous..
+- p6u6a (L20 S69 B105) Local government, for profit and non profits should work together on housing and economic equality
+- pa8ms (L21 S58 B160) Encourage growth of OTA tv stations. Lots of cord cutters and shavers enjoy the HD content they can get with an antenna.
+- pgcmd (L22 S140 B272) Bowling Green needs more cultural and educational establishments, like sciemce, history and art museums.
+- phceg (L23 S334 B296) We need jobs to attract our own college educated students so they don’t leave to get better paying jobs
+- pv2a8 (L24 S48 B523) When the city tears up lawns with projects they should be required to do what it takes so that lawns are same quality they were before.
+- pktbx (L25 S8 B361) Internet services should be a public municipality.
+- pkezh (L29 S110 B11) Public school systems need to provide more funding for art education programs, such as music, theater, and visual arts.
+- pzaca (L32 S23 B595) Bowling Green should spend less time redoing the same sidewalks over and over again and focus on the areas that actually need improvement.
+- pgsds (L34 S9 B285) County volunteer fire departments need to be upgraded to fit the current population of Warren County.
+- pqeuz (L39 S24 B433) Arts education should be available in every school in Warren County and other surrounding areas.
+- pyfsz (L41 S59 B12) University management bears more responsibility than federal and state education funding cuts for tuition rising so much over the years.
+- phjdj (L50 S22 B302) Bowling Green needs more competitive cable rates.
+- pqmg8 (L61 S11 B439) Low-income areas should get beautification money -- not the wealthy who can afford it themselves.
+- pkzf6 (L63 S12 B364) Bowling Green needs more competitive internet rates.
+- pc7zk (L109 S20 B201) City officials need to spread resources across city and not just focus on wealthy neighborhoods. Low-income areas of city are ignored.
+- pyr6n (L114 S256 B13) Future charter schools would be a financial burden to public school funding, unless they are held to accountability by local school boards.
+- pxg44 (L115 S17 B570) Bowling green needs to work in beautifying the city . More Boulvard like roads with planted flowers and reducing overhead utility clusters.
+- pf6t9 (L116 S10 B253) Bowling Green has many excellent non-public schools; more should be done to make these options available to diverse and low-income families.
+- pcura (L126 S6 B214) Other counties have school at home on snow days so that kids do not have to make up days. This should be considered for here.
+- p87p6 (L155 S18 B127) Bowling Green should be become a carbon neutral city.
+- pki7f (L157 S19 B355) Bowling Green needs more access to affordable , healthy, local food sources.
+- pyr2u (L159 S14 B588) Warren county needs to be "wet". The city is wet but the county is dry.
+- pmk7t (L198 S13 B375) Too many trees have been torn down to make way for new developments. We should re-plant more trees around Bowling Green.
+- p4pb4 (L231 S4 B54) Every citizen should be within 1 mile of some shaded green space.
+- pvfj9 (L247 S25 B533) More green spaces. All of our parks have just become sports complexes!
+- pfwr5 (L282 S1 B268) Warren County should be completely wet, the idea of a “moist” County is outdated and stunting the financial growth and tourism opportunity.
+- p34uw (L324 S448 B10) Both school districts shamefully manipulate low economic status parents to gain Title I funding. It should stop.
+- pg358 (L499 S488 B7) Sex education should include information about consent, safe sex practices, and STD spread and prevention.
+- p3fxs (L543 S553 B6) Drug information classes should be given to incoming freshmen of WKU to educate them about the risks and health hazards.
+- pnmq4 (L570 S271 B4) Emergency protective orders should not be able to be obtained regarding claims of an incident from a year ago.
