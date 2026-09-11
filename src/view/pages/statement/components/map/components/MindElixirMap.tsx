@@ -437,13 +437,24 @@ function MindElixirMap({
 		[t],
 	);
 
-	const data = useMemo(() => {
+	// `signature` is everything MindElixir would draw. Most live updates (a vote
+	// moving consensus, a lastUpdate bump) touch fields the map never shows, and
+	// a refresh() rebuilds every node — on a phone that was ~100ms per update and
+	// dropped the selection. Taken here, before MindElixir adds `parent` back-links
+	// to the tree and makes it circular.
+	const { data, signature } = useMemo(() => {
 		const leveled = applyDetailLevel(descendants, level, expandedIds);
 		const filtered =
 			filterBy === FilterType.questionsResults ? filterDescendants(leveled) : leveled;
+		const built = filtered
+			? toMindElixirData(filtered, [], formatBadge, { boardMode, markIds })
+			: null;
 
-		return filtered ? toMindElixirData(filtered, [], formatBadge, { boardMode, markIds }) : null;
+		return { data: built, signature: built ? JSON.stringify(built) : '' };
 	}, [descendants, filterBy, level, expandedIds, formatBadge, boardMode, markIds]);
+
+	// The signature MindElixir is currently showing.
+	const drawnSignatureRef = useRef('');
 
 	// Initialize MindElixir
 	useEffect(() => {
@@ -514,6 +525,7 @@ function MindElixirMap({
 
 		// Initialize with data
 		mind.init(data);
+		drawnSignatureRef.current = signature;
 
 		// Store reference
 		mindRef.current = mind;
@@ -1025,6 +1037,9 @@ function MindElixirMap({
 	useEffect(() => {
 		if (!mindRef.current || !data) return;
 
+		// Nothing the map draws has changed (see `signature`).
+		if (signature === drawnSignatureRef.current) return;
+
 		// Skip refresh if the user is currently editing a node inline.
 		// MindElixir creates div#input-box for inline editing; refresh would destroy it.
 		const inputBox = document.getElementById('input-box');
@@ -1042,6 +1057,7 @@ function MindElixirMap({
 			// If refresh fails, reinitialize
 			mindRef.current.init(data);
 		}
+		drawnSignatureRef.current = signature;
 
 		// Restore scale and position after refresh
 		if (currentScale && mindRef.current) {
@@ -1084,7 +1100,7 @@ function MindElixirMap({
 				}
 			}, 50);
 		}
-	}, [data, removeNodeButtons]);
+	}, [data, signature, removeNodeButtons]);
 
 	// A depth change redraws the tree; the toolbar may be pointing at a node
 	// that just folded away, so close it rather than leave it floating.
@@ -1202,6 +1218,8 @@ function MindElixirMap({
 			try {
 				const parsedData = JSON.parse(savedData);
 				mindRef.current.init(parsedData);
+				// The canvas no longer shows `data`; let the next update redraw it.
+				drawnSignatureRef.current = '';
 			} catch {
 				logError(new Error('Failed to restore mind map data'), {
 					operation: 'components.MindElixirMap.handleRestore',
