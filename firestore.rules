@@ -1557,6 +1557,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Statement vectors (embedding, hybridEmbedding) - no client access (Functions only)
+    match /statementEmbeddings/{statementId} {
+      allow read, write: if false;
+    }
+
     // Engagement events - no client access (Functions only)
     match /engagementEvents/{eventId} {
       allow read, write: if false;

@@ -123,10 +123,13 @@ producing representations *relative to the deliberative context* rather than in 
 
 ## 2.3 Storage and retrieval
 
-Each option's embedding is cached on the option document (`embedding` field) and indexed by Firestore's native
-flat vector index, parameterized by `(parentId, embedding, dimension=1536)`. Approximate-nearest-neighbour
-queries via `findNearest` (distance measure `COSINE`) return top-$k$ neighbours within a parent in roughly
-50–100 ms; the vector-search service over-fetches `limit × 3` and filters hidden/threshold in memory.
+Each option's embedding is cached in its own server-only doc, `statementEmbeddings/{statementId}` (`embedding`
+field, plus a mirrored `parentId`), and indexed by Firestore's native flat vector index, parameterized by
+`(parentId, embedding, dimension=1536)`. It used to sit on the option document itself, which made every client
+listener download ~57 KB of vector per statement change; `functions/src/services/statement-embedding-store.ts`
+explains the move and the legacy fallback. Approximate-nearest-neighbour queries via `findNearest` (distance
+measure `COSINE`) return top-$k$ neighbours within a parent in roughly 50–100 ms; the vector-search service
+over-fetches `limit × 3`, reads the matching statements in one batch, and filters hidden/threshold in memory.
 Embeddings are generated asynchronously after option creation. Both pipelines pre-flight an embedding-coverage
 check and offer a backfill action if coverage is insufficient.
 
@@ -379,7 +382,8 @@ implemented as functions (`kmeans-service.ts`, `negation-detection-service.ts`).
 Only two fragments of this design execute in production:
 
 - **Staleness marking.** Evaluation triggers call `markHybridEmbeddingStale`, setting
-  `hybridEmbeddingStale: true` on the affected proposal.
+  `hybridEmbeddingStale: true` on the affected proposal's embedding doc (`statementEmbeddings`, not the
+  statement — see §2.3).
 - **A zero-rating initial vector.** On option creation, if `enableHybridClustering` is set, a hybrid vector is
   written **with an all-zero rating half and 0 evaluators** — i.e. text-only.
 

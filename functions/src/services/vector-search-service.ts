@@ -1,9 +1,13 @@
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import { Statement } from '@freedi/shared-types';
+import { Collections, Statement } from '@freedi/shared-types';
 import { embeddingService, EMBEDDING_DIMENSIONS } from './embedding-service';
 import { resolveEmbeddingModel } from './embedding-model-resolver';
 import { embeddingCache } from './embedding-cache-service';
+import {
+	embeddingsCollection,
+	isLegacyEmbeddingFallbackEnabled,
+} from './statement-embedding-store';
 
 interface SimilarStatement {
 	statement: Statement;
@@ -25,11 +29,11 @@ const DEFAULT_THRESHOLD = 0.8;
  * Service for performing vector-based similarity search using Firestore
  *
  * Uses Firestore's native vector search (findNearest) for fast, scalable
- * similarity queries on statement embeddings.
+ * similarity queries on statement embeddings (`statementEmbeddings`).
  */
 class VectorSearchService {
 	private db = getFirestore();
-	private statementsCollection = 'statements';
+	private statementsCollection = Collections.statements;
 
 	/**
 	 * Find statements similar to a text query
@@ -106,21 +110,56 @@ class VectorSearchService {
 		const activeModel = await resolveEmbeddingModel(parentId);
 
 		try {
-			// Build the base query - only filter by parentId
-			// Don't filter by hide here to avoid complex index requirements
-			const query = this.db.collection(this.statementsCollection).where('parentId', '==', parentId);
-
-			// Create vector query using Firestore's findNearest
-			// Use distanceResultField to get the distance value in results
-			const vectorQuery = query.findNearest({
+			// Vectors live in statementEmbeddings (see statement-embedding-store);
+			// the hits are then read from `statements` in one batch. Until the
+			// migration has moved the vectors still stored on statement docs, the
+			// old index on `statements` is searched as well — it goes quiet on
+			// its own once those fields are gone.
+			const nearestOptions = {
 				vectorField: 'embedding',
 				queryVector: FieldValue.vector(queryEmbedding),
 				limit: limit * 3, // Get more results to account for hidden filtering
-				distanceMeasure: 'COSINE',
+				distanceMeasure: 'COSINE' as const,
 				distanceResultField: 'vectorDistance',
-			});
+			};
+			const searchLegacy = isLegacyEmbeddingFallbackEnabled();
+			const [embeddingSnap, legacySnap] = await Promise.all([
+				embeddingsCollection().where('parentId', '==', parentId).findNearest(nearestOptions).get(),
+				searchLegacy
+					? this.db
+							.collection(this.statementsCollection)
+							.where('parentId', '==', parentId)
+							.findNearest(nearestOptions)
+							.get()
+					: Promise.resolve(null),
+			]);
 
-			const snapshot = await vectorQuery.get();
+			const hitIds = embeddingSnap.docs.map((doc) => doc.id);
+			const statementSnaps =
+				hitIds.length > 0
+					? await this.db.getAll(
+							...hitIds.map((id) => this.db.collection(this.statementsCollection).doc(id)),
+						)
+					: [];
+			const statementsById = new Map(
+				statementSnaps
+					.filter((snap) => snap.exists)
+					.map((snap) => [snap.id, snap.data() as Statement]),
+			);
+
+			// One list of (statement, vector metadata) whatever store it came from.
+			const candidates: Array<{ statement: Statement; meta: Record<string, unknown> }> = [];
+			for (const doc of embeddingSnap.docs) {
+				const statement = statementsById.get(doc.id);
+				// Deleted, or moved to another question before the sync caught up.
+				if (!statement || statement.parentId !== parentId) continue;
+				candidates.push({ statement, meta: doc.data() });
+			}
+			for (const doc of legacySnap?.docs ?? []) {
+				if (statementsById.has(doc.id)) continue;
+				const data = doc.data() as Statement;
+				candidates.push({ statement: data, meta: doc.data() });
+			}
 
 			const results: SimilarStatement[] = [];
 			// Aggregate counters — replaces a per-doc logger.info that emitted
@@ -132,9 +171,7 @@ class VectorSearchService {
 			let topSimilarity = -Infinity;
 			let topStatementId: string | undefined;
 
-			for (const doc of snapshot.docs) {
-				const data = doc.data() as Statement;
-
+			for (const { statement: data, meta: rawData } of candidates) {
 				// Filter hidden statements in code (avoids complex index)
 				if (!includeHidden && data.hide === true) {
 					continue;
@@ -142,7 +179,6 @@ class VectorSearchService {
 
 				// Firestore COSINE distance = 1 - cosine_similarity, range [0, 2]
 				// Convert back: cosine_similarity = 1 - distance
-				const rawData = doc.data() as Record<string, unknown>;
 
 				// `findNearest` scores server-side against whatever vector is stored,
 				// and cannot be told to skip vectors from a different embedding model
@@ -292,8 +328,10 @@ class VectorSearchService {
 	 */
 	async isVectorSearchAvailable(): Promise<boolean> {
 		try {
-			// Try a minimal vector search to check if index is ready
-			const testQuery = this.db.collection(this.statementsCollection).limit(1);
+			// Try a minimal vector search to check if index is ready. Same shape
+			// as the real query (parentId pre-filter), or a missing composite
+			// index would pass this check and fail every real search.
+			const testQuery = embeddingsCollection().where('parentId', '==', '__index_probe__');
 
 			// Create a dummy embedding matching actual dimensions
 			const dummyEmbedding = new Array(EMBEDDING_DIMENSIONS).fill(0);
