@@ -4124,5 +4124,18 @@
   "homeActivity.agreement": "اتفاق جديد",
   "homeActivity.emptyTitle": "أنشئ نشاطًا",
   "homeActivity.emptyBody": "ابدأ محادثة، وستظهر هنا أشياء مثيرة للاهتمام من أجلك.",
-  "homeActivity.create": "إنشاء نشاط"
+  "homeActivity.create": "إنشاء نشاط",
+  "Search": "بحث",
+  "Search this space": "البحث في هذه المساحة",
+  "Type a word or an idea": "اكتب كلمة أو فكرة",
+  "My spaces": "مساحاتي",
+  "Everything I follow": "كل ما أتابعه",
+  "Close matches": "تطابقات قريبة",
+  "Similar meaning": "معنى مشابه",
+  "Searching…": "جارٍ البحث…",
+  "Looking for similar ideas…": "نبحث عن أفكار مشابهة…",
+  "No matches for": "لا توجد نتائج لـ",
+  "Search is not available right now": "البحث غير متاح حاليًا",
+  "Searched": "تم البحث في",
+  "Comment": "تعليق"
 }

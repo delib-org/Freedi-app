@@ -189,6 +189,23 @@ export const BULK_LOAD = {
 } as const;
 
 /**
+ * Statement search constants (home, subscriptions, whole-tree search).
+ * Scoring thresholds shared with the server live in SEARCH_CONFIG (@freedi/shared-types).
+ */
+export const SEARCH = {
+	/** Wait after typing before ranking locally */
+	DEBOUNCE_MS: 250,
+	/** Wait after typing before calling the searchStatements function */
+	SERVER_DEBOUNCE_MS: 500,
+	/** Most recently updated subscriptions downloaded for local search */
+	SUBSCRIPTIONS_CANDIDATE_LIMIT: 1000,
+	/** How long downloaded subscription candidates stay fresh */
+	CACHE_TTL_MS: 5 * TIME.MINUTE,
+	/** Trees larger than this are searched on the server instead of downloaded */
+	SERVER_TREE_THRESHOLD: 1500,
+} as const;
+
+/**
  * Follow Me feature constants
  */
 export const FOLLOW_ME = {

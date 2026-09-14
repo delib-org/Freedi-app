@@ -137,23 +137,37 @@ export async function loadEmbeddingDocs(
 }
 
 /**
- * Keep the embedding doc's `parentId` equal to its statement's, so vector
- * search by question finds a statement after it was moved. Called from the
- * statement update trigger; a no-op unless the parent changed.
+ * Keep the embedding doc's `parentId` and `topParentId` equal to its
+ * statement's, so vector search by question (and search by tree) finds a
+ * statement after it was moved. Called from the statement update trigger; a
+ * no-op unless one of them changed.
  */
 export async function syncEmbeddingParent(before: unknown, after: unknown): Promise<void> {
 	const previous = before as DocumentData | undefined;
 	const current = after as DocumentData | undefined;
 	const statementId = current?.statementId as string | undefined;
 	const newParentId = current?.parentId as string | undefined;
-	if (!statementId || !newParentId || previous?.parentId === newParentId) return;
+	const newTopParentId = current?.topParentId as string | undefined;
+	if (!statementId || !newParentId) return;
+
+	const parentChanged = previous?.parentId !== newParentId;
+	const topParentChanged = !!newTopParentId && previous?.topParentId !== newTopParentId;
+	if (!parentChanged && !topParentChanged) return;
+
+	const update: Record<string, unknown> = { parentId: newParentId, lastUpdate: Date.now() };
+	if (newTopParentId) update.topParentId = newTopParentId;
 
 	try {
-		await embeddingDocRef(statementId).update({ parentId: newParentId, lastUpdate: Date.now() });
+		await embeddingDocRef(statementId).update(update);
 	} catch (error) {
 		if (isNotFoundError(error)) return; // nothing embedded yet
 
-		logger.error('statementEmbeddings: parent sync failed', { statementId, newParentId, error });
+		logger.error('statementEmbeddings: parent sync failed', {
+			statementId,
+			newParentId,
+			newTopParentId,
+			error,
+		});
 	}
 }
 

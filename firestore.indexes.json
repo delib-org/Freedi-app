@@ -1,6 +1,20 @@
 {
   "indexes": [
     {
+      "collectionGroup": "statementsSubscribe",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "lastUpdate",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "moderationLogs",
       "queryScope": "COLLECTION",
       "fields": [
@@ -2181,6 +2195,27 @@
           "fieldPath": "hybridEmbedding",
           "vectorConfig": {
             "dimension": 1544,
+            "flat": {}
+          }
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statementEmbeddings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "embeddingModel",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "topParentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "embedding",
+          "vectorConfig": {
+            "dimension": 1536,
             "flat": {}
           }
         }

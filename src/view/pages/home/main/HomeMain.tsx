@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
-import { StatementType } from '@freedi/shared-types';
+import { StatementType, type SearchCandidate } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import {
@@ -17,6 +17,9 @@ import {
 } from '@/redux/statements/newStatementSlice';
 import { useHomeStatementOverlay } from '@/controllers/hooks/useHomeStatementOverlay';
 import { useLazyLoadHomeSubscriptions } from '../hooks/useLazyLoadHomeSubscriptions';
+import { useStatementSearch } from '@/controllers/hooks/useStatementSearch';
+import SegmentedControl from '@/view/components/atomic/atoms/SegmentedControl/SegmentedControl';
+import SearchResults from '@/view/components/atomic/molecules/SearchResults';
 import ConversationHome, {
 	ConversationSummary,
 } from '@/view/components/atomic/organisms/ThinkingSpace/ConversationHome';
@@ -31,6 +34,9 @@ export default function HomeMain() {
 	const statements = useAppSelector(statementsSelector);
 	const [loading, setLoading] = useState(true);
 	const [filter, setFilter] = useState<'all' | 'groups'>('all');
+	const [searchQuery, setSearchQuery] = useState('');
+	const [searchScope, setSearchScope] = useState<'home' | 'subscriptions'>('home');
+	const search = useStatementSearch({ kind: searchScope }, searchQuery);
 	const topLevelSubscriptions = useMemo(
 		() => subscriptions.filter((sub) => (sub.parentId || sub.statement?.parentId) === 'top'),
 		[subscriptions],
@@ -79,6 +85,23 @@ export default function HomeMain() {
 				};
 			});
 	}, [subscriptions, statements, user?.uid]);
+	// Where a hit sits, for hits below the top level: the title of its space.
+	const titleById = useMemo(() => {
+		if (!searchQuery.trim()) return new Map<string, string>();
+		const titles = new Map<string, string>();
+		subscriptions.forEach((sub) => {
+			if (sub.statement?.statement) titles.set(sub.statementId, sub.statement.statement);
+		});
+		statements.forEach((statement) => titles.set(statement.statementId, statement.statement));
+
+		return titles;
+	}, [searchQuery, subscriptions, statements]);
+	const getContextLabel = useCallback(
+		(candidate: SearchCandidate): string | undefined =>
+			candidate.parentId === 'top' ? undefined : titleById.get(candidate.topParentId),
+		[titleById],
+	);
+
 	const create = (): void => {
 		dispatch(setParentStatement('top'));
 		dispatch(setNewStatementType(StatementType.question));
@@ -107,6 +130,31 @@ export default function HomeMain() {
 				onCreateGroup={createGroup}
 				onFilterChange={setFilter}
 				loading={loading}
+				search={{
+					query: searchQuery,
+					onQueryChange: setSearchQuery,
+					results: (
+						<div className={styles.search}>
+							<SegmentedControl
+								segments={[
+									{ id: 'home', label: t('My spaces') },
+									{ id: 'subscriptions', label: t('Everything I follow') },
+								]}
+								activeId={searchScope}
+								onChange={(id) => setSearchScope(id === 'subscriptions' ? 'subscriptions' : 'home')}
+							/>
+							<SearchResults
+								query={search.query}
+								lexical={search.lexical}
+								semantic={search.semantic}
+								isLoading={search.isLoading}
+								hasError={search.hasError}
+								onSelect={(id) => navigate(`/statement/${id}`)}
+								getContextLabel={getContextLabel}
+							/>
+						</div>
+					),
+				}}
 				t={t}
 				more={
 					<>

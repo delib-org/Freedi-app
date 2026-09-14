@@ -4502,5 +4502,18 @@
   "homeActivity.agreement": "توافق تازه",
   "homeActivity.emptyTitle": "یک فعالیت بسازید",
   "homeActivity.emptyBody": "یک گفت‌وگو آغاز کنید تا چیزهای جالب برای شما اینجا ظاهر شوند.",
-  "homeActivity.create": "ساخت فعالیت"
+  "homeActivity.create": "ساخت فعالیت",
+  "Search": "جستجو",
+  "Search this space": "جستجو در این فضا",
+  "Type a word or an idea": "یک واژه یا یک ایده بنویسید",
+  "My spaces": "فضاهای من",
+  "Everything I follow": "هر آنچه دنبال می‌کنم",
+  "Close matches": "نتایج نزدیک",
+  "Similar meaning": "معنای مشابه",
+  "Searching…": "در حال جستجو…",
+  "Looking for similar ideas…": "در جستجوی ایده‌های مشابه…",
+  "No matches for": "نتیجه‌ای یافت نشد برای",
+  "Search is not available right now": "جستجو در حال حاضر در دسترس نیست",
+  "Searched": "جستجو شد:",
+  "Comment": "نظر"
 }

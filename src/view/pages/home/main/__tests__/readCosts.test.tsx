@@ -35,6 +35,18 @@ jest.mock('@/redux/statements/newStatementSlice', () => ({
 jest.mock('@/controllers/hooks/useHomeStatementOverlay', () => ({
 	useHomeStatementOverlay: jest.fn(),
 }));
+jest.mock('@/controllers/hooks/useStatementSearch', () => ({
+	useStatementSearch: () => ({
+		query: '',
+		lexical: [],
+		semantic: [],
+		isLoading: false,
+		isLoadingTree: false,
+		isSearchingMeaning: false,
+		coverage: null,
+		hasError: false,
+	}),
+}));
 jest.mock('../../hooks/useLazyLoadHomeSubscriptions', () => ({
 	useLazyLoadHomeSubscriptions: () => ({}),
 }));

@@ -4004,5 +4004,18 @@
   "homeActivity.agreement": "Neue Vereinbarung",
   "homeActivity.emptyTitle": "Aktivität erstellen",
   "homeActivity.emptyBody": "Starte ein Gespräch. Interessante Neuigkeiten für dich erscheinen dann hier.",
-  "homeActivity.create": "Aktivität erstellen"
+  "homeActivity.create": "Aktivität erstellen",
+  "Search": "Suchen",
+  "Search this space": "In diesem Raum suchen",
+  "Type a word or an idea": "Gib ein Wort oder eine Idee ein",
+  "My spaces": "Meine Räume",
+  "Everything I follow": "Alles, dem ich folge",
+  "Close matches": "Passende Treffer",
+  "Similar meaning": "Ähnliche Bedeutung",
+  "Searching…": "Suche läuft…",
+  "Looking for similar ideas…": "Ähnliche Ideen werden gesucht…",
+  "No matches for": "Keine Treffer für",
+  "Search is not available right now": "Die Suche ist gerade nicht verfügbar",
+  "Searched": "Durchsucht:",
+  "Comment": "Kommentar"
 }

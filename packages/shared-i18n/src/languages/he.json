@@ -4741,5 +4741,18 @@
   "homeActivity.agreement": "הסכמה חדשה",
   "homeActivity.emptyTitle": "יוצרים פעילות",
   "homeActivity.emptyBody": "פתחו שיחה, וכאן יופיעו דברים מעניינים עבורכם.",
-  "homeActivity.create": "יצירת פעילות"
+  "homeActivity.create": "יצירת פעילות",
+  "Search": "חיפוש",
+  "Search this space": "חיפוש במרחב הזה",
+  "Type a word or an idea": "הקלידו מילה או רעיון",
+  "My spaces": "המרחבים שלי",
+  "Everything I follow": "כל מה שאני עוקב/ת אחריו",
+  "Close matches": "התאמות קרובות",
+  "Similar meaning": "משמעות דומה",
+  "Searching…": "מחפשים…",
+  "Looking for similar ideas…": "מחפשים רעיונות דומים…",
+  "No matches for": "לא נמצאו תוצאות עבור",
+  "Search is not available right now": "החיפוש לא זמין כרגע",
+  "Searched": "נסרקו",
+  "Comment": "תגובה"
 }

@@ -79,6 +79,8 @@ export type StatementEmbedding = v.InferOutput<typeof StatementEmbeddingSchema>;
 export const StatementEmbeddingDocSchema = v.object({
   statementId: v.string(),
   parentId: v.string(),
+  /** Mirrors the statement's topParentId so search can scope vectors to one tree. */
+  topParentId: v.optional(v.string()),
   embedding: v.optional(v.array(v.number())),
   embeddingModel: v.optional(v.string()),
   embeddingContext: v.optional(v.nullable(v.string())),

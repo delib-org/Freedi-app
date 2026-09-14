@@ -4004,5 +4004,18 @@
   "homeActivity.agreement": "Nieuwe afspraak",
   "homeActivity.emptyTitle": "Maak een activiteit",
   "homeActivity.emptyBody": "Start een gesprek. Interessante dingen voor jou verschijnen dan hier.",
-  "homeActivity.create": "Activiteit maken"
+  "homeActivity.create": "Activiteit maken",
+  "Search": "Zoeken",
+  "Search this space": "Zoeken in deze ruimte",
+  "Type a word or an idea": "Typ een woord of een idee",
+  "My spaces": "Mijn ruimtes",
+  "Everything I follow": "Alles wat ik volg",
+  "Close matches": "Overeenkomsten",
+  "Similar meaning": "Vergelijkbare betekenis",
+  "Searching…": "Zoeken…",
+  "Looking for similar ideas…": "Vergelijkbare ideeën zoeken…",
+  "No matches for": "Geen resultaten voor",
+  "Search is not available right now": "Zoeken is nu niet beschikbaar",
+  "Searched": "Doorzocht:",
+  "Comment": "Reactie"
 }

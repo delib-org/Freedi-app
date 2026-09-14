@@ -99,3 +99,11 @@
 		margin: 0;
 	}
 }
+
+// Search results replace the conversation grid while a query is typed.
+.search {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md, 1rem);
+	max-width: 48rem;
+}

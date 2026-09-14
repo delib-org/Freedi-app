@@ -265,6 +265,8 @@ class EmbeddingCacheService {
 				...legacyFieldsForEmbeddingDoc(statement),
 				statementId,
 				parentId: statement.parentId ?? '',
+				// Search scopes vectors to one tree (vector-search-service findSimilarInTree).
+				topParentId: statement.topParentId ?? statement.parentId ?? '',
 				embedding: FieldValue.vector(embedding),
 				embeddingModel: model,
 				embeddingContext: context || null,
@@ -340,6 +342,8 @@ class EmbeddingCacheService {
 					...legacyFieldsForEmbeddingDoc(statement),
 					statementId: item.statementId,
 					parentId: statement.parentId ?? '',
+					// Search scopes vectors to one tree (vector-search-service findSimilarInTree).
+					topParentId: statement.topParentId ?? statement.parentId ?? '',
 					embedding: FieldValue.vector(item.embedding),
 					embeddingModel: model,
 					embeddingContext: item.context || null,
