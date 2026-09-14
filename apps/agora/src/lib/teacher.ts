@@ -238,6 +238,28 @@ export async function setSessionTheme(sessionId: string, theme: AgoraThemeChoice
 	});
 }
 
+/** Who moves the class between the village's stations — the teacher's to switch, live */
+export async function setVillageNavigation(
+	sessionId: string,
+	villageNavigation: 'teacher' | 'free',
+): Promise<void> {
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		villageNavigation,
+		lastUpdate: Date.now(),
+	});
+}
+
+/**
+ * Walk every student's village to one place. A timestamp rather than a flag,
+ * so calling the same place twice calls twice, and each phone acts once per call.
+ */
+export async function callVillage(sessionId: string, place: 'current' | 'council'): Promise<void> {
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		villageCall: { place, at: Date.now() },
+		lastUpdate: Date.now(),
+	});
+}
+
 /**
  * Where a student placed themselves between the two camps.
  *

@@ -234,6 +234,7 @@ export function ProjectorScreen(
 							scores,
 							census: getConsensusPool(),
 							finale: false,
+							onlyScored: session.votingSettings?.goalZoneOnly === true,
 						}),
 					]),
 				];

@@ -13,9 +13,11 @@ import { db } from '../db';
 import {
 	Collections,
 	AgoraSession,
+	AgoraProposalScore,
 	SimpleStatement,
 	Statement,
 	VotingCandidate,
+	inBridgeZone,
 	resolveVotingSelection,
 } from '@freedi/shared-types';
 import { updateParentStatementWithChosenOptions } from '../evaluation/updateChosenOptions';
@@ -73,6 +75,25 @@ export async function prepareVotingStage(
 			return;
 		}
 
+		// The teacher chose the goal: the ballot is whoever stands in the net
+		// on the class map, in the map's own geometry (shared `inBridgeZone`),
+		// ordered as the scoreboard ranks them. Nothing is written onto the
+		// question — the shared selector is not asked a question it cannot
+		// answer.
+		if (session.votingSettings?.goalZoneOnly === true) {
+			const candidates = await goalZoneCandidates(sessionId);
+			await sessionRef.update({
+				voting: {
+					candidateIds: candidates.map((candidate) => candidate.statementId),
+					candidates,
+					computedAt: Date.now(),
+				},
+				lastUpdate: Date.now(),
+			});
+
+			return;
+		}
+
 		// The teacher's choice, expressed in the shared vocabulary
 		const selection = resolveVotingSelection(session.votingSettings);
 		await db
@@ -108,4 +129,38 @@ export async function prepareVotingStage(
 			metadata: { sessionId },
 		});
 	}
+}
+
+/**
+ * The proposals in the goal, best first — the same reading the board paints,
+ * so the ballot and the net agree. A hidden proposal keeps its score doc but
+ * is not standing anywhere; an unrated one has no reading and cannot be in.
+ */
+export async function goalZoneCandidates(sessionId: string): Promise<VotingCandidate[]> {
+	const scoresSnap = await db
+		.collection(Collections.agoraScores)
+		.where('sessionId', '==', sessionId)
+		.get();
+	const scored = scoresSnap.docs
+		.map((docSnap) => docSnap.data() as AgoraProposalScore)
+		.filter((score) => score.hidden !== true && inBridgeZone(score))
+		.sort(
+			(a, b) => (b.classConsensus?.consensus ?? 0) - (a.classConsensus?.consensus ?? 0),
+		);
+	const docs = await Promise.all(
+		scored.map((score) => db.collection(Collections.statements).doc(score.statementId).get()),
+	);
+
+	return docs.flatMap((docSnap, index) => {
+		if (!docSnap.exists) return [];
+		const statement = docSnap.data() as Statement;
+
+		return [
+			{
+				statementId: statement.statementId,
+				statement: String(statement.statement ?? ''),
+				consensus: Number(scored[index].classConsensus?.consensus ?? statement.consensus ?? 0),
+			},
+		];
+	});
 }

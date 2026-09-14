@@ -96,3 +96,86 @@ right thread, replied as Noam, thanked an open suggestion, and checked Maya's
 reply notification, thank-you notification, award line and balance increment.
 Inbox navigation stays inside the village; the conversation is constrained to
 its panel rather than the classic full-screen shell.
+
+## Booths, the council scoreboard and the goal (September 14)
+
+The village now holds **one booth per question of the plan** (`villageBooths` in
+`lib/flows/villageRoute.ts`; place id `booth:<itemId>`), the deliberation
+included. The library, the study house (lobby) and the council stay fixed;
+the booths stand on a ring around the square (`boothLayout` in
+`prototypes/olive-hill/village.js`), spaced at least a pavilion apart, each
+with its writing desk in front and its board on the back wall **facing the
+square**. A booth ahead of the room is built closed (grey sign, "ייפתח
+בהמשך"); the room's booth flies a pennant. The 3D station list is visible in
+sessions too: walking to another booth and pressing its desk or "לגשת לביתן"
+sends `agora-village-select`, which puts that item on screen and opens its
+paper. The old story/needs/solution places no longer exist.
+
+**Points parity.** The booth board (`VillageCommunity`) now carries the same
+rating control the classic screen for that item shows — the five faces for
+proposals and open questions, the heart for stories, the 0…1 steps for needs
+and vision — gated exactly as there (write your own note first, only while the
+item is live). Every credit is therefore paid in the village as in the classic
+game: first draft, rating credit, round appreciation, thanks, revision, weave,
+bridging. The simulation asserts these on the participant documents.
+
+**The council scoreboard.** The council's wooden board paints the class map
+(`councilPitch` in `lib/flows/villageCouncil.ts`: the field, the goal box,
+every rated proposal with its rank, mine in white, a ball on scored ones) and,
+once the vote is open, the ballot with its bars (`councilBallot`, hidden
+until the teacher reveals them). Pressing it — or the toolbar's "לוח התוצאות"
+— opens the live `ResultsBoard`/`HelpersBoard` over the village; at the vote
+and the recap it opens the ballot/recap itself.
+
+**The goal as the ballot.** `VotingStageSettings.goalZoneOnly` (teacher
+console → "איך נפתחת ההצבעה") narrows every scoreboard (village board, class
+map, projector) to the proposals standing in the goal and makes
+`prepareVotingStage` draw the ballot from exactly those (`inBridgeZone`, now
+in shared-types `agoraGoal.ts` so the server and the board agree). The
+default is unchanged: the shared consensus selector.
+
+Verification: `npx tsx scripts/village-sim.mjs` (or via `solo.sh`) — three
+browser students, four booths, ratings, an improvement and a thank-you, the
+teacher's goal switch, the vote with bars, the recap; screenshots in
+`output/village-sim/`.
+
+## Who moves the class: teacher-led or free (September 14)
+
+`AgoraSession.villageNavigation` (`teacher` | `free`, absent = teacher) is set on
+the start screen under the village choice and switched live in the console's
+settings sheet ("מי מזיז את התלמידים בין התחנות בכפר?").
+
+- **Teacher leads.** Every advance closes whatever the student had open (a
+  board left open used to keep its frame, swap its content to the next item
+  and pause the walk, so the student stood at the old booth facing an empty
+  board with no paper). The shell sends `agora-village-go`; the world walks
+  there and answers `agora-village-arrived`; the shell then opens the paper,
+  or the board once the student has written, or the ballot/recap at the
+  council. The village map stays open, so students roam freely between advances. A
+  refreshed page walks the student back to the class.
+- **Students navigate.** The map lists every station with its state (● the
+  class is here, ✓ open, 🔒 later) and a press walks there; arriving at the
+  room's booth with nothing written opens the paper. An advance is announced
+  on a line across the top with a "ללכת לשם" button; nobody is moved.
+- **Calling the class.** `AgoraSession.villageCall` `{ place, at }`: the
+  console's "כולם לתחנה של עכשיו" / "כולם למועצת הכפר · לוח התוצאות". Each
+  client acts once per `at`, in either mode; a call met on first render older
+  than two minutes is ignored.
+
+The map folds away on phones (≤650px) behind a "🗺 מפת הכפר" toggle.
+
+### Conversations on paper, and the goal switch during the vote (September 14)
+
+A conversation opened from a booth board (improvement ideas, replies) writes
+on the same lined village paper as every desk, with a visible label
+("כתבו כאן את ההודעה או את הרעיון לשיפור" / "כתבו כאן את התשובה שלכם").
+ThreadChat takes an optional `paperLabel`; the classic full-screen chat is
+unchanged.
+
+The teacher's live voting card carries the goal switch too ("בקלפי רק ההצעות
+שנכנסו לשער"). Flipping it during the vote calls `agoraSetBallotGoalOnly`,
+which stores `votingSettings.goalZoneOnly`, redraws `session.voting` through
+`prepareVotingStage`, and withdraws (writes `none`) every vote for a proposal
+that left the ballot, so the tally and the recap's winner stay consistent;
+those students vote again. It refuses while a challenge turn is being judged,
+and refuses to empty the ballot when nothing is in the goal yet.

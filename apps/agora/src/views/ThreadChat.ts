@@ -51,6 +51,8 @@ export interface ThreadChatServices {
 	markThreadSeen: typeof markThreadSeen;
 }
 export interface ThreadChatAttrs {
+	/** A visible label over the message box (the village board passes one; the classic chat shows none) */
+	paperLabel?: string;
 	services?: ThreadChatServices;
 	canEditProposal?: boolean;
 	session: AgoraSession;
@@ -960,7 +962,15 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					stalledBanner(),
 					sendFailed ? m('p.join__error', { role: 'alert' }, t('delib.send_failed')) : null,
 					m('.chat-page__composer', [
+						vnode.attrs.paperLabel
+							? m(
+									'label.chat-page__label',
+									{ for: `chat-input-${proposal.statementId}` },
+									vnode.attrs.paperLabel,
+								)
+							: null,
 						m('textarea.text-input.chat-page__input', {
+							id: `chat-input-${proposal.statementId}`,
 							value: draft,
 							rows: 2,
 							placeholder: t(

@@ -13,6 +13,29 @@ const STORAGE_KEY = 'agora_lang';
  */
 export const translations: Record<LangCode, Record<string, string>> = {
 	he: {
+		'delib.thread_write_label': 'כתבו כאן את ההודעה או את הרעיון לשיפור',
+		'delib.thread_write_label_owner': 'כתבו כאן את התשובה שלכם',
+		'teacher.voting_goal_only_live': 'בקלפי רק ההצעות שנכנסו לשער',
+		'teacher.voting_goal_only_live_hint':
+			'הקלפי נבנית מחדש רק מההצעות שבתוך השער. מי שהצביע להצעה שירדה מהקלפי יתבקש להצביע שוב.',
+		'teacher.voting_goal_only_empty': 'אף הצעה עוד לא בשער, ולכן הקלפי לא שונתה.',
+		'delib.write_label': 'כתבו כאן את ההצעה שלכם',
+		'village.nav_title': 'מי מזיז את התלמידים בין התחנות בכפר?',
+		'village.nav_teacher': 'המורה מוביל/ה את הכיתה',
+		'village.nav_teacher_hint':
+			'התלמידים מסתובבים בכפר בחופשיות. כשתלחצו "הלאה", כולם הולכים יחד לתחנה החדשה והפתק שלהם נפתח שם.',
+		'village.nav_free': 'התלמידים מנווטים בעצמם',
+		'village.nav_free_hint':
+			'התלמידים בוחרים לאן ללכת במפת הכפר. תחנה חדשה נפתחת כשתלחצו "הלאה", והם מקבלים הודעה עם כפתור "ללכת לשם". תחנות שעוד לא הגעתם אליהן נעולות.',
+		'village.call_title': 'לקרוא לכל הכיתה',
+		'village.call_current': 'כולם לתחנה של עכשיו',
+		'village.call_council': 'כולם למועצת הכפר · לוח התוצאות',
+		'village.call_sent': 'התלמידים בדרך.',
+		'teacher.voting_goal_only': 'להצבעה עולות רק ההצעות שנכנסו לשער',
+		'teacher.voting_goal_only_hint':
+			'לוח התוצאות יציג מעכשיו רק את ההצעות שבתוך השער (הריבוע הקטן), והקלפי תיפתח בדיוק עליהן.',
+		'board.goal_only': 'רק ההצעות שנכנסו לשער',
+		'board.goal_only_empty': 'עדיין אף הצעה לא נכנסה לשער. דרגו והציעו שיפורים כדי להכניס אחת.',
 		'look.seed_font': 'גופן',
 		'look.font_default': 'הרגיל',
 		'look.font_sample': 'אגורה',
@@ -870,7 +893,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.propose_hint_open': 'מה צריך לעשות? כתבו הצעה שכמה שיותר אנשים כאן יוכלו לחיות איתה.',
 		'delib.mission_label': 'המשימה שלכם',
 		'delib.placeholder': 'אנחנו מציעים ש...',
-		'delib.write_first': 'קודם כותבים — ואז מוסיפים את התשובה',
+		'delib.write_first': 'כתבו את ההצעה בתיבה שלמעלה כדי לשלוח',
 		'delib.submit_proposal': 'הוספ/י תשובתך',
 		'delib.update_proposal': 'עדכון ההצעה',
 		'delib.update_saved': 'נשמר',
@@ -1351,6 +1374,31 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'המורה ניסח מחדש את הטקסט שלכם',
 	},
 	en: {
+		'delib.thread_write_label': 'Write your message or improvement idea here',
+		'delib.thread_write_label_owner': 'Write your reply here',
+		'teacher.voting_goal_only_live': 'Only proposals in the goal on the ballot',
+		'teacher.voting_goal_only_live_hint':
+			'The ballot is redrawn from the proposals inside the goal. Anyone who voted for a proposal that left the ballot is asked to vote again.',
+		'teacher.voting_goal_only_empty':
+			'No proposal is in the goal yet, so the ballot was not changed.',
+		'delib.write_label': 'Write your proposal here',
+		'village.nav_title': 'Who moves students between the village stations?',
+		'village.nav_teacher': 'The teacher leads the class',
+		'village.nav_teacher_hint':
+			'Students roam the village freely. When you press "Next", everyone walks to the new station together and their note opens there.',
+		'village.nav_free': 'Students navigate themselves',
+		'village.nav_free_hint':
+			'Students choose where to walk on the village map. A new station opens when you press "Next", and they get a notice with a "Go there" button. Stations you have not reached yet stay locked.',
+		'village.call_title': 'Call the whole class',
+		'village.call_current': 'Everyone to the current station',
+		'village.call_council': 'Everyone to the village council · scoreboard',
+		'village.call_sent': 'Students are on their way.',
+		'teacher.voting_goal_only': 'Only proposals that reached the goal go to the vote',
+		'teacher.voting_goal_only_hint':
+			'From now on the scoreboard shows only the proposals inside the goal (the small box), and the ballot opens on exactly those.',
+		'board.goal_only': 'Only the proposals in the goal',
+		'board.goal_only_empty':
+			'No proposal has reached the goal yet. Rate and suggest improvements to get one in.',
 		'look.seed_font': 'Font',
 		'look.font_default': 'Regular',
 		'look.font_sample': 'Agora',
@@ -2244,7 +2292,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 			'What should be done? Write a proposal as many people here as possible could live with.',
 		'delib.mission_label': 'Your mission',
 		'delib.placeholder': 'We propose that...',
-		'delib.write_first': 'Write first — then add your answer',
+		'delib.write_first': 'Write your proposal in the box above to send it',
 		'delib.submit_proposal': 'Add your answer',
 		'delib.update_proposal': 'Update proposal',
 		'delib.update_saved': 'Saved',
@@ -2744,6 +2792,29 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Your teacher reworded your text',
 	},
 	ar: {
+		'delib.thread_write_label': 'اكتبوا هنا رسالتكم أو فكرة التحسين',
+		'delib.thread_write_label_owner': 'اكتبوا ردكم هنا',
+		'teacher.voting_goal_only_live': 'في الاقتراع فقط المقترحات داخل المرمى',
+		'teacher.voting_goal_only_live_hint':
+			'يُعاد بناء الاقتراع من المقترحات داخل المرمى فقط. من صوّت لمقترح خرج من الاقتراع يُطلب منه التصويت مجددًا.',
+		'teacher.voting_goal_only_empty': 'لا يوجد مقترح داخل المرمى بعد، لذلك لم يتغير الاقتراع.',
+		'delib.write_label': 'اكتبوا اقتراحكم هنا',
+		'village.nav_title': 'من ينقل الطلاب بين محطات القرية؟',
+		'village.nav_teacher': 'المعلم/ة يقود الصف',
+		'village.nav_teacher_hint':
+			'يتجول الطلاب في القرية بحرية. عند الضغط على "التالي" يسير الجميع معًا إلى المحطة الجديدة وتُفتح ورقتهم هناك.',
+		'village.nav_free': 'الطلاب يتنقلون بأنفسهم',
+		'village.nav_free_hint':
+			'يختار الطلاب إلى أين يذهبون على خريطة القرية. تُفتح محطة جديدة عند الضغط على "التالي"، ويصلهم إشعار مع زر "اذهب إلى هناك". المحطات التي لم تصلوا إليها بعد تبقى مقفلة.',
+		'village.call_title': 'نداء الصف كله',
+		'village.call_current': 'الجميع إلى المحطة الحالية',
+		'village.call_council': 'الجميع إلى مجلس القرية · لوحة النتائج',
+		'village.call_sent': 'الطلاب في الطريق.',
+		'teacher.voting_goal_only': 'تصعد إلى التصويت فقط المقترحات التي دخلت المرمى',
+		'teacher.voting_goal_only_hint':
+			'من الآن تعرض لوحة النتائج فقط المقترحات داخل المرمى (المربع الصغير)، ويُفتح الاقتراع عليها بالضبط.',
+		'board.goal_only': 'فقط المقترحات التي دخلت المرمى',
+		'board.goal_only_empty': 'لم يدخل أي مقترح المرمى بعد. قيّموا واقترحوا تحسينات لإدخال واحد.',
 		'look.seed_font': 'الخط',
 		'look.font_default': 'العادي',
 		'look.font_sample': 'أغورا',
@@ -3603,7 +3674,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 			'ما الذي يجب فعله؟ اكتبوا اقتراحًا يمكن لأكبر عدد ممكن من الحاضرين التعايش معه.',
 		'delib.mission_label': 'مهمتكم',
 		'delib.placeholder': 'نقترح أن...',
-		'delib.write_first': 'اكتبوا أولًا — ثم أضيفوا إجابتكم',
+		'delib.write_first': 'اكتبوا اقتراحكم في المربع أعلاه لإرساله',
 		'delib.submit_proposal': 'أضيفوا إجابتكم',
 		'delib.update_proposal': 'تحديث الاقتراح',
 		'delib.update_saved': 'تم الحفظ',
@@ -4085,6 +4156,32 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'معلمكم أعاد صياغة نصكم',
 	},
 	es: {
+		'delib.thread_write_label': 'Escribe aquí tu mensaje o idea de mejora',
+		'delib.thread_write_label_owner': 'Escribe aquí tu respuesta',
+		'teacher.voting_goal_only_live': 'En la votación, solo las propuestas en la portería',
+		'teacher.voting_goal_only_live_hint':
+			'La votación se rehace solo con las propuestas dentro de la portería. Quien votó por una propuesta que salió debe votar de nuevo.',
+		'teacher.voting_goal_only_empty':
+			'Aún no hay propuestas en la portería, así que la votación no cambió.',
+		'delib.write_label': 'Escribe aquí tu propuesta',
+		'village.nav_title': '¿Quién mueve a los estudiantes entre las estaciones de la aldea?',
+		'village.nav_teacher': 'El docente guía a la clase',
+		'village.nav_teacher_hint':
+			'Los estudiantes recorren la aldea libremente. Al pulsar "Siguiente", todos caminan juntos a la nueva estación y su nota se abre allí.',
+		'village.nav_free': 'Los estudiantes navegan solos',
+		'village.nav_free_hint':
+			'Los estudiantes eligen adónde ir en el mapa de la aldea. Una nueva estación se abre al pulsar "Siguiente" y reciben un aviso con el botón "Ir allí". Las estaciones a las que aún no llegaron siguen cerradas.',
+		'village.call_title': 'Llamar a toda la clase',
+		'village.call_current': 'Todos a la estación actual',
+		'village.call_council': 'Todos al consejo de la aldea · marcador',
+		'village.call_sent': 'Los estudiantes van en camino.',
+		'teacher.voting_goal_only':
+			'Solo las propuestas que llegaron a la portería pasan a la votación',
+		'teacher.voting_goal_only_hint':
+			'Desde ahora el marcador muestra solo las propuestas dentro de la portería (el cuadro pequeño), y la votación se abre exactamente sobre ellas.',
+		'board.goal_only': 'Solo las propuestas en la portería',
+		'board.goal_only_empty':
+			'Ninguna propuesta ha llegado aún a la portería. Valora y sugiere mejoras para meter una.',
 		'look.seed_font': 'Fuente',
 		'look.font_default': 'Normal',
 		'look.font_sample': 'Agora',
@@ -4998,7 +5095,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 			'¿Qué se debe hacer? Escribid una propuesta con la que pueda vivir el mayor número posible de personas.',
 		'delib.mission_label': 'Vuestra misión',
 		'delib.placeholder': 'Proponemos que...',
-		'delib.write_first': 'Primero escribid — luego añadid vuestra respuesta',
+		'delib.write_first': 'Escribe tu propuesta en el cuadro de arriba para enviarla',
 		'delib.submit_proposal': 'Añadid vuestra respuesta',
 		'delib.update_proposal': 'Actualizar propuesta',
 		'delib.update_saved': 'Guardado',
@@ -5506,6 +5603,31 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Tu profesor reformuló tu texto',
 	},
 	de: {
+		'delib.thread_write_label': 'Schreibt hier eure Nachricht oder Verbesserungsidee',
+		'delib.thread_write_label_owner': 'Schreibt hier eure Antwort',
+		'teacher.voting_goal_only_live': 'Auf dem Stimmzettel nur Vorschläge im Tor',
+		'teacher.voting_goal_only_live_hint':
+			'Der Stimmzettel wird nur aus den Vorschlägen im Tor neu erstellt. Wer für einen entfernten Vorschlag gestimmt hat, stimmt erneut ab.',
+		'teacher.voting_goal_only_empty':
+			'Noch kein Vorschlag im Tor, daher wurde der Stimmzettel nicht geändert.',
+		'delib.write_label': 'Schreibt euren Vorschlag hier',
+		'village.nav_title': 'Wer bewegt die Lernenden zwischen den Stationen des Dorfes?',
+		'village.nav_teacher': 'Die Lehrkraft führt die Klasse',
+		'village.nav_teacher_hint':
+			'Die Lernenden bewegen sich frei im Dorf. Wenn ihr auf "Weiter" drückt, gehen alle gemeinsam zur neuen Station und ihr Zettel öffnet sich dort.',
+		'village.nav_free': 'Die Lernenden navigieren selbst',
+		'village.nav_free_hint':
+			'Die Lernenden wählen auf der Dorfkarte, wohin sie gehen. Eine neue Station öffnet sich, wenn ihr auf "Weiter" drückt, und sie bekommen einen Hinweis mit dem Knopf "Hingehen". Noch nicht erreichte Stationen bleiben gesperrt.',
+		'village.call_title': 'Die ganze Klasse rufen',
+		'village.call_current': 'Alle zur aktuellen Station',
+		'village.call_council': 'Alle zum Dorfrat · Anzeigetafel',
+		'village.call_sent': 'Die Lernenden sind unterwegs.',
+		'teacher.voting_goal_only': 'Nur Vorschläge, die das Tor erreicht haben, kommen zur Abstimmung',
+		'teacher.voting_goal_only_hint':
+			'Ab jetzt zeigt die Anzeigetafel nur die Vorschläge im Tor (das kleine Feld), und genau über diese wird abgestimmt.',
+		'board.goal_only': 'Nur die Vorschläge im Tor',
+		'board.goal_only_empty':
+			'Noch kein Vorschlag hat das Tor erreicht. Bewertet und schlagt Verbesserungen vor, um einen hineinzubringen.',
 		'look.seed_font': 'Schrift',
 		'look.font_default': 'Normal',
 		'look.font_sample': 'Agora',
@@ -6424,7 +6546,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 			'Was sollte getan werden? Schreibt einen Vorschlag, mit dem möglichst viele hier leben können.',
 		'delib.mission_label': 'Eure Mission',
 		'delib.placeholder': 'Wir schlagen vor, dass...',
-		'delib.write_first': 'Erst schreiben — dann die Antwort hinzufügen',
+		'delib.write_first': 'Schreibt euren Vorschlag oben ins Feld, um ihn zu senden',
 		'delib.submit_proposal': 'Antwort hinzufügen',
 		'delib.update_proposal': 'Vorschlag aktualisieren',
 		'delib.update_saved': 'Gespeichert',
@@ -6945,6 +7067,31 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Deine Lehrkraft hat deinen Text umformuliert',
 	},
 	nl: {
+		'delib.thread_write_label': 'Schrijf hier je bericht of verbeteridee',
+		'delib.thread_write_label_owner': 'Schrijf hier je antwoord',
+		'teacher.voting_goal_only_live': 'Op het stembiljet alleen voorstellen in het doel',
+		'teacher.voting_goal_only_live_hint':
+			'Het stembiljet wordt opnieuw opgebouwd uit de voorstellen in het doel. Wie op een verwijderd voorstel stemde, stemt opnieuw.',
+		'teacher.voting_goal_only_empty':
+			'Nog geen voorstel in het doel, dus het stembiljet is niet veranderd.',
+		'delib.write_label': 'Schrijf hier je voorstel',
+		'village.nav_title': 'Wie verplaatst de leerlingen tussen de stations van het dorp?',
+		'village.nav_teacher': 'De docent leidt de klas',
+		'village.nav_teacher_hint':
+			'Leerlingen lopen vrij door het dorp. Als je op "Volgende" drukt, lopen alle leerlingen samen naar het nieuwe station en opent hun briefje daar.',
+		'village.nav_free': 'Leerlingen navigeren zelf',
+		'village.nav_free_hint':
+			'Leerlingen kiezen op de dorpskaart waar ze heen lopen. Een nieuw station opent als je op "Volgende" drukt, en ze krijgen een melding met de knop "Ga erheen". Stations die je nog niet bereikt hebt blijven op slot.',
+		'village.call_title': 'De hele klas roepen',
+		'village.call_current': 'Iedereen naar het huidige station',
+		'village.call_council': 'Iedereen naar de dorpsraad · scorebord',
+		'village.call_sent': 'De leerlingen zijn onderweg.',
+		'teacher.voting_goal_only': 'Alleen voorstellen die het doel bereikten gaan naar de stemming',
+		'teacher.voting_goal_only_hint':
+			'Vanaf nu toont het scorebord alleen de voorstellen in het doel (het kleine vak), en de stemming opent precies daarover.',
+		'board.goal_only': 'Alleen de voorstellen in het doel',
+		'board.goal_only_empty':
+			'Nog geen voorstel heeft het doel bereikt. Beoordeel en stel verbeteringen voor om er een in te krijgen.',
 		'look.seed_font': 'Lettertype',
 		'look.font_default': 'Gewoon',
 		'look.font_sample': 'Agora',
@@ -7855,7 +8002,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 			'Wat moet er gebeuren? Schrijf een voorstel waar zo veel mogelijk mensen hier mee kunnen leven.',
 		'delib.mission_label': 'Jullie missie',
 		'delib.placeholder': 'Wij stellen voor dat...',
-		'delib.write_first': 'Eerst schrijven — dan je antwoord toevoegen',
+		'delib.write_first': 'Schrijf je voorstel in het vak hierboven om het te versturen',
 		'delib.submit_proposal': 'Voeg je antwoord toe',
 		'delib.update_proposal': 'Voorstel bijwerken',
 		'delib.update_saved': 'Opgeslagen',

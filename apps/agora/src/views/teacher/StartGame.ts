@@ -74,6 +74,7 @@ export function StartGame(): m.Component {
 	let creating = false;
 	let createFailed = false;
 	let world: 'village' | 'classic' = 'village';
+	let villageNavigation: 'teacher' | 'free' = 'teacher';
 	let advancedOpen = true;
 	let moreOpen = false;
 
@@ -230,6 +231,7 @@ export function StartGame(): m.Component {
 				collectRealNames,
 				theme: { preset: look },
 				world,
+				...(world === 'village' ? { villageNavigation } : {}),
 				stagePlan: plans[planKey()],
 				...(classChoice && classChoice !== 'none' ? { classId: classChoice } : {}),
 				...(flow ? { flow } : {}),
@@ -712,6 +714,27 @@ export function StartGame(): m.Component {
 								world = 'classic';
 							}),
 						]),
+						world === 'village'
+							? m('.stack.village-nav', [
+									m('p.teacher__section-title', t('village.nav_title')),
+									m('.teacher__mode-row', { role: 'group', 'aria-label': t('village.nav_title') }, [
+										choice(t('village.nav_teacher'), villageNavigation === 'teacher', () => {
+											villageNavigation = 'teacher';
+										}),
+										choice(t('village.nav_free'), villageNavigation === 'free', () => {
+											villageNavigation = 'free';
+										}),
+									]),
+									m(
+										'p',
+										t(
+											villageNavigation === 'free'
+												? 'village.nav_free_hint'
+												: 'village.nav_teacher_hint',
+										),
+									),
+								])
+							: null,
 					]),
 
 					// 1. What are we playing?
