@@ -144,6 +144,24 @@ async function writeAtDesk(page, label, text, textarea) {
 	}
 	await input.waitFor({ timeout: 15000 });
 	await input.fill(text);
+	if (textarea.includes('write-desk')) {
+		// The paper panel is small; the send button must be visible, not below its edge.
+		const inView = await page.evaluate(() => {
+			const panel = document.querySelector('.village-shell__activity.village-desk');
+			const cta = document.querySelector('.village-desk .write-desk__cta');
+			if (!panel || !cta) return false;
+			const p = panel.getBoundingClientRect();
+			const c = cta.getBoundingClientRect();
+
+			return c.top >= p.top - 1 && c.bottom <= p.bottom + 1;
+		});
+		eq(`${label}: the send button is in view without scrolling`, inView, true);
+		eq(
+			`${label}: no classic HUD or tabs inside the paper`,
+			await page.locator('.village-desk .delib-nav, .village-desk .delib-hud').count(),
+			0,
+		);
+	}
 	await tap(page, page.locator('.village-desk button.btn--primary').first(), label);
 	// The paper flies from the desk to the board, and the board opens.
 	await page.locator('.village-community__panel').waitFor({ timeout: 20000 });
@@ -289,6 +307,26 @@ if (teacherUi) {
 	await teacher.goto(`${VITE_HOST}/#!/teach/session/${run.sessionId}`, {
 		waitUntil: 'domcontentloaded',
 	});
+	// A reload can come back as the anonymous user the app signs in on mount.
+	// That console renders perfectly and cannot write a single setting.
+	for (let attempt = 1; attempt <= 5; attempt++) {
+		const who = await teacher
+			.waitForFunction(() => window.__agoraDebug?.()?.user?.tier === 2, { timeout: 8000 })
+			.then(
+				() => teacher.evaluate(() => window.__agoraDebug?.()?.user?.user?.uid ?? null),
+				() => null,
+			);
+		if (who === run.teacherUid) break;
+		console.log(
+			`   (teacher page is ${who ?? 'not signed in'} after the reload — signing in again, attempt ${attempt})`,
+		);
+		await teacher.evaluate(
+			(sub) =>
+				window.__agoraDevSignIn({ sub, email: `${sub}@example.com`, name: 'Fastlane Teacher' }),
+			`${runId}-teacher`,
+		);
+		await pause(2000);
+	}
 	await teacher.locator('.teacher-nav__cog').first().click({ timeout: 20000 });
 	teacherUi = await teacher
 		.locator('.village-nav')
@@ -334,11 +372,13 @@ eq(
 	await s1.page.locator('.village-community__panel').count(),
 	0,
 );
-await world(s1.page).locator('#class-pill-text', { hasText: 'הצרכים' }).waitFor({ timeout: 10000 });
+await world(s1.page)
+	.locator('button.station[data-place="booth:round-needs"] .station__badge.is-now')
+	.waitFor({ state: 'attached', timeout: 10000 });
 eq(
-	'led: the village map is hidden',
+	'led: the map stays open, so students can roam',
 	await world(s1.page).locator('#station-map').isVisible(),
-	false,
+	true,
 );
 await shot(s1.page, '03a-led-to-needs-paper-open');
 for (const [i, s] of pages.entries())
@@ -372,11 +412,6 @@ eq(
 	'free: the village map is shown',
 	await world(s1.page).locator('#station-map').isVisible(),
 	true,
-);
-eq(
-	'free: the class pill is hidden',
-	await world(s1.page).locator('#class-pill').isVisible(),
-	false,
 );
 eq(
 	'free: a station the teacher has not opened is locked',

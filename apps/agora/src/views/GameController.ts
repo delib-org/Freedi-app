@@ -607,6 +607,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							userId,
 							topic,
 							writeRequest: villageWriteRequest,
+							inVillage: villageMode,
 						});
 					}
 

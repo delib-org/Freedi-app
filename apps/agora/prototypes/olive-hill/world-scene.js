@@ -251,9 +251,10 @@ function renderStationNav(){
  const here=stations.find(s=>s.id===activePlace);
  const key=JSON.stringify([lead,selected.id,activePlace,activeLabel,rows.map(r=>[r.s.id,r.s.name,r.st.open,r.st.current])]);
  if(key===navKey)return;navKey=key;
- $('station-map').hidden=lead;$('class-pill').hidden=!lead;
+ // The map is always there: students roam freely. Led only means an advance walks everyone.
+ $('station-map').hidden=false;$('class-pill').hidden=true;
  $('class-pill-text').textContent=`הכיתה נמצאת ב: ${activeLabel||here?.name||''}`;
- $('map-mode').textContent=embedded?'בחרו לאן ללכת. תחנה נפתחת כשהמורה מגיע אליה.':'סיור חופשי · אפשר ללכת לכל מקום';
+ $('map-mode').textContent=!embedded?'סיור חופשי · אפשר ללכת לכל מקום':lead?'מסתובבים בחופשיות. כשהמורה עובר לתחנה חדשה, כולם הולכים אליה יחד.':'בחרו לאן ללכת. תחנה נפתחת כשהמורה מגיע אליה.';
  const nav=$('preview-stations');nav.replaceChildren();
  for(const {s,st} of rows){
   const locked=!st.open;

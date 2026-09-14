@@ -151,7 +151,7 @@ settings sheet ("מי מזיז את התלמידים בין התחנות בכפ�
   board with no paper). The shell sends `agora-village-go`; the world walks
   there and answers `agora-village-arrived`; the shell then opens the paper,
   or the board once the student has written, or the ballot/recap at the
-  council. The village map is hidden; a pill says where the class is. A
+  council. The village map stays open, so students roam freely between advances. A
   refreshed page walks the student back to the class.
 - **Students navigate.** The map lists every station with its state (● the
   class is here, ✓ open, 🔒 later) and a press walks there; arriving at the

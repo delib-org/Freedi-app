@@ -176,3 +176,38 @@ article.village-note { cursor: default; }
 .board__goal-only { margin: 0 0 8px; font-weight: 700; color: var(--text-primary); }
 .village-council { padding: 0 0 16px; }
 .village-council .shell { min-block-size: auto; }
+
+// In the village the deliberation paper is only the paper (no HUD, no tabs).
+// Two things must never scroll away inside it: the way back, and the button
+// that sends what the student wrote. The panel scrolls; both stick to its edges.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk {
+  inset-block-end: 100px;
+  max-block-size: none;
+  .village-desk__header {
+    position: sticky;
+    top: calc(-1 * clamp(20px, 4vw, 44px));
+    z-index: 4;
+    margin-top: calc(-1 * clamp(20px, 4vw, 44px));
+    padding-top: clamp(14px, 3vw, 28px);
+    background: #fffdf7;
+  }
+  .write-desk { overflow: visible; }
+  .write-desk > :has(.write-desk__cta) {
+    position: sticky;
+    bottom: calc(-1 * clamp(20px, 4vw, 44px));
+    z-index: 4;
+    padding-block: 10px 14px;
+    background: #8e1f5b;
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -10px 22px #2a1a3355;
+  }
+  .write-desk__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 -4px;
+    font-size: clamp(18px, 2.6vw, 22px);
+    font-weight: 700;
+  }
+  textarea::placeholder { color: #85897c; opacity: 1; }
+}

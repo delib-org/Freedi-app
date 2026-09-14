@@ -13,10 +13,11 @@ const STORAGE_KEY = 'agora_lang';
  */
 export const translations: Record<LangCode, Record<string, string>> = {
 	he: {
+		'delib.write_label': 'כתבו כאן את ההצעה שלכם',
 		'village.nav_title': 'מי מזיז את התלמידים בין התחנות בכפר?',
 		'village.nav_teacher': 'המורה מוביל/ה את הכיתה',
 		'village.nav_teacher_hint':
-			'כשתלחצו "הלאה", כל התלמידים הולכים יחד לתחנה החדשה והפתק שלהם נפתח שם. מפת הכפר מוסתרת מהם, ורואים רק איפה הכיתה נמצאת.',
+			'התלמידים מסתובבים בכפר בחופשיות. כשתלחצו "הלאה", כולם הולכים יחד לתחנה החדשה והפתק שלהם נפתח שם.',
 		'village.nav_free': 'התלמידים מנווטים בעצמם',
 		'village.nav_free_hint':
 			'התלמידים בוחרים לאן ללכת במפת הכפר. תחנה חדשה נפתחת כשתלחצו "הלאה", והם מקבלים הודעה עם כפתור "ללכת לשם". תחנות שעוד לא הגעתם אליהן נעולות.',
@@ -886,7 +887,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.propose_hint_open': 'מה צריך לעשות? כתבו הצעה שכמה שיותר אנשים כאן יוכלו לחיות איתה.',
 		'delib.mission_label': 'המשימה שלכם',
 		'delib.placeholder': 'אנחנו מציעים ש...',
-		'delib.write_first': 'קודם כותבים — ואז מוסיפים את התשובה',
+		'delib.write_first': 'כתבו את ההצעה בתיבה שלמעלה כדי לשלוח',
 		'delib.submit_proposal': 'הוספ/י תשובתך',
 		'delib.update_proposal': 'עדכון ההצעה',
 		'delib.update_saved': 'נשמר',
@@ -1367,10 +1368,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'המורה ניסח מחדש את הטקסט שלכם',
 	},
 	en: {
+		'delib.write_label': 'Write your proposal here',
 		'village.nav_title': 'Who moves students between the village stations?',
 		'village.nav_teacher': 'The teacher leads the class',
 		'village.nav_teacher_hint':
-			'When you press "Next", every student walks to the new station together and their note opens there. The village map is hidden from them; they only see where the class is.',
+			'Students roam the village freely. When you press "Next", everyone walks to the new station together and their note opens there.',
 		'village.nav_free': 'Students navigate themselves',
 		'village.nav_free_hint':
 			'Students choose where to walk on the village map. A new station opens when you press "Next", and they get a notice with a "Go there" button. Stations you have not reached yet stay locked.',
@@ -2277,7 +2279,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 			'What should be done? Write a proposal as many people here as possible could live with.',
 		'delib.mission_label': 'Your mission',
 		'delib.placeholder': 'We propose that...',
-		'delib.write_first': 'Write first — then add your answer',
+		'delib.write_first': 'Write your proposal in the box above to send it',
 		'delib.submit_proposal': 'Add your answer',
 		'delib.update_proposal': 'Update proposal',
 		'delib.update_saved': 'Saved',
@@ -2777,10 +2779,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Your teacher reworded your text',
 	},
 	ar: {
+		'delib.write_label': 'اكتبوا اقتراحكم هنا',
 		'village.nav_title': 'من ينقل الطلاب بين محطات القرية؟',
 		'village.nav_teacher': 'المعلم/ة يقود الصف',
 		'village.nav_teacher_hint':
-			'عند الضغط على "التالي" يسير جميع الطلاب معًا إلى المحطة الجديدة وتُفتح ورقتهم هناك. خريطة القرية مخفية عنهم، ويرون فقط أين يوجد الصف.',
+			'يتجول الطلاب في القرية بحرية. عند الضغط على "التالي" يسير الجميع معًا إلى المحطة الجديدة وتُفتح ورقتهم هناك.',
 		'village.nav_free': 'الطلاب يتنقلون بأنفسهم',
 		'village.nav_free_hint':
 			'يختار الطلاب إلى أين يذهبون على خريطة القرية. تُفتح محطة جديدة عند الضغط على "التالي"، ويصلهم إشعار مع زر "اذهب إلى هناك". المحطات التي لم تصلوا إليها بعد تبقى مقفلة.',
@@ -3652,7 +3655,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 			'ما الذي يجب فعله؟ اكتبوا اقتراحًا يمكن لأكبر عدد ممكن من الحاضرين التعايش معه.',
 		'delib.mission_label': 'مهمتكم',
 		'delib.placeholder': 'نقترح أن...',
-		'delib.write_first': 'اكتبوا أولًا — ثم أضيفوا إجابتكم',
+		'delib.write_first': 'اكتبوا اقتراحكم في المربع أعلاه لإرساله',
 		'delib.submit_proposal': 'أضيفوا إجابتكم',
 		'delib.update_proposal': 'تحديث الاقتراح',
 		'delib.update_saved': 'تم الحفظ',
@@ -4134,10 +4137,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'معلمكم أعاد صياغة نصكم',
 	},
 	es: {
+		'delib.write_label': 'Escribe aquí tu propuesta',
 		'village.nav_title': '¿Quién mueve a los estudiantes entre las estaciones de la aldea?',
 		'village.nav_teacher': 'El docente guía a la clase',
 		'village.nav_teacher_hint':
-			'Al pulsar "Siguiente", todos los estudiantes caminan juntos a la nueva estación y su nota se abre allí. El mapa de la aldea queda oculto; solo ven dónde está la clase.',
+			'Los estudiantes recorren la aldea libremente. Al pulsar "Siguiente", todos caminan juntos a la nueva estación y su nota se abre allí.',
 		'village.nav_free': 'Los estudiantes navegan solos',
 		'village.nav_free_hint':
 			'Los estudiantes eligen adónde ir en el mapa de la aldea. Una nueva estación se abre al pulsar "Siguiente" y reciben un aviso con el botón "Ir allí". Las estaciones a las que aún no llegaron siguen cerradas.',
@@ -5065,7 +5069,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 			'¿Qué se debe hacer? Escribid una propuesta con la que pueda vivir el mayor número posible de personas.',
 		'delib.mission_label': 'Vuestra misión',
 		'delib.placeholder': 'Proponemos que...',
-		'delib.write_first': 'Primero escribid — luego añadid vuestra respuesta',
+		'delib.write_first': 'Escribe tu propuesta en el cuadro de arriba para enviarla',
 		'delib.submit_proposal': 'Añadid vuestra respuesta',
 		'delib.update_proposal': 'Actualizar propuesta',
 		'delib.update_saved': 'Guardado',
@@ -5573,10 +5577,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Tu profesor reformuló tu texto',
 	},
 	de: {
+		'delib.write_label': 'Schreibt euren Vorschlag hier',
 		'village.nav_title': 'Wer bewegt die Lernenden zwischen den Stationen des Dorfes?',
 		'village.nav_teacher': 'Die Lehrkraft führt die Klasse',
 		'village.nav_teacher_hint':
-			'Wenn ihr auf "Weiter" drückt, gehen alle Lernenden gemeinsam zur neuen Station und ihr Zettel öffnet sich dort. Die Dorfkarte ist für sie ausgeblendet; sie sehen nur, wo die Klasse ist.',
+			'Die Lernenden bewegen sich frei im Dorf. Wenn ihr auf "Weiter" drückt, gehen alle gemeinsam zur neuen Station und ihr Zettel öffnet sich dort.',
 		'village.nav_free': 'Die Lernenden navigieren selbst',
 		'village.nav_free_hint':
 			'Die Lernenden wählen auf der Dorfkarte, wohin sie gehen. Eine neue Station öffnet sich, wenn ihr auf "Weiter" drückt, und sie bekommen einen Hinweis mit dem Knopf "Hingehen". Noch nicht erreichte Stationen bleiben gesperrt.',
@@ -6508,7 +6513,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 			'Was sollte getan werden? Schreibt einen Vorschlag, mit dem möglichst viele hier leben können.',
 		'delib.mission_label': 'Eure Mission',
 		'delib.placeholder': 'Wir schlagen vor, dass...',
-		'delib.write_first': 'Erst schreiben — dann die Antwort hinzufügen',
+		'delib.write_first': 'Schreibt euren Vorschlag oben ins Feld, um ihn zu senden',
 		'delib.submit_proposal': 'Antwort hinzufügen',
 		'delib.update_proposal': 'Vorschlag aktualisieren',
 		'delib.update_saved': 'Gespeichert',
@@ -7029,10 +7034,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Deine Lehrkraft hat deinen Text umformuliert',
 	},
 	nl: {
+		'delib.write_label': 'Schrijf hier je voorstel',
 		'village.nav_title': 'Wie verplaatst de leerlingen tussen de stations van het dorp?',
 		'village.nav_teacher': 'De docent leidt de klas',
 		'village.nav_teacher_hint':
-			'Als je op "Volgende" drukt, lopen alle leerlingen samen naar het nieuwe station en opent hun briefje daar. De dorpskaart is voor hen verborgen; ze zien alleen waar de klas is.',
+			'Leerlingen lopen vrij door het dorp. Als je op "Volgende" drukt, lopen alle leerlingen samen naar het nieuwe station en opent hun briefje daar.',
 		'village.nav_free': 'Leerlingen navigeren zelf',
 		'village.nav_free_hint':
 			'Leerlingen kiezen op de dorpskaart waar ze heen lopen. Een nieuw station opent als je op "Volgende" drukt, en ze krijgen een melding met de knop "Ga erheen". Stations die je nog niet bereikt hebt blijven op slot.',
@@ -7956,7 +7962,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 			'Wat moet er gebeuren? Schrijf een voorstel waar zo veel mogelijk mensen hier mee kunnen leven.',
 		'delib.mission_label': 'Jullie missie',
 		'delib.placeholder': 'Wij stellen voor dat...',
-		'delib.write_first': 'Eerst schrijven — dan je antwoord toevoegen',
+		'delib.write_first': 'Schrijf je voorstel in het vak hierboven om het te versturen',
 		'delib.submit_proposal': 'Voeg je antwoord toe',
 		'delib.update_proposal': 'Voorstel bijwerken',
 		'delib.update_saved': 'Opgeslagen',
