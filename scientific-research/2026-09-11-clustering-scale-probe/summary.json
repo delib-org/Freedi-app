@@ -1,0 +1,880 @@
+{
+  "generatedAt": "2026-09-11T03:58:10.977Z",
+  "labelStatus": "PROVISIONAL",
+  "labelsFile": "frozen/labels.jsonl",
+  "labelsSha256": "eb7cd6c3ffbe7a1acbe1c7e52095331b2b492f4054d7e166a298e910dbfd6963",
+  "manifestCells": 240,
+  "scoredCells": 240,
+  "missing": [],
+  "coreViolations": [],
+  "tables": {
+    "all": [
+      {
+        "size": 100,
+        "method": "A",
+        "cells": 40,
+        "correct": 28,
+        "falseJoin": 1,
+        "missAbstain": 11,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 10,
+        "joinPrecision": 0.9,
+        "falseJoinFraction": 0.025
+      },
+      {
+        "size": 100,
+        "method": "B",
+        "cells": 40,
+        "correct": 24,
+        "falseJoin": 0,
+        "missAbstain": 16,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 4,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 200,
+        "method": "A",
+        "cells": 40,
+        "correct": 31,
+        "falseJoin": 0,
+        "missAbstain": 9,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 11,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 200,
+        "method": "B",
+        "cells": 40,
+        "correct": 25,
+        "falseJoin": 0,
+        "missAbstain": 15,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 5,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 500,
+        "method": "A",
+        "cells": 40,
+        "correct": 31,
+        "falseJoin": 0,
+        "missAbstain": 9,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 11,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 500,
+        "method": "B",
+        "cells": 40,
+        "correct": 25,
+        "falseJoin": 0,
+        "missAbstain": 15,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 5,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      }
+    ],
+    "positive": [
+      {
+        "size": 100,
+        "method": "A",
+        "cells": 20,
+        "correct": 9,
+        "falseJoin": 0,
+        "missAbstain": 11,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 9,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 100,
+        "method": "B",
+        "cells": 20,
+        "correct": 4,
+        "falseJoin": 0,
+        "missAbstain": 16,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 4,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 200,
+        "method": "A",
+        "cells": 20,
+        "correct": 11,
+        "falseJoin": 0,
+        "missAbstain": 9,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 11,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 200,
+        "method": "B",
+        "cells": 20,
+        "correct": 5,
+        "falseJoin": 0,
+        "missAbstain": 15,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 5,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 500,
+        "method": "A",
+        "cells": 20,
+        "correct": 11,
+        "falseJoin": 0,
+        "missAbstain": 9,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 11,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 500,
+        "method": "B",
+        "cells": 20,
+        "correct": 5,
+        "falseJoin": 0,
+        "missAbstain": 15,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 5,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      }
+    ],
+    "noMatch": [
+      {
+        "size": 100,
+        "method": "A",
+        "cells": 20,
+        "correct": 19,
+        "falseJoin": 1,
+        "missAbstain": 0,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 1,
+        "joinPrecision": 0,
+        "falseJoinFraction": 0.05
+      },
+      {
+        "size": 100,
+        "method": "B",
+        "cells": 20,
+        "correct": 20,
+        "falseJoin": 0,
+        "missAbstain": 0,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 0,
+        "joinPrecision": null,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 200,
+        "method": "A",
+        "cells": 20,
+        "correct": 20,
+        "falseJoin": 0,
+        "missAbstain": 0,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 0,
+        "joinPrecision": null,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 200,
+        "method": "B",
+        "cells": 20,
+        "correct": 20,
+        "falseJoin": 0,
+        "missAbstain": 0,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 0,
+        "joinPrecision": null,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 500,
+        "method": "A",
+        "cells": 20,
+        "correct": 20,
+        "falseJoin": 0,
+        "missAbstain": 0,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 0,
+        "joinPrecision": null,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 500,
+        "method": "B",
+        "cells": 20,
+        "correct": 20,
+        "falseJoin": 0,
+        "missAbstain": 0,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 0,
+        "joinPrecision": null,
+        "falseJoinFraction": 0
+      }
+    ],
+    "lenientAll": [
+      {
+        "size": 100,
+        "method": "A",
+        "cells": 40,
+        "correct": 16,
+        "falseJoin": 0,
+        "missAbstain": 24,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 10,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 100,
+        "method": "B",
+        "cells": 40,
+        "correct": 10,
+        "falseJoin": 0,
+        "missAbstain": 30,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 4,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 200,
+        "method": "A",
+        "cells": 40,
+        "correct": 17,
+        "falseJoin": 0,
+        "missAbstain": 23,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 11,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 200,
+        "method": "B",
+        "cells": 40,
+        "correct": 11,
+        "falseJoin": 0,
+        "missAbstain": 29,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 5,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 500,
+        "method": "A",
+        "cells": 40,
+        "correct": 17,
+        "falseJoin": 0,
+        "missAbstain": 23,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 11,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      },
+      {
+        "size": 500,
+        "method": "B",
+        "cells": 40,
+        "correct": 11,
+        "falseJoin": 0,
+        "missAbstain": 29,
+        "missNoRetrieval": 0,
+        "invalid": 0,
+        "truncated": 0,
+        "technical": 0,
+        "predictedJoins": 5,
+        "joinPrecision": 1,
+        "falseJoinFraction": 0
+      }
+    ]
+  },
+  "recall": [
+    {
+      "size": 100,
+      "positiveQueries": 10,
+      "retrievedAtLeastOne": 10,
+      "bestRanks": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        1,
+        2,
+        1
+      ],
+      "bestCosines": [
+        0.879539,
+        0.912505,
+        0.891907,
+        0.944517,
+        0.906549,
+        0.94721,
+        0.913979,
+        0.887918,
+        0.909768,
+        0.919901
+      ]
+    },
+    {
+      "size": 200,
+      "positiveQueries": 10,
+      "retrievedAtLeastOne": 10,
+      "bestRanks": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        1
+      ],
+      "bestCosines": [
+        0.906549,
+        0.944517,
+        0.891907,
+        0.94721,
+        0.909768,
+        0.912505,
+        0.879539,
+        0.887918,
+        0.913979,
+        0.919901
+      ]
+    },
+    {
+      "size": 500,
+      "positiveQueries": 10,
+      "retrievedAtLeastOne": 10,
+      "bestRanks": [
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        2
+      ],
+      "bestCosines": [
+        0.891907,
+        0.913979,
+        0.919901,
+        0.906549,
+        0.887918,
+        0.912505,
+        0.94721,
+        0.944517,
+        0.879539,
+        0.909768
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "size": 100,
+      "method": "A",
+      "calls": 40,
+      "attempts": 40,
+      "retries": 0,
+      "promptMean": 2733.6,
+      "promptMedian": 2721,
+      "cachedMean": 0,
+      "cacheWriteMean": 2730.6,
+      "completionMean": 156.675,
+      "completionMax": 414,
+      "reasoningMean": 108.225,
+      "billedMean": 0.0008712599999999999,
+      "undiscountedMean": 0.0007347300000000001,
+      "billedTotal": 0.0348504,
+      "undiscountedTotal": 0.029389200000000004,
+      "apiMsMean": 2381.8028531499986,
+      "retrievalMsMean": 0
+    },
+    {
+      "size": 100,
+      "method": "B",
+      "calls": 40,
+      "attempts": 40,
+      "retries": 0,
+      "promptMean": 661,
+      "promptMedian": 653,
+      "cachedMean": 0,
+      "cacheWriteMean": 0,
+      "completionMean": 125.325,
+      "completionMax": 209,
+      "reasoningMean": 75.725,
+      "billedMean": 0.00028259,
+      "undiscountedMean": 0.00028259,
+      "billedTotal": 0.0113036,
+      "undiscountedTotal": 0.0113036,
+      "apiMsMean": 1872.6991302499998,
+      "retrievalMsMean": 0.1616812999999997
+    },
+    {
+      "size": 200,
+      "method": "A",
+      "calls": 40,
+      "attempts": 40,
+      "retries": 0,
+      "promptMean": 5149.95,
+      "promptMedian": 5146.5,
+      "cachedMean": 0,
+      "cacheWriteMean": 5146.95,
+      "completionMean": 141.15,
+      "completionMax": 370,
+      "reasoningMean": 93.35,
+      "billedMean": 0.0014567175000000001,
+      "undiscountedMean": 0.0011993700000000002,
+      "billedTotal": 0.05826870000000001,
+      "undiscountedTotal": 0.047974800000000005,
+      "apiMsMean": 2053.3580605,
+      "retrievalMsMean": 0
+    },
+    {
+      "size": 200,
+      "method": "B",
+      "calls": 40,
+      "attempts": 40,
+      "retries": 0,
+      "promptMean": 657.55,
+      "promptMedian": 648.5,
+      "cachedMean": 0,
+      "cacheWriteMean": 0,
+      "completionMean": 129.825,
+      "completionMax": 275,
+      "reasoningMean": 81.175,
+      "billedMean": 0.0002873,
+      "undiscountedMean": 0.0002873,
+      "billedTotal": 0.011491999999999999,
+      "undiscountedTotal": 0.011491999999999999,
+      "apiMsMean": 1957.1089593750003,
+      "retrievalMsMean": 0.32214995
+    },
+    {
+      "size": 500,
+      "method": "A",
+      "calls": 40,
+      "attempts": 40,
+      "retries": 0,
+      "promptMean": 12520.3,
+      "promptMedian": 12524.5,
+      "cachedMean": 0,
+      "cacheWriteMean": 12517.3,
+      "completionMean": 143.75,
+      "completionMax": 343,
+      "reasoningMean": 95.575,
+      "billedMean": 0.003302425,
+      "undiscountedMean": 0.002676560000000001,
+      "billedTotal": 0.132097,
+      "undiscountedTotal": 0.10706240000000004,
+      "apiMsMean": 2198.7337666500007,
+      "retrievalMsMean": 0
+    },
+    {
+      "size": 500,
+      "method": "B",
+      "calls": 40,
+      "attempts": 40,
+      "retries": 0,
+      "promptMean": 653.6,
+      "promptMedian": 656.5,
+      "cachedMean": 0,
+      "cacheWriteMean": 0,
+      "completionMean": 137.65,
+      "completionMax": 334,
+      "reasoningMean": 87.65,
+      "billedMean": 0.00029589999999999993,
+      "undiscountedMean": 0.00029589999999999993,
+      "billedTotal": 0.011835999999999998,
+      "undiscountedTotal": 0.011835999999999998,
+      "apiMsMean": 1943.393709350002,
+      "retrievalMsMean": 0.90202505
+    }
+  ],
+  "pairedBySize": [
+    {
+      "size": 100,
+      "pairs": 40,
+      "bothCorrect": 22,
+      "onlyA": 6,
+      "onlyB": 2,
+      "neither": 10,
+      "falseJoinsA": 1,
+      "falseJoinsB": 0,
+      "sameDecision": 32,
+      "costRatioUndiscounted": {
+        "median": 2.5510688284674243,
+        "q25": 2.2746395463386295,
+        "q75": 2.8377234256851223,
+        "min": 1.970503181029497,
+        "max": 5.138539042821158
+      },
+      "costRatioBilled": {
+        "median": 2.987254162476254,
+        "q25": 2.7661988722921125,
+        "q75": 3.40599367926354
+      },
+      "promptTokenRatio": {
+        "median": 4.173060016826264
+      }
+    },
+    {
+      "size": 200,
+      "pairs": 40,
+      "bothCorrect": 25,
+      "onlyA": 6,
+      "onlyB": 0,
+      "neither": 9,
+      "falseJoinsA": 0,
+      "falseJoinsB": 0,
+      "sameDecision": 34,
+      "costRatioUndiscounted": {
+        "median": 4.285431279323385,
+        "q25": 3.7583069320423115,
+        "q75": 4.6404096649000195,
+        "min": 2.696467509812472,
+        "max": 7.91494532199271
+      },
+      "costRatioBilled": {
+        "median": 5.204686635307139,
+        "q25": 4.570374576463891,
+        "q75": 5.689117248145759
+      },
+      "promptTokenRatio": {
+        "median": 7.9348087660392075
+      }
+    },
+    {
+      "size": 500,
+      "pairs": 40,
+      "bothCorrect": 25,
+      "onlyA": 6,
+      "onlyB": 0,
+      "neither": 9,
+      "falseJoinsA": 0,
+      "falseJoinsB": 0,
+      "sameDecision": 34,
+      "costRatioUndiscounted": {
+        "median": 9.38036057518287,
+        "q25": 8.263969097864184,
+        "q75": 10.168447821431515,
+        "min": 5.170155038759691,
+        "max": 17.10265700483092
+      },
+      "costRatioBilled": {
+        "median": 11.575501246190148,
+        "q25": 10.204076386745587,
+        "q75": 12.565923989142076
+      },
+      "promptTokenRatio": {
+        "median": 19.033494821249583
+      }
+    }
+  ],
+  "position": [
+    {
+      "size": 100,
+      "positiveCorrect": [
+        5,
+        4,
+        10
+      ],
+      "noMatchCorrect": [
+        10,
+        9,
+        10
+      ]
+    },
+    {
+      "size": 200,
+      "positiveCorrect": [
+        5,
+        6,
+        10
+      ],
+      "noMatchCorrect": [
+        10,
+        10,
+        10
+      ]
+    },
+    {
+      "size": 500,
+      "positiveCorrect": [
+        6,
+        5,
+        10
+      ],
+      "noMatchCorrect": [
+        10,
+        10,
+        10
+      ]
+    }
+  ],
+  "bootstrap": {
+    "100": {
+      "correctA": {
+        "estimate": 0.7,
+        "lo": 0.575,
+        "hi": 0.825,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      },
+      "correctB": {
+        "estimate": 0.6,
+        "lo": 0.5,
+        "hi": 0.75,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      },
+      "correctDiffBminusA": {
+        "estimate": -0.09999999999999998,
+        "lo": -0.25,
+        "hi": 0.050000000000000044,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      },
+      "falseJoinDiffBminusA": {
+        "estimate": -0.025,
+        "lo": -0.075,
+        "hi": 0,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      },
+      "medianCostRatio": {
+        "estimate": 2.5510688284674243,
+        "lo": 2.3908773411281574,
+        "hi": 2.755692126269956,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      }
+    },
+    "200": {
+      "correctA": {
+        "estimate": 0.775,
+        "lo": 0.65,
+        "hi": 0.9,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      },
+      "correctB": {
+        "estimate": 0.625,
+        "lo": 0.525,
+        "hi": 0.7256249999999965,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      },
+      "correctDiffBminusA": {
+        "estimate": -0.15000000000000002,
+        "lo": -0.25,
+        "hi": -0.050000000000000044,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      },
+      "falseJoinDiffBminusA": {
+        "estimate": 0,
+        "lo": 0,
+        "hi": 0,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      },
+      "medianCostRatio": {
+        "estimate": 4.285431279323385,
+        "lo": 4.0871963744892135,
+        "hi": 4.451620263420829,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      }
+    },
+    "500": {
+      "correctA": {
+        "estimate": 0.775,
+        "lo": 0.625,
+        "hi": 0.925,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      },
+      "correctB": {
+        "estimate": 0.625,
+        "lo": 0.5,
+        "hi": 0.75,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      },
+      "correctDiffBminusA": {
+        "estimate": -0.15000000000000002,
+        "lo": -0.275,
+        "hi": -0.025000000000000022,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      },
+      "falseJoinDiffBminusA": {
+        "estimate": 0,
+        "lo": 0,
+        "hi": 0,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      },
+      "medianCostRatio": {
+        "estimate": 9.38036057518287,
+        "lo": 8.867018525922965,
+        "hi": 9.786254371436481,
+        "resamples": 2000,
+        "undefinedDraws": 0
+      }
+    }
+  },
+  "criterion": {
+    "labelStatus": "PROVISIONAL",
+    "cost": {
+      "medianRatio": 9.38036057518287,
+      "threshold": 2,
+      "pass": true
+    },
+    "falseJoins": {
+      "A": 0,
+      "B": 0,
+      "allowedExcess": 1,
+      "pass": true
+    },
+    "incorrect": {
+      "A": 9,
+      "B": 15,
+      "allowedExcess": 2,
+      "pass": false
+    },
+    "recall": {
+      "perSize": [
+        "10/10",
+        "10/10",
+        "10/10"
+      ],
+      "threshold": "9/10 at every size",
+      "pass": true
+    },
+    "allPass": false
+  },
+  "spend": {
+    "capUsd": 5,
+    "spentUsd": 0.26933625,
+    "openReservedUsd": 0,
+    "stages": {
+      "prep": {
+        "settledUsd": 0.00477525,
+        "retainedUsd": 0
+      },
+      "smoke": {
+        "settledUsd": 0.0047133,
+        "retainedUsd": 0
+      },
+      "main": {
+        "settledUsd": 0.2598477,
+        "retainedUsd": 0
+      }
+    },
+    "embeddingTokens": 63670,
+    "bQueryEmbeddingUsdMedian": 0.0000010160999999999999
+  },
+  "time": {
+    "mainElapsedSeconds": 248.974,
+    "apiSecondsSum": 496.28385917099985
+  }
+}

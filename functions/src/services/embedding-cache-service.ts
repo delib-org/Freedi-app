@@ -1,10 +1,26 @@
-import { getFirestore, FieldValue, type Firestore } from 'firebase-admin/firestore';
+import {
+	getFirestore,
+	FieldValue,
+	type DocumentData,
+	type Firestore,
+} from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
+import { Collections } from '@freedi/shared-types';
 import { EMBEDDING_DIMENSIONS } from './embedding-service';
 import { DEFAULT_EMBEDDING_MODEL, resolveEmbeddingModel } from './embedding-model-resolver';
 import { computeTextHash } from '../synthesis/textHash';
+import {
+	embeddingDocRef,
+	embeddingsCollection,
+	extractEmbeddingArray,
+	hasLegacyEmbeddingFields,
+	isLegacyEmbeddingFallbackEnabled,
+	isNotFoundError,
+	legacyFieldDeletes,
+	legacyFieldsForEmbeddingDoc,
+	loadEmbeddingDocs,
+} from './statement-embedding-store';
 
-// Helper to extract array from VectorValue or return as-is if already an array
 /**
  * Is this stored vector comparable with the ones we are producing now?
  *
@@ -41,22 +57,16 @@ function isCompatibleModel(storedModel: unknown, expectedModel: string): boolean
 	return storedModel === expectedModel;
 }
 
-function extractEmbeddingArray(embedding: unknown): number[] | null {
-	if (!embedding) return null;
+/**
+ * The comparable vector in a doc — an embedding doc, or (legacy) a statement
+ * doc still carrying the fields — or null when there is none.
+ */
+async function compatibleVector(data: DocumentData | undefined): Promise<number[] | null> {
+	const vector = extractEmbeddingArray(data?.embedding);
+	if (!vector) return null;
+	const expectedModel = await resolveEmbeddingModel(data?.parentId as string | undefined);
 
-	// If it's already an array
-	if (Array.isArray(embedding)) {
-		return embedding as number[];
-	}
-
-	// If it's a VectorValue with toArray method
-	if (typeof embedding === 'object' && embedding !== null && 'toArray' in embedding) {
-		const vectorValue = embedding as { toArray: () => number[] };
-
-		return vectorValue.toArray();
-	}
-
-	return null;
+	return isCompatibleModel(data?.embeddingModel, expectedModel) ? vector : null;
 }
 
 interface EmbeddingWithStatement {
@@ -66,10 +76,12 @@ interface EmbeddingWithStatement {
 }
 
 /**
- * Service for storing and retrieving statement embeddings from Firestore
+ * Service for storing and retrieving statement embeddings.
  *
- * Embeddings are stored directly on the statement document to enable
- * Firestore's native vector search capabilities.
+ * Vectors live in `statementEmbeddings/{statementId}` (see
+ * statement-embedding-store.ts for why they left the statement doc). Readers
+ * fall back to the old statement-doc fields until the migration has run, and
+ * every write moves whatever legacy fields a statement still carries.
  */
 class EmbeddingCacheService {
 	// Lazy Firestore handle. Resolved on first use rather than at construction
@@ -84,7 +96,7 @@ class EmbeddingCacheService {
 
 		return this._db;
 	}
-	private statementsCollection = 'statements';
+	private statementsCollection = Collections.statements;
 
 	/**
 	 * Get embedding for a single statement
@@ -93,26 +105,26 @@ class EmbeddingCacheService {
 	 */
 	async getEmbedding(statementId: string): Promise<number[] | null> {
 		try {
-			const doc = await this.db.collection(this.statementsCollection).doc(statementId).get();
+			const embeddingSnap = await embeddingDocRef(statementId).get();
+			let data = embeddingSnap.exists ? embeddingSnap.data() : undefined;
 
-			if (!doc.exists) {
-				return null;
+			if (!extractEmbeddingArray(data?.embedding) && isLegacyEmbeddingFallbackEnabled()) {
+				const statementSnap = await this.db
+					.collection(this.statementsCollection)
+					.doc(statementId)
+					.get();
+				data = statementSnap.exists ? statementSnap.data() : undefined;
 			}
 
-			const data = doc.data();
-			const expectedModel = await resolveEmbeddingModel(data?.parentId as string | undefined);
-			if (!isCompatibleModel(data?.embeddingModel, expectedModel)) {
+			const vector = await compatibleVector(data);
+			if (!vector && extractEmbeddingArray(data?.embedding)) {
 				logger.info('embeddingCache: ignoring vector from a different model', {
 					statementId,
 					storedModel: data?.embeddingModel,
-					expectedModel,
 				});
-
-				return null;
 			}
-			const embedding = extractEmbeddingArray(data?.embedding);
 
-			return embedding;
+			return vector;
 		} catch (error) {
 			logger.error('Failed to get embedding from cache', {
 				statementId,
@@ -136,34 +148,46 @@ class EmbeddingCacheService {
 		}
 
 		try {
-			// Firestore 'in' query limit is 30, batch if needed
-			const batchSize = 30;
-			for (let i = 0; i < statementIds.length; i += batchSize) {
-				const batch = statementIds.slice(i, i + batchSize);
+			let incompatible = 0;
+			const embeddingDocs = await loadEmbeddingDocs(statementIds);
+			const withoutDoc: string[] = [];
 
-				const snapshot = await this.db
-					.collection(this.statementsCollection)
-					.where('statementId', 'in', batch)
-					.get();
+			for (const id of statementIds) {
+				const data = embeddingDocs.get(id);
+				if (!extractEmbeddingArray(data?.embedding)) {
+					withoutDoc.push(id);
+					continue;
+				}
+				const vector = await compatibleVector(data);
+				if (vector) result.set(id, vector);
+				else incompatible++;
+			}
 
-				let incompatible = 0;
-				for (const doc of snapshot.docs) {
-					const data = doc.data();
-					const expectedModel = await resolveEmbeddingModel(data?.parentId as string | undefined);
-					if (!isCompatibleModel(data?.embeddingModel, expectedModel)) {
-						incompatible++;
-						continue;
-					}
-					const embedding = extractEmbeddingArray(data?.embedding);
-					if (embedding) {
-						result.set(doc.id, embedding);
+			if (withoutDoc.length > 0 && isLegacyEmbeddingFallbackEnabled()) {
+				// Firestore 'in' query limit is 30, batch if needed
+				const batchSize = 30;
+				for (let i = 0; i < withoutDoc.length; i += batchSize) {
+					const batch = withoutDoc.slice(i, i + batchSize);
+
+					const snapshot = await this.db
+						.collection(this.statementsCollection)
+						.where('statementId', 'in', batch)
+						.get();
+
+					for (const doc of snapshot.docs) {
+						const data = doc.data();
+						if (!extractEmbeddingArray(data?.embedding)) continue;
+						const vector = await compatibleVector(data);
+						if (vector) result.set(doc.id, vector);
+						else incompatible++;
 					}
 				}
-				if (incompatible > 0) {
-					logger.info('embeddingCache: ignored vectors from a different model', {
-						count: incompatible,
-					});
-				}
+			}
+
+			if (incompatible > 0) {
+				logger.info('embeddingCache: ignored vectors from a different model', {
+					count: incompatible,
+				});
 			}
 
 			logger.info(`Retrieved ${result.size}/${statementIds.length} embeddings`);
@@ -177,9 +201,37 @@ class EmbeddingCacheService {
 	}
 
 	/**
-	 * Save embedding to a statement document
+	 * The short LLM gist each statement was embedded from (`embeddingBrief`),
+	 * where one was stored. Callers fall back to the statement text.
+	 */
+	async getBriefs(
+		statementIds: string[],
+		legacyStatements: ReadonlyMap<string, DocumentData> = new Map(),
+	): Promise<Map<string, string>> {
+		const briefs = new Map<string, string>();
+		if (statementIds.length === 0) return briefs;
+
+		try {
+			const embeddingDocs = await loadEmbeddingDocs(statementIds);
+			for (const id of statementIds) {
+				const brief =
+					embeddingDocs.get(id)?.embeddingBrief ??
+					(isLegacyEmbeddingFallbackEnabled()
+						? legacyStatements.get(id)?.embeddingBrief
+						: undefined);
+				if (typeof brief === 'string' && brief !== '') briefs.set(id, brief);
+			}
+		} catch (error) {
+			logger.error('Failed to get embedding briefs', { error });
+		}
+
+		return briefs;
+	}
+
+	/**
+	 * Save a statement's embedding.
 	 * @param statementId - The statement ID
-	 * @param embedding - The 768-dimensional embedding vector
+	 * @param embedding - The 1536-dimensional embedding vector
 	 * @param context - Optional context used for embedding (e.g., parent question)
 	 * @param text - Optional statement text; when provided, its sha1 hash is
 	 *   written as `textHash` so the synthesis verdict cache can detect
@@ -200,23 +252,38 @@ class EmbeddingCacheService {
 		}
 
 		try {
-			// Use FieldValue.vector() for Firestore vector search compatibility
-			const vectorValue = FieldValue.vector(embedding);
+			const statementRef = this.db.collection(this.statementsCollection).doc(statementId);
+			const statementSnap = await statementRef.get();
+			const statement = statementSnap.data();
+			if (!statementSnap.exists || !statement) {
+				throw new Error(`Statement ${statementId} not found`);
+			}
 
-			const updatePayload: Record<string, unknown> = {
-				embedding: vectorValue,
+			const payload: Record<string, unknown> = {
+				// Anything still on the statement doc moves along with this write
+				// (the hybrid vector, an older brief); the new values override.
+				...legacyFieldsForEmbeddingDoc(statement),
+				statementId,
+				parentId: statement.parentId ?? '',
+				embedding: FieldValue.vector(embedding),
 				embeddingModel: model,
 				embeddingContext: context || null,
 				embeddingCreatedAt: Date.now(),
+				lastUpdate: Date.now(),
 			};
 			if (text) {
-				updatePayload.textHash = computeTextHash(text);
+				payload.textHash = computeTextHash(text);
 			}
 			if (brief) {
-				updatePayload.embeddingBrief = brief;
+				payload.embeddingBrief = brief;
 			}
 
-			await this.db.collection(this.statementsCollection).doc(statementId).update(updatePayload);
+			const batch = this.db.batch();
+			batch.set(embeddingDocRef(statementId), payload, { merge: true });
+			if (hasLegacyEmbeddingFields(statement)) {
+				batch.update(statementRef, legacyFieldDeletes());
+			}
+			await batch.commit();
 
 			logger.info(`Saved embedding for statement ${statementId}`);
 		} catch (error) {
@@ -247,43 +314,55 @@ class EmbeddingCacheService {
 		let success = 0;
 		let failed = 0;
 
-		// Firestore batch limit is 500 operations
-		const batchSize = 500;
+		// Two writes per statement (embedding doc + legacy strip) under the
+		// 500-operation batch limit.
+		const batchSize = 200;
 
 		for (let i = 0; i < embeddings.length; i += batchSize) {
-			const batch = this.db.batch();
 			const currentBatch = embeddings.slice(i, i + batchSize);
+			const statementRefs = currentBatch.map((item) =>
+				this.db.collection(this.statementsCollection).doc(item.statementId),
+			);
+			const statementSnaps = await this.db.getAll(...statementRefs);
+			const batch = this.db.batch();
+			let queued = 0;
 
-			for (const item of currentBatch) {
-				try {
-					const vectorValue = FieldValue.vector(item.embedding);
-					const docRef = this.db.collection(this.statementsCollection).doc(item.statementId);
-
-					const payload: Record<string, unknown> = {
-						embedding: vectorValue,
-						embeddingModel: model,
-						embeddingContext: item.context || null,
-						embeddingCreatedAt: Date.now(),
-					};
-					if (item.text) {
-						payload.textHash = computeTextHash(item.text);
-					}
-
-					batch.update(docRef, payload);
-					success++;
-				} catch (error) {
-					logger.warn(`Failed to add to batch: ${item.statementId}`, { error });
+			currentBatch.forEach((item, index) => {
+				const statement = statementSnaps[index]?.data();
+				if (!statementSnaps[index]?.exists || !statement) {
+					logger.warn(`Statement not found for embedding: ${item.statementId}`);
 					failed++;
+
+					return;
 				}
-			}
+
+				const payload: Record<string, unknown> = {
+					...legacyFieldsForEmbeddingDoc(statement),
+					statementId: item.statementId,
+					parentId: statement.parentId ?? '',
+					embedding: FieldValue.vector(item.embedding),
+					embeddingModel: model,
+					embeddingContext: item.context || null,
+					embeddingCreatedAt: Date.now(),
+					lastUpdate: Date.now(),
+				};
+				if (item.text) {
+					payload.textHash = computeTextHash(item.text);
+				}
+
+				batch.set(embeddingDocRef(item.statementId), payload, { merge: true });
+				if (hasLegacyEmbeddingFields(statement)) {
+					batch.update(statementRefs[index], legacyFieldDeletes());
+				}
+				queued++;
+			});
 
 			try {
 				await batch.commit();
+				success += queued;
 			} catch (error) {
 				logger.error('Batch commit failed', { error });
-				// Count all items in this batch as failed
-				failed += currentBatch.length - success;
-				success = 0;
+				failed += queued;
 			}
 		}
 
@@ -299,15 +378,13 @@ class EmbeddingCacheService {
 	 */
 	async hasEmbedding(statementId: string): Promise<boolean> {
 		try {
+			const embeddingSnap = await embeddingDocRef(statementId).get();
+			if (embeddingSnap.exists && embeddingSnap.data()?.embedding) return true;
+			if (!isLegacyEmbeddingFallbackEnabled()) return false;
+
 			const doc = await this.db.collection(this.statementsCollection).doc(statementId).get();
 
-			if (!doc.exists) {
-				return false;
-			}
-
-			const data = doc.data();
-
-			return Boolean(data?.embedding);
+			return Boolean(doc.exists && doc.data()?.embedding);
 		} catch (error) {
 			logger.error('Failed to check embedding existence', {
 				statementId,
@@ -326,10 +403,11 @@ class EmbeddingCacheService {
 	async getEmbeddingsForParent(parentId: string): Promise<EmbeddingWithStatement[]> {
 		try {
 			// Query all statements (don't filter by hide - it may not exist on all docs)
-			const snapshot = await this.db
-				.collection(this.statementsCollection)
-				.where('parentId', '==', parentId)
-				.get();
+			const [statementsSnap, embeddingsSnap] = await Promise.all([
+				this.db.collection(this.statementsCollection).where('parentId', '==', parentId).get(),
+				embeddingsCollection().where('parentId', '==', parentId).get(),
+			]);
+			const embeddingDocs = new Map(embeddingsSnap.docs.map((doc) => [doc.id, doc.data()]));
 
 			const results: EmbeddingWithStatement[] = [];
 			// This path fed in-memory similarity WITHOUT the model guard the other
@@ -337,18 +415,20 @@ class EmbeddingCacheService {
 			const expectedModel = await resolveEmbeddingModel(parentId);
 			let incompatible = 0;
 
-			snapshot.docs.forEach((doc) => {
+			statementsSnap.docs.forEach((doc) => {
 				const data = doc.data();
 				// Skip hidden statements
 				if (data?.hide === true) {
 					return;
 				}
-				if (!isCompatibleModel(data?.embeddingModel, expectedModel)) {
+				const stored = embeddingDocs.get(doc.id);
+				const source = stored?.embedding || !isLegacyEmbeddingFallbackEnabled() ? stored : data;
+				if (!isCompatibleModel(source?.embeddingModel, expectedModel)) {
 					incompatible++;
 
 					return;
 				}
-				const embedding = extractEmbeddingArray(data?.embedding);
+				const embedding = extractEmbeddingArray(source?.embedding);
 				if (embedding) {
 					results.push({
 						statementId: doc.id,
@@ -387,24 +467,32 @@ class EmbeddingCacheService {
 		coveragePercent: number;
 	}> {
 		try {
-			// Query all statements under parent (don't filter by hide - it may not exist)
-			const snapshot = await this.db
-				.collection(this.statementsCollection)
-				.where('parentId', '==', parentId)
-				.get();
+			// Query all statements under parent (don't filter by hide - it may not exist).
+			// Only presence matters here, so the embedding docs come back without
+			// their vectors (`embeddingCreatedAt` is written and deleted with them).
+			const [statementsSnap, embeddedSnap] = await Promise.all([
+				this.db.collection(this.statementsCollection).where('parentId', '==', parentId).get(),
+				embeddingsCollection().where('parentId', '==', parentId).select('embeddingCreatedAt').get(),
+			]);
+			const embeddedIds = new Set(
+				embeddedSnap.docs
+					.filter((doc) => doc.data().embeddingCreatedAt !== undefined)
+					.map((doc) => doc.id),
+			);
+			const fallback = isLegacyEmbeddingFallbackEnabled();
 
 			let withEmbeddings = 0;
 			let withoutEmbeddings = 0;
 			let totalStatements = 0;
 
-			snapshot.docs.forEach((doc) => {
+			statementsSnap.docs.forEach((doc) => {
 				const data = doc.data();
 				// Skip hidden statements
 				if (data?.hide === true) {
 					return;
 				}
 				totalStatements++;
-				if (data?.embedding) {
+				if (embeddedIds.has(doc.id) || (fallback && data?.embedding)) {
 					withEmbeddings++;
 				} else {
 					withoutEmbeddings++;
@@ -436,13 +524,27 @@ class EmbeddingCacheService {
 	 * @param statementId - The statement ID
 	 */
 	async deleteEmbedding(statementId: string): Promise<void> {
+		const deletes = {
+			embedding: FieldValue.delete(),
+			embeddingModel: FieldValue.delete(),
+			embeddingContext: FieldValue.delete(),
+			embeddingCreatedAt: FieldValue.delete(),
+		};
+
 		try {
-			await this.db.collection(this.statementsCollection).doc(statementId).update({
-				embedding: FieldValue.delete(),
-				embeddingModel: FieldValue.delete(),
-				embeddingContext: FieldValue.delete(),
-				embeddingCreatedAt: FieldValue.delete(),
-			});
+			try {
+				await embeddingDocRef(statementId).update({ ...deletes, lastUpdate: Date.now() });
+			} catch (error) {
+				if (!isNotFoundError(error)) throw error;
+			}
+
+			if (isLegacyEmbeddingFallbackEnabled()) {
+				const statementRef = this.db.collection(this.statementsCollection).doc(statementId);
+				const statementSnap = await statementRef.get();
+				if (statementSnap.data()?.embedding) {
+					await statementRef.update(deletes);
+				}
+			}
 
 			logger.info(`Deleted embedding for statement ${statementId}`);
 		} catch (error) {

@@ -1,0 +1,3043 @@
+{
+  "model": "text-embedding-3-small",
+  "dimensions": 1536,
+  "contract": "Question: <question>\\nAnswer: <original text>",
+  "f32Sha256": "1fa865b89a46c7509245a39a6bab4c55fb88573e428dcdfa95571400c2708f18",
+  "rows": [
+    {
+      "id": "p23xg",
+      "textSha256": "99c88108ba1dd60e0defd0c1d6576749ffdca5605c9f77cc6bfec7b5f0f406ca",
+      "tokens": 61.15
+    },
+    {
+      "id": "p2839",
+      "textSha256": "eedbd751fbca8311ff19075ceb8e68bf7656925dccb9581d1ce1c8ca3bcbf72d",
+      "tokens": 61.15
+    },
+    {
+      "id": "p28ea",
+      "textSha256": "5eb4a2b2cc49ef451e2a2219729fed7a6492977af0ff283274fac1c0d836fea4",
+      "tokens": 57.96
+    },
+    {
+      "id": "p2a6v",
+      "textSha256": "a96f7c09fe0e577c85537383a9e8615c0628acc5eb77fe84e2d36ebe09201876",
+      "tokens": 59.23
+    },
+    {
+      "id": "p2a8w",
+      "textSha256": "a41cf38ca89bbd54e1077eb734df175858e1540edb761200135e3138f0db358e",
+      "tokens": 61.36
+    },
+    {
+      "id": "p2hhq",
+      "textSha256": "276c798427d20be8f856cb4635a09d5829037ccfaaf0a03ba543c8bb2584eba2",
+      "tokens": 51.78
+    },
+    {
+      "id": "p2hkv",
+      "textSha256": "0c3cc69392c5cedd54e299c82c0fdad0d845f89138dab9418fcac26702da9e92",
+      "tokens": 50.5
+    },
+    {
+      "id": "p2ib2",
+      "textSha256": "c67efe33e53673a8599d6c1baedca30e829d71407b653669cb75bc8970ab4de7",
+      "tokens": 43.68
+    },
+    {
+      "id": "p2w5z",
+      "textSha256": "1c5cedc969942a2f1af76b038b7d98612be3820c23d7e4d7338ce9eb01d740ab",
+      "tokens": 60.73
+    },
+    {
+      "id": "p2wk5",
+      "textSha256": "622445f16a0e582dcfced2463c72229b5e7d2aaa752a48c4c5b802425a7568bd",
+      "tokens": 45.17
+    },
+    {
+      "id": "p2ya2",
+      "textSha256": "b37a129be4e2e3dd8f2b3291d8094d2a25022bae8544ac491016dd1dee812ed7",
+      "tokens": 50.07
+    },
+    {
+      "id": "p3285",
+      "textSha256": "bc022a976149423f4b222e83ac3de5b76aa29588ba09cf5c5ec3d911dbff8f72",
+      "tokens": 37.29
+    },
+    {
+      "id": "p34uw",
+      "textSha256": "9c4507532e978d74765d2cfc49e3bfe2076db82412a7cc52f19163b603d25c38",
+      "tokens": 55.4
+    },
+    {
+      "id": "p35gt",
+      "textSha256": "fa0490f260b115f92b9b84d0972b58616d72bd644199b5be4960ee78733e6e77",
+      "tokens": 40.27
+    },
+    {
+      "id": "p35n3",
+      "textSha256": "c9b6f51662ff6bad9d138da95f91c6c4c3753ad8ff71d4c7c1d1acb25b3a70c4",
+      "tokens": 50.92
+    },
+    {
+      "id": "p389z",
+      "textSha256": "053d1e218b4eb0e34ff34ea3741dc77019bbb9528ecf4577e7cc7a15bcb41b65",
+      "tokens": 59.02
+    },
+    {
+      "id": "p396b",
+      "textSha256": "af02772badb37d69b559e753822bd8e94dd67abb4815fabbdd64bc9479ef665d",
+      "tokens": 61.36
+    },
+    {
+      "id": "p3bwu",
+      "textSha256": "4e273359a14f9afaa470eeede756e1fc1179ad7e6e0255231fbbb4f1a9b6e971",
+      "tokens": 51.99
+    },
+    {
+      "id": "p3cst",
+      "textSha256": "a0267fdb1dc9ad93464ba0d6971f476f536be5eb0625764fcbe85bc2c4fdec23",
+      "tokens": 61.15
+    },
+    {
+      "id": "p3drm",
+      "textSha256": "eaad6d129679d7f8319d3004f3273664f9d19d849df7a6bbec4ab50d517ac801",
+      "tokens": 54.33
+    },
+    {
+      "id": "p3esu",
+      "textSha256": "4652d6b25b57f686dae5026ee794333d0d02d52b02584c0debf9027d2880848e",
+      "tokens": 45.17
+    },
+    {
+      "id": "p3et2",
+      "textSha256": "2ea0ebc35120af19ec4bd7f32b92cf9d13f276e421ecc74a23d3152bed84b55f",
+      "tokens": 57.53
+    },
+    {
+      "id": "p3fxs",
+      "textSha256": "67f1b2320951c0b9b21ddf6208875a5ffd0147eb73071057a39f8cd86072ec63",
+      "tokens": 57.1
+    },
+    {
+      "id": "p3j36",
+      "textSha256": "fa45c88de4cbc939c5202dfb6bda2b0673970799a5f1d9c00f656389b6851ea8",
+      "tokens": 55.4
+    },
+    {
+      "id": "p3kb6",
+      "textSha256": "296569cee4b60a08b7377fa0f97bdb5b02786199c10b19280e642e6177fff459",
+      "tokens": 46.24
+    },
+    {
+      "id": "p3wgr",
+      "textSha256": "777b7796af5f033911e7e58968bf1cde3672ff2660e48a87d3943390ee940e14",
+      "tokens": 61.15
+    },
+    {
+      "id": "p3y2u",
+      "textSha256": "ec0b54b1803ddbf1b0eed0ed67447e0fa30169bbfa9d6bb0978dfaa2580bcc4c",
+      "tokens": 53.27
+    },
+    {
+      "id": "p3y3b",
+      "textSha256": "9915f9575996cfc58c7f13442d8efaa9df90b8942cfaff61b961ccda1fa4976c",
+      "tokens": 44.75
+    },
+    {
+      "id": "p3ymb",
+      "textSha256": "813a82c8ece0c2fe9c3cadb328f5075aeec22e9dd7249d3383f67eed918664c6",
+      "tokens": 44.75
+    },
+    {
+      "id": "p3zeb",
+      "textSha256": "4f01f283c8ac3c14aa93798873c0e34c6c708ff349552499345d9499e5b21da7",
+      "tokens": 45.17
+    },
+    {
+      "id": "p43af",
+      "textSha256": "c9728cba617dbf7db9e64429bc34a68f64ad6a483db4c716e966936a1ec11303",
+      "tokens": 55.82
+    },
+    {
+      "id": "p43q5",
+      "textSha256": "92d67168ed0f44554cb9c1398ea5ecabb430840c09bb43e969758a84ee925dca",
+      "tokens": 51.35
+    },
+    {
+      "id": "p499a",
+      "textSha256": "6703b6e98c29540101e45222ba084d07a7c4c8b60f7a67c19bfc278663a2dfc4",
+      "tokens": 41.12
+    },
+    {
+      "id": "p49kb",
+      "textSha256": "1b20b6817394944f4071a8926b16939f673c0cf2b93f40e4e0297f96973c7ca2",
+      "tokens": 53.69
+    },
+    {
+      "id": "p4cji",
+      "textSha256": "aea6ea50da32dc4eb6faa78792065c9584702e4b813e88b9670cd0166d02b753",
+      "tokens": 60.09
+    },
+    {
+      "id": "p4csd",
+      "textSha256": "1e9f9f396402a020498f5d8ca38057534f13e31e2087697f532c0fd574d529b7",
+      "tokens": 53.05
+    },
+    {
+      "id": "p4e3h",
+      "textSha256": "80982e45d238163df3e8da1536e613401e25b98c300154f5a5c9932da33e9908",
+      "tokens": 60.09
+    },
+    {
+      "id": "p4f6c",
+      "textSha256": "361486c307a6fa64e653a657e8a084e5b1b58affce885fcb7fbca708376861ab",
+      "tokens": 41.34
+    },
+    {
+      "id": "p4g7x",
+      "textSha256": "57997acc5994d61780f515059ab5430bc979da3c834df80b63a933ec57326d10",
+      "tokens": 59.66
+    },
+    {
+      "id": "p4j6s",
+      "textSha256": "f6292a0a031e15a5e807528ff58293b199777cf3bc7060b897115719361b9d17",
+      "tokens": 39.84
+    },
+    {
+      "id": "p4nku",
+      "textSha256": "1e65b9b3612a6edda3b7b10a1757c9902cbd351dc44df50baf94cf905337cbc7",
+      "tokens": 60.3
+    },
+    {
+      "id": "p4p8j",
+      "textSha256": "787ef58e331d9932285f569b25c94242e793d5c3f857a083cf7e04c19443c972",
+      "tokens": 61.58
+    },
+    {
+      "id": "p4pb4",
+      "textSha256": "cd63289f8fa573f0f6c197c7601497035c99f13e79948879d3bbf6ad11764e55",
+      "tokens": 45.38
+    },
+    {
+      "id": "p4qh4",
+      "textSha256": "1aa2450ad49ad29bb7b96b76756db4815928d1b0552e9a08a950dc379a21bcfc",
+      "tokens": 49.65
+    },
+    {
+      "id": "p4r2w",
+      "textSha256": "c1bd09bc7212b9f69e1ff6a98301b120799de0ff57d965157a1fa1fdf8970503",
+      "tokens": 46.02
+    },
+    {
+      "id": "p4rsn",
+      "textSha256": "6ff977827f9310b4b89f5f7c4c47aa728cd16d38ab989b0d8d3cdd543ce0f561",
+      "tokens": 59.02
+    },
+    {
+      "id": "p4u89",
+      "textSha256": "ed4392f5e50eb202d87fe1753321b14eec9dd1887420226d566620190ff030a8",
+      "tokens": 59.02
+    },
+    {
+      "id": "p4vem",
+      "textSha256": "62eb2ea421f66b6b39b7e9ab79021c82c9a43e9f56c9c4c67173364cc9f24139",
+      "tokens": 49.43
+    },
+    {
+      "id": "p4xau",
+      "textSha256": "a0dd5576dadb6d850af1df3dd07411880abbdbcf3b509fcc1e13ffec986f154e",
+      "tokens": 61.36
+    },
+    {
+      "id": "p4zjr",
+      "textSha256": "03611e24b5c8fc7bb7268976c2627d60725b04500d4206eadd18f95060374266",
+      "tokens": 59.87
+    },
+    {
+      "id": "p54eg",
+      "textSha256": "9d79716500625d7dd499a2b0f86ebaa5ad58553196c4477714d3ad6855626608",
+      "tokens": 61.15
+    },
+    {
+      "id": "p572n",
+      "textSha256": "bd295ea73b5340125c474a866e57898c03be7b152d02d235951c751efbc935ae",
+      "tokens": 52.42
+    },
+    {
+      "id": "p57k8",
+      "textSha256": "7068849c63691002fd246b3ac09373005df76891ea28b022c66a74e6f123afef",
+      "tokens": 61.58
+    },
+    {
+      "id": "p59nj",
+      "textSha256": "8a2a27ce613b337df0d69b66bc2ea891d117fab2470fa6e4f57c9fd38400d412",
+      "tokens": 61.36
+    },
+    {
+      "id": "p5ahf",
+      "textSha256": "3b9e699fbfddd1ccd360e6a6c9d248b9dcfbc1093afa5d363d816873e1ddc342",
+      "tokens": 41.98
+    },
+    {
+      "id": "p5at5",
+      "textSha256": "cef99393d49d7ecd6007868cc635a3e705d127c0aec41977a0d5d46d3dffc56f",
+      "tokens": 48.58
+    },
+    {
+      "id": "p5b8r",
+      "textSha256": "801a45268df23542d0e167a74b9ca5134409df7fd26426cfe25f8e1a94fd0aae",
+      "tokens": 61.15
+    },
+    {
+      "id": "p5ctb",
+      "textSha256": "0f8d5a340ba145686efa754af901a25ab33f5b60d721b7040e9dc24154c6eec7",
+      "tokens": 51.35
+    },
+    {
+      "id": "p5e8k",
+      "textSha256": "f86757dead0d4034068c5ecd078e1aa0613a01143485a9a7039bd4a8307107b9",
+      "tokens": 59.45
+    },
+    {
+      "id": "p5eeq",
+      "textSha256": "9b7ca0bc0f829260c03aa9d4d04e96e365dea3f871bf67d8ebce3b84f7e0c389",
+      "tokens": 54.76
+    },
+    {
+      "id": "p5eg6",
+      "textSha256": "beef822fbba21493d6f929e2c7da96ae08ac4ab7b76f27d73ea438edbd1f87e6",
+      "tokens": 49.43
+    },
+    {
+      "id": "p5ehs",
+      "textSha256": "c0b196aeab33eb5fb366fd7c85be74fef7d19b6f39588379f46956840c142c72",
+      "tokens": 58.38
+    },
+    {
+      "id": "p5hhx",
+      "textSha256": "4e3e1fa7b19ef082d84d0fd9107d96717e181dec44b5bf143990baf4ad321dca",
+      "tokens": 58.59
+    },
+    {
+      "id": "p5hnk",
+      "textSha256": "1bd99210ae26eab2e500c75c320e3d1b606bfec263cf16c93d9f883b8c9a5fc1",
+      "tokens": 50.07
+    },
+    {
+      "id": "p5ku8",
+      "textSha256": "809dfe2f651fa8a20898f98371144b4a97c0088e6fbca11957d077ad9e6c916b",
+      "tokens": 59.51
+    },
+    {
+      "id": "p5pav",
+      "textSha256": "d32f5f0ba39c47d4b28b474f6bafe8eda48b238ece9d49ec2a42c8a0457425c5",
+      "tokens": 55.72
+    },
+    {
+      "id": "p5ref",
+      "textSha256": "f45c21804718703c94f3dd664056f037994ecbca24ea5c0c34390557eaf21779",
+      "tokens": 42.26
+    },
+    {
+      "id": "p5rmi",
+      "textSha256": "3c730960ea34200c1bcf04d2bfdc8708a127740a0c6e583306ae8cb1eb9967c4",
+      "tokens": 59.3
+    },
+    {
+      "id": "p5rtq",
+      "textSha256": "5c2dbe2ec27eae9fbf2efad053a704e7a7aebbfd26657c59f9c59fc060848ce2",
+      "tokens": 60.56
+    },
+    {
+      "id": "p5ryp",
+      "textSha256": "d3cad33e25f28f7a7e2c27108bd5bdaa8d3f8cae124f3887aae3cb4d82eac2aa",
+      "tokens": 45.84
+    },
+    {
+      "id": "p5sdr",
+      "textSha256": "fc49659354ad4cf2a7521a23b73aa5094694490fe001838a6f5bcfa68ea7d325",
+      "tokens": 55.72
+    },
+    {
+      "id": "p5y22",
+      "textSha256": "c087951ee98f697239a7ef7e52e8a11c70be358f99e2316437304f43d2d22dad",
+      "tokens": 48.99
+    },
+    {
+      "id": "p5yca",
+      "textSha256": "8f432f761db50de5e931e8148d862cc20982efc4a786be36100ea3637716d68b",
+      "tokens": 46.26
+    },
+    {
+      "id": "p64wt",
+      "textSha256": "bda31b41a2a3faeb35d0edf27a0e25b7a2595edd8837615cfffb6df676841116",
+      "tokens": 39.32
+    },
+    {
+      "id": "p66dt",
+      "textSha256": "7de7ca30c460fae084ffe8d13931bbfd35fe8bfb56559c252e5347135efe59fe",
+      "tokens": 58.24
+    },
+    {
+      "id": "p67wb",
+      "textSha256": "5820afceff9d185cf4af089957d5847207ffc70eab82c3f8355e255dcb2512b2",
+      "tokens": 58.88
+    },
+    {
+      "id": "p6864",
+      "textSha256": "4d4e650d7a0310ab3a6f8912c939f1c243deb24f7007dd169a9176d185ee1fbb",
+      "tokens": 50.04
+    },
+    {
+      "id": "p68hk",
+      "textSha256": "7a264437b4b628998260b56cfe960cf04603038bb656c77795708f5b5c751c40",
+      "tokens": 42.9
+    },
+    {
+      "id": "p68um",
+      "textSha256": "4d97d92aea44c47e12431ffffb0fa6d1d977d0b3a72a2c61742a4b75f296fdcb",
+      "tokens": 50.04
+    },
+    {
+      "id": "p69et",
+      "textSha256": "7405db8d48a28e74b720c97692500b60cb1d26a21cd45a58690db9dbd71f003d",
+      "tokens": 60.56
+    },
+    {
+      "id": "p69s8",
+      "textSha256": "4d117c98098e6ca65681d62f65e21a4a5607379dc31a3a695c2d4dc90d04c6ec",
+      "tokens": 52.15
+    },
+    {
+      "id": "p6c95",
+      "textSha256": "fe9c0bf4d7ae647bb80bf746e940c2209a9c651c58627450d61bb22026418184",
+      "tokens": 37.85
+    },
+    {
+      "id": "p6cyb",
+      "textSha256": "f63f914a482fc15a2d3d4c94f7ce9b2b05ad6e1ce730522859c00340e837235e",
+      "tokens": 45.63
+    },
+    {
+      "id": "p6fag",
+      "textSha256": "450cfdc96a6a677ade9bdcc34211f15012d820497d85daf63145f66a196f850a",
+      "tokens": 52.36
+    },
+    {
+      "id": "p6j9p",
+      "textSha256": "dd939d4fadf3187fb216cd3a23f5c617ca52b5ef91f913191f2bb00eceb1075b",
+      "tokens": 57.4
+    },
+    {
+      "id": "p6jxh",
+      "textSha256": "31e7fe58c80d9f13ace5c1605c623d577856c0482243eedfa46b36b78090902d",
+      "tokens": 47.73
+    },
+    {
+      "id": "p6k4e",
+      "textSha256": "c809292567fe80b38897739d322d9792ba278e8dbb299437afc1136b4ba1dfad",
+      "tokens": 62.45
+    },
+    {
+      "id": "p6kxg",
+      "textSha256": "a11a57564e5f8b8f1761cd85914402e5d3199703d9d3d5ee761a6aeafad2067a",
+      "tokens": 54.25
+    },
+    {
+      "id": "p6quu",
+      "textSha256": "d45ab44c7343f8d20152cd6b9e768fe53a58144d371b75ba22d0584138b6273b",
+      "tokens": 59.72
+    },
+    {
+      "id": "p6r2s",
+      "textSha256": "4b9661ef4014c7f204e846b3d02fa1ef6abc3d956c2f9cb3d2a4001bab4dc1f9",
+      "tokens": 59.72
+    },
+    {
+      "id": "p6rz9",
+      "textSha256": "22dade6d5a932700d7c4456ef7351c6dd7de75b87d868a9b6335a4a606a11b23",
+      "tokens": 39.53
+    },
+    {
+      "id": "p6tet",
+      "textSha256": "78978dabbc0196083ea81c95dfc7a1298731cd6f337747d7be1369e130247551",
+      "tokens": 55.09
+    },
+    {
+      "id": "p6twv",
+      "textSha256": "945746fb0b641828b209b607a40a489ef31eed05b1dd213dd4ec2cdc414f3e7b",
+      "tokens": 43.74
+    },
+    {
+      "id": "p6u6a",
+      "textSha256": "efd680c92b973a1ae7daa1a4ea00c478eb803a29e47540e473b78f6066a38ac6",
+      "tokens": 51.73
+    },
+    {
+      "id": "p6wtw",
+      "textSha256": "b4321a6efa33c9dbd2340df269223c63d03fa47f6b20dcae98108fc3e4c3746a",
+      "tokens": 43.53
+    },
+    {
+      "id": "p6xjr",
+      "textSha256": "58f74357e973f057152062d5b5df984b42d090b1b256160c9609c06caf6eef5a",
+      "tokens": 60.35
+    },
+    {
+      "id": "p6zka",
+      "textSha256": "d65351d33762675aa9ec9ad17389c8fe3321437c1015160bd1cb22e3019cb0a3",
+      "tokens": 37.85
+    },
+    {
+      "id": "p6zxd",
+      "textSha256": "5eaee34307c3ae60dfb37fdc34f7487fada3ae62ebad8649d4af205f606b0a44",
+      "tokens": 54.67
+    },
+    {
+      "id": "p72fq",
+      "textSha256": "f922264e6ace362c731b827426b06f54fc0fe1b6bdeb6d3f19d02624e6b0f3b9",
+      "tokens": 39.32
+    },
+    {
+      "id": "p72mx",
+      "textSha256": "687ad6f0f8558857736257bb98e652de675e2c0d27a8414e5f9a3e92bf19e677",
+      "tokens": 46.05
+    },
+    {
+      "id": "p7438",
+      "textSha256": "a9f15ec2216870280cce0b9dfa7922abc5aa28bb21c25c534b4171c47659076b",
+      "tokens": 60.35
+    },
+    {
+      "id": "p74wp",
+      "textSha256": "db08551f785c81e9d87a3b370a031bba77b31df3fe512e3125ed7b1b53007415",
+      "tokens": 48.57
+    },
+    {
+      "id": "p78cz",
+      "textSha256": "03fb2be23b6b48a0dfc979375e4e9d4f8e9d82b39fb632a7fbfb3babf0ada586",
+      "tokens": 59.72
+    },
+    {
+      "id": "p78pt",
+      "textSha256": "457e8f10f1adbe08b4c959d203bf2495250dbd584adcec534a605fdd05acec62",
+      "tokens": 39.95
+    },
+    {
+      "id": "p78vr",
+      "textSha256": "341f10219364ca44805184747b6b5e35e9364650c0df47d390ecc71f6a0707a3",
+      "tokens": 59.09
+    },
+    {
+      "id": "p792j",
+      "textSha256": "a54f6fe50002c365c6679d81cfa7952ad9ec54832101429ac9b2170b921a8c5c",
+      "tokens": 56.77
+    },
+    {
+      "id": "p7eqj",
+      "textSha256": "8c1fe91a2b8e916a255088c8fa62b94f3c542a37af04edd4cfa9fe050c9bf1b2",
+      "tokens": 60.56
+    },
+    {
+      "id": "p7h4t",
+      "textSha256": "96671e018a3497303521a73114de75791250697f0e4368feb8b1ae7856f1fc6c",
+      "tokens": 60.56
+    },
+    {
+      "id": "p7mfn",
+      "textSha256": "27acc411cf3f093aae2cf816b290816bc89e85519ce4fd91948f0f3844851967",
+      "tokens": 54.88
+    },
+    {
+      "id": "p7ms9",
+      "textSha256": "0c4ab3427873e4712d9c06a5996d72323dac2f2d8aa68d893db01ab2b9f27667",
+      "tokens": 59.93
+    },
+    {
+      "id": "p7msc",
+      "textSha256": "cc363c71e6a3adf98d15b5f7876e42992f9ddb3eb004aafbffea9d520dae0337",
+      "tokens": 37.64
+    },
+    {
+      "id": "p7u7v",
+      "textSha256": "13c756243e9e795bd4191a4294c71575dfb0fe06663be997275c14157763808b",
+      "tokens": 40.58
+    },
+    {
+      "id": "p7whc",
+      "textSha256": "903a2124852b743a48424a1cb8a54da81cebbb336dcd35c7b7716f91d361fc20",
+      "tokens": 59.72
+    },
+    {
+      "id": "p7yd2",
+      "textSha256": "86e544cfcf0a00fbda0c21dd12255961407a9318f906a09cd2e7e416c6cc81dd",
+      "tokens": 58.24
+    },
+    {
+      "id": "p7zmn",
+      "textSha256": "107cc86deba5a2e3498c3632ce1d3d786b4e468644466fe2234beb9a05423fd6",
+      "tokens": 57.82
+    },
+    {
+      "id": "p87p6",
+      "textSha256": "0bfe03a121bb538ce0ad5116ef74e7b4f3a485b5beb634fc44d8ae88cbb5c59a",
+      "tokens": 42.26
+    },
+    {
+      "id": "p8849",
+      "textSha256": "26c7c6e54acc67cf0c551d47287e1cad103a0de86812615d4309babc30b9e68d",
+      "tokens": 36.38
+    },
+    {
+      "id": "p88q8",
+      "textSha256": "029f151bbcab4ac6658464a38ed982f4d7226da088e634a520969ce247904fae",
+      "tokens": 46.26
+    },
+    {
+      "id": "p89sh",
+      "textSha256": "dc42c0ec96aa1c9fb1c84c24e18dea34b3635569fe336a4f15356a0a41479364",
+      "tokens": 35.33
+    },
+    {
+      "id": "p8ce7",
+      "textSha256": "3121bd9f09d06d25e64ee798ad4908ecd7cd717472ef92adaf9a6786638fe291",
+      "tokens": 58.03
+    },
+    {
+      "id": "p8e6q",
+      "textSha256": "ef863c4fe60c12844a8afe1078e348606013745ba87ff39de9f965e7f32a0247",
+      "tokens": 43.95
+    },
+    {
+      "id": "p8h4y",
+      "textSha256": "8776eb9a0fd9df93eba952d29a1788d92204bf9e5a1b022bf61f412a33c4758d",
+      "tokens": 58.88
+    },
+    {
+      "id": "p8hgh",
+      "textSha256": "ebe49591baa5d50e8c0746cdc35b7f5cb0509663e80203579cf69897b852850a",
+      "tokens": 60.14
+    },
+    {
+      "id": "p8hra",
+      "textSha256": "04dcb5c416b2e6448f53073dcf47f5a573ff21ea2695c004f796c90eb41d648c",
+      "tokens": 50.25
+    },
+    {
+      "id": "p8iym",
+      "textSha256": "c0b550bc7b5cfb6320be853e692346095b790e0a1efba2678f2401292493e37d",
+      "tokens": 59.3
+    },
+    {
+      "id": "p8jmp",
+      "textSha256": "f6031c2af63d8b084f7f120da0cb9cb15cee1af2dddd79bee02592d44ab50d01",
+      "tokens": 56.98
+    },
+    {
+      "id": "p8qss",
+      "textSha256": "627c363eb605500df8b802a29d6b13cfe5dc3af8ef68ba1480d970d66e01dc14",
+      "tokens": 43.53
+    },
+    {
+      "id": "p8r8z",
+      "textSha256": "0d92921749f568b42b039cb432924f1cef831c464151ae9196adfb89077866c6",
+      "tokens": 47.1
+    },
+    {
+      "id": "p8tq3",
+      "textSha256": "2cd8fc10063e6c8a068647448036bb7e82ceb43707bc21cf0239e02b1bfc9860",
+      "tokens": 49.71
+    },
+    {
+      "id": "p8usw",
+      "textSha256": "621eff15eebbf49cd9fd02ff33067095da9c6f16522766745fcce2faccf3dc81",
+      "tokens": 57.54
+    },
+    {
+      "id": "p8w2e",
+      "textSha256": "e1c8d041239dd519346508ee819c796080fcb9de862fdba8d99de009b8491683",
+      "tokens": 57.96
+    },
+    {
+      "id": "p8zq7",
+      "textSha256": "0956c3115a30fa2a7a4e7406e67e0ecaca95bad8a2096f358dd6a9546e71b67e",
+      "tokens": 61.34
+    },
+    {
+      "id": "p92ce",
+      "textSha256": "ae45241b60bf38f6736c4df541881920575ff512ec06635657199c9114265026",
+      "tokens": 51.19
+    },
+    {
+      "id": "p92xj",
+      "textSha256": "697264d842b32d7871a2eccee3bf53470782597d016c0938c990bb6a785b0bf2",
+      "tokens": 48.02
+    },
+    {
+      "id": "p95zh",
+      "textSha256": "100d4015729d7214a118825fc5c6039ea4f504f1a90b1a97588a8384413520de",
+      "tokens": 49.5
+    },
+    {
+      "id": "p9622",
+      "textSha256": "53d87c16760022d04ce6ce4978616b91e9e87a1b9ad036166313c65c7296e3d1",
+      "tokens": 56.69
+    },
+    {
+      "id": "p98ae",
+      "textSha256": "6b59295860603824d21f4dbbed4c42523cdc9878ef4422a8a82975b5ca80c3fc",
+      "tokens": 51.19
+    },
+    {
+      "id": "p98s9",
+      "textSha256": "3af5f71b3b4a7c30c4745e884af0afee4d13914be01bdb2c757deab340fe8527",
+      "tokens": 60.29
+    },
+    {
+      "id": "p99xx",
+      "textSha256": "888f1019f4c2c844442546f3efd4a60aa2520cfafa25f1a6681da9f85f5b7d07",
+      "tokens": 53.31
+    },
+    {
+      "id": "p9cba",
+      "textSha256": "7f1d06cd60a164e763ed4b508ad8a66d2d563939bed1abf971d02e2500c67ea7",
+      "tokens": 52.67
+    },
+    {
+      "id": "p9erh",
+      "textSha256": "8971e2ff25547d8d1dae6723fa430bbbab2518b8a65efdf5c5cf9193bc502b7b",
+      "tokens": 60.92
+    },
+    {
+      "id": "p9ivq",
+      "textSha256": "d22121184370621323fb99d156ac491b77b214e8e364c498431ede0004063899",
+      "tokens": 50.98
+    },
+    {
+      "id": "p9j36",
+      "textSha256": "d4a5a35081a543843fe499007433048b20d5141bbf6bd9ebb3924bb35b05b10d",
+      "tokens": 47.81
+    },
+    {
+      "id": "p9md3",
+      "textSha256": "5d986cc536e62ab58a4aa22b149efe5b8cd497059ecb0c3fff85eee286bd1a75",
+      "tokens": 55.84
+    },
+    {
+      "id": "p9mdn",
+      "textSha256": "9324e4c165eba07ae34b03dd378b121dd3981ae8b84f8d0d2585522e692e840d",
+      "tokens": 38.5
+    },
+    {
+      "id": "p9ujh",
+      "textSha256": "558bf23017898457f1deb875cc61fe1a78c18af4c41991895fff84226d120ef0",
+      "tokens": 48.23
+    },
+    {
+      "id": "p9v2v",
+      "textSha256": "7180401429ba9c26113c9ab973067115f5cc4c67012753651c2e7b9c25780960",
+      "tokens": 58.81
+    },
+    {
+      "id": "p9ztq",
+      "textSha256": "9500ef0c17b57c87cdf99c4a8c7fdd900db2cfd9770f3131d9fc9da67631db87",
+      "tokens": 60.29
+    },
+    {
+      "id": "pa8ms",
+      "textSha256": "f458994fe0325163d244562ccec7a3ecf1978c06414764b1e151ab029912b1ac",
+      "tokens": 56.69
+    },
+    {
+      "id": "pa9ks",
+      "textSha256": "165d23a052fcd8a4ee96a998feefb6c16d50b6dc7f627c9e0a391b22f3521a8c",
+      "tokens": 42.31
+    },
+    {
+      "id": "paak8",
+      "textSha256": "4468f47f28f16d5ac412148809abf6b9762d754eeab97396e3e85c5183e63d45",
+      "tokens": 53.94
+    },
+    {
+      "id": "padkd",
+      "textSha256": "ad23516731d04fa7d6f0747024d3fc4b983d9b890416ac3f9c86176b723f32cc",
+      "tokens": 58.38
+    },
+    {
+      "id": "padzm",
+      "textSha256": "795a4a1b97d5654360b181dc061884b7916b644a77afb3d056a7a6b5dff642ff",
+      "tokens": 60.07
+    },
+    {
+      "id": "paeh8",
+      "textSha256": "c0cdf0d88472060de606212ff83d498a6c6f517f42abb9bb0aecbcc439bfe098",
+      "tokens": 59.02
+    },
+    {
+      "id": "pahwq",
+      "textSha256": "8a0e1b613ae50dea335361d376ee8cb03f39b2e66dce428028dfb6afd26234d3",
+      "tokens": 57.32
+    },
+    {
+      "id": "pamph",
+      "textSha256": "a3092c3a5b0c7836e2ccbf3daa70b366e1d6e9896c2ee90dc008285af18de92b",
+      "tokens": 53.94
+    },
+    {
+      "id": "panhj",
+      "textSha256": "c61af04277a094192e0581cad8ef3b743988d56436ed28d808b9477a9837e817",
+      "tokens": 58.59
+    },
+    {
+      "id": "pani2",
+      "textSha256": "b0a4917596f3a09160a0d007468b0428d7f0eca850cde4ae58cd87be6ee5a4ea",
+      "tokens": 53.94
+    },
+    {
+      "id": "pauwi",
+      "textSha256": "d3a787e3e71c818cee8373893a9d96ae9c0da67e229f411e0f31f4808579cf1d",
+      "tokens": 52.25
+    },
+    {
+      "id": "pav4r",
+      "textSha256": "94d9c232f0abb0728681cde17ca9de0163ac069ada0c5f56cdd0deb049492b72",
+      "tokens": 42.73
+    },
+    {
+      "id": "paxtf",
+      "textSha256": "8d566a76a44ab7eec953e6a58dc3c9b294d62576b3941ae515348fb16586460e",
+      "tokens": 38.92
+    },
+    {
+      "id": "paxv3",
+      "textSha256": "fed4e850178324417120ae01b2961a17979cc8acf707e36684da3f6e4f364955",
+      "tokens": 45.06
+    },
+    {
+      "id": "pb2cb",
+      "textSha256": "9336e355e9c4899156927c155a5be99279746e238b0881228c7dd2af88a888f8",
+      "tokens": 44.42
+    },
+    {
+      "id": "pb38d",
+      "textSha256": "db03e7a191b265b5b815a148022bd82dc5bcf8dd105c7c550e59391f370a3181",
+      "tokens": 41.25
+    },
+    {
+      "id": "pb4kx",
+      "textSha256": "1c5d1fefba9688b9e8fcb24ff6f72f0b7072b5677136a93ed148229326894dc5",
+      "tokens": 50.56
+    },
+    {
+      "id": "pb5iz",
+      "textSha256": "84e41ef4dbd4bad50b70b072531da5b338b3c820672d49128b920f2d2a80284b",
+      "tokens": 59.86
+    },
+    {
+      "id": "pb6y8",
+      "textSha256": "a0ccd0c19807ba2a7ecfbb6ceacff14438ade581c11a3f05dd840cbaf63b6233",
+      "tokens": 36.59
+    },
+    {
+      "id": "pb8a2",
+      "textSha256": "084c1480e69ce196980a59bcad0caa0c32e36d1d8c4db20dcf5317d0a98c6591",
+      "tokens": 48.23
+    },
+    {
+      "id": "pb8qj",
+      "textSha256": "f982ad7abb3a9e87bc579416338ac26fc60d8498f67f49f70be50fc1e7c7e82e",
+      "tokens": 59.86
+    },
+    {
+      "id": "pb9kj",
+      "textSha256": "be8586ef63f7807f8e4c2f93f854e3dfeb2797937fa6440a89cfe67ee7bf7005",
+      "tokens": 79.54
+    },
+    {
+      "id": "pbaby",
+      "textSha256": "d66a2ce1d8bc870c4042e16e8c7274cb64d10c1f23099c945a91316ebaf1edb8",
+      "tokens": 56.69
+    },
+    {
+      "id": "pbbu5",
+      "textSha256": "a082b093f877229a4bb407cb2cc895386287e8fd0797b5ce5c97e7ea661b53e7",
+      "tokens": 44
+    },
+    {
+      "id": "pbeq6",
+      "textSha256": "e61b2575a3b41e778e6a4abade4dfb290ab85da63fb64a71b58156a022636d23",
+      "tokens": 50.56
+    },
+    {
+      "id": "pbjm2",
+      "textSha256": "259e842c229dd40d7c5e4300fd8b8da6d4a1651d5ce526fa020785539d96821d",
+      "tokens": 51.4
+    },
+    {
+      "id": "pbkh5",
+      "textSha256": "a9e73441c7dfd1946313fbbcea3abd38b490463372d89d93dac3ce0aca2bcd14",
+      "tokens": 60.5
+    },
+    {
+      "id": "pbkub",
+      "textSha256": "18a6ca17257853f8e174d7e44857d76700d6c881ee245698f6da36292e3cf8fd",
+      "tokens": 45.27
+    },
+    {
+      "id": "pbm45",
+      "textSha256": "14371fd03e5edc0ba5f5a8c1d2dacf8637202d2fbf9dc8be6856ee6e9edf6f68",
+      "tokens": 50.77
+    },
+    {
+      "id": "pbnf4",
+      "textSha256": "aac646f92e7d0b9ee2e44fd21ee4615c5a5d16f1525d64ffb7dd83e97f9ce1dc",
+      "tokens": 46.54
+    },
+    {
+      "id": "pbp7c",
+      "textSha256": "3e3f9bb5eec99db995eb78a26beca5a1440b4634289b6dc43809be5e141533d9",
+      "tokens": 50.98
+    },
+    {
+      "id": "pbqbi",
+      "textSha256": "dcbcac7bfebd915d32609e1bbbb2aab8017f134f5c148b2e387cd90b55de31fb",
+      "tokens": 60.71
+    },
+    {
+      "id": "pbqst",
+      "textSha256": "2f7f3491b1666764021ee679d008c4731a1fb594680c0f7c44b171d0b7f3c8e6",
+      "tokens": 58.38
+    },
+    {
+      "id": "pbstr",
+      "textSha256": "a84d2c1fc7c90fffedcb001f9c6256004bbafd803453320cc55c7d0a16eb95ad",
+      "tokens": 60.71
+    },
+    {
+      "id": "pbwev",
+      "textSha256": "a574a60399408ab8cbac710caa210a5590b27ee10814d7edb92985dcd8391cd8",
+      "tokens": 60.07
+    },
+    {
+      "id": "pbx3e",
+      "textSha256": "07feefc8281f1179681d69483cf00b75f1af20dde201b8ae4b127e616e42d0ba",
+      "tokens": 53.31
+    },
+    {
+      "id": "pbxwr",
+      "textSha256": "e1559752251cee9e4b22c7659a03510e5aa0085d2e1ea88a9ad1883e4576d708",
+      "tokens": 58.81
+    },
+    {
+      "id": "pbzyn",
+      "textSha256": "f7970316dc0fc7a018634b09e9ef62ec0ecbaea934bac5a25b4d15c9678b7fec",
+      "tokens": 46.96
+    },
+    {
+      "id": "pc3m2",
+      "textSha256": "6c304ffdc7b860775462dbca556d1221be71adabad1c32dde6dd5b67ec485b44",
+      "tokens": 53.52
+    },
+    {
+      "id": "pc7ap",
+      "textSha256": "f580d4d29ee1dfa41e2ac0d11a355a88be7b7c19b579acbf70bea3f8132a20a4",
+      "tokens": 60.29
+    },
+    {
+      "id": "pc7ve",
+      "textSha256": "dbd6b3b8106b99461e6491a10f1ea0f29221d50fc68dbefce4ee37408164c1ce",
+      "tokens": 56.48
+    },
+    {
+      "id": "pc7zk",
+      "textSha256": "a70db83304a540b596df73a41cff65af9bbd60643bbfafbab0f6f39e9ca7ee03",
+      "tokens": 59.65
+    },
+    {
+      "id": "pcare",
+      "textSha256": "1a71012d2bb312ddd387d55011f1535e20f0359e0934ff39782ddb35e9bec530",
+      "tokens": 60.71
+    },
+    {
+      "id": "pcetw",
+      "textSha256": "6e163770bbc52a7f9323751323582ce0985c816b9d9589eb55097f8459283222",
+      "tokens": 41.46
+    },
+    {
+      "id": "pchi2",
+      "textSha256": "0fd02dd3580b481eb08eb9422a7ef749827f98e65f154b25f1761f4272cbe63b",
+      "tokens": 61.52
+    },
+    {
+      "id": "pck82",
+      "textSha256": "58fedfed4861377fc45c319ffce58f3a567280c9c88b5b675aa63408b313bfef",
+      "tokens": 55.54
+    },
+    {
+      "id": "pcp4q",
+      "textSha256": "3e8f5177f5d66cb66db85402c4ad84d48a78888527a1892d09b4d34340b07b95",
+      "tokens": 51.69
+    },
+    {
+      "id": "pcp4z",
+      "textSha256": "b2be57e47306e5cbca43e34edf2c377411dee4f5616411cccb3ee6d871c80cb0",
+      "tokens": 60.45
+    },
+    {
+      "id": "pcp9t",
+      "textSha256": "58eda5979d5431f027aeda428715ffdef5cddd58cc69ce7f6eafc481456947cc",
+      "tokens": 60.88
+    },
+    {
+      "id": "pcq7d",
+      "textSha256": "3d616955ae19e1ecbe604a88265b939d30b833167851bc438b627751ae04816a",
+      "tokens": 58.31
+    },
+    {
+      "id": "pcqfp",
+      "textSha256": "4f1e53a96ed3cd45ba92329eef98cf7a97d09fc3be9bd5805f63ca95706a740e",
+      "tokens": 56.18
+    },
+    {
+      "id": "pcrhx",
+      "textSha256": "c308684603b3d253751f43406eb4ca23d4d8a3b6dc9ede53fdae54240ba170b2",
+      "tokens": 54.89
+    },
+    {
+      "id": "pcrnf",
+      "textSha256": "03f388f5a3f6436b7910d8bbaa6666aec913fe131c99d6431df8c8c3cd1b8a28",
+      "tokens": 60.02
+    },
+    {
+      "id": "pcu64",
+      "textSha256": "569384900291a1d595f33a4f7641a06afa86be7b78223c7a1e87f8530cd6f4e0",
+      "tokens": 52.55
+    },
+    {
+      "id": "pcura",
+      "textSha256": "24005b011eaea843a50182217fb8032d1f31ccfce6114d10d241b1a97d8f013f",
+      "tokens": 58.31
+    },
+    {
+      "id": "pcuww",
+      "textSha256": "1b6aa610aba9be05d370bfcafc2f40d32c87de535ba3691156491706a7ac5790",
+      "tokens": 55.96
+    },
+    {
+      "id": "pcv53",
+      "textSha256": "8343de917fad1654eda5748d361aa83c5798e6e73da011bb9240155c23738b0e",
+      "tokens": 52.97
+    },
+    {
+      "id": "pcvs4",
+      "textSha256": "52e9af840ca25cacf38a14d6b083d4ba48f493ccd1d7bbf1511d00f12826471d",
+      "tokens": 57.03
+    },
+    {
+      "id": "pczge",
+      "textSha256": "30ceb026b7213e7ebc732d158a15fdee98ce527d9c16622a670edead76eb627f",
+      "tokens": 52.55
+    },
+    {
+      "id": "pd3p9",
+      "textSha256": "5960abc0a0d33c3c70c975d4639b41f42680be201a211609247ff3cada8568a9",
+      "tokens": 57.24
+    },
+    {
+      "id": "pd4in",
+      "textSha256": "b777bbb0570a009fbaa2343f722f81f53a7af1c49e77720c4752d560da369cf0",
+      "tokens": 51.26
+    },
+    {
+      "id": "pd9yv",
+      "textSha256": "fdd8c32475550047afda14a4b76a0ade024dcc1c706691ccd6e5a436c31674d6",
+      "tokens": 49.98
+    },
+    {
+      "id": "pdckg",
+      "textSha256": "d22575028d5806030730ca156216b39d39c21293a3c2b5bd0c1d0d6d2e1f3451",
+      "tokens": 49.77
+    },
+    {
+      "id": "pdcp3",
+      "textSha256": "cfc7e28ef58949532297fa11cf08e8d75316a571e0c25cced47556ab3cc8f5f9",
+      "tokens": 47.21
+    },
+    {
+      "id": "pddku",
+      "textSha256": "fd83f47b27018dc1b6f9b5bbd485077fc43587cd971e8cc92d6ddc6c543f1c61",
+      "tokens": 53.83
+    },
+    {
+      "id": "pdgcu",
+      "textSha256": "d207a27af44759f4f019072ff98e7bc6a0e4494aa3be089d8686a76976725632",
+      "tokens": 43.57
+    },
+    {
+      "id": "pdhdi",
+      "textSha256": "6b34fc8c9a86234bb063f7963c7c35be83741254d84e3036ba8f28bb8c8b96ae",
+      "tokens": 51.9
+    },
+    {
+      "id": "pdigz",
+      "textSha256": "9bd1c1b0a193b540a38cf990dfe0dfa9d008736b05d67aec3db96e971151aef9",
+      "tokens": 57.24
+    },
+    {
+      "id": "pdt4t",
+      "textSha256": "93a73e6f2c0baac5ccb9ec452ec5298b5795742a15740decc319a9a1cd445104",
+      "tokens": 45.07
+    },
+    {
+      "id": "pdwa3",
+      "textSha256": "f7ef653a67dd05943f16c3b3ade47981bb6b2c54479fa89e676f7247be7c7e6f",
+      "tokens": 59.81
+    },
+    {
+      "id": "pe262",
+      "textSha256": "75c6b62d15e069e7f47911442377a1267a5989cc5de64bbd0a438d06ef7a09df",
+      "tokens": 44.86
+    },
+    {
+      "id": "pe3ap",
+      "textSha256": "848b32a6dd4bf5723c5d28a79457dd0868bb6a56b36670c80b8234ea47d52443",
+      "tokens": 52.97
+    },
+    {
+      "id": "pe3gy",
+      "textSha256": "fd1648eac1e3f234648bbe9ef4ce3495ebe38c79387d0bb2a94bbf556d1beca3",
+      "tokens": 55.11
+    },
+    {
+      "id": "pe54w",
+      "textSha256": "c55be168352bcc36c058d39be299b87f9e944a4db1564da924b069c69ad8cd6d",
+      "tokens": 54.47
+    },
+    {
+      "id": "pe6hw",
+      "textSha256": "ea6d09889be29958c86af2091be763f31a241f9afb5c4bd35fb65f3c32e1f22f",
+      "tokens": 46.78
+    },
+    {
+      "id": "pe9wi",
+      "textSha256": "2c5b8929efd24233910069dce5d24d3dba3107fd1494dd7b1757deabe80d8ffe",
+      "tokens": 60.02
+    },
+    {
+      "id": "peb9c",
+      "textSha256": "2bc8fe0660ffb47fbe2ee3e216a92fb579201d734dfe929f76d16d5b8c20e679",
+      "tokens": 61.3
+    },
+    {
+      "id": "pebvm",
+      "textSha256": "bdd0bee4f00a90b77aab52d3bab38231b92d0f4aa805a3bed476b4d270fd32bd",
+      "tokens": 60.88
+    },
+    {
+      "id": "peddm",
+      "textSha256": "3f79ff4f2ac56a8bf41e0e3f51cf449e0b57e1e9a2225f515c0e82f5d3cf60e1",
+      "tokens": 42.72
+    },
+    {
+      "id": "pee6u",
+      "textSha256": "4c3b9e009d1eb27011ac45317ec412acb8c4de53f19d00ca35c91745a19d0092",
+      "tokens": 38.02
+    },
+    {
+      "id": "peety",
+      "textSha256": "5106617766c8d2de1058596f277041e004599a462f495f0f67bcd880ac6e4c07",
+      "tokens": 50.41
+    },
+    {
+      "id": "pehyf",
+      "textSha256": "a4cf54f03241dcad6415c8f232b142f442d117e438bae4c7531c6c8e200956a1",
+      "tokens": 43.15
+    },
+    {
+      "id": "peizm",
+      "textSha256": "73d50da3ea70ce0796a6b02323902e2bd2ce0f063810511239d21cc21a410b52",
+      "tokens": 59.81
+    },
+    {
+      "id": "pek7k",
+      "textSha256": "bceceaf312ead38f95f32e679e8935da3cbdf0ca3a2caf969ee548dce10a7f31",
+      "tokens": 60.45
+    },
+    {
+      "id": "pek8y",
+      "textSha256": "8ae7aedf9398b146221bfcdd66ee975bf80cfc83f0d444570e2af41525b0a29c",
+      "tokens": 50.62
+    },
+    {
+      "id": "pemdb",
+      "textSha256": "3e094433f5722249ba084fcf8288829709dd405962725847d88c7ee43706cd27",
+      "tokens": 46.99
+    },
+    {
+      "id": "peq9z",
+      "textSha256": "ca0b27ba9f7848152a3406d69c1dbf9db7cecfa1a11147e881a92c9bac0aeb08",
+      "tokens": 38.88
+    },
+    {
+      "id": "peqy9",
+      "textSha256": "d6e9f9848117bf98bfad4556d12252b4b065809700cfdd9beff938d5351182c7",
+      "tokens": 58.1
+    },
+    {
+      "id": "perix",
+      "textSha256": "26251ed90ddd6e062eba53caa03faea162d18cd86587a03a44a0dfd322a19d1d",
+      "tokens": 57.03
+    },
+    {
+      "id": "petwp",
+      "textSha256": "10c61df7e868b813687e49ea4971e78e125c043fd257843e3c736b639a4632ab",
+      "tokens": 47.21
+    },
+    {
+      "id": "peyuw",
+      "textSha256": "d94142d3157a0f047378ee099ac843ef45914635d2cb91755511e6834d14e8a4",
+      "tokens": 55.32
+    },
+    {
+      "id": "pezeh",
+      "textSha256": "0776a1679b65ddd326bea06b3aefb628a6423bd19858f39029829560576e261c",
+      "tokens": 58.53
+    },
+    {
+      "id": "pf2rb",
+      "textSha256": "c9c82036778f419e31864ac0a02ad3a684157519ec34ae400b04fd8d6ac6d4a9",
+      "tokens": 57.03
+    },
+    {
+      "id": "pf6t9",
+      "textSha256": "896a9dfd5d1fbdf521f7c0901d150a09802edd64d732aea716b844f8ae727db4",
+      "tokens": 61.52
+    },
+    {
+      "id": "pf7ei",
+      "textSha256": "21be2471de687a20cc84d8acc8db2205419ed7004cccb42fb75f01f0ffabbc15",
+      "tokens": 47.85
+    },
+    {
+      "id": "pfaf5",
+      "textSha256": "e1476a7d5778f2599164cde944968d0fd65a5524ca31b69e4eeb461dad82a6ea",
+      "tokens": 51.26
+    },
+    {
+      "id": "pfarp",
+      "textSha256": "d3081332a8f0681ee0487d691bc09702923d599ec217036b2c217c05d037a0d2",
+      "tokens": 40.37
+    },
+    {
+      "id": "pfcmk",
+      "textSha256": "b01390bbe528a2dffa36931949457e171826bc02840a78302b3a744297a3b055",
+      "tokens": 60.88
+    },
+    {
+      "id": "pfgep",
+      "textSha256": "c90792bbbeb4208d0771443f08732e9e62fdffcb53528597149ebe0f7dc3a298",
+      "tokens": 60.23
+    },
+    {
+      "id": "pfh4q",
+      "textSha256": "8369b5ff83bd72d009be8ba9c49de4865a0d8e1ee4681d60de6ba7754a192651",
+      "tokens": 50.84
+    },
+    {
+      "id": "pfibi",
+      "textSha256": "0085d001591e662269017a8b29b402086788f29fae7a93601df9bb497925e1c0",
+      "tokens": 61.3
+    },
+    {
+      "id": "pfin8",
+      "textSha256": "6740b9708728b497f789f8c2ac76de5553d5f5ab4fb1adc9f6303a30a72e56c9",
+      "tokens": 53.61
+    },
+    {
+      "id": "pfnxw",
+      "textSha256": "abdad85b6afb858cd1cb067ff3093fb44a80c762adf7a49c273235c567e720a4",
+      "tokens": 50.62
+    },
+    {
+      "id": "pfpwf",
+      "textSha256": "cd1d76540dfc498f52432d1228301ec01c97aed8170e294685732a1dd2b018f7",
+      "tokens": 60.88
+    },
+    {
+      "id": "pfq4x",
+      "textSha256": "48fe01bdf558841aaeb0684d223eb5e90bc460713329360946733441b20efa90",
+      "tokens": 40.8
+    },
+    {
+      "id": "pfqwv",
+      "textSha256": "d75206febec96ef2a1ec1f7df60de899cdcf767febe4c44a09dbbe9ae30c58b5",
+      "tokens": 49.77
+    },
+    {
+      "id": "pfsk9",
+      "textSha256": "24d33adb989573dc1d2c6b32a89aabe92e16ed75cc133ab42924a69e06f1f22f",
+      "tokens": 51.9
+    },
+    {
+      "id": "pfuyd",
+      "textSha256": "928eaa72a71d6d69cbbf60e5656b38e1888e2b66f9413266fc09a980ace9f44a",
+      "tokens": 40.8
+    },
+    {
+      "id": "pfvrw",
+      "textSha256": "48ca09cbae4ce0a056ea39db2da3bdebec7ba067f7bcda9bf63c80ebcc2bca9f",
+      "tokens": 56.01
+    },
+    {
+      "id": "pfwr5",
+      "textSha256": "55e2390a2226803d5dcd2b1573fdce112685b43d61e1ee833922a15df5728dc1",
+      "tokens": 61.27
+    },
+    {
+      "id": "pfzd6",
+      "textSha256": "062e5c0d8c0601cedb6090013158ad4b1f473a508dffbdb489e0e9d8233bd8f4",
+      "tokens": 59.8
+    },
+    {
+      "id": "pg2kz",
+      "textSha256": "67cf2200406278a7881b50ad04b132208b958ca573307cf797f0bba212b39c15",
+      "tokens": 48.64
+    },
+    {
+      "id": "pg358",
+      "textSha256": "b73e470ff9cf63949cd2daf2be7e2f9cbf3900d716ec999fc7adbd71a6d7aa8d",
+      "tokens": 53.48
+    },
+    {
+      "id": "pg99d",
+      "textSha256": "62ff0fdfedeb5aa34db0fb6a93de4655df0aadec213cfff68d76c700b9d3a16d",
+      "tokens": 43.37
+    },
+    {
+      "id": "pgaj7",
+      "textSha256": "f0becf4fe213e3c89f6c586f343fc86117fe4a296a49b0fb2c45e243b5ea9d2d",
+      "tokens": 60.64
+    },
+    {
+      "id": "pgcmd",
+      "textSha256": "0fbe5a43154e9320a2f2a52d7db5501697a3a2c408068a48b7d11351ffb0f02c",
+      "tokens": 53.06
+    },
+    {
+      "id": "pgdik",
+      "textSha256": "87d260dc6106b410558b522aa42bdd4134da2b1ced8c8e3f0403c414068e18b3",
+      "tokens": 41.06
+    },
+    {
+      "id": "pgdsd",
+      "textSha256": "8164e61898161e9ffb5dc0f1c82b9e4e7bb7aa48cf758037ef6e431e0c53fec9",
+      "tokens": 46.32
+    },
+    {
+      "id": "pgdt8",
+      "textSha256": "0be6fd48a80467ce0350ff2a220c6bbff04bb13b5dc777253eee6d14cb4854cd",
+      "tokens": 46.11
+    },
+    {
+      "id": "pge2a",
+      "textSha256": "9685476142686a1c8ff7ee262c902a1b216495b3ae564456fadf660bc3d50db4",
+      "tokens": 47.16
+    },
+    {
+      "id": "pge4x",
+      "textSha256": "bbfd0ccb38618ac1e5c0bcb8cc585edd7b7d3c8a03cda008d6fa4c5952239a4e",
+      "tokens": 54.95
+    },
+    {
+      "id": "pgj3y",
+      "textSha256": "b344236fab8c317086a590a14f7e6c36820e3b92b7a58fee2adc867e63e24d3e",
+      "tokens": 57.06
+    },
+    {
+      "id": "pgmpv",
+      "textSha256": "b2d3d462586b89f6ba2a3190b94320d1ab61a52e48271f527e46c886ce62f5c4",
+      "tokens": 41.69
+    },
+    {
+      "id": "pgnkw",
+      "textSha256": "1287da822761289987bbd25bc8017913452e865dcd3e6c6a2eb211de6f9446f2",
+      "tokens": 59.58
+    },
+    {
+      "id": "pgpc7",
+      "textSha256": "94d5d7eff944833dda0b69a0cd416946ed97b52689f942a9d8742890f2474781",
+      "tokens": 56.85
+    },
+    {
+      "id": "pgpz3",
+      "textSha256": "1d859833a280a77f87e57eb46d5d1c3d62b1f60bc02b0c0f652f5f5c6ef1eed9",
+      "tokens": 47.79
+    },
+    {
+      "id": "pgrkj",
+      "textSha256": "94554a258b9063ced29784a266676e8c9f571697455ce8f8257347c7853ebeb9",
+      "tokens": 60.64
+    },
+    {
+      "id": "pgrp6",
+      "textSha256": "e2b38f3ca7cc15768db7cf4c8854c4007075034f2a19c75038a7784682079875",
+      "tokens": 52.64
+    },
+    {
+      "id": "pgsds",
+      "textSha256": "dba32638dba353a907ddb189f808a622233e2e8c8d419aa7af31670ab03a470c",
+      "tokens": 52.43
+    },
+    {
+      "id": "pgup2",
+      "textSha256": "8cd6dc2ce1200b3d8e953d225f6cb3ce44c2534fe34eaa2a4b2c60f5ca0d21f1",
+      "tokens": 52.43
+    },
+    {
+      "id": "pgvyh",
+      "textSha256": "a2189b47de5f1745b7e33b181d539ca8aaed0f60fcafcf6f6c67dbf6c178ea46",
+      "tokens": 43.79
+    },
+    {
+      "id": "pgw6z",
+      "textSha256": "e68ca4b6bdb3dc90d6782e66bc26ccf38703697f8072133d51ebe0b60576bcf3",
+      "tokens": 40
+    },
+    {
+      "id": "pgxi5",
+      "textSha256": "5f9eaecb700e3cbdc4f223f2bddc4c2d17100215bcfe70683d0a31eebb0b1d7c",
+      "tokens": 46.95
+    },
+    {
+      "id": "pgyhw",
+      "textSha256": "84b4be3388bcc52273400f4072af5e5fc7c5f8c4f2ceadbcd74d6dff8dccb9d7",
+      "tokens": 49.06
+    },
+    {
+      "id": "pgzys",
+      "textSha256": "ec7d78b4d32c2bd22de75c5fde5e869714acaafaab4a2fd3be2646936fa04671",
+      "tokens": 36.64
+    },
+    {
+      "id": "ph3id",
+      "textSha256": "21d44bef5d2c91606b2fe18e23ed766d4395a8bf69d08a4ca42d952c27398dbb",
+      "tokens": 43.16
+    },
+    {
+      "id": "ph4wf",
+      "textSha256": "e8049bc7f55fb92aaeb96691491b9ccfa897c0d2e564d54d76e48cd6056f9927",
+      "tokens": 60.43
+    },
+    {
+      "id": "ph8pr",
+      "textSha256": "d95b39429977135f62221cc740782334aecf72818d2d1b0aa197efe6a54c9951",
+      "tokens": 60.22
+    },
+    {
+      "id": "phc7j",
+      "textSha256": "c3ba7e52b48651b8698cc5bed9fdb24c378cee1d48b54bdf18c258ca8b7fc38e",
+      "tokens": 47.79
+    },
+    {
+      "id": "phceg",
+      "textSha256": "5a4fff582f76f79f3cdcdef8e249134a05f4483a1e65d638490652b6e528d1f3",
+      "tokens": 53.27
+    },
+    {
+      "id": "phdiq",
+      "textSha256": "e4238ff3151b92ea002dbaafbb4e99b1d26cbe363985806fe2e0806371094473",
+      "tokens": 40.85
+    },
+    {
+      "id": "phea9",
+      "textSha256": "69dce37c04f6c05de6b5a5e711b3777b214a742b2c0c5909de0d50a0627a08a9",
+      "tokens": 59.16
+    },
+    {
+      "id": "phfba",
+      "textSha256": "e450a08181d2187c107cc522714a1675132f10cc33a572f7949c8c92b43f7560",
+      "tokens": 51.79
+    },
+    {
+      "id": "phhdw",
+      "textSha256": "336884bfc7cc6d7fa7526404d85d9117cd8817483dc7bf592aa31bd84b79888c",
+      "tokens": 42.32
+    },
+    {
+      "id": "phix2",
+      "textSha256": "71e2b1ad0e4536ed69c969e5a8c287ef828c062da5fdf2611d7ebdfaae5192ba",
+      "tokens": 47.37
+    },
+    {
+      "id": "phjdj",
+      "textSha256": "b65c6d4fe0b026b1dbc5aec00f4e38f753f92dfc655a700f1aec7ce86addde5c",
+      "tokens": 41.48
+    },
+    {
+      "id": "phmk4",
+      "textSha256": "e4a30cacd241009fcfe21eead742f753cc9c9d5cff62ce87ba01b264e8cd64e9",
+      "tokens": 60.01
+    },
+    {
+      "id": "phpnd",
+      "textSha256": "e0d89388bcc473522148c5e08756a0c5d48bed825cf2fc252c29dd7a05f3536e",
+      "tokens": 57.27
+    },
+    {
+      "id": "phqpq",
+      "textSha256": "38fcf94b06d85775f07aa5538fbee750fb34c0d2561cf4447fe130de00f4a145",
+      "tokens": 60.64
+    },
+    {
+      "id": "phsyb",
+      "textSha256": "837e0c04adb126ada4ecb85a0b15f65cd10fd0cdfaa7d6367cc1544c5506d440",
+      "tokens": 47.16
+    },
+    {
+      "id": "phtsf",
+      "textSha256": "b8e816abbf16fb7be8f02ead985fdf9f3155869817ed280a4c85db4d411930bc",
+      "tokens": 58.32
+    },
+    {
+      "id": "phuu3",
+      "textSha256": "caf19040184eb1734e0b7b585ccae725d4d3ab4bf6276a636efa7ae2df61f4b9",
+      "tokens": 60.01
+    },
+    {
+      "id": "phvk8",
+      "textSha256": "597746762a62cec8505454c060fd9c61b7d90dbbe61bb068cd53bf8979482f9f",
+      "tokens": 45.27
+    },
+    {
+      "id": "phyee",
+      "textSha256": "a7c7338961ed0f93f5b0ffb53f86e553e2c6ac63f8d210439e1cc7aaedc69a97",
+      "tokens": 59.58
+    },
+    {
+      "id": "pi2ex",
+      "textSha256": "e217af4156d4914010894eaa3faed2b402c246b4aa6aca39b9ccbc25df17caff",
+      "tokens": 48.85
+    },
+    {
+      "id": "pi46q",
+      "textSha256": "29913a2e172300f673a99bcb09fc3c5c0dac083d01f2ffe55be54216122fc372",
+      "tokens": 56.85
+    },
+    {
+      "id": "pi4h5",
+      "textSha256": "3399dd46896a6b3a0bcad6616a566703558474b96aa100ab73d561b5056874ea",
+      "tokens": 46.11
+    },
+    {
+      "id": "pi4wj",
+      "textSha256": "552f6b89c7fde9041192e5949a2f59cf5173c1d43bc1451344da6e3d8a6fa6fd",
+      "tokens": 36.64
+    },
+    {
+      "id": "pi9rk",
+      "textSha256": "468754eaeee0ae6509b1e6119868bfbed43e79b0738630a601ce2f361637d7d6",
+      "tokens": 50.95
+    },
+    {
+      "id": "picqu",
+      "textSha256": "5100b6c85bdfe3fafa24f1152b1b91e5a3fa166681c470439cc5f12e20d76aa9",
+      "tokens": 61.06
+    },
+    {
+      "id": "picza",
+      "textSha256": "34f1b782e9b73e064e8e79216040635d364cd6d9b0205179b116f2fca9ca3eda",
+      "tokens": 45.27
+    },
+    {
+      "id": "pif8h",
+      "textSha256": "f0b03f7d74ccfb10821238a44baba385d089560117906251eeec56fdc1c94560",
+      "tokens": 48.22
+    },
+    {
+      "id": "pihfx",
+      "textSha256": "aee49feec193bb5f1e79f0ff16c9ea90aa4bf4bfc03429ee75f0513a02c21ac9",
+      "tokens": 60.64
+    },
+    {
+      "id": "pij44",
+      "textSha256": "4c183771f5aea10be200c667043501d18a5201a2026393811631cf8ed54c259d",
+      "tokens": 51.37
+    },
+    {
+      "id": "pikyq",
+      "textSha256": "92e9819dffd710f9b2bcc0ec350bc33e6f1f3e712bdd2e61494d35685f5b03fb",
+      "tokens": 57.69
+    },
+    {
+      "id": "pindv",
+      "textSha256": "9ec1dbbc5b44c0e66d20cd6ca31ce66a9be5428a225814ddf3cb3c67334afb0d",
+      "tokens": 49.9
+    },
+    {
+      "id": "pinkj",
+      "textSha256": "efafe9a989b1ae03c08f86829ab28273a059cead979117bc9afee7f814a05ace",
+      "tokens": 36.64
+    },
+    {
+      "id": "piq5m",
+      "textSha256": "a66fcc8037e260c5b7669aaa16b1fa379f5397a621773a54351c3ba906f44dba",
+      "tokens": 39.16
+    },
+    {
+      "id": "piqt5",
+      "textSha256": "132f624ca17ea1621078113441d23fb5d7f36e849f4b91c0f81851978fc5f33f",
+      "tokens": 54.32
+    },
+    {
+      "id": "pirz4",
+      "textSha256": "2c350806ac794a4a960b88030558ffae9c5672491d63345e03fa9b654757aebc",
+      "tokens": 54.53
+    },
+    {
+      "id": "pit63",
+      "textSha256": "864e3f898d15fec35fcbd890f6baca231b8f76303968334eaf37066d59fd460b",
+      "tokens": 39.58
+    },
+    {
+      "id": "piuhz",
+      "textSha256": "674fb837a986d1bf34e2e65baf667d7397ad5d52a38d71a9800bb2605dc2792f",
+      "tokens": 50.74
+    },
+    {
+      "id": "pix44",
+      "textSha256": "1f4d1c62f9757be24195e84d0fb92d11f88753aba00eba4535f0c262e43292f5",
+      "tokens": 42.86
+    },
+    {
+      "id": "pj2cj",
+      "textSha256": "2581d0ea9315b5dbb44c7c45d7f4983c2cdee7258e5ed04492af3f896ddd8314",
+      "tokens": 60.77
+    },
+    {
+      "id": "pj74t",
+      "textSha256": "0185971eb7ac832cd87d800e6a06dcb58a59416cb24c0f46b63ad0fbc7eb5349",
+      "tokens": 47.98
+    },
+    {
+      "id": "pjaji",
+      "textSha256": "5cf3b29f020acb79f33c0bbb08789f536e98ad68eb8e3f8d3252ed0f670e50af",
+      "tokens": 61.41
+    },
+    {
+      "id": "pjbzz",
+      "textSha256": "a99c17be7cf14875ab012f98f67b5f87f444e0c1dde1599be9174872b81b6cb1",
+      "tokens": 41.58
+    },
+    {
+      "id": "pjc47",
+      "textSha256": "0dd73070a87f5d9e603d87aa3a391d25044f3bcf2599743fb2cbf070c1578665",
+      "tokens": 59.28
+    },
+    {
+      "id": "pjf7t",
+      "textSha256": "a1f36914b5a29f164197cdaf5e5a22619df8434b1f942ce8ebb1113bd5ff252b",
+      "tokens": 57.14
+    },
+    {
+      "id": "pjht6",
+      "textSha256": "f7a36fd5c1e214e279fa2904ed294efffa805ab876bc4a2f66869d3febe5341a",
+      "tokens": 51.39
+    },
+    {
+      "id": "pji76",
+      "textSha256": "a00721827276658cb68b5d058b751c47a1815f7e58749354a8a665fbbc8a6c00",
+      "tokens": 60.98
+    },
+    {
+      "id": "pjk6d",
+      "textSha256": "605d0e02e2b503a49a4935a2baf88b2f0aece6eb61b7c4d7b63ff60403849892",
+      "tokens": 45.84
+    },
+    {
+      "id": "pjkts",
+      "textSha256": "468fa417d8a457480669bae2f8f9a65124e3b41e0333547aad4ec781be225da5",
+      "tokens": 50.32
+    },
+    {
+      "id": "pjq68",
+      "textSha256": "6941780f5f7aa3a36b12623c47640094e5c8c4cc7c8314b35807025dce917aed",
+      "tokens": 59.92
+    },
+    {
+      "id": "pjrdt",
+      "textSha256": "351f8dce86c3fc1550638a16ed0fb7a04af4b1a867afe709b647dc847d4f511a",
+      "tokens": 46.48
+    },
+    {
+      "id": "pjrqx",
+      "textSha256": "269d72e9327780ff5925d2388cbc3241c0e28347be2204d74d5229611a76e52f",
+      "tokens": 47.34
+    },
+    {
+      "id": "pjrwf",
+      "textSha256": "c6f4c0b4fdf20e5bc27c347874ec7764c22ba68fee152a818960f277733cd3d9",
+      "tokens": 59.7
+    },
+    {
+      "id": "pjtja",
+      "textSha256": "f3e7270833863daf0eb994ea9ad560307155357a52903d0f8e8563bd888f4ff3",
+      "tokens": 55.01
+    },
+    {
+      "id": "pjubs",
+      "textSha256": "13aaff70ea8063785602c436ddc4919f75a085120f24335c79fba0a2bd254f46",
+      "tokens": 43.07
+    },
+    {
+      "id": "pjzz6",
+      "textSha256": "5c9c8f31e2808c2974a5edf4e6839d60ab650edd508cfe243d73c6d400a38d1c",
+      "tokens": 61.2
+    },
+    {
+      "id": "pk22m",
+      "textSha256": "356d3fc0a3f7cac3a3a85ed6f54b267ab4671fdadb1fc05d8775c6151eca9b86",
+      "tokens": 50.53
+    },
+    {
+      "id": "pk47i",
+      "textSha256": "ca513d36ce7b4265f83611f7d919865f1af86380348b2d549cda3cacf74546b7",
+      "tokens": 50.32
+    },
+    {
+      "id": "pk7ki",
+      "textSha256": "040b747796e2df5f639ef1c3b04e2f50a82b5a52ace47adcbbb85c581081b15f",
+      "tokens": 58
+    },
+    {
+      "id": "pkb9k",
+      "textSha256": "4f17988764e42085e3d1d6142776aa30233a833edff04cda3a7c0867a781c819",
+      "tokens": 44.56
+    },
+    {
+      "id": "pkcbm",
+      "textSha256": "692f14d72183ec1a1f1b73c550e718b499c77e51574c292702083896666398a7",
+      "tokens": 42.01
+    },
+    {
+      "id": "pkd6q",
+      "textSha256": "d639a72db68e3599d0fb8b810b1406f3bcd9a3a85c1a15736f79dbda840873cf",
+      "tokens": 61.41
+    },
+    {
+      "id": "pkeaq",
+      "textSha256": "d89406760303f1e02b9194969871362c19e716790e037cdb321b3f62b9997d79",
+      "tokens": 46.7
+    },
+    {
+      "id": "pkezh",
+      "textSha256": "c8096d393d4ff2ee0ebc7df2f18d968d9cbd38c6538cdf37b7854141d44207e1",
+      "tokens": 56.93
+    },
+    {
+      "id": "pkg36",
+      "textSha256": "4e15c72186cd47d543c3caad5a47c56ff01ee2eada564b830ca2577041122bc2",
+      "tokens": 61.2
+    },
+    {
+      "id": "pkgar",
+      "textSha256": "405970bb791fe25fc8141de7f324d1919e905b665e45416b6f5f254bef03a432",
+      "tokens": 50.53
+    },
+    {
+      "id": "pkhk2",
+      "textSha256": "88822e0d01e060bb6a3776c60a60574e1bc54f711d011dd1a32ce8ab09d0671a",
+      "tokens": 56.08
+    },
+    {
+      "id": "pki7f",
+      "textSha256": "6554ff09487d8fe50c8d29124b172011bb2c8a5cfdee383432e93ba5cb2c01b8",
+      "tokens": 47.76
+    },
+    {
+      "id": "pkkkz",
+      "textSha256": "1cf387ea6530011d13bb07ad313a879f1e2d261a97b76bb7ea3518faf2f6f903",
+      "tokens": 45.2
+    },
+    {
+      "id": "pknju",
+      "textSha256": "ee2539c93c0bbcb214ac6421e9e30ba8b0a85b73b6ed65dcd0ec748cb516f5c7",
+      "tokens": 59.06
+    },
+    {
+      "id": "pkp8t",
+      "textSha256": "98189eb678805290cab389542f5dbc74a9eacd839c0ef3536383755d7b37f8aa",
+      "tokens": 52.45
+    },
+    {
+      "id": "pkqjk",
+      "textSha256": "efb0ad8ccc1da0917f36060e1ac68e4a375b3ec625bf62d2e3e0b0571645efd3",
+      "tokens": 44.56
+    },
+    {
+      "id": "pkta9",
+      "textSha256": "5af6156fb352eb907c552ca3b084f72a67f1b2fbfc2320a714530ef2f45c21c0",
+      "tokens": 60.77
+    },
+    {
+      "id": "pktbx",
+      "textSha256": "c95f9f85204e598b0fd24a9e4dc91543de47de42dc7ff7f823b1c8e4849c706e",
+      "tokens": 42.22
+    },
+    {
+      "id": "pkupf",
+      "textSha256": "fffafeeb529c7a2d97ec3a427ad2a6eb2a5088556ac5c48cfd4f91259dfd0ca7",
+      "tokens": 60.98
+    },
+    {
+      "id": "pkvep",
+      "textSha256": "cf74325f88ccd037d93d107afba3a731ce397693c7e0b92f70a86b7994319a15",
+      "tokens": 43.29
+    },
+    {
+      "id": "pkzf6",
+      "textSha256": "2f8a41720eceff02fedb445f4061dc1d7840ddd23756e6f24f596218aa9b919d",
+      "tokens": 42.65
+    },
+    {
+      "id": "pm5k9",
+      "textSha256": "788e05e8ba1d720f210acf0b16207952a5986d97a5f399c5266af7089da9c22a",
+      "tokens": 44.14
+    },
+    {
+      "id": "pm8t7",
+      "textSha256": "fc06722a60add6dabe460023874714911f5e53b24c3cd4b4829af9abbe58fe48",
+      "tokens": 42.01
+    },
+    {
+      "id": "pmbwe",
+      "textSha256": "d68ee19b6c7985e4da7b481faa58aa8e8394fc2afac0b7690407479feed24011",
+      "tokens": 38.81
+    },
+    {
+      "id": "pmd9s",
+      "textSha256": "0e894255b2f6eaefe14e23ee016f58ffbe11ee40772c68dd670e0c91506c9f3f",
+      "tokens": 59.92
+    },
+    {
+      "id": "pmehh",
+      "textSha256": "b957f2e6d6eba2311fb688ce4d8dc821b2ff1d2bc5a60af9427bf5851432266e",
+      "tokens": 43.07
+    },
+    {
+      "id": "pmerv",
+      "textSha256": "1d4a11a74a0f2dd4fda1fb04fc88dae976702598c0517ca50224906980e4a971",
+      "tokens": 55.44
+    },
+    {
+      "id": "pmiqq",
+      "textSha256": "28b1713f2481136dbac388dbe790383effa825c0997a6778229728f9f113e49a",
+      "tokens": 46.7
+    },
+    {
+      "id": "pmiz7",
+      "textSha256": "8565267e6182258b776912dd45527ad6f363e3f230c4014fcb11b7399035b3f8",
+      "tokens": 43.71
+    },
+    {
+      "id": "pmjj8",
+      "textSha256": "dd0dffd6fe81c219ce2bb92aba663e2863084c20f1924bee71afd38d032969dc",
+      "tokens": 60.56
+    },
+    {
+      "id": "pmjk5",
+      "textSha256": "d98e044804500f0e124b850259f5a5a84a46625c98683df7ed01b2ecd42711bd",
+      "tokens": 41.58
+    },
+    {
+      "id": "pmk7t",
+      "textSha256": "1b74bfb3292dc3fb1dcd56d987ad17ebc42ce2da9e141cd004ff85ad8c00aa56",
+      "tokens": 57.14
+    },
+    {
+      "id": "pmkq5",
+      "textSha256": "d0ef37328bc083276382a8299f53cb8c84110c4d2dec586cdf9a2445e6b2bc2f",
+      "tokens": 55.01
+    },
+    {
+      "id": "pmn86",
+      "textSha256": "548cdbe7ea5a830b213ffc6a5bef18acf4d88bb7d76c40afe7e36ab8448a98ff",
+      "tokens": 45.63
+    },
+    {
+      "id": "pmnsc",
+      "textSha256": "71a8175ac5c36fd9d51d181c7beb794f19c08972e830cf06aebe51818b45d4f9",
+      "tokens": 46.48
+    },
+    {
+      "id": "pmp68",
+      "textSha256": "5169d61a16acdc6338ded378b31fb6d4fb5cee5ff59591ea2c517fc5fa9d3a7e",
+      "tokens": 45.42
+    },
+    {
+      "id": "pmpqg",
+      "textSha256": "51aa90610fdfc81678126fe933d85a5a8eee3ddc1969c087a3dad7d9627a9b86",
+      "tokens": 60.56
+    },
+    {
+      "id": "pms9n",
+      "textSha256": "bfdaf9476ead35478852dbe3c4d41621ce4a87bfff4049d486bf3b57b30604d4",
+      "tokens": 41.37
+    },
+    {
+      "id": "pmt8i",
+      "textSha256": "aab9775b3e0551dd11c64bdacc72f628af0c60a38dc9e1faafd2ab49268f907c",
+      "tokens": 61.41
+    },
+    {
+      "id": "pmti4",
+      "textSha256": "c9e5e3f0ebc97073e9e17627be80f27eb97f13cade2f2d7ac5c23fe5e481ebcd",
+      "tokens": 61.41
+    },
+    {
+      "id": "pmuac",
+      "textSha256": "5f67c40f0b6711bfa7602c3dc50cb942ac9a80ea5614ce342a2f9e76b047df41",
+      "tokens": 42.01
+    },
+    {
+      "id": "pmxmt",
+      "textSha256": "ac3eb180fa55f62649f8226b261926bb4af18c21e475541f1f8ff691ecb3accf",
+      "tokens": 47.34
+    },
+    {
+      "id": "pmz7k",
+      "textSha256": "8adfa79a1d78cc2d20009250538553b4012ad1a0ae86f73459d4a8342c7e1002",
+      "tokens": 46.27
+    },
+    {
+      "id": "pn228",
+      "textSha256": "795a6b5f217c01a7f865e2fb6b75828e3af6c0a9716f01cb484e6e2dbf6b5ba1",
+      "tokens": 61.41
+    },
+    {
+      "id": "pn5bv",
+      "textSha256": "141df662925b3eec8bfd78994057e7064f960c300215b349c63c8040edc80807",
+      "tokens": 61.2
+    },
+    {
+      "id": "pn9cj",
+      "textSha256": "4f93c93df626faaff4e0be33904d5390e41eb355a351c922bab919354d0c9521",
+      "tokens": 56.93
+    },
+    {
+      "id": "pnbm2",
+      "textSha256": "3b2f9a9e51149706e307f595eaa650ba67d853a12acc8e2ee968f93821822546",
+      "tokens": 60.87
+    },
+    {
+      "id": "pneud",
+      "textSha256": "0e5c4777383020d4aea30b844b05c9e18854eac52dcd9890e5c978a4d07faae2",
+      "tokens": 50.93
+    },
+    {
+      "id": "pnfi5",
+      "textSha256": "1613afd9d89e1c1a51a76d86cfe084881cc8d239d0e67d0333b59f9369280447",
+      "tokens": 55.16
+    },
+    {
+      "id": "pnkpa",
+      "textSha256": "fb5cf6d58fdb634c05e4acee9d6aff22a5d0ea27a903aa83b3ea85068057a5c2",
+      "tokens": 60.02
+    },
+    {
+      "id": "pnkss",
+      "textSha256": "16d76ce65eeb9d72ca7c7b3dc4a61221a55e75c8e47e572cc2c8d707e7f52804",
+      "tokens": 60.87
+    },
+    {
+      "id": "pnmq4",
+      "textSha256": "0d7435387c397c35b8cf068727cf6376cce8d991787bdae01af9155355faedbf",
+      "tokens": 54.53
+    },
+    {
+      "id": "pnqsw",
+      "textSha256": "7920218973622be6c3a398929e230d842d8cf614e43637f6a56b9845c07f2419",
+      "tokens": 51.15
+    },
+    {
+      "id": "pns2r",
+      "textSha256": "533acd60d7814885faf44bf710fa7e32eca080d50283a3d4e52d01315ac2ae0b",
+      "tokens": 42.06
+    },
+    {
+      "id": "pnspp",
+      "textSha256": "df2a66960b534fe08ce72f53a29bea17df713e9b049d4b057b5fa39f7b493b97",
+      "tokens": 48.19
+    },
+    {
+      "id": "pntww",
+      "textSha256": "2beb0504daff05501678572f65f5a50acbd57ab36e143bd0dd4957a28585703c",
+      "tokens": 36.14
+    },
+    {
+      "id": "pnukd",
+      "textSha256": "44334990fef0a23759e4744cfb7209b7adb90f6882f4cec3f08f5ceb264d8b4c",
+      "tokens": 56.22
+    },
+    {
+      "id": "pnv7k",
+      "textSha256": "19ed3b7c6061355963dfa966eb8dd430ff104d3589a2bb64f9374d90740c6c42",
+      "tokens": 48.82
+    },
+    {
+      "id": "pnvfb",
+      "textSha256": "f9b42f0a4654de2ea8e1962fe39f5b2d8f79b9410ae09533b3d34e25687a757d",
+      "tokens": 45.23
+    },
+    {
+      "id": "pnyg7",
+      "textSha256": "c5aa172bd109ab944d31db16e904d59524db415af54399d1ec5ee5dff0e3522d",
+      "tokens": 48.4
+    },
+    {
+      "id": "pp2r6",
+      "textSha256": "86bb50743f32fd3ef8872099ad2150f144936e9e6488a8515235d92cce5a9e98",
+      "tokens": 51.99
+    },
+    {
+      "id": "pp2tr",
+      "textSha256": "22c5fe913d5adcafb601bc9878452ca59f40fa76edb521237aa9e11d5f0b8876",
+      "tokens": 44.59
+    },
+    {
+      "id": "pp5rm",
+      "textSha256": "b49f4a819e7190b01cac16d52d12276705e9a0f98adf742f9f3ec0d45e8e46e2",
+      "tokens": 60.02
+    },
+    {
+      "id": "pp8pk",
+      "textSha256": "4f8a2af449a9a6f7c2755ace850906242a30746bd69730e3937f4a79e4a0233e",
+      "tokens": 60.23
+    },
+    {
+      "id": "pp9h8",
+      "textSha256": "59f0b176357b0394449b1f4a5546d8e8b1db0e66599c31fafeb4bb22ed6bd365",
+      "tokens": 55.16
+    },
+    {
+      "id": "ppaza",
+      "textSha256": "1f2dd7de12267060aa9156ecf7582e81cc65b6e9bc26bda4177df3b3d50802de",
+      "tokens": 51.78
+    },
+    {
+      "id": "ppct5",
+      "textSha256": "d0792c05c2412f05b7125d3e535ac5f3e19f3ede424df2b34adc6a9a6ea37ac0",
+      "tokens": 56.64
+    },
+    {
+      "id": "ppe9v",
+      "textSha256": "e1180bd642b3f5ce93c43ef8bb1f8ffa737d1ca418738b2c6c815dbf74d78a54",
+      "tokens": 61.08
+    },
+    {
+      "id": "ppegh",
+      "textSha256": "bac1318ace1827d58f8f507b343d3a60e10f77103243d0963f80af33074a17de",
+      "tokens": 36.99
+    },
+    {
+      "id": "ppgmg",
+      "textSha256": "be4920feea8aee63b66cbc2e491c3fac3ea8189e01b76766ecebb319a76660eb",
+      "tokens": 46.07
+    },
+    {
+      "id": "pph7p",
+      "textSha256": "c0b9c751b0257ff74bb739ea42690b0d0fad63585c39e285c2b76ecb4ee729ad",
+      "tokens": 56.85
+    },
+    {
+      "id": "pphh2",
+      "textSha256": "d140d818bd76768286f7b86137926bfb8a6f2646fa5ea0ada0ceffe1bc4f144c",
+      "tokens": 59.18
+    },
+    {
+      "id": "pppcy",
+      "textSha256": "98231e163c670149be6ae5e0c92aca52f03bff21e32cf60da399c835702fe96c",
+      "tokens": 50.3
+    },
+    {
+      "id": "pps8y",
+      "textSha256": "19c6740c7bcb505d151bd2859b527369d60651d7bc14b475f1e5100c618b934b",
+      "tokens": 58.12
+    },
+    {
+      "id": "ppsfb",
+      "textSha256": "79976fb044de05f706e4d937df8c97dfda1ca6aa62c3ce106f8e860193fe91e4",
+      "tokens": 41.21
+    },
+    {
+      "id": "pptbv",
+      "textSha256": "d023d7d5f1231789dc33ee31fd990b8de5d953020c6a4334371653309c3361fa",
+      "tokens": 45.65
+    },
+    {
+      "id": "pptwk",
+      "textSha256": "59646ea57579b8eaf01ec612ed87de178692ec236980e9a21b9f1f3493e2c343",
+      "tokens": 58.54
+    },
+    {
+      "id": "pptye",
+      "textSha256": "8f7ae1c17e8aee6c8aff03180c7a2f43b578c49993124959c909eeac2bd4b3e6",
+      "tokens": 40.79
+    },
+    {
+      "id": "ppviv",
+      "textSha256": "2c45a86968b25c5b0d7b459037decf5fcb908088530e47e738dc957373080344",
+      "tokens": 53.26
+    },
+    {
+      "id": "ppwgk",
+      "textSha256": "448a18a62f07e359be29065a37dfa98e6a3742cf49340c0a70e0bf4f1660bbe4",
+      "tokens": 60.87
+    },
+    {
+      "id": "ppz44",
+      "textSha256": "f54c7c7b73bf32faf8d8c4fd40ddeace32736f20800ced6d3ef967164f873e6c",
+      "tokens": 46.71
+    },
+    {
+      "id": "pq2c7",
+      "textSha256": "0aa4fe022a1d811537f6dae7c2ec1210e69a4805b3cdb9ce15610ee0f0d402d4",
+      "tokens": 60.66
+    },
+    {
+      "id": "pq3ad",
+      "textSha256": "718d0116d9616d5d66246cf625941b5e29bbe31b787e6ea378761e5ecb0cbeb1",
+      "tokens": 52.2
+    },
+    {
+      "id": "pq457",
+      "textSha256": "95dde03b8af564c183a0eb0a82b27f7aaf3a3647e832c06949ef82d4495d02c1",
+      "tokens": 59.6
+    },
+    {
+      "id": "pq66s",
+      "textSha256": "6a3d5c8d1eaf002e0755870a70eeff8057e03e784f3d90a7c2d736521a4f73d7",
+      "tokens": 57.27
+    },
+    {
+      "id": "pq8ag",
+      "textSha256": "cda3d85b22377cdda4932413ba5dc9e5c47111a28e8a97194b40bae5e0897177",
+      "tokens": 40.37
+    },
+    {
+      "id": "pq8wz",
+      "textSha256": "41e7f70ad78b4e6aba98b9bbfd9988265977962f0cbc8713975d66775f376cad",
+      "tokens": 39.1
+    },
+    {
+      "id": "pqaaf",
+      "textSha256": "eee4ccd1c64ec6a3150ec1a62798dc1f454d737340326977c69febdade508285",
+      "tokens": 52.41
+    },
+    {
+      "id": "pqbt3",
+      "textSha256": "9f4dda070a3667c7edfcea0b8d8ee464580cadbed3f7994d16547e6e7fa876ec",
+      "tokens": 51.99
+    },
+    {
+      "id": "pqcdx",
+      "textSha256": "eb928f5d6392a0c39a52392723991616d3573582e820e37e8cbc37ea4d1929e3",
+      "tokens": 49.88
+    },
+    {
+      "id": "pqe94",
+      "textSha256": "eb89b1b25c10188f3dfb3ba597c54c95034e831139fc5fab915dcf8484a81639",
+      "tokens": 55.58
+    },
+    {
+      "id": "pqeea",
+      "textSha256": "73d7b64fac85b7d57e6aaffe06aa6376f4bb6233b193abb054bbd69c729c3ada",
+      "tokens": 47.13
+    },
+    {
+      "id": "pqeuz",
+      "textSha256": "4e9d292f4b43b2c76a1fe402eab830e2bb91367146e59a105ac33a9db9c42cf1",
+      "tokens": 51.57
+    },
+    {
+      "id": "pqeyn",
+      "textSha256": "a2514d53f055e31b086838a15ff2cecf8c6a65b20eea03dd4bc2e06888b317c9",
+      "tokens": 41.21
+    },
+    {
+      "id": "pqhex",
+      "textSha256": "54152ab408569bed08415b1fa709af88749462defc33e80acc505ea5151d9063",
+      "tokens": 60.45
+    },
+    {
+      "id": "pqi69",
+      "textSha256": "cf1d4af9bbdd00d163639ec784d53630f005f17faa68716fc9a7202f78ba1126",
+      "tokens": 49.88
+    },
+    {
+      "id": "pqku3",
+      "textSha256": "409d2b16d77008275039237ffa4eb40a24bbec91e8949770b8db8704b51eeb98",
+      "tokens": 65.73
+    },
+    {
+      "id": "pqkxf",
+      "textSha256": "75de24e6fdb22455c5f531e704f49417d20622791c418eb616da48fa990276ef",
+      "tokens": 53.26
+    },
+    {
+      "id": "pqmg8",
+      "textSha256": "f4d4fd7c9067636244fece1cc9bafc04a2b28f00fe6a11d5bb15d2c2e98be7ef",
+      "tokens": 51.78
+    },
+    {
+      "id": "pqnjh",
+      "textSha256": "c45e82817a939c66ec18096ee46b006670f689bd9df560a4ee18eaaa272de4d3",
+      "tokens": 42.48
+    },
+    {
+      "id": "pqnui",
+      "textSha256": "e2f60770e56d7b5d85f8383a9cdb440f52bf0d71d8e5973af42e25adf2075984",
+      "tokens": 51.99
+    },
+    {
+      "id": "pqpib",
+      "textSha256": "9866846b976231253406c9879cb74169f7cdca2d9b66e961de2fbba9ad9c5f1d",
+      "tokens": 51.36
+    },
+    {
+      "id": "pqqyk",
+      "textSha256": "d8338ecde8e8c3f66ae7cfe735bae57b2a4b8f02971ff9bef812df986048a8ba",
+      "tokens": 57.49
+    },
+    {
+      "id": "pqr9z",
+      "textSha256": "8da0cdcb751adbae1f7f2a538f80b6cf1e8ebcb7535b2f13dbe8cb67de12b4ae",
+      "tokens": 52.2
+    },
+    {
+      "id": "pqra3",
+      "textSha256": "207643a6a5b00dbfd809ec41a98e98f0e5deab3110bb4ce767d60836a2c08031",
+      "tokens": 56.64
+    },
+    {
+      "id": "pqtft",
+      "textSha256": "afd882e122add867dfbd25c62fc0c2905dcaa9d735940769858b1bb77d80652e",
+      "tokens": 59.81
+    },
+    {
+      "id": "pqy2d",
+      "textSha256": "51893cb1b1a5eb9bd5a84efe09f3c959071f9a0edd093641b4cb31bbe0827733",
+      "tokens": 60.66
+    },
+    {
+      "id": "pqy6v",
+      "textSha256": "9a10060e70a65e9f259e6f8ae0e166521677013867a8d658897c4f142a232f68",
+      "tokens": 47.55
+    },
+    {
+      "id": "pr2fm",
+      "textSha256": "47718b53d460098bd9acc55cea05492e3814d98fa9280aaea06ad7bef5eb6efc",
+      "tokens": 60.23
+    },
+    {
+      "id": "pr4k5",
+      "textSha256": "c3f5b52ff5d16163881c2305aa81145e1d81bba793e4d463de8ac5005fa01cd1",
+      "tokens": 53.89
+    },
+    {
+      "id": "pr4tz",
+      "textSha256": "0bf667f8c297b8fcbc92a315b5316677993bb2d2f04636c1f62394bc13db68a0",
+      "tokens": 44.22
+    },
+    {
+      "id": "pr7y3",
+      "textSha256": "05fb957d3d5b1b4a80d3ffabaa33504dd2632a76ff17af4bb6fbb934e1904d7d",
+      "tokens": 53.03
+    },
+    {
+      "id": "pr9y5",
+      "textSha256": "8d82cf290471a7c09a780ef2d8a936b41f527f7534165da27ac05d117841bebf",
+      "tokens": 60.97
+    },
+    {
+      "id": "pra2h",
+      "textSha256": "0db1e14d4edb174197f21ff301eadd0073ab0986e4e8915e62b04ecb8940b512",
+      "tokens": 47.87
+    },
+    {
+      "id": "prb59",
+      "textSha256": "c5764d22812122dee723de01c85ff3affe492cd0aae08352b6118bc80f14f684",
+      "tokens": 44.22
+    },
+    {
+      "id": "prb8q",
+      "textSha256": "ccfffe0b1f997784fa18d627e8552645b0612520247d659bf705a44a2f537ca2",
+      "tokens": 51.74
+    },
+    {
+      "id": "prcqc",
+      "textSha256": "e367327cdbad58421afb54e85e57e453433f4b2d47c00a9e4b327e9786228b03",
+      "tokens": 49.16
+    },
+    {
+      "id": "prfvz",
+      "textSha256": "fefa7da0d2431042d0559a821ba627eff89d375774771fd9cd64dc8769a8b19b",
+      "tokens": 39.29
+    },
+    {
+      "id": "prgqn",
+      "textSha256": "8642aba56c4e8482c54a5d65e623946ff560d4927594918afe9cf239e7e76982",
+      "tokens": 61.61
+    },
+    {
+      "id": "prh9c",
+      "textSha256": "ee96028e952aa47a43252b682d1b2bc29faa9a6d1cab2bc1b8262a34f51ee0d2",
+      "tokens": 55.17
+    },
+    {
+      "id": "prhru",
+      "textSha256": "3e4b841b42279d8cab1feafcd13219607a55f1f1072cfdd3277b6bfbf0bae1c0",
+      "tokens": 59.04
+    },
+    {
+      "id": "prjzc",
+      "textSha256": "a3b4e92b5ab22ef019a202987e4baef2ceb0756433281e3a69db6b7bef0549ca",
+      "tokens": 47.01
+    },
+    {
+      "id": "prnhy",
+      "textSha256": "9c892bd2271cec3c1df81220aaa673d6d98ead58adfaa4fc7343c3bc447bd65f",
+      "tokens": 43.58
+    },
+    {
+      "id": "prnz3",
+      "textSha256": "80a351d2fc3671ab111147fa9a2dad02b19a77b4967db3de3be4d46c7c8c7a2e",
+      "tokens": 40.57
+    },
+    {
+      "id": "prqiv",
+      "textSha256": "59df475e3b4f0f873bdc62bb166a02b78ac96e9200fb34f03afe42acb2c1e8c6",
+      "tokens": 61.83
+    },
+    {
+      "id": "prv6q",
+      "textSha256": "c929a6c8597271812afb836548787859fe6de4b2f6b9938d6747995065ed4249",
+      "tokens": 51.09
+    },
+    {
+      "id": "ps5tz",
+      "textSha256": "a4709b382ef62c897a5d4ec095f11c9d49fb6d07564ead0eeb4fa7593bd1a1b1",
+      "tokens": 45.94
+    },
+    {
+      "id": "ps8zr",
+      "textSha256": "d8653700f3a5d3698e252f215b3ac16c1c138d0d3bbcb795136b1ef1f4b473e0",
+      "tokens": 60.11
+    },
+    {
+      "id": "ps9dt",
+      "textSha256": "2cf11b1e4e1676bbae6e78a10227365617dd3d7cf7f449d9026f8ff140336ad7",
+      "tokens": 52.81
+    },
+    {
+      "id": "psb2i",
+      "textSha256": "927663491ca9d4ec9a6418738a506ccde0e5cd942586f242f07bf5ffb4850611",
+      "tokens": 50.45
+    },
+    {
+      "id": "psbcj",
+      "textSha256": "b81d5b4fdbabfe7305a2519f2695daaa16a33721c10321060a14e39a142ee0b9",
+      "tokens": 56.68
+    },
+    {
+      "id": "psebg",
+      "textSha256": "2da09f3426404c9774a49da7ef9db3609ccc291cf804e2713b61e362fa2b0515",
+      "tokens": 51.09
+    },
+    {
+      "id": "psh7u",
+      "textSha256": "6c00f8bd705cb4b5eb8f6e40279f04c692c5aa7d69c6b8a5d7d5a6ea5ea879e4",
+      "tokens": 60.75
+    },
+    {
+      "id": "psik2",
+      "textSha256": "ced0dede1b41b08b7b3c7560521fefc28023f705a8128bd87e17f0c67df90f93",
+      "tokens": 48.52
+    },
+    {
+      "id": "psj6d",
+      "textSha256": "7804e76570b042ab88c46e9d1d1a4f32460d2e465357f407cd775afe19a9d780",
+      "tokens": 53.45
+    },
+    {
+      "id": "psmh7",
+      "textSha256": "8aba87e53022f6996c4407a71850694984c59bb7473d6761714e3517ed406c45",
+      "tokens": 61.83
+    },
+    {
+      "id": "psn6u",
+      "textSha256": "9fd2f67d525568cfc1b79d715bea81962a1a762096e97209f3973cff4c243123",
+      "tokens": 58.61
+    },
+    {
+      "id": "psnvi",
+      "textSha256": "705703a2b98fedbbf881a738b79db5a9cefffe32cc79707f7df74b33d5cd7357",
+      "tokens": 60.54
+    },
+    {
+      "id": "psppu",
+      "textSha256": "677045d0d9ef5ebf00cbe560dff1b468c7aa9b77d3079481af14a602ee4b8797",
+      "tokens": 35.85
+    },
+    {
+      "id": "psxq8",
+      "textSha256": "4e21740e06e530f2f85c14956ae1d11a66d2ece352e27dce1532982816323d2e",
+      "tokens": 53.67
+    },
+    {
+      "id": "pt458",
+      "textSha256": "fc6b9dbcd87bd9f565aa7c43c1873eebd750bcd71ac4be8459daf0ab9014a943",
+      "tokens": 51.31
+    },
+    {
+      "id": "pt76e",
+      "textSha256": "a07e9a6192242ea56688ccf049eafc704f14e86de40ae689c31173b69d69ac84",
+      "tokens": 51.09
+    },
+    {
+      "id": "pt8p7",
+      "textSha256": "86ceaa0e2450c4cdef4803c26a18d19d8b0bdca1f737bb655d0d4eafb0ef1309",
+      "tokens": 58.18
+    },
+    {
+      "id": "pt92d",
+      "textSha256": "a134204af5986f486c6a4f4314b74b89b769904c41ddb35fe96e39a91f811d06",
+      "tokens": 53.45
+    },
+    {
+      "id": "pt9at",
+      "textSha256": "f35701192a744a6654e53e82dafecf3173c7fdec1d32c6a4439754d5a410aa3c",
+      "tokens": 55.6
+    },
+    {
+      "id": "ptahe",
+      "textSha256": "8542dfff1b6e2611e2c0832cb42899fb61f06fc394aa15fc065376a2fc22240d",
+      "tokens": 49.81
+    },
+    {
+      "id": "ptaiy",
+      "textSha256": "9f0d1c97ada6490b5c4648f71c5d5c779060ac3564365a3984cb9aaf25e34c4b",
+      "tokens": 61.61
+    },
+    {
+      "id": "ptbq2",
+      "textSha256": "08ee084f57eb91712587e800aa5ed15fb9a28390f0cf397a9220108c514830fc",
+      "tokens": 46.59
+    },
+    {
+      "id": "ptcr8",
+      "textSha256": "e3d0d1e5126eb99e119eeda0dcf9a5743953d746291f3ba16e708ab21de0b7e3",
+      "tokens": 51.31
+    },
+    {
+      "id": "ptek7",
+      "textSha256": "4af2a1dbbee14681a6a6507824d92738d141e1a1af6035bff0f70661f9d2ee50",
+      "tokens": 60.54
+    },
+    {
+      "id": "ptfp6",
+      "textSha256": "c2d0c518ec01172061bebcd3786c8f86e6ee331341cce3e4db1b720b6e9033eb",
+      "tokens": 54.74
+    },
+    {
+      "id": "ptgpf",
+      "textSha256": "b185617c2366ba6f974510b29904cfe6dcb120720c4a030701f33feec86e1cd4",
+      "tokens": 40.14
+    },
+    {
+      "id": "pticx",
+      "textSha256": "488ff6507cf0485f38483ffc0327bd9638894db17f9fdaa64bd5b2064920a662",
+      "tokens": 59.25
+    },
+    {
+      "id": "ptky7",
+      "textSha256": "5b67970f8263c7f4e545bfc3510ab00771c6277a601fb42f0e10343c41131c0b",
+      "tokens": 47.44
+    },
+    {
+      "id": "ptn8b",
+      "textSha256": "fefda6674bf69e0281bedebe0babfcfa80d5f6cd0ae951ca0f203d95bafd5ddb",
+      "tokens": 61.61
+    },
+    {
+      "id": "ptnie",
+      "textSha256": "a7621fd63ab7613d72d1f95e55fd539fd706cb660bf9fbdbcfa8a2303d6c9832",
+      "tokens": 57.75
+    },
+    {
+      "id": "pts69",
+      "textSha256": "8ea7a693d6a3478673af0a5f896162145aed2856836e72e07f9f0da62bc80c24",
+      "tokens": 56.89
+    },
+    {
+      "id": "ptuye",
+      "textSha256": "07dbf9a465519c56852dd303259fd5594822e250c9435e66a1ff2aa78b13b7d5",
+      "tokens": 46.59
+    },
+    {
+      "id": "ptw5k",
+      "textSha256": "59d0959ab814168a4afd204c43b58503ddae3283d2baa18589bdc13a0f20c12c",
+      "tokens": 61.18
+    },
+    {
+      "id": "ptwgu",
+      "textSha256": "93c0963268e465f8985629c78516929a920aba5028e3aaa7e5e49b71f8415745",
+      "tokens": 59.9
+    },
+    {
+      "id": "ptx9s",
+      "textSha256": "4354d536f11e9a916ef3e61e903de7b5a5128201f5862c6788830fcbc3408892",
+      "tokens": 50.02
+    },
+    {
+      "id": "ptzfk",
+      "textSha256": "aa702587b3ccf766de64e7a691885f83b25a046354bb2f9ee05996c05543d33a",
+      "tokens": 60.97
+    },
+    {
+      "id": "pu2fx",
+      "textSha256": "190928fc00c577fe33f33f38d17c17472b2592fad957fd91543cb5736ccabd2f",
+      "tokens": 47.87
+    },
+    {
+      "id": "pu2kb",
+      "textSha256": "9b86781dda4a5fcc6acef1538a6259282386c72aa817862d0b85bc5218f9eeb2",
+      "tokens": 49.59
+    },
+    {
+      "id": "pu2qt",
+      "textSha256": "6dc15f1c13bbfb2b7ca13cac74b2a8572cc35a318c6fbce332d79117a36cd7fc",
+      "tokens": 40.14
+    },
+    {
+      "id": "pu33h",
+      "textSha256": "687dc625f2e4acf159a78dbec5af9fd606b044ec8aeabce59dff0e6de3ddbeb7",
+      "tokens": 60.75
+    },
+    {
+      "id": "pu3fh",
+      "textSha256": "a4434a5afe1ebf80c866cf665d2b4a8ace94d7397355263214808ff7ff866dc4",
+      "tokens": 54.74
+    },
+    {
+      "id": "pu42c",
+      "textSha256": "f22092b94dc4df4cd7de61c8199df935a21eafa04c43344c9a6a7ddc803021a8",
+      "tokens": 44.01
+    },
+    {
+      "id": "pu4rv",
+      "textSha256": "a1a6cd6b86dea026fcafe20ed40b4468dab979357d8f82d7501cf232401e1b11",
+      "tokens": 50.02
+    },
+    {
+      "id": "pu7k9",
+      "textSha256": "b37173a57e182472cf990162e4aa0024eb637e9281e0d153704be4c0e361e113",
+      "tokens": 59.9
+    },
+    {
+      "id": "pu9z9",
+      "textSha256": "6b1d8ff112d486ecd66aecf9cfb22a71a3c6ec4a90ba8571e38689deea31f3ee",
+      "tokens": 46.59
+    },
+    {
+      "id": "puaak",
+      "textSha256": "517540998b3028b743cb89601ac2383fc56711b259467cda21bb1b97ad827498",
+      "tokens": 61.4
+    },
+    {
+      "id": "pudtd",
+      "textSha256": "57c9c01ee9fa45f96281ae7e56da9b1f46bbec80fb1a5b07300f5419219a058b",
+      "tokens": 38.64
+    },
+    {
+      "id": "pufe9",
+      "textSha256": "ece48f6e89d90da5c78b84e9ec31b148a2e0f4d918797079cef7b761d0b9f493",
+      "tokens": 50.66
+    },
+    {
+      "id": "pugud",
+      "textSha256": "61846160550c738516b3ec5ee02420d1597dcf3d7d2e76fc8edf01deb1bc6834",
+      "tokens": 45.18
+    },
+    {
+      "id": "puhdq",
+      "textSha256": "72f1fbc53c75aa248e03b4d87a86a1761cbb4af06d5f7633c13309cc43a2a32d",
+      "tokens": 54.43
+    },
+    {
+      "id": "pupnr",
+      "textSha256": "4fe3882e2bd7a5ac1cb2891e30b9d7717c13b56ec010293a47ffc88f064593ff",
+      "tokens": 47.98
+    },
+    {
+      "id": "puqkg",
+      "textSha256": "4dc849555d285cec149b2148c873aeccc807c86923ea74c65efe1ed0f8a786b2",
+      "tokens": 61.75
+    },
+    {
+      "id": "puuwd",
+      "textSha256": "067a23f69225ed5dc80e94ea28ba530988fe3aa16649e2169971e1cc53a5f667",
+      "tokens": 44.11
+    },
+    {
+      "id": "puvjs",
+      "textSha256": "1ff8f7a70bf9d7f58e48066d40d448050783ffb1100db7cfee9fc5375185773b",
+      "tokens": 60.67
+    },
+    {
+      "id": "puvmn",
+      "textSha256": "0c1169d9cadb920bc07fbdaca874675d31f07cc531a2ca1d44d0dcc9d3568386",
+      "tokens": 45.4
+    },
+    {
+      "id": "puyc3",
+      "textSha256": "955d7b5036aadf1f4ed5abd3829a385f959bd20e4102692407884805c49854dc",
+      "tokens": 51.64
+    },
+    {
+      "id": "puyc6",
+      "textSha256": "6c6b8e1652485d30c1472c06581c23d5b26ab8683eeb6d07f02193de32b13f38",
+      "tokens": 45.18
+    },
+    {
+      "id": "pv2a8",
+      "textSha256": "52717973dda89a968554ca4f7991affa99258be83be1f3091e10c8e0ef2808d9",
+      "tokens": 60.89
+    },
+    {
+      "id": "pv2mh",
+      "textSha256": "f9c4c44ebc040fcd351037e67c13678fc23b53129f82e732dd33b15173235a33",
+      "tokens": 61.75
+    },
+    {
+      "id": "pv3g6",
+      "textSha256": "40560240415afd40030a7131b0cb0747ac395b9fc3b5d306925ac4e3dea4b898",
+      "tokens": 61.97
+    },
+    {
+      "id": "pv3iy",
+      "textSha256": "59fdfb0957e7eb51d6a8576db3d835e8f4e69360ee1cd901d9c966612d92e0d4",
+      "tokens": 59.6
+    },
+    {
+      "id": "pv52p",
+      "textSha256": "7352b4dcf4fc3a5b0b70b00f88cf8e30ae009db5858a1caf450eca9dd6e38c85",
+      "tokens": 45.83
+    },
+    {
+      "id": "pv68d",
+      "textSha256": "4e621ee48c48af765dcc57552cd8fa6340339dae20a976a71d6d79d345370c27",
+      "tokens": 53.14
+    },
+    {
+      "id": "pv9w5",
+      "textSha256": "db4cecdb260816752ef36f429724ebd4134240873bc96abaf24ac6f8bface096",
+      "tokens": 61.97
+    },
+    {
+      "id": "pvdrx",
+      "textSha256": "2f3adcad1b603aadd4ea40ca8293b7a8b076791b31346e3fbf4780d00fd2d272",
+      "tokens": 60.89
+    },
+    {
+      "id": "pvdxd",
+      "textSha256": "5295505d0116bc5b0b185fe298e190aec23b0416dff59c1afdb9ddb9a1ed8e64",
+      "tokens": 43.25
+    },
+    {
+      "id": "pvead",
+      "textSha256": "238b597f7e17a88e42b79613bdb2913d98be72d9338102b87051644904b161b2",
+      "tokens": 61.1
+    },
+    {
+      "id": "pvfj9",
+      "textSha256": "b9ecc2beb4b5cc2efb3e50a47eb2d408bc34f3e739172c361f49f3c84b61379a",
+      "tokens": 46.9
+    },
+    {
+      "id": "pvh84",
+      "textSha256": "5ef19f9f3cbcd8a27964592319fc63cba409ea335d334b9a5ce802fc11e1419e",
+      "tokens": 46.9
+    },
+    {
+      "id": "pvndx",
+      "textSha256": "475548af62f5d53d2af564e3f280c929ff7e52d1b557e45b701c0fc44468816d",
+      "tokens": 44.54
+    },
+    {
+      "id": "pvng8",
+      "textSha256": "d421e4559c2c2fcab890cf85261bba2a4ac77f358b2cc98150de456bf671b054",
+      "tokens": 61.32
+    },
+    {
+      "id": "pvpmr",
+      "textSha256": "3a413a1a1206a37e72ef01ced883037186e54e269f6eb6f71b511fc24b8f351b",
+      "tokens": 44.97
+    },
+    {
+      "id": "pvq7m",
+      "textSha256": "d4fd9bffa3711314bcb8d8cedd741252319aafb5460e728b7f25433740e84200",
+      "tokens": 42.82
+    },
+    {
+      "id": "pvqds",
+      "textSha256": "b75740492a491f6d459cf24235a5f31769b50da8d7c0979c7dbecdd89332c7c0",
+      "tokens": 58.52
+    },
+    {
+      "id": "pvv6a",
+      "textSha256": "f72ee1b701c0f9943366551d9622c6b00c788a27f79b46ab709d25d90a5d000a",
+      "tokens": 41.53
+    },
+    {
+      "id": "pvvrj",
+      "textSha256": "aff7294abe954c81720c1254052982bafc10c3b287ff917e874b2c241ae8ff09",
+      "tokens": 58.52
+    },
+    {
+      "id": "pvxt4",
+      "textSha256": "d574d69ad3ce01e1ecf2fb2391d8a84abf05a1d3f69fac95a397be74b9605701",
+      "tokens": 37.87
+    },
+    {
+      "id": "pvzkv",
+      "textSha256": "e205ca63b12820eff0dfbb6b9a5339d0699f25481e5019e85b94cb0ed4ad3350",
+      "tokens": 53.36
+    },
+    {
+      "id": "pvzw8",
+      "textSha256": "97e1b7aded16af5550c69c1ff65672869e0c6feb75d0eef659806a246004dc75",
+      "tokens": 52.07
+    },
+    {
+      "id": "pvzzx",
+      "textSha256": "42ebc372b264f48e7dd5be61ce239220dbe386049a1bd946056c43d88bd68fd6",
+      "tokens": 59.17
+    },
+    {
+      "id": "pw6ik",
+      "textSha256": "876684d26a962adacb3c08d07d38288a4c0e3150d86a44c8f2db792bcb2af25a",
+      "tokens": 42.39
+    },
+    {
+      "id": "pw6rb",
+      "textSha256": "555f15a50ef0aef6b914fe2261582c44a4d5df48b4c89bccec57c2703291c54a",
+      "tokens": 58.31
+    },
+    {
+      "id": "pw6sg",
+      "textSha256": "72388c27dc0eef6bdaba25772fece47b5a740fa634e30f839bbb1abeda7f8647",
+      "tokens": 60.89
+    },
+    {
+      "id": "pw8ht",
+      "textSha256": "d90729a3769d972a72892d3113eac074016218b53d39cfc0ff25421bad8e60a6",
+      "tokens": 61.32
+    },
+    {
+      "id": "pwafd",
+      "textSha256": "6d8b1f97f719cee47e6a160fdc1a236c6bfa2adb1339444869a6e16c6f097129",
+      "tokens": 53.57
+    },
+    {
+      "id": "pwbe8",
+      "textSha256": "7d4ce5bf6a81d10492757a3be2a84e8dd3c46bb7f21b1c4fe90a2eb5f248e1af",
+      "tokens": 45.4
+    },
+    {
+      "id": "pwdbv",
+      "textSha256": "01f0edec1d83465281958ec7eb17dbbd0fac31a0637bfbb315727efc485988f1",
+      "tokens": 56.59
+    },
+    {
+      "id": "pwg82",
+      "textSha256": "db74781448fb324952286adc0f679c4846aa92da1e576d31295c9338d9b6c32d",
+      "tokens": 45.18
+    },
+    {
+      "id": "pwigc",
+      "textSha256": "ee92b9f7d0d7cf1510a65298073cdf3f6d56984a444b5149bba7eb42dbfed7a3",
+      "tokens": 52.5
+    },
+    {
+      "id": "pwigz",
+      "textSha256": "efd7ae8cd9477a5ea1fb0b46bf2f2fae84c9e7d6292820c522f382e12cd2296c",
+      "tokens": 50.78
+    },
+    {
+      "id": "pwijp",
+      "textSha256": "8047075dfedd95233713932eb9c2e8c20d52ee7fc2fb496bcc48a0d8b82a25f3",
+      "tokens": 61.32
+    },
+    {
+      "id": "pwin9",
+      "textSha256": "9dc0f412d09ff645bc905d6444747f931a6a5597eeee0c2f59656df93d222ea5",
+      "tokens": 57.23
+    },
+    {
+      "id": "pwj8w",
+      "textSha256": "5c03497ff2935d9cf1660e6f7a9babbfd8b9918c99133829413d9297059be29b",
+      "tokens": 59.17
+    },
+    {
+      "id": "pwnap",
+      "textSha256": "e3c43130775c0e983227ae05ba22b49974e18f0dbdc36bc66dfc2a1af9067706",
+      "tokens": 36.15
+    },
+    {
+      "id": "pwqxk",
+      "textSha256": "65e2f624c13c31c98dec619a9164cdf112a774b3617ce337fed940e5d127f5c0",
+      "tokens": 61.1
+    },
+    {
+      "id": "pwra8",
+      "textSha256": "e027382d1dee053ff274f8a4f9209c6d0c4885eadbb31c340bd84c6ba9ab4d2e",
+      "tokens": 60.67
+    },
+    {
+      "id": "pwsqv",
+      "textSha256": "1ccc09ab639bbd40d7ed6f121889d92fd3724ff3697bba975739b862c950f9a4",
+      "tokens": 42.82
+    },
+    {
+      "id": "pwsz7",
+      "textSha256": "dc34657889a45a05f48d1004c3f23ca0c40efa2500ce793a69f14d5698594d4f",
+      "tokens": 60.89
+    },
+    {
+      "id": "pwu44",
+      "textSha256": "98e641023bc883e9ab984da384604e9b78ef7bd98f2ac1df96e7535d6d7f5409",
+      "tokens": 61.54
+    },
+    {
+      "id": "pwvag",
+      "textSha256": "bb651826290df383d07b5230874eceb2764f5b437852fed2aae7f475daa12774",
+      "tokens": 47.12
+    },
+    {
+      "id": "pwy69",
+      "textSha256": "fd980409f24709bf07ea924c00c3f62f0a0c29e1d7af24404174b72ea0cecfd4",
+      "tokens": 58.95
+    },
+    {
+      "id": "pwzum",
+      "textSha256": "2498a714c56731f4d05778a49364fc813ca02d366ff7f02cdff3e83e3d743798",
+      "tokens": 57.23
+    },
+    {
+      "id": "px7xx",
+      "textSha256": "dbfc8579d3658e41544c40d88e36496a65407edb41c24fd76a39a4bf6cd464d4",
+      "tokens": 45.83
+    },
+    {
+      "id": "px9ga",
+      "textSha256": "04d307ebe788cf1e674609b39086d74c4a8fafe2495554c7e795b20889919b5e",
+      "tokens": 58.09
+    },
+    {
+      "id": "pxg44",
+      "textSha256": "859d1c4a62fa8f78cc87da6cc9183c87f60554c05f9bb721d13ec0c71fbe8ac3",
+      "tokens": 61.75
+    },
+    {
+      "id": "pxgee",
+      "textSha256": "b0bf831f0f9da535855c12769d1e022eb984196ee42f0d5db5acfa912648b888",
+      "tokens": 59.6
+    },
+    {
+      "id": "pxiz6",
+      "textSha256": "cdf35e883ef2e6a3675fa75621e2eed17928b9853e249feb737ec5fe320853f6",
+      "tokens": 43.03
+    },
+    {
+      "id": "pxjks",
+      "textSha256": "a065966fc356cacc1e6b6f5fdacabb5d39c4216465d3f7e30fafe66a09ce3251",
+      "tokens": 54
+    },
+    {
+      "id": "pxjmb",
+      "textSha256": "cbe31657a8bedbde02d95630866094a37c4b9fe6c2c900060d2f5181aa2c9a64",
+      "tokens": 61.75
+    },
+    {
+      "id": "pxn3z",
+      "textSha256": "488849064124e990f2e63c4ff296652e716979a654b23049900f556010e1dadf",
+      "tokens": 59.38
+    },
+    {
+      "id": "pxr8e",
+      "textSha256": "ccdbee8df1fc526566859fea7a921143ed395d673aa1829d2513da8b683f17a2",
+      "tokens": 61.54
+    },
+    {
+      "id": "pxra8",
+      "textSha256": "f9d81dd254992634c1059158bd5a869334bc009c6806d2f5c3c343f63702feb1",
+      "tokens": 46.69
+    },
+    {
+      "id": "pxrds",
+      "textSha256": "a459447509aea75acf93939d3c0ff9ebbe137322d8e56fe4080e4a49ea2053c3",
+      "tokens": 49.59
+    },
+    {
+      "id": "pxrrm",
+      "textSha256": "8b07503e58f8093d8b6b6b167d52112fe9955367b48725a32e79b70b63eeb6d9",
+      "tokens": 52.16
+    },
+    {
+      "id": "pxtgq",
+      "textSha256": "8b1c90608c9496e849784c6e51d338f5524eab0c602db9cc73fb0a3b3e30c6f6",
+      "tokens": 44.65
+    },
+    {
+      "id": "pxwxs",
+      "textSha256": "58083879ff7115adbed65e1e517d4407f31b481638018c128daed8f03bdb789d",
+      "tokens": 38.43
+    },
+    {
+      "id": "py2mw",
+      "textSha256": "915ae82e43a17c0c325061f4d1a5a08bfe97e99fbd2c362f9ce761e522af4c5e",
+      "tokens": 45.94
+    },
+    {
+      "id": "py88f",
+      "textSha256": "1ccd689069cc06b560eaa07152c575bcb625bc675a1f84c66a98fe04285d8f81",
+      "tokens": 55.38
+    },
+    {
+      "id": "pycbi",
+      "textSha256": "a09f8ea8b1fc36fcb2ecf1cced5e511e623ea422a8cb0b3f7ea7328206cf2254",
+      "tokens": 53.45
+    },
+    {
+      "id": "pyei4",
+      "textSha256": "2d4658ca5884c8f7c8ec8123acb127cf0bd034f585cf1a4cf8f65be4d6c1aa40",
+      "tokens": 61.61
+    },
+    {
+      "id": "pyfsz",
+      "textSha256": "17283c07fe46deb0adb7bae78693b3366c7b62a9f1b9ad549cdaf9dc46e58ca3",
+      "tokens": 60.97
+    },
+    {
+      "id": "pymzr",
+      "textSha256": "3006f70e0d058d718bcc2a709baef08706f8193f7d86bc5e1dfbdd960cdd624a",
+      "tokens": 58.18
+    },
+    {
+      "id": "pynzf",
+      "textSha256": "7cbfbb82e19a962a8c976844ee6ff2cb9445a95ba83681caa3e2458027dec9c0",
+      "tokens": 61.61
+    },
+    {
+      "id": "pyr2u",
+      "textSha256": "677a48ce08e86e4b90af1ef26f776a5fbab35524abeb6cca551e31960eef956a",
+      "tokens": 47.01
+    },
+    {
+      "id": "pyr6n",
+      "textSha256": "4f1e97314e4bd7d4041bfdf4c9337b3d40104ac7aec232ed134d4180a1617d25",
+      "tokens": 61.61
+    },
+    {
+      "id": "pyssw",
+      "textSha256": "504d39883ba75d23182d7590ac45fdcef203d6e4a58bf7c8a80c878389d9072c",
+      "tokens": 60.75
+    },
+    {
+      "id": "pyyxz",
+      "textSha256": "77f23a9c1676f73a4dde525fec1902668bfbeb03686a43d37f5bcb1eba6c8274",
+      "tokens": 48.73
+    },
+    {
+      "id": "pz34c",
+      "textSha256": "0802656e723a5f41ee06c154882658941fe0fdc23e60764b4605f21732e011bb",
+      "tokens": 47.87
+    },
+    {
+      "id": "pz3q2",
+      "textSha256": "218a7ede5a961bb3905cc56218c0295059be5b615f8b8cb4776d91c251b2b86f",
+      "tokens": 65.26
+    },
+    {
+      "id": "pz6eg",
+      "textSha256": "761dca23ec3875a23ce7767e424991b8077e5f6f92d6dd0ceec03a63e60a9781",
+      "tokens": 51.52
+    },
+    {
+      "id": "pz6xn",
+      "textSha256": "2eaf68b8108c9bcf2366d6a39abea94f82dbbef0e6b689255fc862dabfbc028f",
+      "tokens": 36.92
+    },
+    {
+      "id": "pzaca",
+      "textSha256": "648572c03ea96ee08e1fdec58c92268dd2512ee54cb44f45718f71a6453a7218",
+      "tokens": 61.4
+    },
+    {
+      "id": "pzahk",
+      "textSha256": "b6b5d9a177566520ba0efb167f91b6dea81d4d928950f4412928f61057c4e698",
+      "tokens": 41.22
+    },
+    {
+      "id": "pzgbm",
+      "textSha256": "05874d98dd41382b856c8e957589095660b9916372e46b6ba53c56809f1833d8",
+      "tokens": 56.89
+    },
+    {
+      "id": "pzj5g",
+      "textSha256": "a260619e255f015a3ba38db24e3164cda2e94b4ba7b28093632f9c66489d7457",
+      "tokens": 59.89
+    },
+    {
+      "id": "pzkag",
+      "textSha256": "87f4f739fed2bd8944eb047fa78bc2c678e3c5a5aad02a0b7e64276f5c367b87",
+      "tokens": 52.38
+    },
+    {
+      "id": "pzntg",
+      "textSha256": "aed528584478db6c78956479b211572abd3f0b9a6adaddf7fe6b183037e6fa1f",
+      "tokens": 61.61
+    },
+    {
+      "id": "pztez",
+      "textSha256": "564d2a6a477a9a104eba6f359d276d85502b8ffc88466a5df946208fbd9c3c54",
+      "tokens": 40.14
+    },
+    {
+      "id": "pzvz6",
+      "textSha256": "73c0f7462f4a5535bde681b2a014287362d47b8f8f336dc478aed67b0f7d4cc5",
+      "tokens": 49.16
+    },
+    {
+      "id": "pzwn8",
+      "textSha256": "aa4e9bbbb1531815503566a77d763a80e5dc980348b90202d9daddc38e9fe734",
+      "tokens": 50.02
+    },
+    {
+      "id": "pzxfe",
+      "textSha256": "7b532a415d91cf44a7f194ebb82af06056d2083b1c7790152a94081f1c3731dd",
+      "tokens": 54.74
+    },
+    {
+      "id": "pzxze",
+      "textSha256": "dc441e513a0aca3e235393a7ec7cc4646ba95109e1f91f161a09911303182307",
+      "tokens": 45.51
+    },
+    {
+      "id": "pzymn",
+      "textSha256": "29c60b5f08fb7c147ed4e1fb49a26d98db7a51a5b83eb4fcb599f2391aed9fde",
+      "tokens": 61.4
+    }
+  ]
+}

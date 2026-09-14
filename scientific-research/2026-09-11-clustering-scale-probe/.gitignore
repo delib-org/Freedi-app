@@ -1,0 +1,4 @@
+.cache/emb-3large.f32
+.cache/emb-3large.json
+.probe.lock
+*.tmp-*

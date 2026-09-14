@@ -744,6 +744,7 @@ export {
 // Embedding models
 export type {
   StatementEmbedding,
+  StatementEmbeddingDoc,
   SimilarityResult,
   EmbeddingBatchRequest,
   EmbeddingBatchResult,
@@ -754,6 +755,7 @@ export type {
 
 export {
   StatementEmbeddingSchema,
+  StatementEmbeddingDocSchema,
   SimilarityResultSchema,
   EmbeddingBatchRequestSchema,
   EmbeddingBatchResultSchema,

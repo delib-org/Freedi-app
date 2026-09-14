@@ -425,8 +425,8 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 
 		// If a concurrent path (the live-synth onCreate trigger) already
 		// produced and saved the embedding for this statement, skip the
-		// OpenAI call. The cache lives on the statement doc itself, so a
-		// single point-read is enough to detect.
+		// OpenAI call. The cache is one doc per statement
+		// (statementEmbeddings/{id}), so a single point-read is enough to detect.
 		const existing = await embeddingCache.getBatchEmbeddings([statement.statementId]);
 		const cached = existing.get(statement.statementId);
 		if (cached && cached.length > 0) {
@@ -459,7 +459,7 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 			},
 		);
 
-		// Save embedding to the statement document (text passed so textHash
+		// Save the embedding to statementEmbeddings/{id} (text passed so textHash
 		// is written for the synthesis verdict cache; brief stored for debugging).
 		// NOTE: this never changes statement.statement — only embedding fields.
 		await embeddingCache.saveEmbedding(

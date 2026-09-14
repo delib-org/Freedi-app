@@ -6,23 +6,10 @@
  * neighbours just rank first. These tests pin the two rules that make the
  * difference between "degrades" and "corrupts".
  */
-const docs = new Map<string, Record<string, unknown>>();
-
-jest.mock('firebase-admin/firestore', () => ({
-	getFirestore: jest.fn(() => ({
-		collection: () => ({
-			doc: (id: string) => ({
-				get: async () => ({ exists: docs.has(id), data: () => docs.get(id) }),
-			}),
-			where: () => ({
-				get: async () => ({
-					docs: [...docs.entries()].map(([id, data]) => ({ id, data: () => data })),
-				}),
-			}),
-		}),
-	})),
-	FieldValue: { vector: jest.fn(), delete: jest.fn() },
-}));
+jest.mock(
+	'firebase-admin/firestore',
+	() => jest.requireActual('./helpers/fakeFirestore').firestoreModule,
+);
 
 jest.mock('firebase-functions', () => ({
 	logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
@@ -41,11 +28,20 @@ jest.mock('../brief-service', () => ({
 
 import { embeddingCache } from '../embedding-cache-service';
 import { invalidateEmbeddingModelCache, resolveEmbeddingModel } from '../embedding-model-resolver';
+import { resetFirestore, seed } from './helpers/fakeFirestore';
+
+/** Vectors live in statementEmbeddings; question settings on statements. */
+const docs = {
+	set: (id: string, data: Record<string, unknown>) =>
+		'statementSettings' in data
+			? seed('statements', id, data)
+			: seed('statementEmbeddings', id, { statementId: id, ...data }),
+};
 
 const vector = [0.1, 0.2, 0.3];
 
 beforeEach(() => {
-	docs.clear();
+	resetFirestore();
 	invalidateEmbeddingModelCache();
 	jest.clearAllMocks();
 });

@@ -7,6 +7,7 @@ import {
 	type MemberBrief,
 } from '../../services/claim-registry-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
+import { embeddingCache } from '../../services/embedding-cache-service';
 import { enqueueItem } from '../queue/enqueue';
 
 /**
@@ -140,16 +141,15 @@ export async function applyClaimTextChange(input: ClaimChangeInput): Promise<Cla
 		memberIds.length > 0
 			? await db().getAll(...memberIds.map((id) => db().collection(Collections.statements).doc(id)))
 			: [];
-	const briefs: MemberBrief[] = memberSnaps
-		.filter((s) => s.exists)
-		.map((s) => {
-			const data = s.data() as Statement & { embeddingBrief?: string };
-
-			return {
-				statementId: data.statementId,
-				brief: data.embeddingBrief || data.statement || data.statementId,
-			};
-		});
+	const members = memberSnaps.filter((s) => s.exists).map((s) => s.data() as Statement);
+	const storedBriefs = await embeddingCache.getBriefs(
+		members.map((m) => m.statementId),
+		new Map(memberSnaps.filter((s) => s.exists).map((s) => [s.id, s.data() ?? {}])),
+	);
+	const briefs: MemberBrief[] = members.map((data) => ({
+		statementId: data.statementId,
+		brief: storedBriefs.get(data.statementId) || data.statement || data.statementId,
+	}));
 
 	const revalidation = await revalidateMembers(newClaim, briefs);
 	const detached = revalidation.detachedIds;

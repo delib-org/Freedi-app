@@ -1,6 +1,7 @@
 export enum Collections {
     statements = 'statements',
     statementDeletions = 'statementDeletions', // tombstones for deleted statements (delta-listener delete sync)
+    statementEmbeddings = 'statementEmbeddings', // server-only vectors per statement, kept off the statement doc so listeners don't download them
     statementSnapShots = 'statementSnapshots',
     statementHistory = 'statementHistory', // subcollection on statements/{id}/statementHistory
     termsOfUseAcceptance = 'termsOfUseAcceptance',
