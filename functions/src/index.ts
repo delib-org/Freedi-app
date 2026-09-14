@@ -1258,6 +1258,7 @@ export {
 	agoraGradeValueIdentification,
 	agoraWritingAssistant,
 	agoraSetRound,
+	agoraSetBallotGoalOnly,
 	agoraChallengeTurn,
 	agoraResolveSuggestion,
 	agoraCharacterReview,

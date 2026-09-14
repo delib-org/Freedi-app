@@ -39,6 +39,14 @@ export interface ResultsBoardAttrs {
 	 * because it is deliberately allowed to happen once per session.
 	 */
 	finale?: boolean;
+	/**
+	 * The teacher narrowed the board to the goal (`votingSettings.goalZoneOnly`):
+	 * only proposals standing in the net are drawn, and the ballot will be
+	 * made of exactly those. Everything else stays where it is — the ranks
+	 * are the whole class's ranks, so a proposal in the net still reads as
+	 * "#3", not as the third of the chosen.
+	 */
+	onlyScored?: boolean;
 }
 
 /** One proposal as a point on the map */
@@ -1051,7 +1059,19 @@ export function ResultsBoard(
 
 		view(vnode) {
 			const attrs = vnode.attrs;
-			const points = buildPoints(attrs);
+			const allPoints = buildPoints(attrs);
+			const points = attrs.onlyScored ? allPoints.filter((point) => point.scored) : allPoints;
+
+			if (points.length === 0 && attrs.onlyScored && allPoints.length > 0) {
+				return m('.board.board--empty.board--goal-only', [
+					m(
+						'span.board__empty-icon',
+						{ 'aria-hidden': 'true' },
+						m(Icon, { name: 'ball', size: 32 }),
+					),
+					m('p.board__empty', t('board.goal_only_empty')),
+				]);
+			}
 
 			if (points.length === 0) {
 				return m('.board.board--empty', [
@@ -1073,6 +1093,7 @@ export function ResultsBoard(
 			const mineIsChampion = mine !== undefined && mine.isLead && mine.consensus !== undefined;
 
 			return m('.board', [
+				attrs.onlyScored ? m('p.board__goal-only', iconLabel('ball', t('board.goal_only'))) : null,
 				champion(points, attrs),
 
 				mine && !mineIsChampion

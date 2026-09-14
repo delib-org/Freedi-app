@@ -1,11 +1,16 @@
 import * as THREE from './vendor/three.module.js';
 
-/** A personal paper on real timber geometry. Only confirmed session text is painted. */
-export function buildWritingDesk({ scene, station, height }) {
+/**
+ * A personal paper on real timber geometry. Only confirmed session text is
+ * painted. `at`/`facing` place the desk exactly (a booth's front); without
+ * them the desk stands halfway between the station and its approach point,
+ * turned toward the approach.
+ */
+export function buildWritingDesk({ scene, station, height, at, facing }) {
  const group = new THREE.Group();
- const x = (station.ax + station.x) / 2, z = (station.az + station.z) / 2;
+ const x = at ? at.x : (station.ax + station.x) / 2, z = at ? at.z : (station.az + station.z) / 2;
  group.position.set(x, height(x, z) + .08, z);
- group.rotation.y = Math.atan2(station.ax - x, station.az - z);
+ group.rotation.y = facing ?? Math.atan2(station.ax - x, station.az - z);
  group.name = `writing-desk-${station.id}`;
  scene.add(group);
  const wood = new THREE.MeshStandardMaterial({ color: '#795638', roughness: .9 });
@@ -17,6 +22,8 @@ export function buildWritingDesk({ scene, station, height }) {
  addBox(1.9, .14, 1.12, wood, 0, .94, 0);
  for (const x of [-.77, .77]) for (const z of [-.4, .4]) addBox(.12, .9, .12, wood, x, .45, z);
  addBox(1.65, .13, .09, wood, 0, .42, -.4);
+ // A stool on the far side, so the desk reads as a place to sit and write.
+ addBox(.5, .08, .5, wood, 0, .5, -.95); for (const sx of [-.18, .18]) for (const sz of [-.18, .18]) addBox(.06, .5, .06, wood, sx, .25, -.95 + sz);
  const paperCanvas = document.createElement('canvas');
  paperCanvas.width = 768; paperCanvas.height = 640;
  const context = paperCanvas.getContext('2d');

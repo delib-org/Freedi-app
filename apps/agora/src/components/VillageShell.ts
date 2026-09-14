@@ -1,11 +1,15 @@
 import m from 'mithril';
-import type { AgoraStagePlanItem } from '@freedi/shared-types';
+import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
 import {
 	acceptsVillageEntry,
 	acceptsVillageWrite,
+	villageBooths,
 	villageDesk,
+	villageFixedPlaces,
 	villagePlace,
+	type VillageNavigation,
 } from '../lib/flows/villageRoute';
+import type { CouncilModel } from '../lib/flows/villageCouncil';
 import { VillageCommunity, type VillageCommunityAttrs } from './VillageCommunity';
 import { planItemLabel } from './StageNav';
 
@@ -13,12 +17,18 @@ interface VillageShellAttrs {
 	stationPapers?: Array<{
 		itemId: string;
 		place: string;
-		papers: Array<{ text: string; own: boolean; confirmed?: boolean }>;
+		papers: Array<{ text: string; own: boolean; author?: string; confirmed?: boolean }>;
 	}>;
 	community?: Omit<
 		VillageCommunityAttrs,
 		'plan' | 'currentIndex' | 'viewingIndex' | 'navigate' | 'onPause'
 	>;
+	/** What the council's scoreboard paints — absent before the topic loads */
+	council?: CouncilModel;
+	/** Who moves the class between stations. Absent = the teacher */
+	navigation?: VillageNavigation;
+	/** The teacher's latest "everyone to …" (`AgoraSession.villageCall`) */
+	call?: { place: string; at: number };
 	plan: readonly AgoraStagePlanItem[];
 	currentIndex: number;
 	viewingIndex: number;
@@ -27,6 +37,35 @@ interface VillageShellAttrs {
 	onSelectBook?: (itemId: string) => void;
 	papers: Array<{ text: string; own: boolean; confirmed?: boolean }>;
 }
+
+/** A message from the world naming a place — a board or desk the walker reached */
+function placeOf(payload: unknown, type: string): string | null {
+	if (!payload || typeof payload !== 'object' || !('type' in payload) || !('place' in payload))
+		return null;
+	if (payload.type !== type || typeof payload.place !== 'string') return null;
+
+	return payload.place;
+}
+
+/**
+ * A light world (no shadows, sparse grass, throttled frames) for weak devices
+ * and headless test runs — opted into per browser, never chosen for anyone.
+ */
+function villageLite(): boolean {
+	try {
+		return localStorage.getItem('agora_village_lite') === '1';
+	} catch {
+		return false;
+	}
+}
+
+/** A walk that never reports arriving (a hidden tab, a lost frame) still ends */
+const ARRIVAL_FALLBACK_MS = 12000;
+/** A call older than this, met on first render, is history rather than an order */
+const CALL_FRESH_MS = 120000;
+
+/** What opens when the walk ends: the paper (or the board once written), only an empty paper, the council, nothing */
+type ArrivalAction = 'desk' | 'desk-if-empty' | 'council' | 'none';
 
 export function VillageShell(): m.Component<VillageShellAttrs> {
 	let frame: HTMLIFrameElement | null = null;
@@ -39,9 +78,21 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 	let flightTimer: ReturnType<typeof setTimeout> | undefined;
 	let communityOpen = false;
 	let boardRequest = 0;
+	let scoreboardRequest = 0;
 	let libraryInside = false;
 	let bookOpen = false;
 	let requestedBook = '';
+	/** A booth the walker chose from the village: open its desk once the item arrives */
+	let requestedDesk = '';
+	/** A council item the walker chose: open its activity (the ballot, the recap) once it arrives */
+	let requestedCouncil = '';
+	/** Bumped to close whatever board the community layer has open */
+	let closeRequest = 0;
+	let lastRoomIndex: number | undefined;
+	let lastCallAt: number | undefined;
+	/** Where the world is walking the student, and what opens when they get there */
+	let arrival: { place: string; then: ArrivalAction } | null = null;
+	let arrivalTimer: ReturnType<typeof setTimeout> | undefined;
 	let itemId = '';
 	let ready = false;
 	let unavailable = false;
@@ -66,6 +117,11 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				community: !!attrs.community,
 				papers: attrs.papers,
 				stationPapers: attrs.stationPapers,
+				booths: villageBooths(attrs.plan, attrs.currentIndex, planItemLabel),
+				council: attrs.council ?? null,
+				navigation: leads() ? 'teacher' : 'free',
+				roomItemId: attrs.plan[attrs.currentIndex]?.itemId ?? '',
+				places: villageFixedPlaces(attrs.plan, attrs.currentIndex),
 			},
 			window.location.origin,
 		);
@@ -91,9 +147,107 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		sync();
 		m.redraw();
 	}
+	/** The plan position an opened place stands for, or -1 */
+	function openedIndexOf(place: string): number {
+		return attrs.plan.findIndex((p, i) => i <= attrs.currentIndex && villagePlace(p) === place);
+	}
+	/** The council's own item — the vote or the recap — once the room has reached one */
+	function councilIndex(): number {
+		let index = -1;
+		attrs.plan.forEach((p, i) => {
+			if (i <= attrs.currentIndex && villagePlace(p) === 'council') index = i;
+		});
+
+		return index;
+	}
+	function openScoreboard(): void {
+		if (!attrs.community) return;
+		scoreboardRequest++;
+		communityOpen = true;
+		sync();
+		m.redraw();
+	}
+	function leads(): boolean {
+		return !attrs.browseFreely && (attrs.navigation ?? 'teacher') === 'teacher';
+	}
+	/** The council's own item — the ballot, the recap — once the room is there; the scoreboard until then */
+	function enterCouncil(): void {
+		const index = councilIndex();
+		if (index >= 0 && attrs.plan[index].stage !== AgoraStage.ended) {
+			if (index === attrs.viewingIndex) {
+				opened = true;
+				deskOpen = false;
+				sync();
+				m.redraw();
+			} else {
+				requestedCouncil = attrs.plan[index].itemId;
+				attrs.onSelectBook?.(requestedCouncil);
+			}
+		} else {
+			openScoreboard();
+		}
+	}
+	/**
+	 * Close every paper, book and board. A board left open when the room
+	 * moves on keeps its frame but swaps its content to the new item — the
+	 * student sees the next station's empty board while standing at the old
+	 * one, with no paper to write on — and it pauses the world's walk.
+	 */
+	function closeEverything(): void {
+		opened = false;
+		deskOpen = false;
+		focusDesk = false;
+		bookOpen = false;
+		if (communityOpen) closeRequest++;
+		communityOpen = false;
+	}
+	/** Walk the student to a place; `then` runs when the world reports arriving */
+	function go(place: string, then: ArrivalAction, reason: 'advance' | 'call' | 'return'): void {
+		closeEverything();
+		arrival = { place, then };
+		clearTimeout(arrivalTimer);
+		arrivalTimer = setTimeout(() => arrive(place), ARRIVAL_FALLBACK_MS);
+		sync();
+		frame?.contentWindow?.postMessage(
+			{ type: 'agora-village-go', place, reason },
+			window.location.origin,
+		);
+		m.redraw();
+	}
+	function arrive(place: string): void {
+		// A walk the student chose (the map, "go there") reports arriving too:
+		// reaching the room's booth with nothing written opens the paper.
+		if (arrival && arrival.place !== place) return;
+		const then: ArrivalAction = arrival ? arrival.then : 'desk-if-empty';
+		arrival = null;
+		clearTimeout(arrivalTimer);
+		if (then === 'council') {
+			enterCouncil();
+
+			return;
+		}
+		if (then === 'none') return;
+		const item = attrs.plan[attrs.viewingIndex];
+		if (!item || villagePlace(item) !== place) return;
+		const written = attrs.papers.some((paper) => paper.own);
+		const live = attrs.viewingIndex === attrs.currentIndex;
+		if (villageDesk(item) && live && !written) {
+			openDesk();
+		} else if (then === 'desk' && villageDesk(item) && attrs.community) {
+			boardRequest++;
+			communityOpen = true;
+			sync();
+			m.redraw();
+		} else if (then === 'desk' && place === 'council') {
+			enterCouncil();
+		}
+	}
 	function receive(event: MessageEvent<unknown>): void {
 		if (event.origin !== window.location.origin || event.source !== frame?.contentWindow) return;
 		const payload = event.data;
+		const boardPlace = placeOf(payload, 'agora-village-board');
+		const selectPlace = placeOf(payload, 'agora-village-select');
+		const arrivedPlace = placeOf(payload, 'agora-village-arrived');
 		if (
 			payload &&
 			typeof payload === 'object' &&
@@ -104,6 +258,10 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			unavailable = false;
 			clearTimeout(timer);
 			sync();
+			// A fresh page (a refresh, the lobby handing over to the first
+			// station) starts at the fountain: take the student to the class.
+			const roomItem = attrs.plan[attrs.currentIndex];
+			if (leads() && roomItem) go(villagePlace(roomItem), 'desk-if-empty', 'return');
 			m.redraw();
 		} else if (
 			payload &&
@@ -115,16 +273,13 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		) {
 			libraryInside = payload.inside;
 			m.redraw();
-		} else if (
-			payload &&
-			typeof payload === 'object' &&
-			'type' in payload &&
-			payload.type === 'agora-village-board' &&
-			'place' in payload
-		) {
-			const index = attrs.plan.findIndex(
-				(p, i) => i <= attrs.currentIndex && villagePlace(p) === payload.place,
-			);
+		} else if (boardPlace !== null) {
+			if (boardPlace === 'council') {
+				enterCouncil();
+
+				return;
+			}
+			const index = openedIndexOf(boardPlace);
 			if (index >= 0 && attrs.community) {
 				attrs.onSelectBook?.(attrs.plan[index].itemId);
 				boardRequest++;
@@ -132,6 +287,20 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				sync();
 				m.redraw();
 			}
+		} else if (arrivedPlace !== null) {
+			arrive(arrivedPlace);
+		} else if (selectPlace !== null) {
+			// The walker reached another booth's desk: make it the item on
+			// screen, and open its paper once the item has arrived.
+			const index = openedIndexOf(selectPlace);
+			if (index < 0) return;
+			if (index === attrs.viewingIndex) {
+				openDesk();
+
+				return;
+			}
+			requestedDesk = attrs.plan[index].itemId;
+			attrs.onSelectBook?.(requestedDesk);
 		} else if (
 			payload &&
 			typeof payload === 'object' &&
@@ -164,6 +333,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			window.removeEventListener('message', receive);
 			clearTimeout(timer);
 			clearTimeout(flightTimer);
+			clearTimeout(arrivalTimer);
 		},
 		onbeforeupdate(vnode) {
 			attrs = vnode.attrs;
@@ -174,9 +344,42 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				itemId = next;
 				deskOpen = false;
 				focusDesk = false;
-				opened = requestedBook === next;
-				bookOpen = opened;
+				opened = requestedBook === next || requestedCouncil === next;
+				bookOpen = requestedBook === next;
 				requestedBook = '';
+				requestedCouncil = '';
+				if (requestedDesk === next) {
+					requestedDesk = '';
+					openDesk();
+				}
+			}
+			// The teacher moved the room on. Whatever the student had open belongs
+			// to the station they are leaving; led, they walk to the new one and
+			// its paper opens there; free, the world announces it and they choose.
+			if (lastRoomIndex !== undefined && attrs.currentIndex !== lastRoomIndex) {
+				const roomItem = attrs.plan[attrs.currentIndex];
+				if (leads() && roomItem) {
+					go(villagePlace(roomItem), 'desk', 'advance');
+				} else {
+					closeEverything();
+					sync();
+				}
+			}
+			lastRoomIndex = attrs.currentIndex;
+			// "Everyone to …" — once per call, and only once the world can walk.
+			const call = attrs.call;
+			if (ready && call && call.at !== lastCallAt) {
+				const fresh = lastCallAt !== undefined || Date.now() - call.at < CALL_FRESH_MS;
+				lastCallAt = call.at;
+				const roomItem = attrs.plan[attrs.currentIndex];
+				if (fresh && roomItem) {
+					if (call.place === 'current') {
+						if (attrs.viewingIndex !== attrs.currentIndex) attrs.onSelectBook?.(roomItem.itemId);
+						go(villagePlace(roomItem), 'desk', 'call');
+					} else {
+						go(call.place, call.place === 'council' ? 'council' : 'none', 'call');
+					}
+				}
 			}
 			const own = attrs.papers.find((p) => p.own);
 			if (
@@ -220,9 +423,9 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		view(vnode) {
 			attrs = vnode.attrs;
 			itemId = attrs.plan[attrs.viewingIndex]?.itemId ?? '';
-			const library =
-				!!attrs.plan[attrs.viewingIndex] &&
-				villagePlace(attrs.plan[attrs.viewingIndex]) === 'library';
+			const viewing = attrs.plan[attrs.viewingIndex];
+			const library = !!viewing && villagePlace(viewing) === 'library';
+			const council = !!viewing && villagePlace(viewing) === 'council';
 
 			return m('.village-shell', [
 				flightItem
@@ -230,35 +433,50 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 					: null,
 				m('.village-shell__toolbar', [
 					m('strong', 'סנהדרין · כפר החכמים'),
-					m(
-						'button.btn.btn--secondary.btn--sm',
-						{
-							onclick: () => {
-								if (!opened && villageDesk(attrs.plan[attrs.viewingIndex])) {
-									openDesk();
+					m('.village-shell__toolbar-actions', [
+						attrs.community && !opened
+							? m(
+									'button.btn.btn--secondary.btn--sm',
+									{ onclick: () => openScoreboard() },
+									'לוח התוצאות',
+								)
+							: null,
+						m(
+							'button.btn.btn--secondary.btn--sm',
+							{
+								onclick: () => {
+									if (!opened && villageDesk(attrs.plan[attrs.viewingIndex])) {
+										openDesk();
 
-									return;
-								}
-								opened = !opened;
-								deskOpen = false;
-								focusDesk = false;
-								bookOpen = false;
-								sync();
+										return;
+									}
+									opened = !opened;
+									deskOpen = false;
+									focusDesk = false;
+									bookOpen = false;
+									sync();
+								},
 							},
-						},
-						opened
-							? 'חזרה לכפר'
-							: library
-								? 'כניסה לספרייה'
-								: villageDesk(attrs.plan[attrs.viewingIndex])
-									? 'הפתק שלי על השולחן'
-									: 'כניסה ישירה לתחנה',
-					),
+							opened
+								? 'חזרה לכפר'
+								: library
+									? 'כניסה לספרייה'
+									: council
+										? viewing.stage === AgoraStage.voting
+											? 'לקלפי במועצה'
+											: 'לסיכום במועצה'
+										: villageDesk(attrs.plan[attrs.viewingIndex])
+											? 'הפתק שלי על השולחן'
+											: 'כניסה ישירה לתחנה',
+						),
+					]),
 				]),
 				attrs.community
 					? m(VillageCommunity, {
 							...attrs.community,
 							boardRequest,
+							scoreboardRequest,
+							closeRequest,
 							plan: attrs.plan,
 							currentIndex: attrs.currentIndex,
 							viewingIndex: attrs.viewingIndex,
@@ -270,7 +488,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 						})
 					: null,
 				m('iframe.village-shell__world', {
-					src: '/prototypes/olive-hill/village.html?embedded=1',
+					src: `/prototypes/olive-hill/village.html?embedded=1${villageLite() ? '&lite=1' : ''}`,
 					title: 'כפר החכמים בתלת־מימד',
 					oncreate: (node: m.VnodeDOM) => {
 						frame = node.dom as HTMLIFrameElement;
@@ -310,7 +528,9 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 							? `village-library${bookOpen ? ' village-library--reading' : ''}`
 							: deskOpen
 								? 'village-desk'
-								: '',
+								: council
+									? 'village-council'
+									: '',
 					},
 					library
 						? [
@@ -406,7 +626,24 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 												'חזרה לשולחן',
 											),
 										])
-									: null,
+									: council
+										? m('.village-desk__header', [
+												m(
+													'h2',
+													viewing.stage === AgoraStage.voting ? 'הקלפי של המועצה' : 'מועצת הכפר',
+												),
+												m(
+													'button.btn.btn--secondary',
+													{
+														onclick: () => {
+															opened = false;
+															sync();
+														},
+													},
+													'חזרה לכפר',
+												),
+											])
+										: null,
 								vnode.children,
 							],
 				),

@@ -110,6 +110,13 @@ import {
 export interface DeliberationAttrs {
 	/** Open the existing personal paper without advancing the current lap. */
 	writeRequest?: number;
+	/**
+	 * Rendered as the personal paper inside the 3D village. The paper is only
+	 * the paper there: the booth board, the council scoreboard and the village
+	 * map replace this screen's HUD and tabs, and a results tab opened inside
+	 * a small panel left students stranded on the class map.
+	 */
+	inVillage?: boolean;
 	session: AgoraSession;
 	myParticipant: AgoraParticipant;
 	userId: string;
@@ -700,6 +707,7 @@ export function Deliberation(
 	 */
 	let focusOnMy = '';
 	let lastWriteRequest = initialVnode.attrs.writeRequest ?? 0;
+	let inVillage = initialVnode.attrs.inVillage === true;
 	/**
 	 * One-shot: right after the very first proposal is submitted, the My tab
 	 * pulses once. The lap has just walked the student out to the square, and
@@ -1012,6 +1020,8 @@ export function Deliberation(
 							: null,
 				],
 			);
+
+		if (inVillage) return null;
 
 		return m('nav.delib-nav', [
 			tab(
@@ -2218,6 +2228,7 @@ export function Deliberation(
 
 		view(vnode) {
 			const { session: live, myParticipant, topic } = vnode.attrs;
+			inVillage = vnode.attrs.inVillage === true;
 			if ((vnode.attrs.writeRequest ?? 0) !== lastWriteRequest) {
 				lastWriteRequest = vnode.attrs.writeRequest ?? 0;
 				chatPage.close();
@@ -2383,19 +2394,21 @@ export function Deliberation(
 								: null,
 						])
 					: null,
-				m(DelibHud, {
-					step: cycle.step,
-					round: cycle.round,
-					rounds: flow.rounds,
-					rated: cycle.rated,
-					ratingQuota: flow.ratingsPerRound,
-					endsAt: live.roundEndsAt ?? undefined,
-					onResults: screen === 'results',
-					// A civic player's uid IS their Odyssey uid (the handoff token
-					// names it), so the post box can edit their voyage-story email
-					// cadence — the same doc the Odyssey settings sheet writes
-					digestUid: civic ? userId : undefined,
-				}),
+				inVillage
+					? null
+					: m(DelibHud, {
+							step: cycle.step,
+							round: cycle.round,
+							rounds: flow.rounds,
+							rated: cycle.rated,
+							ratingQuota: flow.ratingsPerRound,
+							endsAt: live.roundEndsAt ?? undefined,
+							onResults: screen === 'results',
+							// A civic player's uid IS their Odyssey uid (the handoff token
+							// names it), so the post box can edit their voyage-story email
+							// cadence — the same doc the Odyssey settings sheet writes
+							digestUid: civic ? userId : undefined,
+						}),
 			];
 
 			// The first write's reveal, fired after the travel splash clears —
@@ -2412,7 +2425,7 @@ export function Deliberation(
 			// The class picture: where the class stands on each proposal, how
 			// sure that is, and the spread behind the number. Live — it moves as
 			// classmates rate. Standing here does NOT advance the lap.
-			if (screen === 'results' && myConfirmedProposal) {
+			if (screen === 'results' && myConfirmedProposal && !inVillage) {
 				return m('.shell.shell--delib.shell--mode-mine.shell--place-mine', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
@@ -2443,6 +2456,7 @@ export function Deliberation(
 									scores: getDeliberationState().scores,
 									census: getConsensusPool(),
 									userId,
+									onlyScored: live.votingSettings?.goalZoneOnly === true,
 								}),
 						m(
 							'button.btn.btn--primary.btn--full.btn--lg',
@@ -2532,7 +2546,17 @@ export function Deliberation(
 								// What the room said in the question stages before this
 								// one — the brief the proposal is written against.
 								m(CarriedContext, { session: live, beforeIndex: getCurrentPlanIndex() }),
+								// In the village the desk opens straight onto this box, with
+								// no square around it to explain it — so it says what it is for.
+								inVillage
+									? m(
+											'label.write-desk__label',
+											{ for: 'write-desk-text' },
+											iconLabel('edit', t('delib.write_label')),
+										)
+									: null,
 								m('textarea.my-lantern__textarea.write-desk__textarea', {
+									id: 'write-desk-text',
 									value: draft,
 									rows: 4,
 									maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,

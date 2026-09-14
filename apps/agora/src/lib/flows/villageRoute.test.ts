@@ -3,6 +3,9 @@ import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
 import {
 	acceptsVillageEntry,
 	acceptsVillageWrite,
+	boothItemId,
+	villageBooths,
+	villageFixedPlaces,
 	villageDesk,
 	villagePlace,
 } from './villageRoute';
@@ -16,17 +19,17 @@ describe('the village follows the actual session plan', () => {
 		{ itemId: 'idea-b', stage: AgoraStage.question, title: 'Second question' },
 		{ itemId: 'vote', stage: AgoraStage.voting },
 	];
-	it('maps semantic rounds and decisions to their places', () => {
+	it('gives every question its own booth and sends decisions to the council', () => {
 		expect(plan.map(villagePlace)).toEqual([
 			'challenge',
-			'story',
-			'needs',
-			'solution',
-			'solution',
+			'booth:my-story',
+			'booth:what-matters',
+			'booth:idea-a',
+			'booth:idea-b',
 			'council',
 		]);
 	});
-	it('sends learning to the library but personal needs to the courtyard', () => {
+	it('sends learning to the library but every personal question to a booth', () => {
 		for (const stage of [
 			AgoraStage.framing,
 			AgoraStage.perspectives,
@@ -36,8 +39,47 @@ describe('the village follows the actual session plan', () => {
 			expect(villagePlace({ itemId: stage, stage })).toBe('library');
 		}
 		expect(villagePlace({ itemId: 'personal', stage: AgoraStage.question, kind: 'needs' })).toBe(
-			'needs',
+			'booth:personal',
 		);
+		expect(villagePlace({ itemId: 'square', stage: AgoraStage.deliberation })).toBe('booth:square');
+	});
+	it('keeps the meeting point and the council open, and marks where the room is', () => {
+		expect(villageFixedPlaces(plan, 1)).toEqual({
+			library: { open: false, current: false, inPlan: false },
+			challenge: { open: true, current: false, inPlan: true },
+			council: { open: true, current: false, inPlan: true },
+		});
+		expect(villageFixedPlaces(plan, 5).council).toEqual({
+			open: true,
+			current: true,
+			inPlan: true,
+		});
+		expect(villageFixedPlaces(plan, 0).challenge).toEqual({
+			open: true,
+			current: true,
+			inPlan: true,
+		});
+		const withScenes: AgoraStagePlanItem[] = [
+			...plan.slice(0, 1),
+			{ itemId: 'framing', stage: AgoraStage.framing },
+			...plan.slice(1),
+		];
+		expect(villageFixedPlaces(withScenes, 0).library).toEqual({
+			open: false,
+			current: false,
+			inPlan: true,
+		});
+	});
+	it('lists the booths of the plan in order, open up to the room and current at the room', () => {
+		const booths = villageBooths(plan, 2, (item) => `label:${item.itemId}`);
+		expect(booths.map((b) => b.itemId)).toEqual(['my-story', 'what-matters', 'idea-a', 'idea-b']);
+		expect(booths.map((b) => b.kind)).toEqual(['story', 'needs', 'open', 'open']);
+		expect(booths.map((b) => b.open)).toEqual([true, true, false, false]);
+		expect(booths.map((b) => b.current)).toEqual([false, true, false, false]);
+		expect(booths[2].label).toBe('First question');
+		expect(booths[0].label).toBe('label:my-story');
+		expect(boothItemId(booths[0].place)).toBe('my-story');
+		expect(boothItemId('council')).toBeNull();
 	});
 	it('keeps repeated questions distinct even in the same workshop', () => {
 		expect(acceptsVillageEntry({ type: 'agora-village-enter', itemId: 'idea-a' }, plan, 4, 4)).toBe(
@@ -57,7 +99,7 @@ describe('the village follows the actual session plan', () => {
 	});
 	it('works for a short plan without inventing missing stations', () => {
 		const short = [plan[0], plan[3], plan[5]];
-		expect(short.map(villagePlace)).toEqual(['challenge', 'solution', 'council']);
+		expect(short.map(villagePlace)).toEqual(['challenge', 'booth:idea-a', 'council']);
 		expect(acceptsVillageEntry({ type: 'agora-village-enter', itemId: 'vote' }, short, 2, 2)).toBe(
 			true,
 		);
