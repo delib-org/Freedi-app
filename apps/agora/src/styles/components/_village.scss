@@ -230,3 +230,13 @@ article.village-note { cursor: default; }
   }
   .chat-page__send { align-self: flex-end; padding-inline: 26px; }
 }
+
+// The paper box is taller than the classic composer, and in a panel that
+// flexed to fit the viewport it squeezed the conversation above it into a
+// strip. Inside a village board the conversation scrolls as a whole instead:
+// the messages keep their room, the proposal line keeps its height.
+.village-shell .village-community__panel:has(.shell--chat) { display: block; overflow: auto; }
+.village-shell .village-community__panel .shell--chat { overflow: visible; }
+.village-shell .village-community__panel .chat-page { height: auto; overflow: visible; }
+.village-shell .village-community__panel .chat-page > * { flex-shrink: 0; }
+.village-shell .village-community__panel .chat-page__list { flex: none; min-height: 200px; max-height: 44dvh; overflow: auto; }
