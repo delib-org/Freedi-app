@@ -67,8 +67,12 @@ const CALL_FRESH_MS = 120000;
 /** The camera's turn to the table takes ~0.9s; a world that never reports the guide still shows the bubble */
 const ANCHOR_FALLBACK_MS = 1500;
 
-/** What opens when the walk ends: the paper (or the board once written), only an empty paper, the council, nothing */
-type ArrivalAction = 'desk' | 'desk-if-empty' | 'council' | 'none';
+/**
+ * When the walk ends: stand at the station (and at the council, open its
+ * ballot or recap), only stand there, open the council, nothing. A booth
+ * never opens its paper on arrival — the guide's bubble does.
+ */
+type ArrivalAction = 'station' | 'look' | 'council' | 'none';
 
 export function VillageShell(): m.Component<VillageShellAttrs> {
 	let frame: HTMLIFrameElement | null = null;
@@ -188,12 +192,31 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		frameView(villagePlace(item), 'board');
 		m.redraw();
 	}
-	/** The table side of the booth: my paper, in the guide's bubble */
+	/** Straight to my paper at the table — "edit my note" on the board */
 	function showTable(): void {
 		if (communityOpen) closeRequest++;
 		communityOpen = false;
 		boardView = false;
 		openDesk();
+	}
+	/**
+	 * Stand in front of the station: the camera frames the guide, the writing
+	 * table and the note, and the guide's bubble in the world gives the
+	 * instruction. Nothing opens here — the paper opens only from the button
+	 * inside that bubble (`agora-village-write`).
+	 */
+	function showStation(): void {
+		const item = attrs.plan[attrs.viewingIndex];
+		if (!item || !villageDesk(item) || flightItem) return;
+		if (communityOpen) closeRequest++;
+		communityOpen = false;
+		boardView = false;
+		opened = false;
+		deskOpen = false;
+		focusDesk = false;
+		sync();
+		frameView(villagePlace(item), 'table');
+		m.redraw();
 	}
 	/** The plan position an opened place stands for, or -1 */
 	function openedIndexOf(place: string): number {
@@ -264,10 +287,12 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		m.redraw();
 	}
 	function arrive(place: string): void {
-		// A walk the student chose (the map, "go there") reports arriving too:
-		// reaching the room's booth with nothing written opens the paper.
+		// Every walk ends in front of the station — the teacher's advance or
+		// call, a refresh, the map. The student sees the guide, the table and
+		// the note, and the guide's bubble says what to do; nothing opens by
+		// itself. (A walk the student chose reports arriving too.)
 		if (arrival && arrival.place !== place) return;
-		const then: ArrivalAction = arrival ? arrival.then : 'desk-if-empty';
+		const then: ArrivalAction = arrival ? arrival.then : 'look';
 		arrival = null;
 		clearTimeout(arrivalTimer);
 		if (then === 'council') {
@@ -277,20 +302,17 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		}
 		if (then === 'none') return;
 		const item = attrs.plan[attrs.viewingIndex];
-		if (!item || villagePlace(item) !== place) return;
-		const written = attrs.papers.some((paper) => paper.own);
-		const live = attrs.viewingIndex === attrs.currentIndex;
-		if (villageDesk(item) && live && !written) {
-			openDesk();
-		} else if (then === 'desk' && villageDesk(item) && attrs.community) {
-			boardRequest++;
-			communityOpen = true;
-			boardView = true;
-			sync();
-			frameView(place, 'board');
-			m.redraw();
-		} else if (then === 'desk' && place === 'council') {
-			enterCouncil();
+		if (item && villagePlace(item) === place) {
+			if (villageDesk(item)) showStation();
+			else if (then === 'station' && place === 'council') enterCouncil();
+
+			return;
+		}
+		// Another opened booth: put its question on screen, then stand at its table.
+		const index = openedIndexOf(place);
+		if (index >= 0 && villageDesk(attrs.plan[index])) {
+			requestedDesk = attrs.plan[index].itemId;
+			attrs.onSelectBook?.(requestedDesk);
 		}
 	}
 	function receive(event: MessageEvent<unknown>): void {
@@ -312,7 +334,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			// A fresh page (a refresh, the lobby handing over to the first
 			// station) starts at the fountain: take the student to the class.
 			const roomItem = attrs.plan[attrs.currentIndex];
-			if (leads() && roomItem) go(villagePlace(roomItem), 'desk-if-empty', 'return');
+			if (leads() && roomItem) go(villagePlace(roomItem), 'look', 'return');
 			m.redraw();
 		} else if (
 			payload &&
@@ -354,11 +376,11 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			arrive(arrivedPlace);
 		} else if (selectPlace !== null) {
 			// The walker reached another booth's desk: make it the item on
-			// screen, and open its paper once the item has arrived.
+			// screen, and stand at its table once the item has arrived.
 			const index = openedIndexOf(selectPlace);
 			if (index < 0) return;
 			if (index === attrs.viewingIndex) {
-				openDesk();
+				showStation();
 
 				return;
 			}
@@ -416,16 +438,16 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				requestedCouncil = '';
 				if (requestedDesk === next) {
 					requestedDesk = '';
-					openDesk();
+					showStation();
 				}
 			}
 			// The teacher moved the room on. Whatever the student had open belongs
 			// to the station they are leaving; led, they walk to the new one and
-			// its paper opens there; free, the world announces it and they choose.
+			// stand in front of it; free, the world announces it and they choose.
 			if (lastRoomIndex !== undefined && attrs.currentIndex !== lastRoomIndex) {
 				const roomItem = attrs.plan[attrs.currentIndex];
 				if (leads() && roomItem) {
-					go(villagePlace(roomItem), 'desk', 'advance');
+					go(villagePlace(roomItem), 'station', 'advance');
 				} else {
 					closeEverything();
 					sync();
@@ -441,7 +463,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				if (fresh && roomItem) {
 					if (call.place === 'current') {
 						if (attrs.viewingIndex !== attrs.currentIndex) attrs.onSelectBook?.(roomItem.itemId);
-						go(villagePlace(roomItem), 'desk', 'call');
+						go(villagePlace(roomItem), 'station', 'call');
 					} else {
 						go(call.place, call.place === 'council' ? 'council' : 'none', 'call');
 					}
@@ -529,7 +551,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 							{
 								onclick: () => {
 									if (!opened && villageDesk(attrs.plan[attrs.viewingIndex])) {
-										openDesk();
+										showStation();
 
 										return;
 									}
@@ -562,8 +584,8 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 								'button',
 								{
 									type: 'button',
-									'aria-pressed': String(opened && deskOpen),
-									onclick: showTable,
+									'aria-pressed': String(!(communityOpen && boardView)),
+									onclick: showStation,
 								},
 								'📝 השולחן · הפתק שלי',
 							),

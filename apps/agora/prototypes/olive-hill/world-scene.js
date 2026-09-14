@@ -124,7 +124,8 @@ canvas.addEventListener('click',event=>{
  for(const booth of village.booths){
   if(!ray.intersectObject(booth.desk.group,true).some(hit=>hit.distance<7))continue;
   if(!embedded){destination(booth.station.id);openPersonalDesk();return;}
-  if(booth.station.id===activePlace&&deskInfo){openPersonalDesk();return;}
+  // The desk of the class's booth: stand at it — the guide's bubble opens the paper, the desk never does.
+  if(booth.station.id===activePlace&&deskInfo){startView(activePlace,'table');return;}
   parent.postMessage({type:'agora-village-select',place:booth.station.id},location.origin);return;
  }
  const boards=clickableBoards();
@@ -140,7 +141,7 @@ function deskHere(){return !!deskInfo&&selected.id===activePlace;}
 let lastLibraryPresence=null,deskInfo=null,pointerMoved=false;
 /** Who moves the class (the shell says), the room's item, the fixed places' state, a walk the shell waits on. */
 let navigation='teacher',roomItem='',placeStatus={},arriveNotify='',newsTimer=0,navKey='';
-function hideDeskBubble(){ $('desk-bubble').hidden=true;document.body.classList.remove('has-desk-bubble'); }
+function hideDeskBubble(){ $('desk-bubble').hidden=true;document.body.classList.remove('has-desk-bubble');$('enter').hidden=false; }
 function openPersonalDesk(){
  if(uiPaused||!deskInfo||(embedded&&!deskHere()))return;
  if(embedded)send(deskInfo.writable?'agora-village-write':'agora-village-enter');
@@ -148,18 +149,33 @@ function openPersonalDesk(){
 }
 $('desk-write').onclick=openPersonalDesk;
 function guideOf(stationId){return characters.find(c=>c.station===stationId)??null;}
+/**
+ * The guide's speech bubble at the class's booth: who speaks, the question,
+ * the instruction, and the one button that opens the paper. It shows once the
+ * walker stands in front of the station — at its approach point, or framed
+ * at its table — and never while the camera is still turning.
+ */
 function updateDeskBubble(){
  const guide=guideOf(selected.id);
- if(!deskHere()||!guide||uiPaused||Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)>3.5){hideDeskBubble();return;}
+ const atTable=viewKind==='table'&&viewPlace===selected.id;
+ // In a lesson the guide speaks only once the student stands framed at the
+ // station — never on the way in, so the bubble does not appear, vanish while
+ // the camera settles, and appear again. The standalone tour keeps "near".
+ const standing=embedded?atTable:(atTable||Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<=3.5);
+ if(!deskHere()||!guide||uiPaused||view||!standing){hideDeskBubble();return;}
  const anchor=new THREE.Vector3(guide.x,height(guide.x,guide.z)+guide.height+.45,guide.z).project(camera);
  if(anchor.z< -1||anchor.z>1||Math.abs(anchor.x)>.92){hideDeskBubble();return;}
- const bubble=$('desk-bubble');bubble.hidden=false;document.body.classList.add('has-desk-bubble');
+ const written=!!deskInfo.text;
+ $('desk-speaker').textContent=guide.name;
+ $('desk-question').textContent=activeLabel||selected.name;
+ $('desk-invitation').textContent=!deskInfo.writable?'הפתק שלך נשמר. אפשר לפתוח אותו ולקרוא שוב.':written?'הפתק שלך כבר על הלוח. אפשר לחזור אליו ולשפר אותו.':deskInfo.prompt;
+ $('desk-write').textContent=!deskInfo.writable?'📖 לקרוא את הפתק שלי':written?'✍️ לערוך את הפתק שלי':'✍️ לכתוב את זה על הפתק שלי';
+ const bubble=$('desk-bubble');bubble.hidden=false;document.body.classList.add('has-desk-bubble');$('enter').hidden=true;
  const half=bubble.offsetWidth/2+16;
  bubble.style.left=`${THREE.MathUtils.clamp((anchor.x*.5+.5)*innerWidth,half,innerWidth-half)}px`;
- bubble.style.top=`${THREE.MathUtils.clamp((-anchor.y*.5+.5)*innerHeight,bubble.offsetHeight+16,innerHeight-130)}px`;
- $('desk-speaker').textContent=guide.name;
- $('desk-invitation').textContent=deskInfo.writable?deskInfo.prompt:'הפתק שלך נשמר. אפשר לפתוח אותו ולקרוא שוב.';
- $('desk-write').textContent=deskInfo.writable?'לכתוב על הפתק שלי':'לקרוא את הפתק שלי';
+ // In a session the shell's coins, inbox and table/board switch cover the top of the world: stay below them.
+ const topRoom=document.body.classList.contains('has-community')?140:16;
+ bubble.style.top=`${THREE.MathUtils.clamp((-anchor.y*.5+.5)*innerHeight,bubble.offsetHeight+topRoom,innerHeight-130)}px`;
 }
 
 // Spawn just north of the fountain, looking across the square at the booths.
@@ -188,7 +204,9 @@ function viewPose(place,kind){
   // Aim past the middle, toward the guide: the desk sits on one side of the
   // picture, the guide near the centre, and the far side is left free for
   // the bubble — so writing never hides the table the note is on.
-  look.copy(paper).lerp(head,.85);look.y=paper.y+.3;
+  // Looking a little above the table puts the guide low enough in the picture
+  // for their bubble to fit over their head, under the shell's top controls.
+  look.copy(paper).lerp(head,.85);look.y=paper.y+1.15;
   // Step back from the line between paper and guide, toward the square, far enough to see both.
   const across=new THREE.Vector3(head.x-paper.x,0,head.z-paper.z);const sep=across.length();
   const out=sep>.01?new THREE.Vector3(-across.z,0,across.x).normalize():new THREE.Vector3(CENTER.x-look.x,0,CENTER.z-look.z).normalize();
@@ -213,6 +231,17 @@ function postAnchor(){
 function endView(){view=null;const a=new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ');yaw=a.y;pitch=a.x;postAnchor();}
 function startView(place,kind){
  const pose=viewPose(place,kind);if(!pose)return;
+ const station=stations.find(s=>s.id===place);
+ // Far from that station (a student roaming, then pressing "my note"): never
+ // fly across the village. Walk there; arriving, the shell stands the student
+ // at the station and asks for the table again. A board covers the world
+ // anyway, so a far board simply keeps the camera where it is.
+ if(embedded&&station&&Math.hypot(camera.position.x-station.ax,camera.position.z-station.az)>8){
+  if(kind==='table'){selected=station;describe();hideDeskBubble();view=null;viewKind=null;keys.clear();arriveNotify=place;moving=true;}
+  return;
+ }
+ // The walker now stands at this station: its desk and guide are the ones in front of them.
+ if(station&&selected.id!==station.id){selected=station;describe();}
  keys.clear();moving=false;hideDeskBubble();viewKind=kind;viewPlace=place;
  if(matchMedia('(prefers-reduced-motion: reduce)').matches){camera.position.copy(pose.eye);camera.quaternion.copy(pose.quaternion);endView();renderer.render(scene,camera);return;}
  view={fromEye:camera.position.clone(),fromQ:camera.quaternion.clone(),...pose,t:0};
@@ -230,7 +259,7 @@ function destination(place,label){
  if(!embedded){deskInfo=selected.booth?{label:'הפתק שלי',prompt:'הפתק שלך מחכה על השולחן. איזו הצעה תרצה לכתוב?',writable:true}:null;for(const b of village.booths)b.desk.paint('', 'הפתק שלי',b.station.id===selected.id);}
 }
 /** The walker picked a place from the list: go there, without changing what the shell shows. */
-function walkTo(place){const station=stations.find(s=>s.id===place);if(!station)return;selected=station;describe();hideDeskBubble();moving=true;canvas.focus();}
+function walkTo(place){const station=stations.find(s=>s.id===place);if(!station)return;selected=station;describe();hideDeskBubble();viewKind=null;moving=true;canvas.focus();}
 window.addEventListener('message',event=>{
  if(!embedded||event.source!==parent||event.origin!==location.origin||!event.data||typeof event.data!=='object')return;const data=event.data;
  if(data.type!=='agora-village-state'||typeof data.itemId!=='string'||typeof data.place!=='string')return;
@@ -265,7 +294,8 @@ window.addEventListener('message',event=>{
 $('travel').onclick=()=>{moving=!moving;canvas.focus();};
 $('enter').onclick=()=>{
  if(embedded){
-  if(selected.booth){if(selected.id===activePlace&&deskInfo)openPersonalDesk();else parent.postMessage({type:'agora-village-select',place:selected.id},location.origin);return;}
+  // At the class's booth this walks up to the station (the guide's bubble opens the paper), never the paper itself.
+  if(selected.booth){if(selected.id===activePlace&&deskInfo){if(Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<6)startView(activePlace,'table');else{arriveNotify=selected.id;viewKind=null;moving=true;}}else parent.postMessage({type:'agora-village-select',place:selected.id},location.origin);return;}
   if(selected.id==='council'){parent.postMessage({type:'agora-village-board',place:'council'},location.origin);return;}
   if(selected.id===activePlace)send('agora-village-enter');else parent.postMessage({type:'agora-village-select',place:selected.id},location.origin);
   return;
@@ -370,11 +400,11 @@ village.ready.then(({failed})=>{
 });
 function frame(now){requestAnimationFrame(frame);if(lite&&now-last<66)return;const dt=Math.min((now-last)/1000,.04);/* walking uses the real elapsed time (capped) so a slow renderer does not slow the walker */const dtWalk=Math.min((now-last)/1000,.25);last=now;if(paperFlight.active){paperFlight.tick(dt);village.tick(camera);renderer.render(scene,camera);return;}if(view){tickView(dt);village.tick(camera);renderer.render(scene,camera);return;}if(document.hidden||uiPaused||$('preview-info').open)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
  if(moving){const dx=selected.ax-camera.position.x,dz=selected.az-camera.position.z,dist=Math.hypot(dx,dz);if(dist>.12){const stepLen=Math.min(dist,dtWalk*4);camera.position.x+=dx/dist*stepLen;camera.position.z+=dz/dist*stepLen;const look=selected.look??guideOf(selected.id)??selected;const target=Math.atan2(camera.position.x-look.x,camera.position.z-look.z);yaw+=Math.atan2(Math.sin(target-yaw),Math.cos(target-yaw))*Math.min(1,dtWalk*3);}else {moving=false;pitch=selected.pitch??-.06;arrived();}}
- const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));if(f||s){const n=Math.hypot(f,s);camera.position.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)/n*dt*4;camera.position.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)/n*dt*4;}
+ const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));if(f||s){viewKind=null;const n=Math.hypot(f,s);camera.position.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)/n*dt*4;camera.position.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)/n*dt*4;}
  if(!moving&&((Math.abs(camera.position.x)<3.7&&camera.position.z<2.6&&camera.position.z>-3.9)||village.solids.some(o=>Math.abs(camera.position.x-o.x)<o.w&&Math.abs(camera.position.z-o.z)<o.d)))camera.position.copy(old);
  camera.position.x=THREE.MathUtils.clamp(camera.position.x,-45,45);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-20,50);camera.position.y=height(camera.position.x,camera.position.z)+1.75;camera.quaternion.setFromEuler(new THREE.Euler(pitch,yaw,0,'YXZ'));village.tick(camera);
  const insideLibrary=Math.abs(camera.position.z-15)<3.5&&camera.position.x>-25.6&&camera.position.x<-19.6;
  if(embedded&&insideLibrary!==lastLibraryPresence){lastLibraryPresence=insideLibrary;parent.postMessage({type:'agora-village-library-presence',inside:insideLibrary},location.origin);}
- const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;$('enter').textContent=deskHere()?(deskInfo.writable?'לכתוב על הפתק שלי':'לקרוא את הפתק שלי'):selected.id==='council'?'לפתוח את לוח התוצאות':selected.booth?(embedded?'לגשת לביתן הזה':'להיכנס לביתן'):near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←';updateDeskBubble();$('travel').textContent=moving?'לעצור':`ללכת אל: ${selected.name}`;$('travel').hidden=!moving&&near;renderer.render(scene,camera);
+ const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;$('enter').textContent=deskHere()?'לגשת לשולחן ולפתק':selected.id==='council'?'לפתוח את לוח התוצאות':selected.booth?(embedded?'לגשת לביתן הזה':'להיכנס לביתן'):near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←';updateDeskBubble();$('travel').textContent=moving?'לעצור':`ללכת אל: ${selected.name}`;$('travel').hidden=(!moving&&near)||(viewKind==='table'&&viewPlace===selected.id);renderer.render(scene,camera);
 }
 requestAnimationFrame(frame);

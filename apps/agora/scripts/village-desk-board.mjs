@@ -1,10 +1,12 @@
 /* The booth's two sides: the table and the board.
  *
  * One village student at a solutions booth with classmates' notes already on
- * the board. Arriving shows the table with the paper waiting and the guide's
- * speech bubble; the student writes INSIDE the bubble; sending flies the paper
- * to the board and the board opens; from the board the student can go back
- * to the table (to edit) and forth again, and rate a classmate's note.
+ * the board. Arriving puts the student IN FRONT of the station: the guide, the
+ * writing table and the note, and the guide's bubble with the instruction —
+ * nothing opens by itself. Only the bubble's button opens the paper, written
+ * in the guide's speech bubble; sending flies it to the board and the board
+ * opens; the switch goes back to the station and forth again; a classmate is
+ * rated; "edit my note" on the board opens the paper directly.
  *
  * Run (solo suite): bash ../../scripts/solo.sh npx tsx scripts/village-desk-board.mjs [--keep] [--shot=prefix]
  * Screenshots land in output/village-desk-board/.
@@ -53,18 +55,37 @@ const uid = await page.evaluate(() => window.__agoraDebug?.()?.user?.user?.uid ?
 if (!uid) fail('the student has no uid');
 await positionStudent(run.sessionId, uid, 20);
 
-step('Arriving: the table, and the guide asking in a speech bubble');
+const world = page.frameLocator('iframe.village-shell__world');
+const guideBubble = world.locator('#desk-bubble');
+const writeButton = world.locator('#desk-write');
 const bubble = page.locator('.village-bubble');
-const arrived = await bubble
+/** Press the one button that opens the paper: inside the guide's bubble */
+async function writeFromGuide() {
+	await guideBubble.waitFor({ state: 'visible', timeout: 40000 });
+	await clearCelebration(page, 'S1');
+	await writeButton.click();
+	await page.locator('.village-bubble:not(.village-bubble--waiting)').waitFor({ timeout: 15000 });
+}
+
+step('Arriving: in front of the station — the guide, the table, the note; nothing opens');
+const arrived = await guideBubble
 	.waitFor({ state: 'visible', timeout: 40000 })
 	.then(() => true)
 	.catch(() => false);
-await pause(2500);
-await shot(page, `${PREFIX}01-arrive-table`);
-if (!arrived) fail('no speech bubble at the table after arriving');
-eq('the board is not open while writing', await page.locator('.village-community__panel').count(), 0);
+await pause(1500);
+await shot(page, `${PREFIX}01-arrive-station`);
+if (!arrived) fail("the guide's bubble did not appear in front of the station");
+eq('the paper did not open by itself', await bubble.count(), 0);
+eq('the board did not open by itself', await page.locator('.village-community__panel').count(), 0);
+eq(
+	"the guide's bubble tells the student to write it down",
+	(await writeButton.textContent())?.includes('לכתוב את זה על הפתק שלי'),
+	true,
+);
 
-step('Writing inside the bubble');
+step("Pressing the guide's button opens the paper, in the guide's speech bubble");
+await writeFromGuide();
+await pause(800);
 const input = bubble.locator('textarea').first();
 await input.waitFor({ timeout: 15000 });
 await input.fill('ועדה של שלושה נציגים שמתחלפת כל חודש ומביאה הצעות לאישור כל הכיתה.');
@@ -83,12 +104,17 @@ await shot(page, `${PREFIX}03-board-after-send`);
 step('From the board back to the table, and forth again');
 await clearCelebration(page, 'S1');
 await page.locator('.village-booth-switch button', { hasText: 'השולחן' }).first().click();
-await bubble.waitFor({ state: 'visible', timeout: 15000 });
-eq('the board closed at the table', await page.locator('.village-community__panel').count(), 0);
-// The camera turns to the table (~0.9s), then the bubble appears beside the guide.
-await page.locator('.village-bubble:not(.village-bubble--waiting)').waitFor({ timeout: 5000 });
-await pause(1200);
-await shot(page, `${PREFIX}04-back-at-table`);
+await guideBubble.waitFor({ state: 'visible', timeout: 15000 });
+eq('the board closed at the station', await page.locator('.village-community__panel').count(), 0);
+eq('back at the station, the paper waits for the guide’s button', await bubble.count(), 0);
+await pause(800);
+await shot(page, `${PREFIX}04-back-at-station`);
+await writeFromGuide();
+eq(
+	'the written note is offered for editing',
+	(await page.locator('.village-bubble textarea').first().inputValue()).length > 0,
+	true,
+);
 await page.locator('.village-booth-switch button', { hasText: 'הלוח' }).first().click();
 await page.locator('.village-community__panel').waitFor({ timeout: 15000 });
 

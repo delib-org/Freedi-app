@@ -41,7 +41,7 @@ export function buildWritingDesk({ scene, station, height, at, facing }) {
   context.direction = 'rtl'; context.textAlign = 'right'; context.fillStyle = '#304c3b';
   context.font = 'bold 48px Arial'; context.fillText(label, 710, 83, 660);
   context.font = '35px Arial';
-  const words = (text || (active ? 'לחצו כאן כדי לכתוב…' : 'הפתק מחכה לתחנה שלך')).split(/\s+/);
+  const words = (text || (active ? 'הפתק שלך מחכה כאן…' : 'הפתק מחכה לתחנה שלך')).split(/\s+/);
   let line = '', y = 175;
   for (const word of words) {
    if (context.measureText(line + word).width > 650) {

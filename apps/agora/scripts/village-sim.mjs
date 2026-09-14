@@ -134,13 +134,39 @@ async function backToVillage(page) {
 	}
 }
 
+/** In front of the station: the guide's bubble in the world, with the instruction and its button */
+async function expectAtStation(page, label, where) {
+	const guide = world(page).locator('#desk-bubble');
+	const standing = await guide
+		.waitFor({ state: 'visible', timeout: 30000 })
+		.then(() => true)
+		.catch(() => false);
+	if (!standing) {
+		await shot(page, `debug-${label}-not-at-station`);
+		fail(`${label} is not standing in front of ${where} with the guide's bubble`);
+	}
+	eq(
+		`${label}: nothing opened by itself at ${where}`,
+		await page.locator('.village-desk textarea').isVisible(),
+		false,
+	);
+}
+
+/** The only way into the paper at a station: the button inside the guide's bubble */
+async function pressGuideWrite(page, label) {
+	await world(page).locator('#desk-write').waitFor({ state: 'visible', timeout: 30000 });
+	await tap(page, world(page).locator('#desk-write'), label);
+}
+
 /** Write on the desk of the booth the room is at, then wait for the paper to land on the board */
 async function writeAtDesk(page, label, text, textarea) {
 	await clearCelebration(page, label);
 	const input = page.locator(`.village-desk ${textarea}`);
 	if (!(await input.isVisible())) {
 		await backToVillage(page);
+		// The toolbar takes the student to the station; the guide's button opens the paper.
 		await openActivity(page, 'הפתק שלי על השולחן');
+		await pressGuideWrite(page, label);
 	}
 	await input.waitFor({ timeout: 15000 });
 	await input.fill(text);
@@ -185,22 +211,16 @@ async function rateOnBoard(page, label, rate) {
 	console.log(`   ✓ ${label} rated ${count} notes on the board`);
 }
 
-/** Led by the teacher: after an advance every student stands at the new booth with its paper open */
-async function expectLedToDesk(where, textarea) {
+/**
+ * Led by the teacher: after an advance every student stands in front of the
+ * new booth — the guide, the table, the note, the guide's bubble — and the
+ * paper stays closed until the student presses the bubble's button.
+ */
+async function expectLedToDesk(where) {
 	for (const s of pages) {
 		await clearCelebration(s.page, s.label);
-		const led = await s.page
-			.locator(`.village-desk ${textarea}`)
-			.waitFor({ state: 'visible', timeout: 30000 })
-			.then(
-				() => true,
-				() => false,
-			);
-		if (!led) {
-			await shot(s.page, `debug-${s.label}-not-led`);
-			fail(`${s.label} was not walked to ${where} with the paper open`);
-		}
-		console.log(`   ✓ ${s.label} was walked to ${where} and the paper opened`);
+		await expectAtStation(s.page, s.label, where);
+		console.log(`   ✓ ${s.label} was walked to ${where} and stands in front of it, the guide asking`);
 	}
 }
 
@@ -346,7 +366,7 @@ console.log(
 // ---------------------------------------------------------------------------
 step('Booth 1 · the story: everyone writes, everyone likes');
 await advance(1);
-await expectLedToDesk('the story booth', 'textarea.round__textarea');
+await expectLedToDesk('the story booth');
 await shot(s1.page, '02-story-booth');
 for (const [i, s] of pages.entries())
 	await writeAtDesk(s.page, s.label, TEXTS.story[i], 'textarea.round__textarea');
@@ -366,7 +386,7 @@ if ((await s1.page.locator('.village-community__panel').count()) === 0) {
 await s1.page.locator('.village-community__panel').waitFor({ timeout: 10000 });
 console.log('   ✓ S1 is reading the story board');
 await advance(2);
-await expectLedToDesk('the needs booth', 'textarea.round__textarea');
+await expectLedToDesk('the needs booth');
 eq(
 	'the story board closed when the room moved on',
 	await s1.page.locator('.village-community__panel').count(),
@@ -420,15 +440,11 @@ eq(
 );
 await shot(s1.page, '04a-free-news-and-map');
 await world(s1.page).locator('#news-go').click();
-await s1.page
-	.locator('.village-desk textarea.round__textarea')
-	.waitFor({ state: 'visible', timeout: 30000 });
-console.log('   ✓ S1 pressed "go there", walked to the vision booth and the paper opened');
+await expectAtStation(s1.page, 'S1', 'the vision booth');
+console.log('   ✓ S1 pressed "go there", walked to the vision booth and stands in front of it');
 await world(s2.page).locator('button.station[data-place="booth:round-vision"]').click();
-await s2.page
-	.locator('.village-desk textarea.round__textarea')
-	.waitFor({ state: 'visible', timeout: 30000 });
-console.log('   ✓ S2 chose the vision booth on the map, walked there and the paper opened');
+await expectAtStation(s2.page, 'S2', 'the vision booth');
+console.log('   ✓ S2 chose the vision booth on the map, walked there and stands in front of it');
 // Phone width: the map folds away and opens on demand.
 await s3.page.setViewportSize({ width: 400, height: 860 });
 await pause(2500);
@@ -461,7 +477,7 @@ await waitFor(
 
 step('Booth 4 · the solutions: proposals, ratings, an improvement and a thank-you');
 await advance(4);
-await expectLedToDesk('the solutions booth', 'textarea.write-desk__textarea');
+await expectLedToDesk('the solutions booth');
 await pause(4000);
 await backToVillage(s1.page);
 await shot(s1.page, '05-solutions-booth');

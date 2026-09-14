@@ -213,3 +213,33 @@ Verification: `bash ../../scripts/solo.sh npx tsx scripts/village-desk-board.mjs
 edit from the board); screenshots in `output/village-desk-board/`. Inside
 the bubble the send row stays pinned to the bottom edge; scroll padding keeps
 the writing box above it, so focusing and typing never put text under it.
+
+### Arriving in front of the station (September 14, later)
+
+Tal's rule: a station never opens anything by itself. Every arrival — the
+teacher's advance or "everyone to …", a refresh, the map, "go there" — ends
+with the student **standing in front of the station**: the camera frames the
+guide, the writing table with the note, and the board behind. The guide's
+speech bubble (in the world, `#desk-bubble`) shows who speaks, the question,
+the instruction, and one button — "✍️ לכתוב את זה על הפתק שלי" (after writing:
+"✍️ לערוך את הפתק שלי"). **Only that button opens the paper**, which then
+opens as the guide's writing bubble described above.
+
+- `VillageShell.showStation()` is the one way to a station: arrivals
+  (`ArrivalAction` `station` | `look`), the switch's "📝 השולחן", the toolbar
+  button, and pressing a booth's 3D desk (the world frames the table itself).
+  Walking up to another opened booth puts its question on screen and stands
+  there. "עריכת הפתק שלי" on the board still opens the paper directly.
+- In a lesson the guide's bubble appears only once the camera has settled at
+  the table (`viewKind === 'table'`), so it does not show on the way in,
+  vanish while the camera turns, and show again. It stays below the shell's
+  top controls; the world's "go to" and footer buttons hide at the station.
+- The simulation expects this: `expectLedToDesk` checks the student stands at
+  the station with nothing open, and `writeAtDesk` presses the guide's button.
+- A station far from where the student stands (roaming in "students navigate
+  themselves", then pressing "הפתק שלי על השולחן" or "📝 השולחן") is walked
+  to first, never flown to. On arrival the shell stands the student there and
+  the guide's bubble appears. The world marks that station as the one the
+  student stands at, so the guide's bubble belongs to the right booth. A far
+  board only opens the board; the camera stays put. The paper, the board and
+  the bubble hide the world's own bottom buttons while they are open.
