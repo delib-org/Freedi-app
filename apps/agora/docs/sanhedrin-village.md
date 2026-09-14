@@ -243,3 +243,25 @@ opens as the guide's writing bubble described above.
   student stands at, so the guide's bubble belongs to the right booth. A far
   board only opens the board; the camera stays put. The paper, the board and
   the bubble hide the world's own bottom buttons while they are open.
+
+### Two glitches only the eye saw (September 14, later)
+
+Tal, testing by hand, saw the student come close to the guide, back off and
+come close again, and the paper open, close and reopen.
+`scripts/probe-village-motion.mjs` records the shell ↔ world messages and
+samples the walker and the paper every 100 ms. It showed:
+
+- **The 3D world reloaded when the class left the lobby.** GameController
+  rendered the village in a different child slot in the lobby than in the
+  stages (the stages add the view toggle, and spread a variable-length
+  overlay list in front). A just-advanced stage also briefly swapped the
+  whole screen for a topic-loading spinner. Mithril matches unkeyed children
+  by position, so the village was rebuilt and the walker restarted at the
+  fountain. Now overlays take one slot, the lobby leaves an empty slot where
+  the toggle goes, the topic loads while the class is still in the lobby, and
+  the loading spinner renders inside the village.
+- **The paper's pop-in animation outranked `village-bubble--waiting`.** The
+  paper popped in, went invisible when the animation ended, and faded in once
+  the guide's position came back. It is now a single fade, and the world
+  answers the table view at once when the camera already frames it (a 0.9 s
+  "turn" to the same spot kept the paper waiting).

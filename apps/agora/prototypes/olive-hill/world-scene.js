@@ -243,6 +243,9 @@ function startView(place,kind){
  // The walker now stands at this station: its desk and guide are the ones in front of them.
  if(station&&selected.id!==station.id){selected=station;describe();}
  keys.clear();moving=false;hideDeskBubble();viewKind=kind;viewPlace=place;
+ // Already framed there (the guide's button pressed at the table): nothing to
+ // turn, so answer at once — a 0.9 s "turn" to the same spot kept the paper waiting.
+ if(camera.position.distanceTo(pose.eye)<.05&&camera.quaternion.angleTo(pose.quaternion)<.01){view=null;endView();return;}
  if(matchMedia('(prefers-reduced-motion: reduce)').matches){camera.position.copy(pose.eye);camera.quaternion.copy(pose.quaternion);endView();renderer.render(scene,camera);return;}
  view={fromEye:camera.position.clone(),fromQ:camera.quaternion.clone(),...pose,t:0};
 }
@@ -407,4 +410,6 @@ function frame(now){requestAnimationFrame(frame);if(lite&&now-last<66)return;con
  if(embedded&&insideLibrary!==lastLibraryPresence){lastLibraryPresence=insideLibrary;parent.postMessage({type:'agora-village-library-presence',inside:insideLibrary},location.origin);}
  const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;$('enter').textContent=deskHere()?'לגשת לשולחן ולפתק':selected.id==='council'?'לפתוח את לוח התוצאות':selected.booth?(embedded?'לגשת לביתן הזה':'להיכנס לביתן'):near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←';updateDeskBubble();$('travel').textContent=moving?'לעצור':`ללכת אל: ${selected.name}`;$('travel').hidden=(!moving&&near)||(viewKind==='table'&&viewPlace===selected.id);renderer.render(scene,camera);
 }
+/** Read-only probe for tests: where the walker stands and what the world believes it is doing */
+window.__villageDebug=()=>{const g=guideOf(selected.id);return {x:+camera.position.x.toFixed(2),z:+camera.position.z.toFixed(2),dGuide:g?+Math.hypot(camera.position.x-g.x,camera.position.z-g.z).toFixed(2):null,dApproach:+Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az).toFixed(2),moving,turning:!!view,viewKind,selected:selected.id,activePlace,uiPaused,flight:paperFlight.active,guideBubble:!$('desk-bubble').hidden};};
 requestAnimationFrame(frame);

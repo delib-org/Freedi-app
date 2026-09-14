@@ -327,3 +327,12 @@ article.village-note { cursor: default; }
 .village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble {
   scroll-padding-block: 16px 140px;
 }
+
+// The paper appears once, when the guide's position is known: a single fade.
+// A pop animation on the bubble outranked `--waiting`, so the paper popped in,
+// went invisible again when the animation ended, and then faded in a second
+// time — open, close, reopen.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble,
+.village-shell > .village-shell__activity.village-desk.village-bubble { animation: none; }
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble.village-bubble--waiting,
+.village-shell > .village-shell__activity.village-desk.village-bubble.village-bubble--waiting { opacity: 0; transition: none; }
