@@ -210,6 +210,6 @@ the first write; they are hidden inside `.village-shell__activity`.
 
 Verification: `bash ../../scripts/solo.sh npx tsx scripts/village-desk-board.mjs`
 (arrive → bubble at the table → write → board → table → board → rate →
-edit from the board); screenshots in `output/village-desk-board/`. Known
-nit: on the first write in a short bubble the pinned send row can cover the
-bottom of the writing box (the first line stays visible).
+edit from the board); screenshots in `output/village-desk-board/`. Inside
+the bubble the send row stays pinned to the bottom edge; scroll padding keeps
+the writing box above it, so focusing and typing never put text under it.

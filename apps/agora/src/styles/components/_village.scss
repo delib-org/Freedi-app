@@ -320,3 +320,10 @@ article.village-note { cursor: default; }
 .village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble {
   .write-desk textarea, textarea.text-input, .round__textarea, .question__textarea, .my-screen__text { min-block-size: 120px; }
 }
+
+// The send row is pinned to the bubble's bottom edge. Scroll padding keeps the
+// writing box above it: focusing the box, and the caret while typing, scroll
+// the bubble so the text never sits under the pinned row.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble {
+  scroll-padding-block: 16px 140px;
+}
