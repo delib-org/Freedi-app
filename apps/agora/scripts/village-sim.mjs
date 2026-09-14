@@ -137,9 +137,11 @@ async function backToVillage(page) {
 /** Write on the desk of the booth the room is at, then wait for the paper to land on the board */
 async function writeAtDesk(page, label, text, textarea) {
 	await clearCelebration(page, label);
-	await backToVillage(page);
-	await openActivity(page, 'הפתק שלי על השולחן');
 	const input = page.locator(`.village-desk ${textarea}`);
+	if (!(await input.isVisible())) {
+		await backToVillage(page);
+		await openActivity(page, 'הפתק שלי על השולחן');
+	}
 	await input.waitFor({ timeout: 15000 });
 	await input.fill(text);
 	await tap(page, page.locator('.village-desk button.btn--primary').first(), label);
@@ -163,6 +165,44 @@ async function rateOnBoard(page, label, rate) {
 		await pause(500);
 	}
 	console.log(`   ✓ ${label} rated ${count} notes on the board`);
+}
+
+/** Led by the teacher: after an advance every student stands at the new booth with its paper open */
+async function expectLedToDesk(where, textarea) {
+	for (const s of pages) {
+		await clearCelebration(s.page, s.label);
+		const led = await s.page
+			.locator(`.village-desk ${textarea}`)
+			.waitFor({ state: 'visible', timeout: 30000 })
+			.then(
+				() => true,
+				() => false,
+			);
+		if (!led) {
+			await shot(s.page, `debug-${s.label}-not-led`);
+			fail(`${s.label} was not walked to ${where} with the paper open`);
+		}
+		console.log(`   ✓ ${s.label} was walked to ${where} and the paper opened`);
+	}
+}
+
+/** Press a button in the teacher's console; if the console never came up, write the same field directly */
+async function teacherClick(selector, label, fallback) {
+	if (teacherUi) {
+		const button = teacher.locator(selector).first();
+		const found = await button.waitFor({ timeout: 15000 }).then(
+			() => true,
+			() => false,
+		);
+		if (found) {
+			await button.click();
+			console.log(`   ✓ teacher: ${label}`);
+
+			return;
+		}
+	}
+	await fallback();
+	console.log(`   (teacher console unavailable — "${label}" written directly)`);
 }
 
 async function coins(page) {
@@ -224,10 +264,51 @@ await pause(6000);
 await shot(s1.page, '01-village-lobby');
 console.log('   ✓ village rendered with the lobby open');
 
+// The teacher's console, signed in once: who navigates, class calls, the goal switch.
+const teacher = await mkPage(browser, 'T', { width: 1360, height: 900 });
+await teacher.goto(`${VITE_HOST}/#!/teach`, { waitUntil: 'domcontentloaded' });
+await teacher.waitForFunction(() => typeof window.__agoraDevSignIn === 'function', {
+	timeout: 15000,
+});
+let teacherUi = false;
+for (let attempt = 1; attempt <= 4 && !teacherUi; attempt++) {
+	await teacher.evaluate(
+		(sub) =>
+			window.__agoraDevSignIn({ sub, email: `${sub}@example.com`, name: 'Fastlane Teacher' }),
+		`${runId}-teacher`,
+	);
+	teacherUi = await teacher
+		.waitForFunction(() => window.__agoraDebug?.()?.user?.tier === 2, { timeout: 8000 })
+		.then(
+			() => true,
+			() => false,
+		);
+}
+if (teacherUi) {
+	await pause(3000);
+	await teacher.goto(`${VITE_HOST}/#!/teach/session/${run.sessionId}`, {
+		waitUntil: 'domcontentloaded',
+	});
+	await teacher.locator('.teacher-nav__cog').first().click({ timeout: 20000 });
+	teacherUi = await teacher
+		.locator('.village-nav')
+		.waitFor({ timeout: 20000 })
+		.then(
+			() => true,
+			() => false,
+		);
+	if (teacherUi) await shot(teacher, '00-teacher-village-navigation');
+}
+console.log(
+	teacherUi
+		? '   ✓ teacher console open on "who moves the students"'
+		: '   (teacher console unavailable — settings will be written directly)',
+);
+
 // ---------------------------------------------------------------------------
 step('Booth 1 · the story: everyone writes, everyone likes');
 await advance(1);
-await pause(4000);
+await expectLedToDesk('the story booth', 'textarea.round__textarea');
 await shot(s1.page, '02-story-booth');
 for (const [i, s] of pages.entries())
 	await writeAtDesk(s.page, s.label, TEXTS.story[i], 'textarea.round__textarea');
@@ -239,9 +320,27 @@ for (const s of pages) {
 	});
 }
 
-step('Booth 2 · the needs: a 0…1 step each');
+step('Booth 2 · the needs: a board left open when the teacher moves on');
+await clearCelebration(s1.page, 'S1');
+if ((await s1.page.locator('.village-community__panel').count()) === 0) {
+	await tap(s1.page, s1.page.locator('.village-board-open'), 'S1');
+}
+await s1.page.locator('.village-community__panel').waitFor({ timeout: 10000 });
+console.log('   ✓ S1 is reading the story board');
 await advance(2);
-await pause(4000);
+await expectLedToDesk('the needs booth', 'textarea.round__textarea');
+eq(
+	'the story board closed when the room moved on',
+	await s1.page.locator('.village-community__panel').count(),
+	0,
+);
+await world(s1.page).locator('#class-pill-text', { hasText: 'הצרכים' }).waitFor({ timeout: 10000 });
+eq(
+	'led: the village map is hidden',
+	await world(s1.page).locator('#station-map').isVisible(),
+	false,
+);
+await shot(s1.page, '03a-led-to-needs-paper-open');
 for (const [i, s] of pages.entries())
 	await writeAtDesk(s.page, s.label, TEXTS.needs[i], 'textarea.round__textarea');
 for (const s of pages) {
@@ -251,9 +350,60 @@ for (const s of pages) {
 	});
 }
 
-step('Booth 3 · the vision');
+step('Booth 3 · the vision, with students navigating themselves');
+await teacherClick('.village-nav__choice[data-nav="free"]', 'students navigate themselves', () =>
+	db.collection('agoraSessions').doc(run.sessionId).update({ villageNavigation: 'free' }),
+);
+await waitFor(
+	'free navigation reached the session',
+	() => sessionDoc(run.sessionId),
+	(s) => s?.villageNavigation === 'free',
+);
+for (const s of pages) await backToVillage(s.page);
+await pause(1500);
 await advance(3);
-await pause(4000);
+await world(s1.page).locator('#news-go').waitFor({ state: 'visible', timeout: 20000 });
+eq(
+	'free: nobody was handed a paper',
+	await s1.page.locator('.village-desk textarea').isVisible(),
+	false,
+);
+eq(
+	'free: the village map is shown',
+	await world(s1.page).locator('#station-map').isVisible(),
+	true,
+);
+eq(
+	'free: the class pill is hidden',
+	await world(s1.page).locator('#class-pill').isVisible(),
+	false,
+);
+eq(
+	'free: a station the teacher has not opened is locked',
+	await world(s1.page).locator('button.station[data-place="booth:deliberation"]').isDisabled(),
+	true,
+);
+await shot(s1.page, '04a-free-news-and-map');
+await world(s1.page).locator('#news-go').click();
+await s1.page
+	.locator('.village-desk textarea.round__textarea')
+	.waitFor({ state: 'visible', timeout: 30000 });
+console.log('   ✓ S1 pressed "go there", walked to the vision booth and the paper opened');
+await world(s2.page).locator('button.station[data-place="booth:round-vision"]').click();
+await s2.page
+	.locator('.village-desk textarea.round__textarea')
+	.waitFor({ state: 'visible', timeout: 30000 });
+console.log('   ✓ S2 chose the vision booth on the map, walked there and the paper opened');
+// Phone width: the map folds away and opens on demand.
+await s3.page.setViewportSize({ width: 400, height: 860 });
+await pause(2500);
+await shot(s3.page, '04b-phone-map-closed');
+await world(s3.page).locator('#map-toggle').click();
+await pause(600);
+await shot(s3.page, '04c-phone-map-open');
+await world(s3.page).locator('#map-toggle').click();
+await s3.page.setViewportSize({ width: 1360, height: 860 });
+await pause(1500);
 for (const [i, s] of pages.entries())
 	await writeAtDesk(s.page, s.label, TEXTS.vision[i], 'textarea.round__textarea');
 for (const s of pages) {
@@ -265,8 +415,18 @@ for (const s of pages) {
 await shot(s2.page, '04-vision-board-rated');
 
 // ---------------------------------------------------------------------------
+await teacherClick('.village-nav__choice[data-nav="teacher"]', 'the teacher leads again', () =>
+	db.collection('agoraSessions').doc(run.sessionId).update({ villageNavigation: 'teacher' }),
+);
+await waitFor(
+	'teacher navigation reached the session',
+	() => sessionDoc(run.sessionId),
+	(s) => (s?.villageNavigation ?? 'teacher') === 'teacher',
+);
+
 step('Booth 4 · the solutions: proposals, ratings, an improvement and a thank-you');
 await advance(4);
+await expectLedToDesk('the solutions booth', 'textarea.write-desk__textarea');
 await pause(4000);
 await backToVillage(s1.page);
 await shot(s1.page, '05-solutions-booth');
@@ -346,15 +506,19 @@ await waitFor(
 	(n) => n >= 3,
 	120_000,
 );
-// S3 walks to the council in the 3D village and opens its board.
-await backToVillage(s3.page);
-await clearCelebration(s3.page, 'S3');
-await world(s3.page).locator('nav#preview-stations button[data-place="council"]').click();
-await pause(7000);
-await shot(s3.page, '10-council-3d-scoreboard');
-await clearCelebration(s3.page, 'S3');
-await world(s3.page).locator('#enter').click();
-await s3.page.locator('.village-scoreboard .board').waitFor({ timeout: 15000 });
+// The teacher calls everyone to the council: the class walks there and the scoreboard opens.
+for (const s of pages) await clearCelebration(s.page, s.label);
+await teacherClick('.village-nav__call--council', 'everyone to the village council', () =>
+	db
+		.collection('agoraSessions')
+		.doc(run.sessionId)
+		.update({ villageCall: { place: 'council', at: Date.now() } }),
+);
+for (const s of [s1, s3]) {
+	await clearCelebration(s.page, s.label);
+	await s.page.locator('.village-scoreboard .board').waitFor({ timeout: 30000 });
+	console.log(`   ✓ ${s.label} was walked to the council and the scoreboard opened`);
+}
 // The class map fills as the score trigger lands each rating — wait for all three.
 const scoredBefore = await waitFor(
 	'every rated proposal reached the class map',
@@ -367,50 +531,27 @@ const scoredBefore = await waitFor(
 });
 eq('every rated proposal is on the class map', scoredBefore, 3);
 await shot(s3.page, '11-council-scoreboard-panel');
+await backToVillage(s1.page);
+await pause(1500);
+await shot(s1.page, '10-council-3d-scoreboard');
 
-// The teacher narrows the board to the goal from the console.
-const teacher = await mkPage(browser, 'T', { width: 1360, height: 900 });
-await teacher.goto(`${VITE_HOST}/#!/teach`, { waitUntil: 'domcontentloaded' });
-await teacher.waitForFunction(() => typeof window.__agoraDevSignIn === 'function', {
-	timeout: 15000,
-});
-let teacherUi = false;
-for (let attempt = 1; attempt <= 4 && !teacherUi; attempt++) {
-	await teacher.evaluate(
-		(sub) =>
-			window.__agoraDevSignIn({ sub, email: `${sub}@example.com`, name: 'Fastlane Teacher' }),
-		`${runId}-teacher`,
-	);
-	teacherUi = await teacher
-		.waitForFunction(() => window.__agoraDebug?.()?.user?.tier === 2, { timeout: 8000 })
-		.then(
-			() => true,
-			() => false,
-		);
-}
+// The teacher narrows the board to the goal from the same console sheet.
+let goalFromUi = false;
 if (teacherUi) {
-	await pause(3000);
-	await teacher.goto(`${VITE_HOST}/#!/teach/session/${run.sessionId}`, {
-		waitUntil: 'domcontentloaded',
-	});
-	// "How the vote opens" lives behind the console's settings cog.
-	await teacher.locator('.teacher-nav__cog').first().click({ timeout: 20000 });
 	const toggle = teacher.locator('.voting-settings__row--goal input');
-	const found = await toggle.waitFor({ timeout: 20000 }).then(
+	goalFromUi = await toggle.waitFor({ timeout: 20000 }).then(
 		() => true,
 		() => false,
 	);
-	if (found) {
+	if (goalFromUi) {
 		await teacher.locator('.voting-settings__row--goal').scrollIntoViewIfNeeded();
 		await shot(teacher, '12-teacher-goal-toggle');
 		// click, not check(): the box re-renders from the stored value until the save lands
 		await toggle.click();
 		console.log('   ✓ teacher switched the board to the goal from the console');
-	} else {
-		teacherUi = false;
 	}
 }
-if (!teacherUi) {
+if (!goalFromUi) {
 	await db
 		.collection('agoraSessions')
 		.doc(run.sessionId)
@@ -452,26 +593,45 @@ eq('the ballot is the goal', ballot.length, scoredOnly);
 await pause(3000);
 for (const s of pages) {
 	await clearCelebration(s.page, s.label);
-	await backToVillage(s.page);
-	await openActivity(s.page, 'לקלפי במועצה');
 	const options = s.page.locator('.village-shell__activity button.voting__option');
-	await options.first().waitFor({ timeout: 15000 });
+	const led = await options
+		.first()
+		.waitFor({ state: 'visible', timeout: 30000 })
+		.then(
+			() => true,
+			() => false,
+		);
+	if (!led) fail(`${s.label} was not walked to the council ballot`);
+	console.log(`   ✓ ${s.label} was walked to the council and the ballot opened`);
 	await tap(s.page, options.nth(s.label === 'S2' ? Math.min(1, ballot.length - 1) : 0), s.label);
 	await s.page.locator('.voting__option--mine').waitFor({ timeout: 10000 });
 }
 console.log('   ✓ three votes cast from the council');
 await shot(s1.page, '15-ballot-hidden');
+// The counting trigger lands a few seconds after the votes; reveal only once it has.
+const questionId = (await sessionDoc(run.sessionId)).challengeQuestionId;
+await waitFor(
+	'the server counted all three votes',
+	async () => {
+		const question = await db.collection('statements').doc(questionId).get();
+
+		return Object.entries(question.data()?.selections ?? {})
+			.filter(([id]) => id !== 'none')
+			.reduce((sum, [, count]) => sum + Number(count), 0);
+	},
+	(total) => total >= 3,
+	90_000,
+);
 await db
 	.collection('agoraSessions')
 	.doc(run.sessionId)
 	.update({ 'votingSettings.showResults': true });
-await s1.page.locator('.voting__bar').first().waitFor({ timeout: 15000 });
+await s1.page.locator('.voting__bar').first().waitFor({ timeout: 45000 });
 await shot(s1.page, '16-ballot-bars');
 console.log('   ✓ the bars appeared once the teacher revealed the tallies');
 for (const s of pages) await backToVillage(s.page);
 await clearCelebration(s2.page, 'S2');
-await world(s2.page).locator('nav#preview-stations button[data-place="council"]').click();
-await pause(7000);
+await pause(1500);
 await shot(s2.page, '17-council-3d-ballot-bars');
 
 // ---------------------------------------------------------------------------
@@ -485,8 +645,17 @@ await waitFor(
 );
 await pause(2000);
 await clearCelebration(s1.page, 'S1');
-await backToVillage(s1.page);
-await openActivity(s1.page, 'לסיכום במועצה');
+const recap = s1.page.locator('.village-shell__activity .board').first();
+const recapLed = await recap.waitFor({ state: 'visible', timeout: 30000 }).then(
+	() => true,
+	() => false,
+);
+if (recapLed) {
+	console.log('   ✓ the recap opened at the council by itself');
+} else {
+	await backToVillage(s1.page);
+	await openActivity(s1.page, 'לסיכום במועצה');
+}
 await s1.page.locator('.village-shell__activity .board').first().waitFor({ timeout: 20000 });
 await shot(s1.page, '18-recap');
 

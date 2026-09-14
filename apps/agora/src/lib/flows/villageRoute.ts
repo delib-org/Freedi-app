@@ -25,6 +25,44 @@ export interface VillageBooth {
 	current: boolean;
 }
 
+/** Who moves students between stations — see `AgoraSession.villageNavigation` */
+export type VillageNavigation = 'teacher' | 'free';
+
+export interface VillagePlaceStatus {
+	/** The student may walk in: the room has reached it (the meeting point and the council always) */
+	open: boolean;
+	/** The room is here right now */
+	current: boolean;
+	/** The lesson uses this place at all — a library with no scenes stays off the map */
+	inPlan: boolean;
+}
+
+/**
+ * The fixed places' state for the village map. The study house is where the
+ * lesson gathers and the council holds the scoreboard, so both are always
+ * open; the library opens with its first scene.
+ */
+export function villageFixedPlaces(
+	plan: readonly AgoraStagePlanItem[],
+	currentIndex: number,
+): Record<'library' | 'challenge' | 'council', VillagePlaceStatus> {
+	const status = (place: VillagePlace): VillagePlaceStatus => {
+		const indices = plan.flatMap((item, index) => (villagePlace(item) === place ? [index] : []));
+
+		return {
+			open: indices.some((index) => index <= currentIndex),
+			current: indices.includes(currentIndex),
+			inPlan: indices.length > 0,
+		};
+	};
+
+	return {
+		library: status('library'),
+		challenge: { ...status('challenge'), open: true, inPlan: true },
+		council: { ...status('council'), open: true, inPlan: true },
+	};
+}
+
 export function boothPlace(itemId: string): VillagePlace {
 	return `booth:${itemId}`;
 }

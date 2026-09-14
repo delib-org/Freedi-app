@@ -109,7 +109,8 @@ function installBooths(specs){
  if(key!==boothKey){
   boothKey=key;
   village.installBooths(specs.map(b=>({itemId:b.itemId,label:b.label,kind:b.kind})));
-  stations=[...fixedStations,...village.booths.map(b=>b.station)];
+  // The map reads in lesson order: the meeting point, the library, the booths, the council.
+  stations=[fixedStations[1],fixedStations[0],...village.booths.map(b=>b.station),fixedStations[2]];
   renderStationNav();
   if(pendingPlace){const place=pendingPlace;pendingPlace=null;destination(place,pendingLabel);}
  }
@@ -137,6 +138,8 @@ let selected=stations[0],activeItem='',activePlace='',moving=false,uiPaused=fals
 /** The desk in front of the walker is THEIR paper only at the item the shell has on screen. */
 function deskHere(){return !!deskInfo&&selected.id===activePlace;}
 let lastLibraryPresence=null,deskInfo=null,pointerMoved=false;
+/** Who moves the class (the shell says), the room's item, the fixed places' state, a walk the shell waits on. */
+let navigation='teacher',roomItem='',placeStatus={},arriveNotify='',newsTimer=0,navKey='';
 function hideDeskBubble(){ $('desk-bubble').hidden=true;document.body.classList.remove('has-desk-bubble'); }
 function openPersonalDesk(){
  if(uiPaused||!deskInfo||(embedded&&!deskHere()))return;
@@ -181,8 +184,18 @@ window.addEventListener('message',event=>{
  document.body.classList.toggle('has-community',data.community===true);
  deskInfo=data.desk&&typeof data.desk.label==='string'&&typeof data.desk.prompt==='string'?{label:data.desk.label,prompt:data.desk.prompt,text:typeof data.desk.text==='string'?data.desk.text:'',writable:data.desk.writable===true}:null;
  if(Array.isArray(data.booths))installBooths(data.booths.filter(b=>b&&typeof b.itemId==='string'&&typeof b.label==='string').map(b=>({itemId:b.itemId,label:b.label,kind:typeof b.kind==='string'?b.kind:'open',open:b.open!==false,current:b.current===true})));
+ if(data.navigation==='teacher'||data.navigation==='free')navigation=data.navigation;
+ if(data.places&&typeof data.places==='object')placeStatus=data.places;
+ // The ROOM moved (the teacher advanced) — as opposed to this student opening another item.
+ const roomChanged=typeof data.roomItemId==='string'&&roomItem!==''&&roomItem!==data.roomItemId;
+ if(typeof data.roomItemId==='string')roomItem=data.roomItemId;
  activePlace=data.place;
- if(activeItem!==data.itemId){const first=activeItem==='';activeItem=data.itemId;destination(data.place,typeof data.label==='string'?data.label:'');if(!first&&!(data.paused===true))moving=true;}
+ if(activeItem!==data.itemId){
+  const first=activeItem==='';activeItem=data.itemId;const label=typeof data.label==='string'?data.label:'';
+  // Led, the shell sends the walk itself (agora-village-go). Free, a new station is announced, never imposed.
+  if(roomChanged){activeLabel=label;if(navigation==='free')announce(data.place,label,'opened');}
+  else{destination(data.place,label);if(!first&&data.paused!==true)moving=true;}
+ }
  const stationPapers=Array.isArray(data.stationPapers)?data.stationPapers:[];
  for(const booth of village.booths){
   const entries=stationPapers.filter(p=>p&&p.place===booth.station.id&&Array.isArray(p.papers));
@@ -194,6 +207,7 @@ window.addEventListener('message',event=>{
  }
  if(data.council&&typeof data.council==='object')village.scoreboard.paint(data.council);
  uiPaused=data.paused===true;if(uiPaused){keys.clear();moving=false;hideDeskBubble();}
+ renderStationNav();
 });
 $('travel').onclick=()=>{moving=!moving;canvas.focus();};
 $('enter').onclick=()=>{
@@ -223,7 +237,60 @@ $('quality').onclick=()=>{const low=lowQuality=!lowQuality;renderer.setPixelRati
 let drag=null;canvas.onpointerdown=e=>{if(uiPaused)return;pointerMoved=false;drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY};canvas.setPointerCapture(e.pointerId);moving=false;};canvas.onpointermove=e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>6)pointerMoved=true;yaw-=(e.clientX-drag.x)*.004;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-drag.y)*.003,-.7,.55);drag={...drag,x:e.clientX,y:e.clientY};};canvas.onpointerup=canvas.onpointercancel=()=>drag=null;
 addEventListener('keydown',e=>{if(uiPaused||$('preview-info').open)return;if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyE'].includes(e.code)){e.preventDefault();keys.add(e.code);moving=false;if(e.code==='KeyE')$('enter').click();}});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',()=>{keys.clear();drag=null;});
 for(const b of document.querySelectorAll('[data-key]')){b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key);moving=false;};b.onpointerup=b.onpointercancel=()=>keys.delete(b.dataset.key);}
-function renderStationNav(){const nav=$('preview-stations');nav.replaceChildren();for(const s of stations){const b=document.createElement('button');b.textContent=(s.booth?s.icon+' ':'')+s.name;b.dataset.place=s.id;b.setAttribute('aria-pressed',String(s.id===selected.id));if(s.id===activePlace)b.classList.add('is-active');b.onclick=()=>walkTo(s.id);nav.append(b);}}
+/** A station's state on the map: booths carry it on their own spec, the fixed places come from the shell. */
+function statusOf(s){if(!embedded)return {open:true,current:false};if(s.booth){const st=village.booths.find(b=>b.station.id===s.id)?.state??{};return {open:st.open!==false,current:st.current===true};}const p=placeStatus[s.id];return p?{open:p.open!==false,current:p.current===true}:{open:true,current:false};}
+/**
+ * The village map. Free (and in the standalone tour): every station with its
+ * state — now, open, locked — and a press walks there. Led by the teacher: no
+ * list at all, only where the class is, so nobody wonders which button to press.
+ */
+function renderStationNav(){
+ // A fixed place the lesson never uses (a library with no scenes) is not a station at all.
+ const rows=stations.filter(s=>s.booth||!embedded||placeStatus[s.id]?.inPlan!==false).map(s=>({s,st:statusOf(s)}));
+ const lead=embedded&&navigation==='teacher';
+ const here=stations.find(s=>s.id===activePlace);
+ const key=JSON.stringify([lead,selected.id,activePlace,activeLabel,rows.map(r=>[r.s.id,r.s.name,r.st.open,r.st.current])]);
+ if(key===navKey)return;navKey=key;
+ $('station-map').hidden=lead;$('class-pill').hidden=!lead;
+ $('class-pill-text').textContent=`הכיתה נמצאת ב: ${activeLabel||here?.name||''}`;
+ $('map-mode').textContent=embedded?'בחרו לאן ללכת. תחנה נפתחת כשהמורה מגיע אליה.':'סיור חופשי · אפשר ללכת לכל מקום';
+ const nav=$('preview-stations');nav.replaceChildren();
+ for(const {s,st} of rows){
+  const locked=!st.open;
+  const b=document.createElement('button');b.type='button';b.className='station';b.dataset.place=s.id;b.disabled=locked;
+  if(s.id===selected.id)b.setAttribute('aria-current','true');
+  const icon=document.createElement('span');icon.className='station__icon';icon.setAttribute('aria-hidden','true');icon.textContent=s.icon||'•';
+  const name=document.createElement('span');name.className='station__name';name.textContent=s.name;
+  const badge=document.createElement('span');badge.className='station__badge';
+  const text=locked?'🔒 בהמשך':st.current?'● הכיתה כאן':s.id==='council'?'לוח התוצאות':embedded?'✓ פתוח':'';
+  badge.textContent=text;badge.hidden=!text;if(st.current)badge.classList.add('is-now');if(locked)badge.classList.add('is-locked');
+  b.setAttribute('aria-label',text?`${s.name} · ${text}`:s.name);
+  b.onclick=()=>{if(locked)return;if(s.booth||s.id==='council')arriveNotify=s.id;walkTo(s.id);if(matchMedia('(max-width:650px)').matches)setMapOpen(false);};
+  b.append(icon,name,badge);nav.append(b);
+ }
+}
+function setMapOpen(open){$('station-map').classList.toggle('is-open',open);$('map-toggle').setAttribute('aria-expanded',String(open));}
+$('map-toggle').onclick=()=>setMapOpen(!$('station-map').classList.contains('is-open'));
+setMapOpen(!matchMedia('(max-width:650px)').matches);
+/** A line across the top of the world: where the teacher is taking the class, or a newly opened station to walk to. */
+function announce(place,label,reason){
+ const station=stations.find(s=>s.id===place);const name=label||station?.name||'';
+ clearTimeout(newsTimer);
+ $('news-text').textContent=reason==='call'?`המורה קורא לכולם אל: ${name}`:reason==='advance'?`המורה מוביל את הכיתה אל: ${name}`:`נפתחה תחנה חדשה: ${name}`;
+ const goButton=$('news-go');goButton.hidden=reason!=='opened';
+ goButton.onclick=()=>{$('news').hidden=true;arriveNotify=place;walkTo(place);};
+ $('news').hidden=false;newsTimer=setTimeout(()=>{$('news').hidden=true;},reason==='opened'?20000:6000);
+}
+/** Tell the shell the walk it asked for is over, so it can open the paper or the council. */
+function arrived(){if(!arriveNotify||!embedded)return;const place=arriveNotify;arriveNotify='';parent.postMessage({type:'agora-village-arrived',place},location.origin);}
+window.addEventListener('message',event=>{
+ if(!embedded||event.source!==parent||event.origin!==location.origin)return;const d=event.data;
+ if(!d||d.type!=='agora-village-go'||typeof d.place!=='string')return;
+ const station=stations.find(s=>s.id===d.place);if(!station){parent.postMessage({type:'agora-village-arrived',place:d.place},location.origin);return;}
+ uiPaused=false;keys.clear();arriveNotify=d.place;selected=station;describe();hideDeskBubble();
+ if(d.reason==='advance'||d.reason==='call')announce(d.place,d.place===activePlace?activeLabel:'',d.reason);
+ if(Math.hypot(camera.position.x-station.ax,camera.position.z-station.az)<=.3)arrived();else moving=true;
+});
 $('session-entry').hidden=embedded;$('preview-label').hidden=embedded;
 if(!embedded){
  // The standalone tour shows a plan-shaped village: three sample booths and a sample scoreboard.
@@ -248,12 +315,12 @@ village.ready.then(({failed})=>{
  else characterStatus.remove();
 });
 function frame(now){requestAnimationFrame(frame);if(lite&&now-last<66)return;const dt=Math.min((now-last)/1000,.04);/* walking uses the real elapsed time (capped) so a slow renderer does not slow the walker */const dtWalk=Math.min((now-last)/1000,.25);last=now;if(paperFlight.active){paperFlight.tick(dt);village.tick(camera);renderer.render(scene,camera);return;}if(document.hidden||uiPaused||$('preview-info').open)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
- if(moving){const dx=selected.ax-camera.position.x,dz=selected.az-camera.position.z,dist=Math.hypot(dx,dz);if(dist>.12){const stepLen=Math.min(dist,dtWalk*4);camera.position.x+=dx/dist*stepLen;camera.position.z+=dz/dist*stepLen;const look=selected.look??guideOf(selected.id)??selected;const target=Math.atan2(camera.position.x-look.x,camera.position.z-look.z);yaw+=Math.atan2(Math.sin(target-yaw),Math.cos(target-yaw))*Math.min(1,dtWalk*3);}else {moving=false;pitch=selected.pitch??-.06;}}
+ if(moving){const dx=selected.ax-camera.position.x,dz=selected.az-camera.position.z,dist=Math.hypot(dx,dz);if(dist>.12){const stepLen=Math.min(dist,dtWalk*4);camera.position.x+=dx/dist*stepLen;camera.position.z+=dz/dist*stepLen;const look=selected.look??guideOf(selected.id)??selected;const target=Math.atan2(camera.position.x-look.x,camera.position.z-look.z);yaw+=Math.atan2(Math.sin(target-yaw),Math.cos(target-yaw))*Math.min(1,dtWalk*3);}else {moving=false;pitch=selected.pitch??-.06;arrived();}}
  const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));if(f||s){const n=Math.hypot(f,s);camera.position.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)/n*dt*4;camera.position.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)/n*dt*4;}
  if(!moving&&((Math.abs(camera.position.x)<3.7&&camera.position.z<2.6&&camera.position.z>-3.9)||village.solids.some(o=>Math.abs(camera.position.x-o.x)<o.w&&Math.abs(camera.position.z-o.z)<o.d)))camera.position.copy(old);
  camera.position.x=THREE.MathUtils.clamp(camera.position.x,-45,45);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-20,50);camera.position.y=height(camera.position.x,camera.position.z)+1.75;camera.quaternion.setFromEuler(new THREE.Euler(pitch,yaw,0,'YXZ'));village.tick(camera);
  const insideLibrary=Math.abs(camera.position.z-15)<3.5&&camera.position.x>-25.6&&camera.position.x<-19.6;
  if(embedded&&insideLibrary!==lastLibraryPresence){lastLibraryPresence=insideLibrary;parent.postMessage({type:'agora-village-library-presence',inside:insideLibrary},location.origin);}
- const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;$('enter').textContent=deskHere()?(deskInfo.writable?'לכתוב על הפתק שלי':'לקרוא את הפתק שלי'):selected.id==='council'?'לפתוח את לוח התוצאות':selected.booth?(embedded?'לגשת לביתן הזה':'להיכנס לביתן'):near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←';updateDeskBubble();$('travel').textContent=moving?'לעצור':'ללכת לתחנה';renderer.render(scene,camera);
+ const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;$('enter').textContent=deskHere()?(deskInfo.writable?'לכתוב על הפתק שלי':'לקרוא את הפתק שלי'):selected.id==='council'?'לפתוח את לוח התוצאות':selected.booth?(embedded?'לגשת לביתן הזה':'להיכנס לביתן'):near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←';updateDeskBubble();$('travel').textContent=moving?'לעצור':`ללכת אל: ${selected.name}`;$('travel').hidden=!moving&&near;renderer.render(scene,camera);
 }
 requestAnimationFrame(frame);

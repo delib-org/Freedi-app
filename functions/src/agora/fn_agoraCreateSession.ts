@@ -51,6 +51,7 @@ export interface QuickGameRequest {
 
 interface Request {
 	world?: 'village' | 'classic';
+	villageNavigation?: 'teacher' | 'free';
 	/** A ready scenario package — or omit it and send `quick` */
 	topicPackageId?: string;
 	quick?: QuickGameRequest;
@@ -241,6 +242,14 @@ export const agoraCreateSession = onCall(
 		if (world !== undefined && world !== 'village' && world !== 'classic') {
 			throw new HttpsError('invalid-argument', 'Invalid world');
 		}
+		const villageNavigation = request.data?.villageNavigation;
+		if (
+			villageNavigation !== undefined &&
+			villageNavigation !== 'teacher' &&
+			villageNavigation !== 'free'
+		) {
+			throw new HttpsError('invalid-argument', 'Invalid villageNavigation');
+		}
 		const roomTheme = sanitizeTheme(theme);
 		const quickGame = quick !== undefined ? parseQuick(quick) : undefined;
 		if (!quickGame && (!topicPackageId || typeof topicPackageId !== 'string')) {
@@ -411,6 +420,7 @@ export const agoraCreateSession = onCall(
 				collectRealNames: collectRealNames !== false,
 				...(roomTheme ? { theme: roomTheme } : {}),
 				...(world ? { world } : {}),
+				...(villageNavigation ? { villageNavigation } : {}),
 				stage: AgoraStage.lobby,
 				roundNumber: 0,
 				participantCount: 0,

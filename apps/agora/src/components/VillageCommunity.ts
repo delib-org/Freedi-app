@@ -54,6 +54,8 @@ export interface VillageCommunityAttrs {
 	source?: VillageCommunitySource;
 	boardRequest?: number;
 	scoreboardRequest?: number;
+	/** Bumped by the shell when the room moves on: close any open board */
+	closeRequest?: number;
 	scoreboard?: VillageScoreboard;
 	session: AgoraSession;
 	userId: string;
@@ -86,6 +88,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 	let previous: number | undefined;
 	let request = 0;
 	let scoreboardSeen = 0;
+	let closeSeen = 0;
 	let resultsTab: ResultsTab = 'class';
 	let gain = 0,
 		timer: ReturnType<typeof setTimeout> | undefined;
@@ -250,6 +253,10 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			if ((a.boardRequest ?? 0) !== request) {
 				request = a.boardRequest ?? 0;
 				open(a, 'notes');
+			}
+			if ((a.closeRequest ?? 0) !== closeSeen) {
+				closeSeen = a.closeRequest ?? 0;
+				if (panel !== 'none') close(a);
 			}
 			if ((a.scoreboardRequest ?? 0) !== scoreboardSeen) {
 				scoreboardSeen = a.scoreboardRequest ?? 0;

@@ -13,6 +13,17 @@ const STORAGE_KEY = 'agora_lang';
  */
 export const translations: Record<LangCode, Record<string, string>> = {
 	he: {
+		'village.nav_title': 'מי מזיז את התלמידים בין התחנות בכפר?',
+		'village.nav_teacher': 'המורה מוביל/ה את הכיתה',
+		'village.nav_teacher_hint':
+			'כשתלחצו "הלאה", כל התלמידים הולכים יחד לתחנה החדשה והפתק שלהם נפתח שם. מפת הכפר מוסתרת מהם, ורואים רק איפה הכיתה נמצאת.',
+		'village.nav_free': 'התלמידים מנווטים בעצמם',
+		'village.nav_free_hint':
+			'התלמידים בוחרים לאן ללכת במפת הכפר. תחנה חדשה נפתחת כשתלחצו "הלאה", והם מקבלים הודעה עם כפתור "ללכת לשם". תחנות שעוד לא הגעתם אליהן נעולות.',
+		'village.call_title': 'לקרוא לכל הכיתה',
+		'village.call_current': 'כולם לתחנה של עכשיו',
+		'village.call_council': 'כולם למועצת הכפר · לוח התוצאות',
+		'village.call_sent': 'התלמידים בדרך.',
 		'teacher.voting_goal_only': 'להצבעה עולות רק ההצעות שנכנסו לשער',
 		'teacher.voting_goal_only_hint':
 			'לוח התוצאות יציג מעכשיו רק את ההצעות שבתוך השער (הריבוע הקטן), והקלפי תיפתח בדיוק עליהן.',
@@ -1356,6 +1367,17 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'המורה ניסח מחדש את הטקסט שלכם',
 	},
 	en: {
+		'village.nav_title': 'Who moves students between the village stations?',
+		'village.nav_teacher': 'The teacher leads the class',
+		'village.nav_teacher_hint':
+			'When you press "Next", every student walks to the new station together and their note opens there. The village map is hidden from them; they only see where the class is.',
+		'village.nav_free': 'Students navigate themselves',
+		'village.nav_free_hint':
+			'Students choose where to walk on the village map. A new station opens when you press "Next", and they get a notice with a "Go there" button. Stations you have not reached yet stay locked.',
+		'village.call_title': 'Call the whole class',
+		'village.call_current': 'Everyone to the current station',
+		'village.call_council': 'Everyone to the village council · scoreboard',
+		'village.call_sent': 'Students are on their way.',
 		'teacher.voting_goal_only': 'Only proposals that reached the goal go to the vote',
 		'teacher.voting_goal_only_hint':
 			'From now on the scoreboard shows only the proposals inside the goal (the small box), and the ballot opens on exactly those.',
@@ -2755,6 +2777,17 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Your teacher reworded your text',
 	},
 	ar: {
+		'village.nav_title': 'من ينقل الطلاب بين محطات القرية؟',
+		'village.nav_teacher': 'المعلم/ة يقود الصف',
+		'village.nav_teacher_hint':
+			'عند الضغط على "التالي" يسير جميع الطلاب معًا إلى المحطة الجديدة وتُفتح ورقتهم هناك. خريطة القرية مخفية عنهم، ويرون فقط أين يوجد الصف.',
+		'village.nav_free': 'الطلاب يتنقلون بأنفسهم',
+		'village.nav_free_hint':
+			'يختار الطلاب إلى أين يذهبون على خريطة القرية. تُفتح محطة جديدة عند الضغط على "التالي"، ويصلهم إشعار مع زر "اذهب إلى هناك". المحطات التي لم تصلوا إليها بعد تبقى مقفلة.',
+		'village.call_title': 'نداء الصف كله',
+		'village.call_current': 'الجميع إلى المحطة الحالية',
+		'village.call_council': 'الجميع إلى مجلس القرية · لوحة النتائج',
+		'village.call_sent': 'الطلاب في الطريق.',
 		'teacher.voting_goal_only': 'تصعد إلى التصويت فقط المقترحات التي دخلت المرمى',
 		'teacher.voting_goal_only_hint':
 			'من الآن تعرض لوحة النتائج فقط المقترحات داخل المرمى (المربع الصغير)، ويُفتح الاقتراع عليها بالضبط.',
@@ -4101,6 +4134,17 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'معلمكم أعاد صياغة نصكم',
 	},
 	es: {
+		'village.nav_title': '¿Quién mueve a los estudiantes entre las estaciones de la aldea?',
+		'village.nav_teacher': 'El docente guía a la clase',
+		'village.nav_teacher_hint':
+			'Al pulsar "Siguiente", todos los estudiantes caminan juntos a la nueva estación y su nota se abre allí. El mapa de la aldea queda oculto; solo ven dónde está la clase.',
+		'village.nav_free': 'Los estudiantes navegan solos',
+		'village.nav_free_hint':
+			'Los estudiantes eligen adónde ir en el mapa de la aldea. Una nueva estación se abre al pulsar "Siguiente" y reciben un aviso con el botón "Ir allí". Las estaciones a las que aún no llegaron siguen cerradas.',
+		'village.call_title': 'Llamar a toda la clase',
+		'village.call_current': 'Todos a la estación actual',
+		'village.call_council': 'Todos al consejo de la aldea · marcador',
+		'village.call_sent': 'Los estudiantes van en camino.',
 		'teacher.voting_goal_only':
 			'Solo las propuestas que llegaron a la portería pasan a la votación',
 		'teacher.voting_goal_only_hint':
@@ -5529,6 +5573,17 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Tu profesor reformuló tu texto',
 	},
 	de: {
+		'village.nav_title': 'Wer bewegt die Lernenden zwischen den Stationen des Dorfes?',
+		'village.nav_teacher': 'Die Lehrkraft führt die Klasse',
+		'village.nav_teacher_hint':
+			'Wenn ihr auf "Weiter" drückt, gehen alle Lernenden gemeinsam zur neuen Station und ihr Zettel öffnet sich dort. Die Dorfkarte ist für sie ausgeblendet; sie sehen nur, wo die Klasse ist.',
+		'village.nav_free': 'Die Lernenden navigieren selbst',
+		'village.nav_free_hint':
+			'Die Lernenden wählen auf der Dorfkarte, wohin sie gehen. Eine neue Station öffnet sich, wenn ihr auf "Weiter" drückt, und sie bekommen einen Hinweis mit dem Knopf "Hingehen". Noch nicht erreichte Stationen bleiben gesperrt.',
+		'village.call_title': 'Die ganze Klasse rufen',
+		'village.call_current': 'Alle zur aktuellen Station',
+		'village.call_council': 'Alle zum Dorfrat · Anzeigetafel',
+		'village.call_sent': 'Die Lernenden sind unterwegs.',
 		'teacher.voting_goal_only': 'Nur Vorschläge, die das Tor erreicht haben, kommen zur Abstimmung',
 		'teacher.voting_goal_only_hint':
 			'Ab jetzt zeigt die Anzeigetafel nur die Vorschläge im Tor (das kleine Feld), und genau über diese wird abgestimmt.',
@@ -6974,6 +7029,17 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Deine Lehrkraft hat deinen Text umformuliert',
 	},
 	nl: {
+		'village.nav_title': 'Wie verplaatst de leerlingen tussen de stations van het dorp?',
+		'village.nav_teacher': 'De docent leidt de klas',
+		'village.nav_teacher_hint':
+			'Als je op "Volgende" drukt, lopen alle leerlingen samen naar het nieuwe station en opent hun briefje daar. De dorpskaart is voor hen verborgen; ze zien alleen waar de klas is.',
+		'village.nav_free': 'Leerlingen navigeren zelf',
+		'village.nav_free_hint':
+			'Leerlingen kiezen op de dorpskaart waar ze heen lopen. Een nieuw station opent als je op "Volgende" drukt, en ze krijgen een melding met de knop "Ga erheen". Stations die je nog niet bereikt hebt blijven op slot.',
+		'village.call_title': 'De hele klas roepen',
+		'village.call_current': 'Iedereen naar het huidige station',
+		'village.call_council': 'Iedereen naar de dorpsraad · scorebord',
+		'village.call_sent': 'De leerlingen zijn onderweg.',
 		'teacher.voting_goal_only': 'Alleen voorstellen die het doel bereikten gaan naar de stemming',
 		'teacher.voting_goal_only_hint':
 			'Vanaf nu toont het scorebord alleen de voorstellen in het doel (het kleine vak), en de stemming opent precies daarover.',

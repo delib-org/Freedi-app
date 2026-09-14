@@ -188,6 +188,7 @@ export function buildVillage({ scene, height, manager }) {
 		const booth = {
 			spec, station, group, face, paint, desk, guide,
 			setState(next) {
+				this.state = next;
 				pennant.visible = next.current === true;
 				lantern.material.color.set(next.open === false ? '#8a8378' : '#ffd27a');
 				sign.userData.setText(next.label ?? spec.label, next.open === false ? 'ייפתח בהמשך המפגש' : kind.name, next.open === false);

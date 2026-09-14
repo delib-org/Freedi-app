@@ -5,6 +5,7 @@ import {
 	acceptsVillageWrite,
 	boothItemId,
 	villageBooths,
+	villageFixedPlaces,
 	villageDesk,
 	villagePlace,
 } from './villageRoute';
@@ -41,6 +42,33 @@ describe('the village follows the actual session plan', () => {
 			'booth:personal',
 		);
 		expect(villagePlace({ itemId: 'square', stage: AgoraStage.deliberation })).toBe('booth:square');
+	});
+	it('keeps the meeting point and the council open, and marks where the room is', () => {
+		expect(villageFixedPlaces(plan, 1)).toEqual({
+			library: { open: false, current: false, inPlan: false },
+			challenge: { open: true, current: false, inPlan: true },
+			council: { open: true, current: false, inPlan: true },
+		});
+		expect(villageFixedPlaces(plan, 5).council).toEqual({
+			open: true,
+			current: true,
+			inPlan: true,
+		});
+		expect(villageFixedPlaces(plan, 0).challenge).toEqual({
+			open: true,
+			current: true,
+			inPlan: true,
+		});
+		const withScenes: AgoraStagePlanItem[] = [
+			...plan.slice(0, 1),
+			{ itemId: 'framing', stage: AgoraStage.framing },
+			...plan.slice(1),
+		];
+		expect(villageFixedPlaces(withScenes, 0).library).toEqual({
+			open: false,
+			current: false,
+			inPlan: true,
+		});
 	});
 	it('lists the booths of the plan in order, open up to the room and current at the room', () => {
 		const booths = villageBooths(plan, 2, (item) => `label:${item.itemId}`);

@@ -138,3 +138,28 @@ Verification: `npx tsx scripts/village-sim.mjs` (or via `solo.sh`) — three
 browser students, four booths, ratings, an improvement and a thank-you, the
 teacher's goal switch, the vote with bars, the recap; screenshots in
 `output/village-sim/`.
+
+## Who moves the class: teacher-led or free (September 14)
+
+`AgoraSession.villageNavigation` (`teacher` | `free`, absent = teacher) is set on
+the start screen under the village choice and switched live in the console's
+settings sheet ("מי מזיז את התלמידים בין התחנות בכפר?").
+
+- **Teacher leads.** Every advance closes whatever the student had open (a
+  board left open used to keep its frame, swap its content to the next item
+  and pause the walk, so the student stood at the old booth facing an empty
+  board with no paper). The shell sends `agora-village-go`; the world walks
+  there and answers `agora-village-arrived`; the shell then opens the paper,
+  or the board once the student has written, or the ballot/recap at the
+  council. The village map is hidden; a pill says where the class is. A
+  refreshed page walks the student back to the class.
+- **Students navigate.** The map lists every station with its state (● the
+  class is here, ✓ open, 🔒 later) and a press walks there; arriving at the
+  room's booth with nothing written opens the paper. An advance is announced
+  on a line across the top with a "ללכת לשם" button; nobody is moved.
+- **Calling the class.** `AgoraSession.villageCall` `{ place, at }`: the
+  console's "כולם לתחנה של עכשיו" / "כולם למועצת הכפר · לוח התוצאות". Each
+  client acts once per `at`, in either mode; a call met on first render older
+  than two minutes is ignored.
+
+The map folds away on phones (≤650px) behind a "🗺 מפת הכפר" toggle.

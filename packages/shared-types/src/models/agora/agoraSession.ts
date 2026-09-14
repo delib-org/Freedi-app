@@ -262,6 +262,19 @@ export const AgoraSessionSchema = object({
 	 */
 	theme: optional(nullable(AgoraThemeChoiceSchema)),
 	world: optional(picklist(['village', 'classic'])),
+	/**
+	 * Who moves students between the village's stations. `teacher` (absent =
+	 * teacher): every advance walks the whole class to the new station and
+	 * opens its paper. `free`: students pick where to walk on the village map,
+	 * and a newly opened station is announced, not imposed. Teacher-writable.
+	 */
+	villageNavigation: optional(picklist(['teacher', 'free'])),
+	/**
+	 * The teacher's latest "everyone to …": a place id (`council`, or
+	 * `current` for the room's own station) and when it was called. Each
+	 * client walks there once per `at`. Teacher-writable.
+	 */
+	villageCall: optional(object({ place: string(), at: number() })),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),

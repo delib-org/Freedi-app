@@ -413,7 +413,14 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					villageMode
 						? m(
 								VillageShell,
-								{ plan, currentIndex, viewingIndex, papers: [] },
+								{
+									plan,
+									currentIndex,
+									viewingIndex,
+									papers: [],
+									navigation: session.villageNavigation ?? 'teacher',
+									call: session.villageCall,
+								},
 								m(Lobby, { participants, myParticipant, onOpenLook: lookDoor?.onOpen }),
 							)
 						: m(Lobby, { participants, myParticipant, onOpenLook: lookDoor?.onOpen }),
@@ -711,6 +718,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								currentIndex,
 								viewingIndex,
 								council,
+								navigation: session.villageNavigation ?? 'teacher',
+								call: session.villageCall,
 								community: myParticipant
 									? {
 											session,
