@@ -1,3 +1,8 @@
+import LiveMapWorkspace from '@/view/components/atomic/organisms/ThinkingSpace/LiveMapWorkspace';
+import { mapViews, MapViewId } from '@/view/components/atomic/organisms/ThinkingSpace/MapExplorer';
+import AgreementHub, {
+	AGREEMENT_VIEWS,
+} from '@/view/components/atomic/organisms/ThinkingSpace/AgreementHub';
 import { Statement, Role, StatementType, Screen, QuestionType } from '@freedi/shared-types';
 import { ReactNode, useEffect, Suspense } from 'react';
 import { useParams } from 'react-router';
@@ -8,6 +13,7 @@ import { logError } from '@/utils/errorHandling';
 import lazyWithRetry from '@/routes/lazyWithRetry';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import Chat from '../chat/Chat';
+import AnswerImprovement, { showsAnswerImprovement } from '../answer/AnswerImprovement';
 import StagePage from '../statementTypes/stage/StagePage';
 import QuestionsView from '../questionsView/QuestionsView';
 import GroupPage from '../statementTypes/group/GroupPage';
@@ -15,16 +21,17 @@ import PopperHebbianDiscussion from '../popperHebbian/PopperHebbianDiscussion';
 import TreeView from '../treeView/TreeView';
 import { CompoundQuestion } from '../statementTypes/question/compound';
 
+const ClusterBoardMap = lazyWithRetry(
+	() => import('../map/ClusterMap/ClusterMap'),
+	'ClusterBoardMap',
+);
 // Lazy load heavy screen components
 const Triangle = lazyWithRetry(
 	() => import('@/view/components/maps/triangle/Triangle'),
 	'Triangle',
 );
 const MindMap = lazyWithRetry(() => import('../map/MindMap'), 'MindMap');
-const StatementSettings = lazyWithRetry(
-	() => import('../settings/StatementSettings'),
-	'StatementSettings',
-);
+const StatementSettings = lazyWithRetry(() => import('../host/HostHub'), 'HostHub');
 const PolarizationIndexComp = lazyWithRetry(
 	() => import('@/view/components/maps/polarizationIndex/PolarizationIndex'),
 	'PolarizationIndex',
@@ -85,6 +92,25 @@ function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProp
 		screen = 'main';
 	}
 
+	if (statement && mapViews.some((view) => view.id === screen)) {
+		const id = screen as MapViewId;
+		const components = {
+			[Screen.mindMap]: MindMap,
+			[Screen.subQuestionsMap]: SubQuestionsMap,
+			[Screen.clusterBoard]: ClusterBoardMap,
+			[Screen.agreementMap]: Triangle,
+			[Screen.polarizationIndex]: PolarizationIndexComp,
+		};
+		const Component = components[id];
+
+		return (
+			<LiveMapWorkspace statement={statement} active={id}>
+				<Suspense fallback={<LoadingPage />}>
+					<Component />
+				</Suspense>
+			</LiveMapWorkspace>
+		);
+	}
 	// Map/settings/polarization screens remain as-is
 	switch (screen) {
 		case Screen.polarizationIndex:
@@ -126,11 +152,16 @@ function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProp
 		default:
 			// Main content area controlled by the segmented control
 			return (
-				<ViewByActiveTab
-					activeView={activeView}
-					statement={statement}
-					isPopperHebbianEnabled={isPopperHebbianEnabled}
-				/>
+				<>
+					{showsAnswerImprovement(statement, activeView) && !isPopperHebbianEnabled && (
+						<AnswerImprovement key={statement?.statementId} />
+					)}
+					<ViewByActiveTab
+						activeView={activeView}
+						statement={statement}
+						isPopperHebbianEnabled={isPopperHebbianEnabled}
+					/>
+				</>
 			);
 	}
 }
@@ -152,6 +183,10 @@ function ViewByActiveTab({
 	const isCompound =
 		statement?.statementType === StatementType.question &&
 		statement?.questionSettings?.questionType === QuestionType.compound;
+
+	if (statement?.statementType === StatementType.question && AGREEMENT_VIEWS.includes(activeView)) {
+		return <AgreementHub key={statement.statementId} statement={statement} view={activeView} />;
+	}
 
 	if (isCompound) {
 		return <CompoundQuestion />;

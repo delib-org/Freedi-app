@@ -3,10 +3,12 @@ const { withSentryConfig } = require("@sentry/nextjs");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Keep local dev cleanup away from standalone builds and their traced symlinks.
+  distDir: process.env.SIGN_DIST_DIR || '.next',
   poweredByHeader: false,
 
   // Standalone output for Docker/Cloud Run deployment
-  output: 'standalone',
+  output: process.env.SIGN_STANDALONE === 'false' ? undefined : 'standalone',
 
   // Transpile shared packages
   transpilePackages: ['@freedi/shared-i18n', '@freedi/shared-utils'],

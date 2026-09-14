@@ -54,11 +54,11 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
       </head>
       <body suppressHydrationWarning>
-        <AuthSync />
         <NextTranslationProvider
           initialLanguage={language}
           initialDictionary={dictionary}
         >
+          <AuthSync />
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {children as any}
         </NextTranslationProvider>

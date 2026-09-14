@@ -1,112 +1,52 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { totalUnreadCountSelector } from '@/redux/notificationsSlice/notificationsSlice';
+import {
+	inAppNotificationsSelector,
+	notificationFeedOwnerSelector,
+} from '@/redux/notificationsSlice/notificationsSlice';
+import { useAuthentication } from './useAuthentication';
+import { relevantNotifications } from '@/utils/engagementNavigation';
+import '../../../public/badge-store.js';
 
-/**
- * Sets the app badge count using the Badging API
- * Handles browser compatibility for different badge API implementations
- */
-const setAppBadge = async (count: number): Promise<void> => {
-	try {
-		if (count === 0) {
-			// Clear badge
-			if ('clearAppBadge' in navigator) {
-				await navigator.clearAppBadge();
-			} else if ('clearExperimentalAppBadge' in navigator) {
-				// @ts-expect-error - Experimental API
-				await navigator.clearExperimentalAppBadge();
-			} else if ('ExperimentalBadge' in window) {
-				// @ts-expect-error - Experimental API
-				await window.ExperimentalBadge.clear();
-			}
-		} else {
-			// Set badge count
-			if ('setAppBadge' in navigator) {
-				await navigator.setAppBadge(count);
-			} else if ('setExperimentalAppBadge' in navigator) {
-				// @ts-expect-error - Experimental API
-				await navigator.setExperimentalAppBadge(count);
-			} else if ('ExperimentalBadge' in window) {
-				// @ts-expect-error - Experimental API
-				await window.ExperimentalBadge.set(count);
-			}
-		}
-	} catch (error) {
-		// Badge API not supported or permission denied - fail silently
-		console.info('[useBadgeSync] Badge API not available:', error);
-	}
-};
-
-/**
- * Syncs the app badge count with IndexedDB for service worker coordination
- */
-const syncBadgeToIndexedDB = async (count: number): Promise<void> => {
-	try {
-		const openRequest = indexedDB.open('FreeDiNotifications', 1);
-
-		// An open request reports failure through an error event, not a throw, so
-		// the try/catch below never sees it. Without this handler the event bubbles
-		// to window.onerror and gets reported as an app crash — which it is not:
-		// a badge count that cannot be mirrored for the service worker is cosmetic.
-		openRequest.onerror = () => {
-			console.info('[useBadgeSync] Could not open the badge database:', openRequest.error);
-		};
-
-		openRequest.onupgradeneeded = (event) => {
-			const target = event.target as IDBOpenDBRequest;
-			const db = target.result;
-			if (!db.objectStoreNames.contains('badgeCounter')) {
-				db.createObjectStore('badgeCounter', { keyPath: 'id' });
-			}
-		};
-
-		openRequest.onsuccess = (event) => {
-			try {
-				const target = event.target as IDBOpenDBRequest;
-				const db = target.result;
-
-				if (!db.objectStoreNames.contains('badgeCounter')) {
-					return;
-				}
-
-				const transaction = db.transaction('badgeCounter', 'readwrite');
-				const store = transaction.objectStore('badgeCounter');
-				store.put({ id: 'badge', count });
-			} catch (innerError) {
-				console.info('[useBadgeSync] Error accessing badgeCounter store:', innerError);
-			}
-		};
-	} catch (error) {
-		console.info('[useBadgeSync] IndexedDB operation failed:', error);
-	}
-};
-
-/**
- * Hook that syncs the Redux unread notification count with the app badge
- *
- * This hook:
- * 1. Subscribes to the total unread count from Redux
- * 2. Updates the app badge when the count changes
- * 3. Syncs with IndexedDB for service worker coordination
- * 4. Handles browser API compatibility
- *
- * @example
- * ```tsx
- * // Use in a top-level component like App.tsx or PWAWrapper.tsx
- * const App = () => {
- *   useBadgeSync();
- *   return <AppContent />;
- * };
- * ```
- */
+let pendingSync: Promise<void> = Promise.resolve();
+/** Wait for the authenticated feed before replacing a background count. */
 export const useBadgeSync = (): void => {
-	const unreadCount = useSelector(totalUnreadCountSelector);
-
+	const { user, isLoading } = useAuthentication();
+	const notifications = useSelector(inAppNotificationsSelector);
+	const owner = useSelector(notificationFeedOwnerSelector);
+	const count = relevantNotifications(notifications, user?.uid).filter((n) => !n.read).length;
 	useEffect(() => {
-		// Update both the app badge and IndexedDB
-		setAppBadge(unreadCount);
-		syncBadgeToIndexedDB(unreadCount);
-	}, [unreadCount]);
-};
+		if (isLoading || (user && owner !== user.uid)) return;
+		const sync = (): void => {
+			pendingSync = pendingSync
+				.then(async () => {
+					try {
+						await globalThis.FreeDiBadgeStore.update({
+							count,
+							userId: user?.uid ?? null,
+							notificationIds: notifications.flatMap((n) => [
+								n.notificationId,
+								`statement:${n.statementId}`,
+							]),
+						});
+					} catch {
+						/* Some private browsing modes disable IndexedDB. */
+					}
+					await globalThis.FreeDiBadgeStore.apply(count);
+				})
+				.catch(() => {});
+		};
+		sync();
+		const onVisible = (): void => {
+			if (document.visibilityState === 'visible') sync();
+		};
+		document.addEventListener('visibilitychange', onVisible);
+		window.addEventListener('focus', sync);
 
+		return () => {
+			document.removeEventListener('visibilitychange', onVisible);
+			window.removeEventListener('focus', sync);
+		};
+	}, [count, owner, user?.uid, isLoading, notifications]);
+};
 export default useBadgeSync;

@@ -13,7 +13,6 @@ import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificat
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { statementsSelector } from '@/redux/statements/statementsSlice';
 import { createPredicateCountSelector } from '@/redux/utils/selectorFactories';
-import { markStatementNotificationsAsReadDB } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import UnreadBadge from '@/view/components/unreadBadge/UnreadBadge';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
@@ -115,11 +114,6 @@ const StatementChatMore: FC<Props> = ({
 		const button = e.currentTarget;
 		if (!button) {
 			return;
-		}
-
-		// Mark notifications as read when navigating to chat
-		if (hasUnread) {
-			await markStatementNotificationsAsReadDB(statement.statementId);
 		}
 
 		// The active tab is driven by the `tab` search param, not the path

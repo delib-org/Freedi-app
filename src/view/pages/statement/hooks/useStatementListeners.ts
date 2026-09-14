@@ -11,10 +11,6 @@ import {
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
 import { listenToStatementDeltas } from '@/controllers/db/statements/bulkLoadStatements';
 import { Screen } from '@freedi/shared-types';
-import {
-	listenToInAppNotifications,
-	clearInAppNotifications,
-} from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import { CHAT } from '@/constants/common';
 import { TREE_INITIAL_LIMIT } from '@/constants/treeView';
 import {
@@ -118,11 +114,6 @@ export const useStatementListeners = ({
 				return cleanup;
 			}
 
-			// Only clear notifications if we have a valid statementId
-			if (statementId) {
-				clearInAppNotifications(statementId);
-			}
-
 			// Core listeners
 			unsubscribersRef.current.push(
 				listenToStatement(statementId, setIsStatementNotFound),
@@ -130,7 +121,6 @@ export const useStatementListeners = ({
 				listenToEvaluations(statementId, undefined, creator.uid),
 				listenToUserDemographicQuestions(statementId),
 				listenToUserDemographicAnswers(statementId),
-				listenToInAppNotifications(),
 			);
 
 			// Conditional listeners based on screen

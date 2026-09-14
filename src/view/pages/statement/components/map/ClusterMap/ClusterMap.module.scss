@@ -10,6 +10,37 @@
 	background: var(--background, #eef0f3);
 }
 
+// Inside the Thinking Space the map must use the canvas slot rather than a
+// second viewport width/height. `100vw` in an RTL flex layout pushed the board
+// beyond the physical left edge and left its controls outside the viewport.
+:global(.thinking-space) .board {
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+}
+
+// Native Fullscreen API target: occupy the real screen and leave the map canvas
+// edge to edge. The map controls stay inside this element and remain available.
+.board:global(.is-map-fullscreen) {
+	width: 100vw;
+	height: 100dvh;
+}
+
+.board:global(.is-map-fullscreen) .toolbar {
+	display: none;
+}
+
+// Everything above the canvas (app bar + tabs, or the legacy toolbar). Full
+// screen drops it so the board runs edge to edge; the control that entered
+// full screen is on the board itself, so nothing becomes unreachable.
+.chrome {
+	flex-shrink: 0;
+
+	:global(.is-map-fullscreen) > & {
+		display: none;
+	}
+}
+
 .toolbar {
 	display: flex;
 	align-items: center;

@@ -1,6 +1,6 @@
 import { useState, FC, useEffect, useMemo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import CreateStatementModal from '../createStatementModal/CreateStatementModal';
+import AddStatementSheet from '../addStatement/AddStatementSheet';
 import MindElixirMap from './components/MindElixirMap';
 import { isAdmin } from '@/controllers/general/helpers';
 import { FilterType } from '@/controllers/general/sorting';
@@ -11,7 +11,6 @@ import {
 	statementSelector,
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
-import Modal from '@/view/components/modal/Modal';
 import { LoadAllBanner } from '@/view/components/atomic/molecules/LoadAllBanner';
 import { StatementType, Role } from '@freedi/shared-types';
 import { useParams } from 'react-router';
@@ -192,7 +191,8 @@ const MindMap: FC = () => {
 		<>
 			<style>{spinnerStyle}</style>
 			{statementId && <LoadAllBanner rootId={statementId} mode="descendants" />}
-			<div className={styles.mapScreen}>
+			{/* What the full-screen control expands (see useMapFullScreen). */}
+			<div className={styles.mapScreen} data-map-root>
 				<div className={styles.controls}>
 					<div className={styles.filterToggle}>
 						<span className={styles.filterLabel}>
@@ -272,17 +272,17 @@ const MindMap: FC = () => {
 			</div>
 
 			{mapContext.showModal && (
-				<Modal>
-					<CreateStatementModal
-						allowedTypes={[
-							...(isOptionAllowed ? [StatementType.option] : []),
-							StatementType.question,
-						]}
-						parentStatement={mapContext.parentStatement}
-						isOption={isDefaultOption}
-						setShowModal={toggleModal}
-					/>
-				</Modal>
+				<AddStatementSheet
+					isOpen
+					onClose={() => toggleModal(false)}
+					origin="mindmap"
+					intent={isDefaultOption && isOptionAllowed ? 'answer' : 'question'}
+					allowedTypes={[
+						...(isOptionAllowed ? [StatementType.option] : []),
+						StatementType.question,
+					]}
+					parentStatement={mapContext.parentStatement}
+				/>
 			)}
 		</>
 	);

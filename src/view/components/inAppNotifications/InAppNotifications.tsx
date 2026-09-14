@@ -1,9 +1,7 @@
 import React from 'react';
-import {
-	inAppNotificationsSelector,
-	markAllNotificationsAsRead,
-} from '@/redux/notificationsSlice/notificationsSlice';
-import { useSelector, useDispatch } from 'react-redux';
+import { X } from 'lucide-react';
+import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
+import { useSelector } from 'react-redux';
 import styles from './InAppNotifications.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { NotificationType } from '@freedi/shared-types';
@@ -13,13 +11,15 @@ import {
 	markMultipleNotificationsAsReadDB,
 	clearAllInAppNotificationsDB,
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import NotificationDeliveryControls from '../notifications/NotificationDeliveryControls';
+import { relevantNotifications } from '@/utils/engagementNavigation';
 import { logError } from '@/utils/errorHandling';
 
-const InAppNotifications = () => {
+const InAppNotifications = ({ onClose }: { onClose?: () => void }) => {
 	const creator = useSelector(creatorSelector);
-	const dispatch = useDispatch();
-	const inAppNotifications: NotificationType[] = useSelector(inAppNotificationsSelector).filter(
-		(n) => n.creatorId !== creator?.uid,
+	const inAppNotifications: NotificationType[] = relevantNotifications(
+		useSelector(inAppNotificationsSelector),
+		creator?.uid,
 	);
 	const { t } = useTranslation();
 
@@ -31,7 +31,6 @@ const InAppNotifications = () => {
 		e.stopPropagation();
 		try {
 			if (unreadIds.length === 0) return;
-			dispatch(markAllNotificationsAsRead());
 			await markMultipleNotificationsAsReadDB(unreadIds);
 		} catch (error) {
 			logError(error, { operation: 'inAppNotifications.handleMarkAllAsRead' });
@@ -48,7 +47,13 @@ const InAppNotifications = () => {
 	}
 
 	return (
-		<div className={styles.inAppNotifications}>
+		<div className={styles.inAppNotifications} role="region" aria-label={t('Notifications')}>
+			{onClose && (
+				<button className={styles.close} onClick={onClose} type="button" aria-label={t('Close')}>
+					<X size={20} />
+				</button>
+			)}
+			<NotificationDeliveryControls />
 			{inAppNotifications && inAppNotifications.length > 0 ? (
 				<>
 					<div className={styles.header}>

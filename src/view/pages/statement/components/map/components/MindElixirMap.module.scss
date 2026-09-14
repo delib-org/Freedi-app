@@ -336,7 +336,8 @@
 			font-size: 11px;
 			font-weight: 600;
 			font-family: inherit;
-			color: var(--text-body);
+			// The keycap stays light in both themes, so its label must stay dark.
+			color: #24212c;
 		}
 
 		.mind-map-hint-text {
@@ -460,7 +461,7 @@
 
 .toolbarBtnActive {
 	background: var(--btn-primary, #5f88e5);
-	color: white;
+	color: var(--btn-primary-text, #ffffff);
 }
 
 // Rating row — the app's 5-point face scale, inline under the icons.
@@ -666,17 +667,18 @@
 // Controls Panel
 .controlsPanel {
 	position: fixed;
-	bottom: 2rem;
-	// Logical, not `right`: the zoom controls dock to the inline-start corner,
-	// so a physical `right` put both stacks on top of each other in RTL.
-	inset-inline-end: 2rem;
+	bottom: 1rem;
+	right: 1rem;
 	z-index: 100;
 }
 
 .mainButton {
-	width: 56px;
-	height: 56px;
-	border-radius: 50%;
+	width: auto;
+	min-width: 56px;
+	height: 48px;
+	padding: 0 1rem;
+	gap: 0.5rem;
+	border-radius: 999px;
 	background-color: var(--btn-primary, #5f88e5);
 	border: none;
 	cursor: pointer;
@@ -687,7 +689,7 @@
 	transition:
 		transform 0.2s ease,
 		box-shadow 0.2s ease;
-	color: white;
+	color: var(--space-paper, var(--btn-primary-text, #ffffff));
 
 	&:hover {
 		transform: scale(1.1);
@@ -698,6 +700,12 @@
 		width: 24px;
 		height: 24px;
 	}
+}
+
+.mainButtonLabel {
+	font-size: 0.82rem;
+	font-weight: 700;
+	white-space: nowrap;
 }
 
 .arcButtons {
@@ -783,11 +791,12 @@
 
 	.controlsPanel {
 		bottom: 1rem;
-		inset-inline-end: 1rem;
+		right: 1rem;
 	}
 
 	.mainButton {
-		width: 48px;
+		width: auto;
+		min-width: 48px;
 		height: 48px;
 	}
 

@@ -1,5 +1,5 @@
-import { httpsCallable, getFunctions, connectFunctionsEmulator } from 'firebase/functions';
-import { app } from '../config';
+import { httpsCallable } from 'firebase/functions';
+import { functions as functionsWithRegion } from '../config';
 import { logError } from '@/utils/errorHandling';
 import { logger } from '@/services/logger';
 import type {
@@ -7,20 +7,6 @@ import type {
 	ExecuteIntegrationParams,
 	ExecuteIntegrationResponse,
 } from '@/types/integration';
-import { functionConfig } from '@freedi/shared-types';
-
-// Get functions instance with correct region (me-west1)
-const functionsWithRegion = getFunctions(app, functionConfig.region);
-
-// Connect to emulator in development
-if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-	try {
-		connectFunctionsEmulator(functionsWithRegion, 'localhost', 5001);
-	} catch {
-		// Already connected
-	}
-}
-
 // Server-side these callables run with timeoutSeconds: 120 (see
 // fn_integrateSimilarStatements.ts and fn_synthesizeIdeas.ts). The browser
 // callable defaults to only 70s, which trips `deadline-exceeded` on cold

@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 /**
  * Error Handling Utilities for Sign App
  *
@@ -113,6 +114,8 @@ export function logError(error: unknown, context: ErrorContext): void {
     ...(context.metadata && { metadata: context.metadata }),
     ...(process.env.NODE_ENV === 'development' && { stack: errorInfo.stack }),
   };
+
+  Sentry.captureException(error, { tags: { operation: context.operation }, extra: { ...context } });
 
   // Structured error logging
   console.error(`[${timestamp}] [${context.operation}] ${errorInfo.message}`, logData);

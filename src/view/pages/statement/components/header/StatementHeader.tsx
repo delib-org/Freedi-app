@@ -25,6 +25,9 @@ import {
 	questionsSelector,
 } from '@/redux/statements/statementsSlice';
 import styles from '../switch/Switch.module.scss';
+import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { relevantNotifications } from '@/utils/engagementNavigation';
 
 const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
 
@@ -50,7 +53,9 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	// Sub-header state
 	const [searchParams, setSearchParams] = useSearchParams();
 	const tabFromUrl = searchParams.get('tab');
-	const defaultView = statement?.statementSettings?.defaultView ?? 'chat';
+	const defaultView =
+		statement?.statementSettings?.defaultView ??
+		(statement?.statementType === StatementType.question ? 'overview' : 'chat');
 	const [activeView, setActiveView] = useState<string>(tabFromUrl ?? defaultView);
 	const [edit, setEdit] = useState(false);
 	const [headerCollapsed, setHeaderCollapsed] = useState(true);
@@ -58,10 +63,21 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	const [titleExpanded, setTitleExpanded] = useState(false);
 
 	useEffect(() => {
-		if (tabFromUrl && tabFromUrl !== activeView) {
-			setActiveView(tabFromUrl);
-		}
-	}, [tabFromUrl]);
+		setActiveView(
+			[
+				'overview',
+				'themes',
+				'covenant',
+				'summary',
+				'maps',
+				'chat',
+				'options',
+				'questions',
+			].includes(tabFromUrl ?? '')
+				? tabFromUrl!
+				: defaultView,
+		);
+	}, [tabFromUrl, defaultView, statement?.statementId]);
 
 	useEffect(() => {
 		onActiveViewChange(activeView);
@@ -74,7 +90,15 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	const handleTabChange = useCallback(
 		(tabId: string) => {
 			setActiveView(tabId);
-			setSearchParams({ tab: tabId }, { replace: true });
+			setSearchParams(
+				(previous) => {
+					const next = new URLSearchParams(previous);
+					next.set('tab', tabId);
+
+					return next;
+				},
+				{ replace: true },
+			);
 		},
 		[setSearchParams],
 	);
@@ -94,6 +118,11 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	);
 
 	const allSubs = useSelector(subsSelect);
+	const notifications = useSelector(inAppNotificationsSelector);
+	const creator = useSelector(creatorSelector);
+	const unreadCount = relevantNotifications(notifications, creator?.uid).filter(
+		(n) => !n.read && n.parentId === statement?.statementId,
+	).length;
 	const options = useSelector(optionsSelect);
 	const questions = useSelector(questionsSelect);
 
@@ -102,17 +131,27 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 
 	const segments = useMemo(() => {
 		const allSegments = [
-			{ id: 'chat', label: t('Discussion'), count: allSubs.length },
+			...(statement?.statementType === StatementType.question
+				? [{ id: 'overview', label: t('Common ground') }]
+				: []),
+			{ id: 'chat', label: t('Conversation'), count: allSubs.length, unreadCount },
 			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.option)
-				? [{ id: 'options', label: t('Solutions'), count: options.length }]
+				? [{ id: 'options', label: t('Proposals'), count: options.length }]
 				: []),
 			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.question)
 				? [{ id: 'questions', label: t('Questions'), count: questions.length }]
 				: []),
+			...(statement?.statementType === StatementType.question
+				? [
+						{ id: 'covenant', label: t('Our covenant') },
+						{ id: 'summary', label: t('Summary') },
+						{ id: 'maps', label: t('Maps') },
+					]
+				: []),
 		];
 
 		return allSegments;
-	}, [t, allSubs.length, options.length, questions.length, statement]);
+	}, [t, allSubs.length, options.length, questions.length, statement, unreadCount]);
 
 	const showSegmentedControl = MAIN_SCREENS.has(screen);
 
@@ -190,6 +229,9 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 					{/* Sub-header: title, tabs, filters */}
 					<div className={styles.subHeader}>
 						<div className={styles.subHeaderInner}>
+							{showSegmentedControl && !isCompound && (
+								<div className={styles.conversationLabel}>{t('THINKING TOGETHER')}</div>
+							)}
 							{isAdmin ? (
 								<button className={styles.header} onClick={handleStartEdit}>
 									{!edit ? (
@@ -242,7 +284,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 												<div className={styles.segmentedControlWrapper}>
 													<SegmentedControl
 														segments={segments}
-														activeId={activeView}
+														activeId={activeView === 'themes' ? 'maps' : activeView}
 														onChange={handleTabChange}
 													/>
 												</div>
@@ -253,10 +295,10 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 							) : (
 								<>
 									{statement?.brief && !isMapScreen && (
-										<StatementDescription
-											brief={statement.brief}
-											callToAction={t('Share your thoughts below')}
-										/>
+										<details className={styles.contextDetails}>
+											<summary>{t('Background from the facilitator')}</summary>
+											<StatementDescription brief={statement.brief} />
+										</details>
 									)}
 									{/* Facilitator metric, not a participant one: the tab
 									    counts already tell a participant how much is here,
@@ -274,7 +316,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 										<div className={styles.segmentedControlWrapper}>
 											<SegmentedControl
 												segments={segments}
-												activeId={activeView}
+												activeId={activeView === 'themes' ? 'maps' : activeView}
 												onChange={handleTabChange}
 											/>
 										</div>

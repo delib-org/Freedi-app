@@ -1,15 +1,22 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v1';
-import { db } from './index';
+import { DocumentData, FieldValue } from 'firebase-admin/firestore';
+import { db } from './db';
 import {
 	Collections,
 	StatementType,
 	functionConfig,
+	calcAgreement,
 	calcAgreementIndex,
 	calcLikeMindedness,
 	calcConfidenceIndex,
+	resolveStakeholderCount,
+	resolveSamplingQuality,
 	DEFAULT_SAMPLING_QUALITY,
+	type StakeholderScope,
 } from '@freedi/shared-types';
+import { refreshChainVoters } from './progress/chainVoters';
+import { calculateConsensusValid } from './helpers/consensusValidCalculator';
 
 interface RecalculateIndicesRequest {
 	statementId: string; // Parent question statement ID
@@ -73,9 +80,45 @@ export const recalculateIndices = onCall<RecalculateIndicesRequest>(
 			);
 		}
 
-		const targetPopulation = parentData.evaluationSettings?.targetPopulation as number | undefined;
+		return recalculateIndicesForQuestion(statementId, parentData);
+	},
+);
+
+/**
+ * The recalculation itself, with no auth or transport concerns, so migrations
+ * and one-off repair scripts run exactly what the button runs rather than a
+ * copy of it that drifts.
+ */
+export async function recalculateIndicesForQuestion(
+	statementId: string,
+	parentData: DocumentData,
+): Promise<RecalculateIndicesResult> {
+	{
+		// Bring the question's electorate up to date before reading it: this
+		// callable exists precisely for the case where the inputs to N changed
+		// after the votes came in, and the voter count is one of those inputs.
+		await refreshChainVoters(statementId);
+
+		const topParentId = (parentData.topParentId as string | undefined) ?? statementId;
+		const topData =
+			topParentId && topParentId !== statementId
+				? (await db.collection(Collections.statements).doc(topParentId).get()).data()
+				: parentData;
+
+		// Same walk the evaluation trigger does, so a recalculation can never
+		// disagree with the number a fresh vote would have produced.
+		const parentScope = { ...parentData, evaluation: { ...parentData.evaluation } };
+		const { count: targetPopulation } = resolveStakeholderCount(
+			undefined,
+			parentScope as StakeholderScope,
+			(topData ?? parentData) as StakeholderScope,
+		);
 		const samplingQuality =
-			(parentData.evaluationSettings?.samplingQuality as number) ?? DEFAULT_SAMPLING_QUALITY;
+			resolveSamplingQuality(
+				undefined,
+				parentScope as StakeholderScope,
+				(topData ?? parentData) as StakeholderScope,
+			) ?? DEFAULT_SAMPLING_QUALITY;
 
 		// Get all option statements under this parent
 		const optionsSnapshot = await db
@@ -107,33 +150,62 @@ export const recalculateIndices = onCall<RecalculateIndicesRequest>(
 
 			if (numberOfEvaluators === undefined || numberOfEvaluators <= 0) continue;
 
+			// Every option in the question shares its electorate, floored by the
+			// people who evaluated this particular option — see the same guard
+			// in statementEvaluationUpdater.
+			const stakeholderCount =
+				targetPopulation !== undefined ? Math.max(targetPopulation, numberOfEvaluators) : undefined;
+
+			// N is an input to the score, not a label on it: the
+			// finite-population correction shrinks the confidence penalty as
+			// more of the stakeholders weigh in. Recording a new N beside a
+			// consensus computed against the old one would be exactly the
+			// mismatch `evaluation.stakeholderCount` exists to rule out, so the
+			// score is recomputed here rather than left for the next vote.
+			const agreement = calcAgreement(
+				sumEvaluations || 0,
+				sumSquaredEvaluations || 0,
+				numberOfEvaluators,
+				stakeholderCount,
+			);
+
 			// Recalculate Agreement Index (confidence-adjusted)
 			const agreementIndex = calcAgreementIndex(
 				sumEvaluations || 0,
 				sumSquaredEvaluations || 0,
 				numberOfEvaluators,
+				stakeholderCount,
 			);
 
-			// Recalculate Like-mindedness (simple: 1 - SEM*)
+			// Like-mindedness takes no population, deliberately: it measures how
+			// divided the group is, which must not move with how many we heard.
 			const likeMindedness = calcLikeMindedness(
 				sumEvaluations || 0,
 				sumSquaredEvaluations || 0,
 				numberOfEvaluators,
 			);
 
-			// Recalculate Confidence Index (only if targetPopulation is set)
+			// Recalculate Confidence Index (only if a population resolved)
 			let confidenceIndex: number | undefined;
-			if (targetPopulation && targetPopulation > 0) {
+			if (stakeholderCount !== undefined) {
 				confidenceIndex = calcConfidenceIndex(
 					numberOfEvaluators,
-					targetPopulation,
+					stakeholderCount,
 					samplingQuality,
 				);
 			}
 
-			const updateData: Record<string, number> = {
+			const updateData: Record<string, number | FieldValue> = {
+				consensus: agreement,
+				consensusValid: calculateConsensusValid(agreement, data.popperHebbianScore),
+				'evaluation.agreement': agreement,
 				'evaluation.agreementIndex': agreementIndex,
 				'evaluation.likeMindedness': likeMindedness,
+				// Kept in lockstep with the score it produced. Deleted rather
+				// than left stale when no population resolves any more.
+				'evaluation.stakeholderCount':
+					stakeholderCount !== undefined ? stakeholderCount : FieldValue.delete(),
+				lastUpdate: Date.now(),
 			};
 			if (confidenceIndex !== undefined) {
 				updateData['evaluation.confidenceIndex'] = confidenceIndex;
@@ -164,5 +236,5 @@ export const recalculateIndices = onCall<RecalculateIndicesRequest>(
 			samplingQuality,
 			updates,
 		};
-	},
-);
+	}
+}

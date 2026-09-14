@@ -948,3 +948,7 @@ export * from "./models/agora";
 
 // Israeli Odyssey pre-election civic-voice game
 export * from "./models/odyssey";
+
+export * from './models/covenant/covenant';
+
+export * from './models/covenant/deliberation';

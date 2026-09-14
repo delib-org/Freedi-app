@@ -1,5 +1,8 @@
 'use client';
+import { MAIN_APP_URL } from '@/lib/mainApp';
 
+import AgreementJourney from './AgreementJourney';
+import journeyStyles from './AgreementJourney.module.scss';
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
@@ -185,6 +188,7 @@ export default function DocumentView({
         documentId={document.statementId}
         mode={resolvedIdentityMode}
       >
+      {document.agreementMeta && <a className={journeyStyles.backLink} href={`${MAIN_APP_URL}/statement/${document.agreementMeta.questionId}?tab=covenant`}>← {t('Back to the question')}</a>}
       {enableResearchLogging && (
         <ResearchConsentBanner topParentId={document.statementId} />
       )}
@@ -342,7 +346,7 @@ export default function DocumentView({
             </main>
 
             {/* Sign/Reject buttons at bottom */}
-            {paragraphs.length > 0 && (
+            {paragraphs.length > 0 && !document.agreementMeta && (
               <footer className={styles.footer}>
                 <div className={styles.footerContent}>
                 <div className={styles.signatureStatus}>
@@ -413,6 +417,7 @@ export default function DocumentView({
               </footer>
             )}
 
+            {document.agreementMeta && <AgreementJourney questionId={document.agreementMeta.questionId} documentId={document.statementId}/> }
             {/* Developed by credit */}
             <div className={styles.developedBy}>
               {t('developedBy') || 'Developed by'}{' '}

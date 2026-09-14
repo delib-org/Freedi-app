@@ -1,3 +1,4 @@
+import type { UpdateData, DocumentData } from 'firebase-admin/firestore';
 /**
  * Reversible migration: Sign official paragraphs `option` → canonical `paragraph`.
  *
@@ -138,7 +139,7 @@ async function main(): Promise<void> {
 				pending++;
 			} else if (REVERT && isMigrated(d)) {
 				matched++;
-				const restore: Record<string, unknown> = {
+				const restore: UpdateData<DocumentData> = {
 					statementType: StatementType.option,
 					'doc._migratedFrom': FieldValue.delete(),
 					'doc._hadOrder': FieldValue.delete(),

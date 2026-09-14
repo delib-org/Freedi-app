@@ -1,0 +1,178 @@
+// Sheet Molecule — BEM
+// Bottom sheet on phones, centred dialog from tablet up. One style for every
+// overlay flow in the new shell (add answer, bell, share, ⋯ menus).
+// React wrapper: atomic/molecules/Sheet (portal, focus trap, scroll lock).
+//
+// DOM:   <div class="sheet sheet--open [sheet--full]" role="presentation">
+//          <div class="sheet__backdrop"></div>
+//          <div class="sheet__panel" role="dialog" aria-modal="true">
+//            <div class="sheet__handle"></div>
+//            <div class="sheet__header"><h2 class="sheet__title">…</h2><button class="sheet__close">×</button></div>
+//            <div class="sheet__body">…</div>
+//            [<div class="sheet__footer">…</div>]
+//          </div>
+//        </div>
+// Modifiers: --open (visible), --full (panel takes 100dvh on phones)
+@use '../mixins' as *;
+
+.sheet {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	visibility: hidden;
+	opacity: 0;
+	transition:
+		visibility 0s linear var(--motion-slow),
+		opacity var(--motion-slow) var(--motion-ease-exit);
+
+	&__backdrop {
+		position: absolute;
+		inset: 0;
+		background: var(--surface-overlay);
+	}
+
+	&__panel {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		max-height: 90dvh;
+		background: var(--card-default);
+		color: var(--text-body);
+		border-start-start-radius: var(--radius-sheet);
+		border-start-end-radius: var(--radius-sheet);
+		box-shadow: var(--shadow-sheet);
+		padding-block-end: env(safe-area-inset-bottom, 0);
+		transform: translateY(100%);
+		transition: transform var(--motion-slow) var(--motion-ease-exit);
+		outline: none;
+	}
+
+	&__handle {
+		width: 2.5rem;
+		height: 0.25rem;
+		border-radius: var(--radius-pill);
+		background: var(--border-light);
+		margin: 0.5rem auto 0;
+		flex-shrink: 0;
+	}
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm, 0.5rem);
+		padding: var(--space-md, 1rem) var(--padding) var(--space-sm, 0.5rem);
+	}
+
+	&__title {
+		font-size: 1.125rem;
+		font-weight: var(--font-weight-semibold);
+		color: var(--text-title);
+		text-align: start;
+		margin: 0;
+		@include truncate;
+	}
+
+	&__close {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.75rem;
+		height: 2.75rem;
+		margin-inline-end: -0.5rem;
+		border: none;
+		border-radius: 50%;
+		background: transparent;
+		color: var(--text-caption);
+		cursor: pointer;
+		flex-shrink: 0;
+
+		&:hover {
+			background: var(--bg-hover);
+		}
+
+		@include focus-visible;
+
+		svg {
+			width: 1.25rem;
+			height: 1.25rem;
+		}
+	}
+
+	&__body {
+		flex: 1 1 auto;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		padding: 0 var(--padding) var(--space-md, 1rem);
+	}
+
+	&__footer {
+		position: sticky;
+		bottom: 0;
+		display: flex;
+		justify-content: flex-end;
+		gap: var(--space-sm, 0.5rem);
+		padding: var(--space-sm, 0.5rem) var(--padding) var(--space-md, 1rem);
+		background: var(--card-default);
+		border-block-start: 1px solid var(--border-light);
+	}
+
+	&--open {
+		visibility: visible;
+		opacity: 1;
+		transition:
+			visibility 0s,
+			opacity var(--motion-base) var(--motion-ease);
+
+		.sheet__panel {
+			transform: translateY(0);
+			transition: transform var(--motion-slow) var(--motion-ease);
+		}
+	}
+
+	&--full .sheet__panel {
+		height: 100dvh;
+		max-height: 100dvh;
+		border-radius: 0;
+	}
+
+	// Tablet and up: a centred dialog, no handle.
+	@media (min-width: 601px) {
+		align-items: center;
+		padding: var(--space-lg, 1.5rem);
+
+		&__panel {
+			width: min(36rem, 100%);
+			max-height: 85vh;
+			border-radius: var(--radius-sheet);
+			transform: translateY(1rem) scale(0.98);
+		}
+
+		&__handle {
+			display: none;
+		}
+
+		&--open .sheet__panel {
+			transform: none;
+		}
+
+		&--full .sheet__panel {
+			height: auto;
+			max-height: 85vh;
+			border-radius: var(--radius-sheet);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+
+		.sheet__panel {
+			transition: none;
+		}
+	}
+}

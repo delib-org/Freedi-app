@@ -5,6 +5,8 @@ import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setS
 import { setPowerFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSelector } from '@/redux/statements/statementsSlice';
+import { uxAnalytics } from '@/services/analytics';
+import { buildStatementPath } from '@/routes/statementPaths';
 
 export interface StatementSettingsHandlers {
 	handleSettingChange: (
@@ -30,6 +32,7 @@ export function useStatementSettingsHandlers(statement: Statement): StatementSet
 		property: keyof StatementSettings,
 		newValue: boolean | string | number,
 	) {
+		uxAnalytics.settingChanged(statement.statementId, property, newValue);
 		setStatementSettingToDB({
 			statement,
 			property,
@@ -60,7 +63,9 @@ export function useStatementSettingsHandlers(statement: Statement): StatementSet
 
 	function handlePowerFollowMeChange(newValue: boolean) {
 		const target = topParentStatement ?? statement;
-		const path = newValue ? `/statement/${target.statementId}/chat` : '';
+		const path = newValue
+			? buildStatementPath({ statementId: target.statementId, view: 'chat' })
+			: '';
 		setPowerFollowMeDB(target, path);
 	}
 

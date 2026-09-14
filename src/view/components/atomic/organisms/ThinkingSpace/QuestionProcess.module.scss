@@ -1,0 +1,50 @@
+.process {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 20px;
+	min-width: 0;
+	width: 100%;
+	box-sizing: border-box;
+	padding-inline: 16px;
+	overflow-wrap: anywhere;
+	label:has(input[type='checkbox']) {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: flex-start;
+		gap: 10px;
+		cursor: pointer;
+	}
+	input[type='checkbox'] {
+		width: 18px;
+		height: 18px;
+		flex: 0 0 18px;
+		accent-color: var(--space-ink);
+	}
+	article {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 12px;
+		min-width: 0;
+	}
+	> button {
+		justify-self: start;
+	}
+	> p {
+		white-space: pre-wrap;
+	}
+	details {
+		overflow-wrap: anywhere;
+	}
+	summary {
+		cursor: pointer;
+	}
+	> div:has(> label) {
+		display: grid;
+		gap: 8px;
+		padding: 16px;
+		border: 1px solid var(--space-line);
+		border-radius: 20px;
+	}
+}

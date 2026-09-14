@@ -11,7 +11,7 @@ firebase.json
 env/.env.*
 env.zip
 !env/.env.example
-node_modules/
+node_modules
 dist/
 coverage/
 *.log
@@ -116,3 +116,5 @@ firebase.e2e.json
 
 # Emulator data exported by a worktree's own suite (npm run emulators:solo)
 .emulator-data-solo/
+
+functions/lib-covenant/

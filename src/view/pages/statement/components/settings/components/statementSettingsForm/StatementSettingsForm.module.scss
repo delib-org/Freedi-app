@@ -77,3 +77,46 @@
 		height: 50vh;
 	}
 }
+
+.statementSettingsForm {
+	gap: 24px;
+	textarea,
+	input[type='text'] {
+		border: 1px solid var(--space-line);
+		border-radius: 16px;
+		background: var(--space-surface);
+		box-shadow: none;
+		font: inherit;
+		box-sizing: border-box;
+	}
+}
+
+.revealAdvanced {
+	align-self: flex-start;
+	margin-block: var(--space-xs);
+	padding: var(--space-2xs) var(--space-xs);
+	border: none;
+	border-radius: var(--radius-chip);
+	background: transparent;
+	color: var(--btn-primary);
+	font: inherit;
+	font-size: var(--font-size-small);
+	font-weight: var(--font-weight-semibold);
+	cursor: pointer;
+
+	&:hover,
+	&:focus-visible {
+		text-decoration: underline;
+	}
+}
+
+.saveArea {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	align-items: flex-start;
+}
+.saveCaption {
+	color: var(--text-caption);
+	font-size: 0.875rem;
+}

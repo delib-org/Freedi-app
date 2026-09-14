@@ -1237,7 +1237,13 @@ const ClusterBoard: FC<Props> = ({
 				</div>
 			</div>
 
-			<PanZoomControls scale={transform.scale} onZoomIn={zoomIn} onZoomOut={zoomOut} onFit={fit} />
+			<PanZoomControls
+				fixed
+				scale={transform.scale}
+				onZoomIn={zoomIn}
+				onZoomOut={zoomOut}
+				onFit={fit}
+			/>
 
 			{filterPrompts.length > 0 && (
 				<div className={styles.filterPrompt} role="alertdialog" aria-live="polite" data-no-pan>

@@ -13,7 +13,10 @@ import Description from '../evaluations/components/description/Description';
 import { Statement, StatementType } from '@freedi/shared-types';
 import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { useNotificationActions } from '@/controllers/hooks/useNotificationActions';
+import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
+import { store } from '@/redux/store';
+import { setStatement } from '@/redux/statements/statementsSlice';
+import { useReadVisibleNotifications } from '@/controllers/hooks/useReadVisibleNotifications';
 import { fetchOlderSubStatements } from '@/controllers/db/statements/listenToStatements';
 import { CHAT } from '@/constants/common';
 
@@ -39,9 +42,12 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 	// scroller — Virtuoso attaches to it via customScrollParent so the
 	// description, paragraphs, and messages all scroll together. The side-chat
 	// panel keeps its own internal scroller.
+	const [readContainer, setReadContainer] = useState<HTMLDivElement | null>(null);
+	useReadVisibleNotifications(readContainer, statementId);
 	const [pageScroller, setPageScroller] = useState<HTMLElement | null>(null);
 	const containerRefCallback = useCallback(
 		(node: HTMLDivElement | null) => {
+			setReadContainer(node);
 			if (node && !sideChat) {
 				setPageScroller(node.closest('.page__main') as HTMLElement | null);
 			}
@@ -78,22 +84,6 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 			oldestCreatedAtRef.current = subStatements[0].createdAt;
 		}
 	}, [subStatements]);
-
-	// Auto-mark notifications as read when viewing chat
-	const { markStatementAsRead, getStatementUnreadCount } = useNotificationActions();
-
-	useEffect(() => {
-		if (!statementId) return;
-
-		const unreadCount = getStatementUnreadCount(statementId);
-		if (unreadCount === 0) return;
-
-		const timer = setTimeout(() => {
-			markStatementAsRead(statementId);
-		}, 2000);
-
-		return () => clearTimeout(timer);
-	}, [statementId, markStatementAsRead, getStatementUnreadCount]);
 
 	// Reset lazy loading state when navigating to a different statement, and arm
 	// loadMore only after the initial render/scroll has settled (see ref comment).
@@ -156,11 +146,36 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 		firstTimeRef.current = false;
 	}, [location.hash, usePageScroll, pageScroller]);
 
+	useEffect(() => {
+		if (!location.hash || !statementId) return;
+		let targetId: string;
+		try {
+			targetId = decodeURIComponent(location.hash.slice(1));
+		} catch {
+			return;
+		}
+		if (store.getState().statements.statements.some((item) => item.statementId === targetId))
+			return;
+		let cancelled = false;
+		void getStatementFromDB(targetId).then((target) => {
+			if (!cancelled && target?.parentId === statementId) store.dispatch(setStatement(target));
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [location.hash, statementId]);
+
 	// Handle hash navigation
 	useEffect(() => {
 		if (!location.hash || subStatements.length === 0) return;
 
-		const targetId = location.hash.slice(1);
+		let targetId: string;
+		try {
+			targetId = decodeURIComponent(location.hash.slice(1));
+		} catch {
+			return;
+		}
 		const index = subStatements.findIndex((s) => s.statementId === targetId);
 		if (index >= 0) {
 			virtuosoRef.current?.scrollToIndex({ index, behavior: 'auto', align: 'center' });
@@ -233,7 +248,7 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 			const isOption = statementSub.statementType === StatementType.option;
 
 			return (
-				<div className={styles.messageWrapper}>
+				<div className={styles.messageWrapper} data-contribution-id={statementSub.statementId}>
 					{isOption ? (
 						<TreeOptionNode
 							statement={statementSub}

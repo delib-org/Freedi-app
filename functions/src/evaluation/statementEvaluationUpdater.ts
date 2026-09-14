@@ -368,7 +368,7 @@ async function updateStatementInTransaction(
 		// the option itself, while the settings UI only ever offered the field
 		// on questions. The two never met, so the confidence index was in
 		// practice only ever written by the manual recalculation callable.
-		const { count: stakeholderCount } = resolveStakeholderCount(
+		const { count: resolvedStakeholders } = resolveStakeholderCount(
 			statementData as StakeholderScope,
 			ancestors.parent,
 			ancestors.top,
@@ -376,6 +376,20 @@ async function updateStatementInTransaction(
 		const samplingQuality =
 			resolveSamplingQuality(statementData as StakeholderScope, ancestors.parent, ancestors.top) ??
 			DEFAULT_SAMPLING_QUALITY;
+
+		// An inferred N is the question's voter count, maintained by a separate
+		// trigger, so the very first vote on an option can land before the
+		// counter it is about to increment has been written. Everyone who
+		// evaluated this option is a voter in its question by definition, so
+		// the evaluator count is a floor on N — without this the strip briefly
+		// renders "2 / 1", which reads as a bug rather than as a race.
+		const stakeholderCount =
+			resolvedStakeholders !== undefined
+				? Math.max(
+						resolvedStakeholders,
+						(statementData.evaluation?.numberOfEvaluators ?? 0) + addEvaluator,
+					)
+				: undefined;
 
 		const { agreement, evaluation } = calculateEvaluation(
 			statement,

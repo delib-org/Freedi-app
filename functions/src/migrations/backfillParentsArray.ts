@@ -1,3 +1,4 @@
+import type { UpdateData, DocumentData } from 'firebase-admin/firestore';
 import { db } from '../index';
 import { Collections } from '@freedi/shared-types';
 import { logger } from 'firebase-functions/v1';
@@ -157,7 +158,7 @@ export async function migrateBackfillParents(): Promise<MigrationResult> {
 					}
 
 					// Also fix topParentId if it's missing
-					const updateData: Record<string, unknown> = { parents };
+					const updateData: UpdateData<DocumentData> = { parents };
 					if (!data.topParentId) {
 						updateData.topParentId = parents[0]; // first ancestor is the top parent
 					}

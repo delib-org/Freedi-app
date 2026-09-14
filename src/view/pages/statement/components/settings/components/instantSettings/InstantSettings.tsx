@@ -1,5 +1,5 @@
 import { FC, useEffect, useRef, useState } from 'react';
-import { Zap, MessageCircle, PieChart, Vote, Heart } from 'lucide-react';
+import { Zap, MessageCircle, PieChart, Vote, Heart, LucideIcon } from 'lucide-react';
 import {
 	EvaluationUI,
 	Statement,
@@ -15,6 +15,9 @@ import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import RatingScaleButtons from '../QuestionSettings/RatingScaleButtons/RatingScaleButtons';
 import VotingSettings from '../QuestionSettings/votingSettings/VotingSettings';
 import ToggleSwitch from '../advancedSettings/ToggleSwitch';
+import AllowAddAnswersToggle from '../allowAddAnswers/AllowAddAnswersToggle';
+import SavedFlash from '../savedFlash/SavedFlash';
+import { SettingsVariant } from '../../settingsTypeHelpers';
 import { useStatementSettingsHandlers } from '../../useStatementSettingsHandlers';
 import { defaultStatementSettings } from '../../emptyStatementModel';
 import ConsentIcon from '@/assets/icons/doubleCheckIcon.svg?react';
@@ -33,8 +36,61 @@ const toggleWrapClass = `${advStyles.enhancedSettings} ${advStyles.flatGroup}`;
 
 const SAVED_FLASH_MS = 1600;
 
+type InstantToggleKey = 'enableEvaluation' | 'hasChat' | 'showEvaluation';
+
+interface InstantToggle {
+	key: InstantToggleKey;
+	labelKey: string;
+	descriptionKey: string;
+	icon: LucideIcon;
+	defaultValue: boolean;
+}
+
+const ALL_INSTANT_TOGGLES: InstantToggle[] = [
+	{
+		key: 'enableEvaluation',
+		labelKey: 'Accepting responses',
+		descriptionKey: 'Off = participants can see but not rate or vote',
+		icon: Vote,
+		defaultValue: true,
+	},
+	{
+		key: 'hasChat',
+		labelKey: 'Discussion chat',
+		descriptionKey: 'Let participants discuss the question and comment on each option',
+		icon: MessageCircle,
+		defaultValue: false,
+	},
+	{
+		key: 'showEvaluation',
+		labelKey: 'Show live results',
+		descriptionKey: 'Participants see scores while responding (may bias them)',
+		icon: PieChart,
+		defaultValue: false,
+	},
+];
+
+/**
+ * Which high-frequency toggles the hero shows per page. The Host hub moves
+ * "accepting responses" and "live results" into its Live now card and
+ * "discussion chat" into Participation Rules, so the hub hero keeps only the
+ * two segmented controls. This table is the single source of truth the
+ * duplicate-control test reads.
+ */
+export const INSTANT_TOGGLES_BY_VARIANT: Record<SettingsVariant, InstantToggleKey[]> = {
+	legacy: ['enableEvaluation', 'hasChat', 'showEvaluation'],
+	hub: [],
+};
+
+/** Whether the hero renders the "Allow participants to add answers" control. */
+export const INSTANT_ALLOW_ADD_BY_VARIANT: Record<SettingsVariant, boolean> = {
+	legacy: true,
+	hub: false,
+};
+
 interface InstantSettingsProps {
 	statement: Statement;
+	variant?: SettingsVariant;
 }
 
 /**
@@ -43,7 +99,10 @@ interface InstantSettingsProps {
  * participation mode, rating scale, and the three high-frequency toggles.
  * Everything here saves instantly.
  */
-const InstantSettings: FC<InstantSettingsProps> = ({ statement: propStatement }) => {
+const InstantSettings: FC<InstantSettingsProps> = ({
+	statement: propStatement,
+	variant = 'legacy',
+}) => {
 	const { t } = useTranslation();
 	// Prefer the live Redux statement so instant writes reflect back
 	// as soon as the snapshot listener fires.
@@ -79,17 +138,17 @@ const InstantSettings: FC<InstantSettingsProps> = ({ statement: propStatement })
 		flashSaved('scale');
 	}
 
-	function toggle(property: 'enableEvaluation' | 'hasChat' | 'showEvaluation', checked: boolean) {
+	function toggle(property: InstantToggleKey, checked: boolean) {
 		handleSettingChange(property, checked);
 		flashSaved(property);
 	}
 
-	const savedPill = (field: string) =>
-		savedField === field ? (
-			<span className={styles.instantSettings__savedFlash} aria-live="polite">
-				{t('Saved')} ✓
-			</span>
-		) : null;
+	const savedPill = (field: string) => <SavedFlash active={savedField === field} />;
+
+	const toggles = ALL_INSTANT_TOGGLES.filter((item) =>
+		INSTANT_TOGGLES_BY_VARIANT[variant].includes(item.key),
+	);
+	const showAllowAdd = INSTANT_ALLOW_ADD_BY_VARIANT[variant] && isQuestion;
 
 	return (
 		<section className={styles.instantSettings} data-cy="instant-settings">
@@ -212,32 +271,32 @@ const InstantSettings: FC<InstantSettingsProps> = ({ statement: propStatement })
 					</p>
 				))}
 
-			<div className={`${styles.instantSettings__toggles} ${toggleWrapClass}`}>
-				<ToggleSwitch
-					isChecked={settings.enableEvaluation ?? true}
-					onChange={(checked) => toggle('enableEvaluation', checked)}
-					label={t('Accepting responses')}
-					description={t('Off = participants can see but not rate or vote')}
-					icon={Vote}
-				/>
-				{savedPill('enableEvaluation')}
-				<ToggleSwitch
-					isChecked={settings.hasChat ?? false}
-					onChange={(checked) => toggle('hasChat', checked)}
-					label={t('Discussion chat')}
-					description={t('Let participants discuss the question and comment on each option')}
-					icon={MessageCircle}
-				/>
-				{savedPill('hasChat')}
-				<ToggleSwitch
-					isChecked={settings.showEvaluation ?? false}
-					onChange={(checked) => toggle('showEvaluation', checked)}
-					label={t('Show live results')}
-					description={t('Participants see scores while responding (may bias them)')}
-					icon={PieChart}
-				/>
-				{savedPill('showEvaluation')}
-			</div>
+			{(toggles.length > 0 || showAllowAdd) && (
+				<div className={`${styles.instantSettings__toggles} ${toggleWrapClass}`}>
+					{showAllowAdd && (
+						<>
+							<AllowAddAnswersToggle
+								statement={statement}
+								handleSettingChange={handleSettingChange}
+								onSaved={() => flashSaved('allowAdd')}
+							/>
+							{savedPill('allowAdd')}
+						</>
+					)}
+					{toggles.map((item) => (
+						<div key={item.key}>
+							<ToggleSwitch
+								isChecked={settings[item.key] ?? item.defaultValue}
+								onChange={(checked) => toggle(item.key, checked)}
+								label={t(item.labelKey)}
+								description={t(item.descriptionKey)}
+								icon={item.icon}
+							/>
+							{savedPill(item.key)}
+						</div>
+					))}
+				</div>
+			)}
 		</section>
 	);
 };

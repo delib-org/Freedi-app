@@ -257,3 +257,21 @@
     }
   }
 }
+
+:global(:root:has(.thinking-space)) .menu {
+	.menuHeader {
+		background: var(--space-mint);
+		color: var(--space-ink);
+		font-family: inherit;
+	}
+	.menuContent {
+		border: 1px solid var(--space-line);
+		border-radius: 24px;
+		background: var(--space-surface);
+		color: var(--space-ink);
+		box-shadow: var(--space-shadow);
+		&::before {
+			display: none;
+		}
+	}
+}

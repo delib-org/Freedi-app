@@ -1,4 +1,4 @@
-import { FC, useContext, useState } from 'react';
+import { FC, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { logError } from '@/utils/errorHandling';
 
@@ -49,7 +49,8 @@ const StatementBottomNav: FC<Props> = () => {
 	const navigate = useNavigate();
 	const { user } = useAuthentication();
 
-	const [searchParams] = useSearchParams();
+	const [searchParams, setSearchParams] = useSearchParams();
+	const consumedCompose = useRef(false);
 	const activeTab = searchParams.get('tab') ?? 'chat';
 
 	const { statement } = useContext(StatementContext);
@@ -108,7 +109,7 @@ const StatementBottomNav: FC<Props> = () => {
 		return true;
 	});
 
-	function handleCreateNewOption() {
+	const handleCreateNewOption = useCallback(() => {
 		if (!statement) return;
 
 		// Default to question if parent is an option or group (options can't be created under options or groups)
@@ -127,7 +128,7 @@ const StatementBottomNav: FC<Props> = () => {
 				error: null,
 			}),
 		);
-	}
+	}, [dispatch, statement]);
 
 	function handleCreateSimpleQuestion() {
 		if (!statement) return;
@@ -163,7 +164,7 @@ const StatementBottomNav: FC<Props> = () => {
 		);
 	}
 
-	const handleAddOption = () => {
+	const handleAddOption = useCallback(() => {
 		if (isHalted) return;
 		// If Popper-Hebbian mode is enabled AND pre-check is enabled, show initial idea modal first
 		if (isPopperHebbianEnabled && isPopperPreCheckEnabled) {
@@ -174,7 +175,37 @@ const StatementBottomNav: FC<Props> = () => {
 			handleCreateNewOption();
 			decreaseLearning({ addOption: true });
 		}
-	};
+	}, [
+		isHalted,
+		isPopperHebbianEnabled,
+		isPopperPreCheckEnabled,
+		decreaseLearning,
+		handleCreateNewOption,
+	]);
+
+	useEffect(() => {
+		if (searchParams.get('compose') !== 'solution') {
+			consumedCompose.current = false;
+
+			return;
+		}
+		if (consumedCompose.current || !statement || !user || !(canAddOption || isAdmin) || isHalted)
+			return;
+		consumedCompose.current = true;
+		const next = new URLSearchParams(searchParams);
+		next.delete('compose');
+		setSearchParams(next, { replace: true });
+		handleAddOption();
+	}, [
+		searchParams,
+		setSearchParams,
+		statement,
+		user,
+		canAddOption,
+		isAdmin,
+		isHalted,
+		handleAddOption,
+	]);
 
 	function handleInitialIdeaSubmit(idea: string) {
 		setInitialIdea(idea);

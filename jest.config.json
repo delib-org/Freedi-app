@@ -1,13 +1,20 @@
 {
 	"preset": "ts-jest",
 	"testEnvironment": "jsdom",
-	"setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"],
+	"setupFilesAfterEnv": [
+		"<rootDir>/src/setupTests.ts"
+	],
 	"modulePathIgnorePatterns": [
 		"<rootDir>/functions/local-packages/",
 		"<rootDir>/functions/package/"
 	],
-	"roots": ["<rootDir>/src", "<rootDir>/__mocks__", "<rootDir>/packages"],
+	"roots": [
+		"<rootDir>/src",
+		"<rootDir>/__mocks__",
+		"<rootDir>/packages"
+	],
 	"moduleNameMapper": {
+		"\\.svg\\?url$": "<rootDir>/src/__mocks__/fileMock.ts",
 		"^valibot$": "<rootDir>/__mocks__/valibot.ts",
 		"^clsx$": "<rootDir>/__mocks__/clsx.ts",
 		"^lucide-react$": "<rootDir>/node_modules/lucide-react/dist/cjs/lucide-react.js",
@@ -22,20 +29,26 @@
 		"node_modules/(?!(valibot|clsx)/)"
 	],
 	"transform": {
-		"^.+\\.(ts|tsx)$": ["<rootDir>/jest-transformer.cjs", {
-			"isolatedModules": true,
-			"tsconfig": {
-				"esModuleInterop": true,
-				"jsx": "react"
+		"^.+\\.(ts|tsx)$": [
+			"<rootDir>/jest-transformer.cjs",
+			{
+				"isolatedModules": true,
+				"tsconfig": {
+					"esModuleInterop": true,
+					"jsx": "react"
+				}
 			}
-		}],
-		"packages/.+\\.(ts|tsx)$": ["<rootDir>/jest-transformer.cjs", {
-			"isolatedModules": true,
-			"tsconfig": {
-				"esModuleInterop": true,
-				"jsx": "react"
+		],
+		"packages/.+\\.(ts|tsx)$": [
+			"<rootDir>/jest-transformer.cjs",
+			{
+				"isolatedModules": true,
+				"tsconfig": {
+					"esModuleInterop": true,
+					"jsx": "react"
+				}
 			}
-		}]
+		]
 	},
 	"testMatch": [
 		"<rootDir>/src/**/__tests__/**/*.(ts|tsx|js)",
@@ -47,5 +60,12 @@
 		"!src/main.tsx",
 		"!src/vite-env.d.ts"
 	],
-	"moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
+	"moduleFileExtensions": [
+		"ts",
+		"tsx",
+		"js",
+		"jsx",
+		"json",
+		"node"
+	]
 }

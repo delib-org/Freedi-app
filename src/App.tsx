@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { Outlet } from 'react-router';
-import { AgreementProvider } from './context/AgreementProvider';
+import { FirstRunGate } from './view/pages/firstRun/FirstRunGate';
+import AddStatementSheetContainer from './view/pages/statement/components/addStatement/AddStatementSheetContainer';
 import { useAuthentication } from './controllers/hooks/useAuthentication';
 import { useAuthRedirect } from './controllers/hooks/useAuthRedirect';
 import LoadingPage from './view/pages/loadingPage/LoadingPage';
@@ -30,9 +31,10 @@ export default function App() {
 			<Accessibility />
 			<ListenerStats />
 			<OfflineAlert />
-			<AgreementProvider user={user}>
+			<FirstRunGate user={user}>
 				<Outlet />
-			</AgreementProvider>
+				<AddStatementSheetContainer />
+			</FirstRunGate>
 		</Suspense>
 	);
 }
