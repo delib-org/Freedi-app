@@ -150,7 +150,8 @@ export function councilBallot(input: CouncilBallotInput): CouncilModel {
 			mine: input.myVoteStatementId === candidate.statementId,
 		};
 	});
-	if (showResults && input.session.votingSettings?.liveReorder === true) {
+	// Same rule as the students' ballot: once the counts show, the board follows them.
+	if (showResults && input.session.votingSettings?.liveReorder !== false) {
 		rows.sort((a, b) => b.votes - a.votes || a.number - b.number);
 	}
 

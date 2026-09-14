@@ -265,3 +265,24 @@ samples the walker and the paper every 100 ms. It showed:
   the guide's position came back. It is now a single fade, and the world
   answers the table view at once when the camera already frames it (a 0.9 s
   "turn" to the same spot kept the paper waiting).
+
+### The ballot follows the counts, and every overtake slides (September 14)
+
+Tal asked for the voting options to reorder with animation. Both halves
+already existed but were double-gated: the ballot only re-sorted when the
+teacher had revealed the counts AND ticked "לסדר מחדש לפי מספר הקולות", which
+defaulted off. `votingSettings.liveReorder` now counts as ON unless it is
+`false` (Voting.ts, `councilBallot`, the teacher's switch). The teacher can
+still switch it off. While the counts are hidden the order never moves,
+because it would leak the leader.
+
+- The students' ballot keeps its FLIP (`flipRow`). Each overtake slides
+  from where the eye left it, with a slight overshoot.
+- The council's 3D board now slides too (`slideBallot` in `village.js`).
+  Rows are known by ballot number and glide to their new slot, and bars grow
+  instead of jumping. An update mid-slide starts from where the row is drawn;
+  reduced motion repaints at once.
+- `scripts/probe-ballot-reorder.mjs` checks it in a real browser: counts
+  revealed, switch untouched, two forced overtakes, each must slide (> 40px)
+  and come to rest. On the emulator the first counting trigger after idle can
+  take ~10 s, so it waits for each order instead of timing it.
