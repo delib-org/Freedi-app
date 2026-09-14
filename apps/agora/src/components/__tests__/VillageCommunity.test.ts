@@ -13,7 +13,16 @@ vi.mock('../../lib/proposals', () => ({
 	listenToDeliberation: vi.fn(),
 	getOwnerThreads: vi.fn(),
 	getThreadMessages: vi.fn(),
+	likeStatement: vi.fn(),
+	rateStatement: vi.fn(),
 }));
+vi.mock('../../lib/session', () => ({
+	getConsensusPool: () => ({ left: 0, right: 0, center: 0 }),
+	getSessionState: () => ({ participants: [] }),
+}));
+vi.mock('../RateScale', () => ({ RateScale: vi.fn() }));
+vi.mock('../ResultsBoard', () => ({ ResultsBoard: vi.fn() }));
+vi.mock('../HelpersBoard', () => ({ HelpersBoard: vi.fn() }));
 vi.mock('../../lib/seenState', () => ({ threadUnreadCount: vi.fn() }));
 vi.mock('../../views/ThreadChat', () => ({ ThreadChat: vi.fn() }));
 vi.mock('../StageNav', () => ({ planItemLabel: () => '' }));

@@ -2443,6 +2443,7 @@ export function Deliberation(
 									scores: getDeliberationState().scores,
 									census: getConsensusPool(),
 									userId,
+									onlyScored: live.votingSettings?.goalZoneOnly === true,
 								}),
 						m(
 							'button.btn.btn--primary.btn--full.btn--lg',

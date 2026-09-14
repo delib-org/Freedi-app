@@ -1,0 +1,514 @@
+/* The village, played by three students.
+ *
+ * A lesson with four booths (story, needs, vision, solutions) runs from the
+ * lobby to the recap with three REAL browser students and the teacher moving
+ * the room through callables — the same path the console takes. Every point
+ * the classic game pays is asserted on the participant documents at the end:
+ * the first-draft credit, the rating credit, the round appreciation, the
+ * thank-you, the bridging tier. The council's scoreboard is photographed as
+ * the class map, narrowed to the goal by the teacher, then as the ballot with
+ * its bars.
+ *
+ * Run: npm run solo -- node apps/agora/scripts/village-sim.mjs   (from the repo root)
+ *  or: node scripts/village-sim.mjs                              (default ports)
+ * Needs emulators + vite + seed; screenshots land in output/village-sim/.
+ */
+import { mkdirSync } from 'node:fs';
+import { chromium } from '@playwright/test';
+import { preflight, VITE_HOST } from './lib/preflight.mjs';
+import { clearCelebration, eq, fail, mkPage, passNameDoor, shotter, step } from './lib/e2e.mjs';
+import { callable, db, fastlane, positionStudent } from './lib/fastlane.ts';
+
+await preflight();
+
+const OUT = 'output/village-sim';
+mkdirSync(OUT, { recursive: true });
+const shot = shotter(OUT);
+const KEEP = process.argv.includes('--keep');
+
+const runId = `village-${Date.now().toString(36)}`;
+const PLAN = [
+	{ itemId: 'lobby', stage: 'lobby' },
+	{ itemId: 'round-story', stage: 'question', kind: 'story' },
+	{ itemId: 'round-needs', stage: 'question', kind: 'needs' },
+	{ itemId: 'round-vision', stage: 'question', kind: 'vision' },
+	{ itemId: 'deliberation', stage: 'deliberation' },
+	{ itemId: 'voting', stage: 'voting' },
+	{ itemId: 'results', stage: 'results' },
+];
+const STUDENTS = [
+	{ label: 'S1', name: 'נועה', camp: 12 },
+	{ label: 'S2', name: 'אורי', camp: 88 },
+	{ label: 'S3', name: 'מיה', camp: 20 },
+];
+const TEXTS = {
+	story: [
+		'בשנה שעברה חילקנו את התורנויות בכיתה בלי לשאול אף אחד, וחצי מהכיתה הרגישה שדילגו עליה.',
+		'סבא שלי סיפר איך בקיבוץ החליטו הכול יחד באסיפה, גם כשזה לקח שעות.',
+		'בקבוצת הכדורסל שלנו המאמן שואל את כולם לפני שהוא קובע את ההרכב, וזה מרגיש הוגן.',
+	],
+	needs: [
+		'שכולם ישמעו לפני שמחליטים, גם מי שמדבר פחות.',
+		'שההחלטה תהיה ברורה וכתובה, כדי שלא יתווכחו אחר כך מה סוכם.',
+		'שיהיה מקום לשנות החלטה אם רואים שהיא לא עובדת.',
+	],
+	vision: [
+		'כיתה שבה כל החלטה מתחילה בסבב קצר שבו כל אחד אומר משפט.',
+		'לוח אחד על הקיר עם כל ההחלטות ומי אחראי על מה.',
+		'מפגש קצר פעם בחודש שבו בודקים מה עבד ומה משנים.',
+	],
+	proposal: [
+		'אספה כיתתית שבה לכל תלמיד קול שווה, אבל החלטות על כסף דורשות רוב של שני שלישים.',
+		'ועדה של שלושה נציגים שמתחלפת כל חודש ומביאה הצעות לאישור כל הכיתה.',
+		'ניסיון של חודש לכל החלטה גדולה, ואחריו הצבעה חוזרת אם משהו לא עבד.',
+	],
+};
+
+// ---------------------------------------------------------------------------
+const FIRESTORE_HOST = process.env.AGORA_FIRESTORE_HOST ?? 'http://localhost:8081';
+const REST = `${FIRESTORE_HOST}/v1/projects/${process.env.AGORA_PROJECT_ID ?? 'freedi-test'}/databases/(default)/documents`;
+const owner = { Authorization: 'Bearer owner' };
+
+async function sessionDoc(sessionId) {
+	const snap = await db.collection('agoraSessions').doc(sessionId).get();
+
+	return snap.data();
+}
+async function participantDoc(sessionId, uid) {
+	const snap = await db.collection('agoraParticipants').doc(`${sessionId}--${uid}`).get();
+
+	return snap.data();
+}
+async function waitFor(what, read, predicate, timeoutMs = 60_000) {
+	const deadline = Date.now() + timeoutMs;
+	for (;;) {
+		const value = await read();
+		if (predicate(value)) return value;
+		if (Date.now() > deadline) fail(`${what} — timed out`);
+		await new Promise((resolve) => setTimeout(resolve, 400));
+	}
+}
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Click through the game's cheers. Credits land from the server whenever they
+ * land, and every one of them is a modal — a goal scored by a classmate's
+ * rating can cover the button this script is about to press.
+ */
+async function tap(page, locator, label = '') {
+	for (let attempt = 0; attempt < 8; attempt++) {
+		await clearCelebration(page, label);
+		try {
+			await locator.click({ timeout: 4000 });
+
+			return;
+		} catch (error) {
+			if (attempt === 7) throw error;
+		}
+	}
+}
+
+/** The village iframe of a student's page */
+const world = (page) => page.frameLocator('iframe.village-shell__world');
+
+/** The toolbar button that opens the item on screen (the desk, the ballot, the recap) */
+async function openActivity(page, text) {
+	await tap(page, page.locator('.village-shell__toolbar button', { hasText: text }).first());
+}
+async function backToVillage(page) {
+	// A class-wide cheer (a goal, a bridge) lands on every page, not only the author's.
+	await clearCelebration(page);
+	const panel = page.locator('.village-community__panel header button', { hasText: 'חזרה לכפר' });
+	if (await panel.count()) await tap(page, panel.first());
+	const activity = page.locator('.village-shell__activity:visible button', {
+		hasText: /חזרה לשולחן|חזרה לכפר/,
+	});
+	if (await activity.count()) await tap(page, activity.first());
+	// The toolbar button TOGGLES the activity, so re-read it after the panel
+	// closed: pressing it on "חזרה לכפר" closes, pressing it again would reopen.
+	for (let attempt = 0; attempt < 3; attempt++) {
+		await pause(250);
+		const toolbar = page.locator('.village-shell__toolbar button', { hasText: 'חזרה לכפר' });
+		if ((await toolbar.count()) === 0) break;
+		await tap(page, toolbar.first());
+	}
+}
+
+/** Write on the desk of the booth the room is at, then wait for the paper to land on the board */
+async function writeAtDesk(page, label, text, textarea) {
+	await clearCelebration(page, label);
+	await backToVillage(page);
+	await openActivity(page, 'הפתק שלי על השולחן');
+	const input = page.locator(`.village-desk ${textarea}`);
+	await input.waitFor({ timeout: 15000 });
+	await input.fill(text);
+	await tap(page, page.locator('.village-desk button.btn--primary').first(), label);
+	// The paper flies from the desk to the board, and the board opens.
+	await page.locator('.village-community__panel').waitFor({ timeout: 20000 });
+	await page.locator('.village-note--own').waitFor({ timeout: 10000 });
+	console.log(`   ✓ ${label} wrote at the booth and the paper landed on the board`);
+}
+
+/** Open the booth board and rate every classmate's note with `rate(noteLocator, index)` */
+async function rateOnBoard(page, label, rate) {
+	await clearCelebration(page, label);
+	await backToVillage(page);
+	await tap(page, page.locator('.village-board-open'), label);
+	await page.locator('.village-community__panel').waitFor({ timeout: 10000 });
+	const others = page.locator('.village-note:not(.village-note--own)');
+	await others.first().waitFor({ timeout: 15000 });
+	const count = await others.count();
+	for (let i = 0; i < count; i++) {
+		await rate(others.nth(i), i);
+		await pause(500);
+	}
+	console.log(`   ✓ ${label} rated ${count} notes on the board`);
+}
+
+async function coins(page) {
+	const text = await page.locator('.village-coins strong').textContent();
+
+	return Number(String(text).replace(/[^\d.]/g, '')) || 0;
+}
+
+// ---------------------------------------------------------------------------
+step('A lesson with four booths opens in the village');
+const run = await fastlane({
+	stage: 'lobby',
+	students: 0,
+	proposals: 0,
+	ratings: false,
+	stagePlan: PLAN,
+	runId,
+	quiet: true,
+});
+// The console's start screen chooses the world; a callable-made session must be told.
+await db.collection('agoraSessions').doc(run.sessionId).update({ world: 'village' });
+console.log(`   session ${run.sessionId} (code ${run.code}) · world: village`);
+const advance = async (toIndex) => {
+	await callable('agoraAdvanceStage', { sessionId: run.sessionId, toIndex }, run.teacherToken);
+	console.log(`   ✓ teacher → ${PLAN[toIndex].itemId}`);
+	await pause(1500);
+};
+
+const browser = await chromium.launch({
+	headless: !KEEP,
+	args: ['--use-angle=metal', '--ignore-gpu-blocklist'],
+});
+const pages = [];
+for (const student of STUDENTS) {
+	const page = await mkPage(browser, student.label, { width: 1360, height: 860 });
+	await page.goto(`${VITE_HOST}/#!/join/${run.code}`, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(page, student.name);
+	try {
+		await page.locator('.lobby__name').waitFor({ state: 'attached', timeout: 30000 });
+	} catch (error) {
+		await page.screenshot({ path: `${OUT}/debug-${student.label}-join.png` });
+		console.log(
+			`   [${student.label} page text] ${(await page.locator('body').innerText()).slice(0, 400).replace(/\n/g, ' | ')}`,
+		);
+		throw error;
+	}
+	const uid = await page.evaluate(() => window.__agoraDebug?.()?.user?.user?.uid ?? null);
+	if (!uid) fail(`${student.label} has no uid`);
+	await positionStudent(run.sessionId, uid, student.camp);
+	pages.push({ ...student, page, uid });
+	const anon = await page.evaluate(
+		() => document.querySelector('.lobby__name strong')?.textContent ?? '?',
+	);
+	console.log(`   ✓ ${student.label} joined as ${anon} (camp ${student.camp})`);
+}
+const [s1, s2, s3] = pages;
+await s1.page.locator('iframe.village-shell__world').waitFor({ timeout: 20000 });
+await pause(6000);
+await shot(s1.page, '01-village-lobby');
+console.log('   ✓ village rendered with the lobby open');
+
+// ---------------------------------------------------------------------------
+step('Booth 1 · the story: everyone writes, everyone likes');
+await advance(1);
+await pause(4000);
+await shot(s1.page, '02-story-booth');
+for (const [i, s] of pages.entries())
+	await writeAtDesk(s.page, s.label, TEXTS.story[i], 'textarea.round__textarea');
+await shot(s1.page, '03-story-board');
+for (const s of pages) {
+	await rateOnBoard(s.page, s.label, async (note) => {
+		await tap(s.page, note.locator('.like-button'), s.label);
+		await note.locator('.like-button--on').waitFor({ timeout: 8000 });
+	});
+}
+
+step('Booth 2 · the needs: a 0…1 step each');
+await advance(2);
+await pause(4000);
+for (const [i, s] of pages.entries())
+	await writeAtDesk(s.page, s.label, TEXTS.needs[i], 'textarea.round__textarea');
+for (const s of pages) {
+	await rateOnBoard(s.page, s.label, async (note) => {
+		await tap(s.page, note.locator('.unit-scale__step').last(), s.label);
+		await note.locator('.unit-scale__step--on').waitFor({ timeout: 8000 });
+	});
+}
+
+step('Booth 3 · the vision');
+await advance(3);
+await pause(4000);
+for (const [i, s] of pages.entries())
+	await writeAtDesk(s.page, s.label, TEXTS.vision[i], 'textarea.round__textarea');
+for (const s of pages) {
+	await rateOnBoard(s.page, s.label, async (note) => {
+		await tap(s.page, note.locator('.unit-scale__step').nth(2), s.label);
+		await note.locator('.unit-scale__step--on').waitFor({ timeout: 8000 });
+	});
+}
+await shot(s2.page, '04-vision-board-rated');
+
+// ---------------------------------------------------------------------------
+step('Booth 4 · the solutions: proposals, ratings, an improvement and a thank-you');
+await advance(4);
+await pause(4000);
+await backToVillage(s1.page);
+await shot(s1.page, '05-solutions-booth');
+for (const [i, s] of pages.entries())
+	await writeAtDesk(s.page, s.label, TEXTS.proposal[i], 'textarea.write-desk__textarea');
+await shot(s3.page, '06-solutions-board');
+
+// Camps: S1 left, S2 right, S3 left. Ratings chosen so that P1 and P3 are
+// backed by BOTH camps (in the goal) and P2 by the left camp only (out).
+const RATE = {
+	S1: { 1: 'strong-for', 2: 'for' }, // S1 rates P2 +1, P3 +0.5
+	S2: { 0: 'strong-for', 2: 'strong-for' }, // S2 rates P1 +1, P3 +1
+	S3: { 0: 'for', 1: 'for' }, // S3 rates P1 +0.5, P2 +0.5
+};
+for (const s of pages) {
+	await rateOnBoard(s.page, s.label, async (note) => {
+		const text = await note.locator('p').first().textContent();
+		const index = TEXTS.proposal.findIndex((candidate) => text?.includes(candidate.slice(0, 20)));
+		const variant = RATE[s.label][index];
+		if (!variant) fail(`${s.label} met an unexpected note: ${text}`);
+		await tap(s.page, note.locator(`.rate-scale__option--${variant}`), s.label);
+		await note.locator('.rate-scale__option--selected').waitFor({ timeout: 8000 });
+	});
+}
+await shot(s1.page, '07-solutions-rated');
+
+// S2 sends S1 an improvement idea from the board; S1 thanks from their own note.
+const s2CoinsBefore = await coins(s2.page);
+await backToVillage(s2.page);
+await tap(s2.page, s2.page.locator('.village-board-open'), 'S2');
+const s1Note = s2.page.locator('.village-note', { hasText: TEXTS.proposal[0].slice(0, 20) });
+await tap(s2.page, s1Note.locator('.village-note__open'), 'S2');
+await s2.page.locator('.chat-page__input').waitFor({ timeout: 10000 });
+await s2.page
+	.locator('.chat-page__input')
+	.fill('אולי להוסיף שמי שנעדר מהאסיפה יכול להצביע בכתב, כדי שאף אחד לא יישאר בחוץ.');
+await tap(s2.page, s2.page.locator('.chat-page__send'), 'S2');
+await pause(1500);
+console.log('   ✓ S2 sent S1 an improvement idea');
+await backToVillage(s2.page);
+
+await clearCelebration(s1.page, 'S1');
+await backToVillage(s1.page);
+await tap(s1.page, s1.page.locator('.village-board-open'), 'S1');
+await tap(s1.page, s1.page.locator('.village-note--own .village-note__open'), 'S1');
+await s1.page
+	.locator('button.village-note', { hasText: 'שיחה' })
+	.first()
+	.waitFor({ timeout: 20000 });
+await tap(s1.page, s1.page.locator('button.village-note', { hasText: 'שיחה' }).first(), 'S1');
+await s1.page.locator('.thread__msg .btn--primary').first().waitFor({ timeout: 10000 });
+await shot(s1.page, '08-thread-before-thanks');
+await tap(s1.page, s1.page.locator('.thread__msg .btn--primary').first(), 'S1');
+await s1.page.locator('.thread__msg .helped__chip--thanked').waitFor({ timeout: 15000 });
+console.log('   ✓ S1 thanked S2 from the village board');
+await waitFor(
+	'S2 was paid for helping',
+	() => coins(s2.page),
+	(value) => value > s2CoinsBefore,
+	30_000,
+);
+await clearCelebration(s2.page, 'S2');
+await shot(s2.page, '09-helper-coins');
+eq('S2 coins grew after the thank-you', (await coins(s2.page)) > s2CoinsBefore, true);
+await backToVillage(s1.page);
+
+// ---------------------------------------------------------------------------
+step('The council: the scoreboard, then only the goal');
+// The score trigger runs behind every rating; let it finish before reading the board.
+await waitFor(
+	'the score trigger settled every proposal',
+	async () => {
+		const snap = await db.collection('agoraScores').where('sessionId', '==', run.sessionId).get();
+
+		return snap.docs.filter((d) => d.data().classConsensus?.n > 0).length;
+	},
+	(n) => n >= 3,
+	120_000,
+);
+// S3 walks to the council in the 3D village and opens its board.
+await backToVillage(s3.page);
+await clearCelebration(s3.page, 'S3');
+await world(s3.page).locator('nav#preview-stations button[data-place="council"]').click();
+await pause(7000);
+await shot(s3.page, '10-council-3d-scoreboard');
+await clearCelebration(s3.page, 'S3');
+await world(s3.page).locator('#enter').click();
+await s3.page.locator('.village-scoreboard .board').waitFor({ timeout: 15000 });
+// The class map fills as the score trigger lands each rating — wait for all three.
+const scoredBefore = await waitFor(
+	'every rated proposal reached the class map',
+	() => s3.page.locator('.village-scoreboard .board__point').count(),
+	(n) => n === 3,
+	90_000,
+).catch(async (error) => {
+	await shot(s3.page, 'debug-class-map');
+	throw error;
+});
+eq('every rated proposal is on the class map', scoredBefore, 3);
+await shot(s3.page, '11-council-scoreboard-panel');
+
+// The teacher narrows the board to the goal from the console.
+const teacher = await mkPage(browser, 'T', { width: 1360, height: 900 });
+await teacher.goto(`${VITE_HOST}/#!/teach`, { waitUntil: 'domcontentloaded' });
+await teacher.waitForFunction(() => typeof window.__agoraDevSignIn === 'function', {
+	timeout: 15000,
+});
+let teacherUi = false;
+for (let attempt = 1; attempt <= 4 && !teacherUi; attempt++) {
+	await teacher.evaluate(
+		(sub) =>
+			window.__agoraDevSignIn({ sub, email: `${sub}@example.com`, name: 'Fastlane Teacher' }),
+		`${runId}-teacher`,
+	);
+	teacherUi = await teacher
+		.waitForFunction(() => window.__agoraDebug?.()?.user?.tier === 2, { timeout: 8000 })
+		.then(
+			() => true,
+			() => false,
+		);
+}
+if (teacherUi) {
+	await pause(3000);
+	await teacher.goto(`${VITE_HOST}/#!/teach/session/${run.sessionId}`, {
+		waitUntil: 'domcontentloaded',
+	});
+	// "How the vote opens" lives behind the console's settings cog.
+	await teacher.locator('.teacher-nav__cog').first().click({ timeout: 20000 });
+	const toggle = teacher.locator('.voting-settings__row--goal input');
+	const found = await toggle.waitFor({ timeout: 20000 }).then(
+		() => true,
+		() => false,
+	);
+	if (found) {
+		await teacher.locator('.voting-settings__row--goal').scrollIntoViewIfNeeded();
+		await shot(teacher, '12-teacher-goal-toggle');
+		// click, not check(): the box re-renders from the stored value until the save lands
+		await toggle.click();
+		console.log('   ✓ teacher switched the board to the goal from the console');
+	} else {
+		teacherUi = false;
+	}
+}
+if (!teacherUi) {
+	await db
+		.collection('agoraSessions')
+		.doc(run.sessionId)
+		.update({ 'votingSettings.goalZoneOnly': true });
+	console.log('   (teacher console unavailable in this run — the setting was written directly)');
+}
+await waitFor(
+	'goalZoneOnly reached the session',
+	() => sessionDoc(run.sessionId),
+	(s) => s?.votingSettings?.goalZoneOnly === true,
+);
+await s3.page
+	.locator('.village-scoreboard .board__goal-only, .village-scoreboard .board--goal-only')
+	.waitFor({ timeout: 15000 });
+await pause(800);
+const scoredOnly = await waitFor(
+	'the goal-only board settled',
+	() => s3.page.locator('.village-scoreboard .board__point').count(),
+	(n) => n >= 1 && n <= 2,
+	60_000,
+);
+console.log(`   goal-only board shows ${scoredOnly} of 3 proposals`);
+await shot(s3.page, '13-scoreboard-goal-only');
+await backToVillage(s3.page);
+await pause(1500);
+await shot(s3.page, '14-council-3d-goal-only');
+
+// ---------------------------------------------------------------------------
+step('The vote: the ballot is exactly the goal, and the bars appear when revealed');
+await advance(5);
+const voting = await waitFor(
+	'the ballot was drawn',
+	() => sessionDoc(run.sessionId),
+	(s) => Array.isArray(s?.voting?.candidates),
+);
+const ballot = voting.voting.candidates.map((c) => c.statementId);
+console.log(`   ballot: ${ballot.length} candidates`);
+eq('the ballot is the goal', ballot.length, scoredOnly);
+await pause(3000);
+for (const s of pages) {
+	await clearCelebration(s.page, s.label);
+	await backToVillage(s.page);
+	await openActivity(s.page, 'לקלפי במועצה');
+	const options = s.page.locator('.village-shell__activity button.voting__option');
+	await options.first().waitFor({ timeout: 15000 });
+	await tap(s.page, options.nth(s.label === 'S2' ? Math.min(1, ballot.length - 1) : 0), s.label);
+	await s.page.locator('.voting__option--mine').waitFor({ timeout: 10000 });
+}
+console.log('   ✓ three votes cast from the council');
+await shot(s1.page, '15-ballot-hidden');
+await db
+	.collection('agoraSessions')
+	.doc(run.sessionId)
+	.update({ 'votingSettings.showResults': true });
+await s1.page.locator('.voting__bar').first().waitFor({ timeout: 15000 });
+await shot(s1.page, '16-ballot-bars');
+console.log('   ✓ the bars appeared once the teacher revealed the tallies');
+for (const s of pages) await backToVillage(s.page);
+await clearCelebration(s2.page, 'S2');
+await world(s2.page).locator('nav#preview-stations button[data-place="council"]').click();
+await pause(7000);
+await shot(s2.page, '17-council-3d-ballot-bars');
+
+// ---------------------------------------------------------------------------
+step('The recap');
+await advance(6);
+await waitFor(
+	'the recap landed',
+	() => sessionDoc(run.sessionId),
+	(s) => !!s?.classScore,
+	120_000,
+);
+await pause(2000);
+await clearCelebration(s1.page, 'S1');
+await backToVillage(s1.page);
+await openActivity(s1.page, 'לסיכום במועצה');
+await s1.page.locator('.village-shell__activity .board').first().waitFor({ timeout: 20000 });
+await shot(s1.page, '18-recap');
+
+// ---------------------------------------------------------------------------
+step('Every point of the classic game was paid in the village');
+for (const s of pages) {
+	const doc = await waitFor(
+		`${s.label} points settled`,
+		() => participantDoc(run.sessionId, s.uid),
+		(d) => (d?.points?.proposals ?? 0) >= 3 && (d?.points?.rating ?? 0) > 0,
+		60_000,
+	);
+	const p = doc.points;
+	console.log(
+		`   ${s.label}: total ${p.total} · proposals ${p.proposals} · rating ${p.rating ?? 0} · helping ${p.helping} · appreciation ${p.appreciation ?? p.roundAppreciation ?? 0}`,
+	);
+	eq(`${s.label} first draft paid`, p.proposals >= 3, true);
+	eq(`${s.label} rating credit paid`, (p.rating ?? 0) >= 1, true);
+	eq(`${s.label} has points`, p.total > 0, true);
+}
+const helper = await participantDoc(run.sessionId, s2.uid);
+eq('S2 helping (thank-you) paid', helper.points.helping >= 1, true);
+
+console.log(`\n✓ village simulation complete — screenshots in ${OUT}/`);
+if (!KEEP) await browser.close();

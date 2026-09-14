@@ -1,5 +1,7 @@
 import { isProposalConfirmed } from '../lib/proposals';
 import { villagePlace } from '../lib/flows/villageRoute';
+import { councilBallot, councilPitch, type CouncilModel } from '../lib/flows/villageCouncil';
+import { getVotingState } from '../lib/voting';
 import { sessionVillageMode } from '../lib/flows/sessionLinks';
 import m from 'mithril';
 import { t } from '../lib/i18n';
@@ -645,6 +647,48 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				}
 			})();
 
+			/**
+			 * What the council's wooden scoreboard shows: the class map while the
+			 * room writes and rates, the ballot with its bars once the vote is
+			 * open, the closed ballot after. It follows the ROOM's stage, not the
+			 * one the player stepped back to — the board stands in the village.
+			 */
+			const roomItem = plan[currentIndex];
+			const council = ((): CouncilModel | undefined => {
+				if (!villageMode) return undefined;
+				const roomStage = roomItem?.stage;
+				if (
+					(roomStage === AgoraStage.voting ||
+						roomStage === AgoraStage.results ||
+						roomStage === AgoraStage.ended) &&
+					session.voting
+				) {
+					if (roomStage === AgoraStage.voting && userId) {
+						listenToVoting(sessionId, session.challengeQuestionId, userId);
+					}
+					const votes = getVotingState();
+
+					return councilBallot({
+						session,
+						selections: votes.selections,
+						myVoteStatementId: votes.myVoteStatementId,
+						votedCount: votes.voterUids.size,
+						classSize: participants.length,
+						closed: roomStage !== AgoraStage.voting,
+					});
+				}
+
+				return councilPitch({
+					proposals: getDeliberationState().proposals.filter((p) => !p.hidden),
+					scores: getDeliberationState().scores,
+					userId,
+					goalOnly: session.votingSettings?.goalZoneOnly === true,
+					leftLabel: topic.positioningScale.leftLabel,
+					rightLabel: topic.positioningScale.rightLabel,
+					leadStatementId: session.classScore?.leadStatementId,
+				});
+			})();
+
 			return m('.game', [
 				...overlays,
 				stageNav,
@@ -666,12 +710,18 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								plan,
 								currentIndex,
 								viewingIndex,
+								council,
 								community: myParticipant
 									? {
 											session,
 											userId,
 											anonName: myParticipant.anonName,
 											points: myParticipant.points.total,
+											scoreboard: {
+												topic,
+												leadStatementId: session.classScore?.leadStatementId,
+												goalOnly: session.votingSettings?.goalZoneOnly === true,
+											},
 										}
 									: undefined,
 								onWrite: () => {
@@ -689,6 +739,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									papers: stationNotes(p).map((n) => ({
 										text: n.statement,
 										own: n.creatorId === userId,
+										author: n.anonName,
 									})),
 								})),
 							},

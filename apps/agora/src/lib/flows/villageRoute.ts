@@ -1,26 +1,59 @@
 import { AgoraStage, questionKindOf, type AgoraStagePlanItem } from '@freedi/shared-types';
 
-export type VillagePlace = 'library' | 'challenge' | 'story' | 'needs' | 'solution' | 'council';
+/**
+ * A place in the village. Three are fixed — the library (learning scenes),
+ * the study house (the meeting point) and the council (the scoreboard, the
+ * vote, the decision) — and every QUESTION of the plan, the deliberation
+ * included, has a booth of its own: `booth:<itemId>`. The plan item's stable
+ * id stays the data identity; the place is presentation only.
+ */
+export type VillagePlace = 'library' | 'challenge' | 'council' | `booth:${string}`;
 
-/** A place is presentation only. The plan item's stable ID remains the data identity. */
+/** What a booth asks for — the writing desk's copy and the pavilion's colour follow it */
+export type VillageBoothKind = 'story' | 'needs' | 'vision' | 'open' | 'proposal';
+
+export interface VillageBooth {
+	itemId: string;
+	place: VillagePlace;
+	label: string;
+	kind: VillageBoothKind;
+	/** Position in the plan, so the world can order the booths as the lesson runs */
+	index: number;
+	/** The teacher has reached this question — its board and desk are usable */
+	open: boolean;
+	/** The question the room is on right now — the pennant flies here */
+	current: boolean;
+}
+
+export function boothPlace(itemId: string): VillagePlace {
+	return `booth:${itemId}`;
+}
+
+export function isBoothPlace(place: string): place is `booth:${string}` {
+	return place.startsWith('booth:');
+}
+
+/** The item a booth place stands for, or null for a fixed place */
+export function boothItemId(place: string): string | null {
+	return isBoothPlace(place) ? place.slice('booth:'.length) : null;
+}
+
+export function villageBoothKind(item: AgoraStagePlanItem): VillageBoothKind | null {
+	if (item.stage === AgoraStage.question) return questionKindOf(item);
+	if (item.stage === AgoraStage.deliberation) return 'proposal';
+
+	return null;
+}
+
 export function villagePlace(item: AgoraStagePlanItem): VillagePlace {
-	if (item.stage === AgoraStage.question) {
-		const kind = questionKindOf(item);
-		if (kind === 'story') return 'story';
-		if (kind === 'needs') return 'needs';
-
-		return 'solution';
-	}
+	if (villageBoothKind(item) !== null) return boothPlace(item.itemId);
 	switch (item.stage) {
 		case AgoraStage.framing:
 		case AgoraStage.perspectives:
-			return 'library';
 		case AgoraStage.needs:
 		case AgoraStage.valueIdentification:
 		case AgoraStage.positioning:
 			return 'library';
-		case AgoraStage.deliberation:
-			return 'solution';
 		case AgoraStage.voting:
 		case AgoraStage.results:
 		case AgoraStage.ended:
@@ -28,6 +61,35 @@ export function villagePlace(item: AgoraStagePlanItem): VillagePlace {
 		default:
 			return 'challenge';
 	}
+}
+
+/**
+ * Every booth of this lesson, in plan order — one per question, whether the
+ * teacher has reached it or not. A booth ahead of the room stands in the
+ * village closed, so the class can see the whole road; it opens when the
+ * teacher gets there.
+ */
+export function villageBooths(
+	plan: readonly AgoraStagePlanItem[],
+	currentIndex: number,
+	labelOf: (item: AgoraStagePlanItem) => string,
+): VillageBooth[] {
+	const booths: VillageBooth[] = [];
+	plan.forEach((item, index) => {
+		const kind = villageBoothKind(item);
+		if (kind === null) return;
+		booths.push({
+			itemId: item.itemId,
+			place: boothPlace(item.itemId),
+			label: item.title?.trim() || labelOf(item),
+			kind,
+			index,
+			open: index <= currentIndex,
+			current: index === currentIndex,
+		});
+	});
+
+	return booths;
 }
 
 /** The iframe may request entry, never change a stage or open a future item. */

@@ -1,11 +1,13 @@
 import m from 'mithril';
-import type { AgoraStagePlanItem } from '@freedi/shared-types';
+import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
 import {
 	acceptsVillageEntry,
 	acceptsVillageWrite,
+	villageBooths,
 	villageDesk,
 	villagePlace,
 } from '../lib/flows/villageRoute';
+import type { CouncilModel } from '../lib/flows/villageCouncil';
 import { VillageCommunity, type VillageCommunityAttrs } from './VillageCommunity';
 import { planItemLabel } from './StageNav';
 
@@ -13,12 +15,14 @@ interface VillageShellAttrs {
 	stationPapers?: Array<{
 		itemId: string;
 		place: string;
-		papers: Array<{ text: string; own: boolean; confirmed?: boolean }>;
+		papers: Array<{ text: string; own: boolean; author?: string; confirmed?: boolean }>;
 	}>;
 	community?: Omit<
 		VillageCommunityAttrs,
 		'plan' | 'currentIndex' | 'viewingIndex' | 'navigate' | 'onPause'
 	>;
+	/** What the council's scoreboard paints — absent before the topic loads */
+	council?: CouncilModel;
 	plan: readonly AgoraStagePlanItem[];
 	currentIndex: number;
 	viewingIndex: number;
@@ -26,6 +30,27 @@ interface VillageShellAttrs {
 	onWrite?: () => void;
 	onSelectBook?: (itemId: string) => void;
 	papers: Array<{ text: string; own: boolean; confirmed?: boolean }>;
+}
+
+/** A message from the world naming a place — a board or desk the walker reached */
+function placeOf(payload: unknown, type: string): string | null {
+	if (!payload || typeof payload !== 'object' || !('type' in payload) || !('place' in payload))
+		return null;
+	if (payload.type !== type || typeof payload.place !== 'string') return null;
+
+	return payload.place;
+}
+
+/**
+ * A light world (no shadows, sparse grass, throttled frames) for weak devices
+ * and headless test runs — opted into per browser, never chosen for anyone.
+ */
+function villageLite(): boolean {
+	try {
+		return localStorage.getItem('agora_village_lite') === '1';
+	} catch {
+		return false;
+	}
 }
 
 export function VillageShell(): m.Component<VillageShellAttrs> {
@@ -39,9 +64,14 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 	let flightTimer: ReturnType<typeof setTimeout> | undefined;
 	let communityOpen = false;
 	let boardRequest = 0;
+	let scoreboardRequest = 0;
 	let libraryInside = false;
 	let bookOpen = false;
 	let requestedBook = '';
+	/** A booth the walker chose from the village: open its desk once the item arrives */
+	let requestedDesk = '';
+	/** A council item the walker chose: open its activity (the ballot, the recap) once it arrives */
+	let requestedCouncil = '';
 	let itemId = '';
 	let ready = false;
 	let unavailable = false;
@@ -66,6 +96,8 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				community: !!attrs.community,
 				papers: attrs.papers,
 				stationPapers: attrs.stationPapers,
+				booths: villageBooths(attrs.plan, attrs.currentIndex, planItemLabel),
+				council: attrs.council ?? null,
 			},
 			window.location.origin,
 		);
@@ -91,9 +123,31 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		sync();
 		m.redraw();
 	}
+	/** The plan position an opened place stands for, or -1 */
+	function openedIndexOf(place: string): number {
+		return attrs.plan.findIndex((p, i) => i <= attrs.currentIndex && villagePlace(p) === place);
+	}
+	/** The council's own item — the vote or the recap — once the room has reached one */
+	function councilIndex(): number {
+		let index = -1;
+		attrs.plan.forEach((p, i) => {
+			if (i <= attrs.currentIndex && villagePlace(p) === 'council') index = i;
+		});
+
+		return index;
+	}
+	function openScoreboard(): void {
+		if (!attrs.community) return;
+		scoreboardRequest++;
+		communityOpen = true;
+		sync();
+		m.redraw();
+	}
 	function receive(event: MessageEvent<unknown>): void {
 		if (event.origin !== window.location.origin || event.source !== frame?.contentWindow) return;
 		const payload = event.data;
+		const boardPlace = placeOf(payload, 'agora-village-board');
+		const selectPlace = placeOf(payload, 'agora-village-select');
 		if (
 			payload &&
 			typeof payload === 'object' &&
@@ -115,16 +169,28 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		) {
 			libraryInside = payload.inside;
 			m.redraw();
-		} else if (
-			payload &&
-			typeof payload === 'object' &&
-			'type' in payload &&
-			payload.type === 'agora-village-board' &&
-			'place' in payload
-		) {
-			const index = attrs.plan.findIndex(
-				(p, i) => i <= attrs.currentIndex && villagePlace(p) === payload.place,
-			);
+		} else if (boardPlace !== null) {
+			if (boardPlace === 'council') {
+				// The council's board: the ballot or the recap once the room is
+				// there, the live scoreboard until then.
+				const index = councilIndex();
+				if (index >= 0 && attrs.plan[index].stage !== AgoraStage.ended) {
+					if (index === attrs.viewingIndex) {
+						opened = true;
+						deskOpen = false;
+						sync();
+						m.redraw();
+					} else {
+						requestedCouncil = attrs.plan[index].itemId;
+						attrs.onSelectBook?.(requestedCouncil);
+					}
+				} else {
+					openScoreboard();
+				}
+
+				return;
+			}
+			const index = openedIndexOf(boardPlace);
 			if (index >= 0 && attrs.community) {
 				attrs.onSelectBook?.(attrs.plan[index].itemId);
 				boardRequest++;
@@ -132,6 +198,18 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				sync();
 				m.redraw();
 			}
+		} else if (selectPlace !== null) {
+			// The walker reached another booth's desk: make it the item on
+			// screen, and open its paper once the item has arrived.
+			const index = openedIndexOf(selectPlace);
+			if (index < 0) return;
+			if (index === attrs.viewingIndex) {
+				openDesk();
+
+				return;
+			}
+			requestedDesk = attrs.plan[index].itemId;
+			attrs.onSelectBook?.(requestedDesk);
 		} else if (
 			payload &&
 			typeof payload === 'object' &&
@@ -174,9 +252,14 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				itemId = next;
 				deskOpen = false;
 				focusDesk = false;
-				opened = requestedBook === next;
-				bookOpen = opened;
+				opened = requestedBook === next || requestedCouncil === next;
+				bookOpen = requestedBook === next;
 				requestedBook = '';
+				requestedCouncil = '';
+				if (requestedDesk === next) {
+					requestedDesk = '';
+					openDesk();
+				}
 			}
 			const own = attrs.papers.find((p) => p.own);
 			if (
@@ -220,9 +303,9 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		view(vnode) {
 			attrs = vnode.attrs;
 			itemId = attrs.plan[attrs.viewingIndex]?.itemId ?? '';
-			const library =
-				!!attrs.plan[attrs.viewingIndex] &&
-				villagePlace(attrs.plan[attrs.viewingIndex]) === 'library';
+			const viewing = attrs.plan[attrs.viewingIndex];
+			const library = !!viewing && villagePlace(viewing) === 'library';
+			const council = !!viewing && villagePlace(viewing) === 'council';
 
 			return m('.village-shell', [
 				flightItem
@@ -230,35 +313,49 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 					: null,
 				m('.village-shell__toolbar', [
 					m('strong', 'סנהדרין · כפר החכמים'),
-					m(
-						'button.btn.btn--secondary.btn--sm',
-						{
-							onclick: () => {
-								if (!opened && villageDesk(attrs.plan[attrs.viewingIndex])) {
-									openDesk();
+					m('.village-shell__toolbar-actions', [
+						attrs.community && !opened
+							? m(
+									'button.btn.btn--secondary.btn--sm',
+									{ onclick: () => openScoreboard() },
+									'לוח התוצאות',
+								)
+							: null,
+						m(
+							'button.btn.btn--secondary.btn--sm',
+							{
+								onclick: () => {
+									if (!opened && villageDesk(attrs.plan[attrs.viewingIndex])) {
+										openDesk();
 
-									return;
-								}
-								opened = !opened;
-								deskOpen = false;
-								focusDesk = false;
-								bookOpen = false;
-								sync();
+										return;
+									}
+									opened = !opened;
+									deskOpen = false;
+									focusDesk = false;
+									bookOpen = false;
+									sync();
+								},
 							},
-						},
-						opened
-							? 'חזרה לכפר'
-							: library
-								? 'כניסה לספרייה'
-								: villageDesk(attrs.plan[attrs.viewingIndex])
-									? 'הפתק שלי על השולחן'
-									: 'כניסה ישירה לתחנה',
-					),
+							opened
+								? 'חזרה לכפר'
+								: library
+									? 'כניסה לספרייה'
+									: council
+										? viewing.stage === AgoraStage.voting
+											? 'לקלפי במועצה'
+											: 'לסיכום במועצה'
+										: villageDesk(attrs.plan[attrs.viewingIndex])
+											? 'הפתק שלי על השולחן'
+											: 'כניסה ישירה לתחנה',
+						),
+					]),
 				]),
 				attrs.community
 					? m(VillageCommunity, {
 							...attrs.community,
 							boardRequest,
+							scoreboardRequest,
 							plan: attrs.plan,
 							currentIndex: attrs.currentIndex,
 							viewingIndex: attrs.viewingIndex,
@@ -270,7 +367,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 						})
 					: null,
 				m('iframe.village-shell__world', {
-					src: '/prototypes/olive-hill/village.html?embedded=1',
+					src: `/prototypes/olive-hill/village.html?embedded=1${villageLite() ? '&lite=1' : ''}`,
 					title: 'כפר החכמים בתלת־מימד',
 					oncreate: (node: m.VnodeDOM) => {
 						frame = node.dom as HTMLIFrameElement;
@@ -310,7 +407,9 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 							? `village-library${bookOpen ? ' village-library--reading' : ''}`
 							: deskOpen
 								? 'village-desk'
-								: '',
+								: council
+									? 'village-council'
+									: '',
 					},
 					library
 						? [
@@ -406,7 +505,24 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 												'חזרה לשולחן',
 											),
 										])
-									: null,
+									: council
+										? m('.village-desk__header', [
+												m(
+													'h2',
+													viewing.stage === AgoraStage.voting ? 'הקלפי של המועצה' : 'מועצת הכפר',
+												),
+												m(
+													'button.btn.btn--secondary',
+													{
+														onclick: () => {
+															opened = false;
+															sync();
+														},
+													},
+													'חזרה לכפר',
+												),
+											])
+										: null,
 								vnode.children,
 							],
 				),

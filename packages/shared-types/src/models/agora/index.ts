@@ -269,6 +269,7 @@ export type { AgoraValueAnswer } from './agoraValueAnswer';
 export { AgoraValueAnswerSchema, createAgoraValueAnswerId } from './agoraValueAnswer';
 
 export type { BridgingInput } from './agoraBridging';
+export { BRIDGE_ZONE, backing, campLean, boardPercent, inBridgeZone } from './agoraGoal';
 export {
 	deriveCamp,
 	calcBridgingScore,

@@ -1,17 +1,19 @@
 import { createPaperFlight } from './paper-flight.js';
 import * as THREE from './vendor/three.module.js';
 import { Soundscape } from './sound.js';
-import { buildVillage, stations } from './village.js';
+import { buildVillage, fixedStations, CENTER } from './village.js';
 import { characters } from './characters-2d.js';
 
 const $ = id => document.getElementById(id);
+/** A light build for weak machines and headless tests: no shadows, sparse grass, throttled frames. */
+const lite=new URLSearchParams(location.search).get('lite')==='1';
 const canvas = $('world');
 let renderer;
 try { renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'}); }
 catch { $('loading').innerHTML='<p>הדפדפן לא הצליח להפעיל תלת־מימד. נסו דפדפן עם האצת חומרה.</p>'; throw new Error('WebGL unavailable'); }
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setPixelRatio(lite?1:Math.min(devicePixelRatio,2));
 renderer.setSize(innerWidth,innerHeight);
-renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled=!lite; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#b9d1d2');scene.fog=new THREE.FogExp2('#b6cac3',.0065);
 const camera=new THREE.PerspectiveCamera(53,innerWidth/innerHeight,.1,600);
@@ -46,19 +48,20 @@ const sunDisk=mesh(new THREE.SphereGeometry(9,24,16),new THREE.MeshBasicMaterial
 const bladeGeo=new THREE.BufferGeometry();bladeGeo.setAttribute('position',new THREE.Float32BufferAttribute([-.045,0,0,.045,0,0,-.026,.28,.025,.026,.28,.025,0,.64,.11],3));bladeGeo.setIndex([0,1,2,1,3,2,2,3,4]);bladeGeo.computeVertexNormals();
 const grassMat=new THREE.MeshStandardMaterial({color:'#829557',side:THREE.DoubleSide,roughness:1});
 const wind={value:0};grassMat.onBeforeCompile=s=>{s.uniforms.uTime=wind;s.vertexShader='uniform float uTime;\n'+s.vertexShader;s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nfloat phase=instanceMatrix[3].x*.4+instanceMatrix[3].z*.3; transformed.x += sin(uTime*1.5+phase)*position.y*position.y*.22;');};
-const grass=new THREE.InstancedMesh(bladeGeo,grassMat,58000);const dummy=new THREE.Object3D();let gn=0;
-for(let i=0;i<85000&&gn<58000;i++){const x=(rand()-.5)*145,z=(rand()-.5)*145;if(Math.hypot(x+23,z-15)<5.5||Math.hypot(x,z-12)<23||(z>3&&Math.abs(x-pathX(z))<1.2))continue;dummy.position.set(x,height(x,z),z);dummy.rotation.set(0,rand()*6.28,0);const s=.5+rand()*1.1;dummy.scale.set(s,.55+rand()*.9,s);dummy.updateMatrix();grass.setMatrixAt(gn,dummy.matrix);grass.setColorAt(gn,new THREE.Color().setHSL(.19+rand()*.055,.23+rand()*.18,.27+rand()*.17));gn++;}grass.count=gn;grass.receiveShadow=true;grass.frustumCulled=false;scene.add(grass);
+const GRASS_MAX=lite?9000:58000;const grass=new THREE.InstancedMesh(bladeGeo,grassMat,GRASS_MAX);const dummy=new THREE.Object3D();let gn=0;
+for(let i=0;i<85000&&gn<GRASS_MAX;i++){const x=(rand()-.5)*145,z=(rand()-.5)*145;if(Math.hypot(x+23,z-15)<5.5||Math.hypot(x,z-12)<23||(z>3&&Math.abs(x-pathX(z))<1.2))continue;dummy.position.set(x,height(x,z),z);dummy.rotation.set(0,rand()*6.28,0);const s=.5+rand()*1.1;dummy.scale.set(s,.55+rand()*.9,s);dummy.updateMatrix();grass.setMatrixAt(gn,dummy.matrix);grass.setColorAt(gn,new THREE.Color().setHSL(.19+rand()*.055,.23+rand()*.18,.27+rand()*.17));gn++;}grass.count=gn;grass.receiveShadow=true;grass.frustumCulled=false;scene.add(grass);
 
 // Olive trees: twisting trunks, tapering branches and individual silver leaves.
 const bark=mat('#6c6953');
 function branch(a,b,r1,r2,parent){const len=a.distanceTo(b);const m=mesh(new THREE.CylinderGeometry(r2,r1,len,7),bark,0,0,0,parent);m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());return m;}
-const leafGeo=new THREE.SphereGeometry(1,5,3);const leafMat=new THREE.MeshStandardMaterial({color:'#9daa7d',roughness:.85});const leaves=new THREE.InstancedMesh(leafGeo,leafMat,90000);let ln=0;
-const trees=[[-20,7],[24,18],[-16,25],[-21,29],[0,34],[21,-9],[-18,-10],[-29,4],[31,7],[-34,32],[32,40]];
+const leafGeo=new THREE.SphereGeometry(1,5,3);const leafMat=new THREE.MeshStandardMaterial({color:'#9daa7d',roughness:.85});const LEAF_MAX=lite?20000:90000;const leaves=new THREE.InstancedMesh(leafGeo,leafMat,LEAF_MAX);let ln=0;
+// Groves stay outside the booth ring (radius up to ~24 around the square) so no pavilion gets a tree through its roof.
+const trees=[[-30,-2],[28,-6],[21,-9],[-18,-10],[-29,4],[31,7],[-34,32],[32,40],[-31,25],[27,36],[-8,44],[12,44]];
 for(let i=0;i<35;i++){const x=(rand()-.5)*170,z=(rand()-.5)*150;if(Math.hypot(x,z-12)>30)trees.push([x,z]);}
 for(const [tx,tz] of trees){const group=new THREE.Group();group.position.set(tx,height(tx,tz),tz);scene.add(group);const scale=.8+rand()*.5;const centers=[];
  branch(new THREE.Vector3(0,0,0),new THREE.Vector3(.18,2.4*scale,.1),.42*scale,.25*scale,group);
  for(let j=0;j<5;j++){const angle=j*1.256+rand()*.5;const tip=new THREE.Vector3(Math.cos(angle)*1.8*scale,(3.1+rand()*.9)*scale,Math.sin(angle)*1.8*scale);branch(new THREE.Vector3(.18,1.6*scale,0),tip,.19*scale,.055*scale,group);centers.push(tip);for(let k=0;k<3;k++){const t=tip.clone().add(new THREE.Vector3((rand()-.5)*2,.5+rand(),(rand()-.5)*2));branch(tip,t,.06,.018,group);centers.push(t);}}
- for(const center of centers){for(let j=0;j<85&&ln<90000;j++){const angle=rand()*6.28,cos=rand()*2-1,rr=Math.cbrt(rand())*1.13*scale;dummy.position.set(tx+center.x+Math.cos(angle)*Math.sqrt(1-cos*cos)*rr,group.position.y+center.y+cos*rr*.55,tz+center.z+Math.sin(angle)*Math.sqrt(1-cos*cos)*rr);dummy.rotation.set(rand()*2,rand()*6.28,rand()*2);dummy.scale.set(.08+rand()*.065,.022,.20+rand()*.12);dummy.updateMatrix();leaves.setMatrixAt(ln,dummy.matrix);leaves.setColorAt(ln,new THREE.Color().setHSL(.20+rand()*.035,.12+rand()*.17,.32+rand()*.23));ln++;}}
+ for(const center of centers){for(let j=0;j<(lite?20:85)&&ln<LEAF_MAX;j++){const angle=rand()*6.28,cos=rand()*2-1,rr=Math.cbrt(rand())*1.13*scale;dummy.position.set(tx+center.x+Math.cos(angle)*Math.sqrt(1-cos*cos)*rr,group.position.y+center.y+cos*rr*.55,tz+center.z+Math.sin(angle)*Math.sqrt(1-cos*cos)*rr);dummy.rotation.set(rand()*2,rand()*6.28,rand()*2);dummy.scale.set(.08+rand()*.065,.022,.20+rand()*.12);dummy.updateMatrix();leaves.setMatrixAt(ln,dummy.matrix);leaves.setColorAt(ln,new THREE.Color().setHSL(.20+rand()*.035,.12+rand()*.17,.32+rand()*.23));ln++;}}
  for(let j=0;j<4;j++){const a=j*1.57;branch(new THREE.Vector3(Math.cos(a)*.8,.03,Math.sin(a)*.8),new THREE.Vector3(0,.6,0),.06,.17,group);}}
 leaves.count=ln;leaves.castShadow=true;leaves.receiveShadow=true;leaves.frustumCulled=false;scene.add(leaves);
 
@@ -91,37 +94,60 @@ const pebbles=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),stone,6
 
 
 const village=buildVillage({scene,height});
-// Each station has its own board and texture; data comes from confirmed session notes.
-const stationBoards=stations.map(station=>{
- const boardGroup=new THREE.Group();boardGroup.position.set(station.ax+3.4,height(station.ax,station.az),station.az);boardGroup.rotation.y=Math.atan2(-boardGroup.position.x,15-boardGroup.position.z);scene.add(boardGroup);
- box(3.2,2.0,.15,wood,0,2.1,0,boardGroup);for(const x of [-1.3,1.3])box(.14,3,.14,wood,x,1.5,0,boardGroup);
- const boardCanvas=document.createElement('canvas');boardCanvas.width=1536;boardCanvas.height=900;const bc=boardCanvas.getContext('2d');const bt=new THREE.CanvasTexture(boardCanvas);bt.colorSpace=THREE.SRGBColorSpace;
- const face=mesh(new THREE.PlaneGeometry(3.1,1.9),new THREE.MeshBasicMaterial({map:bt,side:THREE.DoubleSide}),0,2.1,.09,boardGroup);let lastPapers='';
-function paint(papers){const key=JSON.stringify(papers);if(key===lastPapers)return;lastPapers=key;bc.fillStyle='#9a805f';bc.fillRect(0,0,1536,900);bc.fillStyle='#fff5dc';bc.textAlign='center';bc.direction='rtl';bc.font='bold 55px Arial';bc.fillText('הרעיונות שלנו',768,80);if(!papers.length){bc.font='32px Arial';bc.fillText('ההצעות של המפגש יופיעו כאן',768,440);}papers.slice(0,6).forEach((paper,i)=>{const x=40+(i%3)*500,y=130+Math.floor(i/3)*370;bc.fillStyle=paper.own?'#ffffff':['#e5d4ce','#d9e4c7','#d7deea'][i%3];bc.fillRect(x,y,470,335);bc.fillStyle='#334635';bc.textAlign='right';bc.font='bold 29px Arial';bc.fillText(paper.own?'ההצעה שלך':'הצעה מהמפגש',x+445,y+44);bc.font='29px Arial';let line='',row=y+97;for(const word of paper.text.split(/\s+/)){if(bc.measureText(line+word).width>415){bc.fillText(line,x+445,row);row+=41;line='';if(row>y+295){line='…';break;}}line+=word+' ';}bc.fillText(line,x+445,row);});bt.needsUpdate=true;}
-paint([]);return {station,face,paint};
-});
-function paintPapers(papers){stationBoards.find(b=>b.station.id===selected.id)?.paint(papers);}
+const embedded=new URLSearchParams(location.search).get('embedded')==='1' && window.parent!==window;
+/** The fixed places plus one booth per question of the plan (see installBooths). */
+let stations=[...fixedStations];
+let boothKey='';
+let pendingPlace=null,pendingLabel='';
+/**
+ * Build the booths for this plan. The plan is fixed for a lesson, so this
+ * runs once in practice; a changed SET of questions rebuilds, a changed
+ * state (opened / current / title) only repaints.
+ */
+function installBooths(specs){
+ const key=specs.map(b=>b.itemId).join('|');
+ if(key!==boothKey){
+  boothKey=key;
+  village.installBooths(specs.map(b=>({itemId:b.itemId,label:b.label,kind:b.kind})));
+  stations=[...fixedStations,...village.booths.map(b=>b.station)];
+  renderStationNav();
+  if(pendingPlace){const place=pendingPlace;pendingPlace=null;destination(place,pendingLabel);}
+ }
+ for(const booth of village.booths){const spec=specs.find(b=>b.itemId===booth.spec.itemId);if(spec)booth.setState(spec);}
+}
+/** Everything with a face the walker may click: booth boards and the council's scoreboard. */
+function clickableBoards(){return [...village.booths.map(b=>({station:b.station,face:b.face,booth:b})),{station:fixedStations[2],face:village.scoreboard.face,council:true}];}
+function boardFor(place){return village.booths.find(b=>b.station.id===place)??null;}
 canvas.addEventListener('click',event=>{
  if(uiPaused||pointerMoved)return;const rect=canvas.getBoundingClientRect();const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1),camera);
- const desk=village.desks.find(d=>d.station.id===selected.id);
- if(desk&&deskInfo&&ray.intersectObject(desk.group,true).some(hit=>hit.distance<7)){openPersonalDesk();return;}
- const hit=ray.intersectObjects(stationBoards.map(b=>b.face))[0];const board=stationBoards.find(b=>b.face===hit?.object);
- if(board && embedded)parent.postMessage({type:'agora-village-board',place:board.station.id},location.origin);
+ for(const booth of village.booths){
+  if(!ray.intersectObject(booth.desk.group,true).some(hit=>hit.distance<7))continue;
+  if(!embedded){destination(booth.station.id);openPersonalDesk();return;}
+  if(booth.station.id===activePlace&&deskInfo){openPersonalDesk();return;}
+  parent.postMessage({type:'agora-village-select',place:booth.station.id},location.origin);return;
+ }
+ const boards=clickableBoards();
+ const hit=ray.intersectObjects(boards.map(b=>b.face))[0];const board=boards.find(b=>b.face===hit?.object);
+ if(!board)return;
+ if(embedded){parent.postMessage({type:'agora-village-board',place:board.station.id},location.origin);return;}
+ if(board.council)$('enter').click();else{destination(board.station.id);$('enter').click();}
 });
-const embedded=new URLSearchParams(location.search).get('embedded')==='1' && window.parent!==window;
 const sound=new Soundscape();
-let selected=stations[0],activeItem='',moving=false,uiPaused=false,yaw=0,pitch=-.04,last=performance.now(),elapsed=0;
+let selected=stations[0],activeItem='',activePlace='',moving=false,uiPaused=false,yaw=0,pitch=-.04,last=performance.now(),elapsed=0;
+/** The desk in front of the walker is THEIR paper only at the item the shell has on screen. */
+function deskHere(){return !!deskInfo&&selected.id===activePlace;}
 let lastLibraryPresence=null,deskInfo=null,pointerMoved=false;
 function hideDeskBubble(){ $('desk-bubble').hidden=true;document.body.classList.remove('has-desk-bubble'); }
 function openPersonalDesk(){
- if(uiPaused||!deskInfo)return;
+ if(uiPaused||!deskInfo||(embedded&&!deskHere()))return;
  if(embedded)send(deskInfo.writable?'agora-village-write':'agora-village-enter');
  else $('enter').click();
 }
 $('desk-write').onclick=openPersonalDesk;
+function guideOf(stationId){return characters.find(c=>c.station===stationId)??null;}
 function updateDeskBubble(){
- const guide=characters.find(c=>c.station===selected.id);
- if(!deskInfo||!guide||uiPaused||Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)>3.5){hideDeskBubble();return;}
+ const guide=guideOf(selected.id);
+ if(!deskHere()||!guide||uiPaused||Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)>3.5){hideDeskBubble();return;}
  const anchor=new THREE.Vector3(guide.x,height(guide.x,guide.z)+guide.height+.45,guide.z).project(camera);
  if(anchor.z< -1||anchor.z>1||Math.abs(anchor.x)>.92){hideDeskBubble();return;}
  const bubble=$('desk-bubble');bubble.hidden=false;document.body.classList.add('has-desk-bubble');
@@ -133,15 +159,50 @@ function updateDeskBubble(){
  $('desk-write').textContent=deskInfo.writable?'לכתוב על הפתק שלי':'לקרוא את הפתק שלי';
 }
 
-const keys=new Set();camera.position.set(0,7.15,26);camera.lookAt(-5,7,12);let angles=new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ');yaw=angles.y;pitch=angles.x;
+// Spawn just north of the fountain, looking across the square at the booths.
+const keys=new Set();camera.position.set(0,7.15,8.5);camera.lookAt(0,6.6,15);let angles=new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ');yaw=angles.y;pitch=angles.x;
 const paperFlight=createPaperFlight(scene,camera,itemId=>{const angles=new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ');yaw=angles.y;pitch=angles.x;if(embedded)parent.postMessage({type:'agora-village-landed',itemId},location.origin);});
-window.addEventListener('message',event=>{const d=event.data;if(event.origin!==location.origin||event.source!==parent||!embedded||d?.type!=='agora-village-fly'||d.itemId!==activeItem)return;keys.clear();moving=false;uiPaused=false;paperFlight.start(village.desks.find(b=>b.station.id===d.place),stationBoards.find(b=>b.station.id===d.place),d.itemId);});
+window.addEventListener('message',event=>{const d=event.data;if(event.origin!==location.origin||event.source!==parent||!embedded||d?.type!=='agora-village-fly'||d.itemId!==activeItem)return;keys.clear();moving=false;uiPaused=false;const booth=boardFor(d.place);paperFlight.start(booth?.desk,booth?{face:booth.face}:null,d.itemId);});
 function send(type){if(embedded)parent.postMessage({type,itemId:activeItem},location.origin);}
-function destination(place,label){selected=stations.find(s=>s.id===place)||stations[0];$('station-name').textContent=label||selected.name;$('station-place').textContent=selected.name;$('guide-line').textContent=selected.question;moving=false;hideDeskBubble();if(!embedded){deskInfo=village.desks.some(d=>d.station.id===selected.id)?{label:'הפתק שלי',prompt:'הפתק שלך מחכה על השולחן. איזו הצעה תרצה לכתוב?',writable:true}:null;village.desks.forEach(d=>d.paint('', 'הפתק שלי',d.station.id===selected.id));}}
-window.addEventListener('message',event=>{if(!embedded||event.source!==parent||event.origin!==location.origin||!event.data||typeof event.data!=='object')return;const data=event.data;if(data.type==='agora-village-state'&&typeof data.itemId==='string'&&typeof data.place==='string'){document.body.classList.toggle('has-community',data.community===true);deskInfo=data.desk&&typeof data.desk.label==='string'&&typeof data.desk.prompt==='string'?{label:data.desk.label,prompt:data.desk.prompt,text:typeof data.desk.text==='string'?data.desk.text:'',writable:data.desk.writable===true}:null;if(activeItem!==data.itemId){activeItem=data.itemId;destination(data.place,typeof data.label==='string'?data.label:'');}if(Array.isArray(data.stationPapers)){for(const board of stationBoards){const entries=data.stationPapers.filter(p=>p && p.place===board.station.id && Array.isArray(p.papers));board.paint(entries.flatMap(e=>e.papers).filter(p=>p&&typeof p.text==='string'&&typeof p.own==='boolean'));}}else if(Array.isArray(data.papers))paintPapers(data.papers.filter(p=>p&&typeof p.text==='string'&&typeof p.own==='boolean'));for(const desk of village.desks){const current=desk.station.id===selected.id;const saved=Array.isArray(data.stationPapers)?data.stationPapers.filter(p=>p&&p.place===desk.station.id&&Array.isArray(p.papers)).flatMap(p=>p.papers).find(p=>p&&p.own===true&&typeof p.text==='string')?.text:'';desk.paint(current?deskInfo?.text??'':saved??'',current?deskInfo?.label??'הפתק שלי':'הפתק שלי',current&&!!deskInfo);}uiPaused=data.paused===true;if(uiPaused){keys.clear();moving=false;hideDeskBubble();}}});
+function describe(){$('station-name').textContent=selected.id===activePlace&&activeLabel?activeLabel:selected.name;$('station-place').textContent=selected.short||selected.name;$('guide-line').textContent=selected.question;renderStationNav();}
+let activeLabel='';
+/** The shell put a new item on screen: its place becomes the walk target. */
+function destination(place,label){
+ const station=stations.find(s=>s.id===place);
+ if(!station){pendingPlace=place;pendingLabel=label||'';selected=stations[0];return;}
+ selected=station;activeLabel=label||'';if(!embedded)activePlace=place;describe();moving=false;hideDeskBubble();
+ if(!embedded){deskInfo=selected.booth?{label:'הפתק שלי',prompt:'הפתק שלך מחכה על השולחן. איזו הצעה תרצה לכתוב?',writable:true}:null;for(const b of village.booths)b.desk.paint('', 'הפתק שלי',b.station.id===selected.id);}
+}
+/** The walker picked a place from the list: go there, without changing what the shell shows. */
+function walkTo(place){const station=stations.find(s=>s.id===place);if(!station)return;selected=station;describe();hideDeskBubble();moving=true;canvas.focus();}
+window.addEventListener('message',event=>{
+ if(!embedded||event.source!==parent||event.origin!==location.origin||!event.data||typeof event.data!=='object')return;const data=event.data;
+ if(data.type!=='agora-village-state'||typeof data.itemId!=='string'||typeof data.place!=='string')return;
+ document.body.classList.toggle('has-community',data.community===true);
+ deskInfo=data.desk&&typeof data.desk.label==='string'&&typeof data.desk.prompt==='string'?{label:data.desk.label,prompt:data.desk.prompt,text:typeof data.desk.text==='string'?data.desk.text:'',writable:data.desk.writable===true}:null;
+ if(Array.isArray(data.booths))installBooths(data.booths.filter(b=>b&&typeof b.itemId==='string'&&typeof b.label==='string').map(b=>({itemId:b.itemId,label:b.label,kind:typeof b.kind==='string'?b.kind:'open',open:b.open!==false,current:b.current===true})));
+ activePlace=data.place;
+ if(activeItem!==data.itemId){const first=activeItem==='';activeItem=data.itemId;destination(data.place,typeof data.label==='string'?data.label:'');if(!first&&!(data.paused===true))moving=true;}
+ const stationPapers=Array.isArray(data.stationPapers)?data.stationPapers:[];
+ for(const booth of village.booths){
+  const entries=stationPapers.filter(p=>p&&p.place===booth.station.id&&Array.isArray(p.papers));
+  const spec=Array.isArray(data.booths)?data.booths.find(b=>b&&b.itemId===booth.spec.itemId):null;
+  booth.paint(entries.flatMap(e=>e.papers).filter(p=>p&&typeof p.text==='string'&&typeof p.own==='boolean'),{open:spec?spec.open!==false:true});
+  const current=booth.station.id===activePlace;
+  const saved=entries.flatMap(e=>e.papers).find(p=>p&&p.own===true&&typeof p.text==='string')?.text??'';
+  booth.desk.paint(current?deskInfo?.text??'':saved,current?deskInfo?.label??'הפתק שלי':'הפתק שלי',current&&!!deskInfo);
+ }
+ if(data.council&&typeof data.council==='object')village.scoreboard.paint(data.council);
+ uiPaused=data.paused===true;if(uiPaused){keys.clear();moving=false;hideDeskBubble();}
+});
 $('travel').onclick=()=>{moving=!moving;canvas.focus();};
 $('enter').onclick=()=>{
- if(embedded){if(deskInfo)openPersonalDesk();else send('agora-village-enter');return;}
+ if(embedded){
+  if(selected.booth){if(selected.id===activePlace&&deskInfo)openPersonalDesk();else parent.postMessage({type:'agora-village-select',place:selected.id},location.origin);return;}
+  if(selected.id==='council'){parent.postMessage({type:'agora-village-board',place:'council'},location.origin);return;}
+  if(selected.id===activePlace)send('agora-village-enter');else parent.postMessage({type:'agora-village-select',place:selected.id},location.origin);
+  return;
+ }
  const guides=characters.filter(c=>c.station===selected.id);
  function showGuide(character){
  const portrait=$('guide-portrait');portrait.hidden=!character;
@@ -157,13 +218,24 @@ $('enter').onclick=()=>{
 };
 $('close-info').onclick=()=>$('preview-info').close();
 $('sound').onclick=async()=>{try{const enabled=await sound.toggle();$('sound').textContent=enabled?'♫ השתקה':'♫ צלילים';}catch{$('sound').textContent='צלילים אינם זמינים';}};
-let lowQuality=false;
+let lowQuality=lite;
 $('quality').onclick=()=>{const low=lowQuality=!lowQuality;renderer.setPixelRatio(low?1:Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=!low;grass.count=low?Math.floor(gn*.55):gn;$('quality').textContent=low?'איכות חסכונית':'איכות גבוהה';};
 let drag=null;canvas.onpointerdown=e=>{if(uiPaused)return;pointerMoved=false;drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY};canvas.setPointerCapture(e.pointerId);moving=false;};canvas.onpointermove=e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>6)pointerMoved=true;yaw-=(e.clientX-drag.x)*.004;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-drag.y)*.003,-.7,.55);drag={...drag,x:e.clientX,y:e.clientY};};canvas.onpointerup=canvas.onpointercancel=()=>drag=null;
 addEventListener('keydown',e=>{if(uiPaused||$('preview-info').open)return;if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyE'].includes(e.code)){e.preventDefault();keys.add(e.code);moving=false;if(e.code==='KeyE')$('enter').click();}});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',()=>{keys.clear();drag=null;});
 for(const b of document.querySelectorAll('[data-key]')){b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key);moving=false;};b.onpointerup=b.onpointercancel=()=>keys.delete(b.dataset.key);}
-for(const s of stations){const b=document.createElement('button');b.textContent=s.name;b.onclick=()=>{destination(s.id);moving=true;};$('preview-stations').append(b);}
-$('session-entry').hidden=embedded;$('preview-stations').hidden=embedded;$('preview-label').hidden=embedded;destination('challenge');
+function renderStationNav(){const nav=$('preview-stations');nav.replaceChildren();for(const s of stations){const b=document.createElement('button');b.textContent=(s.booth?s.icon+' ':'')+s.name;b.dataset.place=s.id;b.setAttribute('aria-pressed',String(s.id===selected.id));if(s.id===activePlace)b.classList.add('is-active');b.onclick=()=>walkTo(s.id);nav.append(b);}}
+$('session-entry').hidden=embedded;$('preview-label').hidden=embedded;
+if(!embedded){
+ // The standalone tour shows a plan-shaped village: three sample booths and a sample scoreboard.
+ installBooths([
+  {itemId:'demo-story',label:'איך האתגר הזה פוגש את החיים שלך?',kind:'story',open:true,current:false},
+  {itemId:'demo-needs',label:'מה חשוב לך, ועל מה היית רוצה לשמור?',kind:'needs',open:true,current:false},
+  {itemId:'demo-solution',label:'איזה פתרון נותן מקום לצרכים שעלו?',kind:'proposal',open:true,current:true},
+ ]);
+ village.booths[2].paint([{text:'נתחיל בניסיון קטן לזמן מוגבל ונבדוק יחד מה עבד.',own:false},{text:'נקבע כללים ברורים לחלוקה, עם מקום לעזרה למי שצריך.',own:false},{text:'קבוצה קטנה עם נציגים מכל צד תחבר בין ההצעות.',own:true}]);
+ village.scoreboard.paint({mode:'pitch',goalOnly:false,leftLabel:'צד א',rightLabel:'צד ב',scoredAny:true,footer:'סיור · במפגש אמיתי הלוח מתעדכן חי',points:[{rank:1,percent:61,lean:.1,raters:6,mine:true,scored:true,lead:true,color:'#f4c95d'},{rank:2,percent:35,lean:-.6,raters:5,mine:false,scored:false,color:'#9fd3e6'},{rank:3,percent:-20,lean:.5,raters:4,mine:false,scored:false,color:'#e6a0a0'}]});
+ destination('booth:demo-solution');
+}else destination('challenge');
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});document.addEventListener('visibilitychange',()=>{keys.clear();sound.visibility(document.hidden);});
 $('loading').textContent='מכינים את הכפר ומזמינים את החכמים…';
 const characterStatus=document.createElement('div');characterStatus.setAttribute('role','status');
@@ -175,13 +247,13 @@ village.ready.then(({failed})=>{
  if(failed){characterStatus.textContent='חלק מהדמויות לא נטענו. רעננו את הדף כדי לנסות שוב.';}
  else characterStatus.remove();
 });
-function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.04);last=now;if(paperFlight.active){paperFlight.tick(dt);village.tick(camera);renderer.render(scene,camera);return;}if(document.hidden||uiPaused||$('preview-info').open)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
- if(moving){const dx=selected.ax-camera.position.x,dz=selected.az-camera.position.z,dist=Math.hypot(dx,dz);if(dist>.12){camera.position.x+=dx/dist*dt*4;camera.position.z+=dz/dist*dt*4;const guide=characters.find(c=>c.station===selected.id);const target=Math.atan2(camera.position.x-(guide?.x??selected.x),camera.position.z-(guide?.z??selected.z));yaw+=Math.atan2(Math.sin(target-yaw),Math.cos(target-yaw))*Math.min(1,dt*3);}else {moving=false;pitch=-.06;}}
+function frame(now){requestAnimationFrame(frame);if(lite&&now-last<66)return;const dt=Math.min((now-last)/1000,.04);/* walking uses the real elapsed time (capped) so a slow renderer does not slow the walker */const dtWalk=Math.min((now-last)/1000,.25);last=now;if(paperFlight.active){paperFlight.tick(dt);village.tick(camera);renderer.render(scene,camera);return;}if(document.hidden||uiPaused||$('preview-info').open)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
+ if(moving){const dx=selected.ax-camera.position.x,dz=selected.az-camera.position.z,dist=Math.hypot(dx,dz);if(dist>.12){const stepLen=Math.min(dist,dtWalk*4);camera.position.x+=dx/dist*stepLen;camera.position.z+=dz/dist*stepLen;const look=selected.look??guideOf(selected.id)??selected;const target=Math.atan2(camera.position.x-look.x,camera.position.z-look.z);yaw+=Math.atan2(Math.sin(target-yaw),Math.cos(target-yaw))*Math.min(1,dtWalk*3);}else {moving=false;pitch=selected.pitch??-.06;}}
  const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));if(f||s){const n=Math.hypot(f,s);camera.position.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)/n*dt*4;camera.position.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)/n*dt*4;}
  if(!moving&&((Math.abs(camera.position.x)<3.7&&camera.position.z<2.6&&camera.position.z>-3.9)||village.solids.some(o=>Math.abs(camera.position.x-o.x)<o.w&&Math.abs(camera.position.z-o.z)<o.d)))camera.position.copy(old);
  camera.position.x=THREE.MathUtils.clamp(camera.position.x,-45,45);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-20,50);camera.position.y=height(camera.position.x,camera.position.z)+1.75;camera.quaternion.setFromEuler(new THREE.Euler(pitch,yaw,0,'YXZ'));village.tick(camera);
  const insideLibrary=Math.abs(camera.position.z-15)<3.5&&camera.position.x>-25.6&&camera.position.x<-19.6;
  if(embedded&&insideLibrary!==lastLibraryPresence){lastLibraryPresence=insideLibrary;parent.postMessage({type:'agora-village-library-presence',inside:insideLibrary},location.origin);}
- const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;$('enter').textContent=deskInfo?(deskInfo.writable?'לכתוב על הפתק שלי':'לקרוא את הפתק שלי'):near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←';updateDeskBubble();$('travel').textContent=moving?'לעצור':'ללכת לתחנה';renderer.render(scene,camera);
+ const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;$('enter').textContent=deskHere()?(deskInfo.writable?'לכתוב על הפתק שלי':'לקרוא את הפתק שלי'):selected.id==='council'?'לפתוח את לוח התוצאות':selected.booth?(embedded?'לגשת לביתן הזה':'להיכנס לביתן'):near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←';updateDeskBubble();$('travel').textContent=moving?'לעצור':'ללכת לתחנה';renderer.render(scene,camera);
 }
 requestAnimationFrame(frame);

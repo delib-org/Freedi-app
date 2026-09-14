@@ -13,6 +13,11 @@ const STORAGE_KEY = 'agora_lang';
  */
 export const translations: Record<LangCode, Record<string, string>> = {
 	he: {
+		'teacher.voting_goal_only': 'להצבעה עולות רק ההצעות שנכנסו לשער',
+		'teacher.voting_goal_only_hint':
+			'לוח התוצאות יציג מעכשיו רק את ההצעות שבתוך השער (הריבוע הקטן), והקלפי תיפתח בדיוק עליהן.',
+		'board.goal_only': 'רק ההצעות שנכנסו לשער',
+		'board.goal_only_empty': 'עדיין אף הצעה לא נכנסה לשער. דרגו והציעו שיפורים כדי להכניס אחת.',
 		'look.seed_font': 'גופן',
 		'look.font_default': 'הרגיל',
 		'look.font_sample': 'אגורה',
@@ -1351,6 +1356,12 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'המורה ניסח מחדש את הטקסט שלכם',
 	},
 	en: {
+		'teacher.voting_goal_only': 'Only proposals that reached the goal go to the vote',
+		'teacher.voting_goal_only_hint':
+			'From now on the scoreboard shows only the proposals inside the goal (the small box), and the ballot opens on exactly those.',
+		'board.goal_only': 'Only the proposals in the goal',
+		'board.goal_only_empty':
+			'No proposal has reached the goal yet. Rate and suggest improvements to get one in.',
 		'look.seed_font': 'Font',
 		'look.font_default': 'Regular',
 		'look.font_sample': 'Agora',
@@ -2744,6 +2755,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Your teacher reworded your text',
 	},
 	ar: {
+		'teacher.voting_goal_only': 'تصعد إلى التصويت فقط المقترحات التي دخلت المرمى',
+		'teacher.voting_goal_only_hint':
+			'من الآن تعرض لوحة النتائج فقط المقترحات داخل المرمى (المربع الصغير)، ويُفتح الاقتراع عليها بالضبط.',
+		'board.goal_only': 'فقط المقترحات التي دخلت المرمى',
+		'board.goal_only_empty': 'لم يدخل أي مقترح المرمى بعد. قيّموا واقترحوا تحسينات لإدخال واحد.',
 		'look.seed_font': 'الخط',
 		'look.font_default': 'العادي',
 		'look.font_sample': 'أغورا',
@@ -4085,6 +4101,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'معلمكم أعاد صياغة نصكم',
 	},
 	es: {
+		'teacher.voting_goal_only':
+			'Solo las propuestas que llegaron a la portería pasan a la votación',
+		'teacher.voting_goal_only_hint':
+			'Desde ahora el marcador muestra solo las propuestas dentro de la portería (el cuadro pequeño), y la votación se abre exactamente sobre ellas.',
+		'board.goal_only': 'Solo las propuestas en la portería',
+		'board.goal_only_empty':
+			'Ninguna propuesta ha llegado aún a la portería. Valora y sugiere mejoras para meter una.',
 		'look.seed_font': 'Fuente',
 		'look.font_default': 'Normal',
 		'look.font_sample': 'Agora',
@@ -5506,6 +5529,12 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Tu profesor reformuló tu texto',
 	},
 	de: {
+		'teacher.voting_goal_only': 'Nur Vorschläge, die das Tor erreicht haben, kommen zur Abstimmung',
+		'teacher.voting_goal_only_hint':
+			'Ab jetzt zeigt die Anzeigetafel nur die Vorschläge im Tor (das kleine Feld), und genau über diese wird abgestimmt.',
+		'board.goal_only': 'Nur die Vorschläge im Tor',
+		'board.goal_only_empty':
+			'Noch kein Vorschlag hat das Tor erreicht. Bewertet und schlagt Verbesserungen vor, um einen hineinzubringen.',
 		'look.seed_font': 'Schrift',
 		'look.font_default': 'Normal',
 		'look.font_sample': 'Agora',
@@ -6945,6 +6974,12 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Deine Lehrkraft hat deinen Text umformuliert',
 	},
 	nl: {
+		'teacher.voting_goal_only': 'Alleen voorstellen die het doel bereikten gaan naar de stemming',
+		'teacher.voting_goal_only_hint':
+			'Vanaf nu toont het scorebord alleen de voorstellen in het doel (het kleine vak), en de stemming opent precies daarover.',
+		'board.goal_only': 'Alleen de voorstellen in het doel',
+		'board.goal_only_empty':
+			'Nog geen voorstel heeft het doel bereikt. Beoordeel en stel verbeteringen voor om er een in te krijgen.',
 		'look.seed_font': 'Lettertype',
 		'look.font_default': 'Gewoon',
 		'look.font_sample': 'Agora',
