@@ -163,3 +163,19 @@ settings sheet ("מי מזיז את התלמידים בין התחנות בכפ�
   than two minutes is ignored.
 
 The map folds away on phones (≤650px) behind a "🗺 מפת הכפר" toggle.
+
+### Conversations on paper, and the goal switch during the vote (September 14)
+
+A conversation opened from a booth board (improvement ideas, replies) writes
+on the same lined village paper as every desk, with a visible label
+("כתבו כאן את ההודעה או את הרעיון לשיפור" / "כתבו כאן את התשובה שלכם").
+ThreadChat takes an optional `paperLabel`; the classic full-screen chat is
+unchanged.
+
+The teacher's live voting card carries the goal switch too ("בקלפי רק ההצעות
+שנכנסו לשער"). Flipping it during the vote calls `agoraSetBallotGoalOnly`,
+which stores `votingSettings.goalZoneOnly`, redraws `session.voting` through
+`prepareVotingStage`, and withdraws (writes `none`) every vote for a proposal
+that left the ballot, so the tally and the recap's winner stay consistent;
+those students vote again. It refuses while a challenge turn is being judged,
+and refuses to empty the ballot when nothing is in the goal yet.

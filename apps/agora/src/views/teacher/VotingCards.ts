@@ -252,8 +252,11 @@ export function votingLiveCard(
 	saving: boolean,
 	challengeLive: boolean,
 	onSave: (next: VotingStageSettings) => void,
+	onGoalOnly?: (next: boolean) => void,
+	goalOnlyError?: string,
 ): m.Children {
 	const showResults = settings?.showResults === true;
+	const goalZoneOnly = settings?.goalZoneOnly === true;
 	const liveReorder = settings?.liveReorder === true;
 	const patch = (next: Partial<VotingStageSettings>): void => onSave({ ...settings, ...next });
 
@@ -300,6 +303,24 @@ export function votingLiveCard(
 			'p.voting-settings__hint',
 			t(showResults ? 'teacher.results_shown_hint' : 'teacher.results_hidden_hint'),
 		),
+
+		// The goal, while the vote runs: the ballot is redrawn server-side from
+		// the proposals standing in the net, so the tally, the bars and the
+		// winner all agree on who is standing.
+		onGoalOnly
+			? [
+					m('label.voting-settings__row.voting-settings__row--goal-live', [
+						m('input[type=checkbox]', {
+							checked: goalZoneOnly,
+							disabled: saving || challengeLive,
+							onchange: (event: Event) => onGoalOnly((event.target as HTMLInputElement).checked),
+						}),
+						m('span', t('teacher.voting_goal_only_live')),
+					]),
+					m('p.voting-settings__hint', t('teacher.voting_goal_only_live_hint')),
+					goalOnlyError ? m('p.join__error', { role: 'alert' }, goalOnlyError) : null,
+				]
+			: null,
 	]);
 }
 

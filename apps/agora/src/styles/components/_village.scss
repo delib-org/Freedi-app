@@ -211,3 +211,22 @@ article.village-note { cursor: default; }
   }
   textarea::placeholder { color: #85897c; opacity: 1; }
 }
+
+// A conversation opened from a village board writes on the same paper as
+// every desk in the village: lined, white, with its label above it — not the
+// dark "mine" block the classic chat uses on a full screen.
+.village-shell .village-community__panel {
+  .chat-page__composer { background: transparent; box-shadow: none; padding-inline: 0; gap: 10px; }
+  .chat-page__label { display: block; font-weight: 700; font-size: 17px; color: #34493d; }
+  .chat-page__input {
+    display: block; box-sizing: border-box; width: 100%; min-block-size: 120px;
+    padding: 14px 20px; font-size: 18px; line-height: 2;
+    color: #34493d; caret-color: #34493d;
+    border: 1px solid #d8cfbc; border-radius: 4px; box-shadow: none;
+    background: repeating-linear-gradient(transparent 0, transparent 35px, #d8d0bf55 35px, #d8d0bf55 36px), #fffefb;
+    background-origin: content-box; background-clip: padding-box; resize: vertical;
+    &::placeholder { color: #85897c; opacity: 1; }
+    &:focus { outline: 2px solid #9aa889; outline-offset: 3px; box-shadow: none; border-color: #d8cfbc; }
+  }
+  .chat-page__send { align-self: flex-end; padding-inline: 26px; }
+}

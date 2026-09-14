@@ -438,6 +438,11 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 											proposal: selected,
 											helperUid: helper,
 											role: selected.creatorId === a.userId ? 'owner' : 'helper',
+											paperLabel: t(
+												selected.creatorId === a.userId
+													? 'delib.thread_write_label_owner'
+													: 'delib.thread_write_label',
+											),
 											userId: a.userId,
 											anonName: a.anonName,
 											proposalNumber: Math.max(

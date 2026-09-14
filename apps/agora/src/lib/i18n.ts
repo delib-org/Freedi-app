@@ -13,6 +13,12 @@ const STORAGE_KEY = 'agora_lang';
  */
 export const translations: Record<LangCode, Record<string, string>> = {
 	he: {
+		'delib.thread_write_label': 'כתבו כאן את ההודעה או את הרעיון לשיפור',
+		'delib.thread_write_label_owner': 'כתבו כאן את התשובה שלכם',
+		'teacher.voting_goal_only_live': 'בקלפי רק ההצעות שנכנסו לשער',
+		'teacher.voting_goal_only_live_hint':
+			'הקלפי נבנית מחדש רק מההצעות שבתוך השער. מי שהצביע להצעה שירדה מהקלפי יתבקש להצביע שוב.',
+		'teacher.voting_goal_only_empty': 'אף הצעה עוד לא בשער, ולכן הקלפי לא שונתה.',
 		'delib.write_label': 'כתבו כאן את ההצעה שלכם',
 		'village.nav_title': 'מי מזיז את התלמידים בין התחנות בכפר?',
 		'village.nav_teacher': 'המורה מוביל/ה את הכיתה',
@@ -1368,6 +1374,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'המורה ניסח מחדש את הטקסט שלכם',
 	},
 	en: {
+		'delib.thread_write_label': 'Write your message or improvement idea here',
+		'delib.thread_write_label_owner': 'Write your reply here',
+		'teacher.voting_goal_only_live': 'Only proposals in the goal on the ballot',
+		'teacher.voting_goal_only_live_hint':
+			'The ballot is redrawn from the proposals inside the goal. Anyone who voted for a proposal that left the ballot is asked to vote again.',
+		'teacher.voting_goal_only_empty':
+			'No proposal is in the goal yet, so the ballot was not changed.',
 		'delib.write_label': 'Write your proposal here',
 		'village.nav_title': 'Who moves students between the village stations?',
 		'village.nav_teacher': 'The teacher leads the class',
@@ -2779,6 +2792,12 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Your teacher reworded your text',
 	},
 	ar: {
+		'delib.thread_write_label': 'اكتبوا هنا رسالتكم أو فكرة التحسين',
+		'delib.thread_write_label_owner': 'اكتبوا ردكم هنا',
+		'teacher.voting_goal_only_live': 'في الاقتراع فقط المقترحات داخل المرمى',
+		'teacher.voting_goal_only_live_hint':
+			'يُعاد بناء الاقتراع من المقترحات داخل المرمى فقط. من صوّت لمقترح خرج من الاقتراع يُطلب منه التصويت مجددًا.',
+		'teacher.voting_goal_only_empty': 'لا يوجد مقترح داخل المرمى بعد، لذلك لم يتغير الاقتراع.',
 		'delib.write_label': 'اكتبوا اقتراحكم هنا',
 		'village.nav_title': 'من ينقل الطلاب بين محطات القرية؟',
 		'village.nav_teacher': 'المعلم/ة يقود الصف',
@@ -4137,6 +4156,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'معلمكم أعاد صياغة نصكم',
 	},
 	es: {
+		'delib.thread_write_label': 'Escribe aquí tu mensaje o idea de mejora',
+		'delib.thread_write_label_owner': 'Escribe aquí tu respuesta',
+		'teacher.voting_goal_only_live': 'En la votación, solo las propuestas en la portería',
+		'teacher.voting_goal_only_live_hint':
+			'La votación se rehace solo con las propuestas dentro de la portería. Quien votó por una propuesta que salió debe votar de nuevo.',
+		'teacher.voting_goal_only_empty':
+			'Aún no hay propuestas en la portería, así que la votación no cambió.',
 		'delib.write_label': 'Escribe aquí tu propuesta',
 		'village.nav_title': '¿Quién mueve a los estudiantes entre las estaciones de la aldea?',
 		'village.nav_teacher': 'El docente guía a la clase',
@@ -5577,6 +5603,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Tu profesor reformuló tu texto',
 	},
 	de: {
+		'delib.thread_write_label': 'Schreibt hier eure Nachricht oder Verbesserungsidee',
+		'delib.thread_write_label_owner': 'Schreibt hier eure Antwort',
+		'teacher.voting_goal_only_live': 'Auf dem Stimmzettel nur Vorschläge im Tor',
+		'teacher.voting_goal_only_live_hint':
+			'Der Stimmzettel wird nur aus den Vorschlägen im Tor neu erstellt. Wer für einen entfernten Vorschlag gestimmt hat, stimmt erneut ab.',
+		'teacher.voting_goal_only_empty':
+			'Noch kein Vorschlag im Tor, daher wurde der Stimmzettel nicht geändert.',
 		'delib.write_label': 'Schreibt euren Vorschlag hier',
 		'village.nav_title': 'Wer bewegt die Lernenden zwischen den Stationen des Dorfes?',
 		'village.nav_teacher': 'Die Lehrkraft führt die Klasse',
@@ -7034,6 +7067,13 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Deine Lehrkraft hat deinen Text umformuliert',
 	},
 	nl: {
+		'delib.thread_write_label': 'Schrijf hier je bericht of verbeteridee',
+		'delib.thread_write_label_owner': 'Schrijf hier je antwoord',
+		'teacher.voting_goal_only_live': 'Op het stembiljet alleen voorstellen in het doel',
+		'teacher.voting_goal_only_live_hint':
+			'Het stembiljet wordt opnieuw opgebouwd uit de voorstellen in het doel. Wie op een verwijderd voorstel stemde, stemt opnieuw.',
+		'teacher.voting_goal_only_empty':
+			'Nog geen voorstel in het doel, dus het stembiljet is niet veranderd.',
 		'delib.write_label': 'Schrijf hier je voorstel',
 		'village.nav_title': 'Wie verplaatst de leerlingen tussen de stations van het dorp?',
 		'village.nav_teacher': 'De docent leidt de klas',

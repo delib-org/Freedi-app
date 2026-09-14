@@ -9,6 +9,7 @@ export { agoraRewordQuestion } from './fn_agoraRewordQuestion';
 export { agoraGradeValueIdentification } from './fn_agoraGradeValueIdentification';
 export { agoraWritingAssistant } from './fn_agoraWritingAssistant';
 export { agoraSetRound } from './fn_agoraSetRound';
+export { agoraSetBallotGoalOnly } from './fn_agoraSetBallotGoalOnly';
 export { agoraChallengeTurn } from './fn_agoraChallengeTurn';
 export { agoraResolveSuggestion } from './fn_agoraResolveSuggestion';
 export { agoraCharacterReview } from './fn_agoraCharacterReview';

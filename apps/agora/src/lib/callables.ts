@@ -129,6 +129,31 @@ export async function joinSession(request: JoinSessionRequest): Promise<JoinSess
 	return result.data;
 }
 
+export interface BallotGoalOnlyRequest {
+	sessionId: string;
+	goalZoneOnly: boolean;
+}
+
+export interface BallotGoalOnlyResponse {
+	/** Candidates on the ballot after the redraw (absent when the vote is not open) */
+	candidates?: number;
+	/** Votes withdrawn because their proposal left the ballot */
+	withdrawn?: number;
+}
+
+/** The teacher's goal switch during the vote: redraws the ballot from the goal, server-side */
+export async function setBallotGoalOnly(
+	request: BallotGoalOnlyRequest,
+): Promise<BallotGoalOnlyResponse> {
+	const call = httpsCallable<BallotGoalOnlyRequest, BallotGoalOnlyResponse>(
+		functions,
+		'agoraSetBallotGoalOnly',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
 export async function advanceStage(request: AdvanceStageRequest): Promise<AdvanceStageResponse> {
 	const call = httpsCallable<AdvanceStageRequest, AdvanceStageResponse>(
 		functions,

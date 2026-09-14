@@ -136,7 +136,7 @@ export async function prepareVotingStage(
  * so the ballot and the net agree. A hidden proposal keeps its score doc but
  * is not standing anywhere; an unrated one has no reading and cannot be in.
  */
-async function goalZoneCandidates(sessionId: string): Promise<VotingCandidate[]> {
+export async function goalZoneCandidates(sessionId: string): Promise<VotingCandidate[]> {
 	const scoresSnap = await db
 		.collection(Collections.agoraScores)
 		.where('sessionId', '==', sessionId)

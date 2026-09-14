@@ -10,7 +10,7 @@ import {
 	getStagePlan,
 	getCurrentPlanIndex,
 } from '../../lib/session';
-import { advanceStage, updateStagePlan } from '../../lib/callables';
+import { advanceStage, setBallotGoalOnly, updateStagePlan } from '../../lib/callables';
 import {
 	getDeliberationState,
 	listenToDeliberation,
@@ -104,6 +104,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let challenging = false;
 	let savingLook = false;
 	let savingNavigation = false;
+	let goalOnlyError = '';
 	let callingVillage = false;
 	let villageCallSent = false;
 	let userId = '';
@@ -163,6 +164,25 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	/** The projector: a second tab (or a classroom PC) showing what the students see */
 	function projectorUrl(): string {
 		return `${window.location.origin}/#!/teach/screen/${sessionId}`;
+	}
+
+	/** The goal switch during the vote — the server redraws the ballot and withdraws orphaned votes */
+	function setGoalOnlyLive(next: boolean): void {
+		if (savingSettings) return;
+		savingSettings = true;
+		goalOnlyError = '';
+		setBallotGoalOnly({ sessionId, goalZoneOnly: next })
+			.catch((error: unknown) => {
+				console.error('[Teacher] Redrawing the ballot from the goal failed:', error);
+				const message = error instanceof Error ? error.message : '';
+				goalOnlyError = t(
+					message.includes('no-goal-proposals') ? 'teacher.voting_goal_only_empty' : 'common.error',
+				);
+			})
+			.finally(() => {
+				savingSettings = false;
+				m.redraw();
+			});
 	}
 
 	function saveVotingSettings(next: VotingStageSettings): void {
@@ -825,6 +845,8 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									savingSettings,
 									challengeLive,
 									saveVotingSettings,
+									setGoalOnlyLive,
+									goalOnlyError,
 								),
 								m(Voting, {
 									session,

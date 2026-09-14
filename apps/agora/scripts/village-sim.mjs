@@ -495,6 +495,16 @@ await tap(s2.page, s2.page.locator('.village-board-open'), 'S2');
 const s1Note = s2.page.locator('.village-note', { hasText: TEXTS.proposal[0].slice(0, 20) });
 await tap(s2.page, s1Note.locator('.village-note__open'), 'S2');
 await s2.page.locator('.chat-page__input').waitFor({ timeout: 10000 });
+// Same paper as every desk in the village, with its label above it.
+eq(
+	'the chat box is labelled',
+	await s2.page.locator('.village-community__panel .chat-page__label').isVisible(),
+	true,
+);
+const chatInk = await s2.page
+	.locator('.village-community__panel .chat-page__input')
+	.evaluate((el) => getComputedStyle(el).color);
+eq('the chat box writes dark ink on white paper', chatInk, 'rgb(52, 73, 61)');
 await s2.page
 	.locator('.chat-page__input')
 	.fill('אולי להוסיף שמי שנעדר מהאסיפה יכול להצביע בכתב, כדי שאף אחד לא יישאר בחוץ.');
@@ -642,6 +652,83 @@ for (const s of pages) {
 	await s.page.locator('.voting__option--mine').waitFor({ timeout: 10000 });
 }
 console.log('   ✓ three votes cast from the council');
+
+// The teacher's goal switch WHILE the vote runs: off puts every leading
+// proposal back on the ballot; on redraws it from the goal and withdraws any
+// vote for a proposal that left it.
+const countedVotes = async () => {
+	const question = await db
+		.collection('statements')
+		.doc((await sessionDoc(run.sessionId)).challengeQuestionId)
+		.get();
+
+	return Object.entries(question.data()?.selections ?? {})
+		.filter(([id]) => id !== 'none')
+		.reduce((sum, [, count]) => sum + Number(count), 0);
+};
+const setGoalLive = async (on) => {
+	await teacherClick(
+		'.voting-settings__row--goal-live input',
+		`ballot goal switch ${on ? 'on' : 'off'}`,
+		() =>
+			callable(
+				'agoraSetBallotGoalOnly',
+				{ sessionId: run.sessionId, goalZoneOnly: on },
+				run.teacherToken,
+			),
+	);
+	return waitFor(
+		`the ballot was redrawn with the goal switch ${on ? 'on' : 'off'}`,
+		() => sessionDoc(run.sessionId),
+		(sess) => (sess?.votingSettings?.goalZoneOnly === true) === on,
+	);
+};
+await setGoalLive(false);
+const widened = await waitFor(
+	'the ballot widened to the leading proposals',
+	() => sessionDoc(run.sessionId),
+	(sess) => (sess?.voting?.candidates?.length ?? 0) > ballot.length,
+);
+const outsideGoal = widened.voting.candidates.find((c) => !ballot.includes(c.statementId));
+console.log(`   ✓ goal switch off: ${widened.voting.candidates.length} proposals on the ballot`);
+const s2Options = s2.page.locator('.village-shell__activity button.voting__option');
+await waitFor(
+	'S2 sees the wider ballot',
+	() => s2Options.count(),
+	(n) => n === widened.voting.candidates.length,
+	30_000,
+);
+await tap(s2.page, s2Options.filter({ hasText: outsideGoal.statement.slice(0, 20) }).first(), 'S2');
+await waitFor(
+	'S2 moved their vote outside the goal',
+	async () =>
+		(
+			await db
+				.collection('votes')
+				.doc(`${s2.uid}--${(await sessionDoc(run.sessionId)).challengeQuestionId}`)
+				.get()
+		).data()?.statementId,
+	(id) => id === outsideGoal.statementId,
+	30_000,
+);
+console.log('   ✓ S2 moved their vote to the proposal outside the goal');
+await setGoalLive(true);
+const narrowed = await waitFor(
+	'the ballot narrowed back to the goal',
+	() => sessionDoc(run.sessionId),
+	(sess) => sess?.voting?.candidates?.length === ballot.length,
+);
+eq(
+	'goal switch on: only the goal is on the ballot',
+	narrowed.voting.candidates.length,
+	ballot.length,
+);
+await waitFor("S2's orphaned vote was withdrawn", countedVotes, (n) => n === 2, 60_000);
+console.log('   ✓ the vote for the removed proposal was withdrawn (2 counted)');
+await s2Options.first().waitFor({ state: 'visible', timeout: 30000 });
+await tap(s2.page, s2Options.nth(Math.min(1, ballot.length - 1)), 'S2');
+await s2.page.locator('.voting__option--mine').waitFor({ timeout: 15000 });
+console.log('   ✓ S2 voted again on the redrawn ballot');
 await shot(s1.page, '15-ballot-hidden');
 // The counting trigger lands a few seconds after the votes; reveal only once it has.
 const questionId = (await sessionDoc(run.sessionId)).challengeQuestionId;
