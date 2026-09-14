@@ -48,6 +48,8 @@ const SearchBox: React.FC<SearchBoxProps> = ({
 				aria-label={label}
 				placeholder={placeholder ?? label}
 				autoFocus={autoFocus}
+				// Dialogs move focus to their panel on open; this lets the field keep it.
+				data-autofocus={autoFocus || undefined}
 				autoComplete="off"
 				enterKeyHint="search"
 			/>

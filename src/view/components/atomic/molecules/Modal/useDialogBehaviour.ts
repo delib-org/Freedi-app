@@ -9,7 +9,7 @@ const FOCUSABLE =
 export interface DialogBehaviourOptions {
 	isOpen: boolean;
 	onClose: () => void;
-	/** Element that receives focus on open and bounds the Tab cycle. */
+	/** Element that receives focus on open (unless a child has data-autofocus) and bounds the Tab cycle. */
 	panelRef: RefObject<HTMLElement | null>;
 	closeOnEscape?: boolean;
 	/** Keep Tab / Shift+Tab inside the panel while open. */
@@ -45,7 +45,10 @@ export function useDialogBehaviour({
 		if (panel) dialogStack.push(panel);
 		bodyLocks.set(bodyClass, (bodyLocks.get(bodyClass) ?? 0) + 1);
 		document.body.classList.add(bodyClass);
-		panelRef.current?.focus();
+		// A child may claim the first focus (a search field, say). React's own
+		// autoFocus loses to this effect, which runs after the children's.
+		const initialFocus = panel?.querySelector<HTMLElement>('[data-autofocus]');
+		(initialFocus ?? panelRef.current)?.focus();
 
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (panel && dialogStack[dialogStack.length - 1] !== panel) return;

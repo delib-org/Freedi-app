@@ -120,3 +120,12 @@ it('Escape only closes the top dialog and keeps the outer scroll lock', () => {
 	expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 	expect(document.body).not.toHaveClass('modal-open');
 });
+
+it('gives the first focus to a child marked data-autofocus', () => {
+	render(
+		<Sheet isOpen onClose={() => {}} title="Search">
+			<input aria-label="query" data-autofocus />
+		</Sheet>,
+	);
+	expect(screen.getByLabelText('query')).toHaveFocus();
+});
