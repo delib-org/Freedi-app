@@ -66,6 +66,10 @@ export interface VillageCommunityAttrs {
 	viewingIndex: number;
 	navigate: (itemId: string) => void;
 	onPause: (paused: boolean) => void;
+	/** Take the student to the table to edit their own note (the board is for reading and rating) */
+	onEditMine?: () => void;
+	/** The board opened from the community layer's own button: the world turns to face it */
+	onBoard?: () => void;
 }
 export function stationNotes(item: AgoraStagePlanItem): AgoraProposal[] {
 	const state = getDeliberationState();
@@ -367,6 +371,13 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 							: !own && live && !mine && !a.source
 								? m('small.village-note__hint', 'כתבו קודם את הפתק שלכם, ואז תוכלו לדרג')
 								: null,
+						own && live && a.onEditMine
+							? m(
+									'button.village-note__edit',
+									{ onclick: () => a.onEditMine?.() },
+									'עריכת הפתק שלי · חזרה לשולחן',
+								)
+							: null,
 						m(
 							'button.village-note__open',
 							{
@@ -394,7 +405,12 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 				m('.village-inbox', m(Inbox)),
 				m(
 					'button.village-board-open',
-					{ onclick: () => open(a, 'notes') },
+					{
+						onclick: () => {
+							open(a, 'notes');
+							a.onBoard?.();
+						},
+					},
 					'לוח הפתקים · קריאה, דירוג ותגובות',
 				),
 				panel === 'scoreboard'

@@ -165,7 +165,60 @@ function updateDeskBubble(){
 // Spawn just north of the fountain, looking across the square at the booths.
 const keys=new Set();camera.position.set(0,7.15,8.5);camera.lookAt(0,6.6,15);let angles=new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ');yaw=angles.y;pitch=angles.x;
 const paperFlight=createPaperFlight(scene,camera,itemId=>{const angles=new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ');yaw=angles.y;pitch=angles.x;if(embedded)parent.postMessage({type:'agora-village-landed',itemId},location.origin);});
-window.addEventListener('message',event=>{const d=event.data;if(event.origin!==location.origin||event.source!==parent||!embedded||d?.type!=='agora-village-fly'||d.itemId!==activeItem)return;keys.clear();moving=false;uiPaused=false;const booth=boardFor(d.place);paperFlight.start(booth?.desk,booth?{face:booth.face}:null,d.itemId);});
+window.addEventListener('message',event=>{const d=event.data;if(event.origin!==location.origin||event.source!==parent||!embedded||d?.type!=='agora-village-fly'||d.itemId!==activeItem)return;keys.clear();moving=false;uiPaused=false;view=null;viewKind=null;const booth=boardFor(d.place);paperFlight.start(booth?.desk,booth?{face:booth.face}:null,d.itemId);});
+/**
+ * The booth's two sides, framed for the shell: 'table' shows the paper and
+ * the booth's guide together (the paper is written in the guide's speech
+ * bubble), 'board' stands in front of the class board. The camera eases there
+ * even while an open paper or board pauses the world, and at the table the
+ * world reports where the guide's head is so the shell can hang the bubble.
+ */
+let view=null,viewKind=null,viewPlace='';
+function viewPose(place,kind){
+ const booth=boardFor(place);if(!booth)return null;
+ const eye=new THREE.Vector3(),look=new THREE.Vector3();
+ if(kind==='board'){
+  booth.face.updateWorldMatrix(true,false);booth.face.getWorldPosition(look);
+  const normal=new THREE.Vector3(0,0,1).transformDirection(booth.face.matrixWorld);
+  eye.copy(look).addScaledVector(normal,3.4);
+ }else{
+  booth.desk.paper.updateWorldMatrix(true,false);const paper=booth.desk.paper.getWorldPosition(new THREE.Vector3());
+  const guide=guideOf(place);
+  const head=guide?new THREE.Vector3(guide.x,height(guide.x,guide.z)+guide.height*.75,guide.z):paper.clone();
+  // Aim past the middle, toward the guide: the desk sits on one side of the
+  // picture, the guide near the centre, and the far side is left free for
+  // the bubble — so writing never hides the table the note is on.
+  look.copy(paper).lerp(head,.85);look.y=paper.y+.3;
+  // Step back from the line between paper and guide, toward the square, far enough to see both.
+  const across=new THREE.Vector3(head.x-paper.x,0,head.z-paper.z);const sep=across.length();
+  const out=sep>.01?new THREE.Vector3(-across.z,0,across.x).normalize():new THREE.Vector3(CENTER.x-look.x,0,CENTER.z-look.z).normalize();
+  if(out.dot(new THREE.Vector3(CENTER.x-look.x,0,CENTER.z-look.z))<0)out.negate();
+  eye.copy(look).addScaledVector(out,sep*1.1+2.6);
+ }
+ // Eye height as the walker's, so closing the paper or the board does not drop the view.
+ eye.y=height(eye.x,eye.z)+1.75;
+ const quaternion=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(eye,look,new THREE.Vector3(0,1,0)));
+ return {eye,quaternion};
+}
+function postAnchor(){
+ if(!embedded||viewKind!=='table')return;const guide=guideOf(viewPlace);
+ if(!guide){parent.postMessage({type:'agora-village-anchor',visible:false},location.origin);return;}
+ const p=new THREE.Vector3(guide.x,height(guide.x,guide.z)+guide.height*.85,guide.z).project(camera);
+ const visible=p.z>-1&&p.z<1&&Math.abs(p.x)<1&&Math.abs(p.y)<1;
+ // Where the paper lies on screen: the bubble hangs on the guide's other side.
+ const booth=boardFor(viewPlace);let avoidX=null;
+ if(booth){const q=booth.desk.paper.getWorldPosition(new THREE.Vector3()).project(camera);if(q.z>-1&&q.z<1)avoidX=Math.round((q.x*.5+.5)*innerWidth);}
+ parent.postMessage({type:'agora-village-anchor',visible,x:Math.round((p.x*.5+.5)*innerWidth),y:Math.round((-p.y*.5+.5)*innerHeight),avoidX,speaker:guide.name},location.origin);
+}
+function endView(){view=null;const a=new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ');yaw=a.y;pitch=a.x;postAnchor();}
+function startView(place,kind){
+ const pose=viewPose(place,kind);if(!pose)return;
+ keys.clear();moving=false;hideDeskBubble();viewKind=kind;viewPlace=place;
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches){camera.position.copy(pose.eye);camera.quaternion.copy(pose.quaternion);endView();renderer.render(scene,camera);return;}
+ view={fromEye:camera.position.clone(),fromQ:camera.quaternion.clone(),...pose,t:0};
+}
+function tickView(dt){const v=view;v.t=Math.min(1,v.t+dt/.9);const e=v.t*v.t*(3-2*v.t);camera.position.lerpVectors(v.fromEye,v.eye,e);camera.quaternion.slerpQuaternions(v.fromQ,v.quaternion,e);if(v.t===1)endView();}
+window.addEventListener('message',event=>{const d=event.data;if(!embedded||event.source!==parent||event.origin!==location.origin||d?.type!=='agora-village-view'||typeof d.place!=='string'||(d.view!=='table'&&d.view!=='board'))return;startView(d.place,d.view);});
 function send(type){if(embedded)parent.postMessage({type,itemId:activeItem},location.origin);}
 function describe(){$('station-name').textContent=selected.id===activePlace&&activeLabel?activeLabel:selected.name;$('station-place').textContent=selected.short||selected.name;$('guide-line').textContent=selected.question;renderStationNav();}
 let activeLabel='';
@@ -206,7 +259,7 @@ window.addEventListener('message',event=>{
   booth.desk.paint(current?deskInfo?.text??'':saved,current?deskInfo?.label??'הפתק שלי':'הפתק שלי',current&&!!deskInfo);
  }
  if(data.council&&typeof data.council==='object')village.scoreboard.paint(data.council);
- uiPaused=data.paused===true;if(uiPaused){keys.clear();moving=false;hideDeskBubble();}
+ uiPaused=data.paused===true;document.body.classList.toggle('is-covered',uiPaused);if(uiPaused){keys.clear();moving=false;hideDeskBubble();}
  renderStationNav();
 });
 $('travel').onclick=()=>{moving=!moving;canvas.focus();};
@@ -288,7 +341,7 @@ window.addEventListener('message',event=>{
  if(!embedded||event.source!==parent||event.origin!==location.origin)return;const d=event.data;
  if(!d||d.type!=='agora-village-go'||typeof d.place!=='string')return;
  const station=stations.find(s=>s.id===d.place);if(!station){parent.postMessage({type:'agora-village-arrived',place:d.place},location.origin);return;}
- uiPaused=false;keys.clear();arriveNotify=d.place;selected=station;describe();hideDeskBubble();
+ uiPaused=false;keys.clear();view=null;viewKind=null;arriveNotify=d.place;selected=station;describe();hideDeskBubble();
  if(d.reason==='advance'||d.reason==='call')announce(d.place,d.place===activePlace?activeLabel:'',d.reason);
  if(Math.hypot(camera.position.x-station.ax,camera.position.z-station.az)<=.3)arrived();else moving=true;
 });
@@ -304,7 +357,7 @@ if(!embedded){
  village.scoreboard.paint({mode:'pitch',goalOnly:false,leftLabel:'צד א',rightLabel:'צד ב',scoredAny:true,footer:'סיור · במפגש אמיתי הלוח מתעדכן חי',points:[{rank:1,percent:61,lean:.1,raters:6,mine:true,scored:true,lead:true,color:'#f4c95d'},{rank:2,percent:35,lean:-.6,raters:5,mine:false,scored:false,color:'#9fd3e6'},{rank:3,percent:-20,lean:.5,raters:4,mine:false,scored:false,color:'#e6a0a0'}]});
  destination('booth:demo-solution');
 }else destination('challenge');
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});document.addEventListener('visibilitychange',()=>{keys.clear();sound.visibility(document.hidden);});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);if(!view)postAnchor();});document.addEventListener('visibilitychange',()=>{keys.clear();sound.visibility(document.hidden);});
 $('loading').textContent='מכינים את הכפר ומזמינים את החכמים…';
 const characterStatus=document.createElement('div');characterStatus.setAttribute('role','status');
 characterStatus.style.cssText='position:fixed;bottom:115px;right:25px;z-index:3;background:#304734;padding:10px;border-radius:4px;font:14px Arial';
@@ -315,7 +368,7 @@ village.ready.then(({failed})=>{
  if(failed){characterStatus.textContent='חלק מהדמויות לא נטענו. רעננו את הדף כדי לנסות שוב.';}
  else characterStatus.remove();
 });
-function frame(now){requestAnimationFrame(frame);if(lite&&now-last<66)return;const dt=Math.min((now-last)/1000,.04);/* walking uses the real elapsed time (capped) so a slow renderer does not slow the walker */const dtWalk=Math.min((now-last)/1000,.25);last=now;if(paperFlight.active){paperFlight.tick(dt);village.tick(camera);renderer.render(scene,camera);return;}if(document.hidden||uiPaused||$('preview-info').open)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
+function frame(now){requestAnimationFrame(frame);if(lite&&now-last<66)return;const dt=Math.min((now-last)/1000,.04);/* walking uses the real elapsed time (capped) so a slow renderer does not slow the walker */const dtWalk=Math.min((now-last)/1000,.25);last=now;if(paperFlight.active){paperFlight.tick(dt);village.tick(camera);renderer.render(scene,camera);return;}if(view){tickView(dt);village.tick(camera);renderer.render(scene,camera);return;}if(document.hidden||uiPaused||$('preview-info').open)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
  if(moving){const dx=selected.ax-camera.position.x,dz=selected.az-camera.position.z,dist=Math.hypot(dx,dz);if(dist>.12){const stepLen=Math.min(dist,dtWalk*4);camera.position.x+=dx/dist*stepLen;camera.position.z+=dz/dist*stepLen;const look=selected.look??guideOf(selected.id)??selected;const target=Math.atan2(camera.position.x-look.x,camera.position.z-look.z);yaw+=Math.atan2(Math.sin(target-yaw),Math.cos(target-yaw))*Math.min(1,dtWalk*3);}else {moving=false;pitch=selected.pitch??-.06;arrived();}}
  const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));if(f||s){const n=Math.hypot(f,s);camera.position.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)/n*dt*4;camera.position.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)/n*dt*4;}
  if(!moving&&((Math.abs(camera.position.x)<3.7&&camera.position.z<2.6&&camera.position.z>-3.9)||village.solids.some(o=>Math.abs(camera.position.x-o.x)<o.w&&Math.abs(camera.position.z-o.z)<o.d)))camera.position.copy(old);

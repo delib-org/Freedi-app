@@ -121,7 +121,7 @@ async function backToVillage(page) {
 	const panel = page.locator('.village-community__panel header button', { hasText: 'חזרה לכפר' });
 	if (await panel.count()) await tap(page, panel.first());
 	const activity = page.locator('.village-shell__activity:visible button', {
-		hasText: /חזרה לשולחן|חזרה לכפר/,
+		hasText: /סגירה|חזרה לשולחן|חזרה לכפר/,
 	});
 	if (await activity.count()) await tap(page, activity.first());
 	// The toolbar button TOGGLES the activity, so re-read it after the panel

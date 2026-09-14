@@ -179,3 +179,37 @@ which stores `votingSettings.goalZoneOnly`, redraws `session.voting` through
 that left the ballot, so the tally and the recap's winner stay consistent;
 those students vote again. It refuses while a challenge turn is being judged,
 and refuses to empty the ballot when nothing is in the goal yet.
+
+## The booth's two sides: the table and the board (September 14)
+
+At a booth the student moves between two sides, never a screen over the
+world:
+
+- **The table.** The camera frames the writing desk with the note on it and
+  the booth's guide (`agora-village-view` `{place, view: 'table'}`; the world
+  eases there even while paused). The paper opens as the guide's **speech
+  bubble**: the world reports the guide's head and the paper's screen position
+  (`agora-village-anchor` `{x, y, avoidX, speaker}`), and
+  `lib/flows/villageBubble.ts` hangs the bubble on the guide's side away from
+  the desk, with a tail pointing at them (centred, tail-less on phones). The
+  bubble shows the guide's name, the item's label and prompt, and the stage's
+  own writing form — every write, confirmation and payout is unchanged.
+- **The board.** Sending flies the paper to the board and the board opens
+  (as before). The camera now faces the board (`view: 'board'`) whenever it
+  opens — the switch, the floating board button, pressing the 3D board, or
+  a teacher advance for a student who has written.
+- **Back and forth.** `.village-booth-switch` ("📝 השולחן · הפתק שלי" /
+  "📋 הלוח · הפתקים של הכיתה") sits over every booth whose item has a desk.
+  On the board, my own note carries "עריכת הפתק שלי · חזרה לשולחן", which goes
+  back to the table with the paper open for editing; classmates' notes keep
+  their rating control and "קריאה והצעת שיפור".
+
+A stage's fixed room wash (`.shell--place-*::after`) and mode strip used to
+escape the paper inside the village and paint the viewport over the world on
+the first write; they are hidden inside `.village-shell__activity`.
+
+Verification: `bash ../../scripts/solo.sh npx tsx scripts/village-desk-board.mjs`
+(arrive → bubble at the table → write → board → table → board → rate →
+edit from the board); screenshots in `output/village-desk-board/`. Known
+nit: on the first write in a short bubble the pinned send row can cover the
+bottom of the writing box (the first line stays visible).

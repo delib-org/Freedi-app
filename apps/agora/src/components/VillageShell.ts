@@ -10,6 +10,7 @@ import {
 	type VillageNavigation,
 } from '../lib/flows/villageRoute';
 import type { CouncilModel } from '../lib/flows/villageCouncil';
+import { bubblePlacement, readBubbleAnchor, type BubbleAnchor } from '../lib/flows/villageBubble';
 import { VillageCommunity, type VillageCommunityAttrs } from './VillageCommunity';
 import { planItemLabel } from './StageNav';
 
@@ -21,7 +22,7 @@ interface VillageShellAttrs {
 	}>;
 	community?: Omit<
 		VillageCommunityAttrs,
-		'plan' | 'currentIndex' | 'viewingIndex' | 'navigate' | 'onPause'
+		'plan' | 'currentIndex' | 'viewingIndex' | 'navigate' | 'onPause' | 'onEditMine' | 'onBoard'
 	>;
 	/** What the council's scoreboard paints — absent before the topic loads */
 	council?: CouncilModel;
@@ -63,6 +64,8 @@ function villageLite(): boolean {
 const ARRIVAL_FALLBACK_MS = 12000;
 /** A call older than this, met on first render, is history rather than an order */
 const CALL_FRESH_MS = 120000;
+/** The camera's turn to the table takes ~0.9s; a world that never reports the guide still shows the bubble */
+const ANCHOR_FALLBACK_MS = 1500;
 
 /** What opens when the walk ends: the paper (or the board once written), only an empty paper, the council, nothing */
 type ArrivalAction = 'desk' | 'desk-if-empty' | 'council' | 'none';
@@ -88,6 +91,14 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 	let requestedCouncil = '';
 	/** Bumped to close whatever board the community layer has open */
 	let closeRequest = 0;
+	/** The open community panel is this booth's board (not the scoreboard): its side of the switch is on */
+	let boardView = false;
+	/** Where the booth's guide stands on screen — the paper is written in their speech bubble */
+	let anchor: BubbleAnchor | null = null;
+	/** The bubble stays invisible while the camera turns to the table, so it does not jump */
+	let waitingAnchor = false;
+	let anchorTimer: ReturnType<typeof setTimeout> | undefined;
+	const redraw = (): void => m.redraw();
 	let lastRoomIndex: number | undefined;
 	let lastCallAt: number | undefined;
 	/** Where the world is walking the student, and what opens when they get there */
@@ -132,8 +143,17 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		clearTimeout(flightTimer);
 		boardRequest++;
 		communityOpen = true;
+		// The flight already left the camera facing the board.
+		boardView = true;
 		sync();
 		m.redraw();
+	}
+	/** Turn the world's camera to one side of a booth: the table (paper and guide) or the class board */
+	function frameView(place: string, view: 'table' | 'board'): void {
+		frame?.contentWindow?.postMessage(
+			{ type: 'agora-village-view', place, view },
+			window.location.origin,
+		);
 	}
 	function openDesk(): void {
 		if (flightItem) return;
@@ -144,8 +164,36 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		deskBaseline = attrs.papers.find((p) => p.own)?.text ?? '';
 		focusDesk = attrs.viewingIndex === attrs.currentIndex;
 		if (focusDesk) attrs.onWrite?.();
+		waitingAnchor = true;
+		clearTimeout(anchorTimer);
+		anchorTimer = setTimeout(() => {
+			waitingAnchor = false;
+			m.redraw();
+		}, ANCHOR_FALLBACK_MS);
 		sync();
+		frameView(villagePlace(item), 'table');
 		m.redraw();
+	}
+	/** The board side of the booth: the class's notes, to read, rate and answer */
+	function openBoard(): void {
+		const item = attrs.plan[attrs.viewingIndex];
+		if (!item || !attrs.community || flightItem) return;
+		opened = false;
+		deskOpen = false;
+		focusDesk = false;
+		boardRequest++;
+		communityOpen = true;
+		boardView = true;
+		sync();
+		frameView(villagePlace(item), 'board');
+		m.redraw();
+	}
+	/** The table side of the booth: my paper, in the guide's bubble */
+	function showTable(): void {
+		if (communityOpen) closeRequest++;
+		communityOpen = false;
+		boardView = false;
+		openDesk();
 	}
 	/** The plan position an opened place stands for, or -1 */
 	function openedIndexOf(place: string): number {
@@ -200,6 +248,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		bookOpen = false;
 		if (communityOpen) closeRequest++;
 		communityOpen = false;
+		boardView = false;
 	}
 	/** Walk the student to a place; `then` runs when the world reports arriving */
 	function go(place: string, then: ArrivalAction, reason: 'advance' | 'call' | 'return'): void {
@@ -236,7 +285,9 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		} else if (then === 'desk' && villageDesk(item) && attrs.community) {
 			boardRequest++;
 			communityOpen = true;
+			boardView = true;
 			sync();
+			frameView(place, 'board');
 			m.redraw();
 		} else if (then === 'desk' && place === 'council') {
 			enterCouncil();
@@ -284,9 +335,21 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				attrs.onSelectBook?.(attrs.plan[index].itemId);
 				boardRequest++;
 				communityOpen = true;
+				boardView = true;
 				sync();
+				frameView(boardPlace, 'board');
 				m.redraw();
 			}
+		} else if (
+			payload &&
+			typeof payload === 'object' &&
+			'type' in payload &&
+			payload.type === 'agora-village-anchor'
+		) {
+			anchor = readBubbleAnchor(payload);
+			waitingAnchor = false;
+			clearTimeout(anchorTimer);
+			m.redraw();
 		} else if (arrivedPlace !== null) {
 			arrive(arrivedPlace);
 		} else if (selectPlace !== null) {
@@ -328,12 +391,15 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		oninit(vnode) {
 			attrs = vnode.attrs;
 			window.addEventListener('message', receive);
+			window.addEventListener('resize', redraw);
 		},
 		onremove() {
 			window.removeEventListener('message', receive);
+			window.removeEventListener('resize', redraw);
 			clearTimeout(timer);
 			clearTimeout(flightTimer);
 			clearTimeout(arrivalTimer);
+			clearTimeout(anchorTimer);
 		},
 		onbeforeupdate(vnode) {
 			attrs = vnode.attrs;
@@ -417,7 +483,8 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			if (input && !input.disabled) {
 				focusDesk = false;
 				input.focus({ preventScroll: true });
-				input.scrollIntoView({ block: 'center' });
+				// Inside the bubble only — 'center' scrolled the whole page and took the world out of view.
+				input.scrollIntoView({ block: 'nearest' });
 			}
 		},
 		view(vnode) {
@@ -426,6 +493,22 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			const viewing = attrs.plan[attrs.viewingIndex];
 			const library = !!viewing && villagePlace(viewing) === 'library';
 			const council = !!viewing && villagePlace(viewing) === 'council';
+			const deskHere = !!viewing && !!villageDesk(viewing) && !library && !council;
+			const bubble =
+				opened && deskOpen && frame
+					? bubblePlacement(
+							{
+								width: frame.clientWidth,
+								frameTop: frame.offsetTop,
+								frameHeight: frame.offsetHeight,
+							},
+							anchor,
+						)
+					: null;
+			const deskPrompt =
+				viewing && attrs.viewingIndex === attrs.currentIndex
+					? villageDesk(viewing)?.prompt
+					: undefined;
 
 			return m('.village-shell', [
 				flightItem
@@ -471,6 +554,30 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 						),
 					]),
 				]),
+				// A booth has two sides: the table, where my paper is written in the
+				// guide's bubble, and the board with the class's notes. Back and forth.
+				deskHere && attrs.community && !flightItem
+					? m('.village-booth-switch', { role: 'group', 'aria-label': 'השולחן והלוח של הביתן' }, [
+							m(
+								'button',
+								{
+									type: 'button',
+									'aria-pressed': String(opened && deskOpen),
+									onclick: showTable,
+								},
+								'📝 השולחן · הפתק שלי',
+							),
+							m(
+								'button',
+								{
+									type: 'button',
+									'aria-pressed': String(communityOpen && boardView),
+									onclick: openBoard,
+								},
+								'📋 הלוח · הפתקים של הכיתה',
+							),
+						])
+					: null,
 				attrs.community
 					? m(VillageCommunity, {
 							...attrs.community,
@@ -483,7 +590,13 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 							navigate: (id: string) => attrs.onSelectBook?.(id),
 							onPause: (value: boolean) => {
 								communityOpen = value;
+								if (!value) boardView = false;
 								sync();
+							},
+							onEditMine: showTable,
+							onBoard: () => {
+								boardView = true;
+								if (viewing) frameView(villagePlace(viewing), 'board');
 							},
 						})
 					: null,
@@ -523,11 +636,21 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				m(
 					'.village-shell__activity',
 					{
-						style: { display: opened ? 'block' : 'none' },
+						style: {
+							display: opened ? 'block' : 'none',
+							...(bubble
+								? {
+										'--bubble-left': `${bubble.left}px`,
+										'--bubble-top': `${bubble.top}px`,
+										'--bubble-width': `${bubble.width}px`,
+										'--bubble-max-height': `${bubble.maxHeight}px`,
+									}
+								: {}),
+						},
 						class: library
 							? `village-library${bookOpen ? ' village-library--reading' : ''}`
 							: deskOpen
-								? 'village-desk'
+								? `village-desk village-bubble${waitingAnchor ? ' village-bubble--waiting' : ''}`
 								: council
 									? 'village-council'
 									: '',
@@ -612,7 +735,13 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 						: [
 								deskOpen
 									? m('.village-desk__header', [
-											m('h2', villageDesk(attrs.plan[attrs.viewingIndex])?.label ?? 'הפתק שלי'),
+											m('div', [
+												anchor?.speaker
+													? m('small.village-bubble__speaker', `💬 ${anchor.speaker}`)
+													: null,
+												m('h2', villageDesk(attrs.plan[attrs.viewingIndex])?.label ?? 'הפתק שלי'),
+												deskPrompt ? m('p.village-bubble__prompt', deskPrompt) : null,
+											]),
 											m(
 												'button.btn.btn--secondary',
 												{
@@ -623,7 +752,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 														sync();
 													},
 												},
-												'חזרה לשולחן',
+												'סגירה',
 											),
 										])
 									: council
@@ -647,6 +776,15 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 								vnode.children,
 							],
 				),
+				bubble?.tail && !waitingAnchor
+					? m(`.village-bubble-tail.village-bubble-tail--${bubble.tail.side}`, {
+							'aria-hidden': 'true',
+							style: {
+								'--tail-left': `${bubble.tail.left}px`,
+								'--tail-top': `${bubble.tail.top}px`,
+							},
+						})
+					: null,
 			]);
 		},
 	};
