@@ -46,3 +46,13 @@
 		}
 	}
 }
+
+// The global header row is `row-reverse`, which on phones put the wordmark at
+// the END. The design reads start → end: wordmark first, avatar last, in both
+// directions. Two classes so this outranks the single global class.
+.header > .header__row {
+	@media (max-width: 1023px) {
+		flex-direction: row;
+		justify-content: space-between;
+	}
+}

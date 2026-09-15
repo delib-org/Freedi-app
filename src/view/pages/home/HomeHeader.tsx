@@ -82,7 +82,7 @@ export default function HomeHeader() {
 
 	return (
 		<div className={`homePage__header ${styles.header} ${dir}`}>
-			<div className="homePage__header__wrapper">
+			<div className={`homePage__header__wrapper ${styles.header__row}`}>
 				<a href="https://wizcol.com" target="_blank" rel="noopener noreferrer">
 					<h1 className="homePage__header__wrapper__title">WizCol.com</h1>
 				</a>
