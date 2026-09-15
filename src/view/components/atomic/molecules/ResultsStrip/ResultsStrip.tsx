@@ -12,7 +12,7 @@ export type ResultsMetric = 'consensus' | 'average' | 'evaluators';
 
 export interface ResultsStripProps {
 	statement: Statement;
-	/** Which number is the headline — rendered larger with an accent ring. */
+	/** Which number is the headline — rendered larger on a sunken tile. */
 	primary?: ResultsMetric;
 	/** Consensus is meaningless on a handful of votes, so it stays hidden
 	 *  until this many people have evaluated. */
@@ -80,29 +80,42 @@ const ResultsStrip: React.FC<ResultsStripProps> = ({
 			)}
 			title={`${title}: ${value}`}
 		>
-			<span className="results-strip__value">{value}</span>
+			{/* dir="ltr" isolates the number: without it bidi reorders
+			    "50 / 500" to "500 / 50" inside a Hebrew card. */}
+			<span className="results-strip__value" dir="ltr">
+				{value}
+			</span>
 			<span className="results-strip__label">{label}</span>
 		</div>
 	);
 
 	return (
-		<div className={clsx('results-strip', className)} aria-label={t('Results')}>
-			{showConsensus &&
-				item(
-					'consensus',
-					t('Consensus'),
-					t('Consensus score'),
-					`${consensusPct}%`,
-					consensusPct < 0,
+		<div className={clsx('results-strip', className)}>
+			<div className="results-strip__items" role="group" aria-label={t('Results')}>
+				{showConsensus &&
+					item(
+						'consensus',
+						t('Consensus'),
+						t('Consensus score'),
+						`${consensusPct}%`,
+						consensusPct < 0,
+					)}
+				{item('average', t('Average'), t('Average score'), `${averagePct}%`, averagePct < 0)}
+				{item(
+					'evaluators',
+					coveragePct !== undefined ? t('Of stakeholders') : t('Evaluators'),
+					coveragePct !== undefined
+						? `${t('Evaluators')} (${coveragePct}% ${t('of stakeholders')})`
+						: t('Evaluators'),
+					evaluatorsValue,
 				)}
-			{item('average', t('Average'), t('Average score'), `${averagePct}%`, averagePct < 0)}
-			{item(
-				'evaluators',
-				coveragePct !== undefined ? t('Of stakeholders') : t('Evaluators'),
-				coveragePct !== undefined
-					? `${t('Evaluators')} (${coveragePct}% ${t('of stakeholders')})`
-					: t('Evaluators'),
-				evaluatorsValue,
+			</div>
+			{/* The gate made legible: without it a missing consensus tile looks
+			    like missing data. */}
+			{!showConsensus && (
+				<p className="results-strip__caption" data-testid="results-strip-caption">
+					{t('Consensus will show after {n} evaluators').replace('{n}', String(minEvaluators))}
+				</p>
 			)}
 		</div>
 	);

@@ -3,71 +3,91 @@
 // Mirrors the Join app's card results strip so a participant reading the same
 // question in either app sees the same three numbers, labelled the same way.
 // SCSS-first BEM, design tokens only.
+//
+// DOM:   <div class="results-strip">
+//          <div class="results-strip__items">
+//            <div class="results-strip__item [--primary] [--negative]">
+//              <span class="results-strip__value" dir="ltr">42%</span>
+//              <span class="results-strip__label">Consensus</span>
+//            </div> ×3
+//          </div>
+//          [<p class="results-strip__caption">Consensus will show after 5 evaluators</p>]
+//        </div>
 
 @use '../mixins' as *;
 
 .results-strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  justify-content: center;
-  gap: 0.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2xs);
+	inline-size: 100%;
+	min-width: 0;
 
-  &__item {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-width: 2.9rem;
-    padding: 0.15rem 0.4rem;
-    border: 1px solid var(--border-light, rgba(0, 0, 0, 0.08));
-    border-radius: 0.5rem;
-    background: var(--bg-subtle, rgba(0, 0, 0, 0.03));
-    color: var(--text-body);
-    line-height: 1.1;
-    cursor: default;
+	&__items {
+		display: flex;
+		align-items: stretch;
+		gap: 0.375rem;
+		inline-size: 100%;
+	}
 
-    &--primary {
-      border-color: var(--btn-primary);
-      background: var(--card-default, #fff);
-    }
+	// Three equal tiles; the value reads as data (display face), the label as UI.
+	&__item {
+		flex: 1 1 0;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.125rem;
+		padding: 0.5rem 0.375rem;
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-tile);
+		background: var(--card-default);
+		color: var(--text-title);
+		cursor: default;
 
-    // Negative consensus / average read as a caution, not as an achievement.
-    &--negative {
-      color: var(--reject);
-    }
-  }
+		&--primary {
+			background: var(--bg-sunken);
+			border-color: var(--border-dashed);
+		}
 
-  &__value {
-    // Numbers always read left-to-right, including inside an RTL card.
-    direction: ltr;
-    font-size: 0.85rem;
-    font-weight: 600;
-  }
+		// Negative consensus / average read as a caution, not as an achievement.
+		&--negative {
+			color: var(--score-negative-ink);
+		}
+	}
 
-  &__item--primary &__value {
-    font-size: 1rem;
-  }
+	&__value {
+		font-family: var(--font-display);
+		font-weight: 500;
+		font-size: 1rem;
+		line-height: 1.1;
+		white-space: nowrap;
+		font-variant-numeric: tabular-nums;
+		// Numbers always read left-to-right, isolated from the RTL line around
+		// them — "50 / 500" must never reorder to "500 / 50".
+		direction: ltr;
+		unicode-bidi: isolate;
+	}
 
-  &__label {
-    font-size: 0.6rem;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    color: var(--text-secondary, #777);
-    white-space: nowrap;
-  }
+	&__item--primary &__value {
+		font-size: 1.125rem;
+	}
 
-  @media screen and (max-width: 600px) {
-    gap: 0.2rem;
+	&__label {
+		max-inline-size: 100%;
+		font-size: 0.625rem;
+		color: var(--text-meta);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
 
-    &__item {
-      min-width: 2.5rem;
-      padding: 0.1rem 0.3rem;
-    }
-
-    &__label {
-      font-size: 0.55rem;
-    }
-  }
+	&__caption {
+		margin: 0;
+		font-size: 0.65625rem;
+		line-height: 1.4;
+		color: var(--text-meta);
+		text-align: start;
+	}
 }
