@@ -96,4 +96,11 @@
 		line-height: 1.45;
 	}
 }
-.bottomNav { position: sticky; bottom: var(--bottom-nav-clearance, 0px); left: auto; transform: none; width: 100%; max-width: none; flex-shrink: 0; z-index: 10; margin-top: auto; background: var(--space-paper); }
+.bottomNav { position: sticky; bottom: 0; left: auto; transform: none; width: 100%; max-width: none; flex-shrink: 0; z-index: 10; margin-top: auto; background: var(--space-paper); }
+
+// The shell already pads the content above the floating nav, so the sticky bar
+// sits at 0; with nothing to show (no add button, fewer than two answers to
+// sort) the wrapper takes no space at all.
+.bottomNav:empty {
+	display: none;
+}

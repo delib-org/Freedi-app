@@ -394,9 +394,3 @@ $addOptionSize: 60px;
 	.sortMenu {
 		border-radius: 24px;
 	}
-
-// Nothing to add (the question screen's add-answer button owns that) and
-// nothing to sort: no bar, no scrim.
-.statementBottomNavHidden {
-	display: none;
-}

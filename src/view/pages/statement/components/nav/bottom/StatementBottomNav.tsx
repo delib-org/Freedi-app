@@ -300,7 +300,6 @@ const StatementBottomNav: FC<Props> = () => {
 
 	// Add mobile-only class that hides the Add button when menu is open
 	const navRootClass = [
-		hideBar ? styles.statementBottomNavHidden : '',
 		showSorting
 			? `${styles.statementBottomNav} ${styles.statementBottomNavShow}`
 			: styles.statementBottomNav,
@@ -309,123 +308,125 @@ const StatementBottomNav: FC<Props> = () => {
 
 	return (
 		<>
-			<div className={navRootClass}>
-				<div
-					className={`${styles.addOptionButtonWrapper} ${dir === 'ltr' ? styles.addOptionButtonWrapperLtr : ''}`}
-				>
-					{(canAddOption || isAdmin) &&
-						!answerFabShown &&
-						!(isHalted && activeTab === 'options') && (
-							<div className={styles.addButtonGroup}>
-								{showAddMenu && (
-									<>
-										<button
-											className={styles.addMenuOverlay}
-											onClick={() => setShowAddMenu(false)}
-										/>
-										{activeTab !== 'options' && (
-											<div className={styles.subFabMenu}>
-												{activeTab === 'questions' && (
+			{!hideBar && (
+				<div className={navRootClass}>
+					<div
+						className={`${styles.addOptionButtonWrapper} ${dir === 'ltr' ? styles.addOptionButtonWrapperLtr : ''}`}
+					>
+						{(canAddOption || isAdmin) &&
+							!answerFabShown &&
+							!(isHalted && activeTab === 'options') && (
+								<div className={styles.addButtonGroup}>
+									{showAddMenu && (
+										<>
+											<button
+												className={styles.addMenuOverlay}
+												onClick={() => setShowAddMenu(false)}
+											/>
+											{activeTab !== 'options' && (
+												<div className={styles.subFabMenu}>
+													{activeTab === 'questions' && (
+														<button
+															className={`${styles.subFabButton} ${styles.subFabButtonQuestion}`}
+															onClick={handleCreateSimpleQuestion}
+															aria-label={t('Add New Question')}
+															title={t('Add New Question')}
+															style={{ animationDelay: '0ms' }}
+														>
+															<QuestionIcon style={{ color: '#fff' }} />
+														</button>
+													)}
 													<button
-														className={`${styles.subFabButton} ${styles.subFabButtonQuestion}`}
-														onClick={handleCreateSimpleQuestion}
-														aria-label={t('Add New Question')}
-														title={t('Add New Question')}
-														style={{ animationDelay: '0ms' }}
+														className={`${styles.subFabButton} ${styles.subFabButtonCompound}`}
+														onClick={handleCreateCompoundQuestion}
+														aria-label={t('Compound Question')}
+														title={t('Compound Question')}
+														style={{ animationDelay: activeTab === 'questions' ? '60ms' : '0ms' }}
 													>
-														<QuestionIcon style={{ color: '#fff' }} />
+														<CompoundIcon style={{ color: '#fff' }} />
 													</button>
-												)}
-												<button
-													className={`${styles.subFabButton} ${styles.subFabButtonCompound}`}
-													onClick={handleCreateCompoundQuestion}
-													aria-label={t('Compound Question')}
-													title={t('Compound Question')}
-													style={{ animationDelay: activeTab === 'questions' ? '60ms' : '0ms' }}
-												>
-													<CompoundIcon style={{ color: '#fff' }} />
-												</button>
-											</div>
+												</div>
+											)}
+										</>
+									)}
+									<button
+										className={`${styles.addOptionButton} ${isLearningFace ? styles.addOptionButtonPill : ''} ${showAddMenu ? styles.addOptionButtonRotated : ''}`}
+										aria-label={isLearningFace ? t('addSolution_aria') : t('addOption_aria')}
+										style={statementColor}
+										onClick={
+											activeTab === 'options'
+												? handleAddOption
+												: showAddMenu
+													? () => {
+															setShowAddMenu(false);
+															handleAddOption();
+														}
+													: () => setShowAddMenu(true)
+										}
+										data-cy="bottom-nav-mid-icon"
+									>
+										{!isLearningFace && <PlusIcon style={{ color: statementColor.color }} />}
+										{isLearningFace && (
+											<span className={styles.addOptionButtonLabel} dir={dir}>
+												{t('Add an answer')}
+											</span>
 										)}
-									</>
+									</button>
+								</div>
+							)}
+
+						{/* Sort menu (absolute fan-out like main branch) - only show when there are at least 2 answers */}
+						{hasEnoughOptionsToSort && (
+							<div className={styles.sortMenu}>
+								{filteredSortItems.map((navItem, i) => (
+									<div
+										key={`item-id-${i}`}
+										className={`${styles.sortMenu__item} ${showSorting ? styles.active : ''}`}
+									>
+										<button
+											className={`${styles.openNavIcon} ${showSorting ? styles.active : ''}`}
+											aria-label="Sorting options"
+											onClick={() => handleSortClick(navItem)}
+										>
+											<NavIcon name={navItem.id} color={statementColor.backgroundColor} />
+										</button>
+										<span className={styles.buttonName}>{navItem.name}</span>
+									</div>
+								))}
+								{/* Admin-only toggle for showing/hiding hidden cards */}
+								{isAdmin && (
+									<div
+										className={`${styles.sortMenu__item} ${styles.sortMenu__item_visibility} ${showSorting ? styles.active : ''}`}
+									>
+										<button
+											className={`${styles.openNavIcon} ${styles.visibilityToggle} ${showSorting ? styles.active : ''} ${showHiddenCards ? styles.visibilityToggle_active : ''}`}
+											aria-label={t('Toggle visibility of hidden suggestion cards')}
+											title={showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
+											onClick={toggleShowHiddenCards}
+										>
+											{showHiddenCards ? (
+												<EyeIcon style={{ color: statementColor.backgroundColor }} />
+											) : (
+												<EyeCrossIcon style={{ color: statementColor.backgroundColor }} />
+											)}
+										</button>
+										<span className={styles.buttonName}>
+											{showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
+										</span>
+									</div>
 								)}
 								<button
-									className={`${styles.addOptionButton} ${isLearningFace ? styles.addOptionButtonPill : ''} ${showAddMenu ? styles.addOptionButtonRotated : ''}`}
-									aria-label={isLearningFace ? t('addSolution_aria') : t('addOption_aria')}
-									style={statementColor}
-									onClick={
-										activeTab === 'options'
-											? handleAddOption
-											: showAddMenu
-												? () => {
-														setShowAddMenu(false);
-														handleAddOption();
-													}
-												: () => setShowAddMenu(true)
-									}
-									data-cy="bottom-nav-mid-icon"
+									className={styles.sortButton}
+									onClick={handleSortingClick}
+									aria-label={showSorting ? 'Close sorting' : 'Open sorting'}
 								>
-									{!isLearningFace && <PlusIcon style={{ color: statementColor.color }} />}
-									{isLearningFace && (
-										<span className={styles.addOptionButtonLabel} dir={dir}>
-											{t('Add an answer')}
-										</span>
-									)}
+									{showSorting ? <XmenuIcon className={styles.whiteIcon} /> : <SortIcon />}
 								</button>
 							</div>
 						)}
-
-					{/* Sort menu (absolute fan-out like main branch) - only show when there are at least 2 answers */}
-					{hasEnoughOptionsToSort && (
-						<div className={styles.sortMenu}>
-							{filteredSortItems.map((navItem, i) => (
-								<div
-									key={`item-id-${i}`}
-									className={`${styles.sortMenu__item} ${showSorting ? styles.active : ''}`}
-								>
-									<button
-										className={`${styles.openNavIcon} ${showSorting ? styles.active : ''}`}
-										aria-label="Sorting options"
-										onClick={() => handleSortClick(navItem)}
-									>
-										<NavIcon name={navItem.id} color={statementColor.backgroundColor} />
-									</button>
-									<span className={styles.buttonName}>{navItem.name}</span>
-								</div>
-							))}
-							{/* Admin-only toggle for showing/hiding hidden cards */}
-							{isAdmin && (
-								<div
-									className={`${styles.sortMenu__item} ${styles.sortMenu__item_visibility} ${showSorting ? styles.active : ''}`}
-								>
-									<button
-										className={`${styles.openNavIcon} ${styles.visibilityToggle} ${showSorting ? styles.active : ''} ${showHiddenCards ? styles.visibilityToggle_active : ''}`}
-										aria-label={t('Toggle visibility of hidden suggestion cards')}
-										title={showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
-										onClick={toggleShowHiddenCards}
-									>
-										{showHiddenCards ? (
-											<EyeIcon style={{ color: statementColor.backgroundColor }} />
-										) : (
-											<EyeCrossIcon style={{ color: statementColor.backgroundColor }} />
-										)}
-									</button>
-									<span className={styles.buttonName}>
-										{showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
-									</span>
-								</div>
-							)}
-							<button
-								className={styles.sortButton}
-								onClick={handleSortingClick}
-								aria-label={showSorting ? 'Close sorting' : 'Open sorting'}
-							>
-								{showSorting ? <XmenuIcon className={styles.whiteIcon} /> : <SortIcon />}
-							</button>
-						</div>
-					)}
+					</div>
 				</div>
-			</div>
+			)}
 
 			{/* Initial Idea Input Modal */}
 			{showInitialIdeaModal && (
