@@ -1,0 +1,259 @@
+// WizCol brand — the "מסלול" mobile design (design_handoff_wizcol_mobile, v2).
+// Warm paper, navy ink, lilac / mint / yellow tones, a violet accent.
+//
+// Opt-in through `data-brand='wizcol'` on the document element. It feeds the same
+// `--space-*` palette the ThinkingSpace shell already reads, so every existing
+// surface re-tints, and adds the tokens the new screens need. Components never
+// hardcode these hexes: they read the semantic names below.
+//
+// Accessibility adjustments against the prototype hexes (the token wins):
+// - meta text #6E7A90 is 4.4:1 on white → #65718A (4.9:1).
+// - positive / split / negative text uses the `-ink` twins; the raw hues stay for
+//   bars and fills, where 3:1 non-text contrast is the bar.
+// - the unread badge carries white 9.5px/700 text → #D62839 (5.0:1).
+
+@mixin wizcol-light {
+	--space-paper: #fbfaf7;
+	--space-surface: #ffffff;
+	--space-sidebar: #f4f2ee;
+	--space-ink: #263854;
+	--space-muted: #65718a;
+	--space-line: #e7e3db;
+	--space-purple: #263854;
+	--space-purple-soft: #e8e2ff;
+	--space-mint: #cdefdf;
+	--space-green: #12503a;
+	--space-yellow: #fce9a8;
+	--space-yellow-ink: #5a4200;
+	--space-pink: #f9dede;
+	--space-peach: #f4f2ee;
+	--space-coral: #7a5af5;
+	--space-shadow: 0 8px 30px rgba(38, 56, 84, 0.06);
+
+	// Surfaces
+	--bg-page: #fbfaf7;
+	--bg-sunken: #f4f2ee;
+	--border-subtle: #e7e3db;
+	--border-dashed: #c9c3b8;
+
+	// Text
+	--text-meta: #65718a;
+	--text-faint: #8a94a6; // icons, placeholders, dividers — never body copy
+	--text-link: #5f88e5;
+
+	// Tones (tint + ink pairs)
+	--tone-lilac: #e8e2ff;
+	--tone-lilac-ink: #3a2a78;
+	--tone-mint: #cdefdf;
+	--tone-mint-ink: #12503a;
+	--tone-yellow: #fce9a8;
+	--tone-yellow-ink: #5a4200;
+	--tone-sunken: #f4f2ee;
+	--tone-sunken-ink: #263854;
+	--tone-lilac-track: rgba(58, 42, 120, 0.18);
+	--tone-glass: rgba(255, 255, 255, 0.6);
+
+	// Accent
+	--accent-violet: #7a5af5;
+	--accent-violet-ink: #ffffff;
+	--accent-violet-shadow: 0 8px 20px rgba(122, 90, 245, 0.3);
+
+	// Scores
+	--score-positive: #16a34a;
+	--score-positive-ink: #15803d;
+	--score-split: #f58220;
+	--score-split-ink: #b45309;
+	--score-negative: #d36868;
+	--score-negative-ink: #b42318;
+	--badge-unread: #d62839;
+	--badge-unread-ink: #ffffff;
+	--rating-idle: #c9cfd9; // unselected faces once the user has rated
+
+	// Floating navigation, sheets, scrim
+	--nav-floating-bg: #263854;
+	--nav-floating-ink: #ffffff;
+	--nav-floating-active-bg: #ffffff;
+	--nav-floating-active-ink: #263854;
+	--shadow-floating: 0 10px 30px rgba(38, 56, 84, 0.3);
+	--shadow-sheet: 0 -10px 40px rgba(38, 56, 84, 0.15);
+	--shadow-pushed: -12px 0 32px rgba(38, 56, 84, 0.12);
+	--scrim: rgba(38, 56, 84, 0.35);
+	--toggle-on: #16a34a;
+	--toggle-off: #c9c3b8;
+}
+
+@mixin wizcol-dark {
+	--space-paper: #131926;
+	--space-surface: #1c2433;
+	--space-sidebar: #222b3c;
+	--space-ink: #eef1f7;
+	--space-muted: #a6afc2;
+	--space-line: #323d52;
+	--space-purple: #eef1f7;
+	--space-purple-soft: #352d5c;
+	--space-mint: #1d4436;
+	--space-green: #b9ecd4;
+	--space-yellow: #473a12;
+	--space-yellow-ink: #fbe7a1;
+	--space-pink: #4a2b2f;
+	--space-peach: #222b3c;
+	--space-coral: #a28bff;
+	--space-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+
+	--bg-page: #131926;
+	--bg-sunken: #222b3c;
+	--border-subtle: #323d52;
+	--border-dashed: #4a5770;
+
+	--text-meta: #a6afc2;
+	--text-faint: #7d879b;
+	--text-link: #8fb0f5;
+
+	--tone-lilac: #352d5c;
+	--tone-lilac-ink: #e6deff;
+	--tone-mint: #1d4436;
+	--tone-mint-ink: #c4f0db;
+	--tone-yellow: #473a12;
+	--tone-yellow-ink: #fbe7a1;
+	--tone-sunken: #222b3c;
+	--tone-sunken-ink: #eef1f7;
+	--tone-lilac-track: rgba(230, 222, 255, 0.2);
+	--tone-glass: rgba(255, 255, 255, 0.08);
+
+	--accent-violet: #8b6ff7;
+	--accent-violet-ink: #ffffff;
+	--accent-violet-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+
+	--score-positive: #3ecf73;
+	--score-positive-ink: #6ee29a;
+	--score-split: #f7a25c;
+	--score-split-ink: #f9b77f;
+	--score-negative: #e98b8b;
+	--score-negative-ink: #f2a7a7;
+	--badge-unread: #e5484d;
+	--badge-unread-ink: #ffffff;
+	--rating-idle: #4a5570;
+
+	--nav-floating-bg: #2a3550;
+	--nav-floating-ink: #eef1f7;
+	--nav-floating-active-bg: #eef1f7;
+	--nav-floating-active-ink: #1c2433;
+	--shadow-floating: 0 10px 30px rgba(0, 0, 0, 0.5);
+	--shadow-sheet: 0 -10px 40px rgba(0, 0, 0, 0.45);
+	--shadow-pushed: -12px 0 32px rgba(0, 0, 0, 0.35);
+	--scrim: rgba(0, 0, 0, 0.55);
+	--toggle-on: #3ecf73;
+	--toggle-off: #4a5570;
+}
+
+// High contrast keeps the palette but removes every low-contrast channel:
+// hairlines become ink, meta and faint text become body ink, tone inks darken.
+@mixin wizcol-contrast {
+	--space-line: var(--space-ink);
+	--space-muted: var(--space-ink);
+	--border-subtle: var(--space-ink);
+	--border-dashed: var(--space-ink);
+	--text-meta: var(--space-ink);
+	--text-faint: var(--space-ink);
+	--tone-lilac-track: var(--tone-lilac-ink);
+	--rating-idle: var(--space-muted);
+}
+
+@mixin wizcol-semantic {
+	--statementBackground: var(--space-paper);
+	--card-default: var(--space-surface);
+	--h2Color: var(--space-ink);
+	--h3Color: var(--space-ink);
+	--h4Color: var(--space-ink);
+	--text-paragraph: var(--space-ink);
+	--text-headline: var(--space-ink);
+	--text-title: var(--space-ink);
+	--text-body: var(--space-ink);
+	--text-secondary: var(--space-muted);
+	--text-caption: var(--space-muted);
+	--text-label: var(--space-ink);
+	--placeHolder: var(--space-muted);
+	--input-active: var(--space-surface);
+	--surface-background: var(--space-surface);
+	--surface-edit: var(--space-surface);
+	--btn-white-default: var(--space-surface);
+	--btn-white-hover: var(--bg-sunken);
+	--btn-white-selected: var(--space-mint);
+	--bg-main: var(--space-paper);
+	--bg-secondary: var(--space-surface);
+	--background-secondary: var(--space-surface);
+	--background-tertiary: var(--space-purple-soft);
+	--background-hover: var(--bg-sunken);
+	--bg-hover: var(--bg-sunken);
+	--bg-selected: var(--space-purple-soft);
+	--menu-default: var(--space-surface);
+	--header-home: var(--space-mint);
+	--border-primary: var(--space-line);
+	--border-light: var(--space-line);
+	--text-blue: var(--space-ink);
+	--icons-blue: var(--space-ink);
+	--icon-blue: var(--space-ink);
+	--btn-primary: var(--space-ink);
+	--btn-primary-default: var(--space-ink);
+	--btn-primary-text: var(--space-paper);
+	--btn-primary-hover: var(--tone-lilac-ink);
+	--btn-secondary: var(--space-ink);
+	--btn-secondary-default: var(--space-surface);
+	--btn-secondary-hover: var(--bg-sunken);
+	--button-blue: var(--space-ink);
+	--add-btn: var(--accent-violet);
+	--add-btn-hover: var(--tone-lilac-ink);
+	--input-background: var(--space-surface);
+	--input-border: var(--space-line);
+	--card-hover: var(--bg-sunken);
+	--card-question: var(--tone-lilac);
+	--card-orange: var(--tone-yellow);
+	--card-purple: var(--tone-lilac);
+	--card-green: var(--tone-mint);
+	--shadow: var(--space-line);
+
+	// Shape
+	--radius-card: 22px;
+	--radius-button: 24px;
+	--radius-sheet: 28px;
+	--radius-sheet-lg: 28px;
+	--radius-tile: 14px;
+	--radius-chip: 999px;
+
+	// Type: Open Sans for UI and headings, Roboto Light for numbers and display.
+	--font-ui: 'Open Sans', 'Rubik', system-ui, sans-serif;
+	--font-display: 'Roboto', 'Open Sans', system-ui, sans-serif;
+	--eyebrow-size: 0.6875rem;
+	--eyebrow-tracking: 0.06em;
+	--line-height-card: 1.45;
+	--tap-min: 44px;
+
+	// Level transitions (push / pop between home, question and map)
+	--level-duration: 320ms;
+	--level-ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+:root[data-brand='wizcol'] {
+	@include wizcol-light;
+	@include wizcol-semantic;
+}
+
+:root[data-brand='wizcol'][data-theme='dark'] {
+	@include wizcol-dark;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root[data-brand='wizcol']:not([data-theme='light']) {
+		@include wizcol-dark;
+	}
+}
+
+:root[data-brand='wizcol'][data-contrast='high'] {
+	@include wizcol-contrast;
+}
+
+@media (prefers-contrast: more) {
+	:root[data-brand='wizcol'] {
+		@include wizcol-contrast;
+	}
+}

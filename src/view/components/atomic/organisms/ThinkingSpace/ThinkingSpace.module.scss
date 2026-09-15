@@ -6,7 +6,7 @@
 	overflow: hidden;
 	color: var(--space-ink);
 	background: var(--space-paper);
-	font-family: 'Roboto', sans-serif;
+	font-family: var(--font-ui, 'Roboto', sans-serif);
 	padding: 18px;
 	gap: 12px;
 	background: var(--space-sidebar);
