@@ -1,8 +1,6 @@
 import LiveMapWorkspace from '@/view/components/atomic/organisms/ThinkingSpace/LiveMapWorkspace';
 import { mapViews, MapViewId } from '@/view/components/atomic/organisms/ThinkingSpace/MapExplorer';
-import AgreementHub, {
-	AGREEMENT_VIEWS,
-} from '@/view/components/atomic/organisms/ThinkingSpace/AgreementHub';
+import AgreementHub from '@/view/components/atomic/organisms/ThinkingSpace/AgreementHub';
 import { Statement, Role, StatementType, Screen, QuestionType } from '@freedi/shared-types';
 import { ReactNode, useEffect, Suspense } from 'react';
 import { useParams } from 'react-router';
@@ -20,6 +18,11 @@ import GroupPage from '../statementTypes/group/GroupPage';
 import PopperHebbianDiscussion from '../popperHebbian/PopperHebbianDiscussion';
 import TreeView from '../treeView/TreeView';
 import { CompoundQuestion } from '../statementTypes/question/compound';
+import BackgroundTab from '../questionScreen/BackgroundTab';
+import MapsTab from '../questionScreen/MapsTab';
+import ResultsTab from '../questionScreen/results/ResultsTab';
+import SubViewHeader from '../questionScreen/SubViewHeader';
+import type { QuestionScreenData } from '../questionScreen/useQuestionScreenData';
 
 const ClusterBoardMap = lazyWithRetry(
 	() => import('../map/ClusterMap/ClusterMap'),
@@ -49,9 +52,15 @@ interface SwitchScreenProps {
 	statement: Statement | undefined;
 	role: Role | undefined;
 	activeView: string;
+	data: QuestionScreenData;
 }
 
-function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProps>): ReactNode {
+function SwitchScreen({
+	statement,
+	role,
+	activeView,
+	data,
+}: Readonly<SwitchScreenProps>): ReactNode {
 	let { screen } = useParams();
 	const dispatch = useDispatch();
 
@@ -160,6 +169,7 @@ function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProp
 						activeView={activeView}
 						statement={statement}
 						isPopperHebbianEnabled={isPopperHebbianEnabled}
+						data={data}
 					/>
 				</>
 			);
@@ -173,19 +183,44 @@ interface ViewByActiveTabProps {
 	activeView: string;
 	statement: Statement | undefined;
 	isPopperHebbianEnabled: boolean;
+	data: QuestionScreenData;
 }
 
 function ViewByActiveTab({
 	activeView,
 	statement,
 	isPopperHebbianEnabled,
+	data,
 }: Readonly<ViewByActiveTabProps>): ReactNode {
 	const isCompound =
 		statement?.statementType === StatementType.question &&
 		statement?.questionSettings?.questionType === QuestionType.compound;
 
-	if (statement?.statementType === StatementType.question && AGREEMENT_VIEWS.includes(activeView)) {
-		return <AgreementHub key={statement.statementId} statement={statement} view={activeView} />;
+	if (statement?.statementType === StatementType.question) {
+		switch (activeView) {
+			case 'background':
+				return <BackgroundTab statement={statement} data={data} />;
+			case 'results':
+				return <ResultsTab key={statement.statementId} statement={statement} data={data} />;
+			case 'maps':
+				return <MapsTab statement={statement} />;
+			case 'covenant':
+				return (
+					<>
+						<SubViewHeader parent="results" parentLabelKey="Results" />
+						<AgreementHub key={statement.statementId} statement={statement} view="covenant" />
+					</>
+				);
+			case 'themes':
+				return (
+					<>
+						<SubViewHeader parent="maps" parentLabelKey="Maps" />
+						<AgreementHub key={statement.statementId} statement={statement} view="themes" />
+					</>
+				);
+			default:
+				break;
+		}
 	}
 
 	if (isCompound) {

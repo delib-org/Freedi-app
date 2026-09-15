@@ -38,6 +38,7 @@ import { QuestionType, CompoundPhase } from '@freedi/shared-types';
 import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 import { generateParagraphId } from '@/utils/paragraphUtils';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
+import { AnswerFabContext } from '../../questionScreen/useQuestionScreenData';
 
 interface Props {
 	showNav?: boolean;
@@ -54,6 +55,9 @@ const StatementBottomNav: FC<Props> = () => {
 	const activeTab = searchParams.get('tab') ?? 'chat';
 
 	const { statement } = useContext(StatementContext);
+	// The question screen's violet "+ Add an answer" button owns adding answers
+	// (and `?compose=solution`) while it is on screen.
+	const answerFabShown = useContext(AnswerFabContext);
 	const subscription = useSelector(statementSubscriptionSelector(statementId));
 	const options = useSelector(statementOptionsSelector(statementId));
 	const allSubs = useSelector(statementSubsSelector(statementId));
@@ -189,7 +193,14 @@ const StatementBottomNav: FC<Props> = () => {
 
 			return;
 		}
-		if (consumedCompose.current || !statement || !user || !(canAddOption || isAdmin) || isHalted)
+		if (
+			answerFabShown ||
+			consumedCompose.current ||
+			!statement ||
+			!user ||
+			!(canAddOption || isAdmin) ||
+			isHalted
+		)
 			return;
 		consumedCompose.current = true;
 		const next = new URLSearchParams(searchParams);
@@ -205,6 +216,7 @@ const StatementBottomNav: FC<Props> = () => {
 		isAdmin,
 		isHalted,
 		handleAddOption,
+		answerFabShown,
 	]);
 
 	function handleInitialIdeaSubmit(idea: string) {
@@ -295,62 +307,67 @@ const StatementBottomNav: FC<Props> = () => {
 				<div
 					className={`${styles.addOptionButtonWrapper} ${dir === 'ltr' ? styles.addOptionButtonWrapperLtr : ''}`}
 				>
-					{(canAddOption || isAdmin) && !(isHalted && activeTab === 'options') && (
-						<div className={styles.addButtonGroup}>
-							{showAddMenu && (
-								<>
-									<button className={styles.addMenuOverlay} onClick={() => setShowAddMenu(false)} />
-									{activeTab !== 'options' && (
-										<div className={styles.subFabMenu}>
-											{activeTab === 'questions' && (
+					{(canAddOption || isAdmin) &&
+						!answerFabShown &&
+						!(isHalted && activeTab === 'options') && (
+							<div className={styles.addButtonGroup}>
+								{showAddMenu && (
+									<>
+										<button
+											className={styles.addMenuOverlay}
+											onClick={() => setShowAddMenu(false)}
+										/>
+										{activeTab !== 'options' && (
+											<div className={styles.subFabMenu}>
+												{activeTab === 'questions' && (
+													<button
+														className={`${styles.subFabButton} ${styles.subFabButtonQuestion}`}
+														onClick={handleCreateSimpleQuestion}
+														aria-label={t('Add New Question')}
+														title={t('Add New Question')}
+														style={{ animationDelay: '0ms' }}
+													>
+														<QuestionIcon style={{ color: '#fff' }} />
+													</button>
+												)}
 												<button
-													className={`${styles.subFabButton} ${styles.subFabButtonQuestion}`}
-													onClick={handleCreateSimpleQuestion}
-													aria-label={t('Add New Question')}
-													title={t('Add New Question')}
-													style={{ animationDelay: '0ms' }}
+													className={`${styles.subFabButton} ${styles.subFabButtonCompound}`}
+													onClick={handleCreateCompoundQuestion}
+													aria-label={t('Compound Question')}
+													title={t('Compound Question')}
+													style={{ animationDelay: activeTab === 'questions' ? '60ms' : '0ms' }}
 												>
-													<QuestionIcon style={{ color: '#fff' }} />
+													<CompoundIcon style={{ color: '#fff' }} />
 												</button>
-											)}
-											<button
-												className={`${styles.subFabButton} ${styles.subFabButtonCompound}`}
-												onClick={handleCreateCompoundQuestion}
-												aria-label={t('Compound Question')}
-												title={t('Compound Question')}
-												style={{ animationDelay: activeTab === 'questions' ? '60ms' : '0ms' }}
-											>
-												<CompoundIcon style={{ color: '#fff' }} />
-											</button>
-										</div>
-									)}
-								</>
-							)}
-							<button
-								className={`${styles.addOptionButton} ${isLearningFace ? styles.addOptionButtonPill : ''} ${showAddMenu ? styles.addOptionButtonRotated : ''}`}
-								aria-label={isLearningFace ? t('addSolution_aria') : t('addOption_aria')}
-								style={statementColor}
-								onClick={
-									activeTab === 'options'
-										? handleAddOption
-										: showAddMenu
-											? () => {
-													setShowAddMenu(false);
-													handleAddOption();
-												}
-											: () => setShowAddMenu(true)
-								}
-								data-cy="bottom-nav-mid-icon"
-							>
-								{!isLearningFace && <PlusIcon style={{ color: statementColor.color }} />}
-								{isLearningFace && (
-									<span className={styles.addOptionButtonLabel} dir={dir}>
-										{t('Add an answer')}
-									</span>
+											</div>
+										)}
+									</>
 								)}
-							</button>
-						</div>
-					)}
+								<button
+									className={`${styles.addOptionButton} ${isLearningFace ? styles.addOptionButtonPill : ''} ${showAddMenu ? styles.addOptionButtonRotated : ''}`}
+									aria-label={isLearningFace ? t('addSolution_aria') : t('addOption_aria')}
+									style={statementColor}
+									onClick={
+										activeTab === 'options'
+											? handleAddOption
+											: showAddMenu
+												? () => {
+														setShowAddMenu(false);
+														handleAddOption();
+													}
+												: () => setShowAddMenu(true)
+									}
+									data-cy="bottom-nav-mid-icon"
+								>
+									{!isLearningFace && <PlusIcon style={{ color: statementColor.color }} />}
+									{isLearningFace && (
+										<span className={styles.addOptionButtonLabel} dir={dir}>
+											{t('Add an answer')}
+										</span>
+									)}
+								</button>
+							</div>
+						)}
 
 					{/* Sort menu (absolute fan-out like main branch) - only show when there are at least 2 answers */}
 					{hasEnoughOptionsToSort && (

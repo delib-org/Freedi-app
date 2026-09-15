@@ -12,6 +12,8 @@ import AppThinkingSpace from '@/view/components/atomic/organisms/ThinkingSpace/A
 import LiveDecisionBoard from '@/view/components/atomic/organisms/ThinkingSpace/LiveDecisionBoard';
 import { StatementType, QuestionType } from '@freedi/shared-types';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
+import { mapViews } from '@/view/components/atomic/organisms/ThinkingSpace/MapExplorer';
+import { isResultsOrMapsView } from './questionScreen/questionTabs';
 
 interface StatementContentProps {
 	statement: Statement | null;
@@ -50,6 +52,8 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 
 	// Check if survey is mandatory and not completed
 	const isSurveyMandatory = showUserQuestions && screen !== 'settings' && !isMassConsensus;
+	// A map opens full screen with its own chrome (back, title, share, switcher).
+	const isMapScreen = mapViews.some((view) => view.id === screen);
 
 	return (
 		<div className={pageClassName}>
@@ -82,7 +86,7 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 							aside={
 								statement &&
 								!isSurveyMandatory &&
-								!['overview', 'themes', 'covenant', 'summary', 'maps'].includes(activeView) &&
+								!isResultsOrMapsView(activeView) &&
 								(!screen || ['main', 'chat', 'options', 'questions'].includes(screen)) &&
 								statement.questionSettings?.questionType !== QuestionType.compound &&
 								isStatementTypeAllowedAsChildren(statement, StatementType.option) ? (
@@ -90,10 +94,12 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 								) : undefined
 							}
 						>
-							<StatementHeader
-								topParentStatement={topParentStatement}
-								onActiveViewChange={handleActiveViewChange}
-							/>
+							{!isMapScreen && (
+								<StatementHeader
+									topParentStatement={topParentStatement ?? undefined}
+									onActiveViewChange={handleActiveViewChange}
+								/>
+							)}
 
 							<MapProvider>
 								<Switch activeView={activeView} />

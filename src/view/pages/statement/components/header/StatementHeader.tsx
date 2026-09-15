@@ -1,41 +1,50 @@
 import React, { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { useSelector } from 'react-redux';
-import { Role, StatementType, QuestionType, Screen, Statement } from '@freedi/shared-types';
+import { Screen, Statement, StatementType } from '@freedi/shared-types';
 
-import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
+import QuestionHeaderBar from './QuestionHeaderBar';
 import ShareModal from '@/view/components/shareModal/ShareModal';
+import QuestionTabs from '@/view/components/atomic/molecules/QuestionTabs/QuestionTabs';
+import StageProgress from '@/view/components/atomic/molecules/StageProgress/StageProgress';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
-import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { logError } from '@/utils/errorHandling';
-import { useAuthorization } from '@/controllers/hooks/useAuthorization';
-import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
-import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
 import { updateStatementText } from '@/controllers/db/statements/updateStatementFields';
-import SegmentedControl from '@/view/components/atomic/atoms/SegmentedControl/SegmentedControl';
-import ParticipationFunnel from '@/view/components/atomic/atoms/ParticipationFunnel/ParticipationFunnel';
-import StatementDescription from '@/view/components/atomic/molecules/StatementDescription/StatementDescription';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useParticipationStats } from '@/controllers/hooks/useParticipationStats';
+import { logError } from '@/utils/errorHandling';
+import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
+import { relevantNotifications } from '@/utils/engagementNavigation';
 import { StatementContext } from '../../StatementCont';
 import {
 	statementSubsSelector,
 	statementOptionsSelector,
 	questionsSelector,
 } from '@/redux/statements/statementsSlice';
-import styles from '../switch/Switch.module.scss';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-import { relevantNotifications } from '@/utils/engagementNavigation';
+import HostHubSheet from '../host/HostHubSheet';
+import { isHostRole } from '../questionScreen/questionScreenLogic';
+import { getQuestionStage, showsStageBar, STAGE_LABEL_KEYS } from '../questionScreen/questionStage';
+import { buildQuestionTabs, resolveActiveView, tabOfView } from '../questionScreen/questionTabs';
+import styles from './QuestionHeader.module.scss';
 
 const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
+export const QUESTION_TABPANEL_ID = 'question-tabpanel';
 
 interface Props {
 	topParentStatement: Statement | undefined;
 	onActiveViewChange: (view: string) => void;
 }
 
+/**
+ * The question header: lilac card with back · space · share · host, the stage
+ * bar, the title (inline-editable by hosts), the host funnel and the tabs.
+ * Share, follow-me, invite, logout and the menu from the old top nav stay
+ * reachable through QuestionHeaderBar.
+ */
 const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) => {
 	const { pathname, search } = useLocation();
 	const navigate = useNavigate();
@@ -43,53 +52,58 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	const { t, dir } = useTranslation();
 	const { statement } = useContext(StatementContext);
 	const { role } = useAuthorization(statement?.statementId);
-	const isAdmin = role === Role.admin || role === Role.creator;
+	const isHost = isHostRole(role);
 
-	// Nav state
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
 	const [showShareModal, setShowShareModal] = useState(false);
-
-	// Sub-header state
-	const [searchParams, setSearchParams] = useSearchParams();
-	const tabFromUrl = searchParams.get('tab');
-	const defaultView =
-		statement?.statementSettings?.defaultView ??
-		(statement?.statementType === StatementType.question ? 'overview' : 'chat');
-	const [activeView, setActiveView] = useState<string>(tabFromUrl ?? defaultView);
+	const [hubOpen, setHubOpen] = useState(false);
 	const [edit, setEdit] = useState(false);
-	const [headerCollapsed, setHeaderCollapsed] = useState(true);
-	// Mobile: the title is clamped to 2 lines; tapping it reveals the full text
 	const [titleExpanded, setTitleExpanded] = useState(false);
 
-	useEffect(() => {
-		setActiveView(
-			[
-				'overview',
-				'themes',
-				'covenant',
-				'summary',
-				'maps',
-				'chat',
-				'options',
-				'questions',
-			].includes(tabFromUrl ?? '')
-				? tabFromUrl!
-				: defaultView,
-		);
-	}, [tabFromUrl, defaultView, statement?.statementId]);
+	const [searchParams, setSearchParams] = useSearchParams();
+	const tabParam = searchParams.get('tab');
+
+	const subsSelect = useMemo(
+		() => statementSubsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
+	const optionsSelect = useMemo(
+		() => statementOptionsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
+	const questionsSelect = useMemo(
+		() => questionsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
+	const allSubs = useSelector(subsSelect);
+	const options = useSelector(optionsSelect);
+	const questions = useSelector(questionsSelect);
+	const notifications = useSelector(inAppNotificationsSelector);
+	const creator = useSelector(creatorSelector);
+	const unreadCount = relevantNotifications(notifications, creator?.uid).filter(
+		(n) => !n.read && n.parentId === statement?.statementId,
+	).length;
+
+	const participation = useParticipationStats(statement, options);
+
+	const tabs = useMemo(
+		() =>
+			buildQuestionTabs({
+				statement,
+				counts: { chat: allSubs.length, options: options.length, questions: questions.length },
+				unreadChat: unreadCount,
+			}),
+		[statement, allSubs.length, options.length, questions.length, unreadCount],
+	);
+	const activeView = resolveActiveView(tabParam, statement, tabs);
 
 	useEffect(() => {
 		onActiveViewChange(activeView);
 	}, [activeView, onActiveViewChange]);
 
-	const isCompound =
-		statement?.statementType === StatementType.question &&
-		statement?.questionSettings?.questionType === QuestionType.compound;
-
 	const handleTabChange = useCallback(
 		(tabId: string) => {
-			setActiveView(tabId);
 			setSearchParams(
 				(previous) => {
 					const next = new URLSearchParams(previous);
@@ -103,63 +117,11 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 		[setSearchParams],
 	);
 
-	// Redux selectors for counts
-	const subsSelect = useMemo(
-		() => statementSubsSelector(statement?.statementId),
-		[statement?.statementId],
-	);
-	const optionsSelect = useMemo(
-		() => statementOptionsSelector(statement?.statementId),
-		[statement?.statementId],
-	);
-	const questionsSelect = useMemo(
-		() => questionsSelector(statement?.statementId),
-		[statement?.statementId],
-	);
-
-	const allSubs = useSelector(subsSelect);
-	const notifications = useSelector(inAppNotificationsSelector);
-	const creator = useSelector(creatorSelector);
-	const unreadCount = relevantNotifications(notifications, creator?.uid).filter(
-		(n) => !n.read && n.parentId === statement?.statementId,
-	).length;
-	const options = useSelector(optionsSelect);
-	const questions = useSelector(questionsSelect);
-
 	const isQuestion = statement?.statementType === StatementType.question;
-	const participation = useParticipationStats(statement, options);
-
-	const segments = useMemo(() => {
-		const allSegments = [
-			...(statement?.statementType === StatementType.question
-				? [{ id: 'overview', label: t('Common ground') }]
-				: []),
-			{ id: 'chat', label: t('Conversation'), count: allSubs.length, unreadCount },
-			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.option)
-				? [{ id: 'options', label: t('Proposals'), count: options.length }]
-				: []),
-			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.question)
-				? [{ id: 'questions', label: t('Questions'), count: questions.length }]
-				: []),
-			...(statement?.statementType === StatementType.question
-				? [
-						{ id: 'covenant', label: t('Our covenant') },
-						{ id: 'summary', label: t('Summary') },
-						{ id: 'maps', label: t('Maps') },
-					]
-				: []),
-		];
-
-		return allSegments;
-	}, [t, allSubs.length, options.length, questions.length, statement, unreadCount]);
-
-	const showSegmentedControl = MAIN_SCREENS.has(screen);
-
-	// The mind map is a canvas: everything but the title is vertical space the
-	// graph needs. Brief and funnel are available on the reading screens.
+	const showTabs = MAIN_SCREENS.has(screen);
 	const isMapScreen = screen === Screen.mindMap;
+	const stage = getQuestionStage({ statement, answerCount: options.length, now: Date.now() });
 
-	// Nav handlers
 	function handleShare() {
 		setShowShareModal(true);
 		setIsHeaderMenuOpen(false);
@@ -177,14 +139,6 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 		}
 	}
 
-	function handleInvitePanel() {
-		try {
-			setShowInvitationPanel(true);
-		} catch (error) {
-			logError(error, { operation: 'header.StatementHeader.handleInvitePanel' });
-		}
-	}
-
 	async function handleLogout() {
 		try {
 			setIsHeaderMenuOpen(false);
@@ -195,141 +149,109 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 		}
 	}
 
-	// Sub-header handlers
 	function handleUpdateStatement(e: React.KeyboardEvent<HTMLInputElement>) {
 		if (e.key === 'Enter') {
-			const title = (e.target as HTMLInputElement).value;
-			updateStatementText(statement, title);
+			updateStatementText(statement, (e.target as HTMLInputElement).value);
 			setEdit(false);
 		}
 	}
 
-	function handleStartEdit() {
-		if (isAdmin) {
-			setEdit(true);
-		}
-	}
+	const spaceName =
+		topParentStatement && topParentStatement.statementId !== statement?.statementId
+			? topParentStatement.statement
+			: undefined;
 
 	return (
 		<>
-			<div className={`page__header ${dir}`}>
-				{/* Full header: nav bar + sub-header */}
-				<div className="page__header__full">
-					<StatementTopNav
-						statement={statement}
-						parentStatement={undefined}
-						handleShare={handleShare}
-						handleFollowMe={handleFollowMe}
-						handleInvitePanel={handleInvitePanel}
-						handleLogout={handleLogout}
-						setIsHeaderMenuOpen={setIsHeaderMenuOpen}
-						isHeaderMenuOpen={isHeaderMenuOpen}
-					/>
+			<div className="page__header">
+				<div className={`page__header__full ${styles.header}`} data-testid="question-header">
+					{statement && (
+						<QuestionHeaderBar
+							statement={statement}
+							spaceName={spaceName}
+							isHost={isHost}
+							onShare={handleShare}
+							onOpenHub={() => setHubOpen(true)}
+							onFollowMe={handleFollowMe}
+							onInvitePanel={() => setShowInvitationPanel(true)}
+							onLogout={handleLogout}
+							isMenuOpen={isHeaderMenuOpen}
+							setIsMenuOpen={setIsHeaderMenuOpen}
+						/>
+					)}
 
-					{/* Sub-header: title, tabs, filters */}
-					<div className={styles.subHeader}>
-						<div className={styles.subHeaderInner}>
-							{showSegmentedControl && !isCompound && (
-								<div className={styles.conversationLabel}>{t('THINKING TOGETHER')}</div>
-							)}
-							{isAdmin ? (
-								<button className={styles.header} onClick={handleStartEdit}>
-									{!edit ? (
-										<h1>{renderInlineMarkdown(statement?.statement)}</h1>
-									) : (
-										<h1>
-											<input
-												type="text"
-												defaultValue={statement?.statement}
-												onBlur={() => setEdit(false)}
-												onKeyUp={handleUpdateStatement}
-											/>
-										</h1>
-									)}
-								</button>
+					{showsStageBar(statement) && !isMapScreen && (
+						<StageProgress
+							stages={STAGE_LABEL_KEYS.map((key) => t(key))}
+							activeIndex={stage}
+							ariaLabel={t('Question stage')}
+						/>
+					)}
+
+					{isHost ? (
+						<button
+							type="button"
+							className={styles.header__titleButton}
+							onClick={() => setEdit(true)}
+							aria-label={edit ? undefined : t('Edit title')}
+						>
+							{!edit ? (
+								<h1 className={styles.header__title}>
+									{renderInlineMarkdown(statement?.statement)}
+								</h1>
 							) : (
-								<button
-									className={`${styles.header} ${titleExpanded ? styles.headerExpanded : ''}`}
-									onClick={() => setTitleExpanded((prev) => !prev)}
-									aria-expanded={titleExpanded}
-								>
-									<h1>{renderInlineMarkdown(statement?.statement)}</h1>
-								</button>
+								<h1 className={styles.header__title}>
+									<input
+										type="text"
+										className={styles.header__titleInput}
+										defaultValue={statement?.statement}
+										onBlur={() => setEdit(false)}
+										onKeyUp={handleUpdateStatement}
+										aria-label={t('Edit title')}
+										autoFocus
+									/>
+								</h1>
 							)}
+						</button>
+					) : (
+						<button
+							type="button"
+							className={`${styles.header__titleButton} ${titleExpanded ? styles['header__titleButton--expanded'] : ''}`}
+							onClick={() => setTitleExpanded((prev) => !prev)}
+							aria-expanded={titleExpanded}
+						>
+							<h1 className={styles.header__title}>{renderInlineMarkdown(statement?.statement)}</h1>
+						</button>
+					)}
 
-							{isCompound ? (
-								<>
-									<button
-										className={styles.headerToggle}
-										onClick={() => setHeaderCollapsed((prev) => !prev)}
-										aria-expanded={!headerCollapsed}
-									>
-										<span className={styles.headerToggleText}>{t('Details')}</span>
-										<span
-											className={`${styles.headerToggleChevron} ${!headerCollapsed ? styles.headerToggleChevronOpen : ''}`}
-										>
-											&#9662;
-										</span>
-									</button>
-									{!headerCollapsed && (
-										<div className={styles.headerCollapsible}>
-											{isQuestion && isAdmin && !isMapScreen && (
-												<ParticipationFunnel
-													entered={participation.entered}
-													suggested={participation.suggested}
-													evaluated={participation.evaluated}
-												/>
-											)}
-											{showSegmentedControl && (
-												<div className={styles.segmentedControlWrapper}>
-													<SegmentedControl
-														segments={segments}
-														activeId={activeView === 'themes' ? 'maps' : activeView}
-														onChange={handleTabChange}
-													/>
-												</div>
-											)}
-										</div>
-									)}
-								</>
-							) : (
-								<>
-									{statement?.brief && !isMapScreen && (
-										<details className={styles.contextDetails}>
-											<summary>{t('Background from the facilitator')}</summary>
-											<StatementDescription brief={statement.brief} />
-										</details>
-									)}
-									{/* Facilitator metric, not a participant one: the tab
-									    counts already tell a participant how much is here,
-									    and this was costing a full band above the fold on
-									    every visit. useParticipationStats still runs for
-									    everyone — it records the "entered" event. */}
-									{isQuestion && isAdmin && !isMapScreen && (
-										<ParticipationFunnel
-											entered={participation.entered}
-											suggested={participation.suggested}
-											evaluated={participation.evaluated}
-										/>
-									)}
-									{showSegmentedControl && (
-										<div className={styles.segmentedControlWrapper}>
-											<SegmentedControl
-												segments={segments}
-												activeId={activeView === 'themes' ? 'maps' : activeView}
-												onChange={handleTabChange}
-											/>
-										</div>
-									)}
-								</>
-							)}
-
-							{/* The filter chips used to render here, gated only on
-							    showSegmentedControl — so they appeared on the Discussion
-							    tab too, offering to filter a list that tab does not have.
-							    They now live in ListToolbar, inside the list they act on. */}
+					{isQuestion && isHost && !isMapScreen && (
+						<div className={styles.header__funnel} data-testid="host-funnel">
+							<span className={styles.header__stat}>
+								{t('Entered')} <b>{participation.entered}</b>
+							</span>
+							<span aria-hidden="true">·</span>
+							<span className={styles.header__stat}>
+								{t('Suggested')} <b>{participation.suggested}</b>
+							</span>
+							<span aria-hidden="true">·</span>
+							<span className={styles.header__stat}>
+								{t('Rated')} <b>{participation.evaluated}</b>
+							</span>
 						</div>
-					</div>
+					)}
+
+					{showTabs && tabs.length > 1 && (
+						<QuestionTabs
+							tabs={tabs.map((tab) => ({ ...tab, label: t(tab.labelKey) }))}
+							activeId={tabOfView(activeView)}
+							onChange={handleTabChange}
+							ariaLabel={t('Question sections')}
+							dir={dir}
+							panelId={QUESTION_TABPANEL_ID}
+							unreadLabel={(n) => `${n} ${t('unread')}`}
+						/>
+					)}
+					{(!showTabs || tabs.length <= 1) && <div className={styles.header__end} />}
 				</div>
 
 				{/* Mini header: compact title bar shown while minimized; tapping it
@@ -354,6 +276,14 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 				url={`${pathname}${search}`}
 				title={t('Share this link')}
 			/>
+			{isHost && statement && (
+				<HostHubSheet
+					isOpen={hubOpen}
+					onClose={() => setHubOpen(false)}
+					statement={statement}
+					stage={stage}
+				/>
+			)}
 		</>
 	);
 };

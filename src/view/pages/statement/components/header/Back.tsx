@@ -4,14 +4,20 @@ import BackArrowIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import { StyleProps } from '@/controllers/hooks/useStatementColor';
 import { Statement } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 interface Props {
 	statement?: Statement | undefined;
 	headerColor?: StyleProps;
+	/** Replaces the legacy `app-header-back-button` class (the new question header). */
+	className?: string;
+	/** When set, the icon takes its colour from this class instead of headerColor. */
+	iconClassName?: string;
 }
 
-const Back: FC<Props> = ({ statement, headerColor }) => {
+const Back: FC<Props> = ({ statement, headerColor, className, iconClassName }) => {
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 
 	function handleBack() {
 		try {
@@ -46,17 +52,22 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 
 	return (
 		<button
-			className="app-header-back-button"
-			aria-label="Back Button"
+			type="button"
+			className={className ?? 'app-header-back-button'}
+			aria-label={t('Back')}
 			onClick={handleBack}
 			data-cy="back-icon-header"
 		>
-			<BackArrowIcon
-				className="back-arrow-icon"
-				style={{
-					color: headerColor?.color || 'white',
-				}}
-			/>
+			{iconClassName ? (
+				<BackArrowIcon className={iconClassName} aria-hidden="true" />
+			) : (
+				<BackArrowIcon
+					className="back-arrow-icon"
+					style={{
+						color: headerColor?.color || 'white',
+					}}
+				/>
+			)}
 		</button>
 	);
 };
