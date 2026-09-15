@@ -31,7 +31,7 @@
 	&__backdrop {
 		position: absolute;
 		inset: 0;
-		background: var(--surface-overlay);
+		background: var(--scrim, var(--surface-overlay));
 	}
 
 	&__panel {
@@ -41,12 +41,12 @@
 		flex-direction: column;
 		width: 100%;
 		max-height: 90dvh;
-		background: var(--card-default);
+		background: var(--bg-page, var(--card-default));
 		color: var(--text-body);
 		border-start-start-radius: var(--radius-sheet);
 		border-start-end-radius: var(--radius-sheet);
 		box-shadow: var(--shadow-sheet);
-		padding-block-end: env(safe-area-inset-bottom, 0);
+		padding-block-end: calc(var(--space-lg, 1.5rem) + env(safe-area-inset-bottom, 0px));
 		transform: translateY(100%);
 		transition: transform var(--motion-slow) var(--motion-ease-exit);
 		outline: none;
@@ -56,8 +56,8 @@
 		width: 2.5rem;
 		height: 0.25rem;
 		border-radius: var(--radius-pill);
-		background: var(--border-light);
-		margin: 0.5rem auto 0;
+		background: var(--border-subtle, var(--border-light));
+		margin: 0.875rem auto 0;
 		flex-shrink: 0;
 	}
 
@@ -66,7 +66,7 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-sm, 0.5rem);
-		padding: var(--space-md, 1rem) var(--padding) var(--space-sm, 0.5rem);
+		padding: var(--space-sm, 0.75rem) 1.25rem var(--space-xs, 0.5rem);
 	}
 
 	&__title {

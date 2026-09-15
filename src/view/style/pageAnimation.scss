@@ -1,95 +1,207 @@
 // Page navigation transitions.
-// Mobile-safe motion budget: short (<= --motion-slow), transform/opacity
-// only, small offsets. Full-viewport translates and long durations made
-// the statement screen feel stuck on mobile.
+// Mobile-safe motion budget: transform/opacity only. Full-viewport translates
+// and long durations once made the statement screen feel stuck on mobile, so
+// the level transition below is short, never animates layout, never blocks
+// input, and its class is removed as soon as it has run.
+
+// ---------------------------------------------------------------------------
+// Level transitions (tabs → question → map). Applied by
+// useSlideAndSubStatement / useLevelTransition to the incoming screen.
+//   push: incoming slides in from the reading-forward side (RTL: from the left)
+//   pop:  incoming rises from underneath (the inverse of the recede)
+// ---------------------------------------------------------------------------
+.level-transition {
+	animation-duration: var(--level-duration, 320ms);
+	animation-timing-function: var(--level-ease, cubic-bezier(0.32, 0.72, 0, 1));
+	animation-fill-mode: both;
+	will-change: transform, opacity;
+
+	&--push {
+		animation-name: levelPushInRtl;
+		box-shadow: var(--shadow-pushed);
+
+		&.level-transition--ltr {
+			animation-name: levelPushInLtr;
+		}
+	}
+
+	&--pop {
+		animation-name: levelUnderInRtl;
+
+		&.level-transition--ltr {
+			animation-name: levelUnderInLtr;
+		}
+	}
+
+	// Desktop keeps the calm 24px slide inside the three-column shell.
+	@media (min-width: 1024px) {
+		animation-duration: var(--motion-slow);
+		animation-timing-function: var(--motion-ease);
+		box-shadow: none;
+
+		&--push,
+		&--push.level-transition--ltr {
+			animation-name: slideIn;
+			box-shadow: none;
+		}
+
+		&--pop,
+		&--pop.level-transition--ltr {
+			animation-name: slideOut;
+		}
+	}
+}
+
+@keyframes levelPushInRtl {
+	from {
+		transform: translateX(-100%);
+		opacity: 0.6;
+	}
+
+	to {
+		transform: none;
+		opacity: 1;
+	}
+}
+
+@keyframes levelPushInLtr {
+	from {
+		transform: translateX(100%);
+		opacity: 0.6;
+	}
+
+	to {
+		transform: none;
+		opacity: 1;
+	}
+}
+
+@keyframes levelUnderInRtl {
+	from {
+		transform: translateX(28%);
+		opacity: 0.5;
+	}
+
+	to {
+		transform: none;
+		opacity: 1;
+	}
+}
+
+@keyframes levelUnderInLtr {
+	from {
+		transform: translateX(-28%);
+		opacity: 0.5;
+	}
+
+	to {
+		transform: none;
+		opacity: 1;
+	}
+}
+
 .slide-in {
-    animation: slideIn var(--motion-slow) var(--motion-ease);
+	animation: slideIn var(--motion-slow) var(--motion-ease);
 }
 
 .slide-out {
-    animation: slideOut var(--motion-slow) var(--motion-ease);
+	animation: slideOut var(--motion-slow) var(--motion-ease);
 }
 
 @keyframes slideIn {
-    0% {
-        opacity: 0;
-        transform: translateX(-24px);
-    }
+	0% {
+		opacity: 0;
+		transform: translateX(-24px);
+	}
 
-    100% {
-        opacity: 1;
-        transform: translateX(0);
-    }
+	100% {
+		opacity: 1;
+		transform: translateX(0);
+	}
 }
 
 @keyframes slideOut {
-    0% {
-        opacity: 0;
-        transform: translateX(24px);
-    }
+	0% {
+		opacity: 0;
+		transform: translateX(24px);
+	}
 
-    100% {
-        opacity: 1;
-        transform: translateX(0);
-    }
+	100% {
+		opacity: 1;
+		transform: translateX(0);
+	}
 }
 
 .zoom-in {
-    animation: zoomIn var(--motion-slow) var(--motion-ease);
+	animation: zoomIn var(--motion-slow) var(--motion-ease);
 }
 
 .zoom-out {
-    animation: zoomOut var(--motion-slow) var(--motion-ease);
+	animation: zoomOut var(--motion-slow) var(--motion-ease);
 }
 
 @keyframes zoomIn {
-    0% {
-        opacity: 0;
-        transform: scale(0.98);
-    }
+	0% {
+		opacity: 0;
+		transform: scale(0.98);
+	}
 
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
 }
 
 @keyframes zoomOut {
-    0% {
-        opacity: 0;
-        transform: scale(1.02);
-    }
+	0% {
+		opacity: 0;
+		transform: scale(1.02);
+	}
 
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
 }
 
 .fade-in {
-    animation: fadeIn var(--motion-slow) var(--motion-ease);
+	animation: fadeIn var(--motion-slow) var(--motion-ease);
 }
 
 .fade-out {
-    animation: fadeOut var(--motion-slow) var(--motion-ease-exit);
+	animation: fadeOut var(--motion-slow) var(--motion-ease-exit);
 }
 
 @keyframes fadeIn {
-    0% {
-        opacity: 0;
-    }
+	0% {
+		opacity: 0;
+	}
 
-    100% {
-        opacity: 1;
-    }
+	100% {
+		opacity: 1;
+	}
 }
 
 @keyframes fadeOut {
-    0% {
-        opacity: 1;
-    }
+	0% {
+		opacity: 1;
+	}
 
-    100% {
-        opacity: 0;
-    }
+	100% {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.level-transition,
+	.slide-in,
+	.slide-out,
+	.zoom-in,
+	.zoom-out,
+	.fade-in,
+	.fade-out {
+		animation: none;
+		will-change: auto;
+		box-shadow: none;
+	}
 }

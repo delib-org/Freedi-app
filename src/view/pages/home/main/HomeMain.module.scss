@@ -25,6 +25,21 @@
 	color: var(--text-secondary, #6b7280);
 }
 
+// Tab-level inbox (/home?view=inbox) scrolls inside the shell's content column.
+.inboxPage {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	background: var(--bg-page);
+	padding-block: var(--space-lg) var(--space-xl);
+	padding-inline: 20px;
+
+	> * {
+		max-width: 44rem;
+		margin-inline: auto;
+	}
+}
+
 .sectionTitle {
 	padding: 0.75rem 1rem 0.25rem;
 	margin: 0;

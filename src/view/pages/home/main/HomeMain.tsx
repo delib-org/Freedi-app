@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useDispatch } from 'react-redux';
 import { StatementType } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -16,69 +16,56 @@ import {
 	setShowNewStatementModal,
 } from '@/redux/statements/newStatementSlice';
 import { useHomeStatementOverlay } from '@/controllers/hooks/useHomeStatementOverlay';
+import {
+	HOME_VIEW_PARAM,
+	INBOX_VIEW,
+} from '@/view/components/atomic/organisms/BottomNav/bottomNavModel';
 import { useLazyLoadHomeSubscriptions } from '../hooks/useLazyLoadHomeSubscriptions';
-import ConversationHome, {
-	ConversationSummary,
-} from '@/view/components/atomic/organisms/ThinkingSpace/ConversationHome';
+import { buildHomeModel } from '../homeModel';
+import HomeOverview, { HomeView } from './HomeOverview';
+import HomeInbox from '../inbox/HomeInbox';
+import PinJoinSheet from '../pin/PinJoinSheet';
 import styles from './HomeMain.module.scss';
 
+/** How long the first paint waits for subscriptions before showing the lists. */
+const INITIAL_LOADING_MS = 1500;
+
 export default function HomeMain() {
-	const { t } = useTranslation();
+	const { t, currentLanguage } = useTranslation();
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
+	const [searchParams] = useSearchParams();
 	const user = useAppSelector(creatorSelector);
 	const subscriptions = useAppSelector(statementsSubscriptionsSelector);
 	const statements = useAppSelector(statementsSelector);
 	const [loading, setLoading] = useState(true);
-	const [filter, setFilter] = useState<'all' | 'groups'>('all');
+	const [visibleView, setVisibleView] = useState<HomeView>('questions');
+	const [pinOpen, setPinOpen] = useState(false);
+	const isInbox = searchParams.get(HOME_VIEW_PARAM) === INBOX_VIEW;
+
 	const topLevelSubscriptions = useMemo(
 		() => subscriptions.filter((sub) => (sub.parentId || sub.statement?.parentId) === 'top'),
 		[subscriptions],
 	);
 	useHomeStatementOverlay(topLevelSubscriptions);
 	const { sentinelRef, isLoadingMore, hasMore } = useLazyLoadHomeSubscriptions(
-		filter === 'groups' ? 'topics' : 'discussions',
+		visibleView === 'spaces' ? 'topics' : 'discussions',
 	);
+
 	useEffect(() => {
-		const timeout = window.setTimeout(() => setLoading(false), 1500);
+		const timeout = window.setTimeout(() => setLoading(false), INITIAL_LOADING_MS);
 
 		return () => window.clearTimeout(timeout);
 	}, []);
 	useEffect(() => {
 		if (subscriptions.length) setLoading(false);
 	}, [subscriptions.length]);
-	const conversations = useMemo<ConversationSummary[]>(() => {
-		const byId = new Map(statements.map((statement) => [statement.statementId, statement]));
 
-		return subscriptions
-			.filter(
-				(sub) =>
-					sub.userId === user?.uid &&
-					!sub.isDocument &&
-					![StatementType.document, StatementType.paragraph].includes(
-						sub.statementType || sub.statement.statementType,
-					),
-			)
-			.map((sub) => {
-				const statement = byId.get(sub.statementId) || sub.statement;
-				const latest = (statement.lastSubStatements || sub.lastSubStatements || [])
-					.filter(
-						(child) =>
-							![StatementType.document, StatementType.paragraph].includes(child.statementType),
-					)
-					.slice()
-					.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))[0];
+	const model = useMemo(
+		() => buildHomeModel({ subscriptions, statements, userId: user?.uid }),
+		[subscriptions, statements, user?.uid],
+	);
 
-				return {
-					id: sub.statementId,
-					title: statement.statement,
-					description: statement.brief || statement.description,
-					isGroup: statement.statementType === StatementType.group,
-					recentText: latest?.statement,
-					recentAuthor: latest?.creator?.displayName,
-				};
-			});
-	}, [subscriptions, statements, user?.uid]);
 	const create = (): void => {
 		dispatch(setParentStatement('top'));
 		dispatch(setNewStatementType(StatementType.question));
@@ -97,16 +84,29 @@ export default function HomeMain() {
 		);
 	};
 
+	const handleVisibleView = useCallback((view: HomeView) => setVisibleView(view), []);
+
+	if (isInbox) {
+		return (
+			<div className={styles.inboxPage}>
+				<HomeInbox />
+			</div>
+		);
+	}
+
 	return (
 		<>
-			<ConversationHome
-				conversations={conversations}
-				userName={user?.displayName || ''}
-				onOpen={(id) => navigate(`/statement/${id}`)}
-				onCreate={create}
-				onCreateGroup={createGroup}
-				onFilterChange={setFilter}
+			<HomeOverview
+				firstName={(user?.displayName || '').trim().split(' ')[0]}
+				spaces={model.spaces}
+				questions={model.questions}
 				loading={loading}
+				locale={currentLanguage}
+				onOpenQuestion={(id) => navigate(`/statement/${id}`)}
+				onCreateQuestion={create}
+				onCreateGroup={createGroup}
+				onOpenPin={() => setPinOpen(true)}
+				onVisibleViewChange={handleVisibleView}
 				t={t}
 				more={
 					<>
@@ -121,6 +121,7 @@ export default function HomeMain() {
 					</>
 				}
 			/>
+			<PinJoinSheet isOpen={pinOpen} onClose={() => setPinOpen(false)} />
 		</>
 	);
 }

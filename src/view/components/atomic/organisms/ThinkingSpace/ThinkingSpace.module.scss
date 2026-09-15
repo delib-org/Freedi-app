@@ -259,7 +259,6 @@
 		padding: 30px 22px;
 		overflow: auto;
 	}
-	&__mobileBar,
 	&__boardToggle,
 	&__closeBoard {
 		display: none;
@@ -310,55 +309,50 @@
 			font-size: 12px;
 		}
 	}
-	@media (max-width: 700px) {
+	// Phones and tablets: no sidebar and no top bar — the floating bottom nav
+	// (BottomNav) leads, spaces live on Home, and the "Taking shape" toggle
+	// floats above the nav.
+	@media (max-width: 1023px) {
 		padding: 0;
 		gap: 0;
-		&__workspace {
-			border-radius: 28px 28px 0 0;
-		}
 		flex-direction: column;
-		&__mobileBar {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			padding: 8px 12px;
-			background: var(--space-sidebar);
-			border-bottom: 1px solid var(--space-line);
-			height: 56px;
-			flex-shrink: 0;
-			> button {
-				border: 0;
-				background: none;
-				min-height: 40px;
-				min-width: 40px;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-			}
-		}
-		&__brand {
-			img {
-				width: 94px;
-				height: 48px;
-			}
+		&__workspace {
+			border: 0;
+			border-radius: 0;
+			box-shadow: none;
 		}
 		&__sidebar {
 			display: none;
-			&--open {
-				display: flex;
-				position: absolute;
-				inset-inline-start: 0;
-				inset-block: 56px 0;
-				width: min(300px, 90vw);
-				z-index: 50;
-				box-shadow: var(--space-shadow);
-			}
 		}
 		&__boardToggle {
-			display: none;
+			display: flex;
+			inset-inline-end: var(--space-md);
+			inset-block-end: calc(var(--bottom-nav-clearance, 0px) + var(--space-xs));
+			min-height: var(--tap-min, 44px);
 		}
 		&__aside {
 			padding: 20px;
+		}
+		// Clearance for the floating nav: pill (tap target + 2 × 6px padding),
+		// its 24px lift and the safe-area inset. Exposed as a custom property so
+		// fixed bars inside the shell can sit above the nav.
+		&--withNav {
+			--bottom-nav-clearance: calc(
+				var(--tap-min, 44px) + 12px + var(--space-lg) + env(safe-area-inset-bottom, 0px)
+			);
+		}
+		&--withNav &__content {
+			padding-block-end: var(--bottom-nav-clearance);
+		}
+	}
+	@media (max-width: 480px) {
+		&__boardToggleLabel {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0 0 0 0);
+			white-space: nowrap;
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
