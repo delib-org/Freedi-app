@@ -42,6 +42,9 @@ function versionError(): DOMException {
 
 const deletedDatabases: string[] = [];
 
+/** 'blocked': another tab holds the database open and never lets go. */
+let deleteOutcome: 'success' | 'blocked' = 'success';
+
 beforeAll(() => {
 	Object.defineProperty(window, 'Notification', {
 		configurable: true,
@@ -65,11 +68,17 @@ beforeAll(() => {
 		writable: true,
 		value: {
 			deleteDatabase: (name: string) => {
-				deletedDatabases.push(name);
 				const request: Record<string, unknown> = {};
-				// The browser fires this asynchronously; mirror that so the code
-				// under test really has to wait for it.
-				setTimeout(() => (request.onsuccess as () => void)?.(), 0);
+				// The browser fires these asynchronously; mirror that so the code
+				// under test really has to wait for them.
+				if (deleteOutcome === 'blocked') {
+					setTimeout(() => (request.onblocked as () => void)?.(), 0);
+				} else {
+					setTimeout(() => {
+						deletedDatabases.push(name);
+						(request.onsuccess as () => void)?.();
+					}, 0);
+				}
 
 				return request;
 			},
@@ -79,8 +88,14 @@ beforeAll(() => {
 
 beforeEach(() => {
 	jest.clearAllMocks();
+	mockGetToken.mockReset();
 	deletedDatabases.length = 0;
+	deleteOutcome = 'success';
 	jest.spyOn(console, 'info').mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+	jest.useRealTimers();
 });
 
 describe('getOrRefreshToken', () => {
@@ -96,10 +111,28 @@ describe('getOrRefreshToken', () => {
 		mockGetToken.mockRejectedValueOnce(versionError()).mockResolvedValueOnce('fcm-token-2');
 
 		await expect(getOrRefreshToken()).resolves.toBe('fcm-token-2');
-		expect(deletedDatabases).toEqual(
-			expect.arrayContaining(['firebase-messaging-database', 'firebase-installations-database']),
-		);
+		expect(deletedDatabases).toContain('firebase-messaging-database');
+		// Version 1 everywhere, and held open by the service worker — deleting
+		// it could only block the repair.
+		expect(deletedDatabases).not.toContain('firebase-installations-database');
 		// A repair that worked is not an incident.
+		expect(logError).not.toHaveBeenCalled();
+	});
+
+	it('defers the repair, without retrying or reporting, while another tab holds the database', async () => {
+		jest.useFakeTimers();
+		deleteOutcome = 'blocked';
+		mockGetToken.mockRejectedValue(versionError());
+
+		const result = getOrRefreshToken();
+		// Step the clock in slices: the delete is only requested after several
+		// awaits, so a single advance could finish before its timeout exists.
+		for (let i = 0; i < 10; i++) {
+			await jest.advanceTimersByTimeAsync(1000);
+		}
+
+		await expect(result).resolves.toBeNull();
+		expect(mockGetToken).toHaveBeenCalledTimes(1);
 		expect(logError).not.toHaveBeenCalled();
 	});
 
@@ -107,6 +140,7 @@ describe('getOrRefreshToken', () => {
 		mockGetToken.mockRejectedValue(versionError());
 
 		await expect(getOrRefreshToken()).resolves.toBeNull();
+		expect(mockGetToken).toHaveBeenCalledTimes(2);
 		expect(logError).toHaveBeenCalledWith(
 			expect.anything(),
 			expect.objectContaining({
