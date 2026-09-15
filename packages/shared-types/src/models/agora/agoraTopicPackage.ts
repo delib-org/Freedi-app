@@ -174,9 +174,7 @@ export const AgoraTopicPackageSchema = object({
 
 export type AgoraTopicPackage = InferOutput<typeof AgoraTopicPackageSchema>;
 
-/** New question-led scenarios use WizCol with only the optional vision omitted. */
-export function topicStagePlan(topic?: Pick<AgoraTopicPackage, 'authoringBrief'>): AgoraStagePlanItem[] {
-	const plan = stagePlanPreset('scenarioWizcol');
-
-	return topic?.authoringBrief ? plan.filter((item) => item.kind !== 'vision') : plan;
+/** Every scenario, question-led or not, starts from the WizCol plan (no vision round). */
+export function topicStagePlan(): AgoraStagePlanItem[] {
+	return stagePlanPreset('scenarioWizcol');
 }

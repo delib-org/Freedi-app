@@ -298,7 +298,7 @@ export const agoraCreateSession = onCall(
 				}
 			}
 			const isQuick = topic.kind === 'quick';
-			if (!plan && topic.authoringBrief) plan = topicStagePlan(topic);
+			if (!plan && topic.authoringBrief) plan = topicStagePlan();
 
 			// A class game must be opened by one of the class's own teachers; a
 			// guest game (no classId) stays exactly what sessions have always been.

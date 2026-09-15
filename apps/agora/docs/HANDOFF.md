@@ -116,11 +116,11 @@ stage kinds: a round is a `question` item with a different evaluation type.
 The default plan for a quick game is now
 
 ```
-lobby → question(story) → question(needs) → question(vision) → deliberation → voting → results
+lobby → question(story) → question(needs) → deliberation → voting → results
 ```
 
-(`stagePlanPreset('wizcol')`, item ids `round-story` / `round-needs` /
-`round-vision`), and a scenario game runs its character scenes as the
+(`stagePlanPreset('wizcol')`, item ids `round-story` / `round-needs`; the
+vision round is optional — the teacher adds it in the plan editor), and a scenario game runs its character scenes as the
 prologue (`scenarioWizcol`). `StartGame` seeds both. `classic` and
 `quickDecision` still exist; `AGORA_STAGE_ORDER` is untouched, so plan-less
 and civic sessions run exactly as before. The book's opening (the goal is a

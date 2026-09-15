@@ -118,7 +118,7 @@ export function StartGame(): m.Component {
 			]);
 			topics = loadedTopics.filter((topic) => topic.status === AgoraTopicStatus.ready);
 			for (const topic of topics) {
-				plans[topic.topicPackageId] ??= topicStagePlan(topic);
+				plans[topic.topicPackageId] ??= topicStagePlan();
 			}
 			classes = dashboard.classes;
 			schools = dashboard.schools;
