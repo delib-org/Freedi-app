@@ -49,7 +49,9 @@ const AnswerChatMessage: React.FC<AnswerChatMessageProps> = ({ message, isNew })
 					{isNew && <span className={styles.messageNew}> · {t('New')}</span>}
 				</div>
 				<div className={styles.bubble}>
-					<p className={styles.bubbleText}>{message.statement}</p>
+					<p className={styles.bubbleText} dir="auto">
+						{message.statement}
+					</p>
 					{description && description !== message.statement && (
 						<p className={styles.bubbleDescription}>{description}</p>
 					)}

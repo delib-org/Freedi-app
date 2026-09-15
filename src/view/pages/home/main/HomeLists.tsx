@@ -30,7 +30,9 @@ export function SpaceCard({
 				<Users size={20} />
 			</span>
 			<span className={styles.spaceCard__body}>
-				<span className={styles.spaceCard__name}>{space.title}</span>
+				<span className={styles.spaceCard__name} dir="auto">
+					{space.title}
+				</span>
 				<span className={styles.spaceCard__meta}>
 					{formatSpaceMeta(space.questionCount, space.openCount, t)}
 				</span>
@@ -65,7 +67,9 @@ export function QuestionRow({
 			>
 				<span className={styles.questionRow__spine} data-tone={question.tone} aria-hidden="true" />
 				<span className={styles.questionRow__body}>
-					<span className={styles.questionRow__title}>{question.title}</span>
+					<span className={styles.questionRow__title} dir="auto">
+						{question.title}
+					</span>
 					{meta && <span className={styles.questionRow__meta}>{meta}</span>}
 				</span>
 				{question.hosting && (

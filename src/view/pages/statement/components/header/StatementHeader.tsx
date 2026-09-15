@@ -196,11 +196,11 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 							aria-label={edit ? undefined : t('Edit title')}
 						>
 							{!edit ? (
-								<h1 className={styles.header__title}>
+								<h1 className={styles.header__title} dir="auto">
 									{renderInlineMarkdown(statement?.statement)}
 								</h1>
 							) : (
-								<h1 className={styles.header__title}>
+								<h1 className={styles.header__title} dir="auto">
 									<input
 										type="text"
 										className={styles.header__titleInput}
@@ -220,7 +220,9 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 							onClick={() => setTitleExpanded((prev) => !prev)}
 							aria-expanded={titleExpanded}
 						>
-							<h1 className={styles.header__title}>{renderInlineMarkdown(statement?.statement)}</h1>
+							<h1 className={styles.header__title} dir="auto">
+								{renderInlineMarkdown(statement?.statement)}
+							</h1>
 						</button>
 					)}
 

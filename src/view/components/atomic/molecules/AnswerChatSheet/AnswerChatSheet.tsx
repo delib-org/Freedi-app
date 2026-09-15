@@ -104,7 +104,7 @@ const AnswerChatSheetPanel: React.FC<PanelProps> = ({ onClose, answerId, answerT
 				<div className={styles.header}>
 					<div className={styles.heading}>
 						<span className={styles.eyebrow}>{t('Conversation about the answer')}</span>
-						<h2 id={titleId} className={styles.title}>
+						<h2 id={titleId} className={styles.title} dir="auto">
 							{answerText}
 						</h2>
 					</div>
