@@ -126,4 +126,30 @@ describe('the council scoreboard model', () => {
 		expect(closed.showResults).toBe(true);
 		expect(closed.title).toBe('ההצבעה הסתיימה');
 	});
+	it('follows the counts once they show, unless the teacher switched reordering off', () => {
+		const voting = {
+			candidateIds: ['a', 'b', 'c'],
+			candidates: [
+				{ statementId: 'a', statement: 'A', consensus: 0.6 },
+				{ statementId: 'b', statement: 'B', consensus: 0.4 },
+				{ statementId: 'c', statement: 'C', consensus: 0.2 },
+			],
+			computedAt: 1,
+		};
+		const ballot = (votingSettings: Record<string, boolean>) =>
+			councilBallot({
+				session: { voting, votingSettings } as unknown as AgoraSession,
+				selections: { a: 1, b: 0, c: 4 },
+				myVoteStatementId: null,
+				votedCount: 5,
+				classSize: 5,
+				closed: false,
+			}).candidates?.map((c) => c.number);
+		// Revealed, by default: the leader first, ties keep the ballot order.
+		expect(ballot({ showResults: true })).toEqual([3, 1, 2]);
+		// The teacher turned reordering off: the ballot keeps its own order.
+		expect(ballot({ showResults: true, liveReorder: false })).toEqual([1, 2, 3]);
+		// Hidden counts never move the ballot — the order would leak them.
+		expect(ballot({})).toEqual([1, 2, 3]);
+	});
 });

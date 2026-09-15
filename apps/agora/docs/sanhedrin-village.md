@@ -179,3 +179,110 @@ which stores `votingSettings.goalZoneOnly`, redraws `session.voting` through
 that left the ballot, so the tally and the recap's winner stay consistent;
 those students vote again. It refuses while a challenge turn is being judged,
 and refuses to empty the ballot when nothing is in the goal yet.
+
+## The booth's two sides: the table and the board (September 14)
+
+At a booth the student moves between two sides, never a screen over the
+world:
+
+- **The table.** The camera frames the writing desk with the note on it and
+  the booth's guide (`agora-village-view` `{place, view: 'table'}`; the world
+  eases there even while paused). The paper opens as the guide's **speech
+  bubble**: the world reports the guide's head and the paper's screen position
+  (`agora-village-anchor` `{x, y, avoidX, speaker}`), and
+  `lib/flows/villageBubble.ts` hangs the bubble on the guide's side away from
+  the desk, with a tail pointing at them (centred, tail-less on phones). The
+  bubble shows the guide's name, the item's label and prompt, and the stage's
+  own writing form — every write, confirmation and payout is unchanged.
+- **The board.** Sending flies the paper to the board and the board opens
+  (as before). The camera now faces the board (`view: 'board'`) whenever it
+  opens — the switch, the floating board button, pressing the 3D board, or
+  a teacher advance for a student who has written.
+- **Back and forth.** `.village-booth-switch` ("📝 השולחן · הפתק שלי" /
+  "📋 הלוח · הפתקים של הכיתה") sits over every booth whose item has a desk.
+  On the board, my own note carries "עריכת הפתק שלי · חזרה לשולחן", which goes
+  back to the table with the paper open for editing; classmates' notes keep
+  their rating control and "קריאה והצעת שיפור".
+
+A stage's fixed room wash (`.shell--place-*::after`) and mode strip used to
+escape the paper inside the village and paint the viewport over the world on
+the first write; they are hidden inside `.village-shell__activity`.
+
+Verification: `bash ../../scripts/solo.sh npx tsx scripts/village-desk-board.mjs`
+(arrive → bubble at the table → write → board → table → board → rate →
+edit from the board); screenshots in `output/village-desk-board/`. Inside
+the bubble the send row stays pinned to the bottom edge; scroll padding keeps
+the writing box above it, so focusing and typing never put text under it.
+
+### Arriving in front of the station (September 14, later)
+
+Tal's rule: a station never opens anything by itself. Every arrival — the
+teacher's advance or "everyone to …", a refresh, the map, "go there" — ends
+with the student **standing in front of the station**: the camera frames the
+guide, the writing table with the note, and the board behind. The guide's
+speech bubble (in the world, `#desk-bubble`) shows who speaks, the question,
+the instruction, and one button — "✍️ לכתוב את זה על הפתק שלי" (after writing:
+"✍️ לערוך את הפתק שלי"). **Only that button opens the paper**, which then
+opens as the guide's writing bubble described above.
+
+- `VillageShell.showStation()` is the one way to a station: arrivals
+  (`ArrivalAction` `station` | `look`), the switch's "📝 השולחן", the toolbar
+  button, and pressing a booth's 3D desk (the world frames the table itself).
+  Walking up to another opened booth puts its question on screen and stands
+  there. "עריכת הפתק שלי" on the board still opens the paper directly.
+- In a lesson the guide's bubble appears only once the camera has settled at
+  the table (`viewKind === 'table'`), so it does not show on the way in,
+  vanish while the camera turns, and show again. It stays below the shell's
+  top controls; the world's "go to" and footer buttons hide at the station.
+- The simulation expects this: `expectLedToDesk` checks the student stands at
+  the station with nothing open, and `writeAtDesk` presses the guide's button.
+- A station far from where the student stands (roaming in "students navigate
+  themselves", then pressing "הפתק שלי על השולחן" or "📝 השולחן") is walked
+  to first, never flown to. On arrival the shell stands the student there and
+  the guide's bubble appears. The world marks that station as the one the
+  student stands at, so the guide's bubble belongs to the right booth. A far
+  board only opens the board; the camera stays put. The paper, the board and
+  the bubble hide the world's own bottom buttons while they are open.
+
+### Two glitches only the eye saw (September 14, later)
+
+Tal, testing by hand, saw the student come close to the guide, back off and
+come close again, and the paper open, close and reopen.
+`scripts/probe-village-motion.mjs` records the shell ↔ world messages and
+samples the walker and the paper every 100 ms. It showed:
+
+- **The 3D world reloaded when the class left the lobby.** GameController
+  rendered the village in a different child slot in the lobby than in the
+  stages (the stages add the view toggle, and spread a variable-length
+  overlay list in front). A just-advanced stage also briefly swapped the
+  whole screen for a topic-loading spinner. Mithril matches unkeyed children
+  by position, so the village was rebuilt and the walker restarted at the
+  fountain. Now overlays take one slot, the lobby leaves an empty slot where
+  the toggle goes, the topic loads while the class is still in the lobby, and
+  the loading spinner renders inside the village.
+- **The paper's pop-in animation outranked `village-bubble--waiting`.** The
+  paper popped in, went invisible when the animation ended, and faded in once
+  the guide's position came back. It is now a single fade, and the world
+  answers the table view at once when the camera already frames it (a 0.9 s
+  "turn" to the same spot kept the paper waiting).
+
+### The ballot follows the counts, and every overtake slides (September 14)
+
+Tal asked for the voting options to reorder with animation. Both halves
+already existed but were double-gated: the ballot only re-sorted when the
+teacher had revealed the counts AND ticked "לסדר מחדש לפי מספר הקולות", which
+defaulted off. `votingSettings.liveReorder` now counts as ON unless it is
+`false` (Voting.ts, `councilBallot`, the teacher's switch). The teacher can
+still switch it off. While the counts are hidden the order never moves,
+because it would leak the leader.
+
+- The students' ballot keeps its FLIP (`flipRow`). Each overtake slides
+  from where the eye left it, with a slight overshoot.
+- The council's 3D board now slides too (`slideBallot` in `village.js`).
+  Rows are known by ballot number and glide to their new slot, and bars grow
+  instead of jumping. An update mid-slide starts from where the row is drawn;
+  reduced motion repaints at once.
+- `scripts/probe-ballot-reorder.mjs` checks it in a real browser: counts
+  revealed, switch untouched, two forced overtakes, each must slide (> 40px)
+  and come to rest. On the emulator the first counting trigger after idle can
+  take ~10 s, so it waits for each order instead of timing it.

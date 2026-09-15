@@ -133,9 +133,11 @@ export function Voting(): m.Component<VotingAttrs> {
 			 */
 			const showResults =
 				(!projector && (board || readOnly)) || (settings?.showResults === true && !challengeLive);
-			// Reordering by a hidden number would leak it, and a ballot that moves
-			// under a voter's finger loses their place.
-			const liveReorder = showResults && settings?.liveReorder === true;
+			// Once the counts are on screen the ballot follows them, sliding each
+			// overtake into place (flipRow) — on unless the teacher switched it off.
+			// While the counts are hidden it never moves: reordering by a hidden
+			// number would leak it.
+			const liveReorder = showResults && settings?.liveReorder !== false;
 
 			// Everyone always knows how much of the class has spoken
 			const classSize = getSessionState().participants.length;

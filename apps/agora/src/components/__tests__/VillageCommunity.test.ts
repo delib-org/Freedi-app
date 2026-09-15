@@ -7,6 +7,8 @@ import type m from 'mithril';
 const state = vi.hoisted(() => ({
 	proposals: [] as AgoraProposal[],
 	answersByQuestion: {} as Record<string, AgoraProposal[]>,
+	myRatings: {} as Record<string, { value: number }>,
+	scores: {},
 }));
 vi.mock('../../lib/proposals', () => ({
 	getDeliberationState: () => state,
@@ -88,4 +90,68 @@ describe('village session integration', () => {
 		component.onremove!.call(component, node as m.VnodeDOM<VillageCommunityAttrs>);
 		vi.useRealTimers();
 	});
+	it('offers "edit my note" on the board only for my note at the live booth, and it goes to the table', () => {
+		state.proposals = [proposal('mine')];
+		const onEditMine = vi.fn();
+		const board = (viewingIndex: number) => {
+			const component = VillageCommunity();
+			const attrs: VillageCommunityAttrs = {
+				session: { sessionId: 's' } as AgoraSession,
+				userId: 'a',
+				anonName: 'a',
+				plan: [
+					{ itemId: 'past', stage: AgoraStage.deliberation },
+					{ itemId: 'live', stage: AgoraStage.deliberation },
+				],
+				currentIndex: 1,
+				viewingIndex,
+				boardRequest: 1,
+				navigate: vi.fn(),
+				onPause: vi.fn(),
+				onEditMine,
+			};
+			const node = { attrs } as unknown as m.VnodeDOM<VillageCommunityAttrs>;
+			component.oninit!.call(component, node);
+			component.onbeforeupdate!.call(component, node, node);
+			const tree = component.view.call(component, node);
+			component.onremove!.call(component, node);
+
+			return findButton(tree, 'עריכת הפתק שלי');
+		};
+		const live = board(1);
+		expect(live).toBeDefined();
+		(live!.attrs!.onclick as () => void)();
+		expect(onEditMine).toHaveBeenCalledTimes(1);
+		expect(board(0)).toBeUndefined();
+	});
 });
+
+interface Node {
+	tag?: unknown;
+	attrs?: Record<string, unknown>;
+	children?: unknown;
+	text?: unknown;
+}
+/** The first `button` vnode whose own text includes `label` */
+function findButton(tree: unknown, label: string): Node | undefined {
+	if (Array.isArray(tree)) {
+		for (const child of tree) {
+			const hit = findButton(child, label);
+			if (hit) return hit;
+		}
+
+		return undefined;
+	}
+	if (!tree || typeof tree !== 'object') return undefined;
+	const node = tree as Node;
+	const texts = [node.text, ...(Array.isArray(node.children) ? node.children : [])].map((c) =>
+		typeof c === 'string'
+			? c
+			: c && typeof c === 'object'
+				? String((c as Node).children ?? '')
+				: '',
+	);
+	if (node.tag === 'button' && texts.some((text) => text.includes(label))) return node;
+
+	return findButton(node.children, label);
+}

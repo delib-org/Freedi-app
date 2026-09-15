@@ -406,10 +406,20 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					]);
 
 			if (item.stage === AgoraStage.lobby) {
+				// The village's first station needs the topic: fetch it while the class
+				// waits, so moving on does not swap the 3D world for a loading spinner.
+				if (villageMode) loadTopicPackage(session.topicPackageId);
+
+				// The same slots as the stage screens below — overlays as ONE slot, and
+				// an empty one where they carry the view toggle — so the village sits in
+				// the same place and survives the move from the lobby. Mithril matches
+				// unkeyed children by position: a shifted village is a new village, and
+				// its 3D world reloads (the walker jumps back to the fountain).
 				return m('.game', [
-					...overlays,
+					overlays,
 					stageNav,
 					pastNotice,
+					null,
 					villageMode
 						? m(
 								VillageShell,
@@ -431,11 +441,33 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const topic = getTopicPackage(session.topicPackageId);
 			if (!topic) {
 				loadTopicPackage(session.topicPackageId);
-
-				return m(
+				const spinner = m(
 					'.shell',
 					m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
 				);
+				// In the village the world keeps standing, in its slot, while the topic loads.
+				if (villageMode) {
+					return m('.game', [
+						overlays,
+						stageNav,
+						pastNotice,
+						null,
+						m(
+							VillageShell,
+							{
+								plan,
+								currentIndex,
+								viewingIndex,
+								papers: [],
+								navigation: session.villageNavigation ?? 'teacher',
+								call: session.villageCall,
+							},
+							spinner,
+						),
+					]);
+				}
+
+				return spinner;
 			}
 
 			/**
@@ -697,8 +729,9 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				});
 			})();
 
+			// Same slots as the lobby above (overlays as one slot): the village keeps its place.
 			return m('.game', [
-				...overlays,
+				overlays,
 				stageNav,
 				pastNotice,
 				m(

@@ -229,8 +229,32 @@ export function buildVillage({ scene, height, manager }) {
 		function paint(model) {
 			const key = JSON.stringify(model); if (key === lastKey) return; lastKey = key;
 			ctx.direction = 'rtl'; ctx.textAlign = 'center';
-			if (!model || model.mode === 'ballot') return paintBallot(model);
+			if (!model || model.mode === 'ballot') return slideBallot(model);
+			cancelAnimationFrame(ballotFrame); ballotRows = new Map();
 			paintPitch(model);
+		}
+		// The ballot moves like the one on the students' screens: a proposal that
+		// overtakes another slides to its new place and its bar grows, instead of
+		// the board repainting in a new order. Rows are known by their ballot
+		// number; an update mid-slide starts from where the eye is.
+		let ballotRows = new Map(), ballotFrame = 0;
+		const easeOutBack = (t) => 1 + 2.70158 * Math.pow(t - 1, 3) + 1.70158 * Math.pow(t - 1, 2);
+		function slideBallot(model) {
+			cancelAnimationFrame(ballotFrame);
+			const rows = model?.candidates ?? [];
+			const target = new Map(rows.map((row, i) => [row.number, { slot: i, share: model.showResults ? row.share : 0 }]));
+			const from = new Map([...target].map(([n, t]) => [n, ballotRows.get(n) ?? t]));
+			const moved = [...target].some(([n, t]) => from.get(n).slot !== t.slot || Math.abs(from.get(n).share - t.share) > .001);
+			const still = !moved || matchMedia('(prefers-reduced-motion: reduce)').matches;
+			const start = performance.now();
+			const step = (now) => {
+				const p = still ? 1 : Math.min(1, (now - start) / 650);
+				const slide = easeOutBack(p), grow = 1 - Math.pow(1 - p, 3);
+				ballotRows = new Map([...target].map(([n, t]) => { const f = from.get(n); return [n, { slot: f.slot + (t.slot - f.slot) * slide, share: f.share + (t.share - f.share) * grow }]; }));
+				paintBallot(model, ballotRows);
+				if (p < 1) ballotFrame = requestAnimationFrame(step);
+			};
+			step(start);
 		}
 		function paintPitch(model) {
 			const W = 2048, H = 1152;
@@ -267,17 +291,21 @@ export function buildVillage({ scene, height, manager }) {
 			ctx.fillText(model?.footer ?? '', W / 2, H - 30);
 			tex.needsUpdate = true;
 		}
-		function paintBallot(model) {
+		function paintBallot(model, at) {
 			const W = 2048, H = 1152;
+			ctx.direction = 'rtl'; ctx.textAlign = 'center';
 			ctx.fillStyle = '#20263a'; ctx.fillRect(0, 0, W, H);
 			ctx.fillStyle = '#fff5dc'; ctx.font = 'bold 62px Arial'; ctx.fillText(model?.title ?? 'הצבעה', W / 2, 84);
 			const rows = model?.candidates ?? [];
 			if (!rows.length) { ctx.font = '40px Arial'; ctx.fillText('הקלפי עוד לא נפתחה', W / 2, H / 2); tex.needsUpdate = true; return; }
 			const top = 140, gap = Math.min(150, (H - 260) / rows.length), barH = Math.min(96, gap - 24);
 			rows.forEach((row, i) => {
-				const y = top + i * gap;
+				// Where the row stands mid-slide, and how far its bar has grown.
+				const cur = at?.get(row.number);
+				const y = top + (cur ? cur.slot : i) * gap;
+				const share = cur ? cur.share : row.share;
 				ctx.fillStyle = '#ffffff22'; ctx.fillRect(140, y, W - 280, barH);
-				if (model.showResults) { ctx.fillStyle = row.mine ? '#ffd83a' : '#67c28a'; ctx.fillRect(140 + (W - 280) * (1 - row.share), y, (W - 280) * row.share, barH); }
+				if (model.showResults) { ctx.fillStyle = row.mine ? '#ffd83a' : '#67c28a'; ctx.fillRect(140 + (W - 280) * (1 - share), y, (W - 280) * share, barH); }
 				ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.font = `bold ${Math.round(barH * .42)}px Arial`;
 				const text = `${row.number}. ${row.label}`; let shown = text; while (ctx.measureText(shown).width > W - 620 && shown.length > 4) shown = shown.slice(0, -4) + '…';
 				ctx.fillText(shown, W - 160, y + barH * .66);

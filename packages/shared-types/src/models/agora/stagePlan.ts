@@ -373,14 +373,14 @@ export function validateStagePlan(
 export type AgoraStagePlanPreset = 'classic' | 'quickDecision' | 'wizcol' | 'scenarioWizcol';
 
 /**
- * The WizCol tail every default plan ends with: the three rounds as question
- * items of their kind, then the square and the vote.
+ * The WizCol tail every default plan ends with: the story and needs rounds as
+ * question items of their kind, then the square and the vote. The vision
+ * round is optional — the admin adds it in the editor.
  */
 function wizcolTail(): AgoraStagePlanItem[] {
 	return [
 		{ itemId: 'round-story', stage: AgoraStage.question, kind: 'story' },
 		{ itemId: 'round-needs', stage: AgoraStage.question, kind: 'needs' },
-		{ itemId: 'round-vision', stage: AgoraStage.question, kind: 'vision' },
 		{
 			itemId: AgoraStage.deliberation,
 			stage: AgoraStage.deliberation,
@@ -393,7 +393,7 @@ function wizcolTail(): AgoraStagePlanItem[] {
 
 /**
  * Starting points for the editor. `wizcol` is the default: the WizCol
- * process as a digital sequence — story, needs, vision, then the square and
+ * process as a digital sequence — story, needs, then the square and
  * the vote. `scenarioWizcol` puts a scenario's character scenes
  * in front of it as the prologue. `classic` is the lesson the game ran
  * before; `quickDecision` is a room deciding one thing: ask, propose, vote.

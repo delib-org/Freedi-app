@@ -240,3 +240,99 @@ article.village-note { cursor: default; }
 .village-shell .village-community__panel .chat-page { height: auto; overflow: visible; }
 .village-shell .village-community__panel .chat-page > * { flex-shrink: 0; }
 .village-shell .village-community__panel .chat-page__list { flex: none; min-height: 200px; max-height: 44dvh; overflow: auto; }
+
+// --- The booth's two sides: the table (the guide's speech bubble) and the board ---
+// The student writes at the table, in the bubble of the booth's guide, and
+// looks at the class board on the other side; the switch goes back and forth.
+.village-booth-switch {
+  position: absolute; z-index: 45; top: 128px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 4px; padding: 4px; max-inline-size: calc(100% - 32px);
+  border: 1px solid #d4b674; border-radius: 999px; background: #233f35; box-shadow: 0 4px 16px #0003;
+  button {
+    font: inherit; font-weight: 700; font-size: 16px; padding: 10px 18px; border: 0; border-radius: 999px;
+    background: transparent; color: #fff6de; cursor: pointer; white-space: nowrap;
+    &[aria-pressed="true"] { background: #fff6de; color: #233f35; }
+    &:hover:not([aria-pressed="true"]) { background: #ffffff1f; }
+    &:focus-visible { outline: 3px solid #e5a548; outline-offset: 2px; }
+  }
+}
+@media (max-width: 600px) {
+  .village-booth-switch { top: 116px; button { font-size: 13px; padding: 8px 10px; } }
+}
+
+// The paper, written in the guide's speech bubble: placed beside the figure by
+// `bubblePlacement` (custom properties), so the table and the guide stay in view.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble,
+.village-shell > .village-shell__activity.village-desk.village-bubble {
+  inset: auto;
+  left: var(--bubble-left); top: var(--bubble-top);
+  inline-size: var(--bubble-width); max-block-size: var(--bubble-max-height);
+  background: #fffdf3;
+  border: 3px solid #40533e; border-radius: 28px;
+  box-shadow: 6px 8px 0 #344c3640, 0 18px 40px #31281830;
+  transition: opacity .2s ease-out;
+  animation: village-bubble-pop .28s ease-out;
+  .village-desk__header { background: #fffdf3; }
+}
+.village-bubble--waiting { opacity: 0; animation: none; }
+.village-bubble__speaker { display: block; margin: 0 0 2px; font-size: 14px; font-weight: 700; color: #5b6b52; }
+.village-bubble__prompt { margin: 6px 0 0; font-size: 17px; line-height: 1.6; color: #34493d; }
+.village-bubble-tail {
+  position: absolute; z-index: 11; left: var(--tail-left); top: var(--tail-top);
+  inline-size: 0; block-size: 0; pointer-events: none;
+  border-top: 14px solid transparent; border-bottom: 14px solid transparent;
+  &--left { border-right: 22px solid #40533e; }
+  &--right { border-left: 22px solid #40533e; }
+}
+@keyframes village-bubble-pop { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .village-shell > .village-shell__activity.village-desk.village-bubble { animation: none; transition: none; }
+}
+.village-note__edit { background: #fff6de; font-weight: 700; }
+
+// A stage's room wash and ownership strip are `position: fixed` over the whole
+// viewport. Inside the village they escaped the paper and painted the page over
+// the 3D world, so the student saw a pink page instead of the table and the
+// guide. In the village the world IS the room: the paper carries no wash.
+.village-shell__activity .shell::before,
+.village-shell__activity .shell::after { display: none; }
+.village-shell__activity .shell { background: transparent; }
+
+// In the bubble the header scrolls away with the paper — only the send row
+// stays pinned — so the guide's question and the writing box share the
+// bubble, instead of a sticky header eating half of it and the pinned send
+// row landing on the textarea. The stage's own column uses the full width.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble .village-desk__header,
+.village-shell > .village-shell__activity.village-desk.village-bubble .village-desk__header {
+  position: static; margin-top: 0; margin-bottom: 12px; padding: 0 0 12px;
+}
+.village-bubble .village-desk__header .btn { padding: 6px 14px; min-block-size: 0; font-size: 15px; }
+.village-bubble .shell,
+.village-bubble .shell__content { padding-inline: 0; max-inline-size: none; inline-size: 100%; }
+
+// "Edit my note" on the board is its own button (not a `__open`: the thread
+// buttons keep that class to themselves), dressed like its neighbours.
+.village-note__edit { display: block; width: 100%; margin-top: 12px; padding: 10px 14px; border: 1px solid #0002; border-radius: 10px; color: #263b33; font: inherit; cursor: pointer; }
+.village-note__edit:hover, .village-note__edit:focus-visible { background: #fff; outline: 2px solid #927535; }
+
+// A shorter writing box inside the bubble, so the pinned send row sits under
+// the text instead of on it.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble {
+  .write-desk textarea, textarea.text-input, .round__textarea, .question__textarea, .my-screen__text { min-block-size: 120px; }
+}
+
+// The send row is pinned to the bubble's bottom edge. Scroll padding keeps the
+// writing box above it: focusing the box, and the caret while typing, scroll
+// the bubble so the text never sits under the pinned row.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble {
+  scroll-padding-block: 16px 140px;
+}
+
+// The paper appears once, when the guide's position is known: a single fade.
+// A pop animation on the bubble outranked `--waiting`, so the paper popped in,
+// went invisible again when the animation ended, and then faded in a second
+// time — open, close, reopen.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble,
+.village-shell > .village-shell__activity.village-desk.village-bubble { animation: none; }
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble.village-bubble--waiting,
+.village-shell > .village-shell__activity.village-desk.village-bubble.village-bubble--waiting { opacity: 0; transition: none; }

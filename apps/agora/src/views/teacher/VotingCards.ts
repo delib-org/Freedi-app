@@ -257,7 +257,8 @@ export function votingLiveCard(
 ): m.Children {
 	const showResults = settings?.showResults === true;
 	const goalZoneOnly = settings?.goalZoneOnly === true;
-	const liveReorder = settings?.liveReorder === true;
+	// On by default: once the counts are revealed the ballot follows them.
+	const liveReorder = settings?.liveReorder !== false;
 	const patch = (next: Partial<VotingStageSettings>): void => onSave({ ...settings, ...next });
 
 	return m('.card.stack.voting-settings', [

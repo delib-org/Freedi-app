@@ -23,6 +23,12 @@ import { callable, db, fastlane } from './lib/fastlane.ts';
 
 const require = createRequire(import.meta.url);
 const { AgoraStage, Collections, stagePlanPreset } = require('@freedi/shared-types');
+
+// The default WizCol plan has no vision round; this run exercises it, so add it back after needs.
+const withVisionRound = (items) =>
+	items.flatMap((item) =>
+		item.itemId === 'round-needs' ? [item, { itemId: 'round-vision', stage: AgoraStage.question, kind: 'vision' }] : [item],
+	);
 const { buildAnswerStatement, buildProposalStatement } = require('../src/lib/statementDocs');
 
 await preflight();
@@ -94,7 +100,7 @@ async function writeRound(sessionRow, item, bots, texts) {
 
 // ---------------------------------------------------------------------------
 step('1. A quick game on the wizcol plan');
-const plan = stagePlanPreset('wizcol').map((item) =>
+const plan = withVisionRound(stagePlanPreset('wizcol')).map((item) =>
 	item.stage === AgoraStage.deliberation
 		? { ...item, votingTrigger: { enabled: true, singleMin: 0.85, pairMin: 0.5, minRaters: 2 } }
 		: item,
