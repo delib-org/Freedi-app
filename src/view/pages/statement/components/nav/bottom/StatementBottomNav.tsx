@@ -293,8 +293,14 @@ const StatementBottomNav: FC<Props> = () => {
 		);
 	}
 
+	// The violet add-answer button owns adding answers; with fewer than two answers
+	// there is nothing to sort, so the bar would only be an empty scrim over the
+	// last card.
+	const hideBar = answerFabShown && !hasEnoughOptionsToSort;
+
 	// Add mobile-only class that hides the Add button when menu is open
 	const navRootClass = [
+		hideBar ? styles.statementBottomNavHidden : '',
 		showSorting
 			? `${styles.statementBottomNav} ${styles.statementBottomNavShow}`
 			: styles.statementBottomNav,

@@ -80,6 +80,10 @@
 	--scrim: rgba(38, 56, 84, 0.35);
 	--toggle-on: #16a34a;
 	--toggle-off: #c9c3b8;
+
+	// Fade behind floating bottom bars (base tokens are the old blue page).
+	--nav-scrim-from: rgba(251, 250, 247, 0);
+	--nav-scrim-to: rgba(251, 250, 247, 1);
 }
 
 @mixin wizcol-dark {
@@ -144,6 +148,9 @@
 	--scrim: rgba(0, 0, 0, 0.55);
 	--toggle-on: #3ecf73;
 	--toggle-off: #4a5570;
+
+	--nav-scrim-from: rgba(19, 25, 38, 0);
+	--nav-scrim-to: rgba(19, 25, 38, 1);
 }
 
 // High contrast keeps the palette but removes every low-contrast channel:
