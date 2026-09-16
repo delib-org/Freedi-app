@@ -1,4 +1,5 @@
 import { proximityBandOf, type ProximityBandKey } from '../lib/seaLayout';
+import ShipTag from './ShipTag';
 
 export interface ShipProximity {
 	partyId: string;
@@ -16,12 +17,14 @@ interface Props {
 	 * Open this ship's card. Given, every chip becomes a button.
 	 *
 	 * Without it these were `<span>`s, and the voyage screen invited the player
-	 * to "הקישו על ספינה" a few lines above them. Tapping a hull on the Phaser
-	 * sea worked; tapping the name or the coloured dot right here did nothing,
-	 * and off the canvas — the direct-questionnaire route, and every screen
-	 * reader — there was no tappable ship anywhere on the page.
+	 * to "הקישו על ספינה" a few lines above them. Off the canvas — the
+	 * direct-questionnaire route, and every screen reader — there was no
+	 * tappable ship anywhere on the page.
 	 */
 	onSelect?: (partyId: string) => void;
+	/** The ship whose card is open: its chip goes gold, the same as its pennant
+	 *  on the water and the heading of the card. */
+	selectedId?: string | null;
 	/**
 	 * Heading for this list. Elders are rendered as their OWN list under their
 	 * own heading rather than sorted in among the parties: a reviewer found
@@ -38,20 +41,29 @@ const BAND_TITLE: Record<ProximityBandKey, string> = {
 	far: 'רחוקות ממסלולך',
 };
 
+const BAND_WORD: Record<ProximityBandKey, string> = {
+	near: 'קרובה למסלולך',
+	middle: 'באמצע הדרך',
+	far: 'רחוקה ממסלולך',
+};
+
 /**
  * Which ships are near, said in words.
  *
- * The sea encodes proximity in how low and how large a ship rides, which is
- * true but not readable — a player looking at twelve hulls cannot tell which
- * one is closest, and that is the whole question the voyage asks. The bands on
- * the water and this list are the same fact told twice, once spatially and
- * once in Hebrew.
- *
- * Sorted by proximity, because a list has to be in some order and alphabetical
- * would be a lie about what the reader is looking for. The captions stay
- * proximity language ("עגינה זמנית") — never a recommendation.
+ * The sea encodes proximity in which ring a ship rides; these rows are the
+ * same three rings — near, middle, far — as a list, with the same pennant on
+ * each ship. Sorted by proximity within a row, because a list has to be in
+ * some order and alphabetical would be a lie about what the reader is looking
+ * for. The captions stay proximity language ("עגינה זמנית") — never a
+ * recommendation.
  */
-export default function NearbyShips({ ships, compact = false, onSelect, caption }: Props) {
+export default function NearbyShips({
+	ships,
+	compact = false,
+	onSelect,
+	selectedId,
+	caption,
+}: Props) {
 	const known = ships
 		.filter((ship) => ship.distance !== null)
 		.sort((a, b) => (a.distance ?? 1) - (b.distance ?? 1));
@@ -68,39 +80,21 @@ export default function NearbyShips({ ships, compact = false, onSelect, caption 
 		.filter((group) => group.ships.length > 0);
 
 	return (
-		<div className={`flex flex-col ${compact ? 'gap-1.5' : 'gap-3'}`}>
+		<div className={`flex flex-col ${compact ? 'gap-1.5' : 'gap-2.5'}`}>
 			{caption ? <p className="text-[13px] opacity-70 m-0 text-center">{caption}</p> : null}
 			{groups.map((group) => (
-				<div key={group.band} className="flex flex-wrap items-center justify-center gap-2">
-					<span className="text-[13px] opacity-70 shrink-0">{BAND_TITLE[group.band]}:</span>
-					{group.ships.map((ship) => {
-						const className =
-							'inline-flex items-center gap-1.5 rounded-full border border-[rgba(94,223,255,0.28)] bg-[rgba(6,24,44,0.6)] px-2.5 py-1 text-[13px]';
-						const dot = (
-							<span
-								className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
-								style={{ background: ship.color }}
-								aria-hidden="true"
-							/>
-						);
-
-						return onSelect ? (
-							<button
-								key={ship.partyId}
-								type="button"
-								className={`${className} cursor-pointer hover:border-[rgba(94,223,255,0.7)]`}
-								onClick={() => onSelect(ship.partyId)}
-							>
-								{dot}
-								{ship.name}
-							</button>
-						) : (
-							<span key={ship.partyId} className={className}>
-								{dot}
-								{ship.name}
-							</span>
-						);
-					})}
+				<div key={group.band} className="ship-row">
+					<span className="ship-row__band">{BAND_TITLE[group.band]}:</span>
+					{group.ships.map((ship) => (
+						<ShipTag
+							key={ship.partyId}
+							name={ship.name}
+							color={ship.color}
+							lit={selectedId === ship.partyId}
+							ariaLabel={`${ship.name} — ${BAND_WORD[group.band]}`}
+							onSelect={onSelect ? () => onSelect(ship.partyId) : undefined}
+						/>
+					))}
 				</div>
 			))}
 		</div>
