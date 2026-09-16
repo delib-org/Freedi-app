@@ -333,12 +333,16 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 				{/* Names last, over every hull including the player's own — a ship's
 				    name was disappearing behind the boat the player is sitting in. */}
 				<g className="sea-names">
-					{placed.map(({ ship, place, lit }) => (
+					{placed.map(({ ship, place, height, lit }) => (
 						<text
 							key={ship.partyId}
 							className={`sea-ship__name ${lit || hovered === ship.partyId ? 'sea-ship__name--lit' : ''}`}
 							x={place.x}
-							y={place.y + 26}
+							/* Above the masthead, not under the keel: below the hull the name
+							   lands on the water the next ship is sailing in, and on the
+							   ship itself once two of them overlap. Over the mast there is
+							   sky. */
+							y={place.y - height * 0.93 - 10}
 							textAnchor="middle"
 						>
 							{ship.name}
