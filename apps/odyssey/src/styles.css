@@ -63,9 +63,16 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 84px 20px 48px;
+  /* The bar is fixed, so pages clear it by padding alone — and it grows by a
+     row when the voyage strip is up. VoyageProgress sets the flag while it
+     is mounted (admin and the pre-journey intro have no strip). */
   /* Let empty page areas pass pointer events through to the sea stage;
      interactive elements re-enable themselves below. */
   pointer-events: none;
+}
+
+:root[data-voyage-strip='on'] .page {
+  padding-top: 118px;
 }
 
 .page a,
@@ -257,12 +264,104 @@ textarea:focus, input:focus, select:focus {
   left: 0;
   z-index: 40;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  gap: 6px;
   padding: 10px 20px;
   background: linear-gradient(180deg, rgba(4, 18, 34, 0.95), rgba(4, 18, 34, 0.75));
   border-bottom: 1px solid rgba(232, 185, 88, 0.5);
+}
+
+.topnav__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ====================== THE VOYAGE STRIP ======================
+   Where am I, and what have I finished? The legs of the journey in
+   order, under the brand: ✓ behind you, gold where you stand, dimmed
+   ahead. It scrolls sideways on a phone rather than wrapping, so the
+   bar keeps one predictable height for .page to clear.
+   ============================================================== */
+.voyage-steps {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.voyage-steps::-webkit-scrollbar {
+  display: none;
+}
+
+.voyage-steps__item {
+  display: flex;
+  align-items: center;
+}
+
+/* The connector — a hair of rope between one leg and the next. */
+.voyage-steps__item + .voyage-steps__item::before {
+  content: '';
+  width: 10px;
+  height: 1px;
+  background: rgba(232, 185, 88, 0.45);
+  flex: none;
+}
+
+.voyage-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 3px 10px 3px 8px;
+  font-size: 13px;
+  color: #cfe6f5;
+  transition: background 0.15s ease;
+}
+
+a.voyage-step:hover {
+  background: rgba(15, 48, 73, 0.9);
+}
+
+.voyage-step--done {
+  color: var(--cream);
+}
+
+.voyage-step--current {
+  color: var(--navy);
+  background: var(--gold-strong);
+  border-color: var(--gold-strong);
+  font-weight: 700;
+}
+
+.voyage-step--locked {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.voyage-step__mark {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.voyage-step__detail {
+  font-size: 11px;
+  opacity: 0.85;
 }
 
 .vignette {

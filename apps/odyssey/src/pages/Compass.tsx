@@ -6,8 +6,8 @@ import { useGame } from '../state/GameContext';
 import NoGameYet from '../components/NoGameYet';
 import { useMode } from '../lib/mode';
 import { stageBus } from '../lib/stageBus';
-
-const TOP_VALUES = 3;
+// One cap, read by the compass and by the strip that reports it as a lit wind.
+import { TOP_VALUES } from '../lib/voyageSteps';
 
 /**
  * Inspiration chips are deliberately uncapped.

@@ -4,8 +4,9 @@ import { logOut, useUser } from '../lib/user';
 import { useGame } from '../state/GameContext';
 import { isGameAdmin } from '../lib/game';
 import DigestSettings from './DigestSettings';
+import VoyageProgress from './VoyageProgress';
 
-/** Fixed top bar: brand, stage indicator, user menu. */
+/** Fixed top bar: brand, stage indicator, the voyage strip, user menu. */
 export default function GameChrome({ stage }: { stage?: string }) {
 	const { user } = useUser();
 	const { content, text } = useGame();
@@ -16,46 +17,49 @@ export default function GameChrome({ stage }: { stage?: string }) {
 
 	return (
 		<nav className="topnav" dir="rtl">
-			<div className="flex items-center gap-3">
-				<span aria-hidden="true" className="text-xl">
-					⚓
-				</span>
-				<div>
-					<div className="font-bold text-[15px] text-[var(--cream)]">{text('gameTitle')}</div>
-					{stage ? <div className="text-[12px] opacity-75">{stage}</div> : null}
+			<div className="topnav__bar">
+				<div className="flex items-center gap-3">
+					<span aria-hidden="true" className="text-xl">
+						⚓
+					</span>
+					<div>
+						<div className="font-bold text-[15px] text-[var(--cream)]">{text('gameTitle')}</div>
+						{stage ? <div className="text-[12px] opacity-75">{stage}</div> : null}
+					</div>
+				</div>
+				<div className="flex items-center gap-2">
+					{user ? (
+						<>
+							<button
+								type="button"
+								className="btn-outline !py-1.5 !px-3 !text-[13px]"
+								onClick={() => setDigestOpen(true)}
+								aria-haspopup="dialog"
+								title="סיפור המסע שלכם למייל"
+							>
+								📬 <span className="hidden sm:inline">מייל</span>
+							</button>
+							{admin ? (
+								<Link className="btn-outline !py-1.5 !px-3 !text-[13px]" to="/admin">
+									ניהול
+								</Link>
+							) : null}
+							<span className="text-[13px] opacity-85 hidden sm:inline">
+								{/* An anonymous sailor has neither, and rendered as empty space. */}
+								{user.isAnonymous ? 'ללא חשבון' : (user.displayName ?? user.email)}
+							</span>
+							<button
+								type="button"
+								className="btn-outline !py-1.5 !px-3 !text-[13px]"
+								onClick={() => void logOut()}
+							>
+								יציאה
+							</button>
+						</>
+					) : null}
 				</div>
 			</div>
-			<div className="flex items-center gap-2">
-				{user ? (
-					<>
-						<button
-							type="button"
-							className="btn-outline !py-1.5 !px-3 !text-[13px]"
-							onClick={() => setDigestOpen(true)}
-							aria-haspopup="dialog"
-							title="סיפור המסע שלכם למייל"
-						>
-							📬 <span className="hidden sm:inline">מייל</span>
-						</button>
-						{admin ? (
-							<Link className="btn-outline !py-1.5 !px-3 !text-[13px]" to="/admin">
-								ניהול
-							</Link>
-						) : null}
-						<span className="text-[13px] opacity-85 hidden sm:inline">
-							{/* An anonymous sailor has neither, and rendered as empty space. */}
-							{user.isAnonymous ? 'ללא חשבון' : (user.displayName ?? user.email)}
-						</span>
-						<button
-							type="button"
-							className="btn-outline !py-1.5 !px-3 !text-[13px]"
-							onClick={() => void logOut()}
-						>
-							יציאה
-						</button>
-					</>
-				) : null}
-			</div>
+			<VoyageProgress />
 			{user && digestOpen ? (
 				<div
 					className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 pt-16"
