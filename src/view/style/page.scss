@@ -15,12 +15,17 @@
 		&__mini {
 			position: absolute;
 			inset: 0 0 auto 0;
-			height: 2.75rem; // 44px — valid touch target
+			// Scrolled state: the question's words and nothing else. The bar is
+			// one line tall; the 44px touch target comes from the overlay below,
+			// which costs no layout height.
+			min-height: 1.3rem;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			background-color: var(--header-question, #123def);
-			color: var(--question-text, #fff);
+			padding-block: 0.25rem;
+			background-color: var(--tone-lilac, var(--header-question));
+			color: var(--tone-lilac-ink, var(--question-text));
+			border-radius: 0 0 var(--radius-sheet, 28px) var(--radius-sheet, 28px);
 			opacity: 0;
 			pointer-events: none;
 			border: none;
@@ -32,10 +37,21 @@
 				outline-offset: -3px;
 			}
 
+			// Invisible 44px tap target, so the thin bar still meets WCAG 2.5.5.
+			&::after {
+				content: '';
+				position: absolute;
+				inset-inline: 0;
+				inset-block: 50%;
+				min-height: var(--tap-min, 44px);
+				transform: translateY(-50%);
+			}
+
 			&__title {
-				font-size: 0.9rem;
+				font-size: 1.1rem;
 				font-weight: 600;
-				padding: 0.5rem 1rem;
+				line-height: 1.2;
+				padding-inline: 1rem;
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
@@ -47,7 +63,7 @@
 		// actually gains the space; the slim mini bar takes its place.
 		// display:none is a one-shot layout change; only opacity animates.
 		&--minimized {
-			@media screen and (max-width: 600px) {
+			@media screen and (max-width: 1023px) {
 				.page__header__full {
 					display: none;
 				}

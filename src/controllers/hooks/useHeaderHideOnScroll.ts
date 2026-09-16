@@ -1,6 +1,6 @@
 import { type RefObject, useEffect, useRef } from 'react';
 
-const MOBILE_BREAKPOINT = '(max-width: 600px)';
+const MOBILE_BREAKPOINT = '(max-width: 1023px)';
 const SCROLL_THRESHOLD = 15;
 const MIN_SCROLL_TOP = 60;
 const COOLDOWN_MS = 350;

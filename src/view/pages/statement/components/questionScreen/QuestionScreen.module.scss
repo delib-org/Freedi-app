@@ -787,3 +787,12 @@
 		transform: rotate(360deg);
 	}
 }
+
+// Phones and tablets carry one bottom control — the floating nav, whose "+"
+// opens this same sheet (see useAnswerCompose). The button itself is for
+// desktop, where there is no floating nav.
+@media (max-width: 1023px) {
+	.fab {
+		display: none;
+	}
+}

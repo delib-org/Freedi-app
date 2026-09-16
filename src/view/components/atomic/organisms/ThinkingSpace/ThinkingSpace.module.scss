@@ -397,3 +397,12 @@
 .space .space__navItem--active {
 	color: var(--space-paper);
 }
+
+// One control at the bottom on phones: the floating nav. The "Taking shape"
+// board is reached from the question's own tabs instead of a second floating
+// button competing with it.
+@media (max-width: 1023px) {
+	.space__boardToggle {
+		display: none;
+	}
+}
