@@ -1,198 +1,188 @@
-import { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router';
+import { useEffect, useMemo, useState } from 'react';
+import { NavigationType, useLocation, useNavigationType } from 'react-router';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 
+/**
+ * Level transitions (WizCol slice 7).
+ *
+ * Three levels: tabs (home / inbox / me) → question → map. Going deeper pushes
+ * (the incoming screen slides in from the reading-forward side), going up pops
+ * (the incoming screen rises from underneath). The direction is derived from
+ * React Router — the paths' depth and the navigation type — never from a
+ * mirrored state field. Only transform and opacity animate, and the class is
+ * dropped once the animation has run so `will-change` does not linger.
+ *
+ * Each level is a different route element under a different layout (Home,
+ * ProtectedLayout, the profile layout), so the leaving screen unmounts the
+ * moment the location changes; only the incoming screen animates.
+ */
+
+export type NavigationLevel = 0 | 1 | 2;
+export type LevelDirection = 'push' | 'pop' | 'none';
+export type LevelNavigationType = `${NavigationType}`;
+
+/** --level-duration (320ms) plus a frame of slack before the class is removed. */
+export const LEVEL_TRANSITION_MS = 360;
+
+const MAP_SCREENS = new Set([
+	'mind-map',
+	'agreement-map',
+	'polarization-index',
+	'sub-questions-map',
+	'cluster-board',
+]);
+const STATEMENT_PATH = /^\/(statement|stage|statement-screen)\/([^/?#]+)(?:\/([^/?#]+))?/;
+
+export function statementIdFromPath(pathname: string | null | undefined): string | undefined {
+	const match = pathname?.match(STATEMENT_PATH);
+
+	return match ? decodeURIComponent(match[2]) : undefined;
+}
+
+/** 0 = tab level (home, inbox, me), 1 = a question, 2 = a full-screen map. */
+export function getNavigationLevel(pathname: string): NavigationLevel {
+	if (/^\/map(\/|$)/.test(pathname)) return 2;
+	const match = pathname.match(STATEMENT_PATH);
+	if (match) return match[3] && MAP_SCREENS.has(match[3]) ? 2 : 1;
+	if (/^\/(home|my)(\/|$)/.test(pathname) || pathname === '/') return 0;
+
+	return 1;
+}
+
+export interface LevelTransitionInput {
+	fromPath: string | null;
+	toPath: string;
+	navigationType: LevelNavigationType;
+	/** The destination statement is the parent of the one being left. */
+	toIsParentOfFrom?: boolean;
+}
+
+export function resolveLevelTransition({
+	fromPath,
+	toPath,
+	navigationType,
+	toIsParentOfFrom = false,
+}: LevelTransitionInput): LevelDirection {
+	if (!fromPath || fromPath === toPath) return 'none';
+	const from = getNavigationLevel(fromPath);
+	const to = getNavigationLevel(toPath);
+	if (to > from) return 'push';
+	if (to < from) return 'pop';
+	if (to === 0) return 'none';
+
+	const fromId = statementIdFromPath(fromPath);
+	const toId = statementIdFromPath(toPath);
+	if (!fromId || !toId || fromId === toId) return 'none';
+	if (navigationType === NavigationType.Pop || toIsParentOfFrom) return 'pop';
+
+	return 'push';
+}
+
+export function levelTransitionClass(direction: LevelDirection, dir: 'ltr' | 'rtl'): string {
+	if (direction === 'none') return '';
+
+	return `level-transition level-transition--${direction} level-transition--${dir}`;
+}
+
+// The path the person was on before the current location. Screens mount and
+// unmount per level, so this has to outlive any one component. The first
+// component that renders a location captures its origin; every other one
+// rendering the same location reads the same answer.
+let lastPathname: string | null = null;
+let captured: { key: string; fromPath: string | null } | null = null;
+
+function originFor(locationKey: string): string | null {
+	if (captured?.key !== locationKey) captured = { key: locationKey, fromPath: lastPathname };
+
+	return captured.fromPath;
+}
+
+/** Test-only: forget the navigation history. */
+export function resetLevelTransitionHistory(): void {
+	lastPathname = null;
+	captured = null;
+}
+
+interface LevelTransitionResult {
+	direction: LevelDirection;
+	className: string;
+	fromPath: string | null;
+}
+
+function useLevelTransitionFor(toIsParentOfFrom = false): LevelTransitionResult {
+	const location = useLocation();
+	const navigationType = useNavigationType();
+	const { dir } = useTranslation();
+	const fromPath = originFor(location.key);
+	const direction = useMemo(
+		() =>
+			resolveLevelTransition({
+				fromPath,
+				toPath: location.pathname,
+				navigationType,
+				toIsParentOfFrom,
+			}),
+		// Resolved once per location, so a late store update cannot flip the
+		// direction halfway through the animation.
+		[location.key],
+	);
+	const [finishedKey, setFinishedKey] = useState<string | null>(null);
+
+	useEffect(() => {
+		lastPathname = location.pathname;
+	}, [location.key, location.pathname]);
+
+	useEffect(() => {
+		if (direction === 'none') return;
+		const timer = window.setTimeout(() => setFinishedKey(location.key), LEVEL_TRANSITION_MS);
+
+		return () => window.clearTimeout(timer);
+	}, [direction, location.key]);
+
+	const running = direction !== 'none' && finishedKey !== location.key;
+
+	return {
+		direction,
+		className: running ? levelTransitionClass(direction, dir === 'rtl' ? 'rtl' : 'ltr') : '',
+		fromPath,
+	};
+}
+
+/** For tab-level and other non-statement screens. */
+export function useLevelTransition(): LevelTransitionResult {
+	return useLevelTransitionFor();
+}
+
+/**
+ * Statement screens. Same return shape as before, so StatementContent keeps
+ * composing `page ${slideInOrOut}`.
+ */
 const useSlideAndSubStatement = (parentId: string | undefined, statementId: string | undefined) => {
 	const location = useLocation();
-	const [toSlide, setToSlide] = useState(false);
-	const [toSubStatement, setToSubStatement] = useState(false);
-	const [slideInOrOut, setSlideInOrOut] = useState('slide-out');
-	const [forceUpdate, setForceUpdate] = useState(0);
+	const previousStatement = useAppSelector(
+		statementSelector(statementIdFromPath(originFor(location.key))),
+	);
+	const { direction, className, fromPath } = useLevelTransitionFor(
+		!!statementId && previousStatement?.parentId === statementId,
+	);
 
-	// Use sessionStorage for persistence across component unmounts
-	const getStoredNavigation = () => {
-		const stored = sessionStorage.getItem('navigationState');
-		if (stored) {
-			try {
-				return JSON.parse(stored);
-			} catch {
-				return { previousId: undefined, previousPath: '', count: 0 };
-			}
-		}
+	const isToStage = location.pathname.includes('/stage/');
+	const isFromStage = !!fromPath?.includes('/stage/');
+	const stageZoom =
+		!!statementId && direction !== 'none' && isToStage !== isFromStage
+			? isToStage
+				? 'zoom-in'
+				: 'zoom-out'
+			: '';
 
-		return { previousId: undefined, previousPath: '', count: 0 };
+	return {
+		toSlide: !!className,
+		toSubStatement:
+			direction === 'push' && !!parentId && parentId === statementIdFromPath(fromPath),
+		slideInOrOut: stageZoom && className ? stageZoom : className,
 	};
-
-	const setStoredNavigation = (
-		previousId: string | undefined,
-		previousPath: string,
-		count: number,
-	) => {
-		sessionStorage.setItem('navigationState', JSON.stringify({ previousId, previousPath, count }));
-	};
-
-	// Initialize from storage
-	const storedNav = getStoredNavigation();
-	const previousStatementIdRef = useRef<string | undefined>(storedNav.previousId);
-	const previousPathRef = useRef<string>(storedNav.previousPath);
-	const navigationCountRef = useRef<number>(storedNav.count);
-
-	// Track if this is a fresh mount with a navigation pending
-	const hasMountedRef = useRef(false);
-
-	// Get both current and previous statements from Redux store
-	const currentStatement = useAppSelector(statementSelector(statementId));
-	const previousStatement = useAppSelector(statementSelector(previousStatementIdRef.current));
-
-	// Force re-check when statements load
-	useEffect(() => {
-		if (statementId && !currentStatement) {
-			// Statement not loaded yet, try again in a moment
-			const timer = setTimeout(() => {
-				setForceUpdate((prev) => prev + 1);
-			}, 100);
-
-			return () => clearTimeout(timer);
-		}
-	}, [statementId, currentStatement]);
-
-	useEffect(() => {
-		// Check if component just mounted
-		const justMounted = !hasMountedRef.current;
-		hasMountedRef.current = true;
-
-		// Track unique navigations
-		const currentNavKey = `${location.pathname}-${statementId}`;
-		const previousNavKey = `${previousPathRef.current}-${previousStatementIdRef.current}`;
-		const isNewNavigation = currentNavKey !== previousNavKey;
-
-		// Skip only if same navigation AND not just mounted with stored state
-		if (!isNewNavigation && !justMounted) {
-			return;
-		}
-
-		// If just mounted but we have stored navigation state, treat it as a navigation
-		if (
-			justMounted &&
-			previousStatementIdRef.current &&
-			statementId !== previousStatementIdRef.current
-		) {
-			// Navigation will be handled below
-		}
-
-		// Increment navigation counter
-		navigationCountRef.current++;
-
-		// Check special routes
-		const isToStage = location.pathname.includes('/stage/');
-		const isFromStage = previousPathRef.current.includes('/stage/');
-		const isFromHome =
-			previousPathRef.current.includes('/home') ||
-			previousPathRef.current === '/' ||
-			previousPathRef.current === '';
-
-		// Initial load
-		if (navigationCountRef.current === 1 && !previousStatementIdRef.current) {
-			// Animate on initial load if we're on a statement
-			if (statementId) {
-				setToSlide(true);
-				setSlideInOrOut('slide-out');
-			}
-			previousStatementIdRef.current = statementId;
-			previousPathRef.current = location.pathname;
-
-			return;
-		}
-
-		// Skip if not on a statement page
-		if (!statementId) {
-			previousStatementIdRef.current = undefined;
-			previousPathRef.current = location.pathname;
-
-			return;
-		}
-
-		let animationType = 'slide-out'; // default
-		let shouldAnimate = true;
-
-		// Priority 1: Stage navigation
-		if (isToStage && !isFromStage) {
-			animationType = 'zoom-in';
-		} else if (isFromStage && !isToStage) {
-			animationType = 'zoom-out';
-		}
-		// Priority 2: From home
-		else if (isFromHome) {
-			animationType = 'slide-out';
-		}
-		// Priority 3: Statement to statement navigation
-		else if (previousStatementIdRef.current !== statementId) {
-			// First try using the actual statement data if available
-			if (currentStatement && previousStatement) {
-				// Current is child of previous (going deeper)
-				if (currentStatement.parentId === previousStatement.statementId) {
-					animationType = 'slide-out';
-				}
-				// Current is parent of previous (going back up)
-				else if (previousStatement.parentId === currentStatement.statementId) {
-					animationType = 'slide-in';
-				}
-				// Check if they share the same parent (sibling navigation)
-				else if (
-					currentStatement.parentId === previousStatement.parentId &&
-					currentStatement.parentId
-				) {
-					animationType = 'slide-out';
-				}
-				// Unrelated statements
-				else {
-					animationType = 'slide-out';
-				}
-			}
-			// Try using the parentId passed to the hook
-			else if (parentId && previousStatementIdRef.current) {
-				if (parentId === previousStatementIdRef.current) {
-					animationType = 'slide-out';
-				} else {
-					animationType = 'slide-out';
-				}
-			}
-			// Always animate if we're changing statements
-			else {
-				animationType = 'slide-out';
-			}
-		}
-		// Priority 4: Same statement, different view
-		else if (previousStatementIdRef.current === statementId) {
-			// Same statement but different path (like chat to vote)
-			if (previousPathRef.current !== location.pathname) {
-				shouldAnimate = false;
-			} else {
-				shouldAnimate = false;
-			}
-		}
-
-		// Apply animation
-		if (shouldAnimate) {
-			// Directly set the animation state
-			setToSlide(true);
-			setSlideInOrOut(animationType);
-			setToSubStatement(
-				animationType === 'slide-out' &&
-					currentStatement?.parentId === previousStatementIdRef.current,
-			);
-		} else {
-			setToSlide(false);
-		}
-
-		// Update refs and storage for next navigation
-		previousStatementIdRef.current = statementId;
-		previousPathRef.current = location.pathname;
-		setStoredNavigation(statementId, location.pathname, navigationCountRef.current);
-	}, [statementId, location.pathname, currentStatement, previousStatement, forceUpdate]);
-
-	return { toSlide, toSubStatement, slideInOrOut };
 };
 
 export default useSlideAndSubStatement;

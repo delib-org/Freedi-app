@@ -1,4 +1,7 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
+import clsx from 'clsx';
+import { TIME } from '@/constants/common';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './Toast.module.scss';
 import X from '@/assets/icons/x.svg?react';
 
@@ -10,35 +13,48 @@ interface Props {
 	setShow: (show: boolean) => void;
 }
 
+/** A plain notice leaves on its own; a toast carrying actions waits for one. */
+export const TOAST_DURATION_MS = 3.5 * TIME.SECOND;
+
+/**
+ * Dark pill above the floating bottom nav (WizCol design). The type is carried
+ * by a small leading dot, not by repainting the whole pill.
+ */
 const Toast: FC<Props> = ({ text, type, show, setShow, children }) => {
+	const { t } = useTranslation();
+
+	useEffect(() => {
+		if (!show || children) return;
+		const timer = window.setTimeout(() => setShow(false), TOAST_DURATION_MS);
+
+		return () => window.clearTimeout(timer);
+	}, [show, children, setShow]);
+
 	if (!show) return null;
 
 	return (
-		<div className={styles.toast} style={{ backgroundColor: getToastColor(type) }}>
-			<p className={styles.toast__text}> {text}</p>
-			{children && <div className={styles.toast__children}>{children}</div>}
-			{!children && (
-				<div className={styles.toast__close}>
-					<button className={styles.toast__close__x} onClick={() => setShow(false)}>
-						<X />
+		<div
+			className={clsx(styles.toast, styles[`toast--${type}`])}
+			role={type === 'error' ? 'alert' : 'status'}
+			data-testid="toast"
+		>
+			<div className={styles.toast__row}>
+				<span className={styles.toast__dot} aria-hidden="true" />
+				<p className={styles.toast__text}>{text}</p>
+				{!children && (
+					<button
+						type="button"
+						className={styles.toast__close}
+						onClick={() => setShow(false)}
+						aria-label={t('Close')}
+					>
+						<X aria-hidden="true" />
 					</button>
-				</div>
-			)}
+				)}
+			</div>
+			{children && <div className={styles.toast__children}>{children}</div>}
 		</div>
 	);
 };
 
 export default Toast;
-
-function getToastColor(type: 'error' | 'success' | 'message') {
-	switch (type) {
-		case 'error':
-			return '#E8749E';
-		case 'success':
-			return '#6FC5BE';
-		case 'message':
-			return '#6DB0F9';
-		default:
-			return '#6FC5BE';
-	}
-}

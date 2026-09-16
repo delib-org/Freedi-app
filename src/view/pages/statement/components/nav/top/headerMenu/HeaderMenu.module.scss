@@ -19,3 +19,18 @@
     color: white;
   }
 }
+
+.headerMenu--tint {
+  min-width: 0;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.menuLanguage {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min, 44px);
+  padding-inline: 12px;
+}

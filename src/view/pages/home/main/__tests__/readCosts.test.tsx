@@ -21,13 +21,16 @@ const mockState = {
 	statements: { statements: [], statementSubscription: mockSubscriptions },
 	creator: { creator: { uid: 'u' } },
 };
-jest.mock('react-router', () => ({ useNavigate: () => jest.fn() }));
+jest.mock('react-router', () => ({
+	useNavigate: () => jest.fn(),
+	useSearchParams: () => [new URLSearchParams(), jest.fn()],
+}));
 jest.mock('react-redux', () => ({ useDispatch: () => jest.fn() }));
 jest.mock('@/controllers/hooks/reduxHooks', () => ({
 	useAppSelector: (selector: (state: typeof mockState) => unknown) => selector(mockState),
 }));
 jest.mock('@/controllers/hooks/useTranslation', () => ({
-	useTranslation: () => ({ t: (key: string) => key }),
+	useTranslation: () => ({ t: (key: string) => key, currentLanguage: 'en' }),
 }));
 jest.mock('@/redux/statements/newStatementSlice', () => ({
 	selectNewStatementShowModal: () => false,
@@ -38,11 +41,15 @@ jest.mock('@/controllers/hooks/useHomeStatementOverlay', () => ({
 jest.mock('../../hooks/useLazyLoadHomeSubscriptions', () => ({
 	useLazyLoadHomeSubscriptions: () => ({}),
 }));
-jest.mock('@/view/components/atomic/organisms/ThinkingSpace/ConversationHome', () => ({
+jest.mock('../HomeOverview', () => ({
 	__esModule: true,
 	default: () => null,
 }));
-jest.mock('../../../statement/components/newStatement/NewStatement', () => ({
+jest.mock('../../inbox/HomeInbox', () => ({
+	__esModule: true,
+	default: () => null,
+}));
+jest.mock('../../pin/PinJoinSheet', () => ({
 	__esModule: true,
 	default: () => null,
 }));

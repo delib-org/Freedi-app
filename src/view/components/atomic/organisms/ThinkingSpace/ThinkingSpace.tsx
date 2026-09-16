@@ -1,5 +1,5 @@
 import React, { ReactNode, useId, useState } from 'react';
-import { ArrowUpRight, ChevronDown, Home, Lightbulb, Menu, Plus, X } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, Home, Lightbulb, Plus, X } from 'lucide-react';
 import styles from './ThinkingSpace.module.scss';
 import UnreadBadge from '@/view/components/unreadBadge/UnreadBadge';
 
@@ -21,6 +21,10 @@ interface ThinkingSpaceProps {
 	aside?: ReactNode;
 	asideLabel?: string;
 	tools?: ReactNode;
+	/** Floating bottom navigation for phones (< 1024px); the sidebar leads on desktop. */
+	bottomNav?: ReactNode;
+	/** Level-transition classes for the incoming screen (see pageAnimation.scss). */
+	transitionClassName?: string;
 	t: Translate;
 	dir?: 'ltr' | 'rtl';
 }
@@ -37,75 +41,44 @@ export default function ThinkingSpace({
 	aside,
 	asideLabel,
 	tools,
+	bottomNav,
+	transitionClassName,
 	t,
 	dir = 'ltr',
 }: ThinkingSpaceProps) {
-	const [navigationOpen, setNavigationOpen] = useState(false);
 	const [ideasOpen, setIdeasOpen] = useState(false);
-	const navId = useId();
 	const asideId = useId();
 	const resolvedAsideLabel = asideLabel || t('Taking shape');
-	const closeAnd = (action: () => void): void => {
-		action();
-		setNavigationOpen(false);
-	};
+	const rootClassName = [
+		'thinking-space',
+		styles.space,
+		bottomNav ? styles['space--withNav'] : '',
+		transitionClassName ?? '',
+	]
+		.filter(Boolean)
+		.join(' ');
 
 	return (
-		<div className={`thinking-space ${styles.space}`} dir={dir}>
+		<div className={rootClassName} dir={dir}>
 			<a className={styles.space__skip} href="#thinking-content">
 				{t('Skip to conversation')}
 			</a>
-			<div className={styles.space__mobileBar}>
-				<button
-					onClick={() => setNavigationOpen(!navigationOpen)}
-					aria-expanded={navigationOpen}
-					aria-controls={navId}
-					aria-label={t('Your spaces')}
-				>
-					<Menu size={21} />
-				</button>
+			<nav className={styles.space__sidebar} aria-label={t('Your spaces')}>
 				<button className={styles.space__brand} onClick={onHome} aria-label="WizCol">
-					<img src="/brand/wizcol-logo-app.webp" alt="WizCol" width="360" height="240" />
-				</button>
-				{aside ? (
-					<button
-						onClick={() => setIdeasOpen(!ideasOpen)}
-						aria-expanded={ideasOpen}
-						aria-controls={asideId}
-						aria-label={resolvedAsideLabel}
-					>
-						<Lightbulb size={21} />
-					</button>
-				) : (
-					<button onClick={onCreate} aria-label={t('Start with a question.')}>
-						<Plus size={21} />
-					</button>
-				)}
-			</div>
-			<nav
-				id={navId}
-				className={`${styles.space__sidebar} ${navigationOpen ? styles['space__sidebar--open'] : ''}`}
-				aria-label={t('Your spaces')}
-			>
-				<button
-					className={styles.space__brand}
-					onClick={() => closeAnd(onHome)}
-					aria-label="WizCol"
-				>
 					<img src="/brand/wizcol-logo-app.webp" alt="" width="360" height="240" />
 				</button>
 				<p className={styles.space__tagline}>{t('Good things start with us.')}</p>
 				<button
 					className={`${styles.space__navItem} ${!activeId ? styles['space__navItem--active'] : ''}`}
 					aria-current={!activeId ? 'page' : undefined}
-					onClick={() => closeAnd(onHome)}
+					onClick={onHome}
 				>
 					<Home size={19} />
 					{t('Your conversations')}
 				</button>
 				<div className={styles.space__sectionLabel}>
 					<span>{t('YOUR SPACES')}</span>
-					<button onClick={() => closeAnd(onCreate)} aria-label={t('Start with a question.')}>
+					<button onClick={onCreate} aria-label={t('Start with a question.')}>
 						<Plus size={17} />
 					</button>
 				</div>
@@ -116,7 +89,7 @@ export default function ThinkingSpace({
 							title={space.title}
 							className={`${styles.space__navItem} ${space.id === activeId ? styles['space__navItem--active'] : ''}`}
 							aria-current={space.id === activeId ? 'page' : undefined}
-							onClick={() => closeAnd(() => onOpen(space.id))}
+							onClick={() => onOpen(space.id)}
 						>
 							<span className={styles.space__spaceIcon} data-tone={index % 3}>
 								{space.title.charAt(0).toUpperCase()}
@@ -133,7 +106,7 @@ export default function ThinkingSpace({
 						<p className={styles.space__empty}>{t('Your shared spaces will live here.')}</p>
 					)}
 				</div>
-				<button className={styles.space__create} onClick={() => closeAnd(onCreate)}>
+				<button className={styles.space__create} onClick={onCreate}>
 					<Plus size={18} />
 					{t('Start with a question.')}
 				</button>
@@ -148,7 +121,7 @@ export default function ThinkingSpace({
 					</strong>
 					<p>{t('Make room for a different point of view.')}</p>
 				</div>
-				<button className={styles.space__profile} onClick={() => closeAnd(onProfile)}>
+				<button className={styles.space__profile} onClick={onProfile}>
 					<span className={styles.space__avatar}>{userName.slice(0, 1).toUpperCase() || '?'}</span>
 					<span>
 						<strong>{userName || t('Your profile')}</strong>
@@ -170,10 +143,12 @@ export default function ThinkingSpace({
 								onClick={() => setIdeasOpen(!ideasOpen)}
 								aria-expanded={ideasOpen}
 								aria-controls={asideId}
+								aria-label={resolvedAsideLabel}
+								data-testid="thinking-space-aside-toggle"
 							>
-								<Lightbulb size={18} />
-								{resolvedAsideLabel}
-								<ChevronDown size={16} />
+								<Lightbulb size={18} aria-hidden="true" />
+								<span className={styles.space__boardToggleLabel}>{resolvedAsideLabel}</span>
+								<ChevronDown size={16} aria-hidden="true" />
 							</button>
 							<aside
 								onClick={(event) => {
@@ -196,6 +171,7 @@ export default function ThinkingSpace({
 					)}
 				</div>
 			</div>
+			{bottomNav}
 		</div>
 	);
 }

@@ -15,7 +15,8 @@ import { agreementCandidates, proposalEvidence } from './agreementData';
 import styles from './Agreement.module.scss';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
 
-export const AGREEMENT_VIEWS = ['overview', 'themes', 'covenant', 'summary', 'maps'];
+/** Views AgreementHub still renders full-width: the covenant (under Results) and themes (under Maps). */
+export const AGREEMENT_VIEWS = ['covenant', 'themes'];
 const selectGrouped = createGroupedViewSelector(statementsSelector);
 const percent = (n?: number): string => (n === undefined ? '—' : `${Math.round(n * 100)}%`);
 
@@ -149,7 +150,7 @@ export default function AgreementHub({
 					</p>
 					{candidates.slice(0, 2).map(card)}
 					<div className={styles.journey__actions}>
-						<button onClick={() => go('overview')}>{t('Open agreement overview')}</button>
+						<button onClick={() => go('results')}>{t('Open agreement overview')}</button>
 						<button onClick={() => go('covenant')}>{t('Our covenant')}</button>
 						<button
 							onClick={() =>
@@ -158,7 +159,7 @@ export default function AgreementHub({
 						>
 							{t('Themes & synthesis')}
 						</button>
-						<button onClick={() => go('summary')}>{t('Summary')}</button>
+						<button onClick={() => go('results')}>{t('Summary')}</button>
 						<button onClick={() => go('maps')}>{t('Maps')}</button>
 					</div>
 				</>
@@ -168,7 +169,7 @@ export default function AgreementHub({
 						<>
 							{statement.parentId && statement.parentId !== 'top' && (
 								<nav aria-label={t('Question path')}>
-									<button onClick={() => navigate(`/statement/${statement.parentId}?tab=overview`)}>
+									<button onClick={() => navigate(`/statement/${statement.parentId}?tab=results`)}>
 										← {parent?.statement || t('Parent question')}
 									</button>
 								</nav>
@@ -220,7 +221,7 @@ export default function AgreementHub({
 										<article key={q.statementId} className={styles.journey__card} data-tone="peach">
 											<span className={styles.journey__eyebrow}>{t('Question')}</span>
 											<h3>{q.statement}</h3>
-											<button onClick={() => navigate(`/statement/${q.statementId}?tab=overview`)}>
+											<button onClick={() => navigate(`/statement/${q.statementId}?tab=results`)}>
 												{t('Explore question')} ↗
 											</button>
 										</article>

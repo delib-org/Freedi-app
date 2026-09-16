@@ -1,0 +1,175 @@
+// Question header — lilac card (slice 5). Mobile values from the WizCol v2
+// prototype; desktop keeps the same card inside the ThinkingSpace column.
+
+.header {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding-block-start: 8px;
+	padding-inline: 20px;
+	background: var(--tone-lilac);
+	color: var(--tone-lilac-ink);
+	border-radius: 0 0 var(--radius-sheet, 28px) var(--radius-sheet, 28px);
+
+	&__bar {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		min-height: var(--tap-min, 44px);
+		margin-inline: -8px;
+	}
+
+	&__back {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex: none;
+		min-width: var(--tap-min, 44px);
+		min-height: var(--tap-min, 44px);
+		border: 0;
+		background: transparent;
+		color: inherit;
+		cursor: pointer;
+		border-radius: 50%;
+
+		&:focus-visible {
+			outline: 2px solid var(--tone-lilac-ink);
+			outline-offset: -2px;
+		}
+	}
+
+	&__backIcon {
+		width: 20px;
+		height: 20px;
+		color: currentColor;
+
+		// The shared chevron points left; in RTL "back" points right.
+		:global([dir='rtl']) & {
+			transform: scaleX(-1);
+		}
+	}
+
+	&__space {
+		flex: 1;
+		min-width: 0;
+		font-size: 12.5px;
+		opacity: 0.75;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&__pill {
+		flex: none;
+		min-height: 36px;
+		padding-inline: 12px;
+		border: 0;
+		border-radius: var(--radius-chip, 999px);
+		font: inherit;
+		font-size: 12.5px;
+		white-space: nowrap;
+		cursor: pointer;
+		color: inherit;
+
+		&:focus-visible {
+			outline: 2px solid var(--tone-lilac-ink);
+			outline-offset: 2px;
+		}
+
+		&--glass {
+			background: var(--tone-glass);
+		}
+
+		&--host {
+			background: var(--tone-lilac-ink);
+			color: var(--tone-lilac);
+			font-weight: 600;
+		}
+	}
+
+	&__icon {
+		display: flex;
+		flex: none;
+		color: inherit;
+
+		:global(svg) {
+			color: currentColor;
+		}
+	}
+
+	&__menuRow {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding-inline: 12px;
+		min-height: var(--tap-min, 44px);
+		color: var(--text-body);
+	}
+
+	&__titleButton {
+		display: block;
+		width: 100%;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: inherit;
+		text-align: start;
+		cursor: pointer;
+		font: inherit;
+
+		&:focus-visible {
+			outline: 2px solid var(--tone-lilac-ink);
+			outline-offset: 4px;
+			border-radius: 8px;
+		}
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 21px;
+		font-weight: 600;
+		line-height: 1.35;
+		color: inherit;
+		text-align: start;
+
+		@media (max-width: 600px) {
+			display: -webkit-box;
+			-webkit-line-clamp: 3;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+	}
+
+	&__titleButton--expanded &__title {
+		-webkit-line-clamp: unset;
+	}
+
+	&__titleInput {
+		width: 100%;
+		padding: 4px 8px;
+		border: 1px solid var(--tone-lilac-track);
+		border-radius: 8px;
+		background: var(--card-default);
+		color: var(--text-body);
+		font: inherit;
+	}
+
+	&__funnel {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		padding: 8px 12px;
+		border-radius: 12px;
+		background: var(--tone-glass);
+		font-size: 11.5px;
+	}
+
+	&__stat {
+		flex: none;
+		white-space: nowrap;
+	}
+
+	&__end {
+		height: 4px;
+	}
+}

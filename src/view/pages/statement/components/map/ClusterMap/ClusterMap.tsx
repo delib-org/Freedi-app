@@ -4,6 +4,7 @@ import { useLocation, useParams, useSearchParams } from 'react-router';
 import { StatementType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useLevelTransition } from '@/controllers/hooks/useSlideAndSubStatement';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { isAdmin as isAdminRole } from '@/controllers/general/helpers';
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
@@ -38,6 +39,8 @@ const ClusterMap: FC = () => {
 	const [searchParams] = useSearchParams();
 
 	const isEmbed = searchParams.get('embed') === '1' || location.pathname.endsWith('/embed');
+	// The board is the map level: it pushes in over the question and pops back.
+	const { className: levelClassName } = useLevelTransition();
 
 	const { user, creator } = useAuthentication();
 	const statement = useSelector(statementSelector(statementId));
@@ -131,7 +134,7 @@ const ClusterMap: FC = () => {
 	}
 
 	return (
-		<div className={styles.board} data-map-root>
+		<div className={`${styles.board} ${isEmbed ? '' : levelClassName}`} data-map-root>
 			{!isEmbed && (
 				<header className={styles.toolbar}>
 					<h1 className={styles.title}>{statement.statement}</h1>

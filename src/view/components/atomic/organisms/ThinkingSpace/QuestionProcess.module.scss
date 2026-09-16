@@ -48,3 +48,50 @@
 		border-radius: 20px;
 	}
 }
+
+.process--card {
+	gap: 8px;
+	padding: 16px 18px;
+	border-radius: var(--radius-card, 22px);
+	background: var(--card-default);
+	border: 1px solid var(--border-subtle);
+	color: var(--text-body);
+	h2 {
+		margin: 0;
+		font-size: 15px;
+		font-weight: 600;
+		color: var(--text-title);
+	}
+	> p {
+		margin: 0;
+		font-size: 13.5px;
+		line-height: 1.6;
+	}
+	> button {
+		min-height: 36px;
+		padding-inline: 14px;
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-button, 24px);
+		background: var(--card-default);
+		color: var(--text-title);
+		font: inherit;
+		font-size: 12px;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	small {
+		font-size: 11px;
+		color: var(--text-meta);
+	}
+	> div:has(> label) {
+		border-color: var(--border-subtle);
+		border-radius: var(--radius-tile, 14px);
+		padding: 12px;
+	}
+}
+.process__head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 8px;
+}

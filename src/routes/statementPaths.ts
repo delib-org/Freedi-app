@@ -8,6 +8,7 @@ import { Screen, SortType } from '@freedi/shared-types';
 
 /** A view of one question. Tab views share the question header; screen views replace it. */
 export type StatementView =
+	| 'background'
 	| 'overview'
 	| 'themes'
 	| 'covenant'
@@ -27,8 +28,8 @@ export type StatementView =
 	| 'sub-questions-map'
 	| 'research';
 
-/** Views rendered inside the question shell, selectable from the segmented control. */
-export const TAB_VIEWS = ['chat', 'options', 'questions'] as const;
+/** Views rendered inside the question shell, selectable from the question tab bar. */
+export const TAB_VIEWS = ['background', 'chat', 'options', 'questions', 'results', 'maps'] as const;
 export type StatementTabView = (typeof TAB_VIEWS)[number];
 
 /** Views that take over the whole page (no segmented control, no brief). */
@@ -46,10 +47,8 @@ export const STATEMENT_VIEWS: readonly StatementView[] = [
 	'themes',
 	'covenant',
 	'summary',
-	'maps',
 	'cluster-board',
 	...TAB_VIEWS,
-	'results',
 	'agreement',
 	'vote',
 	...SCREEN_VIEWS,
@@ -103,16 +102,37 @@ export function isSortType(value: unknown): value is SortType {
 }
 
 /**
- * The tab the segmented control should highlight for a view.
- * `vote` lives on the answers list; screen views and `results` fall back to the
- * question's default tab (what the header showed before the user opened a map).
+ * Retired view names and the view they now open. Results absorbed the old
+ * overview (common ground) and summary tabs; `agreement` is the covenant
+ * sub-view of Results. `covenant` and `themes` stay as sub-view names.
+ */
+export const VIEW_ALIASES: Readonly<Partial<Record<StatementView, StatementView>>> = {
+	overview: 'results',
+	summary: 'results',
+	agreement: 'covenant',
+};
+
+/** The current name for a view (identity for everything that was not retired). */
+export function canonicalView(view: StatementView | undefined): StatementView | undefined {
+	return view ? (VIEW_ALIASES[view] ?? view) : view;
+}
+
+/**
+ * The tab the question tab bar should highlight for a view.
+ * `vote` lives on the answers list, the covenant under Results, themes under
+ * Maps; screen views fall back to the question's default tab.
  */
 export function resolveTabView(
 	view: StatementView | undefined,
 	defaultView: string | undefined,
 ): StatementTabView {
-	if (isTabView(view)) return view;
-	if (view === 'vote') return 'options';
+	const current = canonicalView(view);
+	if (isTabView(current)) return current;
+	if (current === 'vote') return 'options';
+	if (current === 'covenant') return 'results';
+	if (current === 'themes') return 'maps';
+	const fallback = isStatementView(defaultView) ? canonicalView(defaultView) : undefined;
+	if (fallback && fallback !== defaultView) return resolveTabView(fallback, undefined);
 
 	return isTabView(defaultView) ? defaultView : 'chat';
 }
@@ -146,7 +166,7 @@ function joinPath(
 	params: URLSearchParams,
 ): string {
 	const isScreen = view && (isScreenView(view) || view === 'cluster-board');
-	const tab = view === 'agreement' ? 'covenant' : view === 'results' ? 'summary' : view;
+	const tab = canonicalView(view);
 	if (tab && !isScreen) params.set('tab', tab);
 	const search = params.toString();
 	const path = isScreen ? `/statement-screen/${statementId}/${view}` : `/statement/${statementId}`;
@@ -225,6 +245,7 @@ function resolve(pathnameWithSearch: string): LegacyResolution | null {
 	const tab = params.get(TAB_PARAM);
 	if (!view && isStatementView(tab)) view = tab;
 	params.delete(TAB_PARAM);
+	view = canonicalView(view);
 
 	const sort = params.get(SORT_PARAM);
 	if (sort !== null && !isSortType(sort)) params.delete(SORT_PARAM);

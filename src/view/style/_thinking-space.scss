@@ -64,6 +64,9 @@
 		.page__main {
 			padding-inline: 4px;
 		}
+	}
+	// Phones/tablets: the home header is a wordmark + avatar row (HomeHeader).
+	@media (max-width: 1023px) {
 		.homePage__header {
 			padding: 4px 16px;
 			min-height: 48px;
@@ -72,7 +75,7 @@
 			display: none;
 		}
 		.homePage__header__wrapper__icons {
-			width: 100%;
+			flex: 1;
 			justify-content: flex-end;
 		}
 	}
@@ -216,4 +219,39 @@
 	font-style: normal;
 	padding: 20px;
 	min-height: 56px;
+}
+
+// WizCol home switcher (SegmentedControl variant="track"): sunken track,
+// dark active segment, bare counts. Scoped so the question tabs keep their look.
+.thinking-space .segmented-control.segmented-control--track {
+	display: flex;
+	gap: 2px;
+	padding: var(--space-2xs);
+	border-radius: var(--radius-tile);
+	background: var(--bg-sunken);
+	overflow: visible;
+}
+.thinking-space .segmented-control--track .segmented-control__segment {
+	display: flex;
+	flex: 1 1 0;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	min-height: 40px;
+	padding: 0 var(--space-sm);
+	border: 0;
+	border-radius: 11px;
+	background: transparent;
+	color: var(--text-body);
+	font-size: 0.8125rem;
+	font-weight: 600;
+	box-shadow: none;
+}
+.thinking-space .segmented-control--track .segmented-control__segment--active {
+	background: var(--nav-floating-bg);
+	color: var(--nav-floating-ink);
+}
+.thinking-space .segmented-control--track .segmented-control__count {
+	font-size: 0.6875rem;
+	opacity: 0.7;
 }

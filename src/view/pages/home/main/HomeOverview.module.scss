@@ -1,0 +1,368 @@
+// Home (WizCol mobile, slice 6). Mobile-first; centred column on desktop.
+@mixin focus-ring {
+	&:focus-visible {
+		outline: 3px solid var(--accent-violet);
+		outline-offset: 2px;
+	}
+}
+
+.home {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	background: var(--bg-page);
+	color: var(--text-body);
+	font-family: var(--font-ui);
+
+	&__inner {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		width: 100%;
+		max-width: 44rem;
+		margin-inline: auto;
+		padding-block: var(--space-lg) var(--space-xl);
+		padding-inline: 20px;
+	}
+
+	&__greeting {
+		margin: 0;
+		color: var(--text-title);
+		font-family: var(--font-display);
+		font-size: 2rem;
+		font-weight: 300;
+		line-height: 1.15;
+		letter-spacing: -0.01em;
+		overflow-wrap: anywhere;
+	}
+
+	&__notice {
+		margin: 0;
+		padding: 18px;
+		border-radius: var(--radius-card);
+		background: var(--bg-sunken);
+		color: var(--text-body);
+		font-size: 0.875rem;
+		line-height: 1.5;
+	}
+
+	&__lists,
+	&__stack {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	&__toolbar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__spacer {
+		flex: 1;
+	}
+
+	&__list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__empty {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+
+		h2 {
+			margin: 0;
+			color: var(--text-title);
+			font-size: 1.125rem;
+			font-weight: 600;
+		}
+
+		p {
+			margin: 0;
+			color: var(--text-meta);
+			line-height: 1.5;
+		}
+	}
+
+	&__emptyActions {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+}
+
+.search {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: var(--tap-min, 44px);
+	padding-inline: 14px;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-chip, 999px);
+	background: var(--card-default);
+
+	&:focus-within {
+		outline: 3px solid var(--accent-violet);
+		outline-offset: 2px;
+	}
+
+	&__icon {
+		flex: none;
+		color: var(--text-faint);
+	}
+
+	&__input {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		background: transparent;
+		color: var(--text-title);
+		font: inherit;
+		font-size: 0.875rem;
+		outline: none;
+
+		&::placeholder {
+			color: var(--text-faint);
+		}
+
+		&::-webkit-search-cancel-button {
+			appearance: none;
+		}
+	}
+
+	&__clear {
+		min-height: var(--tap-min, 44px);
+		padding-inline: var(--space-2xs);
+		border: 0;
+		background: transparent;
+		color: var(--text-meta);
+		font: inherit;
+		font-size: 0.75rem;
+		cursor: pointer;
+		@include focus-ring;
+	}
+}
+
+.spaceCard {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	width: 100%;
+	padding: 14px var(--space-md);
+	border: 0;
+	border-radius: var(--radius-card);
+	background: var(--tone-lilac);
+	color: var(--tone-lilac-ink);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	@include focus-ring;
+
+	&[data-tone='mint'] {
+		background: var(--tone-mint);
+		color: var(--tone-mint-ink);
+	}
+
+	&[data-tone='yellow'] {
+		background: var(--tone-yellow);
+		color: var(--tone-yellow-ink);
+	}
+
+	&__glyph {
+		display: grid;
+		flex: none;
+		place-items: center;
+		width: 40px;
+		height: 40px;
+		border-radius: var(--radius-tile);
+		background: var(--tone-glass);
+	}
+
+	&__body {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: 3px;
+		min-width: 0;
+	}
+
+	&__name {
+		font-size: 0.9375rem;
+		font-weight: 600;
+		overflow-wrap: anywhere;
+	}
+
+	&__meta {
+		font-size: 0.75rem;
+		opacity: 0.85;
+	}
+}
+
+.questionRow {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	width: 100%;
+	min-height: var(--tap-min, 44px);
+	padding: var(--space-sm) var(--space-2xs);
+	border: 0;
+	border-block-end: 1px solid var(--border-subtle);
+	background: transparent;
+	color: var(--text-body);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	@include focus-ring;
+
+	&__spine {
+		flex: none;
+		width: 6px;
+		height: 36px;
+		border-radius: 3px;
+		background: var(--border-dashed);
+
+		&[data-tone='lilac'] {
+			background: var(--accent-violet);
+		}
+
+		&[data-tone='mint'] {
+			background: var(--score-positive);
+		}
+
+		&[data-tone='yellow'] {
+			background: var(--score-split);
+		}
+	}
+
+	&__body {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	&__title {
+		color: var(--text-title);
+		font-size: 0.875rem;
+		font-weight: 600;
+		line-height: 1.35;
+		overflow-wrap: anywhere;
+	}
+
+	&__meta {
+		color: var(--text-meta);
+		font-size: 0.72rem;
+	}
+}
+
+.hostChip {
+	flex: none;
+	padding: 3px var(--space-xs);
+	border-radius: var(--radius-chip, 999px);
+	background: var(--tone-glass);
+	font-size: 0.66rem;
+	font-weight: 600;
+	white-space: nowrap;
+
+	&--lilac {
+		background: var(--tone-lilac);
+		color: var(--tone-lilac-ink);
+	}
+}
+
+.filterChip {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	min-height: 32px;
+	padding-inline: 10px;
+	border: 0;
+	border-radius: var(--radius-chip, 999px);
+	background: var(--bg-sunken);
+	color: var(--text-body);
+	font: inherit;
+	font-size: 0.72rem;
+	cursor: pointer;
+	@include focus-ring;
+}
+
+.pills {
+	display: flex;
+	gap: var(--space-2xs);
+}
+
+.pill {
+	min-height: 32px;
+	padding: 5px 11px;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-chip, 999px);
+	background: transparent;
+	color: var(--text-body);
+	font: inherit;
+	font-size: 0.72rem;
+	font-weight: 600;
+	cursor: pointer;
+	@include focus-ring;
+
+	&[aria-pressed='true'] {
+		border-color: var(--nav-floating-bg);
+		background: var(--nav-floating-bg);
+		color: var(--nav-floating-ink);
+	}
+}
+
+.newQuestion {
+	display: none;
+	align-items: center;
+	gap: 6px;
+	min-height: 36px;
+	padding-inline: var(--space-sm);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-chip, 999px);
+	background: var(--card-default);
+	color: var(--text-title);
+	font: inherit;
+	font-size: 0.75rem;
+	font-weight: 600;
+	cursor: pointer;
+	@include focus-ring;
+
+	// Phones use the floating nav's + button instead.
+	@media (min-width: 1024px) {
+		display: inline-flex;
+	}
+}
+
+.dashedButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-xs);
+	min-height: 52px;
+	border: 1px dashed var(--border-dashed);
+	border-radius: var(--radius-card);
+	background: transparent;
+	color: var(--text-body);
+	font: inherit;
+	font-size: 0.84rem;
+	cursor: pointer;
+	@include focus-ring;
+}
+
+.primaryButton {
+	min-height: 48px;
+	border: 0;
+	border-radius: var(--radius-button);
+	background: var(--accent-violet);
+	color: var(--accent-violet-ink);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	@include focus-ring;
+}

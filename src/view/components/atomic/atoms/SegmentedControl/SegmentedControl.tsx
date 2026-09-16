@@ -15,6 +15,10 @@ export interface SegmentedControlProps {
 	activeId: string;
 	onChange: (id: string) => void;
 	className?: string;
+	/** 'track' = WizCol home switcher: sunken track, dark active segment, bare counts. */
+	variant?: 'default' | 'track';
+	/** Accessible name of the tab list (defaults to "View switcher"). */
+	ariaLabel?: string;
 }
 
 const SegmentedControl: FC<SegmentedControlProps> = ({
@@ -22,6 +26,8 @@ const SegmentedControl: FC<SegmentedControlProps> = ({
 	activeId,
 	onChange,
 	className,
+	variant = 'default',
+	ariaLabel,
 }) => {
 	const { t } = useTranslation();
 	const tablistRef = useRef<HTMLDivElement>(null);
@@ -66,8 +72,12 @@ const SegmentedControl: FC<SegmentedControlProps> = ({
 		<div
 			ref={tablistRef}
 			role="tablist"
-			aria-label="View switcher"
-			className={clsx('segmented-control', className)}
+			aria-label={ariaLabel ?? 'View switcher'}
+			className={clsx(
+				'segmented-control',
+				variant !== 'default' && `segmented-control--${variant}`,
+				className,
+			)}
 		>
 			{segments.map((segment, index) => {
 				const isActive = segment.id === activeId;
@@ -91,7 +101,9 @@ const SegmentedControl: FC<SegmentedControlProps> = ({
 							ariaLabel={`${segment.unreadCount ?? 0} ${t('unread')}`}
 						/>
 						{segment.count !== undefined && (
-							<span className="segmented-control__count">({segment.count})</span>
+							<span className="segmented-control__count">
+								{variant === 'track' ? segment.count : `(${segment.count})`}
+							</span>
 						)}
 					</button>
 				);

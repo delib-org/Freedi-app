@@ -16,10 +16,14 @@ const signBase =
 export default function QuestionProcess({
 	statement,
 	view,
+	variant = 'page',
 }: {
 	statement: Statement;
 	view: 'overview' | 'summary' | 'covenant';
+	/** `card` = the compact סיכום card inside the Results tab. */
+	variant?: 'page' | 'card';
 }) {
+	const isCard = variant === 'card';
 	const { t } = useTranslation();
 	const [data, setData] = useState<DeliberationStatus>();
 	const [error, setError] = useState('');
@@ -95,8 +99,13 @@ export default function QuestionProcess({
 
 	return (
 		<section
-			className={`${styles.journey__section} ${processStyles.process}`}
-			aria-label={t('From question to agreement')}
+			className={
+				isCard
+					? `${processStyles.process} ${processStyles['process--card']}`
+					: `${styles.journey__section} ${processStyles.process}`
+			}
+			aria-label={isCard ? t('Summary') : t('From question to agreement')}
+			data-testid={isCard ? 'results-summary' : undefined}
 		>
 			{view === 'overview' && (
 				<div className={styles.journey__card} data-tone="yellow">
@@ -140,9 +149,16 @@ export default function QuestionProcess({
 			)}
 			{view === 'summary' && (
 				<>
-					<h2>{t('Summary of agreed proposals')}</h2>
+					<div className={processStyles.process__head}>
+						<h2>{isCard ? t('Summary') : t('Summary of agreed proposals')}</h2>
+						{isCard && !!data?.summaryAt && (
+							<small>{new Date(data.summaryAt).toLocaleString()}</small>
+						)}
+					</div>
 					<p>{data?.summary || t('No summary yet')}</p>
-					{!!data?.summaryAt && <small>{new Date(data.summaryAt).toLocaleString()}</small>}
+					{!isCard && !!data?.summaryAt && (
+						<small>{new Date(data.summaryAt).toLocaleString()}</small>
+					)}
 					{data?.summaryStale && (
 						<p>{t('Agreed proposals have changed since the last summary.')}</p>
 					)}

@@ -394,3 +394,9 @@ $admin-drawer-width: 320px;
 		transition: none;
 	}
 }
+
+// A sheet or modal holds the screen: the drawer's handle (z-index 9001) must
+// not float over it — it covered the sheet's close button.
+body.modal-open .admin-drawer__handle {
+	visibility: hidden;
+}

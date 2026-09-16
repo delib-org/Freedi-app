@@ -1,9 +1,10 @@
-import React, { ReactNode, useMemo } from 'react';
+import React, { ReactNode, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
 import { Statement, StatementType } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useLevelTransition } from '@/controllers/hooks/useSlideAndSubStatement';
 import { topSubscriptionsSelector } from '@/redux/statements/statementsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import {
@@ -13,8 +14,18 @@ import {
 } from '@/redux/statements/newStatementSlice';
 import ThinkingSpace from './ThinkingSpace';
 import EngagementGuide from '../../molecules/EngagementGuide/EngagementGuide';
+import BottomNav from '../BottomNav/BottomNav';
+import {
+	BOTTOM_NAV_PATHS,
+	resolveBottomNavItem,
+	shouldShowBottomNav,
+} from '../BottomNav/bottomNavModel';
+import AskQuestionSheet, { AskSpace } from '@/view/pages/home/askQuestion/AskQuestionSheet';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { relevantNotifications } from '@/utils/engagementNavigation';
+
+/** Statement screens animate their own `.page` (StatementContent), not the shell. */
+const STATEMENT_SCREEN = /^\/(statement|stage|statement-screen)\//;
 
 export default function AppThinkingSpace({
 	children,
@@ -36,11 +47,17 @@ export default function AppThinkingSpace({
 	const { t, dir } = useTranslation();
 	const navigate = useNavigate();
 	const location = useLocation();
+	const { className: levelClassName } = useLevelTransition();
 	const notifications = useAppSelector(inAppNotificationsSelector);
 	const allStatements = useAppSelector((state) => state.statements.statements);
 	const dispatch = useDispatch();
 	const user = useAppSelector(creatorSelector);
 	const subscriptions = useAppSelector(topSubscriptionsSelector);
+	const [askOpen, setAskOpen] = useState(false);
+	const mine = useMemo(
+		() => relevantNotifications(notifications, user?.uid),
+		[notifications, user?.uid],
+	);
 	const spaces = useMemo(
 		() =>
 			subscriptions
@@ -54,7 +71,7 @@ export default function AppThinkingSpace({
 				.map((sub) => ({
 					id: sub.statementId,
 					title: sub.statement.statement,
-					unreadCount: relevantNotifications(notifications, user?.uid).filter(
+					unreadCount: mine.filter(
 						(n) =>
 							!n.read &&
 							(n.parentId === sub.statementId ||
@@ -65,8 +82,27 @@ export default function AppThinkingSpace({
 								)),
 					).length,
 				})),
-		[subscriptions, user?.uid, notifications, allStatements],
+		[subscriptions, user?.uid, mine, allStatements],
 	);
+	// Spaces a new question can live in: the person's top-level groups.
+	const askSpaces = useMemo<AskSpace[]>(
+		() =>
+			subscriptions
+				.filter(
+					(sub) =>
+						sub.userId === user?.uid &&
+						(sub.statementType || sub.statement.statementType) === StatementType.group,
+				)
+				.map((sub) => {
+					const statement =
+						allStatements.find((s) => s.statementId === sub.statementId) || sub.statement;
+
+					return { id: sub.statementId, title: statement.statement, statement };
+				}),
+		[subscriptions, user?.uid, allStatements],
+	);
+	const unreadCount = mine.filter((n) => !n.read).length;
+
 	const create = (): void => {
 		// New top-level creation is hosted on Home; navigating mounts its modal host.
 		dispatch(setParentStatement('top'));
@@ -74,6 +110,8 @@ export default function AppThinkingSpace({
 		dispatch(setShowNewStatementModal(true));
 		navigate('/home');
 	};
+
+	const showNav = !!user && shouldShowBottomNav(location.pathname);
 
 	return (
 		<ThinkingSpace
@@ -87,6 +125,18 @@ export default function AppThinkingSpace({
 			aside={aside}
 			asideLabel={asideLabel}
 			tools={tools}
+			transitionClassName={STATEMENT_SCREEN.test(location.pathname) ? '' : levelClassName}
+			bottomNav={
+				showNav ? (
+					<BottomNav
+						active={resolveBottomNavItem(location.pathname, location.search)}
+						unreadCount={unreadCount}
+						onNavigate={(item) => navigate(BOTTOM_NAV_PATHS[item])}
+						onAsk={() => setAskOpen(true)}
+						t={t}
+					/>
+				) : undefined
+			}
 			t={t}
 			dir={dir}
 		>
@@ -100,6 +150,14 @@ export default function AppThinkingSpace({
 				/>
 			)}
 			{children}
+			{showNav && (
+				<AskQuestionSheet
+					isOpen={askOpen}
+					onClose={() => setAskOpen(false)}
+					spaces={askSpaces}
+					currentSpaceId={activeId}
+				/>
+			)}
 		</ThinkingSpace>
 	);
 }

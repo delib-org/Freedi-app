@@ -1,8 +1,10 @@
 @use '@freedi/shared-styles/tokens/brand-playful';
+@use '@freedi/shared-styles/tokens/brand-wizcol';
+@import '@freedi/shared-styles/fonts/fonts.css';
 
 :root {
 	color-scheme: light;
-	font-family: Arial, Helvetica, sans-serif;
+	font-family: var(--font-ui, 'Open Sans', system-ui, sans-serif);
 	font-synthesis: none;
 }
 
