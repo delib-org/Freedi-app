@@ -75,6 +75,13 @@ body {
   padding-top: 118px;
 }
 
+/* Inline strip — the bar is one line again, so the pages get their room back. */
+@media (min-width: 1100px) {
+  :root[data-voyage-strip='on'] .page {
+    padding-top: 84px;
+  }
+}
+
 .page a,
 .page button,
 .page textarea,
@@ -264,18 +271,29 @@ textarea:focus, input:focus, select:focus {
   left: 0;
   z-index: 40;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  /* One line where there is room for one; the strip drops to a line of its
+     own only when the bar is too narrow to hold it. A row of empty header
+     above every screen is rent nobody is paying. */
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
   padding: 10px 20px;
   background: linear-gradient(180deg, rgba(4, 18, 34, 0.95), rgba(4, 18, 34, 0.75));
   border-bottom: 1px solid rgba(232, 185, 88, 0.5);
 }
 
-.topnav__bar {
+.topnav__brand {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
+}
+
+.topnav__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* pinned to the far end of the first line, wherever the brand ends */
+  margin-inline-start: auto;
 }
 
 /* ====================== THE VOYAGE STRIP ======================
@@ -293,6 +311,33 @@ textarea:focus, input:focus, select:focus {
   list-style: none;
   overflow-x: auto;
   scrollbar-width: none;
+  /* narrow bar: a line of its own, under the brand */
+  flex: 1 0 100%;
+  min-width: 0;
+}
+
+/* Room for all three on one line: brand, the voyage, the user's buttons.
+   The DOM order is brand → buttons → strip (so a wrapped strip is the part
+   that drops); `order` puts the strip back in the middle where it belongs. */
+@media (min-width: 1100px) {
+  .topnav {
+    flex-wrap: nowrap;
+  }
+
+  .topnav__brand {
+    order: 1;
+  }
+
+  .voyage-steps {
+    order: 2;
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .topnav__actions {
+    order: 3;
+    margin-inline-start: 0;
+  }
 }
 
 .voyage-steps::-webkit-scrollbar {
