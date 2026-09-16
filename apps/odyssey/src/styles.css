@@ -651,6 +651,79 @@ a.voyage-step:hover {
 	flex: 1;
 }
 
+/* ======================= THE SEA ==============================
+   Where the party ships ride. The rings are near / middle / far and the
+   player sits at their centre; the lane a ship sails in is its sortOrder and
+   nothing else, so the picture never ranks anyone left to right.
+   ============================================================== */
+.sea-chart {
+	border: 1px solid rgba(94, 223, 255, 0.22);
+	border-radius: 14px;
+	background: linear-gradient(180deg, rgba(8, 38, 64, 0.55), rgba(3, 16, 32, 0.75));
+	overflow: hidden;
+}
+
+.sea-chart svg {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.sea-chart__you {
+	fill: var(--gold-strong);
+	font-size: 17px;
+	font-weight: 700;
+}
+
+/* Ships slide to their new ring when the sea reacts, rather than teleporting:
+   the movement IS the feedback — it says the water heard what you marked. */
+.sea-ship {
+	cursor: pointer;
+	transition:
+		transform 0.9s ease,
+		opacity 0.9s ease;
+}
+
+.sea-ship:hover .sea-ship__name,
+.sea-ship:focus-visible .sea-ship__name,
+.sea-ship--lit .sea-ship__name {
+	opacity: 1;
+}
+
+.sea-ship:focus-visible {
+	outline: none;
+}
+
+.sea-ship:focus-visible .sea-ship__name {
+	text-decoration: underline;
+}
+
+/* Twelve names on one sea would be a hedge, so a name waits to be asked for —
+   which ship is which is answered by the chips under the sea, by hovering, or
+   by tapping a hull. */
+.sea-ship__name {
+	fill: var(--cream);
+	font-size: 15px;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s ease;
+	paint-order: stroke;
+	stroke: rgba(3, 16, 32, 0.9);
+	stroke-width: 4px;
+	stroke-linejoin: round;
+}
+
+.sea-ship__mark {
+	font-size: 16px;
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sea-ship {
+		transition: none;
+	}
+}
+
 /* ====================== THE CHART ============================
    המפה נפתחת. The islands were a column of checkboxes with a paragraph each:
    twelve rows of text on a screen whose whole promise is a sea with islands
