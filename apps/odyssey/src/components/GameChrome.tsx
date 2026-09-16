@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { logOut, useUser } from '../lib/user';
+import { useUser } from '../lib/user';
 import { useGame } from '../state/GameContext';
 import { isGameAdmin } from '../lib/game';
 import DigestSettings from './DigestSettings';
@@ -50,13 +50,6 @@ export default function GameChrome({ stage }: { stage?: string }) {
 							{/* An anonymous sailor has neither, and rendered as empty space. */}
 							{user.isAnonymous ? 'ללא חשבון' : (user.displayName ?? user.email)}
 						</span>
-						<button
-							type="button"
-							className="btn-outline !py-1.5 !px-3 !text-[13px]"
-							onClick={() => void logOut()}
-						>
-							יציאה
-						</button>
 					</>
 				) : null}
 			</div>
