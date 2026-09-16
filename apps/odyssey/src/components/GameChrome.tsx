@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { logOut, useUser } from '../lib/user';
-import { toggleMode, useMode } from '../lib/mode';
 import { useGame } from '../state/GameContext';
 import { isGameAdmin } from '../lib/game';
 import DigestSettings from './DigestSettings';
 
-/** Fixed top bar: brand, stage indicator, direct-mode toggle, user menu. */
+/** Fixed top bar: brand, stage indicator, user menu. */
 export default function GameChrome({ stage }: { stage?: string }) {
 	const { user } = useUser();
-	const mode = useMode();
 	const { content, text } = useGame();
 	const admin = content ? isGameAdmin(content.game, user?.uid) : false;
 	// The email-digest opt-in lives here, on every screen — buried at the foot
@@ -28,13 +26,6 @@ export default function GameChrome({ stage }: { stage?: string }) {
 				</div>
 			</div>
 			<div className="flex items-center gap-2">
-				<button
-					type="button"
-					className="btn-outline !py-1.5 !px-3 !text-[13px]"
-					onClick={toggleMode}
-				>
-					{mode === 'direct' ? 'חזרה למצב הפלגה' : 'מעדיפים שאלון ישיר?'}
-				</button>
 				{user ? (
 					<>
 						<button
