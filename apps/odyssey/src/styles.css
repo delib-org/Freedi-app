@@ -692,18 +692,35 @@ a.voyage-step:hover {
 		opacity 0.9s ease;
 }
 
-.sea-ship:hover .sea-ship__name,
-.sea-ship:focus-visible .sea-ship__name,
-.sea-ship--lit .sea-ship__name {
+/* Which ship am I about to pick? The one that brightened and gave its name. */
+.sea-ship:hover image,
+.sea-ship:focus-visible image,
+.sea-ship--lit image {
+	filter: brightness(1.18) drop-shadow(0 0 6px rgba(255, 243, 209, 0.55));
+}
+
+/* The names ride in a layer of their own, above every hull — a party's name
+   was vanishing behind the boat the player sits in. Which one is lit is React's
+   to say, since the name is no longer the hull's DOM child. */
+.sea-ship__name--lit {
 	opacity: 1;
 }
 
-.sea-ship:focus-visible {
-	outline: none;
+.sea-names {
+	pointer-events: none;
 }
 
-.sea-ship:focus-visible .sea-ship__name {
-	text-decoration: underline;
+.sea-you {
+	pointer-events: none;
+}
+
+/* A mouse click leaves the hull focused, and the browser draws a blue box
+   around the hit rectangle — which is how the target came to be visible at
+   all. The ship says it is chosen by brightening and giving its name; that is
+   the indicator, for the pointer and for the keyboard alike. */
+.sea-ship:focus,
+.sea-ship:focus-visible {
+	outline: none;
 }
 
 /* Twelve names on one sea would be a hedge, so a name waits to be asked for —

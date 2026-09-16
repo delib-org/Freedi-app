@@ -65,6 +65,10 @@ const NEAREST_SHOWN = 5;
  *  frame, small enough not to become a wall the far ships hide behind. */
 const YOUR_SHIP_WIDTH = 118;
 
+/** No target narrower than this, whatever the distance. ~44 CSS px on a phone
+ *  once the chart is scaled down, which is the floor for a thumb. */
+const MIN_TAP = 62;
+
 const BAND_WORD = {
 	near: 'קרובה למסלולך',
 	middle: 'באמצע הדרך',
@@ -92,6 +96,9 @@ function tintId(partyId: string): string {
  */
 export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 	const [showAll, setShowAll] = useState(false);
+	/** The hull under the pointer. Names live in a layer of their own, so which
+	 *  one to light cannot be asked of CSS descendants any more. */
+	const [hovered, setHovered] = useState<string | null>(null);
 	const fan = seaFan(WIDTH, HEIGHT);
 	const rings = rangeRings(WIDTH, HEIGHT);
 
@@ -104,6 +111,62 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 		.sort((a, b) => (b.ship.distance ?? 0.9) - (a.ship.distance ?? 0.9));
 	const drawn = showAll ? byDistance : byDistance.slice(-NEAREST_SHOWN);
 	const hidden = ships.length - drawn.length;
+
+	/**
+	 * Lanes are shared out among the ships actually on the water.
+	 *
+	 * Holding each ship to its lane out of twelve while only five sail left
+	 * them bunched in whatever lanes those five happened to own — hulls behind
+	 * hulls, and a ship you cannot see is a ship you cannot click. Order is
+	 * still the roster's, never distance, so the sea ranks nobody; the five
+	 * simply have the whole fan to spread across, and opening the rest reads
+	 * as the fleet making room.
+	 */
+	const lanes = new Map(
+		drawn
+			.map((entry) => entry.index)
+			.sort((a, b) => a - b)
+			.map((index, lane) => [index, lane]),
+	);
+
+	const placed = drawn.map(({ ship, index }) => {
+		const place = partyShipPlacement(
+			ship.distance,
+			lanes.get(index) ?? index,
+			lanes.size,
+			WIDTH,
+			HEIGHT,
+		);
+		// A full fleet on one horizon is a crowd, and a hull hidden behind another
+		// cannot be tapped — so opening the rest also trims every hull a little.
+		const width = 1024 * place.scale * (showAll ? 0.5 : 0.62);
+		const height = width * SPRITE_RATIO;
+
+		return {
+			ship,
+			place,
+			width,
+			height,
+			/**
+			 * The target, tight to the drawn hull but never below a thumb.
+			 *
+			 * 0.72 of the sprite, not all of it: the galleon fills about seven
+			 * tenths of its own frame and the rest is transparent margin, which as
+			 * a target would reach over the ship sailing beside it and take its
+			 * clicks.
+			 */
+			hit: {
+				width: Math.max(width * 0.72, MIN_TAP),
+				height: Math.max(height * 0.98, MIN_TAP * SPRITE_RATIO),
+			},
+			lit: selectedId === ship.partyId,
+			label: `${ship.name} — ${
+				ship.distance === null
+					? 'עדיין אין מספיק נתונים'
+					: BAND_WORD[proximityBandOf(ship.distance)]
+			}`,
+		};
+	});
 
 	return (
 		<div className="sea-chart">
@@ -169,16 +232,7 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 					))}
 				</g>
 
-				{drawn.map(({ ship, index }) => {
-					const place = partyShipPlacement(ship.distance, index, ships.length, WIDTH, HEIGHT);
-					const width = 1024 * place.scale * 0.62;
-					const height = width * SPRITE_RATIO;
-					const band = proximityBandOf(ship.distance);
-					const lit = selectedId === ship.partyId;
-					const label = `${ship.name} — ${
-						ship.distance === null ? 'עדיין אין מספיק נתונים' : BAND_WORD[band]
-					}`;
-
+				{placed.map(({ ship, place, width, height, hit, lit, label }) => {
 					return (
 						<g
 							key={ship.partyId}
@@ -188,6 +242,12 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 							role={onSelect ? 'button' : undefined}
 							tabIndex={onSelect ? 0 : undefined}
 							aria-label={onSelect ? label : undefined}
+							onPointerEnter={() => setHovered(ship.partyId)}
+							onPointerLeave={() =>
+								setHovered((current) => (current === ship.partyId ? null : current))
+							}
+							onFocus={() => setHovered(ship.partyId)}
+							onBlur={() => setHovered((current) => (current === ship.partyId ? null : current))}
 							onClick={onSelect ? () => onSelect(ship.partyId) : undefined}
 							onKeyDown={
 								onSelect
@@ -201,9 +261,24 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 							}
 						>
 							<title>{label}</title>
-							{/* A generous transparent disc: a distant hull is not a tap
-							    target, and this is a screen people use on a phone. */}
-							<circle r={Math.max(width * 0.55, 26)} fill="transparent" />
+							{/*
+							  The target is the ship you can see.
+							
+							  It used to be a disc at the waterline, which is the one part of
+							  a galleon that is NOT what the eye aims at: nine tenths of the
+							  hull as drawn is masts and sail above that point, so clicking
+							  the ship missed it. This rectangle is the sprite's own bounds,
+							  floored at a thumb's width for the far ones — and since the
+							  nearest hulls are painted last they also take the click first,
+							  which is the right order for a screen asking who is nearest.
+							*/}
+							<rect
+								x={-hit.width / 2}
+								y={-hit.height * 0.88}
+								width={hit.width}
+								height={hit.height}
+								fill="transparent"
+							/>
 							<ellipse cy={-2} rx={width * 0.34} ry={width * 0.07} fill="rgba(4,18,34,0.35)" />
 							<ellipse
 								cy={-1}
@@ -222,14 +297,14 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 								filter={`url(#${tintId(ship.partyId)})`}
 								preserveAspectRatio="xMidYMax meet"
 							/>
-							<text className="sea-ship__name" y={26} textAnchor="middle">
-								{ship.name}
-							</text>
 						</g>
 					);
 				})}
 
-				{/* The player, at the berth every ring is drawn around. */}
+				{/* The player, at the berth every ring is drawn around. It is painted
+				    last of the hulls — you are nearest the eye — and takes no pointer
+				    events at all, because a hull that covers a ship must not also
+				    swallow the click meant for it. */}
 				<g className="sea-you">
 					<ellipse cx={fan.cx} cy={fan.cy - 2} rx={44} ry={9} fill="rgba(4,18,34,0.4)" />
 					<ellipse
@@ -253,6 +328,22 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 					<text className="sea-chart__you" x={fan.cx} y={fan.cy + 32} textAnchor="middle">
 						הסירה שלך
 					</text>
+				</g>
+
+				{/* Names last, over every hull including the player's own — a ship's
+				    name was disappearing behind the boat the player is sitting in. */}
+				<g className="sea-names">
+					{placed.map(({ ship, place, lit }) => (
+						<text
+							key={ship.partyId}
+							className={`sea-ship__name ${lit || hovered === ship.partyId ? 'sea-ship__name--lit' : ''}`}
+							x={place.x}
+							y={place.y + 26}
+							textAnchor="middle"
+						>
+							{ship.name}
+						</text>
+					))}
 				</g>
 			</svg>
 
