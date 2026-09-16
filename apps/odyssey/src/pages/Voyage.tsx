@@ -11,7 +11,7 @@ import { islandArtUrl } from '../lib/islandArt';
 import { stageBus, type SeaDistances } from '../lib/stageBus';
 import { invitedElders, elderStageId, pickIslandRemark, type ElderRemark } from '../lib/elders';
 import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
-import SeaChart, { type SeaChartShip } from '../components/SeaChart';
+import SeaChart from '../components/SeaChart';
 import ShipCard from '../components/ShipCard';
 import ElderRemarkCard from '../components/ElderRemarkCard';
 
@@ -235,11 +235,6 @@ export default function Voyage() {
 	}));
 	const askedShip =
 		[...shipProximity, ...elderProximity].find((ship) => ship.partyId === asked) ?? null;
-	/** Everything that floats, in one water: parties first, then the personas. */
-	const seaShips: SeaChartShip[] = [
-		...shipProximity,
-		...elderProximity.map((ship) => ({ ...ship, isElder: true })),
-	];
 
 	return (
 		<>
@@ -413,7 +408,10 @@ export default function Voyage() {
 									<p className="m-0 text-[13px] opacity-80">
 										הקישו על ספינה כדי לראות כמה היא קרובה למסלול שלכם.
 									</p>
-									<SeaChart ships={seaShips} onSelect={setAsked} selectedId={asked} />
+									{/* Parties only. A persona riding the same water as the parties reads as
+							    a claim that she is running — the reviewer who saw Golda there
+							    said so, which is why the personas keep to their own list. */}
+									<SeaChart ships={shipProximity} onSelect={setAsked} selectedId={asked} />
 									<NearbyShips ships={shipProximity} onSelect={setAsked} />
 									{elderProximity.length > 0 ? (
 										<div className="border-t border-[rgba(232,185,88,0.25)] pt-3">

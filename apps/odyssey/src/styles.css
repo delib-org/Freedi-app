@@ -669,6 +669,12 @@ a.voyage-step:hover {
 	height: auto;
 }
 
+.sea-chart__more {
+	display: flex;
+	justify-content: center;
+	padding: 0 10px 10px;
+}
+
 .sea-chart__you {
 	fill: var(--gold-strong);
 	font-size: 17px;
@@ -711,11 +717,6 @@ a.voyage-step:hover {
 	stroke: rgba(3, 16, 32, 0.9);
 	stroke-width: 4px;
 	stroke-linejoin: round;
-}
-
-.sea-ship__mark {
-	font-size: 16px;
-	pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
