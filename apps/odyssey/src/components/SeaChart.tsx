@@ -20,6 +20,40 @@ const SHIP_SPRITE = '/assets/ship.png';
 const SPRITE_RATIO = 1536 / 1024;
 
 /**
+ * The water itself — the same Mediterranean sunset every screen sits on.
+ *
+ * The ships have to float on a sea, not on a navy rectangle with rings drawn
+ * in it: a diagram of distance is not the voyage, and the game already owns
+ * the sea it happens on.
+ *
+ * The art is placed, not stretched. `seaLayout` sends the farthest ring to
+ * 0.2 of the frame and the player's berth to 0.56, so the horizon has to sit
+ * ABOVE the far ring or ships sail in the sky — these numbers put it at 0.15,
+ * with water under every hull and the city left on the skyline where the
+ * fiction wants it.
+ */
+const OCEAN = '/assets/mediterranean-ocean.png';
+const OCEAN_RATIO = 1672 / 941;
+/** Where the horizon falls inside the source art, and inside our frame. */
+const OCEAN_HORIZON = 0.3;
+const CHART_HORIZON = 0.15;
+const OCEAN_HEIGHT = HEIGHT * 1.5;
+const OCEAN_WIDTH = OCEAN_HEIGHT * OCEAN_RATIO;
+const OCEAN_Y = HEIGHT * CHART_HORIZON - OCEAN_HEIGHT * OCEAN_HORIZON;
+const OCEAN_X = (WIDTH - OCEAN_WIDTH) / 2;
+
+/**
+ * The band of that space the player actually sees.
+ *
+ * The maths needs the whole frame — the fan is drawn against it — but the top
+ * of it is sky and the bottom is empty foreground water, and neither is worth
+ * the height on a phone. The window keeps a strip of sky with the city on it,
+ * every ship, and enough water in front of the berth to be sailing on.
+ */
+const VIEW_TOP = 46;
+const VIEW_HEIGHT = 430;
+
+/**
  * How many hulls the sea carries before the player asks for the rest.
  *
  * Twelve ships is a crowd on one horizon, and the question the voyage asks is
@@ -73,12 +107,20 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 
 	return (
 		<div className="sea-chart">
-			<svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="הים סביב הסירה שלך">
+			<svg
+				viewBox={`0 ${VIEW_TOP} ${WIDTH} ${VIEW_HEIGHT}`}
+				role="img"
+				aria-label="הים סביב הסירה שלך"
+			>
 				<defs>
-					<radialGradient id="seaLight" cx="50%" cy="56%" r="62%">
-						<stop offset="0%" stopColor="rgba(94,223,255,0.20)" />
-						<stop offset="100%" stopColor="rgba(94,223,255,0)" />
-					</radialGradient>
+					<clipPath id="seaFrame">
+						<rect x="0" y={VIEW_TOP} width={WIDTH} height={VIEW_HEIGHT} />
+					</clipPath>
+					<linearGradient id="seaShade" x1="0" y1="0" x2="0" y2="1">
+						<stop offset="0%" stopColor="rgba(6,24,44,0.55)" />
+						<stop offset="38%" stopColor="rgba(6,24,44,0.08)" />
+						<stop offset="100%" stopColor="rgba(6,24,44,0.55)" />
+					</linearGradient>
 					{/* The hull is one painted sprite, and a party's colour is
 					    multiplied into it rather than replacing it — a tinted ship is
 					    still a ship; a flooded one is a silhouette. */}
@@ -96,25 +138,36 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 					</filter>
 				</defs>
 
-				{/* The water immediately around the player, so the berth reads as a
-				    place on the sea rather than a mark on a diagram. */}
-				<ellipse cx={fan.cx} cy={fan.cy} rx={fan.rx} ry={fan.ry} fill="url(#seaLight)" />
-
-				{/* near / middle / far, drawn and never labelled — the words belong to
-				    the chips under the sea and to the card a tap opens. */}
-				{rings.map((ring, index) => (
-					<ellipse
-						key={ring.rx}
-						cx={fan.cx}
-						cy={fan.cy}
-						rx={ring.rx}
-						ry={ring.ry}
-						fill="none"
-						stroke="rgba(94,223,255,0.28)"
-						strokeWidth={index === rings.length - 1 ? 2 : 1.5}
-						strokeDasharray="7 11"
+				<g clipPath="url(#seaFrame)">
+					<image
+						href={OCEAN}
+						x={OCEAN_X}
+						y={OCEAN_Y}
+						width={OCEAN_WIDTH}
+						height={OCEAN_HEIGHT}
+						preserveAspectRatio="xMidYMid slice"
 					/>
-				))}
+					{/* Sky and foreground dimmed a little, so a name on the water and the
+					    heading above it stay readable against a sunset. */}
+					<rect x="0" y="0" width={WIDTH} height={HEIGHT} fill="url(#seaShade)" />
+
+					{/* near / middle / far, drawn and never labelled — the words belong to
+					    the chips under the sea and to the card a tap opens. Faint: they
+					    are a reading of the water, not a HUD laid over it. */}
+					{rings.map((ring, index) => (
+						<ellipse
+							key={ring.rx}
+							cx={fan.cx}
+							cy={fan.cy}
+							rx={ring.rx}
+							ry={ring.ry}
+							fill="none"
+							stroke="rgba(255,243,209,0.22)"
+							strokeWidth={index === rings.length - 1 ? 1.5 : 1.2}
+							strokeDasharray="6 14"
+						/>
+					))}
+				</g>
 
 				{drawn.map(({ ship, index }) => {
 					const place = partyShipPlacement(ship.distance, index, ships.length, WIDTH, HEIGHT);
@@ -151,7 +204,15 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 							{/* A generous transparent disc: a distant hull is not a tap
 							    target, and this is a screen people use on a phone. */}
 							<circle r={Math.max(width * 0.55, 26)} fill="transparent" />
-							<ellipse cy={-2} rx={width * 0.36} ry={width * 0.08} fill="rgba(4,18,34,0.4)" />
+							<ellipse cy={-2} rx={width * 0.34} ry={width * 0.07} fill="rgba(4,18,34,0.35)" />
+							<ellipse
+								cy={-1}
+								rx={width * 0.3}
+								ry={width * 0.05}
+								fill="none"
+								stroke="rgba(255,255,255,0.35)"
+								strokeWidth={Math.max(1, width * 0.02)}
+							/>
 							<image
 								href={SHIP_SPRITE}
 								x={-width / 2}
@@ -170,7 +231,16 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 
 				{/* The player, at the berth every ring is drawn around. */}
 				<g className="sea-you">
-					<ellipse cx={fan.cx} cy={fan.cy - 2} rx={46} ry={10} fill="rgba(4,18,34,0.45)" />
+					<ellipse cx={fan.cx} cy={fan.cy - 2} rx={44} ry={9} fill="rgba(4,18,34,0.4)" />
+					<ellipse
+						cx={fan.cx}
+						cy={fan.cy - 1}
+						rx={40}
+						ry={7}
+						fill="none"
+						stroke="rgba(255,255,255,0.4)"
+						strokeWidth="2"
+					/>
 					<image
 						href={SHIP_SPRITE}
 						x={fan.cx - YOUR_SHIP_WIDTH / 2}
