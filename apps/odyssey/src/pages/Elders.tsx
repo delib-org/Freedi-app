@@ -52,7 +52,7 @@ export default function Elders() {
 		};
 		const onPointer = (event: PointerEvent): void => {
 			const target = event.target;
-			if (target instanceof Element && target.closest('.crew-bubble, .crew-bio')) return;
+			if (target instanceof Element && target.closest('.speech-bubble, .bubble-toggle')) return;
 			setOpenBio(null);
 		};
 		window.addEventListener('keydown', onKey);
@@ -162,7 +162,7 @@ export default function Elders() {
 									</button>
 									<button
 										type="button"
-										className="crew-bio"
+										className="bubble-toggle"
 										aria-expanded={openBio === elder.elderId}
 										aria-controls={`bio-${elder.elderId}`}
 										onClick={() =>
@@ -172,7 +172,7 @@ export default function Elders() {
 										מי זה?
 									</button>
 									{openBio === elder.elderId ? (
-										<div className="crew-bubble" id={`bio-${elder.elderId}`}>
+										<div className="speech-bubble" id={`bio-${elder.elderId}`}>
 											<p>
 												{elder.role} · {elder.bio}
 											</p>

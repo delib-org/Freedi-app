@@ -499,6 +499,8 @@ a.voyage-step:hover {
 .crew-grid {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
+	/* One height for the whole board, not one per row. */
+	grid-auto-rows: 1fr;
 	gap: 14px;
 }
 
@@ -527,7 +529,7 @@ a.voyage-step:hover {
 }
 
 /* The open bubble hangs over the cards below it, so its cell paints on top. */
-.crew-cell:has(> .crew-bubble) {
+.crew-cell:has(> .speech-bubble) {
 	z-index: 5;
 }
 
@@ -649,9 +651,131 @@ a.voyage-step:hover {
 	flex: 1;
 }
 
-/* "מי זה?" lives outside the choosing button — a button may not contain a
-   button, and the persona sentence has to stay reachable by keyboard. */
-.crew-bio {
+/* ====================== THE CHART ============================
+   המפה נפתחת. The islands were a column of checkboxes with a paragraph each:
+   twelve rows of text on a screen whose whole promise is a sea with islands
+   in it. Each one is a card carrying its own islet now — the same diorama art
+   the voyage shows — and what it holds is explained on demand, in the bubble
+   the crew board uses.
+   ============================================================= */
+.isle-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	/* Every card the same height, not just every card in a row: a board of
+	   islands with two card sizes reads as two kinds of island. */
+	grid-auto-rows: 1fr;
+	gap: 14px;
+}
+
+@media (min-width: 560px) {
+	.isle-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+@media (min-width: 920px) {
+	.isle-grid {
+		grid-template-columns: repeat(4, 1fr);
+	}
+}
+
+.isle-cell {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+}
+
+.isle-cell:has(> .speech-bubble) {
+	z-index: 5;
+}
+
+.isle-cell > .isle-card {
+	flex: 1;
+}
+
+.isle-card {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	width: 100%;
+	cursor: pointer;
+	padding: 10px 10px 12px;
+	text-align: center;
+	color: var(--cream);
+	border: 1px solid rgba(232, 185, 88, 0.45);
+	border-radius: 12px;
+	background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+	box-shadow:
+		inset 0 0 0 2px rgba(211, 163, 66, 0.1),
+		0 8px 22px rgba(0, 0, 0, 0.3);
+	transition:
+		border-color 0.15s ease,
+		transform 0.15s ease,
+		box-shadow 0.15s ease;
+}
+
+.isle-card:hover {
+	transform: translateY(-2px);
+}
+
+.isle-card.chosen {
+	border-color: var(--gold-strong);
+	box-shadow:
+		inset 0 0 0 2px rgba(232, 185, 88, 0.3),
+		0 0 0 3px rgba(232, 185, 88, 0.28),
+		0 8px 22px rgba(0, 0, 0, 0.3);
+}
+
+/* The islet floats on the card rather than sitting in a frame: the art ships
+   with real alpha, and boxing it would put it back in the crate. */
+.isle-art {
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	width: 100%;
+	height: 96px;
+	font-size: 34px;
+}
+
+.isle-art img {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+	filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+	transition: transform 0.15s ease;
+}
+
+.isle-card:hover .isle-art img,
+.isle-card.chosen .isle-art img {
+	transform: scale(1.04);
+}
+
+.isle-title {
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.isle-issue {
+	font-size: 12px;
+	color: #cfe6f5;
+	line-height: 1.35;
+	/* Push the join line to the bottom of an equal-height card. */
+	flex: 1;
+}
+
+.isle-state {
+	margin-top: 2px;
+	font-size: 12px;
+	color: var(--gold-strong);
+}
+
+/* The "tell me more" line under a card. It lives outside the choosing button
+   — a button may not contain a button, and the sentence it opens has to stay
+   reachable by keyboard. */
+.bubble-toggle {
 	margin-top: 4px;
 	padding: 2px;
 	border: 0;
@@ -667,7 +791,7 @@ a.voyage-step:hover {
    (cards are equal-height by row) and left the sentence lying on the water
    with nothing around it. Hanging it here costs the grid nothing: the twelve
    cards look identical whatever is open. */
-.crew-bubble {
+.speech-bubble {
 	position: absolute;
 	top: 100%;
 	left: 50%;
@@ -700,7 +824,7 @@ a.voyage-step:hover {
 
 /* The tail, pointing back at the card that is speaking. Physical borders on
    purpose: the square is rotated, and logical ones would flip with the text. */
-.crew-bubble::before {
+.speech-bubble::before {
 	content: '';
 	position: absolute;
 	top: -6px;
@@ -713,7 +837,7 @@ a.voyage-step:hover {
 	background: var(--panel-top);
 }
 
-.crew-bubble > p {
+.speech-bubble > p {
 	margin: 0;
 	font-size: 12px;
 	line-height: 1.45;
@@ -724,7 +848,7 @@ a.voyage-step:hover {
 /* Two columns and a narrow screen: a bubble wider than its cell would hang
    off the page, so it keeps to the card it belongs to. */
 @media (max-width: 479px) {
-	.crew-bubble {
+	.speech-bubble {
 		max-width: 100%;
 	}
 }
@@ -748,10 +872,17 @@ a.voyage-step:hover {
 	.fade-in {
 		animation: none;
 	}
-	.crew-bubble {
+	.speech-bubble {
 		animation: none;
 	}
 	.crew-card:hover {
+		transform: none;
+	}
+	.isle-card:hover {
+		transform: none;
+	}
+	.isle-card:hover .isle-art img,
+	.isle-card.chosen .isle-art img {
 		transform: none;
 	}
 }
