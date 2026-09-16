@@ -21,6 +21,7 @@ import {
 	shouldShowBottomNav,
 } from '../BottomNav/bottomNavModel';
 import AskQuestionSheet, { AskSpace } from '@/view/pages/home/askQuestion/AskQuestionSheet';
+import { AnswerComposeContext, useAnswerComposeState } from '@/controllers/hooks/useAnswerCompose';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { relevantNotifications } from '@/utils/engagementNavigation';
 
@@ -54,6 +55,9 @@ export default function AppThinkingSpace({
 	const user = useAppSelector(creatorSelector);
 	const subscriptions = useAppSelector(topSubscriptionsSelector);
 	const [askOpen, setAskOpen] = useState(false);
+	// One bottom control on phones: the nav's "+" adds an answer when a question
+	// screen registered that action, and otherwise asks a new question.
+	const answerCompose = useAnswerComposeState();
 	const mine = useMemo(
 		() => relevantNotifications(notifications, user?.uid),
 		[notifications, user?.uid],
@@ -114,50 +118,54 @@ export default function AppThinkingSpace({
 	const showNav = !!user && shouldShowBottomNav(location.pathname);
 
 	return (
-		<ThinkingSpace
-			spaces={spaces}
-			activeId={activeId}
-			userName={user?.displayName || t('Your profile')}
-			onHome={() => navigate('/home')}
-			onProfile={() => navigate('/my')}
-			onOpen={(id) => navigate(`/statement/${id}`)}
-			onCreate={create}
-			aside={aside}
-			asideLabel={asideLabel}
-			tools={tools}
-			transitionClassName={STATEMENT_SCREEN.test(location.pathname) ? '' : levelClassName}
-			bottomNav={
-				showNav ? (
-					<BottomNav
-						active={resolveBottomNavItem(location.pathname, location.search)}
-						unreadCount={unreadCount}
-						onNavigate={(item) => navigate(BOTTOM_NAV_PATHS[item])}
-						onAsk={() => setAskOpen(true)}
-						t={t}
+		<AnswerComposeContext.Provider value={answerCompose}>
+			<ThinkingSpace
+				spaces={spaces}
+				activeId={activeId}
+				userName={user?.displayName || t('Your profile')}
+				onHome={() => navigate('/home')}
+				onProfile={() => navigate('/my')}
+				onOpen={(id) => navigate(`/statement/${id}`)}
+				onCreate={create}
+				aside={aside}
+				asideLabel={asideLabel}
+				tools={tools}
+				transitionClassName={STATEMENT_SCREEN.test(location.pathname) ? '' : levelClassName}
+				bottomNav={
+					showNav ? (
+						<BottomNav
+							active={resolveBottomNavItem(location.pathname, location.search)}
+							unreadCount={unreadCount}
+							onNavigate={(item) => navigate(BOTTOM_NAV_PATHS[item])}
+							onAsk={() => {
+								if (!answerCompose.compose()) setAskOpen(true);
+							}}
+							t={t}
+						/>
+					) : undefined
+				}
+				t={t}
+				dir={dir}
+			>
+				{user && guideEnabled && (guideStatement || location.pathname === '/home') && (
+					<EngagementGuide
+						key={user.uid}
+						userId={user.uid}
+						statement={guideStatement}
+						firstSpaceId={spaces[0]?.id}
+						onCreate={create}
 					/>
-				) : undefined
-			}
-			t={t}
-			dir={dir}
-		>
-			{user && guideEnabled && (guideStatement || location.pathname === '/home') && (
-				<EngagementGuide
-					key={user.uid}
-					userId={user.uid}
-					statement={guideStatement}
-					firstSpaceId={spaces[0]?.id}
-					onCreate={create}
-				/>
-			)}
-			{children}
-			{showNav && (
-				<AskQuestionSheet
-					isOpen={askOpen}
-					onClose={() => setAskOpen(false)}
-					spaces={askSpaces}
-					currentSpaceId={activeId}
-				/>
-			)}
-		</ThinkingSpace>
+				)}
+				{children}
+				{showNav && (
+					<AskQuestionSheet
+						isOpen={askOpen}
+						onClose={() => setAskOpen(false)}
+						spaces={askSpaces}
+						currentSpaceId={activeId}
+					/>
+				)}
+			</ThinkingSpace>
+		</AnswerComposeContext.Provider>
 	);
 }
