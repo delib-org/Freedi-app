@@ -33,6 +33,36 @@ export default function Elders() {
 	const elders = activeElders(content?.game);
 	const [chosen, setChosen] = useState<Set<string>>(() => new Set(journey?.selectedElderIds ?? []));
 	const [saving, setSaving] = useState(false);
+	/**
+	 * Which elder is telling you who they are — one at a time.
+	 *
+	 * Opened in place, the answer grew the cell and stretched every card in
+	 * that row to match; a board of twelve identical cards is the whole point
+	 * of the screen. It arrives as a bubble over the board instead.
+	 */
+	const [openBio, setOpenBio] = useState<string | null>(null);
+
+	// A bubble over the board closes the way every overlay does: Escape, or a
+	// click anywhere that is not the bubble itself. The toggles are exempt —
+	// they close it on their own, and dismissing first would reopen it.
+	useEffect(() => {
+		if (!openBio) return;
+		const onKey = (event: KeyboardEvent): void => {
+			if (event.key === 'Escape') setOpenBio(null);
+		};
+		const onPointer = (event: PointerEvent): void => {
+			const target = event.target;
+			if (target instanceof Element && target.closest('.crew-bubble, .crew-bio')) return;
+			setOpenBio(null);
+		};
+		window.addEventListener('keydown', onKey);
+		window.addEventListener('pointerdown', onPointer);
+
+		return () => {
+			window.removeEventListener('keydown', onKey);
+			window.removeEventListener('pointerdown', onPointer);
+		};
+	}, [openBio]);
 
 	// A game whose organizer switched the elders off, or never authored any,
 	// must not show an empty ceremony — it goes straight on to the map. As an
@@ -130,12 +160,24 @@ export default function Elders() {
 											{active ? '⚓ על הסיפון' : '＋ לצרף לצוות'}
 										</span>
 									</button>
-									<details className="crew-bio">
-										<summary>מי זה?</summary>
-										<p>
-											{elder.role} · {elder.bio}
-										</p>
-									</details>
+									<button
+										type="button"
+										className="crew-bio"
+										aria-expanded={openBio === elder.elderId}
+										aria-controls={`bio-${elder.elderId}`}
+										onClick={() =>
+											setOpenBio((current) => (current === elder.elderId ? null : elder.elderId))
+										}
+									>
+										מי זה?
+									</button>
+									{openBio === elder.elderId ? (
+										<div className="crew-bubble" id={`bio-${elder.elderId}`}>
+											<p>
+												{elder.role} · {elder.bio}
+											</p>
+										</div>
+									) : null}
 								</div>
 							);
 						})}

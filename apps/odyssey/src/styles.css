@@ -521,8 +521,14 @@ a.voyage-step:hover {
 /* Cards are as tall as the tallest in their row: a name that wraps to two
    lines must not leave its neighbours short. */
 .crew-cell {
+	position: relative;
 	display: flex;
 	flex-direction: column;
+}
+
+/* The open bubble hangs over the cards below it, so its cell paints on top. */
+.crew-cell:has(> .crew-bubble) {
+	z-index: 5;
 }
 
 .crew-cell > .crew-card {
@@ -643,30 +649,84 @@ a.voyage-step:hover {
 	flex: 1;
 }
 
-/* The bio lives outside the choosing button — a button may not contain a
+/* "מי זה?" lives outside the choosing button — a button may not contain a
    button, and the persona sentence has to stay reachable by keyboard. */
 .crew-bio {
 	margin-top: 4px;
-}
-
-.crew-bio > summary {
+	padding: 2px;
+	border: 0;
+	background: none;
 	cursor: pointer;
-	list-style: none;
 	font-size: 12px;
 	color: var(--gold-strong);
 	text-align: center;
 }
 
-.crew-bio > summary::-webkit-details-marker {
-	display: none;
+/* The answer arrives as a bubble OVER the board rather than inside the card.
+   Opened in place it grew the cell, stretched every card in that row to match
+   (cards are equal-height by row) and left the sentence lying on the water
+   with nothing around it. Hanging it here costs the grid nothing: the twelve
+   cards look identical whatever is open. */
+.crew-bubble {
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1;
+	width: max-content;
+	min-width: 100%;
+	max-width: min(260px, 74vw);
+	margin-top: 8px;
+	padding: 10px 12px;
+	border: 1px solid rgba(232, 185, 88, 0.75);
+	border-radius: 12px;
+	background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+	box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+	/* Its own keyframes, not .fade-in: that one ends on `transform: none` and
+	   would drop the translate that centres the bubble under its card. */
+	animation: bubbleIn 0.18s ease;
 }
 
-.crew-bio > p {
-	margin: 6px 2px 0;
+@keyframes bubbleIn {
+	from {
+		opacity: 0;
+		transform: translateX(-50%) translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(-50%);
+	}
+}
+
+/* The tail, pointing back at the card that is speaking. Physical borders on
+   purpose: the square is rotated, and logical ones would flip with the text. */
+.crew-bubble::before {
+	content: '';
+	position: absolute;
+	top: -6px;
+	left: 50%;
+	width: 10px;
+	height: 10px;
+	transform: translateX(-50%) rotate(45deg);
+	border-top: 1px solid rgba(232, 185, 88, 0.75);
+	border-left: 1px solid rgba(232, 185, 88, 0.75);
+	background: var(--panel-top);
+}
+
+.crew-bubble > p {
+	margin: 0;
 	font-size: 12px;
 	line-height: 1.45;
 	color: #dcecf7;
 	text-align: start;
+}
+
+/* Two columns and a narrow screen: a bubble wider than its cell would hang
+   off the page, so it keeps to the card it belongs to. */
+@media (max-width: 479px) {
+	.crew-bubble {
+		max-width: 100%;
+	}
 }
 
 .fade-in {
@@ -686,6 +746,9 @@ a.voyage-step:hover {
 
 @media (prefers-reduced-motion: reduce) {
 	.fade-in {
+		animation: none;
+	}
+	.crew-bubble {
 		animation: none;
 	}
 	.crew-card:hover {
