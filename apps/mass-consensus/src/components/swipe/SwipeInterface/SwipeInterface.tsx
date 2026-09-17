@@ -432,8 +432,13 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         userName={userName}
         surveyId={surveyId}
         suggestionMode={mergedSettings?.suggestionMode}
-        autoSplitMultiSuggestions={mergedSettings?.autoSplitMultiSuggestions}
-        autoMergeSimilar={mergedSettings?.autoMergeSimilar}
+        autoSplitMultiSuggestions={
+          mergedSettings?.autoSplitMultiSuggestions ??
+          question.statementSettings?.autoSplitMultiSuggestions
+        }
+        autoMergeSimilar={
+          mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
+        }
       />
 
       {/* Comment Modal */}
@@ -463,8 +468,13 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         userName={userName}
         surveyId={surveyId}
         suggestionMode={mergedSettings?.suggestionMode}
-        autoSplitMultiSuggestions={mergedSettings?.autoSplitMultiSuggestions}
-        autoMergeSimilar={mergedSettings?.autoMergeSimilar}
+        autoSplitMultiSuggestions={
+          mergedSettings?.autoSplitMultiSuggestions ??
+          question.statementSettings?.autoSplitMultiSuggestions
+        }
+        autoMergeSimilar={
+          mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
+        }
         requiresSolution={requiresSolution}
         hasCheckedUserSolutions={hasCheckedUserSolutions}
       />

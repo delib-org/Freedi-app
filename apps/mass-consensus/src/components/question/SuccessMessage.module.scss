@@ -229,3 +229,16 @@
     transform: none;
   }
 }
+
+// Partial outcome (part of a split submission was refused): a quiet caveat
+// under the success message, not an error.
+.note {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-muted, #555);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-align: center;
+}
