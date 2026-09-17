@@ -1,0 +1,180 @@
+\begin{thebibliography}{22}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Achille and Soatto(2018)]{achille2018emergence}
+Alessandro Achille and Stefano Soatto.
+\newblock Emergence of invariance and disentanglement in deep representations.
+\newblock \emph{Journal of Machine Learning Research}, 19\penalty0
+  (50):\penalty0 1--34, 2018.
+
+\bibitem[Blair et~al.(2025)Blair, Larson, and Law]{blair2025reflective}
+Carter Blair, Kate Larson, and Edith Law.
+\newblock Reflective verbal reward design for pluralistic alignment.
+\newblock In \emph{Proceedings of the 34th International Joint Conference on
+  Artificial Intelligence (IJCAI)}, 2025.
+\newblock \doi{10.24963/ijcai.2025/1141}.
+
+\bibitem[Blair et~al.(2026{\natexlab{a}})Blair, Armstrong, Alouf-Heffetz,
+  Talmon, and Grossi]{blair2026consensus}
+Carter Blair, Ben Armstrong, Shiri Alouf-Heffetz, Nimrod Talmon, and Davide
+  Grossi.
+\newblock Probably approximately consensus: On the learning theory of finding
+  common ground.
+\newblock \emph{arXiv preprint arXiv:2604.21811}, 2026{\natexlab{a}}.
+
+\bibitem[Blair et~al.(2026{\natexlab{b}})Blair, Procaccia, and
+  Tambe]{blair2026embeddings}
+Carter Blair, Ariel~D. Procaccia, and Milind Tambe.
+\newblock Embeddings for preferences, not semantics.
+\newblock \emph{arXiv preprint arXiv:2605.08360}, 2026{\natexlab{b}}.
+
+\bibitem[Boehmer et~al.(2025)Boehmer, Fish, and
+  Procaccia]{boehmer2025generative}
+Niclas Boehmer, Sara Fish, and Ariel~D. Procaccia.
+\newblock Generative social choice: The next generation.
+\newblock In \emph{Proceedings of the 42nd International Conference on Machine
+  Learning (ICML)}, volume 267 of \emph{Proceedings of Machine Learning
+  Research}, pages 4627--4659, 2025.
+
+\bibitem[Chen et~al.(2019)Chen, Fain, Lyu, and
+  Munagala]{chen2019proportionally}
+Xingyu Chen, Brandon Fain, Liang Lyu, and Kamesh Munagala.
+\newblock Proportionally fair clustering.
+\newblock In \emph{Proceedings of the 36th International Conference on Machine
+  Learning (ICML)}, volume~97 of \emph{Proceedings of Machine Learning
+  Research}, pages 1032--1041, 2019.
+
+\bibitem[Feldman et~al.(2016)Feldman, Fiat, and Golomb]{feldman2016voting}
+Michal Feldman, Amos Fiat, and Iddan Golomb.
+\newblock On voting and facility location.
+\newblock In \emph{Proceedings of the 2016 ACM Conference on Economics and
+  Computation (EC '16)}, pages 269--286, 2016.
+\newblock \doi{10.1145/2940716.2940725}.
+
+\bibitem[Fish et~al.(2026)Fish, G{\"o}lz, Parkes, Procaccia, Rusak, Shapira,
+  and W{\"u}thrich]{fish2026generative}
+Sara Fish, Paul G{\"o}lz, David~C. Parkes, Ariel~D. Procaccia, Gili Rusak, Itai
+  Shapira, and Manuel W{\"u}thrich.
+\newblock Generative social choice.
+\newblock \emph{Journal of the ACM}, 73\penalty0 (2), 2026.
+\newblock \doi{10.1145/3799709}.
+
+\bibitem[Gao et~al.(2021)Gao, Yao, and Chen]{gao2021simcse}
+Tianyu Gao, Xingcheng Yao, and Danqi Chen.
+\newblock {SimCSE}: Simple contrastive learning of sentence embeddings.
+\newblock In \emph{Proceedings of the 2021 Conference on Empirical Methods in
+  Natural Language Processing (EMNLP)}, pages 6894--6910, 2021.
+\newblock \doi{10.18653/v1/2021.emnlp-main.552}.
+
+\bibitem[Kellerhals and Peters(2024)]{kellerhals2024proportional}
+Leon Kellerhals and Jannik Peters.
+\newblock Proportional fairness in clustering: A social choice perspective.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, volume~37, pages 28471--28494, 2024.
+
+\bibitem[Lewis et~al.(2020)Lewis, Perez, Piktus, Petroni, Karpukhin, Goyal,
+  K{\"u}ttler, Lewis, Yih, Rockt{\"a}schel, Riedel, and
+  Kiela]{lewis2020retrieval}
+Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir
+  Karpukhin, Naman Goyal, Heinrich K{\"u}ttler, Mike Lewis, Wen-tau Yih, Tim
+  Rockt{\"a}schel, Sebastian Riedel, and Douwe Kiela.
+\newblock Retrieval-augmented generation for knowledge-intensive {NLP} tasks.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, volume~33, pages 9459--9474, 2020.
+
+\bibitem[Liu et~al.(2024)Liu, Lin, Hewitt, Paranjape, Bevilacqua, Petroni, and
+  Liang]{liu2024lost}
+Nelson~F. Liu, Kevin Lin, John Hewitt, Ashwin Paranjape, Michele Bevilacqua,
+  Fabio Petroni, and Percy Liang.
+\newblock Lost in the middle: How language models use long contexts.
+\newblock \emph{Transactions of the Association for Computational Linguistics},
+  12:\penalty0 157--173, 2024.
+\newblock \doi{10.1162/tacl_a_00638}.
+
+\bibitem[Muennighoff et~al.(2023)Muennighoff, Tazi, Magne, and
+  Reimers]{muennighoff2023mteb}
+Niklas Muennighoff, Nouamane Tazi, Loic Magne, and Nils Reimers.
+\newblock {MTEB}: Massive text embedding benchmark.
+\newblock In \emph{Proceedings of the 17th Conference of the European Chapter
+  of the Association for Computational Linguistics (EACL)}, pages 2014--2037,
+  2023.
+\newblock \doi{10.18653/v1/2023.eacl-main.148}.
+
+\bibitem[Nogueira and Cho(2019)]{nogueira2019passage}
+Rodrigo Nogueira and Kyunghyun Cho.
+\newblock Passage re-ranking with {BERT}.
+\newblock \emph{arXiv preprint arXiv:1901.04085}, 2019.
+
+\bibitem[Reimers and Gurevych(2019)]{reimers2019sentence}
+Nils Reimers and Iryna Gurevych.
+\newblock Sentence-{BERT}: Sentence embeddings using siamese {BERT}-networks.
+\newblock In \emph{Proceedings of the 2019 Conference on Empirical Methods in
+  Natural Language Processing (EMNLP-IJCNLP)}, pages 3982--3992, 2019.
+\newblock \doi{10.18653/v1/D19-1410}.
+
+\bibitem[Sclar et~al.(2024)Sclar, Choi, Tsvetkov, and
+  Suhr]{sclar2024quantifying}
+Melanie Sclar, Yejin Choi, Yulia Tsvetkov, and Alane Suhr.
+\newblock Quantifying language models' sensitivity to spurious features in
+  prompt design or: How {I} learned to start worrying about prompt formatting.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2024.
+
+\bibitem[Small et~al.(2021)Small, Bjorkegren, Erkkil{\"a}, Shaw, and
+  Megill]{small2021polis}
+Christopher~T. Small, Michael Bjorkegren, Timo Erkkil{\"a}, Lynette Shaw, and
+  Colin Megill.
+\newblock Polis: Scaling deliberation by mapping high dimensional opinion
+  spaces.
+\newblock \emph{RECERCA. Revista de Pensament i An{\`a}lisi}, 26\penalty0
+  (2):\penalty0 1--26, 2021.
+\newblock \doi{10.6035/recerca.5516}.
+
+\bibitem[Tessler et~al.(2024)Tessler, Bakker, Jarrett, Sheahan, Chadwick,
+  Koster, Evans, Campbell-Gillingham, Collins, Parkes, Botvinick, and
+  Summerfield]{tessler2024ai}
+Michael~Henry Tessler, Michiel~A. Bakker, Daniel Jarrett, Hannah Sheahan,
+  Martin~J. Chadwick, Raphael Koster, Georgina Evans, Lucy Campbell-Gillingham,
+  Tantum Collins, David~C. Parkes, Matthew Botvinick, and Christopher
+  Summerfield.
+\newblock {AI} can help humans find common ground in democratic deliberation.
+\newblock \emph{Science}, 386\penalty0 (6719):\penalty0 eadq2852, 2024.
+\newblock \doi{10.1126/science.adq2852}.
+
+\bibitem[Viswanathan et~al.(2024)Viswanathan, Gashteovski, Lawrence, Wu, and
+  Neubig]{viswanathan2024large}
+Vijay Viswanathan, Kiril Gashteovski, Carolin Lawrence, Tongshuang Wu, and
+  Graham Neubig.
+\newblock Large language models enable few-shot clustering.
+\newblock \emph{Transactions of the Association for Computational Linguistics},
+  12:\penalty0 321--333, 2024.
+\newblock \doi{10.1162/tacl_a_00648}.
+
+\bibitem[Wang et~al.(2023)Wang, Li, Chen, Cai, Zhu, Lin, Cao, Liu, Liu, and
+  Sui]{wang2023large}
+Peiyi Wang, Lei Li, Liang Chen, Zefan Cai, Dawei Zhu, Binghuai Lin, Yunbo Cao,
+  Qi~Liu, Tianyu Liu, and Zhifang Sui.
+\newblock Large language models are not fair evaluators.
+\newblock \emph{arXiv preprint arXiv:2305.17926}, 2023.
+
+\bibitem[Zhang et~al.(2023)Zhang, Wang, and Shang]{zhang2023clusterllm}
+Yuwei Zhang, Zihan Wang, and Jingbo Shang.
+\newblock {ClusterLLM}: Large language models as a guide for text clustering.
+\newblock In \emph{Proceedings of the 2023 Conference on Empirical Methods in
+  Natural Language Processing (EMNLP)}, pages 13903--13920, 2023.
+\newblock \doi{10.18653/v1/2023.emnlp-main.858}.
+
+\bibitem[Zheng et~al.(2023)Zheng, Chiang, Sheng, Zhuang, Wu, Zhuang, Lin, Li,
+  Li, Xing, Zhang, Gonzalez, and Stoica]{zheng2023judging}
+Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao
+  Zhuang, Zi~Lin, Zhuohan Li, Dacheng Li, Eric~P. Xing, Hao Zhang, Joseph~E.
+  Gonzalez, and Ion Stoica.
+\newblock Judging {LLM}-as-a-judge with {MT}-bench and chatbot arena.
+\newblock In \emph{Advances in Neural Information Processing Systems (NeurIPS),
+  Datasets and Benchmarks Track}, volume~36, 2023.
+
+\end{thebibliography}
