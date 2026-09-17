@@ -4,102 +4,83 @@ Four emblems, one per card on `/compass` (ארבע רוחות המצפון). The
 four cards stop reading as one long form: a player scrolling back should know
 which wind they are looking at before reading a word of it.
 
-Deliverables drop into `apps/odyssey/public/assets/compass/` under these exact
-names — the game loads them by filename:
+They live in `apps/odyssey/public/assets/compass/` under these exact names —
+the game loads them by filename.
 
-| File | Wind | The question the card asks | Emblem |
-|---|---|---|---|
-| `wind-love.webp` | רוח האהבה | what is best here, and worth keeping and nurturing | an open keepsake chest |
-| `wind-worry.webp` | רוח הדאגה | what you fear most in the years ahead | a storm gathering |
-| `wind-listen.webp` | רוח ההקשבה | who is not listened to enough | a listening horn |
-| `wind-decide.webp` | רוח ההכרעה | what should still guide you when no answer is good | a sextant sighting one star |
+| File | Wind | The question the card asks | Emblem | State |
+|---|---|---|---|---|
+| `wind-love.webp` | רוח האהבה | what is best here, and worth keeping and nurturing | a brass heart locket: compass rose, wave, sail | ✅ landed |
+| `wind-worry.webp` | רוח הדאגה | what you fear most in the years ahead | — | ⬜ open |
+| `wind-listen.webp` | רוח ההקשבה | who is not listened to enough | a conch shell on a brass stand | ✅ landed |
+| `wind-decide.webp` | רוח ההכרעה | what should still guide you when no answer is good | a ship's helm | ✅ landed |
 
 Each emblem has to answer its own question, not just look nautical. The test
 is a player who glances at the picture and can guess which wind it belongs to
-before reading the heading: a chest is what you keep, a storm is what is
-coming, a horn is listening, a star is what you steer by when there is no good
-course.
+before reading the heading: a heart is what you love, a shell held to the ear
+is listening, a helm is the hand that has to decide anyway.
 
-Generate as PNG with alpha; whoever integrates them converts to `.webp` (that
-is one `cwebp -q 90` per file). Nothing breaks in the meantime: a missing
-emblem removes itself and the card keeps its old headline-only header.
+Generate as PNG with alpha; integration is
+`cwebp -q 90 -resize 256 256 -alpha_q 100 <in>.png -o wind-<slug>.webp`.
+Nothing breaks in the meantime: a missing emblem removes itself and the card
+keeps its headline-only header.
 
 ## Technical requirements
 
-1. **Square**, 1024×1024, PNG **with alpha**. If the model cannot deliver
-   transparency, deliver on flat `#0d2b43` and say so — the integrator masks.
-2. **The emblem fills the frame** with a small even margin. It is displayed at
+1. **Square**, ~1024² or larger, PNG **with alpha**. If the model cannot
+   deliver transparency, deliver on flat `#0d2b43` and say so — the integrator
+   masks.
+2. **The object fills the frame** with a small even margin. It is displayed at
    **68 px** (48 px on a phone), so it has to survive that: one object, bold
    silhouette, no fine engraving, no thin outlines, no busy background.
-3. **Four different silhouettes and four different dominant colours** — this is
-   the whole point. Two round brass things are two cards a player cannot tell
-   apart at thumbnail size.
+3. **Four different silhouettes and four different dominant colours.** This is
+   the whole point, and the three that landed have spent three of them:
+   heart-shaped warm gold, wide pearl-and-rose teardrop, dark-wood spoked
+   circle. The fourth must not be another circle and must not be another warm
+   brass — see below.
 4. **No text anywhere.** No letters, numbers, labels, plaques, engraved words,
    watermarks or UI. The game draws its own Hebrew headings.
-5. **One shared world**: the same painterly semi-realistic hand, the same warm
-   late-afternoon Mediterranean light from the upper right, as the islands in
-   `public/assets/islands/` and `ship.png`. Generate `wind-love` first, then
-   ask for the others "in the same style, light and palette as this one".
 
-## Shared style block
+## The style the delivered three set
 
-Prepended to each of the four subject lines below (nano-banana takes it inline):
+Not the "single object floating in space" this doc first asked for. What
+actually works, and what the fourth has to match: **one antique nautical
+object, rendered semi-photoreally as if catalogued on a museum shelf** —
+crisp, three-quarter or straight-on, warm light from the upper right, real
+weathered material (cast brass with patina, seasoned oak, sea-polished shell),
+clean alpha, no ground, no shadow plate, no scene.
 
-> Painterly semi-realistic digital illustration of a single object, centered,
-> filling the frame with a small margin. Golden-age-of-sail adventure-map
-> style, the look of an antique nautical keepsake. Warm late-afternoon
-> Mediterranean light from the upper right, soft shadows. Palette of cream and
-> sand stone, weathered brass and gold, deep blue-turquoise accents. Bold
-> readable silhouette that still reads when shrunk to a 68-pixel icon: one
-> object only, no scene, no horizon, no frame, no border, no vignette.
-> Transparent background (if transparency is unsupported, flat #0d2b43).
-> ABSOLUTELY NO text, letters, numbers, labels, plaques, engraved words,
-> watermarks or UI elements.
+## Still open — `wind-worry.png` (רוח הדאגה)
 
-## The four prompts
+The card asks *ממה את/ה הכי חושש/ת בשנים הקרובות?* — what do you fear in the
+years ahead. The emblem has to say **warning**, not merely weather, and it has
+to stay legible beside a heart, a shell and a wheel. Recommended: a ship's
+bell. Its silhouette is unlike the other three, and a bell is the sound a ship
+makes when something is wrong.
 
-**1 — `wind-love.png` (רוח האהבה — what is worth keeping and nurturing)**
+> Painterly semi-realistic digital illustration of a single antique nautical
+> object, catalogued as if on a museum shelf. Centered, filling the frame with
+> a small margin. Warm light from the upper right, soft shadows, crisp
+> material detail. Transparent background, no ground, no shadow plate, no
+> scene, no frame, no border. Bold readable silhouette that still reads when
+> shrunk to a 68-pixel icon. ABSOLUTELY NO text, letters, numbers, labels,
+> plaques, engraved words, watermarks or UI elements.
+>
+> The object: an old ship's alarm bell hanging from a weathered iron bracket,
+> its rope pull swinging, caught mid-strike. The metal is dark storm-grey
+> bronze gone cold and green-black with salt patina — NOT warm polished brass;
+> this is the coldest and darkest of four emblems that otherwise glow. One
+> pale steel highlight down the bell's lip. Dominant colours: storm grey, cold
+> green-black patina, one thin steel gleam.
 
-> [shared style block] The object: an open sea-chest of dark weathered wood
-> with weathered brass corners and a brass lock plate, its lid raised, warm
-> golden light spilling out of the inside so the chest reads as holding
-> something precious. Resting across the open lid, one fresh olive sprig with
-> green leaves — the one living thing in the picture. Not a pirate's hoard of
-> coins: a household keepsake chest, the things a family carries and tends.
-> Dominant colours: warm gold light, dark wood, olive green.
-
-**2 — `wind-worry.png` (רוח הדאגה — what you fear is coming)**
-
-> [shared style block] The object: a single dense, dark slate-blue
-> thundercloud, sculpted and heavy, with one pale lightning fork breaking
-> downward out of its underside and a cold rain-grey veil beneath it. The cloud
-> alone, no land, no sea, no ship — the thing on the horizon that has not
-> arrived yet. Coldest and darkest of the four emblems. Dominant colours: slate
-> grey-blue and cold silver, with one thin amber gleam along the cloud's lit
-> upper edge.
-
-**3 — `wind-listen.png` (רוח ההקשבה — who is not heard)**
-
-> [shared style block] The object: an antique brass ear trumpet — a listening
-> horn, the wide bell turned toward the viewer as if held out to catch a quiet
-> voice, its narrow end curving away. Warm polished brass with soft patina, a
-> wrapped leather grip. It must read as an instrument for HEARING, not a
-> megaphone for shouting: the bell is open to us, the small end points away.
-> Dominant colours: warm polished brass and cream highlight — the brightest of
-> the four emblems.
-
-**4 — `wind-decide.png` (רוח ההכרעה — what guides you when no answer is good)**
-
-> [shared style block] The object: an antique brass sextant, seen three-quarter
-> on so its arc and sighting telescope read as a clear wedge, raised as if
-> being sighted; above and beyond it a single bright silver-white star with a
-> soft glow, the one fixed point in a deep midnight-blue field. The star is
-> small but unmistakable. Dominant colours: deep midnight blue and silver-white
-> star light, with brass warmth only on the instrument itself.
+Alternative, if the bell reads too much like a church: **a storm lantern** — a
+square-sided brass ship's lantern with smoke-darkened glass and a low,
+guttering flame inside, the metal blackened and salt-eaten. Silhouette is a
+box with a small warm core; dominant colours soot black and dim amber.
 
 ## QA checklist
 
-- [ ] 4 files, exact names, square, alpha clean (no white halo)
+- [ ] exact filename, square, alpha clean (no white or dark halo)
 - [ ] zero readable text or numbers anywhere
-- [ ] shrink each to 68 px: still instantly distinguishable from the other three
-- [ ] one visual family with the islands and the ship — same light, same hand
+- [ ] shrink to 68 px: still instantly distinguishable from the other three
+- [ ] one visual family with the three that landed, and with the islands and
+      `ship.png` — same light, same hand
