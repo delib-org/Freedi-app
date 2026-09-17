@@ -23,6 +23,8 @@ const SAVED_BADGE_MS = 2000;
 export interface QuestionCardsPanelProps {
   questionId: string;
   surveyId?: string;
+  /** Each new value opens the panel and brings it into view. */
+  focusRequest?: number;
 }
 
 interface RowState {
@@ -36,7 +38,7 @@ interface RowState {
 
 const IDLE_ROW: RowState = { status: 'idle', problem: null };
 
-export default function QuestionCardsPanel({ questionId, surveyId }: QuestionCardsPanelProps) {
+export default function QuestionCardsPanel({ questionId, surveyId, focusRequest }: QuestionCardsPanelProps) {
   const { t, tWithParams } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [cards, setCards] = useState<Statement[] | null>(null);
@@ -44,6 +46,7 @@ export default function QuestionCardsPanel({ questionId, surveyId }: QuestionCar
   const [isLoading, setIsLoading] = useState(false);
   const [states, setStates] = useState<Record<string, RowState>>({});
   const [altDrafts, setAltDrafts] = useState<Record<string, string>>({});
+  const sectionRef = useRef<HTMLElement>(null);
   const statesRef = useRef(states);
   statesRef.current = states;
 
@@ -52,6 +55,18 @@ export default function QuestionCardsPanel({ questionId, surveyId }: QuestionCar
     () => () => Object.values(statesRef.current).forEach((s) => s.pendingUrl && URL.revokeObjectURL(s.pendingUrl)),
     []
   );
+
+  useEffect(() => {
+    if (!focusRequest) return;
+    setIsOpen(true);
+    // After the row has expanded and the panel has rendered
+    const timer = setTimeout(() => {
+      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      sectionRef.current?.querySelector<HTMLButtonElement>('.question-cards-panel__header')?.focus({ preventScroll: true });
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [focusRequest]);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -165,7 +180,7 @@ export default function QuestionCardsPanel({ questionId, surveyId }: QuestionCar
   const headerLabel = cards === null ? t('Cards') : tWithParams('Cards ({{count}})', { count: cards.length });
 
   return (
-    <section className="question-cards-panel">
+    <section className="question-cards-panel" ref={sectionRef}>
       <button
         type="button"
         className="question-cards-panel__header"

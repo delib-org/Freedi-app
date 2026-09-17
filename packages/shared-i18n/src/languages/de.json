@@ -4182,5 +4182,8 @@
   "Cards ({{count}})": "Karten ({{count}})",
   "Couldn't load the cards": "Die Karten konnten nicht geladen werden",
   "No cards yet": "Noch keine Karten",
-  "Participants' suggestions and cards added in the main app appear here.": "Vorschläge der Teilnehmenden und in der Haupt-App hinzugefügte Karten erscheinen hier."
+  "Participants' suggestions and cards added in the main app appear here.": "Vorschläge der Teilnehmenden und in der Haupt-App hinzugefügte Karten erscheinen hier.",
+  "Pictures": "Bilder",
+  "Add pictures to the cards of this question": "Bilder zu den Karten dieser Frage hinzufügen",
+  "Type or paste your cards above, one per line. Each card then gets a 📷 spot for its picture.": "Geben Sie Ihre Karten oben ein oder fügen Sie sie ein, eine pro Zeile. Jede Karte erhält dann einen 📷-Platz für ihr Bild."
 }

@@ -4182,5 +4182,8 @@
   "Cards ({{count}})": "Kaarten ({{count}})",
   "Couldn't load the cards": "De kaarten konden niet worden geladen",
   "No cards yet": "Nog geen kaarten",
-  "Participants' suggestions and cards added in the main app appear here.": "Suggesties van deelnemers en kaarten uit de hoofdapp verschijnen hier."
+  "Participants' suggestions and cards added in the main app appear here.": "Suggesties van deelnemers en kaarten uit de hoofdapp verschijnen hier.",
+  "Pictures": "Afbeeldingen",
+  "Add pictures to the cards of this question": "Afbeeldingen toevoegen aan de kaarten van deze vraag",
+  "Type or paste your cards above, one per line. Each card then gets a 📷 spot for its picture.": "Typ of plak je kaarten hierboven, één per regel. Elke kaart krijgt dan een 📷-plek voor een afbeelding."
 }

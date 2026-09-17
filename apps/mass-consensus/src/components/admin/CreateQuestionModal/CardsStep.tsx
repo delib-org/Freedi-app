@@ -126,7 +126,7 @@ export default function CardsStep({
       {!skip && rows.length === 0 && (
         <div className={styles.solutionsPreview}>
           <div className={styles.emptyPreview}>
-            {t('pasteYourSolutions') || 'Paste your solutions above, one per line'}
+            {t('Type or paste your cards above, one per line. Each card then gets a 📷 spot for its picture.')}
           </div>
         </div>
       )}

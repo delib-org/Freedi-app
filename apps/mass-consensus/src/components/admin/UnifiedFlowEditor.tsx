@@ -169,6 +169,10 @@ interface SortableFlowItemProps {
   onRemove: () => void;
   // For questions
   surveyId?: string;
+  /** Header shortcut to the question's cards and their pictures. */
+  onOpenPictures?: () => void;
+  /** Bumped each time the shortcut is used, so the panel opens and scrolls into view. */
+  cardsFocusRequest?: number;
   surveySettings?: SurveySettings;
   questionSetting?: QuestionOverrideSettings;
   onQuestionSettingsChange?: (settings: QuestionOverrideSettings) => void;
@@ -189,6 +193,8 @@ function SortableFlowItem({
   onToggleExpand,
   onRemove,
   surveyId,
+  onOpenPictures,
+  cardsFocusRequest,
   surveySettings,
   questionSetting,
   onQuestionSettingsChange,
@@ -262,6 +268,16 @@ function SortableFlowItem({
             })}
           />
         )}
+        {item.type === 'question' && onOpenPictures && (
+          <button
+            type="button"
+            className={styles.flowPicturesButton}
+            onClick={onOpenPictures}
+            aria-label={t('Add pictures to the cards of this question')}
+          >
+            <span aria-hidden="true">🖼️</span> {t('Pictures')}
+          </button>
+        )}
         <button
           type="button"
           className={styles.flowExpandButton}
@@ -300,7 +316,11 @@ function SortableFlowItem({
                   onChange={onQuestionTextChange}
                 />
               )}
-              <QuestionCardsPanel questionId={item.question.statementId} surveyId={surveyId} />
+              <QuestionCardsPanel
+                questionId={item.question.statementId}
+                surveyId={surveyId}
+                focusRequest={cardsFocusRequest}
+              />
               <QuestionSettingsPanel
                 questionSetting={questionSetting}
                 surveySettings={surveySettings}
@@ -736,6 +756,7 @@ export default function UnifiedFlowEditor({
 }: UnifiedFlowEditorProps) {
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [cardsFocus, setCardsFocus] = useState<{ id: string; request: number } | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -906,6 +927,15 @@ export default function UnifiedFlowEditor({
                 onToggleExpand={() => setExpandedId(expandedId === item.id ? null : item.id)}
                 onRemove={() => handleRemoveItem(item)}
                 surveyId={surveyId}
+                onOpenPictures={
+                  item.type === 'question'
+                    ? () => {
+                        setExpandedId(item.id);
+                        setCardsFocus((prev) => ({ id: item.id, request: (prev?.request ?? 0) + 1 }));
+                      }
+                    : undefined
+                }
+                cardsFocusRequest={cardsFocus?.id === item.id ? cardsFocus.request : undefined}
                 surveySettings={surveySettings}
                 questionSetting={item.type === 'question' ? questionSettings[item.id] : undefined}
                 onQuestionSettingsChange={

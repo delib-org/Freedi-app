@@ -4302,5 +4302,8 @@
   "Cards ({{count}})": "البطاقات ({{count}})",
   "Couldn't load the cards": "تعذّر تحميل البطاقات",
   "No cards yet": "لا توجد بطاقات بعد",
-  "Participants' suggestions and cards added in the main app appear here.": "تظهر هنا اقتراحات المشاركين والبطاقات المضافة في التطبيق الرئيسي."
+  "Participants' suggestions and cards added in the main app appear here.": "تظهر هنا اقتراحات المشاركين والبطاقات المضافة في التطبيق الرئيسي.",
+  "Pictures": "الصور",
+  "Add pictures to the cards of this question": "إضافة صور إلى بطاقات هذا السؤال",
+  "Type or paste your cards above, one per line. Each card then gets a 📷 spot for its picture.": "اكتب بطاقاتك أو الصقها أعلاه، بطاقة في كل سطر. ستحصل كل بطاقة بعدها على مكان 📷 لصورتها."
 }
