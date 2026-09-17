@@ -102,7 +102,7 @@ export default function HomeMain() {
 				questions={model.questions}
 				loading={loading}
 				locale={currentLanguage}
-				onOpenQuestion={(id) => navigate(`/statement/${id}`)}
+				onOpenStatement={(id) => navigate(`/statement/${id}`)}
 				onCreateQuestion={create}
 				onCreateGroup={createGroup}
 				onOpenPin={() => setPinOpen(true)}
