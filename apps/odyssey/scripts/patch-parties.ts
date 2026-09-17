@@ -32,6 +32,15 @@
  * DEFAULT_ISLANDS position (sortOrder) AND its title, and any mismatch aborts
  * loudly rather than writing one party's course onto another island.
  *
+ * `--accept-rename 9,12` overrides that abort for the listed sortOrders only.
+ * Use it when the code has RENAMED an island the live game still calls by its
+ * old name, and you have checked that it is the same island — the stance texts
+ * are the evidence, since a renamed island keeps its four positions in their
+ * order. It is deliberately per-island and deliberately typed out each run:
+ * the guard exists because writing one island's route onto another is silent
+ * and unrecoverable, and the only thing that can tell a rename from a
+ * replacement is a person who looked.
+ *
  *   # look first, always
  *   ODYSSEY_FIRESTORE_HOST=localhost:8081 \
  *     npx tsx apps/odyssey/scripts/patch-parties.ts --game default --dry-run
@@ -56,6 +65,13 @@ function arg(name: string): string | undefined {
 
 const gameId = arg('game') ?? 'default';
 const dryRun = process.argv.includes('--dry-run');
+/** sortOrders whose title mismatch the operator has verified as a rename. */
+const acceptRename = new Set(
+	(arg('accept-rename') ?? '')
+		.split(',')
+		.map((value) => Number.parseInt(value.trim(), 10))
+		.filter((value) => Number.isInteger(value)),
+);
 
 if (FIRESTORE_HOST) process.env.FIRESTORE_EMULATOR_HOST = FIRESTORE_HOST;
 const app = getApps().length > 0 ? getApps()[0] : initializeApp({ projectId: PROJECT_ID });
@@ -105,13 +121,23 @@ async function main(): Promise<void> {
 			throw new Error(`a party has a course on "${slug}", which is not a default island`);
 		}
 		const defaultIsland = DEFAULT_ISLANDS[defaultIndex];
-		const gameIsland = gameIslands.find(
-			(island) => island.sortOrder === defaultIndex + 1 && island.title === defaultIsland.title,
-		);
+		const atOrder = gameIslands.find((island) => island.sortOrder === defaultIndex + 1);
+		const renameAccepted = atOrder && acceptRename.has(defaultIndex + 1);
+		const gameIsland =
+			atOrder && (atOrder.title === defaultIsland.title || renameAccepted) ? atOrder : undefined;
 		if (!gameIsland) {
 			throw new Error(
-				`island "${slug}" (${defaultIsland.title}) not found at sortOrder ${defaultIndex + 1} — ` +
-					'the game doc diverged from DEFAULT_ISLANDS (reordered or renamed); refusing to guess',
+				`island "${slug}" (${defaultIsland.title}) not found at sortOrder ${defaultIndex + 1}` +
+					(atOrder ? ` — the game calls it "${atOrder.title}"` : '') +
+					'. The game doc diverged from DEFAULT_ISLANDS (reordered or renamed); refusing to ' +
+					`guess. If it is the same island renamed, verify its stances and pass ` +
+					`--accept-rename ${defaultIndex + 1}`,
+			);
+		}
+		if (renameAccepted && atOrder.title !== defaultIsland.title) {
+			console.info(
+				`  ! sortOrder ${defaultIndex + 1}: writing "${defaultIsland.title}" onto the island the ` +
+					`game calls "${atOrder.title}" — accepted as a rename on your say-so`,
 			);
 		}
 
