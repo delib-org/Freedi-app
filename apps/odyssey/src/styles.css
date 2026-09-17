@@ -198,8 +198,8 @@ body {
 .wind-art {
 	flex: none;
 	display: block;
-	width: 58px;
-	height: 58px;
+	width: 68px;
+	height: 68px;
 }
 
 .wind-art img {
@@ -211,8 +211,8 @@ body {
 
 @media (max-width: 480px) {
 	.wind-art {
-		width: 44px;
-		height: 44px;
+		width: 48px;
+		height: 48px;
 	}
 }
 

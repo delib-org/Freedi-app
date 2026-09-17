@@ -29,7 +29,7 @@ emblem removes itself and the card keeps its old headline-only header.
 1. **Square**, 1024×1024, PNG **with alpha**. If the model cannot deliver
    transparency, deliver on flat `#0d2b43` and say so — the integrator masks.
 2. **The emblem fills the frame** with a small even margin. It is displayed at
-   **58 px** (44 px on a phone), so it has to survive that: one object, bold
+   **68 px** (48 px on a phone), so it has to survive that: one object, bold
    silhouette, no fine engraving, no thin outlines, no busy background.
 3. **Four different silhouettes and four different dominant colours** — this is
    the whole point. Two round brass things are two cards a player cannot tell
@@ -50,7 +50,7 @@ Prepended to each of the four subject lines below (nano-banana takes it inline):
 > style, the look of an antique nautical keepsake. Warm late-afternoon
 > Mediterranean light from the upper right, soft shadows. Palette of cream and
 > sand stone, weathered brass and gold, deep blue-turquoise accents. Bold
-> readable silhouette that still reads when shrunk to a 58-pixel icon: one
+> readable silhouette that still reads when shrunk to a 68-pixel icon: one
 > object only, no scene, no horizon, no frame, no border, no vignette.
 > Transparent background (if transparency is unsupported, flat #0d2b43).
 > ABSOLUTELY NO text, letters, numbers, labels, plaques, engraved words,
@@ -101,5 +101,5 @@ Prepended to each of the four subject lines below (nano-banana takes it inline):
 
 - [ ] 4 files, exact names, square, alpha clean (no white halo)
 - [ ] zero readable text or numbers anywhere
-- [ ] shrink each to 58 px: still instantly distinguishable from the other three
+- [ ] shrink each to 68 px: still instantly distinguishable from the other three
 - [ ] one visual family with the islands and the ship — same light, same hand
