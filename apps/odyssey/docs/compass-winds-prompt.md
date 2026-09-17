@@ -10,14 +10,15 @@ the game loads them by filename.
 | File | Wind | The question the card asks | Emblem | State |
 |---|---|---|---|---|
 | `wind-love.webp` | רוח האהבה | what is best here, and worth keeping and nurturing | a brass heart locket: compass rose, wave, sail | ✅ landed |
-| `wind-worry.webp` | רוח הדאגה | what you fear most in the years ahead | — | ⬜ open |
+| `wind-worry.webp` | רוח הדאגה | what you fear most in the years ahead | a thunderhead trailing rain and one lightning fork | ✅ landed |
 | `wind-listen.webp` | רוח ההקשבה | who is not listened to enough | a conch shell on a brass stand | ✅ landed |
 | `wind-decide.webp` | רוח ההכרעה | what should still guide you when no answer is good | a ship's helm | ✅ landed |
 
 Each emblem has to answer its own question, not just look nautical. The test
 is a player who glances at the picture and can guess which wind it belongs to
-before reading the heading: a heart is what you love, a shell held to the ear
-is listening, a helm is the hand that has to decide anyway.
+before reading the heading: a heart is what you love, a storm is what is
+coming, a shell held to the ear is listening, a helm is the hand that has to
+decide anyway.
 
 Generate as PNG with alpha; integration is
 `cwebp -q 90 -resize 256 256 -alpha_q 100 <in>.png -o wind-<slug>.webp`.
@@ -49,33 +50,21 @@ crisp, three-quarter or straight-on, warm light from the upper right, real
 weathered material (cast brass with patina, seasoned oak, sea-polished shell),
 clean alpha, no ground, no shadow plate, no scene.
 
-## Still open — `wind-worry.png` (רוח הדאגה)
+## All four have landed
 
-The card asks *ממה את/ה הכי חושש/ת בשנים הקרובות?* — what do you fear in the
-years ahead. The emblem has to say **warning**, not merely weather, and it has
-to stay legible beside a heart, a shell and a wheel. Recommended: a ship's
-bell. Its silhouette is unlike the other three, and a bell is the sound a ship
-makes when something is wrong.
+Nothing here is outstanding. What follows is the record — the four subjects, so
+a regeneration (a higher resolution, an animated version, a second game with
+different winds) comes back as the same family rather than four new strangers.
 
-> Painterly semi-realistic digital illustration of a single antique nautical
-> object, catalogued as if on a museum shelf. Centered, filling the frame with
-> a small margin. Warm light from the upper right, soft shadows, crisp
-> material detail. Transparent background, no ground, no shadow plate, no
-> scene, no frame, no border. Bold readable silhouette that still reads when
-> shrunk to a 68-pixel icon. ABSOLUTELY NO text, letters, numbers, labels,
-> plaques, engraved words, watermarks or UI elements.
->
-> The object: an old ship's alarm bell hanging from a weathered iron bracket,
-> its rope pull swinging, caught mid-strike. The metal is dark storm-grey
-> bronze gone cold and green-black with salt patina — NOT warm polished brass;
-> this is the coldest and darkest of four emblems that otherwise glow. One
-> pale steel highlight down the bell's lip. Dominant colours: storm grey, cold
-> green-black patina, one thin steel gleam.
+| Wind | Subject as delivered | Silhouette | Dominant colour |
+|---|---|---|---|
+| האהבה | cast-brass heart locket on a ring: compass rose, wave, sail, blue-green enamel inlay | heart, point down | warm gold |
+| הדאגה | a single dense thunderhead, rain veil beneath it, one pale lightning fork | billowed cloud over a grey skirt | storm grey, cold |
+| ההקשבה | a conch shell on a small brass tripod stand, mouth turned to the viewer | wide spiral teardrop | pearl and rose |
+| ההכרעה | a ship's helm, seasoned oak with a brass hub and brass spoke caps, seen straight on | spoked circle | dark wood and brass |
 
-Alternative, if the bell reads too much like a church: **a storm lantern** — a
-square-sided brass ship's lantern with smoke-darkened glass and a low,
-guttering flame inside, the metal blackened and salt-eaten. Silhouette is a
-box with a small warm core; dominant colours soot black and dim amber.
+Four silhouettes, four colours, and only one of the four is cold — which is
+the wind that should feel cold.
 
 ## QA checklist
 
