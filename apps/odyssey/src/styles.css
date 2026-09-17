@@ -1182,6 +1182,61 @@ button.ship-tag--lit:hover {
 	}
 }
 
+/* On the crew board the bubble belongs to the ⓘ, not to the whole card, and
+   the badge sits in the card's top corner — so the bubble opens UPWARD from
+   there, tail pointing down at the badge you just pressed.
+   Downward was tried first and was wrong: from a badge at the top, the bubble
+   covers the portrait and the name of the very person it is explaining, and
+   the bio text itself never says whose it is. Upward leaves the card whole and
+   costs only the row above, which is an overlay's job anyway. */
+.crew-cell > .speech-bubble {
+	top: auto;
+	bottom: 100%;
+	/* Not centred on the card like the islands' bubble: its edge lines up with
+	   the badge's edge, which is what lets the tail land on the badge. */
+	left: auto;
+	inset-inline-start: 0;
+	transform: none;
+	margin-top: 0;
+	margin-bottom: 8px;
+	/* Room to read a bio without reaching past the board on a phone, where the
+	   grid is two columns and the bubble opens inward from its own card. */
+	max-width: min(260px, 46vw);
+	animation: bubbleUpIn 0.18s ease;
+}
+
+@media (min-width: 480px) {
+	.crew-cell > .speech-bubble {
+		max-width: min(260px, 74vw);
+	}
+}
+
+@keyframes bubbleUpIn {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* The tail moves to the bottom edge and over to the badge's own column —
+   8px in, plus half of the badge's 22px, less half of the tail's 10px. */
+.crew-cell > .speech-bubble::before {
+	top: auto;
+	bottom: -6px;
+	left: auto;
+	inset-inline-start: 14px;
+	transform: rotate(45deg);
+	border-top: 0;
+	border-left: 0;
+	border-bottom: 1px solid rgba(232, 185, 88, 0.75);
+	border-right: 1px solid rgba(232, 185, 88, 0.75);
+	background: var(--panel-bottom);
+}
+
 /* The tail, pointing back at the card that is speaking. Physical borders on
    purpose: the square is rotated, and logical ones would flip with the text. */
 .speech-bubble::before {
