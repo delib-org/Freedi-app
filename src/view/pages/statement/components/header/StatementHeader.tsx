@@ -181,11 +181,13 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 					)}
 
 					{showsStageBar(statement) && !isMapScreen && (
-						<StageProgress
-							stages={STAGE_LABEL_KEYS.map((key) => t(key))}
-							activeIndex={stage}
-							ariaLabel={t('Question stage')}
-						/>
+						<div className={styles.header__stages}>
+							<StageProgress
+								stages={STAGE_LABEL_KEYS.map((key) => t(key))}
+								activeIndex={stage}
+								ariaLabel={t('Question stage')}
+							/>
+						</div>
 					)}
 
 					{isHost ? (
@@ -255,14 +257,6 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 					)}
 					{(!showTabs || tabs.length <= 1) && <div className={styles.header__end} />}
 				</div>
-
-				{/* Mini header: compact title bar shown while minimized; tapping it
-				    restores the full header (click handled by useHeaderHideOnScroll) */}
-				{statement?.statement && (
-					<button type="button" className="page__header__mini" aria-label={t('Show header')}>
-						<span className="page__header__mini__title">{statement.statement}</span>
-					</button>
-				)}
 			</div>
 
 			{showInvitationPanel && (

@@ -172,4 +172,34 @@
 	&__end {
 		height: 4px;
 	}
+
+	&__stages {
+		display: block;
+	}
+}
+
+// Scrolled state. useHeaderHideOnScroll puts .page__header--minimized on the
+// header wrapper: the question's title and its tabs stay, everything that only
+// frames them — the action bar, the stage rail, the host funnel — steps out of
+// the way. Scrolling back up restores them.
+:global(.page__header--minimized) {
+	.header {
+		gap: 6px;
+		padding-block-start: 4px;
+	}
+
+	.header__bar,
+	.header__stages,
+	.header__funnel {
+		display: none;
+	}
+
+	.header__title {
+		display: -webkit-box;
+		-webkit-line-clamp: 1;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		font-size: 1.1rem;
+		line-height: 1.3;
+	}
 }
