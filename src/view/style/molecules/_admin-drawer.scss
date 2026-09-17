@@ -57,7 +57,9 @@ $admin-drawer-width: 320px;
 		width: 52px;
 		height: 56px;
 		padding: 0;
-		color: #ffffff;
+		// Not literal white: this brand's primary is a pale ink in dark mode, and a
+		// white glyph on it disappeared.
+		color: var(--btn-primary-text);
 		background: var(--btn-primary);
 		border: 0;
 		border-start-start-radius: 14px;

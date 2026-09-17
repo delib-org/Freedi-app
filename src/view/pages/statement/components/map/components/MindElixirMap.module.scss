@@ -438,7 +438,7 @@
 
 	&:hover {
 		background: var(--btn-primary, #5f88e5);
-		color: white;
+		color: var(--btn-primary-text);
 	}
 
 	&:focus-visible {
@@ -734,7 +734,7 @@
 		&:hover {
 			background-color: var(--btn-primary, #5f88e5);
 			transform: scale(1.1);
-			color: white;
+			color: var(--btn-primary-text);
 		}
 
 		svg {

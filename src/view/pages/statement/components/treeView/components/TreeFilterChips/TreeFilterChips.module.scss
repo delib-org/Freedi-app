@@ -61,7 +61,7 @@
 
 		&--active {
 			background: var(--btn-primary, #5f88e5);
-			color: #fff;
+			color: var(--btn-primary-text);
 			border-color: var(--btn-primary, #5f88e5);
 
 			&:hover {

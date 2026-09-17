@@ -43,7 +43,7 @@
 		padding: 0.125rem 0.5rem;
 		border-radius: 999px;
 		background-color: var(--btn-primary);
-		color: white;
+		color: var(--btn-primary-text);
 	}
 
 	&__button--promote,
@@ -64,7 +64,7 @@
 
 	&__button--promote {
 		background-color: var(--btn-primary);
-		color: white;
+		color: var(--btn-primary-text);
 	}
 
 	&__button--demote {
