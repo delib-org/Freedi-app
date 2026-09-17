@@ -8,75 +8,12 @@
 	overflow: hidden;
 
 	&__header {
+		// Scrolled state is `page__header--minimized`, set by useHeaderHideOnScroll.
+		// The question header styles that state itself (title + tabs stay); there is
+		// no separate mini bar to swap in.
 		width: 100%;
 		z-index: 999;
 		position: relative;
-
-		&__mini {
-			position: absolute;
-			inset: 0 0 auto 0;
-			// Scrolled state: the question's words and nothing else. The bar is
-			// one line tall; the 44px touch target comes from the overlay below,
-			// which costs no layout height.
-			min-height: 1.3rem;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			padding-block: 0.25rem;
-			background-color: var(--tone-lilac, var(--header-question));
-			color: var(--tone-lilac-ink, var(--question-text));
-			border-radius: 0 0 var(--radius-sheet, 28px) var(--radius-sheet, 28px);
-			opacity: 0;
-			pointer-events: none;
-			border: none;
-			width: 100%;
-			cursor: pointer;
-
-			&:focus-visible {
-				outline: 2px solid var(--white);
-				outline-offset: -3px;
-			}
-
-			// Invisible 44px tap target, so the thin bar still meets WCAG 2.5.5.
-			&::after {
-				content: '';
-				position: absolute;
-				inset-inline: 0;
-				inset-block: 50%;
-				min-height: var(--tap-min, 44px);
-				transform: translateY(-50%);
-			}
-
-			&__title {
-				font-size: 1.1rem;
-				font-weight: 600;
-				line-height: 1.2;
-				padding-inline: 1rem;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				max-width: 90%;
-			}
-		}
-
-		// Minimized: the full header leaves the layout entirely so the content
-		// actually gains the space; the slim mini bar takes its place.
-		// display:none is a one-shot layout change; only opacity animates.
-		&--minimized {
-			@media screen and (max-width: 1023px) {
-				.page__header__full {
-					display: none;
-				}
-
-				.page__header__mini {
-					position: static;
-					opacity: 1;
-					pointer-events: auto;
-					animation: page-header-mini-in var(--motion-base) var(--motion-ease);
-				}
-			}
-		}
-
 		&.rtl {
 			border-bottom-right-radius: 0;
 			border-bottom-left-radius: 50px;
@@ -302,14 +239,5 @@
 				margin: 0 auto;
 			}
 		}
-	}
-}
-@keyframes page-header-mini-in {
-	from {
-		opacity: 0;
-	}
-
-	to {
-		opacity: 1;
 	}
 }

@@ -1,71 +1,90 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
-  --navy: #06182c;
-  --navy-soft: rgba(6, 24, 44, 0.9);
-  --panel-top: rgba(15, 48, 73, 0.96);
-  --panel-bottom: rgba(4, 20, 39, 0.96);
-  --gold: #d8aa4b;
-  --gold-strong: #e8b958;
-  --cream: #fff3d1;
-  --cyan: #5edfff;
+	--navy: #06182c;
+	--navy-soft: rgba(6, 24, 44, 0.9);
+	--panel-top: rgba(15, 48, 73, 0.96);
+	--panel-bottom: rgba(4, 20, 39, 0.96);
+	--gold: #d8aa4b;
+	--gold-strong: #e8b958;
+	--cream: #fff3d1;
+	--cyan: #5edfff;
 }
 
-* { box-sizing: border-box; }
-
-html, body {
-  min-height: 100%;
-  margin: 0;
+* {
+	box-sizing: border-box;
 }
 
-html { background: #06182c; }
+html,
+body {
+	min-height: 100%;
+	margin: 0;
+}
+
+html {
+	background: #06182c;
+}
 
 body {
-  /* Keep body transparent: an opaque body background would paint over the
+	/* Keep body transparent: an opaque body background would paint over the
      fixed .ocean-bg layer, which sits at a negative z-index. */
-  background: transparent;
-  font-family: Arial, Helvetica, sans-serif;
-  color: white;
+	background: transparent;
+	font-family: Arial, Helvetica, sans-serif;
+	color: white;
 }
 
 /* Full-screen sea backdrop behind every screen */
 .ocean-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  background: url("/assets/mediterranean-ocean.png") center / cover no-repeat #06182c;
+	position: fixed;
+	inset: 0;
+	z-index: -2;
+	background: url('/assets/mediterranean-ocean.png') center / cover no-repeat #06182c;
 }
 
 .ocean-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(6, 24, 44, 0.55), rgba(6, 24, 44, 0.8));
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, rgba(6, 24, 44, 0.55), rgba(6, 24, 44, 0.8));
 }
 
 /* Persistent Phaser canvas behind the player screens (game mode) */
 .sea-stage {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
+	position: fixed;
+	inset: 0;
+	z-index: 0;
 }
 
 .sea-stage canvas {
-  width: 100% !important;
-  height: 100% !important;
+	width: 100% !important;
+	height: 100% !important;
 }
 
 .page {
-  position: relative;
-  z-index: 10;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 84px 20px 48px;
-  /* Let empty page areas pass pointer events through to the sea stage;
+	position: relative;
+	z-index: 10;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 84px 20px 48px;
+	/* The bar is fixed, so pages clear it by padding alone — and it grows by a
+     row when the voyage strip is up. VoyageProgress sets the flag while it
+     is mounted (admin and the pre-journey intro have no strip). */
+	/* Let empty page areas pass pointer events through to the sea stage;
      interactive elements re-enable themselves below. */
-  pointer-events: none;
+	pointer-events: none;
+}
+
+:root[data-voyage-strip='on'] .page {
+	padding-top: 118px;
+}
+
+/* Inline strip — the bar is one line again, so the pages get their room back. */
+@media (min-width: 1100px) {
+	:root[data-voyage-strip='on'] .page {
+		padding-top: 84px;
+	}
 }
 
 .page a,
@@ -75,203 +94,397 @@ body {
 .page select,
 .page label,
 .page .panel {
-  pointer-events: auto;
+	pointer-events: auto;
 }
 
 /* Gold-framed panel used across the game */
 .panel {
-  border: 1px solid rgba(232, 185, 88, 0.92);
-  border-radius: 14px;
-  background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
-  box-shadow:
-    inset 0 0 0 3px rgba(211, 163, 66, 0.12),
-    0 12px 35px rgba(0, 0, 0, 0.35);
-  padding: 22px 26px;
+	border: 1px solid rgba(232, 185, 88, 0.92);
+	border-radius: 14px;
+	background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+	box-shadow:
+		inset 0 0 0 3px rgba(211, 163, 66, 0.12),
+		0 12px 35px rgba(0, 0, 0, 0.35);
+	padding: 22px 26px;
 }
 
 .eyebrow {
-  color: var(--gold-strong);
-  font-size: 13px;
-  letter-spacing: 0.08em;
+	color: var(--gold-strong);
+	font-size: 13px;
+	letter-spacing: 0.08em;
 }
 
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  border: 1px solid rgba(232, 185, 88, 0.95);
-  border-radius: 999px;
-  padding: 12px 34px;
-  font-size: 18px;
-  font-weight: 700;
-  color: #2b1c04;
-  background: linear-gradient(180deg, #f3cf7e, #d8a63e);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  transition: transform 0.15s ease, filter 0.15s ease;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	cursor: pointer;
+	border: 1px solid rgba(232, 185, 88, 0.95);
+	border-radius: 999px;
+	padding: 12px 34px;
+	font-size: 18px;
+	font-weight: 700;
+	color: #2b1c04;
+	background: linear-gradient(180deg, #f3cf7e, #d8a63e);
+	box-shadow:
+		0 6px 18px rgba(0, 0, 0, 0.35),
+		inset 0 1px 0 rgba(255, 255, 255, 0.5);
+	transition:
+		transform 0.15s ease,
+		filter 0.15s ease;
 }
 
-.btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05); }
-.btn:disabled { opacity: 0.45; cursor: default; }
+.btn:hover:not(:disabled) {
+	transform: translateY(-1px);
+	filter: brightness(1.05);
+}
+.btn:disabled {
+	opacity: 0.45;
+	cursor: default;
+}
 
 .btn-outline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  border: 1px solid rgba(232, 185, 88, 0.8);
-  border-radius: 999px;
-  padding: 9px 22px;
-  font-size: 15px;
-  color: var(--cream);
-  background: rgba(6, 26, 48, 0.72);
-  transition: background 0.15s ease;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	cursor: pointer;
+	border: 1px solid rgba(232, 185, 88, 0.8);
+	border-radius: 999px;
+	padding: 9px 22px;
+	font-size: 15px;
+	color: var(--cream);
+	background: rgba(6, 26, 48, 0.72);
+	transition: background 0.15s ease;
 }
 
-.btn-outline:hover:not(:disabled) { background: rgba(15, 48, 73, 0.9); }
-.btn-outline:disabled { opacity: 0.45; cursor: default; }
+.btn-outline:hover:not(:disabled) {
+	background: rgba(15, 48, 73, 0.9);
+}
+.btn-outline:disabled {
+	opacity: 0.45;
+	cursor: default;
+}
+
+/* "אפשר להמשיך" — the compass says when a wind has been answered, and says
+   nothing at all before that. It replaced a running count of the buttons the
+   player can already see. */
+.wind-ready {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	white-space: nowrap;
+	border: 1px solid rgba(232, 185, 88, 0.5);
+	border-radius: 999px;
+	padding: 3px 12px;
+	font-size: 13px;
+	color: var(--gold-strong);
+	background: rgba(6, 24, 44, 0.7);
+}
 
 /* Inspiration chips (compass) */
 .chip {
-  cursor: pointer;
-  border: 1px solid rgba(94, 223, 255, 0.4);
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 14px;
-  color: #cfeefc;
-  background: rgba(9, 38, 62, 0.75);
-  transition: all 0.15s ease;
+	cursor: pointer;
+	border: 1px solid rgba(94, 223, 255, 0.4);
+	border-radius: 999px;
+	padding: 6px 14px;
+	font-size: 14px;
+	color: #cfeefc;
+	background: rgba(9, 38, 62, 0.75);
+	transition: all 0.15s ease;
 }
 
-.chip:hover { border-color: rgba(94, 223, 255, 0.8); }
+.chip:hover {
+	border-color: rgba(94, 223, 255, 0.8);
+}
 
 .chip.active {
-  color: #06263e;
-  background: var(--cyan);
-  border-color: var(--cyan);
-  font-weight: 700;
+	color: #06263e;
+	background: var(--cyan);
+	border-color: var(--cyan);
+	font-weight: 700;
 }
 
 /* Attitude buttons (island stances) */
 .attitude {
-  cursor: pointer;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  padding: 6px 12px;
-  font-size: 13px;
-  color: #e6f2ff;
-  background: rgba(9, 38, 62, 0.7);
-  transition: all 0.12s ease;
+	cursor: pointer;
+	border-radius: 8px;
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	padding: 6px 12px;
+	font-size: 13px;
+	color: #e6f2ff;
+	background: rgba(9, 38, 62, 0.7);
+	transition: all 0.12s ease;
 }
 
-.attitude.active-support { background: #1d7a4f; border-color: #35d68d; font-weight: 700; }
-.attitude.active-livewith { background: #7a6420; border-color: #e8c860; font-weight: 700; }
-.attitude.active-oppose { background: #7a2731; border-color: #ff8a96; font-weight: 700; }
-
-textarea, input[type="text"], input[type="number"], input[type="email"], select {
-  width: 100%;
-  border: 1px solid rgba(94, 223, 255, 0.35);
-  border-radius: 10px;
-  background: rgba(4, 18, 34, 0.85);
-  color: #eaf6ff;
-  padding: 10px 12px;
-  font-size: 15px;
-  font-family: inherit;
+.attitude.active-support {
+	background: #1d7a4f;
+	border-color: #35d68d;
+	font-weight: 700;
+}
+.attitude.active-livewith {
+	background: #7a6420;
+	border-color: #e8c860;
+	font-weight: 700;
+}
+.attitude.active-oppose {
+	background: #7a2731;
+	border-color: #ff8a96;
+	font-weight: 700;
 }
 
-textarea:focus, input:focus, select:focus {
-  outline: 2px solid rgba(94, 223, 255, 0.6);
+textarea,
+input[type='text'],
+input[type='number'],
+input[type='email'],
+select {
+	width: 100%;
+	border: 1px solid rgba(94, 223, 255, 0.35);
+	border-radius: 10px;
+	background: rgba(4, 18, 34, 0.85);
+	color: #eaf6ff;
+	padding: 10px 12px;
+	font-size: 15px;
+	font-family: inherit;
+}
+
+textarea:focus,
+input:focus,
+select:focus {
+	outline: 2px solid rgba(94, 223, 255, 0.6);
 }
 
 /* Island node on the map */
 .island-node {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  border: none;
-  background: none;
-  color: var(--cream);
-  padding: 0;
+	position: absolute;
+	transform: translate(-50%, -50%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	cursor: pointer;
+	border: none;
+	background: none;
+	color: var(--cream);
+	padding: 0;
 }
 
 .island-disc {
-  width: 74px;
-  height: 74px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 30px;
-  border: 3px solid rgba(232, 185, 88, 0.85);
-  background: radial-gradient(circle at 35% 30%, #3f7d55 0%, #2a5238 55%, #17331f 100%);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  overflow: hidden;
+	width: 74px;
+	height: 74px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 30px;
+	border: 3px solid rgba(232, 185, 88, 0.85);
+	background: radial-gradient(circle at 35% 30%, #3f7d55 0%, #2a5238 55%, #17331f 100%);
+	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+	transition:
+		transform 0.15s ease,
+		box-shadow 0.15s ease;
+	overflow: hidden;
 }
 
-.island-disc img { width: 100%; height: 100%; object-fit: cover; }
+.island-disc img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
 
-.island-node:hover .island-disc { transform: scale(1.08); }
+.island-node:hover .island-disc {
+	transform: scale(1.08);
+}
 
 .island-node.selected .island-disc {
-  border-color: var(--cyan);
-  box-shadow: 0 0 0 5px rgba(94, 223, 255, 0.35), 0 8px 22px rgba(0, 0, 0, 0.5);
+	border-color: var(--cyan);
+	box-shadow:
+		0 0 0 5px rgba(94, 223, 255, 0.35),
+		0 8px 22px rgba(0, 0, 0, 0.5);
 }
 
 .island-label {
-  background: rgba(6, 26, 48, 0.88);
-  border: 1px solid rgba(232, 185, 88, 0.85);
-  border-radius: 8px;
-  padding: 3px 10px;
-  font-size: 13px;
-  white-space: nowrap;
+	background: rgba(6, 26, 48, 0.88);
+	border: 1px solid rgba(232, 185, 88, 0.85);
+	border-radius: 8px;
+	padding: 3px 10px;
+	font-size: 13px;
+	white-space: nowrap;
 }
 
-.island-node.selected .island-label { border-color: var(--cyan); }
+.island-node.selected .island-label {
+	border-color: var(--cyan);
+}
 
 /* Distance bar in the summary */
 .distance-track {
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  overflow: hidden;
+	height: 10px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.12);
+	overflow: hidden;
 }
 
 .distance-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #35d68d, #e8c860, #ff8a96);
+	height: 100%;
+	border-radius: 999px;
+	background: linear-gradient(90deg, #35d68d, #e8c860, #ff8a96);
 }
 
 /* Top navigation bar */
 .topnav {
-  position: fixed;
-  top: 0;
-  right: 0;
-  left: 0;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 20px;
-  background: linear-gradient(180deg, rgba(4, 18, 34, 0.95), rgba(4, 18, 34, 0.75));
-  border-bottom: 1px solid rgba(232, 185, 88, 0.5);
+	position: fixed;
+	top: 0;
+	right: 0;
+	left: 0;
+	z-index: 40;
+	display: flex;
+	/* One line where there is room for one; the strip drops to a line of its
+     own only when the bar is too narrow to hold it. A row of empty header
+     above every screen is rent nobody is paying. */
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 14px;
+	padding: 10px 20px;
+	background: linear-gradient(180deg, rgba(4, 18, 34, 0.95), rgba(4, 18, 34, 0.75));
+	border-bottom: 1px solid rgba(232, 185, 88, 0.5);
+}
+
+.topnav__brand {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.topnav__actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	/* pinned to the far end of the first line, wherever the brand ends */
+	margin-inline-start: auto;
+}
+
+/* ====================== THE VOYAGE STRIP ======================
+   Where am I, and what have I finished? The legs of the journey in
+   order, under the brand: ✓ behind you, gold where you stand, dimmed
+   ahead. It scrolls sideways on a phone rather than wrapping, so the
+   bar keeps one predictable height for .page to clear.
+   ============================================================== */
+.voyage-steps {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	overflow-x: auto;
+	scrollbar-width: none;
+	/* narrow bar: a line of its own, under the brand */
+	flex: 1 0 100%;
+	min-width: 0;
+}
+
+/* Room for all three on one line: brand, the voyage, the user's buttons.
+   The DOM order is brand → buttons → strip (so a wrapped strip is the part
+   that drops); `order` puts the strip back in the middle where it belongs. */
+@media (min-width: 1100px) {
+	.topnav {
+		flex-wrap: nowrap;
+	}
+
+	.topnav__brand {
+		order: 1;
+	}
+
+	.voyage-steps {
+		order: 2;
+		flex: 1 1 auto;
+		justify-content: center;
+	}
+
+	.topnav__actions {
+		order: 3;
+		margin-inline-start: 0;
+	}
+}
+
+.voyage-steps::-webkit-scrollbar {
+	display: none;
+}
+
+.voyage-steps__item {
+	display: flex;
+	align-items: center;
+}
+
+/* The connector — a hair of rope between one leg and the next. */
+.voyage-steps__item + .voyage-steps__item::before {
+	content: '';
+	width: 10px;
+	height: 1px;
+	background: rgba(232, 185, 88, 0.45);
+	flex: none;
+}
+
+.voyage-step {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	white-space: nowrap;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	padding: 3px 10px 3px 8px;
+	font-size: 13px;
+	color: #cfe6f5;
+	transition: background 0.15s ease;
+}
+
+a.voyage-step:hover {
+	background: rgba(15, 48, 73, 0.9);
+}
+
+.voyage-step--done {
+	color: var(--cream);
+}
+
+.voyage-step--current {
+	color: var(--navy);
+	background: var(--gold-strong);
+	border-color: var(--gold-strong);
+	font-weight: 700;
+}
+
+.voyage-step--locked {
+	opacity: 0.45;
+	cursor: default;
+}
+
+.voyage-step__mark {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	border: 1px solid currentColor;
+	border-radius: 999px;
+	font-size: 11px;
+	line-height: 1;
+}
+
+.voyage-step__detail {
+	font-size: 11px;
+	opacity: 0.85;
 }
 
 .vignette {
-  position: fixed;
-  inset: 0;
-  /* above the sea-stage canvas (z 0), below page content (z 10) */
-  z-index: 5;
-  pointer-events: none;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(2, 10, 20, 0.55) 100%);
+	position: fixed;
+	inset: 0;
+	/* above the sea-stage canvas (z 0), below page content (z 10) */
+	z-index: 5;
+	pointer-events: none;
+	background: radial-gradient(ellipse at center, transparent 55%, rgba(2, 10, 20, 0.55) 100%);
 }
 
 /* ============================ THE CREW ============================
@@ -284,153 +497,668 @@ textarea:focus, input:focus, select:focus {
    five and leaving an orphan pair on a third row, which reads as a mistake
    rather than a layout. */
 .crew-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	/* One height for the whole board, not one per row. */
+	grid-auto-rows: 1fr;
+	gap: 14px;
 }
 
-@media (min-width: 480px) { .crew-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 700px) { .crew-grid { grid-template-columns: repeat(4, 1fr); } }
-@media (min-width: 920px) { .crew-grid { grid-template-columns: repeat(6, 1fr); } }
+@media (min-width: 480px) {
+	.crew-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+@media (min-width: 700px) {
+	.crew-grid {
+		grid-template-columns: repeat(4, 1fr);
+	}
+}
+@media (min-width: 920px) {
+	.crew-grid {
+		grid-template-columns: repeat(6, 1fr);
+	}
+}
 
 /* Cards are as tall as the tallest in their row: a name that wraps to two
    lines must not leave its neighbours short. */
 .crew-cell {
-  display: flex;
-  flex-direction: column;
+	position: relative;
+	display: flex;
+	flex-direction: column;
 }
 
-.crew-cell > .crew-card { flex: 1; }
+/* The open bubble hangs over the cards below it, so its cell paints on top. */
+.crew-cell:has(> .speech-bubble) {
+	z-index: 5;
+}
+
+.crew-cell > .crew-card {
+	flex: 1;
+}
 
 .crew-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  cursor: pointer;
-  padding: 14px 10px 12px;
-  text-align: center;
-  color: var(--cream);
-  border: 1px solid rgba(232, 185, 88, 0.45);
-  border-radius: 12px;
-  background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
-  box-shadow: inset 0 0 0 2px rgba(211, 163, 66, 0.1), 0 8px 22px rgba(0, 0, 0, 0.3);
-  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	width: 100%;
+	cursor: pointer;
+	padding: 14px 10px 12px;
+	text-align: center;
+	color: var(--cream);
+	border: 1px solid rgba(232, 185, 88, 0.45);
+	border-radius: 12px;
+	background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+	box-shadow:
+		inset 0 0 0 2px rgba(211, 163, 66, 0.1),
+		0 8px 22px rgba(0, 0, 0, 0.3);
+	transition:
+		border-color 0.15s ease,
+		transform 0.15s ease,
+		box-shadow 0.15s ease;
 }
 
-.crew-card:hover { transform: translateY(-2px); }
+.crew-card:hover {
+	transform: translateY(-2px);
+}
 
 .crew-card.chosen {
-  border-color: var(--gold-strong);
-  box-shadow: inset 0 0 0 2px rgba(232, 185, 88, 0.3), 0 0 0 3px rgba(232, 185, 88, 0.28),
-    0 8px 22px rgba(0, 0, 0, 0.3);
+	border-color: var(--gold-strong);
+	box-shadow:
+		inset 0 0 0 2px rgba(232, 185, 88, 0.3),
+		0 0 0 3px rgba(232, 185, 88, 0.28),
+		0 8px 22px rgba(0, 0, 0, 0.3);
 }
 
 /* The berth number, top corner of the frame — matches the roster board. */
 .crew-number {
-  position: absolute;
-  top: 8px;
-  inset-inline-start: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1px solid rgba(232, 185, 88, 0.7);
-  background: rgba(4, 18, 34, 0.9);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--gold-strong);
+	position: absolute;
+	top: 8px;
+	inset-inline-start: 8px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	border: 1px solid rgba(232, 185, 88, 0.7);
+	background: rgba(4, 18, 34, 0.9);
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--gold-strong);
 }
 
 /* The persona marker (📜) sits opposite the number: on every card, always,
    because "AI persona, not a candidate" must survive being skim-read. */
 .crew-persona-mark {
-  position: absolute;
-  top: 6px;
-  inset-inline-end: 8px;
-  font-size: 13px;
-  opacity: 0.85;
+	position: absolute;
+	top: 6px;
+	inset-inline-end: 8px;
+	font-size: 13px;
+	opacity: 0.85;
 }
 
 /* Portrait slot. No portrait art ships with the game, so the fallback is a
    tinted medallion in the elder's own colour — a frame that reads as a
    portrait's place, not as a missing image. */
 .crew-portrait {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  border: 2px solid rgba(232, 185, 88, 0.75);
-  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.45);
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 26px;
+	border: 2px solid rgba(232, 185, 88, 0.75);
+	box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.45);
 }
 
-.crew-portrait img { width: 100%; height: 100%; object-fit: cover; }
+.crew-portrait img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
 
-.crew-card.chosen .crew-portrait { border-color: var(--gold-strong); }
+.crew-card.chosen .crew-portrait {
+	border-color: var(--gold-strong);
+}
 
 .crew-name {
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.25;
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.25;
 }
 
 /* 1860–1904 is a Latin-number range inside an RTL document, and bidi
    reorders it to 1904–1860 — a dead man born after he died. Isolating the
    span as LTR is what keeps the dates in the order they were written. */
 .crew-years {
-  direction: ltr;
-  unicode-bidi: isolate;
-  font-size: 11px;
-  opacity: 0.7;
-  letter-spacing: 0.04em;
+	direction: ltr;
+	unicode-bidi: isolate;
+	font-size: 11px;
+	opacity: 0.7;
+	letter-spacing: 0.04em;
 }
 
 .crew-values {
-  font-size: 12px;
-  color: #cfe6f5;
-  line-height: 1.35;
-  /* Push the join-the-crew line to the bottom of an equal-height card. */
-  flex: 1;
+	font-size: 12px;
+	color: #cfe6f5;
+	line-height: 1.35;
+	/* Push the join-the-crew line to the bottom of an equal-height card. */
+	flex: 1;
 }
 
-/* The bio lives outside the choosing button — a button may not contain a
-   button, and the persona sentence has to stay reachable by keyboard. */
-.crew-bio { margin-top: 4px; }
-
-.crew-bio > summary {
-  cursor: pointer;
-  list-style: none;
-  font-size: 12px;
-  color: var(--gold-strong);
-  text-align: center;
+/* ======================= THE SEA ==============================
+   Where the party ships ride. The rings are near / middle / far and the
+   player sits at their centre; the lane a ship sails in is its sortOrder and
+   nothing else, so the picture never ranks anyone left to right.
+   ============================================================== */
+.sea-chart {
+	border: 1px solid rgba(232, 185, 88, 0.45);
+	border-radius: 14px;
+	/* The sea is the art inside the frame; the frame itself adds nothing. */
+	background: #06182c;
+	overflow: hidden;
 }
 
-.crew-bio > summary::-webkit-details-marker { display: none; }
-
-.crew-bio > p {
-  margin: 6px 2px 0;
-  font-size: 12px;
-  line-height: 1.45;
-  color: #dcecf7;
-  text-align: start;
+/* The frame the pennants are laid out against: the SVG paints the water and
+   the hulls, and an HTML layer the same size carries everything written on it,
+   so a name is the same size on a phone as on a desk. */
+.sea-chart__frame {
+	position: relative;
 }
 
-.fade-in { animation: fadeIn 0.5s ease; }
+/* On a phone the sea takes the panel's side padding for itself: every pixel
+   of width is a pixel of water between two hulls. */
+@media (max-width: 480px) {
+	.sea-chart {
+		margin-inline: -16px;
+		border-radius: 10px;
+	}
+}
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: none; }
+.sea-chart svg {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.sea-chart__more {
+	display: flex;
+	justify-content: center;
+	padding: 10px;
+	background: rgba(4, 18, 34, 0.75);
+}
+
+.sea-overlay {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+.sea-overlay > * {
+	position: absolute;
+}
+
+/* What each ring is, in the words of the rows under the sea. Faint, and
+   knocking the dashed ring out beneath it the way a caption sits on a chart. */
+.sea-caption {
+	transform: translateY(-50%);
+	padding: 1px 6px;
+	border-radius: 999px;
+	background: rgba(4, 18, 34, 0.62);
+	color: var(--cream);
+	font-size: 11px;
+	letter-spacing: 0.02em;
+	opacity: 0.8;
+	white-space: nowrap;
+}
+
+.sea-berth {
+	transform: translateX(-50%);
+	color: var(--gold-strong);
+	font-size: 12px;
+	font-weight: 700;
+	white-space: nowrap;
+	text-shadow:
+		0 0 4px rgba(3, 16, 32, 0.95),
+		0 1px 2px rgba(3, 16, 32, 0.95);
+}
+
+.sea-pennants {
+	position: absolute;
+	inset: 0;
+}
+
+/* Ships slide to their new ring when the sea reacts, rather than teleporting:
+   the movement IS the feedback — it says the water heard what you marked. */
+.sea-ship {
+	cursor: pointer;
+	transition:
+		transform 0.9s ease,
+		opacity 0.9s ease;
+}
+
+/* The only part of a ship that takes the pointer: its own silhouette. */
+.sea-ship__hit {
+	fill: transparent;
+	pointer-events: all;
+}
+
+/* Which ship am I about to pick? The one that brightened — on the water and
+   on its pennant at once, whichever of the two the pointer is on. */
+.sea-ship--hot image {
+	filter: brightness(1.18) drop-shadow(0 0 6px rgba(255, 243, 209, 0.55));
+}
+
+/* The picked ship: lit, and ringed in gold at the waterline. */
+.sea-ship--lit image {
+	filter: brightness(1.22) drop-shadow(0 0 10px rgba(232, 185, 88, 0.85));
+}
+
+.sea-ship__pick {
+	fill: rgba(232, 185, 88, 0.16);
+	stroke: var(--gold-strong);
+	stroke-width: 2.5px;
+	vector-effect: non-scaling-stroke;
+	animation: sea-pick 1.8s ease-in-out infinite;
+}
+
+@keyframes sea-pick {
+	0%,
+	100% {
+		stroke-opacity: 1;
+	}
+	50% {
+		stroke-opacity: 0.45;
+	}
+}
+
+/* The course from your boat to the picked ship: the distance, drawn. */
+.sea-course {
+	stroke: var(--gold-strong);
+	stroke-width: 2.5px;
+	vector-effect: non-scaling-stroke;
+	stroke-linecap: round;
+	stroke-dasharray: 8 6;
+	filter: drop-shadow(0 0 3px rgba(3, 16, 32, 0.9));
+	animation: sea-course 1.2s linear infinite;
+}
+
+@keyframes sea-course {
+	to {
+		stroke-dashoffset: -14;
+	}
+}
+
+.sea-leaders line {
+	stroke: rgba(255, 243, 209, 0.7);
+	stroke-width: 1.5px;
+	vector-effect: non-scaling-stroke;
+}
+
+.sea-leaders,
+.sea-you {
+	pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fade-in { animation: none; }
-  .crew-card:hover { transform: none; }
+	.sea-ship {
+		transition: none;
+	}
+	.sea-ship__pick,
+	.sea-course {
+		animation: none;
+	}
+}
+
+/* ====================== THE PENNANT ===========================
+   A ship's colour and name, one badge. It flies above the hull on the water,
+   sits in the near / middle / far rows under the sea, and heads the card a
+   tap opens — the same badge in all three places, gold in all three when
+   that ship is the one you picked.
+   ============================================================== */
+.ship-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	box-sizing: border-box;
+	min-height: 24px;
+	padding: 2px 9px 2px 8px;
+	border: 1px solid rgba(94, 223, 255, 0.28);
+	border-radius: 999px;
+	background: rgba(6, 24, 44, 0.72);
+	color: var(--cream);
+	font: 600 12.5px/1.2 Arial, Helvetica, sans-serif;
+	white-space: nowrap;
+	transition:
+		background 0.15s ease,
+		border-color 0.15s ease,
+		opacity 0.2s ease;
+}
+
+button.ship-tag {
+	cursor: pointer;
+}
+
+/* A pennant on the water is a small thing to aim a thumb at; its reach is
+   wider than its edge. */
+.ship-tag--afloat {
+	position: absolute;
+	pointer-events: auto;
+	justify-content: center;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.ship-tag--afloat::before {
+	content: '';
+	position: absolute;
+	inset: -8px -4px;
+}
+
+.ship-tag--afloat .ship-tag__name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ship-tag__dot {
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	flex-shrink: 0;
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+button.ship-tag:hover,
+.ship-tag--hot {
+	border-color: rgba(94, 223, 255, 0.85);
+	background: rgba(15, 48, 73, 0.92);
+}
+
+button.ship-tag:focus-visible {
+	outline: 2px solid var(--cyan);
+	outline-offset: 1px;
+}
+
+.ship-tag--lit,
+button.ship-tag--lit:hover {
+	border-color: rgba(232, 185, 88, 0.95);
+	background: linear-gradient(180deg, #f3cf7e, #d8a63e);
+	color: #2b1c04;
+	box-shadow:
+		0 0 0 2px rgba(232, 185, 88, 0.35),
+		0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.ship-tag--dim {
+	opacity: 0.72;
+}
+
+.ship-tag--dim:hover,
+.ship-tag--dim.ship-tag--hot {
+	opacity: 1;
+}
+
+/* One ring of the sea as a row: its name, then its ships. */
+.ship-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+}
+
+.ship-row__band {
+	font-size: 13px;
+	opacity: 0.7;
+	flex-shrink: 0;
+}
+
+/* The picked ship's paper, docked right under the water it was picked on. */
+.ship-card {
+	border: 1px solid rgba(232, 185, 88, 0.7);
+	border-radius: 12px;
+	background: rgba(4, 18, 34, 0.55);
+	padding: 12px 16px;
+}
+
+/* ====================== THE CHART ============================
+   המפה נפתחת. The islands were a column of checkboxes with a paragraph each:
+   twelve rows of text on a screen whose whole promise is a sea with islands
+   in it. Each one is a card carrying its own islet now — the same diorama art
+   the voyage shows — and what it holds is explained on demand, in the bubble
+   the crew board uses.
+   ============================================================= */
+.isle-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	/* Every card the same height, not just every card in a row: a board of
+	   islands with two card sizes reads as two kinds of island. */
+	grid-auto-rows: 1fr;
+	gap: 14px;
+}
+
+@media (min-width: 560px) {
+	.isle-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+@media (min-width: 920px) {
+	.isle-grid {
+		grid-template-columns: repeat(4, 1fr);
+	}
+}
+
+.isle-cell {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+}
+
+.isle-cell:has(> .speech-bubble) {
+	z-index: 5;
+}
+
+.isle-cell > .isle-card {
+	flex: 1;
+}
+
+.isle-card {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	width: 100%;
+	cursor: pointer;
+	padding: 10px 10px 12px;
+	text-align: center;
+	color: var(--cream);
+	border: 1px solid rgba(232, 185, 88, 0.45);
+	border-radius: 12px;
+	background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+	box-shadow:
+		inset 0 0 0 2px rgba(211, 163, 66, 0.1),
+		0 8px 22px rgba(0, 0, 0, 0.3);
+	transition:
+		border-color 0.15s ease,
+		transform 0.15s ease,
+		box-shadow 0.15s ease;
+}
+
+.isle-card:hover {
+	transform: translateY(-2px);
+}
+
+.isle-card.chosen {
+	border-color: var(--gold-strong);
+	box-shadow:
+		inset 0 0 0 2px rgba(232, 185, 88, 0.3),
+		0 0 0 3px rgba(232, 185, 88, 0.28),
+		0 8px 22px rgba(0, 0, 0, 0.3);
+}
+
+/* The islet floats on the card rather than sitting in a frame: the art ships
+   with real alpha, and boxing it would put it back in the crate. */
+.isle-art {
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	width: 100%;
+	height: 96px;
+	font-size: 34px;
+}
+
+.isle-art img {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+	filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+	transition: transform 0.15s ease;
+}
+
+.isle-card:hover .isle-art img,
+.isle-card.chosen .isle-art img {
+	transform: scale(1.04);
+}
+
+.isle-title {
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.isle-issue {
+	font-size: 12px;
+	color: #cfe6f5;
+	line-height: 1.35;
+	/* Push the join line to the bottom of an equal-height card. */
+	flex: 1;
+}
+
+.isle-state {
+	margin-top: 2px;
+	font-size: 12px;
+	color: var(--gold-strong);
+}
+
+/* The "tell me more" line under a card. It lives outside the choosing button
+   — a button may not contain a button, and the sentence it opens has to stay
+   reachable by keyboard. */
+.bubble-toggle {
+	margin-top: 4px;
+	padding: 2px;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	font-size: 12px;
+	color: var(--gold-strong);
+	text-align: center;
+}
+
+/* The answer arrives as a bubble OVER the board rather than inside the card.
+   Opened in place it grew the cell, stretched every card in that row to match
+   (cards are equal-height by row) and left the sentence lying on the water
+   with nothing around it. Hanging it here costs the grid nothing: the twelve
+   cards look identical whatever is open. */
+.speech-bubble {
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1;
+	width: max-content;
+	min-width: 100%;
+	max-width: min(260px, 74vw);
+	margin-top: 8px;
+	padding: 10px 12px;
+	border: 1px solid rgba(232, 185, 88, 0.75);
+	border-radius: 12px;
+	background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+	box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+	/* Its own keyframes, not .fade-in: that one ends on `transform: none` and
+	   would drop the translate that centres the bubble under its card. */
+	animation: bubbleIn 0.18s ease;
+}
+
+@keyframes bubbleIn {
+	from {
+		opacity: 0;
+		transform: translateX(-50%) translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(-50%);
+	}
+}
+
+/* The tail, pointing back at the card that is speaking. Physical borders on
+   purpose: the square is rotated, and logical ones would flip with the text. */
+.speech-bubble::before {
+	content: '';
+	position: absolute;
+	top: -6px;
+	left: 50%;
+	width: 10px;
+	height: 10px;
+	transform: translateX(-50%) rotate(45deg);
+	border-top: 1px solid rgba(232, 185, 88, 0.75);
+	border-left: 1px solid rgba(232, 185, 88, 0.75);
+	background: var(--panel-top);
+}
+
+.speech-bubble > p {
+	margin: 0;
+	font-size: 12px;
+	line-height: 1.45;
+	color: #dcecf7;
+	text-align: start;
+}
+
+/* Two columns and a narrow screen: a bubble wider than its cell would hang
+   off the page, so it keeps to the card it belongs to. */
+@media (max-width: 479px) {
+	.speech-bubble {
+		max-width: 100%;
+	}
+}
+
+.fade-in {
+	animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.fade-in {
+		animation: none;
+	}
+	.speech-bubble {
+		animation: none;
+	}
+	.crew-card:hover {
+		transform: none;
+	}
+	.isle-card:hover {
+		transform: none;
+	}
+	.isle-card:hover .isle-art img,
+	.isle-card.chosen .isle-art img {
+		transform: none;
+	}
 }

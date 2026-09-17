@@ -124,7 +124,7 @@
 
 .btnPrimary {
 	background: var(--btn-primary, #5f88e5);
-	color: #fff;
+	color: var(--btn-primary-text);
 
 	&:hover,
 	&:focus-visible {

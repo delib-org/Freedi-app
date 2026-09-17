@@ -4406,12 +4406,7 @@
   "One small step together.": "یک گام کوچک با هم.",
   "Pick up a conversation and see what you can add.": "به گفتگویی برگردید و ببینید چه چیزی می‌توانید اضافه کنید.",
   "Continue a conversation": "ادامه یک گفتگو",
-  "Hello, I am your little guide.": "سلام، من راهنمای کوچک شما هستم.",
   "Every shared solution starts with a question. What would you like to work on together?": "هر راه‌حل مشترک با یک پرسش آغاز می‌شود. روی چه چیزی با هم کار کنیم؟",
-  "Show guide": "نمایش راهنما",
-  "Your little guide": "راهنمای کوچک شما",
-  "A SMALL STEP, TOGETHER": "یک گام کوچک، با هم",
-  "Hide guide": "پنهان کردن راهنما",
   "Install app": "نصب برنامه",
   "Enable notifications": "فعال‌سازی اعلان‌ها",
   "Notifications are off. You can enable them in your device settings.": "اعلان‌ها خاموش هستند. می‌توانید آن‌ها را در تنظیمات دستگاه فعال کنید.",
@@ -4636,5 +4631,6 @@
   "The wording was approved by the host.": "متن توسط میزبان تأیید شد.",
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "وقتی پرسش به رأی‌گیری برسد شکل می‌گیرد. پیش‌نویس از پاسخ‌های پیشتاز ساخته می‌شود و قابل ویرایش است.",
   "Read the full agreement": "خواندن کامل توافق",
-  "Open the draft": "باز کردن پیش‌نویس"
+  "Open the draft": "باز کردن پیش‌نویس",
+  "Resize sidebar": "تغییر عرض نوار کناری"
 }

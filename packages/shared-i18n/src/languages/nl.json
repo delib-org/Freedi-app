@@ -3901,12 +3901,7 @@
   "One small step together.": "Samen een kleine stap.",
   "Pick up a conversation and see what you can add.": "Pak een gesprek weer op en kijk wat je kunt bijdragen.",
   "Continue a conversation": "Ga verder met een gesprek",
-  "Hello, I am your little guide.": "Hallo, ik ben je kleine gids.",
   "Every shared solution starts with a question. What would you like to work on together?": "Elke gezamenlijke oplossing begint met een vraag. Waar willen we samen aan werken?",
-  "Show guide": "Gids tonen",
-  "Your little guide": "Je kleine gids",
-  "A SMALL STEP, TOGETHER": "SAMEN EEN KLEINE STAP",
-  "Hide guide": "Gids verbergen",
   "Install app": "App installeren",
   "Enable notifications": "Meldingen inschakelen",
   "Notifications are off. You can enable them in your device settings.": "Meldingen staan uit. Je kunt ze inschakelen in je apparaatinstellingen.",
@@ -4138,5 +4133,6 @@
   "The wording was approved by the host.": "De tekst is goedgekeurd door de host.",
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "Krijgt vorm zodra de vraag naar stemmen gaat. Het concept wordt opgebouwd uit de koplopers en is te bewerken.",
   "Read the full agreement": "De volledige afspraak lezen",
-  "Open the draft": "Concept openen"
+  "Open the draft": "Concept openen",
+  "Resize sidebar": "Zijbalkbreedte aanpassen"
 }

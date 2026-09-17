@@ -1,5 +1,5 @@
 import React, { ReactNode, useEffect, useMemo, useState } from 'react';
-import { KeyRound, Plus, Search, X } from 'lucide-react';
+import { KeyRound, Plus, Search } from 'lucide-react';
 import SegmentedControl from '@/view/components/atomic/atoms/SegmentedControl/SegmentedControl';
 import ConversationWelcome from '@/view/components/atomic/organisms/ThinkingSpace/ConversationWelcome';
 import {
@@ -20,7 +20,8 @@ interface HomeOverviewProps {
 	questions: HomeQuestion[];
 	loading: boolean;
 	locale: string;
-	onOpenQuestion: (id: string) => void;
+	/** Opens a space or a question — both are statements with their own screen. */
+	onOpenStatement: (id: string) => void;
 	onCreateQuestion: () => void;
 	onCreateGroup: () => void;
 	onOpenPin: () => void;
@@ -37,7 +38,7 @@ export default function HomeOverview({
 	questions,
 	loading,
 	locale,
-	onOpenQuestion,
+	onOpenStatement,
 	onCreateQuestion,
 	onCreateGroup,
 	onOpenPin,
@@ -47,32 +48,30 @@ export default function HomeOverview({
 }: HomeOverviewProps) {
 	const [view, setView] = useState<HomeView>('questions');
 	const [search, setSearch] = useState('');
-	const [spaceId, setSpaceId] = useState<string | null>(null);
 	const [hostOnly, setHostOnly] = useState(false);
 	const term = search.trim();
 	const visibleView: HomeView = term ? 'questions' : view;
-	const activeSpace = spaces.find((space) => space.id === spaceId);
 	const now = Date.now();
 
 	useEffect(() => onVisibleViewChange(visibleView), [visibleView, onVisibleViewChange]);
 
 	const shownQuestions = useMemo(
-		() => filterHomeQuestions(questions, { term, spaceId, hostOnly }),
-		[questions, term, spaceId, hostOnly],
+		() => filterHomeQuestions(questions, { term, hostOnly }),
+		[questions, term, hostOnly],
 	);
 	const shownSpaces = useMemo(() => filterHomeSpaces(spaces, term), [spaces, term]);
 	const hostsAny = questions.some((question) => question.hosting);
 	const isEmpty = !loading && spaces.length === 0 && questions.length === 0;
 	const noResults = !!term && shownQuestions.length === 0;
 
+	// A space is a screen of its own — opening it shows every question inside,
+	// including ones this person has not joined yet.
 	function openSpace(space: HomeSpace) {
-		setSpaceId(space.id);
-		setView('questions');
+		onOpenStatement(space.id);
 	}
 
 	function changeView(next: string) {
 		setView(next === 'spaces' ? 'spaces' : 'questions');
-		setSpaceId(null);
 	}
 
 	return (
@@ -166,18 +165,6 @@ export default function HomeOverview({
 						) : (
 							<div className={styles.home__stack}>
 								<div className={styles.home__toolbar}>
-									{activeSpace && (
-										<button
-											type="button"
-											className={styles.filterChip}
-											onClick={() => setSpaceId(null)}
-											aria-label={`${t('Remove filter')}: ${activeSpace.title}`}
-											data-testid="home-space-filter"
-										>
-											{activeSpace.title}
-											<X size={13} aria-hidden="true" />
-										</button>
-									)}
 									<span className={styles.home__spacer} />
 									{hostsAny && (
 										<div
@@ -220,7 +207,7 @@ export default function HomeOverview({
 											<QuestionRow
 												key={question.id}
 												question={question}
-												onOpen={onOpenQuestion}
+												onOpen={onOpenStatement}
 												now={now}
 												locale={locale}
 												t={t}

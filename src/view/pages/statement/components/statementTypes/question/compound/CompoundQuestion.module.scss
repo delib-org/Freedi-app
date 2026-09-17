@@ -25,7 +25,7 @@
   height: 1.5rem;
   border-radius: 50%;
   background: var(--btn-primary);
-  color: white;
+  color: var(--btn-primary-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -639,7 +639,7 @@
 
 .discussionLink {
   background: var(--btn-primary);
-  color: white;
+  color: var(--btn-primary-text);
   box-shadow: 0 4px 12px rgba(95, 136, 229, 0.2);
 
   &:hover {
@@ -661,7 +661,7 @@
 
 .createDiscussionBtn {
   background: var(--btn-primary);
-  color: white;
+  color: var(--btn-primary-text);
   box-shadow: 0 4px 12px rgba(95, 136, 229, 0.2);
 
   &:hover {

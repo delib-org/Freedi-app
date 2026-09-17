@@ -2,6 +2,7 @@ import { FC, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useAnswerCompose } from '@/controllers/hooks/useAnswerCompose';
 import AddAnswerSheet from './AddAnswerSheet';
 import styles from './QuestionScreen.module.scss';
 
@@ -20,6 +21,11 @@ interface AddAnswerFabProps {
 const AddAnswerFab: FC<AddAnswerFabProps> = ({ statement }) => {
 	const { t } = useTranslation();
 	const [open, setOpen] = useState(false);
+	const { register } = useAnswerCompose();
+
+	// On phones the button itself is hidden and the floating nav's "+" opens
+	// this sheet, so the screen lends the shell its add action while mounted.
+	useEffect(() => register(() => setOpen(true)), [register]);
 	const [searchParams, setSearchParams] = useSearchParams();
 
 	useEffect(() => {

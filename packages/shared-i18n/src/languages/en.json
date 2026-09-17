@@ -4606,12 +4606,7 @@
   "One small step together.": "One small step together.",
   "Pick up a conversation and see what you can add.": "Pick up a conversation and see what you can add.",
   "Continue a conversation": "Continue a conversation",
-  "Hello, I am your little guide.": "Hello, I am your little guide.",
   "Every shared solution starts with a question. What would you like to work on together?": "Every shared solution starts with a question. What would you like to work on together?",
-  "Show guide": "Show guide",
-  "Your little guide": "Your little guide",
-  "A SMALL STEP, TOGETHER": "A SMALL STEP, TOGETHER",
-  "Hide guide": "Hide guide",
   "Install app": "Install app",
   "Enable notifications": "Enable notifications",
   "Notifications are off. You can enable them in your device settings.": "Notifications are off. You can enable them in your device settings.",
@@ -4837,5 +4832,6 @@
   "The wording was approved by the host.": "The wording was approved by the host.",
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.",
   "Read the full agreement": "Read the full agreement",
-  "Open the draft": "Open the draft"
+  "Open the draft": "Open the draft",
+  "Resize sidebar": "Resize sidebar"
 }

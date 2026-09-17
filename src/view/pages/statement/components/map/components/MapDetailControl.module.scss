@@ -54,7 +54,7 @@
 
 .segmentActive {
 	background: var(--btn-primary, #5f88e5);
-	color: #ffffff;
+	color: var(--btn-primary-text);
 
 	&:hover:not(:disabled) {
 		background: var(--btn-primary, #5f88e5);

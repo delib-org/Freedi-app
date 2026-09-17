@@ -77,11 +77,6 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 						{...(isSurveyMandatory ? { inert: '' } : {})}
 					>
 						<AppThinkingSpace
-							guideStatement={statement ?? undefined}
-							guideEnabled={
-								!isSurveyMandatory &&
-								(!screen || ['main', 'chat', 'options', 'questions'].includes(screen))
-							}
 							activeId={topParentStatement?.statementId || statement?.statementId}
 							aside={
 								statement &&

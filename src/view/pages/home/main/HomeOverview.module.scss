@@ -276,22 +276,6 @@
 	}
 }
 
-.filterChip {
-	display: inline-flex;
-	align-items: center;
-	gap: 5px;
-	min-height: 32px;
-	padding-inline: 10px;
-	border: 0;
-	border-radius: var(--radius-chip, 999px);
-	background: var(--bg-sunken);
-	color: var(--text-body);
-	font: inherit;
-	font-size: 0.72rem;
-	cursor: pointer;
-	@include focus-ring;
-}
-
 .pills {
 	display: flex;
 	gap: var(--space-2xs);

@@ -1,7 +1,7 @@
 import React, { ReactNode, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
-import { Statement, StatementType } from '@freedi/shared-types';
+import { StatementType } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useLevelTransition } from '@/controllers/hooks/useSlideAndSubStatement';
@@ -13,7 +13,6 @@ import {
 	setShowNewStatementModal,
 } from '@/redux/statements/newStatementSlice';
 import ThinkingSpace from './ThinkingSpace';
-import EngagementGuide from '../../molecules/EngagementGuide/EngagementGuide';
 import BottomNav from '../BottomNav/BottomNav';
 import {
 	BOTTOM_NAV_PATHS,
@@ -21,6 +20,7 @@ import {
 	shouldShowBottomNav,
 } from '../BottomNav/bottomNavModel';
 import AskQuestionSheet, { AskSpace } from '@/view/pages/home/askQuestion/AskQuestionSheet';
+import { AnswerComposeContext, useAnswerComposeState } from '@/controllers/hooks/useAnswerCompose';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { relevantNotifications } from '@/utils/engagementNavigation';
 
@@ -33,16 +33,12 @@ export default function AppThinkingSpace({
 	aside,
 	asideLabel,
 	tools,
-	guideStatement,
-	guideEnabled = true,
 }: {
 	children: ReactNode;
 	activeId?: string;
 	aside?: ReactNode;
 	asideLabel?: string;
 	tools?: ReactNode;
-	guideStatement?: Statement;
-	guideEnabled?: boolean;
 }) {
 	const { t, dir } = useTranslation();
 	const navigate = useNavigate();
@@ -54,6 +50,9 @@ export default function AppThinkingSpace({
 	const user = useAppSelector(creatorSelector);
 	const subscriptions = useAppSelector(topSubscriptionsSelector);
 	const [askOpen, setAskOpen] = useState(false);
+	// One bottom control on phones: the nav's "+" adds an answer when a question
+	// screen registered that action, and otherwise asks a new question.
+	const answerCompose = useAnswerComposeState();
 	const mine = useMemo(
 		() => relevantNotifications(notifications, user?.uid),
 		[notifications, user?.uid],
@@ -114,50 +113,45 @@ export default function AppThinkingSpace({
 	const showNav = !!user && shouldShowBottomNav(location.pathname);
 
 	return (
-		<ThinkingSpace
-			spaces={spaces}
-			activeId={activeId}
-			userName={user?.displayName || t('Your profile')}
-			onHome={() => navigate('/home')}
-			onProfile={() => navigate('/my')}
-			onOpen={(id) => navigate(`/statement/${id}`)}
-			onCreate={create}
-			aside={aside}
-			asideLabel={asideLabel}
-			tools={tools}
-			transitionClassName={STATEMENT_SCREEN.test(location.pathname) ? '' : levelClassName}
-			bottomNav={
-				showNav ? (
-					<BottomNav
-						active={resolveBottomNavItem(location.pathname, location.search)}
-						unreadCount={unreadCount}
-						onNavigate={(item) => navigate(BOTTOM_NAV_PATHS[item])}
-						onAsk={() => setAskOpen(true)}
-						t={t}
+		<AnswerComposeContext.Provider value={answerCompose}>
+			<ThinkingSpace
+				spaces={spaces}
+				activeId={activeId}
+				userName={user?.displayName || t('Your profile')}
+				onHome={() => navigate('/home')}
+				onProfile={() => navigate('/my')}
+				onOpen={(id) => navigate(`/statement/${id}`)}
+				onCreate={create}
+				aside={aside}
+				asideLabel={asideLabel}
+				tools={tools}
+				transitionClassName={STATEMENT_SCREEN.test(location.pathname) ? '' : levelClassName}
+				bottomNav={
+					showNav ? (
+						<BottomNav
+							active={resolveBottomNavItem(location.pathname, location.search)}
+							unreadCount={unreadCount}
+							onNavigate={(item) => navigate(BOTTOM_NAV_PATHS[item])}
+							onAsk={() => {
+								if (!answerCompose.compose()) setAskOpen(true);
+							}}
+							t={t}
+						/>
+					) : undefined
+				}
+				t={t}
+				dir={dir}
+			>
+				{children}
+				{showNav && (
+					<AskQuestionSheet
+						isOpen={askOpen}
+						onClose={() => setAskOpen(false)}
+						spaces={askSpaces}
+						currentSpaceId={activeId}
 					/>
-				) : undefined
-			}
-			t={t}
-			dir={dir}
-		>
-			{user && guideEnabled && (guideStatement || location.pathname === '/home') && (
-				<EngagementGuide
-					key={user.uid}
-					userId={user.uid}
-					statement={guideStatement}
-					firstSpaceId={spaces[0]?.id}
-					onCreate={create}
-				/>
-			)}
-			{children}
-			{showNav && (
-				<AskQuestionSheet
-					isOpen={askOpen}
-					onClose={() => setAskOpen(false)}
-					spaces={askSpaces}
-					currentSpaceId={activeId}
-				/>
-			)}
-		</ThinkingSpace>
+				)}
+			</ThinkingSpace>
+		</AnswerComposeContext.Provider>
 	);
 }

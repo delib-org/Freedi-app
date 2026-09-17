@@ -31,8 +31,29 @@ export default function MapPage() {
 	);
 	const [saving, setSaving] = useState(false);
 	const [enteringIslandId, setEnteringIslandId] = useState('');
+	/** Which island is explaining itself, one at a time (see the crew board). */
+	const [openIsland, setOpenIsland] = useState<string | null>(null);
 
 	const islands = useMemo(() => (content ? enabledIslands(content) : []), [content]);
+
+	useEffect(() => {
+		if (!openIsland) return;
+		const onKey = (event: KeyboardEvent): void => {
+			if (event.key === 'Escape') setOpenIsland(null);
+		};
+		const onPointer = (event: PointerEvent): void => {
+			const target = event.target;
+			if (target instanceof Element && target.closest('.speech-bubble, .bubble-toggle')) return;
+			setOpenIsland(null);
+		};
+		window.addEventListener('keydown', onKey);
+		window.addEventListener('pointerdown', onPointer);
+
+		return () => {
+			window.removeEventListener('keydown', onKey);
+			window.removeEventListener('pointerdown', onPointer);
+		};
+	}, [openIsland]);
 
 	/**
 	 * Islands this player has actually taken positions on. After the voyage the
@@ -144,27 +165,47 @@ export default function MapPage() {
 						// the islands live on the Phaser chart behind this window
 						<div className="h-[52vh]" aria-hidden="true" />
 					) : (
-						<div className="flex flex-col gap-2 fade-in">
-							{islands.map((island) => (
-								<label
-									key={island.statementId}
-									className="panel !py-3 !px-4 flex items-start gap-3 cursor-pointer"
-								>
-									<input
-										type="checkbox"
-										className="mt-1.5 w-4 h-4"
-										checked={selected.has(island.statementId)}
-										onChange={() => toggle(island.statementId)}
-									/>
-									<span>
-										<strong className="text-[var(--cream)]">{island.title}</strong>
-										<span className="opacity-80"> — {island.issue}</span>
-										<span className="block text-[13px] opacity-70 mt-0.5">
-											{island.shortExplain}
-										</span>
-									</span>
-								</label>
-							))}
+						<div className="isle-grid fade-in">
+							{islands.map((island) => {
+								const chosen = selected.has(island.statementId);
+								const art = island.imageUrl ?? islandArtUrl(island.sortOrder);
+
+								return (
+									<div key={island.statementId} className="isle-cell">
+										<button
+											type="button"
+											aria-pressed={chosen}
+											onClick={() => toggle(island.statementId)}
+											className={`isle-card ${chosen ? 'chosen' : ''}`}
+										>
+											<span className="isle-art" aria-hidden="true">
+												{art ? <img src={art} alt="" loading="lazy" /> : '🏝️'}
+											</span>
+											<span className="isle-title">{island.title}</span>
+											<span className="isle-issue">{island.issue}</span>
+											<span className="isle-state">{chosen ? '⚓ במסלול' : '＋ לצרף למסע'}</span>
+										</button>
+										<button
+											type="button"
+											className="bubble-toggle"
+											aria-expanded={openIsland === island.statementId}
+											aria-controls={`isle-${island.statementId}`}
+											onClick={() =>
+												setOpenIsland((current) =>
+													current === island.statementId ? null : island.statementId,
+												)
+											}
+										>
+											מה באי הזה?
+										</button>
+										{openIsland === island.statementId ? (
+											<div className="speech-bubble" id={`isle-${island.statementId}`}>
+												<p>{island.shortExplain}</p>
+											</div>
+										) : null}
+									</div>
+								);
+							})}
 						</div>
 					)}
 

@@ -23,7 +23,20 @@ async function ready(): Promise<void> {
 		configured = true;
 		const port = Number(import.meta.env.VITE_EMULATOR_AUTH_PORT || 9099);
 		if (isLocalPreview() && Number.isFinite(port)) {
-			connectAuthEmulator(auth, `http://localhost:${port}`, { disableWarnings: true });
+			try {
+				connectAuthEmulator(auth, `http://localhost:${port}`, { disableWarnings: true });
+			} catch {
+				// The app shell shares this auth instance and may have connected it
+				// already; a second call throws auth/emulator-config-failed and used
+				// to block local sign-in from the landing page.
+			}
+			// Either call may have connected it. If neither did, stop: signing in
+			// here would create a real account in the live project.
+			if (!auth.emulatorConfig) {
+				throw new Error(
+					'Auth emulator not connected; refusing to sign in against the live project.',
+				);
+			}
 		}
 	}
 	await setPersistence(auth, browserLocalPersistence);

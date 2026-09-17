@@ -4644,12 +4644,7 @@
   "One small step together.": "צעד קטן, ביחד.",
   "Pick up a conversation and see what you can add.": "אפשר לחזור לשיחה ולראות מה עוד אפשר לתרום.",
   "Continue a conversation": "להמשיך בשיחה",
-  "Hello, I am your little guide.": "שלום, אני המלווה הקטן שלך.",
   "Every shared solution starts with a question. What would you like to work on together?": "כל פתרון משותף מתחיל בשאלה. על מה נרצה לעבוד ביחד?",
-  "Show guide": "להציג את המלווה",
-  "Your little guide": "המלווה הקטן שלך",
-  "A SMALL STEP, TOGETHER": "צעד קטן, ביחד",
-  "Hide guide": "להסתיר את המלווה",
   "Install app": "התקנת האפליקציה",
   "Enable notifications": "הפעלת התראות",
   "Notifications are off. You can enable them in your device settings.": "ההתראות כבויות. אפשר להפעיל אותן בהגדרות המכשיר.",
@@ -4875,5 +4870,6 @@
   "The wording was approved by the host.": "הנוסח אושר על ידי המארח/ת.",
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "תתגבש כשהשאלה תעבור להצבעה. הטיוטה נבנית מהתשובות המובילות, וניתנת לעריכה.",
   "Read the full agreement": "לקריאת ההסכמה המלאה",
-  "Open the draft": "לפתיחת הטיוטה"
+  "Open the draft": "לפתיחת הטיוטה",
+  "Resize sidebar": "שינוי רוחב סרגל הצד"
 }
