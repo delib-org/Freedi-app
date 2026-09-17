@@ -635,9 +635,14 @@ a.voyage-step:hover {
 		0 8px 22px rgba(0, 0, 0, 0.3);
 }
 
-/* The berth number, top corner of the frame — matches the roster board. */
-.crew-number {
+/* "Who is this?" — the top corner of the frame, opposite the 📜.
+   A badge rather than a line of words under the card: twelve cards each
+   ending in the same question read as a board of questions, and the berth
+   numbers that used to sit here numbered people for no reason.
+   It overlays the card from the cell, because a button may not nest. */
+.crew-info {
 	position: absolute;
+	z-index: 2;
 	top: 8px;
 	inset-inline-start: 8px;
 	display: inline-flex;
@@ -645,12 +650,28 @@ a.voyage-step:hover {
 	justify-content: center;
 	width: 22px;
 	height: 22px;
+	padding: 0;
+	cursor: pointer;
 	border-radius: 50%;
 	border: 1px solid rgba(232, 185, 88, 0.7);
 	background: rgba(4, 18, 34, 0.9);
-	font-size: 12px;
+	/* A serif "i" is the one that reads as the information mark rather than
+	   as a lowercase letter that wandered in. */
+	font-family: Georgia, 'Times New Roman', serif;
+	font-size: 13px;
 	font-weight: 700;
+	font-style: italic;
+	line-height: 1;
 	color: var(--gold-strong);
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease;
+}
+
+.crew-info:hover,
+.crew-info[aria-expanded='true'] {
+	background: var(--gold-strong);
+	color: var(--navy);
 }
 
 /* The persona marker (📜) sits opposite the number: on every card, always,
@@ -1216,6 +1237,9 @@ button.ship-tag--lit:hover {
 	}
 	.crew-card:hover {
 		transform: none;
+	}
+	.crew-info {
+		transition: none;
 	}
 	.isle-card:hover {
 		transform: none;
