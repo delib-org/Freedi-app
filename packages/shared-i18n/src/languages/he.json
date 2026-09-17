@@ -4871,5 +4871,10 @@
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "תתגבש כשהשאלה תעבור להצבעה. הטיוטה נבנית מהתשובות המובילות, וניתנת לעריכה.",
   "Read the full agreement": "לקריאת ההסכמה המלאה",
   "Open the draft": "לפתיחת הטיוטה",
-  "Resize sidebar": "שינוי רוחב סרגל הצד"
+  "Resize sidebar": "שינוי רוחב סרגל הצד",
+  "Sort": "מיון",
+  "Most updated": "עודכנו לאחרונה",
+  "Most joined": "הכי הרבה הצטרפו",
+  "Show hidden answers": "הצגת תשובות מוסתרות",
+  "Host's order": "הסדר של המנחה"
 }

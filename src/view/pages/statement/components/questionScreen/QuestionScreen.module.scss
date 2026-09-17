@@ -352,14 +352,28 @@
 
 // ── Answers counter + FAB ──────────────────────────────────
 
-.counter {
+// The row above the answers list: the rating counter and, from two answers
+// on, the sort chip. Sorting lives here, in the flow, rather than in a bar
+// floating over the cards — on phones the shell's bottom nav is the only
+// floating control.
+.listHead {
 	display: flex;
+	flex-wrap: wrap; // a long hint on a narrow phone drops the chip to its own line, never clips it
 	align-items: center;
 	justify-content: space-between;
-	gap: 12px;
+	gap: 8px 12px;
 	width: 100%;
 	max-width: 720px;
 	margin: 0 auto 12px;
+}
+
+.counter {
+	display: flex;
+	flex: 1 1 auto;
+	min-width: 0;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
 	font-size: 12.5px;
 	color: var(--text-meta);
 
@@ -368,6 +382,149 @@
 		font-weight: 600;
 		color: var(--text-title);
 		white-space: nowrap;
+	}
+}
+
+.sortChip {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: var(--tap-min, 44px);
+	max-width: 100%;
+	margin-inline-start: auto;
+	padding-inline: 12px;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-chip, 999px);
+	background: var(--card-default);
+	color: var(--text-title);
+	font: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	@include focus-ring;
+
+	&__label {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__chevron {
+		flex: none;
+		color: var(--text-meta);
+	}
+}
+
+.sortList {
+	display: flex;
+	flex-direction: column;
+	padding-block: 4px;
+}
+
+.sortOption {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	min-height: 48px;
+	padding-inline: 8px;
+	border: 0;
+	border-radius: 12px;
+	background: transparent;
+	color: var(--text-title);
+	font: inherit;
+	font-size: 15px;
+	text-align: start;
+	cursor: pointer;
+	@include focus-ring;
+
+	&:hover {
+		background: var(--bg-hover);
+	}
+
+	&--selected {
+		color: var(--accent-violet);
+		font-weight: 600;
+	}
+
+	&__icon {
+		display: inline-flex;
+		flex: none;
+		width: 24px;
+		justify-content: center;
+		color: var(--text-meta);
+	}
+
+	&--selected &__icon {
+		color: inherit;
+	}
+
+	&__label {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+}
+
+// Host-only "show hidden answers" switch at the foot of the sort sheet.
+.sortToggle {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	min-height: 48px;
+	margin-block-start: 4px;
+	padding-inline: 8px;
+	border: 0;
+	border-block-start: 1px solid var(--border-subtle);
+	border-radius: 0 0 12px 12px;
+	background: transparent;
+	color: var(--text-title);
+	font: inherit;
+	font-size: 15px;
+	text-align: start;
+	cursor: pointer;
+	@include focus-ring;
+
+	&__track {
+		flex: none;
+		position: relative;
+		width: 36px;
+		height: 20px;
+		border-radius: var(--radius-chip, 999px);
+		background: var(--border-subtle);
+		transition: background-color var(--motion-fast, 150ms) ease;
+	}
+
+	&__knob {
+		position: absolute;
+		inset-block-start: 2px;
+		inset-inline-start: 2px;
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		background: var(--card-default);
+		box-shadow: var(--elevation-1);
+		transition: transform var(--motion-fast, 150ms) ease;
+	}
+
+	&[aria-checked='true'] &__track {
+		background: var(--accent-violet);
+	}
+
+	&[aria-checked='true'] &__knob {
+		transform: translateX(16px);
+	}
+
+	[dir='rtl'] &[aria-checked='true'] &__knob {
+		transform: translateX(-16px);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&__track,
+		&__knob {
+			transition: none;
+		}
 	}
 }
 

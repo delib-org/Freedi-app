@@ -4833,5 +4833,10 @@
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.",
   "Read the full agreement": "Read the full agreement",
   "Open the draft": "Open the draft",
-  "Resize sidebar": "Resize sidebar"
+  "Resize sidebar": "Resize sidebar",
+  "Sort": "Sort",
+  "Most updated": "Most updated",
+  "Most joined": "Most joined",
+  "Show hidden answers": "Show hidden answers",
+  "Host's order": "Host's order"
 }

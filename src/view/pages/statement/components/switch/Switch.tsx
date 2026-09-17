@@ -6,6 +6,7 @@ import { QuestionType, Role, StatementType } from '@freedi/shared-types';
 
 import { StatementContext } from '../../StatementCont';
 import styles from './Switch.module.scss';
+import questionStyles from '../questionScreen/QuestionScreen.module.scss';
 import SwitchScreen from './SwitchScreen';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
@@ -21,7 +22,11 @@ import ConversationWelcome from '@/view/components/atomic/organisms/ThinkingSpac
 import { mapViews } from '@/view/components/atomic/organisms/ThinkingSpace/MapExplorer';
 import AnswersCounter from '../questionScreen/AnswersCounter';
 import AddAnswerFab from '../questionScreen/AddAnswerFab';
-import { AnswerFabContext, useQuestionScreenData } from '../questionScreen/useQuestionScreenData';
+import AnswerSortControl from '../questionScreen/AnswerSortControl';
+import {
+	QuestionAnswersTabContext,
+	useQuestionScreenData,
+} from '../questionScreen/useQuestionScreenData';
 import { isResultsOrMapsView, QuestionView, tabOfView } from '../questionScreen/questionTabs';
 import { QUESTION_TABPANEL_ID } from '../header/StatementHeader';
 
@@ -143,10 +148,15 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 					!statement.isCluster && (
 						<OptionImprovement key={statement.statementId} statement={statement} />
 					)}
-				{onAnswersTab && <AnswersCounter data={data} />}
-				<AnswerFabContext.Provider value={showFab}>
+				{onAnswersTab && statement && (
+					<div className={questionStyles.listHead}>
+						<AnswersCounter data={data} />
+						<AnswerSortControl statement={statement} isHost={isAdmin} />
+					</div>
+				)}
+				<QuestionAnswersTabContext.Provider value={onAnswersTab}>
 					<SwitchScreen statement={statement} role={role} activeView={activeView} data={data} />
-				</AnswerFabContext.Provider>
+				</QuestionAnswersTabContext.Provider>
 				{/* Admin control over which answers are marked as leading, and in what
 				    order the list reads. Mounted here rather than inside StagePage
 				    because StagePage is also rendered nested (QuestionPage,

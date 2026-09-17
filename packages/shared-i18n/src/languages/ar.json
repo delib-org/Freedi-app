@@ -4254,5 +4254,10 @@
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "تتشكل عندما ينتقل السؤال إلى التصويت. تُبنى المسودة من الإجابات المتصدرة ويمكن تعديلها.",
   "Read the full agreement": "قراءة الاتفاق كاملًا",
   "Open the draft": "فتح المسودة",
-  "Resize sidebar": "تغيير عرض الشريط الجانبي"
+  "Resize sidebar": "تغيير عرض الشريط الجانبي",
+  "Sort": "فرز",
+  "Most updated": "الأحدث تحديثًا",
+  "Most joined": "الأكثر انضمامًا",
+  "Show hidden answers": "إظهار الإجابات المخفية",
+  "Host's order": "ترتيب المضيف"
 }

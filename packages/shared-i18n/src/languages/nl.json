@@ -4134,5 +4134,10 @@
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "Krijgt vorm zodra de vraag naar stemmen gaat. Het concept wordt opgebouwd uit de koplopers en is te bewerken.",
   "Read the full agreement": "De volledige afspraak lezen",
   "Open the draft": "Concept openen",
-  "Resize sidebar": "Zijbalkbreedte aanpassen"
+  "Resize sidebar": "Zijbalkbreedte aanpassen",
+  "Sort": "Sorteren",
+  "Most updated": "Laatst bijgewerkt",
+  "Most joined": "Meeste deelnemers",
+  "Show hidden answers": "Verborgen antwoorden tonen",
+  "Host's order": "Volgorde van de host"
 }

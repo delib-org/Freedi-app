@@ -38,7 +38,7 @@ import { QuestionType, CompoundPhase } from '@freedi/shared-types';
 import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 import { generateParagraphId } from '@/utils/paragraphUtils';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
-import { AnswerFabContext } from '../../questionScreen/useQuestionScreenData';
+import { QuestionAnswersTabContext } from '../../questionScreen/useQuestionScreenData';
 
 interface Props {
 	showNav?: boolean;
@@ -55,9 +55,10 @@ const StatementBottomNav: FC<Props> = () => {
 	const activeTab = searchParams.get('tab') ?? 'chat';
 
 	const { statement } = useContext(StatementContext);
-	// The question screen's violet "+ Add an answer" button owns adding answers
-	// (and `?compose=solution`) while it is on screen.
-	const answerFabShown = useContext(AnswerFabContext);
+	// On a question's Answers tab the question screen owns adding (its own
+	// button / the shell nav's "+", and `?compose=solution`) and sorting (the
+	// chip in the list header), so this bar renders nothing there.
+	const answersTabOwned = useContext(QuestionAnswersTabContext);
 	const subscription = useSelector(statementSubscriptionSelector(statementId));
 	const options = useSelector(statementOptionsSelector(statementId));
 	const allSubs = useSelector(statementSubsSelector(statementId));
@@ -194,7 +195,7 @@ const StatementBottomNav: FC<Props> = () => {
 			return;
 		}
 		if (
-			answerFabShown ||
+			answersTabOwned ||
 			consumedCompose.current ||
 			!statement ||
 			!user ||
@@ -216,7 +217,7 @@ const StatementBottomNav: FC<Props> = () => {
 		isAdmin,
 		isHalted,
 		handleAddOption,
-		answerFabShown,
+		answersTabOwned,
 	]);
 
 	function handleInitialIdeaSubmit(idea: string) {
@@ -293,10 +294,7 @@ const StatementBottomNav: FC<Props> = () => {
 		);
 	}
 
-	// The violet add-answer button owns adding answers; with fewer than two answers
-	// there is nothing to sort, so the bar would only be an empty scrim over the
-	// last card.
-	const hideBar = answerFabShown && !hasEnoughOptionsToSort;
+	if (answersTabOwned) return null;
 
 	// Add mobile-only class that hides the Add button when menu is open
 	const navRootClass = [
@@ -308,125 +306,118 @@ const StatementBottomNav: FC<Props> = () => {
 
 	return (
 		<>
-			{!hideBar && (
-				<div className={navRootClass}>
-					<div
-						className={`${styles.addOptionButtonWrapper} ${dir === 'ltr' ? styles.addOptionButtonWrapperLtr : ''}`}
-					>
-						{(canAddOption || isAdmin) &&
-							!answerFabShown &&
-							!(isHalted && activeTab === 'options') && (
-								<div className={styles.addButtonGroup}>
-									{showAddMenu && (
-										<>
-											<button
-												className={styles.addMenuOverlay}
-												onClick={() => setShowAddMenu(false)}
-											/>
-											{activeTab !== 'options' && (
-												<div className={styles.subFabMenu}>
-													{activeTab === 'questions' && (
-														<button
-															className={`${styles.subFabButton} ${styles.subFabButtonQuestion}`}
-															onClick={handleCreateSimpleQuestion}
-															aria-label={t('Add New Question')}
-															title={t('Add New Question')}
-															style={{ animationDelay: '0ms' }}
-														>
-															<QuestionIcon style={{ color: '#fff' }} />
-														</button>
-													)}
-													<button
-														className={`${styles.subFabButton} ${styles.subFabButtonCompound}`}
-														onClick={handleCreateCompoundQuestion}
-														aria-label={t('Compound Question')}
-														title={t('Compound Question')}
-														style={{ animationDelay: activeTab === 'questions' ? '60ms' : '0ms' }}
-													>
-														<CompoundIcon style={{ color: '#fff' }} />
-													</button>
-												</div>
+			<div className={navRootClass}>
+				<div
+					className={`${styles.addOptionButtonWrapper} ${dir === 'ltr' ? styles.addOptionButtonWrapperLtr : ''}`}
+				>
+					{(canAddOption || isAdmin) && !(isHalted && activeTab === 'options') && (
+						<div className={styles.addButtonGroup}>
+							{showAddMenu && (
+								<>
+									<button className={styles.addMenuOverlay} onClick={() => setShowAddMenu(false)} />
+									{activeTab !== 'options' && (
+										<div className={styles.subFabMenu}>
+											{activeTab === 'questions' && (
+												<button
+													className={`${styles.subFabButton} ${styles.subFabButtonQuestion}`}
+													onClick={handleCreateSimpleQuestion}
+													aria-label={t('Add New Question')}
+													title={t('Add New Question')}
+													style={{ animationDelay: '0ms' }}
+												>
+													<QuestionIcon style={{ color: '#fff' }} />
+												</button>
 											)}
-										</>
+											<button
+												className={`${styles.subFabButton} ${styles.subFabButtonCompound}`}
+												onClick={handleCreateCompoundQuestion}
+												aria-label={t('Compound Question')}
+												title={t('Compound Question')}
+												style={{ animationDelay: activeTab === 'questions' ? '60ms' : '0ms' }}
+											>
+												<CompoundIcon style={{ color: '#fff' }} />
+											</button>
+										</div>
 									)}
+								</>
+							)}
+							<button
+								className={`${styles.addOptionButton} ${isLearningFace ? styles.addOptionButtonPill : ''} ${showAddMenu ? styles.addOptionButtonRotated : ''}`}
+								aria-label={isLearningFace ? t('addSolution_aria') : t('addOption_aria')}
+								style={statementColor}
+								onClick={
+									activeTab === 'options'
+										? handleAddOption
+										: showAddMenu
+											? () => {
+													setShowAddMenu(false);
+													handleAddOption();
+												}
+											: () => setShowAddMenu(true)
+								}
+								data-cy="bottom-nav-mid-icon"
+							>
+								{!isLearningFace && <PlusIcon style={{ color: statementColor.color }} />}
+								{isLearningFace && (
+									<span className={styles.addOptionButtonLabel} dir={dir}>
+										{t('Add an answer')}
+									</span>
+								)}
+							</button>
+						</div>
+					)}
+
+					{/* Sort menu (absolute fan-out like main branch) - only show when there are at least 2 answers */}
+					{hasEnoughOptionsToSort && (
+						<div className={styles.sortMenu}>
+							{filteredSortItems.map((navItem, i) => (
+								<div
+									key={`item-id-${i}`}
+									className={`${styles.sortMenu__item} ${showSorting ? styles.active : ''}`}
+								>
 									<button
-										className={`${styles.addOptionButton} ${isLearningFace ? styles.addOptionButtonPill : ''} ${showAddMenu ? styles.addOptionButtonRotated : ''}`}
-										aria-label={isLearningFace ? t('addSolution_aria') : t('addOption_aria')}
-										style={statementColor}
-										onClick={
-											activeTab === 'options'
-												? handleAddOption
-												: showAddMenu
-													? () => {
-															setShowAddMenu(false);
-															handleAddOption();
-														}
-													: () => setShowAddMenu(true)
-										}
-										data-cy="bottom-nav-mid-icon"
+										className={`${styles.openNavIcon} ${showSorting ? styles.active : ''}`}
+										aria-label="Sorting options"
+										onClick={() => handleSortClick(navItem)}
 									>
-										{!isLearningFace && <PlusIcon style={{ color: statementColor.color }} />}
-										{isLearningFace && (
-											<span className={styles.addOptionButtonLabel} dir={dir}>
-												{t('Add an answer')}
-											</span>
+										<NavIcon name={navItem.id} color={statementColor.backgroundColor} />
+									</button>
+									<span className={styles.buttonName}>{navItem.name}</span>
+								</div>
+							))}
+							{/* Admin-only toggle for showing/hiding hidden cards */}
+							{isAdmin && (
+								<div
+									className={`${styles.sortMenu__item} ${styles.sortMenu__item_visibility} ${showSorting ? styles.active : ''}`}
+								>
+									<button
+										className={`${styles.openNavIcon} ${styles.visibilityToggle} ${showSorting ? styles.active : ''} ${showHiddenCards ? styles.visibilityToggle_active : ''}`}
+										aria-label={t('Toggle visibility of hidden suggestion cards')}
+										title={showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
+										onClick={toggleShowHiddenCards}
+									>
+										{showHiddenCards ? (
+											<EyeIcon style={{ color: statementColor.backgroundColor }} />
+										) : (
+											<EyeCrossIcon style={{ color: statementColor.backgroundColor }} />
 										)}
 									</button>
+									<span className={styles.buttonName}>
+										{showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
+									</span>
 								</div>
 							)}
-
-						{/* Sort menu (absolute fan-out like main branch) - only show when there are at least 2 answers */}
-						{hasEnoughOptionsToSort && (
-							<div className={styles.sortMenu}>
-								{filteredSortItems.map((navItem, i) => (
-									<div
-										key={`item-id-${i}`}
-										className={`${styles.sortMenu__item} ${showSorting ? styles.active : ''}`}
-									>
-										<button
-											className={`${styles.openNavIcon} ${showSorting ? styles.active : ''}`}
-											aria-label="Sorting options"
-											onClick={() => handleSortClick(navItem)}
-										>
-											<NavIcon name={navItem.id} color={statementColor.backgroundColor} />
-										</button>
-										<span className={styles.buttonName}>{navItem.name}</span>
-									</div>
-								))}
-								{/* Admin-only toggle for showing/hiding hidden cards */}
-								{isAdmin && (
-									<div
-										className={`${styles.sortMenu__item} ${styles.sortMenu__item_visibility} ${showSorting ? styles.active : ''}`}
-									>
-										<button
-											className={`${styles.openNavIcon} ${styles.visibilityToggle} ${showSorting ? styles.active : ''} ${showHiddenCards ? styles.visibilityToggle_active : ''}`}
-											aria-label={t('Toggle visibility of hidden suggestion cards')}
-											title={showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
-											onClick={toggleShowHiddenCards}
-										>
-											{showHiddenCards ? (
-												<EyeIcon style={{ color: statementColor.backgroundColor }} />
-											) : (
-												<EyeCrossIcon style={{ color: statementColor.backgroundColor }} />
-											)}
-										</button>
-										<span className={styles.buttonName}>
-											{showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
-										</span>
-									</div>
-								)}
-								<button
-									className={styles.sortButton}
-									onClick={handleSortingClick}
-									aria-label={showSorting ? 'Close sorting' : 'Open sorting'}
-								>
-									{showSorting ? <XmenuIcon className={styles.whiteIcon} /> : <SortIcon />}
-								</button>
-							</div>
-						)}
-					</div>
+							<button
+								className={styles.sortButton}
+								onClick={handleSortingClick}
+								aria-label={showSorting ? 'Close sorting' : 'Open sorting'}
+							>
+								{showSorting ? <XmenuIcon className={styles.whiteIcon} /> : <SortIcon />}
+							</button>
+						</div>
+					)}
 				</div>
-			)}
+			</div>
 
 			{/* Initial Idea Input Modal */}
 			{showInitialIdeaModal && (

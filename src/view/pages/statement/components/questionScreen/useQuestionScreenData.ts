@@ -15,10 +15,13 @@ import { getQuestionStage, QuestionStageIndex, STAGE_DECIDED } from './questionS
 import { countRated, rankableAnswers } from './resultsLogic';
 
 /**
- * True while the question screen's violet "+ Add an answer" button is on
- * screen, so the legacy bottom-nav add button steps aside instead of doubling it.
+ * True while the question screen's Answers tab is on screen. The screen then
+ * owns both bottom actions there — adding (the "+ Add an answer" button, or the
+ * shell nav's "+" on phones) and sorting (the chip in the list header) — so the
+ * legacy StatementBottomNav bar steps aside instead of stacking a second
+ * floating layer over the cards.
  */
-export const AnswerFabContext = createContext(false);
+export const QuestionAnswersTabContext = createContext(false);
 
 export interface QuestionScreenData {
 	isHost: boolean;
