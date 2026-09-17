@@ -184,6 +184,38 @@ body {
 	background: rgba(6, 24, 44, 0.7);
 }
 
+/* The emblem of a wind, beside its heading. Like the islets it ships with real
+   alpha and floats on the panel rather than sitting in a frame. It is allowed
+   to shrink but never to squeeze the heading: the words are the wind, the
+   picture only helps you find it again. */
+.wind-head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+}
+
+.wind-art {
+	flex: none;
+	display: block;
+	width: 58px;
+	height: 58px;
+}
+
+.wind-art img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.45));
+}
+
+@media (max-width: 480px) {
+	.wind-art {
+		width: 44px;
+		height: 44px;
+	}
+}
+
 /* Inspiration chips (compass) */
 .chip {
 	cursor: pointer;

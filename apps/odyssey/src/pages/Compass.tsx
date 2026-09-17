@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { OdysseyCompassAnswer } from '@freedi/shared-types';
 import GameChrome from '../components/GameChrome';
+import WindArt from '../components/WindArt';
 import { useGame } from '../state/GameContext';
+import { DECIDE_WIND_ID } from '../lib/compassArt';
 import NoGameYet from '../components/NoGameYet';
 import { useMode } from '../lib/mode';
 import { stageBus } from '../lib/stageBus';
@@ -187,7 +189,10 @@ export default function Compass() {
 								רוח {index + 1} מתוך {questions.length + 1}
 							</p>
 							<div className="flex items-center justify-between gap-3 mt-1 mb-1">
-								<h2 className="text-xl font-bold text-[var(--cream)] m-0">{question.title}</h2>
+								<span className="wind-head">
+									<WindArt questionId={question.questionId} />
+									<h2 className="text-xl font-bold text-[var(--cream)] m-0">{question.title}</h2>
+								</span>
 								{answered(question.questionId) ? (
 									<span className="wind-ready" role="status">
 										<span aria-hidden="true">✓</span> אפשר להמשיך
@@ -244,7 +249,10 @@ export default function Compass() {
 							רוח {questions.length + 1} מתוך {questions.length + 1}
 						</p>
 						<div className="flex items-center justify-between gap-3 mt-1 mb-1">
-							<h2 className="text-xl font-bold text-[var(--cream)] m-0">רוח ההכרעה</h2>
+							<span className="wind-head">
+								<WindArt questionId={DECIDE_WIND_ID} />
+								<h2 className="text-xl font-bold text-[var(--cream)] m-0">רוח ההכרעה</h2>
+							</span>
 							{/* Ranked and done says the same thing the other winds say, in the
 							    same words; short of that the dots show how far along it is. */}
 							{ranked.length === TOP_VALUES ? (
