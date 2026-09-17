@@ -1,7 +1,7 @@
 import React, { ReactNode, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useDispatch } from 'react-redux';
-import { Statement, StatementType } from '@freedi/shared-types';
+import { StatementType } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useLevelTransition } from '@/controllers/hooks/useSlideAndSubStatement';
@@ -13,7 +13,6 @@ import {
 	setShowNewStatementModal,
 } from '@/redux/statements/newStatementSlice';
 import ThinkingSpace from './ThinkingSpace';
-import EngagementGuide from '../../molecules/EngagementGuide/EngagementGuide';
 import BottomNav from '../BottomNav/BottomNav';
 import {
 	BOTTOM_NAV_PATHS,
@@ -34,16 +33,12 @@ export default function AppThinkingSpace({
 	aside,
 	asideLabel,
 	tools,
-	guideStatement,
-	guideEnabled = true,
 }: {
 	children: ReactNode;
 	activeId?: string;
 	aside?: ReactNode;
 	asideLabel?: string;
 	tools?: ReactNode;
-	guideStatement?: Statement;
-	guideEnabled?: boolean;
 }) {
 	const { t, dir } = useTranslation();
 	const navigate = useNavigate();
@@ -147,15 +142,6 @@ export default function AppThinkingSpace({
 				t={t}
 				dir={dir}
 			>
-				{user && guideEnabled && (guideStatement || location.pathname === '/home') && (
-					<EngagementGuide
-						key={user.uid}
-						userId={user.uid}
-						statement={guideStatement}
-						firstSpaceId={spaces[0]?.id}
-						onCreate={create}
-					/>
-				)}
 				{children}
 				{showNav && (
 					<AskQuestionSheet
