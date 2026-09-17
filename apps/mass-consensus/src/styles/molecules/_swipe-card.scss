@@ -147,6 +147,79 @@
     }
   }
 
+  // Admin: picture button (top corner, opposite the number badge)
+  &__image-btn {
+    position: absolute;
+    top: var(--spacing-md);
+    inset-inline-end: var(--spacing-md);
+    z-index: 3;
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.92);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  // Hide the admin button during drag, like the comment button
+  &--dragging &__image-btn {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  // A card with a picture: taller, picture on top, text below it.
+  // The picture never takes more than half the card, so long text keeps room.
+  &--with-image {
+    height: clamp(320px, 55vh, 560px);
+    max-height: 62vh;
+    justify-content: flex-start;
+    padding: calc(var(--spacing-md) * 2 + 44px) var(--spacing-md) var(--spacing-md);
+  }
+
+  &--with-image &__content-wrapper {
+    flex: 1;
+    min-height: 0;
+    justify-content: flex-start;
+    gap: var(--spacing-md);
+    padding: 0 0 calc(var(--spacing-md) + 44px);
+  }
+
+  &__image {
+    display: block;
+    width: 100%;
+    max-height: 50%;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: 12px;
+    background: var(--card-default);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+  }
+
+  &--with-image &__content {
+    font-size: 1.125rem;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   // Hide comment button during drag
   &--dragging &__comment-btn {
     opacity: 0;
@@ -398,6 +471,19 @@
 
     &__content {
       font-size: 1.125rem;
+    }
+
+    &--with-image {
+      height: clamp(300px, 52vh, 460px);
+      max-height: 56vh;
+    }
+
+    &--with-image &__content-wrapper {
+      padding: 0 0 calc(var(--spacing-md) + 44px);
+    }
+
+    &--with-image &__content {
+      font-size: 1rem;
     }
 
     &__confirmation-modal {

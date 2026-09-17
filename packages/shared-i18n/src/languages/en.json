@@ -4834,5 +4834,14 @@
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.",
   "Read the full agreement": "Read the full agreement",
   "Open the draft": "Open the draft",
-  "Resize sidebar": "Resize sidebar"
+  "Resize sidebar": "Resize sidebar",
+  "Card image": "Card image",
+  "Change image": "Change image",
+  "Choose image": "Choose image",
+  "Image description": "Image description",
+  "Describe the image for people who cannot see it": "Describe the image for people who cannot see it",
+  "Use PNG, JPG, WebP or GIF, up to 5 MB": "Use PNG, JPG, WebP or GIF, up to 5 MB",
+  "The image is larger than 5 MB": "The image is larger than 5 MB",
+  "This file is not a supported image": "This file is not a supported image",
+  "Failed to save the image. Please try again.": "Failed to save the image. Please try again."
 }

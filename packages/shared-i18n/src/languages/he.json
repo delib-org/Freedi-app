@@ -4872,5 +4872,14 @@
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "תתגבש כשהשאלה תעבור להצבעה. הטיוטה נבנית מהתשובות המובילות, וניתנת לעריכה.",
   "Read the full agreement": "לקריאת ההסכמה המלאה",
   "Open the draft": "לפתיחת הטיוטה",
-  "Resize sidebar": "שינוי רוחב סרגל הצד"
+  "Resize sidebar": "שינוי רוחב סרגל הצד",
+  "Card image": "תמונת הכרטיס",
+  "Change image": "החלפת תמונה",
+  "Choose image": "בחירת תמונה",
+  "Image description": "תיאור התמונה",
+  "Describe the image for people who cannot see it": "תארו את התמונה למי שאינו יכול לראות אותה",
+  "Use PNG, JPG, WebP or GIF, up to 5 MB": "PNG,‏ JPG,‏ WebP או GIF, עד 5MB",
+  "The image is larger than 5 MB": "התמונה גדולה מ-5MB",
+  "This file is not a supported image": "הקובץ אינו תמונה נתמכת",
+  "Failed to save the image. Please try again.": "שמירת התמונה נכשלה. נסו שוב."
 }

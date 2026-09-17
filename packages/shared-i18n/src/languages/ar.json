@@ -4254,5 +4254,15 @@
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "تتشكل عندما ينتقل السؤال إلى التصويت. تُبنى المسودة من الإجابات المتصدرة ويمكن تعديلها.",
   "Read the full agreement": "قراءة الاتفاق كاملًا",
   "Open the draft": "فتح المسودة",
-  "Resize sidebar": "تغيير عرض الشريط الجانبي"
+  "Resize sidebar": "تغيير عرض الشريط الجانبي",
+  "Card image": "صورة البطاقة",
+  "Change image": "تغيير الصورة",
+  "Choose image": "اختيار صورة",
+  "Image description": "وصف الصورة",
+  "Describe the image for people who cannot see it": "صِف الصورة لمن لا يستطيع رؤيتها",
+  "Use PNG, JPG, WebP or GIF, up to 5 MB": "استخدم PNG أو JPG أو WebP أو GIF، حتى 5 ميغابايت",
+  "The image is larger than 5 MB": "حجم الصورة أكبر من 5 ميغابايت",
+  "This file is not a supported image": "هذا الملف ليس صورة مدعومة",
+  "Failed to save the image. Please try again.": "تعذّر حفظ الصورة. يرجى المحاولة مرة أخرى.",
+  "Remove image": "إزالة الصورة"
 }

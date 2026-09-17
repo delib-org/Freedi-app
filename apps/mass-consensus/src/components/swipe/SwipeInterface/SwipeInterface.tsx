@@ -18,6 +18,8 @@ import SwipeCard from '../SwipeCard';
 import RatingButton from '../RatingButton';
 import SurveyProgress from '../SurveyProgress';
 import CommentModal from '../CommentModal';
+import CardImageModal from '../CardImageModal';
+import { useSwipeCardImages } from '@/hooks/useSwipeCardImages';
 import SolutionPromptModal from '@/components/question/SolutionPromptModal';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import {
@@ -77,6 +79,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   const evaluatedCount = useSelector(selectEvaluatedCardsCount);
   const totalCount = useSelector(selectTotalCardsCount);
   const showProposalPrompt = useSelector(selectShowProposalPrompt);
+  const cardImages = useSwipeCardImages(currentCard, surveyId);
 
   const [showProposalModal, setShowProposalModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
@@ -369,6 +372,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
               currentIndex={evaluatedCount}
               programmaticThrow={programmaticThrow}
               onCommentClick={handleOpenComment}
+              onImageEditClick={cardImages.onImageEditClick}
             />
           </div>
 
@@ -449,6 +453,16 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
           suggestionText={currentCard.statement}
           questionText={question.statement}
           onSubmit={handleCommentSubmit}
+        />
+      )}
+
+      {currentCard && cardImages.onImageEditClick && (
+        <CardImageModal
+          isOpen={cardImages.isImageModalOpen}
+          onClose={cardImages.closeImageModal}
+          statement={currentCard}
+          surveyId={surveyId}
+          onSaved={cardImages.onImageSaved}
         />
       )}
 

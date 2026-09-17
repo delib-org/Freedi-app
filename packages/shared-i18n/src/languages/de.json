@@ -4134,5 +4134,15 @@
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "Nimmt Gestalt an, wenn die Frage in die Abstimmung geht. Der Entwurf entsteht aus den führenden Antworten und lässt sich bearbeiten.",
   "Read the full agreement": "Die ganze Vereinbarung lesen",
   "Open the draft": "Entwurf öffnen",
-  "Resize sidebar": "Seitenleistenbreite ändern"
+  "Resize sidebar": "Seitenleistenbreite ändern",
+  "Card image": "Kartenbild",
+  "Change image": "Bild ändern",
+  "Choose image": "Bild auswählen",
+  "Image description": "Bildbeschreibung",
+  "Describe the image for people who cannot see it": "Beschreiben Sie das Bild für Menschen, die es nicht sehen können",
+  "Use PNG, JPG, WebP or GIF, up to 5 MB": "PNG, JPG, WebP oder GIF, bis 5 MB",
+  "The image is larger than 5 MB": "Das Bild ist größer als 5 MB",
+  "This file is not a supported image": "Diese Datei ist kein unterstütztes Bild",
+  "Failed to save the image. Please try again.": "Das Bild konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+  "Remove image": "Bild entfernen"
 }

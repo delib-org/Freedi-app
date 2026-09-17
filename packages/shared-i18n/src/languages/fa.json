@@ -4632,5 +4632,14 @@
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "وقتی پرسش به رأی‌گیری برسد شکل می‌گیرد. پیش‌نویس از پاسخ‌های پیشتاز ساخته می‌شود و قابل ویرایش است.",
   "Read the full agreement": "خواندن کامل توافق",
   "Open the draft": "باز کردن پیش‌نویس",
-  "Resize sidebar": "تغییر عرض نوار کناری"
+  "Resize sidebar": "تغییر عرض نوار کناری",
+  "Card image": "تصویر کارت",
+  "Change image": "تغییر تصویر",
+  "Choose image": "انتخاب تصویر",
+  "Image description": "توضیح تصویر",
+  "Describe the image for people who cannot see it": "تصویر را برای کسانی که نمی‌توانند آن را ببینند توصیف کنید",
+  "Use PNG, JPG, WebP or GIF, up to 5 MB": "PNG، JPG، WebP یا GIF، حداکثر ۵ مگابایت",
+  "The image is larger than 5 MB": "حجم تصویر بیشتر از ۵ مگابایت است",
+  "This file is not a supported image": "این فایل تصویر پشتیبانی‌شده‌ای نیست",
+  "Failed to save the image. Please try again.": "ذخیره تصویر ناموفق بود. لطفاً دوباره تلاش کنید."
 }

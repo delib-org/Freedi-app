@@ -4134,5 +4134,15 @@
   "Takes shape when the question moves to voting. The draft is built from the leading answers and can be edited.": "Krijgt vorm zodra de vraag naar stemmen gaat. Het concept wordt opgebouwd uit de koplopers en is te bewerken.",
   "Read the full agreement": "De volledige afspraak lezen",
   "Open the draft": "Concept openen",
-  "Resize sidebar": "Zijbalkbreedte aanpassen"
+  "Resize sidebar": "Zijbalkbreedte aanpassen",
+  "Card image": "Kaartafbeelding",
+  "Change image": "Afbeelding wijzigen",
+  "Choose image": "Afbeelding kiezen",
+  "Image description": "Beschrijving van de afbeelding",
+  "Describe the image for people who cannot see it": "Beschrijf de afbeelding voor mensen die haar niet kunnen zien",
+  "Use PNG, JPG, WebP or GIF, up to 5 MB": "PNG, JPG, WebP of GIF, tot 5 MB",
+  "The image is larger than 5 MB": "De afbeelding is groter dan 5 MB",
+  "This file is not a supported image": "Dit bestand is geen ondersteunde afbeelding",
+  "Failed to save the image. Please try again.": "Opslaan van de afbeelding is mislukt. Probeer het opnieuw.",
+  "Remove image": "Afbeelding verwijderen"
 }
