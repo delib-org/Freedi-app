@@ -2,6 +2,7 @@ import React, { ReactNode, useId, useState } from 'react';
 import { ArrowUpRight, ChevronDown, Home, Lightbulb, Plus, X } from 'lucide-react';
 import styles from './ThinkingSpace.module.scss';
 import UnreadBadge from '@/view/components/unreadBadge/UnreadBadge';
+import { useSidebarWidth } from '@/controllers/hooks/useSidebarWidth';
 
 export interface SpaceLink {
 	id: string;
@@ -49,17 +50,21 @@ export default function ThinkingSpace({
 	const [ideasOpen, setIdeasOpen] = useState(false);
 	const asideId = useId();
 	const resolvedAsideLabel = asideLabel || t('Taking shape');
+	const { width: sidebarWidth, isResizing, separatorProps } = useSidebarWidth(dir);
 	const rootClassName = [
 		'thinking-space',
 		styles.space,
 		bottomNav ? styles['space--withNav'] : '',
+		isResizing ? styles['space--resizing'] : '',
 		transitionClassName ?? '',
 	]
 		.filter(Boolean)
 		.join(' ');
+	// The rail's width lives on the shell so the separator and the rail agree.
+	const rootStyle = { '--space-sidebar-width': `${sidebarWidth}px` } as React.CSSProperties;
 
 	return (
-		<div className={rootClassName} dir={dir}>
+		<div className={rootClassName} dir={dir} style={rootStyle}>
 			<a className={styles.space__skip} href="#thinking-content">
 				{t('Skip to conversation')}
 			</a>
@@ -130,6 +135,13 @@ export default function ThinkingSpace({
 					<ArrowUpRight size={17} />
 				</button>
 			</nav>
+			<div
+				{...separatorProps}
+				className={`${styles.space__resizer} ${isResizing ? styles['space__resizer--active'] : ''}`}
+				aria-label={t('Resize sidebar')}
+				title={t('Resize sidebar')}
+				data-testid="thinking-space-resizer"
+			/>
 			<div className={styles.space__workspace}>
 				{tools && <div className={styles.space__tools}>{tools}</div>}
 				<div className={styles.space__columns}>

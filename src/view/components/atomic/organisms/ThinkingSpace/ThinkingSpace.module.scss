@@ -42,7 +42,8 @@
 		}
 	}
 	&__sidebar {
-		flex: 0 0 232px;
+		// Set by the shell from useSidebarWidth: the person drags the separator.
+		flex: 0 0 var(--space-sidebar-width, 232px);
 		min-width: 0;
 		background: var(--space-sidebar);
 		border-inline-end: 0;
@@ -221,6 +222,41 @@
 		font-size: 13px;
 		flex-shrink: 0;
 	}
+	// Drag (or arrow-key) the rail wider when space titles are long; double-click
+	// puts it back. Sized to keep the shell's 12px gutter: 12 + 6 + 12 - 2 × 9.
+	&__resizer {
+		flex: 0 0 6px;
+		align-self: stretch;
+		margin-inline: -9px;
+		position: relative;
+		z-index: 5;
+		cursor: col-resize;
+		touch-action: none;
+		&::after {
+			content: '';
+			position: absolute;
+			inset-block: 32px;
+			left: 50%;
+			width: 2px;
+			margin-left: -1px;
+			border-radius: 2px;
+			background: transparent;
+			transition: background 120ms ease;
+		}
+		&:hover::after,
+		&:focus-visible::after,
+		&--active::after {
+			background: var(--space-purple);
+		}
+		@media (max-width: 1023px) {
+			display: none;
+		}
+	}
+	// A drag must not select the sidebar's text on the way past.
+	&--resizing {
+		cursor: col-resize;
+		user-select: none;
+	}
 	&__workspace {
 		background: var(--space-paper);
 		border: 1px solid color-mix(in srgb, var(--space-surface) 75%, transparent);
@@ -265,7 +301,6 @@
 	}
 	@media (max-width: 1199px) {
 		&__sidebar {
-			flex-basis: 208px;
 			padding-inline: 16px;
 		}
 		&__aside {
