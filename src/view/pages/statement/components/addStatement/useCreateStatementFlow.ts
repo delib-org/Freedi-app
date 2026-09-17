@@ -222,6 +222,15 @@ export function useCreateStatementFlow({
 						currentLanguage,
 						user,
 						dispatch,
+						// The sheet closes once the write is local; waiting for the server's
+						// ack kept it open for ~20-30 s on a stale mobile connection.
+						onServerWriteError: (error: unknown) =>
+							logError(error, {
+								operation: 'addStatement.useCreateStatementFlow.serverWrite',
+								statementId: parentId,
+								userId: user.uid,
+								metadata: { intent, origin },
+							}),
 					});
 					ids.push(id);
 				}
