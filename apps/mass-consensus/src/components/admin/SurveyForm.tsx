@@ -442,8 +442,8 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         isOpen={isCreateQuestionModalOpen}
         onClose={() => setIsCreateQuestionModalOpen(false)}
         onQuestionCreated={(question) => {
+          // The modal closes itself — after its pictures upload, when it has any
           setSelectedQuestions((prev) => [...prev, question]);
-          setIsCreateQuestionModalOpen(false);
         }}
         defaultParentId={selectedQuestions.length > 0 ? selectedQuestions[0].parentId : undefined}
       />
@@ -469,6 +469,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             onQuestionSettingsChange={handleQuestionSettingsChange}
             onQuestionTextChange={handleQuestionTextChange}
             onRemoveQuestion={handleRemoveQuestion}
+            surveyId={existingSurvey?.surveyId}
           />
         </div>
       )}

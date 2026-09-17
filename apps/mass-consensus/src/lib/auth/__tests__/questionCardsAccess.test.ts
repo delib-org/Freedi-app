@@ -1,5 +1,5 @@
 /**
- * Who may put a picture on an option's card. The property that matters: a
+ * Who may manage a question's cards and put pictures on them. The property that matters: a
  * survey role only counts for questions that really belong to that survey.
  */
 
@@ -20,7 +20,7 @@ jest.mock('@/lib/utils/errorHandling', () => ({
 }));
 
 import { Statement, Survey, buildSurveyAccess } from '@freedi/shared-types';
-import { canEditCardImage } from '../cardImageAccess';
+import { canEditCardImage, canEditQuestionCards } from '../questionCardsAccess';
 import { getSurveyById } from '@/lib/firebase/surveys';
 import { isAdminOfStatement } from '../verifyAdmin';
 import { resolveSurveyAccess } from '../surveyAccess';
@@ -33,7 +33,7 @@ const mockIsAdmin = isAdminOfStatement as jest.Mock;
 const mockGetSurvey = getSurveyById as jest.Mock;
 const mockResolve = resolveSurveyAccess as jest.Mock;
 
-describe('canEditCardImage', () => {
+describe('canEditQuestionCards / canEditCardImage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsAdmin.mockResolvedValue(false);
@@ -82,6 +82,13 @@ describe('canEditCardImage', () => {
     mockGetSurvey.mockResolvedValue(null);
 
     await expect(canEditCardImage('u', option, 'missing')).resolves.toBe(false);
+  });
+
+  it('checks a question directly by its id', async () => {
+    mockIsAdmin.mockResolvedValue(true);
+
+    await expect(canEditQuestionCards('u', 'q-9')).resolves.toBe(true);
+    expect(mockIsAdmin).toHaveBeenCalledWith('u', 'q-9');
   });
 
   it('fails closed and logs when the lookup throws', async () => {

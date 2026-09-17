@@ -3,7 +3,7 @@ import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { setCardImage, setCardImageAlt, removeCardImage } from '@/lib/firebase/cardImageAdmin';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
-import { canEditCardImage } from '@/lib/auth/cardImageAccess';
+import { canEditCardImage } from '@/lib/auth/questionCardsAccess';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logError } from '@/lib/utils/errorHandling';
 import {
