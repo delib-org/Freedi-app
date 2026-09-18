@@ -235,6 +235,7 @@ const MindMap: FC = () => {
 						filterBy={filterBy}
 						level={detail.level}
 						expandedIds={detail.expandedIds}
+						foldedIds={detail.foldedIds}
 						onToggleExpanded={detail.toggleExpanded}
 						markIds={mine?.synthsContainingMine}
 						locateId={mine?.firstId}

@@ -26,7 +26,7 @@ import styles from './ClusterBoard.module.scss';
  * would ignore the note — the menu/footer would flip it to LTR — and each
  * child's own `inset-inline-*` resolves against ITS OWN direction, not the card's.)
  */
-function detectTextDir(text: string): 'rtl' | 'ltr' {
+export function detectTextDir(text: string): 'rtl' | 'ltr' {
 	for (const ch of text) {
 		const c = ch.codePointAt(0);
 		if (c === undefined) continue;

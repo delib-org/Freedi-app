@@ -38,17 +38,16 @@ import {
 	withFrame,
 	type ClusterColor,
 } from '../mapHelpers/clusterColors';
-import { focusEditField } from '../mapHelpers/focusEditField';
 import { usePanZoom } from '../hooks/usePanZoom';
 import PanZoomControls from '../components/PanZoomControls';
-import ClusterCard from './ClusterCard';
+import ClusterCard, { detectTextDir } from './ClusterCard';
+import NoteFocusOverlay from './NoteFocusOverlay';
 import ClusterStack from './ClusterStack';
 import stackStyles from './ClusterStack.module.scss';
 import type { LocalMapFilter } from './mapLocalFilter';
 import {
 	applyDetailLevel,
 	buildMembershipMap,
-	collapsedByLevel,
 	countsFor,
 	isRatable,
 	type DetailResults,
@@ -188,12 +187,12 @@ const ClusterBoard: FC<Props> = ({
 	const { t } = useTranslation();
 	const { user, creator } = useAuthentication();
 	const subject = results.top;
-	const { level, expandedIds, toggleExpanded, allowExpand } = detail;
+	const { level, expandedIds, foldedIds, toggleExpanded, allowExpand } = detail;
 	// The tree folded to the viewer's altitude; the board reads `collapsed` off
 	// each node instead of pruning, so folded containers still know their counts.
 	const leveled = useMemo(
-		() => applyDetailLevel(results, level, expandedIds),
-		[results, level, expandedIds],
+		() => applyDetailLevel(results, level, expandedIds, foldedIds),
+		[results, level, expandedIds, foldedIds],
 	);
 	const children = leveled.sub;
 	const membership = useMemo(() => buildMembershipMap(results), [results]);
@@ -275,6 +274,9 @@ const ClusterBoard: FC<Props> = ({
 	// Hovering (or tapping, on touch) a cluster's title fades the other frames
 	// and thickens its hub connector so one cluster can be isolated by eye.
 	const [focusedId, setFocusedId] = useState<string | null>(null);
+	// A pressed cluster title opens the same focus box as a note: the full
+	// title, readable from afar, and (with rights) the place to edit it.
+	const [pillFocus, setPillFocus] = useState<{ id: string; rect: DOMRect } | null>(null);
 
 	useEffect(() => {
 		if (focusedId === null) return;
@@ -1009,10 +1011,14 @@ const ClusterBoard: FC<Props> = ({
 										l.collapsed ? styles.pillCollapsed : ''
 									}`}
 									style={{ background: l.color.line }}
-									// Keep the pill clickable (edit/color/delete) — don't let a press
-									// on it start a canvas pan, which would swallow the double-click.
+									// Keep the pill clickable (open/color/delete) — don't let a press
+									// on it start a canvas pan, which would swallow the click.
 									data-no-pan
-									onDoubleClick={canEditPill ? () => setEditingId(l.id) : undefined}
+									onClick={(e) => {
+										if (!l.clusterStatement) return;
+										if ((e.target as HTMLElement).closest('button, input, textarea')) return;
+										setPillFocus({ id: l.id, rect: e.currentTarget.getBoundingClientRect() });
+									}}
 									onPointerEnter={(e) => {
 										if (e.pointerType !== 'touch') setFocusedId(l.id);
 									}}
@@ -1029,35 +1035,12 @@ const ClusterBoard: FC<Props> = ({
 										setFocusedId((id) => (id === l.id ? null : l.id));
 									}}
 								>
-									{editingId === l.id && l.clusterStatement ? (
-										<textarea
-											className={styles.pillEdit}
-											defaultValue={l.clusterStatement.statement}
-											// Focus on pointer devices only; on touch this would scroll
-											// the field into view and yank the map viewport.
-											ref={focusEditField}
-											onFocus={(e) => e.currentTarget.select()}
-											onBlur={(e) =>
-												saveText(l.clusterStatement as Statement, e.currentTarget.value)
-											}
-											onKeyDown={(e) => {
-												if (e.key === 'Enter' && !e.shiftKey) {
-													e.preventDefault();
-													e.currentTarget.blur();
-												}
-												if (e.key === 'Escape') setEditingId(null);
-											}}
-										/>
-									) : (
-										<>
-											{l.clusterStatement && (
-												<span className={styles.pillGlyph} aria-hidden>
-													{l.isSynth ? '⧉' : '#'}
-												</span>
-											)}
-											{l.label}
-										</>
+									{l.clusterStatement && (
+										<span className={styles.pillGlyph} aria-hidden>
+											{l.isSynth ? '⧉' : '#'}
+										</span>
 									)}
+									{l.label}
 
 									{editingId !== l.id && (l.collapsed || l.isSynth) && (
 										<span className={styles.pillCount}>
@@ -1099,14 +1082,13 @@ const ClusterBoard: FC<Props> = ({
 										</button>
 									)}
 
-									{/* Hand-opened above its level (a merged idea below "everything", a
-									    theme at "themes"): offer to fold it back. */}
+									{/* Any open container folds back down to its count — whether the
+									    level or a hand-expand opened it. */}
 									{!l.collapsed &&
 										allowExpand &&
 										l.clusterStatement &&
 										editingId !== l.id &&
-										expandedIds.has(l.clusterStatement.statementId) &&
-										collapsedByLevel(l.isSynth ? 'synth' : 'topic', level) && (
+										l.sourceCount > 0 && (
 											<button
 												type="button"
 												className={styles.pillExpand}
@@ -1235,7 +1217,9 @@ const ClusterBoard: FC<Props> = ({
 														voices={member.sub.length}
 														expanded={open}
 														canExpand={allowExpand && member.sub.length > 0}
-														onToggle={() => toggleExpanded(member.top.statementId)}
+														onToggle={() =>
+															toggleExpanded(member.top.statementId, member.collapsed)
+														}
 														includesMine={mine?.synthsContainingMine.has(member.top.statementId)}
 													>
 														{card}
@@ -1311,6 +1295,30 @@ const ClusterBoard: FC<Props> = ({
 					})}
 				</div>
 			</div>
+
+			{pillFocus &&
+				(() => {
+					const focused = layout.find((l) => l.id === pillFocus.id);
+					const statementToShow = focused?.clusterStatement;
+					if (!focused || !statementToShow) return null;
+
+					return (
+						<NoteFocusOverlay
+							text={statementToShow.statement}
+							dir={detectTextDir(statementToShow.statement)}
+							color={focused.color}
+							sourceRect={pillFocus.rect}
+							canEdit={canManage(statementToShow)}
+							editing={editingId === focused.id}
+							onRequestEdit={() => setEditingId(focused.id)}
+							onSave={(value) => saveText(statementToShow, value)}
+							onClose={() => {
+								if (editingId === focused.id) setEditingId(null);
+								setPillFocus(null);
+							}}
+						/>
+					);
+				})()}
 
 			<PanZoomControls
 				fixed

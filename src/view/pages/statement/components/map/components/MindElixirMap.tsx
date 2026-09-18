@@ -74,6 +74,8 @@ interface Props {
 	level: MapDetailLevel;
 	/** Nodes the viewer opened past the level by hand. */
 	expandedIds: ReadonlySet<string>;
+	/** Nodes folded by hand although the level would open them. */
+	foldedIds?: ReadonlySet<string>;
 	/** Fired when the viewer opens/closes a node with MindElixir's own expander. */
 	onToggleExpanded: (id: string, expanded: boolean) => void;
 	/** Nodes to badge "includes yours" (merged ideas holding one of the viewer's originals). */
@@ -130,6 +132,7 @@ function MindElixirMap({
 	filterBy,
 	level,
 	expandedIds,
+	foldedIds,
 	onToggleExpanded,
 	markIds,
 	locateId,
@@ -443,7 +446,7 @@ function MindElixirMap({
 	// dropped the selection. Taken here, before MindElixir adds `parent` back-links
 	// to the tree and makes it circular.
 	const { data, signature } = useMemo(() => {
-		const leveled = applyDetailLevel(descendants, level, expandedIds);
+		const leveled = applyDetailLevel(descendants, level, expandedIds, foldedIds);
 		const filtered =
 			filterBy === FilterType.questionsResults ? filterDescendants(leveled) : leveled;
 		const built = filtered
@@ -451,7 +454,7 @@ function MindElixirMap({
 			: null;
 
 		return { data: built, signature: built ? JSON.stringify(built) : '' };
-	}, [descendants, filterBy, level, expandedIds, formatBadge, boardMode, markIds]);
+	}, [descendants, filterBy, level, expandedIds, foldedIds, formatBadge, boardMode, markIds]);
 
 	// The signature MindElixir is currently showing.
 	const drawnSignatureRef = useRef('');
