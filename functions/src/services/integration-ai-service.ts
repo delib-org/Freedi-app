@@ -611,6 +611,52 @@ export async function generateTopicLabel(
 		.map((s, i) => `${i + 1}. ${s.statement}`)
 		.join('\n');
 
+	// Themes are born from a single synthesis, and the first theme's title sets
+	// the attractor every later filing decision is measured against. On a NARROW
+	// question every answer shares the question's subject, so a label that names
+	// that subject ("Leveraging research to change reality" for "how can research
+	// change reality?") fits every answer and separates nothing — measured on
+	// Bq-VQPMPiG7b, one such theme swallowed 61 of 114 statements and 26 of the
+	// human coder's 36 clusters. The prompt forbids it, and the guard below
+	// checks, because a prohibition alone is not something the fast model
+	// reliably honours.
+	const first = await requestTopicLabel({ ideaLines, questionContext, languageInstruction });
+	if (!first) return topicLabelFallback(inputs);
+	if (!(await labelRestatesQuestion(first.title, questionContext))) return first;
+
+	logger.info('generateTopicLabel: label restates the question, regenerating', {
+		title: first.title.substring(0, 60),
+	});
+	const second = await requestTopicLabel({
+		ideaLines,
+		questionContext,
+		languageInstruction,
+		rejectedTitle: first.title,
+	});
+	if (second && !(await labelRestatesQuestion(second.title, questionContext))) return second;
+
+	logger.warn('generateTopicLabel: regenerated label still restates the question, using fallback', {
+		title: second?.title.substring(0, 60),
+	});
+
+	return topicLabelFallback(inputs);
+}
+
+/**
+ * One label request. `rejectedTitle` is the stricter second attempt, made
+ * after the guard refused the first label for restating the question.
+ */
+async function requestTopicLabel(input: {
+	ideaLines: string;
+	questionContext: string;
+	languageInstruction: string;
+	rejectedTitle?: string;
+}): Promise<TopicLabelResult | null> {
+	const { ideaLines, questionContext, languageInstruction, rejectedTitle } = input;
+	const strictness = rejectedTitle
+		? `\nYour previous label "${rejectedTitle}" was REJECTED because it restates the question. Be concrete this time: name the one specific lever, mechanism, actor, or domain these ideas rely on, in words that do not appear in the question.\n`
+		: '';
+
 	const prompt = `You are naming a topic that groups related but distinct community ideas.
 
 QUESTION: "${questionContext}"
@@ -620,6 +666,8 @@ ${ideaLines}
 
 TASK: Produce a SHORT topic label (3–6 words) describing what these ideas have in common at the topic level — not a merged proposal. Examples of good labels: "Public transit improvements", "Park & green space", "Bike lane expansion". Avoid verb-led action phrasing; this is a category, not a plan.
 
+Every idea here is an answer to the QUESTION, so the question's own subject is NOT what they have in common — every other answer shares it too. Name the SPECIFIC sub-area that separates these ideas from other answers to the same question: the lever, mechanism, actor, or domain they rely on (for example funding, partnerships, education, data access). NEVER restate, paraphrase, or generalise the question; a label that could head almost every answer is wrong.
+${strictness}
 Also give a one-sentence description (≤ 20 words) describing the topic.
 
 ${languageInstruction}
@@ -643,10 +691,7 @@ Return JSON:
 		const title =
 			typeof parsed.title === 'string' && parsed.title.trim() ? parsed.title.trim() : '';
 		const description = typeof parsed.description === 'string' ? parsed.description.trim() : '';
-
-		if (!title) {
-			return topicLabelFallback(inputs);
-		}
+		if (!title) return null;
 
 		return { title, description };
 	} catch (error) {
@@ -654,7 +699,60 @@ Return JSON:
 			error: error instanceof Error ? error.message : String(error),
 		});
 
-		return topicLabelFallback(inputs);
+		return null;
+	}
+}
+
+/**
+ * Does a theme heading merely restate the question it organises answers to?
+ *
+ * An LLM yes/no rather than a cosine cut: under the Hebrew 3-large space the
+ * whole corpus packs into ~0.64–0.94, so any threshold between "restates" and
+ * "names a sub-area" would be per-language and per-model. The fast model at
+ * temperature 0 answers the question directly. Fail-OPEN: a check that errors
+ * accepts the label — a theme with a mediocre title is a far cheaper error than
+ * a synthesis that can never get a theme. Skipped when the context is not a
+ * question (the caller falls back to the statement id).
+ */
+export async function labelRestatesQuestion(
+	label: string,
+	questionContext: string,
+): Promise<boolean> {
+	if (!label.trim() || !questionContext.trim() || !questionContext.includes(' ')) return false;
+
+	const prompt = `You are checking a topic heading used to organise the answers to a question.
+
+QUESTION: "${questionContext}"
+
+HEADING: "${label}"
+
+Every answer to the question will be filed under some heading, so a heading is useless if it merely restates, paraphrases, or generalises the question — for "How can we harness research to change reality?", the heading "Harnessing research for change" fits every answer and separates nothing. A useful heading names one specific sub-area (a lever, mechanism, actor, or domain) that only SOME answers share, such as "Funding for applied research" or "Researcher–practitioner partnerships".
+
+Does this heading restate or paraphrase the question, or is it so general that it would fit almost any answer to it?
+
+Return JSON:
+{
+  "restatesQuestion": true or false,
+  "reason": "≤ 12 words"
+}`;
+
+	try {
+		const model = getThemeAssignmentModel();
+		const result = await model.generateContent(prompt);
+		const responseText = result.response
+			.text()
+			.replace(/```json\s*/gi, '')
+			.replace(/```\s*/g, '')
+			.trim();
+		const parsed = JSON.parse(responseText);
+
+		return parsed.restatesQuestion === true;
+	} catch (error) {
+		logger.warn('labelRestatesQuestion: check failed, accepting the label', {
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return false;
 	}
 }
 
@@ -833,6 +931,14 @@ by what is actually filed under a topic, not by how its title sounds — a title
 is a compression of whatever arrived first, and may read broader or narrower
 than the topic's real contents.
 
+Every proposal here answers the same QUESTION, so relating to the question — or
+to its subject — is never a reason to file. File the proposal under a topic only
+when it shares the specific sub-area of what that topic already holds: the
+domain, lever, mechanism, or actor its contents have in common and that other
+answers to the question do not (for example funding, partnerships, education,
+data access). If a topic's contents already span many different sub-areas it
+has become a catch-all; prefer "NONE" over adding to it.
+
 File the proposal under a topic only when it clearly belongs to the same area of
 concern as what that topic already holds. When unsure, answer "NONE": a topic
 created too eagerly is cheap, because a later tidy-up sweep merges duplicate
@@ -980,6 +1086,12 @@ schools). Do NOT group topics merely because both are about the city, or because
 both are broadly civic; the result must still be a heading a reader would find
 useful for browsing.
 
+Every heading here organises answers to the same QUESTION, so sharing the
+question's subject is never a reason to group two headings. Group only headings
+that name the same specific sub-area (domain, lever, mechanism, or actor). Never
+give a merged group a heading that restates or paraphrases the question — such a
+heading fits every answer and would swallow every other topic.
+
 Leave a topic out of every group when it genuinely stands alone. Returning no
 groups at all is a valid answer.
 
@@ -1024,6 +1136,137 @@ Return JSON:
 		return groups;
 	} catch (error) {
 		logger.warn('groupEquivalentThemes: error, leaving themes as they are', {
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return [];
+	}
+}
+
+export interface ThemeSplitMember {
+	id: string;
+	title: string;
+}
+
+export interface ThemeSubTopic {
+	title: string;
+	description: string;
+	/** Ids of the members (as offered) that move into this sub-topic. */
+	memberIds: string[];
+}
+
+/** How many sub-topics one split may produce; a floor of two is what makes it a split. */
+export const MIN_SUB_TOPICS = 2;
+export const MAX_SUB_TOPICS = 6;
+
+/**
+ * Propose how to divide one oversized theme into sub-topics.
+ *
+ * The mirror of `groupEquivalentThemes`. Consolidation can only ever make the
+ * theme set smaller, and on a narrow question that is the wrong direction: every
+ * answer shares the question's subject, so the first theme — named for that
+ * subject — is where the filing judge puts most of what follows, and nothing
+ * revisits it. Measured on Bq-VQPMPiG7b (114 Hebrew statements, human-coded
+ * into 36 clusters): one theme held 61 statements spanning 26 of the 36, and the
+ * theme layer scored pairwise F1 0.19 against the coder.
+ *
+ * One call with the theme's full contents in view — like consolidation, this is
+ * a judgement about a SET, and it is the contents that carry the structure (the
+ * heading is precisely what failed to). Returns an empty list when the contents
+ * genuinely form one sub-area, which is a valid answer; the caller records the
+ * set as judged either way.
+ *
+ * Only ids that were offered survive, a member claimed twice stays with the
+ * first sub-topic, and fewer than two surviving sub-topics is no split.
+ */
+export async function proposeThemeSplit(input: {
+	theme: ThemeOption;
+	members: ThemeSplitMember[];
+	questionContext: string;
+	/** Headings of the other live themes, so a sub-topic does not duplicate one. */
+	otherThemeTitles: string[];
+	/** Placed proposals under the question, for the "N of M" framing. */
+	placedTotal: number;
+}): Promise<ThemeSubTopic[]> {
+	const { theme, members, questionContext, otherThemeTitles, placedTotal } = input;
+	if (members.length < MIN_SUB_TOPICS * 2) return [];
+
+	const sample = members[0].title;
+	const isHebrew = /[֐-׿]/.test(sample);
+	const isArabic = /[؀-ۿ]/.test(sample);
+	const languageInstruction = isHebrew
+		? 'Write every title and description in Hebrew.'
+		: isArabic
+			? 'Write every title and description in Arabic.'
+			: 'Write every title and description in EXACTLY the same language as the proposals. Do NOT translate.';
+
+	const memberLines = members.map((m, i) => `${i + 1}. [${m.id}] ${m.title}`).join('\n');
+	const others =
+		otherThemeTitles.length > 0
+			? `\nOTHER TOPICS THAT ALREADY EXIST (do not duplicate them):\n${otherThemeTitles.map((t) => `- ${t}`).join('\n')}\n`
+			: '';
+
+	const prompt = `You are re-organising one topic heading of a community consultation. It has grown too large to browse.
+
+QUESTION: "${questionContext}"
+
+TOPIC: "${theme.title}"${theme.description ? ` — ${theme.description}` : ''}
+It holds ${members.length} of the ${placedTotal} proposals placed so far.
+${others}
+PROPOSALS UNDER THIS TOPIC:
+${memberLines}
+
+TASK: Divide these proposals into ${MIN_SUB_TOPICS}–${MAX_SUB_TOPICS} sub-topics a reader would find useful for browsing. Name each sub-topic for the specific sub-area its proposals share — the domain, lever, mechanism, or actor they rely on — so that the sub-topics clearly differ from one another.
+
+Rules:
+- Every proposal here answers the same QUESTION, so "they all address the question" is not a sub-topic. Never give a sub-topic a title that restates or paraphrases the question or the current topic heading.
+- Each sub-topic should hold at least 2 proposals. Place each proposal in exactly one sub-topic. Leave a proposal out only if it genuinely fits none.
+- If the proposals really form ONE coherent sub-area that cannot be usefully divided, return an empty list.
+
+${languageInstruction}
+
+Return JSON:
+{
+  "subTopics": [
+    { "title": "3–6 word heading", "description": "≤ 20 words", "memberIds": ["id", "id"] }
+  ]
+}`;
+
+	try {
+		const model = getThemeAssignmentModel();
+		const result = await model.generateContent(prompt);
+		const responseText = result.response
+			.text()
+			.replace(/```json\s*/gi, '')
+			.replace(/```\s*/g, '')
+			.trim();
+		const parsed = JSON.parse(responseText);
+		if (!Array.isArray(parsed.subTopics)) return [];
+
+		const known = new Set(members.map((m) => m.id));
+		const claimed = new Set<string>();
+		const subTopics: ThemeSubTopic[] = [];
+		for (const raw of parsed.subTopics) {
+			if (!raw || !Array.isArray(raw.memberIds)) continue;
+			const memberIds = raw.memberIds.filter(
+				(id: unknown): id is string => typeof id === 'string' && known.has(id) && !claimed.has(id),
+			);
+			if (memberIds.length === 0) continue;
+			const title = typeof raw.title === 'string' ? raw.title.trim() : '';
+			if (!title) continue;
+			memberIds.forEach((id: string) => claimed.add(id));
+			subTopics.push({
+				title,
+				description: typeof raw.description === 'string' ? raw.description.trim() : '',
+				memberIds,
+			});
+			if (subTopics.length >= MAX_SUB_TOPICS) break;
+		}
+
+		return subTopics.length >= MIN_SUB_TOPICS ? subTopics : [];
+	} catch (error) {
+		logger.warn('proposeThemeSplit: error, leaving the theme as it is', {
+			themeId: theme.id,
 			error: error instanceof Error ? error.message : String(error),
 		});
 

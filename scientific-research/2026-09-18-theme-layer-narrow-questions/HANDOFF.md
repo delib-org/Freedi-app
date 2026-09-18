@@ -80,6 +80,50 @@ The paper's benchmark (100 statements, about 10 clearly distinct topics) never e
 
 ---
 
+## 3b. What was done (2026-09-18, second session)
+
+Fixes A, B and C are implemented on `dev` (D is not; see below). Everything below is measured against Fanny's labels with `scripts/scoreVsFanny.py`, which scores any snapshot in the `fetch2.cjs` / export shape.
+
+### Baseline (validation step 1)
+
+| snapshot | themes | largest theme, share of placed | theme pairs prec / rec / F1 | ARI | unthemed |
+|---|---|---|---|---|---|
+| snapshot-1 (Aug clustering) | 4 | 77% | 0.216 / 0.624 / 0.321 | 0.208 | 37 |
+| **snapshot-4 (live at hand-off)** | **2** | **64%** | **0.117 / 0.449 / 0.186** | **0.035** | 19 |
+
+The live theme layer is barely better than chance (ARI 0.04). The 61-statement theme holds 26 of Fanny's 36 clusters. Recall is dominated by Fanny's own 30-statement cluster (*Research–civil society partnership*, 435 of her ~1,050 pairs), so F1 is a poor summary here; ARI is the fairer number.
+
+### The fixes
+
+- **A. Label guard** (`generateTopicLabel`, `labelRestatesQuestion` in `integration-ai-service.ts`). The prompt now demands the sub-area that separates these ideas from other answers and forbids restating the question. A fast-model yes/no check (not cosine: the Hebrew 3-large space packs into 0.64–0.94, so no threshold would transfer) rejects a restating label; one stricter regeneration, then the synth-title fallback. Fail-open. On the live titles: "מינוף מחקר לשינוי מציאות" → restates **true**; "שיתופי פעולה בין בעלי עניין" → false.
+- **B. Question-relative judges.** `assignToTheme`: answering the question is never a reason to file; file only on a shared specific sub-area; a topic whose contents span many sub-areas is a catch-all, prefer NONE. The same clause went into `groupEquivalentThemes`, plus "never give a merged group a heading that restates the question", because the merge sweep is the other place a catch-all can be born.
+- **C. Split sweep** (`pipeline/splitThemes.ts`, `proposeThemeSplit`). Runs in `reJudgeProcessParent` after consolidation. Trigger: ≥ 8 leaves (a synthesis counts per member) AND (≥ ⅓ of placed OR ≥ 25 leaves). One call proposes 2–6 sub-topics with member assignment; applied in a transaction that re-checks the parent's membership fingerprint; parent hidden with `splitInto`, sub-topics carry `splitFrom`; unassigned members become unthemed and are logged. Each membership is judged once (`_liveSynthThemeSplit/{parentId}`). At most 2 splits per parent per sweep. **Loop guard:** `consolidateThemes` refuses a group containing two siblings of the same split (cross-parent merges stay allowed).
+- **D not built.** With C in place the sub-themes exist for the judge to file into; D stays optional.
+
+Tests: `synthesis/__tests__/splitThemes.test.ts`, `services/__tests__/themeLabelAndSplit.test.ts`, two cases added to `consolidateThemes.test.ts`. Audit action `'split'` added.
+
+### Offline dry run on the live state (validation step 2a, real LLM, no Firestore)
+
+`scripts/splitDryRun.ts` runs the split judge on snapshot-4's two themes; `scripts/consolidateDryRun.ts` then runs the merge judge on the result, the way the next sweep tick would. Two independent split runs gave the same structure (6 + 6 sub-topics, every member assigned, headings like *Incentives, resources and training*, *Knowledge access and public discourse*, *Intermediaries and decision-makers*, *Forums and meetings*, *Citizen science*).
+
+| state | themes | largest share | prec / rec / F1 | ARI |
+|---|---|---|---|---|
+| live (snapshot-4) | 2 | 64% | 0.117 / 0.449 / 0.186 | 0.035 |
+| after split, run 1 | 12 | 12% | 0.268 / 0.169 / 0.207 | 0.131 |
+| after split, run 2 | 12 | 14% | 0.277 / 0.175 / 0.214 | 0.139 |
+| after split + merge sweep (run 1) | 9 | 17% | 0.267 / 0.222 / 0.242 | 0.150 |
+
+The merge sweep proposed 4 groups: 3 cross-parent duplicates (merged) and 1 sibling pair (refused by the guard). Precision doubles, ARI ×4. Recall against Fanny's 30-statement cluster is what caps F1 — the machine sub-divides that cluster into partnerships / field-grounded research / intermediaries / tools, which is a finer reading than hers, not a wrong one.
+
+**Consequence for production:** deploying the sweep set fixes the live question *without* a re-cluster — the first `fn_synthesisReJudge` tick after deploy splits both themes, the next tidies. A re-cluster is only needed to test whether A+B prevent the collapse from forming in the first place.
+
+### Emulator replay (validation step 2b)
+
+`runs/bq-replay-themefix` under `scientific-research/2026-08-18-live-synth-accuracy/` — the 114 statements in arrival order, production bands + 3-large, solo emulator suite, with A+B+C. Result in that folder's `results.json`; score with `scoreVsFanny.py` on a `fetch2`-shaped export of the emulator question. See the bottom of this file for the outcome.
+
+### Not done
+- Validation step 3 (the EN/HE 100-statement regression) was **not** re-run. B changes the filing judge on every question, so that run is owed before deploy.
+
 ## 4. Other open items
 - **Map not live** (it showed deleted clusters until a refresh). The listener dies silently on errors or network drops, and a restart can't see deletions made meanwhile. The full plan is **Part 2** of `~/.claude/plans/tranquil-napping-cake.md`: port Join's `resilientOnSnapshot` into `src/controllers/utils/firestoreListenerHelpers.ts`, and add a tombstone listener plus cluster reconcile to `listenToMindMapData`.
 - **"Synthesize now" is refused while a system run is active.** It should join the running run instead (`fn_synthesizeNow.ts`, `isRunInFlight`).

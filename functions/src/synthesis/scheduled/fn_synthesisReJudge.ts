@@ -8,6 +8,7 @@ import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
 import { generateSynthesizedProposal } from '../../services/integration-ai-service';
 import { judgeSemanticEquivalenceCachedDetailed } from '../../services/verdict-cache-service';
 import { consolidateThemes } from '../pipeline/consolidateThemes';
+import { splitOversizedThemes } from '../pipeline/splitThemes';
 import { loadSynthesisSettingsFromStatement } from '../pipeline/loadSynthesisSettings';
 import { enqueueItem, ensureQueueRun } from '../queue/enqueue';
 
@@ -468,6 +469,29 @@ export async function reJudgeProcessParent(
 		}
 	} catch (error) {
 		logger.warn('synthesis.reJudge: theme consolidation failed (non-fatal)', {
+			parentId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
+
+	// The opposite repair: a heading that has become a catch-all is divided. On
+	// a narrow question this is the only way a second theme ever appears, since
+	// the filing judge sends nearly everything to the heading named for the
+	// question's subject. Runs after consolidation so a merge that produced a
+	// catch-all is split in the same sweep; sub-topics are guarded from being
+	// re-merged (see consolidateThemes).
+	try {
+		const splitResult = await splitOversizedThemes(parentId, questionContext, 'reJudge');
+		if (splitResult.splits > 0) {
+			logger.info('synthesis.reJudge.themesSplit', {
+				parentId,
+				splits: splitResult.splits,
+				subTopicsCreated: splitResult.created,
+				themesBefore: splitResult.themesBefore,
+			});
+		}
+	} catch (error) {
+		logger.warn('synthesis.reJudge: theme split failed (non-fatal)', {
 			parentId,
 			error: error instanceof Error ? error.message : String(error),
 		});
