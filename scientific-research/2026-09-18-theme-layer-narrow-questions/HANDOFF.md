@@ -134,8 +134,22 @@ Reading: from scratch, A+B+C turn one catch-all into 8–11 headings of 6–26 s
 
 **Where the remaining gap is:** the merge judge still wants to reunite sub-topics on a narrow question (3 refused sibling merges + 1 more in the offline tick, plus 3 cross-parent merges that each cost ~0.02 ARI). Next lever is `groupEquivalentThemes` on narrow questions — e.g. refuse a merge whose result would trip the split trigger, or show it the split history — not the split itself.
 
+### Regression on the broad-question benchmark (validation step 3)
+
+`runs/en-seed42-themefix` (English 100-statement corpus, seed 42, defaults, same solo suite, 62 min) against the baseline `en-seed42-alljudged`:
+
+| | baseline | with A+B+C |
+|---|---|---|
+| composite | 0.878 | 0.861 |
+| synth pairs | P 1.000 / R 0.980 / F1 0.990, 0 false merges | **P 1.000 / R 1.000 / F1 1.000**, 0 false merges |
+| topic pairs | P 0.713 / R 0.707 / F1 0.710 | P 0.740 / R 0.582 / F1 0.652 |
+| topics produced (10 true) | 14 | 16 |
+
+The synthesis layer is untouched (perfect on this run). On a broad question the split sweep never fired (no theme approached the trigger) and the label guard never rejected anything, both as intended. Topic recall dropped 0.12 and precision rose 0.03: the question-relative filing clause (B) makes the judge file less eagerly, which on a broad question means two more headings than before. The composite is inside the documented run-to-run band for topic filing (0.78–0.93 across the study's seeds), so one run cannot separate B's cost from filing dice, but the direction is plausible and worth knowing: **B trades a little broad-question recall for narrow-question precision.** If that matters, the consolidation sweep is where a broad question recovers it, and on this run it merged 10 times. Not a blocker for deploy; a second seed would settle it.
+
 ### Not done
-- Validation step 3 (the EN/HE 100-statement regression) was **not** re-run. B changes the filing judge on every question, so that run is owed before deploy.
+- HE 100-statement regression not re-run (the HE corpus needs the 3-large pin; same harness, `--set embeddingModel=text-embedding-3-large`).
+- A second EN seed to separate B's effect from filing variance.
 
 ## 4. Other open items
 - **Map not live** (it showed deleted clusters until a refresh). The listener dies silently on errors or network drops, and a restart can't see deletions made meanwhile. The full plan is **Part 2** of `~/.claude/plans/tranquil-napping-cake.md`: port Join's `resilientOnSnapshot` into `src/controllers/utils/firestoreListenerHelpers.ts`, and add a tombstone listener plus cluster reconcile to `listenToMindMapData`.
