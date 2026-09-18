@@ -147,6 +147,20 @@ Reading: from scratch, A+B+C turn one catch-all into 8–11 headings of 6–26 s
 
 The synthesis layer is untouched (perfect on this run). On a broad question the split sweep never fired (no theme approached the trigger) and the label guard never rejected anything, both as intended. Topic recall dropped 0.12 and precision rose 0.03: the question-relative filing clause (B) makes the judge file less eagerly, which on a broad question means two more headings than before. The composite is inside the documented run-to-run band for topic filing (0.78–0.93 across the study's seeds), so one run cannot separate B's cost from filing dice, but the direction is plausible and worth knowing: **B trades a little broad-question recall for narrow-question precision.** If that matters, the consolidation sweep is where a broad question recovers it, and on this run it merged 10 times. Not a blocker for deploy; a second seed would settle it.
 
+### Production (validation step 4, done 2026-09-18 afternoon)
+
+Deployed 12:35 local (`fn_synthesisReJudge processSynthesisQueue liveSynthOnOptionCreate liveSynthOnOptionUpdate liveSynthOnOptionEvaluationChange synthesizeNow synthesizeSelected`; no other function touches the changed code). Snapshots 5–8 in `~/Downloads/clustering-research-Bq-VQPMPiG7b/`.
+
+Timeline: 12:43 the first sweep tick after deploy split the two old catch-alls (6 + 5 sub-topics, nothing left unthemed). ~12:54 Tal re-clustered from scratch. Rebuild: 20 spawns, 4 themes born (none restating the question; the attractor this time was "שיתוף בעלי עניין והסכמות"), 47 option filings, 40 review-queued. 13:15 the sweep split the attractor into 5. Then revisit sweeps filed leftovers at ~10 per tick and one merge produced a 24-member "עיצוב מחקר יישומי וחדשני". Settled by ~14:00 (no events since).
+
+| production state | themes | largest share | prec / rec / F1 | ARI | unthemed |
+|---|---|---|---|---|---|
+| before deploy (snapshot-5) | 2 | 64% | 0.117 / 0.449 / 0.186 | 0.035 | 19 |
+| after re-cluster + first split (snapshot-6, 13:20) | 8 | 20% | 0.185 / 0.112 / 0.140 | 0.076 | 39 |
+| settled (snapshot-8, 15:44) | 7 | 27% | 0.151 / 0.164 / 0.157 | 0.068 | 26 |
+
+Reading: the collapse no longer forms (7 headings of 2–24 instead of one of 61), and headings are specific. Agreement with Fanny improved only modestly (ARI 0.035 → 0.068, precision 0.12 → 0.15) — below the offline "split the existing state" path (ARI 0.15), because from scratch the filing judge still built one ~44-member attractor before the split caught it, and the merge sweep then reunited two sub-areas into a 24-member heading. 26 statements remain unthemed (the stricter judge refuses more; "Synthesize now" was not pressed during the session). Report on the settled state: `~/Downloads/clustering_framing_report_he_v3_Bq-VQPMPiG7b.pdf`.
+
 ### Not done
 - HE 100-statement regression not re-run (the HE corpus needs the 3-large pin; same harness, `--set embeddingModel=text-embedding-3-large`).
 - A second EN seed to separate B's effect from filing variance.
