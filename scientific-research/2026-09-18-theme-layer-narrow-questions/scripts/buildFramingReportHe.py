@@ -71,7 +71,8 @@ for t, g in sorted(big.groupby('theme_t'), key=lambda x: -len(x[1])):
     big_spread += f'<tr><td class="hd">{head}<br><span class="n">{len(g)} היגדים</span></td><td>{stmt_list(g)}</td></tr>'
 
 # ---------- 4.2 נושא מכונה שנבנה מאשכולות רבים של פאני ----------
-MIX = 'התנסות, התמדה ולמידה מתמשכת'
+# הנושא של המכונה שנבנה מהמספר הגדול ביותר של אשכולות של פאני
+MIX = max(out['themes'], key=lambda x: (x['fanny_clusters'], -x['n']))['title']
 mix = R[R.theme_t == MIX]
 mix_k = mix.fan.nunique()
 
