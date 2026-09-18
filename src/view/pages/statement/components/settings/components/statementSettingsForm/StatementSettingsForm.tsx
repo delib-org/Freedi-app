@@ -77,7 +77,7 @@ interface StatementSettingsFormProps {
 	/**
 	 * 'legacy': the whole settings page (hero toggles, People, exports here).
 	 * 'hub': composed inside the Host hub, which owns Live now, People, Results
-	 * exports and Insights — so this form omits them.
+	 * exports, AI, Clustering and Insights — so this form omits them.
 	 */
 	variant?: SettingsVariant;
 }
@@ -87,7 +87,8 @@ interface StatementSettingsFormProps {
  * duplicate-control guard test together with the keys each file writes, so
  * adding a toggle that already exists elsewhere on the same page fails CI.
  * `omit` lists keys a component only renders under a prop the variant does
- * not pass.
+ * not pass. The hub list also names the AI group's components, which the
+ * hub renders in its own AI and Clustering cards — same page, same guard.
  */
 export const FORM_COMPOSITION: Record<
 	SettingsVariant,
@@ -339,29 +340,31 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							</div>
 						</SettingsSection>
 
-						{/* Group 4 — AI & Smart Features */}
-						<SettingsSection
-							title={t('AI & Smart Features')}
-							description={t('Optional AI help. Everything here is off unless you turn it on')}
-							icon={Brain}
-							priority="medium"
-							defaultExpanded={false}
-						>
-							<div className={groupWrapClass}>
-								<AISettings
-									statement={settingsStatement}
-									settings={settings}
-									handleSettingChange={handlers.handleSettingChange}
-								/>
-								{isQuestion && <SynthesisPanel statement={settingsStatement} />}
-								<DiscussionSettings
-									statement={settingsStatement}
-									settings={settings}
-									handleSettingChange={handlers.handleSettingChange}
-								/>
-								{isAdminOrCreator && <ModerationLog statement={settingsStatement} />}
-							</div>
-						</SettingsSection>
+						{/* Group 4 — AI & Smart Features (the hub has its own AI and Clustering sections) */}
+						{!isHub && (
+							<SettingsSection
+								title={t('AI & Smart Features')}
+								description={t('Optional AI help. Everything here is off unless you turn it on')}
+								icon={Brain}
+								priority="medium"
+								defaultExpanded={false}
+							>
+								<div className={groupWrapClass}>
+									<AISettings
+										statement={settingsStatement}
+										settings={settings}
+										handleSettingChange={handlers.handleSettingChange}
+									/>
+									{isQuestion && <SynthesisPanel statement={settingsStatement} />}
+									<DiscussionSettings
+										statement={settingsStatement}
+										settings={settings}
+										handleSettingChange={handlers.handleSettingChange}
+									/>
+									{isAdminOrCreator && <ModerationLog statement={settingsStatement} />}
+								</div>
+							</SettingsSection>
+						)}
 
 						{/* Group 5 — People (the hub has its own People section) */}
 						{!isHub && (

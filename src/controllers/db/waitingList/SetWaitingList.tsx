@@ -1,5 +1,6 @@
 import React, { useRef, FC } from 'react';
 import { logError } from '@/utils/errorHandling';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 //Custom components
 import Button from '../../../view/components/buttons/button/Button';
@@ -9,6 +10,7 @@ import UploadFileIcon from '../../../view/components/icons/UploadFileIcon';
 import styles from './setWaitingList.module.scss';
 
 const SetWaitingList: FC = () => {
+	const { t } = useTranslation();
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,11 +29,9 @@ const SetWaitingList: FC = () => {
 
 	return (
 		<div>
-			<label htmlFor="uploadFile">
-				<span className="sr-only">uploadFile</span>
-			</label>
 			<input
 				id="uploadFile"
+				aria-label={t('Upload members list')}
 				className={styles.uploadInput}
 				type="file"
 				accept=".xlsx, .xls"
@@ -40,7 +40,7 @@ const SetWaitingList: FC = () => {
 			/>
 			<Button
 				icon={<UploadFileIcon />}
-				text={'Upload members list'}
+				text={t('Upload members list')}
 				onClick={handleButtonClick}
 				className={'btn btn--primary'}
 			/>

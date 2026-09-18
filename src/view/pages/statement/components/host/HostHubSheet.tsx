@@ -34,6 +34,8 @@ const ROWS: ReadonlyArray<{ section: HostHubSectionId; title: string; descriptio
 	{ section: 'people', title: 'host.people', description: 'host.peopleDesc' },
 	{ section: 'answers', title: 'host.answers', description: 'host.answersDesc' },
 	{ section: 'results', title: 'host.results', description: 'host.resultsDesc' },
+	{ section: 'ai', title: 'host.ai', description: 'host.aiDesc' },
+	{ section: 'clustering', title: 'host.clustering', description: 'host.clusteringDesc' },
 	{ section: 'insights', title: 'host.insights', description: 'host.insightsDesc' },
 	{ section: 'settings', title: 'Advanced settings', description: 'host.settingsDesc' },
 ];

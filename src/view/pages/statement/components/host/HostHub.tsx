@@ -1,6 +1,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { BarChart3, Layers, Radio, Settings, Users, LineChart } from 'lucide-react';
+import { StatementType } from '@freedi/shared-types';
+import { BarChart3, Brain, Layers, Network, Radio, Settings, Users, LineChart } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { uxAnalytics } from '@/services/analytics';
 import Loader from '@/view/components/loaders/Loader';
@@ -13,12 +14,14 @@ import AnswersSection from './AnswersSection';
 import ResultsSection from './ResultsSection';
 import HubSettingsSection from './HubSettingsSection';
 import InsightsSection from './InsightsSection';
+import AISection from './AISection';
+import ClusteringSection from './ClusteringSection';
 import { buildHostHubPath, HostHubSectionId, parseHostHubSection } from './hostHubLogic';
 import styles from './HostHub.module.scss';
 
 /**
- * The host's home for one question: six cards (Live now, People, Answers,
- * Results, Settings, Insights). Rendered for the `settings` view under the
+ * The host's home for one question: cards for Live now, People, Answers,
+ * Results, AI, Clustering (questions only), Settings and Insights. Rendered for the `settings` view under the
  * new shell; `?section=` deep-links and expands one card. Only reached by
  * hosts — SwitchScreen drops the view for everyone else.
  */
@@ -114,6 +117,30 @@ const HostHub: FC = () => {
 			>
 				<ResultsSection statement={statementToEdit} setStatementToEdit={setStatementToEdit} />
 			</HostHubCard>
+
+			<HostHubCard
+				id="ai"
+				title={t('host.ai')}
+				description={t('host.aiDesc')}
+				icon={Brain}
+				expanded={expanded.has('ai')}
+				onToggle={toggle}
+			>
+				<AISection statement={statementToEdit} />
+			</HostHubCard>
+
+			{statementToEdit.statementType === StatementType.question && (
+				<HostHubCard
+					id="clustering"
+					title={t('host.clustering')}
+					description={t('host.clusteringDesc')}
+					icon={Network}
+					expanded={expanded.has('clustering')}
+					onToggle={toggle}
+				>
+					<ClusteringSection statement={statementToEdit} />
+				</HostHubCard>
+			)}
 
 			<HostHubCard
 				id="settings"

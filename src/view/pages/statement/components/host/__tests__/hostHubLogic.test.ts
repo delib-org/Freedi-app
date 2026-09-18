@@ -14,7 +14,7 @@ describe('hostHubLogic', () => {
 		expect(parseHostHubSection(new URLSearchParams(''))).toBe('live');
 	});
 
-	it('recognises exactly the six sections', () => {
+	it('recognises exactly the hub sections', () => {
 		HOST_HUB_SECTIONS.forEach((id) => expect(isHostHubSection(id)).toBe(true));
 		expect(isHostHubSection('members')).toBe(false);
 		expect(isHostHubSection(null)).toBe(false);

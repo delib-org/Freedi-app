@@ -1,11 +1,13 @@
 import { buildStatementPath } from '@/routes/statementPaths';
 
-/** The six cards of the Host hub, in display order. */
+/** The cards of the Host hub, in display order. */
 export const HOST_HUB_SECTIONS = [
 	'live',
 	'people',
 	'answers',
 	'results',
+	'ai',
+	'clustering',
 	'settings',
 	'insights',
 ] as const;

@@ -4,6 +4,7 @@ import HostHub from '../HostHub';
 const navigate = jest.fn();
 const hostHubOpened = jest.fn();
 let search = '';
+let statementType = 'question';
 
 jest.mock('@/controllers/hooks/useTranslation', () => ({
 	useTranslation: () => ({ t: (k: string) => k, dir: 'ltr' }),
@@ -17,7 +18,7 @@ jest.mock('../../../hooks/useStatementView', () => ({
 }));
 jest.mock('../../settings/useStatementSettingsData', () => ({
 	useStatementSettingsData: () => ({
-		statementToEdit: { statementId: 'q1', statement: 'Q', statementType: 'question' },
+		statementToEdit: { statementId: 'q1', statement: 'Q', statementType },
 		setStatementToEdit: jest.fn(),
 		parentStatement: 'top',
 	}),
@@ -49,22 +50,38 @@ jest.mock('../InsightsSection', () => ({
 	__esModule: true,
 	default: () => <div data-testid="insights-body" />,
 }));
+jest.mock('../AISection', () => ({
+	__esModule: true,
+	default: () => <div data-testid="ai-body" />,
+}));
+jest.mock('../ClusteringSection', () => ({
+	__esModule: true,
+	default: () => <div data-testid="clustering-body" />,
+}));
 
 describe('HostHub', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		search = '';
+		statementType = 'question';
 		Element.prototype.scrollIntoView = jest.fn();
 	});
 
-	it('renders the six cards with only Live now open by default', () => {
+	it('renders every card with only Live now open by default', () => {
 		render(<HostHub />);
-		['live', 'people', 'answers', 'results', 'settings', 'insights'].forEach((id) =>
-			expect(screen.getByTestId(`host-hub-section-${id}`)).toBeInTheDocument(),
+		['live', 'people', 'answers', 'results', 'ai', 'clustering', 'settings', 'insights'].forEach(
+			(id) => expect(screen.getByTestId(`host-hub-section-${id}`)).toBeInTheDocument(),
 		);
 		expect(screen.getByTestId('live-body')).toBeInTheDocument();
 		expect(screen.queryByTestId('people-body')).not.toBeInTheDocument();
 		expect(hostHubOpened).toHaveBeenCalledWith('q1', 'live');
+	});
+
+	it('shows the Clustering card only on questions', () => {
+		statementType = 'group';
+		render(<HostHub />);
+		expect(screen.getByTestId('host-hub-section-ai')).toBeInTheDocument();
+		expect(screen.queryByTestId('host-hub-section-clustering')).not.toBeInTheDocument();
 	});
 
 	it('?section= deep-links into a card and reports it', () => {

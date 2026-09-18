@@ -89,7 +89,7 @@
 	&--selected {
 		background: var(--btn-primary);
 		border-color: var(--btn-primary);
-		color: var(--white, #fff);
+		color: var(--btn-primary-text);
 
 		.chip__count {
 			opacity: 0.9;
