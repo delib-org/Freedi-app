@@ -93,6 +93,13 @@ export function resultsByParentId(parentStatement: Statement, subStatements: Sta
 		if (!parentStatement) throw new Error('No parentStatement');
 		if (!subStatements?.length) return { top: parentStatement, sub: [] };
 
+		// A retired cluster is HIDDEN, not deleted: the theme sweeps hide a merge
+		// donor (`mergedInto`) and a split parent (`splitInto`) and empty their
+		// members, so the record keeps its history. Drawn, such a shell is an
+		// empty box hanging off the question (seen on Bq-VQPMPiG7b after the
+		// 2026-09-18 split + merge). Drop them before anything is indexed.
+		subStatements = subStatements.filter((s) => !(s.isCluster && s.hide === true));
+
 		// Index every statement by id for cluster-membership lookups.
 		const byId = new Map<string, Statement>();
 		byId.set(parentStatement.statementId, parentStatement);
