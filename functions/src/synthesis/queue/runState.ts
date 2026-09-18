@@ -71,3 +71,27 @@ export function applyItemOutcome(
 		keepGoing: before.status === 'running',
 	};
 }
+
+/**
+ * What to do with an item's doc once its pipeline run returned.
+ *
+ * A pipeline that re-queues its own option (debounced or failed spawn) writes to
+ * the same deterministic item id the worker is holding — deleting it afterwards
+ * silently dropped every such retry. A re-queue always moves `enqueuedAt` and
+ * counts an attempt, so a doc that no longer matches the one the worker picked
+ * up is a retry and must stay.
+ */
+export type FinishedItemAction = 'delete' | 'keep-retry' | 'keep-exhausted' | 'gone';
+
+export function resolveFinishedItem(
+	picked: { enqueuedAt: number; attempts: number },
+	current: { enqueuedAt: number; attempts: number } | null,
+	maxAttempts: number,
+): FinishedItemAction {
+	if (!current) return 'gone';
+	const requeued =
+		current.enqueuedAt !== picked.enqueuedAt || (current.attempts ?? 0) !== (picked.attempts ?? 0);
+	if (!requeued) return 'delete';
+
+	return (current.attempts ?? 0) >= maxAttempts ? 'keep-exhausted' : 'keep-retry';
+}

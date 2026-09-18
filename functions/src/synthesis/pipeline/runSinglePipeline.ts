@@ -235,7 +235,13 @@ async function deferSpawnAfterDebounce(
 	startedAt: number,
 ): Promise<PipelineResult> {
 	try {
-		await enqueueItem({ questionId, kind: 'process-option', optionId, forceProcess: false });
+		await enqueueItem({
+			questionId,
+			kind: 'process-option',
+			optionId,
+			forceProcess: false,
+			retry: true,
+		});
 	} catch (error) {
 		logger.warn('synthesis.pipeline.spawn: debounced retry could not be queued', {
 			optionId,
@@ -267,7 +273,13 @@ async function deferFailedSpawn(
 ): Promise<PipelineResult> {
 	logger.warn('synthesis.pipeline.spawn: failed, re-queued for retry', { optionId, questionId });
 	try {
-		await enqueueItem({ questionId, kind: 'process-option', optionId, forceProcess: false });
+		await enqueueItem({
+			questionId,
+			kind: 'process-option',
+			optionId,
+			forceProcess: false,
+			retry: true,
+		});
 	} catch (error) {
 		logger.warn('synthesis.pipeline.spawn: failed spawn could not be re-queued', {
 			optionId,

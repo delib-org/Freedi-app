@@ -19,6 +19,12 @@ interface EnqueueOptionInput {
 	kind: 'process-option';
 	optionId: string;
 	forceProcess?: boolean;
+	/**
+	 * A pipeline re-queuing the option it is processing (debounced or failed
+	 * spawn). An existing item keeps its history and counts one more attempt,
+	 * so retries are bounded by MAX_ATTEMPTS; a plain enqueue resets attempts.
+	 */
+	retry?: boolean;
 }
 
 interface EnqueueRejudgeInput {
@@ -65,7 +71,15 @@ export async function enqueueItem(input: EnqueueInput): Promise<string> {
 	};
 
 	try {
-		await ref.set(payload, { merge: true });
+		if (input.kind === 'process-option' && input.retry) {
+			await db().runTransaction(async (tx) => {
+				const snap = await tx.get(ref);
+				const attempts = snap.exists ? ((snap.data() as QueueItem).attempts ?? 0) + 1 : 0;
+				tx.set(ref, { ...payload, attempts }, { merge: true });
+			});
+		} else {
+			await ref.set(payload, { merge: true });
+		}
 
 		return itemId;
 	} catch (error) {

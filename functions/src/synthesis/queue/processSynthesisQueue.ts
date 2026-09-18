@@ -1,5 +1,5 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue, type DocumentReference } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { functionConfig } from '@freedi/shared-types';
 import { runSinglePipeline } from '../pipeline/runSinglePipeline';
@@ -15,7 +15,12 @@ import {
 	type ProgressDoc,
 	type QueueItem,
 } from './types';
-import { applyItemOutcome, canAcquireLease, type ItemOutcome } from './runState';
+import {
+	applyItemOutcome,
+	canAcquireLease,
+	resolveFinishedItem,
+	type ItemOutcome,
+} from './runState';
 
 /**
  * Scheduled synthesis queue worker.
@@ -108,8 +113,7 @@ async function processQuestionBatch(questionId: string): Promise<void> {
 			let outcome: ItemOutcome | null = null;
 			try {
 				await processItem(item);
-				await itemDoc.ref.delete();
-				outcome = 'processed';
+				outcome = await finishItem(itemDoc.ref, item);
 			} catch (error) {
 				const attempts = (item.attempts ?? 0) + 1;
 				const errorMsg = error instanceof Error ? error.message : String(error);
@@ -226,6 +230,27 @@ async function isStillOurRun(questionId: string, runStartedAt: number): Promise<
 	const progress = snap.data() as ProgressDoc;
 
 	return progress.status === 'running' && progress.startedAt === runStartedAt;
+}
+
+/**
+ * Settle an item after its pipeline returned: delete it, or keep it when the
+ * pipeline re-queued it meanwhile (see `resolveFinishedItem`). A retry is not
+ * counted yet — it is counted when it finally lands or runs out of attempts.
+ */
+async function finishItem(ref: DocumentReference, picked: QueueItem): Promise<ItemOutcome | null> {
+	return db().runTransaction(async (tx) => {
+		const snap = await tx.get(ref);
+		const current = snap.exists ? (snap.data() as QueueItem) : null;
+		const action = resolveFinishedItem(picked, current, MAX_ATTEMPTS);
+		if (action === 'delete') tx.delete(ref);
+		if (action === 'keep-exhausted') {
+			tx.update(ref, { lastError: 'retries exhausted', failedAt: Date.now() });
+
+			return 'failed';
+		}
+
+		return action === 'keep-retry' ? null : 'processed';
+	});
 }
 
 async function processItem(item: QueueItem): Promise<void> {

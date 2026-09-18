@@ -9,6 +9,7 @@ import { claimFieldsForSpawn, generateClaim } from '../../services/claim-registr
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
 import { checkAndUpdateSpawnDebounce, markSpawnedNow, spawnDebounceKey } from './debounce';
+import { commitSpawnWithClaims } from './spawnClaims';
 
 function db() {
 	return getFirestore();
@@ -410,8 +411,28 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		...(stampClaim ? { ...claimFieldsForSpawn(title, description) } : {}),
 	};
 
+	// Commit the cluster atomically with per-member claims. The ownership check
+	// above ran before a multi-second LLM call; an overlapping spawn of the same
+	// pair may have committed since, and only this transaction can tell.
 	try {
-		await db().collection(Collections.statements).doc(clusterId).set(newCluster);
+		const commit = await commitSpawnWithClaims({
+			parentId: option.parentId,
+			mode,
+			memberIds: [option.statementId, sibling.statementId],
+			clusterId,
+			cluster: newCluster,
+		});
+		if (!commit.committed) {
+			logger.info('synthesis.pipeline.spawn: deduped at commit — a concurrent spawn won', {
+				parentId: option.parentId,
+				optionId: option.statementId,
+				siblingId: sibling.statementId,
+				ownerId: commit.ownerId,
+				mode,
+			});
+
+			return { spawned: false };
+		}
 	} catch (error) {
 		logger.warn('synthesis.pipeline.spawn: cluster write failed', {
 			clusterId,

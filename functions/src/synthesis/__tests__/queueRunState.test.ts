@@ -3,6 +3,7 @@ import {
 	canAcquireLease,
 	estimateEtaMinutes,
 	isRunInFlight,
+	resolveFinishedItem,
 } from '../queue/runState';
 import type { ProgressDoc } from '../queue/types';
 
@@ -98,5 +99,31 @@ describe('synthesis queue run state', () => {
 		expect(estimateEtaMinutes(0)).toBe(0);
 		expect(estimateEtaMinutes(114)).toBe(14);
 		expect(estimateEtaMinutes(-3)).toBe(0);
+	});
+
+	describe('resolveFinishedItem', () => {
+		const picked = { enqueuedAt: 100, attempts: 0 };
+
+		it('deletes an item nobody touched while it ran', () => {
+			expect(resolveFinishedItem(picked, { enqueuedAt: 100, attempts: 0 }, 3)).toBe('delete');
+		});
+
+		it('keeps an item the pipeline re-queued while it ran', () => {
+			expect(resolveFinishedItem(picked, { enqueuedAt: 250, attempts: 1 }, 3)).toBe('keep-retry');
+		});
+
+		it('keeps a re-queue even within the same millisecond, by its attempt count', () => {
+			expect(resolveFinishedItem(picked, { enqueuedAt: 100, attempts: 1 }, 3)).toBe('keep-retry');
+		});
+
+		it('parks a retry that has used up its attempts', () => {
+			expect(
+				resolveFinishedItem({ enqueuedAt: 100, attempts: 2 }, { enqueuedAt: 300, attempts: 3 }, 3),
+			).toBe('keep-exhausted');
+		});
+
+		it('reports an item that is already gone', () => {
+			expect(resolveFinishedItem(picked, null, 3)).toBe('gone');
+		});
 	});
 });
