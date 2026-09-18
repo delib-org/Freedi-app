@@ -3,7 +3,11 @@
 	width: 100%;
 	height: 100dvh;
 	min-height: 0;
+	// clip, not hidden: a hidden box is still a scroll container, so
+	// scrollIntoView()/focus() deep inside can scroll the frame itself —
+	// the header slides off the top and a gap opens at the bottom.
 	overflow: hidden;
+	overflow: clip;
 	color: var(--space-ink);
 	background: var(--space-paper);
 	font-family: var(--font-ui, 'Roboto', sans-serif);
@@ -262,6 +266,7 @@
 		border: 1px solid color-mix(in srgb, var(--space-surface) 75%, transparent);
 		border-radius: 34px;
 		overflow: hidden;
+		overflow: clip;
 		box-shadow: 0 20px 60px #3020180c;
 		display: flex;
 		flex: 1;
@@ -286,6 +291,7 @@
 		min-width: 0;
 		min-height: 0;
 		overflow: hidden;
+		overflow: clip;
 		outline: none;
 	}
 	&__aside {
