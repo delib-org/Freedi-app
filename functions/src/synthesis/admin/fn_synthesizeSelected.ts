@@ -7,6 +7,7 @@ import { enqueueItem, initProgressDoc, mergeIntoProgressDoc } from '../queue/enq
 import { QUEUE_COLLECTION, type ProgressDoc } from '../queue/types';
 import { assertSynthesisAdmin } from './assertSynthesisAdmin';
 import { validateOptionIdsBelongToQuestion } from './validateOptionIds';
+import { estimateEtaMinutes } from '../queue/runState';
 
 /**
  * Selective synthesis — admin picks specific option IDs and force-processes
@@ -110,7 +111,7 @@ export const synthesizeSelected = onCall<SynthesizeSelectedRequest>(
 		return {
 			enqueued: validIds.length,
 			skipped,
-			etaMinutes: Math.ceil(validIds.length / 50),
+			etaMinutes: estimateEtaMinutes(validIds.length),
 			mergedIntoExistingRun,
 		};
 	},

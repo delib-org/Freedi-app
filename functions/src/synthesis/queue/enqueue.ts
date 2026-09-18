@@ -8,6 +8,7 @@ import {
 	type ProgressDoc,
 	type QueueOperation,
 } from './types';
+import { estimateEtaMinutes } from './runState';
 
 function db() {
 	return getFirestore();
@@ -103,7 +104,7 @@ export async function initProgressDoc(input: InitProgressInput): Promise<void> {
 		rateHint: PROCESS_BATCH_SIZE,
 		startedAt: now,
 		lastTickAt: now,
-		etaMinutes: Math.ceil(input.enqueuedCount / PROCESS_BATCH_SIZE),
+		etaMinutes: estimateEtaMinutes(input.enqueuedCount),
 		initiatedBy: input.initiatedBy,
 	};
 	await ref.set(progress);
@@ -133,7 +134,7 @@ export async function mergeIntoProgressDoc(
 			pendingCount,
 			operation: before.operation === newOperation ? before.operation : 'mixed',
 			lastTickAt: Date.now(),
-			etaMinutes: Math.ceil(pendingCount / PROCESS_BATCH_SIZE),
+			etaMinutes: estimateEtaMinutes(pendingCount),
 		});
 	});
 }

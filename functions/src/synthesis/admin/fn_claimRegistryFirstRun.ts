@@ -11,6 +11,7 @@ import {
 import { loadSynthesisSettings } from '../pipeline/loadSynthesisSettings';
 import { enqueueItem, initProgressDoc } from '../queue/enqueue';
 import { QUEUE_COLLECTION, type ProgressDoc } from '../queue/types';
+import { estimateEtaMinutes, isRunInFlight } from '../queue/runState';
 import { assertSynthesisAdmin } from './assertSynthesisAdmin';
 
 /**
@@ -50,9 +51,8 @@ function db() {
 async function isOperationInFlight(questionId: string): Promise<boolean> {
 	const snap = await db().collection(QUEUE_COLLECTION).doc(questionId).get();
 	if (!snap.exists) return false;
-	const progress = snap.data() as ProgressDoc;
 
-	return progress.status === 'running' || progress.status === 'paused';
+	return isRunInFlight(snap.data() as ProgressDoc, Date.now());
 }
 
 export const claimRegistryFirstRun = onCall<FirstRunRequest>(
@@ -172,7 +172,7 @@ export const claimRegistryFirstRun = onCall<FirstRunRequest>(
 		return {
 			backfilledClaims,
 			enqueuedOptions,
-			etaMinutes: Math.ceil(enqueuedOptions / 50),
+			etaMinutes: estimateEtaMinutes(enqueuedOptions),
 		};
 	},
 );
