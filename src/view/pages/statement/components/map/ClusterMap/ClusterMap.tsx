@@ -27,8 +27,8 @@ import styles from './ClusterMap.module.scss';
  * Standalone, shareable, embeddable cluster board.
  *
  * Reuses the mind-map data layer (useMindMap + Firestore listeners + edit
- * functions) but renders a custom radial board: a central subject, colored
- * cluster pills, and a grid of sticky-note cards per cluster. Access is handled
+ * functions) but renders a custom radial board: a central subject and one
+ * colored frame per cluster (title pill on top, sticky-note grid inside). Access is handled
  * by ProtectedLayout (which auto signs-in anonymous visitors for public
  * statements), so anyone with access can co-edit.
  */
