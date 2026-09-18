@@ -95,3 +95,25 @@ export function resolveFinishedItem(
 
 	return (current.attempts ?? 0) >= maxAttempts ? 'keep-exhausted' : 'keep-retry';
 }
+
+/**
+ * How queued work reaches a worker. The worker only drains questions whose run
+ * is `running`; anything enqueued outside one (a re-judge revisit, a claim
+ * mutation, a retry from the live trigger) sat in the queue forever once the
+ * run had completed — seen on Bq-VQPMPiG7b, 2026-09-18.
+ *
+ * - `merge`: a run is live — add the items to its counts.
+ * - `start`: nothing is running — start a small run for them.
+ * - `leave`: an admin paused or cancelled — respect it; the items wait.
+ */
+export type QueueWakeAction = 'merge' | 'start' | 'leave';
+
+export function planQueueWake(
+	progress: Pick<ProgressDoc, 'status'> | null | undefined,
+): QueueWakeAction {
+	if (!progress) return 'start';
+	if (progress.status === 'running') return 'merge';
+	if (progress.status === 'paused' || progress.status === 'cancelled') return 'leave';
+
+	return 'start';
+}

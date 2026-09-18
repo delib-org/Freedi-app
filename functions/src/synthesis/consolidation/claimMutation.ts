@@ -8,7 +8,7 @@ import {
 } from '../../services/claim-registry-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { embeddingCache } from '../../services/embedding-cache-service';
-import { enqueueItem } from '../queue/enqueue';
+import { enqueueItem, ensureQueueRun } from '../queue/enqueue';
 
 /**
  * Claim mutation protocol (docs/architecture/CLAIM_REGISTRY.md §3).
@@ -194,6 +194,7 @@ export async function applyClaimTextChange(input: ClaimChangeInput): Promise<Cla
 				forceProcess: false,
 			});
 		}
+		await ensureQueueRun(cluster.parentId, detached.length, 'selective');
 	}
 
 	return { change, detachedIds: detached };

@@ -19,7 +19,7 @@ import {
 import { routeByCosine } from './bandRouter';
 import { runRegistryPass } from './registryPass';
 import { assignOptionToTheme, nestSynthUnderTopic } from './nestSynthesis';
-import { enqueueItem } from '../queue/enqueue';
+import { enqueueItem, ensureQueueRun } from '../queue/enqueue';
 import {
 	attachOptionToCluster,
 	isCluster,
@@ -67,6 +67,7 @@ import {
  *       · success           → SPAWN SYNTH (1 LLM), then nest it under its theme
  *       · cannotSynthesize  → fall through; "distinct ideas" is the case FOR
  *                             theming, so the passes below handle it
+ *       · deduped           → the sibling is already merged; same as a refusal
  *       · anything else     → re-queue, never drop (see deferFailedSpawn)
  *     A sibling inside a SYNTH is excluded — spawning from it would duplicate
  *     that synth. A sibling inside a TOPIC CLUSTER is not: it has been given a
@@ -233,6 +234,7 @@ async function deferSpawnAfterDebounce(
 	optionId: string,
 	questionId: string,
 	startedAt: number,
+	wakeRun: boolean,
 ): Promise<PipelineResult> {
 	try {
 		await enqueueItem({
@@ -242,6 +244,8 @@ async function deferSpawnAfterDebounce(
 			forceProcess: false,
 			retry: true,
 		});
+		// Outside the queue worker nothing else owns a run for this item.
+		if (wakeRun) await ensureQueueRun(questionId, 1, 'selective');
 	} catch (error) {
 		logger.warn('synthesis.pipeline.spawn: debounced retry could not be queued', {
 			optionId,
@@ -270,6 +274,7 @@ async function deferFailedSpawn(
 	optionId: string,
 	questionId: string,
 	startedAt: number,
+	wakeRun: boolean,
 ): Promise<PipelineResult> {
 	logger.warn('synthesis.pipeline.spawn: failed, re-queued for retry', { optionId, questionId });
 	try {
@@ -280,6 +285,8 @@ async function deferFailedSpawn(
 			forceProcess: false,
 			retry: true,
 		});
+		// Outside the queue worker nothing else owns a run for this item.
+		if (wakeRun) await ensureQueueRun(questionId, 1, 'selective');
 	} catch (error) {
 		logger.warn('synthesis.pipeline.spawn: failed spawn could not be re-queued', {
 			optionId,
@@ -769,14 +776,31 @@ async function executePipeline(
 			};
 		}
 		if (synthAttempt.debounced) {
-			return deferSpawnAfterDebounce(option.statementId, parent.statementId, startedAt);
+			return deferSpawnAfterDebounce(
+				option.statementId,
+				parent.statementId,
+				startedAt,
+				input.source !== 'queueWorker',
+			);
 		}
+		// Deduped: the sibling is already merged elsewhere. `synthMemberIds` only
+		// excludes members of synths that came back as vector candidates, so a
+		// synth outside the top-K lets its members through to here. That is a
+		// verdict on this pairing — retrying cannot change it, and re-queuing used
+		// to end the pass before theming, leaving the option unplaced (30 of 114
+		// on Bq-VQPMPiG7b, 2026-09-18). Offer the next candidate, then theme.
+		if (synthAttempt.deduped) continue;
 		if (!synthAttempt.cannotSynthesize) {
-			// Neither spawned, nor refused, nor debounced: an LLM error, a malformed
-			// response, or the dedup guard. Work must never be dropped silently here
+			// Neither spawned, nor refused, nor debounced, nor deduped: an LLM error
+			// or a malformed response. Work must never be dropped silently here
 			// — measured cost of doing so, one ground-truth pair at cosine 0.898 lost
 			// with no audit row and no retry. Re-queue and let the worker try again.
-			return deferFailedSpawn(option.statementId, parent.statementId, startedAt);
+			return deferFailedSpawn(
+				option.statementId,
+				parent.statementId,
+				startedAt,
+				input.source !== 'queueWorker',
+			);
 		}
 		// cannotSynthesize → this pairing is refused; offer the next candidate.
 	}
@@ -935,10 +959,23 @@ async function executePipeline(
 			};
 		}
 		if (clusterAttempt.debounced) {
-			return deferSpawnAfterDebounce(option.statementId, parent.statementId, startedAt);
+			return deferSpawnAfterDebounce(
+				option.statementId,
+				parent.statementId,
+				startedAt,
+				input.source !== 'queueWorker',
+			);
 		}
-
-		return deferFailedSpawn(option.statementId, parent.statementId, startedAt);
+		// Deduped: the sibling already belongs to a cluster — no theme to spawn
+		// here, and a retry would meet the same owner. Fall through to review.
+		if (!clusterAttempt.deduped) {
+			return deferFailedSpawn(
+				option.statementId,
+				parent.statementId,
+				startedAt,
+				input.source !== 'queueWorker',
+			);
+		}
 	}
 
 	// =====================================================================

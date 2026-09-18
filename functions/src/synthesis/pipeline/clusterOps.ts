@@ -160,6 +160,13 @@ interface SpawnResult {
 	cannotSynthesize?: boolean;
 	debounced?: boolean;
 	/**
+	 * A member of the pair is already in a visible cluster (found before the LLM
+	 * call, or by losing the commit to a concurrent spawn). A verdict on this
+	 * pairing, not a failure: retrying cannot change it, so the caller moves on
+	 * to its next candidate or to theming — never re-queues.
+	 */
+	deduped?: boolean;
+	/**
 	 * The generated title and description of the new cluster. The theme judge
 	 * reads these — a synthesis's title IS its merged proposal — and re-reading
 	 * the doc that was just written would be a wasted round trip.
@@ -315,7 +322,7 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 			mode,
 		});
 
-		return { spawned: false };
+		return { spawned: false, deduped: true };
 	}
 
 	const questionContext = parentStatement.statement || parentStatement.statementId;
@@ -431,7 +438,7 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 				mode,
 			});
 
-			return { spawned: false };
+			return { spawned: false, deduped: true };
 		}
 	} catch (error) {
 		logger.warn('synthesis.pipeline.spawn: cluster write failed', {

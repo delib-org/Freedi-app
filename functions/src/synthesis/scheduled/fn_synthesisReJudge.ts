@@ -9,7 +9,7 @@ import { generateSynthesizedProposal } from '../../services/integration-ai-servi
 import { judgeSemanticEquivalenceCachedDetailed } from '../../services/verdict-cache-service';
 import { consolidateThemes } from '../pipeline/consolidateThemes';
 import { loadSynthesisSettingsFromStatement } from '../pipeline/loadSynthesisSettings';
-import { enqueueItem } from '../queue/enqueue';
+import { enqueueItem, ensureQueueRun } from '../queue/enqueue';
 
 /**
  * Merge gate for reJudge.
@@ -631,6 +631,9 @@ async function revisitUnmergedOptions(parent: Statement, synthDocs: Statement[])
 		}
 	}
 	if (enqueued > 0) {
+		// The sweep owns no run: without this, revisits queued after a run had
+		// completed were never drained.
+		await ensureQueueRun(parent.statementId, enqueued, 'rejudge');
 		logger.info('synthesis.reJudge.revisit', {
 			parentId: parent.statementId,
 			candidates: scored.length,

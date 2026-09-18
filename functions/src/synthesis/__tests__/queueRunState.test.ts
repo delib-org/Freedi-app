@@ -3,6 +3,7 @@ import {
 	canAcquireLease,
 	estimateEtaMinutes,
 	isRunInFlight,
+	planQueueWake,
 	resolveFinishedItem,
 } from '../queue/runState';
 import type { ProgressDoc } from '../queue/types';
@@ -124,6 +125,27 @@ describe('synthesis queue run state', () => {
 
 		it('reports an item that is already gone', () => {
 			expect(resolveFinishedItem(picked, null, 3)).toBe('gone');
+		});
+	});
+
+	describe('planQueueWake', () => {
+		it('starts a run when the question has none', () => {
+			expect(planQueueWake(null)).toBe('start');
+		});
+
+		it('starts a run after the last one completed — the stranded-revisit case', () => {
+			expect(planQueueWake(progress({ status: 'completed' }))).toBe('start');
+			expect(planQueueWake(progress({ status: 'idle' }))).toBe('start');
+			expect(planQueueWake(progress({ status: 'failed' }))).toBe('start');
+		});
+
+		it('joins a live run', () => {
+			expect(planQueueWake(progress({ status: 'running' }))).toBe('merge');
+		});
+
+		it('respects an admin pause or cancel', () => {
+			expect(planQueueWake(progress({ status: 'paused' }))).toBe('leave');
+			expect(planQueueWake(progress({ status: 'cancelled' }))).toBe('leave');
 		});
 	});
 });

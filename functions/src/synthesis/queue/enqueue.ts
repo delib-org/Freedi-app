@@ -8,7 +8,7 @@ import {
 	type ProgressDoc,
 	type QueueOperation,
 } from './types';
-import { estimateEtaMinutes } from './runState';
+import { estimateEtaMinutes, planQueueWake } from './runState';
 
 function db() {
 	return getFirestore();
@@ -151,4 +151,66 @@ export async function mergeIntoProgressDoc(
 			etaMinutes: estimateEtaMinutes(pendingCount),
 		});
 	});
+}
+
+/**
+ * Make sure a worker will drain `addedCount` items just enqueued by a caller
+ * that does not own a run (re-judge revisits, claim mutations, live-trigger
+ * retries). See `planQueueWake` for the rules.
+ *
+ * A started run is written with `update` when the doc exists, so a worker
+ * lease still held from the previous run survives. Failure is logged and
+ * swallowed: the items are already queued and the next admin run picks them up.
+ */
+export async function ensureQueueRun(
+	questionId: string,
+	addedCount: number,
+	operation: QueueOperation,
+): Promise<void> {
+	if (addedCount <= 0) return;
+	const ref = db().collection(QUEUE_COLLECTION).doc(questionId);
+	try {
+		await db().runTransaction(async (tx) => {
+			const snap = await tx.get(ref);
+			const before = snap.exists ? (snap.data() as ProgressDoc) : null;
+			const action = planQueueWake(before);
+			if (action === 'leave') return;
+			const now = Date.now();
+			if (action === 'merge' && before) {
+				const pendingCount = (before.pendingCount ?? 0) + addedCount;
+				tx.update(ref, {
+					enqueuedCount: (before.enqueuedCount ?? 0) + addedCount,
+					pendingCount,
+					operation: before.operation === operation ? before.operation : 'mixed',
+					lastTickAt: now,
+					etaMinutes: estimateEtaMinutes(pendingCount),
+				});
+
+				return;
+			}
+			const run: Partial<ProgressDoc> = {
+				questionId,
+				enqueuedCount: addedCount,
+				processedCount: 0,
+				failedCount: 0,
+				pendingCount: addedCount,
+				status: 'running',
+				operation,
+				rateHint: PROCESS_BATCH_SIZE,
+				startedAt: now,
+				lastTickAt: now,
+				etaMinutes: estimateEtaMinutes(addedCount),
+				initiatedBy: 'system',
+			};
+			if (snap.exists) tx.update(ref, run);
+			else tx.set(ref, run);
+		});
+	} catch (error) {
+		logger.warn('synthesis.queue.ensureQueueRun: failed; items stay queued', {
+			questionId,
+			addedCount,
+			operation,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
 }
