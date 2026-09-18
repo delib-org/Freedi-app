@@ -59,6 +59,16 @@ function readStoredFontRem(): number {
 	return NOTE_FONT_DEFAULT_REM;
 }
 
+/**
+ * Where to portal the overlay. While the map is in browser fullscreen only the
+ * fullscreen element's subtree is shown, so a box appended to document.body
+ * would open invisibly (and pile up until fullscreen ends). Inside the
+ * fullscreen element `position: fixed` still spans the whole screen.
+ */
+function portalTarget(): HTMLElement {
+	return (document.fullscreenElement as HTMLElement | null) ?? document.body;
+}
+
 function storeFontRem(value: number): void {
 	try {
 		window.localStorage.setItem(STORAGE_KEYS.MAP_NOTE_FONT_REM, String(value));
@@ -96,6 +106,16 @@ const NoteFocusOverlay: FC<Props> = ({
 	const [closing, setClosing] = useState(false);
 	const [draft, setDraft] = useState(text);
 	const [fontRem, setFontRem] = useState(readStoredFontRem);
+	const [target, setTarget] = useState<HTMLElement>(portalTarget);
+
+	// Follow fullscreen in and out while open, so the box never ends up in a
+	// subtree that is not on screen.
+	useEffect(() => {
+		const onChange = () => setTarget(portalTarget());
+		document.addEventListener('fullscreenchange', onChange);
+
+		return () => document.removeEventListener('fullscreenchange', onChange);
+	}, []);
 	const fontStep = NOTE_FONT_STEPS_REM.indexOf(fontRem);
 
 	const stepFont = (delta: number) => {
@@ -291,7 +311,7 @@ const NoteFocusOverlay: FC<Props> = ({
 				</div>
 			</div>
 		</div>,
-		document.body,
+		target,
 	);
 };
 

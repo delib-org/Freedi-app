@@ -24,6 +24,8 @@
 		opacity: 0;
 		transition-duration: var(--motion-base);
 		transition-timing-function: var(--motion-ease-exit);
+		// A box on its way out must never swallow the next press.
+		pointer-events: none;
 	}
 }
 
