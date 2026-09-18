@@ -48,6 +48,7 @@ import type { LocalMapFilter } from './mapLocalFilter';
 import {
 	applyDetailLevel,
 	buildMembershipMap,
+	collapsedByLevel,
 	countsFor,
 	isRatable,
 	type DetailResults,
@@ -1097,6 +1098,29 @@ const ClusterBoard: FC<Props> = ({
 											▾
 										</button>
 									)}
+
+									{/* Hand-opened above its level (a merged idea below "everything", a
+									    theme at "themes"): offer to fold it back. */}
+									{!l.collapsed &&
+										allowExpand &&
+										l.clusterStatement &&
+										editingId !== l.id &&
+										expandedIds.has(l.clusterStatement.statementId) &&
+										collapsedByLevel(l.isSynth ? 'synth' : 'topic', level) && (
+											<button
+												type="button"
+												className={styles.pillExpand}
+												aria-expanded
+												aria-label={t('Hide sources')}
+												title={t('Hide sources')}
+												onClick={(e) => {
+													e.stopPropagation();
+													toggleExpanded((l.clusterStatement as Statement).statementId, false);
+												}}
+											>
+												▴
+											</button>
+										)}
 
 									{showProvenance &&
 										l.clusterStatement &&

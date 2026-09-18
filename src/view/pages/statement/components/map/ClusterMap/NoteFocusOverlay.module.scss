@@ -34,8 +34,10 @@
 	display: flex;
 	flex-direction: column;
 	box-sizing: border-box;
-	width: min(92vw, 32rem);
-	max-height: min(80dvh, 40rem);
+	// Big: on a projector in a hall the note is read from across the room, and
+	// the A+ control can push the text to 4rem. Narrow screens still get 94vw.
+	width: min(94vw, 64rem);
+	max-height: min(90dvh, 80rem);
 	padding: calc(var(--padding) * 1.5);
 	border-radius: 14px;
 	// Deep shadow reads as physically lifted off the board.
@@ -66,14 +68,15 @@
 	// Very long notes scroll INSIDE the lifted note, independent of board zoom.
 	overflow-y: auto;
 	overscroll-behavior: contain;
-	font-size: 1rem;
+	// Set from the A− / A+ controls (see NoteFocusOverlay NOTE_FONT_STEPS_REM).
+	font-size: var(--note-font, 1.25rem);
 	line-height: 1.5;
 	word-break: break-word;
 	white-space: pre-wrap;
 	// Logical start so RTL notes right-align themselves (dir set on .note).
 	text-align: start;
-	// Room so text never runs under the close button in its corner.
-	padding-block-start: 1.75rem;
+	// Room so text never runs under the close / text-size buttons in the corners.
+	padding-block-start: 2.5rem;
 }
 
 // Editor: fills the same space as the read view, so editing feels like the
@@ -91,11 +94,11 @@
 	padding: 0.6rem 0.75rem;
 	color: inherit;
 	font: inherit;
-	font-size: 1rem;
+	font-size: var(--note-font, 1.25rem);
 	line-height: 1.5;
 	text-align: start;
-	// Room so text never runs under the close button in its corner.
-	margin-block-start: 1.75rem;
+	// Room so text never runs under the close / text-size buttons in the corners.
+	margin-block-start: 2.5rem;
 
 	&:focus-visible {
 		box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
@@ -139,6 +142,43 @@
 	&:hover,
 	&:focus-visible {
 		background: rgba(255, 255, 255, 0.85);
+	}
+}
+
+// A− / A+ in the start corner, opposite the close button.
+.sizeControls {
+	position: absolute;
+	top: 0.5rem;
+	inset-inline-start: 0.5rem;
+	display: flex;
+	gap: 0.35rem;
+}
+
+.sizeBtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 2.5rem;
+	height: 2.25rem;
+	padding: 0 0.6rem;
+	border: none;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.55);
+	color: inherit;
+	font-size: 0.95rem;
+	font-weight: 700;
+	line-height: 1;
+	cursor: pointer;
+	transition: background var(--motion-fast) var(--motion-ease);
+
+	&:hover,
+	&:focus-visible {
+		background: rgba(255, 255, 255, 0.9);
+	}
+
+	&:disabled {
+		opacity: 0.4;
+		cursor: default;
 	}
 }
 
