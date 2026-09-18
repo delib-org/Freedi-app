@@ -67,10 +67,13 @@ body {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	padding: 84px 20px 48px;
+	padding: 84px 20px 76px;
 	/* The bar is fixed, so pages clear it by padding alone — and it grows by a
      row when the voyage strip is up. VoyageProgress sets the flag while it
      is mounted (admin and the pre-journey intro have no strip). */
+	/* The letter dock is fixed too, in the bottom corner, and the pages clear it
+     the same way: 76px is its 44px plus 16px of inset plus 16px of air, so the
+     last button on a page never ends up underneath it. */
 	/* Let empty page areas pass pointer events through to the sea stage;
      interactive elements re-enable themselves below. */
 	pointer-events: none;
@@ -485,6 +488,88 @@ a.voyage-step:hover {
 	z-index: 5;
 	pointer-events: none;
 	background: radial-gradient(ellipse at center, transparent 55%, rgba(2, 10, 20, 0.55) 100%);
+}
+
+/* ====================== THE LETTER DOCK =======================
+   מכתב לבוני הספינה. A sailor who finds a plank loose needs a way to tell the
+   yard, from any deck, without leaving the voyage — including the deck before
+   sign-in, where the top bar shows nothing at all.
+
+   It sits in the bottom inline-end corner rather than hugging a side, because
+   the content column (max-w-3xl, max-w-5xl on the map) plus 20px of padding
+   leaves no free gutter below ~810px: an edge tab would lie on top of the panel
+   on every phone. The page's bottom padding is the one band always free, so
+   .page grows to clear it, exactly as it already clears the fixed top bar.
+
+   Outline, never gold: gold fill is the single forward action a screen has
+   ("להמשך המסע"), and this is not it. It mounts outside .page (App.tsx), so the
+   pointer-events rules there never touch it.
+   ============================================================== */
+.letter-dock {
+	position: fixed;
+	inset-inline-end: 16px;
+	bottom: 16px;
+	/* above the pages (10), below the bar (40) and any open dialog (50) */
+	z-index: 30;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-width: 44px;
+	min-height: 44px;
+	padding: 0;
+	cursor: pointer;
+	border: 1px solid rgba(232, 185, 88, 0.8);
+	border-radius: 999px;
+	color: var(--cream);
+	font-size: 14px;
+	background: rgba(6, 26, 48, 0.85);
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+	transition:
+		background 0.15s ease,
+		transform 0.15s ease;
+}
+
+.letter-dock:hover {
+	background: rgba(15, 48, 73, 0.95);
+	transform: translateY(-1px);
+}
+
+.letter-dock:focus-visible {
+	outline: 2px solid var(--cyan);
+	outline-offset: 2px;
+}
+
+.letter-dock__icon {
+	font-size: 18px;
+	line-height: 1;
+}
+
+/* The words come only where there is room for them; a phone gets the quill
+   alone, and the aria-label carries the rest. */
+.letter-dock__label {
+	display: none;
+}
+
+@media (min-width: 640px) {
+	.letter-dock {
+		padding-inline: 12px 16px;
+	}
+
+	.letter-dock__label {
+		display: inline;
+	}
+}
+
+/* The page behind an open dialog stops scrolling (see lib/dialogMechanics). */
+body.modal-open {
+	overflow: hidden;
+}
+
+/* A field the form has refused — the same gold the status lines use. */
+input[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+	border-color: rgba(232, 185, 88, 0.9);
 }
 
 /* ============================ THE CREW ============================
@@ -1147,6 +1232,9 @@ button.ship-tag--lit:hover {
 @media (prefers-reduced-motion: reduce) {
 	.fade-in {
 		animation: none;
+	}
+	.letter-dock:hover {
+		transform: none;
 	}
 	.speech-bubble {
 		animation: none;

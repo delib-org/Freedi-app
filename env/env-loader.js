@@ -109,6 +109,9 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'EMAIL_USER': 'EMAIL_USER',
       'EMAIL_PASSWORD': 'EMAIL_PASSWORD',
       'EMAIL_SERVICE': 'EMAIL_SERVICE',
+      // Where Odyssey feedback letters go. Optional — odysseyFeedbackEmail.ts
+      // falls back to both developers when unset, which is the normal state.
+      'ODYSSEY_FEEDBACK_RECIPIENTS': 'ODYSSEY_FEEDBACK_RECIPIENTS',
       // Google Sheets API (join-form export trigger)
       'GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL': 'GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL',
       'GOOGLE_SHEETS_PRIVATE_KEY': 'GOOGLE_SHEETS_PRIVATE_KEY',
@@ -299,6 +302,10 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'FIREBASE_MESSAGING_SENDER_ID': 'VITE_FIREBASE_MESSAGING_SENDER_ID',
       'FIREBASE_APP_ID': 'VITE_FIREBASE_APP_ID',
       'FIREBASE_MEASUREMENT_ID': 'VITE_FIREBASE_MEASUREMENT_ID',
+      // Stamped into every feedback letter, so a bug report says which build
+      // produced it. Without this line import.meta.env.VITE_APP_VERSION is
+      // undefined and every letter reads "לא ידוע".
+      'APP_VERSION': 'VITE_APP_VERSION',
     },
     extra: ''
   }
