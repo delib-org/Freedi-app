@@ -119,7 +119,20 @@ The merge sweep proposed 4 groups: 3 cross-parent duplicates (merged) and 1 sibl
 
 ### Emulator replay (validation step 2b)
 
-`runs/bq-replay-themefix` under `scientific-research/2026-08-18-live-synth-accuracy/` — the 114 statements in arrival order, production bands + 3-large, solo emulator suite, with A+B+C. Result in that folder's `results.json`; score with `scoreVsFanny.py` on a `fetch2`-shaped export of the emulator question. See the bottom of this file for the outcome.
+`runs/bq-replay-themefix` under `scientific-research/2026-08-18-live-synth-accuracy/` — the 114 statements in arrival order, production bands + 3-large, solo emulator suite, with A+B+C (82 min; `score-vs-fanny.json` in the folder; export via `scripts/exportEmulatorRun.cjs`, which maps the harness's fresh ids back).
+
+| state | themes | largest share | prec / rec / F1 | ARI |
+|---|---|---|---|---|
+| live production (snapshot-4) | 2 | 64% | 0.117 / 0.449 / 0.186 | 0.035 |
+| replay from scratch with A+B+C, at harness end | 8 | 28% | 0.189 / 0.222 / 0.204 | 0.088 |
+| + one more sweep tick offline (split the 26-leaf theme) | 11 | 22% | 0.249 / 0.193 / 0.217 | 0.117 |
+| + the merge tick after it | 10 | 28% | 0.211 / 0.204 / 0.207 | 0.099 |
+
+What happened in the run: **the label guard never fired** — with the new prompt no theme title restated the question in 114 arrivals (final headings: funding and resources; knowledge access and brokering; trust and knowledge mapping; continuity and persistence; community involvement; cross-sector partnerships; initiative and daring; research-question focus). The split sweep fired twice (a 3-theme set → +4 sub-topics; a 7-theme set → +5), the merge sweep merged 3 and **tried 3 times to re-merge split siblings**, which the guard refused — the loop guard is load-bearing, not theoretical. The 26-leaf "cross-sector partnerships" heading was one tick short of its split when the harness stopped (it trips the ≥25 rule); production's 10-minute sweep would take it.
+
+Reading: from scratch, A+B+C turn one catch-all into 8–11 headings of 6–26 statements with precision 0.19–0.25 vs Fanny (up from 0.12) and ARI 2.5–3× the live state. The offline split of the *existing* live state scores higher still (ARI 0.15), because it starts from Fanny-sized merge groups already settled. Both routes beat the baseline; neither reaches the old August clustering's F1 0.32, which rested on one 59-statement heading matching Fanny's 30-statement cluster — recall the new structure gives up by design.
+
+**Where the remaining gap is:** the merge judge still wants to reunite sub-topics on a narrow question (3 refused sibling merges + 1 more in the offline tick, plus 3 cross-parent merges that each cost ~0.02 ARI). Next lever is `groupEquivalentThemes` on narrow questions — e.g. refuse a merge whose result would trip the split trigger, or show it the split history — not the split itself.
 
 ### Not done
 - Validation step 3 (the EN/HE 100-statement regression) was **not** re-run. B changes the filing judge on every question, so that run is owed before deploy.

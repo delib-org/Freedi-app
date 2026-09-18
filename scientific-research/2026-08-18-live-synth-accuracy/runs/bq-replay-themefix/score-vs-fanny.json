@@ -1,0 +1,94 @@
+{
+ "snapshot": "/private/tmp/claude-501/-Users-talyaron-Documents-Freedi-app/9a2b8c07-bcbe-447c-a34e-1e6013e34d6b/scratchpad/replay-export.json",
+ "n": 114,
+ "fanny": {
+  "k": 36,
+  "singletons": 20
+ },
+ "theme": {
+  "k": 8,
+  "cov": 92,
+  "pairs": 731,
+  "prec": 0.189,
+  "rec": 0.222,
+  "f1": 0.204,
+  "ari": 0.088
+ },
+ "syn": {
+  "k": 20,
+  "cov": 42,
+  "pairs": 24,
+  "prec": 0.542,
+  "rec": 0.021,
+  "f1": 0.04,
+  "ari": 0.035
+ },
+ "largest_theme_share_of_placed": 0.283,
+ "unthemed": 22,
+ "themes": [
+  {
+   "id": "jb2FOZSVmwxX",
+   "title": "שותפויות בין־מגזריות ומוסדיות",
+   "n": 26,
+   "fanny_clusters": 16,
+   "top_fanny": "שתפ מחקר-חברה אזרחית",
+   "top_share": 0.31
+  },
+  {
+   "id": "1XAeooSCUD91",
+   "title": "הנגשת ידע ותיווך בין עולמות",
+   "n": 20,
+   "fanny_clusters": 12,
+   "top_fanny": "פיתוח שפה משותפת",
+   "top_share": 0.25
+  },
+  {
+   "id": "FDVrz0er3GhF",
+   "title": "מעורבות קהילתית ושיתוף במחקר",
+   "n": 17,
+   "fanny_clusters": 5,
+   "top_fanny": "שתפ מחקר-חברה אזרחית",
+   "top_share": 0.53
+  },
+  {
+   "id": "0YArRNO4dtli",
+   "title": "מימון ומשאבים למחקר",
+   "n": 8,
+   "fanny_clusters": 2,
+   "top_fanny": "תמריצים ותמיכות",
+   "top_share": 0.88
+  },
+  {
+   "id": "Aan7MJn6VdFh",
+   "title": "רציפות, התמדה ושימור קשרים",
+   "n": 7,
+   "fanny_clusters": 5,
+   "top_fanny": "שתפ מחקר-חברה אזרחית",
+   "top_share": 0.29
+  },
+  {
+   "id": "5JbC6BmHMyUo",
+   "title": "אמון ומיפוי ידע",
+   "n": 6,
+   "fanny_clusters": 5,
+   "top_fanny": "הנגשת ידע",
+   "top_share": 0.33
+  },
+  {
+   "id": "lc4wmuE6vSi6",
+   "title": "יוזמה, תעוזה והנעת מהלך",
+   "n": 6,
+   "fanny_clusters": 4,
+   "top_fanny": "שתפ מחקר-חברה אזרחית",
+   "top_share": 0.5
+  },
+  {
+   "id": "wYnDUhRUpc86",
+   "title": "מיקוד בשאלות המחקר",
+   "n": 2,
+   "fanny_clusters": 2,
+   "top_fanny": "מיקוד המטרה",
+   "top_share": 0.5
+  }
+ ]
+}
