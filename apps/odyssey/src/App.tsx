@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { GameProvider, useGame } from './state/GameContext';
 import { useUser } from './lib/user';
 import SeaStage from './components/SeaStage';
+import FeedbackDock from './components/FeedbackDock';
 import Intro from './pages/Intro';
 import Compass from './pages/Compass';
 import MapPage from './pages/MapPage';
@@ -100,6 +101,10 @@ export default function App() {
 					/>
 					<Route path="*" element={<Navigate to="/" replace />} />
 				</Routes>
+				{/* Last child of <main>, so it is the last Tab stop on every page —
+				    and outside <Routes>, so a half-written letter survives a
+				    navigation. */}
+				<FeedbackDock />
 			</main>
 		</GameProvider>
 	);

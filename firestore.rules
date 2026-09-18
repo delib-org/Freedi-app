@@ -408,6 +408,24 @@ service cloud.firestore {
                                request.resource.data.userId == request.auth.uid;
     }
 
+    // Odyssey "מכתב לבוני הספינה" — letters to the developers. Written ONLY by
+    // the odysseyFeedbackSubmit callable; the Admin SDK bypasses these rules, so
+    // an explicit deny costs the server nothing and documents the decision.
+    //
+    // Deliberately NOT stored in /feedback: that collection grants
+    // `allow read: if request.auth != null`, and "authenticated" here includes
+    // every anonymous Odyssey player. These documents hold the reply-to
+    // addresses players volunteer, which no client may read.
+    match /odysseyFeedback/{feedbackId} {
+      allow read, write: if false;
+    }
+
+    // Per-uid (and one `_global`) throttle counters for Odyssey server
+    // functions. A client-writable counter is not a counter.
+    match /odysseyRateLimits/{docId} {
+      allow read, write: if false;
+    }
+
 	match /polarizationIndex/{statementId=**} {
 	  allow read: if request.auth.uid != null;
 	

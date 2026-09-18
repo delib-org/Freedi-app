@@ -122,6 +122,12 @@ export enum Collections {
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',
     odysseyJourneys = 'odysseyJourneys',
+    // Letters to the developers, and the throttle counters that guard them.
+    // Both are written only by odysseyFeedbackSubmit — server-only, see
+    // firestore.rules. The feedback docs hold reply-to addresses players
+    // volunteered, so no client may read them.
+    odysseyFeedback = 'odysseyFeedback',
+    odysseyRateLimits = 'odysseyRateLimits',
 
     // WizCol Studio — consultant organizations (Cloud-Function-only writes)
     organizations = 'organizations',
