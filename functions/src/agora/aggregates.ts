@@ -1,4 +1,4 @@
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Transaction } from 'firebase-admin/firestore';
 import { db } from '../db';
 import {
 	Collections,
@@ -8,13 +8,17 @@ import {
 	AgoraSession,
 	AgoraStudentAggregate,
 	AgoraStudentGameRow,
+	AgoraTeacherAggregate,
 	AgoraThemeTally,
 	emptyAgoraPoints,
 	emptyClassAggregate,
 	emptyStudentAggregate,
+	emptyTeacherAggregate,
 	mergeClassGame,
 	mergeStudentGame,
+	mergeTeacherLesson,
 	tallyAgoraThemes,
+	teacherLessonRowFrom,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 
@@ -30,6 +34,28 @@ function periodKeysFor(timestampMs: number): { day: string; month: string; year:
 	const dd = String(date.getUTCDate()).padStart(2, '0');
 
 	return { day: `${yyyy}-${mm}-${dd}`, month: `${yyyy}-${mm}`, year: yyyy };
+}
+
+/**
+ * Fold one finished lesson into the teacher's own aggregate doc, inside a
+ * transaction the caller already opened (and already READ `prevAgg` in — Admin
+ * transactions want every read before the first write). Shared by the
+ * finished-session fold below and the backfill, so the two can never build
+ * the row differently. Returns the merged doc.
+ */
+export function foldTeacherLessonTx(
+	transaction: Transaction,
+	session: AgoraSession,
+	studentCount: number,
+	prevAgg: AgoraTeacherAggregate | undefined,
+	now: number,
+): AgoraTeacherAggregate {
+	const teacherAggRef = db.collection(Collections.agoraTeacherAggregates).doc(session.teacherId);
+	const row = teacherLessonRowFrom(session, studentCount);
+	const agg = mergeTeacherLesson(prevAgg ?? emptyTeacherAggregate(session.teacherId), row, now);
+	transaction.set(teacherAggRef, agg);
+
+	return agg;
 }
 
 /**
@@ -72,16 +98,24 @@ export async function writeSessionAggregates(sessionId: string): Promise<AgoraTh
 		const playedAt = session.classScore?.computedAt ?? now;
 		const { classId, schoolId } = session;
 
-		if (classId && schoolId) {
-			const classAggRef = db.collection(Collections.agoraClassAggregates).doc(classId);
-			const studentAggRefs = rosterStudents.map((student) =>
-				db.collection(Collections.agoraStudentAggregates).doc(student.memberId),
-			);
-			const [classAggSnap, ...studentAggSnaps] = await Promise.all([
-				transaction.get(classAggRef),
-				...studentAggRefs.map((ref) => transaction.get(ref)),
-			]);
+		// Every read up front — the teacher's doc beside the class and career
+		// docs — because the first write closes the transaction to reads.
+		const teacherAggRef = db.collection(Collections.agoraTeacherAggregates).doc(session.teacherId);
+		const classAggRef =
+			classId && schoolId ? db.collection(Collections.agoraClassAggregates).doc(classId) : null;
+		const studentAggRefs =
+			classId && schoolId
+				? rosterStudents.map((student) =>
+						db.collection(Collections.agoraStudentAggregates).doc(student.memberId),
+					)
+				: [];
+		const [teacherAggSnap, classAggSnap, studentAggSnaps] = await Promise.all([
+			transaction.get(teacherAggRef),
+			classAggRef ? transaction.get(classAggRef) : Promise.resolve(null),
+			Promise.all(studentAggRefs.map((ref) => transaction.get(ref))),
+		]);
 
+		if (classId && schoolId && classAggRef && classAggSnap) {
 			const classRow: AgoraClassGameRow = {
 				sessionId,
 				topicPackageId: session.topicPackageId,
@@ -121,7 +155,23 @@ export async function writeSessionAggregates(sessionId: string): Promise<AgoraTh
 			});
 		}
 
-		transaction.update(sessionRef, { aggregatedAt: now, lastUpdate: now });
+		// The teacher's own doc advances for EVERY finished game, guest games
+		// included — a lesson without a roster is still a lesson.
+		if (session.teacherAggregatedAt === undefined) {
+			foldTeacherLessonTx(
+				transaction,
+				session,
+				students.length,
+				teacherAggSnap.data() as AgoraTeacherAggregate | undefined,
+				now,
+			);
+		}
+
+		transaction.update(sessionRef, {
+			aggregatedAt: now,
+			teacherAggregatedAt: now,
+			lastUpdate: now,
+		});
 
 		// How the room dressed, counted from the same participant reads — the
 		// one thing the company asked to learn from a finished game that is

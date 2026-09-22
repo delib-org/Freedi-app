@@ -209,5 +209,16 @@
     --approve-ink: #57c6b2; // on dark the brand teal IS the readable ink
     --warning-ink: #fcd34d; // matches the dark --warning above
     --elevation-4: 0 20px 50px rgba(0, 0, 0, 0.6);
+
+    // --- CHART TOKENS (dark) ---
+    // Lifted hues that keep ≥ 3:1 against the #1c2434 card; chrome tokens
+    // (--chart-grid/--chart-text/--chart-surface) follow their aliases.
+    --chart-1: #3f8fd6;
+    --chart-2: #c9782e;
+    --chart-3: #7b83e6;
+    --chart-4: #4aa352;
+    --chart-5: #d9629f;
+    --chart-6: #8e9034;
+    --chart-muted: #3b465e;
   }
 }

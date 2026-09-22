@@ -1,4 +1,5 @@
 import type { AgoraSessionFlow } from './sessionFlow';
+import type { AgoraTeacherSurface } from './agoraTeacherUsage';
 
 /**
  * Wire contracts of the classroom-hierarchy callables (schools, classes,
@@ -11,18 +12,35 @@ import type { AgoraSessionFlow } from './sessionFlow';
 
 /** `agoraAdminManageSchool` — sys-admin only. */
 export interface ManageSchoolRequest {
-	action: 'create' | 'rename' | 'archive' | 'assignTeacher' | 'removeTeacher';
+	action:
+		| 'create'
+		| 'rename'
+		| 'archive'
+		| 'assignTeacher'
+		| 'removeTeacher'
+		| 'assignSupervisor'
+		| 'removeSupervisor'
+		| 'setSupervisorScope';
 	schoolId?: string;
 	name?: string;
 	city?: string;
 	/** assignTeacher/removeTeacher: the teacher's sign-in email, looked up server-side */
 	teacherEmail?: string;
+	/** assignSupervisor/removeSupervisor/setSupervisorScope: the supervisor's sign-in email */
+	supervisorEmail?: string;
+	/**
+	 * setSupervisorScope: the teachers this supervisor may see. `null` (or
+	 * absent) clears the narrowing — every teacher of the school again.
+	 */
+	teacherIds?: string[] | null;
 }
 
 export interface ManageSchoolResponse {
 	schoolId: string;
 	/** Present on assignTeacher/removeTeacher — the resolved uid, echoed for the admin UI */
 	teacherUid?: string;
+	/** Present on the supervisor actions — the resolved uid */
+	supervisorUid?: string;
 }
 
 /**
@@ -165,6 +183,13 @@ export interface TeacherConsoleDashboard {
 	aggregates: Record<string, unknown>;
 	/** This teacher's sessions, newest first (AgoraSession JSON) */
 	sessions: unknown[];
+	/**
+	 * The schools this caller supervises — where the "supervise" entry
+	 * leads. Empty for a plain teacher.
+	 */
+	supervisedSchools: Array<{ schoolId: string; name: string }>;
+	/** usersV2/{uid}.systemAdmin — the system view's key */
+	isSystemAdmin: boolean;
 }
 
 export interface TeacherConsoleClassDetail {
@@ -280,4 +305,23 @@ export interface RewordQuestionResponse {
 	itemIds: string[];
 	/** `kind` scope: the wording is now this teacher's default for that round */
 	savedAsDefault: boolean;
+}
+
+/**
+ * `agoraTeacherHeartbeat` — the console's "I am still here" beat, credited
+ * server-side against the teacher's usage month (see `creditHeartbeat`).
+ */
+export interface TeacherHeartbeatRequest {
+	surface: AgoraTeacherSurface;
+	/** Ms the client believes elapsed since its previous beat */
+	sinceMs: number;
+}
+
+export interface TeacherHeartbeatResponse {
+	/** 'YYYY-MM-DD' (UTC) the beat landed on */
+	day: string;
+	/** What the server actually credited — 0 for a burst or noise */
+	creditedMs: number;
+	/** That day's running total after this beat */
+	dayActiveMs: number;
 }

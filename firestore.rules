@@ -379,6 +379,20 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Teacher aggregates (one doc per teacher uid) and console usage months
+    // (`{uid}--{YYYY-MM}`). Trigger/heartbeat-written. Sys-admin-read only:
+    // supervisors read them through the agoraSupervisorConsole callable,
+    // which filters by their scope, and a teacher never reads their own —
+    // hours are the supervisor's number, not a self-tally.
+    match /agoraTeacherAggregates/{teacherId} {
+      allow read: if isSystemAdminUser();
+      allow write: if false;
+    }
+    match /agoraTeacherUsage/{usageId} {
+      allow read: if isSystemAdminUser();
+      allow write: if false;
+    }
+
     // === Israeli Odyssey pre-election civic-voice game ===
 
     // Game config (texts, island map metadata, party routes). The

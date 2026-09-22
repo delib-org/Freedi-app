@@ -223,6 +223,13 @@ export const AgoraSessionSchema = object({
 	 */
 	aggregatedAt: optional(number()),
 	/**
+	 * When this game was folded into the teacher's own aggregate doc
+	 * (`agoraTeacherAggregates`). Stamped beside `aggregatedAt` by the
+	 * finished-session trigger; the backfill stamps it alone on games that
+	 * finished before teacher aggregates existed. Server-written.
+	 */
+	teacherAggregatedAt: optional(number()),
+	/**
 	 * Which track this session runs. Absent on every classroom session ever
 	 * written, and `undefined` means `classroom` — see AgoraSessionMode.
 	 */

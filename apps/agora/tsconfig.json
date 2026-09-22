@@ -12,6 +12,7 @@
     "isolatedModules": true,
     "paths": {
       "@/*": ["./src/*"],
+      "@freedi/shared-charts": ["../../packages/shared-charts/src"],
       "@freedi/shared-utils": ["../../packages/shared-utils/src"]
     }
   },
