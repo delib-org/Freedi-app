@@ -1,5 +1,7 @@
 import m from 'mithril';
 import { Icon, iconLabel, IconName } from '../components/Icon';
+import { PlaceBar } from '../components/PlaceBar';
+import { placeNavTabs } from '../lib/flows/placeNav';
 import { HeroIcon } from '../components/HeroIcon';
 import { t, tCount } from '../lib/i18n';
 import {
@@ -982,6 +984,7 @@ export function Deliberation(
 	 */
 	function delibNav(myProposal: AgoraProposal | undefined): m.Children {
 		if (!myProposal) return null;
+		if (inVillage) return null;
 		// The draft mirror outlives a tab change, so an unsaved edit can be
 		// sitting on a screen I am not looking at. The dock used to say so
 		// from the foot of every room; with the dock gone the tab says it, and
@@ -989,77 +992,45 @@ export function Deliberation(
 		// beats news I have to read.
 		const unsaved = mineDraftChanged(myProposal);
 
-		const tab = (
-			id: DelibScreen,
-			modifier: string,
-			icon: IconName,
-			label: string,
-			badge: number,
-			onclick: () => void,
-			alert = false,
-		): m.Children =>
-			m(
-				`button.delib-nav__item.delib-nav__item--${modifier}`,
-				{
-					class: screen === id ? 'delib-nav__item--active' : undefined,
-					'aria-selected': String(screen === id),
-					onclick,
-				},
-				[
-					m('span.delib-nav__icon', m(Icon, { name: icon, size: 22 })),
-					m('span.delib-nav__label', label),
-					// A badge is news from a screen I'm not on; on the screen
-					// itself the content says it better than a number
-					screen !== id && alert
-						? [
-								m('span.delib-nav__dot', { 'aria-hidden': 'true' }),
-								m('span.sr-only', t('delib.draft_unsaved')),
-							]
-						: screen !== id && badge > 0
-							? m('span.delib-nav__badge', String(badge))
-							: null,
-				],
-			);
-
-		if (inVillage) return null;
-
-		return m('nav.delib-nav', [
-			tab(
-				'my',
-				'mine',
-				'proposal',
-				t('delib.nav_mine'),
-				myFeedbackCount(myProposal),
-				() => {
+		// The same bar the village carries, minus the village door: a student
+		// who switches views should not have to learn the game's navigation a
+		// second time. The handlers below are the tabs' own, unchanged — this
+		// moved the rendering, not the lap cycle.
+		return m(PlaceBar, {
+			variant: 'flat',
+			tabs: placeNavTabs({
+				village: false,
+				hasDesk: true,
+				hasCommunity: true,
+				inFlight: false,
+				open: screen === 'my' ? 'note' : screen === 'others' ? 'board' : 'results',
+			}),
+			badges: { note: myFeedbackCount(myProposal), board: attentionCount() },
+			alerts: unsaved ? { note: 'delib.draft_unsaved' } : undefined,
+			onGo: (id) => {
+				if (id === 'note') {
 					screen = 'my';
 					m.redraw();
-				},
-				unsaved,
-			),
-			tab('results', 'results', 'chart', t('delib.nav_results'), 0, () => {
-				screen = 'results';
-				m.redraw();
-			}),
-			tab(
-				'others',
-				'peer',
-				'people',
-				t('delib.nav_others'),
-				// Proposals I helped moved while I was away — come see
-				attentionCount(),
-				() => {
-					screen = 'others';
-					if (cycle.step === 'mine') {
-						setCycle({ step: 'rate', rated: 0 });
-					} else if (cycle.step === 'done') {
-						// After the laps, "Others" means: keep helping
-						setCycle({ round: getSessionFlow().rounds, step: 'help' });
-					} else {
-						m.redraw();
-					}
-				},
-			),
-		]);
+
+					return;
+				}
+				if (id === 'results') {
+					screen = 'results';
+					m.redraw();
+
+					return;
+				}
+				screen = 'others';
+				if (cycle.step === 'mine') {
+					setCycle({ step: 'rate', rated: 0 });
+				} else if (cycle.step === 'done') {
+					// After the laps, "Others" means: keep helping
+					setCycle({ round: getSessionFlow().rounds, step: 'help' });
+				} else {
+					m.redraw();
+				}
+			},
+		});
 	}
 
 	/**
@@ -2417,7 +2388,7 @@ export function Deliberation(
 			if (pendingMineReveal && myConfirmedProposal && !splash) {
 				pendingMineReveal = false;
 				window.setTimeout(() => {
-					emphasise(document.querySelector('.delib-nav__item--mine'));
+					emphasise(document.querySelector('.place-bar__item[data-place="note"]'));
 				}, 400);
 			}
 

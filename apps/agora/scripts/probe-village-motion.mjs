@@ -119,7 +119,7 @@ await world.locator('#desk-write').click({ timeout: 20000 });
 await pause(6000);
 
 phase = 'close-paper';
-await page.locator('.village-shell__activity:visible button', { hasText: 'סגירה' }).first().click();
+await page.locator('.place-bar__item[data-place="village"]').first().click();
 await pause(3000);
 
 phase = 'advance→deliberation';

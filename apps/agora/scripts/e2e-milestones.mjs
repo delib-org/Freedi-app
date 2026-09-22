@@ -148,7 +148,7 @@ const propose = async (page, text) => {
 	await page.waitForSelector('textarea.write-desk__textarea', { timeout: 15000 });
 	await page.locator('textarea.write-desk__textarea').fill(text);
 	await page.locator('.write-desk__cta').click();
-	await page.waitForSelector('.delib-nav', { timeout: 25000 });
+	await page.waitForSelector('.place-bar', { timeout: 25000 });
 };
 await propose(sA, 'נכריז על מלוכה חוקתית: המלך סמל מאחד, אספה נבחרת מחוקקת ומאשרת מסים.');
 await propose(sD, 'נבטל את המלוכה לחלוטין ונקים רפובליקה ללא כל זכויות יתר.');
@@ -170,7 +170,7 @@ const rate = async (page, proposalText, option) => {
 		await clearCelebration(page);
 		try {
 			if ((await page.locator('.stall-list').count()) === 0) {
-				await page.locator('.delib-nav__item--peer').click({ timeout: 4000 });
+				await page.locator('.place-bar__item[data-place="board"]').click({ timeout: 4000 });
 			}
 			await page.waitForSelector('.stall__head', { timeout: 6000 });
 			const stall = page.locator('.stall', { hasText: proposalText.slice(0, 20) }).first();

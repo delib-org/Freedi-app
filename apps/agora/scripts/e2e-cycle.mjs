@@ -197,7 +197,7 @@ const waitForPoints = async (label, page, predicate, what, timeoutMs = 30000) =>
 // screen. There is no dock to lift any more — anything that touches the
 // proposal walks to the My tab, exactly as a student does.
 const openPen = async (page) => {
-	await page.locator('.delib-nav__item--mine').click();
+	await page.locator('.place-bar__item[data-place="note"]').click();
 	await page.waitForSelector('.my-screen__paper', { timeout: 15000 });
 };
 
@@ -205,7 +205,7 @@ const openPen = async (page) => {
 // itself once nothing is waiting (it is a to-do list) — a conversation you
 // want to re-read is one tap in.
 const openInbox = async (page) => {
-	await page.locator('.delib-nav__item--mine').click();
+	await page.locator('.place-bar__item[data-place="note"]').click();
 	const head = page.locator('.my-screen button.workbench__head').first();
 	if ((await head.getAttribute('aria-expanded')) === 'false') await head.click();
 	await page.waitForSelector('.my-screen .chat-entry', { timeout: 10000 });
@@ -346,7 +346,7 @@ await suggest(s1, 'S1(A)', 'אולי להבטיח ייצוג מסוים לאצו
 
 // Feedback NEVER forces a screen change — it waits as a count on the My
 // tab, and the student decides when to look.
-const navBadge = s1.locator('.delib-nav__item--mine .delib-nav__badge');
+const navBadge = s1.locator('.place-bar__item[data-place="note"] .place-bar__badge');
 await navBadge.waitFor({ timeout: 10000 });
 eq('A My-tab badge', (await navBadge.textContent()).trim(), '1');
 eq('feedback did not move the student', await s1.locator('.my-screen').count(), 0);
@@ -354,7 +354,7 @@ await shot(s1, '01b-A-mine-badge-with-news');
 
 // Walk to the My screen, as a student would. There, the received accordion
 // is the one that auto-opens (openCount > 0).
-await s1.locator('.delib-nav__item--mine').click();
+await s1.locator('.place-bar__item[data-place="note"]').click();
 const accordionCount = await s1.locator('.my-screen .workbench__count').first().textContent();
 eq('A accordion count', accordionCount.trim(), '1');
 
@@ -513,7 +513,7 @@ await clearCelebration(s1, 'S1(A)');
 
 // The helped proposal visibly moved — B is told, on the card they helped
 await clearCelebration(s2);
-await s2.locator('.delib-nav__item--peer').click();
+await s2.locator('.place-bar__item[data-place="board"]').click();
 await s2.waitForSelector('.stall__head', { timeout: 15000 });
 if ((await s2.locator('.stall--open').count()) === 0) {
 	await s2.locator('.stall:not(.stall--open) .stall__head').first().click();
@@ -606,7 +606,7 @@ eq('no tier paid below 70 (weave still the only proposals delta)', afterBridge1.
 // weave credits arrive as two celebrations a beat apart; the second may land
 // after the first was cleared, and a modal card would swallow the tap.
 await clearCelebration(s1, 'S1(A)');
-await s1.locator('.delib-nav__item--mine').click();
+await s1.locator('.place-bar__item[data-place="note"]').click();
 await s1.waitForSelector('.my-lantern__moved', { timeout: 15000 });
 // The class AVERAGE, not the bridging score: bridging is blended and damped
 // enough to round a real change of mind away to zero, and "moved by 0" is the
@@ -628,8 +628,8 @@ await shot(s1, '10a-A-journey-strip');
 // direction and left a bare count. It must now survive a reload.
 await s1.reload({ waitUntil: 'domcontentloaded' });
 // A reload lands wherever the WORK is; the My screen is one tap away
-await s1.waitForSelector('.delib-nav__item--mine', { timeout: 20000 });
-await s1.locator('.delib-nav__item--mine').click();
+await s1.waitForSelector('.place-bar__item[data-place="note"]', { timeout: 20000 });
+await s1.locator('.place-bar__item[data-place="note"]').click();
 await s1
 	.locator('.my-lantern__moved', { hasText: 'התמיכה הממוצעת עלתה' })
 	.waitFor({ timeout: 20000 });
@@ -638,7 +638,7 @@ await shot(s1, '10-A-ratings-moved');
 
 // ---------- Phase E2: the loop's two ends meet in the conversation ----------
 step('PHASE E2: the invitation clears, the circle is named, and A is told');
-await s2.locator('.delib-nav__item--peer').click();
+await s2.locator('.place-bar__item[data-place="board"]').click();
 await s2.waitForSelector('.stall--open', { timeout: 10000 });
 await openThreadFromStall(s2);
 // The rating happened out on the square, and the thread's invitation is
@@ -678,7 +678,7 @@ await leaveChat(s1);
 
 // ---------- Phase F: one open idea at a time, no toggle to get wrong ----------
 step('PHASE F: the conversation decides — idea while the desk is clear, chat while it is not');
-await s2.locator('.delib-nav__item--peer').click();
+await s2.locator('.place-bar__item[data-place="board"]').click();
 await s2.waitForSelector('.stall--open', { timeout: 10000 });
 await openThreadFromStall(s2);
 // B's first idea was answered (thanked) in Phase B, so the box offers the

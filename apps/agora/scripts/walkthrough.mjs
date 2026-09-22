@@ -242,17 +242,17 @@ const suggest = async (page, label, text) => {
 await shot(s2, '05b-workshop-help');
 
 // My proposal is a TAB, not a sheet: walk to it mid-help, then walk back
-await s1.waitForSelector('.delib-nav__item--mine', { timeout: 10000 });
-await s1.locator('.delib-nav__item--mine').click();
+await s1.waitForSelector('.place-bar__item[data-place="note"]', { timeout: 10000 });
+await s1.locator('.place-bar__item[data-place="note"]').click();
 await s1.waitForSelector('.my-screen__paper', { timeout: 5000 });
 console.log('S1 MINE: stood at my own paper during help');
 console.log(
 	'S1 NAV CLASSES:',
-	await s1.locator('.delib-nav__item').evaluateAll((els) => els.map((e) => e.className))
+	await s1.locator('.place-bar__item').evaluateAll((els) => els.map((e) => e.className))
 );
 await s1.waitForTimeout(900); // the screen settles — shoot it landed, not mid-travel
 await shot(s1, '05c-mine-paper-during-help');
-await s1.locator('.delib-nav__item--peer').click();
+await s1.locator('.place-bar__item[data-place="board"]').click();
 await s1.waitForSelector('textarea.text-input', { timeout: 5000 });
 console.log('S1 MINE: back at the stand');
 
@@ -404,11 +404,11 @@ if (!/changed|השתנה/i.test(staleLabel)) throw new Error(`Expected stale chi
 // ---------- The collaboration loop ----------
 step('COLLABORATION LOOP: S2 sees the improvement, re-rates, follows up');
 // S2 (on lap-2 mine) gets a badge on the Others tab: a proposal they helped moved
-await s2.waitForSelector('.delib-nav__badge', { timeout: 15000 });
-console.log('S2 OTHERS BADGE:', await s2.locator('.delib-nav__badge').textContent());
+await s2.waitForSelector('.place-bar__badge', { timeout: 15000 });
+console.log('S2 OTHERS BADGE:', await s2.locator('.place-bar__badge').textContent());
 // One tap on Others: the "Proposals I helped" section is already visible
 // on the rate step (no need to click through to helping)
-await s2.locator('.delib-nav__item').last().click();
+await s2.locator('.place-bar__item[data-place="board"]').click();
 await s2.waitForSelector('.helped__item', { timeout: 15000 });
 console.log('S2 HELPED SECTION VISIBLE ON RATE STEP ✓');
 await s2.getByRole('button', { name: /Continue to helping|המשיכו לעזרה/i }).click();

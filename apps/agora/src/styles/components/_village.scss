@@ -325,16 +325,21 @@ article.village-note { cursor: default; }
 }
 
 .place-bar-wrap {
-  position: absolute;
-  z-index: 46;
-  inset-inline: 0;
-  inset-block-end: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   padding-block-end: env(safe-area-inset-bottom, 0px);
   pointer-events: none;
+}
+
+// Over the world it floats at the foot of the shell; in the flat view it is
+// simply the last row of the screen, where the tab bar always was.
+.village-shell > .place-bar-wrap {
+  position: absolute;
+  z-index: 46;
+  inset-inline: 0;
+  inset-block-end: 0;
 }
 
 .place-bar__hint {
@@ -463,6 +468,30 @@ article.village-note { cursor: default; }
     inline-size: 10px;
     block-size: 10px;
     border-radius: 50%;
+  }
+
+  // The flat view has no world to float over: the bar is a plain pill row,
+  // in the tab bar's old place under the work.
+  &--flat {
+    inline-size: min(560px, 100%);
+    margin-block: var(--space-sm) 0;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-full);
+    background: var(--bg-inset);
+    box-shadow: none;
+
+    .place-bar__item {
+      color: var(--text-secondary);
+      min-block-size: 48px;
+
+      &--active {
+        color: var(--bg-card-solid);
+
+        &::before { background: var(--mine); }
+      }
+
+      &:focus-visible { outline-color: var(--lantern-deep); }
+    }
   }
 
   // Desktop: a floating pill rather than a full-width bar

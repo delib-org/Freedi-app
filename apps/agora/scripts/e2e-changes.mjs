@@ -125,9 +125,9 @@ await clearCelebration(s2);
 // My own screen: the pen and the workshop (what came back, the elders, the
 // needs). Everything about MY proposal — reading it and writing it — is here.
 const goMine = async (page) => {
-	await page.waitForSelector('.delib-nav__item--mine', { timeout: 15000 });
-	if ((await page.locator('.delib-nav__item--mine.delib-nav__item--active').count()) === 0) {
-		await page.locator('.delib-nav__item--mine').click();
+	await page.waitForSelector('.place-bar__item[data-place="note"]', { timeout: 15000 });
+	if ((await page.locator('.place-bar__item[data-place="note"].place-bar__item--active').count()) === 0) {
+		await page.locator('.place-bar__item[data-place="note"]').click();
 	}
 	// The screen's stable landmark is the paper at its head: my sentence, in
 	// the field it is written in
@@ -136,10 +136,10 @@ const goMine = async (page) => {
 // Back to the classmates' side — also the only place a badge ABOUT my screen
 // can be read, since a tab never badges the screen you are standing on
 const goOthers = async (page) => {
-	await page.locator('.delib-nav__item--peer').click();
+	await page.locator('.place-bar__item[data-place="board"]').click();
 	await page.waitForSelector('.stall-list', { timeout: 15000 });
 };
-const myBadge = (page) => page.locator('.delib-nav__item--mine .delib-nav__badge');
+const myBadge = (page) => page.locator('.place-bar__item[data-place="note"] .place-bar__badge');
 // The received-improvements accordion folds itself once nothing is waiting
 // (it is a to-do list) — a conversation you want to re-read is one tap in.
 const openInbox = async (page) => {

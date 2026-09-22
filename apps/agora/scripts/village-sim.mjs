@@ -111,27 +111,17 @@ async function tap(page, locator, label = '') {
 /** The village iframe of a student's page */
 const world = (page) => page.frameLocator('iframe.village-shell__world');
 
-/** The toolbar button that opens the item on screen (the desk, the ballot, the recap) */
-async function openActivity(page, text) {
-	await tap(page, page.locator('.village-shell__toolbar button', { hasText: text }).first());
+/** One of the four doors: village | note | board | results */
+async function goTo(page, place, label) {
+	await tap(page, page.locator(`.place-bar__item[data-place="${place}"]`).first(), label);
 }
 async function backToVillage(page) {
 	// A class-wide cheer (a goal, a bridge) lands on every page, not only the author's.
 	await clearCelebration(page);
-	const panel = page.locator('.village-community__panel header button', { hasText: 'חזרה לכפר' });
-	if (await panel.count()) await tap(page, panel.first());
-	const activity = page.locator('.village-shell__activity:visible button', {
-		hasText: /סגירה|חזרה לשולחן|חזרה לכפר/,
-	});
-	if (await activity.count()) await tap(page, activity.first());
-	// The toolbar button TOGGLES the activity, so re-read it after the panel
-	// closed: pressing it on "חזרה לכפר" closes, pressing it again would reopen.
-	for (let attempt = 0; attempt < 3; attempt++) {
-		await pause(250);
-		const toolbar = page.locator('.village-shell__toolbar button', { hasText: 'חזרה לכפר' });
-		if ((await toolbar.count()) === 0) break;
-		await tap(page, toolbar.first());
-	}
+	// One door back, and it does not toggle: the village tab always means the
+	// world, whatever was open over it.
+	await goTo(page, 'village');
+	await pause(250);
 }
 
 /** In front of the station: the guide's bubble in the world, with the instruction and its button */
@@ -163,9 +153,9 @@ async function writeAtDesk(page, label, text, textarea) {
 	await clearCelebration(page, label);
 	const input = page.locator(`.village-desk ${textarea}`);
 	if (!(await input.isVisible())) {
+		// The village door stands the student at the station; the guide's
+		// button is still the only thing that opens the paper.
 		await backToVillage(page);
-		// The toolbar takes the student to the station; the guide's button opens the paper.
-		await openActivity(page, 'הפתק שלי על השולחן');
 		await pressGuideWrite(page, label);
 	}
 	await input.waitFor({ timeout: 15000 });
@@ -184,7 +174,7 @@ async function writeAtDesk(page, label, text, textarea) {
 		eq(`${label}: the send button is in view without scrolling`, inView, true);
 		eq(
 			`${label}: no classic HUD or tabs inside the paper`,
-			await page.locator('.village-desk .delib-nav, .village-desk .delib-hud').count(),
+			await page.locator('.village-desk .place-bar, .village-desk .delib-hud').count(),
 			0,
 		);
 	}
@@ -199,7 +189,7 @@ async function writeAtDesk(page, label, text, textarea) {
 async function rateOnBoard(page, label, rate) {
 	await clearCelebration(page, label);
 	await backToVillage(page);
-	await tap(page, page.locator('.village-board-open'), label);
+	await goTo(page, 'board', label);
 	await page.locator('.village-community__panel').waitFor({ timeout: 10000 });
 	const others = page.locator('.village-note:not(.village-note--own)');
 	await others.first().waitFor({ timeout: 15000 });
@@ -381,7 +371,7 @@ for (const s of pages) {
 step('Booth 2 · the needs: a board left open when the teacher moves on');
 await clearCelebration(s1.page, 'S1');
 if ((await s1.page.locator('.village-community__panel').count()) === 0) {
-	await tap(s1.page, s1.page.locator('.village-board-open'), 'S1');
+	await goTo(s1.page, 'board', 'S1');
 }
 await s1.page.locator('.village-community__panel').waitFor({ timeout: 10000 });
 console.log('   ✓ S1 is reading the story board');
@@ -507,7 +497,7 @@ await shot(s1.page, '07-solutions-rated');
 // S2 sends S1 an improvement idea from the board; S1 thanks from their own note.
 const s2CoinsBefore = await coins(s2.page);
 await backToVillage(s2.page);
-await tap(s2.page, s2.page.locator('.village-board-open'), 'S2');
+await goTo(s2.page, 'board', 'S2');
 const s1Note = s2.page.locator('.village-note', { hasText: TEXTS.proposal[0].slice(0, 20) });
 await tap(s2.page, s1Note.locator('.village-note__open'), 'S2');
 await s2.page.locator('.chat-page__input').waitFor({ timeout: 10000 });
@@ -531,7 +521,7 @@ await backToVillage(s2.page);
 
 await clearCelebration(s1.page, 'S1');
 await backToVillage(s1.page);
-await tap(s1.page, s1.page.locator('.village-board-open'), 'S1');
+await goTo(s1.page, 'board', 'S1');
 await tap(s1.page, s1.page.locator('.village-note--own .village-note__open'), 'S1');
 await s1.page
 	.locator('button.village-note', { hasText: 'שיחה' })
@@ -792,7 +782,7 @@ if (recapLed) {
 	console.log('   ✓ the recap opened at the council by itself');
 } else {
 	await backToVillage(s1.page);
-	await openActivity(s1.page, 'לסיכום במועצה');
+	await goTo(s1.page, 'results', 'S1');
 }
 await s1.page.locator('.village-shell__activity .board').first().waitFor({ timeout: 20000 });
 await shot(s1.page, '18-recap');
