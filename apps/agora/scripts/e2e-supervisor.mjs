@@ -459,7 +459,17 @@ const c1Detail = await callable(
 	{ view: 'class', classId: class1.classId },
 	supervisor.idToken,
 );
-eq('class 1 members are aliases', c1Detail.members.length, game1.bots.length + game2.bots.length);
+// Every bot claims its own roster spot, so the roster is whatever the members
+// collection holds — count it there rather than guessing from the bot arrays.
+const rosterSize = (
+	await db
+		.collection('agoraClassMembers')
+		.where('classId', '==', class1.classId)
+		.where('status', '==', 'active')
+		.get()
+).size;
+eq('class 1 members are aliases', c1Detail.members.length, rosterSize);
+if (rosterSize < 3) fail(`roster unexpectedly small: ${rosterSize}`);
 for (const member of c1Detail.members) {
 	if ('rejoinPinHash' in member || 'currentUid' in member || 'uidHistory' in member)
 		fail('member row leaks a private field');
