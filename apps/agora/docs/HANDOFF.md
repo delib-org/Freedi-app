@@ -272,11 +272,18 @@ journey" on the start screen, one of them required.
   on a phone; the thread drawer still layers over it). The students' words fold
   behind `.teacher-peek`. Gone: the tab strip, the rail card, the code panel.
 - **Start** (`StartGame.ts`): scenario rows + "my own question" row → class chips
-  → button → muted summary line → a closed "advanced settings" card holding the
-  plan editor, names, devices, colours, rounds. `classChoice` defaults to the
-  route class, else the only class, else `'none'` when the teacher has no school
-  (so a guest teacher's button is live at once); "no class" is never highlighted
-  by default otherwise.
+  → a CLOSED "advanced settings" card → button. The own question is written on
+  its own surface, `QuestionSheet.ts` (`?question=1` on the same route: a
+  full-screen sheet ≤600px, a dialog over a scrim above; pushed when the row
+  is tapped so the phone's back closes it, replaced when the dashboard sent
+  `?mode=quick` so back leaves to the dashboard). Closing keeps the draft;
+  the row then shows the question as its title with a pencil, or "write the
+  question" while blank. The advanced card carries a live summary line and
+  folds three groups: lesson steps (presets + plan editor + rounds), students
+  (names, device), look and world (village/classic + navigation + colours).
+  `classChoice` defaults to the route class, else the only class, else
+  `'none'` when the teacher has no school (so a guest teacher's button is live
+  at once); "no class" is never highlighted by default otherwise.
 - **Dashboard** (`TeacherHome.ts`): live-lesson banners first, a dismissable
   first-run strip (`localStorage agora.teacher.firstRunDismissed`), scenario rows
   navigate straight to `/teach/start?topic=`, past lessons name the scenario.

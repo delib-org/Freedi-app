@@ -35,9 +35,15 @@ try {
 	await teacher.waitForTimeout(1500);
 	await teacher.goto(`${VITE_HOST}/#!/teach/start`, { waitUntil: 'domcontentloaded' });
 	await teacher.waitForSelector('.scenario-list', { timeout: 30_000 });
+	// "My own question" opens its own sheet; the question is written there
 	await teacher.locator('.scenario-row--own .scenario-row__use').click();
-	// The plan editor waits behind "advanced settings" now
+	await teacher.waitForSelector('.question-sheet__question', { timeout: 10_000 });
+	await teacher.locator('.question-sheet__question').fill('מה נעשה בטיול השנתי?');
+	await teacher.locator('.question-sheet__continue').click();
+	await teacher.waitForSelector('.scenario-row--question-set', { timeout: 10_000 });
+	// The plan editor waits behind "advanced settings" → "lesson steps"
 	await teacher.locator('.start-game__advanced-summary').click();
+	await teacher.locator('.start-game__group-head').first().click();
 	await teacher.waitForSelector('.plan-editor', { timeout: 10_000 });
 	await teacher.waitForTimeout(300);
 	// The quick default is the WizCol plan now (no question item); this script

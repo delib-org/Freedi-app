@@ -1001,17 +1001,87 @@
 				<button class="teacher-peek__summary" type="button" aria-expanded="false"><span class="teacher-peek__label">מה התלמידים רואים</span><span class="teacher-peek__preview">המטרה · ההקשבה היא העבודה</span></button>
 			</div>
 
-			<h2>the start form — class chips, the summary line, the advanced fold</h2>
+			<h2>the start form — class chips, the own-question row in both states, the advanced fold and its groups</h2>
 			<div class="start-game__class-row" role="radiogroup">
 				<button class="start-game__class-chip" type="button" role="radio" aria-checked="false">ח'4</button>
 				<button class="start-game__class-chip start-game__class-chip--on" type="button" role="radio" aria-checked="true">ז'2</button>
 				<button class="start-game__class-chip start-game__class-chip--new" type="button" role="radio" aria-checked="false">+ כיתה חדשה</button>
 				<button class="start-game__class-chip start-game__class-chip--none" type="button" role="radio" aria-checked="false">בלי כיתה</button>
 			</div>
-			<p class="start-game__summary">שיעור מלא · 8 שלבים · שמות בדויים — <button class="start-game__change" type="button">לשנות</button></p>
+			<ul class="scenario-list" role="radiogroup">
+				<li class="scenario-row scenario-row--own scenario-row--chosen scenario-row--question-empty">
+					<button class="scenario-row__use" type="button" role="radio" aria-checked="true">
+						<span class="scenario-row__tile"></span>
+						<span class="scenario-row__text">
+							<span class="scenario-row__title">שאלה משלי</span>
+							<span class="scenario-row__meta"><span class="scenario-row__sub scenario-row__sub--write">כתבו את השאלה</span></span>
+						</span>
+					</button>
+					<button class="scenario-row__edit" type="button" aria-label="עריכת השאלה"></button>
+				</li>
+				<li class="scenario-row scenario-row--own scenario-row--chosen scenario-row--question-set">
+					<button class="scenario-row__use" type="button" role="radio" aria-checked="true">
+						<span class="scenario-row__tile"></span>
+						<span class="scenario-row__text">
+							<span class="scenario-row__title scenario-row__title--question">מה עושים עם זה שכל תלמיד רוצה טמפרטורה אחרת במזגן?</span>
+							<span class="scenario-row__meta"><span class="scenario-row__sub">שם: פתרון בעיית המזגן</span></span>
+						</span>
+					</button>
+					<button class="scenario-row__edit" type="button" aria-label="עריכת השאלה"></button>
+				</li>
+			</ul>
 			<div class="card start-game__advanced">
-				<button class="start-game__advanced-summary" type="button" aria-expanded="false">הגדרות מתקדמות</button>
-				<p class="start-game__advanced-hint">לשיעור הראשון לא צריך לגעת כאן.</p>
+				<button class="start-game__advanced-summary" type="button" aria-expanded="true">
+					<span class="start-game__advanced-text">
+						<span class="start-game__advanced-label">הגדרות מתקדמות</span>
+						<span class="start-game__advanced-meta">8 שלבים · שמות בדויים · כל תלמיד בטלפון שלו · כפר · ממתקים</span>
+					</span>
+				</button>
+				<div class="collapsible">
+					<div class="start-game__groups">
+						<p class="start-game__advanced-hint">לשיעור הראשון לא צריך לגעת כאן.</p>
+						<div class="start-game__group">
+							<button class="start-game__group-head" type="button" aria-expanded="false">
+								<span class="start-game__group-text">
+									<span class="start-game__group-title">מהלך השיעור</span>
+									<span class="start-game__group-meta">8 שלבים</span>
+								</span>
+							</button>
+						</div>
+						<div class="start-game__group">
+							<button class="start-game__group-head" type="button" aria-expanded="true">
+								<span class="start-game__group-text">
+									<span class="start-game__group-title">התלמידים</span>
+									<span class="start-game__group-meta">שמות בדויים · כל תלמיד בטלפון שלו</span>
+								</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<h2>the question sheet — the teacher's own question on its own surface</h2>
+			<div class="question-sheet" style="position: relative; inset: auto; z-index: auto; padding: 0">
+				<div class="question-sheet__dialog" role="dialog">
+					<header class="question-sheet__head">
+						<h2 class="question-sheet__title">השאלה</h2>
+						<button class="question-sheet__close" type="button" aria-label="סגירה">✕</button>
+					</header>
+					<div class="question-sheet__body">
+						<p class="question-sheet__hint">שאלה אחת, פתוחה, שהכיתה יכולה להציע לה תשובות.</p>
+						<label class="start-game__field">
+							<span class="start-game__field-label">השאלה הראשית<span class="question-sheet__required"> *</span></span>
+							<textarea class="text-input question-sheet__question" rows="3" aria-invalid="true">מה עושים עם זה שכל תלמיד רוצה טמפרטורה אחרת במזגן?</textarea>
+						</label>
+						<p class="question-sheet__error">כתבו את השאלה כדי להמשיך.</p>
+						<p class="question-sheet__count">נשארו 12 תווים</p>
+						<span class="question-sheet__field-hint">אם משאירים ריק, השם נלקח מהשאלה.</span>
+					</div>
+					<footer class="question-sheet__foot">
+						<button class="btn btn--secondary question-sheet__cancel" type="button">ביטול</button>
+						<button class="btn btn--primary btn--lg question-sheet__continue" type="button">המשך</button>
+					</footer>
+				</div>
 			</div>
 
 			<h2>the dashboard — live banner, first-run strip, a past lesson's score</h2>

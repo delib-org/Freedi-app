@@ -345,29 +345,6 @@
 		margin-block-start: var(--space-sm);
 	}
 
-	// What the defaults add up to, in one line, with the one way to change them
-	&__summary {
-		text-align: center;
-		font-size: var(--font-size-sm);
-		color: var(--text-secondary);
-		margin: 0;
-	}
-
-	&__change {
-		background: none;
-		border: 0;
-		padding: 0;
-		font: inherit;
-		color: var(--mine-ink);
-		text-decoration: underline;
-		cursor: pointer;
-
-		&:focus-visible {
-			outline: 2px solid var(--lantern-glow);
-			outline-offset: 2px;
-		}
-	}
-
 	// --- the advanced fold: a quieter card than the form above it ---
 	&__advanced {
 		box-shadow: none;
@@ -407,9 +384,29 @@
 		}
 	}
 
-	&__advanced-label {
+	&__advanced-text {
 		flex: 1 1 auto;
 		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__advanced-label {
+		min-inline-size: 0;
+	}
+
+	// What the defaults add up to, in one muted line under the label, so
+	// nobody has to open the fold to find out what a lesson will be
+	&__advanced-meta,
+	&__group-meta {
+		font-family: var(--font-body);
+		font-weight: 400;
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	// The chevron: the arrow icon turned to point down, and up once open
@@ -431,9 +428,79 @@
 		color: var(--text-muted);
 	}
 
-	// The open body sits under the hint; the fold animates its own height
+	// The open body: the hint, then the three groups. The fold animates its own height
 	&__advanced > .collapsible {
-		padding-block-start: var(--space-lg);
+		padding-block-start: var(--space-sm);
+	}
+
+	&__groups {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	// --- the three groups inside the fold: steps, students, look ---
+	// Each one a quiet disclosure row under a hairline; open, its body sits
+	// indented under the head.
+	&__group {
+		border-block-start: 1px solid var(--border-subtle);
+		padding-block-start: var(--space-xs);
+	}
+
+	&__group-head {
+		inline-size: 100%;
+		min-block-size: 44px;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		background: transparent;
+		border: 0;
+		padding: var(--space-xs) 0;
+		text-align: start;
+		font: inherit;
+		color: var(--text-primary);
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+
+		&:hover {
+			color: var(--mine-ink);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	&__group-text {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__group-title {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-base);
+	}
+
+	&__group-chevron {
+		flex: 0 0 auto;
+		display: inline-flex;
+		color: var(--text-muted);
+		transform: rotate(var(--chevron-closed));
+		transition: transform var(--motion-base) var(--ease-camera);
+
+		&--open {
+			transform: rotate(var(--chevron-open));
+		}
+	}
+
+	&__group-body {
+		padding-block: var(--space-sm) var(--space-md);
+		gap: var(--space-lg);
 	}
 
 	// The round knobs, no longer inside their own card
@@ -687,8 +754,24 @@
 		}
 	}
 
-	&__settings {
+	&__settings,
+	&__edit {
 		@extend %agora-icon-button;
+	}
+
+	// The teacher's own question, once written, IS the row's title: it may
+	// run to two lines, where a scenario's name runs to one
+	&__title--question {
+		white-space: normal;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+	}
+
+	// Chosen but still blank: the sub is the one thing left to do
+	&__sub--write {
+		color: var(--mine-ink);
+		font-weight: 700;
 	}
 
 	// "שאלה משלי" — the last row, one question and no scenario. Its tile is

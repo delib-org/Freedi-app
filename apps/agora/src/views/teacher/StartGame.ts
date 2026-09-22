@@ -13,6 +13,7 @@ import { ClassForm, type ClassFormValue } from '../../components/ClassForm';
 import { Collapsible } from '../../components/Collapsible';
 import { Icon } from '../../components/Icon';
 import { StagePlanEditor } from './StagePlanEditor';
+import { QuestionSheet, type QuestionDraft } from './QuestionSheet';
 import { lookDots, PRESET_SEEDS } from '../../components/LookPicker';
 import {
 	AGORA_DEFAULT_THEME,
@@ -25,7 +26,6 @@ import {
 	AgoraStagePlanItem,
 	AgoraTopicPackage,
 	AgoraTopicStatus,
-	AGORA_STAGE_PLAN,
 	resolveSessionFlow,
 	stagePlanPreset,
 	topicStagePlan,
@@ -35,24 +35,32 @@ import { TeacherNav } from '../../components/TeacherNav';
 import { countedSteps } from '../../lib/teacherSteps';
 
 type GameMode = 'scenario' | 'quick';
+type AdvancedGroup = 'steps' | 'students' | 'look';
 
 /** The scenario list's last row: no scenario, the teacher's own question */
 const OWN_QUESTION = '__own__';
 /** How much of the question becomes the game's name when none was typed */
 const NAME_FROM_QUESTION = 40;
+/** The route: the sheet is open while this query param is set */
+const ROUTE = '/teach/start';
+const QUESTION_PARAM = 'question';
+
+const EMPTY_DRAFT: QuestionDraft = { question: '', title: '', explanation: '' };
 
 /**
  * Start a lesson — a three-line form.
  *
  * What are we playing (a scenario, or the teacher's own question), which
  * class, and the button. That is the whole of a first lesson; the rest —
- * the steps, the names, the devices, the colours, the rounds — is already
- * set to the usual game and waits under "advanced settings", where a teacher
- * on their tenth lesson will find it.
+ * the steps, the students, the look — is already set to the usual game and
+ * waits, folded, under "advanced settings", where a teacher on their tenth
+ * lesson will find it.
  *
- * The page used to open with a mode toggle, a stage plan of eleven rows and
- * six more choices before a button 2,000px down. One of those choices was
- * required.
+ * The teacher's own question is written on its own sheet (`?question=1`):
+ * a full screen on a phone, a dialog on a laptop. It used to be a form
+ * wedged between the scenario list and the class chips, with the stage plan
+ * open under it; the one required field on this path was the least
+ * anchored thing on the page.
  */
 export function StartGame(): m.Component {
 	let topics: AgoraTopicPackage[] = [];
@@ -75,8 +83,8 @@ export function StartGame(): m.Component {
 	let createFailed = false;
 	let world: 'village' | 'classic' = 'village';
 	let villageNavigation: 'teacher' | 'free' = 'teacher';
-	let advancedOpen = true;
-	let moreOpen = false;
+	let advancedOpen = false;
+	const groupOpen: Record<AdvancedGroup, boolean> = { steps: false, students: false, look: false };
 
 	// Auth settles in two beats — anonymous first, the teacher's Google account
 	// a moment later. Reading the library on the first beat left this screen
@@ -84,9 +92,14 @@ export function StartGame(): m.Component {
 	let loadedForUid: string | null = null;
 	let refilling = false;
 
-	let quickTitle = '';
-	let quickQuestion = '';
-	let quickExplanation = '';
+	/** The teacher's own question. Memory only — nothing is saved until the lesson opens. */
+	let quick: QuestionDraft = EMPTY_DRAFT;
+	/** The sheet was pushed onto history by this screen, so closing it is a step back */
+	let pushedQuestion = false;
+	/** Arriving with ?mode=quick opens the sheet once, not on every redraw */
+	let autoOpened = false;
+	/** After the sheet closes, focus goes back to the row that opened it */
+	let focusRowAfterClose = false;
 
 	const defaults = resolveSessionFlow({ sessionMode: AgoraSessionMode.classroom });
 	let rounds = defaults.rounds;
@@ -102,6 +115,42 @@ export function StartGame(): m.Component {
 
 	function planKey(): string {
 		return mode() === 'quick' ? 'quick' : (chosenId ?? 'scenario');
+	}
+
+	function questionOpen(): boolean {
+		return m.route.param(QUESTION_PARAM) === '1';
+	}
+
+	/** The route's query, without the sheet's own flag */
+	function routeParams(): Record<string, string> {
+		const params: Record<string, string> = { ...m.route.param() };
+		delete params[QUESTION_PARAM];
+
+		return params;
+	}
+
+	/**
+	 * Open the sheet by setting the flag on the same route. Pushed when the
+	 * teacher tapped the row (so the phone's back closes it); replaced when
+	 * the dashboard sent us straight here (so back leaves to the dashboard,
+	 * never to a sheet-less copy of this screen).
+	 */
+	function openQuestion(options: { replace: boolean }): void {
+		chosenId = OWN_QUESTION;
+		pushedQuestion = !options.replace;
+		m.route.set(ROUTE, { ...routeParams(), [QUESTION_PARAM]: '1' }, { replace: options.replace });
+	}
+
+	/** Close and keep the draft. The row that opened the sheet takes the focus back. */
+	function closeQuestion(): void {
+		focusRowAfterClose = true;
+		if (pushedQuestion) {
+			pushedQuestion = false;
+			window.history.back();
+
+			return;
+		}
+		m.route.set(ROUTE, routeParams(), { replace: true });
 	}
 
 	async function load(): Promise<void> {
@@ -147,6 +196,12 @@ export function StartGame(): m.Component {
 				chosenId = carried.topicPackageId;
 			} else if (m.route.param('mode') === 'quick' || topics.length === 0) {
 				chosenId = OWN_QUESTION;
+				// The dashboard's "my own question" row means "write the question":
+				// land on the sheet, not on a picker that already has the answer
+				if (!autoOpened && !questionOpen() && !quick.question.trim()) {
+					autoOpened = true;
+					openQuestion({ replace: true });
+				}
 			} else if (topics.length === 1) {
 				chosenId = topics[0].topicPackageId;
 			}
@@ -188,22 +243,24 @@ export function StartGame(): m.Component {
 		return rounds !== defaults.rounds ? { rounds } : undefined;
 	}
 
-	/** The game's name: what was typed, or the start of the question */
-	function gameTitle(): string {
-		const typed = quickTitle.trim();
-		if (typed) return typed;
-		const question = quickQuestion.trim();
+	/** The game's name: the start of the question, unless one was typed */
+	function derivedTitle(): string {
+		const question = quick.question.trim();
 
 		return question.length > NAME_FROM_QUESTION
 			? `${question.slice(0, NAME_FROM_QUESTION).trimEnd()}…`
 			: question;
 	}
 
+	function gameTitle(): string {
+		return quick.title.trim() || derivedTitle();
+	}
+
 	function canCreate(): boolean {
 		if (creating || chosenId === null || classChoice === null) return false;
 		const plan = plans[planKey()];
 		if (validateStagePlan(plan, { hasCharacters: mode() === 'scenario' }).length > 0) return false;
-		if (mode() === 'quick') return quickQuestion.trim().length > 0;
+		if (mode() === 'quick') return quick.question.trim().length > 0;
 
 		return true;
 	}
@@ -215,14 +272,15 @@ export function StartGame(): m.Component {
 		m.redraw();
 		try {
 			const flow = changedFlow();
+			const explanation = quick.explanation.trim();
 			const result = await createSession({
 				...(mode() === 'scenario'
 					? { topicPackageId: chosenId as string }
 					: {
 							quick: {
 								title: gameTitle(),
-								mainQuestion: quickQuestion.trim(),
-								...(quickExplanation.trim() ? { explanation: quickExplanation.trim() } : {}),
+								mainQuestion: quick.question.trim(),
+								...(explanation ? { explanation } : {}),
 								language: getLang(),
 							},
 						}),
@@ -257,36 +315,6 @@ export function StartGame(): m.Component {
 			label,
 		);
 
-	function textField(
-		label: string,
-		value: string,
-		placeholder: string,
-		maxlength: number,
-		oninput: (next: string) => void,
-		options: { rows?: number; autofocus?: boolean } = {},
-	): m.Children {
-		return m('label.start-game__field', [
-			m('span.start-game__field-label', label),
-			options.rows
-				? m('textarea.text-input', {
-						value,
-						rows: options.rows,
-						maxlength,
-						placeholder,
-						oncreate: options.autofocus
-							? ({ dom }: m.VnodeDOM) => (dom as HTMLTextAreaElement).focus()
-							: undefined,
-						oninput: (event: InputEvent) => oninput((event.target as HTMLTextAreaElement).value),
-					})
-				: m('input.text-input[type=text]', {
-						value,
-						maxlength,
-						placeholder,
-						oninput: (event: InputEvent) => oninput((event.target as HTMLInputElement).value),
-					}),
-		]);
-	}
-
 	/** One row of the "what are we playing" list */
 	function scenarioRow(topic: AgoraTopicPackage): m.Children {
 		const chosen = chosenId === topic.topicPackageId;
@@ -315,89 +343,78 @@ export function StartGame(): m.Component {
 		);
 	}
 
+	/**
+	 * The teacher's own question, in three states: not chosen; chosen and
+	 * still blank ("write the question"); chosen and written, showing the
+	 * question as the row's title. Tapping the row opens the sheet either
+	 * way; the pencil is the same door for a mouse or a screen reader.
+	 */
 	function ownQuestionRow(): m.Children {
 		const chosen = chosenId === OWN_QUESTION;
+		const question = quick.question.trim();
+		const written = question.length > 0;
+		const name = quick.title.trim();
 
 		return m(
 			'li.scenario-row.scenario-row--own',
-			{ key: OWN_QUESTION, class: chosen ? 'scenario-row--chosen' : undefined },
-			m(
-				'button.scenario-row__use',
-				{
-					type: 'button',
-					role: 'radio',
-					'aria-checked': chosen ? 'true' : 'false',
-					onclick: () => {
-						chosenId = OWN_QUESTION;
-					},
-				},
-				[
-					m('span.scenario-row__tile', m(Icon, { name: chosen ? 'check' : 'new', size: 22 })),
-					m('span.scenario-row__text', [
-						m('span.scenario-row__title', t('startGame.mode_quick')),
-						m(
-							'span.scenario-row__meta',
-							m('span.scenario-row__sub', t('startGame.mode_quick_hint')),
-						),
-					]),
-				],
-			),
-		);
-	}
-
-	/** The question, and — behind "more" — the name and the explanation */
-	function ownQuestionFields(): m.Children {
-		return m(
-			Collapsible,
-			m('.stack.start-game__own', [
-				textField(
-					t('startGame.quick_question'),
-					quickQuestion,
-					t('startGame.quick_question_ph'),
-					AGORA_STAGE_PLAN.MAX_TITLE_LENGTH,
-					(next) => {
-						quickQuestion = next;
-					},
-					{ rows: 2, autofocus: true },
-				),
+			{
+				key: OWN_QUESTION,
+				class: [
+					chosen ? 'scenario-row--chosen' : '',
+					chosen && !written ? 'scenario-row--question-empty' : '',
+					written ? 'scenario-row--question-set' : '',
+				]
+					.join(' ')
+					.trim(),
+			},
+			[
 				m(
-					'button.btn.btn--ghost.btn--sm.start-game__more',
+					'button.scenario-row__use',
 					{
 						type: 'button',
-						'aria-expanded': String(moreOpen),
-						onclick: () => {
-							moreOpen = !moreOpen;
-						},
+						role: 'radio',
+						'aria-checked': chosen ? 'true' : 'false',
+						onclick: () => openQuestion({ replace: false }),
 					},
-					t('startGame.more'),
+					[
+						m('span.scenario-row__tile', m(Icon, { name: chosen ? 'check' : 'new', size: 22 })),
+						m('span.scenario-row__text', [
+							// AT hears "my own question: <the question>"; the eye sees the question
+							written
+								? [
+										m('span.sr-only', `${t('startGame.mode_quick')}: `),
+										m('span.scenario-row__title.scenario-row__title--question', question),
+									]
+								: m('span.scenario-row__title', t('startGame.mode_quick')),
+							m(
+								'span.scenario-row__meta',
+								written
+									? name
+										? m('span.scenario-row__sub', t('startGame.question_name_line', { name }))
+										: null
+									: chosen
+										? m(
+												'span.scenario-row__sub.scenario-row__sub--write',
+												t('startGame.question_write'),
+											)
+										: m('span.scenario-row__sub', t('startGame.mode_quick_hint')),
+							),
+						]),
+					],
 				),
-				moreOpen
+				chosen
 					? m(
-							Collapsible,
-							m('.stack', [
-								textField(
-									t('startGame.quick_title'),
-									quickTitle,
-									t('startGame.quick_title_ph'),
-									AGORA_STAGE_PLAN.MAX_TITLE_LENGTH,
-									(next) => {
-										quickTitle = next;
-									},
-								),
-								textField(
-									t('startGame.quick_explanation'),
-									quickExplanation,
-									t('startGame.quick_explanation_ph'),
-									AGORA_STAGE_PLAN.MAX_EXPLANATION_LENGTH,
-									(next) => {
-										quickExplanation = next;
-									},
-									{ rows: 3 },
-								),
-							]),
+							'button.scenario-row__edit',
+							{
+								type: 'button',
+								'aria-label': t('startGame.question_edit'),
+								title: t('startGame.question_edit'),
+								onclick: () => openQuestion({ replace: false }),
+							},
+							m(Icon, { name: 'edit', size: 20 }),
 						)
 					: null,
-			]),
+			],
 		);
 	}
 
@@ -481,42 +498,220 @@ export function StartGame(): m.Component {
 		]);
 	}
 
-	/** What the advanced settings currently say, in one muted line */
-	function summaryLine(): m.Children {
-		const parts = [
-			t('startGame.summary_steps', { n: countedSteps(plans[planKey()]).length }),
+	// --- the advanced fold: three groups, each with a one-line summary ---
+
+	function stepsSummary(): string {
+		return t('startGame.summary_steps', { n: countedSteps(plans[planKey()]).length });
+	}
+
+	function studentsSummary(): string {
+		return [
 			t(identity === 'named' ? 'startGame.identity_named' : 'startGame.identity_pseudonym'),
 			t(
 				deviceMode === AgoraDeviceMode.team
 					? 'startGame.summary_team'
 					: 'startGame.summary_individual',
 			),
-		];
+		].join(' · ');
+	}
 
-		return m('p.start-game__summary', [
-			`${parts.join(' · ')} — `,
+	function lookSummary(): string {
+		return [
+			t(
+				world === 'village' ? 'startGame.summary_world_village' : 'startGame.summary_world_classic',
+			),
+			t(`look.${look}`),
+		].join(' · ');
+	}
+
+	/** A quiet disclosure row inside the advanced card */
+	function group(
+		key: AdvancedGroup,
+		title: string,
+		summary: string,
+		body: () => m.Children,
+	): m.Children {
+		const open = groupOpen[key];
+		const bodyId = `start-game-group-${key}`;
+
+		return m('.start-game__group', [
 			m(
-				'button.start-game__change',
+				'button.start-game__group-head',
 				{
 					type: 'button',
+					'aria-expanded': String(open),
+					'aria-controls': bodyId,
 					onclick: () => {
-						advancedOpen = true;
-						window.setTimeout(() => {
-							const card = document.querySelector<HTMLElement>('.start-game__advanced');
-							const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-							card?.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
-							card?.querySelector<HTMLElement>('.start-game__advanced-summary')?.focus();
-						}, 0);
+						groupOpen[key] = !open;
 					},
 				},
-				t('startGame.change'),
+				[
+					m('span.start-game__group-text', [
+						m('span.start-game__group-title', title),
+						m('span.start-game__group-meta', summary),
+					]),
+					m(
+						'span.start-game__group-chevron',
+						{ class: open ? 'start-game__group-chevron--open' : undefined, 'aria-hidden': 'true' },
+						m(Icon, { name: 'arrow', size: 16 }),
+					),
+				],
 			),
+			open ? m(Collapsible, m('.start-game__group-body.stack', { id: bodyId }, body())) : null,
+		]);
+	}
+
+	/** How the lesson runs: the steps, and how many rounds the discussion takes */
+	function stepsGroup(): m.Children {
+		return group('steps', t('startGame.plan_title'), stepsSummary(), () => [
+			m(StagePlanEditor, {
+				items: plans[planKey()],
+				hasCharacters: mode() === 'scenario',
+				frozenCount: 0,
+				showPresets: true,
+				onChange: (items) => {
+					plans = { ...plans, [planKey()]: items };
+				},
+			}),
+			m('p.home-explanation.home-explanation--start', t('startGame.plan_hint')),
+			m('.start-game__knob', [
+				m('span.start-game__knob-label', t('startGame.knob_rounds')),
+				m('.start-game__stepper', [
+					m(
+						'button.btn.btn--sm.btn--secondary',
+						{
+							type: 'button',
+							disabled: rounds <= 1,
+							onclick: () => {
+								rounds -= 1;
+							},
+						},
+						'−',
+					),
+					m('span.start-game__stepper-value', String(rounds)),
+					m(
+						'button.btn.btn--sm.btn--secondary',
+						{
+							type: 'button',
+							disabled: rounds >= defaults.rounds,
+							onclick: () => {
+								rounds += 1;
+							},
+						},
+						'+',
+					),
+				]),
+			]),
+			m('p.home-explanation.home-explanation--start', t('startGame.knobs_hint')),
+		]);
+	}
+
+	/** Who the students are to each other, and how they hold the game */
+	function studentsGroup(): m.Children {
+		return group('students', t('startGame.group_students'), studentsSummary(), () => [
+			m('.stack', [
+				m('p.teacher__section-title', t('startGame.identity')),
+				m('.teacher__mode-row', [
+					choice(t('startGame.identity_pseudonym'), identity === 'pseudonym', () => {
+						identity = 'pseudonym';
+					}),
+					choice(t('startGame.identity_named'), identity === 'named', () => {
+						identity = 'named';
+					}),
+				]),
+				m(
+					'p.home-explanation.home-explanation--start',
+					t(identity === 'named' ? 'startGame.identity_named_hint' : 'startGame.identity_hint'),
+				),
+				// The teacher's own list: who is behind each pseudonym. Never on a
+				// card, never to a classmate — see lib/flows/joinName.
+				m('label.voting-settings__row', [
+					m('input[type=checkbox]', {
+						checked: collectRealNames,
+						onchange: (event: Event) => {
+							collectRealNames = (event.target as HTMLInputElement).checked;
+						},
+					}),
+					m('span', t('startGame.collect_names')),
+				]),
+				m('p.home-explanation.home-explanation--start', t('startGame.collect_names_hint')),
+			]),
+			m('.stack', [
+				m('p.teacher__section-title', t('teacher.device_mode')),
+				m('.teacher__mode-row', [
+					choice(t('teacher.individual'), deviceMode === AgoraDeviceMode.individual, () => {
+						deviceMode = AgoraDeviceMode.individual;
+					}),
+					choice(t('teacher.team'), deviceMode === AgoraDeviceMode.team, () => {
+						deviceMode = AgoraDeviceMode.team;
+					}),
+				]),
+			]),
+		]);
+	}
+
+	/** What the students see: the world, who moves them through it, the colours */
+	function lookGroup(): m.Children {
+		return group('look', t('startGame.group_look'), lookSummary(), () => [
+			m('.stack', [
+				m('p.teacher__section-title', t('startGame.world_title')),
+				m('.teacher__mode-row', { role: 'group', 'aria-label': t('startGame.world_title') }, [
+					choice(t('startGame.world_village'), world === 'village', () => {
+						world = 'village';
+					}),
+					choice(t('startGame.world_classic'), world === 'classic', () => {
+						world = 'classic';
+					}),
+				]),
+				m('p.home-explanation.home-explanation--start', t('startGame.world_hint')),
+			]),
+			world === 'village'
+				? m('.stack.village-nav', [
+						m('p.teacher__section-title', t('village.nav_title')),
+						m('.teacher__mode-row', { role: 'group', 'aria-label': t('village.nav_title') }, [
+							choice(t('village.nav_teacher'), villageNavigation === 'teacher', () => {
+								villageNavigation = 'teacher';
+							}),
+							choice(t('village.nav_free'), villageNavigation === 'free', () => {
+								villageNavigation = 'free';
+							}),
+						]),
+						m(
+							'p.home-explanation.home-explanation--start',
+							t(
+								villageNavigation === 'free' ? 'village.nav_free_hint' : 'village.nav_teacher_hint',
+							),
+						),
+					])
+				: null,
+			// The room's colours — the default; each student may still pick
+			// their own, or build one, and the class list grows from that
+			m('.stack.teacher-look', [
+				m('p.teacher__section-title', t('startGame.look')),
+				m(
+					'.teacher__mode-row',
+					AGORA_THEME_PRESETS.map((preset) =>
+						m(
+							'button.btn',
+							{
+								key: preset,
+								type: 'button',
+								class: look === preset ? 'btn--primary' : 'btn--secondary',
+								'aria-pressed': look === preset ? 'true' : 'false',
+								onclick: () => {
+									look = preset;
+								},
+							},
+							[lookDots(PRESET_SEEDS[preset]), ' ', t(`look.${preset}`)],
+						),
+					),
+				),
+				m('p.home-explanation.home-explanation--start', t('startGame.look_hint')),
+			]),
 		]);
 	}
 
 	function advancedCard(): m.Children {
-		const current = mode();
-
 		return m('.card.start-game__advanced', [
 			m(
 				'button.start-game__advanced-summary',
@@ -530,7 +725,14 @@ export function StartGame(): m.Component {
 				},
 				[
 					m(Icon, { name: 'cog', size: 20 }),
-					m('span.start-game__advanced-label', t('startGame.advanced')),
+					m('span.start-game__advanced-text', [
+						m('span.start-game__advanced-label', t('startGame.advanced')),
+						// What the defaults add up to, so nobody opens the fold to find out
+						m(
+							'span.start-game__advanced-meta',
+							[stepsSummary(), studentsSummary(), lookSummary()].join(' · '),
+						),
+					]),
 					m(
 						'span.start-game__advanced-chevron',
 						{ class: advancedOpen ? 'start-game__advanced-chevron--open' : undefined },
@@ -538,129 +740,14 @@ export function StartGame(): m.Component {
 					),
 				],
 			),
-			m('p.start-game__advanced-hint', t('startGame.advanced_hint')),
 			advancedOpen
 				? m(
 						Collapsible,
-						m('#start-game-advanced.stack', { style: { gap: 'var(--space-lg)' } }, [
-							// The steps
-							m('.stack', [
-								m('p.teacher__section-title', t('startGame.plan_title')),
-								m(StagePlanEditor, {
-									items: plans[planKey()],
-									hasCharacters: current === 'scenario',
-									frozenCount: 0,
-									showPresets: true,
-									onChange: (items) => {
-										plans = { ...plans, [planKey()]: items };
-									},
-								}),
-								m('p.home-explanation.home-explanation--start', t('startGame.plan_hint')),
-							]),
-
-							// Who people are to each other
-							m('.stack', [
-								m('p.teacher__section-title', t('startGame.identity')),
-								m('.teacher__mode-row', [
-									choice(t('startGame.identity_pseudonym'), identity === 'pseudonym', () => {
-										identity = 'pseudonym';
-									}),
-									choice(t('startGame.identity_named'), identity === 'named', () => {
-										identity = 'named';
-									}),
-								]),
-								m(
-									'p.home-explanation.home-explanation--start',
-									t(
-										identity === 'named'
-											? 'startGame.identity_named_hint'
-											: 'startGame.identity_hint',
-									),
-								),
-								// The teacher's own list: who is behind each pseudonym. Never on a
-								// card, never to a classmate — see lib/flows/joinName.
-								m('label.voting-settings__row', [
-									m('input[type=checkbox]', {
-										checked: collectRealNames,
-										onchange: (event: Event) => {
-											collectRealNames = (event.target as HTMLInputElement).checked;
-										},
-									}),
-									m('span', t('startGame.collect_names')),
-								]),
-								m('p.home-explanation.home-explanation--start', t('startGame.collect_names_hint')),
-							]),
-
-							// How the class holds the game
-							m('.stack', [
-								m('p.teacher__section-title', t('teacher.device_mode')),
-								m('.teacher__mode-row', [
-									choice(t('teacher.individual'), deviceMode === AgoraDeviceMode.individual, () => {
-										deviceMode = AgoraDeviceMode.individual;
-									}),
-									choice(t('teacher.team'), deviceMode === AgoraDeviceMode.team, () => {
-										deviceMode = AgoraDeviceMode.team;
-									}),
-								]),
-							]),
-
-							// The room's colours — the default; each student may still pick
-							// their own, or build one, and the class list grows from that
-							m('.stack.teacher-look', [
-								m('p.teacher__section-title', t('startGame.look')),
-								m(
-									'.teacher__mode-row',
-									AGORA_THEME_PRESETS.map((preset) =>
-										m(
-											'button.btn',
-											{
-												key: preset,
-												type: 'button',
-												class: look === preset ? 'btn--primary' : 'btn--secondary',
-												'aria-pressed': look === preset ? 'true' : 'false',
-												onclick: () => {
-													look = preset;
-												},
-											},
-											[lookDots(PRESET_SEEDS[preset]), ' ', t(`look.${preset}`)],
-										),
-									),
-								),
-								m('p.home-explanation.home-explanation--start', t('startGame.look_hint')),
-							]),
-
-							// How many rounds the discussion runs
-							m('.stack', [
-								m('.start-game__knob', [
-									m('span.start-game__knob-label', t('startGame.knob_rounds')),
-									m('.start-game__stepper', [
-										m(
-											'button.btn.btn--sm.btn--secondary',
-											{
-												type: 'button',
-												disabled: rounds <= 1,
-												onclick: () => {
-													rounds -= 1;
-												},
-											},
-											'−',
-										),
-										m('span.start-game__stepper-value', String(rounds)),
-										m(
-											'button.btn.btn--sm.btn--secondary',
-											{
-												type: 'button',
-												disabled: rounds >= defaults.rounds,
-												onclick: () => {
-													rounds += 1;
-												},
-											},
-											'+',
-										),
-									]),
-								]),
-								m('p.home-explanation.home-explanation--start', t('startGame.knobs_hint')),
-							]),
+						m('#start-game-advanced.start-game__groups', [
+							m('p.start-game__advanced-hint', t('startGame.advanced_hint')),
+							stepsGroup(),
+							studentsGroup(),
+							lookGroup(),
 						]),
 					)
 				: null,
@@ -670,6 +757,15 @@ export function StartGame(): m.Component {
 	void load();
 
 	return {
+		onupdate() {
+			if (!focusRowAfterClose || questionOpen()) return;
+			focusRowAfterClose = false;
+			const row =
+				document.querySelector<HTMLElement>('.scenario-row--own .scenario-row__edit') ??
+				document.querySelector<HTMLElement>('.scenario-row--own .scenario-row__use');
+			row?.focus();
+		},
+
 		view() {
 			const { tier, loading, user } = getUserState();
 			if (user && !refilling && loadedForUid !== null && loadedForUid !== user.uid) {
@@ -689,6 +785,8 @@ export function StartGame(): m.Component {
 
 				return null;
 			}
+			// The phone's back button closes the sheet without passing through closeQuestion
+			if (!questionOpen()) pushedQuestion = false;
 
 			return m('.shell', [
 				m(TeacherNav, {
@@ -703,40 +801,6 @@ export function StartGame(): m.Component {
 				m('.shell__content.start-game__form', [
 					m('p.home-explanation.home-explanation--start', t('startGame.form_hint')),
 
-					m('.card.stack', [
-						m('h2', 'איך התלמידים יחוו את המפגש?'),
-						m('p', 'הבחירה תחול על כל מי שמצטרף למפגש, גם באמצעות קוד.'),
-						m('.teacher__mode-row', { role: 'group', 'aria-label': 'ממשק התלמידים' }, [
-							choice('כפר תלת־מימדי', world === 'village', () => {
-								world = 'village';
-							}),
-							choice('הממשק הקלאסי', world === 'classic', () => {
-								world = 'classic';
-							}),
-						]),
-						world === 'village'
-							? m('.stack.village-nav', [
-									m('p.teacher__section-title', t('village.nav_title')),
-									m('.teacher__mode-row', { role: 'group', 'aria-label': t('village.nav_title') }, [
-										choice(t('village.nav_teacher'), villageNavigation === 'teacher', () => {
-											villageNavigation = 'teacher';
-										}),
-										choice(t('village.nav_free'), villageNavigation === 'free', () => {
-											villageNavigation = 'free';
-										}),
-									]),
-									m(
-										'p',
-										t(
-											villageNavigation === 'free'
-												? 'village.nav_free_hint'
-												: 'village.nav_teacher_hint',
-										),
-									),
-								])
-							: null,
-					]),
-
 					// 1. What are we playing?
 					m('.stack', [
 						m('p.teacher__section-title', t('startGame.what')),
@@ -744,13 +808,13 @@ export function StartGame(): m.Component {
 							...topics.map(scenarioRow),
 							ownQuestionRow(),
 						]),
-						chosenId === OWN_QUESTION ? ownQuestionFields() : null,
 					]),
 
 					// 2. Which class?
 					classLine(),
 
-					world === 'village' ? advancedCard() : null,
+					// Everything already set, folded — and always above the button
+					advancedCard(),
 
 					// 3. The button
 					createFailed ? m('p.join__error', t('common.error')) : null,
@@ -759,10 +823,19 @@ export function StartGame(): m.Component {
 						{ type: 'button', disabled: !canCreate(), onclick: () => void handleCreate() },
 						creating ? t('teacher.creating') : t('teacher.create'),
 					),
-					summaryLine(),
-
-					world !== 'village' ? advancedCard() : null,
 				]),
+
+				questionOpen()
+					? m(QuestionSheet, {
+							draft: quick,
+							derivedTitle: derivedTitle(),
+							onChange: (next) => {
+								quick = next;
+							},
+							onContinue: closeQuestion,
+							onClose: closeQuestion,
+						})
+					: null,
 			]);
 		},
 	};
