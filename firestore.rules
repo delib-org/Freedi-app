@@ -1826,6 +1826,9 @@ service cloud.firestore {
         allow read, write: if false;
       }
     }
+    // Bookkeeping for the reJudge sweep (fingerprints + pair refusals). Written
+    // only by fn_synthesisReJudge through the Admin SDK; nothing reads it.
+    match /synthesisSweepState/{document=**} { allow read, write: if false; }
     match /agreementHandoffs/{document=**} { allow read, write: if false; }
     match /deliberationBudgets/{id=**} { allow read, write: if false; }
     match /questionDeliberations/{document=**} {
