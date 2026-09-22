@@ -1,0 +1,25 @@
+.supervise { max-inline-size: 1200px; margin-inline:auto; padding:var(--space-md); display:grid; gap:var(--space-md); }
+.supervise__controls { display:flex; flex-wrap:wrap; gap:var(--space-md); align-items:center; }
+.supervise__controls select { padding:var(--space-sm); background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-strong); border-radius:8px; font:inherit; max-inline-size:100%; }
+.supervise__notice { color:var(--text-secondary); font-size:var(--font-size-sm); line-height:1.6; }
+.supervise__table-wrap { overflow-x:auto; }
+.supervise__table { width:100%; border-collapse:collapse; text-align:start; }
+.supervise__table th, .supervise__table td { padding:var(--space-md); border-block-end:1px solid var(--border-subtle); text-align:start; }
+.supervise__spark { min-inline-size:120px; max-inline-size:180px; }
+.supervise__last { display:none; }
+.supervise__cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:var(--space-md); }
+.indicator-grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:var(--space-md); }
+.indicator-grid__item { grid-column:span 6; min-inline-size:0; }
+.indicator-grid__item--sm { grid-column:span 3; }
+.indicator-grid__item--lg { grid-column:1 / -1; }
+.indicator-grid__title { font-size:var(--font-size-base); margin:0 0 var(--space-md); }
+.indicator-grid__value { font-size:var(--font-size-2xl); font-weight:700; margin:0; font-variant-numeric:tabular-nums; }
+.chart__tick, .chart__label, .chart__note { font-size:16px; }
+.chart__tip { inset-block-start:0; inset-inline-end:0; transform:none; font-size:var(--font-size-sm); }
+.chart__legend { font-size:var(--font-size-sm); }
+.roster__graphs { margin-block:var(--space-md); }
+@media(max-width:600px) { .indicator-grid__item { grid-column:1 / -1; } .indicator-grid__item--sm { grid-column:span 6; } .supervise { padding:var(--space-md); } }
+@media(max-width:400px) { .supervise__spark .chart { display:none; } .supervise__last { display:inline; } }
+.chart__table, .chart--table .chart__table, .chart__hint, .chart__empty { font-size:var(--font-size-base); }
+.supervise__cards a { color:var(--text-primary); text-decoration:none; }
+.supervise__table a { color:var(--text-primary); }

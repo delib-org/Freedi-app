@@ -63,7 +63,7 @@ const activeMinutes: TeacherIndicator = {
 				keys: points.map((p) => p.key),
 				granularity: ctx.granularity,
 				series: [{ id: 'minutes', label, values: points.map((p) => Math.round(p.value / MS_PER_MINUTE)), slot: 2 }],
-				unit: 'min',
+				unit: labels.t('indicator.series.minutes'),
 			},
 		};
 	},

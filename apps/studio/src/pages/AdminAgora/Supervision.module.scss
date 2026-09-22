@@ -1,0 +1,8 @@
+.controls { display:flex; flex-wrap:wrap; align-items:center; gap:var(--padding); margin-block:var(--padding); }
+.tableWrap { overflow-x:auto; }
+.table { width:100%; text-align:start; border-collapse:collapse; }
+.table th,.table td { text-align:start; padding:var(--padding); border-bottom:1px solid var(--border-color); }
+.spark { min-width:120px; max-width:180px; }
+.notice { color:var(--text-body); line-height:1.6; }
+.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:var(--padding); }
+.card { border:1px solid var(--border-color); padding:var(--padding); border-radius:12px; background:var(--card-default); }

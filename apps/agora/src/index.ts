@@ -1,4 +1,10 @@
 /// <reference types="vite-plugin-pwa/client" />
+import { TeacherActivity } from './views/teacher/TeacherActivity';
+import { startUsageHeartbeat } from './lib/usageHeartbeat';
+import { SuperviseHome } from './views/supervise/SuperviseHome';
+import { SuperviseTeacher } from './views/supervise/SuperviseTeacher';
+import { SuperviseClass } from './views/supervise/SuperviseClass';
+import { SuperviseStudent } from './views/supervise/SuperviseStudent';
 import m from 'mithril';
 import { registerSW } from 'virtual:pwa-register';
 // Self-hosted so the PWA precaches them: classroom devices get the real faces
@@ -150,7 +156,12 @@ if (root) {
 		'/': Home,
 		'/join/:code': JoinSession,
 		'/play/:id': byId(GameController),
+		'/supervise': SuperviseHome,
+		'/supervise/teacher/:id': byId(SuperviseTeacher),
+		'/supervise/class/:id': byId(SuperviseClass),
+		'/supervise/student/:id': byId(SuperviseStudent),
 		'/teach': TeacherHome,
+		'/teach/activity': TeacherActivity,
 		'/teach/new': TopicWizard,
 		'/teach/start': StartGame,
 		'/teach/topic/:id': byId(TopicEditor),
@@ -166,3 +177,5 @@ if (root) {
 	m.mount(bannerHost, BootBanner);
 	markBooted();
 }
+
+startUsageHeartbeat();

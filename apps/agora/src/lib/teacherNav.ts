@@ -17,6 +17,7 @@ import { fetchTeacherDashboard, type TeacherDashboard } from './teacher';
  * that screen opens with no round trip at all.
  */
 export interface TeacherNavState {
+	canSupervise: boolean;
 	classes: TeacherDashboard['classes'];
 	/** This teacher's sessions, newest first — live and finished both */
 	sessions: readonly AgoraSession[];
@@ -31,6 +32,7 @@ export interface TeacherNavState {
 const STALE_MS = 60_000;
 
 const state: TeacherNavState = {
+	canSupervise: false,
 	classes: [],
 	sessions: [],
 	loading: false,
@@ -39,6 +41,7 @@ const state: TeacherNavState = {
 };
 
 let filledAt = 0;
+let generation = 0;
 
 export function getTeacherNavState(): Readonly<TeacherNavState> {
 	return state;
@@ -74,6 +77,7 @@ export function navClass(classId: string | undefined): TeacherNavState['classes'
 
 /** Hand the bar an answer somebody else already paid for */
 export function noteTeacherDashboard(dashboard: TeacherDashboard): void {
+	state.canSupervise = dashboard.isSystemAdmin || dashboard.supervisedSchools.length > 0;
 	state.classes = dashboard.classes;
 	state.sessions = dashboard.sessions;
 	state.loading = false;
@@ -87,15 +91,18 @@ export function loadTeacherNav(force = false): void {
 	if (state.loading) return;
 	if (!force && state.loaded && Date.now() - filledAt < STALE_MS) return;
 	state.loading = true;
+	const current = generation;
 	fetchTeacherDashboard()
 		.then((dashboard) => {
-			noteTeacherDashboard(dashboard);
+			if (current === generation) noteTeacherDashboard(dashboard);
 		})
 		.catch((error: unknown) => {
+			if (current !== generation) return;
 			console.error('[TeacherNav] Loading the teacher menu failed:', error);
 			state.failed = true;
 		})
 		.finally(() => {
+			if (current !== generation) return;
 			state.loading = false;
 			m.redraw();
 		});
@@ -103,6 +110,8 @@ export function loadTeacherNav(force = false): void {
 
 /** Forget everything — on sign-out, so the next teacher never sees the last one's classes */
 export function clearTeacherNav(): void {
+	generation++;
+	state.canSupervise = false;
 	state.classes = [];
 	state.sessions = [];
 	state.loading = false;

@@ -1,3 +1,4 @@
+import { getTeacherNavState } from '../../lib/teacherNav';
 import m from 'mithril';
 import { Icon } from '../../components/Icon';
 import { getLang, t } from '../../lib/i18n';
@@ -680,6 +681,14 @@ export function TeacherHome(): m.Component {
 					// mid-period wants back in, not a shelf. Its own fragment —
 					// keyed rows cannot share a parent with unkeyed siblings.
 					live.map(liveBanner),
+					getTeacherNavState().canSupervise
+						? m(m.route.Link, { href: '/supervise', class: 'card' }, t('supervise.title'))
+						: null,
+					m(
+						m.route.Link,
+						{ href: '/teach/activity', class: 'btn btn--ghost' },
+						t('supervise.myActivity'),
+					),
 
 					dashboardLoaded && showFirstRun ? firstRunStrip() : null,
 

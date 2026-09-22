@@ -1,3 +1,4 @@
+import { IndicatorGrid } from '../../components/IndicatorGrid';
 import m from 'mithril';
 import { getLang, t } from '../../lib/i18n';
 import { getUserState, ensureUser } from '../../lib/user';
@@ -25,6 +26,7 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 	let busyMemberId: string | null = null;
 	/** The cog: the roster is the page, the class's own settings wait behind it */
 	let settingsOpen = false;
+	let graphsOpen = false;
 	let renaming = false;
 	let savingClass = false;
 	let classError: string | null = null;
@@ -329,6 +331,11 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 				? m('.roster__drawer', [
 						career
 							? m('.roster__career', [
+									m(IndicatorGrid<'student'>, {
+										scope: 'student',
+										context: { career, classGames: detail?.aggregate?.gamesPlayed ?? 0 },
+										chartsOnly: true,
+									}),
 									m('.roster__career-grid', [
 										m('.roster__career-cell', [
 											m('span.roster__career-value', String(career.avgPointsPerGame)),
@@ -518,6 +525,34 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 							])
 						: null,
 
+					detail
+						? m(
+								'button.btn.btn--secondary.roster__graphs-toggle',
+								{
+									type: 'button',
+									'aria-expanded': graphsOpen,
+									onclick: () => {
+										graphsOpen = !graphsOpen;
+									},
+								},
+								t('roster.graphs'),
+							)
+						: null,
+					graphsOpen && detail
+						? m(
+								'.roster__graphs',
+								m(IndicatorGrid<'class'>, {
+									scope: 'class',
+									chartsOnly: true,
+									context: {
+										aggregate: detail.aggregate,
+										memberCount: members.length,
+										members,
+										careers: Object.fromEntries(detail.careers),
+									},
+								}),
+							)
+						: null,
 					m(
 						'button.btn.btn--primary.btn--full.btn--lg',
 						{ onclick: () => m.route.set(`/teach/start?classId=${classId}`) },

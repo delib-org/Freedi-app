@@ -1,3 +1,22 @@
+## 2026-09-22 — supervision and modular analytics
+
+Implementation is on `feat/agora-supervision` in the dedicated supervision
+worktree. Teacher class graphs, student drawer graphs, `/teach/activity`,
+`/supervise` school/teacher/class/student views, and Studio system/school/detail
+pages consume the shared indicator registries. Supervisor assignment and
+teacher narrowing are available on the Studio school page.
+
+Backend review fixed cross-school aggregate disclosure, permission changes
+while cached, never-played student drilldowns, late-backfill history retention,
+month-rollover heartbeat credit, and equal-timestamp backfill pagination.
+School teacher summaries use the retained 100 lesson rows and warn when that
+history is truncated. Usage is teacher-wide screen activity; lesson rows are
+school-scoped. The scope/registry invariants are recorded in CLAUDE.md.
+
+No production deployment, index creation or backfill has been performed.
+Deploy the rules/index/functions first after explicit approval, then the two
+frontends, and run backfill through Studio's historical lesson-data action.
+
 # Agora — Working Handoff
 
 **Start-here document for continuing work in a fresh chat.** Last updated
@@ -808,3 +827,19 @@ This iteration (2026-07-13/14, on `main-sign`):
   (tokens rewrite, day sky, candy-press buttons, sunny EraMap, camps →
   purple/teal, 📘/📙 icons, WCAG-verified palette)
 - `3504c7a35` removed accidentally-tracked .claude/worktrees gitlinks
+
+### Supervision verification record
+
+- Shared types: 519 tests passed; charts: 120 passed; Agora: 356 passed.
+- Backend scope/projection tests: 11 passed; supervision Firestore rules: 9 passed.
+- Emulator e2e: supervision, class-career and teacher-classes all passed.
+  Additional equal-timestamp pagination probe passed with one session per page.
+- Both app lint/typecheck/build checks passed; root typecheck/build passed.
+  Root lint is still blocked by seven existing errors in untouched files
+  (`fn_agoraSetBallotGoalOnly`, `votingStage`, `updateChosenOptions`,
+  `draftWriter`, `userUtils.test`, `agreementData.test`, `IntroductionSection`).
+- Browser: Hebrew/English at 1280 and 390 px; teacher class/drawer, supervisor
+  school/teacher/class/student/system, unauthorized entry, Studio details and
+  OS dark mode. Keyboard tooltips, Escape, table toggles and page overflow checked.
+- Contrast surface audit passed in default/candy/civic/custom; mobile type audit passed.
+- Screenshots from this run: `/private/tmp/supervision-shots/` (temporary artifacts).

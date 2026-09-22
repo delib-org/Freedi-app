@@ -1,3 +1,6 @@
+import { useSupervisorConsole } from '@/db/agoraSupervisor';
+import SchoolSupervisors from './SchoolSupervisors';
+import { TeacherRows, ClassCards, PrivacyNote } from './SupervisionSections';
 import { useMemo, useState } from 'react';
 import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { advancementSummary, type AgoraClass, type AgoraSchool } from '@freedi/shared-types';
@@ -67,7 +70,7 @@ function AssignTeacher({ agoraClass }: { agoraClass: AgoraClass }) {
  * Attached by sign-in email (resolved server-side, never stored); the list
  * shows what the school doc carries, which is uids.
  */
-function SchoolTeachers({ school }: { school: AgoraSchool }) {
+function SchoolTeachers({ school, names }: { school: AgoraSchool; names: Map<string, string> }) {
 	const { t, tWithParams } = useTranslation();
 	const [email, setEmail] = useState('');
 	const [busy, setBusy] = useState(false);
@@ -125,7 +128,7 @@ function SchoolTeachers({ school }: { school: AgoraSchool }) {
 				<ul className={styles.teacherList}>
 					{teacherIds.map((uid) => (
 						<li key={uid} className={styles.teacherRow}>
-							<code className={styles.classCode}>{uid.slice(0, 8)}…</code>
+							<span>{names.get(uid) ?? t('Teacher')}</span>
 						</li>
 					))}
 				</ul>
@@ -165,6 +168,9 @@ export default function AdminSchoolDetail() {
 	const showModal = params.get('new') === '1';
 	const denied = useGrace(!orgLoading && !isSystemAdmin);
 
+	const overview = useSupervisorConsole(
+		isSystemAdmin && schoolId ? { view: 'overview', schoolId } : null,
+	);
 	const { data: school, loading: schoolLoading } = useAgoraSchool(schoolId, isSystemAdmin);
 	const { data: classes, loading, error } = useAgoraClasses(schoolId, isSystemAdmin);
 	const { data: aggregates } = useAgoraClassAggregates(schoolId, isSystemAdmin);
@@ -207,7 +213,27 @@ export default function AdminSchoolDetail() {
 		>
 			{school.city && <p className={styles.meta}>{school.city}</p>}
 
-			<SchoolTeachers school={school} />
+			<SchoolTeachers
+				school={school}
+				names={new Map(overview.data?.school?.teachers.map((r) => [r.uid, r.name]) ?? [])}
+			/>
+			<SchoolSupervisors
+				school={school}
+				teachers={overview.data?.school?.teachers ?? []}
+				onSaved={overview.refresh}
+			/>
+			<Button text={t('Refresh')} variant="secondary" onClick={overview.refresh} />
+			{overview.data?.school?.truncated && (
+				<p>{t('History is limited to the newest 100 lessons; totals may be incomplete.')}</p>
+			)}
+			{overview.error && <p role="alert">{t('Could not load supervision data.')}</p>}
+			{overview.data?.school && (
+				<>
+					<TeacherRows rows={overview.data.school.teachers} schoolId={school.schoolId} />
+					<PrivacyNote />
+					<ClassCards rows={overview.data.school.classes} />
+				</>
+			)}
 
 			{loading && (
 				<div className={styles.skeleton} aria-hidden="true">

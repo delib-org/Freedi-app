@@ -232,6 +232,14 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 							]
 						: null,
 
+					getTeacherNavState().canSupervise
+						? row({
+								key: 'supervise',
+								icon: 'square',
+								label: t('supervise.title'),
+								route: '/supervise',
+							})
+						: null,
 					m('p.teacher-nav__section', t('nav.live_now')),
 					loading && !loaded
 						? m('.spinner')

@@ -36,7 +36,7 @@ $chart-slots: 1 2 3 4 5 6;
 	&__label,
 	&__note {
 		fill: var(--chart-text);
-		font-size: 11px;
+		font-size: 14px;
 		font-family: inherit;
 	}
 
@@ -138,7 +138,8 @@ $chart-slots: 1 2 3 4 5 6;
 		font-size: 0.75rem;
 		line-height: 1.35;
 		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-		transform: translate(-50%, calc(-100% - 8px));
+		inset-block-start: 0;
+		inset-inline-end: 0;
 
 		&-title {
 			font-weight: 600;
@@ -217,6 +218,7 @@ $chart-slots: 1 2 3 4 5 6;
 	// --- Accessible data table ------------------------------------------------
 	// Visually hidden but readable; `.chart--table` shows it instead of the SVG.
 	&__table {
+		display: block;
 		position: absolute;
 		width: 1px;
 		height: 1px;
@@ -228,7 +230,12 @@ $chart-slots: 1 2 3 4 5 6;
 		border: 0;
 	}
 
+	&--table {
+		overflow-x: auto;
+	}
+
 	&--table &__table {
+		display: table;
 		position: static;
 		width: 100%;
 		height: auto;
@@ -283,4 +290,11 @@ $chart-slots: 1 2 3 4 5 6;
 			transition: fill-opacity 120ms ease-out;
 		}
 	}
+}
+
+// Keep table controls legible under both light and dark application themes.
+.chart__table-toggle {
+	color: var(--chart-text);
+	background: var(--chart-surface);
+	border-color: var(--chart-grid);
 }

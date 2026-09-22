@@ -10,7 +10,8 @@
     "./styles/*": "./styles/*"
   },
   "dependencies": {
-    "@freedi/shared-types": "*"
+    "@freedi/shared-types": "*",
+    "valibot": "^1.0.0-rc.1"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

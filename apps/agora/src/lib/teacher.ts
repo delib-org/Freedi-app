@@ -307,6 +307,8 @@ const parseCareer = (data: unknown): AgoraStudentAggregate =>
 const parseParticipant = (data: unknown): AgoraParticipant => parse(AgoraParticipantSchema, data);
 
 export interface TeacherDashboard {
+	supervisedSchools: TeacherConsoleDashboard['supervisedSchools'];
+	isSystemAdmin: boolean;
 	classes: TeacherConsoleDashboard['classes'];
 	/** Where this teacher may open classes — empty means "ask your admin" */
 	schools: TeacherConsoleDashboard['schools'];
@@ -315,6 +317,8 @@ export interface TeacherDashboard {
 }
 
 export const EMPTY_DASHBOARD: TeacherDashboard = {
+	supervisedSchools: [],
+	isSystemAdmin: false,
 	classes: [],
 	schools: [],
 	aggregates: new Map(),
@@ -366,6 +370,8 @@ export async function fetchTeacherDashboard(): Promise<TeacherDashboard> {
 
 	return {
 		classes: data.classes ?? [],
+		supervisedSchools: data.supervisedSchools ?? [],
+		isSystemAdmin: data.isSystemAdmin ?? false,
 		schools: data.schools ?? [],
 		aggregates,
 		sessions: parseEach(data.sessions ?? [], parseSession, 'session'),

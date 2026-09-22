@@ -1,3 +1,4 @@
+import SystemTrends from './SystemTrends';
 import { useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
@@ -126,6 +127,8 @@ export default function AdminAgora() {
 				<LooksRow stats={stats} />
 			</section>
 
+			<SystemTrends />
+
 			<section aria-label={t('Schools')}>
 				<h2 className={styles.sectionTitle}>{t('Schools')}</h2>
 
@@ -154,6 +157,7 @@ export default function AdminAgora() {
 								<th scope="col">{t('School')}</th>
 								<th scope="col">{t('City')}</th>
 								<th scope="col">{t('Classes')}</th>
+								<th scope="col">{t('Supervisors')}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -164,6 +168,7 @@ export default function AdminAgora() {
 									</th>
 									<td>{school.city ?? '—'}</td>
 									<td className="stat-number">{school.classCount}</td>
+									<td>{school.supervisorIds?.length ?? 0}</td>
 								</tr>
 							))}
 						</tbody>
