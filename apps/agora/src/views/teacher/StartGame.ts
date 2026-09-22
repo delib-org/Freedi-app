@@ -159,7 +159,7 @@ export function StartGame(): m.Component {
 			loadedForUid = user.uid;
 			const [loadedTopics, dashboard] = await Promise.all([
 				listTopicPackages(user.uid),
-				fetchTeacherDashboard().catch((error: unknown) => {
+				fetchTeacherDashboard(user.uid).catch((error: unknown) => {
 					console.error('[Teacher] Loading classes failed:', error);
 
 					return EMPTY_DASHBOARD;
@@ -225,7 +225,7 @@ export function StartGame(): m.Component {
 				...(value.gradeLevel ? { gradeLevel: value.gradeLevel } : {}),
 				...(value.schoolId ? { schoolId: value.schoolId } : {}),
 			});
-			const dashboard = await fetchTeacherDashboard();
+			const dashboard = await fetchTeacherDashboard(loadedForUid ?? undefined);
 			classes = dashboard.classes;
 			schools = dashboard.schools;
 			classChoice = result.classId;

@@ -2,6 +2,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { db } from '../db';
 import {
 	Collections,
+	AgoraClass,
 	AgoraClassAggregate,
 	AgoraClassGameRow,
 	AgoraParticipant,
@@ -77,10 +78,15 @@ export async function writeSessionAggregates(sessionId: string): Promise<AgoraTh
 			const studentAggRefs = rosterStudents.map((student) =>
 				db.collection(Collections.agoraStudentAggregates).doc(student.memberId),
 			);
-			const [classAggSnap, ...studentAggSnaps] = await Promise.all([
+			// The class comes along for its teacherMap: the aggregate carries a
+			// copy so a teacher's browser can query its own classes' advancement
+			// without the rule reading this document for every one of them.
+			const [classAggSnap, classSnap, ...studentAggSnaps] = await Promise.all([
 				transaction.get(classAggRef),
+				transaction.get(db.collection(Collections.agoraClasses).doc(classId)),
 				...studentAggRefs.map((ref) => transaction.get(ref)),
 			]);
+			const teacherMap = (classSnap.data() as AgoraClass | undefined)?.teacherMap;
 
 			const classRow: AgoraClassGameRow = {
 				sessionId,
@@ -95,11 +101,14 @@ export async function writeSessionAggregates(sessionId: string): Promise<AgoraTh
 			};
 			const classAgg = mergeClassGame(
 				(classAggSnap.data() as AgoraClassAggregate | undefined) ??
-					emptyClassAggregate(classId, schoolId),
+					emptyClassAggregate(classId, schoolId, teacherMap),
 				classRow,
 				now,
 			);
-			transaction.set(classAggRef, classAgg);
+			transaction.set(classAggRef, {
+				...classAgg,
+				...(teacherMap ? { teacherMap } : {}),
+			});
 
 			rosterStudents.forEach((student, index) => {
 				const row: AgoraStudentGameRow = {

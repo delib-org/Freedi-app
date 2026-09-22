@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { AgoraSession, AgoraSessionStatus } from '@freedi/shared-types';
 import { fetchTeacherDashboard, type TeacherDashboard } from './teacher';
+import { getUserState } from './user';
 
 /**
  * What the teacher's navigation bar needs to know: which classes this teacher
@@ -87,7 +88,9 @@ export function loadTeacherNav(force = false): void {
 	if (state.loading) return;
 	if (!force && state.loaded && Date.now() - filledAt < STALE_MS) return;
 	state.loading = true;
-	fetchTeacherDashboard()
+	// The signed-in uid is what lets the dashboard be read from Firestore
+	// rather than from the console; without it this falls back to the callable.
+	fetchTeacherDashboard(getUserState().user?.uid)
 		.then((dashboard) => {
 			noteTeacherDashboard(dashboard);
 		})

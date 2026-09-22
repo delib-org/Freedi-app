@@ -319,10 +319,16 @@ service cloud.firestore {
     }
 
     // Schools: any signed-in user may resolve a school's name (teachers show
-    // it as a breadcrumb); only sys-admins enumerate them.
+    // it as a breadcrumb). Enumerating them is a sys-admin's right — except
+    // that a teacher may enumerate the ones they are attached to, proved the
+    // same way a class is, from a `teacherMap.<uid> == true` constraint. The
+    // dashboard needs that list before a teacher has any class to read a
+    // schoolId from: it is what "open your first class" is offered against.
     match /agoraSchools/{schoolId} {
       allow get: if isAuthenticated();
-      allow list: if isSystemAdminUser();
+      allow list: if isSystemAdminUser() ||
+                     (isAuthenticated() &&
+                      request.auth.uid in resource.data.get('teacherMap', {}));
       allow write: if false;
     }
 
@@ -366,8 +372,18 @@ service cloud.firestore {
     }
 
     // Class aggregates: the advancement summary both consoles print.
+    //
+    // The teacherMap clause is what makes the teacher's dashboard one query
+    // instead of one document read per class: `isAgoraClassTeacher` costs a
+    // get() of the class per aggregate evaluated, which is a billed read each
+    // and caps a query at twenty of them. The map is denormalized from the
+    // class by the same callables that write teacherIds. The get() stays
+    // behind it for aggregates written before the field existed — a `get` of
+    // one document, never a long list.
     match /agoraClassAggregates/{classId} {
       allow read: if isSystemAdminUser() ||
+                     (isAuthenticated() &&
+                      request.auth.uid in resource.data.get('teacherMap', {})) ||
                      isAgoraClassTeacher(resource.data.classId);
       allow write: if false;
     }

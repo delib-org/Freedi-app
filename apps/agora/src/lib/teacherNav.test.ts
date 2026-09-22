@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { AgoraSessionStatus, type AgoraSession } from '@freedi/shared-types';
 
 vi.mock('./teacher', () => ({ fetchTeacherDashboard: vi.fn() }));
+// The cache asks who is signed in so the dashboard can be read direct; the
+// module behind that answer reaches firebase, which node has no business in.
+vi.mock('./user', () => ({ getUserState: () => ({ user: null }) }));
 import { isSessionLive } from './teacherNav';
 
 describe('lesson archive classification', () => {

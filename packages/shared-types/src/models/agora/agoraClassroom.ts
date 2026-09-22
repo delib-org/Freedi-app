@@ -211,6 +211,19 @@ export type AgoraOutcomeTally = InferOutput<typeof AgoraOutcomeTallySchema>;
 export const AgoraClassAggregateSchema = object({
 	classId: string(),
 	schoolId: string(),
+	/**
+	 * The class's teachers as a `{uid: true}` map, denormalized from
+	 * {@link AgoraClassSchema} — the QUERY index that lets a teacher's browser
+	 * read its own classes' advancement in one query.
+	 *
+	 * Without it the rule has to `get()` the class document per aggregate: a
+	 * billed read each, and a hard ceiling of twenty such calls per query. With
+	 * it the rule is the same equality check as everywhere else. Kept current
+	 * by whoever writes `teacherIds` — the class callables — in the same breath;
+	 * optional because aggregates written before this field existed are still
+	 * readable through the `get()` fallback.
+	 */
+	teacherMap: optional(record(string(), boolean())),
 	gamesPlayed: number(),
 	/** Games that carried a class score — the divisor behind `avgClassScore` */
 	scoredGames: number(),
@@ -279,10 +292,15 @@ export function emptyStudentAggregate(
 	};
 }
 
-export function emptyClassAggregate(classId: string, schoolId: string): AgoraClassAggregate {
+export function emptyClassAggregate(
+	classId: string,
+	schoolId: string,
+	teacherMap?: Record<string, boolean>,
+): AgoraClassAggregate {
 	return {
 		classId,
 		schoolId,
+		...(teacherMap ? { teacherMap } : {}),
 		gamesPlayed: 0,
 		scoredGames: 0,
 		avgClassScore: null,

@@ -273,7 +273,7 @@ export function TeacherHome(): m.Component {
 		// sign-in prompt, which is what tier 0 renders anyway.
 		if (user.isAnonymous) return;
 		try {
-			const dashboard = await fetchTeacherDashboard();
+			const dashboard = await fetchTeacherDashboard(user.uid);
 			if (loadedForUid !== user.uid) return;
 			classes = dashboard.classes;
 			schools = dashboard.schools;
@@ -539,7 +539,7 @@ export function TeacherHome(): m.Component {
 				...(value.gradeLevel ? { gradeLevel: value.gradeLevel } : {}),
 				...(value.schoolId ? { schoolId: value.schoolId } : {}),
 			});
-			const dashboard = await fetchTeacherDashboard();
+			const dashboard = await fetchTeacherDashboard(loadedForUid ?? undefined);
 			classes = dashboard.classes;
 			schools = dashboard.schools;
 			aggregates = dashboard.aggregates;

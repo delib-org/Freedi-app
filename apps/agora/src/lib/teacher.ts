@@ -11,6 +11,8 @@ import {
 	AgoraCamp,
 	AgoraClassAggregate,
 	AgoraClassAggregateSchema,
+	AgoraClassSchema,
+	AgoraSchoolSchema,
 	AgoraIdentitySchema,
 	AgoraParticipant,
 	AgoraParticipantSchema,
@@ -352,8 +354,98 @@ export function classLabel(agoraClass: { name: string; gradeLevel?: string }): s
 	return grade ? `${grade} · ${agoraClass.name}` : agoraClass.name;
 }
 
-/** Everything the /teach dashboard shows, in one round trip. */
-export async function fetchTeacherDashboard(): Promise<TeacherDashboard> {
+/**
+ * The dashboard, read straight from Firestore by the teacher's own browser.
+ *
+ * Four queries on the channel the app already holds open, answered by the
+ * Firestore frontend — no function, and so no cold start. That is the whole
+ * point: `agoraTeacherConsole` shares an entry module with every other
+ * function in the codebase, and the first teacher after a quiet period was
+ * paying for all of it to load before being told the names of their classes.
+ *
+ * Every one of these is a `teacherMap.<uid> == true` equality except the
+ * sessions, which are already read this way by the archive panel below. The
+ * roster does NOT come this way and must not: member documents carry the
+ * students' PIN hashes, which is exactly why the console strips them.
+ */
+async function queryTeacherDashboard(uid: string): Promise<TeacherDashboard> {
+	const mine = (collectionName: string) =>
+		getDocs(query(collection(db, collectionName), where(`teacherMap.${uid}`, '==', true)));
+
+	const [classSnaps, schoolSnaps, aggregateSnaps, sessionSnaps] = await Promise.all([
+		mine(Collections.agoraClasses),
+		mine(Collections.agoraSchools),
+		mine(Collections.agoraClassAggregates),
+		getDocs(
+			query(
+				collection(db, Collections.agoraSessions),
+				where('teacherId', '==', uid),
+				orderBy('createdAt', 'desc'),
+				limit(20),
+			),
+		),
+	]);
+
+	const classes = parseEach(
+		classSnaps.docs.map((snap) => snap.data()),
+		(data: unknown) => parse(AgoraClassSchema, data),
+		'class',
+	)
+		.filter((agoraClass) => agoraClass.status === 'active')
+		.sort((a, b) => a.name.localeCompare(b.name));
+
+	const aggregates = new Map<string, AgoraClassAggregate>();
+	for (const aggregate of parseEach(
+		aggregateSnaps.docs.map((snap) => snap.data()),
+		(data: unknown) => parse(AgoraClassAggregateSchema, data),
+		'class aggregate',
+	)) {
+		aggregates.set(aggregate.classId, aggregate);
+	}
+
+	return {
+		classes: classes.map((agoraClass) => ({
+			classId: agoraClass.classId,
+			name: agoraClass.name,
+			...(agoraClass.gradeLevel ? { gradeLevel: agoraClass.gradeLevel } : {}),
+			classCode: agoraClass.classCode,
+			memberCount: agoraClass.memberCount,
+			schoolId: agoraClass.schoolId,
+		})),
+		schools: parseEach(
+			schoolSnaps.docs.map((snap) => snap.data()),
+			(data: unknown) => parse(AgoraSchoolSchema, data),
+			'school',
+		)
+			.filter((school) => school.status === 'active')
+			.map((school) => ({ schoolId: school.schoolId, name: school.name }))
+			.sort((a, b) => a.name.localeCompare(b.name)),
+		aggregates,
+		sessions: parseEach(
+			sessionSnaps.docs.map((snap) => snap.data()),
+			parseSession,
+			'session',
+		),
+	};
+}
+
+/**
+ * Everything the /teach dashboard shows.
+ *
+ * Read directly when it can be, through the console when it cannot. The
+ * fallback is not decoration: hosting and security rules deploy separately,
+ * so a browser can be running this code against rules that have not landed
+ * yet, and a teacher must not lose their classes over a deploy order. It is
+ * logged loudly, because the standing state of this is the fast path.
+ */
+export async function fetchTeacherDashboard(uid?: string): Promise<TeacherDashboard> {
+	if (uid) {
+		try {
+			return await queryTeacherDashboard(uid);
+		} catch (error) {
+			console.error('[Teacher] Reading the dashboard direct failed; asking the console:', error);
+		}
+	}
 	const data = (await teacherConsole({ view: 'dashboard' })) as TeacherConsoleDashboard;
 	const aggregates = new Map<string, AgoraClassAggregate>();
 	for (const [classId, aggregate] of Object.entries(data.aggregates ?? {})) {
