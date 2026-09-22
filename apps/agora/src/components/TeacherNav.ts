@@ -235,7 +235,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 					getTeacherNavState().canSupervise
 						? row({
 								key: 'supervise',
-								icon: 'square',
+								icon: 'people',
 								label: t('supervise.title'),
 								route: '/supervise',
 							})

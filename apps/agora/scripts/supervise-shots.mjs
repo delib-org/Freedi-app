@@ -19,6 +19,8 @@ const {
 	dayKeyOf,
 } = require('@freedi/shared-types');
 await preflight();
+// A chart's first paint uses a default width until its size observer fires; let that frame land
+const SETTLE_MS = 400;
 const out = process.env.SUPERVISION_SHOTS ?? '/private/tmp/supervision-shots';
 mkdirSync(out, { recursive: true });
 async function seedFixture() {
@@ -199,7 +201,8 @@ try {
 			await page.locator('.chart__tip').first().waitFor();
 			await page.keyboard.press('Escape');
 			await page.locator('.chart__tip').first().waitFor({ state: 'hidden' });
-			await page.screenshot({
+			await page.waitForTimeout(SETTLE_MS);
+				await page.screenshot({
 				path: `${out}/agora-${lang}-${width}-teacher-class.png`,
 				fullPage: true,
 			});
@@ -208,20 +211,22 @@ try {
 			await page.locator('.chart button').first().click();
 			await page.locator('.roster__row').first().click();
 			await page.locator('.roster__drawer .chart__svg').first().waitFor();
-			await page.screenshot({ path: `${out}/agora-${lang}-${width}-drawer.png`, fullPage: true });
+			await page.waitForTimeout(SETTLE_MS);
+				await page.screenshot({ path: `${out}/agora-${lang}-${width}-drawer.png`, fullPage: true });
 			await page.evaluate(
 				(sub) => window.__agoraDevSignIn({ sub, email: `${sub}@example.com` }),
 				supSub,
 			);
 			for (const [name, path] of [
 				['home', '/supervise'],
-				['teacher', `/supervise/teacher/${teacher.uid}?schoolId=${schoolId}`],
+				['teacher', `/supervise/teacher/${encodeURIComponent(schoolId)}/${encodeURIComponent(teacher.uid)}`],
 				['class', `/supervise/class/${classId}`],
 				['student', `/supervise/student/${careers[0].memberId}`],
 			]) {
 				await page.goto('about:blank');
 				await page.goto(`${VITE_HOST}/#!${path}`);
 				await page.locator('.indicator-grid').first().waitFor({ timeout: 30000 });
+				await page.waitForTimeout(SETTLE_MS);
 				await page.screenshot({
 					path: `${out}/agora-${lang}-${width}-${name}.png`,
 					fullPage: true,
@@ -240,20 +245,18 @@ try {
 			);
 			await page.goto('about:blank');
 			await page.goto(`${VITE_HOST}/#!/supervise`);
-			await page.locator('.supervise__controls select').selectOption('all');
+			await page.locator('select.supervise__select').selectOption('__all__');
 			await page.locator('.indicator-grid').first().waitFor();
-			await page.screenshot({ path: `${out}/agora-${lang}-${width}-system.png`, fullPage: true });
+			await page.waitForTimeout(SETTLE_MS);
+				await page.screenshot({ path: `${out}/agora-${lang}-${width}-system.png`, fullPage: true });
 			await page.evaluate(
 				(sub) => window.__agoraDevSignIn({ sub, email: `${sub}@example.com` }),
 				sub,
 			);
 			await page.goto('about:blank');
 			await page.goto(`${VITE_HOST}/#!/supervise`);
-			await page
-				.locator('main p')
-				.filter({ hasText: lang === 'he' ? 'אין' : 'No supervision' })
-				.first()
-				.waitFor();
+			// The plain teacher lands on the "you supervise nothing" notice
+			await page.locator('p.supervise__notice').first().waitFor();
 			assert.equal(await page.locator('.indicator-grid').count(), 0);
 			await ctx.close();
 		}

@@ -1,104 +1,96 @@
-import { useEffect, useState, useCallback } from 'react';
-import { httpsCallable } from 'firebase/functions';
+import { useCallback, useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import type {
-	SupervisorConsoleRequest,
-	SupervisorConsoleResponse,
-	SupervisorOverview,
-	SupervisorTeacherDetail,
-	SupervisorClassDetail,
-	SupervisorStudentDetail,
-	SupervisorSystemView,
-	BackfillTeacherAggregatesRequest,
-	BackfillTeacherAggregatesResponse,
-} from '@freedi/shared-types';
-import { auth, functions } from '@/firebase';
+import type { SupervisorConsoleRequest, SupervisorConsoleResponse } from '@freedi/shared-types';
+import { auth } from '@/firebase';
+import { createRequestCache } from '@/lib/requestCache';
 import { logError } from '@/utils/logError';
+import { callSupervisorConsole, type ResponseFor } from './agoraSupervisorFunctions';
 
-type Result<R extends SupervisorConsoleRequest> = R extends { view: 'overview' }
-	? SupervisorOverview
-	: R extends { view: 'teacher' }
-		? SupervisorTeacherDetail
-		: R extends { view: 'class' }
-			? SupervisorClassDetail
-			: R extends { view: 'student' }
-				? SupervisorStudentDetail
-				: SupervisorSystemView;
-const CACHE_MS = 60000;
-const cache = new Map<string, { at: number; data: SupervisorConsoleResponse }>();
-export function useSupervisorConsole<R extends SupervisorConsoleRequest>(request: R | null) {
-	const [uid, setUid] = useState(auth.currentUser?.uid ?? '');
-	useEffect(
-		() =>
-			onAuthStateChanged(auth, (u) => {
-				cache.clear();
-				setUid(u?.uid ?? '');
-			}),
-		[],
-	);
-	const requestKey = JSON.stringify(request);
-	const key = `${uid}:${requestKey}`;
-	const [revision, setRevision] = useState(0);
+/**
+ * `useSupervisorConsole(request)` — one supervision view, served through a
+ * module-level cache keyed by the JSON of the request (60 s TTL, in-flight
+ * de-duplication). `refresh()` bypasses the cache. `null` asks for nothing.
+ *
+ * The cache is emptied whenever the signed-in user changes, so a supervisor
+ * who signs out never leaves a sys-admin's view behind for the next login.
+ */
+
+const CACHE_TTL_MS = 60_000;
+
+const cache = createRequestCache<SupervisorConsoleResponse>({ ttlMs: CACHE_TTL_MS });
+
+let watchingAuth = false;
+function watchAuth(): void {
+	if (watchingAuth) return;
+	watchingAuth = true;
+	onAuthStateChanged(auth, () => cache.invalidate());
+}
+
+export interface SupervisorConsoleState<T> {
+	data: T | null;
+	loading: boolean;
+	error: Error | null;
+	refresh: () => void;
+}
+
+function asError(error: unknown): Error {
+	return error instanceof Error ? error : new Error(String(error));
+}
+
+export function useSupervisorConsole<R extends SupervisorConsoleRequest>(
+	request: R | null,
+): SupervisorConsoleState<ResponseFor<R>> {
+	const key = request ? JSON.stringify(request) : '';
 	const [state, setState] = useState<{
 		key: string;
-		data: Result<R> | null;
+		data: ResponseFor<R> | null;
 		loading: boolean;
-		error: boolean;
-	}>({ key: '', data: null, loading: true, error: false });
-	const refresh = useCallback(() => {
-		cache.delete(key);
-		setRevision((n) => n + 1);
-	}, [key]);
+		error: Error | null;
+	}>({ key, data: null, loading: !!request, error: null });
+	const [bypassTick, setBypassTick] = useState(0);
+
+	useEffect(watchAuth, []);
+
 	useEffect(() => {
+		if (!key) {
+			setState({ key, data: null, loading: false, error: null });
+
+			return;
+		}
 		let alive = true;
-		if (!request || !uid) {
-			setState({ key, data: null, loading: false, error: false });
+		const bypass = bypassTick > 0;
+		const cached = bypass ? undefined : cache.peek(key);
+		if (cached !== undefined) {
+			setState({ key, data: cached as ResponseFor<R>, loading: false, error: null });
 
 			return;
 		}
-		const hit = cache.get(key);
-		if (hit && Date.now() - hit.at < CACHE_MS) {
-			setState({ key, data: hit.data as Result<R>, loading: false, error: false });
-
-			return;
-		}
-		setState({ key, data: null, loading: true, error: false });
-		const call = httpsCallable<SupervisorConsoleRequest, SupervisorConsoleResponse>(
-			functions,
-			'agoraSupervisorConsole',
-		);
-		void call(JSON.parse(requestKey) as R)
-			.then((result) => {
-				if (!alive) return;
-				if (cache.size > 100) cache.clear();
-				cache.set(key, { at: Date.now(), data: result.data });
-				setState({ key, data: result.data as Result<R>, loading: false, error: false });
+		setState((prev) => ({
+			key,
+			data: prev.key === key ? prev.data : null,
+			loading: true,
+			error: null,
+		}));
+		const parsed = JSON.parse(key) as R;
+		cache
+			.get(key, () => callSupervisorConsole(parsed), { bypass })
+			.then((data) => {
+				if (alive) setState({ key, data: data as ResponseFor<R>, loading: false, error: null });
 			})
-			.catch((error) => {
-				if (alive) {
-					logError(error, { operation: 'agoraSupervisor.load' });
-					setState({ key, data: null, loading: false, error: true });
-				}
+			.catch((error: unknown) => {
+				if (!alive) return;
+				logError(error, { operation: 'agoraSupervisor.useSupervisorConsole', metadata: { key } });
+				setState({ key, data: null, loading: false, error: asError(error) });
 			});
 
 		return () => {
 			alive = false;
 		};
-	}, [key, requestKey, uid, revision]);
+	}, [key, bypassTick]);
 
-	return {
-		...(state.key === key ? state : { key, data: null, loading: !!request, error: false }),
-		refresh,
-	};
-}
-export async function backfillTeacherLessons(
-	request: BackfillTeacherAggregatesRequest,
-): Promise<BackfillTeacherAggregatesResponse> {
-	const call = httpsCallable<BackfillTeacherAggregatesRequest, BackfillTeacherAggregatesResponse>(
-		functions,
-		'agoraAdminBackfillTeacherAggregates',
-		{ timeout: 540000 },
-	);
+	const refresh = useCallback(() => setBypassTick((n) => n + 1), []);
 
-	return (await call(request)).data;
+	const current = state.key === key ? state : { data: null, loading: !!key, error: null };
+
+	return { data: current.data, loading: current.loading, error: current.error, refresh };
 }

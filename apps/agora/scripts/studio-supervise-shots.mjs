@@ -30,7 +30,7 @@ try {
 			for (const [name, path] of [
 				['system', '/admin/agora'],
 				['school', `/admin/agora/schools/${f.schoolId}`],
-				['teacher', `/admin/agora/teachers/${f.teacherUid}?schoolId=${f.schoolId}`],
+				['teacher', `/admin/agora/teachers/${f.schoolId}/${f.teacherUid}`],
 				['class', `/admin/agora/classes/${f.classId}`],
 				['student', `/admin/agora/students/${f.memberId}`],
 			]) {

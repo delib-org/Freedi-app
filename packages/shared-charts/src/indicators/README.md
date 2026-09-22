@@ -63,7 +63,7 @@ callable's response or a test fixture can satisfy them directly.
 
 3. **Add the i18n keys** it lists in `labelKeys`:
    - Agora: `apps/agora/src/lib/i18n.ts` (every language block)
-   - Studio: map the key to an English sentence in `apps/studio/src/i18n/indicatorEnglish.ts`, then translate that sentence in all seven `packages/shared-i18n/src/languages/*.json` dictionaries
+   - Studio: map the key to an English sentence in `apps/studio/src/lib/indicatorLabels.ts` (`INDICATOR_KEYS`), then translate that sentence in all seven `packages/shared-i18n/src/languages/*.json` dictionaries
 
    `labelKeysFor('teacher')` returns the full set for a scope, which is
    what the dictionary audit test compares against.

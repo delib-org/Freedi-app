@@ -1,60 +1,57 @@
+import clsx from 'clsx';
 import {
 	resolveIndicators,
-	type IndicatorScope,
 	type IndicatorContextMap,
-	type ResolveOptions,
+	type IndicatorScope,
 } from '@freedi/shared-charts';
-import { useTranslation } from '@freedi/shared-i18n/react';
-import { indicatorEnglish } from '@/i18n/indicatorEnglish';
-import Chart from './Chart';
-import styles from './IndicatorGrid.module.scss';
+import { useIndicatorLabels } from '@/lib/indicatorLabels';
+import IndicatorCard from './IndicatorCard';
+import styles from './Chart.module.scss';
+
+/**
+ * IndicatorGrid — every indicator of one scope, in registry order, after
+ * `hide`/`order`. Titles and legends come from the dictionaries through
+ * `useIndicatorLabels`; the registry never sees a sentence.
+ */
+export interface IndicatorGridProps<S extends IndicatorScope> {
+	scope: S;
+	ctx: IndicatorContextMap[S];
+	hide?: string[];
+	order?: string[];
+	/** Tight two-up row for a list card (e.g. a class card in the school page). */
+	mini?: boolean;
+	className?: string;
+}
 
 export default function IndicatorGrid<S extends IndicatorScope>({
 	scope,
-	context,
-	options,
-	chartsOnly = false,
-}: {
-	scope: S;
-	context: IndicatorContextMap[S];
-	options?: ResolveOptions;
-	chartsOnly?: boolean;
-}) {
-	const { tWithParams, currentLanguage } = useTranslation();
-	const label = (key: string, params?: Record<string, string>): string =>
-		tWithParams(indicatorEnglish[key] ?? key, params ?? {});
+	ctx,
+	hide,
+	order,
+	mini = false,
+	className,
+}: IndicatorGridProps<S>) {
+	const labels = useIndicatorLabels();
+	const indicators = resolveIndicators(scope, { hide, order });
 
 	return (
-		<div className={styles.grid}>
-			{resolveIndicators(scope, options)
-				.filter((i) => !chartsOnly || i.size !== 'sm')
-				.map((i) => {
-					const out = i.build(context, { t: label, locale: currentLanguage });
-					const title = label(`indicator.${i.id}`);
+		<div className={clsx(styles.grid, mini && styles.mini, className)}>
+			{indicators.map((indicator) => {
+				const output = indicator.build(ctx, labels);
 
-					return (
-						<section
-							key={i.id}
-							className={`${styles.item} ${i.size === 'sm' ? styles.small : i.size === 'lg' ? styles.large : ''}`}
-							aria-label={title}
-						>
-							<h3 className={styles.title}>{title}</h3>
-							{out.type === 'chart' ? (
-								<Chart spec={out.spec} title={title} height={out.height} legend={out.legend} />
-							) : out.type === 'stat' ? (
-								<p className={styles.value}>
-									{typeof out.value === 'number'
-										? new Intl.NumberFormat(currentLanguage).format(out.value)
-										: out.value}
-									{out.unit}
-								</p>
-							) : (
-								<p className="chart__empty">{label(`indicator.empty.${out.reasonKey}`)}</p>
-							)}
-							{out.type !== 'empty' && out.hint && <p>{out.hint}</p>}
-						</section>
-					);
-				})}
+				return (
+					<IndicatorCard
+						key={indicator.id}
+						id={indicator.id}
+						size={mini ? 'md' : indicator.size}
+						title={labels.t(`indicator.${indicator.id}`)}
+						output={output}
+						emptyText={
+							output.type === 'empty' ? labels.t(`indicator.empty.${output.reasonKey}`) : undefined
+						}
+					/>
+				);
+			})}
 		</div>
 	);
 }

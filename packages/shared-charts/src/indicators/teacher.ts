@@ -19,11 +19,23 @@ const activeTime: TeacherIndicator = {
 	id: 'teacher.activeTime',
 	scope: 'teacher',
 	size: 'sm',
-	labelKeys: ['indicator.teacher.activeTime', 'indicator.format.hoursMinutes'],
+	labelKeys: [
+		'indicator.teacher.activeTime',
+		'indicator.format.hoursMinutes',
+		'indicator.format.hoursOnly',
+		'indicator.format.minutesOnly',
+	],
 	build: (ctx, labels) => {
 		const { h, m } = formatMinutes(ctx.totalDurationMs);
+		// "1 h 0 min" reads like a bug; say only the part that is there
+		const key =
+			h > 0 && m === 0
+				? 'indicator.format.hoursOnly'
+				: h === 0
+					? 'indicator.format.minutesOnly'
+					: 'indicator.format.hoursMinutes';
 
-		return stat(labels.t('indicator.format.hoursMinutes', { h: String(h), m: String(m) }));
+		return stat(labels.t(key, { h: String(h), m: String(m) }));
 	},
 };
 

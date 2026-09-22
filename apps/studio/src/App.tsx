@@ -1,4 +1,3 @@
-import AdminSupervisionDetail from '@/pages/AdminAgora/AdminSupervisionDetail';
 import { Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
@@ -19,6 +18,9 @@ import AdminOrgs from '@/pages/AdminOrgs/AdminOrgs';
 import AdminOrgDetail from '@/pages/AdminOrgs/AdminOrgDetail';
 import AdminAgora from '@/pages/AdminAgora/AdminAgora';
 import AdminSchoolDetail from '@/pages/AdminAgora/AdminSchoolDetail';
+import AdminTeacherDetail from '@/pages/AdminAgora/AdminTeacherDetail';
+import AdminClassDetail from '@/pages/AdminAgora/AdminClassDetail';
+import AdminStudentDetail from '@/pages/AdminAgora/AdminStudentDetail';
 import EventDashboard from '@/pages/EventDashboard';
 
 // Heavy per-question screens load on demand.
@@ -71,20 +73,11 @@ export default function App() {
 						<Route path="/invite" element={<Invite />} />
 						<Route path="/admin/orgs" element={<AdminOrgs />} />
 						<Route path="/admin/orgs/:orgId" element={<AdminOrgDetail />} />
-						<Route
-							path="/admin/agora/teachers/:id"
-							element={<AdminSupervisionDetail view="teacher" />}
-						/>
-						<Route
-							path="/admin/agora/classes/:id"
-							element={<AdminSupervisionDetail view="class" />}
-						/>
-						<Route
-							path="/admin/agora/students/:id"
-							element={<AdminSupervisionDetail view="student" />}
-						/>
 						<Route path="/admin/agora" element={<AdminAgora />} />
 						<Route path="/admin/agora/schools/:schoolId" element={<AdminSchoolDetail />} />
+						<Route path="/admin/agora/teachers/:schoolId/:uid" element={<AdminTeacherDetail />} />
+						<Route path="/admin/agora/classes/:classId" element={<AdminClassDetail />} />
+						<Route path="/admin/agora/students/:memberId" element={<AdminStudentDetail />} />
 						<Route path="*" element={<Navigate to="/" replace />} />
 					</Routes>
 				</Suspense>

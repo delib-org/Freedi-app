@@ -157,7 +157,14 @@ if (root) {
 		'/join/:code': JoinSession,
 		'/play/:id': byId(GameController),
 		'/supervise': SuperviseHome,
-		'/supervise/teacher/:id': byId(SuperviseTeacher),
+		'/supervise/teacher/:schoolId/:uid': {
+			render: (vnode) => {
+				const schoolId = String(vnode.attrs.schoolId);
+				const uid = String(vnode.attrs.uid);
+
+				return [m(SuperviseTeacher, { key: `${schoolId}/${uid}`, schoolId, uid })];
+			},
+		},
 		'/supervise/class/:id': byId(SuperviseClass),
 		'/supervise/student/:id': byId(SuperviseStudent),
 		'/teach': TeacherHome,

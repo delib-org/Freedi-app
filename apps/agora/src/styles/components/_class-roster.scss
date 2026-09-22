@@ -215,3 +215,23 @@
 	justify-content: center;
 	margin-block-start: var(--space-lg);
 }
+
+// The graphs behind the summary card, and the drawer's compact charts
+.roster {
+	&__graphs-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		align-self: flex-start;
+	}
+
+	&__graphs {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+	}
+
+	&__career .indicator-grid {
+		gap: var(--space-sm);
+	}
+}

@@ -1,16 +1,31 @@
 import m from 'mithril';
-import {
-	AGORA_TEACHER_USAGE,
-	type TeacherHeartbeatRequest,
-	type TeacherHeartbeatResponse,
-} from '@freedi/shared-types';
-import { functions, httpsCallable } from './firebase';
+import { AGORA_TEACHER_USAGE } from '@freedi/shared-types';
+import { teacherHeartbeat } from './callables';
 import { getUserState } from './user';
 import { ACTIVITY_WINDOW_MS, sampleUsage, usageSurface, type UsageClock } from './flows/usageClock';
 
-const SAMPLE_MS = 15000;
-/** Records elapsed activity only. Event targets, URLs and input contents are never sent. */
+/** How often the clock is read when nothing is happening */
+export const SAMPLE_MS = 15_000;
+
+let running: (() => void) | null = null;
+
+/**
+ * Counts a signed-in teacher's active time on the teacher and supervisor
+ * screens and reports it in beats.
+ *
+ * Only elapsed milliseconds and an enumerated surface are ever sent — no
+ * URLs, no targets, no input. Time counts while the tab is visible and the
+ * teacher touched it within the last minute (`ACTIVITY_WINDOW_MS`); a beat
+ * goes out once `HEARTBEAT_INTERVAL_MS` of ACTIVE time has accumulated, or
+ * on that much wall time if anything is pending, and the rest is flushed
+ * when the surface changes, the page hides, or the clock stops.
+ *
+ * One clock per page: the surface comes from the route, so views need not
+ * mount anything. Calling it twice returns the same stop function.
+ */
 export function startUsageHeartbeat(): () => void {
+	if (running) return running;
+
 	let clock: UsageClock = {
 		at: Date.now(),
 		activeUntil: 0,
@@ -20,18 +35,17 @@ export function startUsageHeartbeat(): () => void {
 		pendingMs: 0,
 	};
 	let lastSent = Date.now();
+
 	function flush(): void {
 		const { pendingMs, surface, uid } = clock;
 		clock = { ...clock, pendingMs: 0 };
 		lastSent = Date.now();
 		if (!surface || !uid || pendingMs <= 0 || uid !== getUserState().user?.uid) return;
-		void httpsCallable<TeacherHeartbeatRequest, TeacherHeartbeatResponse>(
-			functions,
-			'agoraTeacherHeartbeat',
-		)({ surface, sinceMs: pendingMs }).catch((error: unknown) => {
-			console.error('[Usage]', { operation: 'teacherHeartbeat', error });
+		void teacherHeartbeat({ surface, sinceMs: pendingMs }).catch((error: unknown) => {
+			console.error('[Usage]', { operation: 'usageHeartbeat.flush', surface, error });
 		});
 	}
+
 	function tick(interacted = false): void {
 		const now = Date.now();
 		clock = sampleUsage(clock, now);
@@ -39,6 +53,7 @@ export function startUsageHeartbeat(): () => void {
 		const uid = user.tier === 2 ? (user.user?.uid ?? null) : null;
 		const surface = usageSurface(m.route.get() ?? '');
 		if (uid !== clock.uid) {
+			// Another account (or none): whatever was pending is not theirs to report
 			clock = { ...clock, pendingMs: 0, activeUntil: 0 };
 		} else if (surface !== clock.surface || document.hidden) flush();
 		clock = {
@@ -52,8 +67,13 @@ export function startUsageHeartbeat(): () => void {
 					: clock.activeUntil,
 		};
 		if (!surface || document.hidden) clock.activeUntil = 0;
-		if (now - lastSent >= AGORA_TEACHER_USAGE.HEARTBEAT_INTERVAL_MS) flush();
+		if (
+			clock.pendingMs >= AGORA_TEACHER_USAGE.HEARTBEAT_INTERVAL_MS ||
+			now - lastSent >= AGORA_TEACHER_USAGE.HEARTBEAT_INTERVAL_MS
+		)
+			flush();
 	}
+
 	const interact = (): void => tick(true);
 	const visibility = (): void => tick();
 	const hide = (): void => {
@@ -67,11 +87,21 @@ export function startUsageHeartbeat(): () => void {
 	window.addEventListener('pagehide', hide);
 	const timer = window.setInterval(() => tick(), SAMPLE_MS);
 
-	return () => {
+	running = () => {
+		tick();
+		flush();
 		window.clearInterval(timer);
 		events.forEach((event) => window.removeEventListener(event, interact));
 		window.removeEventListener('hashchange', visibility);
 		document.removeEventListener('visibilitychange', visibility);
 		window.removeEventListener('pagehide', hide);
+		running = null;
 	};
+
+	return running;
+}
+
+/** Flush what is pending and stop sampling. Safe to call when nothing runs. */
+export function stopUsageHeartbeat(): void {
+	running?.();
 }

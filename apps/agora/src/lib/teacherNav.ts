@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { AgoraSession, AgoraSessionStatus } from '@freedi/shared-types';
 import { fetchTeacherDashboard, type TeacherDashboard } from './teacher';
+import { clearSupervisorRole, noteDashboardRole } from './supervisor';
 
 /**
  * What the teacher's navigation bar needs to know: which classes this teacher
@@ -78,6 +79,7 @@ export function navClass(classId: string | undefined): TeacherNavState['classes'
 /** Hand the bar an answer somebody else already paid for */
 export function noteTeacherDashboard(dashboard: TeacherDashboard): void {
 	state.canSupervise = dashboard.isSystemAdmin || dashboard.supervisedSchools.length > 0;
+	noteDashboardRole(dashboard);
 	state.classes = dashboard.classes;
 	state.sessions = dashboard.sessions;
 	state.loading = false;
@@ -111,6 +113,7 @@ export function loadTeacherNav(force = false): void {
 /** Forget everything — on sign-out, so the next teacher never sees the last one's classes */
 export function clearTeacherNav(): void {
 	generation++;
+	clearSupervisorRole();
 	state.canSupervise = false;
 	state.classes = [];
 	state.sessions = [];

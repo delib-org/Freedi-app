@@ -22,6 +22,15 @@ import type {
 	TeacherRosterResponse,
 	TeacherClassRequest,
 	TeacherClassResponse,
+	TeacherHeartbeatRequest,
+	TeacherHeartbeatResponse,
+	SupervisorConsoleRequest,
+	SupervisorConsoleResponse,
+	SupervisorOverview,
+	SupervisorTeacherDetail,
+	SupervisorClassDetail,
+	SupervisorStudentDetail,
+	SupervisorSystemView,
 } from '@freedi/shared-types';
 
 /** A game started from a typed main question, with no scenario behind it */
@@ -352,6 +361,47 @@ export async function rewordQuestion(
 	const call = httpsCallable<RewordQuestionRequest, RewordQuestionResponse>(
 		functions,
 		'agoraRewordQuestion',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The answer a supervisor console view returns, narrowed by the request's `view`. */
+export type SupervisorConsoleResult<R extends SupervisorConsoleRequest> = R extends {
+	view: 'overview';
+}
+	? SupervisorOverview
+	: R extends { view: 'teacher' }
+		? SupervisorTeacherDetail
+		: R extends { view: 'class' }
+			? SupervisorClassDetail
+			: R extends { view: 'student' }
+				? SupervisorStudentDetail
+				: SupervisorSystemView;
+
+/** Every read the supervisor console makes — see fn_agoraSupervisorConsole. */
+export async function supervisorConsole<R extends SupervisorConsoleRequest>(
+	request: R,
+): Promise<SupervisorConsoleResult<R>> {
+	const call = httpsCallable<SupervisorConsoleRequest, SupervisorConsoleResponse>(
+		functions,
+		'agoraSupervisorConsole',
+	);
+	const result = await call(request);
+
+	// The union is discriminated by the request, not the response: the server
+	// answers the view it was asked for, so the narrowing is decided here.
+	return result.data as SupervisorConsoleResult<R>;
+}
+
+/** A teacher's active screen time — elapsed milliseconds and a surface name, nothing else. */
+export async function teacherHeartbeat(
+	request: TeacherHeartbeatRequest,
+): Promise<TeacherHeartbeatResponse> {
+	const call = httpsCallable<TeacherHeartbeatRequest, TeacherHeartbeatResponse>(
+		functions,
+		'agoraTeacherHeartbeat',
 	);
 	const result = await call(request);
 

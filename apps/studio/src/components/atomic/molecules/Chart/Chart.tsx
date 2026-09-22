@@ -1,7 +1,48 @@
-import { useState, useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import clsx from 'clsx';
 import { layoutChart, type ChartSpec, type Primitive } from '@freedi/shared-charts';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { Button } from '../../atoms';
+import styles from './Chart.module.scss';
+
+/**
+ * Chart — the React renderer of `@freedi/shared-charts` geometry. The layout
+ * decides every coordinate and BEM class; this component only turns
+ * primitives into SVG elements, wires the hover/focus hits to one HTML
+ * tooltip, and offers the accessible data table the geometry carries.
+ * Colour comes from `styles/_chart.scss` through the app's `--chart-*` tokens.
+ */
+
+export interface ChartProps {
+	spec: ChartSpec;
+	/** Already translated; becomes the SVG's accessible name and the table caption. */
+	title: string;
+	height?: number;
+	/** Print the legend chips under the plot. */
+	legend?: boolean;
+	/** Sparkline mode: fixed small box, no hits, no table. */
+	compact?: boolean;
+	className?: string;
+}
+
+const MIN_WIDTH = 240;
+const DEFAULT_WIDTH = 600;
+const COMPACT = { width: 180, height: 56 };
+const HEIGHTS = { default: 260, strip: 64, hbarRow: 40, hbarPad: 8 };
+const MAX_X_LABELS = 5;
+const PERCENT = 100;
+
+function documentDir(): 'ltr' | 'rtl' {
+	return typeof document !== 'undefined' && document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr';
+}
+
+function defaultHeight(spec: ChartSpec): number {
+	if (spec.kind === 'strip') return HEIGHTS.strip;
+	if (spec.kind === 'hbars')
+		return Math.max(1, spec.rows.length) * HEIGHTS.hbarRow + HEIGHTS.hbarPad;
+
+	return HEIGHTS.default;
+}
 
 function primitive(p: Primitive, key: number): ReactNode {
 	switch (p.type) {
@@ -30,54 +71,51 @@ function primitive(p: Primitive, key: number): ReactNode {
 			);
 	}
 }
+
 export default function Chart({
 	spec,
 	title,
 	height,
 	legend = false,
 	compact = false,
-}: {
-	spec: ChartSpec;
-	title: string;
-	height?: number;
-	legend?: boolean;
-	compact?: boolean;
-}) {
-	const { t, dir, currentLanguage } = useTranslation();
+	className,
+}: ChartProps) {
+	const { t, currentLanguage } = useTranslation();
 	const ref = useRef<HTMLDivElement>(null);
-	const [width, setWidth] = useState(600);
+	const [width, setWidth] = useState(DEFAULT_WIDTH);
+	const [active, setActive] = useState<number | null>(null);
+	const [table, setTable] = useState(false);
+
 	useEffect(() => {
 		const node = ref.current;
-		if (!node) return;
+		if (!node || compact || typeof ResizeObserver === 'undefined') return;
 		const observer = new ResizeObserver(([entry]) =>
-			setWidth(Math.max(240, Math.round(entry.contentRect.width))),
+			setWidth(Math.max(MIN_WIDTH, Math.round(entry.contentRect.width))),
 		);
 		observer.observe(node);
 
 		return () => observer.disconnect();
-	}, []);
-	const [active, setActive] = useState<number | null>(null);
-	const [table, setTable] = useState(false);
+	}, [compact]);
+
 	const g = layoutChart(spec, {
-		width: compact ? 180 : width,
-		height: compact
-			? 64
-			: (height ??
-				(spec.kind === 'strip'
-					? 64
-					: spec.kind === 'hbars'
-						? Math.max(1, spec.rows.length) * 40 + 8
-						: 260)),
-		dir,
+		width: compact ? COMPACT.width : width,
+		height: compact ? COMPACT.height : (height ?? defaultHeight(spec)),
+		dir: documentDir(),
 		locale: currentLanguage,
-		maxXLabels: 5,
+		maxXLabels: MAX_X_LABELS,
 	});
-	const hit = g.hits.find((h) => h.index === active);
+	const hit = active === null ? undefined : g.hits.find((h) => h.index === active);
+	const tipStyle: CSSProperties | undefined = hit
+		? ({
+				'--chart-tip-x': `${((hit.x + hit.w / 2) / g.viewBox.w) * PERCENT}%`,
+				'--chart-tip-y': `${(hit.y / g.viewBox.h) * PERCENT}%`,
+			} as CSSProperties)
+		: undefined;
 
 	return (
 		<div
 			ref={ref}
-			className={`chart ${table ? 'chart--table' : ''}`}
+			className={clsx('chart', table && 'chart--table', compact && styles.compact, className)}
 			onKeyDown={(e) => {
 				if (e.key === 'Escape') setActive(null);
 			}}
@@ -85,50 +123,65 @@ export default function Chart({
 			<svg
 				className="chart__svg"
 				viewBox={`0 0 ${g.viewBox.w} ${g.viewBox.h}`}
-				direction="ltr"
 				preserveAspectRatio="xMidYMid meet"
-				role="group"
+				direction="ltr"
+				role="img"
 				aria-label={title}
 			>
 				<title>{title}</title>
-				<desc>{`${title}. ${g.legend.map((item) => item.label).join(', ')}`}</desc>
+				<desc>{g.a11y.desc}</desc>
 				{g.primitives.map(primitive)}
-				{g.hits.map((h) => (
-					<rect
-						key={h.index}
-						className="chart__hit"
-						x={h.x}
-						y={h.y}
-						width={h.w}
-						height={h.h}
-						tabIndex={compact ? undefined : 0}
-						aria-label={`${h.label}: ${h.lines.map((l) => `${l.label} ${l.value}`).join(', ')}`}
-						onMouseEnter={() => setActive(h.index)}
-						onMouseLeave={() => setActive(null)}
-						onFocus={() => setActive(h.index)}
-						onBlur={() => setActive(null)}
-					/>
-				))}
+				{!compact &&
+					g.hits.map((h) => (
+						<rect
+							key={h.index}
+							className={clsx('chart__hit', h.index === active && styles.hitActive)}
+							x={h.x}
+							y={h.y}
+							width={h.w}
+							height={h.h}
+							tabIndex={0}
+							aria-label={`${h.label}: ${h.lines.map((l) => `${l.label} ${l.value}`).join(', ')}`}
+							onMouseEnter={() => setActive(h.index)}
+							onMouseLeave={() => setActive(null)}
+							onFocus={() => setActive(h.index)}
+							onBlur={() => setActive(null)}
+						/>
+					))}
 			</svg>
 			{hit && !table && (
-				<div className="chart__tip" role="status">
-					<strong>{hit.label}</strong>
+				<div className={clsx('chart__tip', styles.tip)} style={tipStyle} role="status">
+					<div className="chart__tip-title">{hit.label}</div>
 					{hit.lines.map((l, i) => (
-						<div key={i}>
-							{l.label}: {l.value}
+						<div key={i} className="chart__tip-line">
+							{l.slot !== undefined && (
+								<i
+									aria-hidden="true"
+									className={clsx(
+										'chart__swatch',
+										`chart__swatch--${l.slot === 'muted' ? 'muted' : `s${l.slot}`}`,
+									)}
+								/>
+							)}
+							<span>{l.label}</span>
+							<span className="chart__tip-value">{l.value}</span>
 						</div>
 					))}
 				</div>
 			)}
-			{legend && (
+			{legend && g.legend.length > 0 && (
 				<ul className="chart__legend">
 					{g.legend.map((l, i) => (
 						<li
 							key={i}
-							className={`chart__legend-item chart__legend-item--${l.slot === 'muted' ? 'muted' : `s${l.slot}`}`}
+							className={clsx(
+								'chart__legend-item',
+								`chart__legend-item--${l.slot === 'muted' ? 'muted' : `s${l.slot}`}`,
+							)}
 						>
 							<i aria-hidden="true" />
-							{l.icon} {l.label}
+							{l.icon ? `${l.icon} ` : ''}
+							{l.label}
 						</li>
 					))}
 				</ul>
@@ -138,7 +191,8 @@ export default function Chart({
 					<Button
 						className="chart__table-toggle"
 						variant="secondary"
-						text={t(table ? 'Hide data table' : 'Show data table')}
+						size="small"
+						text={t(table ? 'Hide table' : 'Show as table')}
 						onClick={() => {
 							setTable(!table);
 							setActive(null);

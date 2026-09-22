@@ -68,7 +68,10 @@
 	}
 
 	&__trailing {
-		flex: 0 0 auto;
+		// May shrink: a wide control here (the supervisor's school picker)
+		// must clip itself rather than push the bar past a phone's edge
+		flex: 0 1 auto;
+		min-inline-size: 0;
 		display: flex;
 		align-items: center;
 		gap: var(--space-sm);

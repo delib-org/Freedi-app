@@ -824,3 +824,36 @@
 		transition: none;
 	}
 }
+
+// The supervisor's door on /teach — a card, because it opens a whole console
+.dashboard__supervise-card {
+	display: flex;
+	align-items: center;
+	gap: var(--space-md);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+	padding: var(--space-md);
+	color: var(--text-primary);
+	text-decoration: none;
+	transition: border-color var(--motion-base) ease;
+
+	&:hover,
+	&:focus-visible {
+		border-color: var(--border-strong);
+	}
+}
+
+.dashboard__supervise-icon {
+	display: inline-flex;
+	color: var(--lantern);
+	flex: none;
+}
+
+.dashboard__supervise-text {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	min-inline-size: 0;
+}

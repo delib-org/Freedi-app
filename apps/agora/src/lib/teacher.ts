@@ -288,7 +288,7 @@ export async function saveCampPosition(
 // all. Wire payloads are valibot-parsed here; malformed entries are skipped —
 // one bad doc must not blank a dashboard.
 
-function parseEach<T>(rows: unknown[], parseRow: (data: unknown) => T, label: string): T[] {
+export function parseEach<T>(rows: unknown[], parseRow: (data: unknown) => T, label: string): T[] {
 	const parsed: T[] = [];
 	for (const row of rows) {
 		try {
