@@ -86,11 +86,16 @@ export const agoraTeacherConsole = onCall(
 						.map((snap) => snap.data() as AgoraClass)
 						.filter((agoraClass) => agoraClass.status === 'active')
 						.sort((a, b) => a.name.localeCompare(b.name));
-					const aggregateSnaps = await Promise.all(
-						classes.map((agoraClass) =>
-							db.collection(Collections.agoraClassAggregates).doc(agoraClass.classId).get(),
-						),
-					);
+					// One round trip for every class's advancement, not one per
+					// class: a teacher with eight classes was paying eight
+					// sequential gets for what getAll asks once.
+					const aggregateSnaps = classes.length
+						? await db.getAll(
+								...classes.map((agoraClass) =>
+									db.collection(Collections.agoraClassAggregates).doc(agoraClass.classId),
+								),
+							)
+						: [];
 					const aggregates: Record<string, AgoraClassAggregate> = {};
 					for (const snap of aggregateSnaps) {
 						const aggregate = snap.data() as AgoraClassAggregate | undefined;

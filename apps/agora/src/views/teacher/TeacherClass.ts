@@ -7,6 +7,7 @@ import { Icon } from '../../components/Icon';
 import { ClassForm, type ClassFormValue } from '../../components/ClassForm';
 import { advancementSummary, type TeacherConsoleMember } from '@freedi/shared-types';
 import { TeacherNav } from '../../components/TeacherNav';
+import { navClass } from '../../lib/teacherNav';
 
 /**
  * One class: its advancement across games, its roster with each student's
@@ -414,13 +415,22 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 	return {
 		view() {
 			const { tier, loading } = getUserState();
-			if (loading || !loaded) {
+			/**
+			 * The teacher's menu passed this way already and remembers the name
+			 * and the code — the two things a teacher opening a class actually
+			 * wants on screen, one to read and one to write on the board. Held
+			 * back for the console's answer, they arrived with the roster; shown
+			 * from the cache, the page is never blank, and only the roster waits.
+			 */
+			const cached = navClass(classId);
+			const known = detail ?? cached;
+			if (loading || (!loaded && !known)) {
 				return m(
 					'.shell',
 					m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
 				);
 			}
-			if (tier !== 2 || !detail) {
+			if (tier !== 2 || !known || (loaded && !detail)) {
 				return m('.shell', [
 					m('.shell__content.text-center', { style: { justifyContent: 'center' } }, [
 						m('p.join__error', t('roster.not_found')),
@@ -433,21 +443,26 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 				]);
 			}
 
-			const summary = detail.aggregate ? advancementSummary(detail.aggregate) : null;
-			const { members, sessions, classCode } = detail;
+			const summary = detail?.aggregate ? advancementSummary(detail.aggregate) : null;
+			const members = detail?.members ?? [];
+			const sessions = detail?.sessions ?? [];
+			const classCode = known.classCode;
 
 			return m('.shell', [
 				// The bar says which class this is, so the page no longer repeats it —
 				// and the class's own cog rides along on the bar, where the chrome
 				// of every teacher screen now lives.
 				m(TeacherNav, {
-					title: classLabel(detail),
-					subtitle: detail.schoolName,
+					title: classLabel(known),
+					subtitle: detail?.schoolName ?? '',
 					onBack: () => m.route.set('/teach'),
 					trailing: m(
 						'button.teacher-nav__cog',
 						{
 							type: 'button',
+							// The cog opens the class's own settings, and those are
+							// the console's answer — no point offering it early
+							disabled: !detail,
 							'aria-expanded': String(settingsOpen),
 							'aria-label': t('roster.settings'),
 							title: t('roster.settings'),
@@ -476,7 +491,7 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 							),
 						]),
 					]),
-					settingsOpen ? settingsPanel(detail) : null,
+					settingsOpen && detail ? settingsPanel(detail) : null,
 
 					summary
 						? m('.card.roster__summary', [
@@ -510,10 +525,20 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 					),
 
 					m('.stack', [
-						m('p.teacher__section-title', t('roster.title', { count: String(members.length) })),
-						members.length === 0
-							? m('p.home-explanation', t('roster.empty'))
-							: m('.stack', members.map(memberRow)),
+						m(
+							'p.teacher__section-title',
+							t('roster.title', {
+								count: String(detail ? members.length : (cached?.memberCount ?? 0)),
+							}),
+						),
+						// An empty roster and a roster that has not arrived yet are
+						// different sentences — "nobody has joined" must not be the
+						// page's answer while it is still asking
+						!detail
+							? m('.spinner')
+							: members.length === 0
+								? m('p.home-explanation', t('roster.empty'))
+								: m('.stack', members.map(memberRow)),
 					]),
 
 					sessions.length > 0
