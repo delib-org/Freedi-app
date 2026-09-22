@@ -106,7 +106,9 @@ jest.mock('../pipeline/loadSynthesisSettings', () => ({
 import { reJudgeProcessParent } from '../scheduled/fn_synthesisReJudge';
 import {
 	computeParentFingerprint,
+	DORMANT_AFTER_MS,
 	FORCE_FULL_SWEEP_MS,
+	isDormant,
 	memberStateKey,
 	resolveRejectedPairs,
 } from '../scheduled/reJudgeSweepState';
@@ -280,5 +282,85 @@ describe('reJudgeProcessParent sweep-state gate', () => {
 
 		expect(stored?.rejectedPairs?.length).toBeGreaterThan(0);
 		expect(stored?.rejectedPairs?.[0].p).toBe('s1__s2');
+	});
+});
+
+describe('isDormant', () => {
+	it('is false inside the window and true past it', () => {
+		const t = 1_000_000_000_000;
+		expect(
+			isDormant({ lastChildUpdate: t } as unknown as Statement, t + DORMANT_AFTER_MS - 1),
+		).toBe(false);
+		expect(isDormant({ lastChildUpdate: t } as unknown as Statement, t + DORMANT_AFTER_MS)).toBe(
+			true,
+		);
+	});
+
+	it('never calls a parent dormant when its activity cannot be read', () => {
+		// Fail open: an unreadable parent keeps its periodic full sweep rather
+		// than being retired on missing evidence.
+		expect(isDormant(null, 1_000_000_000_000)).toBe(false);
+		expect(isDormant({} as unknown as Statement, 1_000_000_000_000)).toBe(false);
+		expect(isDormant({ lastChildUpdate: 0 } as unknown as Statement, 1_000_000_000_000)).toBe(
+			false,
+		);
+	});
+});
+
+describe('reJudgeProcessParent dormancy', () => {
+	const synths = [synth('s1', ['o1', 'o2']), synth('s2', ['o3', 'o4'])];
+	const T0 = 1_000_000_000_000;
+
+	it('retires a question silent for a week, even though the staleness floor has passed', async () => {
+		seedParent(T0);
+		await reJudgeProcessParent(PARENT_ID, synths, { useSweepState: true, now: T0 });
+
+		jest.clearAllMocks();
+		const result = await reJudgeProcessParent(PARENT_ID, synths, {
+			useSweepState: true,
+			now: T0 + DORMANT_AFTER_MS,
+		});
+
+		expect(result.skipped).toBe(true);
+		expect(result.skipReason).toBe('dormant');
+		expect(consolidateThemes).not.toHaveBeenCalled();
+		expect(getBatchEmbeddings).not.toHaveBeenCalled();
+	});
+
+	it('still sweeps a question that is merely quiet, not dormant', async () => {
+		seedParent(T0);
+		await reJudgeProcessParent(PARENT_ID, synths, { useSweepState: true, now: T0 });
+
+		jest.clearAllMocks();
+		const result = await reJudgeProcessParent(PARENT_ID, synths, {
+			useSweepState: true,
+			now: T0 + FORCE_FULL_SWEEP_MS,
+		});
+
+		expect(result.skipped).toBe(false);
+		expect(consolidateThemes).toHaveBeenCalledTimes(1);
+	});
+
+	it('wakes on a new statement, with no separate wake mechanism', async () => {
+		seedParent(T0);
+		await reJudgeProcessParent(PARENT_ID, synths, { useSweepState: true, now: T0 });
+
+		const longAfter = T0 + DORMANT_AFTER_MS * 3;
+		expect(
+			(await reJudgeProcessParent(PARENT_ID, synths, { useSweepState: true, now: longAfter }))
+				.skipReason,
+		).toBe('dormant');
+
+		// A new statement under the question bumps lastChildUpdate, which both
+		// ends dormancy and changes the fingerprint.
+		seedParent(longAfter);
+		jest.clearAllMocks();
+		const woken = await reJudgeProcessParent(PARENT_ID, synths, {
+			useSweepState: true,
+			now: longAfter + 1,
+		});
+
+		expect(woken.skipped).toBe(false);
+		expect(consolidateThemes).toHaveBeenCalledTimes(1);
 	});
 });

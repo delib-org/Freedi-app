@@ -14,6 +14,7 @@ import { enqueueItem, ensureQueueRun } from '../queue/enqueue';
 import {
 	computeParentFingerprint,
 	FORCE_FULL_SWEEP_MS,
+	isDormant,
 	loadGlobalState,
 	loadSweepState,
 	memberStateKey,
@@ -441,8 +442,10 @@ export async function reJudgeProcessParent(
 	options: ReJudgeParentOptions = {},
 ): Promise<{
 	merges: number;
-	/** True when the fingerprint gate found nothing to do and no pass ran. */
+	/** True when a gate found nothing to do and no pass ran. */
 	skipped: boolean;
+	/** Why it was skipped, for the sweep summary. Absent when work ran. */
+	skipReason?: 'unchanged' | 'dormant';
 }> {
 	const parentDoc = await loadParentDoc(parentId);
 	const questionContext = parentDoc?.statement ?? parentId;
@@ -457,9 +460,16 @@ export async function reJudgeProcessParent(
 	let state: ReJudgeSweepState | null = null;
 	if (useSweepState) {
 		state = await loadSweepState(parentId);
+		const unchanged = state !== null && state.fingerprint === fingerprint;
 		const overdue = now - (state?.lastSweptAt ?? 0) >= FORCE_FULL_SWEEP_MS;
-		if (state && state.fingerprint === fingerprint && !overdue) {
-			return { merges: 0, skipped: true };
+		// A live question still gets its periodic full sweep even when the
+		// fingerprint says nothing moved, because the fingerprint's inputs are
+		// maintained by other code. A question silent for DORMANT_AFTER_MS has
+		// earned the benefit of the doubt: it stops being swept until a new
+		// statement wakes it, which the fingerprint notices on the same tick.
+		const dormant = isDormant(parentDoc, now);
+		if (unchanged && (!overdue || dormant)) {
+			return { merges: 0, skipped: true, skipReason: dormant ? 'dormant' : 'unchanged' };
 		}
 	}
 
@@ -950,6 +960,7 @@ export const fn_synthesisReJudge = onSchedule(
 			let totalMerges = 0;
 			let parentsProcessed = 0;
 			let parentsSkipped = 0;
+			let parentsDormant = 0;
 			for (const [parentId, synths] of byParent) {
 				if (parentsProcessed >= MAX_PARENTS_PER_SWEEP) break;
 				if (synths.length < 2) continue;
@@ -960,6 +971,7 @@ export const fn_synthesisReJudge = onSchedule(
 						now: startedAt,
 					});
 					if (result.skipped) parentsSkipped++;
+					if (result.skipReason === 'dormant') parentsDormant++;
 					totalMerges += result.merges;
 					if (result.merges > 0) {
 						logger.info('synthesis.reJudge.parent', {
@@ -984,6 +996,7 @@ export const fn_synthesisReJudge = onSchedule(
 			logger.info('synthesis.reJudge.summary', {
 				parentsProcessed,
 				parentsSkipped,
+				parentsDormant,
 				totalMerges,
 				durationMs: Date.now() - startedAt,
 			});

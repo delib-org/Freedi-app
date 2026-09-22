@@ -37,15 +37,54 @@ const GLOBAL_STATE_DOC = '__sweep';
 const FINGERPRINT_VERSION = 'v1';
 
 /**
- * Longest a gate may suppress real work.
+ * Longest a gate may suppress real work on a LIVE question.
  *
  * Both gates infer "nothing changed" from timestamps maintained elsewhere
  * (`lastUpdate`, `lastChildUpdate`). If any write path ever fails to bump one,
  * the affected sweep would sleep forever rather than merely late. This floor
  * turns that class of bug into a bounded delay: the sweep runs in full at least
  * this often no matter what the fingerprints say.
+ *
+ * A dormant question is exempt — see DORMANT_AFTER_MS.
  */
 export const FORCE_FULL_SWEEP_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * After this long with no child activity, a question stops being swept at all.
+ *
+ * The staleness floor above is insurance against a missed timestamp bump, and
+ * on a live question that is worth four full sweeps a day. On a question nobody
+ * has touched in a week it is pure recurring cost: the floor alone re-ground
+ * production's three surviving questions every 6 hours forever, ~5,200
+ * reads/day that had already reported `totalMerges: 0` hundreds of times.
+ *
+ * Dormancy is safe precisely because the sweep writes when it does work. A
+ * merge, a revisit stamp or a theme edit all bump the parent's
+ * `lastChildUpdate`, so a week of silence is proof the sweep converged rather
+ * than proof it was interrupted — a backlog it was still chewing through would
+ * have kept the question active by its own writes.
+ *
+ * Waking is automatic and needs no separate mechanism: a new statement bumps
+ * `lastChildUpdate`, which both changes the fingerprint and ends dormancy, so
+ * the next tick sweeps in full. An admin can also force a run at any time via
+ * `synthesizeNow` / `reCluster`.
+ */
+export const DORMANT_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Whether a question has been silent long enough to retire from the sweep.
+ *
+ * Fails CLOSED on dormancy (i.e. open on sweeping): a parent that could not be
+ * read, or that carries no usable `lastChildUpdate`, is never called dormant
+ * and keeps its periodic full sweep.
+ */
+export function isDormant(parentDoc: Statement | null, now: number): boolean {
+	const lastChildUpdate = parentDoc?.lastChildUpdate;
+	if (typeof lastChildUpdate !== 'number' || !Number.isFinite(lastChildUpdate)) return false;
+	if (lastChildUpdate <= 0) return false;
+
+	return now - lastChildUpdate >= DORMANT_AFTER_MS;
+}
 
 /**
  * Cap on persisted pair refusals per parent.
