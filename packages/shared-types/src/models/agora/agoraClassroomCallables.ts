@@ -1,3 +1,4 @@
+import type { SupervisorTeacherDetail } from './agoraSupervisorCallables';
 import type { AgoraSessionFlow } from './sessionFlow';
 import type { AgoraTeacherSurface } from './agoraTeacherUsage';
 
@@ -28,6 +29,8 @@ export interface ManageSchoolRequest {
 	teacherEmail?: string;
 	/** assignSupervisor/removeSupervisor/setSupervisorScope: the supervisor's sign-in email */
 	supervisorEmail?: string;
+	/** Scope editing only: an already attached supervisor. */
+	supervisorUid?: string;
 	/**
 	 * setSupervisorScope: the teachers this supervisor may see. `null` (or
 	 * absent) clears the narrowing — every teacher of the school again.
@@ -154,6 +157,7 @@ export interface TeacherRosterResponse {
  */
 export type TeacherConsoleRequest =
 	| { view: 'dashboard' }
+	| { view: 'activity' }
 	| { view: 'class'; classId: string }
 	| { view: 'report'; sessionId: string };
 
@@ -221,7 +225,8 @@ export interface TeacherConsoleReport {
 export type TeacherConsoleResponse =
 	| TeacherConsoleDashboard
 	| TeacherConsoleClassDetail
-	| TeacherConsoleReport;
+	| TeacherConsoleReport
+	| SupervisorTeacherDetail;
 
 /** New optional fields `agoraCreateSession` accepts for class games. */
 export interface CreateSessionClassroomFields {

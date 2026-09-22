@@ -191,3 +191,12 @@ describe('lessonSeries', () => {
 		expect(series.months).toEqual([{ month: '2026-03', lessons: 0, durationMs: 0 }]);
 	});
 });
+
+describe('month rollover', () => {
+	it('cannot claim time already credited in the previous month', () => {
+		const now = Date.UTC(2026, 3, 1, 0, 1);
+		const first = beat(undefined, now);
+		expect(first.creditedMs).toBe(MINUTE);
+		expect(beat(first.next, now + 1000).creditedMs).toBe(0);
+	});
+});

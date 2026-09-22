@@ -1,4 +1,5 @@
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
+import { FieldPath } from 'firebase-admin/firestore';
 import { db } from '../db';
 import {
 	AgoraParticipant,
@@ -57,9 +58,13 @@ export const agoraAdminBackfillTeacherAggregates = onCall(
 				: DEFAULT_PAGE;
 
 		try {
-			let query = db.collection(Collections.agoraSessions).orderBy('createdAt').limit(pageSize);
-			if (typeof cursor === 'number' && Number.isFinite(cursor)) {
-				query = query.startAfter(cursor);
+			let query = db
+				.collection(Collections.agoraSessions)
+				.orderBy('createdAt')
+				.orderBy(FieldPath.documentId())
+				.limit(pageSize);
+			if (cursor && Number.isFinite(cursor.createdAt) && typeof cursor.sessionId === 'string') {
+				query = query.startAfter(cursor.createdAt, cursor.sessionId);
 			}
 			const pageSnaps = await query.get();
 			const sessions = pageSnaps.docs.map((snap) => snap.data() as AgoraSession);
@@ -121,7 +126,9 @@ export const agoraAdminBackfillTeacherAggregates = onCall(
 				processed: sessions.length,
 				folded,
 				skipped,
-				...(sessions.length === pageSize && last ? { nextCursor: last.createdAt } : {}),
+				...(sessions.length === pageSize && last
+					? { nextCursor: { createdAt: last.createdAt, sessionId: last.sessionId } }
+					: {}),
 			};
 		} catch (error) {
 			logError(error, {

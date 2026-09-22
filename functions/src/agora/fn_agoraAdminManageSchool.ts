@@ -142,7 +142,10 @@ export const agoraAdminManageSchool = onCall(
 			}
 
 			if (action === 'setSupervisorScope') {
-				const supervisorUid = await resolveTeacherUid(supervisorEmail ?? '');
+				const supervisorUid =
+					request.data.supervisorUid ?? (await resolveTeacherUid(supervisorEmail ?? ''));
+				if (typeof supervisorUid !== 'string' || !supervisorUid || /[./]/.test(supervisorUid))
+					throw new HttpsError('invalid-argument', 'Invalid supervisor');
 				const school = schoolSnap.data() as AgoraSchool;
 				if (school.supervisorMap?.[supervisorUid] !== true) {
 					throw new HttpsError(

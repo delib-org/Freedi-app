@@ -161,7 +161,9 @@ export function mergeTeacherLesson(
 ): AgoraTeacherAggregate {
 	if (agg.perLesson.some((lesson) => lesson.sessionId === row.sessionId)) return agg;
 
-	const perLesson = [...agg.perLesson, row].slice(-AGORA_TEACHER_AGGREGATE.LESSON_ROWS_CAP);
+	const perLesson = [...agg.perLesson, row]
+		.sort((a, b) => a.playedAt - b.playedAt)
+		.slice(-AGORA_TEACHER_AGGREGATE.LESSON_ROWS_CAP);
 	const outcomes = { ...agg.outcomes };
 	if (row.outcome !== undefined) outcomes[row.outcome] += 1;
 	else outcomes.unscored += 1;

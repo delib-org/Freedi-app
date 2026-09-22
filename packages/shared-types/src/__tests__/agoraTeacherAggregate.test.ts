@@ -328,3 +328,16 @@ describe('teacherLessonRowFrom', () => {
 		expect(unscored.convergenceScore).toBeUndefined();
 	});
 });
+
+describe('backfill history ordering', () => {
+	it('retains the newest rows when old lessons arrive after live lessons', () => {
+		let agg = emptyTeacherAggregate('t');
+		for (let i = 0; i < 100; i++)
+			agg = mergeTeacherLesson(agg, row(`recent-${i}`, { playedAt: NOW + i }), NOW);
+		const next = mergeTeacherLesson(agg, row('old', { playedAt: NOW - DAY }), NOW);
+		expect(next.lessonsRun).toBe(101);
+		expect(next.perLesson).toHaveLength(100);
+		expect(next.perLesson[0].sessionId).toBe('recent-0');
+		expect(next.perLesson[99].sessionId).toBe('recent-99');
+	});
+});

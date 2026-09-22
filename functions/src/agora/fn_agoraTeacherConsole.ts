@@ -1,3 +1,4 @@
+import { teacherActivity } from './teacherActivity';
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import { db } from '../db';
 import {
@@ -58,6 +59,8 @@ export const agoraTeacherConsole = onCall(
 
 		try {
 			switch (data.view) {
+				case 'activity':
+					return await teacherActivity(uid);
 				case 'dashboard': {
 					const [classSnaps, schoolSnaps, sessionSnaps, supervisedSnaps, systemAdmin] =
 						await Promise.all([

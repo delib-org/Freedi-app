@@ -97,6 +97,8 @@ export interface SupervisorSessionRow {
 }
 
 export interface SupervisorTeacherDetail {
+	/** History is limited to the newest 100 stored lessons. */
+	truncated: boolean;
 	teacher: { uid: string; name: string };
 	/** AgoraTeacherAggregate JSON, or null before the first lesson */
 	aggregate: unknown | null;
@@ -181,7 +183,7 @@ export type SupervisorConsoleResponse =
  */
 export interface BackfillTeacherAggregatesRequest {
 	/** `createdAt` of the last session the previous page handled */
-	cursor?: number;
+	cursor?: { createdAt: number; sessionId: string };
 	/** Sessions per page, ≤ 500, default 200 */
 	limit?: number;
 	/** Count what WOULD fold without writing */
@@ -196,5 +198,5 @@ export interface BackfillTeacherAggregatesResponse {
 	/** Civic, unfinished, or already stamped */
 	skipped: number;
 	/** Absent when the page was the last one */
-	nextCursor?: number;
+	nextCursor?: { createdAt: number; sessionId: string };
 }

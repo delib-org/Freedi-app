@@ -127,7 +127,8 @@ export function creditHeartbeat(
 	if (prev && now - prev.lastHeartbeatAt < AGORA_TEACHER_USAGE.HEARTBEAT_MIN_GAP_MS) {
 		return { next: prev, creditedMs: 0 };
 	}
-	const creditedMs = prev ? Math.min(clamped, now - prev.lastHeartbeatAt) : clamped;
+	const monthStart = Date.parse(`${month}-01T00:00:00Z`);
+	const creditedMs = Math.min(clamped, now - (prev?.lastHeartbeatAt ?? monthStart));
 	if (creditedMs < AGORA_TEACHER_USAGE.HEARTBEAT_MIN_MS) {
 		return { next: base, creditedMs: 0 };
 	}
