@@ -140,6 +140,20 @@ export const ZONES = {
 } as const;
 
 /**
+ * How strongly evaluation cards are tinted (survey setting `cardColorIntensity`).
+ * 1 = the full palette, 0 = plain white cards. Only the card background fades.
+ */
+export const CARD_COLOR_INTENSITY = {
+  MIN: 0,
+  MAX: 1,
+  DEFAULT: 1,
+  /** Admin slider step, in percent */
+  STEP_PERCENT: 10,
+  /** CSS custom property the card styles read */
+  CSS_VAR: '--card-color-intensity',
+} as const;
+
+/**
  * Zone configuration for zone-based swipe system
  * Maps zone indices to ratings and visual elements
  * Universal layout: Negative (left/red) to Positive (right/green)

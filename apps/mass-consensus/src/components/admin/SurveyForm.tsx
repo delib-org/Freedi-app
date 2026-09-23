@@ -13,6 +13,7 @@ import UnifiedFlowEditor from './UnifiedFlowEditor';
 import LanguageSelector from './LanguageSelector';
 import { CreateQuestionModal } from './CreateQuestionModal';
 import OpeningSlideManager from './OpeningSlideManager';
+import CardColorIntensityControl from './CardColorIntensityControl';
 import { logError } from '@/lib/utils/errorHandling';
 import styles from './Admin.module.scss';
 
@@ -756,6 +757,13 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
               </div>
             </label>
           </div>
+        </div>
+
+        <div className={styles.formGroup}>
+          <CardColorIntensityControl
+            value={settings.cardColorIntensity}
+            onChange={(cardColorIntensity) => setSettings({ ...settings, cardColorIntensity })}
+          />
         </div>
       </div>
 

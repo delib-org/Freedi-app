@@ -20,6 +20,7 @@ import SurveyProgress from '../SurveyProgress';
 import CommentModal from '../CommentModal';
 import SolutionPromptModal from '@/components/question/SolutionPromptModal';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
+import { cardColorIntensityStyle } from '@/lib/utils/cardColorIntensity';
 import {
   setCardStack,
   cardEvaluated,
@@ -351,7 +352,10 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   };
 
   return (
-    <div className="swipe-interface">
+    <div
+      className="swipe-interface"
+      style={cardColorIntensityStyle(mergedSettings?.cardColorIntensity)}
+    >
       {/* Progress indicator */}
       <div className="swipe-interface__progress">
         <SurveyProgress current={evaluatedCount} total={totalCount} />

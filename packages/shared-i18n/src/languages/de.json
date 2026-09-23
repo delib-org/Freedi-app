@@ -1975,6 +1975,8 @@
   "displayMode": "Anzeigemodus",
   "displayModeClassic": "Klassisch (Kartenstapel)",
   "displayModeClassicDesc": "Kartenstapel mit Wischen nach links/rechts. Zeigt Stapelfortschritt und Kartenvorschau.",
+  "cardColorIntensity": "Farbintensität der Karten",
+  "cardColorIntensityHint": "Verringern, um den farbigen Hintergrund der Bewertungskarten abzuschwächen. Text, Emojis und Schaltflächen behalten ihre Farben.",
   "displayModeDescription": "Wählen Sie, wie Teilnehmer Vorschläge sehen und bewerten",
   "displayModeSwipe": "Wischen (Tinder-Stil)",
   "displayModeSwipeDesc": "Eine Karte nach der anderen. Benutzer wischen oder tippen auf Schaltflächen, um jeden Vorschlag zu bewerten.",

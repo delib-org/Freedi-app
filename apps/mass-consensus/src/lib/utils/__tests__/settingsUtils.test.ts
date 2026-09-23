@@ -381,4 +381,21 @@ describe('settingsUtils', () => {
       expect(isSurveyLevelOverride(surveySettings, 'autoMergeSimilar')).toBe(false);
     });
   });
+
+  describe('cardColorIntensity', () => {
+    it('defaults to the full palette for surveys without the setting', () => {
+      const merged = getMergedSettings(createSurveySettings(), undefined);
+      expect(merged.cardColorIntensity).toBe(1);
+    });
+
+    it('passes the survey value through', () => {
+      const merged = getMergedSettings(createSurveySettings({ cardColorIntensity: 0.3 }), undefined);
+      expect(merged.cardColorIntensity).toBe(0.3);
+    });
+
+    it('keeps an explicit 0 (plain white cards)', () => {
+      const merged = getMergedSettings(createSurveySettings({ cardColorIntensity: 0 }), undefined);
+      expect(merged.cardColorIntensity).toBe(0);
+    });
+  });
 });

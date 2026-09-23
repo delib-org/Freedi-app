@@ -2530,6 +2530,8 @@
   "displayMode": "Display Mode",
   "displayModeClassic": "Classic (Card stack)",
   "displayModeClassicDesc": "Card stack with swipe left/right. Shows batch progress and card stack preview.",
+  "cardColorIntensity": "Card color intensity",
+  "cardColorIntensityHint": "Lower it to soften the colored background of the evaluation cards. Text, emoji and buttons keep their colors.",
   "displayModeDescription": "Choose how participants see and evaluate suggestions",
   "displayModeSwipe": "Swipe (Tinder-style)",
   "displayModeSwipeDesc": "One card at a time. Users swipe or tap buttons to rate each suggestion.",
