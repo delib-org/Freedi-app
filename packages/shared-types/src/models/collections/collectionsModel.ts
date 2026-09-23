@@ -115,6 +115,8 @@ export enum Collections {
     agoraStudentAggregates = 'agoraStudentAggregates',
     agoraClassAggregates = 'agoraClassAggregates',
     agoraStats = 'agoraStats',
+    agoraTeacherAggregates = 'agoraTeacherAggregates',
+    agoraTeacherUsage = 'agoraTeacherUsage',
     agoraIdentities = 'agoraIdentities',
     agoraTeacherMessages = 'agoraTeacherMessages',
     agoraTeacherPrompts = 'agoraTeacherPrompts',

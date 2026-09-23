@@ -217,6 +217,25 @@
   --who-7: #c23a86; // pink
   --who-8: #4a53c0; // indigo
 
+  // --- Charts (@freedi/shared-charts) ---
+  // The dashboard's categorical slots reuse the classmate hues, so a theme
+  // that recolours --who-* recolours every chart with it. The chrome tokens
+  // alias the surface/hairline/meta tokens above and so follow ink-on-dark.
+  --chart-1: #0f6fb5; // sky
+  --chart-2: #a05a15; // amber
+  --chart-3: #4a53c0; // indigo
+  --chart-4: #2b7530; // green
+  --chart-5: #c23a86; // pink
+  --chart-6: #71741a; // olive
+  --chart-seq-1: #86b6ef;
+  --chart-seq-2: #5598e7;
+  --chart-seq-3: #256abf;
+  --chart-seq-4: #104281;
+  --chart-grid: var(--border-subtle);
+  --chart-text: var(--text-secondary);
+  --chart-surface: var(--bg-card-solid);
+  --chart-muted: var(--peer-tile);
+
   // The two mark tints — a row's news as a coloured disc rather than a
   // sentence. Flat, pale, opaque: an rgba() wash over a white card is a
   // different colour over a purple one, and these marks appear on both.

@@ -12,6 +12,9 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			'@': path.resolve(__dirname, './src'),
+			// '/styles' before the bare name: alias takes the first match.
+			'@freedi/shared-charts/styles': path.resolve(__dirname, '../../packages/shared-charts/styles'),
+			'@freedi/shared-charts': path.resolve(__dirname, '../../packages/shared-charts/src'),
 			'@freedi/shared-utils': path.resolve(__dirname, '../../packages/shared-utils/src'),
 			'@freedi/shared-types': path.resolve(__dirname, '../../packages/shared-types/src'),
 			'@freedi/event-core': path.resolve(__dirname, '../../packages/event-core/src'),

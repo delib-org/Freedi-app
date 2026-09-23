@@ -1193,6 +1193,40 @@
 				<ol class="projector__answers"><li class="projector__answer"><span class="projector__answer-num">1</span><p class="projector__answer-text">תשובה על הקיר</p></li></ol>
 				<aside class="projector__code" style="position:static"><span class="projector__code-label">מצטרפים עם הקוד</span><div class="projector__code-value">48213</div><span class="projector__code-count">19 בחדר</span></aside>
 			</div>
+			<h2>supervision: indicator tiles, chart card, tooltip, data table, chips and pills</h2>
+			<div class="indicator-grid">
+				<div class="indicator-grid__stats">
+					<div class="indicator indicator--stat"><div class="indicator__value">12<span class="indicator__unit">דק׳</span></div><div class="indicator__label">שיעורים</div></div>
+					<div class="indicator indicator--stat"><div class="indicator__value">74</div><div class="indicator__label">ציון כיתתי ממוצע</div><div class="indicator__hint">3 מתוך 5</div></div>
+				</div>
+				<div class="indicator-grid__charts">
+					<section class="indicator indicator--chart indicator--md">
+						<h3 class="indicator__title">ניקוד הכיתה לאורך השיעורים</h3>
+						<div class="chart">
+							<svg class="chart__svg" viewBox="0 0 360 120" direction="ltr"><line class="chart__grid" x1="20" x2="330" y1="80" y2="80"/><text class="chart__tick" x="330" y="80">50</text><text class="chart__label" x="20" y="110">ספטמבר</text><text class="chart__note" x="200" y="20">ממוצע</text><path class="chart__line--s1" d="M20 90 L160 40 L300 20"/></svg>
+							<div class="chart__tip" style="inset-inline-start:50%;inset-block-start:30%"><div class="chart__tip-title">21.9</div><div class="chart__tip-line"><i class="chart__swatch chart__swatch--s1"></i><span>ניקוד</span><span class="chart__tip-value">72</span></div></div>
+							<ul class="chart__legend"><li class="chart__legend-item chart__legend-item--s4"><i></i>✓ הצלחה</li><li class="chart__legend-item chart__legend-item--s2"><i></i>≈ מחלוקת כנה</li></ul>
+							<button class="btn btn--sm btn--ghost chart__table-toggle">הצגת טבלת נתונים</button>
+						</div>
+						<p class="indicator__hint">12 שיעורים</p>
+					</section>
+					<section class="indicator indicator--chart indicator--md">
+						<h3 class="indicator__title">תוצאות השיעורים</h3>
+						<div class="chart chart--table">
+							<svg class="chart__svg" viewBox="0 0 360 120" direction="ltr"></svg>
+							<table class="chart__table"><caption>ניקוד הכיתה</caption><thead><tr><th>שיעור</th><th>נקודות</th></tr></thead><tbody><tr><th>21.9</th><td>72</td></tr></tbody></table>
+							<button class="btn btn--sm btn--ghost chart__table-toggle">הסתרת טבלת הנתונים</button>
+						</div>
+					</section>
+					<div class="indicator indicator--empty indicator--md"><div class="indicator__label">התפלגות נקודות</div><p class="indicator__empty">עדיין אין שיעורים</p></div>
+				</div>
+			</div>
+			<div class="supervise">
+				<div class="supervise__chips"><button class="supervise__chip" aria-pressed="true">כל המורים</button><button class="supervise__chip" aria-pressed="false">רונית</button></div>
+				<div class="supervise__table-wrap"><table class="supervise__table"><thead><tr><th>מורה</th><th>כיתות</th><th>תוצאה</th></tr></thead><tbody><tr><th data-label="מורה"><a href="#">רונית</a></th><td data-label="כיתות">3</td><td data-label="תוצאה"><span class="supervise__pill supervise__pill--success"><span>✓</span>הצלחה</span> <span class="supervise__pill supervise__pill--unscored"><span>–</span>ללא ציון</span></td></tr></tbody></table></div>
+				<p class="supervise__notice">היסטוריה מוגבלת ל-100 שיעורים.</p>
+				<p class="supervise__empty">עדיין אין כיתות.</p>
+			</div>
 		</div>
 	</body>
 </html>

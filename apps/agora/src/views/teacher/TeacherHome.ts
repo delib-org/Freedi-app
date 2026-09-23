@@ -1,3 +1,4 @@
+import { getTeacherNavState } from '../../lib/teacherNav';
 import m from 'mithril';
 import { Icon } from '../../components/Icon';
 import { getLang, t } from '../../lib/i18n';
@@ -72,6 +73,8 @@ export function TeacherHome(): m.Component {
 	 */
 	let topicsLoaded = false;
 	let dashboardLoaded = false;
+	/** A school named this account as its supervisor, or it runs the system */
+	let canSupervise = false;
 	/**
 	 * Whose library is on screen. Auth settles in two beats — an anonymous
 	 * account first, the teacher's Google one a moment later — and the dashboard
@@ -290,6 +293,7 @@ export function TeacherHome(): m.Component {
 			classes = dashboard.classes;
 			schools = dashboard.schools;
 			sessions = dashboard.sessions;
+			canSupervise = dashboard.supervisedSchools.length > 0 || dashboard.isSystemAdmin;
 			aggregates = dashboard.aggregates;
 			noteTeacherDashboard(dashboard, user.uid);
 		} catch (error) {
@@ -734,6 +738,21 @@ export function TeacherHome(): m.Component {
 					// mid-period wants back in, not a shelf. Its own fragment —
 					// keyed rows cannot share a parent with unkeyed siblings.
 					live.map(liveBanner),
+					// The supervisor's door — only for an account a school has named
+					canSupervise || getTeacherNavState().canSupervise
+						? m(m.route.Link, { href: '/supervise', class: 'dashboard__supervise-card' }, [
+								m('span.dashboard__supervise-icon', m(Icon, { name: 'people', size: 28 })),
+								m('span.dashboard__supervise-text', [
+									m('strong.dashboard__class-name', t('dashboard.supervise_card')),
+									m('span.dashboard__class-meta', t('dashboard.supervise_sub')),
+								]),
+							])
+						: null,
+					m(
+						m.route.Link,
+						{ href: '/teach/activity', class: 'btn btn--ghost' },
+						t('supervise.myActivity'),
+					),
 
 					dashboardLoaded && showFirstRun ? firstRunStrip() : null,
 

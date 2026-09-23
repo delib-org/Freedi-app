@@ -8,6 +8,8 @@ const signedIn = vi.hoisted(() => ({ uid: null as string | null }));
 vi.mock('./user', () => ({
 	getUserState: () => ({ user: signedIn.uid ? { uid: signedIn.uid } : null }),
 }));
+// ...and so does the supervisor role, through its callables
+vi.mock('./supervisor', () => ({ clearSupervisorRole: vi.fn(), noteDashboardRole: vi.fn() }));
 import {
 	clearTeacherNav,
 	getTeacherNavState,
@@ -19,6 +21,8 @@ import type { TeacherDashboard } from './teacher';
 
 describe('teacher menu cache ownership', () => {
 	const dashboard: TeacherDashboard = {
+		supervisedSchools: [],
+		isSystemAdmin: false,
 		classes: [{ classId: 'c1', name: 'Blue', classCode: 'ABC123', memberCount: 3, schoolId: 's' }],
 		schools: [],
 		aggregates: new Map(),

@@ -21,6 +21,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
+      "@freedi/shared-charts": ["../../packages/shared-charts/src"],
       "@freedi/shared-i18n": ["../../packages/shared-i18n/src/index.ts"],
       "@freedi/shared-i18n/*": ["../../packages/shared-i18n/src/*"],
       "@freedi/shared-utils": ["../../packages/shared-utils/src"]

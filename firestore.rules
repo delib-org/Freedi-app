@@ -326,9 +326,11 @@ service cloud.firestore {
     // schoolId from: it is what "open your first class" is offered against.
     match /agoraSchools/{schoolId} {
       allow get: if isAuthenticated();
+      // ...and a supervisor the ones they supervise, from `supervisorMap.<uid>`.
       allow list: if isSystemAdminUser() ||
                      (isAuthenticated() &&
-                      request.auth.uid in resource.data.get('teacherMap', {}));
+                      (request.auth.uid in resource.data.get('teacherMap', {}) ||
+                       request.auth.uid in resource.data.get('supervisorMap', {})));
       allow write: if false;
     }
 
@@ -391,6 +393,20 @@ service cloud.firestore {
     // Sys-admin dashboard period counters (day/month/year docs + unique-class
     // markers). Trigger-written, admin-read.
     match /agoraStats/{statDocId} {
+      allow read: if isSystemAdminUser();
+      allow write: if false;
+    }
+
+    // Teacher aggregates (one doc per teacher uid) and console usage months
+    // (`{uid}--{YYYY-MM}`). Trigger/heartbeat-written. Sys-admin-read only:
+    // supervisors read them through the agoraSupervisorConsole callable,
+    // which filters by their scope, and a teacher never reads their own —
+    // hours are the supervisor's number, not a self-tally.
+    match /agoraTeacherAggregates/{teacherId} {
+      allow read: if isSystemAdminUser();
+      allow write: if false;
+    }
+    match /agoraTeacherUsage/{usageId} {
       allow read: if isSystemAdminUser();
       allow write: if false;
     }

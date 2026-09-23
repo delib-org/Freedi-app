@@ -1,4 +1,6 @@
 import m from 'mithril';
+import { IndicatorGrid } from '../../components/IndicatorGrid';
+import { classContextFrom, studentContextFrom } from '../../lib/indicatorContexts';
 import { getLang, t } from '../../lib/i18n';
 import { getUserState, ensureUser } from '../../lib/user';
 import { teacherRoster, teacherClass } from '../../lib/callables';
@@ -8,6 +10,12 @@ import { ClassForm, type ClassFormValue } from '../../components/ClassForm';
 import { advancementSummary, type TeacherConsoleMember } from '@freedi/shared-types';
 import { TeacherNav } from '../../components/TeacherNav';
 import { navClass } from '../../lib/teacherNav';
+
+/** Stats the summary card prints itself — the graphs card must not repeat them */
+const CLASS_STATS_IN_SUMMARY = ['class.lessons', 'class.avgScore', 'class.successRate'];
+/** Numbers the career drawer's own cells already show */
+const STUDENT_STATS_IN_DRAWER = ['student.points', 'student.avgPerGame', 'student.bestGame'];
+const GRAPHS_ID = 'roster-graphs';
 
 /**
  * One class: its advancement across games, its roster with each student's
@@ -31,6 +39,7 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 	let busyMemberId: string | null = null;
 	/** The cog: the roster is the page, the class's own settings wait behind it */
 	let settingsOpen = false;
+	let graphsOpen = false;
 	let renaming = false;
 	let savingClass = false;
 	let classError: string | null = null;
@@ -350,6 +359,14 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 				? m('.roster__drawer', [
 						career
 							? m('.roster__career', [
+									// The three numbers under it are printed by the cells below;
+									// the grid adds the sparkline, the mix and the attendance.
+									m(IndicatorGrid<'student'>, {
+										scope: 'student',
+										context: studentContextFrom(career, detail?.aggregate?.gamesPlayed ?? 0),
+										options: { hide: STUDENT_STATS_IN_DRAWER },
+										compact: true,
+									}),
 									m('.roster__career-grid', [
 										m('.roster__career-cell', [
 											m('span.roster__career-value', String(career.avgPointsPerGame)),
@@ -540,6 +557,36 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 							])
 						: null,
 
+					// The summary card already says lessons, score and success rate;
+					// the graphs behind this button are the rest of the class dashboard.
+					detail
+						? m(
+								'button.btn.btn--ghost.roster__graphs-toggle',
+								{
+									type: 'button',
+									'aria-expanded': String(graphsOpen),
+									'aria-controls': GRAPHS_ID,
+									onclick: () => {
+										graphsOpen = !graphsOpen;
+									},
+								},
+								[
+									m(Icon, { name: 'chart', size: 20 }),
+									m('span', t(graphsOpen ? 'roster.graphs_hide' : 'roster.graphs')),
+								],
+							)
+						: null,
+					graphsOpen && detail
+						? m(
+								'.card.roster__graphs',
+								{ id: GRAPHS_ID },
+								m(IndicatorGrid<'class'>, {
+									scope: 'class',
+									context: classContextFrom(detail),
+									options: { hide: CLASS_STATS_IN_SUMMARY },
+								}),
+							)
+						: null,
 					m(
 						'button.btn.btn--primary.btn--full.btn--lg',
 						{ onclick: () => m.route.set(`/teach/start?classId=${classId}`) },

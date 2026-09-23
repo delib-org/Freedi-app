@@ -50,5 +50,18 @@
     --wash-neutral: var(--card-default);
     // The status rule compensates by getting wider.
     --rule-width: 5px;
+
+    // --- CHART TOKENS (high contrast) ---
+    // The light hues already clear AA on white; pin them so a dark-mode
+    // user with prefers-contrast keeps the darker, more saturated set, and
+    // give the grid real structure now that tints are gone.
+    --chart-1: #0f6fb5;
+    --chart-2: #a05a15;
+    --chart-3: #4a53c0;
+    --chart-4: #2b7530;
+    --chart-5: #c23a86;
+    --chart-6: #71741a;
+    --chart-grid: #6d7ea6;
+    --chart-muted: #8a94a8;
   }
 }

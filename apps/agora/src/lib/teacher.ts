@@ -290,7 +290,7 @@ export async function saveCampPosition(
 // all. Wire payloads are valibot-parsed here; malformed entries are skipped —
 // one bad doc must not blank a dashboard.
 
-function parseEach<T>(rows: unknown[], parseRow: (data: unknown) => T, label: string): T[] {
+export function parseEach<T>(rows: unknown[], parseRow: (data: unknown) => T, label: string): T[] {
 	const parsed: T[] = [];
 	for (const row of rows) {
 		try {
@@ -309,6 +309,8 @@ const parseCareer = (data: unknown): AgoraStudentAggregate =>
 const parseParticipant = (data: unknown): AgoraParticipant => parse(AgoraParticipantSchema, data);
 
 export interface TeacherDashboard {
+	supervisedSchools: TeacherConsoleDashboard['supervisedSchools'];
+	isSystemAdmin: boolean;
 	classes: TeacherConsoleDashboard['classes'];
 	/** Where this teacher may open classes — empty means "ask your admin" */
 	schools: TeacherConsoleDashboard['schools'];
@@ -317,6 +319,8 @@ export interface TeacherDashboard {
 }
 
 export const EMPTY_DASHBOARD: TeacherDashboard = {
+	supervisedSchools: [],
+	isSystemAdmin: false,
 	classes: [],
 	schools: [],
 	aggregates: new Map(),
@@ -372,19 +376,39 @@ async function queryTeacherDashboard(uid: string): Promise<TeacherDashboard> {
 	const mine = (collectionName: string) =>
 		getDocs(query(collection(db, collectionName), where(`teacherMap.${uid}`, '==', true)));
 
-	const [classSnaps, schoolSnaps, aggregateSnaps, sessionSnaps] = await Promise.all([
-		mine(Collections.agoraClasses),
-		mine(Collections.agoraSchools),
-		mine(Collections.agoraClassAggregates),
-		getDocs(
-			query(
-				collection(db, Collections.agoraSessions),
-				where('teacherId', '==', uid),
-				orderBy('createdAt', 'desc'),
-				limit(20),
+	const [classSnaps, schoolSnaps, aggregateSnaps, sessionSnaps, supervisedSnaps, userSnap] =
+		await Promise.all([
+			mine(Collections.agoraClasses),
+			mine(Collections.agoraSchools),
+			mine(Collections.agoraClassAggregates),
+			getDocs(
+				query(
+					collection(db, Collections.agoraSessions),
+					where('teacherId', '==', uid),
+					orderBy('createdAt', 'desc'),
+					limit(20),
+				),
 			),
-		),
-	]);
+			// The schools this caller supervises — the "supervise" entry. Proved
+			// by the same equality constraint as teacherMap, on supervisorMap.
+			getDocs(
+				query(
+					collection(db, Collections.agoraSchools),
+					where(`supervisorMap.${uid}`, '==', true),
+				),
+			),
+			// usersV2/{uid}.systemAdmin, as the console reads it
+			getDoc(doc(db, Collections.users, uid)),
+		]);
+	const activeSchools = (snaps: typeof schoolSnaps): TeacherConsoleDashboard['schools'] =>
+		parseEach(
+			snaps.docs.map((snap) => snap.data()),
+			(data: unknown) => parse(AgoraSchoolSchema, data),
+			'school',
+		)
+			.filter((school) => school.status === 'active')
+			.map((school) => ({ schoolId: school.schoolId, name: school.name }))
+			.sort((a, b) => a.name.localeCompare(b.name));
 
 	const classes = parseEach(
 		classSnaps.docs.map((snap) => snap.data()),
@@ -412,14 +436,9 @@ async function queryTeacherDashboard(uid: string): Promise<TeacherDashboard> {
 			memberCount: agoraClass.memberCount,
 			schoolId: agoraClass.schoolId,
 		})),
-		schools: parseEach(
-			schoolSnaps.docs.map((snap) => snap.data()),
-			(data: unknown) => parse(AgoraSchoolSchema, data),
-			'school',
-		)
-			.filter((school) => school.status === 'active')
-			.map((school) => ({ schoolId: school.schoolId, name: school.name }))
-			.sort((a, b) => a.name.localeCompare(b.name)),
+		schools: activeSchools(schoolSnaps),
+		supervisedSchools: activeSchools(supervisedSnaps),
+		isSystemAdmin: userSnap.data()?.systemAdmin === true,
 		aggregates,
 		sessions: parseEach(
 			sessionSnaps.docs.map((snap) => snap.data()),
@@ -524,6 +543,8 @@ async function fetchConsoleDashboard(): Promise<TeacherDashboard> {
 
 	return {
 		classes: data.classes ?? [],
+		supervisedSchools: data.supervisedSchools ?? [],
+		isSystemAdmin: data.isSystemAdmin ?? false,
 		schools: data.schools ?? [],
 		aggregates,
 		sessions: parseEach(data.sessions ?? [], parseSession, 'session'),

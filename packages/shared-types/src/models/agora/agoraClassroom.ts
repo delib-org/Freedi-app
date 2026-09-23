@@ -62,6 +62,22 @@ export const AgoraSchoolSchema = object({
 	 */
 	teacherIds: optional(array(string())),
 	teacherMap: optional(record(string(), boolean())),
+	/**
+	 * The supervisors a sys-admin attached to this school — the ones who may
+	 * read its teachers' lessons and hours through `agoraSupervisorConsole`
+	 * (never through Firestore directly). `supervisorMap` is the `{uid: true}`
+	 * query index, for the same reason as `teacherMap`. Absent on schools
+	 * written before supervision existed; read both as empty.
+	 */
+	supervisorIds: optional(array(string())),
+	supervisorMap: optional(record(string(), boolean())),
+	/**
+	 * Per-supervisor narrowing, keyed by supervisor uid: the teachers this
+	 * supervisor may see. An ABSENT key means every teacher of the school —
+	 * a present key with an empty list means nobody. Written only by
+	 * `agoraAdminManageSchool`'s `setSupervisorScope`.
+	 */
+	supervisorScopes: optional(record(string(), object({ teacherIds: array(string()) }))),
 	status: ActiveArchivedSchema,
 	/** Sys-admin uid that opened the school */
 	createdBy: string(),
