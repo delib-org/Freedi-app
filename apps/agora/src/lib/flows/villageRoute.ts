@@ -1,3 +1,4 @@
+import { canWritePlanItem } from './stageAccess';
 import { AgoraStage, questionKindOf, type AgoraStagePlanItem } from '@freedi/shared-types';
 
 /**
@@ -185,7 +186,7 @@ export function acceptsVillageWrite(
 	return (
 		payload.type === 'agora-village-write' &&
 		typeof payload.itemId === 'string' &&
-		viewingIndex === currentIndex &&
+		canWritePlanItem(plan, currentIndex, viewingIndex) &&
 		viewingIndex >= 0 &&
 		plan[viewingIndex]?.itemId === payload.itemId &&
 		villageDesk(plan[viewingIndex]) !== null

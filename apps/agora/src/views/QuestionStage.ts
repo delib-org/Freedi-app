@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { canWriteStage } from '../lib/flows/stageAccess';
 import { t } from '../lib/i18n';
 import { Icon } from '../components/Icon';
 import { RateScale } from '../components/RateScale';
@@ -30,7 +31,7 @@ export interface QuestionStageAttrs {
 	planIndex: number;
 	myParticipant: AgoraParticipant;
 	userId: string;
-	/** The room is ON this stage. False when a player stepped back to re-read it. */
+	/** The room is ON this stage. Used only for the teacher’s current-stage progress. */
 	live: boolean;
 }
 
@@ -60,7 +61,7 @@ function toRow(answer: AgoraProposal, named: boolean): AgoraCarriedAnswer {
  * ordinary option Statement and every weighing an ordinary evaluation, so
  * the numbers on the cards are the shared pipeline's, not this screen's.
  *
- * Closed (the room moved on), the stage becomes its record: the outcome card
+ * Once the session finishes, the stage becomes its record: the outcome card
  * — what was carried forward and the summary — over the answers as they
  * stood, with the pen and the faces put away.
  */
@@ -92,7 +93,7 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 			const mine = answers.find((answer) => answer.creatorId === userId);
 			const others = answers.filter((answer) => answer.creatorId !== userId);
 			const outcome = session.stageState?.[item.itemId]?.outcome;
-			const closed = !live || outcome !== undefined;
+			const closed = !canWriteStage(session, item.itemId);
 
 			// Empty for a new question, pre-filled with my own saved answer, and
 			// otherwise left exactly as the student is typing it (lib/flows/penState)
@@ -124,7 +125,7 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 				m.redraw();
 				try {
 					await saveAnswer(session, item, myParticipant.anonName, text);
-					reportStageProgress(session.sessionId, userId, item.stage, 1, 1);
+					if (live) reportStageProgress(session.sessionId, userId, item.stage, 1, 1);
 				} catch (error) {
 					console.error('[Question] Saving the answer failed:', error);
 					saveFailed = true;

@@ -43,6 +43,7 @@ interface VillageShellAttrs {
 	plan: readonly AgoraStagePlanItem[];
 	currentIndex: number;
 	viewingIndex: number;
+	writable: boolean;
 	browseFreely?: boolean;
 	/** The way out when the 3D world will not load on this device */
 	onLeaveVillage?: () => void;
@@ -140,7 +141,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				desk: villageDesk(item)
 					? {
 							...villageDesk(item),
-							writable: attrs.viewingIndex === attrs.currentIndex,
+							writable: attrs.writable,
 							text: attrs.papers.find((paper) => paper.own)?.text ?? '',
 						}
 					: null,
@@ -187,7 +188,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		opened = true;
 		deskOpen = true;
 		deskBaseline = attrs.papers.find((p) => p.own)?.text ?? '';
-		focusDesk = attrs.viewingIndex === attrs.currentIndex;
+		focusDesk = attrs.writable;
 		if (focusDesk) attrs.onWrite?.();
 		waitingAnchor = true;
 		clearTimeout(anchorTimer);
@@ -328,6 +329,8 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		if (then === 'none') return;
 		const item = attrs.plan[attrs.viewingIndex];
 		if (item && villagePlace(item) === place) {
+			// A delayed arrival must not put away a paper the student already opened.
+			if (deskOpen || communityOpen) return;
 			if (villageDesk(item)) showStation();
 			else if (then === 'station' && place === 'council') enterCouncil();
 
@@ -356,10 +359,12 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			unavailable = false;
 			clearTimeout(timer);
 			sync();
-			// A fresh page (a refresh, the lobby handing over to the first
-			// station) starts at the fountain: take the student to the class.
-			const roomItem = attrs.plan[attrs.currentIndex];
-			if (leads() && roomItem) go(villagePlace(roomItem), 'look', 'return');
+			// Restore the student's station, including an earlier one used for catch-up.
+			// The world can finish loading after the student has opened their paper.
+			const viewingItem = attrs.plan[attrs.viewingIndex];
+			if (leads() && viewingItem && !opened && !communityOpen) {
+				go(villagePlace(viewingItem), 'look', 'return');
+			}
 			m.redraw();
 		} else if (
 			payload &&
@@ -420,7 +425,10 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			payload.itemId === flightItem
 		) {
 			finishFlight();
-		} else if (acceptsVillageWrite(payload, attrs.plan, attrs.currentIndex, attrs.viewingIndex)) {
+		} else if (
+			attrs.writable &&
+			acceptsVillageWrite(payload, attrs.plan, attrs.currentIndex, attrs.viewingIndex)
+		) {
 			openDesk();
 		} else if (acceptsVillageEntry(payload, attrs.plan, attrs.currentIndex, attrs.viewingIndex)) {
 			if (villageDesk(attrs.plan[attrs.viewingIndex])) {
@@ -466,10 +474,13 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 					showStation();
 				}
 			}
-			// The teacher moved the room on. Whatever the student had open belongs
-			// to the station they are leaving; led, they walk to the new one and
-			// stand in front of it; free, the world announces it and they choose.
-			if (lastRoomIndex !== undefined && attrs.currentIndex !== lastRoomIndex) {
+			// Follow the teacher only when this student is following the room.
+			// A student catching up keeps their station, paper and draft.
+			if (
+				lastRoomIndex !== undefined &&
+				attrs.currentIndex !== lastRoomIndex &&
+				attrs.viewingIndex === attrs.currentIndex
+			) {
 				const roomItem = attrs.plan[attrs.currentIndex];
 				if (leads() && roomItem) {
 					go(villagePlace(roomItem), 'station', 'advance');
@@ -555,14 +566,11 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 							anchor,
 						)
 					: null;
-			const deskPrompt =
-				viewing && attrs.viewingIndex === attrs.currentIndex
-					? villageDesk(viewing)?.prompt
-					: undefined;
+			const deskPrompt = viewing && attrs.writable ? villageDesk(viewing)?.prompt : undefined;
 
 			return m('.village-shell', [
 				flightItem
-					? m('div.village-flight-status', { role: 'status' }, 'הפתק שלך בדרך ללוח…')
+					? m('div.village-flight-status', { role: 'status' }, t('village.flight_status'))
 					: null,
 				// The toolbar and the booth-switch chips used to sit here — two more
 				// ways to press `showStation()`, plus a third door to the board.
@@ -658,7 +666,10 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 					library
 						? [
 								m('.village-library__header', [
-									m('div', [m('small', 'כפר החכמים · בית של ידע'), m('h2', 'הספרייה')]),
+									m('div', [
+										m('small', t('village.library.kicker')),
+										m('h2', t('village.library.title')),
+									]),
 									bookOpen
 										? m(
 												'button.btn.btn--secondary',
@@ -677,8 +688,8 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 											m(
 												'p.village-library__intro',
 												attrs.browseFreely
-													? 'בחרו ספר מהמדף. אפשר לקרוא ולחזור לכל ספר בכל זמן.'
-													: 'כל ספר פותח חלון לנושא. הספר שהמורה מציג מחכה לכם, ואפשר לשוב גם לספרים שכבר נפתחו.',
+													? t('village.library.intro_free')
+													: t('village.library.intro_led'),
 											),
 											m(
 												'.village-library__shelf',
@@ -719,12 +730,12 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 																	m(
 																		'small',
 																		attrs.browseFreely
-																			? 'פתיחת הספר'
+																			? t('village.library.book_open')
 																			: index > attrs.currentIndex
-																				? 'ייפתח בהמשך המפגש'
+																				? t('village.library.book_later')
 																				: index === attrs.currentIndex
-																					? 'המורה מציג עכשיו · פתיחת הספר'
-																					: 'פתוח לקריאה חוזרת',
+																					? t('village.library.book_current')
+																					: t('village.library.book_reread'),
 																	),
 																],
 															),
@@ -739,7 +750,11 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 												anchor?.speaker
 													? m('small.village-bubble__speaker', `💬 ${anchor.speaker}`)
 													: null,
-												m('h2', villageDesk(attrs.plan[attrs.viewingIndex])?.label ?? 'הפתק שלי'),
+												m(
+													'h2',
+													villageDesk(attrs.plan[attrs.viewingIndex])?.label ??
+														t('village.note.mine'),
+												),
 												deskPrompt ? m('p.village-bubble__prompt', deskPrompt) : null,
 											]),
 											m(
@@ -759,7 +774,9 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 										? m('.village-desk__header', [
 												m(
 													'h2',
-													viewing.stage === AgoraStage.voting ? 'הקלפי של המועצה' : 'מועצת הכפר',
+													viewing.stage === AgoraStage.voting
+														? t('village.council.ballot')
+														: t('village.council.title'),
 												),
 												m(
 													'button.btn.btn--secondary',

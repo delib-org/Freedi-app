@@ -2,6 +2,7 @@ import { Inbox } from './Inbox';
 import type { InboxTarget } from '../lib/inbox';
 import { registerPresentationNavigator, unregisterPresentationNavigator } from '../lib/helpedFocus';
 import m from 'mithril';
+import { canWriteStage } from '../lib/flows/stageAccess';
 import {
 	AGORA_ROUND,
 	AgoraStage,
@@ -243,15 +244,18 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			const raters = note.evaluation?.numberOfEvaluators ?? 0;
 			if (raters === 0) return null;
 			const spec = roundSpecOf(item);
-			if (spec?.scale === 'like') return `${raters} אהבו`;
+			if (spec?.scale === 'like') return t('village.standing.likes', { n: raters });
 			const mean = note.evaluation?.averageEvaluation ?? 0;
 
-			return `${Math.round(mean * 100)}% · ${raters} דירוגים`;
+			return t('village.standing.mean', { pct: Math.round(mean * 100), n: raters });
 		}
 		const score = state.scores[note.statementId];
 		if (!score?.classConsensus || score.classConsensus.n === 0) return null;
 
-		return `${boardPercent(score)}% הסכמה בכיתה · ${score.classConsensus.n} דירוגים`;
+		return t('village.standing.consensus', {
+			pct: boardPercent(score),
+			n: score.classConsensus.n,
+		});
 	}
 
 	return {
@@ -304,7 +308,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			};
 			const item = a.plan[a.viewingIndex];
 			const notes = item ? data.notes(item) : [];
-			const live = a.viewingIndex === a.currentIndex;
+			const live = !!item && canWriteStage(a.session, item.itemId);
 			const mine = notes.find((n) => n.creatorId === a.userId);
 			const canRate = live && mine !== undefined && !a.source;
 			const stationItems = item
@@ -319,13 +323,13 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 
 				return [
 					m('header', [
-						m('h2', 'לוח התוצאות של הכיתה'),
-						m('button.btn.btn--secondary', { onclick: () => close(a) }, 'חזרה לכפר'),
+						m('h2', t('village.scoreboard.title')),
+						m('button.btn.btn--secondary', { onclick: () => close(a) }, t('village.back')),
 					]),
 					a.scoreboard
 						? [
 								a.scoreboard.goalOnly
-									? m('p.village-scoreboard__mode', '⚽ המורה הראה רק את ההצעות שנכנסו לשער')
+									? m('p.village-scoreboard__mode', t('village.scoreboard.goal_only'))
 									: null,
 								m(ResultsSwitch, {
 									tab: resultsTab,
@@ -347,7 +351,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 											onlyScored: a.scoreboard.goalOnly,
 										}),
 							]
-						: m('p', 'הלוח ייפתח כשהמפגש יתחיל.'),
+						: m('p', t('village.scoreboard.not_started')),
 				];
 			};
 
@@ -377,7 +381,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 						!own && canRate && item
 							? m('.village-note__rate', ratingWidget(a, item, note))
 							: !own && live && !mine && !a.source
-								? m('small.village-note__hint', 'כתבו קודם את הפתק שלכם, ואז תוכלו לדרג')
+								? m('small.village-note__hint', t('village.note.rate_gate'))
 								: null,
 						own && live && a.onEditMine
 							? m(
@@ -403,7 +407,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			return m('.village-community', [
 				m(
 					'.village-coins',
-					{ 'aria-label': `המטבעות שלי: ${a.points ?? 0}`, 'aria-live': 'polite' },
+					{ 'aria-label': t('village.coins_aria', { n: a.points ?? 0 }), 'aria-live': 'polite' },
 					[
 						m('img', { src: '/assets/gold-coin.svg', alt: '' }),
 						m('strong', a.points?.toLocaleString('he-IL') ?? '…'),
@@ -424,13 +428,13 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 							{ role: 'region', 'aria-label': t('village.nav.board') },
 							[
 								m('header', [
-									m('h2', item ? planItemLabel(item) : 'לוח הפתקים'),
-									m('button.btn.btn--secondary', { onclick: () => close(a) }, 'חזרה לכפר'),
+									m('h2', item ? planItemLabel(item) : t('village.nav.board')),
+									m('button.btn.btn--secondary', { onclick: () => close(a) }, t('village.back')),
 								]),
 								!selected && item && stationItems.length > 1
 									? m(
 											'nav.village-board-tabs',
-											{ 'aria-label': 'שאלות בתחנה' },
+											{ 'aria-label': t('village.station_questions') },
 											stationItems.map((p) =>
 												m(
 													'button.btn.btn--secondary.btn--sm',
@@ -477,9 +481,9 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 															selected = undefined;
 														},
 													},
-													'חזרה ללוח',
+													t('village.board.back'),
 												),
-												m('h3', 'הפתק שלי'),
+												m('h3', t('village.note.mine')),
 												m('p', selected.statement),
 												data.threads(selected.statementId).size
 													? [...data.threads(selected.statementId)].map(([uid, messages], i) =>
@@ -491,29 +495,21 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 																	},
 																},
 																[
-																	`שיחה ${i + 1}`,
+																	t('village.thread.n', { n: i + 1 }),
 																	m('p', messages[messages.length - 1]?.statement),
-																	'קריאה, תגובה ותודה',
+																	t('village.thread.cta'),
 																],
 															),
 														)
-													: m('p', 'עדיין לא התקבלו תגובות לפתק שלך.'),
+													: m('p', t('village.note.no_replies')),
 											]
 										: [
 												live && !mine && notes.length > 0 && !a.source
-													? m(
-															'p.village-board__gate',
-															'הלוח פתוח לקריאה. כדי לדרג ולהציע שיפורים, כתבו קודם את הפתק שלכם על השולחן.',
-														)
+													? m('p.village-board__gate', t('village.board.gate'))
 													: null,
 												m(
 													'.village-notes',
-													notes.length
-														? notes.map(noteCard)
-														: m(
-																'p',
-																'הפתקים שתכתבו בתחנה יופיעו כאן. חזרו לתחנה כדי לכתוב את שלכם.',
-															),
+													notes.length ? notes.map(noteCard) : m('p', t('village.board.empty')),
 												),
 											],
 							],

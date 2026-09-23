@@ -44,7 +44,7 @@ describe('stageNavReduce', () => {
 		expect(back.viewingItemId).toBeNull();
 	});
 
-	it('is carried forward when the room advances', () => {
+	it('keeps a catch-up station when the room advances', () => {
 		const state = stageNavReduce(
 			{ viewingItemId: 'question-1' },
 			{ kind: 'session-advanced' },
@@ -52,7 +52,15 @@ describe('stageNavReduce', () => {
 			3,
 		);
 
-		expect(state.viewingItemId).toBeNull();
+		expect(state.viewingItemId).toBe('question-1');
+	});
+
+	it('carries a catch-up station to the results when the room reaches them', () => {
+		for (const index of [4, 5]) {
+			expect(
+				stageNavReduce({ viewingItemId: 'question-1' }, { kind: 'session-advanced' }, plan, index),
+			).toBe(INITIAL_STAGE_NAV);
+		}
 	});
 
 	it('restores only what is still valid', () => {

@@ -125,6 +125,20 @@ describe('personal writing desks', () => {
 		{ itemId: 'idea-b', stage: AgoraStage.deliberation },
 		{ itemId: 'vote', stage: AgoraStage.voting },
 	];
+	it('opens earlier question desks for a late arrival and rejects future or mismatched papers', () => {
+		expect(acceptsVillageWrite({ type: 'agora-village-write', itemId: 'story' }, plan, 2, 0)).toBe(
+			true,
+		);
+		expect(acceptsVillageWrite({ type: 'agora-village-write', itemId: 'needs' }, plan, 2, 1)).toBe(
+			true,
+		);
+		expect(acceptsVillageWrite({ type: 'agora-village-write', itemId: 'needs' }, plan, 0, 1)).toBe(
+			false,
+		);
+		expect(acceptsVillageWrite({ type: 'agora-village-write', itemId: 'story' }, plan, 2, 1)).toBe(
+			false,
+		);
+	});
 	it('invites the appropriate kind of writing without adding writing to voting', () => {
 		expect(plan.map((item) => villageDesk(item)?.label ?? null)).toEqual([
 			'הסיפור שלי',

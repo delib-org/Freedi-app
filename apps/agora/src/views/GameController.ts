@@ -4,6 +4,7 @@ import { councilBallot, councilPitch, type CouncilModel } from '../lib/flows/vil
 import { getVotingState } from '../lib/voting';
 import { sessionVillageMode } from '../lib/flows/sessionLinks';
 import m from 'mithril';
+import { canWriteStage } from '../lib/flows/stageAccess';
 import { t } from '../lib/i18n';
 import { ensureUser } from '../lib/user';
 import {
@@ -86,9 +87,9 @@ import {
  *
  * The room's position comes from the session doc (single source of truth,
  * moved only by the advance callable). The player's position is their own:
- * `stageNav` lets them step back to any stage already opened and re-read it,
- * and is carried forward the moment the room advances. A stage that is not
- * the room's current one renders read-only — its outcome is already written.
+ * `stageNav` lets them step back to any stage already opened and catch up.
+ * Earlier questions remain writable until the session finishes;
+ * their carried summaries remain the record made when the class moved on.
  */
 
 /**
@@ -310,15 +311,16 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			}
 
 			// A stage change is a journey leg — play the travel card over the
-			// incoming stage instead of hard-cutting, and carry the player to it
-			// wherever they were looking. Keyed on the plan POSITION, not the
+			// incoming stage for students following the class. A student catching
+			// up stays at their chosen station. Keyed on the plan POSITION, not the
 			// kind: two question stages in a row are two journeys. Never on
 			// first render: a refresh lands directly where the class already is.
 			if (currentIndex !== lastIndex) {
 				if (lastIndex !== null) {
 					dispatchNav({ kind: 'session-advanced' });
 					const item = plan[currentIndex];
-					if (item && hasStageTransition(item.stage)) beginStageTransition(item);
+					if (nav.viewingItemId === null && item && hasStageTransition(item.stage))
+						beginStageTransition(item);
 				}
 				lastIndex = currentIndex;
 			}
@@ -326,6 +328,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const viewingIndex = effectiveIndex(plan, currentIndex, nav.viewingItemId);
 			const item = plan[viewingIndex] ?? plan[currentIndex];
 			const live = viewingIndex === currentIndex;
+			const writable = canWriteStage(session, item.itemId);
 
 			// The look this screen wears, and the door to change it. A civic
 			// square has no door: it wears Odyssey's colours by contract.
@@ -422,6 +425,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								moreOpen = true;
 							},
 							label: t('village.more.open'),
+							open: moreOpen,
 						}
 					: undefined,
 				mail:
@@ -467,6 +471,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									plan,
 									currentIndex,
 									viewingIndex,
+									writable,
 									papers: [],
 									navigation: session.villageNavigation ?? 'teacher',
 									call: session.villageCall,
@@ -498,6 +503,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								plan,
 								currentIndex,
 								viewingIndex,
+								writable,
 								papers: [],
 								navigation: session.villageNavigation ?? 'teacher',
 								call: session.villageCall,
@@ -797,6 +803,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								plan,
 								currentIndex,
 								viewingIndex,
+								writable,
 								council,
 								navigation: session.villageNavigation ?? 'teacher',
 								call: session.villageCall,

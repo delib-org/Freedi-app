@@ -1,6 +1,11 @@
 vi.mock('../Inbox', () => ({ Inbox: vi.fn() }));
 import { describe, it, expect, vi } from 'vitest';
-import { AgoraStage, StatementType, type AgoraSession } from '@freedi/shared-types';
+import {
+	AgoraSessionStatus,
+	AgoraStage,
+	StatementType,
+	type AgoraSession,
+} from '@freedi/shared-types';
 import type { AgoraProposal } from '../../lib/proposals';
 import type m from 'mithril';
 
@@ -91,17 +96,22 @@ describe('village session integration', () => {
 		component.onremove!.call(component, node as m.VnodeDOM<VillageCommunityAttrs>);
 		vi.useRealTimers();
 	});
-	it('offers "edit my note" on the board only for my note at the live booth, and it goes to the table', () => {
+	it('offers "edit my note" on the board for my note at writable booths, including catch-up questions', () => {
 		state.proposals = [proposal('mine')];
+		state.answersByQuestion = { q: [proposal('my-answer')] };
 		const onEditMine = vi.fn();
-		const board = (viewingIndex: number) => {
+		const board = (viewingIndex: number, question = false, ended = false) => {
 			const component = VillageCommunity();
 			const attrs: VillageCommunityAttrs = {
 				session: { sessionId: 's' } as AgoraSession,
 				userId: 'a',
 				anonName: 'a',
 				plan: [
-					{ itemId: 'past', stage: AgoraStage.deliberation },
+					{
+						itemId: 'past',
+						stage: question ? AgoraStage.question : AgoraStage.deliberation,
+						statementId: 'q',
+					},
 					{ itemId: 'live', stage: AgoraStage.deliberation },
 				],
 				currentIndex: 1,
@@ -110,6 +120,13 @@ describe('village session integration', () => {
 				navigate: vi.fn(),
 				onPause: vi.fn(),
 				onEditMine,
+			};
+			attrs.session = {
+				...attrs.session,
+				status: ended ? AgoraSessionStatus.ended : AgoraSessionStatus.live,
+				stage: AgoraStage.deliberation,
+				stageIndex: 1,
+				stagePlan: [...attrs.plan],
 			};
 			const node = { attrs } as unknown as m.VnodeDOM<VillageCommunityAttrs>;
 			component.oninit!.call(component, node);
@@ -124,6 +141,8 @@ describe('village session integration', () => {
 		(live!.attrs!.onclick as () => void)();
 		expect(onEditMine).toHaveBeenCalledTimes(1);
 		expect(board(0)).toBeUndefined();
+		expect(board(0, true)).toBeDefined();
+		expect(board(0, true, true)).toBeUndefined();
 	});
 });
 

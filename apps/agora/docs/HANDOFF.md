@@ -26,6 +26,29 @@ can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
 
+## Late arrivals and catch-up (2026-09-22)
+
+Joining an open/live session already worked. Earlier question stations now
+remain writable and ratable until results/end, including story, needs, vision
+and ordinary questions. `lib/flows/stageAccess.ts` supplies the same policy to
+the simple views, village desks and village board. Future stations stay closed;
+past proposal rounds and ballots retain their existing closing behavior.
+
+The carried outcome remains the snapshot made when the class left that question.
+Catch-up answers and ratings use the normal confirmed writes and evaluation
+pipeline, without replacing that snapshot or reporting progress for the room's
+current station. Students revisiting a station keep it across a teacher advance
+and refresh — except the advance to results or end, which carries everyone to
+the results (`stageNavReduce`'s `session-advanced`), since nothing is writable
+any more; explicit teacher calls still work. A delayed village load or arrival
+no longer closes a paper the student already opened.
+
+Validation: 364 unit tests, lint, app/script typechecks, production build,
+contrast and text-size audits. `npx tsx scripts/e2e-late-join.mjs` verifies a
+fresh live-session join after story/needs close, earlier answers and ratings in
+Firestore, preserved summaries, catch-up across advance, and refresh in both
+classic and village views. Client-only; not deployed.
+
 ## Village navigation and settings (2026-09-22)
 
 The village has one persistent `PlaceBar`: Village, My note, All notes,
@@ -82,7 +105,8 @@ The embedded `agora-village-write` message carries the current plan item ID.
 `VillageShell` checks source/origin and the live item, opens the existing
 RoundStage/QuestionStage/Deliberation writer and focuses it. Deliberation's
 `writeRequest` returns to the personal editor without advancing the lap.
-Past items are read-only through the normal entry route. Repeated questions
+Earlier questions now support catch-up (see above); past proposal rounds remain
+read-only. Repeated questions
 keep distinct IDs. No demo localStorage or parallel proposal persistence is
 used; existing confirmed saves and point awards remain authoritative.
 
@@ -276,9 +300,9 @@ guard still holds.
   Those names are readable by any signed-in user who knows the session.
 - **Free navigation**: `lib/flows/stageNav.ts` (pure) + `components/StageNav`.
   Opened stages are doors; the player's choice lives in sessionStorage and is
-  carried forward when the room advances. A past stage renders read-only
-  (deliberation → `ResultsBoard`, question → ranked list + outcome, voting →
-  tallies).
+  retained when the room advances. Earlier questions support catch-up until
+  results/end; past deliberation renders `ResultsBoard` and past voting shows
+  tallies.
 - **Admin UI**: `/teach/start` has Scenario / Quick game, names, and the
   `StagePlanEditor` (reducer `lib/flows/stagePlanEditor.ts`; presets
   `classic`, `quickDecision`). The live board shows the plan rail, the
