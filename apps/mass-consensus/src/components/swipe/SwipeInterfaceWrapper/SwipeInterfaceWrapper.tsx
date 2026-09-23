@@ -21,6 +21,8 @@ export interface SwipeInterfaceWrapperProps {
   onComplete?: () => void;
   /** Survey context: used to stamp evaluations with a demographic anchor */
   surveyId?: string;
+  /** Position in a multi-question survey ("1) …"); omitted = no number */
+  questionNumber?: number;
 }
 
 const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
@@ -29,6 +31,7 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
   mergedSettings,
   onComplete,
   surveyId,
+  questionNumber,
 }) => {
   const { t } = useTranslation();
   const { user, isLoading } = useAuth();
@@ -85,6 +88,7 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
       mergedSettings={mergedSettings}
       onComplete={onComplete}
       surveyId={surveyId}
+      questionNumber={questionNumber}
     />
   );
 };

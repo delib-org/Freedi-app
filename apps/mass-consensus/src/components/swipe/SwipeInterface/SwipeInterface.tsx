@@ -56,6 +56,8 @@ export interface SwipeInterfaceProps {
   onComplete?: () => void;
   /** Surveys: used to stamp each evaluation with its demographic anchor */
   surveyId?: string;
+  /** Position in a multi-question survey ("1) …"); omitted = no number */
+  questionNumber?: number;
 }
 
 const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
@@ -66,6 +68,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   mergedSettings,
   onComplete,
   surveyId,
+  questionNumber,
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -430,6 +433,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         onSubmitSuccess={handleProposalSuccess}
         questionId={question.statementId}
         questionText={question.statement}
+        questionNumber={questionNumber}
         questionDescription={getParagraphsText(question.paragraphs)}
         minWords={question.statementSettings?.minResponseWords}
         userId={userId}
@@ -461,6 +465,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         }}
         questionId={question.statementId}
         questionText={question.statement}
+        questionNumber={questionNumber}
         questionDescription={getParagraphsText(question.paragraphs)}
         minWords={question.statementSettings?.minResponseWords}
         userId={userId}
