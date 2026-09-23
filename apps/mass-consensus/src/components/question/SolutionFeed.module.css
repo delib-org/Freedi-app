@@ -314,6 +314,20 @@
   max-width: 75ch;
 }
 
+/* Grey lead-in line above the question */
+.titleLead {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: normal;
+  margin-bottom: var(--spacing-xs);
+}
+
+.titleQuestion {
+  display: block;
+}
+
 /* "1)" before the title in a multi-question survey */
 .questionNumber {
   color: var(--btn-primary);
@@ -336,6 +350,10 @@
   .title {
     font-size: 1.125rem;
     margin-bottom: var(--spacing-xs);
+  }
+
+  .titleLead {
+    font-size: 0.875rem;
   }
 
   .description {
