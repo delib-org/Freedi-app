@@ -210,6 +210,8 @@ export interface AvailableQuestionsResponse {
 export interface TestDataCounts {
   progressCount: number;
   demographicAnswerCount: number;
+  evaluationCount: number;
+  userEvaluationCount: number;
   total: number;
 }
 

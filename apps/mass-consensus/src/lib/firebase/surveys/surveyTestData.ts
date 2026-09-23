@@ -12,7 +12,44 @@ import {
 export interface TestDataCounts {
   progressCount: number;
   demographicAnswerCount: number;
+  evaluationCount: number;
+  userEvaluationCount: number;
   total: number;
+}
+
+/**
+ * Test-flagged evaluations + userEvaluations mirrors for the survey's questions.
+ * The mirror is what makes a participant's options show as "already evaluated",
+ * so clearing must remove it together with the evaluations themselves.
+ */
+async function getTestEvaluationDocs(
+  db: FirebaseFirestore.Firestore,
+  questionIds: string[]
+): Promise<{
+  evaluationDocs: FirebaseFirestore.QueryDocumentSnapshot[];
+  userEvaluationDocs: FirebaseFirestore.QueryDocumentSnapshot[];
+}> {
+  const snapshots = await Promise.all(
+    questionIds.map((questionId) =>
+      Promise.all([
+        db
+          .collection(Collections.evaluations)
+          .where('parentId', '==', questionId)
+          .where('isTestData', '==', true)
+          .get(),
+        db
+          .collection(Collections.userEvaluations)
+          .where('parentStatementId', '==', questionId)
+          .where('isTestData', '==', true)
+          .get(),
+      ])
+    )
+  );
+
+  return {
+    evaluationDocs: snapshots.flatMap(([evals]) => evals.docs),
+    userEvaluationDocs: snapshots.flatMap(([, userEvals]) => userEvals.docs),
+  };
 }
 
 /**
@@ -31,6 +68,8 @@ export async function getTestDataCounts(surveyId: string): Promise<TestDataCount
 
   // Count test demographic answers (in usersData, keyed by statementId)
   let demographicAnswerCount = 0;
+  let evaluationCount = 0;
+  let userEvaluationCount = 0;
   const survey = await getSurveyById(surveyId);
   if (survey) {
     const statementId = getStatementIdForSurvey(survey);
@@ -40,12 +79,21 @@ export async function getTestDataCounts(surveyId: string): Promise<TestDataCount
       .where('isTestData', '==', true)
       .get();
     demographicAnswerCount = answersSnapshot.size;
+
+    const { evaluationDocs, userEvaluationDocs } = await getTestEvaluationDocs(
+      db,
+      survey.questionIds ?? []
+    );
+    evaluationCount = evaluationDocs.length;
+    userEvaluationCount = userEvaluationDocs.length;
   }
 
   return {
     progressCount,
     demographicAnswerCount,
-    total: progressCount + demographicAnswerCount,
+    evaluationCount,
+    userEvaluationCount,
+    total: progressCount + demographicAnswerCount + evaluationCount + userEvaluationCount,
   };
 }
 
@@ -63,6 +111,8 @@ export async function clearSurveyTestData(surveyId: string): Promise<ClearTestDa
   const deletedCounts: TestDataCounts = {
     progressCount: 0,
     demographicAnswerCount: 0,
+    evaluationCount: 0,
+    userEvaluationCount: 0,
     total: 0,
   };
 
@@ -77,6 +127,8 @@ export async function clearSurveyTestData(surveyId: string): Promise<ClearTestDa
     // Get and delete test demographic answers (in usersData, keyed by statementId)
     const survey = await getSurveyById(surveyId);
     let answersSnapshot: FirebaseFirestore.QuerySnapshot = { docs: [], size: 0, empty: true } as unknown as FirebaseFirestore.QuerySnapshot;
+    let evaluationDocs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+    let userEvaluationDocs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
     if (survey) {
       const statementId = getStatementIdForSurvey(survey);
       answersSnapshot = await db
@@ -84,11 +136,22 @@ export async function clearSurveyTestData(surveyId: string): Promise<ClearTestDa
         .where('statementId', '==', statementId)
         .where('isTestData', '==', true)
         .get();
+
+      ({ evaluationDocs, userEvaluationDocs } = await getTestEvaluationDocs(
+        db,
+        survey.questionIds ?? []
+      ));
     }
 
-    // Batch delete (Firestore batch limit is 500)
+    // Batch delete (Firestore batch limit is 500). Deleting an evaluation fires
+    // the deleteEvaluation trigger, which rolls the option's consensus back.
     const BATCH_SIZE = 500;
-    const allDocs = [...progressSnapshot.docs, ...answersSnapshot.docs];
+    const allDocs = [
+      ...progressSnapshot.docs,
+      ...answersSnapshot.docs,
+      ...evaluationDocs,
+      ...userEvaluationDocs,
+    ];
 
     for (let i = 0; i < allDocs.length; i += BATCH_SIZE) {
       const batch = db.batch();
@@ -103,7 +166,13 @@ export async function clearSurveyTestData(surveyId: string): Promise<ClearTestDa
 
     deletedCounts.progressCount = progressSnapshot.size;
     deletedCounts.demographicAnswerCount = answersSnapshot.size;
-    deletedCounts.total = deletedCounts.progressCount + deletedCounts.demographicAnswerCount;
+    deletedCounts.evaluationCount = evaluationDocs.length;
+    deletedCounts.userEvaluationCount = userEvaluationDocs.length;
+    deletedCounts.total =
+      deletedCounts.progressCount +
+      deletedCounts.demographicAnswerCount +
+      deletedCounts.evaluationCount +
+      deletedCounts.userEvaluationCount;
 
     logger.info(
       '[clearSurveyTestData] Cleared test data for survey:',
