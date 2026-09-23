@@ -552,8 +552,11 @@ export default function SolutionFeedClient({
           <>
             {/* Instructions */}
             <div className={styles.instructions}>
-              <h3>{t('Please rate the following suggestions')}</h3>
-              <p>{t('rateInstructions')}</p>
+              <h3>
+                {tWithParams('Rate the answers others suggested to the question "{{question}}"', {
+                  question: question.statement,
+                })}
+              </h3>
             </div>
 
             {/* Inline evaluation progress */}
