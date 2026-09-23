@@ -54,10 +54,10 @@ export default function TestSwipePage() {
   const [currentQuestion, setCurrentQuestionState] = useState<Statement | null>(null);
 
   // Mock user (replace with real auth)
-  const mockUser = {
+  const [mockUser] = useState(() => ({
     uid: 'test-user-' + Date.now(),
     displayName: 'Test User',
-  };
+  }));
 
   // Load question ID from URL or prompt
   useEffect(() => {
@@ -138,7 +138,7 @@ export default function TestSwipePage() {
     };
 
     loadData();
-  }, [questionId, dispatch]);
+  }, [questionId, dispatch, mockUser.uid]);
 
   const handleStart = () => {
     dispatch(startSwiping());
@@ -196,7 +196,7 @@ export default function TestSwipePage() {
         })
       );
 
-      console.log('Proposal saved to Firestore successfully');
+      console.info('Proposal saved to Firestore successfully');
     } catch (err) {
       logError(err, { operation: 'TestSwipePage.handleProposalSubmit' });
       dispatch(setError('Failed to submit proposal. Please try again.'));

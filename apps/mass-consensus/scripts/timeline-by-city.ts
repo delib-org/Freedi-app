@@ -131,7 +131,7 @@ async function main(): Promise<void> {
   const minHour = Math.min(...[...buckets.values()].flatMap((b) => [...b.keys()]));
   const maxHour = Math.max(...[...buckets.values()].flatMap((b) => [...b.keys()]));
   console.log(`  ${'Hour (UTC)'.padEnd(22)} ${target.map((c) => c.padStart(10)).join(' ')}`);
-  let cum = new Map<string, number>();
+  const cum = new Map<string, number>();
   for (let h = minHour; h <= maxHour; h++) {
     const row = target.map((c) => {
       const v = buckets.get(c)?.get(h) || 0;

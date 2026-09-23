@@ -124,7 +124,7 @@ export default function CreateQuestionModal({
       setIsCreatingGroup(false);
       setNewGroupName('');
     }
-  }, [isOpen, fetchGroups]);
+  }, [isOpen, fetchGroups, defaultParentId]);
 
   // Filter groups by search query
   const filteredGroups = groups.filter((group) =>

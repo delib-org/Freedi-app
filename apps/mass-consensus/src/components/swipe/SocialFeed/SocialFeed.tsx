@@ -94,6 +94,7 @@ const SocialFeed: React.FC<SocialFeedProps> = ({
         {displayedActivities.map((activity) => (
           <div key={activity.id} className="social-feed__item">
             {activity.userAvatar ? (
+              // eslint-disable-next-line @next/next/no-img-element -- avatar URL can be on any host
               <img
                 src={activity.userAvatar}
                 alt=""
