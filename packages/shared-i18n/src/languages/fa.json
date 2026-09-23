@@ -1416,7 +1416,7 @@
   "Please provide a reason for rejection": "لطفاً دلیل رد را ارائه دهید",
   "Please provide a reason for rejection in the admin notes.": "لطفاً دلیل رد را در یادداشت‌های مدیر ارائه دهید.",
   "Please rate the following suggestions": "لطفاً پیشنهادهای زیر را امتیازدهی کنید",
-  "Rate the answers others suggested to the question \"{{question}}\"": "به پاسخ‌هایی که دیگران برای پرسش «{{question}}» پیشنهاد داده‌اند امتیاز بده",
+  "Rate the answers others suggested to the question": "به پاسخ‌هایی که دیگران برای این پرسش پیشنهاد داده‌اند امتیاز بده",
   "Please remove a vote from another option to vote for this one": "لطفاً یک رأی از گزینه دیگری حذف کنید تا بتوانید به این گزینه رأی دهید",
   "Please select an image": "لطفاً یک تصویر انتخاب کنید",
   "Please select at least one option": "لطفاً حداقل یک گزینه انتخاب کنید",

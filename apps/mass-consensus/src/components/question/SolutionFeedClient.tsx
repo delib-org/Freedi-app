@@ -523,14 +523,15 @@ export default function SolutionFeedClient({
         {/* Title: the rating ask names the question, so no separate question header here */}
         <header className={styles.titleBlock}>
           <h1 className={styles.title}>
-            {questionNumber !== undefined && (
-              <span className={styles.questionNumber}>{questionNumber})</span>
-            )}
-            <InlineMarkdown
-              text={tWithParams('Rate the answers others suggested to the question "{{question}}"', {
-                question: question.statement,
-              })}
-            />
+            <span className={styles.titleLead}>
+              {t('Rate the answers others suggested to the question')}
+            </span>
+            <span className={styles.titleQuestion}>
+              {questionNumber !== undefined && (
+                <span className={styles.questionNumber}>{questionNumber})</span>
+              )}
+              <InlineMarkdown text={question.statement} />
+            </span>
           </h1>
           {getParagraphsText(question.paragraphs) && (
             <p className={styles.description}>
