@@ -1,0 +1,583 @@
+.village-mode-toggle { margin: var(--space-sm) var(--space-md); }
+.village-shell {
+	position: relative;
+	&__world { display: block; inline-size: 100%; block-size: calc(100dvh - var(--village-chrome, 56px)); min-block-size: 420px; border: 0; }
+	&__notice { padding: var(--space-md); background: var(--bg-card-solid); color: var(--text-primary); }
+	&__activity { position: absolute; inset-block: 60px var(--space-md); inset-inline: max(var(--space-sm), calc((100% - 960px) / 2)); overflow: auto; background: var(--bg-card-solid); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+	&__activity .shell { min-block-size: auto; }
+}
+
+.village-library {
+  background: #f7f0df; color: #34493d; border: 5px solid #ab8c60;
+  &__header { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:18px 24px; border-bottom:1px solid #c9b48f; background:#eee3cc; }
+  &__header h2 { margin:0; font-size:32px; }
+  &__intro { padding:12px 28px; max-width:680px; font-size:19px; line-height:1.8; }
+  &__shelf { display:flex; flex-wrap:wrap; justify-content:center; gap:28px; padding:28px 30px 50px; background:linear-gradient(transparent calc(100% - 24px), #78573d calc(100% - 24px), #4e3929); }
+  &__book { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:space-between; gap:20px; width:175px; min-height:235px; padding:24px 20px; background:var(--book-color); color:#fff3cf; border:1px solid #d8be81; border-right:12px solid #0003; border-radius:5px 10px 10px 5px; box-shadow:-6px 4px 0 #e4d6b8,-9px 7px 0 #574734,0 14px 18px #36291840; transform:rotate(-2deg); transition:transform .25s; font:inherit; cursor:pointer; }
+  &__book strong { font-size:23px; }
+  &__book small { font-size:13px; }
+  &__book:hover:not(:disabled), &__book:focus-visible { transform:translateY(-12px) rotate(0); outline:3px solid #bc904b; outline-offset:5px; }
+  &__book:disabled { opacity:.48; cursor:default; }
+  &__book.is-current { box-shadow:-6px 4px 0 #e4d6b8,-9px 7px 0 #574734,0 0 0 4px #d5ae57,0 16px 22px #36291840; }
+  &__ornament { font-size:38px; }
+  &__pages { transform-origin:right center; animation:library-open .55s ease-out; border:10px solid #f9f3e6; }
+  &__pages .scene--immersive { min-height:580px; height:65dvh; }
+}
+@keyframes library-open { from {opacity:0;transform:perspective(1400px) rotateY(-30deg) scale(.94);} to {opacity:1;transform:none;} }
+@media (max-width:600px) { .village-library__book {width:135px;min-height:205px;padding:15px;} .village-library__shelf {gap:22px;padding:20px 12px 40px;} .village-library__header {padding:12px;flex-wrap:wrap;} }
+@media (prefers-reduced-motion:reduce) { .village-library__pages {animation:none;} .village-library__book {transition:none;} }
+
+// A book opens a black, viewport-sized reading room, independent of the village panel.
+.village-shell__activity.village-library--reading {
+  position:fixed; inset:0; z-index:1000; border:0; border-radius:0;
+  background:#000; color:#fff; overflow:auto;
+  .village-library__header { min-height:64px; padding:8px 20px; background:#000; border:0; }
+  .village-library__header > div { display:none; }
+  .village-library__header button { margin-inline-start:auto; background:#171717; color:#fff; border:1px solid #555; }
+  .village-library__pages { min-height:calc(100dvh - 64px); display:flex; align-items:center; justify-content:center; padding:16px; border:0; background:#000; animation:none; }
+  .scene--immersive { position:relative; inset:auto; width:min(1100px, 100%); height:auto; min-height:0; max-height:none; flex-shrink:0; background:#000; }
+  .scene__media { flex:none; min-height:0; height:min(48dvh, 56.25vw); }
+  .scene__backdrop, .scene__video { object-position:center; }
+  .scene__title { align-self:center; text-align:center; margin-inline:auto; }
+  .scene__caption { align-items:center; text-align:center; max-height:26dvh; }
+  .scene__actions { width:min(620px, 100%); margin-inline:auto; }
+  .shell { width:min(960px, 100%); background:#000; color:#fff; }
+}
+body:has(.village-library--reading) { overflow:hidden; }
+
+.village-library__read {
+  position:absolute; z-index:4; top:50%; left:50%; transform:translate(-50%, -50%);
+  padding:22px 48px; max-width:calc(100% - 40px); border:2px solid #ead6a4;
+  border-radius:18px; background:#294c3d; color:#fff8e6;
+  font:700 clamp(24px, 4vw, 34px) 'Assistant', sans-serif; white-space:nowrap;
+  box-shadow:0 10px 35px #0007; cursor:pointer;
+  &:hover { background:#38644e; }
+  &:focus-visible { outline:4px solid #fff; outline-offset:5px; }
+}
+
+.village-coins, .village-feedback { position:absolute; z-index:6; border:1px solid var(--village-nav-border); border-radius:24px; background:var(--village-nav-surface); color:var(--village-nav-ink); box-shadow:0 4px 16px #0003; padding:10px 18px; }
+.village-coins { top:12px; right:16px; display:flex; align-items:center; gap:10px; font-size:24px; pointer-events:none; }
+.village-coins img { width:44px; height:44px; }
+.village-coins__gain { color:#ffe06a; animation:village-coin-gain 2s ease-out; }
+@keyframes village-coin-gain { from {transform:translateY(10px);opacity:1} to {transform:translateY(-24px);opacity:0} }
+.village-feedback { top:12px; left:16px; cursor:pointer; }
+.village-community__panel { position:absolute; z-index:20; inset:58px 12px 12px; overflow:auto; background:#f5efdf; padding:24px; border:4px solid #796342; border-radius:18px; color:#253c32; direction:rtl; }
+.village-community__panel > header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; }
+.village-notes { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:20px; }
+.village-note { display:block; width:100%; border:0; border-radius:3px; padding:24px; margin-bottom:14px; color:#263b33; background:#fff; text-align:right; cursor:pointer; box-shadow:0 5px 14px #45302025; font:inherit; }
+.village-note p { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.8; }
+.village-note span { display:block; border-top:1px solid #0002; padding-top:12px; font-size:14px; }
+@media(max-width:600px) { .village-coins {font-size:18px;right:8px;padding:6px 10px} .village-feedback {left:8px;max-width:52%} .village-community__panel{padding:12px} }
+.village-coins, .village-feedback { z-index:30; }
+.village-community__panel { top:70px; }
+.village-board-tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+.village-board-tabs [aria-pressed="true"] { outline:2px solid #927535; }
+
+
+// The writing surface keeps the stage's existing save and feedback controls.
+.village-desk {
+  z-index: 10;
+  &__header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-sm); padding: var(--space-md); border-bottom: 1px solid var(--border-subtle); }
+  &__header h2 { margin: 0; font-size: var(--font-size-xl); }
+  .round__textarea, .question__textarea, .my-screen__text, .write-desk textarea {
+    min-block-size: 200px;
+    background: repeating-linear-gradient(transparent, transparent calc(2em - 1px), var(--border-subtle) calc(2em - 1px), var(--border-subtle) 2em), var(--bg-card-solid);
+    color: var(--text-primary);
+    line-height: 2;
+    border-radius: var(--radius-sm);
+  }
+}
+
+// Reserve the HUD and game-control rows outside every open paper or board.
+// Raising their z-index alone leaves them covering the paper's title and buttons.
+.village-shell:has(.village-community) {
+  > .village-shell__activity:not(.village-library--reading) {
+    inset-block-start: 70px;
+    inset-block-end: var(--village-bar-clear);
+  }
+  .village-community__panel {
+    top: 70px;
+    bottom: var(--village-bar-clear);
+  }
+}
+.village-flight-status { position:absolute; z-index:35; bottom:calc(var(--village-bar-clear) + 12px); left:50%; transform:translateX(-50%); background:var(--village-nav-surface); color:var(--village-nav-ink); padding:12px 24px; border-radius:24px; pointer-events:none; }
+.village-note--landed { outline:3px solid #c6a457; outline-offset:3px; animation:village-note-land .5s ease-out; }
+@keyframes village-note-land { from {transform:translateY(-16px) rotate(-3deg);opacity:.4} to {transform:none;opacity:1} }
+@media(prefers-reduced-motion:reduce) { .village-note--landed {animation:none} }
+
+// A personal sheet: readable margins around the whole form, not edge-to-edge UI.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk {
+  inset-inline: max(20px, calc((100% - 820px) / 2));
+  inset-block-end: auto;
+  max-block-size: calc(100% - 170px);
+  padding: clamp(20px, 4vw, 44px);
+  background: linear-gradient(135deg, #fffefb, #faf6ed);
+  border: 1px solid #dfd6c4;
+  border-radius: 6px 6px 18px 6px;
+  box-shadow: 0 18px 48px #31281835, 0 3px 0 #e9e0cf;
+  .village-desk__header { padding: 0 0 20px; margin-bottom: 24px; border-color: #ded5c2; }
+  > h2 { margin: 0 0 20px; font-size: clamp(23px, 3vw, 30px); line-height: 1.4; color: #34493d; }
+  textarea.text-input, .round__textarea, .question__textarea, .my-screen__text, .write-desk textarea {
+    display: block; box-sizing: border-box; width: 100%; min-block-size: 190px;
+    padding: 18px 24px; font-size: 19px; line-height: 2;
+    color: #34493d; border: 1px solid #d8cfbc; border-radius: 4px;
+    background: repeating-linear-gradient(transparent 0, transparent 37px, #d8d0bf55 37px, #d8d0bf55 38px), #fffefb;
+    background-origin: content-box; background-clip: padding-box; resize: vertical;
+    &:focus { outline: 2px solid #9aa889; outline-offset: 3px; box-shadow: none; }
+  }
+  > .btn { display: block; margin-top: 22px; margin-inline-start: auto; padding-inline: 30px; }
+}
+@media(max-width:600px) {
+  .village-shell:has(.village-community) > .village-shell__activity.village-desk {
+    inset-inline: 14px;
+    .village-desk__header { gap: 12px; }
+    textarea.text-input { padding: 14px 16px; font-size: 18px; }
+  }
+}
+.village-inbox { position:absolute; top:12px; left:16px; z-index:40; }
+.village-inbox .inbox-button { background:var(--village-nav-surface); color:var(--village-nav-ink); border:1px solid var(--village-nav-border); }
+.village-community__panel .chat-page { min-height:0; height:auto; }
+// Reuse the classic conversation's behavior inside the village panel, below its HUD.
+.village-community__panel:has(.shell--chat) { display:flex; flex-direction:column; overflow:hidden; }
+.village-community__panel > header { flex:0 0 auto; }
+.village-community__panel .shell--chat { position:relative; inset:auto; z-index:auto; height:auto; min-height:0; max-height:none; flex:1 1 auto; margin:0; width:100%; background:transparent; }
+.village-community__panel .chat-page { height:100%; overflow:hidden; }
+@media(max-height:800px) {
+ .village-community__panel:has(.shell--chat) { overflow:auto; display:block; }
+ .village-community__panel .shell--chat { overflow:visible; }
+ .village-community__panel .chat-page { height:auto; overflow:visible; }
+ .village-community__panel .chat-page__list { flex:none; min-height:160px; max-height:36dvh; }
+ .village-community__panel .chat-page__composer { flex-shrink:0; }
+}
+
+// --- Booth boards: notes are cards with a rating row, not one big button ---
+article.village-note { cursor: default; }
+.village-note__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.village-note__standing { font-size: 13px; color: #5b6b52; white-space: nowrap; }
+.village-note__rate { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #0002; }
+.village-note__rate .rate { justify-content: flex-start; }
+.village-note__hint { display: block; margin-top: 10px; color: #6f7168; }
+.village-note__open { display: block; width: 100%; margin-top: 12px; padding: 10px 14px; border: 1px solid #0002; border-radius: 10px; background: #ffffffaa; color: #263b33; font: inherit; cursor: pointer; }
+.village-note__open:hover, .village-note__open:focus-visible { background: #fff; outline: 2px solid #927535; }
+.village-board__gate { margin: 0 0 16px; padding: 12px 16px; border-radius: 10px; background: #fff3d6; color: #5b4a1e; }
+// --- The council's scoreboard, opened over the village ---
+.village-scoreboard { background: #f5efdf; }
+.village-scoreboard .board { margin-top: 12px; }
+.village-scoreboard__mode { margin: 0 0 12px; padding: 10px 16px; border-radius: 10px; background: #e6f2e2; color: #2f4a33; font-weight: 700; }
+.board__goal-only { margin: 0 0 8px; font-weight: 700; color: var(--text-primary); }
+.village-council { padding: 0 0 16px; }
+.village-council .shell { min-block-size: auto; }
+
+// In the village the deliberation paper is only the paper (no HUD, no tabs).
+// Two things must never scroll away inside it: the way back, and the button
+// that sends what the student wrote. The panel scrolls; both stick to its edges.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk {
+  inset-block-end: var(--village-bar-clear);
+  max-block-size: none;
+  .village-desk__header {
+    position: sticky;
+    top: calc(-1 * clamp(20px, 4vw, 44px));
+    z-index: 4;
+    margin-top: calc(-1 * clamp(20px, 4vw, 44px));
+    padding-top: clamp(14px, 3vw, 28px);
+    background: #fffdf7;
+  }
+  .write-desk { overflow: visible; }
+  .write-desk > :has(.write-desk__cta) {
+    position: sticky;
+    bottom: calc(-1 * clamp(20px, 4vw, 44px));
+    z-index: 4;
+    padding-block: 10px 14px;
+    background: #8e1f5b;
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -10px 22px #2a1a3355;
+  }
+  .write-desk__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 -4px;
+    font-size: clamp(18px, 2.6vw, 22px);
+    font-weight: 700;
+  }
+  textarea::placeholder { color: #85897c; opacity: 1; }
+}
+
+// A conversation opened from a village board writes on the same paper as
+// every desk in the village: lined, white, with its label above it — not the
+// dark "mine" block the classic chat uses on a full screen.
+.village-shell .village-community__panel {
+  .chat-page__composer { background: transparent; box-shadow: none; padding-inline: 0; gap: 10px; }
+  .chat-page__label { display: block; font-weight: 700; font-size: 17px; color: #34493d; }
+  .chat-page__input {
+    display: block; box-sizing: border-box; width: 100%; min-block-size: 120px;
+    padding: 14px 20px; font-size: 18px; line-height: 2;
+    color: #34493d; caret-color: #34493d;
+    border: 1px solid #d8cfbc; border-radius: 4px; box-shadow: none;
+    background: repeating-linear-gradient(transparent 0, transparent 35px, #d8d0bf55 35px, #d8d0bf55 36px), #fffefb;
+    background-origin: content-box; background-clip: padding-box; resize: vertical;
+    &::placeholder { color: #85897c; opacity: 1; }
+    &:focus { outline: 2px solid #9aa889; outline-offset: 3px; box-shadow: none; border-color: #d8cfbc; }
+  }
+  .chat-page__send { align-self: flex-end; padding-inline: 26px; }
+}
+
+// The paper box is taller than the classic composer, and in a panel that
+// flexed to fit the viewport it squeezed the conversation above it into a
+// strip. Inside a village board the conversation scrolls as a whole instead:
+// the messages keep their room, the proposal line keeps its height.
+.village-shell .village-community__panel:has(.shell--chat) { display: block; overflow: auto; }
+.village-shell .village-community__panel .shell--chat { overflow: visible; }
+.village-shell .village-community__panel .chat-page { height: auto; overflow: visible; }
+.village-shell .village-community__panel .chat-page > * { flex-shrink: 0; }
+.village-shell .village-community__panel .chat-page__list { flex: none; min-height: 200px; max-height: 44dvh; overflow: auto; }
+
+
+// The paper, written in the guide's speech bubble: placed beside the figure by
+// `bubblePlacement` (custom properties), so the table and the guide stay in view.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble,
+.village-shell > .village-shell__activity.village-desk.village-bubble {
+  inset: auto;
+  left: var(--bubble-left); top: var(--bubble-top);
+  inline-size: var(--bubble-width); max-block-size: var(--bubble-max-height);
+  background: #fffdf3;
+  border: 3px solid #40533e; border-radius: 28px;
+  box-shadow: 6px 8px 0 #344c3640, 0 18px 40px #31281830;
+  transition: opacity .2s ease-out;
+  animation: village-bubble-pop .28s ease-out;
+  .village-desk__header { background: #fffdf3; }
+}
+.village-bubble--waiting { opacity: 0; animation: none; }
+.village-bubble__speaker { display: block; margin: 0 0 2px; font-size: 14px; font-weight: 700; color: #5b6b52; }
+.village-bubble__prompt { margin: 6px 0 0; font-size: 17px; line-height: 1.6; color: #34493d; }
+.village-bubble-tail {
+  position: absolute; z-index: 11; left: var(--tail-left); top: var(--tail-top);
+  inline-size: 0; block-size: 0; pointer-events: none;
+  border-top: 14px solid transparent; border-bottom: 14px solid transparent;
+  &--left { border-right: 22px solid #40533e; }
+  &--right { border-left: 22px solid #40533e; }
+}
+@keyframes village-bubble-pop { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .village-shell > .village-shell__activity.village-desk.village-bubble { animation: none; transition: none; }
+}
+.village-note__edit { background: #fff6de; font-weight: 700; }
+
+// A stage's room wash and ownership strip are `position: fixed` over the whole
+// viewport. Inside the village they escaped the paper and painted the page over
+// the 3D world, so the student saw a pink page instead of the table and the
+// guide. In the village the world IS the room: the paper carries no wash.
+.village-shell__activity .shell::before,
+.village-shell__activity .shell::after { display: none; }
+.village-shell__activity .shell { background: transparent; }
+
+// In the bubble the header scrolls away with the paper — only the send row
+// stays pinned — so the guide's question and the writing box share the
+// bubble, instead of a sticky header eating half of it and the pinned send
+// row landing on the textarea. The stage's own column uses the full width.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble .village-desk__header,
+.village-shell > .village-shell__activity.village-desk.village-bubble .village-desk__header {
+  position: static; margin-top: 0; margin-bottom: 12px; padding: 0 0 12px;
+}
+.village-bubble .village-desk__header .btn { padding: 6px 14px; min-block-size: 0; font-size: 15px; }
+.village-bubble .shell,
+.village-bubble .shell__content { padding-inline: 0; max-inline-size: none; inline-size: 100%; }
+
+// "Edit my note" on the board is its own button (not a `__open`: the thread
+// buttons keep that class to themselves), dressed like its neighbours.
+.village-note__edit { display: block; width: 100%; margin-top: 12px; padding: 10px 14px; border: 1px solid #0002; border-radius: 10px; color: #263b33; font: inherit; cursor: pointer; }
+.village-note__edit:hover, .village-note__edit:focus-visible { background: #fff; outline: 2px solid #927535; }
+
+// A shorter writing box inside the bubble, so the pinned send row sits under
+// the text instead of on it.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble {
+  .write-desk textarea, textarea.text-input, .round__textarea, .question__textarea, .my-screen__text { min-block-size: 120px; }
+}
+
+// The send row is pinned to the bubble's bottom edge. Scroll padding keeps the
+// writing box above it: focusing the box, and the caret while typing, scroll
+// the bubble so the text never sits under the pinned row.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble {
+  scroll-padding-block: 16px 140px;
+}
+
+// The paper appears once, when the guide's position is known: a single fade.
+// A pop animation on the bubble outranked `--waiting`, so the paper popped in,
+// went invisible again when the animation ended, and then faded in a second
+// time — open, close, reopen.
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble,
+.village-shell > .village-shell__activity.village-desk.village-bubble { animation: none; }
+.village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble.village-bubble--waiting,
+.village-shell > .village-shell__activity.village-desk.village-bubble.village-bubble--waiting { opacity: 0; transition: none; }
+
+// --- One bar, four doors ---------------------------------------------------
+// The village, my note, the class's board, the results. This replaces a
+// toolbar, two chips and a floating button that between them opened the same
+// three places — `showStation()` alone had two buttons.
+//
+// Absolute inside `.village-shell`, never fixed: a fixed, full-bleed element
+// escapes the panel and paints the viewport over the 3D iframe.
+.village-shell {
+  // The stage strip above the world, and the room the bar needs below it
+  --village-chrome: 56px;
+  --village-bar-h: 80px;
+  --village-bar-clear: calc(var(--village-bar-h) + 12px + env(safe-area-inset-bottom, 0px));
+}
+
+.place-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-block-end: env(safe-area-inset-bottom, 0px);
+  pointer-events: none;
+}
+
+// Over the world it floats at the foot of the shell; in the flat view it is
+// simply the last row of the screen, where the tab bar always was.
+.village-shell > .place-bar-wrap {
+  position: absolute;
+  z-index: 46;
+  inset-inline: 0;
+  inset-block-end: 0;
+}
+
+.place-bar__hint {
+  margin: 0;
+  max-inline-size: calc(100% - 32px);
+  padding: 10px 18px;
+  border-radius: 24px;
+  background: var(--village-nav-surface);
+  color: var(--village-nav-ink);
+  font-size: var(--font-size-xs);
+  text-align: center;
+  box-shadow: var(--shadow-card);
+
+  &--empty {
+    // Kept in the DOM so a screen reader announces into a region that already
+    // exists, rather than one that appears with the text inside it
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+.place-bar {
+  pointer-events: auto;
+  display: flex;
+  inline-size: 100%;
+  min-block-size: var(--village-bar-h);
+  border-block-start: 1px solid var(--village-nav-border);
+  background: var(--village-nav-surface);
+  box-shadow: var(--shadow-card);
+
+  &__item {
+    flex: 1 1 0;
+    min-inline-size: min-content;
+    min-block-size: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    position: relative;
+    padding: 6px 4px;
+    border: 0;
+    background: transparent;
+    color: var(--village-nav-muted);
+    font: inherit;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 3px solid var(--village-nav-accent);
+      outline-offset: -3px;
+    }
+
+    &:hover:not(&--active):not(&--locked) { color: var(--village-nav-ink); }
+
+    &--active {
+      color: var(--village-nav-surface);
+
+      // The filled pill, not the whole cell: the bar stays one surface
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 4px 6px;
+        border-radius: 999px;
+        background: var(--village-nav-ink);
+      }
+    }
+
+    &--locked {
+      opacity: 0.45;
+      cursor: default;
+    }
+  }
+
+  &__icon,
+  &__label {
+    position: relative; // above the active pill
+  }
+
+  &__icon { display: flex; }
+
+  &__lock {
+    position: absolute;
+    inset-block-end: -2px;
+    inset-inline-end: -6px;
+    inline-size: 10px;
+    block-size: 10px;
+    border: 2px solid currentColor;
+    border-radius: 2px;
+    border-block-start-width: 6px;
+    border-block-start-color: transparent;
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+    max-inline-size: 100%;
+  }
+
+  &__badge,
+  &__dot {
+    position: absolute;
+    inset-block-start: 4px;
+    inset-inline-end: calc(50% - 22px);
+    background: var(--village-nav-accent);
+    color: var(--village-nav-surface);
+  }
+
+  &__badge {
+    min-inline-size: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    @include type-meta;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  &__dot {
+    inline-size: 10px;
+    block-size: 10px;
+    border-radius: 50%;
+  }
+
+  // The flat view has no world to float over: the bar is a plain pill row,
+  // in the tab bar's old place under the work.
+  &--flat {
+    inline-size: min(560px, 100%);
+    margin-block: var(--space-sm) 0;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-full);
+    background: var(--bg-inset);
+    box-shadow: none;
+
+    .place-bar__item {
+      color: var(--text-secondary);
+      min-block-size: 48px;
+
+      // Its ink comes from the on-dark registry in tokens.scss, so every look
+      // that re-colours --mine hands the label a readable ink with it
+      &--active {
+        &::before { background: var(--mine); }
+      }
+
+      &:focus-visible { outline-color: var(--lantern-deep); }
+    }
+  }
+
+  // Desktop: a floating pill rather than a full-width bar
+  @media (min-width: 900px) {
+    inline-size: min(560px, calc(100% - 32px));
+    margin-block-end: 16px;
+    border: 1px solid var(--village-nav-border);
+    border-radius: 999px;
+    box-shadow: var(--shadow-raised);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .place-bar__item { transition: none; }
+}
+
+// --- The gear: everything that is not a move in the game -------------------
+.village-more {
+  &__panel { gap: var(--space-sm); }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    min-block-size: 56px;
+    inline-size: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-card-solid);
+    color: var(--text-primary);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+
+    &:hover { border-color: var(--text-secondary); }
+    &:focus-visible { outline: 3px solid var(--mine-ink); outline-offset: 2px; }
+  }
+
+  &__label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-weight: 700;
+  }
+
+  &__hint {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: 400;
+  }
+
+  &__dots { display: flex; }
+
+  // The switch reads its state off the button, so there is one source of truth
+  &__switch {
+    flex: 0 0 auto;
+    inline-size: 44px;
+    block-size: 26px;
+    border-radius: 999px;
+    background: var(--border-subtle);
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block-start: 3px;
+      inset-inline-start: 3px;
+      inline-size: 20px;
+      block-size: 20px;
+      border-radius: 50%;
+      background: var(--surface-raised);
+      box-shadow: var(--shadow-card);
+    }
+  }
+
+  &__row[aria-checked='true'] &__switch {
+    background: var(--mine-strong);
+
+    &::after { inset-inline-start: 21px; }
+  }
+}
+
+// The teacher's post, pinned above the news inside the one post box
+.inbox__row--pinned {
+  border-block-end: 1px solid var(--border-subtle);
+  font-weight: 700;
+}

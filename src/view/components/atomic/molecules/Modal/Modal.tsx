@@ -1,4 +1,5 @@
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
+import { useDialogBehaviour } from './useDialogBehaviour';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 
@@ -98,17 +99,8 @@ const Modal: React.FC<ModalProps> = ({
 	closeButtonLabel = 'Close modal',
 }) => {
 	const modalRef = useRef<HTMLDivElement>(null);
-	const previousActiveElement = useRef<Element | null>(null);
 
-	// Handle Escape key
-	const handleKeyDown = useCallback(
-		(e: KeyboardEvent) => {
-			if (closeOnEscape && e.key === 'Escape') {
-				onClose();
-			}
-		},
-		[closeOnEscape, onClose],
-	);
+	useDialogBehaviour({ isOpen, onClose, panelRef: modalRef, closeOnEscape, trapFocus: true });
 
 	// Handle backdrop click
 	const handleBackdropClick = useCallback(
@@ -119,33 +111,6 @@ const Modal: React.FC<ModalProps> = ({
 		},
 		[closeOnBackdrop, onClose],
 	);
-
-	// Body scroll lock and focus management
-	useEffect(() => {
-		if (isOpen) {
-			previousActiveElement.current = document.activeElement;
-			document.body.classList.add('modal-open');
-			document.addEventListener('keydown', handleKeyDown);
-
-			// Focus the modal content
-			if (modalRef.current) {
-				modalRef.current.focus();
-			}
-		} else {
-			document.body.classList.remove('modal-open');
-			document.removeEventListener('keydown', handleKeyDown);
-
-			// Restore focus
-			if (previousActiveElement.current instanceof HTMLElement) {
-				previousActiveElement.current.focus();
-			}
-		}
-
-		return () => {
-			document.body.classList.remove('modal-open');
-			document.removeEventListener('keydown', handleKeyDown);
-		};
-	}, [isOpen, handleKeyDown]);
 
 	// Build BEM classes
 	const modalClasses = clsx(

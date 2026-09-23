@@ -28,11 +28,12 @@ import { generateParaphrases } from './paraphrase-service';
  *   expansions   brief → embedding → findNearest             ~1.7 s  } started
  *                paraphrases → 2 × (brief → embed → search)  ~3.5 s  } at t=0
  *
- * The first pass embeds the text as typed, with no LLM in front of it. When it
- * finds a match at or above the threshold, that is the answer and the
- * expansions are abandoned. Only when it finds nothing do we wait for the
- * expansions, which are already in flight, so a miss costs the expansion time
- * and not the first-pass time on top of it.
+ * The first pass embeds the text as typed, with no LLM in front of it. Passes
+ * are settled in order of cost: the first pass answers when it has a match at
+ * or above the threshold; otherwise the brief-based search answers when it
+ * has one; only when both miss do we wait for the paraphrase round. Every
+ * pass is already in flight by then, so a miss costs the slowest pass we had
+ * to wait for and not the passes before it on top.
  *
  * Stored vectors come from LLM briefs, so the raw-text first pass can score a
  * true match a little lower than the brief-based search would. A raw-text
@@ -54,6 +55,12 @@ export interface SimilaritySearchInput {
 	parentStatement: Statement;
 	threshold: number;
 	limit?: number;
+	/**
+	 * Raw and brief passes only, no paraphrase round. For lookups that need a
+	 * confident merge target more than a wide net, such as the pieces of a
+	 * split submission.
+	 */
+	quick?: boolean;
 }
 
 export type StatementWithSimilarity = Statement & { similarity: number | null };
@@ -172,22 +179,24 @@ export async function searchSimilarStatements(
 		'First-pass search',
 	);
 	const briefPassPromise = quiet(vectorHits(userInput, input, limit, false), [], 'Brief search');
-	const paraphrasePassPromise = quiet(
-		generateParaphrases(userInput, parentStatement.statement, PARAPHRASE_COUNT).then(
-			async (paraphrases) => {
-				if (paraphrases.length === 0) return [] as ScoredHit[];
-				const passes = await Promise.all(
-					paraphrases.map((p) =>
-						quiet(vectorHits(p, input, limit, false), [], 'Paraphrase search'),
-					),
-				);
+	const paraphrasePassPromise: Promise<ScoredHit[]> = input.quick
+		? Promise.resolve([])
+		: quiet(
+				generateParaphrases(userInput, parentStatement.statement, PARAPHRASE_COUNT).then(
+					async (paraphrases) => {
+						if (paraphrases.length === 0) return [] as ScoredHit[];
+						const passes = await Promise.all(
+							paraphrases.map((p) =>
+								quiet(vectorHits(p, input, limit, false), [], 'Paraphrase search'),
+							),
+						);
 
-				return mergeHits(...passes);
-			},
-		),
-		[],
-		'Paraphrase expansion',
-	);
+						return mergeHits(...passes);
+					},
+				),
+				[],
+				'Paraphrase expansion',
+			);
 
 	try {
 		const [subStatements, coverage] = await Promise.all([subStatementsPromise, coveragePromise]);
@@ -219,18 +228,25 @@ export async function searchSimilarStatements(
 					top: hits[0]?.similarity,
 				});
 			} else {
-				const [briefPass, paraphrasePass] = await Promise.all([
-					briefPassPromise,
-					paraphrasePassPromise,
-				]);
-				hits = mergeHits(firstPass ?? [], briefPass, paraphrasePass);
-				logger.info('Similarity search: expansions answered', {
-					questionId,
-					firstPassFailed: firstPass === null,
-					briefHits: briefPass.length,
-					paraphraseHits: paraphrasePass.length,
-					hits: hits.length,
-				});
+				const briefPass = await briefPassPromise;
+				if (briefPass.length > 0) {
+					hits = mergeHits(firstPass ?? [], briefPass);
+					logger.info('Similarity search: brief pass answered', {
+						questionId,
+						firstPassFailed: firstPass === null,
+						hits: hits.length,
+						top: hits[0]?.similarity,
+					});
+				} else {
+					const paraphrasePass = await paraphrasePassPromise;
+					hits = mergeHits(firstPass ?? [], paraphrasePass);
+					logger.info('Similarity search: paraphrase pass answered', {
+						questionId,
+						firstPassFailed: firstPass === null,
+						quick: input.quick === true,
+						hits: hits.length,
+					});
+				}
 			}
 
 			if (

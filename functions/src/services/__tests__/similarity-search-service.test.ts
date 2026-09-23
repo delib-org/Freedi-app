@@ -161,7 +161,25 @@ describe('searchSimilarStatements', () => {
 		paraphrases.resolve([]);
 	});
 
-	it('falls back to the brief and paraphrase searches when the first pass finds nothing', async () => {
+	it('answers from the brief search when the first pass misses, without waiting for paraphrases', async () => {
+		const paraphrases = deferred<string[]>();
+		generateParaphrases.mockReturnValue(paraphrases.promise);
+		findSimilarToText.mockImplementation(
+			(_text: string, _q: string, _ctx: string, opts: { skipBrief?: boolean }) =>
+				opts.skipBrief ? Promise.resolve([]) : Promise.resolve([hit('a', 0.86)]),
+		);
+
+		const result = await searchSimilarStatements(baseInput);
+
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(result.similarStatements.map((s) => s.statementId)).toEqual(['a']);
+		// raw + brief of the original text; the paraphrases are still pending
+		expect(findSimilarToText).toHaveBeenCalledTimes(2);
+		paraphrases.resolve([]);
+	});
+
+	it('falls through to the paraphrase searches when both the raw and brief passes miss', async () => {
 		generateParaphrases.mockResolvedValue(['p1', 'p2']);
 		findSimilarToText.mockImplementation(
 			(text: string, _q: string, _ctx: string, opts: { skipBrief?: boolean }) => {
@@ -169,7 +187,7 @@ describe('searchSimilarStatements', () => {
 				if (text === 'p1') return Promise.resolve([hit('b', 0.83)]);
 				if (text === 'p2') return Promise.resolve([hit('c', 0.88), hit('b', 0.8)]);
 
-				return Promise.resolve([hit('a', 0.86)]); // brief search of the original text
+				return Promise.resolve([]); // brief search of the original text
 			},
 		);
 
@@ -177,10 +195,22 @@ describe('searchSimilarStatements', () => {
 
 		expect(result.ok).toBe(true);
 		if (!result.ok) return;
-		expect(result.similarStatements.map((s) => s.statementId)).toEqual(['c', 'a', 'b']);
-		expect(result.similarStatements.map((s) => s.similarity)).toEqual([0.88, 0.86, 0.83]);
+		expect(result.similarStatements.map((s) => s.statementId)).toEqual(['c', 'b']);
+		expect(result.similarStatements.map((s) => s.similarity)).toEqual([0.88, 0.83]);
 		// original raw, original brief, p1, p2
 		expect(findSimilarToText).toHaveBeenCalledTimes(4);
+	});
+
+	it('quick mode never starts a paraphrase round', async () => {
+		findSimilarToText.mockResolvedValue([]);
+
+		const result = await searchSimilarStatements({ ...baseInput, quick: true });
+
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(result.similarStatements).toEqual([]);
+		expect(generateParaphrases).not.toHaveBeenCalled();
+		expect(findSimilarToText).toHaveBeenCalledTimes(2);
 	});
 
 	it('does not wait for the cache write', async () => {

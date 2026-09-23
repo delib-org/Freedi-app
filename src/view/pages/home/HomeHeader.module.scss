@@ -1,0 +1,58 @@
+// Home header row: wordmark + avatar on phones, the full toolset on desktop.
+.header {
+	&__wordmark {
+		display: none;
+		width: auto;
+		height: 26px;
+		object-fit: contain;
+	}
+
+	&__desktopOnly {
+		display: contents;
+	}
+
+	&__avatar {
+		display: none;
+		place-items: center;
+		width: 34px;
+		height: 34px;
+		border-radius: 50%;
+		background: var(--nav-floating-bg);
+		color: var(--nav-floating-ink);
+		font-size: 0.875rem;
+		font-weight: 600;
+		text-decoration: none;
+
+		// 34px disc inside a 44px target
+		outline-offset: 5px;
+		box-shadow: 0 0 0 5px transparent;
+
+		&:focus-visible {
+			outline: 3px solid var(--accent-violet);
+		}
+	}
+
+	@media (max-width: 1023px) {
+		&__wordmark {
+			display: block;
+		}
+
+		&__desktopOnly {
+			display: none;
+		}
+
+		&__avatar {
+			display: grid;
+		}
+	}
+}
+
+// The global header row is `row-reverse`, which on phones put the wordmark at
+// the END. The design reads start → end: wordmark first, avatar last, in both
+// directions. Two classes so this outranks the single global class.
+.header > .header__row {
+	@media (max-width: 1023px) {
+		flex-direction: row;
+		justify-content: space-between;
+	}
+}

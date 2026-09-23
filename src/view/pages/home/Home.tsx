@@ -8,17 +8,19 @@ import { Outlet, useLocation, useParams } from 'react-router';
 
 // Redux Store
 import HomeHeader from './HomeHeader';
+import AppThinkingSpace from '@/view/components/atomic/organisms/ThinkingSpace/AppThinkingSpace';
 import {
 	getNewStatementsFromSubscriptions,
 	listenToStatementSubscriptions,
 } from '@/controllers/db/subscriptions/getSubscriptions';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { listenToInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import { HOME } from '@/constants/common';
 import {
 	listenToUserEngagement,
 	listenToRecentCredits,
 } from '@/controllers/db/engagement/db_engagement';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
+import HomeActivityPanel from './HomeActivityPanel';
 
 // Helpers
 
@@ -29,6 +31,7 @@ export default function Home() {
 	const { statementId } = useParams();
 	const location = useLocation();
 	const { user } = useAuthentication();
+	const { t } = useTranslation();
 
 	// Use States
 	const [displayHeader, setDisplayHeader] = useState(true);
@@ -52,7 +55,7 @@ export default function Home() {
 	useEffect(() => {
 		let unsubscribe: () => void = () => {};
 		let updatesUnsubscribe: () => void = () => {};
-		let unsubscribeInAppNotifications: () => void = () => {};
+		let cancelled = false;
 		let unsubscribeEngagement: () => void = () => {};
 		let unsubscribeCredits: () => void = () => {};
 
@@ -68,16 +71,18 @@ export default function Home() {
 				// Brief pause between listeners for iOS Safari IndexedDB compatibility
 				await new Promise((resolve) => setTimeout(resolve, 100));
 
+				if (cancelled) return;
 				updatesUnsubscribe = getNewStatementsFromSubscriptions(user.uid);
 
 				// Brief pause before final listener
 				await new Promise((resolve) => setTimeout(resolve, 100));
 
-				unsubscribeInAppNotifications = listenToInAppNotifications();
+				if (cancelled) return;
 
 				// Brief pause before engagement listeners
 				await new Promise((resolve) => setTimeout(resolve, 100));
 
+				if (cancelled) return;
 				unsubscribeEngagement = listenToUserEngagement();
 				unsubscribeCredits = listenToRecentCredits();
 			} catch (error) {
@@ -93,17 +98,20 @@ export default function Home() {
 		return () => {
 			unsubscribe();
 			updatesUnsubscribe();
-			unsubscribeInAppNotifications();
+			cancelled = true;
 			unsubscribeEngagement();
 			unsubscribeCredits();
 		};
 	}, [user?.uid]);
 
 	return (
-		<main className="page slide-in">
-			{displayHeader && <HomeHeader />}
+		<AppThinkingSpace
+			tools={displayHeader ? <HomeHeader /> : undefined}
+			aside={displayHeader ? <HomeActivityPanel /> : undefined}
+			asideLabel={t('homeActivity.title')}
+		>
 			<Outlet />
 			{toast && <CreditToast key={toast.id} amount={toast.amount} onComplete={dismissToast} />}
-		</main>
+		</AppThinkingSpace>
 	);
 }

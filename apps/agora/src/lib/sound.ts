@@ -213,3 +213,24 @@ export function playCheer(): void {
 		osc.stop(now + note.at + note.length + 0.02);
 	});
 }
+
+/** A small metallic chime, only after the confirmed balance increases. */
+export function playCoin(): void {
+	if (!isSoundOn()) return;
+	const audio = ctx();
+	if (!audio) return;
+	[1320, 1760, 2640].forEach((frequency, index) => {
+		const tone = audio.createOscillator(),
+			volume = audio.createGain();
+		const start = audio.currentTime + index * 0.065;
+		tone.frequency.value = frequency;
+		tone.type = 'sine';
+		volume.gain.setValueAtTime(0.0001, start);
+		volume.gain.exponentialRampToValueAtTime(0.07, start + 0.008);
+		volume.gain.exponentialRampToValueAtTime(0.0001, start + 0.32);
+		tone.connect(volume);
+		volume.connect(audio.destination);
+		tone.start(start);
+		tone.stop(start + 0.34);
+	});
+}

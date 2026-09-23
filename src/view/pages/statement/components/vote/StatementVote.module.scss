@@ -4,7 +4,7 @@
 	flex-direction: column;
 	position: relative;
 	overflow: visible;
-	
+
 	.numberOfVotesMark {
 		color: var(--icons-blue);
 		font-family: 'Patrick Hand', cursive;
@@ -31,4 +31,13 @@
 .statementVote::-webkit-scrollbar-thumb {
 	background: linear-gradient(45deg, var(--accent), var(--halfPrimary));
 	border-radius: 1rem;
+}
+
+.statementVote .numberOfVotesMark {
+	font-family: inherit;
+	background: var(--space-mint);
+	border-radius: 24px;
+	width: fit-content;
+	margin-block: 16px;
+	color: var(--space-ink);
 }

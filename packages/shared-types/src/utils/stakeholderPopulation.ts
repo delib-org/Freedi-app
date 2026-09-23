@@ -14,10 +14,18 @@
  * This module is the single place that walk happens, so the server trigger,
  * the recalculation tools and the client all agree on N by construction.
  *
- * Leaving it undeclared everywhere is valid and means "no bounded stakeholder
- * set" — open participation, unknown population — which yields the uncorrected
- * formula. That is the safe default, and it is why every accessor here returns
- * `undefined` rather than guessing.
+ * When nobody has declared a number, N falls back to the people who have
+ * actually VOTED in this question or in a question above it — never to the
+ * subscriber count. Subscribing is what a browser does on your behalf the
+ * moment you open a page (see useAuthorization's auto-subscribe), so member
+ * counts measure traffic; a deliberation with 15 subscribers and 2 voters has
+ * an electorate of 2, and calling it 15 quietly reports a 13% turnout the
+ * process never actually had.
+ *
+ * Leaving it undeclared everywhere with nobody having voted is valid and means
+ * "no bounded stakeholder set" — open participation, unknown population —
+ * which yields the uncorrected formula. That is the safe default, and it is
+ * why every accessor here returns `undefined` rather than guessing.
  */
 
 /**
@@ -26,27 +34,24 @@
  * state without converting.
  */
 export interface StakeholderScope {
-	evaluationSettings?:
-		| { targetPopulation?: number; samplingQuality?: number }
-		| undefined;
-	/** Auto-maintained subscriber count (see fn_subscriptions.updateStatementMemberCount) */
-	numberOfMembers?: number | undefined;
+	evaluationSettings?: { targetPopulation?: number; samplingQuality?: number } | undefined;
+	/**
+	 * Questions only: distinct people who have evaluated something under this
+	 * question or a question above it. Maintained server-side by
+	 * functions/src/progress/chainVoters.ts.
+	 */
+	evaluation?: { chainEvaluators?: number | undefined } | undefined;
 }
 
 /** Where the resolved N came from — surface this, never just the number */
-export type StakeholderSource =
-	| 'self'
-	| 'parent'
-	| 'top'
-	| 'topMembers'
-	| 'parentMembers';
+export type StakeholderSource = 'self' | 'parent' | 'top' | 'parentVoters' | 'topVoters';
 
 export interface StakeholderResolution {
 	/** N, or undefined when no bounded stakeholder set is known */
 	count?: number;
 	/** Which level supplied it. Undefined exactly when `count` is undefined. */
 	source?: StakeholderSource;
-	/** True when N was inferred from membership rather than declared by a human */
+	/** True when N was inferred from who voted rather than declared by a human */
 	inferred: boolean;
 }
 
@@ -70,26 +75,34 @@ function declared(scope?: StakeholderScope): number | undefined {
 	return validCount(scope?.evaluationSettings?.targetPopulation);
 }
 
+function voters(scope?: StakeholderScope): number | undefined {
+	return validCount(scope?.evaluation?.chainEvaluators);
+}
+
 /**
  * Resolve N for a statement from its own settings and its ancestors.
  *
  * Order, most specific first:
- *   1. self       — this statement overrides everything
- *   2. parent     — the question it belongs to
- *   3. top        — the group or deliberation it belongs to
- *   4. topMembers — the group's member count
- *   5. parentMembers
+ *   1. self         — this statement overrides everything
+ *   2. parent       — the question it belongs to
+ *   3. top          — the group or deliberation it belongs to
+ *   4. parentVoters — who has voted in that question, or in one above it
+ *   5. topVoters    — the same reading taken at the top, as a floor
  *
- * A human declaration at ANY level beats a count inferred from membership,
- * because membership answers "who signed up" and a stakeholder count answers
- * "who this decision is about" — the same number only by coincidence.
- * Among inferred counts the broadest scope wins: the community with standing
- * in a question is the group holding it, not the subset that subscribed to
- * that one question.
+ * A human declaration at ANY level beats a count inferred from turnout,
+ * because turnout answers "who showed up" and a stakeholder count answers
+ * "who this decision is about" — the same number only by coincidence. An
+ * inferred N therefore always UNDERSTATES the stakeholder body, and a smaller
+ * N raises the corrected score, so `inferred` travels with the number and
+ * every surface that shows it should say where it came from.
  *
- * `self.numberOfMembers` is deliberately never used. Self is typically the
- * option being voted on, and the people subscribed to a single option are not
- * the stakeholders of the decision it belongs to.
+ * The inferred rungs read from the PARENT, not from self. Self is typically
+ * the option being voted on, and `chainEvaluators` is a question-level fact:
+ * the option's electorate is everyone deliberating the question, not only the
+ * subset that reached this one option. Rung 5 exists for the moment before the
+ * parent's count has been written for the first time; it is a lower bound on
+ * rung 4 (the chain at the parent contains the top's voters), never a
+ * contradiction of it.
  */
 export function resolveStakeholderCount(
 	self?: StakeholderScope,
@@ -111,14 +124,14 @@ export function resolveStakeholderCount(
 		return { count: topDeclared, source: 'top', inferred: false };
 	}
 
-	const topMembers = validCount(top?.numberOfMembers);
-	if (topMembers !== undefined) {
-		return { count: topMembers, source: 'topMembers', inferred: true };
+	const parentVoters = voters(parent);
+	if (parentVoters !== undefined) {
+		return { count: parentVoters, source: 'parentVoters', inferred: true };
 	}
 
-	const parentMembers = validCount(parent?.numberOfMembers);
-	if (parentMembers !== undefined) {
-		return { count: parentMembers, source: 'parentMembers', inferred: true };
+	const topVoters = voters(top);
+	if (topVoters !== undefined) {
+		return { count: topVoters, source: 'topVoters', inferred: true };
 	}
 
 	return NOT_RESOLVED;

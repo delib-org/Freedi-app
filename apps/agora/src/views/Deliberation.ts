@@ -1,5 +1,7 @@
 import m from 'mithril';
 import { Icon, iconLabel, IconName } from '../components/Icon';
+import { PlaceBar } from '../components/PlaceBar';
+import { placeNavTabs } from '../lib/flows/placeNav';
 import { HeroIcon } from '../components/HeroIcon';
 import { t, tCount } from '../lib/i18n';
 import {
@@ -108,6 +110,15 @@ import {
 } from '@freedi/shared-types';
 
 export interface DeliberationAttrs {
+	/** Open the existing personal paper without advancing the current lap. */
+	writeRequest?: number;
+	/**
+	 * Rendered as the personal paper inside the 3D village. The paper is only
+	 * the paper there: the booth board, the council scoreboard and the village
+	 * map replace this screen's HUD and tabs, and a results tab opened inside
+	 * a small panel left students stranded on the class map.
+	 */
+	inVillage?: boolean;
 	session: AgoraSession;
 	myParticipant: AgoraParticipant;
 	userId: string;
@@ -697,6 +708,8 @@ export function Deliberation(
 	 * where the tap left it.
 	 */
 	let focusOnMy = '';
+	let lastWriteRequest = initialVnode.attrs.writeRequest ?? 0;
+	let inVillage = initialVnode.attrs.inVillage === true;
 	/**
 	 * One-shot: right after the very first proposal is submitted, the My tab
 	 * pulses once. The lap has just walked the student out to the square, and
@@ -971,6 +984,7 @@ export function Deliberation(
 	 */
 	function delibNav(myProposal: AgoraProposal | undefined): m.Children {
 		if (!myProposal) return null;
+		if (inVillage) return null;
 		// The draft mirror outlives a tab change, so an unsaved edit can be
 		// sitting on a screen I am not looking at. The dock used to say so
 		// from the foot of every room; with the dock gone the tab says it, and
@@ -978,75 +992,45 @@ export function Deliberation(
 		// beats news I have to read.
 		const unsaved = mineDraftChanged(myProposal);
 
-		const tab = (
-			id: DelibScreen,
-			modifier: string,
-			icon: IconName,
-			label: string,
-			badge: number,
-			onclick: () => void,
-			alert = false,
-		): m.Children =>
-			m(
-				`button.delib-nav__item.delib-nav__item--${modifier}`,
-				{
-					class: screen === id ? 'delib-nav__item--active' : undefined,
-					'aria-selected': String(screen === id),
-					onclick,
-				},
-				[
-					m('span.delib-nav__icon', m(Icon, { name: icon, size: 22 })),
-					m('span.delib-nav__label', label),
-					// A badge is news from a screen I'm not on; on the screen
-					// itself the content says it better than a number
-					screen !== id && alert
-						? [
-								m('span.delib-nav__dot', { 'aria-hidden': 'true' }),
-								m('span.sr-only', t('delib.draft_unsaved')),
-							]
-						: screen !== id && badge > 0
-							? m('span.delib-nav__badge', String(badge))
-							: null,
-				],
-			);
-
-		return m('nav.delib-nav', [
-			tab(
-				'my',
-				'mine',
-				'proposal',
-				t('delib.nav_mine'),
-				myFeedbackCount(myProposal),
-				() => {
+		// The same bar the village carries, minus the village door: a student
+		// who switches views should not have to learn the game's navigation a
+		// second time. The handlers below are the tabs' own, unchanged — this
+		// moved the rendering, not the lap cycle.
+		return m(PlaceBar, {
+			variant: 'flat',
+			tabs: placeNavTabs({
+				village: false,
+				hasDesk: true,
+				hasCommunity: true,
+				inFlight: false,
+				open: screen === 'my' ? 'note' : screen === 'others' ? 'board' : 'results',
+			}),
+			badges: { note: myFeedbackCount(myProposal), board: attentionCount() },
+			alerts: unsaved ? { note: 'delib.draft_unsaved' } : undefined,
+			onGo: (id) => {
+				if (id === 'note') {
 					screen = 'my';
 					m.redraw();
-				},
-				unsaved,
-			),
-			tab('results', 'results', 'chart', t('delib.nav_results'), 0, () => {
-				screen = 'results';
-				m.redraw();
-			}),
-			tab(
-				'others',
-				'peer',
-				'people',
-				t('delib.nav_others'),
-				// Proposals I helped moved while I was away — come see
-				attentionCount(),
-				() => {
-					screen = 'others';
-					if (cycle.step === 'mine') {
-						setCycle({ step: 'rate', rated: 0 });
-					} else if (cycle.step === 'done') {
-						// After the laps, "Others" means: keep helping
-						setCycle({ round: getSessionFlow().rounds, step: 'help' });
-					} else {
-						m.redraw();
-					}
-				},
-			),
-		]);
+
+					return;
+				}
+				if (id === 'results') {
+					screen = 'results';
+					m.redraw();
+
+					return;
+				}
+				screen = 'others';
+				if (cycle.step === 'mine') {
+					setCycle({ step: 'rate', rated: 0 });
+				} else if (cycle.step === 'done') {
+					// After the laps, "Others" means: keep helping
+					setCycle({ round: getSessionFlow().rounds, step: 'help' });
+				} else {
+					m.redraw();
+				}
+			},
+		});
 	}
 
 	/**
@@ -2215,6 +2199,12 @@ export function Deliberation(
 
 		view(vnode) {
 			const { session: live, myParticipant, topic } = vnode.attrs;
+			inVillage = vnode.attrs.inVillage === true;
+			if ((vnode.attrs.writeRequest ?? 0) !== lastWriteRequest) {
+				lastWriteRequest = vnode.attrs.writeRequest ?? 0;
+				chatPage.close();
+				openEditBox();
+			}
 			// Read fresh each render: an organizer may re-script a running event,
 			// and the lap count has to follow without a reload.
 			const flow = getSessionFlow();
@@ -2375,19 +2365,21 @@ export function Deliberation(
 								: null,
 						])
 					: null,
-				m(DelibHud, {
-					step: cycle.step,
-					round: cycle.round,
-					rounds: flow.rounds,
-					rated: cycle.rated,
-					ratingQuota: flow.ratingsPerRound,
-					endsAt: live.roundEndsAt ?? undefined,
-					onResults: screen === 'results',
-					// A civic player's uid IS their Odyssey uid (the handoff token
-					// names it), so the post box can edit their voyage-story email
-					// cadence — the same doc the Odyssey settings sheet writes
-					digestUid: civic ? userId : undefined,
-				}),
+				inVillage
+					? null
+					: m(DelibHud, {
+							step: cycle.step,
+							round: cycle.round,
+							rounds: flow.rounds,
+							rated: cycle.rated,
+							ratingQuota: flow.ratingsPerRound,
+							endsAt: live.roundEndsAt ?? undefined,
+							onResults: screen === 'results',
+							// A civic player's uid IS their Odyssey uid (the handoff token
+							// names it), so the post box can edit their voyage-story email
+							// cadence — the same doc the Odyssey settings sheet writes
+							digestUid: civic ? userId : undefined,
+						}),
 			];
 
 			// The first write's reveal, fired after the travel splash clears —
@@ -2396,7 +2388,7 @@ export function Deliberation(
 			if (pendingMineReveal && myConfirmedProposal && !splash) {
 				pendingMineReveal = false;
 				window.setTimeout(() => {
-					emphasise(document.querySelector('.delib-nav__item--mine'));
+					emphasise(document.querySelector('.place-bar__item[data-place="note"]'));
 				}, 400);
 			}
 
@@ -2404,7 +2396,7 @@ export function Deliberation(
 			// The class picture: where the class stands on each proposal, how
 			// sure that is, and the spread behind the number. Live — it moves as
 			// classmates rate. Standing here does NOT advance the lap.
-			if (screen === 'results' && myConfirmedProposal) {
+			if (screen === 'results' && myConfirmedProposal && !inVillage) {
 				return m('.shell.shell--delib.shell--mode-mine.shell--place-mine', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
@@ -2435,6 +2427,7 @@ export function Deliberation(
 									scores: getDeliberationState().scores,
 									census: getConsensusPool(),
 									userId,
+									onlyScored: live.votingSettings?.goalZoneOnly === true,
 								}),
 						m(
 							'button.btn.btn--primary.btn--full.btn--lg',
@@ -2524,7 +2517,17 @@ export function Deliberation(
 								// What the room said in the question stages before this
 								// one — the brief the proposal is written against.
 								m(CarriedContext, { session: live, beforeIndex: getCurrentPlanIndex() }),
+								// In the village the desk opens straight onto this box, with
+								// no square around it to explain it — so it says what it is for.
+								inVillage
+									? m(
+											'label.write-desk__label',
+											{ for: 'write-desk-text' },
+											iconLabel('edit', t('delib.write_label')),
+										)
+									: null,
 								m('textarea.my-lantern__textarea.write-desk__textarea', {
+									id: 'write-desk-text',
 									value: draft,
 									rows: 4,
 									maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,

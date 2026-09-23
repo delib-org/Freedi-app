@@ -49,6 +49,7 @@ export function votingSettingsCard(
 	const cutoff = selection?.cutoffNumber ?? AGORA_VOTING.DEFAULT_CUTOFF_CP;
 	const winThreshold = settings?.winningConsensusThreshold;
 	const challengeGame = settings?.challengeGame === true;
+	const goalZoneOnly = settings?.goalZoneOnly === true;
 	const maxTurns = settings?.challengeMaxTurns ?? AGORA_CHALLENGE.DEFAULT_MAX_TURNS;
 
 	// Spread what is already stored first, so a control this card does not own
@@ -85,41 +86,56 @@ export function votingSettingsCard(
 		enabled
 			? [
 					m('p.voting-settings__hint', t('teacher.voting_manual_hint')),
-					m('label.voting-settings__row', [
-						m('span', t('teacher.voting_mode')),
-						m(
-							'select',
-							{
-								disabled: saving,
-								onchange: (event: Event) =>
-									patch({
-										selection: {
-											resultsBy: ResultsBy.consensus,
-											cutoffBy: votingCutoffFromSelectValue(
-												(event.target as HTMLSelectElement).value,
-											),
-											numberOfResults: topX,
-											cutoffNumber: cutoff,
-										},
-									}),
-							},
-							[
-								m(
-									'option',
-									{ value: 'top', selected: !byThreshold && !byAll },
-									t('teacher.voting_mode_top'),
-								),
-								m(
-									'option',
-									{ value: 'threshold', selected: byThreshold },
-									t('teacher.voting_mode_threshold'),
-								),
-								m('option', { value: 'all', selected: byAll }, t('teacher.voting_mode_all')),
-							],
-						),
+					// The goal on the class map, made into the ballot: only the
+					// proposals in the net stand, and the scoreboard shows only
+					// those from the moment the switch is flipped.
+					m('label.voting-settings__row.voting-settings__row--goal', [
+						m('input[type=checkbox]', {
+							checked: goalZoneOnly,
+							disabled: saving,
+							onchange: (event: Event) =>
+								patch({ goalZoneOnly: (event.target as HTMLInputElement).checked }),
+						}),
+						m('span', t('teacher.voting_goal_only')),
 					]),
+					m('p.voting-settings__hint', t('teacher.voting_goal_only_hint')),
+					goalZoneOnly
+						? null
+						: m('label.voting-settings__row', [
+								m('span', t('teacher.voting_mode')),
+								m(
+									'select',
+									{
+										disabled: saving,
+										onchange: (event: Event) =>
+											patch({
+												selection: {
+													resultsBy: ResultsBy.consensus,
+													cutoffBy: votingCutoffFromSelectValue(
+														(event.target as HTMLSelectElement).value,
+													),
+													numberOfResults: topX,
+													cutoffNumber: cutoff,
+												},
+											}),
+									},
+									[
+										m(
+											'option',
+											{ value: 'top', selected: !byThreshold && !byAll },
+											t('teacher.voting_mode_top'),
+										),
+										m(
+											'option',
+											{ value: 'threshold', selected: byThreshold },
+											t('teacher.voting_mode_threshold'),
+										),
+										m('option', { value: 'all', selected: byAll }, t('teacher.voting_mode_all')),
+									],
+								),
+							]),
 
-					byAll
+					goalZoneOnly || byAll
 						? null
 						: byThreshold
 							? m('label.voting-settings__row', [
@@ -236,9 +252,13 @@ export function votingLiveCard(
 	saving: boolean,
 	challengeLive: boolean,
 	onSave: (next: VotingStageSettings) => void,
+	onGoalOnly?: (next: boolean) => void,
+	goalOnlyError?: string,
 ): m.Children {
 	const showResults = settings?.showResults === true;
-	const liveReorder = settings?.liveReorder === true;
+	const goalZoneOnly = settings?.goalZoneOnly === true;
+	// On by default: once the counts are revealed the ballot follows them.
+	const liveReorder = settings?.liveReorder !== false;
 	const patch = (next: Partial<VotingStageSettings>): void => onSave({ ...settings, ...next });
 
 	return m('.card.stack.voting-settings', [
@@ -284,6 +304,24 @@ export function votingLiveCard(
 			'p.voting-settings__hint',
 			t(showResults ? 'teacher.results_shown_hint' : 'teacher.results_hidden_hint'),
 		),
+
+		// The goal, while the vote runs: the ballot is redrawn server-side from
+		// the proposals standing in the net, so the tally, the bars and the
+		// winner all agree on who is standing.
+		onGoalOnly
+			? [
+					m('label.voting-settings__row.voting-settings__row--goal-live', [
+						m('input[type=checkbox]', {
+							checked: goalZoneOnly,
+							disabled: saving || challengeLive,
+							onchange: (event: Event) => onGoalOnly((event.target as HTMLInputElement).checked),
+						}),
+						m('span', t('teacher.voting_goal_only_live')),
+					]),
+					m('p.voting-settings__hint', t('teacher.voting_goal_only_live_hint')),
+					goalOnlyError ? m('p.join__error', { role: 'alert' }, goalOnlyError) : null,
+				]
+			: null,
 	]);
 }
 

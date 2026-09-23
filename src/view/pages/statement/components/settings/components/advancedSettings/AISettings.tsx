@@ -22,7 +22,15 @@ interface AISettingsProps {
 		property: keyof StatementSettings,
 		newValue: boolean | string | number,
 	) => void;
+	/**
+	 * 'all' (default): every subsection. The Host hub splits them across two
+	 * cards — 'ai' (similarity + submission checks) and 'clustering'
+	 * (merging duplicates + cluster map).
+	 */
+	part?: AISettingsPart;
 }
+
+export type AISettingsPart = 'all' | 'ai' | 'clustering';
 
 interface SubsectionProps {
 	icon: React.ElementType;
@@ -46,11 +54,18 @@ const Subsection: FC<SubsectionProps> = ({ icon: Icon, title, description, child
 	</section>
 );
 
-const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingChange }) => {
+const AISettings: FC<AISettingsProps> = ({
+	statement,
+	settings,
+	handleSettingChange,
+	part = 'all',
+}) => {
 	const { t } = useTranslation();
 	const subscription = useAppSelector(statementSubscriptionSelector(statement.statementId));
 	const isAdminOrCreator = subscription?.role === Role.admin || subscription?.role === Role.creator;
 	const isQuestion = statement.statementType === StatementType.question;
+	const showAi = part !== 'clustering';
+	const showClustering = part !== 'ai';
 
 	// Live-synth per-question gate (Ship 3b.5). Field not yet on typed schema;
 	// read via cast as the backend trigger does.
@@ -67,56 +82,58 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 	return (
 		<div className={styles.aiSettings}>
 			{/* 1. Finding similar ideas — foundation: detection + threshold (everyone) */}
-			<Subsection
-				icon={Search}
-				title={t('Finding similar ideas')}
-				description={t(
-					'Detects when two submissions express the same idea. The threshold here tunes how strict "similar" means for every feature below.',
-				)}
-			>
-				<ToggleSwitch
-					isChecked={settings.enableSimilaritiesSearch ?? false}
-					onChange={(checked) => handleSettingChange('enableSimilaritiesSearch', checked)}
-					label={t('Enable similarity detection')}
-					description={t('Automatically detect and group similar suggestions')}
+			{showAi && (
+				<Subsection
 					icon={Search}
-				/>
-				{settings.enableSimilaritiesSearch && (
-					<div className={styles.sliderSection}>
-						<div className={styles.sliderHeader}>
-							<Target size={18} />
-							<span className={styles.sliderLabel}>{t('Similarity threshold')}</span>
+					title={t('Finding similar ideas')}
+					description={t(
+						'Detects when two submissions express the same idea. The threshold here tunes how strict "similar" means for every feature below.',
+					)}
+				>
+					<ToggleSwitch
+						isChecked={settings.enableSimilaritiesSearch ?? false}
+						onChange={(checked) => handleSettingChange('enableSimilaritiesSearch', checked)}
+						label={t('Enable similarity detection')}
+						description={t('Automatically detect and group similar suggestions')}
+						icon={Search}
+					/>
+					{settings.enableSimilaritiesSearch && (
+						<div className={styles.sliderSection}>
+							<div className={styles.sliderHeader}>
+								<Target size={18} />
+								<span className={styles.sliderLabel}>{t('Similarity threshold')}</span>
+							</div>
+							<p className={styles.sliderDescription}>
+								{t('Higher values require stronger similarity (recommended: 75-85%)')}
+							</p>
+							<div className={styles.sliderContainer}>
+								<input
+									type="range"
+									min="50"
+									max="95"
+									step="5"
+									value={thresholdPercent}
+									onChange={(e) =>
+										handleSettingChange('similarityThreshold', Number(e.target.value) / 100)
+									}
+									className={styles.slider}
+									style={
+										{
+											'--slider-progress': `${((thresholdPercent - 50) / 45) * 100}%`,
+										} as React.CSSProperties
+									}
+									aria-label={t('Similarity threshold')}
+									aria-valuetext={`${thresholdPercent}%`}
+								/>
+								<span className={styles.sliderValue}>{thresholdPercent}%</span>
+							</div>
 						</div>
-						<p className={styles.sliderDescription}>
-							{t('Higher values require stronger similarity (recommended: 75-85%)')}
-						</p>
-						<div className={styles.sliderContainer}>
-							<input
-								type="range"
-								min="50"
-								max="95"
-								step="5"
-								value={thresholdPercent}
-								onChange={(e) =>
-									handleSettingChange('similarityThreshold', Number(e.target.value) / 100)
-								}
-								className={styles.slider}
-								style={
-									{
-										'--slider-progress': `${((thresholdPercent - 50) / 45) * 100}%`,
-									} as React.CSSProperties
-								}
-								aria-label={t('Similarity threshold')}
-								aria-valuetext={`${thresholdPercent}%`}
-							/>
-							<span className={styles.sliderValue}>{thresholdPercent}%</span>
-						</div>
-					</div>
-				)}
-			</Subsection>
+					)}
+				</Subsection>
+			)}
 
 			{/* 2. When people submit — what happens at submission time (questions only) */}
-			{isQuestion && (
+			{showAi && isQuestion && (
 				<Subsection
 					icon={PenLine}
 					title={t('When people submit')}
@@ -147,7 +164,7 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 			)}
 
 			{/* 3. Merging duplicates — soft → continuous → on-demand (questions only) */}
-			{isQuestion && (
+			{showClustering && isQuestion && (
 				<Subsection
 					icon={GitMerge}
 					title={t('Merging duplicates')}
@@ -180,7 +197,7 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 			)}
 
 			{/* 4. Cluster map display — admin controls for how the map renders */}
-			{isQuestion && (
+			{showClustering && isQuestion && (
 				<Subsection
 					icon={Map}
 					title={t('Cluster map')}

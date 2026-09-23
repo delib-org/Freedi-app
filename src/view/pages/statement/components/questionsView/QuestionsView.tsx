@@ -1,6 +1,6 @@
 import { FC, useContext, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Role, Statement, StatementType, QuestionType, CompoundPhase } from '@freedi/shared-types';
+import { Role, StatementType, QuestionType, CompoundPhase } from '@freedi/shared-types';
 import {
 	questionsSelector,
 	statementSubscriptionSelector,
@@ -9,13 +9,9 @@ import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { StatementContext } from '../../StatementCont';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { useSummarization } from '@/controllers/hooks/useSummarization';
-import SummaryDisplay from '../statementTypes/question/document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';
-import SummarizeModal from '../statementTypes/question/document/MultiStageQuestion/components/SummarizeModal/SummarizeModal';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import CompoundIcon from '@/assets/icons/stepsIcon.svg?react';
 import SimpleQuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
-import useStatementColor from '@/controllers/hooks/useStatementColor';
 import styles from './QuestionsView.module.scss';
 import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 import { HelpCircle, Plus, MessageSquare } from 'lucide-react';
@@ -26,24 +22,7 @@ const QuestionsView: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const subscription = useSelector(statementSubscriptionSelector(statement?.statementId));
 	const isAdmin = subscription?.role === Role.admin || subscription?.role === Role.creator;
-	const statementColor = useStatementColor({ statement });
 	const [menuOpen, setMenuOpen] = useState(false);
-	const { isGenerating, generateSummary } = useSummarization();
-	const [isSummarizeModalOpen, setIsSummarizeModalOpen] = useState(false);
-
-	const handleGenerateSummary = async (customPrompt: string, includeSubQuestions: boolean) => {
-		if (!statement) return;
-		const success = await generateSummary(statement.statementId, customPrompt, includeSubQuestions);
-		if (success) {
-			setIsSummarizeModalOpen(false);
-		}
-	};
-
-	// summaryGeneratedAt is written by the summarize function but not part of StatementSchema
-	const statementWithSummary = statement as
-		| (Statement & { summaryGeneratedAt?: number })
-		| undefined;
-
 	const questionsSelect = useMemo(
 		() => questionsSelector(statement?.statementId),
 		[statement?.statementId],
@@ -93,6 +72,18 @@ const QuestionsView: FC = () => {
 	return (
 		<>
 			<div className={styles.questionsView}>
+				<header className={styles.heading}>
+					<div>
+						<h2>{t('Questions')}</h2>
+						<p>{t('questionsOnboarding.breakItDownDesc')}</p>
+					</div>
+					{isAdmin && (
+						<button className="btn btn--primary" onClick={handleAddQuestion}>
+							<Plus size={18} />
+							{t('Add a question')}
+						</button>
+					)}
+				</header>
 				{visibleQuestions.length === 0 ? (
 					<div className={styles.onboarding}>
 						<div className={styles.onboarding__step}>
@@ -136,27 +127,7 @@ const QuestionsView: FC = () => {
 						</div>
 					</div>
 				) : (
-					<div className="wrapper">
-						<SummaryDisplay
-							summary={statementWithSummary?.summary}
-							generatedAt={statementWithSummary?.summaryGeneratedAt}
-							statementId={statement?.statementId}
-							canEdit={isAdmin}
-						/>
-
-						{statement && isAdmin && (
-							<div className={styles.summarizeWrapper}>
-								<button
-									className={`btn btn--secondary ${isGenerating ? 'btn--disabled' : ''}`}
-									onClick={() => setIsSummarizeModalOpen(true)}
-									disabled={isGenerating}
-									aria-label={t('Generate AI summary of the discussion')}
-								>
-									{isGenerating ? t('Generating...') : t('Summarize Discussion')}
-								</button>
-							</div>
-						)}
-
+					<div className={styles.content}>
 						<div className={styles.grid}>
 							{visibleQuestions.map((question) => (
 								<SubGroupCard key={question.statementId} statement={question} />
@@ -165,17 +136,6 @@ const QuestionsView: FC = () => {
 					</div>
 				)}
 			</div>
-
-			{statement && (
-				<SummarizeModal
-					isOpen={isSummarizeModalOpen}
-					onClose={() => setIsSummarizeModalOpen(false)}
-					onGenerate={handleGenerateSummary}
-					isLoading={isGenerating}
-					questionTitle={statement.statement}
-				/>
-			)}
-
 			<div className={styles.addButtonWrapper}>
 				<div className={styles.addButtonGroup}>
 					{menuOpen && (
@@ -219,13 +179,12 @@ const QuestionsView: FC = () => {
 					</div>
 					<button
 						className={`${styles.addButton} ${menuOpen ? styles.addButtonActive : ''}`}
-						style={statementColor}
 						onClick={() => setMenuOpen((open) => !open)}
 						aria-label={t('Add a question')}
 						aria-expanded={menuOpen}
 						aria-haspopup="menu"
 					>
-						<PlusIcon style={{ color: statementColor.color }} />
+						<PlusIcon />
 					</button>
 				</div>
 			</div>

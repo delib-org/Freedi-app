@@ -27,6 +27,21 @@ export const QuestionProgressSchema = object({
 	options: number(),
 	/** Total evaluation events under the question. */
 	evaluations: number(),
+	/**
+	 * Unique users who evaluated something under this question OR under any
+	 * question above it — the question's electorate, used as N when no
+	 * stakeholder count was declared. Maintained by
+	 * functions/src/progress/chainVoters.ts and mirrored onto
+	 * `statements/{id}.evaluation.chainEvaluators`.
+	 */
+	chainEvaluated: optional(number()),
+	/**
+	 * Fingerprint of the `evaluated` counters along the chain at the time
+	 * `chainEvaluated` was computed. Unchanged fingerprint means no question in
+	 * the chain has gained a first-time voter, so the union cannot have moved
+	 * and the expensive recount is skipped.
+	 */
+	chainKey: optional(string()),
 	/** Epoch-ms of the most recent counted activity. */
 	lastActivity: number(),
 	/** Epoch-ms of the last facilitator nudge (rate-limited to once per hour). */

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
+import { cardColorIntensityStyle } from '@/lib/utils/cardColorIntensity';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
 import SolutionCard from './SolutionCard';
@@ -28,6 +29,8 @@ interface SolutionFeedClientProps {
   mergedSettings?: MergedQuestionSettings;
   /** Survey context: used to stamp evaluations with a demographic anchor */
   surveyId?: string;
+  /** Position in a multi-question survey ("1) …"); omitted = no number */
+  questionNumber?: number;
 }
 
 /**
@@ -39,6 +42,7 @@ export default function SolutionFeedClient({
   initialSolutions,
   mergedSettings,
   surveyId,
+  questionNumber,
 }: SolutionFeedClientProps) {
   const { t, tWithParams } = useTranslation();
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
@@ -511,7 +515,10 @@ export default function SolutionFeedClient({
 
   return (
     <ToastProvider>
-      <div className={styles.feed}>
+      <div
+        className={styles.feed}
+        style={cardColorIntensityStyle(mergedSettings?.cardColorIntensity)}
+      >
         {/* Error message */}
         {error && (
           <div className={styles.error}>
@@ -693,6 +700,7 @@ export default function SolutionFeedClient({
           userId={userId}
           onSubmitSuccess={handleSolutionComplete}
           questionText={question.statement}
+          questionNumber={questionNumber}
           questionDescription={getParagraphsText(question.paragraphs)}
           title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
           suggestionMode={mergedSettings?.suggestionMode}

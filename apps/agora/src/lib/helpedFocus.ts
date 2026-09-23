@@ -107,6 +107,7 @@ export function requestTeacherFocus(): void {
  * about where it leads.
  */
 export function requestFocus(target: InboxTarget): void {
+	if (presentationNavigator?.(target)) return;
 	switch (target.kind) {
 		case 'thread':
 			if (threadNavigator) threadNavigator(target.proposalId, target.helperUid);
@@ -138,4 +139,13 @@ export function emphasise(element: Element | null): void {
 	void (element as HTMLElement).offsetWidth;
 	element.classList.add('is-emphasised');
 	window.setTimeout(() => element.classList.remove('is-emphasised'), 2600);
+}
+
+// An alternate world can present the same notification destinations.
+let presentationNavigator: ((target: InboxTarget) => boolean) | null = null;
+export function registerPresentationNavigator(fn: (target: InboxTarget) => boolean): void {
+	presentationNavigator = fn;
+}
+export function unregisterPresentationNavigator(fn: (target: InboxTarget) => boolean): void {
+	if (presentationNavigator === fn) presentationNavigator = null;
 }

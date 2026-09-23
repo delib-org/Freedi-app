@@ -1,3 +1,4 @@
+import type { UpdateData, DocumentData } from 'firebase-admin/firestore';
 /**
  * Credit Engine - Phase 1
  *
@@ -165,7 +166,7 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 			const newTotalCredits = engagement.totalCredits + amount;
 			const newLevel = calculateLevel(newTotalCredits);
 
-			const engagementUpdate: Record<string, unknown> = {
+			const engagementUpdate: UpdateData<DocumentData> = {
 				totalCredits: newTotalCredits,
 				level: newLevel,
 				dailyCreditsEarned: (engagement.dailyCreditsEarned ?? 0) + amount,

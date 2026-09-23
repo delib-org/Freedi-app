@@ -33,6 +33,10 @@ import UploadImage from '@/view/components/uploadImage/UploadImage';
 import StatementImage from './StatementImage';
 import IntegrateSuggestionsModal from '@/view/components/integrateSuggestions/IntegrateSuggestionsModal';
 import RoomBadge from '@/view/components/roomBadge/RoomBadge';
+import { useSelector } from 'react-redux';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
+import MergeBadge from './MergeBadge';
 
 interface Props {
 	statement: Statement | undefined;
@@ -54,6 +58,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	const { t } = useTranslation();
 	// Use parent's authorization instead of individual card authorization
 	const { isAuthorized, isAdmin } = useAuthorization(parentStatement?.statementId);
+	const creator = useSelector(creatorSelector);
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const minJoinMembers = parentStatement?.statementSettings?.minJoinMembers;
 	const maxJoinMembers = parentStatement?.statementSettings?.maxJoinMembers;
@@ -247,9 +252,25 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 					? styles['statement-evaluation-card--below-minimum']
 					: '';
 
+	// Own answer: mint chip + mint border; the face scale hides itself (Evaluation variant="card").
+	const isOwnAnswer = !!creator?.uid && statement.creatorId === creator.uid;
+	// A merged answer represents several originals (manual integration or
+	// auto-merge both write isCluster + integratedOptions).
+	const isMerged = statement.isCluster === true && (statement.integratedOptions?.length ?? 0) > 0;
+	const numberOfEvaluators = statement.evaluation?.numberOfEvaluators ?? 0;
+	// Options are shown without an author name by design (getCreatorDisplayName
+	// returns '' for them), so the byline is usually just the rater count.
+	const bylineText = [
+		getCreatorDisplayName(statement),
+		t('{n} rated').replace('{n}', String(numberOfEvaluators)),
+	]
+		.filter(Boolean)
+		.join(' · ');
+
 	const cardClassName = clsx(
 		styles['statement-evaluation-card'],
 		statusModifier,
+		isOwnAnswer && styles['statement-evaluation-card--own'],
 		statementAge < 10000 && styles['statement-evaluation-card--new'],
 		isCardMenuOpen && styles['statement-evaluation-card--menu-open'],
 	);
@@ -325,6 +346,14 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 				>
 					<EyeIcon />
 				</button>
+			)}
+
+			{isMerged && <MergeBadge cluster={statement} />}
+
+			{isOwnAnswer && (
+				<span className={styles.ownChip} data-testid="own-answer-chip">
+					{t('Your answer')}
+				</span>
 			)}
 
 			{/* Image - Display image at the top of card */}
@@ -477,19 +506,19 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 					</div>
 				)}
 
-				<div className={styles.actions}>
-					<div className={styles.actionsStart}>
-						<div className={styles['evolution-element']}>
-							<Evaluation statement={statement} />
+				{/* Byline: who · how many rated, and the answer's שיחה pill. */}
+				<div className={styles.byline}>
+					<span className={styles.bylineText}>{bylineText}</span>
+					{showChat && (
+						<div className={styles.chat}>
+							<StatementChatMore statement={statement} variant="pill" opensSheet />
 						</div>
-					</div>
-					<div className={styles.actionsEnd}>
-						{showChat && (
-							<div className={styles.chat}>
-								<StatementChatMore statement={statement} />
-							</div>
-						)}
-					</div>
+					)}
+				</div>
+
+				{/* Face scale, then (after you rate) consensus bar + results strip. */}
+				<div className={styles['evolution-element']}>
+					<Evaluation statement={statement} variant="card" />
 				</div>
 				{shouldShowAddSubQuestionModal && (
 					<CreateStatementModal

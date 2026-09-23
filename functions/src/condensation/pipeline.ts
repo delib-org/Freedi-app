@@ -13,6 +13,7 @@ import {
 	User,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
+import { embeddingCache } from '../services/embedding-cache-service';
 import { generateGroupedTitle } from './titleGeneration';
 import {
 	hashIntegratedOptions,
@@ -58,23 +59,6 @@ function cosine(a: number[], b: number[]): number {
 	if (na === 0 || nb === 0) return 0;
 
 	return dot / (Math.sqrt(na) * Math.sqrt(nb));
-}
-
-/**
- * Firestore stores vector embeddings as a `VectorValue` object (so
- * findNearest queries work), not as a plain array. Accept either shape.
- */
-function extractEmbedding(raw: unknown): number[] | null {
-	if (!raw) return null;
-	if (Array.isArray(raw)) return raw as number[];
-	if (typeof raw === 'object' && raw !== null && 'toArray' in raw) {
-		const vectorValue = raw as { toArray: () => number[] };
-		const arr = vectorValue.toArray();
-
-		return Array.isArray(arr) ? arr : null;
-	}
-
-	return null;
 }
 
 interface Candidate {
@@ -251,8 +235,8 @@ export async function runCondensationPipeline(
 	//    and passing the admin-configured eligibility filters (min avg
 	//    evaluation + min evaluator count). Creator-forced overrides bypass
 	//    the eligibility filters because drag-drop is explicit admin intent.
-	//    Embeddings on statements are stored as Firestore VectorValue, not
-	//    plain arrays — extractEmbedding() normalizes both shapes.
+	//    Vectors come from the embedding store, which also drops ones from a
+	//    different embedding model.
 	const minAverage =
 		typeof config.minAverageForClustering === 'number' && config.minAverageForClustering > -1
 			? config.minAverageForClustering
@@ -280,6 +264,8 @@ export async function runCondensationPipeline(
 		return true;
 	}
 
+	const vectors = await embeddingCache.getBatchEmbeddings(originals.map((s) => s.statementId));
+
 	let filteredOutByEligibility = 0;
 	const candidates: Candidate[] = originals
 		.filter((s) => !standaloneOverrides.has(s.statementId))
@@ -290,7 +276,7 @@ export async function runCondensationPipeline(
 			return false;
 		})
 		.map((s) => {
-			const embedding = extractEmbedding((s as unknown as { embedding?: unknown }).embedding);
+			const embedding = vectors.get(s.statementId);
 
 			return embedding
 				? {

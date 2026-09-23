@@ -6,8 +6,18 @@ import { useGame } from '../state/GameContext';
 import NoGameYet from '../components/NoGameYet';
 import { useMode } from '../lib/mode';
 import { stageBus } from '../lib/stageBus';
+// One cap, read by the compass and by the strip that reports it as a lit wind.
+import { TOP_VALUES } from '../lib/voyageSteps';
 
-const TOP_VALUES = 3;
+/**
+ * Chips that make a wind read as answered, and earn the ✓.
+ *
+ * One chip already unblocks the way onward — the gate has always been "said
+ * something". Three is when an answer stops being a shrug, so that is when the
+ * screen says so out loud. Below it the screen says nothing at all: a running
+ * count of what you can see on the buttons in front of you is noise.
+ */
+const CHIPS_ENOUGH = 3;
 
 /**
  * Inspiration chips are deliberately uncapped.
@@ -94,6 +104,17 @@ export default function Compass() {
 		return answers[questionId] ?? { answer: '', chips: [] };
 	}
 
+	/**
+	 * Enough said on this wind to earn the ✓ — three chips, or words of your
+	 * own. Words are a whole answer at any length: someone who wrote a
+	 * paragraph and picked nothing must not be told they are short of three.
+	 */
+	function answered(questionId: string): boolean {
+		const entry = answerOf(questionId);
+
+		return entry.chips.length >= CHIPS_ENOUGH || entry.answer.trim() !== '';
+	}
+
 	function setAnswer(questionId: string, patch: Partial<OdysseyCompassAnswer>): void {
 		setAnswers((current) => ({
 			...current,
@@ -165,7 +186,14 @@ export default function Compass() {
 							<p className="eyebrow m-0">
 								רוח {index + 1} מתוך {questions.length + 1}
 							</p>
-							<h2 className="text-xl font-bold text-[var(--cream)] mt-1 mb-1">{question.title}</h2>
+							<div className="flex items-center justify-between gap-3 mt-1 mb-1">
+								<h2 className="text-xl font-bold text-[var(--cream)] m-0">{question.title}</h2>
+								{answered(question.questionId) ? (
+									<span className="wind-ready" role="status">
+										<span aria-hidden="true">✓</span> אפשר להמשיך
+									</span>
+								) : null}
+							</div>
 							<p className="text-[15px] text-[#dcecf7] mt-0 mb-3">{question.prompt}</p>
 
 							{/*
@@ -177,9 +205,7 @@ export default function Compass() {
 							*/}
 							{question.chips.length > 0 ? (
 								<>
-									<p className="text-[13px] opacity-75 m-0 mb-2">
-										בחרו כל מה שמדבר אליכם — אין הגבלה:
-									</p>
+									<p className="text-[13px] opacity-75 m-0 mb-2">בחרו כל מה שמדבר אליכם:</p>
 									<div className="flex flex-wrap gap-2" aria-label="כפתורי השראה">
 										{question.chips.map((chip) => {
 											const active = answerOf(question.questionId).chips.includes(chip);
@@ -197,18 +223,12 @@ export default function Compass() {
 											);
 										})}
 									</div>
-									<p className="text-[13px] opacity-75 mt-2 mb-3">
-										{answerOf(question.questionId).chips.length > 0
-											? `נבחרו ${answerOf(question.questionId).chips.length} מתוך ${
-													question.chips.length
-												}. לחיצה נוספת מסירה בחירה.`
-											: 'אפשר לבחור כמה שתרצו.'}
-									</p>
+									<div className="mb-3" />
 								</>
 							) : null}
 
 							<p className="text-[13px] opacity-75 m-0 mb-2">
-								ובמילים שלכם — מה שאף כפתור לא אומר{question.chips.length > 0 ? ' (לא חובה)' : ''}:
+								ובמילים שלכם{question.chips.length > 0 ? ' (לא חובה)' : ''}:
 							</p>
 							<textarea
 								rows={3}
@@ -225,33 +245,35 @@ export default function Compass() {
 						</p>
 						<div className="flex items-center justify-between gap-3 mt-1 mb-1">
 							<h2 className="text-xl font-bold text-[var(--cream)] m-0">רוח ההכרעה</h2>
-							<span
-								className="flex items-center gap-2 rounded-full border border-[rgba(232,185,88,0.5)] bg-[rgba(6,24,44,0.7)] px-3 py-1"
-								role="status"
-								aria-label={`נבחרו ${ranked.length} ערכים מתוך ${TOP_VALUES}`}
-							>
-								<span className="flex gap-1" aria-hidden="true">
-									{Array.from({ length: TOP_VALUES }, (_, dot) => (
-										<span
-											key={dot}
-											className={`inline-block h-2.5 w-2.5 rounded-full ${
-												dot < ranked.length
-													? 'bg-[var(--gold-strong)]'
-													: 'border border-[rgba(232,185,88,0.5)]'
-											}`}
-										/>
-									))}
+							{/* Ranked and done says the same thing the other winds say, in the
+							    same words; short of that the dots show how far along it is. */}
+							{ranked.length === TOP_VALUES ? (
+								<span className="wind-ready" role="status">
+									<span aria-hidden="true">✓</span> אפשר להמשיך
 								</span>
-								<strong
-									className={`text-[14px] ${
-										ranked.length === TOP_VALUES
-											? 'text-[var(--gold-strong)]'
-											: 'text-[var(--cream)]'
-									}`}
+							) : (
+								<span
+									className="flex items-center gap-2 rounded-full border border-[rgba(232,185,88,0.5)] bg-[rgba(6,24,44,0.7)] px-3 py-1"
+									role="status"
+									aria-label={`נבחרו ${ranked.length} ערכים מתוך ${TOP_VALUES}`}
 								>
-									{ranked.length}/{TOP_VALUES}
-								</strong>
-							</span>
+									<span className="flex gap-1" aria-hidden="true">
+										{Array.from({ length: TOP_VALUES }, (_, dot) => (
+											<span
+												key={dot}
+												className={`inline-block h-2.5 w-2.5 rounded-full ${
+													dot < ranked.length
+														? 'bg-[var(--gold-strong)]'
+														: 'border border-[rgba(232,185,88,0.5)]'
+												}`}
+											/>
+										))}
+									</span>
+									<strong className="text-[14px] text-[var(--cream)]">
+										{ranked.length}/{TOP_VALUES}
+									</strong>
+								</span>
+							)}
 						</div>
 						<p className="text-[15px] text-[#dcecf7] mt-0 mb-3">
 							כשאין פתרון טוב, מה בכל זאת צריך להנחות אותך? בחרו {TOP_VALUES} ערכים מובילים, לפי
@@ -281,13 +303,7 @@ export default function Compass() {
 								בחרתם {ranked.length} ערכים — הסירו {ranked.length - TOP_VALUES} בלחיצה עליהם כדי
 								להמשיך.
 							</p>
-						) : (
-							<p className="text-[13px] opacity-75 mt-3 mb-0">
-								{ranked.length === TOP_VALUES
-									? 'נבחרו כל הערכים. לחיצה נוספת מסירה ערך.'
-									: `נבחרו ${ranked.length} מתוך ${TOP_VALUES}. לחיצה נוספת מסירה ערך.`}
-							</p>
-						)}
+						) : null}
 					</section>
 
 					<div className="flex flex-col items-center gap-2 pb-4">

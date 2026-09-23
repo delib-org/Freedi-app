@@ -8,59 +8,12 @@
 	overflow: hidden;
 
 	&__header {
+		// Scrolled state is `page__header--minimized`, set by useHeaderHideOnScroll.
+		// The question header styles that state itself (title + tabs stay); there is
+		// no separate mini bar to swap in.
 		width: 100%;
 		z-index: 999;
 		position: relative;
-
-		&__mini {
-			position: absolute;
-			inset: 0 0 auto 0;
-			height: 2.75rem; // 44px — valid touch target
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			background-color: var(--header-question, #123def);
-			color: var(--question-text, #fff);
-			opacity: 0;
-			pointer-events: none;
-			border: none;
-			width: 100%;
-			cursor: pointer;
-
-			&:focus-visible {
-				outline: 2px solid var(--white);
-				outline-offset: -3px;
-			}
-
-			&__title {
-				font-size: 0.9rem;
-				font-weight: 600;
-				padding: 0.5rem 1rem;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				max-width: 90%;
-			}
-		}
-
-		// Minimized: the full header leaves the layout entirely so the content
-		// actually gains the space; the slim mini bar takes its place.
-		// display:none is a one-shot layout change; only opacity animates.
-		&--minimized {
-			@media screen and (max-width: 600px) {
-				.page__header__full {
-					display: none;
-				}
-
-				.page__header__mini {
-					position: static;
-					opacity: 1;
-					pointer-events: auto;
-					animation: page-header-mini-in var(--motion-base) var(--motion-ease);
-				}
-			}
-		}
-
 		&.rtl {
 			border-bottom-right-radius: 0;
 			border-bottom-left-radius: 50px;
@@ -286,14 +239,5 @@
 				margin: 0 auto;
 			}
 		}
-	}
-}
-@keyframes page-header-mini-in {
-	from {
-		opacity: 0;
-	}
-
-	to {
-		opacity: 1;
 	}
 }

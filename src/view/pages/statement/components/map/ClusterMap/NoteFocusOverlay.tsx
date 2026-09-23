@@ -1,4 +1,5 @@
 import {
+	type CSSProperties,
 	FC,
 	type KeyboardEvent as ReactKeyboardEvent,
 	useCallback,
@@ -9,6 +10,8 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { STORAGE_KEYS } from '@/constants/common';
+import { logError } from '@/utils/errorHandling';
 import type { ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
 import styles from './NoteFocusOverlay.module.scss';
 
@@ -39,6 +42,41 @@ const EXIT_FALLBACK_MS = 320;
 
 const FOCUSABLE = 'button, textarea, [href], input, select, [tabindex]:not([tabindex="-1"])';
 
+// Text sizes (rem) the A− / A+ buttons step through. The top end is for a
+// projector in a hall; the choice is remembered per browser.
+const NOTE_FONT_STEPS_REM = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4];
+const NOTE_FONT_DEFAULT_REM = 1.25;
+
+function readStoredFontRem(): number {
+	try {
+		const raw = window.localStorage.getItem(STORAGE_KEYS.MAP_NOTE_FONT_REM);
+		const value = raw === null ? NaN : Number(raw);
+		if (NOTE_FONT_STEPS_REM.includes(value)) return value;
+	} catch {
+		// Storage unavailable (private mode, blocked): fall through to the default.
+	}
+
+	return NOTE_FONT_DEFAULT_REM;
+}
+
+/**
+ * Where to portal the overlay. While the map is in browser fullscreen only the
+ * fullscreen element's subtree is shown, so a box appended to document.body
+ * would open invisibly (and pile up until fullscreen ends). Inside the
+ * fullscreen element `position: fixed` still spans the whole screen.
+ */
+function portalTarget(): HTMLElement {
+	return (document.fullscreenElement as HTMLElement | null) ?? document.body;
+}
+
+function storeFontRem(value: number): void {
+	try {
+		window.localStorage.setItem(STORAGE_KEYS.MAP_NOTE_FONT_REM, String(value));
+	} catch (error) {
+		logError(error, { operation: 'NoteFocusOverlay.storeFontRem', metadata: { value } });
+	}
+}
+
 /**
  * "Lift the note" focus overlay. Renders the full note text in a large,
  * scrollable panel that scales up from the source card's position. With edit
@@ -67,6 +105,25 @@ const NoteFocusOverlay: FC<Props> = ({
 	const [open, setOpen] = useState(false);
 	const [closing, setClosing] = useState(false);
 	const [draft, setDraft] = useState(text);
+	const [fontRem, setFontRem] = useState(readStoredFontRem);
+	const [target, setTarget] = useState<HTMLElement>(portalTarget);
+
+	// Follow fullscreen in and out while open, so the box never ends up in a
+	// subtree that is not on screen.
+	useEffect(() => {
+		const onChange = () => setTarget(portalTarget());
+		document.addEventListener('fullscreenchange', onChange);
+
+		return () => document.removeEventListener('fullscreenchange', onChange);
+	}, []);
+	const fontStep = NOTE_FONT_STEPS_REM.indexOf(fontRem);
+
+	const stepFont = (delta: number) => {
+		const next = NOTE_FONT_STEPS_REM[fontStep + delta];
+		if (next === undefined) return;
+		setFontRem(next);
+		storeFontRem(next);
+	};
 
 	// Enter animation: anchor the scale-in origin to the source card, then flip
 	// `open` on the next frame so the CSS transition runs from that origin.
@@ -167,7 +224,13 @@ const NoteFocusOverlay: FC<Props> = ({
 			<div
 				ref={noteRef}
 				className={styles.note}
-				style={{ background: color.card, color: color.text }}
+				style={
+					{
+						background: color.card,
+						color: color.text,
+						'--note-font': `${fontRem}rem`,
+					} as CSSProperties
+				}
 				dir={dir}
 				role="dialog"
 				aria-modal="true"
@@ -182,6 +245,29 @@ const NoteFocusOverlay: FC<Props> = ({
 				>
 					✕
 				</button>
+
+				<div className={styles.sizeControls} role="group" aria-label={t('Text size')}>
+					<button
+						type="button"
+						className={styles.sizeBtn}
+						aria-label={t('Smaller text')}
+						title={t('Smaller text')}
+						disabled={fontStep <= 0}
+						onClick={() => stepFont(-1)}
+					>
+						A−
+					</button>
+					<button
+						type="button"
+						className={styles.sizeBtn}
+						aria-label={t('Larger text')}
+						title={t('Larger text')}
+						disabled={fontStep >= NOTE_FONT_STEPS_REM.length - 1}
+						onClick={() => stepFont(1)}
+					>
+						A+
+					</button>
+				</div>
 
 				{editing ? (
 					<textarea
@@ -225,7 +311,7 @@ const NoteFocusOverlay: FC<Props> = ({
 				</div>
 			</div>
 		</div>,
-		document.body,
+		target,
 	);
 };
 

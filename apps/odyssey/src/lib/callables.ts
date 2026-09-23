@@ -3,6 +3,8 @@ import type {
 	AdvanceCivicStageResponse,
 	AgoraStage,
 	MintAgoraHandoffResponse,
+	OdysseyFeedbackRequest,
+	OdysseyFeedbackResponse,
 	ProvisionCivicSessionsRequest,
 	ProvisionCivicSessionsResponse,
 	UpdateCivicFlowRequest,
@@ -11,9 +13,10 @@ import type {
 import { functions, httpsCallable } from './firebase';
 
 /**
- * The only two things Odyssey asks a server to do. Everything else in this
- * game is a direct Firestore write — these two need privileges the player
- * does not have: minting a sign-in token, and opening Agora sessions.
+ * The things Odyssey asks a server to do. Everything else in this game is a
+ * direct Firestore write — these need privileges the player does not have:
+ * minting a sign-in token, opening Agora sessions, and mailing a letter to the
+ * developers from an account no client may hold credentials for.
  *
  * The request/response shapes live in shared-types and are imported by the
  * functions too — a drift between the two sides is a compile error.
@@ -22,6 +25,8 @@ import { functions, httpsCallable } from './firebase';
 export type {
 	AdvanceCivicStageRequest,
 	MintAgoraHandoffResponse,
+	OdysseyFeedbackRequest,
+	OdysseyFeedbackResponse,
 	ProvisionCivicSessionsRequest,
 	ProvisionCivicSessionsResponse,
 	ProvisionedCivicSession,
@@ -84,4 +89,20 @@ export async function advanceCivicStage(sessionId: string, stage: AgoraStage): P
 		'agoraAdvanceStage',
 	);
 	await call({ sessionId, stage });
+}
+
+/**
+ * Send one letter to the developers. Requires an authenticated caller — see
+ * `submitFeedback()` in lib/feedback.ts, which guarantees one.
+ */
+export async function submitOdysseyFeedback(
+	input: OdysseyFeedbackRequest,
+): Promise<OdysseyFeedbackResponse> {
+	const call = httpsCallable<OdysseyFeedbackRequest, OdysseyFeedbackResponse>(
+		functions,
+		'odysseyFeedbackSubmit',
+	);
+	const result = await call(input);
+
+	return result.data;
 }

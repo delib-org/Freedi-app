@@ -1,39 +1,18 @@
-import { useSyncExternalStore } from 'react';
-
 /** "מצב ישיר" — plain questionnaire mode without sea animations. */
 export type GameMode = 'game' | 'direct';
 
-const STORAGE_KEY = 'odyssey_mode';
-const listeners = new Set<() => void>();
-
-function current(): GameMode {
-	try {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		if (stored === 'direct') return 'direct';
-		if (stored === 'game') return 'game';
-
-		// No stored preference: reduced-motion users get the plain
-		// questionnaire by default — the direct flow IS the accessible path.
-		// The topnav toggle still lets them opt into game mode explicitly.
-		return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'direct' : 'game';
-	} catch {
-		return 'game';
-	}
-}
-
-export function toggleMode(): void {
-	try {
-		localStorage.setItem(STORAGE_KEY, current() === 'direct' ? 'game' : 'direct');
-	} catch {
-		// storage unavailable — stay in game mode
-	}
-	for (const listener of listeners) listener();
-}
-
+/**
+ * The voyage is the plain questionnaire, for everyone.
+ *
+ * The two modes used to sit behind a top-bar toggle, which asked every player
+ * to choose a presentation before they knew what either one was, and split the
+ * voyage into two experiences that had to be kept in step. Direct is now the
+ * only mode the interface can reach.
+ *
+ * The 'game' branches are deliberately left standing in the pages and the sea
+ * stage still exists: nothing about the Phaser stage was deleted, so restoring
+ * the choice is a matter of making this function return something else again.
+ */
 export function useMode(): GameMode {
-	return useSyncExternalStore((listener) => {
-		listeners.add(listener);
-
-		return () => listeners.delete(listener);
-	}, current);
+	return 'direct';
 }

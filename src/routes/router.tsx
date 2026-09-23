@@ -1,5 +1,6 @@
-import { createBrowserRouter, Navigate } from 'react-router';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router';
 import App from '@/App';
+import AppThinkingSpace from '@/view/components/atomic/organisms/ThinkingSpace/AppThinkingSpace';
 
 // Lazy-loaded routes
 import { publicRoutes } from './publicRoutes';
@@ -40,7 +41,14 @@ export const router = createBrowserRouter([
 				children: [...protectedRoutes],
 			},
 			// User profile routes that need authentication but not statement authorization
-			...userRoutes,
+			{
+				element: (
+					<AppThinkingSpace>
+						<Outlet />
+					</AppThinkingSpace>
+				),
+				children: userRoutes,
+			},
 		],
 	},
 	// Error routes at root level.

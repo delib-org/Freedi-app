@@ -26,7 +26,7 @@ import styles from './ClusterBoard.module.scss';
  * would ignore the note — the menu/footer would flip it to LTR — and each
  * child's own `inset-inline-*` resolves against ITS OWN direction, not the card's.)
  */
-function detectTextDir(text: string): 'rtl' | 'ltr' {
+export function detectTextDir(text: string): 'rtl' | 'ltr' {
 	for (const ch of text) {
 		const c = ch.codePointAt(0);
 		if (c === undefined) continue;
@@ -145,7 +145,6 @@ const ClusterCard: FC<Props> = ({
 
 	// The text is a pressable affordance when there's something the box adds:
 	// more text than the card can show, or edit rights.
-	const canOpen = isClamped || canManage;
 
 	// Open the focus box, anchoring its scale-in to the card's on-screen rect.
 	const openFocus = () => {
@@ -300,36 +299,28 @@ const ClusterCard: FC<Props> = ({
 				</div>
 			)}
 
-			{/* Press the text to open the focus box: read the full note, and — with
-			    edit rights — edit it there instead of in the cramped card. The box
-			    opens when there's more to show (clamped) or the user can edit. */}
+			{/* Press the text to open the focus box: the full note, large enough to
+			    read from across a room, and — with edit rights — the place to edit
+			    it instead of the cramped card. Every note opens, clipped or not. */}
 			<div className={styles.cardTextWrap}>
 				<span
 					ref={textRef}
 					className={`${styles.cardText} ${canManage ? styles.cardTextHasMenu : ''} ${
 						isClamped ? styles.cardTextClamped : ''
-					} ${canOpen ? styles.cardTextClickable : ''}`}
-					role={canOpen ? 'button' : undefined}
-					tabIndex={canOpen ? 0 : undefined}
-					aria-haspopup={canOpen ? 'dialog' : undefined}
-					onClick={
-						canOpen
-							? (e) => {
-									e.stopPropagation();
-									openFocus();
-								}
-							: undefined
-					}
-					onKeyDown={
-						canOpen
-							? (e) => {
-									if (e.key === 'Enter' || e.key === ' ') {
-										e.preventDefault();
-										openFocus();
-									}
-								}
-							: undefined
-					}
+					} ${styles.cardTextClickable}`}
+					role="button"
+					tabIndex={0}
+					aria-haspopup="dialog"
+					onClick={(e) => {
+						e.stopPropagation();
+						openFocus();
+					}}
+					onKeyDown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							openFocus();
+						}
+					}}
 				>
 					{statement.statement}
 				</span>

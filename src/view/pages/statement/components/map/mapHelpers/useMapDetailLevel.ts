@@ -8,6 +8,13 @@ export interface MapDetailState {
 	setLevel: (level: MapDetailLevel) => void;
 	/** Nodes the viewer opened one level past the global depth. */
 	expandedIds: ReadonlySet<string>;
+	/** Nodes the viewer folded although the level would open them. */
+	foldedIds: ReadonlySet<string>;
+	/**
+	 * Open or fold a node by hand. Pass the wanted state; without it the call
+	 * flips the node's own override, which is only right for a node the level
+	 * folds (callers that know `collapsed` should pass `!collapsed`).
+	 */
 	toggleExpanded: (id: string, expanded?: boolean) => void;
 	expandMany: (ids: Iterable<string>) => void;
 	resetExpanded: () => void;
@@ -31,6 +38,7 @@ export function useMapDetailLevel(
 
 	const [level, setLevelState] = useState<MapDetailLevel>(adminDefault);
 	const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(() => new Set());
+	const [foldedIds, setFoldedIds] = useState<ReadonlySet<string>>(() => new Set());
 
 	// Remembered choice wins over the admin default; a viewer who may not
 	// expand is held at the admin default so the setting means something.
@@ -38,12 +46,14 @@ export function useMapDetailLevel(
 		const remembered = statementId ? loadLocalDetail(statementId, uid) : null;
 		setLevelState(remembered && allowExpand ? remembered : adminDefault);
 		setExpandedIds(new Set());
+		setFoldedIds(new Set());
 	}, [statementId, uid, adminDefault, allowExpand]);
 
 	const setLevel = useCallback(
 		(next: MapDetailLevel) => {
 			setLevelState(next);
 			setExpandedIds(new Set());
+			setFoldedIds(new Set());
 			if (statementId) saveLocalDetail(statementId, uid, next);
 		},
 		[statementId, uid],
@@ -52,30 +62,59 @@ export function useMapDetailLevel(
 	const toggleExpanded = useCallback(
 		(id: string, expanded?: boolean) => {
 			if (!allowExpand) return;
+			// Opening records an expand override and clears any fold; folding does
+			// the reverse. Each node carries at most one of the two.
+			const shouldOpen = expanded ?? !expandedIds.has(id);
 			setExpandedIds((prev) => {
-				const isOpen = prev.has(id);
-				const shouldOpen = expanded ?? !isOpen;
-				if (shouldOpen === isOpen) return prev;
+				if (prev.has(id) === shouldOpen) return prev;
 				const next = new Set(prev);
 				if (shouldOpen) next.add(id);
 				else next.delete(id);
 
 				return next;
 			});
+			setFoldedIds((prev) => {
+				if (prev.has(id) === !shouldOpen) return prev;
+				const next = new Set(prev);
+				if (shouldOpen) next.delete(id);
+				else next.add(id);
+
+				return next;
+			});
 		},
-		[allowExpand],
+		[allowExpand, expandedIds],
 	);
 
 	const expandMany = useCallback((ids: Iterable<string>) => {
+		const list = Array.from(ids);
 		setExpandedIds((prev) => {
 			const next = new Set(prev);
-			for (const id of ids) next.add(id);
+			for (const id of list) next.add(id);
 
 			return next.size === prev.size ? prev : next;
 		});
+		setFoldedIds((prev) => {
+			if (!list.some((id) => prev.has(id))) return prev;
+			const next = new Set(prev);
+			for (const id of list) next.delete(id);
+
+			return next;
+		});
 	}, []);
 
-	const resetExpanded = useCallback(() => setExpandedIds(new Set()), []);
+	const resetExpanded = useCallback(() => {
+		setExpandedIds(new Set());
+		setFoldedIds(new Set());
+	}, []);
 
-	return { level, setLevel, expandedIds, toggleExpanded, expandMany, resetExpanded, allowExpand };
+	return {
+		level,
+		setLevel,
+		expandedIds,
+		foldedIds,
+		toggleExpanded,
+		expandMany,
+		resetExpanded,
+		allowExpand,
+	};
 }

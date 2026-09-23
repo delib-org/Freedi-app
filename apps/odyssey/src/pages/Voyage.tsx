@@ -11,6 +11,7 @@ import { islandArtUrl } from '../lib/islandArt';
 import { stageBus, type SeaDistances } from '../lib/stageBus';
 import { invitedElders, elderStageId, pickIslandRemark, type ElderRemark } from '../lib/elders';
 import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
+import SeaChart from '../components/SeaChart';
 import ShipCard from '../components/ShipCard';
 import ElderRemarkCard from '../components/ElderRemarkCard';
 
@@ -370,13 +371,19 @@ export default function Voyage() {
 													✕
 												</button>
 											</div>
-											<NearbyShips ships={shipProximity} compact onSelect={setAsked} />
+											<NearbyShips
+												ships={shipProximity}
+												compact
+												onSelect={setAsked}
+												selectedId={asked}
+											/>
 											{elderProximity.length > 0 ? (
 												<div className="border-t border-[rgba(232,185,88,0.25)] pt-2">
 													<NearbyShips
 														ships={elderProximity}
 														compact
 														onSelect={setAsked}
+														selectedId={asked}
 														caption="📜 המלחים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
 													/>
 												</div>
@@ -407,22 +414,29 @@ export default function Voyage() {
 									<p className="m-0 text-[13px] opacity-80">
 										הקישו על ספינה כדי לראות כמה היא קרובה למסלול שלכם.
 									</p>
-									<NearbyShips ships={shipProximity} onSelect={setAsked} />
-									{elderProximity.length > 0 ? (
-										<div className="border-t border-[rgba(232,185,88,0.25)] pt-3">
-											<NearbyShips
-												ships={elderProximity}
-												onSelect={setAsked}
-												caption="📜 המלחים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
-											/>
-										</div>
-									) : null}
+									{/* Parties only. A persona riding the same water as the parties reads as
+							    a claim that she is running — the reviewer who saw Golda there
+							    said so, which is why the personas keep to their own list. */}
+									<SeaChart ships={shipProximity} onSelect={setAsked} selectedId={asked} />
+									{/* The card docks right under the water: a tap on a hull is
+									    answered where the eye already is, not past two rows of chips. */}
 									{askedShip ? (
 										<ShipCard
 											ship={askedShip}
 											onClose={() => setAsked(null)}
 											onShowAll={() => setAsked(null)}
 										/>
+									) : null}
+									<NearbyShips ships={shipProximity} onSelect={setAsked} selectedId={asked} />
+									{elderProximity.length > 0 ? (
+										<div className="border-t border-[rgba(232,185,88,0.25)] pt-3">
+											<NearbyShips
+												ships={elderProximity}
+												onSelect={setAsked}
+												selectedId={asked}
+												caption="📜 המלחים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
+											/>
+										</div>
 									) : null}
 									<p className="m-0 text-[12px] opacity-65">
 										הקרבה היא עגינה זמנית — לא פסק דין ולא הוראת הצבעה.

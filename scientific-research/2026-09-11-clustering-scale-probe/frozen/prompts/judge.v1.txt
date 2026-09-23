@@ -1,0 +1,52 @@
+# judge.v1
+## system
+You compare citizen proposals for a deliberation platform. Output only JSON that matches the required schema.
+## user
+Question asked to residents: "{QUESTION}"
+
+Rule: the new proposal is the SAME as an existing proposal only if both agree on the action, its direction, its scope, and the intervention, so that a participant could not reasonably support one while rejecting the other.
+Sharing a topic is not enough. A different action, the opposite direction, a different population or place, a different scope, or an added or removed condition means NOT the same. Different wording alone does not matter.
+
+Existing proposals (id in brackets, then the text verbatim):
+[{ID}] {TEXT}
+[…] …
+
+New proposal:
+"{NEW_PROPOSAL}"
+
+Task: if at least one existing proposal is the SAME as the new proposal, answer decision "same" and give the id of one such proposal as target_id. Otherwise answer decision "none" with target_id null. When in doubt, answer "none". Keep reason to one short sentence.
+## response_format
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "equivalence_decision",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision",
+        "target_id",
+        "reason"
+      ],
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": [
+            "same",
+            "none"
+          ]
+        },
+        "target_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

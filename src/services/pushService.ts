@@ -22,18 +22,27 @@ import { logError } from '@/utils/errorHandling';
 const TOKEN_REFRESH_INTERVAL = 30 * 24 * 60 * 60 * 1000;
 
 /**
- * IndexedDB databases the FCM stack owns on this origin.
+ * FCM databases whose schema version can conflict.
  *
- * Everything they hold — a cached registration token and an installation id —
- * is re-fetched on demand, so deleting them costs one extra network round trip
- * and nothing else.
+ * They hold only a cached registration token, which is re-fetched on demand,
+ * so deleting them costs one extra network round trip and nothing else.
+ *
+ * `firebase-installations-database` is deliberately absent: every SDK we have
+ * shipped opens it at version 1, so it cannot be the conflict, and the
+ * service worker keeps it open with no versionchange handler — deleting it
+ * only ever blocked the repair.
  */
 const FCM_DATABASES = [
 	'firebase-messaging-database',
-	'firebase-installations-database',
 	// The pre-v9 store the SDK still migrates from.
 	'fcm_token_details_db',
 ] as const;
+
+/**
+ * How long a blocked delete may wait for another tab or the service worker to
+ * close its connection before the repair is left for the next page load.
+ */
+const FCM_DATABASE_DELETE_TIMEOUT_MS = 3000;
 
 /**
  * True for the IndexedDB failure that happens when a database on this origin
@@ -56,29 +65,39 @@ const isIndexedDbVersionError = (error: unknown): boolean => {
 };
 
 /**
- * Delete the FCM-owned databases so the SDK can recreate them at the version it
- * expects. Best effort: a database another tab still holds open reports
- * `blocked` and is left alone rather than hanging the caller.
+ * Delete the FCM databases so the SDK can recreate them at the version it
+ * expects. Resolves true only when every delete actually completed.
+ *
+ * A `blocked` delete is not a failure: it stays queued and completes the
+ * moment the other connection closes. So wait for that — retrying `getToken()`
+ * while the old database still exists just fails the same way — but give up
+ * after FCM_DATABASE_DELETE_TIMEOUT_MS rather than hanging the caller.
  */
-const deleteFcmDatabases = async (): Promise<void> => {
-	await Promise.all(
+const deleteFcmDatabases = async (): Promise<boolean> => {
+	const results = await Promise.all(
 		FCM_DATABASES.map(
 			(name) =>
-				new Promise<void>((resolve) => {
+				new Promise<boolean>((resolve) => {
 					try {
 						const request = indexedDB.deleteDatabase(name);
-						request.onsuccess = () => resolve();
-						request.onerror = () => resolve();
+						const timeout = setTimeout(() => resolve(false), FCM_DATABASE_DELETE_TIMEOUT_MS);
+						const settle = (deleted: boolean) => {
+							clearTimeout(timeout);
+							resolve(deleted);
+						};
+						request.onsuccess = () => settle(true);
+						request.onerror = () => settle(false);
 						request.onblocked = () => {
-							console.info(`[PushService] Database ${name} is blocked by another tab`);
-							resolve();
+							console.info(`[PushService] Waiting for another tab to release ${name}`);
 						};
 					} catch {
-						resolve();
+						resolve(false);
 					}
 				}),
 		),
 	);
+
+	return results.every(Boolean);
 };
 
 /**
@@ -354,7 +373,14 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 			// stores and ask once more — the token and installation id in them are
 			// disposable.
 			console.info('[PushService] Rebuilding FCM databases after IndexedDB version conflict');
-			await deleteFcmDatabases();
+			if (!(await deleteFcmDatabases())) {
+				// Another tab still holds the old database, so a retry now would fail
+				// identically. That is transient — the repair runs again on the next
+				// load — so it is not an incident.
+				console.info('[PushService] FCM database still in use; repair deferred to next load');
+
+				return null;
+			}
 			currentToken = await requestToken();
 		}
 

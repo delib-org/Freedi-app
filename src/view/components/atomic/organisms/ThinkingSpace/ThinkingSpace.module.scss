@@ -1,0 +1,449 @@
+.space {
+	display: flex;
+	width: 100%;
+	height: 100dvh;
+	min-height: 0;
+	// clip, not hidden: a hidden box is still a scroll container, so
+	// scrollIntoView()/focus() deep inside can scroll the frame itself —
+	// the header slides off the top and a gap opens at the bottom.
+	overflow: hidden;
+	overflow: clip;
+	color: var(--space-ink);
+	background: var(--space-paper);
+	font-family: var(--font-ui, 'Roboto', sans-serif);
+	padding: 18px;
+	gap: 12px;
+	background: var(--space-sidebar);
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+	button {
+		font-family: inherit;
+		cursor: pointer;
+	}
+	button:focus-visible,
+	a:focus-visible,
+	input:focus-visible,
+	textarea:focus-visible {
+		outline: 3px solid var(--space-purple);
+		outline-offset: 3px;
+	}
+	button:disabled {
+		opacity: 1;
+		cursor: default;
+	}
+	&__skip {
+		position: fixed;
+		inset-block-start: -100px;
+		z-index: 200;
+		padding: 16px;
+		background: var(--space-surface);
+		color: var(--space-ink);
+		&:focus {
+			inset-block-start: 8px;
+		}
+	}
+	&__sidebar {
+		// Set by the shell from useSidebarWidth: the person drags the separator.
+		flex: 0 0 var(--space-sidebar-width, 232px);
+		min-width: 0;
+		background: var(--space-sidebar);
+		border-inline-end: 0;
+		display: flex;
+		flex-direction: column;
+		padding: 32px 20px 20px;
+		gap: 8px;
+		overflow: auto;
+	}
+	&__brand {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 0;
+		background: none;
+		text-align: start;
+		img {
+			display: block;
+			width: 152px;
+			height: 88px;
+			object-fit: contain;
+		}
+	}
+	&__tagline {
+		color: var(--space-muted);
+		font-size: 12px;
+		margin: 4px 0 30px;
+	}
+	&__navItem {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		border: 0;
+		background: transparent;
+		border-radius: 20px;
+		text-align: start;
+		font-size: 13px;
+		font-weight: 500;
+		padding: 12px 10px;
+		min-height: 44px;
+		width: 100%;
+		&:hover {
+			background: var(--space-surface);
+		}
+		&--active {
+			background: var(--space-purple);
+			color: var(--space-paper);
+		}
+	}
+	&__spaceIcon {
+		flex: 0 0 27px;
+		height: 27px;
+		display: grid;
+		place-items: center;
+		font-size: 12px;
+		border-radius: 50%;
+		background: var(--space-mint);
+		color: var(--space-green);
+		&[data-tone='1'] {
+			background: var(--space-yellow);
+			color: var(--space-yellow-ink);
+		}
+		&[data-tone='2'] {
+			background: var(--space-purple-soft);
+			color: var(--space-purple);
+		}
+	}
+	&__linkText {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	&__sectionLabel {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin: 20px 10px 0;
+		font-size: 10px;
+		font-weight: 600;
+		letter-spacing: 1.4px;
+		color: var(--space-muted);
+		button {
+			border: 0;
+			background: none;
+			width: 32px;
+			height: 32px;
+			display: grid;
+			place-items: center;
+		}
+	}
+	&__links {
+		max-height: 35vh;
+		overflow: auto;
+		flex-shrink: 0;
+	}
+	&__empty {
+		font-size: 13px;
+		line-height: 1.6;
+		color: var(--space-muted);
+		padding: 8px;
+	}
+	&__create {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 7px;
+		padding: 12px 8px;
+		margin-top: 16px;
+		background: var(--space-surface);
+		border: 1px solid var(--space-line);
+		border-radius: 20px;
+		font-size: 12px;
+		font-weight: 600;
+		min-height: 44px;
+		&:hover {
+			border-color: var(--space-purple);
+		}
+	}
+	&__note {
+		margin-top: auto;
+		padding: 40px 12px 20px;
+		strong {
+			display: block;
+			font-size: 16px;
+			line-height: 1.45;
+			font-weight: 500;
+		}
+		p {
+			font-size: 12px;
+			line-height: 1.6;
+			color: var(--space-muted);
+			margin-top: 10px;
+		}
+	}
+	&__noteFlower {
+		display: block;
+		color: var(--space-coral);
+		font-size: 54px;
+		line-height: 1;
+		margin-bottom: 12px;
+	}
+	&__profile {
+		border: 0;
+		border-top: 1px solid var(--space-line);
+		padding-top: 20px;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		background: transparent;
+		text-align: start;
+		span:nth-child(2) {
+			flex: 1;
+			min-width: 0;
+		}
+		strong {
+			display: block;
+			font-size: 13px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		small {
+			display: block;
+			font-size: 10px;
+			color: var(--space-muted);
+			margin-top: 3px;
+		}
+	}
+	&__avatar {
+		width: 34px;
+		height: 34px;
+		border-radius: 50%;
+		background: var(--space-pink);
+		display: grid;
+		place-items: center;
+		font-weight: 600;
+		font-size: 13px;
+		flex-shrink: 0;
+	}
+	// Drag (or arrow-key) the rail wider when space titles are long; double-click
+	// puts it back. Sized to keep the shell's 12px gutter: 12 + 6 + 12 - 2 × 9.
+	&__resizer {
+		flex: 0 0 6px;
+		align-self: stretch;
+		margin-inline: -9px;
+		position: relative;
+		z-index: 5;
+		cursor: col-resize;
+		touch-action: none;
+		&::after {
+			content: '';
+			position: absolute;
+			inset-block: 32px;
+			left: 50%;
+			width: 2px;
+			margin-left: -1px;
+			border-radius: 2px;
+			background: transparent;
+			transition: background 120ms ease;
+		}
+		&:hover::after,
+		&:focus-visible::after,
+		&--active::after {
+			background: var(--space-purple);
+		}
+		@media (max-width: 1023px) {
+			display: none;
+		}
+	}
+	// A drag must not select the sidebar's text on the way past.
+	&--resizing {
+		cursor: col-resize;
+		user-select: none;
+	}
+	&__workspace {
+		background: var(--space-paper);
+		border: 1px solid color-mix(in srgb, var(--space-surface) 75%, transparent);
+		border-radius: 34px;
+		overflow: hidden;
+		overflow: clip;
+		box-shadow: 0 20px 60px #3020180c;
+		display: flex;
+		flex: 1;
+		min-width: 0;
+		min-height: 0;
+		flex-direction: column;
+	}
+	&__tools {
+		flex-shrink: 0;
+	}
+	&__columns {
+		display: flex;
+		flex: 1;
+		min-width: 0;
+		min-height: 0;
+		position: relative;
+	}
+	&__content {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		min-width: 0;
+		min-height: 0;
+		overflow: hidden;
+		overflow: clip;
+		outline: none;
+	}
+	&__aside {
+		background: var(--space-paper);
+		flex: 0 0 304px;
+		border-inline-start: 1px solid var(--space-line);
+		padding: 30px 22px;
+		overflow: auto;
+	}
+	&__boardToggle,
+	&__closeBoard {
+		display: none;
+	}
+	@media (max-width: 1199px) {
+		&__sidebar {
+			padding-inline: 16px;
+		}
+		&__aside {
+			display: none;
+			&--open {
+				display: block;
+				position: absolute;
+				inset-inline-end: 0;
+				inset-block: 0;
+				width: min(340px, 100%);
+				background: var(--space-paper);
+				z-index: 30;
+				box-shadow: var(--space-shadow);
+			}
+		}
+		&__closeBoard {
+			display: grid;
+			place-items: center;
+			margin-inline-start: auto;
+			border: 1px solid var(--space-line);
+			border-radius: 50%;
+			background: var(--space-surface);
+			width: 40px;
+			height: 40px;
+			margin-bottom: 12px;
+		}
+		&__boardToggle {
+			display: flex;
+			position: absolute;
+			inset-inline-end: 20px;
+			inset-block-end: 100px;
+			gap: 8px;
+			align-items: center;
+			padding: 12px 16px;
+			border: 1px solid var(--space-line);
+			border-radius: 24px;
+			background: var(--space-purple-soft);
+			color: var(--space-purple);
+			z-index: 15;
+			box-shadow: var(--space-shadow);
+			font-size: 12px;
+		}
+	}
+	// Phones and tablets: no sidebar and no top bar — the floating bottom nav
+	// (BottomNav) leads, spaces live on Home, and the "Taking shape" toggle
+	// floats above the nav.
+	@media (max-width: 1023px) {
+		padding: 0;
+		gap: 0;
+		flex-direction: column;
+		&__workspace {
+			border: 0;
+			border-radius: 0;
+			box-shadow: none;
+		}
+		&__sidebar {
+			display: none;
+		}
+		&__boardToggle {
+			display: flex;
+			inset-inline-end: var(--space-md);
+			inset-block-end: calc(var(--bottom-nav-clearance, 0px) + var(--space-xs));
+			min-height: var(--tap-min, 44px);
+		}
+		&__aside {
+			padding: 20px;
+		}
+		// Clearance for the floating nav: pill (tap target + 2 × 6px padding),
+		// its 24px lift and the safe-area inset. Exposed as a custom property so
+		// fixed bars inside the shell can sit above the nav.
+		&--withNav {
+			--bottom-nav-clearance: calc(
+				var(--tap-min, 44px) + 12px + var(--space-lg) + env(safe-area-inset-bottom, 0px)
+			);
+		}
+		&--withNav &__content {
+			padding-block-end: var(--bottom-nav-clearance);
+		}
+	}
+	@media (max-width: 480px) {
+		&__boardToggleLabel {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0 0 0 0);
+			white-space: nowrap;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			animation: none !important;
+			transition: none !important;
+			scroll-behavior: auto !important;
+		}
+	}
+}
+
+// Give unstyled controls the surrounding ink without outranking a component's
+// own foreground colour. The previous `.space button` declaration overrode
+// primary and coloured button labels whenever their CSS module had one class.
+:where(.space button) {
+	color: inherit;
+}
+
+.space {
+	&__create {
+		background: var(--space-yellow);
+		border-color: transparent;
+		box-shadow: 0 4px 0 color-mix(in srgb, var(--space-ink) 12%, transparent);
+	}
+	&__noteFlower {
+		color: var(--space-ink);
+		background: var(--space-mint);
+		border-radius: 50%;
+		width: 64px;
+		height: 64px;
+		display: grid;
+		place-items: center;
+		transform: rotate(-10deg);
+	}
+	&__avatar {
+		border-radius: 40% 50% 38% 48%;
+	}
+}
+
+.space .space__navItem--active {
+	color: var(--space-paper);
+}
+
+// One control at the bottom on phones: the floating nav. The "Taking shape"
+// board is reached from the question's own tabs instead of a second floating
+// button competing with it.
+@media (max-width: 1023px) {
+	.space__boardToggle {
+		display: none;
+	}
+}

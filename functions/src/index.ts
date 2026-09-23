@@ -338,6 +338,8 @@ const corsConfig = isProduction
 			'http://localhost:5177',
 			'http://localhost:5178',
 			'http://localhost:5179',
+			'http://localhost:5189',
+			'http://127.0.0.1:5189',
 		];
 
 /**
@@ -696,6 +698,16 @@ exports.onStatementDeletionTombstone = createFirestoreFunction(
 	onDocumentDeleted,
 	writeStatementDeletionTombstone,
 	'writeStatementDeletionTombstone',
+);
+
+// A deleted statement's vectors (statementEmbeddings/{id}) go with it.
+exports.onStatementDeletionEmbedding = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentDeleted,
+	async (event: { params: { statementId: string } }) => {
+		await deleteEmbeddingDoc(event.params.statementId);
+	},
+	'onStatementDeletionEmbedding',
 );
 
 // Subscription functions
@@ -1142,6 +1154,7 @@ export { fn_clusterRecomputeFlush } from './synthesis/liveSynth/fn_clusterRecomp
 // See plans/synthesis-100k-living-synth.md, Ship 3 §"Trigger 1" / "Trigger 2".
 import { liveSynthOnOptionCreate } from './synthesis/liveSynth/onOptionCreateLive';
 import { liveSynthOnOptionUpdate } from './synthesis/liveSynth/onOptionUpdateLive';
+import { deleteEmbeddingDoc, syncEmbeddingParent } from './services/statement-embedding-store';
 
 exports.liveSynthOnOptionCreate = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
@@ -1158,7 +1171,15 @@ exports.liveSynthOnOptionUpdate = createFirestoreFunction(
 	onDocumentUpdated,
 	async (event: { data?: { before: { data: () => unknown }; after: { data: () => unknown } } }) => {
 		if (!event.data) return;
-		await liveSynthOnOptionUpdate(event.data.before.data(), event.data.after.data());
+		const before = event.data.before.data();
+		const after = event.data.after.data();
+		await Promise.all([
+			// Rides on this trigger (it already fires on every statement update)
+			// rather than adding another per-update function: vector search
+			// pre-filters by parentId, so the embedding doc follows a moved statement.
+			syncEmbeddingParent(before, after),
+			liveSynthOnOptionUpdate(before, after),
+		]);
 	},
 	'liveSynthOnOptionUpdate',
 );
@@ -1258,6 +1279,7 @@ export {
 	agoraGradeValueIdentification,
 	agoraWritingAssistant,
 	agoraSetRound,
+	agoraSetBallotGoalOnly,
 	agoraChallengeTurn,
 	agoraResolveSuggestion,
 	agoraCharacterReview,
@@ -1272,10 +1294,23 @@ export {
 	agoraTeacherClass,
 	agoraTeacherMessage,
 	agoraModerateStatement,
+	agoraSupervisorConsole,
+	agoraTeacherHeartbeat,
+	agoraAdminBackfillTeacherAggregates,
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 	onAgoraSessionFinished,
 } from './agora';
 
 // Israeli Odyssey — the voyage that opens onto the civic Agora deliberations
-export { odysseyMintAgoraHandoff, odysseyDigestUnsubscribe, sendOdysseyDigests } from './odyssey';
+export {
+	odysseyMintAgoraHandoff,
+	odysseyDigestUnsubscribe,
+	sendOdysseyDigests,
+	odysseyFeedbackSubmit,
+} from './odyssey';
+
+export { covenantWorkflow } from './fn_covenant';
+
+export { deliberation, queueDeliberation, updateDeliberations } from './deliberation/functions';
+export { createAgreementHandoff, redeemAgreementHandoff } from './deliberation/handoff';

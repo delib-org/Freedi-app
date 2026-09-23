@@ -1,3 +1,4 @@
+import { clearTeacherNav } from './teacherNav';
 import m from 'mithril';
 import {
 	auth,
@@ -197,6 +198,7 @@ export function initAuth(): void {
 	let authStateSettled = false;
 
 	onAuthStateChanged(auth, (user: User | null) => {
+		if (state.user?.uid !== user?.uid) clearTeacherNav();
 		state.user = user;
 		state.loading = false;
 		state.tier = user && !user.isAnonymous ? 2 : 0;

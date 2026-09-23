@@ -1,6 +1,7 @@
 import { type RefObject, useEffect, useRef } from 'react';
 
-const MOBILE_BREAKPOINT = '(max-width: 600px)';
+// The collapse applies at every width: the desktop header is just as tall.
+const ACTIVE_QUERY = '(min-width: 0px)';
 const SCROLL_THRESHOLD = 15;
 const MIN_SCROLL_TOP = 60;
 const COOLDOWN_MS = 350;
@@ -12,10 +13,10 @@ const HIDDEN_CLASS = 'page__header--minimized';
 const MIN_SCROLLABLE_DISTANCE = 360;
 
 /**
- * Detects scroll direction on mobile and toggles `page__header--minimized` on
- * the header: the full header is swapped for a slim mini title bar in a single
- * layout pass (the freed space goes to the content). Tapping the mini bar
- * restores the full header.
+ * Detects scroll direction and toggles `page__header--minimized` on the header.
+ * The header styles that state itself — the question header keeps its title and
+ * its tabs and drops the rest — so the freed space goes to the content.
+ * Scrolling back up restores it.
  * Includes a cooldown to prevent rapid toggling from momentum scroll events.
  * Arms only after a real user gesture (touchmove or wheel) so programmatic
  * scrolls — Virtuoso pinning, scrollIntoView — never trigger it.
@@ -36,7 +37,7 @@ export function useHeaderHideOnScroll(scrollRef: RefObject<HTMLElement | null>):
 		const header = page.querySelector('.page__header');
 		if (!header) return;
 
-		const mediaQuery = window.matchMedia(MOBILE_BREAKPOINT);
+		const mediaQuery = window.matchMedia(ACTIVE_QUERY);
 
 		let isTouching = false;
 
@@ -130,10 +131,6 @@ export function useHeaderHideOnScroll(scrollRef: RefObject<HTMLElement | null>):
 		scrollElement.addEventListener('scroll', handleScroll, { passive: true });
 		mediaQuery.addEventListener('change', handleMediaChange);
 
-		// Tapping the mini bar restores the full header
-		const miniBar = page.querySelector('.page__header__mini');
-		miniBar?.addEventListener('click', showHeader);
-
 		return () => {
 			isReady.current = false;
 			scrollElement.removeEventListener('touchstart', handleTouchStart);
@@ -141,7 +138,6 @@ export function useHeaderHideOnScroll(scrollRef: RefObject<HTMLElement | null>):
 			scrollElement.removeEventListener('touchend', handleTouchEnd);
 			scrollElement.removeEventListener('wheel', handleWheel);
 			scrollElement.removeEventListener('scroll', handleScroll);
-			miniBar?.removeEventListener('click', showHeader);
 			mediaQuery.removeEventListener('change', handleMediaChange);
 			showHeader();
 		};

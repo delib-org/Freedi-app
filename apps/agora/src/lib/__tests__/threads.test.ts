@@ -51,6 +51,7 @@ vi.mock('../notifications', () => ({
 }));
 
 import {
+	isProposalConfirmed,
 	getHelpedProposals,
 	getOwnerThreads,
 	getThreadMessages,
@@ -62,7 +63,7 @@ import {
 	AgoraProposal,
 } from '../proposals';
 
-function feedStatements(docs: Array<Record<string, unknown>>): void {
+function feedStatements(docs: Array<Record<string, unknown>>, pending = false): void {
 	// The first captured callback is the statements listener. It reads snapshot
 	// and per-doc metadata to tell a server-acknowledged write from one still
 	// sitting in the local queue, so the fake snapshot has to carry it: a
@@ -74,7 +75,7 @@ function feedStatements(docs: Array<Record<string, unknown>>): void {
 				fn({
 					id: String(data.statementId),
 					data: () => data,
-					metadata: { hasPendingWrites: false },
+					metadata: { hasPendingWrites: pending },
 				}),
 			),
 	});
@@ -153,6 +154,14 @@ beforeEach(() => {
 });
 
 describe('thread selectors', () => {
+	it('does not treat an optimistic edit as a newly confirmed paper', () => {
+		feedStatements([proposalDoc]);
+		expect(isProposalConfirmed('p1')).toBe(true);
+		feedStatements([{ ...proposalDoc, statement: 'Edited text' }], true);
+		expect(isProposalConfirmed('p1')).toBe(false);
+		feedStatements([{ ...proposalDoc, statement: 'Edited text' }]);
+		expect(isProposalConfirmed('p1')).toBe(true);
+	});
 	it('a legacy doc without a discriminator IS a suggestion, keyed by its author', () => {
 		const legacy = { creatorId: 'h1' } as AgoraProposal;
 		expect(isSuggestionKind(legacy)).toBe(true);

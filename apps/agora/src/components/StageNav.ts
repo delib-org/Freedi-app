@@ -27,6 +27,13 @@ export interface StageNavAttrs {
 	 * cannot see.
 	 */
 	mail?: { unread: number; onOpen: () => void; label: string };
+	/**
+	 * The gear, in the look door's place. In the village it holds everything
+	 * that is not a move in the game — the style, the sounds, the world's
+	 * quality, the way back to the flat view — so the screen itself carries
+	 * only the four doors and the stations.
+	 */
+	menu?: { onOpen: () => void; label: string; open?: boolean };
 }
 
 const ICONS: Record<AgoraStage, IconName> = {
@@ -63,7 +70,7 @@ export function planItemLabel(item: AgoraStagePlanItem): string {
  * The journey as stations — and, for every station already opened, a door.
  *
  * Replaces the read-only journey strip. Opened stations are buttons: a
- * player can step back to re-read what the room said in an earlier stage.
+ * player can step back to catch up at an earlier station.
  * Stations ahead stay dark and inert; the teacher opens them. `aria-current`
  * marks the one on THIS screen, which is the current one unless the player
  * stepped back — then the current station keeps a live ring, so "where the
@@ -71,7 +78,7 @@ export function planItemLabel(item: AgoraStagePlanItem): string {
  */
 export const StageNav: m.Component<StageNavAttrs> = {
 	view(vnode) {
-		const { plan, currentIndex, viewingIndex, onSelect, compact, look, mail } = vnode.attrs;
+		const { plan, currentIndex, viewingIndex, onSelect, compact, look, mail, menu } = vnode.attrs;
 		const stations = plan
 			.map((item, index) => ({ item, index }))
 			.filter(({ item }) => item.stage !== AgoraStage.ended);
@@ -127,6 +134,21 @@ export const StageNav: m.Component<StageNavAttrs> = {
 								onclick: look.onOpen,
 							},
 							lookDots(look.seeds),
+						)
+					: null,
+				menu
+					? m(
+							'button.stage-nav__menu',
+							{
+								type: 'button',
+								'aria-label': menu.label,
+								'aria-haspopup': 'dialog',
+								'aria-expanded': menu.open ? 'true' : 'false',
+								title: menu.label,
+								onclick: menu.onOpen,
+							},
+							m(Icon, { name: 'cog', size: 18 }),
+							m('span', menu.label),
 						)
 					: null,
 				mail

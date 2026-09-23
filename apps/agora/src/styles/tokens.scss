@@ -141,6 +141,13 @@
   --surface-tint: #faf8ff;               // the faintest wash of a surface
   --surface-flare: #ffffff;              // the white-hot centre of a spark
 
+  // Navigation over the village's illustrated landscape.
+  --village-nav-surface: #233f35;
+  --village-nav-ink: #fff6de;
+  --village-nav-muted: #e6dcc0;
+  --village-nav-border: #d4b674;
+  --village-nav-accent: #e5a548;
+
   // --- MINE: the purple family ---
   // Named by job, not by lightness, so a rule reads as a decision.
   --mine-light: #a98cf7;  // highlights, gradient tops, glows — NEVER under text
@@ -209,6 +216,25 @@
   --who-6: #c03f2a; // coral
   --who-7: #c23a86; // pink
   --who-8: #4a53c0; // indigo
+
+  // --- Charts (@freedi/shared-charts) ---
+  // The dashboard's categorical slots reuse the classmate hues, so a theme
+  // that recolours --who-* recolours every chart with it. The chrome tokens
+  // alias the surface/hairline/meta tokens above and so follow ink-on-dark.
+  --chart-1: #0f6fb5; // sky
+  --chart-2: #a05a15; // amber
+  --chart-3: #4a53c0; // indigo
+  --chart-4: #2b7530; // green
+  --chart-5: #c23a86; // pink
+  --chart-6: #71741a; // olive
+  --chart-seq-1: #86b6ef;
+  --chart-seq-2: #5598e7;
+  --chart-seq-3: #256abf;
+  --chart-seq-4: #104281;
+  --chart-grid: var(--border-subtle);
+  --chart-text: var(--text-secondary);
+  --chart-surface: var(--bg-card-solid);
+  --chart-muted: var(--peer-tile);
 
   // The two mark tints — a row's news as a coloured disc rather than a
   // sentence. Flat, pale, opaque: an rgba() wash over a white card is a
@@ -343,6 +369,8 @@
   // object. This is the number that decides whether the layout reads.
   --shadow-card: 0 6px 18px -6px rgba(70, 45, 150, 0.16), 0 2px 5px -2px rgba(70, 45, 150, 0.1);
   --shadow-raised: 0 14px 34px -10px rgba(70, 45, 150, 0.26), 0 3px 8px -3px rgba(70, 45, 150, 0.12);
+  // The veil under a modal: the page is still there, just not for now
+  --scrim: rgba(20, 12, 45, 0.28);
   --shadow-mine: 0 14px 30px -10px rgba(99, 66, 220, 0.55);
   --glow-lantern: 0 8px 20px -6px rgba(115, 80, 227, 0.55);
   --glow-marker: 0 0 12px rgba(139, 107, 240, 0.55);
@@ -450,13 +478,6 @@
   --z-toast: 90;
   --z-modal: 100;
 
-  // --- Fixed deliberation chrome ---
-  // Two fixed strips stack at the bottom of every deliberation screen (the
-  // Others|Results bar, and the proposal dock parked on its top edge). They
-  // have to agree on their heights, and the page has to know the total to
-  // keep its last button clear of both.
-  --delib-nav-h: 68px;
-
   // --- Fixed teacher chrome ---
   // The console's bar and its control strip stack the same way: the strip
   // sticks under the bar on desktop, and on a phone it is the fixed bottom
@@ -522,9 +543,9 @@
 // my own message in a conversation
 .thread__msg--mine,
 .chat-bubble--mine,
-// the face I pressed, and the tab I am on
+// the face I pressed, and the door I am standing in (the flat view's pill)
 .rate-scale__option--selected,
-.delib-nav__item--active,
+.place-bar--flat .place-bar__item--active,
 // the ballot row I voted for — MINE is a purple surface, not a border
 .voting__option--mine,
 // the HUD's two filled tokens

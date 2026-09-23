@@ -15,6 +15,7 @@ export default defineConfig({
 			react: path.join(rootModules, 'react'),
 			'react-dom': path.join(rootModules, 'react-dom'),
 			'@': path.resolve(__dirname, './src'),
+			'@freedi/shared-charts': path.resolve(__dirname, '../../packages/shared-charts/src'),
 			'@freedi/shared-types': path.resolve(__dirname, '../../packages/shared-types/src'),
 			'@freedi/event-core': path.resolve(__dirname, '../../packages/event-core/src'),
 			'@freedi/shared-i18n': path.resolve(__dirname, '../../packages/shared-i18n/src'),

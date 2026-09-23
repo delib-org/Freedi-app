@@ -8,8 +8,22 @@ import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
 import { generateSynthesizedProposal } from '../../services/integration-ai-service';
 import { judgeSemanticEquivalenceCachedDetailed } from '../../services/verdict-cache-service';
 import { consolidateThemes } from '../pipeline/consolidateThemes';
+import { splitOversizedThemes } from '../pipeline/splitThemes';
 import { loadSynthesisSettingsFromStatement } from '../pipeline/loadSynthesisSettings';
-import { enqueueItem } from '../queue/enqueue';
+import { enqueueItem, ensureQueueRun } from '../queue/enqueue';
+import {
+	computeParentFingerprint,
+	FORCE_FULL_SWEEP_MS,
+	isDormant,
+	loadGlobalState,
+	loadSweepState,
+	memberStateKey,
+	resolveRejectedPairs,
+	saveGlobalState,
+	saveSweepState,
+	type RejectedPairRecord,
+	type ReJudgeSweepState,
+} from './reJudgeSweepState';
 
 /**
  * Merge gate for reJudge.
@@ -69,7 +83,8 @@ const REJUDGE_MERGE_THRESHOLD = 0.82;
  * the reader's point of view. The recipient's title regenerates after the merge
  * via enqueueClusterRecompute.
  *
- * Bounded: at most MAX_PARENTS_PER_SWEEP per tick; at most MAX_MERGES_PER_PARENT
+ * Bounded: at most MAX_PARENTS_PER_SWEEP judged per tick (unchanged and dormant
+ * skips do not count); at most MAX_MERGES_PER_PARENT
  * to avoid a runaway chain of merges that should be its own design decision.
  *
  * Cost per parent with M synths averaging K members: 1 batch read of M*K
@@ -425,12 +440,47 @@ async function mergeSynths(
 export async function reJudgeProcessParent(
 	parentId: string,
 	synthDocs: Statement[],
+	options: ReJudgeParentOptions = {},
 ): Promise<{
 	merges: number;
+	/** True when a gate found nothing to do and no pass ran. */
+	skipped: boolean;
+	/** Why it was skipped, for the sweep summary. Absent when work ran. */
+	skipReason?: 'unchanged' | 'dormant';
 }> {
 	const parentDoc = await loadParentDoc(parentId);
 	const questionContext = parentDoc?.statement ?? parentId;
-	const merges = await mergeDuplicateSynths(parentId, synthDocs, questionContext);
+
+	// The gate is opt-in so the benchmark pump (`functions/scripts/runReJudgeMerge.ts`)
+	// keeps measuring the passes themselves. A pump that silently got skipped
+	// would report "0 merges" for the same reason a broken sweep does — the
+	// failure mode this file's own docstring was written about.
+	const useSweepState = options.useSweepState === true;
+	const now = options.now ?? Date.now();
+	const fingerprint = useSweepState ? computeParentFingerprint(synthDocs, parentDoc) : '';
+	let state: ReJudgeSweepState | null = null;
+	if (useSweepState) {
+		state = await loadSweepState(parentId);
+		const unchanged = state !== null && state.fingerprint === fingerprint;
+		const overdue = now - (state?.lastSweptAt ?? 0) >= FORCE_FULL_SWEEP_MS;
+		// A live question still gets its periodic full sweep even when the
+		// fingerprint says nothing moved, because the fingerprint's inputs are
+		// maintained by other code. A question silent for DORMANT_AFTER_MS has
+		// earned the benefit of the doubt: it stops being swept until a new
+		// statement wakes it, which the fingerprint notices on the same tick.
+		const dormant = isDormant(parentDoc, now);
+		if (unchanged && (!overdue || dormant)) {
+			return { merges: 0, skipped: true, skipReason: dormant ? 'dormant' : 'unchanged' };
+		}
+	}
+
+	const mergeOutcome = await mergeDuplicateSynths(
+		parentId,
+		synthDocs,
+		questionContext,
+		state?.rejectedPairs ?? [],
+	);
+	const merges = mergeOutcome.merges;
 
 	// Second look for statements the live pass left behind. "Topic membership is
 	// non-terminal" was a promise without a mechanism: the live pipeline runs once
@@ -473,7 +523,52 @@ export async function reJudgeProcessParent(
 		});
 	}
 
-	return { merges };
+	// The opposite repair: a heading that has become a catch-all is divided. On
+	// a narrow question this is the only way a second theme ever appears, since
+	// the filing judge sends nearly everything to the heading named for the
+	// question's subject. Runs after consolidation so a merge that produced a
+	// catch-all is split in the same sweep; sub-topics are guarded from being
+	// re-merged (see consolidateThemes).
+	try {
+		const splitResult = await splitOversizedThemes(parentId, questionContext, 'reJudge');
+		if (splitResult.splits > 0) {
+			logger.info('synthesis.reJudge.themesSplit', {
+				parentId,
+				splits: splitResult.splits,
+				subTopicsCreated: splitResult.created,
+				themesBefore: splitResult.themesBefore,
+			});
+		}
+	} catch (error) {
+		logger.warn('synthesis.reJudge: theme split failed (non-fatal)', {
+			parentId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
+
+	if (useSweepState) {
+		// Deliberately the fingerprint computed BEFORE the passes ran. This
+		// sweep's own writes (a merge, a revisit stamp, a theme edit) move the
+		// parent's `lastChildUpdate`, so the next tick recomputes a different
+		// value, sweeps once more, finds nothing, and only then settles. Two
+		// ticks to quiesce is the safe direction to be wrong in; storing a
+		// post-work fingerprint would need a re-read and could mark the parent
+		// clean while a write from elsewhere was still in flight.
+		await saveSweepState(parentId, fingerprint, mergeOutcome.rejections, now);
+	}
+
+	return { merges, skipped: false };
+}
+
+export interface ReJudgeParentOptions {
+	/**
+	 * Consult and update the persisted sweep state: skip a parent whose
+	 * fingerprint is unchanged, and carry pair refusals across ticks. Off by
+	 * default so direct callers (the benchmark pump) always do the real work.
+	 */
+	useSweepState?: boolean;
+	/** Injectable clock, for tests. */
+	now?: number;
 }
 
 /**
@@ -631,6 +726,9 @@ async function revisitUnmergedOptions(parent: Statement, synthDocs: Statement[])
 		}
 	}
 	if (enqueued > 0) {
+		// The sweep owns no run: without this, revisits queued after a run had
+		// completed were never drained.
+		await ensureQueueRun(parent.statementId, enqueued, 'rejudge');
 		logger.info('synthesis.reJudge.revisit', {
 			parentId: parent.statementId,
 			candidates: scored.length,
@@ -642,12 +740,29 @@ async function revisitUnmergedOptions(parent: Statement, synthDocs: Statement[])
 	return enqueued;
 }
 
+/**
+ * Membership identity of one candidate pair, used to age out a stored refusal.
+ * Ordered by statement id so it lines up with `pairKey`.
+ */
+function pairStateKey(a: CandidateSynth, b: CandidateSynth): string {
+	const [first, second] = a.doc.statementId <= b.doc.statementId ? [a, b] : [b, a];
+
+	return `${memberStateKey(first.members)}|${memberStateKey(second.members)}`;
+}
+
+interface MergeOutcome {
+	merges: number;
+	/** Refusals worth carrying to the next sweep. Empty when none are known. */
+	rejections: RejectedPairRecord[];
+}
+
 async function mergeDuplicateSynths(
 	parentId: string,
 	synthDocs: Statement[],
 	questionContext: string,
-): Promise<number> {
-	if (synthDocs.length < 2) return 0;
+	persistedRejections: RejectedPairRecord[] = [],
+): Promise<MergeOutcome> {
+	if (synthDocs.length < 2) return { merges: 0, rejections: persistedRejections };
 
 	const synths: CandidateSynth[] = synthDocs.map((d) => ({
 		doc: d,
@@ -657,7 +772,7 @@ async function mergeDuplicateSynths(
 	// Batch-fetch every member's embedding across all synths in this parent.
 	const allMemberIds = new Set<string>();
 	for (const s of synths) for (const m of s.members) allMemberIds.add(m);
-	if (allMemberIds.size === 0) return 0;
+	if (allMemberIds.size === 0) return { merges: 0, rejections: persistedRejections };
 
 	let embeddings: Map<string, number[]> | undefined;
 	try {
@@ -669,16 +784,46 @@ async function mergeDuplicateSynths(
 			error: error instanceof Error ? error.message : String(error),
 		});
 
-		return 0;
+		return { merges: 0, rejections: persistedRejections };
 	}
-	if (!embeddings || typeof embeddings.get !== 'function') return 0;
+	if (!embeddings || typeof embeddings.get !== 'function') {
+		return { merges: 0, rejections: persistedRejections };
+	}
 
 	const threshold = REJUDGE_MERGE_THRESHOLD;
 	let merges = 0;
 	// Loop: find best merge pair, perform it, repeat. Each merge shrinks the
 	// synth list; recompute pairs each iteration so freshly-merged recipients
 	// can attract further donors.
-	const rejectedPairs = new Set<string>();
+	//
+	// Refusals survive the sweep. They used to be per-tick, so a settled parent
+	// re-proposed and re-refused the same pairs every 10 minutes — and while the
+	// LLM verdict was cached, the Firestore reads behind it were not: two member
+	// `.get()`s in the transitivity gate plus a verdict-cache lookup, per pair,
+	// forever (the cost the MAX_PAIR_EVALUATIONS_PER_PARENT docstring names but
+	// only caps). A stored refusal is honoured while BOTH synths still have the
+	// membership they had when the judge refused, so any merge that grows a synth
+	// puts its pairs back in play.
+	const pairStateNow = new Map<string, string>();
+	for (let i = 0; i < synths.length; i++) {
+		for (let j = i + 1; j < synths.length; j++) {
+			pairStateNow.set(
+				pairKey(synths[i].doc.statementId, synths[j].doc.statementId),
+				pairStateKey(synths[i], synths[j]),
+			);
+		}
+	}
+	const rejectedPairs = resolveRejectedPairs(persistedRejections, pairStateNow);
+	const rejectionFps = new Map<string, string>();
+	for (const key of rejectedPairs) {
+		const fp = pairStateNow.get(key);
+		if (fp) rejectionFps.set(key, fp);
+	}
+	const rememberRejection = (a: CandidateSynth, b: CandidateSynth): void => {
+		const key = pairKey(a.doc.statementId, b.doc.statementId);
+		rejectedPairs.add(key);
+		rejectionFps.set(key, pairStateKey(a, b));
+	};
 	let llmCalls = 0;
 	let pairsEvaluated = 0;
 	while (merges < MAX_MERGES_PER_PARENT && synths.length >= 2) {
@@ -711,7 +856,7 @@ async function mergeDuplicateSynths(
 		const transitive = await farthestPairIsSame(recipient, donor, embeddings);
 		llmCalls += transitive.llmCalls;
 		if (!transitive.passed) {
-			rejectedPairs.add(pairKey(recipient.doc.statementId, donor.doc.statementId));
+			rememberRejection(recipient, donor);
 			continue;
 		}
 		// The writer consultation is uncached and runs on the heavy model, so it
@@ -719,7 +864,7 @@ async function mergeDuplicateSynths(
 		llmCalls++;
 		const confirmed = await confirmMergeWithLlm(recipient, donor, questionContext);
 		if (!confirmed) {
-			rejectedPairs.add(pairKey(recipient.doc.statementId, donor.doc.statementId));
+			rememberRejection(recipient, donor);
 			continue;
 		}
 
@@ -728,7 +873,10 @@ async function mergeDuplicateSynths(
 		merges++;
 	}
 
-	return merges;
+	return {
+		merges,
+		rejections: Array.from(rejectionFps, ([p, f]) => ({ p, f })),
+	};
 }
 
 export const fn_synthesisReJudge = onSchedule(
@@ -742,6 +890,48 @@ export const fn_synthesisReJudge = onSchedule(
 	async () => {
 		const startedAt = Date.now();
 		try {
+			// Cheap gate before the expensive one.
+			//
+			// The sweep repairs a corpus that only changes when someone writes a
+			// statement. Its discovery query alone costs one read per synth doc
+			// (hundreds), and it ran unconditionally every 10 minutes — on
+			// production that was ~187k reads/day against 21 writes/day, all of
+			// it reporting zero merges. A single-document probe answers "has
+			// anything been written at all since I last looked?" for 1 read.
+			//
+			// Fails OPEN in every direction: a probe error, a missing state doc,
+			// or a statement written without `lastUpdate` all fall through to a
+			// full sweep, and FORCE_FULL_SWEEP_MS runs one regardless at least
+			// that often so no gate can suppress the pass indefinitely.
+			const globalState = await loadGlobalState();
+			const overdue = startedAt - globalState.lastFullSweepAt >= FORCE_FULL_SWEEP_MS;
+			let highWaterMark = globalState.lastSeenStatementUpdate;
+			if (!overdue) {
+				const probe = await db()
+					.collection(Collections.statements)
+					.where('lastUpdate', '>', globalState.lastSeenStatementUpdate)
+					.orderBy('lastUpdate', 'desc')
+					.limit(1)
+					.get();
+				if (probe.empty) {
+					logger.info('synthesis.reJudge.idle', {
+						reason: 'no statement written since last sweep',
+						lastSeenStatementUpdate: globalState.lastSeenStatementUpdate,
+						lastFullSweepAt: globalState.lastFullSweepAt,
+					});
+
+					return;
+				}
+				// Captured BEFORE the passes run, so writes this sweep makes are
+				// still ahead of the mark and get their own look next tick.
+				// A non-numeric lastUpdate must not poison the mark: NaN would be
+				// rejected on write and, worse, could never be exceeded.
+				const newest = (probe.docs[0].data() as Statement).lastUpdate;
+				highWaterMark = Number.isFinite(newest)
+					? Math.max(highWaterMark, newest as number)
+					: startedAt;
+			}
+
 			// Fetch up to SYNTH_QUERY_LIMIT non-hidden synth docs and group by
 			// parentId. Collection-group scope on parentId avoids needing a
 			// composite index dedicated to this sweep.
@@ -751,7 +941,14 @@ export const fn_synthesisReJudge = onSchedule(
 				.where('hide', '==', false)
 				.limit(SYNTH_QUERY_LIMIT)
 				.get();
-			if (snap.empty) return;
+			if (snap.empty) {
+				await saveGlobalState({
+					lastSeenStatementUpdate: highWaterMark,
+					lastFullSweepAt: startedAt,
+				});
+
+				return;
+			}
 
 			const byParent = new Map<string, Statement[]>();
 			for (const doc of snap.docs) {
@@ -763,12 +960,21 @@ export const fn_synthesisReJudge = onSchedule(
 
 			let totalMerges = 0;
 			let parentsProcessed = 0;
+			let parentsSkipped = 0;
+			let parentsDormant = 0;
 			for (const [parentId, synths] of byParent) {
 				if (parentsProcessed >= MAX_PARENTS_PER_SWEEP) break;
 				if (synths.length < 2) continue;
-				parentsProcessed++;
 				try {
-					const result = await reJudgeProcessParent(parentId, synths);
+					const result = await reJudgeProcessParent(parentId, synths, {
+						useSweepState: true,
+						now: startedAt,
+					});
+					// A skip is one state read, not a judging pass: it must not use up
+					// a slot, or the parents after the first thirty are never reached
+					if (result.skipped) parentsSkipped++;
+					else parentsProcessed++;
+					if (result.skipReason === 'dormant') parentsDormant++;
 					totalMerges += result.merges;
 					if (result.merges > 0) {
 						logger.info('synthesis.reJudge.parent', {
@@ -778,6 +984,7 @@ export const fn_synthesisReJudge = onSchedule(
 						});
 					}
 				} catch (error) {
+					parentsProcessed++;
 					logger.warn('synthesis.reJudge: parent processing failed', {
 						parentId,
 						error: error instanceof Error ? error.message : String(error),
@@ -785,8 +992,15 @@ export const fn_synthesisReJudge = onSchedule(
 				}
 			}
 
+			await saveGlobalState({
+				lastSeenStatementUpdate: highWaterMark,
+				lastFullSweepAt: startedAt,
+			});
+
 			logger.info('synthesis.reJudge.summary', {
 				parentsProcessed,
+				parentsSkipped,
+				parentsDormant,
 				totalMerges,
 				durationMs: Date.now() - startedAt,
 			});

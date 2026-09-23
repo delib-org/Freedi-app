@@ -1,7 +1,7 @@
 // Helpers
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router';
 import IconButton from '../../components/iconButton/IconButton';
-import InvitationModal from './main/invitationModal/InvitationModal';
 import InstallIcon from '@/assets/icons/installIcon.svg?react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
@@ -14,6 +14,8 @@ import ProfileMenu from '@/view/components/profileMenu/ProfileMenu';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { userLevelSelector } from '@/redux/engagement/engagementSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import PinJoinSheet from './pin/PinJoinSheet';
+import styles from './HomeHeader.module.scss';
 
 const LANGUAGE_HINT_KEY = 'seenLanguageHint';
 const LANGUAGE_HINT_TIMEOUT_MS = 5000;
@@ -48,6 +50,7 @@ export default function HomeHeader() {
 	}, []);
 
 	const showInstallIcon = isInstallable && !isAppInstalled;
+	const initial = (creator?.displayName || '').trim().charAt(0).toUpperCase() || '?';
 
 	function dismissLanguageHint() {
 		if (showLanguageHint) {
@@ -78,21 +81,33 @@ export default function HomeHeader() {
 	}
 
 	return (
-		<div className={`homePage__header ${dir}`}>
-			<div className="homePage__header__wrapper">
+		<div className={`homePage__header ${styles.header} ${dir}`}>
+			<div className={`homePage__header__wrapper ${styles.header__row}`}>
 				<a href="https://wizcol.com" target="_blank" rel="noopener noreferrer">
 					<h1 className="homePage__header__wrapper__title">WizCol.com</h1>
 				</a>
+				<img
+					className={styles.header__wordmark}
+					src="/brand/wizcol-logo-app.webp"
+					alt="WizCol"
+					width="360"
+					height="240"
+				/>
 				<WaitingList />
 				<div className="homePage__header__wrapper__icons">
-					<ProfileMenu
-						photoURL={creator?.photoURL}
-						displayName={creator?.displayName}
-						level={level}
-						onJoinWithPin={handleOpenInvitation}
-					/>
+					{/* Desktop keeps the account menu and bell; phones use the floating nav. */}
+					<span className={styles.header__desktopOnly}>
+						<ProfileMenu
+							photoURL={creator?.photoURL}
+							displayName={creator?.displayName}
+							level={level}
+							onJoinWithPin={handleOpenInvitation}
+						/>
+					</span>
 
-					<NotificationBtn />
+					<span className={styles.header__desktopOnly}>
+						<NotificationBtn />
+					</span>
 
 					<span className="language-pill-anchor">
 						<LanguagePill
@@ -119,10 +134,19 @@ export default function HomeHeader() {
 							<InstallIcon />
 						</IconButton>
 					)}
+
+					<Link
+						to="/my"
+						className={styles.header__avatar}
+						aria-label={t('Your profile')}
+						data-testid="home-header-avatar"
+					>
+						{initial}
+					</Link>
 				</div>
 			</div>
 
-			{showInvitationModal && <InvitationModal setShowModal={setShowInvitationModal} />}
+			<PinJoinSheet isOpen={showInvitationModal} onClose={() => setShowInvitationModal(false)} />
 		</div>
 	);
 }

@@ -126,7 +126,7 @@ const propose = async (page, text) => {
 	await page.waitForSelector('textarea.write-desk__textarea', { timeout: 15000 });
 	await page.locator('textarea.write-desk__textarea').fill(text);
 	await page.locator('.write-desk__cta').click();
-	await page.waitForSelector('.delib-nav', { timeout: 25000 });
+	await page.waitForSelector('.place-bar', { timeout: 25000 });
 };
 // The box starts empty, and says so — checked before a single point is paid
 step('the post box: empty at first, and honest about it');
@@ -166,7 +166,7 @@ for (let attempt = 0; attempt < 8; attempt++) {
 	try {
 		if ((await s2.locator('.chat-page__input').count()) > 0) break;
 		if ((await s2.locator('.stall-list').count()) === 0) {
-			await s2.locator('.delib-nav__item--peer').click({ timeout: 4000 });
+			await s2.locator('.place-bar__item[data-place="board"]').click({ timeout: 4000 });
 			await s2.waitForSelector('.stall__head', { timeout: 6000 });
 		}
 		if ((await s2.locator('.stall--open').count()) === 0) {

@@ -1,189 +1,127 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import styles from './HomeMain.module.scss';
-
-// Redux store
-import MainCard from './mainCard/MainCard';
-import bike from '@/assets/images/bike.png';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
+import { useDispatch } from 'react-redux';
+import { StatementType } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import {
 	statementsSubscriptionsSelector,
-	topSubscriptionsSelector,
+	statementsSelector,
 } from '@/redux/statements/statementsSlice';
-import { useHomeStatementOverlay } from '@/controllers/hooks/useHomeStatementOverlay';
-import { useLazyLoadHomeSubscriptions } from '../hooks/useLazyLoadHomeSubscriptions';
-
-// Custom components
-import Footer from '@/view/components/footer/Footer';
-import PeopleLoader from '@/view/components/loaders/PeopleLoader';
-import { StatementType } from '@freedi/shared-types';
-import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
-import { useTranslation } from '@/controllers/hooks/useTranslation';
-import NewStatement from '../../statement/components/newStatement/NewStatement';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 import {
-	selectNewStatementShowModal,
+	setNewStatementModal,
 	setParentStatement,
 	setNewStatementType,
 	setShowNewStatementModal,
 } from '@/redux/statements/newStatementSlice';
-import { useSelector, useDispatch } from 'react-redux';
-import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { useHomeStatementOverlay } from '@/controllers/hooks/useHomeStatementOverlay';
+import {
+	HOME_VIEW_PARAM,
+	INBOX_VIEW,
+} from '@/view/components/atomic/organisms/BottomNav/bottomNavModel';
+import { useLazyLoadHomeSubscriptions } from '../hooks/useLazyLoadHomeSubscriptions';
+import { buildHomeModel } from '../homeModel';
+import HomeOverview, { HomeView } from './HomeOverview';
+import HomeInbox from '../inbox/HomeInbox';
+import PinJoinSheet from '../pin/PinJoinSheet';
+import styles from './HomeMain.module.scss';
 
-const HomeMain = () => {
-	// Hooks
-	const showNewStatementModal = useAppSelector(selectNewStatementShowModal);
-	const [loading, setLoading] = useState(true);
-	const [subPage, setSubPage] = useState<'decisions' | 'topics'>('topics');
-	const [subPageTitle, setSubPageTitle] = useState<'Discussions' | 'Topics'>('Discussions');
-	const user = useSelector(creatorSelector);
+/** How long the first paint waits for subscriptions before showing the lists. */
+const INITIAL_LOADING_MS = 1500;
+
+export default function HomeMain() {
+	const { t, currentLanguage } = useTranslation();
+	const navigate = useNavigate();
 	const dispatch = useDispatch();
-	const { t } = useTranslation();
-	const userId = user?.uid || '';
+	const [searchParams] = useSearchParams();
+	const user = useAppSelector(creatorSelector);
+	const subscriptions = useAppSelector(statementsSubscriptionsSelector);
+	const statements = useAppSelector(statementsSelector);
+	const [loading, setLoading] = useState(true);
+	const [visibleView, setVisibleView] = useState<HomeView>('questions');
+	const [pinOpen, setPinOpen] = useState(false);
+	const isInbox = searchParams.get(HOME_VIEW_PARAM) === INBOX_VIEW;
 
-	const allTopSubscriptions = useAppSelector(topSubscriptionsSelector);
-	const allStatementsSubscriptions = useAppSelector(statementsSubscriptionsSelector);
-
-	// Fetch fresh statement data for subscriptions (non-blocking overlay)
-	useHomeStatementOverlay(allTopSubscriptions);
-
-	const topSubscriptions = useMemo(
-		() =>
-			allTopSubscriptions.filter(
-				(sub) =>
-					sub.userId === userId &&
-					((sub.statementType || sub.statement.statementType) === StatementType.group ||
-						(sub.statementType || sub.statement.statementType) === StatementType.question),
-			),
-		[allTopSubscriptions, userId],
+	const topLevelSubscriptions = useMemo(
+		() => subscriptions.filter((sub) => (sub.parentId || sub.statement?.parentId) === 'top'),
+		[subscriptions],
 	);
-
-	const latestDecisions = allStatementsSubscriptions;
-
+	useHomeStatementOverlay(topLevelSubscriptions);
 	const { sentinelRef, isLoadingMore, hasMore } = useLazyLoadHomeSubscriptions(
-		subPage === 'topics' ? 'topics' : 'discussions',
+		visibleView === 'spaces' ? 'topics' : 'discussions',
 	);
 
 	useEffect(() => {
-		if (topSubscriptions.length > 0 || latestDecisions.length > 0) {
-			setLoading(false);
-		}
-	}, [topSubscriptions, latestDecisions]);
+		const timeout = window.setTimeout(() => setLoading(false), INITIAL_LOADING_MS);
 
-	// Fallback: stop loading after a short timeout if no data arrives
-	// (e.g. new user with no subscriptions)
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			setLoading(false);
-		}, 1500);
-
-		return () => clearTimeout(timer);
+		return () => window.clearTimeout(timeout);
 	}, []);
-
-	const hasTopics = topSubscriptions.length > 0;
-
 	useEffect(() => {
-		if (userId && user.advanceUser && hasTopics) {
-			setSubPage('topics');
-		} else {
-			setSubPage('decisions');
-		}
-	}, [userId, hasTopics]);
+		if (subscriptions.length) setLoading(false);
+	}, [subscriptions.length]);
 
-	useEffect(() => {
-		setSubPageTitle(subPage === 'decisions' ? 'Discussions' : 'Topics');
-	}, [subPage]);
+	const model = useMemo(
+		() => buildHomeModel({ subscriptions, statements, userId: user?.uid }),
+		[subscriptions, statements, user?.uid],
+	);
 
-	const handleAddStatement = useCallback(() => {
+	const create = (): void => {
 		dispatch(setParentStatement('top'));
 		dispatch(setNewStatementType(StatementType.question));
 		dispatch(setShowNewStatementModal(true));
-	}, [dispatch]);
+	};
+
+	const createGroup = (): void => {
+		dispatch(
+			setNewStatementModal({
+				parentStatement: 'top',
+				newStatement: { statementType: StatementType.group },
+				showModal: true,
+				isLoading: false,
+				error: null,
+			}),
+		);
+	};
+
+	const handleVisibleView = useCallback((view: HomeView) => setVisibleView(view), []);
+
+	if (isInbox) {
+		return (
+			<div className={styles.inboxPage}>
+				<HomeInbox />
+			</div>
+		);
+	}
 
 	return (
-		<main className="home-page__main slide-in">
-			<div className="heroImg"></div>
-			<img className="bikeImg" alt="Three-Characters-on-a-bicycle" src={bike} />
-
-			<div
-				className="wrapper main-wrap"
-				style={{
-					justifyContent: topSubscriptions.length > 0 ? 'start' : 'center',
-				}}
-			>
-				{showNewStatementModal && (
-					<div className={styles.addStatementModal}>
-						<NewStatement />
-					</div>
-				)}
-				<h2 className={styles.sectionTitle}>{t(subPageTitle)}</h2>
-				{(() => {
-					if (loading) {
-						return (
-							<div className="peopleLoadingScreen">
-								<PeopleLoader />
+		<>
+			<HomeOverview
+				firstName={(user?.displayName || '').trim().split(' ')[0]}
+				spaces={model.spaces}
+				questions={model.questions}
+				loading={loading}
+				locale={currentLanguage}
+				onOpenStatement={(id) => navigate(`/statement/${id}`)}
+				onCreateQuestion={create}
+				onCreateGroup={createGroup}
+				onOpenPin={() => setPinOpen(true)}
+				onVisibleViewChange={handleVisibleView}
+				t={t}
+				more={
+					<>
+						{hasMore && (
+							<div ref={sentinelRef} className={styles.lazyLoadSentinel} aria-hidden="true" />
+						)}
+						{isLoadingMore && (
+							<div className={styles.lazyLoadStatus} role="status">
+								{t('Loading more…')}
 							</div>
-						);
-					}
-
-					const itemsToRender = subPage === 'topics' ? topSubscriptions : latestDecisions;
-
-					if (itemsToRender.length === 0) {
-						return (
-							<div className={styles.onboarding}>
-								<h2 className={styles.onboarding__title}>{t('onboarding.welcome')}</h2>
-								<p className={styles.onboarding__description}>{t('onboarding.description')}</p>
-								<p className={styles.onboarding__description}>{t('onboarding.howItWorks')}</p>
-								<div className={styles.onboarding__steps}>
-									<div className={styles.onboarding__step}>
-										<span className={styles.onboarding__stepNumber}>1</span>
-										<span className={styles.onboarding__stepText}>{t('onboarding.step1')}</span>
-									</div>
-									<div className={styles.onboarding__step}>
-										<span className={styles.onboarding__stepNumber}>2</span>
-										<span className={styles.onboarding__stepText}>{t('onboarding.step2')}</span>
-									</div>
-									<div className={styles.onboarding__step}>
-										<span className={styles.onboarding__stepNumber}>3</span>
-										<span className={styles.onboarding__stepText}>{t('onboarding.step3')}</span>
-									</div>
-									<div className={styles.onboarding__step}>
-										<span className={styles.onboarding__stepNumber}>4</span>
-										<span className={styles.onboarding__stepText}>{t('onboarding.step4')}</span>
-									</div>
-								</div>
-								<p className={styles.onboarding__cta}>{t('onboarding.getStarted')}</p>
-							</div>
-						);
-					}
-
-					return (
-						<>
-							{itemsToRender.map((sub) =>
-								subPage === 'topics' ? (
-									<MainCard key={sub.statementId} subscription={sub} />
-								) : (
-									<MainQuestionCard key={sub.statementId} simpleStatement={sub.statement} />
-								),
-							)}
-							{hasMore && (
-								<div ref={sentinelRef} className={styles.lazyLoadSentinel} aria-hidden="true" />
-							)}
-							{isLoadingMore && (
-								<div className={styles.lazyLoadStatus} role="status">
-									{t('Loading more…')}
-								</div>
-							)}
-						</>
-					);
-				})()}
-			</div>
-			<Footer
-				setSubPage={setSubPage}
-				subPage={subPage}
-				hasTopics={hasTopics}
-				onAddStatement={handleAddStatement}
+						)}
+					</>
+				}
 			/>
-		</main>
+			<PinJoinSheet isOpen={pinOpen} onClose={() => setPinOpen(false)} />
+		</>
 	);
-};
-
-export default HomeMain;
+}

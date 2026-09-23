@@ -657,8 +657,8 @@
   --voting-palette-pair-19-dark-contrast: #ff3d9d;
 
   // Buttons (disabled)
-  --btn-disabled: #c6d2de;
-  --btn-disabled-text: #88919b;
+  --btn-disabled: #d8dee7;
+  --btn-disabled-text: #4b5563;
 
   // Layout
   --wrapper-max-width: 75ch;
@@ -863,4 +863,23 @@
   // Inactive evaluation thumb (smiley) background — subtle circle behind icons.
   --evaluation-thumb-inactive: rgba(0, 0, 0, 0.18);
   --evaluation-thumb-ring: rgba(0, 0, 0, 0.22);
+
+  // --- CHART TOKENS (@freedi/shared-charts) ---
+  // Six categorical hues, each ≥ 4.5:1 against white so a bar can carry a
+  // white label; a four-step sequential ramp; and the chart chrome aliased
+  // to the semantic tokens so it follows dark mode and high contrast.
+  --chart-1: #0f6fb5;
+  --chart-2: #a05a15;
+  --chart-3: #4a53c0;
+  --chart-4: #2b7530;
+  --chart-5: #c23a86;
+  --chart-6: #71741a;
+  --chart-seq-1: #86b6ef;
+  --chart-seq-2: #5598e7;
+  --chart-seq-3: #256abf;
+  --chart-seq-4: #104281;
+  --chart-grid: var(--border-primary);
+  --chart-text: var(--text-meta);
+  --chart-surface: var(--card-default);
+  --chart-muted: #c6cddc;
 }

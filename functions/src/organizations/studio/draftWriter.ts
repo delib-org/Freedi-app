@@ -1,3 +1,4 @@
+import { DELIBERATION_LIMITS } from '../../../../packages/shared-types/src/models/covenant/deliberation';
 import {
 	Collections,
 	ParagraphType,
@@ -230,14 +231,20 @@ export async function generateDraft(input: {
 	topQuestion: string;
 	intent?: string;
 	languageCode: string;
+	model?: string;
+	requireAI?: boolean;
 }): Promise<DraftDocument> {
-	if (!process.env.OPENAI_API_KEY) return fixtureDraft(input.sources, input.topQuestion);
+	if (!process.env.OPENAI_API_KEY) {
+		if (input.requireAI) throw new Error('Configure OPENAI_API_KEY to generate the agreement.');
+		return fixtureDraft(input.sources, input.topQuestion);
+	}
 	const { system, user } = buildDraftPrompt(input);
 	const raw = await callLLM({
-		model: DRAFT_MODEL,
+		model: input.model || DRAFT_MODEL,
 		system,
 		user,
-		maxTokens: 6000,
+		maxTokens: input.requireAI ? DELIBERATION_LIMITS.draftTokens : 6000,
+		...(input.requireAI ? { reasoningEffort: 'high' as const } : {}),
 		temperature: 0.4,
 		jsonMode: true,
 	});

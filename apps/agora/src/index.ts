@@ -1,4 +1,10 @@
 /// <reference types="vite-plugin-pwa/client" />
+import { TeacherActivity } from './views/teacher/TeacherActivity';
+import { startUsageHeartbeat } from './lib/usageHeartbeat';
+import { SuperviseHome } from './views/supervise/SuperviseHome';
+import { SuperviseTeacher } from './views/supervise/SuperviseTeacher';
+import { SuperviseClass } from './views/supervise/SuperviseClass';
+import { SuperviseStudent } from './views/supervise/SuperviseStudent';
 import m from 'mithril';
 import { registerSW } from 'virtual:pwa-register';
 // Self-hosted so the PWA precaches them: classroom devices get the real faces
@@ -57,6 +63,16 @@ applyRememberedTheme();
 // early, and the home-screen suggestion needs it stashed for later.
 initInstallCapture();
 
+// Dedicated village deployments keep teacher and student navigation in this world.
+if (
+	import.meta.env.VITE_DEFAULT_WORLD === 'village' &&
+	!new URLSearchParams(location.search).has('world')
+) {
+	const url = new URL(location.href);
+	url.searchParams.set('world', 'village');
+	history.replaceState(null, '', url);
+}
+
 initAuth();
 // A teacher whose popup was blocked came back via a full page redirect; this
 // is where that round trip is collected. No-op on every other load.
@@ -70,7 +86,15 @@ initI18n();
 // virtual module reloads the page the moment a new worker takes over —
 // seconds after launch, before anyone has typed anything worth losing.
 // No-op in dev, where the killswitch below rules instead.
-registerSW({ immediate: true });
+registerSW({
+	immediate: true,
+	onRegisteredSW(_url, registration) {
+		// Explicitly check on entry, including when this page came from an older cache.
+		void registration
+			?.update()
+			.catch((error) => console.warn('[Agora] Update check failed', error));
+	},
+});
 
 // A PWA service worker left behind by a production build served on this
 // origin hijacks the dev server and pins the app to a stale precache
@@ -132,7 +156,19 @@ if (root) {
 		'/': Home,
 		'/join/:code': JoinSession,
 		'/play/:id': byId(GameController),
+		'/supervise': SuperviseHome,
+		'/supervise/teacher/:schoolId/:uid': {
+			render: (vnode) => {
+				const schoolId = String(vnode.attrs.schoolId);
+				const uid = String(vnode.attrs.uid);
+
+				return [m(SuperviseTeacher, { key: `${schoolId}/${uid}`, schoolId, uid })];
+			},
+		},
+		'/supervise/class/:id': byId(SuperviseClass),
+		'/supervise/student/:id': byId(SuperviseStudent),
 		'/teach': TeacherHome,
+		'/teach/activity': TeacherActivity,
 		'/teach/new': TopicWizard,
 		'/teach/start': StartGame,
 		'/teach/topic/:id': byId(TopicEditor),
@@ -148,3 +184,5 @@ if (root) {
 	m.mount(bannerHost, BootBanner);
 	markBooted();
 }
+
+startUsageHeartbeat();

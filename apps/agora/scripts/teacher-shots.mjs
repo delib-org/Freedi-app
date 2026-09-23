@@ -143,9 +143,16 @@ try {
 	await go(page, '/teach/start', '.scenario-list');
 	await shot(page, '02-start-scenario');
 	await page.locator('.scenario-row--own .scenario-row__use').click();
+	await page.waitForSelector('.question-sheet__question', { timeout: 10_000 });
+	await page.waitForTimeout(600);
+	await shot(page, '03-start-question-sheet');
+	await page.locator('.question-sheet__question').fill('לאן ניסע בטיול השנתי?');
+	await page.locator('.question-sheet__continue').click();
+	await page.waitForSelector('.scenario-row--question-set', { timeout: 10_000 });
 	await page.waitForTimeout(600);
 	await shot(page, '03-start-quick');
 	await page.locator('.start-game__advanced-summary').click();
+	await page.locator('.start-game__group-head').first().click();
 	await page.waitForTimeout(800);
 	await shot(page, '04-start-advanced');
 

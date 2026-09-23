@@ -12,6 +12,7 @@
 @import 'components/navigation';
 @import 'components/teacher-live';
 @import 'components/teacher-dashboard';
+@import '@freedi/shared-charts/styles/chart';
 @import 'components/teacher-nav';
 @import 'components/class-roster';
 @import 'components/game-report';
@@ -26,5 +27,10 @@
 @import 'components/teacher-console';
 @import 'components/teacher-strip';
 @import 'components/teacher-panel';
+@import 'components/question-sheet';
 @import 'components/moderation';
 @import 'components/projector';
+@import 'components/village';
+
+@import 'components/indicators';
+@import 'components/supervise';

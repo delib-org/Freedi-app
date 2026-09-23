@@ -62,6 +62,22 @@ export const AgoraSchoolSchema = object({
 	 */
 	teacherIds: optional(array(string())),
 	teacherMap: optional(record(string(), boolean())),
+	/**
+	 * The supervisors a sys-admin attached to this school — the ones who may
+	 * read its teachers' lessons and hours through `agoraSupervisorConsole`
+	 * (never through Firestore directly). `supervisorMap` is the `{uid: true}`
+	 * query index, for the same reason as `teacherMap`. Absent on schools
+	 * written before supervision existed; read both as empty.
+	 */
+	supervisorIds: optional(array(string())),
+	supervisorMap: optional(record(string(), boolean())),
+	/**
+	 * Per-supervisor narrowing, keyed by supervisor uid: the teachers this
+	 * supervisor may see. An ABSENT key means every teacher of the school —
+	 * a present key with an empty list means nobody. Written only by
+	 * `agoraAdminManageSchool`'s `setSupervisorScope`.
+	 */
+	supervisorScopes: optional(record(string(), object({ teacherIds: array(string()) }))),
 	status: ActiveArchivedSchema,
 	/** Sys-admin uid that opened the school */
 	createdBy: string(),
@@ -211,6 +227,19 @@ export type AgoraOutcomeTally = InferOutput<typeof AgoraOutcomeTallySchema>;
 export const AgoraClassAggregateSchema = object({
 	classId: string(),
 	schoolId: string(),
+	/**
+	 * The class's teachers as a `{uid: true}` map, denormalized from
+	 * {@link AgoraClassSchema} — the QUERY index that lets a teacher's browser
+	 * read its own classes' advancement in one query.
+	 *
+	 * Without it the rule has to `get()` the class document per aggregate: a
+	 * billed read each, and a hard ceiling of twenty such calls per query. With
+	 * it the rule is the same equality check as everywhere else. Kept current
+	 * by whoever writes `teacherIds` — the class callables — in the same breath;
+	 * optional because aggregates written before this field existed are still
+	 * readable through the `get()` fallback.
+	 */
+	teacherMap: optional(record(string(), boolean())),
 	gamesPlayed: number(),
 	/** Games that carried a class score — the divisor behind `avgClassScore` */
 	scoredGames: number(),
@@ -279,10 +308,15 @@ export function emptyStudentAggregate(
 	};
 }
 
-export function emptyClassAggregate(classId: string, schoolId: string): AgoraClassAggregate {
+export function emptyClassAggregate(
+	classId: string,
+	schoolId: string,
+	teacherMap?: Record<string, boolean>,
+): AgoraClassAggregate {
 	return {
 		classId,
 		schoolId,
+		...(teacherMap ? { teacherMap } : {}),
 		gamesPlayed: 0,
 		scoredGames: 0,
 		avgClassScore: null,

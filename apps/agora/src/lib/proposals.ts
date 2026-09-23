@@ -201,6 +201,7 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			const challengeQuestionId = getSessionState().session?.challengeQuestionId;
 			snapshot.forEach((docSnap) => {
 				if (!docSnap.metadata.hasPendingWrites) serverConfirmed.add(docSnap.id);
+				else serverConfirmed.delete(docSnap.id);
 				const item = toProposal(docSnap.data() as Record<string, unknown>);
 				// A classmate's hidden text never enters this state: not the market,
 				// not a thread, not a count. The author keeps theirs, marked.

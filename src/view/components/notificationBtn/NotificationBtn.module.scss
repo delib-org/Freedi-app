@@ -1,6 +1,32 @@
 .notificationBtn {
 	position: relative;
-	// Inherit the header's contrast ink (set on the header bar) so the mail
-	// icon stays legible on light accents (e.g. option-yellow) too.
+	// Resolve against the active theme here so the icon cannot inherit a stale
+	// light-on-accent colour after the header switches to a light surface.
+	color: var(--space-ink, var(--text-body));
+}
+.notificationBtn__trigger {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border: 0;
+	background: transparent;
 	color: inherit;
+	border-radius: 50%;
+	cursor: pointer;
+}
+
+.notificationBtn__trigger svg {
+	color: currentColor;
+	stroke: currentColor;
+	stroke-width: 1.7;
+	opacity: 1;
+}
+
+.notificationBtn__trigger > [role='status'] {
+	top: 0;
+	right: auto;
+	left: auto;
+	inset-inline-end: 0;
 }

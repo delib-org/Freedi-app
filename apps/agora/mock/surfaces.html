@@ -377,18 +377,24 @@
 				</div>
 			</header>
 
-			<h2>the bottom nav</h2>
-			<nav class="delib-nav" style="position: static">
-				<button class="delib-nav__item delib-nav__item--results">
-					<span class="delib-nav__icon">📊</span>
-					<span class="delib-nav__label">תוצאות</span>
-				</button>
-				<button class="delib-nav__item delib-nav__item--peer delib-nav__item--active">
-					<span class="delib-nav__icon">👥</span>
-					<span class="delib-nav__label">של אחרים</span>
-					<span class="delib-nav__badge">3</span>
-				</button>
-			</nav>
+			<h2>the place bar (flat view), with a count on a door</h2>
+			<div class="place-bar-wrap" style="position: static">
+				<nav class="place-bar place-bar--flat" aria-label="ניווט">
+					<button class="place-bar__item place-bar__item--active" type="button" data-place="note" aria-current="true">
+						<span class="place-bar__icon">📝</span>
+						<span class="place-bar__label">הפתק שלי</span>
+					</button>
+					<button class="place-bar__item" type="button" data-place="board">
+						<span class="place-bar__icon">👥</span>
+						<span class="place-bar__label">כל הפתקים</span>
+						<span class="place-bar__badge">3</span>
+					</button>
+					<button class="place-bar__item place-bar__item--locked" type="button" data-place="results" aria-disabled="true">
+						<span class="place-bar__icon">📊<span class="place-bar__lock" aria-hidden="true"></span></span>
+						<span class="place-bar__label">תוצאות</span>
+					</button>
+				</nav>
+			</div>
 
 			<h2>buttons, in every state a student meets</h2>
 			<div style="display: flex; flex-wrap: wrap; gap: 8px">
@@ -1001,17 +1007,87 @@
 				<button class="teacher-peek__summary" type="button" aria-expanded="false"><span class="teacher-peek__label">מה התלמידים רואים</span><span class="teacher-peek__preview">המטרה · ההקשבה היא העבודה</span></button>
 			</div>
 
-			<h2>the start form — class chips, the summary line, the advanced fold</h2>
+			<h2>the start form — class chips, the own-question row in both states, the advanced fold and its groups</h2>
 			<div class="start-game__class-row" role="radiogroup">
 				<button class="start-game__class-chip" type="button" role="radio" aria-checked="false">ח'4</button>
 				<button class="start-game__class-chip start-game__class-chip--on" type="button" role="radio" aria-checked="true">ז'2</button>
 				<button class="start-game__class-chip start-game__class-chip--new" type="button" role="radio" aria-checked="false">+ כיתה חדשה</button>
 				<button class="start-game__class-chip start-game__class-chip--none" type="button" role="radio" aria-checked="false">בלי כיתה</button>
 			</div>
-			<p class="start-game__summary">שיעור מלא · 8 שלבים · שמות בדויים — <button class="start-game__change" type="button">לשנות</button></p>
+			<ul class="scenario-list" role="radiogroup">
+				<li class="scenario-row scenario-row--own scenario-row--chosen scenario-row--question-empty">
+					<button class="scenario-row__use" type="button" role="radio" aria-checked="true">
+						<span class="scenario-row__tile"></span>
+						<span class="scenario-row__text">
+							<span class="scenario-row__title">שאלה משלי</span>
+							<span class="scenario-row__meta"><span class="scenario-row__sub scenario-row__sub--write">כתבו את השאלה</span></span>
+						</span>
+					</button>
+					<button class="scenario-row__edit" type="button" aria-label="עריכת השאלה"></button>
+				</li>
+				<li class="scenario-row scenario-row--own scenario-row--chosen scenario-row--question-set">
+					<button class="scenario-row__use" type="button" role="radio" aria-checked="true">
+						<span class="scenario-row__tile"></span>
+						<span class="scenario-row__text">
+							<span class="scenario-row__title scenario-row__title--question">מה עושים עם זה שכל תלמיד רוצה טמפרטורה אחרת במזגן?</span>
+							<span class="scenario-row__meta"><span class="scenario-row__sub">שם: פתרון בעיית המזגן</span></span>
+						</span>
+					</button>
+					<button class="scenario-row__edit" type="button" aria-label="עריכת השאלה"></button>
+				</li>
+			</ul>
 			<div class="card start-game__advanced">
-				<button class="start-game__advanced-summary" type="button" aria-expanded="false">הגדרות מתקדמות</button>
-				<p class="start-game__advanced-hint">לשיעור הראשון לא צריך לגעת כאן.</p>
+				<button class="start-game__advanced-summary" type="button" aria-expanded="true">
+					<span class="start-game__advanced-text">
+						<span class="start-game__advanced-label">הגדרות מתקדמות</span>
+						<span class="start-game__advanced-meta">8 שלבים · שמות בדויים · כל תלמיד בטלפון שלו · כפר · ממתקים</span>
+					</span>
+				</button>
+				<div class="collapsible">
+					<div class="start-game__groups">
+						<p class="start-game__advanced-hint">לשיעור הראשון לא צריך לגעת כאן.</p>
+						<div class="start-game__group">
+							<button class="start-game__group-head" type="button" aria-expanded="false">
+								<span class="start-game__group-text">
+									<span class="start-game__group-title">מהלך השיעור</span>
+									<span class="start-game__group-meta">8 שלבים</span>
+								</span>
+							</button>
+						</div>
+						<div class="start-game__group">
+							<button class="start-game__group-head" type="button" aria-expanded="true">
+								<span class="start-game__group-text">
+									<span class="start-game__group-title">התלמידים</span>
+									<span class="start-game__group-meta">שמות בדויים · כל תלמיד בטלפון שלו</span>
+								</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<h2>the question sheet — the teacher's own question on its own surface</h2>
+			<div class="question-sheet" style="position: relative; inset: auto; z-index: auto; padding: 0">
+				<div class="question-sheet__dialog" role="dialog">
+					<header class="question-sheet__head">
+						<h2 class="question-sheet__title">השאלה</h2>
+						<button class="question-sheet__close" type="button" aria-label="סגירה">✕</button>
+					</header>
+					<div class="question-sheet__body">
+						<p class="question-sheet__hint">שאלה אחת, פתוחה, שהכיתה יכולה להציע לה תשובות.</p>
+						<label class="start-game__field">
+							<span class="start-game__field-label">השאלה הראשית<span class="question-sheet__required"> *</span></span>
+							<textarea class="text-input question-sheet__question" rows="3" aria-invalid="true">מה עושים עם זה שכל תלמיד רוצה טמפרטורה אחרת במזגן?</textarea>
+						</label>
+						<p class="question-sheet__error">כתבו את השאלה כדי להמשיך.</p>
+						<p class="question-sheet__count">נשארו 12 תווים</p>
+						<span class="question-sheet__field-hint">אם משאירים ריק, השם נלקח מהשאלה.</span>
+					</div>
+					<footer class="question-sheet__foot">
+						<button class="btn btn--secondary question-sheet__cancel" type="button">ביטול</button>
+						<button class="btn btn--primary btn--lg question-sheet__continue" type="button">המשך</button>
+					</footer>
+				</div>
 			</div>
 
 			<h2>the dashboard — live banner, first-run strip, a past lesson's score</h2>
@@ -1116,6 +1192,40 @@
 				</div>
 				<ol class="projector__answers"><li class="projector__answer"><span class="projector__answer-num">1</span><p class="projector__answer-text">תשובה על הקיר</p></li></ol>
 				<aside class="projector__code" style="position:static"><span class="projector__code-label">מצטרפים עם הקוד</span><div class="projector__code-value">48213</div><span class="projector__code-count">19 בחדר</span></aside>
+			</div>
+			<h2>supervision: indicator tiles, chart card, tooltip, data table, chips and pills</h2>
+			<div class="indicator-grid">
+				<div class="indicator-grid__stats">
+					<div class="indicator indicator--stat"><div class="indicator__value">12<span class="indicator__unit">דק׳</span></div><div class="indicator__label">שיעורים</div></div>
+					<div class="indicator indicator--stat"><div class="indicator__value">74</div><div class="indicator__label">ציון כיתתי ממוצע</div><div class="indicator__hint">3 מתוך 5</div></div>
+				</div>
+				<div class="indicator-grid__charts">
+					<section class="indicator indicator--chart indicator--md">
+						<h3 class="indicator__title">ניקוד הכיתה לאורך השיעורים</h3>
+						<div class="chart">
+							<svg class="chart__svg" viewBox="0 0 360 120" direction="ltr"><line class="chart__grid" x1="20" x2="330" y1="80" y2="80"/><text class="chart__tick" x="330" y="80">50</text><text class="chart__label" x="20" y="110">ספטמבר</text><text class="chart__note" x="200" y="20">ממוצע</text><path class="chart__line--s1" d="M20 90 L160 40 L300 20"/></svg>
+							<div class="chart__tip" style="inset-inline-start:50%;inset-block-start:30%"><div class="chart__tip-title">21.9</div><div class="chart__tip-line"><i class="chart__swatch chart__swatch--s1"></i><span>ניקוד</span><span class="chart__tip-value">72</span></div></div>
+							<ul class="chart__legend"><li class="chart__legend-item chart__legend-item--s4"><i></i>✓ הצלחה</li><li class="chart__legend-item chart__legend-item--s2"><i></i>≈ מחלוקת כנה</li></ul>
+							<button class="btn btn--sm btn--ghost chart__table-toggle">הצגת טבלת נתונים</button>
+						</div>
+						<p class="indicator__hint">12 שיעורים</p>
+					</section>
+					<section class="indicator indicator--chart indicator--md">
+						<h3 class="indicator__title">תוצאות השיעורים</h3>
+						<div class="chart chart--table">
+							<svg class="chart__svg" viewBox="0 0 360 120" direction="ltr"></svg>
+							<table class="chart__table"><caption>ניקוד הכיתה</caption><thead><tr><th>שיעור</th><th>נקודות</th></tr></thead><tbody><tr><th>21.9</th><td>72</td></tr></tbody></table>
+							<button class="btn btn--sm btn--ghost chart__table-toggle">הסתרת טבלת הנתונים</button>
+						</div>
+					</section>
+					<div class="indicator indicator--empty indicator--md"><div class="indicator__label">התפלגות נקודות</div><p class="indicator__empty">עדיין אין שיעורים</p></div>
+				</div>
+			</div>
+			<div class="supervise">
+				<div class="supervise__chips"><button class="supervise__chip" aria-pressed="true">כל המורים</button><button class="supervise__chip" aria-pressed="false">רונית</button></div>
+				<div class="supervise__table-wrap"><table class="supervise__table"><thead><tr><th>מורה</th><th>כיתות</th><th>תוצאה</th></tr></thead><tbody><tr><th data-label="מורה"><a href="#">רונית</a></th><td data-label="כיתות">3</td><td data-label="תוצאה"><span class="supervise__pill supervise__pill--success"><span>✓</span>הצלחה</span> <span class="supervise__pill supervise__pill--unscored"><span>–</span>ללא ציון</span></td></tr></tbody></table></div>
+				<p class="supervise__notice">היסטוריה מוגבלת ל-100 שיעורים.</p>
+				<p class="supervise__empty">עדיין אין כיתות.</p>
 			</div>
 		</div>
 	</body>

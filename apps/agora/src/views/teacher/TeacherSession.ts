@@ -1,3 +1,4 @@
+import { sessionVillageMode, sessionJoinUrl } from '../../lib/flows/sessionLinks';
 import m from 'mithril';
 import { Icon } from '../../components/Icon';
 import { t } from '../../lib/i18n';
@@ -9,7 +10,7 @@ import {
 	getStagePlan,
 	getCurrentPlanIndex,
 } from '../../lib/session';
-import { advanceStage, updateStagePlan } from '../../lib/callables';
+import { advanceStage, setBallotGoalOnly, updateStagePlan } from '../../lib/callables';
 import {
 	getDeliberationState,
 	listenToDeliberation,
@@ -40,7 +41,13 @@ import {
 	ChallengePhase,
 	VotingStageSettings,
 } from '@freedi/shared-types';
-import { classLabel, setSessionTheme, setVotingSettings } from '../../lib/teacher';
+import {
+	callVillage,
+	classLabel,
+	setSessionTheme,
+	setVillageNavigation,
+	setVotingSettings,
+} from '../../lib/teacher';
 import { getVotingState, listenToVoting, stopVotingListeners } from '../../lib/voting';
 import {
 	endRound,
@@ -96,6 +103,10 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let savingSettings = false;
 	let challenging = false;
 	let savingLook = false;
+	let savingNavigation = false;
+	let goalOnlyError = '';
+	let callingVillage = false;
+	let villageCallSent = false;
 	let userId = '';
 	let editingPlan: AgoraStagePlanItem[] | null = null;
 	/** Which panel is over the board, if any — one at a time */
@@ -155,6 +166,25 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 		return `${window.location.origin}/#!/teach/screen/${sessionId}`;
 	}
 
+	/** The goal switch during the vote — the server redraws the ballot and withdraws orphaned votes */
+	function setGoalOnlyLive(next: boolean): void {
+		if (savingSettings) return;
+		savingSettings = true;
+		goalOnlyError = '';
+		setBallotGoalOnly({ sessionId, goalZoneOnly: next })
+			.catch((error: unknown) => {
+				console.error('[Teacher] Redrawing the ballot from the goal failed:', error);
+				const message = error instanceof Error ? error.message : '';
+				goalOnlyError = t(
+					message.includes('no-goal-proposals') ? 'teacher.voting_goal_only_empty' : 'common.error',
+				);
+			})
+			.finally(() => {
+				savingSettings = false;
+				m.redraw();
+			});
+	}
+
 	function saveVotingSettings(next: VotingStageSettings): void {
 		if (savingSettings) return;
 		savingSettings = true;
@@ -164,6 +194,40 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			})
 			.finally(() => {
 				savingSettings = false;
+				m.redraw();
+			});
+	}
+
+	function saveVillageNavigation(mode: 'teacher' | 'free'): void {
+		if (savingNavigation) return;
+		savingNavigation = true;
+		setVillageNavigation(sessionId, mode)
+			.catch((error: unknown) => {
+				console.error('[Teacher] Saving the village navigation failed:', error);
+			})
+			.finally(() => {
+				savingNavigation = false;
+				m.redraw();
+			});
+	}
+
+	/** Every student's village walks to one place — the room's station or the council */
+	function callClass(place: 'current' | 'council'): void {
+		if (callingVillage) return;
+		callingVillage = true;
+		callVillage(sessionId, place)
+			.then(() => {
+				villageCallSent = true;
+				window.setTimeout(() => {
+					villageCallSent = false;
+					m.redraw();
+				}, 2500);
+			})
+			.catch((error: unknown) => {
+				console.error('[Teacher] Calling the class failed:', error);
+			})
+			.finally(() => {
+				callingVillage = false;
 				m.redraw();
 			});
 	}
@@ -300,7 +364,11 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				);
 			}
 
-			const joinUrl = `${window.location.origin}/join/${session.code}`;
+			const joinUrl = sessionJoinUrl(
+				window.location.origin,
+				session.code,
+				sessionVillageMode(session.world, window.location.search),
+			);
 			const plan = getStagePlan();
 			const currentIndex = getCurrentPlanIndex();
 			const current = plan[currentIndex];
@@ -511,7 +579,57 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			// Behind the cog: the upcoming steps, how the vote opens, the room's
 			// colours, the projector link. A sheet, so the board never moves.
+			const villageNav = session.villageNavigation ?? 'teacher';
+			const navChoice = (mode: 'teacher' | 'free', label: string): m.Children =>
+				m(
+					'button.btn.village-nav__choice',
+					{
+						type: 'button',
+						role: 'radio',
+						'aria-checked': String(villageNav === mode),
+						'data-nav': mode,
+						class: villageNav === mode ? 'btn--primary' : 'btn--secondary',
+						disabled: savingNavigation,
+						onclick: () => saveVillageNavigation(mode),
+					},
+					label,
+				);
 			const settingsBody = m('.stack', { style: { gap: 'var(--space-lg)' } }, [
+				// The village: who walks the class between stations, and the two
+				// places the teacher can call everyone to at any moment.
+				sessionVillageMode(session.world, window.location.search)
+					? m('section.teacher-panel__section.stack.village-nav', [
+							m('p.teacher__section-title', t('village.nav_title')),
+							m(
+								'.teacher__mode-row',
+								{ role: 'radiogroup', 'aria-label': t('village.nav_title') },
+								[
+									navChoice('teacher', t('village.nav_teacher')),
+									navChoice('free', t('village.nav_free')),
+								],
+							),
+							m(
+								'p.home-explanation.home-explanation--start',
+								t(villageNav === 'free' ? 'village.nav_free_hint' : 'village.nav_teacher_hint'),
+							),
+							m('p.teacher__section-title', t('village.call_title')),
+							m('.teacher__mode-row', [
+								m(
+									'button.btn.btn--secondary.village-nav__call.village-nav__call--current',
+									{ type: 'button', disabled: callingVillage, onclick: () => callClass('current') },
+									t('village.call_current'),
+								),
+								m(
+									'button.btn.btn--secondary.village-nav__call.village-nav__call--council',
+									{ type: 'button', disabled: callingVillage, onclick: () => callClass('council') },
+									t('village.call_council'),
+								),
+							]),
+							villageCallSent
+								? m('p.lobby__status', { role: 'status' }, t('village.call_sent'))
+								: null,
+						])
+					: null,
 				m('section.teacher-panel__section.stack', [
 					m('p.teacher__section-title', t('teacher.edit_plan')),
 					editingPlan
@@ -727,6 +845,8 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									savingSettings,
 									challengeLive,
 									saveVotingSettings,
+									setGoalOnlyLive,
+									goalOnlyError,
 								),
 								m(Voting, {
 									session,

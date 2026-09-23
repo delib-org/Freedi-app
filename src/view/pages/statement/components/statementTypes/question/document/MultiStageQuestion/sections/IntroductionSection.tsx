@@ -1,14 +1,9 @@
-import React, { FC, useState } from 'react';
+import React, { FC } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { useSummarization } from '@/controllers/hooks/useSummarization';
-import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import newOptionGraphic from '@/assets/images/newOptionGraphic.png';
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react';
 import EditableDescription from '@/view/components/edit/EditableDescription';
-import SummaryDisplay from '../components/SummaryDisplay/SummaryDisplay';
-import SummarizeButton from '../components/SummarizeButton/SummarizeButton';
-import SummarizeModal from '../components/SummarizeModal/SummarizeModal';
 import styles from '../MultiStageQuestion.module.scss';
 import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
 
@@ -18,23 +13,6 @@ interface IntroductionSectionProps {
 
 export const IntroductionSection: FC<IntroductionSectionProps> = ({ statement }) => {
 	const { t } = useTranslation();
-	const { isGenerating, generateSummary } = useSummarization();
-	const { isAdmin } = useEditPermission(statement);
-	const [isModalOpen, setIsModalOpen] = useState(false);
-
-	const handleGenerateSummary = async (customPrompt: string, includeSubQuestions: boolean) => {
-		const success = await generateSummary(statement.statementId, customPrompt, includeSubQuestions);
-		if (success) {
-			setIsModalOpen(false);
-		}
-	};
-
-	// Type assertion for summary fields that may not be in the base Statement type
-	const statementWithSummary = statement as Statement & {
-		summary?: string;
-		summaryGeneratedAt?: number;
-	};
-
 	return (
 		<div className={styles.stageCard} id="introduction">
 			<div className={styles.imgContainer}>
@@ -55,30 +33,6 @@ export const IntroductionSection: FC<IntroductionSectionProps> = ({ statement })
 			<div className={styles.subDescription}>
 				<EditableDescription statement={statement} placeholder={t('Add a description...')} />
 			</div>
-
-			{/* Summary Display - visible to all users when summary exists */}
-			<SummaryDisplay
-				summary={statementWithSummary.summary}
-				generatedAt={statementWithSummary.summaryGeneratedAt}
-				statementId={statement.statementId}
-				canEdit={isAdmin}
-			/>
-
-			{/* Summarize Button - admin/creator only */}
-			<SummarizeButton
-				statement={statement}
-				onOpenModal={() => setIsModalOpen(true)}
-				isLoading={isGenerating}
-			/>
-
-			{/* Summarize Modal */}
-			<SummarizeModal
-				isOpen={isModalOpen}
-				onClose={() => setIsModalOpen(false)}
-				onGenerate={handleGenerateSummary}
-				isLoading={isGenerating}
-				questionTitle={statement.statement}
-			/>
 		</div>
 	);
 };

@@ -8,7 +8,11 @@ import {
 	Paragraph,
 } from '@freedi/shared-types';
 import { createStatement, setStatementToDB } from './setStatements';
-import { setStatement, setStatementSubscription } from '@/redux/statements/statementsSlice';
+import {
+	deleteStatement,
+	setStatement,
+	setStatementSubscription,
+} from '@/redux/statements/statementsSlice';
 import { Dispatch } from '@reduxjs/toolkit';
 import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
 import { notificationService } from '@/services/notificationService';
@@ -24,6 +28,12 @@ interface CreateStatementWithSubscriptionParams {
 	currentLanguage: string;
 	user: Creator;
 	dispatch: Dispatch;
+	/**
+	 * Resolve once the statement is written locally instead of after the server
+	 * acknowledges it; the subscription is then written in the background too.
+	 * Called if the server later rejects the statement (it is removed from the store).
+	 */
+	onServerWriteError?: (error: unknown) => void;
 }
 
 export async function createStatementWithSubscription({
@@ -35,6 +45,7 @@ export async function createStatementWithSubscription({
 	currentLanguage,
 	user,
 	dispatch,
+	onServerWriteError,
 }: CreateStatementWithSubscriptionParams): Promise<string> {
 	const statementType = newStatement?.statementType || StatementType.question;
 
@@ -90,6 +101,12 @@ export async function createStatementWithSubscription({
 	const result = await setStatementToDB({
 		parentStatement: newStatementParent,
 		statement: _newStatement,
+		onServerWriteError: onServerWriteError
+			? (error: unknown) => {
+					dispatch(deleteStatement(_newStatement.statementId));
+					onServerWriteError(error);
+				}
+			: undefined,
 	});
 
 	if (!result) {
@@ -106,7 +123,7 @@ export async function createStatementWithSubscription({
 	const pushNotificationsEnabled =
 		notificationService.isInitialized() && notificationService.safeGetPermission() === 'granted';
 
-	await setStatementSubscriptionToDB({
+	const subscriptionWrite = setStatementSubscriptionToDB({
 		statement: _newStatement,
 		creator: user,
 		role: Role.admin,
@@ -114,6 +131,8 @@ export async function createStatementWithSubscription({
 		getEmailNotification: false,
 		getPushNotification: pushNotificationsEnabled,
 	});
+	// setStatementSubscriptionToDB logs its own failures and never rejects.
+	if (!onServerWriteError) await subscriptionWrite;
 
 	return statementId;
 }

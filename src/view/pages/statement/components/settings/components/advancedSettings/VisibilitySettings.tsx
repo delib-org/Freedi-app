@@ -39,6 +39,8 @@ interface VisibilitySettingsProps {
 	) => void;
 	handlePowerFollowMeChange: (newValue: boolean) => void;
 	handleIsDocumentChange: (newValue: boolean) => void;
+	/** The Host hub shows Presenter mode in its Live now card instead. */
+	showPresenterMode?: boolean;
 }
 
 const VisibilitySettings: FC<VisibilitySettingsProps> = ({
@@ -48,6 +50,7 @@ const VisibilitySettings: FC<VisibilitySettingsProps> = ({
 	handleSettingChange,
 	handlePowerFollowMeChange,
 	handleIsDocumentChange,
+	showPresenterMode = true,
 }) => {
 	const { t } = useTranslation();
 	const currentDefaultView = settings.defaultView ?? 'chat';
@@ -144,13 +147,15 @@ const VisibilitySettings: FC<VisibilitySettingsProps> = ({
 				description={t('Display the navigational tree of sub-questions alongside the main content')}
 				icon={GitBranch}
 			/>
-			<ToggleSwitch
-				isChecked={!!statement.powerFollowMe}
-				onChange={handlePowerFollowMeChange}
-				label={t('Power Follow Me')}
-				description={t('Auto-redirect all participants to the instructor screen')}
-				icon={Radio}
-			/>
+			{showPresenterMode && (
+				<ToggleSwitch
+					isChecked={!!statement.powerFollowMe}
+					onChange={handlePowerFollowMeChange}
+					label={t('Power Follow Me')}
+					description={t('Auto-redirect all participants to the instructor screen')}
+					icon={Radio}
+				/>
+			)}
 			<ToggleSwitch
 				isChecked={statement.isDocument ?? false}
 				onChange={handleIsDocumentChange}

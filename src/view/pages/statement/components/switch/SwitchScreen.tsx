@@ -1,3 +1,6 @@
+import LiveMapWorkspace from '@/view/components/atomic/organisms/ThinkingSpace/LiveMapWorkspace';
+import { mapViews, MapViewId } from '@/view/components/atomic/organisms/ThinkingSpace/MapExplorer';
+import AgreementHub from '@/view/components/atomic/organisms/ThinkingSpace/AgreementHub';
 import { Statement, Role, StatementType, Screen, QuestionType } from '@freedi/shared-types';
 import { ReactNode, useEffect, Suspense } from 'react';
 import { useParams } from 'react-router';
@@ -8,23 +11,30 @@ import { logError } from '@/utils/errorHandling';
 import lazyWithRetry from '@/routes/lazyWithRetry';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import Chat from '../chat/Chat';
+import AnswerImprovement, { showsAnswerImprovement } from '../answer/AnswerImprovement';
 import StagePage from '../statementTypes/stage/StagePage';
 import QuestionsView from '../questionsView/QuestionsView';
 import GroupPage from '../statementTypes/group/GroupPage';
 import PopperHebbianDiscussion from '../popperHebbian/PopperHebbianDiscussion';
 import TreeView from '../treeView/TreeView';
 import { CompoundQuestion } from '../statementTypes/question/compound';
+import BackgroundTab from '../questionScreen/BackgroundTab';
+import MapsTab from '../questionScreen/MapsTab';
+import ResultsTab from '../questionScreen/results/ResultsTab';
+import SubViewHeader from '../questionScreen/SubViewHeader';
+import type { QuestionScreenData } from '../questionScreen/useQuestionScreenData';
 
+const ClusterBoardMap = lazyWithRetry(
+	() => import('../map/ClusterMap/ClusterMap'),
+	'ClusterBoardMap',
+);
 // Lazy load heavy screen components
 const Triangle = lazyWithRetry(
 	() => import('@/view/components/maps/triangle/Triangle'),
 	'Triangle',
 );
 const MindMap = lazyWithRetry(() => import('../map/MindMap'), 'MindMap');
-const StatementSettings = lazyWithRetry(
-	() => import('../settings/StatementSettings'),
-	'StatementSettings',
-);
+const StatementSettings = lazyWithRetry(() => import('../host/HostHub'), 'HostHub');
 const PolarizationIndexComp = lazyWithRetry(
 	() => import('@/view/components/maps/polarizationIndex/PolarizationIndex'),
 	'PolarizationIndex',
@@ -42,9 +52,15 @@ interface SwitchScreenProps {
 	statement: Statement | undefined;
 	role: Role | undefined;
 	activeView: string;
+	data: QuestionScreenData;
 }
 
-function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProps>): ReactNode {
+function SwitchScreen({
+	statement,
+	role,
+	activeView,
+	data,
+}: Readonly<SwitchScreenProps>): ReactNode {
 	let { screen } = useParams();
 	const dispatch = useDispatch();
 
@@ -85,6 +101,25 @@ function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProp
 		screen = 'main';
 	}
 
+	if (statement && mapViews.some((view) => view.id === screen)) {
+		const id = screen as MapViewId;
+		const components = {
+			[Screen.mindMap]: MindMap,
+			[Screen.subQuestionsMap]: SubQuestionsMap,
+			[Screen.clusterBoard]: ClusterBoardMap,
+			[Screen.agreementMap]: Triangle,
+			[Screen.polarizationIndex]: PolarizationIndexComp,
+		};
+		const Component = components[id];
+
+		return (
+			<LiveMapWorkspace statement={statement} active={id}>
+				<Suspense fallback={<LoadingPage />}>
+					<Component />
+				</Suspense>
+			</LiveMapWorkspace>
+		);
+	}
 	// Map/settings/polarization screens remain as-is
 	switch (screen) {
 		case Screen.polarizationIndex:
@@ -126,11 +161,17 @@ function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProp
 		default:
 			// Main content area controlled by the segmented control
 			return (
-				<ViewByActiveTab
-					activeView={activeView}
-					statement={statement}
-					isPopperHebbianEnabled={isPopperHebbianEnabled}
-				/>
+				<>
+					{showsAnswerImprovement(statement, activeView) && !isPopperHebbianEnabled && (
+						<AnswerImprovement key={statement?.statementId} />
+					)}
+					<ViewByActiveTab
+						activeView={activeView}
+						statement={statement}
+						isPopperHebbianEnabled={isPopperHebbianEnabled}
+						data={data}
+					/>
+				</>
 			);
 	}
 }
@@ -142,16 +183,45 @@ interface ViewByActiveTabProps {
 	activeView: string;
 	statement: Statement | undefined;
 	isPopperHebbianEnabled: boolean;
+	data: QuestionScreenData;
 }
 
 function ViewByActiveTab({
 	activeView,
 	statement,
 	isPopperHebbianEnabled,
+	data,
 }: Readonly<ViewByActiveTabProps>): ReactNode {
 	const isCompound =
 		statement?.statementType === StatementType.question &&
 		statement?.questionSettings?.questionType === QuestionType.compound;
+
+	if (statement?.statementType === StatementType.question) {
+		switch (activeView) {
+			case 'background':
+				return <BackgroundTab statement={statement} data={data} />;
+			case 'results':
+				return <ResultsTab key={statement.statementId} statement={statement} data={data} />;
+			case 'maps':
+				return <MapsTab statement={statement} />;
+			case 'covenant':
+				return (
+					<>
+						<SubViewHeader parent="results" parentLabelKey="Results" />
+						<AgreementHub key={statement.statementId} statement={statement} view="covenant" />
+					</>
+				);
+			case 'themes':
+				return (
+					<>
+						<SubViewHeader parent="maps" parentLabelKey="Maps" />
+						<AgreementHub key={statement.statementId} statement={statement} view="themes" />
+					</>
+				);
+			default:
+				break;
+		}
+	}
 
 	if (isCompound) {
 		return <CompoundQuestion />;

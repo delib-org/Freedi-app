@@ -44,7 +44,9 @@ const ACCEPTED = [
 	['p.thread__text', 'rgb(139, 107, 240)', 3.85],
 	['span.thread__time', 'rgb(139, 107, 240)', 2.87],
 	['p.action-hint', 'rgb(139, 107, 240)', 2.87],
-	['span.delib-nav__label', 'rgb(139, 107, 240)', 3.85],
+	// The tab I am on in the flat view — the old tab bar's debt, carried over
+	// unchanged when the place bar replaced it
+	['span.place-bar__label', 'rgb(139, 107, 240)', 3.85],
 	// White copy on the hero ramp's top stops (--mine-light #a98cf7 and the
 	// sheen washing over it)
 	['p.', 'rgb(181, 156, 248)', 2.31],
@@ -53,7 +55,6 @@ const ACCEPTED = [
 	// The count pink. It replaced --danger, which passed at 4.67:1 — red said
 	// "something broke" about a classmate's reply, which is the friendliest
 	// event in the game, so the hue was worth the ratio.
-	['span.delib-nav__badge', 'rgb(245, 106, 168)', 2.8],
 	['span.stall__chip.stall__chip--unread', 'rgb(245, 106, 168)', 2.8],
 	// The same pink count, on the workshop drawers' feedback badge — it joined
 	// the gauntlet on 2026-09-03 when the drawers did; the candy look passes it
@@ -179,6 +180,14 @@ export async function auditPage(page, { label = 'page', min = AA_NORMAL } = {}) 
 				};
 
 				while (node && node !== document.documentElement.parentElement) {
+					// An empty, filled ::before (the place bar's active pill) paints
+					// over the element's own background, under its text. One with
+					// content (a counter badge) sits beside the text, not under it.
+					const pill = getComputedStyle(node, '::before');
+					if (pill.content === '""') {
+						const pillFill = parseColor(pill.backgroundColor);
+						if (pillFill && pillFill.a >= 0.999) return resolve([pillFill]);
+					}
 					const style = getComputedStyle(node);
 					const stops = gradientStops(style.backgroundImage);
 					const opaque = stops.filter((c) => c.a >= 0.999);

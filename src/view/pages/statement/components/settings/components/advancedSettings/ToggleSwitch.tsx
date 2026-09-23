@@ -10,6 +10,8 @@ export interface ToggleSwitchProps {
 	description?: string;
 	icon?: React.ElementType;
 	badge?: 'recommended' | 'premium' | 'new';
+	/** Lands on the checkbox so tests and e2e can find one specific toggle. */
+	'data-testid'?: string;
 }
 
 const ToggleSwitch: FC<ToggleSwitchProps> = ({
@@ -19,6 +21,7 @@ const ToggleSwitch: FC<ToggleSwitchProps> = ({
 	description,
 	icon: Icon,
 	badge,
+	'data-testid': testId,
 }) => {
 	const { t } = useTranslation();
 
@@ -47,7 +50,13 @@ const ToggleSwitch: FC<ToggleSwitchProps> = ({
 					{isChecked ? t('On') : t('Off')}
 				</span>
 				<label className={styles.toggleSwitch}>
-					<input type="checkbox" checked={isChecked} onChange={(e) => onChange(e.target.checked)} />
+					<input
+						type="checkbox"
+						checked={isChecked}
+						onChange={(e) => onChange(e.target.checked)}
+						aria-label={label}
+						data-testid={testId}
+					/>
 					<span className={styles.toggleSlider}></span>
 				</label>
 			</div>

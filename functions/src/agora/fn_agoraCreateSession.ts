@@ -22,6 +22,7 @@ import {
 	AgoraThemeChoice,
 	AgoraThemeChoiceSchema,
 	AgoraTopicPackage,
+	topicStagePlan,
 	AgoraTopicStatus,
 	SourceApp,
 	AGORA_AI_REVIEW,
@@ -49,6 +50,8 @@ export interface QuickGameRequest {
 }
 
 interface Request {
+	world?: 'village' | 'classic';
+	villageNavigation?: 'teacher' | 'free';
 	/** A ready scenario package — or omit it and send `quick` */
 	topicPackageId?: string;
 	quick?: QuickGameRequest;
@@ -235,6 +238,18 @@ export const agoraCreateSession = onCall(
 			theme,
 			collectRealNames,
 		} = request.data ?? {};
+		const world = request.data?.world;
+		if (world !== undefined && world !== 'village' && world !== 'classic') {
+			throw new HttpsError('invalid-argument', 'Invalid world');
+		}
+		const villageNavigation = request.data?.villageNavigation;
+		if (
+			villageNavigation !== undefined &&
+			villageNavigation !== 'teacher' &&
+			villageNavigation !== 'free'
+		) {
+			throw new HttpsError('invalid-argument', 'Invalid villageNavigation');
+		}
 		const roomTheme = sanitizeTheme(theme);
 		const quickGame = quick !== undefined ? parseQuick(quick) : undefined;
 		if (!quickGame && (!topicPackageId || typeof topicPackageId !== 'string')) {
@@ -283,6 +298,7 @@ export const agoraCreateSession = onCall(
 				}
 			}
 			const isQuick = topic.kind === 'quick';
+			if (!plan && topic.authoringBrief) plan = topicStagePlan();
 
 			// A class game must be opened by one of the class's own teachers; a
 			// guest game (no classId) stays exactly what sessions have always been.
@@ -403,6 +419,8 @@ export const agoraCreateSession = onCall(
 				...(identity ? { identity } : {}),
 				collectRealNames: collectRealNames !== false,
 				...(roomTheme ? { theme: roomTheme } : {}),
+				...(world ? { world } : {}),
+				...(villageNavigation ? { villageNavigation } : {}),
 				stage: AgoraStage.lobby,
 				roundNumber: 0,
 				participantCount: 0,

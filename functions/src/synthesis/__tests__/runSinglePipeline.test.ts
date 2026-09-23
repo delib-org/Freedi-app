@@ -97,6 +97,13 @@ jest.mock('../pipeline/nestSynthesis', () => ({
 	assignOptionToTheme: assignOptionThemeMock,
 }));
 
+const enqueueItemMock = jest.fn();
+const ensureQueueRunMock = jest.fn();
+jest.mock('../queue/enqueue', () => ({
+	enqueueItem: (...args: unknown[]) => enqueueItemMock(...args),
+	ensureQueueRun: (...args: unknown[]) => ensureQueueRunMock(...args),
+}));
+
 // Now import the SUT.
 import { runSinglePipeline } from '../pipeline/runSinglePipeline';
 import { DEFAULT_SYNTHESIS_SETTINGS, MC_DEFAULT_SYNTHESIS_SETTINGS } from '../pipeline/types';
@@ -175,6 +182,8 @@ beforeEach(() => {
 	findSimilarMock.mockResolvedValue([]);
 	spawnMock.mockResolvedValue({ spawned: false });
 	reviewMock.mockResolvedValue(undefined);
+	enqueueItemMock.mockResolvedValue('item');
+	ensureQueueRunMock.mockResolvedValue(undefined);
 });
 
 describe('runSinglePipeline', () => {
@@ -558,6 +567,107 @@ describe('runSinglePipeline', () => {
 		expect(spawnMock).toHaveBeenCalledTimes(2);
 		expect(spawnMock.mock.calls[0][0].sibling.statementId).toBe('wrong-neighbour');
 		expect(spawnMock.mock.calls[1][0].sibling.statementId).toBe('true-twin');
+	});
+
+	it('a deduped pairing moves on to the next candidate instead of re-queuing', async () => {
+		// Bq-VQPMPiG7b, 2026-09-18: the sibling sat in a synth that was not among
+		// the vector candidates, so it was offered, the spawn deduped, and the
+		// option was re-queued until its attempts ran out — never themed.
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				statement: { statementId: 'already-merged', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.86,
+			},
+			{
+				statement: { statementId: 'free-twin', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.83,
+			},
+		]);
+		spawnMock
+			.mockResolvedValueOnce({ spawned: false, deduped: true })
+			.mockResolvedValueOnce({ spawned: true, clusterId: 'synth-with-free-twin' });
+
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'queueWorker',
+			option,
+			parent,
+		});
+
+		expect(result.action).toBe('spawned');
+		expect(result.clusterId).toBe('synth-with-free-twin');
+		expect(spawnMock.mock.calls[1][0].sibling.statementId).toBe('free-twin');
+		expect(enqueueItemMock).not.toHaveBeenCalled();
+	});
+
+	it('when every pairing is deduped the option goes on to theming, never back to the queue', async () => {
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				statement: { statementId: 'already-merged', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.86,
+			},
+		]);
+		spawnMock.mockResolvedValue({ spawned: false, deduped: true });
+
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'queueWorker',
+			option,
+			parent,
+		});
+
+		expect(result.reason).not.toBe('spawn-failed-requeued');
+		expect(enqueueItemMock).not.toHaveBeenCalled();
+		expect(ensureQueueRunMock).not.toHaveBeenCalled();
+	});
+
+	it('a real spawn failure outside the worker re-queues AND wakes a run', async () => {
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				statement: { statementId: 'twin', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.86,
+			},
+		]);
+		spawnMock.mockResolvedValue({ spawned: false });
+
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+
+		expect(result.reason).toBe('spawn-failed-requeued');
+		expect(enqueueItemMock).toHaveBeenCalledWith(expect.objectContaining({ retry: true }));
+		expect(ensureQueueRunMock).toHaveBeenCalledWith('q-1', 1, 'selective');
+	});
+
+	it('the queue worker re-queues a real failure without starting another run', async () => {
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				statement: { statementId: 'twin', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.86,
+			},
+		]);
+		spawnMock.mockResolvedValue({ spawned: false });
+
+		await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'queueWorker',
+			option,
+			parent,
+		});
+
+		expect(enqueueItemMock).toHaveBeenCalledWith(expect.objectContaining({ retry: true }));
+		expect(ensureQueueRunMock).not.toHaveBeenCalled();
 	});
 
 	it('spawn attempts stop at the cap, and below-band candidates are never offered', async () => {

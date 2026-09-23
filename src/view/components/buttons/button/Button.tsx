@@ -50,6 +50,7 @@ const Button: FC<Props> = ({
 			type={type}
 			className={`${styles.button} ${className} ${btnTypes[buttonType]} ${dir === 'rtl' ? styles.rtl : styles.ltr}`}
 			onClick={!disabled ? onClick : undefined}
+			disabled={disabled}
 		>
 			{Icon && (
 				<div className={styles['button__icon-wrapper']}>

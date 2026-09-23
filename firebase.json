@@ -56,7 +56,7 @@
           ]
         },
         {
-          "source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+          "source": "**/@(sw|custom-sw|firebase-messaging-sw|badge-store).js",
           "headers": [
             {
               "key": "Cache-Control",
@@ -156,7 +156,7 @@
           ]
         },
         {
-          "source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+          "source": "**/@(sw|custom-sw|firebase-messaging-sw|badge-store).js",
           "headers": [
             {
               "key": "Cache-Control",
@@ -256,7 +256,7 @@
           ]
         },
         {
-          "source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+          "source": "**/@(sw|custom-sw|firebase-messaging-sw|badge-store).js",
           "headers": [
             {
               "key": "Cache-Control",
@@ -356,7 +356,7 @@
           ]
         },
         {
-          "source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+          "source": "**/@(sw|custom-sw|firebase-messaging-sw|badge-store).js",
           "headers": [
             {
               "key": "Cache-Control",
@@ -500,7 +500,7 @@
           ]
         },
         {
-          "source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+          "source": "**/@(sw|custom-sw|firebase-messaging-sw|badge-store).js",
           "headers": [
             {
               "key": "Cache-Control",
@@ -605,7 +605,7 @@
           ]
         },
         {
-          "source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+          "source": "**/@(sw|custom-sw|firebase-messaging-sw|badge-store).js",
           "headers": [
             {
               "key": "Cache-Control",
@@ -701,7 +701,7 @@
           ]
         },
         {
-          "source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+          "source": "**/@(sw|custom-sw|firebase-messaging-sw|badge-store).js",
           "headers": [
             {
               "key": "Cache-Control",
@@ -788,7 +788,7 @@
           ]
         },
         {
-          "source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+          "source": "**/@(sw|custom-sw|firebase-messaging-sw|badge-store).js",
           "headers": [
             {
               "key": "Cache-Control",
@@ -898,7 +898,7 @@
           ]
         },
         {
-          "source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+          "source": "**/@(sw|custom-sw|firebase-messaging-sw|badge-store).js",
           "headers": [
             {
               "key": "Cache-Control",
@@ -997,7 +997,7 @@
           ]
         },
         {
-          "source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+          "source": "**/@(sw|custom-sw|firebase-messaging-sw|badge-store).js",
           "headers": [
             {
               "key": "Cache-Control",

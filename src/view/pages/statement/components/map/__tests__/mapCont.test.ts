@@ -23,6 +23,8 @@ interface MockStatement {
 	isCluster?: boolean;
 	derivedByPipeline?: 'synthesis' | 'topic-cluster';
 	integratedOptions?: string[];
+	hide?: boolean;
+	mergedInto?: string;
 }
 
 const QUESTION_ID = 'q1';
@@ -51,6 +53,43 @@ function findNode(node: Results, id: string): Results | null {
 
 	return null;
 }
+
+describe('resultsByParentId — retired clusters', () => {
+	/**
+	 * The theme sweeps retire a cluster by hiding it and emptying its members
+	 * (a merge donor keeps `mergedInto`, a split parent keeps `splitInto`).
+	 * Drawn, that is an empty box hanging off the question.
+	 */
+	it('does not draw a hidden, emptied cluster', () => {
+		const descendants = [
+			make({ statementId: 'o1' }),
+			make({
+				statementId: 'donor',
+				isCluster: true,
+				derivedByPipeline: 'topic-cluster',
+				integratedOptions: [],
+				hide: true,
+				mergedInto: 'survivor',
+			}),
+			make({
+				statementId: 'survivor',
+				isCluster: true,
+				derivedByPipeline: 'topic-cluster',
+				integratedOptions: ['o1'],
+			}),
+		];
+		const tree = resultsByParentId(question, descendants);
+
+		expect(childIds(tree)).toEqual(['survivor']);
+		expect(findNode(tree, 'donor')).toBeNull();
+	});
+
+	it('still draws a hidden plain option, which is not this concern', () => {
+		const descendants = [make({ statementId: 'o1', hide: true })];
+
+		expect(childIds(resultsByParentId(question, descendants))).toEqual(['o1']);
+	});
+});
 
 describe('resultsByParentId — cluster nesting', () => {
 	it('leaves a plain flat tree untouched', () => {

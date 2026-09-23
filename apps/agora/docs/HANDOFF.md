@@ -1,7 +1,26 @@
+## 2026-09-22 — supervision and modular analytics
+
+Implementation is on `feat/agora-supervision` in the dedicated supervision
+worktree. Teacher class graphs, student drawer graphs, `/teach/activity`,
+`/supervise` school/teacher/class/student views, and Studio system/school/detail
+pages consume the shared indicator registries. Supervisor assignment and
+teacher narrowing are available on the Studio school page.
+
+Backend review fixed cross-school aggregate disclosure, permission changes
+while cached, never-played student drilldowns, late-backfill history retention,
+month-rollover heartbeat credit, and equal-timestamp backfill pagination.
+School teacher summaries use the retained 100 lesson rows and warn when that
+history is truncated. Usage is teacher-wide screen activity; lesson rows are
+school-scoped. The scope/registry invariants are recorded in CLAUDE.md.
+
+No production deployment, index creation or backfill has been performed.
+Deploy the rules/index/functions first after explicit approval, then the two
+frontends, and run backfill through Studio's historical lesson-data action.
+
 # Agora — Working Handoff
 
 **Start-here document for continuing work in a fresh chat.** Last updated
-2026-09-06.
+2026-09-22.
 
 Companion docs: `../CLAUDE.md` (the rules of the road — read that first),
 `feedback-cycle.md` (the improvement loop, and the spec `e2e-cycle.mjs`
@@ -25,6 +44,122 @@ rate others, improve each other's ideas — aiming for a solution both camps
 can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
+
+## Late arrivals and catch-up (2026-09-22)
+
+Joining an open/live session already worked. Earlier question stations now
+remain writable and ratable until results/end, including story, needs, vision
+and ordinary questions. `lib/flows/stageAccess.ts` supplies the same policy to
+the simple views, village desks and village board. Future stations stay closed;
+past proposal rounds and ballots retain their existing closing behavior.
+
+The carried outcome remains the snapshot made when the class left that question.
+Catch-up answers and ratings use the normal confirmed writes and evaluation
+pipeline, without replacing that snapshot or reporting progress for the room's
+current station. Students revisiting a station keep it across a teacher advance
+and refresh — except the advance to results or end, which carries everyone to
+the results (`stageNavReduce`'s `session-advanced`), since nothing is writable
+any more; explicit teacher calls still work. A delayed village load or arrival
+no longer closes a paper the student already opened.
+
+Validation: 364 unit tests, lint, app/script typechecks, production build,
+contrast and text-size audits. `npx tsx scripts/e2e-late-join.mjs` verifies a
+fresh live-session join after story/needs close, earlier answers and ratings in
+Firestore, preserved summaries, catch-up across advance, and refresh in both
+classic and village views. Client-only; not deployed.
+
+## Village navigation and settings (2026-09-22)
+
+The village has one persistent `PlaceBar`: Village, My note, All notes,
+Results. Labels exist in all six languages, stay readable at 320px, and
+locked destinations explain why they are unavailable. Settings holds style,
+ambience, reduced graphics, and the exit to the simple view; teacher messages
+are pinned in the existing inbox. Embedded world controls no longer duplicate
+the app's settings.
+
+Destination changes close the previous panel and keep the selected tab in
+sync, including notes opened from inbox messages. Returning to the village
+faces the writing guide again. Library reading does not select Results, and
+leaving during a note's flight cancels its deferred board opening. Community
+panels are nonmodal regions so the persistent navigation remains accessible;
+the settings dialog contains keyboard focus and restores it on close.
+
+Preferences live in `lib/villagePrefs.ts`, with a session fallback when browser
+storage fails. Reduced graphics disables shadows, reduces grass, and throttles
+frames. Sound remains separate from celebration sounds.
+
+Validation: 357 unit tests, lint, app/script typechecks, production build,
+contrast and text-size audits. `scripts/village-desk-board.mjs` now verifies
+destination selection, the writing/rating/editing loop, settings and keyboard
+focus, 390px Hebrew and 320px Spanish layouts, and returning from simple view.
+Screenshots are in `output/village-desk-board/verified-*.png`. Client-only;
+these changes have not been deployed.
+
+Follow-up: a Firefox user reported that the guide's “edit my note” button did
+nothing. World labels now update only when their text changes, avoiding DOM
+replacement every animation frame. The desk-board script includes a label
+stability check (not yet rerun). The production build and 12 focused unit tests
+pass. In the user's story session, keyboard activation and programmatic click
+both open the saved text correctly. Physical mouse behavior remains unverified:
+native automation did not deliver clicks to other Firefox page buttons either.
+Do not mark the reported mouse issue resolved without a successful retry.
+
+The writing bubble now reserves the measured navigation height plus a 12px
+gap, including the safe area. Previously its own placement overrode the
+panel's bottom clearance and the bar covered its lower content. Short windows
+also constrain the bubble to the available height rather than forcing overflow.
+Verified in an isolated local story session at 1280×720 and 390×740: textarea
+and Send are visible, and the bubble ends 12px above navigation. Ten placement
+tests, targeted lint, typecheck and production build pass. This does not change
+the camera or the position of the physical paper in the 3D scene.
+
+## Village personal writing desks (2026-09-10)
+
+`prototypes/olive-hill/writing-desks.js` builds timber desks, a personal paper
+and pen in the writing stations. `world-scene.js` paints confirmed own text,
+anchors a comic invitation to the station guide, and opens the paper from a
+nearby desk click, the bubble, or the keyboard-accessible entry button.
+
+The embedded `agora-village-write` message carries the current plan item ID.
+`VillageShell` checks source/origin and the live item, opens the existing
+RoundStage/QuestionStage/Deliberation writer and focuses it. Deliberation's
+`writeRequest` returns to the personal editor without advancing the lap.
+Earlier questions now support catch-up (see above); past proposal rounds remain
+read-only. Repeated questions
+keep distinct IDs. No demo localStorage or parallel proposal persistence is
+used; existing confirmed saves and point awards remain authoritative.
+
+Verified in a separate local session: physical desk click, character bubble,
+story save/reopen, empty needs paper, proposal creation (+3 points), and
+editing the same proposal from the desk. Agora tests (325), lint, typecheck
+and build pass. This is a client-only change; publish Agora hosting when ready.
+
+## Question-led scenario authoring (2026-09-10)
+
+The new-scenario wizard asks for a question (`statement`, max 200) and its
+purpose/context (`description`, max 2000). `agoraGenerateTopicPackage` sends
+both as structured topic data to `topicPrompt.ts`. The prompt follows WizCol
+without vision, stays within the teacher's scope, and no longer requires a
+historical episode, time tunnel or national health gauges. Short illustrative
+voices and needs remain compatible with the existing scenario scenes.
+
+The server pins `title` and `challengeQuestion` to the teacher's statement and
+stores `authoringBrief` separately from the editable AI draft. The editor
+shows the original purpose for review. A missing AI key now returns an error;
+it must never substitute the unrelated French Revolution fixture. Old clients
+sending `{topic, language}` are still accepted during rollout.
+
+`topicStagePlan(topic)` is shared by StartGame and the create-session fallback:
+new packages with an authoring brief use scenarioWizcol with ONLY vision
+removed; older packages keep their defaults. StartGame caches plans by topic
+id so switching scenarios neither leaks vision back in nor loses manual edits.
+Proposal development, mutual improvement, evaluation and further refinement
+remain the existing deliberation cycles before voting.
+
+Validation: Agora lint/typecheck/tests/build; shared-types `agoraTopicPlan` and
+`agoraRounds`; functions `topicGeneration`; `scripts/e2e-authoring.mjs`.
+Deployment requires rebuilding/packing shared-types, deploying
+`agoraGenerateTopicPackage` and `agoraCreateSession`, and Agora hosting.
 
 ## Teacher self-serve classes (2026-09-07)
 
@@ -69,11 +204,11 @@ stage kinds: a round is a `question` item with a different evaluation type.
 The default plan for a quick game is now
 
 ```
-lobby → question(story) → question(needs) → question(vision) → deliberation → voting → results
+lobby → question(story) → question(needs) → deliberation → voting → results
 ```
 
-(`stagePlanPreset('wizcol')`, item ids `round-story` / `round-needs` /
-`round-vision`), and a scenario game runs its character scenes as the
+(`stagePlanPreset('wizcol')`, item ids `round-story` / `round-needs`; the
+vision round is optional — the teacher adds it in the plan editor), and a scenario game runs its character scenes as the
 prologue (`scenarioWizcol`). `StartGame` seeds both. `classic` and
 `quickDecision` still exist; `AGORA_STAGE_ORDER` is untouched, so plan-less
 and civic sessions run exactly as before. The book's opening (the goal is a
@@ -184,9 +319,9 @@ guard still holds.
   Those names are readable by any signed-in user who knows the session.
 - **Free navigation**: `lib/flows/stageNav.ts` (pure) + `components/StageNav`.
   Opened stages are doors; the player's choice lives in sessionStorage and is
-  carried forward when the room advances. A past stage renders read-only
-  (deliberation → `ResultsBoard`, question → ranked list + outcome, voting →
-  tallies).
+  retained when the room advances. Earlier questions support catch-up until
+  results/end; past deliberation renders `ResultsBoard` and past voting shows
+  tallies.
 - **Admin UI**: `/teach/start` has Scenario / Quick game, names, and the
   `StagePlanEditor` (reducer `lib/flows/stagePlanEditor.ts`; presets
   `classic`, `quickDecision`). The live board shows the plan rail, the
@@ -225,11 +360,18 @@ journey" on the start screen, one of them required.
   on a phone; the thread drawer still layers over it). The students' words fold
   behind `.teacher-peek`. Gone: the tab strip, the rail card, the code panel.
 - **Start** (`StartGame.ts`): scenario rows + "my own question" row → class chips
-  → button → muted summary line → a closed "advanced settings" card holding the
-  plan editor, names, devices, colours, rounds. `classChoice` defaults to the
-  route class, else the only class, else `'none'` when the teacher has no school
-  (so a guest teacher's button is live at once); "no class" is never highlighted
-  by default otherwise.
+  → a CLOSED "advanced settings" card → button. The own question is written on
+  its own surface, `QuestionSheet.ts` (`?question=1` on the same route: a
+  full-screen sheet ≤600px, a dialog over a scrim above; pushed when the row
+  is tapped so the phone's back closes it, replaced when the dashboard sent
+  `?mode=quick` so back leaves to the dashboard). Closing keeps the draft;
+  the row then shows the question as its title with a pencil, or "write the
+  question" while blank. The advanced card carries a live summary line and
+  folds three groups: lesson steps (presets + plan editor + rounds), students
+  (names, device), look and world (village/classic + navigation + colours).
+  `classChoice` defaults to the route class, else the only class, else
+  `'none'` when the teacher has no school (so a guest teacher's button is live
+  at once); "no class" is never highlighted by default otherwise.
 - **Dashboard** (`TeacherHome.ts`): live-lesson banners first, a dismissable
   first-run strip (`localStorage agora.teacher.firstRunDismissed`), scenario rows
   navigate straight to `/teach/start?topic=`, past lessons name the scenario.
@@ -754,3 +896,19 @@ This iteration (2026-07-13/14, on `main-sign`):
   (tokens rewrite, day sky, candy-press buttons, sunny EraMap, camps →
   purple/teal, 📘/📙 icons, WCAG-verified palette)
 - `3504c7a35` removed accidentally-tracked .claude/worktrees gitlinks
+
+### Supervision verification record
+
+- Shared types: 519 tests passed; charts: 120 passed; Agora: 356 passed.
+- Backend scope/projection tests: 11 passed; supervision Firestore rules: 9 passed.
+- Emulator e2e: supervision, class-career and teacher-classes all passed.
+  Additional equal-timestamp pagination probe passed with one session per page.
+- Both app lint/typecheck/build checks passed; root typecheck/build passed.
+  Root lint is still blocked by seven existing errors in untouched files
+  (`fn_agoraSetBallotGoalOnly`, `votingStage`, `updateChosenOptions`,
+  `draftWriter`, `userUtils.test`, `agreementData.test`, `IntroductionSection`).
+- Browser: Hebrew/English at 1280 and 390 px; teacher class/drawer, supervisor
+  school/teacher/class/student/system, unauthorized entry, Studio details and
+  OS dark mode. Keyboard tooltips, Escape, table toggles and page overflow checked.
+- Contrast surface audit passed in default/candy/civic/custom; mobile type audit passed.
+- Screenshots from this run: `/private/tmp/supervision-shots/` (temporary artifacts).

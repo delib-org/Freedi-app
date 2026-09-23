@@ -1,0 +1,97 @@
+{"candidateRank":1,"decision":"accepted","queryId":"p5yca","split":"dev","status":"none"}
+{"candidateRank":2,"decision":"accepted","queryId":"pptbv","split":"dev","status":"none"}
+{"candidateRank":3,"decision":"rejected: hedged/compound proposal (\"such as\", \"possibly\")"}
+{"candidateRank":4,"decision":"accepted","queryId":"p8jmp","split":"test","status":"none"}
+{"candidateRank":5,"decision":"accepted","queryId":"pppcy","split":"test","status":"none"}
+{"candidateRank":6,"decision":"accepted","queryId":"p68um","split":"test","status":"none"}
+{"candidateRank":7,"decision":"accepted","queryId":"ptcr8","split":"test","status":"none"}
+{"candidateRank":8,"decision":"rejected: no identifiable action — equivalence undecidable"}
+{"candidateRank":9,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":10,"decision":"rejected: no identifiable action — equivalence undecidable"}
+{"candidateRank":11,"decision":"rejected: no identifiable action — equivalence undecidable"}
+{"candidateRank":12,"decision":"accepted","queryId":"pu3fh","split":"test","status":"none"}
+{"candidateRank":13,"decision":"accepted","queryId":"pqeyn","split":"test","status":"none"}
+{"candidateRank":14,"decision":"accepted","queryId":"pns2r","split":"test","status":"none"}
+{"candidateRank":15,"decision":"accepted","queryId":"pxn3z","split":"test","status":"none"}
+{"candidateRank":16,"decision":"accepted","queryId":"pugud","split":"test","status":"none"}
+{"candidateRank":17,"decision":"rejected: no identifiable action — equivalence undecidable"}
+{"candidateRank":18,"decision":"accepted","queryId":"pudtd","split":"test","status":"none"}
+{"candidateRank":19,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":20,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":21,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":22,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":23,"decision":"accepted","queryId":"pxjks","split":"dev","status":"match"}
+{"candidateRank":24,"decision":"rejected: no identifiable action — equivalence undecidable"}
+{"candidateRank":25,"decision":"accepted","queryId":"pk7ki","split":"dev","status":"match"}
+{"candidateRank":26,"decision":"accepted","queryId":"ptgpf","split":"test","status":"match"}
+{"candidateRank":27,"decision":"rejected: compound list of several separate changes"}
+{"candidateRank":28,"decision":"accepted","queryId":"paak8","split":"test","status":"match"}
+{"candidateRank":29,"decision":"rejected: no identifiable action — equivalence undecidable"}
+{"candidateRank":30,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":31,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":32,"decision":"accepted","queryId":"pnyg7","split":"test","status":"match"}
+{"candidateRank":33,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":34,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":35,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":36,"decision":"accepted","queryId":"pc3m2","split":"test","status":"match"}
+{"candidateRank":37,"decision":"rejected: already labelled inside the core of accepted query pu3fh"}
+{"candidateRank":38,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":39,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":40,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":41,"decision":"rejected: already labelled inside the core of accepted query pudtd"}
+{"candidateRank":42,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":43,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":44,"decision":"accepted","queryId":"pyr2u","split":"test","status":"match"}
+{"candidateRank":45,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":46,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":47,"decision":"accepted","queryId":"pymzr","split":"test","status":"match"}
+{"candidateRank":48,"decision":"rejected: already labelled inside the core of accepted query pk7ki"}
+{"candidateRank":49,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":50,"decision":"rejected: already labelled inside the core of accepted query pppcy"}
+{"candidateRank":51,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":52,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":53,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":54,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":55,"decision":"accepted","queryId":"peqy9","split":"test","status":"match"}
+{"candidateRank":56,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":57,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":58,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":59,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":60,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":61,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":62,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":63,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":64,"decision":"accepted","queryId":"pktbx","split":"test","status":"match"}
+{"candidateRank":65,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":66,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":67,"decision":"rejected: no identifiable action — equivalence undecidable"}
+{"candidateRank":68,"decision":"rejected: already labelled inside the core of accepted query pxjks"}
+{"candidateRank":69,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":70,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":71,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":72,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":73,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":74,"decision":"rejected: compound list of several separate changes"}
+{"candidateRank":75,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":76,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":77,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":78,"decision":"rejected: already labelled inside the core of accepted query ptgpf"}
+{"candidateRank":79,"decision":"rejected: already labelled inside the core of accepted query p68um"}
+{"candidateRank":80,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":81,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":82,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":83,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":84,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":85,"decision":"rejected: already labelled inside the core of accepted query p68um"}
+{"candidateRank":86,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":87,"decision":"rejected: not a proposal (statement, complaint, opinion)"}
+{"candidateRank":88,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":89,"decision":"rejected: no identifiable action — equivalence undecidable"}
+{"candidateRank":90,"decision":"accepted","queryId":"ptwgu","split":"test","status":"match"}
+{"candidateRank":91,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":92,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":93,"decision":"rejected: already labelled inside the core of accepted query p5yca"}
+{"candidateRank":94,"decision":"rejected: already labelled inside the core of accepted query p5yca"}
+{"candidateRank":95,"decision":"rejected: already labelled inside the core of accepted query paak8"}
+{"candidateRank":96,"decision":"rejected: provisionally no-match and the no-match stratum was already full"}
+{"candidateRank":97,"decision":"accepted","queryId":"p6xjr","split":"test","status":"match"}

@@ -26,14 +26,13 @@ const kindsOf = (plan: AgoraStagePlanItem[]): string[] =>
 	plan.map((item) => (item.stage === AgoraStage.question ? `question:${questionKindOf(item)}` : item.stage));
 
 describe('the WizCol presets', () => {
-	it('wizcol runs the three rounds as question items, then the square and the vote', () => {
+	it('wizcol runs story and needs as question items, then the square and the vote — no vision', () => {
 		const plan = stagePlanPreset('wizcol');
 
 		expect(kindsOf(plan)).toEqual([
 			AgoraStage.lobby,
 			'question:story',
 			'question:needs',
-			'question:vision',
 			AgoraStage.deliberation,
 			AgoraStage.voting,
 			AgoraStage.results,

@@ -1,8 +1,10 @@
+import { getTeacherNavState } from '../../lib/teacherNav';
 import m from 'mithril';
 import { Icon } from '../../components/Icon';
 import { getLang, t } from '../../lib/i18n';
 import { getUserState, signInWithGoogle, ensureUser } from '../../lib/user';
 import {
+	fetchSessionHistory,
 	classLabel,
 	fetchTeacherDashboard,
 	listTopicPackages,
@@ -52,7 +54,27 @@ export function TeacherHome(): m.Component {
 	let addClassError: string | null = null;
 	let sessions: AgoraSession[] = [];
 	let aggregates = new Map<string, AgoraClassAggregate>();
-	let loaded = false;
+	let showAllScenarios = false;
+	let historyOpen = false;
+	let historyLoading = false;
+	let historyError = false;
+	let historyStarted = false;
+	let historyMore = true;
+	let historySearch = '';
+	let historyClass = '';
+	let historyCursor: Awaited<ReturnType<typeof fetchSessionHistory>>['cursor'];
+	let historySessions: AgoraSession[] = [];
+	/**
+	 * The shelf and the classes are two independent reads, so they are two
+	 * independent waits. They used to share one flag and one page-wide spinner:
+	 * the whole dashboard stayed blank until the slower of the two landed —
+	 * which, on a cold console call, is seconds of nothing while the answer to
+	 * the other question has been sitting in memory the whole time.
+	 */
+	let topicsLoaded = false;
+	let dashboardLoaded = false;
+	/** A school named this account as its supervisor, or it runs the system */
+	let canSupervise = false;
 	/**
 	 * Whose library is on screen. Auth settles in two beats — an anonymous
 	 * account first, the teacher's Google one a moment later — and the dashboard
@@ -62,7 +84,112 @@ export function TeacherHome(): m.Component {
 	 */
 	let loadedForUid: string | null = null;
 	let refilling = false;
+	/**
+	 * The load running now, keyed by the account it reads for. A
+	 * credential-recovery sign-in changes the uid, and then both the sign-in
+	 * button's `.then(load)` and {@link refillIfAccountChanged} ask for the new
+	 * account at once: two shelf reads could both come back empty and both
+	 * provision the default scenario. Callers for the same account share one
+	 * load instead.
+	 */
+	let inFlight: { key: string; promise: Promise<void> } | null = null;
+	/** Accounts this page already provisioned for — never twice, whatever races */
+	const provisionedFor = new Set<string>();
 	let firstRunHidden = firstRunDismissed();
+
+	async function loadHistory(): Promise<void> {
+		const uid = getUserState().user?.uid;
+		if (!uid || historyLoading) return;
+		historyLoading = true;
+		historyError = false;
+		try {
+			const page = await fetchSessionHistory(uid, historyCursor);
+			if (getUserState().user?.uid !== uid) return;
+			historySessions = [...historySessions, ...page.sessions];
+			historyCursor = page.cursor;
+			historyMore = page.hasMore;
+			historyStarted = true;
+		} catch {
+			historyError = true;
+		} finally {
+			historyLoading = false;
+			m.redraw();
+		}
+	}
+
+	function historyPanel(): m.Children {
+		const filtered = historySessions.filter(
+			(s) =>
+				!isSessionLive(s) &&
+				(!historyClass || s.classId === historyClass) &&
+				`${lessonTitle(s) ?? ''} ${className(s)} ${s.code}`
+					.toLocaleLowerCase()
+					.includes(historySearch.toLocaleLowerCase()),
+		);
+		const groups = new Map<string, AgoraSession[]>();
+		for (const session of filtered) {
+			const month = new Date(session.createdAt).toLocaleDateString(getLang(), {
+				year: 'numeric',
+				month: 'long',
+			});
+			groups.set(month, [...(groups.get(month) ?? []), session]);
+		}
+
+		return m('.card.stack', [
+			m(
+				'button.btn.btn--secondary',
+				{
+					'aria-expanded': historyOpen,
+					onclick: () => {
+						historyOpen = !historyOpen;
+						if (historyOpen && !historyStarted) void loadHistory();
+					},
+				},
+				'ארכיון השיעורים והפתרונות',
+			),
+			m('p', 'שיעורי העבר נשמרים לפי חודש וכיתה. בכל שיעור אפשר לפתוח את הדוח והפתרונות שלו.'),
+			historyOpen
+				? m('.stack', [
+						m('input.text-input', {
+							placeholder: 'חיפוש בכותרת, בכיתה או בקוד מתוך השיעורים שנטענו',
+							'aria-label': 'חיפוש בארכיון',
+							value: historySearch,
+							oninput: (e: InputEvent) => {
+								historySearch = (e.target as HTMLInputElement).value;
+							},
+						}),
+						m(
+							'select.text-input',
+							{
+								'aria-label': 'סינון לפי כיתה',
+								value: historyClass,
+								onchange: (e: Event) => {
+									historyClass = (e.target as HTMLSelectElement).value;
+								},
+							},
+							[
+								m('option', { value: '' }, 'כל הכיתות'),
+								...classes.map((c) => m('option', { value: c.classId }, c.name)),
+							],
+						),
+						...[...groups].map(([month, list]) =>
+							m('.stack', [m('h3', month), m('.stack', list.map(sessionRow))]),
+						),
+						!filtered.length && !historyLoading
+							? m('p', 'לא נמצאו שיעורים בהיסטוריה שנטענה. אפשר לטעון שיעורים מוקדמים יותר.')
+							: null,
+						historyError ? m('p[role=alert]', 'הארכיון לא נטען. אפשר לנסות שוב.') : null,
+						historyMore || historyError
+							? m(
+									'button.btn.btn--secondary',
+									{ disabled: historyLoading, onclick: () => void loadHistory() },
+									historyLoading ? 'טוענים…' : 'טעינת שיעורים נוספים',
+								)
+							: null,
+					])
+				: null,
+		]);
+	}
 
 	function dismissFirstRun(): void {
 		firstRunHidden = true;
@@ -97,59 +224,150 @@ export function TeacherHome(): m.Component {
 	}
 
 	/**
-	 * Heal packages provisioned before the bundled artwork existed. Runs
-	 * fire-and-forget so it never blocks the dashboard from rendering.
+	 * Heal packages provisioned before the bundled artwork existed.
+	 *
+	 * Truly fire-and-forget, as the comment here always claimed: it is a
+	 * backfill write, and awaiting it held the shelf — and behind the old
+	 * shared flag, the whole page — behind one Firestore round trip per
+	 * package. The patched copy is folded back in and redrawn when it lands.
 	 */
-	async function healArtwork(pkg: AgoraTopicPackage): Promise<AgoraTopicPackage> {
+	function healArtwork(pkg: AgoraTopicPackage): void {
 		const patch = backfillDefaultArtwork(pkg);
-		if (!patch) return pkg;
-		const patched = { ...pkg, ...patch, lastUpdate: Date.now() };
-		try {
-			await patchTopicPackage(pkg.topicPackageId, patch);
-		} catch (error) {
-			console.error('[Teacher] Backfilling default artwork failed:', error);
-
-			return pkg;
-		}
-
-		return patched;
+		if (!patch) return;
+		patchTopicPackage(pkg.topicPackageId, patch)
+			.then(() => {
+				topics = topics.map((current) =>
+					current.topicPackageId === pkg.topicPackageId
+						? { ...current, ...patch, lastUpdate: Date.now() }
+						: current,
+				);
+				m.redraw();
+			})
+			.catch((error: unknown) => {
+				console.error('[Teacher] Backfilling default artwork failed:', error);
+			});
 	}
 
-	async function load(): Promise<void> {
+	/** The scenario shelf. Independent of the console — it reads Firestore direct. */
+	async function loadTopics(user: { uid: string; isAnonymous: boolean }): Promise<void> {
 		try {
-			const user = await ensureUser();
-			loadedForUid = user.uid;
-
-			let loadedTopics = await listTopicPackages(user.uid);
-			loadedTopics = await Promise.all(loadedTopics.map((pkg) => healArtwork(pkg)));
-			if (loadedTopics.length === 0 && !user.isAnonymous) {
-				const defaultTopic = await provisionDefaultTopic(user.uid);
-				if (defaultTopic) loadedTopics.push(defaultTopic);
-			}
+			const loadedTopics = await listTopicPackages(user.uid);
+			if (loadedForUid !== user.uid) return;
 			topics = loadedTopics;
-
-			// One round trip for classes, aggregates and recent games — fails
-			// soft: a console hiccup must not blank the scenario library. Not
-			// asked at all before the Google sign-in: the console refuses an
-			// anonymous caller, and the refusal read as an error on a page that
-			// was simply still waiting for the teacher to sign in.
-			try {
-				if (user.isAnonymous) throw new Error('anonymous');
-				const dashboard = await fetchTeacherDashboard();
-				classes = dashboard.classes;
-				schools = dashboard.schools;
-				sessions = dashboard.sessions;
-				aggregates = dashboard.aggregates;
-				noteTeacherDashboard(dashboard);
-			} catch (error) {
-				if (!(error instanceof Error && error.message === 'anonymous')) {
-					console.error('[Teacher] Loading dashboard data failed:', error);
+			topicsLoaded = true;
+			m.redraw();
+			loadedTopics.forEach(healArtwork);
+			if (loadedTopics.length === 0 && !user.isAnonymous && !provisionedFor.has(user.uid)) {
+				provisionedFor.add(user.uid);
+				const defaultTopic = await provisionDefaultTopic(user.uid);
+				if (defaultTopic && loadedForUid === user.uid) {
+					topics = [defaultTopic];
+					m.redraw();
 				}
 			}
 		} catch (error) {
-			console.error('[Teacher] Loading dashboard failed:', error);
+			console.error('[Teacher] Loading the scenario shelf failed:', error);
+			topicsLoaded = true;
+			m.redraw();
 		}
-		loaded = true;
+	}
+
+	/**
+	 * One round trip for classes, aggregates and recent games — fails soft: a
+	 * console hiccup must not blank the scenario library. Not asked at all
+	 * before the Google sign-in: the console refuses an anonymous caller, and
+	 * the refusal read as an error on a page that was simply still waiting for
+	 * the teacher to sign in.
+	 */
+	async function loadDashboard(user: { uid: string; isAnonymous: boolean }): Promise<void> {
+		// Auth's first beat is an anonymous account and the console refuses it.
+		// That beat is not an answer, so it must not be recorded as one: marked
+		// loaded here, the classes area spent the wait for the Google account
+		// saying "no classes yet — ask your admin", which is a different
+		// sentence from "still looking". The screen it belongs to is the
+		// sign-in prompt, which is what tier 0 renders anyway.
+		if (user.isAnonymous) return;
+		try {
+			const dashboard = await fetchTeacherDashboard(user.uid);
+			if (loadedForUid !== user.uid) return;
+			classes = dashboard.classes;
+			schools = dashboard.schools;
+			sessions = dashboard.sessions;
+			canSupervise = dashboard.supervisedSchools.length > 0 || dashboard.isSystemAdmin;
+			aggregates = dashboard.aggregates;
+			noteTeacherDashboard(dashboard, user.uid);
+		} catch (error) {
+			console.error('[Teacher] Loading dashboard data failed:', error);
+		}
+		dashboardLoaded = true;
+		m.redraw();
+	}
+
+	/** Forget everything the last account put on screen */
+	function clearAccountData(): void {
+		topics = [];
+		classes = [];
+		schools = [];
+		sessions = [];
+		aggregates = new Map();
+		addClassOpen = false;
+		addClassError = null;
+		showAllScenarios = false;
+		historySessions = [];
+		historyCursor = undefined;
+		historyStarted = false;
+		historyOpen = false;
+		historyError = false;
+		historySearch = '';
+		historyClass = '';
+		historyMore = true;
+	}
+
+	/** Single-flight: concurrent callers for the same account share one load */
+	async function load(): Promise<void> {
+		let user: Awaited<ReturnType<typeof ensureUser>>;
+		try {
+			user = await ensureUser();
+		} catch (error) {
+			console.error('[Teacher] Loading dashboard failed:', error);
+			topicsLoaded = true;
+			dashboardLoaded = true;
+			m.redraw();
+
+			return;
+		}
+		const key = `${user.uid}:${user.isAnonymous ? 'anon' : 'signed'}`;
+		if (inFlight?.key === key) return inFlight.promise;
+		const promise = loadFor(user).finally(() => {
+			if (inFlight?.promise === promise) inFlight = null;
+		});
+		inFlight = { key, promise };
+
+		return promise;
+	}
+
+	async function loadFor(user: { uid: string; isAnonymous: boolean }): Promise<void> {
+		try {
+			if (loadedForUid !== user.uid) {
+				// A different account's answers are not this one's. Both sections
+				// go back to waiting rather than show the last teacher's shelf —
+				// and the data itself goes too, so a failed read for the new
+				// account paints empty, never the previous teacher's cards.
+				clearAccountData();
+				topicsLoaded = false;
+				dashboardLoaded = false;
+			}
+			loadedForUid = user.uid;
+
+			// The shelf and the console answer different questions of different
+			// servers. Asked together, the page waits for the slower one — not
+			// for both, one after the other.
+			await Promise.all([loadTopics(user), loadDashboard(user)]);
+		} catch (error) {
+			console.error('[Teacher] Loading dashboard failed:', error);
+			topicsLoaded = true;
+			dashboardLoaded = true;
+		}
 		m.redraw();
 	}
 
@@ -206,15 +424,8 @@ export function TeacherHome(): m.Component {
 
 	/** A finished lesson: the class, what it was about, when, and how it went */
 	function sessionRow(session: AgoraSession): m.Children {
-		return m(
-			'.dashboard__game-row',
-			{
-				key: session.sessionId,
-				onclick: () => m.route.set(`/teach/report/${session.sessionId}`),
-				role: 'button',
-				tabindex: 0,
-			},
-			[
+		return m('.card.stack', { key: session.sessionId }, [
+			m('.dashboard__game-row', [
 				m('.dashboard__game-main', [
 					m('strong', className(session)),
 					m('span.dashboard__game-title', lessonTitle(session) ?? ''),
@@ -223,16 +434,30 @@ export function TeacherHome(): m.Component {
 						new Date(session.createdAt).toLocaleDateString(getLang(), {
 							day: 'numeric',
 							month: 'short',
+							year: 'numeric',
 						}),
 					),
 				]),
-				m('.dashboard__game-side', [
+				m(
+					'.dashboard__game-side',
 					session.classScore
 						? m('span.dashboard__score-pill', String(session.classScore.total))
-						: m('span.dashboard__status-pill', t('dashboard.not_finished')),
-				]),
-			],
-		);
+						: m('span.dashboard__status-pill', 'ללא ציון מסכם'),
+				),
+			]),
+			m('.teacher__mode-row', [
+				m(
+					'button.btn.btn--secondary.btn--sm',
+					{ onclick: () => m.route.set(`/teach/report/${session.sessionId}`) },
+					'דוח השיעור',
+				),
+				m(
+					'button.btn.btn--ghost.btn--sm',
+					{ onclick: () => m.route.set(`/teach/session/${session.sessionId}`) },
+					'המסע והפתרונות',
+				),
+			]),
+		]);
 	}
 
 	/** The three lines that are the whole of running a lesson */
@@ -368,11 +593,15 @@ export function TeacherHome(): m.Component {
 				...(value.gradeLevel ? { gradeLevel: value.gradeLevel } : {}),
 				...(value.schoolId ? { schoolId: value.schoolId } : {}),
 			});
-			const dashboard = await fetchTeacherDashboard();
-			classes = dashboard.classes;
-			schools = dashboard.schools;
-			aggregates = dashboard.aggregates;
-			noteTeacherDashboard(dashboard);
+			const uid = loadedForUid;
+			const dashboard = await fetchTeacherDashboard(uid ?? undefined);
+			// The account can change under the round trip; its answer is not the new one's
+			if (loadedForUid === uid) {
+				classes = dashboard.classes;
+				schools = dashboard.schools;
+				aggregates = dashboard.aggregates;
+				noteTeacherDashboard(dashboard, uid);
+			}
 			addClassOpen = false;
 		} catch (error) {
 			console.error('[Teacher] Creating a class failed:', error);
@@ -475,7 +704,8 @@ export function TeacherHome(): m.Component {
 									onclick: () => {
 										signInWithGoogle()
 											.then(() => {
-												loaded = false;
+												topicsLoaded = false;
+												dashboardLoaded = false;
 												void load();
 											})
 											.catch((error: unknown) => {
@@ -492,7 +722,7 @@ export function TeacherHome(): m.Component {
 			}
 
 			const live = sessions.filter(isSessionLive);
-			const finished = sessions.filter((session) => !isSessionLive(session));
+			const reusableTopics = topics.filter((topic) => topic.kind !== 'quick');
 			const showFirstRun =
 				!firstRunHidden && sessions.every((session) => session.classScore === undefined);
 
@@ -504,77 +734,96 @@ export function TeacherHome(): m.Component {
 				}),
 
 				m('.shell__content', { style: { gap: 'var(--space-xl)' } }, [
-					!loaded
-						? m('.spinner')
-						: [
-								// A lesson running now leads: the teacher who reloaded
-								// mid-period wants back in, not a shelf. Its own fragment —
-								// keyed rows cannot share a parent with unkeyed siblings.
-								live.map(liveBanner),
+					// A lesson running now leads: the teacher who reloaded
+					// mid-period wants back in, not a shelf. Its own fragment —
+					// keyed rows cannot share a parent with unkeyed siblings.
+					live.map(liveBanner),
+					// The supervisor's door — only for an account a school has named
+					canSupervise || getTeacherNavState().canSupervise
+						? m(m.route.Link, { href: '/supervise', class: 'dashboard__supervise-card' }, [
+								m('span.dashboard__supervise-icon', m(Icon, { name: 'people', size: 28 })),
+								m('span.dashboard__supervise-text', [
+									m('strong.dashboard__class-name', t('dashboard.supervise_card')),
+									m('span.dashboard__class-meta', t('dashboard.supervise_sub')),
+								]),
+							])
+						: null,
+					m(
+						m.route.Link,
+						{ href: '/teach/activity', class: 'btn btn--ghost' },
+						t('supervise.myActivity'),
+					),
 
-								showFirstRun ? firstRunStrip() : null,
+					dashboardLoaded && showFirstRun ? firstRunStrip() : null,
 
-								// What are we teaching today? A tap on a scenario is the
-								// whole choice; the start screen opens holding it.
-								m('.stack', [
-									m('p.teacher__section-title', t('dashboard.scenarios')),
-									topics.length === 0
-										? m('p.home-explanation.home-explanation--start', t('teacher.no_topics'))
-										: m(
-												'p.home-explanation.home-explanation--start',
-												t('dashboard.scenarios_hint'),
-											),
-									m('ul.scenario-list', { role: 'list' }, [
-										...shelfOrder(topics).map(scenarioRow),
-										ownQuestionRow(),
+					// What are we teaching today? A tap on a scenario is the
+					// whole choice; the start screen opens holding it.
+					!topicsLoaded
+						? m('.stack', [m('p.teacher__section-title', t('dashboard.scenarios')), m('.spinner')])
+						: m('.stack', [
+								m('p.teacher__section-title', t('dashboard.scenarios')),
+								reusableTopics.length === 0
+									? m('p.home-explanation.home-explanation--start', t('teacher.no_topics'))
+									: m('p.home-explanation.home-explanation--start', t('dashboard.scenarios_hint')),
+								m('ul.scenario-list', { role: 'list' }, [
+									...shelfOrder(reusableTopics)
+										.slice(0, showAllScenarios ? undefined : 6)
+										.map(scenarioRow),
+									ownQuestionRow(),
+								]),
+								reusableTopics.length > 6
+									? m(
+											'button.btn.btn--ghost',
+											{
+												onclick: () => {
+													showAllScenarios = !showAllScenarios;
+												},
+											},
+											showAllScenarios
+												? 'הצגת פחות תרחישים'
+												: `כל התרחישים (${reusableTopics.length})`,
+										)
+									: null,
+								m(
+									'button.btn.btn--ghost.btn--sm.dashboard__new-scenario',
+									{ type: 'button', onclick: () => m.route.set('/teach/new') },
+									t('teacher.create_topic'),
+								),
+							]),
+
+					// My classes: the ones I have, and — in a school the admin attached
+					// me to — a card that opens another. With neither, say what to ask for.
+					!dashboardLoaded
+						? m('.stack', [m('p.teacher__section-title', t('dashboard.my_classes')), m('.spinner')])
+						: classes.length > 0 || schools.length > 0
+							? m('.stack', [
+									m('p.teacher__section-title', t('dashboard.my_classes')),
+									m('.dashboard__class-grid', [
+										...classes.map(classCard),
+										schools.length > 0 ? addClassCard() : null,
 									]),
-									m(
-										'button.btn.btn--ghost.btn--sm.dashboard__new-scenario',
-										{ type: 'button', onclick: () => m.route.set('/teach/new') },
-										t('teacher.create_topic'),
-									),
+									addClassOpen
+										? m('.card.stack', [
+												m(ClassForm, {
+													schools,
+													submitLabel: t('classForm.create'),
+													busyLabel: t('classForm.creating'),
+													busy: creatingClass,
+													error: addClassError,
+													onSubmit: (value) => void createClass(value),
+													onCancel: () => {
+														addClassOpen = false;
+													},
+												}),
+											])
+										: null,
+								])
+							: m('.stack', [
+									m('p.teacher__section-title', t('dashboard.my_classes')),
+									m('p.home-explanation.home-explanation--start', t('dashboard.no_school_text')),
 								]),
 
-								// My classes: the ones I have, and — in a school the admin attached
-								// me to — a card that opens another. With neither, say what to ask for.
-								classes.length > 0 || schools.length > 0
-									? m('.stack', [
-											m('p.teacher__section-title', t('dashboard.my_classes')),
-											m('.dashboard__class-grid', [
-												...classes.map(classCard),
-												schools.length > 0 ? addClassCard() : null,
-											]),
-											addClassOpen
-												? m('.card.stack', [
-														m(ClassForm, {
-															schools,
-															submitLabel: t('classForm.create'),
-															busyLabel: t('classForm.creating'),
-															busy: creatingClass,
-															error: addClassError,
-															onSubmit: (value) => void createClass(value),
-															onCancel: () => {
-																addClassOpen = false;
-															},
-														}),
-													])
-												: null,
-										])
-									: m('.stack', [
-											m('p.teacher__section-title', t('dashboard.my_classes')),
-											m(
-												'p.home-explanation.home-explanation--start',
-												t('dashboard.no_school_text'),
-											),
-										]),
-
-								finished.length > 0
-									? m('.stack', [
-											m('p.teacher__section-title', t('dashboard.my_games')),
-											m('.stack', finished.map(sessionRow)),
-										])
-									: null,
-							],
+					dashboardLoaded ? historyPanel() : null,
 				]),
 			]);
 		},

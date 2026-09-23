@@ -80,7 +80,7 @@
 		height: 36px;
 		border-radius: 8px;
 		background-color: var(--icons-blue);
-		color: white;
+		color: var(--btn-primary-text);
 		flex-shrink: 0;
 
 		svg {
@@ -232,5 +232,22 @@
 				transform: none;
 			}
 		}
+	}
+}
+
+.settingsSection {
+	border: 1px solid var(--space-line);
+	border-radius: 28px;
+	box-shadow: none;
+	&.priority--high,
+	&.priority--medium,
+	&.priority--low {
+		border-inline-start: 1px solid var(--space-line);
+		border-left: 1px solid var(--space-line);
+	}
+	&__header {
+		background: var(--space-surface);
+		border-color: var(--space-line);
+		padding: 24px;
 	}
 }

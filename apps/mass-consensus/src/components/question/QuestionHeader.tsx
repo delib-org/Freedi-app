@@ -10,13 +10,15 @@ import styles from './QuestionHeader.module.css';
 
 interface QuestionHeaderProps {
   question: Statement;
+  /** Position in a multi-question survey; omitted = no number */
+  questionNumber?: number;
 }
 
 /**
  * Client Component - Question header
  * Displays question title and description with translations
  */
-export default function QuestionHeader({ question }: QuestionHeaderProps) {
+export default function QuestionHeader({ question, questionNumber }: QuestionHeaderProps) {
   const { t, tWithParams, currentLanguage } = useTranslation();
   const solutionCount = question.totalSubStatements || question.suggestions || 0;
 
@@ -32,6 +34,9 @@ export default function QuestionHeader({ question }: QuestionHeaderProps) {
   return (
     <header className={styles.header}>
       <h1 className={styles.title}>
+        {questionNumber !== undefined && (
+          <span className={styles.questionNumber}>{questionNumber})</span>
+        )}
         <InlineMarkdown text={question.statement} />
       </h1>
       {getParagraphsText(question.paragraphs) && (

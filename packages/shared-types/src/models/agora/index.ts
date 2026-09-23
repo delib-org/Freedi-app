@@ -56,6 +56,7 @@ export {
 	AgoraArtworkSchema,
 	AgoraValueAnswerKeySchema,
 	AgoraTopicPackageSchema,
+	topicStagePlan,
 } from './agoraTopicPackage';
 
 export type {
@@ -268,6 +269,7 @@ export type { AgoraValueAnswer } from './agoraValueAnswer';
 export { AgoraValueAnswerSchema, createAgoraValueAnswerId } from './agoraValueAnswer';
 
 export type { BridgingInput } from './agoraBridging';
+export { BRIDGE_ZONE, backing, campLean, boardPercent, inBridgeZone } from './agoraGoal';
 export {
 	deriveCamp,
 	calcBridgingScore,
@@ -322,6 +324,75 @@ export {
 	advancementSummary,
 } from './agoraClassroom';
 
+export type { SupervisorScope } from './agoraSupervisor';
+export {
+	resolveSupervisorScope,
+	isTeacherInScope,
+	isClassInScope,
+	schoolTeacherUids,
+} from './agoraSupervisor';
+
+export type {
+	AgoraTeacherLessonRow,
+	AgoraTeacherMonthBucket,
+	AgoraTeacherAggregate,
+	AgoraLessonSpan,
+	LessonSpanSession,
+	LessonRowSession,
+} from './agoraTeacherAggregate';
+export {
+	AGORA_TEACHER_AGGREGATE,
+	AgoraTeacherLessonRowSchema,
+	AgoraTeacherMonthBucketSchema,
+	AgoraTeacherAggregateSchema,
+	monthKeyOf,
+	dayKeyOf,
+	emptyTeacherAggregate,
+	mergeTeacherLesson,
+	deriveLessonSpan,
+	teacherLessonRowFrom,
+} from './agoraTeacherAggregate';
+
+export type {
+	AgoraTeacherSurface,
+	AgoraUsageSlice,
+	AgoraTeacherUsageMonth,
+	HeartbeatInput,
+	HeartbeatResult,
+	AgoraPeriod,
+	AgoraUsageSeries,
+	LessonSeries,
+} from './agoraTeacherUsage';
+export {
+	AGORA_TEACHER_SURFACES,
+	AgoraTeacherSurfaceSchema,
+	AGORA_TEACHER_USAGE,
+	AgoraUsageSliceSchema,
+	AgoraTeacherUsageMonthSchema,
+	createAgoraTeacherUsageId,
+	creditHeartbeat,
+	dayKeyToMs,
+	dayKeysBetween,
+	weekStartOf,
+	bucketUsage,
+	lessonSeries,
+} from './agoraTeacherUsage';
+
+export type {
+	SupervisorConsoleRequest,
+	SupervisorTeacherRow,
+	SupervisorClassRow,
+	SupervisorOverview,
+	SupervisorSessionRow,
+	SupervisorTeacherDetail,
+	SupervisorClassDetail,
+	SupervisorStudentDetail,
+	SupervisorSystemView,
+	SupervisorConsoleResponse,
+	BackfillTeacherAggregatesRequest,
+	BackfillTeacherAggregatesResponse,
+} from './agoraSupervisorCallables';
+
 export type {
 	ManageSchoolRequest,
 	TeacherClassRequest,
@@ -347,6 +418,8 @@ export type {
 	ModerateStatementResponse,
 	RewordQuestionRequest,
 	RewordQuestionResponse,
+	TeacherHeartbeatRequest,
+	TeacherHeartbeatResponse,
 } from './agoraClassroomCallables';
 
 export type { AgoraModeration, ModeratedDoc } from './agoraModeration';

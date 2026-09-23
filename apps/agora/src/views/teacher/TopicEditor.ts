@@ -374,6 +374,18 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 						},
 					}),
 
+					current.authoringBrief
+						? m('.card.stack', [
+								m('p.teacher__section-title', t('wizard.description_label')),
+								m(
+									'p.home-card__text',
+									{ style: { whiteSpace: 'pre-wrap' } },
+									current.authoringBrief.description,
+								),
+								m('p.home-explanation', t('wizard.method_hint')),
+							])
+						: null,
+
 					m('label.teacher__section-title', t('editor.framing')),
 					textArea(current.framingText, 3, (next) => {
 						pkg = { ...current, framingText: next };

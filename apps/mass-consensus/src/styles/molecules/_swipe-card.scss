@@ -63,12 +63,22 @@
     opacity: 0.55; // Visible but allows text readability
     transition: opacity 0.2s ease-out;
 
+    // The colour lives on its own layer so the survey's card colour intensity
+    // (--card-color-intensity, 0–1) fades only the tint, never the emoji
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--swipe-zone-color);
+      opacity: var(--card-color-intensity, 1);
+    }
+
     // Zone colors (Universal: left to right, negative to positive)
-    &--zone-0 { background: var(--rating-strongly-disagree); }
-    &--zone-1 { background: var(--rating-disagree); }
-    &--zone-2 { background: var(--rating-neutral); }
-    &--zone-3 { background: var(--rating-agree); }
-    &--zone-4 { background: var(--rating-strongly-agree); }
+    &--zone-0 { --swipe-zone-color: var(--rating-strongly-disagree); }
+    &--zone-1 { --swipe-zone-color: var(--rating-disagree); }
+    &--zone-2 { --swipe-zone-color: var(--rating-neutral); }
+    &--zone-3 { --swipe-zone-color: var(--rating-agree); }
+    &--zone-4 { --swipe-zone-color: var(--rating-strongly-agree); }
 
     // Highlighted state
     &--active {

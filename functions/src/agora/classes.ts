@@ -16,6 +16,10 @@ import {
 	AGORA_CLASSROOM,
 } from '@freedi/shared-types';
 import { generateUniqueClassCode } from './joinCodes';
+import { logError } from '../utils/errorHandling';
+
+/** gRPC status for a missing document */
+const NOT_FOUND = 5;
 
 /** A trimmed, length-capped label, or the refusal the caller should throw. */
 export function cleanClassName(name: string | undefined, what: string): string {
@@ -140,6 +144,40 @@ export async function archiveClass(agoraClass: AgoraClass): Promise<void> {
 	await batch.commit();
 }
 
+/**
+ * Carry a teacherMap change onto the class's aggregate doc, which keeps its
+ * own copy so a teacher's browser can query advancement without the rule
+ * reading the class per document.
+ *
+ * `update` and not `set`: the aggregate exists only once a class has finished
+ * a game, and a merge would otherwise conjure a document holding nothing but a
+ * teacherMap — one that fails its own schema the moment a console reads it.
+ * A class that has never played has no advancement to read either.
+ */
+async function syncAggregateTeacher(
+	classId: string,
+	teacherUid: string,
+	value: true | FieldValue,
+): Promise<void> {
+	try {
+		await db
+			.collection(Collections.agoraClassAggregates)
+			.doc(classId)
+			.update({ [`teacherMap.${teacherUid}`]: value, lastUpdate: Date.now() });
+	} catch (error) {
+		// NOT_FOUND — the class has never finished a game. Nothing to carry.
+		if ((error as { code?: unknown }).code === NOT_FOUND) return;
+		// Anything else leaves the aggregate's map disagreeing with the class —
+		// a removed teacher would keep reading its advancement. Fail the call so
+		// the admin retries; both writes are idempotent.
+		logError(error, {
+			operation: 'agora.classes.syncAggregateTeacher',
+			metadata: { classId, teacherUid },
+		});
+		throw error;
+	}
+}
+
 /** Put a teacher on a class (arrayUnion + the equality index), in one write. */
 export async function addClassTeacher(classId: string, teacherUid: string): Promise<void> {
 	await db
@@ -150,6 +188,7 @@ export async function addClassTeacher(classId: string, teacherUid: string): Prom
 			[`teacherMap.${teacherUid}`]: true,
 			lastUpdate: Date.now(),
 		});
+	await syncAggregateTeacher(classId, teacherUid, true);
 }
 
 /** Take a teacher off a class — both halves of the index together. */
@@ -162,4 +201,5 @@ export async function removeClassTeacher(classId: string, teacherUid: string): P
 			[`teacherMap.${teacherUid}`]: FieldValue.delete(),
 			lastUpdate: Date.now(),
 		});
+	await syncAggregateTeacher(classId, teacherUid, FieldValue.delete());
 }

@@ -1,3 +1,9 @@
+import {
+	orderBy,
+	startAfter,
+	type QueryDocumentSnapshot,
+	type DocumentData,
+} from 'firebase/firestore';
 import { t } from './i18n';
 import { parse } from 'valibot';
 import {
@@ -5,6 +11,8 @@ import {
 	AgoraCamp,
 	AgoraClassAggregate,
 	AgoraClassAggregateSchema,
+	AgoraClassSchema,
+	AgoraSchoolSchema,
 	AgoraIdentitySchema,
 	AgoraParticipant,
 	AgoraParticipantSchema,
@@ -232,6 +240,28 @@ export async function setSessionTheme(sessionId: string, theme: AgoraThemeChoice
 	});
 }
 
+/** Who moves the class between the village's stations — the teacher's to switch, live */
+export async function setVillageNavigation(
+	sessionId: string,
+	villageNavigation: 'teacher' | 'free',
+): Promise<void> {
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		villageNavigation,
+		lastUpdate: Date.now(),
+	});
+}
+
+/**
+ * Walk every student's village to one place. A timestamp rather than a flag,
+ * so calling the same place twice calls twice, and each phone acts once per call.
+ */
+export async function callVillage(sessionId: string, place: 'current' | 'council'): Promise<void> {
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		villageCall: { place, at: Date.now() },
+		lastUpdate: Date.now(),
+	});
+}
+
 /**
  * Where a student placed themselves between the two camps.
  *
@@ -260,7 +290,7 @@ export async function saveCampPosition(
 // all. Wire payloads are valibot-parsed here; malformed entries are skipped —
 // one bad doc must not blank a dashboard.
 
-function parseEach<T>(rows: unknown[], parseRow: (data: unknown) => T, label: string): T[] {
+export function parseEach<T>(rows: unknown[], parseRow: (data: unknown) => T, label: string): T[] {
 	const parsed: T[] = [];
 	for (const row of rows) {
 		try {
@@ -279,6 +309,8 @@ const parseCareer = (data: unknown): AgoraStudentAggregate =>
 const parseParticipant = (data: unknown): AgoraParticipant => parse(AgoraParticipantSchema, data);
 
 export interface TeacherDashboard {
+	supervisedSchools: TeacherConsoleDashboard['supervisedSchools'];
+	isSystemAdmin: boolean;
 	classes: TeacherConsoleDashboard['classes'];
 	/** Where this teacher may open classes — empty means "ask your admin" */
 	schools: TeacherConsoleDashboard['schools'];
@@ -287,6 +319,8 @@ export interface TeacherDashboard {
 }
 
 export const EMPTY_DASHBOARD: TeacherDashboard = {
+	supervisedSchools: [],
+	isSystemAdmin: false,
 	classes: [],
 	schools: [],
 	aggregates: new Map(),
@@ -324,8 +358,176 @@ export function classLabel(agoraClass: { name: string; gradeLevel?: string }): s
 	return grade ? `${grade} · ${agoraClass.name}` : agoraClass.name;
 }
 
-/** Everything the /teach dashboard shows, in one round trip. */
-export async function fetchTeacherDashboard(): Promise<TeacherDashboard> {
+/**
+ * The dashboard, read straight from Firestore by the teacher's own browser.
+ *
+ * Four queries on the channel the app already holds open, answered by the
+ * Firestore frontend — no function, and so no cold start. That is the whole
+ * point: `agoraTeacherConsole` shares an entry module with every other
+ * function in the codebase, and the first teacher after a quiet period was
+ * paying for all of it to load before being told the names of their classes.
+ *
+ * Every one of these is a `teacherMap.<uid> == true` equality except the
+ * sessions, which are already read this way by the archive panel below. The
+ * roster does NOT come this way and must not: member documents carry the
+ * students' PIN hashes, which is exactly why the console strips them.
+ */
+async function queryTeacherDashboard(uid: string): Promise<TeacherDashboard> {
+	const mine = (collectionName: string) =>
+		getDocs(query(collection(db, collectionName), where(`teacherMap.${uid}`, '==', true)));
+
+	const [classSnaps, schoolSnaps, aggregateSnaps, sessionSnaps, supervisedSnaps, userSnap] =
+		await Promise.all([
+			mine(Collections.agoraClasses),
+			mine(Collections.agoraSchools),
+			mine(Collections.agoraClassAggregates),
+			getDocs(
+				query(
+					collection(db, Collections.agoraSessions),
+					where('teacherId', '==', uid),
+					orderBy('createdAt', 'desc'),
+					limit(20),
+				),
+			),
+			// The schools this caller supervises — the "supervise" entry. Proved
+			// by the same equality constraint as teacherMap, on supervisorMap.
+			getDocs(
+				query(collection(db, Collections.agoraSchools), where(`supervisorMap.${uid}`, '==', true)),
+			),
+			// usersV2/{uid}.systemAdmin, as the console reads it
+			getDoc(doc(db, Collections.users, uid)),
+		]);
+	const activeSchools = (snaps: typeof schoolSnaps): TeacherConsoleDashboard['schools'] =>
+		parseEach(
+			snaps.docs.map((snap) => snap.data()),
+			(data: unknown) => parse(AgoraSchoolSchema, data),
+			'school',
+		)
+			.filter((school) => school.status === 'active')
+			.map((school) => ({ schoolId: school.schoolId, name: school.name }))
+			.sort((a, b) => a.name.localeCompare(b.name));
+
+	const classes = parseEach(
+		classSnaps.docs.map((snap) => snap.data()),
+		(data: unknown) => parse(AgoraClassSchema, data),
+		'class',
+	)
+		.filter((agoraClass) => agoraClass.status === 'active')
+		.sort((a, b) => a.name.localeCompare(b.name));
+
+	const aggregates = new Map<string, AgoraClassAggregate>();
+	for (const aggregate of parseEach(
+		aggregateSnaps.docs.map((snap) => snap.data()),
+		(data: unknown) => parse(AgoraClassAggregateSchema, data),
+		'class aggregate',
+	)) {
+		aggregates.set(aggregate.classId, aggregate);
+	}
+
+	return {
+		classes: classes.map((agoraClass) => ({
+			classId: agoraClass.classId,
+			name: agoraClass.name,
+			...(agoraClass.gradeLevel ? { gradeLevel: agoraClass.gradeLevel } : {}),
+			classCode: agoraClass.classCode,
+			memberCount: agoraClass.memberCount,
+			schoolId: agoraClass.schoolId,
+		})),
+		schools: activeSchools(schoolSnaps),
+		supervisedSchools: activeSchools(supervisedSnaps),
+		isSystemAdmin: userSnap.data()?.systemAdmin === true,
+		aggregates,
+		sessions: parseEach(
+			sessionSnaps.docs.map((snap) => snap.data()),
+			parseSession,
+			'session',
+		),
+	};
+}
+
+/**
+ * Everything the /teach dashboard shows.
+ *
+ * Read directly when it can be, through the console when it cannot. The
+ * fallback is not decoration: hosting and security rules deploy separately,
+ * so a browser can be running this code against rules that have not landed
+ * yet, and a teacher must not lose their classes over a deploy order. It is
+ * logged loudly, because the standing state of this is the fast path.
+ */
+export async function fetchTeacherDashboard(uid?: string): Promise<TeacherDashboard> {
+	if (uid) {
+		let direct: TeacherDashboard | null = null;
+		try {
+			direct = await queryTeacherDashboard(uid);
+		} catch (error) {
+			console.error('[Teacher] Reading the dashboard direct failed; asking the console:', error);
+		}
+		if (direct) {
+			const unindexed = classesMissingAggregates(
+				direct.classes,
+				direct.sessions,
+				direct.aggregates,
+			);
+			if (unindexed.length === 0) return direct;
+
+			// The query answered, but it can only see aggregates that carry
+			// `teacherMap`. One written before the field existed is simply absent
+			// — the class reads "no games yet" over a history it has — until the
+			// backfill script runs. The console reads by id and sees them all.
+			console.error(
+				'[Teacher] Class aggregates missing from the direct read (teacherMap not backfilled?); asking the console for advancement:',
+				{ uid, classIds: unindexed },
+			);
+			try {
+				const fromConsole = await fetchConsoleDashboard();
+
+				return {
+					...direct,
+					aggregates: new Map([...direct.aggregates, ...fromConsole.aggregates]),
+				};
+			} catch (error) {
+				console.error('[Teacher] Asking the console for advancement failed:', error);
+
+				return direct;
+			}
+		}
+	}
+
+	return fetchConsoleDashboard();
+}
+
+/**
+ * The classes whose advancement the direct read cannot be trusted on: a game
+ * of theirs has been folded into an aggregate (`aggregatedAt` on the session),
+ * yet no aggregate came back for them. That is the signature of an aggregate
+ * written before `teacherMap` existed — invisible to the equality query, not
+ * missing from the database. Only the sessions on hand are consulted, so it is
+ * a tripwire, not a census.
+ */
+export function classesMissingAggregates(
+	classes: ReadonlyArray<{ classId: string }>,
+	sessions: ReadonlyArray<Pick<AgoraSession, 'classId' | 'aggregatedAt'>>,
+	aggregates: ReadonlyMap<string, unknown>,
+): string[] {
+	const mine = new Set(classes.map((agoraClass) => agoraClass.classId));
+	const missing = new Set<string>();
+	for (const session of sessions) {
+		const { classId } = session;
+		if (
+			classId &&
+			session.aggregatedAt !== undefined &&
+			mine.has(classId) &&
+			!aggregates.has(classId)
+		) {
+			missing.add(classId);
+		}
+	}
+
+	return [...missing];
+}
+
+/** The dashboard as the `agoraTeacherConsole` callable serves it */
+async function fetchConsoleDashboard(): Promise<TeacherDashboard> {
 	const data = (await teacherConsole({ view: 'dashboard' })) as TeacherConsoleDashboard;
 	const aggregates = new Map<string, AgoraClassAggregate>();
 	for (const [classId, aggregate] of Object.entries(data.aggregates ?? {})) {
@@ -338,6 +540,8 @@ export async function fetchTeacherDashboard(): Promise<TeacherDashboard> {
 
 	return {
 		classes: data.classes ?? [],
+		supervisedSchools: data.supervisedSchools ?? [],
+		isSystemAdmin: data.isSystemAdmin ?? false,
 		schools: data.schools ?? [],
 		aggregates,
 		sessions: parseEach(data.sessions ?? [], parseSession, 'session'),
@@ -422,5 +626,27 @@ export async function fetchSessionReport(sessionId: string): Promise<SessionRepo
 				(identity) => [identity.userId, identity.realName],
 			),
 		),
+	};
+}
+
+/** Cursor pagination retains access to all past lessons without filling the dashboard. */
+export async function fetchSessionHistory(
+	uid: string,
+	cursor?: QueryDocumentSnapshot<DocumentData>,
+) {
+	const snap = await getDocs(
+		query(
+			collection(db, Collections.agoraSessions),
+			where('teacherId', '==', uid),
+			orderBy('createdAt', 'desc'),
+			...(cursor ? [startAfter(cursor)] : []),
+			limit(25),
+		),
+	);
+
+	return {
+		sessions: snap.docs.map((d) => parse(AgoraSessionSchema, d.data())),
+		cursor: snap.empty ? undefined : snap.docs[snap.docs.length - 1],
+		hasMore: snap.size === 25,
 	};
 }

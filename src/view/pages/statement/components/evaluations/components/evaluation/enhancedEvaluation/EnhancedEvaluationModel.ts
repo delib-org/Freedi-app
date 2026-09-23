@@ -7,6 +7,11 @@ import type { EnhancedEvaluationThumb } from '@/types/evaluation';
 
 export type { EnhancedEvaluationThumb } from '@/types/evaluation';
 
+/**
+ * Agree/disagree face scale. Stored high→low for the consumers that index into
+ * it (maps, CreatorEvaluationIcon); the face scale renders it low→high through
+ * `orderLowToHigh` in faceScaleModel, never by relying on this array order.
+ */
 export const enhancedEvaluationsThumbs: EnhancedEvaluationThumb[] = [
 	{
 		id: 'a',
@@ -15,6 +20,8 @@ export const enhancedEvaluationsThumbs: EnhancedEvaluationThumb[] = [
 		color: 'var(--evaluation-thumb-inactive)',
 		colorSelected: 'var(--emoji-smiley)',
 		alt: 'like',
+		face: 'strong-like',
+		label: 'Strongly like',
 	},
 	{
 		id: 'b',
@@ -23,6 +30,8 @@ export const enhancedEvaluationsThumbs: EnhancedEvaluationThumb[] = [
 		color: 'var(--evaluation-thumb-inactive)',
 		colorSelected: 'var(--emoji-happy)',
 		alt: 'half like',
+		face: 'like',
+		label: 'Like',
 	},
 	{
 		id: 'c',
@@ -31,6 +40,8 @@ export const enhancedEvaluationsThumbs: EnhancedEvaluationThumb[] = [
 		color: 'var(--evaluation-thumb-inactive)',
 		colorSelected: 'var(--emoji-neutral)',
 		alt: 'neutral',
+		face: 'neutral',
+		label: 'Not sure',
 	},
 	{
 		id: 'd',
@@ -39,6 +50,8 @@ export const enhancedEvaluationsThumbs: EnhancedEvaluationThumb[] = [
 		color: 'var(--evaluation-thumb-inactive)',
 		colorSelected: 'var(--emoji-thinking)',
 		alt: 'half dislike',
+		face: 'dislike',
+		label: 'Dislike',
 	},
 	{
 		id: 'e',
@@ -47,6 +60,8 @@ export const enhancedEvaluationsThumbs: EnhancedEvaluationThumb[] = [
 		color: 'var(--evaluation-thumb-inactive)',
 		colorSelected: 'var(--emoji-sad)',
 		alt: 'dislike',
+		face: 'strong-dislike',
+		label: 'Strongly dislike',
 	},
 ];
 

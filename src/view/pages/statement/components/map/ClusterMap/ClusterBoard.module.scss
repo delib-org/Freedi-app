@@ -1,6 +1,7 @@
-// Custom radial cluster board: central hub, colored cluster pills, and a grid
-// of sticky-note cards per cluster. All nodes are absolutely positioned and
-// centered on their computed (x, y) via translate(-50%, -50%).
+// Custom radial cluster board: a central hub and one FRAME per cluster — a
+// bordered panel in the cluster's colour with its title pill straddling the
+// top edge and its sticky-note grid inside. Hub and frames are absolutely
+// positioned and centered on their computed (x, y) via translate(-50%, -50%).
 
 .scroll {
 	position: relative;
@@ -89,7 +90,7 @@
 	border-radius: 999px;
 	padding: 0.35rem 0.85rem;
 	background: var(--btn-primary, #5f88e5);
-	color: #ffffff;
+	color: var(--btn-primary-text, #ffffff);
 	font-size: 0.78rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -102,10 +103,51 @@
 	}
 }
 
-.pill {
+.frame {
 	position: absolute;
 	transform: translate(-50%, -50%);
-	max-width: 180px;
+	display: flex;
+	flex-direction: column;
+	align-items: start;
+	padding: 12px;
+	border: 2px solid var(--cluster-line);
+	border-radius: 14px;
+	// Opaque on purpose: the hub connector runs under the frame to its centre,
+	// so the visible line ends exactly at the frame's real edge.
+	background: var(--frame-bg);
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+	z-index: 1;
+	transition: opacity 0.15s ease, box-shadow 0.15s ease;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}
+
+// A folded cluster is just its pill — no panel around an empty grid.
+.frameCollapsed {
+	padding: 0;
+	border: none;
+	background: transparent;
+	box-shadow: none;
+}
+
+// Another frame's header is hovered: fade so that cluster stands out.
+.frameDimmed {
+	opacity: 0.35;
+}
+
+.frameFocused {
+	z-index: 5;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.pill {
+	position: relative;
+	// Straddle the frame's top border like a folder tab.
+	margin: -28px 0 10px;
+	max-width: 100%;
+	min-width: 120px;
 	border-radius: 999px;
 	padding: 0.4rem 0.9rem;
 	color: #ffffff;
@@ -156,6 +198,11 @@
 
 .pillCollapsed {
 	opacity: 0.95;
+}
+
+.frameCollapsed .pill {
+	margin: 0;
+	max-width: 180px;
 }
 
 .pillGlyph {
@@ -348,10 +395,8 @@
 }
 
 .grid {
-	position: absolute;
-	transform: translate(-50%, -50%);
+	position: relative;
 	display: grid;
-	z-index: 1;
 }
 
 .card {
@@ -360,6 +405,20 @@
 	height: 120px;
 	border-radius: 10px;
 	padding: 8px;
+	padding-inline-start: 11px;
+
+	// Strong cluster-colour stripe on the start edge so a note keeps its
+	// cluster identity while dragged, zoomed, or fanned out in a tray.
+	&::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		inset-inline-start: 0;
+		width: 4px;
+		background: var(--cluster-line);
+		pointer-events: none;
+	}
 	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 	display: flex;
 	flex-direction: column;
@@ -394,7 +453,7 @@
 .mineDot {
 	position: absolute;
 	top: 6px;
-	inset-inline-start: 6px;
+	inset-inline-start: 8px;
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
@@ -759,7 +818,7 @@
 
 .filterPromptKeep {
 	background: var(--btn-primary, #5f88e5);
-	color: #ffffff;
+	color: var(--btn-primary-text);
 }
 
 .filterPromptHide {

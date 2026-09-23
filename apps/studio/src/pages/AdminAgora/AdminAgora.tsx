@@ -13,6 +13,8 @@ import ProgressStat from '@/components/atomic/atoms/ProgressStat/ProgressStat';
 import StudioPage from '../_shared/StudioPage';
 import { useGrace } from '../_shared/useGrace';
 import OpenSchoolModal from './OpenSchoolModal';
+import SystemTrends from './SystemTrends';
+import BackfillLessons from './BackfillLessons';
 import styles from './AdminAgora.module.scss';
 
 type PeriodId = 'day' | 'month' | 'year';
@@ -100,7 +102,12 @@ export default function AdminAgora() {
 		<StudioPage
 			breadcrumb={[{ label: t('Agora classrooms') }]}
 			title={t('Agora classrooms')}
-			actions={<Button text={`+ ${t('Open school')}`} variant="primary" onClick={openModal} />}
+			actions={
+				<>
+					<BackfillLessons />
+					<Button text={`+ ${t('Open school')}`} variant="primary" onClick={openModal} />
+				</>
+			}
 		>
 			<section className={styles.kpis} aria-label={t('Activity')}>
 				<div className={styles.kpiHeader}>
@@ -125,6 +132,8 @@ export default function AdminAgora() {
 				<h3 className={styles.sectionTitle}>{t('Favourite looks')}</h3>
 				<LooksRow stats={stats} />
 			</section>
+
+			<SystemTrends enabled={isSystemAdmin} />
 
 			<section aria-label={t('Schools')}>
 				<h2 className={styles.sectionTitle}>{t('Schools')}</h2>
@@ -154,6 +163,7 @@ export default function AdminAgora() {
 								<th scope="col">{t('School')}</th>
 								<th scope="col">{t('City')}</th>
 								<th scope="col">{t('Classes')}</th>
+								<th scope="col">{t('Supervisors')}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -164,6 +174,7 @@ export default function AdminAgora() {
 									</th>
 									<td>{school.city ?? '—'}</td>
 									<td className="stat-number">{school.classCount}</td>
+									<td>{school.supervisorIds?.length ?? 0}</td>
 								</tr>
 							))}
 						</tbody>

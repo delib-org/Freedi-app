@@ -113,3 +113,42 @@ Three things bite:
 3. **A new origin needs two allowlists**: Firebase Auth authorised domains, and
    the Google Cloud API key's HTTP referrers. Missing the second fails with
    `auth/requests-from-referer-…-are-blocked`, which does not mention keys.
+
+
+## Supervision and modular indicators (2026-09-22)
+
+Dashboard indicators live in `packages/shared-charts/src/indicators/`, with
+ordered registries for class, student, teacher, school and system scopes.
+Change those registries to add/remove/reorder indicators; keep page components
+as renderers. `resolveIndicators(scope, {hide, order})` supports per-page
+presentation choices. See the registry README for translations and tests.
+`consoleContexts.ts` validates aggregate payloads and adapts the callable data
+for both Mithril and React. Chart geometry is pure SVG; shared SCSS owns marks.
+Agora chart colours are fixed analytical tokens: do not map them to a themed
+identity ramp, which changes the meaning of outcome colours.
+
+Supervision reads go through `agoraSupervisorConsole`, with server-enforced
+school/teacher scope. Never expose roster identity, PINs, account history or
+class codes there. Renew authorization before using cached reports. School
+teacher aggregates must be rebuilt from school-filtered lesson rows, never
+return the teacher's cross-school lifetime aggregate. History is bounded at
+100 teacher lessons; propagate and display the truncation warning. Self usage
+is available through `agoraTeacherConsole` view `activity`.
+
+Teacher usage samples visible, recently interacted teacher/supervisor screens.
+Only elapsed milliseconds and an enumerated surface are sent; no input content
+or page URLs. Heartbeat transactions cap credit across tabs and month rollover.
+Keep the privacy explanation beside activity charts.
+
+Regression checks: `scripts/e2e-supervisor.mjs`, then existing
+`e2e-class-career.mjs` and `e2e-teacher-classes.mjs`. Browser fixtures/checks:
+`scripts/supervise-shots.mjs` and `scripts/studio-supervise-shots.mjs` (set
+`AGORA_*` hosts and `STUDIO_VITE_HOST` to the same isolated emulator suite).
+The scripts create emulator-only data. `SUPERVISION_REUSE=1` reuses saved
+fixture IDs without reseeding. Never run these against production.
+
+Production deployment/backfill requires Tal's explicit request. Build functions
+and commit its shared-types archive; create only the teacherId/month usage
+composite index; deploy rules and the named supervision/teacher aggregation
+functions before either frontend. Backfill is admin-only, paged and repeat-safe.
+Its cursor includes creation time AND session ID; never simplify it to a timestamp.

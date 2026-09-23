@@ -20,6 +20,12 @@ import { callable, db, fastlane, signInTeacher } from './lib/fastlane.ts';
 const require = createRequire(import.meta.url);
 const { AgoraStage, Collections, stagePlanPreset } = require('@freedi/shared-types');
 
+// The default WizCol plan has no vision round; this run exercises it, so add it back after needs.
+const withVisionRound = (items) =>
+	items.flatMap((item) =>
+		item.itemId === 'round-needs' ? [item, { itemId: 'round-vision', stage: AgoraStage.question, kind: 'vision' }] : [item],
+	);
+
 await preflight();
 
 const session = async (sessionId) =>
@@ -45,7 +51,7 @@ async function refused(label, run) {
 step('1. A WizCol game whose rounds carry no wording of their own');
 // One teacher identity for the whole run — the standing wording is theirs.
 const teacher = await signInTeacher(`reword-${Date.now()}`);
-const plan = stagePlanPreset('wizcol');
+const plan = withVisionRound(stagePlanPreset('wizcol'));
 const game = await fastlane({
 	stage: AgoraStage.lobby,
 	students: 2,

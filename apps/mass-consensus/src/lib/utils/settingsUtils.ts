@@ -1,4 +1,5 @@
 import { SurveySettings, QuestionOverrideSettings, SuggestionMode, DisplayMode } from '@/types/survey';
+import { clampCardColorIntensity } from './cardColorIntensity';
 
 /**
  * Merged settings that apply to a specific question
@@ -22,6 +23,8 @@ export interface MergedQuestionSettings {
   autoSplitMultiSuggestions: boolean;
   /** Merge into a similar existing suggestion automatically and +1 it for the author */
   autoMergeSimilar: boolean;
+  /** How strongly evaluation cards are tinted, 0 (white) to 1 (full colour) */
+  cardColorIntensity: number;
 }
 
 /**
@@ -91,6 +94,9 @@ export function getMergedSettings(
       questionOverrides?.autoMergeSimilar ??
       surveySettings.autoMergeSimilar ??
       false,
+
+    // Card tint (survey-level only, no per-question override)
+    cardColorIntensity: clampCardColorIntensity(surveySettings.cardColorIntensity),
   };
 }
 

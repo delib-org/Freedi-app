@@ -80,14 +80,12 @@ try {
 		true,
 	);
 
-	step('4. Stepping back to the story shows my words, with the pen put away');
-	// Stages only move forward for the teacher; a player re-reads an earlier
-	// one through the journey strip, which is the same component reuse again —
-	// and a round they are only re-reading is closed, so there is no box at all.
+	step('4. Stepping back restores the saved story in an editable pen');
 	await page.locator('.stage-nav__station--done').last().click();
-	await page.waitForSelector('.round__mine-text', { timeout: 30_000 });
-	eq('my story is shown as written', (await page.locator('.round__mine-text').innerText()).trim(), MY_STORY);
-	eq('and no box came back with it', await page.locator('.round__textarea').count(), 0);
+	await page.waitForSelector('.round--story .round__textarea', { timeout: 30_000 });
+	eq('the story is restored for catch-up', (await box.inputValue()).trim(), MY_STORY);
+	eq('the earlier story remains editable', await box.isEnabled(), true);
+
 } finally {
 	await browser.close();
 }

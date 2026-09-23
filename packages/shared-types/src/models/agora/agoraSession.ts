@@ -15,11 +15,7 @@ import { VotingStageSettingsSchema, VotingStateSchema } from '../vote/votingStag
 import { VotingGameStateSchema } from '../vote/challengeGame';
 import { AgoraSessionFlowSchema } from './sessionFlow';
 import { AgoraThemeChoiceSchema } from './agoraTheme';
-import {
-	AgoraCarriedAnswerSchema,
-	AgoraStagePlanSchema,
-	AgoraStageStateSchema,
-} from './stagePlan';
+import { AgoraCarriedAnswerSchema, AgoraStagePlanSchema, AgoraStageStateSchema } from './stagePlan';
 import {
 	AgoraStage,
 	AgoraRoundPhase,
@@ -227,6 +223,13 @@ export const AgoraSessionSchema = object({
 	 */
 	aggregatedAt: optional(number()),
 	/**
+	 * When this game was folded into the teacher's own aggregate doc
+	 * (`agoraTeacherAggregates`). Stamped beside `aggregatedAt` by the
+	 * finished-session trigger; the backfill stamps it alone on games that
+	 * finished before teacher aggregates existed. Server-written.
+	 */
+	teacherAggregatedAt: optional(number()),
+	/**
 	 * Which track this session runs. Absent on every classroom session ever
 	 * written, and `undefined` means `classroom` — see AgoraSessionMode.
 	 */
@@ -265,6 +268,20 @@ export const AgoraSessionSchema = object({
 	 * doc outranks it. Never read on civic sessions, which wear Odyssey's.
 	 */
 	theme: optional(nullable(AgoraThemeChoiceSchema)),
+	world: optional(picklist(['village', 'classic'])),
+	/**
+	 * Who moves students between the village's stations. `teacher` (absent =
+	 * teacher): every advance walks the whole class to the new station and
+	 * opens its paper. `free`: students pick where to walk on the village map,
+	 * and a newly opened station is announced, not imposed. Teacher-writable.
+	 */
+	villageNavigation: optional(picklist(['teacher', 'free'])),
+	/**
+	 * The teacher's latest "everyone to …": a place id (`council`, or
+	 * `current` for the room's own station) and when it was called. Each
+	 * client walks there once per `at`. Teacher-writable.
+	 */
+	villageCall: optional(object({ place: string(), at: number() })),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),

@@ -8,11 +8,16 @@ import { useEvaluation } from './EvalautionMV';
 import { logError } from '@/utils/errorHandling';
 import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 
+export type EvaluationVariant = 'default' | 'card';
+
 interface EvaluationProps {
 	statement?: Statement;
+	/** 'card' = the answer card: no face scale on your own answer, and results
+	 *  stay hidden until you have rated (range / enhanced scale only). */
+	variant?: EvaluationVariant;
 }
 
-const Evaluation: FC<EvaluationProps> = ({ statement }) => {
+const Evaluation: FC<EvaluationProps> = ({ statement, variant = 'default' }) => {
 	const { parentStatement } = useEvaluation(statement);
 	const { isHalted } = useIsProcessHalted(parentStatement);
 
@@ -45,7 +50,13 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 						/>
 					);
 				case 'range':
-					return <EnhancedEvaluation statement={statement} enableEvaluation={enableEvaluation} />;
+					return (
+						<EnhancedEvaluation
+							statement={statement}
+							enableEvaluation={enableEvaluation}
+							variant={variant}
+						/>
+					);
 				case 'community-voice':
 					return (
 						<CommunityVoiceEvaluation statement={statement} enableEvaluation={enableEvaluation} />
@@ -64,7 +75,13 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 
 		// Backward compatibility: if no evaluationType, use enhancedEvaluation boolean
 		if (enhancedEvaluation) {
-			return <EnhancedEvaluation statement={statement} enableEvaluation={enableEvaluation} />;
+			return (
+				<EnhancedEvaluation
+					statement={statement}
+					enableEvaluation={enableEvaluation}
+					variant={variant}
+				/>
+			);
 		}
 
 		return (

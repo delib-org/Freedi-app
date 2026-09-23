@@ -1,4 +1,10 @@
+import { isProposalConfirmed } from '../lib/proposals';
+import { villagePlace } from '../lib/flows/villageRoute';
+import { councilBallot, councilPitch, type CouncilModel } from '../lib/flows/villageCouncil';
+import { getVotingState } from '../lib/voting';
+import { sessionVillageMode } from '../lib/flows/sessionLinks';
 import m from 'mithril';
+import { canWriteStage } from '../lib/flows/stageAccess';
 import { t } from '../lib/i18n';
 import { ensureUser } from '../lib/user';
 import {
@@ -42,6 +48,13 @@ import { ToastStack } from '../components/Toast';
 import { NeedsBoard } from '../components/NeedsBoard';
 import { CelebrationOverlay } from '../components/Celebration';
 import { StageNav, planItemLabel } from '../components/StageNav';
+import { VillageMoreSheet } from '../components/VillageMoreSheet';
+import {
+	isLightWorld,
+	isVillageSoundOn,
+	setLightWorld,
+	setVillageSound,
+} from '../lib/villagePrefs';
 import { CarriedContext } from '../components/CarriedContext';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { StageTransition, hasStageTransition } from '../components/StageTransition';
@@ -55,6 +68,8 @@ import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
 import { QuestionStage } from './QuestionStage';
 import { RoundStage } from './RoundStage';
+import { stationNotes } from '../components/VillageCommunity';
+import { VillageShell } from '../components/VillageShell';
 import { Voting } from './Voting';
 import { Results } from './Results';
 import { ReRate } from './ReRate';
@@ -72,9 +87,9 @@ import {
  *
  * The room's position comes from the session doc (single source of truth,
  * moved only by the advance callable). The player's position is their own:
- * `stageNav` lets them step back to any stage already opened and re-read it,
- * and is carried forward the moment the room advances. A stage that is not
- * the room's current one renders read-only — its outcome is already written.
+ * `stageNav` lets them step back to any stage already opened and catch up.
+ * Earlier questions remain writable until the session finishes;
+ * their carried summaries remain the record made when the class moved on.
  */
 
 /**
@@ -152,6 +167,8 @@ function storeNav(sessionId: string, state: StageNavState): void {
 
 export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
+	let villageWriteRequest = 0;
+	let villageOverride: boolean | undefined;
 	let userId = '';
 	/** Last plan position rendered — a change plays the travel interstitial */
 	let lastIndex: number | null = null;
@@ -163,6 +180,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let navRestored = false;
 	/** The style sheet is open — a modal over whatever stage is on screen */
 	let lookOpen = false;
+	/** The village's gear sheet: style, sounds, world quality, the flat view */
+	let moreOpen = false;
 	/** The teacher's thread is open — reachable from every stage, toast or not */
 	let teacherOpen = false;
 
@@ -239,6 +258,11 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			const { session, participants, myParticipant, participantsLoaded, loading, error } =
 				getSessionState();
+			const villageMode = sessionVillageMode(
+				session?.world,
+				window.location.search,
+				villageOverride,
+			);
 			const flow = getSessionFlow();
 
 			if (loading || (!session && !error)) {
@@ -287,15 +311,16 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			}
 
 			// A stage change is a journey leg — play the travel card over the
-			// incoming stage instead of hard-cutting, and carry the player to it
-			// wherever they were looking. Keyed on the plan POSITION, not the
+			// incoming stage for students following the class. A student catching
+			// up stays at their chosen station. Keyed on the plan POSITION, not the
 			// kind: two question stages in a row are two journeys. Never on
 			// first render: a refresh lands directly where the class already is.
 			if (currentIndex !== lastIndex) {
 				if (lastIndex !== null) {
 					dispatchNav({ kind: 'session-advanced' });
 					const item = plan[currentIndex];
-					if (item && hasStageTransition(item.stage)) beginStageTransition(item);
+					if (nav.viewingItemId === null && item && hasStageTransition(item.stage))
+						beginStageTransition(item);
 				}
 				lastIndex = currentIndex;
 			}
@@ -303,6 +328,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const viewingIndex = effectiveIndex(plan, currentIndex, nav.viewingItemId);
 			const item = plan[viewingIndex] ?? plan[currentIndex];
 			const live = viewingIndex === currentIndex;
+			const writable = canWriteStage(session, item.itemId);
 
 			// The look this screen wears, and the door to change it. A civic
 			// square has no door: it wears Odyssey's colours by contract.
@@ -343,6 +369,25 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				m(ToastStack),
 				m(CelebrationOverlay),
 				lookSheet,
+				moreOpen && villageMode
+					? m(VillageMoreSheet, {
+							look: lookDoor,
+							sound: isVillageSoundOn(),
+							onSound: (on: boolean) => {
+								setVillageSound(on);
+							},
+							lightMode: isLightWorld(),
+							onLightMode: (on: boolean) => {
+								setLightWorld(on);
+							},
+							onSimpleView: () => {
+								villageOverride = false;
+							},
+							onClose: () => {
+								moreOpen = false;
+							},
+						})
+					: null,
 				teacherOpen
 					? m(TeacherThreadSheet, {
 							sessionId,
@@ -370,14 +415,27 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				viewingIndex,
 				onSelect: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
 				compact: item.stage === AgoraStage.deliberation && live,
-				look: lookDoor,
-				mail: hasTeacherThread()
+				// One door at the end of the strip, not three. In the village the
+				// gear holds the style, and the teacher's post is in the envelope
+				// with the rest of the mail.
+				look: villageMode ? undefined : lookDoor,
+				menu: villageMode
 					? {
-							unread: teacherThreadUnread(),
-							onOpen: openTeacherThread,
-							label: t('teacherThread.open'),
+							onOpen: () => {
+								moreOpen = true;
+							},
+							label: t('village.more.open'),
+							open: moreOpen,
 						}
 					: undefined,
+				mail:
+					!villageMode && hasTeacherThread()
+						? {
+								unread: teacherThreadUnread(),
+								onOpen: openTeacherThread,
+								label: t('teacherThread.open'),
+							}
+						: undefined,
 			});
 
 			const pastNotice = live
@@ -392,15 +450,35 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					]);
 
 			if (item.stage === AgoraStage.lobby) {
+				// The village's first station needs the topic: fetch it while the class
+				// waits, so moving on does not swap the 3D world for a loading spinner.
+				if (villageMode) loadTopicPackage(session.topicPackageId);
+
+				// The same slots as the stage screens below — overlays as ONE slot, and
+				// an empty one where they carry the view toggle — so the village sits in
+				// the same place and survives the move from the lobby. Mithril matches
+				// unkeyed children by position: a shifted village is a new village, and
+				// its 3D world reloads (the walker jumps back to the fountain).
 				return m('.game', [
-					...overlays,
+					overlays,
 					stageNav,
 					pastNotice,
-					m(Lobby, {
-						participants,
-						myParticipant,
-						onOpenLook: lookDoor?.onOpen,
-					}),
+					null,
+					villageMode
+						? m(
+								VillageShell,
+								{
+									plan,
+									currentIndex,
+									viewingIndex,
+									writable,
+									papers: [],
+									navigation: session.villageNavigation ?? 'teacher',
+									call: session.villageCall,
+								},
+								m(Lobby, { participants, myParticipant, onOpenLook: lookDoor?.onOpen }),
+							)
+						: m(Lobby, { participants, myParticipant, onOpenLook: lookDoor?.onOpen }),
 				]);
 			}
 
@@ -408,11 +486,34 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const topic = getTopicPackage(session.topicPackageId);
 			if (!topic) {
 				loadTopicPackage(session.topicPackageId);
-
-				return m(
+				const spinner = m(
 					'.shell',
 					m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
 				);
+				// In the village the world keeps standing, in its slot, while the topic loads.
+				if (villageMode) {
+					return m('.game', [
+						overlays,
+						stageNav,
+						pastNotice,
+						null,
+						m(
+							VillageShell,
+							{
+								plan,
+								currentIndex,
+								viewingIndex,
+								writable,
+								papers: [],
+								navigation: session.villageNavigation ?? 'teacher',
+								call: session.villageCall,
+							},
+							spinner,
+						),
+					]);
+				}
+
+				return spinner;
 			}
 
 			/**
@@ -490,6 +591,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				switch (item.stage) {
 					case AgoraStage.framing:
 						return m(SceneStage, {
+							allowReplay: villageMode,
 							scenes: scenesOf(
 								AgoraSceneKind.intro,
 								AgoraSceneKind.timeTunnel,
@@ -501,6 +603,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 					case AgoraStage.perspectives:
 						return m(SceneStage, {
+							allowReplay: villageMode,
 							scenes: scenesOf(AgoraSceneKind.perspectiveA, AgoraSceneKind.perspectiveB),
 							storageKey: `agora_${sessionId}_perspectives`,
 							onProgress,
@@ -508,6 +611,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 					case AgoraStage.needs:
 						return m(SceneStage, {
+							allowReplay: villageMode,
 							scenes: scenesOf(
 								AgoraSceneKind.needsQuestion,
 								AgoraSceneKind.needsA,
@@ -555,6 +659,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						 */
 						if (flow.framing && !framingSeen(sessionId)) {
 							return m(SceneStage, {
+								allowReplay: villageMode,
 								scenes: scenesOf(AgoraSceneKind.intro),
 								storageKey: `agora_${sessionId}_framing`,
 								onFinish: () => markFramingSeen(sessionId),
@@ -574,7 +679,14 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							return m(Positioning, { topic, myParticipant, catchUp: true });
 						}
 
-						return m(Deliberation, { session, myParticipant, userId, topic });
+						return m(Deliberation, {
+							session,
+							myParticipant,
+							userId,
+							topic,
+							writeRequest: villageWriteRequest,
+							inVillage: villageMode,
+						});
 					}
 
 					case AgoraStage.voting: {
@@ -621,7 +733,126 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				}
 			})();
 
-			return m('.game', [...overlays, stageNav, pastNotice, stageView]);
+			/**
+			 * What the council's wooden scoreboard shows: the class map while the
+			 * room writes and rates, the ballot with its bars once the vote is
+			 * open, the closed ballot after. It follows the ROOM's stage, not the
+			 * one the player stepped back to — the board stands in the village.
+			 */
+			const roomItem = plan[currentIndex];
+			const council = ((): CouncilModel | undefined => {
+				if (!villageMode) return undefined;
+				const roomStage = roomItem?.stage;
+				if (
+					(roomStage === AgoraStage.voting ||
+						roomStage === AgoraStage.results ||
+						roomStage === AgoraStage.ended) &&
+					session.voting
+				) {
+					if (roomStage === AgoraStage.voting && userId) {
+						listenToVoting(sessionId, session.challengeQuestionId, userId);
+					}
+					const votes = getVotingState();
+
+					return councilBallot({
+						session,
+						selections: votes.selections,
+						myVoteStatementId: votes.myVoteStatementId,
+						votedCount: votes.voterUids.size,
+						classSize: participants.length,
+						closed: roomStage !== AgoraStage.voting,
+					});
+				}
+
+				return councilPitch({
+					proposals: getDeliberationState().proposals.filter((p) => !p.hidden),
+					scores: getDeliberationState().scores,
+					userId,
+					goalOnly: session.votingSettings?.goalZoneOnly === true,
+					leftLabel: topic.positioningScale.leftLabel,
+					rightLabel: topic.positioningScale.rightLabel,
+					leadStatementId: session.classScore?.leadStatementId,
+				});
+			})();
+
+			// Same slots as the lobby above (overlays as one slot): the village keeps its place.
+			return m('.game', [
+				overlays,
+				stageNav,
+				pastNotice,
+				// In the village the way back to the flat view is a row in the gear
+				// sheet, so this slot is an empty hole — the SAME five children as
+				// the lobby branch above, or the 3D world remounts and the walker
+				// jumps back to the fountain.
+				villageMode
+					? null
+					: m(
+							'button.btn.btn--secondary.btn--sm.village-mode-toggle',
+							{
+								onclick: () => {
+									villageOverride = true;
+								},
+								'aria-pressed': 'false',
+							},
+							t('village.enter_3d'),
+						),
+				villageMode
+					? m(
+							VillageShell,
+							{
+								plan,
+								currentIndex,
+								viewingIndex,
+								writable,
+								council,
+								navigation: session.villageNavigation ?? 'teacher',
+								call: session.villageCall,
+								community: myParticipant
+									? {
+											session,
+											userId,
+											anonName: myParticipant.anonName,
+											points: myParticipant.points.total,
+											teacher: hasTeacherThread()
+												? {
+														label: t('teacherThread.open'),
+														unread: teacherThreadUnread(),
+														onOpen: openTeacherThread,
+													}
+												: undefined,
+											scoreboard: {
+												topic,
+												leadStatementId: session.classScore?.leadStatementId,
+												goalOnly: session.votingSettings?.goalZoneOnly === true,
+											},
+										}
+									: undefined,
+								onLeaveVillage: () => {
+									villageOverride = false;
+								},
+								onWrite: () => {
+									villageWriteRequest++;
+								},
+								onSelectBook: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
+								papers: stationNotes(item).map((p) => ({
+									text: p.statement,
+									own: p.creatorId === userId,
+									confirmed: isProposalConfirmed(p.statementId),
+								})),
+								stationPapers: plan.slice(0, currentIndex + 1).map((p) => ({
+									itemId: p.itemId,
+									place: villagePlace(p),
+									papers: stationNotes(p).map((n) => ({
+										text: n.statement,
+										own: n.creatorId === userId,
+										author: n.anonName,
+									})),
+								})),
+							},
+							stageView,
+						)
+					: stageView,
+			]);
 		},
 	};
 }

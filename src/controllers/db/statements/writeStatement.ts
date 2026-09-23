@@ -33,11 +33,19 @@ import { createStatement, CreateStatementProps } from './createStatement';
 interface SetStatementToDBParams {
 	statement: Statement;
 	parentStatement: Statement | 'top';
+	/**
+	 * When set, resolve as soon as the write is queued locally (listeners already
+	 * see it) instead of waiting for the server to acknowledge it, which can take
+	 * tens of seconds on a stale mobile connection. A rejected server write is
+	 * reported here instead of through the return value.
+	 */
+	onServerWriteError?: (error: unknown) => void;
 }
 
 export const setStatementToDB = async ({
 	statement,
 	parentStatement,
+	onServerWriteError,
 }: SetStatementToDBParams): Promise<
 	| {
 			statementId: string;
@@ -115,17 +123,13 @@ export const setStatementToDB = async ({
 
 		//set statement
 		const statementRef = createStatementRef(statement.statementId);
-		const statementPromises = [];
+		const serverWrite = setDoc(statementRef, statement, { merge: true });
 
-		//update timestamp
-		const statementPromise = await setDoc(statementRef, statement, {
-			merge: true,
-		});
-
-		statementPromises.push(statementPromise);
-
-		//add subscription
-		await Promise.all(statementPromises);
+		if (onServerWriteError) {
+			serverWrite.catch(onServerWriteError);
+		} else {
+			await serverWrite;
+		}
 
 		// Track statement creation
 		logger.info('Statement created', {

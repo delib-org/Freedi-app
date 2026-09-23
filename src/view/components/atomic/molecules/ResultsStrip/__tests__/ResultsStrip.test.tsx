@@ -84,6 +84,27 @@ describe('ResultsStrip', () => {
 		expect(screen.getByText('2')).toBeInTheDocument();
 	});
 
+	it('explains the consensus gate with a caption while below the minimum', () => {
+		render(
+			<ResultsStrip
+				statement={makeStatement(0.9, { numberOfEvaluators: 2, sumEvaluations: 2 })}
+				minEvaluators={5}
+			/>,
+		);
+
+		expect(screen.getByTestId('results-strip-caption')).toHaveTextContent(
+			'Consensus will show after 5 evaluators',
+		);
+	});
+
+	it('drops the caption once consensus is shown', () => {
+		render(
+			<ResultsStrip statement={makeStatement(0.9, { numberOfEvaluators: 5, sumEvaluations: 2 })} />,
+		);
+
+		expect(screen.queryByTestId('results-strip-caption')).not.toBeInTheDocument();
+	});
+
 	it('marks negative consensus so it does not read as an achievement', () => {
 		const { container } = render(
 			<ResultsStrip
@@ -130,6 +151,18 @@ describe('ResultsStrip - stakeholder coverage', () => {
 
 		expect(screen.getByText('50 / 500')).toBeInTheDocument();
 		expect(screen.getByText('Of stakeholders')).toBeInTheDocument();
+	});
+
+	it('isolates the evaluator value as LTR so bidi cannot flip "50 / 500"', () => {
+		render(
+			<ResultsStrip
+				statement={makeStatement(0.42, { numberOfEvaluators: 50, stakeholderCount: 500 })}
+			/>,
+		);
+
+		const value = screen.getByText('50 / 500');
+		expect(value).toHaveAttribute('dir', 'ltr');
+		expect(value).toHaveClass('results-strip__value');
 	});
 
 	it('shows a census as everyone having spoken', () => {

@@ -11,6 +11,9 @@
 @use './variables';
 @use './variables-contrast';
 @use './variables-dark';
+@use '@freedi/shared-styles/tokens/brand-playful';
+@use '@freedi/shared-styles/tokens/brand-wizcol';
+@use './thinking-space';
 @use './reset';
 @use './typography';
 @use './utilities';

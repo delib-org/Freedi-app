@@ -35,6 +35,8 @@ interface SolutionPromptModalProps {
   onSubmitSuccess: () => void;
   title?: string;
   questionText?: string;
+  /** Position in a multi-question survey ("1) …"); omitted = no number */
+  questionNumber?: number;
   /** Additional description/context for the question (from paragraphs) */
   questionDescription?: string;
   /** Controls UX friction when adding new suggestions vs merging */
@@ -79,6 +81,7 @@ export default function SolutionPromptModal({
   onSubmitSuccess,
   title = 'Add Your Solution',
   questionText,
+  questionNumber,
   questionDescription,
   suggestionMode = SuggestionMode.encourage,
   minWords,
@@ -726,6 +729,9 @@ export default function SolutionPromptModal({
               <div className={styles.questionContext}>
                 <span className={styles.questionLabel}>{t('Please add your answer to the following question:')}</span>
                 <p className={`${styles.questionText} ${isQuestionExpanded ? styles.questionTextExpanded : ''}`}>
+                  {questionNumber !== undefined && (
+                    <span className={styles.questionNumber}>{questionNumber})</span>
+                  )}
                   <InlineMarkdown text={questionText} />
                 </p>
                 {questionDescription && (

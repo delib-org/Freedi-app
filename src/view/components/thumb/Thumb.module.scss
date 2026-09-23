@@ -1,4 +1,4 @@
-@import '../../style/mixins';
+@use '../../style/mixins' as *;
 
 .thumb {
     // 44x44 minimum target (WCAG 2.5.5). The glyph stays 24px; padding makes

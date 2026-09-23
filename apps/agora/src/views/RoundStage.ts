@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { canWriteStage } from '../lib/flows/stageAccess';
 import { t } from '../lib/i18n';
 import { Icon } from '../components/Icon';
 import { LikeButton } from '../components/LikeButton';
@@ -48,7 +49,7 @@ export interface RoundStageAttrs {
 	planIndex: number;
 	myParticipant: AgoraParticipant;
 	userId: string;
-	/** The room is ON this stage. False when a player stepped back to re-read it. */
+	/** The room is ON this stage. Used only for the teacher’s current-stage progress. */
 	live: boolean;
 }
 
@@ -96,7 +97,7 @@ function removedNotice(): m.Children {
  * Statement and every weighing an ordinary evaluation, so the hearts and
  * the percents on the cards are the shared pipeline's numbers.
  *
- * Closed (the room moved on), the round becomes its record: the AI's
+ * Once the session finishes, the round becomes its record: the AI's
  * summary over every text as it stood, with the pen and the widgets put
  * away. Never C_p bands — those are a −1…+1 reading and this scale is not.
  */
@@ -148,7 +149,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 				(answer) => answer.creatorId !== userId && answer.hidden !== true,
 			);
 			const outcome = session.stageState?.[item.itemId]?.outcome;
-			const closed = !live || outcome !== undefined;
+			const closed = !canWriteStage(session, item.itemId);
 			const isNeeds = kind === 'needs';
 
 			// Empty for a new question, pre-filled with my own saved answer, and

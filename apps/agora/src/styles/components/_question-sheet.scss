@@ -1,0 +1,205 @@
+// The teacher's own question, on its own surface (views/teacher/QuestionSheet).
+// A full-screen sheet on a phone, a centred dialog over a scrim on a laptop —
+// modal at both widths, unlike .teacher-panel, because its one job is one
+// field and the start form behind it is not for now.
+//
+// Imported by components.scss; do not import directly.
+
+.question-sheet {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal);
+	display: grid;
+	place-items: center;
+	padding: var(--space-lg);
+
+	&__scrim {
+		position: absolute;
+		inset: 0;
+		background: var(--scrim);
+	}
+
+	&__dialog {
+		position: relative;
+		inline-size: min(100%, 560px);
+		max-block-size: 100%;
+		display: flex;
+		flex-direction: column;
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-raised);
+		animation: question-sheet-in var(--motion-base) var(--ease-camera) both;
+	}
+
+	&__head {
+		flex: 0 0 auto;
+		min-block-size: var(--teacher-nav-h);
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		border-block-end: 1px solid var(--border-subtle);
+	}
+
+	&__title {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		margin: 0;
+		font-size: var(--font-size-lg);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__back,
+	&__close {
+		@extend %agora-icon-button;
+	}
+
+	// The arrow is the phone's way back; the ✕ is the laptop's. One of the
+	// two shows at each width, and both do the same thing.
+	&__back {
+		display: none;
+	}
+
+	// The glyph is drawn pointing left, which IS back in Hebrew
+	[dir='ltr'] &__back .icon {
+		transform: scaleX(-1);
+	}
+
+	&__body {
+		flex: 1 1 auto;
+		min-block-size: 0;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		padding: var(--space-md);
+	}
+
+	&__hint {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__required {
+		color: var(--mine-ink);
+	}
+
+	&__question {
+		font-size: var(--font-size-lg);
+		line-height: 1.4;
+	}
+
+	&__field-hint {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	// Under the box: the count in the last twenty characters, the error
+	// after an empty Continue. Both quiet, both tied to the box by aria.
+	&__count {
+		margin: calc(-1 * var(--space-sm)) 0 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+		text-align: end;
+	}
+
+	&__error {
+		margin: calc(-1 * var(--space-sm)) 0 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+		border-inline-start: 3px solid var(--warning);
+		padding-inline-start: var(--space-sm);
+
+		&:empty {
+			display: none;
+		}
+	}
+
+	&__foot {
+		flex: 0 0 auto;
+		display: flex;
+		justify-content: flex-end;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		border-block-start: 1px solid var(--border-subtle);
+	}
+
+	// A phone: the whole screen, its own header, the button under the thumb.
+	// The foot is sticky inside the sheet's own scroll, not fixed, so the
+	// keyboard pushes it up instead of covering it.
+	@media (max-width: 600px) {
+		padding: 0;
+
+		&__scrim {
+			display: none;
+		}
+
+		&__dialog {
+			inline-size: 100%;
+			block-size: 100%;
+			max-block-size: none;
+			border: 0;
+			border-radius: 0;
+			box-shadow: none;
+			animation-name: question-sheet-up;
+		}
+
+		&__back {
+			display: inline-flex;
+		}
+
+		&__close,
+		&__cancel {
+			display: none;
+		}
+
+		&__foot {
+			position: sticky;
+			inset-block-end: 0;
+			background: var(--bg-card-solid);
+			padding-block-end: calc(var(--space-md) + env(safe-area-inset-bottom));
+		}
+
+		&__continue {
+			inline-size: 100%;
+		}
+	}
+}
+
+@keyframes question-sheet-in {
+	from {
+		opacity: 0;
+		transform: scale(0.98);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@keyframes question-sheet-up {
+	from {
+		opacity: 0;
+		transform: translateY(24px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+// The sheet arrives in place: global.scss zeroes the duration, but a
+// zero-length slide still starts off-screen for a frame.
+@media (prefers-reduced-motion: reduce) {
+	.question-sheet__dialog {
+		animation: none;
+		transform: none;
+		opacity: 1;
+	}
+}

@@ -1,6 +1,7 @@
 export enum Collections {
     statements = 'statements',
     statementDeletions = 'statementDeletions', // tombstones for deleted statements (delta-listener delete sync)
+    statementEmbeddings = 'statementEmbeddings', // server-only vectors per statement, kept off the statement doc so listeners don't download them
     statementSnapShots = 'statementSnapshots',
     statementHistory = 'statementHistory', // subcollection on statements/{id}/statementHistory
     termsOfUseAcceptance = 'termsOfUseAcceptance',
@@ -114,6 +115,8 @@ export enum Collections {
     agoraStudentAggregates = 'agoraStudentAggregates',
     agoraClassAggregates = 'agoraClassAggregates',
     agoraStats = 'agoraStats',
+    agoraTeacherAggregates = 'agoraTeacherAggregates',
+    agoraTeacherUsage = 'agoraTeacherUsage',
     agoraIdentities = 'agoraIdentities',
     agoraTeacherMessages = 'agoraTeacherMessages',
     agoraTeacherPrompts = 'agoraTeacherPrompts',
@@ -121,6 +124,12 @@ export enum Collections {
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',
     odysseyJourneys = 'odysseyJourneys',
+    // Letters to the developers, and the throttle counters that guard them.
+    // Both are written only by odysseyFeedbackSubmit — server-only, see
+    // firestore.rules. The feedback docs hold reply-to addresses players
+    // volunteered, so no client may read them.
+    odysseyFeedback = 'odysseyFeedback',
+    odysseyRateLimits = 'odysseyRateLimits',
 
     // WizCol Studio — consultant organizations (Cloud-Function-only writes)
     organizations = 'organizations',

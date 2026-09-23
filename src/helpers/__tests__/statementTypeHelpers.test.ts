@@ -3,9 +3,10 @@ import { DISCUSSABLE_STATEMENT_TYPES, NON_DOCUMENT_STATEMENT_TYPES } from '../st
 
 describe('statementTypeHelpers', () => {
 	describe('NON_DOCUMENT_STATEMENT_TYPES', () => {
-		it('contains every StatementType except document', () => {
+		it('contains every StatementType except document and agreement', () => {
 			expect(NON_DOCUMENT_STATEMENT_TYPES).not.toContain(StatementType.document);
-			expect(NON_DOCUMENT_STATEMENT_TYPES.length).toBe(Object.values(StatementType).length - 1);
+			expect(NON_DOCUMENT_STATEMENT_TYPES).not.toContain(StatementType.agreement);
+			expect(NON_DOCUMENT_STATEMENT_TYPES.length).toBe(Object.values(StatementType).length - 2);
 		});
 
 		it('fits within the Firestore `in`-filter 30-element cap', () => {
@@ -14,10 +15,10 @@ describe('statementTypeHelpers', () => {
 	});
 
 	describe('DISCUSSABLE_STATEMENT_TYPES', () => {
-		it('contains every StatementType except document and paragraph', () => {
+		it('contains every StatementType except document, agreement and paragraph', () => {
 			expect(DISCUSSABLE_STATEMENT_TYPES).not.toContain(StatementType.document);
 			expect(DISCUSSABLE_STATEMENT_TYPES).not.toContain(StatementType.paragraph);
-			expect(DISCUSSABLE_STATEMENT_TYPES.length).toBe(Object.values(StatementType).length - 2);
+			expect(DISCUSSABLE_STATEMENT_TYPES.length).toBe(Object.values(StatementType).length - 3);
 		});
 
 		it('fits within the Firestore `in`-filter 30-element cap', () => {

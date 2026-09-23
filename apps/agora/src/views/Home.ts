@@ -1,3 +1,4 @@
+import { isVillageMode } from '../lib/flows/sessionLinks';
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { LanguagePicker } from '../components/LanguagePicker';
@@ -9,6 +10,7 @@ function digitsOnly(value: string): string {
 }
 
 export function Home(): m.Component {
+	const village = isVillageMode(window.location.search);
 	let codeInput = '';
 
 	function handleJoin(): void {
@@ -34,14 +36,36 @@ export function Home(): m.Component {
 							src: '/time-machine.webp',
 							alt: t('home.hero_alt'),
 						}),
-						m('h1.home-hero__title', 'Agora'),
-						m('p.home-hero__tagline', t('home.tagline')),
+						m('h1.home-hero__title', village ? 'כפר החכמים' : 'Agora'),
+						m(
+							'p.home-hero__tagline',
+							village ? 'חושבים יחד. מקשיבים. מחליטים.' : t('home.tagline'),
+						),
 					]),
 
-					m('p.home-explanation', t('home.explanation')),
+					m(
+						'p.home-explanation',
+						village
+							? 'המנחה בוחר את האתגר ואת התחנות. התלמידים מצטרפים בקוד, משתפים רעיונות ומגיעים יחד למועצת הכפר.'
+							: t('home.explanation'),
+					),
+					village
+						? m('.card.home-card', [
+								m('h2', 'אני המנחה'),
+								m(
+									'p',
+									'יוצרים מפגש, עורכים את המסלול ומזמינים תלמידים. הכניסה למנחה היא באמצעות Google.',
+								),
+								m(
+									'button.btn.btn--primary.btn--full.btn--lg',
+									{ onclick: () => m.route.set('/teach') },
+									'כניסה למנחה',
+								),
+							])
+						: null,
 
 					m('.card.home-card', [
-						m('p.home-card__text', t('home.have_code')),
+						m('p.home-card__text', village ? 'אני תלמיד/ה — יש לי קוד מפגש' : t('home.have_code')),
 						m('input.text-input.code-input', {
 							// type=text, not number: a number input strips leading zeros,
 							// and 04213 is a valid code. inputmode raises the numeric keypad.

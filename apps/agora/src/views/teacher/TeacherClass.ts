@@ -1,4 +1,6 @@
 import m from 'mithril';
+import { IndicatorGrid } from '../../components/IndicatorGrid';
+import { classContextFrom, studentContextFrom } from '../../lib/indicatorContexts';
 import { getLang, t } from '../../lib/i18n';
 import { getUserState, ensureUser } from '../../lib/user';
 import { teacherRoster, teacherClass } from '../../lib/callables';
@@ -7,6 +9,13 @@ import { Icon } from '../../components/Icon';
 import { ClassForm, type ClassFormValue } from '../../components/ClassForm';
 import { advancementSummary, type TeacherConsoleMember } from '@freedi/shared-types';
 import { TeacherNav } from '../../components/TeacherNav';
+import { navClass } from '../../lib/teacherNav';
+
+/** Stats the summary card prints itself — the graphs card must not repeat them */
+const CLASS_STATS_IN_SUMMARY = ['class.lessons', 'class.avgScore', 'class.successRate'];
+/** Numbers the career drawer's own cells already show */
+const STUDENT_STATS_IN_DRAWER = ['student.points', 'student.avgPerGame', 'student.bestGame'];
+const GRAPHS_ID = 'roster-graphs';
 
 /**
  * One class: its advancement across games, its roster with each student's
@@ -18,12 +27,19 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 	const classId = initialVnode.attrs.id;
 	let detail: TeacherClassDetail | null = null;
 	let loaded = false;
+	/**
+	 * The account `detail` was read for. A credential-recovery sign-in swaps
+	 * the uid under the open page; the previous account's roster is then not
+	 * this one's to show, so it is dropped and read again.
+	 */
+	let loadedForUid: string | null = null;
 	let openMemberId: string | null = null;
 	/** A fresh PIN from a reset, shown once next to the member row */
 	let issuedPin: { memberId: string; pin: string } | null = null;
 	let busyMemberId: string | null = null;
 	/** The cog: the roster is the page, the class's own settings wait behind it */
 	let settingsOpen = false;
+	let graphsOpen = false;
 	let renaming = false;
 	let savingClass = false;
 	let classError: string | null = null;
@@ -259,13 +275,28 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 
 	async function load(): Promise<void> {
 		try {
-			await ensureUser();
-			detail = await fetchTeacherClass(classId);
+			const user = await ensureUser();
+			loadedForUid = user.uid;
+			const fetched = await fetchTeacherClass(classId);
+			if (getUserState().user?.uid !== user.uid) return;
+			detail = fetched;
 		} catch (error) {
 			console.error('[Teacher] Loading class failed:', error);
 		}
 		loaded = true;
 		m.redraw();
+	}
+
+	/** Drop and re-read the class when auth settles on another account */
+	function reloadIfAccountChanged(uid: string | undefined): void {
+		if (!uid || loadedForUid === null || loadedForUid === uid) return;
+		loadedForUid = uid;
+		detail = null;
+		loaded = false;
+		openMemberId = null;
+		issuedPin = null;
+		settingsOpen = false;
+		void load();
 	}
 
 	async function resetBinding(memberId: string): Promise<void> {
@@ -328,6 +359,14 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 				? m('.roster__drawer', [
 						career
 							? m('.roster__career', [
+									// The three numbers under it are printed by the cells below;
+									// the grid adds the sparkline, the mix and the attendance.
+									m(IndicatorGrid<'student'>, {
+										scope: 'student',
+										context: studentContextFrom(career, detail?.aggregate?.gamesPlayed ?? 0),
+										options: { hide: STUDENT_STATS_IN_DRAWER },
+										compact: true,
+									}),
 									m('.roster__career-grid', [
 										m('.roster__career-cell', [
 											m('span.roster__career-value', String(career.avgPointsPerGame)),
@@ -413,14 +452,24 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 
 	return {
 		view() {
-			const { tier, loading } = getUserState();
-			if (loading || !loaded) {
+			const { tier, loading, user } = getUserState();
+			reloadIfAccountChanged(user?.uid);
+			/**
+			 * The teacher's menu passed this way already and remembers the name
+			 * and the code — the two things a teacher opening a class actually
+			 * wants on screen, one to read and one to write on the board. Held
+			 * back for the console's answer, they arrived with the roster; shown
+			 * from the cache, the page is never blank, and only the roster waits.
+			 */
+			const cached = navClass(classId);
+			const known = detail ?? cached;
+			if (loading || (!loaded && !known)) {
 				return m(
 					'.shell',
 					m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
 				);
 			}
-			if (tier !== 2 || !detail) {
+			if (tier !== 2 || !known || (loaded && !detail)) {
 				return m('.shell', [
 					m('.shell__content.text-center', { style: { justifyContent: 'center' } }, [
 						m('p.join__error', t('roster.not_found')),
@@ -433,21 +482,26 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 				]);
 			}
 
-			const summary = detail.aggregate ? advancementSummary(detail.aggregate) : null;
-			const { members, sessions, classCode } = detail;
+			const summary = detail?.aggregate ? advancementSummary(detail.aggregate) : null;
+			const members = detail?.members ?? [];
+			const sessions = detail?.sessions ?? [];
+			const classCode = known.classCode;
 
 			return m('.shell', [
 				// The bar says which class this is, so the page no longer repeats it —
 				// and the class's own cog rides along on the bar, where the chrome
 				// of every teacher screen now lives.
 				m(TeacherNav, {
-					title: classLabel(detail),
-					subtitle: detail.schoolName,
+					title: classLabel(known),
+					subtitle: detail?.schoolName ?? '',
 					onBack: () => m.route.set('/teach'),
 					trailing: m(
 						'button.teacher-nav__cog',
 						{
 							type: 'button',
+							// The cog opens the class's own settings, and those are
+							// the console's answer — no point offering it early
+							disabled: !detail,
 							'aria-expanded': String(settingsOpen),
 							'aria-label': t('roster.settings'),
 							title: t('roster.settings'),
@@ -476,7 +530,7 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 							),
 						]),
 					]),
-					settingsOpen ? settingsPanel(detail) : null,
+					settingsOpen && detail ? settingsPanel(detail) : null,
 
 					summary
 						? m('.card.roster__summary', [
@@ -503,6 +557,36 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 							])
 						: null,
 
+					// The summary card already says lessons, score and success rate;
+					// the graphs behind this button are the rest of the class dashboard.
+					detail
+						? m(
+								'button.btn.btn--ghost.roster__graphs-toggle',
+								{
+									type: 'button',
+									'aria-expanded': String(graphsOpen),
+									'aria-controls': GRAPHS_ID,
+									onclick: () => {
+										graphsOpen = !graphsOpen;
+									},
+								},
+								[
+									m(Icon, { name: 'chart', size: 20 }),
+									m('span', t(graphsOpen ? 'roster.graphs_hide' : 'roster.graphs')),
+								],
+							)
+						: null,
+					graphsOpen && detail
+						? m(
+								'.card.roster__graphs',
+								{ id: GRAPHS_ID },
+								m(IndicatorGrid<'class'>, {
+									scope: 'class',
+									context: classContextFrom(detail),
+									options: { hide: CLASS_STATS_IN_SUMMARY },
+								}),
+							)
+						: null,
 					m(
 						'button.btn.btn--primary.btn--full.btn--lg',
 						{ onclick: () => m.route.set(`/teach/start?classId=${classId}`) },
@@ -510,10 +594,20 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 					),
 
 					m('.stack', [
-						m('p.teacher__section-title', t('roster.title', { count: String(members.length) })),
-						members.length === 0
-							? m('p.home-explanation', t('roster.empty'))
-							: m('.stack', members.map(memberRow)),
+						m(
+							'p.teacher__section-title',
+							t('roster.title', {
+								count: String(detail ? members.length : (cached?.memberCount ?? 0)),
+							}),
+						),
+						// An empty roster and a roster that has not arrived yet are
+						// different sentences — "nobody has joined" must not be the
+						// page's answer while it is still asking
+						!detail
+							? m('.spinner')
+							: members.length === 0
+								? m('p.home-explanation', t('roster.empty'))
+								: m('.stack', members.map(memberRow)),
 					]),
 
 					sessions.length > 0

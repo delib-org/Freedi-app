@@ -118,7 +118,7 @@ await page.waitForTimeout(3500);
 await page.locator('.celebration__dismiss, .celebration button').first().click({ timeout: 4000 }).catch(() => {});
 await page.waitForTimeout(800);
 
-await page.locator('.delib-nav__item--results').click();
+await page.locator('.place-bar__item[data-place="results"]').click();
 await page.waitForSelector('.board__plot', { timeout: 20_000 });
 // A field with no points on it is not a picture of anything
 await page.waitForSelector('.board__point', { timeout: 20_000 });
@@ -149,7 +149,7 @@ await page.screenshot({ path: `${SHOTS}/04-screen.png` });
 // over the bottom of the plot — which is precisely the against half, the half
 // the red is in — so they come off for this one shot.
 const hideDock = await page.addStyleTag({
-	content: '.delib-nav { display: none !important; }',
+	content: '.place-bar-wrap { display: none !important; }',
 });
 await page.waitForTimeout(400);
 await page.locator('.board__plot-frame').screenshot({ path: `${SHOTS}/05-field.png` });

@@ -6,6 +6,7 @@ import { logError } from '@/utils/errorHandling';
 // Define a type for the slice state
 interface NotificationsState {
 	inAppNotifications: NotificationType[];
+	loadedForUser?: string;
 }
 
 // Define the initial state using that type
@@ -17,6 +18,13 @@ export const notificationsSlice = createSlice({
 	name: 'notifications',
 	initialState,
 	reducers: {
+		resetNotificationFeed: (state) => {
+			state.inAppNotifications = [];
+			state.loadedForUser = undefined;
+		},
+		setNotificationFeedOwner: (state, action: PayloadAction<string>) => {
+			state.loadedForUser = action.payload;
+		},
 		setInAppNotificationsAll: (state, action: PayloadAction<NotificationType[]>) => {
 			try {
 				state.inAppNotifications = action.payload;
@@ -152,6 +160,8 @@ export const notificationsSlice = createSlice({
 });
 
 export const {
+	resetNotificationFeed,
+	setNotificationFeedOwner,
 	setInAppNotificationsAll,
 	setInAppNotification,
 	setInAppNotifications,
@@ -164,6 +174,9 @@ export const {
 	markAllNotificationsAsRead,
 	clearAllInAppNotifications,
 } = notificationsSlice.actions;
+
+export const notificationFeedOwnerSelector = (state: { notifications: NotificationsState }) =>
+	state.notifications.loadedForUser;
 
 // Selectors use narrowly-typed state parameters to avoid circular dependencies with store.ts
 export const inAppNotificationsSelector = (state: { notifications: NotificationsState }) =>

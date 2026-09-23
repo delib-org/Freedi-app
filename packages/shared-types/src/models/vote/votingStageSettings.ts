@@ -60,6 +60,16 @@ export const VotingStageSettingsSchema = object({
 	 * `AGORA_CHALLENGE.DEFAULT_MAX_TURNS`. Only read when `challengeGame`.
 	 */
 	challengeMaxTurns: optional(number()),
+	/**
+	 * Draw the ballot from the GOAL on the class map instead of from the
+	 * shared consensus selector: only proposals standing in the net (enough of
+	 * the class behind them, both camps fairly evenly — `inBridgeZone`) reach
+	 * the vote. While the class still deliberates, the same switch narrows the
+	 * scoreboard to those proposals, so what the room sees in the net is
+	 * exactly what it will vote on. `undefined` means OFF: the shared selector
+	 * stays the default, as every other Freedi app ranks.
+	 */
+	goalZoneOnly: optional(boolean()),
 });
 
 export type VotingStageSettings = InferOutput<typeof VotingStageSettingsSchema>;

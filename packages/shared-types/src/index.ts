@@ -744,6 +744,7 @@ export {
 // Embedding models
 export type {
   StatementEmbedding,
+  StatementEmbeddingDoc,
   SimilarityResult,
   EmbeddingBatchRequest,
   EmbeddingBatchResult,
@@ -754,6 +755,7 @@ export type {
 
 export {
   StatementEmbeddingSchema,
+  StatementEmbeddingDocSchema,
   SimilarityResultSchema,
   EmbeddingBatchRequestSchema,
   EmbeddingBatchResultSchema,
@@ -946,3 +948,7 @@ export * from "./models/agora";
 
 // Israeli Odyssey pre-election civic-voice game
 export * from "./models/odyssey";
+
+export * from './models/covenant/covenant';
+
+export * from './models/covenant/deliberation';

@@ -1,3 +1,4 @@
+import { teacherActivity } from './teacherActivity';
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import { db } from '../db';
 import {
@@ -10,12 +11,13 @@ import {
 	AgoraSession,
 	AgoraStudentAggregate,
 	functionConfig,
-	TeacherConsoleMember,
 	TeacherConsoleRequest,
 	TeacherConsoleResponse,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
+import { isSystemAdmin } from '../utils/httpAuth';
 import { teacherDisplayNames } from './teacherLookup';
+import { toTeacherMember } from './consoleShapes';
 
 /**
  * Every read the teacher console makes, served server-side.
@@ -28,16 +30,6 @@ import { teacherDisplayNames } from './teacherLookup';
  * see: roster rows without rejoinPinHash/uidHistory, participants without
  * the AI raters.
  */
-
-/** The roster as the teacher sees it — never the PIN hash or uid history. */
-function toTeacherMember(member: AgoraClassMember): TeacherConsoleMember {
-	return {
-		memberId: member.memberId,
-		alias: member.alias,
-		joinedAt: member.joinedAt,
-		lastActive: member.lastActive,
-	};
-}
 
 async function loadTeacherClass(classId: string, uid: string): Promise<AgoraClass> {
 	const snap = await db.collection(Collections.agoraClasses).doc(classId).get();
@@ -67,30 +59,44 @@ export const agoraTeacherConsole = onCall(
 
 		try {
 			switch (data.view) {
+				case 'activity':
+					return await teacherActivity(uid);
 				case 'dashboard': {
-					const [classSnaps, schoolSnaps, sessionSnaps] = await Promise.all([
-						db
-							.collection(Collections.agoraClasses)
-							.where('teacherIds', 'array-contains', uid)
-							.get(),
-						// The schools this teacher may open classes in
-						db.collection(Collections.agoraSchools).where(`teacherMap.${uid}`, '==', true).get(),
-						db
-							.collection(Collections.agoraSessions)
-							.where('teacherId', '==', uid)
-							.orderBy('createdAt', 'desc')
-							.limit(20)
-							.get(),
-					]);
+					const [classSnaps, schoolSnaps, sessionSnaps, supervisedSnaps, systemAdmin] =
+						await Promise.all([
+							db
+								.collection(Collections.agoraClasses)
+								.where('teacherIds', 'array-contains', uid)
+								.get(),
+							// The schools this teacher may open classes in
+							db.collection(Collections.agoraSchools).where(`teacherMap.${uid}`, '==', true).get(),
+							db
+								.collection(Collections.agoraSessions)
+								.where('teacherId', '==', uid)
+								.orderBy('createdAt', 'desc')
+								.limit(20)
+								.get(),
+							// The schools this caller supervises — the "supervise" entry
+							db
+								.collection(Collections.agoraSchools)
+								.where(`supervisorMap.${uid}`, '==', true)
+								.get(),
+							isSystemAdmin(uid),
+						]);
 					const classes = classSnaps.docs
 						.map((snap) => snap.data() as AgoraClass)
 						.filter((agoraClass) => agoraClass.status === 'active')
 						.sort((a, b) => a.name.localeCompare(b.name));
-					const aggregateSnaps = await Promise.all(
-						classes.map((agoraClass) =>
-							db.collection(Collections.agoraClassAggregates).doc(agoraClass.classId).get(),
-						),
-					);
+					// One round trip for every class's advancement, not one per
+					// class: a teacher with eight classes was paying eight
+					// sequential gets for what getAll asks once.
+					const aggregateSnaps = classes.length
+						? await db.getAll(
+								...classes.map((agoraClass) =>
+									db.collection(Collections.agoraClassAggregates).doc(agoraClass.classId),
+								),
+							)
+						: [];
 					const aggregates: Record<string, AgoraClassAggregate> = {};
 					for (const snap of aggregateSnaps) {
 						const aggregate = snap.data() as AgoraClassAggregate | undefined;
@@ -113,6 +119,12 @@ export const agoraTeacherConsole = onCall(
 							.sort((a, b) => a.name.localeCompare(b.name)),
 						aggregates,
 						sessions: sessionSnaps.docs.map((snap) => snap.data() as AgoraSession),
+						supervisedSchools: supervisedSnaps.docs
+							.map((snap) => snap.data() as AgoraSchool)
+							.filter((school) => school.status === 'active')
+							.map((school) => ({ schoolId: school.schoolId, name: school.name }))
+							.sort((a, b) => a.name.localeCompare(b.name)),
+						isSystemAdmin: systemAdmin,
 					};
 				}
 

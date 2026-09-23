@@ -1,0 +1,185 @@
+// Dashboard indicators: the KPI row, the chart cards, and the Agora-side
+// overrides of @freedi/shared-charts' .chart chrome (type sizes, tooltip).
+// Imported by components.scss; do not import directly.
+
+.indicator-grid {
+	display: grid;
+	gap: var(--space-md);
+	min-inline-size: 0;
+
+	&__stats {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+		gap: var(--space-sm);
+	}
+
+	&__charts {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: var(--space-md);
+	}
+
+	&--compact &__charts {
+		gap: var(--space-sm);
+	}
+}
+
+.indicator {
+	min-inline-size: 0;
+
+	// --- Sizes: a column, half the row, the whole row ---
+	&--sm {
+		grid-column: span 1;
+	}
+
+	&--md {
+		grid-column: span 2;
+	}
+
+	&--lg {
+		grid-column: 1 / -1;
+	}
+
+	// --- A number with its name ---
+	&--stat {
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		padding: var(--space-sm) var(--space-md);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		align-items: center;
+		text-align: center;
+	}
+
+	&__value {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		color: var(--text-primary);
+		font-variant-numeric: tabular-nums;
+		line-height: 1.1;
+	}
+
+	&__unit {
+		font-family: inherit;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		margin-inline-start: var(--space-xs);
+	}
+
+	&__label {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+
+	// --- A picture with its title ---
+	&--chart {
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+		padding: var(--space-md);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&--compact {
+		box-shadow: none;
+		padding: var(--space-sm);
+		border-radius: var(--radius-md);
+	}
+
+	&__title {
+		font-size: var(--font-size-base);
+		font-weight: 600;
+		margin: 0;
+	}
+
+	&__hint {
+		margin: 0;
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+
+	// --- Nothing yet, said once ---
+	&--empty {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		padding: var(--space-sm) var(--space-md);
+		border: 1px dashed var(--border-subtle);
+		border-radius: var(--radius-md);
+	}
+
+	&__empty {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+	}
+}
+
+// --- Chart chrome at Agora's type scale -------------------------------------
+// The package draws ticks at 14px; here a tick is a glanced-at mark (13px,
+// recorded via type-meta) and anything read is a word (16px+).
+.chart {
+	&__tick,
+	&__note {
+		@include type-meta;
+	}
+
+	&__label {
+		font-size: var(--font-size-xs);
+	}
+
+	&__tip {
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+		transform: translate(-50%, calc(-100% - var(--space-sm)));
+		inset-inline-end: auto;
+
+		&--flip {
+			transform: translate(-50%, var(--space-sm));
+		}
+	}
+
+	[dir='rtl'] &__tip {
+		transform: translate(50%, calc(-100% - var(--space-sm)));
+
+		&--flip {
+			transform: translate(50%, var(--space-sm));
+		}
+	}
+
+	&__legend,
+	&__hint,
+	&__empty {
+		font-size: var(--font-size-sm);
+	}
+
+	&--table &__table {
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+	}
+
+	&__table-toggle {
+		align-self: flex-start;
+	}
+}
+
+@media (max-width: 600px) {
+	.indicator-grid__charts {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.indicator--sm,
+	.indicator--md,
+	.indicator--lg {
+		grid-column: 1 / -1;
+	}
+
+	.indicator-grid__stats {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}

@@ -19,7 +19,7 @@ interface Props {
 const SubGroupCard: FC<Props> = ({ statement }) => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
-	const { Icon, backgroundColor, text } = useSubGroupCard(statement);
+	const { Icon, text } = useSubGroupCard(statement);
 	const routeTargets = useRouteTargets(statement);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
 	const [showRoutePicker, setShowRoutePicker] = useState(false);
@@ -35,18 +35,17 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 		return (
 			<div
 				className={styles.subGroupCard}
-				style={{
-					border: `1px solid ${backgroundColor}`,
-					borderLeft: `5px solid ${backgroundColor}`,
-					opacity: hide ? 0.5 : 1,
-				}}
+				data-hidden={hide || undefined}
+				data-kind={statement.statementType}
 			>
-				<Link to={`/statement/${statement.statementId}`} className={styles.type}>
-					<div className={styles.text}>{text}</div>{' '}
-					<div className={styles.iconWrapper} style={{ color: backgroundColor }}>
+				<div className={styles.type}>
+					<Link to={`/statement/${statement.statementId}`} className={styles.text}>
+						{text}
+					</Link>{' '}
+					<div className={styles.iconWrapper}>
 						{Icon}
 						<div onClick={(e) => e.stopPropagation()}>
-							<StatementChatMore statement={statement} onlyCircle={true} />
+							<StatementChatMore statement={statement} />
 						</div>
 						{routeTargets.length > 0 && (
 							<div
@@ -58,7 +57,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 								<Menu
 									setIsOpen={setIsCardMenuOpen}
 									isMenuOpen={isCardMenuOpen}
-									iconColor={backgroundColor}
+									iconColor="var(--text-body)"
 									isCardMenu={true}
 									isNavMenu={false}
 								>
@@ -74,7 +73,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 							</div>
 						)}
 					</div>
-				</Link>
+				</div>
 				{routeTargets.length > 0 && (
 					<RoutePicker
 						statement={statement}
