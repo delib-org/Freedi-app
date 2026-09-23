@@ -113,6 +113,7 @@ export const LogoManager: React.FC<LogoManagerProps> = ({
                 ⋮⋮
               </div>
 
+              {/* eslint-disable-next-line @next/next/no-img-element -- uploaded logo from any storage host, sized by CSS */}
               <img
                 src={logo.publicUrl}
                 alt={logo.altText}

@@ -57,6 +57,7 @@ export const OpeningSlide: React.FC<OpeningSlideProps> = ({
         <div className="opening-slide__header">
           <div className="opening-slide__logos">
             {sortedLogos.map((logo, index) => (
+              // eslint-disable-next-line @next/next/no-img-element -- uploaded logo, admin sets its own width/height
               <img
                 key={logo.logoId}
                 src={logo.publicUrl}
