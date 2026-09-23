@@ -16,6 +16,10 @@ import {
 	AGORA_CLASSROOM,
 } from '@freedi/shared-types';
 import { generateUniqueClassCode } from './joinCodes';
+import { logError } from '../utils/errorHandling';
+
+/** gRPC status for a missing document */
+const NOT_FOUND = 5;
 
 /** A trimmed, length-capped label, or the refusal the caller should throw. */
 export function cleanClassName(name: string | undefined, what: string): string {
@@ -160,8 +164,17 @@ async function syncAggregateTeacher(
 			.collection(Collections.agoraClassAggregates)
 			.doc(classId)
 			.update({ [`teacherMap.${teacherUid}`]: value, lastUpdate: Date.now() });
-	} catch {
+	} catch (error) {
 		// NOT_FOUND — the class has never finished a game. Nothing to carry.
+		if ((error as { code?: unknown }).code === NOT_FOUND) return;
+		// Anything else leaves the aggregate's map disagreeing with the class —
+		// a removed teacher would keep reading its advancement. Fail the call so
+		// the admin retries; both writes are idempotent.
+		logError(error, {
+			operation: 'agora.classes.syncAggregateTeacher',
+			metadata: { classId, teacherUid },
+		});
+		throw error;
 	}
 }
 

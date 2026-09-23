@@ -83,7 +83,8 @@ const REJUDGE_MERGE_THRESHOLD = 0.82;
  * the reader's point of view. The recipient's title regenerates after the merge
  * via enqueueClusterRecompute.
  *
- * Bounded: at most MAX_PARENTS_PER_SWEEP per tick; at most MAX_MERGES_PER_PARENT
+ * Bounded: at most MAX_PARENTS_PER_SWEEP judged per tick (unchanged and dormant
+ * skips do not count); at most MAX_MERGES_PER_PARENT
  * to avoid a runaway chain of merges that should be its own design decision.
  *
  * Cost per parent with M synths averaging K members: 1 batch read of M*K
@@ -964,13 +965,15 @@ export const fn_synthesisReJudge = onSchedule(
 			for (const [parentId, synths] of byParent) {
 				if (parentsProcessed >= MAX_PARENTS_PER_SWEEP) break;
 				if (synths.length < 2) continue;
-				parentsProcessed++;
 				try {
 					const result = await reJudgeProcessParent(parentId, synths, {
 						useSweepState: true,
 						now: startedAt,
 					});
+					// A skip is one state read, not a judging pass: it must not use up
+					// a slot, or the parents after the first thirty are never reached
 					if (result.skipped) parentsSkipped++;
+					else parentsProcessed++;
 					if (result.skipReason === 'dormant') parentsDormant++;
 					totalMerges += result.merges;
 					if (result.merges > 0) {
@@ -981,6 +984,7 @@ export const fn_synthesisReJudge = onSchedule(
 						});
 					}
 				} catch (error) {
+					parentsProcessed++;
 					logger.warn('synthesis.reJudge: parent processing failed', {
 						parentId,
 						error: error instanceof Error ? error.message : String(error),
