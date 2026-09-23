@@ -745,8 +745,11 @@
 	inset-block-end: 0;
 	background: linear-gradient(0deg, var(--mint-deep), var(--mint));
 	border-radius: var(--radius-md) var(--radius-md) 0 0;
-	transition: block-size var(--motion-slow) var(--ease-camera);
-	animation: voting-pillar-in var(--motion-camera) var(--ease-camera) both;
+	// Every later change of height glides. The reveal sweep below must NOT
+	// hold its end frame (`both`/`forwards`): a filling animation outranks the
+	// transition, and each new vote would snap the pillar instead of moving it.
+	transition: block-size var(--motion-slow) var(--ease-spring);
+	animation: voting-pillar-in var(--motion-camera) var(--ease-camera);
 }
 
 .voting__option--against .voting__pillar {
@@ -769,6 +772,12 @@
 
 .voting__count--standing {
 	min-block-size: 2.6rem;
+
+	// The numbers pop on change (StandingBar.ts); a pop needs a box to scale
+	.voting__votes,
+	.voting__share {
+		display: inline-block;
+	}
 }
 
 @media (min-width: 900px) {
