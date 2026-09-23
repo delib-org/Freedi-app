@@ -553,7 +553,7 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
             <h3>{t('clearTestData') || 'Clear Test Data'}</h3>
             <p>{t('clearTestDataConfirm') || 'Are you sure you want to delete all test data? This action cannot be undone.'}</p>
             <p className={styles.testDataPreview}>
-              {testDataCounts?.progressCount || 0} {t('responses')} | {testDataCounts?.demographicAnswerCount || 0} {t('demographicAnswers') || 'demographic answers'}
+              {testDataCounts?.progressCount || 0} {t('responses')} | {testDataCounts?.demographicAnswerCount || 0} {t('demographicAnswers') || 'demographic answers'} | {testDataCounts?.evaluationCount || 0} {t('evaluations')}
             </p>
             <div className={styles.confirmActions}>
               <button
