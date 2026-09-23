@@ -377,18 +377,24 @@
 				</div>
 			</header>
 
-			<h2>the bottom nav</h2>
-			<nav class="delib-nav" style="position: static">
-				<button class="delib-nav__item delib-nav__item--results">
-					<span class="delib-nav__icon">📊</span>
-					<span class="delib-nav__label">תוצאות</span>
-				</button>
-				<button class="delib-nav__item delib-nav__item--peer delib-nav__item--active">
-					<span class="delib-nav__icon">👥</span>
-					<span class="delib-nav__label">של אחרים</span>
-					<span class="delib-nav__badge">3</span>
-				</button>
-			</nav>
+			<h2>the place bar (flat view), with a count on a door</h2>
+			<div class="place-bar-wrap" style="position: static">
+				<nav class="place-bar place-bar--flat" aria-label="ניווט">
+					<button class="place-bar__item place-bar__item--active" type="button" data-place="note" aria-current="true">
+						<span class="place-bar__icon">📝</span>
+						<span class="place-bar__label">הפתק שלי</span>
+					</button>
+					<button class="place-bar__item" type="button" data-place="board">
+						<span class="place-bar__icon">👥</span>
+						<span class="place-bar__label">כל הפתקים</span>
+						<span class="place-bar__badge">3</span>
+					</button>
+					<button class="place-bar__item place-bar__item--locked" type="button" data-place="results" aria-disabled="true">
+						<span class="place-bar__icon">📊<span class="place-bar__lock" aria-hidden="true"></span></span>
+						<span class="place-bar__label">תוצאות</span>
+					</button>
+				</nav>
+			</div>
 
 			<h2>buttons, in every state a student meets</h2>
 			<div style="display: flex; flex-wrap: wrap; gap: 8px">

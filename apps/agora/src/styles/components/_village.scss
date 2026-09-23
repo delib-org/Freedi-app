@@ -55,7 +55,7 @@ body:has(.village-library--reading) { overflow:hidden; }
   &:focus-visible { outline:4px solid #fff; outline-offset:5px; }
 }
 
-.village-coins, .village-feedback { position:absolute; z-index:6; border:1px solid #d4b674; border-radius:24px; background:#233f35; color:#fff6de; box-shadow:0 4px 16px #0003; padding:10px 18px; }
+.village-coins, .village-feedback { position:absolute; z-index:6; border:1px solid var(--village-nav-border); border-radius:24px; background:var(--village-nav-surface); color:var(--village-nav-ink); box-shadow:0 4px 16px #0003; padding:10px 18px; }
 .village-coins { top:12px; right:16px; display:flex; align-items:center; gap:10px; font-size:24px; pointer-events:none; }
 .village-coins img { width:44px; height:44px; }
 .village-coins__gain { color:#ffe06a; animation:village-coin-gain 2s ease-out; }
@@ -100,7 +100,7 @@ body:has(.village-library--reading) { overflow:hidden; }
     bottom: var(--village-bar-clear);
   }
 }
-.village-flight-status { position:absolute; z-index:35; bottom:calc(var(--village-bar-clear) + 12px); left:50%; transform:translateX(-50%); background:#233f35; color:#fff6de; padding:12px 24px; border-radius:24px; pointer-events:none; }
+.village-flight-status { position:absolute; z-index:35; bottom:calc(var(--village-bar-clear) + 12px); left:50%; transform:translateX(-50%); background:var(--village-nav-surface); color:var(--village-nav-ink); padding:12px 24px; border-radius:24px; pointer-events:none; }
 .village-note--landed { outline:3px solid #c6a457; outline-offset:3px; animation:village-note-land .5s ease-out; }
 @keyframes village-note-land { from {transform:translateY(-16px) rotate(-3deg);opacity:.4} to {transform:none;opacity:1} }
 @media(prefers-reduced-motion:reduce) { .village-note--landed {animation:none} }
@@ -135,7 +135,7 @@ body:has(.village-library--reading) { overflow:hidden; }
   }
 }
 .village-inbox { position:absolute; top:12px; left:16px; z-index:40; }
-.village-inbox .inbox-button { background:#233f35; color:#fff6de; border:1px solid #d4b674; }
+.village-inbox .inbox-button { background:var(--village-nav-surface); color:var(--village-nav-ink); border:1px solid var(--village-nav-border); }
 .village-community__panel .chat-page { min-height:0; height:auto; }
 // Reuse the classic conversation's behavior inside the village panel, below its HUD.
 .village-community__panel:has(.shell--chat) { display:flex; flex-direction:column; overflow:hidden; }
@@ -484,9 +484,9 @@ article.village-note { cursor: default; }
       color: var(--text-secondary);
       min-block-size: 48px;
 
+      // Its ink comes from the on-dark registry in tokens.scss, so every look
+      // that re-colours --mine hands the label a readable ink with it
       &--active {
-        color: var(--bg-card-solid);
-
         &::before { background: var(--mine); }
       }
 

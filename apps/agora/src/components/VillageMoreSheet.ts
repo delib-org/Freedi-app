@@ -13,7 +13,9 @@ import type { AgoraThemeSeeds } from '@freedi/shared-types';
  * gear now.
  *
  * Reuses the `.look-sheet` frame, as the teacher's thread does: a proven
- * bottom sheet, scrim and Esc included.
+ * bottom sheet and scrim. Escape is heard on the document, as in
+ * TeacherThreadSheet: a handler on the sheet only hears keys while focus is
+ * inside it.
  */
 
 export interface VillageMoreSheetAttrs {
@@ -31,13 +33,29 @@ export interface VillageMoreSheetAttrs {
 
 export const VillageMoreSheet: m.Component<
 	VillageMoreSheetAttrs,
-	{ returnFocus: HTMLElement | null }
+	{
+		returnFocus: HTMLElement | null;
+		onClose: () => void;
+		onKey: (event: KeyboardEvent) => void;
+	}
 > = {
 	oninit(vnode) {
 		vnode.state.returnFocus =
 			document.activeElement instanceof HTMLElement ? document.activeElement : null;
+		vnode.state.onClose = vnode.attrs.onClose;
+		vnode.state.onKey = (event: KeyboardEvent): void => {
+			if (event.key !== 'Escape') return;
+			event.preventDefault();
+			vnode.state.onClose();
+			m.redraw();
+		};
+		document.addEventListener('keydown', vnode.state.onKey);
+	},
+	onbeforeupdate(vnode) {
+		vnode.state.onClose = vnode.attrs.onClose;
 	},
 	onremove(vnode) {
+		document.removeEventListener('keydown', vnode.state.onKey);
 		// Opening the style picker hands focus to another dialog.
 		queueMicrotask(() => {
 			if (document.activeElement === document.body) vnode.state.returnFocus?.focus();
@@ -68,10 +86,6 @@ export const VillageMoreSheet: m.Component<
 					if (event.target === event.currentTarget) onClose();
 				},
 				onkeydown: (event: KeyboardEvent) => {
-					if (event.key === 'Escape') {
-						event.preventDefault();
-						onClose();
-					}
 					if (event.key !== 'Tab') return;
 					const buttons = (event.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>(
 						'button:not(:disabled)',

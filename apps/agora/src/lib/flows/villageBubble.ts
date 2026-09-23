@@ -40,8 +40,8 @@ export const BUBBLE = {
 	NARROW: 720,
 	/** Space between the figure's head and the bubble's edge */
 	GAP: 56,
-	/** Below the toolbar, the HUD and the table/board switch */
-	TOP_FLOOR: 176,
+	/** Below the stage strip: the same 70px ceiling as the open panels and world-scene's topRoom */
+	TOP_FLOOR: 70,
 	BOTTOM_ROOM: 24,
 	/** How far above the head the bubble starts: it uses the sky over the guide, the tail still meets the head */
 	LIFT: 300,

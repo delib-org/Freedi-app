@@ -459,13 +459,6 @@
   --z-toast: 90;
   --z-modal: 100;
 
-  // --- Fixed deliberation chrome ---
-  // Two fixed strips stack at the bottom of every deliberation screen (the
-  // Others|Results bar, and the proposal dock parked on its top edge). They
-  // have to agree on their heights, and the page has to know the total to
-  // keep its last button clear of both.
-  --delib-nav-h: 68px;
-
   // --- Fixed teacher chrome ---
   // The console's bar and its control strip stack the same way: the strip
   // sticks under the bar on desktop, and on a phone it is the fixed bottom
@@ -531,9 +524,9 @@
 // my own message in a conversation
 .thread__msg--mine,
 .chat-bubble--mine,
-// the face I pressed, and the tab I am on
+// the face I pressed, and the door I am standing in (the flat view's pill)
 .rate-scale__option--selected,
-.delib-nav__item--active,
+.place-bar--flat .place-bar__item--active,
 // the ballot row I voted for — MINE is a purple surface, not a border
 .voting__option--mine,
 // the HUD's two filled tokens
