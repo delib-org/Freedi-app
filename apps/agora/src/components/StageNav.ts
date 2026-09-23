@@ -27,6 +27,13 @@ export interface StageNavAttrs {
 	 * cannot see.
 	 */
 	mail?: { unread: number; onOpen: () => void; label: string };
+	/**
+	 * The gear, in the look door's place. In the village it holds everything
+	 * that is not a move in the game — the style, the sounds, the world's
+	 * quality, the way back to the flat view — so the screen itself carries
+	 * only the four doors and the stations.
+	 */
+	menu?: { onOpen: () => void; label: string };
 }
 
 const ICONS: Record<AgoraStage, IconName> = {
@@ -71,7 +78,7 @@ export function planItemLabel(item: AgoraStagePlanItem): string {
  */
 export const StageNav: m.Component<StageNavAttrs> = {
 	view(vnode) {
-		const { plan, currentIndex, viewingIndex, onSelect, compact, look, mail } = vnode.attrs;
+		const { plan, currentIndex, viewingIndex, onSelect, compact, look, mail, menu } = vnode.attrs;
 		const stations = plan
 			.map((item, index) => ({ item, index }))
 			.filter(({ item }) => item.stage !== AgoraStage.ended);
@@ -127,6 +134,20 @@ export const StageNav: m.Component<StageNavAttrs> = {
 								onclick: look.onOpen,
 							},
 							lookDots(look.seeds),
+						)
+					: null,
+				menu
+					? m(
+							'button.stage-nav__menu',
+							{
+								type: 'button',
+								'aria-label': menu.label,
+								'aria-haspopup': 'dialog',
+								title: menu.label,
+								onclick: menu.onOpen,
+							},
+							m(Icon, { name: 'cog', size: 18 }),
+							m('span', menu.label),
 						)
 					: null,
 				mail

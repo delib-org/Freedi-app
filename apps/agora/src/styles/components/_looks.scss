@@ -28,7 +28,10 @@
 }
 
 // --- The style button in the stage nav ---
-.stage-nav__look {
+.stage-nav__look,
+// The gear stands in the look door's place in the village, where the style is
+// one row inside it rather than a door of its own — same shape, same slot.
+.stage-nav__menu {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-xs);
@@ -54,6 +57,10 @@
 }
 
 // --- The sheet ---
+.stage-nav__menu {
+	min-block-size: 44px;
+}
+
 .look-sheet {
 	position: fixed;
 	inset: 0;

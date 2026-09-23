@@ -1,21 +1,23 @@
 import * as THREE from './vendor/three.module.js';
 import { buildWritingDesk } from './writing-desks.js';
 import { buildCharacters } from './characters-2d.js';
+import { boothLayout, CENTER, PLACES } from './village-layout.js';
 
-/** The village square every path leads to, and every booth board faces. */
-export const CENTER = { x: 0, z: 15 };
+export { CENTER, boothLayout, villageRadius } from './village-layout.js';
 
 /**
  * The places that exist in every village, whatever the lesson's plan: the
  * library (learning), the study house (the meeting point / lobby) and the
  * council (the scoreboard, the vote, the decision). Every QUESTION of the
  * plan gets a booth of its own — see `boothLayout` — so the stations list is
- * completed at runtime from the session's plan.
+ * completed at runtime from the session's plan. Each one keeps the offsets
+ * of its approach point from its anchor in `PLACES`, so spreading the
+ * village out moves the whole site together.
  */
 export const fixedStations = [
-	{ id: 'library', name: 'הספרייה', short: 'לומדים יחד', guide: 'בית של ידע', question: 'פותחים ספר ומגלים את הסיפור, הדמויות והצרכים.', x: -23, z: 15, ax: -19.8, az: 15, icon: '▤' },
-	{ id: 'challenge', name: 'בית המדרש', short: 'האתגר', guide: 'נועם · חושבים יחד', question: 'מה אנחנו יודעים, ומה עוד חשוב לברר?', x: -13, z: 6, ax: -10, az: 12, icon: '⌂' },
-	{ id: 'council', name: 'מועצת הכפר', short: 'מחליטים יחד', guide: 'חכמי הכפר', question: 'על הלוח הגדול: כל ההצעות במגרש, השער, ובזמן ההצבעה — הקלפי.', x: 14, z: 5, ax: 11.2, az: 10.6, icon: '◒', look: { x: 14.6, z: 1.4 }, pitch: .06 },
+	{ id: 'library', name: 'הספרייה', short: 'לומדים יחד', guide: 'בית של ידע', question: 'פותחים ספר ומגלים את הסיפור, הדמויות והצרכים.', x: PLACES.library.x, z: PLACES.library.z, ax: PLACES.library.x + 3.2, az: PLACES.library.z, icon: '▤' },
+	{ id: 'challenge', name: 'בית המדרש', short: 'האתגר', guide: 'נועם · חושבים יחד', question: 'מה אנחנו יודעים, ומה עוד חשוב לברר?', x: PLACES.study.x, z: PLACES.study.z, ax: PLACES.study.x + 3, az: PLACES.study.z + 6, icon: '⌂' },
+	{ id: 'council', name: 'מועצת הכפר', short: 'מחליטים יחד', guide: 'חכמי הכפר', question: 'על הלוח הגדול: כל ההצעות במגרש, השער, ובזמן ההצבעה — הקלפי.', x: PLACES.council.x, z: PLACES.council.z, ax: PLACES.council.x - 2.8, az: PLACES.council.z + 5.6, icon: '◒', look: { x: PLACES.council.x + .6, z: PLACES.council.z - 3.6 }, pitch: .06 },
 ];
 
 /** What each kind of question booth is called and coloured. */
@@ -27,35 +29,15 @@ export const BOOTH_KINDS = {
 	proposal: { name: 'ביתן הפתרונות', roof: '#6f8a5a', icon: '✎', prompt: 'כותבים הצעה על הפתק, מדרגים את ההצעות של החברים על הלוח ומציעים להם שיפורים.' },
 };
 
-/**
- * Where N booths stand: on a ring around the square, spread over the arc the
- * fixed buildings leave free (east → south → south-west), far enough apart
- * that two pavilions never touch. The ring widens with the count so the gap
- * between neighbours stays at least a pavilion wide.
- */
-export function boothLayout(count) {
-	const radius = Math.max(15, 6.5 + count * 2.2);
-	const first = 12, last = 152;
-	const step = count > 1 ? (last - first) / (count - 1) : 0;
-
-	return Array.from({ length: count }, (_, i) => {
-		const angle = ((count > 1 ? first + step * i : 82) * Math.PI) / 180;
-		const x = CENTER.x + Math.cos(angle) * radius, z = CENTER.z + Math.sin(angle) * radius;
-		// Face the square: the local +z axis points at the centre.
-		const facing = Math.atan2(CENTER.x - x, CENTER.z - z);
-		const toward = { x: Math.sin(facing), z: Math.cos(facing) };
-
-		return { x, z, facing, ax: x + toward.x * 5.6, az: z + toward.z * 5.6 };
-	});
-}
-
 export function buildVillage({ scene, height, manager }) {
 	const material = (color) => new THREE.MeshStandardMaterial({ color, roughness: .93 });
 	const limestone = material('#d8c7a5'), wood = material('#70543b'), paper = material('#f5edda');
 	const solids = [];
+	/** Every paved floor the village lays down: grass and trees are cleared off them. */
+	const clearings = [];
 	const make = (geo, mat, parent, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; };
 	const box = (w, h, d, mat, p, x, y, z) => make(new THREE.BoxGeometry(w, h, d), mat, p, x, y, z);
-	function floor(x, z, r) { const g = new THREE.Group(); g.position.set(x, height(x, z) + .045, z); scene.add(g); make(new THREE.CylinderGeometry(r, r, .14, 48), limestone, g, 0, 0, 0); return g; }
+	function floor(x, z, r, booth = false) { const g = new THREE.Group(); g.position.set(x, height(x, z) + .045, z); scene.add(g); make(new THREE.CylinderGeometry(r, r, .14, 48), limestone, g, 0, 0, 0); clearings.push({ x, z, r, booth }); return g; }
 	function table(g, x, z) { box(1.7, .12, .85, wood, g, x, .92, z); for (const dx of [-.7, .7]) for (const dz of [-.3, .3]) box(.1, .92, .1, wood, g, x + dx, .42, z + dz); box(.65, .012, .43, paper, g, x, .991, z); }
 	function bench(g, x, z, angle = 0) { const b = new THREE.Group(); b.position.set(x, .1, z); b.rotation.y = angle; g.add(b); box(1.5, .18, .55, limestone, b, 0, .5, 0); for (const dx of [-.55, .55]) box(.2, .5, .4, limestone, b, dx, .2, 0); }
 	/** A painted sign; `text` shrinks to fit and may wrap once. */
@@ -81,10 +63,10 @@ export function buildVillage({ scene, height, manager }) {
 	}
 
 	// The study house — the meeting point where the lobby opens.
-	const study = floor(-13, 6, 4.4); box(7, 2.9, .45, limestone, study, 0, 1.5, -2.4); box(.4, 2.9, 4.8, limestone, study, -3.3, 1.5, 0); box(7.4, .3, 5.3, limestone, study, 0, 3.12, 0);
-	for (const x of [-3.05, -1.1, 1.1, 3.05]) { make(new THREE.CylinderGeometry(.17, .23, 2.85, 12), limestone, study, x, 1.55, 2.25); box(.55, .18, .55, limestone, study, x, 2.98, 2.25); } for (const x of [-1.8, 1.8]) table(study, x, .7); label(study, 'בית המדרש'); solids.push({ x: -13, z: 3.6, w: 3.7, d: .5 });
+	const study = floor(PLACES.study.x, PLACES.study.z, 4.4); box(7, 2.9, .45, limestone, study, 0, 1.5, -2.4); box(.4, 2.9, 4.8, limestone, study, -3.3, 1.5, 0); box(7.4, .3, 5.3, limestone, study, 0, 3.12, 0);
+	for (const x of [-3.05, -1.1, 1.1, 3.05]) { make(new THREE.CylinderGeometry(.17, .23, 2.85, 12), limestone, study, x, 1.55, 2.25); box(.55, .18, .55, limestone, study, x, 2.98, 2.25); } for (const x of [-1.8, 1.8]) table(study, x, .7); label(study, 'בית המדרש'); solids.push({ x: PLACES.study.x, z: PLACES.study.z - 2.4, w: 3.7, d: .5 });
 	// An open-front library: warm stone, timber shelves and a reading desk.
-	const library = floor(-23, 15, 4.7); library.rotation.y = Math.PI / 2;
+	const library = floor(PLACES.library.x, PLACES.library.z, 4.7); library.rotation.y = Math.PI / 2;
 	box(7.8, .22, 6.6, wood, library, 0, .15, 0);
 	box(7.8, 3.8, .35, limestone, library, 0, 1.95, -2.8);
 	for (const x of [-3.7, 3.7]) box(.3, 3.8, 5.8, limestone, library, x, 1.95, 0);
@@ -100,11 +82,11 @@ export function buildVillage({ scene, height, manager }) {
 	table(library, 0, .7); label(library, 'הספרייה', 3.55);
 	const openBook = new THREE.Group(); openBook.position.set(0, 1.03, .7); library.add(openBook);
 	for (const side of [-1, 1]) { const page = box(.4, .035, .48, paper, openBook, side * .2, 0, 0); page.rotation.z = side * .14; }
-	solids.push({ x: -25.8, z: 15, w: .25, d: 4 });
+	solids.push({ x: PLACES.library.x - 2.8, z: PLACES.library.z, w: .25, d: 4 });
 
 	// The council: benches in a half circle around the speaker's stone, and the
 	// big scoreboard behind it, facing the square.
-	const council = floor(14, 5, 5.6); for (let row = 0; row < 2; row++) for (let i = 0; i < 9; i++) { const a = Math.PI * .12 + i / 8 * Math.PI * .76, r = 3.3 + row * 1.25; bench(council, Math.cos(a) * r, -Math.sin(a) * r, -a + Math.PI / 2); } make(new THREE.CylinderGeometry(1.0, 1.1, .55, 24), limestone, council, 0, .28, 0); label(council, 'מועצת הכפר', 3.8); for (const x of [-2.6, 2.6]) box(.16, 3.7, .16, wood, council, x, 1.8, 2.7);
+	const council = floor(PLACES.council.x, PLACES.council.z, 5.6); for (let row = 0; row < 2; row++) for (let i = 0; i < 9; i++) { const a = Math.PI * .12 + i / 8 * Math.PI * .76, r = 3.3 + row * 1.25; bench(council, Math.cos(a) * r, -Math.sin(a) * r, -a + Math.PI / 2); } make(new THREE.CylinderGeometry(1.0, 1.1, .55, 24), limestone, council, 0, .28, 0); label(council, 'מועצת הכפר', 3.8); for (const x of [-2.6, 2.6]) box(.16, 3.7, .16, wood, council, x, 1.8, 2.7);
 
 	const square = floor(0, 15, 5.2); make(new THREE.TorusGeometry(1.05, .18, 8, 32).rotateX(Math.PI / 2), limestone, square, 0, .55, 0); make(new THREE.CylinderGeometry(1, 1, .48, 32), limestone, square, 0, .25, 0); make(new THREE.CircleGeometry(.87, 32).rotateX(-Math.PI / 2), material('#80a7a0'), square, 0, .51, 0);
 
@@ -128,7 +110,7 @@ export function buildVillage({ scene, height, manager }) {
 	 */
 	const booths = [];
 	function buildBooth(spec, slot, index) {
-		const group = floor(slot.x, slot.z, 4.2); group.rotation.y = slot.facing; group.name = `booth-${spec.itemId}`;
+		const group = floor(slot.x, slot.z, 4.2, true); group.rotation.y = slot.facing; group.name = `booth-${spec.itemId}`;
 		const kind = BOOTH_KINDS[spec.kind] ?? BOOTH_KINDS.open;
 		const roof = material(kind.roof);
 		box(7.2, 3.1, .42, limestone, group, 0, 1.6, -2.9);
@@ -209,6 +191,7 @@ export function buildVillage({ scene, height, manager }) {
 		booths.length = 0;
 		characters.release();
 		for (let i = solids.length - 1; i >= 0; i--) if (solids[i].booth) solids.splice(i, 1);
+		for (let i = clearings.length - 1; i >= 0; i--) if (clearings[i].booth) clearings.splice(i, 1);
 		const slots = boothLayout(specs.length);
 		specs.forEach((spec, i) => { buildBooth(spec, slots[i], i); });
 
@@ -320,5 +303,5 @@ export function buildVillage({ scene, height, manager }) {
 		return { group: g, face, paint };
 	})();
 
-	return { booths, installBooths, scoreboard, figures: characters.figures, solids, ready: characters.ready, tick: characters.tick, characters };
+	return { booths, installBooths, scoreboard, figures: characters.figures, solids, clearings, ready: characters.ready, tick: characters.tick, characters };
 }

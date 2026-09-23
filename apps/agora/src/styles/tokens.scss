@@ -141,6 +141,13 @@
   --surface-tint: #faf8ff;               // the faintest wash of a surface
   --surface-flare: #ffffff;              // the white-hot centre of a spark
 
+  // Navigation over the village's illustrated landscape.
+  --village-nav-surface: #233f35;
+  --village-nav-ink: #fff6de;
+  --village-nav-muted: #e6dcc0;
+  --village-nav-border: #d4b674;
+  --village-nav-accent: #e5a548;
+
   // --- MINE: the purple family ---
   // Named by job, not by lightness, so a rule reads as a decision.
   --mine-light: #a98cf7;  // highlights, gradient tops, glows — NEVER under text

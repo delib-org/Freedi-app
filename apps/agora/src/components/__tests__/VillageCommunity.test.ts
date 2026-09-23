@@ -31,6 +31,7 @@ vi.mock('../StageNav', () => ({ planItemLabel: () => '' }));
 vi.mock('../../lib/sound', () => ({ playCoin: vi.fn() }));
 import { stationNotes, VillageCommunity, type VillageCommunityAttrs } from '../VillageCommunity';
 import { playCoin } from '../../lib/sound';
+import { t } from '../../lib/i18n';
 
 const proposal = (id: string, hidden = false): AgoraProposal => ({
 	statementId: id,
@@ -116,7 +117,7 @@ describe('village session integration', () => {
 			const tree = component.view.call(component, node);
 			component.onremove!.call(component, node);
 
-			return findButton(tree, 'עריכת הפתק שלי');
+			return findButton(tree, t('village.note.edit'));
 		};
 		const live = board(1);
 		expect(live).toBeDefined();

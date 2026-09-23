@@ -66,10 +66,15 @@ export interface VillageCommunityAttrs {
 	viewingIndex: number;
 	navigate: (itemId: string) => void;
 	onPause: (paused: boolean) => void;
+	onPanelChange?: (panel: 'none' | 'notes' | 'scoreboard') => void;
 	/** Take the student to the table to edit their own note (the board is for reading and rating) */
 	onEditMine?: () => void;
-	/** The board opened from the community layer's own button: the world turns to face it */
-	onBoard?: () => void;
+	/**
+	 * The teacher's private thread, pinned inside the post box. It used to be
+	 * a megaphone of its own in the stage strip — two mail icons on one
+	 * screen, each holding half the post.
+	 */
+	teacher?: { label: string; unread: number; onOpen: () => void };
 }
 export function stationNotes(item: AgoraStagePlanItem): AgoraProposal[] {
 	const state = getDeliberationState();
@@ -103,12 +108,14 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 		panel = 'none';
 		selected = undefined;
 		helper = undefined;
+		a.onPanelChange?.(panel);
 		a.onPause(false);
 	}
 	function open(a: VillageCommunityAttrs, next: Panel) {
 		panel = next;
 		selected = undefined;
 		helper = undefined;
+		a.onPanelChange?.(panel);
 		a.onPause(true);
 	}
 
@@ -143,6 +150,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 						? undefined
 						: a.userId;
 		}
+		a.onPanelChange?.(panel);
 		a.onPause(true);
 		m.redraw();
 
@@ -254,13 +262,13 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			previous = a.points;
 		},
 		onbeforeupdate: ({ attrs: a }) => {
-			if ((a.boardRequest ?? 0) !== request) {
-				request = a.boardRequest ?? 0;
-				open(a, 'notes');
-			}
 			if ((a.closeRequest ?? 0) !== closeSeen) {
 				closeSeen = a.closeRequest ?? 0;
 				if (panel !== 'none') close(a);
+			}
+			if ((a.boardRequest ?? 0) !== request) {
+				request = a.boardRequest ?? 0;
+				open(a, 'notes');
 			}
 			if ((a.scoreboardRequest ?? 0) !== scoreboardSeen) {
 				scoreboardSeen = a.scoreboardRequest ?? 0;
@@ -362,7 +370,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 					},
 					[
 						m('.village-note__head', [
-							m('strong', own ? 'הפתק שלי' : `פתק ${i + 1}`),
+							m('strong', own ? t('village.note.mine') : t('village.note.n', { n: i + 1 })),
 							stand ? m('small.village-note__standing', stand) : null,
 						]),
 						m('p', note.statement),
@@ -375,7 +383,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 							? m(
 									'button.village-note__edit',
 									{ onclick: () => a.onEditMine?.() },
-									'עריכת הפתק שלי · חזרה לשולחן',
+									t('village.note.edit'),
 								)
 							: null,
 						m(
@@ -386,7 +394,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 									helper = own ? undefined : a.userId;
 								},
 							},
-							own ? 'התגובות לפתק שלי' : 'קריאה והצעת שיפור',
+							own ? t('village.note.replies') : t('village.note.improve'),
 						),
 					],
 				);
@@ -402,28 +410,18 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 						gain ? m('span.village-coins__gain', `+${gain}`) : null,
 					],
 				),
-				m('.village-inbox', m(Inbox)),
-				m(
-					'button.village-board-open',
-					{
-						onclick: () => {
-							open(a, 'notes');
-							a.onBoard?.();
-						},
-					},
-					'לוח הפתקים · קריאה, דירוג ותגובות',
-				),
+				m('.village-inbox', m(Inbox, { pinned: a.teacher })),
 				panel === 'scoreboard'
 					? m(
 							'.village-community__panel.village-scoreboard',
-							{ role: 'dialog', 'aria-label': 'לוח התוצאות', 'aria-modal': 'true' },
+							{ role: 'region', 'aria-label': t('village.nav.results') },
 							scoreboardPanel(),
 						)
 					: null,
 				panel === 'notes'
 					? m(
 							'.village-community__panel',
-							{ role: 'dialog', 'aria-label': 'לוח הפתקים', 'aria-modal': 'true' },
+							{ role: 'region', 'aria-label': t('village.nav.board') },
 							[
 								m('header', [
 									m('h2', item ? planItemLabel(item) : 'לוח הפתקים'),

@@ -47,6 +47,13 @@ import { ToastStack } from '../components/Toast';
 import { NeedsBoard } from '../components/NeedsBoard';
 import { CelebrationOverlay } from '../components/Celebration';
 import { StageNav, planItemLabel } from '../components/StageNav';
+import { VillageMoreSheet } from '../components/VillageMoreSheet';
+import {
+	isLightWorld,
+	isVillageSoundOn,
+	setLightWorld,
+	setVillageSound,
+} from '../lib/villagePrefs';
 import { CarriedContext } from '../components/CarriedContext';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { StageTransition, hasStageTransition } from '../components/StageTransition';
@@ -172,6 +179,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let navRestored = false;
 	/** The style sheet is open — a modal over whatever stage is on screen */
 	let lookOpen = false;
+	/** The village's gear sheet: style, sounds, world quality, the flat view */
+	let moreOpen = false;
 	/** The teacher's thread is open — reachable from every stage, toast or not */
 	let teacherOpen = false;
 
@@ -357,6 +366,25 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				m(ToastStack),
 				m(CelebrationOverlay),
 				lookSheet,
+				moreOpen && villageMode
+					? m(VillageMoreSheet, {
+							look: lookDoor,
+							sound: isVillageSoundOn(),
+							onSound: (on: boolean) => {
+								setVillageSound(on);
+							},
+							lightMode: isLightWorld(),
+							onLightMode: (on: boolean) => {
+								setLightWorld(on);
+							},
+							onSimpleView: () => {
+								villageOverride = false;
+							},
+							onClose: () => {
+								moreOpen = false;
+							},
+						})
+					: null,
 				teacherOpen
 					? m(TeacherThreadSheet, {
 							sessionId,
@@ -384,14 +412,26 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				viewingIndex,
 				onSelect: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
 				compact: item.stage === AgoraStage.deliberation && live,
-				look: lookDoor,
-				mail: hasTeacherThread()
+				// One door at the end of the strip, not three. In the village the
+				// gear holds the style, and the teacher's post is in the envelope
+				// with the rest of the mail.
+				look: villageMode ? undefined : lookDoor,
+				menu: villageMode
 					? {
-							unread: teacherThreadUnread(),
-							onOpen: openTeacherThread,
-							label: t('teacherThread.open'),
+							onOpen: () => {
+								moreOpen = true;
+							},
+							label: t('village.more.open'),
 						}
 					: undefined,
+				mail:
+					!villageMode && hasTeacherThread()
+						? {
+								unread: teacherThreadUnread(),
+								onOpen: openTeacherThread,
+								label: t('teacherThread.open'),
+							}
+						: undefined,
 			});
 
 			const pastNotice = live
@@ -734,16 +774,22 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				overlays,
 				stageNav,
 				pastNotice,
-				m(
-					'button.btn.btn--secondary.btn--sm.village-mode-toggle',
-					{
-						onclick: () => {
-							villageOverride = !villageMode;
-						},
-						'aria-pressed': villageMode,
-					},
-					villageMode ? 'תצוגה רגילה' : 'כניסה לכפר התלת־מימדי',
-				),
+				// In the village the way back to the flat view is a row in the gear
+				// sheet, so this slot is an empty hole — the SAME five children as
+				// the lobby branch above, or the 3D world remounts and the walker
+				// jumps back to the fountain.
+				villageMode
+					? null
+					: m(
+							'button.btn.btn--secondary.btn--sm.village-mode-toggle',
+							{
+								onclick: () => {
+									villageOverride = true;
+								},
+								'aria-pressed': 'false',
+							},
+							t('village.enter_3d'),
+						),
 				villageMode
 					? m(
 							VillageShell,
@@ -760,6 +806,13 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 											userId,
 											anonName: myParticipant.anonName,
 											points: myParticipant.points.total,
+											teacher: hasTeacherThread()
+												? {
+														label: t('teacherThread.open'),
+														unread: teacherThreadUnread(),
+														onOpen: openTeacherThread,
+													}
+												: undefined,
 											scoreboard: {
 												topic,
 												leadStatementId: session.classScore?.leadStatementId,
@@ -767,6 +820,9 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 											},
 										}
 									: undefined,
+								onLeaveVillage: () => {
+									villageOverride = false;
+								},
 								onWrite: () => {
 									villageWriteRequest++;
 								},

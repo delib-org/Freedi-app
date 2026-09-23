@@ -1,7 +1,7 @@
 # Agora — Working Handoff
 
 **Start-here document for continuing work in a fresh chat.** Last updated
-2026-09-06.
+2026-09-22.
 
 Companion docs: `../CLAUDE.md` (the rules of the road — read that first),
 `feedback-cycle.md` (the improvement loop, and the spec `e2e-cycle.mjs`
@@ -25,6 +25,51 @@ rate others, improve each other's ideas — aiming for a solution both camps
 can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
+
+## Village navigation and settings (2026-09-22)
+
+The village has one persistent `PlaceBar`: Village, My note, All notes,
+Results. Labels exist in all six languages, stay readable at 320px, and
+locked destinations explain why they are unavailable. Settings holds style,
+ambience, reduced graphics, and the exit to the simple view; teacher messages
+are pinned in the existing inbox. Embedded world controls no longer duplicate
+the app's settings.
+
+Destination changes close the previous panel and keep the selected tab in
+sync, including notes opened from inbox messages. Returning to the village
+faces the writing guide again. Library reading does not select Results, and
+leaving during a note's flight cancels its deferred board opening. Community
+panels are nonmodal regions so the persistent navigation remains accessible;
+the settings dialog contains keyboard focus and restores it on close.
+
+Preferences live in `lib/villagePrefs.ts`, with a session fallback when browser
+storage fails. Reduced graphics disables shadows, reduces grass, and throttles
+frames. Sound remains separate from celebration sounds.
+
+Validation: 357 unit tests, lint, app/script typechecks, production build,
+contrast and text-size audits. `scripts/village-desk-board.mjs` now verifies
+destination selection, the writing/rating/editing loop, settings and keyboard
+focus, 390px Hebrew and 320px Spanish layouts, and returning from simple view.
+Screenshots are in `output/village-desk-board/verified-*.png`. Client-only;
+these changes have not been deployed.
+
+Follow-up: a Firefox user reported that the guide's “edit my note” button did
+nothing. World labels now update only when their text changes, avoiding DOM
+replacement every animation frame. The desk-board script includes a label
+stability check (not yet rerun). The production build and 12 focused unit tests
+pass. In the user's story session, keyboard activation and programmatic click
+both open the saved text correctly. Physical mouse behavior remains unverified:
+native automation did not deliver clicks to other Firefox page buttons either.
+Do not mark the reported mouse issue resolved without a successful retry.
+
+The writing bubble now reserves the measured navigation height plus a 12px
+gap, including the safe area. Previously its own placement overrode the
+panel's bottom clearance and the bar covered its lower content. Short windows
+also constrain the bubble to the available height rather than forcing overflow.
+Verified in an isolated local story session at 1280×720 and 390×740: textarea
+and Send are visible, and the bubble ends 12px above navigation. Ten placement
+tests, targeted lint, typecheck and production build pass. This does not change
+the camera or the position of the physical paper in the 3D scene.
 
 ## Village personal writing desks (2026-09-10)
 

@@ -1,10 +1,14 @@
 import { createPaperFlight } from './paper-flight.js';
 import * as THREE from './vendor/three.module.js';
 import { Soundscape } from './sound.js';
-import { buildVillage, fixedStations, CENTER } from './village.js';
+import { buildVillage, fixedStations, CENTER, villageRadius } from './village.js';
+import { RING_MAX } from './village-layout.js';
 import { characters } from './characters-2d.js';
 
 const $ = id => document.getElementById(id);
+// Preserve label nodes while the world animates; unchanged text needs no DOM
+// mutation or accessibility-tree update.
+function setText(id,value){const element=$(id);if(element.textContent!==value)element.textContent=value;}
 /** A light build for weak machines and headless tests: no shadows, sparse grass, throttled frames. */
 const lite=new URLSearchParams(location.search).get('lite')==='1';
 const canvas = $('world');
@@ -15,11 +19,12 @@ renderer.setPixelRatio(lite?1:Math.min(devicePixelRatio,2));
 renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=!lite; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;
-const scene=new THREE.Scene();scene.background=new THREE.Color('#b9d1d2');scene.fog=new THREE.FogExp2('#b6cac3',.0065);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#b9d1d2');scene.fog=new THREE.FogExp2('#b6cac3',.0052);
 const camera=new THREE.PerspectiveCamera(53,innerWidth/innerHeight,.1,600);
 scene.add(new THREE.HemisphereLight('#d7eef3','#797048',2.1));
 const sun=new THREE.DirectionalLight('#ffe5b3',3.5);sun.position.set(-28,45,22);sun.castShadow=true;
-Object.assign(sun.shadow.camera,{left:-48,right:48,top:48,bottom:-48,near:1,far:130});sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.00025;sun.shadow.normalBias=.035;scene.add(sun);scene.add(sun.target);
+// The shadow box covers the whole meadow, and the map grows with it so a bigger village keeps the same shadow detail per metre.
+Object.assign(sun.shadow.camera,{left:-62,right:62,top:62,bottom:-62,near:1,far:200});sun.shadow.mapSize.setScalar(lite?2048:3072);sun.shadow.bias=-.00025;sun.shadow.normalBias=.035;scene.add(sun);scene.add(sun.target);
 let seed=3471;const rand=()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646};
 const mat=(color,roughness=.92)=>new THREE.MeshStandardMaterial({color,roughness});
 const stone=mat('#d0bea0'),wood=mat('#67503c'),trim=mat('#456760'),tile=mat('#ae6748'),dark=mat('#273a34'),plaster=mat('#e5d7b6');
@@ -48,21 +53,30 @@ const sunDisk=mesh(new THREE.SphereGeometry(9,24,16),new THREE.MeshBasicMaterial
 const bladeGeo=new THREE.BufferGeometry();bladeGeo.setAttribute('position',new THREE.Float32BufferAttribute([-.045,0,0,.045,0,0,-.026,.28,.025,.026,.28,.025,0,.64,.11],3));bladeGeo.setIndex([0,1,2,1,3,2,2,3,4]);bladeGeo.computeVertexNormals();
 const grassMat=new THREE.MeshStandardMaterial({color:'#829557',side:THREE.DoubleSide,roughness:1});
 const wind={value:0};grassMat.onBeforeCompile=s=>{s.uniforms.uTime=wind;s.vertexShader='uniform float uTime;\n'+s.vertexShader;s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nfloat phase=instanceMatrix[3].x*.4+instanceMatrix[3].z*.3; transformed.x += sin(uTime*1.5+phase)*position.y*position.y*.22;');};
-const GRASS_MAX=lite?9000:58000;const grass=new THREE.InstancedMesh(bladeGeo,grassMat,GRASS_MAX);const dummy=new THREE.Object3D();let gn=0;
-for(let i=0;i<85000&&gn<GRASS_MAX;i++){const x=(rand()-.5)*145,z=(rand()-.5)*145;if(Math.hypot(x+23,z-15)<5.5||Math.hypot(x,z-12)<23||(z>3&&Math.abs(x-pathX(z))<1.2))continue;dummy.position.set(x,height(x,z),z);dummy.rotation.set(0,rand()*6.28,0);const s=.5+rand()*1.1;dummy.scale.set(s,.55+rand()*.9,s);dummy.updateMatrix();grass.setMatrixAt(gn,dummy.matrix);grass.setColorAt(gn,new THREE.Color().setHSL(.19+rand()*.055,.23+rand()*.18,.27+rand()*.17));gn++;}grass.count=gn;grass.receiveShadow=true;grass.frustumCulled=false;scene.add(grass);
+const GRASS_MAX=lite?9000:76000;const grass=new THREE.InstancedMesh(bladeGeo,grassMat,GRASS_MAX);const dummy=new THREE.Object3D();let gn=0;
+// Where every blade stands, so the village can clear the ones it paves over.
+const bladeX=new Float32Array(GRASS_MAX),bladeZ=new Float32Array(GRASS_MAX),bladeGone=new Uint8Array(GRASS_MAX);
+// A meadow around the square rather than a square field: the village grew, and
+// the grass grew with it. The core stays beaten earth — a village green is walked on.
+for(let i=0;i<150000&&gn<GRASS_MAX;i++){const a=rand()*6.283,rr=13+Math.sqrt(rand())*67;const x=CENTER.x+Math.cos(a)*rr,z=CENTER.z+Math.sin(a)*rr;if(z>3&&Math.abs(x-pathX(z))<1.2)continue;bladeX[gn]=x;bladeZ[gn]=z;dummy.position.set(x,height(x,z),z);dummy.rotation.set(0,rand()*6.28,0);const s=.5+rand()*1.1;dummy.scale.set(s,.55+rand()*.9,s);dummy.updateMatrix();grass.setMatrixAt(gn,dummy.matrix);grass.setColorAt(gn,new THREE.Color().setHSL(.19+rand()*.055,.23+rand()*.18,.27+rand()*.17));gn++;}grass.count=gn;grass.receiveShadow=true;grass.frustumCulled=false;scene.add(grass);
 
 // Olive trees: twisting trunks, tapering branches and individual silver leaves.
 const bark=mat('#6c6953');
 function branch(a,b,r1,r2,parent){const len=a.distanceTo(b);const m=mesh(new THREE.CylinderGeometry(r2,r1,len,7),bark,0,0,0,parent);m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());return m;}
-const leafGeo=new THREE.SphereGeometry(1,5,3);const leafMat=new THREE.MeshStandardMaterial({color:'#9daa7d',roughness:.85});const LEAF_MAX=lite?20000:90000;const leaves=new THREE.InstancedMesh(leafGeo,leafMat,LEAF_MAX);let ln=0;
-// Groves stay outside the booth ring (radius up to ~24 around the square) so no pavilion gets a tree through its roof.
-const trees=[[-30,-2],[28,-6],[21,-9],[-18,-10],[-29,4],[31,7],[-34,32],[32,40],[-31,25],[27,36],[-8,44],[12,44]];
-for(let i=0;i<35;i++){const x=(rand()-.5)*170,z=(rand()-.5)*150;if(Math.hypot(x,z-12)>30)trees.push([x,z]);}
-for(const [tx,tz] of trees){const group=new THREE.Group();group.position.set(tx,height(tx,tz),tz);scene.add(group);const scale=.8+rand()*.5;const centers=[];
+const leafGeo=new THREE.SphereGeometry(1,5,3);const leafMat=new THREE.MeshStandardMaterial({color:'#9daa7d',roughness:.85});const LEAF_MAX=lite?20000:110000;const leaves=new THREE.InstancedMesh(leafGeo,leafMat,LEAF_MAX);let ln=0;
+/** Each tree's branches and its slice of the leaf cloud, so one can be cleared away whole. */
+const treeParts=[];
+function plantTree(tx,tz){const group=new THREE.Group();group.position.set(tx,height(tx,tz),tz);scene.add(group);const scale=.8+rand()*.5;const centers=[];const from=ln;
  branch(new THREE.Vector3(0,0,0),new THREE.Vector3(.18,2.4*scale,.1),.42*scale,.25*scale,group);
  for(let j=0;j<5;j++){const angle=j*1.256+rand()*.5;const tip=new THREE.Vector3(Math.cos(angle)*1.8*scale,(3.1+rand()*.9)*scale,Math.sin(angle)*1.8*scale);branch(new THREE.Vector3(.18,1.6*scale,0),tip,.19*scale,.055*scale,group);centers.push(tip);for(let k=0;k<3;k++){const t=tip.clone().add(new THREE.Vector3((rand()-.5)*2,.5+rand(),(rand()-.5)*2));branch(tip,t,.06,.018,group);centers.push(t);}}
- for(const center of centers){for(let j=0;j<(lite?20:85)&&ln<LEAF_MAX;j++){const angle=rand()*6.28,cos=rand()*2-1,rr=Math.cbrt(rand())*1.13*scale;dummy.position.set(tx+center.x+Math.cos(angle)*Math.sqrt(1-cos*cos)*rr,group.position.y+center.y+cos*rr*.55,tz+center.z+Math.sin(angle)*Math.sqrt(1-cos*cos)*rr);dummy.rotation.set(rand()*2,rand()*6.28,rand()*2);dummy.scale.set(.08+rand()*.065,.022,.20+rand()*.12);dummy.updateMatrix();leaves.setMatrixAt(ln,dummy.matrix);leaves.setColorAt(ln,new THREE.Color().setHSL(.20+rand()*.035,.12+rand()*.17,.32+rand()*.23));ln++;}}
- for(let j=0;j<4;j++){const a=j*1.57;branch(new THREE.Vector3(Math.cos(a)*.8,.03,Math.sin(a)*.8),new THREE.Vector3(0,.6,0),.06,.17,group);}}
+ for(const center of centers){for(let j=0;j<(lite?20:70)&&ln<LEAF_MAX;j++){const angle=rand()*6.28,cos=rand()*2-1,rr=Math.cbrt(rand())*1.13*scale;dummy.position.set(tx+center.x+Math.cos(angle)*Math.sqrt(1-cos*cos)*rr,group.position.y+center.y+cos*rr*.55,tz+center.z+Math.sin(angle)*Math.sqrt(1-cos*cos)*rr);dummy.rotation.set(rand()*2,rand()*6.28,rand()*2);dummy.scale.set(.08+rand()*.065,.022,.20+rand()*.12);dummy.updateMatrix();leaves.setMatrixAt(ln,dummy.matrix);leaves.setColorAt(ln,new THREE.Color().setHSL(.20+rand()*.035,.12+rand()*.17,.32+rand()*.23));ln++;}}
+ for(let j=0;j<4;j++){const a=j*1.57;branch(new THREE.Vector3(Math.cos(a)*.8,.03,Math.sin(a)*.8),new THREE.Vector3(0,.6,0),.06,.17,group);}
+ treeParts.push({group,x:tx,z:tz,from,to:ln});}
+// The wood stands OUTSIDE the village: it begins past the point the widest
+// booth ring could ever reach, thickest at the treeline and thinning into the
+// hills — so the village is open ground to walk, and the trees close the view.
+const TREELINE=RING_MAX+8;
+for(let i=0;i<70;i++){const a=rand()*6.283,rr=TREELINE+Math.pow(rand(),1.6)*62;plantTree(CENTER.x+Math.cos(a)*rr,CENTER.z+Math.sin(a)*rr);}
 leaves.count=ln;leaves.castShadow=true;leaves.receiveShadow=true;leaves.frustumCulled=false;scene.add(leaves);
 
 // Cottage: plaster over individual stone courses, blue-green woodwork, tiled roof.
@@ -94,6 +108,41 @@ const pebbles=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),stone,6
 
 
 const village=buildVillage({scene,height});
+// The cottage's yard: nothing paves it, but the grass still keeps off the doorstep.
+village.clearings.push({x:0,z:0,r:5.4});
+const HIDDEN=new THREE.Matrix4().makeScale(0,0,0);
+/**
+ * Clear the planting off everything the village has paved: blades that would
+ * grow through a stone floor, trees that would stand inside a pavilion. Run
+ * once for the fixed sites and again whenever the plan's booths are laid out
+ * — a plant is only ever cleared, never planted back, because a booth ring is
+ * built once a lesson.
+ */
+function clearPlanting(){
+ const spots=village.clearings;if(!spots.length)return;
+ let blades=false;
+ for(let i=0;i<gn;i++){
+  if(bladeGone[i])continue;
+  if(!spots.some(s=>Math.hypot(bladeX[i]-s.x,bladeZ[i]-s.z)<s.r+.4))continue;
+  bladeGone[i]=1;grass.setMatrixAt(i,HIDDEN);blades=true;
+ }
+ if(blades)grass.instanceMatrix.needsUpdate=true;
+ let canopy=false;
+ for(const tree of treeParts){
+  if(!tree.group.visible)continue;
+  // A tree clears a wider circle than a blade — its canopy reaches some four
+  // metres past its trunk — and a booth clears wider still, for the roof it
+  // would hang over and the desk and guide standing in front of it.
+  if(!spots.some(s=>Math.hypot(tree.x-s.x,tree.z-s.z)<s.r+(s.booth?7:3.6)))continue;
+  tree.group.visible=false;
+  for(let i=tree.from;i<tree.to;i++)leaves.setMatrixAt(i,HIDDEN);
+  canopy=true;
+ }
+ if(canopy)leaves.instanceMatrix.needsUpdate=true;
+}
+clearPlanting();
+/** How far the walker may roam: the booth ring, plus enough meadow to walk out and look. */
+let bounds={x:46,zMax:52};
 const embedded=new URLSearchParams(location.search).get('embedded')==='1' && window.parent!==window;
 /** The fixed places plus one booth per question of the plan (see installBooths). */
 let stations=[...fixedStations];
@@ -109,6 +158,10 @@ function installBooths(specs){
  if(key!==boothKey){
   boothKey=key;
   village.installBooths(specs.map(b=>({itemId:b.itemId,label:b.label,kind:b.kind})));
+  // More questions, a wider ring — and with it a wider village to walk in.
+  const radius=villageRadius(specs.length);
+  bounds={x:Math.max(46,radius+14),zMax:Math.max(52,CENTER.z+radius+14)};
+  clearPlanting();
   // The map reads in lesson order: the meeting point, the library, the booths, the council.
   stations=[fixedStations[1],fixedStations[0],...village.booths.map(b=>b.station),fixedStations[2]];
   renderStationNav();
@@ -166,15 +219,17 @@ function updateDeskBubble(){
  const anchor=new THREE.Vector3(guide.x,height(guide.x,guide.z)+guide.height+.45,guide.z).project(camera);
  if(anchor.z< -1||anchor.z>1||Math.abs(anchor.x)>.92){hideDeskBubble();return;}
  const written=!!deskInfo.text;
- $('desk-speaker').textContent=guide.name;
- $('desk-question').textContent=activeLabel||selected.name;
- $('desk-invitation').textContent=!deskInfo.writable?'הפתק שלך נשמר. אפשר לפתוח אותו ולקרוא שוב.':written?'הפתק שלך כבר על הלוח. אפשר לחזור אליו ולשפר אותו.':deskInfo.prompt;
- $('desk-write').textContent=!deskInfo.writable?'📖 לקרוא את הפתק שלי':written?'✍️ לערוך את הפתק שלי':'✍️ לכתוב את זה על הפתק שלי';
+ setText('desk-speaker',guide.name);
+ setText('desk-question',activeLabel||selected.name);
+ setText('desk-invitation',!deskInfo.writable?'הפתק שלך נשמר. אפשר לפתוח אותו ולקרוא שוב.':written?'הפתק שלך כבר על הלוח. אפשר לחזור אליו ולשפר אותו.':deskInfo.prompt);
+ setText('desk-write',!deskInfo.writable?'📖 לקרוא את הפתק שלי':written?'✍️ לערוך את הפתק שלי':'✍️ לכתוב את זה על הפתק שלי');
  const bubble=$('desk-bubble');bubble.hidden=false;document.body.classList.add('has-desk-bubble');$('enter').hidden=true;
  const half=bubble.offsetWidth/2+16;
  bubble.style.left=`${THREE.MathUtils.clamp((anchor.x*.5+.5)*innerWidth,half,innerWidth-half)}px`;
  // In a session the shell's coins, inbox and table/board switch cover the top of the world: stay below them.
- const topRoom=document.body.classList.contains('has-community')?140:16;
+ // The app's chrome above the world is the coin/post chips now, not a toolbar
+ // and a switch as well, so the guide's bubble may sit much higher.
+ const topRoom=document.body.classList.contains('has-community')?70:16;
  bubble.style.top=`${THREE.MathUtils.clamp((-anchor.y*.5+.5)*innerHeight,bubble.offsetHeight+topRoom,innerHeight-130)}px`;
 }
 
@@ -267,6 +322,8 @@ window.addEventListener('message',event=>{
  if(!embedded||event.source!==parent||event.origin!==location.origin||!event.data||typeof event.data!=='object')return;const data=event.data;
  if(data.type!=='agora-village-state'||typeof data.itemId!=='string'||typeof data.place!=='string')return;
  document.body.classList.toggle('has-community',data.community===true);
+ if(data.quality==='low'||data.quality==='high'){const low=data.quality==='low';if(low!==lowQuality)applyQuality(low);}
+ if(typeof data.sound==='boolean')applySound(data.sound);
  deskInfo=data.desk&&typeof data.desk.label==='string'&&typeof data.desk.prompt==='string'?{label:data.desk.label,prompt:data.desk.prompt,text:typeof data.desk.text==='string'?data.desk.text:'',writable:data.desk.writable===true}:null;
  if(Array.isArray(data.booths))installBooths(data.booths.filter(b=>b&&typeof b.itemId==='string'&&typeof b.label==='string').map(b=>({itemId:b.itemId,label:b.label,kind:typeof b.kind==='string'?b.kind:'open',open:b.open!==false,current:b.current===true})));
  if(data.navigation==='teacher'||data.navigation==='free')navigation=data.navigation;
@@ -319,7 +376,12 @@ $('enter').onclick=()=>{
 $('close-info').onclick=()=>$('preview-info').close();
 $('sound').onclick=async()=>{try{const enabled=await sound.toggle();$('sound').textContent=enabled?'♫ השתקה':'♫ צלילים';}catch{$('sound').textContent='צלילים אינם זמינים';}};
 let lowQuality=lite;
-$('quality').onclick=()=>{const low=lowQuality=!lowQuality;renderer.setPixelRatio(low?1:Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=!low;grass.count=low?Math.floor(gn*.55):gn;$('quality').textContent=low?'איכות חסכונית':'איכות גבוהה';};
+// Embedded, the app owns both choices (it can label and remember them); the
+// standalone tour keeps its own buttons. Idempotent: the state message that
+// carries them is posted on every sync.
+function applyQuality(low){lowQuality=low;renderer.setPixelRatio(low?1:Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=!low;grass.count=low?Math.floor(gn*.55):gn;$('quality').textContent=low?'איכות חסכונית':'איכות גבוהה';}
+async function applySound(on){try{if(sound.active!==on){const now=await sound.toggle();$('sound').textContent=now?'♫ השתקה':'♫ צלילים';}}catch{/* no audio on this device */}}
+$('quality').onclick=()=>applyQuality(!lowQuality);
 let drag=null;canvas.onpointerdown=e=>{if(uiPaused)return;pointerMoved=false;drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY};canvas.setPointerCapture(e.pointerId);moving=false;};canvas.onpointermove=e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>6)pointerMoved=true;yaw-=(e.clientX-drag.x)*.004;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-drag.y)*.003,-.7,.55);drag={...drag,x:e.clientX,y:e.clientY};};canvas.onpointerup=canvas.onpointercancel=()=>drag=null;
 addEventListener('keydown',e=>{if(uiPaused||$('preview-info').open)return;if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyE'].includes(e.code)){e.preventDefault();keys.add(e.code);moving=false;if(e.code==='KeyE')$('enter').click();}});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',()=>{keys.clear();drag=null;});
 for(const b of document.querySelectorAll('[data-key]')){b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key);moving=false;};b.onpointerup=b.onpointercancel=()=>keys.delete(b.dataset.key);}
@@ -379,14 +441,24 @@ window.addEventListener('message',event=>{
  if(Math.hypot(camera.position.x-station.ax,camera.position.z-station.az)<=.3)arrived();else moving=true;
 });
 $('session-entry').hidden=embedded;$('preview-label').hidden=embedded;
+// The whole header is the standalone tour's — a title, a join link and the two
+// buttons above. Embedded it showed through the iframe over the app's own
+// chrome, which is where "איכות גבוהה" and "♫ צלילים" came from.
+document.querySelector('header').hidden=embedded;
 if(!embedded){
- // The standalone tour shows a plan-shaped village: three sample booths and a sample scoreboard.
- installBooths([
-  {itemId:'demo-story',label:'איך האתגר הזה פוגש את החיים שלך?',kind:'story',open:true,current:false},
-  {itemId:'demo-needs',label:'מה חשוב לך, ועל מה היית רוצה לשמור?',kind:'needs',open:true,current:false},
-  {itemId:'demo-solution',label:'איזה פתרון נותן מקום לצרכים שעלו?',kind:'proposal',open:true,current:true},
- ]);
- village.booths[2].paint([{text:'נתחיל בניסיון קטן לזמן מוגבל ונבדוק יחד מה עבד.',own:false},{text:'נקבע כללים ברורים לחלוקה, עם מקום לעזרה למי שצריך.',own:false},{text:'קבוצה קטנה עם נציגים מכל צד תחבר בין ההצעות.',own:true}]);
+ // The standalone tour shows a plan-shaped village: sample booths and a sample
+ // scoreboard. `?booths=N` walks a village the size of an N-question lesson.
+ const sample=[
+  {itemId:'demo-story',label:'איך האתגר הזה פוגש את החיים שלך?',kind:'story'},
+  {itemId:'demo-needs',label:'מה חשוב לך, ועל מה היית רוצה לשמור?',kind:'needs'},
+  {itemId:'demo-vision',label:'איך היית רוצה שזה ייראה בעוד שנה?',kind:'vision'},
+  {itemId:'demo-open',label:'מה עוד חשוב לברר לפני שמחליטים?',kind:'open'},
+ ];
+ const asked=THREE.MathUtils.clamp(Number(new URLSearchParams(location.search).get('booths'))||3,1,8);
+ const specs=Array.from({length:asked-1},(_,i)=>({...sample[i%sample.length],itemId:`demo-${i}`,open:true,current:false}));
+ specs.push({itemId:'demo-solution',label:'איזה פתרון נותן מקום לצרכים שעלו?',kind:'proposal',open:true,current:true});
+ installBooths(specs);
+ village.booths[specs.length-1].paint([{text:'נתחיל בניסיון קטן לזמן מוגבל ונבדוק יחד מה עבד.',own:false},{text:'נקבע כללים ברורים לחלוקה, עם מקום לעזרה למי שצריך.',own:false},{text:'קבוצה קטנה עם נציגים מכל צד תחבר בין ההצעות.',own:true}]);
  village.scoreboard.paint({mode:'pitch',goalOnly:false,leftLabel:'צד א',rightLabel:'צד ב',scoredAny:true,footer:'סיור · במפגש אמיתי הלוח מתעדכן חי',points:[{rank:1,percent:61,lean:.1,raters:6,mine:true,scored:true,lead:true,color:'#f4c95d'},{rank:2,percent:35,lean:-.6,raters:5,mine:false,scored:false,color:'#9fd3e6'},{rank:3,percent:-20,lean:.5,raters:4,mine:false,scored:false,color:'#e6a0a0'}]});
  destination('booth:demo-solution');
 }else destination('challenge');
@@ -401,15 +473,17 @@ village.ready.then(({failed})=>{
  if(failed){characterStatus.textContent='חלק מהדמויות לא נטענו. רעננו את הדף כדי לנסות שוב.';}
  else characterStatus.remove();
 });
-function frame(now){requestAnimationFrame(frame);if(lite&&now-last<66)return;const dt=Math.min((now-last)/1000,.04);/* walking uses the real elapsed time (capped) so a slow renderer does not slow the walker */const dtWalk=Math.min((now-last)/1000,.25);last=now;if(paperFlight.active){paperFlight.tick(dt);village.tick(camera);renderer.render(scene,camera);return;}if(view){tickView(dt);village.tick(camera);renderer.render(scene,camera);return;}if(document.hidden||uiPaused||$('preview-info').open)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
+function frame(now){requestAnimationFrame(frame);if((lite||lowQuality)&&now-last<66)return;const dt=Math.min((now-last)/1000,.04);/* walking uses the real elapsed time (capped) so a slow renderer does not slow the walker */const dtWalk=Math.min((now-last)/1000,.25);last=now;if(paperFlight.active){paperFlight.tick(dt);village.tick(camera);renderer.render(scene,camera);return;}if(view){tickView(dt);village.tick(camera);renderer.render(scene,camera);return;}if(document.hidden||uiPaused||$('preview-info').open)return;elapsed+=dt;wind.value=elapsed;const old=camera.position.clone();
  if(moving){const dx=selected.ax-camera.position.x,dz=selected.az-camera.position.z,dist=Math.hypot(dx,dz);if(dist>.12){const stepLen=Math.min(dist,dtWalk*4);camera.position.x+=dx/dist*stepLen;camera.position.z+=dz/dist*stepLen;const look=selected.look??guideOf(selected.id)??selected;const target=Math.atan2(camera.position.x-look.x,camera.position.z-look.z);yaw+=Math.atan2(Math.sin(target-yaw),Math.cos(target-yaw))*Math.min(1,dtWalk*3);}else {moving=false;pitch=selected.pitch??-.06;arrived();}}
  const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));if(f||s){viewKind=null;const n=Math.hypot(f,s);camera.position.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)/n*dt*4;camera.position.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)/n*dt*4;}
  if(!moving&&((Math.abs(camera.position.x)<3.7&&camera.position.z<2.6&&camera.position.z>-3.9)||village.solids.some(o=>Math.abs(camera.position.x-o.x)<o.w&&Math.abs(camera.position.z-o.z)<o.d)))camera.position.copy(old);
- camera.position.x=THREE.MathUtils.clamp(camera.position.x,-45,45);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-20,50);camera.position.y=height(camera.position.x,camera.position.z)+1.75;camera.quaternion.setFromEuler(new THREE.Euler(pitch,yaw,0,'YXZ'));village.tick(camera);
- const insideLibrary=Math.abs(camera.position.z-15)<3.5&&camera.position.x>-25.6&&camera.position.x<-19.6;
+ camera.position.x=THREE.MathUtils.clamp(camera.position.x,-bounds.x,bounds.x);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-24,bounds.zMax);camera.position.y=height(camera.position.x,camera.position.z)+1.75;camera.quaternion.setFromEuler(new THREE.Euler(pitch,yaw,0,'YXZ'));village.tick(camera);
+ const shelf=fixedStations[0];const insideLibrary=Math.abs(camera.position.z-shelf.z)<3.5&&camera.position.x>shelf.x-2.6&&camera.position.x<shelf.x+3.4;
  if(embedded&&insideLibrary!==lastLibraryPresence){lastLibraryPresence=insideLibrary;parent.postMessage({type:'agora-village-library-presence',inside:insideLibrary},location.origin);}
- const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;$('enter').textContent=deskHere()?'לגשת לשולחן ולפתק':selected.id==='council'?'לפתוח את לוח התוצאות':selected.booth?(embedded?'לגשת לביתן הזה':'להיכנס לביתן'):near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←';updateDeskBubble();$('travel').textContent=moving?'לעצור':`ללכת אל: ${selected.name}`;$('travel').hidden=(!moving&&near)||(viewKind==='table'&&viewPlace===selected.id);renderer.render(scene,camera);
+ const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;setText('enter',deskHere()?'לגשת לשולחן ולפתק':selected.id==='council'?'לפתוח את לוח התוצאות':selected.booth?(embedded?'לגשת לביתן הזה':'להיכנס לביתן'):near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←');updateDeskBubble();setText('travel',moving?'לעצור':`ללכת אל: ${selected.name}`);$('travel').hidden=(!moving&&near)||(viewKind==='table'&&viewPlace===selected.id);renderer.render(scene,camera);
 }
+/** Read-only probe for tests: how much of the planting the village cleared, and how close the nearest tree stands to each paved place */
+window.__villagePlanting=()=>({trees:treeParts.length,standing:treeParts.filter(t=>t.group.visible).length,nearest:village.clearings.map(s=>({place:s.booth?'booth':'place',x:+s.x.toFixed(1),z:+s.z.toFixed(1),tree:Math.min(...treeParts.filter(t=>t.group.visible).map(t=>+Math.hypot(t.x-s.x,t.z-s.z).toFixed(1)))}))});
 /** Read-only probe for tests: where the walker stands and what the world believes it is doing */
 window.__villageDebug=()=>{const g=guideOf(selected.id);return {x:+camera.position.x.toFixed(2),z:+camera.position.z.toFixed(2),dGuide:g?+Math.hypot(camera.position.x-g.x,camera.position.z-g.z).toFixed(2):null,dApproach:+Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az).toFixed(2),moving,turning:!!view,viewKind,selected:selected.id,activePlace,uiPaused,flight:paperFlight.active,guideBubble:!$('desk-bubble').hidden};};
 requestAnimationFrame(frame);

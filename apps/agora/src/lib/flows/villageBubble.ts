@@ -20,6 +20,8 @@ export interface BubbleBox {
 	width: number;
 	frameTop: number;
 	frameHeight: number;
+	/** Space occupied by the persistent navigation, including its safe area. */
+	bottomInset?: number;
 }
 
 export interface BubblePlacement {
@@ -55,9 +57,13 @@ const clamp = (value: number, min: number, max: number): number =>
 
 export function bubblePlacement(box: BubbleBox, anchor: BubbleAnchor | null): BubblePlacement {
 	const width = Math.max(0, Math.min(BUBBLE.MAX_WIDTH, box.width - 2 * BUBBLE.GUTTER));
-	const bottom = box.frameTop + box.frameHeight - BUBBLE.BOTTOM_ROOM;
-	const topOf = (y: number): number => clamp(y, BUBBLE.TOP_FLOOR, bottom - BUBBLE.MIN_HEIGHT);
-	const heightFrom = (top: number): number => Math.max(BUBBLE.MIN_HEIGHT, bottom - top);
+	const bottom = Math.max(
+		box.frameTop,
+		box.frameTop + box.frameHeight - Math.max(BUBBLE.BOTTOM_ROOM, box.bottomInset ?? 0),
+	);
+	const topFloor = Math.max(box.frameTop, Math.min(BUBBLE.TOP_FLOOR, bottom - BUBBLE.MIN_HEIGHT));
+	const topOf = (y: number): number => clamp(y, topFloor, bottom - BUBBLE.MIN_HEIGHT);
+	const heightFrom = (top: number): number => Math.max(0, bottom - top);
 
 	if (!anchor || box.width < BUBBLE.NARROW) {
 		const top = topOf(BUBBLE.TOP_FLOOR);

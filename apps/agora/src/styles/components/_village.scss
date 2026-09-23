@@ -1,8 +1,7 @@
 .village-mode-toggle { margin: var(--space-sm) var(--space-md); }
 .village-shell {
 	position: relative;
-	&__toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); background: var(--bg-card-solid); }
-	&__world { display: block; inline-size: 100%; block-size: calc(100dvh - 150px); min-block-size: 420px; border: 0; }
+	&__world { display: block; inline-size: 100%; block-size: calc(100dvh - var(--village-chrome, 56px)); min-block-size: 420px; border: 0; }
 	&__notice { padding: var(--space-md); background: var(--bg-card-solid); color: var(--text-primary); }
 	&__activity { position: absolute; inset-block: 60px var(--space-md); inset-inline: max(var(--space-sm), calc((100% - 960px) / 2)); overflow: auto; background: var(--bg-card-solid); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
 	&__activity .shell { min-block-size: auto; }
@@ -56,13 +55,12 @@ body:has(.village-library--reading) { overflow:hidden; }
   &:focus-visible { outline:4px solid #fff; outline-offset:5px; }
 }
 
-.village-coins, .village-feedback, .village-board-open { position:absolute; z-index:6; border:1px solid #d4b674; border-radius:24px; background:#233f35; color:#fff6de; box-shadow:0 4px 16px #0003; padding:10px 18px; }
-.village-coins { top:64px; right:16px; display:flex; align-items:center; gap:10px; font-size:24px; pointer-events:none; }
+.village-coins, .village-feedback { position:absolute; z-index:6; border:1px solid #d4b674; border-radius:24px; background:#233f35; color:#fff6de; box-shadow:0 4px 16px #0003; padding:10px 18px; }
+.village-coins { top:12px; right:16px; display:flex; align-items:center; gap:10px; font-size:24px; pointer-events:none; }
 .village-coins img { width:44px; height:44px; }
 .village-coins__gain { color:#ffe06a; animation:village-coin-gain 2s ease-out; }
 @keyframes village-coin-gain { from {transform:translateY(10px);opacity:1} to {transform:translateY(-24px);opacity:0} }
-.village-feedback { top:64px; left:16px; cursor:pointer; }
-.village-board-open { bottom:100px; left:50%; transform:translateX(-50%); font-size:19px; cursor:pointer; }
+.village-feedback { top:12px; left:16px; cursor:pointer; }
 .village-community__panel { position:absolute; z-index:20; inset:58px 12px 12px; overflow:auto; background:#f5efdf; padding:24px; border:4px solid #796342; border-radius:18px; color:#253c32; direction:rtl; }
 .village-community__panel > header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; }
 .village-notes { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:20px; }
@@ -71,7 +69,7 @@ body:has(.village-library--reading) { overflow:hidden; }
 .village-note span { display:block; border-top:1px solid #0002; padding-top:12px; font-size:14px; }
 @media(max-width:600px) { .village-coins {font-size:18px;right:8px;padding:6px 10px} .village-feedback {left:8px;max-width:52%} .village-community__panel{padding:12px} }
 .village-coins, .village-feedback { z-index:30; }
-.village-community__panel { top:138px; }
+.village-community__panel { top:70px; }
 .village-board-tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
 .village-board-tabs [aria-pressed="true"] { outline:2px solid #927535; }
 
@@ -90,25 +88,19 @@ body:has(.village-library--reading) { overflow:hidden; }
   }
 }
 
-// Keep the board shortcut off the personal paper in the middle of the desk.
-.village-board-open { left: var(--space-md); bottom: var(--space-md); transform: none; }
-@media (max-width: 600px) {
-  .village-board-open { bottom: 150px; max-inline-size: 180px; font-size: var(--font-size-xs); }
-}
-
 // Reserve the HUD and game-control rows outside every open paper or board.
 // Raising their z-index alone leaves them covering the paper's title and buttons.
 .village-shell:has(.village-community) {
   > .village-shell__activity:not(.village-library--reading) {
-    inset-block-start: 204px;
-    inset-block-end: 100px;
+    inset-block-start: 70px;
+    inset-block-end: var(--village-bar-clear);
   }
   .village-community__panel {
-    top: 204px;
-    bottom: 100px;
+    top: 70px;
+    bottom: var(--village-bar-clear);
   }
 }
-.village-flight-status { position:absolute; z-index:35; bottom:110px; left:50%; transform:translateX(-50%); background:#233f35; color:#fff6de; padding:12px 24px; border-radius:24px; pointer-events:none; }
+.village-flight-status { position:absolute; z-index:35; bottom:calc(var(--village-bar-clear) + 12px); left:50%; transform:translateX(-50%); background:#233f35; color:#fff6de; padding:12px 24px; border-radius:24px; pointer-events:none; }
 .village-note--landed { outline:3px solid #c6a457; outline-offset:3px; animation:village-note-land .5s ease-out; }
 @keyframes village-note-land { from {transform:translateY(-16px) rotate(-3deg);opacity:.4} to {transform:none;opacity:1} }
 @media(prefers-reduced-motion:reduce) { .village-note--landed {animation:none} }
@@ -117,7 +109,7 @@ body:has(.village-library--reading) { overflow:hidden; }
 .village-shell:has(.village-community) > .village-shell__activity.village-desk {
   inset-inline: max(20px, calc((100% - 820px) / 2));
   inset-block-end: auto;
-  max-block-size: calc(100% - 304px);
+  max-block-size: calc(100% - 170px);
   padding: clamp(20px, 4vw, 44px);
   background: linear-gradient(135deg, #fffefb, #faf6ed);
   border: 1px solid #dfd6c4;
@@ -142,7 +134,7 @@ body:has(.village-library--reading) { overflow:hidden; }
     textarea.text-input { padding: 14px 16px; font-size: 18px; }
   }
 }
-.village-inbox { position:absolute; top:64px; left:16px; z-index:40; }
+.village-inbox { position:absolute; top:12px; left:16px; z-index:40; }
 .village-inbox .inbox-button { background:#233f35; color:#fff6de; border:1px solid #d4b674; }
 .village-community__panel .chat-page { min-height:0; height:auto; }
 // Reuse the classic conversation's behavior inside the village panel, below its HUD.
@@ -159,7 +151,6 @@ body:has(.village-library--reading) { overflow:hidden; }
 }
 
 // --- Booth boards: notes are cards with a rating row, not one big button ---
-.village-shell__toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 article.village-note { cursor: default; }
 .village-note__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .village-note__standing { font-size: 13px; color: #5b6b52; white-space: nowrap; }
@@ -181,7 +172,7 @@ article.village-note { cursor: default; }
 // Two things must never scroll away inside it: the way back, and the button
 // that sends what the student wrote. The panel scrolls; both stick to its edges.
 .village-shell:has(.village-community) > .village-shell__activity.village-desk {
-  inset-block-end: 100px;
+  inset-block-end: var(--village-bar-clear);
   max-block-size: none;
   .village-desk__header {
     position: sticky;
@@ -241,24 +232,6 @@ article.village-note { cursor: default; }
 .village-shell .village-community__panel .chat-page > * { flex-shrink: 0; }
 .village-shell .village-community__panel .chat-page__list { flex: none; min-height: 200px; max-height: 44dvh; overflow: auto; }
 
-// --- The booth's two sides: the table (the guide's speech bubble) and the board ---
-// The student writes at the table, in the bubble of the booth's guide, and
-// looks at the class board on the other side; the switch goes back and forth.
-.village-booth-switch {
-  position: absolute; z-index: 45; top: 128px; left: 50%; transform: translateX(-50%);
-  display: flex; gap: 4px; padding: 4px; max-inline-size: calc(100% - 32px);
-  border: 1px solid #d4b674; border-radius: 999px; background: #233f35; box-shadow: 0 4px 16px #0003;
-  button {
-    font: inherit; font-weight: 700; font-size: 16px; padding: 10px 18px; border: 0; border-radius: 999px;
-    background: transparent; color: #fff6de; cursor: pointer; white-space: nowrap;
-    &[aria-pressed="true"] { background: #fff6de; color: #233f35; }
-    &:hover:not([aria-pressed="true"]) { background: #ffffff1f; }
-    &:focus-visible { outline: 3px solid #e5a548; outline-offset: 2px; }
-  }
-}
-@media (max-width: 600px) {
-  .village-booth-switch { top: 116px; button { font-size: 13px; padding: 8px 10px; } }
-}
 
 // The paper, written in the guide's speech bubble: placed beside the figure by
 // `bubblePlacement` (custom properties), so the table and the guide stay in view.
@@ -336,3 +309,246 @@ article.village-note { cursor: default; }
 .village-shell > .village-shell__activity.village-desk.village-bubble { animation: none; }
 .village-shell:has(.village-community) > .village-shell__activity.village-desk.village-bubble.village-bubble--waiting,
 .village-shell > .village-shell__activity.village-desk.village-bubble.village-bubble--waiting { opacity: 0; transition: none; }
+
+// --- One bar, four doors ---------------------------------------------------
+// The village, my note, the class's board, the results. This replaces a
+// toolbar, two chips and a floating button that between them opened the same
+// three places — `showStation()` alone had two buttons.
+//
+// Absolute inside `.village-shell`, never fixed: a fixed, full-bleed element
+// escapes the panel and paints the viewport over the 3D iframe.
+.village-shell {
+  // The stage strip above the world, and the room the bar needs below it
+  --village-chrome: 56px;
+  --village-bar-h: 80px;
+  --village-bar-clear: calc(var(--village-bar-h) + 12px + env(safe-area-inset-bottom, 0px));
+}
+
+.place-bar-wrap {
+  position: absolute;
+  z-index: 46;
+  inset-inline: 0;
+  inset-block-end: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-block-end: env(safe-area-inset-bottom, 0px);
+  pointer-events: none;
+}
+
+.place-bar__hint {
+  margin: 0;
+  max-inline-size: calc(100% - 32px);
+  padding: 10px 18px;
+  border-radius: 24px;
+  background: var(--village-nav-surface);
+  color: var(--village-nav-ink);
+  font-size: var(--font-size-xs);
+  text-align: center;
+  box-shadow: var(--shadow-card);
+
+  &--empty {
+    // Kept in the DOM so a screen reader announces into a region that already
+    // exists, rather than one that appears with the text inside it
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+.place-bar {
+  pointer-events: auto;
+  display: flex;
+  inline-size: 100%;
+  min-block-size: var(--village-bar-h);
+  border-block-start: 1px solid var(--village-nav-border);
+  background: var(--village-nav-surface);
+  box-shadow: var(--shadow-card);
+
+  &__item {
+    flex: 1 1 0;
+    min-inline-size: min-content;
+    min-block-size: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    position: relative;
+    padding: 6px 4px;
+    border: 0;
+    background: transparent;
+    color: var(--village-nav-muted);
+    font: inherit;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 3px solid var(--village-nav-accent);
+      outline-offset: -3px;
+    }
+
+    &:hover:not(&--active):not(&--locked) { color: var(--village-nav-ink); }
+
+    &--active {
+      color: var(--village-nav-surface);
+
+      // The filled pill, not the whole cell: the bar stays one surface
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 4px 6px;
+        border-radius: 999px;
+        background: var(--village-nav-ink);
+      }
+    }
+
+    &--locked {
+      opacity: 0.45;
+      cursor: default;
+    }
+  }
+
+  &__icon,
+  &__label {
+    position: relative; // above the active pill
+  }
+
+  &__icon { display: flex; }
+
+  &__lock {
+    position: absolute;
+    inset-block-end: -2px;
+    inset-inline-end: -6px;
+    inline-size: 10px;
+    block-size: 10px;
+    border: 2px solid currentColor;
+    border-radius: 2px;
+    border-block-start-width: 6px;
+    border-block-start-color: transparent;
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+    max-inline-size: 100%;
+  }
+
+  &__badge,
+  &__dot {
+    position: absolute;
+    inset-block-start: 4px;
+    inset-inline-end: calc(50% - 22px);
+    background: var(--village-nav-accent);
+    color: var(--village-nav-surface);
+  }
+
+  &__badge {
+    min-inline-size: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    @include type-meta;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  &__dot {
+    inline-size: 10px;
+    block-size: 10px;
+    border-radius: 50%;
+  }
+
+  // Desktop: a floating pill rather than a full-width bar
+  @media (min-width: 900px) {
+    inline-size: min(560px, calc(100% - 32px));
+    margin-block-end: 16px;
+    border: 1px solid var(--village-nav-border);
+    border-radius: 999px;
+    box-shadow: var(--shadow-raised);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .place-bar__item { transition: none; }
+}
+
+// --- The gear: everything that is not a move in the game -------------------
+.village-more {
+  &__panel { gap: var(--space-sm); }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    min-block-size: 56px;
+    inline-size: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-card-solid);
+    color: var(--text-primary);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+
+    &:hover { border-color: var(--text-secondary); }
+    &:focus-visible { outline: 3px solid var(--mine-ink); outline-offset: 2px; }
+  }
+
+  &__label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-weight: 700;
+  }
+
+  &__hint {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: 400;
+  }
+
+  &__dots { display: flex; }
+
+  // The switch reads its state off the button, so there is one source of truth
+  &__switch {
+    flex: 0 0 auto;
+    inline-size: 44px;
+    block-size: 26px;
+    border-radius: 999px;
+    background: var(--border-subtle);
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block-start: 3px;
+      inset-inline-start: 3px;
+      inline-size: 20px;
+      block-size: 20px;
+      border-radius: 50%;
+      background: var(--surface-raised);
+      box-shadow: var(--shadow-card);
+    }
+  }
+
+  &__row[aria-checked='true'] &__switch {
+    background: var(--mine-strong);
+
+    &::after { inset-inline-start: 21px; }
+  }
+}
+
+// The teacher's post, pinned above the news inside the one post box
+.inbox__row--pinned {
+  border-block-end: 1px solid var(--border-subtle);
+  font-weight: 700;
+}

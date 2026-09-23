@@ -4,6 +4,18 @@ import { BUBBLE, bubblePlacement, readBubbleAnchor } from './villageBubble';
 const desktop = { width: 1360, frameTop: 60, frameHeight: 700 };
 
 describe('bubblePlacement', () => {
+	it('keeps the writing surface above the navigation on desktop and short phones', () => {
+		for (const width of [390, 1360]) {
+			for (const frameHeight of [300, 480, 700]) {
+				const box = { width, frameTop: 0, frameHeight, bottomInset: 104 };
+				const placed = bubblePlacement(box, { x: width * 0.7, y: frameHeight - 30, speaker: '' });
+				expect(placed.top).toBeGreaterThanOrEqual(box.frameTop);
+				expect(placed.maxHeight).toBeGreaterThan(0);
+				expect(placed.top + placed.maxHeight).toBeLessThanOrEqual(frameHeight - box.bottomInset);
+			}
+		}
+	});
+
 	it('centres the bubble without a tail when no guide is in view', () => {
 		const placed = bubblePlacement(desktop, null);
 		expect(placed.width).toBe(BUBBLE.MAX_WIDTH);

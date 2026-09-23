@@ -13,6 +13,10 @@ import type { CouncilModel } from '../lib/flows/villageCouncil';
 import { bubblePlacement, readBubbleAnchor, type BubbleAnchor } from '../lib/flows/villageBubble';
 import { VillageCommunity, type VillageCommunityAttrs } from './VillageCommunity';
 import { planItemLabel } from './StageNav';
+import { PlaceBar } from './PlaceBar';
+import { openPlaceOf, placeNavTabs } from '../lib/flows/placeNav';
+import { t } from '../lib/i18n';
+import { isLightWorld, isVillageSoundOn } from '../lib/villagePrefs';
 
 interface VillageShellAttrs {
 	stationPapers?: Array<{
@@ -22,7 +26,13 @@ interface VillageShellAttrs {
 	}>;
 	community?: Omit<
 		VillageCommunityAttrs,
-		'plan' | 'currentIndex' | 'viewingIndex' | 'navigate' | 'onPause' | 'onEditMine' | 'onBoard'
+		| 'plan'
+		| 'currentIndex'
+		| 'viewingIndex'
+		| 'navigate'
+		| 'onPause'
+		| 'onPanelChange'
+		| 'onEditMine'
 	>;
 	/** What the council's scoreboard paints — absent before the topic loads */
 	council?: CouncilModel;
@@ -34,6 +44,8 @@ interface VillageShellAttrs {
 	currentIndex: number;
 	viewingIndex: number;
 	browseFreely?: boolean;
+	/** The way out when the 3D world will not load on this device */
+	onLeaveVillage?: () => void;
 	onWrite?: () => void;
 	onSelectBook?: (itemId: string) => void;
 	papers: Array<{ text: string; own: boolean; confirmed?: boolean }>;
@@ -60,8 +72,12 @@ function villageLite(): boolean {
 	}
 }
 
-/** A walk that never reports arriving (a hidden tab, a lost frame) still ends */
-const ARRIVAL_FALLBACK_MS = 12000;
+/**
+ * A walk that never reports arriving (a hidden tab, a lost frame) still ends.
+ * Generous on purpose: the village is a village, and crossing it from the far
+ * booth to the council is a walk of some twenty seconds.
+ */
+const ARRIVAL_FALLBACK_MS = 30000;
 /** A call older than this, met on first render, is history rather than an order */
 const CALL_FRESH_MS = 120000;
 /** The camera's turn to the table takes ~0.9s; a world that never reports the guide still shows the bubble */
@@ -137,6 +153,11 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				navigation: leads() ? 'teacher' : 'free',
 				roomItemId: attrs.plan[attrs.currentIndex]?.itemId ?? '',
 				places: villageFixedPlaces(attrs.plan, attrs.currentIndex),
+				// The world used to own these two as buttons of its own, drawn by
+				// the standalone tour and showing through the iframe. The app owns
+				// the choice now; the world only applies it.
+				sound: isVillageSoundOn(),
+				quality: isLightWorld() ? 'low' : 'high',
 			},
 			window.location.origin,
 		);
@@ -233,6 +254,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 	}
 	function openScoreboard(): void {
 		if (!attrs.community) return;
+		closeEverything();
 		scoreboardRequest++;
 		communityOpen = true;
 		sync();
@@ -243,6 +265,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 	}
 	/** The council's own item — the ballot, the recap — once the room is there; the scoreboard until then */
 	function enterCouncil(): void {
+		closeEverything();
 		const index = councilIndex();
 		if (index >= 0 && attrs.plan[index].stage !== AgoraStage.ended) {
 			if (index === attrs.viewingIndex) {
@@ -265,6 +288,8 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 	 * one, with no paper to write on — and it pauses the world's walk.
 	 */
 	function closeEverything(): void {
+		flightItem = '';
+		clearTimeout(flightTimer);
 		opened = false;
 		deskOpen = false;
 		focusDesk = false;
@@ -523,6 +548,9 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 								width: frame.clientWidth,
 								frameTop: frame.offsetTop,
 								frameHeight: frame.offsetHeight,
+								bottomInset:
+									(frame.parentElement?.querySelector<HTMLElement>('.place-bar-wrap')
+										?.offsetHeight ?? 0) + 12,
 							},
 							anchor,
 						)
@@ -536,70 +564,9 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				flightItem
 					? m('div.village-flight-status', { role: 'status' }, 'הפתק שלך בדרך ללוח…')
 					: null,
-				m('.village-shell__toolbar', [
-					m('strong', 'סנהדרין · כפר החכמים'),
-					m('.village-shell__toolbar-actions', [
-						attrs.community && !opened
-							? m(
-									'button.btn.btn--secondary.btn--sm',
-									{ onclick: () => openScoreboard() },
-									'לוח התוצאות',
-								)
-							: null,
-						m(
-							'button.btn.btn--secondary.btn--sm',
-							{
-								onclick: () => {
-									if (!opened && villageDesk(attrs.plan[attrs.viewingIndex])) {
-										showStation();
-
-										return;
-									}
-									opened = !opened;
-									deskOpen = false;
-									focusDesk = false;
-									bookOpen = false;
-									sync();
-								},
-							},
-							opened
-								? 'חזרה לכפר'
-								: library
-									? 'כניסה לספרייה'
-									: council
-										? viewing.stage === AgoraStage.voting
-											? 'לקלפי במועצה'
-											: 'לסיכום במועצה'
-										: villageDesk(attrs.plan[attrs.viewingIndex])
-											? 'הפתק שלי על השולחן'
-											: 'כניסה ישירה לתחנה',
-						),
-					]),
-				]),
-				// A booth has two sides: the table, where my paper is written in the
-				// guide's bubble, and the board with the class's notes. Back and forth.
-				deskHere && attrs.community && !flightItem
-					? m('.village-booth-switch', { role: 'group', 'aria-label': 'השולחן והלוח של הביתן' }, [
-							m(
-								'button',
-								{
-									type: 'button',
-									'aria-pressed': String(!(communityOpen && boardView)),
-									onclick: showStation,
-								},
-								'📝 השולחן · הפתק שלי',
-							),
-							m(
-								'button',
-								{
-									type: 'button',
-									'aria-pressed': String(communityOpen && boardView),
-									onclick: openBoard,
-								},
-								'📋 הלוח · הפתקים של הכיתה',
-							),
-						])
-					: null,
+				// The toolbar and the booth-switch chips used to sit here — two more
+				// ways to press `showStation()`, plus a third door to the board.
+				// One bar below the world answers all of it now.
 				attrs.community
 					? m(VillageCommunity, {
 							...attrs.community,
@@ -615,16 +582,19 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 								if (!value) boardView = false;
 								sync();
 							},
-							onEditMine: showTable,
-							onBoard: () => {
-								boardView = true;
-								if (viewing) frameView(villagePlace(viewing), 'board');
+							onPanelChange: (panel) => {
+								boardView = panel === 'notes';
+								if (panel !== 'none') {
+									opened = false;
+									deskOpen = false;
+								}
 							},
+							onEditMine: showTable,
 						})
 					: null,
 				m('iframe.village-shell__world', {
 					src: `/prototypes/olive-hill/village.html?embedded=1${villageLite() ? '&lite=1' : ''}`,
-					title: 'כפר החכמים בתלת־מימד',
+					title: t('village.world_title'),
 					oncreate: (node: m.VnodeDOM) => {
 						frame = node.dom as HTMLIFrameElement;
 						timer = setTimeout(() => {
@@ -646,14 +616,22 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 									sync();
 								},
 							},
-							'קרא את הספרים',
+							t('village.library.read'),
 						)
 					: null,
+				// The old "enter the station directly" button was really this: the way
+				// out when the world does not load. Now it says so, and offers it.
 				unavailable && !opened
-					? m(
-							'p.village-shell__notice',
-							'הכפר לא נטען במכשיר הזה. אפשר להיכנס ישירות לתחנה ולהמשיך במפגש.',
-						)
+					? m('.village-shell__notice', [
+							m('p', t('village.unavailable')),
+							attrs.onLeaveVillage
+								? m(
+										'button.btn.btn--secondary.btn--sm',
+										{ onclick: () => attrs.onLeaveVillage?.() },
+										t('village.unavailable_action'),
+									)
+								: null,
+						])
 					: null,
 				m(
 					'.village-shell__activity',
@@ -689,7 +667,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 														bookOpen = false;
 													},
 												},
-												'סגירת הספר · חזרה למדף',
+												t('village.library.shelf'),
 											)
 										: null,
 								]),
@@ -774,7 +752,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 														sync();
 													},
 												},
-												'סגירה',
+												t('village.desk.close'),
 											),
 										])
 									: council
@@ -791,7 +769,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 															sync();
 														},
 													},
-													'חזרה לכפר',
+													t('village.back'),
 												),
 											])
 										: null,
@@ -807,6 +785,33 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 							},
 						})
 					: null,
+				// The one navigator, last and always present: the four doors never
+				// move, so a student learns where they are once.
+				m(PlaceBar, {
+					tabs: placeNavTabs({
+						village: true,
+						hasDesk: deskHere,
+						hasCommunity: !!attrs.community,
+						inFlight: !!flightItem,
+						open: openPlaceOf({ opened, deskOpen, communityOpen, boardView, council }),
+					}),
+					onGo: (id) => {
+						if (id === 'village') {
+							closeEverything();
+							if (deskHere) showStation();
+							else {
+								sync();
+								m.redraw();
+							}
+						} else if (id === 'note') {
+							showTable();
+						} else if (id === 'board') {
+							openBoard();
+						} else {
+							enterCouncil();
+						}
+					},
+				}),
 			]);
 		},
 	};

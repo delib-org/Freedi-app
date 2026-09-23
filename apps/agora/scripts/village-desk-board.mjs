@@ -12,7 +12,7 @@
  * Screenshots land in output/village-desk-board/.
  */
 import { mkdirSync } from 'node:fs';
-import { chromium } from '@playwright/test';
+import { chromium, expect } from '@playwright/test';
 import { preflight, VITE_HOST } from './lib/preflight.mjs';
 import { clearCelebration, eq, fail, mkPage, passNameDoor, shotter, step } from './lib/e2e.mjs';
 import { db, fastlane, positionStudent } from './lib/fastlane.ts';
@@ -59,6 +59,7 @@ const world = page.frameLocator('iframe.village-shell__world');
 const guideBubble = world.locator('#desk-bubble');
 const writeButton = world.locator('#desk-write');
 const bubble = page.locator('.village-bubble');
+const door = (place) => page.locator(`.place-bar__item[data-place="${place}"]`);
 /** Press the one button that opens the paper: inside the guide's bubble */
 async function writeFromGuide() {
 	await guideBubble.waitFor({ state: 'visible', timeout: 40000 });
@@ -75,6 +76,17 @@ const arrived = await guideBubble
 await pause(1500);
 await shot(page, `${PREFIX}01-arrive-station`);
 if (!arrived) fail("the guide's bubble did not appear in front of the station");
+eq(
+	'the guide button preserves its click target while the world animates',
+	await writeButton.evaluate(async (button) => {
+		const label = button.firstChild;
+		const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+		for (let i = 0; i < 8; i++) await frame();
+
+		return label === button.firstChild;
+	}),
+	true,
+);
 eq('the paper did not open by itself', await bubble.count(), 0);
 eq('the board did not open by itself', await page.locator('.village-community__panel').count(), 0);
 eq(
@@ -101,9 +113,23 @@ await clearCelebration(page, 'S1');
 await pause(600);
 await shot(page, `${PREFIX}03-board-after-send`);
 
+step('The four destinations select the visible panel');
+await expect(door('board')).toHaveAttribute('aria-current', 'true');
+await door('results').click();
+await expect(page.locator('.village-scoreboard')).toBeVisible();
+await expect(door('results')).toHaveAttribute('aria-current', 'true');
+await expect(door('board')).not.toHaveAttribute('aria-current', 'true');
+await door('note').click();
+await expect(page.locator('.village-scoreboard')).toHaveCount(0);
+await expect(bubble.locator('textarea')).toBeVisible();
+await expect(door('note')).toHaveAttribute('aria-current', 'true');
+await door('board').click();
+await expect(page.locator('.village-note--own')).toBeVisible();
+await expect(door('board')).toHaveAttribute('aria-current', 'true');
+
 step('From the board back to the table, and forth again');
 await clearCelebration(page, 'S1');
-await page.locator('.village-booth-switch button', { hasText: 'השולחן' }).first().click();
+await page.locator('.place-bar__item[data-place="village"]').first().click();
 await guideBubble.waitFor({ state: 'visible', timeout: 15000 });
 eq('the board closed at the station', await page.locator('.village-community__panel').count(), 0);
 eq('back at the station, the paper waits for the guide’s button', await bubble.count(), 0);
@@ -115,7 +141,7 @@ eq(
 	(await page.locator('.village-bubble textarea').first().inputValue()).length > 0,
 	true,
 );
-await page.locator('.village-booth-switch button', { hasText: 'הלוח' }).first().click();
+await page.locator('.place-bar__item[data-place="board"]').first().click();
 await page.locator('.village-community__panel').waitFor({ timeout: 15000 });
 
 step('On the board: rate a classmate, and "edit my note" goes to the table');
@@ -128,11 +154,62 @@ if (await face.count()) {
 }
 await pause(600);
 await shot(page, `${PREFIX}05-board-rated`);
-await page.locator('.village-note--own button', { hasText: 'עריכת הפתק' }).first().click();
+await page.locator('.village-note--own button.village-note__edit').first().click();
 await page.locator('.village-bubble:not(.village-bubble--waiting)').waitFor({ timeout: 15000 });
 await pause(1200);
 await shot(page, `${PREFIX}06-edit-from-board`);
 console.log('   ✓ edit from the board opened the table');
+
+step('Settings keep keyboard focus and apply the world preferences');
+await door('village').click();
+await page.locator('.stage-nav__menu').click();
+const settings = page.locator('.village-more');
+const settingsButtons = settings.locator('button');
+await expect(settingsButtons.first()).toBeFocused();
+await page.keyboard.press('Shift+Tab');
+await expect(settingsButtons.last()).toBeFocused();
+await page.keyboard.press('Tab');
+await expect(settingsButtons.first()).toBeFocused();
+const switches = settings.getByRole('switch');
+await switches.nth(1).click();
+await expect(switches.nth(1)).toHaveAttribute('aria-checked', 'true');
+await expect(switches.nth(1).locator('.village-more__switch')).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+await expect.poll(() => page.evaluate(() => localStorage.getItem('agora_village_quality'))).toBe('low');
+await expect(world.locator('#quality')).toHaveText('איכות חסכונית');
+await switches.nth(0).click();
+await expect(switches.nth(0)).toHaveAttribute('aria-checked', 'true');
+await expect(world.locator('#sound')).toHaveText('♫ השתקה');
+await switches.nth(0).click();
+await expect(world.locator('#sound')).toHaveText('♫ צלילים');
+await page.keyboard.press('Escape');
+await expect(settings).toHaveCount(0);
+await expect(page.locator('.stage-nav__menu')).toBeFocused();
+
+step('Phone navigation stays readable in Hebrew and Spanish');
+await page.setViewportSize({ width: 390, height: 844 });
+await door('board').click();
+await pause(600);
+await shot(page, `${PREFIX}07-phone-board`);
+await page.setViewportSize({ width: 320, height: 740 });
+const spanishUrl = new URL(page.url());
+spanishUrl.searchParams.set('lang', 'es');
+await page.goto(spanishUrl.href, { waitUntil: 'domcontentloaded' });
+await expect(door('board')).toContainText('Todas las notas');
+await door('board').click();
+await expect(page.locator('.village-note--own')).toBeVisible();
+await pause(600);
+for (const label of await page.locator('.place-bar__label').all()) {
+	eq('the entire navigation label fits', await label.evaluate((el) => el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight), true);
+}
+eq('no horizontal page overflow', await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+await shot(page, `${PREFIX}08-small-phone-spanish`);
+await page.locator('.stage-nav__menu').click();
+await shot(page, `${PREFIX}09-phone-settings`);
+await settingsButtons.last().click();
+await expect(page.locator('iframe.village-shell__world')).toHaveCount(0);
+await page.locator('.village-mode-toggle').click();
+await expect(page.locator('iframe.village-shell__world')).toBeVisible();
+await expect(world.locator('#quality')).toHaveText('איכות חסכונית');
 
 console.log(`\nPASS — screenshots in ${OUT}`);
 if (!KEEP) await browser.close();

@@ -28,6 +28,14 @@ export interface InboxAttrs {
 	 * Odyssey app shows. Classroom students have no voyage to be told about.
 	 */
 	digestUid?: string;
+	/**
+	 * The teacher's own thread, pinned to the top of the list.
+	 *
+	 * It used to be a second door in the stage strip — a megaphone beside an
+	 * envelope, two mail icons on one screen, each holding half the post. The
+	 * envelope is the only mail door now, and the badge counts both.
+	 */
+	pinned?: { label: string; unread: number; onOpen: () => void };
 }
 
 type DigestCadence = 'none' | 'every' | 'daily' | 'multi';
@@ -261,9 +269,10 @@ export function Inbox(): m.Component<InboxAttrs> {
 		},
 
 		view(vnode) {
-			const unread = inboxUnreadCount();
 			const items = getInboxItems();
 			const digestUid = vnode.attrs.digestUid;
+			const pinned = vnode.attrs.pinned;
+			const unread = inboxUnreadCount() + (pinned?.unread ?? 0);
 
 			return [
 				m(
@@ -335,9 +344,38 @@ export function Inbox(): m.Component<InboxAttrs> {
 								]),
 								settingsOpen && digestUid
 									? settingsBody(digestUid)
-									: items.length === 0
-										? m('p.inbox__empty', t('inbox.empty'))
-										: m('.inbox__list', items.map(row)),
+									: m('.inbox__list', [
+											pinned
+												? m(
+														'button.inbox__row.inbox__row--pinned',
+														{
+															type: 'button',
+															class: pinned.unread > 0 ? 'inbox__row--unread' : undefined,
+															onclick: () => {
+																close();
+																pinned.onOpen();
+															},
+														},
+														[
+															m(
+																'span.inbox__icon',
+																{ 'aria-hidden': 'true' },
+																m(Icon, { name: 'megaphone', size: 20 }),
+															),
+															m('span.inbox__body', m('span.inbox__line', pinned.label)),
+															m(
+																'span.inbox__meta',
+																pinned.unread > 0
+																	? m('span.inbox__dot', { 'aria-label': t('inbox.unread_mark') })
+																	: null,
+															),
+														],
+													)
+												: null,
+											...(items.length === 0
+												? [pinned ? null : m('p.inbox__empty', t('inbox.empty'))]
+												: items.map(row)),
+										]),
 							]),
 						]
 					: null,
