@@ -184,8 +184,10 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
             enableResearchLogging={question.statementSettings?.enableResearchLogging === true}
             topParentId={question.topParentId || questionId}
           >
-            {/* Question Header */}
-            <QuestionHeader question={question} questionNumber={questionNumber} />
+            {/* Question Header — the classic feed puts its own title in its place */}
+            {mergedSettings.displayMode !== DisplayMode.classic && (
+              <QuestionHeader question={question} questionNumber={questionNumber} />
+            )}
 
             {/* Evaluation Interface - Swipe (zone-based) or Classic (card stack) */}
             <Suspense fallback={<SkeletonLoader count={3} />}>

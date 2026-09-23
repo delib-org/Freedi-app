@@ -15,6 +15,7 @@ import styles from './SolutionFeed.module.css';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError } from '@/lib/utils/errorHandling';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
+import InlineMarkdown from '../shared/InlineMarkdown';
 import {
   trackPageView,
   trackEvaluation,
@@ -519,6 +520,25 @@ export default function SolutionFeedClient({
         className={styles.feed}
         style={cardColorIntensityStyle(mergedSettings?.cardColorIntensity)}
       >
+        {/* Title: the rating ask names the question, so no separate question header here */}
+        <header className={styles.titleBlock}>
+          <h1 className={styles.title}>
+            {questionNumber !== undefined && (
+              <span className={styles.questionNumber}>{questionNumber})</span>
+            )}
+            <InlineMarkdown
+              text={tWithParams('Rate the answers others suggested to the question "{{question}}"', {
+                question: question.statement,
+              })}
+            />
+          </h1>
+          {getParagraphsText(question.paragraphs) && (
+            <p className={styles.description}>
+              <InlineMarkdown text={getParagraphsText(question.paragraphs)} />
+            </p>
+          )}
+        </header>
+
         {/* Error message */}
         {error && (
           <div className={styles.error}>
@@ -550,15 +570,6 @@ export default function SolutionFeedClient({
           </div>
         ) : (
           <>
-            {/* Instructions */}
-            <div className={styles.instructions}>
-              <h3>
-                {tWithParams('Rate the answers others suggested to the question "{{question}}"', {
-                  question: question.statement,
-                })}
-              </h3>
-            </div>
-
             {/* Inline evaluation progress */}
             <EvaluationProgress
               evaluatedCount={evaluatedInBatch}
