@@ -8,7 +8,7 @@
 .progressBar {
   flex: 1;
   height: 5px;
-  background: var(--bg-muted, #e2e8f0);
+  background: var(--bg-muted, var(--mc-surface-subtle, #e2e8f0));
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -22,7 +22,7 @@
 
 .progressLabel {
   font-size: 0.8125rem;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, var(--mc-text-muted, #64748b));
   white-space: nowrap;
   font-weight: 500;
   font-variant-numeric: tabular-nums;

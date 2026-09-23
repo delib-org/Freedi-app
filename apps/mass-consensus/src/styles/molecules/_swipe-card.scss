@@ -216,7 +216,7 @@
   &__content {
     font-size: 1.5rem; // 24px - prominent and readable
     line-height: 1.45;
-    color: #1e293b; // Dark slate for maximum contrast
+    color: var(--mc-text-strong, #1e293b); // Dark slate for maximum contrast
     text-align: center;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -289,22 +289,22 @@
 
     // Reaction mode variants (positive-only 0..1)
     &--reaction-meh {
-      background: var(--reaction-meh, #f1f5f9);
-      border: 2px solid var(--reaction-meh-border, #cbd5e1);
+      background: var(--reaction-meh, var(--mc-surface-muted, #f1f5f9));
+      border: 2px solid var(--reaction-meh-border, var(--mc-border, #cbd5e1));
     }
 
     &--reaction-okay {
-      background: var(--reaction-okay, #e0f2fe);
+      background: var(--reaction-okay, var(--mc-surface-tint, #e0f2fe));
       border: 2px solid var(--reaction-okay-border, #7dd3fc);
     }
 
     &--reaction-good {
-      background: var(--reaction-good, #d1fae5);
+      background: var(--reaction-good, var(--mc-surface-tint, #d1fae5));
       border: 2px solid var(--reaction-good-border, #6ee7b7);
     }
 
     &--reaction-great {
-      background: var(--reaction-great, #fef3c7);
+      background: var(--reaction-great, var(--mc-surface-tint, #fef3c7));
       border: 2px solid var(--reaction-great-border, #fcd34d);
     }
 

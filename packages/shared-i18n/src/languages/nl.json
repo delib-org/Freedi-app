@@ -4262,5 +4262,16 @@
   "saveFailed": "De laatste wijziging kon niet worden opgeslagen",
   "titleRequired": "Een titel is verplicht",
   "retry": "Opnieuw proberen",
-  "saving": "Opslaan..."
+  "saving": "Opslaan...",
+  "a11yTheme": "Thema",
+  "a11yThemeSystem": "Systeem",
+  "a11yThemeLight": "Licht",
+  "a11yThemeDark": "Donker",
+  "a11yTextSize": "Tekstgrootte",
+  "a11yIncreaseText": "Grotere tekst",
+  "a11yDecreaseText": "Kleinere tekst",
+  "a11yReset": "Herstellen",
+  "a11yClose": "Sluiten",
+  "a11yTitle": "Toegankelijkheid",
+  "a11yHighContrast": "Hoog contrast"
 }

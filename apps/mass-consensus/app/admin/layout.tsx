@@ -50,7 +50,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div className={styles.adminLayout}>
+    // mc-light-scope: participant theme/contrast settings stay out of admin
+    <div className={`${styles.adminLayout} mc-light-scope`}>
       <AdminHeader />
       <main className={styles.adminContent}>
         {children}

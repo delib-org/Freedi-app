@@ -15,7 +15,7 @@
 }
 
 .container {
-  background: white;
+  background: var(--mc-surface, white);
   padding: 3rem 2rem;
   border-radius: 20px;
   text-align: center;
@@ -98,14 +98,14 @@
 
 .progressText {
   font-size: 0.9rem;
-  color: #5a6b8c;
+  color: var(--mc-text, #5a6b8c);
   font-weight: 600;
   margin-bottom: 1rem;
 }
 
 .mainMessage {
   font-size: 1.3rem;
-  color: #3d4d71;
+  color: var(--mc-text-strong, #3d4d71);
   margin: 1rem 0 0.5rem;
   font-weight: 500;
 
@@ -116,7 +116,7 @@
 
 .subMessage {
   font-size: 0.95rem;
-  color: #5a6b8c;
+  color: var(--mc-text, #5a6b8c);
   margin: 0 0 0.5rem;
   opacity: 0.9;
 }
@@ -156,12 +156,12 @@
 
 .tipText {
   font-size: 0.9rem;
-  color: #3d4d71;
+  color: var(--mc-text-strong, #3d4d71);
   line-height: 1.4;
   margin: 0;
 
   strong {
-    color: #5f88e5;
+    color: var(--mc-brand-text, #5f88e5);
     font-weight: 600;
   }
 }
@@ -233,7 +233,7 @@
 
 .takingLonger {
   font-size: 0.9rem;
-  color: #5a6b8c;
+  color: var(--mc-text, #5a6b8c);
   margin-bottom: 1rem;
 }
 
@@ -242,7 +242,7 @@
   background: transparent;
   border: 2px solid #5f88e5;
   border-radius: 8px;
-  color: #5f88e5;
+  color: var(--mc-brand-text, #5f88e5);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;

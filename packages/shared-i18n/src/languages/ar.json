@@ -4382,5 +4382,16 @@
   "saveFailed": "تعذّر حفظ التغيير الأخير",
   "titleRequired": "العنوان مطلوب",
   "retry": "إعادة المحاولة",
-  "saving": "جارٍ الحفظ..."
+  "saving": "جارٍ الحفظ...",
+  "a11yTheme": "المظهر",
+  "a11yThemeSystem": "حسب الجهاز",
+  "a11yThemeLight": "فاتح",
+  "a11yThemeDark": "داكن",
+  "a11yTextSize": "حجم النص",
+  "a11yIncreaseText": "تكبير النص",
+  "a11yDecreaseText": "تصغير النص",
+  "a11yReset": "إعادة ضبط",
+  "a11yClose": "إغلاق",
+  "a11yTitle": "إمكانية الوصول",
+  "a11yHighContrast": "تباين عالٍ"
 }

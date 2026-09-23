@@ -117,7 +117,7 @@
 
   &__or-separator {
     font-size: 0.875rem;
-    color: #9ca3af;
+    color: var(--mc-text-muted, #9ca3af);
     user-select: none;
   }
 

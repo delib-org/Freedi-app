@@ -1,0 +1,311 @@
+// Participant themes: dark mode and high contrast.
+//
+// <html> carries data-theme="system|light|dark" and data-contrast="high|normal"
+// (server-rendered from the `mc-a11y` cookie, see AccessibilityButton).
+//
+// Light mode is globals.css untouched. Stylesheets reference the --mc-* roles
+// as `var(--mc-surface, <original colour>)`; the roles are undefined in light
+// mode, so the original colour is used. The blocks below define them.
+//
+// Admin screens are wrapped in .mc-light-scope, which restores the light
+// tokens for everything inside it.
+
+// ---------------------------------------------------------------- Dark
+
+@mixin dark-tokens {
+  color-scheme: dark;
+
+  --btn-primary: #6b8fa3;
+  --btn-primary-hover: #7c9eb2;
+  --btn-secondary: #334155;
+  --text-primary: #f1f5f9;
+  --text-body: #cbd5e1;
+  --text-secondary: #94a3b8;
+  --background: linear-gradient(180deg, #0f172a, #131c2e);
+  --background-solid: #0f172a;
+
+  --color-secondary: #1e3a4a;
+  --color-accent: #3b2f25;
+  --color-warm: #3d3128;
+  --color-soft: #1f3526;
+  --color-lavender: #2e2a40;
+  --color-peach: #3f2a26;
+  --color-mint: #1d3833;
+
+  --card-default: #1e293b;
+  --card-blue: #1e3a4a;
+  --card-orange: #3a2c28;
+  --card-pink: #3f2a26;
+  --card-purple: #2e2a40;
+  --card-green: #1d3833;
+  --card-mint: #1d3833;
+  --card-lavender: #2e2a40;
+  --card-peach: #3f2a26;
+
+  --priority-medium: #4c4670;
+  --priority-low: #2c5a50;
+  --option: #1d3833;
+  --option-text: #8fd3c2;
+
+  --rating-strongly-agree: #14532d;
+  --rating-strongly-agree-text: #bbf7d0;
+  --rating-strongly-agree-hover: #166534;
+  --rating-agree: #1a4a3a;
+  --rating-agree-text: #a7f3d0;
+  --rating-agree-hover: #14532d;
+  --rating-neutral: #5a4a12;
+  --rating-neutral-text: #fde68a;
+  --rating-neutral-hover: #713f12;
+  --rating-disagree: #5a2d12;
+  --rating-disagree-text: #fed7aa;
+  --rating-disagree-hover: #7c2d12;
+  --rating-strongly-disagree: #5f1d1d;
+  --rating-strongly-disagree-text: #fecaca;
+  --rating-strongly-disagree-hover: #7f1d1d;
+
+  --reaction-meh: #334155;
+  --reaction-okay: #0c3a52;
+  --reaction-good: #14532d;
+  --reaction-great: #5a4a12;
+  --reaction-love: #5f1d2d;
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  --mc-surface: #1e293b;
+  --mc-surface-muted: #172033;
+  --mc-surface-subtle: #334155;
+  --mc-surface-tint: #1f2a44;
+  --mc-border: #334155;
+  --mc-border-strong: #475569;
+  --mc-text-strong: #f1f5f9;
+  --mc-text: #cbd5e1;
+  --mc-text-muted: #94a3b8;
+  --mc-brand-text: #93b4f5;
+  --mc-focus: #93c5fd;
+  --mc-halo: rgba(15, 23, 42, 0.9);
+  --mc-glass: rgba(30, 41, 59, 0.92);
+}
+
+:root[data-theme='dark'] {
+  @include dark-tokens;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] {
+    @include dark-tokens;
+  }
+}
+
+// ---------------------------------------------------------------- High contrast
+
+:root[data-contrast='high'] {
+  --btn-primary: #0b3d91;
+  --btn-primary-hover: #062a66;
+  --btn-secondary: #ffffff;
+  --text-primary: #000000;
+  --text-body: #000000;
+  --text-secondary: #1a1a1a;
+  --background: #ffffff;
+  --background-solid: #ffffff;
+
+  --color-secondary: #ffffff;
+  --color-accent: #ffffff;
+  --color-warm: #ffffff;
+  --color-soft: #ffffff;
+  --color-lavender: #ffffff;
+  --color-peach: #ffffff;
+  --color-mint: #ffffff;
+
+  --card-default: #ffffff;
+  --card-blue: #ffffff;
+  --card-orange: #ffffff;
+  --card-pink: #ffffff;
+  --card-purple: #ffffff;
+  --card-green: #e6f4ea;
+  --card-mint: #ffffff;
+  --card-lavender: #ffffff;
+  --card-peach: #ffffff;
+
+  --option-text: #000000;
+  --rating-strongly-agree-text: #064e1f;
+  --rating-agree-text: #04513a;
+  --rating-neutral-text: #5c2a02;
+  --rating-disagree-text: #7c2d12;
+  --rating-strongly-disagree-text: #7f1d1d;
+  --rating-strongly-agree-border: #000000;
+  --rating-agree-border: #000000;
+  --rating-neutral-border: #000000;
+  --rating-disagree-border: #000000;
+  --rating-strongly-disagree-border: #000000;
+
+  --shadow-sm: 0 0 0 1px #000000;
+  --shadow-md: 0 0 0 2px #000000;
+  --shadow-lg: 0 0 0 2px #000000;
+
+  --mc-surface: #ffffff;
+  --mc-surface-muted: #ffffff;
+  --mc-surface-subtle: #e6e6e6;
+  --mc-surface-tint: #ffffff;
+  --mc-border: #000000;
+  --mc-border-strong: #000000;
+  --mc-text-strong: #000000;
+  --mc-text: #000000;
+  --mc-text-muted: #1a1a1a;
+  --mc-brand-text: #0b3d91;
+  --mc-focus: #000000;
+  --mc-halo: rgba(255, 255, 255, 1);
+  --mc-glass: #ffffff;
+}
+
+@mixin dark-high-contrast-tokens {
+  --btn-primary: #1d4ed8;
+  --btn-primary-hover: #1e40af;
+  --btn-secondary: #000000;
+  --text-primary: #ffffff;
+  --text-body: #ffffff;
+  --text-secondary: #f0f0f0;
+  --background: #000000;
+  --background-solid: #000000;
+
+  --color-secondary: #000000;
+  --color-accent: #000000;
+  --color-warm: #000000;
+  --color-soft: #000000;
+  --color-lavender: #000000;
+  --color-peach: #000000;
+  --color-mint: #000000;
+
+  --card-default: #000000;
+  --card-blue: #000000;
+  --card-orange: #000000;
+  --card-pink: #000000;
+  --card-purple: #000000;
+  --card-green: #0a2a14;
+  --card-mint: #000000;
+  --card-lavender: #000000;
+  --card-peach: #000000;
+
+  --option-text: #ffffff;
+  --rating-strongly-agree-text: #ffffff;
+  --rating-agree-text: #ffffff;
+  --rating-neutral-text: #ffffff;
+  --rating-disagree-text: #ffffff;
+  --rating-strongly-disagree-text: #ffffff;
+  --rating-strongly-agree-border: #ffffff;
+  --rating-agree-border: #ffffff;
+  --rating-neutral-border: #ffffff;
+  --rating-disagree-border: #ffffff;
+  --rating-strongly-disagree-border: #ffffff;
+
+  --shadow-sm: 0 0 0 1px #ffffff;
+  --shadow-md: 0 0 0 2px #ffffff;
+  --shadow-lg: 0 0 0 2px #ffffff;
+
+  --mc-surface: #000000;
+  --mc-surface-muted: #000000;
+  --mc-surface-subtle: #1a1a1a;
+  --mc-surface-tint: #000000;
+  --mc-border: #ffffff;
+  --mc-border-strong: #ffffff;
+  --mc-text-strong: #ffffff;
+  --mc-text: #ffffff;
+  --mc-text-muted: #f0f0f0;
+  --mc-brand-text: #ffe066;
+  --mc-focus: #ffe066;
+  --mc-halo: rgba(0, 0, 0, 1);
+  --mc-glass: #000000;
+}
+
+:root[data-contrast='high'][data-theme='dark'] {
+  @include dark-high-contrast-tokens;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-contrast='high'][data-theme='system'] {
+    @include dark-high-contrast-tokens;
+  }
+}
+
+:root[data-contrast='high'] {
+  // The survey's card colour intensity is set inline on the feed/swipe
+  // containers; full tint keeps the rating zones distinguishable.
+  [style*='--card-color-intensity']:not(.mc-light-scope *) {
+    --card-color-intensity: 1 !important;
+  }
+
+  body a {
+    text-decoration: underline;
+  }
+
+  body :focus-visible {
+    outline: 3px solid var(--mc-focus) !important;
+    outline-offset: 2px;
+  }
+}
+
+// ---------------------------------------------------------------- Shared overrides
+// Rules for the few spots where a colour is baked into a shadow or a
+// translucent layer, so a token swap alone cannot reach it.
+
+:root:not([data-theme='light']) .swipe-card__number,
+:root:not([data-theme='light']) .swipe-card__comment-btn,
+:root[data-contrast='high'] .swipe-card__number,
+:root[data-contrast='high'] .swipe-card__comment-btn {
+  background: var(--mc-glass, rgba(255, 255, 255, 0.92));
+}
+
+:root:not([data-theme='light']) .swipe-card__content,
+:root[data-contrast='high'] .swipe-card__content {
+  text-shadow:
+    0 0 20px var(--mc-halo, rgba(255, 255, 255, 0.95)),
+    0 1px 2px var(--mc-halo, rgba(255, 255, 255, 0.9));
+}
+
+:root:not([data-theme='light']) .skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--mc-surface-muted, #f0f0f0) 25%,
+    var(--mc-surface-subtle, #e0e0e0) 50%,
+    var(--mc-surface-muted, #f0f0f0) 75%
+  );
+  background-size: 200% 100%;
+}
+
+:root:not([data-theme='light']) .badge-neutral {
+  background: var(--mc-surface-subtle, #e5e7eb);
+}
+
+// ---------------------------------------------------------------- Admin scope
+
+.mc-light-scope {
+  color-scheme: light;
+
+  --mc-surface: initial;
+  --mc-surface-muted: initial;
+  --mc-surface-subtle: initial;
+  --mc-surface-tint: initial;
+  --mc-border: initial;
+  --mc-border-strong: initial;
+  --mc-text-strong: initial;
+  --mc-text: initial;
+  --mc-text-muted: initial;
+  --mc-brand-text: initial;
+  --mc-focus: initial;
+  --mc-halo: initial;
+  --mc-glass: initial;
+  --reaction-meh: initial;
+  --reaction-okay: initial;
+  --reaction-good: initial;
+  --reaction-great: initial;
+  --reaction-love: initial;
+}
+
+// Admin keeps its light look even when the participant chose dark
+:root:not([data-theme='light']) .mc-light-scope,
+:root[data-contrast='high'] .mc-light-scope {
+  min-height: 100vh;
+  background: var(--background-solid);
+  color: var(--text-body);
+}

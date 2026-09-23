@@ -1,7 +1,7 @@
 .header {
   margin-bottom: var(--spacing-2xl);
   padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--mc-border, #e5e7eb);
 }
 
 .title {

@@ -8,7 +8,7 @@
 
 /* Error message */
 .error {
-  background: #ffebee;
+  background: var(--mc-surface-tint, #ffebee);
   border: 1px solid var(--disagree);
   border-radius: 12px;
   padding: var(--spacing-md);
@@ -83,7 +83,7 @@
 /* Progress Bar */
 .progressBar {
   padding: var(--spacing-md) var(--spacing-lg);
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 16px;
   margin: 0 var(--spacing-md);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
@@ -99,7 +99,7 @@
 .progressCount {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-body, #475569);
+  color: var(--text-body, var(--mc-text, #475569));
 }
 
 .batchBadge {
@@ -113,7 +113,7 @@
 
 .progressTrack {
   height: 6px;
-  background: #e2e8f0;
+  background: var(--mc-surface-subtle, #e2e8f0);
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -166,13 +166,13 @@
 
 .batchComplete h3 {
   font-size: 1.5rem;
-  color: var(--text-body, #475569);
+  color: var(--text-body, var(--mc-text, #475569));
   margin: 0 0 var(--spacing-sm) 0;
 }
 
 .batchComplete p {
   font-size: 1rem;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, var(--mc-text-muted, #64748b));
   margin: 0 0 var(--spacing-lg) 0;
 }
 
@@ -233,7 +233,7 @@
 
 .swipeHint {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--mc-text-muted, #94a3b8);
   margin: 0;
   text-align: center;
 }
@@ -301,7 +301,7 @@
 /* Page title — same look as QuestionHeader, which this view replaces */
 .titleBlock {
   padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--mc-border, #e5e7eb);
 }
 
 .title {
@@ -396,7 +396,7 @@
 
 .batchButton.disabled {
   background: transparent;
-  border-color: var(--btn-secondary, #e2e8f0);
+  border-color: var(--btn-secondary, var(--mc-border, #e2e8f0));
   color: var(--text-secondary);
   cursor: not-allowed;
 }
@@ -424,17 +424,17 @@
   border-radius: 9999px;
   font-size: 0.9rem;
   font-weight: 500;
-  border: 2px solid var(--btn-secondary, #cbd5e0);
-  background: var(--bg-muted, #f7fafc);
-  color: var(--text-secondary, #718096);
+  border: 2px solid var(--btn-secondary, var(--mc-border, #cbd5e0));
+  background: var(--bg-muted, var(--mc-surface-muted, #f7fafc));
+  color: var(--text-secondary, var(--mc-text-muted, #718096));
   cursor: not-allowed;
   transition: all 0.25s ease;
 }
 
 .getMorePillReady {
   border-color: var(--color-primary, #5f88e5);
-  background: white;
-  color: var(--color-primary, #5f88e5);
+  background: var(--mc-surface, white);
+  color: var(--color-primary, var(--mc-brand-text, #5f88e5));
   cursor: pointer;
 }
 
@@ -468,13 +468,13 @@
 .bannerTitle {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-body, #475569);
+  color: var(--text-body, var(--mc-text, #475569));
   margin: 0;
 }
 
 .bannerSubtitle {
   font-size: 0.9375rem;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, var(--mc-text-muted, #64748b));
   margin: 0;
 }
 
@@ -558,7 +558,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to top, #ffffff 80%, transparent);
+  background: linear-gradient(to top, var(--mc-surface-muted, #ffffff) 80%, transparent);
   padding: var(--spacing-md) var(--spacing-lg);
   padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0px));
   display: flex;
@@ -604,7 +604,7 @@
 .progressDivider {
   width: 1px;
   height: 20px;
-  background: var(--border-light, #e0e0e0);
+  background: var(--border-light, var(--mc-surface-subtle, #e0e0e0));
 }
 
 /* Mobile responsive */
@@ -694,7 +694,7 @@
 }
 
 .confirmationModal {
-  background: var(--card-default, #fff);
+  background: var(--card-default, var(--mc-surface, #fff));
   border-radius: 16px;
   padding: 2rem;
   max-width: 400px;
@@ -706,22 +706,22 @@
 
 /* Variant colors for the confirmation modal */
 .confirmation_strongly-agree {
-  background: var(--rating-strongly-agree, #dcfce7);
+  background: var(--rating-strongly-agree, var(--mc-surface-tint, #dcfce7));
   border: 2px solid #22c55e;
 }
 
 .confirmation_agree {
-  background: var(--rating-agree, #d1fae5);
+  background: var(--rating-agree, var(--mc-surface-tint, #d1fae5));
   border: 2px solid #6ee7b7;
 }
 
 .confirmation_neutral {
-  background: var(--rating-neutral, #f1f5f9);
-  border: 2px solid #cbd5e1;
+  background: var(--rating-neutral, var(--mc-surface-muted, #f1f5f9));
+  border: 2px solid var(--mc-border, #cbd5e1);
 }
 
 .confirmation_disagree {
-  background: var(--rating-disagree, #fef3c7);
+  background: var(--rating-disagree, var(--mc-surface-tint, #fef3c7));
   border: 2px solid #fcd34d;
 }
 
@@ -737,21 +737,21 @@
 
 .confirmationTitle {
   font-size: 1.125rem;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, var(--mc-text-muted, #64748b));
   margin: 0 0 0.5rem;
   font-weight: 500;
 }
 
 .confirmationRating {
   font-size: 1.5rem;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, var(--mc-text-strong, #1e293b));
   font-weight: 700;
   margin: 0 0 0.5rem;
 }
 
 .confirmationQuestion {
   font-size: 1rem;
-  color: var(--text-body, #475569);
+  color: var(--text-body, var(--mc-text, #475569));
   margin: 0 0 1.5rem;
 }
 
@@ -772,8 +772,8 @@
 }
 
 .confirmationCancel {
-  background: var(--btn-secondary, #e2e8f0);
-  color: var(--text-primary, #1e293b);
+  background: var(--btn-secondary, var(--mc-surface-subtle, #e2e8f0));
+  color: var(--text-primary, var(--mc-text-strong, #1e293b));
 }
 
 .confirmationCancel:hover {

@@ -4262,5 +4262,16 @@
   "saveFailed": "Die letzte Änderung konnte nicht gespeichert werden",
   "titleRequired": "Ein Titel ist erforderlich",
   "retry": "Erneut versuchen",
-  "saving": "Wird gespeichert..."
+  "saving": "Wird gespeichert...",
+  "a11yTheme": "Farbschema",
+  "a11yThemeSystem": "System",
+  "a11yThemeLight": "Hell",
+  "a11yThemeDark": "Dunkel",
+  "a11yTextSize": "Textgröße",
+  "a11yIncreaseText": "Text vergrößern",
+  "a11yDecreaseText": "Text verkleinern",
+  "a11yReset": "Zurücksetzen",
+  "a11yClose": "Schließen",
+  "a11yTitle": "Barrierefreiheit",
+  "a11yHighContrast": "Hoher Kontrast"
 }

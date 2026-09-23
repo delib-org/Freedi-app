@@ -156,6 +156,21 @@ export const CARD_COLOR_INTENSITY = {
 } as const;
 
 /**
+ * Participant accessibility settings (theme, contrast, text size).
+ * Kept in a cookie so the server renders <html> with them — no flash.
+ */
+export const ACCESSIBILITY = {
+  COOKIE: 'mc-a11y',
+  /** One year, in seconds */
+  COOKIE_MAX_AGE_S: 60 * 60 * 24 * 365,
+  /** Root font-size steps, in percent of the browser default */
+  FONT_SCALE_STEPS: [87.5, 100, 112.5, 125, 150],
+  DEFAULT_FONT_SCALE: 100,
+  THEMES: ['system', 'light', 'dark'],
+  DEFAULT_THEME: 'light',
+} as const;
+
+/**
  * Zone configuration for zone-based swipe system
  * Maps zone indices to ratings and visual elements
  * Universal layout: Negative (left/red) to Positive (right/green)

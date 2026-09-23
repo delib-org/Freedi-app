@@ -32,22 +32,22 @@
 }
 
 .button.dislike {
-  background: var(--rating-dislike, #fef3c7);
+  background: var(--rating-dislike, var(--mc-surface-tint, #fef3c7));
   border-color: #fde68a;
 }
 
 .button.neutral {
-  background: var(--rating-neutral, #f1f5f9);
-  border-color: #e2e8f0;
+  background: var(--rating-neutral, var(--mc-surface-muted, #f1f5f9));
+  border-color: var(--mc-border, #e2e8f0);
 }
 
 .button.like {
-  background: var(--rating-like, #d1fae5);
+  background: var(--rating-like, var(--mc-surface-tint, #d1fae5));
   border-color: #a7f3d0;
 }
 
 .button.love {
-  background: var(--rating-love, #ccfbf1);
+  background: var(--rating-love, var(--mc-surface-tint, #ccfbf1));
   border-color: #99f6e4;
 }
 
@@ -132,14 +132,14 @@
 .score {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, var(--mc-text-muted, #64748b));
   transition: color 0.2s ease;
 }
 
 .label {
   font-size: 0.6875rem;
   font-weight: 500;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, var(--mc-text-muted, #64748b));
   text-align: center;
   max-width: 60px;
   transition: color 0.2s ease;
@@ -150,7 +150,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle, white 10%, transparent 10.01%);
+  background: radial-gradient(circle, var(--mc-surface-muted, white) 10%, transparent 10.01%);
   opacity: 0;
   transform: scale(10, 10);
   transition: transform 0.5s, opacity 1s;

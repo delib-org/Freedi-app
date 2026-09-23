@@ -5,7 +5,8 @@
   padding: 0;
 }
 
-:root {
+:root,
+.mc-light-scope {
   /* Primary Colors - Updated Pastel Palette */
   --btn-primary: #7C9EB2; /* Soft teal-blue for primary CTA */
   --btn-primary-hover: #6B8FA3;

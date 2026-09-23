@@ -4959,5 +4959,16 @@
   "Hide table": "Hide table",
   "allChangesSaved": "All changes saved",
   "saveFailed": "Couldn't save your last change",
-  "titleRequired": "A title is required"
+  "titleRequired": "A title is required",
+  "a11yTheme": "Theme",
+  "a11yThemeSystem": "System",
+  "a11yThemeLight": "Light",
+  "a11yThemeDark": "Dark",
+  "a11yTextSize": "Text size",
+  "a11yIncreaseText": "Larger text",
+  "a11yDecreaseText": "Smaller text",
+  "a11yReset": "Reset",
+  "a11yClose": "Close",
+  "a11yTitle": "Accessibility",
+  "a11yHighContrast": "High contrast"
 }

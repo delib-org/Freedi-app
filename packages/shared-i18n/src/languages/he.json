@@ -4997,5 +4997,16 @@
   "Hide table": "הסתרת הטבלה",
   "allChangesSaved": "כל השינויים נשמרו",
   "saveFailed": "השינוי האחרון לא נשמר",
-  "titleRequired": "חובה להזין כותרת"
+  "titleRequired": "חובה להזין כותרת",
+  "a11yTheme": "ערכת צבעים",
+  "a11yThemeSystem": "לפי המכשיר",
+  "a11yThemeLight": "בהיר",
+  "a11yThemeDark": "כהה",
+  "a11yTextSize": "גודל טקסט",
+  "a11yIncreaseText": "הגדלת טקסט",
+  "a11yDecreaseText": "הקטנת טקסט",
+  "a11yReset": "איפוס",
+  "a11yClose": "סגירה",
+  "a11yTitle": "נגישות",
+  "a11yHighContrast": "ניגודיות גבוהה"
 }
