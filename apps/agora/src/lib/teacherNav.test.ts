@@ -1,11 +1,56 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AgoraSessionStatus, type AgoraSession } from '@freedi/shared-types';
 
 vi.mock('./teacher', () => ({ fetchTeacherDashboard: vi.fn() }));
 // The cache asks who is signed in so the dashboard can be read direct; the
 // module behind that answer reaches firebase, which node has no business in.
-vi.mock('./user', () => ({ getUserState: () => ({ user: null }) }));
-import { isSessionLive } from './teacherNav';
+const signedIn = vi.hoisted(() => ({ uid: null as string | null }));
+vi.mock('./user', () => ({
+	getUserState: () => ({ user: signedIn.uid ? { uid: signedIn.uid } : null }),
+}));
+import {
+	clearTeacherNav,
+	getTeacherNavState,
+	isSessionLive,
+	navClass,
+	noteTeacherDashboard,
+} from './teacherNav';
+import type { TeacherDashboard } from './teacher';
+
+describe('teacher menu cache ownership', () => {
+	const dashboard: TeacherDashboard = {
+		classes: [{ classId: 'c1', name: 'Blue', classCode: 'ABC123', memberCount: 3, schoolId: 's' }],
+		schools: [],
+		aggregates: new Map(),
+		sessions: [],
+	};
+
+	beforeEach(() => {
+		clearTeacherNav();
+		signedIn.uid = null;
+	});
+
+	it('serves the cache to the account it was filled for', () => {
+		signedIn.uid = 'teacher-a';
+		noteTeacherDashboard(dashboard, 'teacher-a');
+		expect(navClass('c1')?.classCode).toBe('ABC123');
+		expect(getTeacherNavState().loaded).toBe(true);
+	});
+
+	it('forgets the last account once the uid changes under the page', () => {
+		signedIn.uid = 'teacher-a';
+		noteTeacherDashboard(dashboard, 'teacher-a');
+		signedIn.uid = 'teacher-b';
+		expect(navClass('c1')).toBeNull();
+		expect(getTeacherNavState().loaded).toBe(false);
+	});
+
+	it('drops an answer that was read for someone other than the signed-in teacher', () => {
+		signedIn.uid = 'teacher-b';
+		noteTeacherDashboard(dashboard, 'teacher-a');
+		expect(navClass('c1')).toBeNull();
+	});
+});
 
 describe('lesson archive classification', () => {
 	const now = Date.now();

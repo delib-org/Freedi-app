@@ -81,6 +81,17 @@ export function TeacherHome(): m.Component {
 	 */
 	let loadedForUid: string | null = null;
 	let refilling = false;
+	/**
+	 * The load running now, keyed by the account it reads for. A
+	 * credential-recovery sign-in changes the uid, and then both the sign-in
+	 * button's `.then(load)` and {@link refillIfAccountChanged} ask for the new
+	 * account at once: two shelf reads could both come back empty and both
+	 * provision the default scenario. Callers for the same account share one
+	 * load instead.
+	 */
+	let inFlight: { key: string; promise: Promise<void> } | null = null;
+	/** Accounts this page already provisioned for — never twice, whatever races */
+	const provisionedFor = new Set<string>();
 	let firstRunHidden = firstRunDismissed();
 
 	async function loadHistory(): Promise<void> {
@@ -243,7 +254,8 @@ export function TeacherHome(): m.Component {
 			topicsLoaded = true;
 			m.redraw();
 			loadedTopics.forEach(healArtwork);
-			if (loadedTopics.length === 0 && !user.isAnonymous) {
+			if (loadedTopics.length === 0 && !user.isAnonymous && !provisionedFor.has(user.uid)) {
+				provisionedFor.add(user.uid);
 				const defaultTopic = await provisionDefaultTopic(user.uid);
 				if (defaultTopic && loadedForUid === user.uid) {
 					topics = [defaultTopic];
@@ -279,7 +291,7 @@ export function TeacherHome(): m.Component {
 			schools = dashboard.schools;
 			sessions = dashboard.sessions;
 			aggregates = dashboard.aggregates;
-			noteTeacherDashboard(dashboard);
+			noteTeacherDashboard(dashboard, user.uid);
 		} catch (error) {
 			console.error('[Teacher] Loading dashboard data failed:', error);
 		}
@@ -287,19 +299,57 @@ export function TeacherHome(): m.Component {
 		m.redraw();
 	}
 
+	/** Forget everything the last account put on screen */
+	function clearAccountData(): void {
+		topics = [];
+		classes = [];
+		schools = [];
+		sessions = [];
+		aggregates = new Map();
+		addClassOpen = false;
+		addClassError = null;
+		showAllScenarios = false;
+		historySessions = [];
+		historyCursor = undefined;
+		historyStarted = false;
+		historyOpen = false;
+		historyError = false;
+		historySearch = '';
+		historyClass = '';
+		historyMore = true;
+	}
+
+	/** Single-flight: concurrent callers for the same account share one load */
 	async function load(): Promise<void> {
+		let user: Awaited<ReturnType<typeof ensureUser>>;
 		try {
-			const user = await ensureUser();
+			user = await ensureUser();
+		} catch (error) {
+			console.error('[Teacher] Loading dashboard failed:', error);
+			topicsLoaded = true;
+			dashboardLoaded = true;
+			m.redraw();
+
+			return;
+		}
+		const key = `${user.uid}:${user.isAnonymous ? 'anon' : 'signed'}`;
+		if (inFlight?.key === key) return inFlight.promise;
+		const promise = loadFor(user).finally(() => {
+			if (inFlight?.promise === promise) inFlight = null;
+		});
+		inFlight = { key, promise };
+
+		return promise;
+	}
+
+	async function loadFor(user: { uid: string; isAnonymous: boolean }): Promise<void> {
+		try {
 			if (loadedForUid !== user.uid) {
-				historySessions = [];
-				historyCursor = undefined;
-				historyStarted = false;
-				historyOpen = false;
-				historySearch = '';
-				historyClass = '';
-				historyMore = true;
 				// A different account's answers are not this one's. Both sections
-				// go back to waiting rather than show the last teacher's shelf.
+				// go back to waiting rather than show the last teacher's shelf —
+				// and the data itself goes too, so a failed read for the new
+				// account paints empty, never the previous teacher's cards.
+				clearAccountData();
 				topicsLoaded = false;
 				dashboardLoaded = false;
 			}
@@ -539,11 +589,15 @@ export function TeacherHome(): m.Component {
 				...(value.gradeLevel ? { gradeLevel: value.gradeLevel } : {}),
 				...(value.schoolId ? { schoolId: value.schoolId } : {}),
 			});
-			const dashboard = await fetchTeacherDashboard(loadedForUid ?? undefined);
-			classes = dashboard.classes;
-			schools = dashboard.schools;
-			aggregates = dashboard.aggregates;
-			noteTeacherDashboard(dashboard);
+			const uid = loadedForUid;
+			const dashboard = await fetchTeacherDashboard(uid ?? undefined);
+			// The account can change under the round trip; its answer is not the new one's
+			if (loadedForUid === uid) {
+				classes = dashboard.classes;
+				schools = dashboard.schools;
+				aggregates = dashboard.aggregates;
+				noteTeacherDashboard(dashboard, uid);
+			}
 			addClassOpen = false;
 		} catch (error) {
 			console.error('[Teacher] Creating a class failed:', error);

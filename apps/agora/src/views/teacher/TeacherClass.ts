@@ -19,6 +19,12 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 	const classId = initialVnode.attrs.id;
 	let detail: TeacherClassDetail | null = null;
 	let loaded = false;
+	/**
+	 * The account `detail` was read for. A credential-recovery sign-in swaps
+	 * the uid under the open page; the previous account's roster is then not
+	 * this one's to show, so it is dropped and read again.
+	 */
+	let loadedForUid: string | null = null;
 	let openMemberId: string | null = null;
 	/** A fresh PIN from a reset, shown once next to the member row */
 	let issuedPin: { memberId: string; pin: string } | null = null;
@@ -260,13 +266,28 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 
 	async function load(): Promise<void> {
 		try {
-			await ensureUser();
-			detail = await fetchTeacherClass(classId);
+			const user = await ensureUser();
+			loadedForUid = user.uid;
+			const fetched = await fetchTeacherClass(classId);
+			if (getUserState().user?.uid !== user.uid) return;
+			detail = fetched;
 		} catch (error) {
 			console.error('[Teacher] Loading class failed:', error);
 		}
 		loaded = true;
 		m.redraw();
+	}
+
+	/** Drop and re-read the class when auth settles on another account */
+	function reloadIfAccountChanged(uid: string | undefined): void {
+		if (!uid || loadedForUid === null || loadedForUid === uid) return;
+		loadedForUid = uid;
+		detail = null;
+		loaded = false;
+		openMemberId = null;
+		issuedPin = null;
+		settingsOpen = false;
+		void load();
 	}
 
 	async function resetBinding(memberId: string): Promise<void> {
@@ -414,7 +435,8 @@ export function TeacherClass(initialVnode: m.Vnode<{ id: string }>): m.Component
 
 	return {
 		view() {
-			const { tier, loading } = getUserState();
+			const { tier, loading, user } = getUserState();
+			reloadIfAccountChanged(user?.uid);
 			/**
 			 * The teacher's menu passed this way already and remembers the name
 			 * and the code — the two things a teacher opening a class actually

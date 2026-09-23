@@ -20,6 +20,10 @@
  *       FIRESTORE_EMULATOR_HOST=localhost:8101 GCLOUD_PROJECT=freedi-test \
  *         npx tsx scripts/backfillAgoraAggregateTeachers.ts
  *
+ *   - Production, read-only preview (no --confirm-prod needed):
+ *       GCLOUD_PROJECT=wizcol-app \
+ *         npx tsx scripts/backfillAgoraAggregateTeachers.ts --dry-run
+ *
  *   - Production (read-write):
  *       gcloud auth application-default login
  *       GCLOUD_PROJECT=wizcol-app \
@@ -35,9 +39,11 @@ import { Collections, AgoraClass, AgoraClassAggregate } from '@freedi/shared-typ
 
 const dryRun = process.argv.includes('--dry-run');
 const emulator = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
-if (!emulator && !process.argv.includes('--confirm-prod')) {
+// A dry run only reads, so it may look at a real project unconfirmed — that
+// is what a dry run is for. Writing to one still takes --confirm-prod.
+if (!emulator && !dryRun && !process.argv.includes('--confirm-prod')) {
 	console.error(
-		'Refusing to touch a real project without --confirm-prod (or point FIRESTORE_EMULATOR_HOST at an emulator).',
+		'Refusing to write to a real project without --confirm-prod (or point FIRESTORE_EMULATOR_HOST at an emulator; --dry-run reads only).',
 	);
 	process.exit(1);
 }

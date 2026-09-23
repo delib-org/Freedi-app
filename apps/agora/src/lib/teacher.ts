@@ -440,12 +440,78 @@ async function queryTeacherDashboard(uid: string): Promise<TeacherDashboard> {
  */
 export async function fetchTeacherDashboard(uid?: string): Promise<TeacherDashboard> {
 	if (uid) {
+		let direct: TeacherDashboard | null = null;
 		try {
-			return await queryTeacherDashboard(uid);
+			direct = await queryTeacherDashboard(uid);
 		} catch (error) {
 			console.error('[Teacher] Reading the dashboard direct failed; asking the console:', error);
 		}
+		if (direct) {
+			const unindexed = classesMissingAggregates(
+				direct.classes,
+				direct.sessions,
+				direct.aggregates,
+			);
+			if (unindexed.length === 0) return direct;
+
+			// The query answered, but it can only see aggregates that carry
+			// `teacherMap`. One written before the field existed is simply absent
+			// — the class reads "no games yet" over a history it has — until the
+			// backfill script runs. The console reads by id and sees them all.
+			console.error(
+				'[Teacher] Class aggregates missing from the direct read (teacherMap not backfilled?); asking the console for advancement:',
+				{ uid, classIds: unindexed },
+			);
+			try {
+				const fromConsole = await fetchConsoleDashboard();
+
+				return {
+					...direct,
+					aggregates: new Map([...direct.aggregates, ...fromConsole.aggregates]),
+				};
+			} catch (error) {
+				console.error('[Teacher] Asking the console for advancement failed:', error);
+
+				return direct;
+			}
+		}
 	}
+
+	return fetchConsoleDashboard();
+}
+
+/**
+ * The classes whose advancement the direct read cannot be trusted on: a game
+ * of theirs has been folded into an aggregate (`aggregatedAt` on the session),
+ * yet no aggregate came back for them. That is the signature of an aggregate
+ * written before `teacherMap` existed — invisible to the equality query, not
+ * missing from the database. Only the sessions on hand are consulted, so it is
+ * a tripwire, not a census.
+ */
+export function classesMissingAggregates(
+	classes: ReadonlyArray<{ classId: string }>,
+	sessions: ReadonlyArray<Pick<AgoraSession, 'classId' | 'aggregatedAt'>>,
+	aggregates: ReadonlyMap<string, unknown>,
+): string[] {
+	const mine = new Set(classes.map((agoraClass) => agoraClass.classId));
+	const missing = new Set<string>();
+	for (const session of sessions) {
+		const { classId } = session;
+		if (
+			classId &&
+			session.aggregatedAt !== undefined &&
+			mine.has(classId) &&
+			!aggregates.has(classId)
+		) {
+			missing.add(classId);
+		}
+	}
+
+	return [...missing];
+}
+
+/** The dashboard as the `agoraTeacherConsole` callable serves it */
+async function fetchConsoleDashboard(): Promise<TeacherDashboard> {
 	const data = (await teacherConsole({ view: 'dashboard' })) as TeacherConsoleDashboard;
 	const aggregates = new Map<string, AgoraClassAggregate>();
 	for (const [classId, aggregate] of Object.entries(data.aggregates ?? {})) {
