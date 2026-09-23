@@ -1,3 +1,4 @@
+import { ChallengePhase, VOTE_AGAINST } from '@freedi/shared-types';
 import type { AgoraProposalScore, AgoraSession } from '@freedi/shared-types';
 import { boardPercent, campLean, inBridgeZone, standings } from '../boardGeometry';
 
@@ -37,6 +38,24 @@ export interface CouncilBallotRow {
 	mine: boolean;
 }
 
+/** One side of a motion — for or against — as a standing pillar */
+export interface CouncilMotionSide {
+	votes: number;
+	/** 0…1 of all votes cast */
+	share: number;
+	mine: boolean;
+}
+
+/**
+ * A ballot of ONE candidate is a motion: "do we adopt this?". The board draws
+ * it the way the phones do — the proposal, then two standing pillars.
+ */
+export interface CouncilMotion {
+	label: string;
+	for: CouncilMotionSide;
+	against: CouncilMotionSide;
+}
+
 export interface CouncilModel {
 	mode: 'pitch' | 'ballot';
 	goalOnly: boolean;
@@ -47,6 +66,8 @@ export interface CouncilModel {
 	footer: string;
 	title?: string;
 	candidates?: CouncilBallotRow[];
+	/** Set instead of a list when the ballot is a single for/against motion */
+	motion?: CouncilMotion;
 	showResults?: boolean;
 }
 
@@ -139,6 +160,48 @@ export function councilBallot(input: CouncilBallotInput): CouncilModel {
 		0,
 	);
 	const showResults = input.closed || input.session.votingSettings?.showResults === true;
+	const footer =
+		input.classSize > 0
+			? `${input.votedCount} מתוך ${input.classSize} הצביעו${showResults ? '' : ' · התוצאות ייחשפו כשהמורה יחליט'}`
+			: `${input.votedCount} הצביעו`;
+
+	// Same rule as the students' ballot: a motion is a motion only while it
+	// stands alone — a challenger pinned beside it makes it "which of these?"
+	const game = input.session.votingGame;
+	const challengeLive =
+		(game?.phase === ChallengePhase.vote || game?.phase === ChallengePhase.resolving) &&
+		Boolean(game?.challengerStatementId);
+	if (candidates.length === 1 && !challengeLive) {
+		const candidate = candidates[0];
+		const forVotes = input.selections[candidate.statementId] ?? 0;
+		const againstVotes = input.selections[VOTE_AGAINST] ?? 0;
+		const motionTotal = forVotes + againstVotes;
+
+		return {
+			mode: 'ballot',
+			goalOnly: input.session.votingSettings?.goalZoneOnly === true,
+			leftLabel: '',
+			rightLabel: '',
+			scoredAny: false,
+			points: [],
+			title: input.closed ? 'ההצבעה הסתיימה' : 'הצעה אחת על השולחן · מאמצים אותה?',
+			motion: {
+				label: candidate.statement,
+				for: {
+					votes: forVotes,
+					share: motionTotal > 0 ? forVotes / motionTotal : 0,
+					mine: input.myVoteStatementId === candidate.statementId,
+				},
+				against: {
+					votes: againstVotes,
+					share: motionTotal > 0 ? againstVotes / motionTotal : 0,
+					mine: input.myVoteStatementId === VOTE_AGAINST,
+				},
+			},
+			showResults,
+			footer,
+		};
+	}
 	const rows: CouncilBallotRow[] = candidates.map((candidate, index) => {
 		const votes = input.selections[candidate.statementId] ?? 0;
 
@@ -165,9 +228,6 @@ export function councilBallot(input: CouncilBallotInput): CouncilModel {
 		title: input.closed ? 'ההצבעה הסתיימה' : 'הצבעה · בחרו הצעה אחת',
 		candidates: rows,
 		showResults,
-		footer:
-			input.classSize > 0
-				? `${input.votedCount} מתוך ${input.classSize} הצביעו${showResults ? '' : ' · התוצאות ייחשפו כשהמורה יחליט'}`
-				: `${input.votedCount} הצביעו`,
+		footer,
 	};
 }
