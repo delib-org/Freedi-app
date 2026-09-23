@@ -4956,5 +4956,8 @@
   "{{h}} h": "{{h}} h",
   "Show as table": "Show as table",
   "Hide table": "Hide table",
-  "Let participants talk in a chat alongside the question": "Let participants talk in a chat alongside the question"
+  "Let participants talk in a chat alongside the question": "Let participants talk in a chat alongside the question",
+  "allChangesSaved": "All changes saved",
+  "saveFailed": "Couldn't save your last change",
+  "titleRequired": "A title is required"
 }

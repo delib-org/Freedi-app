@@ -585,8 +585,23 @@
 .formActions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 1rem;
   margin-top: 2rem;
+}
+
+.autosaveStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-inline-end: auto;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.autosaveStatusError {
+  color: var(--disagree);
+  font-weight: 600;
 }
 
 .cancelButton {

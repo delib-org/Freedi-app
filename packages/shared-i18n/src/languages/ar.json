@@ -4377,5 +4377,10 @@
   "{{h}} h": "{{h}} س",
   "Show as table": "عرض كجدول",
   "Hide table": "إخفاء الجدول",
-  "Let participants talk in a chat alongside the question": "السماح للمشاركين بالتحدث في دردشة إلى جانب السؤال"
+  "Let participants talk in a chat alongside the question": "السماح للمشاركين بالتحدث في دردشة إلى جانب السؤال",
+  "allChangesSaved": "تم حفظ جميع التغييرات",
+  "saveFailed": "تعذّر حفظ التغيير الأخير",
+  "titleRequired": "العنوان مطلوب",
+  "retry": "إعادة المحاولة",
+  "saving": "جارٍ الحفظ..."
 }

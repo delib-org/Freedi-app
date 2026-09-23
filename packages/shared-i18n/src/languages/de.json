@@ -4257,5 +4257,10 @@
   "{{h}} h": "{{h}} Std.",
   "Show as table": "Als Tabelle anzeigen",
   "Hide table": "Tabelle ausblenden",
-  "Let participants talk in a chat alongside the question": "Teilnehmende können neben der Frage chatten"
+  "Let participants talk in a chat alongside the question": "Teilnehmende können neben der Frage chatten",
+  "allChangesSaved": "Alle Änderungen gespeichert",
+  "saveFailed": "Die letzte Änderung konnte nicht gespeichert werden",
+  "titleRequired": "Ein Titel ist erforderlich",
+  "retry": "Erneut versuchen",
+  "saving": "Wird gespeichert..."
 }

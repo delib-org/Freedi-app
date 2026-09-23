@@ -26,6 +26,8 @@ export const UI = {
   LOADER_TIME_UPDATE_INTERVAL: 1000,
   LOADER_CANCEL_THRESHOLD: 30, // seconds
   ANIMATION_DURATION: 200,
+  /** Quiet time after the last edit before the admin editor autosaves */
+  AUTOSAVE_DELAY: 800,
 } as const;
 
 /**

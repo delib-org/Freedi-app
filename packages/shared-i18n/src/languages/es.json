@@ -4257,5 +4257,10 @@
   "{{h}} h": "{{h}} h",
   "Show as table": "Mostrar como tabla",
   "Hide table": "Ocultar tabla",
-  "Let participants talk in a chat alongside the question": "Permitir que los participantes conversen junto a la pregunta"
+  "Let participants talk in a chat alongside the question": "Permitir que los participantes conversen junto a la pregunta",
+  "allChangesSaved": "Todos los cambios guardados",
+  "saveFailed": "No se pudo guardar el último cambio",
+  "titleRequired": "El título es obligatorio",
+  "retry": "Reintentar",
+  "saving": "Guardando..."
 }

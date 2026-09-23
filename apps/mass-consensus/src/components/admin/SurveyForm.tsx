@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Statement, QuestionOverrideSettings, SurveyDemographicPage, UserDemographicQuestion, SurveyExplanationPage } from '@freedi/shared-types';
@@ -15,7 +15,10 @@ import { CreateQuestionModal } from './CreateQuestionModal';
 import OpeningSlideManager from './OpeningSlideManager';
 import CardColorIntensityControl from './CardColorIntensityControl';
 import { logError } from '@/lib/utils/errorHandling';
+import { UI } from '@/constants/common';
 import styles from './Admin.module.scss';
+
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 interface SurveyFormProps {
   existingSurvey?: Survey;
@@ -79,11 +82,21 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [isCreateQuestionModalOpen, setIsCreateQuestionModalOpen] = useState(false);
 
+  const [demographicsLoaded, setDemographicsLoaded] = useState(!existingSurvey);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [saveRetryTick, setSaveRetryTick] = useState(0);
+
   const isEditing = !!existingSurvey;
+  const editingSurveyId = existingSurvey?.surveyId;
+  // Loads run once per survey. Keyed on the id, not the object: every
+  // autosave hands the parent a fresh survey, and re-running the loads on
+  // that would refetch the questions under the admin's cursor.
+  const initialQuestionIdsRef = useRef(existingSurvey?.questionIds ?? []);
 
   // Load existing questions when editing a survey
   const loadExistingQuestions = useCallback(async () => {
-    if (!existingSurvey || existingSurvey.questionIds.length === 0) return;
+    const questionIds = initialQuestionIdsRef.current;
+    if (!editingSurveyId || questionIds.length === 0) return;
 
     setIsLoadingQuestions(true);
     try {
@@ -93,7 +106,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       }
 
       // Fetch each question by ID
-      const questionPromises = existingSurvey.questionIds.map(async (questionId) => {
+      const questionPromises = questionIds.map(async (questionId) => {
         const response = await authedFetch(`/api/statements/${questionId}`);
         if (response.ok) {
           const data = await response.json();
@@ -106,11 +119,11 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       const validQuestions = questions.filter((q): q is Statement => q !== null);
       setSelectedQuestions(validQuestions);
     } catch (err) {
-      logError(err, { operation: 'SurveyForm.loadExistingQuestions' });
+      logError(err, { operation: 'SurveyForm.loadExistingQuestions', metadata: { surveyId: editingSurveyId } });
     } finally {
       setIsLoadingQuestions(false);
     }
-  }, [existingSurvey, refreshToken, router]);
+  }, [editingSurveyId, refreshToken, router]);
 
   useEffect(() => {
     loadExistingQuestions();
@@ -151,7 +164,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
 
   // Load existing demographic questions when editing a survey
   const loadDemographicQuestions = useCallback(async () => {
-    if (!existingSurvey) return;
+    if (!editingSurveyId) return;
 
     try {
       if (!(await refreshToken())) {
@@ -159,7 +172,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         return;
       }
 
-      const response = await authedFetch(`/api/surveys/${existingSurvey.surveyId}/demographics`);
+      const response = await authedFetch(`/api/surveys/${editingSurveyId}/demographics`);
 
       if (response.ok) {
         const data = await response.json();
@@ -168,16 +181,235 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         }
       }
     } catch (err) {
-      logError(err, { operation: 'SurveyForm.loadDemographicQuestions' });
+      logError(err, { operation: 'SurveyForm.loadDemographicQuestions', metadata: { surveyId: editingSurveyId } });
+    } finally {
+      setDemographicsLoaded(true);
     }
-  }, [existingSurvey, refreshToken, router]);
+  }, [editingSurveyId, refreshToken, router]);
 
   useEffect(() => {
     loadDemographicQuestions();
   }, [loadDemographicQuestions]);
 
+  const buildSurveyData = (): CreateSurveyRequest => {
+    // Clean up questionSettings to only include selected questions
+    const cleanedQuestionSettings: Record<string, QuestionOverrideSettings> = {};
+    const selectedIds = new Set(selectedQuestions.map((q) => q.statementId));
+    for (const [questionId, overrides] of Object.entries(questionSettings)) {
+      if (selectedIds.has(questionId)) {
+        cleanedQuestionSettings[questionId] = overrides;
+      }
+    }
+
+    return {
+      title: title.trim(),
+      description: description.trim() || undefined,
+      questionIds: [...new Set(selectedQuestions.map((q) => q.statementId))],
+      settings,
+      questionSettings: cleanedQuestionSettings,
+      defaultLanguage: defaultLanguage || undefined,
+      forceLanguage: forceLanguage || undefined,
+      demographicPages: demographicPages,
+      explanationPages: explanationPages,
+      showEmailSignup: showEmailSignup,
+      customEmailTitle: customEmailTitle.trim() || undefined,
+      customEmailDescription: customEmailDescription.trim() || undefined,
+      showAllSolutionsLink: showAllSolutionsLink,
+      allSolutionsLinkLabel: allSolutionsLinkLabel.trim() || undefined,
+      parentStatementId: seedParentStatementId || existingSurvey?.parentStatementId || undefined,
+    };
+  };
+
+  /** Saves the demographic questions; returns temp-id → real-id for new ones. */
+  const saveDemographics = async (
+    surveyId: string,
+    pages: SurveyDemographicPage[],
+    questions: UserDemographicQuestion[]
+  ): Promise<Record<string, string>> => {
+    if (questions.length === 0 && pages.length === 0) return {};
+
+    const demographicsResponse = await authedFetch(
+      `/api/surveys/${surveyId}/demographics`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          demographicPages: pages,
+          questions: questions.map((q) => ({
+            // Pass temp ID for new questions so API can map them
+            questionId: (q.userQuestionId || '').startsWith('demo-q-') ? undefined : q.userQuestionId,
+            tempId: (q.userQuestionId || '').startsWith('demo-q-') ? q.userQuestionId : undefined,
+            question: q.question,
+            type: q.type,
+            options: q.options,
+            order: q.order,
+            required: q.required,
+            allowOther: q.allowOther,
+            // Range-specific fields
+            min: q.min,
+            max: q.max,
+            step: q.step,
+            minLabel: q.minLabel,
+            maxLabel: q.maxLabel,
+          })),
+        }),
+      }
+    );
+
+    if (!demographicsResponse.ok) {
+      throw new Error('Failed to save demographic questions');
+    }
+
+    const data = await demographicsResponse.json();
+
+    return (data.idMapping as Record<string, string> | undefined) ?? {};
+  };
+
+  // ---- Autosave (edit mode) ----------------------------------------------
+  // Every change is written shortly after the admin stops touching the form.
+  // Saves never overlap: one that comes due mid-save waits for it to finish.
+  const surveyData = buildSurveyData();
+  const autosaveSnapshot = JSON.stringify({ surveyData, customDemographicQuestions });
+  const isHydrated = isEditing && !isLoadingQuestions && demographicsLoaded;
+  const lastSavedSnapshotRef = useRef<string | null>(null);
+  const isSavingRef = useRef(false);
+  const pendingSaveRef = useRef(false);
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestRef = useRef({ surveyData, autosaveSnapshot, demographicPages, customDemographicQuestions });
+  latestRef.current = { surveyData, autosaveSnapshot, demographicPages, customDemographicQuestions };
+  // Read through refs so the save callback stays stable: a new identity
+  // would re-run the unmount flush below and fire a pending save early.
+  const callbacksRef = useRef({ onSurveyUpdate, refreshToken, router });
+  callbacksRef.current = { onSurveyUpdate, refreshToken, router };
+
+  const autosave = useCallback(async () => {
+    if (!editingSurveyId) return;
+    if (isSavingRef.current) {
+      pendingSaveRef.current = true;
+
+      return;
+    }
+
+    const { surveyData: data, autosaveSnapshot: snapshot, demographicPages: pages, customDemographicQuestions: questions } = latestRef.current;
+    if (snapshot === lastSavedSnapshotRef.current) return;
+
+    isSavingRef.current = true;
+    setSaveStatus('saving');
+    try {
+      if (!(await callbacksRef.current.refreshToken())) {
+        callbacksRef.current.router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+
+        return;
+      }
+
+      const response = await authedFetch(`/api/surveys/${editingSurveyId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const body = await response.json();
+        throw new Error(body.error || 'Failed to save survey');
+      }
+
+      const updatedSurvey = (await response.json()) as Survey;
+      const idMapping = await saveDemographics(editingSurveyId, pages, questions);
+
+      lastSavedSnapshotRef.current = snapshot;
+      setSaveStatus('saved');
+      setError(null);
+
+      // New demographic questions now have real ids; adopt them so the next
+      // save updates those questions instead of creating them again.
+      if (Object.keys(idMapping).length > 0) {
+        setCustomDemographicQuestions((prev) =>
+          prev.map((q) => {
+            const realId = q.userQuestionId ? idMapping[q.userQuestionId] : undefined;
+
+            return realId ? { ...q, userQuestionId: realId } : q;
+          })
+        );
+        setDemographicPages((prev) =>
+          prev.map((page) => ({
+            ...page,
+            customQuestionIds: page.customQuestionIds.map((id) => idMapping[id] || id),
+          }))
+        );
+      }
+
+      callbacksRef.current.onSurveyUpdate?.(updatedSurvey);
+    } catch (err) {
+      logError(err, { operation: 'SurveyForm.autosave', metadata: { surveyId: editingSurveyId } });
+      setSaveStatus('error');
+    } finally {
+      isSavingRef.current = false;
+      if (pendingSaveRef.current) {
+        pendingSaveRef.current = false;
+        // Re-run through the effect so it sees any state set above.
+        setSaveRetryTick((tick) => tick + 1);
+      }
+    }
+    // saveDemographics is a plain helper over its arguments
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingSurveyId]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    // The first settled state is what is already stored — nothing to save.
+    if (lastSavedSnapshotRef.current === null) {
+      lastSavedSnapshotRef.current = autosaveSnapshot;
+
+      return;
+    }
+    if (autosaveSnapshot === lastSavedSnapshotRef.current) return;
+    if (!title.trim()) {
+      setSaveStatus('idle');
+
+      return;
+    }
+
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(() => {
+      autosaveTimerRef.current = null;
+      autosave();
+    }, UI.AUTOSAVE_DELAY);
+  }, [isHydrated, autosaveSnapshot, saveRetryTick, title, autosave]);
+
+  // Leaving the editor with an edit still waiting on its timer: save it now.
+  useEffect(() => {
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+        autosave();
+      }
+    };
+  }, [autosave]);
+
+  // Warn before closing the tab while a change has not reached the database.
+  useEffect(() => {
+    if (!isEditing) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const dirty = isSavingRef.current
+        || autosaveTimerRef.current !== null
+        || (lastSavedSnapshotRef.current !== null && latestRef.current.autosaveSnapshot !== lastSavedSnapshotRef.current);
+      if (dirty) e.preventDefault();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isEditing]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Edit mode saves as you go; Enter in a field must not navigate away.
+    if (isEditing) return;
 
     if (!title.trim()) {
       setError(t('titleRequired'));
@@ -193,46 +425,13 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         return;
       }
 
-      // Clean up questionSettings to only include selected questions
-      const cleanedQuestionSettings: Record<string, QuestionOverrideSettings> = {};
-      const selectedIds = new Set(selectedQuestions.map((q) => q.statementId));
-      for (const [questionId, overrides] of Object.entries(questionSettings)) {
-        if (selectedIds.has(questionId)) {
-          cleanedQuestionSettings[questionId] = overrides;
-        }
-      }
-
-      const surveyData: CreateSurveyRequest = {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        questionIds: [...new Set(selectedQuestions.map((q) => q.statementId))],
-        settings,
-        questionSettings: cleanedQuestionSettings,
-        defaultLanguage: defaultLanguage || undefined,
-        forceLanguage: forceLanguage || undefined,
-        demographicPages: demographicPages,
-        explanationPages: explanationPages,
-        showEmailSignup: showEmailSignup,
-        customEmailTitle: customEmailTitle.trim() || undefined,
-        customEmailDescription: customEmailDescription.trim() || undefined,
-        showAllSolutionsLink: showAllSolutionsLink,
-        allSolutionsLinkLabel: allSolutionsLinkLabel.trim() || undefined,
-        parentStatementId: seedParentStatementId || existingSurvey?.parentStatementId || undefined,
-      };
-
-      console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
-      console.info('[SurveyForm] Full survey data:', JSON.stringify(surveyData));
-
-      const response = await authedFetch(
-        isEditing ? `/api/surveys/${existingSurvey.surveyId}` : '/api/surveys',
-        {
-          method: isEditing ? 'PUT' : 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(surveyData),
-        }
-      );
+      const response = await authedFetch('/api/surveys', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(surveyData),
+      });
 
       if (!response.ok) {
         const data = await response.json();
@@ -241,43 +440,10 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
 
       const survey = await response.json();
 
-      // Save demographic questions if there are any
-      if (customDemographicQuestions.length > 0 || demographicPages.length > 0) {
-        const demographicsResponse = await authedFetch(
-          `/api/surveys/${survey.surveyId}/demographics`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              demographicPages,
-              questions: customDemographicQuestions.map((q) => ({
-                // Pass temp ID for new questions so API can map them
-                questionId: (q.userQuestionId || '').startsWith('demo-q-') ? undefined : q.userQuestionId,
-                tempId: (q.userQuestionId || '').startsWith('demo-q-') ? q.userQuestionId : undefined,
-                question: q.question,
-                type: q.type,
-                options: q.options,
-                order: q.order,
-                required: q.required,
-                allowOther: q.allowOther,
-                // Range-specific fields
-                min: q.min,
-                max: q.max,
-                step: q.step,
-                minLabel: q.minLabel,
-                maxLabel: q.maxLabel,
-              })),
-            }),
-          }
-        );
-
-        if (!demographicsResponse.ok) {
-          logError(new Error('Failed to save demographic questions'), {
-            operation: 'SurveyForm.handleSubmit.saveDemographics',
-          });
-        }
+      try {
+        await saveDemographics(survey.surveyId, demographicPages, customDemographicQuestions);
+      } catch (err) {
+        logError(err, { operation: 'SurveyForm.handleSubmit.saveDemographics', metadata: { surveyId: survey.surveyId } });
       }
 
       if (returnTo) {
@@ -900,22 +1066,39 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       </div>
 
       {/* Actions */}
-      <div className={styles.formActions}>
-        <Link href="/admin/surveys" className={styles.cancelButton}>
-          {t('cancel')}
-        </Link>
-        <button
-          type="submit"
-          className={styles.submitButton}
-          disabled={isSubmitting || !title.trim()}
-        >
-          {isSubmitting
-            ? t('saving')
-            : isEditing
-            ? t('saveChanges')
-            : t('createSurvey')}
-        </button>
-      </div>
+      {isEditing ? (
+        <div className={styles.formActions}>
+          <span className={styles.autosaveStatus} role="status" aria-live="polite">
+            {saveStatus === 'saving' && t('saving')}
+            {saveStatus === 'saved' && t('allChangesSaved')}
+            {saveStatus === 'error' && (
+              <>
+                <span className={styles.autosaveStatusError}>{t('saveFailed')}</span>
+                <button type="button" className={styles.cancelButton} onClick={() => autosave()}>
+                  {t('retry')}
+                </button>
+              </>
+            )}
+            {saveStatus === 'idle' && !title.trim() && t('titleRequired')}
+          </span>
+          <Link href="/admin/surveys" className={styles.cancelButton}>
+            {t('backToSurveys')}
+          </Link>
+        </div>
+      ) : (
+        <div className={styles.formActions}>
+          <Link href="/admin/surveys" className={styles.cancelButton}>
+            {t('cancel')}
+          </Link>
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isSubmitting || !title.trim()}
+          >
+            {isSubmitting ? t('saving') : t('createSurvey')}
+          </button>
+        </div>
+      )}
     </form>
   );
 }

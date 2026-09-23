@@ -4755,5 +4755,8 @@
   "{{h}} h": "{{h}} ساعت",
   "Show as table": "نمایش به صورت جدول",
   "Hide table": "پنهان کردن جدول",
-  "Let participants talk in a chat alongside the question": "به شرکت‌کنندگان اجازه دهید در کنار پرسش گفتگو کنند"
+  "Let participants talk in a chat alongside the question": "به شرکت‌کنندگان اجازه دهید در کنار پرسش گفتگو کنند",
+  "allChangesSaved": "همه تغییرات ذخیره شد",
+  "saveFailed": "آخرین تغییر ذخیره نشد",
+  "titleRequired": "عنوان الزامی است"
 }

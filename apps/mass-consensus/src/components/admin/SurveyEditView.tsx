@@ -27,10 +27,10 @@ export default function SurveyEditView({ survey: initialSurvey }: SurveyEditView
   // can hide what a view-only admin must not be offered.
   const roster = useSurveyAdmins(initialSurvey.surveyId);
   const canEdit = roster.access?.canEdit ?? false;
-  // The edit form holds unsaved work. Unmounting it on a tab switch threw
-  // that work away without a word — a setting you toggled and then went to
-  // check somewhere else was silently back to its old value. So mount it
-  // lazily on first visit and keep it mounted, hidden, from then on.
+  // The edit form autosaves a moment after each change. Unmounting it on a
+  // tab switch would also drop its loaded questions and any edit still
+  // waiting on the save timer, so mount it lazily on first visit and keep it
+  // mounted, hidden, from then on.
   const [hasOpenedEditor, setHasOpenedEditor] = useState(false);
 
   const selectTab = (tab: Tab) => {
