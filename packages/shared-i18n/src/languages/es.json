@@ -1975,6 +1975,8 @@
   "displayMode": "Modo de visualización",
   "displayModeClassic": "Clásico (pila de tarjetas)",
   "displayModeClassicDesc": "Pila de tarjetas con deslizamiento izquierda/derecha. Muestra progreso del lote y vista previa de la pila.",
+  "cardColorIntensity": "Intensidad del color de las tarjetas",
+  "cardColorIntensityHint": "Redúcela para suavizar el fondo de color de las tarjetas de evaluación. El texto, los emojis y los botones conservan sus colores.",
   "displayModeDescription": "Elige cómo los participantes ven y evalúan las sugerencias",
   "displayModeSwipe": "Deslizar (estilo Tinder)",
   "displayModeSwipeDesc": "Una tarjeta a la vez. Los usuarios deslizan o tocan botones para calificar cada sugerencia.",

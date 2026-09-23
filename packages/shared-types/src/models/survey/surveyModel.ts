@@ -6,6 +6,9 @@ import {
   array,
   optional,
   enum_,
+  pipe,
+  minValue,
+  maxValue,
   record,
   InferOutput,
 } from 'valibot';
@@ -110,6 +113,12 @@ export const SurveySettingsSchema = object({
    * screen) and record a +1 evaluation of the merged suggestion for the author.
    */
   autoMergeSimilar: optional(boolean()),
+  /**
+   * How strongly the evaluation cards are tinted, 0 (white) to 1 (full colour,
+   * the default). Only the card background fades — text, emoji and buttons keep
+   * their colour.
+   */
+  cardColorIntensity: optional(pipe(number(), minValue(0), maxValue(1))),
 });
 
 export type SurveySettings = InferOutput<typeof SurveySettingsSchema>;

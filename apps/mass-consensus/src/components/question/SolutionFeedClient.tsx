@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
+import { cardColorIntensityStyle } from '@/lib/utils/cardColorIntensity';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
 import SolutionCard from './SolutionCard';
@@ -511,7 +512,10 @@ export default function SolutionFeedClient({
 
   return (
     <ToastProvider>
-      <div className={styles.feed}>
+      <div
+        className={styles.feed}
+        style={cardColorIntensityStyle(mergedSettings?.cardColorIntensity)}
+      >
         {/* Error message */}
         {error && (
           <div className={styles.error}>

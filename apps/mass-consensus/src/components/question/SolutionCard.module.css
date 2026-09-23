@@ -13,28 +13,39 @@
   transform: translateY(-4px);
 }
 
-/* Colorful card variants - cycles through colors */
+/* Colorful card variants - cycles through colors.
+   --card-color-intensity (survey setting, 0–1) mixes the tint toward the plain
+   card background; browsers without color-mix() keep the full tint. */
 .card:nth-child(4n+1) {
-  background: var(--card-blue);
+  --card-tint: var(--card-blue);
 }
 
 .card:nth-child(4n+2) {
-  background: var(--card-orange);
+  --card-tint: var(--card-orange);
 }
 
 .card:nth-child(4n+3) {
-  background: var(--card-pink);
+  --card-tint: var(--card-pink);
 }
 
 .card:nth-child(4n) {
-  background: var(--card-purple);
+  --card-tint: var(--card-purple);
 }
 
 /* Evaluated state - higher specificity to override nth-child colors */
 .card.evaluated,
 .card.evaluated:nth-child(n) {
-  background: var(--card-green);
+  --card-tint: var(--card-green);
   box-shadow: var(--shadow-sm);
+}
+
+.card:nth-child(n) {
+  background: var(--card-tint);
+  background: color-mix(
+    in srgb,
+    var(--card-tint) calc(var(--card-color-intensity, 1) * 100%),
+    var(--card-default)
+  );
 }
 
 .content {

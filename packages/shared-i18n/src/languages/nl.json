@@ -1975,6 +1975,8 @@
   "displayMode": "Weergavemodus",
   "displayModeClassic": "Klassiek (kaartstapel)",
   "displayModeClassicDesc": "Kaartstapel met vegen links/rechts. Toont stapelvoortgang en kaartvoorbeeld.",
+  "cardColorIntensity": "Kleurintensiteit van de kaarten",
+  "cardColorIntensityHint": "Verlaag dit om de gekleurde achtergrond van de beoordelingskaarten te verzachten. Tekst, emoji en knoppen behouden hun kleur.",
   "displayModeDescription": "Kies hoe deelnemers suggesties zien en beoordelen",
   "displayModeSwipe": "Vegen (Tinder-stijl)",
   "displayModeSwipeDesc": "Eén kaart tegelijk. Gebruikers vegen of tikken op knoppen om elke suggestie te beoordelen.",
