@@ -527,9 +527,6 @@ export default function SolutionFeedClient({
               {t('Rate the answers others suggested to the question')}
             </span>
             <span className={styles.titleQuestion}>
-              {questionNumber !== undefined && (
-                <span className={styles.questionNumber}>{questionNumber})</span>
-              )}
               <InlineMarkdown text={question.statement} />
             </span>
           </h1>

@@ -317,21 +317,15 @@
 /* Grey lead-in line above the question */
 .titleLead {
   display: block;
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--text-primary);
   letter-spacing: normal;
   margin-bottom: var(--spacing-xs);
 }
 
 .titleQuestion {
   display: block;
-}
-
-/* "1)" before the title in a multi-question survey */
-.questionNumber {
-  color: var(--btn-primary);
-  margin-inline-end: 0.3em;
 }
 
 .description {
@@ -353,7 +347,7 @@
   }
 
   .titleLead {
-    font-size: 0.875rem;
+    font-size: 1rem;
   }
 
   .description {
