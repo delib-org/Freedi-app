@@ -64,7 +64,7 @@ export function buildVillage({ scene, height, manager }) {
 
 	// The study house — the meeting point where the lobby opens.
 	const study = floor(PLACES.study.x, PLACES.study.z, 4.4); box(7, 2.9, .45, limestone, study, 0, 1.5, -2.4); box(.4, 2.9, 4.8, limestone, study, -3.3, 1.5, 0); box(7.4, .3, 5.3, limestone, study, 0, 3.12, 0);
-	for (const x of [-3.05, -1.1, 1.1, 3.05]) { make(new THREE.CylinderGeometry(.17, .23, 2.85, 12), limestone, study, x, 1.55, 2.25); box(.55, .18, .55, limestone, study, x, 2.98, 2.25); } for (const x of [-1.8, 1.8]) table(study, x, .7); label(study, 'בית המדרש'); solids.push({ x: PLACES.study.x, z: PLACES.study.z - 2.4, w: 3.7, d: .5 });
+	for (const x of [-3.05, -1.1, 1.1, 3.05]) { make(new THREE.CylinderGeometry(.17, .23, 2.85, 12), limestone, study, x, 1.55, 2.25); box(.55, .18, .55, limestone, study, x, 2.98, 2.25); } for (const x of [-1.8, 1.8]) table(study, x, .7); label(study, 'בית המדרש'); const studyWall = { x: PLACES.study.x, z: PLACES.study.z - 2.4, w: 3.7, d: .5 }; solids.push(studyWall);
 	// An open-front library: warm stone, timber shelves and a reading desk.
 	const library = floor(PLACES.library.x, PLACES.library.z, 4.7); library.rotation.y = Math.PI / 2;
 	box(7.8, .22, 6.6, wood, library, 0, .15, 0);
@@ -82,7 +82,19 @@ export function buildVillage({ scene, height, manager }) {
 	table(library, 0, .7); label(library, 'הספרייה', 3.55);
 	const openBook = new THREE.Group(); openBook.position.set(0, 1.03, .7); library.add(openBook);
 	for (const side of [-1, 1]) { const page = box(.4, .035, .48, paper, openBook, side * .2, 0, 0); page.rotation.z = side * .14; }
-	solids.push({ x: PLACES.library.x - 2.8, z: PLACES.library.z, w: .25, d: 4 });
+	const libraryWall = { x: PLACES.library.x - 2.8, z: PLACES.library.z, w: .25, d: 4 }; solids.push(libraryWall);
+	/**
+	 * A fixed place the lesson does not use (no scene for the library, nothing
+	 * held at the study house) is taken off the hill: building, wall and guide.
+	 */
+	const fixedPlaces = { library: { group: library, wall: libraryWall }, challenge: { group: study, wall: studyWall } };
+	function showPlace(id, shown) {
+		const place = fixedPlaces[id]; if (!place || place.group.visible === shown) return;
+		place.group.visible = shown;
+		const at = solids.indexOf(place.wall);
+		if (shown && at < 0) solids.push(place.wall); else if (!shown && at >= 0) solids.splice(at, 1);
+		characters.showStation(id, shown);
+	}
 
 	// The council: benches in a half circle around the speaker's stone, and the
 	// big scoreboard behind it, facing the square.
@@ -303,5 +315,5 @@ export function buildVillage({ scene, height, manager }) {
 		return { group: g, face, paint };
 	})();
 
-	return { booths, installBooths, scoreboard, figures: characters.figures, solids, clearings, ready: characters.ready, tick: characters.tick, characters };
+	return { booths, installBooths, showPlace, scoreboard, figures: characters.figures, solids, clearings, ready: characters.ready, tick: characters.tick, characters };
 }

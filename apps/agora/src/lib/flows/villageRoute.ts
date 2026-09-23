@@ -39,16 +39,20 @@ export interface VillagePlaceStatus {
 }
 
 /**
- * The fixed places' state for the village map. The study house is where the
- * lesson gathers and the council holds the scoreboard, so both are always
- * open; the library opens with its first scene.
+ * The fixed places' state for the village map. The council holds the
+ * scoreboard, so it is always open; the library opens with its first scene.
+ * The study house stands only when the plan holds something there — the
+ * lobby alone does not count, it is where the class waits, not a station —
+ * so a lesson that never set a place for it has no locked building on the hill.
  */
 export function villageFixedPlaces(
 	plan: readonly AgoraStagePlanItem[],
 	currentIndex: number,
 ): Record<'library' | 'challenge' | 'council', VillagePlaceStatus> {
 	const status = (place: VillagePlace): VillagePlaceStatus => {
-		const indices = plan.flatMap((item, index) => (villagePlace(item) === place ? [index] : []));
+		const indices = plan.flatMap((item, index) =>
+			villagePlace(item) === place && item.stage !== AgoraStage.lobby ? [index] : [],
+		);
 
 		return {
 			open: indices.some((index) => index <= currentIndex),
@@ -59,7 +63,7 @@ export function villageFixedPlaces(
 
 	return {
 		library: status('library'),
-		challenge: { ...status('challenge'), open: true, inPlan: true },
+		challenge: status('challenge'),
 		council: { ...status('council'), open: true, inPlan: true },
 	};
 }
