@@ -4953,5 +4953,7 @@
   "{{count}} supervisors": "{{count}} supervisors",
   "{{folded}} lessons imported, {{skipped}} skipped, {{processed}} read.": "{{folded}} lessons imported, {{skipped}} skipped, {{processed}} read.",
   "{{m}} min": "{{m}} min",
-  "{{h}} h": "{{h}} h"
+  "{{h}} h": "{{h}} h",
+  "Show as table": "Show as table",
+  "Hide table": "Hide table"
 }

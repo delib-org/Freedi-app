@@ -4752,5 +4752,7 @@
   "{{count}} supervisors": "{{count}} ناظر",
   "{{folded}} lessons imported, {{skipped}} skipped, {{processed}} read.": "{{folded}} درس درون‌ریزی شد، {{skipped}} رد شد، {{processed}} خوانده شد.",
   "{{m}} min": "{{m}} دقیقه",
-  "{{h}} h": "{{h}} ساعت"
+  "{{h}} h": "{{h}} ساعت",
+  "Show as table": "نمایش به صورت جدول",
+  "Hide table": "پنهان کردن جدول"
 }

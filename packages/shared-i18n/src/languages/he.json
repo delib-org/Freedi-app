@@ -4991,5 +4991,7 @@
   "{{count}} supervisors": "{{count}} מפקחים",
   "{{folded}} lessons imported, {{skipped}} skipped, {{processed}} read.": "{{folded}} שיעורים יובאו, {{skipped}} דולגו, {{processed}} נקראו.",
   "{{m}} min": "{{m}} דק׳",
-  "{{h}} h": "{{h}} שע׳"
+  "{{h}} h": "{{h}} שע׳",
+  "Show as table": "הצגה כטבלה",
+  "Hide table": "הסתרת הטבלה"
 }

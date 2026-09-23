@@ -4374,5 +4374,7 @@
   "{{count}} supervisors": "{{count}} مشرفين",
   "{{folded}} lessons imported, {{skipped}} skipped, {{processed}} read.": "تم استيراد {{folded}} درسًا، وتخطّي {{skipped}}، وقراءة {{processed}}.",
   "{{m}} min": "{{m}} د",
-  "{{h}} h": "{{h}} س"
+  "{{h}} h": "{{h}} س",
+  "Show as table": "عرض كجدول",
+  "Hide table": "إخفاء الجدول"
 }

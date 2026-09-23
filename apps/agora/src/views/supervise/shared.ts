@@ -11,6 +11,7 @@ import { getLang, t } from '../../lib/i18n';
 import { ensureUser, getUserState, signInWithGoogle } from '../../lib/user';
 import {
 	isDeniedError,
+	isNotFoundError,
 	SUPERVISE_PERIODS,
 	type SupervisePeriod,
 	type SupervisorClassView,
@@ -375,8 +376,7 @@ export function resource<T, A extends Record<string, string>>(
 			phase = 'ready';
 		} catch (error) {
 			if (!alive) return;
-			const text = String(error);
-			phase = isDeniedError(error) ? 'denied' : text.includes('not-found') ? 'missing' : 'failed';
+			phase = isDeniedError(error) ? 'denied' : isNotFoundError(error) ? 'missing' : 'failed';
 			if (phase === 'failed')
 				console.error('[Supervision]', { operation: 'supervise.resource', error });
 		} finally {

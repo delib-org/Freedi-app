@@ -392,10 +392,7 @@ async function queryTeacherDashboard(uid: string): Promise<TeacherDashboard> {
 			// The schools this caller supervises — the "supervise" entry. Proved
 			// by the same equality constraint as teacherMap, on supervisorMap.
 			getDocs(
-				query(
-					collection(db, Collections.agoraSchools),
-					where(`supervisorMap.${uid}`, '==', true),
-				),
+				query(collection(db, Collections.agoraSchools), where(`supervisorMap.${uid}`, '==', true)),
 			),
 			// usersV2/{uid}.systemAdmin, as the console reads it
 			getDoc(doc(db, Collections.users, uid)),

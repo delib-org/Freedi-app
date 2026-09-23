@@ -101,12 +101,15 @@ export function layoutLine(spec: LineSpec, ctx: LayoutContext): ChartGeometry {
 export function layoutSparkline(spec: SparkSpec, ctx: LayoutContext): ChartGeometry {
 	const slot = spec.slot ?? 1;
 	const n = spec.values.length;
-	const axis = resolveYAxis(spec.values, ctx, { from: 'zero' });
+	// A non-finite value is a gap, as in layoutLine: one NaN in the path's
+	// `d` makes the browser drop the whole sparkline
+	const axis = resolveYAxis(spec.values.filter(Number.isFinite), ctx, { from: 'zero' });
 	const primitives: Primitive[] = [];
 	if (spec.variant === 'bars') {
 		const gap = 1;
 		const w = n > 0 ? Math.max(0, (ctx.plot.w - gap * (n - 1)) / n) : 0;
 		spec.values.forEach((v, i) => {
+			if (!Number.isFinite(v)) return;
 			const top = axis.scale(v);
 			primitives.push({
 				type: 'rect',
@@ -119,7 +122,9 @@ export function layoutSparkline(spec: SparkSpec, ctx: LayoutContext): ChartGeome
 			});
 		});
 	} else {
-		const points = spec.values.map((v, i) => ({ x: pointX(i, n, ctx), y: axis.scale(v) }));
+		const points = spec.values.flatMap((v, i) =>
+			Number.isFinite(v) ? [{ x: pointX(i, n, ctx), y: axis.scale(v) }] : [],
+		);
 		if (points.length > 1) {
 			primitives.push({ type: 'path', cls: slotClass('area', slot), d: areaPath(points, ctx.plot.y + ctx.plot.h) });
 			primitives.push({ type: 'path', cls: slotClass('line', slot), d: linePath(points) });

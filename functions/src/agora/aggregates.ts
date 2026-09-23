@@ -43,6 +43,10 @@ function periodKeysFor(timestampMs: number): { day: string; month: string; year:
  * transactions want every read before the first write). Shared by the
  * finished-session fold below and the backfill, so the two can never build
  * the row differently. Returns the merged doc.
+ *
+ * A room nobody joined is not a lesson: the hourly sweep ends open sessions
+ * that never started, and counting those would credit a teacher with lessons
+ * for rooms they only opened. Returns the aggregate unchanged, unwritten.
  */
 export function foldTeacherLessonTx(
 	transaction: Transaction,
@@ -51,6 +55,7 @@ export function foldTeacherLessonTx(
 	prevAgg: AgoraTeacherAggregate | undefined,
 	now: number,
 ): AgoraTeacherAggregate {
+	if (studentCount === 0) return prevAgg ?? emptyTeacherAggregate(session.teacherId);
 	const teacherAggRef = db.collection(Collections.agoraTeacherAggregates).doc(session.teacherId);
 	const row = teacherLessonRowFrom(session, studentCount);
 	const agg = mergeTeacherLesson(prevAgg ?? emptyTeacherAggregate(session.teacherId), row, now);

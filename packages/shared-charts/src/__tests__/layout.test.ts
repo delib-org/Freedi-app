@@ -393,3 +393,12 @@ describe('locale', () => {
 		expect(he.hits[0].lines[0].value).toBe('1,000');
 	});
 });
+
+describe('sparkline with a missing value', () => {
+	it('leaves a gap instead of poisoning the path', () => {
+		const g = layoutChart({ kind: 'sparkline', keys: ['a', 'b', 'c'], values: [1, NaN, 3] });
+		const paths = g.primitives.filter((p): p is PathPrimitive => p.type === 'path');
+		expect(paths.length).toBeGreaterThan(0);
+		for (const p of paths) expect(p.d).not.toMatch(/NaN/);
+	});
+});

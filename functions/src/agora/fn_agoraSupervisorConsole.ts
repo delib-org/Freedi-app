@@ -240,8 +240,14 @@ async function classView(
 		throw new HttpsError('permission-denied', 'This class is outside your scope');
 	}
 
+	// Under a narrowed scope the class is shared with co-teachers the
+	// supervisor does not watch: the class itself (roster, careers, its
+	// aggregate) is visible, but only the watched teachers' names and lessons.
+	const watchedTeacherIds = cls.teacherIds.filter((teacherId) =>
+		isTeacherInScope(scope, teacherId),
+	);
 	const [teachers, memberSnaps, careerSnaps, aggregateSnap, sessionSnaps] = await Promise.all([
-		teacherDisplayNames(cls.teacherIds),
+		teacherDisplayNames(watchedTeacherIds),
 		db
 			.collection(Collections.agoraClassMembers)
 			.where('classId', '==', cls.classId)
@@ -275,7 +281,10 @@ async function classView(
 			.sort((a, b) => a.alias.localeCompare(b.alias)),
 		careers,
 		aggregate: (aggregateSnap.data() as AgoraClassAggregate | undefined) ?? null,
-		sessions: sessionSnaps.docs.map((snap) => toSupervisorSessionRow(snap.data() as AgoraSession)),
+		sessions: sessionSnaps.docs
+			.map((snap) => snap.data() as AgoraSession)
+			.filter((session) => isTeacherInScope(scope, session.teacherId))
+			.map(toSupervisorSessionRow),
 	};
 }
 

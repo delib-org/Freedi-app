@@ -157,6 +157,13 @@ $chart-slots: 1 2 3 4 5 6;
 			margin-inline-start: auto;
 			font-variant-numeric: tabular-nums;
 		}
+
+		// Placed by the renderer at the hit's centre (`left`/`top` in percent
+		// of the drawing, which is left-to-right in every language)
+		&--centred {
+			inset-inline: auto;
+			transform: translate(-50%, calc(-100% - 0.25rem));
+		}
 	}
 
 	// --- Legend ---------------------------------------------------------------

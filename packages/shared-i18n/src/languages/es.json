@@ -4254,5 +4254,7 @@
   "{{count}} supervisors": "{{count}} supervisores",
   "{{folded}} lessons imported, {{skipped}} skipped, {{processed}} read.": "{{folded}} lecciones importadas, {{skipped}} omitidas, {{processed}} leídas.",
   "{{m}} min": "{{m}} min",
-  "{{h}} h": "{{h}} h"
+  "{{h}} h": "{{h}} h",
+  "Show as table": "Mostrar como tabla",
+  "Hide table": "Ocultar tabla"
 }

@@ -206,10 +206,23 @@ export function clearSupervisorRole(): void {
 	filledAt = 0;
 }
 
-export function isDeniedError(error: unknown): boolean {
-	const text = String(error);
+/**
+ * The callable's status, from `FirebaseError.code` ("functions/not-found").
+ * The message is the server's own sentence and names no code, so matching on
+ * `String(error)` sent every "Class not found" to the retry screen.
+ */
+function callableCode(error: unknown): string {
+	const code = (error as { code?: unknown } | null)?.code;
 
-	return text.includes('permission-denied') || text.includes('do not supervise');
+	return typeof code === 'string' ? code.replace(/^functions\//, '') : '';
+}
+
+export function isDeniedError(error: unknown): boolean {
+	return callableCode(error) === 'permission-denied' || String(error).includes('do not supervise');
+}
+
+export function isNotFoundError(error: unknown): boolean {
+	return callableCode(error) === 'not-found';
 }
 
 // ---------------------------------------------------------------------------

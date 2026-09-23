@@ -4254,5 +4254,7 @@
   "{{count}} supervisors": "{{count}} supervisors",
   "{{folded}} lessons imported, {{skipped}} skipped, {{processed}} read.": "{{folded}} lessen geïmporteerd, {{skipped}} overgeslagen, {{processed}} gelezen.",
   "{{m}} min": "{{m}} min",
-  "{{h}} h": "{{h}} u"
+  "{{h}} h": "{{h}} u",
+  "Show as table": "Als tabel tonen",
+  "Hide table": "Tabel verbergen"
 }

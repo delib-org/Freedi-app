@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import type { SupervisorConsoleRequest, SupervisorConsoleResponse } from '@freedi/shared-types';
 import { auth } from '@/firebase';
@@ -48,6 +48,9 @@ export function useSupervisorConsole<R extends SupervisorConsoleRequest>(
 		error: Error | null;
 	}>({ key, data: null, loading: !!request, error: null });
 	const [bypassTick, setBypassTick] = useState(0);
+	// The refresh tick already honoured: only a NEW press skips the cache, not
+	// every later request (a period toggle) the hook makes after one refresh
+	const usedTick = useRef(0);
 
 	useEffect(watchAuth, []);
 
@@ -58,7 +61,8 @@ export function useSupervisorConsole<R extends SupervisorConsoleRequest>(
 			return;
 		}
 		let alive = true;
-		const bypass = bypassTick > 0;
+		const bypass = bypassTick !== usedTick.current;
+		usedTick.current = bypassTick;
 		const cached = bypass ? undefined : cache.peek(key);
 		if (cached !== undefined) {
 			setState({ key, data: cached as ResponseFor<R>, loading: false, error: null });

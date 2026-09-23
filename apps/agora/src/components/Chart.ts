@@ -26,6 +26,9 @@ const CHART_HEIGHT = 260;
 const HBAR_ROW = 40;
 const MIN_WIDTH = 240;
 const PERCENT = 100;
+/** How close to the card's edges a tooltip's centre may sit, in percent */
+const TIP_EDGE_MIN = 12;
+const TIP_EDGE_MAX = 88;
 
 function primitive(p: Primitive): m.Children {
 	switch (p.type) {
@@ -72,19 +75,24 @@ export function Chart(): m.Component<ChartAttrs> {
 	let width = 600;
 	let observer: ResizeObserver | undefined;
 
-	function tooltip(g: ChartGeometry, hit: ChartGeometry['hits'][number], rtl: boolean): m.Children {
+	function tooltip(g: ChartGeometry, hit: ChartGeometry['hits'][number]): m.Children {
 		// Percentages of the viewBox, so the tip lands on the hit at any
-		// rendered size and needs no measuring.
-		const cx = ((hit.x + hit.w / 2) / g.viewBox.w) * PERCENT;
+		// rendered size and needs no measuring. The SVG is drawn left to right
+		// in every language, so the tip is placed by `left`, never by the
+		// logical inline start (which would mirror it in Hebrew and Arabic),
+		// and centred on the hit by the stylesheet's translate. Kept off the
+		// card's edges so the last buckets' tips do not overflow it.
+		const cx = Math.min(
+			TIP_EDGE_MAX,
+			Math.max(TIP_EDGE_MIN, ((hit.x + hit.w / 2) / g.viewBox.w) * PERCENT),
+		);
 		const top = (hit.y / g.viewBox.h) * PERCENT;
-		const flip = rtl ? cx < PERCENT / 2 : cx > PERCENT / 2;
 
 		return m(
-			'.chart__tip',
+			'.chart__tip.chart__tip--centred',
 			{
 				role: 'status',
-				class: flip ? 'chart__tip--flip' : undefined,
-				style: { insetInlineStart: `${cx}%`, insetBlockStart: `${top}%` },
+				style: { left: `${cx}%`, top: `${top}%` },
 			},
 			[
 				m('.chart__tip-title', hit.label),
@@ -196,7 +204,7 @@ export function Chart(): m.Component<ChartAttrs> {
 							),
 						],
 					),
-					hit && !table ? tooltip(g, hit, dir === 'rtl') : null,
+					hit && !table ? tooltip(g, hit) : null,
 					attrs.legend && g.legend.length > 0
 						? m(
 								'ul.chart__legend',
