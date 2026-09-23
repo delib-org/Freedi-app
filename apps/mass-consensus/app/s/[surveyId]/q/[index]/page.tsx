@@ -5,6 +5,7 @@ import { getSurveyWithQuestions, getSurveyDemographicQuestions } from '@/lib/fir
 import { SurveyStatus, DisplayMode, buildSurveyFlow, isQuestionFlowItem, isDemographicFlowItem, isExplanationFlowItem, getTotalFlowLength } from '@/types/survey';
 import { getAdaptiveBatch } from '@/lib/firebase/queries';
 import QuestionHeader from '@/components/question/QuestionHeader';
+import { getQuestionNumber } from '@/lib/utils/questionNumber';
 import SwipeInterfaceWrapper from '@/components/swipe/SwipeInterfaceWrapper';
 import SolutionFeedClient from '@/components/question/SolutionFeedClient';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
@@ -157,6 +158,9 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
       // Merge survey settings with per-question overrides
       const mergedSettings = getMergedSettings(survey.settings, questionOverrides);
 
+      // "1) …" prefix, only when the survey has more than one question
+      const questionNumber = getQuestionNumber(questionIndex, survey.questions.length);
+
       // Fetch initial solutions using Thompson Sampling (no userId on SSR)
       const batchResult = await getAdaptiveBatch(question.statementId, undefined, { size: 6 });
       const initialBatch = batchResult.solutions;
@@ -181,7 +185,7 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
             topParentId={question.topParentId || questionId}
           >
             {/* Question Header */}
-            <QuestionHeader question={question} />
+            <QuestionHeader question={question} questionNumber={questionNumber} />
 
             {/* Evaluation Interface - Swipe (zone-based) or Classic (card stack) */}
             <Suspense fallback={<SkeletonLoader count={3} />}>
@@ -191,6 +195,7 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
                   initialSolutions={initialBatch}
                   mergedSettings={mergedSettings}
                   surveyId={params.surveyId}
+                  questionNumber={questionNumber}
                 />
               ) : (
                 <SwipeInterfaceWrapper
@@ -198,6 +203,7 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
                   initialSolutions={initialBatch}
                   mergedSettings={mergedSettings}
                   surveyId={params.surveyId}
+                  questionNumber={questionNumber}
                 />
               )}
             </Suspense>

@@ -14,6 +14,12 @@
   max-width: 75ch;
 }
 
+/* "1)" before the question in a multi-question survey */
+.questionNumber {
+  color: var(--btn-primary);
+  margin-inline-end: 0.3em;
+}
+
 .description {
   font-size: 1.125rem;
   color: var(--text-secondary);

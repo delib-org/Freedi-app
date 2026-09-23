@@ -29,6 +29,8 @@ interface SolutionFeedClientProps {
   mergedSettings?: MergedQuestionSettings;
   /** Survey context: used to stamp evaluations with a demographic anchor */
   surveyId?: string;
+  /** Position in a multi-question survey ("1) …"); omitted = no number */
+  questionNumber?: number;
 }
 
 /**
@@ -40,6 +42,7 @@ export default function SolutionFeedClient({
   initialSolutions,
   mergedSettings,
   surveyId,
+  questionNumber,
 }: SolutionFeedClientProps) {
   const { t, tWithParams } = useTranslation();
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
@@ -697,6 +700,7 @@ export default function SolutionFeedClient({
           userId={userId}
           onSubmitSuccess={handleSolutionComplete}
           questionText={question.statement}
+          questionNumber={questionNumber}
           questionDescription={getParagraphsText(question.paragraphs)}
           title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
           suggestionMode={mergedSettings?.suggestionMode}
