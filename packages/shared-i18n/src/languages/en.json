@@ -4955,5 +4955,8 @@
   "{{m}} min": "{{m}} min",
   "{{h}} h": "{{h}} h",
   "Show as table": "Show as table",
-  "Hide table": "Hide table"
+  "Hide table": "Hide table",
+  "allChangesSaved": "All changes saved",
+  "saveFailed": "Couldn't save your last change",
+  "titleRequired": "A title is required"
 }

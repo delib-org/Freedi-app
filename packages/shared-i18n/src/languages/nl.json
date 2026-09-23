@@ -4256,5 +4256,10 @@
   "{{m}} min": "{{m}} min",
   "{{h}} h": "{{h}} u",
   "Show as table": "Als tabel tonen",
-  "Hide table": "Tabel verbergen"
+  "Hide table": "Tabel verbergen",
+  "allChangesSaved": "Alle wijzigingen opgeslagen",
+  "saveFailed": "De laatste wijziging kon niet worden opgeslagen",
+  "titleRequired": "Een titel is verplicht",
+  "retry": "Opnieuw proberen",
+  "saving": "Opslaan..."
 }

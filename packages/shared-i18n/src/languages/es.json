@@ -4256,5 +4256,10 @@
   "{{m}} min": "{{m}} min",
   "{{h}} h": "{{h}} h",
   "Show as table": "Mostrar como tabla",
-  "Hide table": "Ocultar tabla"
+  "Hide table": "Ocultar tabla",
+  "allChangesSaved": "Todos los cambios guardados",
+  "saveFailed": "No se pudo guardar el último cambio",
+  "titleRequired": "El título es obligatorio",
+  "retry": "Reintentar",
+  "saving": "Guardando..."
 }

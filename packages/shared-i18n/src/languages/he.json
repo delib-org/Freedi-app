@@ -4993,5 +4993,8 @@
   "{{m}} min": "{{m}} דק׳",
   "{{h}} h": "{{h}} שע׳",
   "Show as table": "הצגה כטבלה",
-  "Hide table": "הסתרת הטבלה"
+  "Hide table": "הסתרת הטבלה",
+  "allChangesSaved": "כל השינויים נשמרו",
+  "saveFailed": "השינוי האחרון לא נשמר",
+  "titleRequired": "חובה להזין כותרת"
 }
