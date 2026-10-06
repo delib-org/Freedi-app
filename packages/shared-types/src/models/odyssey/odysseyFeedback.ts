@@ -25,7 +25,7 @@ import {
  */
 
 /**
- * Both developers, hardcoded so the feature works with zero configuration.
+ * The one inbox letters go to, hardcoded so the feature works with zero configuration.
  *
  * `ODYSSEY_FEEDBACK_RECIPIENTS` can override this, but the fallback is the path
  * that actually runs in production — the sibling `FEEDBACK_EMAIL` in
@@ -33,10 +33,7 @@ import {
  * env/env-loader.js. The client also builds its mailto: escape hatch from this
  * same constant, so the two can never drift apart.
  */
-export const ODYSSEY_FEEDBACK_DEFAULT_RECIPIENTS = [
-	'tal.yaron@gmail.com',
-	'uriel@tauex.tau.ac.il',
-] as const;
+export const ODYSSEY_FEEDBACK_DEFAULT_RECIPIENTS = ['tal.yaron+odyssy@wizcol.com'] as const;
 
 export const ODYSSEY_FEEDBACK_MESSAGE_MIN = 5;
 export const ODYSSEY_FEEDBACK_MESSAGE_MAX = 4000;

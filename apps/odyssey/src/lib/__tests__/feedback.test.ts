@@ -48,7 +48,7 @@ describe('isPlausibleEmail', () => {
 
 describe('FEEDBACK_MAILTO', () => {
 	it('is built from the same constant the server mails to', () => {
-		expect(FEEDBACK_MAILTO).toBe('mailto:tal.yaron@gmail.com,uriel@tauex.tau.ac.il');
+		expect(FEEDBACK_MAILTO).toBe('mailto:tal.yaron+odyssy@wizcol.com');
 	});
 });
 

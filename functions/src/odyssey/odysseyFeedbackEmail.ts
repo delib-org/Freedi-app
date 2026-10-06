@@ -31,7 +31,7 @@ function escapeHtml(value: string): string {
  * Who gets the letter.
  *
  * `ODYSSEY_FEEDBACK_RECIPIENTS` is an override, not the source of truth: an
- * unset, blank, or all-garbage value falls back to both developers, so the
+ * unset, blank, or all-garbage value falls back to the default inbox, so the
  * feature works with nothing configured — which is the state production is
  * actually in.
  */
