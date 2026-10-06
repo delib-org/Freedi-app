@@ -15,7 +15,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Statement } from '@freedi/shared-types';
 import SwipeCard from '../SwipeCard';
-import RatingButton from '../RatingButton';
 import SurveyProgress from '../SurveyProgress';
 import CommentModal from '../CommentModal';
 import CardImageModal from '../CardImageModal';
@@ -38,7 +37,7 @@ import {
 } from '@/store/slices/swipeSelectors';
 import { submitRating, fetchPreviousEvaluations } from '@/controllers/swipeController';
 import { submitComment } from '@/controllers/commentController';
-import { getEvaluationScale, getEvaluationEntry, resolveEvaluationScaleKey } from '@freedi/shared-types';
+import { getEvaluationEntry, resolveEvaluationScaleKey } from '@freedi/shared-types';
 import type { RatingValue } from '../RatingButton';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError } from '@/lib/utils/errorHandling';
@@ -372,42 +371,20 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
 
       {/* Current card or completion message */}
       {currentCard ? (
-        <>
-          <div className="swipe-interface__card">
-            <SwipeCard
-              statement={currentCard}
-              onSwipe={handleSwipe}
-              ratingMode={ratingMode}
-              totalCards={totalCount}
-              currentIndex={evaluatedCount}
-              programmaticThrow={programmaticThrow}
-              onCommentClick={handleOpenComment}
-              onImageEditClick={cardImages.onImageEditClick}
-            />
-          </div>
-
-          {/* Rating buttons - universal layout (negative to positive, left to right)
-              - Left side = negative (strongly disagree, red)
-              - Right side = positive (strongly agree, green)
-              Matches the zone strip colors on the card
-              isSelected highlights the user's previous vote for this card
-          */}
-          <div className="swipe-interface__rating-buttons">
-            {(() => {
-              const prevRating = currentCard ? previousEvaluations.get(currentCard.statementId) : undefined;
-
-              return getEvaluationScale(ratingMode).map((entry) => (
-                <RatingButton
-                  key={entry.value}
-                  rating={entry.value}
-                  ratingMode={ratingMode}
-                  onClick={handleSwipe}
-                  isSelected={prevRating === entry.value}
-                />
-              ));
-            })()}
-          </div>
-        </>
+        <div className="swipe-interface__card">
+          <SwipeCard
+            statement={currentCard}
+            onSwipe={handleSwipe}
+            onRate={handleSwipe}
+            selectedRating={previousEvaluations.get(currentCard.statementId)}
+            ratingMode={ratingMode}
+            totalCards={totalCount}
+            currentIndex={evaluatedCount}
+            programmaticThrow={programmaticThrow}
+            onCommentClick={handleOpenComment}
+            onImageEditClick={cardImages.onImageEditClick}
+          />
+        </div>
       ) : (
         <div className="swipe-interface__completion">
           <div className="swipe-interface__completion-emoji">🎉</div>

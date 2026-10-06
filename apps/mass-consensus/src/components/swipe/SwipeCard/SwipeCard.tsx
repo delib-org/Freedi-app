@@ -7,7 +7,8 @@
  *
  * Interaction modes:
  * - Manual swipe (touch/mouse): Swipe left/right to rate
- * - Button clicks: Click rating buttons to rate with precise values
+ * - Button clicks: the rating buttons along the bottom of the card, one above
+ *   each swipe zone, rate with precise values
  *
  * Rating scale (-1 to +1):
  * - Strong swipe right (>160px) = +1 (Strongly Agree)
@@ -24,19 +25,19 @@ import { SWIPE, ZONES } from '@/constants/common';
 import { getEvaluationScale } from '@freedi/shared-types';
 import type { EvaluationScaleKey } from '@freedi/shared-types';
 import { playWhooshSound } from './soundEffects';
+import RatingButton from '../RatingButton';
 import type { RatingValue } from '../RatingButton';
 import EvaluationFace from '@/components/icons/EvaluationFace';
-import {
-  calculateInitialZone,
-  centerZoneIndex,
-  isVerticalSwipeComplete,
-  zoneColorSlot,
-} from './swipeZones';
+import { calculateInitialZone, centerZoneIndex, isVerticalSwipeComplete } from './swipeZones';
 import SwipeConfirmation from './SwipeConfirmation';
 
 export interface SwipeCardProps {
   statement: Statement;
   onSwipe: (rating: RatingValue) => void | Promise<void>;
+  /** A rating button on the card was pressed. Without it the card has no buttons. */
+  onRate?: (rating: RatingValue) => void;
+  /** The participant's earlier rating of this card, highlighted on its button. */
+  selectedRating?: RatingValue;
   /** Evaluation scale; undefined = five-step agree-disagree (default). */
   ratingMode?: EvaluationScaleKey;
   totalCards: number;
@@ -51,6 +52,8 @@ export interface SwipeCardProps {
 export default function SwipeCard({
   statement,
   onSwipe,
+  onRate,
+  selectedRating,
   ratingMode,
   totalCards,
   currentIndex,
@@ -340,6 +343,7 @@ export default function SwipeCard({
     'swipe-card--idle': !isDragging && !isThrowing && !isEntering,
     'swipe-card--vertical-drag': isVerticalDrag,
     'swipe-card--with-image': Boolean(imageUrl),
+    'swipe-card--with-ratings': Boolean(onRate),
   });
 
   return (
@@ -393,14 +397,13 @@ export default function SwipeCard({
         }
       }}
     >
-      {/* Zone strips (always visible) */}
+      {/* Swipe zones: invisible until one is grabbed */}
       <div className="swipe-card__zones">
         {scale.map((zone) => (
           <div
             key={zone.zoneIndex}
             className={clsx(
               'swipe-card__zone',
-              `swipe-card__zone--zone-${zoneColorSlot(zone.zoneIndex, totalZones)}`,
               highlightedZone === zone.zoneIndex && 'swipe-card__zone--active'
             )}
             aria-hidden="true"
@@ -461,6 +464,33 @@ export default function SwipeCard({
         >
           🖼️
         </button>
+      )}
+
+      {/* Rating buttons, one per zone. Pressing one must not start a swipe. */}
+      {onRate && (
+        <div
+          className="swipe-card__ratings"
+          onTouchStart={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {scale.map((entry) => (
+            <div
+              key={entry.value}
+              className={clsx(
+                'swipe-card__rating',
+                highlightedZone === entry.zoneIndex && 'swipe-card__rating--active'
+              )}
+            >
+              <RatingButton
+                rating={entry.value}
+                ratingMode={ratingMode}
+                onClick={onRate}
+                disabled={isThrowing || isEntering}
+                isSelected={selectedRating === entry.value}
+              />
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Screen reader announcements */}

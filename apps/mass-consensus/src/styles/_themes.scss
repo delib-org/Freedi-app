@@ -300,13 +300,6 @@
   background: var(--mc-glass, rgba(255, 255, 255, 0.92));
 }
 
-:root:not([data-theme='light']) .swipe-card__content,
-:root[data-contrast='high'] .swipe-card__content {
-  text-shadow:
-    0 0 20px var(--mc-halo, rgba(255, 255, 255, 0.95)),
-    0 1px 2px var(--mc-halo, rgba(255, 255, 255, 0.9));
-}
-
 :root:not([data-theme='light']) .skeleton {
   background: linear-gradient(
     90deg,
