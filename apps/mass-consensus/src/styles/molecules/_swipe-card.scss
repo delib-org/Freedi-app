@@ -55,7 +55,9 @@
     flex-direction: row;
     direction: ltr; // Force LTR to prevent RTL reversal
     pointer-events: none;
-    z-index: 0;
+    // Above the content, so the highlight and icon of a grabbed zone show
+    // over a picture too. Untinted at rest, so it hides nothing.
+    z-index: 2;
     border-radius: inherit;
     overflow: hidden;
   }
@@ -172,12 +174,14 @@
   }
 
   // A card with a picture: taller, picture on top, text below it.
-  // The picture never takes more than half the card, so long text keeps room.
+  // The picture runs edge to edge from the top of the card (the badge and the
+  // buttons in the top corners sit over it) and keeps its own proportions up
+  // to 60% of the space, so long text keeps room.
   &--with-image {
     height: clamp(320px, 55vh, 560px);
     max-height: 62vh;
     justify-content: flex-start;
-    padding: calc(var(--spacing-md) * 2 + 44px) var(--spacing-md) var(--spacing-md);
+    padding: 0 0 var(--spacing-md);
   }
 
   &--with-image &__content-wrapper {
@@ -225,7 +229,7 @@
   &--with-ratings#{&}--with-image {
     height: calc(clamp(320px, 55vh, 560px) + var(--swipe-card-ratings-height));
     max-height: calc(62vh + var(--swipe-card-ratings-height));
-    padding-bottom: calc(var(--spacing-md) + var(--swipe-card-ratings-height));
+    padding-bottom: var(--swipe-card-ratings-height);
   }
 
   &--with-ratings &__vertical-indicator {
@@ -235,12 +239,11 @@
   &__image {
     display: block;
     width: 100%;
-    max-height: 50%;
+    height: auto;
+    max-height: 60%;
     flex-shrink: 0;
     object-fit: cover;
-    border-radius: 12px;
     background: var(--card-default);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
     user-select: none;
     -webkit-user-drag: none;
     pointer-events: none;
@@ -250,6 +253,7 @@
     font-size: 1.125rem;
     min-height: 0;
     overflow: hidden;
+    padding: 0 var(--spacing-md);
   }
 
   // Hide comment button during drag
@@ -477,6 +481,7 @@
 
   // Mobile
   @include mobile {
+    width: 100%; // The page already has its own side margin; don't add another
     height: clamp(180px, 30vh, 280px);
     max-height: 35vh;
 
