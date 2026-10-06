@@ -118,6 +118,14 @@ export async function createSurvey(
     logger.error('[createSurvey] cascadeAutoAiHandling failed:', survey.surveyId, error);
   }
 
+  // And for the rating scale: one chosen in the create form has to reach the
+  // question Statement now, not on the first later edit.
+  try {
+    await cascadeRatingMode(survey);
+  } catch (error) {
+    logger.error('[createSurvey] cascadeRatingMode failed:', survey.surveyId, error);
+  }
+
   return survey;
 }
 

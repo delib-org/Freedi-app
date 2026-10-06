@@ -9,14 +9,14 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import { getEvaluationEntry } from '@freedi/shared-types';
-import type { RatingMode } from '@freedi/shared-types';
+import type { EvaluationScaleKey } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import EvaluationFace from '@/components/icons/EvaluationFace';
 import type { RatingValue } from '../RatingButton';
 
 interface SwipeConfirmationProps {
   rating: RatingValue;
-  ratingMode?: RatingMode;
+  ratingMode?: EvaluationScaleKey;
   onCancel: () => void;
   onConfirm: () => void;
 }

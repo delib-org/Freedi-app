@@ -38,7 +38,7 @@ import {
 } from '@/store/slices/swipeSelectors';
 import { submitRating, fetchPreviousEvaluations } from '@/controllers/swipeController';
 import { submitComment } from '@/controllers/commentController';
-import { getEvaluationScale, getEvaluationEntry } from '@freedi/shared-types';
+import { getEvaluationScale, getEvaluationEntry, resolveEvaluationScaleKey } from '@freedi/shared-types';
 import type { RatingValue } from '../RatingButton';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError } from '@/lib/utils/errorHandling';
@@ -76,9 +76,10 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   const dispatch = useDispatch();
   const { showToast } = useToast();
 
-  // Evaluation mode for this question (agree-disagree default | reactions).
-  // Cross-app: read from the shared statementSettings.ratingMode.
-  const ratingMode = question.statementSettings?.ratingMode;
+  // Evaluation scale for this question (five-step agree-disagree default |
+  // reactions | three-point). Cross-app: resolved from the shared
+  // statementSettings.ratingMode + ratingSteps.
+  const ratingMode = resolveEvaluationScaleKey(question.statementSettings);
   const currentCard = useSelector(selectCurrentCard);
   const evaluatedCount = useSelector(selectEvaluatedCardsCount);
   const totalCount = useSelector(selectTotalCardsCount);

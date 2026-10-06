@@ -3,27 +3,29 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { getEvaluationScale } from '@freedi/shared-types';
-import type { RatingMode } from '@freedi/shared-types';
+import type { EvaluationScaleKey } from '@freedi/shared-types';
 import styles from './EvaluationButtons.module.css';
 import EvaluationFace from '@/components/icons/EvaluationFace';
+import { zoneColorSlot } from '@/components/swipe/SwipeCard/swipeZones';
 
 interface EvaluationButtonsProps {
   onEvaluate: (score: number, direction?: 'left' | 'right') => void;
   currentScore?: number | null;
-  /** Evaluation mode; undefined = agree-disagree (default). */
-  ratingMode?: RatingMode;
+  /** Evaluation scale; undefined = five-step agree-disagree (default). */
+  ratingMode?: EvaluationScaleKey;
   showLabels?: boolean;
   compact?: boolean;
 }
 
-// Positional pastel color classes (left→right), reused for both modes.
+// Positional pastel color classes (left→right), reused for every scale.
 const COLOR_CLASSES = ['hate', 'dislike', 'neutral', 'like', 'love'] as const;
 
 /**
  * Evaluation buttons component
- * Mode-aware 5-point scale driven by the shared cross-app scale:
- * - 'agree-disagree' (default): signed -1..1, SVG thumbs.
+ * Mode-aware scale driven by the shared cross-app scale:
+ * - 'agree-disagree' (default): signed -1..1 in five steps, SVG thumbs.
  * - 'reactions': positive 0..1 emoji reactions.
+ * - 'three-point': -1 · 0 · +1, single thumbs.
  */
 export default function EvaluationButtons({
   onEvaluate,
@@ -42,20 +44,20 @@ export default function EvaluationButtons({
     }
   }, [currentScore]);
 
-  const evaluationOptions = useMemo(
-    () =>
-      getEvaluationScale(ratingMode).map((entry) => {
-        const rawDirection = entry.direction === 'up' ? null : entry.direction;
+  const evaluationOptions = useMemo(() => {
+    const scale = getEvaluationScale(ratingMode);
 
-        return {
-          score: entry.value,
-          label: t(entry.labelKey),
-          direction: rawDirection,
-          colorClass: COLOR_CLASSES[entry.zoneIndex] ?? 'neutral',
-        };
-      }),
-    [t, ratingMode]
-  );
+    return scale.map((entry) => {
+      const rawDirection = entry.direction === 'up' ? null : entry.direction;
+
+      return {
+        score: entry.value,
+        label: t(entry.labelKey),
+        direction: rawDirection,
+        colorClass: COLOR_CLASSES[zoneColorSlot(entry.zoneIndex, scale.length)] ?? 'neutral',
+      };
+    });
+  }, [t, ratingMode]);
 
   const handleClick = (score: number, direction: 'left' | 'right' | null) => {
     setSelectedScore(score);

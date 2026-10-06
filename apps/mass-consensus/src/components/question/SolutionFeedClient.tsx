@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Statement } from '@freedi/shared-types';
+import { Statement, resolveEvaluationScaleKey } from '@freedi/shared-types';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { cardColorIntensityStyle } from '@/lib/utils/cardColorIntensity';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
@@ -582,7 +582,7 @@ export default function SolutionFeedClient({
                   solution={solution}
                   onEvaluate={handleEvaluate}
                   currentScore={evaluationScores.get(solution.statementId)}
-                  ratingMode={question.statementSettings?.ratingMode}
+                  ratingMode={resolveEvaluationScaleKey(question.statementSettings)}
                 />
               ))}
             </div>

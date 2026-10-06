@@ -147,6 +147,8 @@ export const QuestionOverrideSettingsSchema = object({
   minResponseWords: optional(number()),
   /** How participants evaluate options for THIS question (agree-disagree | reactions). Cascaded onto the question Statement's statementSettings.ratingMode. */
   ratingMode: optional(RatingModeSchema),
+  /** Steps on the agree-disagree scale for THIS question (3 = -1 · 0 · +1; 5 / undefined = the classic five). Cascaded onto statementSettings.ratingSteps. */
+  ratingSteps: optional(number()),
   /** Override the survey's auto-split behaviour for THIS question */
   autoSplitMultiSuggestions: optional(boolean()),
   /** Override the survey's auto-merge behaviour for THIS question */
@@ -370,6 +372,7 @@ export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
   askUserForASolutionAfterEvaluation: undefined,
   minResponseWords: undefined,
   ratingMode: undefined,
+  ratingSteps: undefined,
   autoSplitMultiSuggestions: undefined,
   autoMergeSimilar: undefined,
 };

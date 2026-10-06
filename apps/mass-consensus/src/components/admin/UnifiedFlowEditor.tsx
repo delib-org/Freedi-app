@@ -10,8 +10,15 @@ import type {
   SurveySettings,
   QuestionOverrideSettings,
   RatingMode,
+  EvaluationScaleKey,
 } from '@freedi/shared-types';
-import { UserDemographicQuestionType, SuggestionMode } from '@freedi/shared-types';
+import {
+  UserDemographicQuestionType,
+  SuggestionMode,
+  resolveEvaluationScaleKey,
+  THREE_POINT_STEPS,
+  FIVE_POINT_STEPS,
+} from '@freedi/shared-types';
 import {
   DndContext,
   closestCenter,
@@ -323,6 +330,7 @@ function SortableFlowItem({
               />
               <QuestionSettingsPanel
                 questionSetting={questionSetting}
+                storedSettings={item.question.statementSettings}
                 surveySettings={surveySettings}
                 onChange={onQuestionSettingsChange}
               />
@@ -357,12 +365,15 @@ function SortableFlowItem({
 
 interface QuestionSettingsPanelProps {
   questionSetting?: QuestionOverrideSettings;
+  /** The question Statement's own settings — what participants get until this survey overrides it. */
+  storedSettings?: Statement['statementSettings'];
   surveySettings: SurveySettings;
   onChange: (settings: QuestionOverrideSettings) => void;
 }
 
 function QuestionSettingsPanel({
   questionSetting,
+  storedSettings,
   surveySettings,
   onChange,
 }: QuestionSettingsPanelProps) {
@@ -387,15 +398,22 @@ function QuestionSettingsPanel({
     }
   };
 
-  const handleRatingMode = (value: string) => {
-    if (value === 'default') {
-      // 'default' = no override → falls back to agree-disagree everywhere
-      const newSetting = { ...questionSetting };
-      delete newSetting.ratingMode;
-      onChange(newSetting);
-    } else {
-      onChange({ ...questionSetting, ratingMode: value as RatingMode });
-    }
+  // One dropdown, two stored fields: `ratingMode` picks the face set and
+  // `ratingSteps` the length of the agree-disagree scale. Every choice is
+  // written explicitly — the survey save only cascades an explicit override
+  // onto the question, so "back to the default" has to be one too.
+  // With no override yet, show the scale the question already carries (it may
+  // have been set from another app) rather than claiming the default.
+  const ratingScale = resolveEvaluationScaleKey(
+    questionSetting?.ratingMode ? questionSetting : storedSettings
+  );
+
+  const handleRatingScale = (value: string) => {
+    const scale = value as EvaluationScaleKey;
+    const ratingMode: RatingMode = scale === 'reactions' ? 'reactions' : 'agree-disagree';
+    const ratingSteps = scale === 'three-point' ? THREE_POINT_STEPS : FIVE_POINT_STEPS;
+
+    onChange({ ...questionSetting, ratingMode, ratingSteps });
   };
 
   // Get the survey default label for the dropdown
@@ -538,11 +556,14 @@ function QuestionSettingsPanel({
           <span>{t('ratingModeThisQuestion') || 'How participants rate options'}</span>
           <select
             className={styles.selectInput}
-            value={questionSetting?.ratingMode || 'default'}
-            onChange={(e) => handleRatingMode(e.target.value)}
+            value={ratingScale}
+            onChange={(e) => handleRatingScale(e.target.value)}
           >
-            <option value="default">
-              {t('ratingModeAgreeDisagree') || 'Agree – Disagree (default)'}
+            <option value="agree-disagree">
+              {t('ratingModeAgreeDisagree') || 'Agree – Disagree, 5 steps (default)'}
+            </option>
+            <option value="three-point">
+              {t('ratingModeThreePoint') || 'Disagree – Neutral – Agree, 3 steps (−1, 0, +1)'}
             </option>
             <option value="reactions">
               {t('ratingModeReactions') || 'Emoji reactions 😐🙂😊👍❤️'}
@@ -550,7 +571,8 @@ function QuestionSettingsPanel({
           </select>
         </label>
         <span className={styles.settingHint}>
-          {t('ratingModeHint') || 'Reactions use a positive-only scale (no disagree). Applies across all apps.'}
+          {t('ratingModeHint') ||
+            'Reactions use a positive-only scale (no disagree) and apply across all apps. The 3-step scale applies in Mass Consensus; other apps keep showing 5 steps.'}
         </span>
       </div>
 

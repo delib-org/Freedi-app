@@ -22,18 +22,23 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
 import { SWIPE, ZONES } from '@/constants/common';
 import { getEvaluationScale } from '@freedi/shared-types';
-import type { RatingMode } from '@freedi/shared-types';
+import type { EvaluationScaleKey } from '@freedi/shared-types';
 import { playWhooshSound } from './soundEffects';
 import type { RatingValue } from '../RatingButton';
 import EvaluationFace from '@/components/icons/EvaluationFace';
-import { calculateInitialZone, isVerticalSwipeComplete } from './swipeZones';
+import {
+  calculateInitialZone,
+  centerZoneIndex,
+  isVerticalSwipeComplete,
+  zoneColorSlot,
+} from './swipeZones';
 import SwipeConfirmation from './SwipeConfirmation';
 
 export interface SwipeCardProps {
   statement: Statement;
   onSwipe: (rating: RatingValue) => void | Promise<void>;
-  /** Evaluation mode; undefined = agree-disagree (default). */
-  ratingMode?: RatingMode;
+  /** Evaluation scale; undefined = five-step agree-disagree (default). */
+  ratingMode?: EvaluationScaleKey;
   totalCards: number;
   currentIndex: number;
   programmaticThrow?: { rating: RatingValue; direction: 'left' | 'right' } | null;
@@ -56,9 +61,12 @@ export default function SwipeCard({
   const { t, tWithParams } = useTranslation();
   const imageUrl = statement.imagesURL?.main;
 
-  // Ordered left→right (zoneIndex 0..4). Shared cross-app scale so the swipe
-  // zones, center value and confirmation match the buttons exactly.
+  // Ordered left→right, one zone per step (five, or three on the -1 · 0 · +1
+  // scale). Shared cross-app scale so the swipe zones, center value and
+  // confirmation match the buttons exactly.
   const scale = getEvaluationScale(ratingMode);
+  const totalZones = scale.length;
+  const centerZone = centerZoneIndex(totalZones);
 
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragX, setDragX] = useState(0);
@@ -136,18 +144,18 @@ export default function SwipeCard({
     setIsDragging(true);
 
     // Calculate starting zone
-    const initialZone = calculateInitialZone(clientX, cardRef.current);
+    const initialZone = calculateInitialZone(clientX, cardRef.current, totalZones);
     setDragStartZone(initialZone);
     setCurrentZone(initialZone); // Set current zone immediately
     setHighlightedZone(initialZone); // Show emoji on touched zone immediately
 
     // Check if center zone (special vertical-only behavior)
-    if (initialZone === ZONES.CENTER_ZONE_INDEX) {
+    if (initialZone === centerZone) {
       setIsVerticalDrag(true);
     } else {
       setIsVerticalDrag(false);
     }
-  }, [isThrowing, isEntering]);
+  }, [isThrowing, isEntering, totalZones, centerZone]);
 
   // Handle drag move
   const handleDragMove = useCallback((clientX: number, clientY: number) => {
@@ -169,11 +177,11 @@ export default function SwipeCard({
         const deltaX = clientX - dragStart;
 
         // Universal directional lock based on zone position
-        if (dragStartZone < ZONES.CENTER_ZONE_INDEX) {
-          // Negative zones (0, 1 - left side) - only allow leftward movement
+        if (dragStartZone < centerZone) {
+          // Negative zones (left of center) - only allow leftward movement
           setDragX(Math.min(0, deltaX));
-        } else if (dragStartZone > ZONES.CENTER_ZONE_INDEX) {
-          // Positive zones (3, 4 - right side) - only allow rightward movement
+        } else if (dragStartZone > centerZone) {
+          // Positive zones (right of center) - only allow rightward movement
           setDragX(Math.max(0, deltaX));
         } else {
           // Center zone shouldn't reach here (isVerticalDrag handles it)
@@ -181,7 +189,7 @@ export default function SwipeCard({
         }
       }
     });
-  }, [dragStart, dragStartY, dragStartZone, isThrowing, isVerticalDrag]);
+  }, [dragStart, dragStartY, dragStartZone, isThrowing, isVerticalDrag, centerZone]);
 
   // Reset drag state helper
   const resetDragState = useCallback(() => {
@@ -207,7 +215,7 @@ export default function SwipeCard({
     if (isVerticalDrag) {
       // CENTER ZONE: Check vertical threshold
       if (isVerticalSwipeComplete(dragY)) {
-        const rating = scale[ZONES.CENTER_ZONE_INDEX].value;
+        const rating = scale[centerZone].value;
 
         if (isLearningMode) {
           // Show confirmation in learning mode
@@ -233,8 +241,8 @@ export default function SwipeCard({
       if (dragDistance >= ZONES.HORIZONTAL_SWIPE_THRESHOLD && dragStartZone !== null) {
         // Sufficient horizontal swipe - evaluate rating using the initially grabbed zone
         const rating = scale[dragStartZone].value;
-        // Negative zones (0, 1 - left side) throw left, positive zones (3, 4 - right side) throw right
-        const direction = dragStartZone < ZONES.CENTER_ZONE_INDEX ? 'left' : 'right';
+        // Negative zones (left of center) throw left, positive zones (right of center) throw right
+        const direction = dragStartZone < centerZone ? 'left' : 'right';
 
         if (isLearningMode) {
           // Show confirmation in learning mode
@@ -255,7 +263,7 @@ export default function SwipeCard({
         resetDragState();
       }
     }
-  }, [dragStart, dragY, dragX, dragStartZone, isVerticalDrag, isThrowing, onSwipe, resetDragState, isLearningMode, scale]);
+  }, [dragStart, dragY, dragX, dragStartZone, isVerticalDrag, isThrowing, onSwipe, resetDragState, isLearningMode, scale, centerZone]);
 
   // Handle confirmation - user confirms their rating
   const handleConfirm = useCallback(() => {
@@ -392,7 +400,7 @@ export default function SwipeCard({
             key={zone.zoneIndex}
             className={clsx(
               'swipe-card__zone',
-              `swipe-card__zone--zone-${zone.zoneIndex}`,
+              `swipe-card__zone--zone-${zoneColorSlot(zone.zoneIndex, totalZones)}`,
               highlightedZone === zone.zoneIndex && 'swipe-card__zone--active'
             )}
             aria-hidden="true"

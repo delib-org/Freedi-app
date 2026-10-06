@@ -299,6 +299,12 @@ export const StatementSettingsSchema = object({
 	// by every evaluation surface (MC swipe/classic, main-app faces, etc.) via
 	// getEvaluationScale(ratingMode). Undefined = 'agree-disagree' (default).
 	ratingMode: optional(RatingModeSchema),
+	// How many steps the agree-disagree scale offers: 3 = -1 · 0 · +1, anything
+	// else (undefined / 5) = the classic five. A plain number rather than a
+	// third RatingMode so surfaces built before it existed still parse the
+	// Statement and fall back to five steps. Ignored in 'reactions' mode. Read
+	// it through resolveEvaluationScaleKey(statementSettings).
+	ratingSteps: optional(number()),
 	enableAIImprovement: optional(boolean()),
 	popperianDiscussionEnabled: optional(boolean()),
 	popperianPreCheckEnabled: optional(boolean()),
