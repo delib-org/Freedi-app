@@ -1,12 +1,13 @@
 /**
  * Tests for settingsUtils utility functions
  */
-import { SurveySettings, QuestionOverrideSettings, SuggestionMode } from '@freedi/shared-types';
+import { SurveySettings, QuestionOverrideSettings, SuggestionMode, DisplayMode } from '@freedi/shared-types';
 import {
   areSuggestionsClosed,
   getMergedSettings,
   isSurveyLevelOverride,
   resolveAllowSuggestions,
+  resolveDisplayMode,
   withAllowSuggestions,
 } from '../settingsUtils';
 
@@ -220,6 +221,37 @@ describe('settingsUtils', () => {
         expect(result).toBeDefined();
         expect(result.allowSkipping).toBe(false);
       });
+    });
+  });
+
+  describe('displayMode', () => {
+    it('follows the survey when the question has no override', () => {
+      const classic = createSurveySettings({ displayMode: DisplayMode.classic });
+      expect(getMergedSettings(classic, undefined).displayMode).toBe(DisplayMode.classic);
+      expect(getMergedSettings(classic, {}).displayMode).toBe(DisplayMode.classic);
+    });
+
+    it('lets a question override the survey either way', () => {
+      const classic = createSurveySettings({ displayMode: DisplayMode.classic });
+      const swipe = createSurveySettings({ displayMode: DisplayMode.swipe });
+
+      expect(getMergedSettings(classic, { displayMode: DisplayMode.swipe }).displayMode).toBe(
+        DisplayMode.swipe
+      );
+      expect(getMergedSettings(swipe, { displayMode: DisplayMode.classic }).displayMode).toBe(
+        DisplayMode.classic
+      );
+    });
+
+    it('falls back to swipe for a survey that never stored a display mode', () => {
+      const legacy = createSurveySettings();
+      expect(resolveDisplayMode(legacy, undefined)).toBe(DisplayMode.swipe);
+      expect(resolveDisplayMode(legacy, { displayMode: DisplayMode.classic })).toBe(DisplayMode.classic);
+    });
+
+    it('is never locked by the survey', () => {
+      const classic = createSurveySettings({ displayMode: DisplayMode.classic });
+      expect(isSurveyLevelOverride(classic, 'displayMode')).toBe(false);
     });
   });
 

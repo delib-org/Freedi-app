@@ -15,6 +15,7 @@ import type {
 import {
   UserDemographicQuestionType,
   SuggestionMode,
+  DisplayMode,
   resolveEvaluationScaleKey,
   THREE_POINT_STEPS,
   FIVE_POINT_STEPS,
@@ -22,6 +23,7 @@ import {
 import {
   areSuggestionsClosed,
   resolveAllowSuggestions,
+  resolveDisplayMode,
   withAllowSuggestions,
 } from '@/lib/utils/settingsUtils';
 import {
@@ -403,10 +405,22 @@ function QuestionSettingsPanel({
     }
   };
 
-  // One dropdown, two stored fields: `ratingMode` picks the face set and
-  // `ratingSteps` the length of the agree-disagree scale. Every choice is
-  // written explicitly — the survey save only cascades an explicit override
-  // onto the question, so "back to the default" has to be one too.
+  // 'default' = no override: the question follows the survey's display mode
+  const handleDisplayMode = (value: string) => {
+    const newSetting = { ...questionSetting };
+    if (value === 'default') {
+      delete newSetting.displayMode;
+    } else {
+      newSetting.displayMode = value as DisplayMode;
+    }
+    onChange(newSetting);
+  };
+
+  const displayModeLabels: Record<DisplayMode, string> = {
+    [DisplayMode.swipe]: t('displayModeSwipe') || 'Swipe (Tinder-style)',
+    [DisplayMode.classic]: t('displayModeClassic') || 'Classic (Multi-card)',
+  };
+
   // The two "ask for a suggestion" toggles only mean something while this is on
   const suggestionsAllowed = !areSuggestionsClosed(surveySettings, questionSetting);
 
@@ -416,6 +430,10 @@ function QuestionSettingsPanel({
     questionSetting?.ratingMode ? questionSetting : storedSettings
   );
 
+  // One dropdown, two stored fields: `ratingMode` picks the face set and
+  // `ratingSteps` the length of the agree-disagree scale. Every choice is
+  // written explicitly — the survey save only cascades an explicit override
+  // onto the question, so "back to the default" has to be one too.
   const handleRatingScale = (value: string) => {
     const scale = value as EvaluationScaleKey;
     const ratingMode: RatingMode = scale === 'reactions' ? 'reactions' : 'agree-disagree';
@@ -472,6 +490,25 @@ function QuestionSettingsPanel({
             {t('suggestionsOffForQuestion') || 'Off because suggestions are turned off for this question.'}
           </span>
         )}
+      </div>
+
+      {/* Display mode override: swipe cards or the classic list, for this question only */}
+      <div className={styles.settingRow}>
+        <label className={styles.settingLabel}>
+          <span>{t('displayModeThisQuestion') || 'How this question is shown'}</span>
+          <select
+            className={styles.selectInput}
+            value={questionSetting?.displayMode || 'default'}
+            onChange={(e) => handleDisplayMode(e.target.value)}
+          >
+            <option value="default">
+              {t('useSurveyDefault') || 'Use Survey Default'} (
+              {displayModeLabels[resolveDisplayMode(surveySettings, undefined)]})
+            </option>
+            <option value={DisplayMode.swipe}>{displayModeLabels[DisplayMode.swipe]}</option>
+            <option value={DisplayMode.classic}>{displayModeLabels[DisplayMode.classic]}</option>
+          </select>
+        </label>
       </div>
 
       {/* Suggestion Mode override */}

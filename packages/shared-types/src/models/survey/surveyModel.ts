@@ -153,6 +153,8 @@ export const QuestionOverrideSettingsSchema = object({
   autoSplitMultiSuggestions: optional(boolean()),
   /** Override the survey's auto-merge behaviour for THIS question */
   autoMergeSimilar: optional(boolean()),
+  /** Show THIS question as swipe cards or as the classic card list, instead of the survey's display mode */
+  displayMode: optional(DisplayModeSchema),
 });
 
 export type QuestionOverrideSettings = InferOutput<typeof QuestionOverrideSettingsSchema>;
@@ -375,4 +377,5 @@ export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
   ratingSteps: undefined,
   autoSplitMultiSuggestions: undefined,
   autoMergeSimilar: undefined,
+  displayMode: undefined,
 };
