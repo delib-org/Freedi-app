@@ -324,6 +324,23 @@
     padding: 0 var(--spacing-sm);
   }
 
+  // The option's body, under its title. The card has a fixed height and its
+  // text cannot scroll (a drag on it is a swipe), so a long body is clamped.
+  &__body {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 6;
+    line-clamp: 6;
+    overflow: hidden;
+    margin: var(--spacing-sm) 0 0;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: normal;
+    white-space: pre-line;
+    color: var(--mc-text-muted, #64748b);
+  }
+
   // Overlay states (legacy - kept for compatibility)
   &--like-active &__overlay,
   &--dislike-active &__overlay {

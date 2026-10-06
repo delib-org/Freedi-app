@@ -28,6 +28,8 @@ import { playWhooshSound } from './soundEffects';
 import RatingButton from '../RatingButton';
 import type { RatingValue } from '../RatingButton';
 import EvaluationFace from '@/components/icons/EvaluationFace';
+import InlineMarkdown from '@/components/shared/InlineMarkdown';
+import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import { calculateInitialZone, centerZoneIndex, isVerticalSwipeComplete } from './swipeZones';
 import SwipeConfirmation from './SwipeConfirmation';
 
@@ -63,6 +65,10 @@ export default function SwipeCard({
 }: SwipeCardProps) {
   const { t, tWithParams } = useTranslation();
   const imageUrl = statement.imagesURL?.main;
+  // The text under the title: embedded paragraphs, or the cached preview of
+  // paragraph child statements. Skipped when it only repeats the title.
+  const bodyText = (getParagraphsText(statement.paragraphs) || statement.description || '').trim();
+  const body = bodyText !== statement.statement?.trim() ? bodyText : '';
 
   // Ordered left→right, one zone per step (five, or three on the -1 · 0 · +1
   // scale). Shared cross-app scale so the swipe zones, center value and
@@ -431,7 +437,14 @@ export default function SwipeCard({
             draggable={false}
           />
         )}
-        <div className="swipe-card__content">{statement.statement}</div>
+        <div className="swipe-card__content">
+          {statement.statement}
+          {body && (
+            <p className="swipe-card__body">
+              <InlineMarkdown text={body} />
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Vertical indicator for center zone */}
