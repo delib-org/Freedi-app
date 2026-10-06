@@ -97,7 +97,42 @@ describe('SwipeCard', () => {
     });
   });
 
-  it('leaves the swipe zones untinted', () => {
+  describe('body text under the title', () => {
+    it('shows the embedded paragraphs in order', () => {
+      const statement = {
+        ...STATEMENT,
+        paragraphs: [
+          { paragraphId: 'p2', type: 'paragraph', content: 'Second line', order: 1 },
+          { paragraphId: 'p1', type: 'paragraph', content: 'First line', order: 0 },
+        ],
+      } as Statement;
+      const { container } = renderCard({ statement });
+
+      expect(container.querySelector('.swipe-card__body')).toHaveTextContent(
+        'First line Second line'
+      );
+    });
+
+    it('falls back to the cached description', () => {
+      const statement = { ...STATEMENT, description: 'Shade for every street' } as Statement;
+      const { container } = renderCard({ statement });
+
+      expect(container.querySelector('.swipe-card__body')).toHaveTextContent(
+        'Shade for every street'
+      );
+    });
+
+    it('is absent when there is no body, or it only repeats the title', () => {
+      expect(renderCard().container.querySelector('.swipe-card__body')).toBeNull();
+
+      const statement = { ...STATEMENT, description: STATEMENT.statement } as Statement;
+      expect(
+        renderCard({ statement }).container.querySelector('.swipe-card__body')
+      ).toBeNull();
+    });
+  });
+
+    it('leaves the swipe zones untinted', () => {
     const { container } = renderCard({ onRate: jest.fn() });
 
     const zones = [...container.querySelectorAll('.swipe-card__zone')];

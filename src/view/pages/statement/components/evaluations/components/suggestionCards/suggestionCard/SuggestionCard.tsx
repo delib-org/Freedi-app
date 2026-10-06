@@ -218,6 +218,13 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 			return;
 		}
 
+		// Text fields keep the browser's default: cancelling pointerdown there
+		// stops the caret from being placed and a selection from being dragged,
+		// so the card's own text could not be edited with the mouse.
+		if (target.closest('input, textarea, select, [contenteditable="true"]')) {
+			return;
+		}
+
 		// Block pointer events on non-interactive areas
 		if (!target.closest('button') && !target.closest('a') && !target.closest('[role="button"]')) {
 			e.preventDefault();

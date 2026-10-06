@@ -29,17 +29,37 @@
 		}
 	}
 
+	// Card variants size themselves to the picture. The cap sits on the <img>
+	// itself: a percentage max-height resolves against a parent of auto height,
+	// which is no cap at all, and the picture then spills over the card text.
+	&.compact,
+	&.inline {
+		height: auto;
+		min-height: 0;
+
+		.imageContainer {
+			height: auto;
+			min-height: 0;
+		}
+	}
+
 	// Compact variant - for above mode in cards
 	&.compact {
 		width: 100%;
-		max-height: 300px;
+
+		.imagePreview {
+			max-height: var(--statement-image-max-height, 300px);
+		}
 	}
 
 	// Inline variant - for inline mode in cards
 	&.inline {
-		max-height: 200px;
 		max-width: 200px;
 		border-radius: 8px;
+
+		.imagePreview {
+			max-height: var(--statement-image-max-height, 200px);
+		}
 	}
 }
 
