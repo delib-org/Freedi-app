@@ -32,6 +32,7 @@ import { CSS } from '@dnd-kit/utilities';
 import DemographicQuestionEditor from './DemographicQuestionEditor';
 import ExplanationEditor from './ExplanationEditor';
 import QuestionTextEditor from './QuestionTextEditor';
+import QuestionCardsPanel from './QuestionCardsPanel';
 import SynthesisStatusBadge, { resolveSynthesisBadgeState } from './SynthesisStatusBadge';
 import styles from './Admin.module.scss';
 
@@ -59,6 +60,8 @@ interface UnifiedFlowEditorProps {
   onQuestionSettingsChange: (questionId: string, settings: QuestionOverrideSettings) => void;
   onQuestionTextChange: (questionId: string, newText: string) => void;
   onRemoveQuestion: (questionId: string) => void;
+  /** Lets survey editors manage the cards of questions they did not create. */
+  surveyId?: string;
 }
 
 type FlowItemData =
@@ -165,6 +168,11 @@ interface SortableFlowItemProps {
   onToggleExpand: () => void;
   onRemove: () => void;
   // For questions
+  surveyId?: string;
+  /** Header shortcut to the question's cards and their pictures. */
+  onOpenPictures?: () => void;
+  /** Bumped each time the shortcut is used, so the panel opens and scrolls into view. */
+  cardsFocusRequest?: number;
   surveySettings?: SurveySettings;
   questionSetting?: QuestionOverrideSettings;
   onQuestionSettingsChange?: (settings: QuestionOverrideSettings) => void;
@@ -184,6 +192,9 @@ function SortableFlowItem({
   expanded,
   onToggleExpand,
   onRemove,
+  surveyId,
+  onOpenPictures,
+  cardsFocusRequest,
   surveySettings,
   questionSetting,
   onQuestionSettingsChange,
@@ -257,6 +268,16 @@ function SortableFlowItem({
             })}
           />
         )}
+        {item.type === 'question' && onOpenPictures && (
+          <button
+            type="button"
+            className={styles.flowPicturesButton}
+            onClick={onOpenPictures}
+            aria-label={t('Add pictures to the cards of this question')}
+          >
+            <span aria-hidden="true">🖼️</span> {t('Pictures')}
+          </button>
+        )}
         <button
           type="button"
           className={styles.flowExpandButton}
@@ -295,6 +316,11 @@ function SortableFlowItem({
                   onChange={onQuestionTextChange}
                 />
               )}
+              <QuestionCardsPanel
+                questionId={item.question.statementId}
+                surveyId={surveyId}
+                focusRequest={cardsFocusRequest}
+              />
               <QuestionSettingsPanel
                 questionSetting={questionSetting}
                 surveySettings={surveySettings}
@@ -726,9 +752,11 @@ export default function UnifiedFlowEditor({
   onQuestionSettingsChange,
   onQuestionTextChange,
   onRemoveQuestion,
+  surveyId,
 }: UnifiedFlowEditorProps) {
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [cardsFocus, setCardsFocus] = useState<{ id: string; request: number } | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -898,6 +926,16 @@ export default function UnifiedFlowEditor({
                 expanded={expandedId === item.id}
                 onToggleExpand={() => setExpandedId(expandedId === item.id ? null : item.id)}
                 onRemove={() => handleRemoveItem(item)}
+                surveyId={surveyId}
+                onOpenPictures={
+                  item.type === 'question'
+                    ? () => {
+                        setExpandedId(item.id);
+                        setCardsFocus((prev) => ({ id: item.id, request: (prev?.request ?? 0) + 1 }));
+                      }
+                    : undefined
+                }
+                cardsFocusRequest={cardsFocus?.id === item.id ? cardsFocus.request : undefined}
                 surveySettings={surveySettings}
                 questionSetting={item.type === 'question' ? questionSettings[item.id] : undefined}
                 onQuestionSettingsChange={

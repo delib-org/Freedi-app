@@ -17,16 +17,17 @@
  */
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
 import { SWIPE, ZONES } from '@/constants/common';
-import { getEvaluationScale, getEvaluationEntry } from '@freedi/shared-types';
+import { getEvaluationScale } from '@freedi/shared-types';
 import type { RatingMode } from '@freedi/shared-types';
 import { playWhooshSound } from './soundEffects';
 import type { RatingValue } from '../RatingButton';
 import EvaluationFace from '@/components/icons/EvaluationFace';
+import { calculateInitialZone, isVerticalSwipeComplete } from './swipeZones';
+import SwipeConfirmation from './SwipeConfirmation';
 
 export interface SwipeCardProps {
   statement: Statement;
@@ -37,26 +38,10 @@ export interface SwipeCardProps {
   currentIndex: number;
   programmaticThrow?: { rating: RatingValue; direction: 'left' | 'right' } | null;
   onCommentClick?: () => void;
+  /** Present only for admins: opens the card image sheet. */
+  onImageEditClick?: () => void;
 }
 
-// Calculate initial zone from touch/click position
-function calculateInitialZone(clientX: number, cardElement: HTMLDivElement | null): number | null {
-  if (!cardElement) return null;
-  const rect = cardElement.getBoundingClientRect();
-  const zoneWidth = rect.width / ZONES.TOTAL_ZONES;
-  const offsetX = clientX - rect.left;
-  let zoneIndex = Math.floor(offsetX / zoneWidth);
-  zoneIndex = Math.max(0, Math.min(ZONES.TOTAL_ZONES - 1, zoneIndex));
-
-  // Universal layout: zone 0 (red) on left, zone 4 (green) on right
-  // Visual position directly maps to zone index
-  return zoneIndex;
-}
-
-// Check if vertical swipe meets threshold
-function isVerticalSwipeComplete(dragY: number): boolean {
-  return dragY <= -ZONES.VERTICAL_SWIPE_THRESHOLD; // Negative = upward
-}
 
 export default function SwipeCard({
   statement,
@@ -66,8 +51,10 @@ export default function SwipeCard({
   currentIndex,
   programmaticThrow,
   onCommentClick,
+  onImageEditClick,
 }: SwipeCardProps) {
   const { t, tWithParams } = useTranslation();
+  const imageUrl = statement.imagesURL?.main;
 
   // Ordered left→right (zoneIndex 0..4). Shared cross-app scale so the swipe
   // zones, center value and confirmation match the buttons exactly.
@@ -344,6 +331,7 @@ export default function SwipeCard({
     'swipe-card--entering': isEntering,
     'swipe-card--idle': !isDragging && !isThrowing && !isEntering,
     'swipe-card--vertical-drag': isVerticalDrag,
+    'swipe-card--with-image': Boolean(imageUrl),
   });
 
   return (
@@ -423,6 +411,15 @@ export default function SwipeCard({
 
       {/* Content wrapper (above zones) */}
       <div className="swipe-card__content-wrapper">
+        {imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element -- storage URLs are not in next/image's allow-list
+          <img
+            className="swipe-card__image"
+            src={imageUrl}
+            alt={statement.imagesURL?.alt ?? ''}
+            draggable={false}
+          />
+        )}
         <div className="swipe-card__content">{statement.statement}</div>
       </div>
 
@@ -445,51 +442,32 @@ export default function SwipeCard({
         </button>
       )}
 
+      {onImageEditClick && !isThrowing && !isEntering && (
+        <button
+          className="swipe-card__image-btn"
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onImageEditClick(); }}
+          onTouchStart={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          aria-label={imageUrl ? t('Change image') : t('Add image')}
+        >
+          🖼️
+        </button>
+      )}
+
       {/* Screen reader announcements */}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {currentIndex + 1} {t('of')} {totalCards}
       </div>
 
       {/* Confirmation modal for learning mode - rendered via portal to escape card transforms */}
-      {showConfirmation && pendingRating !== null && createPortal(
-        <div className="swipe-card__confirmation-overlay">
-          <div
-            className={clsx(
-              'swipe-card__confirmation-modal',
-              `swipe-card__confirmation-modal--${getEvaluationEntry(pendingRating, ratingMode)?.variant ?? 'neutral'}`
-            )}
-          >
-            <div className="swipe-card__confirmation-emoji">
-              <EvaluationFace value={pendingRating} mode={ratingMode} />
-            </div>
-            <h3 className="swipe-card__confirmation-title">
-              {t('You have rated it as')}
-            </h3>
-            <p className="swipe-card__confirmation-rating">
-              {t(getEvaluationEntry(pendingRating, ratingMode)?.labelKey ?? '')}
-            </p>
-            <p className="swipe-card__confirmation-question" dir="auto">
-              {t('Are you sure?')}
-            </p>
-            <div className="swipe-card__confirmation-buttons">
-              <button
-                className="swipe-card__confirmation-button swipe-card__confirmation-button--cancel"
-                onClick={handleCancel}
-                type="button"
-              >
-                {t('No, go back')}
-              </button>
-              <button
-                className="swipe-card__confirmation-button swipe-card__confirmation-button--confirm"
-                onClick={handleConfirm}
-                type="button"
-              >
-                {t('Yes, confirm')}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
+      {showConfirmation && pendingRating !== null && (
+        <SwipeConfirmation
+          rating={pendingRating}
+          ratingMode={ratingMode}
+          onCancel={handleCancel}
+          onConfirm={handleConfirm}
+        />
       )}
     </div>
   );

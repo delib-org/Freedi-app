@@ -245,6 +245,17 @@ export const COMMENT = {
 } as const;
 
 /**
+ * Card image constants (an admin's picture on a swipe card)
+ * The size cap mirrors storage.rules for statements/{statementId}/**.
+ * SVG is left out on purpose: it can carry script, and the file is public.
+ */
+export const CARD_IMAGE = {
+  MAX_BYTES: 5 * 1024 * 1024,
+  ALLOWED_TYPES: ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
+  ALT_MAX_LENGTH: 200,
+} as const;
+
+/**
  * Error messages
  */
 export const ERROR_MESSAGES = {

@@ -18,6 +18,8 @@ import SwipeCard from '../SwipeCard';
 import RatingButton from '../RatingButton';
 import SurveyProgress from '../SurveyProgress';
 import CommentModal from '../CommentModal';
+import CardImageModal from '../CardImageModal';
+import { useSwipeCardImages } from '@/hooks/useSwipeCardImages';
 import SolutionPromptModal from '@/components/question/SolutionPromptModal';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { cardColorIntensityStyle } from '@/lib/utils/cardColorIntensity';
@@ -81,6 +83,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   const evaluatedCount = useSelector(selectEvaluatedCardsCount);
   const totalCount = useSelector(selectTotalCardsCount);
   const showProposalPrompt = useSelector(selectShowProposalPrompt);
+  const cardImages = useSwipeCardImages(currentCard, surveyId);
 
   const [showProposalModal, setShowProposalModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
@@ -376,6 +379,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
               currentIndex={evaluatedCount}
               programmaticThrow={programmaticThrow}
               onCommentClick={handleOpenComment}
+              onImageEditClick={cardImages.onImageEditClick}
             />
           </div>
 
@@ -440,8 +444,13 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         userName={userName}
         surveyId={surveyId}
         suggestionMode={mergedSettings?.suggestionMode}
-        autoSplitMultiSuggestions={mergedSettings?.autoSplitMultiSuggestions}
-        autoMergeSimilar={mergedSettings?.autoMergeSimilar}
+        autoSplitMultiSuggestions={
+          mergedSettings?.autoSplitMultiSuggestions ??
+          question.statementSettings?.autoSplitMultiSuggestions
+        }
+        autoMergeSimilar={
+          mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
+        }
       />
 
       {/* Comment Modal */}
@@ -452,6 +461,16 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
           suggestionText={currentCard.statement}
           questionText={question.statement}
           onSubmit={handleCommentSubmit}
+        />
+      )}
+
+      {currentCard && cardImages.onImageEditClick && (
+        <CardImageModal
+          isOpen={cardImages.isImageModalOpen}
+          onClose={cardImages.closeImageModal}
+          statement={currentCard}
+          surveyId={surveyId}
+          onSaved={cardImages.onImageSaved}
         />
       )}
 
@@ -472,8 +491,13 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         userName={userName}
         surveyId={surveyId}
         suggestionMode={mergedSettings?.suggestionMode}
-        autoSplitMultiSuggestions={mergedSettings?.autoSplitMultiSuggestions}
-        autoMergeSimilar={mergedSettings?.autoMergeSimilar}
+        autoSplitMultiSuggestions={
+          mergedSettings?.autoSplitMultiSuggestions ??
+          question.statementSettings?.autoSplitMultiSuggestions
+        }
+        autoMergeSimilar={
+          mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
+        }
         requiresSolution={requiresSolution}
         hasCheckedUserSolutions={hasCheckedUserSolutions}
       />

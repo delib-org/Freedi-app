@@ -138,5 +138,11 @@ export type FlowState =
   | { step: 'multi-preview'; suggestions: SplitSuggestion[]; originalText: string; similarData?: SimilarCheckResponse }
   | { step: 'similar'; data: SimilarCheckResponse }
   | { step: 'submitting' }
-  | { step: 'success'; action: 'created' | 'evaluated' | 'merged'; solutionText: string }
+  | {
+      step: 'success';
+      action: 'created' | 'evaluated' | 'merged';
+      solutionText: string;
+      /** Shown under the success message when part of a split could not be added. */
+      note?: string;
+    }
   | { step: 'evaluate' };

@@ -304,6 +304,14 @@ export const StatementSettingsSchema = object({
 	popperianPreCheckEnabled: optional(boolean()),
 	enableMultiSuggestionDetection: optional(boolean()),
 	enableAutoMerge: optional(boolean()), // if true (default), similar proposals will be automatically merged; if false, users choose
+	// Automatic AI handling of a participant's submission, mirrored here from
+	// the MC survey settings (see cascadeAutoAiHandling) so a question opened
+	// outside any survey — /q/<statementId> — behaves the way its admin set it.
+	// autoSplit: several answers in one submission are added separately instead
+	// of asking the participant; autoMerge: a submission that repeats an
+	// existing suggestion folds into it and +1s it. Undefined = off.
+	autoSplitMultiSuggestions: optional(boolean()),
+	autoMergeSimilar: optional(boolean()),
 	similarityThreshold: optional(number()), // 0-1, default 0.85 - threshold for finding similar options
 	excludedInheritedDemographicIds: optional(array(string())), // IDs of inherited demographic questions to exclude for this statement
 	enableChatPanel: optional(boolean()), // if false, the chat side panel is hidden (default: true)
