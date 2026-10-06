@@ -152,4 +152,40 @@ describe('the council scoreboard model', () => {
 		// Hidden counts never move the ballot — the order would leak them.
 		expect(ballot({})).toEqual([1, 2, 3]);
 	});
+	it('draws a one-candidate ballot as a for/against motion, unless a challenger stands beside it', () => {
+		const voting = {
+			candidateIds: ['a'],
+			candidates: [{ statementId: 'a', statement: 'A', consensus: 0.6 }],
+			computedAt: 1,
+		};
+		const motion = councilBallot({
+			session: { voting, votingSettings: { showResults: true } } as unknown as AgoraSession,
+			selections: { a: 3, against: 1 },
+			myVoteStatementId: 'against',
+			votedCount: 4,
+			classSize: 6,
+			closed: false,
+		});
+		expect(motion.candidates).toBeUndefined();
+		expect(motion.motion).toEqual({
+			label: 'A',
+			for: { votes: 3, share: 0.75, mine: false },
+			against: { votes: 1, share: 0.25, mine: true },
+		});
+		expect(motion.footer).toContain('4 מתוך 6');
+
+		const challenged = councilBallot({
+			session: {
+				voting,
+				votingGame: { phase: 'vote', challengerStatementId: 'z' },
+			} as unknown as AgoraSession,
+			selections: { a: 3 },
+			myVoteStatementId: null,
+			votedCount: 3,
+			classSize: 6,
+			closed: false,
+		});
+		expect(challenged.motion).toBeUndefined();
+		expect(challenged.candidates).toHaveLength(1);
+	});
 });

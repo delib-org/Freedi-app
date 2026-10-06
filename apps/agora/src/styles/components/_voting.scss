@@ -703,3 +703,99 @@
 		}
 	}
 }
+
+// A motion — ONE candidate, "do we adopt this?" — is tallied as two STANDING
+// bars side by side: for and against are two answers to one question, not a
+// ranking, so the room compares two heights instead of reading two rows.
+//
+// The pillar rises from the floor (block-size, like the rows' inline-size:
+// the fill is absolutely positioned, nothing reflows). For is MINT — support
+// is the one job mint has. Against is the neutral --peer, never red: a motion
+// the room declines is a real answer, not an error (same rule as the
+// challenge reveal).
+.voting__list--binary {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--space-md);
+	inline-size: min(100%, 420px);
+	margin-inline: auto;
+}
+
+.voting__option--standing {
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--space-xs);
+	text-align: center;
+}
+
+.voting__track {
+	position: relative;
+	display: block;
+	inline-size: min(100%, 88px);
+	block-size: 180px;
+	background: var(--bg-inset);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+}
+
+.voting__pillar {
+	position: absolute;
+	inset-inline: 0;
+	inset-block-end: 0;
+	background: linear-gradient(0deg, var(--mint-deep), var(--mint));
+	border-radius: var(--radius-md) var(--radius-md) 0 0;
+	// Every later change of height glides. The reveal sweep below must NOT
+	// hold its end frame (`both`/`forwards`): a filling animation outranks the
+	// transition, and each new vote would snap the pillar instead of moving it.
+	transition: block-size var(--motion-slow) var(--ease-spring);
+	animation: voting-pillar-in var(--motion-camera) var(--ease-camera);
+}
+
+.voting__option--against .voting__pillar {
+	background: linear-gradient(0deg, var(--peer-deep), var(--peer));
+}
+
+// On my purple surface the track re-derives itself (--bg-inset is in the
+// on-dark contract), but a --peer pillar would sink into the purple it
+// stands on — it goes white instead
+.voting__option--mine.voting__option--against .voting__pillar {
+	background: var(--text-on-lantern);
+}
+
+// The side's name is the answer the student is giving — it reads as one
+.voting__side {
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: var(--font-size-lg);
+}
+
+.voting__count--standing {
+	min-block-size: 2.6rem;
+
+	// The numbers pop on change (StandingBar.ts); a pop needs a box to scale
+	.voting__votes,
+	.voting__share {
+		display: inline-block;
+	}
+}
+
+@media (min-width: 900px) {
+	.voting__option--static .voting__track {
+		block-size: 260px;
+		inline-size: min(100%, 120px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.voting__pillar {
+		transition: none;
+		animation: none;
+	}
+}
+
+@keyframes voting-pillar-in {
+	from {
+		block-size: 0;
+	}
+}
