@@ -12,7 +12,6 @@ import { useMode } from '../lib/mode';
 import { distanceEngine, ParticipantDistance } from '../lib/distance';
 import { islandArtUrl } from '../lib/islandArt';
 import { loadGameEvaluations } from '../lib/evaluations';
-import { enterIslandDeliberation, getGateState } from '../lib/agoraGate';
 import { stageBus } from '../lib/stageBus';
 import { invitedElders } from '../lib/elders';
 import { proximityBandOf, relativeDistances, type ProximityBandKey } from '../lib/seaLayout';
@@ -37,10 +36,8 @@ const BAR_FLOOR = 6;
 export default function Summary() {
 	const { user } = useUser();
 	const mode = useMode();
-	const { content, journey, attitudes, text, updateJourney } = useGame();
+	const { content, journey, attitudes, text } = useGame();
 	const [participants, setParticipants] = useState<ParticipantDistance[]>([]);
-	/** The gate being walked through — the token round trip is not instant */
-	const [enteringIslandId, setEnteringIslandId] = useState('');
 	const [digestOpen, setDigestOpen] = useState(false);
 	/** the ship whose card is open on the final sea chart */
 	const [asked, setAsked] = useState<string | null>(null);
@@ -217,28 +214,6 @@ export default function Summary() {
 	const unvisitedCount = content.islands.filter(
 		(island) => island.enabled && !visitedIslands.includes(island),
 	).length;
-
-	const agoraOrigin = text('agoraOrigin');
-
-	async function enterGate(islandStatementId: string): Promise<void> {
-		if (!content || enteringIslandId) return;
-		setEnteringIslandId(islandStatementId);
-		// fire-and-go: the boat sails into the lighthouse beam, navigation is
-		// never blocked on the animation
-		if (mode === 'game') stageBus.send({ type: 'sailToLighthouse' });
-		try {
-			await enterIslandDeliberation({
-				islandStatementId,
-				game: content.game,
-				journey,
-				agoraOrigin,
-				updateJourney,
-			});
-		} catch (error) {
-			console.error('[Odyssey] Could not open the gate:', error);
-			setEnteringIslandId('');
-		}
-	}
 
 	return (
 		<>
@@ -417,62 +392,6 @@ export default function Summary() {
 								</Link>
 							) : null}
 						</div>
-					</section>
-
-					<section className="panel fade-in">
-						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-2 text-center">
-							🏛️ שערי האגורה
-						</h2>
-						<p className="text-[15px] text-[#dcecf7] mt-0 mb-4 text-center">
-							{text('agoraQuestion')}
-						</p>
-						{visitedIslands.length > 0 ? (
-							<div className="flex flex-col gap-2.5">
-								{visitedIslands.map((island) => {
-									const state = getGateState(island.statementId, content.game, journey);
-									const entering = enteringIslandId === island.statementId;
-
-									return (
-										<div
-											key={island.statementId}
-											className="flex items-center gap-3 flex-wrap justify-between"
-										>
-											<span className="text-[15px]">
-												{state === 'visited' ? '⚑ ' : ''}
-												{island.title}
-											</span>
-											{state === 'unprovisioned' || !agoraOrigin ? (
-												<button
-													type="button"
-													className="btn"
-													disabled
-													title="הדיון על האי הזה ייפתח במסך הניהול"
-												>
-													{text('agoraButton')} (בקרוב)
-												</button>
-											) : (
-												<button
-													type="button"
-													className="btn"
-													disabled={entering}
-													onClick={() => void enterGate(island.statementId)}
-												>
-													{entering
-														? 'מפליגים…'
-														: state === 'visited'
-															? 'חזרה לדיון'
-															: text('agoraButton')}
-												</button>
-											)}
-										</div>
-									);
-								})}
-							</div>
-						) : (
-							<p className="m-0 opacity-80 text-[15px] text-center">
-								חקרו אי אחד לפחות, ושער הדיון עליו ייפתח כאן.
-							</p>
-						)}
 					</section>
 
 					{uid ? (
