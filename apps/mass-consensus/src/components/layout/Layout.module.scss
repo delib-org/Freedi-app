@@ -296,6 +296,20 @@
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+
+  // Admin pages reuse the participant .page wrapper, which reserves room
+  // for a bottom bar that admin doesn't have
+  :global(.page) {
+    padding: 2rem;
+  }
+
+  @media (max-width: 600px) {
+    padding: 1rem;
+
+    :global(.page) {
+      padding: 0 0 2rem;
+    }
+  }
 }
 
 // ============================================

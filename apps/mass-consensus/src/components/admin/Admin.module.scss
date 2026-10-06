@@ -72,7 +72,9 @@
 .listHeader {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 1rem;
   margin-bottom: 2rem;
 
   h1 {
@@ -122,7 +124,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: box-shadow 0.2s;
@@ -226,7 +228,7 @@
 .formSection {
   margin-bottom: 2rem;
   padding: 1.5rem;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -399,7 +401,7 @@
   display: flex;
   flex-direction: column;
   padding: 0;
-  background: white;
+  background: var(--mc-surface, white);
   border: 2px solid var(--border-light, #e2e8f0);
   border-radius: 8px;
   transition: box-shadow 0.2s, transform 0.2s;
@@ -567,7 +569,7 @@
   flex-direction: column;
   align-items: center;
   padding: 1.5rem;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 12px;
   border: 2px solid var(--border-light, #e2e8f0);
 }
@@ -665,7 +667,7 @@
 .statsSection {
   margin-bottom: 2rem;
   padding: 1.5rem;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -704,7 +706,7 @@
 
 .statusSelection {
   padding: 1.5rem;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -787,7 +789,7 @@
 }
 
 .confirmContent {
-  background: white;
+  background: var(--mc-surface, white);
   padding: 2rem;
   border-radius: 16px;
   max-width: 400px;
@@ -837,7 +839,7 @@
 .enhancedCard {
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 12px;
   padding: 1.25rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -1020,7 +1022,7 @@
 
   &:hover {
     background: rgba(229, 62, 62, 0.1);
-    color: #c53030;
+    color: var(--mc-danger-text, #c53030);
   }
 }
 
@@ -1029,7 +1031,7 @@
 
   &:hover {
     background: rgba(95, 136, 229, 0.1);
-    color: #4a6fc4;
+    color: var(--mc-brand-text, #4a6fc4);
   }
 }
 
@@ -1201,7 +1203,7 @@
 }
 
 .demographicPageCard {
-  background: white;
+  background: var(--mc-surface, white);
   border: 2px solid var(--border-light, #e2e8f0);
   border-radius: 12px;
   overflow: hidden;
@@ -1304,7 +1306,7 @@
   border: 2px solid var(--border-light, #e2e8f0);
   border-radius: 8px;
   outline: none;
-  background: white;
+  background: var(--mc-surface, white);
   cursor: pointer;
   transition: border-color 0.2s;
 
@@ -1355,7 +1357,7 @@
   color: var(--text-muted, #718096);
   text-align: center;
   padding: 1rem;
-  background: white;
+  background: var(--mc-surface, white);
   border: 2px dashed var(--border-light, #e2e8f0);
   border-radius: 8px;
   margin-bottom: 0.75rem;
@@ -1394,7 +1396,7 @@
 // ============================================
 
 .questionEditorCard {
-  background: white;
+  background: var(--mc-surface, white);
   border: 1px solid var(--border-light, #e2e8f0);
   border-radius: 8px;
   overflow: hidden;
@@ -1567,7 +1569,7 @@
   gap: 0.5rem;
   margin-top: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: white;
+  background: var(--mc-surface, white);
   border: 1px solid var(--border-light, #e2e8f0);
   border-radius: 6px;
   font-size: 0.875rem;
@@ -1696,7 +1698,7 @@
   transition: background 0.2s, color 0.2s;
 
   &.active {
-    background: white;
+    background: var(--mc-surface, white);
     color: var(--text-heading, #1a1a2e);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
@@ -1708,7 +1710,7 @@
 
 .markdownPreview {
   padding: 1rem;
-  background: white;
+  background: var(--mc-surface, white);
   border: 2px solid var(--border-light, #e2e8f0);
   border-radius: 8px;
   min-height: 200px;
@@ -1746,7 +1748,7 @@
 }
 
 .flowItemCard {
-  background: white;
+  background: var(--mc-surface, white);
   border: 2px solid var(--border-light, #e2e8f0);
   border-radius: 12px;
   overflow: hidden;
@@ -1799,7 +1801,7 @@
 
   &.explanation {
     background: rgba(236, 201, 75, 0.15);
-    color: #b7791f;
+    color: var(--mc-warning-text, #b7791f);
   }
 }
 
@@ -1936,7 +1938,7 @@
   padding: 0.75rem 1rem;
   background: transparent;
   border: 2px dashed #b7791f;
-  color: #b7791f;
+  color: var(--mc-warning-text, #b7791f);
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
@@ -2001,7 +2003,7 @@
   align-items: baseline;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: white;
+  background: var(--mc-surface, white);
   border: 1px solid var(--border-light, #e2e8f0);
   border-radius: 8px;
   margin-top: 0.25rem;
@@ -2037,7 +2039,7 @@
 .testModeSection {
   margin-bottom: 2rem;
   padding: 1.5rem;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border: 2px solid transparent;
@@ -2065,7 +2067,7 @@
   display: inline-block;
   padding: 0.25rem 0.75rem;
   background: #fbbf24;
-  color: #92400e;
+  color: var(--mc-warning-text, #92400e);
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 12px;
@@ -2131,7 +2133,7 @@
     width: 20px;
     left: 3px;
     bottom: 3px;
-    background-color: white;
+    background-color: var(--mc-surface, white);
     border-radius: 50%;
     transition: transform 0.2s;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -2156,7 +2158,7 @@
 
 .testDataCount {
   font-size: 0.875rem;
-  color: #92400e;
+  color: var(--mc-warning-text, #92400e);
   font-weight: 500;
 }
 
@@ -2188,7 +2190,7 @@
   border: 1px solid #fbbf24;
   border-radius: 8px;
   font-size: 0.875rem;
-  color: #92400e;
+  color: var(--mc-warning-text, #92400e);
 }
 
 .statsNote {
@@ -2375,7 +2377,7 @@
 .unmarkPilotButton {
   padding: 0.5rem 1rem;
   background: transparent;
-  color: #8b5cf6;
+  color: var(--mc-accent-text, #8b5cf6);
   border: 1px solid #8b5cf6;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -2404,7 +2406,7 @@
 
   span {
     font-size: 0.8rem;
-    color: #6d28d9;
+    color: var(--mc-accent-text, #6d28d9);
   }
 }
 
@@ -2503,7 +2505,7 @@
 
 .resultsSection {
   padding: 1.5rem;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -2772,7 +2774,7 @@
 .resultsDemographicType {
   font-size: 0.75rem;
   color: var(--text-muted, #718096);
-  background: white;
+  background: var(--mc-surface, white);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   text-transform: capitalize;
@@ -2844,7 +2846,7 @@
   display: flex;
   gap: 1.5rem;
   padding: 0.75rem;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 6px;
 }
 
@@ -2872,7 +2874,7 @@
   font-size: 0.85rem;
   color: var(--text-muted, #718096);
   padding: 0.5rem 0.75rem;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 6px;
 }
 

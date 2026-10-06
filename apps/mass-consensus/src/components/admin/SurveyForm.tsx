@@ -580,7 +580,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
 
       {/* Step 2: Select Questions */}
       <div className={styles.formSection}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 className={styles.sectionTitle} style={{ marginBottom: 0 }}>{t('selectQuestions')}</h2>
           <button
             type="button"

@@ -6,9 +6,6 @@
 // Light mode is globals.css untouched. Stylesheets reference the --mc-* roles
 // as `var(--mc-surface, <original colour>)`; the roles are undefined in light
 // mode, so the original colour is used. The blocks below define them.
-//
-// Admin screens are wrapped in .mc-light-scope, which restores the light
-// tokens for everything inside it.
 
 // ---------------------------------------------------------------- Dark
 
@@ -86,6 +83,15 @@
   --mc-focus: #93c5fd;
   --mc-halo: rgba(15, 23, 42, 0.9);
   --mc-glass: rgba(30, 41, 59, 0.92);
+  --mc-warning-text: #fcd34d;
+  --mc-accent-text: #c4b5fd;
+  --mc-danger-text: #fca5a5;
+
+  // Undefined in light; admin and older stylesheets fall back to literals
+  --text-heading: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border-light: #334155;
+  --bg-muted: #172033;
 }
 
 :root[data-theme='dark'] {
@@ -157,6 +163,14 @@
   --mc-focus: #000000;
   --mc-halo: rgba(255, 255, 255, 1);
   --mc-glass: #ffffff;
+  --mc-warning-text: #5c2a02;
+  --mc-accent-text: #4c1d95;
+  --mc-danger-text: #7f1d1d;
+
+  --text-heading: #000000;
+  --text-muted: #1a1a1a;
+  --border-light: #000000;
+  --bg-muted: #ffffff;
 }
 
 @mixin dark-high-contrast-tokens {
@@ -216,6 +230,14 @@
   --mc-focus: #ffe066;
   --mc-halo: rgba(0, 0, 0, 1);
   --mc-glass: #000000;
+  --mc-warning-text: #ffe066;
+  --mc-accent-text: #ffffff;
+  --mc-danger-text: #ffffff;
+
+  --text-heading: #ffffff;
+  --text-muted: #f0f0f0;
+  --border-light: #ffffff;
+  --bg-muted: #000000;
 }
 
 :root[data-contrast='high'][data-theme='dark'] {
@@ -231,7 +253,7 @@
 :root[data-contrast='high'] {
   // The survey's card colour intensity is set inline on the feed/swipe
   // containers; full tint keeps the rating zones distinguishable.
-  [style*='--card-color-intensity']:not(.mc-light-scope *) {
+  [style*='--card-color-intensity'] {
     --card-color-intensity: 1 !important;
   }
 
@@ -242,6 +264,28 @@
   body :focus-visible {
     outline: 3px solid var(--mc-focus) !important;
     outline-offset: 2px;
+  }
+}
+
+// ---------------------------------------------------------------- Form fields
+// Fields that set no background of their own would otherwise get the
+// browser's flat grey dark-mode default. :where() keeps this at zero
+// specificity, so any stylesheet that styles a field still wins.
+
+@mixin dark-fields {
+  :where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']), textarea, select) {
+    background-color: var(--mc-surface-muted);
+    color: var(--mc-text-strong);
+  }
+}
+
+:where(:root[data-theme='dark']) {
+  @include dark-fields;
+}
+
+@media (prefers-color-scheme: dark) {
+  :where(:root[data-theme='system']) {
+    @include dark-fields;
   }
 }
 
@@ -275,37 +319,4 @@
 
 :root:not([data-theme='light']) .badge-neutral {
   background: var(--mc-surface-subtle, #e5e7eb);
-}
-
-// ---------------------------------------------------------------- Admin scope
-
-.mc-light-scope {
-  color-scheme: light;
-
-  --mc-surface: initial;
-  --mc-surface-muted: initial;
-  --mc-surface-subtle: initial;
-  --mc-surface-tint: initial;
-  --mc-border: initial;
-  --mc-border-strong: initial;
-  --mc-text-strong: initial;
-  --mc-text: initial;
-  --mc-text-muted: initial;
-  --mc-brand-text: initial;
-  --mc-focus: initial;
-  --mc-halo: initial;
-  --mc-glass: initial;
-  --reaction-meh: initial;
-  --reaction-okay: initial;
-  --reaction-good: initial;
-  --reaction-great: initial;
-  --reaction-love: initial;
-}
-
-// Admin keeps its light look even when the participant chose dark
-:root:not([data-theme='light']) .mc-light-scope,
-:root[data-contrast='high'] .mc-light-scope {
-  min-height: 100vh;
-  background: var(--background-solid);
-  color: var(--text-body);
 }

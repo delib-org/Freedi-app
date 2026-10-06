@@ -12,7 +12,7 @@ export const metadata: Metadata = {
  */
 export default function CreateSurveyPage() {
   return (
-    <div className="page" style={{ padding: '2rem' }}>
+    <div className="page">
       {/* SurveyForm reads search params (Studio pre-seeding) → needs a Suspense boundary */}
       <Suspense fallback={null}>
         <SurveyForm />

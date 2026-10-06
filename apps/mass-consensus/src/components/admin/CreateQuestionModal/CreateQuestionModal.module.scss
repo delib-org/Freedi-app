@@ -29,7 +29,7 @@
 }
 
 .modal {
-  background: white;
+  background: var(--mc-surface, white);
   width: 90%;
   max-width: 560px;
   max-height: 90vh;
@@ -548,7 +548,7 @@
   gap: 0.75rem;
   margin-top: 0.75rem;
   padding: 0.75rem;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 6px;
 
   label {

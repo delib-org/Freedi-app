@@ -259,7 +259,7 @@ export default function QuestionReorder({
 
   if (questions.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+      <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted, #666)' }}>
         {t('noQuestionsToReorder')}
       </div>
     );
