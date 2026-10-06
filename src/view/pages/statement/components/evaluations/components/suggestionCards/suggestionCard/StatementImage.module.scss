@@ -9,8 +9,9 @@
 
   // Above mode - full width image at top of card
   &.above {
+    --statement-image-max-height: 300px;
+
     width: 100%;
-    max-height: 300px;
     margin-bottom: 0rem;
     display: flex;
     justify-content: center;
@@ -27,15 +28,17 @@
 
     // Tablet: show smaller image
     @media screen and (min-width: 601px) and (max-width: 768px) {
-      max-height: 180px;
+      --statement-image-max-height: 180px;
+
       padding: 0.5rem;
     }
   }
 
   // Inline mode - small image floated next to text
   &.inline {
+    --statement-image-max-height: 200px;
+
     max-width: 200px;
-    max-height: 200px;
     margin: 0 1.5rem 1rem 0; // Right and bottom margins for LTR
     flex-shrink: 0;
     align-self: flex-start; // Align to start/top
@@ -48,8 +51,9 @@
 
     // Tablet: smaller inline image
     @media screen and (min-width: 601px) and (max-width: 768px) {
+      --statement-image-max-height: 120px;
+
       max-width: 120px;
-      max-height: 120px;
       margin: 0 1rem 0.5rem 0;
 
       [dir="rtl"] & {
