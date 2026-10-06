@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Modal from '@/components/shared/Modal';
 import { VALIDATION } from '@/constants/common';
 import { countWords } from '@/lib/utils/wordCount';
+import { pieceTextOf, piecesMeetSubmissionRules } from '@/lib/utils/splitPieces';
 import { moderationMessageKey } from '@/lib/utils/moderationMessage';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
@@ -92,7 +93,7 @@ export default function SolutionPromptModal({
   autoSplitMultiSuggestions = false,
   autoMergeSimilar = false,
 }: SolutionPromptModalProps) {
-  const { t } = useTranslation();
+  const { t, tWithParams } = useTranslation();
   const [text, setText] = useState('');
   const [flowState, setFlowState] = useState<FlowState>({ step: 'input' });
   const [error, setError] = useState<string | null>(null);
@@ -146,8 +147,6 @@ export default function SolutionPromptModal({
     adjustTextareaHeight();
   }, [text]);
 
-  const pieceText = (piece: DetectedSuggestion): string => `${piece.title}: ${piece.description}`;
-
   /**
    * Act on what the server found: several answers in one submission, a
    * similar existing suggestion, or neither. Shared by the one-round-trip
@@ -173,7 +172,7 @@ export default function SolutionPromptModal({
         const piece = pieces?.[i];
         if (piece) {
           targets[s.id] = {
-            text: pieceText(multi.suggestions[i]),
+            text: pieceTextOf(multi.suggestions[i]),
             target: piece.similarStatements[0]?.statementId ?? null,
           };
         }
@@ -181,9 +180,23 @@ export default function SolutionPromptModal({
       setPieceTargets(targets);
 
       if (autoSplitMultiSuggestions) {
-        // Admin chose automatic splitting: skip the preview entirely
-        await handleConfirmMultiSuggestions(splitSuggestions, targets);
-        return;
+        // Admin chose automatic splitting: skip the preview entirely — but
+        // only when every piece would survive the submit route. A piece that
+        // is under the question's word minimum (or too short) would be
+        // refused, and silently failing is worse than asking, so those fall
+        // through to the preview where they can be edited or sent as one.
+        const eligible = piecesMeetSubmissionRules(
+          splitSuggestions.map(pieceTextOf),
+          { minWords, minChars: VALIDATION.MIN_SOLUTION_LENGTH },
+        );
+
+        if (eligible.ok) {
+          await handleConfirmMultiSuggestions(splitSuggestions, targets);
+
+          return;
+        }
+
+        console.info('↩️ auto-split skipped: pieces the server would refuse', eligible.rejected);
       }
 
       setMultiSuggestions(splitSuggestions);
@@ -649,34 +662,56 @@ export default function SolutionPromptModal({
     setIsFinalSubmit(true);
     setFlowState({ step: 'submitting' });
 
-    try {
-      // All pieces at once. A precomputed merge target is used only while the
-      // piece still reads as the server saw it.
-      await Promise.all(
-        suggestions.map((suggestion) => {
-          const solutionText = `${suggestion.title}: ${suggestion.description}`;
-          const known = targets[suggestion.id];
-          const precomputed = known && known.text === solutionText ? known.target : undefined;
+    // One piece at a time, deliberately: the per-user option limit is counted
+    // per request, so pieces sent together race that count. Sequential also
+    // means a piece that fails cannot hide the ones already added — we report
+    // how many landed instead of a bare failure.
+    let added = 0;
+    let failure: unknown = null;
 
-          return submitPiece(solutionText, precomputed);
-        }),
-      );
+    for (const suggestion of suggestions) {
+      const solutionText = pieceTextOf(suggestion);
+      const known = targets[suggestion.id];
+      const precomputed = known && known.text === solutionText ? known.target : undefined;
 
-      setFlowState({
-        step: 'success',
-        action: 'created',
-        solutionText: `${suggestions.length} suggestions`,
-      });
-    } catch (err) {
-      logError(err, {
+      try {
+        await submitPiece(solutionText, precomputed);
+        added++;
+      } catch (err) {
+        // A refusal (option limit, moderation) will refuse what follows too.
+        failure = err;
+        break;
+      }
+    }
+
+    if (failure) {
+      logError(failure, {
         operation: 'SolutionPromptModal.handleConfirmMultiSuggestions',
         userId,
         questionId,
-        metadata: { suggestionCount: suggestions.length },
+        metadata: { suggestionCount: suggestions.length, added },
       });
-      setError(err instanceof Error ? err.message : ERROR_MESSAGES.SUBMIT_FAILED);
-      setFlowState({ step: 'input' });
     }
+
+    if (added === 0) {
+      setError(failure instanceof Error ? failure.message : ERROR_MESSAGES.SUBMIT_FAILED);
+      setFlowState({ step: 'input' });
+
+      return;
+    }
+
+    setFlowState({
+      step: 'success',
+      action: 'created',
+      solutionText: `${added} ${added === 1 ? t('suggestion') : t('suggestions')}`,
+      note:
+        added < suggestions.length
+          ? tWithParams('Added {{added}} of {{total}} ideas — the rest could not be added.', {
+              added,
+              total: suggestions.length,
+            })
+          : undefined,
+    });
   };
 
   // Handle dismissing multi-suggestion preview (submit original as-is)
@@ -835,6 +870,7 @@ export default function SolutionPromptModal({
           <SuccessMessage
             action={flowState.action}
             solutionText={flowState.solutionText}
+            note={flowState.note}
             onComplete={handleSuccess}
           />
         )}

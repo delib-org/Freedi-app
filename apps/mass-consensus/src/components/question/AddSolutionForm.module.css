@@ -1,6 +1,6 @@
 .formContainer {
-  background: #f9fafb;
-  border: 2px dashed #d1d5db;
+  background: var(--mc-surface-muted, #f9fafb);
+  border: 2px dashed var(--mc-border, #d1d5db);
   border-radius: 12px;
   padding: var(--spacing-xl);
   margin-top: var(--spacing-xl);
@@ -11,8 +11,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: #ffffff;
-  border-top: 1px solid #e5e7eb;
+  background: var(--mc-surface, #ffffff);
+  border-top: 1px solid var(--mc-border, #e5e7eb);
   padding: 1rem;
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
@@ -29,7 +29,7 @@
 .success {
   background: #d4edda;
   border: 1px solid var(--agree);
-  color: #155724;
+  color: var(--mc-text-strong, #155724);
   padding: var(--spacing-md);
   border-radius: 8px;
   margin-bottom: var(--spacing-md);
@@ -38,7 +38,7 @@
 }
 
 .error {
-  background: #ffebee;
+  background: var(--mc-surface-tint, #ffebee);
   border: 1px solid var(--disagree);
   color: var(--disagree);
   padding: var(--spacing-md);
@@ -56,7 +56,7 @@
 .textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--mc-border, #d1d5db);
   border-radius: 8px;
   font-family: inherit;
   font-size: 1rem;
@@ -74,7 +74,7 @@
 }
 
 .textarea:disabled {
-  background: #f5f5f5;
+  background: var(--mc-surface-muted, #f5f5f5);
   cursor: not-allowed;
 }
 

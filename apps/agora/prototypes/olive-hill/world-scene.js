@@ -162,12 +162,19 @@ function installBooths(specs){
   const radius=villageRadius(specs.length);
   bounds={x:Math.max(46,radius+14),zMax:Math.max(52,CENTER.z+radius+14)};
   clearPlanting();
-  // The map reads in lesson order: the meeting point, the library, the booths, the council.
-  stations=[fixedStations[1],fixedStations[0],...village.booths.map(b=>b.station),fixedStations[2]];
+  arrangeStations();
   renderStationNav();
   if(pendingPlace){const place=pendingPlace;pendingPlace=null;destination(place,pendingLabel);}
  }
  for(const booth of village.booths){const spec=specs.find(b=>b.itemId===booth.spec.itemId);if(spec)booth.setState(spec);}
+}
+/** A fixed place the lesson never uses (a library with no scenes, a study house nothing is held in) is not on the hill. */
+function placeInPlan(id){return !embedded||placeStatus[id]?.inPlan!==false;}
+/** The map reads in lesson order: the meeting point, the library, the booths, the council. */
+function arrangeStations(){
+ for(const id of ['library','challenge'])village.showPlace(id,placeInPlan(id));
+ stations=[fixedStations[1],fixedStations[0],...village.booths.map(b=>b.station),fixedStations[2]].filter(s=>s.booth||placeInPlan(s.id));
+ if(!stations.includes(selected))selected=stations.find(s=>s.id==='council')??stations[0];
 }
 /** Everything with a face the walker may click: booth boards and the council's scoreboard. */
 function clickableBoards(){return [...village.booths.map(b=>({station:b.station,face:b.face,booth:b})),{station:fixedStations[2],face:village.scoreboard.face,council:true}];}
@@ -312,6 +319,8 @@ let activeLabel='';
 /** The shell put a new item on screen: its place becomes the walk target. */
 function destination(place,label){
  const station=stations.find(s=>s.id===place);
+ // A place taken off the hill (the lobby's study house): the walker stays where they are.
+ if(!station&&fixedStations.some(s=>s.id===place)&&!placeInPlan(place)){activeLabel=label||'';describe();return;}
  if(!station){pendingPlace=place;pendingLabel=label||'';selected=stations[0];return;}
  selected=station;activeLabel=label||'';if(!embedded)activePlace=place;describe();moving=false;hideDeskBubble();
  if(!embedded){deskInfo=selected.booth?{label:'הפתק שלי',prompt:'הפתק שלך מחכה על השולחן. איזו הצעה תרצה לכתוב?',writable:true}:null;for(const b of village.booths)b.desk.paint('', 'הפתק שלי',b.station.id===selected.id);}
@@ -327,7 +336,7 @@ window.addEventListener('message',event=>{
  deskInfo=data.desk&&typeof data.desk.label==='string'&&typeof data.desk.prompt==='string'?{label:data.desk.label,prompt:data.desk.prompt,text:typeof data.desk.text==='string'?data.desk.text:'',writable:data.desk.writable===true}:null;
  if(Array.isArray(data.booths))installBooths(data.booths.filter(b=>b&&typeof b.itemId==='string'&&typeof b.label==='string').map(b=>({itemId:b.itemId,label:b.label,kind:typeof b.kind==='string'?b.kind:'open',open:b.open!==false,current:b.current===true})));
  if(data.navigation==='teacher'||data.navigation==='free')navigation=data.navigation;
- if(data.places&&typeof data.places==='object')placeStatus=data.places;
+ if(data.places&&typeof data.places==='object'){placeStatus=data.places;arrangeStations();}
  // The ROOM moved (the teacher advanced) — as opposed to this student opening another item.
  const roomChanged=typeof data.roomItemId==='string'&&roomItem!==''&&roomItem!==data.roomItemId;
  if(typeof data.roomItemId==='string')roomItem=data.roomItemId;
@@ -394,7 +403,7 @@ function statusOf(s){if(!embedded)return {open:true,current:false};if(s.booth){c
  */
 function renderStationNav(){
  // A fixed place the lesson never uses (a library with no scenes) is not a station at all.
- const rows=stations.filter(s=>s.booth||!embedded||placeStatus[s.id]?.inPlan!==false).map(s=>({s,st:statusOf(s)}));
+ const rows=stations.map(s=>({s,st:statusOf(s)}));
  const lead=embedded&&navigation==='teacher';
  const here=stations.find(s=>s.id===activePlace);
  const key=JSON.stringify([lead,selected.id,activePlace,activeLabel,rows.map(r=>[r.s.id,r.s.name,r.st.open,r.st.current])]);
@@ -478,7 +487,7 @@ function frame(now){requestAnimationFrame(frame);if((lite||lowQuality)&&now-last
  const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));if(f||s){viewKind=null;const n=Math.hypot(f,s);camera.position.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)/n*dt*4;camera.position.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)/n*dt*4;}
  if(!moving&&((Math.abs(camera.position.x)<3.7&&camera.position.z<2.6&&camera.position.z>-3.9)||village.solids.some(o=>Math.abs(camera.position.x-o.x)<o.w&&Math.abs(camera.position.z-o.z)<o.d)))camera.position.copy(old);
  camera.position.x=THREE.MathUtils.clamp(camera.position.x,-bounds.x,bounds.x);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-24,bounds.zMax);camera.position.y=height(camera.position.x,camera.position.z)+1.75;camera.quaternion.setFromEuler(new THREE.Euler(pitch,yaw,0,'YXZ'));village.tick(camera);
- const shelf=fixedStations[0];const insideLibrary=Math.abs(camera.position.z-shelf.z)<3.5&&camera.position.x>shelf.x-2.6&&camera.position.x<shelf.x+3.4;
+ const shelf=fixedStations[0];const insideLibrary=placeInPlan('library')&&Math.abs(camera.position.z-shelf.z)<3.5&&camera.position.x>shelf.x-2.6&&camera.position.x<shelf.x+3.4;
  if(embedded&&insideLibrary!==lastLibraryPresence){lastLibraryPresence=insideLibrary;parent.postMessage({type:'agora-village-library-presence',inside:insideLibrary},location.origin);}
  const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;setText('enter',deskHere()?'לגשת לשולחן ולפתק':selected.id==='council'?'לפתוח את לוח התוצאות':selected.booth?(embedded?'לגשת לביתן הזה':'להיכנס לביתן'):near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←');updateDeskBubble();setText('travel',moving?'לעצור':`ללכת אל: ${selected.name}`);$('travel').hidden=(!moving&&near)||(viewKind==='table'&&viewPlace===selected.id);renderer.render(scene,camera);
 }

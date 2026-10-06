@@ -1,15 +1,18 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { authedFetch } from '@/lib/api/authedFetch';
 import { logError } from '@/lib/utils/errorHandling';
-import {
-  appendSolutionLines,
-  SUGGESTED_SOLUTIONS_COUNT,
-} from '@/lib/utils/solutionSuggestions';
+import { SUGGESTED_SOLUTIONS_COUNT } from '@/lib/utils/solutionSuggestions';
+import { draftsToCreate } from '@/lib/utils/cardDrafts';
+import { useCardDrafts } from '@/hooks/useCardDrafts';
+import { uploadCardImage } from '@/controllers/cardImageController';
+import { CardUploadItem, runCardUploads } from '@/controllers/cardUploadQueue';
+import CardsStep from './CardsStep';
+import CardUploadPhase, { CardUploadState } from './CardUploadPhase';
 import styles from './CreateQuestionModal.module.scss';
 
 interface CreateQuestionModalProps {
@@ -39,7 +42,7 @@ export default function CreateQuestionModal({
   onQuestionCreated,
   defaultParentId,
 }: CreateQuestionModalProps) {
-  const { t, tWithParams } = useTranslation();
+  const { t } = useTranslation();
   const { refreshToken } = useAuth();
 
   // Step state
@@ -61,9 +64,16 @@ export default function CreateQuestionModal({
   const [maxVotes, setMaxVotes] = useState(3);
   const [requireSolutionFirst, setRequireSolutionFirst] = useState(true);
 
-  // Step 3: Solutions
-  const [solutionsText, setSolutionsText] = useState('');
+  // Step 3: Cards (text, and a picture for any of them)
+  const cards = useCardDrafts();
+  const resetCards = cards.reset;
   const [skipSolutions, setSkipSolutions] = useState(false);
+
+  // After create: the pictures upload while the modal stays open
+  const [phase, setPhase] = useState<'form' | 'uploading'>('form');
+  const [uploadItems, setUploadItems] = useState<CardUploadItem[]>([]);
+  const [uploadStates, setUploadStates] = useState<Record<string, CardUploadState>>({});
+  const uploadItemsRef = useRef<CardUploadItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
 
@@ -106,8 +116,14 @@ export default function CreateQuestionModal({
     }
   }, [refreshToken, t, defaultParentId]);
 
+  // Reset only when the modal opens. Creating a question changes the parent's
+  // props (and so fetchGroups) while the pictures are still uploading here;
+  // re-running the reset then would throw the admin back to an empty form.
+  const wasOpenRef = useRef(false);
   useEffect(() => {
-    if (isOpen) {
+    const justOpened = isOpen && !wasOpenRef.current;
+    wasOpenRef.current = isOpen;
+    if (justOpened) {
       fetchGroups();
       // Reset state when modal opens
       setCurrentStep(defaultParentId ? 2 : 1);
@@ -116,26 +132,28 @@ export default function CreateQuestionModal({
       setEvaluationType('suggestions');
       setMaxVotes(3);
       setRequireSolutionFirst(true);
-      setSolutionsText('');
+      resetCards();
       setSkipSolutions(false);
+      setPhase('form');
+      setUploadItems([]);
+      setUploadStates({});
+      uploadItemsRef.current = [];
       setIsGenerating(false);
       setGenerateError(null);
       setError(null);
       setIsCreatingGroup(false);
       setNewGroupName('');
     }
-  }, [isOpen, fetchGroups, defaultParentId]);
+  }, [isOpen, fetchGroups, defaultParentId, resetCards]);
 
   // Filter groups by search query
   const filteredGroups = groups.filter((group) =>
     group.statement.toLowerCase().includes(groupSearchQuery.toLowerCase())
   );
 
-  // Parse solutions from text
-  const parsedSolutions = solutionsText
-    .split('\n')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+  // The cards that will be created, in the order they are sent
+  const cardsToCreate = draftsToCreate(cards.drafts);
+  const parsedSolutions = cardsToCreate.map((draft) => draft.text);
 
   // Create new group
   const handleCreateGroup = async () => {
@@ -223,7 +241,7 @@ export default function CreateQuestionModal({
         return;
       }
 
-      setSolutionsText((current) => appendSolutionLines(current, solutions));
+      cards.appendLines(solutions);
     } catch (err) {
       logError(err, {
         operation: 'CreateQuestionModal.handleGenerateSolutions',
@@ -238,12 +256,42 @@ export default function CreateQuestionModal({
     }
   };
 
+  const uploadPictures = async (items: CardUploadItem[]) => {
+    await runCardUploads(
+      items,
+      async (item) => {
+        await uploadCardImage({ statementId: item.statementId, file: item.file, alt: item.alt });
+      },
+      (update) =>
+        setUploadStates((prev) => ({
+          ...prev,
+          [update.key]: { status: update.status, problem: update.problem },
+        }))
+    );
+  };
+
+  const handleRetryUploads = (keys: string[]) => {
+    const items = uploadItemsRef.current.filter((item) => keys.includes(item.key));
+    void uploadPictures(items);
+  };
+
+  const isUploading = Object.values(uploadStates).some(
+    (state) => state.status === 'queued' || state.status === 'uploading'
+  );
+
+  /** Closing is refused only while a picture is mid-upload from the overlay or ×. */
+  const handleDismiss = () => {
+    if (phase === 'uploading' && isUploading) return;
+    onClose();
+  };
+
   // Create question
   const handleCreateQuestion = async () => {
     if (!selectedGroupId || !questionText.trim()) return;
 
     setIsSubmitting(true);
     setError(null);
+    const toCreate = skipSolutions ? [] : cardsToCreate;
 
     try {
       if (!(await refreshToken())) {
@@ -262,7 +310,7 @@ export default function CreateQuestionModal({
           evaluationType,
           maxVotesPerUser: evaluationType === 'voting' ? maxVotes : undefined,
           askUserForASolutionBeforeEvaluation: requireSolutionFirst,
-          solutions: skipSolutions ? [] : parsedSolutions,
+          solutions: toCreate.map((draft) => draft.text),
         }),
       });
 
@@ -271,8 +319,27 @@ export default function CreateQuestionModal({
         throw new Error(errorData.error || 'Failed to create question');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { question: Statement; solutions?: Statement[] };
       onQuestionCreated(data.question);
+
+      // The route creates the cards in the order they were sent
+      const created = data.solutions ?? [];
+      const items: CardUploadItem[] = toCreate.flatMap((draft, index) =>
+        draft.file && created[index]
+          ? [{ key: draft.key, statementId: created[index].statementId, file: draft.file, alt: draft.alt }]
+          : []
+      );
+
+      if (items.length === 0) {
+        onClose();
+
+        return;
+      }
+
+      uploadItemsRef.current = items;
+      setUploadItems(items);
+      setPhase('uploading');
+      void uploadPictures(items);
     } catch (err) {
       logError(err, {
         operation: 'CreateQuestionModal.handleCreateQuestion',
@@ -312,7 +379,7 @@ export default function CreateQuestionModal({
   if (!isOpen) return null;
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
+    <div className={styles.modalOverlay} onClick={handleDismiss}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className={styles.modalHeader}>
@@ -320,7 +387,7 @@ export default function CreateQuestionModal({
           <button
             type="button"
             className={styles.closeButton}
-            onClick={onClose}
+            onClick={handleDismiss}
             aria-label={t('close') || 'Close'}
           >
             &times;
@@ -392,7 +459,7 @@ export default function CreateQuestionModal({
               3
             </div>
             <span className={`${styles.stepLabel} ${currentStep === 3 ? styles.active : ''}`}>
-              {t('solutions') || 'Solutions'}
+              {t('Cards')}
             </span>
           </div>
         </div>
@@ -680,114 +747,38 @@ export default function CreateQuestionModal({
             </div>
           )}
 
-          {/* Step 3: Initial Solutions */}
-          {currentStep === 3 && (
-            <div>
-              <h3 className={styles.stepTitle}>
-                {t('initialSolutions') || 'Add Initial Solutions'}
-                <span style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>
-                  {' '}
-                  ({t('optional') || 'Optional'})
-                </span>
-              </h3>
-              <p className={styles.stepDescription}>
-                {t('initialSolutionsDesc') || 'Paste solutions separated by new lines'}
-              </p>
+          {/* Step 3: Cards */}
+          {currentStep === 3 && phase === 'form' && (
+            <CardsStep
+              cards={cards}
+              skip={skipSolutions}
+              onSkipChange={setSkipSolutions}
+              onGenerate={handleGenerateSolutions}
+              isGenerating={isGenerating}
+              canGenerate={canCreate}
+              generateError={generateError}
+              onSubmitShortcut={handleCreateQuestion}
+            />
+          )}
 
-              <div className={styles.generateRow}>
-                <button
-                  type="button"
-                  className={styles.generateButton}
-                  onClick={handleGenerateSolutions}
-                  disabled={skipSolutions || isGenerating || !canCreate}
-                >
-                  {isGenerating ? (
-                    <>
-                      <span className={styles.generateSpinner} />
-                      {t('writingSolutions') || 'Writing solutions…'}
-                    </>
-                  ) : (
-                    <>
-                      <span aria-hidden="true">✨</span>
-                      {tWithParams('generateSolutionsWithAI', {
-                        count: SUGGESTED_SOLUTIONS_COUNT,
-                      })}
-                    </>
-                  )}
-                </button>
-                <span className={styles.generateHint}>
-                  {t('generateSolutionsHint') ||
-                    'The AI writes starting solutions you can edit before creating the question'}
-                </span>
-              </div>
-
-              {generateError && (
-                <div className={styles.generateError} role="alert">
-                  {generateError}
-                </div>
-              )}
-
-              <textarea
-                className={styles.solutionsTextarea}
-                placeholder={
-                  t('solutionsPlaceholder') ||
-                  'Focus on customer retention\nExpand to new markets\nImprove product quality'
-                }
-                value={solutionsText}
-                onChange={(e) => setSolutionsText(e.target.value)}
-                onKeyDown={(e) => {
-                  // Allow Enter in textarea for new lines, but prevent if Ctrl/Cmd+Enter
-                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    handleCreateQuestion();
-                  }
-                }}
-                disabled={skipSolutions}
-              />
-
-              {parsedSolutions.length > 0 && !skipSolutions && (
-                <div className={styles.solutionsPreview}>
-                  <div className={styles.previewHeader}>
-                    <span className={styles.previewTitle}>{t('preview') || 'Preview'}</span>
-                    <span className={styles.previewCount}>
-                      {parsedSolutions.length}{' '}
-                      {parsedSolutions.length === 1
-                        ? t('solution') || 'solution'
-                        : t('solutions') || 'solutions'}
-                    </span>
-                  </div>
-                  <div className={styles.previewList}>
-                    {parsedSolutions.map((solution, index) => (
-                      <div key={index} className={styles.previewItem}>
-                        <span className={styles.previewNumber}>{index + 1}</span>
-                        <span className={styles.previewText}>{solution}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {parsedSolutions.length === 0 && !skipSolutions && (
-                <div className={styles.solutionsPreview}>
-                  <div className={styles.emptyPreview}>
-                    {t('pasteYourSolutions') || 'Paste your solutions above, one per line'}
-                  </div>
-                </div>
-              )}
-
-              <label className={styles.skipOption}>
-                <input
-                  type="checkbox"
-                  checked={skipSolutions}
-                  onChange={(e) => setSkipSolutions(e.target.checked)}
-                />
-                <span>{t('skipSolutions') || "Skip - don't add solutions now"}</span>
-              </label>
-            </div>
+          {phase === 'uploading' && (
+            <CardUploadPhase
+              drafts={cardsToCreate.filter((draft) => uploadItems.some((item) => item.key === draft.key))}
+              states={uploadStates}
+              onRetry={handleRetryUploads}
+            />
           )}
         </div>
 
         {/* Footer */}
+        {phase === 'uploading' ? (
+          <div className={styles.modalFooter}>
+            <span />
+            <button type="button" className={styles.createButton} onClick={onClose}>
+              {t('Done')}
+            </button>
+          </div>
+        ) : (
         <div className={styles.modalFooter}>
           <button
             type="button"
@@ -828,6 +819,7 @@ export default function CreateQuestionModal({
             </button>
           )}
         </div>
+        )}
       </div>
     </div>
   );

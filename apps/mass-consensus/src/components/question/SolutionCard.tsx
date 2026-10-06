@@ -1,7 +1,7 @@
 'use client';
 
 import { Statement } from '@freedi/shared-types';
-import type { RatingMode } from '@freedi/shared-types';
+import type { EvaluationScaleKey } from '@freedi/shared-types';
 import EvaluationButtons from './EvaluationButtons';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import InlineMarkdown from '../shared/InlineMarkdown';
@@ -13,7 +13,7 @@ interface SolutionCardProps {
   onEvaluate: (solutionId: string, score: number) => void;
   currentScore?: number | null;
   /** Evaluation mode; undefined = agree-disagree (default). */
-  ratingMode?: RatingMode;
+  ratingMode?: EvaluationScaleKey;
 }
 
 /**

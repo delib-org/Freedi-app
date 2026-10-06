@@ -16,6 +16,7 @@ import { SURVEYS_COLLECTION, generateSurveyId } from './surveyHelpers';
 import { cascadeSynthesisToggle } from '../synthesis/cascadeSynthesisToggle';
 import { cascadeMinResponseWords } from './cascadeMinResponseWords';
 import { cascadeRatingMode } from './cascadeRatingMode';
+import { cascadeAutoAiHandling } from './cascadeAutoAiHandling';
 import { deleteSurveyAdminRecords } from './surveyAdmins';
 
 /**
@@ -107,6 +108,22 @@ export async function createSurvey(
     await cascadeSynthesisToggle(survey);
   } catch (error) {
     logger.error('[createSurvey] cascadeSynthesisToggle failed:', survey.surveyId, error);
+  }
+
+  // Same for auto-split / auto-merge, so a question opened outside the survey
+  // already knows how its admin wants submissions handled.
+  try {
+    await cascadeAutoAiHandling(survey);
+  } catch (error) {
+    logger.error('[createSurvey] cascadeAutoAiHandling failed:', survey.surveyId, error);
+  }
+
+  // And for the rating scale: one chosen in the create form has to reach the
+  // question Statement now, not on the first later edit.
+  try {
+    await cascadeRatingMode(survey);
+  } catch (error) {
+    logger.error('[createSurvey] cascadeRatingMode failed:', survey.surveyId, error);
   }
 
   return survey;
@@ -266,6 +283,15 @@ export async function updateSurvey(
       await cascadeSynthesisToggle(merged);
     } catch (error) {
       logger.error('[updateSurvey] cascadeSynthesisToggle failed:', surveyId, error);
+    }
+
+    // Mirror the effective auto-split / auto-merge settings onto each question
+    // Statement. These live at survey level as well as per question, so a
+    // change to either set of settings can change what a question resolves to.
+    try {
+      await cascadeAutoAiHandling(merged);
+    } catch (error) {
+      logger.error('[updateSurvey] cascadeAutoAiHandling failed:', surveyId, error);
     }
   }
 

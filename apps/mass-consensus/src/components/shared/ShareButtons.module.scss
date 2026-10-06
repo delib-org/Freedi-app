@@ -28,7 +28,7 @@
   padding: 0;
 
   &:hover {
-    color: var(--text-body, #3d4d71);
+    color: var(--text-body, var(--mc-text-strong, #3d4d71));
     background: var(--card-hover, rgba(0, 0, 0, 0.06));
     transform: scale(1.1);
   }

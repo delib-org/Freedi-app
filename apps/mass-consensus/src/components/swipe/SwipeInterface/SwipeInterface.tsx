@@ -15,9 +15,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Statement } from '@freedi/shared-types';
 import SwipeCard from '../SwipeCard';
-import RatingButton from '../RatingButton';
 import SurveyProgress from '../SurveyProgress';
 import CommentModal from '../CommentModal';
+import CardImageModal from '../CardImageModal';
+import { useSwipeCardImages } from '@/hooks/useSwipeCardImages';
 import SolutionPromptModal from '@/components/question/SolutionPromptModal';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { cardColorIntensityStyle } from '@/lib/utils/cardColorIntensity';
@@ -36,7 +37,7 @@ import {
 } from '@/store/slices/swipeSelectors';
 import { submitRating, fetchPreviousEvaluations } from '@/controllers/swipeController';
 import { submitComment } from '@/controllers/commentController';
-import { getEvaluationScale, getEvaluationEntry } from '@freedi/shared-types';
+import { getEvaluationEntry, resolveEvaluationScaleKey } from '@freedi/shared-types';
 import type { RatingValue } from '../RatingButton';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError } from '@/lib/utils/errorHandling';
@@ -74,13 +75,15 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   const dispatch = useDispatch();
   const { showToast } = useToast();
 
-  // Evaluation mode for this question (agree-disagree default | reactions).
-  // Cross-app: read from the shared statementSettings.ratingMode.
-  const ratingMode = question.statementSettings?.ratingMode;
+  // Evaluation scale for this question (five-step agree-disagree default |
+  // reactions | three-point). Cross-app: resolved from the shared
+  // statementSettings.ratingMode + ratingSteps.
+  const ratingMode = resolveEvaluationScaleKey(question.statementSettings);
   const currentCard = useSelector(selectCurrentCard);
   const evaluatedCount = useSelector(selectEvaluatedCardsCount);
   const totalCount = useSelector(selectTotalCardsCount);
   const showProposalPrompt = useSelector(selectShowProposalPrompt);
+  const cardImages = useSwipeCardImages(currentCard, surveyId);
 
   const [showProposalModal, setShowProposalModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
@@ -207,14 +210,16 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     loadPreviousEvaluations();
   }, [userId, question.statementId, initialSolutions]);
 
-  // Handle showing proposal prompt
+  // Handle showing proposal prompt — never on a question closed to suggestions
+  const suggestionsClosed = mergedSettings?.suggestionsClosed ?? false;
+
   useEffect(() => {
-    if (showProposalPrompt) {
+    if (showProposalPrompt && !suggestionsClosed) {
       setShowProposalModal(true);
       // Track that prompt was shown
       trackProposalPromptShown(question.statementId, userId, evaluatedCount);
     }
-  }, [showProposalPrompt, question.statementId, userId, evaluatedCount]);
+  }, [showProposalPrompt, suggestionsClosed, question.statementId, userId, evaluatedCount]);
 
   // Show solution prompt after completing minimum evaluations (if admin enabled)
   const askAfterEvaluation = mergedSettings?.askUserForASolutionAfterEvaluation ?? false;
@@ -366,41 +371,20 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
 
       {/* Current card or completion message */}
       {currentCard ? (
-        <>
-          <div className="swipe-interface__card">
-            <SwipeCard
-              statement={currentCard}
-              onSwipe={handleSwipe}
-              ratingMode={ratingMode}
-              totalCards={totalCount}
-              currentIndex={evaluatedCount}
-              programmaticThrow={programmaticThrow}
-              onCommentClick={handleOpenComment}
-            />
-          </div>
-
-          {/* Rating buttons - universal layout (negative to positive, left to right)
-              - Left side = negative (strongly disagree, red)
-              - Right side = positive (strongly agree, green)
-              Matches the zone strip colors on the card
-              isSelected highlights the user's previous vote for this card
-          */}
-          <div className="swipe-interface__rating-buttons">
-            {(() => {
-              const prevRating = currentCard ? previousEvaluations.get(currentCard.statementId) : undefined;
-
-              return getEvaluationScale(ratingMode).map((entry) => (
-                <RatingButton
-                  key={entry.value}
-                  rating={entry.value}
-                  ratingMode={ratingMode}
-                  onClick={handleSwipe}
-                  isSelected={prevRating === entry.value}
-                />
-              ));
-            })()}
-          </div>
-        </>
+        <div className="swipe-interface__card">
+          <SwipeCard
+            statement={currentCard}
+            onSwipe={handleSwipe}
+            onRate={handleSwipe}
+            selectedRating={previousEvaluations.get(currentCard.statementId)}
+            ratingMode={ratingMode}
+            totalCards={totalCount}
+            currentIndex={evaluatedCount}
+            programmaticThrow={programmaticThrow}
+            onCommentClick={handleOpenComment}
+            onImageEditClick={cardImages.onImageEditClick}
+          />
+        </div>
       ) : (
         <div className="swipe-interface__completion">
           <div className="swipe-interface__completion-emoji">🎉</div>
@@ -440,8 +424,13 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         userName={userName}
         surveyId={surveyId}
         suggestionMode={mergedSettings?.suggestionMode}
-        autoSplitMultiSuggestions={mergedSettings?.autoSplitMultiSuggestions}
-        autoMergeSimilar={mergedSettings?.autoMergeSimilar}
+        autoSplitMultiSuggestions={
+          mergedSettings?.autoSplitMultiSuggestions ??
+          question.statementSettings?.autoSplitMultiSuggestions
+        }
+        autoMergeSimilar={
+          mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
+        }
       />
 
       {/* Comment Modal */}
@@ -452,6 +441,16 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
           suggestionText={currentCard.statement}
           questionText={question.statement}
           onSubmit={handleCommentSubmit}
+        />
+      )}
+
+      {currentCard && cardImages.onImageEditClick && (
+        <CardImageModal
+          isOpen={cardImages.isImageModalOpen}
+          onClose={cardImages.closeImageModal}
+          statement={currentCard}
+          surveyId={surveyId}
+          onSaved={cardImages.onImageSaved}
         />
       )}
 
@@ -472,8 +471,13 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         userName={userName}
         surveyId={surveyId}
         suggestionMode={mergedSettings?.suggestionMode}
-        autoSplitMultiSuggestions={mergedSettings?.autoSplitMultiSuggestions}
-        autoMergeSimilar={mergedSettings?.autoMergeSimilar}
+        autoSplitMultiSuggestions={
+          mergedSettings?.autoSplitMultiSuggestions ??
+          question.statementSettings?.autoSplitMultiSuggestions
+        }
+        autoMergeSimilar={
+          mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
+        }
         requiresSolution={requiresSolution}
         hasCheckedUserSolutions={hasCheckedUserSolutions}
       />

@@ -1,17 +1,27 @@
-import { Collections, type Statement, type RatingMode } from '@freedi/shared-types';
+import {
+	Collections,
+	FIVE_POINT_STEPS,
+	THREE_POINT_STEPS,
+	type Statement,
+	type RatingMode,
+} from '@freedi/shared-types';
 import { getFirestoreAdmin } from '../admin';
 import type { Survey } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
 
 /**
- * Cascade the per-question `ratingMode` override down to each question
- * Statement's `statementSettings.ratingMode` field.
+ * Cascade the per-question rating-scale override (`ratingMode` + `ratingSteps`)
+ * down to each question Statement's `statementSettings`.
  *
  * `statementSettings.ratingMode` is the cross-app source of truth read by every
  * evaluation surface (MC swipe/classic, main-app faces, etc.) via
  * `getEvaluationScale(ratingMode)`. MC admins edit it through the survey
  * per-question editor, so we mirror the value onto the Statement doc on every
  * survey save (same pattern as cascadeMinResponseWords).
+ *
+ * `ratingSteps` rides along with it: 3 = the -1 · 0 · +1 scale, 5 = the classic
+ * five steps. Both are always written together, so picking a different scale
+ * in MC can never leave a stale step count behind.
  *
  * Coexistence: like minResponseWords, other surfaces (e.g. the main-app map
  * control panel) may write ratingMode directly onto the Statement. To avoid a
@@ -34,6 +44,14 @@ function readOverride(settings: unknown): RatingMode | undefined {
 /** Current effective mode stored on the Statement ('agree-disagree' when none). */
 function readCurrent(settings: unknown): RatingMode {
 	return readOverride(settings) ?? 'agree-disagree';
+}
+
+/** Steps on the agree-disagree scale: 3 only when explicitly set, otherwise the classic 5. */
+function readSteps(settings: unknown): number {
+	if (!settings || typeof settings !== 'object') return FIVE_POINT_STEPS;
+	const raw = (settings as { ratingSteps?: unknown }).ratingSteps;
+
+	return raw === THREE_POINT_STEPS ? THREE_POINT_STEPS : FIVE_POINT_STEPS;
 }
 
 export interface RatingModeCascadeResult {
@@ -62,6 +80,7 @@ export async function cascadeRatingMode(
 	const writesNeeded: {
 		ref: FirebaseFirestore.DocumentReference;
 		effective: RatingMode;
+		steps: number;
 	}[] = [];
 	let skipped = 0;
 
@@ -76,19 +95,21 @@ export async function cascadeRatingMode(
 
 		// Only cascade when the MC admin explicitly set an override; otherwise
 		// leave whatever another surface wrote on the Statement intact.
-		const override = readOverride(survey.questionSettings?.[questionId]);
+		const questionSetting = survey.questionSettings?.[questionId];
+		const override = readOverride(questionSetting);
 		if (override === undefined) {
 			skipped++;
 			continue;
 		}
 
+		const steps = readSteps(questionSetting);
 		const current = readCurrent(statement.statementSettings);
-		if (current === override) {
+		if (current === override && readSteps(statement.statementSettings) === steps) {
 			skipped++;
 			continue;
 		}
 
-		writesNeeded.push({ ref: docRefs[i], effective: override });
+		writesNeeded.push({ ref: docRefs[i], effective: override, steps });
 	}
 
 	if (writesNeeded.length === 0) {
@@ -99,8 +120,11 @@ export async function cascadeRatingMode(
 	for (let i = 0; i < writesNeeded.length; i += FIRESTORE_BATCH_LIMIT) {
 		const chunk = writesNeeded.slice(i, i + FIRESTORE_BATCH_LIMIT);
 		const batch = db.batch();
-		for (const { ref, effective } of chunk) {
-			batch.update(ref, { 'statementSettings.ratingMode': effective });
+		for (const { ref, effective, steps } of chunk) {
+			batch.update(ref, {
+				'statementSettings.ratingMode': effective,
+				'statementSettings.ratingSteps': steps,
+			});
 		}
 		await batch.commit();
 		updated += chunk.length;
@@ -115,4 +139,4 @@ export async function cascadeRatingMode(
 	return { surveyId, totalQuestions: questionIds.length, updated, skipped };
 }
 
-export const __INTERNAL = { readOverride, readCurrent };
+export const __INTERNAL = { readOverride, readCurrent, readSteps };

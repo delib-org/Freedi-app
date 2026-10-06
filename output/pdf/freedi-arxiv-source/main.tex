@@ -1,0 +1,372 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=23mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,bm,booktabs,graphicx,enumitem,microtype,caption,xcolor}
+\usepackage[authoryear,round]{natbib}
+\usepackage{adjustbox}
+\usepackage{hyperref}
+\usepackage{xurl}
+\hypersetup{colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black,
+ pdftitle={Geometry Proposes, Judgement Disposes: Systems and Algorithmic Engineering for Online Aggregation in Deliberative AI},pdfauthor={Tal Yaron; Fany Yuval},pdfsubject={Online proposal aggregation for deliberative AI},pdfkeywords={deliberation, computational social choice, large language models, proposal aggregation}}
+\setlist{itemsep=3pt,topsep=5pt,leftmargin=1.4em}
+\captionsetup{font=small,labelfont=bf,skip=6pt}
+\setlength{\emergencystretch}{2em}
+\title{\bfseries Geometry Proposes, Judgement Disposes:\\Systems and Algorithmic Engineering for Online Aggregation in Deliberative AI}
+\author{Tal Yaron\\Freedi\\\texttt{tal.yaron@wizcol.com}
+\and Fany Yuval\\Ben-Gurion University of the Negev\\\texttt{fanyuval@bgu.ac.il}}
+\date{September 10, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Online deliberation platforms must decide whether each incoming free-form statement repeats an existing proposal, relates to it, or should remain independent. We describe Freedi's streaming aggregation architecture, which separates embedding-based candidate retrieval from discrete language-model adjudication. Only an affirmative equivalence decision authorizes synthesis; ambiguous or failed decisions preserve separate proposals. An optional Claim Registry classifies statements against an evolving codebook anchored by verbatim exemplars. On 875 hard counterfactual triplets, focused raw-anchor classification achieves 95.0\%--96.5\% attach-and-reject accuracy. On a controlled 100-statement English corpus, the evaluated build recovers all 50 ground-truth paraphrase pairs in each of three arrival orders, while topical grouping remains order-sensitive. These results do not establish general order independence: an automated audit of a separate replay of 114 authentic Hebrew statements measures member-level merge precision of 74.4\% and text fidelity of 0.953 after targeted repairs. Bare-LLM baselines also recover the controlled corpus exactly, so the architectural motivation concerns streaming state management, retrieval cost, and failure handling rather than universal per-decision superiority. We analyze the limits of geometric gates, canonicalization, and repeated maintenance, and propose combining learned preference geometry with discrete adjudication as future work.
+\end{abstract}
+
+\section{Introduction}
+
+Democratic institutions, municipal assemblies, and digital citizen platforms (such as Polis and Remesh) increasingly invite participants to submit free-form policy proposals and evaluate statements authored by peers. While expressive natural language enables nuanced public input, it can produce corpus fragmentation: when dozens of participants submit the same policy intervention in distinct wordings, an unaggregated corpus fragments collective support. Fifty citizens proposing the exact same municipal reform appear to a consensus engine as fifty disparate minority factions.
+
+To overcome fragmentation without compromising democratic legitimacy, an online aggregation engine must fulfill three continuous operational mandates:
+
+\begin{enumerate}
+\item \textbf{Synthesis:} Detecting when distinct submissions express propositionally equivalent policy proposals and merging them into a unified statement that pools peer evaluations.
+\item \textbf{Theming:} Grouping distinct proposals under topical headings to structure public navigation, without asserting that constituent proposals agree on specific interventions.
+\item \textbf{Standing Ideas:} Preserving unique submissions as sovereign, visible public proposals immediately from the moment of their creation.
+\end{enumerate}
+
+These operations are governed by three systems requirements: (1) \textbf{Streaming Execution:} Proposals arrive asynchronously and must be placed incrementally without waiting for batch re-clustering; (2) \textbf{Order Independence:} Decision-critical synthesis should not depend arbitrarily on arrival sequence; and (3) \textbf{Multilingual Robustness:} The pipeline must support morphologically rich languages (such as Hebrew alongside English).
+
+Crucially, two fundamental distinctions must be maintained across all system components:
+\begin{equation}
+\text{Same Topic} \neq \text{Same Proposal} \qquad \text{and} \qquad \text{Same Wording} \neq \text{Same Stance}
+\end{equation}
+
+The first distinction separates thematic proximity from propositional equivalence: ``install speed bumps near schools'' and ``lower speed limits near schools'' share a topic (traffic safety) but represent distinct municipal interventions involving different budgets and enforcement agencies. Merging them misrepresents both authors and distorts democratic consent. The second distinction separates surface lexical overlap from normative alignment: ``ban private vehicular traffic downtown'' and ``do not ban private vehicular traffic downtown'' share nearly identical vocabulary and syntax, yet their policy stances are diametrically opposed.
+
+In this work, we demonstrate that off-the-shelf sentence embeddings collapse on stance-decoupled proposals, while naive LLM architectures incur severe scaling and list-length bottlenecks. We describe an end-to-end deliberative aggregation architecture governed by the doctrine: \emph{geometry proposes, judgement disposes}.
+
+\section{Related Work}
+
+\paragraph{Deliberation Systems and Opinion Mapping.} Platforms such as Polis \citep{small2021polis} map opinion spaces by applying PCA to sparse vote matrices. Generative social choice \citep{fish2026generative,boehmer2025generative} produces representative statement slates via LLM summarization, while computational social choice formalizes proportionally fair clustering \citep{chen2019proportionally,kellerhals2024proportional} and facility location in metric spaces \citep{feldman2016voting}. Complementary work investigates consensus learning theory \citep{blair2026consensus}, verbal reward design \citep{blair2025reflective}, and deliberative alignment \citep{tessler2024ai}.
+
+\paragraph{Sentence Encoders and Preference Geometry.} Standard sentence encoders \citep{reimers2019sentence,muennighoff2023mteb} optimize semantic textual similarity, web retrieval, or natural language inference. Contrastive learning methods like SimCSE \citep{gao2021simcse} pull entailments together and push contradictions apart. Following the representation invariance formulation of \citet{achille2018emergence}, \citet{blair2026embeddings} formalize the preference-semantics mismatch as an invariance problem: an embedding $\psi(x) \in \mathbb{R}^d$ decomposes into an in-subspace preference component $\psi_S(x) \in S$ (dimension $k \ll d$) and an orthogonal semantic nuisance $\psi_\perp(x) \in S^\perp$ (capturing topic, style, and vocabulary):
+\begin{equation}
+\psi(x) = \psi_S(x) + \psi_\perp(x), \quad \text{with } \langle \psi(a), \psi(x) \rangle = \langle \psi_S(a), \psi_S(x) \rangle + \langle \psi_\perp(a), \psi_\perp(x) \rangle
+\end{equation}
+Standard cosine weights both components equally. While stance and vocabulary correlate on natural corpora, when stance and wording decouple on hard counterfactual triplets, the nuisance margin $\Delta_T$ overwhelms the preference margin $\Delta_S$. \citet{blair2026embeddings} address this by repairing the geometry via Decorrelated Preference Tuning (DPT, achieving 80.0\% accuracy) or per-topic vote projections (81.1\%). In contrast, our approach demotes the geometry, treating embeddings purely as approximate-nearest-neighbor candidate generators for discrete, fail-closed adjudication.
+
+\paragraph{LLMs as Evaluators, Judges, and Clusterers.} The use of LLMs as zero-shot evaluators and judges has expanded across NLP \citep{zheng2023judging}. While instruction-tuned models exhibit strong pairwise discriminative capabilities, prior work highlights vulnerabilities including prompt order sensitivity, position bias, and extreme prompt variability \citep{wang2023large,sclar2024quantifying,liu2024lost}. In parallel, LLM-guided clustering has been explored for discovery and taxonomy construction \citep{zhang2023clusterllm,viswanathan2024large}. Our work connects to retrieve-then-rerank pipelines \citep{nogueira2019passage,lewis2020retrieval}, but differs in two key respects: our reranker returns a typed relational discrete verdict rather than a continuous scalar score, and classifies against an evolving, dynamically consolidated codebook rather than a static document corpus.
+
+\section{Why Neither Metric Embeddings Nor Pure LLMs Suffice}
+
+\subsection{The Stance-Blindness of Metric Embeddings}
+
+Direct cosine thresholding can fail to distinguish stance-reversed proposals in this evaluation. On the 875 hard counterfactual triplets of \citet{blair2026embeddings}, 100.0\% of stance-flipped distractors cleared the 0.60 topical clustering threshold and 99.1\% cleared the 0.85 merge threshold. The raw-cosine ranking score was 0.5\%; the context-prefixed threshold rule requiring match cosine $\geq0.60$ and distractor cosine $<0.60$ scored 0/875. These are different metrics. At these thresholds, the false-positive rate is too high to justify autonomous merging.
+
+However, nearest-neighbor vector search over the same embedding space recovered the true paraphrase partner among the top candidates for 100/100 English statements under \texttt{text-embedding-3-small}. In Hebrew, separability under 3-small is inadequate (recovering the true partner as nearest neighbour in only 56/100 statements); upgrading to \texttt{text-embedding-3-large} (truncated natively to 1536 dimensions) lifts Hebrew top-1 recovery to 88--89/100. Thus, vector geometry retains strong utility for candidate retrieval, but cannot serve as a decision rule.
+
+\subsection{Systems Bottlenecks and List-Scale Degradation of Unassisted LLMs}
+\label{sec:llmfail}
+
+Conversely, deploying an unassisted LLM to cluster streaming proposals directly without geometric filtering encounters severe practical limits:
+
+\begin{enumerate}
+\item \textbf{Loss of Reference Precision at List Scale:} When prompted to classify an incoming proposal against a growing, unpruned list of claims, the judge's ability to identify the \emph{specific} matching claim degrades sharply. As established in Section~\ref{sec:triplets}, the same judge that scores 95.0\% in focused candidate comparison drops to 36.0\%--55.8\% under strict own-claim scoring against codebooks of $\approx 94$ claims. The degradation is one of reference rather than of stance discrimination: match-to-any-equivalent-claim remains at 74.4\%--92.9\%, and the distractor false-attach rate does not rise with list length (10.3\% at 94 claims versus 12.8\% at a single claim). Long candidate lists nonetheless carry documented costs in position bias and context-length degradation \citep{liu2024lost}, and prompt size grows with the codebook, which together motivate geometric pre-filtering and periodic codebook consolidation.
+
+\item \textbf{Linear Prompt Growth and Quadratic Token Cost:} In an offline batch baseline where an LLM clustered all 100 benchmark statements simultaneously in one prompt, the model produced the identical ground-truth synthesis partition across three arrival orders (150/150 pairs recovered, F1 $=1.000$) and created cleaner topical headings. Furthermore, an incremental bare-LLM baseline (placing statements incrementally without vector gating) achieved a composite score of 0.937--0.984 (synthesis F1 1.000, topic F1 0.844--0.960 across 101 calls per run at $\approx$\,\$0.03). However, in streaming deployments, the prompt size of an unassisted LLM grows linearly with the number of active proposals, resulting in cumulative $O(N^2)$ token ingestion. At larger corpus sizes, this design increases prompt cost and may exceed context budgets; the crossover depends on statement length, model, and batching strategy.
+
+\item \textbf{Scope Inflation and Lack of Fail-Closed Custody:} Generative models drift toward helpful generalization (e.g., drifting ``subsidized transit for seniors'' into ``better transit for all''), altering civic commitments. Furthermore, unassisted LLMs lack fail-closed state custody during API timeouts or malformed JSON responses.
+\end{enumerate}
+
+\section{Pipeline Architecture: Geometry Proposes, Judgement Disposes}
+
+The evaluated architecture uses a priority cascade for incremental placement. The following describes the research snapshot; optional registry behavior and threshold settings are configuration-dependent.
+
+\subsection{Representation Layer: Context Contracts and Brief Distillation}
+
+To prevent boilerplate framing from compressing vectors into an artificial $\approx 0.75$ floor, statements $\geq 40$ characters are distilled by an ultra-fast worker LLM into an objective 5--15 word policy brief. Embeddings are generated from the brief under a fixed context contract:
+\begin{quote}\small\ttfamily
+Question: <deliberation question>\\
+Answer: <distilled brief>
+\end{quote}
+The original verbatim statement is preserved untouched for public display and discrete adjudication.
+
+\subsection{Calibrated Bands and Multi-Stage Member Evidence}
+
+Candidate discovery utilizes approximate-nearest-neighbor (ANN) search (top $k=15$) over a partitioned vector index. Cosine similarity is partitioned into calibrated bands: \texttt{attachThreshold} (0.85 for 3-small, 0.86 for 3-large), \texttt{synthLowerBound} (0.78 / 0.80), \texttt{clusterThreshold} (0.60 / 0.75), and \texttt{reviewLowerBound} (0.45 for both 3-small and 3-large, serving as the ANN search floor). Crossing a band makes an action eligible; it never triggers the action.
+
+Evidence for existing syntheses is evaluated via multi-stage member expansion: the arithmetic mean of the top-2 constituent member similarities:
+\begin{equation}
+\mathrm{Score}_{\mathrm{cluster}}(s) = \frac{\cos(\psi(s), \psi(m^{(1)})) + \cos(\psi(s), \psi(m^{(2)}))}{2}
+\end{equation}
+Using two member similarities reduces reliance on a single outlier; the members are not assumed statistically independent and this gate does not establish semantic equivalence.
+
+To reduce snowball collapse, receiving clusters must satisfy conjoint cohesion gates before reaching an LLM judge: (1) \textbf{Centroid Proximity:} Cosine similarity between candidate and cluster centroid must exceed $\tau_{\mathrm{cohesion}} = 0.815$ (empirically calibrated: median genuine attach is 0.898 vs.\ 0.723 for same-topic non-matches); and (2) \textbf{Quorum:} At least 50\% of cluster members must individually exhibit cosine $\geq 0.78$ to the candidate.
+
+\subsection{The Seven-Pass Placement Cascade}
+
+Arrivals traverse a strict priority hierarchy:
+
+\begin{itemize}
+\item \textbf{Pass 1 (Synthesis Attach --- P1):} Merges into an existing synthesis if top-2 evidence $\geq 0.85$, cohesion passes, and discrete LLM equivalence verdict is \texttt{same}.
+\item \textbf{Pass 2 (Synthesis Spawn --- P2):} If P1 fails, tests whether the statement can be paired with an unattached statement to spawn a new synthesis (pair cosine $\geq 0.78$, LLM coherence verified).
+\item \textbf{Pass 3 (Judged Theme Filing --- P3):} If no synthesis is warranted, an LLM files the statement into an existing theme judged against member contents (doubt $\rightarrow$ \texttt{NONE}).
+\item \textbf{Pass 4 (Claim Registry --- P4):} Classifies the proposal against an evolving canonical codebook.
+\item \textbf{Pass 5 (Raw Theme Spawn --- P5):} Disabled by default; raw-pair theme creation caused black-hole collapses in early testing. Instead, themes are born from syntheses: whenever a newly spawned synthesis fits no existing theme, \texttt{createThemeForSynth} creates a dedicated theme for it.
+\item \textbf{Pass 6 (Review Queue --- P6):} Borderline candidates ($0.45 \leq \cos < 0.60$) logged for human review.
+\item \textbf{Pass 7 (Standing Singleton --- P7):} Independent standing idea visible immediately.
+\end{itemize}
+
+\textbf{The Priority Invariant:} Synthesis (P1/P2) strictly precedes Theming (P3). Theming membership is non-terminal, while synthesis membership is terminal and enforced by authoritative reverse-index lookups.
+
+\subsection{Discrete Equivalence Adjudication under Asymmetric Doubt}
+
+The P1 judge classifies raw text pairs into $V \in \{\texttt{same}, \texttt{related}, \texttt{different}, \texttt{opposite}\}$ under the operational rubric:
+
+\begin{quote}
+\small
+``\texttt{same}: A and B are paraphrases of essentially the same proposal. \texttt{related}: same topic but different actions, stances, or magnitudes. \texttt{different}: about different things; wording similar by coincidence. \texttt{opposite}: contradictory actions on the same subject (`ban X' vs `permit X'). Use `same' ONLY when the two proposals are essentially interchangeable. When in doubt between `same' and `related', prefer `related'.''
+\end{quote}
+
+Only \texttt{same} authorizes a merge. Under asymmetric doubt, prompt rubrics instruct the model to favor the lower-cost outcome (delaying a merge to sweeps rather than executing a false merge).
+
+Verdicts are stored in a persistent content-addressable cache keyed by an order-independent hash of the normalized statement pair, versioned by model and prompt version. Fallback verdicts resulting from API timeouts or errors are never cached. Fault tolerance separates a semantic refusal from an operational failure:
+\begin{align}
+\text{Placement error} &\longrightarrow \text{no merge; record failure and retry},\\
+\text{Custody error} &\longrightarrow \text{retain existing membership}.
+\end{align}
+A compatibility fallback may return \texttt{different}, but the accompanying failure flag must remain visible to the caller. An outage is not evidence that two proposals differ.
+
+\subsection{Retrieval Cost and Scheduled Maintenance}
+Exhaustive pairwise adjudication requires $\sum_{i=1}^{N}(i-1)=N(N-1)/2$ comparisons. Repeated whole-corpus prompting processes $O(N^2L)$ input tokens for mean statement length $L$, under the assumption that the growing corpus is included on every arrival. In contrast, a fixed candidate budget bounds the number of candidates presented to a local judge. It does not make vector retrieval itself $O(1)$: search cost depends on index implementation, dimension, corpus size, and recall settings. Member expansion and registry fallbacks also add work. We make no constant-time or logarithmic worst-case guarantee for the deployed service.
+
+Scheduled sweeps revisit deferred placements and propose cross-synthesis merges. The maintenance design uses member evidence and an additional check on distant cross-cluster members to reduce transitive chaining. Cached, versioned verdicts and fingerprints of previously processed state reduce repeated model calls; call budgets must count refusals as well as successful merges.
+
+For a fixed corpus, a merge-only phase terminates after at most $K-1$ accepted merges starting from $K$ nonempty clusters, since each merge reduces their number. This counting argument establishes termination only. A unique, correct partition additionally requires complete candidate coverage, a stable equivalence relation, and consistent decisions. These conditions are not guaranteed by stochastic LLM judges, and rewording, revalidation, and new arrivals invalidate the merge-only assumption. The reported arrival-order result is therefore empirical.
+
+\subsection{The Claim Registry: Dynamic Codebook Construction}
+\label{sec:registry}
+
+The Claim Registry addresses a structural blind spot of the placement cascade: the cascade can only evaluate candidate pairs that cosine surfaced, leaving a potential recall gap for distant paraphrases at a fixed retrieval floor. The registry can bypass that hard gate by reframing deduplication into streaming classification over an evolving codebook of canonical claims. Each claim $C_k = \langle T_{\mathrm{canonical}}, E_{\mathrm{public}}, X_{\mathrm{anchor}} \rangle$ contains a 5--15 word canonical wording, a public explanation, and the unedited verbatim anchor exemplar. The registry is opt-in per question and ships default-off.
+
+Within the registry, cosine survives in its demoted role as a \emph{ranker}: it orders the codebook most-plausible-first so that likely matches appear early in the prompt, mitigating the position bias documented by \citet{liu2024lost}, and it filters nothing.
+
+The registry maintains stability via four protocols:
+
+\begin{enumerate}
+\item \textbf{Fixed-Point Consolidation:} Every 15 placements, an LLM proposes merges of redundant claims under the rubric: ``same-topic-different-action is NOT a merge\ldots{} no merges is a exactly good answer'' (claims graduate to \texttt{confirmed} only after $\geq 3$ members and surviving a pass untouched). Accepted consolidation merges are a diagnostic of possible missed attachments, not an unbiased recall estimate: consolidation itself can make mistakes.
+\item \textbf{Broaden-Ratchet:} Rewordings are classified into $\{\texttt{reword}, \texttt{broaden}, \texttt{narrow}, \texttt{different}\}$. Because individually harmless broadenings compose, each claim retains its founding anchor $X_{\mathrm{anchor}}$, and after two consecutive broadenings the new wording is tested directly against that anchor.
+\item \textbf{Hierarchical Routing with Ungated Fallback:} Above 30 claims, classification routes through at most two topical claim groups, but any \texttt{NONE} verdict immediately triggers an ungated flat fallback. In corpus replays, hard partitioning without fallback caused 59\% of all recall errors, whereas the ungated fallback lifted corpus-replay placement accuracy from 61.3\% to 75.3\% ($p = 7.5 \times 10^{-4}$), as reported in the registry evaluation materials.
+\item \textbf{Typed Opposition:} When a proposal negates a claim, the classifier emits \texttt{opposes}, creating a typed symbolic counter-edge $\langle s_i, \textsc{opposes}, C_k \rangle$.
+\end{enumerate}
+
+\subsection{Synthesis Generation and Safety Invariants}
+
+When statements merge, the synthesis writer is instructed to satisfy the following constraints: (1) \textbf{Dual Refusal:} The writer refuses synthesis on directional conflict or distinct actions within the same theme (``if a supporter could reasonably back one while opposing the other's intervention, the inputs are distinct ideas; when in doubt, refuse''); (2) \textbf{The Scope Rule:} An explicit never-widen-scope rule mandates that synthesized texts cannot generalize specific populations (in offline A/B testing over the 50 ground-truth pairs, this rule eliminated scope inflation from 4/50 to 0/50, while live benchmark audits confirmed 98/98 member intents preserved); (3) \textbf{The Formulation Clause:} ``formulation differences are not grounds for refusal; refuse only when the difference IS the intervention'' (elevating Hebrew twin recovery from 45/50 to 49/50 offline); (4) \textbf{Evaluator-Share Weighting:} Input framing is weighted by accumulated peer evaluations; and (5) \textbf{Language Checks:} Script checks can detect a Hebrew/Latin mismatch but cannot distinguish English from German or Spanish, which share a script. The research log reports wrong-language theme titles in early outputs; script checks alone do not establish correct language or faithful meaning. These output checks supplement rather than replace semantic review.
+
+\section{Empirical Evaluation}
+
+\subsection{Hard-Triplet Benchmark (Shared Instrument with Blair et al., 2026)}
+\label{sec:triplets}
+
+We evaluate on the 875 hard counterfactual triplets released by \citet{blair2026embeddings} across 11 deliberation datasets from Polis, Remesh, and Generative Social Choice. Scoring is end-to-end: a triplet is correct if and only if the preference match attaches to the anchor claim and the distractor is rejected.
+
+\begin{table}[t]
+\centering
+\caption{Reported scores on the 875 hard counterfactual triplets \citep{blair2026embeddings}.}
+\label{tab:triplets}
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{@{}llr@{}}
+\toprule
+Model / Configuration & Decision Mechanism & Score (\%) \\
+\midrule
+Raw 3-small (Freedi baseline) & Metric Cosine & 0.5\% \\
+Context-prefixed 3-small & Metric Cosine & 1.8\% \\
+Base Sentence-T5-XL \citep{blair2026embeddings} & Metric Cosine & 48.3\% \\
+e5-large-v2 / BGE-large-en-v1.5 & Metric Cosine & 26.7\% / 6.3\% \\
+DPT-Tuned Sentence-T5-XL \citep{blair2026embeddings} & Repaired Metric & 80.0\% \\
+Rank-20 Per-Topic Projection \citep{blair2026embeddings} & Vote-Trained Metric & 81.1\% \\
+\midrule
+Codebook ($\approx94$): strict own-claim & LLM decision & 36.0\%--55.8\% \\
+Codebook ($\approx94$): any equivalent claim & LLM decision & 74.4\%--92.9\% \\
+\midrule
+Registry: Generated Canonicals Alone & LLM decision & 70.1\% \\
+Registry: Enriched + Stance Caution & LLM decision & 88.6\% \\
+Raw anchors: \texttt{gpt-4o-mini} & LLM decision & 95.0\% \\
+Raw anchors: \texttt{gpt-4o} & LLM decision & 96.5\% \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+Table~\ref{tab:triplets} juxtaposes reported ranking accuracies for embedding models with Freedi's attach-and-reject decision score on the same triplet collection. These are related but distinct decision rules; the table is not a controlled comparison at equal inference cost or a measurement of natural-data merge precision. The local paired comparison between the raw-anchor registry and Freedi's raw-cosine baseline reports 827 discordant wins and no losses (two-sided exact McNemar $p\approx 10^{-249}$). This test does not compare Freedi with DPT.
+
+Four caveats must be emphasized:
+
+\begin{enumerate}
+\item \textbf{Canonicalization Compression Loss:} Moving from raw-anchor representations (95.0\%) to bare generated canonicals (70.1\%) incurs a 24.9 percentage-point drop. Enriched claims (adding public explanations and verbatim exemplars) recover accuracy to 88.6\%, consistent with loss of stance information during canonicalization; the ablation does not isolate every source of error.
+
+\item \textbf{Embedding-Gate Equivalence:} A standard RAG baseline (embedding retrieval followed by LLM judge) also achieves 95.0\% on these English triplets. Thus, the registry adds no accuracy on this particular instrument; its proposed benefits concern codebook management and recall outside a filtered candidate set.
+
+\item \textbf{What the Codebook-Scale Numbers Do and Do Not Show:} Evaluating the same judge against an unpruned list of $\approx 94$ claims drops strict own-claim accuracy to 36.0\%--55.8\%, but the decomposition matters. The benchmark codebook is deliberately unconsolidated and assigns every anchor its own claim, so it contains many word-for-word equivalent entries; roughly a third of matches attach to one of those legitimate duplicates rather than to the anchor's own claim. Match-to-any-equivalent-claim accordingly remains at 74.4\%--92.9\%, and distractor false-attach does not rise with list length. The operational conclusion is therefore narrower than the headline figure suggests: list scale degrades \emph{reference precision} and inflates prompt cost, which retrieval gating and periodic consolidation address, but it does not collapse the judge's stance discrimination.
+
+\item \textbf{Distractor Construction Limits:} The evaluated distractors were constructed specifically to defeat sentence embeddings (maximizing lexical overlap while flipping stance). Adversarial distractors crafted specifically against language models (incorporating subtle hedges, buried negations, or presupposition shifts) would present a harder challenge; these scores characterize the tested distribution, not a formal bound on performance.
+\end{enumerate}
+
+\subsection{Model Upgrades and Pilot-150 Regression Analysis}
+
+Replicating the benchmark on a fixed, dataset-stratified 150-triplet subsample with the upgraded reasoning model (\texttt{gpt-5.6-luna}) revealed key operational insights:
+
+\begin{itemize}
+\item \textbf{Raw-Anchor Stability:} No statistically detectable change in raw-anchor accuracy was found on this pilot (98.7\% under \texttt{gpt-4o-mini} vs.\ 96.7\% under \texttt{gpt-5.6-luna}, $p = 0.45$).
+\item \textbf{The Enriched-Condition Regression:} The enriched condition regressed significantly from 92.0\% to 79.7\% ($p = 2.8 \times 10^{-4}$), reaching a similar numerical score to the published DPT result, although the pilot and full-set scores are not directly comparable. Inspection revealed that the upgraded model's generated canonicals dropped subtle stance qualifiers (e.g., an illegal-with-life-exception anchor canonicalized as ``abortion is permitted when pregnancy poses a genuine risk to the mother's life''), after which the classifier correctly matched the stance-flipped distractor to the stance-lossy claim. A prompt fix demanding explicit stance conditions restored accuracy partially to 82.7\%, confirming that compressive canonicalization is an inherent source of loss.
+\item \textbf{Reasoning Token Headroom:} The legacy 300-token completion budget caused reasoning models to exhaust tokens internally before emitting JSON, triggering fail-closed aborts on 2 of 150 triplets. Reserving a 2,000-token reasoning headroom resolved all deterministic aborts, lifting raw-anchor accuracy to 98.0\%.
+\end{itemize}
+
+
+\begin{table}[htbp]
+\centering\small
+\caption{Pilot replication reported in the source report. Intervals are reported 95\% Wilson intervals; the upgraded enriched condition excludes two failed records ($n=148$), whereas the other displayed conditions use $n=150$. Pilot scores are not directly comparable to the full 875-triplet table.}
+\label{tab:pilot}
+\begin{tabular}{@{}llrr@{}}
+\toprule
+Representation & Model / condition & Accuracy [95\% CI] & False attach \\
+\midrule
+Raw anchor & Archived \texttt{gpt-4o-mini} & 98.7 [95.3, 99.6] & 0.7\% \\
+Enriched + caution & Archived \texttt{gpt-4o-mini} & 92.0 [86.5, 95.4] & 2.7\% \\
+Raw anchor & Upgraded worker & 96.7 [92.4, 98.6] & 1.3\% \\
+Enriched & Upgraded worker & 79.7 [72.5, 85.4] & 10.1\% \\
+Raw anchor & Increased token budget & 98.0 [94.3, 99.3] & 0.7\% \\
+Enriched & Revised stance prompt & 82.7 [75.8, 87.9] & 9.3\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Live Streaming Benchmark: Layer-Specific Variation}
+
+We evaluated the full streaming pipeline on an adversarial corpus of 100 statements (10 topics $\times$ 5 idea-groups $\times$ 2 near-paraphrases; 50 ground-truth syntheses) streamed in random order across three seeds (42, 7, 1234):
+
+\begin{itemize}
+\item \textbf{Synthesis Layer:} Across all three arrival orders, the synthesis layer achieved exact recovery for the three tested English arrival orders: 150/150 ground-truth pairs merged with zero false merges across three runs of 100 input statements (Precision $=1.000$, Recall $=1.000$, Adjusted Rand Index $=1.000$).
+\item \textbf{Theming Layer:} In contrast, theming remained order-sensitive (topic F1 0.711--0.775, generating 10--17 headings). The final composite accuracy reached 0.884--0.910 in English and $\approx 0.930$ in Hebrew (synthesis F1 0.947, 45/50 pairs).
+\item \textbf{Cross-Generator Control:} To verify that benchmark performance is not an artifact of prompt-corpus co-design, an independent vendor's model authored a second adversarial corpus with compressed geometry, where the best cosine-only F1 was capped at 0.871. Our judged pipeline achieved a synthesis F1 of 0.980 with zero false merges, exceeding the metric ceiling by 10.9 percentage points.
+\end{itemize}
+
+
+\begin{table}[htbp]
+\centering\small
+\caption{Streaming run results from the research log. The first three rows use the same English build; the Hebrew row is a separate configuration. Each run contains 100 input statements and 50 ground-truth pairs.}
+\label{tab:stream}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Language / seed & Pair recovery & Synth. F1 & Topic F1 & Composite & Themes \\
+\midrule
+English / 42 & 50/50 & 1.000 & 0.775 & 0.910 & 11 \\
+English / 7 & 50/50 & 1.000 & 0.763 & 0.905 & 10 \\
+English / 1234 & 50/50 & 1.000 & 0.711 & 0.884 & 17 \\
+Hebrew / 42 & 45/50 & 0.947 & 0.910 & 0.932 & 10 \\
+\bottomrule
+\end{tabular}
+\end{table}
+The composite score is $0.6F1_{\mathrm{synthesis}}+0.4F1_{\mathrm{topic}}$, evaluated over the $\binom{100}{2}=4{,}950$ unordered statement pairs. It is a weighted F1 score, not the proportion of correctly placed statements. The three English runs account for 300 input statements and 150 ground-truth pair instances; they are repeated permutations of one corpus, not independent datasets.
+
+\subsection{Authentic Civic Deliberation: A Case Study on Real Deliberation Data}
+\label{sec:realdata}
+
+To evaluate behavior on real, uncurated deliberation data, we replayed an authentic question from a deliberation convened by a sustainability research institute, involving 114 Hebrew statements from environmental researchers on research translation. Statements were ordered chronologically and replayed through a local production emulator under \texttt{text-embedding-3-large}. 
+The Claim Registry (\S\ref{sec:registry}) was \emph{disabled} in both replays, as it is by default; the near-verbatim duplicates identified by the audit below therefore motivate a separate registry evaluation rather than measuring its performance.
+
+\paragraph{Cross-Model-Family Blind Audit.} To evaluate outputs without an objective answer key, two independent auditor models and two missed-merge sweeper models from an alternate foundation model family evaluated the results blind to titles, descriptions, and each other under refutation rubrics. Only findings agreed upon by both independent auditors were counted. An automated text fidelity scorer evaluated whether published synthesis texts preserved constituent member asks.
+
+\begin{table}[t]
+\centering
+\caption{Deliberation structure and blind audit metrics across replays on 114 authentic Hebrew statements.}
+\label{tab:realdata}
+\footnotesize
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Metric / Operational Axis & Legacy Production & First Judged Replay & Fixed Build Replay \\
+\midrule
+Syntheses Count & 1 (holding 24 stmts) & 11 (holding 34 stmts) & 20 (holding 43 stmts) \\
+Largest Synthesis Size & 24 members & 8 members (snowball) & 4 members \\
+Themes Count & 3 (one flat theme of 59) & 2 themes & 3 themes \\
+Statements in No Cluster & 14 (silently unplaced) & 21 & 22 \\
+Review-Queue Events Logged & Not Measured & 30 & 42 \\
+Member-Level Merge Precision & Not Measured & 64.7\% (22/34) & 74.4\% (32/43) \\
+Clean Syntheses (0 refutations) & Not Measured & 6 of 11 & 11 of 20 \\
+Agreed Missed Merges & Not Measured & 11 attach + 5 spawn (19 silent) & 12 attach + 3 spawn (0 silent) \\
+Text Fidelity Score & Not Measured & 0.647 & 0.953 \\
+Lost Member Asks & Not Measured & 3 lost, 9 weakened & 0 lost, 2 weakened \\
+Fabricated Commitments & Not Measured & 2 invented mechanisms & 0 (1 soft benefit) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\paragraph{Audit Findings and Engineering Fixes.} As detailed in Table~\ref{tab:realdata}, the first judged replay reduced the largest synthesis size over legacy production (which had created a 24-member synthesis). However, the blind audit revealed that clean benchmark numbers did not transfer directly: merge precision was 65\%, 19 missed groupings were silent (only 2 of 21 missed statements were logged in the review queue), and fidelity was 0.647 with 3 lost voices due to snowballing in an 8-member cluster.
+
+Three targeted algorithmic fixes were engineered: (1) \textbf{Transitivity Check on Merge Sweeps:} Merging two syntheses requires the two most distant cross-cluster members to be explicitly judged as \texttt{same}, inspecting up to 6 members per side; (2) \textbf{Scheduled Revisit Pass:} Un-synthesized statements whose similarity evidence clears the synthesis band during sweeps are reinjected into the full judged cascade; and (3) \textbf{Writer Invariants:} Strict clauses forbid adding unstated mechanisms and mandate that every input's specific ask remains recognizable.
+
+On the fixed build replay, member-level precision rose to 74.4\% (32/43 members accepted by the audit; no synthesis exceeded four members), text fidelity rose to 0.953 with zero lost voices, and structurally silent misses dropped to zero (all 15 agreed misses were revisit-refused or awaiting sweep rounds). This 74.4\% is a case-specific automated audit result, not a population-wide production estimate or a human-validated accuracy guarantee.
+
+\section{Discussion: Repairing vs.\ Demoting Geometry}
+
+\begin{table}[t]
+\centering
+\caption{Architectural comparison: geometry repair vs.\ geometric demotion.}
+\label{tab:comparison}
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Dimension & Geometry Repair \citep{blair2026embeddings} & Geometric Demotion (Ours) \\
+\midrule
+Primary Decision Rule & Linear Scorer in Mapped Space & Discrete LLM Adjudication \\
+Role of Vector Space & Final Arbiter of Placement & Candidate Generator (ANN, $k=15$) \\
+Hard-Triplet Accuracy & 80.0\% (DPT) / 81.1\% (Projected) & 95.0\%--96.5\% \\
+Per-Placement Cost & Vector scoring; dimension-dependent & Retrieval plus LLM calls \\
+Target Relation & Continuous Preferential Utility & Propositional Equivalence \\
+Representation of Opposition & Metric Distance in Subspace $S$ & Symbolic Typed Counter-Edge \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\paragraph{Divergent Relational Targets.} As summarized in Table~\ref{tab:comparison}, the two paradigms address distinct relations. \citet{blair2026embeddings} model preferential similarity (whether participant $v$ endorses statement $j$), a continuous quantity suited for ideal-point metric spaces. We model propositional equivalence (whether two statements constitute the same policy intervention), a target equivalence relation; individual LLM verdicts need not satisfy symmetry or transitivity. Furthermore, a scalar metric distance alone does not identify whether separation means opposition or unrelatedness; our architecture represents opposition as an explicit typed graph edge.
+
+\paragraph{The Natural Hybrid.} Because our architecture confines geometry to candidate generation, Blair et al.'s learned preference projections integrate naturally as an upgraded candidate generator: $\text{Candidate Pool} = \mathrm{ANN}_{\mathrm{Projected}\ L^\top \psi}(s, k=15) \rightarrow \text{Discrete Judge}$. This hybrid is a proposed extension, not an evaluated result. Its effect on multilingual candidate recall, judge-call counts, and downstream precision requires a separate experiment; better preference prediction need not improve retrieval of strict paraphrases.
+
+\paragraph{Design Implication for Theming.} Because themes merely organize public browsing without altering what participants consented to (unlike syntheses, which pool voting power), themes can be periodically re-synthesized in batch from current syntheses in a single inexpensive call. This architectural separation explains why batch baselines outperform streaming heuristics on theming, providing a principled design recommendation for deliberative platforms.
+
+\section{Limitations and Open Problems}
+
+\begin{itemize}
+\item \textbf{Single-Vendor Foundation Model Dependency:} In the reported experiments, the principal pipeline components (equivalence judge, synthesis writer, claim classifier) used OpenAI models (\texttt{gpt-4o-mini}, \texttt{gpt-4o}, \texttt{gpt-5.6-luna}). Cross-model auditing can reveal disagreements but does not eliminate correlated model errors.
+\item \textbf{Synthetic vs.\ Natural Distribution Shifts:} The 875 triplets are counterfactual rewrites. Blair et al.'s natural-data accuracies (65\%--69\%) indicate that most natural proposal pairs are topically and lexically separable, while the hard tail is what our architecture is designed to handle.
+\item \textbf{Benchmark Codebook Consolidation:} The codebook-scale conditions of Table~\ref{tab:triplets} were evaluated on an unconsolidated codebook, which penalizes attachment to equivalent duplicate claims. A consolidated-codebook replication would isolate genuine list-scale confusion from this scoring artifact and has not yet been run.
+\item \textbf{Residual Error Modes on Real Data:} In the real-data deliberation replay, audited precision was 74.4\%. Residual errors stem from the spawn writer accepting related Hebrew pairs as \texttt{same}, and revisit sweeps exhausting round budgets.
+\item \textbf{Theming Stochasticity:} While synthesis reproduced the same partition across the three tested English orders (ARI $=1.000$), online thematic clustering remains order-sensitive (F1 0.711--0.775). Developing a principled online theming objective is an open problem.
+\item \textbf{Inference Cost and Latency:} The source research notes report per-placement latency of 1--2 seconds (8--10 seconds when the writer is invoked), requiring 2.85 LLM calls per statement at an historical estimated cost of \$0.20--\$0.50 per 1,000 statements, with verdict-cache hits resolving in $\approx 45$\,ms. These figures are configuration-specific observations, not a latency service-level guarantee or a current price quote.
+\end{itemize}
+
+\section{Conclusion}
+
+Aggregating free-form civic proposals requires a disciplined separation of concerns: geometry proposes, judgement disposes. Dense vector spaces provide fast candidate discovery, while fail-closed LLM adjudicators assess propositional equivalence under asymmetric doubt. Validated across 875 hard triplets, live streaming benchmarks, and an authentic deliberation case study, this architecture provides an empirically grounded foundation for AI-assisted collective decision-making.
+
+
+\section*{Acknowledgements}
+We thank Erel Segal-Halevi and Nimrod Talmon for their contributions to this work.
+
+\section*{Code, Data, and Reproducibility}
+The project repository is \url{https://github.com/delib-org/Freedi-app}. The accompanying research directory contains the registry evaluation materials (\path{scientific-research/20206-07-16-Claim-regestry/}) and the streaming benchmark, run scores, and real-data audit report (\path{scientific-research/2026-08-18-live-synth-accuracy/}). Historical model identifiers, prompts, and run configurations must be used when reproducing a reported condition; results from different builds should not be pooled as one configuration. No new experiments were run for this manuscript revision. API-dependent replications can differ because of model changes and nondeterminism. Public availability of individual real-data records is subject to the repository's release contents and data permissions.
+
+\section*{Ethics and AI Assistance}
+Incorrect aggregation can misrepresent participants' policy commitments. Original statements should remain traceable, errors should be reviewable, and benchmark accuracy should not be treated as authorization for automated binding decisions. The authentic-data case study uses model-based audits rather than independent human ground truth. No verbatim participant statement from that case study is reproduced here.
+
+LLMs are components of the evaluated system and were used in synthetic benchmark construction and automated auditing as described in the evaluation. AI tools also assisted with drafting, source comparison, and \LaTeX{} preparation of this revision. This editorial process does not constitute independent replication or human validation of the scientific results.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

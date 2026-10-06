@@ -192,7 +192,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 			},
 			{
 				valueId: 'self-reliance',
-				label: 'עצמאות כוחנו',
+				label: 'עצמאות',
 				description: 'עתידנו תלוי במה שנבנה במו ידינו, לא בהבטחות מבחוץ.',
 			},
 			{
@@ -561,9 +561,9 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 				description: 'שרשרת הפסיקה נושאת דורות; אין מנתקים חוליה בקלות ראש.',
 			},
 			{
-				valueId: 'community',
-				label: 'ציבור',
-				description: 'ציבור שנדחק לשוליים אינו נגאל בהכרזה אלא בכוח מאורגן.',
+				valueId: 'halacha',
+				label: 'הלכה',
+				description: 'השאלה אינה מה נוח אלא מה מותר ומה אסור; הפסיקה קודמת לרוח השעה.',
 			},
 			{
 				valueId: 'mercy',

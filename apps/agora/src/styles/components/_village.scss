@@ -83,8 +83,16 @@ body:has(.village-library--reading) { overflow:hidden; }
     min-block-size: 200px;
     background: repeating-linear-gradient(transparent, transparent calc(2em - 1px), var(--border-subtle) calc(2em - 1px), var(--border-subtle) 2em), var(--bg-card-solid);
     color: var(--text-primary);
+    caret-color: currentColor;
     line-height: 2;
     border-radius: var(--radius-sm);
+  }
+  // The desk is registered ink-on-dark, so inside it --text-primary and --ink
+  // (the caret) are white — white words and a white cursor on white paper.
+  // The paper hands the ink back.
+  .write-desk textarea {
+    color: #34493d;
+    caret-color: #34493d;
   }
 }
 
@@ -120,7 +128,7 @@ body:has(.village-library--reading) { overflow:hidden; }
   textarea.text-input, .round__textarea, .question__textarea, .my-screen__text, .write-desk textarea {
     display: block; box-sizing: border-box; width: 100%; min-block-size: 190px;
     padding: 18px 24px; font-size: 19px; line-height: 2;
-    color: #34493d; border: 1px solid #d8cfbc; border-radius: 4px;
+    color: #34493d; caret-color: #34493d; border: 1px solid #d8cfbc; border-radius: 4px;
     background: repeating-linear-gradient(transparent 0, transparent 37px, #d8d0bf55 37px, #d8d0bf55 38px), #fffefb;
     background-origin: content-box; background-clip: padding-box; resize: vertical;
     &:focus { outline: 2px solid #9aa889; outline-offset: 3px; box-shadow: none; }

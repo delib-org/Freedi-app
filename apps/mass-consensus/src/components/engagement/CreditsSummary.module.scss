@@ -4,7 +4,7 @@
   align-items: center;
   gap: 0.25rem;
   padding: 1.25rem 1.5rem;
-  background: linear-gradient(135deg, #f0f4ff 0%, #e8f4fd 100%);
+  background: linear-gradient(135deg, var(--mc-surface-muted, #f0f4ff) 0%, var(--mc-surface-muted, #e8f4fd) 100%);
   border-radius: 12px;
   text-align: center;
 }
@@ -12,7 +12,7 @@
 .amount {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #5f88e5;
+  color: var(--mc-brand-text, #5f88e5);
   line-height: 1;
   animation: countUp 0.8s ease-out forwards;
 }
@@ -34,7 +34,7 @@
 .label {
   font-size: 0.85rem;
   font-weight: 500;
-  color: #666;
+  color: var(--mc-text, #666);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }

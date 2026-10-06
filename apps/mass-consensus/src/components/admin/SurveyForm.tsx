@@ -546,7 +546,9 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         <h2 className={styles.sectionTitle}>{t('basicInfo')}</h2>
 
         <div className={styles.formGroup}>
-          <label htmlFor="title">{t('surveyTitle')}</label>
+          <label htmlFor="title">
+            {t('surveyTitle')} <span aria-hidden="true">*</span>
+          </label>
           <input
             id="title"
             type="text"
@@ -580,7 +582,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
 
       {/* Step 2: Select Questions */}
       <div className={styles.formSection}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 className={styles.sectionTitle} style={{ marginBottom: 0 }}>{t('selectQuestions')}</h2>
           <button
             type="button"
@@ -609,8 +611,8 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         isOpen={isCreateQuestionModalOpen}
         onClose={() => setIsCreateQuestionModalOpen(false)}
         onQuestionCreated={(question) => {
+          // The modal closes itself — after its pictures upload, when it has any
           setSelectedQuestions((prev) => [...prev, question]);
-          setIsCreateQuestionModalOpen(false);
         }}
         defaultParentId={selectedQuestions.length > 0 ? selectedQuestions[0].parentId : undefined}
       />
@@ -636,6 +638,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             onQuestionSettingsChange={handleQuestionSettingsChange}
             onQuestionTextChange={handleQuestionTextChange}
             onRemoveQuestion={handleRemoveQuestion}
+            surveyId={existingSurvey?.surveyId}
           />
         </div>
       )}
@@ -718,7 +721,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             </span>
           </div>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            {t('allowSuggestionsNote') || 'When enabled, overrides all per-question suggestion settings'}
+            {t('allowSuggestionsNote') || 'Default for all questions. Each question can override it.'}
           </p>
         </div>
 
@@ -1087,6 +1090,10 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         </div>
       ) : (
         <div className={styles.formActions}>
+          {/* The create button is disabled without a title; say why, right beside it */}
+          <span className={styles.autosaveStatus} role="status" aria-live="polite">
+            {!title.trim() && t('titleRequired')}
+          </span>
           <Link href="/admin/surveys" className={styles.cancelButton}>
             {t('cancel')}
           </Link>

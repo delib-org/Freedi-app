@@ -11,7 +11,7 @@ export const metadata: Metadata = {
  */
 export default function AdminSurveysPage() {
   return (
-    <div className="page" style={{ padding: '2rem' }}>
+    <div className="page">
       <SurveyList />
     </div>
   );

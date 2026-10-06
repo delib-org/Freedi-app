@@ -318,12 +318,17 @@ export {
 
 export type {
   EvaluationScaleEntry,
-  EvaluationDirection
+  EvaluationDirection,
+  EvaluationScaleKey
 } from "./models/statement/evaluationScale";
 
 export {
   AGREE_DISAGREE_SCALE,
+  THREE_POINT_SCALE,
   REACTIONS_SCALE,
+  THREE_POINT_STEPS,
+  FIVE_POINT_STEPS,
+  resolveEvaluationScaleKey,
   getEvaluationScale,
   getEvaluationRange,
   isValidEvaluationValue,

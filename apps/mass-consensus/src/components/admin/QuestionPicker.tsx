@@ -181,7 +181,7 @@ export default function QuestionPicker({
           <p>{t('searchingQuestions') || 'Searching questions...'}</p>
         </div>
       ) : questions.length === 0 && selectedQuestions.length === 0 ? (
-        <p style={{ textAlign: 'center', color: '#666', padding: '2rem' }}>
+        <p style={{ textAlign: 'center', color: 'var(--text-muted, #666)', padding: '2rem' }}>
           {searchQuery
             ? (t('noMatchingQuestions') || 'No matching questions found')
             : (t('noQuestionsAvailable') || 'No questions available')}
@@ -256,7 +256,7 @@ export default function QuestionPicker({
         </>
       )}
 
-      <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+      <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-muted, #666)' }}>
         {selectedQuestions.length} {t('questionsSelected') || 'questions selected'}
         {questions.length > 0 && ` • ${questions.length} ${t('shown') || 'shown'}`}
       </div>

@@ -7,6 +7,8 @@ import { clampCardColorIntensity } from './cardColorIntensity';
  */
 export interface MergedQuestionSettings {
   allowParticipantsToAddSuggestions: boolean;
+  /** An admin explicitly turned suggestions off here: nothing may ask the participant for one */
+  suggestionsClosed: boolean;
   askUserForASolutionBeforeEvaluation: boolean;
   allowSkipping: boolean;
   minEvaluationsPerQuestion: number;
@@ -28,13 +30,69 @@ export interface MergedQuestionSettings {
 }
 
 /**
+ * May participants add suggestions on this question? The question's own choice
+ * when it made one, otherwise the survey-wide default — so the survey switch
+ * turns every question on or off at once, and any single question can still
+ * go the other way.
+ */
+export function resolveAllowSuggestions(
+  surveySettings: SurveySettings,
+  questionOverrides: QuestionOverrideSettings | undefined
+): boolean {
+  return (
+    questionOverrides?.allowParticipantsToAddSuggestions ??
+    surveySettings.allowParticipantsToAddSuggestions === true
+  );
+}
+
+/**
+ * Did an admin explicitly turn suggestions off for this question (on the
+ * question itself, or survey-wide with no question override)?
+ *
+ * Narrower than `!resolveAllowSuggestions(...)`: a survey that never stored the
+ * setting (older and Studio-built surveys) has no "add" button either, but it
+ * still relies on the opening "share your idea" prompt to collect ideas, so it
+ * does not count as closed.
+ */
+export function areSuggestionsClosed(
+  surveySettings: SurveySettings,
+  questionOverrides: QuestionOverrideSettings | undefined
+): boolean {
+  const choice =
+    questionOverrides?.allowParticipantsToAddSuggestions ??
+    surveySettings.allowParticipantsToAddSuggestions;
+
+  return choice === false;
+}
+
+/**
+ * The per-question settings after the admin flips "allow suggestions" for one
+ * question. A choice equal to the survey default is not stored, so that
+ * question keeps following the default if the survey switch changes later.
+ */
+export function withAllowSuggestions(
+  surveySettings: SurveySettings,
+  questionOverrides: QuestionOverrideSettings | undefined,
+  allow: boolean
+): QuestionOverrideSettings {
+  const next: QuestionOverrideSettings = { ...questionOverrides };
+  if (allow === (surveySettings.allowParticipantsToAddSuggestions === true)) {
+    delete next.allowParticipantsToAddSuggestions;
+  } else {
+    next.allowParticipantsToAddSuggestions = allow;
+  }
+
+  return next;
+}
+
+/**
  * Merges survey-level settings with per-question overrides.
  *
  * Priority rules:
- * - Survey-level `allowParticipantsToAddSuggestions` when true: applies to ALL questions
+ * - `allowParticipantsToAddSuggestions`: the survey sets the default, a question may override it either way
+ * - Suggestions explicitly turned off: neither "ask for a suggestion" prompt (before / after evaluating) applies
  * - Survey-level `allowSkipping` when true: applies to ALL questions
  * - Per-question `minEvaluationsPerQuestion`: overrides survey default if set
- * - Per-question settings only take effect when survey-level is false/undefined
  *
  * @param surveySettings - The survey-level settings
  * @param questionOverrides - The per-question override settings (optional)
@@ -44,16 +102,18 @@ export function getMergedSettings(
   surveySettings: SurveySettings,
   questionOverrides: QuestionOverrideSettings | undefined
 ): MergedQuestionSettings {
+  const suggestionsClosed = areSuggestionsClosed(surveySettings, questionOverrides);
+
   return {
-    // Survey-level allowParticipantsToAddSuggestions overrides per-question when enabled
-    allowParticipantsToAddSuggestions:
-      surveySettings.allowParticipantsToAddSuggestions === true ||
-      (questionOverrides?.allowParticipantsToAddSuggestions ?? false),
+    // Survey-level allowParticipantsToAddSuggestions is the default; a question can override it
+    allowParticipantsToAddSuggestions: resolveAllowSuggestions(surveySettings, questionOverrides),
+    suggestionsClosed,
 
     // Per-question askUserForASolutionBeforeEvaluation (no survey-level equivalent)
-    // Default to true: users should provide their own suggestion before seeing others
+    // Default to true: users should provide their own suggestion before seeing others.
+    // Never on a question closed to suggestions — it must not ask for one.
     askUserForASolutionBeforeEvaluation:
-      questionOverrides?.askUserForASolutionBeforeEvaluation ?? true,
+      !suggestionsClosed && (questionOverrides?.askUserForASolutionBeforeEvaluation ?? true),
 
     // Survey-level allowSkipping overrides per-question when enabled
     allowSkipping:
@@ -81,8 +141,10 @@ export function getMergedSettings(
     // Show view progress / status button (per-question, defaults to true for backward compatibility)
     showViewProgress: questionOverrides?.showViewProgress ?? true,
 
-    // Ask user for a solution after completing minimum evaluations (defaults to false)
-    askUserForASolutionAfterEvaluation: questionOverrides?.askUserForASolutionAfterEvaluation ?? false,
+    // Ask user for a solution after completing minimum evaluations (defaults to false;
+    // never on a question closed to suggestions)
+    askUserForASolutionAfterEvaluation:
+      !suggestionsClosed && (questionOverrides?.askUserForASolutionAfterEvaluation ?? false),
 
     // Automatic AI handling of submissions: per-question override, then survey
     // default, then off (existing surveys keep asking the participant)
@@ -113,11 +175,10 @@ export function isSurveyLevelOverride(
   settingKey: keyof QuestionOverrideSettings
 ): boolean {
   switch (settingKey) {
-    case 'allowParticipantsToAddSuggestions':
-      return surveySettings.allowParticipantsToAddSuggestions === true;
     case 'allowSkipping':
       return surveySettings.allowSkipping === true;
     // These settings don't have survey-level overrides (per-question can always override)
+    case 'allowParticipantsToAddSuggestions':
     case 'askUserForASolutionBeforeEvaluation':
     case 'minEvaluationsPerQuestion':
     case 'randomizeOptions':

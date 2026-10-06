@@ -1,0 +1,318 @@
+@use '../mixins' as *;
+
+// Card List - admin list of cards, each able to carry a picture
+// (create-question wizard and the survey editor's Cards panel)
+
+.card-list {
+  // Rows adapt to the space the list gets, not the viewport: the survey
+  // editor nests it deep enough to be narrow even on a desktop screen
+  container-type: inline-size;
+  margin-block-start: 1rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--bg-muted, #f7fafc);
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+
+  &--dragover {
+    border-color: var(--btn-primary);
+    border-style: dashed;
+  }
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-block-end: 0.75rem;
+  }
+
+  &__count {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--btn-primary);
+    color: white;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  &__tool,
+  &__add {
+    min-block-size: 44px;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-light, #e2e8f0);
+    background: var(--card-default);
+    color: var(--text-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--btn-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__add {
+    margin-block-start: 0.5rem;
+    border-style: dashed;
+  }
+
+  &__rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    min-block-size: 56px;
+    background: var(--card-default);
+    border-radius: 8px;
+    border: 1px solid transparent;
+
+    &--error {
+      border-color: var(--rating-strongly-disagree-border);
+    }
+  }
+
+  &__number {
+    flex-shrink: 0;
+    inline-size: 24px;
+    block-size: 24px;
+    margin-block-start: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--border-light, #e2e8f0);
+    color: var(--text-muted, #718096);
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  &__body {
+    flex: 1;
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  &__text,
+  &__alt {
+    inline-size: 100%;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--border-light, #e2e8f0);
+    border-radius: 6px;
+    font-family: inherit;
+    background: var(--card-default);
+    color: var(--text-body);
+
+    &:focus {
+      outline: none;
+      border-color: var(--btn-primary);
+    }
+
+    &:disabled {
+      background: transparent;
+    }
+  }
+
+  &__text {
+    font-size: 0.9375rem;
+  }
+
+  &__alt {
+    font-size: 0.8125rem;
+
+    &::placeholder {
+      color: var(--text-muted, #718096);
+    }
+  }
+
+  &__text-static {
+    margin: 0;
+    padding-block: 0.375rem;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    color: var(--text-body);
+    overflow-wrap: anywhere;
+  }
+
+  &__status,
+  &__error,
+  &__confirm,
+  &__notice,
+  &__summary {
+    margin: 0;
+    font-size: 0.8125rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__status {
+    color: var(--text-muted, #718096);
+
+    &--saved {
+      color: var(--agree, #16a34a);
+    }
+  }
+
+  &__error {
+    color: var(--rating-strongly-disagree-border);
+  }
+
+  &__confirm {
+    color: var(--text-body);
+    font-weight: 600;
+  }
+
+  &__link-button {
+    min-block-size: 32px;
+    padding: 0 0.5rem;
+    border: none;
+    background: none;
+    color: var(--btn-primary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &--danger {
+      color: var(--rating-strongly-disagree-border);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__actions {
+    flex-shrink: 0;
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  &__icon-button {
+    inline-size: 44px;
+    block-size: 44px;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: var(--text-muted, #718096);
+    font-size: 1rem;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--bg-muted, #f7fafc);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__drop-hint {
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    color: var(--text-muted, #718096);
+    text-align: center;
+  }
+
+  &__notice {
+    margin-block-start: 0.5rem;
+    color: var(--text-body);
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  // Upload phase (wizard, after the question is created)
+  &__created {
+    margin: 0 0 0.25rem;
+    font-weight: 700;
+    color: var(--agree, #16a34a);
+  }
+
+  &__progress-label {
+    margin: 0 0 0.5rem;
+    font-size: 0.9375rem;
+    color: var(--text-body);
+  }
+
+  &__progress {
+    inline-size: 100%;
+    block-size: 8px;
+    border: none;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--border-light, #e2e8f0);
+    accent-color: var(--btn-primary);
+
+    &::-webkit-progress-bar {
+      background: var(--border-light, #e2e8f0);
+    }
+
+    &::-webkit-progress-value {
+      background: var(--btn-primary);
+    }
+
+    &::-moz-progress-bar {
+      background: var(--btn-primary);
+    }
+  }
+
+  &__summary {
+    margin-block-start: 0.75rem;
+    color: var(--text-body);
+  }
+
+  @include mobile {
+    padding: 0.5rem;
+  }
+}
+
+// Narrow list: number, picture and actions on one line, the text below them
+@container (max-width: 460px) {
+  .card-list__row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .card-list__actions {
+    margin-inline-start: auto;
+  }
+
+  .card-list__body {
+    order: 1;
+    flex-basis: 100%;
+  }
+
+  .card-list__tool {
+    inline-size: 100%;
+  }
+}

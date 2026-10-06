@@ -156,6 +156,21 @@ export const CARD_COLOR_INTENSITY = {
 } as const;
 
 /**
+ * Participant accessibility settings (theme, contrast, text size).
+ * Kept in a cookie so the server renders <html> with them — no flash.
+ */
+export const ACCESSIBILITY = {
+  COOKIE: 'mc-a11y',
+  /** One year, in seconds */
+  COOKIE_MAX_AGE_S: 60 * 60 * 24 * 365,
+  /** Root font-size steps, in percent of the browser default */
+  FONT_SCALE_STEPS: [87.5, 100, 112.5, 125, 150],
+  DEFAULT_FONT_SCALE: 100,
+  THEMES: ['system', 'light', 'dark'],
+  DEFAULT_THEME: 'system',
+} as const;
+
+/**
  * Zone configuration for zone-based swipe system
  * Maps zone indices to ratings and visual elements
  * Universal layout: Negative (left/red) to Positive (right/green)
@@ -227,6 +242,17 @@ export const EMAIL_NOTIFICATIONS = {
 export const COMMENT = {
   MIN_LENGTH: 3,
   MAX_LENGTH: 200,
+} as const;
+
+/**
+ * Card image constants (an admin's picture on a swipe card)
+ * The size cap mirrors storage.rules for statements/{statementId}/**.
+ * SVG is left out on purpose: it can carry script, and the file is public.
+ */
+export const CARD_IMAGE = {
+  MAX_BYTES: 5 * 1024 * 1024,
+  ALLOWED_TYPES: ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
+  ALT_MAX_LENGTH: 200,
 } as const;
 
 /**

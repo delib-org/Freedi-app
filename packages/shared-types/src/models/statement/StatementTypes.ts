@@ -250,6 +250,7 @@ export const StatementSchema = object({
 		object({
 			main: optional(string()), // the main image of the statement
 			more: optional(array(string())), // the other images of the statement
+			alt: optional(string()), // text alternative for the main image, read by screen readers
 		}),
 	),
 	totalEvaluators: optional(number()), // the total number of evaluators of the statement

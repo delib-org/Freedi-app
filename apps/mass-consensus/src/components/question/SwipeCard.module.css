@@ -1,10 +1,10 @@
 .card {
   position: absolute;
   inset: 0;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 24px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--mc-border, #e2e8f0);
   padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
@@ -33,10 +33,10 @@
 }
 
 .zone0 { background: var(--rating-strongly-disagree, #fecaca); }
-.zone1 { background: var(--rating-disagree, #fef3c7); }
-.zone2 { background: var(--rating-neutral, #f1f5f9); }
-.zone3 { background: var(--rating-agree, #d1fae5); }
-.zone4 { background: var(--rating-strongly-agree, #dcfce7); }
+.zone1 { background: var(--rating-disagree, var(--mc-surface-tint, #fef3c7)); }
+.zone2 { background: var(--rating-neutral, var(--mc-surface-muted, #f1f5f9)); }
+.zone3 { background: var(--rating-agree, var(--mc-surface-tint, #d1fae5)); }
+.zone4 { background: var(--rating-strongly-agree, var(--mc-surface-tint, #dcfce7)); }
 
 .card:active {
   cursor: grabbing;
@@ -167,14 +167,14 @@
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.4;
-  color: var(--text-body, #475569);
+  color: var(--text-body, var(--mc-text, #475569));
   margin: 0 0 var(--spacing-sm) 0;
 }
 
 .description {
   font-size: 1rem;
   line-height: 1.6;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, var(--mc-text-muted, #64748b));
   margin: 0;
 }
 
@@ -185,7 +185,7 @@
   justify-content: center;
   gap: 1rem;
   font-size: 0.875rem;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, var(--mc-text-muted, #64748b));
   margin-bottom: var(--spacing-md);
   position: relative;
   z-index: 10;
@@ -202,7 +202,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--mc-text-muted, #94a3b8);
   padding: 0 var(--spacing-md);
   position: relative;
   z-index: 10;

@@ -32,6 +32,9 @@ const pool = characters.filter((c) => !c.fixed);
 export function buildCharacters({scene,height,manager}) {
  const figures=[];
  const byId=new Map();
+ /** Stations taken off the hill — their guides step away with them. */
+ const hiddenStations=new Set();
+ const standing=character=>(character.fixed===true||character.station!=='')&&!hiddenStations.has(character.station);
  const loader=new THREE.TextureLoader(manager);
  const ready=Promise.allSettled(characters.map(async character=>{
   const texture=await loader.loadAsync(character.image);
@@ -44,14 +47,14 @@ export function buildCharacters({scene,height,manager}) {
   person.position.set(character.x,height(character.x,character.z)+character.height/2+.1,character.z);
   person.rotation.y=character.facing;
   person.userData.character=character;
-  person.visible=character.fixed===true||character.station!=='';
+  person.visible=standing(character);
   scene.add(person);figures.push(person);byId.set(character.id,person);
  })).then(results=>({loaded:figures.length,failed:results.filter(r=>r.status==='rejected').length}));
  function place(character){
   const person=byId.get(character.id);
   if(!person)return;
   person.position.set(character.x,height(character.x,character.z)+character.height/2+.1,character.z);
-  person.visible=character.fixed===true||character.station!=='';
+  person.visible=standing(character);
  }
  return {figures,ready,
   /** Send a pool character to a booth. Booths past the pool size share the last guide's twin: none. */
@@ -63,6 +66,10 @@ export function buildCharacters({scene,height,manager}) {
    return character;
   },
   release(){for(const character of pool){character.station='';place(character);}},
+  showStation(station,shown){
+   if(shown)hiddenStations.delete(station);else hiddenStations.add(station);
+   for(const character of characters)if(character.station===station)place(character);
+  },
   tick(camera){
   for(const person of figures){
    if(!person.visible)continue;

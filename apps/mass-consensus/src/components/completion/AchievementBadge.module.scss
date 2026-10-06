@@ -3,7 +3,7 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.4rem 0.75rem;
-  background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
+  background: linear-gradient(135deg, var(--mc-surface-muted, white) 0%, var(--mc-surface-muted, #f8f9fa) 100%);
   border: 2px solid var(--badge-color);
   border-radius: 20px;
   font-size: 0.8rem;
@@ -34,12 +34,12 @@
 
 .label {
   font-weight: 600;
-  color: #333;
+  color: var(--mc-text-strong, #333);
 }
 
 .description {
   display: block;
   font-size: 0.75rem;
-  color: #666;
+  color: var(--mc-text, #666);
   margin-top: 0.25rem;
 }

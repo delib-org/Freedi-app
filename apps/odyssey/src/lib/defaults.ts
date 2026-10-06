@@ -404,9 +404,8 @@ export interface DefaultParty {
  *
  * A map that sails מפלגות that no longer exist, and omits ones on the ballot,
  * is not a map. This list was rebuilt against the 2026 field: יש עתיד sails as
- * part of ביחד with בנט 2026; המחנה הממלכתי went back to being כחול לבן when
- * תקווה חדשה left; העבודה and מרצ are הדמוקרטים; חד״ש, תע״ל and בל״ד are one
- * list again; and ישר! is new to the water.
+ * part of ביחד with בנט 2026; העבודה and מרצ are הדמוקרטים; חד״ש, תע״ל and בל״ד are one
+ * list again; כחול לבן is off the water; and ישר! and עמך ישראל are new to it.
  *
  * Where a party is the same body under a new name, its route is kept whole.
  * Where it is a merger, the route comes from the constituent with the longest
@@ -600,24 +599,24 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		},
 	},
 	{
-		slug: 'blue-white',
-		name: 'כחול לבן',
-		color: '#28418f',
+		slug: 'amcha-israel',
+		name: 'עמך ישראל',
+		color: '#b4652a',
 		description:
-			'גנץ. אותה מפלגה ששמה היה המחנה הממלכתי, ששבה לשמה לאחר פרישת תקווה חדשה (2024). מסלול נשמר במלואו — שינוי שם, לא שינוי גוף.',
+			'עופר וינטר. מפלגה חדשה (אוגוסט 2026), בלי היסטוריה מפלגתית קודמת. מסלול על בסיס התבטאויות מתועדות של ראש המפלגה בשלושה שבועות של קיומה; בנושאים שטרם אמרה בהם דבר — האומדן הוא הערכה אידיאולוגית בלבד. ראו שדה confidence בקובץ המחקר.',
 		positions: {
 			accountability: 1,
-			'rule-of-law': 2,
-			'clean-hands': 2,
-			'political-home': 4,
-			'security-storm': 2,
-			'arab-partnership': 2,
-			'civic-equality': 2,
-			'civic-covenant': 2,
-			'sabbath-rabbinate': 3,
-			'bread-and-home': 2,
+			'rule-of-law': 3,
+			'clean-hands': 3,
+			'political-home': 1,
+			'security-storm': 1,
+			'arab-partnership': 4,
+			'civic-equality': 3,
+			'civic-covenant': 1,
+			'sabbath-rabbinate': 2,
+			'bread-and-home': 4,
 			'democracy-itself': 4,
-			'world-partners': 1,
+			'world-partners': 4,
 		},
 	},
 	{

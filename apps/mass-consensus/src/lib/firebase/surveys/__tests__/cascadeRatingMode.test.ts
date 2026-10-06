@@ -1,6 +1,6 @@
 import { __INTERNAL } from '../cascadeRatingMode';
 
-const { readOverride, readCurrent } = __INTERNAL;
+const { readOverride, readCurrent, readSteps } = __INTERNAL;
 
 describe('cascadeRatingMode helpers', () => {
   describe('readOverride', () => {
@@ -29,6 +29,24 @@ describe('cascadeRatingMode helpers', () => {
 
     it('reads the stored mode', () => {
       expect(readCurrent({ ratingMode: 'reactions' })).toBe('reactions');
+    });
+  });
+
+  describe('readSteps', () => {
+    it('defaults to the classic five steps', () => {
+      expect(readSteps(undefined)).toBe(5);
+      expect(readSteps({})).toBe(5);
+      expect(readSteps({ ratingMode: 'agree-disagree' })).toBe(5);
+    });
+
+    it('reads the three-step scale', () => {
+      expect(readSteps({ ratingMode: 'agree-disagree', ratingSteps: 3 })).toBe(3);
+    });
+
+    it('treats any other value as five steps', () => {
+      expect(readSteps({ ratingSteps: 5 })).toBe(5);
+      expect(readSteps({ ratingSteps: 7 })).toBe(5);
+      expect(readSteps({ ratingSteps: '3' })).toBe(5);
     });
   });
 });

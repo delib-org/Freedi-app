@@ -43,10 +43,10 @@ describe('the village follows the actual session plan', () => {
 		);
 		expect(villagePlace({ itemId: 'square', stage: AgoraStage.deliberation })).toBe('booth:square');
 	});
-	it('keeps the meeting point and the council open, and marks where the room is', () => {
+	it('keeps the council open, drops unused places, and marks where the room is', () => {
 		expect(villageFixedPlaces(plan, 1)).toEqual({
 			library: { open: false, current: false, inPlan: false },
-			challenge: { open: true, current: false, inPlan: true },
+			challenge: { open: false, current: false, inPlan: false },
 			council: { open: true, current: false, inPlan: true },
 		});
 		expect(villageFixedPlaces(plan, 5).council).toEqual({
@@ -54,10 +54,11 @@ describe('the village follows the actual session plan', () => {
 			current: true,
 			inPlan: true,
 		});
+		// The lobby waits at the study house, but a wait is not a station: no building.
 		expect(villageFixedPlaces(plan, 0).challenge).toEqual({
-			open: true,
-			current: true,
-			inPlan: true,
+			open: false,
+			current: false,
+			inPlan: false,
 		});
 		const withScenes: AgoraStagePlanItem[] = [
 			...plan.slice(0, 1),

@@ -3,8 +3,11 @@
  */
 import { SurveySettings, QuestionOverrideSettings, SuggestionMode } from '@freedi/shared-types';
 import {
+  areSuggestionsClosed,
   getMergedSettings,
   isSurveyLevelOverride,
+  resolveAllowSuggestions,
+  withAllowSuggestions,
 } from '../settingsUtils';
 
 describe('settingsUtils', () => {
@@ -27,13 +30,19 @@ describe('settingsUtils', () => {
         expect(result.allowParticipantsToAddSuggestions).toBe(false);
       });
 
-      it('should be true when survey setting is true (overrides per-question)', () => {
+      it('should follow the survey default when the question has no override', () => {
+        const surveySettings = createSurveySettings({ allowParticipantsToAddSuggestions: true });
+        expect(getMergedSettings(surveySettings, undefined).allowParticipantsToAddSuggestions).toBe(true);
+        expect(getMergedSettings(surveySettings, {}).allowParticipantsToAddSuggestions).toBe(true);
+      });
+
+      it('should let a question turn suggestions off when the survey default is on', () => {
         const surveySettings = createSurveySettings({ allowParticipantsToAddSuggestions: true });
         const questionOverrides: QuestionOverrideSettings = {
           allowParticipantsToAddSuggestions: false,
         };
         const result = getMergedSettings(surveySettings, questionOverrides);
-        expect(result.allowParticipantsToAddSuggestions).toBe(true);
+        expect(result.allowParticipantsToAddSuggestions).toBe(false);
       });
 
       it('should be true when survey is false but question override is true', () => {
@@ -57,13 +66,13 @@ describe('settingsUtils', () => {
 
     describe('askUserForASolutionBeforeEvaluation', () => {
       it('should be true when question override is undefined (default behavior)', () => {
-        const surveySettings = createSurveySettings();
+        const surveySettings = createSurveySettings({ allowParticipantsToAddSuggestions: true });
         const result = getMergedSettings(surveySettings, undefined);
         expect(result.askUserForASolutionBeforeEvaluation).toBe(true);
       });
 
       it('should be true when question override is true', () => {
-        const surveySettings = createSurveySettings();
+        const surveySettings = createSurveySettings({ allowParticipantsToAddSuggestions: true });
         const questionOverrides: QuestionOverrideSettings = {
           askUserForASolutionBeforeEvaluation: true,
         };
@@ -174,7 +183,7 @@ describe('settingsUtils', () => {
       it('should merge all settings correctly', () => {
         const surveySettings = createSurveySettings({
           allowSkipping: true,
-          allowParticipantsToAddSuggestions: false,
+          allowParticipantsToAddSuggestions: true,
           minEvaluationsPerQuestion: 3,
         });
         const questionOverrides: QuestionOverrideSettings = {
@@ -185,7 +194,7 @@ describe('settingsUtils', () => {
         const result = getMergedSettings(surveySettings, questionOverrides);
 
         expect(result).toMatchObject({
-          allowParticipantsToAddSuggestions: false,
+          allowParticipantsToAddSuggestions: true,
           askUserForASolutionBeforeEvaluation: true,
           allowSkipping: true,
           minEvaluationsPerQuestion: 7,
@@ -214,12 +223,107 @@ describe('settingsUtils', () => {
     });
   });
 
+  describe('suggestions turned off', () => {
+    const surveyOn = createSurveySettings({ allowParticipantsToAddSuggestions: true });
+    const surveyOff = createSurveySettings({ allowParticipantsToAddSuggestions: false });
+
+    it('does not ask for a suggestion before evaluating, even by default', () => {
+      const result = getMergedSettings(surveyOn, { allowParticipantsToAddSuggestions: false });
+      expect(result.askUserForASolutionBeforeEvaluation).toBe(false);
+    });
+
+    it('does not ask before or after even when those were switched on explicitly', () => {
+      const result = getMergedSettings(surveyOn, {
+        allowParticipantsToAddSuggestions: false,
+        askUserForASolutionBeforeEvaluation: true,
+        askUserForASolutionAfterEvaluation: true,
+      });
+      expect(result.askUserForASolutionBeforeEvaluation).toBe(false);
+      expect(result.askUserForASolutionAfterEvaluation).toBe(false);
+    });
+
+    it('applies to a survey that is explicitly off with no question override', () => {
+      const result = getMergedSettings(surveyOff, undefined);
+      expect(result.allowParticipantsToAddSuggestions).toBe(false);
+      expect(result.suggestionsClosed).toBe(true);
+      expect(result.askUserForASolutionBeforeEvaluation).toBe(false);
+    });
+
+    it('leaves a survey that never stored the setting asking as before', () => {
+      const legacy = createSurveySettings({ allowParticipantsToAddSuggestions: undefined });
+      const result = getMergedSettings(legacy, undefined);
+      expect(result.allowParticipantsToAddSuggestions).toBe(false);
+      expect(result.suggestionsClosed).toBe(false);
+      expect(result.askUserForASolutionBeforeEvaluation).toBe(true);
+      expect(areSuggestionsClosed(legacy, {})).toBe(false);
+    });
+
+    it('is not closed when the question turns suggestions back on', () => {
+      expect(areSuggestionsClosed(surveyOff, { allowParticipantsToAddSuggestions: true })).toBe(false);
+      expect(areSuggestionsClosed(surveyOn, undefined)).toBe(false);
+      expect(areSuggestionsClosed(surveyOn, { allowParticipantsToAddSuggestions: false })).toBe(true);
+    });
+
+    it('keeps both prompts available while suggestions are on', () => {
+      const result = getMergedSettings(surveyOff, {
+        allowParticipantsToAddSuggestions: true,
+        askUserForASolutionAfterEvaluation: true,
+      });
+      expect(result.askUserForASolutionBeforeEvaluation).toBe(true);
+      expect(result.askUserForASolutionAfterEvaluation).toBe(true);
+    });
+  });
+
+  describe('withAllowSuggestions', () => {
+    it('stores a choice that differs from the survey default', () => {
+      const on = createSurveySettings({ allowParticipantsToAddSuggestions: true });
+      expect(withAllowSuggestions(on, undefined, false)).toEqual({
+        allowParticipantsToAddSuggestions: false,
+      });
+
+      const off = createSurveySettings({ allowParticipantsToAddSuggestions: false });
+      expect(withAllowSuggestions(off, {}, true)).toEqual({
+        allowParticipantsToAddSuggestions: true,
+      });
+    });
+
+    it('drops the override when the choice matches the survey default', () => {
+      const on = createSurveySettings({ allowParticipantsToAddSuggestions: true });
+      const result = withAllowSuggestions(on, { allowParticipantsToAddSuggestions: false }, true);
+
+      expect(result).toEqual({});
+      expect('allowParticipantsToAddSuggestions' in result).toBe(false);
+    });
+
+    it('keeps the other per-question settings and does not mutate the input', () => {
+      const on = createSurveySettings({ allowParticipantsToAddSuggestions: true });
+      const before: QuestionOverrideSettings = { minEvaluationsPerQuestion: 7 };
+      const result = withAllowSuggestions(on, before, false);
+
+      expect(result).toEqual({
+        minEvaluationsPerQuestion: 7,
+        allowParticipantsToAddSuggestions: false,
+      });
+      expect(before).toEqual({ minEvaluationsPerQuestion: 7 });
+    });
+
+    it('round-trips through resolveAllowSuggestions', () => {
+      for (const surveyDefault of [true, false, undefined]) {
+        const survey = createSurveySettings({ allowParticipantsToAddSuggestions: surveyDefault });
+        for (const choice of [true, false]) {
+          const stored = withAllowSuggestions(survey, undefined, choice);
+          expect(resolveAllowSuggestions(survey, stored)).toBe(choice);
+        }
+      }
+    });
+  });
+
   describe('isSurveyLevelOverride', () => {
     describe('allowParticipantsToAddSuggestions', () => {
-      it('should return true when survey-level setting is true', () => {
+      it('should return false even when the survey-level setting is true (it is only a default)', () => {
         const surveySettings = createSurveySettings({ allowParticipantsToAddSuggestions: true });
         const result = isSurveyLevelOverride(surveySettings, 'allowParticipantsToAddSuggestions');
-        expect(result).toBe(true);
+        expect(result).toBe(false);
       });
 
       it('should return false when survey-level setting is false', () => {

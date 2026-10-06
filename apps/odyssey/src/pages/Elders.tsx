@@ -43,7 +43,7 @@ export default function Elders() {
 	const [openBio, setOpenBio] = useState<string | null>(null);
 
 	// A bubble over the board closes the way every overlay does: Escape, or a
-	// click anywhere that is not the bubble itself. The toggles are exempt —
+	// click anywhere that is not the bubble itself. The ⓘ badges are exempt —
 	// they close it on their own, and dismissing first would reopen it.
 	useEffect(() => {
 		if (!openBio) return;
@@ -52,7 +52,7 @@ export default function Elders() {
 		};
 		const onPointer = (event: PointerEvent): void => {
 			const target = event.target;
-			if (target instanceof Element && target.closest('.speech-bubble, .bubble-toggle')) return;
+			if (target instanceof Element && target.closest('.speech-bubble, .crew-info')) return;
 			setOpenBio(null);
 		};
 		window.addEventListener('keydown', onKey);
@@ -129,7 +129,7 @@ export default function Elders() {
 					</section>
 
 					<div className="crew-grid fade-in">
-						{elders.map((elder, index) => {
+						{elders.map((elder) => {
 							const active = chosen.has(elder.elderId);
 
 							return (
@@ -140,9 +140,6 @@ export default function Elders() {
 										onClick={() => toggle(elder.elderId)}
 										className={`crew-card ${active ? 'chosen' : ''}`}
 									>
-										<span className="crew-number" aria-hidden="true">
-											{index + 1}
-										</span>
 										<span className="crew-persona-mark" aria-hidden="true">
 											📜
 										</span>
@@ -156,20 +153,32 @@ export default function Elders() {
 										<span className="crew-name">{elder.name}</span>
 										{elder.years ? <span className="crew-years">{elder.years}</span> : null}
 										<span className="crew-values">{keywords(elder)}</span>
-										<span className="text-[12px] text-[var(--gold-strong)] mt-1">
-											{active ? '⚓ על הסיפון' : '＋ לצרף לצוות'}
-										</span>
+										{/* Only the berth that was taken says so. An empty card invites the
+										    click by being a card on a board that asked you to choose. */}
+										{active ? (
+											<span className="text-[12px] text-[var(--gold-strong)] mt-1">
+												⚓ על הסיפון
+											</span>
+										) : null}
 									</button>
+									{/*
+									  The ⓘ sits in the card's free top corner, where the berth number
+									  used to be — but it is a SIBLING of the card, not a child: a
+									  button may not contain a button, and the sentence it opens has to
+									  stay reachable by keyboard. Absolute inside the cell puts it on
+									  the card without putting it in it.
+									*/}
 									<button
 										type="button"
-										className="bubble-toggle"
+										className="crew-info"
+										aria-label={`מי זה ${elder.name}?`}
 										aria-expanded={openBio === elder.elderId}
 										aria-controls={`bio-${elder.elderId}`}
 										onClick={() =>
 											setOpenBio((current) => (current === elder.elderId ? null : elder.elderId))
 										}
 									>
-										מי זה?
+										<span aria-hidden="true">i</span>
 									</button>
 									{openBio === elder.elderId ? (
 										<div className="speech-bubble" id={`bio-${elder.elderId}`}>

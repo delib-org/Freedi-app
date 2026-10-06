@@ -13,7 +13,7 @@
   align-items: center;
   gap: 0.5rem;
   text-decoration: none;
-  color: var(--text-body, #3d4d71);
+  color: var(--text-body, var(--mc-text-strong, #3d4d71));
   transition: opacity 0.2s ease;
 
   &:hover {

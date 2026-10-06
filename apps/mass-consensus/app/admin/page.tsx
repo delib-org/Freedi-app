@@ -11,9 +11,9 @@ export const metadata: Metadata = {
  */
 export default function AdminDashboardPage() {
   return (
-    <div className="page" style={{ padding: '2rem' }}>
+    <div className="page">
       <h1>Survey Admin</h1>
-      <p style={{ color: '#666', marginBottom: '2rem' }}>
+      <p style={{ color: 'var(--text-muted, #666)', marginBottom: '2rem' }}>
         Create and manage linked question surveys
       </p>
 
@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
         >
           <span style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📋</span>
           <span style={{ fontWeight: 600, marginBottom: '0.25rem' }}>My Surveys</span>
-          <span style={{ fontSize: '0.875rem', color: '#666' }}>View and manage surveys</span>
+          <span style={{ fontSize: '0.875rem', color: 'var(--text-muted, #666)' }}>View and manage surveys</span>
         </Link>
 
         <Link
@@ -56,7 +56,7 @@ export default function AdminDashboardPage() {
         </Link>
       </div>
 
-      <div style={{ marginTop: '3rem', padding: '1.5rem', background: '#f9fafb', borderRadius: '12px' }}>
+      <div style={{ marginTop: '3rem', padding: '1.5rem', background: 'var(--mc-surface-muted, #f9fafb)', borderRadius: '12px' }}>
         <h3 style={{ marginBottom: '1rem' }}>Quick Start Guide</h3>
         <ol style={{ paddingLeft: '1.5rem', lineHeight: 1.8 }}>
           <li>Create a new survey with a title and description</li>

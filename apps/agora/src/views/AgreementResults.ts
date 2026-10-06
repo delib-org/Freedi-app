@@ -6,6 +6,7 @@ import { celebrateOnce } from '../lib/celebration';
 import { getStagePlan } from '../lib/session';
 import { VOTE_AGAINST, type AgoraParticipant, type AgoraSession } from '@freedi/shared-types';
 import { InstallOffer } from '../components/InstallOffer';
+import { standingBar } from '../components/StandingBar';
 
 export interface AgreementResultsAttrs {
 	session: AgoraSession;
@@ -48,6 +49,10 @@ export const AgreementResults: m.Component<AgreementResultsAttrs> = {
 		const decision = winner && agreement.voteWinnerMetThreshold !== false ? winner : undefined;
 		const counts = agreement.voteCounts ?? {};
 		const total = agreement.voteTotal ?? 0;
+		// A one-candidate ballot was a motion — for or against — and its
+		// tally stands as the same two pillars the class voted on
+		const motion = session.voting?.candidates.length === 1 ? session.voting.candidates[0] : null;
+		const shareOf = (count: number): number => (total > 0 ? Math.round((count / total) * 100) : 0);
 
 		if (decision) {
 			celebrateOnce(`agreement-${session.sessionId}`, {
@@ -91,28 +96,47 @@ export const AgreementResults: m.Component<AgreementResultsAttrs> = {
 				voteHeld
 					? m('.card.stack.agreement__vote', [
 							m('p.teacher__section-title', t('voting.title')),
-							m(
-								'.agreement__tally',
-								Object.entries(counts)
-									.sort(([, a], [, b]) => b - a)
-									.map(([statementId, count]) => {
-										const row = byId.get(statementId);
-										const share = total > 0 ? Math.round((count / total) * 100) : 0;
-										const label =
-											statementId === VOTE_AGAINST
-												? t('voting.against')
-												: (row?.statement ?? statementId);
+							motion
+								? m(
+										'.voting__list.voting__list--binary',
+										[
+											{ id: motion.statementId, label: t('voting.for'), tone: 'for' },
+											{ id: VOTE_AGAINST, label: t('voting.against'), tone: 'against' },
+										].map(({ id, label, tone }) =>
+											m(
+												'.voting__option.voting__option--static.voting__option--standing',
+												{ key: id, class: `voting__option--${tone}` },
+												standingBar({
+													label,
+													count: counts[id] ?? 0,
+													share: shareOf(counts[id] ?? 0),
+													showCount: true,
+												}),
+											),
+										),
+									)
+								: m(
+										'.agreement__tally',
+										Object.entries(counts)
+											.sort(([, a], [, b]) => b - a)
+											.map(([statementId, count]) => {
+												const row = byId.get(statementId);
+												const share = shareOf(count);
+												const label =
+													statementId === VOTE_AGAINST
+														? t('voting.against')
+														: (row?.statement ?? statementId);
 
-										return m('.agreement__tally-row', { key: statementId }, [
-											m('span.agreement__bar', {
-												style: { inlineSize: `${share}%` },
-												'aria-hidden': 'true',
+												return m('.agreement__tally-row', { key: statementId }, [
+													m('span.agreement__bar', {
+														style: { inlineSize: `${share}%` },
+														'aria-hidden': 'true',
+													}),
+													m('span.agreement__tally-label', label),
+													m('span.agreement__tally-count', `${count} · ${share}%`),
+												]);
 											}),
-											m('span.agreement__tally-label', label),
-											m('span.agreement__tally-count', `${count} · ${share}%`),
-										]);
-									}),
-							),
+									),
 							m('p.voting__total', t('voting.total_votes', { n: String(total) })),
 						])
 					: null,

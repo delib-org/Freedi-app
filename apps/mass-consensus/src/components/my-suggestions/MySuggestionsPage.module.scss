@@ -30,8 +30,8 @@
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: var(--bg-muted, #e2e8f0);
-  color: var(--text-body, #4a5568);
+  background: var(--bg-muted, var(--mc-surface-subtle, #e2e8f0));
+  color: var(--text-body, var(--mc-text, #4a5568));
   cursor: pointer;
   transition: background 0.2s;
   flex-shrink: 0;
@@ -58,7 +58,7 @@
 .title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-heading, #1a1a2e);
+  color: var(--text-heading, var(--mc-text-strong, #1a1a2e));
   margin: 0;
 
   @media (min-width: 480px) {
@@ -68,7 +68,7 @@
 
 .subtitle {
   font-size: 0.9rem;
-  color: var(--text-body, #4a5568);
+  color: var(--text-body, var(--mc-text, #4a5568));
   margin: 0.25rem 0 0;
   white-space: nowrap;
   overflow: hidden;
@@ -84,7 +84,7 @@
   justify-content: space-around;
   gap: 1rem;
   padding: 1rem;
-  background: var(--card-default, #f9fafb);
+  background: var(--card-default, var(--mc-surface-muted, #f9fafb));
   border-radius: 12px;
   margin-bottom: 1.5rem;
 
@@ -103,7 +103,7 @@
 .statValue {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--btn-primary, #5f88e5);
+  color: var(--btn-primary, var(--mc-brand-text, #5f88e5));
   line-height: 1;
 
   @media (min-width: 480px) {
@@ -113,7 +113,7 @@
 
 .statLabel {
   font-size: 0.75rem;
-  color: var(--text-body, #4a5568);
+  color: var(--text-body, var(--mc-text, #4a5568));
   text-align: center;
 
   @media (min-width: 480px) {
@@ -147,20 +147,20 @@
 .emptyIcon {
   width: 64px;
   height: 64px;
-  color: var(--text-muted, #a0aec0);
+  color: var(--text-muted, var(--mc-text-muted, #a0aec0));
   margin-bottom: 1rem;
 }
 
 .emptyTitle {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--text-heading, #1a1a2e);
+  color: var(--text-heading, var(--mc-text-strong, #1a1a2e));
   margin: 0 0 0.5rem;
 }
 
 .emptyDescription {
   font-size: 0.95rem;
-  color: var(--text-body, #4a5568);
+  color: var(--text-body, var(--mc-text, #4a5568));
   margin: 0;
   max-width: 320px;
 }
@@ -170,7 +170,7 @@
 // ============================================
 
 .skeleton {
-  background: linear-gradient(90deg, var(--bg-muted, #e2e8f0) 25%, #f0f0f0 50%, var(--bg-muted, #e2e8f0) 75%);
+  background: linear-gradient(90deg, var(--bg-muted, var(--mc-surface-muted, #e2e8f0)) 25%, var(--mc-surface-muted, #f0f0f0) 50%, var(--bg-muted, var(--mc-surface-muted, #e2e8f0)) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 6px;
@@ -199,8 +199,8 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.875rem 1rem;
-  background: var(--card-default, #f9fafb);
-  border: 1px solid var(--border-light, #e2e8f0);
+  background: var(--card-default, var(--mc-surface-muted, #f9fafb));
+  border: 1px solid var(--border-light, var(--mc-border, #e2e8f0));
   border-radius: 12px;
   cursor: pointer;
   transition: background 0.2s;
@@ -208,7 +208,7 @@
   text-align: start;
 
   &:hover {
-    background: var(--border-light, #e2e8f0);
+    background: var(--border-light, var(--mc-surface-subtle, #e2e8f0));
   }
 
   &--expanded {
@@ -219,7 +219,7 @@
   &--static {
     cursor: default;
     &:hover {
-      background: var(--card-default, #f9fafb);
+      background: var(--card-default, var(--mc-surface-muted, #f9fafb));
     }
   }
 }
@@ -243,7 +243,7 @@
   flex: 1;
   font-size: 0.95rem;
   font-weight: 500;
-  color: var(--text-heading, #1a1a2e);
+  color: var(--text-heading, var(--mc-text-strong, #1a1a2e));
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -261,7 +261,7 @@
   padding: 0 0.4rem;
   border-radius: 12px;
   background: rgba(95, 136, 229, 0.15);
-  color: var(--btn-primary, #5f88e5);
+  color: var(--btn-primary, var(--mc-brand-text, #5f88e5));
   font-size: 0.75rem;
   font-weight: 600;
   flex-shrink: 0;
@@ -270,7 +270,7 @@
 .chevron {
   width: 20px;
   height: 20px;
-  color: var(--text-muted, #a0aec0);
+  color: var(--text-muted, var(--mc-text-muted, #a0aec0));
   flex-shrink: 0;
   transition: transform 0.25s ease;
 
@@ -305,7 +305,7 @@
 // ============================================
 
 .suggestionCard {
-  border: 1px solid var(--border-light, #e2e8f0);
+  border: 1px solid var(--border-light, var(--mc-border, #e2e8f0));
   border-top: none;
   overflow: hidden;
 

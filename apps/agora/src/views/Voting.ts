@@ -3,6 +3,7 @@ import { t } from '../lib/i18n';
 import { stalledBanner } from '../components/StalledBanner';
 import { CarriedContext } from '../components/CarriedContext';
 import { ChallengeCards } from '../components/ChallengeCards';
+import { standingBar } from '../components/StandingBar';
 import { castVote, getVotingState, totalVotes } from '../lib/voting';
 import { getCurrentPlanIndex, getSessionState } from '../lib/session';
 import { challengerCandidate, getGame, passTurn, pitchChallenger } from '../lib/votingGame';
@@ -263,6 +264,39 @@ export function Voting(): m.Component<VotingAttrs> {
 				);
 			};
 
+			/**
+			 * One side of a motion, as a standing column: the pillar rises from
+			 * the floor as the side gathers votes, and the two stand side by side
+			 * so the room compares heights, not rows.
+			 */
+			const standingOption = (
+				statementId: string,
+				label: string,
+				tone: 'for' | 'against',
+			): m.Children => {
+				const count = selections[statementId] ?? 0;
+				const mine = !board && myVoteStatementId === statementId;
+				const share = loaded && total > 0 ? Math.round((count / total) * 100) : 0;
+
+				return m(
+					board ? 'div.voting__option.voting__option--static' : 'button.voting__option',
+					{
+						key: statementId,
+						class: [
+							'voting__option--standing',
+							`voting__option--${tone}`,
+							mine ? 'voting__option--mine' : '',
+						]
+							.join(' ')
+							.trim(),
+						'aria-pressed': board ? undefined : mine ? 'true' : 'false',
+						disabled: board ? undefined : saving || readOnly,
+						onclick: board ? undefined : () => vote(statementId),
+					},
+					standingBar({ label, count, share, showCount: showResults && loaded }),
+				);
+			};
+
 			// The ballot's own order is the agreement order it was drawn in. Under
 			// live reorder it follows the count instead — ties keep the original
 			// order so the list cannot jitter between equal options.
@@ -329,8 +363,8 @@ export function Voting(): m.Component<VotingAttrs> {
 					? [
 							m('.card.voting__motion', [m('p.voting__motion-text', candidates[0].statement)]),
 							m('.voting__list.voting__list--binary', [
-								option(candidates[0].statementId, t('voting.for'), null, 'voting__option--for'),
-								option(VOTE_AGAINST, t('voting.against'), null, 'voting__option--against'),
+								standingOption(candidates[0].statementId, t('voting.for'), 'for'),
+								standingOption(VOTE_AGAINST, t('voting.against'), 'against'),
 							]),
 						]
 					: m(

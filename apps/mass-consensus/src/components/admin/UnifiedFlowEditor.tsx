@@ -10,8 +10,20 @@ import type {
   SurveySettings,
   QuestionOverrideSettings,
   RatingMode,
+  EvaluationScaleKey,
 } from '@freedi/shared-types';
-import { UserDemographicQuestionType, SuggestionMode } from '@freedi/shared-types';
+import {
+  UserDemographicQuestionType,
+  SuggestionMode,
+  resolveEvaluationScaleKey,
+  THREE_POINT_STEPS,
+  FIVE_POINT_STEPS,
+} from '@freedi/shared-types';
+import {
+  areSuggestionsClosed,
+  resolveAllowSuggestions,
+  withAllowSuggestions,
+} from '@/lib/utils/settingsUtils';
 import {
   DndContext,
   closestCenter,
@@ -32,6 +44,7 @@ import { CSS } from '@dnd-kit/utilities';
 import DemographicQuestionEditor from './DemographicQuestionEditor';
 import ExplanationEditor from './ExplanationEditor';
 import QuestionTextEditor from './QuestionTextEditor';
+import QuestionCardsPanel from './QuestionCardsPanel';
 import SynthesisStatusBadge, { resolveSynthesisBadgeState } from './SynthesisStatusBadge';
 import styles from './Admin.module.scss';
 
@@ -59,6 +72,8 @@ interface UnifiedFlowEditorProps {
   onQuestionSettingsChange: (questionId: string, settings: QuestionOverrideSettings) => void;
   onQuestionTextChange: (questionId: string, newText: string) => void;
   onRemoveQuestion: (questionId: string) => void;
+  /** Lets survey editors manage the cards of questions they did not create. */
+  surveyId?: string;
 }
 
 type FlowItemData =
@@ -165,6 +180,11 @@ interface SortableFlowItemProps {
   onToggleExpand: () => void;
   onRemove: () => void;
   // For questions
+  surveyId?: string;
+  /** Header shortcut to the question's cards and their pictures. */
+  onOpenPictures?: () => void;
+  /** Bumped each time the shortcut is used, so the panel opens and scrolls into view. */
+  cardsFocusRequest?: number;
   surveySettings?: SurveySettings;
   questionSetting?: QuestionOverrideSettings;
   onQuestionSettingsChange?: (settings: QuestionOverrideSettings) => void;
@@ -184,6 +204,9 @@ function SortableFlowItem({
   expanded,
   onToggleExpand,
   onRemove,
+  surveyId,
+  onOpenPictures,
+  cardsFocusRequest,
   surveySettings,
   questionSetting,
   onQuestionSettingsChange,
@@ -257,6 +280,16 @@ function SortableFlowItem({
             })}
           />
         )}
+        {item.type === 'question' && onOpenPictures && (
+          <button
+            type="button"
+            className={styles.flowPicturesButton}
+            onClick={onOpenPictures}
+            aria-label={t('Add pictures to the cards of this question')}
+          >
+            <span aria-hidden="true">🖼️</span> {t('Pictures')}
+          </button>
+        )}
         <button
           type="button"
           className={styles.flowExpandButton}
@@ -295,8 +328,14 @@ function SortableFlowItem({
                   onChange={onQuestionTextChange}
                 />
               )}
+              <QuestionCardsPanel
+                questionId={item.question.statementId}
+                surveyId={surveyId}
+                focusRequest={cardsFocusRequest}
+              />
               <QuestionSettingsPanel
                 questionSetting={questionSetting}
+                storedSettings={item.question.statementSettings}
                 surveySettings={surveySettings}
                 onChange={onQuestionSettingsChange}
               />
@@ -331,12 +370,15 @@ function SortableFlowItem({
 
 interface QuestionSettingsPanelProps {
   questionSetting?: QuestionOverrideSettings;
+  /** The question Statement's own settings — what participants get until this survey overrides it. */
+  storedSettings?: Statement['statementSettings'];
   surveySettings: SurveySettings;
   onChange: (settings: QuestionOverrideSettings) => void;
 }
 
 function QuestionSettingsPanel({
   questionSetting,
+  storedSettings,
   surveySettings,
   onChange,
 }: QuestionSettingsPanelProps) {
@@ -361,15 +403,25 @@ function QuestionSettingsPanel({
     }
   };
 
-  const handleRatingMode = (value: string) => {
-    if (value === 'default') {
-      // 'default' = no override → falls back to agree-disagree everywhere
-      const newSetting = { ...questionSetting };
-      delete newSetting.ratingMode;
-      onChange(newSetting);
-    } else {
-      onChange({ ...questionSetting, ratingMode: value as RatingMode });
-    }
+  // One dropdown, two stored fields: `ratingMode` picks the face set and
+  // `ratingSteps` the length of the agree-disagree scale. Every choice is
+  // written explicitly — the survey save only cascades an explicit override
+  // onto the question, so "back to the default" has to be one too.
+  // The two "ask for a suggestion" toggles only mean something while this is on
+  const suggestionsAllowed = !areSuggestionsClosed(surveySettings, questionSetting);
+
+  // With no override yet, show the scale the question already carries (it may
+  // have been set from another app) rather than claiming the default.
+  const ratingScale = resolveEvaluationScaleKey(
+    questionSetting?.ratingMode ? questionSetting : storedSettings
+  );
+
+  const handleRatingScale = (value: string) => {
+    const scale = value as EvaluationScaleKey;
+    const ratingMode: RatingMode = scale === 'reactions' ? 'reactions' : 'agree-disagree';
+    const ratingSteps = scale === 'three-point' ? THREE_POINT_STEPS : FIVE_POINT_STEPS;
+
+    onChange({ ...questionSetting, ratingMode, ratingSteps });
   };
 
   // Get the survey default label for the dropdown
@@ -391,23 +443,15 @@ function QuestionSettingsPanel({
           <label className={styles.toggleSwitch}>
             <input
               type="checkbox"
-              checked={
-                surveySettings.allowParticipantsToAddSuggestions
-                  ? true
-                  : questionSetting?.allowParticipantsToAddSuggestions ?? true
+              checked={resolveAllowSuggestions(surveySettings, questionSetting)}
+              onChange={(e) =>
+                onChange(withAllowSuggestions(surveySettings, questionSetting, e.target.checked))
               }
-              disabled={surveySettings.allowParticipantsToAddSuggestions}
-              onChange={(e) => handleToggle('allowParticipantsToAddSuggestions', e.target.checked)}
             />
             <span className={styles.toggleSlider}></span>
           </label>
           <span className={styles.toggleLabel}>{t('allowParticipantsToAddSuggestionsQuestion') || 'Allow participants to add suggestions'}</span>
         </div>
-        {surveySettings.allowParticipantsToAddSuggestions && (
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
-            {t('surveySettingEnabled') || '(Survey setting enabled)'}
-          </span>
-        )}
       </div>
 
       <div className={styles.settingRow}>
@@ -415,13 +459,19 @@ function QuestionSettingsPanel({
           <label className={styles.toggleSwitch}>
             <input
               type="checkbox"
-              checked={questionSetting?.askUserForASolutionBeforeEvaluation ?? true}
+              checked={suggestionsAllowed && (questionSetting?.askUserForASolutionBeforeEvaluation ?? true)}
+              disabled={!suggestionsAllowed}
               onChange={(e) => handleToggle('askUserForASolutionBeforeEvaluation', e.target.checked)}
             />
             <span className={styles.toggleSlider}></span>
           </label>
           <span className={styles.toggleLabel}>{t('askForSuggestionBeforeEvaluation') || 'Ask for suggestion before showing options'}</span>
         </div>
+        {!suggestionsAllowed && (
+          <span className={styles.settingHint}>
+            {t('suggestionsOffForQuestion') || 'Off because suggestions are turned off for this question.'}
+          </span>
+        )}
       </div>
 
       {/* Suggestion Mode override */}
@@ -512,11 +562,14 @@ function QuestionSettingsPanel({
           <span>{t('ratingModeThisQuestion') || 'How participants rate options'}</span>
           <select
             className={styles.selectInput}
-            value={questionSetting?.ratingMode || 'default'}
-            onChange={(e) => handleRatingMode(e.target.value)}
+            value={ratingScale}
+            onChange={(e) => handleRatingScale(e.target.value)}
           >
-            <option value="default">
-              {t('ratingModeAgreeDisagree') || 'Agree – Disagree (default)'}
+            <option value="agree-disagree">
+              {t('ratingModeAgreeDisagree') || 'Agree – Disagree, 5 steps (default)'}
+            </option>
+            <option value="three-point">
+              {t('ratingModeThreePoint') || 'Disagree – Neutral – Agree, 3 steps (−1, 0, +1)'}
             </option>
             <option value="reactions">
               {t('ratingModeReactions') || 'Emoji reactions 😐🙂😊👍❤️'}
@@ -524,7 +577,8 @@ function QuestionSettingsPanel({
           </select>
         </label>
         <span className={styles.settingHint}>
-          {t('ratingModeHint') || 'Reactions use a positive-only scale (no disagree). Applies across all apps.'}
+          {t('ratingModeHint') ||
+            'Reactions use a positive-only scale (no disagree) and apply across all apps. The 3-step scale applies in Mass Consensus; other apps keep showing 5 steps.'}
         </span>
       </div>
 
@@ -547,13 +601,19 @@ function QuestionSettingsPanel({
           <label className={styles.toggleSwitch}>
             <input
               type="checkbox"
-              checked={questionSetting?.askUserForASolutionAfterEvaluation ?? false}
+              checked={suggestionsAllowed && (questionSetting?.askUserForASolutionAfterEvaluation ?? false)}
+              disabled={!suggestionsAllowed}
               onChange={(e) => handleToggle('askUserForASolutionAfterEvaluation', e.target.checked)}
             />
             <span className={styles.toggleSlider}></span>
           </label>
           <span className={styles.toggleLabel}>{t('askForSuggestionAfterEvaluation') || 'Ask user to add an answer after completing evaluations'}</span>
         </div>
+        {!suggestionsAllowed && (
+          <span className={styles.settingHint}>
+            {t('suggestionsOffForQuestion') || 'Off because suggestions are turned off for this question.'}
+          </span>
+        )}
       </div>
 
       {/* Automatic AI handling of submissions. Each toggle shows the survey
@@ -726,9 +786,11 @@ export default function UnifiedFlowEditor({
   onQuestionSettingsChange,
   onQuestionTextChange,
   onRemoveQuestion,
+  surveyId,
 }: UnifiedFlowEditorProps) {
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [cardsFocus, setCardsFocus] = useState<{ id: string; request: number } | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -898,6 +960,16 @@ export default function UnifiedFlowEditor({
                 expanded={expandedId === item.id}
                 onToggleExpand={() => setExpandedId(expandedId === item.id ? null : item.id)}
                 onRemove={() => handleRemoveItem(item)}
+                surveyId={surveyId}
+                onOpenPictures={
+                  item.type === 'question'
+                    ? () => {
+                        setExpandedId(item.id);
+                        setCardsFocus((prev) => ({ id: item.id, request: (prev?.request ?? 0) + 1 }));
+                      }
+                    : undefined
+                }
+                cardsFocusRequest={cardsFocus?.id === item.id ? cardsFocus.request : undefined}
                 surveySettings={surveySettings}
                 questionSetting={item.type === 'question' ? questionSettings[item.id] : undefined}
                 onQuestionSettingsChange={

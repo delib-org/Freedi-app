@@ -170,21 +170,84 @@ body {
 	cursor: default;
 }
 
-/* "אפשר להמשיך" — the compass says when a wind has been answered, and says
-   nothing at all before that. It replaced a running count of the buttons the
-   player can already see. */
-.wind-ready {
+/* Wind progress — one pill on every compass card: three slots and a count
+   while the wind is still short of its target, ✓ "אפשר להמשיך" once it is
+   answered. The slots are the target, visible before anything is picked. */
+.wind-progress {
 	flex: none;
 	display: inline-flex;
 	align-items: center;
-	gap: 6px;
+	gap: 8px;
 	white-space: nowrap;
 	border: 1px solid rgba(232, 185, 88, 0.5);
 	border-radius: 999px;
 	padding: 3px 12px;
 	font-size: 13px;
-	color: var(--gold-strong);
+	color: var(--cream);
 	background: rgba(6, 24, 44, 0.7);
+	transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.wind-progress.done {
+	color: var(--gold-strong);
+	border-color: rgba(232, 185, 88, 0.85);
+}
+
+.wind-progress__track {
+	display: inline-flex;
+	gap: 4px;
+}
+
+.wind-progress__slot {
+	width: 10px;
+	height: 10px;
+	border-radius: 999px;
+	border: 1px solid rgba(232, 185, 88, 0.5);
+	transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.wind-progress__slot.on {
+	background: var(--gold-strong);
+	border-color: var(--gold-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wind-progress,
+	.wind-progress__slot {
+		transition: none;
+	}
+}
+
+/* The emblem of a wind, beside its heading. Like the islets it ships with real
+   alpha and floats on the panel rather than sitting in a frame. It is allowed
+   to shrink but never to squeeze the heading: the words are the wind, the
+   picture only helps you find it again. */
+.wind-head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+}
+
+.wind-art {
+	flex: none;
+	display: block;
+	width: 68px;
+	height: 68px;
+}
+
+.wind-art img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.45));
+}
+
+@media (max-width: 480px) {
+	.wind-art {
+		width: 48px;
+		height: 48px;
+	}
 }
 
 /* Inspiration chips (compass) */
@@ -657,9 +720,14 @@ textarea[aria-invalid='true'] {
 		0 8px 22px rgba(0, 0, 0, 0.3);
 }
 
-/* The berth number, top corner of the frame — matches the roster board. */
-.crew-number {
+/* "Who is this?" — the top corner of the frame, opposite the 📜.
+   A badge rather than a line of words under the card: twelve cards each
+   ending in the same question read as a board of questions, and the berth
+   numbers that used to sit here numbered people for no reason.
+   It overlays the card from the cell, because a button may not nest. */
+.crew-info {
 	position: absolute;
+	z-index: 2;
 	top: 8px;
 	inset-inline-start: 8px;
 	display: inline-flex;
@@ -667,12 +735,28 @@ textarea[aria-invalid='true'] {
 	justify-content: center;
 	width: 22px;
 	height: 22px;
+	padding: 0;
+	cursor: pointer;
 	border-radius: 50%;
 	border: 1px solid rgba(232, 185, 88, 0.7);
 	background: rgba(4, 18, 34, 0.9);
-	font-size: 12px;
+	/* A serif "i" is the one that reads as the information mark rather than
+	   as a lowercase letter that wandered in. */
+	font-family: Georgia, 'Times New Roman', serif;
+	font-size: 13px;
 	font-weight: 700;
+	font-style: italic;
+	line-height: 1;
 	color: var(--gold-strong);
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease;
+}
+
+.crew-info:hover,
+.crew-info[aria-expanded='true'] {
+	background: var(--gold-strong);
+	color: var(--navy);
 }
 
 /* The persona marker (📜) sits opposite the number: on every card, always,
@@ -1183,6 +1267,61 @@ button.ship-tag--lit:hover {
 	}
 }
 
+/* On the crew board the bubble belongs to the ⓘ, not to the whole card, and
+   the badge sits in the card's top corner — so the bubble opens UPWARD from
+   there, tail pointing down at the badge you just pressed.
+   Downward was tried first and was wrong: from a badge at the top, the bubble
+   covers the portrait and the name of the very person it is explaining, and
+   the bio text itself never says whose it is. Upward leaves the card whole and
+   costs only the row above, which is an overlay's job anyway. */
+.crew-cell > .speech-bubble {
+	top: auto;
+	bottom: 100%;
+	/* Not centred on the card like the islands' bubble: its edge lines up with
+	   the badge's edge, which is what lets the tail land on the badge. */
+	left: auto;
+	inset-inline-start: 0;
+	transform: none;
+	margin-top: 0;
+	margin-bottom: 8px;
+	/* Room to read a bio without reaching past the board on a phone, where the
+	   grid is two columns and the bubble opens inward from its own card. */
+	max-width: min(260px, 46vw);
+	animation: bubbleUpIn 0.18s ease;
+}
+
+@media (min-width: 480px) {
+	.crew-cell > .speech-bubble {
+		max-width: min(260px, 74vw);
+	}
+}
+
+@keyframes bubbleUpIn {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* The tail moves to the bottom edge and over to the badge's own column —
+   8px in, plus half of the badge's 22px, less half of the tail's 10px. */
+.crew-cell > .speech-bubble::before {
+	top: auto;
+	bottom: -6px;
+	left: auto;
+	inset-inline-start: 14px;
+	transform: rotate(45deg);
+	border-top: 0;
+	border-left: 0;
+	border-bottom: 1px solid rgba(232, 185, 88, 0.75);
+	border-right: 1px solid rgba(232, 185, 88, 0.75);
+	background: var(--panel-bottom);
+}
+
 /* The tail, pointing back at the card that is speaking. Physical borders on
    purpose: the square is rotated, and logical ones would flip with the text. */
 .speech-bubble::before {
@@ -1241,6 +1380,9 @@ button.ship-tag--lit:hover {
 	}
 	.crew-card:hover {
 		transform: none;
+	}
+	.crew-info {
+		transition: none;
 	}
 	.isle-card:hover {
 		transform: none;

@@ -1,9 +1,13 @@
 @use '../mixins' as *;
 
 // Swipe Card - Tinder-style card component
-// Full-color zones with readable text overlay
+// A plain card: the rating buttons along its bottom edge carry the colours,
+// one per swipe zone, so grabbing the card above a button throws that rating.
 
 .swipe-card {
+  // Height of the rating row inside the card (button + breathing room)
+  --swipe-card-ratings-height: 4.5rem;
+
   // Base styles
   position: relative;
   width: 90%;
@@ -51,51 +55,26 @@
     flex-direction: row;
     direction: ltr; // Force LTR to prevent RTL reversal
     pointer-events: none;
-    z-index: 0;
+    // Above the content, so the highlight and icon of a grabbed zone show
+    // over a picture too. Untinted at rest, so it hides nothing.
+    z-index: 2;
     border-radius: inherit;
     overflow: hidden;
   }
 
-  // Individual zone strip - full height
+  // Individual zone strip - full height. Untinted: it only marks where a grab
+  // starts, and shows the neutral highlight + emoji of the zone being dragged.
   &__zone {
     flex: 1;
     position: relative;
-    opacity: 0.55; // Visible but allows text readability
-    transition: opacity 0.2s ease-out;
+    transition: background-color 0.2s ease-out;
 
-    // The colour lives on its own layer so the survey's card colour intensity
-    // (--card-color-intensity, 0–1) fades only the tint, never the emoji
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--swipe-zone-color);
-      opacity: var(--card-color-intensity, 1);
-    }
-
-    // Zone colors (Universal: left to right, negative to positive)
-    &--zone-0 { --swipe-zone-color: var(--rating-strongly-disagree); }
-    &--zone-1 { --swipe-zone-color: var(--rating-disagree); }
-    &--zone-2 { --swipe-zone-color: var(--rating-neutral); }
-    &--zone-3 { --swipe-zone-color: var(--rating-agree); }
-    &--zone-4 { --swipe-zone-color: var(--rating-strongly-agree); }
-
-    // Highlighted state
     &--active {
-      opacity: 0.85;
+      background: color-mix(in srgb, var(--text-primary) 8%, transparent);
 
       .swipe-card__zone-emoji {
         opacity: 1;
       }
-    }
-  }
-
-  // When dragging, emphasize zones
-  &--dragging &__zone {
-    opacity: 0.7;
-
-    &--active {
-      opacity: 0.9;
     }
   }
 
@@ -128,10 +107,11 @@
     inset-inline-start: var(--spacing-md);
   }
 
-  // Comment button (bottom corner)
+  // Comment button (top corner, opposite the number badge — the bottom edge
+  // belongs to the rating buttons)
   &__comment-btn {
     position: absolute;
-    bottom: var(--spacing-md);
+    top: var(--spacing-md);
     inset-inline-end: var(--spacing-md);
     z-index: 3;
     pointer-events: auto;
@@ -157,13 +137,132 @@
     }
   }
 
+  // Admin: picture button (top corner, beside the comment button)
+  &__image-btn {
+    position: absolute;
+    top: var(--spacing-md);
+    inset-inline-end: calc(var(--spacing-md) + 44px + 0.5rem);
+    z-index: 3;
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.92);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  // Hide the admin button during drag, like the comment button
+  &--dragging &__image-btn {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  // A card with a picture: taller, picture on top, text below it.
+  // The picture runs edge to edge from the top of the card (the badge and the
+  // buttons in the top corners sit over it) and keeps its own proportions up
+  // to 60% of the space, so long text keeps room.
+  &--with-image {
+    height: clamp(320px, 55vh, 560px);
+    max-height: 62vh;
+    justify-content: flex-start;
+    padding: 0 0 var(--spacing-md);
+  }
+
+  &--with-image &__content-wrapper {
+    flex: 1;
+    min-height: 0;
+    justify-content: flex-start;
+    gap: var(--spacing-md);
+    padding: 0;
+  }
+
+  // Rating buttons along the bottom of the card, one column per swipe zone
+  // (same left→right order as the zones behind them).
+  &__ratings {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 3;
+    height: var(--swipe-card-ratings-height);
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    direction: ltr; // Force LTR to prevent RTL reversal, like the zones
+    align-items: center;
+    justify-items: center;
+    pointer-events: none; // Gaps between buttons still start a swipe
+
+    .rating-button {
+      pointer-events: auto;
+    }
+  }
+
+  // The button of the zone being dragged steps forward
+  &__rating--active .rating-button {
+    transform: scale(1.15);
+    box-shadow: var(--shadow-md);
+  }
+
+  // A card that carries its rating row: taller by that row, content kept clear of it
+  &--with-ratings {
+    height: calc(clamp(200px, 35vh, 400px) + var(--swipe-card-ratings-height));
+    max-height: calc(45vh + var(--swipe-card-ratings-height));
+    padding-bottom: calc(clamp(1.5rem, 4vw, 2rem) + var(--swipe-card-ratings-height));
+  }
+
+  &--with-ratings#{&}--with-image {
+    height: calc(clamp(320px, 55vh, 560px) + var(--swipe-card-ratings-height));
+    max-height: calc(62vh + var(--swipe-card-ratings-height));
+    padding-bottom: var(--swipe-card-ratings-height);
+  }
+
+  &--with-ratings &__vertical-indicator {
+    bottom: calc(var(--swipe-card-ratings-height) + 0.5rem);
+  }
+
+  &__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 60%;
+    flex-shrink: 0;
+    object-fit: cover;
+    background: var(--card-default);
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+  }
+
+  &--with-image &__content {
+    font-size: 1.125rem;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 var(--spacing-md);
+  }
+
   // Hide comment button during drag
   &--dragging &__comment-btn {
     opacity: 0;
     pointer-events: none;
   }
 
-  // Content wrapper - NO background, text sits directly on colors
+  // Content wrapper - NO background, text sits directly on the card
   &__content-wrapper {
     position: relative;
     z-index: 1;
@@ -176,7 +275,6 @@
     padding: var(--spacing-xl) var(--spacing-lg);
     transition: opacity 0.2s;
     pointer-events: none;
-    // No background - unified with card colors
   }
 
   // Dim content during drag
@@ -216,21 +314,14 @@
   &__content {
     font-size: 1.5rem; // 24px - prominent and readable
     line-height: 1.45;
-    color: #1e293b; // Dark slate for maximum contrast
+    color: var(--mc-text-strong, #1e293b); // Dark slate for maximum contrast
     text-align: center;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    font-weight: 600; // Semi-bold for better readability on colors
+    font-weight: 600;
     letter-spacing: -0.01em;
     max-width: 100%;
     padding: 0 var(--spacing-sm);
-
-    // Multi-layer text shadow for readability on any colored background
-    text-shadow:
-      0 0 20px rgba(255, 255, 255, 0.95),
-      0 0 40px rgba(255, 255, 255, 0.8),
-      0 1px 2px rgba(255, 255, 255, 0.9),
-      0 0 60px rgba(255, 255, 255, 0.6);
   }
 
   // Overlay states (legacy - kept for compatibility)
@@ -289,22 +380,22 @@
 
     // Reaction mode variants (positive-only 0..1)
     &--reaction-meh {
-      background: var(--reaction-meh, #f1f5f9);
-      border: 2px solid var(--reaction-meh-border, #cbd5e1);
+      background: var(--reaction-meh, var(--mc-surface-muted, #f1f5f9));
+      border: 2px solid var(--reaction-meh-border, var(--mc-border, #cbd5e1));
     }
 
     &--reaction-okay {
-      background: var(--reaction-okay, #e0f2fe);
+      background: var(--reaction-okay, var(--mc-surface-tint, #e0f2fe));
       border: 2px solid var(--reaction-okay-border, #7dd3fc);
     }
 
     &--reaction-good {
-      background: var(--reaction-good, #d1fae5);
+      background: var(--reaction-good, var(--mc-surface-tint, #d1fae5));
       border: 2px solid var(--reaction-good-border, #6ee7b7);
     }
 
     &--reaction-great {
-      background: var(--reaction-great, #fef3c7);
+      background: var(--reaction-great, var(--mc-surface-tint, #fef3c7));
       border: 2px solid var(--reaction-great-border, #fcd34d);
     }
 
@@ -390,6 +481,7 @@
 
   // Mobile
   @include mobile {
+    width: 100%; // The page already has its own side margin; don't add another
     height: clamp(180px, 30vh, 280px);
     max-height: 35vh;
 
@@ -408,6 +500,25 @@
 
     &__content {
       font-size: 1.125rem;
+    }
+
+    &--with-image {
+      height: clamp(300px, 52vh, 460px);
+      max-height: 56vh;
+    }
+
+    &--with-ratings {
+      height: calc(clamp(180px, 30vh, 280px) + var(--swipe-card-ratings-height));
+      max-height: calc(35vh + var(--swipe-card-ratings-height));
+    }
+
+    &--with-ratings#{&}--with-image {
+      height: calc(clamp(300px, 52vh, 460px) + var(--swipe-card-ratings-height));
+      max-height: calc(56vh + var(--swipe-card-ratings-height));
+    }
+
+    &--with-image &__content {
+      font-size: 1rem;
     }
 
     &__confirmation-modal {

@@ -29,7 +29,7 @@
 }
 
 .modal {
-  background: white;
+  background: var(--mc-surface, white);
   width: 90%;
   max-width: 560px;
   max-height: 90vh;
@@ -275,6 +275,11 @@
 // ============================================
 // STEP CONTENT: GROUP SELECTION
 // ============================================
+
+.optionalLabel {
+  font-weight: normal;
+  color: var(--text-muted, #718096);
+}
 
 .stepTitle {
   font-size: 1.1rem;
@@ -543,7 +548,7 @@
   gap: 0.75rem;
   margin-top: 0.75rem;
   padding: 0.75rem;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 6px;
 
   label {
@@ -691,67 +696,6 @@
   padding: 1rem;
   background: var(--bg-muted, #f7fafc);
   border-radius: 8px;
-}
-
-.previewHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.previewTitle {
-  font-weight: 500;
-  color: var(--text-body, #4a5568);
-}
-
-.previewCount {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.75rem;
-  background: var(--btn-primary, #5f88e5);
-  color: white;
-  border-radius: 12px;
-  font-weight: 600;
-}
-
-.previewList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-height: 150px;
-  overflow-y: auto;
-}
-
-.previewItem {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: white;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  color: var(--text-body, #4a5568);
-}
-
-.previewNumber {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--border-light, #e2e8f0);
-  color: var(--text-muted, #718096);
-  border-radius: 50%;
-  font-size: 0.75rem;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.previewText {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .emptyPreview {

@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
 
-    for (const solutionText of filteredSolutions) {
+    for (const [index, solutionText] of filteredSolutions.entries()) {
       const solutionId = getRandomUID();
       const solution = createStatementObject({
         statementId: solutionId,
@@ -248,6 +248,9 @@ export async function POST(request: NextRequest) {
       });
 
       if (solution) {
+        // One batch shares one clock tick; a millisecond apiece keeps the
+        // order the admin typed recoverable from createdAt
+        solution.createdAt += index;
         solutionStatements.push(solution);
       }
     }
