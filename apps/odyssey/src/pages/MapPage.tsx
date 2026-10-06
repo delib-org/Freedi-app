@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
 import { useGame } from '../state/GameContext';
@@ -258,14 +258,6 @@ export default function MapPage() {
 									? 'בחרו לפחות אי אחד'
 									: `מפליגים אל ${selected.size} איים (~${estimateMinutes(selected.size)} דקות)`}
 						</button>
-						{/* The crew screen promises more sailors can be joined later.
-						    Without a way back before the summary, that promise only
-						    comes true once the voyage is already over. */}
-						{(content.game.elders ?? []).length > 0 ? (
-							<Link className="btn-outline" to="/elders">
-								📜 לצרף מלחים לצוות
-							</Link>
-						) : null}
 					</div>
 				</div>
 			</div>
