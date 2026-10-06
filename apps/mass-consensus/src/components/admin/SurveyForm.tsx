@@ -546,7 +546,9 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         <h2 className={styles.sectionTitle}>{t('basicInfo')}</h2>
 
         <div className={styles.formGroup}>
-          <label htmlFor="title">{t('surveyTitle')}</label>
+          <label htmlFor="title">
+            {t('surveyTitle')} <span aria-hidden="true">*</span>
+          </label>
           <input
             id="title"
             type="text"
@@ -1088,6 +1090,10 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         </div>
       ) : (
         <div className={styles.formActions}>
+          {/* The create button is disabled without a title; say why, right beside it */}
+          <span className={styles.autosaveStatus} role="status" aria-live="polite">
+            {!title.trim() && t('titleRequired')}
+          </span>
           <Link href="/admin/surveys" className={styles.cancelButton}>
             {t('cancel')}
           </Link>

@@ -156,7 +156,7 @@ describe('SurveyForm autosave (edit mode)', () => {
 
   it('coalesces rapid typing into one save with the final text', async () => {
     await renderEditor();
-    const titleInput = screen.getByLabelText('surveyTitle');
+    const titleInput = screen.getByLabelText(/surveyTitle/);
 
     fireEvent.change(titleInput, { target: { value: 'Budget p' } });
     await act(async () => {
@@ -173,7 +173,7 @@ describe('SurveyForm autosave (edit mode)', () => {
   it('does not save an empty title', async () => {
     await renderEditor();
 
-    fireEvent.change(screen.getByLabelText('surveyTitle'), { target: { value: '   ' } });
+    fireEvent.change(screen.getByLabelText(/surveyTitle/), { target: { value: '   ' } });
     await advancePastAutosaveDelay();
 
     expect(surveyPuts()).toHaveLength(0);
@@ -199,5 +199,49 @@ describe('SurveyForm autosave (edit mode)', () => {
 
     expect(surveyPuts()).toHaveLength(2);
     expect(screen.getByRole('status')).toHaveTextContent('allChangesSaved');
+  });
+});
+
+describe('SurveyForm create mode', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.clearAllMocks();
+    authedFetchMock.mockImplementation(() => jsonResponse({}));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  async function renderCreateForm() {
+    render(<SurveyForm />);
+    await act(async () => {
+      await jest.runOnlyPendingTimersAsync();
+    });
+  }
+
+  it('says a title is required while the create button is disabled', async () => {
+    await renderCreateForm();
+
+    expect(screen.getByRole('button', { name: 'createSurvey' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('titleRequired');
+  });
+
+  it('enables the create button and drops the hint once there is a title', async () => {
+    await renderCreateForm();
+
+    fireEvent.change(screen.getByLabelText(/surveyTitle/), { target: { value: 'My survey' } });
+
+    expect(screen.getByRole('button', { name: 'createSurvey' })).toBeEnabled();
+    expect(screen.getByRole('status')).not.toHaveTextContent('titleRequired');
+  });
+
+  it('treats a title of only spaces as missing', async () => {
+    await renderCreateForm();
+
+    fireEvent.change(screen.getByLabelText(/surveyTitle/), { target: { value: '   ' } });
+
+    expect(screen.getByRole('button', { name: 'createSurvey' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('titleRequired');
   });
 });
