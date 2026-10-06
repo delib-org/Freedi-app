@@ -2261,6 +2261,7 @@
   "allowSkippingNote": "وقتی فعال باشد، تمام تنظیمات رد کردن هر سؤال را بازنویسی می‌کند",
   "allowSkippingThisQuestion": "اجازه رد کردن این سؤال",
   "allowSuggestionsNote": "پیش‌فرض برای همه سؤالات. هر سؤال می‌تواند آن را تغییر دهد.",
+  "suggestionsOffForQuestion": "خاموش است چون افزودن پیشنهاد برای این سؤال غیرفعال است.",
   "analyzingBy": "تحلیل بر اساس",
   "anonymous": "ناشناس",
   "answerOptions": "گزینه‌های پاسخ",

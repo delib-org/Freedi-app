@@ -2412,6 +2412,7 @@
   "allowSkippingNote": "When enabled, overrides all per-question skip settings",
   "allowSkippingThisQuestion": "Allow skipping this question",
   "allowSuggestionsNote": "Default for all questions. Each question can override it.",
+  "suggestionsOffForQuestion": "Off because suggestions are turned off for this question.",
   "analyzingBy": "Analyzing by",
   "anonymous": "Anonymous",
   "answerOptions": "Answer Options",

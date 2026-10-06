@@ -211,14 +211,16 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     loadPreviousEvaluations();
   }, [userId, question.statementId, initialSolutions]);
 
-  // Handle showing proposal prompt
+  // Handle showing proposal prompt — never on a question closed to suggestions
+  const suggestionsClosed = mergedSettings?.suggestionsClosed ?? false;
+
   useEffect(() => {
-    if (showProposalPrompt) {
+    if (showProposalPrompt && !suggestionsClosed) {
       setShowProposalModal(true);
       // Track that prompt was shown
       trackProposalPromptShown(question.statementId, userId, evaluatedCount);
     }
-  }, [showProposalPrompt, question.statementId, userId, evaluatedCount]);
+  }, [showProposalPrompt, suggestionsClosed, question.statementId, userId, evaluatedCount]);
 
   // Show solution prompt after completing minimum evaluations (if admin enabled)
   const askAfterEvaluation = mergedSettings?.askUserForASolutionAfterEvaluation ?? false;

@@ -3056,6 +3056,7 @@
   "ratingModeReactions": "تفاعلات إيموجي 😐🙂😊👍❤️",
   "ratingModeHint": "التفاعلات تستخدم مقياسًا إيجابيًا فقط (بدون عدم موافقة) وتنطبق على جميع التطبيقات. مقياس الدرجات الثلاث ينطبق في Mass Consensus؛ أما التطبيقات الأخرى فتستمر في عرض 5 درجات.",
   "allowSuggestionsNote": "الإعداد الافتراضي لجميع الأسئلة. يمكن لكل سؤال تجاوزه.",
+  "suggestionsOffForQuestion": "معطّل لأن إضافة الاقتراحات متوقفة في هذا السؤال.",
   "Emoji reactions": "تفاعلات إيموجي",
   "Reactions use a positive-only scale (no disagree). Applies across all apps.": "تستخدم التفاعلات مقياسًا إيجابيًا فقط (بدون رفض). ينطبق على جميع التطبيقات.",
   "Show full feedback": "عرض الملاحظات الكاملة",

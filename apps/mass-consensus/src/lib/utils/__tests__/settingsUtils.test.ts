@@ -3,6 +3,7 @@
  */
 import { SurveySettings, QuestionOverrideSettings, SuggestionMode } from '@freedi/shared-types';
 import {
+  areSuggestionsClosed,
   getMergedSettings,
   isSurveyLevelOverride,
   resolveAllowSuggestions,
@@ -65,13 +66,13 @@ describe('settingsUtils', () => {
 
     describe('askUserForASolutionBeforeEvaluation', () => {
       it('should be true when question override is undefined (default behavior)', () => {
-        const surveySettings = createSurveySettings();
+        const surveySettings = createSurveySettings({ allowParticipantsToAddSuggestions: true });
         const result = getMergedSettings(surveySettings, undefined);
         expect(result.askUserForASolutionBeforeEvaluation).toBe(true);
       });
 
       it('should be true when question override is true', () => {
-        const surveySettings = createSurveySettings();
+        const surveySettings = createSurveySettings({ allowParticipantsToAddSuggestions: true });
         const questionOverrides: QuestionOverrideSettings = {
           askUserForASolutionBeforeEvaluation: true,
         };
@@ -182,7 +183,7 @@ describe('settingsUtils', () => {
       it('should merge all settings correctly', () => {
         const surveySettings = createSurveySettings({
           allowSkipping: true,
-          allowParticipantsToAddSuggestions: false,
+          allowParticipantsToAddSuggestions: true,
           minEvaluationsPerQuestion: 3,
         });
         const questionOverrides: QuestionOverrideSettings = {
@@ -193,7 +194,7 @@ describe('settingsUtils', () => {
         const result = getMergedSettings(surveySettings, questionOverrides);
 
         expect(result).toMatchObject({
-          allowParticipantsToAddSuggestions: false,
+          allowParticipantsToAddSuggestions: true,
           askUserForASolutionBeforeEvaluation: true,
           allowSkipping: true,
           minEvaluationsPerQuestion: 7,
@@ -219,6 +220,57 @@ describe('settingsUtils', () => {
         expect(result).toBeDefined();
         expect(result.allowSkipping).toBe(false);
       });
+    });
+  });
+
+  describe('suggestions turned off', () => {
+    const surveyOn = createSurveySettings({ allowParticipantsToAddSuggestions: true });
+    const surveyOff = createSurveySettings({ allowParticipantsToAddSuggestions: false });
+
+    it('does not ask for a suggestion before evaluating, even by default', () => {
+      const result = getMergedSettings(surveyOn, { allowParticipantsToAddSuggestions: false });
+      expect(result.askUserForASolutionBeforeEvaluation).toBe(false);
+    });
+
+    it('does not ask before or after even when those were switched on explicitly', () => {
+      const result = getMergedSettings(surveyOn, {
+        allowParticipantsToAddSuggestions: false,
+        askUserForASolutionBeforeEvaluation: true,
+        askUserForASolutionAfterEvaluation: true,
+      });
+      expect(result.askUserForASolutionBeforeEvaluation).toBe(false);
+      expect(result.askUserForASolutionAfterEvaluation).toBe(false);
+    });
+
+    it('applies to a survey that is explicitly off with no question override', () => {
+      const result = getMergedSettings(surveyOff, undefined);
+      expect(result.allowParticipantsToAddSuggestions).toBe(false);
+      expect(result.suggestionsClosed).toBe(true);
+      expect(result.askUserForASolutionBeforeEvaluation).toBe(false);
+    });
+
+    it('leaves a survey that never stored the setting asking as before', () => {
+      const legacy = createSurveySettings({ allowParticipantsToAddSuggestions: undefined });
+      const result = getMergedSettings(legacy, undefined);
+      expect(result.allowParticipantsToAddSuggestions).toBe(false);
+      expect(result.suggestionsClosed).toBe(false);
+      expect(result.askUserForASolutionBeforeEvaluation).toBe(true);
+      expect(areSuggestionsClosed(legacy, {})).toBe(false);
+    });
+
+    it('is not closed when the question turns suggestions back on', () => {
+      expect(areSuggestionsClosed(surveyOff, { allowParticipantsToAddSuggestions: true })).toBe(false);
+      expect(areSuggestionsClosed(surveyOn, undefined)).toBe(false);
+      expect(areSuggestionsClosed(surveyOn, { allowParticipantsToAddSuggestions: false })).toBe(true);
+    });
+
+    it('keeps both prompts available while suggestions are on', () => {
+      const result = getMergedSettings(surveyOff, {
+        allowParticipantsToAddSuggestions: true,
+        askUserForASolutionAfterEvaluation: true,
+      });
+      expect(result.askUserForASolutionBeforeEvaluation).toBe(true);
+      expect(result.askUserForASolutionAfterEvaluation).toBe(true);
     });
   });
 

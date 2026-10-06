@@ -2935,6 +2935,7 @@
   "ratingModeReactions": "Reacciones emoji 😐🙂😊👍❤️",
   "ratingModeHint": "Las reacciones usan una escala solo positiva (sin desacuerdo) y se aplican en todas las aplicaciones. La escala de 3 niveles se aplica en Mass Consensus; las demás aplicaciones siguen mostrando 5 niveles.",
   "allowSuggestionsNote": "Valor predeterminado para todas las preguntas. Cada pregunta puede cambiarlo.",
+  "suggestionsOffForQuestion": "Desactivado porque las sugerencias están desactivadas en esta pregunta.",
   "Emoji reactions": "Reacciones emoji",
   "Reactions use a positive-only scale (no disagree). Applies across all apps.": "Las reacciones usan una escala solo positiva (sin desacuerdo). Se aplica en todas las apps.",
   "Show full feedback": "Mostrar comentarios completos",

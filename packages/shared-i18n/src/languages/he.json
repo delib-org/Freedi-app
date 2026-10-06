@@ -2426,6 +2426,7 @@
   "allowSkippingNote": "כאשר מופעל, עוקף את כל הגדרות הדילוג לכל שאלה",
   "allowSkippingThisQuestion": "אפשר לדלג על שאלה זו",
   "allowSuggestionsNote": "ברירת מחדל לכל השאלות. כל שאלה יכולה לעקוף אותה.",
+  "suggestionsOffForQuestion": "כבוי כי הוספת הצעות כבויה בשאלה הזו.",
   "analyzingBy": "מנתח לפי",
   "anonymous": "אנונימי",
   "answerOptions": "אפשרויות תשובה",

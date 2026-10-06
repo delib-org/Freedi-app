@@ -19,7 +19,11 @@ import {
   THREE_POINT_STEPS,
   FIVE_POINT_STEPS,
 } from '@freedi/shared-types';
-import { resolveAllowSuggestions, withAllowSuggestions } from '@/lib/utils/settingsUtils';
+import {
+  areSuggestionsClosed,
+  resolveAllowSuggestions,
+  withAllowSuggestions,
+} from '@/lib/utils/settingsUtils';
 import {
   DndContext,
   closestCenter,
@@ -403,6 +407,9 @@ function QuestionSettingsPanel({
   // `ratingSteps` the length of the agree-disagree scale. Every choice is
   // written explicitly — the survey save only cascades an explicit override
   // onto the question, so "back to the default" has to be one too.
+  // The two "ask for a suggestion" toggles only mean something while this is on
+  const suggestionsAllowed = !areSuggestionsClosed(surveySettings, questionSetting);
+
   // With no override yet, show the scale the question already carries (it may
   // have been set from another app) rather than claiming the default.
   const ratingScale = resolveEvaluationScaleKey(
@@ -452,13 +459,19 @@ function QuestionSettingsPanel({
           <label className={styles.toggleSwitch}>
             <input
               type="checkbox"
-              checked={questionSetting?.askUserForASolutionBeforeEvaluation ?? true}
+              checked={suggestionsAllowed && (questionSetting?.askUserForASolutionBeforeEvaluation ?? true)}
+              disabled={!suggestionsAllowed}
               onChange={(e) => handleToggle('askUserForASolutionBeforeEvaluation', e.target.checked)}
             />
             <span className={styles.toggleSlider}></span>
           </label>
           <span className={styles.toggleLabel}>{t('askForSuggestionBeforeEvaluation') || 'Ask for suggestion before showing options'}</span>
         </div>
+        {!suggestionsAllowed && (
+          <span className={styles.settingHint}>
+            {t('suggestionsOffForQuestion') || 'Off because suggestions are turned off for this question.'}
+          </span>
+        )}
       </div>
 
       {/* Suggestion Mode override */}
@@ -588,13 +601,19 @@ function QuestionSettingsPanel({
           <label className={styles.toggleSwitch}>
             <input
               type="checkbox"
-              checked={questionSetting?.askUserForASolutionAfterEvaluation ?? false}
+              checked={suggestionsAllowed && (questionSetting?.askUserForASolutionAfterEvaluation ?? false)}
+              disabled={!suggestionsAllowed}
               onChange={(e) => handleToggle('askUserForASolutionAfterEvaluation', e.target.checked)}
             />
             <span className={styles.toggleSlider}></span>
           </label>
           <span className={styles.toggleLabel}>{t('askForSuggestionAfterEvaluation') || 'Ask user to add an answer after completing evaluations'}</span>
         </div>
+        {!suggestionsAllowed && (
+          <span className={styles.settingHint}>
+            {t('suggestionsOffForQuestion') || 'Off because suggestions are turned off for this question.'}
+          </span>
+        )}
       </div>
 
       {/* Automatic AI handling of submissions. Each toggle shows the survey
