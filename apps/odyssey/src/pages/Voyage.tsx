@@ -10,11 +10,10 @@ import { valueToAttitude } from '../lib/evaluations';
 import { islandArtUrl } from '../lib/islandArt';
 import { relativeDistances } from '../lib/seaLayout';
 import { stageBus, type SeaDistances } from '../lib/stageBus';
-import { invitedElders, elderStageId, pickIslandRemark, type ElderRemark } from '../lib/elders';
+import { invitedElders, elderStageId } from '../lib/elders';
 import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
 import SeaChart from '../components/SeaChart';
 import ShipCard from '../components/ShipCard';
-import ElderRemarkCard from '../components/ElderRemarkCard';
 
 /**
  * What the captain's log asks when an island has no question of its own.
@@ -55,8 +54,6 @@ export default function Voyage() {
 	const [asked, setAsked] = useState<string | null>(null);
 	const [depth, setDepth] = useState('');
 	const [saving, setSaving] = useState(false);
-	/** an elder's in-character answer to this island, shown only in reaction */
-	const [remark, setRemark] = useState<ElderRemark | null>(null);
 
 	const island = useMemo(
 		() => selectedIslands[Math.min(index, Math.max(0, selectedIslands.length - 1))] ?? null,
@@ -209,7 +206,6 @@ export default function Voyage() {
 					},
 				});
 			}
-			setRemark(pickIslandRemark(elders, island!, attitudes));
 			setPhase('reaction');
 			if (mode === 'game') {
 				// the log-stamp beat, then the sea reacts
@@ -229,7 +225,6 @@ export default function Voyage() {
 		}
 		setIndex(index + 1);
 		setPhase('question');
-		setRemark(null);
 	}
 
 	// Two lists, never one. See NearbyShips' `caption`.
@@ -369,7 +364,6 @@ export default function Voyage() {
 						</section>
 					) : (
 						<section className="fade-in flex flex-col gap-4">
-							{remark ? <ElderRemarkCard remark={remark} /> : null}
 							{mode === 'game' ? (
 								<>
 									{/* the sea itself reacts behind this window */}

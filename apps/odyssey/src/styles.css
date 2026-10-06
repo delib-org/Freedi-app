@@ -873,20 +873,6 @@ textarea[aria-invalid='true'] {
 	position: absolute;
 }
 
-/* What each ring is, in the words of the rows under the sea. Faint, and
-   knocking the dashed ring out beneath it the way a caption sits on a chart. */
-.sea-caption {
-	transform: translateY(-50%);
-	padding: 1px 6px;
-	border-radius: 999px;
-	background: rgba(4, 18, 34, 0.62);
-	color: var(--cream);
-	font-size: 11px;
-	letter-spacing: 0.02em;
-	opacity: 0.8;
-	white-space: nowrap;
-}
-
 .sea-berth {
 	transform: translateX(-50%);
 	color: var(--gold-strong);

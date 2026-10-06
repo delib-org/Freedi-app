@@ -9,7 +9,6 @@ import {
 import type { ShipProximity } from './NearbyShips';
 import ShipTag from './ShipTag';
 import {
-	FRAME_PAD,
 	LANDSCAPE,
 	PORTRAIT,
 	PORTRAIT_BELOW,
@@ -17,7 +16,6 @@ import {
 	SPRITE_RATIO,
 	YOUR_SHIP_WIDTH,
 	hullPolygon,
-	measureName,
 	placePennants,
 	type ChartSpace,
 	type TagPlacement,
@@ -78,20 +76,6 @@ const BAND_WORD: Record<ProximityBandKey, string> = {
 	middle: 'באמצע הדרך',
 	far: 'רחוקה ממסלולך',
 };
-
-/** What each ring is, said once on the water in the words the rows below use. */
-const RING_CAPTION: Record<ProximityBandKey, string> = {
-	near: 'קרובות',
-	middle: 'באמצע',
-	far: 'רחוקות',
-};
-const RING_BANDS: ProximityBandKey[] = ['near', 'middle', 'far'];
-/** A caption's padding, measured against the pennant type it is smaller than. */
-const CAPTION_CHROME = 12;
-/** A caption box, for keeping pennants off it. */
-const CAPTION_HEIGHT = 18;
-/** Where on each ring its caption sits: aft of the beam, over open water. */
-const CAPTION_ANGLE = (118 * Math.PI) / 180;
 
 /** SVG ids must be word-safe, and a partyId is whatever the admin typed. */
 function tintId(partyId: string): string {
@@ -186,23 +170,6 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 	// The lit pennant is painted last, over any neighbour's.
 	const pennantOrder = [...placed].sort((a, b) => Number(a.lit) - Number(b.lit));
 
-	// Ring captions sit on their ring, aft of the beam; on a narrow frame the
-	// outer ones slide in so no word is cut at the edge.
-	const captions = rings.map((ring, index) => {
-		const band = RING_BANDS[index];
-		const width = CAPTION_CHROME + measureName(RING_CAPTION[band]);
-
-		return {
-			band,
-			width,
-			x: Math.min(
-				(fan.cx + Math.sin(CAPTION_ANGLE) * ring.rx) * scale,
-				space.width * scale - FRAME_PAD - width,
-			),
-			y: (fan.cy - Math.cos(CAPTION_ANGLE) * ring.ry - space.viewTop) * scale,
-		};
-	});
-
 	const pennants =
 		scale > 0
 			? placePennants(
@@ -217,12 +184,8 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 					space,
 					scale,
 					{ x: fan.cx, y: fan.cy },
-					captions.map((caption) => ({
-						x: caption.x,
-						y: caption.y - CAPTION_HEIGHT / 2,
-						w: caption.width,
-						h: CAPTION_HEIGHT,
-					})),
+					// the rings are unlabelled: the rows under the sea say near/far
+					[],
 				)
 			: new Map<string, TagPlacement>();
 
@@ -409,20 +372,10 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 				</svg>
 
 				{/* Everything written on the water is HTML, so it is the same size
-				    on a phone as on a desk: the ring captions, the player's own
-				    berth, and a pennant for every ship. */}
+				    on a phone as on a desk: the player's own berth, and a pennant
+				    for every ship. */}
 				{scale > 0 ? (
 					<div className="sea-overlay">
-						{captions.map((caption) => (
-							<span
-								key={caption.band}
-								className="sea-caption"
-								style={{ left: caption.x, top: caption.y }}
-								aria-hidden="true"
-							>
-								{RING_CAPTION[caption.band]}
-							</span>
-						))}
 						<span
 							className="sea-berth"
 							style={{ left: fan.cx * scale, top: (fan.cy - space.viewTop) * scale + 8 }}
