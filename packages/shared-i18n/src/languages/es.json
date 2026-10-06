@@ -4324,5 +4324,22 @@
   "Participants' suggestions and cards added in the main app appear here.": "Aquí aparecen las sugerencias de los participantes y las tarjetas añadidas en la app principal.",
   "Pictures": "Imágenes",
   "Add pictures to the cards of this question": "Añadir imágenes a las tarjetas de esta pregunta",
-  "Type or paste your cards above, one per line. Each card then gets a 📷 spot for its picture.": "Escribe o pega tus tarjetas arriba, una por línea. Cada tarjeta tendrá entonces un espacio 📷 para su imagen."
+  "Type or paste your cards above, one per line. Each card then gets a 📷 spot for its picture.": "Escribe o pega tus tarjetas arriba, una por línea. Cada tarjeta tendrá entonces un espacio 📷 para su imagen.",
+  "howItWorks": "Cómo funciona",
+  "dashboard": "Panel",
+  "signIn": "Iniciar sesión",
+  "gatherFeedback": "Recoge opiniones a gran escala con encuestas de varias preguntas",
+  "forParticipants": "Para participantes",
+  "participantDescription": "¿Tienes un enlace a una encuesta? Introdúcelo abajo para participar",
+  "pasteSurveyLink": "Pega el enlace o el ID de la encuesta...",
+  "go": "Ir",
+  "forAdministrators": "Para administradores",
+  "adminDescription": "Crea y gestiona encuestas de varias preguntas",
+  "goToDashboard": "Ir al panel",
+  "signInWithGoogle": "Iniciar sesión con Google",
+  "signedInAs": "Sesión iniciada como",
+  "step1": "Lee las preguntas y explora soluciones",
+  "step2": "Valora las soluciones de desacuerdo a acuerdo",
+  "step3": "Envía tus propias ideas",
+  "enterSurveyLink": "Introduce un enlace de encuesta"
 }

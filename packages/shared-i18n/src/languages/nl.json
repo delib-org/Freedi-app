@@ -4324,5 +4324,22 @@
   "Participants' suggestions and cards added in the main app appear here.": "Suggesties van deelnemers en kaarten uit de hoofdapp verschijnen hier.",
   "Pictures": "Afbeeldingen",
   "Add pictures to the cards of this question": "Afbeeldingen toevoegen aan de kaarten van deze vraag",
-  "Type or paste your cards above, one per line. Each card then gets a 📷 spot for its picture.": "Typ of plak je kaarten hierboven, één per regel. Elke kaart krijgt dan een 📷-plek voor een afbeelding."
+  "Type or paste your cards above, one per line. Each card then gets a 📷 spot for its picture.": "Typ of plak je kaarten hierboven, één per regel. Elke kaart krijgt dan een 📷-plek voor een afbeelding.",
+  "howItWorks": "Hoe het werkt",
+  "dashboard": "Dashboard",
+  "signIn": "Inloggen",
+  "gatherFeedback": "Verzamel op grote schaal feedback met enquêtes van meerdere vragen",
+  "forParticipants": "Voor deelnemers",
+  "participantDescription": "Heb je een enquêtelink? Vul hem hieronder in om mee te doen",
+  "pasteSurveyLink": "Plak de enquêtelink of ID...",
+  "go": "Ga",
+  "forAdministrators": "Voor beheerders",
+  "adminDescription": "Maak en beheer enquêtes van meerdere vragen",
+  "goToDashboard": "Naar het dashboard",
+  "signInWithGoogle": "Inloggen met Google",
+  "signedInAs": "Ingelogd als",
+  "step1": "Lees de vragen en verken oplossingen",
+  "step2": "Beoordeel oplossingen van oneens tot eens",
+  "step3": "Dien je eigen ideeën in",
+  "enterSurveyLink": "Vul een enquêtelink in"
 }

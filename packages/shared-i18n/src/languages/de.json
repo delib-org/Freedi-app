@@ -4324,5 +4324,22 @@
   "Participants' suggestions and cards added in the main app appear here.": "Vorschläge der Teilnehmenden und in der Haupt-App hinzugefügte Karten erscheinen hier.",
   "Pictures": "Bilder",
   "Add pictures to the cards of this question": "Bilder zu den Karten dieser Frage hinzufügen",
-  "Type or paste your cards above, one per line. Each card then gets a 📷 spot for its picture.": "Geben Sie Ihre Karten oben ein oder fügen Sie sie ein, eine pro Zeile. Jede Karte erhält dann einen 📷-Platz für ihr Bild."
+  "Type or paste your cards above, one per line. Each card then gets a 📷 spot for its picture.": "Geben Sie Ihre Karten oben ein oder fügen Sie sie ein, eine pro Zeile. Jede Karte erhält dann einen 📷-Platz für ihr Bild.",
+  "howItWorks": "So funktioniert es",
+  "dashboard": "Dashboard",
+  "signIn": "Anmelden",
+  "gatherFeedback": "Sammle Feedback in großem Umfang mit Umfragen aus mehreren Fragen",
+  "forParticipants": "Für Teilnehmende",
+  "participantDescription": "Hast du einen Umfragelink? Gib ihn unten ein, um teilzunehmen",
+  "pasteSurveyLink": "Umfragelink oder ID einfügen...",
+  "go": "Los",
+  "forAdministrators": "Für Verwaltende",
+  "adminDescription": "Erstelle und verwalte Umfragen aus mehreren Fragen",
+  "goToDashboard": "Zum Dashboard",
+  "signInWithGoogle": "Mit Google anmelden",
+  "signedInAs": "Angemeldet als",
+  "step1": "Fragen lesen und Lösungen erkunden",
+  "step2": "Lösungen von Ablehnung bis Zustimmung bewerten",
+  "step3": "Eigene Ideen einreichen",
+  "enterSurveyLink": "Bitte gib einen Umfragelink ein"
 }

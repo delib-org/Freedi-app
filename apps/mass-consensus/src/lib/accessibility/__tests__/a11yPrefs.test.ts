@@ -57,6 +57,10 @@ describe('a11yPrefs', () => {
       expect(parseA11yCookie(encodeURIComponent('"a string"'))).toEqual(DEFAULT_A11Y_PREFS);
     });
 
+    it('follows the device colour scheme when no theme was chosen', () => {
+      expect(parseA11yCookie(undefined).theme).toBe('system');
+    });
+
     it('sanitises each field on its own', () => {
       const raw = encodeURIComponent(
         JSON.stringify({ theme: 'neon', highContrast: 'yes', fontScale: 131 })

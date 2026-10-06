@@ -167,7 +167,7 @@ export const ACCESSIBILITY = {
   FONT_SCALE_STEPS: [87.5, 100, 112.5, 125, 150],
   DEFAULT_FONT_SCALE: 100,
   THEMES: ['system', 'light', 'dark'],
-  DEFAULT_THEME: 'light',
+  DEFAULT_THEME: 'system',
 } as const;
 
 /**

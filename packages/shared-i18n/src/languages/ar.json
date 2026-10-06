@@ -4444,5 +4444,22 @@
   "Participants' suggestions and cards added in the main app appear here.": "تظهر هنا اقتراحات المشاركين والبطاقات المضافة في التطبيق الرئيسي.",
   "Pictures": "الصور",
   "Add pictures to the cards of this question": "إضافة صور إلى بطاقات هذا السؤال",
-  "Type or paste your cards above, one per line. Each card then gets a 📷 spot for its picture.": "اكتب بطاقاتك أو الصقها أعلاه، بطاقة في كل سطر. ستحصل كل بطاقة بعدها على مكان 📷 لصورتها."
+  "Type or paste your cards above, one per line. Each card then gets a 📷 spot for its picture.": "اكتب بطاقاتك أو الصقها أعلاه، بطاقة في كل سطر. ستحصل كل بطاقة بعدها على مكان 📷 لصورتها.",
+  "howItWorks": "كيف يعمل",
+  "dashboard": "لوحة التحكم",
+  "signIn": "تسجيل الدخول",
+  "gatherFeedback": "اجمع الآراء على نطاق واسع باستطلاعات متعددة الأسئلة",
+  "forParticipants": "للمشاركين",
+  "participantDescription": "لديك رابط استطلاع؟ أدخله أدناه للمشاركة",
+  "pasteSurveyLink": "الصق رابط الاستطلاع أو معرّفه...",
+  "go": "انطلق",
+  "forAdministrators": "للمسؤولين",
+  "adminDescription": "أنشئ استطلاعات متعددة الأسئلة وأدرها",
+  "goToDashboard": "انتقل إلى لوحة التحكم",
+  "signInWithGoogle": "تسجيل الدخول باستخدام Google",
+  "signedInAs": "مسجّل الدخول باسم",
+  "step1": "اقرأ الأسئلة واستكشف الحلول",
+  "step2": "قيّم الحلول من عدم الموافقة إلى الموافقة",
+  "step3": "قدّم أفكارك الخاصة",
+  "enterSurveyLink": "يرجى إدخال رابط الاستطلاع"
 }
