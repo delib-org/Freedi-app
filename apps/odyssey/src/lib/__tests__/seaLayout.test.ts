@@ -7,6 +7,7 @@ import {
 	partyShipPlacement,
 	proximityBandOf,
 	rangeRings,
+	relativeDistances,
 	sailorPlacement,
 	seaFan,
 	shipLayout,
@@ -186,5 +187,48 @@ describe('the fan', () => {
 		expect(proximityBandOf(-3)).toBe('near');
 		expect(proximityBandOf(7)).toBe('far');
 		expect(proximityBandOf(null)).toBe('far');
+	});
+});
+
+describe('relativeDistances', () => {
+	it('stretches a bunched fleet across the whole sea', () => {
+		// a typical player: every party between 0.4 and 0.5
+		const result = relativeDistances({ a: 0.4, b: 0.45, c: 0.5 });
+		expect(result.a).toBe(0);
+		expect(result.b).toBeCloseTo(0.5);
+		expect(result.c).toBe(1);
+		expect(proximityBandOf(result.a)).toBe('near');
+		expect(proximityBandOf(result.c)).toBe('far');
+	});
+
+	it('keeps unknown distances unknown', () => {
+		const result = relativeDistances({ a: 0.2, b: null, c: 0.6 });
+		expect(result.b).toBeNull();
+	});
+
+	it('draws a genuinely even fleet as it is', () => {
+		expect(relativeDistances({ a: 0.4, b: 0.4 })).toEqual({ a: 0.4, b: 0.4 });
+		expect(relativeDistances({ a: 0.3 })).toEqual({ a: 0.3 });
+		expect(relativeDistances({ a: null, b: undefined })).toEqual({ a: null, b: null });
+	});
+
+	it('sets the scale from the reference ships only, clamping the rest', () => {
+		const result = relativeDistances({ p1: 0.4, p2: 0.6, elder: 0.1, other: 0.5 }, ['p1', 'p2']);
+		expect(result.p1).toBe(0);
+		expect(result.p2).toBe(1);
+		expect(result.other).toBeCloseTo(0.5);
+		expect(result.elder).toBe(0);
+	});
+});
+
+describe('seaFan frame', () => {
+	it('moves the berth and the horizon when given a frame', () => {
+		const fan = seaFan(W, H, { berth: 0.6, horizon: 0.27 });
+		expect(fan.cy).toBeCloseTo(H * 0.6);
+		expect(fan.cy - fan.ry).toBeCloseTo(H * 0.27);
+		const near = partyShipPlacement(0, 0, 1, W, H, { berth: 0.6, horizon: 0.27 });
+		const far = partyShipPlacement(1, 0, 1, W, H, { berth: 0.6, horizon: 0.27 });
+		expect(near.y).toBeGreaterThan(far.y);
+		expect(far.y).toBeCloseTo(H * 0.27);
 	});
 });

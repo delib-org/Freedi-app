@@ -138,10 +138,18 @@ const FAN_HORIZON = 0.2;
 /** Where the player sits. */
 const FAN_BERTH = 0.56;
 
-export function seaFan(width: number, height: number): SeaFan {
-	const cy = height * FAN_BERTH;
+/** Where the fan sits in the frame, as fractions of its height. A sea that
+ *  shares the frame with other things (the homecoming tableau's islands)
+ *  moves the fan; the voyage uses the defaults. */
+export interface FanFrame {
+	berth?: number;
+	horizon?: number;
+}
 
-	return { cx: width / 2, cy, rx: width * 0.4, ry: cy - height * FAN_HORIZON };
+export function seaFan(width: number, height: number, frame: FanFrame = {}): SeaFan {
+	const cy = height * (frame.berth ?? FAN_BERTH);
+
+	return { cx: width / 2, cy, rx: width * 0.4, ry: cy - height * (frame.horizon ?? FAN_HORIZON) };
 }
 
 /** A ship's lane, by index only. Lane 0 is the rightmost — this is a Hebrew
@@ -168,9 +176,10 @@ export function partyShipPlacement(
 	count: number,
 	width: number,
 	height: number,
+	frame: FanFrame = {},
 ): ShipPlacement {
 	const value = distance ?? 0.9;
-	const fan = seaFan(width, height);
+	const fan = seaFan(width, height, frame);
 	const ring = ringOf(value);
 	const angle = fanAngle(index, count);
 
@@ -184,8 +193,12 @@ export function partyShipPlacement(
 
 /** The two rings that divide the sea into near / middle / far, as semi-axis
  *  pairs. Drawn, not labelled — the words live in the card a tap opens. */
-export function rangeRings(width: number, height: number): { rx: number; ry: number }[] {
-	const fan = seaFan(width, height);
+export function rangeRings(
+	width: number,
+	height: number,
+	frame: FanFrame = {},
+): { rx: number; ry: number }[] {
+	const fan = seaFan(width, height, frame);
 
 	return [1 / 3, 2 / 3, 1].map((distance) => ({
 		rx: fan.rx * ringOf(distance),
@@ -205,4 +218,45 @@ export function proximityBandOf(distance: number | null | undefined): ProximityB
 	if (value < 2 / 3) return 'middle';
 
 	return 'far';
+}
+
+/**
+ * Below this spread the ships really are equally far from the player, and
+ * stretching them apart would draw a difference that is not there.
+ */
+const MIN_RELATIVE_SPREAD = 0.01;
+
+/**
+ * Where each ship sails, relative to the rest of the fleet.
+ *
+ * An absolute distance is a mean over every stance the player marked, and
+ * party routes are continuous scores — so for almost any player every party
+ * lands between ~0.35 and ~0.5, and the whole fleet rides the same ring.
+ * The sea's job is to show which parties sail NEAR your route and which sail
+ * far, so it stretches that band: the nearest reference ship rides the
+ * innermost ring, the farthest the horizon, the rest in proportion between.
+ *
+ * `referenceIds` names the ships that set the scale (the parties). Any other
+ * ship (an elder) is placed on that same scale, clamped to the sea, so an
+ * elder can never push the parties together. Unknown distances stay null.
+ * The true distance is still the number a card puts in words.
+ */
+export function relativeDistances(
+	distances: Record<string, number | null | undefined>,
+	referenceIds: readonly string[] = Object.keys(distances),
+): Record<string, number | null> {
+	const known = referenceIds
+		.map((id) => distances[id])
+		.filter((value): value is number => typeof value === 'number');
+	const min = Math.min(...known);
+	const spread = Math.max(...known) - min;
+	const stretch = known.length >= 2 && spread >= MIN_RELATIVE_SPREAD;
+
+	return Object.fromEntries(
+		Object.entries(distances).map(([id, value]): [string, number | null] => {
+			if (typeof value !== 'number') return [id, null];
+
+			return [id, stretch ? clamp01((value - min) / spread) : value];
+		}),
+	);
 }
