@@ -19,6 +19,7 @@ import {
   THREE_POINT_STEPS,
   FIVE_POINT_STEPS,
 } from '@freedi/shared-types';
+import { resolveAllowSuggestions, withAllowSuggestions } from '@/lib/utils/settingsUtils';
 import {
   DndContext,
   closestCenter,
@@ -435,23 +436,15 @@ function QuestionSettingsPanel({
           <label className={styles.toggleSwitch}>
             <input
               type="checkbox"
-              checked={
-                surveySettings.allowParticipantsToAddSuggestions
-                  ? true
-                  : questionSetting?.allowParticipantsToAddSuggestions ?? true
+              checked={resolveAllowSuggestions(surveySettings, questionSetting)}
+              onChange={(e) =>
+                onChange(withAllowSuggestions(surveySettings, questionSetting, e.target.checked))
               }
-              disabled={surveySettings.allowParticipantsToAddSuggestions}
-              onChange={(e) => handleToggle('allowParticipantsToAddSuggestions', e.target.checked)}
             />
             <span className={styles.toggleSlider}></span>
           </label>
           <span className={styles.toggleLabel}>{t('allowParticipantsToAddSuggestionsQuestion') || 'Allow participants to add suggestions'}</span>
         </div>
-        {surveySettings.allowParticipantsToAddSuggestions && (
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
-            {t('surveySettingEnabled') || '(Survey setting enabled)'}
-          </span>
-        )}
       </div>
 
       <div className={styles.settingRow}>

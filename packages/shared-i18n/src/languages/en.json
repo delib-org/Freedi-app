@@ -2411,7 +2411,7 @@
   "allowSkipping": "Allow participants to skip questions",
   "allowSkippingNote": "When enabled, overrides all per-question skip settings",
   "allowSkippingThisQuestion": "Allow skipping this question",
-  "allowSuggestionsNote": "When enabled, overrides all per-question suggestion settings",
+  "allowSuggestionsNote": "Default for all questions. Each question can override it.",
   "analyzingBy": "Analyzing by",
   "anonymous": "Anonymous",
   "answerOptions": "Answer Options",

@@ -719,7 +719,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             </span>
           </div>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            {t('allowSuggestionsNote') || 'When enabled, overrides all per-question suggestion settings'}
+            {t('allowSuggestionsNote') || 'Default for all questions. Each question can override it.'}
           </p>
         </div>
 

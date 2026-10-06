@@ -20,7 +20,11 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { isSurveyLevelOverride } from '@/lib/utils/settingsUtils';
+import {
+  isSurveyLevelOverride,
+  resolveAllowSuggestions,
+  withAllowSuggestions,
+} from '@/lib/utils/settingsUtils';
 import styles from './Admin.module.scss';
 
 interface QuestionReorderProps {
@@ -89,7 +93,6 @@ function SortableItem({
   };
 
   // Check which settings are overridden at survey level
-  const suggestionsOverridden = isSurveyLevelOverride(surveySettings, 'allowParticipantsToAddSuggestions');
   const skippingOverridden = isSurveyLevelOverride(surveySettings, 'allowSkipping');
 
   return (
@@ -129,21 +132,15 @@ function SortableItem({
             <label className={styles.settingLabel}>
               <input
                 type="checkbox"
-                checked={
-                  suggestionsOverridden
-                    ? true
-                    : questionSetting?.allowParticipantsToAddSuggestions ?? true
-                }
-                disabled={suggestionsOverridden}
+                checked={resolveAllowSuggestions(surveySettings, questionSetting)}
                 onChange={(e) =>
-                  handleSettingToggle('allowParticipantsToAddSuggestions', e.target.checked)
+                  onSettingsChange(
+                    withAllowSuggestions(surveySettings, questionSetting, e.target.checked)
+                  )
                 }
               />
               <span>{t('allowParticipantsToAddSuggestionsQuestion') || 'Allow participants to add suggestions'}</span>
             </label>
-            {suggestionsOverridden && (
-              <span className={styles.overrideNote}>{t('surveySettingEnabled') || 'Survey setting enabled'}</span>
-            )}
           </div>
 
           {/* Ask for suggestion before evaluation */}

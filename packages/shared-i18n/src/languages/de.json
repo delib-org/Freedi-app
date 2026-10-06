@@ -2934,6 +2934,7 @@
   "ratingModeThreePoint": "Ablehnen – Neutral – Zustimmen, 3 Stufen (−1, 0, +1)",
   "ratingModeReactions": "Emoji-Reaktionen 😐🙂😊👍❤️",
   "ratingModeHint": "Reaktionen nutzen eine rein positive Skala (keine Ablehnung) und gelten in allen Apps. Die 3-Stufen-Skala gilt in Mass Consensus; andere Apps zeigen weiterhin 5 Stufen.",
+  "allowSuggestionsNote": "Standard für alle Fragen. Jede Frage kann davon abweichen.",
   "Emoji reactions": "Emoji-Reaktionen",
   "Reactions use a positive-only scale (no disagree). Applies across all apps.": "Reaktionen nutzen eine rein positive Skala (kein Ablehnen). Gilt in allen Apps.",
   "Show full feedback": "Vollständiges Feedback anzeigen",
