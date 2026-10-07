@@ -33,11 +33,18 @@ export interface CardListProps {
   onAltCommit?: (key: string) => void;
   onRemovePicture: (key: string) => void;
   onRetry?: (key: string) => void;
-  // Draft mode only
+  // Text editing: always in draft mode; in saved mode when the editor allows it
   onTextChange?: (key: string, text: string) => void;
+  /** Saved mode: a row's text field lost focus. */
+  onTextCommit?: (key: string) => void;
   onInsertAfter?: (key: string, texts: string[]) => void;
   onDeleteCard?: (key: string) => void;
+  /** Saved mode: the row whose "Delete this option?" is open, and its answer. */
+  confirmingDeleteKey?: string | null;
+  onConfirmDelete?: (confirmed: boolean) => void;
   onAddCard?: () => void;
+  /** Label of the add button; defaults to "+ Add card". */
+  addLabel?: string;
 }
 
 export default function CardList({
@@ -52,9 +59,13 @@ export default function CardList({
   onRemovePicture,
   onRetry,
   onTextChange,
+  onTextCommit,
   onInsertAfter,
   onDeleteCard,
+  confirmingDeleteKey = null,
+  onConfirmDelete,
   onAddCard,
+  addLabel,
 }: CardListProps) {
   const { t, tWithParams } = useTranslation();
   const [isDragOver, setIsDragOver] = useState(false);
@@ -187,6 +198,7 @@ export default function CardList({
             editableText={editableText ?? isDraft}
             disabled={disabled}
             isConfirmingRemove={confirmingKey === row.key}
+            isConfirmingDelete={confirmingDeleteKey === row.key}
             onFiles={(files) => handleRowFiles(row.key, index, files)}
             onAltChange={(alt) => onAltChange(row.key, alt)}
             onAltCommit={onAltCommit ? () => onAltCommit(row.key) : undefined}
@@ -195,8 +207,11 @@ export default function CardList({
               setConfirmingKey(null);
               if (confirmed) onRemovePicture(row.key);
             }}
+            onConfirmDelete={onConfirmDelete}
             onRetry={onRetry ? () => onRetry(row.key) : undefined}
             onTextChange={onTextChange ? (text) => onTextChange(row.key, text) : undefined}
+            onTextCommit={onTextCommit ? () => onTextCommit(row.key) : undefined}
+            autoFocus={Boolean(row.draft) && row.text === ''}
             onInsertAfter={
               onInsertAfter
                 ? (texts) => {
@@ -228,7 +243,7 @@ export default function CardList({
 
       {onAddCard && (
         <button type="button" className="card-list__add" onClick={onAddCard} disabled={disabled}>
-          {t('+ Add card')}
+          {addLabel ?? t('+ Add card')}
         </button>
       )}
 

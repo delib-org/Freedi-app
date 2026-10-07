@@ -619,3 +619,22 @@
     transform: translateY(0);
   }
 }
+
+// The admin's preview: the same card, with no gestures and a fixed height
+// (the real one follows the viewport; the preview sits in a phone frame).
+// Last, and doubled, so it beats the ratings and mobile rules above.
+.swipe-card.swipe-card--preview {
+  inline-size: 100%;
+  max-inline-size: none;
+  height: calc(220px + var(--swipe-card-ratings-height));
+  max-height: none;
+  cursor: default;
+  touch-action: auto;
+  pointer-events: none;
+  will-change: auto;
+
+  &.swipe-card--with-image {
+    height: calc(360px + var(--swipe-card-ratings-height));
+    max-height: none;
+  }
+}

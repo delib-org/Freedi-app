@@ -27,6 +27,12 @@ export interface MergedQuestionSettings {
   autoMergeSimilar: boolean;
   /** How strongly evaluation cards are tinted, 0 (white) to 1 (full colour) */
   cardColorIntensity: number;
+  /**
+   * Participants may not add their own options to this question ("admin
+   * options only"). Beats the survey-wide "allow suggestions" switch and turns
+   * both "ask for a suggestion" prompts off.
+   */
+  blockParticipantOptions: boolean;
 }
 
 /**
@@ -89,6 +95,8 @@ export function withAllowSuggestions(
  * Merges survey-level settings with per-question overrides.
  *
  * Priority rules:
+ * - Per-question `blockParticipantOptions` when true: beats everything — suggestions are off
+ *   and neither "ask for a suggestion" prompt applies, whatever the survey says
  * - `allowParticipantsToAddSuggestions`: the survey sets the default, a question may override it either way
  * - Suggestions explicitly turned off: neither "ask for a suggestion" prompt (before / after evaluating) applies
  * - Survey-level `allowSkipping` when true: applies to ALL questions
@@ -103,17 +111,23 @@ export function getMergedSettings(
   questionOverrides: QuestionOverrideSettings | undefined
 ): MergedQuestionSettings {
   const suggestionsClosed = areSuggestionsClosed(surveySettings, questionOverrides);
+  // "Admin options only": a hard block that no survey-level default reopens
+  const blockParticipantOptions = questionOverrides?.blockParticipantOptions ?? false;
 
   return {
     // Survey-level allowParticipantsToAddSuggestions is the default; a question can override it
-    allowParticipantsToAddSuggestions: resolveAllowSuggestions(surveySettings, questionOverrides),
+    allowParticipantsToAddSuggestions:
+      !blockParticipantOptions && resolveAllowSuggestions(surveySettings, questionOverrides),
     suggestionsClosed,
+    blockParticipantOptions,
 
     // Per-question askUserForASolutionBeforeEvaluation (no survey-level equivalent)
     // Default to true: users should provide their own suggestion before seeing others.
-    // Never on a question closed to suggestions — it must not ask for one.
+    // Never on a question closed or blocked to suggestions — it must not ask for one.
     askUserForASolutionBeforeEvaluation:
-      !suggestionsClosed && (questionOverrides?.askUserForASolutionBeforeEvaluation ?? true),
+      !blockParticipantOptions &&
+      !suggestionsClosed &&
+      (questionOverrides?.askUserForASolutionBeforeEvaluation ?? true),
 
     // Survey-level allowSkipping overrides per-question when enabled
     allowSkipping:
@@ -142,9 +156,11 @@ export function getMergedSettings(
     showViewProgress: questionOverrides?.showViewProgress ?? true,
 
     // Ask user for a solution after completing minimum evaluations (defaults to false;
-    // never on a question closed to suggestions)
+    // never on a question closed or blocked to suggestions)
     askUserForASolutionAfterEvaluation:
-      !suggestionsClosed && (questionOverrides?.askUserForASolutionAfterEvaluation ?? false),
+      !blockParticipantOptions &&
+      !suggestionsClosed &&
+      (questionOverrides?.askUserForASolutionAfterEvaluation ?? false),
 
     // Automatic AI handling of submissions: per-question override, then survey
     // default, then off (existing surveys keep asking the participant)
@@ -187,6 +203,8 @@ export function isSurveyLevelOverride(
     case 'askUserForASolutionAfterEvaluation':
     case 'autoSplitMultiSuggestions':
     case 'autoMergeSimilar':
+    case 'adminProvidesOptions':
+    case 'blockParticipantOptions':
       return false;
     default:
       return false;

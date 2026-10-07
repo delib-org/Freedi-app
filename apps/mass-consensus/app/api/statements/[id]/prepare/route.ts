@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
+import { getAddOptionRefusal } from '@/lib/firebase/addOptionGuard';
 
 /**
  * POST /api/statements/[id]/prepare
@@ -27,6 +28,14 @@ export async function POST(
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required', ok: false }, { status: 400 });
+    }
+
+    // "Admin options only": refuse before the AI round trip. The client treats
+    // 403 as a refusal (not a fallback to the older two-call path), so it will
+    // not retry through detect-multi / check-similar.
+    const refusal = await getAddOptionRefusal(questionId);
+    if (refusal) {
+      return NextResponse.json({ ...refusal.body, ok: false }, { status: refusal.status });
     }
 
     // Same host as the similarity function; only the function name differs.

@@ -1,0 +1,113 @@
+// Switch - an on/off control with its label and an optional hint
+
+.switch {
+  --switch-width: 44px;
+  --switch-height: 24px;
+  --switch-thumb: 18px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &__control {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-block-size: 44px; // Comfortable tap target
+    cursor: pointer;
+  }
+
+  &__input {
+    position: absolute;
+    opacity: 0;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  &__track {
+    position: relative;
+    flex-shrink: 0;
+    inline-size: var(--switch-width);
+    block-size: var(--switch-height);
+    border-radius: var(--radius-full);
+    background: var(--border-light, #e2e8f0);
+    transition: background-color 0.2s;
+  }
+
+  &__thumb {
+    position: absolute;
+    inset-block-start: calc((var(--switch-height) - var(--switch-thumb)) / 2);
+    inset-inline-start: calc((var(--switch-height) - var(--switch-thumb)) / 2);
+    inline-size: var(--switch-thumb);
+    block-size: var(--switch-thumb);
+    border-radius: 50%;
+    background: var(--card-default, #ffffff);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s;
+  }
+
+  &__input:checked + &__track {
+    background: var(--btn-primary);
+  }
+
+  &__input:checked + &__track &__thumb {
+    transform: translateX(calc(var(--switch-width) - var(--switch-height)));
+  }
+
+  [dir='rtl'] &__input:checked + &__track &__thumb {
+    transform: translateX(calc(-1 * (var(--switch-width) - var(--switch-height))));
+  }
+
+  &__input:focus-visible + &__track {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+
+  &__label {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-body);
+  }
+
+  &__hint {
+    margin: 0;
+    // Under the label, past the track
+    padding-inline-start: calc(var(--switch-width) + var(--spacing-sm));
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+
+  // Modifiers
+  &--prominent {
+    --switch-width: 52px;
+    --switch-height: 28px;
+    --switch-thumb: 22px;
+
+    .switch__label {
+      font-size: 1.0625rem;
+      font-weight: 600;
+      color: var(--text-heading, var(--text-primary));
+    }
+  }
+
+  &--disabled {
+    .switch__control {
+      cursor: not-allowed;
+    }
+
+    .switch__track,
+    .switch__label {
+      opacity: 0.5;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__track,
+    &__thumb {
+      transition: none;
+    }
+  }
+}

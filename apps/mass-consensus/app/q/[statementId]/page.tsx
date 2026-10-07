@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { getQuestionFromFirebase, getRandomOptions } from '@/lib/firebase/queries';
+import { isAddBlockedForQuestion } from '@/lib/firebase/surveys/participantOptionsBlock';
 import QuestionHeader from '@/components/question/QuestionHeader';
 import SwipeInterfaceWrapper from '@/components/swipe/SwipeInterfaceWrapper';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
@@ -45,10 +46,12 @@ export default async function QuestionPage({ params }: PageProps) {
   try {
     console.info('[QuestionPage] Starting to fetch data for:', params.statementId);
 
-    // Parallel data fetching on server
-    const [question, initialBatch] = await Promise.all([
+    // Parallel data fetching on server. No survey settings here, so the
+    // "admin options only" block is looked up directly.
+    const [question, initialBatch, blockedByServer] = await Promise.all([
       getQuestionFromFirebase(params.statementId),
       getRandomOptions(params.statementId, { size: 6 }),
+      isAddBlockedForQuestion(params.statementId),
     ]);
 
     console.info('[QuestionPage] Data fetched successfully, question:', question.statement?.substring(0, 30));
@@ -75,6 +78,7 @@ export default async function QuestionPage({ params }: PageProps) {
             <SwipeInterfaceWrapper
               question={question}
               initialSolutions={initialBatch}
+              blockedByServer={blockedByServer}
             />
           </Suspense>
         </div>

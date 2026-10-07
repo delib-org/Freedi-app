@@ -28,6 +28,8 @@ export const UI = {
   ANIMATION_DURATION: 200,
   /** Quiet time after the last edit before the admin editor autosaves */
   AUTOSAVE_DELAY: 800,
+  /** How long the "participants can't add options" notice stays up */
+  ADD_DISABLED_TOAST_MS: 5000,
 } as const;
 
 /**
@@ -268,4 +270,15 @@ export const ERROR_MESSAGES = {
   SUBMIT_FAILED: 'Failed to submit solution',
   CHECK_SIMILAR_FAILED: 'Unable to check for similar solutions. Please try again.',
   MERGE_FAILED: 'Failed to merge with existing solution. Please try again.',
+  /** i18n key: the question is "admin options only" (see ADD_OPTION_CODES.DISABLED) */
+  ADD_DISABLED: "Participants can't add options to this question",
+} as const;
+
+/**
+ * Machine-readable `code` values the add-option routes (submit / merge /
+ * prepare) return with a refusal, so a client can tell them apart.
+ */
+export const ADD_OPTION_CODES = {
+  /** Participants may not add options to this question (admin options only) */
+  DISABLED: 'ADD_DISABLED',
 } as const;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES, VALIDATION } from '@/constants/common';
 import { logger } from '@/lib/utils/logger';
+import { getAddOptionRefusal } from '@/lib/firebase/addOptionGuard';
 
 /**
  * POST /api/statements/[id]/merge
@@ -62,6 +63,13 @@ export async function POST(
         { error: `Solution must be less than ${VALIDATION.MAX_SOLUTION_LENGTH} characters` },
         { status: 400 }
       );
+    }
+
+    // "Admin options only": refuse before any upstream call. A merge adds the
+    // participant's text to the pool just as a new option would.
+    const refusal = await getAddOptionRefusal(questionId);
+    if (refusal) {
+      return NextResponse.json(refusal.body, { status: refusal.status });
     }
 
     // Get Cloud Function endpoint from environment

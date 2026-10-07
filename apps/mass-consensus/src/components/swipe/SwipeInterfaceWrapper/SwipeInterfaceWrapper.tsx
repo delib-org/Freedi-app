@@ -23,6 +23,8 @@ export interface SwipeInterfaceWrapperProps {
   surveyId?: string;
   /** Position in a multi-question survey ("1) …"); omitted = no number */
   questionNumber?: number;
+  /** Standalone page: the server found a survey that blocks participant options here */
+  blockedByServer?: boolean;
 }
 
 const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
@@ -32,6 +34,7 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
   onComplete,
   surveyId,
   questionNumber,
+  blockedByServer,
 }) => {
   const { t } = useTranslation();
   const { user, isLoading } = useAuth();
@@ -89,6 +92,7 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
       onComplete={onComplete}
       surveyId={surveyId}
       questionNumber={questionNumber}
+      blockedByServer={blockedByServer}
     />
   );
 };

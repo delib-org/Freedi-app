@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Statement } from '@freedi/shared-types';
+import { QuestionOverrideSettings, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { authedFetch } from '@/lib/api/authedFetch';
@@ -18,7 +18,8 @@ import styles from './CreateQuestionModal.module.scss';
 interface CreateQuestionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onQuestionCreated: (question: Statement) => void;
+  /** The question exists; `initialSettings` are its per-question overrides for the survey ("Admin options only"). */
+  onQuestionCreated: (question: Statement, initialSettings?: QuestionOverrideSettings) => void;
   /** Default parent group ID to pre-select (e.g. from existing questions in the survey) */
   defaultParentId?: string;
 }
@@ -68,6 +69,8 @@ export default function CreateQuestionModal({
   const cards = useCardDrafts();
   const resetCards = cards.reset;
   const [skipSolutions, setSkipSolutions] = useState(false);
+  // "Admin options only": the admin's cards are the whole list; participants only rate
+  const [adminOptionsOnly, setAdminOptionsOnly] = useState(false);
 
   // After create: the pictures upload while the modal stays open
   const [phase, setPhase] = useState<'form' | 'uploading'>('form');
@@ -132,6 +135,7 @@ export default function CreateQuestionModal({
       setEvaluationType('suggestions');
       setMaxVotes(3);
       setRequireSolutionFirst(true);
+      setAdminOptionsOnly(false);
       resetCards();
       setSkipSolutions(false);
       setPhase('form');
@@ -309,7 +313,7 @@ export default function CreateQuestionModal({
           parentId: selectedGroupId,
           evaluationType,
           maxVotesPerUser: evaluationType === 'voting' ? maxVotes : undefined,
-          askUserForASolutionBeforeEvaluation: requireSolutionFirst,
+          askUserForASolutionBeforeEvaluation: adminOptionsOnly ? false : requireSolutionFirst,
           solutions: toCreate.map((draft) => draft.text),
         }),
       });
@@ -320,7 +324,10 @@ export default function CreateQuestionModal({
       }
 
       const data = (await response.json()) as { question: Statement; solutions?: Statement[] };
-      onQuestionCreated(data.question);
+      onQuestionCreated(
+        data.question,
+        adminOptionsOnly ? { adminProvidesOptions: true, blockParticipantOptions: true } : undefined
+      );
 
       // The route creates the cards in the order they were sent
       const created = data.solutions ?? [];
@@ -358,7 +365,9 @@ export default function CreateQuestionModal({
   // Navigation
   const canContinueStep1 = selectedGroupId !== null;
   const canContinueStep2 = questionText.trim().length >= 3;
-  const canCreate = canContinueStep1 && canContinueStep2;
+  // With "Admin options only" there must be something to rate
+  const canCreate =
+    canContinueStep1 && canContinueStep2 && (!adminOptionsOnly || (!skipSolutions && cardsToCreate.length > 0));
 
   const handleNext = () => {
     if (currentStep === 1 && canContinueStep1) {
@@ -753,6 +762,11 @@ export default function CreateQuestionModal({
               cards={cards}
               skip={skipSolutions}
               onSkipChange={setSkipSolutions}
+              adminOptionsOnly={adminOptionsOnly}
+              onAdminOptionsOnlyChange={(on) => {
+                setAdminOptionsOnly(on);
+                if (on) setSkipSolutions(false);
+              }}
               onGenerate={handleGenerateSolutions}
               isGenerating={isGenerating}
               canGenerate={canCreate}
