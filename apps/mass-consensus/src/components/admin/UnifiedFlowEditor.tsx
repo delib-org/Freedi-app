@@ -47,6 +47,8 @@ import QuestionTextEditor from './QuestionTextEditor';
 import QuestionCardsPanel from './QuestionCardsPanel';
 import SynthesisStatusBadge, { resolveSynthesisBadgeState } from './SynthesisStatusBadge';
 import styles from './Admin.module.scss';
+import { buildUnifiedFlow, recalculatePositions } from './flowEditorOrder';
+import type { FlowItemData } from './flowEditorOrder';
 
 const MAIN_APP_URL = process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.wizcol.com';
 
@@ -74,104 +76,6 @@ interface UnifiedFlowEditorProps {
   onRemoveQuestion: (questionId: string) => void;
   /** Lets survey editors manage the cards of questions they did not create. */
   surveyId?: string;
-}
-
-type FlowItemData =
-  | { type: 'question'; id: string; question: Statement }
-  | { type: 'demographic'; id: string; page: SurveyDemographicPage }
-  | { type: 'explanation'; id: string; page: SurveyExplanationPage };
-
-/**
- * Builds a unified flow from questions, demographic pages, and explanation pages
- * based on their positions
- */
-function buildUnifiedFlow(
-  questions: Statement[],
-  demographicPages: SurveyDemographicPage[],
-  explanationPages: SurveyExplanationPage[]
-): FlowItemData[] {
-  const flow: FlowItemData[] = [];
-
-  // Group pages by position
-  const demosByPosition = new Map<number, SurveyDemographicPage[]>();
-  demographicPages.forEach((page) => {
-    const existing = demosByPosition.get(page.position) || [];
-    existing.push(page);
-    demosByPosition.set(page.position, existing);
-  });
-
-  const explanationsByPosition = new Map<number, SurveyExplanationPage[]>();
-  explanationPages.forEach((page) => {
-    const existing = explanationsByPosition.get(page.position) || [];
-    existing.push(page);
-    explanationsByPosition.set(page.position, existing);
-  });
-
-  // Helper to add pages at a position
-  const addPagesAtPosition = (position: number) => {
-    // Explanation pages first
-    (explanationsByPosition.get(position) || []).forEach((page) => {
-      flow.push({ type: 'explanation', id: page.explanationPageId, page });
-    });
-    // Then demographic pages
-    (demosByPosition.get(position) || []).forEach((page) => {
-      flow.push({ type: 'demographic', id: page.demographicPageId, page });
-    });
-  };
-
-  // Position 0: before all questions
-  addPagesAtPosition(0);
-
-  // Interleave questions and pages
-  questions.forEach((question, index) => {
-    flow.push({ type: 'question', id: question.statementId, question });
-    addPagesAtPosition(index + 1);
-  });
-
-  // Position -1: after all questions
-  addPagesAtPosition(-1);
-
-  return flow;
-}
-
-/**
- * Recalculates positions for pages based on new flow order
- */
-function recalculatePositions(
-  flow: FlowItemData[],
-  _questions: Statement[]
-): {
-  demographicPages: SurveyDemographicPage[];
-  explanationPages: SurveyExplanationPage[];
-  questionOrder: Statement[];
-} {
-  const questionOrder: Statement[] = [];
-  const demographicPages: SurveyDemographicPage[] = [];
-  const explanationPages: SurveyExplanationPage[] = [];
-
-  let lastQuestionIndex = -1;
-  const totalQuestions = flow.filter((item) => item.type === 'question').length;
-
-  flow.forEach((item) => {
-    if (item.type === 'question') {
-      questionOrder.push(item.question);
-      lastQuestionIndex++;
-    } else if (item.type === 'demographic') {
-      const newPosition =
-        lastQuestionIndex === totalQuestions - 1 && questionOrder.length === totalQuestions
-          ? -1 // After all questions
-          : lastQuestionIndex + 1; // After the last question we've seen
-      demographicPages.push({ ...item.page, position: newPosition });
-    } else if (item.type === 'explanation') {
-      const newPosition =
-        lastQuestionIndex === totalQuestions - 1 && questionOrder.length === totalQuestions
-          ? -1
-          : lastQuestionIndex + 1;
-      explanationPages.push({ ...item.page, position: newPosition });
-    }
-  });
-
-  return { questionOrder, demographicPages, explanationPages };
 }
 
 interface SortableFlowItemProps {

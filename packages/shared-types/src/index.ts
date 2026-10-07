@@ -556,6 +556,7 @@ export type {
   SurveyDemographicQuestion,
   SurveyDemographicAnswer,
   SurveyExplanationPage,
+  SurveyFlowPage,
 } from "./models/survey/surveyModel";
 export {
   SurveySchema,
@@ -575,6 +576,7 @@ export {
   SurveyDemographicQuestionSchema,
   SurveyDemographicAnswerSchema,
   SurveyExplanationPageSchema,
+  orderPagesAtPosition,
 } from "./models/survey/surveyModel";
 
 // Survey admin / co-admin models
