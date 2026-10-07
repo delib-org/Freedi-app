@@ -162,6 +162,29 @@ body:has(.village-library--reading) { overflow:hidden; }
 article.village-note { cursor: default; }
 .village-note__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .village-note__standing { font-size: 13px; color: #5b6b52; white-space: nowrap; }
+// A conversation row is a button, so its head is a span — and `.village-note span`
+// above would stack it as a bordered footer line. Specific enough to win.
+.village-note span.village-note__head { display: flex; border: 0; padding: 0; font-size: inherit; }
+// "N new": pink is the notification colour (tokens.scss) — never a camp hue,
+// never danger-red. The ink follows the look: dark on the base pink, white on
+// the looks' deeper pinks (`--pink-ink` beside every `--pink`).
+.village-note .village-note__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: auto;
+  padding: 2px 9px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pink);
+  color: var(--pink-ink);
+  // A count is a mark, not a sentence — the meta rung, like the bar's badge
+  @include type-meta;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.village-note--news { box-shadow: 0 0 0 2px var(--pink), 0 5px 14px #45302025; }
 .village-note__rate { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #0002; }
 .village-note__rate .rate { justify-content: flex-start; }
 .village-note__hint { display: block; margin-top: 10px; color: #6f7168; }

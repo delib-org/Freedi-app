@@ -14,7 +14,7 @@ import { bubblePlacement, readBubbleAnchor, type BubbleAnchor } from '../lib/flo
 import { VillageCommunity, type VillageCommunityAttrs } from './VillageCommunity';
 import { planItemLabel } from './StageNav';
 import { PlaceBar } from './PlaceBar';
-import { openPlaceOf, placeNavTabs } from '../lib/flows/placeNav';
+import { openPlaceOf, placeNavTabs, type PlaceDestination } from '../lib/flows/placeNav';
 import { t } from '../lib/i18n';
 import { isLightWorld, isVillageSoundOn } from '../lib/villagePrefs';
 
@@ -40,6 +40,8 @@ interface VillageShellAttrs {
 	navigation?: VillageNavigation;
 	/** The teacher's latest "everyone to …" (`AgoraSession.villageCall`) */
 	call?: { place: string; at: number };
+	/** News waiting behind a door I am not standing in — the bar's badges */
+	news?: Partial<Record<PlaceDestination, number>>;
 	plan: readonly AgoraStagePlanItem[];
 	currentIndex: number;
 	viewingIndex: number;
@@ -812,6 +814,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 						inFlight: !!flightItem,
 						open: openPlaceOf({ opened, deskOpen, communityOpen, boardView, council }),
 					}),
+					badges: attrs.news,
 					onGo: (id) => {
 						if (id === 'village') {
 							closeEverything();

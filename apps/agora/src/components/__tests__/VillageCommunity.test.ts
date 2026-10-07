@@ -18,8 +18,8 @@ const state = vi.hoisted(() => ({
 vi.mock('../../lib/proposals', () => ({
 	getDeliberationState: () => state,
 	listenToDeliberation: vi.fn(),
-	getOwnerThreads: vi.fn(),
-	getThreadMessages: vi.fn(),
+	getOwnerThreads: vi.fn(() => new Map()),
+	getThreadMessages: vi.fn(() => []),
 	likeStatement: vi.fn(),
 	rateStatement: vi.fn(),
 }));
@@ -30,7 +30,7 @@ vi.mock('../../lib/session', () => ({
 vi.mock('../RateScale', () => ({ RateScale: vi.fn() }));
 vi.mock('../ResultsBoard', () => ({ ResultsBoard: vi.fn() }));
 vi.mock('../HelpersBoard', () => ({ HelpersBoard: vi.fn() }));
-vi.mock('../../lib/seenState', () => ({ threadUnreadCount: vi.fn() }));
+vi.mock('../../lib/seenState', () => ({ threadUnreadCount: vi.fn(() => 0) }));
 vi.mock('../../views/ThreadChat', () => ({ ThreadChat: vi.fn() }));
 vi.mock('../StageNav', () => ({ planItemLabel: () => '' }));
 vi.mock('../../lib/sound', () => ({ playCoin: vi.fn() }));
@@ -144,7 +144,87 @@ describe('village session integration', () => {
 		expect(board(0, true)).toBeDefined();
 		expect(board(0, true, true)).toBeUndefined();
 	});
+	it('flags unread lines: a chip on my card and on the classmate I wrote to, and on my conversation rows', () => {
+		const mine = proposal('mine');
+		const theirs = { ...proposal('theirs'), creatorId: 'b', anonName: 'b' };
+		const untouched = { ...proposal('untouched'), creatorId: 'c', anonName: 'c' };
+		const reply = (id: string, creatorId: string, agoraThreadUserId: string): AgoraProposal => ({
+			...proposal(id),
+			creatorId,
+			agoraThreadUserId,
+		});
+		const source = {
+			notes: () => [mine, theirs, untouched],
+			// Two classmates wrote on my note: b twice, c once and I answered c
+			threads: (id: string) =>
+				id === 'mine'
+					? new Map([
+							['b', [reply('b1', 'b', 'b'), reply('b2', 'b', 'b')]],
+							['c', [reply('c1', 'c', 'c'), reply('me1', 'a', 'c')]],
+						])
+					: new Map<string, AgoraProposal[]>(),
+			// b answered the conversation I started on their note; c never did
+			messages: (id: string, uid: string) =>
+				id === 'theirs' && uid === 'a' ? [reply('r1', 'b', 'a')] : [],
+			unread: (_key: string, messages: AgoraProposal[], uid: string) =>
+				messages.filter((message) => message.creatorId !== uid).length,
+			renderThread: () => null,
+		};
+		const component = VillageCommunity();
+		const attrs: VillageCommunityAttrs = {
+			session: {
+				sessionId: 's',
+				status: AgoraSessionStatus.live,
+				stage: AgoraStage.deliberation,
+				stageIndex: 0,
+			} as AgoraSession,
+			userId: 'a',
+			anonName: 'a',
+			plan: [{ itemId: 'live', stage: AgoraStage.deliberation }],
+			currentIndex: 0,
+			viewingIndex: 0,
+			boardRequest: 1,
+			source,
+			navigate: vi.fn(),
+			onPause: vi.fn(),
+		};
+		const node = { attrs } as unknown as m.VnodeDOM<VillageCommunityAttrs>;
+		component.oninit!.call(component, node);
+		component.onbeforeupdate!.call(component, node, node);
+		const board = component.view.call(component, node);
+		const cards = findAllByClass(board, 'village-note');
+		expect(cards).toHaveLength(3);
+		const chipOf = (card: Node): string | undefined =>
+			findAllByClass(card, 'village-note__chip')[0]?.attrs?.['aria-label'] as string | undefined;
+		// My note: 3 lines from classmates, my own answer not among them
+		expect(chipOf(cards[0])).toBe(t('delib.thread_unread', { n: 3 }));
+		expect(String(cards[0].attrs?.className)).toContain('village-note--news');
+		// Their note: the owner's one reply to me
+		expect(chipOf(cards[1])).toBe(t('delib.thread_unread_one'));
+		// A note I never wrote to carries nothing
+		expect(chipOf(cards[2])).toBeUndefined();
+		expect(String(cards[2].attrs?.className)).not.toContain('village-note--news');
+
+		// Inside "replies to my note", each conversation row says what is new in it
+		(findButton(board, t('village.note.replies'))!.attrs!.onclick as () => void)();
+		const rows = findAllByClass(component.view.call(component, node), 'village-note');
+		expect(rows).toHaveLength(2);
+		expect(chipOf(rows[0])).toBe(t('delib.thread_unread', { n: 2 }));
+		expect(chipOf(rows[1])).toBe(t('delib.thread_unread_one'));
+		component.onremove!.call(component, node);
+	});
 });
+
+/** Every vnode wearing `cls` in its class list, in render order */
+function findAllByClass(tree: unknown, cls: string): Node[] {
+	if (Array.isArray(tree)) return tree.flatMap((child) => findAllByClass(child, cls));
+	if (!tree || typeof tree !== 'object') return [];
+	const node = tree as Node;
+	const classes = String(node.attrs?.className ?? node.attrs?.class ?? '').split(/\s+/);
+	const own = classes.includes(cls) ? [node] : [];
+
+	return [...own, ...findAllByClass(node.children, cls)];
+}
 
 interface Node {
 	tag?: unknown;

@@ -64,6 +64,7 @@
   // A count on a built look is the peer family's deep rung: it must not be
   // MINE (a count is not mine) and the seeds do not include a fifth colour
   --pink: var(--peer-deep);
+  --pink-ink: #fff;       // the deep rung is 70% black, whatever the seed
 
   // --- Washes ---
   --wash-mine-high: color-mix(in srgb, var(--seed-mine) 12%, var(--seed-page));

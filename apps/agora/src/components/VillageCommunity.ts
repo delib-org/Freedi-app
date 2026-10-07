@@ -23,11 +23,13 @@ import {
 	type AgoraProposal,
 } from '../lib/proposals';
 import { threadUnreadCount } from '../lib/seenState';
+import { noteNews, threadNews, type NoteNewsSource } from '../lib/flows/noteNews';
 import { ThreadChat, type ThreadChatAttrs } from '../views/ThreadChat';
 import { planItemLabel } from './StageNav';
+import { iconLabel } from './Icon';
 import { villagePlace } from '../lib/flows/villageRoute';
 import { playCoin } from '../lib/sound';
-import { t } from '../lib/i18n';
+import { t, tCount } from '../lib/i18n';
 import { RateScale } from './RateScale';
 import { LikeButton } from './LikeButton';
 import { UnitScale } from './UnitScale';
@@ -37,12 +39,31 @@ import { countThanks, ResultsSwitch, type ResultsTab } from './ResultsSwitch';
 import { getConsensusPool, getSessionState } from '../lib/session';
 import { boardPercent } from '../lib/boardGeometry';
 
-export interface VillageCommunitySource {
+export interface VillageCommunitySource extends NoteNewsSource {
 	notes: (item: AgoraStagePlanItem) => AgoraProposal[];
-	threads: (id: string) => Map<string, AgoraProposal[]>;
-	messages: (id: string, uid: string) => AgoraProposal[];
-	unread: (id: string, messages: AgoraProposal[], uid: string) => number;
 	renderThread: (attrs: ThreadChatAttrs) => m.Children;
+}
+/** The live deliberation's conversations — the board and the bar's badge count from the same place */
+export const liveNoteNews: NoteNewsSource = {
+	threads: getOwnerThreads,
+	messages: getThreadMessages,
+	unread: threadUnreadCount,
+};
+/**
+ * "N new" on a card or a conversation row. Pink — the notification colour,
+ * never a camp hue and never danger-red: a classmate writing back is the
+ * friendliest event in the game. One label for the whole chip, so a screen
+ * reader hears "3 new messages" and not an icon plus a number.
+ */
+function newsChip(n: number): m.Children {
+	if (n <= 0) return null;
+	const label = tCount('delib.thread_unread', n);
+
+	return m(
+		'span.village-note__chip',
+		{ role: 'img', 'aria-label': label, title: label },
+		iconLabel('talk', String(n)),
+	);
 }
 /** What the scoreboard panel needs beyond the live deliberation state */
 export interface VillageScoreboard {
@@ -301,9 +322,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 		view({ attrs: a }) {
 			const data = a.source ?? {
 				notes: stationNotes,
-				threads: getOwnerThreads,
-				messages: getThreadMessages,
-				unread: threadUnreadCount,
+				...liveNoteNews,
 				renderThread: (props: ThreadChatAttrs) => m(ThreadChat, props),
 			};
 			const item = a.plan[a.viewingIndex];
@@ -355,16 +374,48 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 				];
 			};
 
+			/** The conversations on my note, one row each, the ones with news flagged */
+			const ownerThreads = (note: AgoraProposal): m.Children => {
+				const threads = [...data.threads(note.statementId)];
+				if (threads.length === 0) return m('p', t('village.note.no_replies'));
+
+				return threads.map(([uid, messages], i) => {
+					const news = threadNews(data, note.statementId, uid, a.userId, messages);
+
+					return m(
+						'button.village-note',
+						{
+							class: news > 0 ? 'village-note--news' : undefined,
+							onclick: () => {
+								helper = uid;
+							},
+						},
+						[
+							m('span.village-note__head', [t('village.thread.n', { n: i + 1 }), newsChip(news)]),
+							m('p', messages[messages.length - 1]?.statement),
+							t('village.thread.cta'),
+						],
+					);
+				});
+			};
+
 			const noteCard = (note: AgoraProposal, i: number): m.Children => {
 				const own = note.creatorId === a.userId;
 				const landed = own && (a.boardRequest ?? 0) > 0;
 				const stand = item ? standing(item, note, live) : null;
+				// Someone wrote to me here: on my note any classmate, on theirs the
+				// owner answering the conversation I started
+				const news = noteNews(data, note, a.userId);
 
 				return m(
 					'article.village-note',
 					{
 						key: note.statementId,
-						class: [own ? 'village-note--own' : '', landed ? 'village-note--landed' : '']
+						class: [
+							own ? 'village-note--own' : '',
+							landed ? 'village-note--landed' : '',
+							news > 0 ? 'village-note--news' : '',
+						]
 							.join(' ')
 							.trim(),
 						oncreate: (v: m.VnodeDOM) => {
@@ -375,6 +426,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 					[
 						m('.village-note__head', [
 							m('strong', own ? t('village.note.mine') : t('village.note.n', { n: i + 1 })),
+							newsChip(news),
 							stand ? m('small.village-note__standing', stand) : null,
 						]),
 						m('p', note.statement),
@@ -485,23 +537,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 												),
 												m('h3', t('village.note.mine')),
 												m('p', selected.statement),
-												data.threads(selected.statementId).size
-													? [...data.threads(selected.statementId)].map(([uid, messages], i) =>
-															m(
-																'button.village-note',
-																{
-																	onclick: () => {
-																		helper = uid;
-																	},
-																},
-																[
-																	t('village.thread.n', { n: i + 1 }),
-																	m('p', messages[messages.length - 1]?.statement),
-																	t('village.thread.cta'),
-																],
-															),
-														)
-													: m('p', t('village.note.no_replies')),
+												ownerThreads(selected),
 											]
 										: [
 												live && !mine && notes.length > 0 && !a.source

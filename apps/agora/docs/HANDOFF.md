@@ -20,7 +20,7 @@ frontends, and run backfill through Studio's historical lesson-data action.
 # Agora — Working Handoff
 
 **Start-here document for continuing work in a fresh chat.** Last updated
-2026-09-22.
+2026-10-07.
 
 Companion docs: `../CLAUDE.md` (the rules of the road — read that first),
 `feedback-cycle.md` (the improvement loop, and the spec `e2e-cycle.mjs`
@@ -44,6 +44,47 @@ rate others, improve each other's ideas — aiming for a solution both camps
 can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
+
+## Village news indicators (2026-10-07)
+
+In the 3D village a student had no lasting sign that a classmate wrote to
+them: the toast vanished, and the board, the desk and the bar carried nothing
+(the flat view has had its badges and chips since August). Now a card wears a
+pink "N new" chip — on MY note every classmate's conversation, on a
+classmate's note only the conversation I started there — each row of
+"replies to my note" wears the same chip, and the board door of the
+`PlaceBar` carries the total as a badge. Opening the conversation clears all
+of it (`ThreadChat` advances the seen-state watermark); glancing at the board
+does not.
+
+Where: `lib/flows/noteNews.ts` (pure — `threadNews`, `noteNews`,
+`boardNews`, readers injected), `VillageCommunity.liveNoteNews` (the live
+binding, also the board's own `data`), `VillageShell`'s new `news` attr →
+`PlaceBar.badges`, computed in `GameController` over `stationNotes(item)` —
+the viewing station, because that is what the board door opens onto.
+
+Decisions:
+- The badge sits on the BOARD door, not "my note": the village desk is the
+  writing paper; the replies live behind the board.
+- An improvement idea counts as news here. The flat counters exclude ideas
+  because the workbench shows "open ideas" beside them; a village card shows
+  nothing else, and an unread idea without a chip is a message nobody hears.
+- `--pink-ink` now sits beside every `--pink` (base: dark, 6.1:1; the three
+  looks: white). The chip is the first pink count that passes the contrast
+  audit without the accepted ledger; the older `.stall__chip--unread` and
+  `.workbench__count` still ride the ledger with white on the base pink.
+- The chip is on the meta rung (`@include type-meta`), like the bar's badge.
+
+Gotchas:
+- `.village-note span` styles every span in a card as a bordered footer line.
+  A classed span inside a card needs a more specific rule of its own
+  (`span.village-note__head`, `.village-note .village-note__chip`).
+- The board now reads the threads of every card, so a test that mocks
+  `getOwnerThreads` must return a Map, not `undefined`.
+
+Verify: `bash ../../scripts/solo.sh npx tsx scripts/e2e-village-news.mjs`
+(both directions, the read mark on the participant doc, a 390px shot);
+`village-desk-board.mjs` still passes. Client-only; NOT deployed.
 
 ## Late arrivals and catch-up (2026-09-22)
 
