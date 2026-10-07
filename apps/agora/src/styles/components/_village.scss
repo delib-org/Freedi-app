@@ -184,6 +184,9 @@ article.village-note { cursor: default; }
   line-height: 1.4;
   white-space: nowrap;
 }
+// On the open button the chip follows the label — "replies to my note · 1"
+.village-note__open { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.village-note__open .village-note__chip { margin-inline-start: 0; }
 .village-note--news { box-shadow: 0 0 0 2px var(--pink), 0 5px 14px #45302025; }
 .village-note__rate { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #0002; }
 .village-note__rate .rate { justify-content: flex-start; }

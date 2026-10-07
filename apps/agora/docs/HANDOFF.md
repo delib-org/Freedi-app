@@ -50,8 +50,11 @@ service, expanding agreement, honest disagreement as an achievement.
 In the 3D village a student had no lasting sign that a classmate wrote to
 them: the toast vanished, and the board, the desk and the bar carried nothing
 (the flat view has had its badges and chips since August). Now a card wears a
-pink "N new" chip — on MY note every classmate's conversation, on a
-classmate's note only the conversation I started there — each row of
+pink "N new" chip ON THE BUTTON THAT OPENS THE CONVERSATION ("replies to my
+note" / "suggest an improvement") — a card has two doors, and Tal rejected a
+chip by the title because it did not say which. On MY note it counts every
+classmate's conversation, on a classmate's note only the one I started there;
+each row of
 "replies to my note" wears the same chip, and the board door of the
 `PlaceBar` carries the total as a badge. Opening the conversation clears all
 of it (`ThreadChat` advances the seen-state watermark); glancing at the board

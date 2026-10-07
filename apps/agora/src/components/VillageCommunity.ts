@@ -426,7 +426,6 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 					[
 						m('.village-note__head', [
 							m('strong', own ? t('village.note.mine') : t('village.note.n', { n: i + 1 })),
-							newsChip(news),
 							stand ? m('small.village-note__standing', stand) : null,
 						]),
 						m('p', note.statement),
@@ -442,6 +441,9 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 									t('village.note.edit'),
 								)
 							: null,
+						// The chip rides the button that opens the conversation, so it says
+						// WHERE the news is — a card has two doors, and a chip by the
+						// title could mean either
 						m(
 							'button.village-note__open',
 							{
@@ -450,7 +452,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 									helper = own ? undefined : a.userId;
 								},
 							},
-							own ? t('village.note.replies') : t('village.note.improve'),
+							[own ? t('village.note.replies') : t('village.note.improve'), newsChip(news)],
 						),
 					],
 				);
