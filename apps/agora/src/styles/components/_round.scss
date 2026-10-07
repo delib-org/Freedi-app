@@ -126,11 +126,11 @@
 
 	&__owner {
 		margin: 0;
-		padding: var(--space-xs) var(--space-sm);
-		border: 1px solid var(--mine-strong);
-		border-radius: var(--radius-full);
-		color: var(--mine-ink);
-		font-size: var(--font-size-xs);
+		color: var(--text-primary);
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		font-weight: 700;
+		line-height: 1.4;
 	}
 
 	&__section-title {
