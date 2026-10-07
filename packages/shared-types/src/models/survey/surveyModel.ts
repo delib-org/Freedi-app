@@ -203,6 +203,11 @@ export const SurveyDemographicPageSchema = object({
   description: optional(string()),
   /** Position in the survey flow: 0 = before questions, 1-n = after question n, -1 = after all */
   position: number(),
+  /**
+   * Order among the pages that share a position, lower first. Optional because
+   * older surveys have none; see `orderPagesAtPosition` for how they sort.
+   */
+  order: optional(number()),
   /** Whether this page is required or can be skipped */
   required: boolean(),
   /** Array of custom demographic question IDs specific to this survey */
@@ -227,11 +232,59 @@ export const SurveyExplanationPageSchema = object({
   content: string(),
   /** Position in the survey flow: 0 = before questions, 1-n = after question n, -1 = after all */
   position: number(),
+  /** Order among the pages that share a position, lower first. See `orderPagesAtPosition`. */
+  order: optional(number()),
   /** Optional hero/header image URL */
   heroImageUrl: optional(string()),
 });
 
 export type SurveyExplanationPage = InferOutput<typeof SurveyExplanationPageSchema>;
+
+/** A demographic or explanation page tagged with which kind it is. */
+export type SurveyFlowPage =
+  | { type: 'explanation'; page: SurveyExplanationPage }
+  | { type: 'demographic'; page: SurveyDemographicPage };
+
+/**
+ * The pages that sit at one position in the survey flow, in display order.
+ *
+ * Pages carrying an `order` sort by it. Pages without one — every survey saved
+ * before the field existed — keep the rule those surveys were built under:
+ * explanations first, then demographics, each in array order. A page with an
+ * `order` sorts before any page without, so a survey that has been reordered
+ * once is fully determined by `order` and a legacy survey looks as it always did.
+ *
+ * Both the admin flow editor and the participant runtime go through this, so
+ * what the admin sees is what the participant gets.
+ */
+export function orderPagesAtPosition(
+  position: number,
+  explanationPages: SurveyExplanationPage[],
+  demographicPages: SurveyDemographicPage[]
+): SurveyFlowPage[] {
+  const atPosition: SurveyFlowPage[] = [
+    ...explanationPages
+      .filter((page) => page.position === position)
+      .map((page): SurveyFlowPage => ({ type: 'explanation', page })),
+    ...demographicPages
+      .filter((page) => page.position === position)
+      .map((page): SurveyFlowPage => ({ type: 'demographic', page })),
+  ];
+
+  const rank = (item: SurveyFlowPage): number | undefined =>
+    typeof item.page.order === 'number' ? item.page.order : undefined;
+
+  // Array.prototype.sort is stable, so ties keep the legacy explanation-first order.
+  return atPosition.sort((a, b) => {
+    const ra = rank(a);
+    const rb = rank(b);
+    if (ra === undefined && rb === undefined) return 0;
+    if (ra === undefined) return 1;
+    if (rb === undefined) return -1;
+
+    return ra - rb;
+  });
+}
 
 // ============================================
 // Survey Demographic Answer Schema
