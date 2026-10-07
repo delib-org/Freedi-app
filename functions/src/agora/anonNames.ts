@@ -1,14 +1,40 @@
 /**
  * Anonymous animal code names for agora participants. Names never reveal
  * identity. Every animal is one a student would be glad to be called — no
- * animal that doubles as an insult (donkey, ape, pig, cow, snake, dog…).
+ * animal that doubles as an insult (donkey, ape, pig, cow, snake, dog…) — and
+ * exotic ones mixed in with the familiar.
  * Hebrew nouns are all grammatically masculine so the adjectives agree.
  */
 
 const WORDS: Record<string, { adjectives: string[]; nouns: string[] }> = {
 	he: {
 		adjectives: ['אמיץ', 'חכם', 'שקט', 'זריז', 'סקרן', 'נועז', 'קשוב', 'עליז', 'נדיב', 'חרוץ'],
-		nouns: ['אריה', 'נשר', 'צבי', 'דולפין', 'ינשוף', 'סוס', 'פיל', 'דב', 'אייל', 'נמר'],
+		nouns: [
+			'אריה',
+			'נשר',
+			'צבי',
+			'דולפין',
+			'ינשוף',
+			'פיל',
+			'דב',
+			'אייל',
+			'נמר',
+			'טיגריס',
+			'ברדלס',
+			'יגואר',
+			'פינגווין',
+			'טווס',
+			'קנגורו',
+			'פלמינגו',
+			'לוויתן',
+			'תמנון',
+			'קרנף',
+			'ברבור',
+			'בז',
+			'זאב',
+			'סנאי',
+			'קיפוד',
+		],
 	},
 	en: {
 		adjectives: [
@@ -29,11 +55,25 @@ const WORDS: Record<string, { adjectives: string[]; nouns: string[] }> = {
 			'Gazelle',
 			'Dolphin',
 			'Owl',
-			'Horse',
 			'Elephant',
 			'Bear',
 			'Stag',
 			'Leopard',
+			'Tiger',
+			'Cheetah',
+			'Jaguar',
+			'Penguin',
+			'Peacock',
+			'Kangaroo',
+			'Flamingo',
+			'Whale',
+			'Octopus',
+			'Rhino',
+			'Swan',
+			'Falcon',
+			'Wolf',
+			'Squirrel',
+			'Hedgehog',
 		],
 	},
 };

@@ -15,18 +15,18 @@ import { generateAnonName } from '../agora/anonNames';
 describe('generateAnonName', () => {
 	it('gives every index in a large class a distinct name', () => {
 		const names = new Set<string>();
-		for (let index = 0; index < 100; index++) names.add(generateAnonName('he', index));
-		expect(names.size).toBe(100);
+		for (let index = 0; index < 240; index++) names.add(generateAnonName('he', index));
+		expect(names.size).toBe(240);
 	});
 
 	it('stays distinct past the combination space, where the suffix takes over', () => {
-		// 10 adjectives × 10 nouns = 100 combinations; 101 must not repeat 1.
-		expect(generateAnonName('he', 100)).not.toBe(generateAnonName('he', 0));
-		expect(generateAnonName('en', 100)).not.toBe(generateAnonName('en', 0));
+		// 10 adjectives × 24 nouns = 240 combinations; 241 must not repeat 1.
+		expect(generateAnonName('he', 240)).not.toBe(generateAnonName('he', 0));
+		expect(generateAnonName('en', 240)).not.toBe(generateAnonName('en', 0));
 
 		const names = new Set<string>();
-		for (let index = 0; index < 250; index++) names.add(generateAnonName('en', index));
-		expect(names.size).toBe(250);
+		for (let index = 0; index < 600; index++) names.add(generateAnonName('en', index));
+		expect(names.size).toBe(600);
 	});
 
 	it('is deterministic — the same index is always the same traveler', () => {
