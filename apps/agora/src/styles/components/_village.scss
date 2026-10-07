@@ -264,6 +264,9 @@ article.village-note { cursor: default; }
 .village-shell .village-community__panel .chat-page { height: auto; overflow: visible; }
 .village-shell .village-community__panel .chat-page > * { flex-shrink: 0; }
 .village-shell .village-community__panel .chat-page__list { flex: none; min-height: 200px; max-height: 44dvh; overflow: auto; }
+// The note is the object the page is about: in a panel that scrolls as a
+// whole it is shown in full, never clipped to a few lines
+.village-shell .village-community__panel .chat-page__proposal-text { max-height: none; overflow: visible; }
 
 
 // The paper, written in the guide's speech bubble: placed beside the figure by

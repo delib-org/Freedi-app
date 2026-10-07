@@ -399,6 +399,10 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 				});
 			};
 
+			/** A note's number on this board — the same count the cards wear */
+			const noteNumber = (note: AgoraProposal): number =>
+				Math.max(1, notes.findIndex((n) => n.statementId === note.statementId) + 1);
+
 			const noteCard = (note: AgoraProposal, i: number): m.Children => {
 				const own = note.creatorId === a.userId;
 				const landed = own && (a.boardRequest ?? 0) > 0;
@@ -503,9 +507,19 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 									: null,
 								selected && helper
 									? data.renderThread({
-											canEditProposal: getDeliberationState().proposals.some(
-												(p) => p.statementId === selected?.statementId,
-											),
+											// The owner changes the note from inside the conversation
+											// — a proposal on the square or an answer in a question
+											// booth alike (both are the author's own statement; the
+											// write is the same text update the desk makes). Only a
+											// closed station takes the pen away, as the card's door does.
+											canEditProposal: live,
+											wording: {
+												mine: t('village.note.mine'),
+												theirs: t('village.note.n', { n: noteNumber(selected) }),
+												edit: t('village.note.edit'),
+												withAuthor: t('village.thread.with_author'),
+												save: t('village.note.save'),
+											},
 											session: a.session,
 											proposal: selected,
 											helperUid: helper,
@@ -517,10 +531,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 											),
 											userId: a.userId,
 											anonName: a.anonName,
-											proposalNumber: Math.max(
-												1,
-												notes.findIndex((n) => n.statementId === selected?.statementId) + 1,
-											),
+											proposalNumber: noteNumber(selected),
 											onBack: () => {
 												helper = undefined;
 												selected = undefined;

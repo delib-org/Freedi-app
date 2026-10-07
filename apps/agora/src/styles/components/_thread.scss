@@ -56,21 +56,29 @@
 		min-width: 0;
 	}
 
+	// The paper's name — the OBJECT the page is about — so it carries the
+	// display voice; the conversation is the line underneath
 	&__title {
+		margin: 0;
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 1.05rem;
+		font-size: 1.15rem;
+		line-height: 1.25;
 		color: var(--text-primary);
 	}
 
 	&__sub {
-		color: var(--text-muted);
-		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
 	}
 
-	// What the conversation is ABOUT, always in sight above it
+	// What the conversation is ABOUT, always in sight above it: the text, and
+	// for the person who wrote it, the labelled way in to change it
 	&__proposal {
-		display: block;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-sm);
 		width: calc(100% - 2 * var(--space-md));
 		margin: var(--space-sm) var(--space-md) 0;
 		padding: var(--space-sm) var(--space-md);
@@ -78,47 +86,33 @@
 		border: 1px solid var(--border-subtle);
 		border-radius: var(--radius-lg);
 		box-shadow: var(--shadow-card);
-		// `font: inherit` first, to strip the button UA font this is set on —
-		// then the proposal voice, or the shorthand would flatten it
-		font: inherit;
 
-		@include proposal-voice;
-
-		color: var(--text-primary);
-		text-align: start;
-		max-height: 6.5em;
-		overflow-y: auto;
-
-		// Mine to change: the text itself is the control, the way it is
-		// everywhere else in Freedi. The pencil is the only chrome.
 		// Mine, so it wears the one ownership cue a quoted card can carry
-		// without becoming a message: a purple edge and a purple pencil
-		&--editable {
-			display: flex;
-			align-items: flex-start;
-			gap: var(--space-sm);
-			cursor: pointer;
+		// without becoming a message: the purple edge every "mine" surface has
+		&--mine {
 			border-color: var(--border-lantern);
-			cursor: pointer;
-			transition: box-shadow var(--motion-base) ease;
-
-			&:hover,
-			&:focus-visible {
-				box-shadow: var(--shadow-raised);
-			}
+			border-inline-start-width: 4px;
 		}
 	}
 
 	&__proposal-text {
-		flex: 1 1 auto;
-		min-width: 0;
+		margin: 0;
+		width: 100%;
+		@include proposal-voice;
+
+		color: var(--text-primary);
+		text-align: start;
+		// Capped only where the page is a fixed-height flex column (the classic
+		// chat), so a long proposal cannot push the messages off the screen; the
+		// village panel scrolls as a whole and shows the whole note
+		max-height: 9em;
+		overflow-y: auto;
 	}
 
-	&__proposal-pencil {
-		flex: 0 0 auto;
-		color: var(--mine);
-		font-size: var(--font-size-sm);
-		opacity: 0.7;
+	// A button with words on it, not a pencil to discover: the one act this
+	// page exists to invite from the author
+	&__edit-open {
+		align-self: flex-start;
 	}
 
 	// ...and the box it turns into
