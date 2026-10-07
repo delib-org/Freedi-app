@@ -4805,6 +4805,7 @@
   "Picture link": "پیوند تصویر",
   "Save the survey first, then add pictures": "ابتدا نظرسنجی را ذخیره کنید، سپس تصویر اضافه کنید",
   "Supports headings, bold, lists and links. Drop a picture onto the text to add it.": "از عنوان، متن پررنگ، فهرست و پیوند پشتیبانی می‌کند. برای افزودن تصویر، آن را روی متن رها کنید.",
+  "Colour: (blue)text(/blue) — blue, green, red, orange, purple, gray.": "رنگ: (blue)متن(/blue) — blue, green, red, orange, purple, gray.",
   "Delete card {{n}}": "حذف کارت {{n}}",
   "Delete card": "حذف کارت",
   "{{count}} pictures added to cards {{from}}–{{to}}": "{{count}} تصویر به کارت‌های {{from}}–{{to}} افزوده شد",
