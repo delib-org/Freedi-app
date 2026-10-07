@@ -24,6 +24,12 @@ import '@/styles/_themes.scss';
 export const metadata: Metadata = {
   title: 'WizCol: Mass Consensus',
   description: 'Fast crowdsourced solution platform',
+  openGraph: {
+    title: 'WizCol: Mass Consensus',
+    description: 'A new way to make decisions together',
+    type: 'website',
+    images: [{ url: '/og-wizcol.png', width: 1200, height: 630, alt: 'WizCol' }],
+  },
   icons: {
     icon: '/favicon.ico',
     apple: '/icons/logo-192px.png',
