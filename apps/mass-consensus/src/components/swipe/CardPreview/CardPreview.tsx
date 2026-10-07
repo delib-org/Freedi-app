@@ -59,7 +59,7 @@ export default function CardPreview({ statement, currentIndex, totalCards, ratin
       <div className="swipe-card__ratings" aria-hidden="true">
         {scale.map((entry) => (
           <div key={entry.value} className="swipe-card__rating">
-            {/* Looks live (not greyed); `--preview` turns pointer events off */}
+            {/* Looks live (not greyed); `--preview` turns pointer events off and scales the row to the phone */}
             <RatingButton rating={entry.value} ratingMode={ratingMode} onClick={() => undefined} />
           </div>
         ))}

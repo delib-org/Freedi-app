@@ -637,4 +637,18 @@
     height: calc(360px + var(--swipe-card-ratings-height));
     max-height: none;
   }
+
+  // Five full-size buttons are wider than the 220px phone screen: lay them
+  // out as a centred row (overflowing both sides equally, unlike the grid,
+  // which grows to the right) and shrink that row about its centre.
+  .swipe-card__ratings {
+    display: flex;
+    justify-content: center;
+    transform: scale(0.76);
+    transform-origin: center bottom;
+  }
+
+  .swipe-card__rating {
+    flex: 0 0 auto;
+  }
 }
