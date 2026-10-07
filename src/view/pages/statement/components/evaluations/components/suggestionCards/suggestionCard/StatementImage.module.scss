@@ -63,6 +63,34 @@
   }
 }
 
+// The picture as a participant sees it: a button that opens it full screen.
+// Admins get the upload drop zone in its place.
+.enlargeBtn {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  cursor: zoom-in;
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+.picture {
+  display: block;
+  max-width: 100%;
+  max-height: var(--statement-image-max-height, 300px);
+  width: auto;
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
 // Image control buttons (toggle and remove)
 .imageControls {
   position: absolute;

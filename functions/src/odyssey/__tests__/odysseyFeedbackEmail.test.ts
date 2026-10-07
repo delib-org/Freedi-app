@@ -29,13 +29,13 @@ describe('resolveFeedbackRecipients', () => {
 	});
 
 	it('mails both developers when nothing is configured', () => {
-		expect(resolveFeedbackRecipients()).toEqual(['tal.yaron@gmail.com', 'uriel@tauex.tau.ac.il']);
+		expect(resolveFeedbackRecipients()).toEqual(['tal.yaron+odyssy@wizcol.com']);
 	});
 
 	it('falls back to the defaults for a blank value', () => {
 		process.env.ODYSSEY_FEEDBACK_RECIPIENTS = '';
 
-		expect(resolveFeedbackRecipients()).toEqual(['tal.yaron@gmail.com', 'uriel@tauex.tau.ac.il']);
+		expect(resolveFeedbackRecipients()).toEqual(['tal.yaron+odyssy@wizcol.com']);
 	});
 
 	it('trims, lowercases, dedupes and drops entries that are not addresses', () => {
@@ -61,7 +61,7 @@ describe('sendOdysseyFeedbackEmail', () => {
 		await expect(sendOdysseyFeedbackEmail(feedback())).resolves.toBe(true);
 
 		const payload = sendMail.mock.calls[0][0];
-		expect(payload.to).toEqual(['tal.yaron@gmail.com', 'uriel@tauex.tau.ac.il']);
+		expect(payload.to).toEqual(['tal.yaron+odyssy@wizcol.com']);
 		expect(payload.from).toBe('game@example.com');
 	});
 

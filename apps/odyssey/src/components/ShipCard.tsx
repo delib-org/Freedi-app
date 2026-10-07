@@ -29,7 +29,9 @@ const BAND_SENTENCE: Record<ReturnType<typeof proximityBandOf>, string> = {
  * the others, which is what the standing list is for.
  */
 export default function ShipCard({ ship, onClose, onShowAll }: Props) {
-	const near = ship.distance === null ? null : Math.round((1 - ship.distance) * 100);
+	// The ring is relative to the fleet; the number is the true proximity.
+	const trueDistance = ship.trueDistance === undefined ? ship.distance : ship.trueDistance;
+	const near = trueDistance === null ? null : Math.round((1 - trueDistance) * 100);
 
 	return (
 		<div className="ship-card flex flex-col gap-2.5 text-right" role="status">

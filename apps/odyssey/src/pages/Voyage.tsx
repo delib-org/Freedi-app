@@ -8,12 +8,12 @@ import { useMode } from '../lib/mode';
 import { distanceEngine } from '../lib/distance';
 import { valueToAttitude } from '../lib/evaluations';
 import { islandArtUrl } from '../lib/islandArt';
+import { relativeDistances } from '../lib/seaLayout';
 import { stageBus, type SeaDistances } from '../lib/stageBus';
-import { invitedElders, elderStageId, pickIslandRemark, type ElderRemark } from '../lib/elders';
+import { invitedElders, elderStageId } from '../lib/elders';
 import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
 import SeaChart from '../components/SeaChart';
 import ShipCard from '../components/ShipCard';
-import ElderRemarkCard from '../components/ElderRemarkCard';
 
 /**
  * What the captain's log asks when an island has no question of its own.
@@ -54,8 +54,6 @@ export default function Voyage() {
 	const [asked, setAsked] = useState<string | null>(null);
 	const [depth, setDepth] = useState('');
 	const [saving, setSaving] = useState(false);
-	/** an elder's in-character answer to this island, shown only in reaction */
-	const [remark, setRemark] = useState<ElderRemark | null>(null);
 
 	const island = useMemo(
 		() => selectedIslands[Math.min(index, Math.max(0, selectedIslands.length - 1))] ?? null,
@@ -86,6 +84,17 @@ export default function Voyage() {
 
 		return Object.fromEntries([...partyEntries, ...elderEntries]);
 	}, [content, attitudes, parties, elders]);
+
+	// Where the ships ride: stretched across the sea by the parties' own
+	// spread, so near and far stay visible (see `relativeDistances`).
+	const seaDistances: SeaDistances = useMemo(
+		() =>
+			relativeDistances(
+				distances,
+				parties.map((party) => party.partyId),
+			),
+		[distances, parties],
+	);
 
 	// Feed the voyage scene: parties once, then the current island vignette.
 	// Ships take their positions instantly on entry (no mid-question motion).
@@ -122,8 +131,8 @@ export default function Voyage() {
 				imageUrl: island.imageUrl ?? islandArtUrl(island.sortOrder),
 			},
 		});
-		stageBus.send({ type: 'updateDistances', distances, animate: false });
-		// distances intentionally omitted: ships take a snapshot when the island
+		stageBus.send({ type: 'updateDistances', distances: seaDistances, animate: false });
+		// seaDistances intentionally omitted: ships take a snapshot when the island
 		// changes and only move again during the reaction phase
 	}, [mode, island, index, selectedIslands.length]);
 
@@ -197,12 +206,11 @@ export default function Voyage() {
 					},
 				});
 			}
-			setRemark(pickIslandRemark(elders, island!, attitudes));
 			setPhase('reaction');
 			if (mode === 'game') {
 				// the log-stamp beat, then the sea reacts
 				stageBus.send({ type: 'islandCompleted', islandId: island!.statementId });
-				stageBus.send({ type: 'updateDistances', distances, animate: true });
+				stageBus.send({ type: 'updateDistances', distances: seaDistances, animate: true });
 			}
 		} finally {
 			setSaving(false);
@@ -217,7 +225,6 @@ export default function Voyage() {
 		}
 		setIndex(index + 1);
 		setPhase('question');
-		setRemark(null);
 	}
 
 	// Two lists, never one. See NearbyShips' `caption`.
@@ -225,14 +232,17 @@ export default function Voyage() {
 		partyId: party.partyId,
 		name: party.name,
 		color: party.color,
-		distance: distances[party.partyId] ?? null,
+		distance: seaDistances[party.partyId] ?? null,
+		trueDistance: distances[party.partyId] ?? null,
 	}));
 	const elderProximity: ShipProximity[] = elders.map((elder) => ({
 		partyId: elderStageId(elder.elderId),
 		name: `📜 ${elder.name}`,
 		color: elder.color,
-		distance: distances[elderStageId(elder.elderId)] ?? null,
+		distance: seaDistances[elderStageId(elder.elderId)] ?? null,
+		trueDistance: distances[elderStageId(elder.elderId)] ?? null,
 	}));
+	const islandImage = island.imageUrl ?? islandArtUrl(island.sortOrder);
 	const askedShip =
 		[...shipProximity, ...elderProximity].find((ship) => ship.partyId === asked) ?? null;
 
@@ -241,7 +251,16 @@ export default function Voyage() {
 			<GameChrome stage="ההפלגה" />
 			<div className="page">
 				<div className="w-full max-w-3xl flex flex-col gap-4">
-					<header className="text-center fade-in">
+					<header className="text-center fade-in" key={island.statementId}>
+						{islandImage ? (
+							// the island itself, first: the player should see where they landed
+							// before reading what it asks
+							<img
+								src={islandImage}
+								alt=""
+								className="block mx-auto mb-2 w-auto h-32 sm:h-40 object-contain drop-shadow-lg"
+							/>
+						) : null}
 						<p className="eyebrow m-0">
 							אי {index + 1} מתוך {selectedIslands.length}
 						</p>
@@ -345,7 +364,6 @@ export default function Voyage() {
 						</section>
 					) : (
 						<section className="fade-in flex flex-col gap-4">
-							{remark ? <ElderRemarkCard remark={remark} /> : null}
 							{mode === 'game' ? (
 								<>
 									{/* the sea itself reacts behind this window */}

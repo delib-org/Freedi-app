@@ -5,8 +5,14 @@ export interface ShipProximity {
 	partyId: string;
 	name: string;
 	color: string;
-	/** 0 = sailing your course, 1 = opposite horizon; null = not enough data */
+	/**
+	 * Where the ship rides, relative to the rest of the fleet: 0 = the nearest
+	 * party, 1 = the farthest (see `relativeDistances`); null = not enough data
+	 */
 	distance: number | null;
+	/** The true distance from your route (0 = same course, 1 = opposite) —
+	 *  the number a card puts in words. Falls back to `distance`. */
+	trueDistance?: number | null;
 }
 
 interface Props {

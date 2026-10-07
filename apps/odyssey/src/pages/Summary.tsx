@@ -3,18 +3,28 @@ import { Link } from 'react-router-dom';
 import type { Evaluation } from '@freedi/shared-types';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
-import OpinionMap from '../components/OpinionMap';
+import SeaChart from '../components/SeaChart';
+import ShipCard from '../components/ShipCard';
+import type { ShipProximity } from '../components/NearbyShips';
 import { useGame } from '../state/GameContext';
 import { useUser } from '../lib/user';
 import { useMode } from '../lib/mode';
 import { distanceEngine, ParticipantDistance } from '../lib/distance';
-import { buildOpinionMap } from '../lib/opinionMap';
 import { islandArtUrl } from '../lib/islandArt';
 import { loadGameEvaluations } from '../lib/evaluations';
-import { enterIslandDeliberation, getGateState } from '../lib/agoraGate';
 import { stageBus } from '../lib/stageBus';
-import { invitedElders, elderStageId } from '../lib/elders';
+import { invitedElders } from '../lib/elders';
+import { proximityBandOf, relativeDistances, type ProximityBandKey } from '../lib/seaLayout';
 import DigestSettings from '../components/DigestSettings';
+
+const BAND_WORD: Record<ProximityBandKey, string> = {
+	near: 'קרובה למסלולך',
+	middle: 'אפשרות לעגינה',
+	far: 'מתרחקת',
+};
+
+/** Narrowest bar in the party list, in percent. */
+const BAR_FLOOR = 6;
 
 /**
  * תוצר סוף המסע: not a "which party are you" quiz result — a personal
@@ -26,12 +36,11 @@ import DigestSettings from '../components/DigestSettings';
 export default function Summary() {
 	const { user } = useUser();
 	const mode = useMode();
-	const { content, journey, attitudes, text, updateJourney } = useGame();
+	const { content, journey, attitudes, text } = useGame();
 	const [participants, setParticipants] = useState<ParticipantDistance[]>([]);
-	const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
-	/** The gate being walked through — the token round trip is not instant */
-	const [enteringIslandId, setEnteringIslandId] = useState('');
 	const [digestOpen, setDigestOpen] = useState(false);
+	/** the ship whose card is open on the final sea chart */
+	const [asked, setAsked] = useState<string | null>(null);
 
 	const gameId = content?.game.gameId;
 	const uid = user?.uid;
@@ -41,7 +50,6 @@ export default function Summary() {
 		loadGameEvaluations(gameId)
 			.then((loaded: Evaluation[]) => {
 				if (cancelled) return;
-				setEvaluations(loaded);
 				setParticipants(distanceEngine.participantDistances({ uid, evaluations: loaded }));
 			})
 			.catch((error: unknown) => {
@@ -76,17 +84,17 @@ export default function Summary() {
 		[content, attitudes, parties],
 	);
 
-	const elderDistances = useMemo(
+	// Where each ship rides on the homecoming sea and in the list below:
+	// stretched by the parties' own spread so near and far stay visible.
+	// The elders are not on this page — they sail with you during the voyage,
+	// but the results are about parties and your route only.
+	const seaDistances = useMemo(
 		() =>
-			content ? distanceEngine.elderDistances({ attitudes, islands: content.islands, elders }) : [],
-		[content, attitudes, elders],
+			relativeDistances(
+				Object.fromEntries(partyDistances.map((entry) => [entry.partyId, entry.distance])),
+			),
+		[partyDistances],
 	);
-
-	const opinionMap = useMemo(() => {
-		if (!uid || !content || evaluations.length === 0) return null;
-
-		return buildOpinionMap({ uid, evaluations, islands: content.islands, parties, elders });
-	}, [uid, content, evaluations, parties, elders]);
 
 	const sortedParticipants = useMemo(
 		() =>
@@ -122,36 +130,18 @@ export default function Summary() {
 		});
 		stageBus.send({
 			type: 'setParties',
-			parties: [
-				...parties.map((party) => ({
-					id: party.partyId,
-					name: party.name,
-					color: party.color,
-				})),
-				...elders.map((elder) => ({
-					id: elderStageId(elder.elderId),
-					name: elder.name,
-					color: elder.color,
-					isElder: true,
-				})),
-			],
+			parties: parties.map((party) => ({
+				id: party.partyId,
+				name: party.name,
+				color: party.color,
+			})),
 		});
-		stageBus.send({
-			type: 'updateDistances',
-			distances: Object.fromEntries([
-				...partyDistances.map((entry): [string, number | null] => [entry.partyId, entry.distance]),
-				...elderDistances.map((entry): [string, number | null] => [
-					elderStageId(entry.elderId),
-					entry.distance,
-				]),
-			]),
-			animate: false,
-		});
+		stageBus.send({ type: 'updateDistances', distances: seaDistances, animate: false });
 		if (!celebrated.current && visitedIslandIds.length > 0) {
 			celebrated.current = true;
 			stageBus.send({ type: 'celebrateArrival', islandCount: visitedIslandIds.length });
 		}
-	}, [mode, content, attitudes, parties, partyDistances, elders, elderDistances]);
+	}, [mode, content, attitudes, parties, seaDistances]);
 
 	useEffect(() => {
 		if (mode !== 'game') return;
@@ -169,9 +159,21 @@ export default function Summary() {
 		.map((entry) => ({
 			...entry,
 			party: parties.find((party) => party.partyId === entry.partyId),
+			relative: seaDistances[entry.partyId] ?? null,
 		}))
 		.filter((entry) => entry.party)
 		.sort((a, b) => (a.distance ?? 2) - (b.distance ?? 2));
+
+	// The final sea: the same chart as on every island — your ship at the
+	// berth, each party on the ring of its distance from your whole route.
+	const shipProximity: ShipProximity[] = parties.map((party) => ({
+		partyId: party.partyId,
+		name: party.name,
+		color: party.color,
+		distance: seaDistances[party.partyId] ?? null,
+		trueDistance: partyDistances.find((entry) => entry.partyId === party.partyId)?.distance ?? null,
+	}));
+	const askedShip = shipProximity.find((ship) => ship.partyId === asked) ?? null;
 
 	const rankedValues = Object.entries(journey.valueRankings)
 		.sort((a, b) => a[1] - b[1])
@@ -213,28 +215,6 @@ export default function Summary() {
 		(island) => island.enabled && !visitedIslands.includes(island),
 	).length;
 
-	const agoraOrigin = text('agoraOrigin');
-
-	async function enterGate(islandStatementId: string): Promise<void> {
-		if (!content || enteringIslandId) return;
-		setEnteringIslandId(islandStatementId);
-		// fire-and-go: the boat sails into the lighthouse beam, navigation is
-		// never blocked on the animation
-		if (mode === 'game') stageBus.send({ type: 'sailToLighthouse' });
-		try {
-			await enterIslandDeliberation({
-				islandStatementId,
-				game: content.game,
-				journey,
-				agoraOrigin,
-				updateJourney,
-			});
-		} catch (error) {
-			console.error('[Odyssey] Could not open the gate:', error);
-			setEnteringIslandId('');
-		}
-	}
-
 	return (
 		<>
 			<GameChrome stage={text('summaryTitle')} />
@@ -266,7 +246,7 @@ export default function Summary() {
 							</Link>
 						</p>
 						<div className="flex flex-col gap-3">
-							{sortedParties.map(({ party, distance, sharedIslands }) => (
+							{sortedParties.map(({ party, distance, relative, sharedIslands }) => (
 								<div key={party!.partyId} className="flex items-center gap-3">
 									<span
 										className="inline-block w-3.5 h-3.5 rounded-full shrink-0"
@@ -274,7 +254,7 @@ export default function Summary() {
 										aria-hidden="true"
 									/>
 									<span className="w-40 shrink-0 text-[15px]">{party!.name}</span>
-									{distance === null ? (
+									{distance === null || relative === null ? (
 										<span className="text-[13px] opacity-60">אין עדיין נתוני מסלול לספינה זו</span>
 									) : (
 										<>
@@ -282,19 +262,17 @@ export default function Summary() {
 												<div
 													className="distance-fill"
 													style={{
-														width: `${Math.round((1 - distance) * 100)}%`,
+														// relative to the fleet, like the sea above; a stub
+														// stays so the farthest ship still reads as a ship
+														width: `${Math.max(BAR_FLOOR, Math.round((1 - relative) * 100))}%`,
 													}}
 												/>
 											</div>
 											<span className="w-24 shrink-0 text-[13px] opacity-85 text-left">
-												{distance <= 0.25
-													? 'קרובה למסלולך'
-													: distance <= 0.55
-														? 'אפשרות לעגינה'
-														: 'מתרחקת'}
+												{BAND_WORD[proximityBandOf(relative)]}
 											</span>
 											<span className="text-[12px] opacity-60 shrink-0">
-												({sharedIslands} איים)
+												(קרבה {Math.round((1 - distance) * 100)}% · {sharedIslands} איים)
 											</span>
 										</>
 									)}
@@ -370,10 +348,19 @@ export default function Summary() {
 					<section className="panel fade-in">
 						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">🗺️ מפת ים הדעות</h2>
 						<p className="text-[13px] opacity-75 mt-0 mb-4">
-							כל נקודה היא מפליג/ה או ספינת מפלגה. ככל ששתי נקודות קרובות יותר — התשובות שלהן דומות
-							יותר.
+							הספינה שלך במרכז. כל ספינת מפלגה שטה במרחק שלה מהמסלול שלך על פני כל האיים שחקרת —
+							הקרובות ליד הספינה שלך, הרחוקות באופק. הקישו על ספינה כדי לראות כמה היא קרובה.
 						</p>
-						<OpinionMap result={opinionMap} />
+						<div className="flex flex-col gap-3">
+							<SeaChart ships={shipProximity} onSelect={setAsked} selectedId={asked} />
+							{askedShip ? (
+								<ShipCard
+									ship={askedShip}
+									onClose={() => setAsked(null)}
+									onShowAll={() => setAsked(null)}
+								/>
+							) : null}
+						</div>
 					</section>
 
 					{/*
@@ -405,62 +392,6 @@ export default function Summary() {
 								</Link>
 							) : null}
 						</div>
-					</section>
-
-					<section className="panel fade-in">
-						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-2 text-center">
-							🏛️ שערי האגורה
-						</h2>
-						<p className="text-[15px] text-[#dcecf7] mt-0 mb-4 text-center">
-							{text('agoraQuestion')}
-						</p>
-						{visitedIslands.length > 0 ? (
-							<div className="flex flex-col gap-2.5">
-								{visitedIslands.map((island) => {
-									const state = getGateState(island.statementId, content.game, journey);
-									const entering = enteringIslandId === island.statementId;
-
-									return (
-										<div
-											key={island.statementId}
-											className="flex items-center gap-3 flex-wrap justify-between"
-										>
-											<span className="text-[15px]">
-												{state === 'visited' ? '⚑ ' : ''}
-												{island.title}
-											</span>
-											{state === 'unprovisioned' || !agoraOrigin ? (
-												<button
-													type="button"
-													className="btn"
-													disabled
-													title="הדיון על האי הזה ייפתח במסך הניהול"
-												>
-													{text('agoraButton')} (בקרוב)
-												</button>
-											) : (
-												<button
-													type="button"
-													className="btn"
-													disabled={entering}
-													onClick={() => void enterGate(island.statementId)}
-												>
-													{entering
-														? 'מפליגים…'
-														: state === 'visited'
-															? 'חזרה לדיון'
-															: text('agoraButton')}
-												</button>
-											)}
-										</div>
-									);
-								})}
-							</div>
-						) : (
-							<p className="m-0 opacity-80 text-[15px] text-center">
-								חקרו אי אחד לפחות, ושער הדיון עליו ייפתח כאן.
-							</p>
-						)}
 					</section>
 
 					{uid ? (
