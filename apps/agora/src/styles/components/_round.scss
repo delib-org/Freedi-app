@@ -93,9 +93,20 @@
 }
 
 .round {
+	gap: var(--space-lg);
+
 	&__ask {
-		text-align: center;
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		text-align: start;
 		gap: var(--space-xs);
+		column-gap: var(--space-sm);
+		padding-block: var(--space-sm);
+	}
+
+	&__ask &__explanation,
+	&__ask &__closed {
+		grid-column: 2;
 	}
 
 	&__icon {
@@ -105,6 +116,50 @@
 
 	&__title {
 		margin: 0;
+		font-size: var(--font-size-lg);
+		line-height: 1.4;
+	}
+
+	&__mine {
+		border-inline-start: 3px solid var(--mine-strong);
+	}
+
+	&__owner {
+		margin: 0;
+		padding: var(--space-xs) var(--space-sm);
+		border: 1px solid var(--mine-strong);
+		border-radius: var(--radius-full);
+		color: var(--mine-ink);
+		font-size: var(--font-size-xs);
+	}
+
+	&__section-title {
+		margin: 0;
+		font-size: var(--font-size-base);
+		color: var(--text-primary);
+	}
+
+	&__saved,
+	&__editor {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__saved-status {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
 	}
 
 	&__explanation {

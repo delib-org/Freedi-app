@@ -760,8 +760,10 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 												deskPrompt ? m('p.village-bubble__prompt', deskPrompt) : null,
 											]),
 											m(
-												'button.btn.btn--secondary',
+												'button.btn.btn--secondary.village-desk__close',
 												{
+													'aria-label': t('village.desk.close'),
+													title: t('village.desk.close'),
 													onclick: () => {
 														opened = false;
 														deskOpen = false;
@@ -769,7 +771,10 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 														sync();
 													},
 												},
-												t('village.desk.close'),
+												[
+													m('span.village-desk__close-icon', { 'aria-hidden': 'true' }, '×'),
+													m('span.village-desk__close-label', t('village.desk.close')),
+												],
 											),
 										])
 									: council
