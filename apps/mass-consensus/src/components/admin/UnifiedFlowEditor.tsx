@@ -358,6 +358,7 @@ function SortableFlowItem({
           {item.type === 'explanation' && onExplanationUpdate && (
             <ExplanationEditor
               page={item.page}
+              surveyId={surveyId}
               onUpdate={onExplanationUpdate}
               onRemove={onRemove}
             />

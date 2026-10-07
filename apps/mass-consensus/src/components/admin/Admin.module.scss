@@ -282,6 +282,17 @@
   }
 }
 
+// A picture is being dragged over the text: it will land where the caret is
+.textAreaDragOver {
+  border-style: dashed;
+  border-color: var(--btn-primary, #5f88e5);
+  background: var(--bg-muted, #f7fafc);
+}
+
+.textAreaUploading {
+  opacity: 0.6;
+}
+
 // ============================================
 // QUESTION PICKER
 // ============================================
