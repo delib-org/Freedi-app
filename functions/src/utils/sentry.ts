@@ -63,6 +63,46 @@ function resolveDsn(): string | null {
 }
 
 /**
+ * HttpsError codes that describe the caller's request, not a fault in the
+ * function. The Firebase integration captures every error an onCall handler
+ * throws, so without this filter a curl probe with no token, or a client that
+ * sent an invalid payload, files a "handled: no" issue in Sentry at error level.
+ * Those are the function working as designed. Anything else — `internal`,
+ * `unavailable`, `unknown`, and plain Errors — still goes through.
+ */
+const CLIENT_FAULT_CODES: ReadonlySet<string> = new Set([
+	'unauthenticated',
+	'permission-denied',
+	'invalid-argument',
+	'not-found',
+	'already-exists',
+	'failed-precondition',
+	'resource-exhausted',
+	'out-of-range',
+	'cancelled',
+	'aborted',
+]);
+
+/** Duck-typed: HttpsError carries a string `code`; checked here without importing firebase-functions. */
+function isClientFaultHttpsError(error: unknown): boolean {
+	if (!(error instanceof Error)) return false;
+	const code = (error as Error & { code?: unknown }).code;
+
+	return typeof code === 'string' && CLIENT_FAULT_CODES.has(code);
+}
+
+/**
+ * `beforeSend` hook: drop events whose original exception is a client-fault
+ * HttpsError. Exported so the filter is testable without initializing Sentry.
+ */
+export function filterClientFaultEvents<E>(
+	event: E,
+	hint: { originalException?: unknown },
+): E | null {
+	return isClientFaultHttpsError(hint.originalException) ? null : event;
+}
+
+/**
  * Initialize Sentry once per instance. Safe to call more than once.
  *
  * Called at module load in index.ts so that a crash during cold start — which
@@ -82,6 +122,7 @@ export function initFunctionsSentry(): void {
 		// No tracing: these are background triggers and callables, and the
 		// per-invocation overhead is not worth it until someone asks for it.
 		tracesSampleRate: 0,
+		beforeSend: filterClientFaultEvents,
 		ignoreErrors: [
 			// A client that went away mid-request.
 			'ECONNRESET',

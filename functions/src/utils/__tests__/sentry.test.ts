@@ -1,4 +1,11 @@
-import { initFunctionsSentry, isSentryEnabled, flushSentry } from '../sentry';
+import { HttpsError } from 'firebase-functions/v2/https';
+
+import {
+	initFunctionsSentry,
+	isSentryEnabled,
+	flushSentry,
+	filterClientFaultEvents,
+} from '../sentry';
 
 /**
  * Sentry must stay inert without a DSN, and inert on a developer's machine even
@@ -75,5 +82,49 @@ describe('functions Sentry', () => {
 
 	it('flush resolves true when Sentry is inert', async () => {
 		await expect(flushSentry(10)).resolves.toBe(true);
+	});
+
+	/**
+	 * The Firebase integration captures every error an onCall handler throws.
+	 * An HttpsError that blames the caller is the function working as designed
+	 * (a curl probe with no token filed an "unauthenticated" issue in prod), so
+	 * beforeSend drops those and keeps everything that points at the server.
+	 */
+	describe('filterClientFaultEvents', () => {
+		const event = { event_id: 'e1' };
+
+		it.each([
+			'unauthenticated',
+			'permission-denied',
+			'invalid-argument',
+			'not-found',
+			'failed-precondition',
+			'resource-exhausted',
+		] as const)('drops a client-fault HttpsError (%s)', (code) => {
+			const err = new HttpsError(code, 'nope');
+
+			expect(filterClientFaultEvents(event, { originalException: err })).toBeNull();
+		});
+
+		it.each(['internal', 'unavailable', 'unknown', 'deadline-exceeded'] as const)(
+			'keeps a server-side HttpsError (%s)',
+			(code) => {
+				const err = new HttpsError(code, 'broken');
+
+				expect(filterClientFaultEvents(event, { originalException: err })).toBe(event);
+			},
+		);
+
+		it('keeps plain errors, strings and missing exceptions', () => {
+			expect(filterClientFaultEvents(event, { originalException: new Error('boom') })).toBe(event);
+			expect(filterClientFaultEvents(event, { originalException: 'unauthenticated' })).toBe(event);
+			expect(filterClientFaultEvents(event, {})).toBe(event);
+		});
+
+		it('ignores a non-HttpsError whose code happens to be a string', () => {
+			const err = Object.assign(new Error('fs'), { code: 'ENOENT' });
+
+			expect(filterClientFaultEvents(event, { originalException: err })).toBe(event);
+		});
 	});
 });
