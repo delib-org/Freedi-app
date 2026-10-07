@@ -33,13 +33,18 @@ describe('generateAnonName', () => {
 		expect(generateAnonName('he', 7)).toBe(generateAnonName('he', 7));
 	});
 
+	it('names every traveler after an animal', () => {
+		expect(generateAnonName('he', 13)).toBe('נשר זריז');
+		expect(generateAnonName('en', 13)).toBe('Swift Eagle');
+	});
+
 	it('falls back to English for an unknown language rather than throwing', () => {
 		expect(generateAnonName('fr', 0)).toBe(generateAnonName('en', 0));
 	});
 
 	it('orders the words per language', () => {
 		// Hebrew reads noun-then-adjective; English adjective-then-noun.
-		expect(generateAnonName('he', 0)).toBe('פנס אמיץ');
-		expect(generateAnonName('en', 0)).toBe('Brave Lantern');
+		expect(generateAnonName('he', 0)).toBe('אריה אמיץ');
+		expect(generateAnonName('en', 0)).toBe('Brave Lion');
 	});
 });
