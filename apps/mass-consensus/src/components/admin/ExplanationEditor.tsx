@@ -170,6 +170,7 @@ export default function ExplanationEditor({
                 {surveyId
                   ? t('Supports headings, bold, lists and links. Drop a picture onto the text to add it.')
                   : saveFirstHint}
+                {surveyId && ` ${t('Colour: (blue)text(/blue) — blue, green, red, orange, purple, gray.')}`}
               </p>
             )}
           </>

@@ -4431,6 +4431,7 @@
   "Picture link": "رابط الصورة",
   "Save the survey first, then add pictures": "احفظ الاستبيان أولاً، ثم أضف الصور",
   "Supports headings, bold, lists and links. Drop a picture onto the text to add it.": "يدعم العناوين والخط العريض والقوائم والروابط. اسحب صورة على النص لإضافتها.",
+  "Colour: (blue)text(/blue) — blue, green, red, orange, purple, gray.": "لون: (blue)نص(/blue) — blue, green, red, orange, purple, gray.",
   "Delete card {{n}}": "حذف البطاقة {{n}}",
   "Delete card": "حذف البطاقة",
   "{{count}} pictures added to cards {{from}}–{{to}}": "أُضيفت {{count}} صور إلى البطاقات {{from}}–{{to}}",

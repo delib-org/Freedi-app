@@ -233,4 +233,32 @@
   em {
     font-style: italic;
   }
+
+  // Coloured text: `(blue)…(/blue)` in the markdown, see remarkColorTags.
+  // Class names are global because remark emits them, not this module.
+  // Each colour is the theme's role for it, light literal as the fallback,
+  // so the text stays readable in dark and high-contrast modes.
+  :global(.md-color--blue) {
+    color: var(--mc-brand-text, #1d4ed8);
+  }
+
+  :global(.md-color--green) {
+    color: var(--mc-success-text, #15803d);
+  }
+
+  :global(.md-color--red) {
+    color: var(--mc-danger-text, #b91c1c);
+  }
+
+  :global(.md-color--orange) {
+    color: var(--mc-warning-text, #c2410c);
+  }
+
+  :global(.md-color--purple) {
+    color: var(--mc-accent-text, #6d28d9);
+  }
+
+  :global(.md-color--gray) {
+    color: var(--mc-text-muted, #64748b);
+  }
 }
