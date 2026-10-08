@@ -6460,7 +6460,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'village.board.classmates': 'Zettel der anderen',
 		'village.note.n': 'Zettel {{n}}',
 		'village.note.edit': 'Meinen Zettel bearbeiten',
-		'village.note.save': 'Notiz speichern',
+		'village.note.save': 'Meinen Zettel speichern',
 		'village.note.replies': 'Antworten auf meinen Zettel',
 		'village.note.improve': 'Verbesserung vorschlagen',
 		'village.board.back': 'Zurück zur Tafel',
@@ -6492,7 +6492,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'village.note.no_replies': 'Auf deinen Zettel gibt es noch keine Antworten.',
 		'village.thread.n': 'Gespräch {{n}}',
 		'village.thread.cta': 'Lesen, antworten und danken',
-		'village.thread.with_author': 'Gespräch mit der Person, die die Notiz geschrieben hat',
+		'village.thread.with_author': 'Gespräch mit der Person, die den Zettel geschrieben hat',
 		'village.board.gate':
 			'Die Tafel ist zum Lesen geöffnet. Um zu bewerten und Verbesserungen vorzuschlagen, schreib zuerst deinen eigenen Zettel am Tisch.',
 		'village.board.empty':
