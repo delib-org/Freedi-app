@@ -1,3 +1,5 @@
+@use '../tokens' as *;
+
 // Dashboard indicators: the KPI row, the chart cards, and the Agora-side
 // overrides of @freedi/shared-charts' .chart chrome (type sizes, tooltip).
 // Imported by components.scss; do not import directly.

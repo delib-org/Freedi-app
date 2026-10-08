@@ -1,3 +1,5 @@
+@use '../tokens' as *;
+
 .village-mode-toggle { margin: var(--space-sm) var(--space-md); }
 .village-shell {
 	position: relative;

@@ -18,13 +18,18 @@
   --type-meta: 1;
 
   font-size: var(--font-size-2xs);
+}
 
-  // A custom property inherits. Without this reset a mark containing a nested
-  // element would hand that child the exemption too, and a real word could
-  // ride into the 12px rung on a parent's permission.
-  * {
-    --type-meta: 0;
-  }
+// A custom property inherits by default, and then a mark containing a nested
+// element would hand that child the exemption too — a real word could ride
+// into the 12px rung on a parent's permission. Registered as non-inheriting,
+// the stamp stays on the element that asked for it. (This used to be a nested
+// `* { --type-meta: 0 }` inside the mixin, which put a nested rule before the
+// caller's own declarations in 48 places — Sass's mixed-decls deprecation.)
+@property --type-meta {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 0;
 }
 
 // ============================================================================

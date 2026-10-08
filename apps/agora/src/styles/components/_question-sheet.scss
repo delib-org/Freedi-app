@@ -1,3 +1,5 @@
+@use 'teacher-dashboard';
+
 // The teacher's own question, on its own surface (views/teacher/QuestionSheet).
 // A full-screen sheet on a phone, a centred dialog over a scrim on a laptop —
 // modal at both widths, unlike .teacher-panel, because its one job is one

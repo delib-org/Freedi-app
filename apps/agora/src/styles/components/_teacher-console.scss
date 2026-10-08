@@ -1,3 +1,5 @@
+@use '../tokens' as *;
+
 // The teacher's live console beyond the board: the Class panel (pseudonym →
 // real name, a pip per stage), the Messages panel (every line a student
 // wrote, with the teacher's three moves), and the drawer where one student's

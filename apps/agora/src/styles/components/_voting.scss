@@ -1,3 +1,5 @@
+@use '../tokens' as *;
+
 // The ballot — the voting stage's one screen
 //
 // A row per candidate is a CARD (radius-lg, purple-tinted shadow), identified
