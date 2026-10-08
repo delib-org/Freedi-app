@@ -1,6 +1,7 @@
 vi.mock('../Inbox', () => ({ Inbox: vi.fn() }));
 import { describe, it, expect, vi } from 'vitest';
 import {
+	AgoraMessageKind,
 	AgoraSessionStatus,
 	AgoraStage,
 	StatementType,
@@ -8,6 +9,7 @@ import {
 } from '@freedi/shared-types';
 import type { AgoraProposal } from '../../lib/proposals';
 import type m from 'mithril';
+import type { ThreadChatAttrs } from '../../views/ThreadChat';
 
 const state = vi.hoisted(() => ({
 	proposals: [] as AgoraProposal[],
@@ -151,16 +153,41 @@ describe('village session integration', () => {
 		const reply = (id: string, creatorId: string, agoraThreadUserId: string): AgoraProposal => ({
 			...proposal(id),
 			creatorId,
+			anonName: creatorId,
 			agoraThreadUserId,
 		});
+		const renderThread = vi.fn((_attrs: ThreadChatAttrs) => null);
+		let notes: AgoraProposal[] = [theirs, mine, untouched];
 		const source = {
-			notes: () => [mine, theirs, untouched],
+			notes: () => notes,
 			// Two classmates wrote on my note: b twice, c once and I answered c
 			threads: (id: string) =>
 				id === 'mine'
 					? new Map([
-							['b', [reply('b1', 'b', 'b'), reply('b2', 'b', 'b')]],
-							['c', [reply('c1', 'c', 'c'), reply('me1', 'a', 'c')]],
+							[
+								'b',
+								[
+									reply('b1', 'b', 'b'),
+									reply('b2', 'b', 'b'),
+									{
+										...reply('award', 'a', 'b'),
+										agoraMessageKind: AgoraMessageKind.award,
+										statement: '',
+									},
+								],
+							],
+							[
+								'c',
+								[
+									reply('c1', 'c', 'c'),
+									reply('me1', 'a', 'c'),
+									{
+										...reply('edit', 'a', 'c'),
+										agoraMessageKind: AgoraMessageKind.edit,
+										statement: 'updated note',
+									},
+								],
+							],
 						])
 					: new Map<string, AgoraProposal[]>(),
 			// b answered the conversation I started on their note; c never did
@@ -168,7 +195,7 @@ describe('village session integration', () => {
 				id === 'theirs' && uid === 'a' ? [reply('r1', 'b', 'a')] : [],
 			unread: (_key: string, messages: AgoraProposal[], uid: string) =>
 				messages.filter((message) => message.creatorId !== uid).length,
-			renderThread: () => null,
+			renderThread,
 		};
 		const component = VillageCommunity();
 		const attrs: VillageCommunityAttrs = {
@@ -194,6 +221,13 @@ describe('village session integration', () => {
 		const board = component.view.call(component, node);
 		const cards = findAllByClass(board, 'village-note');
 		expect(cards).toHaveLength(3);
+		expect(nodeText(findAllByClass(cards[0], 'village-note__ownership')[0])).toBe(
+			t('village.note.yours'),
+		);
+		// Pin mine without changing classmates' original numbers.
+		expect(nodeText(findAllByClass(cards[1], 'village-note__title')[0])).toBe(
+			t('village.note.n', { n: 1 }),
+		);
 		const chipOf = (card: Node): string | undefined =>
 			findAllByClass(card, 'village-note__chip')[0]?.attrs?.['aria-label'] as string | undefined;
 		// My note: 3 lines from classmates, my own answer not among them
@@ -207,10 +241,44 @@ describe('village session integration', () => {
 
 		// Inside "replies to my note", each conversation row says what is new in it
 		(findButton(board, t('village.note.replies'))!.attrs!.onclick as () => void)();
-		const rows = findAllByClass(component.view.call(component, node), 'village-note');
+		const rows = findAllByClass(component.view.call(component, node), 'village-note--conversation');
 		expect(rows).toHaveLength(2);
+		expect(nodeText(findAllByClass(rows[0], 'village-note__text')[0])).toBe('b2');
+		expect(nodeText(findAllByClass(rows[1], 'village-note__text')[0])).toBe('me1');
 		expect(chipOf(rows[0])).toBe(t('delib.thread_unread', { n: 2 }));
 		expect(chipOf(rows[1])).toBe(t('delib.thread_unread_one'));
+		// Identify each conversation by the same pseudonym shown inside it.
+		expect(findButton(rows[0], t('delib.chat_with', { name: 'b' }))).toBeDefined();
+		expect(findButton(rows[1], t('delib.chat_with', { name: 'c' }))).toBeDefined();
+		(rows[0].attrs!.onclick as () => void)();
+		component.view.call(component, node);
+		const ownerThread: ThreadChatAttrs =
+			renderThread.mock.calls[renderThread.mock.calls.length - 1][0];
+		expect(ownerThread.backLabel).toBe(t('village.note.replies'));
+		expect(ownerThread.proposal.statementId).toBe('mine');
+		ownerThread.onBack();
+		// Back climbs one level to the same note's conversations, not all notes.
+		const backToReplies = component.view.call(component, node);
+		expect(findAllByClass(backToReplies, 'village-note--conversation')).toHaveLength(2);
+		expect(findButton(backToReplies, t('delib.chat_with', { name: 'c' }))).toBeDefined();
+		(findButton(backToReplies, t('village.board.back'))!.attrs!.onclick as () => void)();
+		const backToBoard = component.view.call(component, node);
+		const peerCard = findAllByClass(backToBoard, 'village-note')[1];
+		(findButton(peerCard, t('village.note.improve'))!.attrs!.onclick as () => void)();
+		component.view.call(component, node);
+		const peerThread: ThreadChatAttrs =
+			renderThread.mock.calls[renderThread.mock.calls.length - 1][0];
+		expect(peerThread.backLabel).toBe(t('village.board.back'));
+		peerThread.onBack();
+		expect(findAllByClass(component.view.call(component, node), 'village-note')).toHaveLength(3);
+		// Incoming snapshots can move mine in the source list; it remains first.
+		notes = [theirs, untouched, mine];
+		const reordered = findAllByClass(component.view.call(component, node), 'village-note');
+		expect(findAllByClass(reordered[0], 'village-note__ownership')).toHaveLength(1);
+		notes = [theirs, untouched];
+		const withoutMine = component.view.call(component, node);
+		expect(findAllByClass(withoutMine, 'village-note')).toHaveLength(2);
+		expect(findAllByClass(withoutMine, 'village-note__ownership')).toHaveLength(0);
 		component.onremove!.call(component, node);
 	});
 });
@@ -232,6 +300,14 @@ interface Node {
 	children?: unknown;
 	text?: unknown;
 }
+function nodeText(tree: unknown): string {
+	if (typeof tree === 'string') return tree;
+	if (Array.isArray(tree)) return tree.map(nodeText).join('');
+	if (!tree || typeof tree !== 'object') return '';
+	const node = tree as Node;
+
+	return nodeText(node.text) + nodeText(node.children);
+}
 /** The first `button` vnode whose own text includes `label` */
 function findButton(tree: unknown, label: string): Node | undefined {
 	if (Array.isArray(tree)) {
@@ -244,14 +320,7 @@ function findButton(tree: unknown, label: string): Node | undefined {
 	}
 	if (!tree || typeof tree !== 'object') return undefined;
 	const node = tree as Node;
-	const texts = [node.text, ...(Array.isArray(node.children) ? node.children : [])].map((c) =>
-		typeof c === 'string'
-			? c
-			: c && typeof c === 'object'
-				? String((c as Node).children ?? '')
-				: '',
-	);
-	if (node.tag === 'button' && texts.some((text) => text.includes(label))) return node;
+	if (node.tag === 'button' && nodeText(node).includes(label)) return node;
 
 	return findButton(node.children, label);
 }

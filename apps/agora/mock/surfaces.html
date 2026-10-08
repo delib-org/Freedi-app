@@ -136,7 +136,7 @@
 			</div>
 			<h2>round: story, need, vision</h2>
 			<div class="round round--story">
-				<div class="card round__ask">
+				<div class="round__ask">
 					<span class="round__icon">✎</span>
 					<h2 class="round__title">איפה פגשת את הנושא בחייך?</h2>
 					<p class="round__explanation">סיפור, לא עמדה.</p>
@@ -144,11 +144,12 @@
 				</div>
 				<div class="card stack round__mine">
 					<div class="round__text-head">
-						<p class="teacher__section-title">הטקסט שלך</p>
+						<h3 class="round__owner">הטקסט שלך</h3>
 						<span class="round__figure">3 לבבות</span>
 					</div>
 					<p class="round__lead">בנושא הזה חשוב לי ש…</p>
 					<textarea class="round__textarea" rows="3">כשהייתי בכיתה ז'…</textarea>
+					<div class="round__actions"><span class="round__saved-status">✓ נשלח</span><button class="btn btn--secondary btn--sm">עריכת הטקסט</button></div>
 				</div>
 				<div class="card round__text" data-hue="3">
 					<div class="round__text-head">
@@ -714,17 +715,25 @@
 			</div>
 
 			<h2>a village card with news — the count wears the notification colour on every paper</h2>
-			<article class="village-note village-note--news" style="background: #dcebd6">
-				<div class="village-note__head"><strong>פתק 2</strong></div>
-				<p>מס מדורג על אדמות האצולה שכולו הולך למחסני תבואה עירוניים.</p>
+			<article class="village-note village-note--own">
+				<div class="village-note__head"><h3 class="village-note__title village-note__ownership">הפתק שלכם</h3></div>
+				<p class="village-note__text">ועדה של שלושה נציגים שמתחלפת כל חודש.</p>
+				<div class="village-note__actions">
+					<button class="village-note__edit" type="button">לערוך את הפתק שלי</button>
+					<button class="village-note__open" type="button">התגובות לפתק שלי</button>
+				</div>
+			</article>
+			<article class="village-note village-note--news">
+				<div class="village-note__head"><h3 class="village-note__title">פתק 2</h3><small class="village-note__standing">75% הסכמה בכיתה · 3 דירוגים</small></div>
+				<p class="village-note__text">מס מדורג על אדמות האצולה שכולו הולך למחסני תבואה עירוניים.</p>
 				<button class="village-note__open" type="button">
 					להציע שיפור<span class="village-note__chip" role="img" aria-label="הודעה חדשה אחת">1</span>
 				</button>
 			</article>
-			<button class="village-note village-note--news" type="button">
-				<span class="village-note__head">שיחה 1<span class="village-note__chip" role="img" aria-label="2 הודעות חדשות">2</span></span>
-				<p>אולי כדאי להוסיף נציג שמתחלף כל שבועיים.</p>
-				קריאה, תגובה ותודה
+			<button class="village-note village-note--conversation village-note--news" type="button">
+				<span class="village-note__head">שיחה עם אריה אמיץ<span class="village-note__chip" role="img" aria-label="2 הודעות חדשות">2</span></span>
+				<p class="village-note__text">אולי כדאי להוסיף נציג שמתחלף כל שבועיים.</p>
+				<span class="village-note__conversation-action">קריאה, תגובה ותודה</span>
 			</button>
 
 			<h2>teacher dashboard — class card, game row, status pills</h2>

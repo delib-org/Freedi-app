@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from 'firebase-admin/auth';
 import {
   Statement,
   StatementType,
@@ -15,7 +14,8 @@ import {
   SourceApp,
   statementToSimpleStatement,
 } from '@freedi/shared-types';
-import { getFirestoreAdmin, initializeFirebaseAdmin } from '@/lib/firebase/admin';
+import { getFirestoreAdmin } from '@/lib/firebase/admin';
+import { buildOptionStatements, cleanOptionTexts, getCreatorForUser } from '@/lib/firebase/buildOptionStatements';
 import { verifyToken, extractBearerToken, isAdminOfStatement } from '@/lib/auth/verifyAdmin';
 import { logger } from '@/lib/utils/logger';
 
@@ -106,21 +106,8 @@ export async function POST(request: NextRequest) {
 
     const parentStatement = parentDoc.data() as Statement;
 
-    // Get user info from Firebase Auth
-    initializeFirebaseAdmin();
-    const auth = getAuth();
-    let displayName = 'Admin';
-    let email = '';
-    let photoURL = '';
-
-    try {
-      const userRecord = await auth.getUser(userId);
-      displayName = userRecord.displayName || userRecord.email?.split('@')[0] || 'Admin';
-      email = userRecord.email || '';
-      photoURL = userRecord.photoURL || '';
-    } catch {
-      logger.info('[POST /api/questions/create] Could not fetch user details, using defaults');
-    }
+    const creator = await getCreatorForUser(userId);
+    const { displayName, email, photoURL } = creator;
 
     const now = Date.now();
     const questionId = getRandomUID();
@@ -222,38 +209,11 @@ export async function POST(request: NextRequest) {
     };
 
     // Create solution statements if provided
-    const solutionStatements: Statement[] = [];
-    const filteredSolutions = (body.solutions || [])
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
-    for (const [index, solutionText] of filteredSolutions.entries()) {
-      const solutionId = getRandomUID();
-      const solution = createStatementObject({
-        statementId: solutionId,
-        statement: solutionText,
-        statementType: StatementType.option,
-        parentId: questionId,
-        topParentId: questionWithSettings.topParentId,
-        parents: [...(questionWithSettings.parents || []), questionId],
-        creatorId: userId,
-        creator: {
-          uid: userId,
-          displayName,
-          email,
-          photoURL,
-          isAnonymous: false,
-        },
-        sourceApp: SourceApp.MASS_CONSENSUS,
-      });
-
-      if (solution) {
-        // One batch shares one clock tick; a millisecond apiece keeps the
-        // order the admin typed recoverable from createdAt
-        solution.createdAt += index;
-        solutionStatements.push(solution);
-      }
-    }
+    const solutionStatements = buildOptionStatements(
+      questionWithSettings,
+      cleanOptionTexts(body.solutions || []),
+      creator
+    );
 
     // Use batch to create all documents atomically
     const batch = db.batch();

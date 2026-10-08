@@ -15,45 +15,38 @@
 	max-width: 640px;
 	margin-inline: auto;
 
-	// Same chrome as the deliberation HUD: white bar, dark title, and the one
-	// squircle tile. A conversation is a place you travel to, so its header
-	// has to be recognisably the same object as the header of the place you
-	// left.
 	&__bar {
 		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-		padding: var(--space-sm) var(--space-md);
-		background: var(--bg-card-solid);
-		border-block-end: 1px solid var(--border-subtle);
-		box-shadow: 0 4px 16px -8px rgba(70, 45, 150, 0.2);
+		padding: var(--space-xs) var(--space-md);
 	}
 
 	&__back {
-		flex: 0 0 auto;
 		display: inline-flex;
 		align-items: center;
-		justify-content: center;
-		width: 40px;
-		height: 40px;
-		border: none;
-		border-radius: var(--radius-tile);
-		background: var(--grad-mine);
-		color: #ffffff;
-		font-size: 1.2rem;
+		gap: var(--space-sm);
+		min-height: 44px;
+		max-width: 100%;
+		padding: var(--space-xs) 0;
+		border: 0;
+		background: transparent;
+		color: var(--text-primary);
+		font: inherit;
+		text-align: start;
 		cursor: pointer;
-		box-shadow: var(--glow-lantern);
-		transition: transform var(--motion-fast) var(--ease-spring);
 
-		&:active {
-			transform: scale(0.94);
-		}
+		&:hover { text-decoration: underline; }
+		&:focus-visible { outline: 2px solid var(--mine-deep); outline-offset: 2px; }
 	}
 
-	&__who {
-		display: flex;
-		flex-direction: column;
-		min-width: 0;
+	&__conversation {
+		margin: var(--space-md) var(--space-md) 0;
+		padding-block-start: var(--space-md);
+		border-block-start: 1px solid var(--border-subtle);
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		font-weight: 700;
+		color: var(--text-primary);
+		overflow-wrap: anywhere;
 	}
 
 	// The paper's name — the OBJECT the page is about — so it carries the
@@ -65,11 +58,6 @@
 		font-size: 1.15rem;
 		line-height: 1.25;
 		color: var(--text-primary);
-	}
-
-	&__sub {
-		color: var(--text-secondary);
-		font-size: var(--font-size-sm);
 	}
 
 	// What the conversation is ABOUT, always in sight above it: the text, and
@@ -98,6 +86,7 @@
 	&__proposal-text {
 		margin: 0;
 		width: 100%;
+		overflow-wrap: anywhere;
 		@include proposal-voice;
 
 		color: var(--text-primary);
@@ -424,19 +413,21 @@
 		letter-spacing: 0.04em;
 	}
 
-	// Points are good news — the one system line allowed a little warmth
-	// Points landing is the one system line allowed real colour, and it wears
-	// mint — the rationed "good things happened" hue (DESIGN.md §2)
+	// A reward is secondary to the conversation. Keep its confirmed amount
+	// and chronology, without giving it the weight of another message.
 	&--award {
 		flex-direction: row;
 		align-items: center;
 		gap: var(--space-xs);
-		border-color: var(--mint-deep);
-		background: rgba(86, 223, 192, 0.16);
+		flex-wrap: wrap;
+		border: 0;
+		background: transparent;
+		box-shadow: none;
 
 		.chat-system__text {
-			color: var(--text-primary);
-			font-weight: 700;
+			color: var(--text-secondary);
+			font-size: var(--font-size-sm);
+			font-weight: 400;
 		}
 	}
 

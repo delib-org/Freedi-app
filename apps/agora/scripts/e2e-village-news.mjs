@@ -149,6 +149,24 @@ await expect
 	})
 	.not.toBeNull();
 await shot(page, `${PREFIX}00-board-quiet`);
+step('My note is first and explicitly marked, above the classmates section');
+await expect(panel.locator('article.village-note').first()).toHaveClass(/village-note--own/);
+await expect(ownCard.locator('.village-note__ownership')).toHaveText('הפתק שלכם');
+await expect(ownCard.locator('.village-note__rate')).toHaveCount(0);
+await expect(panel.locator('.village-board__peers > h3')).toHaveText('הפתקים של שאר הכיתה');
+const peerNumbers = await panel.locator('.village-board__peers .village-note__title').allTextContents();
+for (const width of [390, 320]) {
+	await page.setViewportSize({ width, height: 844 });
+	await panel.evaluate((el) => { el.scrollTop = 0; });
+	await expect(ownCard.locator('.village-note__ownership')).toBeVisible();
+	eq(`board fits at ${width}px`, await panel.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), true);
+	await shot(page, `${PREFIX}00a-board-${width}`);
+}
+await page.setViewportSize({ width: 1360, height: 860 });
+await toVillage();
+await toBoard();
+await expect(panel.locator('article.village-note').first()).toHaveClass(/village-note--own/);
+eq('peer numbers survive reopening the board', JSON.stringify(await panel.locator('.village-board__peers .village-note__title').allTextContents()), JSON.stringify(peerNumbers));
 
 step('A classmate sends an idea on my note: chip on my card, badge on the board door');
 const helperBot = run.bots[0];
@@ -187,8 +205,27 @@ await rows.first().click();
 await page.locator('.chat-page').waitFor({ timeout: 10000 });
 await pause(600);
 await clearCelebration(page, 'S1');
+step('The note, conversation and return destination are distinct on a phone');
+await expect(page.locator('.chat-page__proposal .chat-page__title')).toHaveText('הפתק שלי');
+await expect(page.locator('.chat-page__conversation')).toContainText(helperBot.anonName);
+await expect(page.locator('.chat-page__back')).toHaveText('→התגובות לפתק שלי');
+await expect(page.locator('.chat-page__label')).toContainText(helperBot.anonName);
+await page.locator('.chat-page__edit-open').click();
+await expect(page.locator('.chat-page__edit-input')).toHaveValue(myNote.statement);
+await page.locator('.chat-page__edit').getByRole('button', { name: 'ביטול', exact: true }).click();
+await expect(page.locator('.chat-page__proposal-text')).toHaveText(myNote.statement);
+for (const width of [390, 320]) {
+	await page.setViewportSize({ width, height: 844 });
+	await page.locator('.chat-page__conversation').scrollIntoViewIfNeeded();
+	await expect(page.locator('.chat-page__conversation')).toBeVisible();
+	eq(`conversation fits at ${width}px`, await panel.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), true);
+	await shot(page, `${PREFIX}03b-thread-${width}`);
+}
+await page.setViewportSize({ width: 1360, height: 860 });
 await page.locator('.chat-page__back').click();
 await page.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
+await expect(rows).toHaveCount(1);
+await expect(rows.first()).toContainText(helperBot.anonName);
 await expect(rows.first().locator('.village-note__chip')).toHaveCount(0);
 await toVillage();
 eq('the badge is gone once the conversation was read', await boardBadge.count(), 0);

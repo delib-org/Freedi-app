@@ -6,9 +6,11 @@ import { VALIDATION } from '@/constants/common';
 import { countWords } from '@/lib/utils/wordCount';
 import { pieceTextOf, piecesMeetSubmissionRules } from '@/lib/utils/splitPieces';
 import { moderationMessageKey } from '@/lib/utils/moderationMessage';
+import { isAddDisabledResponse } from '@/lib/utils/participantOptions';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { useToast } from '@/components/shared/Toast';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
-import { ERROR_MESSAGES } from '@/constants/common';
+import { ERROR_MESSAGES, UI } from '@/constants/common';
 import type {
   FlowState,
   SimilarCheckResponse,
@@ -66,6 +68,18 @@ interface SolutionPromptModalProps {
 /** The server refused the text (moderation, limit); the user has already been told. */
 class PrepareRefused extends Error {}
 
+/**
+ * The server says participants may not add options to this question — the
+ * admin switched it on after this tab opened. The modal closes with a notice
+ * instead of a generic failure.
+ */
+class AddDisabled extends Error {}
+
+/** Throw AddDisabled when a refusal body carries the ADD_DISABLED code. */
+function throwIfAddDisabled(body: unknown): void {
+  if (isAddDisabledResponse(body)) throw new AddDisabled();
+}
+
 interface PieceTarget {
   text: string;
   target: string | null;
@@ -94,6 +108,7 @@ export default function SolutionPromptModal({
   autoMergeSimilar = false,
 }: SolutionPromptModalProps) {
   const { t, tWithParams } = useTranslation();
+  const { showToast } = useToast();
   const [text, setText] = useState('');
   const [flowState, setFlowState] = useState<FlowState>({ step: 'input' });
   const [error, setError] = useState<string | null>(null);
@@ -146,6 +161,26 @@ export default function SolutionPromptModal({
   useEffect(() => {
     adjustTextareaHeight();
   }, [text]);
+
+  /**
+   * An ADD_DISABLED refusal from any path: tell the participant once and close
+   * — there is nothing to retry. Returns true when the error was that refusal.
+   */
+  const recoverFromAddDisabled = (err: unknown): boolean => {
+    if (!(err instanceof AddDisabled)) return false;
+
+    showToast({
+      type: 'info',
+      message: t(ERROR_MESSAGES.ADD_DISABLED),
+      duration: UI.ADD_DISABLED_TOAST_MS,
+    });
+    setText('');
+    setError(null);
+    setFlowState({ step: 'input' });
+    onClose();
+
+    return true;
+  };
 
   /**
    * Act on what the server found: several answers in one submission, a
@@ -240,6 +275,7 @@ export default function SolutionPromptModal({
 
     if (response.status === 400 || response.status === 403) {
       const data: PrepareSuggestionResponse = await response.json();
+      throwIfAddDisabled(data);
       const message =
         response.status === 400
           ? moderationMessageKey(data.category)
@@ -300,6 +336,7 @@ export default function SolutionPromptModal({
       await handleCheckSimilarLegacy();
     } catch (err) {
       if (err instanceof PrepareRefused) return;
+      if (recoverFromAddDisabled(err)) return;
       logError(err, {
         operation: 'SolutionPromptModal.handleCheckSimilar',
         userId,
@@ -453,6 +490,7 @@ export default function SolutionPromptModal({
 
       if (!response.ok) {
         const data = await response.json();
+        throwIfAddDisabled(data);
         throw new NetworkError(data.error || ERROR_MESSAGES.SUBMIT_FAILED);
       }
 
@@ -467,6 +505,7 @@ export default function SolutionPromptModal({
         solutionText: textToSubmit,
       });
     } catch (err) {
+      if (recoverFromAddDisabled(err)) return;
       logError(err, {
         operation: 'SolutionPromptModal.handleSelectSolution',
         userId,
@@ -498,6 +537,7 @@ export default function SolutionPromptModal({
 
     if (!response.ok) {
       const data = await response.json();
+      throwIfAddDisabled(data);
       throw new NetworkError(data.error || ERROR_MESSAGES.MERGE_FAILED);
     }
 
@@ -572,6 +612,7 @@ export default function SolutionPromptModal({
 
     if (!response.ok) {
       const data = await response.json();
+      throwIfAddDisabled(data);
       throw new NetworkError(data.error || ERROR_MESSAGES.SUBMIT_FAILED);
     }
 
@@ -614,6 +655,7 @@ export default function SolutionPromptModal({
         solutionText: text,
       });
     } catch (err) {
+      if (recoverFromAddDisabled(err)) return;
       logError(err, {
         operation: 'SolutionPromptModal.handleMergeSolution',
         userId,
@@ -638,6 +680,7 @@ export default function SolutionPromptModal({
         solutionText,
       });
     } catch (err) {
+      if (recoverFromAddDisabled(err)) return;
       logError(err, {
         operation: 'SolutionPromptModal.handleAutoMerge',
         userId,
@@ -694,6 +737,7 @@ export default function SolutionPromptModal({
     }
 
     if (added === 0) {
+      if (recoverFromAddDisabled(failure)) return;
       setError(failure instanceof Error ? failure.message : ERROR_MESSAGES.SUBMIT_FAILED);
       setFlowState({ step: 'input' });
 

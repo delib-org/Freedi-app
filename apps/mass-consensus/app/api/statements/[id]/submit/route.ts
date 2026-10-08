@@ -7,6 +7,7 @@ import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { countWords } from '@/lib/utils/wordCount';
 import { logResearchAction } from '@/lib/utils/researchLogger';
+import { getAddOptionRefusal } from '@/lib/firebase/addOptionGuard';
 import { ResearchAction } from '@freedi/shared-types';
 import { FieldValue } from 'firebase-admin/firestore';
 import {
@@ -169,6 +170,13 @@ export async function POST(
         userId,
         displayName,
       );
+    }
+
+    // "Admin options only": a new option is refused here, while the +1 on an
+    // existing option above stays allowed.
+    const refusal = await getAddOptionRefusal(questionId);
+    if (refusal) {
+      return NextResponse.json(refusal.body, { status: refusal.status });
     }
 
     // Enforce the optional per-question minimum-word requirement. Only applies

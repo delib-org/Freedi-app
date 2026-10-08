@@ -70,6 +70,8 @@ export interface ThreadWording {
 export interface ThreadChatAttrs {
 	/** A visible label over the message box (the village board passes one; the classic chat shows none) */
 	paperLabel?: string;
+	/** Names the destination instead of making students infer it from an arrow. */
+	backLabel?: string;
 	/** Defaults to the classic chat's "proposal" vocabulary */
 	wording?: ThreadWording;
 	services?: ThreadChatServices;
@@ -278,6 +280,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					'aria-label': owner ? wording.mine : wording.theirs,
 				},
 				[
+					m('h2.chat-page__title', owner ? wording.mine : wording.theirs),
 					m('p.chat-page__proposal-text', proposal.statement),
 					owner && canEditProposal
 						? m(
@@ -300,6 +303,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		const changed = text !== proposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
 
 		return m('.chat-page__edit', [
+			m('h2.chat-page__title', wording.mine),
 			// The thanked idea, pinned where the weaving happens. A QUOTE, never a
 			// paste: the student rewrites their own text with it in view.
 			pinnedIdea
@@ -912,7 +916,6 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 				withAuthor: t('delib.chat_with_author'),
 				save: t('delib.update_proposal'),
 			};
-			const title = owner ? wording.mine : wording.theirs;
 			const subtitle = owner
 				? t(helperName ? 'delib.chat_with' : 'delib.chat_with_classmate', { name: helperName })
 				: wording.withAuthor;
@@ -962,14 +965,9 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			return m('.shell.shell--chat', [
 				m('.chat-page', [
 					m('header.chat-page__bar', [
-						m(
-							'button.chat-page__back',
-							{ type: 'button', 'aria-label': t('common.back'), onclick: onBack },
+						m('button.chat-page__back', { type: 'button', onclick: onBack }, [
 							m('span', { 'aria-hidden': 'true' }, isRTL() ? '→' : '←'),
-						),
-						m('.chat-page__who', [
-							m('h2.chat-page__title', title),
-							m('span.chat-page__sub', subtitle),
+							m('span', vnode.attrs.backLabel ?? t('common.back')),
 						]),
 					]),
 					// The proposal this conversation is about — and, for the person
@@ -982,6 +980,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 								iconLabel('check', t('delib.saved_ack')),
 							)
 						: null,
+					m('h3.chat-page__conversation', subtitle),
 					m(
 						'.chat-page__list',
 						{
@@ -1005,7 +1004,9 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 							? m(
 									'label.chat-page__label',
 									{ for: `chat-input-${proposal.statementId}` },
-									vnode.attrs.paperLabel,
+									owner && helperName
+										? t('delib.reply_to', { name: helperName })
+										: vnode.attrs.paperLabel,
 								)
 							: null,
 						m('textarea.text-input.chat-page__input', {

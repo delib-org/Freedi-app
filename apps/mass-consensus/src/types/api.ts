@@ -115,6 +115,8 @@ export interface PrepareSuggestionResponse {
   error?: string;
   reason?: string;
   category?: string;
+  /** Machine-readable refusal, e.g. ADD_OPTION_CODES.DISABLED */
+  code?: string;
 }
 
 /**

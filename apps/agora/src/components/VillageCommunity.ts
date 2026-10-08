@@ -5,6 +5,7 @@ import m from 'mithril';
 import { canWriteStage } from '../lib/flows/stageAccess';
 import {
 	AGORA_ROUND,
+	AgoraMessageKind,
 	AgoraStage,
 	isUnitRating,
 	roundSpecOf,
@@ -109,8 +110,6 @@ export function stationNotes(item: AgoraStagePlanItem): AgoraProposal[] {
 				: []
 	).filter((p) => !p.hidden);
 }
-const PAPER_COLORS = ['#f5dfce', '#dcebd6', '#dce5f4', '#eedcf1'];
-
 export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 	type Panel = 'none' | 'notes' | 'scoreboard';
 	let panel: Panel = 'none';
@@ -329,6 +328,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			const notes = item ? data.notes(item) : [];
 			const live = !!item && canWriteStage(a.session, item.itemId);
 			const mine = notes.find((n) => n.creatorId === a.userId);
+			const classmates = notes.filter((note) => note.creatorId !== a.userId);
 			const canRate = live && mine !== undefined && !a.source;
 			const stationItems = item
 				? a.plan.slice(0, a.currentIndex + 1).filter((p) => villagePlace(p) === villagePlace(item))
@@ -381,9 +381,19 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 
 				return threads.map(([uid, messages], i) => {
 					const news = threadNews(data, note.statementId, uid, a.userId, messages);
+					const name = messages.find((message) => message.creatorId === uid)?.anonName;
+					const preview = [...messages]
+						.reverse()
+						.find(
+							(message) =>
+								!message.hidden &&
+								message.statement.trim() &&
+								message.agoraMessageKind !== AgoraMessageKind.award &&
+								message.agoraMessageKind !== AgoraMessageKind.edit,
+						);
 
 					return m(
-						'button.village-note',
+						'button.village-note.village-note--conversation',
 						{
 							class: news > 0 ? 'village-note--news' : undefined,
 							onclick: () => {
@@ -391,9 +401,12 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 							},
 						},
 						[
-							m('span.village-note__head', [t('village.thread.n', { n: i + 1 }), newsChip(news)]),
-							m('p', messages[messages.length - 1]?.statement),
-							t('village.thread.cta'),
+							m('span.village-note__head', [
+								name ? t('delib.chat_with', { name }) : t('village.thread.n', { n: i + 1 }),
+								newsChip(news),
+							]),
+							m('p.village-note__text', preview?.statement ?? t('delib.chat_empty')),
+							m('span.village-note__conversation-action', t('village.thread.cta')),
 						],
 					);
 				});
@@ -403,9 +416,9 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			const noteNumber = (note: AgoraProposal): number =>
 				Math.max(1, notes.findIndex((n) => n.statementId === note.statementId) + 1);
 
-			const noteCard = (note: AgoraProposal, i: number): m.Children => {
+			const noteCard = (note: AgoraProposal, overview = false): m.Children => {
 				const own = note.creatorId === a.userId;
-				const landed = own && (a.boardRequest ?? 0) > 0;
+				const landed = own && !overview && (a.boardRequest ?? 0) > 0;
 				const stand = item ? standing(item, note, live) : null;
 				// Someone wrote to me here: on my note any classmate, on theirs the
 				// owner answering the conversation I started
@@ -425,39 +438,48 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 						oncreate: (v: m.VnodeDOM) => {
 							if (landed) (v.dom as HTMLElement).scrollIntoView({ block: 'nearest' });
 						},
-						style: { background: own ? '#fff' : PAPER_COLORS[i % PAPER_COLORS.length] },
 					},
 					[
 						m('.village-note__head', [
-							m('strong', own ? t('village.note.mine') : t('village.note.n', { n: i + 1 })),
+							m(
+								'h3.village-note__title',
+								{
+									class: own ? 'village-note__ownership' : undefined,
+								},
+								own ? t('village.note.yours') : t('village.note.n', { n: noteNumber(note) }),
+							),
 							stand ? m('small.village-note__standing', stand) : null,
 						]),
-						m('p', note.statement),
+						m('p.village-note__text', note.statement),
 						!own && canRate && item
 							? m('.village-note__rate', ratingWidget(a, item, note))
 							: !own && live && !mine && !a.source
 								? m('small.village-note__hint', t('village.note.rate_gate'))
 								: null,
-						own && live && a.onEditMine
-							? m(
-									'button.village-note__edit',
-									{ onclick: () => a.onEditMine?.() },
-									t('village.note.edit'),
-								)
-							: null,
-						// The chip rides the button that opens the conversation, so it says
-						// WHERE the news is — a card has two doors, and a chip by the
-						// title could mean either
-						m(
-							'button.village-note__open',
-							{
-								onclick: () => {
-									selected = note;
-									helper = own ? undefined : a.userId;
-								},
-							},
-							[own ? t('village.note.replies') : t('village.note.improve'), newsChip(news)],
-						),
+						m('.village-note__actions', [
+							own && live && a.onEditMine
+								? m(
+										'button.village-note__edit',
+										{ onclick: () => a.onEditMine?.() },
+										t('village.note.edit'),
+									)
+								: null,
+							// The chip rides the button that opens the conversation, so it says
+							// WHERE the news is — a card has two doors, and a chip by the
+							// title could mean either
+							!overview
+								? m(
+										'button.village-note__open',
+										{
+											onclick: () => {
+												selected = note;
+												helper = own ? undefined : a.userId;
+											},
+										},
+										[own ? t('village.note.replies') : t('village.note.improve'), newsChip(news)],
+									)
+								: null,
+						]),
 					],
 				);
 			};
@@ -482,11 +504,14 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 					: null,
 				panel === 'notes'
 					? m(
-							'.village-community__panel',
+							'.village-community__panel.village-board',
 							{ role: 'region', 'aria-label': t('village.nav.board') },
 							[
 								m('header', [
-									m('h2', item ? planItemLabel(item) : t('village.nav.board')),
+									m('.village-board__heading', [
+										item ? m('p.village-board__context', planItemLabel(item)) : null,
+										m(selected ? 'p.village-board__context' : 'h2', t('village.nav.board')),
+									]),
 									m('button.btn.btn--secondary', { onclick: () => close(a) }, t('village.back')),
 								]),
 								!selected && item && stationItems.length > 1
@@ -532,9 +557,14 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 											userId: a.userId,
 											anonName: a.anonName,
 											proposalNumber: noteNumber(selected),
+											backLabel: t(
+												selected.creatorId === a.userId
+													? 'village.note.replies'
+													: 'village.board.back',
+											),
 											onBack: () => {
 												helper = undefined;
-												selected = undefined;
+												if (selected?.creatorId !== a.userId) selected = undefined;
 											},
 										})
 									: selected
@@ -548,18 +578,27 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 													},
 													t('village.board.back'),
 												),
-												m('h3', t('village.note.mine')),
-												m('p', selected.statement),
-												ownerThreads(selected),
+												m('.village-board__own', noteCard(selected, true)),
+												m('section.village-board__conversations', [
+													m('h3.village-board__section-title', t('village.note.replies')),
+													ownerThreads(selected),
+												]),
 											]
 										: [
 												live && !mine && notes.length > 0 && !a.source
 													? m('p.village-board__gate', t('village.board.gate'))
 													: null,
-												m(
-													'.village-notes',
-													notes.length ? notes.map(noteCard) : m('p', t('village.board.empty')),
-												),
+												mine ? m('section.village-board__own', noteCard(mine)) : null,
+												classmates.length
+													? m('section.village-board__peers', [
+															m('h3.village-board__section-title', t('village.board.classmates')),
+															m(
+																'.village-notes',
+																classmates.map((note) => noteCard(note)),
+															),
+														])
+													: null,
+												!notes.length ? m('p', t('village.board.empty')) : null,
 											],
 							],
 						)

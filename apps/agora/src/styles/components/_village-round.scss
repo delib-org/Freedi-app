@@ -1,0 +1,45 @@
+// The round is one sheet inside the guide's bubble, with a short prompt
+// and an owned text card. Avoid nesting the full-page card spacing here.
+.village-desk__close-icon { display: none; }
+
+.village-shell > .village-shell__activity.village-desk.village-bubble:has(.round) {
+	padding: var(--space-md);
+	background: var(--bg-page);
+	color: var(--text-primary);
+
+	.village-desk__header {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: flex-start;
+		gap: var(--space-sm);
+		background: transparent;
+		border-color: var(--border-subtle);
+	}
+
+	.village-desk__header h2 { font-size: var(--font-size-lg); }
+	.village-desk__header .village-desk__close { inline-size: 44px; min-block-size: 44px; padding: 0; }
+	.village-desk__close-label { display: none; }
+	.village-desk__close-icon { display: inline; font-size: var(--font-size-xl); line-height: 1; }
+	.village-bubble__speaker { color: var(--text-secondary); font-size: var(--font-size-xs); }
+	.village-bubble__prompt { display: none; }
+	.shell__content { padding: 0; }
+	.round { gap: var(--space-md); }
+	.round__ask { padding: 0; }
+	.round__title { font-size: var(--font-size-base); }
+	.round__explanation { font-size: var(--font-size-xs); line-height: 1.5; }
+	.round__mine, .round__text { padding: var(--space-md); box-shadow: none; }
+	.round__text-head { flex-wrap: wrap; }
+	.round__mine-text, .round__text-body { font-size: var(--font-size-base); font-weight: 400; line-height: 1.6; overflow-wrap: anywhere; }
+	.round__textarea {
+		min-block-size: 144px;
+		padding: var(--space-sm);
+		font-size: var(--font-size-base);
+		line-height: 1.6;
+		background: var(--bg-card-solid);
+		color: var(--text-primary);
+		caret-color: currentColor;
+		border-color: var(--border-subtle);
+		border-radius: var(--radius-sm);
+		&:focus { outline: 2px solid var(--mine-deep); outline-offset: 2px; }
+	}
+}

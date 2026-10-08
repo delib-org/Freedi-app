@@ -11,6 +11,7 @@
 import React from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import CardList, { CardListRow } from '@/components/admin/CardList';
+import Switch from '@/components/shared/Switch';
 import { SUGGESTED_SOLUTIONS_COUNT } from '@/lib/utils/solutionSuggestions';
 import type { CardDrafts } from '@/hooks/useCardDrafts';
 import styles from './CreateQuestionModal.module.scss';
@@ -19,6 +20,9 @@ export interface CardsStepProps {
   cards: CardDrafts;
   skip: boolean;
   onSkipChange: (skip: boolean) => void;
+  /** The admin's cards are the whole list; participants rate them and can't add their own. */
+  adminOptionsOnly: boolean;
+  onAdminOptionsOnlyChange: (on: boolean) => void;
   onGenerate: () => void;
   isGenerating: boolean;
   canGenerate: boolean;
@@ -30,6 +34,8 @@ export default function CardsStep({
   cards,
   skip,
   onSkipChange,
+  adminOptionsOnly,
+  onAdminOptionsOnlyChange,
   onGenerate,
   isGenerating,
   canGenerate,
@@ -51,11 +57,25 @@ export default function CardsStep({
     <div>
       <h3 className={styles.stepTitle}>
         {t('Add cards')}
-        <span className={styles.optionalLabel}> ({t('optional') || 'Optional'})</span>
+        {!adminOptionsOnly && <span className={styles.optionalLabel}> ({t('optional') || 'Optional'})</span>}
       </h3>
       <p className={styles.stepDescription}>
         {t('One card per line. Add a picture to any card, now or later.')}
       </p>
+
+      <div className={styles.adminOptionsOnly}>
+        <Switch
+          prominent
+          checked={adminOptionsOnly}
+          onChange={onAdminOptionsOnlyChange}
+          label={t('Admin options only')}
+          hint={
+            adminOptionsOnly
+              ? t("You write the options. Participants rate them and can't add their own. Add at least one card.")
+              : t("You write the options. Participants rate them and can't add their own.")
+          }
+        />
+      </div>
 
       <div className={styles.generateRow}>
         <button
@@ -131,10 +151,12 @@ export default function CardsStep({
         </div>
       )}
 
-      <label className={styles.skipOption}>
-        <input type="checkbox" checked={skip} onChange={(e) => onSkipChange(e.target.checked)} />
-        <span>{t("Skip – don't add cards now")}</span>
-      </label>
+      {!adminOptionsOnly && (
+        <label className={styles.skipOption}>
+          <input type="checkbox" checked={skip} onChange={(e) => onSkipChange(e.target.checked)} />
+          <span>{t("Skip – don't add cards now")}</span>
+        </label>
+      )}
     </div>
   );
 }

@@ -21,6 +21,7 @@ import CardImageModal from '../CardImageModal';
 import { useSwipeCardImages } from '@/hooks/useSwipeCardImages';
 import SolutionPromptModal from '@/components/question/SolutionPromptModal';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
+import { resolveCanAddOptions } from '@/lib/utils/participantOptions';
 import { cardColorIntensityStyle } from '@/lib/utils/cardColorIntensity';
 import {
   setCardStack,
@@ -59,6 +60,8 @@ export interface SwipeInterfaceProps {
   surveyId?: string;
   /** Position in a multi-question survey ("1) …"); omitted = no number */
   questionNumber?: number;
+  /** Standalone page: the server found a survey that blocks participant options here */
+  blockedByServer?: boolean;
 }
 
 const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
@@ -70,6 +73,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   onComplete,
   surveyId,
   questionNumber,
+  blockedByServer = false,
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -98,8 +102,11 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   // Guard against double swipes within the same animation cycle
   const isSwipeInFlightRef = useRef(false);
 
+  // May this participant add options at all? One answer for every gate below.
+  const canAdd = resolveCanAddOptions(mergedSettings, blockedByServer);
+
   // Check if user must add solution first
-  const requiresSolution = mergedSettings?.askUserForASolutionBeforeEvaluation ?? true;
+  const requiresSolution = canAdd && (mergedSettings?.askUserForASolutionBeforeEvaluation ?? true);
   const [hasCheckedUserSolutions, setHasCheckedUserSolutions] = useState(false);
   const [, setHasSubmittedSolution] = useState(false);
   const [showSolutionPrompt, setShowSolutionPrompt] = useState(false);
@@ -144,6 +151,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   // Listen for footer "add suggestion" button event
   useEffect(() => {
     const handleTriggerAdd = () => {
+      if (!canAdd) return;
       setShowProposalModal(true);
     };
 
@@ -151,7 +159,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     return () => {
       window.removeEventListener('trigger-add-suggestion', handleTriggerAdd);
     };
-  }, []);
+  }, [canAdd]);
 
   // Initialize cards on mount
   useEffect(() => {
@@ -210,19 +218,29 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     loadPreviousEvaluations();
   }, [userId, question.statementId, initialSolutions]);
 
-  // Handle showing proposal prompt — never on a question closed to suggestions
+  // Handle showing the every-N-cards proposal prompt — never on a question
+  // closed to suggestions, and never when the participant cannot add at all
+  // (then the prompt is dismissed so the counter does not stay armed).
   const suggestionsClosed = mergedSettings?.suggestionsClosed ?? false;
 
   useEffect(() => {
-    if (showProposalPrompt && !suggestionsClosed) {
+    if (!showProposalPrompt) return;
+
+    if (!canAdd) {
+      dispatch(dismissProposalPrompt());
+
+      return;
+    }
+
+    if (!suggestionsClosed) {
       setShowProposalModal(true);
       // Track that prompt was shown
       trackProposalPromptShown(question.statementId, userId, evaluatedCount);
     }
-  }, [showProposalPrompt, suggestionsClosed, question.statementId, userId, evaluatedCount]);
+  }, [showProposalPrompt, suggestionsClosed, canAdd, dispatch, question.statementId, userId, evaluatedCount]);
 
   // Show solution prompt after completing minimum evaluations (if admin enabled)
-  const askAfterEvaluation = mergedSettings?.askUserForASolutionAfterEvaluation ?? false;
+  const askAfterEvaluation = canAdd && (mergedSettings?.askUserForASolutionAfterEvaluation ?? false);
   const minEvaluations = mergedSettings?.minEvaluationsPerQuestion ?? 0;
   const [hasShownAfterEvalPrompt, setHasShownAfterEvalPrompt] = useState(false);
 
@@ -399,39 +417,41 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
             >
               {t('goToNextQuestion')}
             </button>
-          ) : (
+          ) : canAdd ? (
             <button
               className="swipe-interface__completion-button"
               onClick={() => setShowProposalModal(true)}
             >
               {t('Submit Your Own Idea')}
             </button>
-          )}
+          ) : null}
         </div>
       )}
 
       {/* Proposal Modal - uses SolutionPromptModal for full AI check + similarity search */}
-      <SolutionPromptModal
-        isOpen={showProposalModal}
-        onClose={handleProposalDismiss}
-        onSubmitSuccess={handleProposalSuccess}
-        questionId={question.statementId}
-        questionText={question.statement}
-        questionNumber={questionNumber}
-        questionDescription={getParagraphsText(question.paragraphs)}
-        minWords={question.statementSettings?.minResponseWords}
-        userId={userId}
-        userName={userName}
-        surveyId={surveyId}
-        suggestionMode={mergedSettings?.suggestionMode}
-        autoSplitMultiSuggestions={
-          mergedSettings?.autoSplitMultiSuggestions ??
-          question.statementSettings?.autoSplitMultiSuggestions
-        }
-        autoMergeSimilar={
-          mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
-        }
-      />
+      {canAdd && (
+        <SolutionPromptModal
+          isOpen={showProposalModal}
+          onClose={handleProposalDismiss}
+          onSubmitSuccess={handleProposalSuccess}
+          questionId={question.statementId}
+          questionText={question.statement}
+          questionNumber={questionNumber}
+          questionDescription={getParagraphsText(question.paragraphs)}
+          minWords={question.statementSettings?.minResponseWords}
+          userId={userId}
+          userName={userName}
+          surveyId={surveyId}
+          suggestionMode={mergedSettings?.suggestionMode}
+          autoSplitMultiSuggestions={
+            mergedSettings?.autoSplitMultiSuggestions ??
+            question.statementSettings?.autoSplitMultiSuggestions
+          }
+          autoMergeSimilar={
+            mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
+          }
+        />
+      )}
 
       {/* Comment Modal */}
       {currentCard && (
@@ -455,32 +475,34 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
       )}
 
       {/* Solution Prompt Modal - "Add solution first" feature */}
-      <SolutionPromptModal
-        isOpen={showSolutionPrompt}
-        onClose={() => setShowSolutionPrompt(false)}
-        onSubmitSuccess={() => {
-          setShowSolutionPrompt(false);
-          setHasSubmittedSolution(true);
-        }}
-        questionId={question.statementId}
-        questionText={question.statement}
-        questionNumber={questionNumber}
-        questionDescription={getParagraphsText(question.paragraphs)}
-        minWords={question.statementSettings?.minResponseWords}
-        userId={userId}
-        userName={userName}
-        surveyId={surveyId}
-        suggestionMode={mergedSettings?.suggestionMode}
-        autoSplitMultiSuggestions={
-          mergedSettings?.autoSplitMultiSuggestions ??
-          question.statementSettings?.autoSplitMultiSuggestions
-        }
-        autoMergeSimilar={
-          mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
-        }
-        requiresSolution={requiresSolution}
-        hasCheckedUserSolutions={hasCheckedUserSolutions}
-      />
+      {canAdd && (
+        <SolutionPromptModal
+          isOpen={showSolutionPrompt}
+          onClose={() => setShowSolutionPrompt(false)}
+          onSubmitSuccess={() => {
+            setShowSolutionPrompt(false);
+            setHasSubmittedSolution(true);
+          }}
+          questionId={question.statementId}
+          questionText={question.statement}
+          questionNumber={questionNumber}
+          questionDescription={getParagraphsText(question.paragraphs)}
+          minWords={question.statementSettings?.minResponseWords}
+          userId={userId}
+          userName={userName}
+          surveyId={surveyId}
+          suggestionMode={mergedSettings?.suggestionMode}
+          autoSplitMultiSuggestions={
+            mergedSettings?.autoSplitMultiSuggestions ??
+            question.statementSettings?.autoSplitMultiSuggestions
+          }
+          autoMergeSimilar={
+            mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
+          }
+          requiresSolution={requiresSolution}
+          hasCheckedUserSolutions={hasCheckedUserSolutions}
+        />
+      )}
     </div>
   );
 };
