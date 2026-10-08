@@ -770,3 +770,11 @@
   border-radius: 8px;
   margin-bottom: 1rem;
 }
+
+// "Admin options only" on the cards step
+.adminOptionsOnly {
+  margin: 0 0 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md, 12px);
+  background: var(--bg-muted, rgba(0, 0, 0, 0.03));
+}

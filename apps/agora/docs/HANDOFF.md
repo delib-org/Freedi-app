@@ -20,7 +20,7 @@ frontends, and run backfill through Studio's historical lesson-data action.
 # Agora — Working Handoff
 
 **Start-here document for continuing work in a fresh chat.** Last updated
-2026-09-22.
+2026-10-07.
 
 Companion docs: `../CLAUDE.md` (the rules of the road — read that first),
 `feedback-cycle.md` (the improvement loop, and the spec `e2e-cycle.mjs`
@@ -44,6 +44,110 @@ rate others, improve each other's ideas — aiming for a solution both camps
 can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
+
+## Village news indicators (2026-10-07)
+
+In the 3D village a student had no lasting sign that a classmate wrote to
+them: the toast vanished, and the board, the desk and the bar carried nothing
+(the flat view has had its badges and chips since August). Now a card wears a
+pink "N new" chip ON THE BUTTON THAT OPENS THE CONVERSATION ("replies to my
+note" / "suggest an improvement") — a card has two doors, and Tal rejected a
+chip by the title because it did not say which. On MY note it counts every
+classmate's conversation, on a classmate's note only the one I started there;
+each row of
+"replies to my note" wears the same chip, and the board door of the
+`PlaceBar` carries the total as a badge. Opening the conversation clears all
+of it (`ThreadChat` advances the seen-state watermark); glancing at the board
+does not.
+
+Where: `lib/flows/noteNews.ts` (pure — `threadNews`, `noteNews`,
+`boardNews`, readers injected), `VillageCommunity.liveNoteNews` (the live
+binding, also the board's own `data`), `VillageShell`'s new `news` attr →
+`PlaceBar.badges`, computed in `GameController` over `stationNotes(item)` —
+the viewing station, because that is what the board door opens onto.
+
+Decisions:
+- The badge sits on the BOARD door, not "my note": the village desk is the
+  writing paper; the replies live behind the board.
+- An improvement idea counts as news here. The flat counters exclude ideas
+  because the workbench shows "open ideas" beside them; a village card shows
+  nothing else, and an unread idea without a chip is a message nobody hears.
+- `--pink-ink` now sits beside every `--pink` (base: dark, 6.1:1; the three
+  looks: white). The chip is the first pink count that passes the contrast
+  audit without the accepted ledger; the older `.stall__chip--unread` and
+  `.workbench__count` still ride the ledger with white on the base pink.
+- The chip is on the meta rung (`@include type-meta`), like the bar's badge.
+
+Gotchas:
+- `.village-note span` styles every span in a card as a bordered footer line.
+  A classed span inside a card needs a more specific rule of its own
+  (`span.village-note__head`, `.village-note .village-note__chip`).
+- The board now reads the threads of every card, so a test that mocks
+  `getOwnerThreads` must return a Map, not `undefined`.
+
+Verify: `bash ../../scripts/solo.sh npx tsx scripts/e2e-village-news.mjs`
+(both directions, the read mark on the participant doc, a 390px shot);
+`village-desk-board.mjs` still passes. Client-only; NOT deployed.
+
+## Conversation hierarchy (2026-10-07)
+
+On `codex/agora-conversation-hierarchy`, continuing the unfinished note/edit
+changes. The note has its own heading and explicit edit control; the conversation
+heading sits below it. In the village, the station becomes smaller context text.
+Owner conversation rows use the helper's existing pseudonym, with the numbered
+fallback retained. Back returns the owner to that note's replies; helpers return
+to the board. The owner's reply field names the recipient in all six languages.
+
+Reward notices remain in chronological order but have quieter styling. Award
+documents do not identify the suggestion they paid for, so they are not attached
+to individual suggestion bubbles. No reward calculation or persistence changed.
+
+Verified: 405 tests, lint, app/script typechecks, build, four-theme contrast
+gauntlet (existing accepted ledger unchanged), mobile type audit, and the expanded
+`e2e-village-news.mjs` on the solo suite. The browser test covers named headings,
+edit/cancel, both back destinations, read marks, and 320/390px layouts. Screenshots:
+`output/village-news/hierarchy-verified-*`. Client-only; not deployed.
+
+The same branch now updates the whole village notes board: the viewer's note
+appears first in DOM order, above a separate classmates section, with a translated
+“Your note” badge. Classmate numbers still come from the original station list.
+Cards and the replies overview share the note/text/actions hierarchy and theme
+tokens; unread chips remain on the conversation action. Conversation previews
+skip edit/award events so an award cannot replace the preview with empty text.
+The board inherits the active language direction instead of forcing RTL.
+
+Board verification: 405 tests, lint/typechecks/build, the expanded news browser
+test (own-first on reopen, stable peer numbers, 320/390px layouts), and
+`village-desk-board.mjs` (rating, editing, Hebrew/Spanish mobile layouts).
+The surface gauntlet now includes the personal badge, actions and conversation
+rows; all four theme audits and the text-size audit pass with the existing ledger.
+Screenshots: `output/village-news/board-final-*` and
+`output/village-desk-board/board-updated-*`. Not deployed.
+
+## Compact story and round cards (2026-10-07)
+
+The story/needs/vision prompt is now a compact heading and hint, followed by an
+owned text card and a separate classmates heading. `RoundAnswer` renders confirmed
+text with a Sent status and an explicit edit action. Editing supports cancel,
+keeps failed drafts visible, and permits retry after an optimistic snapshot;
+only the existing confirmed save closes the editor. The edit state resets with
+the plan item. Existing moderation, stage access, ratings and rewards stay in
+`RoundStage`/`lib`.
+
+Inside the village bubble, `_village-round.scss` removes the repeated guide
+invitation, reduces nested padding, uses readable regular-weight story text,
+and gives the close action a labelled 44px icon button. All copy reuses the
+existing six-language keys. Other writing desks retain their text close button.
+
+Verified: 410 tests, lint, app/script typechecks and production build; live
+Hebrew story create/edit/cancel/update and peer heart on port 3039, with the
+revision and rating confirmed in the solo Firestore emulator. The mobile
+320/390px layouts have no horizontal overflow; live story contrast/type audits
+pass. Four-theme surface checks pass with only the unchanged purple contrast
+ledger. The audit callbacks were run read-only through the in-app browser.
+`e2e-pen.mjs` now expects a reading card after save and explicitly opens the
+editor for catch-up; that standalone script was updated but not rerun.
+Local sample session: `5sl04x4aItj9`. Client-only; not deployed.
 
 ## Late arrivals and catch-up (2026-09-22)
 

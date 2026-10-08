@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Statement, resolveEvaluationScaleKey } from '@freedi/shared-types';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
+import { resolveCanAddOptions } from '@/lib/utils/participantOptions';
 import { cardColorIntensityStyle } from '@/lib/utils/cardColorIntensity';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
@@ -32,6 +33,8 @@ interface SolutionFeedClientProps {
   surveyId?: string;
   /** Position in a multi-question survey ("1) …"); omitted = no number */
   questionNumber?: number;
+  /** Standalone page: the server found a survey that blocks participant options here */
+  blockedByServer?: boolean;
 }
 
 /**
@@ -44,6 +47,7 @@ export default function SolutionFeedClient({
   mergedSettings,
   surveyId,
   questionNumber,
+  blockedByServer = false,
 }: SolutionFeedClientProps) {
   const { t, tWithParams } = useTranslation();
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
@@ -73,10 +77,18 @@ export default function SolutionFeedClient({
   const questionId = question.statementId;
   const totalOptionsCount = question.numberOfOptions || 0;
 
+  // May this participant add options at all? One answer for every gate below.
+  // An empty question keeps inviting the first idea (as before) unless adding
+  // is blocked outright ("admin options only"), which nothing reopens.
+  const blockedOutright = blockedByServer || (mergedSettings?.blockParticipantOptions ?? false);
+  const canAdd =
+    resolveCanAddOptions(mergedSettings, blockedByServer) ||
+    (solutions.length === 0 && !blockedOutright);
+
   // Use merged settings for "ask for suggestion before evaluation"
   const questionSettingsLegacy = question.questionSettings as { askUserForASolutionBeforeEvaluation?: boolean } | undefined;
-  const requiresSolution = mergedSettings?.askUserForASolutionBeforeEvaluation ??
-    questionSettingsLegacy?.askUserForASolutionBeforeEvaluation ?? true;
+  const requiresSolution = canAdd && (mergedSettings?.askUserForASolutionBeforeEvaluation ??
+    questionSettingsLegacy?.askUserForASolutionBeforeEvaluation ?? true);
 
   console.info('[SolutionFeed Debug] Settings check:', {
     mergedSettings: mergedSettings?.askUserForASolutionBeforeEvaluation,
@@ -90,14 +102,11 @@ export default function SolutionFeedClient({
   // Check if solutions array is empty
   const hasNoSolutions = solutions.length === 0;
 
-  // Check if participants can add suggestions
-  const canAddSuggestions = hasNoSolutions || (mergedSettings?.allowParticipantsToAddSuggestions ?? true);
-
   // Check if view progress button should be shown (admin per-question setting, defaults to true)
   const showViewProgressEnabled = mergedSettings?.showViewProgress !== false;
 
   // Ask user for solution after minimum evaluations
-  const askAfterEvaluation = mergedSettings?.askUserForASolutionAfterEvaluation ?? false;
+  const askAfterEvaluation = canAdd && (mergedSettings?.askUserForASolutionAfterEvaluation ?? false);
   const minEvaluationsForPrompt = mergedSettings?.minEvaluationsPerQuestion ?? 0;
   const [hasShownAfterEvalPrompt, setHasShownAfterEvalPrompt] = useState(false);
 
@@ -277,6 +286,7 @@ export default function SolutionFeedClient({
     if (!inSurveyContext) return;
 
     const handleTriggerAddSuggestion = () => {
+      if (!canAdd) return;
       trackAddSolutionClick(questionId, userId);
       setShowSolutionPrompt(true);
     };
@@ -292,7 +302,7 @@ export default function SolutionFeedClient({
       window.removeEventListener('trigger-add-suggestion', handleTriggerAddSuggestion);
       window.removeEventListener('trigger-view-progress', handleTriggerViewProgress);
     };
-  }, [inSurveyContext, questionId, userId]);
+  }, [inSurveyContext, questionId, userId, canAdd]);
 
   // Dispatch show-view-progress event when in survey context
   useEffect(() => {
@@ -548,8 +558,8 @@ export default function SolutionFeedClient({
         {/* Empty state */}
         {hasNoSolutions ? (
           <div className={styles.emptyState}>
-            <h3>{t('No solutions yet')}</h3>
-            {canAddSuggestions ? (
+            <h3>{t(canAdd ? 'No solutions yet' : 'No options yet')}</h3>
+            {canAdd ? (
               <>
                 <p>{t('Be the first to submit a solution!')}</p>
                 <button
@@ -687,7 +697,7 @@ export default function SolutionFeedClient({
                 {t('View Progress')}
               </button>
             )}
-            {canAddSuggestions && (
+            {canAdd && (
               <button
                 className={styles.addSolutionButton}
                 onClick={() => {
@@ -704,26 +714,28 @@ export default function SolutionFeedClient({
         {/* Social Feed - real-time activity */}
         <SocialFeed isActive={!hasNoSolutions} />
 
-        {/* Solution prompt modal */}
-        <SolutionPromptModal
-          isOpen={showSolutionPrompt}
-          onClose={() => setShowSolutionPrompt(false)}
-          questionId={questionId}
-          userId={userId}
-          onSubmitSuccess={handleSolutionComplete}
-          questionText={question.statement}
-          questionNumber={questionNumber}
-          questionDescription={getParagraphsText(question.paragraphs)}
-          title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
-          suggestionMode={mergedSettings?.suggestionMode}
-          autoSplitMultiSuggestions={
-            mergedSettings?.autoSplitMultiSuggestions ??
-            question.statementSettings?.autoSplitMultiSuggestions
-          }
-          autoMergeSimilar={
-            mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
-          }
-        />
+        {/* Solution prompt modal — not mounted at all when adding is blocked */}
+        {canAdd && (
+          <SolutionPromptModal
+            isOpen={showSolutionPrompt}
+            onClose={() => setShowSolutionPrompt(false)}
+            questionId={questionId}
+            userId={userId}
+            onSubmitSuccess={handleSolutionComplete}
+            questionText={question.statement}
+            questionNumber={questionNumber}
+            questionDescription={getParagraphsText(question.paragraphs)}
+            title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
+            suggestionMode={mergedSettings?.suggestionMode}
+            autoSplitMultiSuggestions={
+              mergedSettings?.autoSplitMultiSuggestions ??
+              question.statementSettings?.autoSplitMultiSuggestions
+            }
+            autoMergeSimilar={
+              mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
+            }
+          />
+        )}
 
         {/* Progress/Completion screen */}
         {showCompletionScreen && (

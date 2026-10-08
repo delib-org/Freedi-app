@@ -54,18 +54,19 @@ try {
 	eq('the story box opens empty', await box.inputValue(), '');
 	await box.fill(MY_STORY);
 	await page.locator('.round__mine button.btn--primary, .round__mine .btn--full').first().click();
-	await page.waitForFunction(
-		() => document.querySelector('.round__textarea')?.disabled === false,
-		undefined,
-		{ timeout: 30_000 },
-	);
+	await page.waitForSelector('.round__saved', { timeout: 30_000 });
 	const mine = await db
 		.collection(Collections.statements)
 		.where('agoraSessionId', '==', sessionId)
 		.get()
 		.then((snap) => snap.docs.map((doc) => doc.data()).find((row) => row.statement === MY_STORY));
 	eq('the story reached Firestore', Boolean(mine), true);
-	eq('the box still shows what I saved', (await box.inputValue()).trim(), MY_STORY);
+	eq('the card shows the confirmed story', (await page.locator('.round__mine-text').innerText()).trim(), MY_STORY);
+	await page.locator('.round__saved button').click();
+	eq('editing restores the saved words', await box.inputValue(), MY_STORY);
+	await box.fill('Unsaved revision');
+	await page.locator('.round__actions .btn--ghost').click();
+	eq('cancel retains the confirmed story', (await page.locator('.round__mine-text').innerText()).trim(), MY_STORY);
 
 	step('3. The room moves to the needs round');
 	await advance(2);
@@ -82,7 +83,8 @@ try {
 
 	step('4. Stepping back restores the saved story in an editable pen');
 	await page.locator('.stage-nav__station--done').last().click();
-	await page.waitForSelector('.round--story .round__textarea', { timeout: 30_000 });
+	await page.waitForSelector('.round--story .round__saved', { timeout: 30_000 });
+	await page.locator('.round__saved button').click();
 	eq('the story is restored for catch-up', (await box.inputValue()).trim(), MY_STORY);
 	eq('the earlier story remains editable', await box.isEnabled(), true);
 

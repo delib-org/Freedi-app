@@ -50,9 +50,30 @@ export interface ThreadChatServices {
 	submitThreadMessage: typeof submitThreadMessage;
 	markThreadSeen: typeof markThreadSeen;
 }
+/**
+ * How the page names the paper it is about. The classic chat says
+ * "proposal", the village says "note" — one page, two vocabularies, so the
+ * title at the top and the edit button both speak the room's language.
+ */
+export interface ThreadWording {
+	/** The owner's title: "My note" */
+	mine: string;
+	/** A helper's title, number included: "Note 2" */
+	theirs: string;
+	/** The owner's labelled door into the editor: "Edit my note" */
+	edit: string;
+	/** A helper's subtitle: "Conversation with the note's author" */
+	withAuthor: string;
+	/** The editor's save button: "Save my note" */
+	save: string;
+}
 export interface ThreadChatAttrs {
 	/** A visible label over the message box (the village board passes one; the classic chat shows none) */
 	paperLabel?: string;
+	/** Names the destination instead of making students infer it from an arrow. */
+	backLabel?: string;
+	/** Defaults to the classic chat's "proposal" vocabulary */
+	wording?: ThreadWording;
 	services?: ThreadChatServices;
 	canEditProposal?: boolean;
 	session: AgoraSession;
@@ -236,34 +257,44 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		dom.scrollTop = dom.scrollHeight;
 	}
 
-	/** The quoted proposal: a plain line, or the box it becomes when tapped */
+	/**
+	 * The quoted proposal — the OBJECT this whole page is about, so it sits
+	 * directly under its title — or the box it becomes once the owner opens it.
+	 *
+	 * The owner's way in is a labelled button, not a pencil glyph on a tappable
+	 * card: "tap the text to edit" was a tooltip nobody hovers on a phone, and
+	 * the one question this page kept getting was "how do I change my note".
+	 */
 	function proposalQuote(
 		session: AgoraSession,
 		proposal: AgoraProposal,
 		anonName: string,
-		canEdit: boolean,
+		owner: boolean,
+		wording: ThreadWording,
 	): m.Children {
-		if (!canEdit || !canEditProposal) return m('p.chat-page__proposal', proposal.statement);
-
-		if (!editing) {
+		if (!owner || !canEditProposal || !editing) {
 			return m(
-				'button.chat-page__proposal.chat-page__proposal--editable',
+				'section.chat-page__proposal',
 				{
-					type: 'button',
-					title: t('delib.tap_to_edit'),
-					'aria-label': t('delib.tap_to_edit'),
-					onclick: () => {
-						editing = canEditProposal;
-						editDraft = proposal.statement;
-					},
+					class: owner ? 'chat-page__proposal--mine' : undefined,
+					'aria-label': owner ? wording.mine : wording.theirs,
 				},
 				[
-					m('span.chat-page__proposal-text', proposal.statement),
-					m(
-						'span.chat-page__proposal-pencil',
-						{ 'aria-hidden': 'true' },
-						m(Icon, { name: 'edit', size: 16 }),
-					),
+					m('h2.chat-page__title', owner ? wording.mine : wording.theirs),
+					m('p.chat-page__proposal-text', proposal.statement),
+					owner && canEditProposal
+						? m(
+								'button.btn.btn--secondary.btn--sm.chat-page__edit-open',
+								{
+									type: 'button',
+									onclick: () => {
+										editing = true;
+										editDraft = proposal.statement;
+									},
+								},
+								iconLabel('edit', wording.edit),
+							)
+						: null,
 				],
 			);
 		}
@@ -272,6 +303,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		const changed = text !== proposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
 
 		return m('.chat-page__edit', [
+			m('h2.chat-page__title', wording.mine),
 			// The thanked idea, pinned where the weaving happens. A QUOTE, never a
 			// paste: the student rewrites their own text with it in view.
 			pinnedIdea
@@ -290,7 +322,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 				value: editDraft,
 				rows: 3,
 				maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
-				'aria-label': t('delib.my_proposal'),
+				'aria-label': wording.mine,
 				oncreate: (node: m.VnodeDOM) => {
 					(node.dom as HTMLTextAreaElement).focus();
 				},
@@ -335,7 +367,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 								});
 						},
 					},
-					t('delib.update_proposal'),
+					wording.save,
 				),
 			]),
 		]);
@@ -871,12 +903,22 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					: AgoraMessageKind.chat;
 			const helperName =
 				messages.find((message) => message.creatorId === helperUid)?.anonName ?? '';
-			const title =
-				role === 'owner'
-					? helperName
-						? t('delib.chat_with', { name: helperName })
-						: t('delib.chat_with_author')
-					: t('delib.chat_with_author');
+			// The paper is the OBJECT and the conversation is ABOUT it, so the
+			// title names the paper ("My note" / "Note 2") and the line under it
+			// names the conversation — a number on your own note said nothing.
+			// `creatorId` is the truth about whose paper this is; `role` only says
+			// which side the caller thinks I am standing on.
+			const owner = proposal.creatorId === userId;
+			const wording: ThreadWording = vnode.attrs.wording ?? {
+				mine: t('delib.my_proposal'),
+				theirs: t('delib.proposal_number', { n: proposalNumber }),
+				edit: t('delib.edit_proposal'),
+				withAuthor: t('delib.chat_with_author'),
+				save: t('delib.update_proposal'),
+			};
+			const subtitle = owner
+				? t(helperName ? 'delib.chat_with' : 'delib.chat_with_classmate', { name: helperName })
+				: wording.withAuthor;
 
 			// The two closing moments of the improvement cycle. `creatorId` is the
 			// truth about who is standing here — `role` is caller-supplied and can
@@ -923,19 +965,14 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			return m('.shell.shell--chat', [
 				m('.chat-page', [
 					m('header.chat-page__bar', [
-						m(
-							'button.chat-page__back',
-							{ type: 'button', 'aria-label': t('common.back'), onclick: onBack },
+						m('button.chat-page__back', { type: 'button', onclick: onBack }, [
 							m('span', { 'aria-hidden': 'true' }, isRTL() ? '→' : '←'),
-						),
-						m('.chat-page__who', [
-							m('span.chat-page__title', title),
-							m('span.chat-page__sub', t('delib.proposal_number', { n: proposalNumber })),
+							m('span', vnode.attrs.backLabel ?? t('common.back')),
 						]),
 					]),
 					// The proposal this conversation is about — and, for the person
 					// who wrote it, the place to change it
-					proposalQuote(session, proposal, anonName, proposal.creatorId === userId),
+					proposalQuote(session, proposal, anonName, owner, wording),
 					savedAck
 						? m(
 								'p.chat-page__saved-ack',
@@ -943,6 +980,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 								iconLabel('check', t('delib.saved_ack')),
 							)
 						: null,
+					m('h3.chat-page__conversation', subtitle),
 					m(
 						'.chat-page__list',
 						{
@@ -966,7 +1004,9 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 							? m(
 									'label.chat-page__label',
 									{ for: `chat-input-${proposal.statementId}` },
-									vnode.attrs.paperLabel,
+									owner && helperName
+										? t('delib.reply_to', { name: helperName })
+										: vnode.attrs.paperLabel,
 								)
 							: null,
 						m('textarea.text-input.chat-page__input', {

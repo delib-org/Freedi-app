@@ -68,7 +68,8 @@ import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
 import { QuestionStage } from './QuestionStage';
 import { RoundStage } from './RoundStage';
-import { stationNotes } from '../components/VillageCommunity';
+import { liveNoteNews, stationNotes } from '../components/VillageCommunity';
+import { boardNews } from '../lib/flows/noteNews';
 import { VillageShell } from '../components/VillageShell';
 import { Voting } from './Voting';
 import { Results } from './Results';
@@ -807,6 +808,11 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								council,
 								navigation: session.villageNavigation ?? 'teacher',
 								call: session.villageCall,
+								// The replies to my note and the owners' answers to mine both
+								// live behind the board door, so that is the door that lights
+								news: myParticipant
+									? { board: boardNews(liveNoteNews, stationNotes(item), userId) }
+									: undefined,
 								community: myParticipant
 									? {
 											session,

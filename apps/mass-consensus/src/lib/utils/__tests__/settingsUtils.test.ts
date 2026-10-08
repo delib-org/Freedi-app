@@ -274,6 +274,59 @@ describe('settingsUtils', () => {
     });
   });
 
+  describe('blockParticipantOptions (admin options only)', () => {
+    const surveyOn = createSurveySettings({ allowParticipantsToAddSuggestions: true });
+
+    it('beats a survey-level "allow suggestions: true"', () => {
+      const merged = getMergedSettings(surveyOn, { blockParticipantOptions: true });
+      expect(merged.blockParticipantOptions).toBe(true);
+      expect(merged.allowParticipantsToAddSuggestions).toBe(false);
+    });
+
+    it('beats a per-question "allow suggestions: true" too', () => {
+      const merged = getMergedSettings(createSurveySettings(), {
+        allowParticipantsToAddSuggestions: true,
+        blockParticipantOptions: true,
+      });
+      expect(merged.allowParticipantsToAddSuggestions).toBe(false);
+    });
+
+    it('forces both ask-for-a-suggestion prompts off, even when switched on explicitly', () => {
+      const merged = getMergedSettings(surveyOn, {
+        blockParticipantOptions: true,
+        askUserForASolutionBeforeEvaluation: true,
+        askUserForASolutionAfterEvaluation: true,
+      });
+      expect(merged.askUserForASolutionBeforeEvaluation).toBe(false);
+      expect(merged.askUserForASolutionAfterEvaluation).toBe(false);
+    });
+
+    it('leaves everything unchanged when absent or false', () => {
+      const withoutFlag = getMergedSettings(surveyOn, { askUserForASolutionAfterEvaluation: true });
+      const withFalse = getMergedSettings(surveyOn, {
+        askUserForASolutionAfterEvaluation: true,
+        blockParticipantOptions: false,
+      });
+
+      for (const merged of [withoutFlag, withFalse]) {
+        expect(merged.blockParticipantOptions).toBe(false);
+        expect(merged.allowParticipantsToAddSuggestions).toBe(true);
+        expect(merged.askUserForASolutionBeforeEvaluation).toBe(true);
+        expect(merged.askUserForASolutionAfterEvaluation).toBe(true);
+      }
+    });
+
+    it('does not count as an explicit "closed" choice (suggestionsClosed is untouched)', () => {
+      const merged = getMergedSettings(surveyOn, { blockParticipantOptions: true });
+      expect(merged.suggestionsClosed).toBe(false);
+    });
+
+    it('is never forced by the survey level (per-question control stays enabled)', () => {
+      expect(isSurveyLevelOverride(surveyOn, 'blockParticipantOptions')).toBe(false);
+      expect(isSurveyLevelOverride(surveyOn, 'adminProvidesOptions')).toBe(false);
+    });
+  });
+
   describe('withAllowSuggestions', () => {
     it('stores a choice that differs from the survey default', () => {
       const on = createSurveySettings({ allowParticipantsToAddSuggestions: true });

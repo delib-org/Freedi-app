@@ -153,6 +153,18 @@ export const QuestionOverrideSettingsSchema = object({
   autoSplitMultiSuggestions: optional(boolean()),
   /** Override the survey's auto-merge behaviour for THIS question */
   autoMergeSimilar: optional(boolean()),
+  /**
+   * The admin writes THIS question's options (with pictures) in the survey editor.
+   * Editor intent only: it opens the options editor and the preview; it changes nothing
+   * for participants. Together with blockParticipantOptions it is "Admin options only".
+   */
+  adminProvidesOptions: optional(boolean()),
+  /**
+   * Participants cannot add their own options to THIS question. Beats the survey-level
+   * allowParticipantsToAddSuggestions and switches off every "add your answer" prompt.
+   * Enforced by the MC API (submit / merge / prepare return 403 ADD_DISABLED).
+   */
+  blockParticipantOptions: optional(boolean()),
 });
 
 export type QuestionOverrideSettings = InferOutput<typeof QuestionOverrideSettingsSchema>;
@@ -428,4 +440,6 @@ export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
   ratingSteps: undefined,
   autoSplitMultiSuggestions: undefined,
   autoMergeSimilar: undefined,
+  adminProvidesOptions: undefined,
+  blockParticipantOptions: undefined,
 };

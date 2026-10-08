@@ -506,7 +506,10 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
     try {
       if (!(await refreshToken())) return;
 
-      const response = await authedFetch(`/api/statements/${questionId}`, {
+      // The survey lets its editors change the question even when they are
+      // not admins of the question itself
+      const surveyQuery = existingSurvey?.surveyId ? `?surveyId=${encodeURIComponent(existingSurvey.surveyId)}` : '';
+      const response = await authedFetch(`/api/statements/${questionId}${surveyQuery}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -610,9 +613,10 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       <CreateQuestionModal
         isOpen={isCreateQuestionModalOpen}
         onClose={() => setIsCreateQuestionModalOpen(false)}
-        onQuestionCreated={(question) => {
+        onQuestionCreated={(question, initialSettings) => {
           // The modal closes itself — after its pictures upload, when it has any
           setSelectedQuestions((prev) => [...prev, question]);
+          if (initialSettings) handleQuestionSettingsChange(question.statementId, initialSettings);
         }}
         defaultParentId={selectedQuestions.length > 0 ? selectedQuestions[0].parentId : undefined}
       />
@@ -721,7 +725,8 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             </span>
           </div>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            {t('allowSuggestionsNote') || 'Default for all questions. Each question can override it.'}
+            {t('allowSuggestionsNote') || 'Default for all questions. Each question can override it.'}{' '}
+            {t('Questions set to "Admin options only" stay closed either way.')}
           </p>
         </div>
 

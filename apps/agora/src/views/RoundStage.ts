@@ -5,7 +5,7 @@ import { Icon } from '../components/Icon';
 import { LikeButton } from '../components/LikeButton';
 import { UnitScale } from '../components/UnitScale';
 import { CarriedContext } from '../components/CarriedContext';
-import { stalledBanner } from '../components/StalledBanner';
+import { RoundAnswer } from '../components/RoundAnswer';
 import { proposalHue } from '../lib/looks';
 import {
 	getDeliberationState,
@@ -27,7 +27,6 @@ import {
 	storeDeal,
 } from '../lib/flows/roundFlow';
 import {
-	AGORA_LIMITS,
 	AGORA_ROUND,
 	AGORA_ROUNDS,
 	isUnitRating,
@@ -104,6 +103,7 @@ function removedNotice(): m.Children {
 export function RoundStage(): m.Component<RoundStageAttrs> {
 	let pen: Pen = blankPen;
 	let saving = false;
+	let editing = false;
 	let saveFailed = false;
 	/** The dealt ids, held for the life of the screen (and in sessionStorage) */
 	let deal: string[] | null = null;
@@ -158,6 +158,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 			if (nextPen.itemId !== pen.itemId) {
 				// A different question: a save error from the last one is not this one's
 				saving = false;
+				editing = false;
 				saveFailed = false;
 				rating.clear();
 				queued.clear();
@@ -219,6 +220,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 				m.redraw();
 				try {
 					await saveAnswer(session, item, myParticipant.anonName, text);
+					editing = false;
 				} catch (error) {
 					console.error('[Round] Saving the text failed:', error);
 					saveFailed = true;
@@ -313,8 +315,8 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 					);
 
 			return m('.shell', [
-				m('.shell__content.round', { class: `round--${kind}`, style: { gap: 'var(--space-lg)' } }, [
-					m('.card.round__ask', [
+				m('.shell__content.round', { class: `round--${kind}` }, [
+					m('section.round__ask', [
 						m(
 							'span.round__icon',
 							{ 'aria-hidden': 'true' },
@@ -346,7 +348,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 					// My text — the pen, or my words as they stand
 					m('.card.stack.round__mine', [
 						m('.round__text-head', [
-							m('p.teacher__section-title', t('round.your_text')),
+							m('h3.round__owner', t('round.your_text')),
 							myRow && myRow.raters > 0
 								? m(
 										'span.round__figure',
@@ -360,45 +362,33 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 							? removedNotice()
 							: closed
 								? m('p.round__mine-text', mine ? mine.statement : t('round.no_text_given'))
-								: [
-										isNeeds
-											? m('p.round__lead', { 'aria-hidden': 'true' }, t('round.needs.lead'))
-											: null,
-										m('textarea.round__textarea', {
-											value: pen.text,
-											rows: kind === 'story' ? 5 : 3,
-											maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
-											placeholder: t(`round.${kind}.placeholder`),
-											'aria-label': isNeeds ? t('round.needs.lead') : t('round.your_text'),
-											disabled: saving,
-											oninput: (event: InputEvent) => {
-												pen = typedInto(pen, (event.target as HTMLTextAreaElement).value);
-											},
-										}),
-										stalledBanner(),
-										saveFailed ? m('p.join__error', t('common.error')) : null,
-										m(
-											'button.btn.btn--primary.btn--full',
-											{
-												class: mine !== undefined && !changed && !saving ? 'btn--done' : undefined,
-												disabled: saving || !pen.text.trim() || (mine !== undefined && !changed),
-												onclick: () => void submit(),
-											},
-											saving
-												? t('round.saving')
-												: mine
-													? changed
-														? t('round.update')
-														: t('round.saved')
-													: t('round.save'),
-										),
-									],
+								: m(RoundAnswer, {
+										kind,
+										text: pen.text,
+										savedText: mine?.statement,
+										editing,
+										saving,
+										saveFailed,
+										changed,
+										onEdit: () => {
+											editing = true;
+										},
+										onCancel: () => {
+											pen = typedInto(pen, mine?.statement ?? '');
+											editing = false;
+											saveFailed = false;
+										},
+										onInput: (text: string) => {
+											pen = typedInto(pen, text);
+										},
+										onSave: () => void submit(),
+									}),
 					]),
 
 					// Classmates' texts: the dealt handful while open, every text once closed
 					m('.stack.round__others', [
 						m('.round__others-head', [
-							m('p.teacher__section-title', t(`round.${kind}.read_title`)),
+							m('h3.round__section-title', t(`round.${kind}.read_title`)),
 							closed
 								? m('span.round__count', String(closedRows.length))
 								: mine && goal > 0
