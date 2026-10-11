@@ -15,7 +15,7 @@ export interface MergedQuestionSettings {
   randomizeOptions: boolean;
   /** Controls UX friction when adding new suggestions vs merging */
   suggestionMode: SuggestionMode;
-  /** Display mode: swipe for tinder-style, classic for multi-card */
+  /** Display mode for this question: swipe for tinder-style, classic for multi-card */
   displayMode: DisplayMode;
   /** Show view progress / status button for this question */
   showViewProgress: boolean;
@@ -49,6 +49,17 @@ export function resolveAllowSuggestions(
     questionOverrides?.allowParticipantsToAddSuggestions ??
     surveySettings.allowParticipantsToAddSuggestions === true
   );
+}
+
+/**
+ * How a question is shown: its own choice when it made one, otherwise the
+ * survey's display mode (swipe for surveys that never stored one).
+ */
+export function resolveDisplayMode(
+  surveySettings: SurveySettings,
+  questionOverrides: QuestionOverrideSettings | undefined
+): DisplayMode {
+  return questionOverrides?.displayMode ?? surveySettings.displayMode ?? DisplayMode.swipe;
 }
 
 /**
@@ -149,8 +160,8 @@ export function getMergedSettings(
       surveySettings.suggestionMode ??
       SuggestionMode.restrict, // Backward compatible: existing surveys use restrict (current behavior)
 
-    // Display mode (survey-level only, no per-question override)
-    displayMode: surveySettings.displayMode ?? DisplayMode.swipe,
+    // Display mode: the survey sets the default, a question may show itself the other way
+    displayMode: resolveDisplayMode(surveySettings, questionOverrides),
 
     // Show view progress / status button (per-question, defaults to true for backward compatibility)
     showViewProgress: questionOverrides?.showViewProgress ?? true,
@@ -205,6 +216,7 @@ export function isSurveyLevelOverride(
     case 'autoMergeSimilar':
     case 'adminProvidesOptions':
     case 'blockParticipantOptions':
+    case 'displayMode':
       return false;
     default:
       return false;

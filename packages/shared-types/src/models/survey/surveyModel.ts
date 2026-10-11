@@ -165,6 +165,8 @@ export const QuestionOverrideSettingsSchema = object({
    * Enforced by the MC API (submit / merge / prepare return 403 ADD_DISABLED).
    */
   blockParticipantOptions: optional(boolean()),
+  /** Show THIS question as swipe cards or as the classic card list, instead of the survey's display mode */
+  displayMode: optional(DisplayModeSchema),
 });
 
 export type QuestionOverrideSettings = InferOutput<typeof QuestionOverrideSettingsSchema>;
@@ -442,4 +444,5 @@ export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
   autoMergeSimilar: undefined,
   adminProvidesOptions: undefined,
   blockParticipantOptions: undefined,
+  displayMode: undefined,
 };

@@ -895,7 +895,8 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       <div className={styles.formSection}>
         <h2 className={styles.sectionTitle}>{t('displayMode') || 'Display Mode'}</h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          {t('displayModeDescription') || 'Choose how participants see and evaluate suggestions'}
+          {t('displayModeDescription') || 'Choose how participants see and evaluate suggestions'}{' '}
+          {t('displayModeDefaultNote') || 'Default for all questions. Each question can override it.'}
         </p>
 
         <div className={styles.formGroup}>
