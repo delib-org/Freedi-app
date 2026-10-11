@@ -102,6 +102,11 @@ export const SWIPE = {
   CARD_ENTER_DURATION: 400, // ms
   CARD_STACK_OFFSET: 10, // px between stacked cards
 
+  // Fitting the card on screen
+  CARD_MIN_FIT_HEIGHT: 260, // px - never squash the card below this
+  CARD_BOTTOM_GAP: 8, // px - space between the card and the bottom bar
+  AXIS_LOCK_DISTANCE: 8, // px - movement before a touch on scrollable text is a scroll or a swipe
+
   // UX Flow
   PROPOSAL_PROMPT_INTERVAL: 7, // Show "propose idea" after N cards
   BATCH_SIZE: 10, // Load N cards at a time

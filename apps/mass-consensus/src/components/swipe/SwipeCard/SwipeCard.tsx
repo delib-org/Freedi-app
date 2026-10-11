@@ -32,6 +32,8 @@ import InlineMarkdown from '@/components/shared/InlineMarkdown';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import { calculateInitialZone, centerZoneIndex, isVerticalSwipeComplete } from './swipeZones';
 import SwipeConfirmation from './SwipeConfirmation';
+import { BOTTOM_NAV_ATTR, calculateFitHeight, decideGestureAxis } from './cardFit';
+import type { GestureAxis } from './cardFit';
 
 export interface SwipeCardProps {
   statement: Statement;
@@ -106,7 +108,15 @@ export default function SwipeCard({
   const [pendingDirection, setPendingDirection] = useState<'left' | 'right' | 'up' | null>(null);
 
   const cardRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
+
+  // Picture + text taller than their space scroll inside the card; the
+  // rating row stays put. A touch on scrollable content waits to see whether
+  // it is a scroll (vertical) or a swipe (horizontal).
+  const [isContentScrollable, setIsContentScrollable] = useState(false);
+  const [fitHeight, setFitHeight] = useState<number | null>(null);
+  const gestureAxisRef = useRef<GestureAxis>('swipe');
 
   // Show confirmation for first 3 evaluations
   const LEARNING_MODE_COUNT = 3;
@@ -143,6 +153,53 @@ export default function SwipeCard({
 
     return () => clearTimeout(timer);
   }, [statement.statementId]);
+
+  // Cap the card so its rating row ends above the survey's fixed bottom bar
+  useEffect(() => {
+    const card = cardRef.current;
+    const slot = card?.parentElement;
+    if (!card || !slot) return;
+
+    const measure = () => {
+      const bar = document.querySelector<HTMLElement>(`[${BOTTOM_NAV_ATTR}]`);
+      // The slot, not the card: the card's own box moves with its transforms
+      const next = calculateFitHeight({
+        viewportHeight: window.innerHeight,
+        cardTopInDocument: slot.getBoundingClientRect().top + window.scrollY,
+        bottomBarHeight: bar?.offsetHeight ?? 0,
+      });
+      setFitHeight((prev) => (prev === next ? prev : next));
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    observer?.observe(document.body);
+
+    return () => {
+      window.removeEventListener('resize', measure);
+      observer?.disconnect();
+    };
+  }, []);
+
+  // Does the picture + text overflow its space?
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+
+    const check = () => {
+      setIsContentScrollable(content.scrollHeight > content.clientHeight + 1);
+    };
+
+    content.scrollTop = 0; // A new card starts at its top
+    check();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(check);
+    observer.observe(content);
+    Array.from(content.children).forEach((child) => observer.observe(child));
+
+    return () => observer.disconnect();
+  }, [statement.statementId, imageUrl, body, fitHeight]);
 
   // Handle drag start (touch/mouse)
   const handleDragStart = useCallback((clientX: number, clientY: number, isTouch: boolean) => {
@@ -322,8 +379,19 @@ export default function SwipeCard({
 
     const handleTouchMove = (e: TouchEvent) => {
       if (dragStart !== null && dragStartY !== null) {
-        e.preventDefault(); // Prevent scrolling while swiping
         const touch = e.touches[0];
+
+        if (gestureAxisRef.current === 'pending') {
+          const axis = decideGestureAxis(touch.clientX - dragStart, touch.clientY - dragStartY);
+          if (axis === 'pending') return;
+          gestureAxisRef.current = axis;
+          if (axis === 'scroll') {
+            resetDragState(); // Let the content scroll natively
+            return;
+          }
+        }
+
+        e.preventDefault(); // Prevent scrolling while swiping
         handleDragMove(touch.clientX, touch.clientY);
       }
     };
@@ -334,7 +402,7 @@ export default function SwipeCard({
     return () => {
       card.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [dragStart, dragStartY, handleDragMove]);
+  }, [dragStart, dragStartY, handleDragMove, resetDragState]);
 
   // Calculate rotation based on drag or throw
   const rotation = isThrowing
@@ -350,6 +418,8 @@ export default function SwipeCard({
     'swipe-card--vertical-drag': isVerticalDrag,
     'swipe-card--with-image': Boolean(imageUrl),
     'swipe-card--with-ratings': Boolean(onRate),
+    'swipe-card--fitted': fitHeight !== null,
+    'swipe-card--scrollable': isContentScrollable,
   });
 
   return (
@@ -360,6 +430,7 @@ export default function SwipeCard({
       aria-label={`${tWithParams('Proposal {{index}} of {{total}}', { index: currentIndex + 1, total: totalCards })}: ${statement.statement}`}
       tabIndex={0}
       style={{
+        ...(fitHeight !== null && { '--swipe-card-fit-height': `${fitHeight}px` }),
         transform: isThrowing
           ? (throwDirection === 'up'
               ? `translateY(-1000px) rotate(0deg) scale(0.8)`
@@ -375,9 +446,12 @@ export default function SwipeCard({
           : isEntering
             ? `transform ${SWIPE.CARD_ENTER_DURATION}ms ease-out, opacity ${SWIPE.CARD_ENTER_DURATION}ms ease-out`
             : (isDragging ? 'none' : 'transform 0.2s'),
-      }}
+      } as React.CSSProperties}
       onTouchStart={(e) => {
         const touch = e.touches[0];
+        const onScrollableContent =
+          isContentScrollable && e.target instanceof Node && Boolean(contentRef.current?.contains(e.target));
+        gestureAxisRef.current = onScrollableContent ? 'pending' : 'swipe';
         handleDragStart(touch.clientX, touch.clientY, true);
       }}
       onTouchEnd={handleDragEnd}
@@ -427,7 +501,7 @@ export default function SwipeCard({
       </div>
 
       {/* Content wrapper (above zones) */}
-      <div className="swipe-card__content-wrapper">
+      <div className="swipe-card__content-wrapper" ref={contentRef}>
         {imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element -- storage URLs are not in next/image's allow-list
           <img
