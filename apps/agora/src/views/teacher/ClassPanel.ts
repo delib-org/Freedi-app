@@ -20,12 +20,15 @@ export function progressFacts(
 	answers: readonly AgoraProposal[],
 	voterUids: ReadonlySet<string>,
 	ratedByUid?: ReadonlyMap<string, number>,
+	/** The lottery's hand size when notes are dealt (see lib/hands.ts); absent otherwise */
+	handSize?: number,
 ): ProgressFacts {
 	return {
 		proposalAuthors: new Set(proposals.map((proposal) => proposal.creatorId)),
 		answerAuthors: new Set(answers.map((answer) => answer.creatorId)),
 		voterUids,
 		...(ratedByUid ? { ratedByUid } : {}),
+		...(handSize !== undefined ? { handSize } : {}),
 		// A round cannot ask a student to read more classmates than wrote
 		roundSampleCap: Math.max(0, answers.length - 1),
 	};

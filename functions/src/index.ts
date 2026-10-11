@@ -1302,6 +1302,7 @@ export {
 	agoraSupervisorConsole,
 	agoraTeacherHeartbeat,
 	agoraAdminBackfillTeacherAggregates,
+	agoraDealNotes,
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 	onAgoraSessionFinished,

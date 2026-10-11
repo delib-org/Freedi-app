@@ -463,3 +463,22 @@ export {
 	AGORA_TEACHER_PRESETS,
 	isAgoraTeacherPreset,
 } from './agoraTeacherMessage';
+
+export { AGORA_LOTTERY } from './agoraConstants';
+export type {
+	AgoraHand,
+	DealNotesMode,
+	DealNotesRequest,
+	DealNotesResponse,
+	DealCandidate,
+	PlanDealInput,
+	PlanDealResult,
+} from './agoraHand';
+export {
+	AgoraHandSchema,
+	createAgoraHandId,
+	lotteryActive,
+	handGoal,
+	orderCandidates,
+	planDeal,
+} from './agoraHand';

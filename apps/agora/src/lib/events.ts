@@ -41,6 +41,11 @@ export interface AgoraEvents {
 	 * of the write path.
 	 */
 	'language:flagged': { sessionId: string; strikes: number; deducted: number };
+	/**
+	 * A rating (or like) reached the server. The hand listens: a student who has
+	 * rated their whole hand is dealt the next note the class has read least.
+	 */
+	'rating:confirmed': { sessionId: string; userId: string; parentId: string; statementId: string };
 }
 
 type Handler<K extends keyof AgoraEvents> = (payload: AgoraEvents[K]) => void;

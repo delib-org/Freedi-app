@@ -297,3 +297,13 @@ export const AGORA_TEACHER_MESSAGE = {
 	/** The teacher's reason for hiding, shown to the author */
 	MAX_REASON: 200,
 } as const;
+
+/** Dealing notes by lottery on a board (`agoraHands`) */
+export const AGORA_LOTTERY = {
+	/** Up to this many students, everyone reads everything */
+	MAX_STUDENTS_WITHOUT_LOTTERY: 6,
+	/** Notes a student is dealt at first, and per "draw more" */
+	HAND_SIZE: 5,
+	/** A note is statistically worth reading once this many have rated it */
+	MIN_RATERS: 6,
+} as const;

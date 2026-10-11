@@ -1586,6 +1586,16 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.language_flagged': 'הטקסט לא נשמר — נא להשתמש בשפה מכבדת',
 		'teacher.notice_language': 'הבינה המלאכותית חסמה שפה פוגענית — הטקסט לא פורסם',
 		'teacher.language_strikes': '{{n}} אזהרות שפה',
+
+		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
+		'hand.line': 'דירגתם {{n}} מתוך {{total}} הפתקים שקיבלתם',
+		'hand.waiting':
+			'בינתיים קיבלתם {{n}} פתקים. פתקים נוספים יגיעו אליכם כשחברים לכיתה יסיימו לכתוב.',
+		'hand.done':
+			'קראתם את כל הפתקים שקיבלתם. כשפתק של חבר לכיתה יצטרך קוראים, הוא יגיע לכאן מעצמו.',
+		'hand.pool_done': 'קראתם את כל הפתקים שעל הלוח הזה.',
+		'hand.draw_more': 'להגריל עוד פתקים',
+		'hand.teacher_coverage': 'ל־{{n}} מתוך {{total}} פתקים יש לפחות {{min}} מדרגים',
 	},
 	en: {
 		'village.unavailable': 'The village did not load on this device.',
@@ -3221,6 +3231,16 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.language_flagged': 'Not saved — please use respectful language',
 		'teacher.notice_language': 'The AI blocked disrespectful language — the text was not posted',
 		'teacher.language_strikes': '{{n}} language warnings',
+
+		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
+		'hand.line': 'You rated {{n}} of the {{total}} notes you were dealt',
+		'hand.waiting':
+			'You have {{n}} notes so far. More will come to you as classmates finish writing.',
+		'hand.done':
+			'You read all your notes. When a classmate’s note needs readers, it will come to you here on its own.',
+		'hand.pool_done': 'You have read every note on this board.',
+		'hand.draw_more': 'Draw more notes',
+		'hand.teacher_coverage': '{{n}} of {{total}} notes have at least {{min}} raters',
 	},
 	ar: {
 		'village.unavailable': 'لم تُحمَّل القرية على هذا الجهاز.',
@@ -4800,6 +4820,15 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.language_flagged': 'لم يُحفظ — الرجاء استخدام لغة محترمة',
 		'teacher.notice_language': 'حجب الذكاء الاصطناعي لغة غير لائقة — لم يُنشر النص',
 		'teacher.language_strikes': '{{n}} تنبيهات لغة',
+
+		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
+		'hand.line': 'قيّمتم {{n}} من أصل {{total}} ملاحظات حصلتم عليها',
+		'hand.waiting': 'لديكم {{n}} ملاحظات حتى الآن. ستصلكم ملاحظات أخرى عندما ينهي زملاؤكم الكتابة.',
+		'hand.done':
+			'قرأتم كل ملاحظاتكم. عندما تحتاج ملاحظة أحد الزملاء إلى قرّاء، ستصلكم هنا من تلقاء نفسها.',
+		'hand.pool_done': 'قرأتم كل الملاحظات على هذه اللوحة.',
+		'hand.draw_more': 'سحب ملاحظات إضافية',
+		'hand.teacher_coverage': '{{n}} من أصل {{total}} ملاحظات لديها {{min}} مقيّمين على الأقل',
 	},
 	es: {
 		'village.unavailable': 'La aldea no se ha cargado en este dispositivo.',
@@ -6464,6 +6493,16 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.language_flagged': 'No se guardó — usa un lenguaje respetuoso',
 		'teacher.notice_language': 'La IA bloqueó lenguaje irrespetuoso — el texto no se publicó',
 		'teacher.language_strikes': '{{n}} avisos de lenguaje',
+
+		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
+		'hand.line': 'Valoraste {{n}} de las {{total}} notas que te tocaron',
+		'hand.waiting':
+			'Por ahora tienes {{n}} notas. Llegarán más cuando tus compañeros terminen de escribir.',
+		'hand.done':
+			'Leíste todas tus notas. Cuando la nota de un compañero necesite lectores, llegará aquí sola.',
+		'hand.pool_done': 'Has leído todas las notas de este tablero.',
+		'hand.draw_more': 'Sacar más notas',
+		'hand.teacher_coverage': '{{n}} de {{total}} notas tienen al menos {{min}} valoraciones',
 	},
 	de: {
 		'village.unavailable': 'Das Dorf wurde auf diesem Gerät nicht geladen.',
@@ -8146,6 +8185,16 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.language_flagged': 'Nicht gespeichert — bitte respektvolle Sprache verwenden',
 		'teacher.notice_language': 'Die KI hat respektlose Sprache blockiert — der Text wurde nicht veröffentlicht',
 		'teacher.language_strikes': '{{n}} Sprachwarnungen',
+
+		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
+		'hand.line': 'Du hast {{n}} von {{total}} zugeteilten Zetteln bewertet',
+		'hand.waiting':
+			'Bis jetzt hast du {{n}} Zettel. Weitere kommen, sobald Mitschüler fertig geschrieben haben.',
+		'hand.done':
+			'Du hast alle deine Zettel gelesen. Wenn der Zettel eines Mitschülers Leser braucht, kommt er von selbst hierher.',
+		'hand.pool_done': 'Du hast jeden Zettel an dieser Tafel gelesen.',
+		'hand.draw_more': 'Weitere Zettel ziehen',
+		'hand.teacher_coverage': '{{n}} von {{total}} Zetteln haben mindestens {{min}} Bewertungen',
 	},
 	nl: {
 		'village.unavailable': 'Het dorp is op dit apparaat niet geladen.',
@@ -9812,6 +9861,16 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.language_flagged': 'Niet opgeslagen — gebruik respectvolle taal',
 		'teacher.notice_language': 'De AI heeft respectloze taal geblokkeerd — de tekst is niet geplaatst',
 		'teacher.language_strikes': '{{n}} taalwaarschuwingen',
+
+		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
+		'hand.line': 'Je beoordeelde {{n}} van de {{total}} briefjes die je kreeg',
+		'hand.waiting':
+			'Je hebt tot nu toe {{n}} briefjes. Er komen er meer zodra klasgenoten klaar zijn met schrijven.',
+		'hand.done':
+			'Je hebt al je briefjes gelezen. Als het briefje van een klasgenoot lezers nodig heeft, komt het hier vanzelf.',
+		'hand.pool_done': 'Je hebt elk briefje op dit bord gelezen.',
+		'hand.draw_more': 'Meer briefjes trekken',
+		'hand.teacher_coverage': '{{n}} van {{total}} briefjes hebben minstens {{min}} beoordelaars',
 	},
 };
 

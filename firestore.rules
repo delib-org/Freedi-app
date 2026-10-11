@@ -288,6 +288,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // A student's hand of dealt notes per station: written by agoraDealNotes
+    // only. The owner may get it (the client listens before the first deal
+    // creates it, so a missing doc must not error); nobody may list hands.
+    match /agoraHands/{handId} {
+      allow get: if isAuthenticated()
+        && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if false;
+      allow write: if false;
+    }
+
     // In-character AI proposal reviews: written by the agoraCharacterReview
     // function only (admin SDK bypasses rules).
     match /agoraCharacterReviews/{reviewId} {

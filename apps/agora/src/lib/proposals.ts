@@ -630,6 +630,13 @@ export async function rateStatement(
 		'delib.saving_rating',
 		setDoc(doc(db, Collections.evaluations, evaluationId), evaluation),
 	);
+	// Landed: the hand may now owe this student the next least-read note (lib/hands.ts)
+	emit('rating:confirmed', {
+		sessionId: session.sessionId,
+		userId: user.uid,
+		parentId,
+		statementId,
+	});
 }
 
 /**

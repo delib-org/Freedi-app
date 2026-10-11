@@ -1,6 +1,6 @@
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { collection, doc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
 import { agoraParticipantDoc, makeEnv, seed } from './helpers.mjs';
 
 /**
@@ -421,6 +421,46 @@ describe('agora collections', () => {
 			await assertFails(
 				updateDoc(doc(db, 'agoraSessions', SESSION), {
 					votingGame: { phase: 'vote', turnIndex: 0 },
+				}),
+			);
+		});
+	});
+	describe('agoraHands (server-dealt, owner-read)', () => {
+		const HAND = `${SESSION}--${STUDENT}`;
+
+		it('lets the owner read their hand', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraHands', HAND), {
+					sessionId: SESSION,
+					userId: STUDENT,
+					hands: { 'question-1': ['note-1', 'note-2'] },
+					lastUpdate: Date.now(),
+				});
+			});
+			const db = env.authenticatedContext(STUDENT).firestore();
+			await assertSucceeds(getDoc(doc(db, 'agoraHands', HAND)));
+		});
+
+		it('lets the owner listen before the first deal creates the doc', async () => {
+			const db = env.authenticatedContext(STUDENT).firestore();
+			await assertSucceeds(getDoc(doc(db, 'agoraHands', `${SESSION}--${STUDENT}-fresh`)));
+		});
+
+		it('hides a hand from classmates and from listing', async () => {
+			const db = env.authenticatedContext(CLASSMATE).firestore();
+			await assertFails(getDoc(doc(db, 'agoraHands', HAND)));
+			await assertFails(getDocs(collection(db, 'agoraHands')));
+		});
+
+		it('rejects any client write to a hand', async () => {
+			const db = env.authenticatedContext(STUDENT).firestore();
+			await assertFails(updateDoc(doc(db, 'agoraHands', HAND), { 'hands.question-1': ['note-9'] }));
+			await assertFails(
+				setDoc(doc(db, 'agoraHands', `${SESSION}--${CLASSMATE}`), {
+					sessionId: SESSION,
+					userId: CLASSMATE,
+					hands: {},
+					lastUpdate: Date.now(),
 				}),
 			);
 		});

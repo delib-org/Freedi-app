@@ -11,6 +11,7 @@ import {
 	getCurrentPlanIndex,
 } from '../../lib/session';
 import { advanceStage, setBallotGoalOnly, updateStagePlan } from '../../lib/callables';
+import { activeHandSize } from '../../lib/hands';
 import {
 	getDeliberationState,
 	listenToDeliberation,
@@ -426,7 +427,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					roundRatedByUid.set(rater.evaluatorId, (roundRatedByUid.get(rater.evaluatorId) ?? 0) + 1);
 				}
 			}
-			const facts = progressFacts(proposals, answers, voterUids, roundRatedByUid);
+			const facts = progressFacts(proposals, answers, voterUids, roundRatedByUid, activeHandSize());
 			const unread = unreadRepliesTotal();
 			const ended = current.stage === AgoraStage.ended;
 			const atResults = current.stage === AgoraStage.results || ended;

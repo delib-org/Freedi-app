@@ -31,3 +31,4 @@ export { agoraCheckLanguage } from './fn_agoraCheckLanguage';
 export { agoraSupervisorConsole } from './fn_agoraSupervisorConsole';
 export { agoraTeacherHeartbeat } from './fn_agoraTeacherHeartbeat';
 export { agoraAdminBackfillTeacherAggregates } from './fn_agoraAdminBackfillTeacherAggregates';
+export { agoraDealNotes } from './fn_agoraDealNotes';
