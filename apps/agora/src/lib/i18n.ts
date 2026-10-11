@@ -938,7 +938,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'כולן',
 		'startGame.plan_cutoff_n': 'כמה',
 		'startGame.plan_cutoff_min': 'הסכמה מינימלית',
-		'startGame.plan_trigger': 'ההצבעה נפתחת לבד כשהכיתה מסכימה',
+		'startGame.plan_trigger': 'סמנו לי כשהכיתה מסכימה (ההצבעה נפתחת רק כשתלחצו "הלאה")',
 		'startGame.plan_trigger_single': 'הצעה אחת בהסכמה של לפחות',
 		'startGame.plan_trigger_pair': 'או שתי הצעות בלפחות',
 		'startGame.plan_trigger_min_raters': 'נספרות רק הצעות שדירגו לפחות כך וכך אנשים',
@@ -978,7 +978,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.trigger_off': 'ההצבעה נפתחת כשתלחצו "הלאה".',
 		'teacher.trigger_waiting':
 			'ההצבעה תיפתח לבד כשהצעה תגיע להסכמה של {{single}}. הכי גבוה עד כה: {{best}}.',
-		'teacher.trigger_ready': 'הכיתה הסכימה — ההצבעה נפתחת.',
+		'teacher.trigger_ready': 'הכיתה הסכימה — לחצו "הלאה" כדי לפתוח את ההצבעה.',
 		'teacher.trigger_fired_single': 'נפתחה אוטומטית: הצעה אחת',
 		'teacher.trigger_fired_pair': 'נפתחה אוטומטית: שתי הצעות',
 		'teacher.trigger_fired_manual': 'נפתחה על ידכם',
@@ -2536,7 +2536,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'all of them',
 		'startGame.plan_cutoff_n': 'how many',
 		'startGame.plan_cutoff_min': 'Minimum agreement',
-		'startGame.plan_trigger': 'The vote opens by itself when the class agrees',
+		'startGame.plan_trigger': 'Tell me when the class agrees (the vote opens only when you press Next)',
 		'startGame.plan_trigger_single': 'One proposal at an agreement of at least',
 		'startGame.plan_trigger_pair': 'or two proposals at least',
 		'startGame.plan_trigger_min_raters': 'counting proposals rated by at least this many people',
@@ -2578,7 +2578,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.trigger_off': 'The vote opens when you press Next.',
 		'teacher.trigger_waiting':
 			'The vote opens by itself when a proposal reaches {{single}} agreement. Best so far: {{best}}.',
-		'teacher.trigger_ready': 'The class has agreed — the vote is opening.',
+		'teacher.trigger_ready': 'The class has agreed — press Next to open the vote.',
 		'teacher.trigger_fired_single': 'opened automatically: one proposal',
 		'teacher.trigger_fired_pair': 'opened automatically: two proposals',
 		'teacher.trigger_fired_manual': 'opened by you',
@@ -4133,7 +4133,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'كلها',
 		'startGame.plan_cutoff_n': 'كم',
 		'startGame.plan_cutoff_min': 'الحد الأدنى للتوافق',
-		'startGame.plan_trigger': 'يُفتح التصويت تلقائيًا عندما يتفق الصف',
+		'startGame.plan_trigger': 'أعلموني عندما يتفق الصف (يُفتح التصويت فقط عندما تضغطون "التالي")',
 		'startGame.plan_trigger_single': 'اقتراح واحد بتوافق لا يقل عن',
 		'startGame.plan_trigger_pair': 'أو اقتراحان لا يقلان عن',
 		'startGame.plan_trigger_min_raters': 'تُحسب فقط الاقتراحات التي قيّمها هذا العدد على الأقل',
@@ -4171,7 +4171,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.trigger_off': 'يُفتح التصويت عندما تضغطون "التالي".',
 		'teacher.trigger_waiting':
 			'يُفتح التصويت تلقائيًا عندما يصل اقتراح إلى توافق {{single}}. الأعلى حتى الآن: {{best}}.',
-		'teacher.trigger_ready': 'اتفق الصف — التصويت يُفتح.',
+		'teacher.trigger_ready': 'اتفق الصف — اضغطوا "التالي" لفتح التصويت.',
 		'teacher.trigger_fired_single': 'فُتح تلقائيًا: اقتراح واحد',
 		'teacher.trigger_fired_pair': 'فُتح تلقائيًا: اقتراحان',
 		'teacher.trigger_fired_manual': 'فتحته أنت',
@@ -5751,7 +5751,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'todas',
 		'startGame.plan_cutoff_n': 'cuántas',
 		'startGame.plan_cutoff_min': 'Acuerdo mínimo',
-		'startGame.plan_trigger': 'La votación se abre sola cuando la clase se pone de acuerdo',
+		'startGame.plan_trigger': 'Avísame cuando la clase se ponga de acuerdo (la votación solo se abre al pulsar Siguiente)',
 		'startGame.plan_trigger_single': 'Una propuesta con un acuerdo de al menos',
 		'startGame.plan_trigger_pair': 'o dos propuestas con al menos',
 		'startGame.plan_trigger_min_raters':
@@ -5793,7 +5793,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.trigger_off': 'La votación se abre cuando pulsas Siguiente.',
 		'teacher.trigger_waiting':
 			'La votación se abre sola cuando una propuesta llega a {{single}} de acuerdo. Máximo hasta ahora: {{best}}.',
-		'teacher.trigger_ready': 'La clase se puso de acuerdo: se abre la votación.',
+		'teacher.trigger_ready': 'La clase se puso de acuerdo: pulsa Siguiente para abrir la votación.',
 		'teacher.trigger_fired_single': 'abierta automáticamente: una propuesta',
 		'teacher.trigger_fired_pair': 'abierta automáticamente: dos propuestas',
 		'teacher.trigger_fired_manual': 'abierta por ti',
@@ -7409,7 +7409,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'alle',
 		'startGame.plan_cutoff_n': 'wie viele',
 		'startGame.plan_cutoff_min': 'Mindestzustimmung',
-		'startGame.plan_trigger': 'Die Abstimmung startet von selbst, wenn die Klasse sich einig ist',
+		'startGame.plan_trigger': 'Sag mir Bescheid, wenn die Klasse sich einig ist (die Abstimmung startet erst, wenn du auf Weiter tippst)',
 		'startGame.plan_trigger_single': 'Ein Vorschlag mit einer Zustimmung von mindestens',
 		'startGame.plan_trigger_pair': 'oder zwei Vorschläge mit mindestens',
 		'startGame.plan_trigger_min_raters':
@@ -7450,7 +7450,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.trigger_off': 'Die Abstimmung startet, wenn du auf Weiter tippst.',
 		'teacher.trigger_waiting':
 			'Die Abstimmung startet von selbst, wenn ein Vorschlag {{single}} Zustimmung erreicht. Bisher am höchsten: {{best}}.',
-		'teacher.trigger_ready': 'Die Klasse ist sich einig – die Abstimmung startet.',
+		'teacher.trigger_ready': 'Die Klasse ist sich einig – tippe auf Weiter, um die Abstimmung zu starten.',
 		'teacher.trigger_fired_single': 'automatisch geöffnet: ein Vorschlag',
 		'teacher.trigger_fired_pair': 'automatisch geöffnet: zwei Vorschläge',
 		'teacher.trigger_fired_manual': 'von dir geöffnet',
@@ -9077,7 +9077,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'allemaal',
 		'startGame.plan_cutoff_n': 'hoeveel',
 		'startGame.plan_cutoff_min': 'Minimale instemming',
-		'startGame.plan_trigger': 'De stemming opent vanzelf wanneer de klas het eens is',
+		'startGame.plan_trigger': 'Laat het me weten wanneer de klas het eens is (de stemming opent pas als je op Volgende drukt)',
 		'startGame.plan_trigger_single': 'Eén voorstel met een instemming van minstens',
 		'startGame.plan_trigger_pair': 'of twee voorstellen met minstens',
 		'startGame.plan_trigger_min_raters':
@@ -9119,7 +9119,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.trigger_off': 'De stemming opent wanneer je op Volgende drukt.',
 		'teacher.trigger_waiting':
 			'De stemming opent vanzelf wanneer een voorstel {{single}} instemming bereikt. Hoogste tot nu toe: {{best}}.',
-		'teacher.trigger_ready': 'De klas is het eens – de stemming opent.',
+		'teacher.trigger_ready': 'De klas is het eens – druk op Volgende om de stemming te openen.',
 		'teacher.trigger_fired_single': 'automatisch geopend: één voorstel',
 		'teacher.trigger_fired_pair': 'automatisch geopend: twee voorstellen',
 		'teacher.trigger_fired_manual': 'door jou geopend',
