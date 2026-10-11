@@ -251,8 +251,6 @@
 
   &--with-image &__content {
     font-size: 1.125rem;
-    min-height: 0;
-    overflow: hidden;
     padding: 0 var(--spacing-md);
   }
 
@@ -262,19 +260,33 @@
     pointer-events: none;
   }
 
-  // Content wrapper - NO background, text sits directly on the card
+  // Content wrapper - NO background, text sits directly on the card.
+  // Picture + text that outgrow it scroll here, above the fixed rating row.
+  // (Top-aligned: centring an overflowing column hides its top.)
   &__content-wrapper {
     position: relative;
     z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     width: 100%;
     max-width: 100%;
+    min-height: 0;
     padding: var(--spacing-xl) var(--spacing-lg);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
     transition: opacity 0.2s;
-    pointer-events: none;
+  }
+
+  // Overflowing content: a vertical drag scrolls it (SwipeCard tells a scroll
+  // from a swipe), and its lower edge fades to hint there is more.
+  // The bottom padding lets the last line scroll clear of the fade.
+  &--scrollable &__content-wrapper {
+    touch-action: pan-y;
+    padding-bottom: var(--spacing-xl);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - var(--spacing-xl)), transparent);
   }
 
   // Dim content during drag
@@ -315,6 +327,7 @@
     font-size: 1.5rem; // 24px - prominent and readable
     line-height: 1.45;
     color: var(--mc-text-strong, #1e293b); // Dark slate for maximum contrast
+    flex-shrink: 0; // Keep its full height; the wrapper scrolls instead
     text-align: center;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -324,14 +337,8 @@
     padding: 0 var(--spacing-sm);
   }
 
-  // The option's body, under its title. The card has a fixed height and its
-  // text cannot scroll (a drag on it is a swipe), so a long body is clamped.
+  // The option's body, under its title. A long one scrolls with the picture.
   &__body {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 6;
-    line-clamp: 6;
-    overflow: hidden;
     margin: var(--spacing-sm) 0 0;
     font-size: 1rem;
     font-weight: 400;
@@ -620,6 +627,13 @@
   }
 }
 
+// The card measured against the screen: it ends above the survey's bottom
+// bar, so its rating row is always in view (SwipeCard sets the variable).
+// After the mobile rules, and doubled, so it beats their max-heights.
+.swipe-card.swipe-card--fitted {
+  max-height: var(--swipe-card-fit-height);
+}
+
 // The admin's preview: the same card, with no gestures and a fixed height
 // (the real one follows the viewport; the preview sits in a phone frame).
 // Last, and doubled, so it beats the ratings and mobile rules above.
@@ -650,5 +664,10 @@
 
   .swipe-card__rating {
     flex: 0 0 auto;
+  }
+
+  // Nobody scrolls a preview; show it without a scrollbar
+  .swipe-card__content-wrapper {
+    overflow: hidden;
   }
 }
