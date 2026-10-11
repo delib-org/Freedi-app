@@ -173,6 +173,9 @@ if (root) {
 		'/teach/start': StartGame,
 		'/teach/topic/:id': byId(TopicEditor),
 		'/teach/session/:id': byId(TeacherSession),
+		// The same console, showing the room as the students see it. The same
+		// keyed component on both routes, so flipping keeps the listeners.
+		'/teach/session/:id/class': byId(TeacherSession),
 		'/teach/screen/:id': byId(ProjectorScreen),
 		'/teach/class/:id': byId(TeacherClass),
 		'/teach/report/:id': byId(GameReport),

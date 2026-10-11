@@ -46,6 +46,14 @@ interface VillageShellAttrs {
 	currentIndex: number;
 	viewingIndex: number;
 	writable: boolean;
+	/**
+	 * The teacher's class view: the room as a student sees it with no seat
+	 * behind it. The note door is locked (there is no note), the station's
+	 * bubble shows the prompt without a pen, and nothing here ever writes.
+	 */
+	watcher?: boolean;
+	/** A row the bar carries above its doors — the watcher's director row on a phone */
+	barLead?: m.Children;
 	browseFreely?: boolean;
 	/** The way out when the 3D world will not load on this device */
 	onLeaveVillage?: () => void;
@@ -568,9 +576,12 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 							anchor,
 						)
 					: null;
-			const deskPrompt = viewing && attrs.writable ? villageDesk(viewing)?.prompt : undefined;
+			// The watcher's bubble carries the prompt in its own card (with the
+			// pen it does not have), so the header does not say it twice
+			const deskPrompt =
+				viewing && attrs.writable && !attrs.watcher ? villageDesk(viewing)?.prompt : undefined;
 
-			return m('.village-shell', [
+			return m('.village-shell', { class: attrs.watcher ? 'village-shell--watcher' : undefined }, [
 				flightItem
 					? m('div.village-flight-status', { role: 'status' }, t('village.flight_status'))
 					: null,
@@ -818,8 +829,10 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 						hasCommunity: !!attrs.community,
 						inFlight: !!flightItem,
 						open: openPlaceOf({ opened, deskOpen, communityOpen, boardView, council }),
+						canWrite: !attrs.watcher,
 					}),
 					badges: attrs.news,
+					lead: attrs.barLead,
 					onGo: (id) => {
 						if (id === 'village') {
 							closeEverything();

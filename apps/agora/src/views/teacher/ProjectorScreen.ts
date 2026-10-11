@@ -7,37 +7,15 @@ import {
 	getSessionState,
 	getStagePlan,
 	getCurrentPlanIndex,
-	getConsensusPool,
 } from '../../lib/session';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
-import {
-	getDeliberationState,
-	listenToDeliberation,
-	stopDeliberationListeners,
-} from '../../lib/proposals';
+import { listenToDeliberation, stopDeliberationListeners } from '../../lib/proposals';
 import { listenToVoting, stopVotingListeners } from '../../lib/voting';
-import { Lobby } from '../Lobby';
-import { Results } from '../Results';
-import { Voting } from '../Voting';
-import { rankedAnswers } from '../QuestionStage';
-import { formatUnit, rankedRoundAnswers } from '../RoundStage';
-import { TeacherInstructions } from './TeacherInstructions';
-import { NeedsBoard } from '../../components/NeedsBoard';
-import { ResultsBoard } from '../../components/ResultsBoard';
-import { CpBands } from '../../components/CpBands';
-import { CountdownTimer } from '../../components/CountdownTimer';
+import { watchStageBody } from './watchBodies';
 import { QRShare } from '../../components/QRShare';
 import { StageTransition, hasStageTransition } from '../../components/StageTransition';
 import { planItemLabel } from '../../components/StageNav';
-import {
-	roundLikes,
-	roundSpecOf,
-	AgoraStage,
-	tallyAgoraCamps,
-	type AgoraSession,
-	type AgoraStagePlanItem,
-	type AgoraTopicPackage,
-} from '@freedi/shared-types';
+import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
 
 /**
  * The projector: what the class sees, on the wall.
@@ -90,167 +68,6 @@ export function ProjectorScreen(
 		listenToSession(sessionId, user.uid);
 		setTimeout(() => m.redraw(), 0);
 	});
-
-	function stageBody(
-		session: AgoraSession,
-		item: AgoraStagePlanItem,
-		topic: AgoraTopicPackage,
-	): m.Children {
-		const { participants } = getSessionState();
-		switch (item.stage) {
-			case AgoraStage.lobby:
-				return m(Lobby, { participants, myParticipant: null });
-
-			case AgoraStage.framing:
-			case AgoraStage.perspectives:
-				return m(TeacherInstructions, { stage: item.stage, topic, projector: true });
-
-			case AgoraStage.needs:
-				return [
-					m(TeacherInstructions, { stage: item.stage, topic, projector: true }),
-					m('.card.stack', m(NeedsBoard, { topic })),
-				];
-
-			case AgoraStage.positioning: {
-				const tally = tallyAgoraCamps(participants).counts;
-				const positioned = tally.left + tally.right + tally.center;
-				const leftName = topic.characters[0]?.name ?? '';
-				const rightName = topic.characters[1]?.name ?? '';
-
-				return [
-					m(TeacherInstructions, { stage: item.stage, topic, projector: true }),
-					m('.card.stack.projector__census', [
-						m('.projector__camps', [
-							m('.projector__camp.projector__camp--left', [
-								m('span.projector__camp-count', String(tally.left)),
-								m('span.projector__camp-name', leftName),
-							]),
-							m('.projector__camp.projector__camp--center', [
-								m('span.projector__camp-count', String(tally.center)),
-								m('span.projector__camp-name', t('projector.center')),
-							]),
-							m('.projector__camp.projector__camp--right', [
-								m('span.projector__camp-count', String(tally.right)),
-								m('span.projector__camp-name', rightName),
-							]),
-						]),
-						m(
-							'p.projector__count-line',
-							t('projector.positioned_count', { n: positioned, total: participants.length }),
-						),
-					]),
-				];
-			}
-
-			case AgoraStage.question: {
-				const answers = item.statementId
-					? (getDeliberationState().answersByQuestion[item.statementId] ?? [])
-					: [];
-				const outcome = session.stageState?.[item.itemId]?.outcome;
-				const round = roundSpecOf(item);
-				if (round) {
-					// A WizCol round: numbers, never names — the wall stays anonymous in a named room too
-					const rankedRound = rankedRoundAnswers(round.kind, answers, false);
-					const like = round.scale === 'like';
-
-					return [
-						m(TeacherInstructions, {
-							stage: item.stage,
-							topic,
-							questionTitle: item.title,
-							questionExplanation: item.explanation,
-							questionKind: item.kind,
-							projector: true,
-						}),
-						m('.card.stack', [
-							m('p.projector__count-line', t('projector.texts_count', { n: rankedRound.length })),
-							outcome?.summary ? m('p.round__summary', outcome.summary) : null,
-							rankedRound.length === 0
-								? m('p.home-explanation', t('projector.waiting'))
-								: m(
-										'ol.projector__answers',
-										rankedRound.map((row, index) =>
-											m('li.projector__answer', { key: row.statementId }, [
-												m('span.projector__answer-num', String(index + 1)),
-												m('p.projector__answer-text', [
-													row.statement,
-													row.raters > 0
-														? m(
-																'span.round__figure',
-																like ? ` ♥${roundLikes(row)}` : ` · ${formatUnit(row.mean)}`,
-															)
-														: null,
-												]),
-											]),
-										),
-									),
-						]),
-					];
-				}
-				// Numbers, never names — even in a named room the wall stays anonymous
-				const ranked = rankedAnswers(answers, false);
-
-				return [
-					m(TeacherInstructions, {
-						stage: item.stage,
-						topic,
-						questionTitle: item.title,
-						questionExplanation: item.explanation,
-						projector: true,
-					}),
-					m('.card.stack', [
-						m('p.projector__count-line', t('projector.answers_count', { n: ranked.length })),
-						outcome?.selected.length
-							? m(CpBands, { answers: outcome.selected, bands: outcome.bands })
-							: null,
-						ranked.length === 0
-							? m('p.home-explanation', t('projector.waiting'))
-							: m(
-									'ol.projector__answers',
-									ranked.map((row, index) =>
-										m('li.projector__answer', { key: row.statementId }, [
-											m('span.projector__answer-num', String(index + 1)),
-											m('p.projector__answer-text', row.statement),
-										]),
-									),
-								),
-					]),
-				];
-			}
-
-			case AgoraStage.deliberation: {
-				const { proposals, scores } = getDeliberationState();
-
-				return [
-					m('.card.stack', [
-						m('.delib__header', [
-							session.roundEndsAt ? m(CountdownTimer, { endsAt: session.roundEndsAt }) : null,
-							m('span.values__score', t('projector.proposals_count', { n: proposals.length })),
-						]),
-						m(ResultsBoard, {
-							sessionId: session.sessionId,
-							topic,
-							proposals,
-							scores,
-							census: getConsensusPool(),
-							finale: false,
-							onlyScored: session.votingSettings?.goalZoneOnly === true,
-						}),
-					]),
-				];
-			}
-
-			case AgoraStage.voting:
-				return m(Voting, { session, userId, board: true, projector: true });
-
-			case AgoraStage.results:
-			case AgoraStage.ended:
-				return m(Results, { session, topic });
-
-			default:
-				return null;
-		}
-	}
 
 	return {
 		onremove() {
@@ -323,7 +140,7 @@ export function ProjectorScreen(
 				m('.projector__stage', [
 					m('h2.projector__title', planItemLabel(item)),
 					topic
-						? stageBody(session, item, topic)
+						? watchStageBody({ session, item, topic, participants, userId })
 						: m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
 				]),
 				m('aside.projector__code', [

@@ -15,6 +15,12 @@ export interface TeacherNavAttrs {
 	/** Status pills, a language picker: whatever the screen wants on the far end */
 	trailing?: m.Children;
 	/**
+	 * A control that must stay on the bar at every width — the console's
+	 * Board ⇄ Class view switch. Unlike `trailing` it never folds into ≡:
+	 * switching views is a lesson-time move, not a setting.
+	 */
+	segment?: m.Children;
+	/**
 	 * The lesson's join code, as a pill that copies itself. On every stage of
 	 * a running lesson a latecomer is one tap away, and the teacher never has
 	 * to scroll to find the five digits.
@@ -284,7 +290,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 		},
 
 		view({ attrs }) {
-			const { title, subtitle, onBack, trailing, code, menuItems = [] } = attrs;
+			const { title, subtitle, onBack, trailing, code, segment, menuItems = [] } = attrs;
 			const atHome = here() === '/teach';
 
 			return m(
@@ -326,6 +332,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 						m('span.teacher-nav__title', title),
 						subtitle ? m('span.teacher-nav__subtitle', subtitle) : null,
 					]),
+					segment ? m('.teacher-nav__segment', segment) : null,
 					code || trailing
 						? m('.teacher-nav__trailing', [code ? codePill(code) : null, trailing])
 						: null,

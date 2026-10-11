@@ -60,6 +60,19 @@ describe('placeNavTabs', () => {
 		expect(placeNavTabs(flying).find((t) => t.id === 'village')?.locked).toBe(false);
 	});
 
+	it('locks only the note for a watcher who has no pen, and says who writes here', () => {
+		const watcher = { ...atBooth, canWrite: false };
+		expect(locked(watcher)).toEqual(['note']);
+		expect(placeNavTabs(watcher).find((t) => t.id === 'note')?.hint).toBe(
+			'village.nav.hint_watcher',
+		);
+		// the board and the results stay open: the watcher reads what the class wrote
+		expect(placeNavTabs(watcher).find((t) => t.id === 'board')?.locked).toBe(false);
+		expect(placeNavTabs(watcher).find((t) => t.id === 'results')?.locked).toBe(false);
+		// a student is unchanged when the flag is absent
+		expect(locked(atBooth)).toEqual([]);
+	});
+
 	it('never marks a locked tab as the place you are standing in', () => {
 		const tabs = placeNavTabs({ ...atBooth, hasDesk: false, open: 'note' });
 		expect(tabs.find((t) => t.id === 'note')).toMatchObject({ locked: true, active: false });

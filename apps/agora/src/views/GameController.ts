@@ -1,7 +1,13 @@
 import { isProposalConfirmed } from '../lib/proposals';
-import { villagePlace } from '../lib/flows/villageRoute';
-import { councilBallot, councilPitch, type CouncilModel } from '../lib/flows/villageCouncil';
+import type { CouncilModel } from '../lib/flows/villageCouncil';
+import {
+	councilModelFor,
+	councilNeedsVotes,
+	papersFor,
+	stationPapersFor,
+} from '../lib/flows/villageModel';
 import { getVotingState } from '../lib/voting';
+import { readStoredNav, storeNav } from '../lib/stageNavStore';
 import { sessionVillageMode } from '../lib/flows/sessionLinks';
 import m from 'mithril';
 import { canWriteStage } from '../lib/flows/stageAccess';
@@ -39,7 +45,6 @@ import { listenToVoting, stopVotingListeners } from '../lib/voting';
 import {
 	INITIAL_STAGE_NAV,
 	effectiveIndex,
-	serializeStageNav,
 	stageNavReduce,
 	type StageNavEvent,
 	type StageNavState,
@@ -105,10 +110,6 @@ function framingKey(sessionId: string): string {
 	return `agora_${sessionId}_framing_done`;
 }
 
-function navKey(sessionId: string): string {
-	return `agora_${sessionId}_viewing`;
-}
-
 /**
  * The same "already done" mark for the closing re-rate.
  *
@@ -148,22 +149,6 @@ function markFramingSeen(sessionId: string): void {
 		// Storage refused: the opening simply shows again on the next load.
 	}
 	m.redraw();
-}
-
-function readStoredNav(sessionId: string): string | null {
-	try {
-		return sessionStorage.getItem(navKey(sessionId));
-	} catch {
-		return null;
-	}
-}
-
-function storeNav(sessionId: string, state: StageNavState): void {
-	try {
-		sessionStorage.setItem(navKey(sessionId), serializeStageNav(state));
-	} catch {
-		// Storage refused: a refresh lands on the current stage, which is fine.
-	}
 }
 
 export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
@@ -740,39 +725,29 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			 * open, the closed ballot after. It follows the ROOM's stage, not the
 			 * one the player stepped back to — the board stands in the village.
 			 */
-			const roomItem = plan[currentIndex];
 			const council = ((): CouncilModel | undefined => {
 				if (!villageMode) return undefined;
-				const roomStage = roomItem?.stage;
-				if (
-					(roomStage === AgoraStage.voting ||
-						roomStage === AgoraStage.results ||
-						roomStage === AgoraStage.ended) &&
-					session.voting
-				) {
-					if (roomStage === AgoraStage.voting && userId) {
-						listenToVoting(sessionId, session.challengeQuestionId, userId);
-					}
-					const votes = getVotingState();
+				if (councilNeedsVotes(plan, currentIndex) && userId) {
+					listenToVoting(sessionId, session.challengeQuestionId, userId);
+				}
+				const votes = getVotingState();
+				const { proposals, scores } = getDeliberationState();
 
-					return councilBallot({
-						session,
+				return councilModelFor({
+					plan,
+					currentIndex,
+					session,
+					votes: {
 						selections: votes.selections,
 						myVoteStatementId: votes.myVoteStatementId,
 						votedCount: votes.voterUids.size,
-						classSize: participants.length,
-						closed: roomStage !== AgoraStage.voting,
-					});
-				}
-
-				return councilPitch({
-					proposals: getDeliberationState().proposals.filter((p) => !p.hidden),
-					scores: getDeliberationState().scores,
+					},
+					proposals,
+					scores,
 					userId,
-					goalOnly: session.votingSettings?.goalZoneOnly === true,
+					classSize: participants.length,
 					leftLabel: topic.positioningScale.leftLabel,
 					rightLabel: topic.positioningScale.rightLabel,
-					leadStatementId: session.classScore?.leadStatementId,
 				});
 			})();
 
@@ -840,20 +815,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									villageWriteRequest++;
 								},
 								onSelectBook: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
-								papers: stationNotes(item).map((p) => ({
-									text: p.statement,
-									own: p.creatorId === userId,
-									confirmed: isProposalConfirmed(p.statementId),
-								})),
-								stationPapers: plan.slice(0, currentIndex + 1).map((p) => ({
-									itemId: p.itemId,
-									place: villagePlace(p),
-									papers: stationNotes(p).map((n) => ({
-										text: n.statement,
-										own: n.creatorId === userId,
-										author: n.anonName,
-									})),
-								})),
+								papers: papersFor(stationNotes(item), userId, isProposalConfirmed),
+								stationPapers: stationPapersFor(plan, currentIndex, stationNotes, userId),
 							},
 							stageView,
 						)

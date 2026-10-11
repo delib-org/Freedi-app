@@ -98,6 +98,19 @@ export interface VillageCommunityAttrs {
 	 * screen, each holding half the post.
 	 */
 	teacher?: { label: string; unread: number; onOpen: () => void };
+	/**
+	 * A watcher with no seat: the teacher's class view. The board is read, not
+	 * rated, no conversation can be joined, and nothing says "write yours first".
+	 */
+	readOnly?: boolean;
+	/**
+	 * The teacher's private device only: who wrote a classmate's note, by the
+	 * name the teacher knows them by. Students never get this; the resolver
+	 * lives in the teacher console and never reaches the world.
+	 */
+	authorName?: (uid: string) => string | undefined;
+	/** The teacher opens the student's private thread from the note */
+	onAuthor?: (uid: string, anonName: string) => void;
 }
 export function stationNotes(item: AgoraStagePlanItem): AgoraProposal[] {
 	const state = getDeliberationState();
@@ -329,7 +342,9 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			const live = !!item && canWriteStage(a.session, item.itemId);
 			const mine = notes.find((n) => n.creatorId === a.userId);
 			const classmates = notes.filter((note) => note.creatorId !== a.userId);
-			const canRate = live && mine !== undefined && !a.source;
+			const canRate = live && mine !== undefined && !a.source && !a.readOnly;
+			// The gate ("rate once you have written") is for someone who could write
+			const gated = live && !mine && !a.source && !a.readOnly;
 			const stationItems = item
 				? a.plan.slice(0, a.currentIndex + 1).filter((p) => villagePlace(p) === villagePlace(item))
 				: [];
@@ -451,9 +466,33 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 							stand ? m('small.village-note__standing', stand) : null,
 						]),
 						m('p.village-note__text', note.statement),
+						// The teacher's own device knows the author; the chip opens the
+						// student's private thread. Never drawn for a student.
+						!own && a.authorName && a.onAuthor
+							? m(
+									'button.village-note__author',
+									{
+										type: 'button',
+										'aria-label': t('teacher.names.author_aria', {
+											name: a.authorName(note.creatorId) ?? note.anonName,
+											anon: note.anonName,
+										}),
+										onclick: () => a.onAuthor?.(note.creatorId, note.anonName),
+									},
+									[
+										m(
+											'span.village-note__author-name',
+											a.authorName(note.creatorId) ?? note.anonName,
+										),
+										a.authorName(note.creatorId)
+											? m('span.village-note__author-anon', ` · ${note.anonName}`)
+											: null,
+									],
+								)
+							: null,
 						!own && canRate && item
 							? m('.village-note__rate', ratingWidget(a, item, note))
-							: !own && live && !mine && !a.source
+							: !own && gated
 								? m('small.village-note__hint', t('village.note.rate_gate'))
 								: null,
 						m('.village-note__actions', [
@@ -466,8 +505,9 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 								: null,
 							// The chip rides the button that opens the conversation, so it says
 							// WHERE the news is — a card has two doors, and a chip by the
-							// title could mean either
-							!overview
+							// title could mean either. A watcher has no door into a
+							// conversation: joining one would be writing.
+							!overview && !a.readOnly
 								? m(
 										'button.village-note__open',
 										{
@@ -485,15 +525,21 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			};
 
 			return m('.village-community', [
-				m(
-					'.village-coins',
-					{ 'aria-label': t('village.coins_aria', { n: a.points ?? 0 }), 'aria-live': 'polite' },
-					[
-						m('img', { src: '/assets/gold-coin.svg', alt: '' }),
-						m('strong', a.points?.toLocaleString('he-IL') ?? '…'),
-						gain ? m('span.village-coins__gain', `+${gain}`) : null,
-					],
-				),
+				// No seat, no purse: a watcher's coins would count nothing
+				a.readOnly
+					? null
+					: m(
+							'.village-coins',
+							{
+								'aria-label': t('village.coins_aria', { n: a.points ?? 0 }),
+								'aria-live': 'polite',
+							},
+							[
+								m('img', { src: '/assets/gold-coin.svg', alt: '' }),
+								m('strong', a.points?.toLocaleString('he-IL') ?? '…'),
+								gain ? m('span.village-coins__gain', `+${gain}`) : null,
+							],
+						),
 				m('.village-inbox', m(Inbox, { pinned: a.teacher })),
 				panel === 'scoreboard'
 					? m(
@@ -585,7 +631,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 												]),
 											]
 										: [
-												live && !mine && notes.length > 0 && !a.source
+												gated && notes.length > 0
 													? m('p.village-board__gate', t('village.board.gate'))
 													: null,
 												mine ? m('section.village-board__own', noteCard(mine)) : null,

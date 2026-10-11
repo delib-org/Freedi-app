@@ -26,6 +26,7 @@ import { Collapsible } from '../../components/Collapsible';
 import { TeacherStrip, type StripAction } from './TeacherStrip';
 import { nowCard } from './NowCard';
 import { TeacherPanel } from './TeacherPanel';
+import { ClassView } from './ClassView';
 import { countedSteps, teacherStepLabel } from '../../lib/teacherSteps';
 import { loadTeacherNav, navClass } from '../../lib/teacherNav';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
@@ -81,6 +82,30 @@ import {
 /** The console's side panels: the class, what the class wrote, the settings */
 type Panel = 'class' | 'texts' | 'settings';
 
+/** The board, or the room as the students see it */
+type ConsoleView = 'board' | 'class';
+
+/** Which view this device opened last — a phone in hand tends to want the class view, a laptop the board */
+const VIEW_KEY = 'agora.teacher.view';
+
+function rememberedView(): ConsoleView | null {
+	try {
+		const view = localStorage.getItem(VIEW_KEY);
+
+		return view === 'class' || view === 'board' ? view : null;
+	} catch {
+		return null;
+	}
+}
+
+function rememberView(view: ConsoleView): void {
+	try {
+		localStorage.setItem(VIEW_KEY, view);
+	} catch {
+		// A forgotten preference costs one tap next time
+	}
+}
+
 /**
  * The teacher's console — one screen.
  *
@@ -123,6 +148,27 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let drawerUid: string | null = null;
 	let drawerAbout: string | undefined;
 	let projectorLinkCopied = false;
+	/** The class view: the same console, the same listeners, the room as the students see it */
+	const boardRoute = `/teach/session/${sessionId}`;
+	const classRoute = `${boardRoute}/class`;
+	/** ≤600px the strip is a director row inside the village's bar, not the fixed bottom bar */
+	const phoneQuery = window.matchMedia('(max-width: 600px)');
+	let phone = phoneQuery.matches;
+	const onPhoneChange = (event: MediaQueryListEvent): void => {
+		phone = event.matches;
+		m.redraw();
+	};
+	phoneQuery.addEventListener('change', onPhoneChange);
+
+	function inClassView(): boolean {
+		return m.route.get().split('?')[0] === classRoute;
+	}
+
+	/** Flip the view. Both routes render this same keyed component, so the listeners survive. */
+	function showView(view: ConsoleView): void {
+		rememberView(view);
+		m.route.set(view === 'class' ? classRoute : boardRoute);
+	}
 
 	function openDrawer(studentUid: string, aboutStatementId?: string): void {
 		drawerUid = studentUid;
@@ -326,6 +372,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 	return {
 		onremove() {
+			phoneQuery.removeEventListener('change', onPhoneChange);
 			stopListening();
 			stopDeliberationListeners();
 			stopVotingListeners();
@@ -431,6 +478,38 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const unread = unreadRepliesTotal();
 			const ended = current.stage === AgoraStage.ended;
 			const atResults = current.stage === AgoraStage.results || ended;
+			const classView = inClassView();
+			// The console opens in the view this device used last. Checked on
+			// render, not at construction: the bare route reached from the class
+			// route re-renders this same keyed instance and constructs nothing.
+			// Choosing the board stores "board" first, so there is no loop.
+			if (!classView && rememberedView() === 'class') {
+				m.route.set(classRoute, undefined, { replace: true });
+			}
+
+			// Board ⇄ Class view: on the bar at every width, never folded into ≡
+			const viewButton = (view: ConsoleView, icon: 'square' | 'watch', label: string): m.Children =>
+				m(
+					'button.teacher-nav__view-btn',
+					{
+						type: 'button',
+						'aria-pressed': String(classView === (view === 'class')),
+						'data-view': view,
+						title: label,
+						onclick: () => {
+							if ((view === 'class') !== classView) showView(view);
+						},
+					},
+					[m(Icon, { name: icon, size: 18 }), m('span.teacher-nav__view-label', label)],
+				);
+			const segment = m(
+				'.teacher-nav__view',
+				{ role: 'group', 'aria-label': t('teacher.view.switch_aria') },
+				[
+					viewButton('board', 'square', t('teacher.view.board')),
+					viewButton('class', 'watch', t('teacher.view.class')),
+				],
+			);
 
 			// The header: the lesson's name, the class, the code — and on a phone
 			// the projector and the cog fold into the menu, where they still fit
@@ -448,6 +527,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				onBack: () => m.route.set(session.classId ? `/teach/class/${session.classId}` : '/teach'),
 				code: session.code,
 				menuItems,
+				segment,
 				trailing: [
 					m(
 						'button.btn.btn--secondary.btn--sm.teacher-nav__projector',
@@ -486,14 +566,19 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						disabled: !next || (current.stage === AgoraStage.lobby && participants.length === 0),
 						busy: advancing,
 					};
-			const strip = m(TeacherStrip, {
+			const stripAttrs = {
 				steps,
 				currentIndex: stepIndex,
 				action,
 				reportRoute: `/teach/report/${sessionId}`,
 				failed: advanceFailed,
 				onRetry: () => handleAdvance(nextIndex),
-			});
+			};
+			// On a phone in the class view the strip rides inside the village's
+			// bar as the director row; anywhere else it is the strip it always was
+			const directorRow = classView && phone;
+			const strip = directorRow ? null : m(TeacherStrip, stripAttrs);
+			const director = directorRow ? m(TeacherStrip, { ...stripAttrs, director: true }) : undefined;
 
 			// The two doors beside the board: who is here, and what they wrote
 			const chip = (
@@ -782,6 +867,31 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							},
 						})
 					: null;
+
+			// The class view: the room as the students see it, under the same bar
+			// and strip, with the same panels and drawer over it
+			if (classView) {
+				return m('.shell.shell--wide.teacher-console.teacher-console--watch', [
+					navBar,
+					strip,
+					m(
+						'.teacher-watch',
+						m(ClassView, {
+							sessionId,
+							userId,
+							session,
+							topic,
+							participants,
+							director,
+							messages: { unread, onOpen: () => openPanel('texts') },
+							nameOf: realNameOf,
+							onAuthor: (uid: string) => openDrawer(uid),
+						}),
+					),
+					sidePanel,
+					drawer,
+				]);
+			}
 
 			// Results/ended: the teacher projects the same transformed map + score
 			if (atResults) {

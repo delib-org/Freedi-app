@@ -490,6 +490,9 @@
   // bar the page has to keep its last card clear of.
   --teacher-nav-h: 56px;
   --teacher-strip-h: 108px;
+  // The strip's one-row height on a laptop — what the class view's world
+  // leaves room for under the bar (the 108px above is the phone's reserve)
+  --teacher-strip-desk-h: 64px;
 
   // The disclosure chevron is the `arrow` icon given a quarter turn (there
   // is no separate chevron glyph). The arrow is drawn pointing LEFT — the

@@ -9,8 +9,8 @@ import { describe, expect, it } from 'vitest';
  * must never be imported here. Pinned as a test because an import is a
  * one-line change nobody reviews.
  */
-describe('ProjectorScreen imports', () => {
-	const source = readFileSync(resolve(__dirname, '../../views/teacher/ProjectorScreen.ts'), 'utf8');
+describe.each(['ProjectorScreen.ts', 'watchBodies.ts'])('%s imports', (file) => {
+	const source = readFileSync(resolve(__dirname, `../../views/teacher/${file}`), 'utf8');
 
 	it.each([
 		'lib/notifications',

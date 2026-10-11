@@ -1587,6 +1587,18 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.notice_language': 'הבינה המלאכותית חסמה שפה פוגענית — הטקסט לא פורסם',
 		'teacher.language_strikes': '{{n}} אזהרות שפה',
 
+		// --- Teacher class view (2026-10-11) — keys added at the end of this fence ---
+		'teacher.view.board': 'לוח',
+		'teacher.view.class': 'מבט הכיתה',
+		'teacher.view.switch_aria': 'לוח או מבט הכיתה',
+		'teacher.view.watching': 'אתם רואים את השיעור כפי שהתלמידים רואים אותו. שום דבר כאן לא נכתב.',
+		'village.nav.hint_watcher': 'אתם צופים — כאן התלמידים כותבים.',
+		'teacher.watch.students_write_here': 'כאן התלמידים כותבים',
+		'teacher.bar.class_at': 'הכיתה: {{station}}',
+		'teacher.bar.class_at_aria': 'הכיתה נמצאת ב{{station}}. להעביר את הכיתה',
+		'teacher.names.author_aria': 'נכתב על ידי {{name}}, מוצג לכיתה בשם {{anon}}',
+		// --- end teacher class view ---
+
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
 		'hand.line': 'דירגתם {{n}} מתוך {{total}} הפתקים שקיבלתם',
 		'hand.waiting':
@@ -3232,6 +3244,19 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.notice_language': 'The AI blocked disrespectful language — the text was not posted',
 		'teacher.language_strikes': '{{n}} language warnings',
 
+		// --- Teacher class view (2026-10-11) — keys added at the end of this fence ---
+		'teacher.view.board': 'Board',
+		'teacher.view.class': 'Class view',
+		'teacher.view.switch_aria': 'Board or class view',
+		'teacher.view.watching':
+			'You are watching the lesson as the students see it. Nothing here writes.',
+		'village.nav.hint_watcher': 'You are watching — the students write here.',
+		'teacher.watch.students_write_here': 'Students write here',
+		'teacher.bar.class_at': 'Class: {{station}}',
+		'teacher.bar.class_at_aria': 'The class is at {{station}}. Move the class',
+		'teacher.names.author_aria': 'Written by {{name}}, shown to the class as {{anon}}',
+		// --- end teacher class view ---
+
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
 		'hand.line': 'You rated {{n}} of the {{total}} notes you were dealt',
 		'hand.waiting':
@@ -4820,6 +4845,18 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.language_flagged': 'لم يُحفظ — الرجاء استخدام لغة محترمة',
 		'teacher.notice_language': 'حجب الذكاء الاصطناعي لغة غير لائقة — لم يُنشر النص',
 		'teacher.language_strikes': '{{n}} تنبيهات لغة',
+
+		// --- Teacher class view (2026-10-11) — keys added at the end of this fence ---
+		'teacher.view.board': 'اللوحة',
+		'teacher.view.class': 'عرض الصف',
+		'teacher.view.switch_aria': 'اللوحة أو عرض الصف',
+		'teacher.view.watching': 'أنتم تشاهدون الدرس كما يراه الطلاب. لا شيء هنا يُكتب.',
+		'village.nav.hint_watcher': 'أنتم تشاهدون — هنا يكتب الطلاب.',
+		'teacher.watch.students_write_here': 'هنا يكتب الطلاب',
+		'teacher.bar.class_at': 'الصف: {{station}}',
+		'teacher.bar.class_at_aria': 'الصف في {{station}}. نقل الصف',
+		'teacher.names.author_aria': 'كتبه {{name}}، ويظهر للصف باسم {{anon}}',
+		// --- end teacher class view ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
 		'hand.line': 'قيّمتم {{n}} من أصل {{total}} ملاحظات حصلتم عليها',
@@ -6493,6 +6530,19 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.language_flagged': 'No se guardó — usa un lenguaje respetuoso',
 		'teacher.notice_language': 'La IA bloqueó lenguaje irrespetuoso — el texto no se publicó',
 		'teacher.language_strikes': '{{n}} avisos de lenguaje',
+
+		// --- Teacher class view (2026-10-11) — keys added at the end of this fence ---
+		'teacher.view.board': 'Tablero',
+		'teacher.view.class': 'Vista de la clase',
+		'teacher.view.switch_aria': 'Tablero o vista de la clase',
+		'teacher.view.watching':
+			'Estás viendo la lección como la ven los estudiantes. Aquí no se escribe nada.',
+		'village.nav.hint_watcher': 'Estás observando: aquí escriben los estudiantes.',
+		'teacher.watch.students_write_here': 'Aquí escriben los estudiantes',
+		'teacher.bar.class_at': 'Clase: {{station}}',
+		'teacher.bar.class_at_aria': 'La clase está en {{station}}. Mover la clase',
+		'teacher.names.author_aria': 'Escrito por {{name}}, mostrado a la clase como {{anon}}',
+		// --- end teacher class view ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
 		'hand.line': 'Valoraste {{n}} de las {{total}} notas que te tocaron',
@@ -8186,6 +8236,19 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.notice_language': 'Die KI hat respektlose Sprache blockiert — der Text wurde nicht veröffentlicht',
 		'teacher.language_strikes': '{{n}} Sprachwarnungen',
 
+		// --- Teacher class view (2026-10-11) — keys added at the end of this fence ---
+		'teacher.view.board': 'Tafel',
+		'teacher.view.class': 'Klassenansicht',
+		'teacher.view.switch_aria': 'Tafel oder Klassenansicht',
+		'teacher.view.watching':
+			'Du siehst die Stunde so, wie die Schüler sie sehen. Hier wird nichts geschrieben.',
+		'village.nav.hint_watcher': 'Du schaust zu – hier schreiben die Schüler.',
+		'teacher.watch.students_write_here': 'Hier schreiben die Schüler',
+		'teacher.bar.class_at': 'Klasse: {{station}}',
+		'teacher.bar.class_at_aria': 'Die Klasse ist bei {{station}}. Klasse bewegen',
+		'teacher.names.author_aria': 'Geschrieben von {{name}}, der Klasse gezeigt als {{anon}}',
+		// --- end teacher class view ---
+
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
 		'hand.line': 'Du hast {{n}} von {{total}} zugeteilten Zetteln bewertet',
 		'hand.waiting':
@@ -9861,6 +9924,19 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.language_flagged': 'Niet opgeslagen — gebruik respectvolle taal',
 		'teacher.notice_language': 'De AI heeft respectloze taal geblokkeerd — de tekst is niet geplaatst',
 		'teacher.language_strikes': '{{n}} taalwaarschuwingen',
+
+		// --- Teacher class view (2026-10-11) — keys added at the end of this fence ---
+		'teacher.view.board': 'Bord',
+		'teacher.view.class': 'Klasweergave',
+		'teacher.view.switch_aria': 'Bord of klasweergave',
+		'teacher.view.watching':
+			'Je ziet de les zoals de leerlingen die zien. Hier wordt niets geschreven.',
+		'village.nav.hint_watcher': 'Je kijkt mee – hier schrijven de leerlingen.',
+		'teacher.watch.students_write_here': 'Hier schrijven de leerlingen',
+		'teacher.bar.class_at': 'Klas: {{station}}',
+		'teacher.bar.class_at_aria': 'De klas is bij {{station}}. Klas verplaatsen',
+		'teacher.names.author_aria': 'Geschreven door {{name}}, aan de klas getoond als {{anon}}',
+		// --- end teacher class view ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
 		'hand.line': 'Je beoordeelde {{n}} van de {{total}} briefjes die je kreeg',
