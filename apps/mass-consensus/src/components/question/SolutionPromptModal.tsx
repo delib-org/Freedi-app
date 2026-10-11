@@ -794,15 +794,6 @@ export default function SolutionPromptModal({
       <div className={styles.content}>
         {flowState.step === 'input' && (
           <>
-            {/* Explanatory Context for "Add Solution First" Feature */}
-            {requiresSolution && (
-              <div className={styles.questionContext}>
-                <p className={styles.questionText}>
-                  {t('We value your independent thinking. Share your perspective before seeing others\' ideas to help generate more diverse and creative solutions.')}
-                </p>
-              </div>
-            )}
-
             {/* Question Context Banner */}
             {questionText && (
               <div className={styles.questionContext}>
