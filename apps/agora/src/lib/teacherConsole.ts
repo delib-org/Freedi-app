@@ -39,72 +39,105 @@ const state: TeacherConsoleState = {
 let unsubscribers: Unsubscribe[] = [];
 let listeningKey = '';
 let seenKey = '';
+let identitiesOn = false;
 
 export function getTeacherConsoleState(): Readonly<TeacherConsoleState> {
 	return state;
 }
 
-export function listenToTeacherConsole(sessionId: string, teacherUid: string): void {
-	const key = `${sessionId}--${teacherUid}`;
+/**
+ * What this device may hold. A screen on the wall subscribes to neither the
+ * names nor the private threads: a name a tab never fetched cannot leak
+ * through a stale cache, a bug, or the dev tools. See lib/flows/deviceRole.
+ */
+export interface TeacherConsoleOptions {
+	identities: boolean;
+	threads: boolean;
+}
+
+const EVERYTHING: TeacherConsoleOptions = { identities: true, threads: true };
+
+export function listenToTeacherConsole(
+	sessionId: string,
+	teacherUid: string,
+	options: TeacherConsoleOptions = EVERYTHING,
+): void {
+	// The options are part of the key: a device that turns private re-subscribes
+	const key = `${sessionId}--${teacherUid}--${options.identities ? 'n' : '-'}${options.threads ? 't' : '-'}`;
 	if (listeningKey === key) return;
 	stopTeacherConsole();
 	listeningKey = key;
 	seenKey = `agora_${sessionId}_teacherseen`;
+	unsubscribers = [];
+	identitiesOn = options.identities;
+	if (!options.identities && !options.threads) return;
 
-	const identitiesUnsub = onSnapshot(
-		query(
-			collection(db, Collections.agoraIdentities),
-			where('sessionId', '==', sessionId),
-			where('teacherId', '==', teacherUid),
-		),
-		(snapshot) => {
-			const identities = new Map<string, AgoraIdentity>();
-			snapshot.forEach((docSnap) => {
-				const parsed = safeParse(AgoraIdentitySchema, docSnap.data());
-				if (parsed.success) identities.set(parsed.output.userId, parsed.output);
-			});
-			state.identities = identities;
-			state.identitiesLoaded = true;
-			m.redraw();
-		},
-		(error) => {
-			console.error('[TeacherConsole] Identities listener failed:', error);
-		},
+	const identitiesUnsub = !options.identities
+		? null
+		: onSnapshot(
+				query(
+					collection(db, Collections.agoraIdentities),
+					where('sessionId', '==', sessionId),
+					where('teacherId', '==', teacherUid),
+				),
+				(snapshot) => {
+					const identities = new Map<string, AgoraIdentity>();
+					snapshot.forEach((docSnap) => {
+						const parsed = safeParse(AgoraIdentitySchema, docSnap.data());
+						if (parsed.success) identities.set(parsed.output.userId, parsed.output);
+					});
+					state.identities = identities;
+					state.identitiesLoaded = true;
+					m.redraw();
+				},
+				(error) => {
+					console.error('[TeacherConsole] Identities listener failed:', error);
+				},
+			);
+
+	const threadsUnsub = !options.threads
+		? null
+		: onSnapshot(
+				query(
+					collection(db, Collections.agoraTeacherMessages),
+					where('sessionId', '==', sessionId),
+					where('teacherId', '==', teacherUid),
+				),
+				(snapshot) => {
+					const threads = new Map<string, AgoraTeacherMessage[]>();
+					snapshot.forEach((docSnap) => {
+						const parsed = safeParse(AgoraTeacherMessageSchema, docSnap.data());
+						if (!parsed.success) return;
+						const line = parsed.output;
+						const thread = threads.get(line.studentUid) ?? [];
+						thread.push(line);
+						threads.set(line.studentUid, thread);
+					});
+					threads.forEach((thread) => thread.sort((a, b) => a.createdAt - b.createdAt));
+					state.threads = threads;
+					state.threadsLoaded = true;
+					m.redraw();
+				},
+				(error) => {
+					console.error('[TeacherConsole] Threads listener failed:', error);
+				},
+			);
+
+	unsubscribers = [identitiesUnsub, threadsUnsub].filter(
+		(unsubscribe): unsubscribe is Unsubscribe => unsubscribe !== null,
 	);
+}
 
-	const threadsUnsub = onSnapshot(
-		query(
-			collection(db, Collections.agoraTeacherMessages),
-			where('sessionId', '==', sessionId),
-			where('teacherId', '==', teacherUid),
-		),
-		(snapshot) => {
-			const threads = new Map<string, AgoraTeacherMessage[]>();
-			snapshot.forEach((docSnap) => {
-				const parsed = safeParse(AgoraTeacherMessageSchema, docSnap.data());
-				if (!parsed.success) return;
-				const line = parsed.output;
-				const thread = threads.get(line.studentUid) ?? [];
-				thread.push(line);
-				threads.set(line.studentUid, thread);
-			});
-			threads.forEach((thread) => thread.sort((a, b) => a.createdAt - b.createdAt));
-			state.threads = threads;
-			state.threadsLoaded = true;
-			m.redraw();
-		},
-		(error) => {
-			console.error('[TeacherConsole] Threads listener failed:', error);
-		},
-	);
-
-	unsubscribers = [identitiesUnsub, threadsUnsub];
+/** Whether this device holds the names at all — the wall never does */
+export function identitiesSubscribed(): boolean {
+	return identitiesOn;
 }
 
 export function stopTeacherConsole(): void {
 	unsubscribers.forEach((unsubscribe) => unsubscribe());
 	unsubscribers = [];
 	listeningKey = '';
+	identitiesOn = false;
 	state.identities = new Map();
 	state.identitiesLoaded = false;
 	state.threads = new Map();

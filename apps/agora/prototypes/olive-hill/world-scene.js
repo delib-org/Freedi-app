@@ -344,7 +344,7 @@ window.addEventListener('message',event=>{
  if(activeItem!==data.itemId){
   const first=activeItem==='';activeItem=data.itemId;const label=typeof data.label==='string'?data.label:'';
   // Led, the shell sends the walk itself (agora-village-go). Free, a new station is announced, never imposed.
-  if(roomChanged){activeLabel=label;if(navigation==='free')announce(data.place,label,'opened');}
+  if(roomChanged){activeLabel=label;if(navigation==='free')announce(data.place,label,'opened',data.openedText);}
   else{destination(data.place,label);if(!first&&data.paused!==true)moving=true;}
  }
  const stationPapers=Array.isArray(data.stationPapers)?data.stationPapers:[];
@@ -431,10 +431,11 @@ function setMapOpen(open){$('station-map').classList.toggle('is-open',open);$('m
 $('map-toggle').onclick=()=>setMapOpen(!$('station-map').classList.contains('is-open'));
 setMapOpen(!matchMedia('(max-width:650px)').matches);
 /** A line across the top of the world: where the teacher is taking the class, or a newly opened station to walk to. */
-function announce(place,label,reason){
+function announce(place,label,reason,text){
  const station=stations.find(s=>s.id===place);const name=label||station?.name||'';
  clearTimeout(newsTimer);
- $('news-text').textContent=reason==='call'?`המורה קורא לכולם אל: ${name}`:reason==='advance'?`המורה מוביל את הכיתה אל: ${name}`:`נפתחה תחנה חדשה: ${name}`;
+ // The app sends the line in the student's language; the Hebrew below is the standalone tour's fallback.
+ $('news-text').textContent=typeof text==='string'&&text?text:reason==='call'?`המורה קורא לכולם אל: ${name}`:reason==='advance'?`המורה מוביל את הכיתה אל: ${name}`:`נפתחה תחנה חדשה: ${name}`;
  const goButton=$('news-go');goButton.hidden=reason!=='opened';
  goButton.onclick=()=>{$('news').hidden=true;arriveNotify=place;walkTo(place);};
  $('news').hidden=false;newsTimer=setTimeout(()=>{$('news').hidden=true;},reason==='opened'?20000:6000);
@@ -446,7 +447,7 @@ window.addEventListener('message',event=>{
  if(!d||d.type!=='agora-village-go'||typeof d.place!=='string')return;
  const station=stations.find(s=>s.id===d.place);if(!station){parent.postMessage({type:'agora-village-arrived',place:d.place},location.origin);return;}
  uiPaused=false;keys.clear();view=null;viewKind=null;arriveNotify=d.place;selected=station;describe();hideDeskBubble();
- if(d.reason==='advance'||d.reason==='call')announce(d.place,d.place===activePlace?activeLabel:'',d.reason);
+ if(d.reason==='advance'||d.reason==='call')announce(d.place,d.place===activePlace?activeLabel:'',d.reason,d.text);
  if(Math.hypot(camera.position.x-station.ax,camera.position.z-station.az)<=.3)arrived();else moving=true;
 });
 $('session-entry').hidden=embedded;$('preview-label').hidden=embedded;

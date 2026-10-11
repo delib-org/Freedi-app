@@ -33,6 +33,7 @@ import { initAuth, completeRedirectSignIn, getUserState } from './lib/user';
 import { initI18n } from './lib/i18n';
 import { initInstallCapture } from './lib/install';
 import { getSessionState } from './lib/session';
+import { identitiesSubscribed } from './lib/teacherConsole';
 import { applyRememberedTheme } from './lib/theme';
 import { Home } from './views/Home';
 import { JoinSession } from './views/JoinSession';
@@ -115,11 +116,13 @@ if (import.meta.env.DEV && 'serviceWorker' in navigator) {
 // Dev-only introspection for e2e debugging
 if (import.meta.env.DEV) {
 	interface AgoraDebugWindow {
-		__agoraDebug?: () => { user: unknown; session: unknown };
+		__agoraDebug?: () => { user: unknown; session: unknown; teacherConsole: unknown };
 	}
 	(window as unknown as AgoraDebugWindow).__agoraDebug = () => ({
 		user: getUserState(),
 		session: getSessionState(),
+		// Whether this device ever subscribed to the real names — the wall never does
+		teacherConsole: { identitiesSubscribed: identitiesSubscribed() },
 	});
 }
 

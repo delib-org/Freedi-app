@@ -49,6 +49,8 @@ export interface ClassPanelAttrs {
 	/** uid → how many classmates' texts this student rated */
 	ratingsByUid: ReadonlyMap<string, number>;
 	onMessage: (studentUid: string) => void;
+	/** This screen is on the wall: pseudonyms only, and say so instead of "no real name" */
+	namesHidden?: boolean;
 }
 
 /** Minutes of silence before a row says so */
@@ -91,7 +93,7 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 							'.class-panel__table',
 							{ role: 'list' },
 							participants.map((participant) => {
-								const real = realNameOf(participant.userId);
+								const real = vnode.attrs.namesHidden ? undefined : realNameOf(participant.userId);
 								const unread = unreadRepliesFor(participant.userId);
 								const idle = idleMs(participant, now);
 
@@ -104,7 +106,12 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 											m(
 												'span.class-panel__real',
 												{ class: real ? undefined : 'class-panel__real--none' },
-												real ?? t('teacher.no_real_name'),
+												real ??
+													t(
+														vnode.attrs.namesHidden
+															? 'teacher.device.names_hidden_row'
+															: 'teacher.no_real_name',
+													),
 											),
 										]),
 										m(

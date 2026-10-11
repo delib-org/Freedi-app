@@ -101,6 +101,19 @@ export function requestTeacherFocus(): void {
 	if (teacherNavigator) teacherNavigator();
 }
 
+// A place the teacher called everyone to: the village walks there, the flat
+// view puts that station on screen. Registered by whichever world is on.
+let placeNavigator: ((place: string) => void) | null = null;
+export function registerPlaceNavigator(navigate: (place: string) => void): void {
+	placeNavigator = navigate;
+}
+export function unregisterPlaceNavigator(navigate: (place: string) => void): void {
+	if (placeNavigator === navigate) placeNavigator = null;
+}
+export function requestPlaceFocus(place: string): void {
+	if (placeNavigator) placeNavigator(place);
+}
+
 /**
  * Send the student to whatever a piece of news is ABOUT. One dispatcher, so
  * the toast and the inbox row that carry the same target can never disagree
@@ -121,6 +134,9 @@ export function requestFocus(target: InboxTarget): void {
 			break;
 		case 'teacher':
 			requestTeacherFocus();
+			break;
+		case 'place':
+			requestPlaceFocus(target.place);
 			break;
 		default:
 			requestMineFocus();

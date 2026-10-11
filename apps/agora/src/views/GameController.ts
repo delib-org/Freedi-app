@@ -9,6 +9,11 @@ import {
 import { getVotingState } from '../lib/voting';
 import { readStoredNav, storeNav } from '../lib/stageNavStore';
 import { sessionVillageMode } from '../lib/flows/sessionLinks';
+import { CALL_FRESH_MS, calledItemIndex, villagePlace } from '../lib/flows/villageRoute';
+import { callPlaceLabel } from '../components/VillageShell';
+import { addInboxItem } from '../lib/inbox';
+import { pushLocalToast } from '../lib/notifications';
+import { registerPlaceNavigator, unregisterPlaceNavigator } from '../lib/helpedFocus';
 import m from 'mithril';
 import { canWriteStage } from '../lib/flows/stageAccess';
 import { t } from '../lib/i18n';
@@ -180,6 +185,28 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 	registerTeacherNavigator(openTeacherThread);
 
+	/** The last call stamp this tab filed, so a call lands in the post box once */
+	let seenCallAt: number | undefined;
+	/**
+	 * A call this student followed from the post box or a toast, replayed to
+	 * the village as a call of its own: the shell walks once per stamp.
+	 */
+	let localCall: { place: string; at: number } | undefined;
+	let inVillage = false;
+
+	function goToPlace(place: string): void {
+		if (inVillage) {
+			localCall = { place, at: Date.now() };
+		} else {
+			const plan = getStagePlan();
+			const index = calledItemIndex(place, plan, getCurrentPlanIndex());
+			if (index >= 0) dispatchNav({ kind: 'select', itemId: plan[index].itemId });
+		}
+		m.redraw();
+	}
+
+	registerPlaceNavigator(goToPlace);
+
 	function beginStageTransition(item: AgoraStagePlanItem): void {
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		transitionItem = item;
@@ -222,6 +249,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			stopListening();
 			stopTeacherThread();
 			unregisterTeacherNavigator(openTeacherThread);
+			unregisterPlaceNavigator(goToPlace);
 			stopValueAnswerListeners();
 			stopNotifications();
 			// The results recap re-attaches these after the deliberation view
@@ -291,6 +319,36 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			const plan = getStagePlan();
 			const currentIndex = getCurrentPlanIndex();
+			inVillage = villageMode;
+
+			// The teacher's call lands in the post box and as a toast, so a
+			// student who was reading elsewhere can tap back to where the class
+			// went. Once per stamp; a call met on first render is history unless
+			// it is fresh (the same rule the village walks by).
+			const callAt = session.villageCall?.at;
+			if (callAt !== undefined && callAt !== seenCallAt) {
+				const first = seenCallAt === undefined;
+				seenCallAt = callAt;
+				if (!first || Date.now() - callAt < CALL_FRESH_MS) {
+					const rawPlace = session.villageCall?.place ?? 'current';
+					const place =
+						rawPlace === 'current' && plan[currentIndex]
+							? villagePlace(plan[currentIndex])
+							: rawPlace;
+					const target = { kind: 'place' as const, place };
+					addInboxItem({
+						id: `call-${callAt}`,
+						trigger: 'agora_called_to',
+						target,
+						detail: callPlaceLabel(place, plan, currentIndex),
+					});
+					pushLocalToast('agora_called_to', target);
+				}
+			}
+			// A call this student followed from the post box outranks the room's
+			// last call only while it is newer
+			const liveCall = session.villageCall;
+			const call = localCall && (!liveCall || localCall.at > liveCall.at) ? localCall : liveCall;
 
 			if (!navRestored) {
 				navRestored = true;
@@ -461,7 +519,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									writable,
 									papers: [],
 									navigation: session.villageNavigation ?? 'teacher',
-									call: session.villageCall,
+									call,
 								},
 								m(Lobby, { participants, myParticipant, onOpenLook: lookDoor?.onOpen }),
 							)
@@ -493,7 +551,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								writable,
 								papers: [],
 								navigation: session.villageNavigation ?? 'teacher',
-								call: session.villageCall,
+								call,
 							},
 							spinner,
 						),
@@ -783,7 +841,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								writable,
 								council,
 								navigation: session.villageNavigation ?? 'teacher',
-								call: session.villageCall,
+								call,
 								// The replies to my note and the owners' answers to mine both
 								// live behind the board door, so that is the door that lights
 								news: myParticipant

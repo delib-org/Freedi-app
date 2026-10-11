@@ -45,6 +45,124 @@ can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
 
+## Teacher class view, move-class sheet, two devices, device roles (2026-10-11)
+
+Built on `feat/agora-improvements` (287d5742d + the follow-up commit), **NOT
+deployed** (client only: `deploy:agora`; no functions, rules or shared-types
+changed — `villageCall.place` was already `string()` and unpinned, and
+`agoraAdvanceStage` already took a forward `toIndex`). Tal's ask: the teacher
+sees the room exactly as the students do, with control buttons on top, from a
+phone and a laptop at once; the phone may show real names.
+
+- **Class view** `/teach/session/:id/class` → `views/teacher/ClassView.ts`,
+  rendered by `TeacherSession` under the same `TeacherNav` + `TeacherStrip`
+  (both routes map to the same keyed component, so Board ⇄ Class keeps every
+  listener; `TeacherSession` stays the ONLY owner of `stopListening()` — the
+  class view has no `onremove` that stops anything). It is the seatless
+  render the projector already proved, under the student chrome: the 3D
+  village (`VillageShell {watcher:true, writable:false}`) or the flat view,
+  `StageNav`, the `PlaceBar` with "my note" as its one locked door
+  (`placeNavTabs({canWrite:false})` → `village.nav.hint_watcher`), the guide's
+  bubble holding `watcherDeskCard` (the prompt + an inert "students write
+  here"), the board via `VillageCommunity {readOnly:true}` (no rating, no
+  door into a conversation, no coins). **Never a teacher seat**: every count
+  reads `participants.length`. `lib/__tests__/classViewImports.test.ts` pins
+  that `ClassView.ts`/`watchBodies.ts` import no write path and mount none of
+  the five seat-gated stage views. `ProjectorScreen` now delegates to
+  `watchBodies.ts`; the council model and the paper builders moved out of
+  `GameController` into `lib/flows/villageModel.ts`; the viewing-position
+  store is `lib/stageNavStore.ts` (the same `agora_${sessionId}_viewing` key).
+  The teacher has their own viewing position like a student (walks opened
+  stations, never ahead); "Walk me to the class" is the sheet's first row when
+  they are elsewhere (`walkRequest` attr).
+- **Board ⇄ Class segment** on `TeacherNav` (`segment` attr — never folded into
+  ≡; icons only ≤600px). Remembered per device in `localStorage
+  agora.teacher.view`; the redirect runs in `view()`, not at construction,
+  because a route flip re-renders the same keyed instance.
+- **Director row**: on a phone in the class view the strip renders INSIDE
+  `.place-bar-wrap` (`PlaceBar {lead}` → `VillageShell {barLead}`,
+  `TeacherStrip {director:true}`) so `villageBubble` — which measures that
+  wrap — lifts the bubble by itself; `--village-bar-h: 136px` on the watcher
+  wrapper, `--village-chrome` = nav + `--teacher-strip-desk-h` (64px, new
+  token) + 56px on a laptop. The fixed phone strip must NOT render there (two
+  bottom bars, two `#teacher-next`).
+- **Move-class sheet** (`views/teacher/MoveClassSheet.ts`, rules in
+  `lib/flows/moveClass.ts`): the plan in order; a reached station GATHERS
+  (`callVillage(sessionId, place)` with `VillageCallPlace = 'current' |
+  'council' | 'library' | 'challenge' | 'booth:<itemId>'`), a station ahead
+  OPENS via the same advance (`toIndex` jumps allowed) behind a confirm that
+  lists what closes (unfinished count) and what is skipped. Backwards is not
+  a move. Opened from the strip's pennant "Class: {station}" (`pennant`
+  attr) and the ≡ menu. Counts are shown for the room's current item only —
+  `ProgressFacts` is derived from the current item's answers, so past rows
+  would lie.
+- **Student side of a call**: `VillageShell` walks with
+  `callArrival(place)` — a `booth:` call now arrives with `'station'` (it
+  used to arrive with `'none'` and never select the item, leaving the student
+  at a table with nothing on it); `'place'` selects the latest opened item of
+  a fixed building (`calledItemIndex`). The world's announce line is now the
+  app's words: `agora-village-go` carries `text` (`village.called_to` /
+  `village.led_to`), the state payload carries `openedText`; the Hebrew
+  literals in `world-scene.js` are only the standalone tour's fallback. A
+  fresh call also lands as a toast (`agora_called_to` in `notificationCopy`)
+  and an inbox row with the new target `{kind:'place', place}`
+  (`helpedFocus.registerPlaceNavigator`; the village replays it as a local
+  call, the flat view selects the station).
+- **Two devices** (`lib/flows/advanceLatch.ts`): `stale`
+  (`functions/failed-precondition`) while the room is already at or past the
+  intended index is "moved from your other device" — a quiet
+  `teacher-strip__status`, not the red failure; so is a pointer that moved
+  while this device was not pressing. A `villageCall.at` this device did not
+  write (`callVillage` returns its stamp) → "called to … from your other
+  device". The newest event owns the line. No presence, no lock.
+- **Device role** (`lib/flows/deviceRole.ts`, `lib/deviceRole.ts`,
+  `views/teacher/DeviceRoleSheet.ts`): `private | wall` in `localStorage
+  agora.teacher.device`. A coarse-pointer screen ≤600px is private without
+  asking; anything else is asked once ("Where is this screen? Just me / On
+  the wall") and is a wall until it answers. A wall: never subscribes to
+  `agoraIdentities` or `agoraTeacherMessages`
+  (`listenToTeacherConsole(…, {identities, threads})`, unit-tested with the
+  firebase mock; `__agoraDebug().teacherConsole.identitiesSubscribed`),
+  pseudonyms only on the Class panel (`namesHidden`), the Messages panel
+  replaced by "open this on your phone", a warning-tinted chip on the bar +
+  `.teacher-console--wall` border, and NEXT takes two taps (`ARM_MS` 3s —
+  a stray touch on a projected laptop). Wall → private asks a confirm;
+  private → wall is one tap. Civic / `collectRealNames: false` → nothing to
+  hide, no sheet. This is a UI guard, not a security boundary (the account
+  can read the names on any device); what makes it hold is the
+  never-subscribed listener. On a private device the NowCard chips and the
+  class view's author chip (`VillageCommunity {authorName, onAuthor}`) show
+  "Dana · Blue Fox"; `villageWorldPayload.test.ts` pins that
+  `VillageShell`/`VillageCommunity` never import the console and the iframe
+  payload carries pseudonyms only.
+- **Vocabulary**: teacher side says lesson/step/class (`teacherStepLabel`),
+  student-facing lines say station/village (`planItemLabel`). All keys sit in
+  one fenced block per language at the end of each `i18n.ts` language block
+  (`// --- Teacher class view (2026-10-11) …`).
+
+**Verify:** `npx tsx scripts/e2e-class-view.mjs` (desktop 1280 / 390 / 320;
+a student page; two teacher contexts; a wall context) asserts: no participant
+doc for the teacher, the locked note door, one NEXT that moves the room, the
+flip keeps the Class panel, the remembered view redirect, the director row
+inside the bar, gather → `villageCall.place === 'booth:round-story'` and the
+student's world line + toast + post box + station, the jump confirm and the
+skipped station, the quiet "moved/called from your other device" lines, the
+private NowCard names, and a wall that never subscribed, shows no name, and
+needs two taps. Shots in `output/class-view/`. Plus `classViewImports`,
+`villageModel`, `moveClass`, `villageRoute`, `advanceLatch`, `deviceRole`,
+`teacherConsole`, `villageWorldPayload` unit tests; the gauntlet has the new
+surfaces (`mock/surfaces.html`).
+
+**Gotchas:** Playwright will not `click()` an `aria-disabled` door — dispatch
+the event. `isVisible({timeout})` does not wait — `waitFor`. Fastlane seeds
+deliberation proposals, not story answers: the e2e writes bot stories with
+`buildAnswerStatement`. The disabled `btn--secondary` style is drawn for dark
+surfaces and vanishes on the bubble's paper — the watcher's pen is inert
+(`aria-disabled`, `pointer-events: none`), not `disabled`. **Later** (not
+built): a live scatter of where each student stands (needs a presence
+write), following one student, a future-station preview, a presence
+indicator for the other device.
+
 ## Village news indicators (2026-10-07)
 
 In the 3D village a student had no lasting sign that a classmate wrote to

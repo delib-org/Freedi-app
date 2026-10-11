@@ -81,6 +81,45 @@ export function boothItemId(place: string): string | null {
 	return isBoothPlace(place) ? place.slice('booth:'.length) : null;
 }
 
+/** Where the teacher can call the whole class: the room's station, or any place by name */
+export type VillageCallPlace = 'current' | 'council' | 'library' | 'challenge' | `booth:${string}`;
+
+/** A call older than this, met on first render, is history rather than an order */
+export const CALL_FRESH_MS = 120000;
+
+/**
+ * What a student's walk does when it ends at a called place: at a booth,
+ * stand at its station (the question comes on screen, the guide's bubble
+ * says what to do); at the council, open it; at any other fixed place, put
+ * the matching opened item on screen and only look.
+ */
+export function callArrival(place: string): 'station' | 'council' | 'place' {
+	if (isBoothPlace(place)) return 'station';
+	if (place === 'council') return 'council';
+
+	return 'place';
+}
+
+/**
+ * The opened plan item a called place stands for — a booth's own question,
+ * or the latest opened item that lives in a fixed building — so the flat
+ * view can follow a call too, and the stage strip agrees with the walker.
+ */
+export function calledItemIndex(
+	place: string,
+	plan: readonly AgoraStagePlanItem[],
+	currentIndex: number,
+): number {
+	const boothId = boothItemId(place);
+	let index = -1;
+	plan.forEach((item, i) => {
+		if (i > currentIndex) return;
+		if (boothId !== null ? item.itemId === boothId : villagePlace(item) === place) index = i;
+	});
+
+	return index;
+}
+
 export function villageBoothKind(item: AgoraStagePlanItem): VillageBoothKind | null {
 	if (item.stage === AgoraStage.question) return questionKindOf(item);
 	if (item.stage === AgoraStage.deliberation) return 'proposal';

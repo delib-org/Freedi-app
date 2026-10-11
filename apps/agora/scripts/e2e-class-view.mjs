@@ -15,7 +15,7 @@ import { mkdirSync } from 'node:fs';
 import { chromium, expect } from '@playwright/test';
 import { createRequire } from 'node:module';
 import { preflight, VITE_HOST } from './lib/preflight.mjs';
-import { eq, fail, mkPage, shotter, step } from './lib/e2e.mjs';
+import { eq, fail, mkPage, passNameDoor, shotter, step } from './lib/e2e.mjs';
 import { db, fastlane, signInTeacher } from './lib/fastlane.ts';
 
 const require = createRequire(import.meta.url);
@@ -110,8 +110,19 @@ const signIn = async (page) => {
 
 const classRoute = `${VITE_HOST}/#!/teach/session/${run.sessionId}/class`;
 const boardRoute = `${VITE_HOST}/#!/teach/session/${run.sessionId}`;
-const openClassView = async (page) => {
+/** A laptop is asked once where it is; these walks answer "just me" unless told otherwise */
+const answerRole = async (page, role = 'private') => {
+	const choice = page.locator(`.device-role[data-mode="ask"] .device-role__choice[data-role="${role}"]`);
+	const asked = await choice.waitFor({ timeout: 5000 }).then(() => true, () => false);
+	if (asked) {
+		await choice.click();
+		await page.locator('.device-role__scrim').waitFor({ state: 'detached', timeout: 5000 });
+	}
+};
+const openClassView = async (page, role = 'private') => {
 	await page.goto(classRoute, { waitUntil: 'domcontentloaded' });
+	await page.locator('.teacher-nav__title').waitFor({ timeout: 30_000 });
+	await answerRole(page, role);
 	await page.locator('iframe.village-shell__world').waitFor({ timeout: 30_000 });
 	// Let the world load and the walker arrive at the station
 	await pause(4000);
@@ -214,6 +225,139 @@ try {
 	eq('one NEXT at 320', await narrow.locator('#teacher-next').count(), 1);
 	await expect(narrow.locator('.teacher-nav__view-label').first()).toBeHidden();
 	await narrow.close();
+
+	step('a student in the village, at the station the class is on');
+	const student = await mkPage(browser, 'student', { width: 1360, height: 860 });
+	await student.goto(`${VITE_HOST}/#!/join/${run.code}`, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(student, 'דנה');
+	await student.locator('iframe.village-shell__world').waitFor({ timeout: 30_000 });
+	await pause(4000);
+
+	step('move the class: the sheet, and a gather at a past station');
+	const desk = await mkPage(browser, 'desk', { width: 1280, height: 900 });
+	await signIn(desk);
+	await openClassView(desk);
+	await desk.locator('.teacher-strip__pennant').click();
+	await desk.locator('#teacher-move').waitFor({ timeout: 10_000 });
+	await pause(400);
+	await shot(desk, 'desktop-move-sheet');
+	const rows = await desk.locator('.move-class__row').evaluateAll((els) =>
+		els.map((el) => `${el.dataset.move}:${el.dataset.item}`),
+	);
+	console.log(`   rows: ${rows.join(' · ')}`);
+	eq('the first row gathers at the first station', rows[0], 'gather:round-story');
+	if (!rows.some((row) => row.startsWith('next:'))) fail('no "opens next" row');
+	if (!rows.some((row) => row.startsWith('jump:'))) fail('no jump row');
+	await desk.locator('.move-class__row[data-move="gather"][data-item="round-story"]').click();
+	await expect
+		.poll(async () => (await sessionDoc()).villageCall?.place, { timeout: 15_000 })
+		.toBe('booth:round-story');
+	await expect(desk.locator('#teacher-move .lobby__status')).toContainText('נקראו');
+	await desk.locator('.teacher-panel__close').click();
+
+	step('the student walks there: the line, the toast, the post box, the station');
+	const world = student.frameLocator('iframe.village-shell__world');
+	await expect(world.locator('#news-text')).toContainText('המורה קורא לכולם אל', { timeout: 15_000 });
+	await expect(student.locator('.toast')).toContainText('המורה קורא לכולם', { timeout: 15_000 });
+	await expect(student.locator('.stage-nav__past')).toBeVisible({ timeout: 40_000 });
+	await shot(student, 'student-called');
+	eq(
+		'the call is in the post box',
+		await student.evaluate((id) =>
+			(JSON.parse(sessionStorage.getItem(`agora_${id}_inbox`) ?? '[]')).some(
+				(item) => item.trigger === 'agora_called_to' && item.target?.kind === 'place',
+			),
+			run.sessionId,
+		),
+		true,
+	);
+
+	step('a private device shows names on the now card');
+	await desk.locator('.teacher-nav__view-btn[data-view="board"]').click();
+	await desk.locator('.teacher-now').waitFor({ timeout: 15_000 });
+	await expect(desk.locator('.teacher-nav__role--private')).toBeVisible();
+	await expect(desk.locator('.teacher-now__chip').first()).toContainText(/לוי|כהן|פרץ|ברק/, {
+		timeout: 15_000,
+	});
+	eq(
+		'the private device holds the names',
+		await desk.evaluate(() => window.__agoraDebug?.()?.teacherConsole?.identitiesSubscribed),
+		true,
+	);
+	await shot(desk, 'desktop-board-names');
+	await desk.locator('.teacher-nav__view-btn[data-view="class"]').click();
+	await desk.locator('iframe.village-shell__world').waitFor({ timeout: 30_000 });
+	await pause(3000);
+
+	step('open a station ahead: the confirm names what closes and what is skipped');
+	await desk.locator('.teacher-strip__pennant').click();
+	await desk.locator('#teacher-move').waitFor({ timeout: 10_000 });
+	const jump = desk.locator('.move-class__row[data-move="jump"]').first();
+	const jumpItem = await jump.getAttribute('data-item');
+	eq('the first jump skips the deliberation', jumpItem, 'voting');
+	await jump.click();
+	await desk.locator('.move-class__confirm').waitFor({ timeout: 5000 });
+	await expect(desk.locator('.move-class__consequences')).toContainText('מדלג');
+	await shot(desk, 'desktop-move-confirm');
+	const idx1 = (await sessionDoc()).stageIndex ?? 0;
+	await desk.locator('.move-class__ok').click();
+	await expect
+		.poll(async () => (await sessionDoc()).stage, { timeout: 30_000 })
+		.toBe('voting');
+	eq('the room jumped past the deliberation', ((await sessionDoc()).stageIndex ?? 0) - idx1, 2);
+	await pause(3000);
+
+	step('two devices: the other hand presses first — a quiet line, not an error');
+	const deskB = await mkPage(browser, 'deskB', { width: 1280, height: 900 });
+	await signIn(deskB);
+	await openClassView(deskB);
+	const idx0 = (await sessionDoc()).stageIndex ?? 0;
+	await deskB.locator('#teacher-next').click();
+	await expect
+		.poll(async () => (await sessionDoc()).stageIndex ?? 0, { timeout: 30_000 })
+		.toBe(idx0 + 1);
+	await expect(desk.locator('.teacher-strip__status')).toContainText('המכשיר השני', { timeout: 15_000 });
+	eq('no failure banner on the quiet device', await desk.locator('.teacher-strip__fail').count(), 0);
+	await shot(desk, 'desktop-moved-elsewhere');
+	await deskB.locator('.teacher-strip__pennant').click();
+	await deskB.locator('.move-class__council').click();
+	await expect(desk.locator('.teacher-strip__status')).toContainText('נקראה', { timeout: 15_000 });
+	await deskB.close();
+	await desk.close();
+
+	step('a wall never holds the names, and NEXT takes two taps');
+	const wall = await mkPage(browser, 'wall', { width: 1280, height: 900 });
+	await wall.addInitScript(() => localStorage.setItem('agora.teacher.device', 'wall'));
+	await signIn(wall);
+	await wall.goto(boardRoute, { waitUntil: 'domcontentloaded' });
+	await wall.locator('.teacher-nav__role--wall').waitFor({ timeout: 30_000 });
+	await pause(1500);
+	await shot(wall, 'desktop-wall');
+	eq(
+		'the wall never subscribed to the names',
+		await wall.evaluate(() => window.__agoraDebug?.()?.teacherConsole?.identitiesSubscribed),
+		false,
+	);
+	for (const name of REAL_NAMES) {
+		if ((await wall.locator('body').innerText()).includes(name)) fail(`a real name is on the wall: ${name}`);
+	}
+	await wall.locator('.teacher-panels__chip[aria-controls="teacher-panel-class"]').click();
+	await expect(wall.locator('#teacher-panel-class')).toContainText('מוסתר');
+	for (const name of REAL_NAMES) {
+		if ((await wall.locator('body').innerText()).includes(name)) fail(`a real name is on the wall: ${name}`);
+	}
+	await wall.locator('.teacher-panel__close').click();
+	const idx2 = (await sessionDoc()).stageIndex ?? 0;
+	await wall.locator('#teacher-next').click();
+	await expect(wall.locator('#teacher-next')).toContainText('הקישו שוב');
+	await pause(1200);
+	eq('one tap moves nothing on a wall', (await sessionDoc()).stageIndex ?? 0, idx2);
+	await wall.locator('#teacher-next').click();
+	await expect
+		.poll(async () => (await sessionDoc()).stageIndex ?? 0, { timeout: 30_000 })
+		.toBe(idx2 + 1);
+	await wall.close();
+	await student.close();
 
 	console.log('\n✓ class view: all assertions passed');
 } finally {

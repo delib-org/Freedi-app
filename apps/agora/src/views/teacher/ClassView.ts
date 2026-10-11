@@ -81,6 +81,8 @@ export interface ClassViewAttrs {
 	onAuthor?: (uid: string, anonName: string) => void;
 	/** Where the teacher is looking, so the shell can say "walk me to the class" */
 	onViewing?: (viewingIndex: number) => void;
+	/** Bumped by the shell: walk back to the class's station */
+	walkRequest?: number;
 }
 
 export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<ClassViewAttrs> {
@@ -89,6 +91,7 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 	let navRestored = false;
 	let lastIndex: number | null = null;
 	let lastViewing: number | null = null;
+	let lastWalk = 0;
 	let villageOverride: boolean | undefined;
 	let moreOpen = false;
 	let transitionItem: AgoraStagePlanItem | null = null;
@@ -155,6 +158,13 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 						beginStageTransition(item);
 				}
 				lastIndex = currentIndex;
+			}
+
+			// "Walk me to the class": the sheet's first row when the teacher is reading elsewhere
+			if (attrs.walkRequest !== undefined && attrs.walkRequest !== lastWalk) {
+				lastWalk = attrs.walkRequest;
+				const room = plan[currentIndex];
+				if (room) dispatchNav({ kind: 'select', itemId: room.itemId });
 			}
 
 			const viewingIndex = effectiveIndex(plan, currentIndex, nav.viewingItemId);

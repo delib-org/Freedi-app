@@ -157,10 +157,18 @@
 	flex-direction: column;
 	gap: var(--space-md);
 	padding: var(--space-md);
+	// No surface of its own: it sits on the guide's paper bubble
 
 	&__pen {
-		// Drawn disabled on purpose: the shape the students know, minus the pen
+		// The shape the students know, minus the pen: inert, and read as such
+		pointer-events: none;
 		cursor: default;
+		// The bubble is paper on every look (see _village.scss: #fffdf3 / #34493d),
+		// so the pen takes the paper's own ink rather than the look's button colours,
+		// which on the civic look are light-on-dark and vanish here
+		color: #34493d;
+		background: #fffdf3;
+		border-color: #40533e;
 	}
 }
 
@@ -269,5 +277,269 @@
 	.teacher-strip__pennant,
 	.teacher-nav__view-btn {
 		transition: none;
+	}
+}
+
+// --- the move-class sheet: the lesson's stations, each a button ---
+// Gathering rows (reached stations) and opening rows (ahead) are one list in
+// lesson order, told apart by their mark and their trailing word, never by
+// shape — a list that changes shape between lessons is a list nobody learns.
+.move-class {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	&__list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__row {
+		inline-size: 100%;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		min-block-size: 48px;
+		padding: 0 var(--space-sm);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-tile);
+		background: var(--bg-card-solid);
+		color: var(--text-primary);
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+		transition:
+			border-color var(--motion-fast) ease,
+			background-color var(--motion-fast) ease;
+
+		&:hover:not(:disabled) {
+			border-color: var(--lantern);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+
+		&:disabled {
+			cursor: default;
+			opacity: 0.7;
+		}
+
+		// The one saturated row: where the class is
+		&--current {
+			border-color: var(--mine);
+			background: color-mix(in srgb, var(--mine) 8%, transparent);
+		}
+
+		&--next .move-class__label {
+			font-weight: 700;
+		}
+
+		&--walk-me {
+			border-style: dashed;
+		}
+	}
+
+	&__mark {
+		flex: 0 0 auto;
+		inline-size: 24px;
+		display: inline-flex;
+		justify-content: center;
+		color: var(--text-secondary);
+	}
+
+	&__row--current &__mark {
+		color: var(--mine-ink);
+	}
+
+	&__ring {
+		inline-size: 12px;
+		block-size: 12px;
+		border-radius: 50%;
+		border: 2px solid var(--border-strong);
+	}
+
+	&__label {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__trail {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__here {
+		color: var(--mine-ink);
+		font-weight: 700;
+	}
+
+	&__hint {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	// The confirm for an opening move: what closes, what is skipped, in a
+	// warning-tinted card with dark ink (never warning-coloured text)
+	&__confirm {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		padding: var(--space-md);
+		border: 1px solid var(--warning);
+		border-radius: var(--radius-lg);
+		background: color-mix(in srgb, var(--warning) 10%, transparent);
+		color: var(--text-primary);
+
+		h3 {
+			margin: 0;
+		}
+	}
+
+	&__consequences {
+		margin: 0;
+		padding-inline-start: 1.2em;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.move-class__row {
+		transition: none;
+	}
+}
+
+// --- the device's role: private (names) or on the wall (none) ---
+// The wall must be unmistakable: a filled, warning-tinted chip on the bar at
+// every width, and a border the same colour under the bar. Private is a
+// quiet inset chip — the ordinary state, not an alarm.
+.teacher-nav__role {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	block-size: 36px;
+	padding: 0 var(--space-sm);
+	border-radius: var(--radius-full);
+	border: 1px solid var(--border-strong);
+	background: var(--bg-inset);
+	color: var(--text-primary);
+	font: inherit;
+	font-size: var(--font-size-sm);
+	white-space: nowrap;
+	cursor: pointer;
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+
+	&--wall {
+		border-color: var(--warning);
+		background: color-mix(in srgb, var(--warning) 22%, transparent);
+		font-weight: 700;
+	}
+
+	// On a phone the words fold; the icon and the colour still say it
+	@media (max-width: 600px) {
+		&-text {
+			display: none;
+		}
+	}
+}
+
+.teacher-console--wall > .teacher-nav {
+	border-block-end: 3px solid var(--warning);
+}
+
+// The students' private words, refused on a wall
+.teacher-panel__wall {
+	padding: var(--space-md);
+	margin: 0;
+}
+
+// "Dana · Blue Fox": the pseudonym muted beside the name the teacher knows
+.teacher-now__alias--muted {
+	color: var(--text-secondary);
+	font-weight: 400;
+}
+
+// --- "where is this screen?" — a dialog over the console ---
+.device-role__scrim {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-md);
+	background: color-mix(in srgb, var(--text-primary) 55%, transparent);
+}
+
+.device-role {
+	inline-size: min(100%, 36rem);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+	padding: var(--space-lg);
+	border-radius: var(--radius-lg);
+	background: var(--bg-card-solid);
+	color: var(--text-primary);
+	box-shadow: var(--shadow-lg);
+
+	h2 {
+		margin: 0;
+	}
+
+	&__lead {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	&__choices {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-md);
+
+		@media (max-width: 480px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	// Two answers of one size: the sheet is a question, not a nudge
+	&__choice {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+		min-block-size: 96px;
+		padding: var(--space-md);
+		text-align: center;
+		white-space: normal;
+	}
+
+	&__label {
+		font-weight: 700;
+	}
+
+	&__hint {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		font-weight: 400;
 	}
 }

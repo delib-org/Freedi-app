@@ -52,6 +52,7 @@ import {
 } from './firebase';
 import { trackWrite } from './confirmedWrite';
 import { teacherConsole } from './callables';
+import type { VillageCallPlace } from './flows/villageRoute';
 
 /**
  * Everything the teacher and join screens ask of Firestore.
@@ -276,14 +277,20 @@ export async function setVillageNavigation(
 }
 
 /**
- * Walk every student's village to one place. A timestamp rather than a flag,
- * so calling the same place twice calls twice, and each phone acts once per call.
+ * Walk every student's village to one place — the room's station, the
+ * council, or any opened station by name (`booth:<itemId>`, `library`). A
+ * timestamp rather than a flag, so calling the same place twice calls twice,
+ * and each phone acts once per call. Returns the stamp, so the console can
+ * tell its own call from one made on the teacher's other device.
  */
-export async function callVillage(sessionId: string, place: 'current' | 'council'): Promise<void> {
+export async function callVillage(sessionId: string, place: VillageCallPlace): Promise<number> {
+	const at = Date.now();
 	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
-		villageCall: { place, at: Date.now() },
-		lastUpdate: Date.now(),
+		villageCall: { place, at },
+		lastUpdate: at,
 	});
+
+	return at;
 }
 
 /**

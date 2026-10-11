@@ -1,8 +1,12 @@
 import m from 'mithril';
 import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
 import {
+	CALL_FRESH_MS,
 	acceptsVillageEntry,
 	acceptsVillageWrite,
+	callArrival,
+	calledItemIndex,
+	isBoothPlace,
 	villageBooths,
 	villageDesk,
 	villageFixedPlaces,
@@ -89,17 +93,44 @@ function villageLite(): boolean {
  * booth to the council is a walk of some twenty seconds.
  */
 const ARRIVAL_FALLBACK_MS = 30000;
-/** A call older than this, met on first render, is history rather than an order */
-const CALL_FRESH_MS = 120000;
 /** The camera's turn to the table takes ~0.9s; a world that never reports the guide still shows the bubble */
 const ANCHOR_FALLBACK_MS = 1500;
 
 /**
  * When the walk ends: stand at the station (and at the council, open its
- * ballot or recap), only stand there, open the council, nothing. A booth
- * never opens its paper on arrival — the guide's bubble does.
+ * ballot or recap), only stand there, open the council, put the called
+ * place's opened item on screen, nothing. A booth never opens its paper on
+ * arrival — the guide's bubble does.
  */
-type ArrivalAction = 'station' | 'look' | 'council' | 'none';
+type ArrivalAction = 'station' | 'look' | 'council' | 'place' | 'none';
+
+/**
+ * The name of a place as a student reads it — a booth by its question, a
+ * fixed building by its own name — for the line the world shows when the
+ * teacher calls or leads everyone there. The world used to compose that
+ * line itself, in Hebrew only; the app owns the words now.
+ */
+export function callPlaceLabel(
+	place: string,
+	plan: readonly AgoraStagePlanItem[],
+	currentIndex: number,
+): string {
+	if (place === 'current') {
+		const room = plan[currentIndex];
+
+		return room ? planItemLabel(room) : '';
+	}
+	if (isBoothPlace(place)) {
+		const index = calledItemIndex(place, plan, currentIndex);
+
+		return index >= 0 ? planItemLabel(plan[index]) : '';
+	}
+	if (place === 'library') return t('village.place.library');
+	if (place === 'council') return t('village.place.council');
+	if (place === 'challenge') return t('village.place.challenge');
+
+	return place;
+}
 
 export function VillageShell(): m.Component<VillageShellAttrs> {
 	let frame: HTMLIFrameElement | null = null;
@@ -164,6 +195,11 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				navigation: leads() ? 'teacher' : 'free',
 				roomItemId: attrs.plan[attrs.currentIndex]?.itemId ?? '',
 				places: villageFixedPlaces(attrs.plan, attrs.currentIndex),
+				// The line the world shows a roaming student when a new station
+				// opens — composed here, in the student's language
+				openedText: attrs.plan[attrs.currentIndex]
+					? t('village.opened', { place: planItemLabel(attrs.plan[attrs.currentIndex]) })
+					: '',
 				// The world used to own these two as buttons of its own, drawn by
 				// the standalone tour and showing through the iframe. The app owns
 				// the choice now; the world only applies it.
@@ -316,8 +352,18 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 		clearTimeout(arrivalTimer);
 		arrivalTimer = setTimeout(() => arrive(place), ARRIVAL_FALLBACK_MS);
 		sync();
+		// The world shows one line across the top while it walks: who is
+		// taking the class where. The words are the app's (six languages);
+		// the world only displays them.
+		const label = callPlaceLabel(place, attrs.plan, attrs.currentIndex);
+		const text =
+			reason === 'call'
+				? t('village.called_to', { place: label })
+				: reason === 'advance'
+					? t('village.led_to', { place: label })
+					: undefined;
 		frame?.contentWindow?.postMessage(
-			{ type: 'agora-village-go', place, reason },
+			{ type: 'agora-village-go', place, reason, text },
 			window.location.origin,
 		);
 		m.redraw();
@@ -337,6 +383,15 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			return;
 		}
 		if (then === 'none') return;
+		if (then === 'place') {
+			// Called to a fixed building: the latest opened item that lives there
+			// comes on screen, so the stage strip agrees with where the walker stands
+			const index = calledItemIndex(place, attrs.plan, attrs.currentIndex);
+			if (index >= 0 && index !== attrs.viewingIndex)
+				attrs.onSelectBook?.(attrs.plan[index].itemId);
+
+			return;
+		}
 		const item = attrs.plan[attrs.viewingIndex];
 		if (item && villagePlace(item) === place) {
 			// A delayed arrival must not put away a paper the student already opened.
@@ -511,7 +566,10 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 						if (attrs.viewingIndex !== attrs.currentIndex) attrs.onSelectBook?.(roomItem.itemId);
 						go(villagePlace(roomItem), 'station', 'call');
 					} else {
-						go(call.place, call.place === 'council' ? 'council' : 'none', 'call');
+						// A booth: stand at its station (its question comes on screen
+						// first — a walk that ended with no item selected left the
+						// student at a table with nothing on it). The council: open it.
+						go(call.place, callArrival(call.place), 'call');
 					}
 				}
 			}

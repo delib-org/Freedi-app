@@ -216,7 +216,9 @@ export function watcherDeskCard(item: AgoraStagePlanItem): m.Children {
 		desk?.prompt ? m('p.village-bubble__prompt', desk.prompt) : null,
 		m(
 			'button.btn.btn--secondary.btn--full.watcher-desk__pen',
-			{ type: 'button', disabled: true, 'aria-disabled': 'true' },
+			// Inert, not disabled: the disabled secondary style was drawn for dark
+			// surfaces and vanishes on the bubble's paper
+			{ type: 'button', 'aria-disabled': 'true', tabindex: -1 },
 			[
 				m(Icon, { name: 'edit', size: 18 }),
 				m('span', ` ${t('teacher.watch.students_write_here')}`),

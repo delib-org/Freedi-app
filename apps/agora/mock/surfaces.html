@@ -397,6 +397,51 @@
 				</nav>
 			</div>
 
+			<h2>the teacher's class view — the view switch, the device chip, the pennant and the director row</h2>
+			<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+				<div class="teacher-nav__view" role="group" aria-label="לוח או מבט הכיתה">
+					<button class="teacher-nav__view-btn" type="button" aria-pressed="false"><span class="teacher-nav__view-label">לוח</span></button>
+					<button class="teacher-nav__view-btn" type="button" aria-pressed="true"><span class="teacher-nav__view-label">מבט הכיתה</span></button>
+				</div>
+				<button class="teacher-nav__role teacher-nav__role--private" type="button"><span class="teacher-nav__role-text">שמות מוצגים</span></button>
+				<button class="teacher-nav__role teacher-nav__role--wall" type="button"><span class="teacher-nav__role-text">על הקיר · השמות מוסתרים</span></button>
+				<button class="teacher-strip__pennant" type="button" aria-expanded="false"><span class="teacher-strip__pennant-text">הכיתה: הצרכים שלי</span></button>
+				<button class="teacher-strip__pennant" type="button" aria-expanded="true"><span class="teacher-strip__pennant-text">הכיתה: הצרכים שלי</span></button>
+			</div>
+			<div class="place-bar__lead" style="margin-top:12px">
+				<div class="teacher-strip teacher-strip--director">
+					<button class="teacher-strip__pennant" type="button"><span class="teacher-strip__pennant-text">הכיתה: הצרכים שלי</span></button>
+					<button class="btn btn--primary btn--lg teacher-strip__next" type="button"><span>הלאה: דיון</span></button>
+				</div>
+			</div>
+			<p class="teacher-strip__status" role="status">הכיתה הועברה מהמכשיר השני שלכם</p>
+
+			<h2>the move-class sheet — a reached station, the class's station, the next, a jump, and the confirm</h2>
+			<div class="move-class" style="max-width:420px">
+				<ol class="move-class__list">
+					<li class="move-class__item"><button class="move-class__row move-class__row--gather" type="button"><span class="move-class__mark">✓</span><span class="move-class__label">הסיפור שלי</span><span class="move-class__trail"></span></button></li>
+					<li class="move-class__item"><button class="move-class__row move-class__row--gather move-class__row--current" type="button" aria-current="step"><span class="move-class__mark">⚑</span><span class="move-class__label">הצרכים שלי</span><span class="move-class__trail"><span class="move-class__here">הכיתה כאן</span><span class="move-class__count">4 מתוך 9 סיימו</span></span></button></li>
+					<li class="move-class__item"><button class="move-class__row move-class__row--next" type="button"><span class="move-class__mark"><span class="move-class__ring"></span></span><span class="move-class__label">דיון</span><span class="move-class__trail"><span class="move-class__meta">נפתח הבא</span></span></button></li>
+					<li class="move-class__item"><button class="move-class__row move-class__row--jump" type="button"><span class="move-class__mark"><span class="move-class__ring"></span></span><span class="move-class__label">הצבעה</span><span class="move-class__trail"><span class="move-class__meta">מדלג על 1</span></span></button></li>
+				</ol>
+				<p class="move-class__hint">לתחנות שעברו אפשר לקרוא, לא לפתוח מחדש.</p>
+				<div class="move-class__confirm" role="group">
+					<h3>לפתוח את הצבעה?</h3>
+					<ul class="move-class__consequences"><li>5 תלמידים עוד לא סיימו את הצרכים שלי. התחנה תיסגר ותקבל סיכום.</li><li>מדלג על דיון — התחנות האלה לא ייפתחו.</li></ul>
+				</div>
+			</div>
+
+			<h2>a classmate's note with the author chip (the teacher's device only), and the watcher's desk</h2>
+			<article class="village-note" style="max-width:360px">
+				<div class="village-note__head"><h3 class="village-note__title">פתק 2</h3></div>
+				<p class="village-note__text">אני זוכר שנסענו לאילת ואבא שלי לימד אותי לצלול.</p>
+				<button class="village-note__author" type="button"><span class="village-note__author-name">איתן כהן</span><span class="village-note__author-anon"> · אריה חכם</span></button>
+			</article>
+			<div class="watcher-desk" style="max-width:360px;background:#fffdf3;border:3px solid #40533e;border-radius:28px">
+				<p class="village-bubble__prompt">מה חשוב לך? כתוב על הפתק שלך את הצרכים שחשוב לך שנכיר.</p>
+				<button class="btn btn--secondary btn--full watcher-desk__pen" type="button" aria-disabled="true" tabindex="-1"><span>כאן התלמידים כותבים</span></button>
+			</div>
+
 			<h2>buttons, in every state a student meets</h2>
 			<div style="display: flex; flex-wrap: wrap; gap: 8px">
 				<button class="btn btn--primary">שליחה</button>

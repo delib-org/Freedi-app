@@ -26,7 +26,9 @@ export type InboxTarget =
 	/** The stalls, for news whose next step is "help someone else" */
 	| { kind: 'market' }
 	/** The private thread with the teacher — a note, or a word about my text */
-	| { kind: 'teacher' };
+	| { kind: 'teacher' }
+	/** A place in the village the teacher called everyone to — walk there */
+	| { kind: 'place'; place: string };
 
 export interface InboxItem {
 	/** Stable, derived from the CAUSE (message id, notification id, edit clock) */
