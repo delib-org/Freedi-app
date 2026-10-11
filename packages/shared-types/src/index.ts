@@ -959,3 +959,22 @@ export * from "./models/odyssey";
 export * from './models/covenant/covenant';
 
 export * from './models/covenant/deliberation';
+
+// Statement search — shared scorer and request/response types
+export * from './models/search/searchModel';
+export {
+  normalizeSearchText,
+  normalizeWithMap,
+  editDistance,
+  scoreMatch,
+  rankCandidates,
+} from './utils/textSearch';
+export type { NormalizedText, TextMatch, RankOptions } from './utils/textSearch';
+export {
+  NON_SEARCHABLE_STATEMENT_TYPES,
+  statementToSearchCandidate,
+  subscriptionToSearchCandidate,
+  isTopLevelSearchCandidate,
+  isSearchCandidate,
+} from './utils/searchCandidates';
+export type { SearchableStatement, SearchableSubscription } from './utils/searchCandidates';

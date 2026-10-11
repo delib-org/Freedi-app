@@ -4384,5 +4384,18 @@
   "Participants see these options and can add their own.": "Los participantes ven estas opciones y pueden añadir las suyas.",
   "Participants see these options and can't add their own.": "Los participantes ven estas opciones y no pueden añadir las suyas.",
   "Open the real question": "Abrir la pregunta real",
-  "Let participants talk in a chat alongside the question": "Permitir que los participantes conversen junto a la pregunta"
+  "Let participants talk in a chat alongside the question": "Permitir que los participantes conversen junto a la pregunta",
+  "Search": "Buscar",
+  "Search this space": "Buscar en este espacio",
+  "Type a word or an idea": "Escribe una palabra o una idea",
+  "My spaces": "Mis espacios",
+  "Everything I follow": "Todo lo que sigo",
+  "Close matches": "Coincidencias cercanas",
+  "Similar meaning": "Significado similar",
+  "Searching…": "Buscando…",
+  "Looking for similar ideas…": "Buscando ideas similares…",
+  "No matches for": "No hay resultados para",
+  "Search is not available right now": "La búsqueda no está disponible ahora",
+  "Searched": "Buscado en",
+  "Comment": "Comentario"
 }

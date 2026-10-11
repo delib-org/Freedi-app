@@ -4862,5 +4862,18 @@
   "Participants see these options and can add their own.": "شرکت‌کنندگان این گزینه‌ها را می‌بینند و می‌توانند گزینهٔ خود را اضافه کنند.",
   "Participants see these options and can't add their own.": "شرکت‌کنندگان این گزینه‌ها را می‌بینند و نمی‌توانند گزینهٔ خود را اضافه کنند.",
   "Open the real question": "باز کردن پرسش واقعی",
-  "Let participants talk in a chat alongside the question": "به شرکت‌کنندگان اجازه دهید در کنار پرسش گفتگو کنند"
+  "Let participants talk in a chat alongside the question": "به شرکت‌کنندگان اجازه دهید در کنار پرسش گفتگو کنند",
+  "Search": "جستجو",
+  "Search this space": "جستجو در این فضا",
+  "Type a word or an idea": "یک واژه یا یک ایده بنویسید",
+  "My spaces": "فضاهای من",
+  "Everything I follow": "هر آنچه دنبال می‌کنم",
+  "Close matches": "نتایج نزدیک",
+  "Similar meaning": "معنای مشابه",
+  "Searching…": "در حال جستجو…",
+  "Looking for similar ideas…": "در جستجوی ایده‌های مشابه…",
+  "No matches for": "نتیجه‌ای یافت نشد برای",
+  "Search is not available right now": "جستجو در حال حاضر در دسترس نیست",
+  "Searched": "جستجو شد:",
+  "Comment": "نظر"
 }

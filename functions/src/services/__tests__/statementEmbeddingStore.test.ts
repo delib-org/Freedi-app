@@ -286,3 +286,39 @@ describe('vector search', () => {
 		expect(got).toEqual([]);
 	});
 });
+
+describe('tree scope (statement search)', () => {
+	it('stamps the statement topParentId on the embedding doc', async () => {
+		statement('a', { topParentId: 't1' });
+		await embeddingCache.saveEmbedding('a', v(1, 0, 0));
+
+		expect(peek(EMBEDDINGS, 'a')?.topParentId).toBe('t1');
+	});
+
+	it('falls back to the parent when the statement has no topParentId', async () => {
+		statement('a');
+		await embeddingCache.saveEmbedding('a', v(1, 0, 0));
+
+		expect(peek(EMBEDDINGS, 'a')?.topParentId).toBe('q1');
+	});
+
+	it('follows a statement moved to another tree', async () => {
+		embedded('a', v(1, 0, 0), { topParentId: 't1' });
+		await syncEmbeddingParent(
+			{ statementId: 'a', parentId: 'q1', topParentId: 't1' },
+			{ statementId: 'a', parentId: 'q2', topParentId: 't2' },
+		);
+
+		expect(peek(EMBEDDINGS, 'a')).toMatchObject({ parentId: 'q2', topParentId: 't2' });
+	});
+
+	it('syncs a topParentId change even when the parent stayed', async () => {
+		embedded('a', v(1, 0, 0));
+		await syncEmbeddingParent(
+			{ statementId: 'a', parentId: 'q1' },
+			{ statementId: 'a', parentId: 'q1', topParentId: 't9' },
+		);
+
+		expect(peek(EMBEDDINGS, 'a')?.topParentId).toBe('t9');
+	});
+});

@@ -4504,5 +4504,18 @@
   "Participants see these options and can add their own.": "يرى المشاركون هذه الخيارات ويمكنهم إضافة خيارات خاصة بهم.",
   "Participants see these options and can't add their own.": "يرى المشاركون هذه الخيارات ولا يمكنهم إضافة خيارات خاصة بهم.",
   "Open the real question": "فتح السؤال الفعلي",
-  "Let participants talk in a chat alongside the question": "السماح للمشاركين بالتحدث في دردشة إلى جانب السؤال"
+  "Let participants talk in a chat alongside the question": "السماح للمشاركين بالتحدث في دردشة إلى جانب السؤال",
+  "Search": "بحث",
+  "Search this space": "البحث في هذه المساحة",
+  "Type a word or an idea": "اكتب كلمة أو فكرة",
+  "My spaces": "مساحاتي",
+  "Everything I follow": "كل ما أتابعه",
+  "Close matches": "تطابقات قريبة",
+  "Similar meaning": "معنى مشابه",
+  "Searching…": "جارٍ البحث…",
+  "Looking for similar ideas…": "نبحث عن أفكار مشابهة…",
+  "No matches for": "لا توجد نتائج لـ",
+  "Search is not available right now": "البحث غير متاح حاليًا",
+  "Searched": "تم البحث في",
+  "Comment": "تعليق"
 }

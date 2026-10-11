@@ -1,8 +1,9 @@
 /**
- * Just enough of `firebase-admin/firestore` for the embedding store tests:
- * collections of plain objects, point reads, getAll, where('=='|'in'),
- * select, set/update/delete with merge + FieldValue sentinels, batches, and
- * a brute-force COSINE findNearest.
+ * Just enough of `firebase-admin/firestore` for the embedding store and search
+ * tests: collections of plain objects, point reads, getAll,
+ * where('=='|'in'|'array-contains') on dotted paths, select (dotted paths),
+ * ascending orderBy + startAfter + limit, count(), set/update/delete with
+ * merge + FieldValue sentinels, batches, and a brute-force COSINE findNearest.
  *
  * Usage: jest.mock('firebase-admin/firestore', () => jest.requireActual(
  *   '<path>/helpers/fakeFirestore').firestoreModule);
@@ -102,41 +103,135 @@ interface NearestOptions {
 	distanceResultField?: string;
 }
 
+interface QueryState {
+	filters: Array<(data: DocData) => boolean>;
+	fields: string[] | null;
+	order: string | null;
+	after: unknown;
+	max: number | null;
+}
+
+const EMPTY_QUERY: QueryState = {
+	filters: [],
+	fields: null,
+	order: null,
+	after: undefined,
+	max: null,
+};
+
+/** Read a dotted field path ('statement.parentId'). */
+function readPath(data: DocData, path: string): unknown {
+	return path
+		.split('.')
+		.reduce<unknown>(
+			(value, key) =>
+				value !== null && typeof value === 'object' ? (value as DocData)[key] : undefined,
+			data,
+		);
+}
+
+/** select() with dotted paths keeps the nesting, like Firestore does. */
+function project(data: DocData, fields: string[]): DocData {
+	const shown: DocData = {};
+	for (const field of fields) {
+		const value = readPath(data, field);
+		if (value === undefined) continue;
+		const keys = field.split('.');
+		let target = shown;
+		for (const key of keys.slice(0, -1)) {
+			if (target[key] === null || typeof target[key] !== 'object') target[key] = {};
+			target = target[key] as DocData;
+		}
+		target[keys[keys.length - 1]] = value;
+	}
+
+	return shown;
+}
+
+function compareValues(a: unknown, b: unknown): number {
+	if (typeof a === 'number' && typeof b === 'number') return a - b;
+	const left = String(a ?? '');
+	const right = String(b ?? '');
+
+	return left < right ? -1 : left > right ? 1 : 0;
+}
+
 class FakeQuery {
 	constructor(
 		readonly collection: string,
-		private readonly filters: Array<(data: DocData) => boolean> = [],
-		private readonly fields: string[] | null = null,
+		private readonly state: QueryState = EMPTY_QUERY,
 	) {}
 
-	where(field: string, op: string, value: unknown): FakeQuery {
-		const test =
-			op === 'in'
-				? (data: DocData) => (value as unknown[]).includes(data[field])
-				: (data: DocData) => data[field] === value;
+	private next(patch: Partial<QueryState>): FakeQuery {
+		return new FakeQuery(this.collection, { ...this.state, ...patch });
+	}
 
-		return new FakeQuery(this.collection, [...this.filters, test], this.fields);
+	where(field: string, op: string, value: unknown): FakeQuery {
+		let test: (data: DocData) => boolean;
+		if (op === 'in') test = (data) => (value as unknown[]).includes(readPath(data, field));
+		else if (op === 'array-contains') {
+			test = (data) => {
+				const list = readPath(data, field);
+
+				return Array.isArray(list) && list.includes(value);
+			};
+		} else test = (data) => readPath(data, field) === value;
+
+		return this.next({ filters: [...this.state.filters, test] });
 	}
 
 	select(...fields: string[]): FakeQuery {
-		return new FakeQuery(this.collection, this.filters, fields);
+		return this.next({ fields });
 	}
 
-	private matching(): Array<[string, DocData]> {
+	/** Ascending only; '__name__' orders by document id. */
+	orderBy(field: string): FakeQuery {
+		return this.next({ order: field });
+	}
+
+	/** A cursor value for the orderBy field (a document id for '__name__'). */
+	startAfter(value: unknown): FakeQuery {
+		return this.next({ after: value });
+	}
+
+	limit(max: number): FakeQuery {
+		return this.next({ max });
+	}
+
+	private filtered(): Array<[string, DocData]> {
 		return [...col(this.collection).entries()].filter(([, data]) =>
-			this.filters.every((test) => test(data)),
+			this.state.filters.every((test) => test(data)),
 		);
 	}
 
-	async get() {
-		return {
-			docs: this.matching().map(([id, data]) => {
-				const shown = this.fields
-					? Object.fromEntries(this.fields.filter((f) => f in data).map((f) => [f, data[f]]))
-					: data;
+	private matching(): Array<[string, DocData]> {
+		let rows = this.filtered();
+		const { order, after, max } = this.state;
+		if (order) {
+			const keyOf = ([id, data]: [string, DocData]): unknown =>
+				order === '__name__' ? id : readPath(data, order);
+			rows = rows.sort((a, b) => compareValues(keyOf(a), keyOf(b)));
+			if (after !== undefined) rows = rows.filter((row) => compareValues(keyOf(row), after) > 0);
+		}
 
-				return snapshot(this.collection, id, shown);
-			}),
+		return max === null ? rows : rows.slice(0, max);
+	}
+
+	async get() {
+		const docs = this.matching().map(([id, data]) =>
+			snapshot(this.collection, id, this.state.fields ? project(data, this.state.fields) : data),
+		);
+
+		return { docs, empty: docs.length === 0, size: docs.length };
+	}
+
+	count() {
+		return {
+			get: async () => {
+				const count = this.matching().length;
+
+				return { data: () => ({ count }) };
+			},
 		};
 	}
 
@@ -145,7 +240,7 @@ class FakeQuery {
 
 		return {
 			get: async () => {
-				const scored = this.matching()
+				const scored = this.filtered()
 					.map(([id, data]) => {
 						const vector = asVector(data[options.vectorField]);
 

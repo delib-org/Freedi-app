@@ -7,6 +7,7 @@ import NotificationSettingsButton from '@/view/components/notifications/Notifica
 import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
 import Back from '../../../header/Back';
 import HomeButton from '../../../header/HomeButton';
+import StatementSearch from '../../../header/statementSearch/StatementSearch';
 
 // Styles
 import styles from './NavButtons.module.scss';
@@ -32,6 +33,9 @@ const NavButtons: FC<NavButtonsProps> = ({ headerStyle, allowNavigation, stateme
 
 			{statement && (
 				<>
+					<div className={styles.padWrap}>
+						<StatementSearch statement={statement} />
+					</div>
 					<NotificationBtn />
 					<NotificationSettingsButton
 						statementId={statement.statementId}

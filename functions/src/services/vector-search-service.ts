@@ -2,7 +2,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, Statement } from '@freedi/shared-types';
 import { embeddingService, EMBEDDING_DIMENSIONS } from './embedding-service';
-import { resolveEmbeddingModel } from './embedding-model-resolver';
+import { ALLOWED_EMBEDDING_MODELS, resolveEmbeddingModel } from './embedding-model-resolver';
 import { embeddingCache } from './embedding-cache-service';
 import {
 	embeddingsCollection,
@@ -12,6 +12,13 @@ import {
 interface SimilarStatement {
 	statement: Statement;
 	similarity: number;
+}
+
+interface TreeSearchOptions {
+	/** Nearest neighbours fetched per embedding model. */
+	limit?: number;
+	/** Minimum cosine similarity kept. */
+	threshold?: number;
 }
 
 interface VectorSearchOptions {
@@ -254,6 +261,103 @@ class VectorSearchService {
 
 			throw error;
 		}
+	}
+
+	/**
+	 * Find statements anywhere under one top statement whose meaning is close
+	 * to a free-text query (the search box, not the dedup flow).
+	 *
+	 * Questions under one tree may pin different embedding models, and a cosine
+	 * between vectors from different models means nothing — so vectors are
+	 * searched per model: the query is embedded once for each model that
+	 * actually has vectors in the tree, and each search is filtered to that
+	 * model. Needs the (topParentId, embeddingModel, embedding) vector index.
+	 *
+	 * The query is embedded as typed (no brief, no question context), while
+	 * stored vectors come from briefs with context, so similarities run lower
+	 * than in the dedup flow; callers pass a lenient threshold.
+	 */
+	async findSimilarInTree(
+		topParentId: string,
+		queryText: string,
+		options: TreeSearchOptions = {},
+	): Promise<SimilarStatement[]> {
+		const { limit = DEFAULT_LIMIT, threshold = 0 } = options;
+		const models = await this.modelsInTree(topParentId);
+		if (models.length === 0) return [];
+
+		const hitsPerModel = await Promise.all(
+			models.map(async (model) => {
+				const { embedding } = await embeddingService.generateEmbedding(queryText, undefined, {
+					model,
+					skipBrief: true,
+				});
+				const snapshot = await embeddingsCollection()
+					.where('topParentId', '==', topParentId)
+					.where('embeddingModel', '==', model)
+					.findNearest({
+						vectorField: 'embedding',
+						queryVector: FieldValue.vector(embedding),
+						limit,
+						distanceMeasure: 'COSINE',
+						distanceResultField: 'vectorDistance',
+					})
+					.get();
+
+				return snapshot.docs.map((doc) => ({
+					statementId: doc.id,
+					distance: doc.data().vectorDistance as unknown,
+				}));
+			}),
+		);
+
+		// A statement has one vector, but keep the closest if it ever appears twice.
+		const bestDistance = new Map<string, number>();
+		for (const { statementId, distance } of hitsPerModel.flat()) {
+			if (typeof distance !== 'number') continue;
+			const known = bestDistance.get(statementId);
+			if (known === undefined || distance < known) bestDistance.set(statementId, distance);
+		}
+		if (bestDistance.size === 0) return [];
+
+		const snaps = await this.db.getAll(
+			...[...bestDistance.keys()].map((id) =>
+				this.db.collection(this.statementsCollection).doc(id),
+			),
+		);
+
+		const results: SimilarStatement[] = [];
+		for (const snap of snaps) {
+			const statement = snap.data() as Statement | undefined;
+			if (!snap.exists || !statement || statement.hide === true) continue;
+			// Moved to another tree before the sync caught up.
+			if ((statement.topParentId || statement.parentId) !== topParentId) continue;
+
+			const similarity = 1 - (bestDistance.get(snap.id) ?? 2);
+			if (similarity >= threshold) results.push({ statement, similarity });
+		}
+
+		return results.sort((a, b) => b.similarity - a.similarity).slice(0, limit);
+	}
+
+	/** Embedding models that have at least one vector under this tree. */
+	private async modelsInTree(topParentId: string): Promise<string[]> {
+		const present = await Promise.all(
+			ALLOWED_EMBEDDING_MODELS.map(async (model) => {
+				const probe = await embeddingsCollection()
+					.where('topParentId', '==', topParentId)
+					.where('embeddingModel', '==', model)
+					.select('statementId')
+					.limit(1)
+					.get();
+
+				return probe.docs.length > 0 ? model : null;
+			}),
+		);
+
+		return present.filter(
+			(model): model is (typeof ALLOWED_EMBEDDING_MODELS)[number] => model !== null,
+		);
 	}
 
 	/**

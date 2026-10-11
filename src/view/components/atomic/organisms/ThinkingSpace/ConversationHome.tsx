@@ -21,7 +21,18 @@ interface ConversationHomeProps {
 	onFilterChange?: (filter: 'all' | 'groups') => void;
 	loading?: boolean;
 	more?: React.ReactNode;
+	/**
+	 * Controlled search. When given, a non-empty query shows `results` in
+	 * place of the conversation grid; without it the box filters the loaded
+	 * conversations by title, as before.
+	 */
+	search?: ConversationSearch;
 	t: Translate;
+}
+export interface ConversationSearch {
+	query: string;
+	onQueryChange: (query: string) => void;
+	results: React.ReactNode;
 }
 export default function ConversationHome({
 	conversations,
@@ -32,16 +43,21 @@ export default function ConversationHome({
 	onFilterChange,
 	loading,
 	more,
+	search,
 	t,
 }: ConversationHomeProps) {
-	const [query, setQuery] = useState('');
+	const [localQuery, setLocalQuery] = useState('');
+	const query = search ? search.query : localQuery;
+	const setQuery = search ? search.onQueryChange : setLocalQuery;
+	const showSearchResults = search !== undefined && query.trim().length > 0;
 	const [filter, setFilter] = useState<'all' | 'groups'>('all');
 	const visible = conversations.filter(
 		(item) =>
 			(filter === 'all' || item.isGroup) &&
-			`${item.title} ${item.description ?? ''}`
-				.toLocaleLowerCase()
-				.includes(query.toLocaleLowerCase()),
+			(search !== undefined ||
+				`${item.title} ${item.description ?? ''}`
+					.toLocaleLowerCase()
+					.includes(query.toLocaleLowerCase())),
 	);
 
 	return (
@@ -104,7 +120,9 @@ export default function ConversationHome({
 					</button>
 				</div>
 			)}
-			{loading ? (
+			{showSearchResults ? (
+				search.results
+			) : loading ? (
 				<div className={styles.home__empty} role="status">
 					{t('Gathering your conversations…')}
 				</div>

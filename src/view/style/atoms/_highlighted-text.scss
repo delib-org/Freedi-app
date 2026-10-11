@@ -1,0 +1,23 @@
+// Highlighted Text Atom — BEM
+// Text with the parts that matched a search marked.
+// React wrapper: atomic/atoms/HighlightedText
+//
+// DOM:   <span class="highlighted-text">Ta<mark class="highlighted-text__mark">lk</mark></span>
+
+.highlighted-text {
+	&__mark {
+		background: color-mix(in srgb, var(--btn-primary) 22%, transparent);
+		color: inherit;
+		font-weight: var(--font-weight-semibold, 600);
+		border-radius: 3px;
+		padding-inline: 1px;
+	}
+}
+
+// Forced-colors (Windows high contrast) drops backgrounds; keep the match visible.
+@media (forced-colors: active) {
+	.highlighted-text__mark {
+		background: Mark;
+		color: MarkText;
+	}
+}

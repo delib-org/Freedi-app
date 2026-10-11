@@ -183,6 +183,7 @@ import {
 
 // Top Answers admin panel — on-demand recompute of statement.results / isChosen
 import { recomputeTopOptions } from './fn_recomputeTopOptions';
+import { searchStatements } from './fn_searchStatements';
 
 // Bulk Idea Synthesis (admin-triggered near-duplicate detection)
 import {
@@ -900,6 +901,9 @@ exports.reverseIntegration = reverseIntegrationCallable;
 
 // Top Answers admin panel
 exports.recomputeTopOptions = recomputeTopOptions;
+
+// Statement search (home, subscriptions, whole tree; lexical + semantic)
+exports.searchStatements = searchStatements;
 
 // Bulk Idea Synthesis
 exports.synthesizeIdeasPreview = synthesizeIdeasPreview;
