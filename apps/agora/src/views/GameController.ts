@@ -73,7 +73,8 @@ import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
 import { QuestionStage } from './QuestionStage';
 import { RoundStage } from './RoundStage';
-import { liveNoteNews, stationNotes } from '../components/VillageCommunity';
+import { liveNoteNews } from '../components/VillageCommunity';
+import { visibleStationNotes } from '../lib/hands';
 import { boardNews } from '../lib/flows/noteNews';
 import { VillageShell } from '../components/VillageShell';
 import { Voting } from './Voting';
@@ -786,7 +787,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								// The replies to my note and the owners' answers to mine both
 								// live behind the board door, so that is the door that lights
 								news: myParticipant
-									? { board: boardNews(liveNoteNews, stationNotes(item), userId) }
+									? { board: boardNews(liveNoteNews, visibleStationNotes(item), userId) }
 									: undefined,
 								community: myParticipant
 									? {
@@ -815,8 +816,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									villageWriteRequest++;
 								},
 								onSelectBook: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
-								papers: papersFor(stationNotes(item), userId, isProposalConfirmed),
-								stationPapers: stationPapersFor(plan, currentIndex, stationNotes, userId),
+								papers: papersFor(visibleStationNotes(item), userId, isProposalConfirmed),
+								stationPapers: stationPapersFor(plan, currentIndex, visibleStationNotes, userId),
 							},
 							stageView,
 						)

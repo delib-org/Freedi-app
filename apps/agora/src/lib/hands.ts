@@ -8,6 +8,7 @@ import {
 	Collections,
 	createAgoraHandId,
 	lotteryActive,
+	resolveStagePlan,
 	type AgoraSession,
 	type AgoraStagePlanItem,
 	type DealNotesResponse,
@@ -18,7 +19,6 @@ import { canWriteStage } from './flows/stageAccess';
 import { dealableCount, fillFingerprint, shouldRequestFill, visibleNotes } from './flows/handFlow';
 import { getDeliberationState, type AgoraProposal } from './proposals';
 import { getSessionState } from './session';
-import { getUserState } from './user';
 
 /**
  * The student's hand of dealt notes, per station.
@@ -70,6 +70,9 @@ export function listenToHand(sessionId: string, userId: string): void {
 			const parsed = safeParse(AgoraHandSchema, snapshot.data());
 			state.hands = parsed.success ? parsed.output.hands : {};
 			if (!snapshot.metadata.fromCache) state.loaded = true;
+			// The first ask may have come before the doc was read; ask again now
+			// that the hand is known (the fingerprint keeps it to one call)
+			requestFill();
 			m.redraw();
 		},
 		(error) => {
@@ -130,10 +133,13 @@ function notesUnder(session: AgoraSession, item: AgoraStagePlanItem): AgoraPropo
 
 /** What this student's board shows at a station: mine, my hand, my ratings — or everything */
 export function visibleStationNotes(item: AgoraStagePlanItem): AgoraProposal[] {
-	const session = getSessionState().session;
-	const userId = getUserState().user?.uid;
-	if (!session || !userId) return [];
+	const { session, myParticipant } = getSessionState();
+	if (!session) return [];
 	const notes = notesUnder(session, item);
+	// Only a seated student holds a hand; the teacher watching the room has no
+	// participant doc and, like any read-only viewer, sees every note
+	const userId = myParticipant?.userId;
+	if (!userId || userId === session.teacherId) return notes;
 
 	return visibleNotes({
 		notes,
@@ -171,14 +177,14 @@ async function call(
 
 /** Ask for a deal at every station I have written at, when a deal could change something */
 function askWhereDue(): void {
-	const session = getSessionState().session;
-	const userId = getUserState().user?.uid;
+	const { session, myParticipant } = getSessionState();
+	const userId = myParticipant?.userId;
 	if (!session || !userId || !state.loaded) return;
 	const active = isLotteryActive();
 	const rated = ratedIds();
-	const plan = session.stagePlan ?? [];
+	// resolveStagePlan: a session without a stored plan runs the legacy order
 	const seen = new Set<string>();
-	for (const item of plan) {
+	for (const item of resolveStagePlan(session)) {
 		const parentId = parentIdOf(session, item);
 		if (!parentId || seen.has(parentId)) continue;
 		seen.add(parentId);

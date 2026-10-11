@@ -36,6 +36,33 @@ vi.mock('../../lib/seenState', () => ({ threadUnreadCount: vi.fn(() => 0) }));
 vi.mock('../../views/ThreadChat', () => ({ ThreadChat: vi.fn() }));
 vi.mock('../StageNav', () => ({ planItemLabel: () => '' }));
 vi.mock('../../lib/sound', () => ({ playCoin: vi.fn() }));
+// The hand (lib/hands.ts) streams Firestore and asks a callable; here the
+// lottery is off, so the board's default source is every note of the station
+const handMock = vi.hoisted(() => ({ handOnly: null as string[] | null }));
+vi.mock('../../lib/hands', async () => {
+	const { getDeliberationState } = await import('../../lib/proposals');
+
+	return {
+		// Every note, or — when a test deals a hand — only the dealt ids plus mine
+		visibleStationNotes: (item: { stage: string; statementId?: string }) => {
+			const state = getDeliberationState();
+			const all = ['deliberation', 'voting', 'results'].includes(item.stage)
+				? state.proposals
+				: item.statementId
+					? (state.answersByQuestion[item.statementId] ?? [])
+					: [];
+			const shown = all.filter((p) => !p.hidden);
+			const hand = handMock.handOnly;
+
+			return hand ? shown.filter((p) => hand.includes(p.statementId)) : shown;
+		},
+		handFor: () => [],
+		isLotteryActive: () => false,
+		parentIdOf: () => undefined,
+		poolExhausted: () => false,
+		drawMore: vi.fn(),
+	};
+});
 import { stationNotes, VillageCommunity, type VillageCommunityAttrs } from '../VillageCommunity';
 import { playCoin } from '../../lib/sound';
 import { t } from '../../lib/i18n';
@@ -69,6 +96,49 @@ describe('village session integration', () => {
 			stationNotes({ itemId: 'empty', stage: AgoraStage.question, statementId: 'missing' }),
 		).toEqual([]);
 	});
+	it('deals a student their hand, but the teacher watching read-only sees every note', () => {
+		state.proposals = [proposal('mine'), proposal('p1'), proposal('p2'), proposal('p3')];
+		state.proposals[0].creatorId = 'a';
+		state.proposals[1].creatorId = 'b';
+		state.proposals[2].creatorId = 'c';
+		state.proposals[3].creatorId = 'd';
+		handMock.handOnly = ['mine', 'p2'];
+		const board = (readOnly: boolean) => {
+			const component = VillageCommunity();
+			const attrs: VillageCommunityAttrs = {
+				session: {
+					sessionId: 's',
+					status: AgoraSessionStatus.live,
+					stage: AgoraStage.deliberation,
+					stageIndex: 0,
+					stagePlan: [{ itemId: 'live', stage: AgoraStage.deliberation }],
+				} as AgoraSession,
+				userId: 'a',
+				anonName: 'a',
+				plan: [{ itemId: 'live', stage: AgoraStage.deliberation }],
+				currentIndex: 0,
+				viewingIndex: 0,
+				boardRequest: 1,
+				navigate: vi.fn(),
+				onPause: vi.fn(),
+				readOnly,
+			};
+			const node = { attrs } as unknown as m.VnodeDOM<VillageCommunityAttrs>;
+			component.oninit!.call(component, node);
+			component.onbeforeupdate!.call(component, node, node);
+			const tree = component.view.call(component, node);
+			component.onremove!.call(component, node);
+
+			return findAllByClass(tree, 'village-note').length;
+		};
+		try {
+			expect(board(false)).toBe(2);
+			expect(board(true)).toBe(4);
+		} finally {
+			handMock.handOnly = null;
+		}
+	});
+
 	it('chimes only for a positive balance change, never initial load or redraw', () => {
 		vi.useFakeTimers();
 		vi.mocked(playCoin).mockClear();

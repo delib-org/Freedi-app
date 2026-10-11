@@ -39,6 +39,17 @@ import { HelpersBoard } from './HelpersBoard';
 import { countThanks, ResultsSwitch, type ResultsTab } from './ResultsSwitch';
 import { getConsensusPool, getSessionState } from '../lib/session';
 import { boardPercent } from '../lib/boardGeometry';
+import { HandStatus } from './HandStatus';
+import { handStatus } from '../lib/flows/handFlow';
+import {
+	drawMore,
+	handFor,
+	isLotteryActive,
+	parentIdOf,
+	poolExhausted,
+	visibleStationNotes,
+} from '../lib/hands';
+import { AGORA_LOTTERY } from '@freedi/shared-types';
 
 export interface VillageCommunitySource extends NoteNewsSource {
 	notes: (item: AgoraStagePlanItem) => AgoraProposal[];
@@ -123,6 +134,22 @@ export function stationNotes(item: AgoraStagePlanItem): AgoraProposal[] {
 				: []
 	).filter((p) => !p.hidden);
 }
+/** The hand line under a dealt board: progress, what comes next, "draw more" */
+function handLine(a: VillageCommunityAttrs, item: AgoraStagePlanItem): m.Children {
+	const parentId = parentIdOf(a.session, item);
+	const hand = handFor(parentId);
+	const exhausted = poolExhausted(parentId);
+
+	return m(HandStatus, {
+		status: handStatus(hand, new Set(Object.keys(getDeliberationState().myRatings))),
+		waiting: hand.length < AGORA_LOTTERY.HAND_SIZE && !exhausted,
+		exhausted,
+		onDrawMore: () => {
+			if (parentId) void drawMore(parentId);
+		},
+	});
+}
+
 export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 	type Panel = 'none' | 'notes' | 'scoreboard';
 	let panel: Panel = 'none';
@@ -333,7 +360,9 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 		},
 		view({ attrs: a }) {
 			const data = a.source ?? {
-				notes: stationNotes,
+				// A student's board is their hand when the class is large (lib/hands.ts);
+				// the teacher watching read-only sees every note
+				notes: a.readOnly ? stationNotes : visibleStationNotes,
 				...liveNoteNews,
 				renderThread: (props: ThreadChatAttrs) => m(ThreadChat, props),
 			};
@@ -644,6 +673,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 															),
 														])
 													: null,
+												canRate && item && isLotteryActive() ? handLine(a, item) : null,
 												!notes.length ? m('p', t('village.board.empty')) : null,
 											],
 							],
