@@ -36,6 +36,7 @@ import {
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { trackWrite, clearWriteTracking } from './confirmedWrite';
+import { assertCleanLanguage } from './language';
 import { getUserState } from './user';
 import { getSessionState } from './session';
 import { emit } from './events';
@@ -473,6 +474,12 @@ export async function submitProposal(
 ): Promise<void> {
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
+	// The gate first: a refused text never reaches Firestore (lib/language.ts)
+	await assertCleanLanguage({
+		sessionId: session.sessionId,
+		text,
+		statementId: existingProposalId,
+	});
 
 	if (existingProposalId) {
 		await trackWrite(
@@ -518,6 +525,7 @@ export async function createProposal(
 ): Promise<void> {
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
+	await assertCleanLanguage({ sessionId: session.sessionId, text });
 	await setDoc(
 		doc(db, Collections.statements, proposalId),
 		buildProposalStatement(session, proposalId, user.uid, anonName, text),
@@ -548,6 +556,7 @@ export async function saveAnswer(
 	if (!user) throw new Error('Not authenticated');
 	if (!item.statementId) throw new Error('Question item has no statement');
 	const statementId = answerStatementId(session.sessionId, user.uid, item.itemId);
+	await assertCleanLanguage({ sessionId: session.sessionId, text, statementId });
 	await trackWrite(
 		'question.saving_answer',
 		setDoc(
@@ -667,6 +676,11 @@ export async function submitThreadMessage(
 	) {
 		throw new Error('Too many open suggestions on this proposal');
 	}
+	await assertCleanLanguage({
+		sessionId: session.sessionId,
+		text,
+		statementId: proposal.statementId,
+	});
 	const newRef = doc(collection(db, Collections.statements));
 
 	await trackWrite(

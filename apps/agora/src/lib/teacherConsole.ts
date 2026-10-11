@@ -132,11 +132,15 @@ function readSeenMap(): Record<string, number> {
 	}
 }
 
-/** Replies from this student the teacher has not yet opened */
+/**
+ * Lines the teacher has not yet opened: the student's replies, and the
+ * language gate's notices filed on this student (`from: 'system'`) — a
+ * refused slur is news the teacher owes a look as much as a reply is.
+ */
 export function unreadRepliesFor(studentUid: string): number {
 	const seen = readSeenMap()[studentUid] ?? 0;
 
-	return threadFor(studentUid).filter((line) => line.from === 'student' && line.createdAt > seen)
+	return threadFor(studentUid).filter((line) => line.from !== 'teacher' && line.createdAt > seen)
 		.length;
 }
 

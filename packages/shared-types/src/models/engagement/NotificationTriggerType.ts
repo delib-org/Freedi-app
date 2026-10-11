@@ -39,4 +39,6 @@ export enum NotificationTriggerType {
 	AGORA_TEACHER_RESTORED = 'agora_teacher_restored',
 	/** The teacher rewrote part of this student's text */
 	AGORA_TEACHER_EDITED = 'agora_teacher_edited',
+	/** The language check refused this student's text (client-raised toast; no doc) */
+	AGORA_LANGUAGE_FLAGGED = 'agora_language_flagged',
 }

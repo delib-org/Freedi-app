@@ -1577,6 +1577,15 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_hidden': 'המורה הוריד טקסט שכתבתם',
 		'toast.teacher_restored': 'המורה החזיר את הטקסט שלכם',
 		'toast.teacher_edited': 'המורה ניסח מחדש את הטקסט שלכם',
+
+		// The language gate: a refused text, what it cost, and the teacher's count
+		'language.flagged': 'הבינה המלאכותית זיהתה שפה פוגענית, ולכן הטקסט לא נשמר. ירדו לכם {{n}} מטבעות — נסחו מחדש בשפה מכבדת.',
+		'language.flagged_no_coins': 'הבינה המלאכותית זיהתה שפה פוגענית, ולכן הטקסט לא נשמר. נסחו מחדש בשפה מכבדת.',
+		'language.notice_title': 'נא להשתמש בשפה מכבדת',
+		'language.notice_body': 'הטקסט הזה לא פורסם כי זוהתה בו שפה פוגענית, וירדו עליו מטבעות. המורה רואה את זה.',
+		'toast.language_flagged': 'הטקסט לא נשמר — נא להשתמש בשפה מכבדת',
+		'teacher.notice_language': 'הבינה המלאכותית חסמה שפה פוגענית — הטקסט לא פורסם',
+		'teacher.language_strikes': '{{n}} אזהרות שפה',
 	},
 	en: {
 		'village.unavailable': 'The village did not load on this device.',
@@ -3203,6 +3212,15 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_hidden': 'Your teacher took one of your texts down',
 		'toast.teacher_restored': 'Your teacher put your text back',
 		'toast.teacher_edited': 'Your teacher reworded your text',
+
+		// The language gate: a refused text, what it cost, and the teacher's count
+		'language.flagged': 'The AI found disrespectful language, so your text was not saved. {{n}} coins were taken — please rewrite it respectfully.',
+		'language.flagged_no_coins': 'The AI found disrespectful language, so your text was not saved. Please rewrite it respectfully.',
+		'language.notice_title': 'Please use respectful language',
+		'language.notice_body': 'This text was not posted because it contained disrespectful language, and it cost coins. Your teacher can see this.',
+		'toast.language_flagged': 'Not saved — please use respectful language',
+		'teacher.notice_language': 'The AI blocked disrespectful language — the text was not posted',
+		'teacher.language_strikes': '{{n}} language warnings',
 	},
 	ar: {
 		'village.unavailable': 'لم تُحمَّل القرية على هذا الجهاز.',
@@ -4773,6 +4791,15 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_hidden': 'معلمكم أنزل أحد نصوصكم',
 		'toast.teacher_restored': 'معلمكم أعاد نصكم',
 		'toast.teacher_edited': 'معلمكم أعاد صياغة نصكم',
+
+		// The language gate: a refused text, what it cost, and the teacher's count
+		'language.flagged': 'رصد الذكاء الاصطناعي لغة غير لائقة، لذلك لم يُحفظ نصكم. خُصمت {{n}} عملات — أعيدوا الصياغة بلغة محترمة.',
+		'language.flagged_no_coins': 'رصد الذكاء الاصطناعي لغة غير لائقة، لذلك لم يُحفظ نصكم. أعيدوا الصياغة بلغة محترمة.',
+		'language.notice_title': 'الرجاء استخدام لغة محترمة',
+		'language.notice_body': 'لم يُنشر هذا النص لأنه احتوى على لغة غير لائقة، وكلّفكم عملات. معلمكم يرى ذلك.',
+		'toast.language_flagged': 'لم يُحفظ — الرجاء استخدام لغة محترمة',
+		'teacher.notice_language': 'حجب الذكاء الاصطناعي لغة غير لائقة — لم يُنشر النص',
+		'teacher.language_strikes': '{{n}} تنبيهات لغة',
 	},
 	es: {
 		'village.unavailable': 'La aldea no se ha cargado en este dispositivo.',
@@ -6428,6 +6455,15 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_hidden': 'Tu profesor retiró uno de tus textos',
 		'toast.teacher_restored': 'Tu profesor repuso tu texto',
 		'toast.teacher_edited': 'Tu profesor reformuló tu texto',
+
+		// The language gate: a refused text, what it cost, and the teacher's count
+		'language.flagged': 'La IA detectó lenguaje irrespetuoso, así que tu texto no se guardó. Se descontaron {{n}} monedas — reescríbelo con respeto.',
+		'language.flagged_no_coins': 'La IA detectó lenguaje irrespetuoso, así que tu texto no se guardó. Reescríbelo con respeto.',
+		'language.notice_title': 'Usa un lenguaje respetuoso, por favor',
+		'language.notice_body': 'Este texto no se publicó porque contenía lenguaje irrespetuoso, y costó monedas. Tu profesor puede verlo.',
+		'toast.language_flagged': 'No se guardó — usa un lenguaje respetuoso',
+		'teacher.notice_language': 'La IA bloqueó lenguaje irrespetuoso — el texto no se publicó',
+		'teacher.language_strikes': '{{n}} avisos de lenguaje',
 	},
 	de: {
 		'village.unavailable': 'Das Dorf wurde auf diesem Gerät nicht geladen.',
@@ -8101,6 +8137,15 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_hidden': 'Deine Lehrkraft hat einen deiner Texte runtergenommen',
 		'toast.teacher_restored': 'Deine Lehrkraft hat deinen Text zurückgeholt',
 		'toast.teacher_edited': 'Deine Lehrkraft hat deinen Text umformuliert',
+
+		// The language gate: a refused text, what it cost, and the teacher's count
+		'language.flagged': 'Die KI hat respektlose Sprache erkannt, deshalb wurde dein Text nicht gespeichert. {{n}} Münzen wurden abgezogen — formuliere ihn bitte respektvoll um.',
+		'language.flagged_no_coins': 'Die KI hat respektlose Sprache erkannt, deshalb wurde dein Text nicht gespeichert. Formuliere ihn bitte respektvoll um.',
+		'language.notice_title': 'Bitte respektvolle Sprache verwenden',
+		'language.notice_body': 'Dieser Text wurde nicht veröffentlicht, weil er respektlose Sprache enthielt, und hat Münzen gekostet. Deine Lehrkraft sieht das.',
+		'toast.language_flagged': 'Nicht gespeichert — bitte respektvolle Sprache verwenden',
+		'teacher.notice_language': 'Die KI hat respektlose Sprache blockiert — der Text wurde nicht veröffentlicht',
+		'teacher.language_strikes': '{{n}} Sprachwarnungen',
 	},
 	nl: {
 		'village.unavailable': 'Het dorp is op dit apparaat niet geladen.',
@@ -9758,6 +9803,15 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_hidden': 'Je docent heeft een van je teksten weggehaald',
 		'toast.teacher_restored': 'Je docent heeft je tekst teruggezet',
 		'toast.teacher_edited': 'Je docent heeft je tekst geherformuleerd',
+
+		// The language gate: a refused text, what it cost, and the teacher's count
+		'language.flagged': 'De AI vond respectloze taal, dus je tekst is niet opgeslagen. Er zijn {{n}} munten afgetrokken — herschrijf hem respectvol.',
+		'language.flagged_no_coins': 'De AI vond respectloze taal, dus je tekst is niet opgeslagen. Herschrijf hem respectvol.',
+		'language.notice_title': 'Gebruik alsjeblieft respectvolle taal',
+		'language.notice_body': 'Deze tekst is niet geplaatst omdat hij respectloze taal bevatte, en dat heeft munten gekost. Je docent kan dit zien.',
+		'toast.language_flagged': 'Niet opgeslagen — gebruik respectvolle taal',
+		'teacher.notice_language': 'De AI heeft respectloze taal geblokkeerd — de tekst is niet geplaatst',
+		'teacher.language_strikes': '{{n}} taalwaarschuwingen',
 	},
 };
 

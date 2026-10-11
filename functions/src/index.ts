@@ -1298,6 +1298,7 @@ export {
 	agoraTeacherClass,
 	agoraTeacherMessage,
 	agoraModerateStatement,
+	agoraCheckLanguage,
 	agoraSupervisorConsole,
 	agoraTeacherHeartbeat,
 	agoraAdminBackfillTeacherAggregates,

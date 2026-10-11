@@ -125,7 +125,15 @@ export function GameReport(initialVnode: m.Vnode<{ id: string }>): m.Component<{
 										// Unkeyed on purpose: the header row shares this fragment, and
 										// Mithril refuses fragments that mix keyed and unkeyed vnodes.
 										m('.report__table-row', [
-											m('span.report__player', participant.anonName),
+											m('span.report__player', [
+												participant.anonName,
+												(participant.languageStrikes ?? 0) > 0
+													? m(
+															'span.class-panel__strikes',
+															` · ${t('teacher.language_strikes', { n: String(participant.languageStrikes) })}`,
+														)
+													: null,
+											]),
 											m(
 												'span.report__real-name',
 												realNames[participant.userId] ?? t('teacher.no_real_name'),

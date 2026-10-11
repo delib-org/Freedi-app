@@ -21,6 +21,7 @@ import {
 	AgoraProposal,
 	HelpedProposal,
 } from '../lib/proposals';
+import { flaggedNotice, isLanguageFlagged } from '../lib/language';
 import {
 	mergeLateArrivals,
 	orderSquare,
@@ -416,6 +417,9 @@ export function Deliberation(
 
 	let draft = '';
 	let submitting = false;
+	/** The language gate's sentences under my paper and the first desk, or null */
+	let mineNotice: string | null = null;
+	let firstNotice: string | null = null;
 	/** Which stall on the row is unfolded — one at a time, one task at a time */
 	let openStallId = '';
 	/** The stall that just took a suggestion, held for one acknowledgment beat */
@@ -433,6 +437,8 @@ export function Deliberation(
 	let gapPrompt: { proposalId: string; kind: 'gap' | 'keep' } | null = null;
 	let gapDraft = '';
 	let gapSending = false;
+	/** The language gate's sentence under the gap composer, or null */
+	let gapNotice: string | null = null;
 	/** Proposals already offered a prompt this lap — one ask per stall per lap */
 	let gapOffered = new Set<string>();
 	/** Prompts shown this lap — past the cap the square goes quiet (no nagging) */
@@ -530,6 +536,7 @@ export function Deliberation(
 						gapDraft = (event.target as HTMLTextAreaElement).value;
 					},
 				}),
+				gapNotice ? m('p.join__error', { role: 'alert' }, gapNotice) : null,
 				m('.gap-prompt__actions', [
 					m(
 						'button.btn.btn--primary',
@@ -537,6 +544,7 @@ export function Deliberation(
 							disabled: !ready || gapSending,
 							onclick: () => {
 								gapSending = true;
+								gapNotice = null;
 								submitSuggestion(
 									live,
 									proposal,
@@ -556,6 +564,11 @@ export function Deliberation(
 										gapDraft = '';
 									})
 									.catch((error: unknown) => {
+										if (isLanguageFlagged(error)) {
+											gapNotice = flaggedNotice(error);
+
+											return;
+										}
 										console.error('[Delib] Gap-prompt suggestion failed:', error);
 									})
 									.finally(() => {
@@ -1209,6 +1222,7 @@ export function Deliberation(
 				disabled: !changed || submitting,
 				onclick: () => {
 					submitting = true;
+					mineNotice = null;
 					submitProposal(
 						live,
 						initialVnode.attrs.myParticipant.anonName,
@@ -1228,6 +1242,12 @@ export function Deliberation(
 							// achievement and drowned out the real moments.
 						})
 						.catch((error: unknown) => {
+							// Refused by the language gate: the draft stays, the paper says why
+							if (isLanguageFlagged(error)) {
+								mineNotice = flaggedNotice(error);
+
+								return;
+							}
 							console.error('[Delib] Update proposal failed:', error);
 						})
 						.finally(() => {
@@ -1300,6 +1320,7 @@ export function Deliberation(
 					m(Icon, { name: 'edit', size: 18 }),
 				),
 			]),
+			mineNotice ? m('p.join__error', { role: 'alert' }, mineNotice) : null,
 			m(
 				'.my-screen__paper-foot',
 				// Resting, the save is a STATUS and not a control: a greyed button
@@ -2597,6 +2618,7 @@ export function Deliberation(
 											onclick: () => {
 												submitting = true;
 												firstSaveSlow = false;
+												firstNotice = null;
 												const text = draft.trim();
 												// A write that never lands never rejects either — it
 												// waits in the queue forever. Only a clock can tell
@@ -2620,6 +2642,13 @@ export function Deliberation(
 													})
 													.catch((error: unknown) => {
 														window.clearTimeout(firstSaveTimer);
+														// Refused, not stuck: the draft stays on the desk
+														// and the desk says why — no reload offered
+														if (isLanguageFlagged(error)) {
+															firstNotice = flaggedNotice(error);
+
+															return;
+														}
 														// A rejection is the same news as a hang, and it
 														// arrives sooner: say it now rather than at 8s
 														firstSaveSlow = true;
@@ -2644,6 +2673,7 @@ export function Deliberation(
 												: iconLabel('edit', t('delib.write_first')),
 									),
 								]),
+								firstNotice ? m('p.join__error', { role: 'alert' }, firstNotice) : null,
 								// The stuck-write escape hatch. Reloading is the honest fix
 								// and the only safe one: the queued write lives in memory,
 								// so a fresh page drops it instead of racing a duplicate —

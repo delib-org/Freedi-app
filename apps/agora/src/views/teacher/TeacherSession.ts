@@ -773,6 +773,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							studentUid: drawerUid,
 							anonName: drawerParticipant.anonName,
 							realName: realNameOf(drawerUid),
+							languageStrikes: drawerParticipant.languageStrikes,
 							aboutStatementId: drawerAbout,
 							onClose: () => {
 								drawerUid = null;

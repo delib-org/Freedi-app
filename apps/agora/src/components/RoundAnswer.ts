@@ -11,6 +11,8 @@ export interface RoundAnswerAttrs {
 	editing: boolean;
 	saving: boolean;
 	saveFailed: boolean;
+	/** Said instead of the generic error when the language gate refused the text */
+	saveNotice?: string;
 	changed: boolean;
 	onEdit: () => void;
 	onCancel: () => void;
@@ -57,7 +59,9 @@ export const RoundAnswer: m.Component<RoundAnswerAttrs> = {
 				oninput: (event: InputEvent) => attrs.onInput((event.target as HTMLTextAreaElement).value),
 			}),
 			stalledBanner(),
-			saveFailed ? m('p.join__error', { role: 'alert' }, t('common.error')) : null,
+			saveFailed
+				? m('p.join__error', { role: 'alert' }, attrs.saveNotice ?? t('common.error'))
+				: null,
 			m('.round__actions', [
 				m(
 					'button.btn.btn--primary',

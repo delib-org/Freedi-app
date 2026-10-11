@@ -165,6 +165,15 @@ export const AGORA_POINTS = {
 	 * these: the rounds pay the author who was appreciated.
 	 */
 	ROUND_APPRECIATION: 1,
+	/**
+	 * Coins taken when the language check refuses a note, an answer or a
+	 * thread message (slurs, insults, threats — see `agoraCheckLanguage`).
+	 * The text is never posted, so the cost is the only consequence the
+	 * student feels at once; the teacher sees the count. Priced below the
+	 * first draft (+3) and at the rung of a landed idea: a lapse should hurt,
+	 * not wipe a lesson's work. Balances floor at 0.
+	 */
+	LANGUAGE_PENALTY: 2,
 } as const;
 
 export const AGORA_ANTI_GAMING = {

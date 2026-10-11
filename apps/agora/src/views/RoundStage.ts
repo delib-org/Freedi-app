@@ -15,6 +15,7 @@ import {
 	saveAnswer,
 	type AgoraProposal,
 } from '../lib/proposals';
+import { flaggedNotice, isLanguageFlagged } from '../lib/language';
 import { reportStageProgress } from '../lib/session';
 import { blankPen, penFor, typedInto, type Pen } from '../lib/flows/penState';
 import { requestTeacherFocus } from '../lib/helpedFocus';
@@ -105,6 +106,8 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 	let saving = false;
 	let editing = false;
 	let saveFailed = false;
+	/** Why the save failed when the language gate refused it; undefined otherwise */
+	let saveNotice: string | undefined;
 	/** The dealt ids, held for the life of the screen (and in sessionStorage) */
 	let deal: string[] | null = null;
 	let dealFor = '';
@@ -217,12 +220,17 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 				if (!text || saving || closed) return;
 				saving = true;
 				saveFailed = false;
+				saveNotice = undefined;
 				m.redraw();
 				try {
 					await saveAnswer(session, item, myParticipant.anonName, text);
 					editing = false;
 				} catch (error) {
-					console.error('[Round] Saving the text failed:', error);
+					if (isLanguageFlagged(error)) {
+						saveNotice = flaggedNotice(error);
+					} else {
+						console.error('[Round] Saving the text failed:', error);
+					}
 					saveFailed = true;
 				} finally {
 					saving = false;
@@ -369,6 +377,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 										editing,
 										saving,
 										saveFailed,
+										saveNotice,
 										changed,
 										onEdit: () => {
 											editing = true;
@@ -377,6 +386,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 											pen = typedInto(pen, mine?.statement ?? '');
 											editing = false;
 											saveFailed = false;
+											saveNotice = undefined;
 										},
 										onInput: (text: string) => {
 											pen = typedInto(pen, text);

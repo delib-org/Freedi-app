@@ -277,6 +277,33 @@ export interface ModerateStatementResponse {
 }
 
 /**
+ * `agoraCheckLanguage` — the gate every student text passes before the
+ * client writes it. A refusal has already been charged and filed by the time
+ * the response arrives: the strike is on the participant doc, the words are
+ * on the private thread, and the client's only job is to keep the draft in
+ * the box and say why.
+ */
+export interface CheckLanguageRequest {
+	sessionId: string;
+	text: string;
+	/** An edit of an existing note / answer: the statement the text was for */
+	statementId?: string;
+}
+
+export type CheckLanguageResponse =
+	| { ok: true }
+	| {
+			ok: false;
+			reason: 'language';
+			/** This student's strikes in the session, this one included */
+			strikes: number;
+			/** Coins actually taken (less than the penalty when the balance floored) */
+			deducted: number;
+			/** The balance after the deduction */
+			pointsTotal: number;
+	  };
+
+/**
  * `agoraRewordQuestion` — the session teacher makes the question in front of
  * the room clearer, while the room is looking at it.
  *

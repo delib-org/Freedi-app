@@ -39,6 +39,18 @@ function moderationLine(line: AgoraTeacherMessage): m.Children {
 	]);
 }
 
+/** The language gate's notice: the refused words, and what they cost */
+function languageLine(line: AgoraTeacherMessage): m.Children {
+	return m('.chat-system.teacher-thread__notice', { key: line.messageId }, [
+		m('.chat-system__head', [
+			m('span.chat-system__title', t('language.notice_title')),
+			m('span.chat-system__time', formatMessageTime(line.createdAt)),
+		]),
+		m('p.chat-system__text', t('language.notice_body')),
+		line.removedText ? m('blockquote.teacher-thread__removed', line.removedText) : null,
+	]);
+}
+
 /**
  * The private thread with the teacher, as a sheet over whatever stage the
  * student is on — a note about language has to be readable on the scene
@@ -76,6 +88,7 @@ export function TeacherThreadSheet(): m.Component<TeacherThreadSheetAttrs> {
 	}
 
 	function line(entry: AgoraTeacherMessage): m.Children {
+		if (entry.kind === 'language') return languageLine(entry);
 		if (entry.kind === 'moderation') return moderationLine(entry);
 		const mine = entry.from === 'student';
 

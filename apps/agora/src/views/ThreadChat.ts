@@ -11,6 +11,7 @@ import {
 	submitProposal,
 	submitThreadMessage,
 } from '../lib/proposals';
+import { flaggedNotice, isLanguageFlagged } from '../lib/language';
 import { celebrate } from '../lib/celebration';
 import { SLOW_AFTER_MS } from '../lib/confirmedWrite';
 import { stalledBanner } from '../components/StalledBanner';
@@ -204,6 +205,9 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	let busy = false;
 	/** The last send rejected — the words are still in the box, say so */
 	let sendFailed = false;
+	/** The language gate's sentence under the composer / the editor, or null */
+	let sendNotice: string | null = null;
+	let editNotice: string | null = null;
 	/** Un-pins `busy` if a send is still in the air when the stall clock fires */
 	let stallTimer: number | undefined;
 	/** Message count the scroller last saw — a new message pins it to the bottom */
@@ -330,6 +334,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					editDraft = (event.target as HTMLTextAreaElement).value;
 				},
 			}),
+			editNotice ? m('p.join__error', { role: 'alert' }, editNotice) : null,
 			m('.delib__actions.delib__actions--tight', [
 				m(
 					'button.btn.btn--ghost.btn--sm',
@@ -347,6 +352,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 						disabled: !changed || savingEdit,
 						onclick: () => {
 							savingEdit = true;
+							editNotice = null;
 							submitProposal(session, anonName, text, proposal.statementId)
 								.then(() => {
 									editing = false;
@@ -359,6 +365,12 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 									acknowledgeSave();
 								})
 								.catch((error: unknown) => {
+									// Refused by the language gate: the draft stays, the box says why
+									if (isLanguageFlagged(error)) {
+										editNotice = flaggedNotice(error);
+
+										return;
+									}
 									console.error('[Chat] Update proposal failed:', error);
 								})
 								.finally(() => {
@@ -998,7 +1010,11 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					// A send still in the air after the stall clock — the words are
 					// safe in the box below, and this line says why nothing moved
 					stalledBanner(),
-					sendFailed ? m('p.join__error', { role: 'alert' }, t('delib.send_failed')) : null,
+					sendNotice
+						? m('p.join__error', { role: 'alert' }, sendNotice)
+						: sendFailed
+							? m('p.join__error', { role: 'alert' }, t('delib.send_failed'))
+							: null,
 					m('.chat-page__composer', [
 						vnode.attrs.paperLabel
 							? m(
@@ -1037,6 +1053,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 									const text = draft.trim();
 									busy = true;
 									sendFailed = false;
+									sendNotice = null;
 									window.clearTimeout(stallTimer);
 									stallTimer = window.setTimeout(() => {
 										busy = false;
@@ -1053,6 +1070,11 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 											}
 										})
 										.catch((error: unknown) => {
+											if (isLanguageFlagged(error)) {
+												sendNotice = flaggedNotice(error);
+
+												return;
+											}
 											sendFailed = true;
 											console.error('[Chat] Thread message failed:', error);
 										})

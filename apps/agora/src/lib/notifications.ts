@@ -207,6 +207,12 @@ export function subscribeNotificationDetectors(): void {
 	on('challenge:changed', ({ userId, phase }) => {
 		announceChallengePhase(userId, phase);
 	});
+
+	// A refused text: the box already says why, the thread keeps the words —
+	// the toast is the door to the teacher's note about it.
+	on('language:flagged', () => {
+		pushLocalToast(NotificationTriggerType.AGORA_LANGUAGE_FLAGGED, { kind: 'teacher' });
+	});
 }
 
 /**

@@ -20,6 +20,8 @@ export interface StudentThreadDrawerAttrs {
 	studentUid: string;
 	anonName: string;
 	realName?: string;
+	/** Times the language gate refused this student's text in this session */
+	languageStrikes?: number;
 	/** A note about one text: the row the teacher pressed "message" on */
 	aboutStatementId?: string;
 	onClose: () => void;
@@ -62,6 +64,16 @@ export function StudentThreadDrawer(): m.Component<StudentThreadDrawerAttrs> {
 	}
 
 	function line(entry: AgoraTeacherMessage): m.Children {
+		// The language gate's notice: what the student tried to post, refused
+		if (entry.kind === 'language') {
+			return m('.chat-system', { key: entry.messageId }, [
+				m('.chat-system__head', [
+					m('span.chat-system__title', t('teacher.notice_language')),
+					m('span.chat-system__time', formatMessageTime(entry.createdAt)),
+				]),
+				entry.removedText ? m('blockquote.teacher-thread__removed', entry.removedText) : null,
+			]);
+		}
 		if (entry.kind === 'moderation') {
 			const key =
 				entry.moderation === 'hidden'
@@ -136,6 +148,12 @@ export function StudentThreadDrawer(): m.Component<StudentThreadDrawerAttrs> {
 											'span.class-panel__real.class-panel__real--none',
 											` · ${t('teacher.no_real_name')}`,
 										),
+								(attrs.languageStrikes ?? 0) > 0
+									? m(
+											'span.class-panel__strikes',
+											` · ${t('teacher.language_strikes', { n: String(attrs.languageStrikes) })}`,
+										)
+									: null,
 							]),
 							m(
 								'button.btn.btn--ghost.btn--sm',

@@ -497,6 +497,55 @@ journey" on the start screen, one of them required.
   "vnodes must either all have keys or none" and the dashboard sits on a spinner
   for ever. Nest the array instead of spreading it.
 
+## Language gate (2026-10-11) — the AI reads every student text before it is written
+
+**NOT deployed.** `agoraCheckLanguage` (functions/src/agora/fn_agoraCheckLanguage.ts)
+is a callable the client asks BEFORE every student write — the note
+(`submitProposal`/`createProposal`), a question-stage answer (`saveAnswer`), a
+thread message or improvement idea (`submitThreadMessage`), all in
+`lib/proposals.ts` via `lib/language.ts::assertCleanLanguage`. The detector is
+the existing `containsBadLanguage` in `fn_profanityChecker.ts` (multi-language
+slurs/insults/threats; political opinions allowed; fails OPEN). A clean verdict
+→ the write happens as before. A refusal → in the same call the server:
+
+1. takes `AGORA_POINTS.LANGUAGE_PENALTY` (2) coins off the participant
+   (`points.total` floored at 0, `points.penalties` accumulates), bumps
+   `languageStrikes` and `lastLanguageStrikeAt` — both rules-pinned, like
+   `points`;
+2. files the words on the private teacher thread as `from: 'system'`,
+   `kind: 'language'`, `removedText` = the text, `aboutStatementId` for an
+   edit — the ONLY copy of the text; `statements` never sees it;
+3. returns `{ ok: false, reason: 'language', strikes, deducted, pointsTotal }`.
+
+Client: `LanguageFlaggedError` keeps the draft in the box and the view says
+why (`language.flagged` / `language.flagged_no_coins`) instead of "saving
+failed" — seven sites: ThreadChat (edit + composer), Deliberation (first
+desk, my paper, gap composer), QuestionStage, RoundStage/RoundAnswer
+(`saveNotice`). The first desk must NOT show the stuck-write reload on a
+refusal (it checks `isLanguageFlagged` first). A `language:flagged` event →
+`pushLocalToast(agora_language_flagged, {kind:'teacher'})`; the student's
+TeacherThreadSheet renders the `language` line (`language.notice_*`).
+Teacher: `unreadRepliesFor` now counts `from !== 'teacher'` so a strike raises
+the badge; ClassPanel rows, StudentThreadDrawer head and GameReport show
+`teacher.language_strikes` (`.class-panel__strikes`, `--danger-ink` text);
+the drawer renders the line as `teacher.notice_language` + quote.
+
+Gotchas: the callable fails open on infrastructure errors and the client
+fails open when the callable is unreachable — a missing function in an
+emulator means NO gate, silently (watch for `[Language] Check unavailable`).
+The gate adds the model's latency to every save (first-desk stuck banner at
+8 s can fire on a cold start — a reload simply retries). A student writing to
+Firestore outside the app skips the gate; the teacher's take-down is the
+backstop. Old clients drop `from: 'system'` lines until redeployed (strict
+parse) — ship hosting with the function.
+
+**Verify:** shared-types `agoraLanguage.test.ts`, functions
+`agora/__tests__/checkLanguage.test.ts`, agora `lib/__tests__/language.test.ts`.
+Not yet browser-tested against a live model.
+
+**Deploy:** shared-types build + functions repack → `deploy:rules:prod` →
+`deploy:f:prod -- agoraCheckLanguage` → `deploy:agora`.
+
 ## Teacher console (2026-09-03) — names, moderation, notes, projector
 
 Built on `work/2026-09-03`, **NOT deployed**. Four things a teacher can now do

@@ -13,6 +13,7 @@ import {
 	saveAnswer,
 	type AgoraProposal,
 } from '../lib/proposals';
+import { flaggedNotice, isLanguageFlagged } from '../lib/language';
 import { reportStageProgress } from '../lib/session';
 import { blankPen, penFor, typedInto, type Pen } from '../lib/flows/penState';
 import { requestTeacherFocus } from '../lib/helpedFocus';
@@ -81,6 +82,8 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 	let pen: Pen = blankPen;
 	let saving = false;
 	let saveFailed = false;
+	/** The language gate's sentence under the box, or null */
+	let saveNotice: string | null = null;
 
 	return {
 		view(vnode) {
@@ -122,13 +125,19 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 				if (!text || saving || closed) return;
 				saving = true;
 				saveFailed = false;
+				saveNotice = null;
 				m.redraw();
 				try {
 					await saveAnswer(session, item, myParticipant.anonName, text);
 					if (live) reportStageProgress(session.sessionId, userId, item.stage, 1, 1);
 				} catch (error) {
-					console.error('[Question] Saving the answer failed:', error);
-					saveFailed = true;
+					if (isLanguageFlagged(error)) {
+						// Refused, not failed: the words stay in the box, with the reason
+						saveNotice = flaggedNotice(error);
+					} else {
+						console.error('[Question] Saving the answer failed:', error);
+						saveFailed = true;
+					}
 				} finally {
 					saving = false;
 					m.redraw();
@@ -181,7 +190,11 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 											},
 										}),
 										stalledBanner(),
-										saveFailed ? m('p.join__error', t('common.error')) : null,
+										saveNotice
+											? m('p.join__error', { role: 'alert' }, saveNotice)
+											: saveFailed
+												? m('p.join__error', t('common.error'))
+												: null,
 										m(
 											'button.btn.btn--primary.btn--full',
 											{

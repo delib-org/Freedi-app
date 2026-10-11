@@ -138,6 +138,17 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 												'span.roster__stat--points',
 												t('roster.points', { points: String(participant.points.total) }),
 											),
+											(participant.languageStrikes ?? 0) > 0
+												? [
+														' · ',
+														m(
+															'span.class-panel__strikes',
+															t('teacher.language_strikes', {
+																n: String(participant.languageStrikes),
+															}),
+														),
+													]
+												: null,
 											idle > IDLE_AFTER_MS && current?.stage !== AgoraStage.lobby
 												? [
 														' · ',

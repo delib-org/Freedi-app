@@ -218,6 +218,8 @@ export type {
 } from './agoraCivicCallables';
 
 export type { AgoraValueScore, AgoraPoints, AgoraParticipant } from './agoraParticipant';
+export type { LanguageStrikeOutcome } from './agoraLanguage';
+export { applyLanguageStrike } from './agoraLanguage';
 export {
 	AgoraValueScoreSchema,
 	AgoraPointsSchema,
@@ -416,6 +418,8 @@ export type {
 	TeacherMessageResponse,
 	ModerateStatementRequest,
 	ModerateStatementResponse,
+	CheckLanguageRequest,
+	CheckLanguageResponse,
 	RewordQuestionRequest,
 	RewordQuestionResponse,
 	TeacherHeartbeatRequest,

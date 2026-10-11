@@ -212,6 +212,13 @@ service cloud.firestore {
                          resource.data.get('creditedRatings', -1) &&
                        request.resource.data.get('firstProposalAwardedAt', -1) ==
                          resource.data.get('firstProposalAwardedAt', -1) &&
+                       // The language-strike ledger is agoraCheckLanguage's: a
+                       // client that could clear it would erase what the
+                       // teacher is shown.
+                       request.resource.data.get('languageStrikes', 0) ==
+                         resource.data.get('languageStrikes', 0) &&
+                       request.resource.data.get('lastLanguageStrikeAt', -1) ==
+                         resource.data.get('lastLanguageStrikeAt', -1) &&
                        // The round-appreciation ledger (which likes already
                        // paid this author) is the trigger's; a client that
                        // could clear a key could be paid for the same like twice.

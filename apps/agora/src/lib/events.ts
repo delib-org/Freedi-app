@@ -35,6 +35,12 @@ export interface AgoraEvents {
 		phase: ChallengePhase;
 		turnIndex: number;
 	};
+	/**
+	 * The language gate refused a text. Charged and filed server-side already;
+	 * announced so the toast is policy in notifications.ts, not a side effect
+	 * of the write path.
+	 */
+	'language:flagged': { sessionId: string; strikes: number; deducted: number };
 }
 
 type Handler<K extends keyof AgoraEvents> = (payload: AgoraEvents[K]) => void;
