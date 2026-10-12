@@ -543,3 +543,57 @@
 		font-weight: 400;
 	}
 }
+
+// --- the move-class sheet's arrivals: who reached the station (2026-10-12) ---
+.move-class__arrivals {
+	display: grid;
+	gap: var(--space-xs);
+	padding: var(--space-sm) var(--space-md);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--bg-card);
+
+	&--all {
+		border-color: var(--success);
+	}
+
+	&-row {
+		display: grid;
+		gap: var(--space-xs);
+	}
+
+	&-count {
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	&-bar {
+		display: block;
+		height: 6px;
+		border-radius: 999px;
+		background: var(--border-subtle);
+		overflow: hidden;
+	}
+
+	&-fill {
+		display: block;
+		height: 100%;
+		border-radius: inherit;
+		background: var(--success);
+		transition: width var(--motion-base) ease;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
+	}
+}
+
+.move-class__waiting {
+	margin: 0;
+	color: var(--text-secondary);
+	font-size: var(--font-size-sm);
+}
+
+.move-class__recall {
+	justify-self: start;
+}

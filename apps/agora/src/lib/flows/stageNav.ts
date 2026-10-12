@@ -21,7 +21,12 @@ export const INITIAL_STAGE_NAV: StageNavState = { viewingItemId: null };
 
 export type StageNavEvent =
 	| { kind: 'select'; itemId: string }
-	| { kind: 'session-advanced' }
+	/**
+	 * The teacher opened a new station. `led`: the room walks as one — a
+	 * student who had stepped back is carried along too. Not led: a student
+	 * catching up keeps their station.
+	 */
+	| { kind: 'session-advanced'; led?: boolean }
 	| { kind: 'restore'; raw: string | null };
 
 function openedIndex(
@@ -49,6 +54,7 @@ export function stageNavReduce(
 		}
 		case 'session-advanced': {
 			if (state.viewingItemId === null) return state;
+			if (event.led) return INITIAL_STAGE_NAV;
 			const currentStage = plan[currentIndex]?.stage;
 			if (currentStage === AgoraStage.results || currentStage === AgoraStage.ended) {
 				return INITIAL_STAGE_NAV;

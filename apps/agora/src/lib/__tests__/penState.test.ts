@@ -61,3 +61,34 @@ describe('penState', () => {
 		expect(back.text).toBe(story.statement);
 	});
 });
+
+describe('penState — parking unsent words when the teacher calls', () => {
+	it('keeps a half-written first answer while the student is walked away, and brings it back', () => {
+		const typing = typedInto(penFor(blankPen, 'item-story'), 'half a sen');
+
+		const elsewhere = penFor(typing, 'item-needs');
+		expect(elsewhere.text).toBe('');
+		expect(elsewhere.parked).toEqual({ 'item-story': 'half a sen' });
+
+		const back = penFor(elsewhere, 'item-story');
+		expect(back.text).toBe('half a sen');
+		expect(back.parked).toBeUndefined();
+	});
+
+	it('parks nothing for an empty box, and carries the park across several moves', () => {
+		const empty = penFor(penFor(blankPen, 'item-story'), 'item-needs');
+		expect(empty.parked).toBeUndefined();
+
+		const typed = typedInto(penFor(blankPen, 'item-story'), 'my story');
+		const atNeeds = typedInto(penFor(typed, 'item-needs'), 'my need');
+		const atDelib = penFor(atNeeds, 'item-delib');
+		expect(atDelib.parked).toEqual({ 'item-story': 'my story', 'item-needs': 'my need' });
+		expect(penFor(atDelib, 'item-needs').text).toBe('my need');
+	});
+
+	it('a saved answer still wins over anything parked for that question', () => {
+		const typed = typedInto(penFor(blankPen, 'item-story'), 'draft');
+		const elsewhere = penFor(typed, 'item-needs');
+		expect(penFor(elsewhere, 'item-story', story).text).toBe(story.statement);
+	});
+});

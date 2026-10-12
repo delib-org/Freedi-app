@@ -1666,6 +1666,18 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.device.keep_hidden': 'להשאיר מוסתר',
 		'teacher.bar.confirm_next': 'הקישו שוב: {{label}}',
 		// --- end teacher class view ---
+		// --- The teacher's call moves the class (2026-10-12) — keys added at the end of this fence ---
+		'call.card_kicker': 'המורה קורא/ת לכולם',
+		'call.typing_title': 'המורה קורא/ת לכולם אל {{place}}',
+		'call.typing_hint': 'אפשר לסיים את המשפט — הולכים לשם בעוד {{s}} שניות. הטקסט שלך נשמר.',
+		'call.more_time': 'עוד רגע',
+		'call.go_now': 'ללכת עכשיו',
+		'teacher.move.arrived': '{{n}} מתוך {{total}} הגיעו אל {{station}}',
+		'teacher.move.all_arrived': 'כל הכיתה הגיעה אל {{station}}',
+		'teacher.move.waiting_for': 'עדיין לא שם: {{names}}',
+		'teacher.move.call_again': 'לקרוא שוב',
+		'teacher.bar.arrived': '{{n}}/{{total}} הגיעו אל {{station}}',
+		// --- end teacher's call ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
 		'hand.line': 'דירגתם {{n}} מתוך {{total}} הפתקים שקיבלתם',
@@ -3393,6 +3405,18 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.device.keep_hidden': 'Keep hidden',
 		'teacher.bar.confirm_next': 'Tap again: {{label}}',
 		// --- end teacher class view ---
+		// --- The teacher's call moves the class (2026-10-12) — keys added at the end of this fence ---
+		'call.card_kicker': 'The teacher is calling everyone',
+		'call.typing_title': 'The teacher is calling everyone to {{place}}',
+		'call.typing_hint': 'Finish your sentence — you walk there in {{s}} s. Your text is kept.',
+		'call.more_time': 'One more moment',
+		'call.go_now': 'Go now',
+		'teacher.move.arrived': '{{n}} of {{total}} arrived at {{station}}',
+		'teacher.move.all_arrived': 'Everyone is at {{station}}',
+		'teacher.move.waiting_for': 'Not there yet: {{names}}',
+		'teacher.move.call_again': 'Call again',
+		'teacher.bar.arrived': '{{n}}/{{total}} arrived at {{station}}',
+		// --- end teacher's call ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
 		'hand.line': 'You rated {{n}} of the {{total}} notes you were dealt',
@@ -5061,6 +5085,18 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.device.keep_hidden': 'إبقاؤها مخفية',
 		'teacher.bar.confirm_next': 'اضغطوا مرة أخرى: {{label}}',
 		// --- end teacher class view ---
+		// --- The teacher's call moves the class (2026-10-12) — keys added at the end of this fence ---
+		'call.card_kicker': 'المعلم يدعو الجميع',
+		'call.typing_title': 'المعلم يدعو الجميع إلى {{place}}',
+		'call.typing_hint': 'أكملوا الجملة — ستذهبون إلى هناك خلال {{s}} ثانية. النص محفوظ.',
+		'call.more_time': 'لحظة أخرى',
+		'call.go_now': 'الذهاب الآن',
+		'teacher.move.arrived': 'وصل {{n}} من {{total}} إلى {{station}}',
+		'teacher.move.all_arrived': 'الجميع في {{station}}',
+		'teacher.move.waiting_for': 'لم يصلوا بعد: {{names}}',
+		'teacher.move.call_again': 'دعوة مرة أخرى',
+		'teacher.bar.arrived': 'وصل {{n}}/{{total}} إلى {{station}}',
+		// --- end teacher's call ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
 		'hand.line': 'قيّمتم {{n}} من أصل {{total}} ملاحظات حصلتم عليها',
@@ -6817,6 +6853,18 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.device.keep_hidden': 'Mantener ocultos',
 		'teacher.bar.confirm_next': 'Toca otra vez: {{label}}',
 		// --- end teacher class view ---
+		// --- The teacher's call moves the class (2026-10-12) — keys added at the end of this fence ---
+		'call.card_kicker': 'El docente llama a todos',
+		'call.typing_title': 'El docente llama a todos a {{place}}',
+		'call.typing_hint': 'Termina tu frase: vas allí en {{s}} s. Tu texto se guarda.',
+		'call.more_time': 'Un momento más',
+		'call.go_now': 'Ir ahora',
+		'teacher.move.arrived': '{{n}} de {{total}} llegaron a {{station}}',
+		'teacher.move.all_arrived': 'Todos están en {{station}}',
+		'teacher.move.waiting_for': 'Aún no llegan: {{names}}',
+		'teacher.move.call_again': 'Llamar de nuevo',
+		'teacher.bar.arrived': '{{n}}/{{total}} llegaron a {{station}}',
+		// --- end teacher's call ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
 		'hand.line': 'Valoraste {{n}} de las {{total}} notas que te tocaron',
@@ -8592,6 +8640,19 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.device.keep_hidden': 'Verborgen lassen',
 		'teacher.bar.confirm_next': 'Noch einmal tippen: {{label}}',
 		// --- end teacher class view ---
+		// --- The teacher's call moves the class (2026-10-12) — keys added at the end of this fence ---
+		'call.card_kicker': 'Die Lehrkraft ruft alle',
+		'call.typing_title': 'Die Lehrkraft ruft alle zu {{place}}',
+		'call.typing_hint':
+			'Beende deinen Satz – in {{s}} s geht es dorthin. Dein Text bleibt erhalten.',
+		'call.more_time': 'Noch einen Moment',
+		'call.go_now': 'Jetzt gehen',
+		'teacher.move.arrived': '{{n}} von {{total}} sind bei {{station}} angekommen',
+		'teacher.move.all_arrived': 'Alle sind bei {{station}}',
+		'teacher.move.waiting_for': 'Noch nicht dort: {{names}}',
+		'teacher.move.call_again': 'Erneut rufen',
+		'teacher.bar.arrived': '{{n}}/{{total}} bei {{station}}',
+		// --- end teacher's call ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
 		'hand.line': 'Du hast {{n}} von {{total}} zugeteilten Zetteln bewertet',
@@ -10350,6 +10411,18 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.device.keep_hidden': 'Verborgen houden',
 		'teacher.bar.confirm_next': 'Tik nog eens: {{label}}',
 		// --- end teacher class view ---
+		// --- The teacher's call moves the class (2026-10-12) — keys added at the end of this fence ---
+		'call.card_kicker': 'De leerkracht roept iedereen',
+		'call.typing_title': 'De leerkracht roept iedereen naar {{place}}',
+		'call.typing_hint': 'Maak je zin af – over {{s}} s ga je erheen. Je tekst blijft bewaard.',
+		'call.more_time': 'Nog even',
+		'call.go_now': 'Nu gaan',
+		'teacher.move.arrived': '{{n}} van {{total}} zijn aangekomen bij {{station}}',
+		'teacher.move.all_arrived': 'Iedereen is bij {{station}}',
+		'teacher.move.waiting_for': 'Nog niet daar: {{names}}',
+		'teacher.move.call_again': 'Opnieuw roepen',
+		'teacher.bar.arrived': '{{n}}/{{total}} bij {{station}}',
+		// --- end teacher's call ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
 		'hand.line': 'Je beoordeelde {{n}} van de {{total}} briefjes die je kreeg',

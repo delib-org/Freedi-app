@@ -84,7 +84,12 @@ export function boothItemId(place: string): string | null {
 /** Where the teacher can call the whole class: the room's station, or any place by name */
 export type VillageCallPlace = 'current' | 'council' | 'library' | 'challenge' | `booth:${string}`;
 
-/** A call older than this, met on first render, is history rather than an order */
+/**
+ * For the teacher's own class view only: a call older than this, met on first
+ * render, is history rather than an order. A STUDENT never judges a call by
+ * its age — `lib/flows/summons.ts` resolves it by stamps the device remembers,
+ * because the students a call is for are exactly the ones who meet it late.
+ */
 export const CALL_FRESH_MS = 120000;
 
 /**

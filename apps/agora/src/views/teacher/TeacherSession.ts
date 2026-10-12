@@ -29,7 +29,8 @@ import { TeacherPanel } from './TeacherPanel';
 import { ClassView } from './ClassView';
 import { MoveClassSheet } from './MoveClassSheet';
 import { classProgress } from '../../lib/flows/classProgress';
-import type { VillageCallPlace } from '../../lib/flows/villageRoute';
+import { villagePlace, type VillageCallPlace } from '../../lib/flows/villageRoute';
+import { arrivalPlace, arrivalStatus } from '../../lib/flows/summons';
 import {
 	ADVANCE_TIMEOUT_MS,
 	INITIAL_ADVANCE_LATCH,
@@ -312,7 +313,12 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 		if (callingVillage) return;
 		callingVillage = true;
 		lastCalledLabel = label;
-		callVillage(sessionId, place)
+		// The stamp never falls below the station's server time, so every
+		// phone reads the call as newer than the station it stands on
+		const { session } = getSessionState();
+		const roomItem = getStagePlan()[getCurrentPlanIndex()];
+		const openedAt = roomItem ? session?.stageState?.[roomItem.itemId]?.openedAt : undefined;
+		callVillage(sessionId, place, openedAt)
 			.then((at) => {
 				sentCallAt = at;
 				villageCallSent = true;
@@ -742,6 +748,40 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			// door to moving it. The sheet lists the lesson's stations.
 			const stationLabel = (item: AgoraStagePlanItem): string =>
 				item.title?.trim() || teacherStepLabel(item);
+			// Who has reached the place the class was last sent to — the phones'
+			// own reports (`whereabouts`), read for a standing call's target or,
+			// with no call standing, for the room's station
+			const roomOpenedAt = session.stageState?.[current.itemId]?.openedAt;
+			const arrivalTarget = arrivalPlace(session.villageCall, roomOpenedAt, plan, currentIndex);
+			const arrivals = arrivalTarget
+				? (() => {
+						const status = arrivalStatus(participants, arrivalTarget.place);
+						const boothItem = plan.find((item) => `booth:${item.itemId}` === arrivalTarget.place);
+						const label =
+							arrivalTarget.place === 'council'
+								? t('village.place.council')
+								: arrivalTarget.place === 'library'
+									? t('village.place.library')
+									: stationLabel(boothItem ?? current);
+
+						return {
+							label,
+							arrived: status.arrived,
+							total: status.total,
+							waiting: status.waiting,
+							fromCall: arrivalTarget.fromCall,
+							place: arrivalTarget.place,
+						};
+					})()
+				: null;
+			const arrivalsLine =
+				arrivals && arrivals.fromCall && arrivals.total > 0 && arrivals.arrived < arrivals.total
+					? t('teacher.bar.arrived', {
+							n: arrivals.arrived,
+							total: arrivals.total,
+							station: arrivals.label,
+						})
+					: undefined;
 			const stripAttrs = {
 				steps,
 				currentIndex: stepIndex,
@@ -753,7 +793,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					? t('teacher.bar.called_elsewhere', { place: calledElsewhere })
 					: latch.movedElsewhere
 						? t('teacher.bar.moved_elsewhere')
-						: undefined,
+						: arrivalsLine,
 				pennant: ended
 					? undefined
 					: {
@@ -1071,6 +1111,21 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 										advancing: latch.advancing,
 										status: villageCallSent
 											? t('teacher.move.gathered', { station: lastCalledLabel })
+											: undefined,
+										arrivals: arrivals
+											? {
+													label: arrivals.label,
+													arrived: arrivals.arrived,
+													total: arrivals.total,
+													waiting: arrivals.waiting,
+													onRecall: () =>
+														callClass(
+															arrivals.place === villagePlace(current)
+																? 'current'
+																: (arrivals.place as VillageCallPlace),
+															arrivals.label,
+														),
+												}
 											: undefined,
 										onClose: closePanel,
 									})

@@ -88,3 +88,14 @@ describe('stageNavReduce', () => {
 		expect(serializeStageNav(INITIAL_STAGE_NAV)).toBe('');
 	});
 });
+
+describe('stageNav — the teacher leads the room', () => {
+	it('a led advance carries a student who had stepped back; an unled one leaves them', () => {
+		const back = { viewingItemId: 'question-1' };
+		expect(stageNavReduce(back, { kind: 'session-advanced', led: true }, plan, 2)).toBe(
+			INITIAL_STAGE_NAV,
+		);
+		expect(stageNavReduce(back, { kind: 'session-advanced', led: false }, plan, 2)).toBe(back);
+		expect(stageNavReduce(back, { kind: 'session-advanced' }, plan, 2)).toBe(back);
+	});
+});

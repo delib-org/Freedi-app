@@ -23,9 +23,26 @@ export interface Pen {
 	readonly itemId: string;
 	/** The saved answer the text was taken from, as `statementId:statement` */
 	readonly from: string;
+	/**
+	 * Unsent words left at other questions, by item. The teacher's call can
+	 * walk a student away mid-sentence; the sentence waits here and is back
+	 * in the box when they return to that question.
+	 */
+	readonly parked?: Readonly<Record<string, string>>;
 }
 
 export const blankPen: Pen = { text: '', itemId: '', from: '' };
+
+/**
+ * The unsent first words of `current`, if any — what a move away must not
+ * lose. An edit of an answer already saved is not parked: coming back shows
+ * what was saved, as it always did.
+ */
+function unsentText(current: Pen): string {
+	if (!current.itemId || current.from || !current.text.trim()) return '';
+
+	return current.text;
+}
 
 /** My saved answer to the question on screen, as the view knows it */
 export interface SavedAnswer {
@@ -40,14 +57,30 @@ export interface SavedAnswer {
  * transition from a redraw (the views use that to clear a stale save error).
  */
 export function penFor(current: Pen, itemId: string, mine?: SavedAnswer): Pen {
-	const base: Pen = current.itemId === itemId ? current : { text: '', itemId, from: '' };
+	let base: Pen;
+	if (current.itemId === itemId) {
+		base = current;
+	} else {
+		// Leaving a question: park what was not sent; arriving: take back what waited here
+		const parked: Record<string, string> = { ...(current.parked ?? {}) };
+		const leaving = unsentText(current);
+		if (leaving) parked[current.itemId] = leaving;
+		const returning = parked[itemId] ?? '';
+		delete parked[itemId];
+		base = {
+			text: returning,
+			itemId,
+			from: '',
+			...(Object.keys(parked).length > 0 ? { parked } : {}),
+		};
+	}
 
 	if (!mine) return base;
 
 	const from = `${mine.statementId}:${mine.statement}`;
 	if (base.from === from) return base;
 
-	return { text: mine.statement, itemId, from };
+	return { ...base, text: mine.statement, itemId, from };
 }
 
 /** The student typing. Keeps the box's identity, replaces only the text. */

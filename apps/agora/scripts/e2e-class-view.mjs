@@ -255,10 +255,11 @@ try {
 	await expect(desk.locator('#teacher-move .lobby__status')).toContainText('נקראו');
 	await desk.locator('.teacher-panel__close').click();
 
-	step('the student walks there: the line, the toast, the post box, the station');
+	step('the student walks there: the line, the post box, the station');
+	// The call moves the student at once (the card over the screen, the item
+	// selected, the whereabouts reported) and the world walks the picture of it
 	const world = student.frameLocator('iframe.village-shell__world');
 	await expect(world.locator('#news-text')).toContainText('המורה קורא לכולם אל', { timeout: 15_000 });
-	await expect(student.locator('.toast')).toContainText('המורה קורא לכולם', { timeout: 15_000 });
 	await expect(student.locator('.stage-nav__past')).toBeVisible({ timeout: 40_000 });
 	await shot(student, 'student-called');
 	eq(

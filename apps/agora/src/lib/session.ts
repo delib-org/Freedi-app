@@ -287,11 +287,39 @@ export function reportStageProgress(
 	});
 }
 
+let lastWhereaboutsKey = '';
+
+/**
+ * Tell the teacher's console where this screen is standing — once per
+ * place, and once more when a call is answered (the stamp names the call).
+ * A courtesy signal like the progress above: the walk never waits on it.
+ */
+export function reportWhereabouts(
+	sessionId: string,
+	userId: string,
+	place: string,
+	callAt?: number,
+): void {
+	const key = `${sessionId}--${place}--${callAt ?? ''}`;
+	if (lastWhereaboutsKey === key) return;
+	lastWhereaboutsKey = key;
+	const at = Date.now();
+
+	updateDoc(doc(db, Collections.agoraParticipants, createAgoraParticipantId(sessionId, userId)), {
+		whereabouts: { place, at, ...(callAt !== undefined ? { callAt } : {}) },
+		lastActive: at,
+	}).catch((error: unknown) => {
+		console.error('[Session] Report whereabouts failed:', error);
+		lastWhereaboutsKey = '';
+	});
+}
+
 export function stopListening(): void {
 	unsubscribers.forEach((unsubscribe) => unsubscribe());
 	unsubscribers = [];
 	listeningSessionId = null;
 	lastChallengeKey = '';
+	lastWhereaboutsKey = '';
 	state.session = null;
 	state.participants = [];
 	state.myParticipant = null;

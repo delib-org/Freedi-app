@@ -34,8 +34,24 @@ export interface MoveClassSheetAttrs {
 	advancing: boolean;
 	/** A quiet line under the rows — "everyone called to …" */
 	status?: string;
+	/**
+	 * Who has reached the place the class was last sent to (or the room's
+	 * station), from the phones' own reports. Live: the list fills as they
+	 * arrive, and "call again" repeats the call for the rest.
+	 */
+	arrivals?: {
+		label: string;
+		arrived: number;
+		total: number;
+		/** Pseudonyms of those not there yet */
+		waiting: string[];
+		onRecall: () => void;
+	};
 	onClose: () => void;
 }
+
+/** How many stragglers are named before the list folds into "+n" */
+const NAMED_WAITING = 6;
 
 export const MOVE_SHEET_ID = 'teacher-move';
 
@@ -224,6 +240,62 @@ export function MoveClassSheet(): m.Component<MoveClassSheetAttrs> {
 				);
 			};
 
+			const arrivalsBlock = (
+				arrivals: NonNullable<MoveClassSheetAttrs['arrivals']>,
+			): m.Children => {
+				const all = arrivals.total > 0 && arrivals.arrived >= arrivals.total;
+				const named = arrivals.waiting.slice(0, NAMED_WAITING);
+				const more = arrivals.waiting.length - named.length;
+
+				return m(
+					'.move-class__arrivals',
+					{
+						role: 'status',
+						'aria-live': 'polite',
+						'data-arrived': String(arrivals.arrived),
+						'data-total': String(arrivals.total),
+						class: all ? 'move-class__arrivals--all' : undefined,
+					},
+					[
+						m('.move-class__arrivals-row', [
+							m(
+								'span.move-class__arrivals-count',
+								all
+									? t('teacher.move.all_arrived', { station: arrivals.label })
+									: t('teacher.move.arrived', {
+											n: arrivals.arrived,
+											total: arrivals.total,
+											station: arrivals.label,
+										}),
+							),
+							m(
+								'span.move-class__arrivals-bar',
+								{ 'aria-hidden': 'true' },
+								m('span.move-class__arrivals-fill', {
+									style: {
+										width: `${arrivals.total > 0 ? Math.round((arrivals.arrived / arrivals.total) * 100) : 0}%`,
+									},
+								}),
+							),
+						]),
+						!all && arrivals.waiting.length > 0
+							? m('p.move-class__waiting', [
+									t('teacher.move.waiting_for', {
+										names: named.join(' · ') + (more > 0 ? ` +${more}` : ''),
+									}),
+								])
+							: null,
+						!all && arrivals.total > 0
+							? m(
+									'button.btn.btn--secondary.btn--sm.move-class__recall',
+									{ type: 'button', disabled: attrs.calling, onclick: arrivals.onRecall },
+									t('teacher.move.call_again'),
+								)
+							: null,
+					],
+				);
+			};
+
 			const navChoice = (mode: 'teacher' | 'free', label: string): m.Children =>
 				m(
 					'button.btn.village-nav__choice',
@@ -268,6 +340,7 @@ export function MoveClassSheet(): m.Component<MoveClassSheetAttrs> {
 									: null,
 							],
 					attrs.status ? m('p.lobby__status', { role: 'status' }, attrs.status) : null,
+					attrs.arrivals && !confirm ? arrivalsBlock(attrs.arrivals) : null,
 				]),
 			);
 		},

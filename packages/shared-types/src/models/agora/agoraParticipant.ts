@@ -92,6 +92,20 @@ export const AgoraParticipantSchema = object({
 			scenesTotal: number(),
 		}),
 	),
+	/**
+	 * Where this student's screen is standing in the village — a place id
+	 * (`booth:<itemId>`, `library`, `council`, …), when it got there, and the
+	 * teacher's call it answered, if any. Written by the student's client once
+	 * per station; the teacher's "who has arrived" reads it. A courtesy
+	 * signal, never a gate.
+	 */
+	whereabouts: optional(
+		object({
+			place: string(),
+			at: number(),
+			callAt: optional(number()),
+		}),
+	),
 	/** 0 (fully left camp) … 100 (fully right camp) */
 	campPosition: optional(number()),
 	camp: optional(enum_(AgoraCamp)),

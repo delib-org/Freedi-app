@@ -9,10 +9,18 @@ import {
 import { getVotingState } from '../lib/voting';
 import { readStoredNav, storeNav } from '../lib/stageNavStore';
 import { sessionVillageMode } from '../lib/flows/sessionLinks';
-import { CALL_FRESH_MS, calledItemIndex, villagePlace } from '../lib/flows/villageRoute';
+import { villagePlace } from '../lib/flows/villageRoute';
+import {
+	TYPING_GRACE_MS,
+	callTargetIndex,
+	callTargetPlace,
+	resolveSummons,
+	type VillageCall,
+} from '../lib/flows/summons';
+import { readHandledCall, storeHandledCall } from '../lib/summonsStore';
 import { callPlaceLabel } from '../components/VillageShell';
+import { CallBanner } from '../components/CallBanner';
 import { addInboxItem } from '../lib/inbox';
-import { pushLocalToast } from '../lib/notifications';
 import { registerPlaceNavigator, unregisterPlaceNavigator } from '../lib/helpedFocus';
 import m from 'mithril';
 import { canWriteStage } from '../lib/flows/stageAccess';
@@ -27,6 +35,7 @@ import {
 	getCurrentPlanIndex,
 	getConsensusPool,
 	reportStageProgress,
+	reportWhereabouts,
 } from '../lib/session';
 import { getTopicPackage, loadTopicPackage } from '../lib/topic';
 import { stopValueAnswerListeners } from '../lib/values';
@@ -187,27 +196,87 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 	registerTeacherNavigator(openTeacherThread);
 
-	/** The last call stamp this tab filed, so a call lands in the post box once */
-	let seenCallAt: number | undefined;
 	/**
-	 * A call this student followed from the post box or a toast, replayed to
-	 * the village as a call of its own: the shell walks once per stamp.
+	 * The teacher's call (`lib/flows/summons.ts`). The newest stamp this
+	 * device answered is kept per session, so a reload never walks twice and
+	 * a call met late — a locked phone, a background tab, a late joiner — is
+	 * still an order. The walk itself is one `act()`: the called item comes on
+	 * screen at once in either world (the 3D walk is the picture of it, never
+	 * the condition for it), the travel card says who is calling and where,
+	 * and the phone reports its whereabouts so the teacher sees arrivals.
 	 */
-	let localCall: { place: string; at: number } | undefined;
-	let inVillage = false;
+	let handledAt: number | undefined = readHandledCall(sessionId);
+	/** The call the village is walking — handed to the shell, once per stamp */
+	let activeCall: VillageCall | undefined;
+	/** A call held for a student mid-sentence: the bar counts down to the walk */
+	let pendingCall: { call: VillageCall; until: number; extended: boolean } | null = null;
+	let pendingTimer: number | undefined;
+	/** The card over the screen while the class is called somewhere */
+	let callCard: { place: string; item: AgoraStagePlanItem } | null = null;
 
-	function goToPlace(place: string): void {
-		if (inVillage) {
-			localCall = { place, at: Date.now() };
-		} else {
-			const plan = getStagePlan();
-			const index = calledItemIndex(place, plan, getCurrentPlanIndex());
-			if (index >= 0) dispatchNav({ kind: 'select', itemId: plan[index].itemId });
+	/** A student with words in the box that are not sent yet */
+	function isTypingAnswer(): boolean {
+		const active = document.activeElement;
+
+		return active instanceof HTMLTextAreaElement && active.value.trim().length > 0;
+	}
+
+	function markHandled(at: number): void {
+		if (handledAt !== undefined && at <= handledAt) return;
+		handledAt = at;
+		storeHandledCall(sessionId, at);
+	}
+
+	function stopPending(): void {
+		window.clearInterval(pendingTimer);
+		pendingTimer = undefined;
+		pendingCall = null;
+	}
+
+	/** Walk now: the item on screen, the card, the whereabouts, the village's walk */
+	function act(call: VillageCall): void {
+		stopPending();
+		markHandled(call.at);
+		const plan = getStagePlan();
+		const currentIndex = getCurrentPlanIndex();
+		const place = callTargetPlace(call.place, plan, currentIndex);
+		const index = callTargetIndex(call.place, plan, currentIndex);
+		if (index >= 0) {
+			dispatchNav({ kind: 'select', itemId: plan[index].itemId });
+			beginStageTransition(plan[index]);
+			callCard = { place, item: plan[index] };
 		}
+		activeCall = { place, at: call.at };
+		if (userId) reportWhereabouts(sessionId, userId, place, call.at);
 		m.redraw();
 	}
 
+	/** Hold the walk for a student mid-sentence; the bar counts the grace down */
+	function hold(call: VillageCall): void {
+		pendingCall = { call, until: Date.now() + TYPING_GRACE_MS, extended: false };
+		window.clearInterval(pendingTimer);
+		pendingTimer = window.setInterval(() => {
+			if (!pendingCall) return;
+			if (Date.now() >= pendingCall.until) act(pendingCall.call);
+			else m.redraw();
+		}, 1000);
+	}
+
+	/** A call tapped in the post box: walk there again, as a call of its own */
+	function goToPlace(place: string): void {
+		act({ place, at: Date.now() });
+	}
+
 	registerPlaceNavigator(goToPlace);
+
+	// A phone that comes back — the screen unlocked, the tab in front, the
+	// network up — re-reads the room at once instead of at its next tap
+	const wake = (): void => {
+		m.redraw();
+	};
+	document.addEventListener('visibilitychange', wake);
+	window.addEventListener('online', wake);
+	window.addEventListener('pageshow', wake);
 
 	function beginStageTransition(item: AgoraStagePlanItem): void {
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -248,6 +317,10 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 		onremove() {
 			window.clearTimeout(transitionTimer);
 			window.clearTimeout(transitionLeaveTimer);
+			stopPending();
+			document.removeEventListener('visibilitychange', wake);
+			window.removeEventListener('online', wake);
+			window.removeEventListener('pageshow', wake);
 			stopListening();
 			stopTeacherThread();
 			unregisterTeacherNavigator(openTeacherThread);
@@ -321,61 +394,73 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			const plan = getStagePlan();
 			const currentIndex = getCurrentPlanIndex();
-			inVillage = villageMode;
-
-			// The teacher's call lands in the post box and as a toast, so a
-			// student who was reading elsewhere can tap back to where the class
-			// went. Once per stamp; a call met on first render is history unless
-			// it is fresh (the same rule the village walks by).
-			const callAt = session.villageCall?.at;
-			if (callAt !== undefined && callAt !== seenCallAt) {
-				const first = seenCallAt === undefined;
-				seenCallAt = callAt;
-				if (!first || Date.now() - callAt < CALL_FRESH_MS) {
-					const rawPlace = session.villageCall?.place ?? 'current';
-					const place =
-						rawPlace === 'current' && plan[currentIndex]
-							? villagePlace(plan[currentIndex])
-							: rawPlace;
-					const target = { kind: 'place' as const, place };
-					addInboxItem({
-						id: `call-${callAt}`,
-						trigger: 'agora_called_to',
-						target,
-						detail: callPlaceLabel(place, plan, currentIndex),
-					});
-					pushLocalToast('agora_called_to', target);
-				}
-			}
-			// A call this student followed from the post box outranks the room's
-			// last call only while it is newer
-			const liveCall = session.villageCall;
-			const call = localCall && (!liveCall || localCall.at > liveCall.at) ? localCall : liveCall;
 
 			if (!navRestored) {
 				navRestored = true;
 				dispatchNav({ kind: 'restore', raw: readStoredNav(sessionId) });
 			}
 
+			// Who moves the class: the teacher (the room walks as one) or, in a
+			// free lesson, each student between the stations the room has opened
+			const led = (session.villageNavigation ?? 'teacher') === 'teacher';
+
 			// A stage change is a journey leg — play the travel card over the
-			// incoming stage for students following the class. A student catching
-			// up stays at their chosen station. Keyed on the plan POSITION, not the
-			// kind: two question stages in a row are two journeys. Never on
-			// first render: a refresh lands directly where the class already is.
+			// incoming stage. Led, everyone goes, a student who had stepped back
+			// included; free, a student catching up keeps their station. Keyed on
+			// the plan POSITION, not the kind: two question stages in a row are
+			// two journeys. Never on first render: a refresh lands directly where
+			// the class already is.
 			if (currentIndex !== lastIndex) {
 				if (lastIndex !== null) {
-					dispatchNav({ kind: 'session-advanced' });
+					dispatchNav({ kind: 'session-advanced', led });
 					const item = plan[currentIndex];
 					if (nav.viewingItemId === null && item && hasStageTransition(item.stage))
 						beginStageTransition(item);
+					// A call held for a typist is over once the class moved on
+					if (pendingCall) stopPending();
 				}
 				lastIndex = currentIndex;
 			}
+
+			// The teacher's call: a standing order until a newer one or a new
+			// station supersedes it. Judged by stamps this device remembers,
+			// never by the call's age — the students a call is for are exactly
+			// the ones who meet it late. It lands in the post box too, so the
+			// way back is one tap after any detour.
+			const liveCall = session.villageCall;
+			const summons = resolveSummons({
+				call: liveCall,
+				currentOpenedAt: session.stageState?.[plan[currentIndex]?.itemId ?? '']?.openedAt,
+				handledAt,
+			});
+			if (summons?.kind === 'retire') markHandled(summons.at);
+			if (summons?.kind === 'walk' && pendingCall?.call.at !== summons.at) {
+				const place = callTargetPlace(summons.place, plan, currentIndex);
+				addInboxItem({
+					id: `call-${summons.at}`,
+					trigger: 'agora_called_to',
+					target: { kind: 'place', place },
+					detail: callPlaceLabel(place, plan, currentIndex),
+				});
+				if (isTypingAnswer()) hold({ place: summons.place, at: summons.at });
+				else act({ place: summons.place, at: summons.at });
+			}
+			const call = activeCall;
 
 			const viewingIndex = effectiveIndex(plan, currentIndex, nav.viewingItemId);
 			const item = plan[viewingIndex] ?? plan[currentIndex];
 			const live = viewingIndex === currentIndex;
 			const writable = canWriteStage(session, item.itemId);
+			// Where this screen stands, for the teacher's "who has arrived" —
+			// once per station; a call's own report carries its stamp
+			if (userId && myParticipant && item.stage !== AgoraStage.lobby) {
+				reportWhereabouts(
+					sessionId,
+					userId,
+					villagePlace(item),
+					activeCall && activeCall.place === villagePlace(item) ? activeCall.at : undefined,
+				);
+			}
 
 			// The look this screen wears, and the door to change it. A civic
 			// square has no door: it wears Odyssey's colours by contract.
@@ -456,6 +541,36 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									? planItemLabel(transitionItem)
 									: undefined,
 							leaving: transitionLeaving,
+							call:
+								callCard && callCard.item === transitionItem
+									? {
+											kicker: t('call.card_kicker'),
+											line: t('village.called_to', {
+												place: callPlaceLabel(callCard.place, plan, currentIndex),
+											}),
+										}
+									: undefined,
+						})
+					: null,
+				pendingCall
+					? m(CallBanner, {
+							place: callPlaceLabel(
+								callTargetPlace(pendingCall.call.place, plan, currentIndex),
+								plan,
+								currentIndex,
+							),
+							secondsLeft: Math.max(0, Math.ceil((pendingCall.until - Date.now()) / 1000)),
+							onGo: () => act(pendingCall?.call ?? { place: 'current', at: Date.now() }),
+							onMoreTime: pendingCall.extended
+								? undefined
+								: () => {
+										if (!pendingCall) return;
+										pendingCall = {
+											...pendingCall,
+											until: Date.now() + TYPING_GRACE_MS,
+											extended: true,
+										};
+									},
 						})
 					: null,
 			];

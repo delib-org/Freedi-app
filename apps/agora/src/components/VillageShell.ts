@@ -557,12 +557,18 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			}
 			lastRoomIndex = attrs.currentIndex;
 			// "Everyone to …" — once per call, and only once the world can walk.
+			// A student's controller decides WHICH calls to walk (a standing
+			// order, however late it is met — `lib/flows/summons.ts`) and hands
+			// the shell only those; this never judges a call by its age. The
+			// teacher's own class view, which reads the raw call, walks fresh
+			// calls only: a call met on first sight there is history.
 			const call = attrs.call;
 			if (ready && call && call.at !== lastCallAt) {
-				const fresh = lastCallAt !== undefined || Date.now() - call.at < CALL_FRESH_MS;
+				const first = lastCallAt === undefined;
 				lastCallAt = call.at;
 				const roomItem = attrs.plan[attrs.currentIndex];
-				if (fresh && roomItem) {
+				const walks = !attrs.watcher || !first || Date.now() - call.at < CALL_FRESH_MS;
+				if (walks && roomItem) {
 					if (call.place === 'current') {
 						if (attrs.viewingIndex !== attrs.currentIndex) attrs.onSelectBook?.(roomItem.itemId);
 						go(villagePlace(roomItem), 'station', 'call');

@@ -53,6 +53,7 @@ import {
 import { trackWrite } from './confirmedWrite';
 import { teacherConsole } from './callables';
 import type { VillageCallPlace } from './flows/villageRoute';
+import { nextCallStamp } from './flows/summons';
 
 /**
  * Everything the teacher and join screens ask of Firestore.
@@ -283,8 +284,13 @@ export async function setVillageNavigation(
  * and each phone acts once per call. Returns the stamp, so the console can
  * tell its own call from one made on the teacher's other device.
  */
-export async function callVillage(sessionId: string, place: VillageCallPlace): Promise<number> {
-	const at = Date.now();
+export async function callVillage(
+	sessionId: string,
+	place: VillageCallPlace,
+	/** The server time the room reached its station — the stamp never falls below it */
+	currentOpenedAt?: number,
+): Promise<number> {
+	const at = nextCallStamp(Date.now(), currentOpenedAt);
 	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
 		villageCall: { place, at },
 		lastUpdate: at,
