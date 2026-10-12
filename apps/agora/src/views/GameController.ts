@@ -75,6 +75,9 @@ import {
 	setVillagePalette,
 	setVillageSound,
 	villagePalette,
+	setVillageViewPreference,
+	villageViewPreference,
+	type VillageView,
 } from '../lib/villagePrefs';
 import { CarriedContext } from '../components/CarriedContext';
 import { ResultsBoard } from '../components/ResultsBoard';
@@ -171,7 +174,24 @@ function markFramingSeen(sessionId: string): void {
 export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
 	let villageWriteRequest = 0;
-	let villageOverride: boolean | undefined;
+	/**
+	 * This device's world, when it chose one: the 3D village or the simple
+	 * view. Remembered per device (`villagePrefs`), so a refresh keeps the
+	 * choice — and the way back to the village is always on the simple view,
+	 * the lobby included; a world that failed to load is retried on that
+	 * press and, failing again, says so instead of trapping anyone.
+	 */
+	const savedView = villageViewPreference();
+	let villageOverride: boolean | undefined =
+		savedView === null ? undefined : savedView === 'village';
+	/** How many times the world was asked for on this screen — a retry wears a plainer notice */
+	let villageAttempts = 0;
+
+	function chooseView(view: VillageView): void {
+		villageOverride = view === 'village';
+		setVillageViewPreference(view);
+		if (view === 'village') villageAttempts++;
+	}
 	let userId = '';
 	/** Last plan position rendered — a change plays the travel interstitial */
 	let lastIndex: number | null = null;
@@ -517,7 +537,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								setVillagePalette(palette);
 							},
 							onSimpleView: () => {
-								villageOverride = false;
+								chooseView('flat');
 							},
 							onClose: () => {
 								moreOpen = false;
@@ -615,6 +635,24 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						),
 					]);
 
+			// The simple view's door back to the village — on every screen the
+			// simple view has, the lobby included. In the village the way to the
+			// simple view is a row in the gear sheet, so this slot is an empty
+			// hole there: the SAME five children in every branch, or the 3D world
+			// remounts and the walker jumps back to the fountain.
+			const viewToggle = villageMode
+				? null
+				: m(
+						'button.btn.btn--secondary.btn--sm.village-mode-toggle',
+						{
+							onclick: () => {
+								chooseView('village');
+							},
+							'aria-pressed': 'false',
+						},
+						t('village.enter_3d'),
+					);
+
 			if (item.stage === AgoraStage.lobby) {
 				// The village's first station needs the topic: fetch it while the class
 				// waits, so moving on does not swap the 3D world for a loading spinner.
@@ -629,7 +667,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					overlays,
 					stageNav,
 					pastNotice,
-					null,
+					viewToggle,
 					villageMode
 						? m(
 								VillageShell,
@@ -641,6 +679,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									papers: [],
 									navigation: session.villageNavigation ?? 'teacher',
 									call,
+									retry: villageAttempts > 0,
 								},
 								m(Lobby, { participants, myParticipant, onOpenLook: lookDoor?.onOpen }),
 							)
@@ -673,6 +712,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								papers: [],
 								navigation: session.villageNavigation ?? 'teacher',
 								call,
+								retry: villageAttempts > 0,
 							},
 							spinner,
 						),
@@ -940,18 +980,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				// sheet, so this slot is an empty hole — the SAME five children as
 				// the lobby branch above, or the 3D world remounts and the walker
 				// jumps back to the fountain.
-				villageMode
-					? null
-					: m(
-							'button.btn.btn--secondary.btn--sm.village-mode-toggle',
-							{
-								onclick: () => {
-									villageOverride = true;
-								},
-								'aria-pressed': 'false',
-							},
-							t('village.enter_3d'),
-						),
+				viewToggle,
 				villageMode
 					? m(
 							VillageShell,
@@ -963,6 +992,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								council,
 								navigation: session.villageNavigation ?? 'teacher',
 								call,
+								retry: villageAttempts > 0,
 								// The replies to my note and the owners' answers to mine both
 								// live behind the board door, so that is the door that lights
 								news: myParticipant
@@ -989,7 +1019,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 										}
 									: undefined,
 								onLeaveVillage: () => {
-									villageOverride = false;
+									chooseView('flat');
 								},
 								onWrite: () => {
 									villageWriteRequest++;

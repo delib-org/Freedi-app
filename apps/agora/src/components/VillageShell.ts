@@ -61,6 +61,8 @@ interface VillageShellAttrs {
 	browseFreely?: boolean;
 	/** The way out when the 3D world will not load on this device */
 	onLeaveVillage?: () => void;
+	/** This world was asked for again after failing once: the notice says it still does not load */
+	retry?: boolean;
 	onWrite?: () => void;
 	onSelectBook?: (itemId: string) => void;
 	papers: Array<{ text: string; own: boolean; confirmed?: boolean }>;
@@ -708,8 +710,8 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				// The old "enter the station directly" button was really this: the way
 				// out when the world does not load. Now it says so, and offers it.
 				unavailable && !opened
-					? m('.village-shell__notice', [
-							m('p', t('village.unavailable')),
+					? m('.village-shell__notice', { role: 'status' }, [
+							m('p', t(attrs.retry ? 'village.unavailable_again' : 'village.unavailable')),
 							attrs.onLeaveVillage
 								? m(
 										'button.btn.btn--secondary.btn--sm',

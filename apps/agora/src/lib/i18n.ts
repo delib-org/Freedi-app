@@ -1677,6 +1677,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.move.waiting_for': 'עדיין לא שם: {{names}}',
 		'teacher.move.call_again': 'לקרוא שוב',
 		'teacher.bar.arrived': '{{n}}/{{total}} הגיעו אל {{station}}',
+		'village.unavailable_again': 'הכפר עדיין לא נטען במכשיר הזה — נשארים בתצוגה הפשוטה.',
 		// --- end teacher's call ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
@@ -3416,6 +3417,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.move.waiting_for': 'Not there yet: {{names}}',
 		'teacher.move.call_again': 'Call again',
 		'teacher.bar.arrived': '{{n}}/{{total}} arrived at {{station}}',
+		'village.unavailable_again':
+			'The village still does not load on this device — staying in the simple view.',
 		// --- end teacher's call ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
@@ -5096,6 +5099,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.move.waiting_for': 'لم يصلوا بعد: {{names}}',
 		'teacher.move.call_again': 'دعوة مرة أخرى',
 		'teacher.bar.arrived': 'وصل {{n}}/{{total}} إلى {{station}}',
+		'village.unavailable_again': 'القرية ما زالت لا تُحمَّل على هذا الجهاز — نبقى في العرض البسيط.',
 		// --- end teacher's call ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
@@ -6864,6 +6868,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.move.waiting_for': 'Aún no llegan: {{names}}',
 		'teacher.move.call_again': 'Llamar de nuevo',
 		'teacher.bar.arrived': '{{n}}/{{total}} llegaron a {{station}}',
+		'village.unavailable_again':
+			'La aldea sigue sin cargar en este dispositivo: seguimos en la vista simple.',
 		// --- end teacher's call ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
@@ -8652,6 +8658,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.move.waiting_for': 'Noch nicht dort: {{names}}',
 		'teacher.move.call_again': 'Erneut rufen',
 		'teacher.bar.arrived': '{{n}}/{{total}} bei {{station}}',
+		'village.unavailable_again':
+			'Das Dorf lädt auf diesem Gerät weiterhin nicht – es bleibt bei der einfachen Ansicht.',
 		// --- end teacher's call ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage
@@ -10422,6 +10430,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.move.waiting_for': 'Nog niet daar: {{names}}',
 		'teacher.move.call_again': 'Opnieuw roepen',
 		'teacher.bar.arrived': '{{n}}/{{total}} bij {{station}}',
+		'village.unavailable_again':
+			'Het dorp laadt nog steeds niet op dit apparaat – we blijven in de eenvoudige weergave.',
 		// --- end teacher's call ---
 
 		// Notes dealt by lottery (agoraHands): the hand line, what comes next, the teacher’s coverage

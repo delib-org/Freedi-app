@@ -45,6 +45,80 @@ can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
 
+## The teacher's call moves the class; the way back to 3D (2026-10-12)
+
+Built on `feat/agora-improvements`, **NOT deployed** (client + one optional
+shared-types field: `AgoraParticipant.whereabouts`; no functions, no rules
+changes — the participant rule already lets a student write their own doc
+minus the pinned fields, and `AgoraParticipantSchema` is a plain `object`, so
+old clients strip the field). Tal's report: in production session
+`4Iy3FyKmCpQ-` the teacher called the students to a booth and nobody moved.
+
+**Root cause (from the deployed code + a read-only look at the session doc).**
+The call was written (`villageCall {place:'booth:round-story', at}`), the
+deployed bundle had the move-class code. The student side dropped it:
+(1) a call was "fresh" only if under `CALL_FRESH_MS` (2 min) on FIRST sight
+— `seenCallAt`/`lastCallAt` undefined → the first call of a session was
+history for any phone that met it late (locked, backgrounded, reconnecting);
+(2) the flat view never moved anyone — a toast to tap; (3) in 3D the station
+came on screen only when the world reported arriving (or a 30 s fallback),
+and `ready` gated the walk; (4) a led NEXT left a student who had stepped
+back where they were; (5) the teacher got "students are on their way"
+whatever happened.
+
+**Model now — `lib/flows/summons.ts` (pure, tested):** a call is a standing
+order. `resolveSummons({call, currentOpenedAt, handledAt})` → `walk` /
+`retire` / nothing: handled once per stamp per device (`summonsStore`,
+sessionStorage `agora_<session>_call`), superseded only by a newer call or
+by the teacher opening a new station after it (`stageState[current].openedAt`
+is server time; `callVillage` floors the stamp above it with
+`nextCallStamp`). No wall clock, no first-render heuristic, so a late joiner
+and a phone that wakes ten minutes later walk too.
+
+- **Student (`GameController`)**: `act()` selects the called item at once in
+  BOTH worlds (the 3D walk is the picture, never the condition), shows the
+  travel card with the call kicker (`StageTransition {call}`,
+  `aria-live=assertive`), files the inbox row, and writes `whereabouts
+  {place, at, callAt}` on the participant doc (`session.reportWhereabouts`,
+  once per place — also on every station change, so the teacher always
+  knows where everyone is). A student mid-sentence (`isTypingAnswer()`) is
+  held: `CallBanner` counts `TYPING_GRACE_MS` down, "go now" / one "one more
+  moment"; their unsent first words are parked per question (`penState`
+  `parked`) and come back when they return. Led NEXT (`villageNavigation
+  !== 'free'`) now carries a student who had stepped back
+  (`stageNavReduce {kind:'session-advanced', led}`). `visibilitychange` /
+  `online` / `pageshow` redraw so a resumed phone acts on the snapshot at
+  once. The toast is gone (it said "tap to walk there"; nobody has to tap).
+- **`VillageShell`** walks whatever `call` the controller hands it, once per
+  stamp, once `ready`; only the teacher's class view (`watcher`) still skips
+  a call met on first sight.
+- **Teacher (`TeacherSession` → `MoveClassSheet {arrivals}`)**: "n of total
+  arrived at X" with a bar, the stragglers' pseudonyms, "call again"
+  (`arrivalStatus` / `arrivalPlace` — a standing call's target, else the
+  room's station); the strip's status line says "n/total arrived at X"
+  while a call stands.
+- **Way back to 3D**: the device's world is remembered
+  (`villagePrefs.villageViewPreference`, `localStorage agora_village_view`);
+  the simple view carries "Back to the 3D village" on every screen, the
+  lobby included (`viewToggle` in the same slot in every branch — never shift
+  the five children); the press retries a world that failed, and a second
+  failure shows `village.unavailable_again` (`VillageShell {retry}`) with the
+  same "continue without the village" door. `ClassView` does the same.
+
+**Verify:** `bash ../../scripts/solo.sh npx tsx scripts/e2e-move-class.mjs`
+— five browser students (village, simple view, mid-sentence, offline, late
+joiner) + four bots; NEXT moves all; gather at a past booth → every
+participant doc's `whereabouts` is `booth:round-story` with the call's
+stamp, the typist is held then goes, the offline phone catches up, the
+late joiner lands there, the sheet fills to 9/9, the reload keeps the
+handled stamp, and flat → 3D → reload keeps 3D (lobby too). Unit:
+`summons`, `stageNav` (led), `penState` (parking), `villagePrefs` (view).
+`e2e-class-view.mjs` no longer expects the toast.
+
+**Still only a classroom can confirm:** iOS Safari's socket resume after a
+long lock (the model handles any delay; the delay itself is the OS's), and
+whether 25 s of grace is right for a child mid-sentence.
+
 ## Teacher class view, move-class sheet, two devices, device roles (2026-10-11)
 
 Built on `feat/agora-improvements` (287d5742d + the follow-up commit), **NOT

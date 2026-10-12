@@ -31,6 +31,9 @@ import {
 	setVillagePalette,
 	setVillageSound,
 	villagePalette,
+	setVillageViewPreference,
+	villageViewPreference,
+	type VillageView,
 } from '../../lib/villagePrefs';
 import { StageNav, planItemLabel } from '../../components/StageNav';
 import { StageTransition, hasStageTransition } from '../../components/StageTransition';
@@ -94,7 +97,16 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 	let lastIndex: number | null = null;
 	let lastViewing: number | null = null;
 	let lastWalk = 0;
-	let villageOverride: boolean | undefined;
+	// The teacher's device remembers its world like a student's does (`villagePrefs`)
+	const savedView = villageViewPreference();
+	let villageOverride: boolean | undefined =
+		savedView === null ? undefined : savedView === 'village';
+	let villageAttempts = 0;
+	function chooseView(view: VillageView): void {
+		villageOverride = view === 'village';
+		setVillageViewPreference(view);
+		if (view === 'village') villageAttempts++;
+	}
 	let moreOpen = false;
 	let transitionItem: AgoraStagePlanItem | null = null;
 	let transitionLeaving = false;
@@ -213,7 +225,7 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 								setVillagePalette(palette);
 							},
 							onSimpleView: () => {
-								villageOverride = false;
+								chooseView('flat');
 							},
 							onClose: () => {
 								moreOpen = false;
@@ -312,7 +324,7 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 							'button.btn.btn--secondary.btn--sm.village-mode-toggle',
 							{
 								onclick: () => {
-									villageOverride = true;
+									chooseView('village');
 								},
 								'aria-pressed': 'false',
 							},
@@ -331,6 +343,7 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 								council,
 								navigation: session.villageNavigation ?? 'teacher',
 								call: session.villageCall,
+								retry: villageAttempts > 0,
 								community: topic
 									? {
 											session,
@@ -354,7 +367,7 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 										}
 									: undefined,
 								onLeaveVillage: () => {
-									villageOverride = false;
+									chooseView('flat');
 								},
 								onSelectBook: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
 								papers: papersFor(stationNotes(item), userId, isProposalConfirmed),
