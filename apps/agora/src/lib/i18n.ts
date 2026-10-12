@@ -7863,11 +7863,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'challenge.outcome_skipped': 'Wir sind von {{name}} weitergegangen.',
 		'celebrate.your_turn': 'Du hast das Wort',
 		'celebrate.your_turn_hint':
+			'Schreib eine neue Option oder setze aus — beides ist völlig in Ordnung.',
 		'voting.saving': 'Eure Stimme wird gespeichert…',
 		'voting.save_failed':
 			'Eure Stimme wurde nicht gespeichert – prüft die Verbindung und versucht es noch einmal.',
 		'voting.retry': 'Noch einmal',
-			'Schreib eine neue Option oder setze aus — beides ist völlig in Ordnung.',
 		'celebrate.challenge_survived': 'Deine Option kam auf den Stimmzettel!',
 		'toast.challenge_your_turn': 'Du bist am Wort',
 		'toast.challenge_open': 'Die Abstimmung über die neue Option ist offen',
