@@ -153,6 +153,17 @@
   --village-nav-border: #d4b674;
   --village-nav-accent: #e5a548;
 
+  // The coin: a two-metal shekel — nickel ring, bronze core, struck ₪.
+  // Metals, not a look's hues: a coin is the same coin in every look.
+  --coin-ring-hi: #f4f5f2;
+  --coin-ring: #c3c7c4;
+  --coin-ring-lo: #8a908d;
+  --coin-core-hi: #f1dc9c;
+  --coin-core: #cfa94f;
+  --coin-core-lo: #9a7428;
+  --coin-edge: #5d625f;
+  --coin-ink: #5a4313;
+
   // --- MINE: the purple family ---
   // Named by job, not by lightness, so a rule reads as a decision.
   --mine-light: #a98cf7;  // highlights, gradient tops, glows — NEVER under text

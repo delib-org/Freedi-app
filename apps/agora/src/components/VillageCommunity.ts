@@ -30,6 +30,7 @@ import { planItemLabel } from './StageNav';
 import { iconLabel } from './Icon';
 import { villagePlace } from '../lib/flows/villageRoute';
 import { playCoin } from '../lib/sound';
+import { Coin } from './Coin';
 import { t, tCount } from '../lib/i18n';
 import { RateScale } from './RateScale';
 import { LikeButton } from './LikeButton';
@@ -564,7 +565,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 								'aria-live': 'polite',
 							},
 							[
-								m('img', { src: '/assets/gold-coin.svg', alt: '' }),
+								m(Coin, { size: 36 }),
 								m('strong', a.points?.toLocaleString('he-IL') ?? '…'),
 								gain ? m('span.village-coins__gain', `+${gain}`) : null,
 							],
