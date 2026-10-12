@@ -2,7 +2,7 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import { getValueAnswersState, listenToValueAnswers, submitValueAnswer } from '../lib/values';
 import type { AgoraTopicPackage } from '@freedi/shared-types';
-import { AGORA_LIMITS } from '@freedi/shared-types';
+import { AGORA_LIMITS, isAgoraTextLongEnough } from '@freedi/shared-types';
 
 export interface ValueIdentificationAttrs {
 	sessionId: string;
@@ -98,7 +98,7 @@ export function ValueIdentification(): m.Component<ValueIdentificationAttrs> {
 								m(
 									'button.btn.btn--primary.btn--full.btn--lg',
 									{
-										disabled: isPending || draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
+										disabled: isPending || !isAgoraTextLongEnough(draft),
 										onclick: () => {
 											submitValueAnswer(sessionId, character.characterId, draft.trim());
 										},

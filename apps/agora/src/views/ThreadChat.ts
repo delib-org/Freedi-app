@@ -30,6 +30,7 @@ import {
 	AgoraSession,
 	AgoraSuggestionStatus,
 	AGORA_LIMITS,
+	isAgoraTextLongEnough,
 	createAgoraThreadKey,
 } from '@freedi/shared-types';
 
@@ -304,7 +305,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		}
 
 		const text = editDraft.trim();
-		const changed = text !== proposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+		const changed = text !== proposal.statement && isAgoraTextLongEnough(text);
 
 		return m('.chat-page__edit', [
 			m('h2.chat-page__title', wording.mine),
@@ -1041,7 +1042,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 								kind === AgoraMessageKind.suggestion ? 'btn--primary' : 'btn--secondary'
 							}`,
 							{
-								disabled: busy || draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
+								disabled: busy || !isAgoraTextLongEnough(draft),
 								onclick: () => {
 									// The draft is NOT cleared here. Firestore queues a write
 									// on a wedged connection and never settles the promise, so

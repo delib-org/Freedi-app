@@ -36,6 +36,7 @@ import {
 	isUnitRating,
 	rankRoundAnswers,
 	roundLikes,
+	isAgoraTextLongEnough,
 	roundProgress,
 	roundSpecOf,
 	type AgoraCarriedAnswer,
@@ -209,7 +210,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 
 			async function submit(): Promise<void> {
 				const text = pen.text.trim();
-				if (!text || saving || closed) return;
+				if (!isAgoraTextLongEnough(text) || saving || closed) return;
 				saving = true;
 				saveFailed = false;
 				saveNotice = undefined;

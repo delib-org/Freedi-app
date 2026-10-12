@@ -27,6 +27,7 @@ export {
 	AGORA_CHALLENGE,
 	AGORA_IDENTITY,
 	AGORA_TEACHER_MESSAGE,
+	isAgoraTextLongEnough,
 } from './agoraConstants';
 
 export type {

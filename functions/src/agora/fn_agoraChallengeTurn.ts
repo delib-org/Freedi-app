@@ -308,7 +308,7 @@ async function pitchChallenge(
 	requirePhase(game, ChallengePhase.floor);
 
 	const statementText = rawText.trim();
-	if (statementText.length < AGORA_LIMITS.MIN_PROPOSAL_LENGTH) {
+	if (statementText.length < AGORA_LIMITS.MIN_TEXT_LENGTH) {
 		throw new HttpsError('invalid-argument', 'That is too short to put to the class');
 	}
 	if (statementText.length > AGORA_LIMITS.MAX_PROPOSAL_LENGTH) {

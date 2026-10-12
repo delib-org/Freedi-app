@@ -269,15 +269,27 @@ export const AGORA_CHALLENGE = {
 } as const;
 
 export const AGORA_LIMITS = {
-	MIN_ANSWER_LENGTH: 10,
+	/**
+	 * The fewest characters (of the trimmed text) any student text may have —
+	 * a proposal, an answer, a thread message, a suggestion. ONE number, read
+	 * by the composers (whose send button stays disabled below it) and by the
+	 * callables (which refuse below it), so the two can never disagree.
+	 * Counted in UTF-16 units of the trimmed string, which for Hebrew and
+	 * Arabic is one per letter. Was 10 (two separate constants) until 2026-10.
+	 */
+	MIN_TEXT_LENGTH: 4,
 	MAX_ANSWER_LENGTH: 1000,
-	MIN_PROPOSAL_LENGTH: 10,
 	MAX_PROPOSAL_LENGTH: 1500,
 	MAX_VIDEO_BYTES: 300 * 1024 * 1024,
 	MAX_IMAGE_BYTES: 5 * 1024 * 1024,
 	/** Proposals shown per rating batch */
 	RATING_BATCH_SIZE: 5,
 } as const;
+
+/** Is this student text long enough to send? The one gate client and server share. */
+export function isAgoraTextLongEnough(text: string): boolean {
+	return text.trim().length >= AGORA_LIMITS.MIN_TEXT_LENGTH;
+}
 
 /** A day in milliseconds — the unit the retention windows below are written in */
 const DAY_MS = 24 * 60 * 60 * 1000;

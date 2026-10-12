@@ -19,6 +19,7 @@ import { blankPen, penFor, typedInto, type Pen } from '../lib/flows/penState';
 import { requestTeacherFocus } from '../lib/helpedFocus';
 import {
 	AGORA_LIMITS,
+	isAgoraTextLongEnough,
 	rankCarriedAnswers,
 	type AgoraCarriedAnswer,
 	type AgoraParticipant,
@@ -122,7 +123,7 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 
 			async function submit(): Promise<void> {
 				const text = pen.text.trim();
-				if (!text || saving || closed) return;
+				if (!isAgoraTextLongEnough(text) || saving || closed) return;
 				saving = true;
 				saveFailed = false;
 				saveNotice = null;
@@ -201,7 +202,10 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 												// "Sent" is a state, not a refusal: the candy look paints
 												// it lime rather than greyed-out
 												class: mine !== undefined && !changed && !saving ? 'btn--done' : undefined,
-												disabled: saving || !pen.text.trim() || (mine !== undefined && !changed),
+												disabled:
+													saving ||
+													!isAgoraTextLongEnough(pen.text) ||
+													(mine !== undefined && !changed),
 												onclick: () => void submit(),
 											},
 											saving

@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { AGORA_LIMITS, type AgoraRoundKind } from '@freedi/shared-types';
+import { AGORA_LIMITS, isAgoraTextLongEnough, type AgoraRoundKind } from '@freedi/shared-types';
 import { t } from '../lib/i18n';
 import { Icon } from './Icon';
 import { stalledBanner } from './StalledBanner';
@@ -68,7 +68,9 @@ export const RoundAnswer: m.Component<RoundAnswerAttrs> = {
 					{
 						type: 'button',
 						disabled:
-							saving || !text.trim() || (savedText !== undefined && !changed && !saveFailed),
+							saving ||
+							!isAgoraTextLongEnough(text) ||
+							(savedText !== undefined && !changed && !saveFailed),
 						onclick: attrs.onSave,
 					},
 					saving ? t('round.saving') : t(savedText === undefined ? 'round.save' : 'round.update'),

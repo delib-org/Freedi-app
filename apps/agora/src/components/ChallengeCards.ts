@@ -2,6 +2,7 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import {
 	AGORA_LIMITS,
+	isAgoraTextLongEnough,
 	ChallengePhase,
 	ChallengeResolvedBy,
 	VotingGameState,
@@ -134,7 +135,7 @@ export function ChallengeCards(): m.Component<ChallengeCardsAttrs> {
 			// idle | floor
 			if (mine && game.phase === ChallengePhase.floor) {
 				const length = draft.trim().length;
-				const tooShort = length < AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+				const tooShort = !isAgoraTextLongEnough(draft);
 
 				return m('.challenge.challenge__desk', [
 					m('h3.challenge__title', t('challenge.desk_title')),

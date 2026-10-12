@@ -106,6 +106,7 @@ import {
 	AGORA_AI_REVIEW,
 	AGORA_BRIDGING,
 	AGORA_LIMITS,
+	isAgoraTextLongEnough,
 	createAgoraCharacterReviewId,
 	createAgoraThreadKey,
 } from '@freedi/shared-types';
@@ -501,7 +502,7 @@ export function Deliberation(
 	function gapPromptCard(live: AgoraSession, proposal: AgoraProposal): m.Children {
 		if (gapPrompt?.proposalId !== proposal.statementId) return null;
 		const keep = gapPrompt.kind === 'keep';
-		const ready = gapDraft.trim().length >= AGORA_LIMITS.MIN_ANSWER_LENGTH;
+		const ready = isAgoraTextLongEnough(gapDraft);
 
 		return m(
 			Collapsible,
@@ -1003,7 +1004,7 @@ export function Deliberation(
 		// from the foot of every room; with the dock gone the tab says it, and
 		// a dot outranks the feedback count — news I can act on in one tap
 		// beats news I have to read.
-		const unsaved = mineDraftChanged(myProposal);
+		const unsaved = mineDraftDirty(myProposal);
 
 		// The same bar the village carries, minus the village door: a student
 		// who switches views should not have to learn the game's navigation a
@@ -1197,11 +1198,14 @@ export function Deliberation(
 		mineDraftBase = myProposal.statement;
 	}
 
+	/** Does what I have typed differ from what is saved? */
+	function mineDraftDirty(myProposal: AgoraProposal): boolean {
+		return mineDraft.trim() !== myProposal.statement;
+	}
+
 	/** Is what I have typed a real, savable change? */
 	function mineDraftChanged(myProposal: AgoraProposal): boolean {
-		const text = mineDraft.trim();
-
-		return text !== myProposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+		return mineDraftDirty(myProposal) && isAgoraTextLongEnough(mineDraft);
 	}
 
 	/**
@@ -1215,6 +1219,9 @@ export function Deliberation(
 	 */
 	function mineSaveButton(live: AgoraSession, myProposal: AgoraProposal): m.Children {
 		const changed = mineDraftChanged(myProposal);
+		// Edited down below the minimum: still the live action, just not yet
+		// pressable — a "✓ saved" here would claim words that were never saved
+		const dirty = mineDraftDirty(myProposal);
 
 		return m(
 			'button.btn.btn--primary.my-lantern__save',
@@ -1256,7 +1263,7 @@ export function Deliberation(
 						});
 				},
 			},
-			changed ? t('delib.update_proposal') : iconLabel('check', t('delib.update_saved')),
+			dirty ? t('delib.update_proposal') : iconLabel('check', t('delib.update_saved')),
 		);
 	}
 
@@ -1280,9 +1287,9 @@ export function Deliberation(
 		// reason and the words live on the private thread; this only points there.
 		if (myProposal.hidden) return removedPaper(myProposal);
 		seedMineDraft(myProposal);
-		const changed = mineDraftChanged(myProposal);
+		const dirty = mineDraftDirty(myProposal);
 
-		return m('.my-screen__paper', { class: changed ? 'my-screen__paper--dirty' : undefined }, [
+		return m('.my-screen__paper', { class: dirty ? 'my-screen__paper--dirty' : undefined }, [
 			m('.my-screen__paper-row', [
 				m('textarea.my-screen__text', {
 					value: mineDraft,
@@ -1329,7 +1336,7 @@ export function Deliberation(
 				// student's own sentence, not a dead pill under it. The first
 				// keystroke turns the line into the real action, which teaches the
 				// rule at the exact moment it starts to matter.
-				changed
+				dirty
 					? mineSaveButton(live, myProposal)
 					: m(
 							'span.my-screen__saved',
@@ -2495,7 +2502,7 @@ export function Deliberation(
 					]);
 				}
 				{
-					const ready = draft.trim().length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+					const ready = isAgoraTextLongEnough(draft);
 					// The write left this device but the square has never seen it.
 					// The desk STAYS: their words are still theirs, and the game
 					// must not deal them a lap around a proposal nobody has.
