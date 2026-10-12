@@ -20,7 +20,7 @@ import { planItemLabel } from './StageNav';
 import { PlaceBar } from './PlaceBar';
 import { openPlaceOf, placeNavTabs, type PlaceDestination } from '../lib/flows/placeNav';
 import { t } from '../lib/i18n';
-import { isLightWorld, isVillageSoundOn } from '../lib/villagePrefs';
+import { isLightWorld, isVillageSoundOn, villagePalette } from '../lib/villagePrefs';
 
 interface VillageShellAttrs {
 	stationPapers?: Array<{
@@ -205,6 +205,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				// the choice now; the world only applies it.
 				sound: isVillageSoundOn(),
 				quality: isLightWorld() ? 'low' : 'high',
+				palette: villagePalette(),
 			},
 			window.location.origin,
 		);

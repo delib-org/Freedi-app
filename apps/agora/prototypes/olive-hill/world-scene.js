@@ -4,6 +4,9 @@ import { Soundscape } from './sound.js';
 import { buildVillage, fixedStations, CENTER, villageRadius } from './village.js';
 import { RING_MAX } from './village-layout.js';
 import { characters } from './characters-2d.js';
+import { dragLook } from './drag-look.js';
+import { lushness, groundGrainCanvas, GRAIN_MEAN } from './meadow.js';
+import { PALETTES, paletteFor } from './palettes.js';
 
 const $ = id => document.getElementById(id);
 // Preserve label nodes while the world animates; unchanged text needs no DOM
@@ -21,7 +24,7 @@ renderer.shadowMap.enabled=!lite; renderer.shadowMap.type=THREE.PCFSoftShadowMap
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#b9d1d2');scene.fog=new THREE.FogExp2('#b6cac3',.0052);
 const camera=new THREE.PerspectiveCamera(53,innerWidth/innerHeight,.1,600);
-scene.add(new THREE.HemisphereLight('#d7eef3','#797048',2.1));
+const hemi=new THREE.HemisphereLight('#d7eef3','#797048',2.1);scene.add(hemi);
 const sun=new THREE.DirectionalLight('#ffe5b3',3.5);sun.position.set(-28,45,22);sun.castShadow=true;
 // The shadow box covers the whole meadow, and the map grows with it so a bigger village keeps the same shadow detail per metre.
 Object.assign(sun.shadow.camera,{left:-62,right:62,top:62,bottom:-62,near:1,far:200});sun.shadow.mapSize.setScalar(lite?2048:3072);sun.shadow.bias=-.00025;sun.shadow.normalBias=.035;scene.add(sun);scene.add(sun.target);
@@ -35,12 +38,18 @@ function pathX(z){return 2+Math.sin(z*.10)*4;}
 
 // A continuous rolling terrain; the clearing around the cottage is level.
 const terrainGeo=new THREE.PlaneGeometry(300,300,200,200);terrainGeo.rotateX(-Math.PI/2);
+// The ground is a patchwork, not a sheet: lush green where the meadow map
+// says so, sun-dried straw between, and a tiled grain on top for the close-up.
 const terrainPos=terrainGeo.attributes.position;const terrainColors=[];
-for(let i=0;i<terrainPos.count;i++){const x=terrainPos.getX(i),z=terrainPos.getZ(i);terrainPos.setY(i,height(x,z));const c=new THREE.Color('#8d9962');c.lerp(new THREE.Color('#c1b286'),Math.max(0,1-Math.abs(x-pathX(z))/3)*(z>4?1:0));c.multiplyScalar(.86+rand()*.2);terrainColors.push(c.r,c.g,c.b);}
-terrainGeo.setAttribute('color',new THREE.Float32BufferAttribute(terrainColors,3));terrainGeo.computeVertexNormals();mesh(terrainGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1}));
+/** Each vertex's colour as drawn, and how much of it is footpath — a colour set re-tints from these. */
+const terrainBase=new Float32Array(terrainPos.count*3),terrainEarth=new Float32Array(terrainPos.count);
+const LUSH=new THREE.Color('#7f955a'),DRY=new THREE.Color('#a9a26b'),EARTH=new THREE.Color('#c1b286');
+for(let i=0;i<terrainPos.count;i++){const x=terrainPos.getX(i),z=terrainPos.getZ(i);terrainPos.setY(i,height(x,z));const w=Math.max(0,1-Math.abs(x-pathX(z))/3)*(z>4?1:0);const c=LUSH.clone().lerp(DRY,1-lushness(x,z));c.lerp(EARTH,w);c.multiplyScalar((.93+rand()*.09)/GRAIN_MEAN);terrainColors.push(c.r,c.g,c.b);terrainBase[i*3]=c.r;terrainBase[i*3+1]=c.g;terrainBase[i*3+2]=c.b;terrainEarth[i]=w;}
+const grain=new THREE.CanvasTexture(groundGrainCanvas());grain.wrapS=grain.wrapT=THREE.RepeatWrapping;grain.repeat.set(110,110);grain.anisotropy=lite?1:Math.min(4,renderer.capabilities.getMaxAnisotropy());
+terrainGeo.setAttribute('color',new THREE.Float32BufferAttribute(terrainColors,3));terrainGeo.computeVertexNormals();mesh(terrainGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,map:grain}));
 // The footpath is actual geometry, conforming to the hillside.
 const pv=[],pi=[];for(let i=0;i<=100;i++){const z=3+i*.52;for(const s of [-1,1])pv.push(pathX(z)+s*(1.05+.15*Math.sin(i*.75)),height(pathX(z)+s,z)+.035,z);if(i<100){const k=i*2;pi.push(k,k+2,k+1,k+1,k+2,k+3);}}
-const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.Float32BufferAttribute(pv,3));pg.setIndex(pi);pg.computeVertexNormals();mesh(pg,mat('#c8b893'));
+const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.Float32BufferAttribute(pv,3));pg.setIndex(pi);pg.computeVertexNormals();const footpathMat=mat('#c8b893');mesh(pg,footpathMat);
 
 // Distance layers: sea and mountainous islands dissolve into atmospheric haze.
 mesh(new THREE.PlaneGeometry(1600,1600).rotateX(-Math.PI/2),mat('#86b9c1',.42),0,-5,-300);
@@ -51,14 +60,28 @@ const sunDisk=mesh(new THREE.SphereGeometry(9,24,16),new THREE.MeshBasicMaterial
 
 // Fine wind-bent blades, instanced rather than separate draw calls.
 const bladeGeo=new THREE.BufferGeometry();bladeGeo.setAttribute('position',new THREE.Float32BufferAttribute([-.045,0,0,.045,0,0,-.026,.28,.025,.026,.28,.025,0,.64,.11],3));bladeGeo.setIndex([0,1,2,1,3,2,2,3,4]);bladeGeo.computeVertexNormals();
-const grassMat=new THREE.MeshStandardMaterial({color:'#829557',side:THREE.DoubleSide,roughness:1});
+// Shaded at the root, catching the light at the tip: the cheapest depth a blade can have.
+bladeGeo.setAttribute('color',new THREE.Float32BufferAttribute([.62,.62,.56,.62,.62,.56,.9,.92,.86,.9,.92,.86,1.2,1.18,1.06],3));
+const grassMat=new THREE.MeshStandardMaterial({color:'#829557',side:THREE.DoubleSide,roughness:1,vertexColors:true});
 const wind={value:0};grassMat.onBeforeCompile=s=>{s.uniforms.uTime=wind;s.vertexShader='uniform float uTime;\n'+s.vertexShader;s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nfloat phase=instanceMatrix[3].x*.4+instanceMatrix[3].z*.3; transformed.x += sin(uTime*1.5+phase)*position.y*position.y*.22;');};
 const GRASS_MAX=lite?9000:76000;const grass=new THREE.InstancedMesh(bladeGeo,grassMat,GRASS_MAX);const dummy=new THREE.Object3D();let gn=0;
 // Where every blade stands, so the village can clear the ones it paves over.
 const bladeX=new Float32Array(GRASS_MAX),bladeZ=new Float32Array(GRASS_MAX),bladeGone=new Uint8Array(GRASS_MAX);
 // A meadow around the square rather than a square field: the village grew, and
 // the grass grew with it. The core stays beaten earth — a village green is walked on.
-for(let i=0;i<150000&&gn<GRASS_MAX;i++){const a=rand()*6.283,rr=13+Math.sqrt(rand())*67;const x=CENTER.x+Math.cos(a)*rr,z=CENTER.z+Math.sin(a)*rr;if(z>3&&Math.abs(x-pathX(z))<1.2)continue;bladeX[gn]=x;bladeZ[gn]=z;dummy.position.set(x,height(x,z),z);dummy.rotation.set(0,rand()*6.28,0);const s=.5+rand()*1.1;dummy.scale.set(s,.55+rand()*.9,s);dummy.updateMatrix();grass.setMatrixAt(gn,dummy.matrix);grass.setColorAt(gn,new THREE.Color().setHSL(.19+rand()*.055,.23+rand()*.18,.27+rand()*.17));gn++;}grass.count=gn;grass.receiveShadow=true;grass.frustumCulled=false;scene.add(grass);
+// The meadow map thins the grass on its dry patches and lets it stand taller and
+// greener in the lush ones; a few straw-coloured blades are mixed in everywhere.
+let seed2=9137;const rand2=()=>{seed2=(seed2*16807)%2147483647;return(seed2-1)/2147483646};const bladeTone=new THREE.Color();
+for(let i=0;i<150000&&gn<GRASS_MAX;i++){const a=rand()*6.283,rr=13+Math.sqrt(rand())*67;const x=CENTER.x+Math.cos(a)*rr,z=CENTER.z+Math.sin(a)*rr;if(z>3&&Math.abs(x-pathX(z))<1.2)continue;const lush=lushness(x,z);if(rand2()>.45+lush*.55)continue;bladeX[gn]=x;bladeZ[gn]=z;dummy.position.set(x,height(x,z),z);dummy.rotation.set(rand2()*.3-.15,rand()*6.28,rand2()*.3-.15);const s=.5+rand()*1.1;dummy.scale.set(s,(.55+rand()*.9)*(.7+lush*.55),s);dummy.updateMatrix();grass.setMatrixAt(gn,dummy.matrix);
+ const straw=rand2()<.07;bladeTone.setHSL(straw?.12+rand()*.03:.155+lush*.07+rand()*.035,straw?.32:.2+lush*.16+rand()*.12,straw?.42+rand()*.1:.3-lush*.04+rand()*.14);grass.setColorAt(gn,bladeTone);gn++;}grass.count=gn;grass.receiveShadow=true;grass.frustumCulled=false;scene.add(grass);
+// Wildflowers in small drifts on the lush ground — anemone red, white chamomile,
+// yellow crown daisy. One instanced draw for all of them.
+const FLOWER_MAX=lite?260:1600;const flowers=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),new THREE.MeshStandardMaterial({roughness:.8}),FLOWER_MAX);let fn=0;
+const flowerX=new Float32Array(FLOWER_MAX),flowerZ=new Float32Array(FLOWER_MAX),flowerGone=new Uint8Array(FLOWER_MAX);
+const FLOWER_TONES=['#c8423c','#f3efe2','#e9c443','#b9a3d0'].map(c=>new THREE.Color(c));
+for(let drift=0;drift<400&&fn<FLOWER_MAX;drift++){const a=rand2()*6.283,rr=15+Math.sqrt(rand2())*60;const cx=CENTER.x+Math.cos(a)*rr,cz=CENTER.z+Math.sin(a)*rr;if(lushness(cx,cz)<.45)continue;const tone=FLOWER_TONES[(rand2()*FLOWER_TONES.length)|0];
+ for(let k=0;k<12&&fn<FLOWER_MAX;k++){const x=cx+(rand2()-.5)*3.2,z=cz+(rand2()-.5)*3.2;if(z>3&&Math.abs(x-pathX(z))<1.3)continue;flowerX[fn]=x;flowerZ[fn]=z;dummy.position.set(x,height(x,z)+.22+rand2()*.22,z);dummy.rotation.set(0,rand2()*6.28,0);const fs=.045+rand2()*.035;dummy.scale.set(fs,fs*.55,fs);dummy.updateMatrix();flowers.setMatrixAt(fn,dummy.matrix);flowers.setColorAt(fn,tone);fn++;}}
+flowers.count=fn;flowers.frustumCulled=false;scene.add(flowers);
 
 // Olive trees: twisting trunks, tapering branches and individual silver leaves.
 const bark=mat('#6c6953');
@@ -127,6 +150,9 @@ function clearPlanting(){
   bladeGone[i]=1;grass.setMatrixAt(i,HIDDEN);blades=true;
  }
  if(blades)grass.instanceMatrix.needsUpdate=true;
+ let blooms=false;
+ for(let i=0;i<fn;i++){if(flowerGone[i]||!spots.some(s=>Math.hypot(flowerX[i]-s.x,flowerZ[i]-s.z)<s.r+.4))continue;flowerGone[i]=1;flowers.setMatrixAt(i,HIDDEN);blooms=true;}
+ if(blooms)flowers.instanceMatrix.needsUpdate=true;
  let canopy=false;
  for(const tree of treeParts){
   if(!tree.group.visible)continue;
@@ -333,6 +359,7 @@ window.addEventListener('message',event=>{
  document.body.classList.toggle('has-community',data.community===true);
  if(data.quality==='low'||data.quality==='high'){const low=data.quality==='low';if(low!==lowQuality)applyQuality(low);}
  if(typeof data.sound==='boolean')applySound(data.sound);
+ if(typeof data.palette==='string')applyPalette(data.palette);
  deskInfo=data.desk&&typeof data.desk.label==='string'&&typeof data.desk.prompt==='string'?{label:data.desk.label,prompt:data.desk.prompt,text:typeof data.desk.text==='string'?data.desk.text:'',writable:data.desk.writable===true}:null;
  if(Array.isArray(data.booths))installBooths(data.booths.filter(b=>b&&typeof b.itemId==='string'&&typeof b.label==='string').map(b=>({itemId:b.itemId,label:b.label,kind:typeof b.kind==='string'?b.kind:'open',open:b.open!==false,current:b.current===true})));
  if(data.navigation==='teacher'||data.navigation==='free')navigation=data.navigation;
@@ -389,9 +416,27 @@ let lowQuality=lite;
 // standalone tour keeps its own buttons. Idempotent: the state message that
 // carries them is posted on every sync.
 function applyQuality(low){lowQuality=low;renderer.setPixelRatio(low?1:Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=!low;grass.count=low?Math.floor(gn*.55):gn;$('quality').textContent=low?'איכות חסכונית':'איכות גבוהה';}
+/**
+ * The colour set the student chose in the app (palettes.js). Sky, haze and
+ * light are set outright; every material moves by its family's ratio to the
+ * hill as drawn, so 'default' gives back exactly the original look.
+ */
+const paletteTargets=[[stone,'stone'],...stoneMats.map(m=>[m,'stone']),[wood,'wood'],[bark,'wood'],[trim,'trim'],[tile,'roof'],[plaster,'plaster'],[grassMat,'grass'],[leafMat,'leaves'],[footpathMat,'earth'],...village.paletteMaterials.map(p=>[p.material,p.slot])].map(([material,slot])=>({material,slot,base:material.color.clone()}));
+let paletteId='default';
+function paletteRatio(palette,slot){const from=new THREE.Color(PALETTES.default[slot]),to=new THREE.Color(palette[slot]);return new THREE.Color(to.r/Math.max(from.r,.001),to.g/Math.max(from.g,.001),to.b/Math.max(from.b,.001));}
+function applyPalette(id){
+ const next=Object.prototype.hasOwnProperty.call(PALETTES,id)?id:'default';if(next===paletteId)return;paletteId=next;const palette=paletteFor(next);
+ for(const target of paletteTargets)target.material.color.copy(target.base).multiply(paletteRatio(palette,target.slot));
+ skyMat.uniforms.top.value.set(palette.sky);skyMat.uniforms.bottom.value.set(palette.horizon);scene.background.set(palette.haze);scene.fog.color.set(palette.fog);hemi.color.set(palette.hemiSky);hemi.groundColor.set(palette.hemiGround);
+ const g=paletteRatio(palette,'ground'),e=paletteRatio(palette,'earth'),colors=terrainGeo.attributes.color;
+ for(let i=0;i<colors.count;i++){const w=terrainEarth[i];colors.setXYZ(i,terrainBase[i*3]*(g.r+(e.r-g.r)*w),terrainBase[i*3+1]*(g.g+(e.g-g.g)*w),terrainBase[i*3+2]*(g.b+(e.b-g.b)*w));}
+ colors.needsUpdate=true;
+}
+// The standalone tour can try a set from its address: village.html?palette=forest
+{const asked=new URLSearchParams(location.search).get('palette');if(asked)applyPalette(asked);}
 async function applySound(on){try{if(sound.active!==on){const now=await sound.toggle();$('sound').textContent=now?'♫ השתקה':'♫ צלילים';}}catch{/* no audio on this device */}}
 $('quality').onclick=()=>applyQuality(!lowQuality);
-let drag=null;canvas.onpointerdown=e=>{if(uiPaused)return;pointerMoved=false;drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY};canvas.setPointerCapture(e.pointerId);moving=false;};canvas.onpointermove=e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>6)pointerMoved=true;yaw-=(e.clientX-drag.x)*.004;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-drag.y)*.003,-.7,.55);drag={...drag,x:e.clientX,y:e.clientY};};canvas.onpointerup=canvas.onpointercancel=()=>drag=null;
+let drag=null;canvas.onpointerdown=e=>{if(uiPaused)return;pointerMoved=false;drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY};canvas.setPointerCapture(e.pointerId);moving=false;};canvas.onpointermove=e=>{if(!drag)return;if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>6)pointerMoved=true;({yaw,pitch}=dragLook({yaw,pitch},e.clientX-drag.x,e.clientY-drag.y,e.pointerType));drag={...drag,x:e.clientX,y:e.clientY};};canvas.onpointerup=canvas.onpointercancel=()=>drag=null;
 addEventListener('keydown',e=>{if(uiPaused||$('preview-info').open)return;if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyE'].includes(e.code)){e.preventDefault();keys.add(e.code);moving=false;if(e.code==='KeyE')$('enter').click();}});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',()=>{keys.clear();drag=null;});
 for(const b of document.querySelectorAll('[data-key]')){b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key);moving=false;};b.onpointerup=b.onpointercancel=()=>keys.delete(b.dataset.key);}
 /** A station's state on the map: booths carry it on their own spec, the fixed places come from the shell. */

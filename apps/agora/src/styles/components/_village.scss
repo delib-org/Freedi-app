@@ -670,6 +670,53 @@ article.village-note { cursor: default; }
 
     &::after { inset-inline-start: 21px; }
   }
+
+  // The colour sets: one swatch each, painted sky over roof over meadow.
+  &__row--palette {
+    flex-wrap: wrap;
+    cursor: default;
+
+    &:hover { border-color: var(--border-subtle); }
+  }
+
+  &__swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  &__swatch {
+    // A picture of each set's 3D colours, not UI chrome: the hexes are the
+    // world's own (prototypes/olive-hill/palettes.js).
+    --swatch-sky: #76acc9;
+    --swatch-roof: #ae6748;
+    --swatch-grass: #829557;
+
+    inline-size: 44px;
+    block-size: 44px;
+    padding: 0;
+    border: 2px solid var(--border-subtle);
+    border-radius: 50%;
+    background: linear-gradient(
+      to bottom,
+      var(--swatch-sky) 0 40%,
+      var(--swatch-roof) 40% 62%,
+      var(--swatch-grass) 62% 100%
+    );
+    cursor: pointer;
+
+    &--sunset { --swatch-sky: #8a86b8; --swatch-roof: #b8553a; --swatch-grass: #8f9650; }
+    &--mediterranean { --swatch-sky: #3f8fd0; --swatch-roof: #c4643f; --swatch-grass: #7f9a55; }
+    &--forest { --swatch-sky: #6f9fb2; --swatch-roof: #7d4a35; --swatch-grass: #5d8a44; }
+    &--desert { --swatch-sky: #8fb6d0; --swatch-roof: #b9774a; --swatch-grass: #b9a46c; }
+
+    &[aria-checked='true'] {
+      border-color: var(--mine-strong);
+      box-shadow: 0 0 0 3px var(--mine-strong);
+    }
+
+    &:focus-visible { outline: 3px solid var(--mine-ink); outline-offset: 3px; }
+  }
 }
 
 // The teacher's post, pinned above the news inside the one post box

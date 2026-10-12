@@ -57,3 +57,28 @@ export function isVillageSoundOn(): boolean {
 export function setVillageSound(on: boolean): void {
 	savePreference(SOUND_KEY, on ? 'on' : 'off');
 }
+
+/**
+ * The village's colour set — sky, ground, grass and houses — chosen per
+ * device, like sound and quality. The colours themselves live with the world
+ * (prototypes/olive-hill/palettes.js); the app only names them, and a test
+ * keeps the two lists equal.
+ */
+export const VILLAGE_PALETTES = ['default', 'sunset', 'mediterranean', 'forest', 'desert'] as const;
+export type VillagePalette = (typeof VILLAGE_PALETTES)[number];
+
+const PALETTE_KEY = 'agora_village_palette';
+
+function isVillagePalette(value: string | null): value is VillagePalette {
+	return VILLAGE_PALETTES.some((palette) => palette === value);
+}
+
+export function villagePalette(): VillagePalette {
+	const saved = preference(PALETTE_KEY);
+
+	return isVillagePalette(saved) ? saved : 'default';
+}
+
+export function setVillagePalette(palette: VillagePalette): void {
+	savePreference(PALETTE_KEY, palette);
+}

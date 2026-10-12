@@ -28,7 +28,9 @@ import {
 	isLightWorld,
 	isVillageSoundOn,
 	setLightWorld,
+	setVillagePalette,
 	setVillageSound,
+	villagePalette,
 } from '../../lib/villagePrefs';
 import { StageNav, planItemLabel } from '../../components/StageNav';
 import { StageTransition, hasStageTransition } from '../../components/StageTransition';
@@ -205,6 +207,10 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 							lightMode: isLightWorld(),
 							onLightMode: (on: boolean) => {
 								setLightWorld(on);
+							},
+							palette: villagePalette(),
+							onPalette: (palette) => {
+								setVillagePalette(palette);
 							},
 							onSimpleView: () => {
 								villageOverride = false;

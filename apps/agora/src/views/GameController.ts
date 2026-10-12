@@ -63,7 +63,9 @@ import {
 	isLightWorld,
 	isVillageSoundOn,
 	setLightWorld,
+	setVillagePalette,
 	setVillageSound,
+	villagePalette,
 } from '../lib/villagePrefs';
 import { CarriedContext } from '../components/CarriedContext';
 import { ResultsBoard } from '../components/ResultsBoard';
@@ -424,6 +426,10 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							lightMode: isLightWorld(),
 							onLightMode: (on: boolean) => {
 								setLightWorld(on);
+							},
+							palette: villagePalette(),
+							onPalette: (palette) => {
+								setVillagePalette(palette);
 							},
 							onSimpleView: () => {
 								villageOverride = false;
