@@ -113,6 +113,16 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 															: 'teacher.no_real_name',
 													),
 											),
+											// On the name, not in the small print: a refused text is
+											// the one fact on this row the teacher must not miss
+											(participant.languageStrikes ?? 0) > 0
+												? m(
+														'span.class-panel__strikes.class-panel__strikes--chip',
+														t('teacher.language_strikes', {
+															n: String(participant.languageStrikes),
+														}),
+													)
+												: null,
 										]),
 										m(
 											'button.btn.btn--sm.btn--secondary.class-panel__message',
@@ -148,17 +158,6 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 												'span.roster__stat--points',
 												t('roster.points', { points: String(participant.points.total) }),
 											),
-											(participant.languageStrikes ?? 0) > 0
-												? [
-														' · ',
-														m(
-															'span.class-panel__strikes',
-															t('teacher.language_strikes', {
-																n: String(participant.languageStrikes),
-															}),
-														),
-													]
-												: null,
 											idle > IDLE_AFTER_MS && current?.stage !== AgoraStage.lobby
 												? [
 														' · ',

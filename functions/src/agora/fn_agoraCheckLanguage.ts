@@ -7,7 +7,9 @@ import {
 	AGORA_LIMITS,
 	CheckLanguageRequest,
 	CheckLanguageResponse,
+	AgoraLanguagePlace,
 	applyLanguageStrike,
+	isAgoraLanguagePlace,
 	createAgoraParticipantId,
 	functionConfig,
 	isAgoraAiUid,
@@ -22,6 +24,10 @@ export interface LanguageCheckInput {
 	sessionId: string;
 	text: string;
 	statementId?: string;
+	/** Where the student was writing — for the teacher's alert */
+	place?: AgoraLanguagePlace;
+	/** The stage-plan item the text belonged to */
+	itemId?: string;
 }
 
 /** The detector, injectable so the ledger can be tested without a model */
@@ -61,7 +67,7 @@ export async function checkLanguageFor(
 	detect: LanguageDetector = containsBadLanguage,
 	now: () => number = Date.now,
 ): Promise<CheckLanguageResponse> {
-	const { uid, sessionId, statementId } = input;
+	const { uid, sessionId, statementId, place, itemId } = input;
 	const text = input.text.trim().slice(0, AGORA_LIMITS.MAX_PROPOSAL_LENGTH);
 	if (!text) return { ok: true };
 
@@ -107,6 +113,8 @@ export async function checkLanguageFor(
 		kind: 'language',
 		text: '',
 		...(statementId ? { aboutStatementId: statementId } : {}),
+		...(place ? { languagePlace: place } : {}),
+		...(itemId ? { languageItemId: itemId } : {}),
 		removedText: text,
 	});
 
@@ -126,7 +134,8 @@ export const agoraCheckLanguage = onCall(
 		if (!uid) {
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
-		const { sessionId, text, statementId } = request.data ?? ({} as CheckLanguageRequest);
+		const { sessionId, text, statementId, place, itemId } =
+			request.data ?? ({} as CheckLanguageRequest);
 		if (!sessionId || typeof sessionId !== 'string') {
 			throw new HttpsError('invalid-argument', 'sessionId is required');
 		}
@@ -137,8 +146,21 @@ export const agoraCheckLanguage = onCall(
 			throw new HttpsError('invalid-argument', 'statementId must be a string');
 		}
 
+		// Context for the teacher's alert, never a reason to refuse: an unknown
+		// place (a newer client) is dropped, not rejected
+		const safePlace = isAgoraLanguagePlace(place) ? place : undefined;
+		const safeItemId =
+			typeof itemId === 'string' && itemId.length > 0 && itemId.length <= 200 ? itemId : undefined;
+
 		try {
-			return await checkLanguageFor({ uid, sessionId, text, statementId });
+			return await checkLanguageFor({
+				uid,
+				sessionId,
+				text,
+				statementId,
+				place: safePlace,
+				itemId: safeItemId,
+			});
 		} catch (error) {
 			if (error instanceof HttpsError) throw error;
 			// Never the text: it is a child's words, and this is Cloud Logging.

@@ -140,6 +140,35 @@ describe('checkLanguageFor', () => {
 		});
 	});
 
+	it("files where the student was writing, for the teacher's alert", async () => {
+		await checkLanguageFor(
+			{
+				uid: STUDENT,
+				sessionId: SESSION,
+				text: 'shut up',
+				statementId: 'a1',
+				place: 'answer',
+				itemId: 'q-2',
+			},
+			dirty,
+		);
+		const line = sets.find((entry) => entry.path.startsWith('agoraTeacherMessages/'));
+		expect(line?.data).toMatchObject({
+			kind: 'language',
+			languagePlace: 'answer',
+			languageItemId: 'q-2',
+			aboutStatementId: 'a1',
+			removedText: 'shut up',
+		});
+	});
+
+	it('leaves the place off a line when the client did not say', async () => {
+		await checkLanguageFor({ uid: STUDENT, sessionId: SESSION, text: 'bad' }, dirty);
+		const line = sets.find((entry) => entry.path.startsWith('agoraTeacherMessages/'));
+		expect(line?.data.languagePlace).toBeUndefined();
+		expect(line?.data.languageItemId).toBeUndefined();
+	});
+
 	it('counts every refusal and floors the balance at zero', async () => {
 		await checkLanguageFor({ uid: STUDENT, sessionId: SESSION, text: 'bad one' }, dirty);
 		await checkLanguageFor({ uid: STUDENT, sessionId: SESSION, text: 'bad two' }, dirty);

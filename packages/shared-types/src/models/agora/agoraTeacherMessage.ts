@@ -50,6 +50,10 @@ export const AgoraTeacherMessageSchema = object({
 	moderation: optional(AgoraModerationActionSchema),
 	/** hidden: the text taken down; edited: the text before the teacher's wording */
 	removedText: optional(string()),
+	/** language: where the student was writing (AgoraLanguagePlace; a string so new places never break old readers) */
+	languagePlace: optional(string()),
+	/** language: the stage-plan item the refused text belonged to */
+	languageItemId: optional(string()),
 	createdAt: number(),
 });
 

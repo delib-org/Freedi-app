@@ -90,7 +90,9 @@ import { liveWeighings } from '../../lib/flows/liveTally';
 import { ClassPanel, progressFacts } from './ClassPanel';
 import { MessagesPanel } from './MessagesPanel';
 import { StudentThreadDrawer } from './StudentThreadDrawer';
+import { LanguageAlert } from './LanguageAlert';
 import {
+	getTeacherConsoleState,
 	listenToTeacherConsole,
 	realNameOf,
 	stopTeacherConsole,
@@ -1074,6 +1076,18 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									})
 								: null;
 
+			// A refused text, the moment it is refused — above the board and the
+			// class view alike, until the teacher says "got it"
+			const languageAlert = m(LanguageAlert, {
+				sessionId,
+				privateDevice,
+				threads: getTeacherConsoleState().threads,
+				participants,
+				plan,
+				realNameOf,
+				onOpen: openDrawer,
+			});
+
 			const drawerParticipant = drawerUid
 				? participants.find((participant) => participant.userId === drawerUid)
 				: undefined;
@@ -1132,6 +1146,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						}),
 					),
 					sidePanel,
+					languageAlert,
 					drawer,
 					roleSheet,
 				]);
@@ -1154,6 +1169,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						m(Results, { session, topic }),
 					]),
 					sidePanel,
+					languageAlert,
 					drawer,
 					roleSheet,
 				]);
@@ -1230,6 +1246,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					peek,
 				]),
 				sidePanel,
+				languageAlert,
 				drawer,
 				roleSheet,
 			]);

@@ -3,6 +3,7 @@ import { Icon } from '../../components/Icon';
 import { t } from '../../lib/i18n';
 import { formatMessageTime } from '../ThreadChat';
 import { teacherLineText } from '../../components/TeacherThreadSheet';
+import { languagePlaceKey } from '../../lib/flows/languageAlerts';
 import {
 	markStudentThreadSeen,
 	moderationErrorKey,
@@ -12,6 +13,7 @@ import {
 import {
 	AGORA_TEACHER_MESSAGE,
 	AGORA_TEACHER_PRESETS,
+	isAgoraLanguagePlace,
 	type AgoraTeacherMessage,
 } from '@freedi/shared-types';
 
@@ -71,6 +73,9 @@ export function StudentThreadDrawer(): m.Component<StudentThreadDrawerAttrs> {
 					m('span.chat-system__title', t('teacher.notice_language')),
 					m('span.chat-system__time', formatMessageTime(entry.createdAt)),
 				]),
+				isAgoraLanguagePlace(entry.languagePlace)
+					? m('p.chat-system__text', t(languagePlaceKey(entry.languagePlace)))
+					: null,
 				entry.removedText ? m('blockquote.teacher-thread__removed', entry.removedText) : null,
 			]);
 		}

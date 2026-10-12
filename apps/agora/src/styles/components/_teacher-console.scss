@@ -96,6 +96,14 @@
 		font-weight: 600;
 		color: var(--danger-ink);
 		white-space: nowrap;
+
+		// On the name: an outlined chip, still text-red, still not a button
+		&--chip {
+			align-self: flex-start;
+			padding: 0 var(--space-sm);
+			border: 1.5px solid var(--danger);
+			border-radius: var(--radius-full);
+		}
 	}
 
 	// Danger-red, never a camp colour: a count of things owed to the teacher

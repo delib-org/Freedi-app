@@ -219,8 +219,8 @@ export type {
 } from './agoraCivicCallables';
 
 export type { AgoraValueScore, AgoraPoints, AgoraParticipant } from './agoraParticipant';
-export type { LanguageStrikeOutcome } from './agoraLanguage';
-export { applyLanguageStrike } from './agoraLanguage';
+export type { LanguageStrikeOutcome, AgoraLanguagePlace } from './agoraLanguage';
+export { applyLanguageStrike, AGORA_LANGUAGE_PLACES, isAgoraLanguagePlace } from './agoraLanguage';
 export {
 	AgoraValueScoreSchema,
 	AgoraPointsSchema,

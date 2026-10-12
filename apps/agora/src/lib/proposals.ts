@@ -479,6 +479,7 @@ export async function submitProposal(
 		sessionId: session.sessionId,
 		text,
 		statementId: existingProposalId,
+		place: 'note',
 	});
 
 	if (existingProposalId) {
@@ -525,7 +526,7 @@ export async function createProposal(
 ): Promise<void> {
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
-	await assertCleanLanguage({ sessionId: session.sessionId, text });
+	await assertCleanLanguage({ sessionId: session.sessionId, text, place: 'note' });
 	await setDoc(
 		doc(db, Collections.statements, proposalId),
 		buildProposalStatement(session, proposalId, user.uid, anonName, text),
@@ -556,7 +557,13 @@ export async function saveAnswer(
 	if (!user) throw new Error('Not authenticated');
 	if (!item.statementId) throw new Error('Question item has no statement');
 	const statementId = answerStatementId(session.sessionId, user.uid, item.itemId);
-	await assertCleanLanguage({ sessionId: session.sessionId, text, statementId });
+	await assertCleanLanguage({
+		sessionId: session.sessionId,
+		text,
+		statementId,
+		place: 'answer',
+		itemId: item.itemId,
+	});
 	await trackWrite(
 		'question.saving_answer',
 		setDoc(
@@ -687,6 +694,7 @@ export async function submitThreadMessage(
 		sessionId: session.sessionId,
 		text,
 		statementId: proposal.statementId,
+		place: kind === AgoraMessageKind.suggestion ? 'improvement' : 'chat',
 	});
 	const newRef = doc(collection(db, Collections.statements));
 

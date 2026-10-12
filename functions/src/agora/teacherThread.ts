@@ -30,6 +30,8 @@ export interface ThreadLine {
 	aboutStatementId?: string;
 	moderation?: AgoraModerationAction;
 	removedText?: string;
+	languagePlace?: string;
+	languageItemId?: string;
 }
 
 export async function fileThreadLine(line: ThreadLine): Promise<string> {
@@ -46,6 +48,8 @@ export async function fileThreadLine(line: ThreadLine): Promise<string> {
 		...(line.aboutStatementId ? { aboutStatementId: line.aboutStatementId } : {}),
 		...(line.moderation ? { moderation: line.moderation } : {}),
 		...(line.removedText !== undefined ? { removedText: line.removedText } : {}),
+		...(line.languagePlace ? { languagePlace: line.languagePlace } : {}),
+		...(line.languageItemId ? { languageItemId: line.languageItemId } : {}),
 		createdAt: Date.now(),
 	};
 	await db.collection(Collections.agoraTeacherMessages).doc(messageId).set(message);

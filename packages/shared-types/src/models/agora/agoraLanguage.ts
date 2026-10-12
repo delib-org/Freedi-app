@@ -1,6 +1,18 @@
 import { AGORA_POINTS } from './agoraConstants';
 import type { AgoraParticipant, AgoraPoints } from './agoraParticipant';
 
+/**
+ * Where a refused text was being written. Stored on the thread line as a
+ * plain optional string (not a picklist in the schema) so a place added
+ * later never makes an older console drop the whole line.
+ */
+export const AGORA_LANGUAGE_PLACES = ['note', 'answer', 'improvement', 'chat'] as const;
+export type AgoraLanguagePlace = (typeof AGORA_LANGUAGE_PLACES)[number];
+
+export function isAgoraLanguagePlace(value: unknown): value is AgoraLanguagePlace {
+	return typeof value === 'string' && (AGORA_LANGUAGE_PLACES as readonly string[]).includes(value);
+}
+
 /** What one refused text does to the participant doc — the fields to write */
 export interface LanguageStrikeOutcome {
 	points: AgoraPoints;
