@@ -115,6 +115,13 @@ for (let attempt = 0; attempt < 3; attempt++) {
 	if (attempt === 2) fail('teacher sign-in never took');
 }
 await tpage.goto(`${VITE_HOST}/#!/teach/session/${run.sessionId}/class`, { waitUntil: 'domcontentloaded' });
+// A laptop is asked once where it is (private screen or the class wall); its scrim
+// covers the place bar until answered — as e2e-class-view answers it.
+const roleChoice = tpage.locator('.device-role[data-mode="ask"] .device-role__choice[data-role="private"]');
+if (await roleChoice.waitFor({ timeout: 5000 }).then(() => true, () => false)) {
+	await roleChoice.click();
+	await tpage.locator('.device-role__scrim').waitFor({ state: 'detached', timeout: 5000 });
+}
 await tpage.locator('iframe.village-shell__world').waitFor({ timeout: 30000 });
 await tpage.waitForTimeout(4000);
 await tpage.locator('.place-bar__item[data-place="board"]').click();
