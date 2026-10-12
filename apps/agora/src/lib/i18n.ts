@@ -1005,6 +1005,10 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'challenge.your_turn_hint': 'עוד רגע המורה ייתן לכם את הבמה. חשבו איזו הצעה חסרה על הלוח.',
 		'challenge.desk_title': 'כתבו את ההצעה שלכם',
 		'challenge.desk_placeholder': 'ההצעה שחסרה על הלוח…',
+		'voting.saving': 'שומרים את הקול שלכם…',
+		'voting.save_failed':
+			'הקול לא נשמר — בדקו את החיבור ונסו שוב.',
+		'voting.retry': 'לנסות שוב',
 		'challenge.rule': 'אם הכיתה תעדיף אתכם על ההצעה החלשה ביותר — ההצעה שלכם תיכנס במקומה.',
 		'challenge.send': 'להעלות ללוח',
 		'challenge.pass': 'לוותר על התור',
@@ -2690,6 +2694,10 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'challenge.send': 'Put it on the board',
 		'challenge.pass': "I'll pass",
 		'challenge.too_short': 'Too short to put to the class — write a little more.',
+		'voting.saving': 'Saving your vote…',
+		'voting.save_failed':
+			'Your vote was not saved — check the connection and try again.',
+		'voting.retry': 'Try again',
 		'challenge.waiting_writer': '{{name}} is writing a new option',
 		'challenge.waiting_next': '{{name}} has the floor next',
 		'challenge.ready_to_vote': 'The option is ready — waiting for the teacher to open the vote.',
@@ -4368,6 +4376,10 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'challenge.blind':
 			'لا أحد يرى العدّ حتى يغلق المعلّم التصويت. كم صوّتوا ليس سرًّا؛ لمن صوّتوا هو السرّ.',
 		'challenge.outcome_survived': 'اقتراح {{name}} انضمّ إلى اللوحة',
+		'voting.saving': 'جارٍ حفظ صوتكم…',
+		'voting.save_failed':
+			'لم يُحفظ صوتكم — تحققوا من الاتصال وحاولوا مجددًا.',
+		'voting.retry': 'حاولوا مجددًا',
 		'challenge.outcome_failed': 'اقتراح {{name}} لم ينجح هذه المرة',
 		'challenge.outcome_votes': '{{n}} أصوات',
 		'challenge.evicted': 'حلّ محلّ: {{statement}}',
@@ -6073,6 +6085,10 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'challenge.outcome_failed': 'La opción de {{name}} no lo logró esta vez',
 		'challenge.outcome_votes': '{{n}} votos',
 		'challenge.evicted': 'Ocupó el lugar de: {{statement}}',
+		'voting.saving': 'Guardando vuestro voto…',
+		'voting.save_failed':
+			'Vuestro voto no se guardó: revisad la conexión y volved a intentarlo.',
+		'voting.retry': 'Reintentar',
 		'challenge.board_stands': 'El tablero queda como estaba.',
 		'challenge.points': '+{{n}} puntos',
 		'challenge.outcome_passed': '{{name}} pasó su turno.',
@@ -7817,6 +7833,10 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'challenge.outcome_skipped': 'Wir sind von {{name}} weitergegangen.',
 		'celebrate.your_turn': 'Du hast das Wort',
 		'celebrate.your_turn_hint':
+		'voting.saving': 'Eure Stimme wird gespeichert…',
+		'voting.save_failed':
+			'Eure Stimme wurde nicht gespeichert – prüft die Verbindung und versucht es noch einmal.',
+		'voting.retry': 'Noch einmal',
 			'Schreib eine neue Option oder setze aus — beides ist völlig in Ordnung.',
 		'celebrate.challenge_survived': 'Deine Option kam auf den Stimmzettel!',
 		'toast.challenge_your_turn': 'Du bist am Wort',
@@ -9572,6 +9592,10 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.challenge_failed': 'De nieuwe optie haalde het niet — het bord blijft',
 		'toast.challenge_vote_freed': 'De optie die je koos is van het bord — kies opnieuw',
 		'votingGame.saving_turn': 'Beurt wordt bijgewerkt',
+		'voting.saving': 'Je stem wordt opgeslagen…',
+		'voting.save_failed':
+			'Je stem is niet opgeslagen — controleer de verbinding en probeer het opnieuw.',
+		'voting.retry': 'Opnieuw proberen',
 		'votingGame.saving_pitch': 'Je optie wordt verstuurd',
 		'teacher.challenge_game': 'Leerlingen nieuwe opties op de stemlijst laten zetten',
 		'teacher.challenge_game_hint':
