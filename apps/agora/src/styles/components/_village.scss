@@ -62,14 +62,27 @@ body:has(.village-library--reading) { overflow:hidden; }
 .village-coins .coin { flex:0 0 auto; width:36px; height:36px; }
 .village-coins__gain { color:var(--coin-core-hi); animation:village-coin-gain 2s ease-out; }
 
-// The shekel itself (components/Coin.ts): every metal is a token
+// The obol itself (components/Coin.ts): every metal is a token
 .coin {
   display: block;
   filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.35));
-  &__ring { stroke: var(--coin-edge); stroke-width: 1; }
-  &__mill { fill: none; stroke: var(--coin-edge); stroke-width: 1.2; stroke-dasharray: 0.9 1.6; opacity: 0.55; }
-  &__core { stroke: var(--coin-core-lo); stroke-width: 1; }
-  &__sign { fill: none; stroke: var(--coin-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  &__ring { stroke: var(--coin-edge); stroke-width: 0.8; }
+  // Reeding: fine teeth round the edge, then the raised rim inside them
+  &__mill { fill: none; stroke: var(--coin-edge); stroke-width: 1.6; stroke-dasharray: 0.55 0.55; opacity: 0.7; }
+  &__rim { fill: none; stroke: var(--coin-ring-lo); stroke-width: 0.9; }
+  &__legend {
+    fill: var(--coin-legend);
+    font: 700 4.7px/1 Georgia, 'Times New Roman', serif;
+    letter-spacing: 0.55px;
+    text-anchor: middle;
+  }
+  &__stop-dot { fill: var(--coin-legend); }
+  &__core { stroke: var(--coin-core-lo); stroke-width: 0.9; }
+  // The beaded circle: zero-length dashes with round caps are dots
+  &__beads { fill: none; stroke: var(--coin-ink); stroke-width: 1.1; stroke-dasharray: 0 2.29; stroke-linecap: round; opacity: 0.75; }
+  &__stem { fill: none; stroke: var(--coin-ink); stroke-width: 0.8; stroke-linecap: round; }
+  &__leaf, &__olive { fill: var(--coin-ink); }
+  &__numeral { fill: var(--coin-ink); stroke: var(--coin-core-hi); stroke-width: 0.5; paint-order: stroke; }
   &__stop--ring-hi { stop-color: var(--coin-ring-hi); }
   &__stop--ring { stop-color: var(--coin-ring); }
   &__stop--ring-lo { stop-color: var(--coin-ring-lo); }
@@ -77,12 +90,13 @@ body:has(.village-library--reading) { overflow:hidden; }
   &__stop--core { stop-color: var(--coin-core); }
   &__stop--core-lo { stop-color: var(--coin-core-lo); }
 }
-// High contrast: an outlined coin in the system's ink, the ₪ still legible
+// High contrast: an outlined coin in the system's ink, the wreath and 1 still legible
 @media (forced-colors: active) {
   .coin { filter: none; }
-  .coin__ring, .coin__core { fill: Canvas; stroke: CanvasText; stroke-width: 2; }
-  .coin__mill { stroke: CanvasText; }
-  .coin__sign { stroke: CanvasText; }
+  .coin__ring, .coin__core { fill: Canvas; stroke: CanvasText; stroke-width: 1.6; }
+  .coin__mill, .coin__rim, .coin__beads, .coin__stem { stroke: CanvasText; }
+  .coin__legend, .coin__stop-dot, .coin__leaf, .coin__olive { fill: CanvasText; }
+  .coin__numeral { fill: CanvasText; stroke: Canvas; }
 }
 @keyframes village-coin-gain { from {transform:translateY(10px);opacity:1} to {transform:translateY(-24px);opacity:0} }
 .village-feedback { top:12px; left:16px; cursor:pointer; }
