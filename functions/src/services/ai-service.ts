@@ -807,36 +807,41 @@ export interface ParagraphForMerge {
  */
 export interface MergeParagraphsResult {
 	paragraphs: ParagraphForMerge[];
-	newTitle: string;
 }
 
 /**
- * Merges new content into existing paragraphs and generates a new title
- * The AI reorganizes all content into a coherent document
+ * Merges new content into an option's body lines. The option's title is
+ * context only and is never rewritten: people have already rated it, and
+ * a merge must not change what they rated.
  * @param existingParagraphs - Current paragraphs of the target statement
  * @param newContent - The new user's suggestion text
  * @param newStatementId - ID of the source statement being merged
  * @param questionContext - The question/topic for context
- * @returns Reorganized paragraphs and new title reflecting all content
+ * @param title - The option's title, kept as is
+ * @returns Reorganized body lines
  */
 export async function mergeAndReorganizeParagraphs(
 	existingParagraphs: ParagraphForMerge[],
 	newContent: string,
 	newStatementId: string,
 	questionContext: string,
+	title: string,
 ): Promise<MergeParagraphsResult> {
 	try {
 		const isHebrew =
 			/[\u0590-\u05FF]/.test(newContent) ||
+			/[\u0590-\u05FF]/.test(title) ||
 			existingParagraphs.some((p) => /[\u0590-\u05FF]/.test(p.content));
 
 		// Format existing paragraphs for the AI
 		const existingContent = existingParagraphs.map((p, i) => `[${i + 1}] ${p.content}`).join('\n');
 
 		const prompt = isHebrew
-			? `אתה עורך תוכן שמאחד הצעות דומות למסמך קוהרנטי אחד.
+			? `אתה עורך תוכן שמוסיף רעיון דומה לגוף של הצעה קיימת.
 
-תוכן קיים (פסקאות):
+כותרת ההצעה (לא משתנה): "${title}"
+
+גוף ההצעה הקיים (פסקאות):
 ${existingContent || '(ריק)'}
 
 תוכן חדש להוספה:
@@ -846,28 +851,26 @@ ${existingContent || '(ריק)'}
 
 משימה:
 1. שלב את התוכן החדש עם הפסקאות הקיימות
-2. ארגן מחדש לזרימה הגיונית וקוהרנטית
+2. ארגן לזרימה הגיונית וקוהרנטית
 3. הסר כפילויות אבל שמור על כל הרעיונות הייחודיים
-4. צור כותרת חדשה שמשקפת את כל התוכן המאוחד
 
 כללים:
-- שמור על כל הרעיונות הייחודיים מכל המקורות
-- ארגן בסדר הגיוני (לא בהכרח לפי סדר ההגעה)
-- התוכן החדש צריך להשתלב בצורה טבעית
-- הכותרת חייבת לשקף את מגוון הרעיונות
+- אל תשנה את הכותרת ואל תחזור עליה כפסקה
+- אם התוכן החדש כבר נאמר בכותרת או בפסקאות, אל תוסיף פסקה חדשה
+- שמור על הניסוח של הפסקאות הקיימות ככל האפשר
 
 החזר JSON בפורמט:
 {
   "paragraphs": [
     {"content": "פסקה ראשונה...", "isNew": false},
-    {"content": "פסקה שניה...", "isNew": true},
-    ...
-  ],
-  "newTitle": "כותרת שמשקפת את כל התוכן"
+    {"content": "פסקה שניה...", "isNew": true}
+  ]
 }`
-			: `You are a content editor merging similar proposals into one coherent document.
+			: `You are a content editor adding a similar idea to the body of an existing proposal.
 
-EXISTING CONTENT (paragraphs):
+PROPOSAL TITLE (unchanged): "${title}"
+
+EXISTING BODY (paragraphs):
 ${existingContent || '(empty)'}
 
 NEW CONTENT TO ADD:
@@ -876,25 +879,21 @@ NEW CONTENT TO ADD:
 CONTEXT/QUESTION: "${questionContext}"
 
 TASK:
-1. Integrate the new content with existing paragraphs
-2. Reorganize into a logical, coherent flow
+1. Integrate the new content with the existing paragraphs
+2. Organize into a logical, coherent flow
 3. Remove duplicates but preserve all unique ideas
-4. Generate a new title that reflects ALL merged content
 
 RULES:
-- Preserve all unique ideas from all sources
-- Organize in logical order (not necessarily chronological)
-- New content should integrate naturally
-- Title MUST reflect the variety of ideas
+- Do not change the title and do not repeat it as a paragraph
+- If the new content is already said by the title or the paragraphs, add no new paragraph
+- Keep the wording of existing paragraphs as far as possible
 
 Return JSON format:
 {
   "paragraphs": [
     {"content": "First paragraph...", "isNew": false},
-    {"content": "Second paragraph...", "isNew": true},
-    ...
-  ],
-  "newTitle": "Title reflecting all content"
+    {"content": "Second paragraph...", "isNew": true}
+  ]
 }`;
 
 		const model = await getGenerativeAIModel();
@@ -915,15 +914,15 @@ Return JSON format:
 
 		const parsed = JSON.parse(responseText);
 
-		if (Array.isArray(parsed.paragraphs) && typeof parsed.newTitle === 'string') {
+		if (Array.isArray(parsed.paragraphs)) {
 			// Map parsed paragraphs to include sourceStatementId
-			const mergedParagraphs: ParagraphForMerge[] = parsed.paragraphs.map(
-				(p: { content: string; isNew: boolean }) => ({
+			const mergedParagraphs: ParagraphForMerge[] = parsed.paragraphs
+				.filter((p: { content?: unknown }) => typeof p.content === 'string' && p.content.trim() !== '')
+				.map((p: { content: string; isNew: boolean }) => ({
 					content: p.content,
 					// If it's new content, mark it with the source statement ID
 					sourceStatementId: p.isNew ? newStatementId : undefined,
-				}),
-			);
+				}));
 
 			// Preserve sourceStatementId from existing paragraphs where possible
 			// by matching content (AI might reorder but content should be similar)
@@ -938,10 +937,7 @@ Return JSON format:
 				}
 			}
 
-			return {
-				paragraphs: mergedParagraphs,
-				newTitle: parsed.newTitle,
-			};
+			return { paragraphs: mergedParagraphs };
 		}
 
 		// Fallback: just append the new content
@@ -963,9 +959,6 @@ function createFallbackMerge(
 	newContent: string,
 	newStatementId: string,
 ): MergeParagraphsResult {
-	const existingTitle = existingParagraphs[0]?.content || '';
-	const isHebrew = /[\u0590-\u05FF]/.test(newContent);
-
 	return {
 		paragraphs: [
 			...existingParagraphs,
@@ -974,7 +967,6 @@ function createFallbackMerge(
 				sourceStatementId: newStatementId,
 			},
 		],
-		newTitle: existingTitle + (isHebrew ? ' ועוד' : ' and more'),
 	};
 }
 

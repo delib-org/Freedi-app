@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { VALIDATION, UI } from '@/constants/common';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './AddSolutionForm.module.css';
+import { isMeaningfulSuggestion, MIN_MEANINGFUL_WORDS } from '@freedi/shared-types';
 
 interface AddSolutionFormProps {
   questionId: string;
@@ -52,9 +53,11 @@ export default function AddSolutionForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const characterCount = text.length;
+  const isMeaningful = isMeaningfulSuggestion(text);
   const isValid =
     characterCount >= VALIDATION.MIN_SOLUTION_LENGTH &&
-    characterCount <= VALIDATION.MAX_SOLUTION_LENGTH;
+    characterCount <= VALIDATION.MAX_SOLUTION_LENGTH &&
+    isMeaningful;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +102,9 @@ export default function AddSolutionForm({
             {characterCount < VALIDATION.MIN_SOLUTION_LENGTH &&
               characterCount > 0 &&
               ` (${t('minimum')} ${VALIDATION.MIN_SOLUTION_LENGTH})`}
+            {characterCount >= VALIDATION.MIN_SOLUTION_LENGTH &&
+              !isMeaningful &&
+              ` (${t('minimum')} ${MIN_MEANINGFUL_WORDS} ${t('words')})`}
           </span>
 
           <button

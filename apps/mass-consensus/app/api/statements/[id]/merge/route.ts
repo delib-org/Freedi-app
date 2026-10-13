@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isMeaningfulSuggestion, MIN_MEANINGFUL_WORDS } from '@freedi/shared-types';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES, VALIDATION } from '@/constants/common';
 import { logger } from '@/lib/utils/logger';
@@ -62,6 +63,13 @@ export async function POST(
     if (trimmedText.length < VALIDATION.MIN_SOLUTION_LENGTH) {
       return NextResponse.json(
         { error: `Solution must be at least ${VALIDATION.MIN_SOLUTION_LENGTH} characters` },
+        { status: 400 }
+      );
+    }
+
+    if (!isMeaningfulSuggestion(trimmedText)) {
+      return NextResponse.json(
+        { error: `Suggestion must have at least ${MIN_MEANINGFUL_WORDS} real words` },
         { status: 400 }
       );
     }
