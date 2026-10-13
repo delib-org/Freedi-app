@@ -119,6 +119,9 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'GOOGLE_SHEETS_PRIVATE_KEY': 'GOOGLE_SHEETS_PRIVATE_KEY',
       // Synthesis feature flags — read by functions/src/synthesis/featureFlags.ts
       'SYNTHESIS_LIVE_SYNTH_ENABLED': 'SYNTHESIS_LIVE_SYNTH_ENABLED',
+      // Folds member evaluations into their synth (see clusterRecompute.ts);
+      // without it a synth never inherits the votes of the originals it replaced.
+      'SYNTHESIS_CLUSTER_AWARE_POLARIZATION': 'SYNTHESIS_CLUSTER_AWARE_POLARIZATION',
       // WizCol Studio base URL — organization invite links (functions/src/organizations/orgAuth.ts)
       'STUDIO_APP_BASE_URL': 'STUDIO_APP_BASE_URL',
       // Sign editor links returned by the Studio Draft tool

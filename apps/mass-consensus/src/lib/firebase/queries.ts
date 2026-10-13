@@ -4,7 +4,13 @@ import { getFirestoreAdmin } from './admin';
 import { logger } from '@/lib/utils/logger';
 import { ProposalSampler, BatchResult } from '@/lib/utils/proposalSampler';
 import { SamplingConfig } from '@/lib/utils/sampling';
-import { isServableOriginal } from '@/lib/utils/derivedStatements';
+import {
+  isServableOriginal,
+  isSynthesisCluster,
+  buildSynthMembershipMap,
+  selectServableForEvaluation,
+  expandEvaluatedIds,
+} from '@/lib/utils/derivedStatements';
 import {
   buildClusterMembershipMap,
   getClusterKey,
@@ -50,12 +56,13 @@ function shuffle<T>(items: readonly T[]): T[] {
 }
 
 /**
- * Fetch the live cluster docs of a question and build a memberId -> clusterId
- * map. Cluster docs are written with `statementType: option` + `isCluster:
- * true`, so the randomSeed-range queries never return them — this dedicated
- * equality query fills the gap for the random serving path.
+ * Fetch the live cluster docs of a question. Cluster docs are written with
+ * `statementType: option` + `isCluster: true` and carry no `randomSeed`, so
+ * the randomSeed-range queries never return them — this dedicated equality
+ * query fills the gap for the random serving path. The docs feed both the
+ * diversity membership map and the synths served in place of their members.
  */
-async function getClusterMembership(questionId: string): Promise<Map<string, string>> {
+async function getClusterDocs(questionId: string): Promise<Statement[]> {
   try {
     const db = getFirestoreAdmin();
     const snapshot = await db
@@ -64,11 +71,11 @@ async function getClusterMembership(questionId: string): Promise<Map<string, str
       .where('isCluster', '==', true)
       .get();
 
-    return buildClusterMembershipMap(snapshot.docs.map((doc) => doc.data() as Statement));
+    return snapshot.docs.map((doc) => sanitizeStatement(doc.data() as Statement));
   } catch (error) {
     // Diversity is best-effort — serving must not fail because of it.
-    logQueryError('getClusterMembership', error, { questionId });
-    return new Map();
+    logQueryError('getClusterDocs', error, { questionId });
+    return [];
   }
 }
 
@@ -170,10 +177,10 @@ export async function getRandomOptions(
 
   logger.info('[getRandomOptions] Fetching options for question:', questionId);
 
-  // Cluster membership (for diverse selection) and the user's evaluation
-  // history are independent — fetch them in parallel.
-  const [membership, evaluatedIds] = await Promise.all([
-    getClusterMembership(questionId),
+  // Cluster docs (diverse selection + synths to serve) and the user's
+  // evaluation history are independent — fetch them in parallel.
+  const [clusterDocs, evaluatedIds] = await Promise.all([
+    getClusterDocs(questionId),
     (async (): Promise<string[]> => {
       if (!userId) return [];
       const evaluationsSnapshot = await db
@@ -192,8 +199,12 @@ export async function getRandomOptions(
     logger.info('[getRandomOptions] User has evaluated:', evaluatedIds.length, 'options');
   }
 
-  const allExcludedIds = [...excludeIds, ...evaluatedIds];
-  const excludedSet = new Set(allExcludedIds);
+  const membership = buildClusterMembershipMap(clusterDocs);
+  // Originals absorbed by a live synth are not served; the synth is.
+  const synthMembership = buildSynthMembershipMap(clusterDocs);
+  // Rating an original counts as rating its synth, and vice versa.
+  const excludedSet = expandEvaluatedIds([...excludeIds, ...evaluatedIds], clusterDocs);
+  const allExcludedIds = [...excludedSet];
 
   logger.info('[getRandomOptions] Total excluded IDs:', allExcludedIds.length);
 
@@ -219,7 +230,12 @@ export async function getRandomOptions(
 
   let options_results = snapshot.docs
     .map((doc) => sanitizeStatement(doc.data() as Statement))
-    .filter((opt) => isServableOriginal(opt) && !excludedSet.has(opt.statementId));
+    .filter(
+      (opt) =>
+        isServableOriginal(opt) &&
+        !synthMembership.has(opt.statementId) &&
+        !excludedSet.has(opt.statementId)
+    );
 
   logger.info('[getRandomOptions] After filtering (derived/hide/excluded):', options_results.length, 'options');
 
@@ -240,12 +256,26 @@ export async function getRandomOptions(
 
     const moreOptions = moreSnapshot.docs
       .map((doc) => sanitizeStatement(doc.data() as Statement))
-      .filter((opt) => isServableOriginal(opt) && !excludedSet.has(opt.statementId));
+      .filter(
+      (opt) =>
+        isServableOriginal(opt) &&
+        !synthMembership.has(opt.statementId) &&
+        !excludedSet.has(opt.statementId)
+    );
 
     logger.info('[getRandomOptions] Additional options after filtering:', moreOptions.length);
 
     options_results = [...options_results, ...moreOptions];
   }
+
+  // Live synths stand in for the originals they merged. They have no
+  // randomSeed, so they join the pool here rather than through the queries.
+  const synths = clusterDocs.filter(
+    (doc) => isSynthesisCluster(doc) && !excludedSet.has(doc.statementId)
+  );
+  options_results = [...options_results, ...synths];
+
+  logger.info('[getRandomOptions] Synths added to pool:', synths.length);
 
   // Shuffle the pool (caller owns randomness; selection is deterministic),
   // then spread the batch across clusters — unseen clusters first so
@@ -306,7 +336,8 @@ export async function getAdaptiveBatch(
     const allStatements = allOptionsSnapshot.docs.map((doc) =>
       sanitizeStatement(doc.data() as Statement)
     );
-    const proposals = allStatements.filter(isServableOriginal);
+    // Live synths are served in place of the originals they merged.
+    const proposals = selectServableForEvaluation(allStatements);
 
     // Cluster docs share statementType: option, so they are already in this
     // snapshot — membership for diverse selection costs zero extra reads.
@@ -341,8 +372,10 @@ export async function getAdaptiveBatch(
         .where('evaluatorId', '==', userId)
         .get();
 
-      evaluatedIds = new Set(
-        evaluatedSnapshot.docs.map((doc) => (doc.data() as Evaluation).statementId)
+      // Rating an original counts as rating its synth, and vice versa.
+      evaluatedIds = expandEvaluatedIds(
+        evaluatedSnapshot.docs.map((doc) => (doc.data() as Evaluation).statementId),
+        allStatements
       );
 
       logger.info('[getAdaptiveBatch] User evaluation history:', {
@@ -403,10 +436,14 @@ export async function getAllSolutionsSorted(
 
     logger.info('[getAllSolutionsSorted] Found', snapshot.size, 'solutions for question:', questionId);
 
+    const all = snapshot.docs.map((doc) => sanitizeStatement(doc.data() as Statement));
+    // Results rank what evaluators were served: a live synth stands in for
+    // the originals it merged, so those originals are left out of the list.
+    const synthMembership = buildSynthMembershipMap(all);
+
     // Sort by evaluation.agreement (fallback to consensus for legacy data) and apply limit
-    return snapshot.docs
-      .map((doc) => sanitizeStatement(doc.data() as Statement))
-      .filter((statement) => !statement.hide)
+    return all
+      .filter((statement) => !statement.hide && !synthMembership.has(statement.statementId))
       .sort((a, b) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0))
       .slice(0, limit);
   } catch (error) {
