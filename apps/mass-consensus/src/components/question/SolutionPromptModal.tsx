@@ -522,8 +522,6 @@ export default function SolutionPromptModal({
    * suggestion that now carries the merged content.
    */
   const mergeInto = async (targetStatementId: string, solutionText: string): Promise<string> => {
-    console.info('🔀 Merging solution into existing statement:', targetStatementId);
-
     const response = await fetch(`/api/statements/${questionId}/merge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -661,7 +659,7 @@ export default function SolutionPromptModal({
         userId,
         metadata: { questionId, targetStatementId },
       });
-      setError(err instanceof Error ? err.message : (ERROR_MESSAGES.MERGE_FAILED || ERROR_MESSAGES.SUBMIT_FAILED));
+      setError(t(ERROR_MESSAGES.MERGE_FAILED));
       setFlowState({ step: 'input' });
     }
   };
@@ -686,7 +684,7 @@ export default function SolutionPromptModal({
         userId,
         metadata: { questionId, targetStatementId },
       });
-      setError(err instanceof Error ? err.message : (ERROR_MESSAGES.MERGE_FAILED || ERROR_MESSAGES.SUBMIT_FAILED));
+      setError(t(ERROR_MESSAGES.MERGE_FAILED));
       setFlowState({ step: 'input' });
     }
   };

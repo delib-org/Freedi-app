@@ -4875,5 +4875,6 @@
   "No matches for": "نتیجه‌ای یافت نشد برای",
   "Search is not available right now": "جستجو در حال حاضر در دسترس نیست",
   "Searched": "جستجو شد:",
-  "Comment": "نظر"
+  "Comment": "نظر",
+  "Failed to merge with existing solution. Please try again.": "نتوانستیم ایده شما را با ایده مشابه ادغام کنیم. متن شما هنوز اینجاست — دوباره تلاش کنید."
 }

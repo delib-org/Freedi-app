@@ -4397,5 +4397,6 @@
   "No matches for": "No hay resultados para",
   "Search is not available right now": "La búsqueda no está disponible ahora",
   "Searched": "Buscado en",
-  "Comment": "Comentario"
+  "Comment": "Comentario",
+  "Failed to merge with existing solution. Please try again.": "No pudimos unir tu idea con la similar. Tu texto sigue aquí; inténtalo de nuevo."
 }

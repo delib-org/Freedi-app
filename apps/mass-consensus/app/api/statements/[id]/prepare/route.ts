@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
 import { getAddOptionRefusal } from '@/lib/firebase/addOptionGuard';
+import { postToCloudFunction } from '@/lib/api/cloudFunction';
 
 /**
  * POST /api/statements/[id]/prepare
@@ -59,30 +60,28 @@ export async function POST(
       );
     }
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        questionId,
-        userInput,
-        userId,
-        checkPieces: checkPieces === true,
-      }),
-      cache: 'no-store',
+    const result = await postToCloudFunction(endpoint, {
+      questionId,
+      userInput,
+      userId,
+      checkPieces: checkPieces === true,
     });
 
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-      // A gateway page (function missing, timeout) rather than the function's own answer
+    if (result.kind === 'unavailable') {
+      // A gateway page (cold start, function missing, timeout) rather than the function's own answer
+      logError(new Error('Suggestion service returned a non-JSON page'), {
+        operation: 'api.prepare',
+        questionId,
+        metadata: { status: result.status, attempts: result.attempts, preview: result.preview },
+      });
+
       return NextResponse.json(
         { error: 'Suggestion service unavailable', ok: false },
         { status: 503 }
       );
     }
 
-    const data = await response.json();
-
-    return NextResponse.json(data, { status: response.status });
+    return NextResponse.json(result.data, { status: result.status });
   } catch (error) {
     logError(error, {
       operation: 'api.prepare',

@@ -111,26 +111,18 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   const [, setHasSubmittedSolution] = useState(false);
   const [showSolutionPrompt, setShowSolutionPrompt] = useState(false);
 
-  console.info('[SwipeInterface Debug] Settings check:', {
-    mergedSettings: mergedSettings?.askUserForASolutionBeforeEvaluation,
-    finalRequiresSolution: requiresSolution
-  });
-
   // Check if user has submitted solutions (for "add solution first" feature)
   useEffect(() => {
     if (!userId || hasCheckedUserSolutions) return;
 
     const checkUserSolutions = async () => {
       try {
-        console.info('[SwipeInterface Debug] Checking user solutions for questionId:', question.statementId);
         const response = await fetch(`/api/user-solutions/${question.statementId}?userId=${userId}`);
         if (response.ok) {
           const data = await response.json();
-          console.info('[SwipeInterface Debug] API response:', data);
           setHasSubmittedSolution(data.hasSubmitted);
 
           const shouldShowModal = !data.hasSubmitted && requiresSolution;
-          console.info('[SwipeInterface Debug] Should show modal?', shouldShowModal, '(hasSubmitted:', data.hasSubmitted, 'requiresSolution:', requiresSolution, ')');
           if (shouldShowModal) {
             setShowSolutionPrompt(true);
           }

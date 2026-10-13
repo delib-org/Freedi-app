@@ -5077,5 +5077,6 @@
   "No matches for": "No matches for",
   "Search is not available right now": "Search is not available right now",
   "Searched": "Searched",
-  "Comment": "Comment"
+  "Comment": "Comment",
+  "Failed to merge with existing solution. Please try again.": "Failed to merge with existing solution. Please try again."
 }
