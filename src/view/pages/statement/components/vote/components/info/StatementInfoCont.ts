@@ -20,7 +20,8 @@ export function handleSubmitInfo(
 		const title = formData.title;
 		const descriptionText = formData.description;
 
-		// Convert description text to paragraphs array
+		// Convert description text to paragraphs array; an emptied description
+		// clears the existing paragraphs.
 		const paragraphs = descriptionText.trim()
 			? descriptionText
 					.split('\n')
@@ -31,7 +32,9 @@ export function handleSubmitInfo(
 						content: line,
 						order: index,
 					}))
-			: undefined;
+			: statement?.paragraphs?.length
+				? []
+				: undefined;
 
 		//update statement to DB
 		if (!statement) throw new Error('No statement');
