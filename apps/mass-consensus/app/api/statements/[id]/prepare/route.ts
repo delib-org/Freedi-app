@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isMeaningfulSuggestion, MIN_MEANINGFUL_WORDS } from '@freedi/shared-types';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
 import { getAddOptionRefusal } from '@/lib/firebase/addOptionGuard';
@@ -29,6 +30,13 @@ export async function POST(
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required', ok: false }, { status: 400 });
+    }
+
+    if (!isMeaningfulSuggestion(userInput)) {
+      return NextResponse.json(
+        { error: `Suggestion must have at least ${MIN_MEANINGFUL_WORDS} real words`, ok: false },
+        { status: 400 }
+      );
     }
 
     // "Admin options only": refuse before the AI round trip. The client treats

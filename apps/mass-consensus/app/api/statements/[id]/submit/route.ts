@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isMeaningfulSuggestion, MIN_MEANINGFUL_WORDS } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, StatementType, createStatementObject, SourceApp } from '@freedi/shared-types';
 import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
@@ -130,6 +131,13 @@ export async function POST(
         {
           error: `Solution must be at least ${VALIDATION.MIN_SOLUTION_LENGTH} characters`,
         },
+        { status: 400 }
+      );
+    }
+
+    if (!isMeaningfulSuggestion(trimmedText)) {
+      return NextResponse.json(
+        { error: `Suggestion must have at least ${MIN_MEANINGFUL_WORDS} real words` },
         { status: 400 }
       );
     }
