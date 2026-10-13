@@ -4876,5 +4876,10 @@
   "Search is not available right now": "جستجو در حال حاضر در دسترس نیست",
   "Searched": "جستجو شد:",
   "Comment": "نظر",
-  "Failed to merge with existing solution. Please try again.": "نتوانستیم ایده شما را با ایده مشابه ادغام کنیم. متن شما هنوز اینجاست — دوباره تلاش کنید."
+  "Failed to merge with existing solution. Please try again.": "نتوانستیم ایده شما را با ایده مشابه ادغام کنیم. متن شما هنوز اینجاست — دوباره تلاش کنید.",
+  "Last page": "صفحه آخر",
+  "Participants see the last page after the final question. You can add your own message to it.": "شرکت‌کنندگان صفحه آخر را پس از آخرین پرسش می‌بینند. می‌توانید پیام خودتان را به آن اضافه کنید.",
+  "Add a message on the last page": "افزودن پیام در صفحه آخر",
+  "Message on the last page": "پیام در صفحه آخر",
+  "Remove message": "حذف پیام"
 }

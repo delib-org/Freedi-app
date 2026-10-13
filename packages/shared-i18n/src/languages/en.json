@@ -5078,5 +5078,10 @@
   "Search is not available right now": "Search is not available right now",
   "Searched": "Searched",
   "Comment": "Comment",
-  "Failed to merge with existing solution. Please try again.": "Failed to merge with existing solution. Please try again."
+  "Failed to merge with existing solution. Please try again.": "Failed to merge with existing solution. Please try again.",
+  "Last page": "Last page",
+  "Participants see the last page after the final question. You can add your own message to it.": "Participants see the last page after the final question. You can add your own message to it.",
+  "Add a message on the last page": "Add a message on the last page",
+  "Message on the last page": "Message on the last page",
+  "Remove message": "Remove message"
 }

@@ -4398,5 +4398,10 @@
   "Search is not available right now": "La búsqueda no está disponible ahora",
   "Searched": "Buscado en",
   "Comment": "Comentario",
-  "Failed to merge with existing solution. Please try again.": "No pudimos unir tu idea con la similar. Tu texto sigue aquí; inténtalo de nuevo."
+  "Failed to merge with existing solution. Please try again.": "No pudimos unir tu idea con la similar. Tu texto sigue aquí; inténtalo de nuevo.",
+  "Last page": "Última página",
+  "Participants see the last page after the final question. You can add your own message to it.": "Los participantes ven la última página después de la pregunta final. Puedes añadirle tu propio mensaje.",
+  "Add a message on the last page": "Añadir un mensaje en la última página",
+  "Message on the last page": "Mensaje en la última página",
+  "Remove message": "Quitar mensaje"
 }

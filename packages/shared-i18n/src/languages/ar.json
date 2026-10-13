@@ -4518,5 +4518,10 @@
   "Search is not available right now": "البحث غير متاح حاليًا",
   "Searched": "تم البحث في",
   "Comment": "تعليق",
-  "Failed to merge with existing solution. Please try again.": "لم نتمكن من دمج فكرتك مع الفكرة المشابهة. نصك ما زال هنا — حاول مرة أخرى."
+  "Failed to merge with existing solution. Please try again.": "لم نتمكن من دمج فكرتك مع الفكرة المشابهة. نصك ما زال هنا — حاول مرة أخرى.",
+  "Last page": "الصفحة الأخيرة",
+  "Participants see the last page after the final question. You can add your own message to it.": "يرى المشاركون الصفحة الأخيرة بعد السؤال الأخير. يمكنك إضافة رسالتك الخاصة إليها.",
+  "Add a message on the last page": "إضافة رسالة في الصفحة الأخيرة",
+  "Message on the last page": "رسالة في الصفحة الأخيرة",
+  "Remove message": "إزالة الرسالة"
 }

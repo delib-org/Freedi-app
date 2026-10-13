@@ -51,6 +51,25 @@ jest.mock('../LanguageSelector', () => ({ __esModule: true, default: () => null 
 jest.mock('../CreateQuestionModal', () => ({ CreateQuestionModal: () => null }));
 jest.mock('../OpeningSlideManager', () => ({ __esModule: true, default: () => null }));
 jest.mock('../CardColorIntensityControl', () => ({ __esModule: true, default: () => null }));
+// The last-page message editor, reduced to the two calls the form must persist.
+jest.mock('../CompletionMessageEditor', () => ({
+  __esModule: true,
+  default: ({ onChange }: { onChange: (message: unknown) => void }) => (
+    <>
+      <button
+        type="button"
+        onClick={() =>
+          onChange({ explanationPageId: 'completion-message', title: 'Thanks', content: 'See you', position: -1 })
+        }
+      >
+        stub-set-message
+      </button>
+      <button type="button" onClick={() => onChange(undefined)}>
+        stub-remove-message
+      </button>
+    </>
+  ),
+}));
 
 const SURVEY: Survey = {
   surveyId: 'survey-1',
@@ -199,6 +218,61 @@ describe('SurveyForm autosave (edit mode)', () => {
 
     expect(surveyPuts()).toHaveLength(2);
     expect(screen.getByRole('status')).toHaveTextContent('allChangesSaved');
+  });
+});
+
+describe('SurveyForm completion message', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.clearAllMocks();
+    authedFetchMock.mockImplementation((url: string, init?: { method?: string; body?: string }) => {
+      if (url.endsWith('/demographics') && !init?.method) return jsonResponse({ questions: [] });
+      if (init?.method === 'PUT') return jsonResponse({ ...SURVEY, ...JSON.parse(init.body ?? '{}') });
+
+      return jsonResponse({});
+    });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('saves a message added to the last page', async () => {
+    await renderEditor();
+
+    fireEvent.click(screen.getByRole('button', { name: 'stub-set-message' }));
+    await advancePastAutosaveDelay();
+
+    const puts = surveyPuts();
+    expect(puts).toHaveLength(1);
+    expect(JSON.parse(puts[0][1].body).completionMessage).toEqual({
+      explanationPageId: 'completion-message',
+      title: 'Thanks',
+      content: 'See you',
+      position: -1,
+    });
+  });
+
+  it('sends null when the admin removes the message', async () => {
+    render(
+      <SurveyForm
+        existingSurvey={{
+          ...SURVEY,
+          completionMessage: { explanationPageId: 'completion-message', title: 'T', content: 'Bye', position: -1 },
+        }}
+        onSurveyUpdate={jest.fn()}
+      />
+    );
+    await act(async () => {
+      await jest.runOnlyPendingTimersAsync();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'stub-remove-message' }));
+    await advancePastAutosaveDelay();
+
+    const puts = surveyPuts();
+    expect(puts).toHaveLength(1);
+    expect(JSON.parse(puts[0][1].body).completionMessage).toBeNull();
   });
 });
 

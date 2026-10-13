@@ -7,6 +7,8 @@ import { SurveyWithQuestions } from '@/types/survey';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { logError } from '@/lib/utils/errorHandling';
+import { getVisibleCompletionMessage } from '@/lib/utils/completionMessage';
+import ExplanationPageBody from './ExplanationPageBody';
 import WizColAttribution from '../shared/WizColAttribution';
 import styles from './Survey.module.scss';
 
@@ -194,6 +196,8 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
     }
   };
 
+  const completionMessage = getVisibleCompletionMessage(survey);
+
   const handleViewQuestions = () => {
     router.push(`/s/${survey.surveyId}/q/0`);
   };
@@ -210,6 +214,12 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
 
       <h1 className={styles.completeTitle}>{t('surveyComplete')}</h1>
       <p className={styles.completeSubtitle}>{t('thankYouForParticipating')}</p>
+
+      {completionMessage && (
+        <section className={styles.completionMessage}>
+          <ExplanationPageBody page={completionMessage} />
+        </section>
+      )}
 
       <div className={styles.completeSummary}>
         <div className={styles.summaryItem}>

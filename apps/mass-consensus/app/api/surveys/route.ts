@@ -129,6 +129,7 @@ export async function POST(request: NextRequest) {
       explanationPages: body.explanationPages,
       showAllSolutionsLink: body.showAllSolutionsLink,
       allSolutionsLinkLabel: body.allSolutionsLinkLabel,
+      completionMessage: body.completionMessage,
       parentStatementId: body.parentStatementId,
     });
 

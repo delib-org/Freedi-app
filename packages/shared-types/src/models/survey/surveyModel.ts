@@ -374,6 +374,12 @@ export const SurveySchema = object({
   showAllSolutionsLink: optional(boolean()),
   /** Custom label for the all-solutions link (replaces default i18n 'seeAllSolutions') */
   allSolutionsLinkLabel: optional(string()),
+  /**
+   * The admin's own message on the completion screen. Same shape as an
+   * explanation page so the same editor and renderer serve both; its
+   * `position` and `order` are unused. Absent = the default completion screen.
+   */
+  completionMessage: optional(SurveyExplanationPageSchema),
   createdAt: number(),
   lastUpdate: number(),
 });
