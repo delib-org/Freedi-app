@@ -76,7 +76,6 @@ import { updateApprovalResults } from './fn_approval';
 import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
 import { updateStatementWithViews } from './fn_views';
-import { recomputeResultsOnOptionDeleted } from './evaluation/onOptionDeleted';
 import {
 	getInitialMCData,
 	addMassConsensusMember,
@@ -750,15 +749,6 @@ exports.updateParentOnChildDelete = updateParentOnChildDelete;
 
 // Mass Consensus functions (for updates and deletes only)
 // Create is now handled in onStatementCreated
-// Deleting a top answer leaves it cached in the question's `results` — the
-// evaluation-delete cascade can't recompute once the option doc is gone.
-exports.recomputeResultsOnOptionDeleted = createFirestoreFunction(
-	`/${Collections.statements}/{statementId}`,
-	onDocumentDeleted,
-	recomputeResultsOnOptionDeleted,
-	'recomputeResultsOnOptionDeleted',
-);
-
 exports.removeOptionFromMassConsensus = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
 	onDocumentDeleted,

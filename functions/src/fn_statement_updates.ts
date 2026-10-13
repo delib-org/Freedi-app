@@ -18,6 +18,10 @@ import {
 import { getParagraphsText, generateDescriptionFromChildren } from './helpers';
 import { writeHistoryEntry } from './statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from './statements/history/isResearchEnabled';
+import {
+	syncTopAnswersOnOptionDeleted,
+	syncTopAnswersOnOptionUpdated,
+} from './evaluation/topAnswerSync';
 
 /**
  * Updates parent statement when a child statement is created
@@ -92,6 +96,13 @@ export const updateParentOnChildUpdate = onDocumentUpdated(
 				logger.info('Skipping update - appears to be triggered by parent update function');
 
 				return;
+			}
+
+			// Keep the parent's cached top answers in step (hide / text edits).
+			try {
+				await syncTopAnswersOnOptionUpdated(before, after);
+			} catch (syncError) {
+				logger.error('updateParentOnChildUpdate: top-answer sync failed:', syncError);
 			}
 
 			// Check if this is a significant content change
@@ -256,6 +267,13 @@ export const updateParentOnChildDelete = onDocumentDeleted(
 				return;
 
 			logger.info(`Child statement deleted, updating parent ${deletedStatement.parentId}`);
+
+			// A deleted top answer must leave the parent's cached results.
+			try {
+				await syncTopAnswersOnOptionDeleted(deletedStatement);
+			} catch (syncError) {
+				logger.error('updateParentOnChildDelete: top-answer sync failed:', syncError);
+			}
 
 			// If the deleted statement was an option, decrement the numberOfOptions count
 			if (deletedStatement.statementType === 'option') {
