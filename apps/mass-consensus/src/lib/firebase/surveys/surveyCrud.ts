@@ -2,6 +2,7 @@ import {
   Statement,
   Collections,
 } from '@freedi/shared-types';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getFirestoreAdmin } from '../admin';
 import {
   Survey,
@@ -72,6 +73,9 @@ export async function createSurvey(
   }
   if (data.allSolutionsLinkLabel !== undefined) {
     survey.allSolutionsLinkLabel = data.allSolutionsLinkLabel;
+  }
+  if (data.completionMessage) {
+    survey.completionMessage = data.completionMessage;
   }
   if (data.parentStatementId) {
     survey.parentStatementId = data.parentStatementId;
@@ -260,8 +264,15 @@ export async function updateSurvey(
   if (data.allSolutionsLinkLabel !== undefined) {
     updates.allSolutionsLinkLabel = data.allSolutionsLinkLabel;
   }
+  if (data.completionMessage) {
+    updates.completionMessage = data.completionMessage;
+  }
+  // null = the admin removed the message; drop the field rather than store null
+  const removeCompletionMessage = data.completionMessage === null;
 
-  await db.collection(SURVEYS_COLLECTION).doc(surveyId).update(updates);
+  await db.collection(SURVEYS_COLLECTION).doc(surveyId).update(
+    removeCompletionMessage ? { ...updates, completionMessage: FieldValue.delete() } : updates
+  );
 
   logger.info('[updateSurvey] Updated survey:', surveyId, 'with updates:', JSON.stringify(updates));
 
@@ -269,6 +280,7 @@ export async function updateSurvey(
     ...survey,
     ...updates,
   };
+  if (removeCompletionMessage) delete merged.completionMessage;
 
   // Cascade liveSynthEnabled whenever survey settings, per-question settings,
   // or the questionIds set changed. The cascade itself is idempotent and only

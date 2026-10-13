@@ -17,6 +17,8 @@ interface ExplanationEditorProps {
   surveyId?: string;
   onUpdate: (updates: Partial<SurveyExplanationPage>) => void;
   onRemove: () => void;
+  /** Label for the remove button; defaults to "Remove Explanation Page". */
+  removeLabel?: string;
 }
 
 /**
@@ -29,6 +31,7 @@ export default function ExplanationEditor({
   surveyId,
   onUpdate,
   onRemove,
+  removeLabel,
 }: ExplanationEditorProps) {
   const { t } = useTranslation();
   const [isPreview, setIsPreview] = useState(false);
@@ -183,7 +186,7 @@ export default function ExplanationEditor({
         className={styles.removeExplanationButton}
         onClick={onRemove}
       >
-        {t('removeExplanationPage') || 'Remove Explanation Page'}
+        {removeLabel || t('removeExplanationPage') || 'Remove Explanation Page'}
       </button>
     </div>
   );

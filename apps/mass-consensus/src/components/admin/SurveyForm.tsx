@@ -10,6 +10,7 @@ import { authedFetch } from '@/lib/api/authedFetch';
 import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS, SuggestionMode, DisplayMode } from '@/types/survey';
 import QuestionPicker from './QuestionPicker';
 import UnifiedFlowEditor from './UnifiedFlowEditor';
+import CompletionMessageEditor from './CompletionMessageEditor';
 import LanguageSelector from './LanguageSelector';
 import { CreateQuestionModal } from './CreateQuestionModal';
 import OpeningSlideManager from './OpeningSlideManager';
@@ -70,6 +71,9 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
   );
   const [explanationPages, setExplanationPages] = useState<SurveyExplanationPage[]>(
     existingSurvey?.explanationPages || []
+  );
+  const [completionMessage, setCompletionMessage] = useState<SurveyExplanationPage | undefined>(
+    existingSurvey?.completionMessage
   );
   const [customDemographicQuestions, setCustomDemographicQuestions] = useState<UserDemographicQuestion[]>([]);
   const [showEmailSignup, setShowEmailSignup] = useState(existingSurvey?.showEmailSignup ?? true);
@@ -216,6 +220,8 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       customEmailDescription: customEmailDescription.trim() || undefined,
       showAllSolutionsLink: showAllSolutionsLink,
       allSolutionsLinkLabel: allSolutionsLinkLabel.trim() || undefined,
+      // null, not undefined: JSON drops undefined, and the server needs to hear "removed"
+      completionMessage: completionMessage ?? null,
       parentStatementId: seedParentStatementId || existingSurvey?.parentStatementId || undefined,
     };
   };
@@ -643,6 +649,11 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             onQuestionTextChange={handleQuestionTextChange}
             onRemoveQuestion={handleRemoveQuestion}
             surveyId={existingSurvey?.surveyId}
+          />
+          <CompletionMessageEditor
+            message={completionMessage}
+            surveyId={existingSurvey?.surveyId}
+            onChange={setCompletionMessage}
           />
         </div>
       )}
