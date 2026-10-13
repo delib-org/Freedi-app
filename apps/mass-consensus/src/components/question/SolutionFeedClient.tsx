@@ -90,12 +90,6 @@ export default function SolutionFeedClient({
   const requiresSolution = canAdd && (mergedSettings?.askUserForASolutionBeforeEvaluation ??
     questionSettingsLegacy?.askUserForASolutionBeforeEvaluation ?? true);
 
-  console.info('[SolutionFeed Debug] Settings check:', {
-    mergedSettings: mergedSettings?.askUserForASolutionBeforeEvaluation,
-    questionSettingsLegacy: questionSettingsLegacy?.askUserForASolutionBeforeEvaluation,
-    finalRequiresSolution: requiresSolution
-  });
-
   // Check if we're in survey context (to hide bottomContainer)
   const inSurveyContext = !!mergedSettings;
 
@@ -118,16 +112,13 @@ export default function SolutionFeedClient({
 
   // Check if user has submitted solutions
   useEffect(() => {
-    console.info('[SolutionFeed Debug] Effect triggered:', { userId, hasCheckedUserSolutions, requiresSolution });
     if (!userId || hasCheckedUserSolutions) return;
 
     const checkUserSolutions = async () => {
       try {
-        console.info('[SolutionFeed Debug] Checking user solutions for questionId:', questionId);
         const response = await fetch(`/api/user-solutions/${questionId}?userId=${userId}`);
         if (response.ok) {
           const data = await response.json();
-          console.info('[SolutionFeed Debug] API response:', data);
           setHasSubmittedSolution(data.hasSubmitted);
           setUserSolutionCount(data.solutionCount || 0);
 
@@ -138,7 +129,6 @@ export default function SolutionFeedClient({
           }
 
           const shouldShowModal = !data.hasSubmitted && requiresSolution;
-          console.info('[SolutionFeed Debug] Should show modal?', shouldShowModal, '(hasSubmitted:', data.hasSubmitted, 'requiresSolution:', requiresSolution, ')');
           if (shouldShowModal) {
             setShowSolutionPrompt(true);
           }

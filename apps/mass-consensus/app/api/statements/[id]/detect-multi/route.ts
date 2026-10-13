@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
+import { postToCloudFunction } from '@/lib/api/cloudFunction';
 
 /**
  * POST /api/statements/[id]/detect-multi
@@ -58,24 +59,27 @@ export async function POST(
       .replace('checkForSimilarStatements', 'detectMultipleSuggestions'); // Legacy fallback
 
     // Call Cloud Function
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userInput,
-        questionId,
-        userId,
-      }),
+    const result = await postToCloudFunction(endpoint, {
+      userInput,
+      questionId,
+      userId,
     });
 
-    const data = await response.json();
+    if (result.kind === 'unavailable') {
+      logError(new Error('Multi-suggestion service returned a non-JSON page'), {
+        operation: 'api.detectMulti',
+        questionId,
+        metadata: { status: result.status, attempts: result.attempts, preview: result.preview },
+      });
 
-    // Pass through the response
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.GENERIC, ok: false, isMultipleSuggestions: false, suggestions: [] },
+        { status: 503 }
+      );
     }
 
-    return NextResponse.json(data);
+    // Pass through the response
+    return NextResponse.json(result.data, { status: result.status });
   } catch (error) {
     logError(error, {
       operation: 'api.detectMulti',

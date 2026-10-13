@@ -4517,5 +4517,6 @@
   "No matches for": "لا توجد نتائج لـ",
   "Search is not available right now": "البحث غير متاح حاليًا",
   "Searched": "تم البحث في",
-  "Comment": "تعليق"
+  "Comment": "تعليق",
+  "Failed to merge with existing solution. Please try again.": "لم نتمكن من دمج فكرتك مع الفكرة المشابهة. نصك ما زال هنا — حاول مرة أخرى."
 }

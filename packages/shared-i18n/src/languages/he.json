@@ -5115,5 +5115,6 @@
   "No matches for": "לא נמצאו תוצאות עבור",
   "Search is not available right now": "החיפוש לא זמין כרגע",
   "Searched": "נסרקו",
-  "Comment": "תגובה"
+  "Comment": "תגובה",
+  "Failed to merge with existing solution. Please try again.": "לא הצלחנו לצרף את הרעיון שלך לרעיון הדומה. הטקסט שלך נשמר — נסו שוב."
 }
