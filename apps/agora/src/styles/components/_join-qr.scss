@@ -37,28 +37,3 @@
 		unicode-bidi: isolate;
 	}
 }
-
-// --- The invite door beside the stage nav (the flat view) ---
-.stage-nav__invite {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	flex-shrink: 0;
-	inline-size: 2.75rem;
-	block-size: 2.75rem;
-	border: 1.5px solid var(--border-subtle);
-	border-radius: var(--radius-full);
-	background: var(--surface-raised);
-	color: var(--text-secondary);
-	cursor: pointer;
-
-	&:hover {
-		border-color: var(--border-lantern);
-		color: var(--text-primary);
-	}
-
-	&:focus-visible {
-		outline: 2px solid var(--lantern-glow);
-		outline-offset: 2px;
-	}
-}

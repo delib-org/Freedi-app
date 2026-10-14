@@ -277,6 +277,14 @@ export async function setVillageNavigation(
 	});
 }
 
+/** Whether the projector keeps a small join QR after the lobby — the teacher's to switch, live */
+export async function setProjectorQr(sessionId: string, projectorQr: boolean): Promise<void> {
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		projectorQr,
+		lastUpdate: Date.now(),
+	});
+}
+
 /**
  * Walk every student's village to one place — the room's station, the
  * council, or any opened station by name (`booth:<itemId>`, `library`). A

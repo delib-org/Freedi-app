@@ -69,6 +69,7 @@ import {
 	classLabel,
 	setSessionTheme,
 	setVillageNavigation,
+	setProjectorQr,
 	setVotingSettings,
 } from '../../lib/teacher';
 import { getVotingState, listenToVoting, stopVotingListeners } from '../../lib/voting';
@@ -299,6 +300,20 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			})
 			.finally(() => {
 				savingNavigation = false;
+				m.redraw();
+			});
+	}
+
+	let savingProjectorQr = false;
+	function toggleProjectorQr(on: boolean): void {
+		if (savingProjectorQr) return;
+		savingProjectorQr = true;
+		setProjectorQr(sessionId, on)
+			.catch((error: unknown) => {
+				console.error('[Teacher] Switching the projector QR failed:', error);
+			})
+			.finally(() => {
+				savingProjectorQr = false;
 				m.redraw();
 			});
 	}
@@ -647,20 +662,35 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			// The header: the lesson's name, the class, the code — and on a phone
 			// the projector and the cog fold into the menu, where they still fit
 			// The lobby's QR, reachable on every stage: the join callable still
-			// seats a latecomer, and this device may be the only screen in the room
+			// seats a latecomer, and this device may be the only screen in the room.
+			// Beside it, the switch for the projector's small QR after the lobby
+			// (off unless the teacher turns it on; the lobby's big one always shows)
 			const canInvite = canInviteToSession(session.status, current.stage, session.code);
-			const menuItems: TeacherNavMenuItem[] = [
-				...(canInvite
-					? [
-							{
-								icon: 'qr' as const,
-								label: t('teacher.show_qr'),
-								onSelect: () => {
-									qrOpen = true;
-								},
+			const projectorQrOn = session.projectorQr === true;
+			const qrItems: TeacherNavMenuItem[] = canInvite
+				? [
+						{
+							icon: 'qr',
+							label: t('teacher.show_qr'),
+							onSelect: () => {
+								qrOpen = true;
 							},
-						]
-					: []),
+						},
+						...(current.stage === AgoraStage.lobby
+							? []
+							: [
+									{
+										icon: 'era' as const,
+										label: t(
+											projectorQrOn ? 'teacher.projector_qr_off' : 'teacher.projector_qr_on',
+										),
+										onSelect: () => toggleProjectorQr(!projectorQrOn),
+									},
+								]),
+					]
+				: [];
+			const menuItems: TeacherNavMenuItem[] = [
+				...qrItems,
 				{ icon: 'flag', label: t('teacher.menu.move_class'), onSelect: () => openPanel('move') },
 				{ icon: 'era', label: t('teacher.open_projector'), onSelect: openProjector },
 				{ icon: 'cog', label: t('teacher.settings_title'), onSelect: () => openPanel('settings') },

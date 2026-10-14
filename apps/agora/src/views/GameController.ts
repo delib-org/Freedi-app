@@ -8,8 +8,7 @@ import {
 } from '../lib/flows/villageModel';
 import { getVotingState } from '../lib/voting';
 import { readStoredNav, storeNav } from '../lib/stageNavStore';
-import { sessionJoinUrl, sessionVillageMode } from '../lib/flows/sessionLinks';
-import { canInviteToSession } from '../lib/flows/joinInvite';
+import { sessionVillageMode } from '../lib/flows/sessionLinks';
 import { villagePlace } from '../lib/flows/villageRoute';
 import {
 	TYPING_GRACE_MS,
@@ -69,7 +68,6 @@ import { NeedsBoard } from '../components/NeedsBoard';
 import { CelebrationOverlay } from '../components/Celebration';
 import { StageNav, planItemLabel } from '../components/StageNav';
 import { VillageMoreSheet } from '../components/VillageMoreSheet';
-import { JoinQrSheet } from '../components/JoinQrSheet';
 import {
 	isLightWorld,
 	isVillageSoundOn,
@@ -207,8 +205,6 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let lookOpen = false;
 	/** The village's gear sheet: style, sounds, world quality, the flat view */
 	let moreOpen = false;
-	/** The lesson's QR, held up for a classmate who came in late */
-	let inviteOpen = false;
 	/** The teacher's thread is open — reachable from every stage, toast or not */
 	let teacherOpen = false;
 
@@ -521,15 +517,6 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						})
 					: null;
 
-			// The join door stays open after the lobby: the join callable seats
-			// a latecomer at any stage of an open or live lesson
-			const canInvite =
-				myParticipant !== null &&
-				canInviteToSession(session.status, plan[currentIndex]?.stage, session.code);
-			const openInvite = (): void => {
-				inviteOpen = true;
-			};
-
 			const overlays = [
 				m(ToastStack),
 				m(CelebrationOverlay),
@@ -549,25 +536,11 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							onPalette: (palette) => {
 								setVillagePalette(palette);
 							},
-							onInvite: canInvite ? openInvite : undefined,
 							onSimpleView: () => {
 								chooseView('flat');
 							},
 							onClose: () => {
 								moreOpen = false;
-							},
-						})
-					: null,
-				inviteOpen && canInvite
-					? m(JoinQrSheet, {
-							url: sessionJoinUrl(
-								window.location.origin,
-								session.code,
-								sessionVillageMode(session.world, window.location.search),
-							),
-							code: session.code,
-							onClose: () => {
-								inviteOpen = false;
 							},
 						})
 					: null,
@@ -641,10 +614,6 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							open: moreOpen,
 						}
 					: undefined,
-				invite:
-					!villageMode && canInvite
-						? { onOpen: openInvite, label: t('invite.open'), open: inviteOpen }
-						: undefined,
 				mail:
 					!villageMode && hasTeacherThread()
 						? {

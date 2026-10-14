@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AgoraSessionStatus, AgoraStage } from '@freedi/shared-types';
-import { canInviteToSession } from './joinInvite';
+import { canInviteToSession, projectorShowsQr } from './joinInvite';
 
 describe('canInviteToSession', () => {
 	it('offers the door in the lobby and on every stage of a running lesson', () => {
@@ -21,5 +21,27 @@ describe('canInviteToSession', () => {
 		expect(canInviteToSession(AgoraSessionStatus.live, undefined, '12345')).toBe(true);
 		expect(canInviteToSession(AgoraSessionStatus.live, AgoraStage.question, '')).toBe(false);
 		expect(canInviteToSession(AgoraSessionStatus.live, AgoraStage.question, undefined)).toBe(false);
+	});
+});
+
+describe('projectorShowsQr', () => {
+	const { live, ended } = AgoraSessionStatus;
+
+	it('always shows the big QR in the lobby', () => {
+		expect(projectorShowsQr(AgoraSessionStatus.open, AgoraStage.lobby, '12345', undefined)).toBe(
+			true,
+		);
+		expect(projectorShowsQr(AgoraSessionStatus.open, AgoraStage.lobby, '12345', false)).toBe(true);
+	});
+
+	it('after the lobby, only while the teacher has switched it on', () => {
+		expect(projectorShowsQr(live, AgoraStage.question, '12345', undefined)).toBe(false);
+		expect(projectorShowsQr(live, AgoraStage.question, '12345', false)).toBe(false);
+		expect(projectorShowsQr(live, AgoraStage.question, '12345', true)).toBe(true);
+	});
+
+	it('never once the lesson has ended, switch or not', () => {
+		expect(projectorShowsQr(ended, AgoraStage.results, '12345', true)).toBe(false);
+		expect(projectorShowsQr(live, AgoraStage.ended, '12345', true)).toBe(false);
 	});
 });

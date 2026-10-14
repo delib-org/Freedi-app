@@ -282,6 +282,12 @@ export const AgoraSessionSchema = object({
 	 * client walks there once per `at`. Teacher-writable.
 	 */
 	villageCall: optional(object({ place: string(), at: number() })),
+	/**
+	 * After the lobby, whether the projector keeps a small join QR beside the
+	 * code. Absent = off; the lobby always shows the big one. Teacher-writable
+	 * from the console's menu, read live by the projector.
+	 */
+	projectorQr: optional(boolean()),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),

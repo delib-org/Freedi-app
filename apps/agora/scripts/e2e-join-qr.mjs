@@ -1,11 +1,12 @@
-/* The join QR after the lobby: a latecomer can still be let in.
+/* The join QR after the lobby: the teacher can still let a latecomer in.
  *
- * A lesson already at a question. A seated student opens the QR from the
- * stage nav (flat view) and from the gear sheet (village); the link it encodes
- * is followed by a fresh browser, and that browser gets a seat. The teacher
- * re-opens the QR from the console's ≡ menu, and the projector carries a small
- * QR beside the digits on a non-lobby stage. Once the lesson has ended, the
- * student's door is gone.
+ * A lesson already past the lobby. Students have no QR door — not in the
+ * stage nav, not in the village gear sheet. The teacher re-opens the QR from
+ * the console's ≡ menu (on a wall device, which must never subscribe to
+ * names); a fresh browser follows the link it encodes and gets a seat. The
+ * projector's small QR is off after the lobby until the teacher switches it
+ * on from the same menu, follows the switch live, and disappears again when
+ * it is switched off and once the lesson has ended.
  *
  * Run (solo suite): bash ../../scripts/solo.sh npx tsx scripts/e2e-join-qr.mjs [--keep]
  * Screenshots land in output/join-qr/.
@@ -28,6 +29,9 @@ const shot = shotter(OUT);
 const KEEP = process.argv.includes('--keep');
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const runId = `qr-${Date.now().toString(36)}`;
+const SHOW_QR = 'קוד QR להצטרפות';
+const PROJECTOR_ON = 'הצגת QR במקרן';
+const PROJECTOR_OFF = 'הסתרת ה־QR מהמקרן';
 
 step('a lesson already past the lobby');
 const teacher = await signInTeacher(`${runId}-teacher`);
@@ -64,30 +68,16 @@ async function readSheet(page, label) {
 	return url;
 }
 
-step('a seated student opens the QR from the stage nav (flat view)');
+step('a seated student has no QR door — flat view');
 const student = await mkPage(browser, 'student', { width: 390, height: 800 });
 await student.goto(run.joinUrl, { waitUntil: 'domcontentloaded' });
 await passNameDoor(student);
-const door = student.locator('.stage-nav__invite');
-await door.waitFor({ timeout: 30_000 });
-await door.click();
-const qrUrl = await readSheet(student, 'student');
-await shot(student, '01-student-sheet');
-await student.keyboard.press('Escape');
-await student.locator('.join-qr').waitFor({ state: 'detached', timeout: 5000 });
-console.log('   ✓ Escape closes it');
+await student.locator('.stage-nav').waitFor({ timeout: 30_000 });
+await pause(1500);
+eq('student QR doors (flat)', await student.locator('.stage-nav__invite, .join-qr').count(), 0);
+eq('QR glyphs on the student screen', await student.locator('.teacher__qr').count(), 0);
 
-step('a latecomer follows the link and gets a seat');
-const before = await seats();
-const late = await mkPage(browser, 'latecomer', { width: 390, height: 800 });
-await late.goto(qrUrl, { waitUntil: 'domcontentloaded' });
-await passNameDoor(late);
-for (let i = 0; i < 40 && (await seats()) === before; i++) await pause(500);
-eq('seats after the latecomer scanned', await seats(), before + 1);
-await late.locator('.stage-nav').waitFor({ timeout: 30_000 });
-await shot(late, '02-latecomer-in');
-
-step('in the village the QR is a row in the gear sheet');
+step('…nor in the village gear sheet');
 await sessionRef.update({ world: 'village' });
 await student.goto(`${VITE_HOST}/?world=village#!/join/${run.code}`, {
 	waitUntil: 'domcontentloaded',
@@ -95,14 +85,18 @@ await student.goto(`${VITE_HOST}/?world=village#!/join/${run.code}`, {
 await passNameDoor(student);
 const gear = student.locator('.stage-nav__menu');
 await gear.waitFor({ timeout: 30_000 });
-eq('no stage-nav QR door in the village', await student.locator('.stage-nav__invite').count(), 0);
 await gear.click();
-await student.locator('.village-more__row', { hasText: 'להזמין לשיעור' }).click();
-await readSheet(student, 'village');
-await shot(student, '03-village-sheet');
+await student.locator('.village-more').waitFor({ timeout: 10_000 });
+eq(
+	'gear-sheet invite rows',
+	await student.locator('.village-more__row', { hasText: 'להזמין' }).count(),
+	0,
+);
+await shot(student, '01-student-gear-no-qr');
 await student.keyboard.press('Escape');
+await sessionRef.update({ world: 'classic' });
 
-step('the teacher re-opens the QR from the console menu');
+step('the teacher re-opens the QR from the console menu, on a wall');
 const tpage = await mkPage(browser, 'teacher', { width: 1280, height: 800 });
 await tpage.goto(`${VITE_HOST}/#!/teach`, { waitUntil: 'domcontentloaded' });
 await tpage.waitForFunction(() => typeof window.__agoraDevSignIn === 'function', {
@@ -116,46 +110,65 @@ await tpage.locator('.teacher-nav__title').waitFor({ timeout: 30_000 });
 await tpage.goto(`${VITE_HOST}/#!/teach/session/${run.sessionId}`, {
 	waitUntil: 'domcontentloaded',
 });
-await tpage.locator('.teacher-strip, .teacher-nav__title').first().waitFor({ timeout: 30_000 });
+await tpage.locator('.teacher-nav__title').waitFor({ timeout: 30_000 });
 const wall = tpage.locator('.device-role[data-mode="ask"] .device-role__choice[data-role="wall"]');
 if (await wall.waitFor({ timeout: 5000 }).then(() => true, () => false)) {
-	// The wall: the role that must never see names still gets the QR
 	await wall.click();
 	await tpage.locator('.device-role__scrim').waitFor({ state: 'detached', timeout: 5000 });
 }
-await tpage.locator('.teacher-nav__switch').click();
-await tpage.locator('.teacher-nav__item--own', { hasText: 'קוד QR להצטרפות' }).click();
-await readSheet(tpage, 'teacher');
-await shot(tpage, '04-teacher-sheet');
-const identities = await tpage.evaluate(
-	() => window.__agoraDebug?.().teacherConsole.identitiesSubscribed,
+const menuItem = async (text) => {
+	await tpage.locator('.teacher-nav__switch').click();
+	await tpage.locator('.teacher-nav__item--own', { hasText: text }).click();
+};
+await menuItem(SHOW_QR);
+const qrUrl = await readSheet(tpage, 'teacher');
+await shot(tpage, '02-teacher-sheet');
+eq(
+	'the wall never subscribed to names',
+	await tpage.evaluate(() => window.__agoraDebug?.().teacherConsole.identitiesSubscribed),
+	false,
 );
-eq('the wall never subscribed to names', identities, false);
 await tpage.keyboard.press('Escape');
+await tpage.locator('.join-qr').waitFor({ state: 'detached', timeout: 5000 });
 
-step('the projector keeps a small QR beside the digits after the lobby');
+step('a latecomer follows the teacher QR link and gets a seat');
+const before = await seats();
+const late = await mkPage(browser, 'latecomer', { width: 390, height: 800 });
+await late.goto(qrUrl, { waitUntil: 'domcontentloaded' });
+await passNameDoor(late);
+for (let i = 0; i < 40 && (await seats()) === before; i++) await pause(500);
+eq('seats after the latecomer scanned', await seats(), before + 1);
+
+step('the projector QR is off after the lobby until the teacher turns it on');
 const proj = await mkPage(browser, 'projector', { width: 1280, height: 800 });
 await proj.goto(`${VITE_HOST}/#!/teach/screen/${run.sessionId}`, {
 	waitUntil: 'domcontentloaded',
 });
-const card = proj.locator('.projector__code--compact');
-await card.waitFor({ timeout: 30_000 });
-const projUrl = await card.locator('.teacher__qr img').getAttribute('alt', { timeout: 10_000 });
-if (!projUrl?.includes(`#!/join/${run.code}`)) fail(`projector QR encodes ${projUrl}`);
-console.log(`   ✓ projector QR encodes ${projUrl}`);
-await shot(proj, '05-projector');
+await proj.locator('.projector__code-value').waitFor({ timeout: 30_000 });
+await pause(1000);
+eq('projector QR by default', await proj.locator('.projector__code .teacher__qr').count(), 0);
+await shot(proj, '03-projector-off');
 
-step('an ended lesson offers no door');
-await sessionRef.update({ world: 'classic' });
-await student.goto(run.joinUrl, { waitUntil: 'domcontentloaded' });
-await passNameDoor(student);
-await student.locator('.stage-nav__invite').waitFor({ timeout: 30_000 });
-await sessionRef.update({ status: 'ended' });
-await student
-	.locator('.stage-nav__invite')
+await menuItem(PROJECTOR_ON);
+const card = proj.locator('.projector__code--compact .teacher__qr img');
+await card.waitFor({ timeout: 15_000 });
+const projUrl = await card.getAttribute('alt');
+if (!projUrl?.includes(`#!/join/${run.code}`)) fail(`projector QR encodes ${projUrl}`);
+console.log(`   ✓ switched on, projector QR encodes ${projUrl}`);
+eq('session.projectorQr', (await sessionRef.get()).data().projectorQr, true);
+await shot(proj, '04-projector-on');
+
+await menuItem(PROJECTOR_OFF);
+await proj
+	.locator('.projector__code .teacher__qr')
 	.waitFor({ state: 'detached', timeout: 15_000 })
-	.catch(() => fail('the QR door stayed after the lesson ended'));
-console.log('   ✓ door gone once the session ended');
+	.catch(() => fail('the projector QR stayed after switching off'));
+console.log('   ✓ switched off, projector QR gone');
+
+step('an ended lesson: no QR even if switched on');
+await sessionRef.update({ projectorQr: true, status: 'ended' });
+await pause(2000);
+eq('projector QR once ended', await proj.locator('.projector__code .teacher__qr').count(), 0);
 
 if (!KEEP) await browser.close();
 console.log('\nPASS e2e-join-qr');
