@@ -1170,6 +1170,24 @@ test.
   `@include type-meta` clears itself on descendants, so if you split a mark
   into a child span the exemption has to move down with it.
 
+## Library background materials (2026-10-14)
+
+A teacher attaches text, a PDF (drag & drop) or a web link to a scene from the
+lesson editor (`components/MaterialsEditor.ts`, under the YouTube list). The
+`agoraSceneMaterials` callable extracts plain text (PDF via `pdf-parse`, link
+via a guarded fetch + `htmlToText`) and stores it in `agoraSceneMaterials/
+{pkg}--{scene}` (caps in shared-types `AGORA_MATERIALS`: 8 items, 30k chars each,
+60k per scene). Students get a "Background materials" button on the scene
+(`components/MaterialsSheet.ts`): read, open the PDF/link, and ask the helper.
+`agoraAskMaterials` runs the language gate, takes one of the student's 15
+questions per session in a transaction (refunded if the model fails), and
+answers ONLY from the materials (`materialsPrompt.ts`). The chat lives in
+`agoraMaterialChats/{session}--{uid}` — owner-read, never client-written, never
+shown in the teacher console. A server may fetch a local URL only in the
+Functions emulator (`FUNCTIONS_EMULATOR`); in production private ranges are
+refused. Browser run: `scripts/e2e-library-materials.mjs`. Deploy order: rules
+(firestore + storage) -> `agoraSceneMaterials`, `agoraAskMaterials` -> hosting.
+
 ## Next steps (agreed direction)
 
 1. ~~Workshop-screens redesign via Google Stitch~~ — DONE 2026-07-13 (shared

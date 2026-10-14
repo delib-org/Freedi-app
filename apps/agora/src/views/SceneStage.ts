@@ -22,6 +22,8 @@ export interface SceneStageAttrs {
 	onFinish?: () => void;
 	/** The library video the teacher started for the class (with its scene) */
 	classVideo?: ClassVideo & { sceneId: string };
+	/** Background materials + the private chat about them (library scenes) */
+	materials?: { topicPackageId: string; sessionId: string; userId: string };
 }
 
 /**
@@ -112,6 +114,7 @@ export function SceneStage(): m.Component<SceneStageAttrs> {
 				immersive: true,
 				progress: { index: index + 1, total: scenes.length },
 				classVideo: classVideo?.sceneId === scene.sceneId ? classVideo : undefined,
+				materials: vnode.attrs.materials,
 				doneLabel: t('scene.continue'),
 				onDone: () => {
 					if (replayIndex !== undefined) {
