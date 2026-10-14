@@ -61,6 +61,7 @@ export type IconName =
 	| 'watch'
 	| 'target'
 	| 'mail'
+	| 'qr'
 	| 'cog'
 	| 'arrow'
 	| 'home'
@@ -174,6 +175,15 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 	mail: [
 		['rect', { x: 2.5, y: 5, width: 19, height: 14, rx: 2 }],
 		['path', { d: 'M3.2 6.4 12 12.6l8.8-6.2' }],
+	],
+
+	// The lesson's door: three finder squares and a scatter of modules — read
+	// as "a QR" at 18px without trying to be a scannable one.
+	qr: [
+		['rect', { x: 3.5, y: 3.5, width: 6, height: 6, rx: 1 }],
+		['rect', { x: 14.5, y: 3.5, width: 6, height: 6, rx: 1 }],
+		['rect', { x: 3.5, y: 14.5, width: 6, height: 6, rx: 1 }],
+		['path', { d: 'M14.5 14.5h2.5v2.5M20.5 14.5v.01M14.5 20.5v.01M17.5 20.5h3v-3' }],
 	],
 
 	// Settings: a ring, its hub, and eight teeth — the plainest possible cog,

@@ -13,6 +13,8 @@ import { listenToDeliberation, stopDeliberationListeners } from '../../lib/propo
 import { listenToVoting, stopVotingListeners } from '../../lib/voting';
 import { watchStageBody } from './watchBodies';
 import { QRShare } from '../../components/QRShare';
+import { sessionJoinUrl, sessionVillageMode } from '../../lib/flows/sessionLinks';
+import { projectorShowsQr } from '../../lib/flows/joinInvite';
 import { StageTransition, hasStageTransition } from '../../components/StageTransition';
 import { planItemLabel } from '../../components/StageNav';
 import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
@@ -119,7 +121,21 @@ export function ProjectorScreen(
 				listenToVoting(sessionId, session.challengeQuestionId, userId);
 			}
 
-			const joinUrl = `${window.location.origin}/join/${session.code}`;
+			// The same link the console's QR encodes. A bare `/join/<code>` path
+			// never reached the join screen: the router reads the hash, so the
+			// wall's QR used to open the home page
+			const joinUrl = sessionJoinUrl(
+				window.location.origin,
+				session.code,
+				sessionVillageMode(session.world, window.location.search),
+			);
+			const lobby = item.stage === AgoraStage.lobby;
+			const showQr = projectorShowsQr(
+				session.status,
+				item.stage,
+				session.code,
+				session.projectorQr,
+			);
 
 			return m('.projector', { 'data-stage': item.stage, 'data-screen': 'projector' }, [
 				// The way back, for a teacher who opened the wall in their own tab.
@@ -143,12 +159,23 @@ export function ProjectorScreen(
 						? watchStageBody({ session, item, topic, participants, userId })
 						: m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
 				]),
-				m('aside.projector__code', [
-					m('span.projector__code-label', t('projector.scan_to_join')),
-					m('.projector__code-value', session.code),
-					item.stage === AgoraStage.lobby ? m(QRShare, { url: joinUrl }) : null,
-					m('span.projector__code-count', t('projector.participants', { n: participants.length })),
-				]),
+				// Big in the lobby; after it a small QR beside the digits, only
+				// while the teacher has switched it on from the console's menu
+				m(
+					'aside.projector__code',
+					{ class: showQr && !lobby ? 'projector__code--compact' : undefined },
+					[
+						m('.projector__code-text', [
+							m('span.projector__code-label', t('projector.scan_to_join')),
+							m('.projector__code-value', session.code),
+							m(
+								'span.projector__code-count',
+								t('projector.participants', { n: participants.length }),
+							),
+						]),
+						showQr ? m(QRShare, { url: joinUrl, size: lobby ? 220 : 112 }) : null,
+					],
+				),
 			]);
 		},
 	};

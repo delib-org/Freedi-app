@@ -341,6 +341,26 @@ ledger. The audit callbacks were run read-only through the in-app browser.
 editor for catch-up; that standalone script was updated but not rerun.
 Local sample session: `5sl04x4aItj9`. Client-only; not deployed.
 
+## The join QR after the lobby (2026-10-14)
+
+Trello "The User can see QR even if the game started". `agoraJoinSession`
+seats anyone at any stage of an `open`/`live` session, but the QR lived only
+in the lobby. Teacher-only by Tal's call — students get no QR door.
+`components/JoinQrSheet.ts` (big QR + digits, look-sheet frame) opens from
+the console's ≡ menu ("this lesson", every device role — it shows no names).
+Beside it, after the lobby, a switch for the projector's small QR
+(`session.projectorQr`, optional boolean, absent = off; teacher-writable
+under the existing blacklist rules). The lobby's big QR always shows.
+`lib/flows/joinInvite.ts` decides both and hides everything once ended.
+
+Bug fixed on the way: the projector's QR encoded `origin/join/<code>`, a
+path the hash router never reads — scanning it opened the home page. It now
+uses `sessionJoinUrl` like the console. Verify: `npx tsx
+scripts/e2e-join-qr.mjs` (no student door in flat or village, teacher wall
+menu without names, a latecomer seated through the encoded link, projector
+switch on/off live, ended). Needs the shared-types build; client-only
+otherwise; not deployed.
+
 ## Late arrivals and catch-up (2026-09-22)
 
 Joining an open/live session already worked. Earlier question stations now
