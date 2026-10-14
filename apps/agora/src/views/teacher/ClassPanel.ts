@@ -55,6 +55,8 @@ export interface ClassPanelAttrs {
 	/** uid → how many classmates' texts this student rated */
 	ratingsByUid: ReadonlyMap<string, number>;
 	onMessage: (studentUid: string) => void;
+	/** Open "what they wrote" on this student's page */
+	onWrote?: (studentUid: string) => void;
 	/** This screen is on the wall: pseudonyms only, and say so instead of "no real name" */
 	namesHidden?: boolean;
 	/**
@@ -152,8 +154,16 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 
 	return {
 		view(vnode) {
-			const { plan, currentIndex, participants, facts, ratingsByUid, onMessage, onRemove } =
-				vnode.attrs;
+			const {
+				plan,
+				currentIndex,
+				participants,
+				facts,
+				ratingsByUid,
+				onMessage,
+				onWrote,
+				onRemove,
+			} = vnode.attrs;
 			// A row removed from the teacher's other device takes its question with it
 			dispatch({ kind: 'roster', uids: new Set(participants.map((row) => row.userId)) });
 			const opened = plan
@@ -221,6 +231,13 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 												: null,
 										]),
 										m('span.class-panel__actions', [
+											onWrote
+												? m(
+														'button.btn.btn--sm.btn--ghost',
+														{ type: 'button', onclick: () => onWrote(participant.userId) },
+														t('teacher.w_what_wrote'),
+													)
+												: null,
 											m(
 												'button.btn.btn--sm.btn--secondary.class-panel__message',
 												{ type: 'button', onclick: () => onMessage(participant.userId) },

@@ -206,6 +206,8 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	/** The student whose private thread is open beside the console, and which text it is about */
 	let drawerUid: string | null = null;
 	let drawerAbout: string | undefined;
+	/** "What they wrote" opened from the class list on one student (else the strip's door: by question) */
+	let textsFocusUid: string | undefined;
 	let projectorLinkCopied = false;
 	/** The class view: the same console, the same listeners, the room as the students see it */
 	const boardRoute = `/teach/session/${sessionId}`;
@@ -244,6 +246,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let stopArmTimer: number | undefined;
 
 	function openPanel(next: Panel, opener?: EventTarget | null): void {
+		textsFocusUid = undefined;
 		if (panel === next) {
 			closePanel();
 
@@ -1227,6 +1230,10 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								facts,
 								ratingsByUid,
 								onMessage: openDrawer,
+								onWrote: (studentUid: string) => {
+									textsFocusUid = studentUid;
+									panel = 'texts';
+								},
 								namesHidden: !privateDevice,
 								// Asked on the teacher's own screen only — never on the wall
 								onRemove: privateDevice
@@ -1246,7 +1253,14 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								},
 								// The students' private words do not belong on a wall
 								privateDevice
-									? m(MessagesPanel, { session, participants, onMessage: openDrawer })
+									? m(MessagesPanel, {
+											key: textsFocusUid ?? 'all',
+											session,
+											participants,
+											onMessage: openDrawer,
+											focusStudentUid: textsFocusUid,
+											defaultTab: 'question',
+										})
 									: m('p.home-explanation.teacher-panel__wall', t('teacher.device.open_on_phone')),
 							)
 						: panel === 'settings'
@@ -1356,14 +1370,18 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const drawerParticipant = drawerUid
 				? participants.find((participant) => participant.userId === drawerUid)
 				: undefined;
+			// A removed student has no seat, but the teacher can still read the
+			// thread and write to them; the note waits for the day they return
+			const drawerRemoval = drawerUid ? session.removedUids?.[drawerUid] : undefined;
 			const drawer =
-				drawerUid && drawerParticipant
+				drawerUid && (drawerParticipant || drawerRemoval)
 					? m(StudentThreadDrawer, {
 							sessionId,
 							studentUid: drawerUid,
-							anonName: drawerParticipant.anonName,
+							anonName: drawerParticipant?.anonName ?? drawerRemoval?.anonName ?? '',
 							realName: realNameOf(drawerUid),
-							languageStrikes: drawerParticipant.languageStrikes,
+							languageStrikes: drawerParticipant?.languageStrikes,
+							removed: !drawerParticipant && drawerRemoval !== undefined,
 							aboutStatementId: drawerAbout,
 							onClose: () => {
 								drawerUid = null;

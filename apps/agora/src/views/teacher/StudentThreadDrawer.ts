@@ -24,6 +24,8 @@ export interface StudentThreadDrawerAttrs {
 	realName?: string;
 	/** Times the language gate refused this student's text in this session */
 	languageStrikes?: number;
+	/** Taken out of the lesson: the note waits in the thread until they are let back */
+	removed?: boolean;
 	/** A note about one text: the row the teacher pressed "message" on */
 	aboutStatementId?: string;
 	onClose: () => void;
@@ -82,7 +84,9 @@ export function StudentThreadDrawer(): m.Component<StudentThreadDrawerAttrs> {
 		if (entry.kind === 'moderation') {
 			const key =
 				entry.moderation === 'hidden'
-					? 'teacher.notice_hidden'
+					? entry.permanent
+						? 'teacher.notice_deleted'
+						: 'teacher.notice_hidden'
 					: entry.moderation === 'restored'
 						? 'teacher.notice_restored'
 						: 'teacher.notice_edited';
@@ -166,6 +170,7 @@ export function StudentThreadDrawer(): m.Component<StudentThreadDrawerAttrs> {
 								'✕',
 							),
 						]),
+						attrs.removed ? m('p.voting-settings__hint', t('teacher.w_note_removed')) : null,
 						thread.length === 0
 							? m('p.home-explanation', t('teacher.thread_empty'))
 							: m('.teacher-drawer__lines', thread.map(line)),
