@@ -1,3 +1,4 @@
+import { backTarget } from '../../lib/routeTrail';
 import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { stalledBanner } from '../../components/StalledBanner';
@@ -93,15 +94,20 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 	 * is the default: OK saves and goes, Cancel stays. A teacher who typed a
 	 * paragraph into their own lesson has never meant to throw it away.
 	 */
+	/** Back is where the teacher came from; a bookmark, or the form that just made this, lands on the list */
+	function backFrom(): string {
+		return backTarget('/teach/scenarios', ['/teach/scenarios/new']);
+	}
+
 	function goBack(): void {
 		if (!dirty) {
-			m.route.set('/teach');
+			m.route.set(backFrom());
 
 			return;
 		}
 		if (!window.confirm(t('editor.leave_unsaved'))) return;
 		save();
-		m.route.set('/teach');
+		m.route.set(backFrom());
 	}
 
 	function uploadVideo(scene: AgoraScene, file: File): void {
@@ -348,7 +354,7 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 						m('p.join__error', t('common.error')),
 						m(
 							'button.btn.btn--secondary',
-							{ onclick: () => m.route.set('/teach') },
+							{ onclick: () => m.route.set(backFrom()) },
 							t('common.back'),
 						),
 					]),

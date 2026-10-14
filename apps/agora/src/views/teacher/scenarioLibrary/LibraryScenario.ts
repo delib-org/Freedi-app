@@ -134,7 +134,7 @@ export function LibraryScenario(): m.Component<LibraryScenarioAttrs> {
 					),
 					m(
 						m.route.Link,
-						{ href: `/teach/topic/${copyId}`, class: 'btn btn--secondary' },
+						{ href: `/teach/scenarios/${copyId}`, class: 'btn btn--secondary' },
 						t('scenlib.use_edit'),
 					),
 				]),

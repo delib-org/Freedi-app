@@ -18,20 +18,15 @@ import {
 	type LibraryFilters,
 } from '../../../lib/scenarioLibrary/view';
 import { getUserState } from '../../../lib/user';
+import { Segment } from '../../../components/Segment';
 import { LibraryShell } from './LibraryShell';
-import { MineList } from './MineList';
-
-export interface LibraryHomeAttrs {
-	/** The "my scenarios" segment instead of the shared library */
-	mine?: boolean;
-}
 
 /**
  * The library home: search, subject and lesson-type chips, a sort, a row of
  * recommended scenarios, and the grid. Everything is read once per sort and
  * filtered in the browser (the library is a few hundred cards, not millions).
  */
-export function LibraryHome(): m.Component<LibraryHomeAttrs> {
+export function LibraryHome(): m.Component {
 	let filters: LibraryFilters = NO_FILTERS;
 	let sort: LibrarySort = 'rating';
 	let showHidden = false;
@@ -221,7 +216,7 @@ export function LibraryHome(): m.Component<LibraryHomeAttrs> {
 									m('p', t(active ? 'scenlib.none_found_hint' : 'scenlib.empty_library_hint')),
 									m(
 										m.route.Link,
-										{ href: '/teach/library/mine', class: 'btn btn--primary' },
+										{ href: '/teach/scenarios', class: 'btn btn--primary' },
 										t('scenlib.publish_one'),
 									),
 								])
@@ -261,8 +256,7 @@ export function LibraryHome(): m.Component<LibraryHomeAttrs> {
 	}
 
 	return {
-		view({ attrs }) {
-			const mine = attrs.mine === true;
+		view() {
 			const store = getLibraryStore();
 			// The teacher switched language with the library open: ask for the cards in it
 			if (
@@ -287,38 +281,15 @@ export function LibraryHome(): m.Component<LibraryHomeAttrs> {
 					},
 				},
 				[
-					m('nav.scn-segment', { 'aria-label': t('scenlib.title') }, [
-						m(
-							m.route.Link,
-							{
-								href: '/teach/library',
-								class: `scn-segment__opt${mine ? '' : ' scn-segment__opt--on'}`,
-								'aria-current': mine ? undefined : 'page',
-							},
-							t('scenlib.seg_all'),
-						),
-						m(
-							m.route.Link,
-							{
-								href: '/teach/library/mine',
-								class: `scn-segment__opt${mine ? ' scn-segment__opt--on' : ''}`,
-								'aria-current': mine ? 'page' : undefined,
-							},
-							t('scenlib.seg_mine'),
-						),
-						store.isAdmin
-							? m(
-									m.route.Link,
-									{ href: '/teach/library/admin', class: 'scn-segment__opt' },
-									t('scenlib.adm_link'),
-								)
-							: null,
-					]),
-					mine
-						? m(MineList, { tags: [...store.tags.values()], sort })
-						: store.access === 'approved'
-							? library()
-							: null,
+					m(Segment, {
+						ariaLabel: t('scenlib.title'),
+						selected: 'library',
+						options: [
+							{ id: 'mine', label: t('scenlib.seg_mine'), href: '/teach/scenarios' },
+							{ id: 'library', label: t('scenlib.seg_all'), href: '/teach/library' },
+						],
+					}),
+					store.access === 'approved' ? library() : null,
 				],
 			);
 		},

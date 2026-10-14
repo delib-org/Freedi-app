@@ -147,7 +147,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 	}
 
 	function row(attrs: {
-		key: string;
+		key?: string;
 		icon: IconName;
 		label: string;
 		meta?: m.Children;
@@ -243,20 +243,33 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 							]
 						: null,
 
-					getTeacherNavState().canSupervise
-						? row({
-								key: 'supervise',
-								icon: 'people',
-								label: t('supervise.title'),
-								route: '/supervise',
-							})
-						: null,
-					m('p.teacher-nav__section', t('nav.live_now')),
+					// Lessons running now come first, on every teacher screen: the
+					// second, always-there way back into a lesson
 					loading && !loaded
 						? m('.spinner')
 						: live.length > 0
-							? live.map(lessonRow)
-							: m('p.teacher-nav__empty', t('nav.no_live')),
+							? [m('p.teacher-nav__section', t('nav.live_now')), live.map(lessonRow)]
+							: null,
+
+					// Places
+					row({ icon: 'home', label: t('teacher.title'), route: '/teach' }),
+					row({
+						icon: 'proposal',
+						label: t('scenlib.seg_mine'),
+						route: '/teach/scenarios',
+					}),
+					getLibraryStore().access === 'approved'
+						? row({
+								icon: 'search',
+								label: t('scenlib.nav'),
+								route: '/teach/library',
+							})
+						: null,
+					row({
+						icon: 'new',
+						label: t('dashboard.start_game'),
+						route: '/teach/start',
+					}),
 
 					m('p.teacher-nav__section', t('dashboard.my_classes')),
 					classes.length > 0
@@ -275,23 +288,37 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 
 					failed ? m('p.teacher-nav__empty.join__error', t('nav.load_failed')) : null,
 
-					m('.teacher-nav__footer', [
-						row({ key: 'home', icon: 'home', label: t('teacher.title'), route: '/teach' }),
-						row({
-							key: 'start',
-							icon: 'new',
-							label: t('dashboard.start_game'),
-							route: '/teach/start',
-						}),
-						getLibraryStore().access === 'approved'
-							? row({
-									key: 'library',
-									icon: 'tunnel',
-									label: t('scenlib.nav'),
-									route: '/teach/library',
-								})
-							: null,
-					]),
+					// Everything a teacher uses less often than the above
+					m('p.teacher-nav__section', t('nav.more')),
+					row({
+						icon: 'watch',
+						label: t('dashboard.my_games'),
+						route: '/teach/lessons',
+					}),
+					row({
+						icon: 'chart',
+						label: t('supervise.myActivity'),
+						route: '/teach/activity',
+					}),
+					getTeacherNavState().canSupervise
+						? row({
+								icon: 'people',
+								label: t('supervise.title'),
+								route: '/supervise',
+							})
+						: null,
+					getLibraryStore().isAdmin
+						? row({
+								icon: 'cog',
+								label: t('scenlib.adm_link'),
+								route: '/teach/library/admin',
+							})
+						: null,
+					row({
+						icon: 'idea',
+						label: t('nav.how_to_run'),
+						route: '/teach?help=1',
+					}),
 				],
 			),
 		];

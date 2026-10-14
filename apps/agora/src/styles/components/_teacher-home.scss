@@ -1,0 +1,768 @@
+@use '../tokens' as *;
+
+// The teacher's home and the screens it leads to: /teach, /teach/scenarios,
+// the class page with its three sections, the student page and past lessons.
+// One column, one card style, one section-header pattern; one filled button
+// per screen. Imported by components.scss; do not import directly.
+//
+// Scenario rows and the live banner keep their old class names (they are in
+// _teacher-dashboard.scss) — this file restyles what the redesign changes.
+
+// --- The page: sections spaced on --space-lg, items inside on --space-sm ---
+.teach-page {
+	gap: var(--space-lg);
+}
+
+.teach-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.sec-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-sm);
+	min-block-size: 44px;
+
+	&__title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--text-primary);
+	}
+
+	&__action {
+		flex: 0 0 auto;
+	}
+}
+
+.teach-note {
+	margin: 0;
+	font-size: var(--font-size-xs);
+	color: var(--text-muted);
+}
+
+.teach-link {
+	align-self: flex-start;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	min-block-size: 44px;
+	padding: 0;
+	border: 0;
+	background: none;
+	font: inherit;
+	font-weight: 700;
+	color: var(--mine-ink);
+	cursor: pointer;
+	text-decoration: none;
+
+	&:hover {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+		border-radius: var(--radius-sm);
+	}
+
+	.icon {
+		[dir='ltr'] & {
+			transform: scaleX(-1);
+		}
+	}
+}
+
+// --- Live banner: the one purple surface on the page ---
+.dashboard__live.teach-live {
+	flex-direction: column;
+	align-items: stretch;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	border: 0;
+	border-radius: var(--radius-lg);
+	background: linear-gradient(160deg, var(--mine-strong), var(--mine-deep));
+	color: #ffffff; // on the purple banner; the white is the banner's, not a theme colour
+	box-shadow: var(--shadow-card);
+
+	.dashboard__live-title {
+		color: inherit;
+		font-size: var(--font-size-lg);
+	}
+
+	.dashboard__live-meta {
+		color: inherit;
+		opacity: 0.94;
+		font-size: var(--font-size-xs);
+		white-space: normal;
+	}
+
+	.btn {
+		inline-size: 100%;
+		background: #ffffff;
+		color: var(--mine-deep);
+	}
+}
+
+.teach-live__dot {
+	inline-size: 10px;
+	block-size: 10px;
+	border-radius: 50%;
+	background: var(--mint);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--mint) 30%, transparent);
+	animation: teach-live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes teach-live-pulse {
+	50% {
+		box-shadow: 0 0 0 7px color-mix(in srgb, var(--mint) 10%, transparent);
+	}
+}
+
+// --- First run: the quietest card on the page ---
+.dashboard__firstrun {
+	background: var(--bg-page-high);
+	box-shadow: none;
+	border-radius: var(--radius-md);
+
+	.dashboard__steps {
+		grid-template-columns: 1fr;
+		gap: var(--space-sm);
+	}
+}
+
+// --- Scenario rows: status chips say it in words, colour only backs it up ---
+.scenario-row {
+	&__status {
+		font-size: var(--font-size-xs);
+		font-weight: 600;
+		line-height: 1.5;
+
+		&--ready {
+			background: var(--mark-helped);
+			border-color: transparent;
+			color: var(--success-ink);
+		}
+
+		&--draft {
+			background: var(--mark-edited);
+			border-color: transparent;
+			color: var(--text-primary);
+		}
+
+		&--shared {
+			background: var(--peer-tile);
+			border-color: transparent;
+			color: var(--mine-ink);
+		}
+
+		&--update {
+			background: var(--mine-strong);
+			border-color: transparent;
+			color: #ffffff; // 5.2:1 on --mine-strong
+		}
+	}
+
+	&__sub {
+		font-size: var(--font-size-xs);
+	}
+
+	// Dashed and shadowless: not a scenario, a different kind of door
+	&--own {
+		background: transparent;
+		border-style: dashed;
+		border-color: var(--border-strong);
+		box-shadow: none;
+	}
+
+	&__edit {
+		inline-size: 44px;
+		block-size: 44px;
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: var(--text-secondary);
+		border-radius: var(--radius-tile);
+		cursor: pointer;
+
+		&:hover {
+			background: var(--bg-inset);
+			color: var(--mine-ink);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+}
+
+.scenario-row--own .scenario-row__arrow {
+	margin-inline-end: var(--space-xs);
+}
+
+// The publish controls under a scenario's row: one quiet line, the switch on request
+.scn-mine__controls-wrap {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	padding-inline: var(--space-sm);
+}
+
+.scenario-item {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+// --- The library's place on the home ---
+.lib-entry {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	min-block-size: 64px;
+	padding: var(--space-sm) var(--space-md);
+	border-radius: var(--radius-md);
+	text-decoration: none;
+	color: var(--text-primary);
+
+	&__tile {
+		inline-size: 40px;
+		block-size: 40px;
+		flex: 0 0 auto;
+		display: grid;
+		place-items: center;
+		border-radius: var(--radius-tile);
+	}
+
+	&__text {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-weight: 700;
+	}
+
+	&__sub {
+		font-size: var(--font-size-xs);
+	}
+
+	&__arrow {
+		flex: 0 0 auto;
+		display: inline-flex;
+
+		[dir='ltr'] & .icon {
+			transform: scaleX(-1);
+		}
+	}
+
+	// Open: the prominent way into other teachers' scenarios
+	&:not(&--locked) {
+		background: var(--peer-tile);
+		border: 1px solid var(--border-strong);
+
+		.lib-entry__tile {
+			background: var(--mine-strong);
+			color: #ffffff; // an icon on --mine-strong
+		}
+
+		.lib-entry__sub {
+			color: var(--text-secondary);
+		}
+
+		.lib-entry__arrow {
+			color: var(--mine-ink);
+		}
+
+		&:hover {
+			border-color: var(--mine);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	// Locked: one quiet line, not a link, not a button
+	&--locked {
+		background: var(--surface-tint);
+		border: 1px solid var(--border-subtle);
+
+		.lib-entry__tile {
+			background: var(--bg-inset);
+			color: var(--text-muted);
+		}
+
+		.lib-entry__title {
+			color: var(--text-secondary);
+		}
+
+		.lib-entry__sub {
+			color: var(--text-muted);
+		}
+	}
+}
+
+// --- A class card: its name, its size, ONE number ---
+.class-card {
+	display: flex;
+	align-items: center;
+	gap: var(--space-md);
+	inline-size: 100%;
+	padding: var(--space-md);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-card);
+	color: var(--text-primary);
+	text-align: start;
+	text-decoration: none;
+	font: inherit;
+	cursor: pointer;
+	transition: border-color var(--motion-fast) ease;
+
+	&:hover {
+		border-color: var(--border-strong);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+
+	&__main {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__name {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		font-weight: 700;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__meta {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+
+	&__score {
+		flex: 0 0 auto;
+		min-inline-size: 64px;
+		text-align: center;
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__number {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		font-weight: 700;
+		line-height: 1.1;
+		color: var(--mine-ink);
+	}
+
+	&__label {
+		@include type-meta;
+
+		color: var(--text-muted);
+	}
+
+	&__none {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		max-inline-size: 7em;
+		text-align: center;
+	}
+}
+
+// --- Empty and waiting states ---
+.teach-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-lg) var(--space-md);
+	text-align: center;
+	color: var(--text-secondary);
+	border: 1px dashed var(--border-strong);
+	border-radius: var(--radius-md);
+
+	&__title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		font-weight: 700;
+		color: var(--text-primary);
+	}
+
+	p {
+		margin: 0;
+	}
+}
+
+.teach-skeleton {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__row {
+		block-size: 64px;
+		border-radius: var(--radius-md);
+		background: var(--bg-inset);
+	}
+}
+
+.teach-error {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-sm);
+	flex-wrap: wrap;
+	margin: 0;
+	padding: var(--space-sm) var(--space-md);
+	border-radius: var(--radius-md);
+	background: var(--surface-tint);
+	border: 1px solid var(--border-subtle);
+	color: var(--text-secondary);
+}
+
+// --- The pill switch: links between pages, tabs inside one ---
+.segment {
+	display: flex;
+	gap: var(--space-xs);
+	padding: var(--space-xs);
+	border-radius: var(--radius-full);
+	background: var(--bg-inset);
+
+	&__opt {
+		flex: 1 1 0;
+		min-inline-size: 0;
+		min-block-size: 44px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding-inline: var(--space-sm);
+		border: 0;
+		border-radius: var(--radius-full);
+		background: transparent;
+		font: inherit;
+		font-weight: 700;
+		color: var(--text-secondary);
+		text-align: center;
+		text-decoration: none;
+		cursor: pointer;
+
+		&--on {
+			background: var(--mine-strong);
+			color: #ffffff; // 5.2:1 on --mine-strong
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+}
+
+// The class page's switch stays under the bar while its section scrolls
+.segment--sticky {
+	position: sticky;
+	inset-block-start: calc(var(--teacher-nav-h) + env(safe-area-inset-top, 0px));
+	z-index: 2;
+	box-shadow: 0 0 0 var(--space-xs) var(--bg-page);
+}
+
+// --- Find and filter ---
+.find-bar {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.find-bar__input {
+	min-block-size: 48px;
+}
+
+.filter-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-sm);
+}
+
+.filter-chip {
+	min-block-size: 44px;
+	padding: 0 var(--space-md);
+	border: 1px solid var(--border-strong);
+	border-radius: var(--radius-full);
+	background: var(--bg-card-solid);
+	font: inherit;
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+	color: var(--text-secondary);
+	cursor: pointer;
+
+	&--on {
+		background: var(--peer-tile);
+		border-color: var(--mine);
+		color: var(--mine-ink);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+}
+
+.sort-select {
+	align-self: flex-start;
+	inline-size: auto;
+	min-block-size: 44px;
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+	color: var(--mine-ink);
+}
+
+// --- KPI tiles: three numbers, no more ---
+.kpis {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: var(--space-sm);
+}
+
+.kpi {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: var(--space-sm);
+	background: var(--surface-tint);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	text-align: center;
+
+	&__number {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		font-weight: 700;
+		line-height: 1.2;
+		color: var(--mine-ink);
+	}
+
+	&__label {
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+	}
+}
+
+.teach-card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-card);
+
+	&__title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		font-weight: 700;
+	}
+
+	&__meta {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+}
+
+// --- Rows in a list: a student, a lesson ---
+.teach-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.month-label {
+	margin: 0;
+	padding-block-start: var(--space-sm);
+	font-size: var(--font-size-xs);
+	font-weight: 700;
+	color: var(--text-muted);
+}
+
+.teach-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	inline-size: 100%;
+	min-block-size: 64px;
+	padding: var(--space-sm) var(--space-md);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-card);
+	color: var(--text-primary);
+	font: inherit;
+	text-align: start;
+	text-decoration: none;
+	cursor: pointer;
+	transition: border-color var(--motion-fast) ease;
+
+	&:hover {
+		border-color: var(--border-strong);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+
+	&__text {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__title {
+		font-weight: 700;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__meta {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+
+	&__end {
+		flex: 0 0 auto;
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--mine-ink);
+	}
+
+	&__go {
+		flex: 0 0 auto;
+		display: inline-flex;
+		color: var(--text-muted);
+
+		[dir='ltr'] & .icon {
+			transform: scaleX(-1);
+		}
+	}
+
+	&__live {
+		flex: 0 0 auto;
+		padding: 0 var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--mark-helped);
+		color: var(--success-ink);
+		font-size: var(--font-size-xs);
+		font-weight: 600;
+	}
+
+	&__unscored {
+		flex: 0 0 auto;
+		padding: 0 var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--mark-edited);
+		color: var(--text-primary);
+		font-size: var(--font-size-xs);
+		font-weight: 600;
+	}
+}
+
+.avatar {
+	flex: 0 0 auto;
+	inline-size: 40px;
+	block-size: 40px;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	background: var(--peer-tile);
+	color: var(--mine-ink);
+	font-family: var(--font-display);
+	font-weight: 700;
+
+	&--lg {
+		inline-size: 56px;
+		block-size: 56px;
+		font-size: var(--font-size-lg);
+	}
+}
+
+.meter {
+	block-size: 8px;
+	margin-block-start: var(--space-xs);
+	border-radius: var(--radius-full);
+	background: var(--bg-inset);
+	overflow: hidden;
+
+	&__fill {
+		display: block;
+		block-size: 100%;
+		border-radius: inherit;
+		background: var(--mine);
+	}
+}
+
+// --- Student page ---
+.student-hero {
+	display: flex;
+	align-items: center;
+	gap: var(--space-md);
+
+	&__name {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+	}
+}
+
+.crumb {
+	font-size: var(--font-size-xs);
+	color: var(--text-muted);
+}
+
+// --- Past lessons: the paging line ---
+.lessons-more {
+	align-self: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.teach-live__dot {
+		animation: none;
+	}
+
+	.class-card,
+	.teach-row {
+		transition: none;
+	}
+}
