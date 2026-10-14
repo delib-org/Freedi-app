@@ -260,10 +260,10 @@ export interface TeacherMessageResponse {
 /** `agoraModerateStatement` — the session teacher's hand on a student's text. */
 export interface ModerateStatementRequest {
 	sessionId: string;
-	action: 'hide' | 'restore' | 'edit' | 'clearLookName' | 'forgetNames';
-	/** hide / restore / edit */
+	action: 'hide' | 'restore' | 'edit' | 'delete' | 'clearLookName' | 'forgetNames';
+	/** hide / restore / edit / delete */
 	statementId?: string;
-	/** hide: shown to the author on the thread, never to the class */
+	/** hide / edit / delete: shown to the author on the thread, never to the class */
 	reason?: string;
 	/** edit: the replacement wording */
 	text?: string;
@@ -273,8 +273,10 @@ export interface ModerateStatementRequest {
 
 export interface ModerateStatementResponse {
 	ok: true;
-	/** hide / restore: the resulting state */
+	/** hide / restore / delete: the resulting state */
 	hidden?: boolean;
+	/** delete: gone for good */
+	deleted?: boolean;
 }
 
 /**

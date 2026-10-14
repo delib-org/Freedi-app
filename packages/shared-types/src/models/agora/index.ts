@@ -451,6 +451,7 @@ export type {
 export type { AgoraModeration, ModeratedDoc } from './agoraModeration';
 export {
 	AgoraModerationSchema,
+	isAgoraDeleted,
 	isAgoraHidden,
 	isTeacherEdited,
 	isTeacherTouched,
