@@ -280,8 +280,8 @@ export interface ModerateStatementResponse {
 /**
  * `agoraRemoveParticipant` — the session teacher takes one student out of
  * the lesson: their seat is deleted and their uid is blocked from this
- * session (see agoraRemoval.ts). Repeat-safe: removing someone already
- * removed answers `removed: false`.
+ * session until the teacher lets them back (see agoraRemoval.ts).
+ * Repeat-safe: removing someone already removed answers `removed: false`.
  */
 export interface RemoveParticipantRequest {
 	sessionId: string;
@@ -292,6 +292,22 @@ export interface RemoveParticipantResponse {
 	ok: true;
 	/** false when the student was already out of the room */
 	removed: boolean;
+}
+
+/**
+ * `agoraResolveRejoin` — the session teacher answers a removed student's
+ * knock: `approve` gives the parked seat back (same pseudonym), `decline`
+ * keeps them out until they knock again.
+ */
+export interface ResolveRejoinRequest {
+	sessionId: string;
+	studentUid: string;
+	decision: 'approve' | 'decline';
+}
+
+export interface ResolveRejoinResponse {
+	ok: true;
+	decision: 'approve' | 'decline';
 }
 
 /**

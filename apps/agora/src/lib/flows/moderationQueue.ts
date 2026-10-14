@@ -27,6 +27,12 @@ export interface TextSources {
 	answersByQuestion: Readonly<Record<string, readonly AgoraProposal[]>>;
 	suggestions: Readonly<Record<string, readonly AgoraProposal[]>>;
 	participants: readonly AgoraParticipant[];
+	/**
+	 * Students the teacher removed (session.removedUids). Their seats are gone
+	 * but their words stay on the board — and so stay in reach of the
+	 * teacher's take-down.
+	 */
+	removedUids?: readonly string[];
 	/** The pitch a student made during a challenge round, if one is standing */
 	challengerStatementId?: string;
 }
@@ -52,9 +58,12 @@ function row(item: AgoraProposal, kind: TextKind, proposalId?: string): TextRow 
 	};
 }
 
-/** Newest first, students only (the AI raters never write), system lines dropped */
+/** Newest first, students only — removed ones included (the AI raters never write), system lines dropped */
 export function buildTextRows(sources: TextSources): TextRow[] {
-	const students = new Set(sources.participants.map((participant) => participant.userId));
+	const students = new Set([
+		...sources.participants.map((participant) => participant.userId),
+		...(sources.removedUids ?? []),
+	]);
 	const rows: TextRow[] = [];
 
 	for (const proposal of sources.proposals) {

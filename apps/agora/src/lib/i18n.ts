@@ -1696,16 +1696,26 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.remove_student': 'להוציא',
 		'teacher.remove_confirm_title': 'להוציא את {{name}} מהשיעור?',
 		'teacher.remove_confirm_body':
-			'במסך שלהם יופיע: "המורה הוציא אתכם מהמסע הזה". מהכניסה הזו אי אפשר יהיה להצטרף שוב לשיעור הזה. מה שכבר נכתב נשאר על הלוח — ואפשר עדיין להוריד כל טקסט.',
+			'במסך שלהם יופיע: "המורה הוציא אתכם מהמסע הזה". כדי לחזור הם יצטרכו את האישור שלכם. מה שכבר נכתב נשאר על הלוח — ואפשר עדיין להוריד כל טקסט.',
 		'teacher.remove_confirm_ok': 'להוציא מהשיעור',
 		'teacher.remove_keep': 'לא, להשאיר',
 		'teacher.remove_failed': 'ההוצאה לא עברה. נסו שוב.',
 		'teacher.removed_done': '{{name}} הוצא/ה מהשיעור',
 		'game.removed_title': 'המורה הוציא אתכם מהמסע הזה',
-		'game.removed_body':
-			'אי אפשר להמשיך במסע הזה מהמכשיר הזה. אם נראה לכם שזו טעות, דברו עם המורה.',
-		'join.removed':
-			'המורה הוציא אתכם מהמסע הזה, ולכן אי אפשר להצטרף אליו שוב. אם נראה לכם שזו טעות, דברו עם המורה.',
+		'game.removed_body': 'בינתיים אי אפשר להמשיך במסע הזה מהמכשיר הזה. אפשר לבקש מהמורה לחזור.',
+		'join.removed': 'המורה הוציא אתכם מהמסע הזה. נסו שוב כדי לבקש לחזור.',
+		'game.rejoin_ask': 'לבקש לחזור',
+		'game.rejoin_ask_again': 'לבקש שוב',
+		'game.rejoin_waiting_title': 'מחכים שהמורה יאשר לכם לחזור',
+		'game.rejoin_waiting_body': 'הבקשה הגיעה למורה. כשהמורה יאשר, המסע ייפתח כאן מעצמו.',
+		'game.rejoin_declined_title': 'המורה אמר: לא עכשיו',
+		'game.rejoin_declined_body': 'אפשר לבקש שוב בעוד דקה.',
+		'join.rejoin_cooldown': 'המורה אמר: לא עכשיו. אפשר לבקש שוב בעוד דקה.',
+		'teacher.rejoin.title': 'בקשות לחזור לשיעור ({{n}})',
+		'teacher.rejoin.asks': '{{name}} מבקש/ת לחזור',
+		'teacher.rejoin.approve': 'לאשר חזרה',
+		'teacher.rejoin.decline': 'לא עכשיו',
+		'teacher.rejoin.failed': 'זה לא עבר. נסו שוב.',
 		// --- end removal ---
 	},
 	en: {
@@ -3456,16 +3466,28 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.remove_student': 'Remove',
 		'teacher.remove_confirm_title': 'Remove {{name}} from this lesson?',
 		'teacher.remove_confirm_body':
-			'Their screen will say: "Your teacher removed you from this journey." This login cannot rejoin the lesson. What they already wrote stays on the board — you can still take any of it down.',
+			'Their screen will say: "Your teacher removed you from this journey." To come back they will need your approval. What they already wrote stays on the board — you can still take any of it down.',
 		'teacher.remove_confirm_ok': 'Remove from the lesson',
 		'teacher.remove_keep': 'No, keep',
 		'teacher.remove_failed': 'Removing did not go through. Try again.',
 		'teacher.removed_done': '{{name}} was removed from the lesson',
 		'game.removed_title': 'Your teacher removed you from this journey',
 		'game.removed_body':
-			'You cannot continue this journey from this device. If you think this is a mistake, talk to your teacher.',
-		'join.removed':
-			'Your teacher removed you from this journey, so you cannot join it again. If you think this is a mistake, talk to your teacher.',
+			'For now you cannot continue this journey from this device. You can ask your teacher to let you back in.',
+		'join.removed': 'Your teacher removed you from this journey. Try again to ask to come back.',
+		'game.rejoin_ask': 'Ask to come back',
+		'game.rejoin_ask_again': 'Ask again',
+		'game.rejoin_waiting_title': 'Waiting for your teacher to let you back in',
+		'game.rejoin_waiting_body':
+			'Your request reached your teacher. When they say yes, the journey opens here by itself.',
+		'game.rejoin_declined_title': 'Your teacher said not now',
+		'game.rejoin_declined_body': 'You can ask again in a minute.',
+		'join.rejoin_cooldown': 'Your teacher said not now. You can ask again in a minute.',
+		'teacher.rejoin.title': 'Asking to come back ({{n}})',
+		'teacher.rejoin.asks': '{{name}} asks to come back',
+		'teacher.rejoin.approve': 'Let back in',
+		'teacher.rejoin.decline': 'Not now',
+		'teacher.rejoin.failed': 'That did not go through. Try again.',
 		// --- end removal ---
 	},
 	ar: {
@@ -5154,16 +5176,27 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.remove_student': 'إخراج',
 		'teacher.remove_confirm_title': 'إخراج {{name}} من هذا الدرس؟',
 		'teacher.remove_confirm_body':
-			'ستظهر على شاشتهم عبارة: "معلمكم أخرجكم من هذه الرحلة". لا يمكن الانضمام إلى هذا الدرس مرة أخرى من هذا الدخول. ما كُتب يبقى على اللوح — ويمكنكم إنزال أي نص منه.',
+			'ستظهر على شاشتهم عبارة: "معلمكم أخرجكم من هذه الرحلة". للعودة سيحتاجون إلى موافقتكم. ما كُتب يبقى على اللوح — ويمكنكم إنزال أي نص منه.',
 		'teacher.remove_confirm_ok': 'إخراج من الدرس',
 		'teacher.remove_keep': 'لا، إبقاء',
 		'teacher.remove_failed': 'لم يتم الإخراج. حاولوا مرة أخرى.',
 		'teacher.removed_done': 'تم إخراج {{name}} من الدرس',
 		'game.removed_title': 'معلمكم أخرجكم من هذه الرحلة',
 		'game.removed_body':
-			'لا يمكنكم متابعة هذه الرحلة من هذا الجهاز. إذا ظننتم أن هذا خطأ، تحدّثوا مع معلمكم.',
-		'join.removed':
-			'معلمكم أخرجكم من هذه الرحلة، لذلك لا يمكنكم الانضمام إليها مرة أخرى. إذا ظننتم أن هذا خطأ، تحدّثوا مع معلمكم.',
+			'لا يمكنكم حاليًا متابعة هذه الرحلة من هذا الجهاز. يمكنكم أن تطلبوا من معلمكم العودة.',
+		'join.removed': 'معلمكم أخرجكم من هذه الرحلة. حاولوا مرة أخرى لتطلبوا العودة.',
+		'game.rejoin_ask': 'طلب العودة',
+		'game.rejoin_ask_again': 'الطلب مرة أخرى',
+		'game.rejoin_waiting_title': 'بانتظار موافقة معلمكم على عودتكم',
+		'game.rejoin_waiting_body': 'وصل طلبكم إلى معلمكم. عندما يوافق، ستُفتح الرحلة هنا تلقائيًا.',
+		'game.rejoin_declined_title': 'قال معلمكم: ليس الآن',
+		'game.rejoin_declined_body': 'يمكنكم الطلب مرة أخرى بعد دقيقة.',
+		'join.rejoin_cooldown': 'قال معلمكم: ليس الآن. يمكنكم الطلب مرة أخرى بعد دقيقة.',
+		'teacher.rejoin.title': 'طلبات العودة إلى الدرس ({{n}})',
+		'teacher.rejoin.asks': '{{name}} يطلب العودة',
+		'teacher.rejoin.approve': 'السماح بالعودة',
+		'teacher.rejoin.decline': 'ليس الآن',
+		'teacher.rejoin.failed': 'لم يتم ذلك. حاولوا مرة أخرى.',
 		// --- end removal ---
 	},
 	es: {
@@ -6945,16 +6978,30 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.remove_student': 'Sacar',
 		'teacher.remove_confirm_title': '¿Sacar a {{name}} de esta clase?',
 		'teacher.remove_confirm_body':
-			'En su pantalla aparecerá: «Tu profesor te ha sacado de este viaje». Con este acceso no se podrá volver a entrar en esta clase. Lo que ya escribió se queda en el tablero; aún puedes retirar cualquier texto.',
+			'En su pantalla aparecerá: «Tu profesor te ha sacado de este viaje». Para volver necesitará tu aprobación. Lo que ya escribió se queda en el tablero; aún puedes retirar cualquier texto.',
 		'teacher.remove_confirm_ok': 'Sacar de la clase',
 		'teacher.remove_keep': 'No, dejarlo',
 		'teacher.remove_failed': 'No se pudo sacar. Inténtalo de nuevo.',
 		'teacher.removed_done': 'Has sacado a {{name}} de la clase',
 		'game.removed_title': 'Tu profesor te ha sacado de este viaje',
 		'game.removed_body':
-			'No puedes seguir este viaje desde este dispositivo. Si crees que es un error, habla con tu profesor.',
+			'Por ahora no puedes seguir este viaje desde este dispositivo. Puedes pedirle a tu profesor que te deje volver.',
 		'join.removed':
-			'Tu profesor te ha sacado de este viaje, así que no puedes volver a unirte. Si crees que es un error, habla con tu profesor.',
+			'Tu profesor te ha sacado de este viaje. Vuelve a intentarlo para pedir volver.',
+		'game.rejoin_ask': 'Pedir volver',
+		'game.rejoin_ask_again': 'Pedirlo otra vez',
+		'game.rejoin_waiting_title': 'Esperando a que tu profesor te deje volver',
+		'game.rejoin_waiting_body':
+			'Tu petición ha llegado a tu profesor. Cuando diga que sí, el viaje se abrirá aquí solo.',
+		'game.rejoin_declined_title': 'Tu profesor ha dicho que ahora no',
+		'game.rejoin_declined_body': 'Puedes volver a pedirlo en un minuto.',
+		'join.rejoin_cooldown':
+			'Tu profesor ha dicho que ahora no. Puedes volver a pedirlo en un minuto.',
+		'teacher.rejoin.title': 'Piden volver a la clase ({{n}})',
+		'teacher.rejoin.asks': '{{name}} pide volver',
+		'teacher.rejoin.approve': 'Dejar volver',
+		'teacher.rejoin.decline': 'Ahora no',
+		'teacher.rejoin.failed': 'No se pudo hacer. Inténtalo de nuevo.',
 		// --- end removal ---
 	},
 	de: {
@@ -8758,16 +8805,30 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.remove_student': 'Entfernen',
 		'teacher.remove_confirm_title': '{{name}} aus dieser Stunde entfernen?',
 		'teacher.remove_confirm_body':
-			'Auf dem Bildschirm steht dann: „Deine Lehrkraft hat dich aus dieser Reise entfernt.“ Mit dieser Anmeldung ist kein erneuter Beitritt zu dieser Stunde möglich. Was schon geschrieben wurde, bleibt an der Tafel – du kannst jeden Text weiterhin runternehmen.',
+			'Auf dem Bildschirm steht dann: „Deine Lehrkraft hat dich aus dieser Reise entfernt.“ Um zurückzukommen, braucht es deine Zustimmung. Was schon geschrieben wurde, bleibt an der Tafel – du kannst jeden Text weiterhin runternehmen.',
 		'teacher.remove_confirm_ok': 'Aus der Stunde entfernen',
 		'teacher.remove_keep': 'Nein, behalten',
 		'teacher.remove_failed': 'Das Entfernen hat nicht geklappt. Versuch es noch mal.',
 		'teacher.removed_done': '{{name}} wurde aus der Stunde entfernt',
 		'game.removed_title': 'Deine Lehrkraft hat dich aus dieser Reise entfernt',
 		'game.removed_body':
-			'Auf diesem Gerät kannst du diese Reise nicht fortsetzen. Wenn du glaubst, dass das ein Fehler ist, sprich mit deiner Lehrkraft.',
+			'Im Moment kannst du diese Reise auf diesem Gerät nicht fortsetzen. Du kannst deine Lehrkraft bitten, dich wieder hereinzulassen.',
 		'join.removed':
-			'Deine Lehrkraft hat dich aus dieser Reise entfernt, deshalb kannst du nicht wieder beitreten. Wenn du glaubst, dass das ein Fehler ist, sprich mit deiner Lehrkraft.',
+			'Deine Lehrkraft hat dich aus dieser Reise entfernt. Versuch es noch mal, um zu fragen, ob du zurückdarfst.',
+		'game.rejoin_ask': 'Fragen, ob ich zurückdarf',
+		'game.rejoin_ask_again': 'Noch mal fragen',
+		'game.rejoin_waiting_title': 'Warten, bis deine Lehrkraft dich wieder hereinlässt',
+		'game.rejoin_waiting_body':
+			'Deine Anfrage ist bei deiner Lehrkraft angekommen. Sobald sie zustimmt, öffnet sich die Reise hier von selbst.',
+		'game.rejoin_declined_title': 'Deine Lehrkraft hat „jetzt nicht“ gesagt',
+		'game.rejoin_declined_body': 'In einer Minute kannst du noch mal fragen.',
+		'join.rejoin_cooldown':
+			'Deine Lehrkraft hat „jetzt nicht“ gesagt. In einer Minute kannst du noch mal fragen.',
+		'teacher.rejoin.title': 'Möchten zurück in die Stunde ({{n}})',
+		'teacher.rejoin.asks': '{{name}} möchte zurückkommen',
+		'teacher.rejoin.approve': 'Wieder hereinlassen',
+		'teacher.rejoin.decline': 'Jetzt nicht',
+		'teacher.rejoin.failed': 'Das hat nicht geklappt. Versuch es noch mal.',
 		// --- end removal ---
 	},
 	nl: {
@@ -10552,16 +10613,29 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.remove_student': 'Verwijderen',
 		'teacher.remove_confirm_title': '{{name}} uit deze les verwijderen?',
 		'teacher.remove_confirm_body':
-			'Op hun scherm komt te staan: "Je docent heeft je uit deze reis verwijderd." Met deze login kan niemand opnieuw aan deze les meedoen. Wat al geschreven is, blijft op het bord — je kunt elke tekst nog steeds weghalen.',
+			'Op hun scherm komt te staan: "Je docent heeft je uit deze reis verwijderd." Om terug te komen hebben ze jouw toestemming nodig. Wat al geschreven is, blijft op het bord — je kunt elke tekst nog steeds weghalen.',
 		'teacher.remove_confirm_ok': 'Uit de les verwijderen',
 		'teacher.remove_keep': 'Nee, laten staan',
 		'teacher.remove_failed': 'Verwijderen is niet gelukt. Probeer het opnieuw.',
 		'teacher.removed_done': '{{name}} is uit de les verwijderd',
 		'game.removed_title': 'Je docent heeft je uit deze reis verwijderd',
 		'game.removed_body':
-			'Je kunt deze reis op dit apparaat niet voortzetten. Denk je dat dit een vergissing is? Praat dan met je docent.',
+			'Je kunt deze reis voorlopig niet voortzetten op dit apparaat. Je kunt je docent vragen of je terug mag.',
 		'join.removed':
-			'Je docent heeft je uit deze reis verwijderd, dus je kunt niet opnieuw meedoen. Denk je dat dit een vergissing is? Praat dan met je docent.',
+			'Je docent heeft je uit deze reis verwijderd. Probeer het opnieuw om te vragen of je terug mag.',
+		'game.rejoin_ask': 'Vragen of ik terug mag',
+		'game.rejoin_ask_again': 'Opnieuw vragen',
+		'game.rejoin_waiting_title': 'Wachten tot je docent je weer binnenlaat',
+		'game.rejoin_waiting_body':
+			'Je verzoek is bij je docent aangekomen. Zodra die ja zegt, gaat de reis hier vanzelf verder.',
+		'game.rejoin_declined_title': 'Je docent zei: nu niet',
+		'game.rejoin_declined_body': 'Over een minuut kun je het opnieuw vragen.',
+		'join.rejoin_cooldown': 'Je docent zei: nu niet. Over een minuut kun je het opnieuw vragen.',
+		'teacher.rejoin.title': 'Willen terug in de les ({{n}})',
+		'teacher.rejoin.asks': '{{name}} vraagt om terug te komen',
+		'teacher.rejoin.approve': 'Weer binnenlaten',
+		'teacher.rejoin.decline': 'Nu niet',
+		'teacher.rejoin.failed': 'Dat is niet gelukt. Probeer het opnieuw.',
 		// --- end removal ---
 	},
 };

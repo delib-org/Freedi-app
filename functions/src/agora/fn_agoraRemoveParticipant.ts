@@ -8,9 +8,11 @@ import {
 	RemoveParticipantResponse,
 	createAgoraHandId,
 	createAgoraIdentityId,
+	createAgoraRemovalId,
 	createAgoraParticipantId,
 	functionConfig,
 	isAgoraAiUid,
+	isRemovedFromAgoraSession,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 
@@ -23,16 +25,19 @@ export interface RemoveParticipantInput {
 /**
  * Take one student out of a live lesson, in one transaction:
  *
- *   1. the uid goes on the session's `removedUids` — the block list that
- *      `agoraJoinSession` and the statement/evaluation/vote rules read, so
- *      the same login cannot simply walk back in or keep writing;
- *   2. the participant doc is deleted — every count, camp census, lottery
- *      and console row is built from that collection, so the room shrinks by
- *      one everywhere without a single filter to forget;
+ *   1. the uid goes on the session's `removedUids` with the pseudonym it
+ *      played under — the block list `agoraJoinSession` and the statement /
+ *      evaluation / vote rules read, so the login cannot walk back in or keep
+ *      writing until the teacher lets it back (`agoraResolveRejoin`);
+ *   2. the participant doc is parked whole in `agoraRemovals` (server-only)
+ *      and deleted — every count, camp census, lottery and console row is
+ *      built from that collection, so the room shrinks by one everywhere
+ *      without a single filter to forget, and an approved return gets the
+ *      same seat (pseudonym, camp, points, credit guards) back;
  *   3. their dealt hand goes, so the notes it held count as unread again and
  *      the lottery deals them to someone who will read them;
- *   4. the real name they typed at the door goes too — the teacher no longer
- *      has a row to read it on, and it is a child's name.
+ *   4. the real name they typed at the door goes too — it is a child's name,
+ *      and a returning student types it again at the door.
  *
  * Their notes, ratings and votes stay where they are: the notes keep their
  * pseudonym, and the teacher's existing take-down is the way to hide any of
@@ -57,6 +62,9 @@ export async function removeParticipant(
 	const identityRef = db
 		.collection(Collections.agoraIdentities)
 		.doc(createAgoraIdentityId(sessionId, studentUid));
+	const parkedRef = db
+		.collection(Collections.agoraRemovals)
+		.doc(createAgoraRemovalId(sessionId, studentUid));
 
 	return db.runTransaction(async (transaction) => {
 		const [sessionSnap, participantSnap] = await Promise.all([
@@ -77,25 +85,30 @@ export async function removeParticipant(
 		if (participant?.isAI) {
 			throw new HttpsError('invalid-argument', 'Not a student of this session');
 		}
-
-		const alreadyBlocked = typeof session.removedUids?.[studentUid] === 'number';
-		if (!participant && alreadyBlocked) {
-			return { ok: true, removed: false };
+		if (!participant) {
+			if (isRemovedFromAgoraSession(session, studentUid)) return { ok: true, removed: false };
+			throw new HttpsError('not-found', 'Not a student of this session');
 		}
 
 		const stamp = now();
 		transaction.update(sessionRef, {
 			removedUids: {
 				...(session.removedUids ?? {}),
-				[studentUid]: session.removedUids?.[studentUid] ?? stamp,
+				[studentUid]: { removedAt: stamp, anonName: participant.anonName },
 			},
 			lastUpdate: stamp,
 		});
-		if (participant) transaction.delete(participantRef);
+		transaction.set(parkedRef, {
+			sessionId,
+			userId: studentUid,
+			removedAt: stamp,
+			participant,
+		});
+		transaction.delete(participantRef);
 		transaction.delete(handRef);
 		transaction.delete(identityRef);
 
-		return { ok: true, removed: participant !== undefined };
+		return { ok: true, removed: true };
 	});
 }
 

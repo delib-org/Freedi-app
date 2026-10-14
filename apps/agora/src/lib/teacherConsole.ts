@@ -10,11 +10,13 @@ import {
 	ModerateStatementRequest,
 	ModerateStatementResponse,
 	RemoveParticipantResponse,
+	ResolveRejoinResponse,
 	TeacherMessageRequest,
 } from '@freedi/shared-types';
 import {
 	moderateStatement as moderateCallable,
 	removeParticipant as removeParticipantCallable,
+	resolveRejoin as resolveRejoinCallable,
 	teacherMessage,
 } from './callables';
 
@@ -225,6 +227,19 @@ export async function removeStudent(
 	studentUid: string,
 ): Promise<RemoveParticipantResponse> {
 	return removeParticipantCallable({ sessionId, studentUid });
+}
+
+/**
+ * Answer a removed student's knock. Approve gives the old seat back (the
+ * participants listener brings the row back by itself); decline keeps them
+ * out until they knock again.
+ */
+export async function answerRejoin(
+	sessionId: string,
+	studentUid: string,
+	decision: 'approve' | 'decline',
+): Promise<ResolveRejoinResponse> {
+	return resolveRejoinCallable({ sessionId, studentUid, decision });
 }
 
 /**

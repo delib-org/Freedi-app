@@ -98,12 +98,13 @@ import { boardNews } from '../lib/flows/noteNews';
 import { VillageShell } from '../components/VillageShell';
 import { Voting } from './Voting';
 import { Results } from './Results';
+import { RemovedScreen } from './RemovedScreen';
 import { ReRate } from './ReRate';
 import {
 	AgoraSceneKind,
 	AgoraSessionMode,
 	AgoraStage,
-	isRemovedFromAgoraSession,
+	removalOf,
 	resolveAgoraTheme,
 	roundSpecOf,
 	type AgoraStagePlanItem,
@@ -202,6 +203,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let transitionLeaveTimer: number | undefined;
 	let nav: StageNavState = INITIAL_STAGE_NAV;
 	let navRestored = false;
+	/** This device was showing the removed screen: a missing seat now means "on its way back" */
+	let wasRemoved = false;
 	/** The style sheet is open — a modal over whatever stage is on screen */
 	let lookOpen = false;
 	/** The village's gear sheet: style, sounds, world quality, the flat view */
@@ -413,22 +416,27 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				);
 			}
 
-			// The teacher took this login out of the lesson. A calm end, not an
-			// error: no stage renders behind it, so nothing on this device tries
-			// to write again (the rules would refuse it anyway), and no join
-			// door is offered — the join callable would refuse that too.
-			if (isRemovedFromAgoraSession(session, userId)) {
+			// The teacher took this login out of the lesson. A calm screen, not
+			// an error: no stage renders behind it, so nothing on this device
+			// tries to write (the rules would refuse it anyway). It is also where
+			// the student waits after knocking, and where the teacher's "yes"
+			// lands: the entry leaves the session and the seat comes back.
+			const removal = removalOf(session, userId);
+			if (removal) {
+				wasRemoved = true;
+
+				return m(RemovedScreen, {
+					removal,
+					onAsk: () => m.route.set(`/join/${session.code}`),
+					onLeave: () => m.route.set('/'),
+				});
+			}
+			// Let back in: the entry left with the session snapshot, the seat
+			// arrives with the participants one — wait for it, never flash "no seat"
+			if (wasRemoved && !myParticipant) {
 				return m(
 					'.shell',
-					m(
-						'.shell__content.text-center.game-removed',
-						{ role: 'status', style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
-						[
-							m('h2', t('game.removed_title')),
-							m('p.lobby__status', t('game.removed_body')),
-							m('button.btn.btn--secondary', { onclick: () => m.route.set('/') }, t('common.back')),
-						],
-					),
+					m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
 				);
 			}
 

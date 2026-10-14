@@ -111,8 +111,9 @@ service cloud.firestore {
               agoraCustomThemeValid(choice.get('custom', null)));
     }
 
-    // The teacher took this login out of this lesson (agoraRemoveParticipant
-    // writes the uid into the session's `removedUids`). Read by the statement,
+    // The teacher took this login out of this lesson and has not let it back
+    // (agoraRemoveParticipant writes the uid into the session's `removedUids`;
+    // agoraResolveRejoin's approve takes it out). Read by the statement,
     // evaluation and vote rules so a removed student cannot keep writing into
     // the room from a stale tab or the SDK. One get() of the session, only on
     // writes that name an Agora session; other sessions are never consulted.
@@ -202,10 +203,11 @@ service cloud.firestore {
                        // at all) stays teacher-writable above.
                        request.resource.data.get('votingGame', {}) ==
                          resource.data.get('votingGame', {}) &&
-                       // Who was removed is agoraRemoveParticipant's to write:
-                       // it deletes the seat in the same transaction, and a
-                       // block list edited from a browser would disagree with
-                       // the seats it is supposed to describe.
+                       // Who was removed, and who asked to come back, is the
+                       // callables' to write (agoraRemoveParticipant, the
+                       // join knock, agoraResolveRejoin): each moves a seat in
+                       // the same transaction, and a list edited from the
+                       // teacher's browser would let someone back without one.
                        request.resource.data.get('removedUids', {}) ==
                          resource.data.get('removedUids', {});
     }
@@ -297,6 +299,13 @@ service cloud.firestore {
     match /agoraTeacherPrompts/{teacherId} {
       allow read: if isAuthenticated() && request.auth.uid == teacherId;
       allow write: if false;
+    }
+
+    // A removed student's seat, parked whole by agoraRemoveParticipant until
+    // the teacher lets them back (agoraResolveRejoin). Server-only: it holds
+    // points and credit guards the student must not rewrite.
+    match /agoraRemovals/{removalId} {
+      allow read, write: if false;
     }
 
     // Proposal scores (bridging/plausibility): server-computed only.

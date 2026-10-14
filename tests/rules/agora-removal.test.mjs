@@ -1,6 +1,6 @@
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { agoraProposalDoc, evaluationDoc, makeEnv, seed, statementDoc } from './helpers.mjs';
 
 /**
@@ -36,7 +36,7 @@ describe('agora removed participants', () => {
 	before(async () => {
 		env = await makeEnv('agora-removal');
 		await seed(env, async (db) => {
-			await setDoc(doc(db, 'agoraSessions', SESSION), sessionDoc(SESSION, { [REMOVED]: 1000 }));
+			await setDoc(doc(db, 'agoraSessions', SESSION), sessionDoc(SESSION, { [REMOVED]: { removedAt: 1000, anonName: 'שועל כחול', requestedAt: 2000 } }));
 			await setDoc(doc(db, 'agoraSessions', OTHER_SESSION), sessionDoc(OTHER_SESSION));
 			await setDoc(
 				doc(db, 'statements', QUESTION),
@@ -217,11 +217,29 @@ describe('agora removed participants', () => {
 	});
 
 	describe('the block list itself', () => {
-		it('cannot be cleared or extended from the teacher browser', async () => {
+		it('cannot be cleared (a browser approve) or extended from the teacher browser', async () => {
 			const db = env.authenticatedContext(TEACHER).firestore();
 			await assertFails(updateDoc(doc(db, 'agoraSessions', SESSION), { removedUids: {} }));
 			await assertFails(
-				updateDoc(doc(db, 'agoraSessions', OTHER_SESSION), { removedUids: { [CLASSMATE]: 5 } }),
+				updateDoc(doc(db, 'agoraSessions', OTHER_SESSION), {
+					removedUids: { [CLASSMATE]: { removedAt: 5, anonName: 'x' } },
+				}),
+			);
+		});
+
+		it('the student cannot knock by writing the session either', async () => {
+			const db = env.authenticatedContext(REMOVED).firestore();
+			await assertFails(updateDoc(doc(db, 'agoraSessions', SESSION), { lastUpdate: 9 }));
+		});
+
+		it('the parked seat is readable and writable by nobody', async () => {
+			await assertFails(
+				getDoc(doc(env.authenticatedContext(TEACHER).firestore(), 'agoraRemovals', `${SESSION}--${REMOVED}`)),
+			);
+			await assertFails(
+				setDoc(doc(env.authenticatedContext(REMOVED).firestore(), 'agoraRemovals', `${SESSION}--${REMOVED}`), {
+					participant: { points: { total: 99 } },
+				}),
 			);
 		});
 

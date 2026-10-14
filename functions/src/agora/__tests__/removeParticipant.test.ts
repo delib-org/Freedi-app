@@ -29,6 +29,9 @@ const fakeDb = {
 			delete: (ref: { __path: string }) => {
 				writes.push(() => store.delete(ref.__path));
 			},
+			set: (ref: { __path: string }, data: Record<string, unknown>) => {
+				writes.push(() => store.set(ref.__path, data));
+			},
 		};
 		const result = await fn(tx);
 		writes.forEach((write) => write());
@@ -85,7 +88,7 @@ describe('removeParticipant', () => {
 		store.set(identity(STUDENT), { realName: 'Alice A.' });
 	});
 
-	it('blocks the uid, deletes the seat, the hand and the real name', async () => {
+	it('blocks the uid with its pseudonym, parks the seat, deletes hand and real name', async () => {
 		const result = await removeParticipant(
 			{ sessionId: SESSION, teacherUid: TEACHER, studentUid: STUDENT },
 			() => 5000,
@@ -93,7 +96,11 @@ describe('removeParticipant', () => {
 
 		expect(result).toEqual({ ok: true, removed: true });
 		const session = store.get(SESSION_PATH) ?? {};
-		expect(session.removedUids).toEqual({ [STUDENT]: 5000 });
+		expect(session.removedUids).toEqual({
+			[STUDENT]: { removedAt: 5000, anonName: `name-${STUDENT}` },
+		});
+		const parked = store.get(`agoraRemovals/${SESSION}--${STUDENT}`) ?? {};
+		expect((parked.participant as Record<string, unknown>).anonName).toBe(`name-${STUDENT}`);
 		expect(session.lastUpdate).toBe(5000);
 		expect(store.has(seat(STUDENT))).toBe(false);
 		expect(store.has(hand(STUDENT))).toBe(false);
@@ -119,7 +126,10 @@ describe('removeParticipant', () => {
 			() => 200,
 		);
 
-		expect(store.get(SESSION_PATH)?.removedUids).toEqual({ [OTHER]: 100, [STUDENT]: 200 });
+		expect(store.get(SESSION_PATH)?.removedUids).toEqual({
+			[OTHER]: { removedAt: 100, anonName: `name-${OTHER}` },
+			[STUDENT]: { removedAt: 200, anonName: `name-${STUDENT}` },
+		});
 	});
 
 	it('is repeat-safe: a second removal changes nothing', async () => {
@@ -133,7 +143,9 @@ describe('removeParticipant', () => {
 		);
 
 		expect(again).toEqual({ ok: true, removed: false });
-		expect(store.get(SESSION_PATH)?.removedUids).toEqual({ [STUDENT]: 100 });
+		expect(store.get(SESSION_PATH)?.removedUids).toEqual({
+			[STUDENT]: { removedAt: 100, anonName: `name-${STUDENT}` },
+		});
 	});
 
 	it('refuses anyone but the session teacher, and writes nothing', async () => {
@@ -155,6 +167,12 @@ describe('removeParticipant', () => {
 			removeParticipant({ sessionId: SESSION, teacherUid: TEACHER, studentUid: 'ai-rater' }),
 		).rejects.toMatchObject({ code: 'invalid-argument' });
 		expect(store.has(seat('ai-rater'))).toBe(true);
+	});
+
+	it('answers not-found for a uid that never had a seat', async () => {
+		await expect(
+			removeParticipant({ sessionId: SESSION, teacherUid: TEACHER, studentUid: 'stranger' }),
+		).rejects.toMatchObject({ code: 'not-found' });
 	});
 
 	it('answers not-found for a missing session', async () => {

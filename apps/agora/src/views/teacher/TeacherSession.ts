@@ -92,9 +92,11 @@ import { ClassPanel, progressFacts } from './ClassPanel';
 import { MessagesPanel } from './MessagesPanel';
 import { StudentThreadDrawer } from './StudentThreadDrawer';
 import { LanguageAlert } from './LanguageAlert';
+import { RejoinRequests } from './RejoinRequests';
 import {
 	getTeacherConsoleState,
 	listenToTeacherConsole,
+	answerRejoin,
 	realNameOf,
 	removeStudent,
 	stopTeacherConsole,
@@ -1140,15 +1142,28 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			// A refused text, the moment it is refused — above the board and the
 			// class view alike, until the teacher says "got it"
-			const languageAlert = m(LanguageAlert, {
-				sessionId,
-				privateDevice,
-				threads: getTeacherConsoleState().threads,
-				participants,
-				plan,
-				realNameOf,
-				onOpen: openDrawer,
-			});
+			// Both live alerts share one corner (.teacher-alerts) and stack there.
+			// A removed student's knock is for the teacher's own device only.
+			const languageAlert = m('.teacher-alerts', [
+				m(LanguageAlert, {
+					sessionId,
+					privateDevice,
+					threads: getTeacherConsoleState().threads,
+					participants,
+					plan,
+					realNameOf,
+					onOpen: openDrawer,
+				}),
+				privateDevice
+					? m(RejoinRequests, {
+							session,
+							realNameOf,
+							onAnswer: async (studentUid: string, decision: 'approve' | 'decline') => {
+								await answerRejoin(session.sessionId, studentUid, decision);
+							},
+						})
+					: null,
+			]);
 
 			const drawerParticipant = drawerUid
 				? participants.find((participant) => participant.userId === drawerUid)

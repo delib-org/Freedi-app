@@ -1304,6 +1304,7 @@ export {
 	agoraAdminBackfillTeacherAggregates,
 	agoraDealNotes,
 	agoraRemoveParticipant,
+	agoraResolveRejoin,
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 	onAgoraSessionFinished,

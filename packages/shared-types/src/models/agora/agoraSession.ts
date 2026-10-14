@@ -11,6 +11,7 @@ import {
 	picklist,
 	InferOutput,
 } from 'valibot';
+import { AgoraRemovalSchema } from './agoraRemoval';
 import { VotingStageSettingsSchema, VotingStateSchema } from '../vote/votingStageSettings';
 import { VotingGameStateSchema } from '../vote/challengeGame';
 import { AgoraSessionFlowSchema } from './sessionFlow';
@@ -283,14 +284,14 @@ export const AgoraSessionSchema = object({
 	 */
 	villageCall: optional(object({ place: string(), at: number() })),
 	/**
-	 * Who the teacher took out of this lesson: uid → when (ms). Written only
-	 * by `agoraRemoveParticipant`, pinned by rules. The removed student's
-	 * participant doc is deleted, so every count simply loses them; this map
-	 * is what keeps them out — the join callable refuses them and rules refuse
-	 * their statements, ratings and votes in this session. Other sessions are
-	 * untouched. See `isRemovedFromAgoraSession`.
+	 * Who the teacher took out of this lesson: uid → when, the pseudonym they
+	 * played under, and their knock to come back. Written only by
+	 * `agoraRemoveParticipant`, `agoraJoinSession` (the knock) and
+	 * `agoraResolveRejoin`; pinned by rules, which also refuse the uid's
+	 * statements, ratings and votes in this session while it is here. Other
+	 * sessions are untouched. See agoraRemoval.ts.
 	 */
-	removedUids: optional(record(string(), number())),
+	removedUids: optional(record(string(), AgoraRemovalSchema)),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),
