@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ODYSSEY_ATTITUDES, OdysseyAttitudeKey } from '@freedi/shared-types';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
@@ -10,10 +10,12 @@ import { valueToAttitude } from '../lib/evaluations';
 import { islandArtUrl } from '../lib/islandArt';
 import { relativeDistances } from '../lib/seaLayout';
 import { stageBus, type SeaDistances } from '../lib/stageBus';
-import { invitedElders, elderStageId } from '../lib/elders';
+import { activeElders, crewByCloseness, elderStageId } from '../lib/elders';
+import { nextIslandIndex, sailedCount, voyageIslands } from '../lib/voyageRoute';
 import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
 import SeaChart from '../components/SeaChart';
 import ShipCard from '../components/ShipCard';
+import IslandStrip from '../components/IslandStrip';
 
 /**
  * What the captain's log asks when an island has no question of its own.
@@ -34,13 +36,9 @@ export default function Voyage() {
 	const mode = useMode();
 	const { content, journey, attitudes, text, setAttitude, updateJourney } = useGame();
 
-	const selectedIslands = useMemo(() => {
-		if (!content || !journey) return [];
-
-		return content.islands.filter(
-			(island) => island.enabled && journey.selectedIslandIds.includes(island.statementId),
-		);
-	}, [content, journey]);
+	// No islands are chosen up front: the route is every enabled island, in the
+	// game's order. `journey.selectedIslandIds` from the old map is not read.
+	const selectedIslands = useMemo(() => voyageIslands(content), [content]);
 
 	const [index, setIndex] = useState(() => {
 		const unanswered = selectedIslands.findIndex(
@@ -68,9 +66,25 @@ export default function Voyage() {
 		[content],
 	);
 
+	const allElders = useMemo(() => activeElders(content?.game), [content]);
+
+	/** elderId → distance from the player's answers so far (null = nothing shared yet) */
+	const elderDistances = useMemo((): Record<string, number | null> => {
+		if (!content) return {};
+
+		return Object.fromEntries(
+			distanceEngine
+				.elderDistances({ attitudes, islands: content.islands, elders: allElders })
+				.map((entry) => [entry.elderId, entry.distance]),
+		);
+	}, [content, attitudes, allElders]);
+
+	// Nobody picks the crew. It forms after the first island from the elders
+	// closest to the player's answers, and re-forms as they sail on — so before
+	// the first answer the sea carries no sailors at all.
 	const elders = useMemo(
-		() => invitedElders(content?.game, journey?.selectedElderIds),
-		[content, journey?.selectedElderIds],
+		() => crewByCloseness(allElders, elderDistances),
+		[allElders, elderDistances],
 	);
 
 	const distances: SeaDistances = useMemo(() => {
@@ -78,12 +92,13 @@ export default function Voyage() {
 		const partyEntries = distanceEngine
 			.partyDistances({ attitudes, islands: content.islands, parties })
 			.map((entry): [string, number | null] => [entry.partyId, entry.distance]);
-		const elderEntries = distanceEngine
-			.elderDistances({ attitudes, islands: content.islands, elders })
-			.map((entry): [string, number | null] => [elderStageId(entry.elderId), entry.distance]);
+		const elderEntries = elders.map((elder): [string, number | null] => [
+			elderStageId(elder.elderId),
+			elderDistances[elder.elderId] ?? null,
+		]);
 
 		return Object.fromEntries([...partyEntries, ...elderEntries]);
-	}, [content, attitudes, parties, elders]);
+	}, [content, attitudes, parties, elders, elderDistances]);
 
 	// Where the ships ride: stretched across the sea by the parties' own
 	// spread, so near and far stay visible (see `relativeDistances`).
@@ -170,15 +185,15 @@ export default function Voyage() {
 		setDepth(island ? (journey?.depthAnswers?.[island.statementId] ?? '') : '');
 	}, [island, journey?.depthAnswers]);
 
-	// No islands chosen → back to the chart. A side effect, so it runs after
-	// render (calling navigate() during render is a React error).
-	const shouldRedirectToMap = Boolean(content && journey) && selectedIslands.length === 0;
+	// A game with no enabled island has no voyage → the summary. A side effect,
+	// so it runs after render (calling navigate() during render is a React error).
+	const shouldRedirectToSummary = Boolean(content && journey) && selectedIslands.length === 0;
 	useEffect(() => {
-		if (shouldRedirectToMap) navigate('/map');
-	}, [shouldRedirectToMap, navigate]);
+		if (shouldRedirectToSummary) navigate('/summary');
+	}, [shouldRedirectToSummary, navigate]);
 
 	if (!content || !journey) return <NoGameYet />;
-	if (shouldRedirectToMap) return null;
+	if (shouldRedirectToSummary) return null;
 	if (!island) return null;
 
 	const answeredOnIsland = island.stances.filter(
@@ -217,14 +232,25 @@ export default function Voyage() {
 		}
 	}
 
+	const islandIndex = Math.min(index, selectedIslands.length - 1);
+	// Where "the next island" leads: the next one still waiting, wrapping round
+	// to any skipped earlier; none left means the voyage is complete.
+	const nextIndex = nextIslandIndex(selectedIslands, attitudes, islandIndex);
+	const sailed = sailedCount(selectedIslands, attitudes);
+
+	function goToIsland(target: number): void {
+		setIndex(target);
+		setPhase('question');
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}
+
 	function nextIsland(): void {
-		if (index + 1 >= selectedIslands.length) {
+		if (nextIndex === null) {
 			navigate('/summary');
 
 			return;
 		}
-		setIndex(index + 1);
-		setPhase('question');
+		goToIsland(nextIndex);
 	}
 
 	// Two lists, never one. See NearbyShips' `caption`.
@@ -262,11 +288,18 @@ export default function Voyage() {
 							/>
 						) : null}
 						<p className="eyebrow m-0">
-							אי {index + 1} מתוך {selectedIslands.length}
+							אי {islandIndex + 1} מתוך {selectedIslands.length}
 						</p>
 						<h1 className="text-3xl font-bold text-[var(--cream)] mt-1 mb-1">{island.title}</h1>
 						<p className="text-[15px] text-[#cfe6f5] m-0">{island.issue}</p>
 					</header>
+
+					<IslandStrip
+						islands={selectedIslands}
+						attitudes={attitudes}
+						currentIndex={islandIndex}
+						onSelect={goToIsland}
+					/>
 
 					{mode === 'game' && phase === 'question' ? (
 						// window onto the island vignette and the sea
@@ -447,7 +480,15 @@ export default function Voyage() {
 									) : null}
 									<NearbyShips ships={shipProximity} onSelect={setAsked} selectedId={asked} />
 									{elderProximity.length > 0 ? (
-										<div className="border-t border-[rgba(232,185,88,0.25)] pt-3">
+										<div className="border-t border-[rgba(232,185,88,0.25)] pt-3 flex flex-col gap-2">
+											<p className="m-0 text-[13px] opacity-85">
+												{sailed <= 1
+													? 'אחרי האי הראשון הצטרפו אליך מלחים — דמויות בינה מלאכותית בהשראת אישים היסטוריים, שהעמדות שלהן קרובות לתשובות שלך. הצוות מתעדכן בכל אי.'
+													: 'המלחים הקרובים ביותר לתשובות שלך עד כה. הצוות מתעדכן בכל אי.'}{' '}
+												<Link className="underline" to="/elders">
+													מי הם המלחים?
+												</Link>
+											</p>
 											<NearbyShips
 												ships={elderProximity}
 												onSelect={setAsked}
@@ -461,10 +502,19 @@ export default function Voyage() {
 									</p>
 								</div>
 							)}
-							<div className="flex justify-center">
+							<div className="flex flex-wrap justify-center gap-3">
 								<button type="button" className="btn" onClick={() => nextIsland()}>
-									{index + 1 >= selectedIslands.length ? 'אל מפת ההפלגה שלך 🗺️' : 'לאי הבא ⚓'}
+									{nextIndex === null
+										? 'אל מפת ההפלגה שלך 🗺️'
+										: `לאי הבא: ${selectedIslands[nextIndex].title} ⚓`}
 								</button>
+								{nextIndex !== null ? (
+									// The player may stop whenever they like; saying so beside "next"
+									// is what makes it a choice rather than a hidden exit.
+									<Link className="btn-outline" to="/summary">
+										לסיים כאן — למפת ההפלגה שלך
+									</Link>
+								) : null}
 							</div>
 						</section>
 					)}

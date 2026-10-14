@@ -1,7 +1,7 @@
 import type { OdysseyJourney } from '@freedi/shared-types';
 import type { GameContent } from './game';
 import type { AttitudeMap } from './distance';
-import { activeElders } from './elders';
+import { sailedCount, voyageIslands } from './voyageRoute';
 
 /**
  * The voyage, as a list of legs.
@@ -47,6 +47,8 @@ interface Leg {
 	done: boolean;
 	detail?: string;
 	isDestination?: boolean;
+	/** open regardless of the legs before it — the player has already been there */
+	reached?: boolean;
 }
 
 export interface VoyageStepsInput {
@@ -77,16 +79,13 @@ export function voyageSteps({
 	const ranked = Object.keys(journey.valueRankings ?? {}).length;
 	const windsLit = answered + (ranked >= TOP_VALUES ? 1 : 0);
 
-	const crew = activeElders(content.game);
-	const chosenCrew = journey.selectedElderIds;
-
-	const islands = content.islands.filter(
-		(island) => island.enabled && journey.selectedIslandIds.includes(island.statementId),
-	);
-	const sailed = islands.filter((island) =>
-		island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
-	).length;
-	const voyageDone = islands.length > 0 && sailed === islands.length;
+	// No island is chosen up front any more: the route is every enabled island,
+	// and the crew forms on its own after the first one — so neither the map
+	// nor the crew is a leg the player has to finish. The voyage earns its ✓
+	// only when every island is sailed, but the player may stop whenever they
+	// like — so the summary opens as soon as one island is.
+	const islands = voyageIslands(content);
+	const sailed = sailedCount(islands, attitudes);
 
 	const legs: Leg[] = [
 		{ path: '/', label: 'הקדמה', done: true },
@@ -96,45 +95,23 @@ export function voyageSteps({
 			done: windsLit === winds,
 			detail: `${windsLit}/${winds} רוחות`,
 		},
-	];
-
-	// A game whose organizer authored no elders never shows the crew screen —
-	// it redirects to the map — so a step for it would be one nobody can stand on.
-	if (crew.length > 0) {
-		legs.push({
-			path: '/elders',
-			label: 'המלחים',
-			done: chosenCrew !== undefined,
-			// `undefined` is "not asked yet"; an empty array is a real answer.
-			detail: chosenCrew === undefined ? undefined : `${chosenCrew.length} מלחים`,
-		});
-	}
-
-	legs.push(
-		{
-			path: '/map',
-			label: 'המפה',
-			done: islands.length > 0,
-			detail: islands.length > 0 ? `${islands.length} איים` : undefined,
-		},
 		{
 			path: '/voyage',
 			label: 'ההפלגה',
-			done: voyageDone,
+			done: islands.length > 0 && sailed === islands.length,
+			reached: sailed > 0,
 			detail: islands.length > 0 ? `${sailed}/${islands.length} איים` : undefined,
 		},
-		{ path: '/summary', label: 'הסיכום', done: false, isDestination: true },
-	);
+		{ path: '/summary', label: 'הסיכום', done: false, isDestination: true, reached: sailed > 0 },
+	];
 
 	// The frontier: everything up to the leg after the furthest one finished.
 	// Measuring from the FURTHEST rather than the first unfinished leg is what
-	// keeps a skipped screen from walling off the rest of the voyage — a
-	// journey begun before the crew screen existed has islands chosen and no
-	// crew, and must still be free to sail.
+	// keeps a half-answered compass from walling off islands already sailed.
 	const furthestDone = legs.reduce((furthest, leg, index) => (leg.done ? index : furthest), -1);
 
 	return legs.map((leg, index) => {
-		const unlocked = leg.done || index <= furthestDone + 1;
+		const unlocked = leg.done || leg.reached === true || index <= furthestDone + 1;
 
 		const status: VoyageStepStatus =
 			pathname === leg.path ? 'current' : leg.done ? 'done' : unlocked ? 'open' : 'locked';
