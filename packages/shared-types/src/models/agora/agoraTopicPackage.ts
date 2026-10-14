@@ -14,6 +14,11 @@ import {
 import { stagePlanPreset } from './stagePlan';
 import type { AgoraStagePlanItem } from './stagePlan';
 import { AgoraSceneKind, AgoraTopicStatus } from './agoraEnums';
+import {
+	AgoraLibraryCardSchema,
+	AgoraLibraryStatsSchema,
+	AgoraLibraryVisibilitySchema,
+} from './agoraLibrary';
 
 /** A value held by a historical character — also the AI grading answer key */
 export const AgoraValueSchema = object({
@@ -189,6 +194,21 @@ export const AgoraTopicPackageSchema = object({
 	healthMetrics: array(AgoraHealthMetricDefSchema),
 	scenes: array(AgoraSceneSchema),
 	artwork: optional(AgoraArtworkSchema),
+	/**
+	 * The teachers' library. All optional, all server-written (rules refuse a
+	 * client write to `stats` and `library`): absent `visibility` means private.
+	 * A public scenario is listed, rated and copyable by approved teachers only.
+	 */
+	visibility: optional(AgoraLibraryVisibilitySchema),
+	library: optional(AgoraLibraryCardSchema),
+	stats: optional(AgoraLibraryStatsSchema),
+	/** On a copy taken from the library: the original scenario's id... */
+	sourceScenarioId: optional(string()),
+	/** ...its title and author as they were, so the credit survives the original going private... */
+	sourceTitle: optional(string()),
+	sourceAuthorName: optional(string()),
+	/** ...and the original's `lastUpdate` when this copy was taken ("a new version is available" compares to it) */
+	sourceVersion: optional(number()),
 	createdAt: number(),
 	lastUpdate: number(),
 });

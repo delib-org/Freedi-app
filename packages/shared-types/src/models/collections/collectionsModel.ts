@@ -122,6 +122,11 @@ export enum Collections {
     agoraIdentities = 'agoraIdentities',
     agoraTeacherMessages = 'agoraTeacherMessages',
     agoraTeacherPrompts = 'agoraTeacherPrompts',
+    // The teachers' scenario library (tags, ratings, cached translations, approval markers)
+    agoraLibraryTags = 'agoraLibraryTags',
+    agoraScenarioRatings = 'agoraScenarioRatings',
+    agoraScenarioTranslations = 'agoraScenarioTranslations',
+    agoraApprovedTeachers = 'agoraApprovedTeachers',
 
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',

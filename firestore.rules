@@ -68,12 +68,76 @@ service cloud.firestore {
 
     // Topic packages: teachers author them; ready packages are readable by
     // any signed-in user (students need scenes/artwork during the game).
+    //
+    // The teachers' scenario library rides on the same documents, so the rules
+    // split reading in two:
+    //   get  — any signed-in user, as before: a student's phone opens the
+    //          package behind its game by id, and a public scenario may be the
+    //          one a teacher is playing. THIS IS THE SOFT SPOT: "private" hides a
+    //          scenario from every list, but its id, if it leaks, still opens it.
+    //   list — the owner's own packages, or PUBLIC ones for an approved teacher
+    //          (see isApprovedAgoraTeacher). Nobody else can enumerate anything.
+    // `visibility`, `library`, `stats` and the `source*` credit are written by
+    // the agoraLibrary* callables alone; a client can neither publish nor claim
+    // a rating or an original author.
+    function isApprovedAgoraTeacher() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/agoraApprovedTeachers/$(request.auth.uid));
+    }
+
+    function agoraLibraryFieldsUntouched() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+               .hasAny(['visibility', 'library', 'stats', 'sourceScenarioId',
+                        'sourceTitle', 'sourceAuthorName', 'sourceVersion']);
+    }
+
     match /agoraTopicPackages/{topicPackageId} {
-      allow read: if isAuthenticated();
+      allow get: if isAuthenticated();
+      allow list: if isAuthenticated() &&
+                     (resource.data.creatorId == request.auth.uid ||
+                      (isApprovedAgoraTeacher() &&
+                       resource.data.get('visibility', 'private') == 'public' &&
+                       resource.data.get('library', {}).get('hidden', true) == false));
       allow create: if isAuthenticated() &&
-                       request.resource.data.creatorId == request.auth.uid;
-      allow update, delete: if isAuthenticated() &&
-                               resource.data.creatorId == request.auth.uid;
+                       request.resource.data.creatorId == request.auth.uid &&
+                       !request.resource.data.keys().hasAny(
+                         ['visibility', 'library', 'stats', 'sourceScenarioId',
+                          'sourceTitle', 'sourceAuthorName', 'sourceVersion']);
+      allow update: if isAuthenticated() &&
+                       resource.data.creatorId == request.auth.uid &&
+                       agoraLibraryFieldsUntouched();
+      allow delete: if isAuthenticated() &&
+                       resource.data.creatorId == request.auth.uid;
+    }
+
+    // The library's vocabularies, ratings and translation cache. Only an
+    // approved teacher reads any of it, and nothing here is client-written:
+    // agoraLibraryCreateTag / Publish / Rate / Translate / Moderate are the
+    // writers. A hidden review is read by its author and a sys-admin alone.
+    match /agoraLibraryTags/{tagId} {
+      allow read: if isApprovedAgoraTeacher();
+      allow write: if false;
+    }
+    match /agoraScenarioRatings/{ratingId} {
+      allow get: if isApprovedAgoraTeacher() &&
+                    (resource == null ||
+                     resource.data.get('hidden', true) == false ||
+                     resource.data.get('teacherId', '') == request.auth.uid ||
+                     isSystemAdminUser());
+      allow list: if isApprovedAgoraTeacher() &&
+                     (resource.data.get('hidden', true) == false ||
+                      resource.data.get('teacherId', '') == request.auth.uid ||
+                      isSystemAdminUser());
+      allow write: if false;
+    }
+    match /agoraScenarioTranslations/{translationId} {
+      allow read, write: if false;
+    }
+    // The approval marker agoraLibraryAccess writes (and the rules above ask
+    // `exists()` of). A teacher reads their own; nobody writes it from a client.
+    match /agoraApprovedTeachers/{teacherId} {
+      allow get: if isAuthenticated() && request.auth.uid == teacherId;
+      allow list, write: if false;
     }
 
     // Sessions: created via callable only. The teacher may update live-control
