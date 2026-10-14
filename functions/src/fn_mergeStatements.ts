@@ -13,6 +13,7 @@ import {
 } from '@freedi/shared-types';
 import { mergeAndReorganizeParagraphs, ParagraphForMerge } from './services/ai-service';
 import { generateParagraphId } from './helpers';
+import { judgeAutoMerge } from './services/auto-merge-gate';
 
 interface MergeRequest {
 	/** ID of the target statement to merge into */
@@ -25,6 +26,11 @@ interface MergeRequest {
 	userId: string;
 	/** Optional: User's display name */
 	userName?: string;
+	/**
+	 * True when the merge was chosen by the app (autoMergeSimilar), not by the
+	 * participant. Such merges must pass the same-idea judge first.
+	 */
+	autoMerge?: boolean;
 }
 
 interface MergeResponse {
@@ -37,6 +43,10 @@ interface MergeResponse {
 	newTitle?: string;
 	/** Error message if failed */
 	error?: string;
+	/** Auto-merge refused: the judge did not find the two to be the same idea */
+	notSameIdea?: boolean;
+	/** The judge's verdict when an auto-merge was refused */
+	verdict?: string;
 }
 
 /**
@@ -53,7 +63,7 @@ export async function mergeStatements(request: Request, response: Response): Pro
 	const startTime = Date.now();
 
 	try {
-		const { targetStatementId, newContent, questionId, userId, userName }: MergeRequest =
+		const { targetStatementId, newContent, questionId, userId, userName, autoMerge }: MergeRequest =
 			request.body;
 
 		// Validate required fields
@@ -119,6 +129,41 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			});
 
 			return;
+		}
+
+		// 1b. Automatic merges need the same-idea judge's 'same'. Embedding
+		// similarity alone proposed the target, and in MC it is not enough (the
+		// shared question prefix makes unrelated answers look alike). Checked
+		// here, server-side, for any merge the app chose — flagged by the client
+		// or implied by the question's own autoMergeSimilar setting — so no
+		// client path can fold an idea into an option it does not restate.
+		const isAutoMerge =
+			autoMerge === true || questionData.statementSettings?.autoMergeSimilar === true;
+		if (isAutoMerge) {
+			const decision = await judgeAutoMerge({
+				newText: newContent,
+				targetText: targetStatement.statement || '',
+				targetStatementId,
+				questionId,
+				userId,
+			});
+
+			if (!decision.allowed) {
+				logger.info('mergeStatements: auto-merge refused by judge', {
+					targetStatementId,
+					questionId,
+					verdict: decision.verdict,
+				});
+				const refused: MergeResponse = {
+					ok: false,
+					notSameIdea: true,
+					verdict: decision.verdict,
+					error: 'Not the same idea as the suggested option; add it as a new suggestion',
+				};
+				response.status(409).send(refused);
+
+				return;
+			}
 		}
 
 		// 2. Create hidden statement for the user's original input (audit trail)

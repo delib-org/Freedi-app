@@ -1,5 +1,10 @@
 import { DisplayMode, SuggestionMode } from '@freedi/shared-types';
-import { isAddDisabledResponse, resolveCanAddOptions } from '../participantOptions';
+import {
+  isAddDisabledResponse,
+  isMergeRefusedAsDifferentIdea,
+  MERGE_REFUSED_STATUS,
+  resolveCanAddOptions,
+} from '../participantOptions';
 import type { MergedQuestionSettings } from '../settingsUtils';
 
 const merged = (overrides: Partial<MergedQuestionSettings> = {}): MergedQuestionSettings => ({
@@ -58,5 +63,20 @@ describe('isAddDisabledResponse', () => {
     expect(isAddDisabledResponse(null)).toBe(false);
     expect(isAddDisabledResponse(undefined)).toBe(false);
     expect(isAddDisabledResponse('ADD_DISABLED')).toBe(false);
+  });
+});
+
+describe('isMergeRefusedAsDifferentIdea', () => {
+  it('is true for the judge refusal (409 + notSameIdea)', () => {
+    expect(
+      isMergeRefusedAsDifferentIdea(MERGE_REFUSED_STATUS, { notSameIdea: true, verdict: 'related' })
+    ).toBe(true);
+  });
+
+  it('is false for other failures, so they still surface as errors', () => {
+    expect(isMergeRefusedAsDifferentIdea(500, { notSameIdea: true })).toBe(false);
+    expect(isMergeRefusedAsDifferentIdea(MERGE_REFUSED_STATUS, { error: 'x' })).toBe(false);
+    expect(isMergeRefusedAsDifferentIdea(MERGE_REFUSED_STATUS, null)).toBe(false);
+    expect(isMergeRefusedAsDifferentIdea(MERGE_REFUSED_STATUS, 'notSameIdea')).toBe(false);
   });
 });
