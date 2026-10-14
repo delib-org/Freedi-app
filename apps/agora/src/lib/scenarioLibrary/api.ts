@@ -13,6 +13,8 @@ import {
 import type {
 	LibraryAccessResponse,
 	LibraryCreateTagRequest,
+	LibraryGenerateCoverRequest,
+	LibraryGenerateCoverResponse,
 	LibraryCreateTagResponse,
 	LibraryModerateRequest,
 	LibraryModerateResponse,
@@ -78,6 +80,9 @@ export const translateScenarios = call<LibraryTranslateRequest, LibraryTranslate
 	'agoraLibraryTranslate',
 );
 export const rateScenario = call<LibraryRateRequest, LibraryRateResponse>('agoraLibraryRate');
+export const generateCover = call<LibraryGenerateCoverRequest, LibraryGenerateCoverResponse>(
+	'agoraLibraryGenerateCover',
+);
 export const moderateLibrary = call<LibraryModerateRequest, LibraryModerateResponse>(
 	'agoraLibraryModerate',
 );

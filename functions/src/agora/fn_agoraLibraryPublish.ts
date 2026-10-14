@@ -19,6 +19,7 @@ import {
 import { containsBadLanguage } from '../fn_profanityChecker';
 import { logError } from '../utils/errorHandling';
 import { authorNameOf, requireApprovedTeacher } from './libraryAccess';
+import { isAiCoverUrl } from './libraryCover';
 import { isScenarioCoverUrl, tagDelta } from './libraryPublish';
 import { currentGlobalMean } from './libraryStats';
 
@@ -134,7 +135,10 @@ export const agoraLibraryPublish = onCall(
 					subjectIds,
 					lessonTypeIds,
 					...(coverUrl
-						? { coverUrl, coverSource: 'upload' as const }
+						? {
+								coverUrl,
+								coverSource: isAiCoverUrl(coverUrl) ? ('ai' as const) : ('upload' as const),
+							}
 						: current.library?.coverUrl
 							? { coverUrl: current.library.coverUrl, coverSource: current.library.coverSource }
 							: {}),

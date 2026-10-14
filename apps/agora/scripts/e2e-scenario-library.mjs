@@ -10,6 +10,7 @@
  * env for the translation steps (it skips them, loudly, without one).
  * Run: npx tsx scripts/e2e-scenario-library.mjs
  */
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { preflight, FIRESTORE_REST } from './lib/preflight.mjs';
 import { eq, fail, step } from './lib/e2e.mjs';
 import { callable, db, signInTeacher } from './lib/fastlane.ts';
@@ -120,7 +121,43 @@ eq('a short summary is refused, by name', await refuses(callable('agoraLibraryPu
 eq('a missing subject is refused', await refuses(callable('agoraLibraryPublish', { ...publishBody, subjectIds: [] }, author.idToken), /subjects_missing/), true);
 eq('an unknown tag is refused', await refuses(callable('agoraLibraryPublish', { ...publishBody, subjectIds: ['nope'] }, author.idToken), /Unknown subject/i), true);
 eq('a cover from someone else folder is refused', await refuses(callable('agoraLibraryPublish', { ...publishBody, coverUrl: 'https://evil.example.com/agora/x/y.png' }, author.idToken), /cover/i), true);
+
+step('D2. AI cover: generated from the scenario, limited per teacher per day');
+// Real OpenAI image call when the functions env has a key (about 20 s, ~USD 0.015 each);
+// with AGORA_COVER_STUB=1 on the functions emulator a fixed swatch is painted instead.
+const genBody = { scenarioId: pkgId, summary };
+eq('outsider cannot generate', await refuses(callable('agoraLibraryGenerateCover', genBody, outsider.idToken), /PERMISSION_DENIED|approved/i), true);
+eq('a non-owner cannot generate for it', await refuses(callable('agoraLibraryGenerateCover', genBody, reader.idToken), /PERMISSION_DENIED|owner/i), true);
+eq('an unknown scenario is not found', await refuses(callable('agoraLibraryGenerateCover', { scenarioId: 'nope' }, author.idToken), /NOT_FOUND/i), true);
+const started = Date.now();
+const cover = await callable('agoraLibraryGenerateCover', genBody, author.idToken);
+console.log('   cover made in', Date.now() - started, 'ms');
+eq('not listed yet, so not applied', cover.applied, false);
+eq('9 left after one', cover.remainingToday, 9);
+eq('the URL is under the scenario folder', cover.coverUrl.includes(`agora%2F${pkgId}%2F`), true);
+const picture = await fetch(cover.coverUrl);
+eq('the picture is stored and served', picture.status, 200);
+eq('as webp', picture.headers.get('content-type'), 'image/webp');
+const bytes = Buffer.from(await picture.arrayBuffer());
+if (bytes.length < 500) fail('the generated picture is suspiciously small');
+mkdirSync('output/scenario-library', { recursive: true });
+writeFileSync('output/scenario-library/ai-cover-generated.webp', bytes);
+console.log('   saved output/scenario-library/ai-cover-generated.webp,', bytes.length, 'bytes');
+eq('the day counter is on the marker', (await db.collection('agoraApprovedTeachers').doc(author.uid).get()).data().coversToday, 1);
+publishBody.coverUrl = cover.coverUrl;
+
 await callable('agoraLibraryPublish', publishBody, author.idToken);
+eq('publishing with it marks the cover as AI', (await db.collection('agoraTopicPackages').doc(pkgId).get()).data().library.coverSource, 'ai');
+const regenerated = await callable('agoraLibraryGenerateCover', genBody, author.idToken);
+eq('regenerating on a listed scenario applies at once', regenerated.applied, true);
+eq('...with a new picture', regenerated.coverUrl !== cover.coverUrl, true);
+eq('...on the card', (await db.collection('agoraTopicPackages').doc(pkgId).get()).data().library.coverUrl, regenerated.coverUrl);
+const marker = db.collection('agoraApprovedTeachers').doc(author.uid);
+await marker.set({ coversToday: 10 }, { merge: true });
+eq('the eleventh of the day is refused', await refuses(callable('agoraLibraryGenerateCover', genBody, author.idToken), /RESOURCE_EXHAUSTED|limit/i), true);
+await marker.set({ coversDay: '1999-01-01' }, { merge: true });
+eq('a new day starts the count again', (await callable('agoraLibraryGenerateCover', { scenarioId: pkgId }, author.idToken)).remainingToday, 9);
+await callable('agoraLibraryPublish', { ...publishBody, coverUrl: undefined }, author.idToken);
 let pkg = (await db.collection('agoraTopicPackages').doc(pkgId).get()).data();
 eq('public', pkg.visibility, 'public');
 eq('card summary', pkg.library.summary, summary);

@@ -1313,6 +1313,7 @@ export {
 	agoraLibraryTranslate,
 	agoraLibraryRate,
 	agoraLibraryModerate,
+	agoraLibraryGenerateCover,
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 	onAgoraSessionFinished,

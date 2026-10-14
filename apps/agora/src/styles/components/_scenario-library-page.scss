@@ -351,6 +351,13 @@
 		}
 	}
 
+	&__ai {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		align-items: flex-start;
+	}
+
 	&__img {
 		position: absolute;
 		inset: 0;

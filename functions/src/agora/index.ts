@@ -40,3 +40,4 @@ export { agoraLibraryPublish, agoraLibraryUnpublish } from './fn_agoraLibraryPub
 export { agoraLibraryUse, agoraLibraryTranslate } from './fn_agoraLibraryUse';
 export { agoraLibraryRate } from './fn_agoraLibraryRate';
 export { agoraLibraryModerate } from './fn_agoraLibraryModerate';
+export { agoraLibraryGenerateCover } from './fn_agoraLibraryGenerateCover';

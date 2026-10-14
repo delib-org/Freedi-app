@@ -65,6 +65,8 @@ export const AGORA_LIBRARY = {
 	/** Tags whose key is within this edit distance read as "the same thing" */
 	NEAR_DUPLICATE_DISTANCE: 2,
 	MAX_COVER_URL_LENGTH: 1000,
+	/** AI covers one teacher may ask for in a calendar day (each costs a cent or two) */
+	COVERS_PER_DAY: 10,
 } as const;
 
 // ─── Tags ──────────────────────────────────────────────────────────────────
@@ -528,6 +530,8 @@ export const AgoraApprovedTeacherSchema = object({
 	copiesToday: optional(number()),
 	tagsWeekStart: optional(number()),
 	tagsThisWeek: optional(number()),
+	coversDay: optional(string()),
+	coversToday: optional(number()),
 });
 
 export type AgoraApprovedTeacher = InferOutput<typeof AgoraApprovedTeacherSchema>;
@@ -619,6 +623,21 @@ export interface LibraryUseRequest {
 export interface LibraryUseResponse {
 	copyId: string;
 	translated: boolean;
+}
+
+export interface LibraryGenerateCoverRequest {
+	scenarioId: string;
+	/** The summary as typed in the publish sheet, if it is not published yet */
+	summary?: string;
+}
+
+export interface LibraryGenerateCoverResponse {
+	/** A download URL under `agora/{scenarioId}/`, ready for the publish callable */
+	coverUrl: string;
+	/** True when the scenario is already listed and its card now wears this cover */
+	applied: boolean;
+	/** Generations left today */
+	remainingToday: number;
 }
 
 export interface LibraryRateRequest {

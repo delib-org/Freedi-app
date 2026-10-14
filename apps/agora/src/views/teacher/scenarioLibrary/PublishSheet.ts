@@ -10,7 +10,7 @@ import {
 } from '@freedi/shared-types';
 import { Icon } from '../../../components/Icon';
 import { t } from '../../../lib/i18n';
-import { publishScenario } from '../../../lib/scenarioLibrary/api';
+import { generateCover, publishScenario } from '../../../lib/scenarioLibrary/api';
 import { uploadCover } from '../../../lib/scenarioLibrary/cover';
 import { coverProblem, type CoverProblem } from '../../../lib/scenarioLibrary/coverRules';
 import { CoverDrop } from './CoverDrop';
@@ -57,6 +57,10 @@ export function PublishSheet(): m.Component<PublishSheetAttrs> {
 	let preview: string | null = null;
 	let progress: number | null = null;
 	let problem: CoverProblem | 'failed' | null = null;
+	let aiWorking = false;
+	let aiMade = false;
+	let aiLeft: number | null = null;
+	let aiNote: { key: string; error: boolean } | null = null;
 	let submitting = false;
 	let failed = false;
 	let showProblems = false;
@@ -95,6 +99,7 @@ export function PublishSheet(): m.Component<PublishSheetAttrs> {
 			return;
 		}
 		problem = null;
+		aiNote = null;
 		progress = 0;
 		preview = URL.createObjectURL(file);
 		m.redraw();
@@ -113,13 +118,46 @@ export function PublishSheet(): m.Component<PublishSheetAttrs> {
 		}
 	}
 
+	async function makePicture(attrs: PublishSheetAttrs): Promise<void> {
+		aiWorking = true;
+		aiNote = null;
+		problem = null;
+		m.redraw();
+		try {
+			const answer = await generateCover({
+				scenarioId: attrs.pkg.topicPackageId,
+				summary: summary.trim(),
+			});
+			coverUrl = answer.coverUrl;
+			preview = answer.coverUrl;
+			aiLeft = answer.remainingToday;
+			aiMade = true;
+			aiNote = { key: 'scenlib.cover_ai_done', error: false };
+		} catch (error) {
+			console.error('[Library] Making the cover failed:', error);
+			const code = (error as { code?: string }).code;
+			aiNote = {
+				key:
+					code === 'functions/resource-exhausted'
+						? 'scenlib.cover_ai_limit'
+						: code === 'functions/invalid-argument'
+							? 'scenlib.cover_ai_refused'
+							: 'scenlib.cover_ai_failed',
+				error: true,
+			};
+		} finally {
+			aiWorking = false;
+			m.redraw();
+		}
+	}
+
 	async function submit(attrs: PublishSheetAttrs, problems: PublishProblem[]): Promise<void> {
 		if (problems.length > 0) {
 			showProblems = true;
 
 			return;
 		}
-		if (submitting || progress !== null) return;
+		if (submitting || progress !== null || aiWorking) return;
 		submitting = true;
 		failed = false;
 		m.redraw();
@@ -258,11 +296,20 @@ export function PublishSheet(): m.Component<PublishSheetAttrs> {
 								previewUrl: preview,
 								progress,
 								problem,
+								ai: {
+									working: aiWorking,
+									made: aiMade,
+									left: aiLeft,
+									noteKey: aiNote?.key ?? null,
+									noteIsError: aiNote?.error ?? false,
+									onGenerate: () => void makePicture(attrs),
+								},
 								onFile: (file: File) => void takeFile(file, attrs),
 								onRemove: () => {
 									coverUrl = null;
 									preview = null;
 									problem = null;
+									aiNote = null;
 								},
 							}),
 
@@ -345,7 +392,8 @@ export function PublishSheet(): m.Component<PublishSheetAttrs> {
 								'button.btn.btn--primary.question-sheet__continue',
 								{
 									type: 'button',
-									'aria-disabled': submitting || progress !== null ? 'true' : undefined,
+									'aria-disabled':
+										submitting || progress !== null || aiWorking ? 'true' : undefined,
 									onclick: () => void submit(attrs, problems),
 								},
 								submitting

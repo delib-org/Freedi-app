@@ -221,6 +221,19 @@ try {
 	eq('the dropped picture is previewed', await a.locator('.scn-cover__img').count(), 1);
 	await shot(a, '03-publish-sheet-empty-laptop');
 
+	// ...or let the AI paint one from the scenario's own content (a real image call, ~20 s)
+	const droppedSrc = await a.locator('.scn-cover__img').getAttribute('src');
+	await a.click('.scn-cover__ai button');
+	await a.waitForSelector('.scn-cover__ai button[aria-disabled="true"]', { timeout: 5_000 });
+	await shot(a, '03a-publish-sheet-ai-working-laptop');
+	await a.waitForSelector('.scn-cover__ai .scn-notice, .scn-cover__ai .scn-field__error', { timeout: 120_000 });
+	eq('no error from the cover generator', await a.locator('.scn-cover__ai .scn-field__error').count(), 0);
+	const aiSrc = await a.locator('.scn-cover__img').getAttribute('src');
+	eq('the preview is now the generated picture', /library-cover-ai-/.test(aiSrc ?? '') && aiSrc !== droppedSrc, true);
+	eq('the button now offers another picture', (await a.locator('.scn-cover__ai button').innerText()).includes('תמונה אחרת'), true);
+	eq('the daily allowance is shown', await a.locator('.scn-cover__ai .scn-field__hint', { hasText: '9' }).count() >= 1, true);
+	await shot(a, '03b-publish-sheet-ai-cover-laptop');
+
 	// pressing publish with nothing chosen names what is missing
 	await a.fill('#scn-publish-summary', 'קצר');
 	await a.click('.question-sheet__continue');
@@ -256,7 +269,8 @@ try {
 	eq('the switch now says public', await row.locator('.scn-switch__opt--on').innerText(), 'ציבורי');
 	const published = (await db.collection('agoraTopicPackages').doc(ownId).get()).data();
 	eq('the scenario is public in Firestore', published.visibility, 'public');
-	eq('with the dropped cover on the card', /\/o\/agora%2F.*library-cover/.test(published.library.coverUrl), true);
+	eq('with the generated cover on the card', /\/o\/agora%2F.*library-cover-ai-/.test(published.library.coverUrl), true);
+	eq('marked as an AI cover', published.library.coverSource, 'ai');
 	eq('and a new tag adopted', published.library.subjectIds.length, 2);
 	await shot(a, '07-mine-published-laptop');
 

@@ -12,6 +12,53 @@ export interface CoverDropAttrs {
 	problem: CoverProblem | 'failed' | null;
 	onFile: (file: File) => void;
 	onRemove: () => void;
+	/** The "make a picture for me" button; absent where the cover cannot be generated */
+	ai?: CoverAiAttrs;
+}
+
+export interface CoverAiAttrs {
+	working: boolean;
+	/** A picture was already made this session: the button says "another" */
+	made: boolean;
+	/** Generations left today, once known */
+	left: number | null;
+	/** The note under the button: a cover-picture error or the done message */
+	noteKey: string | null;
+	noteIsError: boolean;
+	onGenerate: () => void;
+}
+
+function aiBlock(ai: CoverAiAttrs, uploading: boolean): m.Children {
+	return m('.scn-cover__ai', [
+		m(
+			'button.btn.btn--secondary.btn--sm',
+			{
+				type: 'button',
+				'aria-disabled': ai.working || uploading ? 'true' : undefined,
+				onclick: () => {
+					if (!ai.working && !uploading) ai.onGenerate();
+				},
+			},
+			[
+				m(Icon, { name: 'image', size: 16 }),
+				' ',
+				ai.working
+					? t('scenlib.cover_ai_working')
+					: t(ai.made ? 'scenlib.cover_ai_again' : 'scenlib.cover_ai'),
+			],
+		),
+		ai.left !== null && !ai.working
+			? m('span.scn-field__hint', t('scenlib.cover_ai_left', { n: ai.left }))
+			: null,
+		m('p.scn-field__hint', t('scenlib.cover_ai_hint')),
+		ai.noteKey
+			? m(
+					ai.noteIsError ? 'p.scn-field__error' : 'p.scn-notice',
+					{ role: ai.noteIsError ? 'alert' : 'status' },
+					t(ai.noteKey),
+				)
+			: null,
+	]);
 }
 
 /**
@@ -121,6 +168,7 @@ export function CoverDrop(): m.Component<CoverDropAttrs> {
 						target.value = '';
 					},
 				}),
+				attrs.ai ? aiBlock(attrs.ai, busy) : null,
 				m('p.scn-field__hint', { id: `${id}-hint` }, t('scenlib.cover_hint')),
 				errorKey ? m('p.scn-field__error', { role: 'alert' }, t(errorKey)) : null,
 				previewUrl && !busy

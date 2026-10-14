@@ -149,3 +149,15 @@ export function countTag(
 
 	return { tagsWeekStart: fresh ? (marker?.tagsWeekStart ?? now) : now, tagsThisWeek: used + 1 };
 }
+
+/** The same for AI covers, over a calendar day */
+export function countCover(
+	marker: Partial<AgoraApprovedTeacher> | undefined,
+	now: number,
+): Pick<AgoraApprovedTeacher, 'coversDay' | 'coversToday'> | null {
+	const today = dayKey(now);
+	const used = marker?.coversDay === today ? (marker.coversToday ?? 0) : 0;
+	if (used >= AGORA_LIBRARY.COVERS_PER_DAY) return null;
+
+	return { coversDay: today, coversToday: used + 1 };
+}

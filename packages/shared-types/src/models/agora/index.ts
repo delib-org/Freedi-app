@@ -533,6 +533,8 @@ export type {
 	LibraryUseRequest,
 	LibraryUseResponse,
 	LibraryRateRequest,
+	LibraryGenerateCoverRequest,
+	LibraryGenerateCoverResponse,
 	LibraryRateResponse,
 	LibraryTranslateRequest,
 	LibraryTranslateResponse,
