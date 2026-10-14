@@ -95,6 +95,9 @@ service cloud.firestore {
       allow get: if isAuthenticated();
       allow list: if isAuthenticated() &&
                      (resource.data.creatorId == request.auth.uid ||
+                      // A sys-admin also lists what is hidden, to lift a hide
+                      (isSystemAdminUser() &&
+                       resource.data.get('visibility', 'private') == 'public') ||
                       (isApprovedAgoraTeacher() &&
                        resource.data.get('visibility', 'private') == 'public' &&
                        resource.data.get('library', {}).get('hidden', true) == false));

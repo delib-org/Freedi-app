@@ -27,6 +27,9 @@ import { TeacherNav } from '../../components/TeacherNav';
 import { isSessionLive, noteTeacherDashboard } from '../../lib/teacherNav';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { countedSteps, teacherStepLabel } from '../../lib/teacherSteps';
+import { LibraryDoor } from '../../components/scenarioLibrary/LibraryDoor';
+import { fetchSourceVersions } from '../../lib/scenarioLibrary/api';
+import { isNewerVersionAvailable } from '@freedi/shared-types';
 
 /** Once dismissed, the three-step strip stays away on this device */
 const FIRST_RUN_KEY = 'agora.teacher.firstRunDismissed';
@@ -72,6 +75,8 @@ export function TeacherHome(): m.Component {
 	 * the other question has been sitting in memory the whole time.
 	 */
 	let topicsLoaded = false;
+	/** The library originals behind copies on the shelf — for "a new version is available" */
+	let sourceVersions = new Map<string, { lastUpdate: number; title: string }>();
 	let dashboardLoaded = false;
 	/** A school named this account as its supervisor, or it runs the system */
 	let canSupervise = false;
@@ -257,6 +262,14 @@ export function TeacherHome(): m.Component {
 			topicsLoaded = true;
 			m.redraw();
 			loadedTopics.forEach(healArtwork);
+			const copies = loadedTopics.filter((topic) => topic.sourceScenarioId);
+			if (copies.length > 0) {
+				void fetchSourceVersions(copies).then((found) => {
+					if (loadedForUid !== user.uid) return;
+					sourceVersions = found;
+					m.redraw();
+				});
+			}
 			if (loadedTopics.length === 0 && !user.isAnonymous && !provisionedFor.has(user.uid)) {
 				provisionedFor.add(user.uid);
 				const defaultTopic = await provisionDefaultTopic(user.uid);
@@ -525,6 +538,25 @@ export function TeacherHome(): m.Component {
 									t(ready ? 'editor.ready' : 'editor.draft'),
 								),
 								ready ? null : m('span.scenario-row__sub', t('dashboard.scenario_draft_sub')),
+								topic.visibility === 'public'
+									? m('span.scenario-row__status.scenario-row__status--shared', t('scenlib.public'))
+									: null,
+								topic.sourceScenarioId
+									? m(
+											'span.scenario-row__sub',
+											t('scenlib.source_of', {
+												title: topic.sourceTitle ?? '',
+												author: topic.sourceAuthorName || t('scenlib.author_anon'),
+											}),
+										)
+									: null,
+								topic.sourceScenarioId &&
+								isNewerVersionAvailable(topic, sourceVersions.get(topic.sourceScenarioId))
+									? m(
+											'span.scenario-row__status.scenario-row__status--update',
+											t('scenlib.new_version'),
+										)
+									: null,
 							]),
 						]),
 						m('span.scenario-row__arrow', m(Icon, { name: 'arrow', size: 20 })),
@@ -762,6 +794,8 @@ export function TeacherHome(): m.Component {
 						? m('.stack', [m('p.teacher__section-title', t('dashboard.scenarios')), m('.spinner')])
 						: m('.stack', [
 								m('p.teacher__section-title', t('dashboard.scenarios')),
+								// The library, for an approved teacher: the first door when the shelf is empty
+								m(LibraryDoor, { variant: 'tile', empty: reusableTopics.length === 0 }),
 								reusableTopics.length === 0
 									? m('p.home-explanation.home-explanation--start', t('teacher.no_topics'))
 									: m('p.home-explanation.home-explanation--start', t('dashboard.scenarios_hint')),

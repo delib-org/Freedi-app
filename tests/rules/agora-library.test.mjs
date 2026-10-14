@@ -124,6 +124,19 @@ describe('agora scenario library', () => {
 			assertIds(snap, ['pub-1']);
 		});
 
+		it('lets a sys-admin list the hidden ones to lift a hide, and no one else', async () => {
+			const hiddenList = (db) =>
+				query(
+					collection(db, 'agoraTopicPackages'),
+					where('visibility', '==', 'public'),
+					where('library.hidden', '==', true),
+				);
+			const admin = env.authenticatedContext(ADMIN).firestore();
+			assertIds(await assertSucceeds(getDocs(hiddenList(admin))), ['pub-hidden']);
+			const teacher = env.authenticatedContext(APPROVED).firestore();
+			await assertFails(getDocs(hiddenList(teacher)));
+		});
+
 		it('refuses a teacher who is not approved', async () => {
 			const db = env.authenticatedContext(OUTSIDER).firestore();
 			await assertFails(getDocs(publicList(db)));
@@ -159,6 +172,13 @@ describe('agora scenario library', () => {
 				getDocs(query(collection(db, 'agoraTopicPackages'), where('creatorId', '==', AUTHOR))),
 			);
 			assertIds(snap, ['plain-1', 'private-1', 'pub-1', 'pub-hidden']);
+		});
+
+		it('still lets a teacher who is not approved list their own shelf', async () => {
+			const db = env.authenticatedContext(OUTSIDER).firestore();
+			await assertSucceeds(
+				getDocs(query(collection(db, 'agoraTopicPackages'), where('creatorId', '==', OUTSIDER))),
+			);
 		});
 
 		it('refuses a non-owner listing someone else shelf', async () => {

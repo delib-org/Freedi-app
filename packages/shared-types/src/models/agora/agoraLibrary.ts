@@ -104,10 +104,7 @@ export const AgoraLibraryTagSchema = object({
 export type AgoraLibraryTag = InferOutput<typeof AgoraLibraryTagSchema>;
 
 /** The label to show a reader: their language, else the author's own words */
-export function tagLabelIn(
-	tag: Pick<AgoraLibraryTag, 'label' | 'labels'>,
-	lang: string,
-): string {
+export function tagLabelIn(tag: Pick<AgoraLibraryTag, 'label' | 'labels'>, lang: string): string {
 	return tag.labels[lang] ?? tag.label;
 }
 
@@ -167,7 +164,11 @@ export function editDistance(a: string, b: string, limit = Infinity): number {
 		let best = row;
 		for (let column = 1; column <= b.length; column++) {
 			const cost = a[row - 1] === b[column - 1] ? 0 : 1;
-			const value = Math.min(previous[column] + 1, current[column - 1] + 1, previous[column - 1] + cost);
+			const value = Math.min(
+				previous[column] + 1,
+				current[column - 1] + 1,
+				previous[column - 1] + cost,
+			);
 			current.push(value);
 			if (value < best) best = value;
 		}
@@ -556,6 +557,8 @@ export const AgoraScenarioTranslationSchema = object({
 	scenarioId: string(),
 	lang: string(),
 	sourceVersion: number(),
+	/** The library summary `card.summary` was translated from, so an edited summary invalidates it */
+	summarySource: optional(string()),
 	card: optional(AgoraScenarioCardTextSchema),
 	/** Every translatable string of the package in `collectPackageStrings` order, written on the first copy */
 	strings: optional(array(string())),
