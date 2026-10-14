@@ -124,7 +124,7 @@ export default function MapPage() {
 		setSaving(true);
 		try {
 			await updateJourney({ selectedIslandIds: [...selected] });
-			navigate('/voyage');
+			navigate('/voyage', { state: { fresh: true } });
 		} finally {
 			setSaving(false);
 		}
