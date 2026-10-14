@@ -210,3 +210,76 @@
 		font-weight: 600;
 	}
 }
+
+.youtube__hint {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	color: var(--text-muted);
+}
+
+// Teacher: the now-playing chip on the strip
+.teacher-strip__video {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-xs);
+	width: 100%;
+}
+
+.teacher-strip__video-title {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+}
+
+// Teacher: the videos group in the move-class sheet
+.move-class__videos {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.move-class__videos-title {
+	margin: 0;
+}
+
+.move-class__videos-scene {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.move-class__videos-scene-title {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	color: var(--text-muted);
+}
+
+// The wall while a video is live: only the video and its name
+.projector--video {
+	position: relative;
+	padding: 0;
+	gap: 0;
+	background: var(--ink);
+}
+
+.projector__video {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+.projector__video-title {
+	position: absolute;
+	inset-inline-start: var(--space-md);
+	inset-block-end: var(--space-sm);
+	margin: 0;
+	padding: var(--space-xs) var(--space-sm);
+	border-radius: var(--radius-sm);
+	background: var(--surface-veil);
+	color: var(--text-primary);
+	font-size: var(--font-size-sm);
+}

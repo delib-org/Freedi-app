@@ -28,9 +28,16 @@ import { nowCard } from './NowCard';
 import { TeacherPanel } from './TeacherPanel';
 import { ClassView } from './ClassView';
 import { MoveClassSheet } from './MoveClassSheet';
+import { logError } from '@freedi/shared-utils';
+import {
+	isLibraryVideoLive,
+	startImpact,
+	videoGroups,
+	videoLabelParts,
+} from '../../lib/flows/libraryVideo';
 import { classProgress } from '../../lib/flows/classProgress';
 import { villagePlace, type VillageCallPlace } from '../../lib/flows/villageRoute';
-import { arrivalPlace, arrivalStatus } from '../../lib/flows/summons';
+import { arrivalPlace, arrivalStatus, callTargetPlace } from '../../lib/flows/summons';
 import {
 	ADVANCE_TIMEOUT_MS,
 	INITIAL_ADVANCE_LATCH,
@@ -59,12 +66,15 @@ import {
 	AgoraThemeChoice,
 	resolveAgoraTheme,
 	AgoraStagePlanItem,
+	AgoraYoutubeVideo,
 	ChallengePhase,
 	VotingStageSettings,
 } from '@freedi/shared-types';
 import {
 	callVillage,
 	classLabel,
+	startLibraryVideo,
+	stopLibraryVideo,
 	setSessionTheme,
 	setVillageNavigation,
 	setVotingSettings,
@@ -216,6 +226,15 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 		drawerAbout = aboutStatementId;
 	}
 
+	/** The sheet opened from the strip's "switch": scroll to its videos */
+	let moveFocusVideos = false;
+	/** A video start or stop is in flight / failed */
+	let videoBusy = false;
+	let videoFailed = false;
+	/** On a wall, stop is armed by its first tap until this clock */
+	let stopArmedUntil = 0;
+	let stopArmTimer: number | undefined;
+
 	function openPanel(next: Panel, opener?: EventTarget | null): void {
 		if (panel === next) {
 			closePanel();
@@ -228,6 +247,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 	function closePanel(): void {
 		panel = null;
+		moveFocusVideos = false;
 		const opener = panelOpener;
 		panelOpener = null;
 		// After Mithril has removed the panel, not before
@@ -308,6 +328,56 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	/** Bumped to walk the class view back to the class's station */
 	let walkRequest = 0;
 
+	/** Start a library video for the class: the move to the library and the video in one write */
+	function startVideo(sceneId: string, video: AgoraYoutubeVideo): void {
+		if (videoBusy) return;
+		videoBusy = true;
+		videoFailed = false;
+		const { session } = getSessionState();
+		const roomItem = getStagePlan()[getCurrentPlanIndex()];
+		const floorAt = Math.max(
+			roomItem ? (session?.stageState?.[roomItem.itemId]?.openedAt ?? 0) : 0,
+			session?.villageCall?.at ?? 0,
+			session?.libraryVideo?.at ?? 0,
+		);
+		lastCalledLabel = t('village.place.library');
+		startLibraryVideo(sessionId, sceneId, video, floorAt)
+			.then((at) => noteStarted(at))
+			.catch((error: unknown) => {
+				videoFailed = true;
+				logError(error instanceof Error ? error : new Error(String(error)), {
+					operation: 'teacherSession.startVideo',
+					metadata: { sessionId, sceneId },
+				});
+			})
+			.finally(() => {
+				videoBusy = false;
+				m.redraw();
+			});
+	}
+
+	/** This console wrote the start: it must not announce its own call as "from elsewhere" */
+	function noteStarted(at: number): void {
+		sentCallAt = at;
+		villageCallSent = true;
+		window.setTimeout(() => {
+			villageCallSent = false;
+			m.redraw();
+		}, 2500);
+	}
+
+	async function stopVideo(): Promise<void> {
+		try {
+			await stopLibraryVideo(sessionId);
+		} catch (error) {
+			logError(error instanceof Error ? error : new Error(String(error)), {
+				operation: 'teacherSession.stopVideo',
+				metadata: { sessionId },
+			});
+		}
+		m.redraw();
+	}
+
 	/** Every student's village walks to one place — the room's station, the council, any opened station */
 	function callClass(place: VillageCallPlace, label = ''): void {
 		if (callingVillage) return;
@@ -318,7 +388,8 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 		const { session } = getSessionState();
 		const roomItem = getStagePlan()[getCurrentPlanIndex()];
 		const openedAt = roomItem ? session?.stageState?.[roomItem.itemId]?.openedAt : undefined;
-		callVillage(sessionId, place, openedAt)
+		const target = callTargetPlace(place, getStagePlan(), getCurrentPlanIndex());
+		callVillage(sessionId, place, openedAt, !!session?.libraryVideo && target !== 'library')
 			.then((at) => {
 				sentCallAt = at;
 				villageCallSent = true;
@@ -413,7 +484,11 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			m.redraw();
 		}, ADVANCE_TIMEOUT_MS);
 		advanceStage({ sessionId, toIndex })
-			.then(() => dispatchLatch({ kind: 'ok' }))
+			.then(() => {
+				dispatchLatch({ kind: 'ok' });
+				// A new station ends the class's video
+				if (getSessionState().session?.libraryVideo) void stopVideo();
+			})
 			.catch((error: unknown) => {
 				// `stale` (failed-precondition) means the room already moved on —
 				// the teacher's other device pressed first — unless the room is
@@ -782,7 +857,46 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							station: arrivals.label,
 						})
 					: undefined;
+			// The class's video, while it is live: a chip on the strip with stop and switch
+			const liveVideo = isLibraryVideoLive(session.libraryVideo, Date.now())
+				? session.libraryVideo
+				: undefined;
+			const videoChip = liveVideo
+				? (() => {
+						const parts = topic ? videoLabelParts(topic.scenes, liveVideo) : null;
+						const wallArmed = !privateDevice && Date.now() < stopArmedUntil;
+
+						return {
+							title:
+								parts?.title ||
+								(parts ? t('video.default_title', { n: parts.n }) : t('video.teacher_section')),
+							wall: !privateDevice,
+							armed: wallArmed,
+							onStop: () => {
+								// On a wall the first tap arms, the second stops — a stray tap on a
+								// shared screen must not end what the whole room is watching
+								if (!privateDevice && !wallArmed) {
+									stopArmedUntil = Date.now() + ARM_MS;
+									window.clearTimeout(stopArmTimer);
+									stopArmTimer = window.setTimeout(() => {
+										stopArmedUntil = 0;
+										m.redraw();
+									}, ARM_MS);
+
+									return;
+								}
+								stopArmedUntil = 0;
+								void stopVideo();
+							},
+							onSwitch: () => {
+								moveFocusVideos = true;
+								if (panel !== 'move') openPanel('move');
+							},
+						};
+					})()
+				: undefined;
 			const stripAttrs = {
+				video: videoChip,
 				steps,
 				currentIndex: stepIndex,
 				action,
@@ -886,14 +1000,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 													session.villageCall?.at ?? 0,
 													session.libraryVideo?.at ?? 0,
 												),
-												onStarted: (at: number) => {
-													sentCallAt = at;
-													villageCallSent = true;
-													window.setTimeout(() => {
-														villageCallSent = false;
-														m.redraw();
-													}, 2500);
-												},
+												onStarted: noteStarted,
 											},
 											questionTitle: current.title,
 											questionExplanation: current.explanation,
@@ -1124,6 +1231,22 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 															),
 											),
 										onAdvance: handleAdvance,
+										videos:
+											topic && videoGroups(topic.scenes).length > 0
+												? {
+														groups: videoGroups(topic.scenes),
+														now: liveVideo,
+														impact: startImpact(plan, currentIndex, {
+															done: classProgress(current, participants, facts).doneCount,
+															total: participants.length,
+														}),
+														stationLabel: stationLabel(current),
+														busy: videoBusy,
+														failed: videoFailed,
+														focus: moveFocusVideos,
+														onStart: startVideo,
+													}
+												: undefined,
 										calling: callingVillage,
 										advancing: latch.advancing,
 										status: villageCallSent

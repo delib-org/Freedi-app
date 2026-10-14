@@ -29,11 +29,18 @@ export function YoutubePlayer(): m.Component<YoutubePlayerAttrs> {
 	let ownPick: string | undefined;
 	let playing = false;
 	let seenAt = 0;
+	let hadClassVideo = false;
 
 	return {
 		view(vnode) {
 			const { videos, classVideo, display = false } = vnode.attrs;
 			if (videos.length === 0) return null;
+
+			// The teacher stopped the class video: go back to the poster instead of
+			// reloading the first video under the student's eyes. A video the
+			// student picked themselves keeps playing.
+			if (!classVideo && hadClassVideo && !ownPick) playing = false;
+			hadClassVideo = classVideo !== undefined;
 
 			if (classVideo && classVideo.at !== seenAt) {
 				seenAt = classVideo.at;
@@ -95,6 +102,10 @@ export function YoutubePlayer(): m.Component<YoutubePlayerAttrs> {
 									],
 								),
 					),
+					// Phones only autoplay muted: say so, or a silent video reads as broken
+					!display && playing
+						? m('p.youtube__hint', { role: 'note' }, t('video.tap_for_sound'))
+						: null,
 					!display && videos.length > 1
 						? m(
 								'.youtube__shelf',

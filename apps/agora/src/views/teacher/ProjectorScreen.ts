@@ -13,6 +13,8 @@ import { listenToDeliberation, stopDeliberationListeners } from '../../lib/propo
 import { listenToVoting, stopVotingListeners } from '../../lib/voting';
 import { watchStageBody } from './watchBodies';
 import { QRShare } from '../../components/QRShare';
+import { isLibraryVideoLive, videoLabelParts } from '../../lib/flows/libraryVideo';
+import { youtubeEmbedUrl } from '../../lib/youtube';
 import { StageTransition, hasStageTransition } from '../../components/StageTransition';
 import { planItemLabel } from '../../components/StageNav';
 import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
@@ -120,6 +122,35 @@ export function ProjectorScreen(
 			}
 
 			const joinUrl = `${window.location.origin}/join/${session.code}`;
+
+			// The teacher started a video for the class: the wall shows only it —
+			// full-bleed, muted, its name small, nothing to press — and returns to
+			// the stage the moment it is stopped.
+			const live = isLibraryVideoLive(session.libraryVideo, Date.now())
+				? session.libraryVideo
+				: undefined;
+			if (live && topic) {
+				const parts = videoLabelParts(topic.scenes, live);
+				const stored = topic.scenes
+					.find((scene) => scene.sceneId === live.sceneId)
+					?.youtubeVideos?.find((video) => video.videoId === live.videoId);
+
+				return m('.projector.projector--video', { 'data-screen': 'projector' }, [
+					m('iframe.projector__video', {
+						src: youtubeEmbedUrl(
+							{ videoId: live.videoId, startSeconds: live.startSeconds ?? stored?.startSeconds },
+							{ autoplay: true },
+						),
+						title: parts?.title || t('video.default_title', { n: parts?.n ?? 1 }),
+						allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
+						referrerpolicy: 'strict-origin-when-cross-origin',
+					}),
+					m(
+						'p.projector__video-title',
+						parts?.title || t('video.default_title', { n: parts?.n ?? 1 }),
+					),
+				]);
+			}
 
 			return m('.projector', { 'data-stage': item.stage, 'data-screen': 'projector' }, [
 				// The way back, for a teacher who opened the wall in their own tab.

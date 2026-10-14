@@ -1,5 +1,7 @@
 import {
+	deleteField,
 	orderBy,
+	runTransaction,
 	startAfter,
 	type QueryDocumentSnapshot,
 	type DocumentData,
@@ -55,6 +57,7 @@ import { trackWrite } from './confirmedWrite';
 import { teacherConsole } from './callables';
 import type { VillageCallPlace } from './flows/villageRoute';
 import { nextCallStamp } from './flows/summons';
+import { shouldClearLibraryVideo } from './flows/libraryVideo';
 
 /**
  * Everything the teacher and join screens ask of Firestore.
@@ -290,10 +293,13 @@ export async function callVillage(
 	place: VillageCallPlace,
 	/** The server time the room reached its station — the stamp never falls below it */
 	currentOpenedAt?: number,
+	/** Sending the class anywhere but the library ends the class's video */
+	clearVideo = false,
 ): Promise<number> {
 	const at = nextCallStamp(Date.now(), currentOpenedAt);
 	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
 		villageCall: { place, at },
+		...(clearVideo ? { libraryVideo: deleteField() } : {}),
 		lastUpdate: at,
 	});
 
@@ -330,6 +336,25 @@ export async function startLibraryVideo(
 	});
 
 	return at;
+}
+
+/**
+ * End the class's library video. The class stays in the library and students
+ * may replay; the wall returns to the stage. Clears only what was started no
+ * later than this stop (see `shouldClearLibraryVideo`), so a start pressed on
+ * the teacher's other device a moment later is never undone by a late stop.
+ */
+export async function stopLibraryVideo(
+	sessionId: string,
+	stopAt: number = Date.now(),
+): Promise<void> {
+	const ref = doc(db, Collections.agoraSessions, sessionId);
+	await runTransaction(db, async (transaction) => {
+		const snapshot = await transaction.get(ref);
+		const existing = snapshot.data()?.libraryVideo as { at?: number } | undefined;
+		if (!shouldClearLibraryVideo(existing?.at, stopAt)) return;
+		transaction.update(ref, { libraryVideo: deleteField(), lastUpdate: stopAt });
+	});
 }
 
 /**
