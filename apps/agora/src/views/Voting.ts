@@ -6,6 +6,12 @@ import { ChallengeCards } from '../components/ChallengeCards';
 import { standingBar } from '../components/StandingBar';
 import { castVote, getVotingState, totalVotes } from '../lib/voting';
 import { createBallotSender, type BallotChoice } from '../lib/flows/ballotTap';
+import {
+	ballotStatus,
+	followFrozenOrder,
+	REORDER_RESUME_MS,
+	REORDER_SLIDE_MS,
+} from '../lib/flows/ballotView';
 import { logError } from '@freedi/shared-utils';
 import { getCurrentPlanIndex, getSessionState } from '../lib/session';
 import { challengerCandidate, getGame, passTurn, pitchChallenger } from '../lib/votingGame';
@@ -96,6 +102,32 @@ export function Voting(): m.Component<VotingAttrs> {
 	/** The order last rendered, and whether this render actually changed it */
 	let orderKey = '';
 	let resorted = false;
+	/** The classroom projector keeps the spring; a phone's list must not overshoot */
+	let springy = false;
+	/**
+	 * A finger is on the list: the order it was pressed in. Rows never reorder
+	 * under a thumb — the row slid out from under the tap that was aiming at it.
+	 */
+	let frozenOrder: string[] | null = null;
+	let releaseTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function releaseFinger(): void {
+		window.removeEventListener('pointerup', releaseFinger);
+		window.removeEventListener('pointercancel', releaseFinger);
+		clearTimeout(releaseTimer);
+		// After the click that belongs to this press, not before it
+		releaseTimer = setTimeout(() => {
+			frozenOrder = null;
+			m.redraw();
+		}, REORDER_RESUME_MS);
+	}
+
+	function pressFinger(): void {
+		clearTimeout(releaseTimer);
+		frozenOrder = orderKey === '' ? null : orderKey.split('|');
+		window.addEventListener('pointerup', releaseFinger);
+		window.addEventListener('pointercancel', releaseFinger);
+	}
 
 	/**
 	 * A proposal overtaking another is the whole point of live reorder, so the
@@ -121,8 +153,9 @@ export function Voting(): m.Component<VotingAttrs> {
 		const delta = before - now;
 		if (Math.abs(delta) < 2 || typeof dom.animate !== 'function') return;
 		dom.animate([{ transform: `translateY(${delta}px)` }, { transform: 'translateY(0)' }], {
-			duration: 600,
-			easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+			duration: springy ? 600 : REORDER_SLIDE_MS,
+			// --ease-camera: no overshoot on a phone, the spring on the projector
+			easing: springy ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'cubic-bezier(0.22, 1, 0.36, 1)',
 		});
 	}
 
@@ -130,6 +163,7 @@ export function Voting(): m.Component<VotingAttrs> {
 		view(vnode) {
 			const { session, userId, board = false, projector = false } = vnode.attrs;
 			currentSession = session;
+			springy = projector;
 			// The projector is never a ballot, whatever the caller said
 			const readOnly = board || vnode.attrs.readOnly === true;
 			const candidates: VotingCandidate[] = session.voting?.candidates ?? [];
@@ -139,6 +173,7 @@ export function Voting(): m.Component<VotingAttrs> {
 			const confirmedVote = getVotingState().myVoteStatementId;
 			const myVoteStatementId = board ? null : ballot.displayed(confirmedVote);
 			const voteSaving = !board && ballot.isSaving();
+			const failedWrite = !board && !readOnly && ballot.hasFailed();
 			const total = totalVotes();
 
 			const settings = session.votingSettings;
@@ -226,7 +261,11 @@ export function Voting(): m.Component<VotingAttrs> {
 				saving = true;
 				move()
 					.catch((error: unknown) => {
-						console.error('[Voting] Challenge turn failed:', error);
+						logError(error, {
+							operation: 'agora.voting.runTurn',
+							statementId: currentSession?.challengeQuestionId,
+							metadata: { sessionId: currentSession?.sessionId },
+						});
 					})
 					.finally(() => {
 						saving = false;
@@ -245,6 +284,7 @@ export function Voting(): m.Component<VotingAttrs> {
 				// The projector has no vote of its own to mark
 				const mine = !board && myVoteStatementId === statementId;
 				const pending = mine && voteSaving;
+				const unsaved = mine && failedWrite;
 				// Before the first snapshot every bar would read 0% — show
 				// no bar at all rather than a confident wrong number.
 				const share = loaded && total > 0 ? Math.round((count / total) * 100) : 0;
@@ -258,6 +298,7 @@ export function Voting(): m.Component<VotingAttrs> {
 							[
 								mine ? 'voting__option--mine' : '',
 								pending ? 'voting__option--saving' : '',
+								unsaved ? 'voting__option--unsaved' : '',
 								extraClass ?? '',
 							]
 								.join(' ')
@@ -293,6 +334,12 @@ export function Voting(): m.Component<VotingAttrs> {
 									loaded && total > 0 ? m('span.voting__share', `${share}%`) : null,
 								])
 							: null,
+						// Always rendered, so the row teaches "pick one" before any tap
+						// and "mine" never rests on colour alone. The row's own
+						// aria-pressed carries it for a screen reader.
+						board
+							? null
+							: m('span.voting__radio', { 'aria-hidden': 'true' }, mine ? '\u2713' : null),
 					],
 				);
 			};
@@ -340,7 +387,8 @@ export function Voting(): m.Component<VotingAttrs> {
 			//
 			// A one-candidate ballot has no order to change: for and against are
 			// a fixed pair, not a ranking.
-			const ordered = candidates.map((candidate, index) => ({
+			let ordered = candidates.map((candidate, index) => ({
+				id: candidate.statementId,
 				candidate,
 				index,
 				pinned: false,
@@ -358,8 +406,15 @@ export function Voting(): m.Component<VotingAttrs> {
 			if (challenger) {
 				// Numbered 0 and rendered as ★ — it has no place in the ballot's
 				// numbering until it has earned one.
-				ordered.unshift({ candidate: challenger, index: -1, pinned: true });
+				ordered.unshift({
+					id: challenger.statementId,
+					candidate: challenger,
+					index: -1,
+					pinned: true,
+				});
 			}
+			// A finger is down: the list stays as it was when it landed
+			if (frozenOrder && !board) ordered = followFrozenOrder(ordered, frozenOrder);
 
 			// Did the ORDER change this render, or did the rows merely move?
 			// Only the first is a FLIP (see flipRow).
@@ -367,41 +422,103 @@ export function Voting(): m.Component<VotingAttrs> {
 			resorted = orderKey !== '' && key !== orderKey;
 			orderKey = key;
 
-			return frame([
-				m('h2.voting__title', t('voting.title')),
-				m(
-					'p.voting__instruction',
-					t(
-						board
-							? 'voting.teacher_hint'
-							: readOnly
-								? 'voting.closed'
-								: single
-									? 'voting.single_instruction'
-									: 'voting.instruction',
-					),
-				),
+			// A student on a phone gets the new ballot: one task line, one status
+			// strip. The projector and the teacher's board keep their own frame —
+			// they are read from across a room, not tapped.
+			const phone = !board && !projector;
+			const status = ballotStatus({
+				readOnly,
+				hasVote: myVoteStatementId !== null,
+				saving: voteSaving,
+				failed: failedWrite,
+			});
 
-				// The teacher's page carries the earlier stages itself; on the
-				// board this would be a second copy of what is already above it.
-				board
-					? null
-					: m(CarriedContext, { session, beforeIndex: getCurrentPlanIndex(), defaultOpen: false }),
+			const turnoutText =
+				classSize > 0
+					? t(phone ? 'voting.turnout_short' : 'voting.turnout', {
+							n: String(votedCount),
+							total: String(classSize),
+						})
+					: t('voting.total_votes', { n: String(votedCount) });
+			// Participation, not support: while the counts are hidden the meter is
+			// grey so it cannot be read as a result. Mint returns with the reveal.
+			const turnoutMeter = (): m.Children =>
+				classSize > 0
+					? m(
+							'.voting__turnout-track',
+							{ 'aria-hidden': 'true' },
+							m('.voting__turnout-fill', {
+								class: showResults ? undefined : 'voting__turnout-fill--neutral',
+								style: { inlineSize: `${Math.round((votedCount / classSize) * 100)}%` },
+							}),
+						)
+					: null;
+
+			const taskKey = ((): string => {
+				if (single) return 'voting.task_motion';
+				if (readOnly) return showResults ? 'voting.closed' : 'voting.task_waiting';
+
+				return showResults && myVoteStatementId ? 'voting.task_revealed' : 'voting.task';
+			})();
+
+			const taskBlock = (): m.Children => [
+				m('h3.voting__task', t(taskKey)),
+				// The rules where the finger is: change until it closes, and the
+				// tap-again withdraw, said out loud instead of left to be found.
+				readOnly ? null : m('p.voting__task-sub', t('voting.task_sub')),
+				liveReorder && !single ? m('p.voting__sorted', t('voting.sorted_by_votes')) : null,
+			];
+
+			// The ONE live region: the chip. Every state change is a sentence here.
+			const statusStrip = (): m.Children =>
+				m('.voting__status', [
+					m('.voting__status-main', [
+						m(
+							'span.voting__chip',
+							{ class: `voting__chip--${status}`, role: 'status', 'aria-live': 'polite' },
+							[
+								status === 'voted' || status === 'closed'
+									? m('span.voting__chip-mark', { 'aria-hidden': 'true' }, '✓')
+									: null,
+								t(`voting.status.${status}`),
+							],
+						),
+						status === 'failed'
+							? m(
+									'button.btn.btn--secondary.btn--sm.voting__retry',
+									{ type: 'button', onclick: () => ballot.retry() },
+									t('voting.retry'),
+								)
+							: null,
+					]),
+					m('.voting__status-turnout', [
+						turnoutMeter(),
+						m('span.voting__turnout-text', turnoutText),
+					]),
+				]);
+
+			return frame([
+				phone ? null : m('h2.voting__title', t('voting.title')),
+				phone
+					? taskBlock()
+					: m(
+							'p.voting__instruction',
+							t(
+								board
+									? 'voting.teacher_hint'
+									: readOnly
+										? 'voting.closed'
+										: single
+											? 'voting.single_instruction'
+											: 'voting.instruction',
+							),
+						),
+				phone ? statusStrip() : null,
 
 				// A ballot disabled by a vote that never lands looks broken with
 				// no explanation — this screen has no HUD, so the stalled-write
 				// line has to live here itself.
 				readOnly ? null : stalledBanner(),
-				!readOnly && ballot.hasFailed()
-					? m('.voting__failed', { role: 'alert' }, [
-							m('span', t('voting.save_failed')),
-							m(
-								'button.btn.btn--secondary.btn--sm',
-								{ type: 'button', onclick: () => ballot.retry() },
-								t('voting.retry'),
-							),
-						])
-					: null,
 
 				// The round runs above the ballot: the desk, the wait, the reveal.
 				challengeCards(),
@@ -416,6 +533,7 @@ export function Voting(): m.Component<VotingAttrs> {
 						]
 					: m(
 							'.voting__list',
+							{ onpointerdown: phone && liveReorder ? pressFinger : undefined },
 							ordered.map(({ candidate, index, pinned }) =>
 								option(
 									candidate.statementId,
@@ -427,36 +545,18 @@ export function Voting(): m.Component<VotingAttrs> {
 							),
 						),
 
-				// Always: how much of the room has spoken. Never: for whom.
-				// Progress is drawn as progress everywhere in this game — a mint
-				// meter — with the sentence under it carrying the numbers.
-				m('.voting__turnout', [
-					classSize > 0
-						? m(
-								'.voting__turnout-track',
-								{ 'aria-hidden': 'true' },
-								m('.voting__turnout-fill', {
-									style: {
-										inlineSize: `${Math.round((votedCount / classSize) * 100)}%`,
-									},
-								}),
-							)
-						: null,
-					m(
-						'p.voting__turnout-text',
-						classSize > 0
-							? t('voting.turnout', { n: String(votedCount), total: String(classSize) })
-							: t('voting.total_votes', { n: String(votedCount) }),
-					),
-				]),
-				myVoteStatementId && !readOnly
-					? m(
-							'p.voting__hint',
-							{ 'aria-live': 'polite' },
-							t(voteSaving ? 'voting.saving' : 'voting.change_hint'),
-						)
-					: null,
+				// The projector and the teacher's board have no strip: how much of
+				// the room has spoken sits under the list, as it always did.
+				phone
+					? null
+					: m('.voting__turnout', [turnoutMeter(), m('p.voting__turnout-text', turnoutText)]),
 				!showResults ? m('p.voting__hint', t('voting.results_hidden')) : null,
+
+				// The ballot is the page: what the room said earlier is still
+				// reachable, but it no longer competes for first position.
+				phone
+					? m(CarriedContext, { session, beforeIndex: getCurrentPlanIndex(), defaultOpen: false })
+					: null,
 			]);
 		},
 	};
