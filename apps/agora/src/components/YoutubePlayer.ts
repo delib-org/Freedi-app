@@ -75,7 +75,6 @@ export function YoutubePlayer(): m.Component<YoutubePlayerAttrs> {
 									src: youtubeEmbedUrl(current, { autoplay: true }),
 									title: titleOf(current),
 									allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
-									allowfullscreen: true,
 									referrerpolicy: 'strict-origin-when-cross-origin',
 								})
 							: m(
