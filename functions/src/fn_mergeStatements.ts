@@ -8,6 +8,8 @@ import {
 	ParagraphType,
 	ResearchAction,
 	getResearchLogId,
+	isMeaningfulSuggestion,
+	MIN_MEANINGFUL_WORDS,
 } from '@freedi/shared-types';
 import { mergeAndReorganizeParagraphs, ParagraphForMerge } from './services/ai-service';
 import { generateParagraphId } from './helpers';
@@ -43,7 +45,7 @@ interface MergeResponse {
  * Flow:
  * 1. Create a hidden statement for the user's original input (for audit trail)
  * 2. Use AI to reorganize paragraphs of target + new content
- * 3. Update target statement with merged paragraphs and new title
+ * 3. Update target statement with merged paragraphs (the title stays)
  * 4. Create +1 evaluation for the user on the target statement
  * 5. Update counters
  */
@@ -59,6 +61,16 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			response.status(400).send({
 				ok: false,
 				error: 'Missing required fields: targetStatementId, newContent, questionId, userId',
+			});
+
+			return;
+		}
+
+		// Keyboard noise ("ייי") must never be merged into someone's option
+		if (!isMeaningfulSuggestion(newContent)) {
+			response.status(400).send({
+				ok: false,
+				error: `Suggestion must have at least ${MIN_MEANINGFUL_WORDS} real words`,
 			});
 
 			return;
@@ -150,26 +162,20 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			}),
 		);
 
-		// If no paragraphs, create one from the statement text
-		if (existingParagraphs.length === 0 && targetStatement.statement) {
-			existingParagraphs.push({
-				content: targetStatement.statement,
-				sourceStatementId: targetStatement.statementId,
-			});
-		}
-
-		// 4. Use AI to merge and reorganize paragraphs
+		// 4. Use AI to merge the body lines. The title stays: people already
+		// rated this option, and a merge must not change what they rated.
+		const targetTitle: string = targetStatement.statement || '';
 		const questionContext = questionData.statement || '';
 		const mergeResult = await mergeAndReorganizeParagraphs(
 			existingParagraphs,
 			newContent,
 			hiddenStatementRef.id, // Use the hidden statement ID as source
 			questionContext,
+			targetTitle,
 		);
 
 		logger.info('AI merge result', {
 			paragraphCount: mergeResult.paragraphs.length,
-			newTitle: mergeResult.newTitle.substring(0, 50),
 		});
 
 		// 5. Convert merged paragraphs to proper Paragraph format
@@ -205,7 +211,6 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			// Update target statement
 			const targetRef = db.collection(Collections.statements).doc(targetStatementId);
 			transaction.update(targetRef, {
-				statement: mergeResult.newTitle,
 				paragraphs: mergedParagraphs,
 				lastUpdate: now,
 				// Increment contributor count if this is a new contributor
@@ -242,7 +247,6 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			responseTime: totalTime,
 			targetStatementId,
 			hiddenStatementId: hiddenStatementRef.id,
-			newTitle: mergeResult.newTitle.substring(0, 50),
 		});
 
 		// Research logging (non-blocking)
@@ -273,7 +277,7 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			ok: true,
 			statementId: targetStatementId,
 			mergedStatementId: hiddenStatementRef.id,
-			newTitle: mergeResult.newTitle,
+			newTitle: targetTitle,
 		};
 
 		response.status(200).send(responseData);

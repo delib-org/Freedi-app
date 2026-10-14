@@ -64,10 +64,6 @@ export default function SurveyQuestionWrapper({
     [survey.questions, questionId]
   );
 
-  // Debug logging for merged settings
-  console.info('[SurveyQuestionWrapper] mergedSettings:', mergedSettings);
-  console.info('[SurveyQuestionWrapper] allowParticipantsToAddSuggestions:', mergedSettings.allowParticipantsToAddSuggestions);
-  console.info('[SurveyQuestionWrapper] askUserForASolutionBeforeEvaluation:', mergedSettings.askUserForASolutionBeforeEvaluation);
 
   // Action buttons state - use merged settings for current question
   const [showAddSuggestion, setShowAddSuggestion] = useState(

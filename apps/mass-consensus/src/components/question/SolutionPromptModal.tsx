@@ -8,6 +8,7 @@ import { pieceTextOf, piecesMeetSubmissionRules } from '@/lib/utils/splitPieces'
 import { moderationMessageKey } from '@/lib/utils/moderationMessage';
 import { isAddDisabledResponse } from '@/lib/utils/participantOptions';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { isMeaningfulSuggestion, MIN_MEANINGFUL_WORDS } from '@freedi/shared-types';
 import { useToast } from '@/components/shared/Toast';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES, UI } from '@/constants/common';
@@ -129,10 +130,13 @@ export default function SolutionPromptModal({
   const hasWordMinimum = typeof minWords === 'number' && minWords > 0;
   const wordCount = countWords(text);
   const meetsWordMinimum = !hasWordMinimum || wordCount >= (minWords as number);
+  // Keyboard noise ("ייי") must never reach the pool or be merged into an option
+  const isMeaningful = isMeaningfulSuggestion(text);
   const isValid =
     characterCount >= VALIDATION.MIN_SOLUTION_LENGTH &&
     characterCount <= VALIDATION.MAX_SOLUTION_LENGTH &&
-    meetsWordMinimum;
+    meetsWordMinimum &&
+    isMeaningful;
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -522,8 +526,6 @@ export default function SolutionPromptModal({
    * suggestion that now carries the merged content.
    */
   const mergeInto = async (targetStatementId: string, solutionText: string): Promise<string> => {
-    console.info('🔀 Merging solution into existing statement:', targetStatementId);
-
     const response = await fetch(`/api/statements/${questionId}/merge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -661,7 +663,7 @@ export default function SolutionPromptModal({
         userId,
         metadata: { questionId, targetStatementId },
       });
-      setError(err instanceof Error ? err.message : (ERROR_MESSAGES.MERGE_FAILED || ERROR_MESSAGES.SUBMIT_FAILED));
+      setError(t(ERROR_MESSAGES.MERGE_FAILED));
       setFlowState({ step: 'input' });
     }
   };
@@ -686,7 +688,7 @@ export default function SolutionPromptModal({
         userId,
         metadata: { questionId, targetStatementId },
       });
-      setError(err instanceof Error ? err.message : (ERROR_MESSAGES.MERGE_FAILED || ERROR_MESSAGES.SUBMIT_FAILED));
+      setError(t(ERROR_MESSAGES.MERGE_FAILED));
       setFlowState({ step: 'input' });
     }
   };
@@ -842,6 +844,9 @@ export default function SolutionPromptModal({
               )}
               {hasWordMinimum && !meetsWordMinimum && (
                 <span className={styles.hint}> ({t('minimum')} {minWords} {t('words')})</span>
+              )}
+              {characterCount >= VALIDATION.MIN_SOLUTION_LENGTH && meetsWordMinimum && !isMeaningful && (
+                <span className={styles.hint}> ({t('minimum')} {MIN_MEANINGFUL_WORDS} {t('words')})</span>
               )}
             </div>
 

@@ -427,7 +427,7 @@ When refusing, return:
 Bias: when in doubt, refuse. The downstream pipeline will group refused inputs under a topic label, which preserves the distinction. Merging genuinely distinct ideas erases what made each one specific.
 
 STAGE 2: WRITE THE SYNTHESIZED PROPOSAL (only if Stage 1 passes)
-Write a NEW actionable proposal. Don't summarize what people said — propose what should be DONE. Verb-led title, executive summary, multi-section plan.
+Write ONE proposal in the voice of a participant, as short as the sources themselves. It is shown to other participants as a card to rate, next to proposals people wrote by hand — it must not read longer, grander, or more official than theirs. Propose what should be DONE, then stop.
 
 Drawing-from rules:
 - Give more weight to higher-weight sources.
@@ -438,15 +438,19 @@ Drawing-from rules:
 - NEVER ADD COMMITMENTS. Do not introduce mechanisms, procedures, selection criteria, conditions, or obligations that no input stated. If no input said HOW something is chosen, allocated, or enforced, the merged proposal does not say it either — added machinery reads as rigour but commits supporters to things nobody asked for.
 - EVERY INPUT MUST REMAIN VISIBLE. For each source proposal, a reader of your text should still be able to tell that its specific ask was made. Carry each input's concrete asks — named instruments, examples, enumerations ("equipment, staff, training") — into the body rather than abstracting them into a general phrase; an ask that survives only as an abstraction has silently disenfranchised its author. When two inputs make the same ask at different granularity, keep the more concrete wording.
 - Keep the proposal acceptable to the supporters of all weighted-in inputs.
+- NEVER ADD FRAMING. Do not describe the proposal's own scope ("this focuses on X, without extending to Y"), do not say how its success would be judged, and do not add constraints, timing, rationale or benefits that no input wrote. Such sentences read as substance but were authored by nobody.
 
-Length: title 8–18 words; description 2–3 sentences (60–90 words); 2–4 paragraphs of 80–140 words each.
+Length:
+- title: 5–15 words, verb-led, a complete proposal on its own.
+- description: ONE sentence of at most 25 words, and only when it carries a concrete detail from an input that the title could not fit. Otherwise return "".
+- paragraphs: ONLY when at least one input has a Body. Then one paragraph per distinct point those bodies make, each at most 80 words, drawn from the bodies. When no input has a body, return [].
 
 Return JSON:
 {
   "cannotSynthesize": false,
-  "title": "Verb-led action-oriented proposal title",
-  "description": "Single-paragraph executive summary suitable as a card preview",
-  "paragraphs": ["Section 1: actions/steps", "Section 2: stakeholders & responsibilities", "Section 3: constraints, timing, success measures"]
+  "title": "Verb-led proposal title",
+  "description": "",
+  "paragraphs": []
 }`;
 
 export async function generateSynthesizedProposal(

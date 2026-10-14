@@ -1,5 +1,5 @@
 /**
- * Survey CRUD Tests - Email signup fields
+ * Survey CRUD Tests - Email signup fields and the completion message
  * Tests that the new showEmailSignup, customEmailTitle, customEmailDescription
  * fields are properly handled in createSurvey and updateSurvey
  */
@@ -21,6 +21,10 @@ jest.mock('@/lib/firebase/admin', () => ({
   getFirestoreAdmin: () => ({
     collection: mockCollection,
   }),
+}));
+
+jest.mock('firebase-admin/firestore', () => ({
+  FieldValue: { delete: () => 'FIELD_DELETE' },
 }));
 
 jest.mock('@/lib/utils/logger', () => ({
@@ -172,6 +176,69 @@ describe('surveyCrud - email signup fields', () => {
 
       expect(result).toBeNull();
       expect(mockUpdate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('completionMessage', () => {
+    const message = {
+      explanationPageId: 'completion-message',
+      title: 'Thanks',
+      content: '## Thank you!',
+      position: -1,
+    };
+    const existingSurvey = {
+      surveyId: 'survey-1',
+      title: 'Existing Survey',
+      description: '',
+      creatorId: 'user-1',
+      questionIds: ['q-1'],
+      settings: DEFAULT_SURVEY_SETTINGS,
+      status: 'active' as const,
+      createdAt: Date.now(),
+      lastUpdate: Date.now(),
+      completionMessage: message,
+    };
+
+    beforeEach(() => {
+      mockGet.mockResolvedValue({
+        exists: true,
+        data: () => existingSurvey,
+      });
+    });
+
+    it('saves a completion message on create', async () => {
+      const result = await createSurvey('user-1', { title: 'T', completionMessage: message });
+
+      expect(result.completionMessage).toEqual(message);
+      expect(mockSet.mock.calls[0][0].completionMessage).toEqual(message);
+    });
+
+    it('leaves the field out on create when there is none', async () => {
+      await createSurvey('user-1', { title: 'T', completionMessage: null });
+
+      expect(mockSet.mock.calls[0][0]).not.toHaveProperty('completionMessage');
+    });
+
+    it('updates the completion message', async () => {
+      const edited = { ...message, content: 'See you soon' };
+      const result = await updateSurvey('survey-1', { completionMessage: edited });
+
+      expect(mockUpdate.mock.calls[0][0].completionMessage).toEqual(edited);
+      expect(result!.completionMessage).toEqual(edited);
+    });
+
+    it('deletes the field when the message is removed (null)', async () => {
+      const result = await updateSurvey('survey-1', { completionMessage: null });
+
+      expect(mockUpdate.mock.calls[0][0].completionMessage).toBe('FIELD_DELETE');
+      expect(result).not.toHaveProperty('completionMessage');
+    });
+
+    it('does not touch the message when the update omits it', async () => {
+      const result = await updateSurvey('survey-1', { title: 'Renamed' });
+
+      expect(mockUpdate.mock.calls[0][0]).not.toHaveProperty('completionMessage');
+      expect(result!.completionMessage).toEqual(message);
     });
   });
 });

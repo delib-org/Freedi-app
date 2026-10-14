@@ -2,13 +2,12 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import type { SurveyExplanationPage as SurveyExplanationPageType } from '@freedi/shared-types';
 import { SurveyWithQuestions, getTotalFlowLength } from '@/types/survey';
 import { logError } from '@/lib/utils/errorHandling';
 import SurveyProgressBar from './SurveyProgress';
-import MarkdownRenderer from '../shared/MarkdownRenderer';
+import ExplanationPageBody from './ExplanationPageBody';
 import styles from './Survey.module.scss';
 
 interface SurveyExplanationPageProps {
@@ -111,26 +110,7 @@ export default function SurveyExplanationPage({
       />
 
       <div className={styles.explanationContent}>
-        {/* Hero image if provided */}
-        {explanationPage.heroImageUrl && (
-          <div style={{ position: 'relative', width: '100%', height: '200px' }}>
-            <Image
-              src={explanationPage.heroImageUrl}
-              alt=""
-              fill
-              className={styles.explanationHero}
-              style={{ objectFit: 'cover' }}
-              role="presentation"
-              unoptimized
-            />
-          </div>
-        )}
-
-        <div className={styles.explanationBody}>
-          <div className={styles.explanationText}>
-            <MarkdownRenderer content={explanationPage.content} />
-          </div>
-        </div>
+        <ExplanationPageBody page={explanationPage} />
       </div>
 
       <div className={styles.navContainer}>

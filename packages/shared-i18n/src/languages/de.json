@@ -4397,5 +4397,11 @@
   "No matches for": "Keine Treffer für",
   "Search is not available right now": "Die Suche ist gerade nicht verfügbar",
   "Searched": "Durchsucht:",
-  "Comment": "Kommentar"
+  "Comment": "Kommentar",
+  "Failed to merge with existing solution. Please try again.": "Deine Idee konnte nicht mit der ähnlichen zusammengeführt werden. Dein Text ist noch da – bitte versuche es erneut.",
+  "Last page": "Letzte Seite",
+  "Participants see the last page after the final question. You can add your own message to it.": "Die Teilnehmenden sehen die letzte Seite nach der letzten Frage. Du kannst ihr eine eigene Nachricht hinzufügen.",
+  "Add a message on the last page": "Nachricht auf der letzten Seite hinzufügen",
+  "Message on the last page": "Nachricht auf der letzten Seite",
+  "Remove message": "Nachricht entfernen"
 }

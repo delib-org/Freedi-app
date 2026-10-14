@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isMeaningfulSuggestion, MIN_MEANINGFUL_WORDS } from '@freedi/shared-types';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES, VALIDATION } from '@/constants/common';
 import { logger } from '@/lib/utils/logger';
 import { getAddOptionRefusal } from '@/lib/firebase/addOptionGuard';
+import { postToCloudFunction } from '@/lib/api/cloudFunction';
+
+interface MergeFunctionResponse {
+  error?: string;
+  statementId?: string;
+  mergedStatementId?: string;
+  newTitle?: string;
+}
 
 /**
  * POST /api/statements/[id]/merge
@@ -58,6 +67,13 @@ export async function POST(
       );
     }
 
+    if (!isMeaningfulSuggestion(trimmedText)) {
+      return NextResponse.json(
+        { error: `Suggestion must have at least ${MIN_MEANINGFUL_WORDS} real words` },
+        { status: 400 }
+      );
+    }
+
     if (trimmedText.length > VALIDATION.MAX_SOLUTION_LENGTH) {
       return NextResponse.json(
         { error: `Solution must be less than ${VALIDATION.MAX_SOLUTION_LENGTH} characters` },
@@ -96,28 +112,37 @@ export async function POST(
     });
 
     // Call Cloud Function
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        targetStatementId,
-        newContent: trimmedText,
-        questionId,
-        userId,
-        userName,
-      }),
+    const result = await postToCloudFunction<MergeFunctionResponse>(endpoint, {
+      targetStatementId,
+      newContent: trimmedText,
+      questionId,
+      userId,
+      userName,
     });
 
-    const data = await response.json();
+    if (result.kind === 'unavailable') {
+      logError(new Error('Merge service returned a non-JSON page'), {
+        operation: 'api.merge',
+        userId,
+        metadata: { questionId, targetStatementId, status: result.status, attempts: result.attempts, preview: result.preview },
+      });
+
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.MERGE_FAILED || 'Failed to merge statement', unavailable: true },
+        { status: 503 }
+      );
+    }
+
+    const data = result.data;
 
     // Pass through the response
-    if (!response.ok) {
+    if (!result.ok) {
       logger.error('[Merge] Cloud Function error', {
-        status: response.status,
+        status: result.status,
         error: data.error,
       });
 
-      return NextResponse.json(data, { status: response.status });
+      return NextResponse.json(data, { status: result.status });
     }
 
     logger.info('[Merge] Success', {

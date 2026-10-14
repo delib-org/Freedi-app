@@ -91,6 +91,8 @@ export interface CreateSurveyRequest {
   showAllSolutionsLink?: boolean;
   /** Custom label for the all-solutions link (replaces default i18n 'seeAllSolutions') */
   allSolutionsLinkLabel?: string;
+  /** The admin's message on the completion screen; null removes it */
+  completionMessage?: SurveyExplanationPage | null;
 }
 
 /**
@@ -135,6 +137,8 @@ export interface UpdateSurveyRequest {
   showAllSolutionsLink?: boolean;
   /** Custom label for the all-solutions link (replaces default i18n 'seeAllSolutions') */
   allSolutionsLinkLabel?: string;
+  /** The admin's message on the completion screen; null removes it */
+  completionMessage?: SurveyExplanationPage | null;
 }
 
 /**

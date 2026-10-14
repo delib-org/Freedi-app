@@ -5115,5 +5115,11 @@
   "No matches for": "לא נמצאו תוצאות עבור",
   "Search is not available right now": "החיפוש לא זמין כרגע",
   "Searched": "נסרקו",
-  "Comment": "תגובה"
+  "Comment": "תגובה",
+  "Failed to merge with existing solution. Please try again.": "לא הצלחנו לצרף את הרעיון שלך לרעיון הדומה. הטקסט שלך נשמר — נסו שוב.",
+  "Last page": "העמוד האחרון",
+  "Participants see the last page after the final question. You can add your own message to it.": "המשתתפים רואים את העמוד האחרון אחרי השאלה האחרונה. אפשר להוסיף לו הודעה משלכם.",
+  "Add a message on the last page": "הוספת הודעה בעמוד האחרון",
+  "Message on the last page": "הודעה בעמוד האחרון",
+  "Remove message": "הסרת ההודעה"
 }

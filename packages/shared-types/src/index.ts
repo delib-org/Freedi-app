@@ -971,6 +971,11 @@ export {
 } from './utils/textSearch';
 export type { NormalizedText, TextMatch, RankOptions } from './utils/textSearch';
 export {
+	MIN_MEANINGFUL_WORDS,
+	countMeaningfulWords,
+	isMeaningfulSuggestion,
+} from './utils/meaningfulText';
+export {
   NON_SEARCHABLE_STATEMENT_TYPES,
   statementToSearchCandidate,
   subscriptionToSearchCandidate,
