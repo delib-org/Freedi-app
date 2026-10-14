@@ -136,6 +136,40 @@ body:has(.village-library--reading) { overflow:hidden; }
 .village-board__heading { min-width: 0; }
 .village-board__heading h2 { margin: 0; }
 .village-board > header { flex-wrap: wrap; }
+// How many classmates' notes the board holds — said under the title, because
+// on a phone my own note fills the first screen and the class sits below it
+.village-board__count {
+  display: inline-block;
+  margin: var(--space-xs) 0 0;
+  padding: 2px var(--space-sm);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  background: var(--bg-card-solid);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+// "N more notes below": rides the board's bottom edge while classmates' cards
+// wait under the fold. The fade says the list goes on; the button brings the
+// next card up. Only the button takes taps — the fade lets them through.
+.village-board__more {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  margin-block-start: var(--space-md);
+  padding-block: var(--space-lg) var(--space-xs);
+  background: linear-gradient(to bottom, transparent, var(--bg-page) 60%);
+  pointer-events: none;
+}
+.village-board__more-button {
+  pointer-events: auto;
+  gap: var(--space-sm);
+  min-height: 44px;
+  box-shadow: var(--shadow-card);
+}
+.village-board__more-arrow { font-weight: 700; }
 .village-community__panel.village-board {
   inset-inline: max(var(--space-sm), calc((100% - 960px) / 2));
   background: var(--bg-page);

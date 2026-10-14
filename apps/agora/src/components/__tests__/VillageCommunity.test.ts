@@ -65,7 +65,7 @@ vi.mock('../../lib/hands', async () => {
 });
 import { stationNotes, VillageCommunity, type VillageCommunityAttrs } from '../VillageCommunity';
 import { playCoin } from '../../lib/sound';
-import { t } from '../../lib/i18n';
+import { t, tCount } from '../../lib/i18n';
 
 const proposal = (id: string, hidden = false): AgoraProposal => ({
 	statementId: id,
@@ -129,11 +129,19 @@ describe('village session integration', () => {
 			const tree = component.view.call(component, node);
 			component.onremove!.call(component, node);
 
-			return findAllByClass(tree, 'village-note').length;
+			return {
+				cards: findAllByClass(tree, 'village-note').length,
+				count: nodeText(findAllByClass(tree, 'village-board__count')),
+			};
 		};
 		try {
-			expect(board(false)).toBe(2);
-			expect(board(true)).toBe(4);
+			// The count under the title is what the student can reach: the hand
+			// (one classmate), never the class (three) — the teacher sees all three
+			expect(board(false)).toEqual({
+				cards: 2,
+				count: tCount('village.board.count', 1),
+			});
+			expect(board(true)).toEqual({ cards: 4, count: tCount('village.board.count', 3) });
 		} finally {
 			handMock.handOnly = null;
 		}
