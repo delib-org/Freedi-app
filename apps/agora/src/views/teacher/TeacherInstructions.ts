@@ -1,16 +1,28 @@
 import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { QuestionReword } from './QuestionReword';
+import { LibraryVideos } from './LibraryVideos';
+import { YoutubePlayer } from '../../components/YoutubePlayer';
 import {
 	AgoraSceneKind,
 	AgoraStage,
 	roundSpecOf,
 	type AgoraQuestionKind,
 } from '@freedi/shared-types';
-import type { AgoraScene, AgoraTopicPackage } from '@freedi/shared-types';
+import type { AgoraScene, AgoraSession, AgoraTopicPackage } from '@freedi/shared-types';
+
+/** What a scene card needs to show or start the scene's YouTube videos */
+interface VideoContext {
+	/** The console only: with a session, each video gets a "start for the class" button */
+	sessionId?: string;
+	/** The video the teacher started for the class, if any */
+	libraryVideo?: AgoraSession['libraryVideo'];
+}
 
 export interface TeacherInstructionsAttrs {
 	stage: AgoraStage;
+	/** The console passes the session so the teacher can start a video; the wall passes only the live one */
+	videoContext?: VideoContext;
 	topic: AgoraTopicPackage;
 	/** A question stage projects its own question, not a generic prompt */
 	questionTitle?: string;
@@ -37,8 +49,25 @@ const STAGE_SCENE_KINDS: Partial<Record<AgoraStage, AgoraSceneKind[]>> = {
 	[AgoraStage.needs]: [AgoraSceneKind.needsQuestion, AgoraSceneKind.needsA, AgoraSceneKind.needsB],
 };
 
+/**
+ * The scene's YouTube videos: on the console a list with a start button each;
+ * on the wall only the one the class is on, muted.
+ */
+function sceneVideos(scene: AgoraScene, projector: boolean, video?: VideoContext): m.Children {
+	const videos = scene.youtubeVideos ?? [];
+	if (videos.length === 0) return null;
+	const now = video?.libraryVideo;
+	const nowHere = now?.sceneId === scene.sceneId ? now : undefined;
+	if (projector) {
+		return nowHere ? m(YoutubePlayer, { videos, classVideo: nowHere, display: true }) : null;
+	}
+	if (!video?.sessionId) return null;
+
+	return m(LibraryVideos, { sessionId: video.sessionId, scene, now });
+}
+
 /** One scene rendered read-only: the same media, title, text and dialogue students see */
-function sceneCard(scene: AgoraScene): m.Children {
+function sceneCard(scene: AgoraScene, projector: boolean, video?: VideoContext): m.Children {
 	return m('.teacher-instructions__scene', { key: scene.sceneId }, [
 		m('h4.teacher-instructions__scene-title', scene.title),
 		scene.videoUrl
@@ -49,6 +78,7 @@ function sceneCard(scene: AgoraScene): m.Children {
 					preload: 'metadata',
 				})
 			: null,
+		sceneVideos(scene, projector, video),
 		scene.imageUrls.length > 0
 			? m(
 					'.teacher-instructions__images',
@@ -116,6 +146,7 @@ function stageBody(
 	topic: AgoraTopicPackage,
 	question?: { title?: string; explanation?: string; kind?: AgoraQuestionKind },
 	projector = false,
+	video?: VideoContext,
 ): m.Children {
 	// The lobby is where the facilitator opens: why a group is wiser than its
 	// loudest member, and what will happen at the end (the WizCol guide)
@@ -150,7 +181,10 @@ function stageBody(
 			.filter((scene): scene is AgoraScene => scene !== undefined);
 		if (scenes.length === 0) return null;
 
-		return m('.teacher-instructions__scenes', scenes.map(sceneCard));
+		return m(
+			'.teacher-instructions__scenes',
+			scenes.map((scene) => sceneCard(scene, projector, video)),
+		);
 	}
 
 	if (stage === AgoraStage.positioning) {
@@ -178,6 +212,7 @@ export function TeacherInstructions(): m.Component<TeacherInstructionsAttrs> {
 				topic,
 				{ title: questionTitle, explanation: questionExplanation, kind: questionKind },
 				projector === true,
+				vnode.attrs.videoContext,
 			);
 			if (!body) return null;
 

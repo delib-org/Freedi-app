@@ -4403,5 +4403,20 @@
   "Participants see the last page after the final question. You can add your own message to it.": "Deelnemers zien de laatste pagina na de laatste vraag. Je kunt er je eigen bericht aan toevoegen.",
   "Add a message on the last page": "Een bericht op de laatste pagina toevoegen",
   "Message on the last page": "Bericht op de laatste pagina",
-  "Remove message": "Bericht verwijderen"
+  "Remove message": "Bericht verwijderen",
+  "Lesson videos": "Video's van de les",
+  "YouTube videos": "YouTube-video's",
+  "Paste a link first.": "Plak eerst een link.",
+  "That is not a YouTube link. Paste one that starts with youtube.com or youtu.be.": "Dat is geen YouTube-link. Plak een link die begint met youtube.com of youtu.be.",
+  "We could not find a video in that link. Paste the link of the video itself.": "We vonden geen video in die link. Plak de link van de video zelf.",
+  "That is not a valid link.": "Dat is geen geldige link.",
+  "That video is already on the list.": "Die video staat al in de lijst.",
+  "A scene can hold up to {{max}} videos.": "Een scène kan maximaal {{max}} video's bevatten.",
+  "Video {{n}}": "Video {{n}}",
+  "Paste a YouTube link": "Plak een YouTube-link",
+  "Could not find this lesson.": "Deze les is niet gevonden.",
+  "Could not load this lesson.": "Deze les kon niet worden geladen.",
+  "Could not save. Try again.": "Opslaan mislukt. Probeer het opnieuw.",
+  "Add YouTube links to a scene. During the lesson you choose which one the class watches.": "Voeg YouTube-links toe aan een scène. Tijdens de les kies je welke de klas bekijkt.",
+  "Could not load your lessons.": "Je lessen konden niet worden geladen."
 }

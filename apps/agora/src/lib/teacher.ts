@@ -22,6 +22,7 @@ import {
 	AgoraStudentAggregateSchema,
 	AgoraTopicPackage,
 	AgoraTopicPackageSchema,
+	AgoraYoutubeVideo,
 	AgoraThemeChoice,
 	VotingStageSettings,
 	AGORA_VOTING,
@@ -293,6 +294,32 @@ export async function callVillage(
 	const at = nextCallStamp(Date.now(), currentOpenedAt);
 	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
 		villageCall: { place, at },
+		lastUpdate: at,
+	});
+
+	return at;
+}
+
+/**
+ * Start a library video for the whole class. The stamp is monotonic across the
+ * teacher's devices, so each phone reacts once per start; a student's own
+ * replay never writes this. Teacher-writable (the rules pin only what the
+ * server owns).
+ */
+export async function startLibraryVideo(
+	sessionId: string,
+	sceneId: string,
+	video: AgoraYoutubeVideo,
+	currentAt?: number,
+): Promise<number> {
+	const at = nextCallStamp(Date.now(), currentAt);
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		libraryVideo: {
+			sceneId,
+			videoId: video.videoId,
+			...(video.startSeconds ? { startSeconds: video.startSeconds } : {}),
+			at,
+		},
 		lastUpdate: at,
 	});
 

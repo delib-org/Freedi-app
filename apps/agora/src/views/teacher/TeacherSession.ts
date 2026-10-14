@@ -878,6 +878,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 										m(TeacherInstructions, {
 											stage: current.stage,
 											topic,
+											videoContext: { sessionId, libraryVideo: session.libraryVideo },
 											questionTitle: current.title,
 											questionExplanation: current.explanation,
 											questionKind: current.kind,

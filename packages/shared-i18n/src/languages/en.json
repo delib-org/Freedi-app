@@ -5083,5 +5083,20 @@
   "Participants see the last page after the final question. You can add your own message to it.": "Participants see the last page after the final question. You can add your own message to it.",
   "Add a message on the last page": "Add a message on the last page",
   "Message on the last page": "Message on the last page",
-  "Remove message": "Remove message"
+  "Remove message": "Remove message",
+  "Lesson videos": "Lesson videos",
+  "YouTube videos": "YouTube videos",
+  "Paste a link first.": "Paste a link first.",
+  "That is not a YouTube link. Paste one that starts with youtube.com or youtu.be.": "That is not a YouTube link. Paste one that starts with youtube.com or youtu.be.",
+  "We could not find a video in that link. Paste the link of the video itself.": "We could not find a video in that link. Paste the link of the video itself.",
+  "That is not a valid link.": "That is not a valid link.",
+  "That video is already on the list.": "That video is already on the list.",
+  "A scene can hold up to {{max}} videos.": "A scene can hold up to {{max}} videos.",
+  "Video {{n}}": "Video {{n}}",
+  "Paste a YouTube link": "Paste a YouTube link",
+  "Could not find this lesson.": "Could not find this lesson.",
+  "Could not load this lesson.": "Could not load this lesson.",
+  "Could not save. Try again.": "Could not save. Try again.",
+  "Add YouTube links to a scene. During the lesson you choose which one the class watches.": "Add YouTube links to a scene. During the lesson you choose which one the class watches.",
+  "Could not load your lessons.": "Could not load your lessons."
 }

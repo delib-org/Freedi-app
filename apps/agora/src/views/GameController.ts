@@ -805,6 +805,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							),
 							storageKey: `agora_${sessionId}_framing`,
 							onProgress,
+							classVideo: session.libraryVideo,
 						});
 
 					case AgoraStage.perspectives:
@@ -813,6 +814,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							scenes: scenesOf(AgoraSceneKind.perspectiveA, AgoraSceneKind.perspectiveB),
 							storageKey: `agora_${sessionId}_perspectives`,
 							onProgress,
+							classVideo: session.libraryVideo,
 						});
 
 					case AgoraStage.needs:
@@ -828,6 +830,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							// the class finishes the scenes
 							epilogue: m(NeedsBoard, { topic }),
 							onProgress,
+							classVideo: session.libraryVideo,
 						});
 
 					case AgoraStage.valueIdentification:

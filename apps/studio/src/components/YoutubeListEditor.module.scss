@@ -1,0 +1,53 @@
+.editor {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+}
+
+.thumb {
+	inline-size: 72px;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+	border-radius: 6px;
+}
+
+.name {
+	flex: 1;
+	min-inline-size: 0;
+}
+
+.add {
+	display: flex;
+	gap: var(--space-sm);
+}
+
+.input {
+	flex: 1;
+	min-inline-size: 0;
+	padding: var(--space-xs) var(--space-sm);
+	border: 1px solid var(--border-light);
+	border-radius: 8px;
+	background: var(--background);
+	color: var(--text-body);
+	font: inherit;
+}
+
+.error {
+	margin: 0;
+	color: var(--text-error);
+}

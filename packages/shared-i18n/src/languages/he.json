@@ -5121,5 +5121,20 @@
   "Participants see the last page after the final question. You can add your own message to it.": "המשתתפים רואים את העמוד האחרון אחרי השאלה האחרונה. אפשר להוסיף לו הודעה משלכם.",
   "Add a message on the last page": "הוספת הודעה בעמוד האחרון",
   "Message on the last page": "הודעה בעמוד האחרון",
-  "Remove message": "הסרת ההודעה"
+  "Remove message": "הסרת ההודעה",
+  "Lesson videos": "סרטוני השיעור",
+  "YouTube videos": "סרטוני יוטיוב",
+  "Paste a link first.": "הדביקו קודם קישור.",
+  "That is not a YouTube link. Paste one that starts with youtube.com or youtu.be.": "זה לא קישור ליוטיוב. הדביקו קישור שמתחיל ב-youtube.com או ב-youtu.be.",
+  "We could not find a video in that link. Paste the link of the video itself.": "לא מצאנו סרטון בקישור הזה. הדביקו את הקישור של הסרטון עצמו.",
+  "That is not a valid link.": "הקישור לא תקין.",
+  "That video is already on the list.": "הסרטון הזה כבר ברשימה.",
+  "A scene can hold up to {{max}} videos.": "אפשר להוסיף עד {{max}} סרטונים לסצנה.",
+  "Video {{n}}": "סרטון {{n}}",
+  "Paste a YouTube link": "הדביקו קישור ליוטיוב",
+  "Could not find this lesson.": "לא מצאנו את השיעור הזה.",
+  "Could not load this lesson.": "לא ניתן היה לטעון את השיעור.",
+  "Could not save. Try again.": "השמירה נכשלה. נסו שוב.",
+  "Add YouTube links to a scene. During the lesson you choose which one the class watches.": "הוסיפו קישורי יוטיוב לסצנה. במהלך השיעור תבחרו איזה מהם הכיתה צופה בו.",
+  "Could not load your lessons.": "לא ניתן היה לטעון את השיעורים שלכם."
 }

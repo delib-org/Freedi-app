@@ -1,0 +1,29 @@
+.scenes {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+}
+
+.scene {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.sceneTitle {
+	margin: 0;
+}
+
+.hint {
+	margin: 0;
+	color: var(--text-meta);
+}
+
+.error {
+	margin: 0;
+	color: var(--text-error);
+}
+
+.back {
+	align-self: flex-start;
+}
