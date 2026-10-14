@@ -766,3 +766,28 @@
 		transition: none;
 	}
 }
+
+// Contribution by student: a nickname, a meter, the points — never an axis of names
+.contrib-row {
+	display: grid;
+	grid-template-columns: minmax(0, 9em) 1fr auto;
+	align-items: center;
+	gap: var(--space-sm);
+	min-block-size: 44px;
+
+	&__name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__points {
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--mine-ink);
+	}
+
+	.meter {
+		margin: 0;
+	}
+}

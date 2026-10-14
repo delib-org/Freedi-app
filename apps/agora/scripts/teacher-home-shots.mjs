@@ -193,6 +193,10 @@ try {
 		await go(page, `/teach/class/${classA.classId}`, '.kpis');
 		await fits(page, `class achievements ${name}`);
 		await shot(page, `class-achievements-${name}`);
+		await page.click('button[aria-controls="class-more-data"]');
+		await page.waitForSelector('.contrib-row');
+		await fits(page, `class more data ${name}`);
+		await shot(page, `class-achievements-more-${name}`);
 		await page.click('#class-tab-students');
 		await page.waitForSelector('.teach-row');
 		await shot(page, `class-students-${name}`);
