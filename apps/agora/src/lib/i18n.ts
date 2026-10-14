@@ -1417,7 +1417,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'video.move_down': 'הזזה למטה',
 		'video.err_empty': 'הדביקו קודם קישור.',
 		'video.err_invalid': 'הקישור לא תקין.',
-		'video.err_not_youtube': 'זה לא קישור ליוטיוב. הדביקו קישור שמתחיל ב-youtube.com או ב-youtu.be.',
+		'video.err_not_youtube':
+			'זה לא קישור ליוטיוב. הדביקו קישור שמתחיל ב-youtube.com או ב-youtu.be.',
 		'video.err_no_id': 'לא מצאנו סרטון בקישור הזה. הדביקו את הקישור של הסרטון עצמו.',
 		'video.err_duplicate': 'הסרטון הזה כבר ברשימה.',
 		'video.err_full': 'אפשר להוסיף עד {{max}} סרטונים לסצנה.',
@@ -3232,8 +3233,10 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'video.move_down': 'Move down',
 		'video.err_empty': 'Paste a link first.',
 		'video.err_invalid': 'That is not a valid link.',
-		'video.err_not_youtube': 'That is not a YouTube link. Paste one that starts with youtube.com or youtu.be.',
-		'video.err_no_id': 'We could not find a video in that link. Paste the link of the video itself.',
+		'video.err_not_youtube':
+			'That is not a YouTube link. Paste one that starts with youtube.com or youtu.be.',
+		'video.err_no_id':
+			'We could not find a video in that link. Paste the link of the video itself.',
 		'video.err_duplicate': 'That video is already on the list.',
 		'video.err_full': 'A scene can hold up to {{max}} videos.',
 		'video.default_title': 'Video {{n}}',
@@ -3246,7 +3249,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'video.shelf': 'Videos in this scene',
 		'video.group_title': 'Videos',
 		'video.confirm_title': 'The class will go to the library',
-		'video.confirm_unfinished': '{{n}} students have not finished "{{station}}" and will be moved to the library.',
+		'video.confirm_unfinished':
+			'{{n}} students have not finished "{{station}}" and will be moved to the library.',
 		'video.confirm_ok': 'Start and go to the library',
 		'video.now_playing': '{{title}} · on for the class',
 		'video.stop': 'Stop',
@@ -6849,8 +6853,10 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'video.move_down': 'Bajar',
 		'video.err_empty': 'Pega un enlace primero.',
 		'video.err_invalid': 'Ese enlace no es válido.',
-		'video.err_not_youtube': 'Ese no es un enlace de YouTube. Pega uno que empiece por youtube.com o youtu.be.',
-		'video.err_no_id': 'No encontramos ningún vídeo en ese enlace. Pega el enlace del propio vídeo.',
+		'video.err_not_youtube':
+			'Ese no es un enlace de YouTube. Pega uno que empiece por youtube.com o youtu.be.',
+		'video.err_no_id':
+			'No encontramos ningún vídeo en ese enlace. Pega el enlace del propio vídeo.',
 		'video.err_duplicate': 'Ese vídeo ya está en la lista.',
 		'video.err_full': 'Una escena admite hasta {{max}} vídeos.',
 		'video.default_title': 'Vídeo {{n}}',
@@ -6863,7 +6869,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'video.shelf': 'Vídeos de esta escena',
 		'video.group_title': 'Vídeos',
 		'video.confirm_title': 'La clase irá a la biblioteca',
-		'video.confirm_unfinished': '{{n}} estudiantes no han terminado "{{station}}" y pasarán a la biblioteca.',
+		'video.confirm_unfinished':
+			'{{n}} estudiantes no han terminado "{{station}}" y pasarán a la biblioteca.',
 		'video.confirm_ok': 'Iniciar e ir a la biblioteca',
 		'video.now_playing': '{{title}} · en pantalla para la clase',
 		'video.stop': 'Detener',
@@ -8724,8 +8731,10 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'video.move_down': 'Nach unten',
 		'video.err_empty': 'Füge zuerst einen Link ein.',
 		'video.err_invalid': 'Das ist kein gültiger Link.',
-		'video.err_not_youtube': 'Das ist kein YouTube-Link. Füge einen ein, der mit youtube.com oder youtu.be beginnt.',
-		'video.err_no_id': 'In diesem Link wurde kein Video gefunden. Füge den Link des Videos selbst ein.',
+		'video.err_not_youtube':
+			'Das ist kein YouTube-Link. Füge einen ein, der mit youtube.com oder youtu.be beginnt.',
+		'video.err_no_id':
+			'In diesem Link wurde kein Video gefunden. Füge den Link des Videos selbst ein.',
 		'video.err_duplicate': 'Dieses Video steht schon in der Liste.',
 		'video.err_full': 'Eine Szene kann bis zu {{max}} Videos enthalten.',
 		'video.default_title': 'Video {{n}}',
@@ -8738,7 +8747,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'video.shelf': 'Videos dieser Szene',
 		'video.group_title': 'Videos',
 		'video.confirm_title': 'Die Klasse geht in die Bibliothek',
-		'video.confirm_unfinished': '{{n}} Schüler haben „{{station}}“ noch nicht beendet und gehen in die Bibliothek.',
+		'video.confirm_unfinished':
+			'{{n}} Schüler haben „{{station}}“ noch nicht beendet und gehen in die Bibliothek.',
 		'video.confirm_ok': 'Starten und in die Bibliothek gehen',
 		'video.now_playing': '{{title}} · läuft für die Klasse',
 		'video.stop': 'Stoppen',
@@ -10595,7 +10605,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'video.move_down': 'Omlaag',
 		'video.err_empty': 'Plak eerst een link.',
 		'video.err_invalid': 'Dat is geen geldige link.',
-		'video.err_not_youtube': 'Dat is geen YouTube-link. Plak een link die begint met youtube.com of youtu.be.',
+		'video.err_not_youtube':
+			'Dat is geen YouTube-link. Plak een link die begint met youtube.com of youtu.be.',
 		'video.err_no_id': 'We vonden geen video in die link. Plak de link van de video zelf.',
 		'video.err_duplicate': 'Die video staat al in de lijst.',
 		'video.err_full': 'Een scène kan maximaal {{max}} video’s bevatten.',
@@ -10609,7 +10620,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'video.shelf': 'Video’s in deze scène',
 		'video.group_title': 'Video’s',
 		'video.confirm_title': 'De klas gaat naar de bibliotheek',
-		'video.confirm_unfinished': '{{n}} leerlingen zijn nog niet klaar met "{{station}}" en gaan naar de bibliotheek.',
+		'video.confirm_unfinished':
+			'{{n}} leerlingen zijn nog niet klaar met "{{station}}" en gaan naar de bibliotheek.',
 		'video.confirm_ok': 'Starten en naar de bibliotheek',
 		'video.now_playing': '{{title}} · aan voor de klas',
 		'video.stop': 'Stoppen',
