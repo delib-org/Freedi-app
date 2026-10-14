@@ -271,7 +271,7 @@ export default function Voyage() {
 			<GameChrome stage="ההפלגה" />
 			<div className="page">
 				<div className="w-full max-w-3xl flex flex-col gap-4">
-					<header className="text-center fade-in" key={island.statementId}>
+					<header className="text-center fade-in" key={`${island.statementId}-header`}>
 						{islandImage ? (
 							// the island itself, first: the player should see where they landed
 							// before reading what it asks
@@ -301,7 +301,10 @@ export default function Voyage() {
 					) : null}
 
 					{phase === 'question' ? (
-						<section className="panel fade-in flex flex-col gap-4" key={island.statementId}>
+						<section
+							className="panel fade-in flex flex-col gap-4"
+							key={`${island.statementId}-question`}
+						>
 							{island.opening ? (
 								<p className="text-[15px] text-[#dcecf7] italic m-0">{island.opening}</p>
 							) : null}
