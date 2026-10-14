@@ -11,8 +11,18 @@ import { logError } from '../utils/errorHandling';
 import { advanceSession } from './stageAdvance';
 
 /**
- * Hourly hygiene: auto-end sessions whose lesson window passed without the
- * teacher closing them (pattern: fn_handleVotingDeadline).
+ * How long past its planned end a lesson must sit before the sweep calls it
+ * abandoned. `lessonEndsAt` is only creation + 45 minutes: a teacher who
+ * opened the room before the bell, or whose lesson ran long, used to have
+ * the whole class thrown to the end mid-discussion at the next top of the
+ * hour. The sweep is hygiene for forgotten rooms, never a lesson clock —
+ * a room still in use is the teacher's to end.
+ */
+const ABANDONED_AFTER_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Hourly hygiene: auto-end sessions left open hours after their lesson
+ * window, i.e. the teacher forgot to close them (pattern: fn_handleVotingDeadline).
  *
  * Ending goes through the same `advanceSession` the teacher's button uses —
  * straight to the plan's terminal item — so `stageIndex` stays true to
@@ -28,7 +38,7 @@ export const agoraSessionSweep = onSchedule(
 			const stale = await db
 				.collection(Collections.agoraSessions)
 				.where('status', 'in', [AgoraSessionStatus.open, AgoraSessionStatus.live])
-				.where('lessonEndsAt', '<', Date.now())
+				.where('lessonEndsAt', '<', Date.now() - ABANDONED_AFTER_MS)
 				.get();
 
 			if (stale.empty) return;

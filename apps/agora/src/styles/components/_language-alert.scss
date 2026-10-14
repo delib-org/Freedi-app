@@ -1,0 +1,152 @@
+// The teacher's language alert (views/teacher/LanguageAlert.ts): a refused
+// text, the moment it is refused, above the board and the class view alike.
+// Below the drawer (60) so "open the thread" lands on top of it; above the
+// side panels (55) so an open panel cannot hide it.
+//
+// Where: never over NEXT. On a wide screen the strip (and NEXT) is at the
+// top and the side panels open at inline-end, so the alert sits at the
+// bottom, inline-start. On a phone the strip is the bottom bar, so the alert
+// drops in under the nav bar instead.
+//
+// Imported by components.scss; do not import directly.
+
+.language-alert {
+	position: fixed;
+	inset-block-end: var(--space-md);
+	inset-inline-start: var(--space-md);
+	z-index: calc(var(--z-panel) + 2);
+	width: min(calc(100% - 2 * var(--space-md)), 420px);
+	max-height: 70vh;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	background: var(--bg-card-solid);
+	color: var(--text-primary);
+	border: 1px solid var(--border-subtle);
+	border-inline-start: 6px solid var(--danger);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-raised);
+	animation: language-alert-in 240ms ease-out;
+
+	&__head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	// The alarm as a FILL with a white mark — the one place in the console
+	// that red is spent on a shape and not on text
+	&__mark {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: none;
+		width: 1.75rem;
+		height: 1.75rem;
+		border-radius: var(--radius-full);
+		background: var(--danger);
+		color: var(--text-on-lantern); // white on a fill, the same label colour
+		font-weight: 800;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: var(--font-size-lg);
+		color: var(--danger-ink);
+	}
+
+	&__hint,
+	&__more {
+		margin: 0;
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-xs);
+		padding-block-start: var(--space-sm);
+		border-block-start: 1px solid var(--border-subtle);
+
+		&:first-child {
+			padding-block-start: 0;
+			border-block-start: none;
+		}
+	}
+
+	&__who {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-xs) var(--space-sm);
+	}
+
+	&__name {
+		font-weight: 700;
+	}
+
+	&__anon,
+	&__where {
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+		margin: 0;
+	}
+
+	&__strikes {
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		color: var(--danger-ink);
+		white-space: nowrap;
+	}
+
+	&__text {
+		margin: 0;
+		padding: var(--space-xs) var(--space-sm);
+		border-inline-start: 3px solid var(--danger);
+		background: color-mix(in srgb, var(--danger) 8%, transparent);
+		border-radius: var(--radius-sm);
+		overflow-wrap: anywhere;
+	}
+
+	&__actions {
+		display: flex;
+		justify-content: flex-end;
+	}
+
+	@media (max-width: 600px) {
+		inset-block-start: calc(var(--teacher-nav-h) + env(safe-area-inset-top, 0px) + var(--space-sm));
+		inset-block-end: auto;
+		inset-inline: var(--space-sm);
+		width: auto;
+		max-height: 55vh;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
+}
+
+@keyframes language-alert-in {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}

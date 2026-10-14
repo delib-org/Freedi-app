@@ -25,6 +25,7 @@ import {
 	AgoraThemeChoice,
 	VotingStageSettings,
 	AGORA_VOTING,
+	createAgoraParticipantId,
 	deriveCamp,
 } from '@freedi/shared-types';
 import type {
@@ -51,6 +52,8 @@ import {
 } from './firebase';
 import { trackWrite } from './confirmedWrite';
 import { teacherConsole } from './callables';
+import type { VillageCallPlace } from './flows/villageRoute';
+import { nextCallStamp } from './flows/summons';
 
 /**
  * Everything the teacher and join screens ask of Firestore.
@@ -79,6 +82,29 @@ export async function findSessionByCode(code: string): Promise<AgoraSession | nu
 		console.error('[Teacher] Invalid session doc:', error);
 
 		return null;
+	}
+}
+
+/**
+ * Whether this login already holds a seat in the session. The join door asks
+ * it before asking anything else: a student who lands back on the door — a
+ * reload, a shared link, the "no seat" screen tapped on a blip — is walked
+ * straight back in, not asked for their name a second time.
+ *
+ * A failed read answers "no": the door then runs as it always did, and the
+ * join callable keeps one seat per login either way.
+ */
+export async function hasSeatInSession(sessionId: string, userId: string): Promise<boolean> {
+	try {
+		const snapshot = await getDoc(
+			doc(db, Collections.agoraParticipants, createAgoraParticipantId(sessionId, userId)),
+		);
+
+		return snapshot.exists();
+	} catch (error) {
+		console.error('[Join] Seat lookup failed:', error);
+
+		return false;
 	}
 }
 
@@ -252,14 +278,25 @@ export async function setVillageNavigation(
 }
 
 /**
- * Walk every student's village to one place. A timestamp rather than a flag,
- * so calling the same place twice calls twice, and each phone acts once per call.
+ * Walk every student's village to one place — the room's station, the
+ * council, or any opened station by name (`booth:<itemId>`, `library`). A
+ * timestamp rather than a flag, so calling the same place twice calls twice,
+ * and each phone acts once per call. Returns the stamp, so the console can
+ * tell its own call from one made on the teacher's other device.
  */
-export async function callVillage(sessionId: string, place: 'current' | 'council'): Promise<void> {
+export async function callVillage(
+	sessionId: string,
+	place: VillageCallPlace,
+	/** The server time the room reached its station — the stamp never falls below it */
+	currentOpenedAt?: number,
+): Promise<number> {
+	const at = nextCallStamp(Date.now(), currentOpenedAt);
 	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
-		villageCall: { place, at: Date.now() },
-		lastUpdate: Date.now(),
+		villageCall: { place, at },
+		lastUpdate: at,
 	});
+
+	return at;
 }
 
 /**

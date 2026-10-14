@@ -212,6 +212,13 @@ service cloud.firestore {
                          resource.data.get('creditedRatings', -1) &&
                        request.resource.data.get('firstProposalAwardedAt', -1) ==
                          resource.data.get('firstProposalAwardedAt', -1) &&
+                       // The language-strike ledger is agoraCheckLanguage's: a
+                       // client that could clear it would erase what the
+                       // teacher is shown.
+                       request.resource.data.get('languageStrikes', 0) ==
+                         resource.data.get('languageStrikes', 0) &&
+                       request.resource.data.get('lastLanguageStrikeAt', -1) ==
+                         resource.data.get('lastLanguageStrikeAt', -1) &&
                        // The round-appreciation ledger (which likes already
                        // paid this author) is the trigger's; a client that
                        // could clear a key could be paid for the same like twice.
@@ -278,6 +285,16 @@ service cloud.firestore {
     // Proposal scores (bridging/plausibility): server-computed only.
     match /agoraScores/{statementId} {
       allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // A student's hand of dealt notes per station: written by agoraDealNotes
+    // only. The owner may get it (the client listens before the first deal
+    // creates it, so a missing doc must not error); nobody may list hands.
+    match /agoraHands/{handId} {
+      allow get: if isAuthenticated()
+        && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if false;
       allow write: if false;
     }
 

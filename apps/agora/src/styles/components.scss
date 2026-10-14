@@ -23,15 +23,18 @@
 @use 'components/event';
 @use 'components/stage-plan';
 @use 'components/round';
+@use 'components/hand';
 @use 'components/looks';
 @use 'components/teacher-console';
 @use 'components/teacher-strip';
 @use 'components/teacher-panel';
 @use 'components/question-sheet';
 @use 'components/moderation';
+@use 'components/language-alert';
 @use 'components/projector';
 @use 'components/village';
 @use 'components/village-round';
+@use 'components/teacher-watch';
 
 @use 'components/indicators';
 @use 'components/supervise';

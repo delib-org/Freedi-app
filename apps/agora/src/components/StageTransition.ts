@@ -11,6 +11,12 @@ export interface StageTransitionAttrs {
 	title?: string;
 	/** Fade-out phase — the overlay is about to be removed */
 	leaving: boolean;
+	/**
+	 * The teacher's call: the same travel card, with the kicker saying who
+	 * sent the class and the line naming the place — one card a student
+	 * cannot miss, in both worlds, read aloud by a screen reader.
+	 */
+	call?: { kicker: string; line: string };
 }
 
 interface TransitionMeta {
@@ -64,12 +70,22 @@ export const StageTransition: m.Component<StageTransitionAttrs> = {
 	view(vnode) {
 		const meta = TRANSITIONS[vnode.attrs.stage];
 		if (!meta) return null;
+		const { call } = vnode.attrs;
 
 		return m(
 			'.stage-transition',
 			{
-				class: vnode.attrs.leaving ? 'stage-transition--leaving' : undefined,
-				'aria-live': 'polite',
+				class: [
+					vnode.attrs.leaving ? 'stage-transition--leaving' : '',
+					call ? 'stage-transition--call' : '',
+				]
+					.filter(Boolean)
+					.join(' '),
+				role: call ? 'status' : undefined,
+				// A call is an order from the teacher: announced at once, not after
+				// whatever the reader was in the middle of
+				'aria-live': call ? 'assertive' : 'polite',
+				'data-call': call ? 'true' : undefined,
 			},
 			[
 				m('.stage-transition__map', m(EraMap, { participants: [] })),
@@ -81,8 +97,9 @@ export const StageTransition: m.Component<StageTransitionAttrs> = {
 						{ 'aria-hidden': 'true' },
 						m(HeroIcon, { name: meta.icon, size: 88 }),
 					),
+					call ? m('p.stage-transition__kicker', call.kicker) : null,
 					m('h2.stage-transition__title', vnode.attrs.title?.trim() || t(meta.labelKey)),
-					m('p.stage-transition__line', t(meta.lineKey)),
+					m('p.stage-transition__line', call ? call.line : t(meta.lineKey)),
 				]),
 			],
 		);

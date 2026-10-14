@@ -2,7 +2,7 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import { ensureUser, signInWithHandoff } from '../lib/user';
 import { joinClass, joinSession } from '../lib/callables';
-import { findSessionByCode } from '../lib/teacher';
+import { findSessionByCode, hasSeatInSession } from '../lib/teacher';
 import { paintTheme, rememberTheme } from '../lib/theme';
 import {
 	AgoraDeviceMode,
@@ -103,7 +103,7 @@ export function JoinSession(
 	 * not worth turning them away for: they still get in, just as a newcomer
 	 * with no camp, which is exactly what an anonymous join has always been.
 	 */
-	async function establishIdentity(): Promise<void> {
+	async function establishIdentity(): Promise<string> {
 		// The gate says which world this code belongs to, and it says so a whole
 		// round trip before the session document could. Recording it here is what
 		// lets the square be the right colour on its first frame.
@@ -116,20 +116,22 @@ export function JoinSession(
 		const handoff = m.route.param('handoff');
 		if (handoff) {
 			try {
-				await signInWithHandoff(handoff);
+				const handedOff = await signInWithHandoff(handoff);
 
-				return;
+				return handedOff.uid;
 			} catch (error) {
 				console.error('[Join] Handoff sign-in failed, joining as a newcomer:', error);
 			}
 		}
 
-		await ensureUser();
+		const user = await ensureUser();
+
+		return user.uid;
 	}
 
 	async function lookupSession(): Promise<void> {
 		try {
-			await establishIdentity();
+			const uid = await establishIdentity();
 			const found = await findSessionByCode(code);
 
 			if (!found) {
@@ -146,6 +148,15 @@ export function JoinSession(
 				phase = 'error';
 				errorKey = 'join.session_ended';
 				m.redraw();
+
+				return;
+			}
+
+			// Already seated from this browser: back to the game, no questions.
+			// Asking again would hand the teacher a second "real name" for the
+			// same student and look, to the student, like being thrown out.
+			if (await hasSeatInSession(session.sessionId, uid)) {
+				m.route.set(`/play/${session.sessionId}`);
 
 				return;
 			}

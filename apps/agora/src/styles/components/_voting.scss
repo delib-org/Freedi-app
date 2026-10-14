@@ -72,6 +72,14 @@
 		box-shadow: var(--shadow-card);
 		cursor: pointer;
 		color: var(--text-primary);
+		// A ballot row is tapped, never read-selected or zoomed: no 300ms
+		// double-tap-zoom wait, no text selection or callout stealing a press
+		// on iOS Safari, no grey flash standing in for real feedback.
+		touch-action: manipulation;
+		user-select: none;
+		-webkit-user-select: none;
+		-webkit-touch-callout: none;
+		-webkit-tap-highlight-color: transparent;
 		// transform is the FLIP move: under live reorder a proposal overtaking
 		// another has to be SEEN to overtake. The JS hands the transition back
 		// here (same pairing as the square's stall rows).
@@ -80,10 +88,20 @@
 			box-shadow var(--motion-fast) ease,
 			transform var(--motion-base) var(--ease-camera);
 
-		&:hover:not(:disabled) {
-			transform: translateY(-2px);
-			border-color: var(--border-lantern);
-			box-shadow: var(--shadow-raised);
+		// Only where hover is real. On a phone a :hover sticks to the tapped
+		// row and moves it under the finger; on iOS a hover-driven change can
+		// also cost the first tap its click.
+		@media (hover: hover) {
+			&:hover:not(:disabled) {
+				transform: translateY(-2px);
+				border-color: var(--border-lantern);
+				box-shadow: var(--shadow-raised);
+			}
+		}
+
+		// The press itself answers, before any network does
+		&:active:not(:disabled) {
+			transform: scale(0.98);
 		}
 
 		&:focus-visible {
@@ -92,7 +110,13 @@
 		}
 
 		&:disabled {
-			cursor: progress;
+			cursor: default;
+		}
+
+		// Chosen on this phone, not yet on the server: already MINE, breathing
+		// until the write lands (the hint under the ballot says "saving").
+		&--saving {
+			animation: voting-saving 1.2s ease-in-out infinite;
 		}
 
 		// MINE is a purple surface — the one saturated content object on the
@@ -300,9 +324,31 @@
 		}
 	}
 
+	// A vote that did not save, with its one-tap retry
+	&__failed {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		inline-size: 100%;
+		padding: var(--space-sm) var(--space-md);
+		color: var(--text-primary);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-inline-start: 4px solid var(--peer-deep);
+		border-radius: var(--radius-md);
+	}
+
 	@media (prefers-reduced-motion: reduce) {
-		&__option:hover:not(:disabled) {
+		&__option:hover:not(:disabled),
+		&__option:active:not(:disabled) {
 			transform: none;
+		}
+
+		&__option--saving {
+			animation: none;
+			opacity: 0.85;
 		}
 
 		&__bar {
@@ -799,5 +845,11 @@
 @keyframes voting-pillar-in {
 	from {
 		block-size: 0;
+	}
+}
+
+@keyframes voting-saving {
+	50% {
+		opacity: 0.72;
 	}
 }

@@ -1,6 +1,7 @@
 import type { SupervisorTeacherDetail } from './agoraSupervisorCallables';
 import type { AgoraSessionFlow } from './sessionFlow';
 import type { AgoraTeacherSurface } from './agoraTeacherUsage';
+import type { AgoraLanguagePlace } from './agoraLanguage';
 
 /**
  * Wire contracts of the classroom-hierarchy callables (schools, classes,
@@ -275,6 +276,40 @@ export interface ModerateStatementResponse {
 	/** hide / restore: the resulting state */
 	hidden?: boolean;
 }
+
+/**
+ * `agoraCheckLanguage` — the gate every student text passes before the
+ * client writes it. A refusal has already been charged and filed by the time
+ * the response arrives: the strike is on the participant doc, the words are
+ * on the private thread, and the client's only job is to keep the draft in
+ * the box and say why.
+ */
+export interface CheckLanguageRequest {
+	sessionId: string;
+	text: string;
+	/** An edit of an existing note / answer: the statement the text was for */
+	statementId?: string;
+	/**
+	 * Where the student was writing (see AGORA_LANGUAGE_PLACES), filed with
+	 * the refusal so the teacher's alert can say "in a note", "in an answer".
+	 */
+	place?: AgoraLanguagePlace;
+	/** The stage-plan item the text belonged to, when the writer knows it */
+	itemId?: string;
+}
+
+export type CheckLanguageResponse =
+	| { ok: true }
+	| {
+			ok: false;
+			reason: 'language';
+			/** This student's strikes in the session, this one included */
+			strikes: number;
+			/** Coins actually taken (less than the penalty when the balance floored) */
+			deducted: number;
+			/** The balance after the deduction */
+			pointsTotal: number;
+	  };
 
 /**
  * `agoraRewordQuestion` — the session teacher makes the question in front of

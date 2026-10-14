@@ -15,10 +15,16 @@ import { number, object, optional, picklist, string, InferOutput } from 'valibot
  * HERE — the only place they exist — so the author sees why, and the class
  * never does.
  */
-export const AgoraTeacherMessageFromSchema = picklist(['teacher', 'student']);
+/**
+ * `system`: the language check, filing on the teacher's behalf — the line
+ * reaches both readers of the thread at once, and the teacher never has to
+ * forward what the student already saw.
+ */
+export const AgoraTeacherMessageFromSchema = picklist(['teacher', 'student', 'system']);
 export type AgoraTeacherMessageFrom = InferOutput<typeof AgoraTeacherMessageFromSchema>;
 
-export const AgoraTeacherMessageKindSchema = picklist(['note', 'reply', 'moderation']);
+/** `language`: a refused text — `removedText` holds the words, `text` is empty */
+export const AgoraTeacherMessageKindSchema = picklist(['note', 'reply', 'moderation', 'language']);
 export type AgoraTeacherMessageKind = InferOutput<typeof AgoraTeacherMessageKindSchema>;
 
 export const AgoraModerationActionSchema = picklist(['hidden', 'restored', 'edited']);
@@ -44,6 +50,10 @@ export const AgoraTeacherMessageSchema = object({
 	moderation: optional(AgoraModerationActionSchema),
 	/** hidden: the text taken down; edited: the text before the teacher's wording */
 	removedText: optional(string()),
+	/** language: where the student was writing (AgoraLanguagePlace; a string so new places never break old readers) */
+	languagePlace: optional(string()),
+	/** language: the stage-plan item the refused text belonged to */
+	languageItemId: optional(string()),
 	createdAt: number(),
 });
 

@@ -123,7 +123,7 @@ export const agoraGradeValueIdentification = onCall(
 		}
 		const trimmed = answerText.trim();
 		if (
-			trimmed.length < AGORA_LIMITS.MIN_ANSWER_LENGTH ||
+			trimmed.length < AGORA_LIMITS.MIN_TEXT_LENGTH ||
 			trimmed.length > AGORA_LIMITS.MAX_ANSWER_LENGTH
 		) {
 			throw new HttpsError('invalid-argument', 'Answer length out of range');

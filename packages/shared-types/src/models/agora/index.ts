@@ -27,6 +27,7 @@ export {
 	AGORA_CHALLENGE,
 	AGORA_IDENTITY,
 	AGORA_TEACHER_MESSAGE,
+	isAgoraTextLongEnough,
 } from './agoraConstants';
 
 export type {
@@ -218,6 +219,8 @@ export type {
 } from './agoraCivicCallables';
 
 export type { AgoraValueScore, AgoraPoints, AgoraParticipant } from './agoraParticipant';
+export type { LanguageStrikeOutcome, AgoraLanguagePlace } from './agoraLanguage';
+export { applyLanguageStrike, AGORA_LANGUAGE_PLACES, isAgoraLanguagePlace } from './agoraLanguage';
 export {
 	AgoraValueScoreSchema,
 	AgoraPointsSchema,
@@ -416,6 +419,8 @@ export type {
 	TeacherMessageResponse,
 	ModerateStatementRequest,
 	ModerateStatementResponse,
+	CheckLanguageRequest,
+	CheckLanguageResponse,
 	RewordQuestionRequest,
 	RewordQuestionResponse,
 	TeacherHeartbeatRequest,
@@ -459,3 +464,22 @@ export {
 	AGORA_TEACHER_PRESETS,
 	isAgoraTeacherPreset,
 } from './agoraTeacherMessage';
+
+export { AGORA_LOTTERY } from './agoraConstants';
+export type {
+	AgoraHand,
+	DealNotesMode,
+	DealNotesRequest,
+	DealNotesResponse,
+	DealCandidate,
+	PlanDealInput,
+	PlanDealResult,
+} from './agoraHand';
+export {
+	AgoraHandSchema,
+	createAgoraHandId,
+	lotteryActive,
+	handGoal,
+	orderCandidates,
+	planDeal,
+} from './agoraHand';

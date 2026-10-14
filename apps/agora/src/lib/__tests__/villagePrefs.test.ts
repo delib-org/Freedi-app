@@ -49,3 +49,24 @@ describe('village preferences', () => {
 		},
 	);
 });
+
+describe('village view preference', () => {
+	it('remembers which world this device chose, and is absent until it chooses', async () => {
+		const saved = new Map<string, string>();
+		vi.stubGlobal('localStorage', {
+			getItem: (key: string) => saved.get(key) ?? null,
+			setItem: (key: string, value: string) => saved.set(key, value),
+		});
+		const prefs = await import('../villagePrefs');
+		expect(prefs.villageViewPreference()).toBe(null);
+		prefs.setVillageViewPreference('flat');
+		vi.resetModules();
+		const reloaded = await import('../villagePrefs');
+		expect(reloaded.villageViewPreference()).toBe('flat');
+		reloaded.setVillageViewPreference('village');
+		expect(reloaded.villageViewPreference()).toBe('village');
+		saved.set('agora_village_view', 'nonsense');
+		vi.resetModules();
+		expect((await import('../villagePrefs')).villageViewPreference()).toBe(null);
+	});
+});

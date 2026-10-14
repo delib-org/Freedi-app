@@ -31,13 +31,18 @@ const EditableStatement: FC<EditableStatementProps> = ({
 
 	if (!statement) return null;
 
+	const effectiveVariant = showDescription ? variant : 'statement';
+
 	const handleSave = async (primary: string, secondary?: string) => {
 		try {
 			if (!statement) throw new Error('Statement is undefined');
 
 			const title = variant === 'description' ? statement.statement : primary;
 
-			// Convert secondary text lines to paragraphs
+			// Convert secondary text lines to paragraphs. An emptied body clears the
+			// existing paragraphs — but only when the body was shown for editing;
+			// a title-only editor must leave them alone.
+			const bodyWasEditable = effectiveVariant !== 'statement';
 			const paragraphs = secondary?.trim()
 				? secondary
 						.split('\n')
@@ -48,7 +53,9 @@ const EditableStatement: FC<EditableStatementProps> = ({
 							content: line,
 							order: index,
 						}))
-				: undefined;
+				: bodyWasEditable && statement.paragraphs?.length
+					? []
+					: undefined;
 
 			await updateStatementText(statement, title, paragraphs);
 			onSaveSuccess?.();
@@ -61,7 +68,6 @@ const EditableStatement: FC<EditableStatementProps> = ({
 		}
 	};
 
-	const effectiveVariant = showDescription ? variant : 'statement';
 	const paragraphsText = getParagraphsText(statement.paragraphs);
 
 	return (

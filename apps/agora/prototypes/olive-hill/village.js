@@ -2,6 +2,7 @@ import * as THREE from './vendor/three.module.js';
 import { buildWritingDesk } from './writing-desks.js';
 import { buildCharacters } from './characters-2d.js';
 import { boothLayout, CENTER, PLACES } from './village-layout.js';
+import { roundedPlane, roundedSlab } from './rounded.js';
 
 export { CENTER, boothLayout, villageRadius } from './village-layout.js';
 
@@ -44,7 +45,7 @@ export function buildVillage({ scene, height, manager }) {
 	function signTexture(text, sub = '', locked = false) {
 		const c = document.createElement('canvas'); c.width = 768; c.height = 192; const ctx = c.getContext('2d');
 		ctx.fillStyle = locked ? '#d9d2c2' : '#f8edce'; ctx.fillRect(0, 0, 768, 192);
-		ctx.strokeStyle = locked ? '#8d8c80' : '#686e49'; ctx.lineWidth = 6; ctx.strokeRect(5, 5, 758, 182);
+		ctx.strokeStyle = locked ? '#8d8c80' : '#686e49'; ctx.lineWidth = 6; ctx.beginPath(); ctx.roundRect(5, 5, 758, 182, 30); ctx.stroke();
 		ctx.fillStyle = locked ? '#6f7168' : '#384f36'; ctx.textAlign = 'center'; ctx.direction = 'rtl';
 		let size = 52; ctx.font = `bold ${size}px Arial`;
 		while (ctx.measureText(text).width > 1380 && size > 26) { size -= 2; ctx.font = `bold ${size}px Arial`; }
@@ -57,7 +58,7 @@ export function buildVillage({ scene, height, manager }) {
 		const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; return tex;
 	}
 	function label(g, text, y = 3.7, sub = '') {
-		const sign = make(new THREE.PlaneGeometry(3.5, .87), new THREE.MeshBasicMaterial({ map: signTexture(text, sub), side: THREE.DoubleSide }), g, 0, y, 2.7);
+		const sign = make(roundedPlane(3.5, .87, .16), new THREE.MeshBasicMaterial({ map: signTexture(text, sub), side: THREE.DoubleSide }), g, 0, y, 2.7);
 		sign.userData.setText = (next, nextSub = '', locked = false) => { sign.material.map?.dispose(); sign.material.map = signTexture(next, nextSub, locked); sign.material.needsUpdate = true; };
 		return sign;
 	}
@@ -139,9 +140,9 @@ export function buildVillage({ scene, height, manager }) {
 		const lantern = make(new THREE.SphereGeometry(.16, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffd27a' }), group, 2.2, 3.05, 1.6); lantern.castShadow = false;
 		box(.04, .3, .04, wood, group, 2.2, 3.3, 1.6);
 		// The board on the back wall, facing the square.
-		box(3.6, 2.2, .14, wood, group, 0, 1.95, -2.62);
+		make(roundedSlab(3.6, 2.2, .14, .24), wood, group, 0, 1.95, -2.62);
 		const boardCanvas = document.createElement('canvas'); boardCanvas.width = 1536; boardCanvas.height = 900; const bc = boardCanvas.getContext('2d'); const bt = new THREE.CanvasTexture(boardCanvas); bt.colorSpace = THREE.SRGBColorSpace;
-		const face = make(new THREE.PlaneGeometry(3.4, 2.0), new THREE.MeshBasicMaterial({ map: bt }), group, 0, 1.95, -2.54); face.castShadow = false;
+		const face = make(roundedPlane(3.4, 2.0, .2), new THREE.MeshBasicMaterial({ map: bt }), group, 0, 1.95, -2.54); face.castShadow = false;
 		let lastKey = '';
 		function paint(papers, state = {}) {
 			const key = JSON.stringify([papers, state]); if (key === lastKey) return; lastKey = key;
@@ -155,8 +156,8 @@ export function buildVillage({ scene, height, manager }) {
 			shown.forEach((p, i) => {
 				const x = 40 + (i % 3) * 500, y = 125 + Math.floor(i / 3) * 375;
 				bc.save(); bc.translate(x + 235, y + 165); bc.rotate([-.018, .012, -.01, .016, -.015, .01][i]);
-				bc.fillStyle = '#3a2f2740'; bc.fillRect(-229, -159, 470, 335);
-				bc.fillStyle = p.own ? '#ffffff' : ['#f0dcd6', '#dbe7cf', '#d7dfee', '#ecdcf0'][i % 4]; bc.fillRect(-235, -165, 470, 335);
+				bc.fillStyle = '#3a2f2740'; bc.beginPath(); bc.roundRect(-229, -159, 470, 335, 18); bc.fill();
+				bc.fillStyle = p.own ? '#ffffff' : ['#f0dcd6', '#dbe7cf', '#d7dfee', '#ecdcf0'][i % 4]; bc.beginPath(); bc.roundRect(-235, -165, 470, 335, 18); bc.fill();
 				bc.fillStyle = '#334635'; bc.textAlign = 'right'; bc.font = 'bold 29px Arial';
 				bc.fillText(p.own ? 'הפתק שלי' : (p.author || `פתק ${i + 1}`), 210, -118);
 				bc.font = '29px Arial'; let line = '', row = -68;
@@ -215,10 +216,10 @@ export function buildVillage({ scene, height, manager }) {
 		const g = new THREE.Group(); const s = fixedStations[2];
 		const cx = s.look.x, cz = s.look.z;
 		g.position.set(cx, height(cx, cz) + .05, cz); g.rotation.y = Math.atan2(CENTER.x - cx, CENTER.z - cz); scene.add(g);
-		box(6.2, 3.6, .18, wood, g, 0, 3.4, 0); for (const x of [-2.8, 2.8]) box(.2, 5.4, .2, wood, g, x, 2.7, -.05);
+		make(roundedSlab(6.2, 3.6, .18, .38), wood, g, 0, 3.4, 0); for (const x of [-2.8, 2.8]) box(.2, 5.4, .2, wood, g, x, 2.7, -.05);
 		for (const y of [1.55, 5.25]) box(6.4, .16, .28, wood, g, 0, y, .04);
 		const canvas = document.createElement('canvas'); canvas.width = 2048; canvas.height = 1152; const ctx = canvas.getContext('2d'); const tex = new THREE.CanvasTexture(canvas); tex.colorSpace = THREE.SRGBColorSpace;
-		const face = make(new THREE.PlaneGeometry(6.0, 3.4), new THREE.MeshBasicMaterial({ map: tex }), g, 0, 3.4, .1); face.castShadow = false;
+		const face = make(roundedPlane(6.0, 3.4, .3), new THREE.MeshBasicMaterial({ map: tex }), g, 0, 3.4, .1); face.castShadow = false;
 		solids.push({ x: cx, z: cz, w: 1.4, d: 1.4 });
 		let lastKey = '';
 		function paint(model) {
@@ -393,5 +394,7 @@ export function buildVillage({ scene, height, manager }) {
 		return { group: g, face, paint };
 	})();
 
-	return { booths, installBooths, showPlace, scoreboard, figures: characters.figures, solids, clearings, ready: characters.ready, tick: characters.tick, characters };
+	// The materials a chosen colour set re-tints (see palettes.js); the booths' roofs keep their kind's colour.
+	const paletteMaterials = [{ material: limestone, slot: 'stone' }, { material: wood, slot: 'wood' }, { material: pathMaterial, slot: 'earth' }];
+	return { booths, installBooths, showPlace, scoreboard, figures: characters.figures, solids, clearings, ready: characters.ready, tick: characters.tick, characters, paletteMaterials };
 }

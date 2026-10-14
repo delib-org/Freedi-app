@@ -21,6 +21,7 @@ import {
 	AgoraProposal,
 	HelpedProposal,
 } from '../lib/proposals';
+import { flaggedNotice, isLanguageFlagged } from '../lib/language';
 import {
 	mergeLateArrivals,
 	orderSquare,
@@ -105,6 +106,7 @@ import {
 	AGORA_AI_REVIEW,
 	AGORA_BRIDGING,
 	AGORA_LIMITS,
+	isAgoraTextLongEnough,
 	createAgoraCharacterReviewId,
 	createAgoraThreadKey,
 } from '@freedi/shared-types';
@@ -416,6 +418,9 @@ export function Deliberation(
 
 	let draft = '';
 	let submitting = false;
+	/** The language gate's sentences under my paper and the first desk, or null */
+	let mineNotice: string | null = null;
+	let firstNotice: string | null = null;
 	/** Which stall on the row is unfolded — one at a time, one task at a time */
 	let openStallId = '';
 	/** The stall that just took a suggestion, held for one acknowledgment beat */
@@ -433,6 +438,8 @@ export function Deliberation(
 	let gapPrompt: { proposalId: string; kind: 'gap' | 'keep' } | null = null;
 	let gapDraft = '';
 	let gapSending = false;
+	/** The language gate's sentence under the gap composer, or null */
+	let gapNotice: string | null = null;
 	/** Proposals already offered a prompt this lap — one ask per stall per lap */
 	let gapOffered = new Set<string>();
 	/** Prompts shown this lap — past the cap the square goes quiet (no nagging) */
@@ -495,7 +502,7 @@ export function Deliberation(
 	function gapPromptCard(live: AgoraSession, proposal: AgoraProposal): m.Children {
 		if (gapPrompt?.proposalId !== proposal.statementId) return null;
 		const keep = gapPrompt.kind === 'keep';
-		const ready = gapDraft.trim().length >= AGORA_LIMITS.MIN_ANSWER_LENGTH;
+		const ready = isAgoraTextLongEnough(gapDraft);
 
 		return m(
 			Collapsible,
@@ -530,6 +537,7 @@ export function Deliberation(
 						gapDraft = (event.target as HTMLTextAreaElement).value;
 					},
 				}),
+				gapNotice ? m('p.join__error', { role: 'alert' }, gapNotice) : null,
 				m('.gap-prompt__actions', [
 					m(
 						'button.btn.btn--primary',
@@ -537,6 +545,7 @@ export function Deliberation(
 							disabled: !ready || gapSending,
 							onclick: () => {
 								gapSending = true;
+								gapNotice = null;
 								submitSuggestion(
 									live,
 									proposal,
@@ -556,6 +565,11 @@ export function Deliberation(
 										gapDraft = '';
 									})
 									.catch((error: unknown) => {
+										if (isLanguageFlagged(error)) {
+											gapNotice = flaggedNotice(error);
+
+											return;
+										}
 										console.error('[Delib] Gap-prompt suggestion failed:', error);
 									})
 									.finally(() => {
@@ -990,7 +1004,7 @@ export function Deliberation(
 		// from the foot of every room; with the dock gone the tab says it, and
 		// a dot outranks the feedback count — news I can act on in one tap
 		// beats news I have to read.
-		const unsaved = mineDraftChanged(myProposal);
+		const unsaved = mineDraftDirty(myProposal);
 
 		// The same bar the village carries, minus the village door: a student
 		// who switches views should not have to learn the game's navigation a
@@ -1184,11 +1198,14 @@ export function Deliberation(
 		mineDraftBase = myProposal.statement;
 	}
 
+	/** Does what I have typed differ from what is saved? */
+	function mineDraftDirty(myProposal: AgoraProposal): boolean {
+		return mineDraft.trim() !== myProposal.statement;
+	}
+
 	/** Is what I have typed a real, savable change? */
 	function mineDraftChanged(myProposal: AgoraProposal): boolean {
-		const text = mineDraft.trim();
-
-		return text !== myProposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+		return mineDraftDirty(myProposal) && isAgoraTextLongEnough(mineDraft);
 	}
 
 	/**
@@ -1202,6 +1219,9 @@ export function Deliberation(
 	 */
 	function mineSaveButton(live: AgoraSession, myProposal: AgoraProposal): m.Children {
 		const changed = mineDraftChanged(myProposal);
+		// Edited down below the minimum: still the live action, just not yet
+		// pressable — a "✓ saved" here would claim words that were never saved
+		const dirty = mineDraftDirty(myProposal);
 
 		return m(
 			'button.btn.btn--primary.my-lantern__save',
@@ -1209,6 +1229,7 @@ export function Deliberation(
 				disabled: !changed || submitting,
 				onclick: () => {
 					submitting = true;
+					mineNotice = null;
 					submitProposal(
 						live,
 						initialVnode.attrs.myParticipant.anonName,
@@ -1228,6 +1249,12 @@ export function Deliberation(
 							// achievement and drowned out the real moments.
 						})
 						.catch((error: unknown) => {
+							// Refused by the language gate: the draft stays, the paper says why
+							if (isLanguageFlagged(error)) {
+								mineNotice = flaggedNotice(error);
+
+								return;
+							}
 							console.error('[Delib] Update proposal failed:', error);
 						})
 						.finally(() => {
@@ -1236,7 +1263,7 @@ export function Deliberation(
 						});
 				},
 			},
-			changed ? t('delib.update_proposal') : iconLabel('check', t('delib.update_saved')),
+			dirty ? t('delib.update_proposal') : iconLabel('check', t('delib.update_saved')),
 		);
 	}
 
@@ -1260,9 +1287,9 @@ export function Deliberation(
 		// reason and the words live on the private thread; this only points there.
 		if (myProposal.hidden) return removedPaper(myProposal);
 		seedMineDraft(myProposal);
-		const changed = mineDraftChanged(myProposal);
+		const dirty = mineDraftDirty(myProposal);
 
-		return m('.my-screen__paper', { class: changed ? 'my-screen__paper--dirty' : undefined }, [
+		return m('.my-screen__paper', { class: dirty ? 'my-screen__paper--dirty' : undefined }, [
 			m('.my-screen__paper-row', [
 				m('textarea.my-screen__text', {
 					value: mineDraft,
@@ -1300,6 +1327,7 @@ export function Deliberation(
 					m(Icon, { name: 'edit', size: 18 }),
 				),
 			]),
+			mineNotice ? m('p.join__error', { role: 'alert' }, mineNotice) : null,
 			m(
 				'.my-screen__paper-foot',
 				// Resting, the save is a STATUS and not a control: a greyed button
@@ -1308,7 +1336,7 @@ export function Deliberation(
 				// student's own sentence, not a dead pill under it. The first
 				// keystroke turns the line into the real action, which teaches the
 				// rule at the exact moment it starts to matter.
-				changed
+				dirty
 					? mineSaveButton(live, myProposal)
 					: m(
 							'span.my-screen__saved',
@@ -2474,7 +2502,7 @@ export function Deliberation(
 					]);
 				}
 				{
-					const ready = draft.trim().length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+					const ready = isAgoraTextLongEnough(draft);
 					// The write left this device but the square has never seen it.
 					// The desk STAYS: their words are still theirs, and the game
 					// must not deal them a lap around a proposal nobody has.
@@ -2597,6 +2625,7 @@ export function Deliberation(
 											onclick: () => {
 												submitting = true;
 												firstSaveSlow = false;
+												firstNotice = null;
 												const text = draft.trim();
 												// A write that never lands never rejects either — it
 												// waits in the queue forever. Only a clock can tell
@@ -2620,6 +2649,13 @@ export function Deliberation(
 													})
 													.catch((error: unknown) => {
 														window.clearTimeout(firstSaveTimer);
+														// Refused, not stuck: the draft stays on the desk
+														// and the desk says why — no reload offered
+														if (isLanguageFlagged(error)) {
+															firstNotice = flaggedNotice(error);
+
+															return;
+														}
 														// A rejection is the same news as a hang, and it
 														// arrives sooner: say it now rather than at 8s
 														firstSaveSlow = true;
@@ -2644,6 +2680,7 @@ export function Deliberation(
 												: iconLabel('edit', t('delib.write_first')),
 									),
 								]),
+								firstNotice ? m('p.join__error', { role: 'alert' }, firstNotice) : null,
 								// The stuck-write escape hatch. Reloading is the honest fix
 								// and the only safe one: the queued write lives in memory,
 								// so a fresh page drops it instead of racing a duplicate —

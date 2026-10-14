@@ -20,12 +20,15 @@ export function progressFacts(
 	answers: readonly AgoraProposal[],
 	voterUids: ReadonlySet<string>,
 	ratedByUid?: ReadonlyMap<string, number>,
+	/** The lottery's hand size when notes are dealt (see lib/hands.ts); absent otherwise */
+	handSize?: number,
 ): ProgressFacts {
 	return {
 		proposalAuthors: new Set(proposals.map((proposal) => proposal.creatorId)),
 		answerAuthors: new Set(answers.map((answer) => answer.creatorId)),
 		voterUids,
 		...(ratedByUid ? { ratedByUid } : {}),
+		...(handSize !== undefined ? { handSize } : {}),
 		// A round cannot ask a student to read more classmates than wrote
 		roundSampleCap: Math.max(0, answers.length - 1),
 	};
@@ -46,6 +49,8 @@ export interface ClassPanelAttrs {
 	/** uid → how many classmates' texts this student rated */
 	ratingsByUid: ReadonlyMap<string, number>;
 	onMessage: (studentUid: string) => void;
+	/** This screen is on the wall: pseudonyms only, and say so instead of "no real name" */
+	namesHidden?: boolean;
 }
 
 /** Minutes of silence before a row says so */
@@ -88,7 +93,7 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 							'.class-panel__table',
 							{ role: 'list' },
 							participants.map((participant) => {
-								const real = realNameOf(participant.userId);
+								const real = vnode.attrs.namesHidden ? undefined : realNameOf(participant.userId);
 								const unread = unreadRepliesFor(participant.userId);
 								const idle = idleMs(participant, now);
 
@@ -101,8 +106,23 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 											m(
 												'span.class-panel__real',
 												{ class: real ? undefined : 'class-panel__real--none' },
-												real ?? t('teacher.no_real_name'),
+												real ??
+													t(
+														vnode.attrs.namesHidden
+															? 'teacher.device.names_hidden_row'
+															: 'teacher.no_real_name',
+													),
 											),
+											// On the name, not in the small print: a refused text is
+											// the one fact on this row the teacher must not miss
+											(participant.languageStrikes ?? 0) > 0
+												? m(
+														'span.class-panel__strikes.class-panel__strikes--chip',
+														t('teacher.language_strikes', {
+															n: String(participant.languageStrikes),
+														}),
+													)
+												: null,
 										]),
 										m(
 											'button.btn.btn--sm.btn--secondary.class-panel__message',

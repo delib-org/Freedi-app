@@ -1,6 +1,8 @@
 import { functions, httpsCallable } from './firebase';
 import type {
 	AgoraDeviceMode,
+	DealNotesRequest,
+	DealNotesResponse,
 	AgoraIdentityMode,
 	AgoraSessionFlow,
 	AgoraStage,
@@ -168,6 +170,14 @@ export async function advanceStage(request: AdvanceStageRequest): Promise<Advanc
 		functions,
 		'agoraAdvanceStage',
 	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** A student's hand of classmates' notes at a station — dealt by lottery, server-side */
+export async function dealNotes(request: DealNotesRequest): Promise<DealNotesResponse> {
+	const call = httpsCallable<DealNotesRequest, DealNotesResponse>(functions, 'agoraDealNotes');
 	const result = await call(request);
 
 	return result.data;

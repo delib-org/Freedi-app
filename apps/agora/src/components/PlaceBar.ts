@@ -35,6 +35,13 @@ export interface PlaceBarAttrs {
 	alerts?: Partial<Record<PlaceDestination, string>>;
 	/** An extra BEM modifier — the flat view floats the bar, the village pins it */
 	variant?: string;
+	/**
+	 * A row above the doors, inside the same wrap: the teacher's director row
+	 * on a phone. Inside, not beside, because the village measures this wrap
+	 * to keep the guide's bubble clear of it — whatever rides here lifts the
+	 * bubble by itself.
+	 */
+	lead?: m.Children;
 }
 
 export function PlaceBar(): m.Component<PlaceBarAttrs> {
@@ -55,7 +62,7 @@ export function PlaceBar(): m.Component<PlaceBarAttrs> {
 			clearTimeout(timer);
 		},
 		view(vnode) {
-			const { tabs, onGo, badges, alerts, variant } = vnode.attrs;
+			const { tabs, onGo, badges, alerts, variant, lead } = vnode.attrs;
 
 			return m('.place-bar-wrap', [
 				// The live region exists before it has anything to say, so a screen
@@ -65,6 +72,7 @@ export function PlaceBar(): m.Component<PlaceBarAttrs> {
 					{ role: 'status', class: hint ? '' : 'place-bar__hint--empty' },
 					hint ? t(hint) : '',
 				),
+				lead ? m('.place-bar__lead', lead) : null,
 				m(
 					'nav.place-bar',
 					{

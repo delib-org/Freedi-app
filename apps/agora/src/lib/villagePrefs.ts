@@ -57,3 +57,51 @@ export function isVillageSoundOn(): boolean {
 export function setVillageSound(on: boolean): void {
 	savePreference(SOUND_KEY, on ? 'on' : 'off');
 }
+
+/**
+ * The village's colour set — sky, ground, grass and houses — chosen per
+ * device, like sound and quality. The colours themselves live with the world
+ * (prototypes/olive-hill/palettes.js); the app only names them, and a test
+ * keeps the two lists equal.
+ */
+export const VILLAGE_PALETTES = ['default', 'sunset', 'mediterranean', 'forest', 'desert'] as const;
+export type VillagePalette = (typeof VILLAGE_PALETTES)[number];
+
+const PALETTE_KEY = 'agora_village_palette';
+
+function isVillagePalette(value: string | null): value is VillagePalette {
+	return VILLAGE_PALETTES.some((palette) => palette === value);
+}
+
+export function villagePalette(): VillagePalette {
+	const saved = preference(PALETTE_KEY);
+
+	return isVillagePalette(saved) ? saved : 'default';
+}
+
+export function setVillagePalette(palette: VillagePalette): void {
+	savePreference(PALETTE_KEY, palette);
+}
+
+/**
+ * Which world this device shows: the 3D village or the simple view.
+ *
+ * The room says which world the lesson runs in; a device that chose the
+ * other one keeps that choice across reloads — "simple view" used to be a
+ * variable in the screen's closure, so a refresh put the student back in a
+ * village that had just failed to load, and a student who stepped into the
+ * flat view from the lobby had no door back. Absent = the room's choice.
+ */
+export type VillageView = 'village' | 'flat';
+
+const VIEW_KEY = 'agora_village_view';
+
+export function villageViewPreference(): VillageView | null {
+	const saved = preference(VIEW_KEY);
+
+	return saved === 'village' || saved === 'flat' ? saved : null;
+}
+
+export function setVillageViewPreference(view: VillageView): void {
+	savePreference(VIEW_KEY, view);
+}

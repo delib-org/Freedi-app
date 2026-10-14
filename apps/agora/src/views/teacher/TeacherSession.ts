@@ -11,6 +11,7 @@ import {
 	getCurrentPlanIndex,
 } from '../../lib/session';
 import { advanceStage, setBallotGoalOnly, updateStagePlan } from '../../lib/callables';
+import { activeHandSize } from '../../lib/hands';
 import {
 	getDeliberationState,
 	listenToDeliberation,
@@ -25,8 +26,28 @@ import { Collapsible } from '../../components/Collapsible';
 import { TeacherStrip, type StripAction } from './TeacherStrip';
 import { nowCard } from './NowCard';
 import { TeacherPanel } from './TeacherPanel';
+import { ClassView } from './ClassView';
+import { MoveClassSheet } from './MoveClassSheet';
+import { classProgress } from '../../lib/flows/classProgress';
+import { villagePlace, type VillageCallPlace } from '../../lib/flows/villageRoute';
+import { arrivalPlace, arrivalStatus } from '../../lib/flows/summons';
+import {
+	ADVANCE_TIMEOUT_MS,
+	INITIAL_ADVANCE_LATCH,
+	QUIET_LINE_MS,
+	advanceReduce,
+	type AdvanceEvent,
+} from '../../lib/flows/advanceLatch';
 import { countedSteps, teacherStepLabel } from '../../lib/teacherSteps';
 import { loadTeacherNav, navClass } from '../../lib/teacherNav';
+import { DeviceRoleSheet } from './DeviceRoleSheet';
+import { getDeviceRole, setDeviceRole } from '../../lib/deviceRole';
+import {
+	ARM_MS,
+	decideDeviceRole,
+	nextNeedsArming,
+	type DeviceRole,
+} from '../../lib/flows/deviceRole';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { CountdownTimer } from '../../components/CountdownTimer';
 import { LookPicker } from '../../components/LookPicker';
@@ -70,15 +91,41 @@ import { liveWeighings } from '../../lib/flows/liveTally';
 import { ClassPanel, progressFacts } from './ClassPanel';
 import { MessagesPanel } from './MessagesPanel';
 import { StudentThreadDrawer } from './StudentThreadDrawer';
+import { LanguageAlert } from './LanguageAlert';
 import {
+	getTeacherConsoleState,
 	listenToTeacherConsole,
 	realNameOf,
 	stopTeacherConsole,
 	unreadRepliesTotal,
 } from '../../lib/teacherConsole';
 
-/** The console's side panels: the class, what the class wrote, the settings */
-type Panel = 'class' | 'texts' | 'settings';
+/** The console's side panels: the class, what the class wrote, the settings, the move-class sheet */
+type Panel = 'class' | 'texts' | 'settings' | 'move';
+
+/** The board, or the room as the students see it */
+type ConsoleView = 'board' | 'class';
+
+/** Which view this device opened last — a phone in hand tends to want the class view, a laptop the board */
+const VIEW_KEY = 'agora.teacher.view';
+
+function rememberedView(): ConsoleView | null {
+	try {
+		const view = localStorage.getItem(VIEW_KEY);
+
+		return view === 'class' || view === 'board' ? view : null;
+	} catch {
+		return null;
+	}
+}
+
+function rememberView(view: ConsoleView): void {
+	try {
+		localStorage.setItem(VIEW_KEY, view);
+	} catch {
+		// A forgotten preference costs one tap next time
+	}
+}
 
 /**
  * The teacher's console — one screen.
@@ -97,9 +144,17 @@ type Panel = 'class' | 'texts' | 'settings';
 
 export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
-	let advancing = false;
-	/** The server refused (or never received) the last advance — say so on the panel */
-	let advanceFailed = false;
+	/**
+	 * NEXT's state, for a teacher holding two devices: a press in flight, a
+	 * refusal, or a move the other hand made (the quiet line, not an alert).
+	 */
+	let latch = INITIAL_ADVANCE_LATCH;
+	let advanceTimer: number | undefined;
+	let quietTimer: number | undefined;
+	/** The last call stamp this device has seen on the session doc */
+	let seenCallAt: number | undefined;
+	/** A call the teacher's other device made — the strip's quiet line, in the teacher's words */
+	let calledElsewhere = '';
 	let savingSettings = false;
 	let challenging = false;
 	let savingLook = false;
@@ -108,6 +163,18 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let callingVillage = false;
 	let villageCallSent = false;
 	let userId = '';
+	/** A wall asked to show names: the confirm is open */
+	let roleConfirm = false;
+	/** On a wall NEXT is armed by its first tap until this clock, and fires on the second */
+	let armedUntil = 0;
+	let armTimer: number | undefined;
+	const coarsePointer = window.matchMedia('(pointer: coarse)');
+
+	function chooseRole(role: DeviceRole): void {
+		setDeviceRole(role);
+		roleConfirm = false;
+		m.redraw();
+	}
 	let editingPlan: AgoraStagePlanItem[] | null = null;
 	/** Which panel is over the board, if any — one at a time */
 	let panel: Panel | null = null;
@@ -122,6 +189,27 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let drawerUid: string | null = null;
 	let drawerAbout: string | undefined;
 	let projectorLinkCopied = false;
+	/** The class view: the same console, the same listeners, the room as the students see it */
+	const boardRoute = `/teach/session/${sessionId}`;
+	const classRoute = `${boardRoute}/class`;
+	/** ≤600px the strip is a director row inside the village's bar, not the fixed bottom bar */
+	const phoneQuery = window.matchMedia('(max-width: 600px)');
+	let phone = phoneQuery.matches;
+	const onPhoneChange = (event: MediaQueryListEvent): void => {
+		phone = event.matches;
+		m.redraw();
+	};
+	phoneQuery.addEventListener('change', onPhoneChange);
+
+	function inClassView(): boolean {
+		return m.route.get().split('?')[0] === classRoute;
+	}
+
+	/** Flip the view. Both routes render this same keyed component, so the listeners survive. */
+	function showView(view: ConsoleView): void {
+		rememberView(view);
+		m.route.set(view === 'class' ? classRoute : boardRoute);
+	}
 
 	function openDrawer(studentUid: string, aboutStatementId?: string): void {
 		drawerUid = studentUid;
@@ -211,12 +299,28 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			});
 	}
 
-	/** Every student's village walks to one place — the room's station or the council */
-	function callClass(place: 'current' | 'council'): void {
+	/** The stamp of the last call THIS device made — a newer one came from the teacher's other device */
+	let sentCallAt: number | undefined;
+	/** Where the class was last called, in the teacher's words — the sheet's status line */
+	let lastCalledLabel = '';
+	/** Where the class view is standing (the board always stands with the class) */
+	let watchViewing: number | null = null;
+	/** Bumped to walk the class view back to the class's station */
+	let walkRequest = 0;
+
+	/** Every student's village walks to one place — the room's station, the council, any opened station */
+	function callClass(place: VillageCallPlace, label = ''): void {
 		if (callingVillage) return;
 		callingVillage = true;
-		callVillage(sessionId, place)
-			.then(() => {
+		lastCalledLabel = label;
+		// The stamp never falls below the station's server time, so every
+		// phone reads the call as newer than the station it stands on
+		const { session } = getSessionState();
+		const roomItem = getStagePlan()[getCurrentPlanIndex()];
+		const openedAt = roomItem ? session?.stageState?.[roomItem.itemId]?.openedAt : undefined;
+		callVillage(sessionId, place, openedAt)
+			.then((at) => {
+				sentCallAt = at;
 				villageCallSent = true;
 				window.setTimeout(() => {
 					villageCallSent = false;
@@ -285,22 +389,45 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 		end: () => runChallenge(() => endRound(sessionId)),
 	};
 
+	/** The quiet "moved from your other device" line stays long enough to be read, then goes */
+	function dispatchLatch(event: AdvanceEvent): void {
+		const next = advanceReduce(latch, event);
+		if (next === latch) return;
+		if (next.movedElsewhere && !latch.movedElsewhere) {
+			calledElsewhere = '';
+			window.clearTimeout(quietTimer);
+			quietTimer = window.setTimeout(() => {
+				dispatchLatch({ kind: 'dismiss' });
+				m.redraw();
+			}, QUIET_LINE_MS);
+		}
+		latch = next;
+	}
+
 	function handleAdvance(toIndex: number): void {
-		if (advancing) return;
-		advancing = true;
-		advanceFailed = false;
+		if (latch.advancing) return;
+		dispatchLatch({ kind: 'press', toIndex, now: Date.now() });
+		window.clearTimeout(advanceTimer);
+		advanceTimer = window.setTimeout(() => {
+			dispatchLatch({ kind: 'tick', now: Date.now() });
+			m.redraw();
+		}, ADVANCE_TIMEOUT_MS);
 		advanceStage({ sessionId, toIndex })
-			.then(() => {
-				advanceFailed = false;
-			})
+			.then(() => dispatchLatch({ kind: 'ok' }))
 			.catch((error: unknown) => {
-				// A rejection swallowed into the console leaves the teacher
-				// pressing a button that does nothing — the panel must say it.
-				advanceFailed = true;
-				console.error('[Teacher] Advance stage failed:', error);
+				// `stale` (failed-precondition) means the room already moved on —
+				// the teacher's other device pressed first — unless the room is
+				// still behind, which is a real refusal the strip must say.
+				const code = (error as { code?: string } | null)?.code;
+				if (code === 'functions/failed-precondition') {
+					dispatchLatch({ kind: 'stale', stageIndex: getCurrentPlanIndex() });
+				} else {
+					dispatchLatch({ kind: 'error' });
+					console.error('[Teacher] Advance stage failed:', error);
+				}
 			})
 			.finally(() => {
-				advancing = false;
+				window.clearTimeout(advanceTimer);
 				m.redraw();
 			});
 	}
@@ -325,6 +452,10 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 	return {
 		onremove() {
+			window.clearTimeout(advanceTimer);
+			window.clearTimeout(quietTimer);
+			window.clearTimeout(armTimer);
+			phoneQuery.removeEventListener('change', onPhoneChange);
 			stopListening();
 			stopDeliberationListeners();
 			stopVotingListeners();
@@ -338,10 +469,31 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				// Every stage: the Messages tab reads answers and threads from the
 				// lobby on, and the results recap projects the same board
 				listenToDeliberation(sessionId, userId);
-				listenToTeacherConsole(sessionId, userId);
 			}
 
 			const { session, participants, loading, error } = getSessionState();
+
+			// Which of the teacher's screens this is. Decided every render (it is
+			// pure and cheap) so the answer to the sheet takes effect at once; a
+			// wall — including an unanswered laptop — never subscribes to the names.
+			const namesCollected =
+				!!session &&
+				session.sessionMode !== AgoraSessionMode.civic &&
+				session.collectRealNames !== false;
+			const roleDecision = decideDeviceRole({
+				stored: getDeviceRole(),
+				coarsePointer: coarsePointer.matches,
+				viewportWidth: window.innerWidth,
+				namesCollected,
+			});
+			const role: DeviceRole = roleDecision.role;
+			const privateDevice = role === 'private';
+			if (userId && session) {
+				listenToTeacherConsole(sessionId, userId, {
+					identities: privateDevice,
+					threads: privateDevice,
+				});
+			}
 
 			if (loading || (!session && !error)) {
 				return m(
@@ -373,6 +525,31 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const currentIndex = getCurrentPlanIndex();
 			const current = plan[currentIndex];
 			const next = plan[currentIndex + 1] ?? null;
+			// Every snapshot feeds the latch: a pointer that moved without this
+			// device pressing moved from the teacher's other device
+			dispatchLatch({ kind: 'snapshot', stageIndex: currentIndex });
+			// The same for a call: a stamp this device did not write
+			const liveCall = session.villageCall;
+			if (liveCall && liveCall.at !== seenCallAt) {
+				const first = seenCallAt === undefined;
+				seenCallAt = liveCall.at;
+				if (!first && liveCall.at !== sentCallAt) {
+					// The newer event is the one to say; the quiet move line yields
+					dispatchLatch({ kind: 'dismiss' });
+					const boothItem = plan.find((item) => `booth:${item.itemId}` === liveCall.place);
+					calledElsewhere =
+						liveCall.place === 'council'
+							? t('village.call_council')
+							: liveCall.place === 'current' || !boothItem
+								? current.title?.trim() || teacherStepLabel(current)
+								: boothItem.title?.trim() || teacherStepLabel(boothItem);
+					window.clearTimeout(quietTimer);
+					quietTimer = window.setTimeout(() => {
+						calledElsewhere = '';
+						m.redraw();
+					}, QUIET_LINE_MS);
+				}
+			}
 			const nextIndex = currentIndex + 1;
 			const planOwnsVoting = Boolean(session.stagePlan && session.stagePlan.length > 0);
 			const topic = getTopicPackage(session.topicPackageId);
@@ -426,14 +603,47 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					roundRatedByUid.set(rater.evaluatorId, (roundRatedByUid.get(rater.evaluatorId) ?? 0) + 1);
 				}
 			}
-			const facts = progressFacts(proposals, answers, voterUids, roundRatedByUid);
+			const facts = progressFacts(proposals, answers, voterUids, roundRatedByUid, activeHandSize());
 			const unread = unreadRepliesTotal();
 			const ended = current.stage === AgoraStage.ended;
 			const atResults = current.stage === AgoraStage.results || ended;
+			const classView = inClassView();
+			// The console opens in the view this device used last. Checked on
+			// render, not at construction: the bare route reached from the class
+			// route re-renders this same keyed instance and constructs nothing.
+			// Choosing the board stores "board" first, so there is no loop.
+			if (!classView && rememberedView() === 'class') {
+				m.route.set(classRoute, undefined, { replace: true });
+			}
+
+			// Board ⇄ Class view: on the bar at every width, never folded into ≡
+			const viewButton = (view: ConsoleView, icon: 'square' | 'watch', label: string): m.Children =>
+				m(
+					'button.teacher-nav__view-btn',
+					{
+						type: 'button',
+						'aria-pressed': String(classView === (view === 'class')),
+						'data-view': view,
+						title: label,
+						onclick: () => {
+							if ((view === 'class') !== classView) showView(view);
+						},
+					},
+					[m(Icon, { name: icon, size: 18 }), m('span.teacher-nav__view-label', label)],
+				);
+			const segment = m(
+				'.teacher-nav__view',
+				{ role: 'group', 'aria-label': t('teacher.view.switch_aria') },
+				[
+					viewButton('board', 'square', t('teacher.view.board')),
+					viewButton('class', 'watch', t('teacher.view.class')),
+				],
+			);
 
 			// The header: the lesson's name, the class, the code — and on a phone
 			// the projector and the cog fold into the menu, where they still fit
 			const menuItems: TeacherNavMenuItem[] = [
+				{ icon: 'flag', label: t('teacher.menu.move_class'), onSelect: () => openPanel('move') },
 				{ icon: 'era', label: t('teacher.open_projector'), onSelect: openProjector },
 				{ icon: 'cog', label: t('teacher.settings_title'), onSelect: () => openPanel('settings') },
 			];
@@ -447,7 +657,37 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				onBack: () => m.route.set(session.classId ? `/teach/class/${session.classId}` : '/teach'),
 				code: session.code,
 				menuItems,
+				segment,
 				trailing: [
+					// The device's role, always visible: a wall must be unmistakable.
+					// Private → wall is one tap; wall → private asks first.
+					namesCollected
+						? m(
+								'button.teacher-nav__role',
+								{
+									type: 'button',
+									class: privateDevice ? 'teacher-nav__role--private' : 'teacher-nav__role--wall',
+									'data-role': role,
+									title: t(
+										privateDevice ? 'teacher.device.private_chip' : 'teacher.device.wall_chip',
+									),
+									'aria-label': t(
+										privateDevice ? 'teacher.device.private_chip' : 'teacher.device.wall_chip',
+									),
+									onclick: () => {
+										if (privateDevice) chooseRole('wall');
+										else roleConfirm = true;
+									},
+								},
+								[
+									m(Icon, { name: privateDevice ? 'people' : 'era', size: 16 }),
+									m(
+										'span.teacher-nav__role-text',
+										t(privateDevice ? 'teacher.device.private_chip' : 'teacher.device.wall_chip'),
+									),
+								],
+							)
+						: null,
 					m(
 						'button.btn.btn--secondary.btn--sm.teacher-nav__projector',
 						{ type: 'button', title: t('teacher.projector_hint'), onclick: openProjector },
@@ -472,27 +712,101 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			});
 
 			// The one button. Its label says what it opens, in the teacher's words.
+			// On a wall the first tap arms NEXT and the second opens — a stray
+			// touch on a projected laptop must not move the whole class
+			const armed = nextNeedsArming(role) && Date.now() < armedUntil;
+			const nextLabel =
+				current.stage === AgoraStage.lobby
+					? t('teacher.start_journey')
+					: !next || next.stage === AgoraStage.ended
+						? t('teacher.end_game')
+						: t('teacher.open_next', { stage: teacherStepLabel(next) });
+			const pressNext = (): void => {
+				if (!nextNeedsArming(role) || armed) {
+					armedUntil = 0;
+					window.clearTimeout(armTimer);
+					handleAdvance(nextIndex);
+
+					return;
+				}
+				armedUntil = Date.now() + ARM_MS;
+				window.clearTimeout(armTimer);
+				armTimer = window.setTimeout(() => {
+					armedUntil = 0;
+					m.redraw();
+				}, ARM_MS);
+			};
 			const action: StripAction | null = ended
 				? null
 				: {
-						label:
-							current.stage === AgoraStage.lobby
-								? t('teacher.start_journey')
-								: !next || next.stage === AgoraStage.ended
-									? t('teacher.end_game')
-									: t('teacher.open_next', { stage: teacherStepLabel(next) }),
-						onclick: () => handleAdvance(nextIndex),
+						label: armed ? t('teacher.bar.confirm_next', { label: nextLabel }) : nextLabel,
+						onclick: pressNext,
 						disabled: !next || (current.stage === AgoraStage.lobby && participants.length === 0),
-						busy: advancing,
+						busy: latch.advancing,
 					};
-			const strip = m(TeacherStrip, {
+			// The pennant: where the class is, in the teacher's words, and the
+			// door to moving it. The sheet lists the lesson's stations.
+			const stationLabel = (item: AgoraStagePlanItem): string =>
+				item.title?.trim() || teacherStepLabel(item);
+			// Who has reached the place the class was last sent to — the phones'
+			// own reports (`whereabouts`), read for a standing call's target or,
+			// with no call standing, for the room's station
+			const roomOpenedAt = session.stageState?.[current.itemId]?.openedAt;
+			const arrivalTarget = arrivalPlace(session.villageCall, roomOpenedAt, plan, currentIndex);
+			const arrivals = arrivalTarget
+				? (() => {
+						const status = arrivalStatus(participants, arrivalTarget.place);
+						const boothItem = plan.find((item) => `booth:${item.itemId}` === arrivalTarget.place);
+						const label =
+							arrivalTarget.place === 'council'
+								? t('village.place.council')
+								: arrivalTarget.place === 'library'
+									? t('village.place.library')
+									: stationLabel(boothItem ?? current);
+
+						return {
+							label,
+							arrived: status.arrived,
+							total: status.total,
+							waiting: status.waiting,
+							fromCall: arrivalTarget.fromCall,
+							place: arrivalTarget.place,
+						};
+					})()
+				: null;
+			const arrivalsLine =
+				arrivals && arrivals.fromCall && arrivals.total > 0 && arrivals.arrived < arrivals.total
+					? t('teacher.bar.arrived', {
+							n: arrivals.arrived,
+							total: arrivals.total,
+							station: arrivals.label,
+						})
+					: undefined;
+			const stripAttrs = {
 				steps,
 				currentIndex: stepIndex,
 				action,
 				reportRoute: `/teach/report/${sessionId}`,
-				failed: advanceFailed,
+				failed: latch.failed,
 				onRetry: () => handleAdvance(nextIndex),
-			});
+				status: calledElsewhere
+					? t('teacher.bar.called_elsewhere', { place: calledElsewhere })
+					: latch.movedElsewhere
+						? t('teacher.bar.moved_elsewhere')
+						: arrivalsLine,
+				pennant: ended
+					? undefined
+					: {
+							label: stationLabel(current),
+							open: panel === 'move',
+							onOpen: () => openPanel('move'),
+						},
+			};
+			// On a phone in the class view the strip rides inside the village's
+			// bar as the director row; anywhere else it is the strip it always was
+			const directorRow = classView && phone;
+			const strip = directorRow ? null : m(TeacherStrip, stripAttrs);
+			const director = directorRow ? m(TeacherStrip, { ...stripAttrs, director: true }) : undefined;
 
 			// The two doors beside the board: who is here, and what they wrote
 			const chip = (
@@ -738,6 +1052,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								facts,
 								ratingsByUid,
 								onMessage: openDrawer,
+								namesHidden: !privateDevice,
 							}),
 						)
 					: panel === 'texts'
@@ -748,7 +1063,10 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									title: t('teacher.panel_texts'),
 									onClose: closePanel,
 								},
-								m(MessagesPanel, { session, participants, onMessage: openDrawer }),
+								// The students' private words do not belong on a wall
+								privateDevice
+									? m(MessagesPanel, { session, participants, onMessage: openDrawer })
+									: m('p.home-explanation.teacher-panel__wall', t('teacher.device.open_on_phone')),
 							)
 						: panel === 'settings'
 							? m(
@@ -761,7 +1079,69 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									},
 									settingsBody,
 								)
-							: null;
+							: panel === 'move'
+								? m(MoveClassSheet, {
+										plan,
+										currentIndex,
+										viewingIndex: classView && watchViewing !== null ? watchViewing : currentIndex,
+										currentProgress: {
+											done: classProgress(current, participants, facts).doneCount,
+											total: participants.length,
+										},
+										navigation: session.villageNavigation ?? 'teacher',
+										savingNavigation,
+										onNavigation: saveVillageNavigation,
+										onWalkMe: () => {
+											walkRequest++;
+										},
+										onGather: (place) =>
+											callClass(
+												place,
+												place === 'council'
+													? t('village.call_council')
+													: place === 'current'
+														? stationLabel(current)
+														: stationLabel(
+																plan.find((item) => `booth:${item.itemId}` === place) ??
+																	plan[currentIndex],
+															),
+											),
+										onAdvance: handleAdvance,
+										calling: callingVillage,
+										advancing: latch.advancing,
+										status: villageCallSent
+											? t('teacher.move.gathered', { station: lastCalledLabel })
+											: undefined,
+										arrivals: arrivals
+											? {
+													label: arrivals.label,
+													arrived: arrivals.arrived,
+													total: arrivals.total,
+													waiting: arrivals.waiting,
+													onRecall: () =>
+														callClass(
+															arrivals.place === villagePlace(current)
+																? 'current'
+																: (arrivals.place as VillageCallPlace),
+															arrivals.label,
+														),
+												}
+											: undefined,
+										onClose: closePanel,
+									})
+								: null;
+
+			// A refused text, the moment it is refused — above the board and the
+			// class view alike, until the teacher says "got it"
+			const languageAlert = m(LanguageAlert, {
+				sessionId,
+				privateDevice,
+				threads: getTeacherConsoleState().threads,
+				participants,
+				plan,
+				realNameOf,
+				onOpen: openDrawer,
+			});
 
 			const drawerParticipant = drawerUid
 				? participants.find((participant) => participant.userId === drawerUid)
@@ -773,6 +1153,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							studentUid: drawerUid,
 							anonName: drawerParticipant.anonName,
 							realName: realNameOf(drawerUid),
+							languageStrikes: drawerParticipant.languageStrikes,
 							aboutStatementId: drawerAbout,
 							onClose: () => {
 								drawerUid = null;
@@ -780,6 +1161,51 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							},
 						})
 					: null;
+
+			// "Where is this screen?" — before anything with a name on it; and the
+			// confirm when a wall asks to show names after all
+			const roleSheet =
+				roleDecision.ask || roleConfirm
+					? m(DeviceRoleSheet, {
+							mode: roleConfirm ? 'confirm' : 'ask',
+							onChoose: chooseRole,
+							onKeep: () => {
+								roleConfirm = false;
+							},
+						})
+					: null;
+			const wallClass = privateDevice ? '' : '.teacher-console--wall';
+
+			// The class view: the room as the students see it, under the same bar
+			// and strip, with the same panels and drawer over it
+			if (classView) {
+				return m(`.shell.shell--wide.teacher-console.teacher-console--watch${wallClass}`, [
+					navBar,
+					strip,
+					m(
+						'.teacher-watch',
+						m(ClassView, {
+							sessionId,
+							userId,
+							session,
+							topic,
+							participants,
+							director,
+							messages: { unread, onOpen: () => openPanel('texts') },
+							nameOf: privateDevice ? realNameOf : undefined,
+							onAuthor: (uid: string) => openDrawer(uid),
+							onViewing: (index: number) => {
+								watchViewing = index;
+							},
+							walkRequest,
+						}),
+					),
+					sidePanel,
+					languageAlert,
+					drawer,
+					roleSheet,
+				]);
+			}
 
 			// Results/ended: the teacher projects the same transformed map + score
 			if (atResults) {
@@ -790,7 +1216,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					);
 				}
 
-				return m('.shell.shell--wide.teacher-console', [
+				return m(`.shell.shell--wide.teacher-console${wallClass}`, [
 					navBar,
 					strip,
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
@@ -798,11 +1224,13 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						m(Results, { session, topic }),
 					]),
 					sidePanel,
+					languageAlert,
 					drawer,
+					roleSheet,
 				]);
 			}
 
-			return m('.shell.shell--wide.teacher-console', [
+			return m(`.shell.shell--wide.teacher-console${wallClass}`, [
 				// On a phone the strip is the last thing in tab order; a keyboard
 				// or switch user gets a door straight to it
 				m('a.skip-link', { href: '#teacher-next' }, t('teacher.skip_to_next')),
@@ -819,6 +1247,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						code: session.code,
 						onMessage: openDrawer,
 						now: Date.now(),
+						nameOf: privateDevice ? realNameOf : undefined,
 					}),
 
 					inQuestion
@@ -872,7 +1301,9 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					peek,
 				]),
 				sidePanel,
+				languageAlert,
 				drawer,
+				roleSheet,
 			]);
 		},
 	};

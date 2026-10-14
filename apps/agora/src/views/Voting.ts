@@ -5,6 +5,8 @@ import { CarriedContext } from '../components/CarriedContext';
 import { ChallengeCards } from '../components/ChallengeCards';
 import { standingBar } from '../components/StandingBar';
 import { castVote, getVotingState, totalVotes } from '../lib/voting';
+import { createBallotSender, type BallotChoice } from '../lib/flows/ballotTap';
+import { logError } from '@freedi/shared-utils';
 import { getCurrentPlanIndex, getSessionState } from '../lib/session';
 import { challengerCandidate, getGame, passTurn, pitchChallenger } from '../lib/votingGame';
 import {
@@ -62,7 +64,31 @@ export interface VotingAttrs {
  * everyone.
  */
 export function Voting(): m.Component<VotingAttrs> {
+	/** A challenge-round move in the air (pitch / pass) */
 	let saving = false;
+	/** The session of the latest render — what the ballot's writes go to */
+	let currentSession: AgoraSession | null = null;
+
+	/**
+	 * The ballot's own taps: shown the moment the finger lifts, written one at
+	 * a time, last tap wins (see flows/ballotTap.ts). The options are never
+	 * disabled while a write is in the air — on a slow connection that was a
+	 * ballot that ignored the student and then, much later, "suddenly" voted.
+	 */
+	const ballot = createBallotSender({
+		send: (choice: BallotChoice) => {
+			if (!currentSession) return Promise.reject(new Error('No session'));
+
+			return castVote(currentSession, choice);
+		},
+		onChange: () => m.redraw(),
+		onError: (error: unknown, choice: BallotChoice) =>
+			logError(error, {
+				operation: 'agora.voting.castVote',
+				statementId: currentSession?.challengeQuestionId,
+				metadata: { sessionId: currentSession?.sessionId, choice },
+			}),
+	});
 
 	const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 	/** statementId → where its row last sat, for the FLIP move */
@@ -103,10 +129,16 @@ export function Voting(): m.Component<VotingAttrs> {
 	return {
 		view(vnode) {
 			const { session, userId, board = false, projector = false } = vnode.attrs;
+			currentSession = session;
 			// The projector is never a ballot, whatever the caller said
 			const readOnly = board || vnode.attrs.readOnly === true;
 			const candidates: VotingCandidate[] = session.voting?.candidates ?? [];
-			const { selections, myVoteStatementId, voterUids, loaded } = getVotingState();
+			const { selections, voterUids, loaded } = getVotingState();
+			// What the student sees as their vote: the tap they just made, until
+			// the server has it, and the server's copy from then on.
+			const confirmedVote = getVotingState().myVoteStatementId;
+			const myVoteStatementId = board ? null : ballot.displayed(confirmedVote);
+			const voteSaving = !board && ballot.isSaving();
 			const total = totalVotes();
 
 			const settings = session.votingSettings;
@@ -184,16 +216,8 @@ export function Voting(): m.Component<VotingAttrs> {
 			}
 
 			function vote(statementId: string): void {
-				if (saving || readOnly) return;
-				saving = true;
-				castVote(session, statementId)
-					.catch((error: unknown) => {
-						console.error('[Voting] Casting the vote failed:', error);
-					})
-					.finally(() => {
-						saving = false;
-						m.redraw();
-					});
+				if (readOnly) return;
+				ballot.tap(statementId, confirmedVote);
 			}
 
 			/** A move in the challenge round, with the same in-flight latch as a vote. */
@@ -220,6 +244,7 @@ export function Voting(): m.Component<VotingAttrs> {
 				const count = selections[statementId] ?? 0;
 				// The projector has no vote of its own to mark
 				const mine = !board && myVoteStatementId === statementId;
+				const pending = mine && voteSaving;
 				// Before the first snapshot every bar would read 0% — show
 				// no bar at all rather than a confident wrong number.
 				const share = loaded && total > 0 ? Math.round((count / total) * 100) : 0;
@@ -228,10 +253,18 @@ export function Voting(): m.Component<VotingAttrs> {
 					board ? 'div.voting__option.voting__option--static' : 'button.voting__option',
 					{
 						key: statementId,
+						type: board ? undefined : 'button',
 						class:
-							[mine ? 'voting__option--mine' : '', extraClass ?? ''].join(' ').trim() || undefined,
+							[
+								mine ? 'voting__option--mine' : '',
+								pending ? 'voting__option--saving' : '',
+								extraClass ?? '',
+							]
+								.join(' ')
+								.trim() || undefined,
 						'aria-pressed': board ? undefined : mine ? 'true' : 'false',
-						disabled: board ? undefined : saving || readOnly,
+						'aria-busy': pending ? 'true' : undefined,
+						disabled: board ? undefined : readOnly,
 						onclick: board ? undefined : () => vote(statementId),
 						oncreate: (node: m.VnodeDOM) =>
 							rowOffsets.set(statementId, (node.dom as HTMLElement).offsetTop),
@@ -276,21 +309,25 @@ export function Voting(): m.Component<VotingAttrs> {
 			): m.Children => {
 				const count = selections[statementId] ?? 0;
 				const mine = !board && myVoteStatementId === statementId;
+				const pending = mine && voteSaving;
 				const share = loaded && total > 0 ? Math.round((count / total) * 100) : 0;
 
 				return m(
 					board ? 'div.voting__option.voting__option--static' : 'button.voting__option',
 					{
 						key: statementId,
+						type: board ? undefined : 'button',
 						class: [
 							'voting__option--standing',
 							`voting__option--${tone}`,
 							mine ? 'voting__option--mine' : '',
+							pending ? 'voting__option--saving' : '',
 						]
 							.join(' ')
 							.trim(),
 						'aria-pressed': board ? undefined : mine ? 'true' : 'false',
-						disabled: board ? undefined : saving || readOnly,
+						'aria-busy': pending ? 'true' : undefined,
+						disabled: board ? undefined : readOnly,
 						onclick: board ? undefined : () => vote(statementId),
 					},
 					standingBar({ label, count, share, showCount: showResults && loaded }),
@@ -355,6 +392,16 @@ export function Voting(): m.Component<VotingAttrs> {
 				// no explanation — this screen has no HUD, so the stalled-write
 				// line has to live here itself.
 				readOnly ? null : stalledBanner(),
+				!readOnly && ballot.hasFailed()
+					? m('.voting__failed', { role: 'alert' }, [
+							m('span', t('voting.save_failed')),
+							m(
+								'button.btn.btn--secondary.btn--sm',
+								{ type: 'button', onclick: () => ballot.retry() },
+								t('voting.retry'),
+							),
+						])
+					: null,
 
 				// The round runs above the ballot: the desk, the wait, the reveal.
 				challengeCards(),
@@ -402,7 +449,13 @@ export function Voting(): m.Component<VotingAttrs> {
 							: t('voting.total_votes', { n: String(votedCount) }),
 					),
 				]),
-				myVoteStatementId && !readOnly ? m('p.voting__hint', t('voting.change_hint')) : null,
+				myVoteStatementId && !readOnly
+					? m(
+							'p.voting__hint',
+							{ 'aria-live': 'polite' },
+							t(voteSaving ? 'voting.saving' : 'voting.change_hint'),
+						)
+					: null,
 				!showResults ? m('p.voting__hint', t('voting.results_hidden')) : null,
 			]);
 		},

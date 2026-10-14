@@ -33,6 +33,27 @@ const facts = {
 };
 
 describe('participantProgress — the rounds', () => {
+	it('asks for the lottery hand, not the round sample, when notes are dealt', () => {
+		const dealt = {
+			...facts,
+			answerAuthors: new Set(['u']),
+			ratedByUid: new Map([['u', 5]]),
+			roundSampleCap: 20,
+			handSize: 5,
+		};
+		// needs/vision deal 6 by the round's own sample; a hand of 5 is the goal now
+		expect(participantProgress(participant(), round('needs'), dealt)).toEqual({
+			done: true,
+			label: 'check',
+		});
+		expect(
+			participantProgress(participant(), round('needs'), {
+				...dealt,
+				ratedByUid: new Map([['u', 4]]),
+			}),
+		).toEqual({ done: false, label: { done: 5, total: 6 } });
+	});
+
 	it('is one text plus the dealt sample, capped by how many classmates wrote', () => {
 		const roundFacts = {
 			...facts,

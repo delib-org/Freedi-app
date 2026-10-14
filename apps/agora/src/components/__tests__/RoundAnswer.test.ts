@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { describe, expect, it, vi } from 'vitest';
+import { AGORA_LIMITS } from '@freedi/shared-types';
 import { RoundAnswer, type RoundAnswerAttrs } from '../RoundAnswer';
 import { t } from '../../lib/i18n';
 
@@ -52,6 +53,17 @@ describe('round answer reading and editing', () => {
 		const tree = render();
 		expect(tree.find((node) => node.tag === 'textarea')?.attrs?.value).toBe('');
 		expect(tree.find((node) => node.tag === 'button')?.attrs?.disabled).toBe(true);
+	});
+
+	it('keeps Send disabled until the trimmed text reaches the minimum, then enables it', () => {
+		const short = 'x'.repeat(AGORA_LIMITS.MIN_TEXT_LENGTH - 1);
+		const enough = 'x'.repeat(AGORA_LIMITS.MIN_TEXT_LENGTH);
+		const sendFor = (text: string): Node | undefined =>
+			render({ text, changed: true }).find((node) => node.tag === 'button');
+		expect(sendFor(short)?.attrs?.disabled).toBe(true);
+		expect(sendFor(`   ${short}   `)?.attrs?.disabled).toBe(true);
+		expect(sendFor(enough)?.attrs?.disabled).toBe(false);
+		expect(sendFor('שלום')?.attrs?.disabled).toBe(false);
 	});
 
 	it('shows confirmed words and an explicit edit action instead of a disabled form', () => {

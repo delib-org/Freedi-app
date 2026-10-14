@@ -46,6 +46,12 @@ export interface ProgressFacts {
 	ratedByUid?: ReadonlyMap<string, number>;
 	/** How many classmates' texts the current round deals; absent = the round's own sample */
 	roundSampleCap?: number;
+	/**
+	 * The lottery's hand size when the class is large enough to deal notes
+	 * (AGORA_LOTTERY.HAND_SIZE); absent when everyone reads everyone. A
+	 * student dealt five cannot be asked to read six.
+	 */
+	handSize?: number;
 }
 
 const DONE: StageProgress = { done: true, label: 'check' };
@@ -69,7 +75,11 @@ export function participantProgress(
 		const spec = roundSpecOf(item);
 		if (!spec) return facts.answerAuthors.has(participant.userId) ? DONE : NOT_DONE;
 		// A round: the text is in AND the dealt sample is read
-		const sample = Math.min(spec.sample, facts.roundSampleCap ?? Number.POSITIVE_INFINITY);
+		const sample = Math.min(
+			spec.sample,
+			facts.roundSampleCap ?? Number.POSITIVE_INFINITY,
+			facts.handSize ?? Number.POSITIVE_INFINITY,
+		);
 		const { done, total } = roundProgress(
 			facts.answerAuthors.has(participant.userId),
 			facts.ratedByUid?.get(participant.userId) ?? 0,

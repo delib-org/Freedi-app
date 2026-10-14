@@ -33,6 +33,7 @@ import { initAuth, completeRedirectSignIn, getUserState } from './lib/user';
 import { initI18n } from './lib/i18n';
 import { initInstallCapture } from './lib/install';
 import { getSessionState } from './lib/session';
+import { identitiesSubscribed } from './lib/teacherConsole';
 import { applyRememberedTheme } from './lib/theme';
 import { Home } from './views/Home';
 import { JoinSession } from './views/JoinSession';
@@ -115,11 +116,13 @@ if (import.meta.env.DEV && 'serviceWorker' in navigator) {
 // Dev-only introspection for e2e debugging
 if (import.meta.env.DEV) {
 	interface AgoraDebugWindow {
-		__agoraDebug?: () => { user: unknown; session: unknown };
+		__agoraDebug?: () => { user: unknown; session: unknown; teacherConsole: unknown };
 	}
 	(window as unknown as AgoraDebugWindow).__agoraDebug = () => ({
 		user: getUserState(),
 		session: getSessionState(),
+		// Whether this device ever subscribed to the real names — the wall never does
+		teacherConsole: { identitiesSubscribed: identitiesSubscribed() },
 	});
 }
 
@@ -173,6 +176,9 @@ if (root) {
 		'/teach/start': StartGame,
 		'/teach/topic/:id': byId(TopicEditor),
 		'/teach/session/:id': byId(TeacherSession),
+		// The same console, showing the room as the students see it. The same
+		// keyed component on both routes, so flipping keeps the listeners.
+		'/teach/session/:id/class': byId(TeacherSession),
 		'/teach/screen/:id': byId(ProjectorScreen),
 		'/teach/class/:id': byId(TeacherClass),
 		'/teach/report/:id': byId(GameReport),
