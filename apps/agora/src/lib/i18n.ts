@@ -1012,8 +1012,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'challenge.desk_title': 'כתבו את ההצעה שלכם',
 		'challenge.desk_placeholder': 'ההצעה שחסרה על הלוח…',
 		'voting.saving': 'שומרים את הקול שלכם…',
-		'voting.save_failed':
-			'הקול לא נשמר — בדקו את החיבור ונסו שוב.',
+		'voting.save_failed': 'הקול לא נשמר — בדקו את החיבור ונסו שוב.',
 		'voting.retry': 'לנסות שוב',
 		'challenge.rule': 'אם הכיתה תעדיף אתכם על ההצעה החלשה ביותר — ההצעה שלכם תיכנס במקומה.',
 		'challenge.send': 'להעלות ללוח',
@@ -1589,16 +1588,20 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'המורה ניסח מחדש את הטקסט שלכם',
 
 		// The language gate: a refused text, what it cost, and the teacher's count
-		'language.flagged': 'הבינה המלאכותית זיהתה שפה פוגענית, ולכן הטקסט לא נשמר. ירדו לכם {{n}} מטבעות — נסחו מחדש בשפה מכבדת.',
-		'language.flagged_no_coins': 'הבינה המלאכותית זיהתה שפה פוגענית, ולכן הטקסט לא נשמר. נסחו מחדש בשפה מכבדת.',
+		'language.flagged':
+			'הבינה המלאכותית זיהתה שפה פוגענית, ולכן הטקסט לא נשמר. ירדו לכם {{n}} מטבעות — נסחו מחדש בשפה מכבדת.',
+		'language.flagged_no_coins':
+			'הבינה המלאכותית זיהתה שפה פוגענית, ולכן הטקסט לא נשמר. נסחו מחדש בשפה מכבדת.',
 		'language.notice_title': 'נא להשתמש בשפה מכבדת',
-		'language.notice_body': 'הטקסט הזה לא פורסם כי זוהתה בו שפה פוגענית, וירדו עליו מטבעות. המורה רואה את זה.',
+		'language.notice_body':
+			'הטקסט הזה לא פורסם כי זוהתה בו שפה פוגענית, וירדו עליו מטבעות. המורה רואה את זה.',
 		'toast.language_flagged': 'הטקסט לא נשמר — נא להשתמש בשפה מכבדת',
 		'teacher.notice_language': 'הבינה המלאכותית חסמה שפה פוגענית — הטקסט לא פורסם',
 		'teacher.language_strikes': '{{n}} אזהרות שפה',
 		'teacher.language_alert.title': 'נחסמה שפה פוגענית ({{n}})',
 		'teacher.language_alert.wall_title': 'טקסט של תלמיד/ה נחסם בגלל שפה ({{n}})',
-		'teacher.language_alert.wall_hint': 'השמות והמילים מוצגים רק במכשיר האישי שלך — פתחו שם את לוח המורה כדי לראות מי ומה.',
+		'teacher.language_alert.wall_hint':
+			'השמות והמילים מוצגים רק במכשיר האישי שלך — פתחו שם את לוח המורה כדי לראות מי ומה.',
 		'teacher.language_alert.dismiss': 'הבנתי',
 		'teacher.language_alert.open_thread': 'לפתוח את השיחה',
 		'teacher.language_alert.more': 'ועוד {{n}}',
@@ -1689,6 +1692,21 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'hand.pool_done': 'קראתם את כל הפתקים שעל הלוח הזה.',
 		'hand.draw_more': 'להגריל עוד פתקים',
 		'hand.teacher_coverage': 'ל־{{n}} מתוך {{total}} פתקים יש לפחות {{min}} מדרגים',
+		// --- The teacher removes a participant (2026-10-14) ---
+		'teacher.remove_student': 'להוציא',
+		'teacher.remove_confirm_title': 'להוציא את {{name}} מהשיעור?',
+		'teacher.remove_confirm_body':
+			'במסך שלהם יופיע: "המורה הוציא אתכם מהמסע הזה". מהכניסה הזו אי אפשר יהיה להצטרף שוב לשיעור הזה. מה שכבר נכתב נשאר על הלוח — ואפשר עדיין להוריד כל טקסט.',
+		'teacher.remove_confirm_ok': 'להוציא מהשיעור',
+		'teacher.remove_keep': 'לא, להשאיר',
+		'teacher.remove_failed': 'ההוצאה לא עברה. נסו שוב.',
+		'teacher.removed_done': '{{name}} הוצא/ה מהשיעור',
+		'game.removed_title': 'המורה הוציא אתכם מהמסע הזה',
+		'game.removed_body':
+			'אי אפשר להמשיך במסע הזה מהמכשיר הזה. אם נראה לכם שזו טעות, דברו עם המורה.',
+		'join.removed':
+			'המורה הוציא אתכם מהמסע הזה, ולכן אי אפשר להצטרף אליו שוב. אם נראה לכם שזו טעות, דברו עם המורה.',
+		// --- end removal ---
 	},
 	en: {
 		'village.unavailable': 'The village did not load on this device.',
@@ -2654,7 +2672,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'all of them',
 		'startGame.plan_cutoff_n': 'how many',
 		'startGame.plan_cutoff_min': 'Minimum agreement',
-		'startGame.plan_trigger': 'Tell me when the class agrees (the vote opens only when you press Next)',
+		'startGame.plan_trigger':
+			'Tell me when the class agrees (the vote opens only when you press Next)',
 		'startGame.plan_trigger_single': 'One proposal at an agreement of at least',
 		'startGame.plan_trigger_pair': 'or two proposals at least',
 		'startGame.plan_trigger_min_raters': 'counting proposals rated by at least this many people',
@@ -2731,8 +2750,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'challenge.pass': "I'll pass",
 		'challenge.too_short': 'Too short to put to the class — write a little more.',
 		'voting.saving': 'Saving your vote…',
-		'voting.save_failed':
-			'Your vote was not saved — check the connection and try again.',
+		'voting.save_failed': 'Your vote was not saved — check the connection and try again.',
 		'voting.retry': 'Try again',
 		'challenge.waiting_writer': '{{name}} is writing a new option',
 		'challenge.waiting_next': '{{name}} has the floor next',
@@ -3327,16 +3345,20 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Your teacher reworded your text',
 
 		// The language gate: a refused text, what it cost, and the teacher's count
-		'language.flagged': 'The AI found disrespectful language, so your text was not saved. {{n}} coins were taken — please rewrite it respectfully.',
-		'language.flagged_no_coins': 'The AI found disrespectful language, so your text was not saved. Please rewrite it respectfully.',
+		'language.flagged':
+			'The AI found disrespectful language, so your text was not saved. {{n}} coins were taken — please rewrite it respectfully.',
+		'language.flagged_no_coins':
+			'The AI found disrespectful language, so your text was not saved. Please rewrite it respectfully.',
 		'language.notice_title': 'Please use respectful language',
-		'language.notice_body': 'This text was not posted because it contained disrespectful language, and it cost coins. Your teacher can see this.',
+		'language.notice_body':
+			'This text was not posted because it contained disrespectful language, and it cost coins. Your teacher can see this.',
 		'toast.language_flagged': 'Not saved — please use respectful language',
 		'teacher.notice_language': 'The AI blocked disrespectful language — the text was not posted',
 		'teacher.language_strikes': '{{n}} language warnings',
 		'teacher.language_alert.title': 'Offensive language blocked ({{n}})',
-		'teacher.language_alert.wall_title': 'A student\'s text was blocked for language ({{n}})',
-		'teacher.language_alert.wall_hint': 'Names and words show only on your own device — open the console there to see who and what.',
+		'teacher.language_alert.wall_title': "A student's text was blocked for language ({{n}})",
+		'teacher.language_alert.wall_hint':
+			'Names and words show only on your own device — open the console there to see who and what.',
 		'teacher.language_alert.dismiss': 'Got it',
 		'teacher.language_alert.open_thread': 'Open the thread',
 		'teacher.language_alert.more': '+{{n}} more',
@@ -3371,7 +3393,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.move.ends': 'ends the lesson',
 		'teacher.move.confirm_title': 'Open {{station}}?',
 		'teacher.move.confirm_unfinished':
-			'{{n}} students haven\'t finished {{station}}. It closes and gets its summary.',
+			"{{n}} students haven't finished {{station}}. It closes and gets its summary.",
 		'teacher.move.confirm_closes': '{{station}} closes and gets its summary.',
 		'teacher.move.confirm_skip': 'Skips {{items}} — those stations never open.',
 		'teacher.move.confirm_ends': 'This ends the lesson: the class goes to the results.',
@@ -3389,7 +3411,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.bar.called_elsewhere': 'Called to {{place}} from your other device',
 		'teacher.device.title': 'Where is this screen?',
 		'teacher.device.lead':
-			'Real names and the students\' private words appear only on a screen that is yours alone.',
+			"Real names and the students' private words appear only on a screen that is yours alone.",
 		'teacher.device.private': 'Just me',
 		'teacher.device.private_hint': 'Show real names here',
 		'teacher.device.wall': 'On the wall',
@@ -3398,10 +3420,10 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.device.wall_chip': 'On the wall · names hidden',
 		'teacher.device.names_hidden_row': 'name hidden on this screen',
 		'teacher.device.open_on_phone':
-			'Open this on your phone — the students\' private words don\'t belong on the wall.',
+			"Open this on your phone — the students' private words don't belong on the wall.",
 		'teacher.device.to_private_title': 'Show real names on this screen?',
 		'teacher.device.to_private_body':
-			'If this screen is projected, the students will see each other\'s names.',
+			"If this screen is projected, the students will see each other's names.",
 		'teacher.device.to_private_ok': 'Show names here',
 		'teacher.device.keep_hidden': 'Keep hidden',
 		'teacher.bar.confirm_next': 'Tap again: {{label}}',
@@ -3430,6 +3452,21 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'hand.pool_done': 'You have read every note on this board.',
 		'hand.draw_more': 'Draw more notes',
 		'hand.teacher_coverage': '{{n}} of {{total}} notes have at least {{min}} raters',
+		// --- The teacher removes a participant (2026-10-14) ---
+		'teacher.remove_student': 'Remove',
+		'teacher.remove_confirm_title': 'Remove {{name}} from this lesson?',
+		'teacher.remove_confirm_body':
+			'Their screen will say: "Your teacher removed you from this journey." This login cannot rejoin the lesson. What they already wrote stays on the board — you can still take any of it down.',
+		'teacher.remove_confirm_ok': 'Remove from the lesson',
+		'teacher.remove_keep': 'No, keep',
+		'teacher.remove_failed': 'Removing did not go through. Try again.',
+		'teacher.removed_done': '{{name}} was removed from the lesson',
+		'game.removed_title': 'Your teacher removed you from this journey',
+		'game.removed_body':
+			'You cannot continue this journey from this device. If you think this is a mistake, talk to your teacher.',
+		'join.removed':
+			'Your teacher removed you from this journey, so you cannot join it again. If you think this is a mistake, talk to your teacher.',
+		// --- end removal ---
 	},
 	ar: {
 		'village.unavailable': 'لم تُحمَّل القرية على هذا الجهاز.',
@@ -4444,8 +4481,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 			'لا أحد يرى العدّ حتى يغلق المعلّم التصويت. كم صوّتوا ليس سرًّا؛ لمن صوّتوا هو السرّ.',
 		'challenge.outcome_survived': 'اقتراح {{name}} انضمّ إلى اللوحة',
 		'voting.saving': 'جارٍ حفظ صوتكم…',
-		'voting.save_failed':
-			'لم يُحفظ صوتكم — تحققوا من الاتصال وحاولوا مجددًا.',
+		'voting.save_failed': 'لم يُحفظ صوتكم — تحققوا من الاتصال وحاولوا مجددًا.',
 		'voting.retry': 'حاولوا مجددًا',
 		'challenge.outcome_failed': 'اقتراح {{name}} لم ينجح هذه المرة',
 		'challenge.outcome_votes': '{{n}} أصوات',
@@ -5012,16 +5048,20 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'معلمكم أعاد صياغة نصكم',
 
 		// The language gate: a refused text, what it cost, and the teacher's count
-		'language.flagged': 'رصد الذكاء الاصطناعي لغة غير لائقة، لذلك لم يُحفظ نصكم. خُصمت {{n}} عملات — أعيدوا الصياغة بلغة محترمة.',
-		'language.flagged_no_coins': 'رصد الذكاء الاصطناعي لغة غير لائقة، لذلك لم يُحفظ نصكم. أعيدوا الصياغة بلغة محترمة.',
+		'language.flagged':
+			'رصد الذكاء الاصطناعي لغة غير لائقة، لذلك لم يُحفظ نصكم. خُصمت {{n}} عملات — أعيدوا الصياغة بلغة محترمة.',
+		'language.flagged_no_coins':
+			'رصد الذكاء الاصطناعي لغة غير لائقة، لذلك لم يُحفظ نصكم. أعيدوا الصياغة بلغة محترمة.',
 		'language.notice_title': 'الرجاء استخدام لغة محترمة',
-		'language.notice_body': 'لم يُنشر هذا النص لأنه احتوى على لغة غير لائقة، وكلّفكم عملات. معلمكم يرى ذلك.',
+		'language.notice_body':
+			'لم يُنشر هذا النص لأنه احتوى على لغة غير لائقة، وكلّفكم عملات. معلمكم يرى ذلك.',
 		'toast.language_flagged': 'لم يُحفظ — الرجاء استخدام لغة محترمة',
 		'teacher.notice_language': 'حجب الذكاء الاصطناعي لغة غير لائقة — لم يُنشر النص',
 		'teacher.language_strikes': '{{n}} تنبيهات لغة',
 		'teacher.language_alert.title': 'تم حجب لغة مسيئة ({{n}})',
 		'teacher.language_alert.wall_title': 'تم حجب نص لطالب بسبب اللغة ({{n}})',
-		'teacher.language_alert.wall_hint': 'الأسماء والكلمات تظهر فقط على جهازك الشخصي — افتحوا لوحة المعلّم هناك لمعرفة من وماذا.',
+		'teacher.language_alert.wall_hint':
+			'الأسماء والكلمات تظهر فقط على جهازك الشخصي — افتحوا لوحة المعلّم هناك لمعرفة من وماذا.',
 		'teacher.language_alert.dismiss': 'فهمت',
 		'teacher.language_alert.open_thread': 'فتح المحادثة',
 		'teacher.language_alert.more': '+{{n}} أخرى',
@@ -5110,6 +5150,21 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'hand.pool_done': 'قرأتم كل الملاحظات على هذه اللوحة.',
 		'hand.draw_more': 'سحب ملاحظات إضافية',
 		'hand.teacher_coverage': '{{n}} من أصل {{total}} ملاحظات لديها {{min}} مقيّمين على الأقل',
+		// --- The teacher removes a participant (2026-10-14) ---
+		'teacher.remove_student': 'إخراج',
+		'teacher.remove_confirm_title': 'إخراج {{name}} من هذا الدرس؟',
+		'teacher.remove_confirm_body':
+			'ستظهر على شاشتهم عبارة: "معلمكم أخرجكم من هذه الرحلة". لا يمكن الانضمام إلى هذا الدرس مرة أخرى من هذا الدخول. ما كُتب يبقى على اللوح — ويمكنكم إنزال أي نص منه.',
+		'teacher.remove_confirm_ok': 'إخراج من الدرس',
+		'teacher.remove_keep': 'لا، إبقاء',
+		'teacher.remove_failed': 'لم يتم الإخراج. حاولوا مرة أخرى.',
+		'teacher.removed_done': 'تم إخراج {{name}} من الدرس',
+		'game.removed_title': 'معلمكم أخرجكم من هذه الرحلة',
+		'game.removed_body':
+			'لا يمكنكم متابعة هذه الرحلة من هذا الجهاز. إذا ظننتم أن هذا خطأ، تحدّثوا مع معلمكم.',
+		'join.removed':
+			'معلمكم أخرجكم من هذه الرحلة، لذلك لا يمكنكم الانضمام إليها مرة أخرى. إذا ظننتم أن هذا خطأ، تحدّثوا مع معلمكم.',
+		// --- end removal ---
 	},
 	es: {
 		'village.unavailable': 'La aldea no se ha cargado en este dispositivo.',
@@ -6094,7 +6149,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'todas',
 		'startGame.plan_cutoff_n': 'cuántas',
 		'startGame.plan_cutoff_min': 'Acuerdo mínimo',
-		'startGame.plan_trigger': 'Avísame cuando la clase se ponga de acuerdo (la votación solo se abre al pulsar Siguiente)',
+		'startGame.plan_trigger':
+			'Avísame cuando la clase se ponga de acuerdo (la votación solo se abre al pulsar Siguiente)',
 		'startGame.plan_trigger_single': 'Una propuesta con un acuerdo de al menos',
 		'startGame.plan_trigger_pair': 'o dos propuestas con al menos',
 		'startGame.plan_trigger_min_raters':
@@ -6183,8 +6239,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'challenge.outcome_votes': '{{n}} votos',
 		'challenge.evicted': 'Ocupó el lugar de: {{statement}}',
 		'voting.saving': 'Guardando vuestro voto…',
-		'voting.save_failed':
-			'Vuestro voto no se guardó: revisad la conexión y volved a intentarlo.',
+		'voting.save_failed': 'Vuestro voto no se guardó: revisad la conexión y volved a intentarlo.',
 		'voting.retry': 'Reintentar',
 		'challenge.board_stands': 'El tablero queda como estaba.',
 		'challenge.points': '+{{n}} puntos',
@@ -6777,16 +6832,21 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Tu profesor reformuló tu texto',
 
 		// The language gate: a refused text, what it cost, and the teacher's count
-		'language.flagged': 'La IA detectó lenguaje irrespetuoso, así que tu texto no se guardó. Se descontaron {{n}} monedas — reescríbelo con respeto.',
-		'language.flagged_no_coins': 'La IA detectó lenguaje irrespetuoso, así que tu texto no se guardó. Reescríbelo con respeto.',
+		'language.flagged':
+			'La IA detectó lenguaje irrespetuoso, así que tu texto no se guardó. Se descontaron {{n}} monedas — reescríbelo con respeto.',
+		'language.flagged_no_coins':
+			'La IA detectó lenguaje irrespetuoso, así que tu texto no se guardó. Reescríbelo con respeto.',
 		'language.notice_title': 'Usa un lenguaje respetuoso, por favor',
-		'language.notice_body': 'Este texto no se publicó porque contenía lenguaje irrespetuoso, y costó monedas. Tu profesor puede verlo.',
+		'language.notice_body':
+			'Este texto no se publicó porque contenía lenguaje irrespetuoso, y costó monedas. Tu profesor puede verlo.',
 		'toast.language_flagged': 'No se guardó — usa un lenguaje respetuoso',
 		'teacher.notice_language': 'La IA bloqueó lenguaje irrespetuoso — el texto no se publicó',
 		'teacher.language_strikes': '{{n}} avisos de lenguaje',
 		'teacher.language_alert.title': 'Lenguaje ofensivo bloqueado ({{n}})',
-		'teacher.language_alert.wall_title': 'Se bloqueó el texto de un estudiante por su lenguaje ({{n}})',
-		'teacher.language_alert.wall_hint': 'Los nombres y las palabras solo se ven en tu propio dispositivo: abre allí la consola para ver quién y qué.',
+		'teacher.language_alert.wall_title':
+			'Se bloqueó el texto de un estudiante por su lenguaje ({{n}})',
+		'teacher.language_alert.wall_hint':
+			'Los nombres y las palabras solo se ven en tu propio dispositivo: abre allí la consola para ver quién y qué.',
 		'teacher.language_alert.dismiss': 'Entendido',
 		'teacher.language_alert.open_thread': 'Abrir la conversación',
 		'teacher.language_alert.more': '+{{n}} más',
@@ -6881,6 +6941,21 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'hand.pool_done': 'Has leído todas las notas de este tablero.',
 		'hand.draw_more': 'Sacar más notas',
 		'hand.teacher_coverage': '{{n}} de {{total}} notas tienen al menos {{min}} valoraciones',
+		// --- The teacher removes a participant (2026-10-14) ---
+		'teacher.remove_student': 'Sacar',
+		'teacher.remove_confirm_title': '¿Sacar a {{name}} de esta clase?',
+		'teacher.remove_confirm_body':
+			'En su pantalla aparecerá: «Tu profesor te ha sacado de este viaje». Con este acceso no se podrá volver a entrar en esta clase. Lo que ya escribió se queda en el tablero; aún puedes retirar cualquier texto.',
+		'teacher.remove_confirm_ok': 'Sacar de la clase',
+		'teacher.remove_keep': 'No, dejarlo',
+		'teacher.remove_failed': 'No se pudo sacar. Inténtalo de nuevo.',
+		'teacher.removed_done': 'Has sacado a {{name}} de la clase',
+		'game.removed_title': 'Tu profesor te ha sacado de este viaje',
+		'game.removed_body':
+			'No puedes seguir este viaje desde este dispositivo. Si crees que es un error, habla con tu profesor.',
+		'join.removed':
+			'Tu profesor te ha sacado de este viaje, así que no puedes volver a unirte. Si crees que es un error, habla con tu profesor.',
+		// --- end removal ---
 	},
 	de: {
 		'village.unavailable': 'Das Dorf wurde auf diesem Gerät nicht geladen.',
@@ -7868,7 +7943,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'alle',
 		'startGame.plan_cutoff_n': 'wie viele',
 		'startGame.plan_cutoff_min': 'Mindestzustimmung',
-		'startGame.plan_trigger': 'Sag mir Bescheid, wenn die Klasse sich einig ist (die Abstimmung startet erst, wenn du auf Weiter tippst)',
+		'startGame.plan_trigger':
+			'Sag mir Bescheid, wenn die Klasse sich einig ist (die Abstimmung startet erst, wenn du auf Weiter tippst)',
 		'startGame.plan_trigger_single': 'Ein Vorschlag mit einer Zustimmung von mindestens',
 		'startGame.plan_trigger_pair': 'oder zwei Vorschläge mit mindestens',
 		'startGame.plan_trigger_min_raters':
@@ -7909,7 +7985,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.trigger_off': 'Die Abstimmung startet, wenn du auf Weiter tippst.',
 		'teacher.trigger_waiting':
 			'Die Abstimmung startet von selbst, wenn ein Vorschlag {{single}} Zustimmung erreicht. Bisher am höchsten: {{best}}.',
-		'teacher.trigger_ready': 'Die Klasse ist sich einig – tippe auf Weiter, um die Abstimmung zu starten.',
+		'teacher.trigger_ready':
+			'Die Klasse ist sich einig – tippe auf Weiter, um die Abstimmung zu starten.',
 		'teacher.trigger_fired_single': 'automatisch geöffnet: ein Vorschlag',
 		'teacher.trigger_fired_pair': 'automatisch geöffnet: zwei Vorschläge',
 		'teacher.trigger_fired_manual': 'von dir geöffnet',
@@ -8566,16 +8643,22 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Deine Lehrkraft hat deinen Text umformuliert',
 
 		// The language gate: a refused text, what it cost, and the teacher's count
-		'language.flagged': 'Die KI hat respektlose Sprache erkannt, deshalb wurde dein Text nicht gespeichert. {{n}} Münzen wurden abgezogen — formuliere ihn bitte respektvoll um.',
-		'language.flagged_no_coins': 'Die KI hat respektlose Sprache erkannt, deshalb wurde dein Text nicht gespeichert. Formuliere ihn bitte respektvoll um.',
+		'language.flagged':
+			'Die KI hat respektlose Sprache erkannt, deshalb wurde dein Text nicht gespeichert. {{n}} Münzen wurden abgezogen — formuliere ihn bitte respektvoll um.',
+		'language.flagged_no_coins':
+			'Die KI hat respektlose Sprache erkannt, deshalb wurde dein Text nicht gespeichert. Formuliere ihn bitte respektvoll um.',
 		'language.notice_title': 'Bitte respektvolle Sprache verwenden',
-		'language.notice_body': 'Dieser Text wurde nicht veröffentlicht, weil er respektlose Sprache enthielt, und hat Münzen gekostet. Deine Lehrkraft sieht das.',
+		'language.notice_body':
+			'Dieser Text wurde nicht veröffentlicht, weil er respektlose Sprache enthielt, und hat Münzen gekostet. Deine Lehrkraft sieht das.',
 		'toast.language_flagged': 'Nicht gespeichert — bitte respektvolle Sprache verwenden',
-		'teacher.notice_language': 'Die KI hat respektlose Sprache blockiert — der Text wurde nicht veröffentlicht',
+		'teacher.notice_language':
+			'Die KI hat respektlose Sprache blockiert — der Text wurde nicht veröffentlicht',
 		'teacher.language_strikes': '{{n}} Sprachwarnungen',
 		'teacher.language_alert.title': 'Beleidigende Sprache blockiert ({{n}})',
-		'teacher.language_alert.wall_title': 'Ein Schülertext wurde wegen der Sprache blockiert ({{n}})',
-		'teacher.language_alert.wall_hint': 'Namen und Worte erscheinen nur auf deinem eigenen Gerät — öffne dort die Konsole, um zu sehen, wer und was.',
+		'teacher.language_alert.wall_title':
+			'Ein Schülertext wurde wegen der Sprache blockiert ({{n}})',
+		'teacher.language_alert.wall_hint':
+			'Namen und Worte erscheinen nur auf deinem eigenen Gerät — öffne dort die Konsole, um zu sehen, wer und was.',
 		'teacher.language_alert.dismiss': 'Verstanden',
 		'teacher.language_alert.open_thread': 'Unterhaltung öffnen',
 		'teacher.language_alert.more': '+{{n}} weitere',
@@ -8671,6 +8754,21 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'hand.pool_done': 'Du hast jeden Zettel an dieser Tafel gelesen.',
 		'hand.draw_more': 'Weitere Zettel ziehen',
 		'hand.teacher_coverage': '{{n}} von {{total}} Zetteln haben mindestens {{min}} Bewertungen',
+		// --- The teacher removes a participant (2026-10-14) ---
+		'teacher.remove_student': 'Entfernen',
+		'teacher.remove_confirm_title': '{{name}} aus dieser Stunde entfernen?',
+		'teacher.remove_confirm_body':
+			'Auf dem Bildschirm steht dann: „Deine Lehrkraft hat dich aus dieser Reise entfernt.“ Mit dieser Anmeldung ist kein erneuter Beitritt zu dieser Stunde möglich. Was schon geschrieben wurde, bleibt an der Tafel – du kannst jeden Text weiterhin runternehmen.',
+		'teacher.remove_confirm_ok': 'Aus der Stunde entfernen',
+		'teacher.remove_keep': 'Nein, behalten',
+		'teacher.remove_failed': 'Das Entfernen hat nicht geklappt. Versuch es noch mal.',
+		'teacher.removed_done': '{{name}} wurde aus der Stunde entfernt',
+		'game.removed_title': 'Deine Lehrkraft hat dich aus dieser Reise entfernt',
+		'game.removed_body':
+			'Auf diesem Gerät kannst du diese Reise nicht fortsetzen. Wenn du glaubst, dass das ein Fehler ist, sprich mit deiner Lehrkraft.',
+		'join.removed':
+			'Deine Lehrkraft hat dich aus dieser Reise entfernt, deshalb kannst du nicht wieder beitreten. Wenn du glaubst, dass das ein Fehler ist, sprich mit deiner Lehrkraft.',
+		// --- end removal ---
 	},
 	nl: {
 		'village.unavailable': 'Het dorp is op dit apparaat niet geladen.',
@@ -9653,7 +9751,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'allemaal',
 		'startGame.plan_cutoff_n': 'hoeveel',
 		'startGame.plan_cutoff_min': 'Minimale instemming',
-		'startGame.plan_trigger': 'Laat het me weten wanneer de klas het eens is (de stemming opent pas als je op Volgende drukt)',
+		'startGame.plan_trigger':
+			'Laat het me weten wanneer de klas het eens is (de stemming opent pas als je op Volgende drukt)',
 		'startGame.plan_trigger_single': 'Eén voorstel met een instemming van minstens',
 		'startGame.plan_trigger_pair': 'of twee voorstellen met minstens',
 		'startGame.plan_trigger_min_raters':
@@ -10340,16 +10439,22 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Je docent heeft je tekst geherformuleerd',
 
 		// The language gate: a refused text, what it cost, and the teacher's count
-		'language.flagged': 'De AI vond respectloze taal, dus je tekst is niet opgeslagen. Er zijn {{n}} munten afgetrokken — herschrijf hem respectvol.',
-		'language.flagged_no_coins': 'De AI vond respectloze taal, dus je tekst is niet opgeslagen. Herschrijf hem respectvol.',
+		'language.flagged':
+			'De AI vond respectloze taal, dus je tekst is niet opgeslagen. Er zijn {{n}} munten afgetrokken — herschrijf hem respectvol.',
+		'language.flagged_no_coins':
+			'De AI vond respectloze taal, dus je tekst is niet opgeslagen. Herschrijf hem respectvol.',
 		'language.notice_title': 'Gebruik alsjeblieft respectvolle taal',
-		'language.notice_body': 'Deze tekst is niet geplaatst omdat hij respectloze taal bevatte, en dat heeft munten gekost. Je docent kan dit zien.',
+		'language.notice_body':
+			'Deze tekst is niet geplaatst omdat hij respectloze taal bevatte, en dat heeft munten gekost. Je docent kan dit zien.',
 		'toast.language_flagged': 'Niet opgeslagen — gebruik respectvolle taal',
-		'teacher.notice_language': 'De AI heeft respectloze taal geblokkeerd — de tekst is niet geplaatst',
+		'teacher.notice_language':
+			'De AI heeft respectloze taal geblokkeerd — de tekst is niet geplaatst',
 		'teacher.language_strikes': '{{n}} taalwaarschuwingen',
 		'teacher.language_alert.title': 'Beledigende taal geblokkeerd ({{n}})',
-		'teacher.language_alert.wall_title': 'De tekst van een leerling is geblokkeerd vanwege taal ({{n}})',
-		'teacher.language_alert.wall_hint': 'Namen en woorden staan alleen op je eigen apparaat — open daar de console om te zien wie en wat.',
+		'teacher.language_alert.wall_title':
+			'De tekst van een leerling is geblokkeerd vanwege taal ({{n}})',
+		'teacher.language_alert.wall_hint':
+			'Namen en woorden staan alleen op je eigen apparaat — open daar de console om te zien wie en wat.',
 		'teacher.language_alert.dismiss': 'Begrepen',
 		'teacher.language_alert.open_thread': 'Gesprek openen',
 		'teacher.language_alert.more': '+{{n}} meer',
@@ -10443,6 +10548,21 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'hand.pool_done': 'Je hebt elk briefje op dit bord gelezen.',
 		'hand.draw_more': 'Meer briefjes trekken',
 		'hand.teacher_coverage': '{{n}} van {{total}} briefjes hebben minstens {{min}} beoordelaars',
+		// --- The teacher removes a participant (2026-10-14) ---
+		'teacher.remove_student': 'Verwijderen',
+		'teacher.remove_confirm_title': '{{name}} uit deze les verwijderen?',
+		'teacher.remove_confirm_body':
+			'Op hun scherm komt te staan: "Je docent heeft je uit deze reis verwijderd." Met deze login kan niemand opnieuw aan deze les meedoen. Wat al geschreven is, blijft op het bord — je kunt elke tekst nog steeds weghalen.',
+		'teacher.remove_confirm_ok': 'Uit de les verwijderen',
+		'teacher.remove_keep': 'Nee, laten staan',
+		'teacher.remove_failed': 'Verwijderen is niet gelukt. Probeer het opnieuw.',
+		'teacher.removed_done': '{{name}} is uit de les verwijderd',
+		'game.removed_title': 'Je docent heeft je uit deze reis verwijderd',
+		'game.removed_body':
+			'Je kunt deze reis op dit apparaat niet voortzetten. Denk je dat dit een vergissing is? Praat dan met je docent.',
+		'join.removed':
+			'Je docent heeft je uit deze reis verwijderd, dus je kunt niet opnieuw meedoen. Denk je dat dit een vergissing is? Praat dan met je docent.',
+		// --- end removal ---
 	},
 };
 

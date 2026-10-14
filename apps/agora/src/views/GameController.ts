@@ -103,6 +103,7 @@ import {
 	AgoraSceneKind,
 	AgoraSessionMode,
 	AgoraStage,
+	isRemovedFromAgoraSession,
 	resolveAgoraTheme,
 	roundSpecOf,
 	type AgoraStagePlanItem,
@@ -409,6 +410,25 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						m('p.join__error', t('common.error')),
 						m('button.btn.btn--secondary', { onclick: () => m.route.set('/') }, t('common.back')),
 					]),
+				);
+			}
+
+			// The teacher took this login out of the lesson. A calm end, not an
+			// error: no stage renders behind it, so nothing on this device tries
+			// to write again (the rules would refuse it anyway), and no join
+			// door is offered — the join callable would refuse that too.
+			if (isRemovedFromAgoraSession(session, userId)) {
+				return m(
+					'.shell',
+					m(
+						'.shell__content.text-center.game-removed',
+						{ role: 'status', style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
+						[
+							m('h2', t('game.removed_title')),
+							m('p.lobby__status', t('game.removed_body')),
+							m('button.btn.btn--secondary', { onclick: () => m.route.set('/') }, t('common.back')),
+						],
+					),
 				);
 			}
 

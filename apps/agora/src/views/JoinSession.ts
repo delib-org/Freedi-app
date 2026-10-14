@@ -9,7 +9,9 @@ import {
 	AgoraSessionStatus,
 	AgoraSession,
 	AGORA_IDENTITY,
+	AGORA_REMOVED_REASON,
 	AGORA_SESSION,
+	isRemovedFromAgoraSession,
 } from '@freedi/shared-types';
 import {
 	classJoinErrorKey,
@@ -152,6 +154,16 @@ export function JoinSession(
 				return;
 			}
 
+			// The teacher removed this login from this lesson: say so at the
+			// door instead of asking for a name the callable would refuse.
+			if (isRemovedFromAgoraSession(session, uid)) {
+				phase = 'error';
+				errorKey = 'join.removed';
+				m.redraw();
+
+				return;
+			}
+
 			// Already seated from this browser: back to the game, no questions.
 			// Asking again would hand the teacher a second "real name" for the
 			// same student and look, to the student, like being thrown out.
@@ -210,6 +222,14 @@ export function JoinSession(
 				classJoin = INITIAL_CLASS_JOIN;
 				pendingAlias = '';
 				pendingPin = '';
+				m.redraw();
+
+				return;
+			}
+			// Removed between the lookup and the join (the door checked a moment ago)
+			if (String(error).includes(AGORA_REMOVED_REASON)) {
+				phase = 'error';
+				errorKey = 'join.removed';
 				m.redraw();
 
 				return;

@@ -102,6 +102,9 @@ export {
 	tallyAgoraThemes,
 } from './agoraTheme';
 
+export type { RemovalSession } from './agoraRemoval';
+export { isRemovedFromAgoraSession, AGORA_REMOVED_REASON } from './agoraRemoval';
+
 export type { AgoraAgreementResults, AgoraIdentityMode } from './agoraSession';
 export { AgoraAgreementResultsSchema, AgoraIdentityModeSchema } from './agoraSession';
 
@@ -419,6 +422,8 @@ export type {
 	TeacherMessageResponse,
 	ModerateStatementRequest,
 	ModerateStatementResponse,
+	RemoveParticipantRequest,
+	RemoveParticipantResponse,
 	CheckLanguageRequest,
 	CheckLanguageResponse,
 	RewordQuestionRequest,

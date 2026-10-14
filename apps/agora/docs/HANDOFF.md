@@ -45,6 +45,46 @@ can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
 
+## The teacher removes a student (2026-10-14)
+
+Built on `feat/agora-teacher-remove-user`, **NOT deployed**. Trello "The
+teacher can remove users" — a prankster, a duplicate seat, a stranger.
+
+- **Server**: `agoraRemoveParticipant {sessionId, studentUid}` (session teacher
+  only, full account) runs one transaction: uid → `session.removedUids`
+  (`{uid: ms}`, new optional shared-types field, rules-pinned), DELETE the
+  participant doc, delete their `agoraHands` doc (their dealt notes count as
+  unread again) and their `agoraIdentities` real name. Repeat-safe; refuses
+  the teacher and AI raters; never moves the stage. Deleting the seat is the
+  point: every count, camp census, lottery size and console row is built from
+  `agoraParticipants`, so nothing has to learn a "removed" filter.
+  `participantCount` is NOT decremented (it mints pseudonyms; reuse would
+  duplicate a name).
+- **Kept out**: `agoraJoinSession` refuses a blocked uid
+  (`permission-denied`, `AGORA_REMOVED_REASON` = `removed-from-session`),
+  also inside its transaction. Rules (`agoraRemovedFrom(sessionId)`, one
+  session `get()` only on writes that name an Agora session) refuse their
+  agora statement creates/edits, evaluations and votes in THAT session.
+  Callables that read the seat (`agoraCheckLanguage`, `agoraTeacherMessage`,
+  `agoraDealNotes`, …) already refuse a missing seat.
+- **Kept**: their notes, ratings and votes stay (pseudonymous, others may have
+  built on them); the teacher's existing take-down hides any note.
+- **Client**: Class panel row → "Remove" (private device only, never on a
+  wall) → in-app confirm under the row (`lib/flows/removeStudent.ts`, focus on
+  "No, keep") → `teacher.removed_done` status line. Student: `GameController`
+  renders `game.removed_*` before any stage; the join door says `join.removed`.
+
+**Verify:** `npx tsx scripts/e2e-remove-student.mjs` (browser student removed
+from the teacher's browser; Firestore, the student's screen, reload, the
+door; a bot's note/rating/vote refused by rules, rejoin + deal refused, a
+classmate still dealt). Rules: `tests/rules/agora-removal.test.mjs`. Unit:
+shared-types `agoraRemoval`, functions `removeParticipant`, agora
+`removeStudent`.
+
+**Deploy (in this order):** shared-types build + functions repack →
+`deploy:rules:prod` → `deploy:f:prod -- agoraRemoveParticipant agoraJoinSession`
+→ `deploy:agora`.
+
 ## The teacher's call moves the class; the way back to 3D (2026-10-12)
 
 Built on `feat/agora-improvements`, **NOT deployed** (client + one optional

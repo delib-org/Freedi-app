@@ -14,6 +14,8 @@ import type {
 	JoinClassResponse,
 	ModerateStatementRequest,
 	ModerateStatementResponse,
+	RemoveParticipantRequest,
+	RemoveParticipantResponse,
 	RewordQuestionRequest,
 	RewordQuestionResponse,
 	TeacherMessageRequest,
@@ -355,6 +357,19 @@ export async function moderateStatement(
 	const call = httpsCallable<ModerateStatementRequest, ModerateStatementResponse>(
 		functions,
 		'agoraModerateStatement',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The session teacher takes one student out of the lesson (seat deleted, uid blocked). */
+export async function removeParticipant(
+	request: RemoveParticipantRequest,
+): Promise<RemoveParticipantResponse> {
+	const call = httpsCallable<RemoveParticipantRequest, RemoveParticipantResponse>(
+		functions,
+		'agoraRemoveParticipant',
 	);
 	const result = await call(request);
 

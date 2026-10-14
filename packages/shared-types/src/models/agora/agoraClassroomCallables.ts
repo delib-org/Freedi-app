@@ -278,6 +278,23 @@ export interface ModerateStatementResponse {
 }
 
 /**
+ * `agoraRemoveParticipant` — the session teacher takes one student out of
+ * the lesson: their seat is deleted and their uid is blocked from this
+ * session (see agoraRemoval.ts). Repeat-safe: removing someone already
+ * removed answers `removed: false`.
+ */
+export interface RemoveParticipantRequest {
+	sessionId: string;
+	studentUid: string;
+}
+
+export interface RemoveParticipantResponse {
+	ok: true;
+	/** false when the student was already out of the room */
+	removed: boolean;
+}
+
+/**
  * `agoraCheckLanguage` — the gate every student text passes before the
  * client writes it. A refusal has already been charged and filed by the time
  * the response arrives: the strike is on the participant doc, the words are

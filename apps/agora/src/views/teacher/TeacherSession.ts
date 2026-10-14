@@ -96,6 +96,7 @@ import {
 	getTeacherConsoleState,
 	listenToTeacherConsole,
 	realNameOf,
+	removeStudent,
 	stopTeacherConsole,
 	unreadRepliesTotal,
 } from '../../lib/teacherConsole';
@@ -1053,6 +1054,12 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								ratingsByUid,
 								onMessage: openDrawer,
 								namesHidden: !privateDevice,
+								// Asked on the teacher's own screen only — never on the wall
+								onRemove: privateDevice
+									? async (studentUid: string) => {
+											await removeStudent(session.sessionId, studentUid);
+										}
+									: undefined,
 							}),
 						)
 					: panel === 'texts'

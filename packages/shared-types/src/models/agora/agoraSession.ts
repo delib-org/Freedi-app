@@ -282,6 +282,15 @@ export const AgoraSessionSchema = object({
 	 * client walks there once per `at`. Teacher-writable.
 	 */
 	villageCall: optional(object({ place: string(), at: number() })),
+	/**
+	 * Who the teacher took out of this lesson: uid → when (ms). Written only
+	 * by `agoraRemoveParticipant`, pinned by rules. The removed student's
+	 * participant doc is deleted, so every count simply loses them; this map
+	 * is what keeps them out — the join callable refuses them and rules refuse
+	 * their statements, ratings and votes in this session. Other sessions are
+	 * untouched. See `isRemovedFromAgoraSession`.
+	 */
+	removedUids: optional(record(string(), number())),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),
