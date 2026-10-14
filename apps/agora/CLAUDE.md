@@ -152,3 +152,45 @@ and commit its shared-types archive; create only the teacherId/month usage
 composite index; deploy rules and the named supervision/teacher aggregation
 functions before either frontend. Backfill is admin-only, paged and repeat-safe.
 Its cursor includes creation time AND session ID; never simplify it to a timestamp.
+
+
+## Teachers' scenario library (2026-10-14)
+
+A scenario is an `AgoraTopicPackage`; publishing adds OPTIONAL `visibility`,
+`library` (card), `stats` and (on copies) `source*` fields to the same doc.
+Screens: `views/teacher/scenarioLibrary/`, state in `lib/scenarioLibrary/`,
+words in `lib/scenarioLibrary/strings*.ts` (merged into `i18n.ts`), styles
+`_scenario-library*.scss`. Server: `functions/src/agora/fn_agoraLibrary*.ts`.
+
+- **Who may enter.** There is no explicit "approved" flag yet: an approved
+  teacher is a sys-admin, or a teacher/supervisor a sys-admin attached to an
+  ACTIVE school. `libraryAccess.ts#resolveApproval` is the one place to teach
+  about a future Studio approval. Callables re-check it live; the RULES see the
+  marker `agoraApprovedTeachers/{uid}` that `agoraLibraryAccess` writes (so a
+  removed teacher loses writes at once and reads at their next visit).
+- **The soft spot.** `agoraTopicPackages` `get` stays open to any signed-in user
+  (students read the package behind their game by id). Only `list` is
+  restricted: the owner's own, or public + un-hidden for an approved teacher. A
+  "private" scenario is unlisted, not unreadable if its id leaks.
+- **Translations** are cached per scenario per language in
+  `agoraScenarioTranslations` (valid while the scenario's `lastUpdate` matches),
+  model `WORKER_MODEL` via `callLLM`. A copy in another language is translated
+  whole (cached too); ids, kinds, URLs and numbers never go through the model.
+- **Never** let a client write `visibility`/`library`/`stats`/`source*` (rules
+  refuse it) and never count ratings on read (`stats` moves in the rating
+  transaction). A hidden scenario/review stays hidden when its owner republishes
+  or re-rates: only a sys-admin lifts it (`agoraLibraryModerate`).
+- **Indexes** (firestore.indexes.json; create with `gcloud`, never a plain
+  deploy): `agoraTopicPackages` (visibility, library.hidden, then one of
+  stats.ratingBayes / library.publishedAt / stats.copyCount, descending) and
+  `agoraScenarioRatings` (scenarioId, hidden, lastUpdate descending).
+- **Verify:** `scripts/e2e-scenario-library.mjs` (callables + rules, real AI
+  translation) and `scripts/e2e-scenario-library-ui.mjs` (browser, screenshots
+  in `output/scenario-library/`, contrast + type audits). Both need a clean
+  emulator DB and `OPENAI_API_KEY` in `functions/.env`.
+- **Deploy order:** rules, then `agoraLibraryAccess agoraLibraryCreateTag
+  agoraLibraryPublish agoraLibraryUnpublish agoraLibraryUse
+  agoraLibraryTranslate agoraLibraryRate agoraLibraryModerate`, then Agora
+  hosting. Phases 3-6 (AI cover, discussion, admin queue and tag merge, polish)
+  have seams: `ScenarioFeedback` mounts under the scenario page, the cover is an
+  upload today, and `agoraLibraryModerate` is where the rest of moderation sits.

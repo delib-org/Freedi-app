@@ -38,3 +38,5 @@ export { agoraLibraryAccess } from './fn_agoraLibraryAccess';
 export { agoraLibraryCreateTag } from './fn_agoraLibraryCreateTag';
 export { agoraLibraryPublish, agoraLibraryUnpublish } from './fn_agoraLibraryPublish';
 export { agoraLibraryUse, agoraLibraryTranslate } from './fn_agoraLibraryUse';
+export { agoraLibraryRate } from './fn_agoraLibraryRate';
+export { agoraLibraryModerate } from './fn_agoraLibraryModerate';

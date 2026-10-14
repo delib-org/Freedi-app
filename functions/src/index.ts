@@ -1311,6 +1311,8 @@ export {
 	agoraLibraryUnpublish,
 	agoraLibraryUse,
 	agoraLibraryTranslate,
+	agoraLibraryRate,
+	agoraLibraryModerate,
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 	onAgoraSessionFinished,
