@@ -692,7 +692,6 @@ textarea[aria-invalid='true'] {
 	align-items: center;
 	gap: 6px;
 	width: 100%;
-	cursor: pointer;
 	padding: 14px 10px 12px;
 	text-align: center;
 	color: var(--cream);
@@ -706,10 +705,6 @@ textarea[aria-invalid='true'] {
 		border-color 0.15s ease,
 		transform 0.15s ease,
 		box-shadow 0.15s ease;
-}
-
-.crew-card:hover {
-	transform: translateY(-2px);
 }
 
 .crew-card.chosen {

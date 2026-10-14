@@ -1,38 +1,45 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import type { OdysseyElder } from '@freedi/shared-types';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
 import { useGame } from '../state/GameContext';
-import { activeElders } from '../lib/elders';
+import { activeElders, crewByCloseness } from '../lib/elders';
+import { distanceEngine } from '../lib/distance';
+import { sailedCount, voyageIslands } from '../lib/voyageRoute';
 
 /**
- * המלחים מחכים: choosing the crew.
+ * המלחים: who the sailors are, and who is sailing with you now.
  *
- * They used to arrive unannounced. Every enabled elder sailed with every
- * player, so the same Ben-Gurion line appeared above island after island with
- * nothing to explain it, and Golda's ship rode in the same row as the parties
- * — which reads as a claim that she is running in this election, on a screen
- * whose whole job is telling you which party sails near you.
+ * This used to be a board where the player picked a crew before setting out.
+ * The first reviewer said the choosing belonged after the first island, not
+ * before it — you cannot know whose company you want before you have said
+ * anything — and three sailors were too few. So nobody is chosen here any
+ * more: the crew forms by itself from the elders whose courses sit closest to
+ * the player's answers (`crewByCloseness`), and this screen only explains them.
+ * Every elder is on the board, nearest first; the ones currently aboard say
+ * so. Before the first island there is no crew yet, and the screen says that
+ * instead of showing a board nobody can be on.
  *
- * Being asked fixes both. A player who chose Begin knows why Begin is
- * answering her, and a screen that says plainly what these figures are — AI
- * personas with declared positions, not candidates — spends its explanation
- * once, here, instead of failing to make it twelve times on the water.
- *
- * With twelve on the roster the screen is a portrait board, not a list: a
- * list of twelve bios is a wall nobody reads, and a player who scrolls past
- * the crew has not chosen a crew, only dismissed one. Nobody is pre-selected
- * for the same reason — twelve voices arriving unasked is precisely the noise
- * this screen exists to prevent. One sailor now is a real answer, so is none,
- * and the crew can be changed at any point in the voyage.
+ * The board still spends its explanation once, here — that these are AI
+ * personas with declared positions, not parties or candidates.
  */
 export default function Elders() {
 	const navigate = useNavigate();
-	const { content, journey, updateJourney } = useGame();
-	const elders = activeElders(content?.game);
-	const [chosen, setChosen] = useState<Set<string>>(() => new Set(journey?.selectedElderIds ?? []));
-	const [saving, setSaving] = useState(false);
+	const { content, journey, attitudes } = useGame();
+	const elders = useMemo(() => activeElders(content?.game), [content]);
+	const distances = useMemo((): Record<string, number | null> => {
+		if (!content) return {};
+
+		return Object.fromEntries(
+			distanceEngine
+				.elderDistances({ attitudes, islands: content.islands, elders })
+				.map((entry) => [entry.elderId, entry.distance]),
+		);
+	}, [content, attitudes, elders]);
+	const crew = useMemo(() => crewByCloseness(elders, distances), [elders, distances]);
+	const sailed = sailedCount(voyageIslands(content), attitudes);
+
 	/**
 	 * Which elder is telling you who they are — one at a time.
 	 *
@@ -65,35 +72,20 @@ export default function Elders() {
 	}, [openBio]);
 
 	// A game whose organizer switched the elders off, or never authored any,
-	// must not show an empty ceremony — it goes straight on to the map. As an
-	// effect, not during render (calling navigate() mid-render is a React error).
-	const shouldRedirectToMap = Boolean(content && journey) && elders.length === 0;
+	// has no sailors to explain — back to the voyage. As an effect, not during
+	// render (calling navigate() mid-render is a React error).
+	const shouldRedirect = Boolean(content && journey) && elders.length === 0;
 	useEffect(() => {
-		if (shouldRedirectToMap) navigate('/map', { replace: true });
-	}, [shouldRedirectToMap, navigate]);
+		if (shouldRedirect) navigate('/voyage', { replace: true });
+	}, [shouldRedirect, navigate]);
 
 	if (!content || !journey) return <NoGameYet />;
-	if (shouldRedirectToMap) return null;
+	if (shouldRedirect) return null;
 
-	function toggle(elderId: string): void {
-		setChosen((current) => {
-			const next = new Set(current);
-			if (next.has(elderId)) next.delete(elderId);
-			else next.add(elderId);
-
-			return next;
-		});
-	}
-
-	async function save(): Promise<void> {
-		setSaving(true);
-		try {
-			await updateJourney({ selectedElderIds: [...chosen] });
-			navigate('/map');
-		} finally {
-			setSaving(false);
-		}
-	}
+	const crewIds = new Set(crew.map((elder) => elder.elderId));
+	// Nearest first: the crew in its own order, then everyone else in the
+	// organizer's order.
+	const board = [...crew, ...elders.filter((elder) => !crewIds.has(elder.elderId))];
 
 	/** The three keywords under the name — the elder's own values, verbatim. */
 	function keywords(elder: OdysseyElder): string {
@@ -106,9 +98,11 @@ export default function Elders() {
 			<div className="page">
 				<div className="w-full max-w-5xl flex flex-col gap-4 pb-4">
 					<header className="text-center fade-in">
-						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">המלחים מחכים</h1>
+						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">המלחים</h1>
 						<p className="text-[15px] text-[#cfe6f5] mt-2 mb-1">
-							כל קברניט צריך צוות על הסיפון. בחרו מי יעזור לכם במסע.
+							{sailed === 0
+								? 'המלחים מצטרפים אחרי האי הראשון: אלה שהעמדות שלהם קרובות לתשובות שלכם יעלו לסיפון.'
+								: `על הסיפון ${crew.length} המלחים הקרובים ביותר לתשובות שלכם עד כה. הצוות מתעדכן בכל אי.`}
 						</p>
 						<p className="text-[14px] text-[#cfe6f5] opacity-85 m-0">
 							המלחים לא יחליטו במקומכם — הם ישאלו, יזהירו ויעזרו לכם לראות את הדרך מזוויות שונות.
@@ -129,17 +123,12 @@ export default function Elders() {
 					</section>
 
 					<div className="crew-grid fade-in">
-						{elders.map((elder) => {
-							const active = chosen.has(elder.elderId);
+						{board.map((elder) => {
+							const active = crewIds.has(elder.elderId);
 
 							return (
 								<div key={elder.elderId} className="crew-cell">
-									<button
-										type="button"
-										aria-pressed={active}
-										onClick={() => toggle(elder.elderId)}
-										className={`crew-card ${active ? 'chosen' : ''}`}
-									>
+									<div className={`crew-card ${active ? 'chosen' : ''}`}>
 										<span className="crew-persona-mark" aria-hidden="true">
 											📜
 										</span>
@@ -153,19 +142,16 @@ export default function Elders() {
 										<span className="crew-name">{elder.name}</span>
 										{elder.years ? <span className="crew-years">{elder.years}</span> : null}
 										<span className="crew-values">{keywords(elder)}</span>
-										{/* Only the berth that was taken says so. An empty card invites the
-										    click by being a card on a board that asked you to choose. */}
 										{active ? (
 											<span className="text-[12px] text-[var(--gold-strong)] mt-1">
 												⚓ על הסיפון
 											</span>
 										) : null}
-									</button>
+									</div>
 									{/*
-									  The ⓘ sits in the card's free top corner, where the berth number
-									  used to be — but it is a SIBLING of the card, not a child: a
-									  button may not contain a button, and the sentence it opens has to
-									  stay reachable by keyboard. Absolute inside the cell puts it on
+									  The ⓘ sits in the card's free top corner as a SIBLING of the
+									  card, not a child — the card used to be a button, and a button
+									  may not contain a button. Absolute inside the cell puts it on
 									  the card without putting it in it.
 									*/}
 									<button
@@ -193,16 +179,9 @@ export default function Elders() {
 					</div>
 
 					<div className="flex flex-col items-center gap-2 pb-4">
-						<button type="button" className="btn" disabled={saving} onClick={() => void save()}>
-							{saving
-								? 'שומר…'
-								: chosen.size === 0
-									? 'להפליג לבד — לפתיחת המפה'
-									: `להפליג עם ${chosen.size} — לפתיחת המפה`}
-						</button>
-						<p className="text-[13px] opacity-75 m-0">
-							אפשר לבחור מלח אחד כעת, ולצרף נוספים בהמשך.
-						</p>
+						<Link className="btn" to="/voyage">
+							⛵ חזרה להפלגה
+						</Link>
 					</div>
 				</div>
 			</div>
