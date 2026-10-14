@@ -4,6 +4,7 @@ import {
 	AgoraScenarioCardText,
 	AgoraTopicPackage,
 	normalizeLibraryText,
+	resolveTagAlias,
 	showsAsFilterChip,
 	tagLabelIn,
 } from '@freedi/shared-types';
@@ -82,7 +83,8 @@ export function tagLabels(
 	tags: ReadonlyMap<string, AgoraLibraryTag>,
 	lang: string,
 ): string[] {
-	return ids
+	// A tag an admin merged away still resolves: its label is the canonical tag's
+	return [...new Set(ids.map((id) => resolveTagAlias(id, tags)))]
 		.map((id) => tags.get(id))
 		.filter((tag): tag is AgoraLibraryTag => tag !== undefined)
 		.map((tag) => tagLabelIn(tag, lang));

@@ -2,6 +2,9 @@ import { parse } from 'valibot';
 import {
 	AgoraLibraryTag,
 	AgoraLibraryTagSchema,
+	AgoraLibraryReport,
+	AgoraLibraryReportSchema,
+	AgoraReportTargetKind,
 	AgoraScenarioPost,
 	AgoraScenarioPostSchema,
 	AgoraScenarioRating,
@@ -18,6 +21,12 @@ import type {
 	LibraryCreateTagRequest,
 	LibraryGenerateCoverRequest,
 	LibraryHidePostRequest,
+	LibraryMergeTagsRequest,
+	LibraryMergeTagsResponse,
+	LibraryReportRequest,
+	LibraryReportResponse,
+	LibraryResolveReportRequest,
+	LibraryResolveReportResponse,
 	LibraryHidePostResponse,
 	LibraryPostRequest,
 	LibraryPostResponse,
@@ -93,6 +102,13 @@ export const generateCover = call<LibraryGenerateCoverRequest, LibraryGenerateCo
 export const postToThread = call<LibraryPostRequest, LibraryPostResponse>('agoraLibraryPost');
 export const hidePost = call<LibraryHidePostRequest, LibraryHidePostResponse>(
 	'agoraLibraryHidePost',
+);
+export const reportItem = call<LibraryReportRequest, LibraryReportResponse>('agoraLibraryReport');
+export const resolveReports = call<LibraryResolveReportRequest, LibraryResolveReportResponse>(
+	'agoraLibraryResolveReport',
+);
+export const mergeLibraryTags = call<LibraryMergeTagsRequest, LibraryMergeTagsResponse>(
+	'agoraLibraryMergeTags',
 );
 export const moderateLibrary = call<LibraryModerateRequest, LibraryModerateResponse>(
 	'agoraLibraryModerate',
@@ -283,4 +299,107 @@ export async function fetchPosts(
 	}
 
 	return found;
+}
+
+// ─── The admin page's reads (the rules let a sys-admin read all of these) ───
+
+function parseAll<T>(
+	snapshot: { forEach: (cb: (doc: { data: () => unknown }) => void) => void },
+	schema: Parameters<typeof parse>[0],
+	label: string,
+): T[] {
+	const found: T[] = [];
+	snapshot.forEach((docSnap) => {
+		try {
+			found.push(parse(schema, docSnap.data()) as T);
+		} catch (error) {
+			console.error(`[Library] Invalid ${label}:`, error);
+		}
+	});
+
+	return found;
+}
+
+/** Every open report (the queue), unsorted: the page groups and orders them */
+export async function fetchOpenReports(): Promise<AgoraLibraryReport[]> {
+	return parseAll<AgoraLibraryReport>(
+		await getDocs(
+			query(
+				collection(db, Collections.agoraLibraryReports),
+				where('status', '==', 'open'),
+				limit(AGORA_LIBRARY_COMMUNITY.QUEUE_PAGE_SIZE),
+			),
+		),
+		AgoraLibraryReportSchema,
+		'report',
+	);
+}
+
+export async function fetchHiddenReviews(): Promise<AgoraScenarioRating[]> {
+	return parseAll<AgoraScenarioRating>(
+		await getDocs(
+			query(
+				collection(db, Collections.agoraScenarioRatings),
+				where('hidden', '==', true),
+				limit(AGORA_LIBRARY_COMMUNITY.QUEUE_PAGE_SIZE),
+			),
+		),
+		AgoraScenarioRatingSchema,
+		'review',
+	);
+}
+
+export async function fetchHiddenPosts(): Promise<AgoraScenarioPost[]> {
+	return parseAll<AgoraScenarioPost>(
+		await getDocs(
+			query(
+				collection(db, Collections.agoraScenarioPosts),
+				where('hidden', '==', true),
+				limit(AGORA_LIBRARY_COMMUNITY.QUEUE_PAGE_SIZE),
+			),
+		),
+		AgoraScenarioPostSchema,
+		'post',
+	);
+}
+
+/** What a report points at, in words an admin can judge it by */
+export interface ReportTarget {
+	title: string;
+	text: string;
+	stars?: number;
+	hidden: boolean;
+}
+
+export async function fetchReportTarget(
+	kind: AgoraReportTargetKind,
+	targetId: string,
+): Promise<ReportTarget | null> {
+	if (kind === 'scenario') {
+		const pkg = await fetchLibraryScenario(targetId);
+		if (!pkg) return null;
+
+		return {
+			title: pkg.title,
+			text: pkg.library?.summary ?? '',
+			hidden: pkg.library?.hidden === true,
+		};
+	}
+	if (kind === 'review') {
+		const snapshot = await getDoc(doc(db, Collections.agoraScenarioRatings, targetId));
+		if (!snapshot.exists()) return null;
+		const rating = parse(AgoraScenarioRatingSchema, snapshot.data());
+
+		return {
+			title: rating.authorName,
+			text: rating.text ?? '',
+			stars: rating.stars,
+			hidden: rating.hidden,
+		};
+	}
+	const snapshot = await getDoc(doc(db, Collections.agoraScenarioPosts, targetId));
+	if (!snapshot.exists()) return null;
+	const post = parse(AgoraScenarioPostSchema, snapshot.data());
+
+	return { title: post.authorName, text: post.text, hidden: post.hidden };
 }

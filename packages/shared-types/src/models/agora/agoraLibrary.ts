@@ -668,7 +668,7 @@ export interface LibraryTranslateResponse {
 
 export interface LibraryModerateRequest {
 	action: 'hide' | 'unhide';
-	targetKind: 'scenario' | 'review';
+	targetKind: 'scenario' | 'review' | 'post';
 	targetId: string;
 	reason?: string;
 }

@@ -17,6 +17,20 @@ import { logError } from '../utils/errorHandling';
 import { countTag, markerRef, requireApprovedTeacher } from './libraryAccess';
 import { translateLabel } from './libraryTranslate';
 
+const MAX_ALIAS_HOPS = 5;
+
+/** Follow `aliasOf` pointers (an admin's merges) to the tag that is really in use */
+async function liveTagId(tag: AgoraLibraryTag): Promise<string> {
+	let current = tag;
+	for (let hops = 0; hops < MAX_ALIAS_HOPS && current.aliasOf; hops++) {
+		const next = await db.collection(Collections.agoraLibraryTags).doc(current.aliasOf).get();
+		if (!next.exists) break;
+		current = next.data() as AgoraLibraryTag;
+	}
+
+	return current.tagId;
+}
+
 /**
  * A teacher adds a subject or lesson type of their own. It is usable on a
  * scenario at once (status `pending`: it gets its own filter chip once enough
@@ -58,7 +72,13 @@ export const agoraLibraryCreateTag = onCall(
 		const tagRef = db.collection(Collections.agoraLibraryTags).doc(tagId);
 
 		try {
-			if ((await tagRef.get()).exists) return { tagId, existed: true };
+			const found = await tagRef.get();
+			if (found.exists) {
+				// A tag an admin merged away points at the one in use
+				const target = await liveTagId(found.data() as AgoraLibraryTag);
+
+				return { tagId: target, existed: true };
+			}
 			if (await containsBadLanguage(cleanLabel)) {
 				throw new HttpsError('invalid-argument', 'That name is not allowed');
 			}

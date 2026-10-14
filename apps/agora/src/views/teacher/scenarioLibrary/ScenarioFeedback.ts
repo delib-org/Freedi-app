@@ -10,6 +10,7 @@ import {
 } from '../../../lib/scenarioLibrary/api';
 import { getLibraryStore } from '../../../lib/scenarioLibrary/state';
 import { getUserState } from '../../../lib/user';
+import { ReportButton } from './ReportButton';
 
 export interface ScenarioFeedbackAttrs {
 	scenario: AgoraTopicPackage;
@@ -179,6 +180,7 @@ export function ScenarioFeedback(): m.Component<ScenarioFeedbackAttrs> {
 					entry.hidden ? m('span.scn-pill.scn-pill--draft', t('scenlib.review_hidden')) : null,
 				]),
 				entry.text ? m('p.scn-review__text', entry.text) : null,
+				own || entry.hidden ? null : m(ReportButton, { kind: 'review', targetId: entry.ratingId }),
 				admin
 					? m(
 							'button.btn.btn--ghost.btn--sm.scn-review__admin',

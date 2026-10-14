@@ -13,6 +13,7 @@ import {
 	NO_FILTERS,
 	ratingLabel,
 	searchScore,
+	tagLabels,
 	untranslatedIds,
 } from '../view';
 
@@ -273,5 +274,17 @@ describe('ratingLabel', () => {
 			}),
 		).toBe('4.7');
 		expect(ratingLabel({ stats: undefined })).toBe('');
+	});
+});
+
+describe('tagLabels', () => {
+	it('shows a merged-away tag as the canonical one, once', () => {
+		const tags = new Map([
+			['canon', tag('canon', 'subject', { he: 'עישון', en: 'Smoking' })],
+			['dup', tag('dup', 'subject', { he: 'עישונ', en: 'Smokin' }, { aliasOf: 'canon' })],
+		]);
+		expect(tagLabels(['dup'], tags, 'en')).toEqual(['Smoking']);
+		expect(tagLabels(['canon', 'dup'], tags, 'en')).toEqual(['Smoking']);
+		expect(tagLabels(['missing'], tags, 'en')).toEqual([]);
 	});
 });

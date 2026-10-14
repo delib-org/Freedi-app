@@ -46,6 +46,7 @@ import { TopicEditor } from './views/teacher/TopicEditor';
 import { StartGame } from './views/teacher/StartGame';
 import { TeacherClass } from './views/teacher/TeacherClass';
 import { GameReport } from './views/teacher/GameReport';
+import { LibraryAdmin } from './views/teacher/scenarioLibrary/LibraryAdmin';
 import { LibraryHome } from './views/teacher/scenarioLibrary/LibraryHome';
 import { LibraryScenario } from './views/teacher/scenarioLibrary/LibraryScenario';
 
@@ -187,6 +188,7 @@ if (root) {
 		'/teach/library': { render: () => m(LibraryHome) },
 		// Before ':id', so "mine" is never read as a scenario id
 		'/teach/library/mine': { render: () => m(LibraryHome, { key: 'mine', mine: true }) },
+		'/teach/library/admin': { render: () => m(LibraryAdmin) },
 		'/teach/library/:id': byId(LibraryScenario),
 	});
 	// The banner lives beside the router's root so a crash in any view leaves it standing

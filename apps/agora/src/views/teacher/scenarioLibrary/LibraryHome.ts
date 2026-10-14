@@ -306,6 +306,13 @@ export function LibraryHome(): m.Component<LibraryHomeAttrs> {
 							},
 							t('scenlib.seg_mine'),
 						),
+						store.isAdmin
+							? m(
+									m.route.Link,
+									{ href: '/teach/library/admin', class: 'scn-segment__opt' },
+									t('scenlib.adm_link'),
+								)
+							: null,
 					]),
 					mine
 						? m(MineList, { tags: [...store.tags.values()], sort })

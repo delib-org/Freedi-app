@@ -11,6 +11,7 @@ import { getLang, t } from '../../../lib/i18n';
 import { fetchPosts, hidePost, postToThread } from '../../../lib/scenarioLibrary/api';
 import { getLibraryStore } from '../../../lib/scenarioLibrary/state';
 import { getUserState } from '../../../lib/user';
+import { ReportButton } from './ReportButton';
 
 export interface ScenarioDiscussionAttrs {
 	scenario: AgoraTopicPackage;
@@ -228,6 +229,7 @@ export function ScenarioDiscussion(): m.Component<ScenarioDiscussionAttrs> {
 								t('scenlib.disc_reply'),
 							)
 						: null,
+					!own && !post.hidden ? m(ReportButton, { kind: 'post', targetId: post.postId }) : null,
 					moderates && (!post.hidden || canLift)
 						? m(
 								'button.btn.btn--ghost.btn--sm',

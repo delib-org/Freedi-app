@@ -188,9 +188,30 @@ words in `lib/scenarioLibrary/strings*.ts` (merged into `i18n.ts`), styles
   translation) and `scripts/e2e-scenario-library-ui.mjs` (browser, screenshots
   in `output/scenario-library/`, contrast + type audits). Both need a clean
   emulator DB and `OPENAI_API_KEY` in `functions/.env`.
+- **Cover (P3).** `agoraLibraryGenerateCover` paints a cover from the
+  scenario's own words (never student data): scene brief via `WORKER_MODEL`,
+  moderation check, then `gpt-image-1-mini` 1536x1024 medium webp
+  (`COVER_IMAGE` in `libraryCover.ts`, override with `AGORA_COVER_IMAGE_MODEL`;
+  about USD 0.015 an image, from published pricing, not fetched live), stored
+  under `agora/{id}/library-cover-ai-*.webp`. 10 a teacher a day on the approval
+  marker (`AGORA_LIBRARY.COVERS_PER_DAY`). Provider seam `libraryCoverProvider.ts`
+  (stubbed in jest; `AGORA_COVER_STUB=1` on the functions emulator, no network).
+- **Discussion (P4).** `agoraScenarioPosts` (flat, `scenarioId` on each post, one
+  reply level): `agoraLibraryPost` (30 a day, language check, `stats.postCount`),
+  `agoraLibraryHidePost` (scenario author or admin; an admin's hide is lifted
+  only by an admin). Hidden posts are readable by the author (`scenarioOwnerId`
+  is on the doc for that) and admins only.
+- **Admin (P5).** `/teach/library/admin` (sys-admin only): open reports grouped
+  by target (`agoraLibraryReport` files, `agoraLibraryResolveReport` hides or
+  dismisses), everything hidden with a lift button, and tag merging
+  (`agoraLibraryMergeTags`: `aliasOf` first, then scenarios re-pointed in
+  batches with their counters in the same commit, so a half-done merge is just
+  run again). Tag counters count what the library LISTS (public and not hidden):
+  hide/unhide, publish and unpublish all keep to that.
 - **Deploy order:** rules, then `agoraLibraryAccess agoraLibraryCreateTag
   agoraLibraryPublish agoraLibraryUnpublish agoraLibraryUse
-  agoraLibraryTranslate agoraLibraryRate agoraLibraryModerate`, then Agora
-  hosting. Phases 3-6 (AI cover, discussion, admin queue and tag merge, polish)
-  have seams: `ScenarioFeedback` mounts under the scenario page, the cover is an
-  upload today, and `agoraLibraryModerate` is where the rest of moderation sits.
+  agoraLibraryTranslate agoraLibraryRate agoraLibraryModerate
+  agoraLibraryGenerateCover agoraLibraryPost agoraLibraryHidePost
+  agoraLibraryReport agoraLibraryResolveReport agoraLibraryMergeTags`, then
+  Agora hosting, then the indexes (gcloud). Remaining: P6 polish (helpful votes,
+  save for later, tightening the private-read rule).

@@ -12,6 +12,7 @@ import { getLibraryStore, reloadTags } from '../../../lib/scenarioLibrary/state'
 import { ratingLabel, tagLabels } from '../../../lib/scenarioLibrary/view';
 import { getUserState } from '../../../lib/user';
 import { LibraryShell } from './LibraryShell';
+import { ReportButton } from './ReportButton';
 import { ScenarioTabs } from './ScenarioTabs';
 
 type Phase = 'loading' | 'ready' | 'missing' | 'failed';
@@ -263,6 +264,9 @@ export function LibraryScenario(): m.Component<LibraryScenarioAttrs> {
 						...lessonTypes.map((label) => m('span.scn-tag.scn-tag--kind', label)),
 					]),
 					useBlock(scenario, mine),
+					mine || !scenario.library || scenario.library.hidden
+						? null
+						: m(ReportButton, { kind: 'scenario', targetId: scenario.topicPackageId }),
 				]),
 			]),
 		]);

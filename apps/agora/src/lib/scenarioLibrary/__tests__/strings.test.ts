@@ -27,6 +27,8 @@ const FILES = [
 const DYNAMIC: Record<string, string[]> = {
 	'scenlib.sort_': ['rating', 'new', 'used'],
 	'scenlib.notice_': ['published', 'unpublished', 'failed'],
+	'scenlib.adm_kind_': ['scenario', 'review', 'post'],
+	'scenlib.report_': ['scenario', 'review', 'post'],
 };
 
 describe('scenario library strings', () => {

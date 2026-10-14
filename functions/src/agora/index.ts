@@ -43,3 +43,6 @@ export { agoraLibraryModerate } from './fn_agoraLibraryModerate';
 export { agoraLibraryGenerateCover } from './fn_agoraLibraryGenerateCover';
 export { agoraLibraryPost } from './fn_agoraLibraryPost';
 export { agoraLibraryHidePost } from './fn_agoraLibraryHidePost';
+export { agoraLibraryReport } from './fn_agoraLibraryReport';
+export { agoraLibraryResolveReport } from './fn_agoraLibraryResolveReport';
+export { agoraLibraryMergeTags } from './fn_agoraLibraryMergeTags';

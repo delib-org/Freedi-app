@@ -398,6 +398,24 @@ try {
 	await shot(r, '16d-discussion-reader-laptop');
 	await audit(r, 'discussion thread, reader (laptop)');
 
+	step('I3. a teacher reports a message and the scenario');
+	await r.reload({ waitUntil: 'domcontentloaded' });
+	await r.waitForSelector('#scn-tab-discussion', { timeout: 30_000 });
+	await r.click('#scn-tab-discussion');
+	await r.waitForSelector('.scn-thread__replies .scn-post', { timeout: 20_000 });
+	eq('no report button on my own message', await r.locator('.scn-thread__item > .scn-post .scn-report__open').count(), 0);
+	await r.locator('.scn-thread__replies .scn-report__open').click();
+	await r.fill('[id^="scn-report-post-"][id$="-reason"]', 'לא ענייני');
+	await shot(r, '16e-report-form-laptop');
+	await r.locator('.scn-thread__replies .scn-report__form .btn--secondary').click();
+	await r.waitForSelector('.scn-thread__replies .scn-report__thanks', { timeout: 20_000 });
+	await r.locator('.scn-page__side .scn-report__open').click();
+	await r.fill('[id^="scn-report-scenario-"][id$="-reason"]', 'תוכן שלא מתאים לכיתה');
+	await r.locator('.scn-page__side .scn-report__form .btn--secondary').click();
+	await r.waitForSelector('.scn-page__side .scn-report__thanks', { timeout: 20_000 });
+	eq('two open reports filed', (await db.collection('agoraLibraryReports').where('status', '==', 'open').get()).size, 2);
+	await shot(r, '16f-reported-laptop');
+
 	step('J. the reader shelf shows the copy with its credit');
 	await r.goto(`${VITE_HOST}/#!/teach`, { waitUntil: 'domcontentloaded' });
 	await r.waitForSelector('.scenario-row', { timeout: 30_000 });
@@ -426,6 +444,69 @@ try {
 	await ad.click('.scn-admin .btn--secondary');
 	await ad.waitForFunction(() => !document.body.innerText.includes('hidden from the other teachers'), { timeout: 20_000 });
 
+	step('K2. the admin page: reports, hide and close, hidden list, merge a duplicate tag');
+	// a duplicate of "Smoking" that two listed scenarios already carry
+	const dupTag = await callable('agoraLibraryCreateTag', { kind: 'subject', label: 'עישונ', lang: 'he' }, reader.idToken);
+	const seeded = (index) => db.collection('agoraTopicPackages').doc(`${runId}-seed-${index}`);
+	await seeded(1).update({ 'library.subjectIds': [SMOKING, dupTag.tagId] });
+	await seeded(2).update({ 'library.subjectIds': [BULLYING, dupTag.tagId] });
+	await seeded(3).update({ 'library.subjectIds': [MAJORITY, SMOKING] });
+	await db.collection('agoraLibraryTags').doc(dupTag.tagId).update({ scenarioCount: FieldValue.increment(2) });
+	await db.collection('agoraLibraryTags').doc(SMOKING).update({ scenarioCount: FieldValue.increment(1) });
+	await ad.goto(`${VITE_HOST}/#!/teach/library`, { waitUntil: 'domcontentloaded' });
+	await ad.waitForSelector('.scn-segment__opt:has-text("Admin")', { timeout: 40_000 });
+	eq('the admin link is in the library bar', await ad.locator('.scn-segment__opt:has-text("Admin")').count(), 1);
+	eq('a teacher sees no admin link', await r.locator('.scn-segment__opt:has-text("Admin")').count(), 0);
+	await ad.click('.scn-segment__opt:has-text("Admin")');
+	await ad.waitForSelector('.scn-adm', { timeout: 30_000 });
+	await ad.waitForFunction(() => document.querySelectorAll('section[aria-labelledby="scn-adm-reports"] .scn-adm__item').length >= 2, { timeout: 30_000 });
+	await ad.waitForFunction(() => !document.querySelector('section[aria-labelledby="scn-adm-reports"] .spinner'), { timeout: 30_000 });
+	eq('two reported items in the queue', await ad.locator('section[aria-labelledby="scn-adm-reports"] .scn-adm__item').count(), 2);
+	await shot(ad, '18a-admin-queue-laptop');
+	await audit(ad, 'admin page (laptop)');
+	// the reported message: hide it and close its reports
+	const postItem = ad.locator('section[aria-labelledby="scn-adm-reports"] .scn-adm__item', { hasText: 'Message' }).first();
+	await postItem.locator('button:has-text("Hide it and close the reports")').click();
+	await ad.waitForFunction(() => document.querySelectorAll('section[aria-labelledby="scn-adm-reports"] .scn-adm__item').length === 1, { timeout: 30_000 });
+	const hiddenPostDocs = await db.collection('agoraScenarioPosts').where('hidden', '==', true).get();
+	eq('the post is hidden in Firestore', hiddenPostDocs.size, 1);
+	eq('...by an admin', hiddenPostDocs.docs[0].data().hiddenBy, 'admin');
+	await ad.waitForSelector('#scn-adm-hidden', { timeout: 10_000 });
+	await ad.waitForSelector('section[aria-labelledby="scn-adm-hidden"] .scn-adm__item', { timeout: 20_000 });
+	eq('and listed under Hidden', await ad.locator('section[aria-labelledby="scn-adm-hidden"] .scn-adm__item').count() >= 1, true);
+	await shot(ad, '18b-admin-after-hide-laptop');
+	// the reported scenario: dismiss
+	await ad.locator('section[aria-labelledby="scn-adm-reports"] .scn-adm__item', { hasText: 'Scenario' }).first().locator('button:has-text("Dismiss the reports")').click();
+	await ad.waitForFunction(() => document.body.innerText.includes('No open reports'), { timeout: 30_000 });
+	eq('no open reports left', (await db.collection('agoraLibraryReports').where('status', '==', 'open').get()).size, 0);
+	eq('the dismissed scenario is still public and listed', (await db.collection('agoraTopicPackages').doc(ownId).get()).data().library.hidden, false);
+	// lift the post hide from the Hidden list
+	await ad.locator('section[aria-labelledby="scn-adm-hidden"] button:has-text("Lift the hide")').first().click();
+	await ad.waitForFunction(() => document.body.innerText.includes('Nothing is hidden'), { timeout: 30_000 });
+	// merge the duplicate tag, taking the suggestion
+	await ad.locator('.scn-adm__suggest .scn-adm__item', { hasText: 'עישונ ' }).first().waitFor({ timeout: 20_000 });
+	await shot(ad, '18c-admin-tag-suggestions-laptop');
+	await ad.locator('.scn-adm__suggest .scn-adm__item', { hasText: 'עישונ ' }).first().locator('button').click();
+	await ad.click('.scn-adm__tags > button.btn--secondary');
+	await ad.waitForSelector('.scn-notice--bad', { timeout: 10_000 });
+	await shot(ad, '18d-admin-tag-merge-confirm-laptop');
+	await ad.click('.scn-notice--bad .btn--primary');
+	await ad.waitForSelector('.scn-adm__tags .scn-notice:not(.scn-notice--bad)', { timeout: 60_000 });
+	const dupDoc = (await db.collection('agoraLibraryTags').doc(dupTag.tagId).get()).data();
+	eq('the duplicate is an alias of Smoking', dupDoc.aliasOf, SMOKING);
+	eq('the duplicate counts nothing', dupDoc.scenarioCount, 0);
+	eq('Smoking counts the three listed scenarios', (await db.collection('agoraLibraryTags').doc(SMOKING).get()).data().scenarioCount, 3);
+	eq('a scenario that carried both keeps one', (await seeded(1).get()).data().library.subjectIds.join(','), SMOKING);
+	eq('a scenario that carried only the duplicate now has Smoking', (await seeded(2).get()).data().library.subjectIds.sort().join(','), [BULLYING, SMOKING].sort().join(','));
+	await shot(ad, '18e-admin-tag-merged-laptop');
+	// the filter chips no longer offer the alias
+	await r.goto(`${VITE_HOST}/#!/teach/library`, { waitUntil: 'domcontentloaded' });
+	await r.waitForSelector('.scn-chip', { timeout: 30_000 });
+	await r.reload({ waitUntil: 'domcontentloaded' });
+	await r.waitForSelector('.scn-chip', { timeout: 30_000 });
+	await r.waitForTimeout(800);
+	eq('the library filters list no merged-away tag', await r.locator('.scn-chip:has-text("עישונ")').count(), 0);
+
 	// ── phone ───────────────────────────────────────────────────────────────
 	step('L. on a phone');
 	const phone = await mkPage(browser, 'phone', { width: 390, height: 844, lang: 'he' });
@@ -449,6 +530,13 @@ try {
 	await phone.evaluate(() => window.scrollTo(0, 99999));
 	await phone.waitForTimeout(400);
 	await shot(phone, '24-scenario-page-bottom-phone');
+	await phone.reload({ waitUntil: 'domcontentloaded' });
+	await phone.waitForSelector('#scn-tab-discussion', { timeout: 30_000 });
+	await phone.click('#scn-tab-discussion');
+	await phone.waitForSelector('.scn-discussion', { timeout: 10_000 });
+	await phone.waitForTimeout(800);
+	await shot(phone, '24a-discussion-phone');
+	await audit(phone, 'discussion thread (phone)');
 	await phone.goto(`${VITE_HOST}/#!/teach/library/mine`, { waitUntil: 'domcontentloaded' });
 	await phone.waitForSelector('.scn-mine', { timeout: 30_000 });
 	await shot(phone, '25-mine-phone');
@@ -468,6 +556,13 @@ try {
 	await readerPhone.waitForTimeout(300);
 	await shot(readerPhone, '29-reader-scenario-scrolled-phone');
 	await audit(readerPhone, 'scenario page as a reader (phone)');
+	const adminPhone = await mkPage(browser, 'admin-phone', { width: 390, height: 844, lang: 'he' });
+	await signIn(adminPhone, admin);
+	await adminPhone.goto(`${VITE_HOST}/#!/teach/library/admin`, { waitUntil: 'domcontentloaded' });
+	await adminPhone.waitForSelector('.scn-adm', { timeout: 40_000 });
+	await adminPhone.waitForTimeout(1500);
+	await shot(adminPhone, '27a-admin-phone');
+	await audit(adminPhone, 'admin page (phone)');
 	const out2 = await mkPage(browser, 'outsider-phone', { width: 390, height: 844, lang: 'he' });
 	await signIn(out2, outsider);
 	await out2.goto(`${VITE_HOST}/#!/teach/library`, { waitUntil: 'domcontentloaded' });

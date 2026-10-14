@@ -123,10 +123,15 @@ export const agoraLibraryPublish = onCall(
 					throw new HttpsError('permission-denied', 'Only the scenario owner can publish it');
 				}
 				const wasPublic = current.visibility === 'public';
-				const before = wasPublic
-					? [...(current.library?.subjectIds ?? []), ...(current.library?.lessonTypeIds ?? [])]
-					: [];
-				const delta = tagDelta(before, [...subjectIds, ...lessonTypeIds]);
+				// Tag counters follow what the library LISTS: public and not hidden. A hide
+				// already took the scenario off its tags; lifting it puts it back.
+				const hiddenNow = current.library?.hidden ?? false;
+				const before =
+					wasPublic && !hiddenNow
+						? [...(current.library?.subjectIds ?? []), ...(current.library?.lessonTypeIds ?? [])]
+						: [];
+				const after = hiddenNow ? [] : [...subjectIds, ...lessonTypeIds];
+				const delta = tagDelta(before, after);
 				const touched = [...delta.add, ...delta.remove];
 				const touchedSnaps = await Promise.all(touched.map((id) => transaction.get(tagRef(id))));
 
@@ -210,10 +215,10 @@ export const agoraLibraryUnpublish = onCall(
 					throw new HttpsError('permission-denied', 'Only the scenario owner can change it');
 				}
 				if (current.visibility !== 'public') return;
-				const tagIds = [
-					...(current.library?.subjectIds ?? []),
-					...(current.library?.lessonTypeIds ?? []),
-				];
+				// A hidden scenario is already off its tags' counts
+				const tagIds = current.library?.hidden
+					? []
+					: [...(current.library?.subjectIds ?? []), ...(current.library?.lessonTypeIds ?? [])];
 				const tagSnaps = await Promise.all(tagIds.map((id) => transaction.get(tagRef(id))));
 				transaction.update(packageRef(scenarioId), { visibility: 'private' });
 				tagSnaps.forEach((tagSnap, index) => {
