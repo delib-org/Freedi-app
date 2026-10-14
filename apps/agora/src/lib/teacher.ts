@@ -1,5 +1,7 @@
 import {
+	deleteField,
 	orderBy,
+	runTransaction,
 	startAfter,
 	type QueryDocumentSnapshot,
 	type DocumentData,
@@ -22,6 +24,7 @@ import {
 	AgoraStudentAggregateSchema,
 	AgoraTopicPackage,
 	AgoraTopicPackageSchema,
+	AgoraYoutubeVideo,
 	AgoraThemeChoice,
 	VotingStageSettings,
 	AGORA_VOTING,
@@ -54,6 +57,7 @@ import { trackWrite } from './confirmedWrite';
 import { teacherConsole } from './callables';
 import type { VillageCallPlace } from './flows/villageRoute';
 import { nextCallStamp } from './flows/summons';
+import { shouldClearLibraryVideo } from './flows/libraryVideo';
 
 /**
  * Everything the teacher and join screens ask of Firestore.
@@ -297,14 +301,68 @@ export async function callVillage(
 	place: VillageCallPlace,
 	/** The server time the room reached its station — the stamp never falls below it */
 	currentOpenedAt?: number,
+	/** Sending the class anywhere but the library ends the class's video */
+	clearVideo = false,
 ): Promise<number> {
 	const at = nextCallStamp(Date.now(), currentOpenedAt);
 	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
 		villageCall: { place, at },
+		...(clearVideo ? { libraryVideo: deleteField() } : {}),
 		lastUpdate: at,
 	});
 
 	return at;
+}
+
+/**
+ * Start a library video for the whole class, and bring the class to the
+ * library with it: the same `villageCall` the move-class sheet writes, so
+ * every phone (village or flat) walks to the library item the room is on and
+ * the video plays there. The stage itself is never advanced from here.
+ *
+ * One stamp serves both fields, so each phone reacts once per start.
+ * `floorAt` is the highest stamp already in play (the station's opening time,
+ * the last call, the last video): the new one never falls below it. A
+ * student's own replay never writes any of this.
+ */
+export async function startLibraryVideo(
+	sessionId: string,
+	sceneId: string,
+	video: AgoraYoutubeVideo,
+	floorAt?: number,
+): Promise<number> {
+	const at = nextCallStamp(Date.now(), floorAt);
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		libraryVideo: {
+			sceneId,
+			videoId: video.videoId,
+			...(video.startSeconds ? { startSeconds: video.startSeconds } : {}),
+			at,
+		},
+		villageCall: { place: 'library', at },
+		lastUpdate: at,
+	});
+
+	return at;
+}
+
+/**
+ * End the class's library video. The class stays in the library and students
+ * may replay; the wall returns to the stage. Clears only what was started no
+ * later than this stop (see `shouldClearLibraryVideo`), so a start pressed on
+ * the teacher's other device a moment later is never undone by a late stop.
+ */
+export async function stopLibraryVideo(
+	sessionId: string,
+	stopAt: number = Date.now(),
+): Promise<void> {
+	const ref = doc(db, Collections.agoraSessions, sessionId);
+	await runTransaction(db, async (transaction) => {
+		const snapshot = await transaction.get(ref);
+		const existing = snapshot.data()?.libraryVideo as { at?: number } | undefined;
+		if (!shouldClearLibraryVideo(existing?.at, stopAt)) return;
+		transaction.update(ref, { libraryVideo: deleteField(), lastUpdate: stopAt });
+	});
 }
 
 /**

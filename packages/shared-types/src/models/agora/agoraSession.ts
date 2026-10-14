@@ -288,6 +288,19 @@ export const AgoraSessionSchema = object({
 	 * from the console's menu, read live by the projector.
 	 */
 	projectorQr: optional(boolean()),
+	 * The library video the teacher started for the class: which scene it
+	 * belongs to, its YouTube id (and start offset), and when it was started
+	 * (ms). Each student device follows it once per `at`; a student replaying
+	 * a video on their own phone never writes this. Teacher-writable.
+	 */
+	libraryVideo: optional(
+		object({
+			sceneId: string(),
+			videoId: string(),
+			startSeconds: optional(number()),
+			at: number(),
+		}),
+	),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),

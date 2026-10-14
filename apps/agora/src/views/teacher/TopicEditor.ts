@@ -2,6 +2,7 @@ import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { stalledBanner } from '../../components/StalledBanner';
 import { TeacherNav } from '../../components/TeacherNav';
+import { YoutubeListEditor } from '../../components/YoutubeListEditor';
 import {
 	fetchTopicPackage,
 	saveTopicEditorFields,
@@ -323,6 +324,13 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			scene.videoUrl
 				? m('video.scene__video', { src: scene.videoUrl, controls: true, preload: 'metadata' })
 				: null,
+			m('label.teacher__section-title', t('video.editor_label')),
+			m(YoutubeListEditor, {
+				videos: scene.youtubeVideos ?? [],
+				onChange: (youtubeVideos) => {
+					update({ youtubeVideos });
+				},
+			}),
 		]);
 	}
 

@@ -54,11 +54,21 @@ export function watchStageBody(input: WatchBodyInput): m.Children {
 
 		case AgoraStage.framing:
 		case AgoraStage.perspectives:
-			return m(TeacherInstructions, { stage: item.stage, topic, projector: true });
+			return m(TeacherInstructions, {
+				stage: item.stage,
+				topic,
+				projector: true,
+				videoContext: { libraryVideo: session.libraryVideo },
+			});
 
 		case AgoraStage.needs:
 			return [
-				m(TeacherInstructions, { stage: item.stage, topic, projector: true }),
+				m(TeacherInstructions, {
+					stage: item.stage,
+					topic,
+					projector: true,
+					videoContext: { libraryVideo: session.libraryVideo },
+				}),
 				m('.card.stack', m(NeedsBoard, { topic })),
 			];
 

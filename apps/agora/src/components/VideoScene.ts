@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { Icon } from './Icon';
 import { t } from '../lib/i18n';
+import { YoutubePlayer, type ClassVideo } from './YoutubePlayer';
 import type { AgoraScene } from '@freedi/shared-types';
 
 export interface VideoSceneAttrs {
@@ -16,6 +17,8 @@ export interface VideoSceneAttrs {
 	immersive?: boolean;
 	/** Position inside the stage's scene run — drawn as story bars on top */
 	progress?: { index: number; total: number };
+	/** The YouTube video the teacher started for the class, if it is on this scene */
+	classVideo?: ClassVideo;
 }
 
 /**
@@ -31,7 +34,10 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 
 	return {
 		view(vnode) {
-			const { scene, onDone, doneLabel, immersive = false, progress } = vnode.attrs;
+			const { scene, onDone, doneLabel, immersive = false, progress, classVideo } = vnode.attrs;
+			const youtubeVideos = scene.youtubeVideos ?? [];
+			const youtube =
+				youtubeVideos.length > 0 ? m(YoutubePlayer, { videos: youtubeVideos, classVideo }) : null;
 
 			if (scene.sceneId !== lastSceneId) {
 				lastSceneId = scene.sceneId;
@@ -126,6 +132,9 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 						// scene never scrolls away where the student is
 						m('h2.scene__title', scene.title),
 
+						// Outside the scrolling caption, so a long scene never scrolls it away
+						youtube ? m('.scene__youtube', youtube) : null,
+
 						m(
 							'.scene__caption',
 							{
@@ -191,6 +200,8 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 							preload: 'auto',
 						})
 					: null,
+
+				youtube,
 
 				galleryImages.length > 0
 					? m(

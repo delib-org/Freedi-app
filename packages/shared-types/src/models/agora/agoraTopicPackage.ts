@@ -59,6 +59,22 @@ export const AgoraDialogueLineSchema = object({
 export type AgoraDialogueLine = InferOutput<typeof AgoraDialogueLineSchema>;
 
 /**
+ * One YouTube video a teacher pasted into a scene. Only the id is stored —
+ * never the raw link or any HTML — and clients build the youtube-nocookie
+ * embed URL from it.
+ */
+export const AgoraYoutubeVideoSchema = object({
+	/** The 11-character YouTube video id */
+	videoId: string(),
+	/** A teacher-written label; clients fall back to "Video N" when absent */
+	title: optional(string()),
+	/** Where playback begins, from a `&t=` / `?t=` in the pasted link */
+	startSeconds: optional(number()),
+});
+
+export type AgoraYoutubeVideo = InferOutput<typeof AgoraYoutubeVideoSchema>;
+
+/**
  * One narrative scene. If videoUrl is missing, clients render the
  * dialogue/text fallback over the scene images.
  */
@@ -68,6 +84,11 @@ export const AgoraSceneSchema = object({
 	title: string(),
 	text: string(),
 	videoUrl: optional(string()),
+	/**
+	 * Any number of YouTube videos, in the teacher's order. Independent of the
+	 * uploaded `videoUrl`, which keeps working as before.
+	 */
+	youtubeVideos: optional(array(AgoraYoutubeVideoSchema)),
 	imageUrls: array(string()),
 	dialogue: array(AgoraDialogueLineSchema),
 });

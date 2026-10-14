@@ -39,6 +39,18 @@ export interface TeacherStripAttrs {
 	director?: boolean;
 	/** A quiet line under the button — "moved from your other device" */
 	status?: string;
+	/**
+	 * The class's library video while it is live: its name, and the two ways
+	 * out. On a wall device only stop is offered, and it takes two taps.
+	 */
+	video?: {
+		title: string;
+		wall: boolean;
+		/** Wall only: the first tap has armed stop */
+		armed: boolean;
+		onStop: () => void;
+		onSwitch: () => void;
+	};
 }
 
 const STEPS_ID = 'teacher-steps';
@@ -133,6 +145,7 @@ export function TeacherStrip(): m.Component<TeacherStripAttrs> {
 				pennant,
 				director,
 				status,
+				video,
 			} = attrs;
 			const current = steps[currentIndex];
 			const ended = action === null;
@@ -219,6 +232,27 @@ export function TeacherStrip(): m.Component<TeacherStripAttrs> {
 									: m('span.teacher-strip__arrow', m(Icon, { name: 'arrow', size: 20 })),
 							],
 						),
+
+				video
+					? m('.teacher-strip__video', { role: 'status' }, [
+							m('span.teacher-strip__video-title', [
+								'▣ ',
+								t('video.now_playing', { title: video.title }),
+							]),
+							m(
+								'button.btn.btn--secondary.btn--sm.teacher-strip__video-stop',
+								{ type: 'button', onclick: video.onStop },
+								video.wall && video.armed ? t('video.stop_confirm') : t('video.stop'),
+							),
+							video.wall
+								? null
+								: m(
+										'button.btn.btn--ghost.btn--sm.teacher-strip__video-switch',
+										{ type: 'button', onclick: video.onSwitch },
+										t('video.switch'),
+									),
+						])
+					: null,
 
 				status && !failed ? m('p.teacher-strip__status', { role: 'status' }, status) : null,
 

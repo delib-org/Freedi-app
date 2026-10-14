@@ -87,6 +87,7 @@ import { seedsOf } from '../components/LookPicker';
 import { buildLook, classLooks, wearLook } from '../lib/looks';
 import { Lobby } from './Lobby';
 import { SceneStage } from './SceneStage';
+import { isLibraryVideoLive } from '../lib/flows/libraryVideo';
 import { ValueIdentification } from './ValueIdentification';
 import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
@@ -757,6 +758,10 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
 						);
 
+			// A stale start (an old stamp) is history: it never auto-plays on a late phone
+			const liveLibraryVideo = isLibraryVideoLive(session.libraryVideo, Date.now())
+				? session.libraryVideo
+				: undefined;
 			const scenesOf = (...kinds: AgoraSceneKind[]) =>
 				kinds
 					.map((kind) => topic.scenes.find((scene) => scene.kind === kind))
@@ -805,6 +810,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							),
 							storageKey: `agora_${sessionId}_framing`,
 							onProgress,
+							classVideo: liveLibraryVideo,
 						});
 
 					case AgoraStage.perspectives:
@@ -813,6 +819,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							scenes: scenesOf(AgoraSceneKind.perspectiveA, AgoraSceneKind.perspectiveB),
 							storageKey: `agora_${sessionId}_perspectives`,
 							onProgress,
+							classVideo: liveLibraryVideo,
 						});
 
 					case AgoraStage.needs:
@@ -828,6 +835,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							// the class finishes the scenes
 							epilogue: m(NeedsBoard, { topic }),
 							onProgress,
+							classVideo: liveLibraryVideo,
 						});
 
 					case AgoraStage.valueIdentification:

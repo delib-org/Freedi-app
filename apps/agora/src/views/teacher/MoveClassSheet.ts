@@ -2,6 +2,7 @@ import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { Icon } from '../../components/Icon';
 import { TeacherPanel } from './TeacherPanel';
+import { MoveClassVideos, type MoveClassVideosAttrs } from './MoveClassVideos';
 import { teacherStepLabel } from '../../lib/teacherSteps';
 import { jumpConsequences, moveClassRows, type MoveRow } from '../../lib/flows/moveClass';
 import { villagePlace, type VillageCallPlace } from '../../lib/flows/villageRoute';
@@ -47,6 +48,8 @@ export interface MoveClassSheetAttrs {
 		waiting: string[];
 		onRecall: () => void;
 	};
+	/** The lesson's YouTube videos — a group under the stations; absent when there are none */
+	videos?: Omit<MoveClassVideosAttrs, 'onClose'>;
 	onClose: () => void;
 }
 
@@ -337,6 +340,9 @@ export function MoveClassSheet(): m.Component<MoveClassSheetAttrs> {
 											},
 											t('village.call_council'),
 										)
+									: null,
+								attrs.videos
+									? m(MoveClassVideos, { ...attrs.videos, onClose: attrs.onClose })
 									: null,
 							],
 					attrs.status ? m('p.lobby__status', { role: 'status' }, attrs.status) : null,
