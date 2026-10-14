@@ -135,12 +135,17 @@ export function villageBoothKind(item: AgoraStagePlanItem): VillageBoothKind | n
 export function villagePlace(item: AgoraStagePlanItem): VillagePlace {
 	if (villageBoothKind(item) !== null) return boothPlace(item.itemId);
 	switch (item.stage) {
+		// The library is the house of knowledge: the film, the period, the
+		// teacher's videos and the background materials.
 		case AgoraStage.framing:
+		case AgoraStage.valueIdentification:
+			return 'library';
+		// The two voices of the era stand at the study house: that is where you
+		// meet people. (A presentation place only — no stored value changes.)
 		case AgoraStage.perspectives:
 		case AgoraStage.needs:
-		case AgoraStage.valueIdentification:
 		case AgoraStage.positioning:
-			return 'library';
+			return 'challenge';
 		case AgoraStage.voting:
 		case AgoraStage.results:
 		case AgoraStage.ended:

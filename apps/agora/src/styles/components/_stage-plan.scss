@@ -16,6 +16,9 @@
 	padding: var(--space-xs) var(--space-md);
 	background: var(--bg-card-solid);
 	border-block-end: 1px solid var(--border-subtle);
+	// A ten-station plan (the scenario's) scrolls inside its row; without this
+	// the row's overflow also widened the page, and a phone showed it shifted
+	overflow-x: clip;
 
 	&__row {
 		flex: 1 1 auto;

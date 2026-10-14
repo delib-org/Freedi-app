@@ -30,8 +30,8 @@ describe('calledItemIndex', () => {
 	});
 
 	it('finds the latest opened item living in a fixed building', () => {
-		expect(calledItemIndex('library', plan, 4)).toBe(3);
-		expect(calledItemIndex('library', plan, 2)).toBe(1);
+		expect(calledItemIndex('library', plan, 4)).toBe(1);
+		expect(calledItemIndex('challenge', plan, 4)).toBe(3);
 		expect(calledItemIndex('council', plan, 6)).toBe(6);
 	});
 

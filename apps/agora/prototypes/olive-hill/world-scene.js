@@ -278,7 +278,24 @@ window.addEventListener('message',event=>{const d=event.data;if(event.origin!==l
  * world reports where the guide's head is so the shell can hang the bubble.
  */
 let view=null,viewKind=null,viewPlace='';
+/**
+ * The study house's two voices, framed side by side: far enough back that both
+ * fit the screen, and aimed low so they stand in its upper half, above the
+ * bubble that speaks for them.
+ */
+function castPose(){
+ const pair=characters.filter(c=>c.station==='challenge'&&c.cast);if(!pair.length)return null;
+ const cx=pair.reduce((a,c)=>a+c.x,0)/pair.length,cz=pair.reduce((a,c)=>a+c.z,0)/pair.length;
+ const look=new THREE.Vector3(cx,height(cx,cz)+.1,cz);
+ const halfFov=Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov)/2)*camera.aspect);
+ const back=THREE.MathUtils.clamp(2.5/Math.tan(halfFov),5.5,11);
+ const eye=look.clone().addScaledVector(new THREE.Vector3(CENTER.x-cx,0,CENTER.z-cz).normalize(),back);
+ eye.y=height(eye.x,eye.z)+1.75;
+ const quaternion=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(eye,look,new THREE.Vector3(0,1,0)));
+ return {eye,quaternion};
+}
 function viewPose(place,kind){
+ if(place==='challenge'&&kind==='table')return castPose();
  const booth=boardFor(place);if(!booth)return null;
  const eye=new THREE.Vector3(),look=new THREE.Vector3();
  if(kind==='board'){
@@ -361,6 +378,7 @@ window.addEventListener('message',event=>{
  if(typeof data.sound==='boolean')applySound(data.sound);
  if(typeof data.palette==='string')applyPalette(data.palette);
  deskInfo=data.desk&&typeof data.desk.label==='string'&&typeof data.desk.prompt==='string'?{label:data.desk.label,prompt:data.desk.prompt,text:typeof data.desk.text==='string'?data.desk.text:'',writable:data.desk.writable===true}:null;
+ if(Array.isArray(data.cast))village.setCast(data.cast.filter(c=>c&&typeof c.id==='string'&&typeof c.name==='string').map(c=>({id:c.id,name:c.name,portraitUrl:typeof c.portraitUrl==='string'?c.portraitUrl:''})));
  if(Array.isArray(data.booths))installBooths(data.booths.filter(b=>b&&typeof b.itemId==='string'&&typeof b.label==='string').map(b=>({itemId:b.itemId,label:b.label,kind:typeof b.kind==='string'?b.kind:'open',open:b.open!==false,current:b.current===true})));
  if(data.navigation==='teacher'||data.navigation==='free')navigation=data.navigation;
  if(data.places&&typeof data.places==='object'){placeStatus=data.places;arrangeStations();}

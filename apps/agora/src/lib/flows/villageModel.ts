@@ -1,6 +1,7 @@
 import { AgoraStage, type AgoraSession, type AgoraStagePlanItem } from '@freedi/shared-types';
 import type { AgoraProposalScore } from '@freedi/shared-types';
 import { councilBallot, councilPitch, type CouncilModel } from './villageCouncil';
+import type { CouncilVoice } from './councilVoices';
 import { villagePlace } from './villageRoute';
 
 /**
@@ -49,6 +50,8 @@ export interface CouncilModelInput {
 	classSize: number;
 	leftLabel: string;
 	rightLabel: string;
+	/** The characters' verdicts on a proposal — two portrait tiles on the ballot */
+	voicesOf?: (statementId: string) => CouncilVoice[];
 }
 
 /**
@@ -71,6 +74,7 @@ export function councilModelFor(input: CouncilModelInput): CouncilModel {
 			votedCount: input.votes.votedCount,
 			classSize: input.classSize,
 			closed: roomStage !== AgoraStage.voting,
+			voicesOf: input.voicesOf,
 		});
 	}
 

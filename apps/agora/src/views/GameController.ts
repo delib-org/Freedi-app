@@ -82,6 +82,10 @@ import {
 import { CarriedContext } from '../components/CarriedContext';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { StageTransition, hasStageTransition } from '../components/StageTransition';
+import { prefetchFilm } from '../components/OpeningFilm';
+import { openingFilmOf, playsOpeningFilm, type OpeningFilm } from '../lib/flows/openingFilm';
+import { needsQuestionOf, planHasCast, scenarioCast } from '../lib/flows/scenarioCast';
+import { councilVoices } from '../lib/flows/councilVoices';
 import { LookSheet } from '../components/LookSheet';
 import { seedsOf } from '../components/LookPicker';
 import { buildLook, classLooks, wearLook } from '../lib/looks';
@@ -202,6 +206,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let transitionLeaving = false;
 	let transitionTimer: number | undefined;
 	let transitionLeaveTimer: number | undefined;
+	/** The opening film, while it is the travel card: it ends itself, or someone skips it */
+	let transitionFilm: OpeningFilm | null = null;
 	let nav: StageNavState = INITIAL_STAGE_NAV;
 	let navRestored = false;
 	/** This device was showing the removed screen: a missing seat now means "on its way back" */
@@ -303,23 +309,49 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	window.addEventListener('online', wake);
 	window.addEventListener('pageshow', wake);
 
-	function beginStageTransition(item: AgoraStagePlanItem): void {
+	/** Fade the travel card out, then take it away */
+	function endStageTransition(): void {
+		window.clearTimeout(transitionTimer);
+		window.clearTimeout(transitionLeaveTimer);
+		transitionLeaving = true;
+		m.redraw();
+		transitionLeaveTimer = window.setTimeout(() => {
+			transitionItem = null;
+			transitionFilm = null;
+			m.redraw();
+		}, 400);
+	}
+
+	/**
+	 * The travel card between journey legs. Into the story it is the scenario's
+	 * opening film (when it has one): full screen, until it ends or is skipped.
+	 */
+	function beginStageTransition(item: AgoraStagePlanItem, film: OpeningFilm | null = null): void {
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		transitionItem = item;
+		transitionFilm = film;
 		transitionLeaving = false;
 		window.clearTimeout(transitionTimer);
 		window.clearTimeout(transitionLeaveTimer);
-		transitionTimer = window.setTimeout(
-			() => {
-				transitionLeaving = true;
-				m.redraw();
-				transitionLeaveTimer = window.setTimeout(() => {
-					transitionItem = null;
-					m.redraw();
-				}, 400);
-			},
-			reduced ? 900 : 1900,
+		if (film) return;
+		transitionTimer = window.setTimeout(endStageTransition, reduced ? 900 : 1900);
+	}
+
+	/** The film for a stage the teacher just opened, if this scenario has one */
+	function filmFor(item: AgoraStagePlanItem): OpeningFilm | null {
+		if (!playsOpeningFilm(item.stage)) return null;
+
+		return openingFilmOf(
+			getTopicPackage(getSessionState().session?.topicPackageId ?? '') ?? undefined,
 		);
+	}
+
+	/** The library shelf's "watch again": the film, on demand, over the village */
+	function replayFilm(): void {
+		const item = getStagePlan().find((candidate) => playsOpeningFilm(candidate.stage));
+		const film = item ? filmFor(item) : null;
+		if (item && film) beginStageTransition(item, film);
+		m.redraw();
 	}
 
 	function dispatchNav(event: StageNavEvent): void {
@@ -464,7 +496,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					dispatchNav({ kind: 'session-advanced', led });
 					const item = plan[currentIndex];
 					if (nav.viewingItemId === null && item && hasStageTransition(item.stage))
-						beginStageTransition(item);
+						beginStageTransition(item, filmFor(item));
 					// A call held for a typist is over once the class moved on
 					if (pendingCall) stopPending();
 				}
@@ -590,6 +622,9 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									? planItemLabel(transitionItem)
 									: undefined,
 							leaving: transitionLeaving,
+							film: transitionFilm
+								? { film: transitionFilm, wall: false, onDone: endStageTransition }
+								: undefined,
 							call:
 								callCard && callCard.item === transitionItem
 									? {
@@ -685,7 +720,10 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			if (item.stage === AgoraStage.lobby) {
 				// The village's first station needs the topic: fetch it while the class
 				// waits, so moving on does not swap the 3D world for a loading spinner.
-				if (villageMode) loadTopicPackage(session.topicPackageId);
+				// (The opening film is warmed up in the same wait, so it starts on a frame.)
+				loadTopicPackage(session.topicPackageId);
+				const lobbyFilm = openingFilmOf(getTopicPackage(session.topicPackageId) ?? undefined);
+				if (lobbyFilm) prefetchFilm(lobbyFilm.url);
 
 				// The same slots as the stage screens below — overlays as ONE slot, and
 				// an empty one where they carry the view toggle — so the village sits in
@@ -791,6 +829,10 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				? session.libraryVideo
 				: undefined;
 			const materialsRef = { topicPackageId: session.topicPackageId, sessionId, userId };
+			// The scenario's two characters stand in the village; with them there,
+			// the study house reports what the class has heard, not the shelf's books
+			const openingFilm = openingFilmOf(topic);
+			const cast = villageMode && planHasCast(plan) ? scenarioCast(topic) : [];
 			const scenesOf = (...kinds: AgoraSceneKind[]) =>
 				kinds
 					.map((kind) => topic.scenes.find((scene) => scene.kind === kind))
@@ -803,6 +845,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					reportStageProgress(sessionId, userId, item.stage, scenesDone, scenesTotal);
 				}
 			};
+			const sceneProgress = cast.length > 0 ? undefined : onProgress;
 
 			/** A past deliberation, re-read: the board as it stood, no pen */
 			const deliberationRecord = (): m.Children => {
@@ -848,7 +891,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							allowReplay: villageMode,
 							scenes: scenesOf(AgoraSceneKind.perspectiveA, AgoraSceneKind.perspectiveB),
 							storageKey: `agora_${sessionId}_perspectives`,
-							onProgress,
+							onProgress: sceneProgress,
 							classVideo: liveLibraryVideo,
 							materials: materialsRef,
 						});
@@ -865,7 +908,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							// Both sides' needs stay on screen for re-reading while
 							// the class finishes the scenes
 							epilogue: m(NeedsBoard, { topic }),
-							onProgress,
+							onProgress: sceneProgress,
 							classVideo: liveLibraryVideo,
 							materials: materialsRef,
 						});
@@ -991,7 +1034,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					listenToVoting(sessionId, session.challengeQuestionId, userId);
 				}
 				const votes = getVotingState();
-				const { proposals, scores } = getDeliberationState();
+				const { proposals, scores, characterReviews } = getDeliberationState();
 
 				return councilModelFor({
 					plan,
@@ -1008,6 +1051,11 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					classSize: participants.length,
 					leftLabel: topic.positioningScale.leftLabel,
 					rightLabel: topic.positioningScale.rightLabel,
+					// The characters' existing verdicts, two portrait tiles per proposal
+					voicesOf:
+						cast.length > 0
+							? (statementId: string) => councilVoices(statementId, cast, characterReviews)
+							: undefined,
 				});
 			})();
 
@@ -1058,6 +1106,11 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 											},
 										}
 									: undefined,
+								cast,
+								castQuestion: needsQuestionOf(topic),
+								castStorageKey: `agora_${sessionId}_cast`,
+								onCastProgress: onProgress,
+								film: openingFilm ? { title: openingFilm.title, onReplay: replayFilm } : undefined,
 								onLeaveVillage: () => {
 									chooseView('flat');
 								},

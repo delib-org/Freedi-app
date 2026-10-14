@@ -24,6 +24,7 @@ import {
 	stationPapersFor,
 } from '../../lib/flows/villageModel';
 import { villageDesk } from '../../lib/flows/villageRoute';
+import { needsQuestionOf, planHasCast, scenarioCast } from '../../lib/flows/scenarioCast';
 import {
 	isLightWorld,
 	isVillageSoundOn,
@@ -344,6 +345,10 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 								navigation: session.villageNavigation ?? 'teacher',
 								call: session.villageCall,
 								retry: villageAttempts > 0,
+								// The two characters stand at the study house for the teacher too
+								cast: topic && planHasCast(plan) ? scenarioCast(topic) : [],
+								castQuestion: needsQuestionOf(topic ?? undefined),
+								castStorageKey: `agora_watch_${sessionId}_cast`,
 								community: topic
 									? {
 											session,

@@ -18,6 +18,9 @@ import { bubblePlacement, readBubbleAnchor, type BubbleAnchor } from '../lib/flo
 import { VillageCommunity, type VillageCommunityAttrs } from './VillageCommunity';
 import { planItemLabel } from './StageNav';
 import { PlaceBar } from './PlaceBar';
+import { CastBubble } from './CastBubble';
+import { CastCards } from './CastCards';
+import { castFigures, isCastStage, planHasCast, type CastMember } from '../lib/flows/scenarioCast';
 import { openPlaceOf, placeNavTabs, type PlaceDestination } from '../lib/flows/placeNav';
 import { t } from '../lib/i18n';
 import { isLightWorld, isVillageSoundOn, villagePalette } from '../lib/villagePrefs';
@@ -59,6 +62,20 @@ interface VillageShellAttrs {
 	/** A row the bar carries above its doors — the watcher's director row on a phone */
 	barLead?: m.Children;
 	browseFreely?: boolean;
+	/**
+	 * The scenario's two characters. They stand at the study house and in the
+	 * story and needs booths, speak only the package's own lines, and their
+	 * cards (opinions / needs) hang in every desk bubble.
+	 */
+	cast?: readonly CastMember[];
+	/** The needs scene's question, read above the characters' answers */
+	castQuestion?: string;
+	/** Refresh-safe place of what the student has heard from each character */
+	castStorageKey?: string;
+	/** (characters heard to the end, characters) — the progress the teacher sees */
+	onCastProgress?: (done: number, total: number) => void;
+	/** The opening film, replayable from the library shelf */
+	film?: { title: string; onReplay: () => void };
 	/** The way out when the 3D world will not load on this device */
 	onLeaveVillage?: () => void;
 	/** This world was asked for again after failing once: the notice says it still does not load */
@@ -193,6 +210,8 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				papers: attrs.papers,
 				stationPapers: attrs.stationPapers,
 				booths: villageBooths(attrs.plan, attrs.currentIndex, planItemLabel),
+				// The two characters the world stands up (names and pictures only)
+				cast: planHasCast(attrs.plan) ? castFigures(attrs.cast ?? []) : [],
 				council: attrs.council ?? null,
 				navigation: leads() ? 'teacher' : 'free',
 				roomItemId: attrs.plan[attrs.currentIndex]?.itemId ?? '',
@@ -392,6 +411,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			const index = calledItemIndex(place, attrs.plan, attrs.currentIndex);
 			if (index >= 0 && index !== attrs.viewingIndex)
 				attrs.onSelectBook?.(attrs.plan[index].itemId);
+			else if (place === 'challenge' && (attrs.cast?.length ?? 0) > 0) frameView(place, 'table');
 
 			return;
 		}
@@ -401,6 +421,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			if (deskOpen || communityOpen) return;
 			if (villageDesk(item)) showStation();
 			else if (then === 'station' && place === 'council') enterCouncil();
+			else if (isCastStage(item.stage) && (attrs.cast?.length ?? 0) > 0) frameView(place, 'table');
 
 			return;
 		}
@@ -629,6 +650,18 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			const library = !!viewing && villagePlace(viewing) === 'library';
 			const council = !!viewing && villagePlace(viewing) === 'council';
 			const deskHere = !!viewing && !!villageDesk(viewing) && !library && !council;
+			const study = !!viewing && villagePlace(viewing) === 'challenge';
+			const cast = attrs.cast ?? [];
+			// The two voices speak in a sheet over the study house, once the walk
+			// has ended and no paper or board is open
+			const castBubble =
+				study &&
+				isCastStage(viewing.stage) &&
+				cast.length > 0 &&
+				!arrival &&
+				!opened &&
+				!communityOpen &&
+				attrs.viewingIndex <= attrs.currentIndex;
 			const bubble =
 				opened && deskOpen && frame
 					? bubblePlacement(
@@ -739,7 +772,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 							? `village-library${bookOpen ? ' village-library--reading' : ''}`
 							: deskOpen
 								? `village-desk village-bubble${waitingAnchor ? ' village-bubble--waiting' : ''}`
-								: council
+								: council || study
 									? 'village-council'
 									: '',
 					},
@@ -771,56 +804,78 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 													? t('village.library.intro_free')
 													: t('village.library.intro_led'),
 											),
-											m(
-												'.village-library__shelf',
-												attrs.plan.map((item, index) =>
-													villagePlace(item) !== 'library'
-														? null
-														: m(
-																'button.village-library__book',
+											m('.village-library__shelf', [
+												...(attrs.film
+													? [
+															m(
+																'button.village-library__book.village-library__book--film',
 																{
-																	key: item.itemId,
-																	disabled: index > attrs.currentIndex,
-																	class:
-																		!attrs.browseFreely && index === attrs.currentIndex
-																			? 'is-current'
-																			: '',
-																	style: {
-																		'--book-color': [
-																			'#466762',
-																			'#8d604f',
-																			'#64704c',
-																			'#6e6083',
-																			'#8c713e',
-																		][index % 5],
-																	},
-																	onclick: () => {
-																		if (index > attrs.currentIndex) return;
-																		if (index === attrs.viewingIndex) {
-																			bookOpen = true;
-																		} else {
-																			requestedBook = item.itemId;
-																			attrs.onSelectBook?.(item.itemId);
-																		}
-																	},
+																	key: 'opening-film',
+																	style: { '--book-color': '#2b2350' },
+																	onclick: () => attrs.film?.onReplay(),
 																},
 																[
-																	m('span.village-library__ornament', '❧'),
-																	m('strong', item.title?.trim() || planItemLabel(item)),
 																	m(
-																		'small',
-																		attrs.browseFreely
-																			? t('village.library.book_open')
-																			: index > attrs.currentIndex
-																				? t('village.library.book_later')
-																				: index === attrs.currentIndex
-																					? t('village.library.book_current')
-																					: t('village.library.book_reread'),
+																		'span.village-library__ornament',
+																		{ 'aria-hidden': 'true' },
+																		'▶',
 																	),
+																	m('strong', attrs.film.title),
+																	m('small', t('film.watch_again')),
 																],
 															),
+														]
+													: []),
+												...attrs.plan.flatMap((item, index) =>
+													villagePlace(item) !== 'library'
+														? []
+														: [
+																m(
+																	'button.village-library__book',
+																	{
+																		key: item.itemId,
+																		disabled: index > attrs.currentIndex,
+																		class:
+																			!attrs.browseFreely && index === attrs.currentIndex
+																				? 'is-current'
+																				: '',
+																		style: {
+																			'--book-color': [
+																				'#466762',
+																				'#8d604f',
+																				'#64704c',
+																				'#6e6083',
+																				'#8c713e',
+																			][index % 5],
+																		},
+																		onclick: () => {
+																			if (index > attrs.currentIndex) return;
+																			if (index === attrs.viewingIndex) {
+																				bookOpen = true;
+																			} else {
+																				requestedBook = item.itemId;
+																				attrs.onSelectBook?.(item.itemId);
+																			}
+																		},
+																	},
+																	[
+																		m('span.village-library__ornament', '❧'),
+																		m('strong', item.title?.trim() || planItemLabel(item)),
+																		m(
+																			'small',
+																			attrs.browseFreely
+																				? t('village.library.book_open')
+																				: index > attrs.currentIndex
+																					? t('village.library.book_later')
+																					: index === attrs.currentIndex
+																						? t('village.library.book_current')
+																						: t('village.library.book_reread'),
+																		),
+																	],
+																),
+															],
 												),
-											),
+											]),
 										],
 							]
 						: [
@@ -836,6 +891,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 														t('village.note.mine'),
 												),
 												deskPrompt ? m('p.village-bubble__prompt', deskPrompt) : null,
+												cast.length > 0 ? m(CastCards, { cast }) : null,
 											]),
 											m(
 												'button.btn.btn--secondary.village-desk__close',
@@ -855,13 +911,15 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 												],
 											),
 										])
-									: council
+									: council || study
 										? m('.village-desk__header', [
 												m(
 													'h2',
-													viewing.stage === AgoraStage.voting
-														? t('village.council.ballot')
-														: t('village.council.title'),
+													study
+														? planItemLabel(viewing)
+														: viewing.stage === AgoraStage.voting
+															? t('village.council.ballot')
+															: t('village.council.title'),
 												),
 												m(
 													'button.btn.btn--secondary',
@@ -878,6 +936,28 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 								vnode.children,
 							],
 				),
+				castBubble
+					? m(CastBubble, {
+							cast,
+							stage: viewing.stage,
+							question: viewing.stage === AgoraStage.needs ? attrs.castQuestion : undefined,
+							heading: planItemLabel(viewing),
+							storageKey: `${attrs.castStorageKey ?? 'agora_cast'}_${viewing.stage}`,
+							watcher: attrs.watcher,
+							onProgress: attrs.onCastProgress,
+							action:
+								viewing.stage === AgoraStage.positioning && !attrs.watcher
+									? {
+											label: t('cast.where_stand'),
+											onClick: () => {
+												opened = true;
+												sync();
+												m.redraw();
+											},
+										}
+									: undefined,
+						})
+					: null,
 				bubble?.tail && !waitingAnchor
 					? m(`.village-bubble-tail.village-bubble-tail--${bubble.tail.side}`, {
 							'aria-hidden': 'true',

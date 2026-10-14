@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import { buildWritingDesk } from './writing-desks.js';
-import { buildCharacters } from './characters-2d.js';
+import { buildCharacters, characters as roster } from './characters-2d.js';
 import { boothLayout, CENTER, PLACES } from './village-layout.js';
 import { roundedPlane, roundedSlab } from './rounded.js';
 
@@ -179,9 +179,10 @@ export function buildVillage({ scene, height, manager }) {
 		const back = { x: slot.x - Math.sin(slot.facing) * 2.6, z: slot.z - Math.cos(slot.facing) * 2.6 };
 		solids.push({ x: back.x, z: back.z, w: 2.2, d: 2.2, booth: true });
 		path(station);
-		const guide = characters.assign(index, { x: slot.x + Math.sin(slot.facing) * 2.4 + Math.cos(slot.facing) * 2.6, z: slot.z + Math.cos(slot.facing) * 2.4 - Math.sin(slot.facing) * 2.6, station: station.id });
+		const guideSpot = { x: slot.x + Math.sin(slot.facing) * 2.4 + Math.cos(slot.facing) * 2.6, z: slot.z + Math.cos(slot.facing) * 2.4 - Math.sin(slot.facing) * 2.6, station: station.id };
+		const guide = characters.assign(index, guideSpot);
 		const booth = {
-			spec, station, group, face, paint, desk, guide,
+			spec, station, group, face, paint, desk, guide, slot, guideSpot,
 			setState(next) {
 				this.state = next;
 				pennant.visible = next.current === true;
@@ -207,8 +208,54 @@ export function buildVillage({ scene, height, manager }) {
 		for (let i = clearings.length - 1; i >= 0; i--) if (clearings[i].booth) clearings.splice(i, 1);
 		const slots = boothLayout(specs.length);
 		specs.forEach((spec, i) => { buildBooth(spec, slots[i], i); });
+		seatCast();
 
 		return booths;
+	}
+
+	/**
+	 * The scenario's two characters. They stand at the study house (where the
+	 * lesson's two voices are met) and take the guide's place at the story and
+	 * needs booths. The flat guides they replace step aside and come back when
+	 * the cast leaves. Everything they say is the package's own text — the app
+	 * shows it; the world only stands them up.
+	 */
+	const man = roster.find((c) => c.id === 'man');
+	/** Two spots side by side, `gap` apart, the pair centred on (cx, cz) and turned to `facing` */
+	function pairSpots(cx, cz, facing, gap, height) {
+		const along = { x: Math.cos(facing), z: -Math.sin(facing) };
+
+		return [-1, 1].map((side) => ({ x: cx + along.x * side * gap / 2, z: cz + along.z * side * gap / 2, facing, height }));
+	}
+	function seatCast() {
+		const has = characters.hasCast();
+		const studyFacing = Math.atan2(CENTER.x - PLACES.study.x, CENTER.z - PLACES.study.z);
+		// Camille on the left of the picture, the Count on the right: read right to left, the Count first
+		characters.seatCast('challenge', has ? pairSpots(PLACES.study.x + .6, PLACES.study.z + 3.5, studyFacing, 2.3, 2.1).reverse() : []);
+		characters.hide(man, has);
+		for (const booth of booths) {
+			const stands = has && (booth.spec.kind === 'story' || booth.spec.kind === 'needs');
+			if (stands) {
+				characters.hide(booth.guide, true);
+				const f = booth.slot.facing, g = booth.guideSpot;
+				characters.seatCast(booth.station.id, [
+					{ x: g.x, z: g.z, facing: f, height: 2 },
+					{ x: g.x - Math.cos(f) * 1.9, z: g.z + Math.sin(f) * 1.9, facing: f, height: 2 },
+				]);
+			} else {
+				characters.unseatCast(booth.station.id);
+				characters.hide(booth.guide, false);
+			}
+		}
+	}
+	/** Re-seat only when the cast actually changed: the shell posts its state on every sync. */
+	let castKey = '';
+	function setCast(list) {
+		characters.setCast(list);
+		const key = characters.castKey();
+		if (key === castKey) return;
+		castKey = key;
+		seatCast();
 	}
 
 	// The council's scoreboard: wide, high, and turned toward the square.
@@ -221,8 +268,49 @@ export function buildVillage({ scene, height, manager }) {
 		const canvas = document.createElement('canvas'); canvas.width = 2048; canvas.height = 1152; const ctx = canvas.getContext('2d'); const tex = new THREE.CanvasTexture(canvas); tex.colorSpace = THREE.SRGBColorSpace;
 		const face = make(roundedPlane(6.0, 3.4, .3), new THREE.MeshBasicMaterial({ map: tex }), g, 0, 3.4, .1); face.castShadow = false;
 		solids.push({ x: cx, z: cz, w: 1.4, d: 1.4 });
-		let lastKey = '';
+		let lastKey = '', lastModel = null;
+		// The characters' verdicts (the reviews the class already asked for) as portrait tiles.
+		const portraits = new Map();
+		function portrait(url) {
+			if (!url) return null;
+			let entry = portraits.get(url);
+			if (!entry) {
+				entry = { img: new Image(), ready: false };
+				entry.img.onload = () => { entry.ready = true; lastKey = ''; if (lastModel) paint(lastModel); };
+				entry.img.src = url;
+				portraits.set(url, entry);
+			}
+
+			return entry.ready ? entry.img : null;
+		}
+		/** One small tile: the portrait with its score badge, at (x, y), `size` square */
+		function voiceTile(voice, x, y, size) {
+			ctx.save(); ctx.save();
+			ctx.beginPath(); ctx.roundRect(x, y, size, size, size * .16); ctx.clip();
+			const img = portrait(voice.portraitUrl);
+			if (img) ctx.drawImage(img, x, y, size, size); else { ctx.fillStyle = '#d9cdb0'; ctx.fillRect(x, y, size, size); ctx.fillStyle = '#384f36'; ctx.font = `bold ${Math.round(size * .5)}px Arial`; ctx.textAlign = 'center'; ctx.fillText([...voice.name][0] ?? '', x + size / 2, y + size * .66); }
+			ctx.restore();
+			ctx.strokeStyle = '#fff5dc'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(x, y, size, size, size * .16); ctx.stroke();
+			const r = size * .25, bx = x + size - r * .6, by = y + size - r * .6;
+			ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fillStyle = '#233f35'; ctx.fill(); ctx.strokeStyle = '#fff5dc'; ctx.stroke();
+			ctx.fillStyle = '#fff5dc'; ctx.textAlign = 'center'; ctx.font = `bold ${Math.round(r * .95)}px Arial`; ctx.fillText(String(voice.score), bx, by + r * .33);
+			ctx.restore();
+		}
+		/** A larger card for a single motion: portrait, name, score and the character's own line */
+		function voiceCard(voice, x, y, w) {
+			ctx.save();
+			ctx.fillStyle = '#ffffff1f'; ctx.beginPath(); ctx.roundRect(x, y, w, 330, 26); ctx.fill();
+			voiceTile(voice, x + w - 150, y + 20, 130);
+			ctx.fillStyle = '#fff5dc'; ctx.textAlign = 'right'; ctx.font = 'bold 34px Arial';
+			ctx.fillText(voice.name, x + w - 170, y + 62, w - 190);
+			ctx.font = '28px Arial'; ctx.fillStyle = '#fff5dccc';
+			ctx.fillText(`${voice.score}/100`, x + w - 170, y + 104);
+			ctx.fillStyle = '#ffffff'; ctx.font = '30px Arial';
+			wrapLines(voice.line, w - 50, 4).forEach((line, i) => ctx.fillText(line, x + w - 25, y + 190 + i * 40));
+			ctx.restore();
+		}
 		function paint(model) {
+			lastModel = model;
 			const key = JSON.stringify(model); if (key === lastKey) return; lastKey = key;
 			ctx.direction = 'rtl'; ctx.textAlign = 'center';
 			if (!model || model.mode === 'ballot') return slideBallot(model);
@@ -327,6 +415,8 @@ export function buildVillage({ scene, height, manager }) {
 				}
 				ctx.fillStyle = '#ffffff'; ctx.font = 'bold 60px Arial'; ctx.fillText(side.label, side.x, trackTop + trackH + 80);
 			}
+			// The two characters' verdicts on this one proposal, either side of the pillars
+			(m.voices ?? []).slice(0, 2).forEach((voice, i) => voiceCard(voice, i === 0 ? 1490 : 40, trackTop + 20, 520));
 			ctx.fillStyle = '#fff5dc'; ctx.font = '36px Arial'; ctx.fillText(model.footer ?? '', W / 2, H - 34);
 			tex.needsUpdate = true;
 		}
@@ -381,7 +471,8 @@ export function buildVillage({ scene, height, manager }) {
 				ctx.fillStyle = '#ffffff22'; ctx.fillRect(140, y, W - 280, barH);
 				if (model.showResults) { ctx.fillStyle = row.mine ? '#ffd83a' : '#67c28a'; ctx.fillRect(140 + (W - 280) * (1 - share), y, (W - 280) * share, barH); }
 				ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.font = `bold ${Math.round(barH * .42)}px Arial`;
-				const text = `${row.number}. ${row.label}`; let shown = text; while (ctx.measureText(shown).width > W - 620 && shown.length > 4) shown = shown.slice(0, -4) + '…';
+				const text = `${row.number}. ${row.label}`; let shown = text; const voices = (row.voices ?? []).slice(0, 2); const room = voices.length ? W - 1010 : W - 620; while (ctx.measureText(shown).width > room && shown.length > 4) shown = shown.slice(0, -4) + '…';
+				voices.forEach((voice, k) => voiceTile(voice, 430 + k * (barH - 6), y + 3, barH - 6));
 				ctx.fillText(shown, W - 160, y + barH * .66);
 				ctx.textAlign = 'left'; ctx.fillText(model.showResults ? `${row.votes} · ${Math.round(row.share * 100)}%` : (row.mine ? '✓ ההצבעה שלי' : ''), 160, y + barH * .66);
 				ctx.textAlign = 'center';
@@ -396,5 +487,5 @@ export function buildVillage({ scene, height, manager }) {
 
 	// The materials a chosen colour set re-tints (see palettes.js); the booths' roofs keep their kind's colour.
 	const paletteMaterials = [{ material: limestone, slot: 'stone' }, { material: wood, slot: 'wood' }, { material: pathMaterial, slot: 'earth' }];
-	return { booths, installBooths, showPlace, scoreboard, figures: characters.figures, solids, clearings, ready: characters.ready, tick: characters.tick, characters, paletteMaterials };
+	return { booths, installBooths, showPlace, setCast, scoreboard, figures: characters.figures, solids, clearings, ready: characters.ready, tick: characters.tick, characters, paletteMaterials };
 }

@@ -18,6 +18,8 @@ import { projectorShowsQr } from '../../lib/flows/joinInvite';
 import { isLibraryVideoLive, videoLabelParts } from '../../lib/flows/libraryVideo';
 import { youtubeEmbedUrl } from '../../lib/youtube';
 import { StageTransition, hasStageTransition } from '../../components/StageTransition';
+import { prefetchFilm } from '../../components/OpeningFilm';
+import { openingFilmOf, playsOpeningFilm, type OpeningFilm } from '../../lib/flows/openingFilm';
 import { planItemLabel } from '../../components/StageNav';
 import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
 
@@ -46,23 +48,30 @@ export function ProjectorScreen(
 	let transitionTimer: number | undefined;
 	let transitionLeaveTimer: number | undefined;
 
-	function beginStageTransition(item: AgoraStagePlanItem): void {
+	/** The opening film, while it is the wall's travel card */
+	let transitionFilm: OpeningFilm | null = null;
+
+	function endStageTransition(): void {
+		window.clearTimeout(transitionTimer);
+		window.clearTimeout(transitionLeaveTimer);
+		transitionLeaving = true;
+		m.redraw();
+		transitionLeaveTimer = window.setTimeout(() => {
+			transitionItem = null;
+			transitionFilm = null;
+			m.redraw();
+		}, 400);
+	}
+
+	function beginStageTransition(item: AgoraStagePlanItem, film: OpeningFilm | null = null): void {
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		transitionItem = item;
+		transitionFilm = film;
 		transitionLeaving = false;
 		window.clearTimeout(transitionTimer);
 		window.clearTimeout(transitionLeaveTimer);
-		transitionTimer = window.setTimeout(
-			() => {
-				transitionLeaving = true;
-				m.redraw();
-				transitionLeaveTimer = window.setTimeout(() => {
-					transitionItem = null;
-					m.redraw();
-				}, 400);
-			},
-			reduced ? 900 : 1900,
-		);
+		if (film) return;
+		transitionTimer = window.setTimeout(endStageTransition, reduced ? 900 : 1900);
 	}
 
 	// Anonymous is enough: every read this screen makes is open to any
@@ -103,14 +112,17 @@ export function ProjectorScreen(
 			const currentIndex = getCurrentPlanIndex();
 			const item = plan[currentIndex];
 
-			if (currentIndex !== lastIndex) {
-				if (lastIndex !== null && item && hasStageTransition(item.stage))
-					beginStageTransition(item);
-				lastIndex = currentIndex;
-			}
-
 			const topic = getTopicPackage(session.topicPackageId);
 			if (!topic) loadTopicPackage(session.topicPackageId);
+			const film = openingFilmOf(topic ?? undefined);
+			// The wall warms the film up while the class waits in the lobby
+			if (film && item.stage === AgoraStage.lobby) prefetchFilm(film.url);
+
+			if (currentIndex !== lastIndex) {
+				if (lastIndex !== null && item && hasStageTransition(item.stage))
+					beginStageTransition(item, playsOpeningFilm(item.stage) ? film : null);
+				lastIndex = currentIndex;
+			}
 
 			const needsData =
 				item.stage === AgoraStage.question ||
@@ -182,6 +194,10 @@ export function ProjectorScreen(
 							title:
 								transitionItem.stage === AgoraStage.question ? transitionItem.title : undefined,
 							leaving: transitionLeaving,
+							// The wall plays the film with sound
+							film: transitionFilm
+								? { film: transitionFilm, wall: true, onDone: endStageTransition }
+								: undefined,
 						})
 					: null,
 				m('.projector__stage', [
