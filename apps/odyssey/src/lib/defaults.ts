@@ -502,8 +502,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		slug: 'democrats',
 		name: 'הדמוקרטים',
 		color: '#2e7d43',
-		description:
-			'בראשות יאיר גולן. איחוד העבודה ומרצ; מדגישה שוויון, זכויות אדם והסדר מדיני.',
+		description: 'בראשות יאיר גולן. איחוד העבודה ומרצ; מדגישה שוויון, זכויות אדם והסדר מדיני.',
 		positions: {
 			accountability: 1,
 			'rule-of-law': 1,
@@ -586,8 +585,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		slug: 'religious-zionism',
 		name: 'הציונות הדתית',
 		color: '#7a4f21',
-		description:
-			'בראשות בצלאל סמוטריץ׳. מפלגה דתית־לאומית; מדגישה התיישבות, אופי יהודי וריבונות.',
+		description: 'בראשות בצלאל סמוטריץ׳. מפלגה דתית־לאומית; מדגישה התיישבות, אופי יהודי וריבונות.',
 		positions: {
 			accountability: 4,
 			'rule-of-law': 4,

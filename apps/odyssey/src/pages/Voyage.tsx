@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { isEarlierAnswer, voyageStartIndex } from '../lib/voyageResume';
 import { ODYSSEY_ATTITUDES, OdysseyAttitudeKey } from '@freedi/shared-types';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
@@ -33,6 +34,7 @@ const DEFAULT_LOG_PROMPT = 'מה חשוב לך במיוחד בסוגיה הזו,
  */
 export default function Voyage() {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const mode = useMode();
 	const { content, journey, attitudes, text, setAttitude, updateJourney } = useGame();
 
@@ -40,13 +42,12 @@ export default function Voyage() {
 	// game's order. `journey.selectedIslandIds` from the old map is not read.
 	const selectedIslands = useMemo(() => voyageIslands(content), [content]);
 
-	const [index, setIndex] = useState(() => {
-		const unanswered = selectedIslands.findIndex(
-			(island) => !island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
-		);
-
-		return unanswered === -1 ? Math.max(0, selectedIslands.length - 1) : unanswered;
-	});
+	// Sailing from the map starts at island 1; arriving any other way resumes at
+	// the first unanswered island. See lib/voyageResume.
+	const fresh = Boolean((location.state as { fresh?: boolean } | null)?.fresh);
+	const [index, setIndex] = useState(() => voyageStartIndex(selectedIslands, attitudes, fresh));
+	/** stances marked during this visit; any other mark is an earlier answer */
+	const [markedThisVisit, setMarkedThisVisit] = useState<ReadonlySet<string>>(() => new Set());
 	const [phase, setPhase] = useState<'question' | 'reaction'>('question');
 	/** which ship the player asked about: a partyId, 'all' for the standing, or none */
 	const [asked, setAsked] = useState<string | null>(null);
@@ -201,6 +202,7 @@ export default function Voyage() {
 	).length;
 
 	function markAttitude(stanceIndex: number, stanceId: string, key: OdysseyAttitudeKey): void {
+		setMarkedThisVisit((current) => new Set(current).add(stanceId));
 		void setAttitude(island!.statementId, stanceId, key);
 		if (mode === 'game') {
 			stageBus.send({ type: 'attitudeMarked', stanceIndex, attitude: key });
@@ -334,6 +336,11 @@ export default function Voyage() {
 												</strong>{' '}
 												{stance.statement}
 											</p>
+											{isEarlierAnswer(stance.statementId, attitudes, markedThisVisit) ? (
+												<p className="m-0 mb-2 text-[12px] opacity-75">
+													התשובה הקודמת שלך — אפשר לשנות
+												</p>
+											) : null}
 											<div
 												className="flex flex-wrap gap-2"
 												role="group"
