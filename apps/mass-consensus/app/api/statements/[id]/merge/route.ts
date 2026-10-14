@@ -6,11 +6,16 @@ import { logger } from '@/lib/utils/logger';
 import { getAddOptionRefusal } from '@/lib/firebase/addOptionGuard';
 import { postToCloudFunction } from '@/lib/api/cloudFunction';
 
+const STATUS_CONFLICT = 409;
+
 interface MergeFunctionResponse {
   error?: string;
   statementId?: string;
   mergedStatementId?: string;
   newTitle?: string;
+  /** Auto-merge refused: the same-idea judge did not call it the same idea */
+  notSameIdea?: boolean;
+  verdict?: string;
 }
 
 /**
@@ -30,11 +35,12 @@ export async function POST(
     solutionText?: string;
     userId?: string;
     userName?: string;
+    autoMerge?: boolean;
   } = {};
 
   try {
     parsedBody = await request.json();
-    const { targetStatementId, solutionText, userId, userName } = parsedBody;
+    const { targetStatementId, solutionText, userId, userName, autoMerge } = parsedBody;
 
     // Validate required fields
     if (!targetStatementId) {
@@ -118,6 +124,7 @@ export async function POST(
       questionId,
       userId,
       userName,
+      autoMerge: autoMerge === true,
     });
 
     if (result.kind === 'unavailable') {
@@ -134,6 +141,21 @@ export async function POST(
     }
 
     const data = result.data;
+
+    // The same-idea judge refused an automatic merge. Not a failure: the
+    // client adds the text as a new suggestion instead.
+    if (result.status === STATUS_CONFLICT && data.notSameIdea) {
+      logger.info('[Merge] Auto-merge refused: not the same idea', {
+        questionId,
+        targetStatementId,
+        verdict: data.verdict,
+      });
+
+      return NextResponse.json(
+        { error: data.error, notSameIdea: true, verdict: data.verdict },
+        { status: STATUS_CONFLICT }
+      );
+    }
 
     // Pass through the response
     if (!result.ok) {

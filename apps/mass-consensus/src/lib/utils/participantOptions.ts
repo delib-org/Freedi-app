@@ -11,6 +11,21 @@ export function isAddDisabledResponse(body: unknown): boolean {
   return (body as { code?: unknown }).code === ADD_OPTION_CODES.DISABLED;
 }
 
+/** HTTP status the merge route uses when the same-idea judge refuses a merge. */
+export const MERGE_REFUSED_STATUS = 409;
+
+/**
+ * Did the merge route refuse because the server's same-idea judge found the
+ * text is not the same idea as the target? Nothing was merged then — the
+ * caller should add the text as a new suggestion. Safe on any parsed body.
+ */
+export function isMergeRefusedAsDifferentIdea(status: number, body: unknown): boolean {
+  if (status !== MERGE_REFUSED_STATUS) return false;
+  if (typeof body !== 'object' || body === null) return false;
+
+  return (body as { notSameIdea?: unknown }).notSameIdea === true;
+}
+
 /**
  * May this participant add their own options to the question?
  *

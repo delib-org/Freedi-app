@@ -6,7 +6,7 @@ import { VALIDATION } from '@/constants/common';
 import { countWords } from '@/lib/utils/wordCount';
 import { pieceTextOf, piecesMeetSubmissionRules } from '@/lib/utils/splitPieces';
 import { moderationMessageKey } from '@/lib/utils/moderationMessage';
-import { isAddDisabledResponse } from '@/lib/utils/participantOptions';
+import { isAddDisabledResponse, isMergeRefusedAsDifferentIdea } from '@/lib/utils/participantOptions';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { isMeaningfulSuggestion, MIN_MEANINGFUL_WORDS } from '@freedi/shared-types';
 import { useToast } from '@/components/shared/Toast';
@@ -523,9 +523,15 @@ export default function SolutionPromptModal({
 
   /**
    * Merge `solutionText` into an existing suggestion. Returns the id of the
-   * suggestion that now carries the merged content.
+   * suggestion that now carries the merged content, or null when the server's
+   * same-idea judge refused the merge (the text is not the same idea as the
+   * target) — the caller then adds it as a new suggestion.
    */
-  const mergeInto = async (targetStatementId: string, solutionText: string): Promise<string> => {
+  const mergeInto = async (
+    targetStatementId: string,
+    solutionText: string,
+    autoMerge: boolean,
+  ): Promise<string | null> => {
     const response = await fetch(`/api/statements/${questionId}/merge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -534,11 +540,20 @@ export default function SolutionPromptModal({
         solutionText,
         userId,
         userName,
+        autoMerge,
       }),
     });
 
     if (!response.ok) {
       const data = await response.json();
+      if (isMergeRefusedAsDifferentIdea(response.status, data)) {
+        console.info('↩️ merge refused by the same-idea judge; adding as new', {
+          targetStatementId,
+          verdict: data.verdict,
+        });
+
+        return null;
+      }
       throwIfAddDisabled(data);
       throw new NetworkError(data.error || ERROR_MESSAGES.MERGE_FAILED);
     }
@@ -555,9 +570,21 @@ export default function SolutionPromptModal({
    * Automatic merge: fold the text into the closest existing suggestion and
    * record the author's +1 on it. The merge is the real outcome; a failed +1
    * is logged but does not undo it or block the participant.
+   *
+   * The server's same-idea judge may refuse (embedding similarity alone picked
+   * the target). Then nothing was merged, no +1 goes on the target, and the
+   * text is added as its own suggestion. Returns what actually happened.
    */
-  const mergeAndAgree = async (targetStatementId: string, solutionText: string): Promise<void> => {
-    const mergedStatementId = await mergeInto(targetStatementId, solutionText);
+  const mergeAndAgree = async (
+    targetStatementId: string,
+    solutionText: string,
+  ): Promise<'merged' | 'created'> => {
+    const mergedStatementId = await mergeInto(targetStatementId, solutionText, true);
+    if (mergedStatementId === null) {
+      await createSuggestion(solutionText);
+
+      return 'created';
+    }
 
     try {
       await submitRating(questionId, mergedStatementId, 1, userId, userName, surveyId);
@@ -569,6 +596,8 @@ export default function SolutionPromptModal({
         metadata: { questionId },
       });
     }
+
+    return 'merged';
   };
 
   /**
@@ -649,11 +678,14 @@ export default function SolutionPromptModal({
     setFlowState({ step: 'submitting' });
 
     try {
-      await mergeInto(targetStatementId, text);
+      const mergedStatementId = await mergeInto(targetStatementId, text, false);
+      // Refused only when the server treats this question as auto-merge;
+      // the text is then kept as its own suggestion rather than lost.
+      if (mergedStatementId === null) await createSuggestion(text);
 
       setFlowState({
         step: 'success',
-        action: 'merged',
+        action: mergedStatementId === null ? 'created' : 'merged',
         solutionText: text,
       });
     } catch (err) {
@@ -674,11 +706,11 @@ export default function SolutionPromptModal({
     setFlowState({ step: 'submitting' });
 
     try {
-      await mergeAndAgree(targetStatementId, solutionText);
+      const action = await mergeAndAgree(targetStatementId, solutionText);
 
       setFlowState({
         step: 'success',
-        action: 'merged',
+        action,
         solutionText,
       });
     } catch (err) {
