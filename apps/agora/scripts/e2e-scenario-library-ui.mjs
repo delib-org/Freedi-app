@@ -202,7 +202,7 @@ try {
 	await shot(a, '02-mine-laptop');
 	await audit(a, 'my scenarios (laptop)');
 	const row = a.locator('.scenario-item', { hasText: 'ועדת כיתה' });
-	await row.locator('button.teach-link').click();
+	await row.locator('button.publish-pill').click();
 	await row.locator('.scn-switch__opt:has-text("ציבורי")').click();
 	await a.waitForSelector('.scn-publish', { timeout: 10_000 });
 	await a.waitForTimeout(400);
@@ -547,7 +547,7 @@ try {
 	await phone.waitForSelector('.scenario-item', { timeout: 30_000 });
 	await shot(phone, '25-mine-phone');
 	const mineRow = phone.locator('.scenario-item', { hasText: 'ועדת כיתה' });
-	await mineRow.locator('button.teach-link').click();
+	await mineRow.locator('button.publish-pill').click();
 	await mineRow.locator('.btn:has-text("עריכת הפרסום")').click();
 	await phone.waitForSelector('.scn-publish', { timeout: 10_000 });
 	await phone.waitForTimeout(500);

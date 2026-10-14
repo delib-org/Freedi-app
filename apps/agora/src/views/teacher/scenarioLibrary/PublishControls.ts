@@ -5,6 +5,7 @@ import {
 	AgoraTopicPackage,
 	AgoraTopicStatus,
 } from '@freedi/shared-types';
+import { Icon } from '../../../components/Icon';
 import { getLang, t } from '../../../lib/i18n';
 import {
 	createLibraryTag,
@@ -86,6 +87,9 @@ export function PublishControls(): m.Component<PublishControlsAttrs> {
 			const ready = pkg.status === AgoraTopicStatus.ready;
 			const adminHidden = isPublic && pkg.library?.hidden === true;
 
+			// A draft cannot be published: nothing to show, so no footer line either
+			if (!ready && !notice && !adminHidden) return null;
+
 			return m('.scn-mine__controls-wrap', [
 				notice
 					? m(
@@ -104,7 +108,7 @@ export function PublishControls(): m.Component<PublishControlsAttrs> {
 				// A draft cannot be published, so it offers nothing at all.
 				ready
 					? m(
-							'button.teach-link',
+							'button.btn.btn--secondary.btn--sm.publish-pill',
 							{
 								type: 'button',
 								'aria-expanded': String(open),
@@ -113,7 +117,10 @@ export function PublishControls(): m.Component<PublishControlsAttrs> {
 									notice = null;
 								},
 							},
-							t(isPublic ? 'scenlib.edit_listing' : 'scenlib.publish_one'),
+							[
+								m(Icon, { name: 'megaphone', size: 18 }),
+								t(isPublic ? 'scenlib.edit_listing' : 'teach.publish_to_library'),
+							],
 						)
 					: null,
 				open || confirming

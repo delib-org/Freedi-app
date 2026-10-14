@@ -107,8 +107,9 @@ export function ScenarioRow(): m.Component<ScenarioRowAttrs> {
 						},
 						m(Icon, { name: 'edit', size: 20 }),
 					),
+					// Inside the card, apart from the title: what else can be done with it
+					m('.scenario-row__footer', children),
 				]),
-				children,
 			]);
 		},
 	};
