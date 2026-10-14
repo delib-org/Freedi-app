@@ -4881,20 +4881,5 @@
   "Participants see the last page after the final question. You can add your own message to it.": "شرکت‌کنندگان صفحه آخر را پس از آخرین پرسش می‌بینند. می‌توانید پیام خودتان را به آن اضافه کنید.",
   "Add a message on the last page": "افزودن پیام در صفحه آخر",
   "Message on the last page": "پیام در صفحه آخر",
-  "Remove message": "حذف پیام",
-  "Lesson videos": "ویدیوهای درس",
-  "YouTube videos": "ویدیوهای یوتیوب",
-  "Paste a link first.": "ابتدا یک پیوند بچسبانید.",
-  "That is not a YouTube link. Paste one that starts with youtube.com or youtu.be.": "این پیوند یوتیوب نیست. پیوندی را بچسبانید که با youtube.com یا youtu.be شروع شود.",
-  "We could not find a video in that link. Paste the link of the video itself.": "در این پیوند ویدیویی پیدا نشد. پیوند خود ویدیو را بچسبانید.",
-  "That is not a valid link.": "این پیوند معتبر نیست.",
-  "That video is already on the list.": "این ویدیو از قبل در فهرست است.",
-  "A scene can hold up to {{max}} videos.": "هر صحنه می‌تواند تا {{max}} ویدیو داشته باشد.",
-  "Video {{n}}": "ویدیو {{n}}",
-  "Paste a YouTube link": "پیوند یوتیوب را بچسبانید",
-  "Could not find this lesson.": "این درس پیدا نشد.",
-  "Could not load this lesson.": "بارگذاری این درس ممکن نشد.",
-  "Could not save. Try again.": "ذخیره نشد. دوباره تلاش کنید.",
-  "Add YouTube links to a scene. During the lesson you choose which one the class watches.": "پیوندهای یوتیوب را به یک صحنه اضافه کنید. در طول درس انتخاب می‌کنید کلاس کدام را ببیند.",
-  "Could not load your lessons.": "بارگذاری درس‌های شما ممکن نشد."
+  "Remove message": "حذف پیام"
 }

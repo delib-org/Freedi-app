@@ -878,7 +878,23 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 										m(TeacherInstructions, {
 											stage: current.stage,
 											topic,
-											videoContext: { sessionId, libraryVideo: session.libraryVideo },
+											videoContext: {
+												sessionId,
+												libraryVideo: session.libraryVideo,
+												floorAt: Math.max(
+													current ? (session.stageState?.[current.itemId]?.openedAt ?? 0) : 0,
+													session.villageCall?.at ?? 0,
+													session.libraryVideo?.at ?? 0,
+												),
+												onStarted: (at: number) => {
+													sentCallAt = at;
+													villageCallSent = true;
+													window.setTimeout(() => {
+														villageCallSent = false;
+														m.redraw();
+													}, 2500);
+												},
+											},
 											questionTitle: current.title,
 											questionExplanation: current.explanation,
 											questionKind: current.kind,

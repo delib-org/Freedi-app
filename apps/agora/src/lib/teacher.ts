@@ -301,18 +301,23 @@ export async function callVillage(
 }
 
 /**
- * Start a library video for the whole class. The stamp is monotonic across the
- * teacher's devices, so each phone reacts once per start; a student's own
- * replay never writes this. Teacher-writable (the rules pin only what the
- * server owns).
+ * Start a library video for the whole class, and bring the class to the
+ * library with it: the same `villageCall` the move-class sheet writes, so
+ * every phone (village or flat) walks to the library item the room is on and
+ * the video plays there. The stage itself is never advanced from here.
+ *
+ * One stamp serves both fields, so each phone reacts once per start.
+ * `floorAt` is the highest stamp already in play (the station's opening time,
+ * the last call, the last video): the new one never falls below it. A
+ * student's own replay never writes any of this.
  */
 export async function startLibraryVideo(
 	sessionId: string,
 	sceneId: string,
 	video: AgoraYoutubeVideo,
-	currentAt?: number,
+	floorAt?: number,
 ): Promise<number> {
-	const at = nextCallStamp(Date.now(), currentAt);
+	const at = nextCallStamp(Date.now(), floorAt);
 	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
 		libraryVideo: {
 			sceneId,
@@ -320,6 +325,7 @@ export async function startLibraryVideo(
 			...(video.startSeconds ? { startSeconds: video.startSeconds } : {}),
 			at,
 		},
+		villageCall: { place: 'library', at },
 		lastUpdate: at,
 	});
 

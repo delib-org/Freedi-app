@@ -17,6 +17,9 @@ interface VideoContext {
 	sessionId?: string;
 	/** The video the teacher started for the class, if any */
 	libraryVideo?: AgoraSession['libraryVideo'];
+	/** The console: the highest call stamp in play, and who to tell when a start is written */
+	floorAt?: number;
+	onStarted?: (at: number) => void;
 }
 
 export interface TeacherInstructionsAttrs {
@@ -63,7 +66,13 @@ function sceneVideos(scene: AgoraScene, projector: boolean, video?: VideoContext
 	}
 	if (!video?.sessionId) return null;
 
-	return m(LibraryVideos, { sessionId: video.sessionId, scene, now });
+	return m(LibraryVideos, {
+		sessionId: video.sessionId,
+		scene,
+		now,
+		floorAt: video.floorAt,
+		onStarted: video.onStarted,
+	});
 }
 
 /** One scene rendered read-only: the same media, title, text and dialogue students see */

@@ -10,6 +10,10 @@ export interface LibraryVideosAttrs {
 	scene: AgoraScene;
 	/** What the class is on now, if the teacher has started anything */
 	now: AgoraSession['libraryVideo'];
+	/** The highest call stamp already in play, so a start is always read as newer */
+	floorAt?: number;
+	/** Told the stamp of a start this console wrote, so it does not announce its own call */
+	onStarted?: (at: number) => void;
 }
 
 /**
@@ -22,7 +26,7 @@ export function LibraryVideos(): m.Component<LibraryVideosAttrs> {
 
 	return {
 		view(vnode) {
-			const { sessionId, scene, now } = vnode.attrs;
+			const { sessionId, scene, now, floorAt, onStarted } = vnode.attrs;
 			const videos = scene.youtubeVideos ?? [];
 			if (videos.length === 0) return null;
 
@@ -56,7 +60,8 @@ export function LibraryVideos(): m.Component<LibraryVideosAttrs> {
 												onclick: () => {
 													busyId = video.videoId;
 													failed = false;
-													startLibraryVideo(sessionId, scene.sceneId, video, now?.at)
+													startLibraryVideo(sessionId, scene.sceneId, video, floorAt)
+														.then((at) => onStarted?.(at))
 														.catch((error: unknown) => {
 															failed = true;
 															logError(error instanceof Error ? error : new Error(String(error)), {

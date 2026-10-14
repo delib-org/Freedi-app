@@ -4403,20 +4403,5 @@
   "Participants see the last page after the final question. You can add your own message to it.": "Die Teilnehmenden sehen die letzte Seite nach der letzten Frage. Du kannst ihr eine eigene Nachricht hinzufügen.",
   "Add a message on the last page": "Nachricht auf der letzten Seite hinzufügen",
   "Message on the last page": "Nachricht auf der letzten Seite",
-  "Remove message": "Nachricht entfernen",
-  "Lesson videos": "Videos der Lektion",
-  "YouTube videos": "YouTube-Videos",
-  "Paste a link first.": "Füge zuerst einen Link ein.",
-  "That is not a YouTube link. Paste one that starts with youtube.com or youtu.be.": "Das ist kein YouTube-Link. Füge einen ein, der mit youtube.com oder youtu.be beginnt.",
-  "We could not find a video in that link. Paste the link of the video itself.": "In diesem Link wurde kein Video gefunden. Füge den Link des Videos selbst ein.",
-  "That is not a valid link.": "Das ist kein gültiger Link.",
-  "That video is already on the list.": "Dieses Video steht schon in der Liste.",
-  "A scene can hold up to {{max}} videos.": "Eine Szene kann bis zu {{max}} Videos enthalten.",
-  "Video {{n}}": "Video {{n}}",
-  "Paste a YouTube link": "YouTube-Link einfügen",
-  "Could not find this lesson.": "Diese Lektion wurde nicht gefunden.",
-  "Could not load this lesson.": "Diese Lektion konnte nicht geladen werden.",
-  "Could not save. Try again.": "Speichern fehlgeschlagen. Versuche es erneut.",
-  "Add YouTube links to a scene. During the lesson you choose which one the class watches.": "Füge einer Szene YouTube-Links hinzu. Während der Lektion wählst du, welches die Klasse ansieht.",
-  "Could not load your lessons.": "Deine Lektionen konnten nicht geladen werden."
+  "Remove message": "Nachricht entfernen"
 }

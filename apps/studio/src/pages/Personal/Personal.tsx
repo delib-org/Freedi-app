@@ -1,7 +1,6 @@
 import { useTranslation } from '@freedi/shared-i18n/react';
 import StudioPage from '../_shared/StudioPage';
 import PersonalEvents from './PersonalEvents';
-import PersonalLessons from './PersonalLessons';
 
 /**
  * `/personal` — the facilitator's own events, the ones that belong to no
@@ -18,7 +17,6 @@ export default function Personal() {
 	return (
 		<StudioPage breadcrumb={[{ label: t('Events') }]} title={t('Events')}>
 			<PersonalEvents />
-			<PersonalLessons />
 		</StudioPage>
 	);
 }

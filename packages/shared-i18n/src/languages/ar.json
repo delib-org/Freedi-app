@@ -4523,20 +4523,5 @@
   "Participants see the last page after the final question. You can add your own message to it.": "يرى المشاركون الصفحة الأخيرة بعد السؤال الأخير. يمكنك إضافة رسالتك الخاصة إليها.",
   "Add a message on the last page": "إضافة رسالة في الصفحة الأخيرة",
   "Message on the last page": "رسالة في الصفحة الأخيرة",
-  "Remove message": "إزالة الرسالة",
-  "Lesson videos": "فيديوهات الدرس",
-  "YouTube videos": "فيديوهات يوتيوب",
-  "Paste a link first.": "الصقوا رابطًا أولًا.",
-  "That is not a YouTube link. Paste one that starts with youtube.com or youtu.be.": "هذا ليس رابط يوتيوب. الصقوا رابطًا يبدأ بـ youtube.com أو youtu.be.",
-  "We could not find a video in that link. Paste the link of the video itself.": "لم نجد فيديو في هذا الرابط. الصقوا رابط الفيديو نفسه.",
-  "That is not a valid link.": "هذا الرابط غير صالح.",
-  "That video is already on the list.": "هذا الفيديو موجود في القائمة.",
-  "A scene can hold up to {{max}} videos.": "يمكن إضافة حتى {{max}} فيديو لكل مشهد.",
-  "Video {{n}}": "فيديو {{n}}",
-  "Paste a YouTube link": "الصقوا رابط يوتيوب",
-  "Could not find this lesson.": "لم نجد هذا الدرس.",
-  "Could not load this lesson.": "تعذّر تحميل هذا الدرس.",
-  "Could not save. Try again.": "تعذّر الحفظ. حاولوا مرة أخرى.",
-  "Add YouTube links to a scene. During the lesson you choose which one the class watches.": "أضيفوا روابط يوتيوب إلى المشهد. أثناء الدرس تختارون أيّها يشاهده الصف.",
-  "Could not load your lessons.": "تعذّر تحميل دروسكم."
+  "Remove message": "إزالة الرسالة"
 }
