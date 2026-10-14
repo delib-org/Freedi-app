@@ -247,18 +247,25 @@ export default function Summary() {
 						</p>
 						<div className="flex flex-col gap-3">
 							{sortedParties.map(({ party, distance, relative, sharedIslands }) => (
-								<div key={party!.partyId} className="flex items-center gap-3">
-									<span
-										className="inline-block w-3.5 h-3.5 rounded-full shrink-0"
-										style={{ background: party!.color }}
-										aria-hidden="true"
-									/>
-									<span className="w-40 shrink-0 text-[15px]">{party!.name}</span>
+								<div key={party!.partyId} className="flex flex-col gap-1.5 min-w-0">
+									<div className="flex items-center gap-2 min-w-0">
+										<span
+											className="inline-block w-3.5 h-3.5 rounded-full shrink-0"
+											style={{ background: party!.color }}
+											aria-hidden="true"
+										/>
+										<span className="flex-1 min-w-0 text-[15px] break-words">{party!.name}</span>
+										{distance !== null && relative !== null ? (
+											<span className="shrink-0 text-[13px] opacity-85">
+												{BAND_WORD[proximityBandOf(relative)]}
+											</span>
+										) : null}
+									</div>
 									{distance === null || relative === null ? (
 										<span className="text-[13px] opacity-60">אין עדיין נתוני מסלול לספינה זו</span>
 									) : (
-										<>
-											<div className="distance-track flex-1" aria-hidden="true">
+										<div className="flex items-center gap-2 min-w-0">
+											<div className="distance-track flex-1 min-w-0" aria-hidden="true">
 												<div
 													className="distance-fill"
 													style={{
@@ -268,13 +275,10 @@ export default function Summary() {
 													}}
 												/>
 											</div>
-											<span className="w-24 shrink-0 text-[13px] opacity-85 text-left">
-												{BAND_WORD[proximityBandOf(relative)]}
-											</span>
 											<span className="text-[12px] opacity-60 shrink-0">
-												(קרבה {Math.round((1 - distance) * 100)}% · {sharedIslands} איים)
+												קרבה {Math.round((1 - distance) * 100)}% · {sharedIslands} איים
 											</span>
-										</>
+										</div>
 									)}
 								</div>
 							))}
@@ -320,9 +324,9 @@ export default function Summary() {
 						{sortedParticipants.length > 0 ? (
 							<div className="flex flex-col gap-2">
 								{sortedParticipants.map((entry) => (
-									<div key={entry.userId} className="flex items-center gap-3">
-										<span className="w-32 shrink-0 text-[15px]">{entry.displayName}</span>
-										<div className="distance-track flex-1" aria-hidden="true">
+									<div key={entry.userId} className="flex items-center gap-2 min-w-0">
+										<span className="w-20 shrink-0 text-[15px] truncate">{entry.displayName}</span>
+										<div className="distance-track flex-1 min-w-0" aria-hidden="true">
 											<div
 												className="distance-fill"
 												style={{

@@ -419,7 +419,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		name: 'הליכוד',
 		color: '#1d5fbf',
 		description:
-			'נתניהו. ממשיכה, לאחר איחוד עם תקווה חדשה. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
+			'בראשות בנימין נתניהו. מפלגה לאומית־ליברלית, פועלת מאז 1973; מדגישה ביטחון, כלכלת שוק וזהות יהודית.',
 		positions: {
 			accountability: 4,
 			'rule-of-law': 4,
@@ -440,7 +440,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		name: 'ישר! עם איזנקוט',
 		color: '#6b3fa0',
 		description:
-			'גדי איזנקוט. מפלגה חדשה (2025), בלי היסטוריה מפלגתית קודמת. מסלול על בסיס התבטאויות מתועדות של ראש המפלגה; ראו שדה confidence בקובץ המחקר.',
+			'בראשות גדי איזנקוט. מפלגה חדשה (2025), רמטכ״ל לשעבר; מדגישה ביטחון, שיתוף פעולה רחב וממשל תקין.',
 		positions: {
 			accountability: 1,
 			'rule-of-law': 2,
@@ -461,7 +461,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		name: 'ביחד',
 		color: '#0aa2c0',
 		description:
-			'לפיד ובנט. איחוד יש עתיד ובנט 2026 (2026). מסלול על בסיס עמדות יש עתיד, שהיא הגדולה שברכיביה ובעלת התיעוד הרציף.',
+			'בראשות יאיר לפיד ונפתלי בנט. איחוד של יש עתיד ובנט 2026; מדגישה מרכז מדיני, כלכלה וממשל תקין.',
 		positions: {
 			accountability: 1,
 			'rule-of-law': 2,
@@ -481,7 +481,8 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		slug: 'yisrael-beiteinu',
 		name: 'ישראל ביתנו',
 		color: '#274a78',
-		description: 'ליברמן. ממשיכה. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
+		description:
+			'בראשות אביגדור ליברמן. מפלגה חילונית־לאומית; מדגישה ביטחון, שוויון בנטל ומדינה ללא כפייה דתית.',
 		positions: {
 			accountability: 1,
 			'rule-of-law': 2,
@@ -501,7 +502,8 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		slug: 'democrats',
 		name: 'הדמוקרטים',
 		color: '#2e7d43',
-		description: 'יאיר גולן. איחוד העבודה ומרצ (2024). מסלול על בסיס עמדות שתי המפלגות המרכיבות.',
+		description:
+			'בראשות יאיר גולן. איחוד העבודה ומרצ; מדגישה שוויון, זכויות אדם והסדר מדיני.',
 		positions: {
 			accountability: 1,
 			'rule-of-law': 1,
@@ -521,7 +523,8 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		slug: 'otzma',
 		name: 'עוצמה יהודית',
 		color: '#8f2727',
-		description: 'בן גביר. ממשיכה. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
+		description:
+			'בראשות איתמר בן גביר. מפלגה לאומית־ימנית; מדגישה ביטחון אישי, אכיפה ואופי יהודי של המדינה.',
 		positions: {
 			accountability: 4,
 			'rule-of-law': 4,
@@ -541,7 +544,8 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		slug: 'shas',
 		name: 'ש״ס',
 		color: '#111111',
-		description: 'דרעי. ממשיכה. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
+		description:
+			'בראשות אריה דרעי. מפלגה חרדית־ספרדית; מדגישה מסורת ודת, שירותי רווחה ותמיכה בחלשים.',
 		positions: {
 			accountability: 3,
 			'rule-of-law': 3,
@@ -561,7 +565,8 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		slug: 'utj',
 		name: 'יהדות התורה',
 		color: '#3d3d3d',
-		description: 'ממשיכה. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
+		description:
+			'רשימה חרדית־אשכנזית של דגל התורה ואגודת ישראל; מדגישה לימוד תורה, אורח חיים דתי ותקציבי קהילה.',
 		positions: {
 			accountability: 3,
 			'rule-of-law': 3,
@@ -582,7 +587,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		name: 'הציונות הדתית',
 		color: '#7a4f21',
 		description:
-			'סמוטריץ׳. ממשיכה, לאחר איחוד עם הבית היהודי. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
+			'בראשות בצלאל סמוטריץ׳. מפלגה דתית־לאומית; מדגישה התיישבות, אופי יהודי וריבונות.',
 		positions: {
 			accountability: 4,
 			'rule-of-law': 4,
@@ -603,7 +608,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		name: 'עמך ישראל',
 		color: '#b4652a',
 		description:
-			'עופר וינטר. מפלגה חדשה (אוגוסט 2026), בלי היסטוריה מפלגתית קודמת. מסלול על בסיס התבטאויות מתועדות של ראש המפלגה בשלושה שבועות של קיומה; בנושאים שטרם אמרה בהם דבר — האומדן הוא הערכה אידיאולוגית בלבד. ראו שדה confidence בקובץ המחקר.',
+			'בראשות עופר וינטר. מפלגה חדשה (אוגוסט 2026), בלי היסטוריית הצבעות; עמדותיה מוכרות מהצהרות ראש המפלגה.',
 		positions: {
 			accountability: 1,
 			'rule-of-law': 3,
@@ -624,7 +629,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		name: 'רע״ם',
 		color: '#1c7a4b',
 		description:
-			'מנסור עבאס. ממשיכה, מתמודדת בנפרד. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
+			'בראשות מנסור עבאס. מפלגה ערבית־אסלאמית; מדגישה שותפות בממשלה ותקציבים לחברה הערבית.',
 		positions: {
 			accountability: 2,
 			'rule-of-law': 2,
@@ -645,7 +650,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		name: 'הרשימה המשותפת',
 		color: '#b03030',
 		description:
-			'חד״ש, תע״ל ובל״ד. רשימה משותפת שחודשה לקראת הבחירות. מסלול על בסיס עמדות חד״ש-תע״ל, שהן רוב הרשימה ובעלות התיעוד הרציף.',
+			'חד״ש, תע״ל ובל״ד. רשימה ערבית משותפת; מדגישה שוויון אזרחי, שלום והכרה בערבים כמיעוט לאומי.',
 		positions: {
 			accountability: 1,
 			'rule-of-law': 1,

@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { User as FreediUser } from '@freedi/shared-types';
 import { Collections } from '@freedi/shared-types';
+import { GUEST_NAME } from './sailorName';
 import {
 	auth,
 	db,
@@ -51,7 +52,7 @@ onAuthStateChanged(auth, (user: User | null) => {
 			doc(db, Collections.users, user.uid),
 			{
 				uid: user.uid,
-				displayName: user.displayName ?? user.email ?? 'מפליג/ה',
+				displayName: user.displayName ?? user.email ?? GUEST_NAME,
 				email: user.email ?? null,
 				lastUpdate: Date.now(),
 			},
@@ -99,7 +100,7 @@ export async function logOut(): Promise<void> {
 export function toFreediUser(user: User): FreediUser {
 	return {
 		uid: user.uid,
-		displayName: user.displayName ?? user.email ?? 'מפליג/ה',
+		displayName: user.displayName ?? user.email ?? GUEST_NAME,
 		email: user.email ?? null,
 		photoURL: user.photoURL ?? null,
 		isAnonymous: user.isAnonymous,
