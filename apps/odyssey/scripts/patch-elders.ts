@@ -28,6 +28,9 @@
  *   # production: no emulator host, real credentials
  *   ODYSSEY_PROJECT_ID=wizcol-app GOOGLE_APPLICATION_CREDENTIALS=... \
  *     npx tsx apps/odyssey/scripts/patch-elders.ts --game default
+ *
+ * `--accept-rename 9,12` overrides the title-mismatch abort for the listed sortOrders only
+ * (prod still calls island 9 השבת והרבנות and island 12 יחסי החוץ; same stances, same order).
  */
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
@@ -45,6 +48,13 @@ function arg(name: string): string | undefined {
 
 const gameId = arg('game') ?? 'default';
 const dryRun = process.argv.includes('--dry-run');
+/** sortOrders whose title mismatch the operator has verified as a rename. */
+const acceptRename = new Set(
+	(arg('accept-rename') ?? '')
+		.split(',')
+		.map((value) => Number.parseInt(value.trim(), 10))
+		.filter((value) => Number.isInteger(value)),
+);
 
 if (FIRESTORE_HOST) process.env.FIRESTORE_EMULATOR_HOST = FIRESTORE_HOST;
 const app = getApps().length > 0 ? getApps()[0] : initializeApp({ projectId: PROJECT_ID });
@@ -85,13 +95,23 @@ async function main(): Promise<void> {
 		const defaultIndex = DEFAULT_ISLANDS.findIndex((island) => island.slug === slug);
 		if (defaultIndex === -1) throw new Error(`elder charts "${slug}", which is not a default island`);
 		const defaultIsland = DEFAULT_ISLANDS[defaultIndex];
-		const gameIsland = gameIslands.find(
-			(island) => island.sortOrder === defaultIndex + 1 && island.title === defaultIsland.title,
-		);
+		const atOrder = gameIslands.find((island) => island.sortOrder === defaultIndex + 1);
+		const renameAccepted = atOrder && acceptRename.has(defaultIndex + 1);
+		const gameIsland =
+			atOrder && (atOrder.title === defaultIsland.title || renameAccepted) ? atOrder : undefined;
 		if (!gameIsland) {
 			throw new Error(
-				`island "${slug}" (${defaultIsland.title}) not found at sortOrder ${defaultIndex + 1} — ` +
-					'the game doc diverged from DEFAULT_ISLANDS (reordered or renamed); refusing to guess',
+				`island "${slug}" (${defaultIsland.title}) not found at sortOrder ${defaultIndex + 1}` +
+					(atOrder ? ` — the game calls it "${atOrder.title}"` : '') +
+					'. The game doc diverged from DEFAULT_ISLANDS (reordered or renamed); refusing to ' +
+					`guess. If it is the same island renamed, verify its stances and pass ` +
+					`--accept-rename ${defaultIndex + 1}`,
+			);
+		}
+		if (renameAccepted && atOrder.title !== defaultIsland.title) {
+			console.info(
+				`  ! sortOrder ${defaultIndex + 1}: charting "${defaultIsland.title}" onto the island the ` +
+					`game calls "${atOrder.title}" — accepted as a rename on your say-so`,
 			);
 		}
 
