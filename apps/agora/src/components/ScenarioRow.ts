@@ -70,15 +70,15 @@ export function ScenarioRow(): m.Component<ScenarioRowAttrs> {
 											)
 										: null,
 									showEdited && topic.sourceScenarioId
-									? m(
-											'span.scenario-row__sub',
-											t('scenlib.source_of', {
-												title: topic.sourceTitle ?? '',
-												author: topic.sourceAuthorName || t('scenlib.author_anon'),
-											}),
-										)
-									: null,
-								isSampleScenario(topic)
+										? m(
+												'span.scenario-row__sub',
+												t('scenlib.source_of', {
+													title: topic.sourceTitle ?? '',
+													author: topic.sourceAuthorName || t('scenlib.author_anon'),
+												}),
+											)
+										: null,
+									isSampleScenario(topic)
 										? m('span.scenario-row__sub', t('teach.sample_chip'))
 										: null,
 									ready ? null : m('span.scenario-row__sub', t('dashboard.scenario_draft_sub')),
