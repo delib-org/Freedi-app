@@ -34,6 +34,11 @@ export interface StageNavAttrs {
 	 * only the four doors and the stations.
 	 */
 	menu?: { onOpen: () => void; label: string; open?: boolean };
+	/**
+	 * The lesson's door — a QR a latecomer can scan off this phone. The flat
+	 * view only: in the village it is a row in the gear sheet.
+	 */
+	invite?: { onOpen: () => void; label: string; open?: boolean };
 }
 
 const ICONS: Record<AgoraStage, IconName> = {
@@ -78,7 +83,8 @@ export function planItemLabel(item: AgoraStagePlanItem): string {
  */
 export const StageNav: m.Component<StageNavAttrs> = {
 	view(vnode) {
-		const { plan, currentIndex, viewingIndex, onSelect, compact, look, mail, menu } = vnode.attrs;
+		const { plan, currentIndex, viewingIndex, onSelect, compact, look, mail, menu, invite } =
+			vnode.attrs;
 		const stations = plan
 			.map((item, index) => ({ item, index }))
 			.filter(({ item }) => item.stage !== AgoraStage.ended);
@@ -149,6 +155,20 @@ export const StageNav: m.Component<StageNavAttrs> = {
 							},
 							m(Icon, { name: 'cog', size: 18 }),
 							m('span', menu.label),
+						)
+					: null,
+				invite
+					? m(
+							'button.stage-nav__invite',
+							{
+								type: 'button',
+								'aria-label': invite.label,
+								'aria-haspopup': 'dialog',
+								'aria-expanded': invite.open ? 'true' : 'false',
+								title: invite.label,
+								onclick: invite.onOpen,
+							},
+							m(Icon, { name: 'qr', size: 20 }),
 						)
 					: null,
 				mail

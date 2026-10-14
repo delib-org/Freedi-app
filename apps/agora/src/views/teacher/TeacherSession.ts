@@ -1,4 +1,6 @@
 import { sessionVillageMode, sessionJoinUrl } from '../../lib/flows/sessionLinks';
+import { canInviteToSession } from '../../lib/flows/joinInvite';
+import { JoinQrSheet } from '../../components/JoinQrSheet';
 import m from 'mithril';
 import { Icon } from '../../components/Icon';
 import { t } from '../../lib/i18n';
@@ -165,6 +167,8 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let userId = '';
 	/** A wall asked to show names: the confirm is open */
 	let roleConfirm = false;
+	/** The join QR, held up again after the lobby for a latecomer */
+	let qrOpen = false;
 	/** On a wall NEXT is armed by its first tap until this clock, and fires on the second */
 	let armedUntil = 0;
 	let armTimer: number | undefined;
@@ -642,7 +646,21 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			// The header: the lesson's name, the class, the code — and on a phone
 			// the projector and the cog fold into the menu, where they still fit
+			// The lobby's QR, reachable on every stage: the join callable still
+			// seats a latecomer, and this device may be the only screen in the room
+			const canInvite = canInviteToSession(session.status, current.stage, session.code);
 			const menuItems: TeacherNavMenuItem[] = [
+				...(canInvite
+					? [
+							{
+								icon: 'qr' as const,
+								label: t('teacher.show_qr'),
+								onSelect: () => {
+									qrOpen = true;
+								},
+							},
+						]
+					: []),
 				{ icon: 'flag', label: t('teacher.menu.move_class'), onSelect: () => openPanel('move') },
 				{ icon: 'era', label: t('teacher.open_projector'), onSelect: openProjector },
 				{ icon: 'cog', label: t('teacher.settings_title'), onSelect: () => openPanel('settings') },
@@ -1174,6 +1192,16 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							},
 						})
 					: null;
+			const qrSheet =
+				qrOpen && canInvite
+					? m(JoinQrSheet, {
+							url: joinUrl,
+							code: session.code,
+							onClose: () => {
+								qrOpen = false;
+							},
+						})
+					: null;
 			const wallClass = privateDevice ? '' : '.teacher-console--wall';
 
 			// The class view: the room as the students see it, under the same bar
@@ -1204,6 +1232,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					languageAlert,
 					drawer,
 					roleSheet,
+					qrSheet,
 				]);
 			}
 
@@ -1227,6 +1256,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					languageAlert,
 					drawer,
 					roleSheet,
+					qrSheet,
 				]);
 			}
 
@@ -1304,6 +1334,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				languageAlert,
 				drawer,
 				roleSheet,
+				qrSheet,
 			]);
 		},
 	};

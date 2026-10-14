@@ -1,0 +1,64 @@
+// The lesson's door on a phone: a big QR and the code, for a latecomer.
+// The frame and scrim are the look sheet's; this only lays out the inside.
+//
+// Imported by components.scss; do not import directly.
+
+.join-qr {
+	&__panel {
+		align-items: center;
+		text-align: center;
+	}
+
+	// The head spans the panel even though the panel centres its children
+	.look-sheet__head {
+		align-self: stretch;
+	}
+
+	&__scan,
+	&__or {
+		margin: 0;
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+
+	// A QR needs its light quiet zone in every look, dark ones included
+	&__code-box .teacher__qr img {
+		inline-size: min(320px, 72vw);
+		block-size: auto;
+	}
+
+	&__digits {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: 3rem;
+		letter-spacing: 0.15em;
+		color: var(--text-primary);
+		direction: ltr;
+		unicode-bidi: isolate;
+	}
+}
+
+// --- The invite door beside the stage nav (the flat view) ---
+.stage-nav__invite {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	inline-size: 2.75rem;
+	block-size: 2.75rem;
+	border: 1.5px solid var(--border-subtle);
+	border-radius: var(--radius-full);
+	background: var(--surface-raised);
+	color: var(--text-secondary);
+	cursor: pointer;
+
+	&:hover {
+		border-color: var(--border-lantern);
+		color: var(--text-primary);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+}

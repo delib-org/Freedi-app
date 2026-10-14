@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { lookDots } from './LookPicker';
+import { Icon } from './Icon';
 import type { AgoraThemeSeeds } from '@freedi/shared-types';
 import { VILLAGE_PALETTES, type VillagePalette } from '../lib/villagePrefs';
 
@@ -30,6 +31,8 @@ export interface VillageMoreSheetAttrs {
 	/** The village's colour set on this device; absent hides the picker */
 	palette?: VillagePalette;
 	onPalette?: (palette: VillagePalette) => void;
+	/** The lesson's QR for a latecomer; absent once the lesson can no longer be joined */
+	onInvite?: () => void;
 	/** Leave the 3D village for the flat view */
 	onSimpleView: () => void;
 	onClose: () => void;
@@ -74,6 +77,7 @@ export const VillageMoreSheet: m.Component<
 			onLightMode,
 			palette,
 			onPalette,
+			onInvite,
 			onSimpleView,
 			onClose,
 		} = vnode.attrs;
@@ -145,6 +149,23 @@ export const VillageMoreSheet: m.Component<
 								[
 									m('span.village-more__label', t('village.more.style')),
 									m('span.village-more__dots', lookDots(look.seeds)),
+								],
+							)
+						: null,
+					onInvite
+						? m(
+								'button.village-more__row',
+								{
+									type: 'button',
+									'aria-haspopup': 'dialog',
+									onclick: () => {
+										onClose();
+										onInvite();
+									},
+								},
+								[
+									m('span.village-more__label', t('invite.open')),
+									m('span.village-more__icon', m(Icon, { name: 'qr', size: 20 })),
 								],
 							)
 						: null,
