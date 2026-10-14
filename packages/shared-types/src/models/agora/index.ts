@@ -104,6 +104,21 @@ export {
 	tallyAgoraThemes,
 } from './agoraTheme';
 
+export type { AgoraRemoval, RemovalSession, RejoinRequest } from './agoraRemoval';
+export {
+	AgoraRemovalSchema,
+	AGORA_REJOIN,
+	AGORA_REMOVED_REASON,
+	AGORA_REJOIN_COOLDOWN_REASON,
+	createAgoraRemovalId,
+	isRejoinDeclined,
+	isRejoinPending,
+	isRemovedFromAgoraSession,
+	pendingRejoinRequests,
+	rejoinAllowedAt,
+	removalOf,
+} from './agoraRemoval';
+
 export type { AgoraAgreementResults, AgoraIdentityMode } from './agoraSession';
 export { AgoraAgreementResultsSchema, AgoraIdentityModeSchema } from './agoraSession';
 
@@ -421,6 +436,10 @@ export type {
 	TeacherMessageResponse,
 	ModerateStatementRequest,
 	ModerateStatementResponse,
+	RemoveParticipantRequest,
+	RemoveParticipantResponse,
+	ResolveRejoinRequest,
+	ResolveRejoinResponse,
 	CheckLanguageRequest,
 	CheckLanguageResponse,
 	RewordQuestionRequest,

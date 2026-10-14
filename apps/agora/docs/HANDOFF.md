@@ -45,6 +45,60 @@ can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
 
+## The teacher removes a student — and approves each return (2026-10-14)
+
+Built on `feat/agora-teacher-remove-user`, **NOT deployed**. Trello "The
+teacher can remove users" — a prankster, a duplicate seat, a stranger. No
+permanent block: a removed student may knock, and the teacher approves THEM.
+
+- **Remove** — `agoraRemoveParticipant {sessionId, studentUid}` (session
+  teacher only, full account), one transaction: `session.removedUids[uid] =
+  {removedAt, anonName}` (optional shared-types field, rules-pinned), the
+  participant doc parked whole in `agoraRemovals/{sessionId}--{uid}`
+  (server-only, rules deny all) and DELETED, their `agoraHands` doc deleted
+  (dealt notes count as unread again), their `agoraIdentities` real name
+  deleted. Deleting the seat is the point: every count, census, lottery size
+  and console row is built from `agoraParticipants`, so nothing learns a
+  "removed" filter. `participantCount` is never touched (it mints pseudonyms).
+- **Knock** — `agoraJoinSession` for a removed uid seats nobody: it stamps
+  `requestedAt` (rejoin.ts `knockToRejoin`; a knock while one is pending
+  changes nothing; inside `AGORA_REJOIN.REQUEST_COOLDOWN_MS` after a "not now"
+  → `failed-precondition rejoin-cooldown`), records the real name typed at the
+  door for the teacher's card, and answers `{waiting: true}`.
+- **Answer** — `agoraResolveRejoin {sessionId, studentUid, decision}` (teacher
+  only, pending knocks only). Approve: the entry leaves `removedUids` and the
+  parked seat comes back — same pseudonym, camp, points, credit guards — so
+  their earlier notes are theirs again. Decline: `declinedAt`, the typed name
+  is deleted. Never moves the stage.
+- **Kept out while removed/waiting**: rules (`agoraRemovedFrom(sessionId)`, one
+  session `get()` only on writes that name an Agora session) refuse their
+  agora statement creates/edits, evaluations and votes in THAT session.
+  Callables that read the seat (`agoraCheckLanguage`, `agoraTeacherMessage`,
+  `agoraDealNotes`, …) refuse a missing seat.
+- **Kept**: their notes, ratings and votes. The Messages panel lists removed
+  authors' texts too (`buildTextRows {removedUids}`), so the take-down reaches
+  them.
+- **Client**: Class panel row → "Remove" (private device only) → in-app confirm
+  (`lib/flows/removeStudent.ts`). Teacher: `RejoinRequests` card ("‹pseudonym ·
+  real name› asks to come back" → Let back in / Not now), private device only,
+  stacked with the language alert in the shared `.teacher-alerts` corner.
+  Student: `views/RemovedScreen.ts` before any stage, live from the session doc
+  (`data-state` removed → waiting → declined; approval drops straight into the
+  game; `wasRemoved` holds a spinner until the seat snapshot lands).
+
+**Verify:** `npx tsx scripts/e2e-remove-student.mjs` (remove from the
+teacher's browser → removed screen survives reload → ask → waiting survives
+reload → teacher card → not now → paused re-ask → ask → let back in → same
+pseudonym and points, stage unmoved; a bot: rules refuse note/rating/vote,
+one pending knock, no self-approve, take-down still works, approved → writes
+again). Rules: `tests/rules/agora-removal.test.mjs`. Unit: shared-types
+`agoraRemoval`, functions `removeParticipant` + `rejoin`, agora
+`removeStudent` + `moderationQueue`.
+
+**Deploy (in this order):** shared-types build + functions repack →
+`deploy:rules:prod` → `deploy:f:prod -- agoraRemoveParticipant
+agoraResolveRejoin agoraJoinSession` → `deploy:agora`.
+
 ## The teacher's call moves the class; the way back to 3D (2026-10-12)
 
 Built on `feat/agora-improvements`, **NOT deployed** (client + one optional

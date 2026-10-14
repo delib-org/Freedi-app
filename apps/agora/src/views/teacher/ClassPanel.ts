@@ -11,6 +11,12 @@ import {
 	type ProgressLabel,
 } from '../../lib/flows/classProgress';
 import { realNameOf, unreadRepliesFor } from '../../lib/teacherConsole';
+import {
+	INITIAL_REMOVE_STUDENT,
+	removeStudentReduce,
+	type RemoveStudentEvent,
+	type RemoveStudentState,
+} from '../../lib/flows/removeStudent';
 import type { AgoraProposal } from '../../lib/proposals';
 import { AgoraStage, type AgoraParticipant, type AgoraStagePlanItem } from '@freedi/shared-types';
 
@@ -51,6 +57,11 @@ export interface ClassPanelAttrs {
 	onMessage: (studentUid: string) => void;
 	/** This screen is on the wall: pseudonyms only, and say so instead of "no real name" */
 	namesHidden?: boolean;
+	/**
+	 * Take a student out of the lesson. Absent on a wall screen: "remove Blue
+	 * Fox?" is not a question to ask in front of the class.
+	 */
+	onRemove?: (studentUid: string) => Promise<void>;
 }
 
 /** Minutes of silence before a row says so */
@@ -66,9 +77,85 @@ const IDLE_AFTER_MS = 5 * 60 * 1000;
  * from the two teacher-only listeners in lib/teacherConsole.
  */
 export function ClassPanel(): m.Component<ClassPanelAttrs> {
+	let removal: RemoveStudentState = INITIAL_REMOVE_STUDENT;
+	const dispatch = (event: RemoveStudentEvent): void => {
+		removal = removeStudentReduce(removal, event);
+	};
+
+	async function confirmRemoval(
+		onRemove: (studentUid: string) => Promise<void>,
+		participant: AgoraParticipant,
+	): Promise<void> {
+		dispatch({ kind: 'start' });
+		if (removal.busyUid !== participant.userId) return;
+		try {
+			await onRemove(participant.userId);
+			dispatch({ kind: 'succeeded', name: participant.anonName });
+		} catch (error) {
+			console.error('[Teacher] Remove student failed:', error);
+			dispatch({ kind: 'failed' });
+		} finally {
+			m.redraw();
+		}
+	}
+
+	function confirmBlock(
+		participant: AgoraParticipant,
+		real: string | undefined,
+		onRemove: (studentUid: string) => Promise<void>,
+	): m.Children {
+		const busy = removal.busyUid === participant.userId;
+		const titleId = `remove-title-${participant.participantId}`;
+		const name = real ? `${participant.anonName} · ${real}` : participant.anonName;
+
+		return m(
+			'.class-panel__confirm',
+			{
+				role: 'group',
+				'aria-labelledby': titleId,
+				// The question opens under the row, often below the panel's fold:
+				// bring it into view and put the keyboard on the safe answer
+				oncreate: (confirmVnode: m.VnodeDOM) => {
+					const element = confirmVnode.dom as HTMLElement;
+					element.scrollIntoView?.({ block: 'nearest' });
+					element.querySelector<HTMLButtonElement>('.class-panel__keep')?.focus();
+				},
+			},
+			[
+				m(`h3.class-panel__confirm-title#${titleId}`, t('teacher.remove_confirm_title', { name })),
+				m('p.class-panel__confirm-body', t('teacher.remove_confirm_body')),
+				removal.errorKey ? m('p.class-panel__error', { role: 'alert' }, t(removal.errorKey)) : null,
+				m('.teacher__mode-row', [
+					m(
+						'button.btn.btn--sm.btn--primary.class-panel__remove-ok',
+						{
+							type: 'button',
+							disabled: busy,
+							'aria-busy': busy ? 'true' : undefined,
+							onclick: () => void confirmRemoval(onRemove, participant),
+						},
+						t('teacher.remove_confirm_ok'),
+					),
+					m(
+						'button.btn.btn--sm.btn--secondary.class-panel__keep',
+						{
+							type: 'button',
+							disabled: busy,
+							onclick: () => dispatch({ kind: 'cancel' }),
+						},
+						t('teacher.remove_keep'),
+					),
+				]),
+			],
+		);
+	}
+
 	return {
 		view(vnode) {
-			const { plan, currentIndex, participants, facts, ratingsByUid, onMessage } = vnode.attrs;
+			const { plan, currentIndex, participants, facts, ratingsByUid, onMessage, onRemove } =
+				vnode.attrs;
+			// A row removed from the teacher's other device takes its question with it
+			dispatch({ kind: 'roster', uids: new Set(participants.map((row) => row.userId)) });
 			const opened = plan
 				.slice(0, currentIndex + 1)
 				.filter((item) => PROGRESS_STAGES.has(item.stage));
@@ -87,6 +174,13 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 							)
 						: null,
 				]),
+				removal.removedName
+					? m(
+							'p.class-panel__status',
+							{ role: 'status' },
+							t('teacher.removed_done', { name: removal.removedName }),
+						)
+					: null,
 				participants.length === 0
 					? m('p.home-explanation', t('teacher.no_students_yet'))
 					: m(
@@ -97,10 +191,12 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 								const unread = unreadRepliesFor(participant.userId);
 								const idle = idleMs(participant, now);
 
+								const asking = onRemove && removal.confirmUid === participant.userId;
+
 								return m(
-									'.class-panel__row',
+									'.class-panel__item',
 									{ key: participant.participantId, role: 'listitem' },
-									[
+									m('.class-panel__row', [
 										m('.class-panel__who', [
 											m('span.class-panel__name', participant.anonName),
 											m(
@@ -124,16 +220,34 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 													)
 												: null,
 										]),
-										m(
-											'button.btn.btn--sm.btn--secondary.class-panel__message',
-											{ type: 'button', onclick: () => onMessage(participant.userId) },
-											[
-												t('teacher.message_student'),
-												unread > 0
-													? m('span.class-panel__badge', { 'aria-hidden': 'true' }, String(unread))
-													: null,
-											],
-										),
+										m('span.class-panel__actions', [
+											m(
+												'button.btn.btn--sm.btn--secondary.class-panel__message',
+												{ type: 'button', onclick: () => onMessage(participant.userId) },
+												[
+													t('teacher.message_student'),
+													unread > 0
+														? m(
+																'span.class-panel__badge',
+																{ 'aria-hidden': 'true' },
+																String(unread),
+															)
+														: null,
+												],
+											),
+											onRemove
+												? m(
+														'button.btn.btn--sm.btn--ghost.class-panel__remove',
+														{
+															type: 'button',
+															'aria-expanded': asking ? 'true' : 'false',
+															'aria-label': `${t('teacher.remove_student')} ${participant.anonName}`,
+															onclick: () => dispatch({ kind: 'ask', uid: participant.userId }),
+														},
+														t('teacher.remove_student'),
+													)
+												: null,
+										]),
 										m(
 											'span.class-panel__pips',
 											{ 'aria-label': t('teacher.col_progress') },
@@ -168,7 +282,8 @@ export function ClassPanel(): m.Component<ClassPanelAttrs> {
 													]
 												: null,
 										]),
-									],
+									]),
+									asking && onRemove ? confirmBlock(participant, real, onRemove) : null,
 								);
 							}),
 						),

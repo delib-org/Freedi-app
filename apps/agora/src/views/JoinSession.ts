@@ -9,6 +9,8 @@ import {
 	AgoraSessionStatus,
 	AgoraSession,
 	AGORA_IDENTITY,
+	AGORA_REJOIN_COOLDOWN_REASON,
+	AGORA_REMOVED_REASON,
 	AGORA_SESSION,
 } from '@freedi/shared-types';
 import {
@@ -201,8 +203,17 @@ export function JoinSession(
 				...(trimmedName && namePhase === 'named' ? { displayName: trimmedName } : {}),
 				...(trimmedName ? { realName: trimmedName } : {}),
 			});
+			// A removed login is not seated: its knock now waits for the teacher,
+			// and the game screen is where it waits (and where it is let back in)
 			m.route.set(`/play/${result.sessionId}`);
 		} catch (error) {
+			if (String(error).includes(AGORA_REJOIN_COOLDOWN_REASON)) {
+				phase = 'error';
+				errorKey = 'join.rejoin_cooldown';
+				m.redraw();
+
+				return;
+			}
 			// A class game admits roster members only: this specific refusal is
 			// not an error, it is the door to the one-time class-join step.
 			if (/class-membership-required/.test(String(error))) {
@@ -210,6 +221,14 @@ export function JoinSession(
 				classJoin = INITIAL_CLASS_JOIN;
 				pendingAlias = '';
 				pendingPin = '';
+				m.redraw();
+
+				return;
+			}
+			// Removed between the knock check and the seat — one more knock will do
+			if (String(error).includes(AGORA_REMOVED_REASON)) {
+				phase = 'error';
+				errorKey = 'join.removed';
 				m.redraw();
 
 				return;

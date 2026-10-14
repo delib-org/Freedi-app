@@ -92,4 +92,17 @@ describe('buildTextRows', () => {
 			{ uid: 'b', anonName: 'Beta' },
 		]);
 	});
+
+	it("keeps a removed student's words in reach of the take-down", () => {
+		const sources = {
+			proposals: [item({ statementId: 'gone', creatorId: 'c', anonName: 'Gamma' })],
+			answersByQuestion: {},
+			suggestions: {},
+			participants,
+		};
+		expect(buildTextRows(sources)).toHaveLength(0);
+		expect(buildTextRows({ ...sources, removedUids: ['c'] }).map((r) => r.statementId)).toEqual([
+			'gone',
+		]);
+	});
 });

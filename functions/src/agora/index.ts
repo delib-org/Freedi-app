@@ -32,3 +32,5 @@ export { agoraSupervisorConsole } from './fn_agoraSupervisorConsole';
 export { agoraTeacherHeartbeat } from './fn_agoraTeacherHeartbeat';
 export { agoraAdminBackfillTeacherAggregates } from './fn_agoraAdminBackfillTeacherAggregates';
 export { agoraDealNotes } from './fn_agoraDealNotes';
+export { agoraRemoveParticipant } from './fn_agoraRemoveParticipant';
+export { agoraResolveRejoin } from './fn_agoraResolveRejoin';

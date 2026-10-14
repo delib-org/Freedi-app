@@ -14,6 +14,10 @@ import type {
 	JoinClassResponse,
 	ModerateStatementRequest,
 	ModerateStatementResponse,
+	RemoveParticipantRequest,
+	RemoveParticipantResponse,
+	ResolveRejoinRequest,
+	ResolveRejoinResponse,
 	RewordQuestionRequest,
 	RewordQuestionResponse,
 	TeacherMessageRequest,
@@ -83,6 +87,8 @@ export interface JoinSessionResponse {
 	sessionId: string;
 	participantId: string;
 	anonName: string;
+	/** The teacher removed this login: not seated, the knock waits for the teacher */
+	waiting?: boolean;
 }
 
 export interface AdvanceStageRequest {
@@ -355,6 +361,30 @@ export async function moderateStatement(
 	const call = httpsCallable<ModerateStatementRequest, ModerateStatementResponse>(
 		functions,
 		'agoraModerateStatement',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The session teacher takes one student out of the lesson (seat deleted, uid blocked). */
+export async function removeParticipant(
+	request: RemoveParticipantRequest,
+): Promise<RemoveParticipantResponse> {
+	const call = httpsCallable<RemoveParticipantRequest, RemoveParticipantResponse>(
+		functions,
+		'agoraRemoveParticipant',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The session teacher answers a removed student's knock: let back in, or not now. */
+export async function resolveRejoin(request: ResolveRejoinRequest): Promise<ResolveRejoinResponse> {
+	const call = httpsCallable<ResolveRejoinRequest, ResolveRejoinResponse>(
+		functions,
+		'agoraResolveRejoin',
 	);
 	const result = await call(request);
 

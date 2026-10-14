@@ -305,6 +305,7 @@ export function MessagesPanel(): m.Component<MessagesPanelAttrs> {
 				answersByQuestion: state.answersByQuestion,
 				suggestions: state.suggestions,
 				participants,
+				removedUids: Object.keys(session.removedUids ?? {}),
 				challengerStatementId: session.votingGame?.challengerStatementId,
 			});
 			const shown = filterRows(rows, {

@@ -16,6 +16,7 @@ import {
 	Evaluation,
 	AGORA_CIVIC_CENTER_POSITION,
 	AGORA_IDENTITY,
+	AGORA_REMOVED_REASON,
 	AGORA_SESSION,
 	AgoraIdentity,
 	createAgoraIdentityId,
@@ -24,11 +25,13 @@ import {
 	deriveCamp,
 	deriveCivicCampPositionFromIsland,
 	functionConfig,
+	isRemovedFromAgoraSession,
 	resolveSessionFlow,
 	AttitudeMap,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { generateAnonName } from './anonNames';
+import { knockToRejoin } from './rejoin';
 
 interface CivicStanding {
 	campPosition: number;
@@ -195,6 +198,8 @@ interface Result {
 	sessionId: string;
 	participantId: string;
 	anonName: string;
+	/** A removed login knocked: not seated, waiting for the teacher */
+	waiting?: true;
 }
 
 /**
@@ -235,6 +240,26 @@ export const agoraJoinSession = onCall(
 			}
 
 			const session = sessionSnap.docs[0].data() as AgoraSession;
+			// The teacher took this login out of this lesson. Before anything
+			// else — a rejoin, a roster check — or the door would hand the seat
+			// straight back. The door is a knock instead: the request waits for
+			// the teacher (agoraResolveRejoin), and the student waits with it.
+			// Other sessions never read this list.
+			if (isRemovedFromAgoraSession(session, uid)) {
+				const knock = await knockToRejoin(session.sessionId, uid);
+				if (knock) {
+					// The name they type at the door is for the teacher's request card
+					// — and stays theirs if the teacher lets them back
+					await recordIdentity(session, uid, knock.anonName, realName);
+
+					return {
+						sessionId: session.sessionId,
+						participantId: createAgoraParticipantId(session.sessionId, uid),
+						anonName: knock.anonName,
+						waiting: true,
+					};
+				}
+			}
 			const participantId = createAgoraParticipantId(session.sessionId, uid);
 			const participantRef = db.collection(Collections.agoraParticipants).doc(participantId);
 
@@ -354,6 +379,10 @@ export const agoraJoinSession = onCall(
 					transaction.get(sessionRef),
 					transaction.get(participantRef),
 				]);
+				// A removal that landed between the read above and this seat
+				if (isRemovedFromAgoraSession(freshSession.data() as AgoraSession | undefined, uid)) {
+					throw new HttpsError('permission-denied', AGORA_REMOVED_REASON);
+				}
 				if (freshParticipant.exists) {
 					return (freshParticipant.data() as AgoraParticipant).anonName;
 				}

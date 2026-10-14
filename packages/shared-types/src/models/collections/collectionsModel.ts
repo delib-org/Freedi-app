@@ -108,6 +108,7 @@ export enum Collections {
     agoraParticipants = 'agoraParticipants',
     agoraScores = 'agoraScores',
     agoraHands = 'agoraHands',
+    agoraRemovals = 'agoraRemovals',
     agoraValueAnswers = 'agoraValueAnswers',
     agoraCharacterReviews = 'agoraCharacterReviews',
     agoraSchools = 'agoraSchools',

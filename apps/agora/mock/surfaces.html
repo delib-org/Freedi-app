@@ -1210,6 +1210,41 @@
 				</div>
 			</div>
 
+			<h2>removing a student — the row's question, and the line after</h2>
+			<div class="card stack class-panel">
+				<p class="class-panel__status" role="status">שועל כחול הוצא/ה מהשיעור</p>
+				<div class="class-panel__table">
+					<div class="class-panel__item">
+						<div class="class-panel__row">
+							<span class="class-panel__who"><span class="class-panel__name">פנס אמיץ</span><span class="class-panel__real">טל י.</span></span>
+							<span class="class-panel__actions"><button class="btn btn--sm btn--secondary class-panel__message" type="button">הודעה</button><button class="btn btn--sm btn--ghost class-panel__remove" type="button" aria-expanded="true">להוציא</button></span>
+						</div>
+						<div class="class-panel__confirm" role="group">
+							<h3 class="class-panel__confirm-title">להוציא את פנס אמיץ · טל י. מהשיעור?</h3>
+							<p class="class-panel__confirm-body">במסך שלהם יופיע: "המורה הוציא אתכם מהמסע הזה". כדי לחזור הם יצטרכו את האישור שלכם. מה שכבר נכתב נשאר על הלוח — ואפשר עדיין להוריד כל טקסט.</p>
+							<p class="class-panel__error">ההוצאה לא עברה. נסו שוב.</p>
+							<div class="teacher__mode-row"><button class="btn btn--sm btn--primary class-panel__remove-ok" type="button">להוציא מהשיעור</button><button class="btn btn--sm btn--secondary" type="button">לא, להשאיר</button></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<h2>a removed student knocks to come back — the teacher's card</h2>
+			<section class="rejoin-alert" role="alert">
+				<h2 class="rejoin-alert__title">בקשות לחזור לשיעור (2)</h2>
+				<ul class="rejoin-alert__list">
+					<li class="rejoin-alert__item">
+						<p class="rejoin-alert__who">פנס אמיץ · טל י. מבקש/ת לחזור</p>
+						<div class="rejoin-alert__actions"><button class="btn btn--primary btn--sm" type="button">לאשר חזרה</button><button class="btn btn--secondary btn--sm" type="button">לא עכשיו</button></div>
+					</li>
+					<li class="rejoin-alert__item">
+						<p class="rejoin-alert__who">שועל כחול מבקש/ת לחזור</p>
+						<p class="rejoin-alert__error">זה לא עבר. נסו שוב.</p>
+						<div class="rejoin-alert__actions"><button class="btn btn--primary btn--sm" type="button">לאשר חזרה</button><button class="btn btn--secondary btn--sm" type="button">לא עכשיו</button></div>
+					</li>
+				</ul>
+			</section>
+
 			<h2>what the class wrote — a plain line, a reworded one, a hidden one</h2>
 			<div class="card stack messages-panel">
 				<div class="messages-panel__filters">

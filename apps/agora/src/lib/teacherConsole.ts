@@ -9,9 +9,16 @@ import {
 	AgoraTeacherMessageSchema,
 	ModerateStatementRequest,
 	ModerateStatementResponse,
+	RemoveParticipantResponse,
+	ResolveRejoinResponse,
 	TeacherMessageRequest,
 } from '@freedi/shared-types';
-import { moderateStatement as moderateCallable, teacherMessage } from './callables';
+import {
+	moderateStatement as moderateCallable,
+	removeParticipant as removeParticipantCallable,
+	resolveRejoin as resolveRejoinCallable,
+	teacherMessage,
+} from './callables';
 
 /**
  * The teacher's live console: the two listeners only the teacher may hold
@@ -208,6 +215,31 @@ export async function moderateStatement(
 	request: ModerateStatementRequest,
 ): Promise<ModerateStatementResponse> {
 	return moderateCallable(request);
+}
+
+/**
+ * Take one student out of the lesson. The server deletes the seat and blocks
+ * the login from this session; the participants listener then drops the row
+ * by itself, so there is nothing to patch locally.
+ */
+export async function removeStudent(
+	sessionId: string,
+	studentUid: string,
+): Promise<RemoveParticipantResponse> {
+	return removeParticipantCallable({ sessionId, studentUid });
+}
+
+/**
+ * Answer a removed student's knock. Approve gives the old seat back (the
+ * participants listener brings the row back by itself); decline keeps them
+ * out until they knock again.
+ */
+export async function answerRejoin(
+	sessionId: string,
+	studentUid: string,
+	decision: 'approve' | 'decline',
+): Promise<ResolveRejoinResponse> {
+	return resolveRejoinCallable({ sessionId, studentUid, decision });
 }
 
 /**

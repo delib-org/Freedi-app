@@ -83,6 +83,60 @@
 		justify-content: flex-end;
 	}
 
+	// A row and, when the teacher asked "remove?", its question under it
+	&__item {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	// The alarm red as TEXT on a quiet button — the strikes chip's colour,
+	// so it reads as consequential without shouting next to "Message"
+	&__remove {
+		color: var(--danger-ink);
+
+		&:hover:not(:disabled) {
+			color: var(--danger-ink);
+		}
+	}
+
+	&__confirm {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		background: var(--bg-card-solid);
+		border: 1.5px solid var(--danger);
+		border-radius: var(--radius-md);
+	}
+
+	&__confirm-title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		color: var(--text-primary);
+	}
+
+	&__confirm-body {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	// The alarm as text: --danger-ink is re-tuned per look (light on navy)
+	&__error {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		color: var(--danger-ink);
+	}
+
+	&__status {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
 	&__idle {
 		font-size: var(--font-size-xs);
 		color: var(--text-muted);
@@ -152,6 +206,10 @@
 	}
 
 	&__message {
+		grid-area: door;
+	}
+
+	&__actions {
 		grid-area: door;
 	}
 
