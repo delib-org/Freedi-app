@@ -4,6 +4,7 @@ import { t } from '../lib/i18n';
 import { classLabel } from '../lib/teacher';
 import { getTeacherNavState, liveSessions, loadTeacherNav, navClass } from '../lib/teacherNav';
 import { AgoraSession } from '@freedi/shared-types';
+import { ensureLibraryAccess, getLibraryStore } from '../lib/scenarioLibrary/state';
 
 export interface TeacherNavAttrs {
 	/** What this screen is about — the lesson's own name, not the screen's */
@@ -124,7 +125,11 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 
 	function toggle(): void {
 		open = !open;
-		if (open) loadTeacherNav();
+		if (open) {
+			loadTeacherNav();
+			// The library row appears only once the server has said this teacher may enter
+			void ensureLibraryAccess().then(() => m.redraw());
+		}
 	}
 
 	function close(): void {
@@ -278,6 +283,14 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 							label: t('dashboard.start_game'),
 							route: '/teach/start',
 						}),
+						getLibraryStore().access === 'approved'
+							? row({
+									key: 'library',
+									icon: 'tunnel',
+									label: t('scenlib.nav'),
+									route: '/teach/library',
+								})
+							: null,
 					]),
 				],
 			),

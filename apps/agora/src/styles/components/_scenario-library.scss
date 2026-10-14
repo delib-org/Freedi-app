@@ -1,0 +1,611 @@
+// The teachers' scenario library: the door, the home (search, chips, grid),
+// the card. Tokens only, so every look wears it. Logical properties
+// throughout (Hebrew and Arabic are right-to-left). Imported by
+// components.scss; do not import directly.
+//
+// Type floor: every word here is 16px or more (--font-size-xs and up).
+
+.shell--wide .scn {
+	gap: var(--space-md);
+}
+
+// --- Doors into the library ---
+
+.scn-door {
+	display: flex;
+	align-items: center;
+	gap: var(--space-md);
+	padding: var(--space-md);
+	border-radius: var(--radius-lg);
+	background: var(--grad-mine);
+	color: #ffffff;
+	text-decoration: none;
+	box-shadow: var(--shadow-mine);
+	transition: transform var(--motion-fast) var(--ease-spring);
+
+	&:hover {
+		transform: translateY(-1px);
+	}
+
+	&:focus-visible {
+		outline: 3px solid var(--lantern-glow);
+		outline-offset: 3px;
+	}
+
+	&__icon {
+		flex: 0 0 auto;
+		inline-size: 52px;
+		block-size: 52px;
+		display: grid;
+		place-items: center;
+		border-radius: var(--radius-md);
+		background: rgba(255, 255, 255, 0.2);
+	}
+
+	&__text {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+	}
+
+	&__sub {
+		font-size: var(--font-size-xs);
+	}
+
+	&__arrow {
+		flex: 0 0 auto;
+		display: inline-flex;
+	}
+
+	// The glyph is drawn pointing left, which is "forward" in Hebrew and Arabic
+	[dir='ltr'] &__arrow .icon {
+		transform: scaleX(-1);
+	}
+}
+
+.scn-door-link {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-sm);
+	min-block-size: 44px;
+	margin-block-start: var(--space-sm);
+	color: var(--mine-ink);
+	font-weight: 700;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+		border-radius: var(--radius-sm);
+	}
+}
+
+// --- The two views: everyone's library, and mine ---
+
+.scn-segment {
+	display: flex;
+	gap: var(--space-xs);
+	padding: var(--space-xs);
+	border-radius: var(--radius-full);
+	background: var(--bg-inset);
+	inline-size: fit-content;
+
+	&__opt {
+		min-block-size: 44px;
+		display: inline-flex;
+		align-items: center;
+		padding-inline: var(--space-md);
+		border-radius: var(--radius-full);
+		font-weight: 700;
+		color: var(--text-secondary);
+		text-decoration: none;
+
+		&--on {
+			background: var(--mine-strong);
+			color: #ffffff;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+}
+
+// --- Home: filters beside the results on a laptop, stacked on a phone ---
+
+.scn-layout {
+	display: grid;
+	gap: var(--space-lg);
+	align-items: start;
+
+	@media (min-width: 900px) {
+		grid-template-columns: 260px minmax(0, 1fr);
+	}
+}
+
+.scn-side {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	@media (min-width: 900px) {
+		position: sticky;
+		inset-block-start: calc(var(--teacher-nav-h) + var(--space-md));
+	}
+}
+
+.scn-search {
+	position: relative;
+	display: flex;
+	align-items: center;
+
+	.icon {
+		position: absolute;
+		inset-inline-start: var(--space-md);
+		color: var(--text-muted);
+		pointer-events: none;
+	}
+
+	&__input {
+		padding-inline-start: calc(var(--space-md) * 2 + 12px);
+	}
+}
+
+.scn-filter {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+
+	&__label {
+		margin: 0;
+		font-weight: 700;
+		color: var(--text-secondary);
+	}
+
+	// A phone scrolls the chips sideways, one line per group; a laptop
+	// sidebar lets them wrap
+	&__chips {
+		display: flex;
+		gap: var(--space-xs);
+		overflow-x: auto;
+		padding-block: 2px;
+		scrollbar-width: none;
+
+		@media (min-width: 900px) {
+			flex-wrap: wrap;
+			overflow: visible;
+		}
+	}
+}
+
+// In the laptop sidebar a long subject name wraps inside its chip instead of
+// running out of the column
+@media (min-width: 900px) {
+	.scn-side .scn-chip {
+		max-inline-size: 100%;
+		white-space: normal;
+		text-align: start;
+		padding-block: var(--space-xs);
+	}
+}
+
+.scn-chip {
+	flex: 0 0 auto;
+	min-block-size: 44px;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	padding-inline: var(--space-md);
+	border-radius: var(--radius-full);
+	border: 1.5px solid var(--border-strong);
+	background: var(--surface-raised);
+	color: var(--text-primary);
+	font: inherit;
+	font-size: var(--font-size-xs);
+	cursor: pointer;
+	transition:
+		background-color var(--motion-fast) ease,
+		border-color var(--motion-fast) ease;
+
+	&:hover {
+		border-color: var(--lantern);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+
+	&--on {
+		background: var(--mine-strong);
+		border-color: var(--mine-strong);
+		color: #ffffff;
+	}
+
+	&__count {
+		font-size: var(--font-size-xs);
+		opacity: 0.75;
+	}
+}
+
+.scn-active {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-xs);
+}
+
+.scn-results {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+	min-inline-size: 0;
+}
+
+.scn-section-title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: var(--font-size-lg);
+}
+
+.scn-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-sm) var(--space-md);
+
+	&__count {
+		margin: 0;
+		margin-inline-end: auto;
+		font-weight: 700;
+	}
+
+	&__translating {
+		color: var(--text-secondary);
+	}
+}
+
+.scn-sort {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-sm);
+
+	select {
+		inline-size: auto;
+		min-block-size: 44px;
+		padding-block: 0.4em;
+	}
+}
+
+// --- The grid and the card ---
+
+.scn-grid {
+	display: grid;
+	gap: var(--space-md);
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+}
+
+.scn-featured {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__row {
+		display: flex;
+		gap: var(--space-md);
+		overflow-x: auto;
+		scroll-snap-type: x proximity;
+		padding-block: var(--space-xs) var(--space-sm);
+
+		.scn-card {
+			flex: 0 0 min(78vw, 300px);
+			scroll-snap-align: start;
+		}
+
+		// A laptop shows more of the row but keeps it a row: six recommended
+		// scenarios scroll sideways rather than wrap into a second grid
+		@media (min-width: 900px) {
+			.scn-card {
+				flex-basis: 300px;
+			}
+		}
+	}
+}
+
+.scn-card {
+	display: flex;
+	flex-direction: column;
+	block-size: 100%;
+	overflow: hidden;
+	border-radius: var(--radius-md);
+	border: 1px solid var(--border-subtle);
+	background: var(--bg-card-solid);
+	box-shadow: var(--shadow-card);
+	color: var(--text-primary);
+	text-decoration: none;
+	transition:
+		transform var(--motion-fast) var(--ease-spring),
+		border-color var(--motion-fast) ease,
+		box-shadow var(--motion-base) ease;
+
+	&:hover {
+		transform: translateY(-2px);
+		border-color: var(--border-lantern);
+		box-shadow: var(--shadow-raised);
+	}
+
+	&:focus-visible {
+		outline: 3px solid var(--lantern-glow);
+		outline-offset: 2px;
+	}
+
+	&--hidden {
+		border-style: dashed;
+		opacity: 0.85;
+	}
+
+	&__cover {
+		position: relative;
+		display: block;
+		aspect-ratio: 16 / 10;
+		background: var(--bg-inset);
+	}
+
+	&__img {
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+		display: block;
+	}
+
+	// No picture yet: a tinted tile and the scenario glyph, never a blank
+	&__fallback {
+		inline-size: 100%;
+		block-size: 100%;
+		display: grid;
+		place-items: center;
+		color: var(--mine-ink);
+		background: linear-gradient(150deg, var(--wash-mine-high), var(--peer-tile));
+	}
+
+	&__badge {
+		position: absolute;
+		inset-block-start: var(--space-sm);
+		inset-inline-start: var(--space-sm);
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--mint);
+		color: var(--mint-ink);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+
+		&--hidden {
+			background: var(--pink);
+			color: var(--pink-ink);
+		}
+	}
+
+	&__body {
+		flex: 1 1 auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		padding: var(--space-md);
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		font-weight: 700;
+		line-height: 1.3;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	&__summary {
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+		line-height: 1.45;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	&__tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	&__meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-xs) var(--space-md);
+		margin-block-start: auto;
+		padding-block-start: var(--space-xs);
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+	}
+
+	&__rating {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__rating-text {
+		color: var(--text-primary);
+		font-weight: 700;
+	}
+
+	&__foot {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-xs) var(--space-sm);
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+	}
+
+	&__lang {
+		padding: 0 var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+	}
+
+	&__auto {
+		color: var(--mine-ink);
+	}
+}
+
+.scn-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	padding: 2px var(--space-sm);
+	border-radius: var(--radius-full);
+	background: var(--peer-tile);
+	color: var(--mine-ink);
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+
+	&--kind {
+		background: var(--wash-mine-high);
+		border: 1px solid var(--border-subtle);
+	}
+
+	&--picked {
+		min-block-size: 36px;
+		padding-inline: var(--space-sm) 2px;
+	}
+
+	&__remove {
+		inline-size: 32px;
+		block-size: 32px;
+		display: grid;
+		place-items: center;
+		border: 0;
+		border-radius: var(--radius-full);
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		cursor: pointer;
+
+		&:hover {
+			background: var(--bg-inset);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+		}
+	}
+}
+
+// --- Stars: five glyphs, each filled to --fill ---
+
+.scn-stars {
+	display: inline-flex;
+	gap: 1px;
+	color: var(--gold);
+
+	&__star {
+		position: relative;
+		display: inline-flex;
+
+		.icon {
+			color: var(--border-strong);
+		}
+
+		// The filled copy, clipped to the fraction
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			inline-size: var(--fill, 0%);
+			overflow: hidden;
+			background: currentColor;
+			-webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.4l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.2l-5.1 2.9 1.1-5.7-4.3-4 5.8-.7z'/></svg>") no-repeat left / auto 100%;
+			mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.4l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.2l-5.1 2.9 1.1-5.7-4.3-4 5.8-.7z'/></svg>") no-repeat left / auto 100%;
+		}
+	}
+
+	// An over-constrained box (inset 0 + a width) anchors to the start edge
+	// of the script, so the fill follows RTL by itself; only the mask's own
+	// origin has to follow it.
+	[dir='rtl'] &__star::after {
+		-webkit-mask-position: right;
+		mask-position: right;
+	}
+}
+
+// --- Gates and empty states ---
+
+.scn-gate {
+	max-inline-size: 520px;
+	margin-inline: auto;
+	text-align: center;
+	padding: var(--space-lg);
+
+	&__title {
+		margin: 0;
+		font-family: var(--font-display);
+	}
+}
+
+.scn-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-xl) var(--space-md);
+	text-align: center;
+	border: 1.5px dashed var(--border-strong);
+	border-radius: var(--radius-lg);
+
+	h2 {
+		margin: 0;
+		font-family: var(--font-display);
+	}
+
+	p {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+}
+
+.scn-admin {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding-block-start: var(--space-md);
+	border-block-start: 1px dashed var(--border-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.scn-card,
+	.scn-door {
+		transition: none;
+	}
+
+	.scn-card:hover,
+	.scn-door:hover {
+		transform: none;
+	}
+
+	.scn-featured__row {
+		scroll-snap-type: none;
+	}
+}

@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { LibraryDoor } from '../../components/scenarioLibrary/LibraryDoor';
 import { getLang, t } from '../../lib/i18n';
 import { getUserState, ensureUser } from '../../lib/user';
 import { createSession, teacherClass } from '../../lib/callables';
@@ -808,6 +809,8 @@ export function StartGame(): m.Component {
 							...topics.map(scenarioRow),
 							ownQuestionRow(),
 						]),
+						// "Didn't find it?" — a way to the library, so starting a lesson never dead-ends
+						m(LibraryDoor, { variant: 'link' }),
 					]),
 
 					// 2. Which class?

@@ -66,6 +66,11 @@ export type IconName =
 	| 'arrow'
 	| 'home'
 	| 'menu'
+	// the scenario library
+	| 'star'
+	| 'search'
+	| 'image'
+	| 'hide'
 	// the rating scale
 	| 'face-strong-against'
 	| 'face-against'
@@ -211,6 +216,32 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		['path', { d: 'M4.5 7.5h15' }],
 		['path', { d: 'M4.5 12h15' }],
 		['path', { d: 'M4.5 16.5h15' }],
+	],
+
+	// The scenario library. A star filled with the current colour (a rating),
+	// a lens, a picture frame (the cover), and an eye with a stroke through it.
+	star: [
+		[
+			'path',
+			{
+				d: 'M12 3.4l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.2l-5.1 2.9 1.1-5.7-4.3-4 5.8-.7z',
+				fill: 'currentColor',
+			},
+		],
+	],
+	search: [
+		['circle', { cx: 10.8, cy: 10.8, r: 6.3 }],
+		['path', { d: 'M15.6 15.6 20.4 20.4' }],
+	],
+	image: [
+		['rect', { x: 3.5, y: 5, width: 17, height: 14, rx: 2.2 }],
+		['circle', { cx: 9, cy: 10, r: 1.6 }],
+		['path', { d: 'M4.5 17.5l4.6-4.4 3.4 3.1 3-2.6 4 3.9' }],
+	],
+	hide: [
+		['path', { d: 'M3.2 12s3.2-6 8.8-6 8.8 6 8.8 6-3.2 6-8.8 6-8.8-6-8.8-6z' }],
+		['circle', { cx: 12, cy: 12, r: 2.6 }],
+		['path', { d: 'M4.5 4.5l15 15' }],
 	],
 
 	cog: [

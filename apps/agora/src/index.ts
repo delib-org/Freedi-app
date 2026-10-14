@@ -46,6 +46,9 @@ import { TopicEditor } from './views/teacher/TopicEditor';
 import { StartGame } from './views/teacher/StartGame';
 import { TeacherClass } from './views/teacher/TeacherClass';
 import { GameReport } from './views/teacher/GameReport';
+import { LibraryAdmin } from './views/teacher/scenarioLibrary/LibraryAdmin';
+import { LibraryHome } from './views/teacher/scenarioLibrary/LibraryHome';
+import { LibraryScenario } from './views/teacher/scenarioLibrary/LibraryScenario';
 
 // Error reporting first, so anything thrown during boot is captured. A crash
 // here happens in front of a classroom, and until now nothing recorded it.
@@ -182,6 +185,11 @@ if (root) {
 		'/teach/screen/:id': byId(ProjectorScreen),
 		'/teach/class/:id': byId(TeacherClass),
 		'/teach/report/:id': byId(GameReport),
+		'/teach/library': { render: () => m(LibraryHome) },
+		// Before ':id', so "mine" is never read as a scenario id
+		'/teach/library/mine': { render: () => m(LibraryHome, { key: 'mine', mine: true }) },
+		'/teach/library/admin': { render: () => m(LibraryAdmin) },
+		'/teach/library/:id': byId(LibraryScenario),
 	});
 	// The banner lives beside the router's root so a crash in any view leaves it standing
 	const bannerHost = document.createElement('div');
