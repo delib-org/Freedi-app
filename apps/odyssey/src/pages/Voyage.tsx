@@ -15,6 +15,9 @@ import { invitedElders, elderStageId } from '../lib/elders';
 import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
 import SeaChart from '../components/SeaChart';
 import ShipCard from '../components/ShipCard';
+import IslandStrip from '../components/IslandStrip';
+import CrewCounsel from '../components/CrewCounsel';
+import { nextIslandIndex } from '../lib/voyageRoute';
 
 /**
  * What the captain's log asks when an island has no question of its own.
@@ -29,6 +32,10 @@ const DEFAULT_LOG_PROMPT = 'מה חשוב לך במיוחד בסוגיה הזו,
  * shows the island vignette; marking an attitude plants a buoy, and after
  * each island the sea reacts — party ships sail by the updated distances
  * (only in the reaction phase, never mid-question).
+ *
+ * Two things the player can reach from every island: the strip of islands
+ * they chose (to sail to any other one), and their crew — consulted, never
+ * volunteering, and folded until asked (see CrewCounsel).
  */
 export default function Voyage() {
 	const navigate = useNavigate();
@@ -219,14 +226,25 @@ export default function Voyage() {
 		}
 	}
 
+	// Where "next" leads, so the button can say it: the island after this
+	// one, then anything skipped, then home (see lib/voyageRoute).
+	const nextIndex = nextIslandIndex(selectedIslands, attitudes, index);
+	const nextTitle = nextIndex === null ? null : selectedIslands[nextIndex].title;
+
+	function goToIsland(target: number): void {
+		setIndex(target);
+		setPhase('question');
+		setAsked(null);
+		window.scrollTo({ top: 0 });
+	}
+
 	function nextIsland(): void {
-		if (index + 1 >= selectedIslands.length) {
+		if (nextIndex === null) {
 			navigate('/summary');
 
 			return;
 		}
-		setIndex(index + 1);
-		setPhase('question');
+		goToIsland(nextIndex);
 	}
 
 	// Two lists, never one. See NearbyShips' `caption`.
@@ -269,6 +287,13 @@ export default function Voyage() {
 						<h1 className="text-3xl font-bold text-[var(--cream)] mt-1 mb-1">{island.title}</h1>
 						<p className="text-[15px] text-[#cfe6f5] m-0">{island.issue}</p>
 					</header>
+
+					<IslandStrip
+						islands={selectedIslands}
+						attitudes={attitudes}
+						currentIndex={index}
+						onSelect={goToIsland}
+					/>
 
 					{mode === 'game' && phase === 'question' ? (
 						// window onto the island vignette and the sea
@@ -334,6 +359,10 @@ export default function Voyage() {
 									);
 								})}
 							</div>
+
+							{/* The crew, when asked. Keyed by island so a sailor opened on
+							    the last island is not still talking over this one. */}
+							<CrewCounsel key={island.statementId} crew={elders} island={island} />
 
 							{/*
 							  One open question, not two. There used to be a "depth question"
@@ -470,7 +499,7 @@ export default function Voyage() {
 							)}
 							<div className="flex justify-center">
 								<button type="button" className="btn" onClick={() => nextIsland()}>
-									{index + 1 >= selectedIslands.length ? 'אל מפת ההפלגה שלך 🗺️' : 'לאי הבא ⚓'}
+									{nextTitle === null ? 'אל מפת ההפלגה שלך 🗺️' : `לאי הבא: ${nextTitle} ⚓`}
 								</button>
 							</div>
 						</section>
