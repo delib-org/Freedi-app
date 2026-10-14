@@ -125,6 +125,8 @@ export enum Collections {
     // The teachers' scenario library (tags, ratings, cached translations, approval markers)
     agoraLibraryTags = 'agoraLibraryTags',
     agoraScenarioRatings = 'agoraScenarioRatings',
+    agoraScenarioPosts = 'agoraScenarioPosts',
+    agoraLibraryReports = 'agoraLibraryReports',
     agoraScenarioTranslations = 'agoraScenarioTranslations',
     agoraApprovedTeachers = 'agoraApprovedTeachers',
 

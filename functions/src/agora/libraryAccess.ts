@@ -6,6 +6,7 @@ import {
 	AgoraApprovedTeacher,
 	AgoraSchool,
 	AGORA_LIBRARY,
+	AGORA_LIBRARY_COMMUNITY,
 	Collections,
 	seedTagDocs,
 } from '@freedi/shared-types';
@@ -160,4 +161,28 @@ export function countCover(
 	if (used >= AGORA_LIBRARY.COVERS_PER_DAY) return null;
 
 	return { coversDay: today, coversToday: used + 1 };
+}
+
+/** The same for discussion posts, over a calendar day */
+export function countPost(
+	marker: Partial<AgoraApprovedTeacher> | undefined,
+	now: number,
+): Pick<AgoraApprovedTeacher, 'postsDay' | 'postsToday'> | null {
+	const today = dayKey(now);
+	const used = marker?.postsDay === today ? (marker.postsToday ?? 0) : 0;
+	if (used >= AGORA_LIBRARY_COMMUNITY.POSTS_PER_DAY) return null;
+
+	return { postsDay: today, postsToday: used + 1 };
+}
+
+/** The same for reports, over a calendar day */
+export function countReport(
+	marker: Partial<AgoraApprovedTeacher> | undefined,
+	now: number,
+): Pick<AgoraApprovedTeacher, 'reportsDay' | 'reportsToday'> | null {
+	const today = dayKey(now);
+	const used = marker?.reportsDay === today ? (marker.reportsToday ?? 0) : 0;
+	if (used >= AGORA_LIBRARY_COMMUNITY.REPORTS_PER_DAY) return null;
+
+	return { reportsDay: today, reportsToday: used + 1 };
 }

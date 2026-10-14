@@ -21,6 +21,30 @@ const { bayesianAverage, isNewerVersionAvailable, normalizeTagKey, agoraTagId } 
 
 await preflight({ needs: ['firestore', 'auth', 'functions'] });
 
+/** Posts of one scenario as a signed-in client (rules apply), with an optional extra equality filter */
+async function listPosts(token, scenarioId, extra = []) {
+	const field = (path, value) => ({ fieldFilter: { field: { fieldPath: path }, op: 'EQUAL', value } });
+	const response = await fetch(`${FIRESTORE_REST.replace(/\/documents$/, '')}/documents:runQuery`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+		body: JSON.stringify({
+			structuredQuery: {
+				from: [{ collectionId: 'agoraScenarioPosts' }],
+				where: { compositeFilter: { op: 'AND', filters: [field('scenarioId', { stringValue: scenarioId }), ...extra] } },
+			},
+		}),
+	});
+	const body = await response.text();
+	if (response.status === 403 || /PERMISSION_DENIED/i.test(body)) return null;
+	if (!response.ok) fail(`list failed: ${response.status} ${body}`);
+
+	return JSON.parse(body)
+		.filter((row) => row.document)
+		.map((row) => row.document.name.split('/').pop());
+}
+const eqFilter = (path, value) => ({ fieldFilter: { field: { fieldPath: path }, op: 'EQUAL', value } });
+
+
 const runId = `lib-${Date.now().toString(36)}`;
 const refuses = (promise, pattern) =>
 	promise.then(
@@ -280,6 +304,64 @@ eq('only the owner can unpublish', await refuses(callable('agoraLibraryUnpublish
 await callable('agoraLibraryPublish', publishBody, author.idToken);
 eq('ratings come back with the scenario', (await db.collection('agoraTopicPackages').doc(pkgId).get()).data().stats.ratingCount, 2);
 eq('tag counter again', (await db.collection('agoraLibraryTags').doc(smoking).get()).data().scenarioCount, 1);
+
+step('L. discussion: posts and one level of replies');
+const post = (who, text, parentId) => callable('agoraLibraryPost', { scenarioId: pkgId, text, ...(parentId ? { parentId } : {}) }, who.idToken);
+const postDoc = async (id) => (await db.collection('agoraScenarioPosts').doc(id).get()).data();
+const scenarioStats = async () => (await db.collection('agoraTopicPackages').doc(pkgId).get()).data().stats;
+eq('an outsider cannot post', await refuses(post(outsider, 'שלום'), /PERMISSION_DENIED|approved/i), true);
+eq('an empty post is refused', await refuses(post(reader, '   '), /INVALID_ARGUMENT|characters/i), true);
+eq('a post over the limit is refused', await refuses(post(reader, 'x'.repeat(1001)), /INVALID_ARGUMENT|characters/i), true);
+eq('an unknown scenario is not found', await refuses(callable('agoraLibraryPost', { scenarioId: 'nope', text: 'hi' }, reader.idToken), /NOT_FOUND/i), true);
+const question = await post(reader, 'האם הכיתה צריכה הכנה מראש לפני התרחיש?');
+const q = await postDoc(question.postId);
+eq('author name is a first name', q.authorName, 'Ron');
+eq('the post remembers the scenario author', q.scenarioOwnerId, author.uid);
+eq('not hidden', q.hidden, false);
+eq('post count 1', (await scenarioStats()).postCount, 1);
+const answer = await post(author, 'לא צריך, כדאי לקרוא את שאלת האתגר יחד.', question.postId);
+eq('a reply carries its parent', (await postDoc(answer.postId)).parentId, question.postId);
+eq('a reply to a reply is refused', await refuses(post(second, 'עוד', answer.postId), /INVALID_ARGUMENT|not to a reply/i), true);
+eq('a reply to a missing post is refused', await refuses(post(second, 'עוד', 'nope'), /NOT_FOUND/i), true);
+const third = await post(second, 'תודה, זה עזר לי.', question.postId);
+eq('post count 3', (await scenarioStats()).postCount, 3);
+eq('a teacher sees the visible thread under the rules', (await listPosts(reader.idToken, pkgId, [eqFilter('hidden', { booleanValue: false })]))?.length, 3);
+eq('an outsider is refused the thread', await listPosts(outsider.idToken, pkgId, [eqFilter('hidden', { booleanValue: false })]), null);
+
+step('M. discussion: hide (author and admin), lift, who may lift what');
+const hide = (who, postId, action = 'hide') => callable('agoraLibraryHidePost', { postId, action }, who.idToken);
+eq('another teacher cannot hide', await refuses(hide(second, question.postId), /PERMISSION_DENIED|author or a system admin/i), true);
+eq('even a post author cannot hide their own', await refuses(hide(reader, question.postId), /PERMISSION_DENIED/i), true);
+await hide(author, third.postId);
+let t3 = await postDoc(third.postId);
+eq('the scenario author hid it', t3.hidden, true);
+eq('...marked as the owner hide', t3.hiddenBy, 'owner');
+eq('a hidden post leaves the count', (await scenarioStats()).postCount, 2);
+eq('a teacher no longer sees it under the rules', (await listPosts(reader.idToken, pkgId, [eqFilter('hidden', { booleanValue: false })]))?.includes(third.postId), false);
+eq('another teacher cannot list hidden posts', await listPosts(reader.idToken, pkgId, [eqFilter('hidden', { booleanValue: true })]), null);
+eq('the scenario author lists hidden posts of their own thread', (await listPosts(author.idToken, pkgId, [eqFilter('scenarioOwnerId', { stringValue: author.uid }), eqFilter('hidden', { booleanValue: true })]))?.includes(third.postId), true);
+eq('an admin lists every hidden post', (await listPosts(admin.idToken, pkgId, [eqFilter('hidden', { booleanValue: true })]))?.includes(third.postId), true);
+await hide(author, third.postId, 'unhide');
+eq('the author lifts their own hide', (await postDoc(third.postId)).hidden, false);
+eq('the count comes back', (await scenarioStats()).postCount, 3);
+await hide(admin, third.postId);
+t3 = await postDoc(third.postId);
+eq('an admin hide is marked as one', t3.hiddenBy, 'admin');
+eq('the scenario author cannot lift an admin hide', await refuses(hide(author, third.postId, 'unhide'), /PERMISSION_DENIED|system admin/i), true);
+await hide(admin, third.postId, 'unhide');
+eq('an admin lifts it', (await postDoc(third.postId)).hidden, false);
+eq('hiding twice is harmless', (await hide(admin, third.postId)).hidden && (await hide(admin, third.postId)).hidden, true);
+eq('...and counts once', (await scenarioStats()).postCount, 2);
+await hide(admin, third.postId, 'unhide');
+eq('the count is whole again after the admin lifts', (await scenarioStats()).postCount, 3);
+
+step('N. discussion: a day allowance of posts');
+const reMarker = db.collection('agoraApprovedTeachers').doc(second.uid);
+await reMarker.set({ postsDay: new Date().toISOString().slice(0, 10), postsToday: 30 }, { merge: true });
+eq('the thirty-first post of the day is refused', await refuses(post(second, 'עוד אחת'), /RESOURCE_EXHAUSTED|limit/i), true);
+await reMarker.set({ postsDay: '1999-01-01' }, { merge: true });
+await post(second, 'ביום חדש שוב אפשר');
+eq('a new day starts the count again', (await scenarioStats()).postCount, 4);
 
 console.log('\nALL SCENARIO LIBRARY CHECKS PASSED');
 process.exit(0);

@@ -88,6 +88,29 @@ describe('agora scenario library', () => {
 			await setDoc(doc(db, 'agoraTopicPackages', 'plain-1'), pkg('plain-1'));
 			await setDoc(doc(db, 'agoraLibraryTags', 's1'), { tagId: 's1', label: 'x' });
 			await setDoc(doc(db, 'agoraScenarioTranslations', 'pub-1__en'), { scenarioId: 'pub-1' });
+			const post = (id, overrides = {}) =>
+				setDoc(doc(db, 'agoraScenarioPosts', id), {
+					postId: id,
+					scenarioId: 'pub-1',
+					scenarioOwnerId: AUTHOR,
+					authorId: APPROVED,
+					authorName: 'Ron',
+					text: 'hello',
+					hidden: false,
+					createdAt: 1,
+					lastUpdate: 1,
+					...overrides,
+				});
+			await post('post-visible');
+			await post('post-hidden', { hidden: true, hiddenBy: 'admin' });
+			await setDoc(doc(db, 'agoraLibraryReports', 'post__post-hidden__teacher-approved'), {
+				reportId: 'post__post-hidden__teacher-approved',
+				targetKind: 'post',
+				targetId: 'post-hidden',
+				scenarioId: 'pub-1',
+				reporterId: APPROVED,
+				status: 'open',
+			});
 			await setDoc(doc(db, 'agoraScenarioRatings', 'pub-1__teacher-approved'), {
 				scenarioId: 'pub-1',
 				teacherId: APPROVED,
@@ -235,7 +258,11 @@ describe('agora scenario library', () => {
 			await assertFails(
 				setDoc(
 					doc(db, 'agoraTopicPackages', 'forged'),
-					pkg('forged', { creatorId: OUTSIDER, sourceScenarioId: 'pub-1', sourceAuthorName: 'Dana' }),
+					pkg('forged', {
+						creatorId: OUTSIDER,
+						sourceScenarioId: 'pub-1',
+						sourceAuthorName: 'Dana',
+					}),
 				),
 			);
 		});
@@ -309,6 +336,95 @@ describe('agora scenario library', () => {
 				}),
 			);
 			await assertFails(deleteDoc(doc(db, 'agoraScenarioRatings', 'pub-1__teacher-approved')));
+		});
+	});
+
+	describe('discussion posts', () => {
+		const visible = (db) =>
+			query(
+				collection(db, 'agoraScenarioPosts'),
+				where('scenarioId', '==', 'pub-1'),
+				where('hidden', '==', false),
+				orderBy('createdAt', 'desc'),
+			);
+		const ownersHidden = (db) =>
+			query(
+				collection(db, 'agoraScenarioPosts'),
+				where('scenarioId', '==', 'pub-1'),
+				where('scenarioOwnerId', '==', AUTHOR),
+				where('hidden', '==', true),
+			);
+
+		it('lets an approved teacher read the visible posts', async () => {
+			const db = env.authenticatedContext(APPROVED).firestore();
+			assertIds(await assertSucceeds(getDocs(visible(db))), ['post-visible']);
+		});
+
+		it('refuses a teacher who is not approved, and a student', async () => {
+			await assertFails(getDocs(visible(env.authenticatedContext(OUTSIDER).firestore())));
+			await assertFails(getDocs(visible(env.authenticatedContext(STUDENT).firestore())));
+		});
+
+		it('shows a hidden post to the scenario author and a sys-admin, not to other teachers', async () => {
+			const author = env.authenticatedContext(AUTHOR).firestore();
+			assertIds(await assertSucceeds(getDocs(ownersHidden(author))), ['post-hidden']);
+			const admin = env.authenticatedContext(ADMIN).firestore();
+			await assertSucceeds(getDoc(doc(admin, 'agoraScenarioPosts', 'post-hidden')));
+			const approved = env.authenticatedContext(APPROVED).firestore();
+			await assertFails(getDocs(ownersHidden(approved)));
+			await assertFails(getDoc(doc(approved, 'agoraScenarioPosts', 'post-hidden')));
+		});
+
+		it('is never client-written', async () => {
+			const db = env.authenticatedContext(APPROVED).firestore();
+			await assertFails(
+				setDoc(doc(db, 'agoraScenarioPosts', 'mine'), {
+					scenarioId: 'pub-1',
+					authorId: APPROVED,
+					text: 'x',
+					hidden: false,
+				}),
+			);
+			await assertFails(
+				updateDoc(doc(db, 'agoraScenarioPosts', 'post-visible'), { text: 'edited' }),
+			);
+			await assertFails(deleteDoc(doc(db, 'agoraScenarioPosts', 'post-visible')));
+			const author = env.authenticatedContext(AUTHOR).firestore();
+			await assertFails(
+				updateDoc(doc(author, 'agoraScenarioPosts', 'post-hidden'), { hidden: false }),
+			);
+		});
+	});
+
+	describe('reports', () => {
+		it('are read by a sys-admin only', async () => {
+			const queue = (db) =>
+				query(collection(db, 'agoraLibraryReports'), where('status', '==', 'open'));
+			const admin = env.authenticatedContext(ADMIN).firestore();
+			assertIds(await assertSucceeds(getDocs(queue(admin))), [
+				'post__post-hidden__teacher-approved',
+			]);
+			await assertFails(getDocs(queue(env.authenticatedContext(APPROVED).firestore())));
+			await assertFails(getDocs(queue(env.authenticatedContext(AUTHOR).firestore())));
+		});
+
+		it('are never client-written, not even by the reporter or an admin', async () => {
+			for (const uid of [APPROVED, ADMIN]) {
+				const db = env.authenticatedContext(uid).firestore();
+				await assertFails(
+					setDoc(doc(db, 'agoraLibraryReports', `post__x__${uid}`), {
+						targetKind: 'post',
+						targetId: 'x',
+						reporterId: uid,
+						status: 'open',
+					}),
+				);
+				await assertFails(
+					updateDoc(doc(db, 'agoraLibraryReports', 'post__post-hidden__teacher-approved'), {
+						status: 'resolved',
+					}),
+				);
+			}
 		});
 	});
 

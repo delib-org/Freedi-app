@@ -354,6 +354,50 @@ try {
 	eq('the author gets no rating form', await a.locator('.scn-rate').count(), 0);
 	eq('...and sees why', (await a.locator('.scn-feedback .scn-note').first().innerText()).includes('לא ניתן') || (await a.locator('.scn-feedback .scn-note').count()) > 0, true);
 
+	step('I2. the discussion thread: a question, an answer, a hide');
+	// the reader asks a question under the scenario, on the Discussion tab
+	await r.click('#scn-tab-discussion');
+	await r.waitForSelector('#scn-post-new', { timeout: 10_000 });
+	eq('the discussion tab is selected', await r.locator('#scn-tab-discussion').getAttribute('aria-selected'), 'true');
+	await r.fill('#scn-post-new', 'Does the class need any preparation before starting this scenario?');
+	await shot(r, '16a-discussion-composer-laptop');
+	await r.click('.scn-compose .btn--primary');
+	await r.waitForSelector('.scn-post--mine', { timeout: 30_000 });
+	eq('the question is on the thread, as mine', await r.locator('.scn-post--mine .scn-post__text').first().innerText(), 'Does the class need any preparation before starting this scenario?');
+	eq('the tab counts it', (await r.locator('#scn-tab-discussion').innerText()).includes('(1)'), true);
+	// the author answers it with a reply, and sees the hide control
+	await a.goto(`${VITE_HOST}/#!/teach/library/${ownId}`, { waitUntil: 'domcontentloaded' });
+	await a.waitForSelector('#scn-tab-discussion', { timeout: 30_000 });
+	await a.click('#scn-tab-discussion');
+	await a.waitForSelector('.scn-post', { timeout: 20_000 });
+	await a.click('.scn-post__actions button:has-text("הגבה")');
+	await a.fill('[id^="scn-reply-"]', 'אין צורך בהכנה. כדאי לקרוא יחד את שאלת האתגר.');
+	await a.click('.scn-thread__reply-box .btn--primary');
+	await a.waitForSelector('.scn-thread__replies .scn-post', { timeout: 30_000 });
+	eq('the reply sits one level under the question', await a.locator('.scn-thread__replies .scn-post').count(), 1);
+	eq('the author is marked as the author', await a.locator('.scn-thread__replies .scn-pill').count(), 1);
+	await shot(a, '16b-discussion-thread-laptop');
+	await audit(a, 'discussion thread, author (laptop)');
+	// the author hides the reader's question; the reader no longer sees it
+	await a.locator('.scn-thread__item > .scn-post .scn-post__actions button:has-text("הסתרה")').click();
+	await a.waitForSelector('.scn-post--hidden', { timeout: 20_000 });
+	await shot(a, '16c-discussion-hidden-author-laptop');
+	await r.reload({ waitUntil: 'domcontentloaded' });
+	await r.waitForSelector('#scn-tab-discussion', { timeout: 30_000 });
+	await r.click('#scn-tab-discussion');
+	await r.waitForSelector('.scn-discussion', { timeout: 10_000 });
+	await r.waitForTimeout(1200);
+	eq('the reader no longer sees the hidden question', await r.locator('.scn-post').count(), 0);
+	// lift it so the rest of the run reads the full page
+	await a.locator('.scn-post--hidden .scn-post__actions button').last().click();
+	await a.waitForFunction(() => !document.querySelector('.scn-post--hidden'), { timeout: 20_000 });
+	await r.reload({ waitUntil: 'domcontentloaded' });
+	await r.waitForSelector('#scn-tab-discussion', { timeout: 30_000 });
+	await r.click('#scn-tab-discussion');
+	await r.waitForSelector('.scn-post', { timeout: 20_000 });
+	await shot(r, '16d-discussion-reader-laptop');
+	await audit(r, 'discussion thread, reader (laptop)');
+
 	step('J. the reader shelf shows the copy with its credit');
 	await r.goto(`${VITE_HOST}/#!/teach`, { waitUntil: 'domcontentloaded' });
 	await r.waitForSelector('.scenario-row', { timeout: 30_000 });

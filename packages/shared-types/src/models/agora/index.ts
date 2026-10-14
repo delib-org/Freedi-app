@@ -575,3 +575,37 @@ export {
 	publishProblems,
 	createAgoraTranslationId,
 } from './agoraLibrary';
+
+export type {
+	AgoraPostHiddenBy,
+	AgoraScenarioPost,
+	PostThreadEntry,
+	LibraryPostRequest,
+	LibraryPostResponse,
+	LibraryHidePostRequest,
+	LibraryHidePostResponse,
+	AgoraReportTargetKind,
+	AgoraReportStatus,
+	AgoraReportResolution,
+	AgoraLibraryReport,
+	LibraryReportRequest,
+	LibraryReportResponse,
+	LibraryResolveReportRequest,
+	LibraryResolveReportResponse,
+	LibraryMergeTagsRequest,
+	LibraryMergeTagsResponse,
+} from './agoraLibraryCommunity';
+export {
+	AGORA_LIBRARY_COMMUNITY,
+	AgoraPostHiddenBySchema,
+	AgoraScenarioPostSchema,
+	AgoraReportTargetKindSchema,
+	AgoraReportStatusSchema,
+	AgoraReportResolutionSchema,
+	AgoraLibraryReportSchema,
+	buildPostThread,
+	canUnhidePost,
+	createAgoraReportId,
+	repointTagIds,
+	resolveTagAlias,
+} from './agoraLibraryCommunity';

@@ -360,6 +360,8 @@ export const AgoraLibraryStatsSchema = object({
 	/** Ratings that came with words */
 	reviewCount: number(),
 	copyCount: number(),
+	/** Visible discussion posts (hidden ones leave the count). Server-maintained; absent until the first post. */
+	postCount: optional(number()),
 });
 
 export type AgoraLibraryStats = InferOutput<typeof AgoraLibraryStatsSchema>;
@@ -532,6 +534,10 @@ export const AgoraApprovedTeacherSchema = object({
 	tagsThisWeek: optional(number()),
 	coversDay: optional(string()),
 	coversToday: optional(number()),
+	postsDay: optional(string()),
+	postsToday: optional(number()),
+	reportsDay: optional(string()),
+	reportsToday: optional(number()),
 });
 
 export type AgoraApprovedTeacher = InferOutput<typeof AgoraApprovedTeacherSchema>;

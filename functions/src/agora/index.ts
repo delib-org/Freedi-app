@@ -41,3 +41,5 @@ export { agoraLibraryUse, agoraLibraryTranslate } from './fn_agoraLibraryUse';
 export { agoraLibraryRate } from './fn_agoraLibraryRate';
 export { agoraLibraryModerate } from './fn_agoraLibraryModerate';
 export { agoraLibraryGenerateCover } from './fn_agoraLibraryGenerateCover';
+export { agoraLibraryPost } from './fn_agoraLibraryPost';
+export { agoraLibraryHidePost } from './fn_agoraLibraryHidePost';

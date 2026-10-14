@@ -12,7 +12,7 @@ import { getLibraryStore, reloadTags } from '../../../lib/scenarioLibrary/state'
 import { ratingLabel, tagLabels } from '../../../lib/scenarioLibrary/view';
 import { getUserState } from '../../../lib/user';
 import { LibraryShell } from './LibraryShell';
-import { ScenarioFeedback } from './ScenarioFeedback';
+import { ScenarioTabs } from './ScenarioTabs';
 
 type Phase = 'loading' | 'ready' | 'missing' | 'failed';
 type UseState = 'idle' | 'working' | 'done' | 'limit' | 'failed';
@@ -238,7 +238,7 @@ export function LibraryScenario(): m.Component<LibraryScenarioAttrs> {
 					]),
 				]),
 
-				m(ScenarioFeedback, {
+				m(ScenarioTabs, {
 					scenario,
 					mine,
 					onChanged: () => void reread(scenario.topicPackageId),

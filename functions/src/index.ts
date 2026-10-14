@@ -1314,6 +1314,8 @@ export {
 	agoraLibraryRate,
 	agoraLibraryModerate,
 	agoraLibraryGenerateCover,
+	agoraLibraryPost,
+	agoraLibraryHidePost,
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 	onAgoraSessionFinished,

@@ -2,8 +2,11 @@ import { parse } from 'valibot';
 import {
 	AgoraLibraryTag,
 	AgoraLibraryTagSchema,
+	AgoraScenarioPost,
+	AgoraScenarioPostSchema,
 	AgoraScenarioRating,
 	AgoraScenarioRatingSchema,
+	AGORA_LIBRARY_COMMUNITY,
 	AgoraTopicPackage,
 	AgoraTopicPackageSchema,
 	AGORA_LIBRARY,
@@ -14,6 +17,10 @@ import type {
 	LibraryAccessResponse,
 	LibraryCreateTagRequest,
 	LibraryGenerateCoverRequest,
+	LibraryHidePostRequest,
+	LibraryHidePostResponse,
+	LibraryPostRequest,
+	LibraryPostResponse,
 	LibraryGenerateCoverResponse,
 	LibraryCreateTagResponse,
 	LibraryModerateRequest,
@@ -82,6 +89,10 @@ export const translateScenarios = call<LibraryTranslateRequest, LibraryTranslate
 export const rateScenario = call<LibraryRateRequest, LibraryRateResponse>('agoraLibraryRate');
 export const generateCover = call<LibraryGenerateCoverRequest, LibraryGenerateCoverResponse>(
 	'agoraLibraryGenerateCover',
+);
+export const postToThread = call<LibraryPostRequest, LibraryPostResponse>('agoraLibraryPost');
+export const hidePost = call<LibraryHidePostRequest, LibraryHidePostResponse>(
+	'agoraLibraryHidePost',
 );
 export const moderateLibrary = call<LibraryModerateRequest, LibraryModerateResponse>(
 	'agoraLibraryModerate',
@@ -216,6 +227,60 @@ export async function fetchSourceVersions(
 			}
 		}),
 	);
+
+	return found;
+}
+
+/**
+ * The posts of a scenario's discussion. Everyone reads the visible ones; the
+ * scenario's author also reads the hidden posts of their own thread (the
+ * query names them as the owner, which is what the rule checks) and a
+ * sys-admin reads every hidden post.
+ */
+export async function fetchPosts(
+	scenarioId: string,
+	viewer: { uid: string | null; isOwner: boolean; isAdmin: boolean },
+): Promise<AgoraScenarioPost[]> {
+	const posts = collection(db, Collections.agoraScenarioPosts);
+	const queries = [
+		query(
+			posts,
+			where('scenarioId', '==', scenarioId),
+			where('hidden', '==', false),
+			orderBy('createdAt', 'desc'),
+			limit(AGORA_LIBRARY_COMMUNITY.THREAD_PAGE_SIZE),
+		),
+	];
+	if (viewer.isAdmin) {
+		queries.push(
+			query(
+				posts,
+				where('scenarioId', '==', scenarioId),
+				where('hidden', '==', true),
+				limit(AGORA_LIBRARY_COMMUNITY.THREAD_PAGE_SIZE),
+			),
+		);
+	} else if (viewer.isOwner && viewer.uid) {
+		queries.push(
+			query(
+				posts,
+				where('scenarioId', '==', scenarioId),
+				where('scenarioOwnerId', '==', viewer.uid),
+				where('hidden', '==', true),
+				limit(AGORA_LIBRARY_COMMUNITY.THREAD_PAGE_SIZE),
+			),
+		);
+	}
+	const found: AgoraScenarioPost[] = [];
+	for (const snapshot of await Promise.all(queries.map((entry) => getDocs(entry)))) {
+		snapshot.forEach((docSnap) => {
+			try {
+				found.push(parse(AgoraScenarioPostSchema, docSnap.data()));
+			} catch (error) {
+				console.error('[Library] Invalid post:', error);
+			}
+		});
+	}
 
 	return found;
 }

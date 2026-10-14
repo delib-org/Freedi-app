@@ -232,7 +232,6 @@ export function ScenarioFeedback(): m.Component<ScenarioFeedbackAttrs> {
 			const admin = getLibraryStore().isAdmin;
 
 			return m('section.scn-feedback', { 'aria-label': t('scenlib.reviews') }, [
-				m('h2.scn-section-title', t('scenlib.reviews')),
 				form(attrs),
 				reviews.length === 0
 					? m('p.scn-note', t('scenlib.reviews_empty'))

@@ -133,6 +133,28 @@ service cloud.firestore {
                       isSystemAdminUser());
       allow write: if false;
     }
+    // The discussion under a scenario. Teachers read the visible posts; a hidden
+    // one is read by the scenario's author (the doc carries `scenarioOwnerId`
+    // for exactly this) and by a sys-admin. Written by agoraLibraryPost /
+    // agoraLibraryHidePost alone.
+    match /agoraScenarioPosts/{postId} {
+      allow get: if isApprovedAgoraTeacher() &&
+                    (resource == null ||
+                     resource.data.get('hidden', true) == false ||
+                     resource.data.get('scenarioOwnerId', '') == request.auth.uid ||
+                     isSystemAdminUser());
+      allow list: if isApprovedAgoraTeacher() &&
+                     (resource.data.get('hidden', true) == false ||
+                      resource.data.get('scenarioOwnerId', '') == request.auth.uid ||
+                      isSystemAdminUser());
+      allow write: if false;
+    }
+    // Reports about a scenario, review or post: the moderation queue's input.
+    // Sys-admins read them; only agoraLibraryReport / agoraLibraryResolveReport write.
+    match /agoraLibraryReports/{reportId} {
+      allow read: if isSystemAdminUser();
+      allow write: if false;
+    }
     match /agoraScenarioTranslations/{translationId} {
       allow read, write: if false;
     }
