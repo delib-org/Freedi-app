@@ -3,8 +3,9 @@ import type { AgoraProposal } from '../proposals';
 
 /**
  * Every line a student wrote in this session, as one flat list the teacher
- * can read, filter and act on. Pure: the Messages tab hands it the
- * deliberation state and gets rows back.
+ * can read, filter and act on. Pure: the "what they wrote" panel hands it the
+ * deliberation state and gets rows back (grouping and search live in
+ * writingGroups.ts).
  */
 export type TextKind = 'proposal' | 'answer' | 'suggestion' | 'chat' | 'pitch';
 
@@ -20,6 +21,25 @@ export interface TextRow {
 	editedByTeacher: boolean;
 	/** suggestion / chat: the proposal the thread hangs off */
 	proposalId?: string;
+	/** Where it was written: one key per question, per square, per proposal thread */
+	contextKey: string;
+	/** Plan position of that place, so groups sort in the order the lesson ran */
+	contextOrder: number;
+	/** answer: the question it answers */
+	questionId?: string;
+	/** suggestion / chat: the proposal's words, to say what the thread is about */
+	proposalText?: string;
+}
+
+/** A question stage as the plan names it */
+export interface QuestionRef {
+	id: string;
+	/** May be blank: a WizCol round's prompt is the kind's, not the teacher's */
+	title: string;
+	/** 1-based position among the plan's question stages */
+	number: number;
+	/** Plan index of the stage */
+	order: number;
 }
 
 export interface TextSources {
@@ -35,6 +55,18 @@ export interface TextSources {
 	removedUids?: readonly string[];
 	/** The pitch a student made during a challenge round, if one is standing */
 	challengerStatementId?: string;
+	/** The plan's question stages, for the "where was this written" label */
+	questions?: readonly QuestionRef[];
+	/** Plan index of the square (deliberation stage); proposals sort under it */
+	squareOrder?: number;
+	/**
+	 * Lines the teacher took down: the live listener keeps them out of the
+	 * three collections above, so they arrive here and are filed by the same
+	 * parent rule the listener uses.
+	 */
+	hiddenOthers?: readonly AgoraProposal[];
+	/** The square's question — the parent that makes an option a proposal, not an answer */
+	challengeQuestionId?: string;
 }
 
 export interface TextFilter {
@@ -43,7 +75,16 @@ export interface TextFilter {
 	showHidden: boolean;
 }
 
-function row(item: AgoraProposal, kind: TextKind, proposalId?: string): TextRow {
+interface Where {
+	contextKey: string;
+	contextOrder: number;
+	questionId?: string;
+	proposalText?: string;
+}
+
+const UNPLANNED_ORDER = 1000;
+
+function row(item: AgoraProposal, kind: TextKind, where: Where, proposalId?: string): TextRow {
 	return {
 		statementId: item.statementId,
 		kind,
@@ -54,34 +95,88 @@ function row(item: AgoraProposal, kind: TextKind, proposalId?: string): TextRow 
 		lastUpdate: item.lastUpdate,
 		hidden: item.hidden === true,
 		editedByTeacher: item.teacherEdited === true,
+		...where,
 		...(proposalId ? { proposalId } : {}),
 	};
 }
 
-/** Newest first, students only — removed ones included (the AI raters never write), system lines dropped */
+/**
+ * Newest first, students only — removed ones included (the AI raters never
+ * write), system lines dropped. A line the teacher deleted for good is gone
+ * from the list altogether.
+ */
 export function buildTextRows(sources: TextSources): TextRow[] {
 	const students = new Set([
 		...sources.participants.map((participant) => participant.userId),
 		...(sources.removedUids ?? []),
 	]);
 	const rows: TextRow[] = [];
+	const squareOrder = sources.squareOrder ?? UNPLANNED_ORDER / 2;
+	const proposalById = new Map<string, AgoraProposal>();
+	for (const proposal of sources.proposals) proposalById.set(proposal.statementId, proposal);
 
-	for (const proposal of sources.proposals) {
-		if (!students.has(proposal.creatorId)) continue;
-		const isPitch = proposal.statementId === sources.challengerStatementId;
-		rows.push(row(proposal, isPitch ? 'pitch' : 'proposal'));
-	}
-	for (const answers of Object.values(sources.answersByQuestion)) {
-		for (const answer of answers) {
-			if (students.has(answer.creatorId)) rows.push(row(answer, 'answer'));
+	// Fold the taken-down lines back in beside their live neighbours
+	const proposals = [...sources.proposals];
+	const answersByQuestion: Record<string, AgoraProposal[]> = {};
+	for (const [id, list] of Object.entries(sources.answersByQuestion))
+		answersByQuestion[id] = [...list];
+	const suggestions: Record<string, AgoraProposal[]> = {};
+	for (const [id, list] of Object.entries(sources.suggestions)) suggestions[id] = [...list];
+	for (const item of sources.hiddenOthers ?? []) {
+		if (item.statementType === 'option') {
+			if (sources.challengeQuestionId && item.parentId !== sources.challengeQuestionId) {
+				(answersByQuestion[item.parentId] ??= []).push(item);
+			} else {
+				proposals.push(item);
+			}
+		} else if (item.statementType === 'suggestion') {
+			(suggestions[item.parentId] ??= []).push(item);
 		}
 	}
-	for (const [proposalId, thread] of Object.entries(sources.suggestions)) {
+
+	for (const proposal of proposals) {
+		if (!students.has(proposal.creatorId) || proposal.deleted) continue;
+		const isPitch = proposal.statementId === sources.challengerStatementId;
+		rows.push(
+			row(proposal, isPitch ? 'pitch' : 'proposal', {
+				contextKey: 'square',
+				contextOrder: squareOrder,
+			}),
+		);
+	}
+	for (const [questionId, answers] of Object.entries(answersByQuestion)) {
+		const question = sources.questions?.find((candidate) => candidate.id === questionId);
+		for (const answer of answers) {
+			if (!students.has(answer.creatorId) || answer.deleted) continue;
+			rows.push(
+				row(answer, 'answer', {
+					contextKey: `q:${questionId}`,
+					contextOrder: question?.order ?? UNPLANNED_ORDER,
+					questionId,
+				}),
+			);
+		}
+	}
+	for (const [proposalId, thread] of Object.entries(suggestions)) {
+		const parent = proposalById.get(proposalId);
 		for (const message of thread) {
-			if (!students.has(message.creatorId)) continue;
+			if (!students.has(message.creatorId) || message.deleted) continue;
 			const kind = message.agoraMessageKind;
 			if (kind === AgoraMessageKind.edit || kind === AgoraMessageKind.award) continue;
-			rows.push(row(message, kind === AgoraMessageKind.chat ? 'chat' : 'suggestion', proposalId));
+			rows.push(
+				row(
+					message,
+					kind === AgoraMessageKind.chat ? 'chat' : 'suggestion',
+					{
+						contextKey: `p:${proposalId}`,
+						contextOrder: squareOrder + 0.5,
+						...(parent && !parent.hidden && parent.statement
+							? { proposalText: parent.statement }
+							: {}),
+					},
+					proposalId,
+				),
+			);
 		}
 	}
 

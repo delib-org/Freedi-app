@@ -11,6 +11,7 @@ import {
 	createAgoraParticipantId,
 	functionConfig,
 	isAgoraTeacherPreset,
+	removalOf,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { fileThreadLine, notifyStudent, threadLength } from './teacherThread';
@@ -61,7 +62,12 @@ export const agoraTeacherMessage = onCall(
 				.doc(createAgoraParticipantId(sessionId, target))
 				.get();
 			const participant = participantSnap.data() as AgoraParticipant | undefined;
-			if (!participant || participant.isAI) {
+			// A removed student has no seat, but the teacher may still write to
+			// them: the note waits in the thread and is theirs again the moment
+			// the teacher lets them back (agoraResolveRejoin). Only the teacher
+			// can; a removed student's own reply still needs a seat.
+			const removedByTeacher = isTeacher && removalOf(session, target) !== undefined;
+			if (!removedByTeacher && (!participant || participant.isAI)) {
 				throw new HttpsError(
 					isTeacher ? 'not-found' : 'permission-denied',
 					'Not a student of this session',

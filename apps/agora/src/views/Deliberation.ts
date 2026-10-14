@@ -1355,7 +1355,13 @@ export function Deliberation(
 		const notice = removedTextFor(myProposal.statementId);
 
 		return m('.my-screen__paper.my-screen__removed', { role: 'status' }, [
-			m('p.my-screen__removed-title', iconLabel('again', t('moderation.removed_title'))),
+			m(
+				'p.my-screen__removed-title',
+				iconLabel(
+					'again',
+					t(notice?.permanent ? 'moderation.deleted_title' : 'moderation.removed_title'),
+				),
+			),
 			notice?.text ? m('p.my-screen__removed-reason', notice.text) : null,
 			m('p.my-screen__removed-hint', t('moderation.removed_hint')),
 			m(

@@ -30,6 +30,7 @@ export interface ThreadLine {
 	aboutStatementId?: string;
 	moderation?: AgoraModerationAction;
 	removedText?: string;
+	permanent?: boolean;
 	languagePlace?: string;
 	languageItemId?: string;
 }
@@ -48,6 +49,7 @@ export async function fileThreadLine(line: ThreadLine): Promise<string> {
 		...(line.aboutStatementId ? { aboutStatementId: line.aboutStatementId } : {}),
 		...(line.moderation ? { moderation: line.moderation } : {}),
 		...(line.removedText !== undefined ? { removedText: line.removedText } : {}),
+		...(line.permanent ? { permanent: true } : {}),
 		...(line.languagePlace ? { languagePlace: line.languagePlace } : {}),
 		...(line.languageItemId ? { languageItemId: line.languageItemId } : {}),
 		createdAt: Date.now(),

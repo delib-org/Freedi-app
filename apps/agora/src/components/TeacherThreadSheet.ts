@@ -24,7 +24,9 @@ export function teacherLineText(line: AgoraTeacherMessage): string {
 function moderationLine(line: AgoraTeacherMessage): m.Children {
 	const key =
 		line.moderation === 'hidden'
-			? 'moderation.removed_title'
+			? line.permanent
+				? 'moderation.deleted_title'
+				: 'moderation.removed_title'
 			: line.moderation === 'restored'
 				? 'moderation.restored'
 				: 'moderation.edited_notice';
