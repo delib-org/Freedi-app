@@ -1339,6 +1339,212 @@ button.ship-tag--lit:hover {
 	}
 }
 
+/* ======================= ON THE ISLAND ==========================
+   Two folded panels under the island's name: the route (every island the
+   player chose, tap to sail there) and the crew's counsel. Both start
+   closed so the island's question stays first on a phone, and both keep
+   their summary line visible so a folded panel is still a way out.
+   ================================================================ */
+.island-strip,
+.counsel {
+	border: 1px solid rgba(232, 185, 88, 0.55);
+	border-radius: 12px;
+	background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+	padding: 10px 14px;
+}
+
+.island-strip__summary,
+.counsel__summary {
+	cursor: pointer;
+	font-size: 14px;
+	color: var(--cream);
+	list-style: none;
+}
+
+.island-strip__summary::-webkit-details-marker,
+.counsel__summary::-webkit-details-marker {
+	display: none;
+}
+
+/* A folded panel says so with a chevron, an open one with the other. */
+.island-strip__summary::before,
+.counsel__summary::before {
+	content: '▸';
+	display: inline-block;
+	margin-inline-end: 6px;
+	color: var(--gold-strong);
+	transform: scaleX(-1); /* points into the text in RTL */
+}
+
+.island-strip[open] > .island-strip__summary::before,
+.counsel[open] > .counsel__summary::before {
+	content: '▾';
+	transform: none;
+}
+
+.island-strip__body,
+.counsel__body {
+	margin-top: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.island-strip__list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.island-strip__stop {
+	cursor: pointer;
+	border: 1px solid rgba(94, 223, 255, 0.4);
+	border-radius: 999px;
+	padding: 6px 12px;
+	font-size: 13px;
+	color: #cfeefc;
+	background: rgba(9, 38, 62, 0.75);
+}
+
+.island-strip__stop--done {
+	border-color: rgba(232, 185, 88, 0.7);
+	color: var(--cream);
+}
+
+.island-strip__stop--current {
+	cursor: default;
+	color: #06263e;
+	background: var(--cyan);
+	border-color: var(--cyan);
+	font-weight: 700;
+}
+
+.island-strip__note,
+.counsel__note {
+	margin: 0;
+	font-size: 13px;
+	opacity: 0.8;
+}
+
+.counsel__count {
+	margin-inline-start: 4px;
+	opacity: 0.75;
+}
+
+/* Every sailor the same size, in crew order — no face bigger than another. */
+.counsel__crew {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.counsel__sailor {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	padding: 4px 12px 4px 6px;
+	border: 1px solid rgba(232, 185, 88, 0.45);
+	border-radius: 999px;
+	background: rgba(9, 38, 62, 0.75);
+	color: var(--cream);
+	font-size: 13px;
+	transition: border-color 0.15s ease;
+}
+
+.counsel__sailor:hover,
+.counsel__sailor--open {
+	border-color: var(--gold-strong);
+}
+
+.counsel__sailor--open {
+	box-shadow: 0 0 0 2px rgba(232, 185, 88, 0.28);
+}
+
+.counsel__portrait {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	overflow: hidden;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px;
+	border: 1px solid rgba(232, 185, 88, 0.75);
+	flex-shrink: 0;
+}
+
+.counsel__portrait img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.counsel__name {
+	font-weight: 700;
+}
+
+.counsel__card {
+	border: 1px solid rgba(232, 185, 88, 0.6);
+	border-radius: 10px;
+	padding: 10px 12px;
+	background: rgba(6, 24, 44, 0.6);
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.counsel__who {
+	margin: 0;
+	font-size: 14px;
+	color: var(--cream);
+}
+
+.counsel__lean {
+	margin: 0;
+	font-size: 13px;
+	color: #dcecf7;
+}
+
+.counsel__lean-label {
+	color: var(--gold-strong);
+	font-weight: 700;
+}
+
+.counsel__line {
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.5;
+	font-style: italic;
+	color: #e6f2ff;
+}
+
+.counsel__disclaimer {
+	margin: 0;
+	font-size: 11px;
+	opacity: 0.65;
+}
+
+/* A sailor's card on the crew board once the crew is full: still a card,
+   still readable, visibly not takeable. */
+.crew-card--full {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.crew-card--full:hover {
+	transform: none;
+}
+
+.crew-winds {
+	font-size: 11px;
+	color: var(--gold-strong);
+	margin-top: 2px;
+}
+
 .fade-in {
 	animation: fadeIn 0.5s ease;
 }

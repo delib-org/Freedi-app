@@ -5,9 +5,12 @@ import NoGameYet from '../components/NoGameYet';
 import { useGame } from '../state/GameContext';
 import { enabledIslands } from '../lib/game';
 import { islandArtUrl } from '../lib/islandArt';
+import { initialRouteSelection } from '../lib/voyageRoute';
 import { useMode } from '../lib/mode';
-import { enterIslandDeliberation, getGateState } from '../lib/agoraGate';
 import { stageBus } from '../lib/stageBus';
+
+/** The shortest voyage: one island. A map with none chosen has nowhere to sail. */
+const ISLANDS_MIN = 1;
 
 /** Rough voyage length per the design doc: 3→~5min, 5→~8, 8→~12, 12→~20. */
 function estimateMinutes(count: number): number {
@@ -19,22 +22,25 @@ function estimateMinutes(count: number): number {
 /**
  * המפה נפתחת: the civic issues spread out as islands on the sea. Each island
  * is a Freedi `question` Statement; choosing islands only marks the journey —
- * answering happens on the voyage. In game mode the islands live on the
- * Phaser chart (tap → anchor stamp); selection state stays here in React.
+ * answering happens on the voyage. The discussion gates that used to sit here
+ * live on the summary now: a gate is the step AFTER an island, and a tester
+ * rightly asked what one was doing before the voyage had begun. In game mode
+ * the islands live on the Phaser chart (tap → anchor stamp); selection state
+ * stays here in React.
  */
 export default function MapPage() {
 	const navigate = useNavigate();
 	const mode = useMode();
 	const { content, journey, attitudes, text, updateJourney } = useGame();
+	const islands = useMemo(() => (content ? enabledIslands(content) : []), [content]);
+	// Nothing ticked on a voyage not yet begun: the islands are the player's
+	// to choose. A route already being sailed comes back (see voyageRoute).
 	const [selected, setSelected] = useState<Set<string>>(
-		() => new Set(journey?.selectedIslandIds ?? []),
+		() => new Set(initialRouteSelection(journey?.selectedIslandIds, islands, attitudes)),
 	);
 	const [saving, setSaving] = useState(false);
-	const [enteringIslandId, setEnteringIslandId] = useState('');
 	/** Which island is explaining itself, one at a time (see the crew board). */
 	const [openIsland, setOpenIsland] = useState<string | null>(null);
-
-	const islands = useMemo(() => (content ? enabledIslands(content) : []), [content]);
 
 	useEffect(() => {
 		if (!openIsland) return;
@@ -54,19 +60,6 @@ export default function MapPage() {
 			window.removeEventListener('pointerdown', onPointer);
 		};
 	}, [openIsland]);
-
-	/**
-	 * Islands this player has actually taken positions on. After the voyage the
-	 * map stops being only a place to choose from and becomes the hub of the
-	 * round trip: these are the ones with a deliberation waiting.
-	 */
-	const addressedIslands = useMemo(
-		() =>
-			islands.filter((island) =>
-				island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
-			),
-		[islands, attitudes],
-	);
 
 	const toggle = useCallback((statementId: string): void => {
 		setSelected((current) => {
@@ -110,16 +103,6 @@ export default function MapPage() {
 
 	if (!content || !journey) return <NoGameYet />;
 
-	const agoraOrigin = text('agoraOrigin');
-	const gatedIslands = agoraOrigin
-		? addressedIslands
-				.map((island) => ({
-					island,
-					state: getGateState(island.statementId, content.game, journey),
-				}))
-				.filter((entry) => entry.state !== 'unprovisioned')
-		: [];
-
 	async function sail(): Promise<void> {
 		setSaving(true);
 		try {
@@ -127,24 +110,6 @@ export default function MapPage() {
 			navigate('/voyage', { state: { fresh: true } });
 		} finally {
 			setSaving(false);
-		}
-	}
-
-	async function enterGate(islandStatementId: string): Promise<void> {
-		if (!content || enteringIslandId) return;
-		setEnteringIslandId(islandStatementId);
-		if (mode === 'game') stageBus.send({ type: 'sailToLighthouse' });
-		try {
-			await enterIslandDeliberation({
-				islandStatementId,
-				game: content.game,
-				journey,
-				agoraOrigin,
-				updateJourney,
-			});
-		} catch (error) {
-			console.error('[Odyssey] Could not open the gate:', error);
-			setEnteringIslandId('');
 		}
 	}
 
@@ -157,7 +122,8 @@ export default function MapPage() {
 						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">{text('mapTitle')}</h1>
 						<p className="text-[15px] text-[#cfe6f5] mt-2 mb-0">{text('mapIntro')}</p>
 						<p className="text-[13px] opacity-75 mt-1">
-							אפשר לבחור מעט איים למסע קצר, או יותר איים למסע מלא. אין חובה לעבור בכל האיים.
+							שום אי לא נבחר מראש — הבחירה כולה שלכם. אפשר לבחור מעט איים למסע קצר, או יותר איים
+							למסע מלא. אין חובה לעבור בכל האיים.
 						</p>
 					</header>
 
@@ -209,53 +175,20 @@ export default function MapPage() {
 						</div>
 					)}
 
-					{gatedIslands.length > 0 ? (
-						<section className="panel fade-in">
-							<h2 className="text-lg font-bold text-[var(--cream)] mt-0 mb-1">
-								🏛️ שערי הדיון שנפתחו לך
-							</h2>
-							<p className="text-[13px] opacity-75 mt-0 mb-3">
-								על האיים שכבר חקרת אפשר להיפגש עם אחרים ולחפש יחד פתרונות.
-							</p>
-							<div className="flex flex-col gap-2.5">
-								{gatedIslands.map(({ island, state }) => (
-									<div
-										key={island.statementId}
-										className="flex items-center gap-3 flex-wrap justify-between"
-									>
-										<span className="text-[15px]">
-											{state === 'visited' ? '⚑ ' : ''}
-											{island.title}
-										</span>
-										<button
-											type="button"
-											className="btn"
-											disabled={enteringIslandId === island.statementId}
-											onClick={() => void enterGate(island.statementId)}
-										>
-											{enteringIslandId === island.statementId
-												? 'מפליגים…'
-												: state === 'visited'
-													? 'חזרה לדיון'
-													: text('agoraButton')}
-										</button>
-									</div>
-								))}
-							</div>
-						</section>
-					) : null}
-
 					<div className="flex flex-col items-center gap-2 pb-4">
+						<p className="text-[14px] text-[var(--cream)] m-0" aria-live="polite">
+							במסלול: {selected.size} מתוך {islands.length} איים
+						</p>
 						<button
 							type="button"
 							className="btn"
-							disabled={selected.size === 0 || saving}
+							disabled={selected.size < ISLANDS_MIN || saving}
 							onClick={() => void sail()}
 						>
 							{saving
 								? 'שומר…'
-								: selected.size === 0
-									? 'בחרו לפחות אי אחד'
+								: selected.size < ISLANDS_MIN
+									? 'בחרו לפחות אי אחד כדי להפליג'
 									: `מפליגים אל ${selected.size} איים (~${estimateMinutes(selected.size)} דקות)`}
 						</button>
 					</div>
