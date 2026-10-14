@@ -69,7 +69,7 @@ const compassFinished: Partial<OdysseyJourney> = {
 function steps(
 	journeyPatch: Partial<OdysseyJourney> = {},
 	attitudes: AttitudeMap = {},
-	pathname = '/voyage',
+	pathname = '/map',
 	gameContent: GameContent = content(),
 ): VoyageStep[] {
 	return voyageSteps({
@@ -97,8 +97,20 @@ describe('voyageSteps', () => {
 		).toEqual([]);
 	});
 
-	it('lists the legs of the voyage in order — no map and no crew to choose', () => {
-		expect(steps().map((step) => step.path)).toEqual(['/', '/compass', '/voyage', '/summary']);
+	it('lists the legs of the voyage in order', () => {
+		expect(steps().map((step) => step.path)).toEqual([
+			'/',
+			'/compass',
+			'/elders',
+			'/map',
+			'/voyage',
+			'/summary',
+		]);
+	});
+
+	it('leaves out the crew when the game has no elders', () => {
+		const all = steps({}, {}, '/map', content({ elders: [] }));
+		expect(all.map((step) => step.path)).not.toContain('/elders');
 	});
 
 	it('counts the compass winds, values included', () => {
@@ -119,45 +131,53 @@ describe('voyageSteps', () => {
 		).toBe('1/3 רוחות');
 	});
 
-	it('counts every enabled island as the route, and the ones already sailed', () => {
-		expect(byPath(steps(compassFinished, {}, '/summary'), '/voyage')).toMatchObject({
-			status: 'open',
-			detail: '0/2 איים',
+	it('marks the crew chosen even when nobody was invited', () => {
+		expect(byPath(steps(), '/elders').status).toBe('locked');
+		expect(byPath(steps({ ...compassFinished, selectedElderIds: [] }), '/elders')).toMatchObject({
+			status: 'done',
+			detail: '0 מלחים',
 		});
+	});
+
+	it('counts the islands chosen, and the ones already sailed', () => {
+		const chosen = { ...compassFinished, selectedElderIds: [], selectedIslandIds: ['i1', 'i2'] };
+		// standing on the water, so the map behind them reads as finished
+		expect(byPath(steps(chosen, {}, '/voyage'), '/map')).toMatchObject({
+			status: 'done',
+			detail: '2 איים',
+		});
+		expect(byPath(steps(chosen), '/voyage')).toMatchObject({ status: 'open', detail: '0/2 איים' });
+
 		// One marked stance is what the island screen itself requires to sail on.
-		expect(byPath(steps(compassFinished, { s1: 1 }, '/summary'), '/voyage')).toMatchObject({
+		expect(byPath(steps(chosen, { s1: 1 }), '/voyage')).toMatchObject({
 			status: 'open',
 			detail: '1/2 איים',
 		});
-		expect(byPath(steps(compassFinished, { s1: 1, s4: -1 }, '/summary'), '/voyage')).toMatchObject({
+		expect(byPath(steps(chosen, { s1: 1, s4: -1 }), '/voyage')).toMatchObject({
 			status: 'done',
 			detail: '2/2 איים',
 		});
 	});
 
-	it('ignores a legacy island choice: the route is every island', () => {
-		// Journeys from before the choosing was removed still carry
-		// selectedIslandIds; it must neither shrink nor grow the route.
-		expect(byPath(steps({ ...compassFinished, selectedIslandIds: ['i1'] }), '/voyage').detail).toBe(
-			'0/2 איים',
-		);
-	});
-
 	it('ignores islands the organizer switched off', () => {
 		const game = content({ islands: [island('i1', ['s1']), island('i2', ['s3'], false)] });
-		expect(byPath(steps(compassFinished, { s1: 1 }, '/voyage', game), '/voyage').detail).toBe(
-			'1/1 איים',
+		const all = steps(
+			{ ...compassFinished, selectedElderIds: [], selectedIslandIds: ['i1', 'i2'] },
+			{ s1: 1 },
+			'/voyage',
+			game,
 		);
+		expect(byPath(all, '/map').detail).toBe('1 איים');
+		expect(byPath(all, '/voyage').detail).toBe('1/1 איים');
 	});
 
-	it('the homecoming is an arrival: never a ✓, and open as soon as one island is sailed', () => {
-		expect(byPath(steps(compassFinished, {}, '/compass'), '/summary')).toMatchObject({
+	it('the homecoming is an arrival: it never carries a ✓, and opens once the voyage is sailed', () => {
+		const chosen = { ...compassFinished, selectedElderIds: [], selectedIslandIds: ['i1', 'i2'] };
+		expect(byPath(steps(chosen, { s1: 1 }), '/summary')).toMatchObject({
 			status: 'locked',
 			isDestination: true,
 		});
-		// The player may stop whenever they like.
-		expect(byPath(steps(compassFinished, { s1: 1 }, '/compass'), '/summary').status).toBe('open');
-		expect(byPath(steps(compassFinished, { s1: 1 }, '/summary'), '/voyage').status).toBe('open');
+		expect(byPath(steps(chosen, { s1: 1, s3: 1 }), '/summary').status).toBe('open');
 	});
 
 	it('marks where the player is standing', () => {
@@ -167,10 +187,11 @@ describe('voyageSteps', () => {
 		expect(byPath(all, '/').status).toBe('done');
 	});
 
-	it('a half-answered compass does not wall off islands already sailed', () => {
-		const all = steps({}, { s1: 1 }, '/compass');
-		expect(byPath(all, '/compass').status).toBe('current');
+	it('unlocks a skipped leg once a later one is finished', () => {
+		// A journey from before the crew screen existed: no selectedElderIds,
+		// but islands already chosen. The crew must not wall off the voyage.
+		const all = steps({ ...compassFinished, selectedIslandIds: ['i1'] }, {}, '/map');
+		expect(byPath(all, '/elders').status).toBe('open');
 		expect(byPath(all, '/voyage').status).toBe('open');
-		expect(byPath(all, '/summary').status).toBe('open');
 	});
 });

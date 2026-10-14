@@ -32,38 +32,27 @@ export function activeElders(game: OdysseyGame | null | undefined): OdysseyElder
 	return game.elders.filter((elder) => elder.enabled).sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
-/** How many of the closest elders sail with the player at once. */
-export const CREW_SIZE = 5;
-
 /**
- * The crew: the elders whose declared courses sit closest to the player's own
- * answers, nearest first.
+ * The elders THIS player invited.
  *
- * Players used to pick their sailors on a board before the voyage began. The
- * first reviewer said that made no sense — you cannot know whose company you
- * want before you have said anything — and that three was too few. So no one
- * is chosen up front: the crew forms after the first island, from what the
- * player actually answered, and re-forms as they sail on. An elder with no
- * shared island yet (`null` distance) has nothing to say to this player and
- * stays ashore. `journey.selectedElderIds` from the old choosing screen is no
- * longer read.
+ * Every enabled elder used to sail with everyone, unasked, and the first
+ * reviewer to meet them could not tell what they were: a Ben-Gurion quote
+ * appeared above island after island, and Golda's ship rode among the party
+ * ships as though she were running. Being chosen is what makes them legible —
+ * a player who picked Begin knows why Begin is talking to her.
  *
- * Ties keep the organizer's order, so the crew does not shuffle between two
- * renders of the same answers.
+ * `undefined` is not `[]`. A journey begun before the choosing screen existed
+ * has no selection and keeps every elder, exactly as it did; a player who was
+ * asked and chose no one gets an empty sea, and must.
  */
-export function crewByCloseness(
-	elders: OdysseyElder[],
-	distances: Record<string, number | null | undefined>,
-	size: number = CREW_SIZE,
+export function invitedElders(
+	game: OdysseyGame | null | undefined,
+	selectedElderIds: string[] | undefined,
 ): OdysseyElder[] {
-	return elders
-		.filter((elder) => typeof distances[elder.elderId] === 'number')
-		.sort(
-			(a, b) =>
-				(distances[a.elderId] as number) - (distances[b.elderId] as number) ||
-				a.sortOrder - b.sortOrder,
-		)
-		.slice(0, Math.max(0, size));
+	const elders = activeElders(game);
+	if (selectedElderIds === undefined) return elders;
+
+	return elders.filter((elder) => selectedElderIds.includes(elder.elderId));
 }
 
 export interface ElderRemark {

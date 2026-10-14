@@ -164,11 +164,10 @@ export default function Compass() {
 				compassAnswers: answers,
 				valueRankings: Object.fromEntries(ranked.map((valueId, index) => [valueId, index + 1])),
 			});
-			// Straight out to sea. Nothing is chosen up front any more — not the
-			// islands (the route is all of them, in order) and not the crew
-			// (the sailors closest to the player's answers join after the
-			// first island).
-			navigate('/voyage');
+			// The Elders are asked for between calibrating the compass and
+			// choosing islands: after the player knows what the game is about,
+			// before anyone starts talking to them on the water.
+			navigate('/elders');
 		} finally {
 			setSaving(false);
 		}
@@ -305,7 +304,7 @@ export default function Compass() {
 							disabled={!complete || saving}
 							onClick={() => void save()}
 						>
-							{saving ? 'שומר…' : 'המצפן שלך כויל — יוצאים להפלגה ⛵'}
+							{saving ? 'שומר…' : 'המצפן שלך כויל — לפתיחת המפה'}
 						</button>
 						{!complete ? (
 							<p className="text-[13px] opacity-75 m-0">

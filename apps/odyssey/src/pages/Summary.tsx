@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Evaluation } from '@freedi/shared-types';
-import { logError } from '@freedi/shared-utils';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
 import SeaChart from '../components/SeaChart';
@@ -14,8 +13,7 @@ import { distanceEngine, ParticipantDistance } from '../lib/distance';
 import { islandArtUrl } from '../lib/islandArt';
 import { loadGameEvaluations } from '../lib/evaluations';
 import { stageBus } from '../lib/stageBus';
-import { activeElders } from '../lib/elders';
-import { enterIslandDeliberation, getGateState } from '../lib/agoraGate';
+import { invitedElders } from '../lib/elders';
 import { proximityBandOf, relativeDistances, type ProximityBandKey } from '../lib/seaLayout';
 import DigestSettings from '../components/DigestSettings';
 
@@ -38,13 +36,11 @@ const BAR_FLOOR = 6;
 export default function Summary() {
 	const { user } = useUser();
 	const mode = useMode();
-	const { content, journey, attitudes, text, updateJourney } = useGame();
+	const { content, journey, attitudes, text } = useGame();
 	const [participants, setParticipants] = useState<ParticipantDistance[]>([]);
 	const [digestOpen, setDigestOpen] = useState(false);
 	/** the ship whose card is open on the final sea chart */
 	const [asked, setAsked] = useState<string | null>(null);
-	/** the island whose discussion gate the player is sailing through */
-	const [enteringIslandId, setEnteringIslandId] = useState('');
 
 	const gameId = content?.game.gameId;
 	const uid = user?.uid;
@@ -75,7 +71,10 @@ export default function Summary() {
 		[content],
 	);
 
-	const elders = useMemo(() => activeElders(content?.game), [content]);
+	const elders = useMemo(
+		() => invitedElders(content?.game, journey?.selectedElderIds),
+		[content, journey?.selectedElderIds],
+	);
 
 	const partyDistances = useMemo(
 		() =>
@@ -215,46 +214,6 @@ export default function Summary() {
 	const unvisitedCount = content.islands.filter(
 		(island) => island.enabled && !visitedIslands.includes(island),
 	).length;
-
-	/**
-	 * שערי הדיון — the discussions waiting on the islands this player sailed.
-	 *
-	 * They used to sit on the island-choosing screen, above "מפליגים אל 2 איים",
-	 * where a reviewer rightly asked what a discussion gate was doing before the
-	 * voyage had begun. A gate is the step AFTER an island: here, once the
-	 * player has positions to bring, it is the natural next thing to offer.
-	 */
-	const agoraOrigin = text('agoraOrigin');
-	const gatedIslands = agoraOrigin
-		? visitedIslands
-				.map((island) => ({
-					island,
-					state: getGateState(island.statementId, content.game, journey),
-				}))
-				.filter((entry) => entry.state !== 'unprovisioned')
-		: [];
-
-	async function enterGate(islandStatementId: string): Promise<void> {
-		if (!content || enteringIslandId) return;
-		setEnteringIslandId(islandStatementId);
-		if (mode === 'game') stageBus.send({ type: 'sailToLighthouse' });
-		try {
-			await enterIslandDeliberation({
-				islandStatementId,
-				game: content.game,
-				journey,
-				agoraOrigin,
-				updateJourney,
-			});
-		} catch (error) {
-			logError(error, {
-				operation: 'odyssey.summary.enterGate',
-				userId: uid,
-				statementId: islandStatementId,
-			});
-			setEnteringIslandId('');
-		}
-	}
 
 	return (
 		<>
@@ -408,42 +367,6 @@ export default function Summary() {
 						</div>
 					</section>
 
-					{gatedIslands.length > 0 ? (
-						<section className="panel fade-in">
-							<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-1">
-								🏛️ שערי הדיון שנפתחו לך
-							</h2>
-							<p className="text-[13px] opacity-75 mt-0 mb-3">
-								על האיים שכבר חקרת אפשר להיפגש עם אחרים ולחפש יחד פתרונות.
-							</p>
-							<div className="flex flex-col gap-2.5">
-								{gatedIslands.map(({ island, state }) => (
-									<div
-										key={island.statementId}
-										className="flex items-center gap-3 flex-wrap justify-between"
-									>
-										<span className="text-[15px]">
-											{state === 'visited' ? '⚑ ' : ''}
-											{island.title}
-										</span>
-										<button
-											type="button"
-											className="btn"
-											disabled={enteringIslandId === island.statementId}
-											onClick={() => void enterGate(island.statementId)}
-										>
-											{enteringIslandId === island.statementId
-												? 'מפליגים…'
-												: state === 'visited'
-													? 'חזרה לדיון'
-													: text('agoraButton')}
-										</button>
-									</div>
-								))}
-							</div>
-						</section>
-					) : null}
-
 					{/*
 					  Before the way out, the way back.
 					  This used to be one dim line under the Agora gates, and a reader
@@ -458,16 +381,16 @@ export default function Summary() {
 						</h2>
 						<p className="text-[15px] text-[#dcecf7] mt-0 mb-3">
 							{unvisitedCount > 0
-								? `חקרתם ${visitedIslands.length} איים. עוד ${unvisitedCount} ממתינים לכם, ואפשר להמשיך להפליג אליהם בכל רגע — מפת ההפלגה תתעדכן.`
-								: 'עברתם בכל האיים. אפשר לחזור לכל אי בכל רגע ולשנות עמדה.'}
+								? `חקרתם ${visitedIslands.length} איים. עוד ${unvisitedCount} ממתינים לכם על המפה, ואפשר לחזור אליהם בכל רגע — מפת ההפלגה תתעדכן.`
+								: 'עברתם בכל האיים. אפשר לחזור למפה בכל רגע ולשנות עמדה על אי שכבר חקרתם.'}
 						</p>
 						<div className="flex flex-wrap justify-center gap-3">
-							{/* The voyage opens on the next island still waiting, and its
-							    island list reaches every other one. */}
-							<Link className="btn" to="/voyage">
-								⛵ {unvisitedCount > 0 ? 'להמשיך להפליג' : 'חזרה לאיים'}
+							<Link className="btn" to="/map">
+								🗺️ חזרה למפה
 							</Link>
-							{elders.length > 0 ? (
+							{elders.length > 0 || (content.game.elders ?? []).length > 0 ? (
+								// The crew screen promises more sailors can be added later, so
+								// there has to be a way back to it.
 								<Link className="btn-outline" to="/elders">
 									📜 המלחים שאיתך
 								</Link>

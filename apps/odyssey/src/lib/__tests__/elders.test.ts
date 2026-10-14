@@ -3,8 +3,7 @@ import type { OdysseyElder, OdysseyGame } from '@freedi/shared-types';
 import { opinionDistanceEngine, elderAttitudes } from '../distance';
 import {
 	activeElders,
-	crewByCloseness,
-	CREW_SIZE,
+	invitedElders,
 	elderIdFromStageId,
 	elderStageId,
 	pickElderReaction,
@@ -132,42 +131,44 @@ describe('pickIslandRemark', () => {
 	});
 });
 
-describe('crewByCloseness', () => {
-	const crew = ['bg', 'begin', 'golda', 'rabin', 'jabotinsky', 'herzl', 'katznelson'].map(
-		(elderId, index) => elder({ elderId, sortOrder: index + 1 }),
-	);
+describe('invitedElders', () => {
+	const game = {
+		elders: [
+			{ elderId: 'bg', enabled: true, sortOrder: 1 },
+			{ elderId: 'begin', enabled: true, sortOrder: 2 },
+			{ elderId: 'golda', enabled: true, sortOrder: 3 },
+		],
+	} as unknown as OdysseyGame;
 
-	it('nobody sails before the player has said anything', () => {
-		// Every distance is null until the first island is answered.
-		expect(crewByCloseness(crew, {})).toEqual([]);
-		expect(crewByCloseness(crew, { bg: null, begin: null })).toEqual([]);
-	});
-
-	it('takes the closest elders, nearest first', () => {
-		const ids = crewByCloseness(crew, { bg: 0.8, begin: 0.1, golda: 0.4, rabin: null }).map(
-			(entry) => entry.elderId,
-		);
-		expect(ids).toEqual(['begin', 'golda', 'bg']);
-	});
-
-	it('sails more than three when there are more than three to sail', () => {
-		const distances = Object.fromEntries(crew.map((entry, index) => [entry.elderId, index / 10]));
-		expect(CREW_SIZE).toBeGreaterThan(3);
-		expect(crewByCloseness(crew, distances)).toHaveLength(CREW_SIZE);
-		expect(crewByCloseness(crew, distances, 100)).toHaveLength(crew.length);
-	});
-
-	it('keeps the organizer order on a tie', () => {
-		const ids = crewByCloseness(crew, { golda: 0.2, bg: 0.2, begin: 0.2 }).map(
-			(entry) => entry.elderId,
-		);
-		expect(ids).toEqual(['bg', 'begin', 'golda']);
-	});
-
-	it('treats a distance of 0 as the closest, not as missing', () => {
-		expect(crewByCloseness(crew, { begin: 0, bg: 0.5 }).map((entry) => entry.elderId)).toEqual([
-			'begin',
+	it('sails everyone when the player was never asked', () => {
+		// Journeys begun before the choosing screen existed. `undefined` has to
+		// keep behaving exactly as it did, or a returning player suddenly loses
+		// the company they already had.
+		expect(invitedElders(game, undefined).map((elder) => elder.elderId)).toEqual([
 			'bg',
+			'begin',
+			'golda',
 		]);
+	});
+
+	it('sails no one when the player was asked and chose no one', () => {
+		// The distinction that matters: [] is an answer, not a missing answer.
+		expect(invitedElders(game, [])).toEqual([]);
+	});
+
+	it('sails only the invited', () => {
+		expect(invitedElders(game, ['begin']).map((elder) => elder.elderId)).toEqual(['begin']);
+	});
+
+	it('ignores an invitation to an elder who is switched off', () => {
+		const withDisabled = {
+			elders: [{ elderId: 'bg', enabled: false, sortOrder: 1 }],
+		} as unknown as OdysseyGame;
+		expect(invitedElders(withDisabled, ['bg'])).toEqual([]);
+	});
+
+	it('sails no one when the organizer switched the elders off entirely', () => {
+		const noElders = { ...game, script: { eldersEnabled: false } } as unknown as OdysseyGame;
+		expect(invitedElders(noElders, ['bg'])).toEqual([]);
 	});
 });

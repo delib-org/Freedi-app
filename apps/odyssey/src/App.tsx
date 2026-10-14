@@ -1,11 +1,12 @@
 import type { ReactElement } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { GameProvider, useGame } from './state/GameContext';
 import { useUser } from './lib/user';
 import SeaStage from './components/SeaStage';
 import FeedbackDock from './components/FeedbackDock';
 import Intro from './pages/Intro';
 import Compass from './pages/Compass';
+import MapPage from './pages/MapPage';
 import Voyage from './pages/Voyage';
 import Summary from './pages/Summary';
 import Admin from './pages/Admin';
@@ -28,18 +29,6 @@ function Protected({ children }: { children: ReactElement }) {
 	if (!user) return <Navigate to="/" replace />;
 
 	return children;
-}
-
-/**
- * The old island-choosing map. The voyage now sails every island in order, so
- * the screen is gone — but digest emails link to `/map`, and what they mean by
- * "the map" is the player's sailing map. The query string rides along so a
- * `?game=` link still lands in its own game.
- */
-function MapRedirect() {
-	const { search } = useLocation();
-
-	return <Navigate to={{ pathname: '/summary', search }} replace />;
 }
 
 export default function App() {
@@ -70,7 +59,14 @@ export default function App() {
 							</Protected>
 						}
 					/>
-					<Route path="/map" element={<MapRedirect />} />
+					<Route
+						path="/map"
+						element={
+							<Protected>
+								<MapPage />
+							</Protected>
+						}
+					/>
 					<Route
 						path="/voyage"
 						element={
