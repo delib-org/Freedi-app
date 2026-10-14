@@ -29,7 +29,8 @@ export const HandStatus: m.Component<HandStatusAttrs> = {
 			status.total > 0
 				? m('p.hand__line', t('hand.line', { n: status.ratedCount, total: status.total }))
 				: null,
-			waiting ? m('p.hand__note', t('hand.waiting')) : null,
+			// The sentence counts what is already in the hand ("so far you have {{n}}")
+			waiting ? m('p.hand__note', t('hand.waiting', { n: status.total })) : null,
 			status.finished ? m('p.hand__note', t(exhausted ? 'hand.pool_done' : 'hand.done')) : null,
 			status.finished && !exhausted
 				? m(

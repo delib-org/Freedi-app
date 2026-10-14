@@ -51,6 +51,7 @@ import {
 	visibleStationNotes,
 } from '../lib/hands';
 import { AGORA_LOTTERY } from '@freedi/shared-types';
+import { nextCardBelow, notesBelowFold, type CardEdges } from '../lib/flows/boardFold';
 
 export interface VillageCommunitySource extends NoteNewsSource {
 	notes: (item: AgoraStagePlanItem) => AgoraProposal[];
@@ -161,6 +162,8 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 	let scoreboardSeen = 0;
 	let closeSeen = 0;
 	let resultsTab: ResultsTab = 'class';
+	/** Classmates' cards still under the board's fold — the "N more below" hint */
+	let below = 0;
 	let gain = 0,
 		timer: ReturnType<typeof setTimeout> | undefined;
 	/** Notes whose rating is in flight, and the failed ones — same latch as the round stage */
@@ -170,6 +173,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 		panel = 'none';
 		selected = undefined;
 		helper = undefined;
+		below = 0;
 		a.onPanelChange?.(panel);
 		a.onPause(false);
 	}
@@ -177,8 +181,45 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 		panel = next;
 		selected = undefined;
 		helper = undefined;
+		below = 0;
 		a.onPanelChange?.(panel);
 		a.onPause(true);
+	}
+
+	/**
+	 * On a phone the board shows my note and the top of one classmate's card;
+	 * the rest of the class sat out of sight with nothing saying so. Measure
+	 * which classmates' cards have not started yet, and redraw only when that
+	 * number changes — this runs on every scroll frame.
+	 */
+	function peerEdges(panel: HTMLElement): {
+		cards: HTMLElement[];
+		edges: CardEdges[];
+		fold: number;
+	} {
+		const hint = panel.querySelector<HTMLElement>('.village-board__more');
+		const fold = panel.getBoundingClientRect().bottom - (hint?.offsetHeight ?? 0);
+		const cards = Array.from(
+			panel.querySelectorAll<HTMLElement>('.village-board__peers .village-note'),
+		);
+
+		return { cards, edges: cards.map((card) => card.getBoundingClientRect()), fold };
+	}
+	function measureBoard(panel: Element): void {
+		if (!(panel instanceof HTMLElement)) return;
+		const { edges, fold } = peerEdges(panel);
+		const next = notesBelowFold(edges, fold);
+		if (next === below) return;
+		below = next;
+		m.redraw();
+	}
+	function showNextBelow(panel: Element | null): void {
+		if (!(panel instanceof HTMLElement)) return;
+		const { cards, edges, fold } = peerEdges(panel);
+		const card = cards[nextCardBelow(edges, fold)];
+		if (!card) return;
+		const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+		card.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' });
 	}
 
 	let current: VillageCommunityAttrs;
@@ -581,12 +622,31 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 				panel === 'notes'
 					? m(
 							'.village-community__panel.village-board',
-							{ role: 'region', 'aria-label': t('village.nav.board') },
+							{
+								role: 'region',
+								'aria-label': t('village.nav.board'),
+								oncreate: (v: m.VnodeDOM) => measureBoard(v.dom),
+								onupdate: (v: m.VnodeDOM) => measureBoard(v.dom),
+								onscroll: (e: Event & { redraw?: boolean }) => {
+									// measureBoard redraws itself when the count moves
+									e.redraw = false;
+									if (e.currentTarget instanceof Element) measureBoard(e.currentTarget);
+								},
+							},
 							[
 								m('header', [
 									m('.village-board__heading', [
 										item ? m('p.village-board__context', planItemLabel(item)) : null,
 										m(selected ? 'p.village-board__context' : 'h2', t('village.nav.board')),
+										// How many classmates' notes this board holds for me — the
+										// dealt hand when the lottery is on, so it never promises
+										// notes the student cannot reach
+										!selected && classmates.length
+											? m(
+													'p.village-board__count',
+													tCount('village.board.count', classmates.length),
+												)
+											: null,
 									]),
 									m('button.btn.btn--secondary', { onclick: () => close(a) }, t('village.back')),
 								]),
@@ -676,6 +736,33 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 													: null,
 												canRate && item && isLotteryActive() ? handLine(a, item) : null,
 												!notes.length ? m('p', t('village.board.empty')) : null,
+												// Sticks to the bottom edge while classmates' cards wait
+												// below; a tap brings the next one up
+												below > 0
+													? m(
+															'.village-board__more',
+															m(
+																'button.btn.btn--primary.btn--sm.village-board__more-button',
+																{
+																	type: 'button',
+																	onclick: (e: Event) =>
+																		showNextBelow(
+																			(e.currentTarget as Element).closest(
+																				'.village-community__panel',
+																			),
+																		),
+																},
+																[
+																	m('span', tCount('village.board.more_below', below)),
+																	m(
+																		'span.village-board__more-arrow',
+																		{ 'aria-hidden': 'true' },
+																		'↓',
+																	),
+																],
+															),
+														)
+													: null,
 											],
 							],
 						)

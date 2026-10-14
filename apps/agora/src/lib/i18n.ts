@@ -47,6 +47,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'village.note.mine': 'הפתק שלי',
 		'village.note.yours': 'הפתק שלכם',
 		'village.board.classmates': 'הפתקים של שאר הכיתה',
+		// The board's size, said up front, and the hint while cards wait below the fold
+		'village.board.count': '{{n}} פתקים של חברים לכיתה',
+		'village.board.count_one': 'פתק אחד של חבר לכיתה',
+		'village.board.more_below': 'עוד {{n}} פתקים למטה',
+		'village.board.more_below_one': 'עוד פתק אחד למטה',
 		'village.note.n': 'פתק {{n}}',
 		'village.note.edit': 'לערוך את הפתק שלי',
 		'village.note.save': 'שמירת הפתק',
@@ -1012,8 +1017,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'challenge.desk_title': 'כתבו את ההצעה שלכם',
 		'challenge.desk_placeholder': 'ההצעה שחסרה על הלוח…',
 		'voting.saving': 'שומרים את הקול שלכם…',
-		'voting.save_failed':
-			'הקול לא נשמר — בדקו את החיבור ונסו שוב.',
+		'voting.save_failed': 'הקול לא נשמר — בדקו את החיבור ונסו שוב.',
 		'voting.retry': 'לנסות שוב',
 		'challenge.rule': 'אם הכיתה תעדיף אתכם על ההצעה החלשה ביותר — ההצעה שלכם תיכנס במקומה.',
 		'challenge.send': 'להעלות ללוח',
@@ -1589,16 +1593,20 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'המורה ניסח מחדש את הטקסט שלכם',
 
 		// The language gate: a refused text, what it cost, and the teacher's count
-		'language.flagged': 'הבינה המלאכותית זיהתה שפה פוגענית, ולכן הטקסט לא נשמר. ירדו לכם {{n}} מטבעות — נסחו מחדש בשפה מכבדת.',
-		'language.flagged_no_coins': 'הבינה המלאכותית זיהתה שפה פוגענית, ולכן הטקסט לא נשמר. נסחו מחדש בשפה מכבדת.',
+		'language.flagged':
+			'הבינה המלאכותית זיהתה שפה פוגענית, ולכן הטקסט לא נשמר. ירדו לכם {{n}} מטבעות — נסחו מחדש בשפה מכבדת.',
+		'language.flagged_no_coins':
+			'הבינה המלאכותית זיהתה שפה פוגענית, ולכן הטקסט לא נשמר. נסחו מחדש בשפה מכבדת.',
 		'language.notice_title': 'נא להשתמש בשפה מכבדת',
-		'language.notice_body': 'הטקסט הזה לא פורסם כי זוהתה בו שפה פוגענית, וירדו עליו מטבעות. המורה רואה את זה.',
+		'language.notice_body':
+			'הטקסט הזה לא פורסם כי זוהתה בו שפה פוגענית, וירדו עליו מטבעות. המורה רואה את זה.',
 		'toast.language_flagged': 'הטקסט לא נשמר — נא להשתמש בשפה מכבדת',
 		'teacher.notice_language': 'הבינה המלאכותית חסמה שפה פוגענית — הטקסט לא פורסם',
 		'teacher.language_strikes': '{{n}} אזהרות שפה',
 		'teacher.language_alert.title': 'נחסמה שפה פוגענית ({{n}})',
 		'teacher.language_alert.wall_title': 'טקסט של תלמיד/ה נחסם בגלל שפה ({{n}})',
-		'teacher.language_alert.wall_hint': 'השמות והמילים מוצגים רק במכשיר האישי שלך — פתחו שם את לוח המורה כדי לראות מי ומה.',
+		'teacher.language_alert.wall_hint':
+			'השמות והמילים מוצגים רק במכשיר האישי שלך — פתחו שם את לוח המורה כדי לראות מי ומה.',
 		'teacher.language_alert.dismiss': 'הבנתי',
 		'teacher.language_alert.open_thread': 'לפתוח את השיחה',
 		'teacher.language_alert.more': 'ועוד {{n}}',
@@ -1725,6 +1733,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'village.note.mine': 'My note',
 		'village.note.yours': 'Your note',
 		'village.board.classmates': 'Classmates’ notes',
+		// The board's size, said up front, and the hint while cards wait below the fold
+		'village.board.count': '{{n}} notes from classmates',
+		'village.board.count_one': 'One note from a classmate',
+		'village.board.more_below': '{{n}} more notes below',
+		'village.board.more_below_one': 'One more note below',
 		'village.note.n': 'Note {{n}}',
 		'village.note.edit': 'Edit my note',
 		'village.note.save': 'Save my note',
@@ -2654,7 +2667,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'all of them',
 		'startGame.plan_cutoff_n': 'how many',
 		'startGame.plan_cutoff_min': 'Minimum agreement',
-		'startGame.plan_trigger': 'Tell me when the class agrees (the vote opens only when you press Next)',
+		'startGame.plan_trigger':
+			'Tell me when the class agrees (the vote opens only when you press Next)',
 		'startGame.plan_trigger_single': 'One proposal at an agreement of at least',
 		'startGame.plan_trigger_pair': 'or two proposals at least',
 		'startGame.plan_trigger_min_raters': 'counting proposals rated by at least this many people',
@@ -2731,8 +2745,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'challenge.pass': "I'll pass",
 		'challenge.too_short': 'Too short to put to the class — write a little more.',
 		'voting.saving': 'Saving your vote…',
-		'voting.save_failed':
-			'Your vote was not saved — check the connection and try again.',
+		'voting.save_failed': 'Your vote was not saved — check the connection and try again.',
 		'voting.retry': 'Try again',
 		'challenge.waiting_writer': '{{name}} is writing a new option',
 		'challenge.waiting_next': '{{name}} has the floor next',
@@ -3327,16 +3340,20 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Your teacher reworded your text',
 
 		// The language gate: a refused text, what it cost, and the teacher's count
-		'language.flagged': 'The AI found disrespectful language, so your text was not saved. {{n}} coins were taken — please rewrite it respectfully.',
-		'language.flagged_no_coins': 'The AI found disrespectful language, so your text was not saved. Please rewrite it respectfully.',
+		'language.flagged':
+			'The AI found disrespectful language, so your text was not saved. {{n}} coins were taken — please rewrite it respectfully.',
+		'language.flagged_no_coins':
+			'The AI found disrespectful language, so your text was not saved. Please rewrite it respectfully.',
 		'language.notice_title': 'Please use respectful language',
-		'language.notice_body': 'This text was not posted because it contained disrespectful language, and it cost coins. Your teacher can see this.',
+		'language.notice_body':
+			'This text was not posted because it contained disrespectful language, and it cost coins. Your teacher can see this.',
 		'toast.language_flagged': 'Not saved — please use respectful language',
 		'teacher.notice_language': 'The AI blocked disrespectful language — the text was not posted',
 		'teacher.language_strikes': '{{n}} language warnings',
 		'teacher.language_alert.title': 'Offensive language blocked ({{n}})',
-		'teacher.language_alert.wall_title': 'A student\'s text was blocked for language ({{n}})',
-		'teacher.language_alert.wall_hint': 'Names and words show only on your own device — open the console there to see who and what.',
+		'teacher.language_alert.wall_title': "A student's text was blocked for language ({{n}})",
+		'teacher.language_alert.wall_hint':
+			'Names and words show only on your own device — open the console there to see who and what.',
 		'teacher.language_alert.dismiss': 'Got it',
 		'teacher.language_alert.open_thread': 'Open the thread',
 		'teacher.language_alert.more': '+{{n}} more',
@@ -3371,7 +3388,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.move.ends': 'ends the lesson',
 		'teacher.move.confirm_title': 'Open {{station}}?',
 		'teacher.move.confirm_unfinished':
-			'{{n}} students haven\'t finished {{station}}. It closes and gets its summary.',
+			"{{n}} students haven't finished {{station}}. It closes and gets its summary.",
 		'teacher.move.confirm_closes': '{{station}} closes and gets its summary.',
 		'teacher.move.confirm_skip': 'Skips {{items}} — those stations never open.',
 		'teacher.move.confirm_ends': 'This ends the lesson: the class goes to the results.',
@@ -3389,7 +3406,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.bar.called_elsewhere': 'Called to {{place}} from your other device',
 		'teacher.device.title': 'Where is this screen?',
 		'teacher.device.lead':
-			'Real names and the students\' private words appear only on a screen that is yours alone.',
+			"Real names and the students' private words appear only on a screen that is yours alone.",
 		'teacher.device.private': 'Just me',
 		'teacher.device.private_hint': 'Show real names here',
 		'teacher.device.wall': 'On the wall',
@@ -3398,10 +3415,10 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.device.wall_chip': 'On the wall · names hidden',
 		'teacher.device.names_hidden_row': 'name hidden on this screen',
 		'teacher.device.open_on_phone':
-			'Open this on your phone — the students\' private words don\'t belong on the wall.',
+			"Open this on your phone — the students' private words don't belong on the wall.",
 		'teacher.device.to_private_title': 'Show real names on this screen?',
 		'teacher.device.to_private_body':
-			'If this screen is projected, the students will see each other\'s names.',
+			"If this screen is projected, the students will see each other's names.",
 		'teacher.device.to_private_ok': 'Show names here',
 		'teacher.device.keep_hidden': 'Keep hidden',
 		'teacher.bar.confirm_next': 'Tap again: {{label}}',
@@ -3466,6 +3483,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'village.note.mine': 'ورقتي',
 		'village.note.yours': 'ورقتكم',
 		'village.board.classmates': 'أوراق زملاء الصف',
+		// The board's size, said up front, and the hint while cards wait below the fold
+		'village.board.count': '{{n}} أوراق من زملاء الصف',
+		'village.board.count_one': 'ورقة واحدة من زميل',
+		'village.board.more_below': '{{n}} أوراق أخرى في الأسفل',
+		'village.board.more_below_one': 'ورقة أخرى في الأسفل',
 		'village.note.n': 'ورقة {{n}}',
 		'village.note.edit': 'تعديل ورقتي',
 		'village.note.save': 'حفظ ورقتي',
@@ -4444,8 +4466,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 			'لا أحد يرى العدّ حتى يغلق المعلّم التصويت. كم صوّتوا ليس سرًّا؛ لمن صوّتوا هو السرّ.',
 		'challenge.outcome_survived': 'اقتراح {{name}} انضمّ إلى اللوحة',
 		'voting.saving': 'جارٍ حفظ صوتكم…',
-		'voting.save_failed':
-			'لم يُحفظ صوتكم — تحققوا من الاتصال وحاولوا مجددًا.',
+		'voting.save_failed': 'لم يُحفظ صوتكم — تحققوا من الاتصال وحاولوا مجددًا.',
 		'voting.retry': 'حاولوا مجددًا',
 		'challenge.outcome_failed': 'اقتراح {{name}} لم ينجح هذه المرة',
 		'challenge.outcome_votes': '{{n}} أصوات',
@@ -5012,16 +5033,20 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'معلمكم أعاد صياغة نصكم',
 
 		// The language gate: a refused text, what it cost, and the teacher's count
-		'language.flagged': 'رصد الذكاء الاصطناعي لغة غير لائقة، لذلك لم يُحفظ نصكم. خُصمت {{n}} عملات — أعيدوا الصياغة بلغة محترمة.',
-		'language.flagged_no_coins': 'رصد الذكاء الاصطناعي لغة غير لائقة، لذلك لم يُحفظ نصكم. أعيدوا الصياغة بلغة محترمة.',
+		'language.flagged':
+			'رصد الذكاء الاصطناعي لغة غير لائقة، لذلك لم يُحفظ نصكم. خُصمت {{n}} عملات — أعيدوا الصياغة بلغة محترمة.',
+		'language.flagged_no_coins':
+			'رصد الذكاء الاصطناعي لغة غير لائقة، لذلك لم يُحفظ نصكم. أعيدوا الصياغة بلغة محترمة.',
 		'language.notice_title': 'الرجاء استخدام لغة محترمة',
-		'language.notice_body': 'لم يُنشر هذا النص لأنه احتوى على لغة غير لائقة، وكلّفكم عملات. معلمكم يرى ذلك.',
+		'language.notice_body':
+			'لم يُنشر هذا النص لأنه احتوى على لغة غير لائقة، وكلّفكم عملات. معلمكم يرى ذلك.',
 		'toast.language_flagged': 'لم يُحفظ — الرجاء استخدام لغة محترمة',
 		'teacher.notice_language': 'حجب الذكاء الاصطناعي لغة غير لائقة — لم يُنشر النص',
 		'teacher.language_strikes': '{{n}} تنبيهات لغة',
 		'teacher.language_alert.title': 'تم حجب لغة مسيئة ({{n}})',
 		'teacher.language_alert.wall_title': 'تم حجب نص لطالب بسبب اللغة ({{n}})',
-		'teacher.language_alert.wall_hint': 'الأسماء والكلمات تظهر فقط على جهازك الشخصي — افتحوا لوحة المعلّم هناك لمعرفة من وماذا.',
+		'teacher.language_alert.wall_hint':
+			'الأسماء والكلمات تظهر فقط على جهازك الشخصي — افتحوا لوحة المعلّم هناك لمعرفة من وماذا.',
 		'teacher.language_alert.dismiss': 'فهمت',
 		'teacher.language_alert.open_thread': 'فتح المحادثة',
 		'teacher.language_alert.more': '+{{n}} أخرى',
@@ -5146,6 +5171,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'village.note.mine': 'Mi nota',
 		'village.note.yours': 'Tu nota',
 		'village.board.classmates': 'Notas de tus compañeros',
+		// The board's size, said up front, and the hint while cards wait below the fold
+		'village.board.count': '{{n}} notas de tus compañeros',
+		'village.board.count_one': 'Una nota de un compañero',
+		'village.board.more_below': '{{n}} notas más abajo',
+		'village.board.more_below_one': 'Una nota más abajo',
 		'village.note.n': 'Nota {{n}}',
 		'village.note.edit': 'Editar mi nota',
 		'village.note.save': 'Guardar mi nota',
@@ -6094,7 +6124,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'todas',
 		'startGame.plan_cutoff_n': 'cuántas',
 		'startGame.plan_cutoff_min': 'Acuerdo mínimo',
-		'startGame.plan_trigger': 'Avísame cuando la clase se ponga de acuerdo (la votación solo se abre al pulsar Siguiente)',
+		'startGame.plan_trigger':
+			'Avísame cuando la clase se ponga de acuerdo (la votación solo se abre al pulsar Siguiente)',
 		'startGame.plan_trigger_single': 'Una propuesta con un acuerdo de al menos',
 		'startGame.plan_trigger_pair': 'o dos propuestas con al menos',
 		'startGame.plan_trigger_min_raters':
@@ -6183,8 +6214,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'challenge.outcome_votes': '{{n}} votos',
 		'challenge.evicted': 'Ocupó el lugar de: {{statement}}',
 		'voting.saving': 'Guardando vuestro voto…',
-		'voting.save_failed':
-			'Vuestro voto no se guardó: revisad la conexión y volved a intentarlo.',
+		'voting.save_failed': 'Vuestro voto no se guardó: revisad la conexión y volved a intentarlo.',
 		'voting.retry': 'Reintentar',
 		'challenge.board_stands': 'El tablero queda como estaba.',
 		'challenge.points': '+{{n}} puntos',
@@ -6777,16 +6807,21 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Tu profesor reformuló tu texto',
 
 		// The language gate: a refused text, what it cost, and the teacher's count
-		'language.flagged': 'La IA detectó lenguaje irrespetuoso, así que tu texto no se guardó. Se descontaron {{n}} monedas — reescríbelo con respeto.',
-		'language.flagged_no_coins': 'La IA detectó lenguaje irrespetuoso, así que tu texto no se guardó. Reescríbelo con respeto.',
+		'language.flagged':
+			'La IA detectó lenguaje irrespetuoso, así que tu texto no se guardó. Se descontaron {{n}} monedas — reescríbelo con respeto.',
+		'language.flagged_no_coins':
+			'La IA detectó lenguaje irrespetuoso, así que tu texto no se guardó. Reescríbelo con respeto.',
 		'language.notice_title': 'Usa un lenguaje respetuoso, por favor',
-		'language.notice_body': 'Este texto no se publicó porque contenía lenguaje irrespetuoso, y costó monedas. Tu profesor puede verlo.',
+		'language.notice_body':
+			'Este texto no se publicó porque contenía lenguaje irrespetuoso, y costó monedas. Tu profesor puede verlo.',
 		'toast.language_flagged': 'No se guardó — usa un lenguaje respetuoso',
 		'teacher.notice_language': 'La IA bloqueó lenguaje irrespetuoso — el texto no se publicó',
 		'teacher.language_strikes': '{{n}} avisos de lenguaje',
 		'teacher.language_alert.title': 'Lenguaje ofensivo bloqueado ({{n}})',
-		'teacher.language_alert.wall_title': 'Se bloqueó el texto de un estudiante por su lenguaje ({{n}})',
-		'teacher.language_alert.wall_hint': 'Los nombres y las palabras solo se ven en tu propio dispositivo: abre allí la consola para ver quién y qué.',
+		'teacher.language_alert.wall_title':
+			'Se bloqueó el texto de un estudiante por su lenguaje ({{n}})',
+		'teacher.language_alert.wall_hint':
+			'Los nombres y las palabras solo se ven en tu propio dispositivo: abre allí la consola para ver quién y qué.',
 		'teacher.language_alert.dismiss': 'Entendido',
 		'teacher.language_alert.open_thread': 'Abrir la conversación',
 		'teacher.language_alert.more': '+{{n}} más',
@@ -6917,6 +6952,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'village.note.mine': 'Mein Zettel',
 		'village.note.yours': 'Dein Zettel',
 		'village.board.classmates': 'Zettel der anderen',
+		// The board's size, said up front, and the hint while cards wait below the fold
+		'village.board.count': '{{n}} Zettel der anderen',
+		'village.board.count_one': 'Ein Zettel der anderen',
+		'village.board.more_below': '{{n}} weitere Zettel unten',
+		'village.board.more_below_one': 'Ein weiterer Zettel unten',
 		'village.note.n': 'Zettel {{n}}',
 		'village.note.edit': 'Meinen Zettel bearbeiten',
 		'village.note.save': 'Meinen Zettel speichern',
@@ -7868,7 +7908,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'alle',
 		'startGame.plan_cutoff_n': 'wie viele',
 		'startGame.plan_cutoff_min': 'Mindestzustimmung',
-		'startGame.plan_trigger': 'Sag mir Bescheid, wenn die Klasse sich einig ist (die Abstimmung startet erst, wenn du auf Weiter tippst)',
+		'startGame.plan_trigger':
+			'Sag mir Bescheid, wenn die Klasse sich einig ist (die Abstimmung startet erst, wenn du auf Weiter tippst)',
 		'startGame.plan_trigger_single': 'Ein Vorschlag mit einer Zustimmung von mindestens',
 		'startGame.plan_trigger_pair': 'oder zwei Vorschläge mit mindestens',
 		'startGame.plan_trigger_min_raters':
@@ -7909,7 +7950,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.trigger_off': 'Die Abstimmung startet, wenn du auf Weiter tippst.',
 		'teacher.trigger_waiting':
 			'Die Abstimmung startet von selbst, wenn ein Vorschlag {{single}} Zustimmung erreicht. Bisher am höchsten: {{best}}.',
-		'teacher.trigger_ready': 'Die Klasse ist sich einig – tippe auf Weiter, um die Abstimmung zu starten.',
+		'teacher.trigger_ready':
+			'Die Klasse ist sich einig – tippe auf Weiter, um die Abstimmung zu starten.',
 		'teacher.trigger_fired_single': 'automatisch geöffnet: ein Vorschlag',
 		'teacher.trigger_fired_pair': 'automatisch geöffnet: zwei Vorschläge',
 		'teacher.trigger_fired_manual': 'von dir geöffnet',
@@ -8566,16 +8608,22 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Deine Lehrkraft hat deinen Text umformuliert',
 
 		// The language gate: a refused text, what it cost, and the teacher's count
-		'language.flagged': 'Die KI hat respektlose Sprache erkannt, deshalb wurde dein Text nicht gespeichert. {{n}} Münzen wurden abgezogen — formuliere ihn bitte respektvoll um.',
-		'language.flagged_no_coins': 'Die KI hat respektlose Sprache erkannt, deshalb wurde dein Text nicht gespeichert. Formuliere ihn bitte respektvoll um.',
+		'language.flagged':
+			'Die KI hat respektlose Sprache erkannt, deshalb wurde dein Text nicht gespeichert. {{n}} Münzen wurden abgezogen — formuliere ihn bitte respektvoll um.',
+		'language.flagged_no_coins':
+			'Die KI hat respektlose Sprache erkannt, deshalb wurde dein Text nicht gespeichert. Formuliere ihn bitte respektvoll um.',
 		'language.notice_title': 'Bitte respektvolle Sprache verwenden',
-		'language.notice_body': 'Dieser Text wurde nicht veröffentlicht, weil er respektlose Sprache enthielt, und hat Münzen gekostet. Deine Lehrkraft sieht das.',
+		'language.notice_body':
+			'Dieser Text wurde nicht veröffentlicht, weil er respektlose Sprache enthielt, und hat Münzen gekostet. Deine Lehrkraft sieht das.',
 		'toast.language_flagged': 'Nicht gespeichert — bitte respektvolle Sprache verwenden',
-		'teacher.notice_language': 'Die KI hat respektlose Sprache blockiert — der Text wurde nicht veröffentlicht',
+		'teacher.notice_language':
+			'Die KI hat respektlose Sprache blockiert — der Text wurde nicht veröffentlicht',
 		'teacher.language_strikes': '{{n}} Sprachwarnungen',
 		'teacher.language_alert.title': 'Beleidigende Sprache blockiert ({{n}})',
-		'teacher.language_alert.wall_title': 'Ein Schülertext wurde wegen der Sprache blockiert ({{n}})',
-		'teacher.language_alert.wall_hint': 'Namen und Worte erscheinen nur auf deinem eigenen Gerät — öffne dort die Konsole, um zu sehen, wer und was.',
+		'teacher.language_alert.wall_title':
+			'Ein Schülertext wurde wegen der Sprache blockiert ({{n}})',
+		'teacher.language_alert.wall_hint':
+			'Namen und Worte erscheinen nur auf deinem eigenen Gerät — öffne dort die Konsole, um zu sehen, wer und was.',
 		'teacher.language_alert.dismiss': 'Verstanden',
 		'teacher.language_alert.open_thread': 'Unterhaltung öffnen',
 		'teacher.language_alert.more': '+{{n}} weitere',
@@ -8707,6 +8755,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'village.note.mine': 'Mijn briefje',
 		'village.note.yours': 'Jouw briefje',
 		'village.board.classmates': 'Briefjes van klasgenoten',
+		// The board's size, said up front, and the hint while cards wait below the fold
+		'village.board.count': '{{n}} briefjes van klasgenoten',
+		'village.board.count_one': 'Eén briefje van een klasgenoot',
+		'village.board.more_below': 'Nog {{n}} briefjes hieronder',
+		'village.board.more_below_one': 'Nog één briefje hieronder',
 		'village.note.n': 'Briefje {{n}}',
 		'village.note.edit': 'Mijn briefje bewerken',
 		'village.note.save': 'Briefje opslaan',
@@ -9653,7 +9706,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'startGame.plan_cutoff_all': 'allemaal',
 		'startGame.plan_cutoff_n': 'hoeveel',
 		'startGame.plan_cutoff_min': 'Minimale instemming',
-		'startGame.plan_trigger': 'Laat het me weten wanneer de klas het eens is (de stemming opent pas als je op Volgende drukt)',
+		'startGame.plan_trigger':
+			'Laat het me weten wanneer de klas het eens is (de stemming opent pas als je op Volgende drukt)',
 		'startGame.plan_trigger_single': 'Eén voorstel met een instemming van minstens',
 		'startGame.plan_trigger_pair': 'of twee voorstellen met minstens',
 		'startGame.plan_trigger_min_raters':
@@ -10340,16 +10394,22 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.teacher_edited': 'Je docent heeft je tekst geherformuleerd',
 
 		// The language gate: a refused text, what it cost, and the teacher's count
-		'language.flagged': 'De AI vond respectloze taal, dus je tekst is niet opgeslagen. Er zijn {{n}} munten afgetrokken — herschrijf hem respectvol.',
-		'language.flagged_no_coins': 'De AI vond respectloze taal, dus je tekst is niet opgeslagen. Herschrijf hem respectvol.',
+		'language.flagged':
+			'De AI vond respectloze taal, dus je tekst is niet opgeslagen. Er zijn {{n}} munten afgetrokken — herschrijf hem respectvol.',
+		'language.flagged_no_coins':
+			'De AI vond respectloze taal, dus je tekst is niet opgeslagen. Herschrijf hem respectvol.',
 		'language.notice_title': 'Gebruik alsjeblieft respectvolle taal',
-		'language.notice_body': 'Deze tekst is niet geplaatst omdat hij respectloze taal bevatte, en dat heeft munten gekost. Je docent kan dit zien.',
+		'language.notice_body':
+			'Deze tekst is niet geplaatst omdat hij respectloze taal bevatte, en dat heeft munten gekost. Je docent kan dit zien.',
 		'toast.language_flagged': 'Niet opgeslagen — gebruik respectvolle taal',
-		'teacher.notice_language': 'De AI heeft respectloze taal geblokkeerd — de tekst is niet geplaatst',
+		'teacher.notice_language':
+			'De AI heeft respectloze taal geblokkeerd — de tekst is niet geplaatst',
 		'teacher.language_strikes': '{{n}} taalwaarschuwingen',
 		'teacher.language_alert.title': 'Beledigende taal geblokkeerd ({{n}})',
-		'teacher.language_alert.wall_title': 'De tekst van een leerling is geblokkeerd vanwege taal ({{n}})',
-		'teacher.language_alert.wall_hint': 'Namen en woorden staan alleen op je eigen apparaat — open daar de console om te zien wie en wat.',
+		'teacher.language_alert.wall_title':
+			'De tekst van een leerling is geblokkeerd vanwege taal ({{n}})',
+		'teacher.language_alert.wall_hint':
+			'Namen en woorden staan alleen op je eigen apparaat — open daar de console om te zien wie en wat.',
 		'teacher.language_alert.dismiss': 'Begrepen',
 		'teacher.language_alert.open_thread': 'Gesprek openen',
 		'teacher.language_alert.more': '+{{n}} meer',
