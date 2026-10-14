@@ -28,6 +28,11 @@ export interface TeacherNavAttrs {
 	 */
 	code?: string;
 	/**
+	 * When set, tapping the code pill calls this (the console opens the join
+	 * QR) instead of copying the digits.
+	 */
+	onCodeTap?: () => void;
+	/**
 	 * Rows for this screen alone, listed first in the ≡ menu under "this
 	 * lesson". On a phone the bar has no room for the projector and the cog,
 	 * so the console hands them over here instead of dropping them.
@@ -97,15 +102,23 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 		selection?.addRange(range);
 	}
 
-	function codePill(code: string): m.Children {
+	function codePill(code: string, onCodeTap?: () => void): m.Children {
 		return m(
 			'button.teacher-nav__code',
 			{
 				type: 'button',
 				class: copied ? 'teacher-nav__code--copied' : undefined,
-				'aria-label': t('teacher.code_aria', { code }),
-				title: t('teacher.copy_code'),
+				'aria-label': onCodeTap
+					? t('teacher.code_qr_aria', { code })
+					: t('teacher.code_aria', { code }),
+				title: onCodeTap ? t('teacher.show_qr') : t('teacher.copy_code'),
+				'aria-haspopup': onCodeTap ? 'dialog' : undefined,
 				onclick: (event: MouseEvent) => {
+					if (onCodeTap) {
+						onCodeTap();
+
+						return;
+					}
 					const digits = (event.currentTarget as HTMLElement).querySelector<HTMLElement>(
 						'.teacher-nav__code-digits',
 					);
@@ -330,7 +343,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 		},
 
 		view({ attrs }) {
-			const { title, subtitle, onBack, trailing, code, segment, menuItems = [] } = attrs;
+			const { title, subtitle, onBack, trailing, code, onCodeTap, segment, menuItems = [] } = attrs;
 			const atHome = here() === '/teach';
 
 			return m(
@@ -374,7 +387,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 					]),
 					segment ? m('.teacher-nav__segment', segment) : null,
 					code || trailing
-						? m('.teacher-nav__trailing', [code ? codePill(code) : null, trailing])
+						? m('.teacher-nav__trailing', [code ? codePill(code, onCodeTap) : null, trailing])
 						: null,
 					m(
 						'button.teacher-nav__switch',

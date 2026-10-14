@@ -785,6 +785,11 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				})(),
 				onBack: () => m.route.set(session.classId ? `/teach/class/${session.classId}` : '/teach'),
 				code: session.code,
+				onCodeTap: canInvite
+					? () => {
+							qrOpen = true;
+						}
+					: undefined,
 				menuItems,
 				segment,
 				trailing: [
