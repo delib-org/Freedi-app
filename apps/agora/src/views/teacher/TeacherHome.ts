@@ -1,11 +1,7 @@
-import { getTeacherNavState } from '../../lib/teacherNav';
 import m from 'mithril';
-import { Icon } from '../../components/Icon';
-import { getLang, t } from '../../lib/i18n';
+import { t } from '../../lib/i18n';
 import { getUserState, signInWithGoogle, ensureUser } from '../../lib/user';
 import {
-	fetchSessionHistory,
-	classLabel,
 	fetchTeacherDashboard,
 	listTopicPackages,
 	patchTopicPackage,
@@ -14,22 +10,16 @@ import {
 } from '../../lib/teacher';
 import { teacherClass } from '../../lib/callables';
 import { ClassForm, type ClassFormValue } from '../../components/ClassForm';
-import {
-	AgoraClassAggregate,
-	AgoraSession,
-	AgoraTopicPackage,
-	AgoraTopicStatus,
-	advancementSummary,
-} from '@freedi/shared-types';
+import { AgoraClassAggregate, AgoraSession, AgoraTopicPackage } from '@freedi/shared-types';
 import { buildDefaultFrenchRevolutionTopic, backfillDefaultArtwork } from '../../lib/defaultTopic';
 import { LanguagePicker } from '../../components/LanguagePicker';
 import { TeacherNav } from '../../components/TeacherNav';
 import { isSessionLive, noteTeacherDashboard } from '../../lib/teacherNav';
-import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { countedSteps, teacherStepLabel } from '../../lib/teacherSteps';
-import { LibraryDoor } from '../../components/scenarioLibrary/LibraryDoor';
 import { fetchSourceVersions } from '../../lib/scenarioLibrary/api';
-import { isNewerVersionAvailable } from '@freedi/shared-types';
+import { lessonClassName, lessonTitle } from '../../lib/lessonLabels';
+import { isSampleScenario, reusableScenarios } from '../../lib/teacherHome';
+import { classesSection, firstRunStrip, liveBanner, scenariosSection } from './home/HomeSections';
 
 /** Once dismissed, the three-step strip stays away on this device */
 const FIRST_RUN_KEY = 'agora.teacher.firstRunDismissed';
@@ -43,10 +33,11 @@ function firstRunDismissed(): boolean {
 }
 
 /**
- * The teacher's dashboard: a lesson that is running now (one tap back into
- * it), what we are teaching today (a tap on a scenario starts a lesson), my
- * classes, and past lessons. A teacher opening this page for the first time
- * also gets the whole of running a lesson in three lines.
+ * The teacher's room (/teach): four things and nothing else. A lesson running
+ * now (one tap back into it), my scenarios (a tap on one starts a lesson), my
+ * classes (a tap on one opens its achievements), and — on a teacher's first
+ * visit — the three lines that are the whole of running a lesson. Past lessons,
+ * supervision and the teacher's own activity live in the ≡ menu.
  */
 export function TeacherHome(): m.Component {
 	let topics: AgoraTopicPackage[] = [];
@@ -57,29 +48,18 @@ export function TeacherHome(): m.Component {
 	let addClassError: string | null = null;
 	let sessions: AgoraSession[] = [];
 	let aggregates = new Map<string, AgoraClassAggregate>();
-	let showAllScenarios = false;
-	let historyOpen = false;
-	let historyLoading = false;
-	let historyError = false;
-	let historyStarted = false;
-	let historyMore = true;
-	let historySearch = '';
-	let historyClass = '';
-	let historyCursor: Awaited<ReturnType<typeof fetchSessionHistory>>['cursor'];
-	let historySessions: AgoraSession[] = [];
 	/**
 	 * The shelf and the classes are two independent reads, so they are two
-	 * independent waits. They used to share one flag and one page-wide spinner:
-	 * the whole dashboard stayed blank until the slower of the two landed —
-	 * which, on a cold console call, is seconds of nothing while the answer to
-	 * the other question has been sitting in memory the whole time.
+	 * independent waits (and two independent failures). They used to share one
+	 * flag and one page-wide spinner: the whole dashboard stayed blank until the
+	 * slower of the two landed.
 	 */
 	let topicsLoaded = false;
+	let topicsFailed = false;
+	let dashboardLoaded = false;
+	let dashboardFailed = false;
 	/** The library originals behind copies on the shelf — for "a new version is available" */
 	let sourceVersions = new Map<string, { lastUpdate: number; title: string }>();
-	let dashboardLoaded = false;
-	/** A school named this account as its supervisor, or it runs the system */
-	let canSupervise = false;
 	/**
 	 * Whose library is on screen. Auth settles in two beats — an anonymous
 	 * account first, the teacher's Google one a moment later — and the dashboard
@@ -102,100 +82,6 @@ export function TeacherHome(): m.Component {
 	const provisionedFor = new Set<string>();
 	let firstRunHidden = firstRunDismissed();
 
-	async function loadHistory(): Promise<void> {
-		const uid = getUserState().user?.uid;
-		if (!uid || historyLoading) return;
-		historyLoading = true;
-		historyError = false;
-		try {
-			const page = await fetchSessionHistory(uid, historyCursor);
-			if (getUserState().user?.uid !== uid) return;
-			historySessions = [...historySessions, ...page.sessions];
-			historyCursor = page.cursor;
-			historyMore = page.hasMore;
-			historyStarted = true;
-		} catch {
-			historyError = true;
-		} finally {
-			historyLoading = false;
-			m.redraw();
-		}
-	}
-
-	function historyPanel(): m.Children {
-		const filtered = historySessions.filter(
-			(s) =>
-				!isSessionLive(s) &&
-				(!historyClass || s.classId === historyClass) &&
-				`${lessonTitle(s) ?? ''} ${className(s)} ${s.code}`
-					.toLocaleLowerCase()
-					.includes(historySearch.toLocaleLowerCase()),
-		);
-		const groups = new Map<string, AgoraSession[]>();
-		for (const session of filtered) {
-			const month = new Date(session.createdAt).toLocaleDateString(getLang(), {
-				year: 'numeric',
-				month: 'long',
-			});
-			groups.set(month, [...(groups.get(month) ?? []), session]);
-		}
-
-		return m('.card.stack', [
-			m(
-				'button.btn.btn--secondary',
-				{
-					'aria-expanded': historyOpen,
-					onclick: () => {
-						historyOpen = !historyOpen;
-						if (historyOpen && !historyStarted) void loadHistory();
-					},
-				},
-				'ארכיון השיעורים והפתרונות',
-			),
-			m('p', 'שיעורי העבר נשמרים לפי חודש וכיתה. בכל שיעור אפשר לפתוח את הדוח והפתרונות שלו.'),
-			historyOpen
-				? m('.stack', [
-						m('input.text-input', {
-							placeholder: 'חיפוש בכותרת, בכיתה או בקוד מתוך השיעורים שנטענו',
-							'aria-label': 'חיפוש בארכיון',
-							value: historySearch,
-							oninput: (e: InputEvent) => {
-								historySearch = (e.target as HTMLInputElement).value;
-							},
-						}),
-						m(
-							'select.text-input',
-							{
-								'aria-label': 'סינון לפי כיתה',
-								value: historyClass,
-								onchange: (e: Event) => {
-									historyClass = (e.target as HTMLSelectElement).value;
-								},
-							},
-							[
-								m('option', { value: '' }, 'כל הכיתות'),
-								...classes.map((c) => m('option', { value: c.classId }, c.name)),
-							],
-						),
-						...[...groups].map(([month, list]) =>
-							m('.stack', [m('h3', month), m('.stack', list.map(sessionRow))]),
-						),
-						!filtered.length && !historyLoading
-							? m('p', 'לא נמצאו שיעורים בהיסטוריה שנטענה. אפשר לטעון שיעורים מוקדמים יותר.')
-							: null,
-						historyError ? m('p[role=alert]', 'הארכיון לא נטען. אפשר לנסות שוב.') : null,
-						historyMore || historyError
-							? m(
-									'button.btn.btn--secondary',
-									{ disabled: historyLoading, onclick: () => void loadHistory() },
-									historyLoading ? 'טוענים…' : 'טעינת שיעורים נוספים',
-								)
-							: null,
-					])
-				: null,
-		]);
-	}
-
 	function dismissFirstRun(): void {
 		firstRunHidden = true;
 		try {
@@ -203,6 +89,8 @@ export function TeacherHome(): m.Component {
 		} catch {
 			// A private window forgets; the strip comes back next time, harmlessly
 		}
+		// Opened from the menu's "how to run a lesson": drop the request as well
+		if (m.route.param('help') === '1') m.route.set('/teach', undefined, { replace: true });
 	}
 
 	/** Refill the shelf when auth settles on a different account than it was
@@ -231,10 +119,9 @@ export function TeacherHome(): m.Component {
 	/**
 	 * Heal packages provisioned before the bundled artwork existed.
 	 *
-	 * Truly fire-and-forget, as the comment here always claimed: it is a
-	 * backfill write, and awaiting it held the shelf — and behind the old
-	 * shared flag, the whole page — behind one Firestore round trip per
-	 * package. The patched copy is folded back in and redrawn when it lands.
+	 * Truly fire-and-forget: it is a backfill write, and awaiting it held the
+	 * shelf behind one Firestore round trip per package. The patched copy is
+	 * folded back in and redrawn when it lands.
 	 */
 	function healArtwork(pkg: AgoraTopicPackage): void {
 		const patch = backfillDefaultArtwork(pkg);
@@ -255,6 +142,7 @@ export function TeacherHome(): m.Component {
 
 	/** The scenario shelf. Independent of the console — it reads Firestore direct. */
 	async function loadTopics(user: { uid: string; isAnonymous: boolean }): Promise<void> {
+		topicsFailed = false;
 		try {
 			const loadedTopics = await listTopicPackages(user.uid);
 			if (loadedForUid !== user.uid) return;
@@ -280,37 +168,38 @@ export function TeacherHome(): m.Component {
 			}
 		} catch (error) {
 			console.error('[Teacher] Loading the scenario shelf failed:', error);
+			topicsFailed = true;
 			topicsLoaded = true;
 			m.redraw();
 		}
 	}
 
 	/**
-	 * One round trip for classes, aggregates and recent games — fails soft: a
-	 * console hiccup must not blank the scenario library. Not asked at all
-	 * before the Google sign-in: the console refuses an anonymous caller, and
-	 * the refusal read as an error on a page that was simply still waiting for
-	 * the teacher to sign in.
+	 * One round trip for classes, aggregates and recent lessons — fails soft: a
+	 * console hiccup must not blank the scenarios. Not asked at all before the
+	 * Google sign-in: the console refuses an anonymous caller, and the refusal
+	 * read as an error on a page that was simply still waiting for the teacher
+	 * to sign in.
 	 */
 	async function loadDashboard(user: { uid: string; isAnonymous: boolean }): Promise<void> {
 		// Auth's first beat is an anonymous account and the console refuses it.
 		// That beat is not an answer, so it must not be recorded as one: marked
 		// loaded here, the classes area spent the wait for the Google account
 		// saying "no classes yet — ask your admin", which is a different
-		// sentence from "still looking". The screen it belongs to is the
-		// sign-in prompt, which is what tier 0 renders anyway.
+		// sentence from "still looking".
 		if (user.isAnonymous) return;
+		dashboardFailed = false;
 		try {
 			const dashboard = await fetchTeacherDashboard(user.uid);
 			if (loadedForUid !== user.uid) return;
 			classes = dashboard.classes;
 			schools = dashboard.schools;
 			sessions = dashboard.sessions;
-			canSupervise = dashboard.supervisedSchools.length > 0 || dashboard.isSystemAdmin;
 			aggregates = dashboard.aggregates;
 			noteTeacherDashboard(dashboard, user.uid);
 		} catch (error) {
 			console.error('[Teacher] Loading dashboard data failed:', error);
+			dashboardFailed = true;
 		}
 		dashboardLoaded = true;
 		m.redraw();
@@ -325,15 +214,6 @@ export function TeacherHome(): m.Component {
 		aggregates = new Map();
 		addClassOpen = false;
 		addClassError = null;
-		showAllScenarios = false;
-		historySessions = [];
-		historyCursor = undefined;
-		historyStarted = false;
-		historyOpen = false;
-		historyError = false;
-		historySearch = '';
-		historyClass = '';
-		historyMore = true;
 	}
 
 	/** Single-flight: concurrent callers for the same account share one load */
@@ -384,32 +264,21 @@ export function TeacherHome(): m.Component {
 		m.redraw();
 	}
 
-	/** The lesson's own name: its scenario's title, or the question a quick game asked */
-	function lessonTitle(session: AgoraSession): string | null {
-		const topic = getTopicPackage(session.topicPackageId);
-		if (!topic) {
-			loadTopicPackage(session.topicPackageId);
-
-			return null;
-		}
-
-		return topic.title;
+	/** Retry one section: forget its failure, show its skeleton, ask again */
+	function retry(section: 'topics' | 'dashboard'): void {
+		if (section === 'topics') topicsLoaded = false;
+		else dashboardLoaded = false;
+		void load();
 	}
 
-	function className(session: AgoraSession): string {
-		return session.classId
-			? (classes.find((agoraClass) => agoraClass.classId === session.classId)?.name ??
-					t('dashboard.class_gone'))
-			: t('startGame.guest_game');
-	}
-
-	/** A lesson running right now — the first thing on the page, and one tap back in */
-	function liveBanner(session: AgoraSession): m.Children {
+	/** The live banner's second line: class · scenario · step i of n · step name */
+	function liveMeta(session: AgoraSession): string {
 		const steps = countedSteps(session.stagePlan ?? []);
 		const stepIndex = Math.min(session.stageIndex ?? 0, Math.max(0, steps.length - 1));
 		const current = steps[stepIndex];
-		const meta = [
-			className(session),
+
+		return [
+			lessonClassName(session, classes),
 			lessonTitle(session),
 			current
 				? `${t('teacher.step_of', { i: stepIndex + 1, n: steps.length })} · ${teacherStepLabel(current)}`
@@ -417,202 +286,9 @@ export function TeacherHome(): m.Component {
 		]
 			.filter(Boolean)
 			.join(' · ');
-
-		return m('.card.dashboard__live', { key: session.sessionId }, [
-			m('.dashboard__live-text', [
-				m('strong.dashboard__live-title', [
-					t('dashboard.live_title'),
-					' ',
-					m('span.dashboard__status-pill.dashboard__status-pill--live', t('dashboard.game_live')),
-				]),
-				m('span.dashboard__live-meta', meta),
-			]),
-			m(
-				'button.btn.btn--primary.btn--lg',
-				{ type: 'button', onclick: () => m.route.set(`/teach/session/${session.sessionId}`) },
-				t('dashboard.back_to_lesson'),
-			),
-		]);
 	}
 
-	/** A finished lesson: the class, what it was about, when, and how it went */
-	function sessionRow(session: AgoraSession): m.Children {
-		return m('.card.stack', { key: session.sessionId }, [
-			m('.dashboard__game-row', [
-				m('.dashboard__game-main', [
-					m('strong', className(session)),
-					m('span.dashboard__game-title', lessonTitle(session) ?? ''),
-					m(
-						'span.dashboard__game-date',
-						new Date(session.createdAt).toLocaleDateString(getLang(), {
-							day: 'numeric',
-							month: 'short',
-							year: 'numeric',
-						}),
-					),
-				]),
-				m(
-					'.dashboard__game-side',
-					session.classScore
-						? m('span.dashboard__score-pill', String(session.classScore.total))
-						: m('span.dashboard__status-pill', 'ללא ציון מסכם'),
-				),
-			]),
-			m('.teacher__mode-row', [
-				m(
-					'button.btn.btn--secondary.btn--sm',
-					{ onclick: () => m.route.set(`/teach/report/${session.sessionId}`) },
-					'דוח השיעור',
-				),
-				m(
-					'button.btn.btn--ghost.btn--sm',
-					{ onclick: () => m.route.set(`/teach/session/${session.sessionId}`) },
-					'המסע והפתרונות',
-				),
-			]),
-		]);
-	}
-
-	/** The three lines that are the whole of running a lesson */
-	function firstRunStrip(): m.Children {
-		return m('.card.dashboard__firstrun', [
-			m('strong.dashboard__firstrun-title', t('dashboard.first_run_title')),
-			m(
-				'ol.dashboard__steps',
-				[1, 2, 3].map((n) =>
-					m('li.dashboard__step', { key: n }, [
-						m('span.dashboard__step-n', String(n)),
-						m('span', t(`dashboard.first_run_${n}`)),
-					]),
-				),
-			),
-			m(
-				'button.dashboard__firstrun-dismiss',
-				{
-					type: 'button',
-					'aria-label': t('dashboard.first_run_dismiss'),
-					onclick: dismissFirstRun,
-				},
-				'✕',
-			),
-		]);
-	}
-
-	/**
-	 * A shelf row is a door. Tapping a finished scenario opens the start
-	 * screen already holding it; an unfinished one opens where it can be
-	 * finished. The cog beside it is the way in to the scenario's own editor —
-	 * a sibling button, never nested, so it cannot swallow the row's tap.
-	 */
-	function scenarioRow(topic: AgoraTopicPackage): m.Children {
-		const ready = topic.status === AgoraTopicStatus.ready;
-		const statusId = `scenario-status-${topic.topicPackageId}`;
-
-		return m(
-			'li.scenario-row',
-			{ key: topic.topicPackageId, class: ready ? undefined : 'scenario-row--draft' },
-			[
-				m(
-					'button.scenario-row__use',
-					{
-						type: 'button',
-						'aria-label': t(ready ? 'dashboard.scenario_choose' : 'dashboard.scenario_finish', {
-							title: topic.title,
-						}),
-						'aria-describedby': statusId,
-						onclick: () =>
-							m.route.set(
-								ready
-									? `/teach/start?topic=${topic.topicPackageId}`
-									: `/teach/topic/${topic.topicPackageId}`,
-							),
-					},
-					[
-						m('span.scenario-row__tile', m(Icon, { name: ready ? 'tunnel' : 'edit', size: 22 })),
-						m('span.scenario-row__text', [
-							m('span.scenario-row__title', topic.title),
-							m('span.scenario-row__meta', { id: statusId }, [
-								m(
-									'span.scenario-row__status',
-									{ class: ready ? undefined : 'scenario-row__status--draft' },
-									t(ready ? 'editor.ready' : 'editor.draft'),
-								),
-								ready ? null : m('span.scenario-row__sub', t('dashboard.scenario_draft_sub')),
-								topic.visibility === 'public'
-									? m('span.scenario-row__status.scenario-row__status--shared', t('scenlib.public'))
-									: null,
-								topic.sourceScenarioId
-									? m(
-											'span.scenario-row__sub',
-											t('scenlib.source_of', {
-												title: topic.sourceTitle ?? '',
-												author: topic.sourceAuthorName || t('scenlib.author_anon'),
-											}),
-										)
-									: null,
-								topic.sourceScenarioId &&
-								isNewerVersionAvailable(topic, sourceVersions.get(topic.sourceScenarioId))
-									? m(
-											'span.scenario-row__status.scenario-row__status--update',
-											t('scenlib.new_version'),
-										)
-									: null,
-							]),
-						]),
-						m('span.scenario-row__arrow', m(Icon, { name: 'arrow', size: 20 })),
-					],
-				),
-				m(
-					'button.scenario-row__settings',
-					{
-						type: 'button',
-						'aria-label': t('dashboard.scenario_settings', { title: topic.title }),
-						title: t('dashboard.scenario_settings', { title: topic.title }),
-						onclick: () => m.route.set(`/teach/topic/${topic.topicPackageId}`),
-					},
-					m(Icon, { name: 'cog', size: 20 }),
-				),
-			],
-		);
-	}
-
-	/** The list's last row: no scenario, the teacher's own question */
-	function ownQuestionRow(): m.Children {
-		return m(
-			'li.scenario-row.scenario-row--own',
-			{ key: 'own-question' },
-			m(
-				'button.scenario-row__use',
-				{
-					type: 'button',
-					'aria-label': t('dashboard.scenario_choose', { title: t('dashboard.start_quick') }),
-					onclick: () => m.route.set('/teach/start?mode=quick'),
-				},
-				[
-					m('span.scenario-row__tile', m(Icon, { name: 'new', size: 22 })),
-					m('span.scenario-row__text', [
-						m('span.scenario-row__title', t('dashboard.start_quick')),
-						m(
-							'span.scenario-row__meta',
-							m('span.scenario-row__sub', t('dashboard.own_question_sub')),
-						),
-					]),
-					m('span.scenario-row__arrow', m(Icon, { name: 'arrow', size: 20 })),
-				],
-			),
-		);
-	}
-
-	/** Finished scenarios first: the shelf is a picker now, and the pickable
-	 *  ones belong on top. */
-	function shelfOrder(list: readonly AgoraTopicPackage[]): AgoraTopicPackage[] {
-		const rank = (topic: AgoraTopicPackage): number =>
-			topic.status === AgoraTopicStatus.ready ? 0 : 1;
-
-		return [...list].sort((a, b) => rank(a) - rank(b));
-	}
-
-	/** Open a class in the teacher's school; the grid picks it up on the reload */
+	/** Open a class in the teacher's school; the cards pick it up on the reload */
 	async function createClass(value: ClassFormValue): Promise<void> {
 		if (creatingClass) return;
 		creatingClass = true;
@@ -643,59 +319,63 @@ export function TeacherHome(): m.Component {
 		m.redraw();
 	}
 
-	/** The card that opens the form — the last tile of the grid */
-	function addClassCard(): m.Children {
-		return m(
-			'button.dashboard__class-card.dashboard__class-card--add',
-			{
-				key: 'add-class',
-				type: 'button',
-				'aria-expanded': String(addClassOpen),
-				onclick: () => {
-					addClassOpen = !addClassOpen;
+	function newClassForm(): m.Children {
+		if (!addClassOpen) return null;
+
+		return m('.card.stack', [
+			m(ClassForm, {
+				schools,
+				submitLabel: t('classForm.create'),
+				busyLabel: t('classForm.creating'),
+				busy: creatingClass,
+				error: addClassError,
+				onSubmit: (value) => void createClass(value),
+				onCancel: () => {
+					addClassOpen = false;
 				},
-			},
-			[
-				m('strong.dashboard__class-name', `＋ ${t('dashboard.add_class')}`),
-				m('span.dashboard__class-meta', schools.map((school) => school.name).join(' · ')),
-			],
-		);
+			}),
+		]);
 	}
 
-	function classCard(agoraClass: TeacherDashboard['classes'][number]): m.Children {
-		const aggregate = aggregates.get(agoraClass.classId);
-		const summary = aggregate ? advancementSummary(aggregate) : null;
-
-		return m(
-			'.dashboard__class-card',
-			{
-				key: agoraClass.classId,
-				onclick: () => m.route.set(`/teach/class/${agoraClass.classId}`),
-				role: 'button',
-				tabindex: 0,
-			},
-			[
-				m('strong.dashboard__class-name', classLabel(agoraClass)),
-				m(
-					'span.dashboard__class-meta',
-					t('dashboard.members', { count: String(agoraClass.memberCount) }),
-				),
-				summary
-					? m('.dashboard__class-stats', [
-							m(
-								'span.dashboard__class-stat',
-								t('dashboard.games_played', { count: String(summary.gamesPlayed) }),
-							),
-							summary.avgClassScore !== null
-								? m(
-										'span.dashboard__class-stat',
-										t('dashboard.avg_score', { score: String(summary.avgClassScore) }),
-									)
-								: null,
-						])
-					: m('span.dashboard__class-meta', t('dashboard.no_games_yet')),
-			],
-		);
+	function signInView(signInError: string | null): m.Children {
+		return m('.shell', [
+			m(
+				'.shell__content.text-center',
+				{ style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
+				[
+					m('h2', t('teacher.title')),
+					m('p.home-explanation', t('teacher.sign_in_required')),
+					signInError
+						? m(
+								'p.join__error',
+								t(
+									signInError === 'popup-blocked'
+										? 'teacher.sign_in_popup_blocked'
+										: 'teacher.sign_in_failed',
+								),
+							)
+						: null,
+					m(
+						'button.btn.btn--primary',
+						{
+							onclick: () => {
+								signInWithGoogle()
+									.then(() => {
+										topicsLoaded = false;
+										dashboardLoaded = false;
+										void load();
+									})
+									.catch((error: unknown) => {
+										console.error('[Teacher] Sign-in failed:', error);
+									});
+							},
+						},
+						t('home.sign_in'),
+					),
+					m('button.btn.btn--ghost', { onclick: () => m.route.set('/') }, t('common.back')),
+				],
+			),
+		]);
 	}
 
 	void load();
@@ -711,52 +391,14 @@ export function TeacherHome(): m.Component {
 					m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
 				);
 			}
-
-			if (tier !== 2) {
-				return m('.shell', [
-					m(
-						'.shell__content.text-center',
-						{ style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
-						[
-							m('h2', t('teacher.title')),
-							m('p.home-explanation', t('teacher.sign_in_required')),
-							signInError
-								? m(
-										'p.join__error',
-										t(
-											signInError === 'popup-blocked'
-												? 'teacher.sign_in_popup_blocked'
-												: 'teacher.sign_in_failed',
-										),
-									)
-								: null,
-							m(
-								'button.btn.btn--primary',
-								{
-									onclick: () => {
-										signInWithGoogle()
-											.then(() => {
-												topicsLoaded = false;
-												dashboardLoaded = false;
-												void load();
-											})
-											.catch((error: unknown) => {
-												console.error('[Teacher] Sign-in failed:', error);
-											});
-									},
-								},
-								t('home.sign_in'),
-							),
-							m('button.btn.btn--ghost', { onclick: () => m.route.set('/') }, t('common.back')),
-						],
-					),
-				]);
-			}
+			if (tier !== 2) return signInView(signInError ?? null);
 
 			const live = sessions.filter(isSessionLive);
-			const reusableTopics = topics.filter((topic) => topic.kind !== 'quick');
+			const reusable = reusableScenarios(topics);
+			// First visit, or asked for again from the ≡ menu ("how to run a lesson")
 			const showFirstRun =
-				!firstRunHidden && sessions.every((session) => session.classScore === undefined);
+				m.route.param('help') === '1' ||
+				(!firstRunHidden && sessions.every((session) => session.classScore === undefined));
 
 			return m('.shell', [
 				m(TeacherNav, {
@@ -765,99 +407,36 @@ export function TeacherHome(): m.Component {
 					trailing: m(LanguagePicker),
 				}),
 
-				m('.shell__content', { style: { gap: 'var(--space-xl)' } }, [
-					// A lesson running now leads: the teacher who reloaded
-					// mid-period wants back in, not a shelf. Its own fragment —
-					// keyed rows cannot share a parent with unkeyed siblings.
-					live.map(liveBanner),
-					// The supervisor's door — only for an account a school has named
-					canSupervise || getTeacherNavState().canSupervise
-						? m(m.route.Link, { href: '/supervise', class: 'dashboard__supervise-card' }, [
-								m('span.dashboard__supervise-icon', m(Icon, { name: 'people', size: 28 })),
-								m('span.dashboard__supervise-text', [
-									m('strong.dashboard__class-name', t('dashboard.supervise_card')),
-									m('span.dashboard__class-meta', t('dashboard.supervise_sub')),
-								]),
-							])
-						: null,
-					m(
-						m.route.Link,
-						{ href: '/teach/activity', class: 'btn btn--ghost' },
-						t('supervise.myActivity'),
-					),
+				m('.shell__content.teach-page', [
+					// A lesson running now leads: the teacher who reloaded mid-period
+					// wants back in, not a shelf
+					live.map((session) => liveBanner(session.sessionId, liveMeta(session))),
 
-					dashboardLoaded && showFirstRun ? firstRunStrip() : null,
+					dashboardLoaded && showFirstRun ? firstRunStrip(dismissFirstRun) : null,
 
-					// What are we teaching today? A tap on a scenario is the
-					// whole choice; the start screen opens holding it.
-					!topicsLoaded
-						? m('.stack', [m('p.teacher__section-title', t('dashboard.scenarios')), m('.spinner')])
-						: m('.stack', [
-								m('p.teacher__section-title', t('dashboard.scenarios')),
-								// The library, for an approved teacher: the first door when the shelf is empty
-								m(LibraryDoor, { variant: 'tile', empty: reusableTopics.length === 0 }),
-								reusableTopics.length === 0
-									? m('p.home-explanation.home-explanation--start', t('teacher.no_topics'))
-									: m('p.home-explanation.home-explanation--start', t('dashboard.scenarios_hint')),
-								m('ul.scenario-list', { role: 'list' }, [
-									...shelfOrder(reusableTopics)
-										.slice(0, showAllScenarios ? undefined : 6)
-										.map(scenarioRow),
-									ownQuestionRow(),
-								]),
-								reusableTopics.length > 6
-									? m(
-											'button.btn.btn--ghost',
-											{
-												onclick: () => {
-													showAllScenarios = !showAllScenarios;
-												},
-											},
-											showAllScenarios
-												? 'הצגת פחות תרחישים'
-												: `כל התרחישים (${reusableTopics.length})`,
-										)
-									: null,
-								m(
-									'button.btn.btn--ghost.btn--sm.dashboard__new-scenario',
-									{ type: 'button', onclick: () => m.route.set('/teach/new') },
-									t('teacher.create_topic'),
-								),
-							]),
+					scenariosSection({
+						loaded: topicsLoaded,
+						failed: topicsFailed,
+						topics,
+						reusableCount: reusable.length,
+						sourceVersions,
+						onlyStarter:
+							reusable.length === 0 || (reusable.length === 1 && isSampleScenario(reusable[0])),
+						onRetry: () => retry('topics'),
+					}),
 
-					// My classes: the ones I have, and — in a school the admin attached
-					// me to — a card that opens another. With neither, say what to ask for.
-					!dashboardLoaded
-						? m('.stack', [m('p.teacher__section-title', t('dashboard.my_classes')), m('.spinner')])
-						: classes.length > 0 || schools.length > 0
-							? m('.stack', [
-									m('p.teacher__section-title', t('dashboard.my_classes')),
-									m('.dashboard__class-grid', [
-										...classes.map(classCard),
-										schools.length > 0 ? addClassCard() : null,
-									]),
-									addClassOpen
-										? m('.card.stack', [
-												m(ClassForm, {
-													schools,
-													submitLabel: t('classForm.create'),
-													busyLabel: t('classForm.creating'),
-													busy: creatingClass,
-													error: addClassError,
-													onSubmit: (value) => void createClass(value),
-													onCancel: () => {
-														addClassOpen = false;
-													},
-												}),
-											])
-										: null,
-								])
-							: m('.stack', [
-									m('p.teacher__section-title', t('dashboard.my_classes')),
-									m('p.home-explanation.home-explanation--start', t('dashboard.no_school_text')),
-								]),
-
-					dashboardLoaded ? historyPanel() : null,
+					classesSection({
+						loaded: dashboardLoaded,
+						failed: dashboardFailed,
+						classes,
+						hasSchool: schools.length > 0,
+						aggregates,
+						onAddClass: () => {
+							addClassOpen = !addClassOpen;
+						},
+						onRetry: () => retry('dashboard'),
+						form: newClassForm(),
+					}),
 				]),
 			]);
 		},

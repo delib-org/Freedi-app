@@ -45,6 +45,10 @@ import { TopicWizard } from './views/teacher/TopicWizard';
 import { TopicEditor } from './views/teacher/TopicEditor';
 import { StartGame } from './views/teacher/StartGame';
 import { TeacherClass } from './views/teacher/TeacherClass';
+import { TeacherStudent } from './views/teacher/TeacherStudent';
+import { MyScenarios } from './views/teacher/MyScenarios';
+import { PastLessons } from './views/teacher/PastLessons';
+import { trackRoutes } from './lib/routeTrail';
 import { GameReport } from './views/teacher/GameReport';
 import { LibraryAdmin } from './views/teacher/scenarioLibrary/LibraryAdmin';
 import { LibraryHome } from './views/teacher/scenarioLibrary/LibraryHome';
@@ -155,9 +159,24 @@ function byId(component: m.ComponentTypes<{ id: string }>): m.RouteResolver<{ id
 	};
 }
 
+/**
+ * An old address that now lives elsewhere. Replaces the history entry, so the
+ * back button does not bounce the teacher off the redirect.
+ */
+function redirectTo(target: (args: Record<string, string | undefined>) => string): m.RouteResolver {
+	return {
+		onmatch(args) {
+			m.route.set(target(args as Record<string, string | undefined>), undefined, { replace: true });
+
+			return new Promise<never>(() => undefined);
+		},
+	};
+}
+
 const root = document.getElementById('app');
 
 if (root) {
+	trackRoutes();
 	m.route(root, '/', {
 		'/': Home,
 		'/join/:code': JoinSession,
@@ -175,19 +194,32 @@ if (root) {
 		'/supervise/student/:id': byId(SuperviseStudent),
 		'/teach': TeacherHome,
 		'/teach/activity': TeacherActivity,
-		'/teach/new': TopicWizard,
+		'/teach/lessons': PastLessons,
 		'/teach/start': StartGame,
-		'/teach/topic/:id': byId(TopicEditor),
+		// "Scenario" is the one word: the old /topic, /new and /library/mine
+		// links (bookmarks, e-mails, the e2e scripts) still land in the right place
+		'/teach/scenarios': MyScenarios,
+		'/teach/scenarios/new': TopicWizard,
+		'/teach/scenarios/:id': byId(TopicEditor),
+		'/teach/new': redirectTo(() => '/teach/scenarios/new'),
+		'/teach/topic/:id': redirectTo((args) => `/teach/scenarios/${String(args.id)}`),
 		'/teach/session/:id': byId(TeacherSession),
 		// The same console, showing the room as the students see it. The same
 		// keyed component on both routes, so flipping keeps the listeners.
 		'/teach/session/:id/class': byId(TeacherSession),
 		'/teach/screen/:id': byId(ProjectorScreen),
 		'/teach/class/:id': byId(TeacherClass),
+		'/teach/class/:id/student/:memberId': {
+			render: (vnode) => {
+				const id = String(vnode.attrs.id);
+				const memberId = String(vnode.attrs.memberId);
+
+				return [m(TeacherStudent, { key: `${id}/${memberId}`, id, memberId })];
+			},
+		},
 		'/teach/report/:id': byId(GameReport),
 		'/teach/library': { render: () => m(LibraryHome) },
-		// Before ':id', so "mine" is never read as a scenario id
-		'/teach/library/mine': { render: () => m(LibraryHome, { key: 'mine', mine: true }) },
+		'/teach/library/mine': redirectTo(() => '/teach/scenarios'),
 		'/teach/library/admin': { render: () => m(LibraryAdmin) },
 		'/teach/library/:id': byId(LibraryScenario),
 	});

@@ -179,7 +179,7 @@ try {
 	await signIn(out, outsider);
 	await out.waitForSelector('.scenario-list', { timeout: 30_000 });
 	await out.waitForTimeout(2500);
-	eq('no door on the teacher home', await out.locator('.scn-door').count(), 0);
+	eq('no door on the teacher home', await out.locator('.lib-entry:not(.lib-entry--locked)').count(), 0);
 	await out.goto(`${VITE_HOST}/#!/teach/library`, { waitUntil: 'domcontentloaded' });
 	await out.waitForSelector('.scn-gate', { timeout: 30_000 });
 	eq('the library says it is for approved teachers', await out.locator('.scn-gate__title').innerText(), 'The library is open to approved teachers');
@@ -193,15 +193,16 @@ try {
 	const a = await mkPage(browser, 'author', { width: 1280, height: 900, lang: 'he' });
 	await signIn(a, author);
 	await a.waitForSelector('.scenario-list', { timeout: 30_000 });
-	await a.waitForSelector('.scn-door', { timeout: 20_000 });
+	await a.waitForSelector('.lib-entry:not(.lib-entry--locked)', { timeout: 20_000 });
 	await shot(a, '01-teacher-home-door-laptop');
-	await a.locator('.scn-door').click();
+	await a.locator('.lib-entry:not(.lib-entry--locked)').click();
 	await a.waitForSelector('.scn-layout', { timeout: 30_000 });
-	await a.click('.scn-segment__opt:has-text("התרחישים שלי")');
-	await a.waitForSelector('.scn-mine', { timeout: 20_000 });
+	await a.click('.segment__opt:has-text("התרחישים שלי")');
+	await a.waitForSelector('.scenario-item', { timeout: 20_000 });
 	await shot(a, '02-mine-laptop');
 	await audit(a, 'my scenarios (laptop)');
-	const row = a.locator('.scn-mine', { hasText: 'ועדת כיתה' });
+	const row = a.locator('.scenario-item', { hasText: 'ועדת כיתה' });
+	await row.locator('button.publish-pill').click();
 	await row.locator('.scn-switch__opt:has-text("ציבורי")').click();
 	await a.waitForSelector('.scn-publish', { timeout: 10_000 });
 	await a.waitForTimeout(400);
@@ -275,7 +276,7 @@ try {
 	await shot(a, '07-mine-published-laptop');
 
 	step('F. the private one is not listed');
-	await a.click('.scn-segment__opt:has-text("הספרייה")');
+	await a.click('.segment__opt:has-text("ספריית התרחישים")');
 	await a.waitForSelector('.scn-card', { timeout: 30_000 });
 	const authorCards = await a.locator('.scn-card__title').allInnerTexts();
 	eq('own published scenario is in the library, marked mine', authorCards.some((title) => title.includes('ועדת כיתה')), true);
@@ -285,9 +286,9 @@ try {
 	step('G. another approved teacher finds it, in English, through the filters');
 	const r = await mkPage(browser, 'reader', { width: 1280, height: 900, lang: 'en' });
 	await signIn(r, reader);
-	await r.waitForSelector('.scn-door', { timeout: 30_000 });
+	await r.waitForSelector('.lib-entry:not(.lib-entry--locked)', { timeout: 30_000 });
 	await shot(r, '08-teacher-home-door-english-laptop');
-	await r.locator('.scn-door').click();
+	await r.locator('.lib-entry:not(.lib-entry--locked)').click();
 	await r.waitForSelector('.scn-card', { timeout: 30_000 });
 	await r.waitForFunction(() => !document.querySelector('.scn-bar__translating') && document.querySelectorAll('.scn-card__auto').length >= 3, { timeout: 120_000 });
 	const readerTitles = await r.locator('.scn-card__title').allInnerTexts();
@@ -417,7 +418,7 @@ try {
 	await shot(r, '16f-reported-laptop');
 
 	step('J. the reader shelf shows the copy with its credit');
-	await r.goto(`${VITE_HOST}/#!/teach`, { waitUntil: 'domcontentloaded' });
+	await r.goto(`${VITE_HOST}/#!/teach/scenarios`, { waitUntil: 'domcontentloaded' });
 	await r.waitForSelector('.scenario-row', { timeout: 30_000 });
 	await r.waitForTimeout(1500);
 	const shelf = await r.locator('.scenario-row').allInnerTexts();
@@ -454,10 +455,15 @@ try {
 	await db.collection('agoraLibraryTags').doc(dupTag.tagId).update({ scenarioCount: FieldValue.increment(2) });
 	await db.collection('agoraLibraryTags').doc(SMOKING).update({ scenarioCount: FieldValue.increment(1) });
 	await ad.goto(`${VITE_HOST}/#!/teach/library`, { waitUntil: 'domcontentloaded' });
-	await ad.waitForSelector('.scn-segment__opt:has-text("Admin")', { timeout: 40_000 });
-	eq('the admin link is in the library bar', await ad.locator('.scn-segment__opt:has-text("Admin")').count(), 1);
-	eq('a teacher sees no admin link', await r.locator('.scn-segment__opt:has-text("Admin")').count(), 0);
-	await ad.click('.scn-segment__opt:has-text("Admin")');
+	await ad.waitForSelector('.scn-layout', { timeout: 40_000 });
+	await ad.click('.teacher-nav__switch');
+	await ad.waitForSelector('.teacher-nav__panel .teacher-nav__item:has-text("Library admin")', { timeout: 40_000 });
+	eq('the admin link is in the menu', await ad.locator('.teacher-nav__item:has-text("Library admin")').count(), 1);
+	await r.click('.teacher-nav__switch');
+	await r.waitForSelector('.teacher-nav__panel');
+	eq('a teacher sees no admin link', await r.locator('.teacher-nav__item:has-text("Library admin")').count(), 0);
+	await r.keyboard.press('Escape');
+	await ad.click('.teacher-nav__item:has-text("Library admin")');
 	await ad.waitForSelector('.scn-adm', { timeout: 30_000 });
 	await ad.waitForFunction(() => document.querySelectorAll('section[aria-labelledby="scn-adm-reports"] .scn-adm__item').length >= 2, { timeout: 30_000 });
 	await ad.waitForFunction(() => !document.querySelector('section[aria-labelledby="scn-adm-reports"] .spinner'), { timeout: 30_000 });
@@ -512,7 +518,7 @@ try {
 	const phone = await mkPage(browser, 'phone', { width: 390, height: 844, lang: 'he' });
 	await signIn(phone, author);
 	await phone.waitForSelector('.scenario-list', { timeout: 30_000 });
-	await phone.waitForSelector('.scn-door', { timeout: 20_000 });
+	await phone.waitForSelector('.lib-entry:not(.lib-entry--locked)', { timeout: 20_000 });
 	await shot(phone, '20-teacher-home-door-phone');
 	await phone.goto(`${VITE_HOST}/#!/teach/library`, { waitUntil: 'domcontentloaded' });
 	await phone.waitForSelector('.scn-card', { timeout: 30_000 });
@@ -537,10 +543,12 @@ try {
 	await phone.waitForTimeout(800);
 	await shot(phone, '24a-discussion-phone');
 	await audit(phone, 'discussion thread (phone)');
-	await phone.goto(`${VITE_HOST}/#!/teach/library/mine`, { waitUntil: 'domcontentloaded' });
-	await phone.waitForSelector('.scn-mine', { timeout: 30_000 });
+	await phone.goto(`${VITE_HOST}/#!/teach/scenarios`, { waitUntil: 'domcontentloaded' });
+	await phone.waitForSelector('.scenario-item', { timeout: 30_000 });
 	await shot(phone, '25-mine-phone');
-	await phone.locator('.scn-mine', { hasText: 'ועדת כיתה' }).locator('.btn:has-text("עריכת הפרסום")').click();
+	const mineRow = phone.locator('.scenario-item', { hasText: 'ועדת כיתה' });
+	await mineRow.locator('button.publish-pill').click();
+	await mineRow.locator('.btn:has-text("עריכת הפרסום")').click();
 	await phone.waitForSelector('.scn-publish', { timeout: 10_000 });
 	await phone.waitForTimeout(500);
 	await shot(phone, '26-publish-sheet-phone');

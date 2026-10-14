@@ -1,3 +1,4 @@
+import { backTarget } from '../../lib/routeTrail';
 import m from 'mithril';
 import { t, getLang } from '../../lib/i18n';
 import { generateTopicPackage } from '../../lib/callables';
@@ -25,7 +26,7 @@ export function TopicWizard(): m.Component {
 			language: getLang(),
 		})
 			.then((result) => {
-				if (alive) m.route.set(`/teach/topic/${result.topicPackageId}`);
+				if (alive) m.route.set(`/teach/scenarios/${result.topicPackageId}`);
 			})
 			.catch((err: unknown) => {
 				console.error('[Wizard] Generation failed:', err);
@@ -45,7 +46,7 @@ export function TopicWizard(): m.Component {
 			return m('.shell', [
 				m(TeacherNav, {
 					title: t('wizard.title'),
-					onBack: () => m.route.set('/teach'),
+					onBack: () => m.route.set(backTarget('/teach/scenarios')),
 					trailing: m(LanguagePicker),
 				}),
 				m('.shell__content', { style: { justifyContent: 'center', gap: 'var(--space-xl)' } }, [

@@ -71,6 +71,7 @@ export type IconName =
 	| 'search'
 	| 'image'
 	| 'hide'
+	| 'lock'
 	// the rating scale
 	| 'face-strong-against'
 	| 'face-against'
@@ -242,6 +243,12 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		['path', { d: 'M3.2 12s3.2-6 8.8-6 8.8 6 8.8 6-3.2 6-8.8 6-8.8-6-8.8-6z' }],
 		['circle', { cx: 12, cy: 12, r: 2.6 }],
 		['path', { d: 'M4.5 4.5l15 15' }],
+	],
+	// A padlock: a door that exists but is not open to this teacher yet
+	lock: [
+		['rect', { x: 5.5, y: 10.5, width: 13, height: 9.5, rx: 2.2 }],
+		['path', { d: 'M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5' }],
+		['path', { d: 'M12 14.4v2' }],
 	],
 
 	cog: [
