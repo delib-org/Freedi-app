@@ -504,3 +504,26 @@ export {
 	orderCandidates,
 	planDeal,
 } from './agoraHand';
+
+export {
+	AGORA_MATERIALS,
+	AGORA_MATERIAL_KINDS,
+	AgoraMaterialItemSchema,
+	AgoraSceneMaterialsSchema,
+	AgoraMaterialMessageSchema,
+	AgoraMaterialChatSchema,
+	createAgoraSceneMaterialsId,
+	createAgoraMaterialChatId,
+} from './agoraMaterials';
+export type {
+	AgoraMaterialKind,
+	AgoraMaterialItem,
+	AgoraSceneMaterials,
+	AgoraMaterialMessage,
+	AgoraMaterialChat,
+	SceneMaterialsRequest,
+	SceneMaterialsFailure,
+	SceneMaterialsResponse,
+	AskMaterialsRequest,
+	AskMaterialsResponse,
+} from './agoraMaterials';

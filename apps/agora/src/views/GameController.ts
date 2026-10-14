@@ -790,6 +790,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const liveLibraryVideo = isLibraryVideoLive(session.libraryVideo, Date.now())
 				? session.libraryVideo
 				: undefined;
+			const materialsRef = { topicPackageId: session.topicPackageId, sessionId, userId };
 			const scenesOf = (...kinds: AgoraSceneKind[]) =>
 				kinds
 					.map((kind) => topic.scenes.find((scene) => scene.kind === kind))
@@ -839,6 +840,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							storageKey: `agora_${sessionId}_framing`,
 							onProgress,
 							classVideo: liveLibraryVideo,
+							materials: materialsRef,
 						});
 
 					case AgoraStage.perspectives:
@@ -848,6 +850,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							storageKey: `agora_${sessionId}_perspectives`,
 							onProgress,
 							classVideo: liveLibraryVideo,
+							materials: materialsRef,
 						});
 
 					case AgoraStage.needs:
@@ -864,6 +867,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							epilogue: m(NeedsBoard, { topic }),
 							onProgress,
 							classVideo: liveLibraryVideo,
+							materials: materialsRef,
 						});
 
 					case AgoraStage.valueIdentification:

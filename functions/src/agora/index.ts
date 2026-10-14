@@ -34,3 +34,5 @@ export { agoraAdminBackfillTeacherAggregates } from './fn_agoraAdminBackfillTeac
 export { agoraDealNotes } from './fn_agoraDealNotes';
 export { agoraRemoveParticipant } from './fn_agoraRemoveParticipant';
 export { agoraResolveRejoin } from './fn_agoraResolveRejoin';
+export { agoraSceneMaterials } from './fn_agoraSceneMaterials';
+export { agoraAskMaterials } from './fn_agoraAskMaterials';

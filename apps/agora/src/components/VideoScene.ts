@@ -2,6 +2,7 @@ import m from 'mithril';
 import { Icon } from './Icon';
 import { t } from '../lib/i18n';
 import { YoutubePlayer, type ClassVideo } from './YoutubePlayer';
+import { MaterialsSheet } from './MaterialsSheet';
 import type { AgoraScene } from '@freedi/shared-types';
 
 export interface VideoSceneAttrs {
@@ -19,6 +20,8 @@ export interface VideoSceneAttrs {
 	progress?: { index: number; total: number };
 	/** The YouTube video the teacher started for the class, if it is on this scene */
 	classVideo?: ClassVideo;
+	/** Where the scene's background materials and the student's private chat about them live */
+	materials?: { topicPackageId: string; sessionId: string; userId: string };
 }
 
 /**
@@ -34,7 +37,18 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 
 	return {
 		view(vnode) {
-			const { scene, onDone, doneLabel, immersive = false, progress, classVideo } = vnode.attrs;
+			const {
+				scene,
+				onDone,
+				doneLabel,
+				immersive = false,
+				progress,
+				classVideo,
+				materials,
+			} = vnode.attrs;
+			const materialsView = materials
+				? m('.scene__materials', m(MaterialsSheet, { ...materials, sceneId: scene.sceneId }))
+				: null;
 			const youtubeVideos = scene.youtubeVideos ?? [];
 			const youtube =
 				youtubeVideos.length > 0 ? m(YoutubePlayer, { videos: youtubeVideos, classVideo }) : null;
@@ -162,6 +176,8 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 							],
 						),
 
+						materialsView,
+
 						m('.scene__actions', [
 							!allRevealed
 								? m(
@@ -213,6 +229,8 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 				scene.text ? m('p.scene__text', scene.text) : null,
 
 				hasDialogue ? m('.scene__dialogue', dialogueLines()) : null,
+
+				materialsView,
 
 				m('.scene__actions', [
 					!allRevealed

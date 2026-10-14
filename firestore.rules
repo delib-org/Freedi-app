@@ -324,6 +324,26 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Background materials on a library scene (agoraSceneMaterials) hold text
+    // the teacher's callable extracted; any signed-in user may get one (the
+    // students read them), nobody lists, only the callable writes.
+    match /agoraSceneMaterials/{materialsId} {
+      allow get: if isAuthenticated();
+      allow list: if false;
+      allow write: if false;
+    }
+
+    // A student's private conversation with the materials, one doc per
+    // session and student, written by agoraAskMaterials only. Only its owner
+    // may get it (a missing doc must not error: the panel reads it first);
+    // not classmates, not the teacher, nobody lists.
+    match /agoraMaterialChats/{chatId} {
+      allow get: if isAuthenticated()
+        && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if false;
+      allow write: if false;
+    }
+
     // In-character AI proposal reviews: written by the agoraCharacterReview
     // function only (admin SDK bypasses rules).
     match /agoraCharacterReviews/{reviewId} {

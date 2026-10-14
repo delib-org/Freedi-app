@@ -1299,6 +1299,8 @@ export {
 	agoraTeacherMessage,
 	agoraModerateStatement,
 	agoraCheckLanguage,
+	agoraSceneMaterials,
+	agoraAskMaterials,
 	agoraSupervisorConsole,
 	agoraTeacherHeartbeat,
 	agoraAdminBackfillTeacherAggregates,

@@ -3,6 +3,7 @@ import { t } from '../../lib/i18n';
 import { stalledBanner } from '../../components/StalledBanner';
 import { TeacherNav } from '../../components/TeacherNav';
 import { YoutubeListEditor } from '../../components/YoutubeListEditor';
+import { MaterialsEditor } from '../../components/MaterialsEditor';
 import {
 	fetchTopicPackage,
 	saveTopicEditorFields,
@@ -331,6 +332,8 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 					update({ youtubeVideos });
 				},
 			}),
+			m('label.teacher__section-title', t('mat.editor_label')),
+			m(MaterialsEditor, { topicPackageId, sceneId: scene.sceneId }),
 		]);
 	}
 
