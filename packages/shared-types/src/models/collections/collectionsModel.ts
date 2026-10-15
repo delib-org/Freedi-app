@@ -124,6 +124,7 @@ export enum Collections {
     agoraIdentities = 'agoraIdentities',
     agoraTeacherMessages = 'agoraTeacherMessages',
     agoraTeacherPrompts = 'agoraTeacherPrompts',
+    agoraTeacherBannedWords = 'agoraTeacherBannedWords',
     // The teachers' scenario library (tags, ratings, cached translations, approval markers)
     agoraLibraryTags = 'agoraLibraryTags',
     agoraScenarioRatings = 'agoraScenarioRatings',
@@ -133,6 +134,8 @@ export enum Collections {
     agoraApprovedTeachers = 'agoraApprovedTeachers',
     // Requests to become an Agora teacher / regional coordinator (server-written)
     agoraAccessRequests = 'agoraAccessRequests',
+    // Server-written markers: who may read a private scenario (players of a game built on it)
+    agoraTopicReaders = 'agoraTopicReaders',
 
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',

@@ -653,7 +653,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const nextIndex = currentIndex + 1;
 			const planOwnsVoting = Boolean(session.stagePlan && session.stagePlan.length > 0);
 			const topic = getTopicPackage(session.topicPackageId);
-			if (!topic) loadTopicPackage(session.topicPackageId);
+			if (!topic) loadTopicPackage(session.topicPackageId, session.sessionId);
 			const hasCharacters = topic ? topic.kind !== 'quick' : true;
 			const steps = countedSteps(plan);
 			const stepIndex = Math.min(currentIndex, steps.length - 1);

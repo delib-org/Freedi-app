@@ -19,6 +19,8 @@ import type {
 	ResolveRejoinRequest,
 	ResolveRejoinResponse,
 	RewordQuestionRequest,
+	SetBannedWordsRequest,
+	SetBannedWordsResponse,
 	RewordQuestionResponse,
 	TeacherMessageRequest,
 	TeacherMessageResponse,
@@ -28,6 +30,8 @@ import type {
 	TeacherRosterResponse,
 	TeacherClassRequest,
 	TeacherClassResponse,
+	TopicAccessRequest,
+	TopicAccessResponse,
 	TeacherHeartbeatRequest,
 	TeacherHeartbeatResponse,
 	SupervisorConsoleRequest,
@@ -140,6 +144,19 @@ export async function joinSession(request: JoinSessionRequest): Promise<JoinSess
 	const call = httpsCallable<JoinSessionRequest, JoinSessionResponse>(
 		functions,
 		'agoraJoinSession',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** Ask to read the private scenario of a session I am in (the reader-marker fallback) */
+export async function requestTopicAccess(
+	request: TopicAccessRequest,
+): Promise<TopicAccessResponse> {
+	const call = httpsCallable<TopicAccessRequest, TopicAccessResponse>(
+		functions,
+		'agoraTopicAccess',
 	);
 	const result = await call(request);
 
@@ -442,6 +459,19 @@ export async function teacherHeartbeat(
 	const call = httpsCallable<TeacherHeartbeatRequest, TeacherHeartbeatResponse>(
 		functions,
 		'agoraTeacherHeartbeat',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The teacher replaces their list of words their students may not use */
+export async function setBannedWords(
+	request: SetBannedWordsRequest,
+): Promise<SetBannedWordsResponse> {
+	const call = httpsCallable<SetBannedWordsRequest, SetBannedWordsResponse>(
+		functions,
+		'agoraSetBannedWords',
 	);
 	const result = await call(request);
 

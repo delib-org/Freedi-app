@@ -52,6 +52,23 @@ describe('assertCleanLanguage', () => {
 		expect(heard).toEqual([{ sessionId: 's1', strikes: 2, deducted: 2 }]);
 	});
 
+	it("turns the teacher's banned word into a rephrase request — no strike event", async () => {
+		const heard: unknown[] = [];
+		on('language:flagged', (payload) => heard.push(payload));
+		const check = vi.fn(async () => ({
+			ok: false as const,
+			reason: 'banned_word' as const,
+			word: 'טמבל',
+		}));
+
+		const error = await assertCleanLanguage(request, check).catch((e: unknown) => e);
+		expect(isLanguageFlagged(error)).toBe(true);
+		expect((error as LanguageFlaggedError).bannedWord).toBe('טמבל');
+		expect((error as LanguageFlaggedError).deducted).toBe(0);
+		expect(heard).toEqual([]);
+		expect(flaggedNotice(error as LanguageFlaggedError)).toBe('language.banned_word:טמבל');
+	});
+
 	it('fails open when the check itself cannot be reached', async () => {
 		const quiet = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 		const check = vi.fn(async () => {

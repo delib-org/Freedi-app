@@ -4,7 +4,11 @@ import { t } from '../lib/i18n';
 import { classLabel } from '../lib/teacher';
 import { getTeacherNavState, liveSessions, loadTeacherNav, navClass } from '../lib/teacherNav';
 import { AgoraSession } from '@freedi/shared-types';
-import { ensureLibraryAccess, getLibraryStore } from '../lib/scenarioLibrary/state';
+import {
+	ensureLibraryAccess,
+	getLibraryStore,
+	refreshOpenReports,
+} from '../lib/scenarioLibrary/state';
 
 export interface TeacherNavAttrs {
 	/** What this screen is about — the lesson's own name, not the screen's */
@@ -141,7 +145,11 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 		if (open) {
 			loadTeacherNav();
 			// The library row appears only once the server has said this teacher may enter
-			void ensureLibraryAccess().then(() => m.redraw());
+			void ensureLibraryAccess().then(() => {
+				// An admin's queue count, fresh each time the menu opens
+				void refreshOpenReports();
+				m.redraw();
+			});
 		}
 	}
 
@@ -164,6 +172,8 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 		icon: IconName;
 		label: string;
 		meta?: m.Children;
+		/** A count waiting behind this row; zero shows nothing */
+		badge?: { count: number; label: string };
 		route: string;
 	}): m.Children {
 		const current = here() === attrs.route;
@@ -183,6 +193,13 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 					m('span.teacher-nav__item-label', attrs.label),
 					attrs.meta ? m('span.teacher-nav__item-meta', attrs.meta) : null,
 				]),
+				attrs.badge && attrs.badge.count > 0
+					? m(
+							'span.teacher-nav__item-badge',
+							{ 'aria-label': attrs.badge.label, title: attrs.badge.label },
+							String(attrs.badge.count),
+						)
+					: null,
 			],
 		);
 	}
@@ -313,6 +330,11 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 						label: t('supervise.myActivity'),
 						route: '/teach/activity',
 					}),
+					row({
+						icon: 'talk',
+						label: t('nav.banned_words'),
+						route: '/teach/words',
+					}),
 					getTeacherNavState().canSupervise
 						? row({
 								icon: 'people',
@@ -324,6 +346,12 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 						? row({
 								icon: 'cog',
 								label: t('scenlib.adm_link'),
+								badge: {
+									count: getLibraryStore().openReports,
+									label: t('scenlib.adm_badge', {
+										n: String(getLibraryStore().openReports),
+									}),
+								},
 								route: '/teach/library/admin',
 							})
 						: null,

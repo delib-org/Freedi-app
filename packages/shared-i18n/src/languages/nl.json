@@ -4410,5 +4410,14 @@
   "Score {{score}}": "Score {{score}}",
   "{{count}} evaluators": "{{count}} beoordelaars",
   "Could not load the results": "Resultaten konden niet worden geladen",
-  "Back to the survey": "Terug naar de enquête"
+  "Back to the survey": "Terug naar de enquête",
+  "topAgreements": "Hoogste overeenstemming",
+  "topAgreementsRefresh": "Vernieuwen",
+  "topAgreementsShowMore": "Meer tonen",
+  "topAgreementsLoadError": "De hoogste overeenstemming kon niet worden geladen.",
+  "topAgreementsEmpty": "Er zijn nog geen opties beoordeeld.",
+  "topAgreementsNoOptions": "Er zijn nog geen opties voor deze vraag.",
+  "My Agora classrooms": "Mijn Agora-klassen",
+  "My classes": "Mijn klassen",
+  "You are not attached to an Agora school yet.": "Je bent nog niet aan een Agora-school gekoppeld."
 }

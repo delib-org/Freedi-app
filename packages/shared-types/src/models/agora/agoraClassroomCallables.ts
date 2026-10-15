@@ -344,7 +344,31 @@ export type CheckLanguageResponse =
 			deducted: number;
 			/** The balance after the deduction */
 			pointsTotal: number;
+	  }
+	| {
+			/**
+			 * The text holds a word on the session teacher's own list. No strike, no
+			 * coins: the student is asked to rephrase. `word` is the student's own
+			 * word that matched — never the list.
+			 */
+			ok: false;
+			reason: 'banned_word';
+			word: string;
 	  };
+
+/**
+ * `agoraSetBannedWords` — a teacher replaces their list of words their
+ * students may not use (applies to every class they run). The server cleans
+ * it (trim, dedupe, caps) and answers with what it stored.
+ */
+export interface SetBannedWordsRequest {
+	words: string[];
+}
+
+export interface SetBannedWordsResponse {
+	ok: true;
+	words: string[];
+}
 
 /**
  * `agoraRewordQuestion` — the session teacher makes the question in front of

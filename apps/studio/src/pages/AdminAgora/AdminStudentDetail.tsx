@@ -1,27 +1,25 @@
 import { useMemo } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
-import { useOrg } from '@/org/OrgContext';
 import { useSupervisorConsole } from '@/db/agoraSupervisor';
 import { studentContextFrom } from '@/lib/indicatorContexts';
 import { EmptyState } from '@/components/atomic/atoms';
 import { IndicatorGrid } from '@/components/atomic/molecules/Chart';
 import StudioPage from '../_shared/StudioPage';
-import { useGrace } from '../_shared/useGrace';
+import { useAgoraDetailAccess } from './agoraBase';
 import OutcomeTag from './sections/OutcomeTag';
 import { LoadError, Loading } from './sections/LoadState';
 import { shortDate } from './sections/formatLesson';
 import styles from './AdminDetail.module.scss';
 
-/** `/admin/agora/students/:memberId` — one student's career (alias only; system admins only). */
+/** `/admin/agora/students/:memberId` — one student's career (alias only; admin, coordinator in scope, or the class's teacher). */
 export default function AdminStudentDetail() {
 	const { t, currentLanguage } = useTranslation();
 	const { memberId = '' } = useParams<{ memberId: string }>();
-	const { isSystemAdmin, loading: orgLoading } = useOrg();
-	const denied = useGrace(!orgLoading && !isSystemAdmin);
+	const { base, rootLabel, enabled, denied } = useAgoraDetailAccess();
 
 	const { data, loading, error, refresh } = useSupervisorConsole(
-		isSystemAdmin && memberId ? { view: 'student', memberId } : null,
+		enabled && memberId ? { view: 'student', memberId } : null,
 	);
 	const ctx = useMemo(() => (data ? studentContextFrom(data) : null), [data]);
 	const games = useMemo(
@@ -32,14 +30,14 @@ export default function AdminStudentDetail() {
 	if (denied) return <Navigate to="/" replace />;
 
 	const crumbs = [
-		{ label: t('Agora classrooms'), to: '/admin/agora' },
-		...(data ? [{ label: data.className, to: `/admin/agora/classes/${data.classId}` }] : []),
+		{ label: rootLabel, to: base },
+		...(data ? [{ label: data.className, to: `${base}/classes/${data.classId}` }] : []),
 		{ label: data?.alias ?? t('Student') },
 	];
 
 	return (
 		<StudioPage breadcrumb={crumbs} title={data?.alias ?? t('Student')}>
-			{(!isSystemAdmin || loading) && <Loading />}
+			{(!enabled || loading) && <Loading />}
 			{error && (
 				<LoadError error={error} notFoundText={t('Student not found.')} onRetry={refresh} />
 			)}

@@ -17,7 +17,11 @@ import {
 	type ReportTarget,
 } from '../../../lib/scenarioLibrary/api';
 import { groupReports, type ReportGroup } from '../../../lib/scenarioLibrary/adminView';
-import { getLibraryStore, reloadTags } from '../../../lib/scenarioLibrary/state';
+import {
+	getLibraryStore,
+	reloadTags,
+	setOpenReportCount,
+} from '../../../lib/scenarioLibrary/state';
 import { AdminHidden } from './AdminHidden';
 import { AdminReports, groupKey } from './AdminReports';
 import { AdminTags } from './AdminTags';
@@ -65,6 +69,8 @@ export function LibraryAdmin(): m.Component {
 				reloadTags(),
 			]).then(([a, b, c, d]) => [a, b, c, d]);
 			failed = false;
+			// The menu's badge counts what this queue lists
+			setOpenReportCount(groupReports(reports).length);
 		} catch (error) {
 			console.error('[Library] Loading the admin page failed:', error);
 			failed = true;

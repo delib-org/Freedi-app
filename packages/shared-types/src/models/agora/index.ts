@@ -442,6 +442,8 @@ export type {
 	ResolveRejoinResponse,
 	CheckLanguageRequest,
 	CheckLanguageResponse,
+	SetBannedWordsRequest,
+	SetBannedWordsResponse,
 	RewordQuestionRequest,
 	RewordQuestionResponse,
 	TeacherHeartbeatRequest,
@@ -456,6 +458,16 @@ export {
 	isTeacherEdited,
 	isTeacherTouched,
 } from './agoraModeration';
+
+export type { AgoraTeacherBannedWords } from './agoraBannedWords';
+export {
+	AGORA_BANNED_WORDS,
+	AgoraTeacherBannedWordsSchema,
+	bannedWordKey,
+	bannedWordTokens,
+	cleanBannedWords,
+	findBannedWord,
+} from './agoraBannedWords';
 
 export type {
 	AgoraQuestionWording,
@@ -661,3 +673,14 @@ export {
 	canSeeAccessRequest,
 	canRemoveAccess,
 } from './agoraAccess';
+
+export type {
+	AgoraTopicReader,
+	TopicAccessRequest,
+	TopicAccessResponse,
+} from './agoraScenarioAccess';
+export {
+	canOpenScenario,
+	createAgoraTopicReaderId,
+	isPrivateScenario,
+} from './agoraScenarioAccess';

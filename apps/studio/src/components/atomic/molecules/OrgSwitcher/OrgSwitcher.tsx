@@ -29,7 +29,7 @@ import { RoleBadge } from '@/components/atomic/atoms/RoleBadge';
  * returns focus to the trigger. With one workspace and nothing to create it
  * renders as static text (`--single`).
  */
-export type SwitcherEntryKind = 'org' | 'personal' | 'system';
+export type SwitcherEntryKind = 'org' | 'personal' | 'agora' | 'system';
 
 export interface SwitcherEntry {
 	id: string;
@@ -68,6 +68,20 @@ const GLYPHS: Partial<Record<SwitcherEntryKind, ReactElement>> = {
 		>
 			<circle cx="12" cy="8" r="3.5" />
 			<path d="M5 20a7 7 0 0 1 14 0" />
+		</svg>
+	),
+	agora: (
+		<svg
+			className="org-switcher__glyph"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="1.8"
+			aria-hidden="true"
+		>
+			<path d="M4 10l8-6 8 6" />
+			<path d="M5 10v9M9.5 10v9M14.5 10v9M19 10v9" />
+			<path d="M3 19h18" />
 		</svg>
 	),
 	system: (

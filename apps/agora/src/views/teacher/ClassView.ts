@@ -273,9 +273,10 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 					]);
 
 			// Every stage past the lobby needs the topic package
-			if (!topic && item.stage !== AgoraStage.lobby) loadTopicPackage(session.topicPackageId);
+			if (!topic && item.stage !== AgoraStage.lobby)
+				loadTopicPackage(session.topicPackageId, session.sessionId);
 			if (villageMode && item.stage === AgoraStage.lobby && !topic) {
-				loadTopicPackage(session.topicPackageId);
+				loadTopicPackage(session.topicPackageId, session.sessionId);
 			}
 
 			const stageView: m.Children =

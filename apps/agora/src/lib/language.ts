@@ -23,13 +23,24 @@ export class LanguageFlaggedError extends Error {
 	readonly strikes: number;
 	readonly deducted: number;
 	readonly pointsTotal: number;
+	/**
+	 * Set when the refusal is the teacher's own word list, not the model: the
+	 * student's own word that matched. No strike, no coins — a rephrase request.
+	 */
+	readonly bannedWord?: string;
 
-	constructor(verdict: { strikes: number; deducted: number; pointsTotal: number }) {
+	constructor(verdict: {
+		strikes: number;
+		deducted: number;
+		pointsTotal: number;
+		bannedWord?: string;
+	}) {
 		super('language-flagged');
 		this.name = 'LanguageFlaggedError';
 		this.strikes = verdict.strikes;
 		this.deducted = verdict.deducted;
 		this.pointsTotal = verdict.pointsTotal;
+		this.bannedWord = verdict.bannedWord;
 	}
 }
 
@@ -39,6 +50,8 @@ export function isLanguageFlagged(error: unknown): error is LanguageFlaggedError
 
 /** The sentence the box shows under a refused draft, in the student's language */
 export function flaggedNotice(error: LanguageFlaggedError): string {
+	if (error.bannedWord) return t('language.banned_word', { word: error.bannedWord });
+
 	return error.deducted > 0
 		? t('language.flagged', { n: String(error.deducted) })
 		: t('language.flagged_no_coins');
@@ -75,6 +88,17 @@ export async function assertCleanLanguage(
 		return;
 	}
 	if (verdict.ok) return;
+
+	// The teacher's own list: a gentle "say it another way", never a strike —
+	// so no alert event either (the teacher's thread is not told)
+	if (verdict.reason === 'banned_word') {
+		throw new LanguageFlaggedError({
+			strikes: 0,
+			deducted: 0,
+			pointsTotal: 0,
+			bannedWord: verdict.word,
+		});
+	}
 
 	emit('language:flagged', {
 		sessionId: request.sessionId,

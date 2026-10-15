@@ -97,6 +97,44 @@ describe('agora teacher console collections', () => {
 		});
 	});
 
+	describe('agoraTeacherBannedWords', () => {
+		before(async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraTeacherBannedWords', TEACHER), {
+					teacherId: TEACHER,
+					words: ['stupid'],
+					lastUpdate: 1_700_000_000_000,
+				});
+			});
+		});
+
+		it('lets the teacher read their own list', async () => {
+			const db = env.authenticatedContext(TEACHER).firestore();
+			await assertSucceeds(getDoc(doc(db, 'agoraTeacherBannedWords', TEACHER)));
+		});
+
+		it('hides it from a student and from another teacher', async () => {
+			const student = env.authenticatedContext(STUDENT).firestore();
+			await assertFails(getDoc(doc(student, 'agoraTeacherBannedWords', TEACHER)));
+			const other = env.authenticatedContext(OTHER_TEACHER).firestore();
+			await assertFails(getDoc(doc(other, 'agoraTeacherBannedWords', TEACHER)));
+		});
+
+		it('hides it from a signed-out visitor', async () => {
+			const db = env.unauthenticatedContext().firestore();
+			await assertFails(getDoc(doc(db, 'agoraTeacherBannedWords', TEACHER)));
+		});
+
+		it('is written by the callable alone — not even by its owner', async () => {
+			const db = env.authenticatedContext(TEACHER).firestore();
+			await assertFails(
+				setDoc(doc(db, 'agoraTeacherBannedWords', TEACHER), { teacherId: TEACHER, words: [] }),
+			);
+			await assertFails(updateDoc(doc(db, 'agoraTeacherBannedWords', TEACHER), { words: [] }));
+			await assertFails(deleteDoc(doc(db, 'agoraTeacherBannedWords', TEACHER)));
+		});
+	});
+
 	describe('agoraTeacherMessages', () => {
 		before(async () => {
 			await seed(env, async (db) => {

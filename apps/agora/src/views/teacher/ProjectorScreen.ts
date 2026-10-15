@@ -113,7 +113,7 @@ export function ProjectorScreen(
 			const item = plan[currentIndex];
 
 			const topic = getTopicPackage(session.topicPackageId);
-			if (!topic) loadTopicPackage(session.topicPackageId);
+			if (!topic) loadTopicPackage(session.topicPackageId, session.sessionId);
 			const film = openingFilmOf(topic ?? undefined);
 			// The wall warms the film up while the class waits in the lobby
 			if (film && item.stage === AgoraStage.lobby) prefetchFilm(film.url);

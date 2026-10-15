@@ -563,6 +563,13 @@
 		margin: 0;
 		font-family: var(--font-display);
 	}
+
+	// The padlock over "this scenario is private"
+	&__icon {
+		display: inline-flex;
+		justify-content: center;
+		color: var(--text-secondary);
+	}
 }
 
 .scn-empty {

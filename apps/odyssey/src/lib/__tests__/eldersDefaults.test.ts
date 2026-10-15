@@ -175,3 +175,22 @@ describe('buildEldersFromDefaults', () => {
 		}
 	});
 });
+
+describe('per-shore counsel content', () => {
+	it('every default sailor carries counsel for exactly the islands they chart, one line per shore', () => {
+		for (const elder of DEFAULT_ELDERS) {
+			expect(elder.counsel, elder.slug).toBeDefined();
+			const charted = new Set([...Object.keys(elder.positions), ...Object.keys(elder.challenges)]);
+			expect(new Set(Object.keys(elder.counsel ?? {})), elder.slug).toEqual(charted);
+			for (const [slug, lines] of Object.entries(elder.counsel ?? {})) {
+				const island = DEFAULT_ISLANDS.find((candidate) => candidate.slug === slug);
+				expect(island, `${elder.slug}/${slug}`).toBeDefined();
+				expect(lines.length, `${elder.slug}/${slug}`).toBe(island?.stances.length);
+				for (const line of lines) {
+					expect(line.length, `${elder.slug}/${slug}`).toBeGreaterThanOrEqual(60);
+					expect(line.length, `${elder.slug}/${slug}`).toBeLessThanOrEqual(160);
+				}
+			}
+		}
+	});
+});
