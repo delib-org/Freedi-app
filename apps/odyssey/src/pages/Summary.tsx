@@ -11,6 +11,7 @@ import { useGame } from '../state/GameContext';
 import { useUser } from '../lib/user';
 import { useMode } from '../lib/mode';
 import { distanceEngine, ParticipantDistance } from '../lib/distance';
+import { matchConfidence } from '../lib/matchConfidence';
 import { islandArtUrl } from '../lib/islandArt';
 import { loadGameEvaluations } from '../lib/evaluations';
 import { stageBus } from '../lib/stageBus';
@@ -188,6 +189,13 @@ export default function Summary() {
 		island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
 	);
 
+	const answeredStatements = Object.values(attitudes).filter((value) => value !== undefined).length;
+	const confidence = matchConfidence(partyDistances, answeredStatements, visitedIslands.length);
+	const firstPlaceNames = confidence.firstPlace
+		.map((entry) => parties.find((party) => party.partyId === entry.partyId)?.name)
+		.filter(Boolean)
+		.join(' · ');
+
 	/**
 	 * The captain's log, in island order.
 	 *
@@ -290,6 +298,17 @@ export default function Summary() {
 								איך נקבע מסלול של ספינה?
 							</Link>
 						</p>
+						{confidence.isTie ? (
+							<p className="text-[14px] font-bold text-[var(--cream)] mt-0 mb-3">
+								מקום ראשון משותף: {firstPlaceNames}
+							</p>
+						) : null}
+						{confidence.evidence === 'early' && confidence.answeredStatements > 0 ? (
+							<p className="text-[13px] opacity-85 mt-0 mb-3">
+								רושם ראשוני — מבוסס על {confidence.answeredStatements} היגדים ב־
+								{confidence.answeredIslands} איים
+							</p>
+						) : null}
 						<div className="flex flex-col gap-3">
 							{sortedParties.map(({ party, distance, relative, sharedIslands }) => (
 								<div key={party!.partyId} className="flex flex-col gap-1.5 min-w-0">
