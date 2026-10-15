@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_ELDERS, buildEldersFromDefaults } from '../eldersDefaults';
+import { DEFAULT_ELDERS, buildEldersFromDefaults, resolveCounsel } from '../eldersDefaults';
 import { DEFAULT_ISLANDS } from '../defaults';
 
 /**
@@ -79,6 +79,42 @@ describe('DEFAULT_ELDERS', () => {
 		const senesh = DEFAULT_ELDERS.find((elder) => elder.slug === 'senesh');
 		expect(Object.keys(senesh?.positions ?? {}).length).toBeLessThan(DEFAULT_ISLANDS.length);
 	});
+
+	it('keys any shore lines to islands that exist, one slot per shore at most', () => {
+		for (const elder of DEFAULT_ELDERS) {
+			for (const [slug, lines] of Object.entries(elder.counsel ?? {})) {
+				const island = islandBySlug.get(slug);
+				expect(island, `${elder.slug} → ${slug}`).toBeDefined();
+				expect(lines.length).toBeLessThanOrEqual(island?.stances.length ?? 0);
+			}
+		}
+	});
+});
+
+describe('resolveCounsel', () => {
+	const islandIdBySlug = new Map([['harbor', 'q-harbor']]);
+	const stanceIdsBySlug = new Map([['harbor', ['s-1', 's-2', 's-3']]]);
+
+	it('is undefined for an unauthored sailor, so no `counsel` field is written', () => {
+		expect(resolveCounsel(undefined, islandIdBySlug, stanceIdsBySlug)).toBeUndefined();
+		expect(resolveCounsel({}, islandIdBySlug, stanceIdsBySlug)).toBeUndefined();
+	});
+
+	it('maps lines by 1-based shore index to stance ids, skipping blanks', () => {
+		expect(
+			resolveCounsel({ harbor: ['one', '  ', 'three '] }, islandIdBySlug, stanceIdsBySlug),
+		).toEqual({ 'q-harbor': { 's-1': 'one', 's-3': 'three' } });
+	});
+
+	it('drops islands that do not resolve and lines past the last shore', () => {
+		expect(
+			resolveCounsel(
+				{ harbor: ['', '', '', 'four'], gone: ['x'] },
+				islandIdBySlug,
+				stanceIdsBySlug,
+			),
+		).toBeUndefined();
+	});
 });
 
 describe('buildEldersFromDefaults', () => {
@@ -129,5 +165,13 @@ describe('buildEldersFromDefaults', () => {
 		expect(senesh.positions['q-accountability']).toBe('s-accountability-1');
 		expect(senesh.positions['q-sabbath-rabbinate']).toBeUndefined();
 		expect(senesh.challenges['q-sabbath-rabbinate']).toBeUndefined();
+	});
+
+	it('writes no `counsel` field for a sailor with no authored shore lines', () => {
+		for (const [index, elder] of built.entries()) {
+			if (DEFAULT_ELDERS[index].counsel === undefined) {
+				expect('counsel' in elder, elder.elderId).toBe(false);
+			}
+		}
 	});
 });

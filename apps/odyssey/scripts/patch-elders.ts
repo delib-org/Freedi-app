@@ -13,6 +13,8 @@
  * What it preserves, because the organizer may have changed it in /admin:
  *   - `enabled` on an elder that already exists (a switched-off elder stays off)
  *   - `portraitUrl` (art the game may already carry)
+ *   - `counsel` (per-shore lines) when the source has none for that elder —
+ *     lines authored on the live doc outlive a refresh that did not touch them
  * Everything else — positions, reactions, challenges, values, years — is
  * refreshed from source, since that is the point of running it.
  *
@@ -71,6 +73,7 @@ interface StoredElder {
 	name: string;
 	enabled?: boolean;
 	portraitUrl?: string | null;
+	counsel?: Record<string, Record<string, string>>;
 }
 
 async function main(): Promise<void> {
@@ -149,19 +152,26 @@ async function main(): Promise<void> {
 		const before = previous.get(elder.elderId);
 		if (!before) return elder;
 
+		// Source wins when it carries shore lines; a key is only ever set to a
+		// value (the admin SDK refuses `undefined`), and never to `{}`.
+		const counsel = elder.counsel ?? before.counsel;
+
 		return {
 			...elder,
 			enabled: before.enabled ?? elder.enabled,
 			portraitUrl: before.portraitUrl ?? elder.portraitUrl,
+			...(counsel ? { counsel } : {}),
 		};
 	});
 
 	for (const elder of elders) {
 		const before = previous.get(elder.elderId);
 		const islands = Object.keys(elder.positions).length;
+		const counselled = Object.keys(elder.counsel ?? {}).length;
 		console.info(
 			`  ${before ? '↻' : '+'} ${elder.name} (${elder.years ?? '—'}) — ` +
-				`${islands} islands${elder.enabled ? '' : ', DISABLED (kept from /admin)'}`,
+				`${islands} islands, shore lines on ${counselled}` +
+				`${elder.enabled ? '' : ', DISABLED (kept from /admin)'}`,
 		);
 	}
 	const dropped = existing.filter(

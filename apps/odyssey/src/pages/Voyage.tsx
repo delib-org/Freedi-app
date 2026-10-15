@@ -11,12 +11,30 @@ import { valueToAttitude } from '../lib/evaluations';
 import { islandArtUrl } from '../lib/islandArt';
 import { relativeDistances } from '../lib/seaLayout';
 import { stageBus, type SeaDistances } from '../lib/stageBus';
-import { invitedElders, elderStageId } from '../lib/elders';
+import {
+	invitedElders,
+	elderStageId,
+	elderIdFromStageId,
+	islandFocusStance,
+	pickElderReaction,
+} from '../lib/elders';
+import { AI_PERSONA_NOTE } from '../lib/counsel';
+import {
+	isShoreRowOpen,
+	openIslandSailor,
+	openShoreSailor,
+	toggleIslandSailor,
+	toggleShoreRow,
+	toggleShoreSailor,
+	type CounselState,
+} from '../lib/counselState';
 import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
 import SeaChart from '../components/SeaChart';
 import ShipCard from '../components/ShipCard';
 import IslandStrip from '../components/IslandStrip';
-import CrewCounsel from '../components/CrewCounsel';
+import IslandCounsel from '../components/IslandCounsel';
+import ShoreCounsel from '../components/ShoreCounsel';
+import CrewReactions from '../components/CrewReactions';
 import { nextIslandIndex } from '../lib/voyageRoute';
 
 /**
@@ -35,7 +53,8 @@ const DEFAULT_LOG_PROMPT = 'מה חשוב לך במיוחד בסוגיה הזו,
  *
  * Two things the player can reach from every island: the strip of islands
  * they chose (to sail to any other one), and their crew — consulted, never
- * volunteering, and folded until asked (see CrewCounsel).
+ * volunteering: a row before the shores and one line under each shore, and
+ * nothing said until a sailor is tapped (see IslandCounsel / ShoreCounsel).
  */
 export default function Voyage() {
 	const navigate = useNavigate();
@@ -62,6 +81,13 @@ export default function Voyage() {
 	const [asked, setAsked] = useState<string | null>(null);
 	const [depth, setDepth] = useState('');
 	const [saving, setSaving] = useState(false);
+	/**
+	 * Which crew disclosure is open on this island: a sailor's island card,
+	 * or one shore's row (and at most one sailor's card in it). One across the
+	 * whole panel, never two; never persisted; marking a shore never touches
+	 * it; sailing to another island resets it (see lib/counselState).
+	 */
+	const [counsel, setCounsel] = useState<CounselState>(null);
 
 	const island = useMemo(
 		() => selectedIslands[Math.min(index, Math.max(0, selectedIslands.length - 1))] ?? null,
@@ -235,6 +261,8 @@ export default function Voyage() {
 		setIndex(target);
 		setPhase('question');
 		setAsked(null);
+		// what Golda said on the last island must not stay open over this one
+		setCounsel(null);
 		window.scrollTo({ top: 0 });
 	}
 
@@ -265,6 +293,19 @@ export default function Voyage() {
 	const islandImage = island.imageUrl ?? islandArtUrl(island.sortOrder);
 	const askedShip =
 		[...shipProximity, ...elderProximity].find((ship) => ship.partyId === asked) ?? null;
+	// A tapped sailor's ship answers the same shore the crew card answers —
+	// reveal phase only, which is the only phase a ship can be asked in.
+	const askedElder = elders.find((elder) => elder.elderId === elderIdFromStageId(asked ?? ''));
+	const focusStance = islandFocusStance(elders, island, attitudes);
+	const askedReaction =
+		askedElder && focusStance
+			? (pickElderReaction(
+					[askedElder],
+					island,
+					focusStance.statementId,
+					attitudes[focusStance.statementId] ?? 0,
+				)?.line ?? null)
+			: null;
 
 	return (
 		<>
@@ -311,6 +352,20 @@ export default function Voyage() {
 							<h2 className="text-lg font-bold text-[var(--cream)] m-0">
 								⚓ {island.statement.statement}
 							</h2>
+
+							{/* The crew, before the shores: "consult before you answer" in
+							    reading order. The question stays first — the sailors' lines
+							    are about it. Keyed by island so the row remounts clean. */}
+							<IslandCounsel
+								key={island.statementId}
+								crew={elders}
+								island={island}
+								openElderId={openIslandSailor(counsel)}
+								onToggle={(elderId) =>
+									setCounsel((current) => toggleIslandSailor(current, elderId))
+								}
+							/>
+
 							<p className="text-[13px] opacity-75 m-0">
 								לפניכם {island.stances.length} חופים. סמנו את יחסכם לכל חוף — חובה לסמן לפחות אחד.
 								אין צורך לבחור תשובה אחת בלבד.
@@ -335,6 +390,25 @@ export default function Voyage() {
 												<p className="m-0 mb-2 text-[12px] opacity-75">
 													התשובה הקודמת שלך — אפשר לשנות
 												</p>
+											) : null}
+											{/* text → consult → mark; nothing rendered with no crew */}
+											{elders.length > 0 ? (
+												<ShoreCounsel
+													crew={elders}
+													island={island}
+													stance={stance}
+													stanceIndex={stanceIndex}
+													open={isShoreRowOpen(counsel, stance.statementId)}
+													openElderId={openShoreSailor(counsel, stance.statementId)}
+													onToggleRow={() =>
+														setCounsel((current) => toggleShoreRow(current, stance.statementId))
+													}
+													onToggleElder={(elderId) =>
+														setCounsel((current) =>
+															toggleShoreSailor(current, stance.statementId, elderId),
+														)
+													}
+												/>
 											) : null}
 											<div
 												className="flex flex-wrap gap-2"
@@ -362,10 +436,6 @@ export default function Voyage() {
 									);
 								})}
 							</div>
-
-							{/* The crew, when asked. Keyed by island so a sailor opened on
-							    the last island is not still talking over this one. */}
-							<CrewCounsel key={island.statementId} crew={elders} island={island} />
 
 							{/*
 							  One open question, not two. There used to be a "depth question"
@@ -412,6 +482,7 @@ export default function Voyage() {
 									{askedShip ? (
 										<ShipCard
 											ship={askedShip}
+											reaction={askedReaction}
 											onClose={() => setAsked(null)}
 											onShowAll={() => setAsked('all')}
 										/>
@@ -441,7 +512,7 @@ export default function Voyage() {
 														compact
 														onSelect={setAsked}
 														selectedId={asked}
-														caption="📜 המלחים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
+														caption={AI_PERSONA_NOTE}
 													/>
 												</div>
 											) : null}
@@ -480,6 +551,7 @@ export default function Voyage() {
 									{askedShip ? (
 										<ShipCard
 											ship={askedShip}
+											reaction={askedReaction}
 											onClose={() => setAsked(null)}
 											onShowAll={() => setAsked(null)}
 										/>
@@ -491,7 +563,7 @@ export default function Voyage() {
 												ships={elderProximity}
 												onSelect={setAsked}
 												selectedId={asked}
-												caption="📜 המלחים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
+												caption={AI_PERSONA_NOTE}
 											/>
 										</div>
 									) : null}
@@ -500,6 +572,9 @@ export default function Voyage() {
 									</p>
 								</div>
 							)}
+							{/* The sea's reaction first, the crew's after it, before the way on.
+							    Never in the question phase. */}
+							<CrewReactions crew={elders} island={island} attitudes={attitudes} />
 							<div className="flex justify-center">
 								<button type="button" className="btn" onClick={() => nextIsland()}>
 									{nextTitle === null ? 'אל מפת ההפלגה שלך 🗺️' : `לאי הבא: ${nextTitle} ⚓`}

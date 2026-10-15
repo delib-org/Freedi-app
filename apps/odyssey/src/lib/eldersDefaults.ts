@@ -46,6 +46,13 @@ export interface DefaultElder {
 	opposeLine: string;
 	/** island slug → standing challenge in the elder's voice (email + game) */
 	challenges: Record<string, string>;
+	/**
+	 * island slug → one line per shore, by 1-based shore index (an empty
+	 * string leaves that shore to the fallback). What the elder says when the
+	 * player consults them about that shore before marking it. Optional: the
+	 * voyage falls back to the island's challenge line, labelled as such.
+	 */
+	counsel?: Record<string, string[]>;
 }
 
 /**
@@ -89,6 +96,7 @@ export function buildEldersFromDefaults(input: {
 			const challenge = elder.challenges[slug];
 			if (challenge) challenges[islandId] = challenge;
 		}
+		const counsel = resolveCounsel(elder.counsel, islandIdBySlug, stanceIdsBySlug);
 
 		return {
 			elderId: elder.slug,
@@ -103,10 +111,42 @@ export function buildEldersFromDefaults(input: {
 			positions,
 			reactions,
 			challenges,
+			// absent, not `{}`, until a sailor has shore lines: the field is
+			// optional on the schema and an unauthored sailor stays unauthored
+			...(counsel ? { counsel } : {}),
 			sortOrder: index + 1,
 			enabled: true,
 		};
 	});
+}
+
+/**
+ * Seed shore lines (island slug → lines by 1-based shore index) to the stored
+ * shape (island statementId → stance statementId → line). Not tied to
+ * `positions`: a sailor with no documented lean on an island may still have
+ * a question about one of its shores. Undefined when nothing resolves, so an
+ * unauthored sailor carries no `counsel` field at all.
+ */
+export function resolveCounsel(
+	seed: Record<string, string[]> | undefined,
+	islandIdBySlug: Map<string, string>,
+	stanceIdsBySlug: Map<string, string[]>,
+): Record<string, Record<string, string>> | undefined {
+	if (!seed) return undefined;
+	const counsel: Record<string, Record<string, string>> = {};
+	for (const [slug, lines] of Object.entries(seed)) {
+		const islandId = islandIdBySlug.get(slug);
+		const stanceIds = stanceIdsBySlug.get(slug);
+		if (!islandId || !stanceIds) continue;
+		const byStance: Record<string, string> = {};
+		lines.forEach((line, shoreIndex) => {
+			const stanceId = stanceIds[shoreIndex];
+			if (stanceId && line.trim()) byStance[stanceId] = line.trim();
+		});
+		if (Object.keys(byStance).length > 0) counsel[islandId] = byStance;
+	}
+
+	return Object.keys(counsel).length > 0 ? counsel : undefined;
 }
 
 export const DEFAULT_ELDERS: DefaultElder[] = [
