@@ -28,6 +28,7 @@ export { onAgoraSessionFinished } from './fn_onAgoraSessionFinished';
 export { agoraTeacherMessage } from './fn_agoraTeacherMessage';
 export { agoraModerateStatement } from './fn_agoraModerateStatement';
 export { agoraCheckLanguage } from './fn_agoraCheckLanguage';
+export { agoraSetBannedWords } from './fn_agoraSetBannedWords';
 export { agoraSupervisorConsole } from './fn_agoraSupervisorConsole';
 export { agoraTeacherHeartbeat } from './fn_agoraTeacherHeartbeat';
 export { agoraAdminBackfillTeacherAggregates } from './fn_agoraAdminBackfillTeacherAggregates';

@@ -1,5 +1,6 @@
 /// <reference types="vite-plugin-pwa/client" />
 import { TeacherActivity } from './views/teacher/TeacherActivity';
+import { TeacherBannedWords } from './views/teacher/TeacherBannedWords';
 import { startUsageHeartbeat } from './lib/usageHeartbeat';
 import { SuperviseHome } from './views/supervise/SuperviseHome';
 import { SuperviseTeacher } from './views/supervise/SuperviseTeacher';
@@ -194,6 +195,7 @@ if (root) {
 		'/supervise/student/:id': byId(SuperviseStudent),
 		'/teach': TeacherHome,
 		'/teach/activity': TeacherActivity,
+		'/teach/words': TeacherBannedWords,
 		'/teach/lessons': PastLessons,
 		'/teach/start': StartGame,
 		// "Scenario" is the one word: the old /topic, /new and /library/mine

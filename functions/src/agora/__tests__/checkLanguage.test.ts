@@ -94,6 +94,53 @@ describe('checkLanguageFor', () => {
 		expect(sets).toHaveLength(0);
 	});
 
+	describe("the teacher's banned words", () => {
+		const BANNED = `agoraTeacherBannedWords/${TEACHER}`;
+
+		beforeEach(() => {
+			store.set(BANNED, { teacherId: TEACHER, words: ['טמבל', 'stupid'], lastUpdate: 1 });
+		});
+
+		it('asks for a rephrase with the matched word — no strike, no thread line, no model', async () => {
+			const detect = jest.fn(async () => true);
+			const result = await checkLanguageFor(
+				{ uid: STUDENT, sessionId: SESSION, text: 'דיברת כמו הטמבל הזה' },
+				detect,
+			);
+			expect(result).toEqual({ ok: false, reason: 'banned_word', word: 'הטמבל' });
+			expect(detect).not.toHaveBeenCalled();
+			expect(participant().languageStrikes).toBeUndefined();
+			expect(sets).toHaveLength(0);
+		});
+
+		it('matches whole words, case-insensitively', async () => {
+			expect(
+				await checkLanguageFor({ uid: STUDENT, sessionId: SESSION, text: 'So STUPID!' }, clean),
+			).toEqual({ ok: false, reason: 'banned_word', word: 'stupid' });
+			expect(
+				await checkLanguageFor(
+					{ uid: STUDENT, sessionId: SESSION, text: 'a stupidly long note' },
+					clean,
+				),
+			).toEqual({ ok: true });
+		});
+
+		it('lets the text through once the word is removed from the list', async () => {
+			store.set(BANNED, { teacherId: TEACHER, words: [], lastUpdate: 2 });
+			expect(
+				await checkLanguageFor({ uid: STUDENT, sessionId: SESSION, text: 'So stupid' }, clean),
+			).toEqual({ ok: true });
+		});
+
+		it("never applies another teacher's list", async () => {
+			store.delete(BANNED);
+			store.set('agoraTeacherBannedWords/other', { teacherId: 'other', words: ['stupid'] });
+			expect(
+				await checkLanguageFor({ uid: STUDENT, sessionId: SESSION, text: 'So stupid' }, clean),
+			).toEqual({ ok: true });
+		});
+	});
+
 	it('treats blank text as clean without asking the detector', async () => {
 		const detect = jest.fn(async () => true);
 		const result = await checkLanguageFor(

@@ -156,4 +156,12 @@ export type AskMaterialsResponse =
 			strikes: number;
 			deducted: number;
 			pointsTotal: number;
+	  }
+	| {
+			/** The question held a word on the teacher's own list — nothing was charged */
+			ok: false;
+			reason: 'banned_word';
+			used: number;
+			limit: number;
+			word: string;
 	  };
