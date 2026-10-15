@@ -1299,6 +1299,7 @@ export {
 	agoraTeacherMessage,
 	agoraModerateStatement,
 	agoraCheckLanguage,
+	agoraSetBannedWords,
 	agoraSceneMaterials,
 	agoraAskMaterials,
 	agoraSupervisorConsole,

@@ -120,6 +120,9 @@ export function MaterialsSheet(): m.Component<MaterialsSheetAttrs> {
 						? t('language.flagged', { n: String(outcome.deducted) })
 						: t('language.flagged_no_coins');
 				noticeIsError = true;
+			} else if (outcome.kind === 'banned_word') {
+				notice = t('language.banned_word', { word: outcome.word });
+				noticeIsError = true;
 			} else if (outcome.kind === 'limit') {
 				notice = t('mat.none_left');
 				noticeIsError = true;

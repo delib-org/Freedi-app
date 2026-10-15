@@ -390,6 +390,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // A teacher's list of words their students may not use — their own doc,
+    // keyed by their uid, written by agoraSetBannedWords alone. The language
+    // gate reads it on the server; a student never can.
+    match /agoraTeacherBannedWords/{teacherId} {
+      allow read: if isAuthenticated() && request.auth.uid == teacherId;
+      allow write: if false;
+    }
+
     // A removed student's seat, parked whole by agoraRemoveParticipant until
     // the teacher lets them back (agoraResolveRejoin). Server-only: it holds
     // points and credit guards the student must not rewrite.

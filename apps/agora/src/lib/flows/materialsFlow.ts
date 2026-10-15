@@ -70,6 +70,7 @@ export function messagesForScene(
 export type AskOutcome =
 	| { kind: 'answer'; used: number }
 	| { kind: 'language'; used: number; deducted: number }
+	| { kind: 'banned_word'; used: number; word: string }
 	| { kind: 'limit'; used: number }
 	| { kind: 'error'; used: number; key: string };
 
@@ -79,6 +80,8 @@ export function askOutcome(response: AskMaterialsResponse): AskOutcome {
 	switch (response.reason) {
 		case 'language':
 			return { kind: 'language', used: response.used, deducted: response.deducted };
+		case 'banned_word':
+			return { kind: 'banned_word', used: response.used, word: response.word };
 		case 'limit':
 			return { kind: 'limit', used: response.used };
 		case 'unavailable':

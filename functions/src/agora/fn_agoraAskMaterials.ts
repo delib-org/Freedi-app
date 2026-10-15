@@ -103,6 +103,10 @@ export async function askMaterialsFor(
 	// and costs no question.
 	const verdict = await checkLanguageFor({ uid, sessionId, text: question });
 	if (!verdict.ok) {
+		if (verdict.reason === 'banned_word') {
+			return { ok: false, reason: 'banned_word', used, limit: LIMIT, word: verdict.word };
+		}
+
 		return {
 			ok: false,
 			reason: 'language',

@@ -1761,6 +1761,25 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'language.flagged_no_coins':
 			'הבינה המלאכותית זיהתה שפה פוגענית, ולכן הטקסט לא נשמר. נסחו מחדש בשפה מכבדת.',
 		'language.notice_title': 'נא להשתמש בשפה מכבדת',
+		'language.banned_word':
+			'המורה ביקש/ה לא להשתמש במילה "{{word}}". נסחו את זה במילים אחרות, מכבדות יותר — ואז אפשר לשלוח.',
+		'nav.banned_words': 'מילים שלא אומרים',
+		'bannedWords.title': 'מילים שלא אומרים',
+		'bannedWords.intro':
+			'רשימה אחת לכל הכיתות שלכם. תלמיד/ה שכותב/ת מילה מהרשימה לא יכול/ה לשלוח עד שינסחו מחדש, והודעה עדינה מבקשת מילים מכבדות יותר. התלמידים לא רואים את הרשימה — רק את המילה שכתבו.',
+		'bannedWords.input_label': 'מילה או ביטוי להוספה',
+		'bannedWords.placeholder': 'למשל: מטומטם',
+		'bannedWords.add': 'הוספה',
+		'bannedWords.empty': 'עוד אין מילים ברשימה.',
+		'bannedWords.list_label': 'המילים ברשימה',
+		'bannedWords.remove': 'הסרת "{{word}}"',
+		'bannedWords.count': '{{n}} מתוך {{max}}',
+		'bannedWords.hint':
+			'מילים שלמות בלבד, בלי הבדל בין אותיות גדולות לקטנות, בלי ניקוד וסימני פיסוק. בעברית גם תחילית של אות אחת (ו/ה/ב/ל/מ/ש/כ) נתפסת — "טמבל" תופסת גם "והטמבל". צורות רבים וקניין מוסיפים בנפרד.',
+		'bannedWords.load_failed': 'לא הצלחנו לטעון את הרשימה.',
+		'bannedWords.save_failed': 'השמירה נכשלה. נסו שוב.',
+		'bannedWords.retry': 'ניסיון חוזר',
+		'bannedWords.saved': 'נשמר',
 		'language.notice_body':
 			'הטקסט הזה לא פורסם כי זוהתה בו שפה פוגענית, וירדו עליו מטבעות. המורה רואה את זה.',
 		'toast.language_flagged': 'הטקסט לא נשמר — נא להשתמש בשפה מכבדת',
@@ -3705,6 +3724,25 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'language.flagged_no_coins':
 			'The AI found disrespectful language, so your text was not saved. Please rewrite it respectfully.',
 		'language.notice_title': 'Please use respectful language',
+		'language.banned_word':
+			'Your teacher asked the class not to use the word "{{word}}". Please say it another way, more respectfully, and then you can send.',
+		'nav.banned_words': "Words we don't say",
+		'bannedWords.title': "Words we don't say",
+		'bannedWords.intro':
+			"One list for all your classes. A student who writes a word from the list can't send until they rephrase, and a gentle message asks for more respectful words. Students never see the list — only the word they wrote.",
+		'bannedWords.input_label': 'A word or phrase to add',
+		'bannedWords.placeholder': 'For example: stupid',
+		'bannedWords.add': 'Add',
+		'bannedWords.empty': 'No words on the list yet.',
+		'bannedWords.list_label': 'Words on the list',
+		'bannedWords.remove': 'Remove "{{word}}"',
+		'bannedWords.count': '{{n}} of {{max}}',
+		'bannedWords.hint':
+			'Whole words only; capitals, accents and punctuation don\'t matter. In Hebrew, a one-letter prefix (ו/ה/ב/ל/מ/ש/כ) still matches — "טמבל" also catches "והטמבל". Plurals and possessives are separate entries.',
+		'bannedWords.load_failed': "We couldn't load the list.",
+		'bannedWords.save_failed': 'Saving failed. Please try again.',
+		'bannedWords.retry': 'Try again',
+		'bannedWords.saved': 'Saved',
 		'language.notice_body':
 			'This text was not posted because it contained disrespectful language, and it cost coins. Your teacher can see this.',
 		'toast.language_flagged': 'Not saved — please use respectful language',
@@ -5587,6 +5625,25 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'language.flagged_no_coins':
 			'رصد الذكاء الاصطناعي لغة غير لائقة، لذلك لم يُحفظ نصكم. أعيدوا الصياغة بلغة محترمة.',
 		'language.notice_title': 'الرجاء استخدام لغة محترمة',
+		'language.banned_word':
+			'طلب المعلم ألا نستخدم الكلمة "{{word}}". أعيدوا الصياغة بكلمات أخرى أكثر احترامًا، ثم يمكنكم الإرسال.',
+		'nav.banned_words': 'كلمات لا نقولها',
+		'bannedWords.title': 'كلمات لا نقولها',
+		'bannedWords.intro':
+			'قائمة واحدة لكل صفوفكم. الطالب الذي يكتب كلمة من القائمة لا يستطيع الإرسال حتى يعيد الصياغة، وتطلب رسالة لطيفة كلمات أكثر احترامًا. لا يرى الطلاب القائمة، بل الكلمة التي كتبوها فقط.',
+		'bannedWords.input_label': 'كلمة أو عبارة للإضافة',
+		'bannedWords.placeholder': 'مثلًا: غبي',
+		'bannedWords.add': 'إضافة',
+		'bannedWords.empty': 'لا توجد كلمات في القائمة بعد.',
+		'bannedWords.list_label': 'الكلمات في القائمة',
+		'bannedWords.remove': 'إزالة "{{word}}"',
+		'bannedWords.count': '{{n}} من {{max}}',
+		'bannedWords.hint':
+			'كلمات كاملة فقط، ولا فرق بين الأحرف الكبيرة والصغيرة ولا التشكيل ولا علامات الترقيم. في العبرية تُطابَق الكلمة مع بادئة من حرف واحد (ו/ה/ב/ל/מ/ש/כ). صيغ الجمع والملكية تُكتب كلٌّ على حدة.',
+		'bannedWords.load_failed': 'تعذّر تحميل القائمة.',
+		'bannedWords.save_failed': 'فشل الحفظ. حاولوا مرة أخرى.',
+		'bannedWords.retry': 'حاولوا مرة أخرى',
+		'bannedWords.saved': 'تم الحفظ',
 		'language.notice_body':
 			'لم يُنشر هذا النص لأنه احتوى على لغة غير لائقة، وكلّفكم عملات. معلمكم يرى ذلك.',
 		'toast.language_flagged': 'لم يُحفظ — الرجاء استخدام لغة محترمة',
@@ -7559,6 +7616,25 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'language.flagged_no_coins':
 			'La IA detectó lenguaje irrespetuoso, así que tu texto no se guardó. Reescríbelo con respeto.',
 		'language.notice_title': 'Usa un lenguaje respetuoso, por favor',
+		'language.banned_word':
+			'Tu profesor/a pidió no usar la palabra "{{word}}". Dilo de otra manera, con más respeto, y entonces podrás enviar.',
+		'nav.banned_words': 'Palabras que no decimos',
+		'bannedWords.title': 'Palabras que no decimos',
+		'bannedWords.intro':
+			'Una lista para todas tus clases. Un estudiante que escribe una palabra de la lista no puede enviar hasta reformular, y un mensaje amable pide palabras más respetuosas. Los estudiantes nunca ven la lista, solo la palabra que escribieron.',
+		'bannedWords.input_label': 'Palabra o frase para añadir',
+		'bannedWords.placeholder': 'Por ejemplo: tonto',
+		'bannedWords.add': 'Añadir',
+		'bannedWords.empty': 'Todavía no hay palabras en la lista.',
+		'bannedWords.list_label': 'Palabras de la lista',
+		'bannedWords.remove': 'Quitar "{{word}}"',
+		'bannedWords.count': '{{n}} de {{max}}',
+		'bannedWords.hint':
+			'Solo palabras completas; mayúsculas, acentos y puntuación no importan. En hebreo, un prefijo de una letra (ו/ה/ב/ל/מ/ש/כ) también coincide. Los plurales y posesivos son entradas aparte.',
+		'bannedWords.load_failed': 'No pudimos cargar la lista.',
+		'bannedWords.save_failed': 'No se pudo guardar. Inténtalo de nuevo.',
+		'bannedWords.retry': 'Reintentar',
+		'bannedWords.saved': 'Guardado',
 		'language.notice_body':
 			'Este texto no se publicó porque contenía lenguaje irrespetuoso, y costó monedas. Tu profesor puede verlo.',
 		'toast.language_flagged': 'No se guardó — usa un lenguaje respetuoso',
@@ -9562,6 +9638,25 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'language.flagged_no_coins':
 			'Die KI hat respektlose Sprache erkannt, deshalb wurde dein Text nicht gespeichert. Formuliere ihn bitte respektvoll um.',
 		'language.notice_title': 'Bitte respektvolle Sprache verwenden',
+		'language.banned_word':
+			'Deine Lehrkraft bittet darum, das Wort "{{word}}" nicht zu verwenden. Sag es bitte anders, respektvoller, dann kannst du senden.',
+		'nav.banned_words': 'Wörter, die wir nicht sagen',
+		'bannedWords.title': 'Wörter, die wir nicht sagen',
+		'bannedWords.intro':
+			'Eine Liste für alle deine Klassen. Wer ein Wort aus der Liste schreibt, kann erst senden, wenn er oder sie es umformuliert, und eine freundliche Meldung bittet um respektvollere Wörter. Schülerinnen und Schüler sehen die Liste nie, nur das Wort, das sie geschrieben haben.',
+		'bannedWords.input_label': 'Wort oder Ausdruck zum Hinzufügen',
+		'bannedWords.placeholder': 'Zum Beispiel: dumm',
+		'bannedWords.add': 'Hinzufügen',
+		'bannedWords.empty': 'Noch keine Wörter in der Liste.',
+		'bannedWords.list_label': 'Wörter in der Liste',
+		'bannedWords.remove': '"{{word}}" entfernen',
+		'bannedWords.count': '{{n}} von {{max}}',
+		'bannedWords.hint':
+			'Nur ganze Wörter; Groß- und Kleinschreibung, Akzente und Satzzeichen spielen keine Rolle. Im Hebräischen zählt auch ein einbuchstabiges Präfix (ו/ה/ב/ל/מ/ש/כ). Plural- und Besitzformen trägst du einzeln ein.',
+		'bannedWords.load_failed': 'Die Liste konnte nicht geladen werden.',
+		'bannedWords.save_failed': 'Speichern fehlgeschlagen. Bitte versuche es erneut.',
+		'bannedWords.retry': 'Erneut versuchen',
+		'bannedWords.saved': 'Gespeichert',
 		'language.notice_body':
 			'Dieser Text wurde nicht veröffentlicht, weil er respektlose Sprache enthielt, und hat Münzen gekostet. Deine Lehrkraft sieht das.',
 		'toast.language_flagged': 'Nicht gespeichert — bitte respektvolle Sprache verwenden',
@@ -11549,6 +11644,25 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'language.flagged_no_coins':
 			'De AI vond respectloze taal, dus je tekst is niet opgeslagen. Herschrijf hem respectvol.',
 		'language.notice_title': 'Gebruik alsjeblieft respectvolle taal',
+		'language.banned_word':
+			'Je docent vraagt het woord "{{word}}" niet te gebruiken. Zeg het op een andere, respectvollere manier, dan kun je versturen.',
+		'nav.banned_words': 'Woorden die we niet zeggen',
+		'bannedWords.title': 'Woorden die we niet zeggen',
+		'bannedWords.intro':
+			'Eén lijst voor al je klassen. Een leerling die een woord van de lijst schrijft kan pas versturen na herformuleren, en een vriendelijk bericht vraagt om respectvollere woorden. Leerlingen zien de lijst nooit, alleen het woord dat ze schreven.',
+		'bannedWords.input_label': 'Woord of uitdrukking om toe te voegen',
+		'bannedWords.placeholder': 'Bijvoorbeeld: stom',
+		'bannedWords.add': 'Toevoegen',
+		'bannedWords.empty': 'Nog geen woorden in de lijst.',
+		'bannedWords.list_label': 'Woorden in de lijst',
+		'bannedWords.remove': '"{{word}}" verwijderen',
+		'bannedWords.count': '{{n}} van {{max}}',
+		'bannedWords.hint':
+			'Alleen hele woorden; hoofdletters, accenten en leestekens maken niet uit. In het Hebreeuws telt ook een voorvoegsel van één letter (ו/ה/ב/ל/מ/ש/כ) mee. Meervouden en bezitsvormen voeg je apart toe.',
+		'bannedWords.load_failed': 'De lijst kon niet worden geladen.',
+		'bannedWords.save_failed': 'Opslaan mislukt. Probeer het opnieuw.',
+		'bannedWords.retry': 'Opnieuw proberen',
+		'bannedWords.saved': 'Opgeslagen',
 		'language.notice_body':
 			'Deze tekst is niet geplaatst omdat hij respectloze taal bevatte, en dat heeft munten gekost. Je docent kan dit zien.',
 		'toast.language_flagged': 'Niet opgeslagen — gebruik respectvolle taal',

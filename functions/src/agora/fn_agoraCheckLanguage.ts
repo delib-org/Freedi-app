@@ -12,11 +12,13 @@ import {
 	isAgoraLanguagePlace,
 	createAgoraParticipantId,
 	functionConfig,
+	findBannedWord,
 	isAgoraAiUid,
 } from '@freedi/shared-types';
 import { containsBadLanguage } from '../fn_profanityChecker';
 import { logError } from '../utils/errorHandling';
 import { fileThreadLine } from './teacherThread';
+import { loadTeacherBannedWords } from './teacherBannedWords';
 
 /** What the gate needs to know about the caller and the words */
 export interface LanguageCheckInput {
@@ -86,6 +88,13 @@ export async function checkLanguageFor(
 	if (!participant || participant.isAI || isAgoraAiUid(uid)) {
 		throw new HttpsError('permission-denied', 'not-a-participant');
 	}
+
+	// The teacher's own list comes first: instant, free, and a rephrase request,
+	// not an accusation — so no strike, no coins and nothing on the teacher's
+	// thread. The list never leaves the server; the student gets their own word.
+	const banned = await loadTeacherBannedWords(session.teacherId);
+	const bannedWord = findBannedWord(text, banned);
+	if (bannedWord) return { ok: false, reason: 'banned_word', word: bannedWord };
 
 	const flagged = await detect(text);
 	if (!flagged) return { ok: true };

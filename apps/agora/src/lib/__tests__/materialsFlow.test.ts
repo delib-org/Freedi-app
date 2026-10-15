@@ -84,6 +84,13 @@ describe('materialsFlow', () => {
 				pointsTotal: 4,
 			}),
 		).toEqual({ kind: 'language', used: 2, deducted: 2 });
+		expect(askOutcome({ ok: false, reason: 'banned_word', used: 2, limit: 15, word: 'x' })).toEqual(
+			{
+				kind: 'banned_word',
+				used: 2,
+				word: 'x',
+			},
+		);
 		expect(askOutcome({ ok: false, reason: 'unavailable', used: 2, limit: 15 })).toMatchObject({
 			kind: 'error',
 			key: 'mat.err_unavailable',

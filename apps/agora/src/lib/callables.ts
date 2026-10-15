@@ -19,6 +19,8 @@ import type {
 	ResolveRejoinRequest,
 	ResolveRejoinResponse,
 	RewordQuestionRequest,
+	SetBannedWordsRequest,
+	SetBannedWordsResponse,
 	RewordQuestionResponse,
 	TeacherMessageRequest,
 	TeacherMessageResponse,
@@ -442,6 +444,19 @@ export async function teacherHeartbeat(
 	const call = httpsCallable<TeacherHeartbeatRequest, TeacherHeartbeatResponse>(
 		functions,
 		'agoraTeacherHeartbeat',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The teacher replaces their list of words their students may not use */
+export async function setBannedWords(
+	request: SetBannedWordsRequest,
+): Promise<SetBannedWordsResponse> {
+	const call = httpsCallable<SetBannedWordsRequest, SetBannedWordsResponse>(
+		functions,
+		'agoraSetBannedWords',
 	);
 	const result = await call(request);
 

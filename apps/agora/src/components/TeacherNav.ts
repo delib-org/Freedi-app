@@ -313,6 +313,11 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 						label: t('supervise.myActivity'),
 						route: '/teach/activity',
 					}),
+					row({
+						icon: 'talk',
+						label: t('nav.banned_words'),
+						route: '/teach/words',
+					}),
 					getTeacherNavState().canSupervise
 						? row({
 								icon: 'people',
