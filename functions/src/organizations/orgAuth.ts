@@ -251,9 +251,8 @@ export function hashToken(raw: string): string {
 /**
  * Base URL of the WizCol Studio console (where `/invite?token=` lives).
  * `STUDIO_APP_BASE_URL` wins; otherwise derive from `DOMAIN` like the Join
- * helper does. The default is the Firebase hosting site (`.firebaserc` target
- * `studio` → `wizcol-studio`); a custom domain (studio.wizcol.com?) has NOT
- * been confirmed yet — set `STUDIO_APP_BASE_URL` once it is.
+ * helper does. The default is the custom
+ * domain studio.wizcol.com (Tal, 2026-10-15).
  */
 export function getStudioBaseUrl(): string {
 	const explicit = process.env.STUDIO_APP_BASE_URL;
@@ -264,6 +263,6 @@ export function getStudioBaseUrl(): string {
 		case 'localhost':
 			return 'http://localhost:3008';
 		default:
-			return 'https://wizcol-studio.web.app';
+			return 'https://studio.wizcol.com';
 	}
 }
