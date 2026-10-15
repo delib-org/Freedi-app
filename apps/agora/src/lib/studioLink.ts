@@ -5,7 +5,7 @@ export function studioAgoraUrl(origin: string | undefined): string {
 	return base ? `${base}/agora` : '';
 }
 
-/** The configured Studio's overview. Absent origin = no link rather than a broken one. */
+/** Studio's overview: VITE_STUDIO_ORIGIN, else the live Studio domain */
 export function studioOverviewUrl(): string {
-	return studioAgoraUrl(import.meta.env.VITE_STUDIO_ORIGIN);
+	return studioAgoraUrl(import.meta.env.VITE_STUDIO_ORIGIN || 'https://studio.wizcol.com');
 }
