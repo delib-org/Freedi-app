@@ -40,6 +40,7 @@ import { Home } from './views/Home';
 import { JoinSession } from './views/JoinSession';
 import { GameController } from './views/GameController';
 import { TeacherHome } from './views/teacher/TeacherHome';
+import { AccessRequest } from './views/teacher/AccessRequest';
 import { TeacherSession } from './views/teacher/TeacherSession';
 import { ProjectorScreen } from './views/teacher/ProjectorScreen';
 import { TopicWizard } from './views/teacher/TopicWizard';
@@ -194,6 +195,8 @@ if (root) {
 		'/supervise/class/:id': byId(SuperviseClass),
 		'/supervise/student/:id': byId(SuperviseStudent),
 		'/teach': TeacherHome,
+		// Ask to teach; `?school=<id>` is a school's own sign-up link
+		'/teach/request': AccessRequest,
 		'/teach/activity': TeacherActivity,
 		'/teach/words': TeacherBannedWords,
 		'/teach/lessons': PastLessons,

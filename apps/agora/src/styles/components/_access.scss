@@ -1,0 +1,160 @@
+@use '../tokens' as *;
+
+// Asking to teach: the request form (/teach/request) and the status panel that
+// stands in for the teacher's home until the request is approved. One column,
+// one filled button per state. Imported by components.scss; do not import directly.
+
+.access-page {
+	gap: var(--space-md);
+	max-inline-size: 36rem;
+	margin-inline: auto;
+	inline-size: 100%;
+}
+
+.access-panel {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-lg) var(--space-md);
+	text-align: center;
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+
+	&__title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--text-primary);
+	}
+
+	&__text {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	&__meta {
+		margin: 0;
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+
+	&__reason {
+		margin: 0;
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-sm);
+		background: var(--bg-inset);
+		color: var(--text-primary);
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--space-sm);
+		margin-block-start: var(--space-xs);
+	}
+
+	&__error {
+		margin: 0;
+		color: var(--danger-ink);
+	}
+
+	.btn {
+		min-block-size: 44px;
+	}
+}
+
+.access-chip {
+	display: inline-flex;
+	align-items: center;
+	min-block-size: 32px;
+	padding: 0 var(--space-md);
+	border-radius: var(--radius-full);
+	background: var(--bg-inset);
+	color: var(--text-primary);
+	font-weight: 700;
+
+	&--pending {
+		border: 1.5px solid var(--border-lantern);
+	}
+
+	&--declined {
+		border: 1.5px solid var(--danger-ink);
+		color: var(--danger-ink);
+	}
+}
+
+.access-flash {
+	margin: 0;
+	padding: var(--space-sm) var(--space-md);
+	border-radius: var(--radius-sm);
+	background: var(--bg-inset);
+	border-inline-start: 4px solid var(--border-lantern);
+	color: var(--text-primary);
+}
+
+.access-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	&__field {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		border: 0;
+		padding: 0;
+		margin: 0;
+		min-inline-size: 0;
+	}
+
+	&__label {
+		font-weight: 700;
+		color: var(--text-primary);
+	}
+
+	&__input {
+		min-block-size: 44px;
+		padding: var(--space-xs) var(--space-sm);
+		border: 1.5px solid var(--border-strong);
+		border-radius: var(--radius-sm);
+		font: inherit;
+		background: var(--bg-card-solid);
+		color: var(--text-primary);
+		inline-size: 100%;
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+
+		&[aria-invalid='true'] {
+			border-color: var(--danger-ink);
+		}
+	}
+
+	&__error {
+		margin: 0;
+		font-size: var(--font-size-xs);
+		color: var(--danger-ink);
+	}
+
+	&__hint {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	&__choice {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		min-block-size: 44px;
+	}
+
+	&__submit {
+		min-block-size: 44px;
+	}
+}

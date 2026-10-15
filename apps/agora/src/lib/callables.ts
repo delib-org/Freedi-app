@@ -1,4 +1,5 @@
 import { functions, httpsCallable } from './firebase';
+import { withApprovalGate } from './access';
 import type {
 	AgoraDeviceMode,
 	DealNotesRequest,
@@ -135,7 +136,7 @@ export async function createSession(request: CreateSessionRequest): Promise<Crea
 		functions,
 		'agoraCreateSession',
 	);
-	const result = await call(request);
+	const result = await withApprovalGate(() => call(request));
 
 	return result.data;
 }
@@ -272,7 +273,7 @@ export async function generateTopicPackage(
 		// while the package quietly finished and appeared on the next visit.
 		{ timeout: 5 * 60 * 1000 },
 	);
-	const result = await call(request);
+	const result = await withApprovalGate(() => call(request));
 
 	return result.data;
 }
@@ -298,7 +299,7 @@ export async function teacherClass(request: TeacherClassRequest): Promise<Teache
 		functions,
 		'agoraTeacherClass',
 	);
-	const result = await call(request);
+	const result = await withApprovalGate(() => call(request));
 
 	return result.data;
 }
@@ -322,7 +323,7 @@ export async function teacherRoster(request: TeacherRosterRequest): Promise<Teac
 		functions,
 		'agoraTeacherRoster',
 	);
-	const result = await call(request);
+	const result = await withApprovalGate(() => call(request));
 
 	return result.data;
 }

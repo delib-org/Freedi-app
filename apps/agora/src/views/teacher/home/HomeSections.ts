@@ -196,7 +196,7 @@ export function classesSection(attrs: ClassesSectionAttrs): m.Children {
 				: empty
 					? m('.teach-empty', [
 							m('strong.teach-empty__title', t('teach.no_classes')),
-							m('p', t(attrs.hasSchool ? 'teach.no_classes_hint' : 'dashboard.no_school_text')),
+							m('p', t(attrs.hasSchool ? 'teach.no_classes_hint' : 'access.no_school')),
 							attrs.hasSchool
 								? m(
 										'button.btn.btn--primary',
