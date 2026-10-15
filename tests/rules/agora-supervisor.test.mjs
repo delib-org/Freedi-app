@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
@@ -149,12 +150,28 @@ describe('agora supervision collections', () => {
 			await assertFails(getDoc(doc(db, 'agoraStudentAggregates', MEMBER)));
 		});
 
-		it('cannot list the schools it supervises (the callable does that)', async () => {
+		// The one exception: the Agora dashboard lists the schools a user
+		// supervises with a `supervisorMap.<uid> == true` equality query, and the
+		// agoraSchools list rule proves it from that constraint (see
+		// apps/agora/src/lib/teacher.ts). The query below mirrors it exactly.
+		it('lists the schools it supervises, and only those', async () => {
 			const db = env.authenticatedContext(SUPERVISOR).firestore();
-			await assertFails(
+			const snap = await assertSucceeds(
 				getDocs(
 					query(collection(db, 'agoraSchools'), where(`supervisorMap.${SUPERVISOR}`, '==', true)),
 				),
+			);
+			assert.deepEqual(
+				snap.docs.map((d) => d.id),
+				[SCHOOL],
+			);
+		});
+
+		it('cannot enumerate schools it does not supervise', async () => {
+			const db = env.authenticatedContext(SUPERVISOR).firestore();
+			await assertFails(getDocs(collection(db, 'agoraSchools')));
+			await assertFails(
+				getDocs(query(collection(db, 'agoraSchools'), where('supervisorMap.someone-else', '==', true))),
 			);
 		});
 	});
