@@ -17,7 +17,7 @@ import { getTopicPackage, loadTopicPackage } from './topic';
 export function lessonTitle(session: AgoraSession): string | null {
 	const topic = getTopicPackage(session.topicPackageId);
 	if (!topic) {
-		loadTopicPackage(session.topicPackageId);
+		loadTopicPackage(session.topicPackageId, session.sessionId);
 
 		return null;
 	}

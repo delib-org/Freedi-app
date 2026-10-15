@@ -9,11 +9,13 @@ import { getUserState } from '../user';
 import {
 	checkLibraryAccess,
 	fetchHiddenScenarios,
+	fetchOpenReports,
 	fetchLibraryScenarios,
 	fetchLibraryTags,
 	translateScenarios,
 	type LibrarySort,
 } from './api';
+import { groupReports } from './adminView';
 import { untranslatedIds } from './view';
 
 /**
@@ -39,6 +41,8 @@ export interface LibraryStore {
 	translations: Map<string, AgoraScenarioCardText>;
 	translationLang: string;
 	translating: boolean;
+	/** Reported items waiting in the admin queue (one per target, as the queue lists them); admins only */
+	openReports: number;
 }
 
 /** An answer for "is this teacher approved" is trusted this long before the next page re-asks */
@@ -58,6 +62,7 @@ const store: LibraryStore = {
 	translations: new Map(),
 	translationLang: '',
 	translating: false,
+	openReports: 0,
 };
 
 let ownerUid: string | null = null;
@@ -88,6 +93,7 @@ export function resetLibrary(): void {
 	store.translations = new Map();
 	store.translationLang = '';
 	store.translating = false;
+	store.openReports = 0;
 	ownerUid = null;
 	accessAt = 0;
 	accessPending = null;
@@ -120,6 +126,7 @@ export function ensureLibraryAccess(force = false): Promise<void> {
 			store.access = answer.approved ? 'approved' : 'denied';
 			store.isAdmin = answer.isAdmin;
 			accessAt = Date.now();
+			if (answer.isAdmin) void refreshOpenReports();
 		})
 		.catch((error: unknown) => {
 			console.error('[Library] Checking access failed:', error);
@@ -131,6 +138,22 @@ export function ensureLibraryAccess(force = false): Promise<void> {
 		});
 
 	return accessPending;
+}
+
+/** The admin queue just loaded or changed: its own count is the badge's */
+export function setOpenReportCount(count: number): void {
+	store.openReports = count;
+	m.redraw();
+}
+
+/** Count what waits in the admin queue, for the badge on its menu entry. Admins only. */
+export async function refreshOpenReports(): Promise<void> {
+	if (!store.isAdmin) return;
+	try {
+		setOpenReportCount(groupReports(await fetchOpenReports()).length);
+	} catch (error) {
+		console.error('[Library] Counting open reports failed:', error);
+	}
 }
 
 export async function reloadTags(): Promise<void> {

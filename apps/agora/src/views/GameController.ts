@@ -721,7 +721,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				// The village's first station needs the topic: fetch it while the class
 				// waits, so moving on does not swap the 3D world for a loading spinner.
 				// (The opening film is warmed up in the same wait, so it starts on a frame.)
-				loadTopicPackage(session.topicPackageId);
+				loadTopicPackage(session.topicPackageId, session.sessionId);
 				const lobbyFilm = openingFilmOf(getTopicPackage(session.topicPackageId) ?? undefined);
 				if (lobbyFilm) prefetchFilm(lobbyFilm.url);
 
@@ -757,7 +757,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			// Every stage past the lobby needs the topic package
 			const topic = getTopicPackage(session.topicPackageId);
 			if (!topic) {
-				loadTopicPackage(session.topicPackageId);
+				loadTopicPackage(session.topicPackageId, session.sessionId);
 				const spinner = m(
 					'.shell',
 					m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),

@@ -290,6 +290,23 @@
 		color: var(--text-secondary);
 	}
 
+	// A count of things waiting for this person (the library's open reports).
+	// Danger-red like the console's badge: it is owed attention, not a camp.
+	&__item-badge {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 1.25rem;
+		height: 1.25rem;
+		padding: 0 var(--space-xs);
+		border-radius: var(--radius-full);
+		background: var(--danger);
+		color: var(--text-on-lantern);
+		font-size: var(--font-size-xs);
+		font-family: var(--font-display);
+	}
+
 	// Said with a success-tinted fill and border, never success-coloured text:
 	// --success-deep is defined against white and the civic theme does not
 	// remap it, so as text it vanishes on navy.

@@ -1322,6 +1322,8 @@ export {
 	agoraLibraryReport,
 	agoraLibraryResolveReport,
 	agoraLibraryMergeTags,
+	onAgoraLibraryReportCreated,
+	agoraTopicAccess,
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 	onAgoraSessionFinished,

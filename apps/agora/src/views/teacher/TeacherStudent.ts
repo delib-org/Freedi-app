@@ -81,7 +81,7 @@ export function TeacherStudent(
 
 	function lessonTitleOf(sessionId: string, topicPackageId: string): string {
 		const topic = getTopicPackage(topicPackageId);
-		if (!topic) loadTopicPackage(topicPackageId);
+		if (!topic) loadTopicPackage(topicPackageId, sessionId);
 		const session = detail?.sessions.find((candidate) => candidate.sessionId === sessionId);
 
 		return (

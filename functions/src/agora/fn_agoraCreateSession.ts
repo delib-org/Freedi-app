@@ -39,6 +39,7 @@ import { generateUniqueCode } from './joinCodes';
 import { buildQuestionStatement } from './questionStage';
 import { sanitizeStagePlan } from './stagePlanInput';
 import { loadTeacherPrompts } from './teacherPrompts';
+import { mayOpenScenario } from './topicReaders';
 
 /** A game started by typing the main question — no scenario package behind it */
 export interface QuickGameRequest {
@@ -293,6 +294,10 @@ export const agoraCreateSession = onCall(
 					throw new HttpsError('not-found', 'Topic package not found');
 				}
 				topic = topicSnap.data() as AgoraTopicPackage;
+				// Someone else's private scenario is not theirs to run (the library copies)
+				if (!(await mayOpenScenario(topic, uid))) {
+					throw new HttpsError('permission-denied', 'This scenario is private');
+				}
 				if (topic.status !== AgoraTopicStatus.ready) {
 					throw new HttpsError('failed-precondition', 'Topic package is not ready');
 				}

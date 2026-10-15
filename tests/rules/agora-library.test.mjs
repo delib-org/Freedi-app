@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import {
@@ -27,6 +28,8 @@ describe('agora scenario library', () => {
 	const OUTSIDER = 'teacher-not-approved';
 	const STUDENT = 'student-1';
 	const ADMIN = 'admin-1';
+	/** A student seated in a game built on `plain-1` (agoraJoinSession left the marker) */
+	const PLAYER = 'student-playing';
 
 	function pkg(id, overrides = {}) {
 		return {
@@ -86,6 +89,12 @@ describe('agora scenario library', () => {
 				pkg('private-1', { visibility: 'private' }),
 			);
 			await setDoc(doc(db, 'agoraTopicPackages', 'plain-1'), pkg('plain-1'));
+			await setDoc(doc(db, 'agoraTopicReaders', `plain-1--${PLAYER}`), {
+				topicPackageId: 'plain-1',
+				uid: PLAYER,
+				sessionId: 'session-1',
+				grantedAt: 1,
+			});
 			await setDoc(doc(db, 'agoraLibraryTags', 's1'), { tagId: 's1', label: 'x' });
 			await setDoc(doc(db, 'agoraScenarioTranslations', 'pub-1__en'), { scenarioId: 'pub-1' });
 			const post = (id, overrides = {}) =>
@@ -212,16 +221,74 @@ describe('agora scenario library', () => {
 		});
 	});
 
-	describe('reading one scenario by id (the soft spot, kept on purpose)', () => {
-		it('lets a student open the package behind a game', async () => {
+	describe('reading one scenario by id (private means private)', () => {
+		it('keeps a public scenario readable by any signed-in user, hidden or not', async () => {
+			for (const uid of [STUDENT, OUTSIDER, APPROVED]) {
+				const db = env.authenticatedContext(uid).firestore();
+				await assertSucceeds(getDoc(doc(db, 'agoraTopicPackages', 'pub-1')));
+				await assertSucceeds(getDoc(doc(db, 'agoraTopicPackages', 'pub-hidden')));
+			}
+		});
+
+		it('refuses a private scenario to a teacher who is not its author, approved or not', async () => {
+			for (const uid of [APPROVED, OUTSIDER]) {
+				const db = env.authenticatedContext(uid).firestore();
+				await assertFails(getDoc(doc(db, 'agoraTopicPackages', 'private-1')));
+				// Never published (no `visibility`) is private too
+				await assertFails(getDoc(doc(db, 'agoraTopicPackages', 'plain-1')));
+			}
+		});
+
+		it('refuses a student who holds only the id', async () => {
 			const db = env.authenticatedContext(STUDENT).firestore();
+			await assertFails(getDoc(doc(db, 'agoraTopicPackages', 'private-1')));
+		});
+
+		it('lets the author open their own private scenario', async () => {
+			const db = env.authenticatedContext(AUTHOR).firestore();
+			await assertSucceeds(getDoc(doc(db, 'agoraTopicPackages', 'private-1')));
 			await assertSucceeds(getDoc(doc(db, 'agoraTopicPackages', 'plain-1')));
-			await assertSucceeds(getDoc(doc(db, 'agoraTopicPackages', 'pub-1')));
+		});
+
+		it('lets a sys-admin open any private scenario', async () => {
+			const db = env.authenticatedContext(ADMIN).firestore();
+			await assertSucceeds(getDoc(doc(db, 'agoraTopicPackages', 'private-1')));
+			await assertSucceeds(getDoc(doc(db, 'agoraTopicPackages', 'plain-1')));
+		});
+
+		it('lets a player the server marked as a reader open the package behind their game', async () => {
+			const db = env.authenticatedContext(PLAYER).firestore();
+			await assertSucceeds(getDoc(doc(db, 'agoraTopicPackages', 'plain-1')));
+			// The marker is for that scenario alone
+			await assertFails(getDoc(doc(db, 'agoraTopicPackages', 'private-1')));
+		});
+
+		it('answers a missing scenario as missing, not as denied', async () => {
+			const db = env.authenticatedContext(OUTSIDER).firestore();
+			const snap = await assertSucceeds(getDoc(doc(db, 'agoraTopicPackages', 'no-such')));
+			assert.equal(snap.exists(), false);
 		});
 
 		it('refuses a signed-out visitor', async () => {
 			const db = env.unauthenticatedContext().firestore();
 			await assertFails(getDoc(doc(db, 'agoraTopicPackages', 'pub-1')));
+		});
+	});
+
+	describe('reader markers', () => {
+		it('are never read or written by a client, not even their own', async () => {
+			const db = env.authenticatedContext(PLAYER).firestore();
+			const markerId = `plain-1--${PLAYER}`;
+			await assertFails(getDoc(doc(db, 'agoraTopicReaders', markerId)));
+			await assertFails(
+				setDoc(doc(db, 'agoraTopicReaders', `private-1--${PLAYER}`), {
+					topicPackageId: 'private-1',
+					uid: PLAYER,
+					sessionId: 's',
+					grantedAt: 1,
+				}),
+			);
+			await assertFails(deleteDoc(doc(db, 'agoraTopicReaders', markerId)));
 		});
 	});
 

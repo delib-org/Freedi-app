@@ -3,6 +3,7 @@ import { AgoraScenarioCardText, AgoraTopicPackage, isNewScenario } from '@freedi
 import { Icon } from '../../../components/Icon';
 import { Stars } from '../../../components/scenarioLibrary/Stars';
 import { getAvailableLanguages, getLang, t, tCount } from '../../../lib/i18n';
+import { isPermissionDenied } from '../../../lib/permissionDenied';
 import {
 	fetchLibraryScenario,
 	translateScenarios,
@@ -15,7 +16,7 @@ import { LibraryShell } from './LibraryShell';
 import { ReportButton } from './ReportButton';
 import { ScenarioTabs } from './ScenarioTabs';
 
-type Phase = 'loading' | 'ready' | 'missing' | 'failed';
+type Phase = 'loading' | 'ready' | 'missing' | 'private' | 'failed';
 type UseState = 'idle' | 'working' | 'done' | 'limit' | 'failed';
 
 export interface LibraryScenarioAttrs {
@@ -69,9 +70,11 @@ export function LibraryScenario(): m.Component<LibraryScenarioAttrs> {
 			if (getLibraryStore().tags.size === 0) await reloadTags();
 			const found = await fetchLibraryScenario(id);
 			if (!found || found.visibility !== 'public' || !found.library) {
-				// Mine but private: still worth opening, as a preview of the listing
-				if (!found || found.creatorId !== getUserState().user?.uid) {
-					phase = 'missing';
+				// Mine but private: still worth opening, as a preview of the listing.
+				// An admin may open anyone's; the rules refuse everyone else (below).
+				const mine = found?.creatorId === getUserState().user?.uid;
+				if (!found || (!mine && !getLibraryStore().isAdmin)) {
+					phase = found && found.visibility !== 'public' ? 'private' : 'missing';
 					m.redraw();
 
 					return;
@@ -86,8 +89,13 @@ export function LibraryScenario(): m.Component<LibraryScenarioAttrs> {
 				m.redraw();
 			}
 		} catch (error) {
-			console.error('[Library] Loading the scenario failed:', error);
-			phase = 'failed';
+			if (isPermissionDenied(error)) {
+				// A private scenario someone else wrote: the rules keep it closed
+				phase = 'private';
+			} else {
+				console.error('[Library] Loading the scenario failed:', error);
+				phase = 'failed';
+			}
 			m.redraw();
 		}
 	}
@@ -286,25 +294,40 @@ export function LibraryScenario(): m.Component<LibraryScenarioAttrs> {
 				},
 				phase === 'loading'
 					? m('.spinner', { role: 'status' })
-					: phase === 'missing'
+					: phase === 'private'
 						? m('.card.stack.scn-gate', [
-								m('p', { role: 'alert' }, t('scenlib.not_found')),
+								m(
+									'span.scn-gate__icon',
+									{ 'aria-hidden': 'true' },
+									m(Icon, { name: 'lock', size: 28 }),
+								),
+								m('h2.scn-gate__title', t('scenlib.private_title')),
+								m('p', t('scenlib.private_body')),
 								m(
 									m.route.Link,
 									{ href: '/teach/library', class: 'btn btn--secondary' },
 									t('scenlib.back'),
 								),
 							])
-						: phase === 'failed' || !pkg
+						: phase === 'missing'
 							? m('.card.stack.scn-gate', [
-									m('p', { role: 'alert' }, t('scenlib.error')),
+									m('p', { role: 'alert' }, t('scenlib.not_found')),
 									m(
-										'button.btn.btn--primary',
-										{ type: 'button', onclick: () => void load(attrs.id) },
-										t('scenlib.retry'),
+										m.route.Link,
+										{ href: '/teach/library', class: 'btn btn--secondary' },
+										t('scenlib.back'),
 									),
 								])
-							: body(pkg),
+							: phase === 'failed' || !pkg
+								? m('.card.stack.scn-gate', [
+										m('p', { role: 'alert' }, t('scenlib.error')),
+										m(
+											'button.btn.btn--primary',
+											{ type: 'button', onclick: () => void load(attrs.id) },
+											t('scenlib.retry'),
+										),
+									])
+								: body(pkg),
 			);
 		},
 	};

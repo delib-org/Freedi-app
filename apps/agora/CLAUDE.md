@@ -168,10 +168,22 @@ words in `lib/scenarioLibrary/strings*.ts` (merged into `i18n.ts`), styles
   about a future Studio approval. Callables re-check it live; the RULES see the
   marker `agoraApprovedTeachers/{uid}` that `agoraLibraryAccess` writes (so a
   removed teacher loses writes at once and reads at their next visit).
-- **The soft spot.** `agoraTopicPackages` `get` stays open to any signed-in user
-  (students read the package behind their game by id). Only `list` is
-  restricted: the owner's own, or public + un-hidden for an approved teacher. A
-  "private" scenario is unlisted, not unreadable if its id leaks.
+- **Private is private (2026-10-15).** `agoraTopicPackages` `get`: a PUBLIC
+  scenario is open to any signed-in user; a private one (anything not public,
+  never-published included) only to its author, a sys-admin, or a holder of a
+  reader marker `agoraTopicReaders/{id}--{uid}`. `agoraJoinSession` leaves the
+  marker for every player; `agoraTopicAccess({sessionId})` is the fallback
+  `lib/topic.ts` tries once on permission-denied (seats from before markers,
+  a teacher running someone else's scenario). Pass the session to
+  `loadTopicPackage(id, sessionId)`. `agoraCreateSession` refuses someone
+  else's private scenario (the library hands out copies). A stranger opening
+  `/teach/library/:id` of a private one sees "This scenario is private".
+  The seed's demo package is `visibility: 'public'` for that reason.
+- **Reports reach the admins.** `onAgoraLibraryReportCreated` emails the system
+  admins (usersV2 `systemAdmin`, or `AGORA_LIBRARY_REPORT_RECIPIENTS`) through
+  the shared nodemailer transporter: what, why, the reporter's role, a link to
+  the queue; no names. The menu's "Library admin" row carries an open-reports
+  badge (`state.ts#refreshOpenReports`).
 - **Translations** are cached per scenario per language in
   `agoraScenarioTranslations` (valid while the scenario's `lastUpdate` matches),
   model `WORKER_MODEL` via `callLLM`. A copy in another language is translated

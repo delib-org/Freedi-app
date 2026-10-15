@@ -77,6 +77,9 @@ export const libraryStrings: Record<LangCode, Record<string, string>> = {
 		'scenlib.translated_note': 'התרחיש נכתב ב{{language}} ותורגם אוטומטית.',
 		'scenlib.rated_by': '({{n}} מורים)',
 		'scenlib.rated_by_one': '(מורה אחד)',
+		'scenlib.private_title': 'התרחיש הזה פרטי',
+		'scenlib.private_body':
+			'רק מי שכתב/ה אותו ומנהלי המערכת יכולים לפתוח אותו. אם הוא נחוץ לכם, בקשו מהכותב/ת לפרסם אותו בספרייה.',
 		'scenlib.not_found': 'התרחיש לא נמצא. ייתכן שהוסר מהספרייה.',
 		'scenlib.stars_n': '{{n}} כוכבים',
 		'scenlib.mine_title': 'התרחישים שלי',
@@ -211,6 +214,9 @@ export const libraryStrings: Record<LangCode, Record<string, string>> = {
 			'This scenario was written in {{language}} and translated automatically.',
 		'scenlib.rated_by': '({{n}} teachers)',
 		'scenlib.rated_by_one': '(1 teacher)',
+		'scenlib.private_title': 'This scenario is private',
+		'scenlib.private_body':
+			'Only its author and the system admins can open it. If you need it, ask the author to publish it in the library.',
 		'scenlib.not_found': 'Scenario not found. It may have been removed from the library.',
 		'scenlib.stars_n': '{{n}} stars',
 		'scenlib.mine_title': 'My scenarios',
@@ -345,6 +351,9 @@ export const libraryStrings: Record<LangCode, Record<string, string>> = {
 		'scenlib.translated_note': 'كُتب هذا السيناريو بلغة {{language}} وتُرجم تلقائيًا.',
 		'scenlib.rated_by': '({{n}} معلمين)',
 		'scenlib.rated_by_one': '(معلّم واحد)',
+		'scenlib.private_title': 'هذا السيناريو خاص',
+		'scenlib.private_body':
+			'لا يمكن فتحه إلا لمؤلفه ولمديري النظام. إن كنتم بحاجة إليه، اطلبوا من المؤلف نشره في المكتبة.',
 		'scenlib.not_found': 'السيناريو غير موجود. ربما أُزيل من المكتبة.',
 		'scenlib.stars_n': '{{n}} نجوم',
 		'scenlib.mine_title': 'سيناريوهاتي',
@@ -480,6 +489,9 @@ export const libraryStrings: Record<LangCode, Record<string, string>> = {
 			'Este escenario se escribió en {{language}} y se tradujo automáticamente.',
 		'scenlib.rated_by': '({{n}} docentes)',
 		'scenlib.rated_by_one': '(1 docente)',
+		'scenlib.private_title': 'Este escenario es privado',
+		'scenlib.private_body':
+			'Solo su autor y los administradores del sistema pueden abrirlo. Si lo necesitas, pide al autor que lo publique en la biblioteca.',
 		'scenlib.not_found':
 			'No se encontró el escenario. Puede que se haya retirado de la biblioteca.',
 		'scenlib.stars_n': '{{n}} estrellas',
@@ -618,6 +630,9 @@ export const libraryStrings: Record<LangCode, Record<string, string>> = {
 			'Dieses Szenario wurde auf {{language}} geschrieben und automatisch übersetzt.',
 		'scenlib.rated_by': '({{n}} Lehrkräfte)',
 		'scenlib.rated_by_one': '(1 Lehrkraft)',
+		'scenlib.private_title': 'Dieses Szenario ist privat',
+		'scenlib.private_body':
+			'Nur die Person, die es geschrieben hat, und die Systemadministration können es öffnen. Wenn du es brauchst, bitte sie, es in der Bibliothek zu veröffentlichen.',
 		'scenlib.not_found': 'Szenario nicht gefunden. Es wurde womöglich aus der Bibliothek entfernt.',
 		'scenlib.stars_n': '{{n}} Sterne',
 		'scenlib.mine_title': 'Meine Szenarien',
@@ -760,6 +775,9 @@ export const libraryStrings: Record<LangCode, Record<string, string>> = {
 			'Dit scenario is geschreven in het {{language}} en automatisch vertaald.',
 		'scenlib.rated_by': '({{n}} docenten)',
 		'scenlib.rated_by_one': '(1 docent)',
+		'scenlib.private_title': 'Dit scenario is privé',
+		'scenlib.private_body':
+			'Alleen de auteur en de systeembeheerders kunnen het openen. Heb je het nodig, vraag de auteur dan om het in de bibliotheek te publiceren.',
 		'scenlib.not_found': 'Scenario niet gevonden. Het is misschien uit de bibliotheek verwijderd.',
 		'scenlib.stars_n': '{{n}} sterren',
 		'scenlib.mine_title': 'Mijn scenario’s',

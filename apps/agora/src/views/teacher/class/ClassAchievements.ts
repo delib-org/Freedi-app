@@ -31,7 +31,7 @@ function bestLessonCard(detail: TeacherClassDetail): m.Children {
 	const best = bestClassLesson(detail.aggregate);
 	if (!best) return null;
 	const topic = getTopicPackage(best.topicPackageId);
-	if (!topic) loadTopicPackage(best.topicPackageId);
+	if (!topic) loadTopicPackage(best.topicPackageId, best.sessionId);
 	const date = new Date(best.playedAt).toLocaleDateString(getLang(), {
 		day: 'numeric',
 		month: 'long',
