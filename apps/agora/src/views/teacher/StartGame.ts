@@ -492,7 +492,7 @@ export function StartGame(): m.Component {
 					)
 				: null,
 			schools.length === 0 && classes.length === 0
-				? m('p.home-explanation.home-explanation--start', t('startGame.no_school_hint'))
+				? m('p.home-explanation.home-explanation--start', t('access.no_school'))
 				: classChoice === null
 					? m('p.home-explanation.home-explanation--start', t('startGame.pick_class_hint'))
 					: null,

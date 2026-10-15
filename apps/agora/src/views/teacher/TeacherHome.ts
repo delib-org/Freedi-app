@@ -14,6 +14,8 @@ import { AgoraClassAggregate, AgoraSession, AgoraTopicPackage } from '@freedi/sh
 import { buildDefaultFrenchRevolutionTopic, backfillDefaultArtwork } from '../../lib/defaultTopic';
 import { LanguagePicker } from '../../components/LanguagePicker';
 import { TeacherNav } from '../../components/TeacherNav';
+import { AccessPanel } from '../../components/AccessPanel';
+import { accessState, getAccessStore, loadAccess } from '../../lib/access';
 import { isSessionLive, noteTeacherDashboard } from '../../lib/teacherNav';
 import { countedSteps, teacherStepLabel } from '../../lib/teacherSteps';
 import { fetchSourceVersions } from '../../lib/scenarioLibrary/api';
@@ -158,7 +160,10 @@ export function TeacherHome(): m.Component {
 					m.redraw();
 				});
 			}
+			// The starter scenario is a write only an approved teacher may make
 			if (loadedTopics.length === 0 && !user.isAnonymous && !provisionedFor.has(user.uid)) {
+				await loadAccess(user.uid);
+				if (accessState() !== 'approved' || loadedForUid !== user.uid) return;
 				provisionedFor.add(user.uid);
 				const defaultTopic = await provisionDefaultTopic(user.uid);
 				if (defaultTopic && loadedForUid === user.uid) {
@@ -251,6 +256,10 @@ export function TeacherHome(): m.Component {
 				dashboardLoaded = false;
 			}
 			loadedForUid = user.uid;
+			// Someone waiting may have been approved since the last look: ask again
+			if (!user.isAnonymous && getAccessStore().uid === user.uid && accessState() !== 'approved') {
+				void loadAccess(user.uid, true);
+			}
 
 			// The shelf and the console answer different questions of different
 			// servers. Asked together, the page waits for the slower one — not
@@ -378,6 +387,27 @@ export function TeacherHome(): m.Component {
 		]);
 	}
 
+	/**
+	 * Until approved the home is one card: the request, or where it stands.
+	 * Nothing behind it (lessons, classes, scenarios) is reachable — the server
+	 * refuses the same calls, this only keeps the screen honest about it.
+	 */
+	function gateView(uid: string): m.Children {
+		const state = accessState();
+
+		return m('.shell', [
+			m('.shell__content.access-page', [
+				m('.sec-head', [m('h2.sec-head__title', t('teacher.title')), m(LanguagePicker)]),
+				state === 'approved' ? null : m(AccessPanel, { state, uid }),
+				m(
+					'button.btn.btn--ghost',
+					{ type: 'button', onclick: () => m.route.set('/') },
+					t('common.back'),
+				),
+			]),
+		]);
+	}
+
 	void load();
 
 	return {
@@ -392,6 +422,18 @@ export function TeacherHome(): m.Component {
 				);
 			}
 			if (tier !== 2) return signInView(signInError ?? null);
+
+			// Who may enter is asked once per account; a failed read lets the page
+			// through, because the server refuses what it must either way
+			if (user) void loadAccess(user.uid);
+			const access = getAccessStore();
+			if (user && (!access.loaded || access.uid !== user.uid)) {
+				return m(
+					'.shell',
+					m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
+				);
+			}
+			if (user && !access.failed && accessState() !== 'approved') return gateView(user.uid);
 
 			const live = sessions.filter(isSessionLive);
 			const reusable = reusableScenarios(topics);

@@ -4,6 +4,7 @@ import { t } from '../lib/i18n';
 import { classLabel } from '../lib/teacher';
 import { getTeacherNavState, liveSessions, loadTeacherNav, navClass } from '../lib/teacherNav';
 import { AgoraSession } from '@freedi/shared-types';
+import { studioOverviewUrl } from '../lib/studioLink';
 import {
 	ensureLibraryAccess,
 	getLibraryStore,
@@ -175,8 +176,10 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 		/** A count waiting behind this row; zero shows nothing */
 		badge?: { count: number; label: string };
 		route: string;
+		/** A page outside Agora: opened in its own tab, never "you are here" */
+		external?: boolean;
 	}): m.Children {
-		const current = here() === attrs.route;
+		const current = !attrs.external && here() === attrs.route;
 
 		return m(
 			'button.teacher-nav__item',
@@ -185,7 +188,15 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 				type: 'button',
 				class: current ? 'teacher-nav__item--current' : undefined,
 				'aria-current': current ? 'page' : undefined,
-				onclick: () => go(attrs.route),
+				onclick: () => {
+					if (!attrs.external) {
+						go(attrs.route);
+
+						return;
+					}
+					open = false;
+					window.open(attrs.route, '_blank', 'noopener');
+				},
 			},
 			[
 				m('span.teacher-nav__item-icon', m(Icon, { name: attrs.icon, size: 20 })),
@@ -335,6 +346,14 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 						label: t('nav.banned_words'),
 						route: '/teach/words',
 					}),
+					studioOverviewUrl()
+						? row({
+								icon: 'chart',
+								label: t('nav.my_overview'),
+								route: studioOverviewUrl(),
+								external: true,
+							})
+						: null,
 					getTeacherNavState().canSupervise
 						? row({
 								icon: 'people',
