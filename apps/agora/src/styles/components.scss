@@ -6,14 +6,19 @@
 
 @use 'components/entry';
 @use 'components/scenes';
+@use 'components/youtube';
+@use 'components/materials';
 @use 'components/journey';
 @use 'components/square';
 @use 'components/thread';
 @use 'components/navigation';
 @use 'components/teacher-live';
 @use 'components/teacher-dashboard';
+@use 'components/teacher-home';
+@use 'components/banned-words';
 @use '@freedi/shared-charts/styles/chart';
 @use 'components/teacher-nav';
+@use 'components/access';
 @use 'components/class-roster';
 @use 'components/game-report';
 @use 'components/rating';
@@ -23,15 +28,27 @@
 @use 'components/event';
 @use 'components/stage-plan';
 @use 'components/round';
+@use 'components/hand';
 @use 'components/looks';
 @use 'components/teacher-console';
+@use 'components/writing-view';
 @use 'components/teacher-strip';
 @use 'components/teacher-panel';
 @use 'components/question-sheet';
 @use 'components/moderation';
+@use 'components/language-alert';
+@use 'components/rejoin-alert';
 @use 'components/projector';
+@use 'components/join-qr';
 @use 'components/village';
 @use 'components/village-round';
+@use 'components/cast';
+@use 'components/opening-film';
+@use 'components/teacher-watch';
+@use 'components/scenario-library';
+@use 'components/scenario-library-page';
+@use 'components/scenario-library-discussion';
+@use 'components/scenario-library-admin';
 
 @use 'components/indicators';
 @use 'components/supervise';

@@ -1,4 +1,5 @@
 import { useMemo, type FC } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import type { OrganizationActivity } from '@freedi/shared-types';
 import { ProgressFunnel } from '@/components/atomic/atoms/ProgressFunnel';
@@ -71,6 +72,12 @@ const LinkedSurveyCard: FC<LinkedSurveyCardProps> = ({ activity }) => {
 			)}
 
 			<div className={styles.actions}>
+				<Link
+					className={`${styles.action} ${styles.primaryAction}`}
+					to={`/orgs/${activity.organizationId}/questions/${activity.statementId}/results`}
+				>
+					{t('View results')}
+				</Link>
 				<a className={styles.action} href={participantUrl} target="_blank" rel="noreferrer">
 					{t('Open the survey')}
 				</a>

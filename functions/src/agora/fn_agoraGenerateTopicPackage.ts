@@ -12,6 +12,7 @@ import { parse } from 'valibot';
 import { logError } from '../utils/errorHandling';
 import { callLLM, extractJson, TAXONOMY_MODEL } from '../config/openai-chat';
 import { buildTopicPrompt } from './topicPrompt';
+import { requireApprovedTeacher } from './libraryAccess';
 
 interface Request {
 	statement?: string;
@@ -32,13 +33,8 @@ interface Result {
 export const agoraGenerateTopicPackage = onCall(
 	{ region: functionConfig.region, timeoutSeconds: 300 },
 	async (request: CallableRequest<Request>): Promise<Result> => {
-		const uid = request.auth?.uid;
-		if (!uid) {
-			throw new HttpsError('unauthenticated', 'User must be authenticated');
-		}
-		if (request.auth?.token.firebase.sign_in_provider === 'anonymous') {
-			throw new HttpsError('permission-denied', 'Teachers must sign in with a full account');
-		}
+		// Scenarios are for approved teachers only (hard gate, Tal 2026-10-15)
+		const { uid } = await requireApprovedTeacher(request);
 
 		const { statement, description, topic, language } = request.data ?? {};
 		const question = statement ?? topic;

@@ -1,7 +1,8 @@
 import * as THREE from './vendor/three.module.js';
 import { buildWritingDesk } from './writing-desks.js';
-import { buildCharacters } from './characters-2d.js';
+import { buildCharacters, characters as roster } from './characters-2d.js';
 import { boothLayout, CENTER, PLACES } from './village-layout.js';
+import { roundedPlane, roundedSlab } from './rounded.js';
 
 export { CENTER, boothLayout, villageRadius } from './village-layout.js';
 
@@ -44,7 +45,7 @@ export function buildVillage({ scene, height, manager }) {
 	function signTexture(text, sub = '', locked = false) {
 		const c = document.createElement('canvas'); c.width = 768; c.height = 192; const ctx = c.getContext('2d');
 		ctx.fillStyle = locked ? '#d9d2c2' : '#f8edce'; ctx.fillRect(0, 0, 768, 192);
-		ctx.strokeStyle = locked ? '#8d8c80' : '#686e49'; ctx.lineWidth = 6; ctx.strokeRect(5, 5, 758, 182);
+		ctx.strokeStyle = locked ? '#8d8c80' : '#686e49'; ctx.lineWidth = 6; ctx.beginPath(); ctx.roundRect(5, 5, 758, 182, 30); ctx.stroke();
 		ctx.fillStyle = locked ? '#6f7168' : '#384f36'; ctx.textAlign = 'center'; ctx.direction = 'rtl';
 		let size = 52; ctx.font = `bold ${size}px Arial`;
 		while (ctx.measureText(text).width > 1380 && size > 26) { size -= 2; ctx.font = `bold ${size}px Arial`; }
@@ -57,7 +58,7 @@ export function buildVillage({ scene, height, manager }) {
 		const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; return tex;
 	}
 	function label(g, text, y = 3.7, sub = '') {
-		const sign = make(new THREE.PlaneGeometry(3.5, .87), new THREE.MeshBasicMaterial({ map: signTexture(text, sub), side: THREE.DoubleSide }), g, 0, y, 2.7);
+		const sign = make(roundedPlane(3.5, .87, .16), new THREE.MeshBasicMaterial({ map: signTexture(text, sub), side: THREE.DoubleSide }), g, 0, y, 2.7);
 		sign.userData.setText = (next, nextSub = '', locked = false) => { sign.material.map?.dispose(); sign.material.map = signTexture(next, nextSub, locked); sign.material.needsUpdate = true; };
 		return sign;
 	}
@@ -139,9 +140,9 @@ export function buildVillage({ scene, height, manager }) {
 		const lantern = make(new THREE.SphereGeometry(.16, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffd27a' }), group, 2.2, 3.05, 1.6); lantern.castShadow = false;
 		box(.04, .3, .04, wood, group, 2.2, 3.3, 1.6);
 		// The board on the back wall, facing the square.
-		box(3.6, 2.2, .14, wood, group, 0, 1.95, -2.62);
+		make(roundedSlab(3.6, 2.2, .14, .24), wood, group, 0, 1.95, -2.62);
 		const boardCanvas = document.createElement('canvas'); boardCanvas.width = 1536; boardCanvas.height = 900; const bc = boardCanvas.getContext('2d'); const bt = new THREE.CanvasTexture(boardCanvas); bt.colorSpace = THREE.SRGBColorSpace;
-		const face = make(new THREE.PlaneGeometry(3.4, 2.0), new THREE.MeshBasicMaterial({ map: bt }), group, 0, 1.95, -2.54); face.castShadow = false;
+		const face = make(roundedPlane(3.4, 2.0, .2), new THREE.MeshBasicMaterial({ map: bt }), group, 0, 1.95, -2.54); face.castShadow = false;
 		let lastKey = '';
 		function paint(papers, state = {}) {
 			const key = JSON.stringify([papers, state]); if (key === lastKey) return; lastKey = key;
@@ -155,8 +156,8 @@ export function buildVillage({ scene, height, manager }) {
 			shown.forEach((p, i) => {
 				const x = 40 + (i % 3) * 500, y = 125 + Math.floor(i / 3) * 375;
 				bc.save(); bc.translate(x + 235, y + 165); bc.rotate([-.018, .012, -.01, .016, -.015, .01][i]);
-				bc.fillStyle = '#3a2f2740'; bc.fillRect(-229, -159, 470, 335);
-				bc.fillStyle = p.own ? '#ffffff' : ['#f0dcd6', '#dbe7cf', '#d7dfee', '#ecdcf0'][i % 4]; bc.fillRect(-235, -165, 470, 335);
+				bc.fillStyle = '#3a2f2740'; bc.beginPath(); bc.roundRect(-229, -159, 470, 335, 18); bc.fill();
+				bc.fillStyle = p.own ? '#ffffff' : ['#f0dcd6', '#dbe7cf', '#d7dfee', '#ecdcf0'][i % 4]; bc.beginPath(); bc.roundRect(-235, -165, 470, 335, 18); bc.fill();
 				bc.fillStyle = '#334635'; bc.textAlign = 'right'; bc.font = 'bold 29px Arial';
 				bc.fillText(p.own ? 'הפתק שלי' : (p.author || `פתק ${i + 1}`), 210, -118);
 				bc.font = '29px Arial'; let line = '', row = -68;
@@ -178,9 +179,10 @@ export function buildVillage({ scene, height, manager }) {
 		const back = { x: slot.x - Math.sin(slot.facing) * 2.6, z: slot.z - Math.cos(slot.facing) * 2.6 };
 		solids.push({ x: back.x, z: back.z, w: 2.2, d: 2.2, booth: true });
 		path(station);
-		const guide = characters.assign(index, { x: slot.x + Math.sin(slot.facing) * 2.4 + Math.cos(slot.facing) * 2.6, z: slot.z + Math.cos(slot.facing) * 2.4 - Math.sin(slot.facing) * 2.6, station: station.id });
+		const guideSpot = { x: slot.x + Math.sin(slot.facing) * 2.4 + Math.cos(slot.facing) * 2.6, z: slot.z + Math.cos(slot.facing) * 2.4 - Math.sin(slot.facing) * 2.6, station: station.id };
+		const guide = characters.assign(index, guideSpot);
 		const booth = {
-			spec, station, group, face, paint, desk, guide,
+			spec, station, group, face, paint, desk, guide, slot, guideSpot,
 			setState(next) {
 				this.state = next;
 				pennant.visible = next.current === true;
@@ -206,8 +208,54 @@ export function buildVillage({ scene, height, manager }) {
 		for (let i = clearings.length - 1; i >= 0; i--) if (clearings[i].booth) clearings.splice(i, 1);
 		const slots = boothLayout(specs.length);
 		specs.forEach((spec, i) => { buildBooth(spec, slots[i], i); });
+		seatCast();
 
 		return booths;
+	}
+
+	/**
+	 * The scenario's two characters. They stand at the study house (where the
+	 * lesson's two voices are met) and take the guide's place at the story and
+	 * needs booths. The flat guides they replace step aside and come back when
+	 * the cast leaves. Everything they say is the package's own text — the app
+	 * shows it; the world only stands them up.
+	 */
+	const man = roster.find((c) => c.id === 'man');
+	/** Two spots side by side, `gap` apart, the pair centred on (cx, cz) and turned to `facing` */
+	function pairSpots(cx, cz, facing, gap, height) {
+		const along = { x: Math.cos(facing), z: -Math.sin(facing) };
+
+		return [-1, 1].map((side) => ({ x: cx + along.x * side * gap / 2, z: cz + along.z * side * gap / 2, facing, height }));
+	}
+	function seatCast() {
+		const has = characters.hasCast();
+		const studyFacing = Math.atan2(CENTER.x - PLACES.study.x, CENTER.z - PLACES.study.z);
+		// Camille on the left of the picture, the Count on the right: read right to left, the Count first
+		characters.seatCast('challenge', has ? pairSpots(PLACES.study.x + .6, PLACES.study.z + 3.5, studyFacing, 2.3, 2.1).reverse() : []);
+		characters.hide(man, has);
+		for (const booth of booths) {
+			const stands = has && (booth.spec.kind === 'story' || booth.spec.kind === 'needs');
+			if (stands) {
+				characters.hide(booth.guide, true);
+				const f = booth.slot.facing, g = booth.guideSpot;
+				characters.seatCast(booth.station.id, [
+					{ x: g.x, z: g.z, facing: f, height: 2 },
+					{ x: g.x - Math.cos(f) * 1.9, z: g.z + Math.sin(f) * 1.9, facing: f, height: 2 },
+				]);
+			} else {
+				characters.unseatCast(booth.station.id);
+				characters.hide(booth.guide, false);
+			}
+		}
+	}
+	/** Re-seat only when the cast actually changed: the shell posts its state on every sync. */
+	let castKey = '';
+	function setCast(list) {
+		characters.setCast(list);
+		const key = characters.castKey();
+		if (key === castKey) return;
+		castKey = key;
+		seatCast();
 	}
 
 	// The council's scoreboard: wide, high, and turned toward the square.
@@ -215,13 +263,54 @@ export function buildVillage({ scene, height, manager }) {
 		const g = new THREE.Group(); const s = fixedStations[2];
 		const cx = s.look.x, cz = s.look.z;
 		g.position.set(cx, height(cx, cz) + .05, cz); g.rotation.y = Math.atan2(CENTER.x - cx, CENTER.z - cz); scene.add(g);
-		box(6.2, 3.6, .18, wood, g, 0, 3.4, 0); for (const x of [-2.8, 2.8]) box(.2, 5.4, .2, wood, g, x, 2.7, -.05);
+		make(roundedSlab(6.2, 3.6, .18, .38), wood, g, 0, 3.4, 0); for (const x of [-2.8, 2.8]) box(.2, 5.4, .2, wood, g, x, 2.7, -.05);
 		for (const y of [1.55, 5.25]) box(6.4, .16, .28, wood, g, 0, y, .04);
 		const canvas = document.createElement('canvas'); canvas.width = 2048; canvas.height = 1152; const ctx = canvas.getContext('2d'); const tex = new THREE.CanvasTexture(canvas); tex.colorSpace = THREE.SRGBColorSpace;
-		const face = make(new THREE.PlaneGeometry(6.0, 3.4), new THREE.MeshBasicMaterial({ map: tex }), g, 0, 3.4, .1); face.castShadow = false;
+		const face = make(roundedPlane(6.0, 3.4, .3), new THREE.MeshBasicMaterial({ map: tex }), g, 0, 3.4, .1); face.castShadow = false;
 		solids.push({ x: cx, z: cz, w: 1.4, d: 1.4 });
-		let lastKey = '';
+		let lastKey = '', lastModel = null;
+		// The characters' verdicts (the reviews the class already asked for) as portrait tiles.
+		const portraits = new Map();
+		function portrait(url) {
+			if (!url) return null;
+			let entry = portraits.get(url);
+			if (!entry) {
+				entry = { img: new Image(), ready: false };
+				entry.img.onload = () => { entry.ready = true; lastKey = ''; if (lastModel) paint(lastModel); };
+				entry.img.src = url;
+				portraits.set(url, entry);
+			}
+
+			return entry.ready ? entry.img : null;
+		}
+		/** One small tile: the portrait with its score badge, at (x, y), `size` square */
+		function voiceTile(voice, x, y, size) {
+			ctx.save(); ctx.save();
+			ctx.beginPath(); ctx.roundRect(x, y, size, size, size * .16); ctx.clip();
+			const img = portrait(voice.portraitUrl);
+			if (img) ctx.drawImage(img, x, y, size, size); else { ctx.fillStyle = '#d9cdb0'; ctx.fillRect(x, y, size, size); ctx.fillStyle = '#384f36'; ctx.font = `bold ${Math.round(size * .5)}px Arial`; ctx.textAlign = 'center'; ctx.fillText([...voice.name][0] ?? '', x + size / 2, y + size * .66); }
+			ctx.restore();
+			ctx.strokeStyle = '#fff5dc'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(x, y, size, size, size * .16); ctx.stroke();
+			const r = size * .25, bx = x + size - r * .6, by = y + size - r * .6;
+			ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fillStyle = '#233f35'; ctx.fill(); ctx.strokeStyle = '#fff5dc'; ctx.stroke();
+			ctx.fillStyle = '#fff5dc'; ctx.textAlign = 'center'; ctx.font = `bold ${Math.round(r * .95)}px Arial`; ctx.fillText(String(voice.score), bx, by + r * .33);
+			ctx.restore();
+		}
+		/** A larger card for a single motion: portrait, name, score and the character's own line */
+		function voiceCard(voice, x, y, w) {
+			ctx.save();
+			ctx.fillStyle = '#ffffff1f'; ctx.beginPath(); ctx.roundRect(x, y, w, 330, 26); ctx.fill();
+			voiceTile(voice, x + w - 150, y + 20, 130);
+			ctx.fillStyle = '#fff5dc'; ctx.textAlign = 'right'; ctx.font = 'bold 34px Arial';
+			ctx.fillText(voice.name, x + w - 170, y + 62, w - 190);
+			ctx.font = '28px Arial'; ctx.fillStyle = '#fff5dccc';
+			ctx.fillText(`${voice.score}/100`, x + w - 170, y + 104);
+			ctx.fillStyle = '#ffffff'; ctx.font = '30px Arial';
+			wrapLines(voice.line, w - 50, 4).forEach((line, i) => ctx.fillText(line, x + w - 25, y + 190 + i * 40));
+			ctx.restore();
+		}
 		function paint(model) {
+			lastModel = model;
 			const key = JSON.stringify(model); if (key === lastKey) return; lastKey = key;
 			ctx.direction = 'rtl'; ctx.textAlign = 'center';
 			if (!model || model.mode === 'ballot') return slideBallot(model);
@@ -326,6 +415,8 @@ export function buildVillage({ scene, height, manager }) {
 				}
 				ctx.fillStyle = '#ffffff'; ctx.font = 'bold 60px Arial'; ctx.fillText(side.label, side.x, trackTop + trackH + 80);
 			}
+			// The two characters' verdicts on this one proposal, either side of the pillars
+			(m.voices ?? []).slice(0, 2).forEach((voice, i) => voiceCard(voice, i === 0 ? 1490 : 40, trackTop + 20, 520));
 			ctx.fillStyle = '#fff5dc'; ctx.font = '36px Arial'; ctx.fillText(model.footer ?? '', W / 2, H - 34);
 			tex.needsUpdate = true;
 		}
@@ -380,7 +471,8 @@ export function buildVillage({ scene, height, manager }) {
 				ctx.fillStyle = '#ffffff22'; ctx.fillRect(140, y, W - 280, barH);
 				if (model.showResults) { ctx.fillStyle = row.mine ? '#ffd83a' : '#67c28a'; ctx.fillRect(140 + (W - 280) * (1 - share), y, (W - 280) * share, barH); }
 				ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.font = `bold ${Math.round(barH * .42)}px Arial`;
-				const text = `${row.number}. ${row.label}`; let shown = text; while (ctx.measureText(shown).width > W - 620 && shown.length > 4) shown = shown.slice(0, -4) + '…';
+				const text = `${row.number}. ${row.label}`; let shown = text; const voices = (row.voices ?? []).slice(0, 2); const room = voices.length ? W - 1010 : W - 620; while (ctx.measureText(shown).width > room && shown.length > 4) shown = shown.slice(0, -4) + '…';
+				voices.forEach((voice, k) => voiceTile(voice, 430 + k * (barH - 6), y + 3, barH - 6));
 				ctx.fillText(shown, W - 160, y + barH * .66);
 				ctx.textAlign = 'left'; ctx.fillText(model.showResults ? `${row.votes} · ${Math.round(row.share * 100)}%` : (row.mine ? '✓ ההצבעה שלי' : ''), 160, y + barH * .66);
 				ctx.textAlign = 'center';
@@ -393,5 +485,7 @@ export function buildVillage({ scene, height, manager }) {
 		return { group: g, face, paint };
 	})();
 
-	return { booths, installBooths, showPlace, scoreboard, figures: characters.figures, solids, clearings, ready: characters.ready, tick: characters.tick, characters };
+	// The materials a chosen colour set re-tints (see palettes.js); the booths' roofs keep their kind's colour.
+	const paletteMaterials = [{ material: limestone, slot: 'stone' }, { material: wood, slot: 'wood' }, { material: pathMaterial, slot: 'earth' }];
+	return { booths, installBooths, showPlace, setCast, scoreboard, figures: characters.figures, solids, clearings, ready: characters.ready, tick: characters.tick, characters, paletteMaterials };
 }

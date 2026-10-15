@@ -13,6 +13,7 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { generatePin, hashPin } from './rosterPins';
+import { requireApprovedTeacher } from './libraryAccess';
 
 /**
  * Teacher roster actions on their own class: rename a student's alias, remove
@@ -23,10 +24,8 @@ import { generatePin, hashPin } from './rosterPins';
 export const agoraTeacherRoster = onCall(
 	{ region: functionConfig.region },
 	async (request: CallableRequest<TeacherRosterRequest>): Promise<TeacherRosterResponse> => {
-		const uid = request.auth?.uid;
-		if (!uid) {
-			throw new HttpsError('unauthenticated', 'User must be authenticated');
-		}
+		// Hard gate (Tal, 2026-10-15): managing a class roster is a teacher's act
+		const { uid } = await requireApprovedTeacher(request);
 
 		const { classId, action, memberId, alias } = request.data ?? {};
 		if (!classId || typeof classId !== 'string') {

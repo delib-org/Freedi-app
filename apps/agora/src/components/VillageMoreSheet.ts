@@ -2,6 +2,7 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import { lookDots } from './LookPicker';
 import type { AgoraThemeSeeds } from '@freedi/shared-types';
+import { VILLAGE_PALETTES, type VillagePalette } from '../lib/villagePrefs';
 
 /**
  * Everything the village needs but a student almost never presses.
@@ -26,6 +27,9 @@ export interface VillageMoreSheetAttrs {
 	/** The cheap world: no shadows, sparse grass, fewer frames */
 	lightMode: boolean;
 	onLightMode: (on: boolean) => void;
+	/** The village's colour set on this device; absent hides the picker */
+	palette?: VillagePalette;
+	onPalette?: (palette: VillagePalette) => void;
 	/** Leave the 3D village for the flat view */
 	onSimpleView: () => void;
 	onClose: () => void;
@@ -62,7 +66,17 @@ export const VillageMoreSheet: m.Component<
 		});
 	},
 	view(vnode) {
-		const { look, sound, onSound, lightMode, onLightMode, onSimpleView, onClose } = vnode.attrs;
+		const {
+			look,
+			sound,
+			onSound,
+			lightMode,
+			onLightMode,
+			palette,
+			onPalette,
+			onSimpleView,
+			onClose,
+		} = vnode.attrs;
 
 		const toggle = (label: string, on: boolean, onchange: (next: boolean) => void): m.Children =>
 			m(
@@ -136,6 +150,55 @@ export const VillageMoreSheet: m.Component<
 						: null,
 					toggle(t('village.more.sound'), sound, onSound),
 					toggle(t('village.more.quality_low'), lightMode, onLightMode),
+					palette && onPalette
+						? m('.village-more__row.village-more__row--palette', [
+								m('span.village-more__label#village-more-palette', t('village.more.palette')),
+								m(
+									'.village-more__swatches',
+									{ role: 'radiogroup', 'aria-labelledby': 'village-more-palette' },
+									VILLAGE_PALETTES.map((id) =>
+										m('button.village-more__swatch', {
+											key: id,
+											type: 'button',
+											role: 'radio',
+											class: `village-more__swatch--${id}`,
+											'aria-checked': String(id === palette),
+											'aria-label': t(`village.more.palette_${id}`),
+											title: t(`village.more.palette_${id}`),
+											// One tab stop for the group; arrows move the choice.
+											tabindex: id === palette ? 0 : -1,
+											onclick: () => onPalette(id),
+											onkeydown: (event: KeyboardEvent) => {
+												const step =
+													event.key === 'ArrowRight' || event.key === 'ArrowDown'
+														? 1
+														: event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+															? -1
+															: 0;
+												if (!step) return;
+												event.preventDefault();
+												const rtl =
+													getComputedStyle(event.currentTarget as HTMLElement).direction === 'rtl';
+												const horizontal = event.key === 'ArrowRight' || event.key === 'ArrowLeft';
+												const delta = rtl && horizontal ? -step : step;
+												const at = VILLAGE_PALETTES.indexOf(id);
+												const next =
+													VILLAGE_PALETTES[
+														(at + delta + VILLAGE_PALETTES.length) % VILLAGE_PALETTES.length
+													];
+												onPalette(next);
+												const group = (event.currentTarget as HTMLElement).parentElement;
+												requestAnimationFrame(() =>
+													group
+														?.querySelector<HTMLButtonElement>(`.village-more__swatch--${next}`)
+														?.focus(),
+												);
+											},
+										}),
+									),
+								),
+							])
+						: null,
 					m(
 						'button.village-more__row.village-more__row--exit',
 						{

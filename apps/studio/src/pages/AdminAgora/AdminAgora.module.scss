@@ -156,8 +156,15 @@
 }
 
 .teacherRow {
-  display: inline-flex;
-  align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-sm);
+}
+
+.removeSlot {
+	display: inline-flex;
+	align-items: center;
 }
 
 // --- Supervisors of this school ---------------------------------------------

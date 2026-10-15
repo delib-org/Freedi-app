@@ -17,6 +17,10 @@ import OpenClassModal from './OpenClassModal';
 import SchoolSupervisors, { type TeacherOption } from './SchoolSupervisors';
 import TeachersTable from './sections/TeachersTable';
 import { LoadError, PrivacyNote, TruncatedNote } from './sections/LoadState';
+import RemoveAccess from '../AccessRequests/RemoveAccess';
+import SignUpLink from '../AccessRequests/SignUpLink';
+import { refreshAccessCount } from '../AccessRequests/accessCount';
+import { useAccessActor } from '../AccessRequests/useAccessActor';
 import styles from './AdminAgora.module.scss';
 
 /** The two-up mini row on each class card: the score line and the participation bars. */
@@ -78,8 +82,17 @@ function AssignTeacher({ agoraClass }: { agoraClass: AgoraClass }) {
  * Attached by sign-in email (resolved server-side, never stored); the list
  * shows what the school doc carries, which is uids.
  */
-function SchoolTeachers({ school, names }: { school: AgoraSchool; names: Map<string, string> }) {
+function SchoolTeachers({
+	school,
+	names,
+	onChanged,
+}: {
+	school: AgoraSchool;
+	names: Map<string, string>;
+	onChanged: () => void;
+}) {
 	const { t, tWithParams } = useTranslation();
+	const actor = useAccessActor();
 	const [email, setEmail] = useState('');
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState('');
@@ -137,6 +150,20 @@ function SchoolTeachers({ school, names }: { school: AgoraSchool; names: Map<str
 					{teacherIds.map((uid) => (
 						<li key={uid} className={styles.teacherRow}>
 							<span>{names.get(uid) ?? t('Teacher')}</span>
+							{actor && (
+								<span className={styles.removeSlot}>
+									<RemoveAccess
+										actor={actor}
+										target={{ uid, role: 'teacher', schoolId: school.schoolId }}
+										personName={names.get(uid) ?? t('Teacher')}
+										schoolName={school.name}
+										onRemoved={() => {
+											void refreshAccessCount();
+											onChanged();
+										}}
+									/>
+								</span>
+							)}
 						</li>
 					))}
 				</ul>
@@ -261,7 +288,8 @@ export default function AdminSchoolDetail() {
 		>
 			{school.city && <p className={styles.meta}>{school.city}</p>}
 
-			<SchoolTeachers school={school} names={teacherNames} />
+			<SchoolTeachers school={school} names={teacherNames} onChanged={refreshConsole} />
+			<SignUpLink schoolId={school.schoolId} />
 			<SchoolSupervisors
 				school={school}
 				teachers={teacherOptions}

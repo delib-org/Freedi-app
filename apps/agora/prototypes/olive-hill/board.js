@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import { roundedPlane } from './rounded.js';
 
 export const demoProposals = [
   {id:'listen',author:'נועה',color:'#f3d4d3',text:'לפני שבוחרים פתרון, נשמע מכל אחד מה הכי חשוב לו. נחפש רעיון שנותן מענה לצרכים של שני הצדדים.'},
@@ -21,7 +22,7 @@ export class ProposalBoard {
     addBox(5.3,3.05,.16,0,2.8,0);for(const x of [-2.2,2.2])addBox(.18,4.35,.2,x,2.15,-.12);
     for(const y of [1.28,4.32])addBox(5.55,.14,.24,0,y,.05);for(const x of [-2.69,2.69])addBox(.14,3.1,.24,x,2.8,.05);
     this.surface=document.createElement('canvas');this.surface.width=2048;this.surface.height=1152;this.ctx=this.surface.getContext('2d');this.texture=new THREE.CanvasTexture(this.surface);this.texture.colorSpace=THREE.SRGBColorSpace;
-    this.panel=new THREE.Mesh(new THREE.PlaneGeometry(5.2,2.93),new THREE.MeshBasicMaterial({map:this.texture}));this.panel.position.set(0,2.8,.1);this.group.add(this.panel);
+    this.panel=new THREE.Mesh(roundedPlane(5.2,2.93,.25),new THREE.MeshBasicMaterial({map:this.texture}));this.panel.position.set(0,2.8,.1);this.group.add(this.panel);
     this.letter=new THREE.Mesh(new THREE.PlaneGeometry(.65,.45),new THREE.MeshStandardMaterial({color:'#ffffff',side:THREE.DoubleSide,roughness:.8}));this.letter.visible=false;scene.add(this.letter);
     // A fold in the flying sheet catches the light as it turns.
     const fold=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(.65,.45)),new THREE.LineBasicMaterial({color:'#b3ae9e'}));this.letter.add(fold);

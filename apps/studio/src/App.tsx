@@ -21,12 +21,19 @@ import AdminSchoolDetail from '@/pages/AdminAgora/AdminSchoolDetail';
 import AdminTeacherDetail from '@/pages/AdminAgora/AdminTeacherDetail';
 import AdminClassDetail from '@/pages/AdminAgora/AdminClassDetail';
 import AdminStudentDetail from '@/pages/AdminAgora/AdminStudentDetail';
+import AgoraHome, { AgoraMine } from '@/pages/AgoraHome/AgoraHome';
+import AccessRequests from '@/pages/AccessRequests/AccessRequests';
+import AccessRequestDetail from '@/pages/AccessRequests/AccessRequestDetail';
 import EventDashboard from '@/pages/EventDashboard';
 
 // Heavy per-question screens load on demand.
 const QuestionDashboard = lazyWithRetry(
 	() => import('@/pages/QuestionDashboard/QuestionDashboard'),
 	'QuestionDashboard',
+);
+const SurveyResults = lazyWithRetry(
+	() => import('@/pages/SurveyResults/SurveyResults'),
+	'SurveyResults',
 );
 const RunView = lazyWithRetry(() => import('@/pages/RunView/RunView'), 'RunView');
 const PlanWithAI = lazyWithRetry(() => import('@/pages/PlanWithAI/PlanWithAI'), 'PlanWithAI');
@@ -66,6 +73,7 @@ export default function App() {
 						<Route path="/orgs/:orgId/people" element={<People />} />
 						<Route path="/orgs/:orgId/plan/new" element={<PlanWithAI />} />
 						<Route path="/orgs/:orgId/questions/:qId" element={<QuestionDashboard />} />
+						<Route path="/orgs/:orgId/questions/:qId/results" element={<SurveyResults />} />
 						<Route path="/orgs/:orgId/questions/:qId/plan" element={<PlanWithAI />} />
 						<Route path="/orgs/:orgId/questions/:qId/run/:aId" element={<RunView />} />
 						<Route path="/personal" element={<Personal />} />
@@ -74,10 +82,19 @@ export default function App() {
 						<Route path="/admin/orgs" element={<AdminOrgs />} />
 						<Route path="/admin/orgs/:orgId" element={<AdminOrgDetail />} />
 						<Route path="/admin/agora" element={<AdminAgora />} />
+						<Route path="/admin/agora/requests" element={<AccessRequests />} />
+						<Route path="/admin/agora/requests/:requestId" element={<AccessRequestDetail />} />
 						<Route path="/admin/agora/schools/:schoolId" element={<AdminSchoolDetail />} />
 						<Route path="/admin/agora/teachers/:schoolId/:uid" element={<AdminTeacherDetail />} />
 						<Route path="/admin/agora/classes/:classId" element={<AdminClassDetail />} />
 						<Route path="/admin/agora/students/:memberId" element={<AdminStudentDetail />} />
+						<Route path="/agora" element={<AgoraHome />} />
+						<Route path="/agora/mine" element={<AgoraMine />} />
+						<Route path="/agora/requests" element={<AccessRequests />} />
+						<Route path="/agora/requests/:requestId" element={<AccessRequestDetail />} />
+						<Route path="/agora/teachers/:schoolId/:uid" element={<AdminTeacherDetail />} />
+						<Route path="/agora/classes/:classId" element={<AdminClassDetail />} />
+						<Route path="/agora/students/:memberId" element={<AdminStudentDetail />} />
 						<Route path="*" element={<Navigate to="/" replace />} />
 					</Routes>
 				</Suspense>

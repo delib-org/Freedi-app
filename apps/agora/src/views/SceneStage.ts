@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { VideoScene } from '../components/VideoScene';
+import type { ClassVideo } from '../components/YoutubePlayer';
 import type { AgoraScene } from '@freedi/shared-types';
 
 export interface SceneStageAttrs {
@@ -19,6 +20,10 @@ export interface SceneStageAttrs {
 	 * the room, so "waiting for the class" would be waiting for nothing.
 	 */
 	onFinish?: () => void;
+	/** The library video the teacher started for the class (with its scene) */
+	classVideo?: ClassVideo & { sceneId: string };
+	/** Background materials + the private chat about them (library scenes) */
+	materials?: { topicPackageId: string; sessionId: string; userId: string };
 }
 
 /**
@@ -29,6 +34,8 @@ export interface SceneStageAttrs {
 export function SceneStage(): m.Component<SceneStageAttrs> {
 	let replayIndex: number | undefined;
 	let activeKey = '';
+	/** The teacher's start this device has already followed */
+	let followedAt = 0;
 
 	return {
 		view(vnode) {
@@ -36,6 +43,20 @@ export function SceneStage(): m.Component<SceneStageAttrs> {
 			if (activeKey !== storageKey) {
 				activeKey = storageKey;
 				replayIndex = undefined;
+			}
+			// The teacher started a video: follow it to its scene, once per start.
+			// Reading it again is replay mode, so the student's own place and the
+			// progress the teacher sees are left alone.
+			const { classVideo } = vnode.attrs;
+			const followKey = `${storageKey}_yt`;
+			if (followedAt === 0) followedAt = Number(sessionStorage.getItem(followKey) ?? '0');
+			if (classVideo && classVideo.at !== followedAt) {
+				const target = scenes.findIndex((candidate) => candidate.sceneId === classVideo.sceneId);
+				if (target >= 0) {
+					followedAt = classVideo.at;
+					sessionStorage.setItem(followKey, String(followedAt));
+					replayIndex = target;
+				}
 			}
 			const index = replayIndex ?? Number(sessionStorage.getItem(storageKey) ?? '0');
 			const done = index >= scenes.length;
@@ -92,6 +113,8 @@ export function SceneStage(): m.Component<SceneStageAttrs> {
 				scene,
 				immersive: true,
 				progress: { index: index + 1, total: scenes.length },
+				classVideo: classVideo?.sceneId === scene.sceneId ? classVideo : undefined,
+				materials: vnode.attrs.materials,
 				doneLabel: t('scene.continue'),
 				onDone: () => {
 					if (replayIndex !== undefined) {

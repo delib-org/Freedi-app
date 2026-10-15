@@ -15,23 +15,28 @@ import {
 	saveAnswer,
 	type AgoraProposal,
 } from '../lib/proposals';
+import { flaggedNotice, isLanguageFlagged } from '../lib/language';
 import { reportStageProgress } from '../lib/session';
 import { blankPen, penFor, typedInto, type Pen } from '../lib/flows/penState';
 import { requestTeacherFocus } from '../lib/helpedFocus';
+import { roundRatedCount } from '../lib/flows/roundFlow';
+import { visibleNotes } from '../lib/flows/handFlow';
 import {
-	dealRound,
-	extendDeal,
-	rankedRest,
-	readStoredDeal,
-	roundRatedCount,
-	storeDeal,
-} from '../lib/flows/roundFlow';
+	drawMore,
+	handFor,
+	isLotteryActive,
+	parentIdOf,
+	poolExhausted,
+	requestFill,
+} from '../lib/hands';
 import {
 	AGORA_ROUND,
 	AGORA_ROUNDS,
+	handGoal,
 	isUnitRating,
 	rankRoundAnswers,
 	roundLikes,
+	isAgoraTextLongEnough,
 	roundProgress,
 	roundSpecOf,
 	type AgoraCarriedAnswer,
@@ -105,9 +110,10 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 	let saving = false;
 	let editing = false;
 	let saveFailed = false;
-	/** The dealt ids, held for the life of the screen (and in sessionStorage) */
-	let deal: string[] | null = null;
-	let dealFor = '';
+	/** Why the save failed when the language gate refused it; undefined otherwise */
+	let saveNotice: string | undefined;
+	/** Which item the last fill was asked for — a new item asks once more */
+	let askedFor = '';
 	/**
 	 * The texts whose rating is in flight, one entry per text.
 	 *
@@ -171,39 +177,29 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 					(statementId) => state.myRatings[statementId] !== undefined,
 				),
 			);
-			const ratersOf = (statementId: string): number =>
-				others.find((row) => row.statementId === statementId)?.evaluation?.numberOfEvaluators ?? 0;
-
-			// The deal: once per item, held steady, filled only while short
-			if (dealFor !== item.itemId) {
-				dealFor = item.itemId;
-				deal = readStoredDeal(session.sessionId, item.itemId);
+			// The deal: dealt by lottery on the server (lib/hands.ts) once the class
+			// is large enough; a small class reads everyone. Held in deal order so
+			// nothing moves under a reading finger; newcomers append.
+			const parentId = parentIdOf(session, item);
+			const active = isLotteryActive();
+			const hand = handFor(parentId);
+			if (askedFor !== item.itemId) {
+				askedFor = item.itemId;
+				requestFill();
 			}
-			if (!closed && mine) {
-				const next = dealRound({
-					others,
-					userId,
-					rated,
-					ratersOf,
-					sample: spec.sample,
-					stored: deal,
-				});
-				if (
-					deal === null ||
-					next.length !== deal.length ||
-					next.some((id, i) => id !== deal?.[i])
-				) {
-					deal = next;
-					storeDeal(session.sessionId, item.itemId, next);
-				}
-			}
-			const dealt = (deal ?? [])
-				.map((statementId) => others.find((row) => row.statementId === statementId))
-				.filter((row): row is AgoraProposal => row !== undefined);
-			const ratedCount = roundRatedCount(deal ?? [], rated);
-			const goal = Math.min(spec.sample, others.length);
+			const dealt = visibleNotes({
+				notes: others,
+				userId,
+				hand,
+				rated,
+				active,
+				live: !closed,
+			});
+			const dealtIds = dealt.map((row) => row.statementId);
+			const ratedCount = roundRatedCount(dealtIds, rated);
+			const goal = active ? handGoal(others.length) : Math.min(spec.sample, others.length);
 			const goalMet = mine !== undefined && ratedCount >= goal;
-			const moreLeft = others.length > (deal?.length ?? 0);
+			const moreLeft = active ? others.length > dealtIds.length && !poolExhausted(parentId) : false;
 
 			const progress = roundProgress(mine !== undefined, ratedCount, goal);
 			const progressKey = `${item.itemId}:${progress.done}/${progress.total}`;
@@ -214,15 +210,20 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 
 			async function submit(): Promise<void> {
 				const text = pen.text.trim();
-				if (!text || saving || closed) return;
+				if (!isAgoraTextLongEnough(text) || saving || closed) return;
 				saving = true;
 				saveFailed = false;
+				saveNotice = undefined;
 				m.redraw();
 				try {
 					await saveAnswer(session, item, myParticipant.anonName, text);
 					editing = false;
 				} catch (error) {
-					console.error('[Round] Saving the text failed:', error);
+					if (isLanguageFlagged(error)) {
+						saveNotice = flaggedNotice(error);
+					} else {
+						console.error('[Round] Saving the text failed:', error);
+					}
 					saveFailed = true;
 				} finally {
 					saving = false;
@@ -369,6 +370,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 										editing,
 										saving,
 										saveFailed,
+										saveNotice,
 										changed,
 										onEdit: () => {
 											editing = true;
@@ -377,6 +379,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 											pen = typedInto(pen, mine?.statement ?? '');
 											editing = false;
 											saveFailed = false;
+											saveNotice = undefined;
 										},
 										onInput: (text: string) => {
 											pen = typedInto(pen, text);
@@ -440,9 +443,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 																	{
 																		type: 'button',
 																		onclick: () => {
-																			const rest = rankedRest({ others, userId, rated, ratersOf });
-																			deal = extendDeal(deal ?? [], rest, spec.sample);
-																			storeDeal(session.sessionId, item.itemId, deal);
+																			if (parentId) void drawMore(parentId);
 																		},
 																	},
 																	t('round.rate_more'),

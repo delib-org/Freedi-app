@@ -16,6 +16,7 @@ import {
 	createAgoraParticipantId,
 	functionConfig,
 	isAgoraAiUid,
+	isAgoraDeleted,
 	isAgoraHidden,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
@@ -130,8 +131,13 @@ export const agoraModerateStatement = onCall(
 				session.votingGame?.challengerStatementId === statementId;
 			const moderation: AgoraModeration = statement.agoraModeration ?? { hidden: false };
 
-			if (action === 'hide') {
-				if (isAgoraHidden(statement)) return { ok: true, hidden: true };
+			if (action === 'hide' || action === 'delete') {
+				// Delete is hide with the words erased for good (see the notes at
+				// `permanent` below): a tombstone, not a removed document, so the
+				// ratings, threads and counts hanging off it never dangle.
+				const permanent = action === 'delete';
+				if (isAgoraDeleted(statement)) return { ok: true, hidden: true, deleted: true };
+				if (!permanent && isAgoraHidden(statement)) return { ok: true, hidden: true };
 				// The ballot is a frozen snapshot the rules pin; the teacher
 				// closes the vote first, then takes the text down.
 				if (
@@ -150,10 +156,31 @@ export const agoraModerateStatement = onCall(
 				batch.update(statementRef, {
 					statement: '',
 					hide: true,
-					agoraModeration: { ...moderation, hidden: true, hiddenAt: now },
+					agoraModeration: {
+						...moderation,
+						hidden: true,
+						hiddenAt: now,
+						...(permanent ? { deletedAt: now } : {}),
+					},
 					lastUpdate: now,
 				});
+				// Hidden or deleted: out of every score, ballot and count. Ratings
+				// already cast stay on file but are never read again.
 				if (scoreExists) batch.update(scoreRef, { hidden: true, lastUpdate: now });
+				if (permanent) {
+					// The notices filed earlier hold the only other copies of the words
+					// (hidden / reworded) — erase those too.
+					const earlier = await db
+						.collection(Collections.agoraTeacherMessages)
+						.where('sessionId', '==', sessionId)
+						.where('aboutStatementId', '==', statementId)
+						.get();
+					earlier.docs.forEach((snap) => {
+						if ((snap.data() as AgoraTeacherMessage).removedText) {
+							batch.update(snap.ref, { removedText: '' });
+						}
+					});
+				}
 				// The edit announcements under a proposal quote its earlier
 				// wording — they go dark with it, and stay dark.
 				const edits = await db
@@ -184,7 +211,7 @@ export const agoraModerateStatement = onCall(
 					text: why,
 					aboutStatementId: statementId,
 					moderation: 'hidden',
-					removedText,
+					...(permanent ? { permanent: true } : { removedText }),
 				});
 				await notifyStudent(
 					sessionId,
@@ -195,10 +222,13 @@ export const agoraModerateStatement = onCall(
 					statementId,
 				);
 
-				return { ok: true, hidden: true };
+				return permanent ? { ok: true, hidden: true, deleted: true } : { ok: true, hidden: true };
 			}
 
 			if (action === 'restore') {
+				if (isAgoraDeleted(statement)) {
+					throw new HttpsError('failed-precondition', 'deleted');
+				}
 				if (!isAgoraHidden(statement)) return { ok: true, hidden: false };
 				// The words came off the document when it was hidden; the only
 				// copy is the notice filed to the author.

@@ -11,6 +11,7 @@ import {
 	picklist,
 	InferOutput,
 } from 'valibot';
+import { AgoraRemovalSchema } from './agoraRemoval';
 import { VotingStageSettingsSchema, VotingStateSchema } from '../vote/votingStageSettings';
 import { VotingGameStateSchema } from '../vote/challengeGame';
 import { AgoraSessionFlowSchema } from './sessionFlow';
@@ -282,6 +283,35 @@ export const AgoraSessionSchema = object({
 	 * client walks there once per `at`. Teacher-writable.
 	 */
 	villageCall: optional(object({ place: string(), at: number() })),
+	/**
+	 * After the lobby, whether the projector keeps a small join QR beside the
+	 * code. Absent = off; the lobby always shows the big one. Teacher-writable
+	 * from the console's menu, read live by the projector.
+	 */
+	projectorQr: optional(boolean()),
+	/**
+	 * The library video the teacher started for the class: which scene it
+	 * belongs to, its YouTube id (and start offset), and when it was started
+	 * (ms). Each student device follows it once per `at`; a student replaying
+	 * a video on their own phone never writes this. Teacher-writable.
+	 */
+	libraryVideo: optional(
+		object({
+			sceneId: string(),
+			videoId: string(),
+			startSeconds: optional(number()),
+			at: number(),
+		}),
+	),
+	/**
+	 * Who the teacher took out of this lesson: uid → when, the pseudonym they
+	 * played under, and their knock to come back. Written only by
+	 * `agoraRemoveParticipant`, `agoraJoinSession` (the knock) and
+	 * `agoraResolveRejoin`; pinned by rules, which also refuse the uid's
+	 * statements, ratings and votes in this session while it is here. Other
+	 * sessions are untouched. See agoraRemoval.ts.
+	 */
+	removedUids: optional(record(string(), AgoraRemovalSchema)),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),

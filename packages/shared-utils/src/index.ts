@@ -76,3 +76,17 @@ export type {
 	UpdateParagraphChildArgs,
 	ReplaceParagraphLine,
 } from './paragraphs';
+
+// YouTube links: parsing, embed URLs and the scene list helpers
+export {
+	addYoutubeVideo,
+	MAX_YOUTUBE_VIDEOS_PER_SCENE,
+	moveYoutubeVideo,
+	parseStartTime,
+	parseYoutubeUrl,
+	pickShownVideo,
+	removeYoutubeVideo,
+	youtubeEmbedUrl,
+	youtubeThumbnailUrl,
+} from './youtube';
+export type { EmbedOptions, YoutubeParseFailure, YoutubeParseResult } from './youtube';

@@ -1,7 +1,10 @@
+import { backTarget } from '../../lib/routeTrail';
 import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { stalledBanner } from '../../components/StalledBanner';
 import { TeacherNav } from '../../components/TeacherNav';
+import { YoutubeListEditor } from '../../components/YoutubeListEditor';
+import { MaterialsEditor } from '../../components/MaterialsEditor';
 import {
 	fetchTopicPackage,
 	saveTopicEditorFields,
@@ -91,15 +94,20 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 	 * is the default: OK saves and goes, Cancel stays. A teacher who typed a
 	 * paragraph into their own lesson has never meant to throw it away.
 	 */
+	/** Back is where the teacher came from; a bookmark, or the form that just made this, lands on the list */
+	function backFrom(): string {
+		return backTarget('/teach/scenarios', ['/teach/scenarios/new']);
+	}
+
 	function goBack(): void {
 		if (!dirty) {
-			m.route.set('/teach');
+			m.route.set(backFrom());
 
 			return;
 		}
 		if (!window.confirm(t('editor.leave_unsaved'))) return;
 		save();
-		m.route.set('/teach');
+		m.route.set(backFrom());
 	}
 
 	function uploadVideo(scene: AgoraScene, file: File): void {
@@ -323,6 +331,15 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			scene.videoUrl
 				? m('video.scene__video', { src: scene.videoUrl, controls: true, preload: 'metadata' })
 				: null,
+			m('label.teacher__section-title', t('video.editor_label')),
+			m(YoutubeListEditor, {
+				videos: scene.youtubeVideos ?? [],
+				onChange: (youtubeVideos) => {
+					update({ youtubeVideos });
+				},
+			}),
+			m('label.teacher__section-title', t('mat.editor_label')),
+			m(MaterialsEditor, { topicPackageId, sceneId: scene.sceneId }),
 		]);
 	}
 
@@ -337,7 +354,7 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 						m('p.join__error', t('common.error')),
 						m(
 							'button.btn.btn--secondary',
-							{ onclick: () => m.route.set('/teach') },
+							{ onclick: () => m.route.set(backFrom()) },
 							t('common.back'),
 						),
 					]),

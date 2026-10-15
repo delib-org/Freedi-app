@@ -8,7 +8,9 @@
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-lg);
-	padding: var(--space-lg) var(--space-lg) calc(var(--space-lg) + 5rem);
+	// Room under the stage for the code card, which now carries a QR on
+	// every stage, not only in the lobby
+	padding: var(--space-lg) var(--space-lg) calc(var(--space-lg) + 9rem);
 	font-size: 125%;
 	background: var(--bg-page);
 	color: var(--text-primary);
@@ -58,6 +60,28 @@
 		border: 1px solid var(--border-subtle);
 		border-radius: var(--radius-lg);
 		box-shadow: var(--shadow-card);
+	}
+
+	&__code-text {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	// After the lobby: the digits and a small QR side by side, low in the corner
+	&__code--compact {
+		flex-direction: row;
+		gap: var(--space-md);
+		padding: var(--space-sm) var(--space-md);
+
+		.teacher__qr {
+			padding: var(--space-xs);
+		}
+	}
+
+	&__code--compact &__code-value {
+		font-size: 2.25rem;
 	}
 
 	&__code-label {

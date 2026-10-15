@@ -36,6 +36,114 @@
 		text-align: center;
 	}
 
+	// The task, in one line. The shell header above is the only title.
+	&__task {
+		margin: 0;
+		text-align: center;
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--text-primary);
+	}
+
+	// The rules, where the finger is: change until it closes, tap again to
+	// withdraw. Said out loud here instead of left as a footnote.
+	&__task-sub {
+		margin-block: 0;
+		margin-inline: auto;
+		max-inline-size: 36ch;
+		text-align: center;
+		color: var(--text-secondary);
+	}
+
+	// Why the rows are moving, said once under the task
+	&__sorted {
+		margin: 0;
+		text-align: center;
+		color: var(--text-secondary);
+		font-weight: 700;
+	}
+
+	// The status strip: the one place the ballot reports on itself, kept in
+	// view under the shell header while the list scrolls beneath it.
+	&__status {
+		position: sticky;
+		inset-block-start: 0;
+		z-index: 2;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+	}
+
+	&__status-main {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__status-turnout {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		margin-inline-start: auto;
+	}
+
+	&__status-turnout &__turnout-track {
+		inline-size: 40px;
+	}
+
+	// One chip, one sentence, never colour alone: the words change, and
+	// "received" / "closed" carry a check.
+	&__chip {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		min-block-size: 32px;
+		padding-inline: var(--space-sm);
+		font-weight: 700;
+		color: var(--text-primary);
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+
+		&--voted {
+			color: var(--text-on-lantern);
+			background: var(--mine-deep);
+		}
+
+		&--failed {
+			border: 2px solid var(--warning);
+			background: var(--bg-card-solid);
+		}
+	}
+
+	// Single-choice, taught before any tap: an empty circle that fills with a
+	// check on my row. The check is the non-colour "mine".
+	&__radio {
+		flex: 0 0 auto;
+		display: inline-grid;
+		place-items: center;
+		inline-size: 28px;
+		block-size: 28px;
+		position: relative; // above the fill
+		border: 2px solid var(--peer-deep);
+		border-radius: var(--radius-full);
+		font-weight: 700;
+		line-height: 1;
+	}
+
+	&__option--mine &__radio {
+		color: var(--mine-deep);
+		background: var(--bg-card-solid);
+		border-color: var(--bg-card-solid);
+	}
+
 	&__instruction,
 	&__waiting {
 		margin-block: 0;
@@ -72,6 +180,14 @@
 		box-shadow: var(--shadow-card);
 		cursor: pointer;
 		color: var(--text-primary);
+		// A ballot row is tapped, never read-selected or zoomed: no 300ms
+		// double-tap-zoom wait, no text selection or callout stealing a press
+		// on iOS Safari, no grey flash standing in for real feedback.
+		touch-action: manipulation;
+		user-select: none;
+		-webkit-user-select: none;
+		-webkit-touch-callout: none;
+		-webkit-tap-highlight-color: transparent;
 		// transform is the FLIP move: under live reorder a proposal overtaking
 		// another has to be SEEN to overtake. The JS hands the transition back
 		// here (same pairing as the square's stall rows).
@@ -80,10 +196,20 @@
 			box-shadow var(--motion-fast) ease,
 			transform var(--motion-base) var(--ease-camera);
 
-		&:hover:not(:disabled) {
-			transform: translateY(-2px);
-			border-color: var(--border-lantern);
-			box-shadow: var(--shadow-raised);
+		// Only where hover is real. On a phone a :hover sticks to the tapped
+		// row and moves it under the finger; on iOS a hover-driven change can
+		// also cost the first tap its click.
+		@media (hover: hover) {
+			&:hover:not(:disabled) {
+				transform: translateY(-2px);
+				border-color: var(--border-lantern);
+				box-shadow: var(--shadow-raised);
+			}
+		}
+
+		// The press itself answers, before any network does
+		&:active:not(:disabled) {
+			transform: scale(0.98);
 		}
 
 		&:focus-visible {
@@ -92,7 +218,21 @@
 		}
 
 		&:disabled {
-			cursor: progress;
+			cursor: default;
+		}
+
+		// Chosen on this phone, not yet on the server: already MINE. The status
+		// chip says "saving" in words, and the check below dims until it lands —
+		// no pulse, so nothing moves under a thumb that is still deciding.
+		&--saving .voting__radio {
+			opacity: 0.6;
+		}
+
+		// The write gave up: the row still shows what the student chose, with a
+		// warning edge, until the retry in the status strip lands it.
+		&--unsaved {
+			outline: 3px solid var(--warning);
+			outline-offset: 2px;
 		}
 
 		// MINE is a purple surface — the one saturated content object on the
@@ -270,6 +410,12 @@
 		transition: inline-size var(--motion-slow) var(--ease-camera);
 	}
 
+	// Votes are hidden: the meter says how many spoke, not for whom, so it is
+	// grey and cannot be read as a result. Mint returns with the reveal.
+	&__turnout-fill--neutral {
+		background: var(--peer-deep);
+	}
+
 	&__turnout-text {
 		margin: 0;
 		text-align: center;
@@ -301,7 +447,8 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		&__option:hover:not(:disabled) {
+		&__option:hover:not(:disabled),
+		&__option:active:not(:disabled) {
 			transform: none;
 		}
 

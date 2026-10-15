@@ -16,18 +16,33 @@
 	padding: var(--space-xs) var(--space-md);
 	background: var(--bg-card-solid);
 	border-block-end: 1px solid var(--border-subtle);
+	// A ten-station plan (the scenario's) scrolls inside its row; without this
+	// the row's overflow also widened the page, and a phone showed it shifted
+	overflow-x: clip;
 
 	&__row {
 		flex: 1 1 auto;
 		min-inline-size: 0;
 		display: flex;
 		align-items: center;
-		justify-content: center;
+		// Centred by the end stations' auto margins, not justify-content: a
+		// centred row that overflows spills past BOTH edges, and its first
+		// station is cut square and cannot be scrolled to
+		justify-content: flex-start;
 		gap: var(--space-xs);
 		max-inline-size: 720px;
 		margin-inline: auto;
+		padding-inline: 2px;
 		overflow-x: auto;
 		scrollbar-width: none;
+
+		> :first-child {
+			margin-inline-start: auto;
+		}
+
+		> :last-child {
+			margin-inline-end: auto;
+		}
 	}
 
 	&__station {
@@ -110,7 +125,9 @@
 		justify-content: center;
 		flex-wrap: wrap;
 		gap: var(--space-sm);
+		margin: var(--space-xs) var(--space-sm);
 		padding: var(--space-xs) var(--space-md);
+		border-radius: var(--radius-lg);
 		background: var(--bg-inset);
 		color: var(--text-secondary);
 		font-size: var(--font-size-sm);

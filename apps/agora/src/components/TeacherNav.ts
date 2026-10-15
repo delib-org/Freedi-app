@@ -4,6 +4,12 @@ import { t } from '../lib/i18n';
 import { classLabel } from '../lib/teacher';
 import { getTeacherNavState, liveSessions, loadTeacherNav, navClass } from '../lib/teacherNav';
 import { AgoraSession } from '@freedi/shared-types';
+import { studioOverviewUrl } from '../lib/studioLink';
+import {
+	ensureLibraryAccess,
+	getLibraryStore,
+	refreshOpenReports,
+} from '../lib/scenarioLibrary/state';
 
 export interface TeacherNavAttrs {
 	/** What this screen is about — the lesson's own name, not the screen's */
@@ -15,11 +21,22 @@ export interface TeacherNavAttrs {
 	/** Status pills, a language picker: whatever the screen wants on the far end */
 	trailing?: m.Children;
 	/**
+	 * A control that must stay on the bar at every width — the console's
+	 * Board ⇄ Class view switch. Unlike `trailing` it never folds into ≡:
+	 * switching views is a lesson-time move, not a setting.
+	 */
+	segment?: m.Children;
+	/**
 	 * The lesson's join code, as a pill that copies itself. On every stage of
 	 * a running lesson a latecomer is one tap away, and the teacher never has
 	 * to scroll to find the five digits.
 	 */
 	code?: string;
+	/**
+	 * When set, tapping the code pill calls this (the console opens the join
+	 * QR) instead of copying the digits.
+	 */
+	onCodeTap?: () => void;
 	/**
 	 * Rows for this screen alone, listed first in the ≡ menu under "this
 	 * lesson". On a phone the bar has no room for the projector and the cog,
@@ -90,15 +107,23 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 		selection?.addRange(range);
 	}
 
-	function codePill(code: string): m.Children {
+	function codePill(code: string, onCodeTap?: () => void): m.Children {
 		return m(
 			'button.teacher-nav__code',
 			{
 				type: 'button',
 				class: copied ? 'teacher-nav__code--copied' : undefined,
-				'aria-label': t('teacher.code_aria', { code }),
-				title: t('teacher.copy_code'),
+				'aria-label': onCodeTap
+					? t('teacher.code_qr_aria', { code })
+					: t('teacher.code_aria', { code }),
+				title: onCodeTap ? t('teacher.show_qr') : t('teacher.copy_code'),
+				'aria-haspopup': onCodeTap ? 'dialog' : undefined,
 				onclick: (event: MouseEvent) => {
+					if (onCodeTap) {
+						onCodeTap();
+
+						return;
+					}
 					const digits = (event.currentTarget as HTMLElement).querySelector<HTMLElement>(
 						'.teacher-nav__code-digits',
 					);
@@ -118,7 +143,15 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 
 	function toggle(): void {
 		open = !open;
-		if (open) loadTeacherNav();
+		if (open) {
+			loadTeacherNav();
+			// The library row appears only once the server has said this teacher may enter
+			void ensureLibraryAccess().then(() => {
+				// An admin's queue count, fresh each time the menu opens
+				void refreshOpenReports();
+				m.redraw();
+			});
+		}
 	}
 
 	function close(): void {
@@ -136,13 +169,17 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 	}
 
 	function row(attrs: {
-		key: string;
+		key?: string;
 		icon: IconName;
 		label: string;
 		meta?: m.Children;
+		/** A count waiting behind this row; zero shows nothing */
+		badge?: { count: number; label: string };
 		route: string;
+		/** A page outside Agora: opened in its own tab, never "you are here" */
+		external?: boolean;
 	}): m.Children {
-		const current = here() === attrs.route;
+		const current = !attrs.external && here() === attrs.route;
 
 		return m(
 			'button.teacher-nav__item',
@@ -151,7 +188,15 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 				type: 'button',
 				class: current ? 'teacher-nav__item--current' : undefined,
 				'aria-current': current ? 'page' : undefined,
-				onclick: () => go(attrs.route),
+				onclick: () => {
+					if (!attrs.external) {
+						go(attrs.route);
+
+						return;
+					}
+					open = false;
+					window.open(attrs.route, '_blank', 'noopener');
+				},
 			},
 			[
 				m('span.teacher-nav__item-icon', m(Icon, { name: attrs.icon, size: 20 })),
@@ -159,6 +204,13 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 					m('span.teacher-nav__item-label', attrs.label),
 					attrs.meta ? m('span.teacher-nav__item-meta', attrs.meta) : null,
 				]),
+				attrs.badge && attrs.badge.count > 0
+					? m(
+							'span.teacher-nav__item-badge',
+							{ 'aria-label': attrs.badge.label, title: attrs.badge.label },
+							String(attrs.badge.count),
+						)
+					: null,
 			],
 		);
 	}
@@ -232,20 +284,33 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 							]
 						: null,
 
-					getTeacherNavState().canSupervise
-						? row({
-								key: 'supervise',
-								icon: 'people',
-								label: t('supervise.title'),
-								route: '/supervise',
-							})
-						: null,
-					m('p.teacher-nav__section', t('nav.live_now')),
+					// Lessons running now come first, on every teacher screen: the
+					// second, always-there way back into a lesson
 					loading && !loaded
 						? m('.spinner')
 						: live.length > 0
-							? live.map(lessonRow)
-							: m('p.teacher-nav__empty', t('nav.no_live')),
+							? [m('p.teacher-nav__section', t('nav.live_now')), live.map(lessonRow)]
+							: null,
+
+					// Places
+					row({ icon: 'home', label: t('teacher.title'), route: '/teach' }),
+					row({
+						icon: 'proposal',
+						label: t('scenlib.seg_mine'),
+						route: '/teach/scenarios',
+					}),
+					getLibraryStore().access === 'approved'
+						? row({
+								icon: 'search',
+								label: t('scenlib.nav'),
+								route: '/teach/library',
+							})
+						: null,
+					row({
+						icon: 'new',
+						label: t('dashboard.start_game'),
+						route: '/teach/start',
+					}),
 
 					m('p.teacher-nav__section', t('dashboard.my_classes')),
 					classes.length > 0
@@ -264,15 +329,56 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 
 					failed ? m('p.teacher-nav__empty.join__error', t('nav.load_failed')) : null,
 
-					m('.teacher-nav__footer', [
-						row({ key: 'home', icon: 'home', label: t('teacher.title'), route: '/teach' }),
-						row({
-							key: 'start',
-							icon: 'new',
-							label: t('dashboard.start_game'),
-							route: '/teach/start',
-						}),
-					]),
+					// Everything a teacher uses less often than the above
+					m('p.teacher-nav__section', t('nav.more')),
+					row({
+						icon: 'watch',
+						label: t('dashboard.my_games'),
+						route: '/teach/lessons',
+					}),
+					row({
+						icon: 'chart',
+						label: t('supervise.myActivity'),
+						route: '/teach/activity',
+					}),
+					row({
+						icon: 'talk',
+						label: t('nav.banned_words'),
+						route: '/teach/words',
+					}),
+					studioOverviewUrl()
+						? row({
+								icon: 'chart',
+								label: t('nav.my_overview'),
+								route: studioOverviewUrl(),
+								external: true,
+							})
+						: null,
+					getTeacherNavState().canSupervise
+						? row({
+								icon: 'people',
+								label: t('supervise.title'),
+								route: '/supervise',
+							})
+						: null,
+					getLibraryStore().isAdmin
+						? row({
+								icon: 'cog',
+								label: t('scenlib.adm_link'),
+								badge: {
+									count: getLibraryStore().openReports,
+									label: t('scenlib.adm_badge', {
+										n: String(getLibraryStore().openReports),
+									}),
+								},
+								route: '/teach/library/admin',
+							})
+						: null,
+					row({
+						icon: 'idea',
+						label: t('nav.how_to_run'),
+						route: '/teach?help=1',
+					}),
 				],
 			),
 		];
@@ -284,7 +390,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 		},
 
 		view({ attrs }) {
-			const { title, subtitle, onBack, trailing, code, menuItems = [] } = attrs;
+			const { title, subtitle, onBack, trailing, code, onCodeTap, segment, menuItems = [] } = attrs;
 			const atHome = here() === '/teach';
 
 			return m(
@@ -326,8 +432,9 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 						m('span.teacher-nav__title', title),
 						subtitle ? m('span.teacher-nav__subtitle', subtitle) : null,
 					]),
+					segment ? m('.teacher-nav__segment', segment) : null,
 					code || trailing
-						? m('.teacher-nav__trailing', [code ? codePill(code) : null, trailing])
+						? m('.teacher-nav__trailing', [code ? codePill(code, onCodeTap) : null, trailing])
 						: null,
 					m(
 						'button.teacher-nav__switch',

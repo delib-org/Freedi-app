@@ -69,7 +69,8 @@ export function GameReport(initialVnode: m.Vnode<{ id: string }>): m.Component<{
 						year: 'numeric',
 					}),
 					// A report is read from the class it belongs to as often as from home
-					onBack: () => m.route.set(session.classId ? `/teach/class/${session.classId}` : '/teach'),
+					onBack: () =>
+						m.route.set(session.classId ? `/teach/class/${session.classId}` : '/teach/lessons'),
 				}),
 				m('.shell__content', { style: { gap: 'var(--space-xl)' } }, [
 					score
@@ -125,7 +126,15 @@ export function GameReport(initialVnode: m.Vnode<{ id: string }>): m.Component<{
 										// Unkeyed on purpose: the header row shares this fragment, and
 										// Mithril refuses fragments that mix keyed and unkeyed vnodes.
 										m('.report__table-row', [
-											m('span.report__player', participant.anonName),
+											m('span.report__player', [
+												participant.anonName,
+												(participant.languageStrikes ?? 0) > 0
+													? m(
+															'span.class-panel__strikes',
+															` · ${t('teacher.language_strikes', { n: String(participant.languageStrikes) })}`,
+														)
+													: null,
+											]),
 											m(
 												'span.report__real-name',
 												realNames[participant.userId] ?? t('teacher.no_real_name'),
@@ -149,6 +158,14 @@ export function GameReport(initialVnode: m.Vnode<{ id: string }>): m.Component<{
 					// Where a teacher goes from a summary: back to the class, or straight
 					// into the next lesson with it
 					m('.teacher__mode-row.report__actions', [
+						m(
+							'button.btn.btn--ghost',
+							{
+								type: 'button',
+								onclick: () => m.route.set(`/teach/session/${session.sessionId}`),
+							},
+							t('report.open_board'),
+						),
 						session.classId
 							? m(
 									'button.btn.btn--secondary',

@@ -19,7 +19,15 @@ export function usageSurface(route: string): AgoraTeacherSurface | null {
 	if (path.startsWith('/teach/class/')) return 'class';
 	if (path.startsWith('/teach/report/')) return 'report';
 	if (path === '/teach/start') return 'start';
-	if (path === '/teach/new' || path.startsWith('/teach/topic/')) return 'topic';
+	if (
+		path === '/teach/new' ||
+		path.startsWith('/teach/topic/') ||
+		path === '/teach/scenarios' ||
+		path.startsWith('/teach/scenarios/')
+	) {
+		return 'topic';
+	}
+	if (path === '/teach/lessons') return 'home';
 
 	return null;
 }

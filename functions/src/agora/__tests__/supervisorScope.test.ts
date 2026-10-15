@@ -37,7 +37,12 @@ jest.mock('../../db', () => ({
 	},
 }));
 
-import { requireScope, supervisedSchools, supervisorScopeFor } from '../supervisorScope';
+import {
+	classScopeFor,
+	requireScope,
+	supervisedSchools,
+	supervisorScopeFor,
+} from '../supervisorScope';
 import { toSupervisorSessionRow } from '../consoleShapes';
 import {
 	AgoraSession,
@@ -102,6 +107,40 @@ describe('supervisorScopeFor', () => {
 	it('requireScope refuses null with permission-denied', () => {
 		expect(() => requireScope(null)).toThrow(/do not supervise/);
 		expect(requireScope({ kind: 'admin' })).toEqual({ kind: 'admin' });
+	});
+});
+
+describe('classScopeFor', () => {
+	beforeEach(() => {
+		schools.clear();
+		adminUids = new Set(['root']);
+		schools.set('s1', {
+			schoolId: 's1',
+			name: 'Alpha',
+			status: 'active',
+			supervisorMap: { sup: true },
+		});
+	});
+
+	const cls = { schoolId: 's1', teacherIds: ['t1', 't2'] };
+
+	it('keeps the supervisor scope when the caller holds one', async () => {
+		expect((await classScopeFor('sup', cls)).scope).toEqual({ kind: 'all', schoolId: 's1' });
+		expect((await classScopeFor('root', cls)).scope).toEqual({ kind: 'admin' });
+	});
+
+	it('gives a teacher of the class a scope narrowed to themselves', async () => {
+		const { scope, school } = await classScopeFor('t1', cls);
+		expect(scope).toEqual({
+			kind: 'teachers',
+			schoolId: 's1',
+			teacherIds: new Set(['t1']),
+		});
+		expect(school?.name).toBe('Alpha');
+	});
+
+	it('is null for someone who neither supervises nor teaches the class', async () => {
+		expect((await classScopeFor('stranger', cls)).scope).toBeNull();
 	});
 });
 

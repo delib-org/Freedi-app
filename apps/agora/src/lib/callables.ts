@@ -1,6 +1,9 @@
 import { functions, httpsCallable } from './firebase';
+import { withApprovalGate } from './access';
 import type {
 	AgoraDeviceMode,
+	DealNotesRequest,
+	DealNotesResponse,
 	AgoraIdentityMode,
 	AgoraSessionFlow,
 	AgoraStage,
@@ -12,7 +15,13 @@ import type {
 	JoinClassResponse,
 	ModerateStatementRequest,
 	ModerateStatementResponse,
+	RemoveParticipantRequest,
+	RemoveParticipantResponse,
+	ResolveRejoinRequest,
+	ResolveRejoinResponse,
 	RewordQuestionRequest,
+	SetBannedWordsRequest,
+	SetBannedWordsResponse,
 	RewordQuestionResponse,
 	TeacherMessageRequest,
 	TeacherMessageResponse,
@@ -22,6 +31,8 @@ import type {
 	TeacherRosterResponse,
 	TeacherClassRequest,
 	TeacherClassResponse,
+	TopicAccessRequest,
+	TopicAccessResponse,
 	TeacherHeartbeatRequest,
 	TeacherHeartbeatResponse,
 	SupervisorConsoleRequest,
@@ -81,6 +92,8 @@ export interface JoinSessionResponse {
 	sessionId: string;
 	participantId: string;
 	anonName: string;
+	/** The teacher removed this login: not seated, the knock waits for the teacher */
+	waiting?: boolean;
 }
 
 export interface AdvanceStageRequest {
@@ -123,7 +136,7 @@ export async function createSession(request: CreateSessionRequest): Promise<Crea
 		functions,
 		'agoraCreateSession',
 	);
-	const result = await call(request);
+	const result = await withApprovalGate(() => call(request));
 
 	return result.data;
 }
@@ -132,6 +145,19 @@ export async function joinSession(request: JoinSessionRequest): Promise<JoinSess
 	const call = httpsCallable<JoinSessionRequest, JoinSessionResponse>(
 		functions,
 		'agoraJoinSession',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** Ask to read the private scenario of a session I am in (the reader-marker fallback) */
+export async function requestTopicAccess(
+	request: TopicAccessRequest,
+): Promise<TopicAccessResponse> {
+	const call = httpsCallable<TopicAccessRequest, TopicAccessResponse>(
+		functions,
+		'agoraTopicAccess',
 	);
 	const result = await call(request);
 
@@ -168,6 +194,14 @@ export async function advanceStage(request: AdvanceStageRequest): Promise<Advanc
 		functions,
 		'agoraAdvanceStage',
 	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** A student's hand of classmates' notes at a station — dealt by lottery, server-side */
+export async function dealNotes(request: DealNotesRequest): Promise<DealNotesResponse> {
+	const call = httpsCallable<DealNotesRequest, DealNotesResponse>(functions, 'agoraDealNotes');
 	const result = await call(request);
 
 	return result.data;
@@ -239,7 +273,7 @@ export async function generateTopicPackage(
 		// while the package quietly finished and appeared on the next visit.
 		{ timeout: 5 * 60 * 1000 },
 	);
-	const result = await call(request);
+	const result = await withApprovalGate(() => call(request));
 
 	return result.data;
 }
@@ -265,7 +299,7 @@ export async function teacherClass(request: TeacherClassRequest): Promise<Teache
 		functions,
 		'agoraTeacherClass',
 	);
-	const result = await call(request);
+	const result = await withApprovalGate(() => call(request));
 
 	return result.data;
 }
@@ -289,7 +323,7 @@ export async function teacherRoster(request: TeacherRosterRequest): Promise<Teac
 		functions,
 		'agoraTeacherRoster',
 	);
-	const result = await call(request);
+	const result = await withApprovalGate(() => call(request));
 
 	return result.data;
 }
@@ -351,6 +385,30 @@ export async function moderateStatement(
 	return result.data;
 }
 
+/** The session teacher takes one student out of the lesson (seat deleted, uid blocked). */
+export async function removeParticipant(
+	request: RemoveParticipantRequest,
+): Promise<RemoveParticipantResponse> {
+	const call = httpsCallable<RemoveParticipantRequest, RemoveParticipantResponse>(
+		functions,
+		'agoraRemoveParticipant',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The session teacher answers a removed student's knock: let back in, or not now. */
+export async function resolveRejoin(request: ResolveRejoinRequest): Promise<ResolveRejoinResponse> {
+	const call = httpsCallable<ResolveRejoinRequest, ResolveRejoinResponse>(
+		functions,
+		'agoraResolveRejoin',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
 /**
  * The teacher makes the question in front of the room clearer — and says
  * whether the new words are for this game or for every round like it.
@@ -402,6 +460,19 @@ export async function teacherHeartbeat(
 	const call = httpsCallable<TeacherHeartbeatRequest, TeacherHeartbeatResponse>(
 		functions,
 		'agoraTeacherHeartbeat',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The teacher replaces their list of words their students may not use */
+export async function setBannedWords(
+	request: SetBannedWordsRequest,
+): Promise<SetBannedWordsResponse> {
+	const call = httpsCallable<SetBannedWordsRequest, SetBannedWordsResponse>(
+		functions,
+		'agoraSetBannedWords',
 	);
 	const result = await call(request);
 

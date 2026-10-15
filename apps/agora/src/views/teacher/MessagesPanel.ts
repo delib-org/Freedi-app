@@ -1,388 +1,239 @@
 import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { getDeliberationState } from '../../lib/proposals';
+import { buildTextRows, type TextRow } from '../../lib/flows/moderationQueue';
+import { planContext } from '../../lib/flows/writingContext';
 import {
-	authorsOf,
-	buildTextRows,
-	filterRows,
-	type TextKind,
-	type TextRow,
-} from '../../lib/flows/moderationQueue';
-import { moderateStatement, moderationErrorKey, realNameOf } from '../../lib/teacherConsole';
-import { formatMessageTime } from '../ThreadChat';
-import {
-	AGORA_LIMITS,
-	AGORA_TEACHER_MESSAGE,
-	type AgoraParticipant,
-	type AgoraSession,
-} from '@freedi/shared-types';
+	groupByQuestion,
+	rowsOfStudent,
+	searchRows,
+	summarizeStudents,
+} from '../../lib/flows/writingGroups';
+import { realNameOf, unreadRepliesFor } from '../../lib/teacherConsole';
+import type { AgoraParticipant, AgoraSession } from '@freedi/shared-types';
+import { createWritingActions } from './writing/WritingActions';
+import { placeLabel, plainRows, rowsWithDividers, studentList } from './writing/WritingLenses';
 
 export interface MessagesPanelAttrs {
 	session: AgoraSession;
 	participants: readonly AgoraParticipant[];
 	onMessage: (studentUid: string, aboutStatementId?: string) => void;
+	/** Opened from the class list on one student: land on their page */
+	focusStudentUid?: string;
+	/** Opened from the strip mid-lesson: "what is the class writing now" is the live question */
+	defaultTab?: Tab;
 }
 
-const KINDS: readonly TextKind[] = ['proposal', 'answer', 'suggestion', 'chat', 'pitch'];
-const REASON_CHIPS = ['language', 'offtopic', 'personal'] as const;
+export type Tab = 'student' | 'question';
 
 /**
- * The Messages tab: every line a student wrote, newest first, with the
- * teacher's three moves on each — reword it, take it down (with a reason the
- * author will read), put it back — and the door to a note to its author.
+ * "What they wrote" — everything the class wrote, with the teacher's moves on
+ * each line. Two lenses on the same rows: BY STUDENT (a list, then one
+ * student's whole path oldest first) and BY QUESTION (each place in the order
+ * the lesson ran). One search box and two chips replace the old selects.
  *
- * Everything on this screen is already in the deliberation state the Live
- * tab listens to; this only renders it. The moves go through the moderation
- * callable, which is what makes them honest (see fn_agoraModerateStatement).
+ * Everything shown is already in the deliberation state the Live tab listens
+ * to; the moves go through the moderation callable (fn_agoraModerateStatement)
+ * and the note callable (fn_agoraTeacherMessage).
  */
 export function MessagesPanel(): m.Component<MessagesPanelAttrs> {
-	let studentUid = '';
-	let kind: TextKind | '' = '';
-	let showHidden = false;
-	/** The row being reworded, and the draft */
-	let editingId: string | null = null;
-	let editDraft = '';
-	/** The row about to be hidden, and the reason */
-	let hidingId: string | null = null;
-	let reason = '';
-	let busyId: string | null = null;
-	let errorKey: string | null = null;
+	let tab: Tab = 'student';
+	let selected: string | null = null;
+	let query = '';
+	let onlyHidden = false;
+	let onlyNews = false;
+	let started = false;
+	const actions = createWritingActions();
 
-	async function run(statementId: string, move: () => Promise<unknown>): Promise<void> {
-		if (busyId) return;
-		busyId = statementId;
-		errorKey = null;
-		m.redraw();
-		try {
-			await move();
-			editingId = null;
-			hidingId = null;
-			reason = '';
-		} catch (error) {
-			console.error('[Teacher] Moderation failed:', error);
-			errorKey = moderationErrorKey(error);
-		} finally {
-			busyId = null;
-			m.redraw();
-		}
+	function chips(hiddenCount: number, newsCount: number): m.Children {
+		const chip = (label: string, on: boolean, toggle: () => void): m.Vnode =>
+			m(
+				'button.mod-reason-chip',
+				{
+					type: 'button',
+					'aria-pressed': String(on),
+					class: on ? 'mod-reason-chip--on' : undefined,
+					onclick: toggle,
+				},
+				label,
+			);
+
+		return m('.mod-reason-chips', [
+			chip(t('teacher.w_chip_hidden', { n: String(hiddenCount) }), onlyHidden, () => {
+				onlyHidden = !onlyHidden;
+			}),
+			tab === 'student' && !selected
+				? chip(t('teacher.w_chip_news', { n: String(newsCount) }), onlyNews, () => {
+						onlyNews = !onlyNews;
+					})
+				: null,
+		]);
 	}
 
-	function actions(
-		session: AgoraSession,
-		item: TextRow,
-		onMessage: MessagesPanelAttrs['onMessage'],
+	function tabs(): m.Children {
+		const one = (value: Tab, label: string): m.Vnode =>
+			m(
+				'button.writing-tabs__tab',
+				{
+					type: 'button',
+					role: 'tab',
+					'aria-selected': String(tab === value),
+					class: tab === value ? 'writing-tabs__tab--on' : undefined,
+					onclick: () => {
+						tab = value;
+						selected = null;
+						actions.close();
+					},
+				},
+				label,
+			);
+
+		return m('.writing-tabs', { role: 'tablist' }, [
+			one('student', t('teacher.w_tab_student')),
+			one('question', t('teacher.w_tab_question')),
+		]);
+	}
+
+	function studentPage(
+		uid: string,
+		rows: readonly TextRow[],
+		removedNames: Record<string, string>,
+		attrs: MessagesPanelAttrs,
+		questions: ReturnType<typeof planContext>['questions'],
 	): m.Children {
-		const busy = busyId === item.statementId;
-		if (item.hidden) {
-			return m('.mod-row__actions', [
+		const mine = rowsOfStudent(rows, uid);
+		const shown = onlyHidden ? mine.filter((item) => item.hidden) : mine;
+		const anonName = mine[0]?.anonName ?? removedNames[uid] ?? '';
+		const real = realNameOf(uid);
+		const removed = Object.prototype.hasOwnProperty.call(removedNames, uid);
+
+		return m('.writing-page', [
+			m(
+				'button.btn.btn--sm.btn--ghost',
+				{
+					type: 'button',
+					onclick: () => {
+						selected = null;
+						actions.close();
+					},
+				},
+				`› ${t('teacher.w_back')}`,
+			),
+			m('.writing-page__head', [
+				m('h3.writing-page__title', [
+					m('span.class-panel__name', anonName),
+					real ? m('span.class-panel__real', ` · ${real}`) : null,
+					removed ? m('span.writing-student__tag', t('teacher.w_removed_tag')) : null,
+				]),
 				m(
 					'button.btn.btn--sm.btn--secondary',
-					{
-						type: 'button',
-						disabled: busy,
-						onclick: () =>
-							void run(item.statementId, () =>
-								moderateStatement({
-									sessionId: session.sessionId,
-									action: 'restore',
-									statementId: item.statementId,
-								}),
-							),
-					},
-					t('teacher.restore_text'),
-				),
-				messageButton(item, onMessage),
-			]);
-		}
-
-		return m('.mod-row__actions', [
-			m(
-				'button.btn.btn--sm.btn--ghost',
-				{
-					type: 'button',
-					disabled: busy,
-					onclick: () => {
-						editingId = item.statementId;
-						editDraft = item.text;
-						hidingId = null;
-					},
-				},
-				t('teacher.edit_text'),
-			),
-			m(
-				'button.btn.btn--sm.btn--ghost',
-				{
-					type: 'button',
-					disabled: busy,
-					onclick: () => {
-						hidingId = item.statementId;
-						reason = '';
-						editingId = null;
-					},
-				},
-				t('teacher.hide_text'),
-			),
-			messageButton(item, onMessage),
-		]);
-	}
-
-	function messageButton(item: TextRow, onMessage: MessagesPanelAttrs['onMessage']): m.Children {
-		return m(
-			'button.btn.btn--sm.btn--secondary',
-			{ type: 'button', onclick: () => onMessage(item.authorUid, item.statementId) },
-			t('teacher.message_student'),
-		);
-	}
-
-	function editor(session: AgoraSession, item: TextRow): m.Children {
-		const busy = busyId === item.statementId;
-
-		return m('.mod-row__editor', [
-			m('textarea.text-input.thread__input', {
-				value: editDraft,
-				rows: 3,
-				maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
-				'aria-label': t('teacher.edit_text'),
-				disabled: busy,
-				oninput: (event: InputEvent) => {
-					editDraft = (event.target as HTMLTextAreaElement).value;
-				},
-			}),
-			m('.teacher__mode-row', [
-				m(
-					'button.btn.btn--sm.btn--primary',
-					{
-						type: 'button',
-						disabled: busy || !editDraft.trim() || editDraft.trim() === item.text,
-						onclick: () =>
-							void run(item.statementId, () =>
-								moderateStatement({
-									sessionId: session.sessionId,
-									action: 'edit',
-									statementId: item.statementId,
-									text: editDraft.trim(),
-								}),
-							),
-					},
-					t('teacher.save_text'),
-				),
-				m(
-					'button.btn.btn--sm.btn--ghost',
-					{
-						type: 'button',
-						disabled: busy,
-						onclick: () => {
-							editingId = null;
-						},
-					},
-					t('common.cancel'),
+					{ type: 'button', onclick: () => attrs.onMessage(uid) },
+					t('teacher.w_dm'),
 				),
 			]),
+			shown.length === 0
+				? m(
+						'p.home-explanation',
+						t(removed ? 'teacher.w_nothing_removed' : 'teacher.w_nothing_found'),
+					)
+				: rowsWithDividers({
+						session: attrs.session,
+						rows: shown,
+						questions,
+						actions,
+						showAuthor: false,
+						removedUids: attrs.session.removedUids ?? {},
+					}),
 		]);
-	}
-
-	function hider(session: AgoraSession, item: TextRow): m.Children {
-		const busy = busyId === item.statementId;
-
-		return m('.mod-row__editor', [
-			m('p.voting-settings__hint', t('teacher.hide_reason')),
-			m(
-				'.mod-reason-chips',
-				REASON_CHIPS.map((chip) =>
-					m(
-						'button.mod-reason-chip',
-						{
-							key: chip,
-							type: 'button',
-							class:
-								reason === t(`teacher.hide_reason_${chip}`) ? 'mod-reason-chip--on' : undefined,
-							onclick: () => {
-								reason = t(`teacher.hide_reason_${chip}`);
-							},
-						},
-						t(`teacher.hide_reason_${chip}`),
-					),
-				),
-			),
-			m('input.join__name-input', {
-				type: 'text',
-				value: reason,
-				maxlength: AGORA_TEACHER_MESSAGE.MAX_REASON,
-				placeholder: t('teacher.hide_reason_placeholder'),
-				'aria-label': t('teacher.hide_reason'),
-				disabled: busy,
-				oninput: (event: InputEvent) => {
-					reason = (event.target as HTMLInputElement).value;
-				},
-			}),
-			m('.teacher__mode-row', [
-				m(
-					'button.btn.btn--sm.btn--primary',
-					{
-						type: 'button',
-						disabled: busy,
-						onclick: () =>
-							void run(item.statementId, () =>
-								moderateStatement({
-									sessionId: session.sessionId,
-									action: 'hide',
-									statementId: item.statementId,
-									reason: reason.trim(),
-								}),
-							),
-					},
-					t('teacher.hide_confirm'),
-				),
-				m(
-					'button.btn.btn--sm.btn--ghost',
-					{
-						type: 'button',
-						disabled: busy,
-						onclick: () => {
-							hidingId = null;
-						},
-					},
-					t('common.cancel'),
-				),
-			]),
-		]);
-	}
-
-	function row(
-		session: AgoraSession,
-		item: TextRow,
-		onMessage: MessagesPanelAttrs['onMessage'],
-	): m.Children {
-		const real = realNameOf(item.authorUid);
-
-		return m(
-			'.mod-row',
-			{
-				key: item.statementId,
-				class: [
-					item.hidden ? 'mod-row--hidden' : undefined,
-					item.editedByTeacher ? 'mod-row--edited' : undefined,
-				]
-					.filter(Boolean)
-					.join(' '),
-			},
-			[
-				m('.mod-row__head', [
-					m('span.mod-row__who', [
-						m('span.class-panel__name', item.anonName),
-						real ? m('span.class-panel__real', ` · ${real}`) : null,
-					]),
-					m('span.mod-row__kind', t(`teacher.kind_${item.kind}`)),
-					m('span.thread__time', formatMessageTime(item.createdAt)),
-				]),
-				editingId === item.statementId
-					? editor(session, item)
-					: item.hidden
-						? m('p.mod-row__text.mod-row__text--hidden', t('teacher.hidden_by_you'))
-						: m('p.mod-row__text', item.text),
-				item.editedByTeacher && !item.hidden
-					? m('span.moderation__edited', t('teacher.edited_by_you'))
-					: null,
-				hidingId === item.statementId ? hider(session, item) : null,
-				editingId === item.statementId || hidingId === item.statementId
-					? null
-					: actions(session, item, onMessage),
-				errorKey &&
-				busyId === null &&
-				(hidingId === item.statementId || editingId === item.statementId)
-					? m('p.join__error', t(errorKey))
-					: null,
-			],
-		);
 	}
 
 	return {
 		view(vnode) {
-			const { session, participants, onMessage } = vnode.attrs;
+			const attrs = vnode.attrs;
+			const { session, participants } = attrs;
+			if (!started) {
+				started = true;
+				if (attrs.focusStudentUid) selected = attrs.focusStudentUid;
+				else if (attrs.defaultTab) tab = attrs.defaultTab;
+			}
 			const state = getDeliberationState();
-			const rows = buildTextRows({
+			const { questions, squareOrder } = planContext(session);
+			const removedNames: Record<string, string> = {};
+			for (const [uid, entry] of Object.entries(session.removedUids ?? {})) {
+				removedNames[uid] = entry.anonName;
+			}
+			const all = buildTextRows({
 				proposals: state.proposals,
 				answersByQuestion: state.answersByQuestion,
 				suggestions: state.suggestions,
+				hiddenOthers: state.hiddenOthers,
+				challengeQuestionId: session.challengeQuestionId,
 				participants,
+				removedUids: Object.keys(removedNames),
 				challengerStatementId: session.votingGame?.challengerStatementId,
+				questions,
+				squareOrder,
 			});
-			const shown = filterRows(rows, {
-				showHidden,
-				...(studentUid ? { studentUid } : {}),
-				...(kind ? { kind } : {}),
-			});
-			const hiddenCount = rows.filter((item) => item.hidden).length;
+			const hiddenCount = all.filter((item) => item.hidden).length;
+			const newsCount = new Set(
+				all.map((item) => item.authorUid).filter((uid) => unreadRepliesFor(uid) > 0),
+			).size;
+			const found = searchRows(all, query, realNameOf);
+			const visible = onlyHidden ? found.filter((item) => item.hidden) : found;
+
+			let body: m.Children;
+			if (tab === 'student' && selected) {
+				body = studentPage(selected, query ? found : all, removedNames, attrs, questions);
+			} else if (tab === 'student') {
+				let students = summarizeStudents(visible, removedNames);
+				if (!query && !onlyHidden) students = summarizeStudents(all, removedNames);
+				if (onlyNews) students = students.filter((student) => unreadRepliesFor(student.uid) > 0);
+				body =
+					students.length === 0
+						? m(
+								'p.home-explanation',
+								t(all.length === 0 ? 'teacher.no_messages_yet' : 'teacher.w_nothing_found'),
+							)
+						: studentList(students, (uid) => {
+								selected = uid;
+								actions.close();
+							});
+			} else {
+				const groups = groupByQuestion(visible);
+				body =
+					groups.length === 0
+						? m(
+								'p.home-explanation',
+								t(all.length === 0 ? 'teacher.no_messages_yet' : 'teacher.w_nothing_found'),
+							)
+						: groups.map((group) =>
+								m('section.writing-run', { key: group.key }, [
+									m('h4.writing-run__place', placeLabel(group.key, group.rows[0], questions)),
+									plainRows({
+										session,
+										rows: group.rows,
+										questions,
+										actions,
+										showAuthor: true,
+										removedUids: session.removedUids ?? {},
+									}),
+								]),
+							);
+			}
 
 			return m('.card.stack.messages-panel', [
-				m('.class-progress__head', [
-					m('p.teacher__section-title', t('teacher.messages_title')),
-					m('span.class-progress__count', String(shown.length)),
-				]),
-				m('.messages-panel__filters', [
-					m(
-						'select.messages-panel__select',
-						{
-							'aria-label': t('teacher.filter_all_students'),
-							onchange: (event: Event) => {
-								studentUid = (event.target as HTMLSelectElement).value;
-							},
-						},
-						[
-							m(
-								'option',
-								{ value: '', selected: studentUid === '' },
-								t('teacher.filter_all_students'),
-							),
-							authorsOf(rows).map((author) =>
-								m(
-									'option',
-									{ key: author.uid, value: author.uid, selected: studentUid === author.uid },
-									realNameOf(author.uid)
-										? `${author.anonName} · ${realNameOf(author.uid)}`
-										: author.anonName,
-								),
-							),
-						],
-					),
-					m(
-						'select.messages-panel__select',
-						{
-							'aria-label': t('teacher.filter_all_kinds'),
-							onchange: (event: Event) => {
-								kind = (event.target as HTMLSelectElement).value as TextKind | '';
-							},
-						},
-						[
-							m('option', { value: '', selected: kind === '' }, t('teacher.filter_all_kinds')),
-							KINDS.map((value) =>
-								m(
-									'option',
-									{ key: value, value, selected: kind === value },
-									t(`teacher.kind_${value}`),
-								),
-							),
-						],
-					),
-					m('label.voting-settings__row', [
-						m('input[type=checkbox]', {
-							checked: showHidden,
-							onchange: (event: Event) => {
-								showHidden = (event.target as HTMLInputElement).checked;
-							},
-						}),
-						m('span', t('teacher.filter_show_hidden', { n: hiddenCount })),
-					]),
-				]),
-				errorKey && hidingId === null && editingId === null
-					? m('p.join__error', t(errorKey))
-					: null,
-				shown.length === 0
-					? m('p.home-explanation', t('teacher.no_messages_yet'))
-					: m(
-							'.messages-panel__list',
-							shown.map((item) => row(session, item, onMessage)),
-						),
+				tabs(),
+				m('input.join__name-input.writing-search', {
+					type: 'search',
+					value: query,
+					placeholder: t('teacher.w_search'),
+					'aria-label': t('teacher.w_search'),
+					oninput: (event: InputEvent) => {
+						query = (event.target as HTMLInputElement).value;
+					},
+				}),
+				chips(hiddenCount, newsCount),
+				body,
 			]);
 		},
 	};

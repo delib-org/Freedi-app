@@ -3,8 +3,9 @@ import { GEMINI_MODEL, getGenAI } from './config/gemini';
 import { functionConfig } from '@freedi/shared-types';
 import { logError } from './utils/errorHandling';
 
-// Gemini-based profanity detection
-async function containsBadLanguage(text: string): Promise<boolean> {
+// LLM-based profanity detection (see config/gemini.ts: OpenAI-backed today).
+// Exported for the Agora language gate (agora/fn_agoraCheckLanguage.ts).
+export async function containsBadLanguage(text: string): Promise<boolean> {
 	try {
 		const model = getGenAI().getGenerativeModel({ model: GEMINI_MODEL });
 

@@ -123,23 +123,25 @@ export function stopVotingListeners(): void {
  * Casts, changes, or withdraws a vote — one doc per student per question, so
  * changing your mind overwrites rather than accumulates.
  *
- * Voting for the option you already hold withdraws it. The doc is rewritten
- * with the `none` sentinel instead of being deleted, because the counting
- * trigger needs to see the transition in order to decrement the option you
- * left.
+ * `null` withdraws. The doc is rewritten with the `none` sentinel instead of
+ * being deleted, because the counting trigger needs to see the transition in
+ * order to decrement the option you left.
+ *
+ * The caller says which it is (`flows/ballotTap.ts` decides from what the
+ * student SEES). Deciding here from the last snapshot made a second, impatient
+ * tap on a slow connection withdraw the vote the first tap had just cast.
  */
-export async function castVote(session: AgoraSession, statementId: string): Promise<void> {
+export async function castVote(session: AgoraSession, statementId: string | null): Promise<void> {
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
 
 	const parentId = session.challengeQuestionId;
 	const voteId = getVoteId(user.uid, parentId);
-	const withdrawing = state.myVoteStatementId === statementId;
 	const now = Date.now();
 
 	const vote: Vote = {
 		voteId,
-		statementId: withdrawing ? NO_VOTE : statementId,
+		statementId: statementId ?? NO_VOTE,
 		userId: user.uid,
 		parentId,
 		// Proposals are known by number in this game; the anon name keeps a vote

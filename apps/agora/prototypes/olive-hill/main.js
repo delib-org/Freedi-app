@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import { Soundscape } from './sound.js';
 import { ProposalBoard } from './board.js';
+import { dragLook } from './drag-look.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('world');
@@ -118,7 +119,7 @@ $('quality').onclick=()=>{high=!high;renderer.setPixelRatio(high?Math.min(device
 function walk(){if(writing)return;auto=!auto;$('walk').textContent=auto?'לעצור ולהסתכל מסביב':near?'לשוחח עם החכמה':'ללכת אל הבקתה';if(near){auto=false;encounter();}canvas.focus();}
 $('walk').onclick=walk;
 canvas.addEventListener('pointerdown',ev=>{drag={x:ev.clientX,y:ev.clientY};canvas.setPointerCapture(ev.pointerId);auto=false;});
-canvas.addEventListener('pointermove',ev=>{if(!drag||writing)return;yaw-=(ev.clientX-drag.x)*.004;pitch=THREE.MathUtils.clamp(pitch-(ev.clientY-drag.y)*.003,-.65,.65);drag={x:ev.clientX,y:ev.clientY};aim();});
+canvas.addEventListener('pointermove',ev=>{if(!drag||writing)return;({yaw,pitch}=dragLook({yaw,pitch},ev.clientX-drag.x,ev.clientY-drag.y,ev.pointerType,{min:-.65,max:.65}));drag={x:ev.clientX,y:ev.clientY};aim();});
 canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
 addEventListener('keydown',ev=>{if(writing)return;if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyE'].includes(ev.code)){ev.preventDefault();keys.add(ev.code);auto=false;if(ev.code==='KeyE'&&near)encounter();}});
 addEventListener('keyup',ev=>keys.delete(ev.code));addEventListener('blur',()=>{keys.clear();drag=null;});

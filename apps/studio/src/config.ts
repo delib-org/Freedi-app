@@ -7,6 +7,10 @@ export const MAIN_APP_URL: string = import.meta.env.VITE_MAIN_APP_URL || 'https:
 export const MASS_CONSENSUS_URL: string =
 	import.meta.env.VITE_MASS_CONSENSUS_URL || 'https://mc.wizcol.com';
 
+/** Base URL of the Agora classroom app (teacher sign-up links point here). */
+export const AGORA_APP_URL: string =
+	import.meta.env.VITE_AGORA_APP_URL || 'https://agora-wizcol.web.app';
+
 /** Studio's activity URL resolver, built from its env-configured base URLs. */
 export const activityUrlResolver: ActivityUrlResolver = createActivityUrlResolver({
 	mainAppBaseUrl: MAIN_APP_URL,

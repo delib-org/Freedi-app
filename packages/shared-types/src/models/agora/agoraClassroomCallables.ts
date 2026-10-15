@@ -1,6 +1,7 @@
 import type { SupervisorTeacherDetail } from './agoraSupervisorCallables';
 import type { AgoraSessionFlow } from './sessionFlow';
 import type { AgoraTeacherSurface } from './agoraTeacherUsage';
+import type { AgoraLanguagePlace } from './agoraLanguage';
 
 /**
  * Wire contracts of the classroom-hierarchy callables (schools, classes,
@@ -259,10 +260,10 @@ export interface TeacherMessageResponse {
 /** `agoraModerateStatement` — the session teacher's hand on a student's text. */
 export interface ModerateStatementRequest {
 	sessionId: string;
-	action: 'hide' | 'restore' | 'edit' | 'clearLookName' | 'forgetNames';
-	/** hide / restore / edit */
+	action: 'hide' | 'restore' | 'edit' | 'delete' | 'clearLookName' | 'forgetNames';
+	/** hide / restore / edit / delete */
 	statementId?: string;
-	/** hide: shown to the author on the thread, never to the class */
+	/** hide / edit / delete: shown to the author on the thread, never to the class */
 	reason?: string;
 	/** edit: the replacement wording */
 	text?: string;
@@ -272,8 +273,101 @@ export interface ModerateStatementRequest {
 
 export interface ModerateStatementResponse {
 	ok: true;
-	/** hide / restore: the resulting state */
+	/** hide / restore / delete: the resulting state */
 	hidden?: boolean;
+	/** delete: gone for good */
+	deleted?: boolean;
+}
+
+/**
+ * `agoraRemoveParticipant` — the session teacher takes one student out of
+ * the lesson: their seat is deleted and their uid is blocked from this
+ * session until the teacher lets them back (see agoraRemoval.ts).
+ * Repeat-safe: removing someone already removed answers `removed: false`.
+ */
+export interface RemoveParticipantRequest {
+	sessionId: string;
+	studentUid: string;
+}
+
+export interface RemoveParticipantResponse {
+	ok: true;
+	/** false when the student was already out of the room */
+	removed: boolean;
+}
+
+/**
+ * `agoraResolveRejoin` — the session teacher answers a removed student's
+ * knock: `approve` gives the parked seat back (same pseudonym), `decline`
+ * keeps them out until they knock again.
+ */
+export interface ResolveRejoinRequest {
+	sessionId: string;
+	studentUid: string;
+	decision: 'approve' | 'decline';
+}
+
+export interface ResolveRejoinResponse {
+	ok: true;
+	decision: 'approve' | 'decline';
+}
+
+/**
+ * `agoraCheckLanguage` — the gate every student text passes before the
+ * client writes it. A refusal has already been charged and filed by the time
+ * the response arrives: the strike is on the participant doc, the words are
+ * on the private thread, and the client's only job is to keep the draft in
+ * the box and say why.
+ */
+export interface CheckLanguageRequest {
+	sessionId: string;
+	text: string;
+	/** An edit of an existing note / answer: the statement the text was for */
+	statementId?: string;
+	/**
+	 * Where the student was writing (see AGORA_LANGUAGE_PLACES), filed with
+	 * the refusal so the teacher's alert can say "in a note", "in an answer".
+	 */
+	place?: AgoraLanguagePlace;
+	/** The stage-plan item the text belonged to, when the writer knows it */
+	itemId?: string;
+}
+
+export type CheckLanguageResponse =
+	| { ok: true }
+	| {
+			ok: false;
+			reason: 'language';
+			/** This student's strikes in the session, this one included */
+			strikes: number;
+			/** Coins actually taken (less than the penalty when the balance floored) */
+			deducted: number;
+			/** The balance after the deduction */
+			pointsTotal: number;
+	  }
+	| {
+			/**
+			 * The text holds a word on the session teacher's own list. No strike, no
+			 * coins: the student is asked to rephrase. `word` is the student's own
+			 * word that matched — never the list.
+			 */
+			ok: false;
+			reason: 'banned_word';
+			word: string;
+	  };
+
+/**
+ * `agoraSetBannedWords` — a teacher replaces their list of words their
+ * students may not use (applies to every class they run). The server cleans
+ * it (trim, dedupe, caps) and answers with what it stored.
+ */
+export interface SetBannedWordsRequest {
+	words: string[];
+}
+
+export interface SetBannedWordsResponse {
+	ok: true;
+	words: string[];
 }
 
 /**

@@ -20,6 +20,12 @@ export interface NowCardAttrs {
 	code: string;
 	onMessage: (studentUid: string) => void;
 	now: number;
+	/**
+	 * The teacher's private device only: the name the teacher knows the
+	 * student by, drawn first, with the class's pseudonym muted beside it.
+	 * Absent on a wall, where the chip is the pseudonym alone.
+	 */
+	nameOf?: (studentUid: string) => string | undefined;
 }
 
 /** A chip says how long a student has been quiet only once it is worth saying */
@@ -38,7 +44,7 @@ const IDLE_WARN_MS = 5 * 60 * 1000;
  * of the fourth, nothing more.
  */
 export function nowCard(attrs: NowCardAttrs): m.Children {
-	const { item, participants, facts, joinUrl, code, onMessage, now } = attrs;
+	const { item, participants, facts, joinUrl, code, onMessage, now, nameOf } = attrs;
 
 	if (item.stage === AgoraStage.lobby) {
 		return m('.card.teacher-now.teacher-now--lobby', [
@@ -106,8 +112,10 @@ export function nowCard(attrs: NowCardAttrs): m.Children {
 			: m(
 					'ul.teacher-now__pending',
 					{ 'aria-label': t('teacher.not_finished') },
-					pending.map(({ entry, idle }) =>
-						m(
+					pending.map(({ entry, idle }) => {
+						const real = nameOf?.(entry.participant.userId);
+
+						return m(
 							'li',
 							{ key: entry.participant.participantId },
 							m(
@@ -115,11 +123,18 @@ export function nowCard(attrs: NowCardAttrs): m.Children {
 								{
 									type: 'button',
 									class: idle >= IDLE_WARN_MS ? 'teacher-now__chip--idle' : undefined,
-									'aria-label': t('teacher.message_aria', { name: entry.participant.anonName }),
+									'aria-label': t('teacher.message_aria', {
+										name: real ?? entry.participant.anonName,
+									}),
 									onclick: () => onMessage(entry.participant.userId),
 								},
 								[
-									m('span.teacher-now__alias', entry.participant.anonName),
+									real
+										? [
+												m('span.teacher-now__alias', real),
+												m('span.teacher-now__alias--muted', ` · ${entry.participant.anonName}`),
+											]
+										: m('span.teacher-now__alias', entry.participant.anonName),
 									idle >= SHOW_IDLE_AFTER_MS
 										? m(
 												'span.teacher-now__idle',
@@ -128,8 +143,8 @@ export function nowCard(attrs: NowCardAttrs): m.Children {
 										: null,
 								],
 							),
-						),
-					),
+						);
+					}),
 				),
 	]);
 }

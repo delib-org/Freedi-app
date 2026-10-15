@@ -19,6 +19,12 @@ export const AgoraModerationSchema = object({
 	restoredAt: optional(number()),
 	/** When the teacher last rewrote the text — the "edited by teacher" mark */
 	editedAt: optional(number()),
+	/**
+	 * When the teacher deleted it for good. Always together with `hidden: true`
+	 * (so every reader that already honours hide keeps working); the words are
+	 * erased everywhere and `restore` refuses.
+	 */
+	deletedAt: optional(number()),
 });
 
 export type AgoraModeration = InferOutput<typeof AgoraModerationSchema>;
@@ -30,6 +36,7 @@ export interface ModeratedDoc {
 		hiddenAt?: number;
 		restoredAt?: number;
 		editedAt?: number;
+		deletedAt?: number;
 	} | null;
 	hide?: boolean | null;
 }
@@ -39,6 +46,11 @@ export function isAgoraHidden(doc: ModeratedDoc | null | undefined): boolean {
 	if (!doc) return false;
 
 	return doc.agoraModeration?.hidden === true || doc.hide === true;
+}
+
+/** Deleted for good by the teacher: nothing to restore, nothing to show */
+export function isAgoraDeleted(doc: ModeratedDoc | null | undefined): boolean {
+	return typeof doc?.agoraModeration?.deletedAt === 'number';
 }
 
 /** The text on screen is (partly) the teacher's wording */
@@ -60,7 +72,7 @@ export function isTeacherTouched(
 	const b = before?.agoraModeration ?? undefined;
 	const a = after?.agoraModeration ?? undefined;
 	if (!a && !b) return false;
-	const clocks = ['editedAt', 'hiddenAt', 'restoredAt'] as const;
+	const clocks = ['editedAt', 'hiddenAt', 'restoredAt', 'deletedAt'] as const;
 
 	return clocks.some(
 		(clock) =>

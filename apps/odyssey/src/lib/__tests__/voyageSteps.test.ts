@@ -131,12 +131,23 @@ describe('voyageSteps', () => {
 		).toBe('1/3 רוחות');
 	});
 
-	it('marks the crew chosen even when nobody was invited', () => {
+	it('marks the crew chosen only once the minimum is aboard', () => {
 		expect(byPath(steps(), '/elders').status).toBe('locked');
-		expect(byPath(steps({ ...compassFinished, selectedElderIds: [] }), '/elders')).toMatchObject({
-			status: 'done',
-			detail: '0 מלחים',
-		});
+		// One sailor on offer: one is the whole minimum.
+		expect(
+			byPath(steps({ ...compassFinished, selectedElderIds: ['ben-gurion'] }), '/elders'),
+		).toMatchObject({ status: 'done', detail: '1 מלחים' });
+		// A fuller roster asks for two; an empty crew is an answer but not a crew.
+		const roster = content({ elders: ['ben-gurion', 'golda', 'begin'] });
+		expect(
+			byPath(steps({ ...compassFinished, selectedElderIds: [] }, {}, '/map', roster), '/elders'),
+		).toMatchObject({ status: 'open', detail: '0 מלחים' });
+		expect(
+			byPath(
+				steps({ ...compassFinished, selectedElderIds: ['golda', 'begin'] }, {}, '/map', roster),
+				'/elders',
+			),
+		).toMatchObject({ status: 'done', detail: '2 מלחים' });
 	});
 
 	it('counts the islands chosen, and the ones already sailed', () => {

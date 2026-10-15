@@ -81,6 +81,50 @@ export function boothItemId(place: string): string | null {
 	return isBoothPlace(place) ? place.slice('booth:'.length) : null;
 }
 
+/** Where the teacher can call the whole class: the room's station, or any place by name */
+export type VillageCallPlace = 'current' | 'council' | 'library' | 'challenge' | `booth:${string}`;
+
+/**
+ * For the teacher's own class view only: a call older than this, met on first
+ * render, is history rather than an order. A STUDENT never judges a call by
+ * its age — `lib/flows/summons.ts` resolves it by stamps the device remembers,
+ * because the students a call is for are exactly the ones who meet it late.
+ */
+export const CALL_FRESH_MS = 120000;
+
+/**
+ * What a student's walk does when it ends at a called place: at a booth,
+ * stand at its station (the question comes on screen, the guide's bubble
+ * says what to do); at the council, open it; at any other fixed place, put
+ * the matching opened item on screen and only look.
+ */
+export function callArrival(place: string): 'station' | 'council' | 'place' {
+	if (isBoothPlace(place)) return 'station';
+	if (place === 'council') return 'council';
+
+	return 'place';
+}
+
+/**
+ * The opened plan item a called place stands for — a booth's own question,
+ * or the latest opened item that lives in a fixed building — so the flat
+ * view can follow a call too, and the stage strip agrees with the walker.
+ */
+export function calledItemIndex(
+	place: string,
+	plan: readonly AgoraStagePlanItem[],
+	currentIndex: number,
+): number {
+	const boothId = boothItemId(place);
+	let index = -1;
+	plan.forEach((item, i) => {
+		if (i > currentIndex) return;
+		if (boothId !== null ? item.itemId === boothId : villagePlace(item) === place) index = i;
+	});
+
+	return index;
+}
+
 export function villageBoothKind(item: AgoraStagePlanItem): VillageBoothKind | null {
 	if (item.stage === AgoraStage.question) return questionKindOf(item);
 	if (item.stage === AgoraStage.deliberation) return 'proposal';
@@ -91,12 +135,17 @@ export function villageBoothKind(item: AgoraStagePlanItem): VillageBoothKind | n
 export function villagePlace(item: AgoraStagePlanItem): VillagePlace {
 	if (villageBoothKind(item) !== null) return boothPlace(item.itemId);
 	switch (item.stage) {
+		// The library is the house of knowledge: the film, the period, the
+		// teacher's videos and the background materials.
 		case AgoraStage.framing:
+		case AgoraStage.valueIdentification:
+			return 'library';
+		// The two voices of the era stand at the study house: that is where you
+		// meet people. (A presentation place only — no stored value changes.)
 		case AgoraStage.perspectives:
 		case AgoraStage.needs:
-		case AgoraStage.valueIdentification:
 		case AgoraStage.positioning:
-			return 'library';
+			return 'challenge';
 		case AgoraStage.voting:
 		case AgoraStage.results:
 		case AgoraStage.ended:

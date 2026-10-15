@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import { roundedPlane } from './rounded.js';
 
 /**
  * A personal paper on real timber geometry. Only confirmed session text is
@@ -28,7 +29,7 @@ export function buildWritingDesk({ scene, station, height, at, facing }) {
  paperCanvas.width = 768; paperCanvas.height = 640;
  const context = paperCanvas.getContext('2d');
  const texture = new THREE.CanvasTexture(paperCanvas); texture.colorSpace = THREE.SRGBColorSpace;
- const paper = new THREE.Mesh(new THREE.PlaneGeometry(1.02, .85), new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }));
+ const paper = new THREE.Mesh(roundedPlane(1.02, .85, .05), new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }));
  paper.rotation.x = -Math.PI / 2; paper.position.set(-.14, 1.018, .04); group.add(paper);
  const pen = addBox(.035, .028, .48, new THREE.MeshStandardMaterial({ color: '#304c43' }), .59, 1.035, .12);
  pen.rotation.y = -.3;

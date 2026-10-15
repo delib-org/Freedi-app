@@ -61,10 +61,17 @@ export type IconName =
 	| 'watch'
 	| 'target'
 	| 'mail'
+	| 'qr'
 	| 'cog'
 	| 'arrow'
 	| 'home'
 	| 'menu'
+	// the scenario library
+	| 'star'
+	| 'search'
+	| 'image'
+	| 'hide'
+	| 'lock'
 	// the rating scale
 	| 'face-strong-against'
 	| 'face-against'
@@ -176,6 +183,15 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		['path', { d: 'M3.2 6.4 12 12.6l8.8-6.2' }],
 	],
 
+	// The lesson's door: three finder squares and a scatter of modules — read
+	// as "a QR" at 18px without trying to be a scannable one.
+	qr: [
+		['rect', { x: 3.5, y: 3.5, width: 6, height: 6, rx: 1 }],
+		['rect', { x: 14.5, y: 3.5, width: 6, height: 6, rx: 1 }],
+		['rect', { x: 3.5, y: 14.5, width: 6, height: 6, rx: 1 }],
+		['path', { d: 'M14.5 14.5h2.5v2.5M20.5 14.5v.01M14.5 20.5v.01M17.5 20.5h3v-3' }],
+	],
+
 	// Settings: a ring, its hub, and eight teeth — the plainest possible cog,
 	// because at 22px anything cleverer stops reading as one
 	// Points to inline-start in LTR; the stylesheet mirrors it under [dir=rtl],
@@ -201,6 +217,38 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		['path', { d: 'M4.5 7.5h15' }],
 		['path', { d: 'M4.5 12h15' }],
 		['path', { d: 'M4.5 16.5h15' }],
+	],
+
+	// The scenario library. A star filled with the current colour (a rating),
+	// a lens, a picture frame (the cover), and an eye with a stroke through it.
+	star: [
+		[
+			'path',
+			{
+				d: 'M12 3.4l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.2l-5.1 2.9 1.1-5.7-4.3-4 5.8-.7z',
+				fill: 'currentColor',
+			},
+		],
+	],
+	search: [
+		['circle', { cx: 10.8, cy: 10.8, r: 6.3 }],
+		['path', { d: 'M15.6 15.6 20.4 20.4' }],
+	],
+	image: [
+		['rect', { x: 3.5, y: 5, width: 17, height: 14, rx: 2.2 }],
+		['circle', { cx: 9, cy: 10, r: 1.6 }],
+		['path', { d: 'M4.5 17.5l4.6-4.4 3.4 3.1 3-2.6 4 3.9' }],
+	],
+	hide: [
+		['path', { d: 'M3.2 12s3.2-6 8.8-6 8.8 6 8.8 6-3.2 6-8.8 6-8.8-6-8.8-6z' }],
+		['circle', { cx: 12, cy: 12, r: 2.6 }],
+		['path', { d: 'M4.5 4.5l15 15' }],
+	],
+	// A padlock: a door that exists but is not open to this teacher yet
+	lock: [
+		['rect', { x: 5.5, y: 10.5, width: 13, height: 9.5, rx: 2.2 }],
+		['path', { d: 'M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5' }],
+		['path', { d: 'M12 14.4v2' }],
 	],
 
 	cog: [

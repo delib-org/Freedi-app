@@ -29,14 +29,12 @@ describe('the village follows the actual session plan', () => {
 			'council',
 		]);
 	});
-	it('sends learning to the library but every personal question to a booth', () => {
-		for (const stage of [
-			AgoraStage.framing,
-			AgoraStage.perspectives,
-			AgoraStage.needs,
-			AgoraStage.positioning,
-		]) {
+	it('sends knowledge to the library, the two voices to the study house, every personal question to a booth', () => {
+		for (const stage of [AgoraStage.framing, AgoraStage.valueIdentification]) {
 			expect(villagePlace({ itemId: stage, stage })).toBe('library');
+		}
+		for (const stage of [AgoraStage.perspectives, AgoraStage.needs, AgoraStage.positioning]) {
+			expect(villagePlace({ itemId: stage, stage })).toBe('challenge');
 		}
 		expect(villagePlace({ itemId: 'personal', stage: AgoraStage.question, kind: 'needs' })).toBe(
 			'booth:personal',

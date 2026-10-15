@@ -1,8 +1,27 @@
 import { isProposalConfirmed } from '../lib/proposals';
-import { villagePlace } from '../lib/flows/villageRoute';
-import { councilBallot, councilPitch, type CouncilModel } from '../lib/flows/villageCouncil';
+import type { CouncilModel } from '../lib/flows/villageCouncil';
+import {
+	councilModelFor,
+	councilNeedsVotes,
+	papersFor,
+	stationPapersFor,
+} from '../lib/flows/villageModel';
 import { getVotingState } from '../lib/voting';
+import { readStoredNav, storeNav } from '../lib/stageNavStore';
 import { sessionVillageMode } from '../lib/flows/sessionLinks';
+import { villagePlace } from '../lib/flows/villageRoute';
+import {
+	TYPING_GRACE_MS,
+	callTargetIndex,
+	callTargetPlace,
+	resolveSummons,
+	type VillageCall,
+} from '../lib/flows/summons';
+import { readHandledCall, storeHandledCall } from '../lib/summonsStore';
+import { callPlaceLabel } from '../components/VillageShell';
+import { CallBanner } from '../components/CallBanner';
+import { addInboxItem } from '../lib/inbox';
+import { registerPlaceNavigator, unregisterPlaceNavigator } from '../lib/helpedFocus';
 import m from 'mithril';
 import { canWriteStage } from '../lib/flows/stageAccess';
 import { t } from '../lib/i18n';
@@ -16,6 +35,7 @@ import {
 	getCurrentPlanIndex,
 	getConsensusPool,
 	reportStageProgress,
+	reportWhereabouts,
 } from '../lib/session';
 import { getTopicPackage, loadTopicPackage } from '../lib/topic';
 import { stopValueAnswerListeners } from '../lib/values';
@@ -39,7 +59,6 @@ import { listenToVoting, stopVotingListeners } from '../lib/voting';
 import {
 	INITIAL_STAGE_NAV,
 	effectiveIndex,
-	serializeStageNav,
 	stageNavReduce,
 	type StageNavEvent,
 	type StageNavState,
@@ -53,31 +72,44 @@ import {
 	isLightWorld,
 	isVillageSoundOn,
 	setLightWorld,
+	setVillagePalette,
 	setVillageSound,
+	villagePalette,
+	setVillageViewPreference,
+	villageViewPreference,
+	type VillageView,
 } from '../lib/villagePrefs';
 import { CarriedContext } from '../components/CarriedContext';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { StageTransition, hasStageTransition } from '../components/StageTransition';
+import { prefetchFilm } from '../components/OpeningFilm';
+import { openingFilmOf, playsOpeningFilm, type OpeningFilm } from '../lib/flows/openingFilm';
+import { needsQuestionOf, planHasCast, scenarioCast } from '../lib/flows/scenarioCast';
+import { councilVoices } from '../lib/flows/councilVoices';
 import { LookSheet } from '../components/LookSheet';
 import { seedsOf } from '../components/LookPicker';
 import { buildLook, classLooks, wearLook } from '../lib/looks';
 import { Lobby } from './Lobby';
 import { SceneStage } from './SceneStage';
+import { isLibraryVideoLive } from '../lib/flows/libraryVideo';
 import { ValueIdentification } from './ValueIdentification';
 import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
 import { QuestionStage } from './QuestionStage';
 import { RoundStage } from './RoundStage';
-import { liveNoteNews, stationNotes } from '../components/VillageCommunity';
+import { liveNoteNews } from '../components/VillageCommunity';
+import { visibleStationNotes } from '../lib/hands';
 import { boardNews } from '../lib/flows/noteNews';
 import { VillageShell } from '../components/VillageShell';
 import { Voting } from './Voting';
 import { Results } from './Results';
+import { RemovedScreen } from './RemovedScreen';
 import { ReRate } from './ReRate';
 import {
 	AgoraSceneKind,
 	AgoraSessionMode,
 	AgoraStage,
+	removalOf,
 	resolveAgoraTheme,
 	roundSpecOf,
 	type AgoraStagePlanItem,
@@ -103,10 +135,6 @@ import {
  */
 function framingKey(sessionId: string): string {
 	return `agora_${sessionId}_framing_done`;
-}
-
-function navKey(sessionId: string): string {
-	return `agora_${sessionId}_viewing`;
 }
 
 /**
@@ -150,26 +178,27 @@ function markFramingSeen(sessionId: string): void {
 	m.redraw();
 }
 
-function readStoredNav(sessionId: string): string | null {
-	try {
-		return sessionStorage.getItem(navKey(sessionId));
-	} catch {
-		return null;
-	}
-}
-
-function storeNav(sessionId: string, state: StageNavState): void {
-	try {
-		sessionStorage.setItem(navKey(sessionId), serializeStageNav(state));
-	} catch {
-		// Storage refused: a refresh lands on the current stage, which is fine.
-	}
-}
-
 export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
 	let villageWriteRequest = 0;
-	let villageOverride: boolean | undefined;
+	/**
+	 * This device's world, when it chose one: the 3D village or the simple
+	 * view. Remembered per device (`villagePrefs`), so a refresh keeps the
+	 * choice — and the way back to the village is always on the simple view,
+	 * the lobby included; a world that failed to load is retried on that
+	 * press and, failing again, says so instead of trapping anyone.
+	 */
+	const savedView = villageViewPreference();
+	let villageOverride: boolean | undefined =
+		savedView === null ? undefined : savedView === 'village';
+	/** How many times the world was asked for on this screen — a retry wears a plainer notice */
+	let villageAttempts = 0;
+
+	function chooseView(view: VillageView): void {
+		villageOverride = view === 'village';
+		setVillageViewPreference(view);
+		if (view === 'village') villageAttempts++;
+	}
 	let userId = '';
 	/** Last plan position rendered — a change plays the travel interstitial */
 	let lastIndex: number | null = null;
@@ -177,8 +206,12 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let transitionLeaving = false;
 	let transitionTimer: number | undefined;
 	let transitionLeaveTimer: number | undefined;
+	/** The opening film, while it is the travel card: it ends itself, or someone skips it */
+	let transitionFilm: OpeningFilm | null = null;
 	let nav: StageNavState = INITIAL_STAGE_NAV;
 	let navRestored = false;
+	/** This device was showing the removed screen: a missing seat now means "on its way back" */
+	let wasRemoved = false;
 	/** The style sheet is open — a modal over whatever stage is on screen */
 	let lookOpen = false;
 	/** The village's gear sheet: style, sounds, world quality, the flat view */
@@ -194,23 +227,131 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 	registerTeacherNavigator(openTeacherThread);
 
-	function beginStageTransition(item: AgoraStagePlanItem): void {
+	/**
+	 * The teacher's call (`lib/flows/summons.ts`). The newest stamp this
+	 * device answered is kept per session, so a reload never walks twice and
+	 * a call met late — a locked phone, a background tab, a late joiner — is
+	 * still an order. The walk itself is one `act()`: the called item comes on
+	 * screen at once in either world (the 3D walk is the picture of it, never
+	 * the condition for it), the travel card says who is calling and where,
+	 * and the phone reports its whereabouts so the teacher sees arrivals.
+	 */
+	let handledAt: number | undefined = readHandledCall(sessionId);
+	/** The call the village is walking — handed to the shell, once per stamp */
+	let activeCall: VillageCall | undefined;
+	/** A call held for a student mid-sentence: the bar counts down to the walk */
+	let pendingCall: { call: VillageCall; until: number; extended: boolean } | null = null;
+	let pendingTimer: number | undefined;
+	/** The card over the screen while the class is called somewhere */
+	let callCard: { place: string; item: AgoraStagePlanItem } | null = null;
+
+	/** A student with words in the box that are not sent yet */
+	function isTypingAnswer(): boolean {
+		const active = document.activeElement;
+
+		return active instanceof HTMLTextAreaElement && active.value.trim().length > 0;
+	}
+
+	function markHandled(at: number): void {
+		if (handledAt !== undefined && at <= handledAt) return;
+		handledAt = at;
+		storeHandledCall(sessionId, at);
+	}
+
+	function stopPending(): void {
+		window.clearInterval(pendingTimer);
+		pendingTimer = undefined;
+		pendingCall = null;
+	}
+
+	/** Walk now: the item on screen, the card, the whereabouts, the village's walk */
+	function act(call: VillageCall): void {
+		stopPending();
+		markHandled(call.at);
+		const plan = getStagePlan();
+		const currentIndex = getCurrentPlanIndex();
+		const place = callTargetPlace(call.place, plan, currentIndex);
+		const index = callTargetIndex(call.place, plan, currentIndex);
+		if (index >= 0) {
+			dispatchNav({ kind: 'select', itemId: plan[index].itemId });
+			beginStageTransition(plan[index]);
+			callCard = { place, item: plan[index] };
+		}
+		activeCall = { place, at: call.at };
+		if (userId) reportWhereabouts(sessionId, userId, place, call.at);
+		m.redraw();
+	}
+
+	/** Hold the walk for a student mid-sentence; the bar counts the grace down */
+	function hold(call: VillageCall): void {
+		pendingCall = { call, until: Date.now() + TYPING_GRACE_MS, extended: false };
+		window.clearInterval(pendingTimer);
+		pendingTimer = window.setInterval(() => {
+			if (!pendingCall) return;
+			if (Date.now() >= pendingCall.until) act(pendingCall.call);
+			else m.redraw();
+		}, 1000);
+	}
+
+	/** A call tapped in the post box: walk there again, as a call of its own */
+	function goToPlace(place: string): void {
+		act({ place, at: Date.now() });
+	}
+
+	registerPlaceNavigator(goToPlace);
+
+	// A phone that comes back — the screen unlocked, the tab in front, the
+	// network up — re-reads the room at once instead of at its next tap
+	const wake = (): void => {
+		m.redraw();
+	};
+	document.addEventListener('visibilitychange', wake);
+	window.addEventListener('online', wake);
+	window.addEventListener('pageshow', wake);
+
+	/** Fade the travel card out, then take it away */
+	function endStageTransition(): void {
+		window.clearTimeout(transitionTimer);
+		window.clearTimeout(transitionLeaveTimer);
+		transitionLeaving = true;
+		m.redraw();
+		transitionLeaveTimer = window.setTimeout(() => {
+			transitionItem = null;
+			transitionFilm = null;
+			m.redraw();
+		}, 400);
+	}
+
+	/**
+	 * The travel card between journey legs. Into the story it is the scenario's
+	 * opening film (when it has one): full screen, until it ends or is skipped.
+	 */
+	function beginStageTransition(item: AgoraStagePlanItem, film: OpeningFilm | null = null): void {
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		transitionItem = item;
+		transitionFilm = film;
 		transitionLeaving = false;
 		window.clearTimeout(transitionTimer);
 		window.clearTimeout(transitionLeaveTimer);
-		transitionTimer = window.setTimeout(
-			() => {
-				transitionLeaving = true;
-				m.redraw();
-				transitionLeaveTimer = window.setTimeout(() => {
-					transitionItem = null;
-					m.redraw();
-				}, 400);
-			},
-			reduced ? 900 : 1900,
+		if (film) return;
+		transitionTimer = window.setTimeout(endStageTransition, reduced ? 900 : 1900);
+	}
+
+	/** The film for a stage the teacher just opened, if this scenario has one */
+	function filmFor(item: AgoraStagePlanItem): OpeningFilm | null {
+		if (!playsOpeningFilm(item.stage)) return null;
+
+		return openingFilmOf(
+			getTopicPackage(getSessionState().session?.topicPackageId ?? '') ?? undefined,
 		);
+	}
+
+	/** The library shelf's "watch again": the film, on demand, over the village */
+	function replayFilm(): void {
+		const item = getStagePlan().find((candidate) => playsOpeningFilm(candidate.stage));
+		const film = item ? filmFor(item) : null;
+		if (item && film) beginStageTransition(item, film);
+		m.redraw();
 	}
 
 	function dispatchNav(event: StageNavEvent): void {
@@ -233,9 +374,14 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 		onremove() {
 			window.clearTimeout(transitionTimer);
 			window.clearTimeout(transitionLeaveTimer);
+			stopPending();
+			document.removeEventListener('visibilitychange', wake);
+			window.removeEventListener('online', wake);
+			window.removeEventListener('pageshow', wake);
 			stopListening();
 			stopTeacherThread();
 			unregisterTeacherNavigator(openTeacherThread);
+			unregisterPlaceNavigator(goToPlace);
 			stopValueAnswerListeners();
 			stopNotifications();
 			// The results recap re-attaches these after the deliberation view
@@ -303,6 +449,30 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				);
 			}
 
+			// The teacher took this login out of the lesson. A calm screen, not
+			// an error: no stage renders behind it, so nothing on this device
+			// tries to write (the rules would refuse it anyway). It is also where
+			// the student waits after knocking, and where the teacher's "yes"
+			// lands: the entry leaves the session and the seat comes back.
+			const removal = removalOf(session, userId);
+			if (removal) {
+				wasRemoved = true;
+
+				return m(RemovedScreen, {
+					removal,
+					onAsk: () => m.route.set(`/join/${session.code}`),
+					onLeave: () => m.route.set('/'),
+				});
+			}
+			// Let back in: the entry left with the session snapshot, the seat
+			// arrives with the participants one — wait for it, never flash "no seat"
+			if (wasRemoved && !myParticipant) {
+				return m(
+					'.shell',
+					m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
+				);
+			}
+
 			const plan = getStagePlan();
 			const currentIndex = getCurrentPlanIndex();
 
@@ -311,25 +481,67 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				dispatchNav({ kind: 'restore', raw: readStoredNav(sessionId) });
 			}
 
+			// Who moves the class: the teacher (the room walks as one) or, in a
+			// free lesson, each student between the stations the room has opened
+			const led = (session.villageNavigation ?? 'teacher') === 'teacher';
+
 			// A stage change is a journey leg — play the travel card over the
-			// incoming stage for students following the class. A student catching
-			// up stays at their chosen station. Keyed on the plan POSITION, not the
-			// kind: two question stages in a row are two journeys. Never on
-			// first render: a refresh lands directly where the class already is.
+			// incoming stage. Led, everyone goes, a student who had stepped back
+			// included; free, a student catching up keeps their station. Keyed on
+			// the plan POSITION, not the kind: two question stages in a row are
+			// two journeys. Never on first render: a refresh lands directly where
+			// the class already is.
 			if (currentIndex !== lastIndex) {
 				if (lastIndex !== null) {
-					dispatchNav({ kind: 'session-advanced' });
+					dispatchNav({ kind: 'session-advanced', led });
 					const item = plan[currentIndex];
 					if (nav.viewingItemId === null && item && hasStageTransition(item.stage))
-						beginStageTransition(item);
+						beginStageTransition(item, filmFor(item));
+					// A call held for a typist is over once the class moved on
+					if (pendingCall) stopPending();
 				}
 				lastIndex = currentIndex;
 			}
+
+			// The teacher's call: a standing order until a newer one or a new
+			// station supersedes it. Judged by stamps this device remembers,
+			// never by the call's age — the students a call is for are exactly
+			// the ones who meet it late. It lands in the post box too, so the
+			// way back is one tap after any detour.
+			const liveCall = session.villageCall;
+			const summons = resolveSummons({
+				call: liveCall,
+				currentOpenedAt: session.stageState?.[plan[currentIndex]?.itemId ?? '']?.openedAt,
+				handledAt,
+			});
+			if (summons?.kind === 'retire') markHandled(summons.at);
+			if (summons?.kind === 'walk' && pendingCall?.call.at !== summons.at) {
+				const place = callTargetPlace(summons.place, plan, currentIndex);
+				addInboxItem({
+					id: `call-${summons.at}`,
+					trigger: 'agora_called_to',
+					target: { kind: 'place', place },
+					detail: callPlaceLabel(place, plan, currentIndex),
+				});
+				if (isTypingAnswer()) hold({ place: summons.place, at: summons.at });
+				else act({ place: summons.place, at: summons.at });
+			}
+			const call = activeCall;
 
 			const viewingIndex = effectiveIndex(plan, currentIndex, nav.viewingItemId);
 			const item = plan[viewingIndex] ?? plan[currentIndex];
 			const live = viewingIndex === currentIndex;
 			const writable = canWriteStage(session, item.itemId);
+			// Where this screen stands, for the teacher's "who has arrived" —
+			// once per station; a call's own report carries its stamp
+			if (userId && myParticipant && item.stage !== AgoraStage.lobby) {
+				reportWhereabouts(
+					sessionId,
+					userId,
+					villagePlace(item),
+					activeCall && activeCall.place === villagePlace(item) ? activeCall.at : undefined,
+				);
+			}
 
 			// The look this screen wears, and the door to change it. A civic
 			// square has no door: it wears Odyssey's colours by contract.
@@ -381,8 +593,12 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							onLightMode: (on: boolean) => {
 								setLightWorld(on);
 							},
+							palette: villagePalette(),
+							onPalette: (palette) => {
+								setVillagePalette(palette);
+							},
 							onSimpleView: () => {
-								villageOverride = false;
+								chooseView('flat');
 							},
 							onClose: () => {
 								moreOpen = false;
@@ -406,6 +622,39 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									? planItemLabel(transitionItem)
 									: undefined,
 							leaving: transitionLeaving,
+							film: transitionFilm
+								? { film: transitionFilm, wall: false, onDone: endStageTransition }
+								: undefined,
+							call:
+								callCard && callCard.item === transitionItem
+									? {
+											kicker: t('call.card_kicker'),
+											line: t('village.called_to', {
+												place: callPlaceLabel(callCard.place, plan, currentIndex),
+											}),
+										}
+									: undefined,
+						})
+					: null,
+				pendingCall
+					? m(CallBanner, {
+							place: callPlaceLabel(
+								callTargetPlace(pendingCall.call.place, plan, currentIndex),
+								plan,
+								currentIndex,
+							),
+							secondsLeft: Math.max(0, Math.ceil((pendingCall.until - Date.now()) / 1000)),
+							onGo: () => act(pendingCall?.call ?? { place: 'current', at: Date.now() }),
+							onMoreTime: pendingCall.extended
+								? undefined
+								: () => {
+										if (!pendingCall) return;
+										pendingCall = {
+											...pendingCall,
+											until: Date.now() + TYPING_GRACE_MS,
+											extended: true,
+										};
+									},
 						})
 					: null,
 			];
@@ -450,10 +699,31 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						),
 					]);
 
+			// The simple view's door back to the village — on every screen the
+			// simple view has, the lobby included. In the village the way to the
+			// simple view is a row in the gear sheet, so this slot is an empty
+			// hole there: the SAME five children in every branch, or the 3D world
+			// remounts and the walker jumps back to the fountain.
+			const viewToggle = villageMode
+				? null
+				: m(
+						'button.btn.btn--secondary.btn--sm.village-mode-toggle',
+						{
+							onclick: () => {
+								chooseView('village');
+							},
+							'aria-pressed': 'false',
+						},
+						t('village.enter_3d'),
+					);
+
 			if (item.stage === AgoraStage.lobby) {
 				// The village's first station needs the topic: fetch it while the class
 				// waits, so moving on does not swap the 3D world for a loading spinner.
-				if (villageMode) loadTopicPackage(session.topicPackageId);
+				// (The opening film is warmed up in the same wait, so it starts on a frame.)
+				loadTopicPackage(session.topicPackageId, session.sessionId);
+				const lobbyFilm = openingFilmOf(getTopicPackage(session.topicPackageId) ?? undefined);
+				if (lobbyFilm) prefetchFilm(lobbyFilm.url);
 
 				// The same slots as the stage screens below — overlays as ONE slot, and
 				// an empty one where they carry the view toggle — so the village sits in
@@ -464,7 +734,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					overlays,
 					stageNav,
 					pastNotice,
-					null,
+					viewToggle,
 					villageMode
 						? m(
 								VillageShell,
@@ -475,7 +745,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 									writable,
 									papers: [],
 									navigation: session.villageNavigation ?? 'teacher',
-									call: session.villageCall,
+									call,
+									retry: villageAttempts > 0,
 								},
 								m(Lobby, { participants, myParticipant, onOpenLook: lookDoor?.onOpen }),
 							)
@@ -486,7 +757,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			// Every stage past the lobby needs the topic package
 			const topic = getTopicPackage(session.topicPackageId);
 			if (!topic) {
-				loadTopicPackage(session.topicPackageId);
+				loadTopicPackage(session.topicPackageId, session.sessionId);
 				const spinner = m(
 					'.shell',
 					m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
@@ -507,7 +778,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								writable,
 								papers: [],
 								navigation: session.villageNavigation ?? 'teacher',
-								call: session.villageCall,
+								call,
+								retry: villageAttempts > 0,
 							},
 							spinner,
 						),
@@ -552,6 +824,15 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
 						);
 
+			// A stale start (an old stamp) is history: it never auto-plays on a late phone
+			const liveLibraryVideo = isLibraryVideoLive(session.libraryVideo, Date.now())
+				? session.libraryVideo
+				: undefined;
+			const materialsRef = { topicPackageId: session.topicPackageId, sessionId, userId };
+			// The scenario's two characters stand in the village; with them there,
+			// the study house reports what the class has heard, not the shelf's books
+			const openingFilm = openingFilmOf(topic);
+			const cast = villageMode && planHasCast(plan) ? scenarioCast(topic) : [];
 			const scenesOf = (...kinds: AgoraSceneKind[]) =>
 				kinds
 					.map((kind) => topic.scenes.find((scene) => scene.kind === kind))
@@ -564,6 +845,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					reportStageProgress(sessionId, userId, item.stage, scenesDone, scenesTotal);
 				}
 			};
+			const sceneProgress = cast.length > 0 ? undefined : onProgress;
 
 			/** A past deliberation, re-read: the board as it stood, no pen */
 			const deliberationRecord = (): m.Children => {
@@ -600,6 +882,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							),
 							storageKey: `agora_${sessionId}_framing`,
 							onProgress,
+							classVideo: liveLibraryVideo,
+							materials: materialsRef,
 						});
 
 					case AgoraStage.perspectives:
@@ -607,7 +891,9 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							allowReplay: villageMode,
 							scenes: scenesOf(AgoraSceneKind.perspectiveA, AgoraSceneKind.perspectiveB),
 							storageKey: `agora_${sessionId}_perspectives`,
-							onProgress,
+							onProgress: sceneProgress,
+							classVideo: liveLibraryVideo,
+							materials: materialsRef,
 						});
 
 					case AgoraStage.needs:
@@ -622,7 +908,9 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							// Both sides' needs stay on screen for re-reading while
 							// the class finishes the scenes
 							epilogue: m(NeedsBoard, { topic }),
-							onProgress,
+							onProgress: sceneProgress,
+							classVideo: liveLibraryVideo,
+							materials: materialsRef,
 						});
 
 					case AgoraStage.valueIdentification:
@@ -740,39 +1028,34 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			 * open, the closed ballot after. It follows the ROOM's stage, not the
 			 * one the player stepped back to — the board stands in the village.
 			 */
-			const roomItem = plan[currentIndex];
 			const council = ((): CouncilModel | undefined => {
 				if (!villageMode) return undefined;
-				const roomStage = roomItem?.stage;
-				if (
-					(roomStage === AgoraStage.voting ||
-						roomStage === AgoraStage.results ||
-						roomStage === AgoraStage.ended) &&
-					session.voting
-				) {
-					if (roomStage === AgoraStage.voting && userId) {
-						listenToVoting(sessionId, session.challengeQuestionId, userId);
-					}
-					const votes = getVotingState();
+				if (councilNeedsVotes(plan, currentIndex) && userId) {
+					listenToVoting(sessionId, session.challengeQuestionId, userId);
+				}
+				const votes = getVotingState();
+				const { proposals, scores, characterReviews } = getDeliberationState();
 
-					return councilBallot({
-						session,
+				return councilModelFor({
+					plan,
+					currentIndex,
+					session,
+					votes: {
 						selections: votes.selections,
 						myVoteStatementId: votes.myVoteStatementId,
 						votedCount: votes.voterUids.size,
-						classSize: participants.length,
-						closed: roomStage !== AgoraStage.voting,
-					});
-				}
-
-				return councilPitch({
-					proposals: getDeliberationState().proposals.filter((p) => !p.hidden),
-					scores: getDeliberationState().scores,
+					},
+					proposals,
+					scores,
 					userId,
-					goalOnly: session.votingSettings?.goalZoneOnly === true,
+					classSize: participants.length,
 					leftLabel: topic.positioningScale.leftLabel,
 					rightLabel: topic.positioningScale.rightLabel,
-					leadStatementId: session.classScore?.leadStatementId,
+					// The characters' existing verdicts, two portrait tiles per proposal
+					voicesOf:
+						cast.length > 0
+							? (statementId: string) => councilVoices(statementId, cast, characterReviews)
+							: undefined,
 				});
 			})();
 
@@ -785,18 +1068,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				// sheet, so this slot is an empty hole — the SAME five children as
 				// the lobby branch above, or the 3D world remounts and the walker
 				// jumps back to the fountain.
-				villageMode
-					? null
-					: m(
-							'button.btn.btn--secondary.btn--sm.village-mode-toggle',
-							{
-								onclick: () => {
-									villageOverride = true;
-								},
-								'aria-pressed': 'false',
-							},
-							t('village.enter_3d'),
-						),
+				viewToggle,
 				villageMode
 					? m(
 							VillageShell,
@@ -807,11 +1079,12 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								writable,
 								council,
 								navigation: session.villageNavigation ?? 'teacher',
-								call: session.villageCall,
+								call,
+								retry: villageAttempts > 0,
 								// The replies to my note and the owners' answers to mine both
 								// live behind the board door, so that is the door that lights
 								news: myParticipant
-									? { board: boardNews(liveNoteNews, stationNotes(item), userId) }
+									? { board: boardNews(liveNoteNews, visibleStationNotes(item), userId) }
 									: undefined,
 								community: myParticipant
 									? {
@@ -833,27 +1106,20 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 											},
 										}
 									: undefined,
+								cast,
+								castQuestion: needsQuestionOf(topic),
+								castStorageKey: `agora_${sessionId}_cast`,
+								onCastProgress: onProgress,
+								film: openingFilm ? { title: openingFilm.title, onReplay: replayFilm } : undefined,
 								onLeaveVillage: () => {
-									villageOverride = false;
+									chooseView('flat');
 								},
 								onWrite: () => {
 									villageWriteRequest++;
 								},
 								onSelectBook: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
-								papers: stationNotes(item).map((p) => ({
-									text: p.statement,
-									own: p.creatorId === userId,
-									confirmed: isProposalConfirmed(p.statementId),
-								})),
-								stationPapers: plan.slice(0, currentIndex + 1).map((p) => ({
-									itemId: p.itemId,
-									place: villagePlace(p),
-									papers: stationNotes(p).map((n) => ({
-										text: n.statement,
-										own: n.creatorId === userId,
-										author: n.anonName,
-									})),
-								})),
+								papers: papersFor(visibleStationNotes(item), userId, isProposalConfirmed),
+								stationPapers: stationPapersFor(plan, currentIndex, visibleStationNotes, userId),
 							},
 							stageView,
 						)

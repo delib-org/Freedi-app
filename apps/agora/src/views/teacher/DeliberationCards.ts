@@ -5,8 +5,11 @@ import { formatUnit, rankedRoundAnswers } from '../RoundStage';
 import { CpBands, bandClassOf, bandLabelOf } from '../../components/CpBands';
 import { getDeliberationState } from '../../lib/proposals';
 import { tallyRow, type RowTally } from '../../lib/flows/liveTally';
+import { coverage } from '../../lib/flows/handFlow';
+import { isLotteryActive } from '../../lib/hands';
 import type { AgoraProposal } from '../../lib/proposals';
 import {
+	AGORA_LOTTERY,
 	AGORA_ROUNDS,
 	AgoraSession,
 	AgoraStagePlanItem,
@@ -22,6 +25,21 @@ import {
  * and the auto-open-voting rule as it stands. Moved out of TeacherSession
  * with the voting cards — see VotingCards.ts.
  */
+
+/**
+ * When notes are dealt by lottery, how many have enough readers to be worth a
+ * number — the teacher's cue to ask the class to draw more before moving on.
+ * Nothing when everyone reads everyone.
+ */
+export function coverageLine(answers: readonly AgoraProposal[]): m.Children {
+	if (!isLotteryActive() || answers.length === 0) return null;
+	const { covered, total } = coverage(answers);
+
+	return m(
+		'p.teacher-answers__coverage',
+		t('hand.teacher_coverage', { n: covered, total, min: AGORA_LOTTERY.MIN_RATERS }),
+	);
+}
 
 /** Net agreement as printed on the teacher's lists */
 export function formatMean(mean: number): string {
@@ -89,6 +107,7 @@ export function questionPanel(
 			m('p.teacher__section-title', t('teacher.answers_title')),
 			m('span.class-progress__count', String(ranked.length)),
 		]),
+		coverageLine(answers),
 		outcome?.summary ? m('p.question__summary', outcome.summary) : null,
 		// What the room is behind, banded by C_p — live while the question is
 		// open (the bands, no prose), and the AI's record once it closes.
@@ -157,6 +176,7 @@ export function roundPanel(
 			m('p.teacher__section-title', t(`round.${kind}.read_title`)),
 			m('span.class-progress__count', String(ranked.length)),
 		]),
+		coverageLine(answers),
 		outcome?.summary ? m('p.round__summary', outcome.summary) : null,
 		ranked.length === 0
 			? m('p.home-explanation', t('round.waiting'))

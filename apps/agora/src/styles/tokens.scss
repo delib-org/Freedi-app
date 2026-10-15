@@ -153,6 +153,19 @@
   --village-nav-border: #d4b674;
   --village-nav-accent: #e5a548;
 
+  // The coin: one obol of the (fictional) Republic of Elaia — nickel ring
+  // with the legend, bronze core with the olive wreath and the numeral 1.
+  // Metals, not a look's hues: a coin is the same coin in every look.
+  --coin-ring-hi: #f4f5f2;
+  --coin-ring: #c3c7c4;
+  --coin-ring-lo: #8a908d;
+  --coin-core-hi: #f1dc9c;
+  --coin-core: #cfa94f;
+  --coin-core-lo: #9a7428;
+  --coin-edge: #5d625f;
+  --coin-ink: #5a4313;
+  --coin-legend: #3f4442;
+
   // --- MINE: the purple family ---
   // Named by job, not by lightness, so a rule reads as a decision.
   --mine-light: #a98cf7;  // highlights, gradient tops, glows — NEVER under text
@@ -490,6 +503,9 @@
   // bar the page has to keep its last card clear of.
   --teacher-nav-h: 56px;
   --teacher-strip-h: 108px;
+  // The strip's one-row height on a laptop — what the class view's world
+  // leaves room for under the bar (the 108px above is the phone's reserve)
+  --teacher-strip-desk-h: 64px;
 
   // The disclosure chevron is the `arrow` icon given a quarter turn (there
   // is no separate chevron glyph). The arrow is drawn pointing LEFT — the

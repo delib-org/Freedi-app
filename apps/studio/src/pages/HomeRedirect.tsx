@@ -2,11 +2,14 @@ import { Navigate } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { useOrg } from '@/org/OrgContext';
 import { useGrace } from './_shared/useGrace';
+import { useAgoraAccess } from './AgoraHome/useAgoraAccess';
 
 /**
  * `/` — send the user to the workspace they most likely want:
  * sysadmin with no orgs → the admin screens; exactly one org → that org;
- * no orgs at all → their own events, which is the only workspace they have;
+ * no orgs and attached to an Agora school (teacher or regional coordinator) →
+ * their Agora classrooms; no orgs at all → their own events, which is the only
+ * workspace they have;
  * otherwise the picker.
  */
 export default function HomeRedirect() {
@@ -17,6 +20,9 @@ export default function HomeRedirect() {
 	// settle before acting on it, or a system admin who belongs to two
 	// organizations is sent to the admin screens every time they open the app.
 	const settled = useGrace(!loading && orgs.length === 0);
+	// Asked only for someone who would otherwise land on `/personal`.
+	const askAgora = !loading && settled && orgs.length === 0 && !isSystemAdmin;
+	const agora = useAgoraAccess(askAgora);
 
 	if (loading) return <div className="studio-loading">{t('Loading…')}</div>;
 	if (orgs.length === 1) return <Navigate to={`/orgs/${orgs[0].organizationId}`} replace />;
@@ -25,6 +31,9 @@ export default function HomeRedirect() {
 
 	// No organizations at all.
 	if (isSystemAdmin) return <Navigate to="/admin/orgs" replace />;
+
+	if (agora.loading) return <div className="studio-loading">{t('Loading…')}</div>;
+	if (agora.isTeacher || agora.isSupervisor) return <Navigate to="/agora" replace />;
 
 	// Nothing to pick between: their own events are the only workspace they have,
 	// and "you are not a member of any organization" is not a home screen.

@@ -42,6 +42,12 @@
   import styles from './MyComponent.module.scss';
   ```
 
+### Information Architecture First
+- **Before designing any new screen, flow or navigation**, run the `information-architect` agent. It writes an IA spec to `docs/ia/<app>-<feature>.md` (template in `docs/ia/README.md`): objects, labels, hierarchy, navigation, task flows, screen inventory.
+- The `ux-ui-architect` / `ui-design-system-architect` agents design **against that spec**, never from the raw brief.
+- When a flow "feels confusing", audit its IA with the same agent before touching styles.
+- One name per concept across UI text, i18n keys, routes and code types. Synonyms are defects.
+
 ### Design System Guidelines
 - **ALWAYS follow design system guidelines** from `docs/guides/design-guide.md`
 - **All UI/UX decisions must align** with the design guide

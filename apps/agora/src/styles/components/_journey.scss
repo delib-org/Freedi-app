@@ -500,6 +500,78 @@
 		color: var(--text-secondary);
 		max-width: 34ch;
 	}
+
+	// The teacher's call wears the same card with a kicker naming who sent
+	// the class — the one line a student must read before anything else
+	&__kicker {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		color: var(--mine-strong);
+	}
+
+	&--call &__panel {
+		border-color: var(--mine-strong);
+	}
+}
+
+// --- the teacher's call held for a student mid-sentence (2026-10-12) ---
+.call-banner {
+	position: fixed;
+	inset-inline: var(--space-md);
+	top: calc(var(--space-md) + 64px);
+	z-index: var(--z-toast);
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-sm) var(--space-md);
+	background: var(--bg-card);
+	border: 2px solid var(--mine-strong);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-card);
+	animation: stage-transition-panel var(--motion-base) var(--ease-camera) both;
+
+	&__icon {
+		display: flex;
+		color: var(--mine-strong);
+	}
+
+	&__text {
+		display: grid;
+		gap: 2px;
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__title {
+		color: var(--text-primary);
+	}
+
+	&__hint {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+
+	&__actions {
+		display: flex;
+		gap: var(--space-xs);
+		flex-shrink: 0;
+	}
+
+	@media (max-width: 600px) {
+		flex-wrap: wrap;
+
+		&__actions {
+			width: 100%;
+			justify-content: flex-end;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
 }
 
 @keyframes stage-transition-in {

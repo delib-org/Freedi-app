@@ -7,37 +7,21 @@ import {
 	getSessionState,
 	getStagePlan,
 	getCurrentPlanIndex,
-	getConsensusPool,
 } from '../../lib/session';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
-import {
-	getDeliberationState,
-	listenToDeliberation,
-	stopDeliberationListeners,
-} from '../../lib/proposals';
+import { listenToDeliberation, stopDeliberationListeners } from '../../lib/proposals';
 import { listenToVoting, stopVotingListeners } from '../../lib/voting';
-import { Lobby } from '../Lobby';
-import { Results } from '../Results';
-import { Voting } from '../Voting';
-import { rankedAnswers } from '../QuestionStage';
-import { formatUnit, rankedRoundAnswers } from '../RoundStage';
-import { TeacherInstructions } from './TeacherInstructions';
-import { NeedsBoard } from '../../components/NeedsBoard';
-import { ResultsBoard } from '../../components/ResultsBoard';
-import { CpBands } from '../../components/CpBands';
-import { CountdownTimer } from '../../components/CountdownTimer';
+import { watchStageBody } from './watchBodies';
 import { QRShare } from '../../components/QRShare';
+import { sessionJoinUrl, sessionVillageMode } from '../../lib/flows/sessionLinks';
+import { projectorShowsQr } from '../../lib/flows/joinInvite';
+import { isLibraryVideoLive, videoLabelParts } from '../../lib/flows/libraryVideo';
+import { youtubeEmbedUrl } from '../../lib/youtube';
 import { StageTransition, hasStageTransition } from '../../components/StageTransition';
+import { prefetchFilm } from '../../components/OpeningFilm';
+import { openingFilmOf, playsOpeningFilm, type OpeningFilm } from '../../lib/flows/openingFilm';
 import { planItemLabel } from '../../components/StageNav';
-import {
-	roundLikes,
-	roundSpecOf,
-	AgoraStage,
-	tallyAgoraCamps,
-	type AgoraSession,
-	type AgoraStagePlanItem,
-	type AgoraTopicPackage,
-} from '@freedi/shared-types';
+import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
 
 /**
  * The projector: what the class sees, on the wall.
@@ -64,23 +48,30 @@ export function ProjectorScreen(
 	let transitionTimer: number | undefined;
 	let transitionLeaveTimer: number | undefined;
 
-	function beginStageTransition(item: AgoraStagePlanItem): void {
+	/** The opening film, while it is the wall's travel card */
+	let transitionFilm: OpeningFilm | null = null;
+
+	function endStageTransition(): void {
+		window.clearTimeout(transitionTimer);
+		window.clearTimeout(transitionLeaveTimer);
+		transitionLeaving = true;
+		m.redraw();
+		transitionLeaveTimer = window.setTimeout(() => {
+			transitionItem = null;
+			transitionFilm = null;
+			m.redraw();
+		}, 400);
+	}
+
+	function beginStageTransition(item: AgoraStagePlanItem, film: OpeningFilm | null = null): void {
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		transitionItem = item;
+		transitionFilm = film;
 		transitionLeaving = false;
 		window.clearTimeout(transitionTimer);
 		window.clearTimeout(transitionLeaveTimer);
-		transitionTimer = window.setTimeout(
-			() => {
-				transitionLeaving = true;
-				m.redraw();
-				transitionLeaveTimer = window.setTimeout(() => {
-					transitionItem = null;
-					m.redraw();
-				}, 400);
-			},
-			reduced ? 900 : 1900,
-		);
+		if (film) return;
+		transitionTimer = window.setTimeout(endStageTransition, reduced ? 900 : 1900);
 	}
 
 	// Anonymous is enough: every read this screen makes is open to any
@@ -90,167 +81,6 @@ export function ProjectorScreen(
 		listenToSession(sessionId, user.uid);
 		setTimeout(() => m.redraw(), 0);
 	});
-
-	function stageBody(
-		session: AgoraSession,
-		item: AgoraStagePlanItem,
-		topic: AgoraTopicPackage,
-	): m.Children {
-		const { participants } = getSessionState();
-		switch (item.stage) {
-			case AgoraStage.lobby:
-				return m(Lobby, { participants, myParticipant: null });
-
-			case AgoraStage.framing:
-			case AgoraStage.perspectives:
-				return m(TeacherInstructions, { stage: item.stage, topic, projector: true });
-
-			case AgoraStage.needs:
-				return [
-					m(TeacherInstructions, { stage: item.stage, topic, projector: true }),
-					m('.card.stack', m(NeedsBoard, { topic })),
-				];
-
-			case AgoraStage.positioning: {
-				const tally = tallyAgoraCamps(participants).counts;
-				const positioned = tally.left + tally.right + tally.center;
-				const leftName = topic.characters[0]?.name ?? '';
-				const rightName = topic.characters[1]?.name ?? '';
-
-				return [
-					m(TeacherInstructions, { stage: item.stage, topic, projector: true }),
-					m('.card.stack.projector__census', [
-						m('.projector__camps', [
-							m('.projector__camp.projector__camp--left', [
-								m('span.projector__camp-count', String(tally.left)),
-								m('span.projector__camp-name', leftName),
-							]),
-							m('.projector__camp.projector__camp--center', [
-								m('span.projector__camp-count', String(tally.center)),
-								m('span.projector__camp-name', t('projector.center')),
-							]),
-							m('.projector__camp.projector__camp--right', [
-								m('span.projector__camp-count', String(tally.right)),
-								m('span.projector__camp-name', rightName),
-							]),
-						]),
-						m(
-							'p.projector__count-line',
-							t('projector.positioned_count', { n: positioned, total: participants.length }),
-						),
-					]),
-				];
-			}
-
-			case AgoraStage.question: {
-				const answers = item.statementId
-					? (getDeliberationState().answersByQuestion[item.statementId] ?? [])
-					: [];
-				const outcome = session.stageState?.[item.itemId]?.outcome;
-				const round = roundSpecOf(item);
-				if (round) {
-					// A WizCol round: numbers, never names — the wall stays anonymous in a named room too
-					const rankedRound = rankedRoundAnswers(round.kind, answers, false);
-					const like = round.scale === 'like';
-
-					return [
-						m(TeacherInstructions, {
-							stage: item.stage,
-							topic,
-							questionTitle: item.title,
-							questionExplanation: item.explanation,
-							questionKind: item.kind,
-							projector: true,
-						}),
-						m('.card.stack', [
-							m('p.projector__count-line', t('projector.texts_count', { n: rankedRound.length })),
-							outcome?.summary ? m('p.round__summary', outcome.summary) : null,
-							rankedRound.length === 0
-								? m('p.home-explanation', t('projector.waiting'))
-								: m(
-										'ol.projector__answers',
-										rankedRound.map((row, index) =>
-											m('li.projector__answer', { key: row.statementId }, [
-												m('span.projector__answer-num', String(index + 1)),
-												m('p.projector__answer-text', [
-													row.statement,
-													row.raters > 0
-														? m(
-																'span.round__figure',
-																like ? ` ♥${roundLikes(row)}` : ` · ${formatUnit(row.mean)}`,
-															)
-														: null,
-												]),
-											]),
-										),
-									),
-						]),
-					];
-				}
-				// Numbers, never names — even in a named room the wall stays anonymous
-				const ranked = rankedAnswers(answers, false);
-
-				return [
-					m(TeacherInstructions, {
-						stage: item.stage,
-						topic,
-						questionTitle: item.title,
-						questionExplanation: item.explanation,
-						projector: true,
-					}),
-					m('.card.stack', [
-						m('p.projector__count-line', t('projector.answers_count', { n: ranked.length })),
-						outcome?.selected.length
-							? m(CpBands, { answers: outcome.selected, bands: outcome.bands })
-							: null,
-						ranked.length === 0
-							? m('p.home-explanation', t('projector.waiting'))
-							: m(
-									'ol.projector__answers',
-									ranked.map((row, index) =>
-										m('li.projector__answer', { key: row.statementId }, [
-											m('span.projector__answer-num', String(index + 1)),
-											m('p.projector__answer-text', row.statement),
-										]),
-									),
-								),
-					]),
-				];
-			}
-
-			case AgoraStage.deliberation: {
-				const { proposals, scores } = getDeliberationState();
-
-				return [
-					m('.card.stack', [
-						m('.delib__header', [
-							session.roundEndsAt ? m(CountdownTimer, { endsAt: session.roundEndsAt }) : null,
-							m('span.values__score', t('projector.proposals_count', { n: proposals.length })),
-						]),
-						m(ResultsBoard, {
-							sessionId: session.sessionId,
-							topic,
-							proposals,
-							scores,
-							census: getConsensusPool(),
-							finale: false,
-							onlyScored: session.votingSettings?.goalZoneOnly === true,
-						}),
-					]),
-				];
-			}
-
-			case AgoraStage.voting:
-				return m(Voting, { session, userId, board: true, projector: true });
-
-			case AgoraStage.results:
-			case AgoraStage.ended:
-				return m(Results, { session, topic });
-
-			default:
-				return null;
-		}
-	}
 
 	return {
 		onremove() {
@@ -282,14 +112,17 @@ export function ProjectorScreen(
 			const currentIndex = getCurrentPlanIndex();
 			const item = plan[currentIndex];
 
+			const topic = getTopicPackage(session.topicPackageId);
+			if (!topic) loadTopicPackage(session.topicPackageId, session.sessionId);
+			const film = openingFilmOf(topic ?? undefined);
+			// The wall warms the film up while the class waits in the lobby
+			if (film && item.stage === AgoraStage.lobby) prefetchFilm(film.url);
+
 			if (currentIndex !== lastIndex) {
 				if (lastIndex !== null && item && hasStageTransition(item.stage))
-					beginStageTransition(item);
+					beginStageTransition(item, playsOpeningFilm(item.stage) ? film : null);
 				lastIndex = currentIndex;
 			}
-
-			const topic = getTopicPackage(session.topicPackageId);
-			if (!topic) loadTopicPackage(session.topicPackageId);
 
 			const needsData =
 				item.stage === AgoraStage.question ||
@@ -302,7 +135,50 @@ export function ProjectorScreen(
 				listenToVoting(sessionId, session.challengeQuestionId, userId);
 			}
 
-			const joinUrl = `${window.location.origin}/join/${session.code}`;
+			// The same link the console's QR encodes. A bare `/join/<code>` path
+			// never reached the join screen: the router reads the hash, so the
+			// wall's QR used to open the home page
+			const joinUrl = sessionJoinUrl(
+				window.location.origin,
+				session.code,
+				sessionVillageMode(session.world, window.location.search),
+			);
+			const lobby = item.stage === AgoraStage.lobby;
+			const showQr = projectorShowsQr(
+				session.status,
+				item.stage,
+				session.code,
+				session.projectorQr,
+			);
+
+			// The teacher started a video for the class: the wall shows only it —
+			// full-bleed, muted, its name small, nothing to press — and returns to
+			// the stage the moment it is stopped.
+			const live = isLibraryVideoLive(session.libraryVideo, Date.now())
+				? session.libraryVideo
+				: undefined;
+			if (live && topic) {
+				const parts = videoLabelParts(topic.scenes, live);
+				const stored = topic.scenes
+					.find((scene) => scene.sceneId === live.sceneId)
+					?.youtubeVideos?.find((video) => video.videoId === live.videoId);
+
+				return m('.projector.projector--video', { 'data-screen': 'projector' }, [
+					m('iframe.projector__video', {
+						src: youtubeEmbedUrl(
+							{ videoId: live.videoId, startSeconds: live.startSeconds ?? stored?.startSeconds },
+							{ autoplay: true },
+						),
+						title: parts?.title || t('video.default_title', { n: parts?.n ?? 1 }),
+						allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
+						referrerpolicy: 'strict-origin-when-cross-origin',
+					}),
+					m(
+						'p.projector__video-title',
+						parts?.title || t('video.default_title', { n: parts?.n ?? 1 }),
+					),
+				]);
+			}
 
 			return m('.projector', { 'data-stage': item.stage, 'data-screen': 'projector' }, [
 				// The way back, for a teacher who opened the wall in their own tab.
@@ -318,20 +194,35 @@ export function ProjectorScreen(
 							title:
 								transitionItem.stage === AgoraStage.question ? transitionItem.title : undefined,
 							leaving: transitionLeaving,
+							// The wall plays the film with sound
+							film: transitionFilm
+								? { film: transitionFilm, wall: true, onDone: endStageTransition }
+								: undefined,
 						})
 					: null,
 				m('.projector__stage', [
 					m('h2.projector__title', planItemLabel(item)),
 					topic
-						? stageBody(session, item, topic)
+						? watchStageBody({ session, item, topic, participants, userId })
 						: m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
 				]),
-				m('aside.projector__code', [
-					m('span.projector__code-label', t('projector.scan_to_join')),
-					m('.projector__code-value', session.code),
-					item.stage === AgoraStage.lobby ? m(QRShare, { url: joinUrl }) : null,
-					m('span.projector__code-count', t('projector.participants', { n: participants.length })),
-				]),
+				// Big in the lobby; after it a small QR beside the digits, only
+				// while the teacher has switched it on from the console's menu
+				m(
+					'aside.projector__code',
+					{ class: showQr && !lobby ? 'projector__code--compact' : undefined },
+					[
+						m('.projector__code-text', [
+							m('span.projector__code-label', t('projector.scan_to_join')),
+							m('.projector__code-value', session.code),
+							m(
+								'span.projector__code-count',
+								t('projector.participants', { n: participants.length }),
+							),
+						]),
+						showQr ? m(QRShare, { url: joinUrl, size: lobby ? 220 : 112 }) : null,
+					],
+				),
 			]);
 		},
 	};

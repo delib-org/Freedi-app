@@ -1,0 +1,144 @@
+// The scenario page's tabs and the discussion thread. Tokens only, logical
+// properties throughout so Hebrew and Arabic mirror without a rule of their own.
+
+.scn-tabs {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	&__list {
+		display: flex;
+		gap: var(--space-xs);
+		border-block-end: 1px solid var(--border-subtle);
+	}
+
+	&__tab {
+		min-block-size: 44px;
+		padding-inline: var(--space-md);
+		border: 0;
+		border-block-end: 3px solid transparent;
+		background: transparent;
+		color: var(--text-secondary);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+		transition:
+			color var(--motion-fast) ease,
+			border-color var(--motion-fast) ease;
+
+		&:hover {
+			color: var(--text-primary);
+		}
+
+		&[aria-selected='true'] {
+			color: var(--text-primary);
+			border-block-end-color: var(--mine-strong);
+		}
+
+		&:focus-visible {
+			outline: 3px solid var(--lantern-glow);
+			outline-offset: -3px;
+			border-radius: var(--radius-sm);
+		}
+	}
+}
+
+.scn-discussion {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+}
+
+.scn-compose {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	background: var(--surface-tint);
+	border: 1px solid var(--border-subtle);
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+}
+
+.scn-thread {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	&__replies {
+		list-style: none;
+		margin: var(--space-xs) 0 0;
+		padding: 0;
+		padding-inline-start: var(--space-lg);
+		border-inline-start: 2px solid var(--border-subtle);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__reply-box {
+		margin-block-start: var(--space-xs);
+		padding-inline-start: var(--space-lg);
+	}
+}
+
+.scn-post {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	border: 1px solid var(--border-subtle);
+	background: var(--bg-card-solid);
+
+	&--mine {
+		border-color: var(--border-lantern);
+		background: var(--wash-mine-high);
+	}
+
+	&--hidden {
+		border-style: dashed;
+		background: var(--surface-tint);
+	}
+
+	&__head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-xs) var(--space-sm);
+	}
+
+	&__who {
+		font-weight: 700;
+	}
+
+	&__date {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	&__text {
+		margin: 0;
+		line-height: 1.5;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+
+	&--hidden &__text {
+		color: var(--text-muted);
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+}

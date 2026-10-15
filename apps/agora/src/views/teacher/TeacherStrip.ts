@@ -25,6 +25,32 @@ export interface TeacherStripAttrs {
 	/** The last advance was refused or never arrived — say so on the strip */
 	failed: boolean;
 	onRetry: () => void;
+	/**
+	 * The class view's pennant: where the class is, as a pill that opens the
+	 * move-class sheet. The strip's step text already names the step on the
+	 * board; over the village the teacher may be standing somewhere else, so
+	 * the pill says where the CLASS is and is the door to moving it.
+	 */
+	pennant?: { label: string; onOpen: () => void; open?: boolean };
+	/**
+	 * The phone's director row: pennant and NEXT only, riding inside the
+	 * place bar's wrap over the village instead of being the fixed bottom bar.
+	 */
+	director?: boolean;
+	/** A quiet line under the button — "moved from your other device" */
+	status?: string;
+	/**
+	 * The class's library video while it is live: its name, and the two ways
+	 * out. On a wall device only stop is offered, and it takes two taps.
+	 */
+	video?: {
+		title: string;
+		wall: boolean;
+		/** Wall only: the first tap has armed stop */
+		armed: boolean;
+		onStop: () => void;
+		onSwitch: () => void;
+	};
 }
 
 const STEPS_ID = 'teacher-steps';
@@ -109,36 +135,77 @@ export function TeacherStrip(): m.Component<TeacherStripAttrs> {
 		},
 
 		view({ attrs }) {
-			const { steps, currentIndex, action, reportRoute, failed, onRetry } = attrs;
+			const {
+				steps,
+				currentIndex,
+				action,
+				reportRoute,
+				failed,
+				onRetry,
+				pennant,
+				director,
+				status,
+				video,
+			} = attrs;
 			const current = steps[currentIndex];
 			const ended = action === null;
 
-			return m('.teacher-strip', [
-				ended || !current
-					? m('span.teacher-strip__step.teacher-strip__step--static', [
-							m('span.teacher-strip__name', t('teacher.lesson_over')),
-						])
-					: m(
-							'button.teacher-strip__step',
-							{
-								type: 'button',
-								'aria-expanded': String(open),
-								'aria-controls': STEPS_ID,
-								class: open ? 'teacher-strip__step--open' : undefined,
-								onclick: () => {
-									open = !open;
-								},
+			const pennantPill = pennant
+				? m(
+						'button.teacher-strip__pennant',
+						{
+							type: 'button',
+							'aria-haspopup': 'dialog',
+							'aria-expanded': pennant.open ? 'true' : 'false',
+							'aria-label': t('teacher.bar.class_at_aria', { station: pennant.label }),
+							title: t('teacher.bar.class_at_aria', { station: pennant.label }),
+							onclick: () => {
+								open = false;
+								pennant.onOpen();
 							},
-							[
-								m('span.teacher-strip__disc', String(currentIndex + 1)),
-								m(
-									'span.teacher-strip__index',
-									t('teacher.step_of', { i: currentIndex + 1, n: steps.length }),
-								),
-								m('span.teacher-strip__name', teacherStepLabel(current)),
-								m('span.teacher-strip__chevron', m(Icon, { name: 'arrow', size: 16 })),
-							],
-						),
+						},
+						[
+							m(Icon, { name: 'flag', size: 16 }),
+							m(
+								'span.teacher-strip__pennant-text',
+								t('teacher.bar.class_at', { station: pennant.label }),
+							),
+							m('span.teacher-strip__chevron', m(Icon, { name: 'arrow', size: 14 })),
+						],
+					)
+				: null;
+
+			return m('.teacher-strip', { class: director ? 'teacher-strip--director' : undefined }, [
+				// The director row has no room for the step text; the pennant names the station
+				director
+					? pennantPill
+					: ended || !current
+						? m('span.teacher-strip__step.teacher-strip__step--static', [
+								m('span.teacher-strip__name', t('teacher.lesson_over')),
+							])
+						: m(
+								'button.teacher-strip__step',
+								{
+									type: 'button',
+									'aria-expanded': String(open),
+									'aria-controls': STEPS_ID,
+									class: open ? 'teacher-strip__step--open' : undefined,
+									onclick: () => {
+										open = !open;
+									},
+								},
+								[
+									m('span.teacher-strip__disc', String(currentIndex + 1)),
+									m(
+										'span.teacher-strip__index',
+										t('teacher.step_of', { i: currentIndex + 1, n: steps.length }),
+									),
+									m('span.teacher-strip__name', teacherStepLabel(current)),
+									m('span.teacher-strip__chevron', m(Icon, { name: 'arrow', size: 16 })),
+								],
+							),
+
+				!director ? pennantPill : null,
 
 				ended
 					? m(
@@ -166,6 +233,29 @@ export function TeacherStrip(): m.Component<TeacherStripAttrs> {
 							],
 						),
 
+				video
+					? m('.teacher-strip__video', { role: 'status' }, [
+							m('span.teacher-strip__video-title', [
+								'▣ ',
+								t('video.now_playing', { title: video.title }),
+							]),
+							m(
+								'button.btn.btn--secondary.btn--sm.teacher-strip__video-stop',
+								{ type: 'button', onclick: video.onStop },
+								video.wall && video.armed ? t('video.stop_confirm') : t('video.stop'),
+							),
+							video.wall
+								? null
+								: m(
+										'button.btn.btn--ghost.btn--sm.teacher-strip__video-switch',
+										{ type: 'button', onclick: video.onSwitch },
+										t('video.switch'),
+									),
+						])
+					: null,
+
+				status && !failed ? m('p.teacher-strip__status', { role: 'status' }, status) : null,
+
 				failed
 					? m('p.teacher-strip__fail', { role: 'alert' }, [
 							m(Icon, { name: 'flag', size: 18 }),
@@ -178,7 +268,7 @@ export function TeacherStrip(): m.Component<TeacherStripAttrs> {
 						])
 					: null,
 
-				open && current && !ended ? stepsPopover(steps, currentIndex) : null,
+				open && current && !ended && !director ? stepsPopover(steps, currentIndex) : null,
 			]);
 		},
 	};

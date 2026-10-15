@@ -13,6 +13,8 @@
  * What it preserves, because the organizer may have changed it in /admin:
  *   - `enabled` on an elder that already exists (a switched-off elder stays off)
  *   - `portraitUrl` (art the game may already carry)
+ *   - `counsel` (per-shore lines) when the source has none for that elder —
+ *     lines authored on the live doc outlive a refresh that did not touch them
  * Everything else — positions, reactions, challenges, values, years — is
  * refreshed from source, since that is the point of running it.
  *
@@ -28,6 +30,9 @@
  *   # production: no emulator host, real credentials
  *   ODYSSEY_PROJECT_ID=wizcol-app GOOGLE_APPLICATION_CREDENTIALS=... \
  *     npx tsx apps/odyssey/scripts/patch-elders.ts --game default
+ *
+ * `--accept-rename 9,12` overrides the title-mismatch abort for the listed sortOrders only
+ * (prod still calls island 9 השבת והרבנות and island 12 יחסי החוץ; same stances, same order).
  */
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
@@ -45,6 +50,13 @@ function arg(name: string): string | undefined {
 
 const gameId = arg('game') ?? 'default';
 const dryRun = process.argv.includes('--dry-run');
+/** sortOrders whose title mismatch the operator has verified as a rename. */
+const acceptRename = new Set(
+	(arg('accept-rename') ?? '')
+		.split(',')
+		.map((value) => Number.parseInt(value.trim(), 10))
+		.filter((value) => Number.isInteger(value)),
+);
 
 if (FIRESTORE_HOST) process.env.FIRESTORE_EMULATOR_HOST = FIRESTORE_HOST;
 const app = getApps().length > 0 ? getApps()[0] : initializeApp({ projectId: PROJECT_ID });
@@ -61,6 +73,7 @@ interface StoredElder {
 	name: string;
 	enabled?: boolean;
 	portraitUrl?: string | null;
+	counsel?: Record<string, Record<string, string>>;
 }
 
 async function main(): Promise<void> {
@@ -85,13 +98,23 @@ async function main(): Promise<void> {
 		const defaultIndex = DEFAULT_ISLANDS.findIndex((island) => island.slug === slug);
 		if (defaultIndex === -1) throw new Error(`elder charts "${slug}", which is not a default island`);
 		const defaultIsland = DEFAULT_ISLANDS[defaultIndex];
-		const gameIsland = gameIslands.find(
-			(island) => island.sortOrder === defaultIndex + 1 && island.title === defaultIsland.title,
-		);
+		const atOrder = gameIslands.find((island) => island.sortOrder === defaultIndex + 1);
+		const renameAccepted = atOrder && acceptRename.has(defaultIndex + 1);
+		const gameIsland =
+			atOrder && (atOrder.title === defaultIsland.title || renameAccepted) ? atOrder : undefined;
 		if (!gameIsland) {
 			throw new Error(
-				`island "${slug}" (${defaultIsland.title}) not found at sortOrder ${defaultIndex + 1} — ` +
-					'the game doc diverged from DEFAULT_ISLANDS (reordered or renamed); refusing to guess',
+				`island "${slug}" (${defaultIsland.title}) not found at sortOrder ${defaultIndex + 1}` +
+					(atOrder ? ` — the game calls it "${atOrder.title}"` : '') +
+					'. The game doc diverged from DEFAULT_ISLANDS (reordered or renamed); refusing to ' +
+					`guess. If it is the same island renamed, verify its stances and pass ` +
+					`--accept-rename ${defaultIndex + 1}`,
+			);
+		}
+		if (renameAccepted && atOrder.title !== defaultIsland.title) {
+			console.info(
+				`  ! sortOrder ${defaultIndex + 1}: charting "${defaultIsland.title}" onto the island the ` +
+					`game calls "${atOrder.title}" — accepted as a rename on your say-so`,
 			);
 		}
 
@@ -129,19 +152,26 @@ async function main(): Promise<void> {
 		const before = previous.get(elder.elderId);
 		if (!before) return elder;
 
+		// Source wins when it carries shore lines; a key is only ever set to a
+		// value (the admin SDK refuses `undefined`), and never to `{}`.
+		const counsel = elder.counsel ?? before.counsel;
+
 		return {
 			...elder,
 			enabled: before.enabled ?? elder.enabled,
 			portraitUrl: before.portraitUrl ?? elder.portraitUrl,
+			...(counsel ? { counsel } : {}),
 		};
 	});
 
 	for (const elder of elders) {
 		const before = previous.get(elder.elderId);
 		const islands = Object.keys(elder.positions).length;
+		const counselled = Object.keys(elder.counsel ?? {}).length;
 		console.info(
 			`  ${before ? '↻' : '+'} ${elder.name} (${elder.years ?? '—'}) — ` +
-				`${islands} islands${elder.enabled ? '' : ', DISABLED (kept from /admin)'}`,
+				`${islands} islands, shore lines on ${counselled}` +
+				`${elder.enabled ? '' : ', DISABLED (kept from /admin)'}`,
 		);
 	}
 	const dropped = existing.filter(

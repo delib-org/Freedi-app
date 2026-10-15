@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { AGORA_LIMITS, type AgoraRoundKind } from '@freedi/shared-types';
+import { AGORA_LIMITS, isAgoraTextLongEnough, type AgoraRoundKind } from '@freedi/shared-types';
 import { t } from '../lib/i18n';
 import { Icon } from './Icon';
 import { stalledBanner } from './StalledBanner';
@@ -11,6 +11,8 @@ export interface RoundAnswerAttrs {
 	editing: boolean;
 	saving: boolean;
 	saveFailed: boolean;
+	/** Said instead of the generic error when the language gate refused the text */
+	saveNotice?: string;
 	changed: boolean;
 	onEdit: () => void;
 	onCancel: () => void;
@@ -57,14 +59,18 @@ export const RoundAnswer: m.Component<RoundAnswerAttrs> = {
 				oninput: (event: InputEvent) => attrs.onInput((event.target as HTMLTextAreaElement).value),
 			}),
 			stalledBanner(),
-			saveFailed ? m('p.join__error', { role: 'alert' }, t('common.error')) : null,
+			saveFailed
+				? m('p.join__error', { role: 'alert' }, attrs.saveNotice ?? t('common.error'))
+				: null,
 			m('.round__actions', [
 				m(
 					'button.btn.btn--primary',
 					{
 						type: 'button',
 						disabled:
-							saving || !text.trim() || (savedText !== undefined && !changed && !saveFailed),
+							saving ||
+							!isAgoraTextLongEnough(text) ||
+							(savedText !== undefined && !changed && !saveFailed),
 						onclick: attrs.onSave,
 					},
 					saving ? t('round.saving') : t(savedText === undefined ? 'round.save' : 'round.update'),

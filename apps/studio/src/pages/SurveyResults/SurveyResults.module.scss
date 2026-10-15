@@ -1,0 +1,72 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Layout only — colour and spacing come from the design tokens.
+.results {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+}
+
+.question {
+	@include card-base;
+
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.questionTitle {
+	margin: 0;
+	font-size: var(--font-size-md);
+	font-weight: 600;
+	color: var(--text-title);
+	overflow-wrap: anywhere;
+}
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	margin: 0;
+	padding: 0;
+	list-style-position: inside;
+}
+
+.option {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: var(--space-xs) var(--space-md);
+	padding-block: var(--space-xs);
+	border-block-end: 1px solid var(--border-light);
+}
+
+.text {
+	flex: 1 1 14rem;
+	min-width: 0;
+	color: var(--text-body);
+	overflow-wrap: anywhere;
+}
+
+.stats {
+	display: flex;
+	gap: var(--space-sm);
+	font-size: var(--font-size-xs);
+	color: var(--text-meta);
+}
+
+.score {
+	font-weight: 600;
+	color: var(--text-title);
+}
+
+.note {
+	margin: 0;
+	font-size: var(--font-size-xs);
+	color: var(--text-meta);
+}
+
+.back {
+	color: var(--btn-primary);
+	font-size: var(--font-size-sm);
+}

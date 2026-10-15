@@ -107,6 +107,10 @@ export enum Collections {
     agoraSessions = 'agoraSessions',
     agoraParticipants = 'agoraParticipants',
     agoraScores = 'agoraScores',
+    agoraHands = 'agoraHands',
+    agoraSceneMaterials = 'agoraSceneMaterials',
+    agoraMaterialChats = 'agoraMaterialChats',
+    agoraRemovals = 'agoraRemovals',
     agoraValueAnswers = 'agoraValueAnswers',
     agoraCharacterReviews = 'agoraCharacterReviews',
     agoraSchools = 'agoraSchools',
@@ -120,6 +124,18 @@ export enum Collections {
     agoraIdentities = 'agoraIdentities',
     agoraTeacherMessages = 'agoraTeacherMessages',
     agoraTeacherPrompts = 'agoraTeacherPrompts',
+    agoraTeacherBannedWords = 'agoraTeacherBannedWords',
+    // The teachers' scenario library (tags, ratings, cached translations, approval markers)
+    agoraLibraryTags = 'agoraLibraryTags',
+    agoraScenarioRatings = 'agoraScenarioRatings',
+    agoraScenarioPosts = 'agoraScenarioPosts',
+    agoraLibraryReports = 'agoraLibraryReports',
+    agoraScenarioTranslations = 'agoraScenarioTranslations',
+    agoraApprovedTeachers = 'agoraApprovedTeachers',
+    // Requests to become an Agora teacher / regional coordinator (server-written)
+    agoraAccessRequests = 'agoraAccessRequests',
+    // Server-written markers: who may read a private scenario (players of a game built on it)
+    agoraTopicReaders = 'agoraTopicReaders',
 
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',

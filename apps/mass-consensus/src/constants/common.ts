@@ -163,6 +163,16 @@ export const CARD_COLOR_INTENSITY = {
 } as const;
 
 /**
+ * Admin "Top agreements" panel: options shown per question before
+ * "show more", and the most the API returns per question.
+ */
+export const TOP_AGREEMENTS = {
+  INITIAL_VISIBLE: 10,
+  PAGE_SIZE: 10,
+  MAX_PER_QUESTION: 100,
+} as const;
+
+/**
  * Participant accessibility settings (theme, contrast, text size).
  * Kept in a cookie so the server renders <html> with them — no flash.
  */

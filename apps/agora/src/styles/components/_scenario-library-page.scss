@@ -1,0 +1,774 @@
+// The scenario library, part two: the scenario page, the publish sheet, "my
+// scenarios", ratings and reviews. Part one is _scenario-library.scss.
+// Imported by components.scss; do not import directly.
+
+// --- Shared bits ---
+
+.scn-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px var(--space-sm);
+	border-radius: var(--radius-full);
+	background: var(--mint);
+	color: var(--mint-ink);
+	font-size: var(--font-size-xs);
+	font-weight: 700;
+
+	&--draft {
+		background: var(--bg-inset);
+		color: var(--text-secondary);
+	}
+}
+
+.scn-note {
+	margin: 0;
+	color: var(--text-secondary);
+	font-size: var(--font-size-xs);
+	line-height: 1.5;
+}
+
+.scn-notice {
+	margin: 0;
+	padding: var(--space-sm) var(--space-md);
+	border-radius: var(--radius-md);
+	background: var(--mark-helped);
+	color: var(--text-primary);
+	border-inline-start: 4px solid var(--success);
+
+	&--bad {
+		background: var(--mark-edited);
+		border-inline-start-color: var(--warning);
+	}
+}
+
+.scn-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+
+	&__label {
+		font-weight: 700;
+		color: var(--text-primary);
+	}
+
+	&__hint {
+		margin: 0;
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+
+		&--end {
+			text-align: end;
+			min-block-size: 1.2em;
+		}
+	}
+
+	&__error {
+		margin: 0;
+		font-size: var(--font-size-xs);
+		color: var(--danger-ink);
+		border-inline-start: 3px solid var(--danger);
+		padding-inline-start: var(--space-sm);
+	}
+}
+
+// --- The scenario page ---
+
+.scn-page {
+	display: grid;
+	gap: var(--space-lg);
+	align-items: start;
+
+	// Room for the pinned "use" bar, so the last line is never behind it
+	@media (max-width: 899px) {
+		padding-block-end: calc(88px + env(safe-area-inset-bottom));
+	}
+
+	@media (min-width: 900px) {
+		grid-template-columns: minmax(0, 1fr) 320px;
+	}
+
+	&__main {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		min-inline-size: 0;
+	}
+
+	&__cover {
+		aspect-ratio: 16 / 9;
+		overflow: hidden;
+		border-radius: var(--radius-lg);
+		background: var(--bg-inset);
+		box-shadow: var(--shadow-card);
+	}
+
+	&__img {
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+		display: block;
+	}
+
+	&__fallback {
+		inline-size: 100%;
+		block-size: 100%;
+		display: grid;
+		place-items: center;
+		color: var(--mine-ink);
+		background: linear-gradient(150deg, var(--wash-mine-high), var(--peer-tile));
+	}
+
+	&__head {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-xs);
+	}
+
+	&__title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		line-height: 1.2;
+	}
+
+	&__by {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	&__summary {
+		margin: 0;
+		font-size: var(--font-size-base);
+		line-height: 1.6;
+	}
+
+	&__preview {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__side {
+		@media (min-width: 900px) {
+			position: sticky;
+			inset-block-start: calc(var(--teacher-nav-h) + var(--space-md));
+		}
+	}
+}
+
+// On a phone the "use" button stays under the thumb while the page scrolls
+.scn-panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	border-radius: var(--radius-lg);
+	border: 1px solid var(--border-subtle);
+	background: var(--bg-card-solid);
+	box-shadow: var(--shadow-card);
+
+	&__rating {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-sm);
+
+		strong {
+			font-size: var(--font-size-lg);
+		}
+	}
+
+	&__none,
+	&__stat {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	.scn-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	// On a phone the "use" button is a bar pinned under the thumb: fixed to
+	// the viewport (a sticky box would be stuck inside its panel, far below the
+	// fold, until the very end of the page)
+	@media (max-width: 899px) {
+		.scn-use {
+			position: fixed;
+			inset-inline: 0;
+			inset-block-end: 0;
+			z-index: var(--z-content);
+			padding: var(--space-sm) var(--space-md) calc(var(--space-sm) + env(safe-area-inset-bottom));
+			background: var(--surface-veil);
+			border-block-start: 1px solid var(--border-subtle);
+			box-shadow: var(--shadow-raised);
+		}
+	}
+}
+
+.scn-use {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.scn-done {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	background: var(--mark-helped);
+	border-inline-start: 4px solid var(--success);
+
+	p {
+		margin: 0;
+	}
+
+	&__title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+
+		.btn {
+			text-decoration: none;
+			text-align: center;
+		}
+	}
+}
+
+.scn-quote {
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	background: var(--wash-mine-high);
+	border-inline-start: 4px solid var(--mine);
+
+	&__label {
+		font-weight: 700;
+		color: var(--mine-ink);
+	}
+
+	&__text {
+		margin: var(--space-xs) 0 0;
+		font-size: var(--font-size-base);
+		line-height: 1.5;
+	}
+}
+
+.scn-preview {
+	display: grid;
+	gap: var(--space-md);
+
+	@media (min-width: 600px) {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	h3 {
+		margin: 0 0 var(--space-xs);
+		font-size: var(--font-size-base);
+		font-family: var(--font-display);
+	}
+
+	ul {
+		margin: 0;
+		padding-inline-start: 1.2em;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		line-height: 1.45;
+	}
+}
+
+// --- Publish sheet (rides on .question-sheet) ---
+
+.scn-publish {
+	&__body {
+		gap: var(--space-lg);
+	}
+
+	// The question sheet's dialog is short enough to never need a height; this
+	// one has a picture, a textarea and two pickers, so it is bounded by the
+	// screen and its body scrolls under a foot that stays in view.
+	.question-sheet__dialog {
+		inline-size: min(100%, 640px);
+		max-block-size: calc(100dvh - 2 * var(--space-lg));
+	}
+
+	.scn-cover__zone {
+		aspect-ratio: 16 / 7;
+		max-block-size: 220px;
+	}
+
+	@media (max-width: 600px) {
+		.question-sheet__dialog {
+			max-block-size: none;
+		}
+	}
+}
+
+.scn-cover {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	align-items: flex-start;
+
+	&__zone {
+		position: relative;
+		inline-size: 100%;
+		aspect-ratio: 16 / 9;
+		display: grid;
+		place-items: center;
+		overflow: hidden;
+		border: 2px dashed var(--border-strong);
+		border-radius: var(--radius-md);
+		background: var(--surface-tint);
+		cursor: pointer;
+		transition:
+			border-color var(--motion-fast) ease,
+			background-color var(--motion-fast) ease;
+
+		&:hover,
+		&--over {
+			border-color: var(--lantern);
+			background: var(--wash-mine-high);
+		}
+
+		&:focus-visible {
+			outline: 3px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+
+		&--filled {
+			border-style: solid;
+		}
+	}
+
+	&__ai {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		align-items: flex-start;
+	}
+
+	&__img {
+		position: absolute;
+		inset: 0;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+	}
+
+	&__prompt {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-full);
+		background: var(--surface-veil);
+		color: var(--mine-ink);
+		font-weight: 700;
+		text-align: center;
+	}
+
+	&__bar {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: 0;
+		block-size: 8px;
+		background: var(--bg-inset);
+	}
+
+	&__bar-fill {
+		display: block;
+		block-size: 100%;
+		background: var(--mint-deep);
+		transition: inline-size var(--motion-fast) linear;
+	}
+}
+
+.scn-picker-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	position: relative;
+}
+
+.scn-selected {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-xs);
+
+	&:empty {
+		display: none;
+	}
+}
+
+.scn-suggest {
+	list-style: none;
+	margin: 0;
+	padding: var(--space-xs);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--bg-card-solid);
+	box-shadow: var(--shadow-raised);
+	max-block-size: 260px;
+	overflow-y: auto;
+
+	&__head {
+		padding: var(--space-xs) var(--space-sm);
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+	}
+
+	&__row,
+	&__create {
+		inline-size: 100%;
+		min-block-size: 44px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		padding: var(--space-xs) var(--space-sm);
+		border: 0;
+		border-radius: var(--radius-sm);
+		background: transparent;
+		font: inherit;
+		font-size: var(--font-size-xs);
+		text-align: start;
+		cursor: pointer;
+
+		&:hover,
+		&:focus-visible {
+			background: var(--bg-inset);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+		}
+	}
+
+	// The weakest row in the list on purpose: look at what exists first
+	&__create {
+		color: var(--text-secondary);
+		justify-content: flex-start;
+		border-block-start: 1px dashed var(--border-subtle);
+		border-radius: 0;
+	}
+}
+
+.scn-problems {
+	margin: 0;
+	padding: var(--space-sm) var(--space-md);
+	padding-inline-start: calc(var(--space-md) + 1em);
+	border-radius: var(--radius-md);
+	background: var(--mark-edited);
+	border-inline-start: 4px solid var(--warning);
+	color: var(--text-primary);
+}
+
+// --- My scenarios ---
+
+.scn-mine-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+}
+
+.scn-mine-grid {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: var(--space-sm);
+
+	@media (min-width: 900px) {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+.scn-mine {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	border: 1px solid var(--border-subtle);
+	background: var(--bg-card-solid);
+	box-shadow: var(--shadow-card);
+
+	&__main {
+		display: flex;
+		gap: var(--space-sm);
+		align-items: center;
+	}
+
+	&__thumb {
+		flex: 0 0 auto;
+		inline-size: 64px;
+		block-size: 44px;
+		display: grid;
+		place-items: center;
+		overflow: hidden;
+		border-radius: var(--radius-sm);
+		background: var(--peer-tile);
+		color: var(--mine-ink);
+
+		img {
+			inline-size: 100%;
+			block-size: 100%;
+			object-fit: cover;
+		}
+	}
+
+	&__text {
+		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__title {
+		font-weight: 700;
+		color: var(--text-primary);
+		text-decoration: none;
+		overflow-wrap: anywhere;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+
+	&__meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-xs) var(--space-sm);
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+	}
+
+	&__update {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-xs) var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-md);
+		background: var(--mark-edited);
+		border-inline-start: 4px solid var(--warning);
+		font-size: var(--font-size-xs);
+
+		.btn {
+			text-decoration: none;
+		}
+	}
+
+	&__warn {
+		margin: 0;
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-sm);
+		background: var(--mark-edited);
+		border-inline-start: 4px solid var(--danger);
+	}
+
+	&__controls {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__hint {
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+	}
+
+	&__confirm {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-md);
+		background: var(--surface-tint);
+		border: 1px dashed var(--border-strong);
+
+		p {
+			margin: 0;
+		}
+	}
+
+	&__confirm-actions {
+		display: flex;
+		gap: var(--space-sm);
+	}
+}
+
+// private | public: one radiogroup that reads as a switch
+.scn-switch {
+	display: inline-flex;
+	padding: 2px;
+	border-radius: var(--radius-full);
+	background: var(--bg-inset);
+
+	&__opt {
+		min-block-size: 44px;
+		padding-inline: var(--space-md);
+		border: 0;
+		border-radius: var(--radius-full);
+		background: transparent;
+		color: var(--text-secondary);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+
+		&--on {
+			background: var(--mine-strong);
+			color: #ffffff;
+		}
+
+		&:disabled {
+			cursor: wait;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+}
+
+// --- Ratings and reviews ---
+
+.scn-feedback {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+}
+
+.scn-picker {
+	display: inline-flex;
+	gap: 2px;
+
+	&__star {
+		inline-size: 44px;
+		block-size: 44px;
+		display: grid;
+		place-items: center;
+		border: 0;
+		border-radius: var(--radius-sm);
+		background: transparent;
+		color: var(--border-strong);
+		cursor: pointer;
+		transition: transform var(--motion-fast) var(--ease-spring);
+
+		&:hover {
+			transform: scale(1.1);
+		}
+
+		&--on {
+			color: var(--gold);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+
+		&:disabled {
+			cursor: not-allowed;
+			opacity: 0.6;
+		}
+	}
+}
+
+.scn-rate {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	background: var(--surface-tint);
+	border: 1px solid var(--border-subtle);
+
+	&__title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+	}
+}
+
+.scn-reviews {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.scn-review {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	border: 1px solid var(--border-subtle);
+	background: var(--bg-card-solid);
+
+	&--mine {
+		border-color: var(--border-lantern);
+		background: var(--wash-mine-high);
+	}
+
+	&__head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-xs) var(--space-sm);
+	}
+
+	&__who {
+		font-weight: 700;
+	}
+
+	&__date {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	&__text {
+		margin: 0;
+		line-height: 1.5;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+
+	&__admin {
+		align-self: flex-start;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.scn-picker__star {
+		transition: none;
+	}
+
+	.scn-picker__star:hover {
+		transform: none;
+	}
+}

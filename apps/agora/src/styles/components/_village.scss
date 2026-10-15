@@ -4,7 +4,7 @@
 .village-shell {
 	position: relative;
 	&__world { display: block; inline-size: 100%; block-size: calc(100dvh - var(--village-chrome, 56px)); min-block-size: 420px; border: 0; }
-	&__notice { padding: var(--space-md); background: var(--bg-card-solid); color: var(--text-primary); }
+	&__notice { margin: var(--space-sm); padding: var(--space-md); background: var(--bg-card-solid); color: var(--text-primary); border-radius: var(--radius-lg); }
 	&__activity { position: absolute; inset-block: 60px var(--space-md); inset-inline: max(var(--space-sm), calc((100% - 960px) / 2)); overflow: auto; background: var(--bg-card-solid); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
 	&__activity .shell { min-block-size: auto; }
 }
@@ -59,11 +59,48 @@ body:has(.village-library--reading) { overflow:hidden; }
 
 .village-coins, .village-feedback { position:absolute; z-index:6; border:1px solid var(--village-nav-border); border-radius:24px; background:var(--village-nav-surface); color:var(--village-nav-ink); box-shadow:0 4px 16px #0003; padding:10px 18px; }
 .village-coins { top:12px; right:16px; display:flex; align-items:center; gap:10px; font-size:24px; pointer-events:none; }
-.village-coins img { width:44px; height:44px; }
-.village-coins__gain { color:#ffe06a; animation:village-coin-gain 2s ease-out; }
+.village-coins .coin { flex:0 0 auto; width:36px; height:36px; }
+.village-coins__gain { color:var(--coin-core-hi); animation:village-coin-gain 2s ease-out; }
+
+// The obol itself (components/Coin.ts): every metal is a token
+.coin {
+  display: block;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.35));
+  &__ring { stroke: var(--coin-edge); stroke-width: 0.8; }
+  // Reeding: fine teeth round the edge, then the raised rim inside them
+  &__mill { fill: none; stroke: var(--coin-edge); stroke-width: 1.6; stroke-dasharray: 0.55 0.55; opacity: 0.7; }
+  &__rim { fill: none; stroke: var(--coin-ring-lo); stroke-width: 0.9; }
+  &__legend {
+    fill: var(--coin-legend);
+    font: 700 4.7px/1 Georgia, 'Times New Roman', serif;
+    letter-spacing: 0.55px;
+    text-anchor: middle;
+  }
+  &__stop-dot { fill: var(--coin-legend); }
+  &__core { stroke: var(--coin-core-lo); stroke-width: 0.9; }
+  // The beaded circle: zero-length dashes with round caps are dots
+  &__beads { fill: none; stroke: var(--coin-ink); stroke-width: 1.1; stroke-dasharray: 0 2.29; stroke-linecap: round; opacity: 0.75; }
+  &__stem { fill: none; stroke: var(--coin-ink); stroke-width: 0.8; stroke-linecap: round; }
+  &__leaf, &__olive { fill: var(--coin-ink); }
+  &__numeral { fill: var(--coin-ink); stroke: var(--coin-core-hi); stroke-width: 0.5; paint-order: stroke; }
+  &__stop--ring-hi { stop-color: var(--coin-ring-hi); }
+  &__stop--ring { stop-color: var(--coin-ring); }
+  &__stop--ring-lo { stop-color: var(--coin-ring-lo); }
+  &__stop--core-hi { stop-color: var(--coin-core-hi); }
+  &__stop--core { stop-color: var(--coin-core); }
+  &__stop--core-lo { stop-color: var(--coin-core-lo); }
+}
+// High contrast: an outlined coin in the system's ink, the wreath and 1 still legible
+@media (forced-colors: active) {
+  .coin { filter: none; }
+  .coin__ring, .coin__core { fill: Canvas; stroke: CanvasText; stroke-width: 1.6; }
+  .coin__mill, .coin__rim, .coin__beads, .coin__stem { stroke: CanvasText; }
+  .coin__legend, .coin__stop-dot, .coin__leaf, .coin__olive { fill: CanvasText; }
+  .coin__numeral { fill: CanvasText; stroke: Canvas; }
+}
 @keyframes village-coin-gain { from {transform:translateY(10px);opacity:1} to {transform:translateY(-24px);opacity:0} }
 .village-feedback { top:12px; left:16px; cursor:pointer; }
-.village-community__panel { position:absolute; z-index:20; inset:58px 12px 12px; overflow:auto; background:#f5efdf; padding:24px; border:4px solid #796342; border-radius:18px; color:#253c32; }
+.village-community__panel { position:absolute; z-index:20; inset:58px 12px 12px; overflow:auto; background:#f5efdf; padding:24px; border:4px solid #796342; border-radius:var(--radius-lg); color:#253c32; }
 .village-community__panel > header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; }
 // Reading order is also DOM order: the personal card precedes the peer grid.
 .village-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--space-md); align-items: start; }
@@ -99,12 +136,46 @@ body:has(.village-library--reading) { overflow:hidden; }
 .village-board__heading { min-width: 0; }
 .village-board__heading h2 { margin: 0; }
 .village-board > header { flex-wrap: wrap; }
+// How many classmates' notes the board holds — said under the title, because
+// on a phone my own note fills the first screen and the class sits below it
+.village-board__count {
+  display: inline-block;
+  margin: var(--space-xs) 0 0;
+  padding: 2px var(--space-sm);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  background: var(--bg-card-solid);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+// "N more notes below": rides the board's bottom edge while classmates' cards
+// wait under the fold. The fade says the list goes on; the button brings the
+// next card up. Only the button takes taps — the fade lets them through.
+.village-board__more {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  margin-block-start: var(--space-md);
+  padding-block: var(--space-lg) var(--space-xs);
+  background: linear-gradient(to bottom, transparent, var(--bg-page) 60%);
+  pointer-events: none;
+}
+.village-board__more-button {
+  pointer-events: auto;
+  gap: var(--space-sm);
+  min-height: 44px;
+  box-shadow: var(--shadow-card);
+}
+.village-board__more-arrow { font-weight: 700; }
 .village-community__panel.village-board {
   inset-inline: max(var(--space-sm), calc((100% - 960px) / 2));
   background: var(--bg-page);
   color: var(--text-primary);
 }
-@media(max-width:600px) { .village-coins {font-size:18px;right:8px;padding:6px 10px} .village-feedback {left:8px;max-width:52%} .village-community__panel{padding:12px} }
+@media(max-width:600px) { .village-coins {font-size:18px;right:8px;padding:6px 10px} .village-coins .coin {width:28px;height:28px} .village-feedback {left:8px;max-width:52%} .village-community__panel{padding:12px} }
 .village-coins, .village-feedback { z-index:30; }
 .village-community__panel { top:70px; }
 .village-board-tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
@@ -555,6 +626,18 @@ article.village-note { cursor: default; }
     }
   }
 
+  // Phone: a rounded slab inside a gutter, not a square strip the screen
+  // edge cuts off. The flat view keeps its own pill above.
+  @media (max-width: 899px) {
+    &:not(.place-bar--flat) {
+      inline-size: calc(100% - 2 * var(--space-sm));
+      margin-block-end: var(--space-sm);
+      border: 1px solid var(--village-nav-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+  }
+
   // Desktop: a floating pill rather than a full-width bar
   @media (min-width: 900px) {
     inline-size: min(560px, calc(100% - 32px));
@@ -634,6 +717,53 @@ article.village-note { cursor: default; }
     background: var(--mine-strong);
 
     &::after { inset-inline-start: 21px; }
+  }
+
+  // The colour sets: one swatch each, painted sky over roof over meadow.
+  &__row--palette {
+    flex-wrap: wrap;
+    cursor: default;
+
+    &:hover { border-color: var(--border-subtle); }
+  }
+
+  &__swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  &__swatch {
+    // A picture of each set's 3D colours, not UI chrome: the hexes are the
+    // world's own (prototypes/olive-hill/palettes.js).
+    --swatch-sky: #76acc9;
+    --swatch-roof: #ae6748;
+    --swatch-grass: #829557;
+
+    inline-size: 44px;
+    block-size: 44px;
+    padding: 0;
+    border: 2px solid var(--border-subtle);
+    border-radius: 50%;
+    background: linear-gradient(
+      to bottom,
+      var(--swatch-sky) 0 40%,
+      var(--swatch-roof) 40% 62%,
+      var(--swatch-grass) 62% 100%
+    );
+    cursor: pointer;
+
+    &--sunset { --swatch-sky: #8a86b8; --swatch-roof: #b8553a; --swatch-grass: #8f9650; }
+    &--mediterranean { --swatch-sky: #3f8fd0; --swatch-roof: #c4643f; --swatch-grass: #7f9a55; }
+    &--forest { --swatch-sky: #6f9fb2; --swatch-roof: #7d4a35; --swatch-grass: #5d8a44; }
+    &--desert { --swatch-sky: #8fb6d0; --swatch-roof: #b9774a; --swatch-grass: #b9a46c; }
+
+    &[aria-checked='true'] {
+      border-color: var(--mine-strong);
+      box-shadow: 0 0 0 3px var(--mine-strong);
+    }
+
+    &:focus-visible { outline: 3px solid var(--mine-ink); outline-offset: 3px; }
   }
 }
 

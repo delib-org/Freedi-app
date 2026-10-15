@@ -36,9 +36,11 @@ import {
 import { safeParse } from 'valibot';
 import { logError } from '../utils/errorHandling';
 import { generateUniqueCode } from './joinCodes';
+import { requireApprovedTeacher } from './libraryAccess';
 import { buildQuestionStatement } from './questionStage';
 import { sanitizeStagePlan } from './stagePlanInput';
 import { loadTeacherPrompts } from './teacherPrompts';
+import { mayOpenScenario } from './topicReaders';
 
 /** A game started by typing the main question — no scenario package behind it */
 export interface QuickGameRequest {
@@ -217,13 +219,9 @@ interface Result {
 export const agoraCreateSession = onCall(
 	{ region: functionConfig.region },
 	async (request: CallableRequest<Request>): Promise<Result> => {
-		const uid = request.auth?.uid;
-		if (!uid) {
-			throw new HttpsError('unauthenticated', 'User must be authenticated');
-		}
-		if (request.auth?.token.firebase.sign_in_provider === 'anonymous') {
-			throw new HttpsError('permission-denied', 'Teachers must sign in with a full account');
-		}
+		// Hard gate (Tal, 2026-10-15): only an approved teacher opens a lesson,
+		// guest lessons included. Throws unauthenticated / permission-denied.
+		const { uid } = await requireApprovedTeacher(request);
 
 		const {
 			topicPackageId,
@@ -293,6 +291,10 @@ export const agoraCreateSession = onCall(
 					throw new HttpsError('not-found', 'Topic package not found');
 				}
 				topic = topicSnap.data() as AgoraTopicPackage;
+				// Someone else's private scenario is not theirs to run (the library copies)
+				if (!(await mayOpenScenario(topic, uid))) {
+					throw new HttpsError('permission-denied', 'This scenario is private');
+				}
 				if (topic.status !== AgoraTopicStatus.ready) {
 					throw new HttpsError('failed-precondition', 'Topic package is not ready');
 				}

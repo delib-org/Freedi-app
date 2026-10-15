@@ -152,3 +152,82 @@ and commit its shared-types archive; create only the teacherId/month usage
 composite index; deploy rules and the named supervision/teacher aggregation
 functions before either frontend. Backfill is admin-only, paged and repeat-safe.
 Its cursor includes creation time AND session ID; never simplify it to a timestamp.
+
+
+## Teachers' scenario library (2026-10-14)
+
+A scenario is an `AgoraTopicPackage`; publishing adds OPTIONAL `visibility`,
+`library` (card), `stats` and (on copies) `source*` fields to the same doc.
+Screens: `views/teacher/scenarioLibrary/`, state in `lib/scenarioLibrary/`,
+words in `lib/scenarioLibrary/strings*.ts` (merged into `i18n.ts`), styles
+`_scenario-library*.scss`. Server: `functions/src/agora/fn_agoraLibrary*.ts`.
+
+- **Who may enter.** Since 2026-10-15 approval is explicit and a HARD gate
+  (pending teachers get nothing: no lesson, class, roster or scenario). An
+  approved teacher is a sys-admin, holds a `grant` on `agoraApprovedTeachers/{uid}`
+  (approved access request, admin attach, or the grandfather backfill), or is
+  attached to an ACTIVE school. `libraryAccess.ts#resolveApproval` is the one
+  seam; `requireApprovedTeacher` gates the callables; the RULES read the
+  marker's existence. Requests: `agoraRequestAccess` / `agoraManageAccess`
+  (docs/ia/studio-teacher-approval.md). Fastlane's `signInTeacher` grants its
+  teacher; a teacher signing in through the browser on the emulator must be
+  approved (Studio, or an admin attach) before opening a lesson.
+- **Private is private (2026-10-15).** `agoraTopicPackages` `get`: a PUBLIC
+  scenario is open to any signed-in user; a private one (anything not public,
+  never-published included) only to its author, a sys-admin, or a holder of a
+  reader marker `agoraTopicReaders/{id}--{uid}`. `agoraJoinSession` leaves the
+  marker for every player; `agoraTopicAccess({sessionId})` is the fallback
+  `lib/topic.ts` tries once on permission-denied (seats from before markers,
+  a teacher running someone else's scenario). Pass the session to
+  `loadTopicPackage(id, sessionId)`. `agoraCreateSession` refuses someone
+  else's private scenario (the library hands out copies). A stranger opening
+  `/teach/library/:id` of a private one sees "This scenario is private".
+  The seed's demo package is `visibility: 'public'` for that reason.
+- **Reports reach the admins.** `onAgoraLibraryReportCreated` emails the system
+  admins (usersV2 `systemAdmin`, or `AGORA_LIBRARY_REPORT_RECIPIENTS`) through
+  the shared nodemailer transporter: what, why, the reporter's role, a link to
+  the queue; no names. The menu's "Library admin" row carries an open-reports
+  badge (`state.ts#refreshOpenReports`).
+- **Translations** are cached per scenario per language in
+  `agoraScenarioTranslations` (valid while the scenario's `lastUpdate` matches),
+  model `WORKER_MODEL` via `callLLM`. A copy in another language is translated
+  whole (cached too); ids, kinds, URLs and numbers never go through the model.
+- **Never** let a client write `visibility`/`library`/`stats`/`source*` (rules
+  refuse it) and never count ratings on read (`stats` moves in the rating
+  transaction). A hidden scenario/review stays hidden when its owner republishes
+  or re-rates: only a sys-admin lifts it (`agoraLibraryModerate`).
+- **Indexes** (firestore.indexes.json; create with `gcloud`, never a plain
+  deploy): `agoraTopicPackages` (visibility, library.hidden, then one of
+  stats.ratingBayes / library.publishedAt / stats.copyCount, descending) and
+  `agoraScenarioRatings` (scenarioId, hidden, lastUpdate descending).
+- **Verify:** `scripts/e2e-scenario-library.mjs` (callables + rules, real AI
+  translation) and `scripts/e2e-scenario-library-ui.mjs` (browser, screenshots
+  in `output/scenario-library/`, contrast + type audits). Both need a clean
+  emulator DB and `OPENAI_API_KEY` in `functions/.env`.
+- **Cover (P3).** `agoraLibraryGenerateCover` paints a cover from the
+  scenario's own words (never student data): scene brief via `WORKER_MODEL`,
+  moderation check, then `gpt-image-1-mini` 1536x1024 medium webp
+  (`COVER_IMAGE` in `libraryCover.ts`, override with `AGORA_COVER_IMAGE_MODEL`;
+  about USD 0.015 an image, from published pricing, not fetched live), stored
+  under `agora/{id}/library-cover-ai-*.webp`. 10 a teacher a day on the approval
+  marker (`AGORA_LIBRARY.COVERS_PER_DAY`). Provider seam `libraryCoverProvider.ts`
+  (stubbed in jest; `AGORA_COVER_STUB=1` on the functions emulator, no network).
+- **Discussion (P4).** `agoraScenarioPosts` (flat, `scenarioId` on each post, one
+  reply level): `agoraLibraryPost` (30 a day, language check, `stats.postCount`),
+  `agoraLibraryHidePost` (scenario author or admin; an admin's hide is lifted
+  only by an admin). Hidden posts are readable by the author (`scenarioOwnerId`
+  is on the doc for that) and admins only.
+- **Admin (P5).** `/teach/library/admin` (sys-admin only): open reports grouped
+  by target (`agoraLibraryReport` files, `agoraLibraryResolveReport` hides or
+  dismisses), everything hidden with a lift button, and tag merging
+  (`agoraLibraryMergeTags`: `aliasOf` first, then scenarios re-pointed in
+  batches with their counters in the same commit, so a half-done merge is just
+  run again). Tag counters count what the library LISTS (public and not hidden):
+  hide/unhide, publish and unpublish all keep to that.
+- **Deploy order:** rules, then `agoraLibraryAccess agoraLibraryCreateTag
+  agoraLibraryPublish agoraLibraryUnpublish agoraLibraryUse
+  agoraLibraryTranslate agoraLibraryRate agoraLibraryModerate
+  agoraLibraryGenerateCover agoraLibraryPost agoraLibraryHidePost
+  agoraLibraryReport agoraLibraryResolveReport agoraLibraryMergeTags`, then
+  Agora hosting, then the indexes (gcloud). Remaining: P6 polish (helpful votes,
+  save for later, tightening the private-read rule).

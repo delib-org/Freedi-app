@@ -30,6 +30,7 @@ import { planItemLabel } from './StageNav';
 import { iconLabel } from './Icon';
 import { villagePlace } from '../lib/flows/villageRoute';
 import { playCoin } from '../lib/sound';
+import { Coin } from './Coin';
 import { t, tCount } from '../lib/i18n';
 import { RateScale } from './RateScale';
 import { LikeButton } from './LikeButton';
@@ -39,6 +40,18 @@ import { HelpersBoard } from './HelpersBoard';
 import { countThanks, ResultsSwitch, type ResultsTab } from './ResultsSwitch';
 import { getConsensusPool, getSessionState } from '../lib/session';
 import { boardPercent } from '../lib/boardGeometry';
+import { HandStatus } from './HandStatus';
+import { handStatus } from '../lib/flows/handFlow';
+import {
+	drawMore,
+	handFor,
+	isLotteryActive,
+	parentIdOf,
+	poolExhausted,
+	visibleStationNotes,
+} from '../lib/hands';
+import { AGORA_LOTTERY } from '@freedi/shared-types';
+import { nextCardBelow, notesBelowFold, type CardEdges } from '../lib/flows/boardFold';
 
 export interface VillageCommunitySource extends NoteNewsSource {
 	notes: (item: AgoraStagePlanItem) => AgoraProposal[];
@@ -98,6 +111,19 @@ export interface VillageCommunityAttrs {
 	 * screen, each holding half the post.
 	 */
 	teacher?: { label: string; unread: number; onOpen: () => void };
+	/**
+	 * A watcher with no seat: the teacher's class view. The board is read, not
+	 * rated, no conversation can be joined, and nothing says "write yours first".
+	 */
+	readOnly?: boolean;
+	/**
+	 * The teacher's private device only: who wrote a classmate's note, by the
+	 * name the teacher knows them by. Students never get this; the resolver
+	 * lives in the teacher console and never reaches the world.
+	 */
+	authorName?: (uid: string) => string | undefined;
+	/** The teacher opens the student's private thread from the note */
+	onAuthor?: (uid: string, anonName: string) => void;
 }
 export function stationNotes(item: AgoraStagePlanItem): AgoraProposal[] {
 	const state = getDeliberationState();
@@ -110,6 +136,22 @@ export function stationNotes(item: AgoraStagePlanItem): AgoraProposal[] {
 				: []
 	).filter((p) => !p.hidden);
 }
+/** The hand line under a dealt board: progress, what comes next, "draw more" */
+function handLine(a: VillageCommunityAttrs, item: AgoraStagePlanItem): m.Children {
+	const parentId = parentIdOf(a.session, item);
+	const hand = handFor(parentId);
+	const exhausted = poolExhausted(parentId);
+
+	return m(HandStatus, {
+		status: handStatus(hand, new Set(Object.keys(getDeliberationState().myRatings))),
+		waiting: hand.length < AGORA_LOTTERY.HAND_SIZE && !exhausted,
+		exhausted,
+		onDrawMore: () => {
+			if (parentId) void drawMore(parentId);
+		},
+	});
+}
+
 export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 	type Panel = 'none' | 'notes' | 'scoreboard';
 	let panel: Panel = 'none';
@@ -120,6 +162,8 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 	let scoreboardSeen = 0;
 	let closeSeen = 0;
 	let resultsTab: ResultsTab = 'class';
+	/** Classmates' cards still under the board's fold — the "N more below" hint */
+	let below = 0;
 	let gain = 0,
 		timer: ReturnType<typeof setTimeout> | undefined;
 	/** Notes whose rating is in flight, and the failed ones — same latch as the round stage */
@@ -129,6 +173,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 		panel = 'none';
 		selected = undefined;
 		helper = undefined;
+		below = 0;
 		a.onPanelChange?.(panel);
 		a.onPause(false);
 	}
@@ -136,8 +181,45 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 		panel = next;
 		selected = undefined;
 		helper = undefined;
+		below = 0;
 		a.onPanelChange?.(panel);
 		a.onPause(true);
+	}
+
+	/**
+	 * On a phone the board shows my note and the top of one classmate's card;
+	 * the rest of the class sat out of sight with nothing saying so. Measure
+	 * which classmates' cards have not started yet, and redraw only when that
+	 * number changes — this runs on every scroll frame.
+	 */
+	function peerEdges(panel: HTMLElement): {
+		cards: HTMLElement[];
+		edges: CardEdges[];
+		fold: number;
+	} {
+		const hint = panel.querySelector<HTMLElement>('.village-board__more');
+		const fold = panel.getBoundingClientRect().bottom - (hint?.offsetHeight ?? 0);
+		const cards = Array.from(
+			panel.querySelectorAll<HTMLElement>('.village-board__peers .village-note'),
+		);
+
+		return { cards, edges: cards.map((card) => card.getBoundingClientRect()), fold };
+	}
+	function measureBoard(panel: Element): void {
+		if (!(panel instanceof HTMLElement)) return;
+		const { edges, fold } = peerEdges(panel);
+		const next = notesBelowFold(edges, fold);
+		if (next === below) return;
+		below = next;
+		m.redraw();
+	}
+	function showNextBelow(panel: Element | null): void {
+		if (!(panel instanceof HTMLElement)) return;
+		const { cards, edges, fold } = peerEdges(panel);
+		const card = cards[nextCardBelow(edges, fold)];
+		if (!card) return;
+		const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+		card.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' });
 	}
 
 	let current: VillageCommunityAttrs;
@@ -320,7 +402,9 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 		},
 		view({ attrs: a }) {
 			const data = a.source ?? {
-				notes: stationNotes,
+				// A student's board is their hand when the class is large (lib/hands.ts);
+				// the teacher watching read-only sees every note
+				notes: a.readOnly ? stationNotes : visibleStationNotes,
 				...liveNoteNews,
 				renderThread: (props: ThreadChatAttrs) => m(ThreadChat, props),
 			};
@@ -329,7 +413,9 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			const live = !!item && canWriteStage(a.session, item.itemId);
 			const mine = notes.find((n) => n.creatorId === a.userId);
 			const classmates = notes.filter((note) => note.creatorId !== a.userId);
-			const canRate = live && mine !== undefined && !a.source;
+			const canRate = live && mine !== undefined && !a.source && !a.readOnly;
+			// The gate ("rate once you have written") is for someone who could write
+			const gated = live && !mine && !a.source && !a.readOnly;
 			const stationItems = item
 				? a.plan.slice(0, a.currentIndex + 1).filter((p) => villagePlace(p) === villagePlace(item))
 				: [];
@@ -451,9 +537,33 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 							stand ? m('small.village-note__standing', stand) : null,
 						]),
 						m('p.village-note__text', note.statement),
+						// The teacher's own device knows the author; the chip opens the
+						// student's private thread. Never drawn for a student.
+						!own && a.authorName && a.onAuthor
+							? m(
+									'button.village-note__author',
+									{
+										type: 'button',
+										'aria-label': t('teacher.names.author_aria', {
+											name: a.authorName(note.creatorId) ?? note.anonName,
+											anon: note.anonName,
+										}),
+										onclick: () => a.onAuthor?.(note.creatorId, note.anonName),
+									},
+									[
+										m(
+											'span.village-note__author-name',
+											a.authorName(note.creatorId) ?? note.anonName,
+										),
+										a.authorName(note.creatorId)
+											? m('span.village-note__author-anon', ` · ${note.anonName}`)
+											: null,
+									],
+								)
+							: null,
 						!own && canRate && item
 							? m('.village-note__rate', ratingWidget(a, item, note))
-							: !own && live && !mine && !a.source
+							: !own && gated
 								? m('small.village-note__hint', t('village.note.rate_gate'))
 								: null,
 						m('.village-note__actions', [
@@ -466,8 +576,9 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 								: null,
 							// The chip rides the button that opens the conversation, so it says
 							// WHERE the news is — a card has two doors, and a chip by the
-							// title could mean either
-							!overview
+							// title could mean either. A watcher has no door into a
+							// conversation: joining one would be writing.
+							!overview && !a.readOnly
 								? m(
 										'button.village-note__open',
 										{
@@ -485,15 +596,21 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			};
 
 			return m('.village-community', [
-				m(
-					'.village-coins',
-					{ 'aria-label': t('village.coins_aria', { n: a.points ?? 0 }), 'aria-live': 'polite' },
-					[
-						m('img', { src: '/assets/gold-coin.svg', alt: '' }),
-						m('strong', a.points?.toLocaleString('he-IL') ?? '…'),
-						gain ? m('span.village-coins__gain', `+${gain}`) : null,
-					],
-				),
+				// No seat, no purse: a watcher's coins would count nothing
+				a.readOnly
+					? null
+					: m(
+							'.village-coins',
+							{
+								'aria-label': t('village.coins_aria', { n: a.points ?? 0 }),
+								'aria-live': 'polite',
+							},
+							[
+								m(Coin, { size: 36 }),
+								m('strong', a.points?.toLocaleString('he-IL') ?? '…'),
+								gain ? m('span.village-coins__gain', `+${gain}`) : null,
+							],
+						),
 				m('.village-inbox', m(Inbox, { pinned: a.teacher })),
 				panel === 'scoreboard'
 					? m(
@@ -505,12 +622,31 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 				panel === 'notes'
 					? m(
 							'.village-community__panel.village-board',
-							{ role: 'region', 'aria-label': t('village.nav.board') },
+							{
+								role: 'region',
+								'aria-label': t('village.nav.board'),
+								oncreate: (v: m.VnodeDOM) => measureBoard(v.dom),
+								onupdate: (v: m.VnodeDOM) => measureBoard(v.dom),
+								onscroll: (e: Event & { redraw?: boolean }) => {
+									// measureBoard redraws itself when the count moves
+									e.redraw = false;
+									if (e.currentTarget instanceof Element) measureBoard(e.currentTarget);
+								},
+							},
 							[
 								m('header', [
 									m('.village-board__heading', [
 										item ? m('p.village-board__context', planItemLabel(item)) : null,
 										m(selected ? 'p.village-board__context' : 'h2', t('village.nav.board')),
+										// How many classmates' notes this board holds for me — the
+										// dealt hand when the lottery is on, so it never promises
+										// notes the student cannot reach
+										!selected && classmates.length
+											? m(
+													'p.village-board__count',
+													tCount('village.board.count', classmates.length),
+												)
+											: null,
 									]),
 									m('button.btn.btn--secondary', { onclick: () => close(a) }, t('village.back')),
 								]),
@@ -585,7 +721,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 												]),
 											]
 										: [
-												live && !mine && notes.length > 0 && !a.source
+												gated && notes.length > 0
 													? m('p.village-board__gate', t('village.board.gate'))
 													: null,
 												mine ? m('section.village-board__own', noteCard(mine)) : null,
@@ -598,7 +734,35 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 															),
 														])
 													: null,
+												canRate && item && isLotteryActive() ? handLine(a, item) : null,
 												!notes.length ? m('p', t('village.board.empty')) : null,
+												// Sticks to the bottom edge while classmates' cards wait
+												// below; a tap brings the next one up
+												below > 0
+													? m(
+															'.village-board__more',
+															m(
+																'button.btn.btn--primary.btn--sm.village-board__more-button',
+																{
+																	type: 'button',
+																	onclick: (e: Event) =>
+																		showNextBelow(
+																			(e.currentTarget as Element).closest(
+																				'.village-community__panel',
+																			),
+																		),
+																},
+																[
+																	m('span', tCount('village.board.more_below', below)),
+																	m(
+																		'span.village-board__more-arrow',
+																		{ 'aria-hidden': 'true' },
+																		'↓',
+																	),
+																],
+															),
+														)
+													: null,
 											],
 							],
 						)

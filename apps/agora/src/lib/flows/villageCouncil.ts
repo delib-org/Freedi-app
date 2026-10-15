@@ -1,5 +1,6 @@
 import { ChallengePhase, VOTE_AGAINST } from '@freedi/shared-types';
 import type { AgoraProposalScore, AgoraSession } from '@freedi/shared-types';
+import type { CouncilVoice } from './councilVoices';
 import { boardPercent, campLean, inBridgeZone, standings } from '../boardGeometry';
 
 /**
@@ -36,6 +37,8 @@ export interface CouncilBallotRow {
 	/** 0…1 of all votes cast */
 	share: number;
 	mine: boolean;
+	/** The characters' existing verdicts on this proposal — portrait tiles on the board */
+	voices?: CouncilVoice[];
 }
 
 /** One side of a motion — for or against — as a standing pillar */
@@ -52,6 +55,7 @@ export interface CouncilMotionSide {
  */
 export interface CouncilMotion {
 	label: string;
+	voices?: CouncilVoice[];
 	for: CouncilMotionSide;
 	against: CouncilMotionSide;
 }
@@ -150,6 +154,8 @@ export interface CouncilBallotInput {
 	classSize: number;
 	/** The vote is over: the tallies are always shown */
 	closed: boolean;
+	/** The characters' verdicts on a proposal, when the class asked for them */
+	voicesOf?: (statementId: string) => CouncilVoice[];
 }
 
 /** The ballot with its bars, for the council board during the vote */
@@ -187,6 +193,7 @@ export function councilBallot(input: CouncilBallotInput): CouncilModel {
 			title: input.closed ? 'ההצבעה הסתיימה' : 'הצעה אחת על השולחן · מאמצים אותה?',
 			motion: {
 				label: candidate.statement,
+				voices: input.voicesOf?.(candidate.statementId),
 				for: {
 					votes: forVotes,
 					share: motionTotal > 0 ? forVotes / motionTotal : 0,
@@ -211,6 +218,7 @@ export function councilBallot(input: CouncilBallotInput): CouncilModel {
 			votes,
 			share: total > 0 ? votes / total : 0,
 			mine: input.myVoteStatementId === candidate.statementId,
+			voices: input.voicesOf?.(candidate.statementId),
 		};
 	});
 	// Same rule as the students' ballot: once the counts show, the board follows them.

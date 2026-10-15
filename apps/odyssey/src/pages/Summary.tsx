@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Evaluation } from '@freedi/shared-types';
+import { logError } from '@freedi/shared-utils';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
 import SeaChart from '../components/SeaChart';
@@ -14,6 +15,7 @@ import { islandArtUrl } from '../lib/islandArt';
 import { loadGameEvaluations } from '../lib/evaluations';
 import { stageBus } from '../lib/stageBus';
 import { invitedElders } from '../lib/elders';
+import { enterIslandDeliberation, getGateState } from '../lib/agoraGate';
 import { proximityBandOf, relativeDistances, type ProximityBandKey } from '../lib/seaLayout';
 import DigestSettings from '../components/DigestSettings';
 
@@ -36,11 +38,13 @@ const BAR_FLOOR = 6;
 export default function Summary() {
 	const { user } = useUser();
 	const mode = useMode();
-	const { content, journey, attitudes, text } = useGame();
+	const { content, journey, attitudes, text, updateJourney } = useGame();
 	const [participants, setParticipants] = useState<ParticipantDistance[]>([]);
 	const [digestOpen, setDigestOpen] = useState(false);
 	/** the ship whose card is open on the final sea chart */
 	const [asked, setAsked] = useState<string | null>(null);
+	/** the island whose discussion gate the player is sailing through */
+	const [enteringIslandId, setEnteringIslandId] = useState('');
 
 	const gameId = content?.game.gameId;
 	const uid = user?.uid;
@@ -215,6 +219,47 @@ export default function Summary() {
 		(island) => island.enabled && !visitedIslands.includes(island),
 	).length;
 
+	/**
+	 * שערי הדיון — the discussions waiting on the islands this player sailed.
+	 *
+	 * They used to sit on the island-choosing map, above "מפליגים אל 2 איים",
+	 * where a tester rightly asked what a discussion gate was doing before the
+	 * voyage had begun. A gate is the step AFTER an island: here, once the
+	 * player has positions to bring, it is the natural next thing to offer —
+	 * and only for islands already sailed.
+	 */
+	const agoraOrigin = text('agoraOrigin');
+	const gatedIslands = agoraOrigin
+		? visitedIslands
+				.map((island) => ({
+					island,
+					state: getGateState(island.statementId, content.game, journey),
+				}))
+				.filter((entry) => entry.state !== 'unprovisioned')
+		: [];
+
+	async function enterGate(islandStatementId: string): Promise<void> {
+		if (!content || enteringIslandId) return;
+		setEnteringIslandId(islandStatementId);
+		if (mode === 'game') stageBus.send({ type: 'sailToLighthouse' });
+		try {
+			await enterIslandDeliberation({
+				islandStatementId,
+				game: content.game,
+				journey,
+				agoraOrigin,
+				updateJourney,
+			});
+		} catch (error) {
+			logError(error, {
+				operation: 'odyssey.summary.enterGate',
+				userId: uid,
+				statementId: islandStatementId,
+			});
+			setEnteringIslandId('');
+		}
+	}
+
 	return (
 		<>
 			<GameChrome stage={text('summaryTitle')} />
@@ -247,18 +292,25 @@ export default function Summary() {
 						</p>
 						<div className="flex flex-col gap-3">
 							{sortedParties.map(({ party, distance, relative, sharedIslands }) => (
-								<div key={party!.partyId} className="flex items-center gap-3">
-									<span
-										className="inline-block w-3.5 h-3.5 rounded-full shrink-0"
-										style={{ background: party!.color }}
-										aria-hidden="true"
-									/>
-									<span className="w-40 shrink-0 text-[15px]">{party!.name}</span>
+								<div key={party!.partyId} className="flex flex-col gap-1.5 min-w-0">
+									<div className="flex items-center gap-2 min-w-0">
+										<span
+											className="inline-block w-3.5 h-3.5 rounded-full shrink-0"
+											style={{ background: party!.color }}
+											aria-hidden="true"
+										/>
+										<span className="flex-1 min-w-0 text-[15px] break-words">{party!.name}</span>
+										{distance !== null && relative !== null ? (
+											<span className="shrink-0 text-[13px] opacity-85">
+												{BAND_WORD[proximityBandOf(relative)]}
+											</span>
+										) : null}
+									</div>
 									{distance === null || relative === null ? (
 										<span className="text-[13px] opacity-60">אין עדיין נתוני מסלול לספינה זו</span>
 									) : (
-										<>
-											<div className="distance-track flex-1" aria-hidden="true">
+										<div className="flex items-center gap-2 min-w-0">
+											<div className="distance-track flex-1 min-w-0" aria-hidden="true">
 												<div
 													className="distance-fill"
 													style={{
@@ -268,13 +320,10 @@ export default function Summary() {
 													}}
 												/>
 											</div>
-											<span className="w-24 shrink-0 text-[13px] opacity-85 text-left">
-												{BAND_WORD[proximityBandOf(relative)]}
-											</span>
 											<span className="text-[12px] opacity-60 shrink-0">
-												(קרבה {Math.round((1 - distance) * 100)}% · {sharedIslands} איים)
+												קרבה {Math.round((1 - distance) * 100)}% · {sharedIslands} איים
 											</span>
-										</>
+										</div>
 									)}
 								</div>
 							))}
@@ -320,9 +369,9 @@ export default function Summary() {
 						{sortedParticipants.length > 0 ? (
 							<div className="flex flex-col gap-2">
 								{sortedParticipants.map((entry) => (
-									<div key={entry.userId} className="flex items-center gap-3">
-										<span className="w-32 shrink-0 text-[15px]">{entry.displayName}</span>
-										<div className="distance-track flex-1" aria-hidden="true">
+									<div key={entry.userId} className="flex items-center gap-2 min-w-0">
+										<span className="w-20 shrink-0 text-[15px] truncate">{entry.displayName}</span>
+										<div className="distance-track flex-1 min-w-0" aria-hidden="true">
 											<div
 												className="distance-fill"
 												style={{
@@ -362,6 +411,42 @@ export default function Summary() {
 							) : null}
 						</div>
 					</section>
+
+					{gatedIslands.length > 0 ? (
+						<section className="panel fade-in">
+							<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-1">
+								🏛️ שערי הדיון שנפתחו לך
+							</h2>
+							<p className="text-[13px] opacity-75 mt-0 mb-3">
+								על האיים שכבר חקרת אפשר להיפגש עם אחרים ולחפש יחד פתרונות.
+							</p>
+							<div className="flex flex-col gap-2.5">
+								{gatedIslands.map(({ island, state }) => (
+									<div
+										key={island.statementId}
+										className="flex items-center gap-3 flex-wrap justify-between"
+									>
+										<span className="text-[15px]">
+											{state === 'visited' ? '⚑ ' : ''}
+											{island.title}
+										</span>
+										<button
+											type="button"
+											className="btn"
+											disabled={enteringIslandId === island.statementId}
+											onClick={() => void enterGate(island.statementId)}
+										>
+											{enteringIslandId === island.statementId
+												? 'מפליגים…'
+												: state === 'visited'
+													? 'חזרה לדיון'
+													: text('agoraButton')}
+										</button>
+									</div>
+								))}
+							</div>
+						</section>
+					) : null}
 
 					{/*
 					  Before the way out, the way back.

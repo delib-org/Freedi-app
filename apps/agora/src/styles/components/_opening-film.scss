@@ -1,0 +1,62 @@
+@use '../tokens' as *;
+
+// The scenario's opening film as the full-screen travel card: it covers the
+// card's map and panel, on every phone and on the wall.
+.stage-transition--film {
+	background: var(--village-nav-surface);
+	align-items: stretch;
+	justify-content: stretch;
+}
+
+.opening-film {
+	position: relative;
+	display: flex;
+	flex: 1 1 auto;
+	align-items: center;
+	justify-content: center;
+	color: var(--village-nav-ink);
+
+	&__video {
+		position: absolute;
+		inset: 0;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: contain;
+		background: var(--village-nav-surface);
+	}
+
+	&__title {
+		position: absolute;
+		inset-block-start: max(var(--space-md), env(safe-area-inset-top, 0px));
+		inset-inline: var(--space-md);
+		text-align: center;
+		font-weight: 700;
+		text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+		pointer-events: none;
+	}
+
+	&__play {
+		position: relative;
+		z-index: 2;
+	}
+
+	&__controls {
+		position: absolute;
+		inset-block-end: max(var(--space-lg), env(safe-area-inset-bottom, 0px));
+		inset-inline: var(--space-md);
+		z-index: 2;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		flex-wrap: wrap;
+	}
+
+	&__wait {
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-md);
+		background: rgba(0, 0, 0, 0.45);
+		color: var(--village-nav-ink);
+		font-size: var(--font-size-sm);
+	}
+}

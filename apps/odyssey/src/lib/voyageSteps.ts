@@ -2,6 +2,7 @@ import type { OdysseyJourney } from '@freedi/shared-types';
 import type { GameContent } from './game';
 import type { AttitudeMap } from './distance';
 import { activeElders } from './elders';
+import { crewIsComplete } from './crew';
 
 /**
  * The voyage, as a list of legs.
@@ -104,8 +105,10 @@ export function voyageSteps({
 		legs.push({
 			path: '/elders',
 			label: 'המלחים',
-			done: chosenCrew !== undefined,
-			// `undefined` is "not asked yet"; an empty array is a real answer.
+			// The crew screen itself will not let the player on until the
+			// minimum is aboard, so the strip reports the same gate.
+			done: chosenCrew !== undefined && crewIsComplete(chosenCrew.length, crew.length),
+			// `undefined` is "not asked yet"; an array is a real answer.
 			detail: chosenCrew === undefined ? undefined : `${chosenCrew.length} מלחים`,
 		});
 	}

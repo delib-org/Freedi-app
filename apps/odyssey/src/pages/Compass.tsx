@@ -304,7 +304,7 @@ export default function Compass() {
 							disabled={!complete || saving}
 							onClick={() => void save()}
 						>
-							{saving ? 'שומר…' : 'המצפן שלך כויל — לפתיחת המפה'}
+							{saving ? 'שומר…' : 'המצפן שלך כויל — להמשך המסע'}
 						</button>
 						{!complete ? (
 							<p className="text-[13px] opacity-75 m-0">

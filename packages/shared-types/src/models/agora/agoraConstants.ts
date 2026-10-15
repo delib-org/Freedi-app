@@ -165,6 +165,15 @@ export const AGORA_POINTS = {
 	 * these: the rounds pay the author who was appreciated.
 	 */
 	ROUND_APPRECIATION: 1,
+	/**
+	 * Coins taken when the language check refuses a note, an answer or a
+	 * thread message (slurs, insults, threats — see `agoraCheckLanguage`).
+	 * The text is never posted, so the cost is the only consequence the
+	 * student feels at once; the teacher sees the count. Priced below the
+	 * first draft (+3) and at the rung of a landed idea: a lapse should hurt,
+	 * not wipe a lesson's work. Balances floor at 0.
+	 */
+	LANGUAGE_PENALTY: 2,
 } as const;
 
 export const AGORA_ANTI_GAMING = {
@@ -260,15 +269,27 @@ export const AGORA_CHALLENGE = {
 } as const;
 
 export const AGORA_LIMITS = {
-	MIN_ANSWER_LENGTH: 10,
+	/**
+	 * The fewest characters (of the trimmed text) any student text may have —
+	 * a proposal, an answer, a thread message, a suggestion. ONE number, read
+	 * by the composers (whose send button stays disabled below it) and by the
+	 * callables (which refuse below it), so the two can never disagree.
+	 * Counted in UTF-16 units of the trimmed string, which for Hebrew and
+	 * Arabic is one per letter. Was 10 (two separate constants) until 2026-10.
+	 */
+	MIN_TEXT_LENGTH: 4,
 	MAX_ANSWER_LENGTH: 1000,
-	MIN_PROPOSAL_LENGTH: 10,
 	MAX_PROPOSAL_LENGTH: 1500,
 	MAX_VIDEO_BYTES: 300 * 1024 * 1024,
 	MAX_IMAGE_BYTES: 5 * 1024 * 1024,
 	/** Proposals shown per rating batch */
 	RATING_BATCH_SIZE: 5,
 } as const;
+
+/** Is this student text long enough to send? The one gate client and server share. */
+export function isAgoraTextLongEnough(text: string): boolean {
+	return text.trim().length >= AGORA_LIMITS.MIN_TEXT_LENGTH;
+}
 
 /** A day in milliseconds — the unit the retention windows below are written in */
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -287,4 +308,14 @@ export const AGORA_TEACHER_MESSAGE = {
 	MAX_PER_THREAD: 60,
 	/** The teacher's reason for hiding, shown to the author */
 	MAX_REASON: 200,
+} as const;
+
+/** Dealing notes by lottery on a board (`agoraHands`) */
+export const AGORA_LOTTERY = {
+	/** Up to this many students, everyone reads everything */
+	MAX_STUDENTS_WITHOUT_LOTTERY: 6,
+	/** Notes a student is dealt at first, and per "draw more" */
+	HAND_SIZE: 5,
+	/** A note is statistically worth reading once this many have rated it */
+	MIN_RATERS: 6,
 } as const;

@@ -44,6 +44,12 @@ export const AgoraPointsSchema = object({
 	 * legacy-docs reason as `rating` — read as `?? 0`.
 	 */
 	appreciation: optional(number()),
+	/**
+	 * Coins actually taken by language strikes (AGORA_POINTS.LANGUAGE_PENALTY
+	 * each, less when the balance floored). Kept so the category columns
+	 * still explain `total`. Optional for the legacy-docs reason — `?? 0`.
+	 */
+	penalties: optional(number()),
 	total: number(),
 });
 
@@ -86,6 +92,20 @@ export const AgoraParticipantSchema = object({
 			scenesTotal: number(),
 		}),
 	),
+	/**
+	 * Where this student's screen is standing in the village — a place id
+	 * (`booth:<itemId>`, `library`, `council`, …), when it got there, and the
+	 * teacher's call it answered, if any. Written by the student's client once
+	 * per station; the teacher's "who has arrived" reads it. A courtesy
+	 * signal, never a gate.
+	 */
+	whereabouts: optional(
+		object({
+			place: string(),
+			at: number(),
+			callAt: optional(number()),
+		}),
+	),
 	/** 0 (fully left camp) … 100 (fully right camp) */
 	campPosition: optional(number()),
 	camp: optional(enum_(AgoraCamp)),
@@ -109,6 +129,14 @@ export const AgoraParticipantSchema = object({
 	firstProposalAwardedAt: optional(number()),
 	/** How many of this student's ratings have been credited (cap guard) */
 	creditedRatings: optional(number()),
+	/**
+	 * Times the language check refused this student's text in this session.
+	 * Server-written by `agoraCheckLanguage`, rules-pinned; the teacher's
+	 * console shows the count, the student's screen never does.
+	 */
+	languageStrikes: optional(number()),
+	/** When the latest language strike landed */
+	lastLanguageStrikeAt: optional(number()),
 	/**
 	 * The round-appreciation ledger: evaluation ids that already paid THIS
 	 * author (`${raterUid}--${answerId}`). Server-written, rules-pinned — a

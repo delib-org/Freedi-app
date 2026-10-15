@@ -4,6 +4,8 @@ import { HeroIcon } from './HeroIcon';
 import { t } from '../lib/i18n';
 import { AgoraStage } from '@freedi/shared-types';
 import { EraMap } from './EraMap';
+import { OpeningFilm } from './OpeningFilm';
+import type { OpeningFilm as Film } from '../lib/flows/openingFilm';
 
 export interface StageTransitionAttrs {
 	stage: AgoraStage;
@@ -11,6 +13,17 @@ export interface StageTransitionAttrs {
 	title?: string;
 	/** Fade-out phase — the overlay is about to be removed */
 	leaving: boolean;
+	/**
+	 * The teacher's call: the same travel card, with the kicker saying who
+	 * sent the class and the line naming the place — one card a student
+	 * cannot miss, in both worlds, read aloud by a screen reader.
+	 */
+	call?: { kicker: string; line: string };
+	/**
+	 * The scenario's opening film: the travel card IS the film, full screen,
+	 * until it ends or someone skips it. `wall` plays it with sound.
+	 */
+	film?: { film: Film; wall: boolean; onDone: () => void };
 }
 
 interface TransitionMeta {
@@ -64,27 +77,41 @@ export const StageTransition: m.Component<StageTransitionAttrs> = {
 	view(vnode) {
 		const meta = TRANSITIONS[vnode.attrs.stage];
 		if (!meta) return null;
+		const { call } = vnode.attrs;
 
 		return m(
 			'.stage-transition',
 			{
-				class: vnode.attrs.leaving ? 'stage-transition--leaving' : undefined,
-				'aria-live': 'polite',
+				class: [
+					vnode.attrs.leaving ? 'stage-transition--leaving' : '',
+					call ? 'stage-transition--call' : '',
+					vnode.attrs.film ? 'stage-transition--film' : '',
+				]
+					.filter(Boolean)
+					.join(' '),
+				role: call ? 'status' : undefined,
+				// A call is an order from the teacher: announced at once, not after
+				// whatever the reader was in the middle of
+				'aria-live': call ? 'assertive' : 'polite',
+				'data-call': call ? 'true' : undefined,
 			},
-			[
-				m('.stage-transition__map', m(EraMap, { participants: [] })),
-				m('.stage-transition__panel', [
-					// The one slot with room for the rendered sheet: a full-screen
-					// card, one object, nothing else competing for the eye.
-					m(
-						'span.stage-transition__icon',
-						{ 'aria-hidden': 'true' },
-						m(HeroIcon, { name: meta.icon, size: 88 }),
-					),
-					m('h2.stage-transition__title', vnode.attrs.title?.trim() || t(meta.labelKey)),
-					m('p.stage-transition__line', t(meta.lineKey)),
-				]),
-			],
+			vnode.attrs.film
+				? m(OpeningFilm, vnode.attrs.film)
+				: [
+						m('.stage-transition__map', m(EraMap, { participants: [] })),
+						m('.stage-transition__panel', [
+							// The one slot with room for the rendered sheet: a full-screen
+							// card, one object, nothing else competing for the eye.
+							m(
+								'span.stage-transition__icon',
+								{ 'aria-hidden': 'true' },
+								m(HeroIcon, { name: meta.icon, size: 88 }),
+							),
+							call ? m('p.stage-transition__kicker', call.kicker) : null,
+							m('h2.stage-transition__title', vnode.attrs.title?.trim() || t(meta.labelKey)),
+							m('p.stage-transition__line', call ? call.line : t(meta.lineKey)),
+						]),
+					],
 		);
 	},
 };

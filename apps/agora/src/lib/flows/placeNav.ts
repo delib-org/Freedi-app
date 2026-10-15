@@ -27,6 +27,12 @@ export interface PlaceNavInput {
 	/** The note is flying to the board; nothing may open until it lands */
 	inFlight: boolean;
 	open: OpenPlace;
+	/**
+	 * This person writes here. The teacher's class view does not — it watches
+	 * the room as the students see it with no seat behind it — so "my note"
+	 * is its one locked door. Absent = a student, who writes.
+	 */
+	canWrite?: boolean;
 }
 
 export interface PlaceTab {
@@ -41,6 +47,7 @@ const HINT_NO_NOTE = 'village.nav.hint_no_note';
 const HINT_NO_BOARD = 'village.nav.hint_no_board';
 const HINT_NO_SEAT = 'village.nav.hint_no_seat';
 const HINT_FLIGHT = 'village.nav.hint_flight';
+const HINT_WATCHER = 'village.nav.hint_watcher';
 
 /**
  * The four tabs in lesson order — go, write, read the others, see the
@@ -52,7 +59,7 @@ const HINT_FLIGHT = 'village.nav.hint_flight';
  * explains the lock in one line.
  */
 export function placeNavTabs(input: PlaceNavInput): PlaceTab[] {
-	const { village, hasDesk, hasCommunity, inFlight, open } = input;
+	const { village, hasDesk, hasCommunity, inFlight, open, canWrite = true } = input;
 
 	const tab = (id: PlaceDestination, locked: boolean, hint?: string): PlaceTab => ({
 		id,
@@ -62,12 +69,14 @@ export function placeNavTabs(input: PlaceNavInput): PlaceTab[] {
 		...(locked && hint ? { hint } : {}),
 	});
 
-	const noteHint = inFlight ? HINT_FLIGHT : HINT_NO_NOTE;
+	// A watcher's lock outranks the station's: the hint says who writes here,
+	// not that there is nowhere to write
+	const noteHint = !canWrite ? HINT_WATCHER : inFlight ? HINT_FLIGHT : HINT_NO_NOTE;
 	const boardHint = inFlight ? HINT_FLIGHT : hasDesk ? HINT_NO_SEAT : HINT_NO_BOARD;
 
 	return [
 		...(village ? [tab('village', false)] : []),
-		tab('note', !hasDesk || inFlight, noteHint),
+		tab('note', !hasDesk || inFlight || !canWrite, noteHint),
 		// The board is readable before you have written — only rating is gated,
 		// and the board says so itself. Locking it here would hide the class's
 		// notes from the slowest writer, who needs them most.

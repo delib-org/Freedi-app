@@ -9,6 +9,13 @@ jest.mock('../../config/openai-chat', () => ({
 	TAXONOMY_MODEL: 'test-model',
 }));
 jest.mock('../../utils/errorHandling', () => ({ logError: jest.fn() }));
+// The approval gate has its own tests (approvalGate.test.ts); here the caller is approved
+jest.mock('../libraryAccess', () => ({
+	requireApprovedTeacher: jest.fn(async () => ({
+		uid: 'teacher',
+		approval: { approved: true, isAdmin: false, via: 'school' },
+	})),
+}));
 
 import { agoraGenerateTopicPackage } from '../fn_agoraGenerateTopicPackage';
 import { callLLM } from '../../config/openai-chat';
