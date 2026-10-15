@@ -21,6 +21,7 @@ import AdminSchoolDetail from '@/pages/AdminAgora/AdminSchoolDetail';
 import AdminTeacherDetail from '@/pages/AdminAgora/AdminTeacherDetail';
 import AdminClassDetail from '@/pages/AdminAgora/AdminClassDetail';
 import AdminStudentDetail from '@/pages/AdminAgora/AdminStudentDetail';
+import AgoraHome, { AgoraMine } from '@/pages/AgoraHome/AgoraHome';
 import EventDashboard from '@/pages/EventDashboard';
 
 // Heavy per-question screens load on demand.
@@ -83,6 +84,11 @@ export default function App() {
 						<Route path="/admin/agora/teachers/:schoolId/:uid" element={<AdminTeacherDetail />} />
 						<Route path="/admin/agora/classes/:classId" element={<AdminClassDetail />} />
 						<Route path="/admin/agora/students/:memberId" element={<AdminStudentDetail />} />
+						<Route path="/agora" element={<AgoraHome />} />
+						<Route path="/agora/mine" element={<AgoraMine />} />
+						<Route path="/agora/teachers/:schoolId/:uid" element={<AdminTeacherDetail />} />
+						<Route path="/agora/classes/:classId" element={<AdminClassDetail />} />
+						<Route path="/agora/students/:memberId" element={<AdminStudentDetail />} />
 						<Route path="*" element={<Navigate to="/" replace />} />
 					</Routes>
 				</Suspense>

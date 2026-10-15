@@ -4410,5 +4410,8 @@
   "Score {{score}}": "Score {{score}}",
   "{{count}} evaluators": "{{count}} beoordelaars",
   "Could not load the results": "Resultaten konden niet worden geladen",
-  "Back to the survey": "Terug naar de enquête"
+  "Back to the survey": "Terug naar de enquête",
+  "My Agora classrooms": "Mijn Agora-klassen",
+  "My classes": "Mijn klassen",
+  "You are not attached to an Agora school yet.": "Je bent nog niet aan een Agora-school gekoppeld."
 }

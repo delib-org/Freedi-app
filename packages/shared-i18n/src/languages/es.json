@@ -4410,5 +4410,8 @@
   "Score {{score}}": "Puntuación {{score}}",
   "{{count}} evaluators": "{{count}} evaluadores",
   "Could not load the results": "No se pudieron cargar los resultados",
-  "Back to the survey": "Volver a la encuesta"
+  "Back to the survey": "Volver a la encuesta",
+  "My Agora classrooms": "Mis aulas de Agora",
+  "My classes": "Mis clases",
+  "You are not attached to an Agora school yet.": "Aún no estás vinculado a ninguna escuela de Agora."
 }

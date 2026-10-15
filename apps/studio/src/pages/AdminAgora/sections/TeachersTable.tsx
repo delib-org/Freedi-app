@@ -3,6 +3,7 @@ import { useTranslation } from '@freedi/shared-i18n/react';
 import type { SupervisorTeacherRow } from '@freedi/shared-types';
 import { EmptyState } from '@/components/atomic/atoms';
 import { Sparkline } from '@/components/atomic/molecules/Chart';
+import { ADMIN_AGORA_BASE } from '../agoraBase';
 import { shortDate } from './formatLesson';
 import styles from '../AdminDetail.module.scss';
 
@@ -10,9 +11,12 @@ import styles from '../AdminDetail.module.scss';
 export default function TeachersTable({
 	rows,
 	schoolId,
+	basePath = ADMIN_AGORA_BASE,
 }: {
 	rows: SupervisorTeacherRow[];
 	schoolId: string;
+	/** Where teacher pages live: `/admin/agora` (default) or `/agora`. */
+	basePath?: string;
 }) {
 	const { t, currentLanguage } = useTranslation();
 	const sorted = [...rows].sort((a, b) => b.lastLessonAt - a.lastLessonAt);
@@ -35,7 +39,7 @@ export default function TeachersTable({
 					{sorted.map((row) => (
 						<tr key={row.uid}>
 							<th scope="row">
-								<Link to={`/admin/agora/teachers/${schoolId}/${row.uid}`}>{row.name}</Link>
+								<Link to={`${basePath}/teachers/${schoolId}/${row.uid}`}>{row.name}</Link>
 							</th>
 							<td className={styles.number}>{row.classCount}</td>
 							<td>

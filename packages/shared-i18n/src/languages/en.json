@@ -5090,5 +5090,8 @@
   "Score {{score}}": "Score {{score}}",
   "{{count}} evaluators": "{{count}} evaluators",
   "Could not load the results": "Could not load the results",
-  "Back to the survey": "Back to the survey"
+  "Back to the survey": "Back to the survey",
+  "My Agora classrooms": "My Agora classrooms",
+  "My classes": "My classes",
+  "You are not attached to an Agora school yet.": "You are not attached to an Agora school yet."
 }

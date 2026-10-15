@@ -4530,5 +4530,8 @@
   "Score {{score}}": "النتيجة {{score}}",
   "{{count}} evaluators": "{{count}} مقيّمين",
   "Could not load the results": "تعذّر تحميل النتائج",
-  "Back to the survey": "العودة إلى الاستطلاع"
+  "Back to the survey": "العودة إلى الاستطلاع",
+  "My Agora classrooms": "صفوف أغورا الخاصة بي",
+  "My classes": "صفوفي",
+  "You are not attached to an Agora school yet.": "لم يتم ربطك بمدرسة في أغورا بعد."
 }

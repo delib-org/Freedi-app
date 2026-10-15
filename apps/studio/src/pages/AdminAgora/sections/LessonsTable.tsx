@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import type { AgoraSessionOutcome } from '@freedi/shared-types';
 import { EmptyState } from '@/components/atomic/atoms';
+import { ADMIN_AGORA_BASE } from '../agoraBase';
 import OutcomeTag from './OutcomeTag';
 import { lessonDuration, shortDate } from './formatLesson';
 import styles from '../AdminDetail.module.scss';
@@ -21,10 +22,16 @@ export interface LessonsTableProps {
 	rows: LessonLike[];
 	/** classId → name; when given, a Class column links to each class page. */
 	classNames?: Map<string, string>;
+	/** Where class pages live: `/admin/agora` (default) or `/agora`. */
+	basePath?: string;
 }
 
 /** Newest first: date, class, duration, participants, score, outcome. */
-export default function LessonsTable({ rows, classNames }: LessonsTableProps) {
+export default function LessonsTable({
+	rows,
+	classNames,
+	basePath = ADMIN_AGORA_BASE,
+}: LessonsTableProps) {
 	const { t, tWithParams, currentLanguage } = useTranslation();
 	const sorted = [...rows].sort((a, b) => b.playedAt - a.playedAt);
 
@@ -50,7 +57,7 @@ export default function LessonsTable({ rows, classNames }: LessonsTableProps) {
 							{classNames && (
 								<td>
 									{row.classId ? (
-										<Link to={`/admin/agora/classes/${row.classId}`}>
+										<Link to={`${basePath}/classes/${row.classId}`}>
 											{classNames.get(row.classId) ?? t('Class')}
 										</Link>
 									) : (

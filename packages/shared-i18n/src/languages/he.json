@@ -5128,5 +5128,8 @@
   "Score {{score}}": "ציון {{score}}",
   "{{count}} evaluators": "{{count}} מעריכים",
   "Could not load the results": "לא ניתן לטעון את התוצאות",
-  "Back to the survey": "חזרה לסקר"
+  "Back to the survey": "חזרה לסקר",
+  "My Agora classrooms": "כיתות האגורה שלי",
+  "My classes": "הכיתות שלי",
+  "You are not attached to an Agora school yet.": "עדיין אין שיוך לבית ספר באגורה."
 }
