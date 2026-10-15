@@ -5,6 +5,9 @@ import { manageAgoraSchool } from '@/db/agoraAdminFunctions';
 import { Button, Checkbox, Input, Tag } from '@/components/atomic/atoms';
 import { logError } from '@/utils/logError';
 import { callableMessage } from '../_shared/callableErrors';
+import RemoveAccess from '../AccessRequests/RemoveAccess';
+import { refreshAccessCount } from '../AccessRequests/accessCount';
+import { useAccessActor } from '../AccessRequests/useAccessActor';
 import styles from './AdminAgora.module.scss';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -55,7 +58,9 @@ function ScopeEditor({
 				operation: 'SchoolSupervisors.setSupervisorScope',
 				metadata: { schoolId: school.schoolId, supervisorUid: uid },
 			});
-			setError(callableMessage(err, t('Could not update supervision. Please try again.')));
+			setError(
+				callableMessage(err, t("Could not update the coordinator's access. Please try again.")),
+			);
 		} finally {
 			setBusy(false);
 		}
@@ -65,7 +70,9 @@ function ScopeEditor({
 		<details className={styles.scope}>
 			<summary>{t('Narrow to teachers')}</summary>
 			<p className={styles.meta}>
-				{t('Leave every box empty to let this supervisor see all teachers of the school.')}
+				{t(
+					'Leave every box empty to let this regional coordinator see all teachers of the school.',
+				)}
 			</p>
 			{teachers.length === 0 ? (
 				<p className={styles.meta}>{t('No teachers yet')}</p>
@@ -130,18 +137,19 @@ export default function SchoolSupervisors({
 }: SchoolSupervisorsProps) {
 	const { t, tWithParams } = useTranslation();
 	const [email, setEmail] = useState('');
-	const [busy, setBusy] = useState<'' | 'assignSupervisor' | 'removeSupervisor'>('');
+	const actor = useAccessActor();
+	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState('');
 	const supervisorIds = school.supervisorIds ?? [];
 	const validEmail = EMAIL_PATTERN.test(email.trim().toLowerCase());
 
-	const change = async (action: 'assignSupervisor' | 'removeSupervisor') => {
+	const attach = async () => {
 		if (busy || !validEmail) return;
-		setBusy(action);
+		setBusy(true);
 		setError('');
 		try {
 			await manageAgoraSchool({
-				action,
+				action: 'assignSupervisor',
 				schoolId: school.schoolId,
 				supervisorEmail: email.trim().toLowerCase(),
 			});
@@ -149,33 +157,33 @@ export default function SchoolSupervisors({
 			onChanged();
 		} catch (err) {
 			logError(err, {
-				operation: `SchoolSupervisors.${action}`,
+				operation: 'SchoolSupervisors.assignSupervisor',
 				metadata: { schoolId: school.schoolId },
 			});
 			setError(
 				callableMessage(
 					err,
-					action === 'assignSupervisor'
-						? t('Could not assign — the supervisor must sign in to Agora with Google once first.')
-						: t('Could not remove the supervisor.'),
+					t(
+						'Could not assign — the regional coordinator must sign in to Agora with Google once first.',
+					),
 				),
 			);
 		} finally {
-			setBusy('');
+			setBusy(false);
 		}
 	};
 
 	return (
-		<section className={styles.classCard} aria-label={t('Supervisors of this school')}>
+		<section className={styles.classCard} aria-label={t('Regional coordinators of this school')}>
 			<div className={styles.classHead}>
-				<h3 className={styles.className}>{t('Supervisors of this school')}</h3>
+				<h3 className={styles.className}>{t('Regional coordinators of this school')}</h3>
 				<span className={styles.meta}>
-					{tWithParams('{{count}} supervisors', { count: supervisorIds.length })}
+					{tWithParams('{{count}} regional coordinators', { count: supervisorIds.length })}
 				</span>
 			</div>
 			<p className={styles.meta}>
 				{t(
-					'Supervisors see the teachers of this school in Agora. Narrow each one to some teachers if needed.',
+					'Regional coordinators see the teachers of this school in Agora. Narrow each one to some teachers if needed.',
 				)}
 			</p>
 			{supervisorIds.length > 0 && (
@@ -186,12 +194,24 @@ export default function SchoolSupervisors({
 						return (
 							<li key={uid} className={styles.supervisorRow}>
 								<div className={styles.supervisorHead}>
-									<span>{supervisorNames.get(uid) ?? t('Supervisor')}</span>
+									<span>{supervisorNames.get(uid) ?? t('Regional coordinator')}</span>
 									<Tag status={scope ? 'frozen' : 'open'} dot>
 										{scope
 											? tWithParams('{{count}} teachers', { count: scope.length })
 											: t('All teachers')}
 									</Tag>
+									{actor && (
+										<RemoveAccess
+											actor={actor}
+											target={{ uid, role: 'supervisor', schoolId: school.schoolId }}
+											personName={supervisorNames.get(uid) ?? t('Regional coordinator')}
+											schoolName={school.name}
+											onRemoved={() => {
+												void refreshAccessCount();
+												onChanged();
+											}}
+										/>
+									)}
 								</div>
 								<ScopeEditor
 									key={`${uid}:${JSON.stringify(scope ?? null)}`}
@@ -208,22 +228,16 @@ export default function SchoolSupervisors({
 			<div className={styles.assign}>
 				<Input
 					type="email"
-					ariaLabel={t('Supervisor email')}
-					placeholder={t('Supervisor email')}
+					ariaLabel={t('Regional coordinator email')}
+					placeholder={t('Regional coordinator email')}
 					value={email}
 					onChange={setEmail}
 				/>
 				<Button
-					text={busy === 'assignSupervisor' ? t('Assigning…') : t('Attach supervisor')}
+					text={busy ? t('Assigning…') : t('Attach regional coordinator')}
 					variant="secondary"
-					disabled={!validEmail || !!busy}
-					onClick={() => void change('assignSupervisor')}
-				/>
-				<Button
-					text={busy === 'removeSupervisor' ? t('Removing…') : t('Remove supervisor')}
-					variant="secondary"
-					disabled={!validEmail || !!busy}
-					onClick={() => void change('removeSupervisor')}
+					disabled={!validEmail || busy}
+					onClick={() => void attach()}
 				/>
 				{error && <p className={styles.error}>{error}</p>}
 			</div>

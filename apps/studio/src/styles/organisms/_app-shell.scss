@@ -221,6 +221,21 @@
 		@include truncate;
 	}
 
+	// Waiting-count pill on a nav item; sits at the inline end, flips in RTL.
+	&__nav-badge {
+		margin-inline-start: auto;
+		min-inline-size: 1.25rem;
+		padding-inline: var(--space-xs);
+		font-size: 0.75rem;
+		font-weight: 600;
+		line-height: 1.25rem;
+		text-align: center;
+		color: var(--white);
+		background: var(--btn-primary);
+		border-radius: 999px;
+		font-variant-numeric: tabular-nums;
+	}
+
 	&__toggle {
 		@include hit-target;
 		margin-block-start: auto;
@@ -312,6 +327,14 @@
 				inline-size: auto;
 				block-size: 3px;
 			}
+		}
+
+		// In the bottom bar the count rides the icon's corner.
+		.app-shell__nav-badge {
+			position: absolute;
+			inset-block-start: 0.125rem;
+			inset-inline-end: 0.5rem;
+			margin: 0;
 		}
 
 		// The trail stays on a phone — it is the only thing naming the workspace

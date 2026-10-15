@@ -22,6 +22,8 @@ import AdminTeacherDetail from '@/pages/AdminAgora/AdminTeacherDetail';
 import AdminClassDetail from '@/pages/AdminAgora/AdminClassDetail';
 import AdminStudentDetail from '@/pages/AdminAgora/AdminStudentDetail';
 import AgoraHome, { AgoraMine } from '@/pages/AgoraHome/AgoraHome';
+import AccessRequests from '@/pages/AccessRequests/AccessRequests';
+import AccessRequestDetail from '@/pages/AccessRequests/AccessRequestDetail';
 import EventDashboard from '@/pages/EventDashboard';
 
 // Heavy per-question screens load on demand.
@@ -80,12 +82,16 @@ export default function App() {
 						<Route path="/admin/orgs" element={<AdminOrgs />} />
 						<Route path="/admin/orgs/:orgId" element={<AdminOrgDetail />} />
 						<Route path="/admin/agora" element={<AdminAgora />} />
+						<Route path="/admin/agora/requests" element={<AccessRequests />} />
+						<Route path="/admin/agora/requests/:requestId" element={<AccessRequestDetail />} />
 						<Route path="/admin/agora/schools/:schoolId" element={<AdminSchoolDetail />} />
 						<Route path="/admin/agora/teachers/:schoolId/:uid" element={<AdminTeacherDetail />} />
 						<Route path="/admin/agora/classes/:classId" element={<AdminClassDetail />} />
 						<Route path="/admin/agora/students/:memberId" element={<AdminStudentDetail />} />
 						<Route path="/agora" element={<AgoraHome />} />
 						<Route path="/agora/mine" element={<AgoraMine />} />
+						<Route path="/agora/requests" element={<AccessRequests />} />
+						<Route path="/agora/requests/:requestId" element={<AccessRequestDetail />} />
 						<Route path="/agora/teachers/:schoolId/:uid" element={<AdminTeacherDetail />} />
 						<Route path="/agora/classes/:classId" element={<AdminClassDetail />} />
 						<Route path="/agora/students/:memberId" element={<AdminStudentDetail />} />

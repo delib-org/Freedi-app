@@ -1,15 +1,18 @@
 import { useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import type { TeacherConsoleDashboard } from '@freedi/shared-types';
 import { useSupervisorConsole } from '@/db/agoraSupervisor';
 import { schoolContextFrom } from '@/lib/indicatorContexts';
-import { EmptyState, SegmentedControl } from '@/components/atomic/atoms';
+import { EmptyState, SegmentedControl, Tag } from '@/components/atomic/atoms';
 import { IndicatorGrid } from '@/components/atomic/molecules/Chart';
 import ClassesTable from '../AdminAgora/sections/ClassesTable';
 import TeachersTable from '../AdminAgora/sections/TeachersTable';
 import { LoadError, Loading, PrivacyNote, TruncatedNote } from '../AdminAgora/sections/LoadState';
 import { PERSONAL_AGORA_BASE } from '../AdminAgora/agoraBase';
+import SignUpLink from '../AccessRequests/SignUpLink';
+import { useAccessCount } from '../AccessRequests/accessCount';
+import accessStyles from '../AccessRequests/AccessRequests.module.scss';
 import { pickSchoolId, readLastSchool, rememberSchool } from './lastSchool';
 import styles from '../AdminAgora/AdminDetail.module.scss';
 
@@ -25,7 +28,8 @@ export default function CoordinatorOverview({
 }: {
 	schools: TeacherConsoleDashboard['supervisedSchools'];
 }) {
-	const { t } = useTranslation();
+	const { t, tWithParams } = useTranslation();
+	const waiting = useAccessCount(true);
 	const [params, setParams] = useSearchParams();
 	const schoolId = pickSchoolId(schools, params.get('school'), readLastSchool());
 	const { data, loading, error, refresh } = useSupervisorConsole(
@@ -49,6 +53,14 @@ export default function CoordinatorOverview({
 					onChange={chooseSchool}
 				/>
 			)}
+			<div className={accessStyles.countLine}>
+				<Link to={`${PERSONAL_AGORA_BASE}/requests`}>{t('Access requests')}</Link>
+				{waiting > 0 && (
+					<Tag status="frozen" dot>
+						{tWithParams('{{count}} waiting for approval', { count: waiting })}
+					</Tag>
+				)}
+			</div>
 			{loading && <Loading />}
 			{error && <LoadError error={error} onRetry={refresh} />}
 			{school && ctx && (
@@ -71,6 +83,8 @@ export default function CoordinatorOverview({
 
 					<h2 className={styles.sectionTitle}>{t('Classes')}</h2>
 					<ClassesTable rows={school.classes} basePath={PERSONAL_AGORA_BASE} />
+
+					<SignUpLink schoolId={school.schoolId} />
 				</>
 			)}
 		</>
