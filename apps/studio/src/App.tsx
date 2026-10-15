@@ -28,6 +28,10 @@ const QuestionDashboard = lazyWithRetry(
 	() => import('@/pages/QuestionDashboard/QuestionDashboard'),
 	'QuestionDashboard',
 );
+const SurveyResults = lazyWithRetry(
+	() => import('@/pages/SurveyResults/SurveyResults'),
+	'SurveyResults',
+);
 const RunView = lazyWithRetry(() => import('@/pages/RunView/RunView'), 'RunView');
 const PlanWithAI = lazyWithRetry(() => import('@/pages/PlanWithAI/PlanWithAI'), 'PlanWithAI');
 
@@ -66,6 +70,7 @@ export default function App() {
 						<Route path="/orgs/:orgId/people" element={<People />} />
 						<Route path="/orgs/:orgId/plan/new" element={<PlanWithAI />} />
 						<Route path="/orgs/:orgId/questions/:qId" element={<QuestionDashboard />} />
+						<Route path="/orgs/:orgId/questions/:qId/results" element={<SurveyResults />} />
 						<Route path="/orgs/:orgId/questions/:qId/plan" element={<PlanWithAI />} />
 						<Route path="/orgs/:orgId/questions/:qId/run/:aId" element={<RunView />} />
 						<Route path="/personal" element={<Personal />} />

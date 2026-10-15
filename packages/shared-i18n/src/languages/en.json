@@ -5083,5 +5083,12 @@
   "Participants see the last page after the final question. You can add your own message to it.": "Participants see the last page after the final question. You can add your own message to it.",
   "Add a message on the last page": "Add a message on the last page",
   "Message on the last page": "Message on the last page",
-  "Remove message": "Remove message"
+  "Remove message": "Remove message",
+  "View results": "View results",
+  "Survey results": "Survey results",
+  "Read-only view. Nothing here can change the suggestions.": "Read-only view. Nothing here can change the suggestions.",
+  "Score {{score}}": "Score {{score}}",
+  "{{count}} evaluators": "{{count}} evaluators",
+  "Could not load the results": "Could not load the results",
+  "Back to the survey": "Back to the survey"
 }
