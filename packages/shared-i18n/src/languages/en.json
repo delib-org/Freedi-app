@@ -5090,5 +5090,11 @@
   "Score {{score}}": "Score {{score}}",
   "{{count}} evaluators": "{{count}} evaluators",
   "Could not load the results": "Could not load the results",
-  "Back to the survey": "Back to the survey"
+  "Back to the survey": "Back to the survey",
+  "topAgreements": "Top agreements",
+  "topAgreementsRefresh": "Refresh",
+  "topAgreementsShowMore": "Show more",
+  "topAgreementsLoadError": "Could not load the top agreements.",
+  "topAgreementsEmpty": "No options have been evaluated yet.",
+  "topAgreementsNoOptions": "No options for this question yet."
 }

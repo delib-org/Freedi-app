@@ -4410,5 +4410,11 @@
   "Score {{score}}": "Wert {{score}}",
   "{{count}} evaluators": "{{count}} Bewertende",
   "Could not load the results": "Ergebnisse konnten nicht geladen werden",
-  "Back to the survey": "Zurück zur Umfrage"
+  "Back to the survey": "Zurück zur Umfrage",
+  "topAgreements": "Höchste Zustimmung",
+  "topAgreementsRefresh": "Aktualisieren",
+  "topAgreementsShowMore": "Mehr anzeigen",
+  "topAgreementsLoadError": "Die höchsten Zustimmungen konnten nicht geladen werden.",
+  "topAgreementsEmpty": "Es wurden noch keine Optionen bewertet.",
+  "topAgreementsNoOptions": "Für diese Frage gibt es noch keine Optionen."
 }

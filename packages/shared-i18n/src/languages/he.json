@@ -5128,5 +5128,11 @@
   "Score {{score}}": "ציון {{score}}",
   "{{count}} evaluators": "{{count}} מעריכים",
   "Could not load the results": "לא ניתן לטעון את התוצאות",
-  "Back to the survey": "חזרה לסקר"
+  "Back to the survey": "חזרה לסקר",
+  "topAgreements": "ההסכמות הגבוהות ביותר",
+  "topAgreementsRefresh": "רענון",
+  "topAgreementsShowMore": "הצג עוד",
+  "topAgreementsLoadError": "לא ניתן לטעון את ההסכמות הגבוהות ביותר.",
+  "topAgreementsEmpty": "עדיין לא הוערכו אפשרויות.",
+  "topAgreementsNoOptions": "עדיין אין אפשרויות לשאלה זו."
 }
