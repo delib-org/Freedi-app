@@ -43,7 +43,7 @@ export const LIBRARY_REPORT_EMAIL = {
 	SUBJECT_TITLE_MAX: 60,
 	/** The Agora route of the moderation queue (Mithril hash routing) */
 	QUEUE_ROUTE: '/#!/teach/library/admin',
-	DEFAULT_APP_URL: 'https://agora-wizcol.web.app',
+	DEFAULT_APP_URL: 'https://agora.wizcol.com',
 } as const;
 
 const KIND_LABEL: Record<AgoraReportTargetKind, string> = {
