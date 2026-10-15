@@ -4403,5 +4403,12 @@
   "Participants see the last page after the final question. You can add your own message to it.": "Deelnemers zien de laatste pagina na de laatste vraag. Je kunt er je eigen bericht aan toevoegen.",
   "Add a message on the last page": "Een bericht op de laatste pagina toevoegen",
   "Message on the last page": "Bericht op de laatste pagina",
-  "Remove message": "Bericht verwijderen"
+  "Remove message": "Bericht verwijderen",
+  "View results": "Resultaten bekijken",
+  "Survey results": "Enquêteresultaten",
+  "Read-only view. Nothing here can change the suggestions.": "Alleen-lezenweergave. Niets hier kan de suggesties wijzigen.",
+  "Score {{score}}": "Score {{score}}",
+  "{{count}} evaluators": "{{count}} beoordelaars",
+  "Could not load the results": "Resultaten konden niet worden geladen",
+  "Back to the survey": "Terug naar de enquête"
 }

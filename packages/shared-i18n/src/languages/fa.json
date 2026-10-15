@@ -4881,5 +4881,12 @@
   "Participants see the last page after the final question. You can add your own message to it.": "شرکت‌کنندگان صفحه آخر را پس از آخرین پرسش می‌بینند. می‌توانید پیام خودتان را به آن اضافه کنید.",
   "Add a message on the last page": "افزودن پیام در صفحه آخر",
   "Message on the last page": "پیام در صفحه آخر",
-  "Remove message": "حذف پیام"
+  "Remove message": "حذف پیام",
+  "View results": "مشاهده نتایج",
+  "Survey results": "نتایج نظرسنجی",
+  "Read-only view. Nothing here can change the suggestions.": "نمایش فقط‌خواندنی. هیچ چیز در اینجا نمی‌تواند پیشنهادها را تغییر دهد.",
+  "Score {{score}}": "امتیاز {{score}}",
+  "{{count}} evaluators": "{{count}} ارزیاب",
+  "Could not load the results": "بارگذاری نتایج ممکن نشد",
+  "Back to the survey": "بازگشت به نظرسنجی"
 }

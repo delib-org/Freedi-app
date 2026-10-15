@@ -4403,5 +4403,12 @@
   "Participants see the last page after the final question. You can add your own message to it.": "Die Teilnehmenden sehen die letzte Seite nach der letzten Frage. Du kannst ihr eine eigene Nachricht hinzufügen.",
   "Add a message on the last page": "Nachricht auf der letzten Seite hinzufügen",
   "Message on the last page": "Nachricht auf der letzten Seite",
-  "Remove message": "Nachricht entfernen"
+  "Remove message": "Nachricht entfernen",
+  "View results": "Ergebnisse ansehen",
+  "Survey results": "Umfrageergebnisse",
+  "Read-only view. Nothing here can change the suggestions.": "Nur Ansicht. Hier kann nichts an den Vorschlägen geändert werden.",
+  "Score {{score}}": "Wert {{score}}",
+  "{{count}} evaluators": "{{count}} Bewertende",
+  "Could not load the results": "Ergebnisse konnten nicht geladen werden",
+  "Back to the survey": "Zurück zur Umfrage"
 }

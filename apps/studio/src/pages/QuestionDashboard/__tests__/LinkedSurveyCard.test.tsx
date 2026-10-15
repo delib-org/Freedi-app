@@ -5,6 +5,23 @@ import { LanguagesEnum } from '@freedi/shared-i18n';
 import { TranslationProvider } from '@freedi/shared-i18n/react';
 import type { OrganizationActivity } from '@freedi/shared-types';
 
+vi.mock('react-router-dom', () => ({
+	Link: ({
+		to,
+		children,
+		className,
+	}: {
+		to: string;
+		children: React.ReactNode;
+		className?: string;
+	}) => (
+		<a href={to} className={className}>
+			{children}
+		</a>
+	),
+	useParams: () => ({ orgId: 'org-1', qId: 'q1' }),
+}));
+
 const useQuestionProgressByIds = vi.fn();
 const useSurveyStats = vi.fn();
 vi.mock('@/db/orgActivities', () => ({
@@ -108,6 +125,14 @@ describe('LinkedSurveyCard', () => {
 		const settings = screen.getByRole('link', { name: /survey settings/i });
 		expect(open.getAttribute('href')).toContain('/s/survey_1712345678901_a1b2c3d');
 		expect(settings.getAttribute('href')).toContain('/admin/surveys/survey_1712345678901_a1b2c3d');
+	});
+
+	it('offers read-only Results first, as the primary link', () => {
+		renderCard();
+
+		const links = screen.getAllByRole('link');
+		expect(links[0].textContent).toMatch(/view results/i);
+		expect(links[0].getAttribute('href')).toBe('/orgs/org-1/questions/q-one/results');
 	});
 
 	it('falls back to the linked question when the survey lists none', () => {

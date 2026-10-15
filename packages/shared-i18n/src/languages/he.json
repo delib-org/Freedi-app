@@ -5121,5 +5121,12 @@
   "Participants see the last page after the final question. You can add your own message to it.": "המשתתפים רואים את העמוד האחרון אחרי השאלה האחרונה. אפשר להוסיף לו הודעה משלכם.",
   "Add a message on the last page": "הוספת הודעה בעמוד האחרון",
   "Message on the last page": "הודעה בעמוד האחרון",
-  "Remove message": "הסרת ההודעה"
+  "Remove message": "הסרת ההודעה",
+  "View results": "צפייה בתוצאות",
+  "Survey results": "תוצאות הסקר",
+  "Read-only view. Nothing here can change the suggestions.": "תצוגה לקריאה בלבד. שום דבר כאן לא יכול לשנות את ההצעות.",
+  "Score {{score}}": "ציון {{score}}",
+  "{{count}} evaluators": "{{count}} מעריכים",
+  "Could not load the results": "לא ניתן לטעון את התוצאות",
+  "Back to the survey": "חזרה לסקר"
 }
