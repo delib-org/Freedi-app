@@ -80,9 +80,8 @@ async function main(): Promise<void> {
 		}
 		expected.stances.forEach((codeStance, index) => {
 			const liveText = stances[index]?.statement;
-			const codeText = typeof codeStance === 'string' ? codeStance : codeStance.text;
-			if (liveText !== codeText) {
-				mismatches.push(`island ${live.sortOrder} stance ${index + 1}: live "${liveText}" vs code "${codeText}"`);
+			if (liveText !== codeStance) {
+				mismatches.push(`island ${live.sortOrder} stance ${index + 1}: live "${liveText}" vs code "${codeStance}"`);
 			}
 		});
 	}
