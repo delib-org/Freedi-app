@@ -1340,35 +1340,30 @@ button.ship-tag--lit:hover {
 }
 
 /* ======================= ON THE ISLAND ==========================
-   Two folded panels under the island's name: the route (every island the
-   player chose, tap to sail there) and the crew's counsel. Both start
-   closed so the island's question stays first on a phone, and both keep
-   their summary line visible so a folded panel is still a way out.
+   Under the island's name: the route (every island the player chose,
+   tap to sail there), folded so the island's question stays first on a
+   phone, with its summary line visible as a way out even when folded.
    ================================================================ */
-.island-strip,
-.counsel {
+.island-strip {
 	border: 1px solid rgba(232, 185, 88, 0.55);
 	border-radius: 12px;
 	background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
 	padding: 10px 14px;
 }
 
-.island-strip__summary,
-.counsel__summary {
+.island-strip__summary {
 	cursor: pointer;
 	font-size: 14px;
 	color: var(--cream);
 	list-style: none;
 }
 
-.island-strip__summary::-webkit-details-marker,
-.counsel__summary::-webkit-details-marker {
+.island-strip__summary::-webkit-details-marker {
 	display: none;
 }
 
 /* A folded panel says so with a chevron, an open one with the other. */
-.island-strip__summary::before,
-.counsel__summary::before {
+.island-strip__summary::before {
 	content: '▸';
 	display: inline-block;
 	margin-inline-end: 6px;
@@ -1376,14 +1371,12 @@ button.ship-tag--lit:hover {
 	transform: scaleX(-1); /* points into the text in RTL */
 }
 
-.island-strip[open] > .island-strip__summary::before,
-.counsel[open] > .counsel__summary::before {
+.island-strip[open] > .island-strip__summary::before {
 	content: '▾';
 	transform: none;
 }
 
-.island-strip__body,
-.counsel__body {
+.island-strip__body {
 	margin-top: 10px;
 	display: flex;
 	flex-direction: column;
@@ -1422,49 +1415,209 @@ button.ship-tag--lit:hover {
 	font-weight: 700;
 }
 
-.island-strip__note,
-.counsel__note {
+.island-strip__note {
 	margin: 0;
 	font-size: 13px;
 	opacity: 0.8;
 }
 
-.counsel__count {
-	margin-inline-start: 4px;
-	opacity: 0.75;
-}
-
-/* Every sailor the same size, in crew order — no face bigger than another. */
-.counsel__crew {
+/* ======================= THE CREW'S COUNSEL ======================
+   Consulting the crew on the island (a row before the shores) and on
+   each shore (a line under its text). Sailors are the game's conscience:
+   the same row in both places, every sailor the same size, nothing said
+   until one is tapped, one card open at a time, no tally anywhere.
+   See docs/design/odyssey-crew-counsel-ux.md.
+   ================================================================ */
+.island-counsel {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
+	flex-direction: column;
+	gap: 6px;
 }
 
-.counsel__sailor {
-	display: inline-flex;
+.island-counsel__caption {
+	margin: 0;
+	font-size: 14px;
+	color: var(--cream);
+}
+
+.island-counsel__hint {
+	margin: 0;
+	font-size: 12px;
+	opacity: 0.7;
+}
+
+.island-counsel__empty {
+	margin: 0;
+	font-size: 13px;
+	opacity: 0.8;
+}
+
+/* The row: N equal columns — the equal-juice rule made structural. No chip
+   can be wider, first, or alone on a second row; it never wraps or scrolls.
+   On a phone it takes the panel's side padding for itself (as .sea-chart
+   does) so five 48px targets fit at 320px. */
+.crew-row {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+	gap: 4px;
+	margin-top: 4px;
+}
+
+@media (max-width: 480px) {
+	.crew-row {
+		margin-inline: -14px;
+	}
+}
+
+@media (min-width: 481px) {
+	.crew-row {
+		grid-auto-columns: minmax(48px, 72px);
+		justify-content: center;
+	}
+}
+
+.crew-row__chip {
+	display: flex;
+	flex-direction: column;
 	align-items: center;
-	gap: 8px;
+	gap: 4px;
+	min-width: 0;
+	min-height: 64px;
+	padding: 4px 2px;
 	cursor: pointer;
-	padding: 4px 12px 4px 6px;
 	border: 1px solid rgba(232, 185, 88, 0.45);
-	border-radius: 999px;
+	border-radius: 10px;
 	background: rgba(9, 38, 62, 0.75);
 	color: var(--cream);
-	font-size: 13px;
-	transition: border-color 0.15s ease;
+	transition:
+		border-color 0.15s ease,
+		box-shadow 0.15s ease;
 }
 
-.counsel__sailor:hover,
-.counsel__sailor--open {
+.crew-row__chip:hover,
+.crew-row__chip:focus-visible {
+	border-color: rgba(232, 185, 88, 0.8);
+}
+
+.crew-row__chip:focus-visible {
+	outline: 2px solid var(--cyan);
+	outline-offset: 1px;
+}
+
+/* The only state a chip has. Marking a shore changes nothing here. */
+.crew-row__chip--open {
 	border-color: var(--gold-strong);
-}
-
-.counsel__sailor--open {
 	box-shadow: 0 0 0 2px rgba(232, 185, 88, 0.28);
 }
 
-.counsel__portrait {
+.crew-row__chip--open .crew-row__name {
+	color: var(--gold-strong);
+}
+
+.crew-row__portrait {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	overflow: hidden;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 17px;
+	border: 1px solid rgba(232, 185, 88, 0.75);
+	flex-shrink: 0;
+}
+
+.crew-row__portrait img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* The full name always reads in the card and the chip's aria-label; here it
+   may break (ז'בוטינסקי at 48px) but never overflow. */
+.crew-row__name {
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 1.2;
+	text-align: center;
+	overflow-wrap: anywhere;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
+}
+
+/* The slot a card docks in: always present (a polite live region, so a swap
+   is announced), empty until a sailor is tapped. */
+.counsel-slot:empty {
+	display: none;
+}
+
+/* One sailor's words. A gold quote-block with a 3px start-rule, so inside a
+   shore's cyan card it reads as "a voice inside the shore". It opens below
+   the row so the tapped chip never moves; a swap re-mounts the card (keyed
+   by sailor) and only the words fade, the frame stays. */
+.counsel-card {
+	border: 1px solid rgba(232, 185, 88, 0.6);
+	border-inline-start: 3px solid var(--gold-strong);
+	border-radius: 10px;
+	padding: 10px 12px;
+	margin-top: 8px;
+	background: rgba(6, 24, 44, 0.6);
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	animation: bubbleUpIn 0.18s ease;
+}
+
+.counsel-card__head {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
+.counsel-card__eyebrow {
+	margin: 0;
+	flex: 1;
+	font-size: 12px;
+	letter-spacing: 0.02em;
+	color: var(--gold-strong);
+}
+
+.counsel-card__close {
+	flex-shrink: 0;
+	padding: 0 4px;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	font-size: 13px;
+	color: var(--cream);
+	opacity: 0.7;
+}
+
+.counsel-card__close:hover,
+.counsel-card__close:focus-visible {
+	opacity: 1;
+}
+
+.counsel-card__close:focus-visible {
+	outline: 2px solid var(--cyan);
+	border-radius: 4px;
+}
+
+.counsel-card__name {
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--cream);
+}
+
+.counsel-card__portrait {
 	width: 28px;
 	height: 28px;
 	border-radius: 50%;
@@ -1477,44 +1630,24 @@ button.ship-tag--lit:hover {
 	flex-shrink: 0;
 }
 
-.counsel__portrait img {
+.counsel-card__portrait img {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
 }
 
-.counsel__name {
-	font-weight: 700;
-}
-
-.counsel__card {
-	border: 1px solid rgba(232, 185, 88, 0.6);
-	border-radius: 10px;
-	padding: 10px 12px;
-	background: rgba(6, 24, 44, 0.6);
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-}
-
-.counsel__who {
-	margin: 0;
-	font-size: 14px;
-	color: var(--cream);
-}
-
-.counsel__lean {
+.counsel-card__lean {
 	margin: 0;
 	font-size: 13px;
 	color: #dcecf7;
 }
 
-.counsel__lean-label {
+.counsel-card__lean-label {
 	color: var(--gold-strong);
 	font-weight: 700;
 }
 
-.counsel__line {
+.counsel-card__line {
 	margin: 0;
 	font-size: 15px;
 	line-height: 1.5;
@@ -1522,7 +1655,61 @@ button.ship-tag--lit:hover {
 	color: #e6f2ff;
 }
 
-.counsel__disclaimer {
+.counsel-card__note {
+	margin: 0;
+	font-size: 11px;
+	opacity: 0.65;
+}
+
+/* The reveal's reaction card: the same paper, static — no chips, no close. */
+.counsel-card--reactions {
+	margin-top: 0;
+}
+
+/* One line under a shore's text: a text button, gold, 44px tall, no border —
+   a line, not a card. Chevron at the end: ‹ folded, ▾ open. */
+.shore-counsel__line {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	width: 100%;
+	min-height: 44px;
+	margin-bottom: 4px;
+	padding: 0 2px;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	font-size: 13px;
+	color: var(--gold-strong);
+	text-align: start;
+}
+
+.shore-counsel__line:focus-visible {
+	outline: 2px solid var(--cyan);
+	border-radius: 6px;
+}
+
+.shore-counsel__chevron {
+	opacity: 0.8;
+}
+
+.shore-counsel__body {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 10px;
+}
+
+/* A sailor's reaction on their ship's card in the reveal. */
+.ship-card__reaction {
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.5;
+	font-style: italic;
+	color: #e6f2ff;
+}
+
+.ship-card__note {
 	margin: 0;
 	font-size: 11px;
 	opacity: 0.65;
@@ -1569,6 +1756,12 @@ button.ship-tag--lit:hover {
 	}
 	.speech-bubble {
 		animation: none;
+	}
+	.counsel-card {
+		animation: none;
+	}
+	.crew-row__chip {
+		transition: none;
 	}
 	.crew-card:hover {
 		transform: none;

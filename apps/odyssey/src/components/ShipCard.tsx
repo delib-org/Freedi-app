@@ -1,9 +1,15 @@
 import { proximityBandOf } from '../lib/seaLayout';
+import { AI_PERSONA_NOTE } from '../lib/counsel';
 import type { ShipProximity } from './NearbyShips';
 import ShipTag from './ShipTag';
 
 interface Props {
 	ship: ShipProximity;
+	/**
+	 * A sailor's reaction to the shore the island answered (reveal phase only,
+	 * and only when the ship is a sailor's); parties have none.
+	 */
+	reaction?: string | null;
 	onClose: () => void;
 	onShowAll: () => void;
 }
@@ -28,7 +34,7 @@ const BAND_SENTENCE: Record<ReturnType<typeof proximityBandOf>, string> = {
  * far, and the caption says so plainly. Nothing here ranks the party against
  * the others, which is what the standing list is for.
  */
-export default function ShipCard({ ship, onClose, onShowAll }: Props) {
+export default function ShipCard({ ship, reaction = null, onClose, onShowAll }: Props) {
 	// The ring is relative to the fleet; the number is the true proximity.
 	const trueDistance = ship.trueDistance === undefined ? ship.distance : ship.trueDistance;
 	const near = trueDistance === null ? null : Math.round((1 - trueDistance) * 100);
@@ -59,6 +65,13 @@ export default function ShipCard({ ship, onClose, onShowAll }: Props) {
 					</div>
 					<span className="text-[13px] opacity-85 shrink-0">קרבה {near}%</span>
 				</div>
+			) : null}
+
+			{reaction ? (
+				<>
+					<p className="ship-card__reaction">{reaction}</p>
+					<p className="ship-card__note">{AI_PERSONA_NOTE}</p>
+				</>
 			) : null}
 
 			<div className="flex items-center justify-between gap-3">
