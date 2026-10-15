@@ -101,6 +101,11 @@ await api(`cards/SHORTLINK/idLabels`, { method:'POST', ...json({ value: lab.id }
 
 ## Failure modes
 
+- `CDP Runtime.evaluate timed out` / tab frozen → the heavy board UI hangs the renderer
+  after a while. Open `https://trello.com/robots.txt` in a fresh tab instead and run the
+  snippets there (same origin, same cookies, no board UI; hardcode `BOARD = 'u6sHplpi'`).
+  Check card state before retrying a write: a timed-out call may or may not have run.
+
 - `401` on read → the tab is not logged in; ask Tal to log in to Trello in Chrome.
 - `400 invalid token` / `unauthorized` on write → `dsc` cookie missing; reload the board
   tab and retry once. Do not ask Tal for an API key - he chose the cookie route on purpose.
