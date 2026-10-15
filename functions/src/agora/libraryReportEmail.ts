@@ -56,6 +56,8 @@ const ROLE_LABEL: Record<LibraryReporterRole, string> = {
 	admin: 'מנהל/ת מערכת',
 	school: 'מורה',
 	supervisor: 'מפקח/ת',
+	// An approved teacher with no live school attachment (approved request / grandfathered)
+	granted: 'מורה מאושר/ת',
 	unknown: 'מורה (התפקיד לא אומת)',
 };
 

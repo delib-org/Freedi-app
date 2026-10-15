@@ -203,6 +203,17 @@ export async function signInTeacher(sub: string): Promise<{ uid: string; idToken
 	if (!json.idToken || !json.localId) {
 		throw new Error('Teacher sign-in failed against the auth emulator');
 	}
+	// Agora is gated on approval (agoraCreateSession refuses a pending teacher):
+	// the fastlane teacher is approved the way the grandfather backfill does it.
+	await db.collection('agoraApprovedTeachers').doc(json.localId).set(
+		{
+			teacherId: json.localId,
+			via: 'granted',
+			checkedAt: Date.now(),
+			grant: { source: 'grandfathered', grantedAt: Date.now(), grantedBy: 'fastlane' },
+		},
+		{ merge: true },
+	);
 
 	return { uid: json.localId, idToken: json.idToken };
 }

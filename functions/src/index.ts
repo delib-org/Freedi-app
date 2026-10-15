@@ -1291,6 +1291,8 @@ export {
 	agoraGenerateTopicPackage,
 	agoraSessionSweep,
 	agoraAdminManageSchool,
+	agoraRequestAccess,
+	agoraManageAccess,
 	agoraAdminOpenClass,
 	agoraJoinClass,
 	agoraTeacherRoster,

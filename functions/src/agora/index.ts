@@ -19,6 +19,8 @@ export { onAgoraProposalWritten } from './fn_onAgoraProposal';
 export { agoraGenerateTopicPackage } from './fn_agoraGenerateTopicPackage';
 export { agoraSessionSweep } from './fn_agoraSessionSweep';
 export { agoraAdminManageSchool } from './fn_agoraAdminManageSchool';
+export { agoraRequestAccess } from './fn_agoraRequestAccess';
+export { agoraManageAccess } from './fn_agoraManageAccess';
 export { agoraAdminOpenClass } from './fn_agoraAdminOpenClass';
 export { agoraJoinClass } from './fn_agoraJoinClass';
 export { agoraTeacherRoster } from './fn_agoraTeacherRoster';

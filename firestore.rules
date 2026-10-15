@@ -115,7 +115,10 @@ service cloud.firestore {
                       (isApprovedAgoraTeacher() &&
                        resource.data.get('visibility', 'private') == 'public' &&
                        resource.data.get('library', {}).get('hidden', true) == false));
+      // Only an approved teacher (or a sys-admin) creates a scenario: a
+      // pending teacher gets nothing until approved (Tal, 2026-10-15).
       allow create: if isAuthenticated() &&
+                       (isApprovedAgoraTeacher() || isSystemAdminUser()) &&
                        request.resource.data.creatorId == request.auth.uid &&
                        !request.resource.data.keys().hasAny(
                          ['visibility', 'library', 'stats', 'sourceScenarioId',
@@ -587,6 +590,22 @@ service cloud.firestore {
     }
     match /agoraTeacherUsage/{usageId} {
       allow read: if isSystemAdminUser();
+      allow write: if false;
+    }
+
+    // Access requests (who asks to be an Agora teacher / regional coordinator).
+    // Written only by the agoraRequestAccess / agoraManageAccess callables.
+    // The applicant reads their own (get by id, or a list constrained to
+    // their uid); a sys-admin reads all. Coordinators read through the
+    // callable only: rules cannot prove "a school I coordinate" without a
+    // get() per document, and the callable is also where the applicant's
+    // email is joined in — it is never stored here.
+    match /agoraAccessRequests/{requestId} {
+      allow get: if isSystemAdminUser() ||
+                    (isAuthenticated() && resource != null &&
+                     resource.data.uid == request.auth.uid);
+      allow list: if isSystemAdminUser() ||
+                     (isAuthenticated() && resource.data.uid == request.auth.uid);
       allow write: if false;
     }
 

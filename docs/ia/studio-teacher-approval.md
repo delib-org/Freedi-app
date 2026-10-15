@@ -5,10 +5,12 @@ Date: 2026-10-15
 Trello: nWQzjCc1 (open and manage teachers), UrxdrKcP (approve every teacher and coordinator), iOUJAzXy (a board per teacher and coordinator)
 Supersedes: in `docs/ia/agora-teacher-home.md` §7, the state "No classes, no school: ask the system admin to attach you" (replaced by the access-request states in §7 here).
 
-## Open questions for Tal (each has a default; the spec is written on the default)
-1. **What does a pending teacher lose?** Default: exactly what an unattached teacher loses today, no more: opening classes, the scenario library, and the Studio overview. A guest lesson and their own scenarios stay open, so a new teacher can try a lesson the same day and no past lesson-runner is locked out. (Hard gate = refuse `agoraCreateSession` until approved; it breaks demos and needs every past lesson-runner grandfathered.)
-2. **How does an applicant name their school?** Default: a coordinator (or admin) copies a **teacher sign-up link** per school from Studio (`/teach/request?school=<schoolId>`); the request lands in that school's coordinators' queue already matched. Without a link, the applicant types school name and city as free text and the request goes to system admins, who pick or open the school while approving. Applicants cannot browse the school list (rules keep `list` admin-only).
-3. **One home for the overview.** Agora already shows the same data at `/supervise` (coordinator) and `/teach/activity` (teacher). Default: Studio `/agora` becomes the canonical place; in v1 the Agora menu rows link to it and keep working; after one release `/supervise/*` redirects to Studio and `/teach/activity` is removed from the menu. Two live screens for one object is an IA defect we accept for one release only.
+## Decisions (Tal, 2026-10-15) — these override the defaults the first draft proposed
+1. **What does a pending teacher lose? Everything: a hard gate.** Until approved, no lesson (guest lessons included), no class, no roster, no scenario, no library. Gated on the server, not only in UI: `agoraCreateSession`, `agoraTeacherClass` (every action), `agoraTeacherRoster`, `agoraGenerateTopicPackage`, the library callables, and the `agoraTopicPackages` create rule. Because of this, "approved" is no longer derived from school attachment alone: it is **stored** as a `grant` on the person's `agoraApprovedTeachers/{uid}` marker (see §2, §10), and `resolveApproval` stays the single seam. Grandfathered generously by a one-time backfill (`functions/scripts/backfillAgoraApprovals.ts`, dry run by default): everyone attached to a school (teacher or coordinator), on a class (creator or co-teacher), who ever ran a lesson, or who ever created a scenario. System admins are always approved. **The backfill runs before the gate deploys**, or teachers are locked out.
+2. **How does an applicant name their school?** As proposed: a per-school **teacher sign-up link** (`/teach/request?school=<schoolId>`) routes the request to that school's coordinators; without a link the applicant types school name + city and the request goes to system admins, who pick or open the school while approving. Applicants cannot browse the school list.
+3. **One home for the overview: both stay.** Agora `/supervise` and `/teach/activity` keep working next to Studio `/agora`; no redirects, no removal from the menu.
+4. **Hebrew label for the role is exactly "רכז/ת"** (not "רכז/ת אזורי/ת"). English stays "Regional coordinator". Code and wire names stay `supervisor`.
+5. **Approval rule confirmed:** admins approve, decline and remove anyone, coordinators included; coordinators approve, decline and remove teachers only, at schools they coordinate.
 
 ## 1. Audiences
 | Audience | One-line goal | Must never see |
@@ -21,8 +23,8 @@ Supersedes: in `docs/ia/agora-teacher-home.md` §7, the state "No classes, no sc
 Assumptions: a coordinator may also teach (both roles at once is allowed and common). A coordinator's "region" is the set of schools they are attached to; there is no Region object (§9 A1).
 
 ## 2. Object model
-- **Person**: a `usersV2` account signed in with Google. Not a new document. Their **access** is derived, never stored as a flag:
-  - *approved teacher* = attached to ≥1 active school (`agoraSchools.teacherMap[uid]`) — exactly today's `resolveApproval` in `functions/src/agora/libraryAccess.ts`, which was written as "the single seam for when Studio gains an approval step".
+- **Person**: a `usersV2` account signed in with Google. Not a new document. Their **access** (decided in `resolveApproval`, `functions/src/agora/libraryAccess.ts`, the single seam):
+  - *approved teacher* = a system admin, OR holds an explicit approval (`agoraApprovedTeachers/{uid}.grant`, written on request approval, on an admin attach, or by the grandfather backfill), OR attached to ≥1 active school as teacher or coordinator. Removing access from someone's last school also removes their grant (Decision 1).
   - *coordinator* = attached as supervisor to ≥1 active school (`supervisorMap[uid]`).
   - *admin* = `usersV2.systemAdmin`.
   - *pending* = has an access request in status `pending`. *Declined* = last request declined and nothing approved.
@@ -40,7 +42,7 @@ One name per concept. Studio strings live in `packages/shared-i18n/src/languages
 
 | Concept | EN | HE | i18n key (NEW unless noted) | Route segment | Code type | Synonyms to retire |
 |---|---|---|---|---|---|---|
-| Regional coordinator | Regional coordinator | רכז/ת אזורי/ת (?) ; pl. רכזים אזוריים | Studio "Regional coordinator", "Regional coordinators"; Agora `role.coordinator` | — | `supervisor` | Studio "Supervisor", "Supervisors", "מפקח", "מפקחים" (all keys listed below) |
+| Regional coordinator | Regional coordinator | רכז/ת ; pl. רכזים | Studio "Regional coordinator", "Regional coordinators"; Agora `role.coordinator` | — | `supervisor` | Studio "Supervisor", "Supervisors", "מפקח", "מפקחים" (all keys listed below) |
 | Coordination area (Agora screen) | Regional coordination | ריכוז אזורי | Agora `supervise.title` (change from "פיקוח"), `dashboard.supervise_card` (merge into it) | /supervise (kept) | — | "פיקוח", "Supervision" |
 | Teacher | Teacher | מורה | Studio "Teacher" (exists) | — | — | — |
 | Access request | Access request | בקשת גישה | Studio "Access request"; Agora `access.request` | requests | `AgoraAccessRequest` | "join request", "invitation" (an invitation is outgoing; do not reuse "Pending invitations") |
@@ -106,7 +108,7 @@ Max depth 3 everywhere. A coordinator of several schools never gets a school lev
 Applicant, sign up with a sign-up link (3 steps)
 1. Agora `/teach/request?school=X` → Google sign-in if needed (existing popup)
 2. Form, school pre-filled and read-only: full name, role (teacher), optional note → "שליחה"
-3. Done state: "ממתינה לאישור", who approves (the school's coordinators), "meanwhile you can try a guest lesson" → `/teach`
+3. Done state: "ממתינה לאישור", who approves (the school's coordinators), nothing else opens until approval (Decision 1) → `/teach`
 (Without a link: step 2 adds school name + city as free text; the request goes to admins.)
 
 Applicant, check status (1 step): open `/teach` → banner shows the status; or Studio `/` → `/agora` status card.
@@ -124,7 +126,7 @@ Admin, approve a teacher request with no school (4 steps)
 3. "אישור" 4. confirmed.
 
 Admin, approve a coordinator (4 steps)
-1. `/admin/agora/requests` filtered "רכז/ת אזורי/ת" → open
+1. `/admin/agora/requests` filtered "רכז/ת" → open
 2. Pick one or more schools (multi-select); optional narrowing stays on the school page as today
 3. "אישור" 4. coordinator emailed; their Studio home is `/agora`.
 
@@ -169,7 +171,7 @@ Applicant, withdraw (2 taps): `/teach` banner → "ביטול הבקשה" → co
 | Remove coordinator / narrow scope / open school | yes | no | no | no |
 | Studio overview | all (admin tree) | own schools | own classes | status only |
 
-- **Grandfathering**: approval stays derived from attachment, so every teacher and coordinator attached to an active school today is approved with no migration. One backfill (dry run first, list shown to Tal): teachers on an active class of an active school but not in that school's `teacherMap` (co-teachers added by email) are attached to it. People who only ran guest lessons get nothing: next visit they see "בקשת גישה כמורה" and their history stays.
+- **Grandfathering** (Decision 1): one backfill, `functions/scripts/backfillAgoraApprovals.ts` (dry run prints uid, email and reasons; `--apply` writes), grants approval to everyone attached to any school as teacher or coordinator, on any class (creator or co-teacher), who ever ran a lesson, or who ever created a scenario. Anonymous and deleted accounts, admins, and existing grants are skipped. It runs before the gate is deployed. Nobody is attached to a school by it.
 - **Co-teacher added by email** (existing `agoraTeacherClass addTeacher`): still works; if that account is not approved at the class's school, a pending request (`source: 'coTeacher'`) is created so the school's coordinators see it.
 - **Teacher in two schools**: one request per school; access, revoke and coordinator visibility are per school. The teacher overview spans all their classes.
 - **Coordinator removed**: their pending queue needs no handover (queues are per school); teachers they approved stay approved; if they lose every school their `/agora` shows the "no schools" text, and if they also teach they keep the teacher overview.
@@ -177,14 +179,16 @@ Applicant, withdraw (2 taps): `/teach` banner → "ביטול הבקשה" → co
 - **Applicant already approved elsewhere** opens a sign-up link: the form becomes "request access at this school too".
 - **Spam guard**: at most one pending request per (person, role, school) and 5 requests per person per week.
 - A1. No Region object: "אזורי" describes the coordinator, the region is their school list. If regions must be named or reported on, that is a separate spec.
-- A2. Hebrew gender: "רכז/ת אזורי/ת" follows ministry-document style; Tal may prefer "רכזת אזורית" as written on the cards (?).
+- A2. Hebrew label: "רכז/ת" (Tal, 2026-10-15; Decision 4).
 - A3. Approvers see the applicant's sign-in email (needed to vet them); it is read from `usersV2` by the callable and never stored on the request. Run privacy-guardian over this before build.
 
 ## 10. Data model sketch (no code)
 `agoraAccessRequests/{requestId}` (NEW, `packages/shared-types/src/models/agora/agoraAccess.ts`, Valibot, timestamps in ms):
 `requestId, uid, role: 'teacher'|'supervisor', fullName, schoolId?, schoolNameText?, city?, note? (≤300), source: 'form'|'link'|'coTeacher', status: 'pending'|'approved'|'declined'|'withdrawn', grantedSchoolIds? (coordinator approvals), decidedBy?, decidedVia?: 'admin'|'supervisor', decidedAt?, declineReason?, createdAt, lastUpdate`.
 Callables (me-west1): `agoraRequestAccess` (submit, withdraw) and `agoraManageAccess` (list, approve, decline, revoke; scope via `resolveSupervisorScope`). Approve reuses the attach logic of `agoraAdminManageSchool` by uid and then `syncApprovalMarker`, so the library opens at once.
-Rules: `match /agoraAccessRequests/{id}`: `get` if `resource.data.uid == request.auth.uid` or system admin; `list` system admin only; `write: false`. Coordinators read through the callable (same pattern as supervision). `agoraSchools`, `agoraClasses`, `agoraApprovedTeachers` rules unchanged.
+Rules: `match /agoraAccessRequests/{id}`: `get` if system admin or (`resource != null` and `resource.data.uid == request.auth.uid`); `list` system admin, or a query constrained to the caller's own uid; `write: false`. Coordinators read through the callable (same pattern as supervision). `agoraTopicPackages` `create` now also requires `isApprovedAgoraTeacher() || isSystemAdminUser()` (the hard gate). `agoraSchools`, `agoraClasses`, `agoraApprovedTeachers` rules unchanged.
+Approval storage (Decision 1): `agoraApprovedTeachers/{uid}` gains an optional `grant {source: 'request'|'grandfathered'|'assigned', grantedAt, grantedBy, requestId?}` and `via` gains `'granted'`. Invariant: the marker exists ⇔ the person is approved (the rules read existence). Written only by `functions/src/agora/approvalGrant.ts` (approve, admin attach, backfill); removed when access is removed from the person's last school.
+As built (slice 1): callable types live in `agoraAccess.ts` itself (not `agoraClassroomCallables.ts`, which is near the 500-line cap); no composite index is needed (equality-only queries, ordering in memory).
 Indexes (create via gcloud, never `--force`): `status+schoolId+createdAt`, `status+createdAt`, `uid+status`.
 Supervisor console: add a `self` reading path so a teacher may open the `class` and `student` views of their own classes (today those views require a coordinator scope).
 
@@ -194,7 +198,7 @@ Supervisor console: add a `self` reading path so a teacher may open the `class` 
 - Admins: in-app count; one daily digest of requests with no school, coordinator requests, and any request waiting over 3 days.
 
 ## 12. Handoff to UX
-Fixed by this spec: the labels in §3 (including "כיתות האגורה שלי" instead of "board", "רכז/ת אזורי/ת" instead of "מפקח"); routes and depth in §4–5; the approval rule and matrix in §9; one request component for admin and coordinator; every state in §7 has a place; approve/decline reachable inline from the list.
+Fixed by this spec: the labels in §3 (including "כיתות האגורה שלי" instead of "board", "רכז/ת" instead of "מפקח"); routes and depth in §4–5; the approval rule and matrix in §9; one request component for admin and coordinator; every state in §7 has a place; approve/decline reachable inline from the list.
 Yours to decide: how the waiting count shows on nav items; request row layout and what goes in it beyond name, school, date; the decline-reason input (free text vs presets); the applicant done screen and Agora banner treatment; how the school picker sits on the coordinator home; confirmation pattern for "הסרת הגישה".
 
 ## 13. Implementation slices (each mergeable on its own; 1 first)

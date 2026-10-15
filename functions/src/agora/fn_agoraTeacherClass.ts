@@ -21,6 +21,8 @@ import {
 	removeClassTeacher,
 } from './classes';
 import { resolveTeacherUid } from './teacherLookup';
+import { requireApprovedTeacher } from './libraryAccess';
+import { requestAccessForCoTeacher } from './coTeacherRequest';
 
 /**
  * A teacher's own classes. The admin opens the school and attaches its
@@ -32,13 +34,9 @@ import { resolveTeacherUid } from './teacherLookup';
 export const agoraTeacherClass = onCall(
 	{ region: functionConfig.region },
 	async (request: CallableRequest<TeacherClassRequest>): Promise<TeacherClassResponse> => {
-		const uid = request.auth?.uid;
-		if (!uid) {
-			throw new HttpsError('unauthenticated', 'User must be authenticated');
-		}
-		if (request.auth?.token.firebase.sign_in_provider === 'anonymous') {
-			throw new HttpsError('permission-denied', 'Teachers must sign in with a full account');
-		}
+		// Hard gate (Tal, 2026-10-15): a pending teacher — e.g. a co-teacher
+		// added by email who was never approved — cannot touch classes.
+		const { uid } = await requireApprovedTeacher(request);
 
 		const data = request.data ?? ({} as TeacherClassRequest);
 
@@ -106,6 +104,8 @@ export const agoraTeacherClass = onCall(
 				case 'addTeacher': {
 					const teacherUid = await resolveTeacherUid(data.teacherEmail ?? '');
 					await addClassTeacher(classId, teacherUid);
+					// Not approved yet: file a pending request so the school's coordinators see it
+					await requestAccessForCoTeacher(teacherUid, agoraClass.schoolId, uid);
 
 					return { classId, teacherUid };
 				}

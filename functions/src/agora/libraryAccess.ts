@@ -14,28 +14,41 @@ import { isSystemAdmin } from '../utils/httpAuth';
 import { firstNameOf } from './libraryStrings';
 
 /**
- * Who is an APPROVED teacher.
+ * Who is an APPROVED teacher (and so may do anything a teacher does in Agora:
+ * open lessons, classes and scenarios, enter the library).
  *
- * Today there is no explicit "approved" flag on a user: a sys-admin vets a
- * teacher by attaching them to an ACTIVE school (`agoraSchools.teacherMap`),
- * by naming them one of its supervisors (`supervisorMap`), or by being a
- * sys-admin themselves. That admin-granted attachment is what "approved" means
- * for the library. (A teacher a class teacher added by e-mail is NOT approved:
- * any teacher can mint those, so they prove nothing.)
+ * Approved = any of:
+ *   - a sys-admin (`usersV2.systemAdmin`);
+ *   - an explicit approval: a `grant` on the person's `agoraApprovedTeachers`
+ *     marker, written when an access request is approved, when a sys-admin
+ *     attaches them to a school, or by the one-time grandfather backfill
+ *     (functions/scripts/backfillAgoraApprovals.ts);
+ *   - attached to an ACTIVE school as teacher (`teacherMap`) or regional
+ *     coordinator (`supervisorMap`) — kept so nobody a sys-admin attached is
+ *     ever locked out by a missing marker. (A teacher a class teacher added by
+ *     e-mail is NOT approved: any teacher can mint those; such an add files a
+ *     pending access request instead.)
  *
- * This file is the single seam: when Studio gains an explicit approval step,
- * {@link resolveApproval} learns about it and nothing else changes.
+ * Tal, 2026-10-15: a pending teacher gets NOTHING until approved, so approval
+ * can no longer be derived from school attachment alone — hence the stored
+ * grant. This file stays the single seam: every gate asks
+ * {@link resolveApproval} (directly or through {@link requireApprovedTeacher}).
  */
 
 export interface Approval {
 	approved: boolean;
 	isAdmin: boolean;
 	via?: AgoraApprovalSource;
+	/** Whether the rules-visible marker exists now (a gate heals a missing one) */
+	hasMarker?: boolean;
 }
 
 export async function resolveApproval(uid: string): Promise<Approval> {
-	const isAdmin = await isSystemAdmin(uid);
-	if (isAdmin) return { approved: true, isAdmin, via: 'admin' };
+	const [isAdmin, markerSnap] = await Promise.all([isSystemAdmin(uid), markerRef(uid).get()]);
+	const hasMarker = markerSnap.exists;
+	if (isAdmin) return { approved: true, isAdmin, via: 'admin', hasMarker };
+	const marker = markerSnap.data() as Partial<AgoraApprovedTeacher> | undefined;
+	if (marker?.grant) return { approved: true, isAdmin, via: 'granted', hasMarker };
 
 	const [teacherSchools, supervisorSchools] = await Promise.all([
 		db.collection(Collections.agoraSchools).where(`teacherMap.${uid}`, '==', true).get(),
@@ -43,13 +56,22 @@ export async function resolveApproval(uid: string): Promise<Approval> {
 	]);
 	const active = (snaps: typeof teacherSchools): boolean =>
 		snaps.docs.some((snap) => (snap.data() as AgoraSchool).status === 'active');
-	if (active(teacherSchools)) return { approved: true, isAdmin, via: 'school' };
-	if (active(supervisorSchools)) return { approved: true, isAdmin, via: 'supervisor' };
+	if (active(teacherSchools)) return { approved: true, isAdmin, via: 'school', hasMarker };
+	if (active(supervisorSchools)) return { approved: true, isAdmin, via: 'supervisor', hasMarker };
 
-	return { approved: false, isAdmin };
+	return { approved: false, isAdmin, hasMarker };
 }
 
-/** The signed-in, non-anonymous caller, who must also be approved. Throws otherwise. */
+/** Machine-readable reason on the refusal, so a client can offer "request access" instead of an error */
+export const NOT_APPROVED_REASON = 'agora-not-approved';
+
+/**
+ * The signed-in, non-anonymous caller, who must also be approved. Throws
+ * otherwise (`permission-denied`, details `{ reason: NOT_APPROVED_REASON }`).
+ * When the caller is approved but has no marker yet (attached before markers
+ * were reliable), the marker is written so the rules-side gate
+ * (`isApprovedAgoraTeacher()`) agrees with this one.
+ */
 export async function requireApprovedTeacher(
 	request: CallableRequest<unknown>,
 ): Promise<{ uid: string; approval: Approval }> {
@@ -64,9 +86,11 @@ export async function requireApprovedTeacher(
 	if (!approval.approved) {
 		throw new HttpsError(
 			'permission-denied',
-			'The scenario library is for approved teachers — ask your admin to attach you to a school',
+			'Agora is for approved teachers — request access and wait for approval',
+			{ reason: NOT_APPROVED_REASON },
 		);
 	}
+	if (!approval.hasMarker) await syncApprovalMarker(uid, approval);
 
 	return { uid, approval };
 }

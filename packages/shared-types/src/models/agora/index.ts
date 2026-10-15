@@ -556,6 +556,7 @@ export type {
 	PublishInput,
 	PublishProblem,
 	AgoraApprovalSource,
+	AgoraApprovalGrant,
 	AgoraApprovedTeacher,
 	AgoraScenarioCardText,
 	AgoraScenarioTranslation,
@@ -589,6 +590,7 @@ export {
 	AgoraLibraryStatsSchema,
 	AgoraScenarioRatingSchema,
 	AgoraApprovalSourceSchema,
+	AgoraApprovalGrantSchema,
 	AgoraApprovedTeacherSchema,
 	AgoraScenarioCardTextSchema,
 	AgoraScenarioTranslationSchema,
@@ -644,6 +646,33 @@ export {
 	repointTagIds,
 	resolveTagAlias,
 } from './agoraLibraryCommunity';
+
+export type {
+	AgoraAccessRole,
+	AgoraAccessStatus,
+	AgoraAccessSource,
+	AgoraAccessDecidedVia,
+	AgoraAccessRequest,
+	AgoraAccessActor,
+	RequestAccessRequest,
+	RequestAccessResponse,
+	AccessStatusRow,
+	ManageAccessRequest,
+	ManageAccessResponse,
+	AccessRequestRow,
+	AccessSchoolOption,
+} from './agoraAccess';
+export {
+	AGORA_ACCESS,
+	AgoraAccessRoleSchema,
+	AgoraAccessStatusSchema,
+	AgoraAccessSourceSchema,
+	AgoraAccessDecidedViaSchema,
+	AgoraAccessRequestSchema,
+	canDecideAccessRequest,
+	canSeeAccessRequest,
+	canRemoveAccess,
+} from './agoraAccess';
 
 export type {
 	AgoraTopicReader,
