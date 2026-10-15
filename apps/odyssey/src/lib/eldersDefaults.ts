@@ -1,4 +1,5 @@
 import type { OdysseyElder } from '@freedi/shared-types';
+import { COUNSEL_BY_SLUG } from './counsel/index';
 
 /**
  * Seed content for the Elder personas — the crew of המלחים מחכים, AI characters
@@ -152,6 +153,7 @@ export function resolveCounsel(
 export const DEFAULT_ELDERS: DefaultElder[] = [
 	{
 		slug: 'herzl',
+		counsel: COUNSEL_BY_SLUG['herzl'],
 		name: 'בנימין זאב הרצל',
 		role: 'חוזה המדינה',
 		years: '1860–1904',
@@ -213,6 +215,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'ben-gurion',
+		counsel: COUNSEL_BY_SLUG['ben-gurion'],
 		name: 'דוד בן-גוריון',
 		role: 'ראש הממשלה הראשון',
 		years: '1886–1973',
@@ -277,6 +280,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'jabotinsky',
+		counsel: COUNSEL_BY_SLUG['jabotinsky'],
 		name: 'זאב ז׳בוטינסקי',
 		role: 'מייסד התנועה הרוויזיוניסטית',
 		years: '1880–1940',
@@ -338,6 +342,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'rav-kook',
+		counsel: COUNSEL_BY_SLUG['rav-kook'],
 		name: 'הרב אברהם יצחק הכהן קוק',
 		role: 'הרב הראשי האשכנזי הראשון',
 		years: '1865–1935',
@@ -400,6 +405,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'geula-cohen',
+		counsel: COUNSEL_BY_SLUG['geula-cohen'],
 		name: 'גאולה כהן',
 		role: 'לוחמת לח״י וחברת כנסת',
 		years: '1925–2019',
@@ -461,6 +467,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'golda',
+		counsel: COUNSEL_BY_SLUG['golda'],
 		name: 'גולדה מאיר',
 		role: 'ראש הממשלה הרביעית',
 		years: '1898–1978',
@@ -522,6 +529,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'rachel-yanait',
+		counsel: COUNSEL_BY_SLUG['rachel-yanait'],
 		name: 'רחל ינאית בן-צבי',
 		role: 'ממקימות "השומר" ומחנכת',
 		years: '1886–1979',
@@ -583,6 +591,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'ovadia',
+		counsel: COUNSEL_BY_SLUG['ovadia'],
 		name: 'הרב עובדיה יוסף',
 		role: 'הראשון לציון ומנהיג ש״ס',
 		years: '1920–2013',
@@ -644,6 +653,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'aloni',
+		counsel: COUNSEL_BY_SLUG['aloni'],
 		name: 'שולמית אלוני',
 		role: 'מייסדת ר״ץ ושרת החינוך',
 		years: '1928–2014',
@@ -705,6 +715,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'leibowitz',
+		counsel: COUNSEL_BY_SLUG['leibowitz'],
 		name: 'ישעיהו ליבוביץ',
 		role: 'הוגה דעות ומדען',
 		years: '1903–1994',
@@ -766,6 +777,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'habibi',
+		counsel: COUNSEL_BY_SLUG['habibi'],
 		name: 'אמיל חביבי',
 		role: 'סופר וחבר כנסת',
 		years: '1922–1996',
@@ -834,6 +846,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 		// dignity of the person in front of you — she speaks. Elsewhere she is
 		// silent, and the sea simply sails past her on those islands.
 		slug: 'senesh',
+		counsel: COUNSEL_BY_SLUG['senesh'],
 		name: 'חנה סנש',
 		role: 'משוררת וצנחנית',
 		years: '1921–1944',
