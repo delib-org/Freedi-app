@@ -632,3 +632,14 @@ export {
 	repointTagIds,
 	resolveTagAlias,
 } from './agoraLibraryCommunity';
+
+export type {
+	AgoraTopicReader,
+	TopicAccessRequest,
+	TopicAccessResponse,
+} from './agoraScenarioAccess';
+export {
+	canOpenScenario,
+	createAgoraTopicReaderId,
+	isPrivateScenario,
+} from './agoraScenarioAccess';

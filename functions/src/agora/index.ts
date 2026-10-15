@@ -48,3 +48,5 @@ export { agoraLibraryHidePost } from './fn_agoraLibraryHidePost';
 export { agoraLibraryReport } from './fn_agoraLibraryReport';
 export { agoraLibraryResolveReport } from './fn_agoraLibraryResolveReport';
 export { agoraLibraryMergeTags } from './fn_agoraLibraryMergeTags';
+export { onAgoraLibraryReportCreated } from './fn_onAgoraLibraryReportCreated';
+export { agoraTopicAccess } from './fn_agoraTopicAccess';

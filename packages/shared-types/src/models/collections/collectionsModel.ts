@@ -131,6 +131,8 @@ export enum Collections {
     agoraLibraryReports = 'agoraLibraryReports',
     agoraScenarioTranslations = 'agoraScenarioTranslations',
     agoraApprovedTeachers = 'agoraApprovedTeachers',
+    // Server-written markers: who may read a private scenario (players of a game built on it)
+    agoraTopicReaders = 'agoraTopicReaders',
 
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',

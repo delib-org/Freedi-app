@@ -32,6 +32,7 @@ import {
 import { logError } from '../utils/errorHandling';
 import { generateAnonName } from './anonNames';
 import { knockToRejoin } from './rejoin';
+import { grantTopicRead } from './topicReaders';
 
 interface CivicStanding {
 	campPosition: number;
@@ -285,6 +286,8 @@ export const agoraJoinSession = onCall(
 						lastActive: Date.now(),
 					});
 				}
+				// A seat taken before reader markers existed gets one on its way back in
+				await grantTopicRead(session.topicPackageId, uid, session.sessionId);
 
 				return {
 					sessionId: session.sessionId,
@@ -427,6 +430,8 @@ export const agoraJoinSession = onCall(
 			});
 
 			await recordIdentity(session, uid, anonName, realName, rosterMember?.memberId);
+			// The player may read the scenario behind the game even when it is private
+			await grantTopicRead(session.topicPackageId, uid, session.sessionId);
 
 			// The roster's "last active" column — fire-and-forget: losing it costs
 			// a timestamp, never a seat.

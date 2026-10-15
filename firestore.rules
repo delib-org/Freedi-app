@@ -71,10 +71,13 @@ service cloud.firestore {
     //
     // The teachers' scenario library rides on the same documents, so the rules
     // split reading in two:
-    //   get  — any signed-in user, as before: a student's phone opens the
-    //          package behind its game by id, and a public scenario may be the
-    //          one a teacher is playing. THIS IS THE SOFT SPOT: "private" hides a
-    //          scenario from every list, but its id, if it leaks, still opens it.
+    //   get  — a PUBLIC scenario: any signed-in user. A private one (anything
+    //          not public, never-published included): its author, a sys-admin,
+    //          or someone holding a reader marker
+    //          `agoraTopicReaders/{id}--{uid}` — the server leaves one for each
+    //          player of a game built on it (agoraJoinSession, and
+    //          agoraTopicAccess for someone already in the session). A leaked
+    //          id alone no longer opens a private scenario.
     //   list — the owner's own packages, or PUBLIC ones for an approved teacher
     //          (see isApprovedAgoraTeacher). Nobody else can enumerate anything.
     // `visibility`, `library`, `stats` and the `source*` credit are written by
@@ -91,8 +94,19 @@ service cloud.firestore {
                         'sourceTitle', 'sourceAuthorName', 'sourceVersion']);
     }
 
+    function isAgoraTopicReader(topicPackageId) {
+      return exists(/databases/$(database)/documents/agoraTopicReaders/$(topicPackageId + '--' + request.auth.uid));
+    }
+
     match /agoraTopicPackages/{topicPackageId} {
-      allow get: if isAuthenticated();
+      // Cheapest first: the doc's own fields, then the marker, then the admin
+      // lookup (two reads). A missing package reads as missing, not denied.
+      allow get: if isAuthenticated() &&
+                    (resource == null ||
+                     resource.data.get('creatorId', '') == request.auth.uid ||
+                     resource.data.get('visibility', 'private') == 'public' ||
+                     isAgoraTopicReader(topicPackageId) ||
+                     isSystemAdminUser());
       allow list: if isAuthenticated() &&
                      (resource.data.creatorId == request.auth.uid ||
                       // A sys-admin also lists what is hidden, to lift a hide
@@ -156,6 +170,11 @@ service cloud.firestore {
       allow write: if false;
     }
     match /agoraScenarioTranslations/{translationId} {
+      allow read, write: if false;
+    }
+    // Reader markers for private scenarios (see agoraTopicPackages above).
+    // The rules ask exists() of them; no client reads or writes one.
+    match /agoraTopicReaders/{readerId} {
       allow read, write: if false;
     }
     // The approval marker agoraLibraryAccess writes (and the rules above ask
