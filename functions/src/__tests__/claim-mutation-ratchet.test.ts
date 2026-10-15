@@ -24,6 +24,7 @@ jest.mock('../synthesis/liveSynth/auditLog', () => ({
 }));
 jest.mock('../synthesis/queue/enqueue', () => ({
 	enqueueItem: jest.fn().mockResolvedValue(undefined),
+	ensureQueueRun: jest.fn().mockResolvedValue(undefined),
 }));
 
 const mockClassifyChange = classifyClaimChange as jest.MockedFunction<typeof classifyClaimChange>;
