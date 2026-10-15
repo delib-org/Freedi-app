@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { OrganizationRole } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { useOrg } from '@/org/OrgContext';
+import { useAgoraAccess } from '../AgoraHome/useAgoraAccess';
 import type { AppShellNavItem } from '@/components/atomic/organisms/AppShell';
 import type { StudioScope } from './useStudioScope';
 
@@ -56,6 +57,7 @@ const AgoraIcon: ReactNode = (
 export function useStudioNav(scope: StudioScope): AppShellNavItem[] {
 	const { t } = useTranslation();
 	const { currentRole, isSystemAdmin } = useOrg();
+	const agoraAccess = useAgoraAccess(scope.kind === 'agora');
 
 	const isViewer = currentRole === OrganizationRole.viewer && !isSystemAdmin;
 	const items: AppShellNavItem[] = [];
@@ -93,6 +95,20 @@ export function useStudioNav(scope: StudioScope): AppShellNavItem[] {
 
 	if (scope.kind === 'personal') {
 		items.push({ id: 'events', label: t('Events'), to: '/personal', icon: EventsIcon, end: true });
+	}
+
+	if (scope.kind === 'agora') {
+		items.push({
+			id: 'my-agora',
+			label: t('My Agora classrooms'),
+			to: '/agora',
+			icon: AgoraIcon,
+			end: true,
+		});
+		// A coordinator who also teaches keeps their own classes one tap away.
+		if (agoraAccess.isSupervisor && agoraAccess.isTeacher) {
+			items.push({ id: 'my-classes', label: t('My classes'), to: '/agora/mine', icon: PeopleIcon });
+		}
 	}
 
 	// In the admin workspace those screens ARE the sections; anywhere else they

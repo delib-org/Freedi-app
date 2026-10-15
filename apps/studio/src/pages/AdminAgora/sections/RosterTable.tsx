@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import type { AgoraStudentAggregate, TeacherConsoleMember } from '@freedi/shared-types';
 import { EmptyState } from '@/components/atomic/atoms';
+import { ADMIN_AGORA_BASE } from '../agoraBase';
 import { shortDate } from './formatLesson';
 import styles from '../AdminDetail.module.scss';
 
@@ -9,10 +10,16 @@ export interface RosterTableProps {
 	members: TeacherConsoleMember[];
 	/** memberId → career; a member without one has not played yet. */
 	careers: Record<string, AgoraStudentAggregate>;
+	/** Where student pages live: `/admin/agora` (default) or `/agora`. */
+	basePath?: string;
 }
 
 /** The class roster: alias, games, points, last active — each row opens the student page. */
-export default function RosterTable({ members, careers }: RosterTableProps) {
+export default function RosterTable({
+	members,
+	careers,
+	basePath = ADMIN_AGORA_BASE,
+}: RosterTableProps) {
 	const { t, currentLanguage } = useTranslation();
 	const sorted = [...members].sort((a, b) => a.alias.localeCompare(b.alias, currentLanguage));
 
@@ -36,7 +43,7 @@ export default function RosterTable({ members, careers }: RosterTableProps) {
 						return (
 							<tr key={member.memberId}>
 								<th scope="row">
-									<Link to={`/admin/agora/students/${member.memberId}`}>{member.alias}</Link>
+									<Link to={`${basePath}/students/${member.memberId}`}>{member.alias}</Link>
 								</th>
 								<td className={styles.number}>{career?.gamesPlayed ?? 0}</td>
 								<td className={styles.number}>{career?.totals.total ?? 0}</td>

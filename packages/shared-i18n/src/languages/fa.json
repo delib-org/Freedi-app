@@ -4894,5 +4894,8 @@
   "topAgreementsShowMore": "نمایش بیشتر",
   "topAgreementsLoadError": "بارگذاری بالاترین توافق‌ها ممکن نشد.",
   "topAgreementsEmpty": "هنوز گزینه‌ای ارزیابی نشده است.",
-  "topAgreementsNoOptions": "هنوز گزینه‌ای برای این پرسش وجود ندارد."
+  "topAgreementsNoOptions": "هنوز گزینه‌ای برای این پرسش وجود ندارد.",
+  "My Agora classrooms": "کلاس‌های آگورای من",
+  "My classes": "کلاس‌های من",
+  "You are not attached to an Agora school yet.": "هنوز به مدرسه‌ای در آگورا متصل نشده‌اید."
 }

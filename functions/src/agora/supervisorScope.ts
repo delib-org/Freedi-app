@@ -1,6 +1,7 @@
 import { HttpsError } from 'firebase-functions/v2/https';
 import { db } from '../db';
 import {
+	AgoraClass,
 	AgoraSchool,
 	Collections,
 	SupervisorScope,
@@ -52,4 +53,28 @@ export function requireScope(scope: SupervisorScope | null): SupervisorScope {
 	}
 
 	return scope;
+}
+
+/**
+ * The scope a caller holds over ONE class: their supervisor scope on its
+ * school, else, when they teach the class, a scope narrowed to themselves.
+ * That "self" scope lets a teacher open the class and student views of their
+ * own classes in Studio without being a supervisor. It shows them the class
+ * and their own lessons only (as a narrowed supervisor sees a shared class),
+ * and never another school's data.
+ */
+export async function classScopeFor(
+	uid: string,
+	cls: Pick<AgoraClass, 'schoolId' | 'teacherIds'>,
+): Promise<{ scope: SupervisorScope | null; school: AgoraSchool | null }> {
+	const { scope, school } = await supervisorScopeFor(uid, cls.schoolId);
+	if (scope) return { scope, school };
+	if (cls.teacherIds.includes(uid)) {
+		return {
+			scope: { kind: 'teachers', schoolId: cls.schoolId, teacherIds: new Set([uid]) },
+			school,
+		};
+	}
+
+	return { scope: null, school };
 }

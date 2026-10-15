@@ -27,7 +27,12 @@ import { logError } from '../utils/errorHandling';
 import { isSystemAdmin } from '../utils/httpAuth';
 import { teacherDisplayNames } from './teacherLookup';
 import { toSupervisorSessionRow, toTeacherMember } from './consoleShapes';
-import { requireScope, supervisedSchools, supervisorScopeFor } from './supervisorScope';
+import {
+	classScopeFor,
+	requireScope,
+	supervisedSchools,
+	supervisorScopeFor,
+} from './supervisorScope';
 
 import {
 	CLASSES_CAP,
@@ -234,7 +239,7 @@ async function classView(
 	if (!cls) {
 		throw new HttpsError('not-found', 'Class not found');
 	}
-	const { scope: found, school } = await supervisorScopeFor(uid, cls.schoolId);
+	const { scope: found, school } = await classScopeFor(uid, cls);
 	const scope = requireScope(found);
 	if (!isClassInScope(scope, cls)) {
 		throw new HttpsError('permission-denied', 'This class is outside your scope');
@@ -312,7 +317,7 @@ async function studentView(
 	if (!cls) {
 		throw new HttpsError('not-found', 'Class not found');
 	}
-	const { scope: found } = await supervisorScopeFor(uid, cls.schoolId);
+	const { scope: found } = await classScopeFor(uid, cls);
 	const scope = requireScope(found);
 	if (!isClassInScope(scope, cls)) {
 		throw new HttpsError('permission-denied', 'This student is outside your scope');

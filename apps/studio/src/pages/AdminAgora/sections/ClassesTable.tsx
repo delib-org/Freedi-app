@@ -5,11 +5,19 @@ import type { SupervisorClassRow } from '@freedi/shared-types';
 import { EmptyState } from '@/components/atomic/atoms';
 import { Sparkline } from '@/components/atomic/molecules/Chart';
 import { classRowContextFrom } from '@/lib/indicatorContexts';
+import { ADMIN_AGORA_BASE } from '../agoraBase';
 import { shortDate } from './formatLesson';
 import styles from '../AdminDetail.module.scss';
 
 /** A teacher's (or school's) classes: size, lessons, score trend, participation trend. */
-export default function ClassesTable({ rows }: { rows: SupervisorClassRow[] }) {
+export default function ClassesTable({
+	rows,
+	basePath = ADMIN_AGORA_BASE,
+}: {
+	rows: SupervisorClassRow[];
+	/** Where class pages live: `/admin/agora` (default) or `/agora`. */
+	basePath?: string;
+}) {
 	const { t, currentLanguage } = useTranslation();
 	const sorted = [...rows].sort((a, b) => a.name.localeCompare(b.name, currentLanguage));
 
@@ -38,7 +46,7 @@ export default function ClassesTable({ rows }: { rows: SupervisorClassRow[] }) {
 						return (
 							<tr key={row.classId}>
 								<th scope="row">
-									<Link to={`/admin/agora/classes/${row.classId}`}>
+									<Link to={`${basePath}/classes/${row.classId}`}>
 										{row.name}
 										{row.gradeLevel ? ` · ${row.gradeLevel}` : ''}
 									</Link>

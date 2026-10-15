@@ -14,6 +14,7 @@ import { useTranslation } from '@freedi/shared-i18n/react';
 import { useAuth } from '@/auth/AuthContext';
 import { useOrg } from '@/org/OrgContext';
 import { useAllOrganizations } from '@/db/orgStatements';
+import { useAgoraAccess } from '@/pages/AgoraHome/useAgoraAccess';
 import { OrgSwitcher, type SwitcherEntry } from '@/components/atomic/molecules/OrgSwitcher';
 import { Breadcrumb, type BreadcrumbItem } from '@/components/atomic/molecules/Breadcrumb';
 import type { StudioScope } from '@/pages/_shared/useStudioScope';
@@ -94,6 +95,8 @@ const AppShell: FC<AppShellProps> = ({
 	const { t, currentLanguage, changeLanguage } = useTranslation();
 	const { user, signOut } = useAuth();
 	const { orgs, memberships, isSystemAdmin } = useOrg();
+	// Cached for a minute and shared with the pages, so this is one callable per session at most.
+	const agoraAccess = useAgoraAccess();
 	// A system admin works inside organizations they do not belong to — several
 	// of them have no members at all — so listing only their own memberships
 	// hides exactly the organizations they were sent in to run.
@@ -160,6 +163,16 @@ const AppShell: FC<AppShellProps> = ({
 			to: `/orgs/${org.organizationId}`,
 			role: roles[org.organizationId],
 		})),
+		...(agoraAccess.isTeacher || agoraAccess.isSupervisor || scope.kind === 'agora'
+			? [
+					{
+						id: 'agora',
+						kind: 'agora' as const,
+						label: t('My Agora classrooms'),
+						to: '/agora',
+					},
+				]
+			: []),
 		{ id: 'personal', kind: 'personal', label: t('Personal'), to: '/personal' },
 		...(isSystemAdmin
 			? [
@@ -175,7 +188,11 @@ const AppShell: FC<AppShellProps> = ({
 	const currentEntryId =
 		scope.kind === 'org' ? scope.organizationId : scope.kind === 'none' ? null : scope.kind;
 	const switcherKind =
-		scope.kind === 'admin' ? 'system' : scope.kind === 'personal' ? 'personal' : 'org';
+		scope.kind === 'admin'
+			? 'system'
+			: scope.kind === 'personal' || scope.kind === 'agora'
+				? scope.kind
+				: 'org';
 
 	const primaryNav = nav.filter((item) => item.group !== 'system');
 	const systemNav = nav.filter((item) => item.group === 'system');

@@ -4416,5 +4416,8 @@
   "topAgreementsShowMore": "Mostrar más",
   "topAgreementsLoadError": "No se pudieron cargar los mayores acuerdos.",
   "topAgreementsEmpty": "Aún no se ha evaluado ninguna opción.",
-  "topAgreementsNoOptions": "Aún no hay opciones para esta pregunta."
+  "topAgreementsNoOptions": "Aún no hay opciones para esta pregunta.",
+  "My Agora classrooms": "Mis aulas de Agora",
+  "My classes": "Mis clases",
+  "You are not attached to an Agora school yet.": "Aún no estás vinculado a ninguna escuela de Agora."
 }

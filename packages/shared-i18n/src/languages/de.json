@@ -4416,5 +4416,8 @@
   "topAgreementsShowMore": "Mehr anzeigen",
   "topAgreementsLoadError": "Die höchsten Zustimmungen konnten nicht geladen werden.",
   "topAgreementsEmpty": "Es wurden noch keine Optionen bewertet.",
-  "topAgreementsNoOptions": "Für diese Frage gibt es noch keine Optionen."
+  "topAgreementsNoOptions": "Für diese Frage gibt es noch keine Optionen.",
+  "My Agora classrooms": "Meine Agora-Klassen",
+  "My classes": "Meine Klassen",
+  "You are not attached to an Agora school yet.": "Du bist noch keiner Agora-Schule zugeordnet."
 }

@@ -4536,5 +4536,8 @@
   "topAgreementsShowMore": "عرض المزيد",
   "topAgreementsLoadError": "تعذر تحميل أعلى الاتفاقات.",
   "topAgreementsEmpty": "لم يتم تقييم أي خيارات بعد.",
-  "topAgreementsNoOptions": "لا توجد خيارات لهذا السؤال بعد."
+  "topAgreementsNoOptions": "لا توجد خيارات لهذا السؤال بعد.",
+  "My Agora classrooms": "صفوف أغورا الخاصة بي",
+  "My classes": "صفوفي",
+  "You are not attached to an Agora school yet.": "لم يتم ربطك بمدرسة في أغورا بعد."
 }

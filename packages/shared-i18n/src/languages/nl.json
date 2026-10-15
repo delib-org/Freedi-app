@@ -4416,5 +4416,8 @@
   "topAgreementsShowMore": "Meer tonen",
   "topAgreementsLoadError": "De hoogste overeenstemming kon niet worden geladen.",
   "topAgreementsEmpty": "Er zijn nog geen opties beoordeeld.",
-  "topAgreementsNoOptions": "Er zijn nog geen opties voor deze vraag."
+  "topAgreementsNoOptions": "Er zijn nog geen opties voor deze vraag.",
+  "My Agora classrooms": "Mijn Agora-klassen",
+  "My classes": "Mijn klassen",
+  "You are not attached to an Agora school yet.": "Je bent nog niet aan een Agora-school gekoppeld."
 }

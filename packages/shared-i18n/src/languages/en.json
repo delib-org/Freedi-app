@@ -5096,5 +5096,8 @@
   "topAgreementsShowMore": "Show more",
   "topAgreementsLoadError": "Could not load the top agreements.",
   "topAgreementsEmpty": "No options have been evaluated yet.",
-  "topAgreementsNoOptions": "No options for this question yet."
+  "topAgreementsNoOptions": "No options for this question yet.",
+  "My Agora classrooms": "My Agora classrooms",
+  "My classes": "My classes",
+  "You are not attached to an Agora school yet.": "You are not attached to an Agora school yet."
 }

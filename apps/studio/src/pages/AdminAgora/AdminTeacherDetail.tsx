@@ -1,14 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
-import { useOrg } from '@/org/OrgContext';
 import { useAgoraSchool } from '@/db/agoraAdmin';
 import { useSupervisorConsole } from '@/db/agoraSupervisor';
 import { teacherContextFrom } from '@/lib/indicatorContexts';
 import { SegmentedControl } from '@/components/atomic/atoms';
 import { IndicatorGrid } from '@/components/atomic/molecules/Chart';
 import StudioPage from '../_shared/StudioPage';
-import { useGrace } from '../_shared/useGrace';
+import { useAgoraDetailAccess } from './agoraBase';
 import ClassesTable from './sections/ClassesTable';
 import LessonsTable from './sections/LessonsTable';
 import { LoadError, Loading, PrivacyNote, TruncatedNote } from './sections/LoadState';
@@ -17,17 +16,16 @@ import styles from './AdminDetail.module.scss';
 const PERIOD_DAYS = 90;
 type Granularity = 'day' | 'week';
 
-/** `/admin/agora/teachers/:schoolId/:uid` — one teacher's lessons and console time (system admins only). */
+/** `/admin/agora/teachers/:schoolId/:uid` — one teacher's lessons and console time (system admin, or a regional coordinator whose scope covers the teacher). */
 export default function AdminTeacherDetail() {
 	const { t } = useTranslation();
 	const { schoolId = '', uid = '' } = useParams<{ schoolId: string; uid: string }>();
-	const { isSystemAdmin, loading: orgLoading } = useOrg();
-	const denied = useGrace(!orgLoading && !isSystemAdmin);
+	const { base, inAdminTree, rootLabel, enabled, denied } = useAgoraDetailAccess();
 	const [granularity, setGranularity] = useState<Granularity>('week');
 
-	const { data: school } = useAgoraSchool(schoolId, isSystemAdmin);
+	const { data: school } = useAgoraSchool(schoolId, inAdminTree && enabled);
 	const { data, loading, error, refresh } = useSupervisorConsole(
-		isSystemAdmin && schoolId && uid
+		enabled && schoolId && uid
 			? { view: 'teacher', schoolId, teacherId: uid, days: PERIOD_DAYS }
 			: null,
 	);
@@ -43,14 +41,16 @@ export default function AdminTeacherDetail() {
 	if (denied) return <Navigate to="/" replace />;
 
 	const crumbs = [
-		{ label: t('Agora classrooms'), to: '/admin/agora' },
-		{ label: school?.name ?? t('School'), to: `/admin/agora/schools/${schoolId}` },
+		{ label: rootLabel, to: inAdminTree ? base : `${base}?school=${schoolId}` },
+		...(inAdminTree
+			? [{ label: school?.name ?? t('School'), to: `${base}/schools/${schoolId}` }]
+			: []),
 		{ label: data?.teacher.name ?? t('Teacher') },
 	];
 
 	return (
 		<StudioPage breadcrumb={crumbs} title={data?.teacher.name ?? t('Teacher')}>
-			{(!isSystemAdmin || loading) && <Loading />}
+			{(!enabled || loading) && <Loading />}
 			{error && (
 				<LoadError error={error} notFoundText={t('Teacher not found.')} onRetry={refresh} />
 			)}
@@ -73,10 +73,10 @@ export default function AdminTeacherDetail() {
 					<PrivacyNote />
 
 					<h2 className={styles.sectionTitle}>{t('Classes')}</h2>
-					<ClassesTable rows={data.classes} />
+					<ClassesTable rows={data.classes} basePath={base} />
 
 					<h2 className={styles.sectionTitle}>{t('Lessons')}</h2>
-					<LessonsTable rows={data.lessonRows} classNames={classNames} />
+					<LessonsTable rows={data.lessonRows} classNames={classNames} basePath={base} />
 				</>
 			)}
 		</StudioPage>

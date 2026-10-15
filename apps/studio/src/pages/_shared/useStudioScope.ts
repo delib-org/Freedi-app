@@ -6,12 +6,12 @@ import { useOrganization } from './useOrganization';
 /**
  * Which workspace the URL puts you in.
  *
- * The console holds three of them — an organization, your own events, and the
- * system-admin screens — and every trail begins by naming the one you are in.
+ * The console holds four of them — an organization, your own events, your own
+ * Agora classrooms (a teacher or regional coordinator), and the system-admin screens — and every trail begins by naming the one you are in.
  * It is read from the route rather than from state, so a page can never claim
  * you are somewhere you have navigated away from.
  */
-export type StudioScopeKind = 'org' | 'personal' | 'admin' | 'none';
+export type StudioScopeKind = 'org' | 'personal' | 'agora' | 'admin' | 'none';
 
 export interface StudioScope {
 	kind: StudioScopeKind;
@@ -34,6 +34,9 @@ export function useStudioScope(): StudioScope {
 	const personal = personalNested ?? personalExact;
 	const event = useMatch('/events/:eventId');
 	const admin = useMatch('/admin/*');
+	const agoraNested = useMatch('/agora/*');
+	const agoraExact = useMatch('/agora');
+	const agora = agoraNested ?? agoraExact;
 
 	const organizationId = orgNested?.params.orgId ?? orgExact?.params.orgId ?? null;
 	// A system admin browses organizations they are not a member of, so the name
@@ -52,6 +55,9 @@ export function useStudioScope(): StudioScope {
 	}
 	if (personal || event) {
 		return { kind: 'personal', label: t('Personal'), organizationId: null };
+	}
+	if (agora) {
+		return { kind: 'agora', label: t('My Agora classrooms'), organizationId: null };
 	}
 	if (admin) {
 		return { kind: 'admin', label: t('System admin'), organizationId: null };
