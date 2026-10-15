@@ -36,6 +36,7 @@ import {
 import { safeParse } from 'valibot';
 import { logError } from '../utils/errorHandling';
 import { generateUniqueCode } from './joinCodes';
+import { requireApprovedTeacher } from './libraryAccess';
 import { buildQuestionStatement } from './questionStage';
 import { sanitizeStagePlan } from './stagePlanInput';
 import { loadTeacherPrompts } from './teacherPrompts';
@@ -217,13 +218,9 @@ interface Result {
 export const agoraCreateSession = onCall(
 	{ region: functionConfig.region },
 	async (request: CallableRequest<Request>): Promise<Result> => {
-		const uid = request.auth?.uid;
-		if (!uid) {
-			throw new HttpsError('unauthenticated', 'User must be authenticated');
-		}
-		if (request.auth?.token.firebase.sign_in_provider === 'anonymous') {
-			throw new HttpsError('permission-denied', 'Teachers must sign in with a full account');
-		}
+		// Hard gate (Tal, 2026-10-15): only an approved teacher opens a lesson,
+		// guest lessons included. Throws unauthenticated / permission-denied.
+		const { uid } = await requireApprovedTeacher(request);
 
 		const {
 			topicPackageId,

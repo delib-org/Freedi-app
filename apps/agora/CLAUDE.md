@@ -162,12 +162,16 @@ Screens: `views/teacher/scenarioLibrary/`, state in `lib/scenarioLibrary/`,
 words in `lib/scenarioLibrary/strings*.ts` (merged into `i18n.ts`), styles
 `_scenario-library*.scss`. Server: `functions/src/agora/fn_agoraLibrary*.ts`.
 
-- **Who may enter.** There is no explicit "approved" flag yet: an approved
-  teacher is a sys-admin, or a teacher/supervisor a sys-admin attached to an
-  ACTIVE school. `libraryAccess.ts#resolveApproval` is the one place to teach
-  about a future Studio approval. Callables re-check it live; the RULES see the
-  marker `agoraApprovedTeachers/{uid}` that `agoraLibraryAccess` writes (so a
-  removed teacher loses writes at once and reads at their next visit).
+- **Who may enter.** Since 2026-10-15 approval is explicit and a HARD gate
+  (pending teachers get nothing: no lesson, class, roster or scenario). An
+  approved teacher is a sys-admin, holds a `grant` on `agoraApprovedTeachers/{uid}`
+  (approved access request, admin attach, or the grandfather backfill), or is
+  attached to an ACTIVE school. `libraryAccess.ts#resolveApproval` is the one
+  seam; `requireApprovedTeacher` gates the callables; the RULES read the
+  marker's existence. Requests: `agoraRequestAccess` / `agoraManageAccess`
+  (docs/ia/studio-teacher-approval.md). Fastlane's `signInTeacher` grants its
+  teacher; a teacher signing in through the browser on the emulator must be
+  approved (Studio, or an admin attach) before opening a lesson.
 - **The soft spot.** `agoraTopicPackages` `get` stays open to any signed-in user
   (students read the package behind their game by id). Only `list` is
   restricted: the owner's own, or public + un-hidden for an approved teacher. A

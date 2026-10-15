@@ -267,10 +267,17 @@ describe('agora scenario library', () => {
 			);
 		});
 
-		it('still lets any teacher create an ordinary package of their own', async () => {
-			const db = env.authenticatedContext(OUTSIDER).firestore();
+		it('lets an approved teacher create an ordinary package of their own', async () => {
+			const db = env.authenticatedContext(APPROVED).firestore();
 			await assertSucceeds(
-				setDoc(doc(db, 'agoraTopicPackages', 'mine'), pkg('mine', { creatorId: OUTSIDER })),
+				setDoc(doc(db, 'agoraTopicPackages', 'mine'), pkg('mine', { creatorId: APPROVED })),
+			);
+		});
+
+		it('refuses a teacher who is not approved yet (hard gate: pending gets nothing)', async () => {
+			const db = env.authenticatedContext(OUTSIDER).firestore();
+			await assertFails(
+				setDoc(doc(db, 'agoraTopicPackages', 'pending'), pkg('pending', { creatorId: OUTSIDER })),
 			);
 		});
 

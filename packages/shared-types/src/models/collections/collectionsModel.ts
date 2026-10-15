@@ -131,6 +131,8 @@ export enum Collections {
     agoraLibraryReports = 'agoraLibraryReports',
     agoraScenarioTranslations = 'agoraScenarioTranslations',
     agoraApprovedTeachers = 'agoraApprovedTeachers',
+    // Requests to become an Agora teacher / regional coordinator (server-written)
+    agoraAccessRequests = 'agoraAccessRequests',
 
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',

@@ -509,8 +509,14 @@ export function publishProblems(input: PublishInput): PublishProblem[] {
 
 // ─── Who may enter ─────────────────────────────────────────────────────────
 
-/** How a teacher came to be approved, today */
-export const AgoraApprovalSourceSchema = picklist(['admin', 'school', 'supervisor']);
+/**
+ * How a teacher came to be approved: a sys-admin; attached to an active school
+ * as teacher or as regional coordinator (`supervisor`); or `granted` — an
+ * explicit approval with no live attachment (an approved access request, or
+ * grandfathered by the backfill). 'granted' widens the picklist; nothing parses
+ * the marker with this schema on a client (only the server writes and reads it).
+ */
+export const AgoraApprovalSourceSchema = picklist(['admin', 'school', 'supervisor', 'granted']);
 export type AgoraApprovalSource = InferOutput<typeof AgoraApprovalSourceSchema>;
 
 /**
@@ -524,10 +530,28 @@ export type AgoraApprovalSource = InferOutput<typeof AgoraApprovalSourceSchema>;
  * Doc id: the teacher's uid. Server-written only. The counters double as the
  * rate limits (copies a day, tags a week) without a query.
  */
+export const AgoraApprovalGrantSchema = object({
+	/** request = an approved access request; grandfathered = the one-time backfill; assigned = a sys-admin attached them */
+	source: picklist(['request', 'grandfathered', 'assigned']),
+	grantedAt: number(),
+	/** Approver uid, or 'backfill' */
+	grantedBy: string(),
+	requestId: optional(string()),
+});
+
+export type AgoraApprovalGrant = InferOutput<typeof AgoraApprovalGrantSchema>;
+
 export const AgoraApprovedTeacherSchema = object({
 	teacherId: string(),
 	via: AgoraApprovalSourceSchema,
 	checkedAt: number(),
+	/**
+	 * The explicit approval (Tal, 2026-10-15: pending teachers get nothing, so
+	 * approval can no longer be derived from school attachment alone). Present
+	 * = approved even with no active attachment. Removed when access is removed
+	 * from the person's last school. Server-written only.
+	 */
+	grant: optional(AgoraApprovalGrantSchema),
 	copiesDay: optional(string()),
 	copiesToday: optional(number()),
 	tagsWeekStart: optional(number()),

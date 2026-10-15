@@ -15,9 +15,21 @@ import {
 import { logError } from '../utils/errorHandling';
 import { isSystemAdmin } from '../utils/httpAuth';
 import { resolveTeacherUid } from './teacherLookup';
+import {
+	attachSupervisorUpdate,
+	attachTeacherUpdate,
+	detachSupervisorUpdate,
+	detachTeacherUpdate,
+	revokeGrantIfUnattached,
+	writeGrant,
+} from './approvalGrant';
+import { declinePendingForSchool } from './accessRequests';
 
 /** The most teachers one supervisor's narrowing may name */
 const MAX_SCOPE_TEACHERS = 200;
+
+/** Stored on access requests auto-declined when their school is archived */
+const SCHOOL_CLOSED_REASON = 'The school was closed';
 
 /**
  * Sys-admin school management. Clients cannot write `agoraSchools` at all
@@ -85,58 +97,57 @@ export const agoraAdminManageSchool = onCall(
 
 			if (action === 'archive') {
 				await schoolRef.update({ status: 'archived', lastUpdate: Date.now() });
+				// Its waiting access requests can no longer be granted there
+				await declinePendingForSchool(schoolId, uid, SCHOOL_CLOSED_REASON);
 
 				return { schoolId };
 			}
 
 			// The school's teachers: the ones who may open classes in it themselves.
-			// Both halves of the index move in one write, as on a class.
+			// Both halves of the index move in one write, as on a class. A
+			// sys-admin attaching someone IS an approval, so the grant is written too.
 			if (action === 'assignTeacher') {
 				const teacherUid = await resolveTeacherUid(teacherEmail ?? '');
-				await schoolRef.update({
-					teacherIds: FieldValue.arrayUnion(teacherUid),
-					[`teacherMap.${teacherUid}`]: true,
-					lastUpdate: Date.now(),
-				});
+				const now = Date.now();
+				await schoolRef.update(attachTeacherUpdate(teacherUid, now));
+				await writeGrant(
+					teacherUid,
+					{ source: 'assigned', grantedAt: now, grantedBy: uid },
+					'school',
+				);
 
 				return { schoolId, teacherUid };
 			}
 
 			if (action === 'removeTeacher') {
 				const teacherUid = await resolveTeacherUid(teacherEmail ?? '');
-				await schoolRef.update({
-					teacherIds: FieldValue.arrayRemove(teacherUid),
-					[`teacherMap.${teacherUid}`]: FieldValue.delete(),
-					lastUpdate: Date.now(),
-				});
+				await schoolRef.update(detachTeacherUpdate(teacherUid, Date.now()));
+				await revokeGrantIfUnattached(teacherUid);
 
 				return { schoolId, teacherUid };
 			}
 
-			// The school's supervisors: the ones who may read its teachers' lessons
-			// and hours through agoraSupervisorConsole. Same two-halves index as
-			// the teachers above, plus an optional per-supervisor narrowing.
+			// The school's supervisors (UI: regional coordinators): the ones who may
+			// read its teachers' lessons and hours through agoraSupervisorConsole.
+			// Same two-halves index as the teachers above, plus an optional
+			// per-supervisor narrowing.
 			if (action === 'assignSupervisor') {
 				const supervisorUid = await resolveTeacherUid(supervisorEmail ?? '');
-				await schoolRef.update({
-					supervisorIds: FieldValue.arrayUnion(supervisorUid),
-					[`supervisorMap.${supervisorUid}`]: true,
-					lastUpdate: Date.now(),
-				});
+				const now = Date.now();
+				await schoolRef.update(attachSupervisorUpdate(supervisorUid, now));
+				await writeGrant(
+					supervisorUid,
+					{ source: 'assigned', grantedAt: now, grantedBy: uid },
+					'supervisor',
+				);
 
 				return { schoolId, supervisorUid };
 			}
 
 			if (action === 'removeSupervisor') {
 				const supervisorUid = await resolveTeacherUid(supervisorEmail ?? '');
-				// The attachment, its index and its narrowing leave in ONE write —
-				// a scope left behind would silently re-narrow a re-assigned supervisor.
-				await schoolRef.update({
-					supervisorIds: FieldValue.arrayRemove(supervisorUid),
-					[`supervisorMap.${supervisorUid}`]: FieldValue.delete(),
-					[`supervisorScopes.${supervisorUid}`]: FieldValue.delete(),
-					lastUpdate: Date.now(),
-				});
+				await schoolRef.update(detachSupervisorUpdate(supervisorUid, Date.now()));
+				await revokeGrantIfUnattached(supervisorUid);
 
 				return { schoolId, supervisorUid };
 			}
