@@ -4403,5 +4403,11 @@
   "Participants see the last page after the final question. You can add your own message to it.": "Deelnemers zien de laatste pagina na de laatste vraag. Je kunt er je eigen bericht aan toevoegen.",
   "Add a message on the last page": "Een bericht op de laatste pagina toevoegen",
   "Message on the last page": "Bericht op de laatste pagina",
-  "Remove message": "Bericht verwijderen"
+  "Remove message": "Bericht verwijderen",
+  "topAgreements": "Hoogste overeenstemming",
+  "topAgreementsRefresh": "Vernieuwen",
+  "topAgreementsShowMore": "Meer tonen",
+  "topAgreementsLoadError": "De hoogste overeenstemming kon niet worden geladen.",
+  "topAgreementsEmpty": "Er zijn nog geen opties beoordeeld.",
+  "topAgreementsNoOptions": "Er zijn nog geen opties voor deze vraag."
 }

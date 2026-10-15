@@ -5083,5 +5083,11 @@
   "Participants see the last page after the final question. You can add your own message to it.": "Participants see the last page after the final question. You can add your own message to it.",
   "Add a message on the last page": "Add a message on the last page",
   "Message on the last page": "Message on the last page",
-  "Remove message": "Remove message"
+  "Remove message": "Remove message",
+  "topAgreements": "Top agreements",
+  "topAgreementsRefresh": "Refresh",
+  "topAgreementsShowMore": "Show more",
+  "topAgreementsLoadError": "Could not load the top agreements.",
+  "topAgreementsEmpty": "No options have been evaluated yet.",
+  "topAgreementsNoOptions": "No options for this question yet."
 }

@@ -5121,5 +5121,11 @@
   "Participants see the last page after the final question. You can add your own message to it.": "המשתתפים רואים את העמוד האחרון אחרי השאלה האחרונה. אפשר להוסיף לו הודעה משלכם.",
   "Add a message on the last page": "הוספת הודעה בעמוד האחרון",
   "Message on the last page": "הודעה בעמוד האחרון",
-  "Remove message": "הסרת ההודעה"
+  "Remove message": "הסרת ההודעה",
+  "topAgreements": "ההסכמות הגבוהות ביותר",
+  "topAgreementsRefresh": "רענון",
+  "topAgreementsShowMore": "הצג עוד",
+  "topAgreementsLoadError": "לא ניתן לטעון את ההסכמות הגבוהות ביותר.",
+  "topAgreementsEmpty": "עדיין לא הוערכו אפשרויות.",
+  "topAgreementsNoOptions": "עדיין אין אפשרויות לשאלה זו."
 }

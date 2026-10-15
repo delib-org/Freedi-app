@@ -4403,5 +4403,11 @@
   "Participants see the last page after the final question. You can add your own message to it.": "Die Teilnehmenden sehen die letzte Seite nach der letzten Frage. Du kannst ihr eine eigene Nachricht hinzufügen.",
   "Add a message on the last page": "Nachricht auf der letzten Seite hinzufügen",
   "Message on the last page": "Nachricht auf der letzten Seite",
-  "Remove message": "Nachricht entfernen"
+  "Remove message": "Nachricht entfernen",
+  "topAgreements": "Höchste Zustimmung",
+  "topAgreementsRefresh": "Aktualisieren",
+  "topAgreementsShowMore": "Mehr anzeigen",
+  "topAgreementsLoadError": "Die höchsten Zustimmungen konnten nicht geladen werden.",
+  "topAgreementsEmpty": "Es wurden noch keine Optionen bewertet.",
+  "topAgreementsNoOptions": "Für diese Frage gibt es noch keine Optionen."
 }

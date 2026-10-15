@@ -4881,5 +4881,11 @@
   "Participants see the last page after the final question. You can add your own message to it.": "شرکت‌کنندگان صفحه آخر را پس از آخرین پرسش می‌بینند. می‌توانید پیام خودتان را به آن اضافه کنید.",
   "Add a message on the last page": "افزودن پیام در صفحه آخر",
   "Message on the last page": "پیام در صفحه آخر",
-  "Remove message": "حذف پیام"
+  "Remove message": "حذف پیام",
+  "topAgreements": "بالاترین توافق‌ها",
+  "topAgreementsRefresh": "بازآوری",
+  "topAgreementsShowMore": "نمایش بیشتر",
+  "topAgreementsLoadError": "بارگذاری بالاترین توافق‌ها ممکن نشد.",
+  "topAgreementsEmpty": "هنوز گزینه‌ای ارزیابی نشده است.",
+  "topAgreementsNoOptions": "هنوز گزینه‌ای برای این پرسش وجود ندارد."
 }

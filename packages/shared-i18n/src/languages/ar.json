@@ -4523,5 +4523,11 @@
   "Participants see the last page after the final question. You can add your own message to it.": "يرى المشاركون الصفحة الأخيرة بعد السؤال الأخير. يمكنك إضافة رسالتك الخاصة إليها.",
   "Add a message on the last page": "إضافة رسالة في الصفحة الأخيرة",
   "Message on the last page": "رسالة في الصفحة الأخيرة",
-  "Remove message": "إزالة الرسالة"
+  "Remove message": "إزالة الرسالة",
+  "topAgreements": "أعلى الاتفاقات",
+  "topAgreementsRefresh": "تحديث",
+  "topAgreementsShowMore": "عرض المزيد",
+  "topAgreementsLoadError": "تعذر تحميل أعلى الاتفاقات.",
+  "topAgreementsEmpty": "لم يتم تقييم أي خيارات بعد.",
+  "topAgreementsNoOptions": "لا توجد خيارات لهذا السؤال بعد."
 }
