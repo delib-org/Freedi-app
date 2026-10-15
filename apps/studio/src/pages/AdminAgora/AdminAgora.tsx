@@ -12,9 +12,11 @@ import { Button, EmptyState, SegmentedControl, Skeleton, Tag } from '@/component
 import ProgressStat from '@/components/atomic/atoms/ProgressStat/ProgressStat';
 import StudioPage from '../_shared/StudioPage';
 import { useGrace } from '../_shared/useGrace';
+import { useAccessCount } from '../AccessRequests/accessCount';
 import OpenSchoolModal from './OpenSchoolModal';
 import SystemTrends from './SystemTrends';
 import BackfillLessons from './BackfillLessons';
+import accessStyles from '../AccessRequests/AccessRequests.module.scss';
 import styles from './AdminAgora.module.scss';
 
 type PeriodId = 'day' | 'month' | 'year';
@@ -73,12 +75,13 @@ function LooksRow({ stats }: { stats: AgoraStatsDoc | null }) {
 
 /** `/admin/agora` — the Agora classroom game across every school (system admins only). */
 export default function AdminAgora() {
-	const { t } = useTranslation();
+	const { t, tWithParams } = useTranslation();
 	const { isSystemAdmin, loading: orgLoading } = useOrg();
 	const [params, setParams] = useSearchParams();
 	const [period, setPeriod] = useState<PeriodId>('month');
 	const showModal = params.get('new') === '1';
 	const denied = useGrace(!orgLoading && !isSystemAdmin);
+	const waiting = useAccessCount(isSystemAdmin);
 
 	const periodKeys = currentPeriodKeys();
 	const { data: stats } = useAgoraStats(periodKeys[period], isSystemAdmin);
@@ -109,6 +112,15 @@ export default function AdminAgora() {
 				</>
 			}
 		>
+			<div className={accessStyles.countLine}>
+				<Link to="/admin/agora/requests">{t('Access requests')}</Link>
+				{waiting > 0 && (
+					<Tag status="frozen" dot>
+						{tWithParams('{{count}} waiting for approval', { count: waiting })}
+					</Tag>
+				)}
+			</div>
+
 			<section className={styles.kpis} aria-label={t('Activity')}>
 				<div className={styles.kpiHeader}>
 					<h2 className={styles.sectionTitle}>{t('Activity')}</h2>
@@ -163,7 +175,7 @@ export default function AdminAgora() {
 								<th scope="col">{t('School')}</th>
 								<th scope="col">{t('City')}</th>
 								<th scope="col">{t('Classes')}</th>
-								<th scope="col">{t('Supervisors')}</th>
+								<th scope="col">{t('Regional coordinators')}</th>
 							</tr>
 						</thead>
 						<tbody>

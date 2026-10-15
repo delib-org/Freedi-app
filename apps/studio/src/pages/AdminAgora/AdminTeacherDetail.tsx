@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { useAgoraSchool } from '@/db/agoraAdmin';
 import { useSupervisorConsole } from '@/db/agoraSupervisor';
@@ -7,6 +7,10 @@ import { teacherContextFrom } from '@/lib/indicatorContexts';
 import { SegmentedControl } from '@/components/atomic/atoms';
 import { IndicatorGrid } from '@/components/atomic/molecules/Chart';
 import StudioPage from '../_shared/StudioPage';
+import RemoveAccess from '../AccessRequests/RemoveAccess';
+import { refreshAccessCount } from '../AccessRequests/accessCount';
+import { useAgoraAccess } from '../AgoraHome/useAgoraAccess';
+import { useAccessActor } from '../AccessRequests/useAccessActor';
 import { useAgoraDetailAccess } from './agoraBase';
 import ClassesTable from './sections/ClassesTable';
 import LessonsTable from './sections/LessonsTable';
@@ -22,6 +26,10 @@ export default function AdminTeacherDetail() {
 	const { schoolId = '', uid = '' } = useParams<{ schoolId: string; uid: string }>();
 	const { base, inAdminTree, rootLabel, enabled, denied } = useAgoraDetailAccess();
 	const [granularity, setGranularity] = useState<Granularity>('week');
+	const navigate = useNavigate();
+	const actor = useAccessActor();
+	const { supervisedSchools } = useAgoraAccess(!inAdminTree);
+	const ownSchoolName = supervisedSchools.find((row) => row.schoolId === schoolId)?.name;
 
 	const { data: school } = useAgoraSchool(schoolId, inAdminTree && enabled);
 	const { data, loading, error, refresh } = useSupervisorConsole(
@@ -49,7 +57,25 @@ export default function AdminTeacherDetail() {
 	];
 
 	return (
-		<StudioPage breadcrumb={crumbs} title={data?.teacher.name ?? t('Teacher')}>
+		<StudioPage
+			breadcrumb={crumbs}
+			title={data?.teacher.name ?? t('Teacher')}
+			actions={
+				// A coordinator removes a teacher of their own school from here; admins do it on the school page.
+				actor && data && !inAdminTree ? (
+					<RemoveAccess
+						actor={actor}
+						target={{ uid, role: 'teacher', schoolId }}
+						personName={data.teacher.name}
+						schoolName={ownSchoolName ?? t('School')}
+						onRemoved={() => {
+							void refreshAccessCount();
+							navigate(`${base}?school=${schoolId}`);
+						}}
+					/>
+				) : undefined
+			}
+		>
 			{(!enabled || loading) && <Loading />}
 			{error && (
 				<LoadError error={error} notFoundText={t('Teacher not found.')} onRetry={refresh} />

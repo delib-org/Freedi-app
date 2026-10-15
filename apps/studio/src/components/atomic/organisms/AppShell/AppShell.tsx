@@ -41,6 +41,10 @@ export interface AppShellNavItem {
 	 * workspace named in the trail — so they are set apart and captioned.
 	 */
 	group?: 'system';
+	/** A count shown beside the label (hidden at 0). */
+	badge?: number;
+	/** What the count means, for assistive tech ("3 waiting for approval"). */
+	badgeLabel?: string;
 }
 
 export interface AppShellProps {
@@ -212,6 +216,11 @@ const AppShell: FC<AppShellProps> = ({
 					{item.icon}
 				</span>
 				<span className="app-shell__nav-label">{item.label}</span>
+				{item.badge !== undefined && item.badge > 0 && (
+					<span className="app-shell__nav-badge" aria-label={item.badgeLabel}>
+						{item.badge}
+					</span>
+				)}
 			</NavLink>
 		));
 
