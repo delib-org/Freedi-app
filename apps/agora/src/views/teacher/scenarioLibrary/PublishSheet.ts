@@ -13,6 +13,11 @@ import { t } from '../../../lib/i18n';
 import { generateCover, publishScenario } from '../../../lib/scenarioLibrary/api';
 import { uploadCover } from '../../../lib/scenarioLibrary/cover';
 import { coverProblem, type CoverProblem } from '../../../lib/scenarioLibrary/coverRules';
+import {
+	errorCodeOf,
+	publishErrorKey,
+	publishWaitKey,
+} from '../../../lib/scenarioLibrary/publishFeedback';
 import { CoverDrop } from './CoverDrop';
 import { TagPicker } from './TagPicker';
 
@@ -62,7 +67,7 @@ export function PublishSheet(): m.Component<PublishSheetAttrs> {
 	let aiLeft: number | null = null;
 	let aiNote: { key: string; error: boolean } | null = null;
 	let submitting = false;
-	let failed = false;
+	let failedKey: string | null = null;
 	let showProblems = false;
 
 	function onKey(event: KeyboardEvent): void {
@@ -159,7 +164,7 @@ export function PublishSheet(): m.Component<PublishSheetAttrs> {
 		}
 		if (submitting || progress !== null || aiWorking) return;
 		submitting = true;
-		failed = false;
+		failedKey = null;
 		m.redraw();
 		try {
 			await publishScenario({
@@ -171,8 +176,15 @@ export function PublishSheet(): m.Component<PublishSheetAttrs> {
 			});
 			attrs.onPublished(attrs.pkg.topicPackageId);
 		} catch (error) {
-			console.error('[Library] Publishing failed:', error);
-			failed = true;
+			const code = errorCodeOf(error);
+			console.error('[Library] Publishing failed:', {
+				operation: 'scenarioLibrary.publishSheet.submit',
+				scenarioId: attrs.pkg.topicPackageId,
+				code,
+				hasCover: Boolean(coverUrl),
+				error,
+			});
+			failedKey = publishErrorKey(code);
 		} finally {
 			submitting = false;
 			m.redraw();
@@ -258,6 +270,11 @@ export function PublishSheet(): m.Component<PublishSheetAttrs> {
 				(entry) => entry === 'summary_short' || entry === 'summary_long',
 			);
 			const editing = pkg.visibility === 'public';
+			const waitKey = publishWaitKey({
+				submitting,
+				uploading: progress !== null,
+				drawing: aiWorking,
+			});
 
 			return m('.question-sheet.scn-publish', [
 				m('.question-sheet__scrim', { onclick: onClose }),
@@ -379,7 +396,20 @@ export function PublishSheet(): m.Component<PublishSheetAttrs> {
 										problems.map((entry) => m('li', { key: entry }, problemText(entry))),
 									)
 								: null,
-							failed ? m('p.scn-field__error', { role: 'alert' }, t('scenlib.pub_failed')) : null,
+							failedKey ? m('p.scn-field__error', { role: 'alert' }, t(failedKey)) : null,
+
+							// Always one honest line about the button: why it waits, or that the picture can wait
+							m(
+								'.scn-publish__status',
+								waitKey
+									? m('p.scn-notice.scn-notice--busy', { role: 'status' }, [
+											m('span.scn-notice__dot', { 'aria-hidden': 'true' }),
+											m('span', t(waitKey)),
+										])
+									: !coverUrl && !editing
+										? m('p.scn-note', t('scenlib.pub_cover_optional'))
+										: null,
+							),
 						]),
 
 						m('footer.question-sheet__foot', [
@@ -392,8 +422,7 @@ export function PublishSheet(): m.Component<PublishSheetAttrs> {
 								'button.btn.btn--primary.question-sheet__continue',
 								{
 									type: 'button',
-									'aria-disabled':
-										submitting || progress !== null || aiWorking ? 'true' : undefined,
+									'aria-disabled': waitKey ? 'true' : undefined,
 									onclick: () => void submit(attrs, problems),
 								},
 								submitting
