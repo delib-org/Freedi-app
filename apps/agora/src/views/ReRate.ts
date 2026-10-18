@@ -119,15 +119,14 @@ export function ReRate(): m.Component<ReRateAttrs> {
 												{
 													class: active ? 'rate-scale__option--selected' : undefined,
 													role: 'radio',
+													'aria-label': t(option.labelKey),
+													title: t(option.labelKey),
 													'aria-checked': String(active),
 													onclick: () => {
 														ratings = { ...ratings, [stance.statementId]: option.value };
 													},
 												},
-												[
-													m('span.rate-scale__emoji', m(Icon, { name: option.icon, size: 30 })),
-													m('span.rate-scale__label', t(option.labelKey)),
-												],
+												[m('span.rate-scale__emoji', m(Icon, { name: option.icon, size: 38 }))],
 											);
 										}),
 									),
