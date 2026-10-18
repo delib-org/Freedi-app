@@ -123,7 +123,7 @@ try {
 	await teacher.locator('.start-game__advanced-summary').click();
 	await teacher.waitForSelector('.plan-editor', { timeout: 10_000 });
 	await teacher.waitForTimeout(300);
-	await teacher.locator('.plan-editor__item button.btn--ghost', { hasText: 'הגדרות' }).first().click();
+	await teacher.locator('.plan-step__tool--edit').first().click();
 	await teacher.waitForTimeout(300);
 	await shot(teacher, '11-start-quick');
 	console.log(`\n✓ screens in ${DIR}/`);
