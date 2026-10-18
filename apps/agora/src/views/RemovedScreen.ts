@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { iconLabel } from '../components/Icon';
 import { isRejoinDeclined, isRejoinPending, type AgoraRemoval } from '@freedi/shared-types';
 import { t } from '../lib/i18n';
 
@@ -50,7 +51,7 @@ export function RemovedScreen(): m.Component<RemovedScreenAttrs> {
 					},
 					[
 						m('h2', t(title)),
-						m('p.lobby__status', t(body)),
+						m('p.lobby__status', iconLabel(pending ? 'watch' : 'lock', t(body), 18)),
 						pending ? m('.spinner', { 'aria-hidden': 'true' }) : null,
 						pending
 							? null

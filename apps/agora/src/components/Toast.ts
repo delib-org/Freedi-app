@@ -2,6 +2,7 @@ import m from 'mithril';
 import { getToasts, dismissToast, holdToast, releaseToast } from '../lib/notifications';
 import { requestFocus } from '../lib/helpedFocus';
 import { triggerLook } from '../lib/notificationCopy';
+import { Icon } from './Icon';
 
 /** Floating lantern-glow toast stack (top of the game shell) */
 export const ToastStack: m.Component = {
@@ -20,7 +21,8 @@ export const ToastStack: m.Component = {
 				// row for the same event can never lead to different places.
 				const target = toast.target;
 				const actionable = target !== undefined;
-				const label = triggerLook(toast.triggerType, toast.text).line;
+				const look = triggerLook(toast.triggerType, toast.text);
+				const label = look.line;
 
 				return m(
 					actionable ? 'button.toast.toast--action' : '.toast',
@@ -37,7 +39,11 @@ export const ToastStack: m.Component = {
 						role: actionable ? undefined : 'status',
 						'aria-label': actionable ? label : undefined,
 					},
-					[m('span.toast__glow', { 'aria-hidden': 'true' }), m('span.toast__text', label)],
+					[
+						m('span.toast__glow', { 'aria-hidden': 'true' }),
+						m(Icon, { name: look.icon, size: 20, class: 'toast__icon' }),
+						m('span.toast__text', label),
+					],
 				);
 			}),
 		);

@@ -1,8 +1,11 @@
 import m from 'mithril';
+import { iconLabel, type IconName } from './Icon';
 
 export interface StandingBarAttrs {
 	/** "For" / "Against" — the side this column counts */
 	label: string;
+	/** A face beside the word, so the two sides differ by more than colour */
+	labelIcon?: IconName;
 	count: number;
 	/** 0–100, of all votes cast */
 	share: number;
@@ -103,7 +106,13 @@ function flashOnChange(dom: HTMLElement, count: number): void {
  * mounted at 0% so a side's first vote (and its last) glides too, instead of
  * appearing or vanishing.
  */
-export function standingBar({ label, count, share, showCount }: StandingBarAttrs): m.Children {
+export function standingBar({
+	label,
+	labelIcon,
+	count,
+	share,
+	showCount,
+}: StandingBarAttrs): m.Children {
 	return [
 		showCount
 			? m('span.voting__count.voting__count--standing', [
@@ -124,6 +133,6 @@ export function standingBar({ label, count, share, showCount }: StandingBarAttrs
 					})
 				: null,
 		),
-		m('span.voting__side', label),
+		m('span.voting__side', labelIcon ? iconLabel(labelIcon, label, 18) : label),
 	];
 }

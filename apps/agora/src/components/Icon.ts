@@ -66,6 +66,7 @@ export type IconName =
 	| 'arrow'
 	| 'home'
 	| 'menu'
+	| 'info'
 	// the scenario library
 	| 'star'
 	| 'search'
@@ -449,6 +450,14 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		['circle', { cx: 9, cy: 8, r: 3.4 }],
 		['path', { d: 'M2.8 20.5a6.2 6.2 0 0 1 12.4 0' }],
 		['path', { d: 'M16 5.2a3.4 3.4 0 0 1 0 6.6M17.5 15.2a6.2 6.2 0 0 1 3.7 5.3' }],
+	],
+
+	// The explain button: a round i. Everything the student does not need in
+	// order to proceed hides behind it.
+	info: [
+		['circle', { cx: 12, cy: 12, r: 9 }],
+		['path', { d: 'M12 11v5.2' }],
+		['circle', { cx: 12, cy: 7.8, r: 0.6, fill: 'currentColor' }],
 	],
 
 	'sound-on': [

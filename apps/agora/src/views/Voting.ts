@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
+import { Icon, iconLabel } from '../components/Icon';
 import { stalledBanner } from '../components/StalledBanner';
 import { CarriedContext } from '../components/CarriedContext';
 import { ChallengeCards } from '../components/ChallengeCards';
@@ -377,7 +378,13 @@ export function Voting(): m.Component<VotingAttrs> {
 						disabled: board ? undefined : readOnly,
 						onclick: board ? undefined : () => vote(statementId),
 					},
-					standingBar({ label, count, share, showCount: showResults && loaded }),
+					standingBar({
+						label,
+						labelIcon: tone === 'for' ? 'face-for' : 'face-against',
+						count,
+						share,
+						showCount: showResults && loaded,
+					}),
 				);
 			};
 
@@ -477,9 +484,13 @@ export function Voting(): m.Component<VotingAttrs> {
 							'span.voting__chip',
 							{ class: `voting__chip--${status}`, role: 'status', 'aria-live': 'polite' },
 							[
-								status === 'voted' || status === 'closed'
-									? m('span.voting__chip-mark', { 'aria-hidden': 'true' }, '✓')
-									: null,
+								status === 'voted'
+									? m(Icon, { name: 'check', size: 16 })
+									: status === 'closed'
+										? m(Icon, { name: 'lock', size: 16 })
+										: status === 'failed'
+											? m(Icon, { name: 'again', size: 16 })
+											: null,
 								t(`voting.status.${status}`),
 							],
 						),
@@ -510,7 +521,7 @@ export function Voting(): m.Component<VotingAttrs> {
 										? 'voting.closed'
 										: single
 											? 'voting.single_instruction'
-											: 'voting.instruction',
+											: 'voting.task',
 							),
 						),
 				phone ? statusStrip() : null,
@@ -550,7 +561,9 @@ export function Voting(): m.Component<VotingAttrs> {
 				phone
 					? null
 					: m('.voting__turnout', [turnoutMeter(), m('p.voting__turnout-text', turnoutText)]),
-				!showResults ? m('p.voting__hint', t('voting.results_hidden')) : null,
+				!showResults
+					? m('p.voting__hint', iconLabel('hide', t('voting.results_hidden'), 18))
+					: null,
 
 				// The ballot is the page: what the room said earlier is still
 				// reachable, but it no longer competes for first position.

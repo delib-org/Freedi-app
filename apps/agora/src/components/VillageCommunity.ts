@@ -564,7 +564,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 						!own && canRate && item
 							? m('.village-note__rate', ratingWidget(a, item, note))
 							: !own && gated
-								? m('small.village-note__hint', t('village.note.rate_gate'))
+								? m('small.village-note__hint', iconLabel('lock', t('village.note.rate_gate'), 14))
 								: null,
 						m('.village-note__actions', [
 							own && live && a.onEditMine
@@ -721,9 +721,6 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 												]),
 											]
 										: [
-												gated && notes.length > 0
-													? m('p.village-board__gate', t('village.board.gate'))
-													: null,
 												mine ? m('section.village-board__own', noteCard(mine)) : null,
 												classmates.length
 													? m('section.village-board__peers', [

@@ -38,6 +38,13 @@ await preflight();
 const OUT = 'output/three-students';
 mkdirSync(OUT, { recursive: true });
 const shot = shotter(OUT);
+// --docs=<dir> also files named phone screenshots for the IA docs
+const docsFlag = process.argv.find((arg) => arg.startsWith('--docs='));
+const DOCS = docsFlag ? docsFlag.slice('--docs='.length) : null;
+if (DOCS) mkdirSync(DOCS, { recursive: true });
+const docShot = async (page, name) => {
+	if (DOCS) await page.screenshot({ path: `${DOCS}/${name}.png` });
+};
 const KEEP = process.argv.includes('--keep');
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const runId = `three-${Date.now().toString(36)}`;
@@ -254,6 +261,7 @@ async function takeStand(student, value) {
 async function writeRound(session, student, itemId, text) {
 	const { page } = student;
 	await door(page, 'note');
+	if (itemId === 'round-story' && student.index === 0) await docShot(page, 'after-ingame-question-round');
 	await page.locator('textarea.round__textarea').fill(text);
 	await page.locator('.round__editor .btn--primary').click();
 	// The screen reads my words back only once the server has them
@@ -272,7 +280,19 @@ const browser = await chromium.launch({
 	headless: !KEEP,
 	args: ['--use-angle=metal', '--ignore-gpu-blocklist'],
 });
-const outcomes = {};
+let toastShot = false;
+const toastWatch = setInterval(async () => {
+	if (toastShot || !DOCS) return;
+	for (const [page, who] of watched) {
+		if (!who.startsWith('S')) continue;
+		if (await page.locator('.toast-stack .toast').first().isVisible().catch(() => false)) {
+			toastShot = true;
+			await docShot(page, 'after-ingame-toast');
+			console.log(`   (toast captured on ${who})`);
+			return;
+		}
+	}
+}, 300);
 
 try {
 	step('The teacher opens a lesson from the shelf, on the default plan');
@@ -405,6 +425,7 @@ try {
 		await note.locator('.unit-scale__step--on').waitFor({ timeout: 10_000 });
 	}
 	await shot(students[0].page, 'student-needs-board');
+	await docShot(students[0].page, 'after-ingame-notes-board');
 	for (const student of students) await settled(student.page, student.name, 'needs round');
 	assertQuiet('after the needs round');
 
@@ -473,6 +494,7 @@ try {
 	}
 	console.log('   ✓ every proposal carries a consensus from the two ratings it received');
 	await shot(students[0].page, 'student-square-rated');
+	await docShot(students[0].page, 'after-ingame-deliberation');
 	for (const student of students) await settled(student.page, student.name, 'square');
 	assertQuiet('after the square');
 
@@ -502,6 +524,7 @@ try {
 		if (!found) fail(`${student.name} found no ballot behind any door`);
 		await page.locator('.voting__option', { hasText: choiceText(choices[student.index]) }).first().click();
 		await page.locator('.voting__option--mine').first().waitFor({ timeout: 15_000 });
+		if (student.index === 0) await docShot(page, 'after-ingame-voting');
 		const vote = await until(`${student.name}'s vote reached the server`, async () =>
 			(await db.collection('votes').doc(`${student.uid}--${challengeQuestionId}`).get()).data(),
 		);
@@ -539,6 +562,7 @@ try {
 		await page.locator('.results__mine, .results__total, .village-scoreboard').first().waitFor({ timeout: 30_000 });
 		await clearCelebration(page, student.name);
 		await shot(page, `student-results-${student.name}`);
+		if (student.index === 0) await docShot(page, 'after-ingame-results');
 		await settled(page, student.name, 'results');
 	}
 	await shot(teacher.page, 'teacher-results');
@@ -555,4 +579,5 @@ try {
 } finally {
 	if (!KEEP) await browser.close();
 }
+clearInterval(toastWatch);
 process.exit(process.exitCode ?? 0);

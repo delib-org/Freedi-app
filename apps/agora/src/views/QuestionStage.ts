@@ -1,7 +1,7 @@
 import m from 'mithril';
 import { canWriteStage } from '../lib/flows/stageAccess';
 import { t } from '../lib/i18n';
-import { Icon } from '../components/Icon';
+import { Icon, iconLabel } from '../components/Icon';
 import { RateScale } from '../components/RateScale';
 import { CarriedContext } from '../components/CarriedContext';
 import { CpBands, bandClassOf, bandLabelOf } from '../components/CpBands';
@@ -157,7 +157,9 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 						),
 						m('h2.question__title', item.title ?? ''),
 						item.explanation ? m('p.question__explanation', item.explanation) : null,
-						closed && !outcome ? m('p.question__closed', t('question.closed')) : null,
+						closed && !outcome
+							? m('p.question__closed', iconLabel('lock', t('question.closed'), 18))
+							: null,
 					]),
 
 					m(CarriedContext, { session, beforeIndex: planIndex, defaultOpen: false }),
@@ -226,9 +228,9 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 							m('span.question__count', String(others.length)),
 						]),
 						!closed && !mine
-							? m('p.home-explanation', t('question.answer_first'))
+							? m('p.home-explanation', iconLabel('lock', t('question.answer_first'), 18))
 							: ordered.length === 0
-								? m('p.home-explanation', t('question.waiting_for_answers'))
+								? m('p.home-explanation', iconLabel('watch', t('question.waiting_for_answers'), 18))
 								: m(
 										'.question__list',
 										ordered.map((answer, index) => {
