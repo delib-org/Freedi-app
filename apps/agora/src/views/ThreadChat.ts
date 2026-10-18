@@ -165,7 +165,7 @@ export function threadEntry(options: ThreadEntryOptions): m.Children {
 				m(
 					'span.chat-entry__last',
 					{ class: last ? undefined : 'chat-entry__last--empty' },
-					last ? lastLine(last) : t('delib.chat_start'),
+					last ? lastLine(last) : t('delib.chat_open'),
 				),
 			]),
 			m('span.chat-entry__meta', [
@@ -643,9 +643,6 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 								cheerRoundTrip(session, proposal.statementId);
 							},
 						}),
-						// Said out loud, every time: keeping or lowering a rating is a
-						// real answer, not a rudeness
-						m('p.chat-system__free', t('thread.reweigh_free')),
 					]
 				: m('.chat-system__gate', [
 						m(
@@ -1030,9 +1027,9 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 							id: `chat-input-${proposal.statementId}`,
 							value: draft,
 							rows: 2,
-							placeholder: t(
-								role === 'owner' ? 'delib.thread_reply_placeholder' : 'delib.thread_placeholder',
-							),
+							// A placeholder never repeats its label: only the owner's reply
+							// box has words of its own to add
+							placeholder: role === 'owner' ? t('delib.thread_reply_placeholder') : undefined,
 							oninput: (event: InputEvent) => {
 								draft = (event.target as HTMLTextAreaElement).value;
 							},

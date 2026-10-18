@@ -3,6 +3,7 @@ import { Icon, iconLabel, IconName } from '../components/Icon';
 import { PlaceBar } from '../components/PlaceBar';
 import { placeNavTabs } from '../lib/flows/placeNav';
 import { HeroIcon } from '../components/HeroIcon';
+import { ExplainHint } from '../components/ExplainHint';
 import { t, tCount } from '../lib/i18n';
 import {
 	getDeliberationState,
@@ -169,7 +170,7 @@ export function lanternsFromState(
  */
 const PLACES: Record<
 	'mine' | 'rate' | 'help',
-	{ icon: IconName; titleKey: string; subKey: string; shellClass: string }
+	{ icon: IconName; titleKey: string; subKey?: string; shellClass: string }
 > = {
 	// Three objects, not three tools — see the same table in DelibHud.ts for
 	// why. These two must not drift: the HUD and the arrival splash are the
@@ -178,7 +179,6 @@ const PLACES: Record<
 	mine: {
 		icon: 'proposal',
 		titleKey: 'place.mine_title',
-		subKey: 'place.mine_sub',
 		shellClass: 'shell--place-mine',
 	},
 	rate: {
@@ -517,14 +517,6 @@ export function Deliberation(
 				keep
 					? null
 					: m('.gap-prompt__rules', [
-							m(
-								'span.gap-prompt__rule',
-								iconLabel(
-									'bridge',
-									t(getSessionFlow().stances ? 'delib.gap_rule_both' : 'delib.gap_rule_open'),
-									14,
-								),
-							),
 							m('span.gap-prompt__rule', iconLabel('improve', t('delib.gap_rule_build'), 14)),
 						]),
 				m('textarea.gap-prompt__textarea', {
@@ -1448,13 +1440,17 @@ export function Deliberation(
 		const gap = target - live;
 		if (gap > 20) return null;
 
-		return m(
-			'p.journey__tier',
-			iconLabel(
-				'trend',
-				t(target === tier1 ? 'delib.tier_distance' : 'delib.tier_distance_full', { n: gap }),
+		return m('.hint-line', [
+			m(
+				'p.journey__tier.hint-line__text',
+				iconLabel(
+					'trend',
+					t(target === tier1 ? 'delib.tier_distance' : 'delib.tier_distance_full', { n: gap }),
+				),
 			),
-		);
+			// The thresholds are the reason, not the number: one tap away
+			m(ExplainHint, { text: t('delib.bridge_info') }),
+		]);
 	}
 
 	/**
@@ -2363,7 +2359,9 @@ export function Deliberation(
 										),
 										t(PLACES[splash.step].titleKey),
 									]),
-									m('p.delib-splash__sub', t(PLACES[splash.step].subKey)),
+									PLACES[splash.step].subKey
+										? m('p.delib-splash__sub', t(PLACES[splash.step].subKey as string))
+										: null,
 								]),
 					)
 				: null;
@@ -2523,7 +2521,7 @@ export function Deliberation(
 								// The 🎯 is the label. "Your mission:" written above the
 								// mission itself was the icon's job done twice — it stays
 								// as the block's accessible name and nothing else.
-								m('.write-desk__mission', { 'aria-label': t('delib.mission_label') }, [
+								m('.write-desk__mission', [
 									m(
 										'span.write-desk__mission-icon',
 										{ 'aria-hidden': 'true' },
@@ -2864,7 +2862,6 @@ export function Deliberation(
 						// brief — the help place used to be a bare list of stalls.
 						m('.card.market-ask', [
 							m('p.market-ask__question', iconLabel('target', t('delib.help_question'))),
-							m('p.market-ask__hint', t('delib.help_dont_attack')),
 						]),
 						stalls.length > 0
 							? [

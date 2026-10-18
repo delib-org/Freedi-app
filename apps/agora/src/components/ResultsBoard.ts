@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { ExplainHint } from './ExplainHint';
 import { Icon, iconLabel, type IconName } from './Icon';
 import {
 	AGORA_RATING_LEVELS,
@@ -925,7 +926,6 @@ export function ResultsBoard(
 			m('p.board__detail-title', t('board.detail_title')),
 			m('.board__stats', [
 				statLine(t('board.detail_mean'), signed(meanPercent)),
-				statLine(t('board.detail_caution'), `−${caution}%`),
 				statLine(t('board.detail_cp'), signed(point.percent), { strong: true }),
 				statLine(
 					t('board.detail_coverage'),
@@ -938,8 +938,6 @@ export function ResultsBoard(
 					// own direction
 					{ numeric: false },
 				),
-				statLine(t('board.detail_ceiling'), `${ceiling}%`),
-				statLine(t('board.detail_split'), `${Math.round(consensus.polarization * 100)}%`),
 				statLine(t('board.detail_backing'), sideLabel(point, topic), { numeric: false }),
 				statLine(
 					t('board.detail_rank'),
@@ -956,7 +954,22 @@ export function ResultsBoard(
 			histogram(classDist(score)),
 			m('p.board__detail-sub', t('board.detail_camps')),
 			campSplit(score, topic),
-			m('p.board__detail-why', t('board.detail_why')),
+			// The jargon lives behind one explain button: the careful score, what
+			// was held back for classmates who did not rate, the ceiling, the split
+			m('.hint-line', [
+				m('p.hint-line__text', t('board.detail_how')),
+				m(ExplainHint, {
+					text: [
+						m('p', t('board.detail_careful')),
+						m('.board__stats', [
+							statLine(t('board.detail_caution'), `−${caution}%`),
+							statLine(t('board.detail_ceiling'), `${ceiling}%`),
+							statLine(t('board.detail_split'), `${Math.round(consensus.polarization * 100)}%`),
+						]),
+						m('p', t('board.detail_why')),
+					],
+				}),
+			]),
 		]);
 	}
 

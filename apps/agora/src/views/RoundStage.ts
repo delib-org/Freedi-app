@@ -1,7 +1,8 @@
 import m from 'mithril';
 import { canWriteStage } from '../lib/flows/stageAccess';
 import { t } from '../lib/i18n';
-import { Icon } from '../components/Icon';
+import { Icon, iconLabel } from '../components/Icon';
+import { ExplainHint } from '../components/ExplainHint';
 import { LikeButton } from '../components/LikeButton';
 import { UnitScale } from '../components/UnitScale';
 import { CarriedContext } from '../components/CarriedContext';
@@ -327,7 +328,16 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 							}),
 						),
 						m('h2.round__title', item.title?.trim() || t(`round.${kind}.prompt`)),
-						m('p.round__explanation', item.explanation?.trim() || t(`round.${kind}.hint`)),
+						m('.hint-line', [
+							m(
+								'p.round__explanation.hint-line__text',
+								item.explanation?.trim() || t(`round.${kind}.hint`),
+							),
+							// The need-vs-solution example is the reason, not a step: one tap away
+							isNeeds && !item.explanation?.trim()
+								? m(ExplainHint, { text: t('round.needs.example') })
+								: null,
+						]),
 						closed && !outcome ? m('p.round__closed', t('round.closed')) : null,
 					]),
 
@@ -342,7 +352,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 								m('p.teacher__section-title', t(`round.${kind}.summary_title`)),
 								outcome.summary
 									? m('p.round__summary', outcome.summary)
-									: m('p.home-explanation', t('round.no_texts')),
+									: m('p.home-explanation', iconLabel('watch', t('round.no_texts'), 18)),
 							])
 						: null,
 
@@ -404,7 +414,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 						]),
 						closed
 							? closedRows.length === 0
-								? m('p.home-explanation', t('round.no_texts'))
+								? m('p.home-explanation', iconLabel('watch', t('round.no_texts'), 18))
 								: m(
 										'.round__list',
 										closedRows.map((row, index) =>
@@ -426,9 +436,9 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 										),
 									)
 							: !mine
-								? m('p.home-explanation', t('round.answer_first'))
+								? m('p.home-explanation', iconLabel('lock', t('round.answer_first'), 18))
 								: dealt.length === 0
-									? m('p.home-explanation', t('round.waiting'))
+									? m('p.home-explanation', iconLabel('watch', t('round.waiting'), 18))
 									: [
 											m(
 												'.round__list',
@@ -436,7 +446,7 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 											),
 											goalMet && goal > 0
 												? m('.round__goal', [
-														m('p.round__goal-line', t('round.goal_met')),
+														m('p.round__goal-line', iconLabel('check', t('round.goal_met'), 18)),
 														moreLeft
 															? m(
 																	'button.btn.btn--secondary.btn--sm',

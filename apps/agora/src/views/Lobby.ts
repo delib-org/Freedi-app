@@ -2,7 +2,7 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import { EraMap } from '../components/EraMap';
 import { Collapsible } from '../components/Collapsible';
-import { Icon, type IconName } from '../components/Icon';
+import { Icon, iconLabel, type IconName } from '../components/Icon';
 import type { AgoraParticipant } from '@freedi/shared-types';
 
 export interface LobbyAttrs {
@@ -20,9 +20,9 @@ interface IntroCard {
 
 /** The three things the facilitator says before anyone speaks (the WizCol guide, "opening") */
 const INTRO_CARDS: readonly IntroCard[] = [
-	{ icon: 'bridge', titleKey: 'intro.goal_title', textKey: 'intro.goal_text' },
-	{ icon: 'thought', titleKey: 'intro.listen_title', textKey: 'intro.listen_text' },
-	{ icon: 'scales', titleKey: 'intro.end_title', textKey: 'intro.end_text' },
+	{ icon: 'target', titleKey: 'intro.goal_title', textKey: 'intro.goal_text' },
+	{ icon: 'talk', titleKey: 'intro.listen_title', textKey: 'intro.listen_text' },
+	{ icon: 'flag', titleKey: 'intro.end_title', textKey: 'intro.end_text' },
 ];
 
 /**
@@ -88,10 +88,13 @@ export const Lobby: m.Component<LobbyAttrs> = {
 
 				m('.text-center', [
 					m('span.lobby__count', String(participants.length)),
-					m('p.lobby__status', ` ${t('lobby.joined')}`),
+					m('p.lobby__status', iconLabel('people', ` ${t('lobby.joined')}`, 18)),
 				]),
 
-				m('p.lobby__status.lobby__waiting-dots.text-center', t('lobby.waiting')),
+				m(
+					'p.lobby__status.lobby__waiting-dots.text-center',
+					iconLabel('watch', t('lobby.waiting'), 20),
+				),
 
 				introCard(introOpen, () => {
 					introOpen = !introOpen;

@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { iconLabel } from './Icon';
 import { t } from '../lib/i18n';
 import {
 	AGORA_LIMITS,
@@ -128,7 +129,7 @@ export function ChallengeCards(): m.Component<ChallengeCardsAttrs> {
 					// The counts are hidden, and saying so is the point: silence
 					// about a number reads as a broken screen, a sentence about it
 					// reads as a rule.
-					m('p.challenge__blind', t('challenge.blind')),
+					m('p.challenge__blind', iconLabel('hide', t('challenge.blind'), 18)),
 				]);
 			}
 
@@ -139,7 +140,7 @@ export function ChallengeCards(): m.Component<ChallengeCardsAttrs> {
 
 				return m('.challenge.challenge__desk', [
 					m('h3.challenge__title', t('challenge.desk_title')),
-					m('p.challenge__rule', t('challenge.rule')),
+					m('p.challenge__rule', iconLabel('scales', t('challenge.rule'), 18)),
 					m('textarea.challenge__input', {
 						value: draft,
 						// Readonly, never disabled: a disabled textarea drops focus
@@ -182,7 +183,7 @@ export function ChallengeCards(): m.Component<ChallengeCardsAttrs> {
 			if (mine && game.phase === ChallengePhase.idle) {
 				return m('.challenge.challenge__next', [
 					m('h3.challenge__title', t('challenge.your_turn')),
-					m('p.challenge__line', t('challenge.your_turn_hint')),
+					m('p.challenge__line', iconLabel('megaphone', t('challenge.your_turn_hint'), 18)),
 					roster(game),
 				]);
 			}

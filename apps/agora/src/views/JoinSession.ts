@@ -21,6 +21,7 @@ import {
 	type ClassJoinState,
 } from '../lib/flows/classJoin';
 import { ClassJoinPanel } from '../components/ClassJoinPanel';
+import { iconLabel } from '../components/Icon';
 import { joinNamePhase } from '../lib/flows/joinName';
 
 type JoinPhase = 'looking' | 'name' | 'team-size' | 'joining' | 'class-join' | 'error';
@@ -257,7 +258,9 @@ export function JoinSession(
 								m('h3.text-center', t(namePhase === 'named' ? 'join.your_name' : 'join.real_name')),
 								m(
 									'p.text-center.home-explanation',
-									t(namePhase === 'named' ? 'join.your_name_hint' : 'join.real_name_hint'),
+									namePhase === 'named'
+										? t('join.your_name_hint')
+										: iconLabel('lock', t('join.real_name_hint')),
 								),
 								m('input.join__name-input', {
 									type: 'text',
@@ -301,8 +304,7 @@ export function JoinSession(
 
 					phase === 'team-size' && session
 						? m('.card.stack', [
-								m('h3.text-center', t('join.team_question')),
-								m('p.text-center.home-explanation', t('join.team_hint')),
+								m('h3.text-center', iconLabel('people', t('join.team_question'), 20)),
 								m(
 									'.join__team-picker',
 									Array.from({ length: AGORA_SESSION.TEAM_SIZE_MAX }, (_, index) => index + 1).map(

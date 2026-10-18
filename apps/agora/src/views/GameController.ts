@@ -23,6 +23,8 @@ import { CallBanner } from '../components/CallBanner';
 import { addInboxItem } from '../lib/inbox';
 import { registerPlaceNavigator, unregisterPlaceNavigator } from '../lib/helpedFocus';
 import m from 'mithril';
+import { ExplainHint } from '../components/ExplainHint';
+import { iconLabel } from '../components/Icon';
 import { canWriteStage } from '../lib/flows/stageAccess';
 import { t } from '../lib/i18n';
 import { ensureUser } from '../lib/user';
@@ -805,7 +807,10 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						{ style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
 						[
 							m('h2', t('game.no_seat_title')),
-							m('p.lobby__status', t('game.no_seat_body')),
+							m('.hint-line', [
+								m('p.lobby__status.hint-line__text', iconLabel('lock', t('game.no_seat_body'), 18)),
+								m(ExplainHint, { text: t('game.no_seat_why') }),
+							]),
 							m(
 								'button.btn.btn--primary.btn--lg',
 								{ onclick: () => m.route.set(`/join/${session.code}`) },
