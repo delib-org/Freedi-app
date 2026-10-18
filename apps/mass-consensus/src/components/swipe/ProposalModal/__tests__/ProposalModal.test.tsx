@@ -111,7 +111,7 @@ describe('ProposalModal', () => {
     const textarea = screen.getByPlaceholderText('Type your proposal here...');
     fireEvent.change(textarea, { target: { value: 'Hi' } });
 
-    const submitButton = screen.getByText('Submit Proposal');
+    const submitButton = screen.getByText('Add Your Idea');
     expect(submitButton).toBeDisabled();
   });
 
@@ -128,7 +128,7 @@ describe('ProposalModal', () => {
     const validText = 'A'.repeat(VALIDATION.MIN_STATEMENT_LENGTH);
     fireEvent.change(textarea, { target: { value: validText } });
 
-    const submitButton = screen.getByText('Submit Proposal');
+    const submitButton = screen.getByText('Add Your Idea');
     expect(submitButton).not.toBeDisabled();
   });
 
@@ -145,7 +145,7 @@ describe('ProposalModal', () => {
     const tooLongText = 'A'.repeat(VALIDATION.MAX_STATEMENT_LENGTH + 1);
     fireEvent.change(textarea, { target: { value: tooLongText } });
 
-    const submitButton = screen.getByText('Submit Proposal');
+    const submitButton = screen.getByText('Add Your Idea');
     expect(submitButton).toBeDisabled();
   });
 
@@ -164,7 +164,7 @@ describe('ProposalModal', () => {
     const validText = 'This is a valid proposal text';
     fireEvent.change(textarea, { target: { value: validText } });
 
-    const submitButton = screen.getByText('Submit Proposal');
+    const submitButton = screen.getByText('Add Your Idea');
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -186,7 +186,7 @@ describe('ProposalModal', () => {
     const textarea = screen.getByPlaceholderText('Type your proposal here...');
     fireEvent.change(textarea, { target: { value: 'Valid proposal text' } });
 
-    const submitButton = screen.getByText('Submit Proposal');
+    const submitButton = screen.getByText('Add Your Idea');
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -208,7 +208,7 @@ describe('ProposalModal', () => {
     const textarea = screen.getByPlaceholderText('Type your proposal here...') as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: 'Valid proposal text' } });
 
-    const submitButton = screen.getByText('Submit Proposal');
+    const submitButton = screen.getByText('Add Your Idea');
     fireEvent.click(submitButton);
 
     // Wait for submission to complete (onClose is called after text is cleared)
@@ -253,7 +253,7 @@ describe('ProposalModal', () => {
     expect(mockOnClose).toHaveBeenCalled();
   });
 
-  it('should call onClose when cancel button clicked', () => {
+  it('should call onClose when skip button clicked', () => {
     render(
       <ProposalModal
         isOpen={true}
@@ -262,8 +262,8 @@ describe('ProposalModal', () => {
       />
     );
 
-    const cancelButton = screen.getByText('Cancel');
-    fireEvent.click(cancelButton);
+    const skipButton = screen.getByText('Skip for now');
+    fireEvent.click(skipButton);
 
     expect(mockOnClose).toHaveBeenCalled();
   });
@@ -318,7 +318,7 @@ describe('ProposalModal', () => {
     const textarea = screen.getByPlaceholderText('Type your proposal here...');
     fireEvent.change(textarea, { target: { value: 'Valid proposal text' } });
 
-    const submitButton = screen.getByText('Submit Proposal');
+    const submitButton = screen.getByText('Add Your Idea');
     fireEvent.click(submitButton);
 
     // When submitting, EnhancedLoader is shown (mocked as "Loading...")
@@ -348,12 +348,12 @@ describe('ProposalModal', () => {
     const textarea = screen.getByPlaceholderText('Type your proposal here...');
     fireEvent.change(textarea, { target: { value: 'Valid proposal text' } });
 
-    const submitButton = screen.getByText('Submit Proposal');
+    const submitButton = screen.getByText('Add Your Idea');
     fireEvent.click(submitButton);
 
     // When submitting, EnhancedLoader replaces the form content
     // so Cancel/Close buttons are not in the DOM
-    expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
+    expect(screen.queryByText('Skip for now')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Close')).not.toBeInTheDocument();
 
     resolveSubmit!();
