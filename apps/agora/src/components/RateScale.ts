@@ -108,6 +108,8 @@ export function RateScale(): m.Component<RateScaleAttrs> {
 							{
 								class: active ? 'rate-scale__option--selected' : undefined,
 								role: 'radio',
+								'aria-label': t(option.labelKey),
+								title: t(option.labelKey),
 								'aria-checked': String(active),
 								onclick: () => {
 									// Read BEFORE the write: rateProposal overwrites in place,
@@ -124,8 +126,7 @@ export function RateScale(): m.Component<RateScaleAttrs> {
 								},
 							},
 							[
-								m('span.rate-scale__emoji', m(Icon, { name: option.icon, size: 30 })),
-								m('span.rate-scale__label', t(option.labelKey)),
+								m('span.rate-scale__emoji', m(Icon, { name: option.icon, size: 34 })),
 								active
 									? m(
 											'span.rate-scale__check',

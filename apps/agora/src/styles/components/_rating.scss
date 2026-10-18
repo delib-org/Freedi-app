@@ -71,17 +71,8 @@
 		transform: rotate(-8deg) scale(1.15);
 	}
 
-	// These are WORDS — "ממש לא בעד" is the difference between the two faces
-	// at each end, and the face alone does not carry it. 0.62rem was ~10px,
-	// the smallest type anywhere in the app, sitting under the control a
-	// student presses more often than any other. Five options still share one
-	// phone row; at 14px the label simply wraps inside its own tile, which is
-	// what the centred two-line line-height below was already built for.
-	&__label {
-		font-size: var(--font-size-xs);
-		line-height: 1.2;
-		text-align: center;
-	}
+	// No visible word: the face carries the rating. The word lives in each
+	// button's aria-label and title (tooltip), set in RateScale / ReRate.
 
 	@media (prefers-reduced-motion: reduce) {
 		&__option,

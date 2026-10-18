@@ -114,7 +114,9 @@ body:has(.village-library--reading) { overflow:hidden; }
 .village-note__text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; font-size: var(--font-size-base); }
 .village-note__title { margin: 0; font-family: var(--font-display); font-size: var(--font-size-base); font-weight: 700; }
 .village-note--own { border-inline-start: 4px solid var(--mine-strong); }
-.village-note__ownership { color: var(--mine-ink); border: 1px solid var(--border-lantern); border-radius: var(--radius-full); padding: var(--space-xs) var(--space-sm); }
+// A section heading, not a control: plain text, no border or pill, so nothing
+// that cannot be pressed looks pressable
+.village-note__ownership { color: var(--mine-ink); font-size: var(--font-size-lg); }
 .village-note__actions { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-top: auto; }
 .village-note__edit, .village-note__open {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-sm);
@@ -139,15 +141,10 @@ body:has(.village-library--reading) { overflow:hidden; }
 // How many classmates' notes the board holds — said under the title, because
 // on a phone my own note fills the first screen and the class sits below it
 .village-board__count {
-  display: inline-block;
+  // Status text, not a control: muted, no border, no pill background
   margin: var(--space-xs) 0 0;
-  padding: 2px var(--space-sm);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-full);
-  background: var(--bg-card-solid);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   font-size: var(--font-size-sm);
-  font-weight: 700;
 }
 // "N more notes below": rides the board's bottom edge while classmates' cards
 // wait under the fold. The fade says the list goes on; the button brings the
