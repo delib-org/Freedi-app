@@ -1,0 +1,82 @@
+@use '../tokens' as *;
+
+// The shared "explain" pattern (ExplainHint) and the icon rows that replace
+// paragraphs of instruction. Both exist so a working screen carries one short
+// line and the reason is one tap away.
+
+.explain-hint {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-xs);
+	max-width: 100%;
+
+	&__button {
+		// 44px hit area around a 20px glyph
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 44px;
+		min-height: 44px;
+		padding: 0;
+		border: 0;
+		border-radius: var(--radius-full);
+		background: transparent;
+		color: var(--text-secondary);
+		cursor: pointer;
+
+		&:hover {
+			color: var(--text-primary);
+		}
+
+		&:focus-visible {
+			outline: 3px solid var(--border-lantern);
+			outline-offset: 2px;
+		}
+	}
+
+	&__body {
+		margin: 0;
+		padding: var(--space-sm) var(--space-md);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-sm);
+		background: var(--bg-card-solid);
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+	}
+}
+
+// A line of working copy with an explain button at its end
+.hint-line {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-xs);
+	flex-wrap: wrap;
+
+	&__text {
+		margin: 0;
+		align-self: center;
+	}
+}
+
+// Icon + short line, one per rule (the intro's three cards)
+.icon-row {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-sm);
+
+	&__icon {
+		flex-shrink: 0;
+		color: var(--text-secondary);
+	}
+
+	&__body {
+		min-width: 0;
+	}
+}
+
+// The glyph in front of a toast's line: the same one the inbox row wears
+.toast__icon {
+	flex-shrink: 0;
+	color: var(--text-secondary);
+}
