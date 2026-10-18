@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { iconLabel } from './Icon';
 import { t } from '../lib/i18n';
 import { logError } from '@freedi/shared-utils';
 import {
@@ -162,7 +163,11 @@ export function OpeningFilm(): m.Component<OpeningFilmAttrs> {
 							)
 						: null,
 					filmSkippable(elapsed)
-						? m('button.btn.btn--secondary.opening-film__skip', { onclick: finish }, t('film.skip'))
+						? m(
+								'button.btn.btn--secondary.opening-film__skip',
+								{ onclick: finish },
+								iconLabel('arrow', t('film.skip'), 18),
+							)
 						: m('span.opening-film__wait', { role: 'status' }, t('film.skip_in', { n: wait })),
 				]),
 			]);

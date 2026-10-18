@@ -2,6 +2,7 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import { EraMap } from '../components/EraMap';
 import { Collapsible } from '../components/Collapsible';
+import { ExplainHint } from '../components/ExplainHint';
 import { Icon, iconLabel, type IconName } from '../components/Icon';
 import type { AgoraParticipant } from '@freedi/shared-types';
 
@@ -46,18 +47,17 @@ function introCard(open: boolean, onToggle: () => void): m.Children {
 					m('.stack', [
 						m('p.intro__lead', t('intro.lead')),
 						m(
-							'ol.intro__cards',
-							INTRO_CARDS.map((card, index) =>
-								m('li.card.intro__card', { key: card.titleKey, 'data-step': String(index + 1) }, [
-									m('.intro__card-head', [
-										m(
-											'span.intro__card-icon',
-											{ 'aria-hidden': 'true' },
-											m(Icon, { name: card.icon, size: 22 }),
-										),
-										m('h3.intro__card-title', t(card.titleKey)),
-									]),
-									m('p.intro__card-text', t(card.textKey)),
+							'ul.intro__rows',
+							INTRO_CARDS.map((card) =>
+								m('li.icon-row', { key: card.titleKey }, [
+									m(
+										'span.icon-row__icon',
+										{ 'aria-hidden': 'true' },
+										m(Icon, { name: card.icon, size: 28 }),
+									),
+									m('strong.icon-row__body', t(card.titleKey)),
+									// The sentence behind the words is the reason, one tap away
+									m(ExplainHint, { text: t(card.textKey) }),
 								]),
 							),
 						),

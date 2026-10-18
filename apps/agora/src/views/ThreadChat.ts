@@ -748,9 +748,13 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 				// moved: a line that says "still 45" every lap teaches nothing
 				supportNow !== undefined && moment.bridgeDelta !== 0
 					? m('p.chat-system__bridge.chat-system__bridge--aside', [
-							t('thread.score_bridge', {
-								range: `⁦${moment.bridgeNow - moment.bridgeDelta} → ${moment.bridgeNow}⁩`,
-							}),
+							iconLabel(
+								'bridge',
+								t('thread.score_bridge', {
+									range: `⁦${moment.bridgeNow - moment.bridgeDelta} → ${moment.bridgeNow}⁩`,
+								}),
+								18,
+							),
 							deltaChip(moment.bridgeDelta),
 						])
 					: null,
