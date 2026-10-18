@@ -141,15 +141,10 @@ body:has(.village-library--reading) { overflow:hidden; }
 // How many classmates' notes the board holds — said under the title, because
 // on a phone my own note fills the first screen and the class sits below it
 .village-board__count {
-  display: inline-block;
+  // Status text, not a control: muted, no border, no pill background
   margin: var(--space-xs) 0 0;
-  padding: 2px var(--space-sm);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-full);
-  background: var(--bg-card-solid);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   font-size: var(--font-size-sm);
-  font-weight: 700;
 }
 // "N more notes below": rides the board's bottom edge while classmates' cards
 // wait under the fold. The fade says the list goes on; the button brings the
