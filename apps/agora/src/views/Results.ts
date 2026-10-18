@@ -8,6 +8,7 @@ import { VideoScene } from '../components/VideoScene';
 import { formatPoints } from '../components/PointsPill';
 import { getDeliberationState, isSuggestionKind, listenToDeliberation } from '../lib/proposals';
 import { Icon, iconLabel, type IconName } from '../components/Icon';
+import { ExplainHint } from '../components/ExplainHint';
 import { getConsensusPool, getSessionFlow, getSessionState } from '../lib/session';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { HelpersBoard } from '../components/HelpersBoard';
@@ -163,7 +164,7 @@ function buildRecognitions(
 	)[0];
 	if (byBridge && (scores[byBridge.statementId]?.bridgingScore ?? 0) > 0) {
 		out.push({
-			icon: 'trend',
+			icon: 'bridge',
 			titleKey: 'results.recognition_bridge',
 			value: t('results.recognition_proposal', { n: numberOf(byBridge.statementId) }),
 		});
@@ -180,7 +181,7 @@ function buildRecognitions(
 	const byTravel = [...proposals].sort((a, b) => travel(b.statementId) - travel(a.statementId))[0];
 	if (byTravel && travel(byTravel.statementId) > 0) {
 		out.push({
-			icon: 'edit',
+			icon: 'weave',
 			titleKey: 'results.recognition_craft',
 			value: t('results.recognition_proposal', { n: numberOf(byTravel.statementId) }),
 		});
@@ -194,7 +195,7 @@ function buildRecognitions(
 	const first = ideas[0];
 	if (first && nameOf(first.creatorId)) {
 		out.push({
-			icon: 'idea',
+			icon: 'helped',
 			titleKey: 'results.recognition_first',
 			value: nameOf(first.creatorId),
 		});
@@ -206,7 +207,7 @@ function buildRecognitions(
 	)[0];
 	if (byRatings && (byRatings.points.rating ?? 0) > 0) {
 		out.push({
-			icon: 'square',
+			icon: 'trend',
 			titleKey: 'results.recognition_engine',
 			value: nameOf(byRatings.userId),
 		});
@@ -259,7 +260,6 @@ function myJourneyCard(participant: AgoraParticipant, sessionId: string): m.Chil
 				: null,
 			story.voicesWovenIn > 0 ? m('li', tCount('results.story_voices', story.voicesWovenIn)) : null,
 		]),
-		m('p.results__mine-note', t('results.my_contribution_note')),
 		// The forward look: the one question a finale should leave behind
 		reflectionBox(sessionId),
 	]);
@@ -382,12 +382,21 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 					: outcome === AgoraSessionOutcome.honestDisagreement
 						? 'results__total--honest'
 						: 'results__total--failure';
-			const outcomeLabel =
+			const outcomeIcon: IconName =
+				outcome === AgoraSessionOutcome.success
+					? 'trophy'
+					: outcome === AgoraSessionOutcome.honestDisagreement
+						? 'scales'
+						: 'again';
+			const outcomeLabel = iconLabel(
+				outcomeIcon,
 				outcome === AgoraSessionOutcome.success
 					? t('results.outcome_success')
 					: outcome === AgoraSessionOutcome.honestDisagreement
 						? t('results.outcome_honest')
-						: t('results.outcome_collapse');
+						: t('results.outcome_collapse'),
+				20,
+			);
 			const debrief = score.debrief;
 			const showFullDebrief = outcome !== AgoraSessionOutcome.success;
 
@@ -515,6 +524,7 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 									),
 									m('span.results__recognition-title', t(recognition.titleKey)),
 									m('span.results__recognition-value', recognition.value),
+									m(ExplainHint, { text: t(`${recognition.titleKey}_why`) }),
 								]),
 							),
 						])

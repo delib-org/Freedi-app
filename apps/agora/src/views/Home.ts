@@ -2,6 +2,8 @@ import { isVillageMode } from '../lib/flows/sessionLinks';
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { LanguagePicker } from '../components/LanguagePicker';
+import { ExplainHint } from '../components/ExplainHint';
+import { iconLabel } from '../components/Icon';
 import { AGORA_SESSION } from '@freedi/shared-types';
 
 /** Codes are digits only — drop anything else the keyboard or a paste sends. */
@@ -43,12 +45,12 @@ export function Home(): m.Component {
 						),
 					]),
 
-					m(
-						'p.home-explanation',
-						village
-							? 'המנחה בוחר את האתגר ואת התחנות. התלמידים מצטרפים בקוד, משתפים רעיונות ומגיעים יחד למועצת הכפר.'
-							: t('home.explanation'),
-					),
+					village
+						? m(
+								'p.home-explanation',
+								'המנחה בוחר את האתגר ואת התחנות. התלמידים מצטרפים בקוד, משתפים רעיונות ומגיעים יחד למועצת הכפר.',
+							)
+						: m(ExplainHint, { text: t('home.explanation'), class: 'home-explain' }),
 					village
 						? m('.card.home-card', [
 								m('h2', 'אני המנחה'),
@@ -65,7 +67,10 @@ export function Home(): m.Component {
 						: null,
 
 					m('.card.home-card', [
-						m('p.home-card__text', village ? 'אני תלמיד/ה — יש לי קוד מפגש' : t('home.have_code')),
+						m(
+							'p.home-card__text',
+							village ? 'אני תלמיד/ה — יש לי קוד מפגש' : iconLabel('qr', t('home.have_code')),
+						),
 						m('input.text-input.code-input', {
 							// type=text, not number: a number input strips leading zeros,
 							// and 04213 is a valid code. inputmode raises the numeric keypad.

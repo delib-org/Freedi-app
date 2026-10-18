@@ -8,7 +8,6 @@ import {
 	ChallengePhase,
 	ChallengeResolvedBy,
 } from '@freedi/shared-types';
-import { AGORA_POINTS } from '@freedi/shared-types';
 import { t } from './i18n';
 import { celebrate } from './celebration';
 import { requestHelpedFocus, requestMineFocus } from './helpedFocus';
@@ -569,14 +568,6 @@ export function listenToNotifications(userId: string): void {
 									: t('celebrate.suggestion_implemented_capped')
 								: t('celebrate.suggestion_accepted', { n: awarded }),
 						detail: suggestion?.statement,
-						// Accept is the promise, not the payoff. Saying what comes
-						// next turns the wait for "+2" into anticipation instead of
-						// an invisible state — and teaches the ladder when it lands.
-						// A thank-you IS the payoff — it promises nothing further.
-						hint:
-							implemented || thanked
-								? undefined
-								: t('celebrate.accepted_hint', { n: AGORA_POINTS.SUGGESTION_IMPLEMENTED }),
 						action:
 							implemented && proposalId
 								? {
@@ -607,7 +598,7 @@ export function listenToNotifications(userId: string): void {
 								? t('celebrate.bridging_full', { n: awarded })
 								: t('celebrate.bridging_reached', { n: awarded })
 							: t('celebrate.proposal_credited', { n: awarded }),
-						hint: bridging ? t('celebrate.bridging_hint') : t('celebrate.proposal_credited_hint'),
+						hint: bridging ? undefined : t('celebrate.proposal_credited_hint'),
 						// Bridging arrives while you are off rating classmates, so it
 						// offers the trip back to your proposal. The first-proposal
 						// credit fires the instant you submit — you are already
@@ -639,7 +630,6 @@ export function listenToNotifications(userId: string): void {
 					if (first) {
 						celebrate({
 							message: t('celebrate.revision_first', { n: awarded }),
-							hint: t('celebrate.revision_first_hint'),
 						});
 					} else {
 						pushLocalToast('agora_revision_credited');
@@ -763,7 +753,6 @@ export function detectProposalMilestones(sessionId: string, userId: string): voi
 			kind: 'goal',
 			message: t('celebrate.bridge_zone'),
 			detail: mine.statement,
-			hint: t('celebrate.bridge_zone_hint'),
 			sound: 'goal',
 		});
 	}

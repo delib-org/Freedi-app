@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { iconLabel } from './Icon';
 import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
 import {
 	CALL_FRESH_MS,
@@ -800,9 +801,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 									: [
 											m(
 												'p.village-library__intro',
-												attrs.browseFreely
-													? t('village.library.intro_free')
-													: t('village.library.intro_led'),
+												iconLabel('idea', t('village.library.intro_free'), 18),
 											),
 											m('.village-library__shelf', [
 												...(attrs.film

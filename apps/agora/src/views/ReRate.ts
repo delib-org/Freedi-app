@@ -5,6 +5,7 @@ import { t } from '../lib/i18n';
 import { rerateStances } from '../lib/callables';
 import { RATE_OPTIONS } from '../components/RateScale';
 import { Icon } from '../components/Icon';
+import { ExplainHint } from '../components/ExplainHint';
 
 export interface ReRateAttrs {
 	session: AgoraSession;
@@ -98,7 +99,10 @@ export function ReRate(): m.Component<ReRateAttrs> {
 				m('.shell__content', [
 					m('.card.rerate', [
 						m('h1.rerate__title', t('rerate.title')),
-						m('p.rerate__lead', t('rerate.lead')),
+						m('.hint-line', [
+							m('p.rerate__lead.hint-line__text', t('rerate.lead')),
+							m(ExplainHint, { text: t('rerate.why') }),
+						]),
 						m(
 							'.rerate__stances',
 							stances.map((stance) =>
