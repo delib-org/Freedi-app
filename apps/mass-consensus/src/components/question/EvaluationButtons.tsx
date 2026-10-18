@@ -7,6 +7,7 @@ import type { EvaluationScaleKey } from '@freedi/shared-types';
 import styles from './EvaluationButtons.module.css';
 import EvaluationFace from '@/components/icons/EvaluationFace';
 import { zoneColorSlot } from '@/components/swipe/SwipeCard/swipeZones';
+import { useVisualScale } from '@/components/swipe/SwipeCard/visualScale';
 
 interface EvaluationButtonsProps {
   onEvaluate: (score: number, direction?: 'left' | 'right') => void;
@@ -35,6 +36,7 @@ export default function EvaluationButtons({
   compact = false,
 }: EvaluationButtonsProps) {
   const { t } = useTranslation();
+  const visualScale = useVisualScale(ratingMode);
   const [selectedScore, setSelectedScore] = useState<number | null>(currentScore ?? null);
 
   // Sync with currentScore prop when it changes (e.g., loaded from server)
@@ -45,19 +47,24 @@ export default function EvaluationButtons({
   }, [currentScore]);
 
   const evaluationOptions = useMemo(() => {
-    const scale = getEvaluationScale(ratingMode);
+    // Colour follows the value (red = disagree, green = agree), the order
+    // follows the language, so look the colour slot up on the unmirrored scale.
+    const baseScale = getEvaluationScale(ratingMode);
+    const slotByValue = new Map(
+      baseScale.map((entry) => [entry.value, zoneColorSlot(entry.zoneIndex, baseScale.length)])
+    );
 
-    return scale.map((entry) => {
+    return visualScale.map((entry) => {
       const rawDirection = entry.direction === 'up' ? null : entry.direction;
 
       return {
         score: entry.value,
         label: t(entry.labelKey),
         direction: rawDirection,
-        colorClass: COLOR_CLASSES[zoneColorSlot(entry.zoneIndex, scale.length)] ?? 'neutral',
+        colorClass: COLOR_CLASSES[slotByValue.get(entry.value) ?? 0] ?? 'neutral',
       };
     });
-  }, [t, ratingMode]);
+  }, [t, ratingMode, visualScale]);
 
   const handleClick = (score: number, direction: 'left' | 'right' | null) => {
     setSelectedScore(score);
