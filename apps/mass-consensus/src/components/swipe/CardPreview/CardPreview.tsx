@@ -8,7 +8,8 @@
 
 import React from 'react';
 import clsx from 'clsx';
-import { Statement, getEvaluationScale } from '@freedi/shared-types';
+import { Statement } from '@freedi/shared-types';
+import { useVisualScale } from '../SwipeCard/visualScale';
 import type { EvaluationScaleKey } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import RatingButton from '@/components/swipe/RatingButton';
@@ -29,7 +30,7 @@ export default function CardPreview({ statement, currentIndex, totalCards, ratin
   const imageUrl = imageOverride ?? statement.imagesURL?.main;
   const bodyText = (getParagraphsText(statement.paragraphs) || statement.description || '').trim();
   const body = bodyText !== statement.statement?.trim() ? bodyText : '';
-  const scale = getEvaluationScale(ratingMode);
+  const scale = useVisualScale(ratingMode);
 
   return (
     <div

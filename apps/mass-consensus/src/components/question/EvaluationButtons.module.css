@@ -3,10 +3,18 @@
   gap: var(--spacing-sm);
   justify-content: center;
   flex-wrap: wrap;
+  /* Order is set in code (agree first in LTR, disagree first in RTL), so the
+     row must not be reversed again by the page direction */
+  direction: ltr;
 }
 
 .buttons.compact {
   gap: var(--spacing-xs);
+}
+
+/* Labels inside a button still follow the page language */
+:global(html[dir='rtl']) .button {
+  direction: rtl;
 }
 
 .button {
