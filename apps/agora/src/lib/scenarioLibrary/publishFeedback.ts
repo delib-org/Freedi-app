@@ -36,6 +36,12 @@ export function publishErrorKey(code: string | undefined): string {
 		case 'functions/unavailable':
 		case 'functions/deadline-exceeded':
 			return 'scenlib.pub_err_network';
+		case 'functions/failed-precondition':
+			return 'scenlib.pub_err_state';
+		case 'functions/invalid-argument':
+			return 'scenlib.pub_err_text';
+		case 'functions/not-found':
+			return 'scenlib.pub_err_missing';
 		case 'functions/internal':
 		case 'functions/unknown':
 			return 'scenlib.pub_err_server';

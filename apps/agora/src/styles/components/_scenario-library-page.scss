@@ -80,13 +80,6 @@
 	}
 }
 
-// The line above the sheet's footer: why Publish is waiting, or that the picture is optional
-.scn-publish__status {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-xs);
-}
-
 .scn-field {
 	display: flex;
 	flex-direction: column;
