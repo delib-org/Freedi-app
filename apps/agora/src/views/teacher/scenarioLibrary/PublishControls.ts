@@ -98,7 +98,20 @@ export function PublishControls(): m.Component<PublishControlsAttrs> {
 								role: notice === 'failed' ? 'alert' : 'status',
 								class: notice === 'failed' ? 'scn-notice--bad' : undefined,
 							},
-							t(`scenlib.notice_${notice}`),
+							[
+								t(
+									notice === 'published'
+										? 'scenlib.notice_published_where'
+										: `scenlib.notice_${notice}`,
+								),
+								notice === 'published'
+									? m(
+											m.route.Link,
+											{ href: '/teach/library', class: 'teach-link scn-notice__link' },
+											t('scenlib.open_library'),
+										)
+									: null,
+							],
 						)
 					: null,
 				adminHidden
