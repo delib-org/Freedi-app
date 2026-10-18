@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { libraryStringsFor } from './scenarioLibrary/stringsAll';
 import { teacherHomeStrings } from './teacherHomeStrings';
+import { planBuilderStrings } from './planBuilderStrings';
 
 export type LangCode = 'he' | 'en' | 'ar' | 'es' | 'de' | 'nl';
 
@@ -11921,7 +11922,12 @@ export const translations: Record<LangCode, Record<string, string>> = {
 // The scenario library keeps its words beside its code; they join the table here
 // so the parity test and t() see them like any other key.
 for (const lang of Object.keys(translations) as LangCode[]) {
-	Object.assign(translations[lang], libraryStringsFor(lang), teacherHomeStrings[lang]);
+	Object.assign(
+		translations[lang],
+		libraryStringsFor(lang),
+		teacherHomeStrings[lang],
+		planBuilderStrings[lang],
+	);
 }
 
 const LANGUAGE_NAMES: Record<LangCode, string> = {

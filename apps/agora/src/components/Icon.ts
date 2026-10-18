@@ -73,6 +73,9 @@ export type IconName =
 	| 'image'
 	| 'hide'
 	| 'lock'
+	// the lesson builder
+	| 'plus'
+	| 'trash'
 	// the rating scale
 	| 'face-strong-against'
 	| 'face-against'
@@ -468,6 +471,17 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 	'sound-off': [
 		['path', { d: 'M4 9.5h3.2L12 5.5v13L7.2 14.5H4z' }],
 		['path', { d: 'M16.5 10 21 14.5M21 10l-4.5 4.5' }],
+	],
+
+	/* ---- the lesson builder ---- */
+
+	plus: [['path', { d: 'M12 5v14M5 12h14' }]],
+
+	// A bin with its lid lifted a hair: reads as "remove" and not as "archive"
+	trash: [
+		['path', { d: 'M4.5 7h15M9.5 7V4.8h5V7' }],
+		['path', { d: 'M6.5 7l.9 12.2a1.6 1.6 0 0 0 1.6 1.3h6a1.6 1.6 0 0 0 1.6-1.3L17.5 7' }],
+		['path', { d: 'M10.2 11v5.5M13.8 11v5.5' }],
 	],
 
 	/* ---- the rating scale ---- */

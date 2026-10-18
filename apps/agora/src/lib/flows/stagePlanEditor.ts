@@ -12,16 +12,39 @@ import {
 	AgoraStage,
 	AGORA_CHARACTER_STAGES,
 	AGORA_PLANNABLE_STAGES,
+	AGORA_STAGE_PLAN,
 	defaultQuestionSelection,
 	defaultVotingTrigger,
 	questionKindOf,
 	stagePlanPreset,
+	type AgoraQuestionKind,
 	type AgoraStagePlanItem,
 	type AgoraStagePlanPreset,
+	type StagePlanError,
 } from '@freedi/shared-types';
 
+/** Every question type, in the order the teacher reads them */
+export const QUESTION_KINDS: readonly AgoraQuestionKind[] = ['open', 'story', 'needs', 'vision'];
+
+/**
+ * What the "add a step" sheet can put in: a question of one type, or one of
+ * the single-instance stages. A round is a QUESTION item with a kind — never
+ * a stage of its own.
+ */
+export interface AddChoice {
+	stage: AgoraStage;
+	questionKind?: AgoraQuestionKind;
+}
+
 export type PlanEditorEvent =
-	| { kind: 'add'; stage: AgoraStage }
+	| {
+			kind: 'add';
+			stage: AgoraStage;
+			/** A question's type; open when absent */
+			questionKind?: AgoraQuestionKind;
+			/** Where to splice it in; clamped into the insertable range, the end when absent */
+			at?: number;
+	  }
 	| { kind: 'remove'; itemId: string }
 	| { kind: 'move'; itemId: string; direction: -1 | 1 }
 	| { kind: 'patch'; itemId: string; patch: Partial<Omit<AgoraStagePlanItem, 'itemId' | 'stage'>> }
@@ -51,6 +74,130 @@ export function addableStages(
 	});
 }
 
+/**
+ * Where a new step may be spliced in: after the entry and after the steps
+ * that already ran, and never after the results. `first..last` inclusive, as
+ * splice indices.
+ */
+export function insertionRange(
+	items: readonly AgoraStagePlanItem[],
+	frozenCount: number,
+): { first: number; last: number } {
+	const lobbyAt = items.findIndex((item) => item.stage === AgoraStage.lobby);
+	const resultsAt = items.findIndex((item) => item.stage === AgoraStage.results);
+	const last = resultsAt === -1 ? items.length : resultsAt;
+	const first = Math.min(last, Math.max(Math.max(0, frozenCount), lobbyAt + 1));
+
+	return { first, last };
+}
+
+/** Can a step be inserted at this splice index? */
+export function canInsertAt(
+	items: readonly AgoraStagePlanItem[],
+	at: number,
+	frozenCount: number,
+): boolean {
+	const { first, last } = insertionRange(items, frozenCount);
+
+	return at >= first && at <= last;
+}
+
+/** The choices the add-step sheet offers: every question type, then what is not in the plan yet */
+export function addChoices(
+	items: readonly AgoraStagePlanItem[],
+	options: Pick<PlanEditorOptions, 'hasCharacters'>,
+): AddChoice[] {
+	if (items.length >= AGORA_STAGE_PLAN.MAX_ITEMS) return [];
+
+	return addableStages(items, options).flatMap((stage): AddChoice[] =>
+		stage === AgoraStage.question
+			? QUESTION_KINDS.map((questionKind) => ({ stage, questionKind }))
+			: [{ stage }],
+	);
+}
+
+/**
+ * The problem a single step has, for the red edge and the sentence under its
+ * title. The list-wide errors (duplicate ids, the fixed ends) stay in the
+ * summary under the list; these are the ones a teacher fixes on the card.
+ */
+export function stepProblems(
+	items: readonly AgoraStagePlanItem[],
+	options: Pick<PlanEditorOptions, 'hasCharacters'>,
+): Map<string, StagePlanError> {
+	const problems = new Map<string, StagePlanError>();
+	let sourceSeen = false;
+	for (const item of items) {
+		if (
+			item.stage === AgoraStage.question &&
+			questionKindOf(item) === 'open' &&
+			!(item.title ?? '').trim()
+		) {
+			problems.set(item.itemId, 'question_needs_title');
+		} else if (item.stage === AgoraStage.voting && !sourceSeen) {
+			problems.set(item.itemId, 'voting_needs_source');
+		} else if (AGORA_CHARACTER_STAGES.has(item.stage) && !options.hasCharacters) {
+			problems.set(item.itemId, 'stage_needs_characters');
+		}
+		if (item.stage === AgoraStage.deliberation || item.stage === AgoraStage.question) {
+			sourceSeen = true;
+		}
+	}
+
+	return problems;
+}
+
+/** What a template is compared on: the steps, their types and their words */
+function planSignature(items: readonly AgoraStagePlanItem[]): string {
+	return JSON.stringify(
+		items.map((item) => [
+			item.stage,
+			item.stage === AgoraStage.question ? questionKindOf(item) : '',
+			(item.title ?? '').trim(),
+			(item.explanation ?? '').trim(),
+		]),
+	);
+}
+
+/**
+ * The template the plan still is, if any. A teacher who has added, moved,
+ * removed or typed anything has a plan of their own, and replacing it with a
+ * template must ask first.
+ */
+export function matchingPreset(
+	items: readonly AgoraStagePlanItem[],
+	presets: readonly AgoraStagePlanPreset[],
+	frozenCount = 0,
+): AgoraStagePlanPreset | null {
+	const mine = planSignature(items);
+
+	return (
+		presets.find(
+			(preset) =>
+				planSignature(
+					planEditorReduce(
+						items,
+						{ kind: 'preset', preset },
+						{
+							hasCharacters: true,
+							frozenCount,
+						},
+					),
+				) === mine,
+		) ?? null
+	);
+}
+
+/** The item an `add` put in, by comparing ids before and after */
+export function addedItem(
+	before: readonly AgoraStagePlanItem[],
+	after: readonly AgoraStagePlanItem[],
+): AgoraStagePlanItem | null {
+	const ids = new Set(before.map((item) => item.itemId));
+
+	return after.find((item) => !ids.has(item.itemId)) ?? null;
+}
+
 /** A fresh id: the stage name for single-instance stages, numbered for questions */
 export function mintItemId(stage: AgoraStage, items: readonly AgoraStagePlanItem[]): string {
 	if (stage !== AgoraStage.question) return stage;
@@ -61,9 +208,16 @@ export function mintItemId(stage: AgoraStage, items: readonly AgoraStagePlanItem
 	return `question-${n}`;
 }
 
-function freshItem(stage: AgoraStage, items: readonly AgoraStagePlanItem[]): AgoraStagePlanItem {
+function freshItem(
+	stage: AgoraStage,
+	items: readonly AgoraStagePlanItem[],
+	questionKind: AgoraQuestionKind = 'open',
+): AgoraStagePlanItem {
 	const itemId = mintItemId(stage, items);
 	if (stage === AgoraStage.question) {
+		// A round asks in the book's words until the teacher types their own
+		if (questionKind !== 'open') return { itemId, stage, kind: questionKind, title: '' };
+
 		return { itemId, stage, kind: 'open', title: '', selection: defaultQuestionSelection() };
 	}
 	if (stage === AgoraStage.deliberation) {
@@ -92,11 +246,12 @@ export function planEditorReduce(
 		}
 		case 'add': {
 			if (!addableStages(items, options).includes(event.stage)) return [...items];
-			// Before results, never inside the frozen prefix
-			const resultsAt = items.findIndex((item) => item.stage === AgoraStage.results);
-			const at = Math.max(frozen, resultsAt === -1 ? items.length : resultsAt);
+			if (items.length >= AGORA_STAGE_PLAN.MAX_ITEMS) return [...items];
+			// After the entry and the history, before results — wherever the teacher pointed
+			const { first, last } = insertionRange(items, frozen);
+			const at = Math.min(last, Math.max(first, event.at ?? last));
 			const next = [...items];
-			next.splice(at, 0, freshItem(event.stage, items));
+			next.splice(at, 0, freshItem(event.stage, items, event.questionKind));
 
 			return next;
 		}

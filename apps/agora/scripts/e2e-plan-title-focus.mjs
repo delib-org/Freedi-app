@@ -1,6 +1,6 @@
-/* The question title in the plan editor is a door to its own text field:
- * pressing it opens the options with the title input focused, and a freshly
- * added question opens straight into typing.
+/* The lesson builder (docs/ia/agora-lesson-builder.md): a question's card
+ * opens its editor, its type is picked from a readable list, and a step added
+ * at a "+" between two cards lands there and opens straight into typing.
  *
  * Run: npx tsx scripts/e2e-plan-title-focus.mjs
  */
@@ -36,7 +36,11 @@ try {
 	await teacher.goto(`${VITE_HOST}/#!/teach/start`, { waitUntil: 'domcontentloaded' });
 	await teacher.waitForSelector('.scenario-list', { timeout: 30_000 });
 	// "My own question" opens its own sheet; the question is written there
-	await teacher.locator('.scenario-row--own .scenario-row__use').click();
+	// (a teacher with no scenarios of their own lands with the sheet already open)
+	await teacher.waitForTimeout(500);
+	if (!(await teacher.locator('.question-sheet__question').isVisible())) {
+		await teacher.locator('.scenario-row--own .scenario-row__use').click();
+	}
 	await teacher.waitForSelector('.question-sheet__question', { timeout: 10_000 });
 	await teacher.locator('.question-sheet__question').fill('מה נעשה בטיול השנתי?');
 	await teacher.locator('.question-sheet__continue').click();
@@ -46,33 +50,49 @@ try {
 	await teacher.locator('.start-game__group-head').first().click();
 	await teacher.waitForSelector('.plan-editor', { timeout: 10_000 });
 	await teacher.waitForTimeout(300);
-	// The quick default is the WizCol plan now (no question item); this script
-	// exercises the question title, so it picks the quick-decision preset.
-	await teacher.locator('.plan-editor__presets button', { hasText: 'החלטה מהירה' }).first().click();
+	// The quick default is the WizCol plan (story, needs rounds); this script
+	// exercises an open question too, so it starts from the quick-decision template.
+	await teacher.locator('.plan-editor__template', { hasText: 'החלטה מהירה' }).first().click();
 	await teacher.waitForTimeout(300);
 
-	step('press the untitled question title');
-	const title = teacher.locator('button.plan-editor__title').first();
-	expect((await title.count()) > 0, 'the question title renders as a button');
+	step('an untitled question says so on its card, and its card opens its editor');
+	const untitled = teacher.locator('.plan-step--invalid').first();
+	expect((await untitled.count()) > 0, 'the untitled question is marked on its card');
 	await shot(teacher, 'title-before');
-	await title.click();
-	await teacher.waitForSelector('.plan-editor__item--open input.plan-editor__text', { timeout: 5_000 });
-	expect(await focusedIs(teacher, 'input.plan-editor__text'), 'pressing the title focuses the title input');
+	await untitled.locator('button.plan-step__main').click();
+	await teacher.waitForSelector('.plan-step--open textarea.step-editor__input--words', { timeout: 5_000 });
+	await teacher.locator('.plan-step--open textarea.step-editor__input--words').focus();
 	await teacher.keyboard.type('מה נאכל בטיול?');
 	await teacher.waitForTimeout(200);
-	const shown = await teacher.locator('button.plan-editor__title').first().innerText();
-	expect(shown.includes('מה נאכל'), `typing updates the row title (${shown})`);
+	const shown = await teacher.locator('.plan-step--open .plan-step__line').innerText();
+	expect(shown.includes('מה נאכל'), `typing updates the card (${shown})`);
+	expect((await teacher.locator('.plan-step--invalid').count()) === 0, 'the card is no longer marked');
 	await shot(teacher, 'title-after-typing');
 
-	step('add a second question → opens straight into typing');
-	await teacher.locator('.plan-editor__add > button').click();
-	await teacher.locator('.plan-editor__add-menu button', { hasText: 'שאלה' }).first().click();
+	step('the question type is a list of readable choices, not a select');
+	expect((await teacher.locator('.plan-step--open select').count()) === 0, 'no native select in the editor');
+	await teacher.locator('.plan-step--open .step-editor__choice', { hasText: 'חזון' }).click();
+	await teacher.waitForTimeout(200);
+	const chip = await teacher.locator('.plan-step--open .plan-step__chip').innerText();
+	expect(chip.includes('חזון'), `the chip follows the type (${chip})`);
+	await teacher.locator('.plan-step--open .step-editor__done').click();
+
+	step('add a step between two steps → the sheet → a question opens straight into typing');
+	const before = await teacher.locator('.plan-step').count();
+	await teacher.locator('.plan-editor__insert-btn').first().click();
+	await teacher.waitForSelector('.step-sheet__panel', { timeout: 5_000 });
+	await shot(teacher, 'title-add-sheet');
+	await teacher.locator('.step-sheet__option', { hasText: 'שאלה משלי' }).click();
 	await teacher.waitForTimeout(300);
-	const openItems = teacher.locator('.plan-editor__item--open');
-	expect((await openItems.count()) === 1, 'exactly one item is open after adding');
-	expect(await focusedIs(teacher, 'input.plan-editor__text'), 'the new question opens with its title input focused');
-	const openTitle = await openItems.locator('button.plan-editor__title').innerText();
-	expect(openTitle.includes('כתבו את השאלה'), `the open item is the new, untitled one (${openTitle})`);
+	expect((await teacher.locator('.plan-step').count()) === before + 1, 'one step was added');
+	const openItems = teacher.locator('.plan-step--open');
+	expect((await openItems.count()) === 1, 'exactly one step is open after adding');
+	expect(
+		await focusedIs(teacher, 'textarea.step-editor__input--words'),
+		'the new question opens with its words focused',
+	);
+	const second = await teacher.locator('.plan-step').nth(1).locator('.plan-step__chip').innerText();
+	expect(second.includes('שאלה משלי'), `it went where the "+" was, right after the entry (${second})`);
 	await shot(teacher, 'title-added-question');
 	console.log('\n   all green');
 } finally {
