@@ -4561,5 +4561,6 @@
   "Remove access for {{name}} at {{school}}? Their past lessons stay theirs.": "إزالة وصول {{name}} في {{school}}؟ تبقى دروسه السابقة له.",
   "Could not copy the link.": "تعذّر نسخ الرابط.",
   "{{count}} waiting for approval": "{{count}} بانتظار الموافقة",
-  "Review access requests": "مراجعة طلبات الوصول"
+  "Review access requests": "مراجعة طلبات الوصول",
+  "signInPopupBlocked": "قام المتصفح بحظر نافذة تسجيل الدخول. يرجى السماح بالنوافذ المنبثقة لهذا الموقع والمحاولة مرة أخرى."
 }

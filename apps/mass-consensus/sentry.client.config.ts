@@ -39,6 +39,9 @@ Sentry.init({
     // User-cancelled requests
     'AbortError',
     'The operation was aborted',
+    // User closed / replaced the Google sign-in popup (normal action)
+    'auth/popup-closed-by-user',
+    'auth/cancelled-popup-request',
     // Vercel Live feedback instrumentation errors (null references during lifecycle events)
     "Cannot read properties of null (reading 'getItem')",
     "Cannot read properties of null (reading 'removeEventListener')",

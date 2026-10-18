@@ -5159,5 +5159,6 @@
   "Remove access for {{name}} at {{school}}? Their past lessons stay theirs.": "להסיר את הגישה של {{name}} ב{{school}}? השיעורים שכבר הועברו נשארים שלהם.",
   "Could not copy the link.": "לא ניתן להעתיק את הקישור.",
   "{{count}} waiting for approval": "{{count}} ממתינות לאישור",
-  "Review access requests": "לבדיקת בקשות הגישה"
+  "Review access requests": "לבדיקת בקשות הגישה",
+  "signInPopupBlocked": "הדפדפן חסם את חלון ההתחברות. יש לאפשר חלונות קופצים באתר זה ולנסות שוב."
 }
