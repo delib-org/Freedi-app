@@ -4919,5 +4919,6 @@
   "Remove access for {{name}} at {{school}}? Their past lessons stay theirs.": "دسترسی {{name}} در {{school}} حذف شود؟ درس‌های گذشته‌اش برای خودش می‌ماند.",
   "Could not copy the link.": "کپی پیوند ممکن نشد.",
   "{{count}} waiting for approval": "{{count}} در انتظار تأیید",
-  "Review access requests": "بررسی درخواست‌های دسترسی"
+  "Review access requests": "بررسی درخواست‌های دسترسی",
+  "signInPopupBlocked": "مرورگر پنجره ورود را مسدود کرد. لطفاً پنجره‌های بازشو را برای این سایت مجاز کنید و دوباره تلاش کنید."
 }

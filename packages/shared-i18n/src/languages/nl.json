@@ -4441,5 +4441,6 @@
   "Remove access for {{name}} at {{school}}? Their past lessons stay theirs.": "Toegang van {{name}} tot {{school}} intrekken? Eerdere lessen blijven van die persoon.",
   "Could not copy the link.": "De link kon niet worden gekopieerd.",
   "{{count}} waiting for approval": "{{count}} wachten op goedkeuring",
-  "Review access requests": "Toegangsverzoeken bekijken"
+  "Review access requests": "Toegangsverzoeken bekijken",
+  "signInPopupBlocked": "Je browser heeft het inlogvenster geblokkeerd. Sta pop-ups toe voor deze site en probeer het opnieuw."
 }

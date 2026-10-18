@@ -4441,5 +4441,6 @@
   "Remove access for {{name}} at {{school}}? Their past lessons stay theirs.": "¿Quitar el acceso de {{name}} en {{school}}? Sus lecciones anteriores siguen siendo suyas.",
   "Could not copy the link.": "No se pudo copiar el enlace.",
   "{{count}} waiting for approval": "{{count}} pendientes de aprobación",
-  "Review access requests": "Revisar solicitudes de acceso"
+  "Review access requests": "Revisar solicitudes de acceso",
+  "signInPopupBlocked": "Tu navegador bloqueó la ventana de inicio de sesión. Permite las ventanas emergentes para este sitio e inténtalo de nuevo."
 }

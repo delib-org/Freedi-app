@@ -14,6 +14,7 @@ import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { logError } from '../utils/errorHandling';
+import { isUserCancelledAuthError, isPopupBlockedAuthError } from './authErrors';
 
 // Region for all Cloud Functions in this project. Matches functionConfig.region
 // in @freedi/shared-types and the deploy targets (me-west1 / Tel Aviv).
@@ -98,14 +99,28 @@ googleProvider.setCustomParameters({
 });
 
 /**
- * Sign in with Google using popup
+ * Sign in with Google using popup.
+ *
+ * Resolves to `null` when the user backed out (closed the popup, or opened a
+ * newer one) - that is a normal action, not an error, so it is neither logged
+ * nor reported. A blocked popup is rethrown unreported so the caller can tell
+ * the user to allow pop-ups. Every other failure is logged and rethrown.
  */
-export async function signInWithGoogle(): Promise<User> {
+export async function signInWithGoogle(): Promise<User | null> {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     console.info('[Firebase] Sign in successful:', result.user.email);
     return result.user;
   } catch (error) {
+    if (isUserCancelledAuthError(error)) {
+      console.info('[Firebase] Sign in cancelled by user');
+
+      return null;
+    }
+    if (isPopupBlockedAuthError(error)) {
+      console.info('[Firebase] Sign in popup was blocked by the browser');
+      throw error;
+    }
     logError(error, { operation: 'firebaseClient.signInWithGoogle' });
     throw error;
   }

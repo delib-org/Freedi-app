@@ -5121,5 +5121,6 @@
   "Remove access for {{name}} at {{school}}? Their past lessons stay theirs.": "Remove access for {{name}} at {{school}}? Their past lessons stay theirs.",
   "Could not copy the link.": "Could not copy the link.",
   "{{count}} waiting for approval": "{{count}} waiting for approval",
-  "Review access requests": "Review access requests"
+  "Review access requests": "Review access requests",
+  "signInPopupBlocked": "Your browser blocked the sign-in window. Please allow pop-ups for this site and try again."
 }
