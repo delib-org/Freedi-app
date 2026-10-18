@@ -52,6 +52,8 @@ export interface CouncilModelInput {
 	rightLabel: string;
 	/** The characters' verdicts on a proposal — two portrait tiles on the ballot */
 	voicesOf?: (statementId: string) => CouncilVoice[];
+	/** Built for the teacher's class view: she always sees the live tallies */
+	teacherView?: boolean;
 }
 
 /**
@@ -75,6 +77,7 @@ export function councilModelFor(input: CouncilModelInput): CouncilModel {
 			classSize: input.classSize,
 			closed: roomStage !== AgoraStage.voting,
 			voicesOf: input.voicesOf,
+			teacherView: input.teacherView,
 		});
 	}
 

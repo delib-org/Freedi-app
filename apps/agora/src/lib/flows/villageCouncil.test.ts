@@ -188,4 +188,38 @@ describe('the council scoreboard model', () => {
 		expect(challenged.motion).toBeUndefined();
 		expect(challenged.candidates).toHaveLength(1);
 	});
+	it('shows the tallies to the class only when the teacher reveals them, and always to the teacher', () => {
+		const voting = {
+			candidateIds: ['a', 'b'],
+			candidates: [
+				{ statementId: 'a', statement: 'A', consensus: 0.6 },
+				{ statementId: 'b', statement: 'B', consensus: 0.4 },
+			],
+			computedAt: 1,
+		};
+		const shown = (session: Record<string, unknown>, teacherView?: boolean): boolean | undefined =>
+			councilBallot({
+				session: { voting, ...session } as unknown as AgoraSession,
+				selections: { a: 2, b: 1 },
+				myVoteStatementId: null,
+				votedCount: 3,
+				classSize: 5,
+				closed: false,
+				teacherView,
+			}).showResults;
+		// Off by default: the class sees turnout, not counts.
+		expect(shown({})).toBe(false);
+		expect(shown({ votingSettings: { showResults: false } })).toBe(false);
+		// The teacher flipped the switch: the class sees them live.
+		expect(shown({ votingSettings: { showResults: true } })).toBe(true);
+		// The teacher's own screen never hides them.
+		expect(shown({}, true)).toBe(true);
+		// A challenge is judged blind for the class, but not for the teacher.
+		const challenge = {
+			votingSettings: { showResults: true },
+			votingGame: { phase: 'vote', challengerStatementId: 'z' },
+		};
+		expect(shown(challenge)).toBe(false);
+		expect(shown(challenge, true)).toBe(true);
+	});
 });

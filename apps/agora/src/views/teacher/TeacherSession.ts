@@ -1092,6 +1092,24 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					label,
 				);
 			const settingsBody = m('.stack', { style: { gap: 'var(--space-lg)' } }, [
+				// While the vote is open: whether the class sees the tallies live.
+				// Held here too, because the class view has no board to hang the
+				// card on — the teacher must be able to flip it from either screen.
+				inVoting
+					? m(
+							'section.teacher-panel__section.stack',
+							votingLiveCard(
+								session.votingSettings,
+								voterUids.size,
+								participants.length,
+								savingSettings,
+								challengeLive,
+								saveVotingSettings,
+								setGoalOnlyLive,
+								goalOnlyError,
+							),
+						)
+					: null,
 				// The village: who walks the class between stations, and the two
 				// places the teacher can call everyone to at any moment.
 				sessionVillageMode(session.world, window.location.search)

@@ -154,6 +154,8 @@ export interface CouncilBallotInput {
 	classSize: number;
 	/** The vote is over: the tallies are always shown */
 	closed: boolean;
+	/** The teacher's own screen: the tallies are never hidden from her, whatever the class sees */
+	teacherView?: boolean;
 	/** The characters' verdicts on a proposal, when the class asked for them */
 	voicesOf?: (statementId: string) => CouncilVoice[];
 }
@@ -165,7 +167,16 @@ export function councilBallot(input: CouncilBallotInput): CouncilModel {
 		(sum, candidate) => sum + (input.selections[candidate.statementId] ?? 0),
 		0,
 	);
-	const showResults = input.closed || input.session.votingSettings?.showResults === true;
+	// A challenge is judged blind, so while one stands the reveal does nothing
+	// for the class — the same rule as the students' ballot.
+	const game = input.session.votingGame;
+	const challengeLive =
+		(game?.phase === ChallengePhase.vote || game?.phase === ChallengePhase.resolving) &&
+		Boolean(game?.challengerStatementId);
+	const showResults =
+		input.closed ||
+		input.teacherView === true ||
+		(input.session.votingSettings?.showResults === true && !challengeLive);
 	const footer =
 		input.classSize > 0
 			? `${input.votedCount} מתוך ${input.classSize} הצביעו${showResults ? '' : ' · התוצאות ייחשפו כשהמורה יחליט'}`
@@ -173,10 +184,6 @@ export function councilBallot(input: CouncilBallotInput): CouncilModel {
 
 	// Same rule as the students' ballot: a motion is a motion only while it
 	// stands alone — a challenger pinned beside it makes it "which of these?"
-	const game = input.session.votingGame;
-	const challengeLive =
-		(game?.phase === ChallengePhase.vote || game?.phase === ChallengePhase.resolving) &&
-		Boolean(game?.challengerStatementId);
 	if (candidates.length === 1 && !challengeLive) {
 		const candidate = candidates[0];
 		const forVotes = input.selections[candidate.statementId] ?? 0;
