@@ -22,7 +22,7 @@ import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
 import { SWIPE, ZONES } from '@/constants/common';
-import { getEvaluationScale } from '@freedi/shared-types';
+import { useVisualScale } from './visualScale';
 import type { EvaluationScaleKey } from '@freedi/shared-types';
 import { playWhooshSound } from './soundEffects';
 import RatingButton from '../RatingButton';
@@ -75,7 +75,7 @@ export default function SwipeCard({
   // Ordered left→right, one zone per step (five, or three on the -1 · 0 · +1
   // scale). Shared cross-app scale so the swipe zones, center value and
   // confirmation match the buttons exactly.
-  const scale = getEvaluationScale(ratingMode);
+  const scale = useVisualScale(ratingMode);
   const totalZones = scale.length;
   const centerZone = centerZoneIndex(totalZones);
 
