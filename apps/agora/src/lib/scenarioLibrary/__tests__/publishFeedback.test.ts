@@ -28,9 +28,15 @@ describe('publishErrorKey', () => {
 		expect(publishErrorKey('functions/internal')).toBe('scenlib.pub_err_server');
 	});
 
+	it('names a refused listing and a scenario that cannot be published as it is', () => {
+		expect(publishErrorKey('functions/invalid-argument')).toBe('scenlib.pub_err_text');
+		expect(publishErrorKey('functions/failed-precondition')).toBe('scenlib.pub_err_state');
+		expect(publishErrorKey('functions/not-found')).toBe('scenlib.pub_err_missing');
+	});
+
 	it('falls back to the check-the-summary message', () => {
-		expect(publishErrorKey('functions/invalid-argument')).toBe('scenlib.pub_failed');
 		expect(publishErrorKey(undefined)).toBe('scenlib.pub_failed');
+		expect(publishErrorKey('functions/something-new')).toBe('scenlib.pub_failed');
 	});
 });
 

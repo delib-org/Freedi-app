@@ -4,7 +4,19 @@ import { t } from '../../lib/i18n';
 import { stalledBanner } from '../../components/StalledBanner';
 import { TeacherNav } from '../../components/TeacherNav';
 import { YoutubeListEditor } from '../../components/YoutubeListEditor';
+import { LineTextArea } from '../../components/LineTextArea';
+import { SceneMediaEditor } from '../../components/SceneMediaEditor';
 import { MaterialsEditor } from '../../components/MaterialsEditor';
+import {
+	formatDialogue,
+	formatLines,
+	formatValues,
+	megabytes,
+	parseDialogue,
+	parseLines,
+	parseValues,
+	saveErrorKey,
+} from '../../lib/scenarioEditor';
 import {
 	fetchTopicPackage,
 	saveTopicEditorFields,
@@ -16,9 +28,9 @@ import {
 	AgoraScene,
 	AgoraTopicPackage,
 	AgoraTopicStatus,
-	AgoraValue,
-	AGORA_LIMITS,
 } from '@freedi/shared-types';
+
+const SAVED_FLASH_MS = 2000;
 
 /**
  * Full review/edit surface for a generated topic package. Arrays edit as
@@ -29,10 +41,15 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 	const topicPackageId = initialVnode.attrs.id;
 	let pkg: AgoraTopicPackage | null = null;
 	let loadFailed = false;
-	let saving = false;
+	/** Which button is waiting on the server: both are dead until it answers */
+	let saving: 'save' | 'ready' | null = null;
 	let savedFlash = false;
 	/** Edits made since the last confirmed save. What back has to ask about. */
 	let dirty = false;
+	/** Counts edits, so a save knows whether the teacher kept typing while it was in the air */
+	let edits = 0;
+	/** What the teacher must be told: a save or an upload that failed, a file that was refused */
+	let problems: { key: string; params?: Record<string, string | number> }[] = [];
 	const uploadProgress: Record<string, number> = {};
 	const imageUploadProgress: Record<string, number> = {};
 
@@ -53,79 +70,133 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			});
 	}
 
+	/** Every edit goes through here, onto the CURRENT package: never onto the copy a render captured */
+	function patch(change: Partial<AgoraTopicPackage>): void {
+		if (!pkg) return;
+		pkg = { ...pkg, ...change };
+		dirty = true;
+		edits += 1;
+	}
+
 	/**
 	 * Save ONLY the fields this editor owns — never the whole in-memory copy,
 	 * which would overwrite fields the editor doesn't show with the values they
 	 * had when it was opened. Runs under the confirmed-write clock, so an
 	 * offline save surfaces as a stalled banner instead of a false "saved".
+	 *
+	 * The button waits ("Saving…") until the server answers, and a failure says
+	 * why under it: a save that fails quietly is indistinguishable from a button
+	 * that does nothing. Edits made while it was in the air stay unsaved.
 	 */
-	function save(extra?: TopicEditorFields): void {
-		if (!pkg || saving) return;
-		saving = true;
+	async function save(status?: AgoraTopicStatus): Promise<boolean> {
+		if (!pkg || saving) return false;
+		if (!pkg.title.trim()) {
+			problems = [{ key: 'editor.title_required' }];
+
+			return false;
+		}
+		saving = status ? 'ready' : 'save';
+		problems = [];
+		const revision = edits;
 		const fields: TopicEditorFields = {
 			title: pkg.title,
 			framingText: pkg.framingText,
 			challengeQuestion: pkg.challengeQuestion,
 			characters: pkg.characters,
 			scenes: pkg.scenes,
-			...extra,
+			...(status ? { status } : {}),
 		};
-		saveTopicEditorFields(topicPackageId, fields)
-			.then(() => {
-				if (pkg) pkg = { ...pkg, ...fields, lastUpdate: Date.now() };
-				dirty = false;
-				savedFlash = true;
-				setTimeout(() => {
-					savedFlash = false;
-					m.redraw();
-				}, 2000);
-			})
-			.catch((error: unknown) => {
-				console.error('[Editor] Save failed:', error);
-			})
-			.finally(() => {
-				saving = false;
+		m.redraw();
+		try {
+			await saveTopicEditorFields(topicPackageId, fields);
+			if (pkg) pkg = { ...pkg, ...(status ? { status } : {}), lastUpdate: Date.now() };
+			if (edits === revision) dirty = false;
+			savedFlash = true;
+			setTimeout(() => {
+				savedFlash = false;
 				m.redraw();
+			}, SAVED_FLASH_MS);
+
+			return true;
+		} catch (error) {
+			console.error('[Editor] Save failed:', {
+				operation: 'scenarioEditor.save',
+				topicPackageId,
+				code: (error as { code?: string }).code,
+				error,
 			});
+			problems = [{ key: saveErrorKey(error) }];
+
+			return false;
+		} finally {
+			saving = null;
+			m.redraw();
+		}
 	}
 
-	/**
-	 * Leaving with unsaved edits. `confirm` offers two answers, so the safe one
-	 * is the default: OK saves and goes, Cancel stays. A teacher who typed a
-	 * paragraph into their own lesson has never meant to throw it away.
-	 */
 	/** Back is where the teacher came from; a bookmark, or the form that just made this, lands on the list */
 	function backFrom(): string {
 		return backTarget('/teach/scenarios', ['/teach/scenarios/new']);
 	}
 
-	function goBack(): void {
+	/**
+	 * Leaving with unsaved edits. `confirm` offers two answers, so the safe one
+	 * is the default: OK saves and goes, Cancel stays. A teacher who typed a
+	 * paragraph into their own lesson has never meant to throw it away, so a
+	 * save that fails keeps them here, with the edits, and says so.
+	 */
+	async function goBack(): Promise<void> {
+		if (saving) return;
 		if (!dirty) {
 			m.route.set(backFrom());
 
 			return;
 		}
 		if (!window.confirm(t('editor.leave_unsaved'))) return;
-		save();
-		m.route.set(backFrom());
+		if (await save()) {
+			m.route.set(backFrom());
+		} else {
+			problems = [{ key: 'editor.leave_failed' }, ...problems];
+			m.redraw();
+		}
+	}
+
+	/** One scene's media change, onto the current package, then saved */
+	function patchScene(sceneId: string, change: (scene: AgoraScene) => AgoraScene): void {
+		if (!pkg) return;
+		patch({
+			scenes: pkg.scenes.map((candidate) =>
+				candidate.sceneId === sceneId ? change(candidate) : candidate,
+			),
+		});
+	}
+
+	function uploadFailed(kind: 'video' | 'image', error: unknown): void {
+		console.error('[Editor] Upload failed:', {
+			operation: `scenarioEditor.upload.${kind}`,
+			topicPackageId,
+			error,
+		});
+		problems = [{ key: 'editor.upload_err' }];
+	}
+
+	function tooBig(limit: number): void {
+		problems = [{ key: 'editor.file_too_big', params: { mb: megabytes(limit) } }];
 	}
 
 	function uploadVideo(scene: AgoraScene, file: File): void {
 		uploadProgress[scene.sceneId] = 0;
+		problems = [];
 		uploadTopicAsset(topicPackageId, `${scene.sceneId}-${file.name}`, file, (percent) => {
 			uploadProgress[scene.sceneId] = percent;
 			m.redraw();
 		})
 			.then((url) => {
-				if (!pkg) return;
-				const scenes = pkg.scenes.map((candidate) =>
-					candidate.sceneId === scene.sceneId ? { ...candidate, videoUrl: url } : candidate,
-				);
-				pkg = { ...pkg, scenes };
-				save({ scenes });
+				patchScene(scene.sceneId, (candidate) => ({ ...candidate, videoUrl: url }));
+				void save();
 			})
 			.catch((error: unknown) => {
-				console.error('[Editor] Video upload failed:', error);
+				uploadFailed('video', error);
 			})
 			.finally(() => {
 				delete uploadProgress[scene.sceneId];
@@ -135,22 +206,20 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 
 	function uploadImage(scene: AgoraScene, file: File): void {
 		imageUploadProgress[scene.sceneId] = 0;
+		problems = [];
 		uploadTopicAsset(topicPackageId, `${scene.sceneId}-img-${file.name}`, file, (percent) => {
 			imageUploadProgress[scene.sceneId] = percent;
 			m.redraw();
 		})
 			.then((url) => {
-				if (!pkg) return;
-				const scenes = pkg.scenes.map((candidate) =>
-					candidate.sceneId === scene.sceneId
-						? { ...candidate, imageUrls: [...candidate.imageUrls, url] }
-						: candidate,
-				);
-				pkg = { ...pkg, scenes };
-				save({ scenes });
+				patchScene(scene.sceneId, (candidate) => ({
+					...candidate,
+					imageUrls: [...candidate.imageUrls, url],
+				}));
+				void save();
 			})
 			.catch((error: unknown) => {
-				console.error('[Editor] Image upload failed:', error);
+				uploadFailed('image', error);
 			})
 			.finally(() => {
 				delete imageUploadProgress[scene.sceneId];
@@ -159,13 +228,11 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 	}
 
 	function removeSceneImage(scene: AgoraScene, url: string): void {
-		if (!pkg) return;
-		const scenes = pkg.scenes.map((candidate) =>
-			candidate.sceneId === scene.sceneId
-				? { ...candidate, imageUrls: candidate.imageUrls.filter((current) => current !== url) }
-				: candidate,
-		);
-		save({ scenes });
+		patchScene(scene.sceneId, (candidate) => ({
+			...candidate,
+			imageUrls: candidate.imageUrls.filter((current) => current !== url),
+		}));
+		void save();
 	}
 
 	function textArea(value: string, rows: number, onchange: (next: string) => void): m.Children {
@@ -179,12 +246,11 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 	}
 
 	function characterEditor(character: AgoraCharacter, index: number): m.Children {
-		const update = (patch: Partial<AgoraCharacter>): void => {
+		const update = (change: Partial<AgoraCharacter>): void => {
 			if (!pkg) return;
 			const characters = [...pkg.characters] as [AgoraCharacter, AgoraCharacter];
-			characters[index] = { ...character, ...patch };
-			pkg = { ...pkg, characters };
-			dirty = true;
+			characters[index] = { ...pkg.characters[index], ...change };
+			patch({ characters });
 		};
 
 		return m('.card.stack', { key: character.characterId }, [
@@ -209,44 +275,30 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 				]),
 			]),
 			m('label.teacher__section-title', t('editor.char_args')),
-			textArea(character.arguments.join('\n'), 4, (next) => {
-				update({ arguments: next.split('\n').filter((line) => line.trim()) });
+			m(LineTextArea, {
+				value: formatLines(character.arguments),
+				rows: 4,
+				onText: (text: string) => update({ arguments: parseLines(text) }),
 			}),
 			m('label.teacher__section-title', t('editor.char_needs')),
-			textArea((character.needs ?? []).join('\n'), 4, (next) => {
-				update({ needs: next.split('\n').filter((line) => line.trim()) });
+			m(LineTextArea, {
+				value: formatLines(character.needs),
+				rows: 4,
+				onText: (text: string) => update({ needs: parseLines(text) }),
 			}),
 			m('label.teacher__section-title', t('editor.char_values')),
-			textArea(
-				character.values.map((value) => `${value.label} | ${value.description}`).join('\n'),
-				4,
-				(next) => {
-					const values: AgoraValue[] = next
-						.split('\n')
-						.filter((line) => line.trim())
-						.map((line, valueIndex) => {
-							const [label, ...rest] = line.split('|');
-
-							return {
-								valueId: character.values[valueIndex]?.valueId ?? `val-${index}-${valueIndex}`,
-								label: label.trim(),
-								description: rest.join('|').trim(),
-							};
-						});
-					update({ values });
-				},
-			),
+			m(LineTextArea, {
+				value: formatValues(character.values),
+				rows: 4,
+				onText: (text: string) =>
+					update({ values: parseValues(text, pkg?.characters[index].values ?? [], index) }),
+			}),
 		]);
 	}
 
 	function sceneEditor(scene: AgoraScene): m.Children {
-		const update = (patch: Partial<AgoraScene>): void => {
-			if (!pkg) return;
-			const scenes = pkg.scenes.map((candidate) =>
-				candidate.sceneId === scene.sceneId ? { ...candidate, ...patch } : candidate,
-			);
-			pkg = { ...pkg, scenes };
-			dirty = true;
+		const update = (change: Partial<AgoraScene>): void => {
+			patchScene(scene.sceneId, (candidate) => ({ ...candidate, ...change }));
 		};
 		const progress = uploadProgress[scene.sceneId];
 		const imageProgress = imageUploadProgress[scene.sceneId];
@@ -269,68 +321,22 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			scene.kind === 'needsB'
 				? [
 						m('label.teacher__section-title', t('editor.scene_dialogue')),
-						textArea(
-							scene.dialogue.map((line) => `${line.speaker}: ${line.line}`).join('\n'),
-							4,
-							(next) => {
-								update({
-									dialogue: next
-										.split('\n')
-										.filter((line) => line.includes(':'))
-										.map((line) => {
-											const [speaker, ...rest] = line.split(':');
-
-											return { speaker: speaker.trim(), line: rest.join(':').trim() };
-										}),
-								});
-							},
-						),
+						m(LineTextArea, {
+							value: formatDialogue(scene.dialogue),
+							rows: 4,
+							onText: (text: string) => update({ dialogue: parseDialogue(text) }),
+						}),
 					]
 				: null,
-			m('label.teacher__section-title', t('editor.images')),
-			scene.imageUrls.length > 0
-				? m(
-						'.editor__image-list',
-						scene.imageUrls.map((url) =>
-							m('.editor__image-item', { key: url }, [
-								m('img.editor__image-thumb', { src: url, alt: '' }),
-								m(
-									'button.btn.btn--ghost.btn--sm',
-									{ onclick: () => removeSceneImage(scene, url) },
-									t('editor.remove_image'),
-								),
-							]),
-						),
-					)
-				: null,
-			imageProgress !== undefined
-				? m('p.lobby__status', t('editor.image_uploading', { pct: imageProgress }))
-				: m('input.editor__file', {
-						type: 'file',
-						accept: 'image/*',
-						onchange: (event: Event) => {
-							const file = (event.target as HTMLInputElement).files?.[0];
-							if (file && file.size <= AGORA_LIMITS.MAX_IMAGE_BYTES) {
-								uploadImage(scene, file);
-							}
-						},
-					}),
-			m('label.teacher__section-title', t('editor.video')),
-			progress !== undefined
-				? m('p.lobby__status', t('editor.video_uploading', { pct: progress }))
-				: m('input.editor__file', {
-						type: 'file',
-						accept: 'video/*',
-						onchange: (event: Event) => {
-							const file = (event.target as HTMLInputElement).files?.[0];
-							if (file && file.size <= AGORA_LIMITS.MAX_VIDEO_BYTES) {
-								uploadVideo(scene, file);
-							}
-						},
-					}),
-			scene.videoUrl
-				? m('video.scene__video', { src: scene.videoUrl, controls: true, preload: 'metadata' })
-				: null,
+			m(SceneMediaEditor, {
+				scene,
+				imageProgress,
+				videoProgress: progress,
+				onImage: (file: File) => uploadImage(scene, file),
+				onVideo: (file: File) => uploadVideo(scene, file),
+				onRemoveImage: (url: string) => removeSceneImage(scene, url),
+				onTooBig: tooBig,
+			}),
 			m('label.teacher__section-title', t('video.editor_label')),
 			m(YoutubeListEditor, {
 				videos: scene.youtubeVideos ?? [],
@@ -371,7 +377,7 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			return m('.shell', [
 				m(TeacherNav, {
 					title: current.title,
-					onBack: goBack,
+					onBack: () => void goBack(),
 					trailing: [
 						dirty ? m('span.teacher-nav__unsaved', t('editor.unsaved')) : null,
 						m(
@@ -386,8 +392,7 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 						value: current.title,
 						style: { letterSpacing: 'normal', textTransform: 'none' },
 						oninput: (event: InputEvent) => {
-							pkg = { ...current, title: (event.target as HTMLInputElement).value };
-							dirty = true;
+							patch({ title: (event.target as HTMLInputElement).value });
 						},
 					}),
 
@@ -404,16 +409,10 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 						: null,
 
 					m('label.teacher__section-title', t('editor.framing')),
-					textArea(current.framingText, 3, (next) => {
-						pkg = { ...current, framingText: next };
-						dirty = true;
-					}),
+					textArea(current.framingText, 3, (next) => patch({ framingText: next })),
 
 					m('label.teacher__section-title', t('editor.challenge')),
-					textArea(current.challengeQuestion, 2, (next) => {
-						pkg = { ...current, challengeQuestion: next };
-						dirty = true;
-					}),
+					textArea(current.challengeQuestion, 2, (next) => patch({ challengeQuestion: next })),
 
 					m('h3', t('editor.characters')),
 					m(
@@ -431,19 +430,35 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 						// A save wedged offline must not read as saved — this is the
 						// confirmed-write clock's voice on a screen with no HUD
 						stalledBanner(),
+						// Inside the bar, not above it: the bar is what the teacher is
+						// looking at when a press does not take
+						...problems.map((problem) =>
+							m('p.editor__error', { role: 'alert' }, t(problem.key, problem.params)),
+						),
 						m(
 							'button.btn.btn--secondary',
-							{ disabled: saving, onclick: () => save() },
-							savedFlash ? t('editor.saved') : t('editor.save'),
+							{
+								type: 'button',
+								disabled: saving !== null,
+								'aria-busy': saving === 'save' ? 'true' : undefined,
+								onclick: () => void save(),
+							},
+							saving === 'save'
+								? t('editor.saving')
+								: savedFlash
+									? t('editor.saved')
+									: t('editor.save'),
 						),
 						current.status !== AgoraTopicStatus.ready
 							? m(
 									'button.btn.btn--primary',
 									{
-										disabled: saving,
-										onclick: () => save({ status: AgoraTopicStatus.ready }),
+										type: 'button',
+										disabled: saving !== null,
+										'aria-busy': saving === 'ready' ? 'true' : undefined,
+										onclick: () => void save(AgoraTopicStatus.ready),
 									},
-									t('editor.mark_ready'),
+									saving === 'ready' ? t('editor.saving') : t('editor.mark_ready'),
 								)
 							: null,
 					]),

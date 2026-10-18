@@ -388,31 +388,32 @@ export function PublishSheet(): m.Component<PublishSheetAttrs> {
 							}),
 
 							m('p.scn-note', t('scenlib.privacy_note')),
-
-							showProblems && problems.length > 0
-								? m(
-										'ul.scn-problems',
-										{ role: 'alert' },
-										problems.map((entry) => m('li', { key: entry }, problemText(entry))),
-									)
+							!waitKey && !coverUrl && !editing
+								? m('p.scn-note', t('scenlib.pub_cover_optional'))
 								: null,
-							failedKey ? m('p.scn-field__error', { role: 'alert' }, t(failedKey)) : null,
-
-							// Always one honest line about the button: why it waits, or that the picture can wait
-							m(
-								'.scn-publish__status',
-								waitKey
-									? m('p.scn-notice.scn-notice--busy', { role: 'status' }, [
-											m('span.scn-notice__dot', { 'aria-hidden': 'true' }),
-											m('span', t(waitKey)),
-										])
-									: !coverUrl && !editing
-										? m('p.scn-note', t('scenlib.pub_cover_optional'))
-										: null,
-							),
 						]),
 
 						m('footer.question-sheet__foot', [
+							// In the footer, which stays on screen (sticky on a phone), not in the scrolling
+							// body: a press that answers out of sight is a press that did nothing
+							(showProblems && problems.length > 0) || failedKey || waitKey
+								? m('.scn-publish__alert', [
+										showProblems && problems.length > 0
+											? m(
+													'ul.scn-problems',
+													{ role: 'alert' },
+													problems.map((entry) => m('li', { key: entry }, problemText(entry))),
+												)
+											: null,
+										failedKey ? m('p.scn-field__error', { role: 'alert' }, t(failedKey)) : null,
+										waitKey
+											? m('p.scn-notice.scn-notice--busy', { role: 'status' }, [
+													m('span.scn-notice__dot', { 'aria-hidden': 'true' }),
+													m('span', t(waitKey)),
+												])
+											: null,
+									])
+								: null,
 							m(
 								'button.btn.btn--ghost.question-sheet__cancel',
 								{ type: 'button', onclick: onClose },

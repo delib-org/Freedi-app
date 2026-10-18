@@ -2,6 +2,7 @@ import type { LangCode } from '../i18n';
 import { libraryStrings } from './strings';
 import { libraryAdminStrings } from './stringsAdmin';
 import { libraryCoverStrings } from './stringsCover';
+import { libraryEditorStrings } from './stringsEditor';
 import { libraryDiscussionStrings } from './stringsDiscussion';
 import { libraryFeedbackStrings } from './stringsFeedback';
 import { libraryPublishStrings } from './stringsPublish';
@@ -15,5 +16,6 @@ export function libraryStringsFor(lang: LangCode): Record<string, string> {
 		...libraryDiscussionStrings[lang],
 		...libraryAdminStrings[lang],
 		...libraryPublishStrings[lang],
+		...libraryEditorStrings[lang],
 	};
 }
