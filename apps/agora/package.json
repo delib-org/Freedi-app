@@ -22,6 +22,7 @@
 		"fast:solo": "bash ../../scripts/solo.sh npx tsx scripts/fastlane.ts",
 		"preflight": "node scripts/lib/preflight.mjs",
 		"preflight:solo": "bash ../../scripts/solo.sh node scripts/lib/preflight.mjs",
+		"e2e:three": "bash ../../scripts/solo.sh npx tsx scripts/e2e-three-students.mjs",
 		"e2e:challenge": "node scripts/e2e-challenge.mjs",
 		"contrast": "node scripts/contrast-audit.mjs && node scripts/contrast-audit.mjs \"http://localhost:3009/mock/surfaces.html?theme=candy\" && node scripts/contrast-audit.mjs \"http://localhost:3009/mock/surfaces.html?theme=civic\" && node scripts/contrast-audit.mjs \"http://localhost:3009/mock/surfaces.html?theme=custom\"",
 		"typesize": "node scripts/type-audit.mjs"
