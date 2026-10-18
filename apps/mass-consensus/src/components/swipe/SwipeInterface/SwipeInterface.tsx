@@ -38,7 +38,8 @@ import {
 } from '@/store/slices/swipeSelectors';
 import { submitRating, fetchPreviousEvaluations } from '@/controllers/swipeController';
 import { submitComment } from '@/controllers/commentController';
-import { getEvaluationEntry, resolveEvaluationScaleKey } from '@freedi/shared-types';
+import { resolveEvaluationScaleKey } from '@freedi/shared-types';
+import { useVisualScale } from '../SwipeCard/visualScale';
 import type { RatingValue } from '../RatingButton';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError } from '@/lib/utils/errorHandling';
@@ -83,6 +84,8 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   // reactions | three-point). Cross-app: resolved from the shared
   // statementSettings.ratingMode + ratingSteps.
   const ratingMode = resolveEvaluationScaleKey(question.statementSettings);
+  // Same left-to-right order as the card, so a button press throws toward its own side
+  const visualScale = useVisualScale(ratingMode);
   const currentCard = useSelector(selectCurrentCard);
   const evaluatedCount = useSelector(selectEvaluatedCardsCount);
   const totalCount = useSelector(selectTotalCardsCount);
@@ -265,7 +268,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     const capturedStatementId = currentCard.statementId;
 
     // Get throw direction from the shared evaluation scale
-    const entry = getEvaluationEntry(rating, ratingMode);
+    const entry = visualScale.find((candidate) => candidate.value === rating);
     const rawDirection = entry?.direction || 'right';
     const direction: 'left' | 'right' = rawDirection === 'up' ? 'right' : rawDirection;
 

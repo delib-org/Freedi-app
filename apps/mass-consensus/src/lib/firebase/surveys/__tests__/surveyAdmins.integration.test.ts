@@ -11,6 +11,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { spawnSync } from 'child_process';
 import type { Firestore } from 'firebase-admin/firestore';
 
 /** Read apps/mass-consensus/.env — jest does not apply Next's env loading. */
@@ -29,9 +30,43 @@ function loadEnvFile(): void {
 
 loadEnvFile();
 
+const PROBE_TIMEOUT_MS = 800;
+
+/**
+ * Whether something accepts TCP connections at `host:port`. describe() bodies
+ * are synchronous, so the probe runs in a short-lived child process that is
+ * killed after PROBE_TIMEOUT_MS. A host with no listener fails fast instead of
+ * letting the suite hang until the 60s hook timeout.
+ */
+function isEmulatorReachable(hostPort: string | undefined): boolean {
+  if (!hostPort) return false;
+
+  const separator = hostPort.lastIndexOf(':');
+  const hostname = hostPort.slice(0, separator);
+  const port = Number(hostPort.slice(separator + 1));
+
+  if (separator <= 0 || !Number.isInteger(port) || port <= 0) return false;
+
+  const probeScript = [
+    `const s = require('net').connect({ host: ${JSON.stringify(hostname)}, port: ${port} });`,
+    `s.on('connect', () => process.exit(0));`,
+    `s.on('error', () => process.exit(1));`,
+    `setTimeout(() => process.exit(1), ${PROBE_TIMEOUT_MS - 200});`,
+  ].join('\n');
+
+  const result = spawnSync(process.execPath, ['-e', probeScript], {
+    timeout: PROBE_TIMEOUT_MS,
+    stdio: 'ignore',
+  });
+
+  return result.status === 0;
+}
+
 const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
 const hasEmulator =
-  process.env.USE_FIREBASE_EMULATOR === 'true' && Boolean(emulatorHost);
+  process.env.USE_FIREBASE_EMULATOR === 'true' &&
+  Boolean(emulatorHost) &&
+  isEmulatorReachable(emulatorHost);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const describeWithEmulator: jest.Describe = hasEmulator ? describe : describe.skip;
@@ -80,7 +115,8 @@ describeWithEmulator('survey co-admins (Firestore emulator)', () => {
   }, 30000);
 
   afterAll(async () => {
-    if (!db) return;
+    // beforeAll may never have run (or failed early), so guard both handles.
+    if (!db || !mod) return;
 
     await mod.deleteSurveyAdminRecords(surveyId);
     await db.collection(types.Collections.surveys).doc(surveyId).delete();

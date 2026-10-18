@@ -6,6 +6,7 @@ jest.mock('firebase-admin/auth', () => ({ getAuth: jest.fn() }));
 
 const creator = { uid: 'admin-1', displayName: 'Admin', email: '', photoURL: '', isAnonymous: false };
 const question = { statementId: 'q1', topParentId: 'top', parents: ['top', 'group'] };
+const FIXED_BATCH_TIME = 1_700_000_000_000;
 
 describe('buildOptionStatements', () => {
   it('builds one option per text, in order, under the question', () => {
@@ -22,10 +23,18 @@ describe('buildOptionStatements', () => {
   });
 
   it('keeps the typed order recoverable from createdAt', () => {
-    const [a, b, c] = buildOptionStatements(question, ['A', 'B', 'C'], creator);
+    // Pin the clock: each option reads Date.now() itself, so a tick between
+    // two options would otherwise make this assertion flaky.
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(FIXED_BATCH_TIME);
 
-    expect(b.createdAt).toBe(a.createdAt + 1);
-    expect(c.createdAt).toBe(a.createdAt + 2);
+    try {
+      const [a, b, c] = buildOptionStatements(question, ['A', 'B', 'C'], creator);
+
+      expect(b.createdAt).toBe(a.createdAt + 1);
+      expect(c.createdAt).toBe(a.createdAt + 2);
+    } finally {
+      nowSpy.mockRestore();
+    }
   });
 
   it('falls back to the question id as topParentId', () => {
