@@ -2,6 +2,8 @@ import m from 'mithril';
 import { AgoraParticipant, AgoraSession } from '@freedi/shared-types';
 import { t } from '../lib/i18n';
 import { InstallOffer } from '../components/InstallOffer';
+import { PointsLeaderboard } from '../components/PointsLeaderboard';
+import { getSessionState } from '../lib/session';
 
 export interface ConvergenceResultsAttrs {
 	session: AgoraSession;
@@ -27,7 +29,7 @@ export interface ConvergenceResultsAttrs {
 export function ConvergenceResults(): m.Component<ConvergenceResultsAttrs> {
 	return {
 		view(vnode) {
-			const { session } = vnode.attrs;
+			const { session, myParticipant } = vnode.attrs;
 			const convergence = session.convergence;
 			const counted = convergence?.participants ?? 0;
 
@@ -82,6 +84,15 @@ export function ConvergenceResults(): m.Component<ConvergenceResultsAttrs> {
 								]),
 						m('p.convergence__counted', t('convergence.counted', { n: String(counted) })),
 					]),
+
+					// The class points board — the same card every recap carries
+					m(
+						'.card.stack',
+						m(PointsLeaderboard, {
+							participants: getSessionState().participants,
+							userId: myParticipant?.userId,
+						}),
+					),
 
 					m(InstallOffer),
 				]),

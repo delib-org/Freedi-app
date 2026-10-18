@@ -11,6 +11,7 @@ import { Icon, iconLabel, type IconName } from '../components/Icon';
 import { getConsensusPool, getSessionFlow, getSessionState } from '../lib/session';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { HelpersBoard } from '../components/HelpersBoard';
+import { PointsLeaderboard } from '../components/PointsLeaderboard';
 import { countThanks, ResultsSwitch, type ResultsTab } from '../components/ResultsSwitch';
 import {
 	AgoraParticipant,
@@ -519,6 +520,10 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 							),
 						])
 					: null,
+
+				// The class points board: the class total, the podium, and every
+				// student by the points the game already paid them
+				m('.card.stack', m(PointsLeaderboard, { participants, userId: myParticipant?.userId })),
 
 				m('.card.stack', [
 					m('p.teacher__section-title', t('results.health_title')),

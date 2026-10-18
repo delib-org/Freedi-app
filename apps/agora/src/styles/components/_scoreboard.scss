@@ -1,0 +1,754 @@
+@use '../tokens' as *;
+
+// ============================================================================
+// The results board as a game reveal: the decision (reveal), the vote
+// (tally), every proposal by agreement (ranked) and the class points board
+// (scoreboard). Every animation here is decoration: its natural state is the
+// finished one, the keyframe only says where it comes from, and the global
+// reduced-motion rule in global.scss collapses all of it to a still.
+// ============================================================================
+
+$reveal-step: 220ms;
+$row-step: 70ms;
+
+// --- The sequence: one section after another ------------------------------
+.reveal-seq {
+	> * {
+		animation: reveal-rise var(--motion-slow) var(--ease-camera) both;
+	}
+
+	@for $i from 1 through 6 {
+		> :nth-child(#{$i}) {
+			animation-delay: ($i - 1) * $reveal-step;
+		}
+	}
+}
+
+@keyframes reveal-rise {
+	from {
+		opacity: 0;
+		transform: translateY(18px);
+	}
+}
+
+// --- Latin numerals inside an RTL page ------------------------------------
+.scoreboard__num {
+	direction: ltr;
+	unicode-bidi: isolate;
+	font-variant-numeric: tabular-nums;
+}
+
+// --- The decision ----------------------------------------------------------
+.reveal {
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-xs);
+	text-align: center;
+	background:
+		radial-gradient(120% 80% at 50% 0%, var(--wash-mine-high), transparent 70%),
+		var(--bg-card-solid);
+
+	&--decision {
+		border: 2px solid var(--border-lantern);
+		box-shadow: var(--shadow-raised), 0 0 0 6px var(--wash-mine-high);
+	}
+
+	&__icon {
+		display: inline-flex;
+		margin-block-start: var(--space-sm);
+		color: var(--mine);
+		animation: reveal-drop var(--motion-slow) var(--ease-spring) both;
+
+		.reveal--decision & {
+			color: var(--gold);
+			filter: drop-shadow(0 4px 10px rgba(224, 168, 0, 0.45));
+		}
+	}
+
+	&__eyebrow {
+		@include type-meta;
+		margin: 0;
+		color: var(--text-secondary);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	&__headline {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--font-size-2xl);
+		line-height: 1.1;
+		color: var(--mine-ink);
+		animation: reveal-pop var(--motion-slow) var(--ease-spring) $reveal-step both;
+
+		.reveal--decision & {
+			font-size: var(--font-size-3xl);
+		}
+	}
+
+	&__statement {
+		@include proposal-voice;
+		margin: var(--space-xs) 0 0;
+		max-width: 34ch;
+		white-space: pre-wrap;
+
+		&--muted {
+			color: var(--text-secondary);
+		}
+	}
+
+	&__who {
+		@include type-meta;
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	// The one big number: how much of the class stood behind it
+	&__support {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		margin-block-start: var(--space-sm);
+		padding: var(--space-sm) var(--space-lg);
+		border-radius: var(--radius-full);
+		background: var(--wash-mine-high);
+		animation: reveal-pop var(--motion-slow) var(--ease-spring) ($reveal-step * 2) both;
+	}
+
+	&__support-value {
+		font-family: var(--font-display);
+		font-size: var(--font-size-2xl);
+		line-height: 1;
+		color: var(--mine-ink);
+	}
+
+	&__support-label {
+		@include type-meta;
+		color: var(--text-secondary);
+	}
+
+	// Confetti: paper that falls once, cycling the theme hues. Pure CSS, no
+	// script, and nothing at all when motion is reduced (see the bottom).
+	&__confetti {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		overflow: hidden;
+	}
+
+	&__piece {
+		position: absolute;
+		inset-block-start: -12px;
+		inset-inline-start: calc((var(--piece-index) + 0.5) * (100% / 24));
+		width: 8px;
+		height: 14px;
+		border-radius: 2px;
+		background: var(--piece-color, var(--gold));
+		opacity: 0;
+		animation: reveal-confetti 2.6s cubic-bezier(0.2, 0.6, 0.4, 1) both;
+		animation-delay: calc(var(--piece-index) * 45ms);
+
+		&:nth-child(4n + 1) { --piece-color: var(--mine); }
+		&:nth-child(4n + 2) { --piece-color: var(--who-2); }
+		&:nth-child(4n + 3) { --piece-color: var(--who-6); }
+		&:nth-child(3n) { height: 9px; width: 9px; border-radius: 50%; }
+	}
+}
+
+@keyframes reveal-drop {
+	from {
+		opacity: 0;
+		transform: translateY(-28px) scale(0.6);
+	}
+}
+
+@keyframes reveal-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.6);
+	}
+}
+
+@keyframes reveal-confetti {
+	0% {
+		opacity: 0;
+		transform: translateY(0) rotate(0deg);
+	}
+	10% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+		transform: translateY(360px) rotate(540deg);
+	}
+}
+
+// --- The vote: bars that grow ---------------------------------------------
+.tally {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__row {
+		position: relative;
+		overflow: hidden;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: var(--space-sm);
+		min-height: 52px;
+		padding: var(--space-sm) var(--space-md);
+		border: 1.5px solid var(--border-subtle);
+		border-radius: var(--radius-tile);
+		background: var(--bg-card-solid);
+
+		&--winner {
+			border-color: var(--border-lantern);
+			box-shadow: var(--glow-lantern);
+
+			.tally__bar {
+				background: linear-gradient(90deg, var(--mine-light), var(--mine));
+				opacity: 0.35;
+			}
+
+			.tally__text,
+			.tally__votes {
+				color: var(--mine-ink);
+				font-weight: 700;
+			}
+		}
+	}
+
+	// The fill grows from the start edge to its share, one row after the next
+	&__bar {
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 0;
+		inline-size: var(--share);
+		background: var(--bg-inset);
+		pointer-events: none;
+		transform-origin: 0 50%;
+		animation: tally-grow var(--motion-slow) var(--ease-camera) both;
+		animation-delay: calc(var(--row-index) * #{$row-step} + #{$reveal-step});
+
+		[dir='rtl'] & {
+			transform-origin: 100% 50%;
+		}
+	}
+
+	&__label {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		min-width: 0;
+	}
+
+	&__crown {
+		display: inline-flex;
+		flex: 0 0 auto;
+		color: var(--gold);
+	}
+
+	&__text {
+		@include proposal-voice;
+		font-size: var(--font-size-base);
+		line-height: 1.35;
+		overflow-wrap: anywhere;
+	}
+
+	&__count {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		line-height: 1;
+	}
+
+	&__votes {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		color: var(--text-primary);
+	}
+
+	&__share {
+		@include type-meta;
+		color: var(--text-secondary);
+	}
+}
+
+@keyframes tally-grow {
+	from {
+		transform: scaleX(0);
+	}
+}
+
+// --- Every proposal, by agreement ------------------------------------------
+.ranked {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	// Rank beside the text; the score sits UNDER the text as a full-width
+	// meter, so a long proposal keeps the whole row width on a phone
+	&__row {
+		display: grid;
+		grid-template-columns: 2.5rem minmax(0, 1fr);
+		align-items: start;
+		gap: var(--space-sm);
+		padding: var(--space-sm);
+		border-radius: var(--radius-md);
+		background: var(--bg-card-solid);
+		animation: reveal-rise var(--motion-base) var(--ease-camera) both;
+		animation-delay: calc(var(--row-index) * #{$row-step} + #{$reveal-step});
+
+		&:nth-child(even) {
+			background: var(--wash-mine-high);
+		}
+
+		&--winner {
+			background: var(--wash-mine-high);
+			box-shadow: inset 0 0 0 2px var(--lantern);
+
+			.ranked__text {
+				color: var(--mine-ink);
+			}
+		}
+	}
+
+	&__rank {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 1.75rem;
+	}
+
+	&__rank-num {
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		color: var(--text-secondary);
+	}
+
+	&__body {
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__text {
+		@include proposal-voice;
+		margin: 0;
+		font-size: var(--font-size-base);
+		line-height: 1.4;
+		white-space: pre-wrap;
+	}
+
+	&__foot {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__who,
+	&__meta {
+		@include type-meta;
+		color: var(--text-secondary);
+	}
+
+	&__score {
+		grid-column: 2;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__figure {
+		flex: 0 0 3.5rem;
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		line-height: 1;
+		text-align: center;
+		color: var(--success-ink);
+
+		&--against {
+			color: var(--danger-ink, var(--text-secondary));
+		}
+	}
+
+	// Zero-centred: the fill grows out of the middle toward one end
+	&__meter {
+		position: relative;
+		display: block;
+		inline-size: 100%;
+		block-size: 8px;
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		overflow: hidden;
+	}
+
+	&__meter-zero {
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 50%;
+		inline-size: 1px;
+		background: var(--border-lantern);
+	}
+
+	&__meter-fill {
+		position: absolute;
+		inset-block: 0;
+		inline-size: var(--fill);
+		background: var(--success);
+		transform-origin: 0 50%;
+		animation: tally-grow var(--motion-slow) var(--ease-camera) both;
+		animation-delay: calc(var(--row-index) * #{$row-step} + #{$reveal-step * 2});
+
+		&--against {
+			background: var(--danger);
+			transform-origin: 100% 50%;
+		}
+
+		[dir='rtl'] & {
+			transform-origin: 100% 50%;
+		}
+
+		[dir='rtl'] &--against {
+			transform-origin: 0 50%;
+		}
+	}
+}
+
+// --- The class points board ------------------------------------------------
+.scoreboard {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-sm);
+	// Room for the crest, which hangs over the top edge
+	margin-block-start: 22px;
+	padding-block-start: var(--space-lg);
+
+	&__crest {
+		position: absolute;
+		inset-block-start: -22px;
+		inset-inline: 0;
+		display: flex;
+		justify-content: center;
+		pointer-events: none;
+	}
+
+	&__crest-pill {
+		padding: var(--space-sm) var(--space-lg);
+		background: var(--grad-mine-aa);
+		border: 2px solid var(--bg-card-solid);
+		border-radius: var(--radius-full);
+		box-shadow: var(--glow-lantern);
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		color: var(--text-on-lantern);
+		white-space: nowrap;
+	}
+
+	// The number that belongs to the whole class — first, and largest
+	&__class {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__class-label,
+	&__class-unit {
+		@include type-meta;
+		color: var(--text-secondary);
+	}
+
+	&__class-total {
+		font-family: var(--font-display);
+		font-size: var(--font-size-3xl);
+		line-height: 1;
+		color: var(--mine-ink);
+		animation: reveal-pop var(--motion-slow) var(--ease-spring) both;
+	}
+
+	&__sub,
+	&__empty {
+		max-width: 40ch;
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		line-height: 1.45;
+		text-align: center;
+	}
+
+	// The podium: three steps, 2nd–1st–3rd, the winner's the tallest
+	&__podium {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		align-items: end;
+		gap: var(--space-xs);
+		inline-size: 100%;
+		margin-block-start: var(--space-sm);
+	}
+
+	&__step {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+		min-width: 0;
+		animation: reveal-rise var(--motion-slow) var(--ease-spring) both;
+		animation-delay: calc(var(--step-slot) * #{$row-step} + #{$reveal-step});
+
+		// Place and height by SLOT: the winner's step in the middle and tallest,
+		// then the one before it, then the one after. Tint by RANK: three
+		// students tied at 1 all wear gold and still stand on three steps.
+		&--slot-0 {
+			--step-height: 72px;
+			grid-column: 2;
+		}
+
+		&--slot-1 {
+			--step-height: 52px;
+			grid-column: 1;
+		}
+
+		&--slot-2 {
+			--step-height: 40px;
+			grid-column: 3;
+		}
+
+		&--gold {
+			--step-color: #e0a800;
+		}
+
+		&--silver {
+			--step-color: #9aa0ad;
+		}
+
+		&--bronze {
+			--step-color: #b4713a;
+		}
+	}
+
+	&__step-name {
+		max-width: 100%;
+		font-size: var(--font-size-sm);
+		font-weight: 700;
+		color: var(--text-primary);
+		text-align: center;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+
+		.scoreboard__step--mine & {
+			color: var(--mine-ink);
+		}
+	}
+
+	&__step-points {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		line-height: 1;
+		color: var(--mine-ink);
+	}
+
+	&__step-block {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-start;
+		gap: 2px;
+		inline-size: 100%;
+		block-size: var(--step-height);
+		padding-block-start: var(--space-xs);
+		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+		background: linear-gradient(180deg, var(--wash-mine-high), var(--bg-inset));
+		border-block-start: 4px solid var(--step-color);
+	}
+
+	&__step-rank {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+	}
+
+	&__avatar--large {
+		width: 48px;
+		height: 48px;
+		font-size: var(--font-size-base);
+	}
+
+	// Every student, in points order. A grid, not a <table> — see the
+	// helpers board for why (a tr paints no box-shadow, a flex td is no cell).
+	&__table {
+		inline-size: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-sm);
+	}
+
+	&__cols,
+	&__row {
+		display: grid;
+		grid-template-columns: 2.75rem minmax(0, 1fr) 3.5rem;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__cols {
+		padding: 0 var(--space-sm) var(--space-xs);
+		border-block-end: 1px solid var(--border-subtle);
+	}
+
+	&__col {
+		color: var(--text-muted);
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		text-align: start;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+
+		&--rank {
+			text-align: center;
+		}
+
+		&--score {
+			text-align: end;
+		}
+	}
+
+	&__rows {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__row {
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-md);
+		background: var(--bg-card-solid);
+		animation: reveal-rise var(--motion-base) var(--ease-camera) both;
+		animation-delay: calc(var(--row-index) * #{$row-step} + #{$reveal-step * 2});
+
+		&:nth-child(even) {
+			background: var(--wash-mine-high);
+		}
+
+		// Mine: the same grammar as everywhere else in the game. No zero
+		// styling anywhere — a starting line is not a deficit.
+		&--mine {
+			background: var(--wash-mine-high);
+			box-shadow: inset 0 0 0 2px var(--lantern);
+
+			.scoreboard__name,
+			.scoreboard__score {
+				color: var(--mine-ink);
+				font-weight: 700;
+			}
+		}
+	}
+
+	&__rank {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	&__rank-num {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__who {
+		min-width: 0;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__who-text {
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		color: var(--text-primary);
+	}
+
+	// The role tag: what this student earned most in. An identity, not a rank.
+	&__role {
+		@include type-meta;
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		inline-size: fit-content;
+		padding: 1px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		color: var(--text-secondary);
+	}
+
+	&__score {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		text-align: end;
+		color: var(--text-primary);
+	}
+}
+
+// --- Stillness -------------------------------------------------------------
+// The global rule already zeroes every duration; this makes the confetti
+// disappear outright rather than flash for a frame, and removes the staggers.
+@media (prefers-reduced-motion: reduce) {
+	.reveal-seq > *,
+	.reveal__icon,
+	.reveal__headline,
+	.reveal__support,
+	.tally__bar,
+	.ranked__row,
+	.ranked__meter-fill,
+	.scoreboard__class-total,
+	.scoreboard__step,
+	.scoreboard__row {
+		animation: none;
+	}
+
+	.reveal__confetti {
+		display: none;
+	}
+}
