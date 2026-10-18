@@ -8,13 +8,15 @@ import {
   getCurrentToken,
   User,
 } from '@/lib/firebase/client';
+import { isPopupBlockedAuthError } from '@/lib/firebase/authErrors';
 import { logError } from '@/lib/utils/errorHandling';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  signIn: () => Promise<User>;
+  /** Resolves to null when the user closed the sign-in popup. */
+  signIn: () => Promise<User | null>;
   signOut: () => Promise<void>;
   /** @param options.force - mint a new token instead of reusing a cached one. */
   refreshToken: (options?: { force?: boolean }) => Promise<string | null>;
@@ -66,13 +68,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => unsubscribe();
   }, []);
 
-  const signIn = useCallback(async (): Promise<User> => {
+  const signIn = useCallback(async (): Promise<User | null> => {
     try {
       setIsLoading(true);
       const signedInUser = await signInWithGoogle();
       return signedInUser;
     } catch (error) {
-      logError(error, { operation: 'AuthProvider.signIn' });
+      // A blocked popup is an expected browser setting; the caller tells the user.
+      if (!isPopupBlockedAuthError(error)) {
+        logError(error, { operation: 'AuthProvider.signIn' });
+      }
       throw error;
     } finally {
       setIsLoading(false);

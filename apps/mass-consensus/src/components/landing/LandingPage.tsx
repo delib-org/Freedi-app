@@ -2,6 +2,7 @@
 
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { isPopupBlockedAuthError } from '@/lib/firebase/authErrors';
 import { logError } from '@/lib/utils/errorHandling';
 import styles from './LandingPage.module.scss';
 
@@ -18,9 +19,12 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
 
   const handleSignIn = async () => {
     try {
-      await signIn();
+      const signedInUser = await signIn();
+      // Popup closed by the user: stay on the landing page.
+      if (!signedInUser) return;
       onGetStarted();
     } catch (error) {
+      if (isPopupBlockedAuthError(error)) return;
       logError(error, { operation: 'LandingPage.handleSignIn' });
     }
   };

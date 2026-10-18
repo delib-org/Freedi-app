@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { trackUserLogin } from '@/lib/analytics';
+import { isPopupBlockedAuthError } from '@/lib/firebase/authErrors';
 import styles from './login.module.scss';
 
 /**
@@ -37,13 +38,20 @@ export default function LoginPage() {
 
     try {
       const user = await signIn();
-      if (user?.uid) {
-        trackUserLogin(user.uid, 'google');
-      }
+      // Popup closed by the user: stay on the login screen, no message.
+      if (!user) return;
+      trackUserLogin(user.uid, 'google');
       router.push(redirectUrl);
     } catch (err) {
-      console.error('Sign in error:', err);
-      setError(t('loginFailed') || 'Sign in failed. Please try again.');
+      if (isPopupBlockedAuthError(err)) {
+        setError(
+          t('signInPopupBlocked') ||
+            'Your browser blocked the sign-in window. Please allow pop-ups for this site and try again.',
+        );
+      } else {
+        // Already reported with context by AuthProvider.signIn.
+        setError(t('loginFailed') || 'Sign in failed. Please try again.');
+      }
     } finally {
       setIsSigningIn(false);
     }
