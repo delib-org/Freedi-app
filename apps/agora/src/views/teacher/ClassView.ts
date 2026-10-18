@@ -309,6 +309,7 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 								classSize: participants.length,
 								leftLabel: topic.positioningScale.leftLabel,
 								rightLabel: topic.positioningScale.rightLabel,
+								teacherView: true,
 							});
 						})()
 					: undefined;
