@@ -1,13 +1,4 @@
-import {
-	object,
-	optional,
-	array,
-	string,
-	boolean,
-	enum_,
-	InferOutput,
-	number,
-} from 'valibot';
+import { object, optional, array, string, boolean, enum_, InferOutput, number } from 'valibot';
 import { DeliberationType } from '../TypeEnums';
 
 export enum evaluationType {
@@ -15,7 +6,6 @@ export enum evaluationType {
 	range = 'range',
 	singleLike = 'single-like',
 }
-
 
 export const StatementSettingsSchema = object({
 	subScreens: optional(array(string())),

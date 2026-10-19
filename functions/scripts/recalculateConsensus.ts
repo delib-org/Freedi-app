@@ -30,7 +30,8 @@ function findServiceAccountKey(): ServiceAccount | null {
 
 	for (const keyPath of possiblePaths) {
 		if (fs.existsSync(keyPath)) {
-			console.log(`✓ Found service account key at: ${keyPath}`);
+			console.info(`✓ Found service account key at: ${keyPath}`);
+
 			return JSON.parse(fs.readFileSync(keyPath, 'utf-8')) as ServiceAccount;
 		}
 	}
@@ -46,7 +47,7 @@ if (!getApps().length) {
 		initializeApp({
 			credential: cert(serviceAccount),
 		});
-		console.log('✓ Initialized Firebase Admin with service account');
+		console.info('✓ Initialized Firebase Admin with service account');
 	} else {
 		console.error(`
 ❌ No service account key found!
@@ -76,12 +77,12 @@ const FLOOR_STD_DEV = 0.5;
 function calcStandardError(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
+	numberOfEvaluators: number,
 ): number {
 	if (numberOfEvaluators <= 1) return FLOOR_STD_DEV;
 
 	const mean = sumEvaluations / numberOfEvaluators;
-	const variance = (sumSquaredEvaluations / numberOfEvaluators) - (mean * mean);
+	const variance = sumSquaredEvaluations / numberOfEvaluators - mean * mean;
 	const safeVariance = Math.max(0, variance);
 	const observedStdDev = Math.sqrt(safeVariance);
 
@@ -98,7 +99,7 @@ function calcStandardError(
 function calcAgreement(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
+	numberOfEvaluators: number,
 ): number {
 	if (numberOfEvaluators === 0) return 0;
 
@@ -109,23 +110,25 @@ function calcAgreement(
 }
 
 async function recalculateConsensus(topParentId: string): Promise<void> {
-	console.log(`\n🔄 Recalculating consensus for options under topParentId: ${topParentId}\n`);
+	console.info(`\n🔄 Recalculating consensus for options under topParentId: ${topParentId}\n`);
 
 	// Query all options under this topParentId
-	const optionsSnapshot = await db.collection('statements')
+	const optionsSnapshot = await db
+		.collection('statements')
 		.where('topParentId', '==', topParentId)
 		.where('statementType', '==', 'option')
 		.get();
 
 	if (optionsSnapshot.empty) {
-		console.log('No options found under this topParentId');
+		console.info('No options found under this topParentId');
+
 		return;
 	}
 
-	console.log(`Found ${optionsSnapshot.size} options to process\n`);
-	console.log('─'.repeat(80));
-	console.log('| Statement (first 30 chars)          | Old Consensus | New Consensus | Change  |');
-	console.log('─'.repeat(80));
+	console.info(`Found ${optionsSnapshot.size} options to process\n`);
+	console.info('─'.repeat(80));
+	console.info('| Statement (first 30 chars)          | Old Consensus | New Consensus | Change  |');
+	console.info('─'.repeat(80));
 
 	const batch = db.batch();
 	let updatedCount = 0;
@@ -145,23 +148,25 @@ async function recalculateConsensus(topParentId: string): Promise<void> {
 		const change = newConsensus - oldConsensus;
 		const changeStr = change >= 0 ? `+${change.toFixed(3)}` : change.toFixed(3);
 
-		console.log(`| ${statementText} | ${oldConsensus.toFixed(3).padStart(13)} | ${newConsensus.toFixed(3).padStart(13)} | ${changeStr.padStart(7)} |`);
+		console.info(
+			`| ${statementText} | ${oldConsensus.toFixed(3).padStart(13)} | ${newConsensus.toFixed(3).padStart(13)} | ${changeStr.padStart(7)} |`,
+		);
 
 		// Update the document
 		batch.update(doc.ref, {
 			consensus: newConsensus,
 			'evaluation.agreement': newConsensus,
-			lastUpdate: Date.now()
+			lastUpdate: Date.now(),
 		});
 		updatedCount++;
 	}
 
-	console.log('─'.repeat(80));
+	console.info('─'.repeat(80));
 
 	// Commit the batch
 	await batch.commit();
 
-	console.log(`\n✅ Successfully updated ${updatedCount} options\n`);
+	console.info(`\n✅ Successfully updated ${updatedCount} options\n`);
 }
 
 // Main execution
@@ -169,7 +174,7 @@ const TOP_PARENT_ID = '23sMIMXgmpg9';
 
 recalculateConsensus(TOP_PARENT_ID)
 	.then(() => {
-		console.log('Script completed successfully');
+		console.info('Script completed successfully');
 		process.exit(0);
 	})
 	.catch((error) => {

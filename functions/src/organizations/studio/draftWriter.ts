@@ -236,6 +236,7 @@ export async function generateDraft(input: {
 }): Promise<DraftDocument> {
 	if (!process.env.OPENAI_API_KEY) {
 		if (input.requireAI) throw new Error('Configure OPENAI_API_KEY to generate the agreement.');
+
 		return fixtureDraft(input.sources, input.topQuestion);
 	}
 	const { system, user } = buildDraftPrompt(input);

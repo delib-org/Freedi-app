@@ -1,12 +1,4 @@
-import {
-	object,
-	string,
-	number,
-	optional,
-	enum_,
-	picklist,
-	InferOutput,
-} from 'valibot';
+import { object, string, number, optional, enum_, picklist, InferOutput } from 'valibot';
 
 /**
  * ParagraphType enum defines the types of paragraphs supported in rich text content.

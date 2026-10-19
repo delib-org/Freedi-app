@@ -1,8 +1,7 @@
 import { Role } from './user/UserSettings';
 
 export function isMember(role: Role | undefined): boolean {
-	if (role === Role.admin || role === Role.member || role === Role.creator)
-		return true;
+	if (role === Role.admin || role === Role.member || role === Role.creator) return true;
 
 	return false;
 }
@@ -30,8 +29,7 @@ export function maxKeyInObject(obj: { [key: string]: number }): string {
 }
 
 export function getRandomUID(numberOfChars = 12): string {
-	const chars =
-		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-0123456789';
+	const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-0123456789';
 	let randomString = '';
 	for (let i = 0; i < numberOfChars; i++) {
 		randomString += chars.charAt(Math.floor(Math.random() * chars.length));

@@ -1,12 +1,4 @@
-import {
-	object,
-	string,
-	optional,
-	number,
-	enum_,
-	nullable,
-	InferOutput,
-} from 'valibot';
+import { object, string, optional, number, enum_, nullable, InferOutput } from 'valibot';
 import { AgreementSchema } from '../agreement/Agreement';
 
 export enum Role {
@@ -35,7 +27,7 @@ export const userSettingsSchema = object({
 		object({
 			evaluation: optional(number()),
 			addOptions: optional(number()),
-		})
+		}),
 	),
 });
 

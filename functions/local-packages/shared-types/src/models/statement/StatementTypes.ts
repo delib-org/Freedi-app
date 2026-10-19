@@ -23,7 +23,10 @@ import { StageSelectionType } from '../stage/stageTypes';
 import { SimpleStatementSchema } from './SimpleStatement';
 import { StatementSettingsSchema } from './StatementSettings';
 import { UserDataSchema } from '../user/UserSettings';
-import { StatementEvaluationSchema, StatementEvaluationSettingsSchema } from '../evaluation/Evaluation';
+import {
+	StatementEvaluationSchema,
+	StatementEvaluationSettingsSchema,
+} from '../evaluation/Evaluation';
 import { QuestionnaireSchema } from '../questionnaire/questionnaireModel';
 import { FairDivisionSelectionSchema } from './fairDivision';
 import { VotingSettingsSchema } from '../vote/votingModel';
@@ -46,7 +49,6 @@ export const LastMessageSchema = object({
 
 export type LastMessage = InferOutput<typeof LastMessageSchema>;
 
-
 export const StatementSchema = object({
 	allowAnonymousLogin: optional(boolean()), // if true, allow anonymous login
 	statement: string(), // the text of the statement (title - auto-extracted from first paragraph)
@@ -55,14 +57,16 @@ export const StatementSchema = object({
 	creatorId: string(), // the id of the creator of the statement
 	creator: UserSchema, // the creator of the statement
 	statementType: enum_(StatementType), // the type of the statement: group, stage, option, chat-message, etc.
-	evidence: optional(object({
-		evidenceType: optional(enum_(EvidenceType)), // the type of evidence: data, testimony, argument, anecdote, fallacy
-		support: optional(number()), // the strength of support of the evidence (-1 to 1): -1 = strongly challenges, 0 = neutral, 1 = strongly supports
-		helpfulCount: optional(number()), // the number of helpful votes for the evidence
-		notHelpfulCount: optional(number()), // the number of not-helpful votes for the evidence
-		netScore: optional(number()), // the net score of the evidence (helpfulCount - notHelpfulCount)
-		evidenceWeight: optional(number()), // calculated weight based on evidence type and vote quality (can be > 1.0)
-	})),
+	evidence: optional(
+		object({
+			evidenceType: optional(enum_(EvidenceType)), // the type of evidence: data, testimony, argument, anecdote, fallacy
+			support: optional(number()), // the strength of support of the evidence (-1 to 1): -1 = strongly challenges, 0 = neutral, 1 = strongly supports
+			helpfulCount: optional(number()), // the number of helpful votes for the evidence
+			notHelpfulCount: optional(number()), // the number of not-helpful votes for the evidence
+			netScore: optional(number()), // the net score of the evidence (helpfulCount - notHelpfulCount)
+			evidenceWeight: optional(number()), // calculated weight based on evidence type and vote quality (can be > 1.0)
+		}),
+	),
 	deliberativeElement: optional(enum_(DeliberativeElement)), // the deliberative element of the statement: need, explanation, question, suggestion, conclusion, etc.
 	color: optional(string()), // it is a color assigned to a statement
 	defaultLanguage: optional(string()), // the default language of the statement
@@ -72,11 +76,13 @@ export const StatementSchema = object({
 	parents: optional(array(string())), // the list of all parents of the statement
 	topParentId: string(), // the id of the top parent of the statement
 	hasChildren: optional(boolean()), // if true, the user can add sub statements to the statement
-	lastMessage: optional(object({
-		message: string(),
-		creator: string(),
-		createdAt: number(),
-	})), // the last message in the statement
+	lastMessage: optional(
+		object({
+			message: string(),
+			creator: string(),
+			createdAt: number(),
+		}),
+	), // the last message in the statement
 	lastSubStatements: optional(array(SimpleStatementSchema)), // the last sub-statements of the statement
 	lastUpdate: number(), // the last update of the statement
 	lastChildUpdate: optional(number()), // the last update of the last child of the statement
@@ -87,7 +93,7 @@ export const StatementSchema = object({
 		object({
 			isDoc: boolean(),
 			order: number(),
-		})
+		}),
 	), // I think it is relevant to Freedi-sign
 	numberOfOptions: optional(number()), // the number of options of the statement
 	consensus: number(), // the consensus of the statement
@@ -117,7 +123,7 @@ export const StatementSchema = object({
 		object({
 			main: optional(string()), // the main image of the statement
 			more: optional(array(string())), // the other images of the statement
-		})
+		}),
 	),
 	totalEvaluators: optional(number()), // the total number of evaluators of the statement
 	isInMultiStage: optional(boolean()), // if true, the statement is in a multi-stage
@@ -128,7 +134,7 @@ export const StatementSchema = object({
 	viewed: optional(
 		object({
 			individualViews: optional(number()), // the number of views of the statement - used for Freedi-sign.
-		})
+		}),
 	),
 	stageSelectionType: optional(enum_(StageSelectionType)), // the type of the stage selection of the statement
 	creatorData: optional(UserDataSchema), // the creator data of the statement
@@ -136,28 +142,30 @@ export const StatementSchema = object({
 	chosenSolutions: optional(array(string())), // the chosen solutions of the statement
 	summary: optional(string()), // the summary of the statement - should be generated by the AI
 	evaluation: optional(StatementEvaluationSchema), // the evaluation of the statement
-	evaluationSettings: optional(StatementEvaluationSettingsSchema),// the evaluation settings of the statement	
+	evaluationSettings: optional(StatementEvaluationSettingsSchema), // the evaluation settings of the statement
 	importanceData: optional(
 		object({
 			sumImportance: number(), // the sum of the importance of the statement
 			numberOfUsers: number(), // the number of users who voted for the statement
 			numberOfViews: number(), // the number of views of the statement
-		})
+		}),
 	),
-	documentSettings: optional( //used for Freedi-sign
+	documentSettings: optional(
+		//used for Freedi-sign
 		object({
 			parentDocumentId: string(), // the id of the parent document of the statement
 			order: number(), // the order of the statement relative to its siblings
 			type: enum_(DocumentType), // the type of the document
 			isTop: boolean(), // if true, the statement is a top-statement
-		})
+		}),
 	),
 	resultsSettings: optional(ResultsSettingsSchema), // the settings of the results of the statement
-	steps: optional( // steps are used to generate a solution using several steps, like suggestion, and then voting
+	steps: optional(
+		// steps are used to generate a solution using several steps, like suggestion, and then voting
 		object({
 			currentStep: StepSchema,
 			allSteps: optional(array(StepSchema)),
-		})
+		}),
 	),
 	votingSettings: optional(VotingSettingsSchema), // the settings of the voting of the statement
 	questionSettings: optional(QuestionSettingsSchema), // the settings of the question of the statement
@@ -184,5 +192,3 @@ export const StatementMetaDataSchema = object({
 });
 
 export type StatementMetaData = InferOutput<typeof StatementMetaDataSchema>;
-
-

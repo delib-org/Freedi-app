@@ -1,13 +1,4 @@
-import {
-	object,
-	string,
-	number,
-	optional,
-	array,
-	enum_,
-	InferOutput,
-	boolean,
-} from 'valibot';
+import { object, string, number, optional, array, enum_, InferOutput, boolean } from 'valibot';
 import { Creator, CreatorSchema, User, UserSchema } from '../user/User';
 import { Role } from '../user/UserSettings';
 import { StatementSchema } from './StatementTypes';
@@ -21,7 +12,7 @@ export const StatementSubscriptionSchema = object({
 	createdAt: optional(number()),
 	statementsSubscribeId: string(),
 	statement: SimpleStatementSchema || StatementSchema,
-	lastSubStatements:optional(array(SimpleStatementSchema || StatementSchema)),
+	lastSubStatements: optional(array(SimpleStatementSchema || StatementSchema)),
 	tokens: optional(array(string())),
 	totalSubStatementsRead: optional(number()), // deprecated at 3/8/2024
 	lastReadTimestamp: optional(number()),
@@ -30,16 +21,13 @@ export const StatementSubscriptionSchema = object({
 	getEmailNotification: optional(boolean()),
 	getPushNotification: optional(boolean()),
 	coins: optional(number()), // In fair-Division, the coins the user has in this statement
-	
 });
- 
-export type StatementSubscription = InferOutput<
-	typeof StatementSubscriptionSchema
->;
+
+export type StatementSubscription = InferOutput<typeof StatementSubscriptionSchema>;
 
 export function getStatementSubscriptionId(
 	statementId: string,
-	user: User | Creator
+	user: User | Creator,
 ): string | undefined {
 	return `${user.uid}--${statementId}`;
 }
@@ -62,6 +50,4 @@ export const WaitingMemberSchema = object({
 	adminId: string(), // or any other valibot validator
 });
 
-export type WaitingMember = InferOutput<
-	typeof WaitingMemberSchema
-> 
+export type WaitingMember = InferOutput<typeof WaitingMemberSchema>;

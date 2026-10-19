@@ -37,7 +37,9 @@ import { StatementType, createParagraphChildStatement } from '@freedi/shared-typ
 import type { Paragraph, Statement } from '@freedi/shared-types';
 
 if (process.env.FIRESTORE_EMULATOR_HOST) {
-	console.error('FIRESTORE_EMULATOR_HOST is set — this migration targets a real project. Aborting.');
+	console.error(
+		'FIRESTORE_EMULATOR_HOST is set — this migration targets a real project. Aborting.',
+	);
 	process.exit(1);
 }
 
@@ -49,7 +51,9 @@ const LIMIT = limitArg ? parseInt(limitArg, 10) : Infinity;
 const project = process.env.GCLOUD_PROJECT;
 
 if (!project) {
-	console.error('Usage: GCLOUD_PROJECT=<proj> npx tsx scripts/migrateMcEmbeddedParagraphsToChildren.ts [--execute] [--revert] [--documentId=ID] [--limit=N]');
+	console.error(
+		'Usage: GCLOUD_PROJECT=<proj> npx tsx scripts/migrateMcEmbeddedParagraphsToChildren.ts [--execute] [--revert] [--documentId=ID] [--limit=N]',
+	);
 	process.exit(1);
 }
 if (getApps().length === 0) initializeApp({ projectId: project });

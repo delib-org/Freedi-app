@@ -1,13 +1,4 @@
-import {
-	object,
-	string,
-	number,
-	boolean,
-	optional,
-	nullable,
-	enum_,
-	InferOutput,
-} from 'valibot';
+import { object, string, number, boolean, optional, nullable, enum_, InferOutput } from 'valibot';
 import { Access, membersAllowed, StepType } from '../TypeEnums';
 import { AgreementSchema } from '../agreement/Agreement';
 
@@ -21,8 +12,7 @@ export const UserSchema = object({
 	fontSize: optional(nullable(number())),
 	color: optional(string()),
 	agreement: optional(nullable(AgreementSchema)),
-	role: optional(string())
-	
+	role: optional(string()),
 });
 
 export type User = InferOutput<typeof UserSchema>;
@@ -57,7 +47,7 @@ export const CreatorSchema = object({
 
 export type Creator = InferOutput<typeof CreatorSchema>;
 
-export enum LoginType{
+export enum LoginType {
 	default = 'default',
 	google = 'google',
 	anonymous = 'anonymous',

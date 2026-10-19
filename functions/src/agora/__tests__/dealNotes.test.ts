@@ -7,7 +7,11 @@ jest.mock('../../db', () => ({ db: {} }));
 
 import { buildCandidates, dealableParents } from '../dealNotes';
 
-const note = (statementId: string, creatorId: string, hide = false) => ({ statementId, creatorId, hide });
+const note = (statementId: string, creatorId: string, hide = false) => ({
+	statementId,
+	creatorId,
+	hide,
+});
 
 describe('buildCandidates', () => {
 	const pool = [
@@ -19,11 +23,7 @@ describe('buildCandidates', () => {
 		note('fresh', 'u5'),
 		note('popular', 'u6'),
 	];
-	const hands = [
-		['held', 'popular'],
-		['popular', 'rated'],
-		['popular'],
-	];
+	const hands = [['held', 'popular'], ['popular', 'rated'], ['popular']];
 
 	it('excludes my own, held, rated and hidden notes', () => {
 		const candidates = buildCandidates({

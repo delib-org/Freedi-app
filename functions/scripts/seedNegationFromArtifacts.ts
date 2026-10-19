@@ -24,7 +24,8 @@ if (getApps().length === 0) {
 	initializeApp({ projectId: process.env.GCLOUD_PROJECT ?? 'freedi-test' });
 }
 
-const RUN = '../scientific-research/2026-06-14-synthesis-clustering-validation/validation/4-6-2026-20-10-5-negation-validation';
+const RUN =
+	'../scientific-research/2026-06-14-synthesis-clustering-validation/validation/4-6-2026-20-10-5-negation-validation';
 const QUESTION_ID = 'NegationTest0001';
 const QUESTION_TEXT = 'What should our country do';
 const USER_UID = 'dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY';
@@ -66,28 +67,38 @@ async function main(): Promise<void> {
 	const now = Date.now();
 
 	// Question (synthesis OFF so the live pipeline never fires on writes).
-	await db.collection('statements').doc(QUESTION_ID).set({
-		statementId: QUESTION_ID,
-		statement: QUESTION_TEXT,
-		paragraphs: [],
-		statementType: 'question',
-		parentId: 'top',
-		parents: [],
-		topParentId: QUESTION_ID,
-		creatorId: USER_UID,
-		creator: { uid: USER_UID, displayName: 'Artifact Seeder', email: 'seed@example.com', photoURL: null, isAnonymous: false, defaultLanguage: 'en' },
-		createdAt: now,
-		lastUpdate: now,
-		lastChildUpdate: now,
-		membership: { access: 'public' },
-		statementSettings: {
-			enableAddVotingOption: true,
-			enableAddEvaluationOption: true,
-			enableNotifications: false,
-			synthesis: { enabled: false },
-			liveSynthEnabled: false,
-		},
-	});
+	await db
+		.collection('statements')
+		.doc(QUESTION_ID)
+		.set({
+			statementId: QUESTION_ID,
+			statement: QUESTION_TEXT,
+			paragraphs: [],
+			statementType: 'question',
+			parentId: 'top',
+			parents: [],
+			topParentId: QUESTION_ID,
+			creatorId: USER_UID,
+			creator: {
+				uid: USER_UID,
+				displayName: 'Artifact Seeder',
+				email: 'seed@example.com',
+				photoURL: null,
+				isAnonymous: false,
+				defaultLanguage: 'en',
+			},
+			createdAt: now,
+			lastUpdate: now,
+			lastChildUpdate: now,
+			membership: { access: 'public' },
+			statementSettings: {
+				enableAddVotingOption: true,
+				enableAddEvaluationOption: true,
+				enableNotifications: false,
+				synthesis: { enabled: false },
+				liveSynthEnabled: false,
+			},
+		});
 
 	// Clear any pre-existing options under the question (idempotent re-seed).
 	const existing = await db
@@ -106,27 +117,39 @@ async function main(): Promise<void> {
 			continue;
 		}
 		withEmb++;
-		await db.collection('statements').doc(s.id).set({
-			statementId: s.id,
-			statement: s.text,
-			paragraphs: [],
-			statementType: 'option',
-			parentId: QUESTION_ID,
-			parents: [QUESTION_ID],
-			topParentId: QUESTION_ID,
-			creatorId: USER_UID,
-			creator: { uid: USER_UID, displayName: 'Artifact Seeder', email: 'seed@example.com', photoURL: null, isAnonymous: false, defaultLanguage: 'en' },
-			createdAt: now,
-			lastUpdate: now,
-			consensus: 0,
-			totalEvaluators: 0,
-			hide: false,
-			embedding,
-			randomSeed: Math.random(),
-			evaluation: blankEval(),
-		});
+		await db
+			.collection('statements')
+			.doc(s.id)
+			.set({
+				statementId: s.id,
+				statement: s.text,
+				paragraphs: [],
+				statementType: 'option',
+				parentId: QUESTION_ID,
+				parents: [QUESTION_ID],
+				topParentId: QUESTION_ID,
+				creatorId: USER_UID,
+				creator: {
+					uid: USER_UID,
+					displayName: 'Artifact Seeder',
+					email: 'seed@example.com',
+					photoURL: null,
+					isAnonymous: false,
+					defaultLanguage: 'en',
+				},
+				createdAt: now,
+				lastUpdate: now,
+				consensus: 0,
+				totalEvaluators: 0,
+				hide: false,
+				embedding,
+				randomSeed: Math.random(),
+				evaluation: blankEval(),
+			});
 	}
-	console.info(`✓ Seeded ${withEmb}/${statements.length} options with embeddings under ${QUESTION_ID}`);
+	console.info(
+		`✓ Seeded ${withEmb}/${statements.length} options with embeddings under ${QUESTION_ID}`,
+	);
 }
 
 main()

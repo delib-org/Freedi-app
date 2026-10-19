@@ -1,11 +1,4 @@
-import {
-	object,
-	string,
-	number,
-	InferOutput,
-	optional,
-	InferInput,
-} from 'valibot';
+import { object, string, number, InferOutput, optional, InferInput } from 'valibot';
 
 export const AgreementSchema = object({
 	text: string(),

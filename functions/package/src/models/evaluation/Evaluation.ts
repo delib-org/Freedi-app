@@ -1,13 +1,4 @@
-import {
-	object,
-	string,
-	number,
-	boolean,
-	optional,
-	InferOutput,
-	enum_,
-	array,
-} from 'valibot';
+import { object, string, number, boolean, optional, InferOutput, enum_, array } from 'valibot';
 import { UserSchema } from '../user/User';
 
 export const EvaluationSchema = object({
@@ -67,39 +58,42 @@ export enum EvaluationUI {
 export const StatementEvaluationSettingsSchema = object({
 	maxVotesPerUser: optional(number()),
 	evaluationUI: enum_(EvaluationUI),
-	anchored: optional(object({ //a two-phase process where users propose options, and evaluations always include admin-selected anchored options alongside randomly chosen user options		
-		anchored:optional(boolean()), //if true, some statements are anchored to be represented in the evaluation.
-		numberOfAnchoredStatements: optional(number()), //the number of anchored statements in the evaluation (while the others are not anchored)
-		differentiateBetweenAnchoredAndNot: optional(boolean()), //if true, the evaluation will differentiate between anchored and not anchored statements
-		anchorIcon: optional(string()),
-		anchorDescription: optional(string()),
-		anchorLabel: optional(string()),
-	})), //the admin can chose to anchor some of the statements to be evaluated
+	anchored: optional(
+		object({
+			//a two-phase process where users propose options, and evaluations always include admin-selected anchored options alongside randomly chosen user options
+			anchored: optional(boolean()), //if true, some statements are anchored to be represented in the evaluation.
+			numberOfAnchoredStatements: optional(number()), //the number of anchored statements in the evaluation (while the others are not anchored)
+			differentiateBetweenAnchoredAndNot: optional(boolean()), //if true, the evaluation will differentiate between anchored and not anchored statements
+			anchorIcon: optional(string()),
+			anchorDescription: optional(string()),
+			anchorLabel: optional(string()),
+		}),
+	), //the admin can chose to anchor some of the statements to be evaluated
 });
 
 export type StatementEvaluationSettings = InferOutput<typeof StatementEvaluationSettingsSchema>;
 
 export const UserEvaluationSchema = object({
-    // Composite ID: ${userId}--${parentStatementId}
-    userEvaluationId: string(),
+	// Composite ID: ${userId}--${parentStatementId}
+	userEvaluationId: string(),
 
-    // The user who is evaluating (can be anonymous)
-    userId: string(),
+	// The user who is evaluating (can be anonymous)
+	userId: string(),
 
-    // The parent statement/question being evaluated
-    parentStatementId: string(),
+	// The parent statement/question being evaluated
+	parentStatementId: string(),
 
-    // Array of statement IDs that have been evaluated
-    evaluatedOptionsIds: array(string()),
+	// Array of statement IDs that have been evaluated
+	evaluatedOptionsIds: array(string()),
 
-    // Timestamps in milliseconds
-    createdAt: number(),
-    lastUpdated: number(),
+	// Timestamps in milliseconds
+	createdAt: number(),
+	lastUpdated: number(),
 
-    // Optional optimization fields
-    evaluatedCount: optional(number()),
-    totalOptionsAvailable: optional(number()),
-    completedAt: optional(number()),
-  });
+	// Optional optimization fields
+	evaluatedCount: optional(number()),
+	totalOptionsAvailable: optional(number()),
+	completedAt: optional(number()),
+});
 
 export type UserEvaluation = InferOutput<typeof UserEvaluationSchema>;

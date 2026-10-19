@@ -31,10 +31,12 @@ function findServiceAccountKey(): ServiceAccount | null {
 
 	for (const keyPath of possiblePaths) {
 		if (fs.existsSync(keyPath)) {
-			console.log(`✓ Found service account key at: ${keyPath}`);
+			console.info(`✓ Found service account key at: ${keyPath}`);
+
 			return JSON.parse(fs.readFileSync(keyPath, 'utf-8')) as ServiceAccount;
 		}
 	}
+
 	return null;
 }
 
@@ -43,7 +45,7 @@ if (!getApps().length) {
 	const serviceAccount = findServiceAccountKey();
 	if (serviceAccount) {
 		initializeApp({ credential: cert(serviceAccount) });
-		console.log('✓ Initialized Firebase Admin');
+		console.info('✓ Initialized Firebase Admin');
 	} else {
 		console.error('❌ No service account key found!');
 		process.exit(1);
@@ -81,8 +83,14 @@ function clamp(value: number): number {
 /**
  * Create a SimpleStatement for results array
  */
-function toSimpleStatement(stmt: StatementData): { statementId: string; statement: string; consensus: number; parentId: string } {
+function toSimpleStatement(stmt: StatementData): {
+	statementId: string;
+	statement: string;
+	consensus: number;
+	parentId: string;
+} {
 	const agreement = stmt.evaluation?.agreement ?? stmt.consensus ?? 0;
+
 	return {
 		statementId: stmt.statementId,
 		statement: stmt.statement,
@@ -92,21 +100,24 @@ function toSimpleStatement(stmt: StatementData): { statementId: string; statemen
 }
 
 async function syncConsensusWithAgreement(): Promise<void> {
-	console.log(`\n${'='.repeat(80)}`);
-	console.log(`SYNC CONSENSUS WITH EVALUATION.AGREEMENT`);
-	console.log(`${'='.repeat(80)}`);
-	console.log(`Mode: ${DRY_RUN ? 'DRY RUN (no changes will be written)' : 'LIVE (changes will be written)'}`);
-	console.log(`Top Parent ID: ${TOP_PARENT_ID}\n`);
+	console.info(`\n${'='.repeat(80)}`);
+	console.info(`SYNC CONSENSUS WITH EVALUATION.AGREEMENT`);
+	console.info(`${'='.repeat(80)}`);
+	console.info(
+		`Mode: ${DRY_RUN ? 'DRY RUN (no changes will be written)' : 'LIVE (changes will be written)'}`,
+	);
+	console.info(`Top Parent ID: ${TOP_PARENT_ID}\n`);
 
 	// 1. Get all statements under this topParentId
-	const statementsSnapshot = await db.collection('statements')
+	const statementsSnapshot = await db
+		.collection('statements')
 		.where('topParentId', '==', TOP_PARENT_ID)
 		.get();
 
-	console.log(`Found ${statementsSnapshot.size} statements\n`);
+	console.info(`Found ${statementsSnapshot.size} statements\n`);
 
-	const allStatements: StatementData[] = statementsSnapshot.docs.map(doc => ({
-		...doc.data() as StatementData,
+	const allStatements: StatementData[] = statementsSnapshot.docs.map((doc) => ({
+		...(doc.data() as StatementData),
 		statementId: doc.id,
 	}));
 
@@ -132,63 +143,70 @@ async function syncConsensusWithAgreement(): Promise<void> {
 		}
 	}
 
-	console.log(`Statements with out-of-range agreement: ${outOfRange.length}`);
+	console.info(`Statements with out-of-range agreement: ${outOfRange.length}`);
 	for (const stmt of outOfRange) {
-		console.log(`  - ${stmt.statement.substring(0, 40)}: agreement=${stmt.evaluation?.agreement?.toFixed(4)}`);
+		console.info(
+			`  - ${stmt.statement.substring(0, 40)}: agreement=${stmt.evaluation?.agreement?.toFixed(4)}`,
+		);
 	}
 
-	console.log(`\nStatements needing consensus sync: ${needsSync.length}`);
+	console.info(`\nStatements needing consensus sync: ${needsSync.length}`);
 
 	// 3. Find parent statements that have results[] arrays
-	const parentsWithResults = allStatements.filter(s => s.results && s.results.length > 0);
-	console.log(`Parent statements with results[]: ${parentsWithResults.length}\n`);
+	const parentsWithResults = allStatements.filter((s) => s.results && s.results.length > 0);
+	console.info(`Parent statements with results[]: ${parentsWithResults.length}\n`);
 
 	// 4. Preview changes
-	console.log(`${'─'.repeat(80)}`);
-	console.log('PREVIEW OF CHANGES:');
-	console.log(`${'─'.repeat(80)}`);
+	console.info(`${'─'.repeat(80)}`);
+	console.info('PREVIEW OF CHANGES:');
+	console.info(`${'─'.repeat(80)}`);
 
 	// Show sample of consensus sync changes
-	console.log('\nConsensus sync samples (first 10):');
+	console.info('\nConsensus sync samples (first 10):');
 	for (const stmt of needsSync.slice(0, 10)) {
 		const oldConsensus = stmt.consensus ?? 0;
 		const newConsensus = clamp(stmt.evaluation?.agreement ?? 0);
-		console.log(`  ${stmt.statement.substring(0, 35).padEnd(35)} | old=${oldConsensus.toFixed(4)} → new=${newConsensus.toFixed(4)}`);
+		console.info(
+			`  ${stmt.statement.substring(0, 35).padEnd(35)} | old=${oldConsensus.toFixed(4)} → new=${newConsensus.toFixed(4)}`,
+		);
 	}
 
 	// Show results[] re-sorting preview for each parent
 	for (const parent of parentsWithResults) {
-		console.log(`\nResults for: ${parent.statement.substring(0, 50)}`);
+		console.info(`\nResults for: ${parent.statement.substring(0, 50)}`);
 
 		// Get child options
-		const childOptions = allStatements.filter(s =>
-			s.parentId === parent.statementId &&
-			(s.statementType === 'option' || !s.statementType)
+		const childOptions = allStatements.filter(
+			(s) =>
+				s.parentId === parent.statementId && (s.statementType === 'option' || !s.statementType),
 		);
 
 		// Sort by evaluation.agreement (clamped)
 		const sorted = [...childOptions]
-			.filter(s => s.evaluation?.numberOfEvaluators && s.evaluation.numberOfEvaluators > 0)
+			.filter((s) => s.evaluation?.numberOfEvaluators && s.evaluation.numberOfEvaluators > 0)
 			.sort((a, b) => {
 				const aVal = clamp(a.evaluation?.agreement ?? a.consensus ?? 0);
 				const bVal = clamp(b.evaluation?.agreement ?? b.consensus ?? 0);
+
 				return bVal - aVal;
 			});
 
-		console.log('  NEW order (top 10 by evaluation.agreement):');
+		console.info('  NEW order (top 10 by evaluation.agreement):');
 		for (let i = 0; i < Math.min(10, sorted.length); i++) {
 			const s = sorted[i];
 			const agreement = clamp(s.evaluation?.agreement ?? 0);
 			const numEvals = s.evaluation?.numberOfEvaluators ?? 0;
-			console.log(`    ${i + 1}. agreement=${agreement.toFixed(4)}, evals=${numEvals.toString().padStart(2)} | ${s.statement.substring(0, 45)}`);
+			console.info(
+				`    ${i + 1}. agreement=${agreement.toFixed(4)}, evals=${numEvals.toString().padStart(2)} | ${s.statement.substring(0, 45)}`,
+			);
 		}
 	}
 
 	// 5. Apply changes if not dry run
 	if (!DRY_RUN) {
-		console.log(`\n${'─'.repeat(80)}`);
-		console.log('APPLYING CHANGES...');
-		console.log(`${'─'.repeat(80)}\n`);
+		console.info(`\n${'─'.repeat(80)}`);
+		console.info('APPLYING CHANGES...');
+		console.info(`${'─'.repeat(80)}\n`);
 
 		const batch = db.batch();
 		let updateCount = 0;
@@ -206,17 +224,18 @@ async function syncConsensusWithAgreement(): Promise<void> {
 
 		// Update results[] arrays for parents
 		for (const parent of parentsWithResults) {
-			const childOptions = allStatements.filter(s =>
-				s.parentId === parent.statementId &&
-				(s.statementType === 'option' || !s.statementType)
+			const childOptions = allStatements.filter(
+				(s) =>
+					s.parentId === parent.statementId && (s.statementType === 'option' || !s.statementType),
 			);
 
 			// Sort by evaluation.agreement, filter to those with evaluators
 			const sorted = [...childOptions]
-				.filter(s => s.evaluation?.numberOfEvaluators && s.evaluation.numberOfEvaluators > 0)
+				.filter((s) => s.evaluation?.numberOfEvaluators && s.evaluation.numberOfEvaluators > 0)
 				.sort((a, b) => {
 					const aVal = clamp(a.evaluation?.agreement ?? a.consensus ?? 0);
 					const bVal = clamp(b.evaluation?.agreement ?? b.consensus ?? 0);
+
 					return bVal - aVal;
 				});
 
@@ -234,20 +253,20 @@ async function syncConsensusWithAgreement(): Promise<void> {
 		}
 
 		await batch.commit();
-		console.log(`✓ Updated ${updateCount} statements`);
+		console.info(`✓ Updated ${updateCount} statements`);
 	} else {
-		console.log(`\n⚠️  DRY RUN - No changes written. Set DRY_RUN = false to apply changes.`);
+		console.info(`\n⚠️  DRY RUN - No changes written. Set DRY_RUN = false to apply changes.`);
 	}
 
-	console.log(`\n${'='.repeat(80)}`);
-	console.log('DONE');
-	console.log(`${'='.repeat(80)}\n`);
+	console.info(`\n${'='.repeat(80)}`);
+	console.info('DONE');
+	console.info(`${'='.repeat(80)}\n`);
 }
 
 // Run
 syncConsensusWithAgreement()
 	.then(() => process.exit(0))
-	.catch(err => {
+	.catch((err) => {
 		console.error('Error:', err);
 		process.exit(1);
 	});

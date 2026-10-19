@@ -307,9 +307,7 @@ async function getOptionsUsingMethod(
 			return [];
 		}
 
-		const options = snapshot.docs
-			.map((doc) => doc.data() as Statement)
-			.filter((opt) => !opt.hide);
+		const options = snapshot.docs.map((doc) => doc.data() as Statement).filter((opt) => !opt.hide);
 
 		return sortOptionsByResultsBy(options, resultsBy);
 	}
