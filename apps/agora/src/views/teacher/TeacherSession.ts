@@ -773,8 +773,13 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const menuItems: TeacherNavMenuItem[] = [
 				...qrItems,
 				{ icon: 'flag', label: t('teacher.menu.move_class'), onSelect: () => openPanel('move') },
-				{ icon: 'era', label: t('teacher.open_projector'), onSelect: openProjector },
-				{ icon: 'cog', label: t('teacher.settings_title'), onSelect: () => openPanel('settings') },
+				{ icon: 'era', label: t('teacher.open_projector'), onSelect: openProjector, onBar: true },
+				{
+					icon: 'cog',
+					label: t('teacher.settings_title'),
+					onSelect: () => openPanel('settings'),
+					onBar: !atResults,
+				},
 			];
 			const navBar = m(TeacherNav, {
 				title: topic?.title ?? t('teacher.title'),
