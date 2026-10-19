@@ -173,7 +173,7 @@ export default function AdminAgora() {
 						<thead>
 							<tr>
 								<th scope="col">{t('School')}</th>
-								<th scope="col">{t('City')}</th>
+								<th scope="col">{t('Locality')}</th>
 								<th scope="col">{t('Classes')}</th>
 								<th scope="col">{t('Regional coordinators')}</th>
 							</tr>
