@@ -54,6 +54,9 @@ export function buildOptionStatements(
   creator: OptionCreator
 ): Statement[] {
   const options: Statement[] = [];
+  // createStatementObject reads Date.now() per call, so a tick between two
+  // options could reorder them. Read the clock once and derive every stamp.
+  const batchNow = Date.now();
 
   for (const [index, text] of texts.entries()) {
     const option = createStatementObject({
@@ -69,7 +72,8 @@ export function buildOptionStatements(
     });
 
     if (option) {
-      option.createdAt += index;
+      option.createdAt = batchNow + index;
+      option.lastUpdate = option.createdAt;
       options.push(option);
     }
   }
