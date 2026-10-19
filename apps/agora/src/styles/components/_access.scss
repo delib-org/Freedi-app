@@ -87,6 +87,37 @@
 	}
 }
 
+// "Signed in as …  Not you? Sign out" under the header of the screens a
+// not-yet-approved teacher sees, where there is no menu to hold the account.
+.account-line {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--space-xs) var(--space-sm);
+	min-inline-size: 0;
+	font-size: var(--font-size-sm);
+	color: var(--text-secondary);
+
+	&__email {
+		min-inline-size: 0;
+		max-inline-size: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__link {
+		min-block-size: 44px;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		font: inherit;
+		color: var(--text-primary);
+		text-decoration: underline;
+		cursor: pointer;
+	}
+}
+
 .access-flash {
 	margin: 0;
 	padding: var(--space-sm) var(--space-md);

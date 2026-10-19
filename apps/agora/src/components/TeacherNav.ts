@@ -5,6 +5,8 @@ import { classLabel } from '../lib/teacher';
 import { getTeacherNavState, liveSessions, loadTeacherNav, navClass } from '../lib/teacherNav';
 import { AgoraSession } from '@freedi/shared-types';
 import { studioOverviewUrl } from '../lib/studioLink';
+import { getUserState } from '../lib/user';
+import { signedInAs, signOutAndLeave } from './SignOutLink';
 import {
 	ensureLibraryAccess,
 	getLibraryStore,
@@ -74,6 +76,7 @@ const MENU_ID = 'teacher-nav-menu';
 export function TeacherNav(): m.Component<TeacherNavAttrs> {
 	let open = false;
 	let copied = false;
+	let signOutFailed = false;
 	let copiedTimer: number | undefined;
 
 	function copyCode(code: string, digits: HTMLElement | null): void {
@@ -158,6 +161,18 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 		open = false;
 	}
 
+	/** Close the menu, sign out, and land on the sign-in screen; on failure stay and say so */
+	function signOut(): void {
+		open = false;
+		signOutFailed = false;
+		signOutAndLeave().catch(() => {
+			// The menu was closed above; open it again so the note is where the tap was
+			open = true;
+			signOutFailed = true;
+			m.redraw();
+		});
+	}
+
 	function go(route: string): void {
 		open = false;
 		m.route.set(route);
@@ -239,6 +254,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 	function menu(menuItems: readonly TeacherNavMenuItem[]): m.Children[] {
 		const { classes, loading, loaded, failed } = getTeacherNavState();
 		const live = liveSessions();
+		const email = getUserState().user?.email;
 
 		return [
 			// The scrim: a tap anywhere off the panel closes it, which is what
@@ -379,6 +395,18 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 						label: t('nav.how_to_run'),
 						route: '/teach?help=1',
 					}),
+
+					// The account: who is signed in, and the way out. Last, and quiet —
+					// it is for the shared classroom computer, not for every lesson.
+					m('p.teacher-nav__section.teacher-nav__section--account', t('nav.account')),
+					email ? m('p.teacher-nav__account', signedInAs(email)) : null,
+					m('button.teacher-nav__item', { type: 'button', onclick: signOut }, [
+						m('span.teacher-nav__item-icon', m(Icon, { name: 'lock', size: 20 })),
+						m('span.teacher-nav__item-text', m('span.teacher-nav__item-label', t('nav.sign_out'))),
+					]),
+					signOutFailed
+						? m('p.teacher-nav__empty.join__error', { role: 'alert' }, t('nav.sign_out_failed'))
+						: null,
 				],
 			),
 		];

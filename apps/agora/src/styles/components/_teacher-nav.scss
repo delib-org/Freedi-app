@@ -218,6 +218,23 @@
 		}
 	}
 
+	// The signed-in account, set apart as the menu's last section: a hairline
+	// above it, the address quiet and cut short rather than wrapped.
+	&__section--account {
+		padding-block-start: var(--space-sm);
+		border-block-start: 1px solid var(--border-subtle);
+	}
+
+	&__account {
+		margin: 0;
+		padding: 0 var(--space-sm) var(--space-xs);
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
 	&__empty {
 		font-size: var(--font-size-sm);
 		color: var(--text-secondary);

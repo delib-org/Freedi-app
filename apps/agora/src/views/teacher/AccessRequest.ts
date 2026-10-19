@@ -21,6 +21,7 @@ import { AGORA_ACCESS } from '@freedi/shared-types';
 import type { AgoraAccessRole } from '@freedi/shared-types';
 import { AccessPanel } from '../../components/AccessPanel';
 import { LanguagePicker } from '../../components/LanguagePicker';
+import { SignOutLink } from '../../components/SignOutLink';
 
 /**
  * /teach/request — ask to be a teacher (or a regional coordinator). The school
@@ -171,10 +172,11 @@ export function AccessRequest(): m.Component {
 		);
 	}
 
-	function shell(children: m.Children): m.Children {
+	function shell(children: m.Children, withAccount = true): m.Children {
 		return m('.shell', [
 			m('.shell__content.access-page', [
 				m('.sec-head', [m('h2.sec-head__title', t('access.title')), m(LanguagePicker)]),
+				withAccount ? m(SignOutLink) : null,
 				children,
 				m(
 					'button.btn.btn--ghost',
@@ -186,27 +188,33 @@ export function AccessRequest(): m.Component {
 	}
 
 	function signInView(): m.Children {
-		return shell([
-			m('p.access-panel__text', t('teacher.sign_in_required')),
-			signInFailed
-				? m('p.access-panel__error', { role: 'alert' }, t('teacher.sign_in_failed'))
-				: null,
-			m(
-				'button.btn.btn--primary',
-				{
-					type: 'button',
-					onclick: () => {
-						signInFailed = false;
-						signInWithGoogle().catch((error: unknown) => {
-							console.error('[Access] Sign-in failed:', error);
-							signInFailed = true;
-							m.redraw();
-						});
+		return shell(
+			[
+				m.route.param('signedOut') === '1'
+					? m('p.access-flash', { role: 'status' }, t('teacher.signed_out'))
+					: null,
+				m('p.access-panel__text', t('teacher.sign_in_required')),
+				signInFailed
+					? m('p.access-panel__error', { role: 'alert' }, t('teacher.sign_in_failed'))
+					: null,
+				m(
+					'button.btn.btn--primary',
+					{
+						type: 'button',
+						onclick: () => {
+							signInFailed = false;
+							signInWithGoogle().catch((error: unknown) => {
+								console.error('[Access] Sign-in failed:', error);
+								signInFailed = true;
+								m.redraw();
+							});
+						},
 					},
-				},
-				t('home.sign_in'),
-			),
-		]);
+					t('home.sign_in'),
+				),
+			],
+			false,
+		);
 	}
 
 	return {
