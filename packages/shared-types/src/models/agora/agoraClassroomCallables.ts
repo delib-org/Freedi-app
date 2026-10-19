@@ -20,13 +20,19 @@ export interface ManageSchoolRequest {
 		| 'archive'
 		| 'assignTeacher'
 		| 'removeTeacher'
+		| 'resendTeacherInvite'
+		| 'cancelTeacherInvite'
 		| 'assignSupervisor'
 		| 'removeSupervisor'
 		| 'setSupervisorScope';
 	schoolId?: string;
 	name?: string;
 	city?: string;
-	/** assignTeacher/removeTeacher: the teacher's sign-in email, looked up server-side */
+	/**
+	 * assignTeacher/removeTeacher/resendTeacherInvite/cancelTeacherInvite: the
+	 * teacher's sign-in email, looked up server-side. assignTeacher with an
+	 * email no account has yet files a pending invite instead of failing.
+	 */
 	teacherEmail?: string;
 	/** assignSupervisor/removeSupervisor/setSupervisorScope: the supervisor's sign-in email */
 	supervisorEmail?: string;
@@ -45,6 +51,12 @@ export interface ManageSchoolResponse {
 	teacherUid?: string;
 	/** Present on the supervisor actions — the resolved uid */
 	supervisorUid?: string;
+	/** assignTeacher: true when no account had the email and an invite was filed instead */
+	invited?: boolean;
+	/** assignTeacher/resendTeacherInvite: whether the email went out (false = mail unconfigured or failed) */
+	emailSent?: boolean;
+	/** removeTeacher/cancelTeacherInvite: a pending invite for that email was cancelled */
+	inviteCancelled?: boolean;
 }
 
 /**

@@ -5123,5 +5123,20 @@
   "Could not copy the link.": "Could not copy the link.",
   "{{count}} waiting for approval": "{{count}} waiting for approval",
   "Review access requests": "Review access requests",
-  "signInPopupBlocked": "Your browser blocked the sign-in window. Please allow pop-ups for this site and try again."
+  "signInPopupBlocked": "Your browser blocked the sign-in window. Please allow pop-ups for this site and try again.",
+  "Invited – not signed in yet": "Invited – not signed in yet",
+  "Resend invitation": "Resend invitation",
+  "Sending invitation…": "Sending invitation…",
+  "Cancel invitation": "Cancel invitation",
+  "Cancelling invitation…": "Cancelling invitation…",
+  "Invitation sent again.": "Invitation sent again.",
+  "The invitation was saved, but the email could not be sent — try Resend invitation.": "The invitation was saved, but the email could not be sent — try Resend invitation.",
+  "Invitation cancelled.": "Invitation cancelled.",
+  "Could not cancel the invitation.": "Could not cancel the invitation.",
+  "Invitation sent to {{email}}. They join this school when they sign in to Agora with Google.": "Invitation sent to {{email}}. They join this school when they sign in to Agora with Google.",
+  "Teacher attached and notified by email.": "Teacher attached and notified by email.",
+  "Teacher attached. The notification email could not be sent.": "Teacher attached. The notification email could not be sent.",
+  "Could not attach the teacher.": "Could not attach the teacher.",
+  "Invited teachers": "Invited teachers",
+  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "No Agora account yet? They get an email invitation and join when they sign in with Google."
 }

@@ -4443,5 +4443,20 @@
   "Could not copy the link.": "Der Link konnte nicht kopiert werden.",
   "{{count}} waiting for approval": "{{count}} warten auf Freigabe",
   "Review access requests": "Zugangsanfragen prüfen",
-  "signInPopupBlocked": "Ihr Browser hat das Anmeldefenster blockiert. Bitte erlauben Sie Pop-ups für diese Seite und versuchen Sie es erneut."
+  "signInPopupBlocked": "Ihr Browser hat das Anmeldefenster blockiert. Bitte erlauben Sie Pop-ups für diese Seite und versuchen Sie es erneut.",
+  "Invited – not signed in yet": "Eingeladen – noch nicht angemeldet",
+  "Resend invitation": "Einladung erneut senden",
+  "Sending invitation…": "Einladung wird gesendet…",
+  "Cancel invitation": "Einladung zurückziehen",
+  "Cancelling invitation…": "Einladung wird zurückgezogen…",
+  "Invitation sent again.": "Einladung erneut gesendet.",
+  "The invitation was saved, but the email could not be sent — try Resend invitation.": "Die Einladung wurde gespeichert, aber die E-Mail konnte nicht gesendet werden – versuche „Einladung erneut senden“.",
+  "Invitation cancelled.": "Einladung zurückgezogen.",
+  "Could not cancel the invitation.": "Die Einladung konnte nicht zurückgezogen werden.",
+  "Invitation sent to {{email}}. They join this school when they sign in to Agora with Google.": "Einladung an {{email}} gesendet. Die Lehrkraft wird der Schule zugeordnet, sobald sie sich mit Google bei Agora anmeldet.",
+  "Teacher attached and notified by email.": "Lehrkraft zugeordnet und per E-Mail benachrichtigt.",
+  "Teacher attached. The notification email could not be sent.": "Lehrkraft zugeordnet. Die Benachrichtigung per E-Mail konnte nicht gesendet werden.",
+  "Could not attach the teacher.": "Die Lehrkraft konnte nicht zugeordnet werden.",
+  "Invited teachers": "Eingeladene Lehrkräfte",
+  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "Noch kein Agora-Konto? Die Lehrkraft erhält eine Einladung per E-Mail und wird zugeordnet, sobald sie sich mit Google anmeldet."
 }

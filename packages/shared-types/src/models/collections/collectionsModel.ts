@@ -134,6 +134,8 @@ export enum Collections {
     agoraApprovedTeachers = 'agoraApprovedTeachers',
     // Requests to become an Agora teacher / regional coordinator (server-written)
     agoraAccessRequests = 'agoraAccessRequests',
+    // Pending email invitations for a school's teachers (server-written, sys-admin read)
+    agoraTeacherInvites = 'agoraTeacherInvites',
     // Server-written markers: who may read a private scenario (players of a game built on it)
     agoraTopicReaders = 'agoraTopicReaders',
 

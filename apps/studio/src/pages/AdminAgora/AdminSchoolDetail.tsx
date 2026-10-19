@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
-import { advancementSummary, type AgoraClass, type AgoraSchool } from '@freedi/shared-types';
+import { advancementSummary, type AgoraClass } from '@freedi/shared-types';
 import { CLASS_INDICATORS } from '@freedi/shared-charts';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { useOrg } from '@/org/OrgContext';
 import { useAgoraClassAggregates, useAgoraClasses, useAgoraSchool } from '@/db/agoraAdmin';
-import { manageAgoraSchool, openAgoraClass } from '@/db/agoraAdminFunctions';
+import { openAgoraClass } from '@/db/agoraAdminFunctions';
 import { useSupervisorConsole } from '@/db/agoraSupervisor';
 import { classRowContextFrom } from '@/lib/indicatorContexts';
 import { logError } from '@/utils/logError';
@@ -16,11 +16,9 @@ import { useGrace } from '../_shared/useGrace';
 import OpenClassModal from './OpenClassModal';
 import SchoolSupervisors, { type TeacherOption } from './SchoolSupervisors';
 import TeachersTable from './sections/TeachersTable';
+import SchoolTeachers from './sections/SchoolTeachers';
 import { LoadError, PrivacyNote, TruncatedNote } from './sections/LoadState';
-import RemoveAccess from '../AccessRequests/RemoveAccess';
 import SignUpLink from '../AccessRequests/SignUpLink';
-import { refreshAccessCount } from '../AccessRequests/accessCount';
-import { useAccessActor } from '../AccessRequests/useAccessActor';
 import styles from './AdminAgora.module.scss';
 
 /** The two-up mini row on each class card: the score line and the participation bars. */
@@ -74,123 +72,6 @@ function AssignTeacher({ agoraClass }: { agoraClass: AgoraClass }) {
 			/>
 			{error && <p className={styles.error}>{error}</p>}
 		</div>
-	);
-}
-
-/**
- * The school's own teachers — the ones who may open classes in it themselves.
- * Attached by sign-in email (resolved server-side, never stored); the list
- * shows what the school doc carries, which is uids.
- */
-function SchoolTeachers({
-	school,
-	names,
-	onChanged,
-}: {
-	school: AgoraSchool;
-	names: Map<string, string>;
-	onChanged: () => void;
-}) {
-	const { t, tWithParams } = useTranslation();
-	const actor = useAccessActor();
-	const [email, setEmail] = useState('');
-	const [busy, setBusy] = useState(false);
-	const [error, setError] = useState('');
-	const [removing, setRemoving] = useState('');
-	const teacherIds = school.teacherIds ?? [];
-
-	const canSubmit = EMAIL_PATTERN.test(email.trim().toLowerCase()) && !busy;
-
-	const attach = async () => {
-		if (!canSubmit) return;
-		setBusy(true);
-		setError('');
-		try {
-			await manageAgoraSchool({
-				action: 'assignTeacher',
-				schoolId: school.schoolId,
-				teacherEmail: email.trim().toLowerCase(),
-			});
-			setEmail('');
-		} catch (err) {
-			logError(err, { operation: 'AdminSchoolDetail.attachTeacher' });
-			setError(t('Could not assign — the teacher must sign in to Agora with Google once first.'));
-		} finally {
-			setBusy(false);
-		}
-	};
-
-	const detach = async (teacherEmail: string) => {
-		if (removing) return;
-		setRemoving(teacherEmail);
-		setError('');
-		try {
-			await manageAgoraSchool({ action: 'removeTeacher', schoolId: school.schoolId, teacherEmail });
-		} catch (err) {
-			logError(err, { operation: 'AdminSchoolDetail.detachTeacher' });
-			setError(t('Could not remove the teacher.'));
-		} finally {
-			setRemoving('');
-		}
-	};
-
-	return (
-		<section className={styles.classCard}>
-			<div className={styles.classHead}>
-				<h3 className={styles.className}>{t('Teachers of this school')}</h3>
-				<span className={styles.meta}>
-					{tWithParams('{{count}} teachers', { count: teacherIds.length })}
-				</span>
-			</div>
-			<p className={styles.meta}>
-				{t('Teachers attached here open their own classes in this school.')}
-			</p>
-			{teacherIds.length > 0 && (
-				<ul className={styles.teacherList}>
-					{teacherIds.map((uid) => (
-						<li key={uid} className={styles.teacherRow}>
-							<span>{names.get(uid) ?? t('Teacher')}</span>
-							{actor && (
-								<span className={styles.removeSlot}>
-									<RemoveAccess
-										actor={actor}
-										target={{ uid, role: 'teacher', schoolId: school.schoolId }}
-										personName={names.get(uid) ?? t('Teacher')}
-										schoolName={school.name}
-										onRemoved={() => {
-											void refreshAccessCount();
-											onChanged();
-										}}
-									/>
-								</span>
-							)}
-						</li>
-					))}
-				</ul>
-			)}
-			<div className={styles.assign}>
-				<Input
-					type="email"
-					ariaLabel={t('Teacher email')}
-					placeholder={t('Teacher email')}
-					value={email}
-					onChange={setEmail}
-				/>
-				<Button
-					text={busy ? t('Assigning…') : t('Attach teacher')}
-					variant="secondary"
-					disabled={!canSubmit}
-					onClick={() => void attach()}
-				/>
-				<Button
-					text={removing ? t('Removing…') : t('Remove by email')}
-					variant="secondary"
-					disabled={!EMAIL_PATTERN.test(email.trim().toLowerCase()) || !!removing || busy}
-					onClick={() => void detach(email.trim().toLowerCase())}
-				/>
-				{error && <p className={styles.error}>{error}</p>}
-			</div>
-		</section>
 	);
 }
 

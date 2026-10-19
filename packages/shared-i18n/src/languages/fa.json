@@ -4921,5 +4921,20 @@
   "Could not copy the link.": "کپی پیوند ممکن نشد.",
   "{{count}} waiting for approval": "{{count}} در انتظار تأیید",
   "Review access requests": "بررسی درخواست‌های دسترسی",
-  "signInPopupBlocked": "مرورگر پنجره ورود را مسدود کرد. لطفاً پنجره‌های بازشو را برای این سایت مجاز کنید و دوباره تلاش کنید."
+  "signInPopupBlocked": "مرورگر پنجره ورود را مسدود کرد. لطفاً پنجره‌های بازشو را برای این سایت مجاز کنید و دوباره تلاش کنید.",
+  "Invited – not signed in yet": "دعوت شده – هنوز وارد نشده",
+  "Resend invitation": "ارسال دوباره دعوت‌نامه",
+  "Sending invitation…": "در حال ارسال دعوت‌نامه…",
+  "Cancel invitation": "لغو دعوت‌نامه",
+  "Cancelling invitation…": "در حال لغو دعوت‌نامه…",
+  "Invitation sent again.": "دعوت‌نامه دوباره ارسال شد.",
+  "The invitation was saved, but the email could not be sent — try Resend invitation.": "دعوت‌نامه ذخیره شد، اما ایمیل ارسال نشد — «ارسال دوباره دعوت‌نامه» را امتحان کنید.",
+  "Invitation cancelled.": "دعوت‌نامه لغو شد.",
+  "Could not cancel the invitation.": "لغو دعوت‌نامه ممکن نشد.",
+  "Invitation sent to {{email}}. They join this school when they sign in to Agora with Google.": "دعوت‌نامه به {{email}} ارسال شد. معلم پس از ورود به آگورا با Google به این مدرسه می‌پیوندد.",
+  "Teacher attached and notified by email.": "معلم به مدرسه متصل شد و با ایمیل مطلع شد.",
+  "Teacher attached. The notification email could not be sent.": "معلم به مدرسه متصل شد. ایمیل اطلاع‌رسانی ارسال نشد.",
+  "Could not attach the teacher.": "اتصال معلم ممکن نشد.",
+  "Invited teachers": "معلمان دعوت‌شده",
+  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "هنوز حساب آگورا ندارد؟ یک دعوت‌نامه ایمیلی دریافت می‌کند و پس از ورود با Google می‌پیوندد."
 }

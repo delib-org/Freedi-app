@@ -674,6 +674,15 @@ export {
 	canRemoveAccess,
 } from './agoraAccess';
 
+export type { AgoraTeacherInvite, AgoraTeacherInviteStatus } from './agoraTeacherInvite';
+export {
+	AGORA_TEACHER_INVITE,
+	AgoraTeacherInviteSchema,
+	AgoraTeacherInviteStatusSchema,
+	agoraTeacherInviteId,
+	normalizeInviteEmail,
+} from './agoraTeacherInvite';
+
 export type {
 	AgoraTopicReader,
 	TopicAccessRequest,
