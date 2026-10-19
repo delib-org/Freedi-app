@@ -22,6 +22,10 @@ html.has-teacher-sidebar--folded {
 // The page sits beside the bar, not under it
 html.has-teacher-sidebar body {
 	padding-inline-start: var(--teacher-sidebar-w);
+}
+
+// Only after the first frame: on load the page is already at its width
+html.has-teacher-sidebar--ready body {
 	transition: padding-inline-start var(--motion-fast) ease;
 }
 
@@ -33,7 +37,10 @@ html.has-teacher-sidebar body {
 	inline-size: var(--teacher-sidebar-w, 17rem);
 	background: var(--bg-card-solid);
 	border-inline-end: 1px solid var(--border-subtle);
-	transition: inline-size var(--motion-fast) ease;
+
+	html.has-teacher-sidebar--ready & {
+		transition: inline-size var(--motion-fast) ease;
+	}
 
 	&__scroll {
 		block-size: 100%;
@@ -58,8 +65,7 @@ html.has-teacher-sidebar body {
 
 	// The first stop in tab order: fold or unfold
 	&__fold {
-		@extend .teacher-nav__item;
-		color: var(--text-secondary);
+			color: var(--text-secondary);
 		margin-block-end: var(--space-xs);
 
 		// The arrow points at the edge the bar hangs from: that is where it goes

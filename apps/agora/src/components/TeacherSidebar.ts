@@ -41,6 +41,8 @@ export interface TeacherSidebarAttrs {
 const SIDEBAR_ID = 'teacher-sidebar';
 const ROOT_CLASS = 'has-teacher-sidebar';
 const ROOT_FOLDED_CLASS = 'has-teacher-sidebar--folded';
+const ROOT_READY_CLASS = 'has-teacher-sidebar--ready';
+let readyScheduled = false;
 const TIPS_OFF_CLASS = 'teacher-sidebar--tips-off';
 
 /**
@@ -50,6 +52,18 @@ const TIPS_OFF_CLASS = 'teacher-sidebar--tips-off';
  */
 function paintRoot(folded: boolean | null): void {
 	const root = document.documentElement;
+	if (folded === null) {
+		root.classList.remove(ROOT_READY_CLASS);
+	} else if (!root.classList.contains(ROOT_READY_CLASS) && !readyScheduled) {
+		// Animate folds, never the first paint
+		readyScheduled = true;
+		requestAnimationFrame(() =>
+			requestAnimationFrame(() => {
+				readyScheduled = false;
+				if (root.classList.contains(ROOT_CLASS)) root.classList.add(ROOT_READY_CLASS);
+			}),
+		);
+	}
 	root.classList.toggle(ROOT_CLASS, folded !== null);
 	root.classList.toggle(ROOT_FOLDED_CLASS, folded === true);
 }

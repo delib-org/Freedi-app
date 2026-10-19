@@ -43,6 +43,12 @@ export interface TeacherNavAttrs {
 	 * so the console hands them over here instead of dropping them.
 	 */
 	menuItems?: readonly TeacherNavMenuItem[];
+	/**
+	 * `false` keeps the desktop side bar away: a gate (sign-in, no access) has
+	 * no menu to show, and must not fetch a teacher's lessons. The top bar then
+	 * behaves as it does on a phone.
+	 */
+	sidebar?: boolean;
 }
 
 /** How long the pill says "copied" before it says the code again */
@@ -312,6 +318,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 
 		view({ attrs }) {
 			const { title, subtitle, onBack, trailing, code, onCodeTap, segment, menuItems = [] } = attrs;
+			const barOn = desktop && attrs.sidebar !== false;
 			const atHome = here() === '/teach';
 
 			return [
@@ -339,7 +346,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 						),
 						// On /teach itself the house would lead to the screen it sits on; on
 						// a desktop the side bar has the teachers' room as its first row
-						atHome || desktop
+						atHome || barOn
 							? null
 							: m(
 									'button.teacher-nav__home',
@@ -359,7 +366,7 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 						code || trailing
 							? m('.teacher-nav__trailing', [code ? codePill(code, onCodeTap) : null, trailing])
 							: null,
-						desktop
+						barOn
 							? null
 							: m(
 									'button.teacher-nav__switch',
@@ -373,11 +380,11 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 									},
 									m(Icon, { name: 'menu', size: 20 }),
 								),
-						open && !desktop ? menu(menuItems) : null,
+						open && !barOn ? menu(menuItems) : null,
 					],
 				),
 				// After the top bar and before the page in tab order
-				desktop ? m(TeacherSidebar, { menuItems }) : null,
+				barOn ? m(TeacherSidebar, { menuItems }) : null,
 			];
 		},
 	};
