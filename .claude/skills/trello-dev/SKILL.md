@@ -1,6 +1,6 @@
 ---
 name: trello-dev
-description: Drive development from a Trello board with a team of sub-agents. The main session is the orchestrator - it reads the board through Claude in Chrome, triages cards with a cheap agent, confirms understanding with Tal, groups cards into lanes (one git worktree + one agent pipeline per lane, several in parallel), verifies with a reviewer agent, merges every green branch into local dev at the end, then comments on each card and moves it to done. Use whenever Tal mentions Trello, a board, cards, the sprint backlog, "work the board", "take the next card", "do the cards", or hands over a Trello link - even when he does not say "skill".
+description: Drive development from a Trello board with a team of sub-agents. The main session is the orchestrator - it reads the board through Claude in Chrome, triages cards with a cheap agent, confirms understanding with Tal, groups cards into lanes (one git worktree + one agent pipeline per lane, several in parallel), verifies with a reviewer agent, merges every green branch into local dev at the end, comments on each card and moves it to done, then hands the developer the exact deploy commands and asks permission before running any of them. Use whenever Tal mentions Trello, a board, cards, the sprint backlog, "work the board", "take the next card", "do the cards", or hands over a Trello link - even when he does not say "skill".
 ---
 
 # Trello-driven development
@@ -172,8 +172,8 @@ typecheck` once in the main tree: two green branches can still disagree. If it i
 sonnet agent in a fresh worktree off `dev` fixes it as its own `fix/` commit; do not edit
 `dev` directly.
 
-Never `git stash`, never switch the main tree's branch, never push, never deploy. Deploys
-need Tal's explicit ask every time. If the main tree is on another branch or carries
+Never `git stash`, never switch the main tree's branch, never push. Deploys happen only
+in Step 10, after Tal says yes to the listed commands. If the main tree is on another branch or carries
 someone else's edits to the same files, say so and merge inside one lane's worktree instead
 (`git checkout dev` there is fine; it is the agent's tree), or ask Tal.
 
@@ -197,7 +197,7 @@ Done by Claude (<date>) - merged into local dev <short-sha>
 What changed: <2-4 lines, what the user sees>
 Branch: feat/<slug>  Commits: <sha..sha>
 Checks: typecheck ✓ lint ✓ tests ✓ (<app>: N passed)  Review: ✓ <model>
-To deploy: <none | rules | functions: fnA fnB | hosting: agora> - NOT deployed, NOT pushed
+To deploy: <none | npm run deploy:rules:prod | npm run deploy:f:prod -- fnA fnB | npm run deploy:agora> - NOT deployed, NOT pushed
 Open questions: <none | ...>
 ```
 
@@ -207,11 +207,46 @@ and why, and tell Tal. Never move a card to done that you did not verify and mer
 ## Step 9 - Report to Tal
 
 One table for the batch: card, lane/branch, model(s) used, checks, review, merged into
-dev?, deploy needed, notes. Then what you recommend next (next cards, or a deploy list for
-his OK). Plain short English, no jargon - describe what changed on screen.
+dev?, deploy needed, notes. Plain short English, no jargon - describe what changed on
+screen. Then the deploy list from Step 10.
 
 When the batch is done, save a `project` memory note for anything not derivable from git:
-decisions Tal made in Step 3, deploy order, cards left in doing.
+decisions Tal made in Step 3, deploy order, cards left in doing, what was deployed.
+
+## Step 10 - Deployment: list the commands, then ask
+
+Nothing in this skill deploys on its own. The batch ends with two things:
+
+1. **The command list.** From the merged branches' `git diff --name-only dev~N..dev`, map
+   every touched area to its target and exact command with `references/deploy-map.md`.
+   Functions are listed **by name** (the exported functions whose code path changed), in
+   batches of 10-20; the order is rules → functions → hosting; MC and Sign are a merge into
+   `main-mc` / `main-sign` plus a push. Print it as a block Tal can paste:
+
+   ```
+   npm run deploy:rules:prod
+   npm run deploy:f:prod -- createLesson gradeAnswer
+   npm run deploy:agora
+   ```
+
+   plus one line per command saying what it ships ("agora: the new lesson builder"). If
+   nothing needs deploying, say "nothing to deploy" explicitly.
+
+2. **The permission question.** Everything in that list is something this session can run
+   itself from the main tree, so ask once, with `AskUserQuestion`: deploy all of it now,
+   deploy a subset (functions only / hosting only / to `test` first), or not now. Never run
+   a deploy on an earlier "yes" from another batch or another day; approval in one context
+   does not carry to the next.
+
+On a yes: run the commands in the listed order from the main tree, one at a time, and
+watch each result. A 429 on functions means the batch was too big; retry the names that
+failed in smaller batches. After the last command, confirm the main tree is back on the
+dev env (`npm run env:dev` if a script was interrupted), update each card's done comment
+from "NOT deployed" to "deployed <date>: <targets>", and record the deploy in the memory
+note. Pushing `dev` or `main` to origin is a separate ask; it is not implied by a deploy.
+
+On a no or a subset: leave the rest of the list in the report, unchanged, so Tal can run it
+later. Do not nag.
 
 ## Etiquette
 
@@ -219,5 +254,7 @@ decisions Tal made in Step 3, deploy order, cards left in doing.
 - The main tree is shared by live sessions: never stash, never switch its branch, never
   reset it. Unexplained modified files there are someone else's work.
 - One agent per lane at a time; the reviewer starts only after the implementer is green.
+- Deploys: list the exact commands, ask once, run only what Tal approved, in order. The
+  same scripts every time (`references/deploy-map.md`), never raw `firebase deploy`.
 - Tal's standing rules in memory apply: commit finished work, deploy only on ask, talk in
   simple English, paragraphs/types/firebase/error conventions from `CLAUDE.md`.
