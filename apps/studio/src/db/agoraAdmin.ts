@@ -4,6 +4,7 @@ import {
 	type AgoraClass,
 	type AgoraClassAggregate,
 	type AgoraSchool,
+	type AgoraTeacherInvite,
 } from '@freedi/shared-types';
 import { db } from '@/firebase';
 import { useCollection, useDoc, type SnapshotState } from './hooks';
@@ -32,6 +33,23 @@ export function useAgoraSchool(
 	return useDoc<AgoraSchool>(
 		enabled && schoolId ? doc(db, Collections.agoraSchools, schoolId) : null,
 		`agoraSchool:${schoolId ?? 'none'}`,
+	);
+}
+
+/**
+ * A school's teacher invites (pending and accepted). Rules: sys-admins only —
+ * they carry the invited email. Equality-only query, no composite index; the
+ * panel keeps the pending ones.
+ */
+export function useAgoraTeacherInvites(
+	schoolId: string | undefined,
+	enabled: boolean,
+): SnapshotState<AgoraTeacherInvite[]> {
+	return useCollection<AgoraTeacherInvite>(
+		enabled && schoolId
+			? query(collection(db, Collections.agoraTeacherInvites), where('schoolId', '==', schoolId))
+			: null,
+		`agoraTeacherInvites:${schoolId ?? 'none'}`,
 	);
 }
 

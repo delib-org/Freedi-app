@@ -609,6 +609,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Pending email invitations to teach in a school. They hold an email
+    // address, so only the people who manage a school's teachers — system
+    // admins — may read them; written only by agoraAdminManageSchool and
+    // claimed only server-side, on a verified Google sign-in.
+    match /agoraTeacherInvites/{inviteId} {
+      allow read: if isSystemAdminUser();
+      allow write: if false;
+    }
+
     // === Israeli Odyssey pre-election civic-voice game ===
 
     // Game config (texts, island map metadata, party routes). The

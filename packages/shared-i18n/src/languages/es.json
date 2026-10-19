@@ -4442,5 +4442,20 @@
   "Could not copy the link.": "No se pudo copiar el enlace.",
   "{{count}} waiting for approval": "{{count}} pendientes de aprobación",
   "Review access requests": "Revisar solicitudes de acceso",
-  "signInPopupBlocked": "Tu navegador bloqueó la ventana de inicio de sesión. Permite las ventanas emergentes para este sitio e inténtalo de nuevo."
+  "signInPopupBlocked": "Tu navegador bloqueó la ventana de inicio de sesión. Permite las ventanas emergentes para este sitio e inténtalo de nuevo.",
+  "Invited – not signed in yet": "Invitado – aún no ha iniciado sesión",
+  "Resend invitation": "Reenviar invitación",
+  "Sending invitation…": "Enviando invitación…",
+  "Cancel invitation": "Cancelar invitación",
+  "Cancelling invitation…": "Cancelando invitación…",
+  "Invitation sent again.": "Invitación enviada de nuevo.",
+  "The invitation was saved, but the email could not be sent — try Resend invitation.": "La invitación se guardó, pero no se pudo enviar el correo — prueba con Reenviar invitación.",
+  "Invitation cancelled.": "Invitación cancelada.",
+  "Could not cancel the invitation.": "No se pudo cancelar la invitación.",
+  "Invitation sent to {{email}}. They join this school when they sign in to Agora with Google.": "Invitación enviada a {{email}}. Se unirá a esta escuela cuando inicie sesión en Agora con Google.",
+  "Teacher attached and notified by email.": "Docente asignado y avisado por correo.",
+  "Teacher attached. The notification email could not be sent.": "Docente asignado. No se pudo enviar el correo de aviso.",
+  "Could not attach the teacher.": "No se pudo asignar al docente.",
+  "Invited teachers": "Docentes invitados",
+  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "¿Aún no tiene cuenta en Agora? Recibirá una invitación por correo y se unirá al iniciar sesión con Google."
 }

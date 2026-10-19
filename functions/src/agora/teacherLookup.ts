@@ -9,21 +9,29 @@ import { HttpsError } from 'firebase-functions/v2/https';
 import { db } from '../db';
 import { Collections } from '@freedi/shared-types';
 
+/** The uid of the account with this (already normalized) email, or null when none has it */
+export async function findUidByEmail(email: string): Promise<string | null> {
+	if (!email) return null;
+	const snap = await db.collection(Collections.users).where('email', '==', email).limit(1).get();
+
+	return snap.empty ? null : snap.docs[0].id;
+}
+
 /** Resolve a teacher's sign-in email to a uid, or refuse loudly. */
 export async function resolveTeacherUid(teacherEmail: string): Promise<string> {
 	const email = teacherEmail.trim().toLowerCase();
 	if (!email) {
 		throw new HttpsError('invalid-argument', 'teacherEmail is required');
 	}
-	const snap = await db.collection(Collections.users).where('email', '==', email).limit(1).get();
-	if (snap.empty) {
+	const uid = await findUidByEmail(email);
+	if (!uid) {
 		throw new HttpsError(
 			'not-found',
 			'No account with that email — the teacher must sign in to Agora with Google once first',
 		);
 	}
 
-	return snap.docs[0].id;
+	return uid;
 }
 
 /**

@@ -14,10 +14,15 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { isSystemAdmin } from '../utils/httpAuth';
-import { resolveTeacherUid } from './teacherLookup';
+import { findUidByEmail, resolveTeacherUid } from './teacherLookup';
+import {
+	addTeacherByEmail,
+	cancelTeacherInvite,
+	cleanInviteEmail,
+	resendTeacherInvite,
+} from './teacherInvites';
 import {
 	attachSupervisorUpdate,
-	attachTeacherUpdate,
 	detachSupervisorUpdate,
 	detachTeacherUpdate,
 	revokeGrantIfUnattached,
@@ -106,25 +111,52 @@ export const agoraAdminManageSchool = onCall(
 			// The school's teachers: the ones who may open classes in it themselves.
 			// Both halves of the index move in one write, as on a class. A
 			// sys-admin attaching someone IS an approval, so the grant is written too.
+			// No account with the email yet → a pending invite instead of a refusal
+			// (teacherInvites.ts); either way the teacher gets a letter.
 			if (action === 'assignTeacher') {
-				const teacherUid = await resolveTeacherUid(teacherEmail ?? '');
-				const now = Date.now();
-				await schoolRef.update(attachTeacherUpdate(teacherUid, now));
-				await writeGrant(
-					teacherUid,
-					{ source: 'assigned', grantedAt: now, grantedBy: uid },
-					'school',
-				);
+				const result = await addTeacherByEmail({
+					schoolRef,
+					school: schoolSnap.data() as AgoraSchool,
+					rawEmail: teacherEmail,
+					adminUid: uid,
+				});
 
-				return { schoolId, teacherUid };
+				return { schoolId, ...result };
 			}
 
+			if (action === 'resendTeacherInvite') {
+				const { emailSent } = await resendTeacherInvite({
+					school: schoolSnap.data() as AgoraSchool,
+					rawEmail: teacherEmail,
+					adminUid: uid,
+				});
+
+				return { schoolId, emailSent };
+			}
+
+			if (action === 'cancelTeacherInvite') {
+				const inviteCancelled = await cancelTeacherInvite(schoolId, teacherEmail);
+				if (!inviteCancelled) {
+					throw new HttpsError('not-found', 'No pending invite for that email at this school');
+				}
+
+				return { schoolId, inviteCancelled };
+			}
+
+			// Removing by email also cancels a pending invite for that address, so
+			// "remove" works for someone who was only invited.
 			if (action === 'removeTeacher') {
-				const teacherUid = await resolveTeacherUid(teacherEmail ?? '');
+				const email = cleanInviteEmail(teacherEmail);
+				const inviteCancelled = await cancelTeacherInvite(schoolId, email);
+				const teacherUid = await findUidByEmail(email);
+				if (!teacherUid) {
+					if (inviteCancelled) return { schoolId, inviteCancelled };
+					throw new HttpsError('not-found', 'No account or invite with that email');
+				}
 				await schoolRef.update(detachTeacherUpdate(teacherUid, Date.now()));
 				await revokeGrantIfUnattached(teacherUid);
 
-				return { schoolId, teacherUid };
+				return { schoolId, teacherUid, inviteCancelled };
 			}
 
 			// The school's supervisors (UI: regional coordinators): the ones who may

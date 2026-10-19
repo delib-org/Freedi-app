@@ -4562,5 +4562,20 @@
   "Could not copy the link.": "تعذّر نسخ الرابط.",
   "{{count}} waiting for approval": "{{count}} بانتظار الموافقة",
   "Review access requests": "مراجعة طلبات الوصول",
-  "signInPopupBlocked": "قام المتصفح بحظر نافذة تسجيل الدخول. يرجى السماح بالنوافذ المنبثقة لهذا الموقع والمحاولة مرة أخرى."
+  "signInPopupBlocked": "قام المتصفح بحظر نافذة تسجيل الدخول. يرجى السماح بالنوافذ المنبثقة لهذا الموقع والمحاولة مرة أخرى.",
+  "Invited – not signed in yet": "تمت الدعوة – لم يسجّل الدخول بعد",
+  "Resend invitation": "إعادة إرسال الدعوة",
+  "Sending invitation…": "جارٍ إرسال الدعوة…",
+  "Cancel invitation": "إلغاء الدعوة",
+  "Cancelling invitation…": "جارٍ إلغاء الدعوة…",
+  "Invitation sent again.": "تم إرسال الدعوة مرة أخرى.",
+  "The invitation was saved, but the email could not be sent — try Resend invitation.": "تم حفظ الدعوة، لكن تعذّر إرسال البريد الإلكتروني — جرّب إعادة إرسال الدعوة.",
+  "Invitation cancelled.": "تم إلغاء الدعوة.",
+  "Could not cancel the invitation.": "تعذّر إلغاء الدعوة.",
+  "Invitation sent to {{email}}. They join this school when they sign in to Agora with Google.": "تم إرسال دعوة إلى {{email}}. سينضم المعلّم إلى المدرسة عند تسجيل الدخول إلى أغورا باستخدام Google.",
+  "Teacher attached and notified by email.": "تم ربط المعلّم وإبلاغه بالبريد الإلكتروني.",
+  "Teacher attached. The notification email could not be sent.": "تم ربط المعلّم. تعذّر إرسال بريد الإشعار.",
+  "Could not attach the teacher.": "تعذّر ربط المعلّم.",
+  "Invited teachers": "معلّمون تمت دعوتهم",
+  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "لا يوجد حساب في أغورا بعد؟ سيتلقّى المعلّم دعوة بالبريد الإلكتروني وينضم عند تسجيل الدخول باستخدام Google."
 }

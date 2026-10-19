@@ -20,6 +20,7 @@ import {
 	schoolsById,
 } from './accessRequests';
 import { sendNewRequestEmails } from './accessEmail';
+import { claimTeacherInvites, type InviteClaimToken } from './teacherInvites';
 
 /** Own requests the status view returns */
 const STATUS_ROWS = 10;
@@ -45,7 +46,7 @@ export const agoraRequestAccess = onCall(
 		try {
 			if (data.action === 'submit') return await submit(uid, data);
 			if (data.action === 'withdraw') return await withdraw(uid, data.requestId);
-			if (data.action === 'status') return await status(uid);
+			if (data.action === 'status') return await status(uid, request.auth?.token);
 			throw new HttpsError('invalid-argument', 'Unknown action');
 		} catch (error) {
 			if (error instanceof HttpsError) throw error;
@@ -140,7 +141,16 @@ async function withdraw(uid: string, rawRequestId: unknown): Promise<RequestAcce
 	return { action: 'withdraw', requestId, status: 'withdrawn' };
 }
 
-async function status(uid: string): Promise<RequestAccessResponse> {
+/**
+ * Agora's teacher room asks this on every sign-in, so it is also where a
+ * pending email invite is claimed (teacherInvites.ts) — before the approval is
+ * read, so a newly invited teacher's first answer is already "approved".
+ */
+async function status(
+	uid: string,
+	token: InviteClaimToken | undefined,
+): Promise<RequestAccessResponse> {
+	await claimTeacherInvites(uid, token);
 	const [approval, snaps] = await Promise.all([
 		resolveApproval(uid),
 		requestsCollection().where('uid', '==', uid).get(),

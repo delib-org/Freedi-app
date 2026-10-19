@@ -5160,5 +5160,20 @@
   "Could not copy the link.": "לא ניתן להעתיק את הקישור.",
   "{{count}} waiting for approval": "{{count}} ממתינות לאישור",
   "Review access requests": "לבדיקת בקשות הגישה",
-  "signInPopupBlocked": "הדפדפן חסם את חלון ההתחברות. יש לאפשר חלונות קופצים באתר זה ולנסות שוב."
+  "signInPopupBlocked": "הדפדפן חסם את חלון ההתחברות. יש לאפשר חלונות קופצים באתר זה ולנסות שוב.",
+  "Invited – not signed in yet": "הוזמן/ה – עדיין לא התחבר/ה",
+  "Resend invitation": "שליחת ההזמנה שוב",
+  "Sending invitation…": "שולחים הזמנה…",
+  "Cancel invitation": "ביטול ההזמנה",
+  "Cancelling invitation…": "מבטלים את ההזמנה…",
+  "Invitation sent again.": "ההזמנה נשלחה שוב.",
+  "The invitation was saved, but the email could not be sent — try Resend invitation.": "ההזמנה נשמרה, אבל לא הצלחנו לשלוח את המייל — נסו \"שליחת ההזמנה שוב\".",
+  "Invitation cancelled.": "ההזמנה בוטלה.",
+  "Could not cancel the invitation.": "לא הצלחנו לבטל את ההזמנה.",
+  "Invitation sent to {{email}}. They join this school when they sign in to Agora with Google.": "הזמנה נשלחה אל {{email}}. המורה יצורף/תצורף לבית הספר ברגע שיתחבר/תתחבר לאגורה עם Google.",
+  "Teacher attached and notified by email.": "המורה שויך/ה לבית הספר וקיבל/ה הודעה במייל.",
+  "Teacher attached. The notification email could not be sent.": "המורה שויך/ה לבית הספר. לא הצלחנו לשלוח את מייל ההודעה.",
+  "Could not attach the teacher.": "לא הצלחנו לשייך את המורה.",
+  "Invited teachers": "מורים שהוזמנו",
+  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "אין עדיין חשבון באגורה? המורה יקבל/תקבל הזמנה במייל ויצורף/תצורף ברגע שיתחבר/תתחבר עם Google."
 }
