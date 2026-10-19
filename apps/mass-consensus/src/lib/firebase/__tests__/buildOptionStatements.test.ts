@@ -22,16 +22,17 @@ describe('buildOptionStatements', () => {
     });
   });
 
-  it('keeps the typed order recoverable from createdAt', () => {
-    // Pin the clock: each option reads Date.now() itself, so a tick between
-    // two options would otherwise make this assertion flaky.
-    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(FIXED_BATCH_TIME);
+  it('keeps the typed order recoverable from createdAt even when the clock ticks between options', () => {
+    // First read is the batch clock; every later read (one per option inside
+    // createStatementObject) jumps ahead, as a real tick between calls would.
+    let tick = 0;
+    const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => FIXED_BATCH_TIME + 1000 * tick++);
 
     try {
-      const [a, b, c] = buildOptionStatements(question, ['A', 'B', 'C'], creator);
+      const options = buildOptionStatements(question, ['A', 'B', 'C'], creator);
 
-      expect(b.createdAt).toBe(a.createdAt + 1);
-      expect(c.createdAt).toBe(a.createdAt + 2);
+      expect(options.map((o) => o.createdAt)).toEqual([FIXED_BATCH_TIME, FIXED_BATCH_TIME + 1, FIXED_BATCH_TIME + 2]);
+      options.forEach((option) => expect(option.lastUpdate).toBe(option.createdAt));
     } finally {
       nowSpy.mockRestore();
     }
