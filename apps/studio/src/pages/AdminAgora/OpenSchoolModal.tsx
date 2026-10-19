@@ -47,7 +47,7 @@ export default function OpenSchoolModal({ onClose }: OpenSchoolModalProps) {
 					value={name}
 					onChange={setName}
 				/>
-				<Input ariaLabel={t('City')} placeholder={t('City')} value={city} onChange={setCity} />
+				<Input ariaLabel={t('Locality')} placeholder={t('City')} value={city} onChange={setCity} />
 				{error && <p className={styles.error}>{error}</p>}
 				<div className={styles.formActions}>
 					<Button text={t('Cancel')} variant="secondary" onClick={onClose} />
