@@ -27,10 +27,12 @@ function findServiceAccountKey(): ServiceAccount | null {
 
 	for (const keyPath of possiblePaths) {
 		if (fs.existsSync(keyPath)) {
-			console.log(`Found service account key at: ${keyPath}`);
+			console.info(`Found service account key at: ${keyPath}`);
+
 			return JSON.parse(fs.readFileSync(keyPath, 'utf-8')) as ServiceAccount;
 		}
 	}
+
 	return null;
 }
 
@@ -39,7 +41,7 @@ if (!getApps().length) {
 	const serviceAccount = findServiceAccountKey();
 	if (serviceAccount) {
 		initializeApp({ credential: cert(serviceAccount) });
-		console.log('Initialized Firebase Admin');
+		console.info('Initialized Firebase Admin');
 	} else {
 		console.error('No service account key found!');
 		process.exit(1);
@@ -84,7 +86,7 @@ async function countProConEvaluators(statementId: string): Promise<ProConCounts>
 	let numberOfProEvaluators = 0;
 	let numberOfConEvaluators = 0;
 
-	evaluationsSnapshot.forEach(doc => {
+	evaluationsSnapshot.forEach((doc) => {
 		const data = doc.data() as EvaluationDoc;
 		if (data.evaluation > 0) {
 			numberOfProEvaluators++;
@@ -100,30 +102,34 @@ async function countProConEvaluators(statementId: string): Promise<ProConCounts>
  * Process statements in batches
  */
 async function migrateProConCounts(): Promise<void> {
-	console.log(`\n${'='.repeat(80)}`);
-	console.log(`MIGRATE PRO/CON EVALUATOR COUNTS`);
-	console.log(`${'='.repeat(80)}`);
-	console.log(`Mode: ${DRY_RUN ? 'DRY RUN (no changes will be written)' : 'LIVE (changes will be written)'}`);
+	console.info(`\n${'='.repeat(80)}`);
+	console.info(`MIGRATE PRO/CON EVALUATOR COUNTS`);
+	console.info(`${'='.repeat(80)}`);
+	console.info(
+		`Mode: ${DRY_RUN ? 'DRY RUN (no changes will be written)' : 'LIVE (changes will be written)'}`,
+	);
 	if (PARENT_STATEMENT_ID) {
-		console.log(`Scope: Statements under parent ${PARENT_STATEMENT_ID}`);
+		console.info(`Scope: Statements under parent ${PARENT_STATEMENT_ID}`);
 	} else {
-		console.log(`Scope: All statements with evaluations`);
+		console.info(`Scope: All statements with evaluations`);
 	}
-	console.log('');
+	console.info('');
 
 	// Query statements
 	let query = db.collection('statements').where('evaluation.numberOfEvaluators', '>', 0);
 	if (PARENT_STATEMENT_ID) {
-		query = db.collection('statements')
+		query = db
+			.collection('statements')
 			.where('parentId', '==', PARENT_STATEMENT_ID)
 			.where('evaluation.numberOfEvaluators', '>', 0);
 	}
 
 	const statementsSnapshot = await query.get();
-	console.log(`Found ${statementsSnapshot.size} statements with evaluations\n`);
+	console.info(`Found ${statementsSnapshot.size} statements with evaluations\n`);
 
 	if (statementsSnapshot.empty) {
-		console.log('No statements to process');
+		console.info('No statements to process');
+
 		return;
 	}
 
@@ -151,7 +157,10 @@ async function migrateProConCounts(): Promise<void> {
 		const currentPro = data.evaluation?.numberOfProEvaluators;
 		const currentCon = data.evaluation?.numberOfConEvaluators;
 
-		if (currentPro !== counts.numberOfProEvaluators || currentCon !== counts.numberOfConEvaluators) {
+		if (
+			currentPro !== counts.numberOfProEvaluators ||
+			currentCon !== counts.numberOfConEvaluators
+		) {
 			updates.push({
 				statementId,
 				statement: data.statement,
@@ -164,20 +173,22 @@ async function migrateProConCounts(): Promise<void> {
 
 		processed++;
 		if (processed % 100 === 0) {
-			console.log(`Processed ${processed}/${total} statements...`);
+			console.info(`Processed ${processed}/${total} statements...`);
 		}
 	}
 
-	console.log(`\nStatements needing update: ${updates.length}\n`);
+	console.info(`\nStatements needing update: ${updates.length}\n`);
 
 	// Preview changes
 	if (updates.length > 0) {
-		console.log(`${'─'.repeat(80)}`);
-		console.log('PREVIEW OF CHANGES:');
-		console.log(`${'─'.repeat(80)}\n`);
+		console.info(`${'─'.repeat(80)}`);
+		console.info('PREVIEW OF CHANGES:');
+		console.info(`${'─'.repeat(80)}\n`);
 
-		console.log('Statement                                    | Current Pro | New Pro | Current Con | New Con');
-		console.log(`${'─'.repeat(100)}`);
+		console.info(
+			'Statement                                    | Current Pro | New Pro | Current Con | New Con',
+		);
+		console.info(`${'─'.repeat(100)}`);
 
 		// Show first 50 changes
 		const previewUpdates = updates.slice(0, 50);
@@ -188,19 +199,19 @@ async function migrateProConCounts(): Promise<void> {
 			const curCon = (update.currentCon?.toString() ?? 'N/A').padStart(11);
 			const newCon = update.newCon.toString().padStart(7);
 
-			console.log(`${title} | ${curPro} | ${newPro} | ${curCon} | ${newCon}`);
+			console.info(`${title} | ${curPro} | ${newPro} | ${curCon} | ${newCon}`);
 		}
 
 		if (updates.length > 50) {
-			console.log(`... and ${updates.length - 50} more`);
+			console.info(`... and ${updates.length - 50} more`);
 		}
 	}
 
 	// Apply changes
 	if (!DRY_RUN && updates.length > 0) {
-		console.log(`\n${'─'.repeat(80)}`);
-		console.log('APPLYING CHANGES...');
-		console.log(`${'─'.repeat(80)}\n`);
+		console.info(`\n${'─'.repeat(80)}`);
+		console.info('APPLYING CHANGES...');
+		console.info(`${'─'.repeat(80)}\n`);
 
 		// Process in batches
 		let batchCount = 0;
@@ -212,14 +223,14 @@ async function migrateProConCounts(): Promise<void> {
 			batch.update(ref, {
 				'evaluation.numberOfProEvaluators': update.newPro,
 				'evaluation.numberOfConEvaluators': update.newCon,
-				'lastUpdate': Date.now(),
+				lastUpdate: Date.now(),
 			});
 			batchItems++;
 
 			if (batchItems >= BATCH_SIZE) {
 				await batch.commit();
 				batchCount++;
-				console.log(`Committed batch ${batchCount} (${batchItems} updates)`);
+				console.info(`Committed batch ${batchCount} (${batchItems} updates)`);
 				batch = db.batch();
 				batchItems = 0;
 			}
@@ -229,28 +240,28 @@ async function migrateProConCounts(): Promise<void> {
 		if (batchItems > 0) {
 			await batch.commit();
 			batchCount++;
-			console.log(`Committed batch ${batchCount} (${batchItems} updates)`);
+			console.info(`Committed batch ${batchCount} (${batchItems} updates)`);
 		}
 
-		console.log(`\nTotal batches committed: ${batchCount}`);
-		console.log(`Total statements updated: ${updates.length}`);
+		console.info(`\nTotal batches committed: ${batchCount}`);
+		console.info(`Total statements updated: ${updates.length}`);
 	} else if (DRY_RUN) {
-		console.log(`\nDRY RUN - No changes written. Set DRY_RUN = false to apply changes.`);
+		console.info(`\nDRY RUN - No changes written. Set DRY_RUN = false to apply changes.`);
 	}
 
 	// Summary
-	console.log(`\n${'='.repeat(80)}`);
-	console.log('SUMMARY');
-	console.log(`${'='.repeat(80)}`);
-	console.log(`Total statements processed: ${processed}`);
-	console.log(`Statements needing update: ${updates.length}`);
-	console.log(`${'='.repeat(80)}\n`);
+	console.info(`\n${'='.repeat(80)}`);
+	console.info('SUMMARY');
+	console.info(`${'='.repeat(80)}`);
+	console.info(`Total statements processed: ${processed}`);
+	console.info(`Statements needing update: ${updates.length}`);
+	console.info(`${'='.repeat(80)}\n`);
 }
 
 // Run
 migrateProConCounts()
 	.then(() => process.exit(0))
-	.catch(err => {
+	.catch((err) => {
 		console.error('Error:', err);
 		process.exit(1);
 	});

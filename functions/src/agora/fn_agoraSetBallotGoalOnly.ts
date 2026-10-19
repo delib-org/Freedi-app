@@ -88,7 +88,9 @@ export const agoraSetBallotGoalOnly = onCall(
 			const orphaned = votesSnap.docs.filter((docSnap) => {
 				const vote = docSnap.data() as Vote;
 
-				return !!vote.statementId && vote.statementId !== NO_VOTE && !standing.has(vote.statementId);
+				return (
+					!!vote.statementId && vote.statementId !== NO_VOTE && !standing.has(vote.statementId)
+				);
 			});
 			await Promise.all(
 				orphaned.map((docSnap) =>

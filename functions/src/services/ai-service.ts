@@ -917,7 +917,9 @@ Return JSON format:
 		if (Array.isArray(parsed.paragraphs)) {
 			// Map parsed paragraphs to include sourceStatementId
 			const mergedParagraphs: ParagraphForMerge[] = parsed.paragraphs
-				.filter((p: { content?: unknown }) => typeof p.content === 'string' && p.content.trim() !== '')
+				.filter(
+					(p: { content?: unknown }) => typeof p.content === 'string' && p.content.trim() !== '',
+				)
 				.map((p: { content: string; isNew: boolean }) => ({
 					content: p.content,
 					// If it's new content, mark it with the source statement ID

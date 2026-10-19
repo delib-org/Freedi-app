@@ -45,7 +45,8 @@ async function main(): Promise<void> {
 	const questionParents: string[] = Array.isArray(q.parents) ? (q.parents as string[]) : [];
 	// The correct ancestor chain for a DIRECT child of this question.
 	const correctParents = [...new Set([...questionParents, questionId])];
-	const correctTopParentId = (q.topParentId as string | undefined) || correctParents[0] || questionId;
+	const correctTopParentId =
+		(q.topParentId as string | undefined) || correctParents[0] || questionId;
 
 	console.info(`Project: ${project}`);
 	console.info(`Question: ${questionId}`);
@@ -85,11 +86,13 @@ async function main(): Promise<void> {
 
 	if (!apply) {
 		console.info('\nDRY RUN complete. Re-run with --apply to write these changes.');
+
 		return;
 	}
 
 	if (toFix.length === 0) {
 		console.info('\nNothing to write.');
+
 		return;
 	}
 

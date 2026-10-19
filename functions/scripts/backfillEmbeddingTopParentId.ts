@@ -23,7 +23,11 @@
  *   Emulator (FIRESTORE_EMULATOR_HOST set) needs no --confirm-project.
  */
 import { initializeApp, getApps } from 'firebase-admin/app';
-import { getFirestore, type DocumentData, type QueryDocumentSnapshot } from 'firebase-admin/firestore';
+import {
+	getFirestore,
+	type DocumentData,
+	type QueryDocumentSnapshot,
+} from 'firebase-admin/firestore';
 import { Collections } from '@freedi/shared-types';
 import { DEFAULT_EMBEDDING_MODEL } from '../src/services/embedding-model-resolver';
 

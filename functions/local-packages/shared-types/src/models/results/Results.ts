@@ -10,7 +10,7 @@ export enum ResultsBy {
 
 export enum CutoffBy {
 	topOptions = 'topOptions',
-	aboveThreshold = 'aboveThreshold'
+	aboveThreshold = 'aboveThreshold',
 }
 
 export type Results = {
@@ -21,7 +21,7 @@ export type Results = {
 export const ResultsSettingsSchema = object({
 	resultsBy: enum_(ResultsBy),
 	cutoffNumber: optional(number()),
-	cutoffBy: optional( enum_(CutoffBy)),
+	cutoffBy: optional(enum_(CutoffBy)),
 	numberOfResults: optional(number()),
 	numberOfSelections: optional(number()),
 	deep: optional(number()),
@@ -30,7 +30,7 @@ export const ResultsSettingsSchema = object({
 
 export type ResultsSettings = InferOutput<typeof ResultsSettingsSchema>;
 
-export const defaultResultsSettings:ResultsSettings = {
+export const defaultResultsSettings: ResultsSettings = {
 	resultsBy: ResultsBy.consensus,
 	cutoffNumber: 0,
 	cutoffBy: CutoffBy.topOptions,

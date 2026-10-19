@@ -31,10 +31,12 @@ function findServiceAccountKey(): ServiceAccount | null {
 
 	for (const keyPath of possiblePaths) {
 		if (fs.existsSync(keyPath)) {
-			console.log(`Found service account key at: ${keyPath}`);
+			console.info(`Found service account key at: ${keyPath}`);
+
 			return JSON.parse(fs.readFileSync(keyPath, 'utf-8')) as ServiceAccount;
 		}
 	}
+
 	return null;
 }
 
@@ -43,7 +45,7 @@ if (!getApps().length) {
 	const serviceAccount = findServiceAccountKey();
 	if (serviceAccount) {
 		initializeApp({ credential: cert(serviceAccount) });
-		console.log('Initialized Firebase Admin');
+		console.info('Initialized Firebase Admin');
 	} else {
 		console.error('No service account key found!');
 		process.exit(1);
@@ -76,12 +78,12 @@ interface StatementData {
 function calcStandardError(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
+	numberOfEvaluators: number,
 ): number {
 	if (numberOfEvaluators <= 1) return FLOOR_STD_DEV;
 
 	const mean = sumEvaluations / numberOfEvaluators;
-	const variance = (sumSquaredEvaluations / numberOfEvaluators) - (mean * mean);
+	const variance = sumSquaredEvaluations / numberOfEvaluators - mean * mean;
 	const safeVariance = Math.max(0, variance);
 	const observedStdDev = Math.sqrt(safeVariance);
 	const adjustedStdDev = Math.max(observedStdDev, FLOOR_STD_DEV);
@@ -96,7 +98,7 @@ function calcStandardError(
 function calcAgreement(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
+	numberOfEvaluators: number,
 ): number {
 	if (numberOfEvaluators === 0) return 0;
 
@@ -112,20 +114,22 @@ function calcAgreement(
 }
 
 async function recalculateAgreement(): Promise<void> {
-	console.log(`\n${'='.repeat(80)}`);
-	console.log(`RECALCULATE AGREEMENT - Proportional Penalty Formula`);
-	console.log(`${'='.repeat(80)}`);
-	console.log(`Mode: ${DRY_RUN ? 'DRY RUN (no changes will be written)' : 'LIVE (changes will be written)'}`);
-	console.log(`Parent Statement ID: ${PARENT_STATEMENT_ID}\n`);
+	console.info(`\n${'='.repeat(80)}`);
+	console.info(`RECALCULATE AGREEMENT - Proportional Penalty Formula`);
+	console.info(`${'='.repeat(80)}`);
+	console.info(
+		`Mode: ${DRY_RUN ? 'DRY RUN (no changes will be written)' : 'LIVE (changes will be written)'}`,
+	);
+	console.info(`Parent Statement ID: ${PARENT_STATEMENT_ID}\n`);
 
 	// First, check the parent statement itself
 	const parentDoc = await db.collection('statements').doc(PARENT_STATEMENT_ID).get();
 	if (parentDoc.exists) {
 		const parentData = parentDoc.data() as StatementData;
-		console.log(`Parent statement: "${parentData.statement?.substring(0, 60)}..."`);
-		console.log(`Parent's topParentId: ${parentData.topParentId}\n`);
+		console.info(`Parent statement: "${parentData.statement?.substring(0, 60)}..."`);
+		console.info(`Parent's topParentId: ${parentData.topParentId}\n`);
 	} else {
-		console.log(`Parent statement ${PARENT_STATEMENT_ID} not found!\n`);
+		console.info(`Parent statement ${PARENT_STATEMENT_ID} not found!\n`);
 	}
 
 	// 1. Get all statements under this parent - try both topParentId and parentId
@@ -134,33 +138,35 @@ async function recalculateAgreement(): Promise<void> {
 		db.collection('statements').where('parentId', '==', PARENT_STATEMENT_ID).get(),
 	]);
 
-	console.log(`Found ${byTopParent.size} statements by topParentId`);
-	console.log(`Found ${byParent.size} statements by parentId\n`);
+	console.info(`Found ${byTopParent.size} statements by topParentId`);
+	console.info(`Found ${byParent.size} statements by parentId\n`);
 
 	// Merge results (avoid duplicates)
 	const seenIds = new Set<string>();
-	const allDocs = [...byTopParent.docs, ...byParent.docs].filter(doc => {
+	const allDocs = [...byTopParent.docs, ...byParent.docs].filter((doc) => {
 		if (seenIds.has(doc.id)) return false;
 		seenIds.add(doc.id);
+
 		return true;
 	});
 
 	const statementsSnapshot = { size: allDocs.length, docs: allDocs };
 
-	const allStatements: StatementData[] = statementsSnapshot.docs.map(doc => ({
-		...doc.data() as StatementData,
+	const allStatements: StatementData[] = statementsSnapshot.docs.map((doc) => ({
+		...(doc.data() as StatementData),
 		statementId: doc.id,
 	}));
 
 	// 2. Filter to statements with evaluation data
-	const statementsWithEvaluation = allStatements.filter(s =>
-		s.evaluation?.numberOfEvaluators &&
-		s.evaluation.numberOfEvaluators > 0 &&
-		s.evaluation.sumEvaluations !== undefined &&
-		s.evaluation.sumSquaredEvaluations !== undefined
+	const statementsWithEvaluation = allStatements.filter(
+		(s) =>
+			s.evaluation?.numberOfEvaluators &&
+			s.evaluation.numberOfEvaluators > 0 &&
+			s.evaluation.sumEvaluations !== undefined &&
+			s.evaluation.sumSquaredEvaluations !== undefined,
 	);
 
-	console.log(`Statements with evaluation data: ${statementsWithEvaluation.length}\n`);
+	console.info(`Statements with evaluation data: ${statementsWithEvaluation.length}\n`);
 
 	// 3. Calculate changes
 	const changes: Array<{
@@ -178,14 +184,14 @@ async function recalculateAgreement(): Promise<void> {
 		const newAgreement = calcAgreement(
 			eval_.sumEvaluations!,
 			eval_.sumSquaredEvaluations!,
-			eval_.numberOfEvaluators!
+			eval_.numberOfEvaluators!,
 		);
 
 		const mean = eval_.sumEvaluations! / eval_.numberOfEvaluators!;
 		const sem = calcStandardError(
 			eval_.sumEvaluations!,
 			eval_.sumSquaredEvaluations!,
-			eval_.numberOfEvaluators!
+			eval_.numberOfEvaluators!,
 		);
 
 		// Only include if there's a meaningful difference
@@ -200,18 +206,22 @@ async function recalculateAgreement(): Promise<void> {
 		}
 	}
 
-	console.log(`Statements needing update: ${changes.length}\n`);
+	console.info(`Statements needing update: ${changes.length}\n`);
 
 	// 4. Preview changes
-	console.log(`${'─'.repeat(80)}`);
-	console.log('PREVIEW OF CHANGES:');
-	console.log(`${'─'.repeat(80)}\n`);
+	console.info(`${'─'.repeat(80)}`);
+	console.info('PREVIEW OF CHANGES:');
+	console.info(`${'─'.repeat(80)}\n`);
 
 	// Sort by change magnitude for visibility
-	changes.sort((a, b) => Math.abs(b.oldAgreement - b.newAgreement) - Math.abs(a.oldAgreement - a.newAgreement));
+	changes.sort(
+		(a, b) => Math.abs(b.oldAgreement - b.newAgreement) - Math.abs(a.oldAgreement - a.newAgreement),
+	);
 
-	console.log('Statement                                    | Evals | Mean   | SEM    | Old    | New    | Diff');
-	console.log(`${'─'.repeat(100)}`);
+	console.info(
+		'Statement                                    | Evals | Mean   | SEM    | Old    | New    | Diff',
+	);
+	console.info(`${'─'.repeat(100)}`);
 
 	for (const change of changes) {
 		const title = change.stmt.statement.substring(0, 40).padEnd(40);
@@ -222,25 +232,27 @@ async function recalculateAgreement(): Promise<void> {
 		const newVal = change.newAgreement.toFixed(3).padStart(6);
 		const diff = (change.newAgreement - change.oldAgreement).toFixed(3).padStart(6);
 
-		console.log(`${title} | ${evals} | ${mean} | ${sem} | ${old} | ${newVal} | ${diff}`);
+		console.info(`${title} | ${evals} | ${mean} | ${sem} | ${old} | ${newVal} | ${diff}`);
 	}
 
 	// Show out-of-range corrections
-	const outOfRange = changes.filter(c => c.oldAgreement < -1 || c.oldAgreement > 1);
+	const outOfRange = changes.filter((c) => c.oldAgreement < -1 || c.oldAgreement > 1);
 	if (outOfRange.length > 0) {
-		console.log(`\n${'─'.repeat(80)}`);
-		console.log(`OUT-OF-RANGE CORRECTIONS (${outOfRange.length}):`);
-		console.log(`${'─'.repeat(80)}`);
+		console.info(`\n${'─'.repeat(80)}`);
+		console.info(`OUT-OF-RANGE CORRECTIONS (${outOfRange.length}):`);
+		console.info(`${'─'.repeat(80)}`);
 		for (const c of outOfRange) {
-			console.log(`  ${c.stmt.statement.substring(0, 50)}: ${c.oldAgreement.toFixed(3)} -> ${c.newAgreement.toFixed(3)}`);
+			console.info(
+				`  ${c.stmt.statement.substring(0, 50)}: ${c.oldAgreement.toFixed(3)} -> ${c.newAgreement.toFixed(3)}`,
+			);
 		}
 	}
 
 	// 5. Apply changes if not dry run
 	if (!DRY_RUN) {
-		console.log(`\n${'─'.repeat(80)}`);
-		console.log('APPLYING CHANGES...');
-		console.log(`${'─'.repeat(80)}\n`);
+		console.info(`\n${'─'.repeat(80)}`);
+		console.info('APPLYING CHANGES...');
+		console.info(`${'─'.repeat(80)}\n`);
 
 		const batch = db.batch();
 		let updateCount = 0;
@@ -249,33 +261,33 @@ async function recalculateAgreement(): Promise<void> {
 			const ref = db.collection('statements').doc(change.stmt.statementId);
 			batch.update(ref, {
 				'evaluation.agreement': change.newAgreement,
-				'consensus': change.newAgreement,
-				'lastUpdate': Date.now(),
+				consensus: change.newAgreement,
+				lastUpdate: Date.now(),
 			});
 			updateCount++;
 		}
 
 		await batch.commit();
-		console.log(`Updated ${updateCount} statements`);
+		console.info(`Updated ${updateCount} statements`);
 	} else {
-		console.log(`\nDRY RUN - No changes written. Set DRY_RUN = false to apply changes.`);
+		console.info(`\nDRY RUN - No changes written. Set DRY_RUN = false to apply changes.`);
 	}
 
 	// Summary stats
-	console.log(`\n${'='.repeat(80)}`);
-	console.log('SUMMARY');
-	console.log(`${'='.repeat(80)}`);
-	console.log(`Total statements: ${allStatements.length}`);
-	console.log(`With evaluation data: ${statementsWithEvaluation.length}`);
-	console.log(`Needing update: ${changes.length}`);
-	console.log(`Out-of-range corrections: ${outOfRange.length}`);
-	console.log(`${'='.repeat(80)}\n`);
+	console.info(`\n${'='.repeat(80)}`);
+	console.info('SUMMARY');
+	console.info(`${'='.repeat(80)}`);
+	console.info(`Total statements: ${allStatements.length}`);
+	console.info(`With evaluation data: ${statementsWithEvaluation.length}`);
+	console.info(`Needing update: ${changes.length}`);
+	console.info(`Out-of-range corrections: ${outOfRange.length}`);
+	console.info(`${'='.repeat(80)}\n`);
 }
 
 // Run
 recalculateAgreement()
 	.then(() => process.exit(0))
-	.catch(err => {
+	.catch((err) => {
 		console.error('Error:', err);
 		process.exit(1);
 	});

@@ -19,9 +19,7 @@ import { getAuth } from 'firebase-admin/auth';
 const email = process.argv[2];
 const project = process.env.GCLOUD_PROJECT;
 if (!email || !project) {
-	console.error(
-		'Usage: GCLOUD_PROJECT=<proj> npx tsx scripts/diagnoseHomeLazyLoad.ts <email>',
-	);
+	console.error('Usage: GCLOUD_PROJECT=<proj> npx tsx scripts/diagnoseHomeLazyLoad.ts <email>');
 	process.exit(1);
 }
 if (getApps().length === 0) initializeApp({ projectId: project });
@@ -101,11 +99,17 @@ async function main(): Promise<void> {
 	const numericCursor =
 		typeof boundaryValue === 'number'
 			? boundaryValue
-			: (boundaryValue?.toMillis?.() as number | undefined) ?? 0;
-	const byNumber = await topQuery.startAfter(numericCursor).limit(INITIAL + 1).get();
+			: ((boundaryValue?.toMillis?.() as number | undefined) ?? 0);
+	const byNumber = await topQuery
+		.startAfter(numericCursor)
+		.limit(INITIAL + 1)
+		.get();
 
 	// Cursor B: DocumentSnapshot (type-safe, matches the stored field exactly).
-	const bySnapshot = await topQuery.startAfter(boundaryDoc).limit(INITIAL + 1).get();
+	const bySnapshot = await topQuery
+		.startAfter(boundaryDoc)
+		.limit(INITIAL + 1)
+		.get();
 
 	console.info(`\ncursor by NUMBER  (${numericCursor}) → next-page size: ${byNumber.size}`);
 	console.info(`cursor by SNAPSHOT            → next-page size: ${bySnapshot.size}`);

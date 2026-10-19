@@ -82,7 +82,9 @@ async function main(): Promise<void> {
 	}
 
 	console.info(`[restore] question=${args.questionId}`);
-	console.info(`[restore] as-of   =${asOfMs === Number.MAX_SAFE_INTEGER ? 'latest' : new Date(asOfMs).toISOString()}`);
+	console.info(
+		`[restore] as-of   =${asOfMs === Number.MAX_SAFE_INTEGER ? 'latest' : new Date(asOfMs).toISOString()}`,
+	);
 	console.info(`[restore] mode    =${args.apply ? 'APPLY (writes)' : 'DRY-RUN (read-only)'}`);
 	console.info('');
 
@@ -108,6 +110,7 @@ async function main(): Promise<void> {
 
 	if (latestByUser.size === 0) {
 		console.info('Nothing to restore. Exit.');
+
 		return;
 	}
 
@@ -120,13 +123,16 @@ async function main(): Promise<void> {
 	let alreadyMatches = 0;
 	let redactedSkipped = 0;
 
-	const ops: Array<{ kind: 'set' | 'delete'; userId: string; payload?: Record<string, unknown> }> = [];
+	const ops: Array<{ kind: 'set' | 'delete'; userId: string; payload?: Record<string, unknown> }> =
+		[];
 
 	for (const [userId, entry] of latestByUser) {
 		// Refuse to restore from an erased entry — the values were intentionally
 		// stripped via GDPR/Israeli erasure callable. Operator must investigate.
 		if (entry.redactedAt) {
-			console.info(`  [skip] ${userId.slice(0, 10)}.. erased at ${new Date(entry.redactedAt).toISOString()}`);
+			console.info(
+				`  [skip] ${userId.slice(0, 10)}.. erased at ${new Date(entry.redactedAt).toISOString()}`,
+			);
 			redactedSkipped++;
 			continue;
 		}
@@ -165,7 +171,8 @@ async function main(): Promise<void> {
 			live &&
 			JSON.stringify(live.values ?? {}) === JSON.stringify(targetPayload.values) &&
 			(live.displayName ?? '') === targetPayload.displayName &&
-			((live.role as string | undefined) ?? null) === ((targetPayload.role as string | undefined) ?? null);
+			((live.role as string | undefined) ?? null) ===
+				((targetPayload.role as string | undefined) ?? null);
 
 		if (matchesLive) {
 			alreadyMatches++;
@@ -192,6 +199,7 @@ async function main(): Promise<void> {
 	if (!args.apply) {
 		console.info('');
 		console.info('Dry run complete. Re-run with --apply to write.');
+
 		return;
 	}
 

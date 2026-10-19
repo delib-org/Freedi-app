@@ -7,9 +7,6 @@ export enum StatementType {
 	comment = 'comment',
 }
 
-
-
-
 export enum DeliberativeElement {
 	explanation = 'explanation',
 	needs = 'needs',
@@ -31,7 +28,7 @@ export enum QuestionStage {
 
 export enum Access {
 	/**
-	 * Completely unrestricted access - users can join instantly without 
+	 * Completely unrestricted access - users can join instantly without
 	 * providing any information, authentication, or approval
 	 */
 	public = 'public',
@@ -61,7 +58,7 @@ export enum Access {
 	moderated = 'moderated',
 
 	/**
-	 * Invitation-only - users cannot request access and must be 
+	 * Invitation-only - users cannot request access and must be
 	 * directly invited by an administrator to join
 	 */
 	secret = 'secret',
@@ -127,8 +124,6 @@ export enum SortType {
 	accepted = 'accepted',
 	backendOrder = 'backend-order',
 }
-
-
 
 export enum QuestionStep {
 	explanation = 'explanation',

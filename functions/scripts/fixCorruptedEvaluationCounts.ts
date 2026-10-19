@@ -34,7 +34,9 @@ if (getApps().length === 0) {
 		// Emulator
 		initializeApp({ projectId: 'demo-test' });
 	} else {
-		console.error('No credentials provided. Set GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_PROJECT_ID, or FIRESTORE_EMULATOR_HOST');
+		console.error(
+			'No credentials provided. Set GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_PROJECT_ID, or FIRESTORE_EMULATOR_HOST',
+		);
 		process.exit(1);
 	}
 }
@@ -70,6 +72,7 @@ async function fixStatementEvaluationCounts(statementId: string): Promise<FixRes
 
 	if (!statementDoc.exists) {
 		console.error(`Statement ${statementId} not found`);
+
 		return null;
 	}
 
@@ -131,6 +134,7 @@ async function fixStatementEvaluationCounts(statementId: string): Promise<FixRes
 
 	if (!hasProMismatch && !hasConMismatch && !hasEvaluatorMismatch) {
 		console.info(`Statement ${statementId} has correct counts, skipping`);
+
 		return null;
 	}
 
@@ -218,8 +222,12 @@ async function findAndFixCorruptedStatements(parentId?: string): Promise<void> {
 		if (result) {
 			results.push(result);
 			console.info(`Fixed: ${result.statementId} - "${result.statement}"`);
-			console.info(`  Before: pro=${result.before.numberOfProEvaluators}, con=${result.before.numberOfConEvaluators}, total=${result.before.numberOfEvaluators}`);
-			console.info(`  After:  pro=${result.after.numberOfProEvaluators}, con=${result.after.numberOfConEvaluators}, total=${result.after.numberOfEvaluators}`);
+			console.info(
+				`  Before: pro=${result.before.numberOfProEvaluators}, con=${result.before.numberOfConEvaluators}, total=${result.before.numberOfEvaluators}`,
+			);
+			console.info(
+				`  After:  pro=${result.after.numberOfProEvaluators}, con=${result.after.numberOfConEvaluators}, total=${result.after.numberOfEvaluators}`,
+			);
 		}
 	}
 
@@ -230,7 +238,9 @@ async function findAndFixCorruptedStatements(parentId?: string): Promise<void> {
 	if (results.length > 0) {
 		console.info('\nFixed statements:');
 		for (const result of results) {
-			console.info(`  - ${result.statementId}: pro ${result.before.numberOfProEvaluators} -> ${result.after.numberOfProEvaluators}, con ${result.before.numberOfConEvaluators} -> ${result.after.numberOfConEvaluators}`);
+			console.info(
+				`  - ${result.statementId}: pro ${result.before.numberOfProEvaluators} -> ${result.after.numberOfProEvaluators}, con ${result.before.numberOfConEvaluators} -> ${result.after.numberOfConEvaluators}`,
+			);
 		}
 	}
 }

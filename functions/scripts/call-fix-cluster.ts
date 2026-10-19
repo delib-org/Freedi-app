@@ -2,10 +2,13 @@
  * Script to call the fixClusterIntegration function
  * Run with: cd functions && npx tsx scripts/call-fix-cluster.ts
  */
-import * as admin from "firebase-admin";
+import * as admin from 'firebase-admin';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 // Initialize Firebase Admin
-const serviceAccount = require("./serviceAccountKey.json");
+const serviceAccount = JSON.parse(readFileSync(join(__dirname, 'serviceAccountKey.json'), 'utf8'));
+
 admin.initializeApp({
 	credential: admin.credential.cert(serviceAccount),
 });
@@ -13,79 +16,84 @@ admin.initializeApp({
 const db = admin.firestore();
 
 async function main() {
-	const clusterId = "Prdiw8iZeL3z7xV69eTw";
+	const clusterId = 'Prdiw8iZeL3z7xV69eTw';
 
 	// Dog enforcement source IDs (excluding dog park statements)
 	const sourceIds = [
-		"506TXDMLbTeelXQJ3Tj3",  // כלבים משוטטים - stray dogs
-		"Cd01Rcz7GwVESp9pQEzG",  // טיפול בכלבים משוטטים - treatment of stray dogs
-		"lIRoox57FPXwAdGd8v91",  // לטפל בכלבים המשוטטים - handle stray dogs + enforcement
-		"FYwOCK5BR3HKHv5cfAz1",  // לתגבר אכיפה - dog poop enforcement
-		"Xug6gVVHaPydTDT4HNFU",  // כל מה שקשור לנושא הכלבים - dogs threatening
-		"qSTbcxNqtPix7KBMUSEs",  // איסוף קקי של הכלבים - dog poop collection
-		"layP2ip8NpDiCrYOSQNR",  // אכיפה של נושא הכלבים - dog enforcement
-		"uGCBCAiwPFudn7JL9JAe",  // אכיפת בעלי כלבים - dog poop enforcement
-		"E5YWInsaWe4AUhFZrkKG",  // כלבים לא קשורים - dogs not tied
-		"AF0pZ2m4dry4kGktQZWR",  // כלבים לא קשורים כולל הקקי - dogs not tied + poop
-		"2qcSw3rR7nrPHrIrmErT",  // כלבים משוטטים או ללא רצועה לאכוף - stray dogs + enforcement
+		'506TXDMLbTeelXQJ3Tj3', // כלבים משוטטים - stray dogs
+		'Cd01Rcz7GwVESp9pQEzG', // טיפול בכלבים משוטטים - treatment of stray dogs
+		'lIRoox57FPXwAdGd8v91', // לטפל בכלבים המשוטטים - handle stray dogs + enforcement
+		'FYwOCK5BR3HKHv5cfAz1', // לתגבר אכיפה - dog poop enforcement
+		'Xug6gVVHaPydTDT4HNFU', // כל מה שקשור לנושא הכלבים - dogs threatening
+		'qSTbcxNqtPix7KBMUSEs', // איסוף קקי של הכלבים - dog poop collection
+		'layP2ip8NpDiCrYOSQNR', // אכיפה של נושא הכלבים - dog enforcement
+		'uGCBCAiwPFudn7JL9JAe', // אכיפת בעלי כלבים - dog poop enforcement
+		'E5YWInsaWe4AUhFZrkKG', // כלבים לא קשורים - dogs not tied
+		'AF0pZ2m4dry4kGktQZWR', // כלבים לא קשורים כולל הקקי - dogs not tied + poop
+		'2qcSw3rR7nrPHrIrmErT', // כלבים משוטטים או ללא רצועה לאכוף - stray dogs + enforcement
 	];
 
 	// Excluded: JkokMOhPJfpic3h8UeDx (dog park) and FnV0walLzOXtjmEh6qa3 (dog park)
 
-	console.log("=== Fix Cluster Integration ===");
-	console.log("Cluster ID:", clusterId);
-	console.log("Source IDs:", sourceIds);
-	console.log("Source count:", sourceIds.length);
-	console.log("");
+	console.info('=== Fix Cluster Integration ===');
+	console.info('Cluster ID:', clusterId);
+	console.info('Source IDs:', sourceIds);
+	console.info('Source count:', sourceIds.length);
+	console.info('');
 
 	// First, let's do a dry run manually to see what would happen
-	console.log("=== DRY RUN - Checking current state ===");
+	console.info('=== DRY RUN - Checking current state ===');
 
 	// Get cluster
-	const clusterDoc = await db.collection("statements").doc(clusterId).get();
+	const clusterDoc = await db.collection('statements').doc(clusterId).get();
 	if (!clusterDoc.exists) {
-		console.error("Cluster not found!");
+		console.error('Cluster not found!');
 		process.exit(1);
 	}
 
 	const cluster = clusterDoc.data()!;
-	console.log("\nCurrent cluster state:");
-	console.log("  Statement:", cluster.statement);
-	console.log("  Consensus:", cluster.consensus?.toFixed(3));
-	console.log("  Evaluators:", cluster.evaluation?.numberOfEvaluators);
-	console.log("  Pro:", cluster.evaluation?.numberOfProEvaluators);
-	console.log("  Con:", cluster.evaluation?.numberOfConEvaluators);
-	console.log("  isCluster:", cluster.isCluster);
-	console.log("  integratedOptions:", cluster.integratedOptions);
+	console.info('\nCurrent cluster state:');
+	console.info('  Statement:', cluster.statement);
+	console.info('  Consensus:', cluster.consensus?.toFixed(3));
+	console.info('  Evaluators:', cluster.evaluation?.numberOfEvaluators);
+	console.info('  Pro:', cluster.evaluation?.numberOfProEvaluators);
+	console.info('  Con:', cluster.evaluation?.numberOfConEvaluators);
+	console.info('  isCluster:', cluster.isCluster);
+	console.info('  integratedOptions:', cluster.integratedOptions);
 
 	// Get source details
-	console.log("\nSource statements:");
+	console.info('\nSource statements:');
 	for (const sourceId of sourceIds) {
-		const sourceDoc = await db.collection("statements").doc(sourceId).get();
+		const sourceDoc = await db.collection('statements').doc(sourceId).get();
 		if (sourceDoc.exists) {
 			const source = sourceDoc.data()!;
-			console.log(`  ${sourceId}: ${source.statement?.substring(0, 50)}...`);
-			console.log(`    Consensus: ${source.consensus?.toFixed(3)}, Evals: ${source.evaluation?.numberOfEvaluators}`);
+			console.info(`  ${sourceId}: ${source.statement?.substring(0, 50)}...`);
+			console.info(
+				`    Consensus: ${source.consensus?.toFixed(3)}, Evals: ${source.evaluation?.numberOfEvaluators}`,
+			);
 		} else {
-			console.log(`  ${sourceId}: NOT FOUND`);
+			console.info(`  ${sourceId}: NOT FOUND`);
 		}
 	}
 
 	// Collect all evaluations from sources
-	console.log("\n=== Collecting evaluations from sources ===");
-	const userEvaluations = new Map<string, {
-		evaluation: number;
-		isDirect: boolean;
-		sourceEvaluations: number[];
-	}>();
+	console.info('\n=== Collecting evaluations from sources ===');
+	const userEvaluations = new Map<
+		string,
+		{
+			evaluation: number;
+			isDirect: boolean;
+			sourceEvaluations: number[];
+		}
+	>();
 
 	for (const sourceId of sourceIds) {
 		const sourceEvals = await db
-			.collection("evaluations")
-			.where("statementId", "==", sourceId)
+			.collection('evaluations')
+			.where('statementId', '==', sourceId)
 			.get();
 
-		console.log(`Source ${sourceId}: ${sourceEvals.size} evaluations`);
+		console.info(`Source ${sourceId}: ${sourceEvals.size} evaluations`);
 
 		for (const doc of sourceEvals.docs) {
 			const evaluation = doc.data();
@@ -97,7 +105,8 @@ async function main() {
 				// Average multiple source evaluations from the same user
 				existing.sourceEvaluations.push(evaluation.evaluation);
 				existing.evaluation =
-					existing.sourceEvaluations.reduce((a: number, b: number) => a + b, 0) / existing.sourceEvaluations.length;
+					existing.sourceEvaluations.reduce((a: number, b: number) => a + b, 0) /
+					existing.sourceEvaluations.length;
 			} else if (!existing) {
 				userEvaluations.set(userId, {
 					evaluation: evaluation.evaluation,
@@ -108,13 +117,13 @@ async function main() {
 		}
 	}
 
-	console.log(`\nTotal unique users from sources: ${userEvaluations.size}`);
+	console.info(`\nTotal unique users from sources: ${userEvaluations.size}`);
 
 	// Get direct evaluations on cluster (without migratedAt)
-	console.log("\n=== Getting direct evaluations on cluster ===");
+	console.info('\n=== Getting direct evaluations on cluster ===');
 	const clusterEvals = await db
-		.collection("evaluations")
-		.where("statementId", "==", clusterId)
+		.collection('evaluations')
+		.where('statementId', '==', clusterId)
 		.get();
 
 	let directCount = 0;
@@ -136,9 +145,9 @@ async function main() {
 		});
 	}
 
-	console.log(`Total evaluations on cluster: ${clusterEvals.size}`);
-	console.log(`  Direct (no migratedAt): ${directCount}`);
-	console.log(`  Migrated: ${migratedCount}`);
+	console.info(`Total evaluations on cluster: ${clusterEvals.size}`);
+	console.info(`  Direct (no migratedAt): ${directCount}`);
+	console.info(`  Migrated: ${migratedCount}`);
 
 	// Calculate new metrics
 	let sumEvaluations = 0;
@@ -179,18 +188,20 @@ async function main() {
 		agreement = mean - penalty;
 	}
 
-	console.log("\n=== CALCULATED NEW VALUES ===");
-	console.log(`Total evaluators: ${totalEvaluators} (${proCount} pro, ${conCount} con)`);
-	console.log(`New consensus: ${agreement.toFixed(3)}`);
-	console.log(`\nCurrent consensus: ${cluster.consensus?.toFixed(3)}`);
-	console.log(`Current evaluators: ${cluster.evaluation?.numberOfEvaluators} (${cluster.evaluation?.numberOfProEvaluators} pro, ${cluster.evaluation?.numberOfConEvaluators} con)`);
+	console.info('\n=== CALCULATED NEW VALUES ===');
+	console.info(`Total evaluators: ${totalEvaluators} (${proCount} pro, ${conCount} con)`);
+	console.info(`New consensus: ${agreement.toFixed(3)}`);
+	console.info(`\nCurrent consensus: ${cluster.consensus?.toFixed(3)}`);
+	console.info(
+		`Current evaluators: ${cluster.evaluation?.numberOfEvaluators} (${cluster.evaluation?.numberOfProEvaluators} pro, ${cluster.evaluation?.numberOfConEvaluators} con)`,
+	);
 
 	// Ask for confirmation
-	console.log("\n=== WOULD YOU LIKE TO APPLY THESE CHANGES? ===");
-	console.log("To apply, run with --apply flag");
+	console.info('\n=== WOULD YOU LIKE TO APPLY THESE CHANGES? ===');
+	console.info('To apply, run with --apply flag');
 
-	if (process.argv.includes("--apply")) {
-		console.log("\n=== APPLYING CHANGES ===");
+	if (process.argv.includes('--apply')) {
+		console.info('\n=== APPLYING CHANGES ===');
 
 		const now = Date.now();
 		const batch = db.batch();
@@ -206,7 +217,7 @@ async function main() {
 			agreement,
 		};
 
-		batch.update(db.collection("statements").doc(clusterId), {
+		batch.update(db.collection('statements').doc(clusterId), {
 			isCluster: true,
 			integratedOptions: sourceIds,
 			evaluation: updatedEvaluation,
@@ -217,25 +228,25 @@ async function main() {
 
 		// Update source statements
 		for (const sourceId of sourceIds) {
-			batch.update(db.collection("statements").doc(sourceId), {
+			batch.update(db.collection('statements').doc(sourceId), {
 				integratedInto: clusterId,
 				lastUpdate: now,
 			});
 		}
 
 		await batch.commit();
-		console.log("Changes applied successfully!");
+		console.info('Changes applied successfully!');
 
 		// Verify
-		const updatedCluster = await db.collection("statements").doc(clusterId).get();
+		const updatedCluster = await db.collection('statements').doc(clusterId).get();
 		const updated = updatedCluster.data()!;
-		console.log("\nVerification - Updated cluster:");
-		console.log("  Consensus:", updated.consensus?.toFixed(3));
-		console.log("  Evaluators:", updated.evaluation?.numberOfEvaluators);
-		console.log("  Pro:", updated.evaluation?.numberOfProEvaluators);
-		console.log("  Con:", updated.evaluation?.numberOfConEvaluators);
-		console.log("  isCluster:", updated.isCluster);
-		console.log("  integratedOptions:", updated.integratedOptions?.length, "sources");
+		console.info('\nVerification - Updated cluster:');
+		console.info('  Consensus:', updated.consensus?.toFixed(3));
+		console.info('  Evaluators:', updated.evaluation?.numberOfEvaluators);
+		console.info('  Pro:', updated.evaluation?.numberOfProEvaluators);
+		console.info('  Con:', updated.evaluation?.numberOfConEvaluators);
+		console.info('  isCluster:', updated.isCluster);
+		console.info('  integratedOptions:', updated.integratedOptions?.length, 'sources');
 	}
 
 	process.exit(0);

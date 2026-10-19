@@ -144,9 +144,7 @@ export async function goalZoneCandidates(sessionId: string): Promise<VotingCandi
 	const scored = scoresSnap.docs
 		.map((docSnap) => docSnap.data() as AgoraProposalScore)
 		.filter((score) => score.hidden !== true && inBridgeZone(score))
-		.sort(
-			(a, b) => (b.classConsensus?.consensus ?? 0) - (a.classConsensus?.consensus ?? 0),
-		);
+		.sort((a, b) => (b.classConsensus?.consensus ?? 0) - (a.classConsensus?.consensus ?? 0));
 	const docs = await Promise.all(
 		scored.map((score) => db.collection(Collections.statements).doc(score.statementId).get()),
 	);

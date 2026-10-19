@@ -192,10 +192,7 @@ interface SheetCache {
 	optionTitleCol: number;
 }
 
-async function loadSheetCache(
-	sheets: sheets_v4.Sheets,
-	sheetId: string,
-): Promise<SheetCache> {
+async function loadSheetCache(sheets: sheets_v4.Sheets, sheetId: string): Promise<SheetCache> {
 	const meta = await sheets.spreadsheets.get({
 		spreadsheetId: sheetId,
 		fields: 'sheets(properties(sheetId,title))',
@@ -215,6 +212,7 @@ async function loadSheetCache(
 	const header = rows[0] ?? [];
 	const findCol = (name: string) =>
 		header.findIndex((h) => typeof h === 'string' && h.trim() === name);
+
 	return {
 		rows,
 		header,
@@ -251,12 +249,14 @@ async function appendUserRow(
 		| { displayName?: string; values?: Record<string, string> }
 		| undefined;
 
-	if (rowExistsInCache(args.cache, {
-		userId: args.userId,
-		role: args.role,
-		optionId: args.optionId,
-		optionTitle: args.optionTitle,
-	})) {
+	if (
+		rowExistsInCache(args.cache, {
+			userId: args.userId,
+			role: args.role,
+			optionId: args.optionId,
+			optionTitle: args.optionTitle,
+		})
+	) {
 		return 'skipped-already-present';
 	}
 
@@ -316,8 +316,7 @@ function rowExistsInCache(
 			if (typeof cellRole !== 'string' || cellRole !== args.role) continue;
 		}
 		const cellOptionId = cache.optionIdCol !== -1 ? row[cache.optionIdCol] : undefined;
-		const cellOptionTitle =
-			cache.optionTitleCol !== -1 ? row[cache.optionTitleCol] : undefined;
+		const cellOptionTitle = cache.optionTitleCol !== -1 ? row[cache.optionTitleCol] : undefined;
 		const optionIdMatches =
 			cache.optionIdCol !== -1 &&
 			typeof cellOptionId === 'string' &&
@@ -330,14 +329,17 @@ function rowExistsInCache(
 			cellOptionTitle !== '' &&
 			cellOptionTitle === args.optionTitle;
 		if (!optionIdMatches && !optionTitleMatches) continue;
+
 		return true;
 	}
+
 	return false;
 }
 
 async function readHeader(sheets: sheets_v4.Sheets, sheetId: string): Promise<string[]> {
 	const resp = await sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'A1:ZZ1' });
 	const row = resp.data.values?.[0] ?? [];
+
 	return row.map((c) => (typeof c === 'string' ? c : ''));
 }
 
@@ -359,6 +361,7 @@ async function ensureHeaderRow(
 
 function extractSheetId(url: string): string | null {
 	const m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+
 	return m ? m[1] : null;
 }
 
@@ -372,6 +375,7 @@ function getSheetsClient(): sheets_v4.Sheets | null {
 		key,
 		scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 	});
+
 	return google.sheets({ version: 'v4', auth });
 }
 
@@ -379,10 +383,7 @@ function loadSheetEnvFromFunctionsDotEnv(): void {
 	if (process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_SHEETS_PRIVATE_KEY) {
 		return;
 	}
-	const candidates = [
-		resolve(process.cwd(), '.env'),
-		resolve(process.cwd(), 'functions/.env'),
-	];
+	const candidates = [resolve(process.cwd(), '.env'), resolve(process.cwd(), 'functions/.env')];
 	const envPath = candidates.find((p) => existsSync(p));
 	if (!envPath) return;
 	const lines = readFileSync(envPath, 'utf-8').split('\n');
@@ -403,5 +404,6 @@ function parseArgs(argv: string[]): { questionId?: string } {
 		const a = argv[i];
 		if (a === '--question-id') out.questionId = argv[++i];
 	}
+
 	return out;
 }
