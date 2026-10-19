@@ -32,6 +32,7 @@ import {
 	getRedirectResult,
 	linkWithPopup,
 	onAuthStateChanged,
+	signOut,
 	User,
 } from 'firebase/auth';
 import {
@@ -170,6 +171,7 @@ export {
 	getRedirectResult,
 	linkWithPopup,
 	onAuthStateChanged,
+	signOut,
 	storageRef,
 	uploadBytesResumable,
 	getDownloadURL,

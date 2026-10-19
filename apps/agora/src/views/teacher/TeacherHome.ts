@@ -14,6 +14,7 @@ import { AgoraClassAggregate, AgoraSession, AgoraTopicPackage } from '@freedi/sh
 import { buildDefaultFrenchRevolutionTopic, backfillDefaultArtwork } from '../../lib/defaultTopic';
 import { LanguagePicker } from '../../components/LanguagePicker';
 import { TeacherNav } from '../../components/TeacherNav';
+import { SignOutLink } from '../../components/SignOutLink';
 import { AccessPanel } from '../../components/AccessPanel';
 import { accessState, getAccessStore, loadAccess } from '../../lib/access';
 import { isSessionLive, noteTeacherDashboard } from '../../lib/teacherNav';
@@ -398,6 +399,7 @@ export function TeacherHome(): m.Component {
 		return m('.shell', [
 			m('.shell__content.access-page', [
 				m('.sec-head', [m('h2.sec-head__title', t('teacher.title')), m(LanguagePicker)]),
+				m(SignOutLink),
 				state === 'approved' ? null : m(AccessPanel, { state, uid }),
 				m(
 					'button.btn.btn--ghost',
