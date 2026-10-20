@@ -25,15 +25,22 @@ import {
 } from 'firebase/firestore';
 import {
 	getAuth,
+	initializeAuth,
+	indexedDBLocalPersistence,
+	browserLocalPersistence,
 	Auth,
+	AuthProvider,
+	UserCredential,
 	connectAuthEmulator,
 	signInAnonymously,
 	GoogleAuthProvider,
-	signInWithPopup,
-	linkWithPopup,
+	signInWithPopup as fbSignInWithPopup,
+	linkWithPopup as fbLinkWithPopup,
 	onAuthStateChanged,
 	User,
 } from 'firebase/auth';
+import { afterLoad } from './deferWork';
+import { popupResolver, warmPopupResolver as warmSharedResolver } from './popupResolver';
 import {
 	getFunctions,
 	Functions,
@@ -77,6 +84,47 @@ let functions: Functions;
 // Null when VITE_FIREBASE_DATABASE_URL is absent — those features no-op.
 let rtdb: Database | null = null;
 
+/**
+ * Auth WITHOUT a default popup/redirect resolver.
+ *
+ * `getAuth()` installs `browserPopupRedirectResolver`, which makes Firebase load
+ * an auth iframe (iframe.js ~93 kB) plus the gapi script (~35 kB) at startup —
+ * on slow 4G that is the biggest late request, and guests (the common case)
+ * never open a popup. Instead the resolver is passed explicitly at the popup
+ * call sites below, and warmed up once the page is idle so the first Google
+ * click doesn't have to await an iframe load before `window.open` (which could
+ * make browsers block the popup).
+ */
+function createAuth(firebaseApp: FirebaseApp): Auth {
+	try {
+		return initializeAuth(firebaseApp, {
+			persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+		});
+	} catch {
+		// Already initialised (HMR / second init) — reuse it.
+		return getAuth(firebaseApp);
+	}
+}
+
+/** Pre-load the popup iframe off the critical path, via the resolver singleton
+ *  Firebase caches per class. Resolves null: no redirect is ever started here. */
+function warmPopupResolver(): void {
+	afterLoad(() => {
+		void warmSharedResolver(auth);
+	}, 5000);
+}
+
+export function signInWithPopup(
+	authInstance: Auth,
+	provider: AuthProvider,
+): Promise<UserCredential> {
+	return fbSignInWithPopup(authInstance, provider, popupResolver);
+}
+
+export function linkWithPopup(user: User, provider: AuthProvider): Promise<UserCredential> {
+	return fbLinkWithPopup(user, provider, popupResolver);
+}
+
 function init(): void {
 	if (getApps().length > 0) {
 		app = getApp();
@@ -85,7 +133,7 @@ function init(): void {
 	}
 
 	db = getFirestore(app);
-	auth = getAuth(app);
+	auth = createAuth(app);
 	functions = getFunctions(app, FUNCTIONS_REGION);
 
 	const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
@@ -123,6 +171,7 @@ function init(): void {
 }
 
 init();
+warmPopupResolver();
 
 export {
 	app,
@@ -147,8 +196,6 @@ export {
 	httpsCallable,
 	signInAnonymously,
 	GoogleAuthProvider,
-	signInWithPopup,
-	linkWithPopup,
 	onAuthStateChanged,
 	rtdbRef,
 	rtdbSet,

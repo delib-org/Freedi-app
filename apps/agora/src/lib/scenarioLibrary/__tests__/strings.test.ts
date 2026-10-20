@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { translations } from '../../i18n';
+import { translations } from '../../locales/all';
 
 /** Every `.ts` file under `dir`, so the test reads the library's real sources */
 function sources(dir: string): string[] {

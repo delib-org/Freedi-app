@@ -1,11 +1,5 @@
 /// <reference types="vite-plugin-pwa/client" />
-import { TeacherActivity } from './views/teacher/TeacherActivity';
-import { TeacherBannedWords } from './views/teacher/TeacherBannedWords';
 import { startUsageHeartbeat } from './lib/usageHeartbeat';
-import { SuperviseHome } from './views/supervise/SuperviseHome';
-import { SuperviseTeacher } from './views/supervise/SuperviseTeacher';
-import { SuperviseClass } from './views/supervise/SuperviseClass';
-import { SuperviseStudent } from './views/supervise/SuperviseStudent';
 import m from 'mithril';
 import { registerSW } from 'virtual:pwa-register';
 // Self-hosted so the PWA precaches them: classroom devices get the real faces
@@ -31,6 +25,7 @@ import './styles/theme-custom.scss';
 import { initSentry } from './lib/sentry';
 import { BootBanner, flushEarlyErrors, installRuntimeGuards, markBooted } from './lib/boot';
 import { initAuth, completeRedirectSignIn, getUserState } from './lib/user';
+import { prepareGoogleSignIn } from './lib/firebase';
 import { initI18n } from './lib/i18n';
 import { initInstallCapture } from './lib/install';
 import { getSessionState } from './lib/session';
@@ -39,22 +34,7 @@ import { applyRememberedTheme } from './lib/theme';
 import { Home } from './views/Home';
 import { JoinSession } from './views/JoinSession';
 import { GameController } from './views/GameController';
-import { TeacherHome } from './views/teacher/TeacherHome';
-import { AccessRequest } from './views/teacher/AccessRequest';
-import { TeacherSession } from './views/teacher/TeacherSession';
-import { ProjectorScreen } from './views/teacher/ProjectorScreen';
-import { TopicWizard } from './views/teacher/TopicWizard';
-import { TopicEditor } from './views/teacher/TopicEditor';
-import { StartGame } from './views/teacher/StartGame';
-import { TeacherClass } from './views/teacher/TeacherClass';
-import { TeacherStudent } from './views/teacher/TeacherStudent';
-import { MyScenarios } from './views/teacher/MyScenarios';
-import { PastLessons } from './views/teacher/PastLessons';
 import { trackRoutes } from './lib/routeTrail';
-import { GameReport } from './views/teacher/GameReport';
-import { LibraryAdmin } from './views/teacher/scenarioLibrary/LibraryAdmin';
-import { LibraryHome } from './views/teacher/scenarioLibrary/LibraryHome';
-import { LibraryScenario } from './views/teacher/scenarioLibrary/LibraryScenario';
 
 // Error reporting first, so anything thrown during boot is captured. A crash
 // here happens in front of a classroom, and until now nothing recorded it.
@@ -87,7 +67,10 @@ initAuth();
 // A teacher whose popup was blocked came back via a full page redirect; this
 // is where that round trip is collected. No-op on every other load.
 void completeRedirectSignIn();
-initI18n();
+// Mounting waits for the visitor's dictionary (Hebrew is bundled, so it is instant
+// there): every view calls t() synchronously, and mounting first would flash
+// the default language.
+const i18nReady = initI18n();
 
 // Register through the plugin's virtual module rather than the injected
 // script: with a plain register, a fresh deploy's worker takes control
@@ -162,6 +145,66 @@ function byId(component: m.ComponentTypes<{ id: string }>): m.RouteResolver<{ id
 }
 
 /**
+ * Teacher and supervisor screens are downloaded when somebody opens them.
+ * A student joining with a code never visits any of them, and they were
+ * more than half of the entry bundle. Opening one also starts warming the
+ * Google sign-in iframe, so it is ready before the button is pressed.
+ */
+type ViewModule = Record<string, unknown>;
+type Loader = () => Promise<ViewModule>;
+
+function loadView<A>(load: Loader, name: string): Promise<m.ComponentTypes<A>> {
+	prepareGoogleSignIn();
+
+	return load().then((mod) => mod[name] as m.ComponentTypes<A>);
+}
+
+function lazyView<A = Record<string, never>>(load: Loader, name: string): m.RouteResolver<A> {
+	return { onmatch: () => loadView<A>(load, name) };
+}
+
+/** `lazyView` + the keyed-by-id behaviour of `byId`. */
+function lazyById(load: Loader, name: string): m.RouteResolver<{ id: string }> {
+	return {
+		onmatch: () => loadView<{ id: string }>(load, name),
+		render(vnode) {
+			const id = String(vnode.attrs.id);
+
+			return [m(vnode.tag as m.ComponentTypes<{ id: string }>, { key: id, id })];
+		},
+	};
+}
+
+/** A lazy view keyed by two route parameters. */
+function lazyByPair<K1 extends string, K2 extends string>(
+	load: Loader,
+	name: string,
+	first: K1,
+	second: K2,
+): m.RouteResolver<Record<K1 | K2, string>> {
+	type Attrs = Record<K1 | K2, string>;
+
+	return {
+		onmatch: () => loadView<Attrs>(load, name),
+		render(vnode) {
+			const attrs = {
+				[first]: String(vnode.attrs[first]),
+				[second]: String(vnode.attrs[second]),
+			} as Attrs;
+
+			return [
+				m(vnode.tag as m.ComponentTypes<Attrs>, {
+					key: `${attrs[first]}/${attrs[second]}`,
+					...attrs,
+				}),
+			];
+		},
+	};
+}
+
+const teacherSession: Loader = () => import('./views/teacher/TeacherSession');
+
+/**
  * An old address that now lives elsewhere. Replaces the history entry, so the
  * back button does not bounce the teacher off the redirect.
  */
@@ -177,56 +220,75 @@ function redirectTo(target: (args: Record<string, string | undefined>) => string
 
 const root = document.getElementById('app');
 
-if (root) {
+function mountApp(): void {
+	if (!root) return;
+
 	trackRoutes();
 	m.route(root, '/', {
 		'/': Home,
 		'/join/:code': JoinSession,
 		'/play/:id': byId(GameController),
-		'/supervise': SuperviseHome,
-		'/supervise/teacher/:schoolId/:uid': {
-			render: (vnode) => {
-				const schoolId = String(vnode.attrs.schoolId);
-				const uid = String(vnode.attrs.uid);
-
-				return [m(SuperviseTeacher, { key: `${schoolId}/${uid}`, schoolId, uid })];
-			},
-		},
-		'/supervise/class/:id': byId(SuperviseClass),
-		'/supervise/student/:id': byId(SuperviseStudent),
-		'/teach': TeacherHome,
+		'/supervise': lazyView(() => import('./views/supervise/SuperviseHome'), 'SuperviseHome'),
+		'/supervise/teacher/:schoolId/:uid': lazyByPair(
+			() => import('./views/supervise/SuperviseTeacher'),
+			'SuperviseTeacher',
+			'schoolId',
+			'uid',
+		),
+		'/supervise/class/:id': lazyById(
+			() => import('./views/supervise/SuperviseClass'),
+			'SuperviseClass',
+		),
+		'/supervise/student/:id': lazyById(
+			() => import('./views/supervise/SuperviseStudent'),
+			'SuperviseStudent',
+		),
+		'/teach': lazyView(() => import('./views/teacher/TeacherHome'), 'TeacherHome'),
 		// Ask to teach; `?school=<id>` is a school's own sign-up link
-		'/teach/request': AccessRequest,
-		'/teach/activity': TeacherActivity,
-		'/teach/words': TeacherBannedWords,
-		'/teach/lessons': PastLessons,
-		'/teach/start': StartGame,
+		'/teach/request': lazyView(() => import('./views/teacher/AccessRequest'), 'AccessRequest'),
+		'/teach/activity': lazyView(() => import('./views/teacher/TeacherActivity'), 'TeacherActivity'),
+		'/teach/words': lazyView(
+			() => import('./views/teacher/TeacherBannedWords'),
+			'TeacherBannedWords',
+		),
+		'/teach/lessons': lazyView(() => import('./views/teacher/PastLessons'), 'PastLessons'),
+		'/teach/start': lazyView(() => import('./views/teacher/StartGame'), 'StartGame'),
 		// "Scenario" is the one word: the old /topic, /new and /library/mine
 		// links (bookmarks, e-mails, the e2e scripts) still land in the right place
-		'/teach/scenarios': MyScenarios,
-		'/teach/scenarios/new': TopicWizard,
-		'/teach/scenarios/:id': byId(TopicEditor),
+		'/teach/scenarios': lazyView(() => import('./views/teacher/MyScenarios'), 'MyScenarios'),
+		'/teach/scenarios/new': lazyView(() => import('./views/teacher/TopicWizard'), 'TopicWizard'),
+		'/teach/scenarios/:id': lazyById(() => import('./views/teacher/TopicEditor'), 'TopicEditor'),
 		'/teach/new': redirectTo(() => '/teach/scenarios/new'),
 		'/teach/topic/:id': redirectTo((args) => `/teach/scenarios/${String(args.id)}`),
-		'/teach/session/:id': byId(TeacherSession),
+		'/teach/session/:id': lazyById(teacherSession, 'TeacherSession'),
 		// The same console, showing the room as the students see it. The same
 		// keyed component on both routes, so flipping keeps the listeners.
-		'/teach/session/:id/class': byId(TeacherSession),
-		'/teach/screen/:id': byId(ProjectorScreen),
-		'/teach/class/:id': byId(TeacherClass),
-		'/teach/class/:id/student/:memberId': {
-			render: (vnode) => {
-				const id = String(vnode.attrs.id);
-				const memberId = String(vnode.attrs.memberId);
-
-				return [m(TeacherStudent, { key: `${id}/${memberId}`, id, memberId })];
-			},
-		},
-		'/teach/report/:id': byId(GameReport),
-		'/teach/library': { render: () => m(LibraryHome) },
+		'/teach/session/:id/class': lazyById(teacherSession, 'TeacherSession'),
+		'/teach/screen/:id': lazyById(
+			() => import('./views/teacher/ProjectorScreen'),
+			'ProjectorScreen',
+		),
+		'/teach/class/:id': lazyById(() => import('./views/teacher/TeacherClass'), 'TeacherClass'),
+		'/teach/class/:id/student/:memberId': lazyByPair(
+			() => import('./views/teacher/TeacherStudent'),
+			'TeacherStudent',
+			'id',
+			'memberId',
+		),
+		'/teach/report/:id': lazyById(() => import('./views/teacher/GameReport'), 'GameReport'),
+		'/teach/library': lazyView(
+			() => import('./views/teacher/scenarioLibrary/LibraryHome'),
+			'LibraryHome',
+		),
 		'/teach/library/mine': redirectTo(() => '/teach/scenarios'),
-		'/teach/library/admin': { render: () => m(LibraryAdmin) },
-		'/teach/library/:id': byId(LibraryScenario),
+		'/teach/library/admin': lazyView(
+			() => import('./views/teacher/scenarioLibrary/LibraryAdmin'),
+			'LibraryAdmin',
+		),
+		'/teach/library/:id': lazyById(
+			() => import('./views/teacher/scenarioLibrary/LibraryScenario'),
+			'LibraryScenario',
+		),
 	});
 	// The banner lives beside the router's root so a crash in any view leaves it standing
 	const bannerHost = document.createElement('div');
@@ -235,5 +297,7 @@ if (root) {
 	m.mount(bannerHost, BootBanner);
 	markBooted();
 }
+
+void i18nReady.then(mountApp);
 
 startUsageHeartbeat();
