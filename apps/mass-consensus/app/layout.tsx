@@ -6,7 +6,8 @@ import {
   detectLanguage,
   NextTranslationProvider,
 } from '@freedi/shared-i18n/next';
-import { COOKIE_KEY } from '@freedi/shared-i18n';
+import { COOKIE_KEY, pickTranslations } from '@freedi/shared-i18n';
+import clientTranslationKeys from '@/generated/i18nClientKeys.json';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import ConnectionLostHandler from '@/components/shared/ConnectionLostHandler';
@@ -67,6 +68,10 @@ export default async function RootLayout({
 
   const language = await detectLanguage(cookieValue, acceptLanguage);
   const { dir, dictionary } = getTranslations(language);
+  // Only the keys MC's source uses (~1,000 of ~5,000; see
+  // scripts/generate-i18n-keys.js): this dictionary is serialized into every
+  // page's HTML, so the full one would cost ~300KB a page.
+  const clientDictionary = pickTranslations(dictionary, clientTranslationKeys);
 
   // Participant accessibility settings, rendered onto <html> so there is no flash
   const a11yPrefs = parseA11yCookie(cookieStore.get(ACCESSIBILITY.COOKIE)?.value);
@@ -85,7 +90,7 @@ export default async function RootLayout({
       <body suppressHydrationWarning>
         <NextTranslationProvider
           initialLanguage={language}
-          initialDictionary={dictionary}
+          initialDictionary={clientDictionary}
         >
           <ReduxProvider>
             <AuthProvider>

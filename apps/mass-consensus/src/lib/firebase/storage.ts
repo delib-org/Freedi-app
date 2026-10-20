@@ -4,7 +4,7 @@ import {
   getDownloadURL,
   deleteObject,
 } from 'firebase/storage';
-import { storage } from './client';
+import { storage } from './storageClient';
 import type { SurveyLogo } from '@freedi/shared-types';
 
 /**

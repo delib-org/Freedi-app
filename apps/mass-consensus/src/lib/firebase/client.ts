@@ -1,24 +1,28 @@
+/**
+ * Firebase client: the app and Auth only.
+ *
+ * Every page loads this file (AuthProvider sits in the root layout), so it
+ * deliberately does not touch Firestore, Storage or Functions — together they
+ * are ~150KB gzipped. Import those from firestoreClient / storageClient /
+ * functionsClient where they are used, or lazily via loadFirestore().
+ */
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   getAuth,
+  initializeAuth,
+  Auth,
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
   onAuthStateChanged,
   User,
   browserLocalPersistence,
-  setPersistence,
   connectAuthEmulator,
 } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
-import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { logError } from '../utils/errorHandling';
 import { isUserCancelledAuthError, isPopupBlockedAuthError } from './authErrors';
-
-// Region for all Cloud Functions in this project. Matches functionConfig.region
-// in @freedi/shared-types and the deploy targets (me-west1 / Tel Aviv).
-const FUNCTIONS_REGION = 'me-west1';
+import { CLIENT_EMULATORS, isClientEmulatorMode } from './clientEmulators';
+import { popupResolver, warmPopupResolver } from './popupResolver';
 
 // Firebase client configuration from environment variables
 const firebaseConfig = {
@@ -33,63 +37,38 @@ const firebaseConfig = {
 // Initialize Firebase app (singleton pattern)
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// Get Auth instance
-const auth = getAuth(app);
-
-// Get Firestore instance for client-side operations
-const db = getFirestore(app);
-
-// Get Storage instance for client-side operations
-const storage = getStorage(app);
-
-// Get Functions instance pinned to the deploy region
-const functions = getFunctions(app, FUNCTIONS_REGION);
-
-// Connect to emulators in development
-// Check if we're on localhost (development mode)
-const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-
-if (isLocalhost) {
-  console.info('[Firebase Client] Development mode - connecting to emulators');
-
-  // Connect to Auth emulator
+/**
+ * Auth without the default popup/redirect resolver.
+ *
+ * getAuth() wires in browserPopupRedirectResolver, which downloads Google's
+ * auth iframe + gapi (~100KB) on every page load just to check for a redirect
+ * result. MC only signs in with a popup, so the resolver is handed to
+ * signInWithPopup() instead, and warmGoogleSignIn() loads it ahead of the tap
+ * only on screens that show a Google sign-in button (see popupResolver.ts).
+ * Persistence stays browserLocalPersistence, as before, so existing sessions
+ * are kept.
+ */
+function createAuth(): Auth {
+  if (typeof window === 'undefined') return getAuth(app);
   try {
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-    console.info('[Firebase Client] Connected to Auth emulator on localhost:9099');
-  } catch (error) {
-    logError(error, { operation: 'firebaseClient.connectAuthEmulator' });
-  }
-
-  // Connect to Firestore emulator
-  try {
-    connectFirestoreEmulator(db, 'localhost', 8081);
-    console.info('[Firebase Client] Connected to Firestore emulator on localhost:8081');
-  } catch (error) {
-    logError(error, { operation: 'firebaseClient.connectFirestoreEmulator' });
-  }
-
-  // Connect to Storage emulator
-  try {
-    connectStorageEmulator(storage, 'localhost', 9199);
-    console.info('[Firebase Client] Connected to Storage emulator on localhost:9199');
-  } catch (error) {
-    logError(error, { operation: 'firebaseClient.connectStorageEmulator' });
-  }
-
-  // Connect to Functions emulator
-  try {
-    connectFunctionsEmulator(functions, 'localhost', 5001);
-    console.info('[Firebase Client] Connected to Functions emulator on localhost:5001');
-  } catch (error) {
-    logError(error, { operation: 'firebaseClient.connectFunctionsEmulator' });
+    return initializeAuth(app, { persistence: browserLocalPersistence });
+  } catch {
+    // Already initialized (dev hot reload) - reuse that instance
+    return getAuth(app);
   }
 }
 
-// Set persistence to local storage
-if (typeof window !== 'undefined') {
-  setPersistence(auth, browserLocalPersistence).catch((error) => {
-    logError(error, { operation: 'firebaseClient.setPersistence' });
-  });
+const auth = createAuth();
+
+if (isClientEmulatorMode()) {
+  console.info('[Firebase Client] Development mode - connecting to emulators');
+  try {
+    connectAuthEmulator(auth, `http://${CLIENT_EMULATORS.host}:${CLIENT_EMULATORS.authPort}`, {
+      disableWarnings: true,
+    });
+  } catch (error) {
+    logError(error, { operation: 'firebaseClient.connectAuthEmulator' });
+  }
 }
 
 // Google Auth Provider
@@ -97,6 +76,15 @@ const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account',
 });
+
+/**
+ * Load Google's sign-in iframe before the user taps "Sign in with Google".
+ * signInWithPopup() waits for it before opening the window, and iOS Safari
+ * blocks a popup opened that late. Call only where a Google button is shown.
+ */
+export function warmGoogleSignIn(): Promise<unknown> {
+  return warmPopupResolver(auth);
+}
 
 /**
  * Sign in with Google using popup.
@@ -108,7 +96,7 @@ googleProvider.setCustomParameters({
  */
 export async function signInWithGoogle(): Promise<User | null> {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(auth, googleProvider, popupResolver);
     console.info('[Firebase] Sign in successful:', result.user.email);
     return result.user;
   } catch (error) {
@@ -218,5 +206,5 @@ export function onAuthChange(callback: (user: User | null) => void): () => void 
   return onAuthStateChanged(auth, callback);
 }
 
-export { auth, app, db, storage, functions };
+export { auth, app };
 export type { User };

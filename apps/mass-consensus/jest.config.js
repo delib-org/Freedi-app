@@ -11,6 +11,7 @@ const config = {
         module: 'CommonJS',
         moduleResolution: 'Node',
         esModuleInterop: true,
+        resolveJsonModule: true,
         allowSyntheticDefaultImports: true,
         jsx: 'react-jsx',
         strict: true,

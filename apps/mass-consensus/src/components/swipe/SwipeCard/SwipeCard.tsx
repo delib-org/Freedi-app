@@ -21,7 +21,13 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
+import Image from 'next/image';
 import { SWIPE, ZONES } from '@/constants/common';
+import {
+  CARD_IMAGE_INTRINSIC,
+  CARD_IMAGE_SIZES,
+  isOptimizableImageUrl,
+} from '@/lib/utils/imageOptimization';
 import { useVisualScale } from './visualScale';
 import type { EvaluationScaleKey } from '@freedi/shared-types';
 import { playWhooshSound } from './soundEffects';
@@ -503,11 +509,17 @@ export default function SwipeCard({
       {/* Content wrapper (above zones) */}
       <div className="swipe-card__content-wrapper" ref={contentRef}>
         {imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element -- storage URLs are not in next/image's allow-list
-          <img
+          // Resized WebP/AVIF for the card's width instead of the full-size upload.
+          // width/height only seed the aspect ratio; CSS sizes the picture.
+          <Image
             className="swipe-card__image"
             src={imageUrl}
             alt={statement.imagesURL?.alt ?? ''}
+            width={CARD_IMAGE_INTRINSIC.width}
+            height={CARD_IMAGE_INTRINSIC.height}
+            sizes={CARD_IMAGE_SIZES}
+            loading="eager"
+            unoptimized={!isOptimizableImageUrl(imageUrl)}
             draggable={false}
           />
         )}

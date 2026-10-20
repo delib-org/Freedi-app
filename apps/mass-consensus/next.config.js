@@ -23,6 +23,11 @@ const nextConfig = {
         hostname: 'firebasestorage.googleapis.com',
       },
       {
+        // Card and survey pictures (public GCS URLs, see lib/utils/cardImage.ts)
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+      },
+      {
         protocol: 'https',
         hostname: 'mc.wizcol.com',
       },

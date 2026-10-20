@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useWarmGoogleSignIn } from '@/hooks/useWarmGoogleSignIn';
 import { trackUserLogin } from '@/lib/analytics';
 import { isPopupBlockedAuthError } from '@/lib/firebase/authErrors';
 import styles from './login.module.scss';
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isLoading, signIn } = useAuth();
+  useWarmGoogleSignIn(!user);
   const [error, setError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
 
