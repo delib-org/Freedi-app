@@ -37,6 +37,8 @@ import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 import MergeBadge from './MergeBadge';
+import YouTubeEmbed from './YouTubeEmbed';
+import { extractYouTubeVideo } from '@/helpers/youtubeLinks';
 
 interface Props {
 	statement: Statement | undefined;
@@ -289,6 +291,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		? ''
 		: (statement.description ?? '').trim();
 
+	const youTubeVideo = extractYouTubeVideo(statement.statement);
 	const showBadgeRow = statement.hide || showVotingWinner;
 	const showJoinRow = Boolean(enableJoining);
 	const showMetaRow =
@@ -378,6 +381,8 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 					fileInputRef={fileInputRef}
 				/>
 			)}
+			{/* A YouTube link in the option text plays here; the link itself is hidden from the text. */}
+			{youTubeVideo && <YouTubeEmbed embedUrl={youTubeVideo.embedUrl} />}
 			<div className={styles.body}>
 				<div className={styles.info}>
 					<div className={styles.text}>
@@ -398,6 +403,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 								className={styles.editableCard}
 								inputClassName={styles.editInput}
 								saveButtonClassName={styles.editButtons}
+								displayValue={youTubeVideo?.textWithoutLinks}
 							/>
 						</div>
 

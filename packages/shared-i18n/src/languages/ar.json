@@ -4582,5 +4582,13 @@
   "Space name": "اسم المساحة",
   "The question will open inside this new space.": "سيُفتح السؤال داخل هذه المساحة الجديدة.",
   "The space was created, but the question was not saved. Try again.": "تم إنشاء المساحة، لكن لم يتم حفظ السؤال. حاول مرة أخرى.",
-  "Give the space a name": "أعطِ المساحة اسمًا"
+  "Give the space a name": "أعطِ المساحة اسمًا",
+  "Evaluation method": "طريقة التقييم",
+  "Card stacks": "أكوام البطاقات",
+  "Everyone scores each suggestion, one card at a time": "يقيّم الجميع كل اقتراح، بطاقة تلو الأخرى",
+  "Options shown in voting": "الخيارات المعروضة في التصويت",
+  "Show all options": "عرض كل الخيارات",
+  "Only options selected in the card-stack evaluation": "فقط الخيارات المختارة في تقييم أكوام البطاقات",
+  "Options the group rated positively in the card-stack evaluation": "الخيارات التي قيّمتها المجموعة إيجابياً في تقييم أكوام البطاقات",
+  "YouTube video player": "مشغّل فيديو يوتيوب"
 }

@@ -290,12 +290,14 @@ export type {
   MapSynthVisibility,
   MapDetailLevel,
   MapFilterMetric,
-  RatingMode
+  RatingMode,
+  VotingOptionsSource
 } from "./models/statement/StatementSettings";
 
 export {
   StatementSettingsSchema,
   RatingModeSchema,
+  VotingOptionsSourceSchema,
   evaluationType,
   JoinFormFieldSchema,
   JoinFormFieldTypeSchema,

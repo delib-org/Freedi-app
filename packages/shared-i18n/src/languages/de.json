@@ -4462,5 +4462,13 @@
   "Space name": "Name des Raums",
   "The question will open inside this new space.": "Die Frage wird in diesem neuen Raum geöffnet.",
   "The space was created, but the question was not saved. Try again.": "Der Raum wurde erstellt, aber die Frage wurde nicht gespeichert. Versuche es erneut.",
-  "Give the space a name": "Gib dem Raum einen Namen"
+  "Give the space a name": "Gib dem Raum einen Namen",
+  "Evaluation method": "Bewertungsmethode",
+  "Card stacks": "Kartenstapel",
+  "Everyone scores each suggestion, one card at a time": "Alle bewerten jeden Vorschlag, eine Karte nach der anderen",
+  "Options shown in voting": "In der Abstimmung angezeigte Optionen",
+  "Show all options": "Alle Optionen anzeigen",
+  "Only options selected in the card-stack evaluation": "Nur in der Kartenstapel-Bewertung ausgewählte Optionen",
+  "Options the group rated positively in the card-stack evaluation": "Optionen, die die Gruppe in der Kartenstapel-Bewertung positiv bewertet hat",
+  "YouTube video player": "YouTube-Videoplayer"
 }

@@ -5142,5 +5142,13 @@
   "Space name": "Space name",
   "The question will open inside this new space.": "The question will open inside this new space.",
   "The space was created, but the question was not saved. Try again.": "The space was created, but the question was not saved. Try again.",
-  "Give the space a name": "Give the space a name"
+  "Give the space a name": "Give the space a name",
+  "Evaluation method": "Evaluation method",
+  "Card stacks": "Card stacks",
+  "Everyone scores each suggestion, one card at a time": "Everyone scores each suggestion, one card at a time",
+  "Options shown in voting": "Options shown in voting",
+  "Show all options": "Show all options",
+  "Only options selected in the card-stack evaluation": "Only options selected in the card-stack evaluation",
+  "Options the group rated positively in the card-stack evaluation": "Options the group rated positively in the card-stack evaluation",
+  "YouTube video player": "YouTube video player"
 }
