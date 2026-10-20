@@ -49,6 +49,11 @@ const en: Record<string, string> = {
 	'intro.privacyNote':
 		'Your compass answers and captain’s log are private. The positions you mark are visible to other sailors next to your first name only — never your email.',
 	'intro.privacyLink': 'What is saved and who sees what',
+	'intro.signInFailed': 'Sign-in did not complete, so you are not signed in yet.',
+	'intro.signInRetry': 'Try again',
+	'intro.signInOrAnonymous': 'Or continue without an account with the button above.',
+	'intro.signInInApp':
+		'You seem to be inside another app’s browser. Open this link in Safari or Chrome and try again.',
 
 	// ---- compass ----
 	'compass.windCounter': 'Wind {{index}} of {{total}}',

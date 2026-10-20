@@ -44,11 +44,18 @@ import {
 	getDownloadURL,
 } from 'firebase/storage';
 
+import { resolveAuthDomain } from './authDomain';
+
 // Same wiring as apps/agora: config from generated .env.local, and automatic
 // emulator connection on localhost.
 const firebaseConfig = {
 	apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-	authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+	// On Odyssey's own hosts the auth handler is served from the same site (see
+	// authDomain.ts); anywhere else the configured domain applies.
+	authDomain: resolveAuthDomain(
+		typeof window !== 'undefined' ? window.location.hostname : '',
+		import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+	),
 	projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
 	storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
 	messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
