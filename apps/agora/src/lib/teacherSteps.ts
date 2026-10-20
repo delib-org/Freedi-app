@@ -21,6 +21,9 @@ export function teacherStepLabel(item: AgoraStagePlanItem): string {
 
 		return kind === 'open' ? t('teacherStage.question') : t(`question.kind_${kind}`);
 	}
+	if (item.stage === AgoraStage.linked) {
+		return item.title?.trim() || item.link?.title.trim() || t('teacherStage.linked');
+	}
 
 	return t(`teacherStage.${item.stage}`);
 }

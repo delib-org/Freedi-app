@@ -1,4 +1,5 @@
 import type { LangCode } from './i18n';
+import { linkedStationStrings } from './linkedStationStrings';
 
 /**
  * The lesson builder's words (the "lesson flow" step list on the start screen
@@ -8,7 +9,7 @@ import type { LangCode } from './i18n';
  * One name per concept (docs/ia/agora-lesson-builder.md): a lesson is made of
  * STEPS; a question step has a QUESTION TYPE; a starting plan is a TEMPLATE.
  */
-export const planBuilderStrings: Record<LangCode, Record<string, string>> = {
+const builderStrings: Record<LangCode, Record<string, string>> = {
 	he: {
 		'planb.templates': 'תבנית',
 		'planb.replace_ask': 'לוותר על השינויים שעשיתם ולהתחיל מהתבנית?',
@@ -244,3 +245,11 @@ export const planBuilderStrings: Record<LangCode, Record<string, string>> = {
 		'planb.reads_as': 'De leerlingen lezen: {{prompt}}',
 	},
 };
+
+/** The builder's words plus the linked-station ones its new step type brings */
+export const planBuilderStrings: Record<LangCode, Record<string, string>> = Object.fromEntries(
+	(Object.keys(builderStrings) as LangCode[]).map((lang) => [
+		lang,
+		{ ...builderStrings[lang], ...linkedStationStrings[lang] },
+	]),
+) as Record<LangCode, Record<string, string>>;

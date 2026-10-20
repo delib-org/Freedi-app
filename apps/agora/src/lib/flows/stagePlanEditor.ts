@@ -68,7 +68,8 @@ export function addableStages(
 	return AGORA_PLANNABLE_STAGES.filter((stage) => {
 		if (FIXED.has(stage)) return false;
 		if (AGORA_CHARACTER_STAGES.has(stage) && !options.hasCharacters) return false;
-		if (stage === AgoraStage.question) return true;
+		// Questions and linked stations come as many as the teacher wants
+		if (stage === AgoraStage.question || stage === AgoraStage.linked) return true;
 
 		return !present.has(stage);
 	});
@@ -138,6 +139,8 @@ export function stepProblems(
 			problems.set(item.itemId, 'voting_needs_source');
 		} else if (AGORA_CHARACTER_STAGES.has(item.stage) && !options.hasCharacters) {
 			problems.set(item.itemId, 'stage_needs_characters');
+		} else if (item.stage === AgoraStage.linked && !item.link) {
+			problems.set(item.itemId, 'linked_needs_link');
 		}
 		if (item.stage === AgoraStage.deliberation || item.stage === AgoraStage.question) {
 			sourceSeen = true;
@@ -155,6 +158,7 @@ function planSignature(items: readonly AgoraStagePlanItem[]): string {
 			item.stage === AgoraStage.question ? questionKindOf(item) : '',
 			(item.title ?? '').trim(),
 			(item.explanation ?? '').trim(),
+			item.link?.statementId ?? '',
 		]),
 	);
 }
@@ -198,14 +202,15 @@ export function addedItem(
 	return after.find((item) => !ids.has(item.itemId)) ?? null;
 }
 
-/** A fresh id: the stage name for single-instance stages, numbered for questions */
+/** A fresh id: the stage name for single-instance stages, numbered for questions and linked stations */
 export function mintItemId(stage: AgoraStage, items: readonly AgoraStagePlanItem[]): string {
-	if (stage !== AgoraStage.question) return stage;
+	if (stage !== AgoraStage.question && stage !== AgoraStage.linked) return stage;
+	const prefix = stage === AgoraStage.linked ? 'linked' : 'question';
 	const taken = new Set(items.map((item) => item.itemId));
 	let n = 1;
-	while (taken.has(`question-${n}`)) n += 1;
+	while (taken.has(`${prefix}-${n}`)) n += 1;
 
-	return `question-${n}`;
+	return `${prefix}-${n}`;
 }
 
 function freshItem(

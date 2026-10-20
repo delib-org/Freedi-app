@@ -12,7 +12,7 @@ import { AgoraStage, questionKindOf, type AgoraStagePlanItem } from '@freedi/sha
 export type VillagePlace = 'library' | 'challenge' | 'council' | `booth:${string}`;
 
 /** What a booth asks for — the writing desk's copy and the pavilion's colour follow it */
-export type VillageBoothKind = 'story' | 'needs' | 'vision' | 'open' | 'proposal';
+export type VillageBoothKind = 'story' | 'needs' | 'vision' | 'open' | 'proposal' | 'linked';
 
 export interface VillageBooth {
 	itemId: string;
@@ -129,6 +129,8 @@ export function calledItemIndex(
 export function villageBoothKind(item: AgoraStagePlanItem): VillageBoothKind | null {
 	if (item.stage === AgoraStage.question) return questionKindOf(item);
 	if (item.stage === AgoraStage.deliberation) return 'proposal';
+	// A task in another app stands as a booth too; it has no desk (`villageDesk` is null)
+	if (item.stage === AgoraStage.linked) return 'linked';
 
 	return null;
 }

@@ -99,6 +99,16 @@ import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
 import { QuestionStage } from './QuestionStage';
 import { RoundStage } from './RoundStage';
+import { LinkedStation } from '../components/LinkedStation';
+import {
+	listenForStationReturn,
+	markStationReturned,
+	openStationTask,
+	prepareStationTask,
+	retryStationTask,
+	stopStationPrefetches,
+} from '../lib/stationHandoff';
+import { stationReturnOf } from '../lib/flows/linkedStation';
 import { liveNoteNews } from '../components/VillageCommunity';
 import { visibleStationNotes } from '../lib/hands';
 import { boardNews } from '../lib/flows/noteNews';
@@ -110,10 +120,12 @@ import { ReRate } from './ReRate';
 import {
 	AgoraSceneKind,
 	AgoraSessionMode,
+	AgoraSessionStatus,
 	AgoraStage,
 	removalOf,
 	resolveAgoraTheme,
 	roundSpecOf,
+	stationVisitState,
 	type AgoraStagePlanItem,
 } from '@freedi/shared-types';
 
@@ -220,6 +232,18 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	let moreOpen = false;
 	/** The teacher's thread is open — reachable from every stage, toast or not */
 	let teacherOpen = false;
+	/**
+	 * Back from a linked station's task: the return URL's `at`/`back` (read
+	 * once, then stripped), and the station that says "Welcome back".
+	 */
+	const returnParams = { at: m.route.param('at'), back: m.route.param('back') };
+	let returnHandled = returnParams.back === undefined;
+	let welcomeBackItem: string | null = null;
+	const stopStationReturn = listenForStationReturn(getStagePlan, (itemId) => {
+		if (userId) markStationReturned(sessionId, userId, itemId);
+		welcomeBackItem = itemId;
+		m.redraw();
+	});
 
 	function openTeacherThread(): void {
 		teacherOpen = true;
@@ -390,6 +414,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			// drops them, so leaving the game is what finally closes them
 			stopDeliberationListeners();
 			stopVotingListeners();
+			stopStationReturn();
+			stopStationPrefetches();
 		},
 
 		view() {
@@ -481,6 +507,26 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			if (!navRestored) {
 				navRestored = true;
 				dispatchNav({ kind: 'restore', raw: readStoredNav(sessionId) });
+			}
+
+			// The way back from a linked station's task. A hint, not an order:
+			// the student stands at that station only while the room is still
+			// there; a teacher who moved the class on (or called it) wins.
+			if (!returnHandled && userId && myParticipant) {
+				returnHandled = true;
+				const returnedTo = stationReturnOf(returnParams, plan);
+				if (returnedTo) {
+					markStationReturned(sessionId, userId, returnedTo);
+					welcomeBackItem = returnedTo;
+					if (plan[currentIndex]?.itemId === returnedTo) {
+						dispatchNav({ kind: 'select', itemId: returnedTo });
+					}
+				}
+				history.replaceState(
+					null,
+					'',
+					`${location.pathname}${location.search}#!/play/${sessionId}`,
+				);
 			}
 
 			// Who moves the class: the teacher (the room walks as one) or, in a
@@ -934,6 +980,28 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							myParticipant,
 							userId,
 							live,
+						});
+					}
+
+					case AgoraStage.linked: {
+						if (!myParticipant) return noSeatYet();
+						const open =
+							viewingIndex <= currentIndex && session.status !== AgoraSessionStatus.ended;
+						const link = open ? prepareStationTask(sessionId, item.itemId) : 'preparing';
+
+						return m(LinkedStation, {
+							title: planItemLabel(item),
+							explanation: item.explanation,
+							open,
+							link,
+							visit: stationVisitState(myParticipant.stationVisits?.[item.itemId]),
+							welcomeBack: welcomeBackItem === item.itemId,
+							showTitle: !villageMode,
+							onOpen: () => {
+								welcomeBackItem = null;
+								openStationTask(sessionId, item.itemId, userId);
+							},
+							onRetry: () => retryStationTask(sessionId, item.itemId),
 						});
 					}
 

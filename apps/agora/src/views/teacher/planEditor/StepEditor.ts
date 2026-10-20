@@ -2,6 +2,7 @@ import m from 'mithril';
 import { t } from '../../../lib/i18n';
 import { QUESTION_KINDS } from '../../../lib/flows/stagePlanEditor';
 import { questionKindLabel } from './stepMeta';
+import { LinkedStepEditor } from './LinkedStepEditor';
 import {
 	AgoraStage,
 	CutoffBy,
@@ -189,6 +190,18 @@ export const StepEditor: m.Component<StepEditorAttrs> = {
 					: null,
 				done,
 			]);
+		}
+
+		if (item.stage === AgoraStage.linked) {
+			return m(LinkedStepEditor, {
+				key: item.itemId,
+				item,
+				index,
+				onPatch,
+				focusLink: focusWords,
+				onFocused,
+				onDone,
+			});
 		}
 
 		if (item.stage !== AgoraStage.question) return null;

@@ -2,6 +2,7 @@
 import { startUsageHeartbeat } from './lib/usageHeartbeat';
 import m from 'mithril';
 import { registerSW } from 'virtual:pwa-register';
+import { checkForAppUpdate } from './lib/appUpdate';
 // Self-hosted so the PWA precaches them: classroom devices get the real faces
 // offline, and no student's IP reaches a third-party font CDN.
 // Assistant = body. Alef = titles & buttons; it ships 400/700 only, so never
@@ -86,6 +87,12 @@ registerSW({
 		void registration
 			?.update()
 			.catch((error) => console.warn('[Agora] Update check failed', error));
+		// A phone keeps a tab for days: check again each time it comes to the
+		// front, so a deploy (a new kind of step included) reaches it before
+		// the session it is watching does
+		document.addEventListener('visibilitychange', () => {
+			if (document.visibilityState === 'visible') checkForAppUpdate();
+		});
 	},
 });
 
