@@ -4462,5 +4462,12 @@
   "Space name": "Nombre del espacio",
   "The question will open inside this new space.": "La pregunta se abrirá dentro de este nuevo espacio.",
   "The space was created, but the question was not saved. Try again.": "El espacio se creó, pero la pregunta no se guardó. Inténtalo de nuevo.",
-  "Give the space a name": "Ponle un nombre al espacio"
+  "Give the space a name": "Ponle un nombre al espacio",
+  "Evaluation method": "Método de evaluación",
+  "Card stacks": "Pilas de tarjetas",
+  "Everyone scores each suggestion, one card at a time": "Todos puntúan cada sugerencia, una tarjeta a la vez",
+  "Options shown in voting": "Opciones mostradas en la votación",
+  "Show all options": "Mostrar todas las opciones",
+  "Only options selected in the card-stack evaluation": "Solo las opciones seleccionadas en la evaluación por pilas de tarjetas",
+  "Options the group rated positively in the card-stack evaluation": "Opciones que el grupo valoró positivamente en la evaluación por pilas de tarjetas"
 }

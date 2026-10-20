@@ -4462,5 +4462,12 @@
   "Space name": "Naam van de ruimte",
   "The question will open inside this new space.": "De vraag wordt geopend in deze nieuwe ruimte.",
   "The space was created, but the question was not saved. Try again.": "De ruimte is gemaakt, maar de vraag is niet opgeslagen. Probeer het opnieuw.",
-  "Give the space a name": "Geef de ruimte een naam"
+  "Give the space a name": "Geef de ruimte een naam",
+  "Evaluation method": "Beoordelingsmethode",
+  "Card stacks": "Kaartenstapels",
+  "Everyone scores each suggestion, one card at a time": "Iedereen beoordeelt elk voorstel, kaart voor kaart",
+  "Options shown in voting": "Opties getoond bij het stemmen",
+  "Show all options": "Toon alle opties",
+  "Only options selected in the card-stack evaluation": "Alleen opties geselecteerd in de kaartenstapelbeoordeling",
+  "Options the group rated positively in the card-stack evaluation": "Opties die de groep positief beoordeelde in de kaartenstapelbeoordeling"
 }

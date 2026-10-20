@@ -248,6 +248,14 @@ export enum evaluationType {
 export const RatingModeSchema = picklist(['agree-disagree', 'reactions']);
 export type RatingMode = InferOutput<typeof RatingModeSchema>;
 
+/**
+ * Which options the voting view lists. 'all' (or undefined) shows every
+ * option; 'positivelyEvaluated' shows only the options the group scored
+ * positively in the card-stack evaluation (consensus > 0).
+ */
+export const VotingOptionsSourceSchema = picklist(['all', 'positivelyEvaluated']);
+export type VotingOptionsSource = InferOutput<typeof VotingOptionsSourceSchema>;
+
 
 export const StatementSettingsSchema = object({
 	subScreens: optional(array(string())),
@@ -283,6 +291,9 @@ export const StatementSettingsSchema = object({
 	// without changing the participant evaluation mode.
 	showResults: optional(boolean()),
 	inVotingGetOnlyResults: optional(boolean()),
+	// Voting view only: undefined / 'all' = list every option;
+	// 'positivelyEvaluated' = only options with positive card-stack consensus.
+	votingOptionsSource: optional(VotingOptionsSourceSchema),
 	enableSimilaritiesSearch: optional(boolean()),
 	enableNavigationalElements: optional(boolean()),
 	show: optional(boolean()),

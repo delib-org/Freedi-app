@@ -4940,5 +4940,12 @@
   "Space name": "نام فضا",
   "The question will open inside this new space.": "پرسش در همین فضای جدید باز می‌شود.",
   "The space was created, but the question was not saved. Try again.": "فضا ساخته شد، اما پرسش ذخیره نشد. دوباره تلاش کنید.",
-  "Give the space a name": "برای فضا یک نام بگذارید"
+  "Give the space a name": "برای فضا یک نام بگذارید",
+  "Evaluation method": "روش ارزیابی",
+  "Card stacks": "پشته‌های کارت",
+  "Everyone scores each suggestion, one card at a time": "همه هر پیشنهاد را یکی‌یکی و کارت به کارت امتیاز می‌دهند",
+  "Options shown in voting": "گزینه‌های نمایش‌داده‌شده در رأی‌گیری",
+  "Show all options": "نمایش همه گزینه‌ها",
+  "Only options selected in the card-stack evaluation": "فقط گزینه‌های انتخاب‌شده در ارزیابی پشته‌های کارت",
+  "Options the group rated positively in the card-stack evaluation": "گزینه‌هایی که گروه در ارزیابی پشته‌های کارت مثبت ارزیابی کرد"
 }
