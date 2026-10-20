@@ -5,6 +5,7 @@
  */
 
 import {
+	browserPopupRedirectResolver,
 	signInAnonymously,
 	signInWithPopup,
 	GoogleAuthProvider,
@@ -41,7 +42,7 @@ async function trySilentGoogleSignIn(): Promise<boolean> {
 			login_hint: localStorage.getItem('lastGoogleEmail') || undefined,
 		});
 
-		const result = await signInWithPopup(auth, provider);
+		const result = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
 
 		// Store successful login info
 		localStorage.setItem('lastAuthProvider', 'google.com');

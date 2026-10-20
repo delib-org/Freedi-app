@@ -4,7 +4,6 @@ import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
 import { Provider } from 'react-redux';
-import { loadLanguageData, DEFAULT_LANGUAGE, isValidLanguage } from '@freedi/shared-i18n';
 import { store } from './redux/store';
 import { router } from './routes/router';
 import { UserConfigProvider } from './context/UserConfigContext';
@@ -13,7 +12,6 @@ import PWAWrapper from './view/components/pwa/PWAWrapper';
 import { initSentry } from './services/monitoring/sentry';
 import RootErrorBoundary from './components/ErrorBoundary/RootErrorBoundary';
 import { schedulePrefetchLazyRoutes } from './routes/prefetchRoutes';
-import { LocalStorageObjects } from './types/localStorage/LocalStorageObjects';
 import { setupIndexedDBErrorHandler } from './utils/indexedDBErrorHandler';
 import { isChunkLoadError, handleChunkLoadError } from './utils/errorBoundaryHelpers';
 
@@ -23,14 +21,7 @@ materialSymbols.href =
 	'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0';
 document.head.append(materialSymbols);
 
-try {
-	const savedConfig = localStorage.getItem(LocalStorageObjects.UserConfig);
-	const parsed: { chosenLanguage?: string } = savedConfig ? JSON.parse(savedConfig) : {};
-	const lang = parsed.chosenLanguage;
-	void loadLanguageData(lang && isValidLanguage(lang) ? lang : DEFAULT_LANGUAGE);
-} catch {
-	void loadLanguageData(DEFAULT_LANGUAGE);
-}
+// The dictionary chunk is warm-started by main.tsx, in parallel with this file.
 
 initSentry();
 setupIndexedDBErrorHandler();

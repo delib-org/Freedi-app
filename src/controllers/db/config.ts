@@ -2,9 +2,13 @@
 import { initializeApp } from 'firebase/app';
 import {
 	browserLocalPersistence,
+	browserPopupRedirectResolver,
+	browserSessionPersistence,
 	connectAuthEmulator,
 	getAuth,
-	setPersistence,
+	indexedDBLocalPersistence,
+	initializeAuth,
+	type Auth,
 } from 'firebase/auth';
 import {
 	connectFirestoreEmulator,
@@ -16,12 +20,14 @@ import {
 	type Firestore,
 } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
-import { getAnalytics, isSupported } from 'firebase/analytics';
+import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 // Removed import to avoid circular dependency - isProduction is inlined below
 import firebaseConfig from './configKey';
 import { initializeFirebaseAppCheck } from './appCheck';
+import { hasPersistedFirebaseUser } from '@/utils/persistedAuthUser';
 import { logError } from '@/utils/errorHandling';
+import { TIME } from '@/constants/common';
 import {
 	clearIndexedDBErrorRecord,
 	recordIndexedDBError,
@@ -162,6 +168,51 @@ export function handleFirestoreAssertionError(error: Error): void {
 	}
 }
 
+/**
+ * Whether the auth instance was created with the popup/redirect resolver.
+ *
+ * `getAuth()` always attaches `browserPopupRedirectResolver`. On mobile
+ * browsers and Safari that makes Auth load Google's gapi iframe (iframe.js,
+ * ~93 KB, plus the /__/auth/iframe page) and WAIT for it before it even reads
+ * the saved user, so a signed-in student on a phone waited for it before
+ * onAuthStateChanged, and therefore before any Firestore listener.
+ *
+ * A signed-in visitor does not need the resolver to start, so it is left out
+ * for them and passed explicitly to signInWithPopup() instead. A signed-out
+ * visitor is about to sign in, and on mobile/Safari the popup must open within
+ * the tap, which only works if the iframe is already warm - they keep the
+ * default resolver, exactly as before.
+ */
+let authHasPopupResolver = true;
+
+export function authNeedsReloadToSignInAgain(): boolean {
+	return !authHasPopupResolver;
+}
+
+function createAuth(firebaseApp: ReturnType<typeof initializeApp>): Auth {
+	const signedIn = hasPersistedFirebaseUser();
+	try {
+		const created = initializeAuth(firebaseApp, {
+			// localStorage first: main.tsx reads it synchronously to route a
+			// returning user, and it is what setPersistence() used to migrate to.
+			// The rest match getAuth()'s defaults so any older session is found.
+			persistence: [browserLocalPersistence, indexedDBLocalPersistence, browserSessionPersistence],
+			popupRedirectResolver: signedIn ? undefined : browserPopupRedirectResolver,
+		});
+		authHasPopupResolver = !signedIn;
+
+		return created;
+	} catch (error) {
+		// Already initialized elsewhere (e.g. a getAuth() that ran first): reuse it.
+		logError(error, {
+			operation: 'config.createAuth',
+			metadata: { message: 'initializeAuth failed, falling back to getAuth()' },
+		});
+
+		return getAuth(firebaseApp);
+	}
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 // Firebase app initialized
@@ -177,18 +228,40 @@ const appCheck = isProductionForAppCheck ? initializeFirebaseAppCheck(app) : nul
 const FireStore = initializeFirestoreWithCache(app);
 const DB = FireStore;
 const storage = getStorage(app);
-const auth = getAuth();
+const auth = createAuth(app);
 const functions = getFunctions(app, 'me-west1');
 
+const ANALYTICS_IDLE_TIMEOUT_MS = 5 * TIME.SECOND;
+const ANALYTICS_FALLBACK_DELAY_MS = 1.5 * TIME.SECOND;
+
 // Initialize Analytics only in production and if supported
-let analytics: ReturnType<typeof getAnalytics> | null = null;
+let analytics: Analytics | null = null;
 // Inline isProduction check to avoid circular dependency
 const isProduction =
 	typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
 		? false
 		: typeof window !== 'undefined' && !isLocalRuntime();
 
-if (isProduction) {
+/**
+ * Run after the page has loaded and the main thread is idle. Analytics pulls in
+ * gtag.js plus an Installations call; on slow 4G those competed with the auth
+ * and Firestore requests that put data on screen. Events logged before this
+ * are queued by analyticsService and flushed once `analytics` is set.
+ */
+function afterLoadWhenIdle(callback: () => void): void {
+	const whenIdle = () => {
+		if (typeof window.requestIdleCallback === 'function') {
+			window.requestIdleCallback(() => callback(), { timeout: ANALYTICS_IDLE_TIMEOUT_MS });
+		} else {
+			window.setTimeout(callback, ANALYTICS_FALLBACK_DELAY_MS);
+		}
+	};
+
+	if (document.readyState === 'complete') whenIdle();
+	else window.addEventListener('load', whenIdle, { once: true });
+}
+
+function initializeAnalytics(): void {
 	// Check both isSupported and IndexedDB availability before initializing analytics
 	Promise.all([isSupported(), isIndexedDBAvailable()])
 		.then(([supported, indexedDBAvailable]) => {
@@ -220,16 +293,9 @@ if (isProduction) {
 		});
 }
 
-setPersistence(auth, browserLocalPersistence)
-	.then(() => {
-		// Persistence set to local storage
-	})
-	.catch((error) => {
-		logError(error, {
-			operation: 'config.unknown',
-			metadata: { message: 'Error setting persistence:' },
-		});
-	});
+if (isProduction) {
+	afterLoadWhenIdle(initializeAnalytics);
+}
 
 /**
  * Emulator ports.
