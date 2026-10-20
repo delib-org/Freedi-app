@@ -3,6 +3,7 @@ import { buildWritingDesk } from './writing-desks.js';
 import { buildCharacters, characters as roster } from './characters-2d.js';
 import { boothLayout, CENTER, PLACES } from './village-layout.js';
 import { roundedPlane, roundedSlab } from './rounded.js';
+import { S, fill, moreLine, stringsVersion } from './world-strings.js';
 
 export { CENTER, boothLayout, villageRadius } from './village-layout.js';
 
@@ -16,18 +17,37 @@ export { CENTER, boothLayout, villageRadius } from './village-layout.js';
  * village out moves the whole site together.
  */
 export const fixedStations = [
-	{ id: 'library', name: 'הספרייה', short: 'לומדים יחד', guide: 'בית של ידע', question: 'פותחים ספר ומגלים את הסיפור, הדמויות והצרכים.', x: PLACES.library.x, z: PLACES.library.z, ax: PLACES.library.x + 3.2, az: PLACES.library.z, icon: '▤' },
-	{ id: 'challenge', name: 'בית המדרש', short: 'האתגר', guide: 'נועם · חושבים יחד', question: 'מה אנחנו יודעים, ומה עוד חשוב לברר?', x: PLACES.study.x, z: PLACES.study.z, ax: PLACES.study.x + 3, az: PLACES.study.z + 6, icon: '⌂' },
-	{ id: 'council', name: 'מועצת הכפר', short: 'מחליטים יחד', guide: 'חכמי הכפר', question: 'על הלוח הגדול: כל ההצעות במגרש, השער, ובזמן ההצבעה — הקלפי.', x: PLACES.council.x, z: PLACES.council.z, ax: PLACES.council.x - 2.8, az: PLACES.council.z + 5.6, icon: '◒', look: { x: PLACES.council.x + .6, z: PLACES.council.z - 3.6 }, pitch: .06 },
+	{ id: 'library', name: S.place_library_name, short: S.place_library_short, guide: 'בית של ידע', question: S.place_library_question, x: PLACES.library.x, z: PLACES.library.z, ax: PLACES.library.x + 3.2, az: PLACES.library.z, icon: '▤' },
+	{ id: 'challenge', name: S.place_challenge_name, short: S.place_challenge_short, guide: 'נועם · חושבים יחד', question: S.place_challenge_question, x: PLACES.study.x, z: PLACES.study.z, ax: PLACES.study.x + 3, az: PLACES.study.z + 6, icon: '⌂' },
+	{ id: 'council', name: S.place_council_name, short: S.place_council_short, guide: 'חכמי הכפר', question: S.place_council_question, x: PLACES.council.x, z: PLACES.council.z, ax: PLACES.council.x - 2.8, az: PLACES.council.z + 5.6, icon: '◒', look: { x: PLACES.council.x + .6, z: PLACES.council.z - 3.6 }, pitch: .06 },
 ];
 
-/** What each kind of question booth is called and coloured. */
+/**
+ * The fixed places took their words from S when the module loaded; the shell's
+ * words arrive later, in the student's language.
+ */
+export function relabelFixedStations() {
+	for (const station of fixedStations) {
+		station.name = S[`place_${station.id}_name`];
+		station.short = S[`place_${station.id}_short`];
+		station.question = S[`place_${station.id}_question`];
+	}
+}
+
+/** A booth kind's sign and its line beside the map, in the current words */
+export function boothKindWords(kind) {
+	const id = BOOTH_KINDS[kind] ? kind : 'open';
+
+	return { name: S[`kind_${id}_name`], prompt: S[`kind_${id}_prompt`] };
+}
+
+/** What each kind of question booth is coloured (its words are `boothKindWords`). */
 export const BOOTH_KINDS = {
-	story: { name: 'ביתן הסיפורים', roof: '#b06a55', icon: '❧', prompt: 'כותבים סיפור אישי על הפתק שעל השולחן, וקוראים את הסיפורים של החברים על הלוח.' },
-	needs: { name: 'ביתן הצרכים', roof: '#6c8a9c', icon: '✧', prompt: 'כותבים מה חשוב לכם, ומסמנים על הלוח עד כמה הצרכים של החברים חשובים גם לכם.' },
-	vision: { name: 'ביתן החזון', roof: '#8b7aa8', icon: '☼', prompt: 'כותבים איך הייתם רוצים שזה ייראה, ומסמנים על הלוח עד כמה גם אתם רוצים את החזון של החברים.' },
-	open: { name: 'ביתן השאלה', roof: '#9c8a4e', icon: '?', prompt: 'כותבים את התשובה שלכם על הפתק, ומדרגים על הלוח את התשובות של החברים.' },
-	proposal: { name: 'ביתן הפתרונות', roof: '#6f8a5a', icon: '✎', prompt: 'כותבים הצעה על הפתק, מדרגים את ההצעות של החברים על הלוח ומציעים להם שיפורים.' },
+	story: { roof: '#b06a55', icon: '❧' },
+	needs: { roof: '#6c8a9c', icon: '✧' },
+	vision: { roof: '#8b7aa8', icon: '☼' },
+	open: { roof: '#9c8a4e', icon: '?' },
+	proposal: { roof: '#6f8a5a', icon: '✎' },
 };
 
 export function buildVillage({ scene, height, manager }) {
@@ -46,7 +66,7 @@ export function buildVillage({ scene, height, manager }) {
 		const c = document.createElement('canvas'); c.width = 768; c.height = 192; const ctx = c.getContext('2d');
 		ctx.fillStyle = locked ? '#d9d2c2' : '#f8edce'; ctx.fillRect(0, 0, 768, 192);
 		ctx.strokeStyle = locked ? '#8d8c80' : '#686e49'; ctx.lineWidth = 6; ctx.beginPath(); ctx.roundRect(5, 5, 758, 182, 30); ctx.stroke();
-		ctx.fillStyle = locked ? '#6f7168' : '#384f36'; ctx.textAlign = 'center'; ctx.direction = 'rtl';
+		ctx.fillStyle = locked ? '#6f7168' : '#384f36'; ctx.textAlign = 'center'; ctx.direction = S.dir === 'ltr' ? 'ltr' : 'rtl';
 		let size = 52; ctx.font = `bold ${size}px Arial`;
 		while (ctx.measureText(text).width > 1380 && size > 26) { size -= 2; ctx.font = `bold ${size}px Arial`; }
 		const words = text.split(/\s+/); const lines = [''];
@@ -65,7 +85,7 @@ export function buildVillage({ scene, height, manager }) {
 
 	// The study house — the meeting point where the lobby opens.
 	const study = floor(PLACES.study.x, PLACES.study.z, 4.4); box(7, 2.9, .45, limestone, study, 0, 1.5, -2.4); box(.4, 2.9, 4.8, limestone, study, -3.3, 1.5, 0); box(7.4, .3, 5.3, limestone, study, 0, 3.12, 0);
-	for (const x of [-3.05, -1.1, 1.1, 3.05]) { make(new THREE.CylinderGeometry(.17, .23, 2.85, 12), limestone, study, x, 1.55, 2.25); box(.55, .18, .55, limestone, study, x, 2.98, 2.25); } for (const x of [-1.8, 1.8]) table(study, x, .7); label(study, 'בית המדרש'); const studyWall = { x: PLACES.study.x, z: PLACES.study.z - 2.4, w: 3.7, d: .5 }; solids.push(studyWall);
+	for (const x of [-3.05, -1.1, 1.1, 3.05]) { make(new THREE.CylinderGeometry(.17, .23, 2.85, 12), limestone, study, x, 1.55, 2.25); box(.55, .18, .55, limestone, study, x, 2.98, 2.25); } for (const x of [-1.8, 1.8]) table(study, x, .7); const studySign = label(study, S.place_challenge_name); const studyWall = { x: PLACES.study.x, z: PLACES.study.z - 2.4, w: 3.7, d: .5 }; solids.push(studyWall);
 	// An open-front library: warm stone, timber shelves and a reading desk.
 	const library = floor(PLACES.library.x, PLACES.library.z, 4.7); library.rotation.y = Math.PI / 2;
 	box(7.8, .22, 6.6, wood, library, 0, .15, 0);
@@ -80,7 +100,7 @@ export function buildVillage({ scene, height, manager }) {
 			for (let i = 0; i < 9; i++) { const h = .45 + (i % 3) * .09; box(.14, h, .33, material(['#687e69', '#af7d62', '#d2b77c', '#6f8297'][i % 4]), library, x - .85 + i * .2, .72 + row * .9 + h / 2, -2.22); }
 		}
 	}
-	table(library, 0, .7); label(library, 'הספרייה', 3.55);
+	table(library, 0, .7); const librarySign = label(library, S.place_library_name, 3.55);
 	const openBook = new THREE.Group(); openBook.position.set(0, 1.03, .7); library.add(openBook);
 	for (const side of [-1, 1]) { const page = box(.4, .035, .48, paper, openBook, side * .2, 0, 0); page.rotation.z = side * .14; }
 	const libraryWall = { x: PLACES.library.x - 2.8, z: PLACES.library.z, w: .25, d: 4 }; solids.push(libraryWall);
@@ -99,7 +119,7 @@ export function buildVillage({ scene, height, manager }) {
 
 	// The council: benches in a half circle around the speaker's stone, and the
 	// big scoreboard behind it, facing the square.
-	const council = floor(PLACES.council.x, PLACES.council.z, 5.6); for (let row = 0; row < 2; row++) for (let i = 0; i < 9; i++) { const a = Math.PI * .12 + i / 8 * Math.PI * .76, r = 3.3 + row * 1.25; bench(council, Math.cos(a) * r, -Math.sin(a) * r, -a + Math.PI / 2); } make(new THREE.CylinderGeometry(1.0, 1.1, .55, 24), limestone, council, 0, .28, 0); label(council, 'מועצת הכפר', 3.8); for (const x of [-2.6, 2.6]) box(.16, 3.7, .16, wood, council, x, 1.8, 2.7);
+	const council = floor(PLACES.council.x, PLACES.council.z, 5.6); for (let row = 0; row < 2; row++) for (let i = 0; i < 9; i++) { const a = Math.PI * .12 + i / 8 * Math.PI * .76, r = 3.3 + row * 1.25; bench(council, Math.cos(a) * r, -Math.sin(a) * r, -a + Math.PI / 2); } make(new THREE.CylinderGeometry(1.0, 1.1, .55, 24), limestone, council, 0, .28, 0); const councilSign = label(council, S.place_council_name, 3.8); for (const x of [-2.6, 2.6]) box(.16, 3.7, .16, wood, council, x, 1.8, 2.7);
 
 	const square = floor(0, 15, 5.2); make(new THREE.TorusGeometry(1.05, .18, 8, 32).rotateX(Math.PI / 2), limestone, square, 0, .55, 0); make(new THREE.CylinderGeometry(1, 1, .48, 32), limestone, square, 0, .25, 0); make(new THREE.CircleGeometry(.87, 32).rotateX(-Math.PI / 2), material('#80a7a0'), square, 0, .51, 0);
 
@@ -125,6 +145,7 @@ export function buildVillage({ scene, height, manager }) {
 	function buildBooth(spec, slot, index) {
 		const group = floor(slot.x, slot.z, 4.2, true); group.rotation.y = slot.facing; group.name = `booth-${spec.itemId}`;
 		const kind = BOOTH_KINDS[spec.kind] ?? BOOTH_KINDS.open;
+		const words = () => boothKindWords(spec.kind);
 		const roof = material(kind.roof);
 		box(7.2, 3.1, .42, limestone, group, 0, 1.6, -2.9);
 		for (const x of [-3.4, 3.4]) box(.42, 3.1, 2.4, limestone, group, x, 1.6, -1.8);
@@ -145,31 +166,35 @@ export function buildVillage({ scene, height, manager }) {
 		const face = make(roundedPlane(3.4, 2.0, .2), new THREE.MeshBasicMaterial({ map: bt }), group, 0, 1.95, -2.54); face.castShadow = false;
 		let lastKey = '';
 		function paint(papers, state = {}) {
-			const key = JSON.stringify([papers, state]); if (key === lastKey) return; lastKey = key;
+			const key = JSON.stringify([papers, state, stringsVersion]); if (key === lastKey) return; lastKey = key;
+			const rtl = S.dir !== 'ltr', edge = rtl ? 210 : -210;
 			const locked = state.open === false;
 			bc.fillStyle = locked ? '#7d7466' : '#9a805f'; bc.fillRect(0, 0, 1536, 900);
-			bc.fillStyle = '#fff5dc'; bc.textAlign = 'center'; bc.direction = 'rtl'; bc.font = 'bold 54px Arial';
-			bc.fillText(locked ? 'הביתן עדיין סגור' : 'הפתקים של הכיתה', 768, 78);
-			if (locked) { bc.font = '34px Arial'; bc.fillText('ייפתח כשהמורה יגיע לשאלה הזאת', 768, 460); bt.needsUpdate = true; return; }
-			if (!papers.length) { bc.font = '34px Arial'; bc.fillText('הפתקים שתכתבו כאן יופיעו על הלוח', 768, 460); bt.needsUpdate = true; return; }
+			bc.fillStyle = '#fff5dc'; bc.textAlign = 'center'; bc.direction = rtl ? 'rtl' : 'ltr'; bc.font = 'bold 54px Arial';
+			bc.fillText(locked ? S.board_locked : S.board_title, 768, 78);
+			if (locked) { bc.font = '34px Arial'; bc.fillText(S.board_locked_hint, 768, 460); bt.needsUpdate = true; return; }
+			if (!papers.length) { bc.font = '34px Arial'; bc.fillText(S.board_empty, 768, 460); bt.needsUpdate = true; return; }
 			const shown = papers.slice(0, 6);
+			// Classmates count from 1, mine is "my note": the same numbering as the app's board
+			let classmate = 0;
 			shown.forEach((p, i) => {
 				const x = 40 + (i % 3) * 500, y = 125 + Math.floor(i / 3) * 375;
 				bc.save(); bc.translate(x + 235, y + 165); bc.rotate([-.018, .012, -.01, .016, -.015, .01][i]);
 				bc.fillStyle = '#3a2f2740'; bc.beginPath(); bc.roundRect(-229, -159, 470, 335, 18); bc.fill();
 				bc.fillStyle = p.own ? '#ffffff' : ['#f0dcd6', '#dbe7cf', '#d7dfee', '#ecdcf0'][i % 4]; bc.beginPath(); bc.roundRect(-235, -165, 470, 335, 18); bc.fill();
-				bc.fillStyle = '#334635'; bc.textAlign = 'right'; bc.font = 'bold 29px Arial';
-				bc.fillText(p.own ? 'הפתק שלי' : (p.author || `פתק ${i + 1}`), 210, -118);
+				bc.fillStyle = '#334635'; bc.textAlign = rtl ? 'right' : 'left'; bc.font = 'bold 29px Arial';
+				if (!p.own) classmate++;
+				bc.fillText(p.own ? S.note_mine : (p.author || fill(S.note_n, { n: classmate })), edge, -118);
 				bc.font = '29px Arial'; let line = '', row = -68;
-				for (const word of String(p.text).split(/\s+/)) { if (bc.measureText(line + word).width > 415) { bc.fillText(line, 210, row); row += 41; line = ''; if (row > 120) { line = '…'; break; } } line += word + ' '; }
-				bc.fillText(line, 210, row); bc.restore();
+				for (const word of String(p.text).split(/\s+/)) { if (bc.measureText(line + word).width > 415) { bc.fillText(line, edge, row); row += 41; line = ''; if (row > 120) { line = '…'; break; } } line += word + ' '; }
+				bc.fillText(line, edge, row); bc.restore();
 			});
-			if (papers.length > shown.length) { bc.fillStyle = '#fff5dc'; bc.textAlign = 'center'; bc.font = '30px Arial'; bc.fillText(`ועוד ${papers.length - shown.length} פתקים על הלוח הגדול`, 768, 880); }
+			if (papers.length > shown.length) { bc.fillStyle = '#fff5dc'; bc.textAlign = 'center'; bc.font = '30px Arial'; bc.fillText(moreLine(papers.length - shown.length), 768, 880); }
 			bt.needsUpdate = true;
 		}
 		paint([]);
-		const sign = label(group, spec.label, 3.95, kind.name);
-		const station = { id: `booth:${spec.itemId}`, itemId: spec.itemId, kind: spec.kind, name: spec.label, short: kind.name, guide: kind.name, question: kind.prompt, x: slot.x, z: slot.z, ax: slot.ax, az: slot.az, icon: kind.icon, booth: true };
+		const sign = label(group, spec.label, 3.95, words().name);
+		const station = { id: `booth:${spec.itemId}`, itemId: spec.itemId, kind: spec.kind, name: spec.label, short: words().name, guide: words().name, question: words().prompt, x: slot.x, z: slot.z, ax: slot.ax, az: slot.az, icon: kind.icon, booth: true };
 		// The desk sits in front of the pavilion, off to the side so it never
 		// hides the board from the square.
 		const deskX = slot.x + Math.sin(slot.facing) * 1.9 - Math.cos(slot.facing) * 1.4, deskZ = slot.z + Math.cos(slot.facing) * 1.9 + Math.sin(slot.facing) * 1.4;
@@ -187,7 +212,10 @@ export function buildVillage({ scene, height, manager }) {
 				this.state = next;
 				pennant.visible = next.current === true;
 				lantern.material.color.set(next.open === false ? '#8a8378' : '#ffd27a');
-				sign.userData.setText(next.label ?? spec.label, next.open === false ? 'ייפתח בהמשך המפגש' : kind.name, next.open === false);
+				// The words may have changed since the booth was built: the student's language arrived
+				const now = words();
+				station.short = now.name; station.guide = now.name; station.question = now.prompt;
+				sign.userData.setText(next.label ?? spec.label, next.open === false ? S.sign_later : now.name, next.open === false);
 			},
 		};
 		booths.push(booth);
@@ -487,5 +515,13 @@ export function buildVillage({ scene, height, manager }) {
 
 	// The materials a chosen colour set re-tints (see palettes.js); the booths' roofs keep their kind's colour.
 	const paletteMaterials = [{ material: limestone, slot: 'stone' }, { material: wood, slot: 'wood' }, { material: pathMaterial, slot: 'earth' }];
-	return { booths, installBooths, showPlace, setCast, scoreboard, figures: characters.figures, solids, clearings, ready: characters.ready, tick: characters.tick, characters, paletteMaterials };
+	/** The shell's words arrived (or changed): the fixed places and their signs follow */
+	function relabel() {
+		relabelFixedStations();
+		studySign.userData.setText(S.place_challenge_name);
+		librarySign.userData.setText(S.place_library_name);
+		councilSign.userData.setText(S.place_council_name);
+	}
+
+	return { booths, installBooths, relabel, showPlace, setCast, scoreboard, figures: characters.figures, solids, clearings, ready: characters.ready, tick: characters.tick, characters, paletteMaterials };
 }

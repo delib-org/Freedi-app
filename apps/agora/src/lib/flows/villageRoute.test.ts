@@ -147,6 +147,15 @@ describe('personal writing desks', () => {
 			null,
 		]);
 	});
+	it('asks in the plural, gender-neutral address the rest of the app uses', () => {
+		for (const item of plan) {
+			const prompt = villageDesk(item)?.prompt;
+			if (prompt === undefined) continue;
+			expect(prompt.startsWith('village.')).toBe(false);
+			// No masculine singular "you" or imperative ("אתה", "כתוב", "תרצה", "שלך")
+			expect(prompt).not.toMatch(/(^|\s)(אתה|כתוב|תרצה|שלך|לך)(\s|[.,?!]|$)/);
+		}
+	});
 	it('opens only the live paper, keeping repeated proposal rounds distinct', () => {
 		expect(acceptsVillageWrite({ type: 'agora-village-write', itemId: 'idea-b' }, plan, 3, 3)).toBe(
 			true,

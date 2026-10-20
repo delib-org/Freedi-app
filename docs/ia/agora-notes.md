@@ -1,6 +1,6 @@
 # Agora: Notes at the booths (write, see, rate, improve) — IA audit + spec
 
-Status: draft (audit done, redesign proposed, nothing implemented)
+Status: Phase 1 implemented 2026-10-20 (see section 10); Phases 2-3 pending. Open questions answered by Tal (section 11).
 Date: 2026-10-20
 Supersedes: nothing. Extends `agora-student-clarity.md` (label choices kept: פתק = container, plural address) and the "one bar, four doors" model. Scope: the student's note in the 3D village and its flat fallback. Teacher view only where it shares code.
 
@@ -149,6 +149,27 @@ Phase 1: truth and words. No structural change (fixes D1, D2, D4, D5 in part, D1
 - Label sweep (section 4). Values change in `village.note.yours` (retire), `village.desk.close`, `village.note.replies`, `village.note.improve`, `round.save|saved|update|saving|your_text`, `question.save|saved|update|saving_answer|your_answer`, `delib.submit_proposal|saving|edit_text|edit_proposal|update_proposal`, `hand.line|waiting|done|draw_more`, `round.rate_more`, `village.flight_status`, `celebrate.*` lines that say כיכר, and `language.flagged*` (shorter, coins second). Add `note.send|sending|on_board|edit|send_change`, `note.kind.*`, `rate.saved_ack`. Fix `village.standing.*` plurals with `tCount`.
 - `dir="auto"` on note text and every note textarea (`RoundAnswer.ts`, `QuestionStage.ts`, `Deliberation.ts` write desk, `VillageCommunity.ts` `.village-note__text`, `ThreadChat.ts`).
 
+Phase 1 — done 2026-10-20. What was built, and where it differs from the plan above:
+- First rating vs re-rate: `RateScale.ts` `rateAckKey()` shows `rate.saved_ack` ("הדירוג נשמר") on a first rating, `delib.rerate_ack` only over an earlier rating. Tests: `components/__tests__/RateScale.test.ts`.
+- Desk header and prompt: `villageDesk()` resolves `village.desk.<kind>.label|prompt` through `t()` (plural address; English UI no longer shows "ההצעה שלי"). Its signature is unchanged, so ClassView and watchBodies follow. Test: plural-address case in `villageRoute.test.ts`.
+- World strings: new `prototypes/olive-hill/world-strings.js` (Hebrew fallback for the standalone tour) and `lib/flows/villageWorldStrings.ts` (the shell's side, sent as `strings` on every `agora-village-state`, plus `dir`/`lang`). Covers the guide's bubble (write / edit / read; "on the board" only when `desk.confirmed !== false`, "still on its way" otherwise; closed-with-a-note and closed-with-nothing are two lines; the teacher watching gets the prompt), the paper on the desk, the 3D board canvas (title, locked, empty, "N more"), booth kind names and lines, the three fixed places and their building signs, the map, badges, enter/walk/stop and the WASD hint. Canvases and the page flip to LTR for ltr languages. Test: `lib/__tests__/villageWorldStrings.test.ts` pins that both sides name the same keys, every key exists in every locale, and the Hebrew is plural.
+- Lottery board: `lib/flows/boardLines.ts` `boardEmptyLine()` — before writing, with the lottery on, the board says "8 פתקים על הלוח. כתבו את שלכם, ותקבלו פתקים לקריאה" (`village.board.write_to_read`) instead of "עוד אין פתקים"; "no notes yet" only when none exist. `HandStatus` shows `hand.waiting_none` instead of "קיבלתם 0 פתקים". Tests: `boardLines.test.ts`, `HandStatus.test.ts`, a lottery case in `VillageCommunity.test.ts`.
+- Numbering: the board (and the 3D board's fallback label) numbers classmates from 1 (`classmateNumber`); mine is "my note", so the first classmate is no longer "פתק 2". RoundStage and QuestionStage still number their own lists (Phase 2 `noteNumber.ts`).
+- Q2 applied on the board: at the deliberation/vote/results booth the board says הצעה (`village.proposal.mine|n|replies|count|classmates|more_below|write_to_read`, `delib.edit_proposal`); other booths say פתק.
+- Q5 applied: ביתן replaces תחנה in student-facing strings (`village.board.empty`, `village.nav.hint_no_note`, `village.station_questions`, `village.opened`, the world map lines). Teacher-console strings that say תחנה are untouched.
+- Label sweep (values changed, keys kept to avoid churn — the planned `note.*` rename is deferred): `village.desk.close` סגירה, `village.note.yours`/`round.your_text`/`question.your_answer` הפתק שלי, `village.note.replies` רעיונות לפתק שלי, `village.note.improve` רעיון לשיפור, `village.note.save`/`round.update`/`question.update`/`delib.update_proposal` שליחת השינוי, `question.save` שליחה, `round.saved`/`question.saved` על הלוח, `question.saving_answer`/`delib.saving` שולחים…, `delib.edit_text` עריכה, `hand.line|waiting|done|draw_more`, `round.rate_more` עוד פתקים, `village.flight_status`, and "כיכר → לוח" in `celebrate.proposal_credited`, `toast.proposal_credited`, `delib.save_stuck`, `delib.saving_proposal|edit|rating|generic`. `village.standing.*` get `_one` forms ("1 rating").
+- Language gate: `language.flagged` and `_no_coins` now say what happened and what to do first, coins last ("הטקסט לא נשמר: יש בו שפה פוגענית. נסחו אותו מחדש בשפה מכבדת. (−n מטבעות)").
+- `dir="auto"` on note text and note textareas: RoundAnswer, RoundStage, QuestionStage, Deliberation (two desks), VillageCommunity, ThreadChat, and the world's station title and bubble question.
+- Verified in the browser on the solo suite, 390x844, Hebrew and English: write a story note, its bubble and board; the solutions booth with 9 students before writing (count line), after writing (hand of 5, "הצעה 1"), first rating ("הדירוג נשמר" / "Rating saved"), re-rate ("עודכן"). Shots `.playwright-mcp/notes-p1-*.png`.
+
+Deferred from Phase 1:
+- The world's own buttons, paper label and canvas still say פתק at the solutions booth (the shell's desk header says ההצעה שלי). Needs a per-kind word set in `world-strings.js`.
+- The doors ("כל הפתקים", "הפתק שלי") are one global pair and say פתק at the solutions booth too.
+- The council scoreboard canvas (`village.js` vote/pitch lines) and the world's loading/characters lines are still Hebrew only.
+- The bubble's "כתבו קודם, ואז תקראו את האחרים" (RoundStage) is a real gate today; Q1 removes it in Phase 2 together with dealing a hand before writing.
+- `village.note.yours` was not retired as a key (its value now equals `village.note.mine`).
+- Not run: `scripts/e2e-hand-board.mjs` and the other e2e scripts.
+
 Phase 2: one home per thing (fixes D3, D8, D9, D10; 2-3 days).
 - `RoundStage.ts` and `QuestionStage.ts`: add `part: 'desk' | 'all'`. `GameController.ts:926-935` passes `'desk'` in village mode, so the bubble holds only my note. The flat view keeps `'all'`.
 - New `lib/flows/noteNumber.ts` (pure, tested): one number per note per booth. Use it in the board, RoundStage, QuestionStage, ThreadChat (`proposalNumber`) and inbox rows.
@@ -166,6 +187,14 @@ Phase 3: the send moment and editing (fixes D6, D7, D11 layout, D13; 2 days, nee
 - E2E to update: `scripts/village-desk-board.mjs`, `scripts/e2e-story-in-village.mjs`, `scripts/e2e-hand-board.mjs`, `scripts/village-sim.mjs` (points still paid).
 
 ## 11. Open questions (for Tal)
+Answered by Tal 2026-10-20:
+- Q1: yes, a student may read classmates' notes before writing. Phase 2 (structure). Phase 1 adds no new "write first" gate.
+- Q2: at the solutions (deliberation) booth the object is הצעה ("proposal"), everywhere from there to the results; other booths keep פתק.
+- Q3: keep the send flight. Later phases may shorten it or unlock the doors, but it stays.
+- Q4: yes, the lottery also covers open questions. Phase 2.
+- Q5: the place is ביתן ("booth"), not תחנה.
+
+Original questions:
 Q1. Before writing, may a student read classmates' notes (the board's rule) or not (the desk's rule)? Today the two disagree, and the lottery hides them anyway.
 Q2. At the solutions booth, is the object still "פתק" with an "הצעה" tag, or "הצעה" everywhere from there to the results?
 Q3. After sending, should the paper still fly to the board on its own, or should the student stay at the desk and choose to go?

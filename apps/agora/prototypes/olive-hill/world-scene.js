@@ -7,6 +7,7 @@ import { characters } from './characters-2d.js';
 import { dragLook } from './drag-look.js';
 import { lushness, groundGrainCanvas, GRAIN_MEAN } from './meadow.js';
 import { PALETTES, paletteFor } from './palettes.js';
+import { S, setStrings, fill } from './world-strings.js';
 
 const $ = id => document.getElementById(id);
 // Preserve label nodes while the world animates; unchanged text needs no DOM
@@ -254,8 +255,10 @@ function updateDeskBubble(){
  const written=!!deskInfo.text;
  setText('desk-speaker',guide.name);
  setText('desk-question',activeLabel||selected.name);
- setText('desk-invitation',!deskInfo.writable?'הפתק שלך נשמר. אפשר לפתוח אותו ולקרוא שוב.':written?'הפתק שלך כבר על הלוח. אפשר לחזור אליו ולשפר אותו.':deskInfo.prompt);
- setText('desk-write',!deskInfo.writable?'📖 לקרוא את הפתק שלי':written?'✍️ לערוך את הפתק שלי':'✍️ לכתוב את זה על הפתק שלי');
+ // Say only what is true: "on the board" once the server has it, "closed"
+ // with or without a note of mine, and the teacher watching gets the prompt.
+ setText('desk-invitation',deskInfo.watcher?deskInfo.prompt:!deskInfo.writable?(written?S.bubble_closed_written:S.bubble_closed_empty):written?(deskInfo.confirmed===false?S.bubble_pending:S.bubble_written):deskInfo.prompt);
+ setText('desk-write',!deskInfo.writable?S.btn_read:written?S.btn_edit:S.btn_write);
  const bubble=$('desk-bubble');bubble.hidden=false;document.body.classList.add('has-desk-bubble');$('enter').hidden=true;
  const half=bubble.offsetWidth/2+16;
  bubble.style.left=`${THREE.MathUtils.clamp((anchor.x*.5+.5)*innerWidth,half,innerWidth-half)}px`;
@@ -366,18 +369,33 @@ function destination(place,label){
  if(!station&&fixedStations.some(s=>s.id===place)&&!placeInPlan(place)){activeLabel=label||'';describe();return;}
  if(!station){pendingPlace=place;pendingLabel=label||'';selected=stations[0];return;}
  selected=station;activeLabel=label||'';if(!embedded)activePlace=place;describe();moving=false;hideDeskBubble();
- if(!embedded){deskInfo=selected.booth?{label:'הפתק שלי',prompt:'הפתק שלך מחכה על השולחן. איזו הצעה תרצה לכתוב?',writable:true}:null;for(const b of village.booths)b.desk.paint('', 'הפתק שלי',b.station.id===selected.id);}
+ if(!embedded){deskInfo=selected.booth?{label:S.note_mine,prompt:'הפתק מחכה על השולחן. איזו הצעה תרצו לכתוב?',writable:true}:null;for(const b of village.booths)b.desk.paint('',S.note_mine,b.station.id===selected.id);}
+}
+/**
+ * The shell's words arrived (in the student's language) or changed: the page's
+ * direction, the static controls, the fixed places and the map follow. Booths
+ * re-read their words on the setState that comes right after.
+ */
+function applyWords(){
+ document.documentElement.dir=S.dir==='ltr'?'ltr':'rtl';
+ if(S.lang)document.documentElement.lang=S.lang;
+ $('map-toggle').textContent=S.map_toggle;
+ const hint=document.querySelector('.hint');if(hint)hint.textContent=S.hint;
+ village.relabel();
+ navKey='';describe();
 }
 /** The walker picked a place from the list: go there, without changing what the shell shows. */
 function walkTo(place){const station=stations.find(s=>s.id===place);if(!station)return;selected=station;describe();hideDeskBubble();viewKind=null;moving=true;canvas.focus();}
 window.addEventListener('message',event=>{
  if(!embedded||event.source!==parent||event.origin!==location.origin||!event.data||typeof event.data!=='object')return;const data=event.data;
  if(data.type!=='agora-village-state'||typeof data.itemId!=='string'||typeof data.place!=='string')return;
+ // The words first: the booths and the map below are painted with them
+ if(setStrings(data.strings))applyWords();
  document.body.classList.toggle('has-community',data.community===true);
  if(data.quality==='low'||data.quality==='high'){const low=data.quality==='low';if(low!==lowQuality)applyQuality(low);}
  if(typeof data.sound==='boolean')applySound(data.sound);
  if(typeof data.palette==='string')applyPalette(data.palette);
- deskInfo=data.desk&&typeof data.desk.label==='string'&&typeof data.desk.prompt==='string'?{label:data.desk.label,prompt:data.desk.prompt,text:typeof data.desk.text==='string'?data.desk.text:'',writable:data.desk.writable===true}:null;
+ deskInfo=data.desk&&typeof data.desk.label==='string'&&typeof data.desk.prompt==='string'?{label:data.desk.label,prompt:data.desk.prompt,text:typeof data.desk.text==='string'?data.desk.text:'',writable:data.desk.writable===true,confirmed:typeof data.desk.confirmed==='boolean'?data.desk.confirmed:undefined,watcher:data.desk.watcher===true}:null;
  if(Array.isArray(data.cast))village.setCast(data.cast.filter(c=>c&&typeof c.id==='string'&&typeof c.name==='string').map(c=>({id:c.id,name:c.name,portraitUrl:typeof c.portraitUrl==='string'?c.portraitUrl:''})));
  if(Array.isArray(data.booths))installBooths(data.booths.filter(b=>b&&typeof b.itemId==='string'&&typeof b.label==='string').map(b=>({itemId:b.itemId,label:b.label,kind:typeof b.kind==='string'?b.kind:'open',open:b.open!==false,current:b.current===true})));
  if(data.navigation==='teacher'||data.navigation==='free')navigation=data.navigation;
@@ -399,7 +417,7 @@ window.addEventListener('message',event=>{
   booth.paint(entries.flatMap(e=>e.papers).filter(p=>p&&typeof p.text==='string'&&typeof p.own==='boolean'),{open:spec?spec.open!==false:true});
   const current=booth.station.id===activePlace;
   const saved=entries.flatMap(e=>e.papers).find(p=>p&&p.own===true&&typeof p.text==='string')?.text??'';
-  booth.desk.paint(current?deskInfo?.text??'':saved,current?deskInfo?.label??'הפתק שלי':'הפתק שלי',current&&!!deskInfo);
+  booth.desk.paint(current?deskInfo?.text??'':saved,current?deskInfo?.label??S.note_mine:S.note_mine,current&&!!deskInfo);
  }
  if(data.council&&typeof data.council==='object')village.scoreboard.paint(data.council);
  uiPaused=data.paused===true;document.body.classList.toggle('is-covered',uiPaused);if(uiPaused){keys.clear();moving=false;hideDeskBubble();}
@@ -473,8 +491,8 @@ function renderStationNav(){
  if(key===navKey)return;navKey=key;
  // The map is always there: students roam freely. Led only means an advance walks everyone.
  $('station-map').hidden=false;$('class-pill').hidden=true;
- $('class-pill-text').textContent=`הכיתה נמצאת ב: ${activeLabel||here?.name||''}`;
- $('map-mode').textContent=!embedded?'סיור חופשי · אפשר ללכת לכל מקום':lead?'מסתובבים בחופשיות. כשהמורה עובר לתחנה חדשה, כולם הולכים אליה יחד.':'בחרו לאן ללכת. תחנה נפתחת כשהמורה מגיע אליה.';
+ $('class-pill-text').textContent=fill(S.class_at,{place:activeLabel||here?.name||''});
+ $('map-mode').textContent=!embedded?'סיור חופשי · אפשר ללכת לכל מקום':lead?S.map_lead:S.map_free;
  const nav=$('preview-stations');nav.replaceChildren();
  for(const {s,st} of rows){
   const locked=!st.open;
@@ -483,7 +501,7 @@ function renderStationNav(){
   const icon=document.createElement('span');icon.className='station__icon';icon.setAttribute('aria-hidden','true');icon.textContent=s.icon||'•';
   const name=document.createElement('span');name.className='station__name';name.textContent=s.name;
   const badge=document.createElement('span');badge.className='station__badge';
-  const text=locked?'🔒 בהמשך':st.current?'● הכיתה כאן':s.id==='council'?'לוח התוצאות':embedded?'✓ פתוח':'';
+  const text=locked?S.badge_locked:st.current?S.badge_here:s.id==='council'?S.badge_results:embedded?S.badge_open:'';
   badge.textContent=text;badge.hidden=!text;if(st.current)badge.classList.add('is-now');if(locked)badge.classList.add('is-locked');
   b.setAttribute('aria-label',text?`${s.name} · ${text}`:s.name);
   b.onclick=()=>{if(locked)return;if(s.booth||s.id==='council')arriveNotify=s.id;walkTo(s.id);if(matchMedia('(max-width:650px)').matches)setMapOpen(false);};
@@ -553,7 +571,7 @@ function frame(now){requestAnimationFrame(frame);if((lite||lowQuality)&&now-last
  camera.position.x=THREE.MathUtils.clamp(camera.position.x,-bounds.x,bounds.x);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-24,bounds.zMax);camera.position.y=height(camera.position.x,camera.position.z)+1.75;camera.quaternion.setFromEuler(new THREE.Euler(pitch,yaw,0,'YXZ'));village.tick(camera);
  const shelf=fixedStations[0];const insideLibrary=placeInPlan('library')&&Math.abs(camera.position.z-shelf.z)<3.5&&camera.position.x>shelf.x-2.6&&camera.position.x<shelf.x+3.4;
  if(embedded&&insideLibrary!==lastLibraryPresence){lastLibraryPresence=insideLibrary;parent.postMessage({type:'agora-village-library-presence',inside:insideLibrary},location.origin);}
- const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;setText('enter',deskHere()?'לגשת לשולחן ולפתק':selected.id==='council'?'לפתוח את לוח התוצאות':selected.booth?(embedded?'לגשת לביתן הזה':'להיכנס לביתן'):near?'להיכנס לתחנה ←':'כניסה מהירה לתחנה ←');updateDeskBubble();setText('travel',moving?'לעצור':`ללכת אל: ${selected.name}`);$('travel').hidden=(!moving&&near)||(viewKind==='table'&&viewPlace===selected.id);renderer.render(scene,camera);
+ const near=Math.hypot(camera.position.x-selected.ax,camera.position.z-selected.az)<3;setText('enter',deskHere()?S.enter_desk:selected.id==='council'?S.enter_results:selected.booth?S.enter_booth:near?S.enter_place:S.enter_place_far);updateDeskBubble();setText('travel',moving?S.stop:fill(S.walk_to,{place:selected.name}));$('travel').hidden=(!moving&&near)||(viewKind==='table'&&viewPlace===selected.id);renderer.render(scene,camera);
 }
 /** Read-only probe for tests: how much of the planting the village cleared, and how close the nearest tree stands to each paved place */
 window.__villagePlanting=()=>({trees:treeParts.length,standing:treeParts.filter(t=>t.group.visible).length,nearest:village.clearings.map(s=>({place:s.booth?'booth':'place',x:+s.x.toFixed(1),z:+s.z.toFixed(1),tree:Math.min(...treeParts.filter(t=>t.group.visible).map(t=>+Math.hypot(t.x-s.x,t.z-s.z).toFixed(1)))}))});

@@ -52,6 +52,7 @@ import {
 } from '../lib/hands';
 import { AGORA_LOTTERY } from '@freedi/shared-types';
 import { nextCardBelow, notesBelowFold, type CardEdges } from '../lib/flows/boardFold';
+import { boardEmptyLine, classmateNumber } from '../lib/flows/boardLines';
 
 export interface VillageCommunitySource extends NoteNewsSource {
 	notes: (item: AgoraStagePlanItem) => AgoraProposal[];
@@ -135,6 +136,47 @@ export function stationNotes(item: AgoraStagePlanItem): AgoraProposal[] {
 				? (state.answersByQuestion[item.statementId] ?? [])
 				: []
 	).filter((p) => !p.hidden);
+}
+interface BoardWords {
+	mine: string;
+	n: string;
+	replies: string;
+	edit: string;
+	count: string;
+	classmates: string;
+	moreBelow: string;
+	writeToRead: string;
+}
+/** One name per object: a proposal at the solutions booth (and its vote and results), a note elsewhere */
+function boardWords(item: AgoraStagePlanItem | undefined): BoardWords {
+	const proposals =
+		!!item && [AgoraStage.deliberation, AgoraStage.voting, AgoraStage.results].includes(item.stage);
+
+	return proposals
+		? {
+				mine: 'village.proposal.mine',
+				n: 'village.proposal.n',
+				replies: 'village.proposal.replies',
+				edit: 'delib.edit_proposal',
+				count: 'village.proposal.count',
+				classmates: 'village.proposal.classmates',
+				moreBelow: 'village.proposal.more_below',
+				writeToRead: 'village.proposal.write_to_read',
+			}
+		: {
+				mine: 'village.note.yours',
+				n: 'village.note.n',
+				replies: 'village.note.replies',
+				edit: 'village.note.edit',
+				count: 'village.board.count',
+				classmates: 'village.board.classmates',
+				moreBelow: 'village.board.more_below',
+				writeToRead: 'village.board.write_to_read',
+			};
+}
+/** "1 ratings" read wrong: one rater takes the `_one` sentence (tCount, with a second placeholder) */
+function countKey(key: string, n: number): string {
+	return n === 1 ? `${key}_one` : key;
 }
 /** The hand line under a dealt board: progress, what comes next, "draw more" */
 function handLine(a: VillageCommunityAttrs, item: AgoraStagePlanItem): m.Children {
@@ -346,15 +388,19 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 			const raters = note.evaluation?.numberOfEvaluators ?? 0;
 			if (raters === 0) return null;
 			const spec = roundSpecOf(item);
-			if (spec?.scale === 'like') return t('village.standing.likes', { n: raters });
+			if (spec?.scale === 'like')
+				return t(countKey('village.standing.likes', raters), { n: raters });
 			const mean = note.evaluation?.averageEvaluation ?? 0;
 
-			return t('village.standing.mean', { pct: Math.round(mean * 100), n: raters });
+			return t(countKey('village.standing.mean', raters), {
+				pct: Math.round(mean * 100),
+				n: raters,
+			});
 		}
 		const score = state.scores[note.statementId];
 		if (!score?.classConsensus || score.classConsensus.n === 0) return null;
 
-		return t('village.standing.consensus', {
+		return t(countKey('village.standing.consensus', score.classConsensus.n), {
 			pct: boardPercent(score),
 			n: score.classConsensus.n,
 		});
@@ -491,16 +537,33 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 								name ? t('delib.chat_with', { name }) : t('village.thread.n', { n: i + 1 }),
 								newsChip(news),
 							]),
-							m('p.village-note__text', preview?.statement ?? t('delib.chat_empty')),
+							m(
+								'p.village-note__text',
+								{ dir: 'auto' },
+								preview?.statement ?? t('delib.chat_empty'),
+							),
 							m('span.village-note__conversation-action', t('village.thread.cta')),
 						],
 					);
 				});
 			};
 
-			/** A note's number on this board — the same count the cards wear */
+			// At the solutions booth the object is a proposal; everywhere else a note
+			const words = boardWords(item);
+			/** A classmate's note number on this board — mine is "my note", never a number */
 			const noteNumber = (note: AgoraProposal): number =>
-				Math.max(1, notes.findIndex((n) => n.statementId === note.statementId) + 1);
+				classmateNumber(notes, a.userId, note.statementId);
+			// An empty board says why: no notes at all, or notes held back until I write
+			const emptyLine = item
+				? boardEmptyLine({
+						visible: notes.length,
+						classmates: stationNotes(item).filter((note) => note.creatorId !== a.userId).length,
+						lottery: isLotteryActive(),
+						live,
+						hasMine: mine !== undefined,
+						canWrite: !a.source && !a.readOnly,
+					})
+				: null;
 
 			const noteCard = (note: AgoraProposal, overview = false): m.Children => {
 				const own = note.creatorId === a.userId;
@@ -532,11 +595,11 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 								{
 									class: own ? 'village-note__ownership' : undefined,
 								},
-								own ? t('village.note.yours') : t('village.note.n', { n: noteNumber(note) }),
+								own ? t(words.mine) : t(words.n, { n: noteNumber(note) }),
 							),
 							stand ? m('small.village-note__standing', stand) : null,
 						]),
-						m('p.village-note__text', note.statement),
+						m('p.village-note__text', { dir: 'auto' }, note.statement),
 						// The teacher's own device knows the author; the chip opens the
 						// student's private thread. Never drawn for a student.
 						!own && a.authorName && a.onAuthor
@@ -568,11 +631,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 								: null,
 						m('.village-note__actions', [
 							own && live && a.onEditMine
-								? m(
-										'button.village-note__edit',
-										{ onclick: () => a.onEditMine?.() },
-										t('village.note.edit'),
-									)
+								? m('button.village-note__edit', { onclick: () => a.onEditMine?.() }, t(words.edit))
 								: null,
 							// The chip rides the button that opens the conversation, so it says
 							// WHERE the news is — a card has two doors, and a chip by the
@@ -587,7 +646,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 												helper = own ? undefined : a.userId;
 											},
 										},
-										[own ? t('village.note.replies') : t('village.note.improve'), newsChip(news)],
+										[own ? t(words.replies) : t('village.note.improve'), newsChip(news)],
 									)
 								: null,
 						]),
@@ -642,10 +701,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 										// dealt hand when the lottery is on, so it never promises
 										// notes the student cannot reach
 										!selected && classmates.length
-											? m(
-													'p.village-board__count',
-													tCount('village.board.count', classmates.length),
-												)
+											? m('p.village-board__count', tCount(words.count, classmates.length))
 											: null,
 									]),
 									m('button.btn.btn--secondary', { onclick: () => close(a) }, t('village.back')),
@@ -675,9 +731,9 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 											// closed station takes the pen away, as the card's door does.
 											canEditProposal: live,
 											wording: {
-												mine: t('village.note.mine'),
-												theirs: t('village.note.n', { n: noteNumber(selected) }),
-												edit: t('village.note.edit'),
+												mine: t(words.mine),
+												theirs: t(words.n, { n: noteNumber(selected) }),
+												edit: t(words.edit),
 												withAuthor: t('village.thread.with_author'),
 												save: t('village.note.save'),
 											},
@@ -694,9 +750,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 											anonName: a.anonName,
 											proposalNumber: noteNumber(selected),
 											backLabel: t(
-												selected.creatorId === a.userId
-													? 'village.note.replies'
-													: 'village.board.back',
+												selected.creatorId === a.userId ? words.replies : 'village.board.back',
 											),
 											onBack: () => {
 												helper = undefined;
@@ -716,7 +770,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 												),
 												m('.village-board__own', noteCard(selected, true)),
 												m('section.village-board__conversations', [
-													m('h3.village-board__section-title', t('village.note.replies')),
+													m('h3.village-board__section-title', t(words.replies)),
 													ownerThreads(selected),
 												]),
 											]
@@ -724,7 +778,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 												mine ? m('section.village-board__own', noteCard(mine)) : null,
 												classmates.length
 													? m('section.village-board__peers', [
-															m('h3.village-board__section-title', t('village.board.classmates')),
+															m('h3.village-board__section-title', t(words.classmates)),
 															m(
 																'.village-notes',
 																classmates.map((note) => noteCard(note)),
@@ -732,7 +786,14 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 														])
 													: null,
 												canRate && item && isLotteryActive() ? handLine(a, item) : null,
-												!notes.length ? m('p', t('village.board.empty')) : null,
+												emptyLine
+													? m(
+															'p.village-board__empty',
+															'n' in emptyLine
+																? tCount(words.writeToRead, emptyLine.n)
+																: t(emptyLine.key),
+														)
+													: null,
 												// Sticks to the bottom edge while classmates' cards wait
 												// below; a tap brings the next one up
 												below > 0
@@ -750,7 +811,7 @@ export function VillageCommunity(): m.Component<VillageCommunityAttrs> {
 																		),
 																},
 																[
-																	m('span', tCount('village.board.more_below', below)),
+																	m('span', tCount(words.moreBelow, below)),
 																	m(
 																		'span.village-board__more-arrow',
 																		{ 'aria-hidden': 'true' },

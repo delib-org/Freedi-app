@@ -24,6 +24,7 @@ import { CastCards } from './CastCards';
 import { castFigures, isCastStage, planHasCast, type CastMember } from '../lib/flows/scenarioCast';
 import { openPlaceOf, placeNavTabs, type PlaceDestination } from '../lib/flows/placeNav';
 import { t } from '../lib/i18n';
+import { villageWorldStrings } from '../lib/flows/villageWorldStrings';
 import { isLightWorld, isVillageSoundOn, villagePalette } from '../lib/villagePrefs';
 
 interface VillageShellAttrs {
@@ -204,6 +205,10 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 							...villageDesk(item),
 							writable: attrs.writable,
 							text: attrs.papers.find((paper) => paper.own)?.text ?? '',
+							// "On the board" only once the server has it; until then "on its way"
+							confirmed: attrs.papers.find((paper) => paper.own)?.confirmed,
+							// The teacher watching has no note: the guide says the prompt, not "closed"
+							watcher: !!attrs.watcher,
 						}
 					: null,
 				paused: opened || communityOpen,
@@ -228,6 +233,8 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				sound: isVillageSoundOn(),
 				quality: isLightWorld() ? 'low' : 'high',
 				palette: villagePalette(),
+				// Every word the world paints, in the student's language
+				strings: villageWorldStrings(),
 			},
 			window.location.origin,
 		);

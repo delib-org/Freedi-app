@@ -38,7 +38,7 @@ vi.mock('../StageNav', () => ({ planItemLabel: () => '' }));
 vi.mock('../../lib/sound', () => ({ playCoin: vi.fn() }));
 // The hand (lib/hands.ts) streams Firestore and asks a callable; here the
 // lottery is off, so the board's default source is every note of the station
-const handMock = vi.hoisted(() => ({ handOnly: null as string[] | null }));
+const handMock = vi.hoisted(() => ({ handOnly: null as string[] | null, lottery: false }));
 vi.mock('../../lib/hands', async () => {
 	const { getDeliberationState } = await import('../../lib/proposals');
 
@@ -57,7 +57,7 @@ vi.mock('../../lib/hands', async () => {
 			return hand ? shown.filter((p) => hand.includes(p.statementId)) : shown;
 		},
 		handFor: () => [],
-		isLotteryActive: () => false,
+		isLotteryActive: () => handMock.lottery,
 		parentIdOf: () => undefined,
 		poolExhausted: () => false,
 		drawMore: vi.fn(),
@@ -139,9 +139,9 @@ describe('village session integration', () => {
 			// (one classmate), never the class (three) — the teacher sees all three
 			expect(board(false)).toEqual({
 				cards: 2,
-				count: tCount('village.board.count', 1),
+				count: tCount('village.proposal.count', 1),
 			});
-			expect(board(true)).toEqual({ cards: 4, count: tCount('village.board.count', 3) });
+			expect(board(true)).toEqual({ cards: 4, count: tCount('village.proposal.count', 3) });
 		} finally {
 			handMock.handOnly = null;
 		}
@@ -214,7 +214,11 @@ describe('village session integration', () => {
 			const tree = component.view.call(component, node);
 			component.onremove!.call(component, node);
 
-			return findButton(tree, t('village.note.edit'));
+			// One name per object: "edit my proposal" at the solutions booth, "edit my note" at a question
+			return findButton(
+				tree,
+				t(question && viewingIndex === 0 ? 'village.note.edit' : 'delib.edit_proposal'),
+			);
 		};
 		const live = board(1);
 		expect(live).toBeDefined();
@@ -223,6 +227,53 @@ describe('village session integration', () => {
 		expect(board(0)).toBeUndefined();
 		expect(board(0, true)).toBeDefined();
 		expect(board(0, true, true)).toBeUndefined();
+	});
+	it('an empty board in a large class says the notes are there, never "no notes yet"', () => {
+		state.answersByQuestion = { q: [proposal('n1'), proposal('n2'), proposal('n3')] };
+		state.answersByQuestion.q.forEach((note, i) => {
+			note.creatorId = `c${i}`;
+		});
+		const plan = [{ itemId: 'story', stage: AgoraStage.question, statementId: 'q', kind: 'story' }];
+		const emptyLine = (): string => {
+			const component = VillageCommunity();
+			const attrs = {
+				session: {
+					sessionId: 's',
+					status: AgoraSessionStatus.live,
+					stage: AgoraStage.question,
+					stageIndex: 0,
+					stagePlan: plan,
+				} as unknown as AgoraSession,
+				userId: 'me',
+				anonName: 'me',
+				plan,
+				currentIndex: 0,
+				viewingIndex: 0,
+				boardRequest: 1,
+				navigate: vi.fn(),
+				onPause: vi.fn(),
+			} as unknown as VillageCommunityAttrs;
+			const node = { attrs } as unknown as m.VnodeDOM<VillageCommunityAttrs>;
+			component.oninit!.call(component, node);
+			component.onbeforeupdate!.call(component, node, node);
+			const tree = component.view.call(component, node);
+			component.onremove!.call(component, node);
+
+			return nodeText(findAllByClass(tree, 'village-board__empty'));
+		};
+		try {
+			// Before I write, the lottery deals me nothing: the board counts what is there
+			handMock.lottery = true;
+			handMock.handOnly = [];
+			expect(emptyLine()).toBe(tCount('village.board.write_to_read', 3));
+			// Nobody has written at all: then, and only then, "no notes yet"
+			state.answersByQuestion = { q: [] };
+			expect(emptyLine()).toBe(t('village.board.empty'));
+		} finally {
+			handMock.lottery = false;
+			handMock.handOnly = null;
+			state.answersByQuestion = {};
+		}
 	});
 	it('flags unread lines: a chip on my card and on the classmate I wrote to, and on my conversation rows', () => {
 		const mine = proposal('mine');
@@ -300,11 +351,11 @@ describe('village session integration', () => {
 		const cards = findAllByClass(board, 'village-note');
 		expect(cards).toHaveLength(3);
 		expect(nodeText(findAllByClass(cards[0], 'village-note__ownership')[0])).toBe(
-			t('village.note.yours'),
+			t('village.proposal.mine'),
 		);
 		// Pin mine without changing classmates' original numbers.
 		expect(nodeText(findAllByClass(cards[1], 'village-note__title')[0])).toBe(
-			t('village.note.n', { n: 1 }),
+			t('village.proposal.n', { n: 1 }),
 		);
 		const chipOf = (card: Node): string | undefined =>
 			findAllByClass(card, 'village-note__chip')[0]?.attrs?.['aria-label'] as string | undefined;
@@ -318,7 +369,7 @@ describe('village session integration', () => {
 		expect(String(cards[2].attrs?.className)).not.toContain('village-note--news');
 
 		// Inside "replies to my note", each conversation row says what is new in it
-		(findButton(board, t('village.note.replies'))!.attrs!.onclick as () => void)();
+		(findButton(board, t('village.proposal.replies'))!.attrs!.onclick as () => void)();
 		const rows = findAllByClass(component.view.call(component, node), 'village-note--conversation');
 		expect(rows).toHaveLength(2);
 		expect(nodeText(findAllByClass(rows[0], 'village-note__text')[0])).toBe('b2');
@@ -332,7 +383,7 @@ describe('village session integration', () => {
 		component.view.call(component, node);
 		const ownerThread: ThreadChatAttrs =
 			renderThread.mock.calls[renderThread.mock.calls.length - 1][0];
-		expect(ownerThread.backLabel).toBe(t('village.note.replies'));
+		expect(ownerThread.backLabel).toBe(t('village.proposal.replies'));
 		expect(ownerThread.proposal.statementId).toBe('mine');
 		ownerThread.onBack();
 		// Back climbs one level to the same note's conversations, not all notes.

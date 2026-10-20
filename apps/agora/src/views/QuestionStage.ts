@@ -183,6 +183,7 @@ export function QuestionStage(): m.Component<QuestionStageAttrs> {
 								? m('p.question__mine-text', mine ? mine.statement : t('question.no_answer_given'))
 								: [
 										m('textarea.question__textarea', {
+											dir: 'auto',
 											value: pen.text,
 											rows: 3,
 											maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
