@@ -155,8 +155,24 @@ function pluralCategory(count: number): Intl.LDMLPluralRule {
 	return rules.select(count);
 }
 
+/**
+ * Strings registered by a lazy chunk (Admin) for its own screens. Kept apart
+ * from `dictionaries` so a registered language still loads its main chunk,
+ * and so those strings never weigh on the player bundle.
+ */
+const extensions: Partial<Record<Lang, Dictionary>> = {};
+
+export function extendDictionaries(byLang: Record<Lang, Dictionary>): void {
+	for (const lang of LANGS) extensions[lang] = { ...extensions[lang], ...byLang[lang] };
+}
+
 function lookup(key: string): string | undefined {
-	return dictionaries[currentLang]?.[key] ?? dictionaries.he?.[key];
+	return (
+		dictionaries[currentLang]?.[key] ??
+		extensions[currentLang]?.[key] ??
+		dictionaries.he?.[key] ??
+		extensions.he?.[key]
+	);
 }
 
 /**

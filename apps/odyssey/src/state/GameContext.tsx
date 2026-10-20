@@ -58,8 +58,17 @@ import { DEFAULT_TEXTS } from '../lib/defaultTexts';
 interface GameState {
 	/** true while auth or the initial game load is in flight */
 	loading: boolean;
-	/** null after loading when no game was seeded yet */
+	/** null after loading when no game was seeded yet. Display copy: already
+	 *  in the player's language (falls back to Hebrew per field). */
 	content: GameContent | null;
+	/**
+	 * The Hebrew source. Anything STORED or MATCHED (journey chips, elder value
+	 * matching, the Agora hand-off) reads this, never `content`, so a sailor's
+	 * answers mean the same thing in every language.
+	 */
+	canonicalContent: GameContent | null;
+	/** The canonical (Hebrew) chip at the same index as a displayed chip. */
+	canonicalChip(questionId: string, displayedChip: string): string;
 	journey: OdysseyJourney | null;
 	/** stance statementId → my evaluation value (-1..1) */
 	attitudes: AttitudeMap;
@@ -118,6 +127,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
 		() => ({
 			loading: authLoading || loading,
 			content,
+			// Same object until content translation lands (localizeGame.ts).
+			canonicalContent: content,
+			canonicalChip(_questionId: string, displayedChip: string): string {
+				return displayedChip;
+			},
 			journey,
 			attitudes,
 			text(key: string): string {
