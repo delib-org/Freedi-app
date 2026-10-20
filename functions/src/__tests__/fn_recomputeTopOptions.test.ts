@@ -11,6 +11,7 @@ jest.mock('../evaluation/updateChosenOptions', () => ({
 	updateParentStatementWithChosenOptions: (parentId: string | undefined) => mockRecompute(parentId),
 }));
 
+import { logger } from 'firebase-functions';
 import { applyRecomputeTopOptions } from '../fn_recomputeTopOptions';
 
 interface DbShape {
@@ -129,6 +130,57 @@ describe('applyRecomputeTopOptions', () => {
 
 		await expect(applyRecomputeTopOptions(firestore, 'u1', request)).rejects.toThrow(
 			/Failed to recompute top answers/i,
+		);
+	});
+
+	it('logs the cause and throws unavailable when the admin lookup fails in Firestore', async () => {
+		const failing = {
+			collection: jest.fn((name: string) =>
+				name === 'statements'
+					? {
+							doc: jest.fn(() => ({
+								get: jest.fn(async () => ({ exists: true, data: () => ({}) })),
+							})),
+						}
+					: {
+							where: jest.fn().mockReturnThis(),
+							limit: jest.fn().mockReturnThis(),
+							get: jest.fn(async () => {
+								throw Object.assign(new Error('9 FAILED_PRECONDITION: needs index'), { code: 9 });
+							}),
+						},
+			),
+		} as unknown as Firestore;
+
+		await expect(applyRecomputeTopOptions(failing, 'u1', request)).rejects.toMatchObject({
+			code: 'unavailable',
+		});
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.stringContaining('admin check failed'),
+			expect.objectContaining({ statementId: 'q-1', userId: 'u1', errorCode: 9 }),
+		);
+		expect(mockRecompute).not.toHaveBeenCalled();
+	});
+
+	it('keeps not-found as not-found rather than masking it', async () => {
+		const { firestore } = makeDb({ statement: null, isAdmin: true });
+
+		await expect(applyRecomputeTopOptions(firestore, 'u1', request)).rejects.toMatchObject({
+			code: 'not-found',
+		});
+		expect(logger.error).not.toHaveBeenCalled();
+	});
+
+	it('logs the underlying error with context before rethrowing internal', async () => {
+		const { firestore } = makeDb({ statement: {}, isAdmin: true });
+		mockRecompute.mockRejectedValue(new Error('boom'));
+
+		await expect(applyRecomputeTopOptions(firestore, 'u1', request)).rejects.toMatchObject({
+			code: 'internal',
+		});
+		expect(logger.error).toHaveBeenCalledWith(
+			expect.stringContaining('recompute failed'),
+			expect.objectContaining({ statementId: 'q-1', userId: 'u1', errorMessage: 'boom' }),
 		);
 	});
 });

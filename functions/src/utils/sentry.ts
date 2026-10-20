@@ -83,23 +83,124 @@ const CLIENT_FAULT_CODES: ReadonlySet<string> = new Set([
 	'aborted',
 ]);
 
-/** Duck-typed: HttpsError carries a string `code`; checked here without importing firebase-functions. */
-function isClientFaultHttpsError(error: unknown): boolean {
-	if (!(error instanceof Error)) return false;
-	const code = (error as Error & { code?: unknown }).code;
+/** HTTP status range an HttpsError with a client-fault code must agree with. */
+const MIN_CLIENT_FAULT_HTTP_STATUS = 400;
+const MAX_CLIENT_FAULT_HTTP_STATUS = 499;
 
-	return typeof code === 'string' && CLIENT_FAULT_CODES.has(code);
+interface ErrorLike {
+	name?: unknown;
+	code?: unknown;
+	constructor?: { name?: unknown };
+	httpErrorCode?: { status?: unknown; canonicalName?: unknown };
+}
+
+type FaultClass = 'client' | 'server' | 'unknown';
+
+function normalizeCode(code: unknown): string | null {
+	if (typeof code !== 'string') return null;
+
+	return code
+		.replace(/^functions\//, '')
+		.toLowerCase()
+		.replace(/_/g, '-');
+}
+
+/**
+ * Only an HttpsError is trusted to carry a Firebase code. A third-party SDK
+ * error with `code: 'RESOURCE_EXHAUSTED'` or a plain object with `.status: 429`
+ * is OUR failure talking to an upstream, so it must still be reported.
+ */
+function isIdentifiedHttpsError(error: ErrorLike): boolean {
+	return (
+		(typeof error.httpErrorCode === 'object' && error.httpErrorCode !== null) ||
+		error.name === 'HttpsError' ||
+		error.constructor?.name === 'HttpsError'
+	);
+}
+
+/**
+ * Classify the hint's exception. Server wins on any doubt: an unreadable code,
+ * or a client-fault code whose HTTP status says 5xx, is never dropped.
+ */
+function classifyException(error: unknown): FaultClass {
+	if (typeof error !== 'object' || error === null) return 'unknown';
+	const candidate = error as ErrorLike;
+	if (!isIdentifiedHttpsError(candidate)) return 'unknown';
+
+	const code =
+		normalizeCode(candidate.code) ?? normalizeCode(candidate.httpErrorCode?.canonicalName);
+	if (code === null) return 'unknown';
+	if (!CLIENT_FAULT_CODES.has(code)) return 'server';
+
+	const status = candidate.httpErrorCode?.status;
+	if (
+		typeof status === 'number' &&
+		(status < MIN_CLIENT_FAULT_HTTP_STATUS || status > MAX_CLIENT_FAULT_HTTP_STATUS)
+	) {
+		return 'server';
+	}
+
+	return 'client';
+}
+
+interface SentryExceptionValue {
+	type?: string;
+	mechanism?: { data?: Record<string, unknown> };
+}
+
+interface EventLike {
+	exception?: { values?: SentryExceptionValue[] };
+	extra?: Record<string, unknown>;
+	contexts?: Record<string, Record<string, unknown> | undefined>;
+}
+
+function isClientFaultCode(code: unknown): boolean {
+	const normalized = normalizeCode(code);
+
+	return normalized !== null && CLIENT_FAULT_CODES.has(normalized);
+}
+
+/**
+ * Fallback for when there is no `hint.originalException` at all. Only an
+ * exception entry typed HttpsError, with a readable client-fault code, is
+ * dropped; anything else is kept so real faults are never hidden.
+ */
+function eventDescribesClientFault(event: EventLike): boolean {
+	const values = event.exception?.values ?? [];
+
+	return values.some((entry) => {
+		if (entry.type !== 'HttpsError') return false;
+
+		return (
+			isClientFaultCode(entry.mechanism?.data?.code) ||
+			isClientFaultCode(event.extra?.code) ||
+			isClientFaultCode(event.contexts?.error?.code) ||
+			isClientFaultCode(event.contexts?.HttpsError?.code)
+		);
+	});
 }
 
 /**
  * `beforeSend` hook: drop events whose original exception is a client-fault
- * HttpsError. Exported so the filter is testable without initializing Sentry.
+ * HttpsError. A readable hint always decides; the event-only fallback runs
+ * solely when the hint carries no exception. Exported so the filter is
+ * testable without initializing Sentry.
  */
 export function filterClientFaultEvents<E>(
 	event: E,
-	hint: { originalException?: unknown },
+	hint: { originalException?: unknown } | undefined,
 ): E | null {
-	return isClientFaultHttpsError(hint.originalException) ? null : event;
+	const original = hint?.originalException;
+
+	if (original !== undefined && original !== null) {
+		return classifyException(original) === 'client' ? null : event;
+	}
+
+	if (event && typeof event === 'object' && eventDescribesClientFault(event as EventLike)) {
+		return null;
+	}
+
+	return event;
 }
 
 /**

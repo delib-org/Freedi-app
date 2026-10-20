@@ -121,6 +121,109 @@ describe('functions Sentry', () => {
 			expect(filterClientFaultEvents(event, {})).toBe(event);
 		});
 
+		describe('OTel-shaped events (auto.firebase.otel.functions)', () => {
+			const otelEvent = {
+				event_id: 'e2',
+				level: 'error',
+				exception: {
+					values: [
+						{
+							type: 'HttpsError',
+							value: 'no-goal-proposals',
+							mechanism: { type: 'auto.firebase.otel.functions', handled: false },
+						},
+					],
+				},
+			};
+
+			it('drops it when the original exception is an HttpsError from another class copy', () => {
+				const copy = {
+					name: 'HttpsError',
+					code: 'failed-precondition',
+					httpErrorCode: { status: 400, canonicalName: 'FAILED_PRECONDITION' },
+				};
+
+				expect(filterClientFaultEvents(otelEvent, { originalException: copy })).toBeNull();
+			});
+
+			it('drops it when only httpErrorCode survives', () => {
+				const err = { httpErrorCode: { status: 400, canonicalName: 'FAILED_PRECONDITION' } };
+
+				expect(filterClientFaultEvents(otelEvent, { originalException: err })).toBeNull();
+			});
+
+			it('drops it when the hint is empty but the event carries the code', () => {
+				const withCode = { ...otelEvent, extra: { code: 'failed-precondition' } };
+
+				expect(filterClientFaultEvents(withCode, {})).toBeNull();
+				expect(filterClientFaultEvents(withCode, undefined)).toBeNull();
+			});
+
+			it('keeps an HttpsError event whose code cannot be read', () => {
+				expect(filterClientFaultEvents(otelEvent, {})).toBe(otelEvent);
+			});
+
+			describe('must stay reported', () => {
+				const notFound = new HttpsError('not-found', 'missing');
+
+				it('keeps an internal HttpsError wrapping a client-fault cause', () => {
+					const err = Object.assign(new HttpsError('internal', 'boom'), { cause: notFound });
+
+					expect(filterClientFaultEvents(otelEvent, { originalException: err })).toBe(otelEvent);
+				});
+
+				it('keeps a plain Error wrapping a client-fault cause', () => {
+					const err = Object.assign(new Error('wrapped'), { cause: notFound });
+
+					expect(filterClientFaultEvents(otelEvent, { originalException: err })).toBe(otelEvent);
+				});
+
+				it('keeps a non-HttpsError event with mechanism.data.code not-found', () => {
+					const ev = {
+						exception: {
+							values: [{ type: 'Error', mechanism: { type: 'x', data: { code: 'not-found' } } }],
+						},
+					};
+
+					expect(filterClientFaultEvents(ev, {})).toBe(ev);
+				});
+
+				it.each(['RESOURCE_EXHAUSTED', 'NOT_FOUND', 'INVALID_ARGUMENT'])(
+					'keeps a third-party error with code %s',
+					(code) => {
+						const err = Object.assign(new Error('upstream'), { code });
+
+						expect(filterClientFaultEvents(otelEvent, { originalException: err })).toBe(otelEvent);
+					},
+				);
+
+				it.each([429, 404])('keeps a plain object with status %i', (status) => {
+					expect(filterClientFaultEvents(otelEvent, { originalException: { status } })).toBe(
+						otelEvent,
+					);
+				});
+
+				it('lets a server-error hint win over a client-fault event code', () => {
+					const ev = { ...otelEvent, extra: { code: 'not-found' } };
+					const internal = new HttpsError('internal', 'boom');
+
+					expect(filterClientFaultEvents(ev, { originalException: internal })).toBe(ev);
+				});
+
+				it('keeps an HttpsError whose code disagrees with a 5xx status', () => {
+					const odd = { code: 'not-found', httpErrorCode: { status: 500 } };
+
+					expect(filterClientFaultEvents(otelEvent, { originalException: odd })).toBe(otelEvent);
+				});
+
+				it.each(['unavailable', 'unknown', 'data-loss'] as const)('keeps %s', (code) => {
+					const err = new HttpsError(code, 'broken');
+
+					expect(filterClientFaultEvents(otelEvent, { originalException: err })).toBe(otelEvent);
+				});
+			});
+		});
+
 		it('ignores a non-HttpsError whose code happens to be a string', () => {
 			const err = Object.assign(new Error('fs'), { code: 'ENOENT' });
 

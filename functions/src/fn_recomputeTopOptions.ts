@@ -41,22 +41,42 @@ export async function assertAdmin(
 	statementId: string,
 	userId: string,
 ): Promise<Statement> {
-	const statementDoc = await firestore.collection(Collections.statements).doc(statementId).get();
-	if (!statementDoc.exists) {
-		throw new HttpsError('not-found', 'Statement not found');
+	let statement: Statement;
+	let isAdmin: boolean;
+
+	try {
+		const statementDoc = await firestore.collection(Collections.statements).doc(statementId).get();
+		if (!statementDoc.exists) {
+			throw new HttpsError('not-found', 'Statement not found');
+		}
+		statement = statementDoc.data() as Statement;
+		const topParentId = statement.topParentId || statementId;
+
+		const membersSnapshot = await firestore
+			.collection(Collections.statementsSubscribe)
+			.where('statementId', '==', topParentId)
+			.where('userId', '==', userId)
+			.where('role', 'in', [Role.admin, 'creator', 'admin'])
+			.limit(1)
+			.get();
+		isAdmin = !membersSnapshot.empty;
+	} catch (error) {
+		// Deliberate HttpsErrors (not-found) pass through untouched.
+		if (error instanceof HttpsError) throw error;
+
+		// A Firestore failure (missing index, unavailable, ...) used to surface to
+		// the client as a bare `internal` with nothing in the logs.
+		logger.error('recomputeTopOptions: admin check failed', {
+			operation: 'recomputeTopOptions.assertAdmin',
+			statementId,
+			userId,
+			errorMessage: error instanceof Error ? error.message : String(error),
+			errorCode: (error as { code?: unknown } | null)?.code,
+		});
+		throw new HttpsError('unavailable', 'Could not verify permissions, please try again');
 	}
-	const statement = statementDoc.data() as Statement;
-	const topParentId = statement.topParentId || statementId;
 
-	const membersSnapshot = await firestore
-		.collection(Collections.statementsSubscribe)
-		.where('statementId', '==', topParentId)
-		.where('userId', '==', userId)
-		.where('role', 'in', [Role.admin, 'creator', 'admin'])
-		.limit(1)
-		.get();
-
-	if (membersSnapshot.empty) {
+	if (!isAdmin) {
 		throw new HttpsError('permission-denied', 'Only admins can recompute top answers');
 	}
 
@@ -86,7 +106,13 @@ export async function applyRecomputeTopOptions(
 	try {
 		await updateParentStatementWithChosenOptions(statementId);
 	} catch (error) {
-		logger.error('recomputeTopOptions: recompute failed', { statementId, error });
+		logger.error('recomputeTopOptions: recompute failed', {
+			operation: 'recomputeTopOptions.applyRecomputeTopOptions',
+			statementId,
+			userId: uid,
+			errorMessage: error instanceof Error ? error.message : String(error),
+			stack: error instanceof Error ? error.stack : undefined,
+		});
 		throw new HttpsError('internal', 'Failed to recompute top answers');
 	}
 
