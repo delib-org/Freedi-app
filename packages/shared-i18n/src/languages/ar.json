@@ -4590,5 +4590,13 @@
   "Show all options": "عرض كل الخيارات",
   "Only options selected in the card-stack evaluation": "فقط الخيارات المختارة في تقييم أكوام البطاقات",
   "Options the group rated positively in the card-stack evaluation": "الخيارات التي قيّمتها المجموعة إيجابياً في تقييم أكوام البطاقات",
-  "YouTube video player": "مشغّل فيديو يوتيوب"
+  "YouTube video player": "مشغّل فيديو يوتيوب",
+  "A task from your Agora lesson": "مهمة من درسك في أغورا",
+  "Back to the village": "العودة إلى القرية",
+  "This link has expired. Go back to the village and open the task again": "انتهت صلاحية هذا الرابط. عودوا إلى القرية وافتحوا المهمة مرة أخرى",
+  "The lesson has ended": "انتهى الدرس",
+  "Opening your task...": "نفتح مهمتك...",
+  "Could not open the task. Go back to the village and try again": "تعذر فتح المهمة. عودوا إلى القرية وحاولوا مرة أخرى",
+  "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.": "هذا الجهاز مسجّل في WizCol باسم {{name}}. لأداء مهمة الصف، انتقلوا إلى ضيف الصف.",
+  "Switch to the class task": "الانتقال إلى مهمة الصف"
 }

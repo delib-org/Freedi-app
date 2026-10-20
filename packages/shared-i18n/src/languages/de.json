@@ -4470,5 +4470,13 @@
   "Show all options": "Alle Optionen anzeigen",
   "Only options selected in the card-stack evaluation": "Nur in der Kartenstapel-Bewertung ausgewählte Optionen",
   "Options the group rated positively in the card-stack evaluation": "Optionen, die die Gruppe in der Kartenstapel-Bewertung positiv bewertet hat",
-  "YouTube video player": "YouTube-Videoplayer"
+  "YouTube video player": "YouTube-Videoplayer",
+  "A task from your Agora lesson": "Eine Aufgabe aus deiner Agora-Stunde",
+  "Back to the village": "Zurück ins Dorf",
+  "This link has expired. Go back to the village and open the task again": "Dieser Link ist abgelaufen. Geh zurück ins Dorf und öffne die Aufgabe noch einmal",
+  "The lesson has ended": "Die Stunde ist zu Ende",
+  "Opening your task...": "Deine Aufgabe wird geöffnet...",
+  "Could not open the task. Go back to the village and try again": "Die Aufgabe konnte nicht geöffnet werden. Geh zurück ins Dorf und versuch es noch einmal",
+  "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.": "Dieses Gerät ist bei WizCol als {{name}} angemeldet. Für die Klassenaufgabe wechselst du zum Klassengast.",
+  "Switch to the class task": "Zur Klassenaufgabe wechseln"
 }

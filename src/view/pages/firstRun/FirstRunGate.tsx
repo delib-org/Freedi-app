@@ -5,6 +5,7 @@ import { logError } from '@/utils/errorHandling';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import FirstRunFlow from './FirstRunFlow';
 import { FirstRunContext } from './FirstRunContext';
+import { useAgoraGuest } from '@/context/AgoraGuestContext';
 
 interface FirstRunGateProps {
 	user: User | null;
@@ -18,6 +19,8 @@ interface FirstRunGateProps {
 export const FirstRunGate: FC<FirstRunGateProps> = ({ user, children }) => {
 	const [checked, setChecked] = useState<string | null>(null);
 	const [pending, setPending] = useState(false);
+	// An Agora guest came for one task under their school's terms: no first-run flow
+	const agoraGuest = useAgoraGuest() !== null;
 
 	useEffect(() => {
 		let cancelled = false;
@@ -52,7 +55,9 @@ export const FirstRunGate: FC<FirstRunGateProps> = ({ user, children }) => {
 	return (
 		<FirstRunContext.Provider value={value}>
 			{children}
-			{pending && user && <FirstRunFlow user={user} onDone={() => setPending(false)} />}
+			{pending && user && !agoraGuest && (
+				<FirstRunFlow user={user} onDone={() => setPending(false)} />
+			)}
 		</FirstRunContext.Provider>
 	);
 };

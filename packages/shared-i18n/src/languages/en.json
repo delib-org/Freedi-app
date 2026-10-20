@@ -5150,5 +5150,13 @@
   "Show all options": "Show all options",
   "Only options selected in the card-stack evaluation": "Only options selected in the card-stack evaluation",
   "Options the group rated positively in the card-stack evaluation": "Options the group rated positively in the card-stack evaluation",
-  "YouTube video player": "YouTube video player"
+  "YouTube video player": "YouTube video player",
+  "A task from your Agora lesson": "A task from your Agora lesson",
+  "Back to the village": "Back to the village",
+  "This link has expired. Go back to the village and open the task again": "This link has expired. Go back to the village and open the task again",
+  "The lesson has ended": "The lesson has ended",
+  "Opening your task...": "Opening your task...",
+  "Could not open the task. Go back to the village and try again": "Could not open the task. Go back to the village and try again",
+  "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.": "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.",
+  "Switch to the class task": "Switch to the class task"
 }

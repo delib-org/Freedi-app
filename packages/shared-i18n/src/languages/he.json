@@ -5188,5 +5188,13 @@
   "Show all options": "הצג את כל האפשרויות",
   "Only options selected in the card-stack evaluation": "רק אפשרויות שנבחרו בהערכת ערימות הכרטיסים",
   "Options the group rated positively in the card-stack evaluation": "אפשרויות שהקבוצה דירגה באופן חיובי בהערכת ערימות הכרטיסים",
-  "YouTube video player": "נגן וידאו של יוטיוב"
+  "YouTube video player": "נגן וידאו של יוטיוב",
+  "A task from your Agora lesson": "משימה מהשיעור באגורה",
+  "Back to the village": "חזרה לכפר",
+  "This link has expired. Go back to the village and open the task again": "הקישור כבר לא בתוקף. חזרו לכפר ופתחו את המשימה שוב",
+  "The lesson has ended": "השיעור הסתיים",
+  "Opening your task...": "פותחים את המשימה...",
+  "Could not open the task. Go back to the village and try again": "לא הצלחנו לפתוח את המשימה. חזרו לכפר ונסו שוב",
+  "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.": "המכשיר הזה מחובר ל־WizCol בתור {{name}}. כדי לעשות את המשימה של הכיתה, עוברים לאורח הכיתה.",
+  "Switch to the class task": "מעבר למשימה של הכיתה"
 }

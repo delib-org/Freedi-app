@@ -4470,5 +4470,13 @@
   "Show all options": "Toon alle opties",
   "Only options selected in the card-stack evaluation": "Alleen opties geselecteerd in de kaartenstapelbeoordeling",
   "Options the group rated positively in the card-stack evaluation": "Opties die de groep positief beoordeelde in de kaartenstapelbeoordeling",
-  "YouTube video player": "YouTube-videospeler"
+  "YouTube video player": "YouTube-videospeler",
+  "A task from your Agora lesson": "Een taak uit je Agora-les",
+  "Back to the village": "Terug naar het dorp",
+  "This link has expired. Go back to the village and open the task again": "Deze link is verlopen. Ga terug naar het dorp en open de taak opnieuw",
+  "The lesson has ended": "De les is afgelopen",
+  "Opening your task...": "Je taak wordt geopend...",
+  "Could not open the task. Go back to the village and try again": "De taak kon niet worden geopend. Ga terug naar het dorp en probeer het opnieuw",
+  "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.": "Dit apparaat is bij WizCol aangemeld als {{name}}. Wissel naar de klasgast om de klastaak te doen.",
+  "Switch to the class task": "Naar de klastaak"
 }

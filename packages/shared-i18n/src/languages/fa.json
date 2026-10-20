@@ -4948,5 +4948,13 @@
   "Show all options": "نمایش همه گزینه‌ها",
   "Only options selected in the card-stack evaluation": "فقط گزینه‌های انتخاب‌شده در ارزیابی پشته‌های کارت",
   "Options the group rated positively in the card-stack evaluation": "گزینه‌هایی که گروه در ارزیابی پشته‌های کارت مثبت ارزیابی کرد",
-  "YouTube video player": "پخش‌کننده ویدیوی یوتیوب"
+  "YouTube video player": "پخش‌کننده ویدیوی یوتیوب",
+  "A task from your Agora lesson": "یک تکلیف از درس آگورای تو",
+  "Back to the village": "بازگشت به روستا",
+  "This link has expired. Go back to the village and open the task again": "این پیوند منقضی شده است. به روستا برگرد و تکلیف را دوباره باز کن",
+  "The lesson has ended": "درس تمام شده است",
+  "Opening your task...": "در حال باز کردن تکلیف...",
+  "Could not open the task. Go back to the village and try again": "باز کردن تکلیف ممکن نشد. به روستا برگرد و دوباره امتحان کن",
+  "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.": "این دستگاه با نام {{name}} وارد WizCol شده است. برای انجام تکلیف کلاس، به مهمان کلاس تغییر بده.",
+  "Switch to the class task": "رفتن به تکلیف کلاس"
 }
