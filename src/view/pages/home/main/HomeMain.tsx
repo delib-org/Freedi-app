@@ -9,12 +9,8 @@ import {
 	statementsSelector,
 } from '@/redux/statements/statementsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-import {
-	setNewStatementModal,
-	setParentStatement,
-	setNewStatementType,
-	setShowNewStatementModal,
-} from '@/redux/statements/newStatementSlice';
+import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
+import { useOpenAskQuestion } from '@/controllers/hooks/useOpenAskQuestion';
 import { useHomeStatementOverlay } from '@/controllers/hooks/useHomeStatementOverlay';
 import {
 	HOME_VIEW_PARAM,
@@ -66,11 +62,7 @@ export default function HomeMain() {
 		[subscriptions, statements, user?.uid],
 	);
 
-	const create = (): void => {
-		dispatch(setParentStatement('top'));
-		dispatch(setNewStatementType(StatementType.question));
-		dispatch(setShowNewStatementModal(true));
-	};
+	const create = useOpenAskQuestion();
 
 	const createGroup = (): void => {
 		dispatch(

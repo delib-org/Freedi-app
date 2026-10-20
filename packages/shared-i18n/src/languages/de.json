@@ -4458,5 +4458,9 @@
   "Teacher attached. The notification email could not be sent.": "Lehrkraft zugeordnet. Die Benachrichtigung per E-Mail konnte nicht gesendet werden.",
   "Could not attach the teacher.": "Die Lehrkraft konnte nicht zugeordnet werden.",
   "Invited teachers": "Eingeladene Lehrkräfte",
-  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "Noch kein Agora-Konto? Die Lehrkraft erhält eine Einladung per E-Mail und wird zugeordnet, sobald sie sich mit Google anmeldet."
+  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "Noch kein Agora-Konto? Die Lehrkraft erhält eine Einladung per E-Mail und wird zugeordnet, sobald sie sich mit Google anmeldet.",
+  "Space name": "Name des Raums",
+  "The question will open inside this new space.": "Die Frage wird in diesem neuen Raum geöffnet.",
+  "The space was created, but the question was not saved. Try again.": "Der Raum wurde erstellt, aber die Frage wurde nicht gespeichert. Versuche es erneut.",
+  "Give the space a name": "Gib dem Raum einen Namen"
 }

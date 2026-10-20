@@ -5176,5 +5176,9 @@
   "Teacher attached. The notification email could not be sent.": "המורה שויך/ה לבית הספר. לא הצלחנו לשלוח את מייל ההודעה.",
   "Could not attach the teacher.": "לא הצלחנו לשייך את המורה.",
   "Invited teachers": "מורים שהוזמנו",
-  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "אין עדיין חשבון באגורה? המורה יקבל/תקבל הזמנה במייל ויצורף/תצורף ברגע שיתחבר/תתחבר עם Google."
+  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "אין עדיין חשבון באגורה? המורה יקבל/תקבל הזמנה במייל ויצורף/תצורף ברגע שיתחבר/תתחבר עם Google.",
+  "Space name": "שם המרחב",
+  "The question will open inside this new space.": "השאלה תיפתח בתוך המרחב החדש.",
+  "The space was created, but the question was not saved. Try again.": "המרחב נוצר, אבל השאלה לא נשמרה. נסו שוב.",
+  "Give the space a name": "צריך לתת שם למרחב"
 }

@@ -5138,5 +5138,9 @@
   "Teacher attached. The notification email could not be sent.": "Teacher attached. The notification email could not be sent.",
   "Could not attach the teacher.": "Could not attach the teacher.",
   "Invited teachers": "Invited teachers",
-  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "No Agora account yet? They get an email invitation and join when they sign in with Google."
+  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "No Agora account yet? They get an email invitation and join when they sign in with Google.",
+  "Space name": "Space name",
+  "The question will open inside this new space.": "The question will open inside this new space.",
+  "The space was created, but the question was not saved. Try again.": "The space was created, but the question was not saved. Try again.",
+  "Give the space a name": "Give the space a name"
 }

@@ -4936,5 +4936,9 @@
   "Teacher attached. The notification email could not be sent.": "معلم به مدرسه متصل شد. ایمیل اطلاع‌رسانی ارسال نشد.",
   "Could not attach the teacher.": "اتصال معلم ممکن نشد.",
   "Invited teachers": "معلمان دعوت‌شده",
-  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "هنوز حساب آگورا ندارد؟ یک دعوت‌نامه ایمیلی دریافت می‌کند و پس از ورود با Google می‌پیوندد."
+  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "هنوز حساب آگورا ندارد؟ یک دعوت‌نامه ایمیلی دریافت می‌کند و پس از ورود با Google می‌پیوندد.",
+  "Space name": "نام فضا",
+  "The question will open inside this new space.": "پرسش در همین فضای جدید باز می‌شود.",
+  "The space was created, but the question was not saved. Try again.": "فضا ساخته شد، اما پرسش ذخیره نشد. دوباره تلاش کنید.",
+  "Give the space a name": "برای فضا یک نام بگذارید"
 }
