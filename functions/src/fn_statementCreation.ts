@@ -25,6 +25,7 @@ import { trackStatementCreation } from './engagement/credits/trackEngagement';
 import { onStatementCreatedStats } from './fn_adminStats';
 import { recordSuggestionProgress } from './progress/statementCreationHook';
 import { generateDescriptionFromChildren } from './helpers';
+import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
 import {
 	computeHybridVector,
 	isHybridClusteringEnabled,
@@ -66,9 +67,10 @@ export async function onStatementCreated(
 		if (statement.parentId !== 'top') {
 			tasks.push(updateParentForNewChild(statement));
 
-			// REMOVED: updateTopParentSubscriptions fan-out
-			// The parent Statement doc's lastChildUpdate is the source of truth for activity.
-			// The client reads it via Redux overlay and sorts using getLatestChildActivity().
+			// New content anywhere in a discussion raises it on its members' home
+			// pages: a coalesced (once a minute) write to userFeed, which has no
+			// triggers. Replaces the removed updateTopParentSubscriptions fan-out.
+			tasks.push(recordDiscussionActivity(db, statement.topParentId).then(() => undefined));
 		}
 
 		// Task 4: Add to mass consensus (if applicable)

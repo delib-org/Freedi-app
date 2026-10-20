@@ -9,6 +9,8 @@ export enum Collections {
     statementsMetaData = 'statementsMeta',
     statementsPasswords = 'statementsPasswords',
     statementsSubscribe = 'statementsSubscribe',
+    userFeed = 'userFeed', // server-written per-user home feed: one doc per (user, top-level discussion), ordered by lastActivity
+    userFeedThrottle = 'userFeedThrottle', // server-only: last activity fan-out per discussion (coalesces userFeed writes)
     massConsensus = 'massConsensus',
     massConsensusMembers = 'massConsensusMembers',
     massConsensusProcesses = 'massConsensusProcesses',

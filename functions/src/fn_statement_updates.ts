@@ -15,7 +15,9 @@ import {
 	statementToSimpleStatement,
 	functionConfig,
 } from '@freedi/shared-types';
-import { getParagraphsText, generateDescriptionFromChildren } from './helpers';
+import { generateDescriptionFromChildren } from './helpers';
+import { classifyChildUpdate } from './userFeed/classifyChildUpdate';
+import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
 import { writeHistoryEntry } from './statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from './statements/history/isResearchEnabled';
 import {
@@ -43,16 +45,8 @@ export const updateParentOnChildCreate = onDocumentCreated(
 			// Update parent statement with latest children
 			await updateParentWithLatestChildren(newStatement.parentId);
 
-			// Also update top-level parent if different from direct parent
-			// AND if the current statement is not itself a top-level statement
-			if (
-				newStatement.topParentId &&
-				newStatement.topParentId !== newStatement.parentId &&
-				newStatement.parentId !== 'top'
-			) {
-				logger.info(`Also updating top-level parent ${newStatement.topParentId}`);
-				await updateTopParentSubscriptions(newStatement.topParentId);
-			}
+			// New content is activity: raise the discussion on members' home pages.
+			await recordDiscussionActivity(db, newStatement.topParentId);
 		} catch (error) {
 			logger.error('Error in updateParentOnChildCreate:', error);
 		}
@@ -105,16 +99,19 @@ export const updateParentOnChildUpdate = onDocumentUpdated(
 				logger.error('updateParentOnChildUpdate: top-answer sync failed:', syncError);
 			}
 
-			// Check if this is a significant content change
-			const titleChanged = before.statement !== after.statement;
-			const beforeParagraphs = getParagraphsText(before.paragraphs);
-			const afterParagraphs = getParagraphsText(after.paragraphs);
-			const descriptionChanged = beforeParagraphs !== afterParagraphs;
-			const hasContentChange =
-				titleChanged || descriptionChanged || before.consensus !== after.consensus;
+			// Only content edits continue. Consensus/evaluation/result changes stop
+			// here: results reach clients live via the statement listeners, and they
+			// must not re-order discussions or create unread activity.
+			const {
+				titleChanged,
+				descriptionChanged,
+				beforeParagraphs,
+				afterParagraphs,
+				isContentActivity,
+			} = classifyChildUpdate(before, after);
 
-			if (!hasContentChange) {
-				logger.info('No significant content changes, skipping parent update');
+			if (!isContentActivity) {
+				logger.info('No content change (e.g. consensus only), skipping parent update');
 
 				return;
 			}
@@ -143,12 +140,8 @@ export const updateParentOnChildUpdate = onDocumentUpdated(
 			// Update parent statement with latest children
 			await updateParentWithLatestChildren(after.parentId);
 
-			// Also update top-level parent if different from direct parent
-			// AND if the current statement is not itself a top-level statement
-			if (after.topParentId && after.topParentId !== after.parentId && after.parentId !== 'top') {
-				logger.info(`Also updating top-level parent ${after.topParentId}`);
-				await updateTopParentSubscriptions(after.topParentId);
-			}
+			// A text edit is activity: raise the discussion on members' home pages.
+			await recordDiscussionActivity(db, after.topParentId);
 		} catch (error) {
 			logger.error('Error in updateParentOnChildUpdate:', error);
 		}
@@ -294,106 +287,14 @@ export const updateParentOnChildDelete = onDocumentDeleted(
 			// Update parent statement with latest children
 			await updateParentWithLatestChildren(deletedStatement.parentId);
 
-			// Also update top-level parent if different from direct parent
-			// AND if the current statement is not itself a top-level statement
-			if (
-				deletedStatement.topParentId &&
-				deletedStatement.topParentId !== deletedStatement.parentId &&
-				deletedStatement.parentId !== 'top'
-			) {
-				logger.info(`Also updating top-level parent ${deletedStatement.topParentId}`);
-				await updateTopParentSubscriptions(deletedStatement.topParentId);
-			}
+			// A deletion is not activity: it no longer re-orders members' home
+			// pages (it used to stamp up to 500 subscriptions, waking 3 membership
+			// triggers per member). See docs/architecture/firebase-cost-2026-10/lane-a-feed.md.
 		} catch (error) {
 			logger.error('Error in updateParentOnChildDelete:', error);
 		}
 	},
 );
-
-/**
- * Updates only the subscriptions for a top-level parent without fetching sub-statements
- * This is used when a nested child changes to update the top-level group's lastUpdate
- */
-async function updateTopParentSubscriptions(topParentId: string) {
-	try {
-		// Skip if topParentId is 'top' since it's not a real document
-		if (topParentId === 'top') {
-			logger.info('Skipping subscription update for "top" parent - not a real document');
-
-			return;
-		}
-
-		const LIMIT = 500; // Safety limit to prevent runaway updates
-		const timestamp = Date.now();
-
-		// First, update the top-level statement document itself
-		// IMPORTANT: We only update lastUpdate field to avoid triggering content change detection
-		const topParentRef = db.collection(Collections.statements).doc(topParentId);
-
-		// Check if the statement exists and hasn't been updated recently (within 1 second)
-		// This prevents rapid successive updates and potential loops
-		const topParentDoc = await topParentRef.get();
-		if (!topParentDoc.exists) {
-			logger.warn(`Top-level statement ${topParentId} not found`);
-
-			return;
-		}
-
-		const currentData = topParentDoc.data() as Statement;
-		const lastUpdateTime = currentData.lastUpdate || 0;
-
-		// Skip if this was updated within the last second (prevents rapid cascading)
-		if (timestamp - lastUpdateTime < 1000) {
-			logger.info(`Skipping update for ${topParentId} - was recently updated`);
-
-			return;
-		}
-
-		// Update the statement's lastUpdate field
-		// This will trigger updateParentOnChildUpdate, but it will be filtered out
-		// because only lastUpdate changed (no content change)
-		await topParentRef.update({
-			lastUpdate: timestamp,
-		});
-		logger.info(`Updated top-level statement ${topParentId} with new timestamp`);
-
-		// Get all subscriptions for this top-level statement
-		const subscriptionsQuery = await db
-			.collection(Collections.statementsSubscribe)
-			.where('statementId', '==', topParentId)
-			.limit(LIMIT)
-			.get();
-
-		if (subscriptionsQuery.empty) {
-			logger.info(`No subscriptions found for top-level statement ${topParentId}`);
-
-			return;
-		}
-
-		if (subscriptionsQuery.size >= LIMIT) {
-			logger.warn(
-				`Found more than ${LIMIT} subscriptions for top-level statement ${topParentId}, consider batching updates`,
-			);
-		}
-
-		logger.info(
-			`Updating ${subscriptionsQuery.size} subscriptions for top-level statement ${topParentId}`,
-		);
-
-		// Batch update for efficiency - only update lastUpdate timestamp
-		const batch = db.batch();
-		subscriptionsQuery.docs.forEach((doc) => {
-			batch.update(doc.ref, {
-				lastUpdate: timestamp,
-			});
-		});
-
-		await batch.commit();
-		logger.info(`Successfully updated ${subscriptionsQuery.size} top-level subscriptions`);
-	} catch (error) {
-		logger.error(`Error updating top-level subscriptions for statement ${topParentId}:`, error);
-	}
-}
 
 /**
  * Optional: Function to backfill existing statements with lastSubStatements
