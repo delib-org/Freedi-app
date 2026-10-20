@@ -37,6 +37,7 @@ import { logError } from '@/utils/errorHandling';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 import { NON_DOCUMENT_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
 import { FIREBASE, HOME } from '@/constants/common';
+import { listenerManager } from '@/controllers/utils/ListenerManager';
 import { firstLoadThenListen } from '@/controllers/utils/firstLoadThenListen';
 import {
 	createManagedCollectionListener,
@@ -190,7 +191,7 @@ export function listenToStatementSubscriptions(
 
 		// Head start: first 10 spaces/topics reach Redux before the full snapshot.
 		const firstLoad =
-			numberOfStatements > FIREBASE.FIRST_LOAD_LIMIT
+			numberOfStatements > FIREBASE.FIRST_LOAD_LIMIT && !listenerManager.hasListener(listenerKey)
 				? firstLoadThenListen({
 						queryRef: q,
 						onSnapshotNext: handleSnapshot,

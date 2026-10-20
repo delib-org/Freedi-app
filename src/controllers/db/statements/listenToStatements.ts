@@ -2,6 +2,7 @@ import { Unsubscribe } from 'firebase/auth';
 import { and, getDocs, limit, or, orderBy, query, startAfter, where } from 'firebase/firestore';
 import type { QuerySnapshot } from 'firebase/firestore';
 import { FIREBASE } from '@/constants/common';
+import { listenerManager } from '@/controllers/utils/ListenerManager';
 import { firstLoadThenListen } from '@/controllers/utils/firstLoadThenListen';
 import { logError } from '@/utils/errorHandling';
 import { normalizeStatementData, convertTimestampsToMillis } from '@/helpers/timestampHelpers';
@@ -319,7 +320,11 @@ export const listenToSubStatements = (
 
 		// Head start: a bounded read of the first 10 reaches Redux before the full
 		// listener snapshot. Pointless when the live query is already that small.
-		const needsHeadStart = !numberOfOptions || numberOfOptions > FIREBASE.FIRST_LOAD_LIMIT;
+		// Also skipped when the key is already registered: the managed listener then
+		// ignores our handler, and the head start would overwrite fresher state.
+		const needsHeadStart =
+			(!numberOfOptions || numberOfOptions > FIREBASE.FIRST_LOAD_LIMIT) &&
+			!listenerManager.hasListener(listenerKey);
 		const firstLoad = needsHeadStart
 			? firstLoadThenListen({
 					queryRef: q,
