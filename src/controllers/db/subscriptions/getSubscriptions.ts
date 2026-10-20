@@ -13,6 +13,7 @@ import {
 	where,
 	Unsubscribe,
 } from 'firebase/firestore';
+import type { QuerySnapshot } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { getStatementFromDB } from '../statements/getStatement';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
@@ -31,11 +32,12 @@ import {
 	User,
 	Collections,
 } from '@freedi/shared-types';
-import { parse } from 'valibot';
+import { parse, safeParse } from 'valibot';
 import { logError } from '@/utils/errorHandling';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 import { NON_DOCUMENT_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
-import { HOME } from '@/constants/common';
+import { FIREBASE, HOME } from '@/constants/common';
+import { firstLoadThenListen } from '@/controllers/utils/firstLoadThenListen';
 import {
 	createManagedCollectionListener,
 	generateListenerKey,
@@ -162,32 +164,55 @@ export function listenToStatementSubscriptions(
 			`${userId}-${numberOfStatements}`,
 		);
 
-		return createManagedCollectionListener(
+		const handleSnapshot = (subscriptionsDB: QuerySnapshot): void => {
+			subscriptionsDB.docChanges().forEach((change) => {
+				try {
+					const data = change.doc.data();
+					const statementSubscription = parse(
+						StatementSubscriptionSchema,
+						convertTimestampsToMillis(data),
+					) as StatementSubscription;
+
+					if (change.type === 'added' || change.type === 'modified') {
+						dispatch(setStatementSubscription(statementSubscription));
+					}
+
+					if (change.type === 'removed')
+						dispatch(deleteSubscribedStatement(statementSubscription.statementId));
+				} catch (error) {
+					logError(error, {
+						operation: 'subscriptions.getSubscriptions.listenToStatementSubscriptions',
+						metadata: { message: 'Listen to statement subscriptions each error' },
+					});
+				}
+			});
+		};
+
+		// Head start: first 10 spaces/topics reach Redux before the full snapshot.
+		const firstLoad =
+			numberOfStatements > FIREBASE.FIRST_LOAD_LIMIT
+				? firstLoadThenListen({
+						queryRef: q,
+						onSnapshotNext: handleSnapshot,
+						onFirstDocs: (docs) => {
+							const parsed: StatementSubscription[] = [];
+							docs.forEach((d) => {
+								const result = safeParse(
+									StatementSubscriptionSchema,
+									convertTimestampsToMillis(d.data()),
+								);
+								if (result.success) parsed.push(result.output as StatementSubscription);
+							});
+							dispatch(setStatementsSubscription(parsed));
+						},
+						operation: 'subscriptions.listenToStatementSubscriptions',
+					})
+				: null;
+
+		const unsubscribe = createManagedCollectionListener(
 			q,
 			listenerKey,
-			(subscriptionsDB) => {
-				subscriptionsDB.docChanges().forEach((change) => {
-					try {
-						const data = change.doc.data();
-						const statementSubscription = parse(
-							StatementSubscriptionSchema,
-							convertTimestampsToMillis(data),
-						) as StatementSubscription;
-
-						if (change.type === 'added' || change.type === 'modified') {
-							dispatch(setStatementSubscription(statementSubscription));
-						}
-
-						if (change.type === 'removed')
-							dispatch(deleteSubscribedStatement(statementSubscription.statementId));
-					} catch (error) {
-						logError(error, {
-							operation: 'subscriptions.getSubscriptions.listenToStatementSubscriptions',
-							metadata: { message: 'Listen to statement subscriptions each error' },
-						});
-					}
-				});
-			},
+			firstLoad ? firstLoad.onNext : handleSnapshot,
 			(error) => {
 				// Handle IndexedDB errors
 				if (isIndexedDBError(error)) {
@@ -211,6 +236,11 @@ export function listenToStatementSubscriptions(
 			},
 			'query',
 		);
+
+		return () => {
+			firstLoad?.cancel();
+			unsubscribe();
+		};
 	} catch (error) {
 		logError(error, {
 			operation: 'subscriptions.getSubscriptions.unknown',
