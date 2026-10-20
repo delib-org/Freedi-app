@@ -58,39 +58,55 @@ describe('NextTranslationProvider', () => {
     expect(mockLoad).not.toHaveBeenCalled();
   });
 
-  it('loads the full dictionary once when a partial one misses a key', async () => {
+  it('shows a key missing from a partial dictionary as its own text, without loading', async () => {
     render(
       <NextTranslationProvider
         initialLanguage={LanguagesEnum.he}
         initialDictionary={{ Hello: 'שלום', Greet: 'היי {{name}}' }}
-        isPartialDictionary
       >
         <Probe keyName="Rare" />
       </NextTranslationProvider>
     );
+    await flush();
 
     expect(screen.getByTestId('text').textContent).toBe('Rare');
-    await flush();
-
-    expect(screen.getByTestId('text').textContent).toBe('נדיר');
-    expect(mockLoad).toHaveBeenCalledTimes(1);
-    expect(mockLoad).toHaveBeenCalledWith(LanguagesEnum.he);
-  });
-
-  it('does not load when a partial dictionary has every key asked for', async () => {
-    render(
-      <NextTranslationProvider
-        initialLanguage={LanguagesEnum.he}
-        initialDictionary={{ Hello: 'שלום', Greet: 'היי {{name}}' }}
-        isPartialDictionary
-      >
-        <Probe keyName="Hello" />
-      </NextTranslationProvider>
-    );
-    await flush();
-
     expect(screen.getByTestId('params').textContent).toBe('היי Dana');
     expect(mockLoad).not.toHaveBeenCalled();
+  });
+
+  it('applies only the latest of two quick language changes', async () => {
+    let resolveFirst: (d: Record<string, string>) => void = () => undefined;
+    mockLoad
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveFirst = resolve; }))
+      .mockImplementationOnce(() => Promise.resolve(FULL.en));
+    function TwoSwitches() {
+      const { t, changeLanguage } = useTranslation();
+
+      return (
+        <button
+          onClick={() => {
+            changeLanguage(LanguagesEnum.he);
+            changeLanguage(LanguagesEnum.en);
+          }}
+        >
+          {t('Hello')}
+        </button>
+      );
+    }
+    render(
+      <NextTranslationProvider initialLanguage={LanguagesEnum.en} initialDictionary={FULL.en}>
+        <TwoSwitches />
+      </NextTranslationProvider>
+    );
+
+    act(() => {
+      screen.getByRole('button').click();
+    });
+    await flush();
+    resolveFirst(FULL.he ?? {});
+    await flush();
+
+    expect(screen.getByRole('button').textContent).toBe('Hello');
   });
 
   it('switches language, direction and cookie after the new dictionary loads', async () => {

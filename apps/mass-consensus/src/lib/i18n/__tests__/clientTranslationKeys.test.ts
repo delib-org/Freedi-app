@@ -32,6 +32,17 @@ describe('collectTranslationKeys', () => {
     expect(generator.collectTranslationKeys(['t(`Sub${x}`)'], dictionaryKeys)).toEqual([]);
   });
 
+  it('is not thrown off by interpolated templates or apostrophes earlier in the file', () => {
+    const source = [
+      'const a = `${x} px`;',
+      "// don't stop here",
+      'const b = `${y}`;',
+      "const c = <p title={t('Submit')}>It's here</p>;",
+    ].join('\n');
+
+    expect(generator.collectTranslationKeys([source], dictionaryKeys)).toEqual(['Submit']);
+  });
+
   it('returns each key once, sorted', () => {
     const sources = ["t('Submit')", "t('Submit'); t('Cancel')"];
 

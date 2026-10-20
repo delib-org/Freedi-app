@@ -39,73 +39,42 @@ export const NextTranslationContext = createContext<NextTranslationContextValue 
 interface NextTranslationProviderProps {
   children: React.ReactNode;
   initialLanguage: LanguagesEnum;
-  initialDictionary: TranslationDictionary;
   /**
-   * True when `initialDictionary` holds only the keys the app is known to use
-   * (to keep the page payload small). The first lookup of a key it lacks
-   * loads the full dictionary in the background, so nothing stays untranslated.
+   * May hold only the keys the app uses (to keep the page payload small);
+   * a key it lacks shows its own text, as with any missing translation.
+   * changeLanguage() always loads the new language's full dictionary.
    */
-  isPartialDictionary?: boolean;
+  initialDictionary: TranslationDictionary;
 }
 
 export function NextTranslationProvider({
   children,
   initialLanguage,
   initialDictionary,
-  isPartialDictionary = false,
 }: NextTranslationProviderProps) {
   const [language, setLanguage] = useState<LanguagesEnum>(initialLanguage);
   const [dictionary, setDictionary] = useState<TranslationDictionary>(initialDictionary);
-
-  // The language most recently asked for (may still be loading)
-  const requestedLanguageRef = useRef<LanguagesEnum>(initialLanguage);
   const latestRequestRef = useRef(0);
-  const isFullDictionaryRequestedRef = useRef(!isPartialDictionary);
 
-  const applyLanguage = useCallback((newLanguage: LanguagesEnum): void => {
+  const changeLanguage = useCallback((newLanguage: LanguagesEnum) => {
     const requestId = ++latestRequestRef.current;
-    isFullDictionaryRequestedRef.current = true;
     loadLanguageData(newLanguage)
-      .then((fullDictionary) => {
+      .then((newDictionary) => {
         // A newer request superseded this one
         if (requestId !== latestRequestRef.current) return;
-        setDictionary(fullDictionary);
+        setDictionary(newDictionary);
         setLanguage(newLanguage);
       })
       .catch((error: unknown) => {
-        console.error('[NextTranslationProvider.applyLanguage] Failed to load dictionary', {
+        console.error('[NextTranslationProvider.changeLanguage] Failed to load dictionary', {
           language: newLanguage,
           error,
         });
       });
+
+    // Persist to cookie for server-side reading
+    document.cookie = `${COOKIE_KEY}=${newLanguage};path=/;max-age=31536000;SameSite=Lax`;
   }, []);
-
-  const changeLanguage = useCallback(
-    (newLanguage: LanguagesEnum) => {
-      requestedLanguageRef.current = newLanguage;
-      applyLanguage(newLanguage);
-
-      // Persist to cookie for server-side reading
-      document.cookie = `${COOKIE_KEY}=${newLanguage};path=/;max-age=31536000;SameSite=Lax`;
-    },
-    [applyLanguage]
-  );
-
-  const lookup = useCallback(
-    (key: string): string => {
-      const value = dictionary[key];
-      if (value !== undefined) return value;
-
-      if (!isFullDictionaryRequestedRef.current) {
-        isFullDictionaryRequestedRef.current = true;
-        // Deferred: never start a state update from inside a render
-        Promise.resolve().then(() => applyLanguage(requestedLanguageRef.current));
-      }
-
-      return key;
-    },
-    [dictionary, applyLanguage]
-  );
 
   // Update document direction when language changes
   useEffect(() => {
@@ -113,28 +82,30 @@ export function NextTranslationProvider({
     document.documentElement.lang = language;
   }, [language]);
 
+  const t = useCallback((key: string): string => dictionary[key] ?? key, [dictionary]);
+
   const tWithParams = useCallback(
     (key: string, params: Record<string, string | number>): string => {
-      let result = lookup(key);
+      let result = t(key);
       for (const [param, value] of Object.entries(params)) {
         result = result.replace(new RegExp(`{{${param}}}`, 'g'), String(value));
       }
 
       return result;
     },
-    [lookup]
+    [t]
   );
 
   const value = useMemo<NextTranslationContextValue>(
     () => ({
-      t: lookup,
+      t,
       tWithParams,
       currentLanguage: language,
       changeLanguage,
       dir: getDirection(language),
       rowDirection: getRowDirection(language),
     }),
-    [lookup, tWithParams, language, changeLanguage]
+    [t, tWithParams, language, changeLanguage]
   );
 
   return (

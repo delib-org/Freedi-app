@@ -1,13 +1,15 @@
 /**
- * Writes src/generated/i18nClientKeys.json: every translation key that MC's
- * source can ask for.
+ * Writes src/generated/i18nClientKeys.json: the translation keys MC's client
+ * can ask for.
  *
  * The root layout sends the client only these keys instead of the whole
  * ~5,000-entry dictionary, which keeps every page's HTML/RSC payload small.
- * A key is "used" when it appears as a plain string literal anywhere in the
- * scanned sources (t('key'), labelKey: 'key', enum values, ...). Keys built at
- * runtime are not found here; the translation provider covers those by loading
- * the full dictionary on the first miss.
+ *
+ * A key is "used" when it appears as a string literal anywhere in the scanned
+ * sources (t('key'), labelKey: 'key', enum values, ...), found by parsing each
+ * file with the TypeScript compiler. A key assembled at runtime from pieces
+ * would not be found; MC has none (there is no t(`...${x}`) in the code), and
+ * a missing key shows its own text, as it always has.
  *
  * Runs automatically before `next build` (npm "prebuild"), and a jest test
  * fails when the committed file is stale.
@@ -16,6 +18,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const ts = require('typescript');
 
 const APP_DIR = path.resolve(__dirname, '..');
 const REPO_DIR = path.resolve(APP_DIR, '../..');
@@ -31,8 +34,6 @@ const SOURCE_ROOTS = [
 ];
 const SKIPPED_DIRS = new Set(['node_modules', '.next', '__tests__', '__mocks__', 'generated']);
 const SOURCE_FILE = /\.(tsx?|jsx?|mjs)$/;
-// '...' or "..." on one line, or a `...` template without ${} interpolation
-const STRING_LITERAL = /'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`([^`$\\]*)`/g;
 
 function listSourceFiles(dir) {
   if (!fs.existsSync(dir)) return [];
@@ -57,14 +58,35 @@ function readDictionaryKeys() {
   return keys;
 }
 
-/** Sorted dictionary keys that occur as string literals in the sources. */
+function isStringLiteral(node) {
+  return ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node);
+}
+
+/** Every string literal in a file (template literals without interpolation included). */
+function literalsOf(text) {
+  const source = ts.createSourceFile('source.tsx', text, ts.ScriptTarget.Latest, false, ts.ScriptKind.TSX);
+  const literals = [];
+  const visit = (node) => {
+    if (isStringLiteral(node)) literals.push(node.text);
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+
+  return literals;
+}
+
+/**
+ * Sorted dictionary keys that occur as string literals in the sources.
+ * @param {string[]} sourceTexts
+ * @param {Set<string>} dictionaryKeys
+ * @returns {string[]}
+ */
 function collectTranslationKeys(sourceTexts, dictionaryKeys) {
   const found = new Set();
   for (const text of sourceTexts) {
-    for (const match of text.matchAll(STRING_LITERAL)) {
-      const literal = match[1] ?? match[2] ?? match[3];
-      if (dictionaryKeys.has(literal)) found.add(literal);
-    }
+    literalsOf(text)
+      .filter((literal) => dictionaryKeys.has(literal))
+      .forEach((key) => found.add(key));
   }
 
   return [...found].sort();
