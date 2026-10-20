@@ -1,0 +1,168 @@
+/** Admin console strings — English. Lives in the Admin chunk, not the player bundle. */
+const adminEn: Record<string, string> = {
+	'admin.stage.manage': 'Admin',
+	'admin.stage.edit': 'Editing game content',
+	'admin.loading': 'Loading…',
+	'admin.noPermission': 'You do not have admin permission for this game.',
+	'admin.status.saved': '✓ Saved',
+	'admin.status.saveFailed': 'Save failed',
+
+	'admin.setup.title': 'Set up the game',
+	'admin.setup.body':
+		'The game does not exist yet. Creating it builds the statement tree (island = question, shore = option) and the game settings, with the default content from the spec.',
+	'admin.setup.creating': 'Creating…',
+	'admin.setup.create': '⚓ Create the game',
+
+	'admin.tab.texts': '🛠️ Texts & settings',
+	'admin.tab.compass': '🧭 Winds of conscience',
+	'admin.tab.values': '⚖️ Values',
+	'admin.tab.islands': '🏝️ Islands',
+	'admin.tab.parties': '🚢 Ships (parties)',
+	'admin.tab.agora': '🏛️ Agora',
+
+	'admin.common.save': 'Save',
+	'admin.common.order': 'Order',
+	'admin.common.remove': 'Remove',
+
+	'admin.text.gameTitle': 'Game name',
+	'admin.text.gameSubtitle': 'Subtitle',
+	'admin.text.introMotto': 'Opening motto',
+	'admin.text.introWelcome': 'Welcome line',
+	'admin.text.introBody': 'Explanation paragraph on the intro screen',
+	'admin.text.introLine1': 'Closing line 1',
+	'admin.text.introLine2': 'Closing line 2',
+	'admin.text.startButton': 'Start button label',
+	'admin.text.compassTitle': 'Compass screen title',
+	'admin.text.compassIntro': 'Compass opening line',
+	'admin.text.mapTitle': 'Map screen title',
+	'admin.text.mapIntro': 'Map opening line',
+	'admin.text.voyageShipsNote': 'Sea reaction caption',
+	'admin.text.summaryTitle': 'Summary screen title',
+	'admin.text.summaryIntro': 'Summary opening line',
+	'admin.text.agoraQuestion': 'Agora gate question',
+	'admin.text.agoraButton': 'Agora button label',
+	'admin.text.agoraOrigin': 'Agora app address (Origin)',
+	'admin.text.destinationName': 'Destination name on the map',
+	'admin.text.privacyController':
+		'⚠️ Privacy: who is responsible for the data (shown on the privacy screen)',
+	'admin.text.privacyContact': '⚠️ Privacy: email address for data inquiries',
+	'admin.texts.save': 'Save settings',
+
+	'admin.compass.titlePlaceholder': 'Title (e.g. Wind of Love)',
+	'admin.compass.promptPlaceholder': 'The question',
+	'admin.compass.chipsPlaceholder': 'Inspiration chips, comma-separated',
+	'admin.compass.enabled': 'Enabled',
+	'admin.compass.add': '+ Add a wind',
+
+	'admin.values.intro': 'The values of the "Wind of Decision" — players choose and rank five.',
+	'admin.values.add': '+ Add a value',
+
+	'admin.image.uploaded': '✓ Image uploaded — remember to save',
+	'admin.image.uploadFailed': 'Upload failed — you can paste an image URL instead',
+	'admin.image.placeholder': 'Image URL, or use "Upload"',
+	'admin.image.upload': 'Upload',
+
+	'admin.islands.intro':
+		"Each island is a question statement and each shore an option statement in Freedi's statement system — editing the texts here updates the statements themselves.",
+	'admin.islands.hidden': '(hidden)',
+	'admin.islands.namePlaceholder': 'Island name',
+	'admin.islands.issuePlaceholder': 'The civic issue',
+	'admin.islands.shortExplainPlaceholder': 'Short explanation',
+	'admin.islands.openingPlaceholder': 'Narrative opening',
+	'admin.islands.centralQuestion': 'Central question (statement)',
+	'admin.islands.depthQuestionPlaceholder': 'Depth question (optional)',
+	'admin.islands.image': 'Island image',
+	'admin.islands.position': 'Position on the map (%)',
+	'admin.islands.posX': 'Horizontal (0-100)',
+	'admin.islands.posY': 'Vertical (0-100)',
+	'admin.islands.enabled': 'Shown in the game',
+	'admin.islands.shores': 'Shores (option statements)',
+	'admin.islands.shore': 'Shore {{n}}',
+	'admin.islands.deleteShore': 'Delete this shore (the statement)',
+	'admin.islands.confirmDeleteShore': 'Delete this shore?',
+	'admin.islands.newShorePlaceholder': '+ New shore (saved when you save the island)',
+	'admin.islands.save': 'Save island',
+	'admin.islands.add': '+ Add a new island',
+
+	'admin.parties.intro':
+		"Each party's ship course = a score from −1 (opposes) to +1 (supports) for every statement on every island, based on platforms, votes and public declarations. A statement without a score falls back to the old declared position (if any). The distance calculation is derived from these scores.",
+	'admin.parties.newShip': 'New ship',
+	'admin.parties.hidden': '(hidden)',
+	'admin.parties.namePlaceholder': 'Party name',
+	'admin.parties.color': 'Color (hex)',
+	'admin.parties.descriptionPlaceholder': 'Description (optional)',
+	'admin.parties.image': 'Logo/image',
+	'admin.parties.enabled': 'Shown in the game',
+	'admin.parties.courseHeading': 'Ship course — a score per statement (−1 opposes … +1 supports)',
+	'admin.parties.shoreLine': 'Shore {{n}}: {{text}}',
+	'admin.parties.quickScore': 'Quick score',
+	'admin.parties.exactScore': 'Exact score',
+	'admin.parties.confirmRemove': 'Delete "{{name}}"?',
+	'admin.parties.remove': 'Remove ship (applied when you save)',
+	'admin.parties.add': '+ Add a ship',
+	'admin.parties.save': 'Save ships',
+
+	'admin.script.saved': 'Script saved',
+	'admin.script.savedUpdated_one': 'Script saved · one deliberation updated',
+	'admin.script.savedUpdated_two': 'Script saved · two deliberations updated',
+	'admin.script.savedUpdated_other': 'Script saved · {{count}} deliberations updated',
+	'admin.script.title': 'Event script',
+	'admin.script.intro':
+		'What a participant goes through in the deliberation. Changes here also apply to deliberations already open — the join code and the proposals written so far are kept.',
+	'admin.script.stances': 'Stances and camps',
+	'admin.script.stancesOn':
+		'Participants are placed in two camps by the stances they marked on the island, and the score measures the bridging between them.',
+	'admin.script.stancesOff':
+		'No camps. Instead of a bridging score, we measure how much the opinions in the room converged during the deliberation.',
+	'admin.script.needs': 'Needs board',
+	'admin.script.needsHint': 'Shows the needs behind both stances while writing.',
+	'admin.script.elders': 'Elders',
+	'admin.script.eldersHint':
+		"AI characters inspired by historical leaders sail alongside participants: elder ships at sea, and an elders' council that responds to proposals in the deliberation. Turning this off also hides the characters question.",
+	'admin.script.framing': 'Opening screen',
+	'admin.script.framingHint':
+		"A short screen at the start of the deliberation, built from the island's own text.",
+	'admin.script.voting': 'Closing vote',
+	'admin.script.votingHint':
+		'The deliberation closes with a vote on the proposals before the results screen.',
+	'admin.script.rounds': 'Number of rounds',
+	'admin.script.ratingsPerRound': 'Ratings per round',
+	'admin.script.save': 'Save script',
+	'admin.script.eventMode': 'Event mode',
+	'admin.script.reset': 'Back to default',
+
+	'admin.conductor.advanced': '{{label}} · deliberation updated',
+	'admin.conductor.title': 'Running the event',
+	'admin.conductor.intro':
+		'A deliberation stays open until it is closed. Closing moves participants to the closing question and the results — and there is no way back.',
+	'admin.conductor.code': '{{title}} · code {{code}}',
+	'admin.conductor.toVoting': 'To the vote',
+	'admin.conductor.toResults': 'To the results',
+
+	'admin.agora.title': 'Agora gates',
+	'admin.agora.intro':
+		'Every island gets a standing deliberation in the Agora. Choose two opposing shores for each island — they decide which camp a sailor joins on entering the deliberation, so pick shores that genuinely disagree.',
+	'admin.agora.originMissing': '⚠️ Set the Agora app address in the Texts tab first.',
+	'admin.agora.anchorA': 'Shore A (one pole)',
+	'admin.agora.anchorB': 'Shore B (the opposite pole)',
+	'admin.agora.notChosen': '— not chosen —',
+	'admin.agora.sessionOpen': '✓ Deliberation open · join code',
+	'admin.agora.openSession': 'Open the deliberation',
+	'admin.agora.noSession': 'No deliberation has been opened for this island yet.',
+	'admin.agora.missingAnchors_one':
+		'Note: one island still has no two opposing shores. You can open a deliberation for it, but every sailor there will be placed in the centre.',
+	'admin.agora.missingAnchors_two':
+		'Note: two islands still have no two opposing shores. You can open deliberations for them, but every sailor there will be placed in the centre.',
+	'admin.agora.missingAnchors_other':
+		'Note: {{count}} islands still have no two opposing shores. You can open deliberations for them, but every sailor there will be placed in the centre.',
+	'admin.agora.saveAnchors': 'Save opposing shores',
+	'admin.agora.provisioned_one': 'Opened one deliberation',
+	'admin.agora.provisioned_two': 'Opened two deliberations',
+	'admin.agora.provisioned_other': 'Opened {{count}} deliberations',
+	'admin.agora.alreadyOpen_one': 'one was already open',
+	'admin.agora.alreadyOpen_two': 'two were already open',
+	'admin.agora.alreadyOpen_other': '{{count}} were already open',
+	'admin.agora.provision': '🏛️ Open the Agora deliberations',
+};
+
+export default adminEn;
