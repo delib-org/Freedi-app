@@ -114,6 +114,10 @@ export class FakeDocRef {
 	async set(data: DocData, options?: { merge?: boolean }): Promise<void> {
 		applySet(this.path, data, options);
 	}
+	async create(data: DocData): Promise<void> {
+		if (store.has(this.path)) throw new Error(`ALREADY_EXISTS: ${this.path}`);
+		applySet(this.path, data);
+	}
 	async update(data: DocData): Promise<void> {
 		applyUpdate(this.path, data);
 	}

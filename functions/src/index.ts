@@ -1329,7 +1329,12 @@ export {
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 	onAgoraSessionFinished,
+	agoraCheckStationLink,
+	agoraMintStationHandoff,
 } from './agora';
+
+// Linked stations: a one-time code from Agora redeemed for a sign-in in another app
+export { redeemAppHandoff } from './handoff/fn_redeemAppHandoff';
 
 // Israeli Odyssey — the voyage that opens onto the civic Agora deliberations
 export {
