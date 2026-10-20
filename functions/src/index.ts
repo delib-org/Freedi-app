@@ -46,12 +46,12 @@ import {
 	// updateNumberOfNewSubStatements,
 } from './fn_statements';
 import { updateVote } from './fn_vote';
+import { onNewSubscription, onStatementDeletionDeleteSubscriptions } from './fn_subscriptions';
 import {
-	onNewSubscription,
-	onStatementDeletionDeleteSubscriptions,
-	validateRoleChange,
-	updateStatementMemberCount,
-} from './fn_subscriptions';
+	onSubscriptionCreated,
+	onSubscriptionDeleted,
+	onSubscriptionUpdated,
+} from './fn_subscriptionLifecycle';
 import { updateParentOnChildUpdate, updateParentOnChildDelete } from './fn_statement_updates';
 import {
 	getRandomStatements,
@@ -721,20 +721,29 @@ exports.handleWaitingRoleSubscriptions = createFirestoreFunction(
 	'handleWaitingRoleSubscriptions',
 );
 
-// Validate role changes to prevent banning admins or creators
+// Subscription updates: revert bans of admins/creators, then keep the user's
+// userFeed entry in step with role changes (deployed name kept for continuity).
 exports.validateRoleChange = createFirestoreFunction(
 	`/${Collections.statementsSubscribe}/{subscriptionId}`,
 	onDocumentUpdated,
-	validateRoleChange,
+	onSubscriptionUpdated,
 	'validateRoleChange',
 );
 
-// Update statement's numberOfMembers count when subscriptions are created/deleted
-exports.updateStatementMemberCount = createFirestoreFunction(
+// Membership lifecycle: numberOfMembers + userFeed entry. Split from the old
+// onDocumentWritten `updateStatementMemberCount`, which was also invoked by
+// every subscription UPDATE (activity stamps, read-state) only to return early.
+exports.onSubscriptionCreatedMembership = createFirestoreFunction(
 	`/${Collections.statementsSubscribe}/{subscriptionId}`,
-	onDocumentWritten,
-	updateStatementMemberCount,
-	'updateStatementMemberCount',
+	onDocumentCreated,
+	onSubscriptionCreated,
+	'onSubscriptionCreatedMembership',
+);
+exports.onSubscriptionDeletedMembership = createFirestoreFunction(
+	`/${Collections.statementsSubscribe}/{subscriptionId}`,
+	onDocumentDeleted,
+	onSubscriptionDeleted,
+	'onSubscriptionDeletedMembership',
 );
 
 // New v2 functions to update statements and subscriptions efficiently

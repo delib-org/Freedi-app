@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import {
-	fetchOlderTopSubscriptions,
-	fetchOlderDiscussionSubscriptions,
-} from '@/controllers/db/subscriptions/getSubscriptions';
+import { fetchOlderDiscussionSubscriptions } from '@/controllers/db/subscriptions/getSubscriptions';
+import { getDiscussionsCursor } from '@/controllers/db/subscriptions/discussionsCursor';
+import { fetchOlderUserFeed } from '@/controllers/db/userFeed/listenToUserFeed';
 import type { RootState } from '@/redux/store';
+import { selectOldestUserFeedActivity } from '@/redux/userFeed/userFeedSlice';
 import { HOME } from '@/constants/common';
-import { NON_DOCUMENT_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
-import { Role, StatementSubscription } from '@freedi/shared-types';
 
 export type HomeTab = 'topics' | 'discussions';
-
-const DISCUSSION_ROLES: ReadonlySet<Role> = new Set([Role.admin, Role.creator, Role.member]);
 
 /**
  * Nearest scrollable ancestor of `node`, used as the IntersectionObserver root.
@@ -33,39 +29,16 @@ function getScrollableAncestor(node: HTMLElement | null): HTMLElement | null {
 }
 
 /**
- * True when a subscription belongs to the given home tab — kept in sync with the
- * listener/cursor queries so the pagination cursor is computed over exactly the
- * docs each query returns.
- *  - Topics:      top-level subscriptions (parentId === 'top')
- *  - Discussions: non-document statements where the user is admin/creator/member
- */
-function matchesTab(sub: StatementSubscription, tab: HomeTab): boolean {
-	if (tab === 'topics') {
-		return (sub.parentId || sub.statement?.parentId) === 'top';
-	}
-
-	const statementType = sub.statementType || sub.statement?.statementType;
-
-	return (
-		!!statementType &&
-		NON_DOCUMENT_STATEMENT_TYPES.includes(statementType) &&
-		!!sub.role &&
-		DISCUSSION_ROLES.has(sub.role)
-	);
-}
-
-/**
  * Lazy-load older home-screen subscriptions as the user scrolls to the bottom.
  *
- * The home listeners subscribe to only the newest `HOME.INITIAL_SUBSCRIPTIONS_LIMIT`
- * subscriptions per tab. This hook pulls older batches (by `lastUpdate`, matching
- * the listener query) into the store via cursor pagination, driven by an
- * IntersectionObserver on a sentinel rendered at the end of the list.
+ * The home listeners subscribe to only the first `HOME.INITIAL_SUBSCRIPTIONS_LIMIT`
+ * entries per tab. This hook pulls older batches into the store via cursor
+ * pagination, driven by an IntersectionObserver on a sentinel at the end of the list.
+ *  - Topics:      the next `userFeed` page by lastActivity, then those subscriptions.
+ *  - Discussions: the next subscriptions page by lastUpdate.
  *
- * Cursor = the oldest loaded `lastUpdate` for the active tab. Display sort
- * (by latest child activity) is irrelevant to the cursor: each batch is merged
- * into the store and the view re-sorts. Rides the same composite indexes the
- * listeners already use, so no extra index is required.
+ * Display sort (by latest activity) is irrelevant to the cursor: each batch is
+ * merged into the store and the view re-sorts.
  */
 export function useLazyLoadHomeSubscriptions(tab: HomeTab): {
 	sentinelRef: (node: HTMLElement | null) => void;
@@ -80,25 +53,13 @@ export function useLazyLoadHomeSubscriptions(tab: HomeTab): {
 
 	const userId = useSelector((state: RootState) => state.creator.creator?.uid);
 
-	// Oldest loaded `lastUpdate` for the active tab, returned as a PRIMITIVE so
-	// useSelector's reference equality holds and we avoid needless rerenders.
-	const oldestLastUpdate = useSelector((state: RootState) => {
-		let min = Infinity;
-		for (const sub of state.statements.statementSubscription) {
-			if (
-				sub.userId === userId &&
-				matchesTab(sub, tab) &&
-				typeof sub.lastUpdate === 'number' &&
-				sub.lastUpdate < min
-			) {
-				min = sub.lastUpdate;
-			}
-		}
-
-		return min === Infinity ? null : min;
-	});
-	const oldestRef = useRef<number | null>(oldestLastUpdate);
-	oldestRef.current = oldestLastUpdate;
+	// Topics page by activity (userFeed.lastActivity); its cursor is the oldest
+	// loaded feed entry — a PRIMITIVE so useSelector's equality holds.
+	// Discussions page by subscription lastUpdate; their cursor is tracked from
+	// the query results (see discussionsCursor.ts), read when loading.
+	const oldestFeedActivity = useSelector(selectOldestUserFeedActivity);
+	const oldestRef = useRef<number | null>(oldestFeedActivity);
+	oldestRef.current = oldestFeedActivity;
 
 	// Reset paging state when the active tab changes. We don't pre-decide
 	// `hasMore` from the loaded count — let the fetch's own `hasMore` drive it
@@ -112,14 +73,14 @@ export function useLazyLoadHomeSubscriptions(tab: HomeTab): {
 
 	const loadMore = useCallback(async () => {
 		if (!userId || isLoadingRef.current || !hasMoreRef.current) return;
-		if (oldestRef.current === null) return;
+		const cursor = tab === 'topics' ? oldestRef.current : getDiscussionsCursor();
+		if (cursor === null) return;
 
 		isLoadingRef.current = true;
 		setIsLoadingMore(true);
 		try {
-			const fetcher =
-				tab === 'topics' ? fetchOlderTopSubscriptions : fetchOlderDiscussionSubscriptions;
-			const result = await fetcher(userId, oldestRef.current, HOME.LOAD_MORE_BATCH_SIZE);
+			const fetcher = tab === 'topics' ? fetchOlderUserFeed : fetchOlderDiscussionSubscriptions;
+			const result = await fetcher(userId, cursor, HOME.LOAD_MORE_BATCH_SIZE);
 			hasMoreRef.current = result.hasMore;
 			setHasMore(result.hasMore);
 		} finally {

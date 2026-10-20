@@ -13,7 +13,8 @@ import {
 	where,
 	Unsubscribe,
 } from 'firebase/firestore';
-import type { QuerySnapshot } from 'firebase/firestore';
+import type { QueryDocumentSnapshot, QuerySnapshot } from 'firebase/firestore';
+import { recordDiscussionsCursor } from './discussionsCursor';
 import { FireStore } from '../config';
 import { getStatementFromDB } from '../statements/getStatement';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
@@ -43,6 +44,13 @@ import {
 	createManagedCollectionListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
+
+/** lastUpdate of the last doc of a lastUpdate-desc page (the discussions pager cursor). */
+function lastDocLastUpdate(docs: QueryDocumentSnapshot[]): number | undefined {
+	const last = docs[docs.length - 1]?.data().lastUpdate;
+
+	return typeof last === 'number' ? last : undefined;
+}
 
 // Helper to check if an error is IndexedDB-related
 function isIndexedDBError(error: unknown): boolean {
@@ -342,6 +350,7 @@ export async function fetchOlderDiscussionSubscriptions(
 		const snapshot = await getDocs(q);
 		const hasMore = snapshot.size > batchSize;
 		const docs = hasMore ? snapshot.docs.slice(0, batchSize) : snapshot.docs;
+		recordDiscussionsCursor(lastDocLastUpdate(docs));
 
 		docs.forEach((docSnap) => {
 			try {
@@ -561,6 +570,7 @@ export function getNewStatementsFromSubscriptions(
 			q,
 			listenerKey,
 			(subscriptionsDB) => {
+				recordDiscussionsCursor(lastDocLastUpdate(subscriptionsDB.docs));
 				subscriptionsDB.docChanges().forEach((change) => {
 					const data = change.doc.data();
 					const statementSubscription = parse(

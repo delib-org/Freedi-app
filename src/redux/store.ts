@@ -15,6 +15,7 @@ import { roomAssignmentSlice } from './roomAssignment/roomAssignmentSlice';
 import { engagementSlice } from './engagement/engagementSlice';
 import { clusterEvaluationLinksSlice } from './clusterEvaluationLinks/clusterEvaluationLinksSlice';
 import { searchSlice } from './search/searchSlice';
+import { userFeedSlice } from './userFeed/userFeedSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -34,6 +35,7 @@ export const store = configureStore({
 		engagement: engagementSlice.reducer,
 		clusterEvaluationLinks: clusterEvaluationLinksSlice.reducer,
 		search: searchSlice.reducer,
+		userFeed: userFeedSlice.reducer,
 	},
 });
 

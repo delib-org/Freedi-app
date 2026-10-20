@@ -1243,6 +1243,24 @@ service cloud.firestore {
                       (isSubscriber() && !isBanned()));
     }
 
+    // Home activity feed — one doc per (user, top-level discussion), written
+    // ONLY by Cloud Functions (membership lifecycle + coalesced activity).
+    // A user reads only their own entries; the home query filters on
+    // userId == auth.uid, so a list is provably limited to them. No client
+    // writes: a client that could stamp lastActivity could pin a discussion
+    // to the top of its own (or, via a forged id, someone else's) home.
+    match /userFeed/{feedId} {
+      allow read: if request.auth != null &&
+                   resource != null &&
+                   resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Server-only coalescing marker for userFeed fan-out (one per discussion).
+    match /userFeedThrottle/{statementId} {
+      allow read, write: if false;
+    }
+
     // The rest of the collection rules...
     match /massConsensusProcesses/{statementId=**} {
       allow read: if request.auth.uid != null;

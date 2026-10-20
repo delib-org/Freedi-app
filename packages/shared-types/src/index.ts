@@ -992,3 +992,14 @@ export {
   isSearchCandidate,
 } from './utils/searchCandidates';
 export type { SearchableStatement, SearchableSubscription } from './utils/searchCandidates';
+
+// Home activity feed (server-written; replaces subscription lastUpdate stamps)
+export type { UserFeedItem, UserFeedThrottle } from './models/userFeed/UserFeed';
+export {
+  UserFeedItemSchema,
+  UserFeedThrottleSchema,
+  USER_FEED_ROLES,
+  getUserFeedId,
+  isUserFeedRole,
+  isTopLevelSubscription,
+} from './models/userFeed/UserFeed';
