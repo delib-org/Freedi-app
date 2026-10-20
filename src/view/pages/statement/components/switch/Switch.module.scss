@@ -211,6 +211,9 @@
 }
 .panel {
 	width: 100%;
+	// Fill the scrolling main so a tab that sizes itself to the screen (the
+	// voting bars) gets a real height instead of collapsing to its content.
+	flex: 1 1 auto;
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
