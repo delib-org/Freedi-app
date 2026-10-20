@@ -1,17 +1,11 @@
-import React, { useEffect, useId, useMemo, useState } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { Statement } from '@freedi/shared-types';
 import { Sheet } from '@/view/components/atomic/molecules/Sheet';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { useCreateStatementFlow } from '@/view/pages/statement/components/addStatement/useCreateStatementFlow';
-import { VALIDATION } from '@/constants/common';
+import { AskSpace, NEW_SPACE, NO_SPACE, useAskInSpace } from './useAskInSpace';
 import styles from './AskQuestionSheet.module.scss';
 
-export interface AskSpace {
-	id: string;
-	title: string;
-	statement: Statement;
-}
+export type { AskSpace };
 
 interface AskQuestionSheetProps {
 	isOpen: boolean;
@@ -21,13 +15,10 @@ interface AskQuestionSheetProps {
 	currentSpaceId?: string;
 }
 
-const NO_SPACE = 'top';
-const MIN_QUESTION_LENGTH = VALIDATION.MIN_TITLE_LENGTH;
-
 /**
- * "לשאול שאלה" — the floating nav's + button. Writes through the one creation
- * flow (useCreateStatementFlow → createStatementWithSubscription), so a
- * question asked here is identical to one asked from the legacy sheet.
+ * "לשאול שאלה" — the one place a question is asked from Home and the nav's +.
+ * The person picks an existing space, no space, or a new space (created first,
+ * then the question inside it). See useAskInSpace for the writes.
  */
 export default function AskQuestionSheet({
 	isOpen,
@@ -53,64 +44,75 @@ function AskQuestionForm({
 	const navigate = useNavigate();
 	const textId = useId();
 	const hintId = useId();
-	const [spaceId, setSpaceId] = useState<string>(
-		currentSpaceId && spaces.some((space) => space.id === currentSpaceId)
-			? currentSpaceId
-			: NO_SPACE,
-	);
-	const [text, setText] = useState('');
-	const parentStatement = useMemo<Statement | 'top'>(
-		() => spaces.find((space) => space.id === spaceId)?.statement ?? 'top',
-		[spaces, spaceId],
-	);
-	const flow = useCreateStatementFlow({
-		parentStatement,
-		intent: 'question',
-		origin: 'fab',
-		onDone: (ids) => {
+	const nameId = useId();
+	const nameRef = useRef<HTMLInputElement>(null);
+	const ask = useAskInSpace({
+		spaces,
+		currentSpaceId,
+		onCreated: (questionId) => {
 			onClose();
-			if (ids[0]) navigate(`/statement/${ids[0]}`);
+			navigate(`/statement/${questionId}`);
 		},
 	});
-	const busy = flow.state.step === 'create';
-	const canSubmit = text.trim().length >= MIN_QUESTION_LENGTH && !busy;
+	const { choice, isNewSpace, busy, error } = ask;
 
 	useEffect(() => {
-		const [title, ...rest] = text.trim().split('\n');
-		flow.setDraft({ title: title ?? '', description: rest.join('\n').trim() });
-		// setDraft is stable per flow; only the text drives the draft.
-	}, [text]);
+		if (isNewSpace) nameRef.current?.focus();
+	}, [isNewSpace]);
 
 	function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		if (!canSubmit) return;
-		if (flow.state.step === 'error') flow.retry();
-		else flow.submit();
+		void ask.submit();
 	}
 
-	const chips = [
-		...spaces.map((space) => ({ id: space.id, title: space.title })),
-		{ id: NO_SPACE, title: t('No space') },
-	];
+	function chip(id: string, title: string) {
+		return (
+			<button
+				key={id}
+				type="button"
+				role="radio"
+				aria-checked={id === choice}
+				disabled={busy}
+				className={`${styles.ask__chip} ${id === choice ? styles['ask__chip--active'] : ''}`}
+				onClick={() => ask.setChoice(id)}
+				data-testid={`ask-space-${id}`}
+			>
+				{title}
+			</button>
+		);
+	}
 
 	return (
 		<form className={styles.ask} onSubmit={handleSubmit}>
-			{spaces.length > 0 && (
-				<div className={styles.ask__spaces} role="radiogroup" aria-label={t('Space')}>
-					{chips.map((chip) => (
-						<button
-							key={chip.id}
-							type="button"
-							role="radio"
-							aria-checked={chip.id === spaceId}
-							className={`${styles.ask__chip} ${chip.id === spaceId ? styles['ask__chip--active'] : ''}`}
-							onClick={() => setSpaceId(chip.id)}
-							data-testid={`ask-space-${chip.id}`}
-						>
-							{chip.title}
-						</button>
-					))}
+			<div className={styles.ask__spaces} role="radiogroup" aria-label={t('Space')}>
+				{ask.options.length > 0 && (
+					<div className={styles.ask__list}>
+						{ask.options.map((space) => chip(space.id, space.title))}
+					</div>
+				)}
+				<div className={styles.ask__pinned}>
+					{chip(NO_SPACE, t('No space'))}
+					{chip(NEW_SPACE, `+ ${t('New space')}`)}
 				</div>
+			</div>
+			{isNewSpace && (
+				<>
+					<label htmlFor={nameId} className={styles.ask__label}>
+						{t('Space name')}
+					</label>
+					<input
+						id={nameId}
+						ref={nameRef}
+						className={styles.ask__name}
+						value={ask.spaceName}
+						onChange={(event) => ask.setSpaceName(event.target.value)}
+						placeholder={t('question.sheet.titlePlaceholderSpace')}
+						readOnly={busy}
+						required
+						data-testid="ask-space-name"
+					/>
+					<p className={styles.ask__hint}>{t('The question will open inside this new space.')}</p>
+				</>
 			)}
 			<label htmlFor={textId} className={styles.ask__label}>
 				{t('Your question')}
@@ -118,25 +120,28 @@ function AskQuestionForm({
 			<textarea
 				id={textId}
 				className={styles.ask__text}
-				value={text}
-				onChange={(event) => setText(event.target.value)}
+				value={ask.text}
+				onChange={(event) => ask.setText(event.target.value)}
 				placeholder={t('What does the group need to decide?')}
 				aria-describedby={hintId}
+				readOnly={busy}
 				rows={4}
 				data-testid="ask-question-text"
 			/>
 			<p id={hintId} className={styles.ask__hint}>
 				{t('The question opens in the "Collecting" stage. You can change it in the host tools.')}
 			</p>
-			{flow.state.step === 'error' && (
+			{error && (
 				<p className={styles.ask__error} role="alert">
-					{t('Something went wrong. Please try again.')}
+					{error === 'partial'
+						? t('The space was created, but the question was not saved. Try again.')
+						: t('Something went wrong. Please try again.')}
 				</p>
 			)}
 			<button
 				type="submit"
 				className={styles.ask__submit}
-				disabled={!canSubmit}
+				disabled={!ask.canSubmit}
 				aria-busy={busy || undefined}
 				data-testid="ask-question-submit"
 			>

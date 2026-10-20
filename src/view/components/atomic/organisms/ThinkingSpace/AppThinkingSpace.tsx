@@ -1,17 +1,12 @@
-import React, { ReactNode, useMemo, useState } from 'react';
+import React, { ReactNode, useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { useDispatch } from 'react-redux';
 import { StatementType } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useLevelTransition } from '@/controllers/hooks/useSlideAndSubStatement';
 import { topSubscriptionsSelector } from '@/redux/statements/statementsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-import {
-	setNewStatementType,
-	setParentStatement,
-	setShowNewStatementModal,
-} from '@/redux/statements/newStatementSlice';
+import { OpenAskQuestionContext } from '@/controllers/hooks/useOpenAskQuestion';
 import ThinkingSpace from './ThinkingSpace';
 import BottomNav from '../BottomNav/BottomNav';
 import {
@@ -46,7 +41,6 @@ export default function AppThinkingSpace({
 	const { className: levelClassName } = useLevelTransition();
 	const notifications = useAppSelector(inAppNotificationsSelector);
 	const allStatements = useAppSelector((state) => state.statements.statements);
-	const dispatch = useDispatch();
 	const user = useAppSelector(creatorSelector);
 	const subscriptions = useAppSelector(topSubscriptionsSelector);
 	const [askOpen, setAskOpen] = useState(false);
@@ -102,56 +96,52 @@ export default function AppThinkingSpace({
 	);
 	const unreadCount = mine.filter((n) => !n.read).length;
 
-	const create = (): void => {
-		// New top-level creation is hosted on Home; navigating mounts its modal host.
-		dispatch(setParentStatement('top'));
-		dispatch(setNewStatementType(StatementType.question));
-		dispatch(setShowNewStatementModal(true));
-		navigate('/home');
-	};
+	const create = useCallback((): void => setAskOpen(true), []);
 
 	const showNav = !!user && shouldShowBottomNav(location.pathname);
 
 	return (
-		<AnswerComposeContext.Provider value={answerCompose}>
-			<ThinkingSpace
-				spaces={spaces}
-				activeId={activeId}
-				userName={user?.displayName || t('Your profile')}
-				onHome={() => navigate('/home')}
-				onProfile={() => navigate('/my')}
-				onOpen={(id) => navigate(`/statement/${id}`)}
-				onCreate={create}
-				aside={aside}
-				asideLabel={asideLabel}
-				tools={tools}
-				transitionClassName={STATEMENT_SCREEN.test(location.pathname) ? '' : levelClassName}
-				bottomNav={
-					showNav ? (
-						<BottomNav
-							active={resolveBottomNavItem(location.pathname, location.search)}
-							unreadCount={unreadCount}
-							onNavigate={(item) => navigate(BOTTOM_NAV_PATHS[item])}
-							onAsk={() => {
-								if (!answerCompose.compose()) setAskOpen(true);
-							}}
-							t={t}
+		<OpenAskQuestionContext.Provider value={create}>
+			<AnswerComposeContext.Provider value={answerCompose}>
+				<ThinkingSpace
+					spaces={spaces}
+					activeId={activeId}
+					userName={user?.displayName || t('Your profile')}
+					onHome={() => navigate('/home')}
+					onProfile={() => navigate('/my')}
+					onOpen={(id) => navigate(`/statement/${id}`)}
+					onCreate={create}
+					aside={aside}
+					asideLabel={asideLabel}
+					tools={tools}
+					transitionClassName={STATEMENT_SCREEN.test(location.pathname) ? '' : levelClassName}
+					bottomNav={
+						showNav ? (
+							<BottomNav
+								active={resolveBottomNavItem(location.pathname, location.search)}
+								unreadCount={unreadCount}
+								onNavigate={(item) => navigate(BOTTOM_NAV_PATHS[item])}
+								onAsk={() => {
+									if (!answerCompose.compose()) setAskOpen(true);
+								}}
+								t={t}
+							/>
+						) : undefined
+					}
+					t={t}
+					dir={dir}
+				>
+					{children}
+					{!!user && (
+						<AskQuestionSheet
+							isOpen={askOpen}
+							onClose={() => setAskOpen(false)}
+							spaces={askSpaces}
+							currentSpaceId={activeId}
 						/>
-					) : undefined
-				}
-				t={t}
-				dir={dir}
-			>
-				{children}
-				{showNav && (
-					<AskQuestionSheet
-						isOpen={askOpen}
-						onClose={() => setAskOpen(false)}
-						spaces={askSpaces}
-						currentSpaceId={activeId}
-					/>
-				)}
-			</ThinkingSpace>
-		</AnswerComposeContext.Provider>
+					)}
+				</ThinkingSpace>
+			</AnswerComposeContext.Provider>
+		</OpenAskQuestionContext.Provider>
 	);
 }

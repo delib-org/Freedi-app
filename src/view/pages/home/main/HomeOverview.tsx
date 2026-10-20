@@ -128,7 +128,7 @@ export default function HomeOverview({
 								onClick={onCreateQuestion}
 								data-cy="add-statement"
 							>
-								{t('Start a conversation')}
+								{t('Ask a question')}
 							</button>
 							<button type="button" className={styles.dashedButton} onClick={onCreateGroup}>
 								+ {t('New space')}
@@ -198,7 +198,7 @@ export default function HomeOverview({
 										data-cy="add-statement"
 									>
 										<Plus size={16} aria-hidden="true" />
-										{t('Start something')}
+										{t('Ask a question')}
 									</button>
 								</div>
 								{shownQuestions.length > 0 && (

@@ -4578,5 +4578,9 @@
   "Teacher attached. The notification email could not be sent.": "تم ربط المعلّم. تعذّر إرسال بريد الإشعار.",
   "Could not attach the teacher.": "تعذّر ربط المعلّم.",
   "Invited teachers": "معلّمون تمت دعوتهم",
-  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "لا يوجد حساب في أغورا بعد؟ سيتلقّى المعلّم دعوة بالبريد الإلكتروني وينضم عند تسجيل الدخول باستخدام Google."
+  "No Agora account yet? They get an email invitation and join when they sign in with Google.": "لا يوجد حساب في أغورا بعد؟ سيتلقّى المعلّم دعوة بالبريد الإلكتروني وينضم عند تسجيل الدخول باستخدام Google.",
+  "Space name": "اسم المساحة",
+  "The question will open inside this new space.": "سيُفتح السؤال داخل هذه المساحة الجديدة.",
+  "The space was created, but the question was not saved. Try again.": "تم إنشاء المساحة، لكن لم يتم حفظ السؤال. حاول مرة أخرى.",
+  "Give the space a name": "أعطِ المساحة اسمًا"
 }
