@@ -12,6 +12,7 @@ import {
 } from 'valibot';
 import { AgoraCamp, AgoraStage } from './agoraEnums';
 import { AgoraCustomThemeSchema, AgoraThemeChoiceSchema } from './agoraTheme';
+import { AgoraStationVisitSchema } from './stationLink';
 
 export const AgoraValueScoreSchema = object({
 	characterId: string(),
@@ -106,6 +107,13 @@ export const AgoraParticipantSchema = object({
 			callAt: optional(number()),
 		}),
 	),
+	/**
+	 * Linked stations this student opened, and when they came back — keyed by
+	 * plan itemId. Written by the student's own client (the participant rule
+	 * is a deny-list); the teacher's "opened / came back" reads it. A courtesy
+	 * signal like `whereabouts`: "finished" is not knowable from here.
+	 */
+	stationVisits: optional(record(string(), AgoraStationVisitSchema)),
 	/** 0 (fully left camp) … 100 (fully right camp) */
 	campPosition: optional(number()),
 	camp: optional(enum_(AgoraCamp)),

@@ -138,6 +138,8 @@ export enum Collections {
     agoraTeacherInvites = 'agoraTeacherInvites',
     // Server-written markers: who may read a private scenario (players of a game built on it)
     agoraTopicReaders = 'agoraTopicReaders',
+    // One-time codes a linked station redeems in another app (server only; doc id = sha256(code))
+    appHandoffs = 'appHandoffs',
 
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',

@@ -15,6 +15,7 @@ import { CutoffBy } from '../results/ResultsSettings';
 import { AgoraCpBandSummarySchema } from './questionSummary';
 import { sessionRunsVoting } from './sessionFlow';
 import { AgoraQuestionKindSchema, questionKindOf } from './rounds';
+import { AgoraStationLinkSchema } from './stationLink';
 import type { AgoraSessionFlow } from './sessionFlow';
 import type { AgoraSessionMode } from './agoraEnums';
 
@@ -93,6 +94,11 @@ export const AgoraStagePlanItemSchema = object({
 	selection: optional(AgoraQuestionSelectionSchema),
 	/** deliberation: the auto-open-voting rule. Absent = off */
 	votingTrigger: optional(AgoraVotingTriggerSchema),
+	/**
+	 * linked: the question in another app this station opens. Required to
+	 * run (`linked_needs_link`); the server re-checks it on every save.
+	 */
+	link: optional(AgoraStationLinkSchema),
 });
 
 export type AgoraStagePlanItem = InferOutput<typeof AgoraStagePlanItemSchema>;
@@ -185,6 +191,7 @@ export const AGORA_PLANNABLE_STAGES: readonly AgoraStage[] = [
 	AgoraStage.question,
 	AgoraStage.deliberation,
 	AgoraStage.voting,
+	AgoraStage.linked,
 	AgoraStage.results,
 ];
 
@@ -320,6 +327,7 @@ export type StagePlanError =
 	| 'voting_needs_source'
 	| 'stage_needs_characters'
 	| 'question_needs_title'
+	| 'linked_needs_link'
 	| 'unknown_stage';
 
 /**
@@ -365,6 +373,7 @@ export function validateStagePlan(
 		) {
 			errors.push('question_needs_title');
 		}
+		if (item.stage === AgoraStage.linked && !item.link) errors.push('linked_needs_link');
 	});
 
 	return Array.from(new Set(errors));
@@ -495,7 +504,12 @@ export interface VotingTriggerRow {
 }
 
 export type VotingTriggerVerdict =
-	| { fired: false; /** The best single-proposal net agreement among counted rows, for the teacher's line */ best: number | null }
+	| {
+			fired: false;
+			/** The best single-proposal net agreement among counted rows, for the teacher's line */ best:
+				| number
+				| null;
+	  }
 	| { fired: true; mode: 'single' | 'pair'; candidateIds: string[] };
 
 /**
