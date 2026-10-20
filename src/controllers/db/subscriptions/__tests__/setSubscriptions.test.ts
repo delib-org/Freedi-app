@@ -104,6 +104,7 @@ jest.mock('firebase/firestore', () => ({
 	updateDoc: jest.fn(),
 	setDoc: jest.fn(),
 	getDoc: jest.fn(),
+	runTransaction: jest.fn(),
 	arrayUnion: jest.fn((val) => ({ _arrayUnion: val })),
 	arrayRemove: jest.fn((val) => ({ _arrayRemove: val })),
 	Timestamp: {
@@ -144,12 +145,13 @@ jest.mock('../../userDemographic/getUserDemographic', () => ({
 	getUserGroupAnswers: jest.fn().mockResolvedValue([]),
 }));
 
-import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, getDoc, runTransaction } from 'firebase/firestore';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 
 const mockDoc = doc as jest.MockedFunction<typeof doc>;
 const mockUpdateDoc = updateDoc as jest.MockedFunction<typeof updateDoc>;
 const mockSetDoc = setDoc as jest.MockedFunction<typeof setDoc>;
+const mockRunTransaction = runTransaction as jest.MockedFunction<typeof runTransaction>;
 const mockGetDoc = getDoc as jest.MockedFunction<typeof getDoc>;
 
 describe('setSubscriptions', () => {
@@ -331,43 +333,67 @@ describe('setSubscriptions', () => {
 	});
 
 	describe('updateLastReadTimestamp', () => {
+		const runWithStoredDoc = (
+			snapshot: { exists: boolean; lastReadTimestamp?: number },
+			transactionUpdate: jest.Mock,
+		): void => {
+			mockRunTransaction.mockImplementation(async (_db, updateFn) => {
+				const transaction = {
+					get: jest.fn().mockResolvedValue({
+						exists: () => snapshot.exists,
+						data: () => ({ lastReadTimestamp: snapshot.lastReadTimestamp }),
+					}),
+					update: transactionUpdate,
+				};
+
+				return updateFn(transaction as never);
+			});
+		};
+
 		it('should update timestamp when subscription exists', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => true,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+			const update = jest.fn();
+			runWithStoredDoc({ exists: true, lastReadTimestamp: 1 }, update);
 
 			await updateLastReadTimestamp('stmt-123', 'user-123');
 
-			expect(mockUpdateDoc).toHaveBeenCalledWith(
+			expect(update).toHaveBeenCalledWith(
 				expect.anything(),
 				expect.objectContaining({
 					lastReadTimestamp: expect.any(Number),
 					statementId: 'stmt-123',
 				}),
 			);
+			expect(mockGetDoc).not.toHaveBeenCalled();
 		});
 
-		it('should not update when subscription does not exist', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => false,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+		it('should never write an older timestamp than the stored one', async () => {
+			const update = jest.fn();
+			runWithStoredDoc({ exists: true, lastReadTimestamp: Date.now() + 60_000 }, update);
 
 			await updateLastReadTimestamp('stmt-123', 'user-123');
 
-			expect(mockUpdateDoc).not.toHaveBeenCalled();
+			expect(update).not.toHaveBeenCalled();
 		});
 
-		it('should throw error when statementId is missing', async () => {
+		it('should not update or throw when subscription does not exist', async () => {
+			const update = jest.fn();
+			runWithStoredDoc({ exists: false }, update);
+
+			await expect(updateLastReadTimestamp('stmt-123', 'user-123')).resolves.toBeUndefined();
+
+			expect(update).not.toHaveBeenCalled();
+		});
+
+		it('should not run a transaction when statementId is missing', async () => {
 			await updateLastReadTimestamp('', 'user-123');
 
-			// Should throw and log error
-			expect(mockUpdateDoc).not.toHaveBeenCalled();
+			expect(mockRunTransaction).not.toHaveBeenCalled();
 		});
 
-		it('should throw error when userId is missing', async () => {
+		it('should not run a transaction when userId is missing', async () => {
 			await updateLastReadTimestamp('stmt-123', '');
 
-			expect(mockUpdateDoc).not.toHaveBeenCalled();
+			expect(mockRunTransaction).not.toHaveBeenCalled();
 		});
 	});
 

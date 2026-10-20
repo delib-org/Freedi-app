@@ -61,6 +61,10 @@ export const UI = {
 	// keeps the FLIP glide followable and stops the measure-storm that used to
 	// freeze mobile during active deliberation.
 	REORDER_THROTTLE_DELAY: 1200,
+	// Minimum gap between two "mark discussion as read" writes while a
+	// discussion stays open. Each write to a subscription doc also fires
+	// three Cloud Functions triggers.
+	READ_MARK_THROTTLE_MS: 30 * 1000,
 } as const;
 
 /**
