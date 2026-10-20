@@ -36,6 +36,11 @@ export function Home(): m.Component {
 					m('.home-hero', [
 						m('img.home-hero__image', {
 							src: '/time-machine.webp',
+							// Intrinsic size (960x541, 2x the 30rem display cap) reserves the
+							// box before the image lands, so the title doesn't jump.
+							width: 960,
+							height: 541,
+							decoding: 'async',
 							alt: t('home.hero_alt'),
 						}),
 						m('h1.home-hero__title', village ? 'כפר החכמים' : 'Agora'),
