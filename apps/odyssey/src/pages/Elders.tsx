@@ -5,7 +5,14 @@ import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
 import { useGame } from '../state/GameContext';
 import { activeElders } from '../lib/elders';
-import { crewIsComplete, crewIsFull, crewLimits, rankEldersByWinds } from '../lib/crew';
+import {
+	crewIsComplete,
+	crewIsFull,
+	crewLimits,
+	rankEldersByWinds,
+	withDisplayElders,
+} from '../lib/crew';
+import { useT } from '../i18n/useT';
 
 /**
  * המלחים מחכים: choosing the crew.
@@ -28,8 +35,12 @@ import { crewIsComplete, crewIsFull, crewLimits, rankEldersByWinds } from '../li
  */
 export default function Elders() {
 	const navigate = useNavigate();
-	const { content, journey, updateJourney } = useGame();
+	const { content, canonicalContent, journey, updateJourney } = useGame();
+	const { t } = useT();
+	/** The crew as shown — in the player's language. */
 	const elders = useMemo(() => activeElders(content?.game), [content]);
+	/** The crew as authored — matched against the compass in Hebrew. */
+	const canonicalElders = useMemo(() => activeElders(canonicalContent?.game), [canonicalContent]);
 	const limits = crewLimits(elders.length);
 	const [chosen, setChosen] = useState<Set<string>>(
 		() =>
@@ -51,17 +62,28 @@ export default function Elders() {
 	 */
 	const [openBio, setOpenBio] = useState<string | null>(null);
 
-	/** The values the player ranked on רוח ההכרעה, in rank order, as labels. */
+	/**
+	 * The values the player ranked on the deciding wind, in rank order, as the
+	 * CANONICAL labels: the sailors' values are matched by word, and the words
+	 * must be the ones the elders were authored with, whatever the player reads.
+	 */
 	const rankedLabels = useMemo(() => {
-		if (!content || !journey) return [];
+		if (!canonicalContent || !journey) return [];
 
 		return Object.entries(journey.valueRankings ?? {})
 			.sort((a, b) => a[1] - b[1])
-			.map(([valueId]) => content.game.values.find((value) => value.valueId === valueId)?.label)
+			.map(
+				([valueId]) =>
+					canonicalContent.game.values.find((value) => value.valueId === valueId)?.label,
+			)
 			.filter((label): label is string => Boolean(label));
-	}, [content, journey]);
+	}, [canonicalContent, journey]);
 
-	const roster = useMemo(() => rankEldersByWinds(elders, rankedLabels), [elders, rankedLabels]);
+	// Ranked in Hebrew, shown in the player's language.
+	const roster = useMemo(
+		() => withDisplayElders(rankEldersByWinds(canonicalElders, rankedLabels), elders),
+		[canonicalElders, rankedLabels, elders],
+	);
 	const matchingCount = roster.filter((entry) => entry.matchesWinds).length;
 
 	// A bubble over the board closes the way every overlay does: Escape, or a
@@ -131,37 +153,31 @@ export default function Elders() {
 
 	return (
 		<>
-			<GameChrome stage="המלחים" />
+			<GameChrome stage={t('step.elders')} />
 			<div className="page">
 				<div className="w-full max-w-5xl flex flex-col gap-4 pb-4">
 					<header className="text-center fade-in">
-						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">המלחים מחכים</h1>
+						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">{t('elders.title')}</h1>
 						<p className="text-[15px] text-[#cfe6f5] mt-2 mb-1">
-							כל קברניט צריך צוות על הסיפון. בחרו {rangeText} מלחים שילוו אתכם מאי לאי.
+							{t('elders.intro', { range: rangeText })}
 						</p>
-						<p className="text-[14px] text-[#cfe6f5] opacity-85 m-0">
-							המלחים לא יחליטו במקומכם — בכל אי תוכלו להתייעץ איתם, והם יעזרו לכם לראות את הסוגיה
-							מזוויות שונות.
-						</p>
+						<p className="text-[14px] text-[#cfe6f5] opacity-85 m-0">{t('elders.intro2')}</p>
 					</header>
 
 					<section className="panel fade-in">
 						<p className="text-[15px] m-0 mb-2">
-							<strong className="text-[var(--gold-strong)]">חשוב לדעת:</strong> אלה דמויות בינה
-							מלאכותית בהשראת אישים היסטוריים — <strong>לא מפלגות ולא מועמדים בבחירות</strong>. הן
-							מסומנות תמיד ב־📜, שטות בנפרד מספינות המפלגות, ואינן משפיעות על מידת הקרבה שלכם לאף
-							מפלגה.
+							<strong className="text-[var(--gold-strong)]">{t('elders.noteLabel')}</strong>{' '}
+							{t('elders.note1a')} <strong>{t('elders.note1strong')}</strong>
+							{t('elders.note1b')}
 						</p>
 						<p className="text-[15px] m-0">
-							העמדות שלהן הן <strong>שחזור משוער</strong> מתוך מה שאמרו וכתבו בחייהם, ולא ציטוט. מלח
-							ששתק בנושא מסוים — שותק גם כאן.
+							{t('elders.note2a')} <strong>{t('elders.note2strong')}</strong> {t('elders.note2b')}
 						</p>
 					</section>
 
 					{matchingCount > 0 ? (
 						<p className="text-[13px] text-center opacity-80 m-0 fade-in" aria-live="polite">
-							🧭 המלחים שמסומנים ב"מתאים לרוחות שלך" מדברים על ערכים שדירגתם במצפן. זה סדר בלבד —
-							הבחירה כולה שלכם.
+							{t('elders.matchHint')}
 						</p>
 					) : null}
 
@@ -192,12 +208,14 @@ export default function Elders() {
 										<span className="crew-name">{elder.name}</span>
 										{elder.years ? <span className="crew-years">{elder.years}</span> : null}
 										<span className="crew-values">{keywords(elder)}</span>
-										{matchesWinds ? <span className="crew-winds">🧭 מתאים לרוחות שלך</span> : null}
+										{matchesWinds ? (
+											<span className="crew-winds">{t('elders.matchBadge')}</span>
+										) : null}
 										{/* Only the berth that was taken says so. An empty card invites the
 										    click by being a card on a board that asked you to choose. */}
 										{active ? (
 											<span className="text-[12px] text-[var(--gold-strong)] mt-1">
-												⚓ על הסיפון
+												{t('elders.aboard')}
 											</span>
 										) : null}
 									</button>
@@ -210,7 +228,7 @@ export default function Elders() {
 									<button
 										type="button"
 										className="crew-info"
-										aria-label={`מי זה ${elder.name}?`}
+										aria-label={t('elders.whoIs', { name: elder.name })}
 										aria-expanded={openBio === elder.elderId}
 										aria-controls={`bio-${elder.elderId}`}
 										onClick={() =>
@@ -233,8 +251,8 @@ export default function Elders() {
 
 					<div className="flex flex-col items-center gap-2 pb-4">
 						<p className="text-[14px] text-[var(--cream)] m-0" aria-live="polite">
-							על הסיפון: {chosen.size} מתוך {limits.max}
-							{full ? ' — הצוות מלא' : ''}
+							{t('elders.aboardCount', { chosen: chosen.size, max: limits.max })}
+							{full ? t('elders.crewFull') : ''}
 						</p>
 						<button
 							type="button"
@@ -243,15 +261,13 @@ export default function Elders() {
 							onClick={() => void save()}
 						>
 							{saving
-								? 'שומר…'
+								? t('common.saving')
 								: complete
-									? `להפליג עם ${chosen.size} מלחים — לפתיחת המפה`
-									: `בחרו עוד ${missing} כדי להמשיך`}
+									? t('elders.sailWith', { count: chosen.size })
+									: t('elders.pickMore', { count: missing })}
 						</button>
 						<p className="text-[13px] opacity-75 m-0">
-							{complete
-								? 'אפשר לשנות את הצוות בכל שלב של המסע.'
-								: `צוות הוא לפחות ${limits.min} מלחים. אפשר לשנות אותו בכל שלב של המסע.`}
+							{complete ? t('elders.canChange') : t('elders.minCrew', { count: limits.min })}
 						</p>
 					</div>
 				</div>

@@ -7,6 +7,7 @@ import {
 	type ProximityBandKey,
 } from '../lib/seaLayout';
 import type { ShipProximity } from './NearbyShips';
+import { useT } from '../i18n/useT';
 import ShipTag from './ShipTag';
 import {
 	LANDSCAPE,
@@ -71,10 +72,10 @@ interface PlacedShip {
 
 /** How many hulls the sea carries before the player asks for the rest. */
 const NEAREST_SHOWN = 5;
-const BAND_WORD: Record<ProximityBandKey, string> = {
-	near: 'קרובה למסלולך',
-	middle: 'באמצע הדרך',
-	far: 'רחוקה ממסלולך',
+const BAND_WORD_KEY: Record<ProximityBandKey, string> = {
+	near: 'ships.band.near.word',
+	middle: 'ships.band.middle.word',
+	far: 'ships.band.far.word',
 };
 
 /** SVG ids must be word-safe, and a partyId is whatever the admin typed. */
@@ -96,6 +97,7 @@ function tintId(partyId: string): string {
  * line whose length is the distance the card puts a number on.
  */
 export default function SeaChart({ ships, onSelect, selectedId }: Props) {
+	const { t } = useT();
 	const [showAll, setShowAll] = useState(false);
 	/** The ship under the pointer, on the hull or on its pennant. */
 	const [hovered, setHovered] = useState<string | null>(null);
@@ -160,8 +162,8 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 			lit: selectedId === ship.partyId,
 			label: `${ship.name} — ${
 				ship.distance === null
-					? 'עדיין אין מספיק נתונים'
-					: BAND_WORD[proximityBandOf(ship.distance)]
+					? t('ships.notEnoughData')
+					: t(BAND_WORD_KEY[proximityBandOf(ship.distance)])
 			}`,
 		};
 	});
@@ -195,7 +197,7 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 				<svg
 					viewBox={`0 ${space.viewTop} ${space.width} ${space.viewHeight}`}
 					role="img"
-					aria-label="הים סביב הסירה שלך"
+					aria-label={t('ships.seaAria')}
 				>
 					<defs>
 						<clipPath id="seaFrame">
@@ -380,9 +382,9 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 							className="sea-berth"
 							style={{ left: fan.cx * scale, top: (fan.cy - space.viewTop) * scale + 8 }}
 						>
-							הסירה שלך
+							{t('ships.yourBoat')}
 						</span>
-						<div className="sea-pennants" role="group" aria-label="הספינות על הים">
+						<div className="sea-pennants" role="group" aria-label={t('ships.pennantsAria')}>
 							{pennantOrder.map((entry) => {
 								const placement = pennants.get(entry.ship.partyId);
 								if (!placement) return null;
@@ -424,7 +426,9 @@ export default function SeaChart({ ships, onSelect, selectedId }: Props) {
 						className="btn-outline !py-1.5 !px-4 !text-[13px]"
 						onClick={() => setShowAll(!showAll)}
 					>
-						{showAll ? `להציג רק את ${NEAREST_SHOWN} הקרובות` : `להציג עוד ${hidden} ספינות`}
+						{showAll
+							? t('ships.showNearest', { nearest: NEAREST_SHOWN })
+							: t('ships.showMore', { count: hidden })}
 					</button>
 				</div>
 			) : null}

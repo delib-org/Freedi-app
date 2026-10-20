@@ -1,5 +1,6 @@
-import { proximityBandOf } from '../lib/seaLayout';
-import { AI_PERSONA_NOTE } from '../lib/counsel';
+import { proximityBandOf, type ProximityBandKey } from '../lib/seaLayout';
+import { aiPersonaNote } from '../lib/counsel';
+import { useT } from '../i18n/useT';
 import type { ShipProximity } from './NearbyShips';
 import ShipTag from './ShipTag';
 
@@ -14,10 +15,10 @@ interface Props {
 	onShowAll: () => void;
 }
 
-const BAND_SENTENCE: Record<ReturnType<typeof proximityBandOf>, string> = {
-	near: 'שטה קרוב למסלול שלך',
-	middle: 'שטה באמצע הדרך',
-	far: 'שטה רחוק ממסלולך',
+const BAND_SENTENCE_KEY: Record<ProximityBandKey, string> = {
+	near: 'ships.band.near.sentence',
+	middle: 'ships.band.middle.sentence',
+	far: 'ships.band.far.sentence',
 };
 
 /**
@@ -35,24 +36,25 @@ const BAND_SENTENCE: Record<ReturnType<typeof proximityBandOf>, string> = {
  * the others, which is what the standing list is for.
  */
 export default function ShipCard({ ship, reaction = null, onClose, onShowAll }: Props) {
+	const { t } = useT();
 	// The ring is relative to the fleet; the number is the true proximity.
 	const trueDistance = ship.trueDistance === undefined ? ship.distance : ship.trueDistance;
 	const near = trueDistance === null ? null : Math.round((1 - trueDistance) * 100);
 
 	return (
-		<div className="ship-card flex flex-col gap-2.5 text-right" role="status">
+		<div className="ship-card flex flex-col gap-2.5 text-start" role="status">
 			<div className="flex items-center gap-2 flex-wrap">
 				<ShipTag name={ship.name} color={ship.color} lit />
 				<span className="text-[13px] opacity-85">
 					{ship.distance === null
-						? 'עדיין אין נתוני מסלול'
-						: BAND_SENTENCE[proximityBandOf(ship.distance)]}
+						? t('ships.noRouteData')
+						: t(BAND_SENTENCE_KEY[proximityBandOf(ship.distance)])}
 				</span>
 				<button
 					type="button"
-					className="mr-auto text-[13px] opacity-70 hover:opacity-100"
+					className="ms-auto text-[13px] opacity-70 hover:opacity-100"
 					onClick={onClose}
-					aria-label="סגירה"
+					aria-label={t('common.close')}
 				>
 					✕
 				</button>
@@ -63,22 +65,24 @@ export default function ShipCard({ ship, reaction = null, onClose, onShowAll }: 
 					<div className="distance-track flex-1" aria-hidden="true">
 						<div className="distance-fill" style={{ width: `${near}%` }} />
 					</div>
-					<span className="text-[13px] opacity-85 shrink-0">קרבה {near}%</span>
+					<span className="text-[13px] opacity-85 shrink-0">
+						{t('ships.proximity', { percent: near })}
+					</span>
 				</div>
 			) : null}
 
 			{reaction ? (
 				<>
 					<p className="ship-card__reaction">{reaction}</p>
-					<p className="ship-card__note">{AI_PERSONA_NOTE}</p>
+					<p className="ship-card__note">{aiPersonaNote()}</p>
 				</>
 			) : null}
 
 			<div className="flex items-center justify-between gap-3">
 				<button type="button" className="text-[13px] underline opacity-80" onClick={onShowAll}>
-					כל הספינות
+					{t('ships.all')}
 				</button>
-				<span className="text-[12px] opacity-60">עגינה זמנית — לא פסק דין ולא הוראת הצבעה.</span>
+				<span className="text-[12px] opacity-60">{t('ships.temporaryBerth')}</span>
 			</div>
 		</div>
 	);

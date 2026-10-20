@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import GameChrome from '../components/GameChrome';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { signInAnonymous, signInWithGoogle, useUser } from '../lib/user';
 import { useGame } from '../state/GameContext';
+import { useT } from '../i18n/useT';
 
 /**
  * The door.
@@ -16,6 +18,7 @@ import { useGame } from '../state/GameContext';
 export default function Intro() {
 	const { user, loading } = useUser();
 	const { text } = useGame();
+	const { t } = useT();
 	const [boarding, setBoarding] = useState(false);
 
 	async function board(method: 'google' | 'anonymous'): Promise<void> {
@@ -31,7 +34,7 @@ export default function Intro() {
 
 	return (
 		<>
-			<GameChrome stage="הקדמה" />
+			<GameChrome stage={t('step.intro')} />
 			<div className="page justify-center">
 				<section className="panel fade-in w-full max-w-2xl text-center flex flex-col items-center gap-4 !py-10">
 					<p className="eyebrow">{text('introMotto')}</p>
@@ -54,10 +57,10 @@ export default function Intro() {
 							</Link>
 							<p className="text-[13px] opacity-75 m-0">
 								{/* An anonymous sailor has neither name nor email — the line read
-								    "מחוברים כ־" and then stopped. */}
+								    "signed in as" and then stopped. */}
 								{user.isAnonymous
-									? 'מפליגים ללא חשבון — המסע נשמר בדפדפן הזה'
-									: `מחוברים כ־${user.displayName ?? user.email}`}
+									? t('intro.anonymousNote')
+									: t('intro.signedInAs', { name: user.displayName ?? user.email ?? '' })}
 							</p>
 						</>
 					) : (
@@ -68,15 +71,13 @@ export default function Intro() {
 								disabled={boarding}
 								onClick={() => void board('google')}
 							>
-								התחברות עם Google כדי להפליג
+								{t('intro.googleButton')}
 							</button>
-							<p className="text-[13px] opacity-80 m-0 text-center">
-								החשבון שומר את המסע שלכם ומאפשר לחזור אליו ממכשיר אחר.
-							</p>
+							<p className="text-[13px] opacity-80 m-0 text-center">{t('intro.googleNote')}</p>
 
 							<div className="flex items-center gap-3 w-full opacity-40" aria-hidden="true">
 								<span className="h-px flex-1 bg-[var(--cream)]" />
-								<span className="text-[13px]">או</span>
+								<span className="text-[13px]">{t('intro.or')}</span>
 								<span className="h-px flex-1 bg-[var(--cream)]" />
 							</div>
 
@@ -86,21 +87,22 @@ export default function Intro() {
 								disabled={boarding}
 								onClick={() => void board('anonymous')}
 							>
-								כניסה ללא חשבון
+								{t('intro.anonymousButton')}
 							</button>
-							<p className="text-[13px] opacity-80 m-0 text-center">
-								לא נדע מי אתם. המסע נשמר רק בדפדפן הזה — ניקוי היסטוריה או מכשיר אחר מתחילים מחדש.
-							</p>
+							<p className="text-[13px] opacity-80 m-0 text-center">{t('intro.anonymousHint')}</p>
 
 							<p className="text-[13px] opacity-85 m-0 text-center mt-1">
-								תשובות המצפן ויומן הקברניט פרטיים לכם. העמדות שתסמנו נראות למפליגים אחרים לצד השם
-								הפרטי בלבד — לעולם לא המייל.{' '}
+								{t('intro.privacyNote')}{' '}
 								<Link className="underline" to="/privacy">
-									מה נשמר ומי רואה מה
+									{t('intro.privacyLink')}
 								</Link>
 							</p>
 						</div>
 					)}
+
+					{/* The top bar has one too; this one is where a first-time visitor
+					    is actually looking, before they have found the bar. */}
+					<LanguageSwitcher className="mt-2" />
 				</section>
 			</div>
 		</>

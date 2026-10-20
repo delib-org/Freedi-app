@@ -8,6 +8,7 @@ import { islandArtUrl } from '../lib/islandArt';
 import { initialRouteSelection } from '../lib/voyageRoute';
 import { useMode } from '../lib/mode';
 import { stageBus } from '../lib/stageBus';
+import { useT } from '../i18n/useT';
 
 /** The shortest voyage: one island. A map with none chosen has nowhere to sail. */
 const ISLANDS_MIN = 1;
@@ -32,6 +33,7 @@ export default function MapPage() {
 	const navigate = useNavigate();
 	const mode = useMode();
 	const { content, journey, attitudes, text, updateJourney } = useGame();
+	const { t } = useT();
 	const islands = useMemo(() => (content ? enabledIslands(content) : []), [content]);
 	// Nothing ticked on a voyage not yet begun: the islands are the player's
 	// to choose. A route already being sailed comes back (see voyageRoute).
@@ -121,10 +123,7 @@ export default function MapPage() {
 					<header className="text-center fade-in">
 						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">{text('mapTitle')}</h1>
 						<p className="text-[15px] text-[#cfe6f5] mt-2 mb-0">{text('mapIntro')}</p>
-						<p className="text-[13px] opacity-75 mt-1">
-							שום אי לא נבחר מראש — הבחירה כולה שלכם. אפשר לבחור מעט איים למסע קצר, או יותר איים
-							למסע מלא. אין חובה לעבור בכל האיים.
-						</p>
+						<p className="text-[13px] opacity-75 mt-1">{t('map.hint')}</p>
 					</header>
 
 					{mode === 'game' ? (
@@ -149,7 +148,9 @@ export default function MapPage() {
 											</span>
 											<span className="isle-title">{island.title}</span>
 											<span className="isle-issue">{island.issue}</span>
-											<span className="isle-state">{chosen ? '⚓ במסלול' : '＋ לצרף למסע'}</span>
+											<span className="isle-state">
+												{chosen ? t('map.onRoute') : t('map.addToRoute')}
+											</span>
 										</button>
 										<button
 											type="button"
@@ -162,7 +163,7 @@ export default function MapPage() {
 												)
 											}
 										>
-											מה באי הזה?
+											{t('map.whatIsHere')}
 										</button>
 										{openIsland === island.statementId ? (
 											<div className="speech-bubble" id={`isle-${island.statementId}`}>
@@ -177,7 +178,7 @@ export default function MapPage() {
 
 					<div className="flex flex-col items-center gap-2 pb-4">
 						<p className="text-[14px] text-[var(--cream)] m-0" aria-live="polite">
-							במסלול: {selected.size} מתוך {islands.length} איים
+							{t('map.selectedCount', { selected: selected.size, total: islands.length })}
 						</p>
 						<button
 							type="button"
@@ -186,10 +187,13 @@ export default function MapPage() {
 							onClick={() => void sail()}
 						>
 							{saving
-								? 'שומר…'
+								? t('common.saving')
 								: selected.size < ISLANDS_MIN
-									? 'בחרו לפחות אי אחד כדי להפליג'
-									: `מפליגים אל ${selected.size} איים (~${estimateMinutes(selected.size)} דקות)`}
+									? t('map.pickOne')
+									: t('map.sail', {
+											count: selected.size,
+											minutes: estimateMinutes(selected.size),
+										})}
 						</button>
 					</div>
 				</div>

@@ -1,5 +1,6 @@
 import type { OdysseyElder, Statement } from '@freedi/shared-types';
 import type { IslandContent } from './game';
+import { t } from '../i18n/i18n';
 
 /**
  * What a sailor says when consulted — on the island as a whole, or on one of
@@ -19,11 +20,18 @@ import type { IslandContent } from './game';
  * they answer a mark, and a question has not been marked yet.
  */
 
-/** Said in the sailor's place when their record has no lean on this island. */
-export const SILENT_LINE = 'אין לי נטייה מתועדת כאן. כאן אני מקשיב/ה, לא מדבר/ת.';
+/**
+ * Said in the sailor's place when their record has no lean on this island.
+ * Functions, not constants: read in the player's language at render time.
+ */
+export function silentLine(): string {
+	return t('counsel.silent');
+}
 
 /** The one persona disclaimer, on every card a sailor speaks from. */
-export const AI_PERSONA_NOTE = '📜 דמות בינה מלאכותית — שחזור משוער, לא ציטוט ולא המלצת הצבעה';
+export function aiPersonaNote(): string {
+	return t('counsel.personaNote');
+}
 
 export interface IslandCounsel {
 	elder: OdysseyElder;
@@ -66,7 +74,7 @@ function valuesLine(elder: OdysseyElder): string | null {
 	const labels = elder.values.map((value) => value.label).filter(Boolean);
 	if (labels.length === 0) return null;
 
-	return `מה שמנחה אותי כאן: ${labels.join(', ')}. שקלו גם אתם מה מנחה אתכם.`;
+	return t('counsel.valuesLine', { values: labels.join(', ') });
 }
 
 /** Index of the shore the sailor declared on this island, or -1. */

@@ -19,11 +19,12 @@ import { invitedElders } from '../lib/elders';
 import { enterIslandDeliberation, getGateState } from '../lib/agoraGate';
 import { proximityBandOf, relativeDistances, type ProximityBandKey } from '../lib/seaLayout';
 import DigestSettings from '../components/DigestSettings';
+import { useT } from '../i18n/useT';
 
-const BAND_WORD: Record<ProximityBandKey, string> = {
-	near: 'קרובה למסלולך',
-	middle: 'אפשרות לעגינה',
-	far: 'מתרחקת',
+const BAND_WORD_KEY: Record<ProximityBandKey, string> = {
+	near: 'summary.band.near',
+	middle: 'summary.band.middle',
+	far: 'summary.band.far',
 };
 
 /** Narrowest bar in the party list, in percent. */
@@ -39,7 +40,9 @@ const BAR_FLOOR = 6;
 export default function Summary() {
 	const { user } = useUser();
 	const mode = useMode();
-	const { content, journey, attitudes, text, updateJourney } = useGame();
+	const { content, canonicalContent, journey, attitudes, text, updateJourney, displayChip } =
+		useGame();
+	const { t } = useT();
 	const [participants, setParticipants] = useState<ParticipantDistance[]>([]);
 	const [digestOpen, setDigestOpen] = useState(false);
 	/** the ship whose card is open on the final sea chart */
@@ -247,13 +250,14 @@ export default function Summary() {
 		: [];
 
 	async function enterGate(islandStatementId: string): Promise<void> {
-		if (!content || enteringIslandId) return;
+		if (!canonicalContent || enteringIslandId) return;
 		setEnteringIslandId(islandStatementId);
 		if (mode === 'game') stageBus.send({ type: 'sailToLighthouse' });
 		try {
+			// The hand-off carries the game as authored, never a translated copy.
 			await enterIslandDeliberation({
 				islandStatementId,
-				game: content.game,
+				game: canonicalContent.game,
 				journey,
 				agoraOrigin,
 				updateJourney,
@@ -283,30 +287,32 @@ export default function Summary() {
 							{/* the homecoming tableau plays on the sea stage behind this window */}
 							<div className="h-[44vh]" aria-hidden="true" />
 							<div className="panel !py-2.5 text-center text-[13px] text-[#d5ecf7]">
-								ספינות קרובות שטות במסלול דומה לשלך. הקרבה היא עגינה זמנית — לא פסק דין ולא הוראת
-								הצבעה.
+								{t('summary.gameNote')}
 							</div>
 						</>
 					) : null}
 
 					<section className="panel fade-in">
-						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">🚢 הספינות באופק</h2>
+						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">
+							{t('summary.shipsTitle')}
+						</h2>
 						<p className="text-[13px] opacity-75 mt-0 mb-4">
-							לכל ספינה: קרבה למסלול שלך על פי {visitedIslands.length} האיים שחקרת. אפשרות עגינה —
-							לא כרטיס הצבעה.{' '}
+							{t('summary.shipsIntro', { count: visitedIslands.length })}{' '}
 							<Link className="underline" to="/parties">
-								איך נקבע מסלול של ספינה?
+								{t('summary.howRoute')}
 							</Link>
 						</p>
 						{confidence.isTie ? (
 							<p className="text-[14px] font-bold text-[var(--cream)] mt-0 mb-3">
-								מקום ראשון משותף: {firstPlaceNames}
+								{t('summary.tie', { names: firstPlaceNames })}
 							</p>
 						) : null}
 						{confidence.evidence === 'early' && confidence.answeredStatements > 0 ? (
 							<p className="text-[13px] opacity-85 mt-0 mb-3">
-								רושם ראשוני — מבוסס על {confidence.answeredStatements} היגדים ב־
-								{confidence.answeredIslands} איים
+								{t('summary.earlyEvidence', {
+									statements: confidence.answeredStatements,
+									islands: confidence.answeredIslands,
+								})}
 							</p>
 						) : null}
 						<div className="flex flex-col gap-3">
@@ -321,12 +327,12 @@ export default function Summary() {
 										<span className="flex-1 min-w-0 text-[15px] break-words">{party!.name}</span>
 										{distance !== null && relative !== null ? (
 											<span className="shrink-0 text-[13px] opacity-85">
-												{BAND_WORD[proximityBandOf(relative)]}
+												{t(BAND_WORD_KEY[proximityBandOf(relative)])}
 											</span>
 										) : null}
 									</div>
 									{distance === null || relative === null ? (
-										<span className="text-[13px] opacity-60">אין עדיין נתוני מסלול לספינה זו</span>
+										<span className="text-[13px] opacity-60">{t('summary.noRouteData')}</span>
 									) : (
 										<div className="flex items-center gap-2 min-w-0">
 											<div className="distance-track flex-1 min-w-0" aria-hidden="true">
@@ -340,7 +346,10 @@ export default function Summary() {
 												/>
 											</div>
 											<span className="text-[12px] opacity-60 shrink-0">
-												קרבה {Math.round((1 - distance) * 100)}% · {sharedIslands} איים
+												{t('summary.proximityIslands', {
+													percent: Math.round((1 - distance) * 100),
+													count: sharedIslands,
+												})}
 											</span>
 										</div>
 									)}
@@ -350,7 +359,9 @@ export default function Summary() {
 					</section>
 
 					<section className="panel fade-in">
-						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">🧭 יומן המסע שלך</h2>
+						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">
+							{t('summary.journalTitle')}
+						</h2>
 						{content.game.compassQuestions.map((question) => {
 							const entry = journey.compassAnswers[question.questionId];
 							if (!entry || (!entry.answer && entry.chips.length === 0)) {
@@ -360,19 +371,25 @@ export default function Summary() {
 							return (
 								<p key={question.questionId} className="m-0 mb-2 text-[15px]">
 									<strong className="text-[var(--gold-strong)]">{question.title}:</strong>{' '}
-									{[entry.answer, entry.chips.join(', ')].filter(Boolean).join(' · ')}
+									{/* chips are stored canonical (Hebrew); shown in the reader's language */}
+									{[
+										entry.answer,
+										entry.chips.map((chip) => displayChip(question.questionId, chip)).join(', '),
+									]
+										.filter(Boolean)
+										.join(' · ')}
 								</p>
 							);
 						})}
 						{rankedValues.length > 0 ? (
 							<p className="m-0 mb-2 text-[15px]">
-								<strong className="text-[var(--gold-strong)]">רוח ההכרעה:</strong>{' '}
-								{rankedValues.join(' ← ')}
+								<strong className="text-[var(--gold-strong)]">{t('compass.decideWind')}:</strong>{' '}
+								{rankedValues.join(t('summary.rankArrow'))}
 							</p>
 						) : null}
 						{logbook.length > 0 ? (
 							<div className="mt-3 border-t border-[rgba(232,185,88,0.35)] pt-3">
-								<p className="eyebrow m-0 mb-2">יומן הקברניט</p>
+								<p className="eyebrow m-0 mb-2">{t('summary.captainLog')}</p>
 								{logbook.map((entry, index) => (
 									<p key={index} className="m-0 mb-1.5 text-[14px] opacity-90">
 										{entry.islandTitle ? <strong>{entry.islandTitle}: </strong> : null}
@@ -384,7 +401,9 @@ export default function Summary() {
 					</section>
 
 					<section className="panel fade-in">
-						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">⛵ מפליגים לצידך</h2>
+						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">
+							{t('summary.companionsTitle')}
+						</h2>
 						{sortedParticipants.length > 0 ? (
 							<div className="flex flex-col gap-2">
 								{sortedParticipants.map((entry) => (
@@ -400,25 +419,22 @@ export default function Summary() {
 										</div>
 										<span className="text-[13px] opacity-85 shrink-0">
 											{entry.distance !== null && entry.distance <= 0.3
-												? 'מסלול דומה'
-												: 'מסלול שונה'}
+												? t('summary.similarRoute')
+												: t('summary.differentRoute')}
 										</span>
 									</div>
 								))}
 							</div>
 						) : (
-							<p className="m-0 opacity-80 text-[15px]">
-								עדיין אין מפליגים נוספים בים הזה. כשיצטרפו — תראו כאן מי שט במסלול דומה לשלכם.
-							</p>
+							<p className="m-0 opacity-80 text-[15px]">{t('summary.noCompanions')}</p>
 						)}
 					</section>
 
 					<section className="panel fade-in">
-						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">🗺️ מפת ים הדעות</h2>
-						<p className="text-[13px] opacity-75 mt-0 mb-4">
-							הספינה שלך במרכז. כל ספינת מפלגה שטה במרחק שלה מהמסלול שלך על פני כל האיים שחקרת —
-							הקרובות ליד הספינה שלך, הרחוקות באופק. הקישו על ספינה כדי לראות כמה היא קרובה.
-						</p>
+						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">
+							{t('summary.seaMapTitle')}
+						</h2>
+						<p className="text-[13px] opacity-75 mt-0 mb-4">{t('summary.seaMapIntro')}</p>
 						<div className="flex flex-col gap-3">
 							<SeaChart ships={shipProximity} onSelect={setAsked} selectedId={asked} />
 							{askedShip ? (
@@ -434,11 +450,9 @@ export default function Summary() {
 					{gatedIslands.length > 0 ? (
 						<section className="panel fade-in">
 							<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-1">
-								🏛️ שערי הדיון שנפתחו לך
+								{t('summary.gatesTitle')}
 							</h2>
-							<p className="text-[13px] opacity-75 mt-0 mb-3">
-								על האיים שכבר חקרת אפשר להיפגש עם אחרים ולחפש יחד פתרונות.
-							</p>
+							<p className="text-[13px] opacity-75 mt-0 mb-3">{t('summary.gatesIntro')}</p>
 							<div className="flex flex-col gap-2.5">
 								{gatedIslands.map(({ island, state }) => (
 									<div
@@ -456,9 +470,9 @@ export default function Summary() {
 											onClick={() => void enterGate(island.statementId)}
 										>
 											{enteringIslandId === island.statementId
-												? 'מפליגים…'
+												? t('common.sailing')
 												: state === 'visited'
-													? 'חזרה לדיון'
+													? t('summary.backToDiscussion')
 													: text('agoraButton')}
 										</button>
 									</div>
@@ -477,22 +491,25 @@ export default function Summary() {
 					*/}
 					<section className="panel fade-in text-center">
 						<h2 className="text-lg font-bold text-[var(--cream)] mt-0 mb-2">
-							🧭 המסע לא נגמר — יש עוד איים
+							{t('summary.notOverTitle')}
 						</h2>
 						<p className="text-[15px] text-[#dcecf7] mt-0 mb-3">
 							{unvisitedCount > 0
-								? `חקרתם ${visitedIslands.length} איים. עוד ${unvisitedCount} ממתינים לכם על המפה, ואפשר לחזור אליהם בכל רגע — מפת ההפלגה תתעדכן.`
-								: 'עברתם בכל האיים. אפשר לחזור למפה בכל רגע ולשנות עמדה על אי שכבר חקרתם.'}
+								? t('summary.moreIslands', {
+										visited: visitedIslands.length,
+										count: unvisitedCount,
+									})
+								: t('summary.allVisited')}
 						</p>
 						<div className="flex flex-wrap justify-center gap-3">
 							<Link className="btn" to="/map">
-								🗺️ חזרה למפה
+								{t('summary.backToMap')}
 							</Link>
 							{elders.length > 0 || (content.game.elders ?? []).length > 0 ? (
 								// The crew screen promises more sailors can be added later, so
 								// there has to be a way back to it.
 								<Link className="btn-outline" to="/elders">
-									📜 המלחים שאיתך
+									{t('summary.crewLink')}
 								</Link>
 							) : null}
 						</div>
@@ -504,9 +521,9 @@ export default function Summary() {
 						) : (
 							<section className="panel fade-in text-center">
 								<p className="m-0 text-[14px] text-[#dcecf7]">
-									רוצים לדעת מה קורה בים כשאתם לא כאן?{' '}
+									{t('summary.digestPrompt')}{' '}
 									<button type="button" className="underline" onClick={() => setDigestOpen(true)}>
-										📬 סיפור המסע שלכם למייל
+										{t('summary.digestLink')}
 									</button>
 								</p>
 							</section>

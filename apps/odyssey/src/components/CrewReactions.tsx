@@ -1,7 +1,8 @@
 import type { OdysseyElder } from '@freedi/shared-types';
 import type { IslandContent } from '../lib/game';
-import { AI_PERSONA_NOTE } from '../lib/counsel';
+import { aiPersonaNote } from '../lib/counsel';
 import { pickIslandRemark } from '../lib/elders';
+import { useT } from '../i18n/useT';
 
 interface CrewReactionsProps {
 	crew: OdysseyElder[];
@@ -18,6 +19,7 @@ interface CrewReactionsProps {
  * the sea has already answered, this is the crew's word after it.
  */
 export default function CrewReactions({ crew, island, attitudes }: CrewReactionsProps) {
+	const { t } = useT();
 	const remark = pickIslandRemark(crew, island, attitudes);
 	if (!remark) return null;
 
@@ -25,7 +27,7 @@ export default function CrewReactions({ crew, island, attitudes }: CrewReactions
 
 	return (
 		<div className="counsel-card counsel-card--reactions fade-in">
-			<p className="counsel-card__eyebrow">המלחים מגיבים · על חוף {number}</p>
+			<p className="counsel-card__eyebrow">{t('counsel.reactionsEyebrow', { number })}</p>
 			<p className="counsel-card__name">
 				<span
 					className="counsel-card__portrait"
@@ -37,7 +39,7 @@ export default function CrewReactions({ crew, island, attitudes }: CrewReactions
 				{remark.elder.name}
 			</p>
 			<p className="counsel-card__line">{remark.line}</p>
-			<p className="counsel-card__note">{AI_PERSONA_NOTE}</p>
+			<p className="counsel-card__note">{aiPersonaNote()}</p>
 		</div>
 	);
 }

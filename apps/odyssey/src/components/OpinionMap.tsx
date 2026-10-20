@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { OpinionMapResult, OpinionPoint } from '../lib/opinionMap';
+import { useT } from '../i18n/useT';
 
 /**
  * SVG renderer for the 2D opinion map (doc §3 honesty rules):
@@ -20,6 +21,7 @@ interface Placed {
 }
 
 export default function OpinionMap({ result }: { result: OpinionMapResult | null }) {
+	const { t } = useT();
 	const layout = useMemo(() => {
 		if (!result) return null;
 		const xs = result.points.map((point) => point.x);
@@ -47,11 +49,7 @@ export default function OpinionMap({ result }: { result: OpinionMapResult | null
 	}, [result]);
 
 	if (!result || !layout) {
-		return (
-			<p className="m-0 opacity-80 text-[15px]">
-				עדיין אין מספיק מפליגים עם תשובות משותפות כדי לצייר את מפת הדעות.
-			</p>
-		);
+		return <p className="m-0 opacity-80 text-[15px]">{t('opinionMap.notEnough')}</p>;
 	}
 
 	const { fidelity } = result;
@@ -60,9 +58,9 @@ export default function OpinionMap({ result }: { result: OpinionMapResult | null
 		// there is no number to show, only the fact that the map is not drawable.
 		return (
 			<p className="m-0 opacity-80 text-[15px]">
-				⚠️ החפיפה בין המסלולים עדיין דלה מכדי לצייר מפה אמינה
-				{Number.isFinite(fidelity.r) ? ` (r = ${fidelity.r.toFixed(2)})` : ''}. המפה תופיע כשיהיו
-				יותר תשובות משותפות.
+				{t('opinionMap.unreliable', {
+					r: Number.isFinite(fidelity.r) ? ` (r = ${fidelity.r.toFixed(2)})` : '',
+				})}
 			</p>
 		);
 	}
@@ -74,7 +72,7 @@ export default function OpinionMap({ result }: { result: OpinionMapResult | null
 			<svg
 				viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
 				role="img"
-				aria-label="מפת דעות דו-ממדית: קרבה בין נקודות משמעה דמיון בתשובות"
+				aria-label={t('opinionMap.aria')}
 				className="w-full rounded-xl border border-[rgba(94,223,255,0.35)] bg-[rgba(4,18,34,0.8)]"
 			>
 				{layout.placed.map(({ point, cx, cy }) => (
@@ -131,14 +129,16 @@ export default function OpinionMap({ result }: { result: OpinionMapResult | null
 					<line x1={0} y1={-5} x2={0} y2={5} stroke="#d5ecf7" strokeWidth={2} />
 					<line x1={barLength} y1={-5} x2={barLength} y2={5} stroke="#d5ecf7" strokeWidth={2} />
 					<text x={barLength / 2} y={-9} textAnchor="middle" fontSize={11} fill="#d5ecf7">
-						מרחק {layout.barUnit}
+						{t('opinionMap.scaleBar', { unit: String(layout.barUnit) })}
 					</text>
 				</g>
 			</svg>
 			<p className="m-0 text-[12px] opacity-70">
-				קרבה במפה = דמיון בתשובות. לצירים אין כיוון או משמעות קבועה. נאמנות המפה: r ={' '}
-				{fidelity.r.toFixed(2)} · מתח {fidelity.stress.toFixed(2)} · שני הצירים נושאים{' '}
-				{Math.round(fidelity.varianceRatio * 100)}% מהמבנה.
+				{t('opinionMap.fidelity', {
+					r: fidelity.r.toFixed(2),
+					stress: fidelity.stress.toFixed(2),
+					percent: Math.round(fidelity.varianceRatio * 100),
+				})}
 			</p>
 		</div>
 	);

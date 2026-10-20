@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { OdysseyElder } from '@freedi/shared-types';
 import type { IslandContent } from '../lib/game';
 import { islandCounsel, islandLean } from '../lib/counsel';
+import { useT } from '../i18n/useT';
 import CrewRow, { focusCrewChip } from './CrewRow';
 import CounselCard from './CounselCard';
 
@@ -27,6 +28,7 @@ interface IslandCounselProps {
  * State lives in the caller (one disclosure across the whole island panel).
  */
 export default function IslandCounsel({ crew, island, openElderId, onToggle }: IslandCounselProps) {
+	const { t } = useT();
 	const root = useRef<HTMLDivElement>(null);
 	const cardId = `island-counsel-${island.statementId}`;
 	const openElder = crew.find((elder) => elder.elderId === openElderId) ?? null;
@@ -41,9 +43,9 @@ export default function IslandCounsel({ crew, island, openElderId, onToggle }: I
 	if (crew.length === 0) {
 		return (
 			<p className="island-counsel__empty">
-				עדיין אין מלחים על הסיפון ·{' '}
+				{t('counsel.noCrew')}{' '}
 				<Link className="underline" to="/elders">
-					להוספת מלחים
+					{t('counsel.addCrew')}
 				</Link>
 			</p>
 		);
@@ -51,14 +53,14 @@ export default function IslandCounsel({ crew, island, openElderId, onToggle }: I
 
 	return (
 		<div className="island-counsel" ref={root}>
-			<p className="island-counsel__caption">📜 להתייעץ עם הצוות על האי</p>
-			<p className="island-counsel__hint">הקישו על מלח או מלחית</p>
+			<p className="island-counsel__caption">{t('counsel.islandCaption')}</p>
+			<p className="island-counsel__hint">{t('counsel.hint')}</p>
 			<CrewRow
 				crew={crew}
 				openElderId={openElderId}
 				onToggle={onToggle}
 				onEscape={close}
-				ariaLabel="הצוות — התייעצות על האי"
+				ariaLabel={t('counsel.islandRowAria')}
 				controlsId={cardId}
 			/>
 			<div id={cardId} className="counsel-slot" aria-live="polite" aria-atomic="true">

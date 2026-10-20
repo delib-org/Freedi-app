@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import type { IslandContent } from '../lib/game';
 import type { AttitudeMap } from '../lib/distance';
 import { routeStops, sailedCount } from '../lib/voyageRoute';
+import { useT } from '../i18n/useT';
 
 interface IslandStripProps {
 	islands: IslandContent[];
@@ -11,16 +12,16 @@ interface IslandStripProps {
 	onSelect(index: number): void;
 }
 
-const STATUS_TEXT = {
-	done: 'נחקר',
-	current: 'כאן אתם',
-	open: 'טרם נחקר',
+const STATUS_KEY = {
+	done: 'strip.status.done',
+	current: 'strip.status.current',
+	open: 'strip.status.open',
 } as const;
 
 /**
  * The islands you chose — the way to any of them, from any of them.
  *
- * A tester standing on "אי 3 מתוך 3" could not tell how to reach the other
+ * A tester standing on "island 3 of 3" could not tell how to reach the other
  * islands he had chosen: the only way off an island was "the next one". This
  * strip sits under the island's name on every island and lists the whole
  * route — sailed (✓), the one under your feet, the ones still waiting — and
@@ -34,6 +35,7 @@ export default function IslandStrip({
 	currentIndex,
 	onSelect,
 }: IslandStripProps) {
+	const { t } = useT();
 	if (islands.length < 2) return null;
 
 	const sailed = sailedCount(islands, attitudes);
@@ -42,9 +44,9 @@ export default function IslandStrip({
 	return (
 		<details className="island-strip fade-in">
 			<summary className="island-strip__summary">
-				🗺️ האיים שבחרתם — נחקרו {sailed} מתוך {islands.length} · לעבור לאי אחר
+				{t('strip.summary', { sailed, total: islands.length })}
 			</summary>
-			<nav aria-label="האיים במסע" className="island-strip__body">
+			<nav aria-label={t('strip.nav')} className="island-strip__body">
 				<ol className="island-strip__list">
 					{stops.map((stop) => (
 						<li key={stop.island.statementId}>
@@ -59,16 +61,16 @@ export default function IslandStrip({
 									{stop.status === 'done' ? '✓' : stop.status === 'current' ? '⚓' : '○'}
 								</span>{' '}
 								{stop.index + 1}. {stop.island.title}
-								<span className="sr-only"> — {STATUS_TEXT[stop.status]}</span>
+								<span className="sr-only"> — {t(STATUS_KEY[stop.status])}</span>
 							</button>
 						</li>
 					))}
 				</ol>
 				{sailed > 0 ? (
 					<p className="island-strip__note">
-						אין חובה לעבור בכל האיים.{' '}
+						{t('strip.noNeedAll')}{' '}
 						<Link className="underline" to="/summary">
-							לסיים את המסע כאן ולראות את מפת ההפלגה שלכם
+							{t('strip.finishHere')}
 						</Link>
 					</p>
 				) : null}

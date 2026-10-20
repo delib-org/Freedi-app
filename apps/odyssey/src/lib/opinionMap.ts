@@ -8,6 +8,7 @@ import {
 	participantProfiles,
 	partyAttitudes,
 } from './distance';
+import { t } from '../i18n/i18n';
 
 /**
  * =========================  2D OPINION MAP  ============================
@@ -97,7 +98,7 @@ export function buildOpinionMap(input: {
 		entities.push({
 			id: profile.userId,
 			kind: profile.userId === uid ? 'me' : 'sailor',
-			label: profile.userId === uid ? 'אתם' : profile.displayName,
+			label: profile.userId === uid ? t('opinionMap.you') : profile.displayName,
 			attitudes: profile.attitudes,
 		});
 	}
