@@ -1,0 +1,179 @@
+// The teacher menu as a side bar, on a desktop screen
+//
+// At 1024px and wider the ≡ panel's rows live in a bar down the inline-start
+// edge instead (right in Hebrew and Arabic, left elsewhere). It folds to a
+// strip of icons; the choice is remembered per device. Below 1024px none of
+// this exists and the top bar behaves as it always did.
+//
+// The rows reuse the .teacher-nav__item family, so a row looks the same in
+// the panel and in the bar. Only the frame, the fold control and the folded
+// strip are new.
+
+// One variable carries the width, so folding is one class toggle and the page
+// follows without any script measuring anything.
+html.has-teacher-sidebar {
+	--teacher-sidebar-w: 17rem;
+}
+
+html.has-teacher-sidebar--folded {
+	--teacher-sidebar-w: 3.75rem;
+}
+
+// The page sits beside the bar, not under it
+html.has-teacher-sidebar body {
+	padding-inline-start: var(--teacher-sidebar-w);
+}
+
+// Only after the first frame: on load the page is already at its width
+html.has-teacher-sidebar--ready body {
+	transition: padding-inline-start var(--motion-fast) ease;
+}
+
+.teacher-sidebar {
+	position: fixed;
+	inset-block: 0;
+	inset-inline-start: 0;
+	z-index: var(--z-header);
+	inline-size: var(--teacher-sidebar-w, 17rem);
+	background: var(--bg-card-solid);
+	border-inline-end: 1px solid var(--border-subtle);
+
+	html.has-teacher-sidebar--ready & {
+		transition: inline-size var(--motion-fast) ease;
+	}
+
+	&__scroll {
+		block-size: 100%;
+		overflow-y: auto;
+		overflow-x: hidden;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		padding: var(--space-sm);
+		padding-block-start: max(var(--space-sm), env(safe-area-inset-top, 0px));
+	}
+
+	&__group {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+
+		& + & {
+			margin-block-start: var(--space-xs);
+		}
+	}
+
+	// The first stop in tab order: fold or unfold
+	&__fold {
+			color: var(--text-secondary);
+		margin-block-end: var(--space-xs);
+
+		// The arrow points at the edge the bar hangs from: that is where it goes
+		// when it folds. The script flips it, and folding flips it back.
+		.icon {
+			transition: transform var(--motion-fast) ease;
+		}
+	}
+
+	&__fold-label {
+		font-weight: 600;
+	}
+
+	// A thin line stands where a heading was
+	&__divider {
+		block-size: 1px;
+		margin: var(--space-xs) var(--space-sm);
+		background: var(--border-subtle);
+	}
+
+	// A row that may need a tooltip beside it when the bar is folded
+	&__item,
+	&__fold {
+		position: relative;
+	}
+
+	&--folded {
+		.teacher-sidebar__scroll {
+			// The tooltips hang past the strip's edge; a scroller would clip them
+			overflow: visible;
+			align-items: stretch;
+		}
+
+		// The label stays for screen readers (not display: none) and goes from sight
+		.teacher-nav__item-text,
+		.teacher-sidebar__fold-label {
+			position: absolute;
+			inline-size: 1px;
+			block-size: 1px;
+			margin: -1px;
+			padding: 0;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
+			border: 0;
+		}
+
+		.teacher-nav__item,
+		.teacher-sidebar__fold {
+			justify-content: center;
+		}
+
+		// The count rides the icon's corner
+		.teacher-nav__item-badge {
+			position: absolute;
+			inset-block-start: 2px;
+			inset-inline-end: 2px;
+			min-width: 1rem;
+			height: 1rem;
+			font-size: var(--font-size-xs);
+		}
+	}
+
+	// --- fold chevron: flips with the script, and again when folded ---
+	[dir='rtl'] &__fold .icon {
+		transform: scaleX(-1);
+	}
+
+	&--folded &__fold .icon {
+		transform: scaleX(-1);
+	}
+
+	[dir='rtl'] &--folded &__fold .icon {
+		transform: none;
+	}
+
+	// --- tooltips on a folded icon: hover and keyboard focus ---
+	// Hoverable (it is part of the button, so the pointer can rest on it) and
+	// put away with Escape, which TeacherSidebar records as --tips-off.
+	&--folded [data-tip]:hover::after,
+	&--folded [data-tip]:focus-visible::after {
+		content: attr(data-tip);
+		position: absolute;
+		inset-inline-start: calc(100% + var(--space-xs));
+		inset-block-start: 50%;
+		transform: translateY(-50%);
+		z-index: var(--z-modal);
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-sm);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-strong);
+		box-shadow: var(--shadow-raised);
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		white-space: nowrap;
+		pointer-events: auto;
+	}
+
+	&--tips-off [data-tip]::after {
+		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html.has-teacher-sidebar body,
+	.teacher-sidebar,
+	.teacher-sidebar__fold .icon {
+		transition: none;
+	}
+}

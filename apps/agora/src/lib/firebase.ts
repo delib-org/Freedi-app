@@ -21,20 +21,26 @@ import {
 } from 'firebase/firestore';
 import {
 	getAuth,
+	initializeAuth,
+	indexedDBLocalPersistence,
+	browserLocalPersistence,
 	Auth,
+	AuthProvider,
+	UserCredential,
 	connectAuthEmulator,
 	signInAnonymously,
 	signInWithCredential,
 	signInWithCustomToken,
 	GoogleAuthProvider,
-	signInWithPopup,
-	signInWithRedirect,
-	getRedirectResult,
-	linkWithPopup,
+	signInWithPopup as fbSignInWithPopup,
+	signInWithRedirect as fbSignInWithRedirect,
+	getRedirectResult as fbGetRedirectResult,
+	linkWithPopup as fbLinkWithPopup,
 	onAuthStateChanged,
 	signOut,
 	User,
 } from 'firebase/auth';
+import { popupResolver, warmPopupResolver as warmSharedResolver } from './popupResolver';
 import {
 	getFunctions,
 	Functions,
@@ -85,6 +91,86 @@ const emulatorPort = (name: string, fallback: number): number => {
 	return configured ? Number(configured) : fallback;
 };
 
+/**
+ * Auth WITHOUT a default popup/redirect resolver.
+ *
+ * `getAuth()` installs `browserPopupRedirectResolver`, which makes Firebase
+ * load an auth iframe (iframe.js ~93 kB) plus the gapi script (~35 kB) as soon
+ * as the page starts. Most visitors are students who sign in anonymously and
+ * never open a popup, so the resolver is passed explicitly where a popup or
+ * redirect is actually used (wrappers below) and the iframe is warmed once a
+ * teacher/supervisor route is entered (`prepareGoogleSignIn`) so a Google click
+ * does not have to await an iframe download before `window.open`, which can
+ * get the popup blocked.
+ */
+function createAuth(firebaseApp: FirebaseApp): Auth {
+	try {
+		return initializeAuth(firebaseApp, {
+			persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+		});
+	} catch {
+		// Already initialised (HMR / second init) — reuse it.
+		return getAuth(firebaseApp);
+	}
+}
+
+const PENDING_REDIRECT_KEY = 'agora_pending_redirect';
+
+/**
+ * Start loading the sign-in iframe. Called when a screen that offers Google
+ * sign-in (teacher / supervisor routes) is entered, so it is ready by the time
+ * the button is pressed. Students never call it. Idempotent.
+ */
+export function prepareGoogleSignIn(): void {
+	void warmSharedResolver(auth);
+}
+
+export function signInWithPopup(
+	authInstance: Auth,
+	provider: AuthProvider,
+): Promise<UserCredential> {
+	return fbSignInWithPopup(authInstance, provider, popupResolver);
+}
+
+export function linkWithPopup(user: User, provider: AuthProvider): Promise<UserCredential> {
+	return fbLinkWithPopup(user, provider, popupResolver);
+}
+
+/** Remembers that a redirect is in flight so the far side knows to collect it. */
+export async function signInWithRedirect(
+	authInstance: Auth,
+	provider: AuthProvider,
+): Promise<never> {
+	try {
+		localStorage.setItem(PENDING_REDIRECT_KEY, '1');
+	} catch {
+		// Storage blocked: the redirect still works for browsers that allow it
+		// on return, we just can't skip the check on ordinary loads.
+	}
+
+	return fbSignInWithRedirect(authInstance, provider, popupResolver);
+}
+
+/**
+ * Collects a finished redirect sign-in. Cheap on every other load: with no
+ * redirect pending it resolves null WITHOUT touching the auth iframe, which is
+ * what keeps that iframe off the first-load path.
+ */
+export async function getRedirectResult(authInstance: Auth): Promise<UserCredential | null> {
+	let pending = false;
+
+	try {
+		pending = localStorage.getItem(PENDING_REDIRECT_KEY) === '1';
+		if (pending) localStorage.removeItem(PENDING_REDIRECT_KEY);
+	} catch {
+		pending = true;
+	}
+
+	if (!pending) return null;
+
+	return fbGetRedirectResult(authInstance, popupResolver);
+}
+
 function init(): void {
 	if (getApps().length > 0) {
 		app = getApp();
@@ -93,7 +179,7 @@ function init(): void {
 	}
 
 	db = getFirestore(app);
-	auth = getAuth(app);
+	auth = createAuth(app);
 	functions = getFunctions(app, FUNCTIONS_REGION);
 	storage = getStorage(app);
 
@@ -166,10 +252,6 @@ export {
 	signInWithCredential,
 	signInWithCustomToken,
 	GoogleAuthProvider,
-	signInWithPopup,
-	signInWithRedirect,
-	getRedirectResult,
-	linkWithPopup,
 	onAuthStateChanged,
 	signOut,
 	storageRef,

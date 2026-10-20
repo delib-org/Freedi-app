@@ -2,6 +2,9 @@ import { logEvent as firebaseLogEvent, setUserId, setUserProperties } from 'fire
 import { analytics } from '../../controllers/db/config';
 import { logger } from '../logger';
 import { store } from '../../redux/store';
+import { TIME } from '@/constants/common';
+
+const ANALYTICS_READY_WAIT_MS = 2 * TIME.MINUTE;
 
 // Event names as constants to ensure consistency
 export const AnalyticsEvents = {
@@ -222,10 +225,11 @@ class AnalyticsService {
 				clearInterval(checkInterval);
 				this.flushPendingEvents();
 			}
-		}, 1000);
+		}, TIME.SECOND);
 
-		// Stop checking after 10 seconds
-		setTimeout(() => clearInterval(checkInterval), 10000);
+		// Analytics starts only after page load + idle (see config.ts), which on a
+		// slow connection can be well past 10 s; keep waiting long enough to flush.
+		setTimeout(() => clearInterval(checkInterval), ANALYTICS_READY_WAIT_MS);
 	}
 
 	private flushPendingEvents() {

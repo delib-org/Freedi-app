@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import type { ClusterEvaluationLink } from '@freedi/shared-types';
 import { Collections } from '@freedi/shared-types';
-import { db } from '@/lib/firebase/client';
+import { loadFirestore } from '@/lib/firebase/lazyFirestore';
+import { logError } from '@/lib/utils/errorHandling';
 import { useTranslation } from '@freedi/shared-i18n/next';
 
 /**
@@ -20,17 +20,30 @@ export default function ScoreBreakdown({ clusterId }: { clusterId: string }) {
 
   useEffect(() => {
     if (!clusterId) return;
-    const q = query(
-      collection(db, Collections.clusterEvaluationLinks),
-      where('clusterId', '==', clusterId),
-    );
-    const unsub = onSnapshot(q, (snap) => {
-      const next: ClusterEvaluationLink[] = [];
-      snap.forEach((d) => next.push(d.data() as ClusterEvaluationLink));
-      setLinks(next);
-    });
+    let unsubscribe: (() => void) | undefined;
+    let isCancelled = false;
 
-    return () => unsub();
+    loadFirestore()
+      .then(({ sdk, db }) => {
+        if (isCancelled) return;
+        const q = sdk.query(
+          sdk.collection(db, Collections.clusterEvaluationLinks),
+          sdk.where('clusterId', '==', clusterId),
+        );
+        unsubscribe = sdk.onSnapshot(q, (snap) => {
+          const next: ClusterEvaluationLink[] = [];
+          snap.forEach((d) => next.push(d.data() as ClusterEvaluationLink));
+          setLinks(next);
+        });
+      })
+      .catch((error: unknown) => {
+        logError(error, { operation: 'ScoreBreakdown.subscribe', metadata: { clusterId } });
+      });
+
+    return () => {
+      isCancelled = true;
+      unsubscribe?.();
+    };
   }, [clusterId]);
 
   const stats = useMemo(() => {

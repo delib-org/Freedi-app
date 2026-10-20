@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { labelKeysFor, type IndicatorScope } from '@freedi/shared-charts';
-import { translations } from '../i18n';
+import { translations } from '../locales/all';
 
 describe('modular indicator translations', () => {
 	for (const [locale, dict] of Object.entries(translations))

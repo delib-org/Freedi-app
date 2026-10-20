@@ -1,17 +1,15 @@
 import m from 'mithril';
-import { Icon, type IconName } from './Icon';
+import { Icon } from './Icon';
 import { t } from '../lib/i18n';
-import { classLabel } from '../lib/teacher';
-import { getTeacherNavState, liveSessions, loadTeacherNav, navClass } from '../lib/teacherNav';
-import { AgoraSession } from '@freedi/shared-types';
-import { studioOverviewUrl } from '../lib/studioLink';
+import { loadTeacherNav } from '../lib/teacherNav';
+import { buildNavModel, type NavItem, type TeacherNavMenuItem } from '../lib/teacherNavModel';
+import { isDesktop, watchDesktop } from '../lib/teacherSidebar';
 import { getUserState } from '../lib/user';
 import { signedInAs, signOutAndLeave } from './SignOutLink';
-import {
-	ensureLibraryAccess,
-	getLibraryStore,
-	refreshOpenReports,
-} from '../lib/scenarioLibrary/state';
+import { navItemBody, TeacherSidebar } from './TeacherSidebar';
+import { ensureLibraryAccess, refreshOpenReports } from '../lib/scenarioLibrary/state';
+
+export type { TeacherNavMenuItem };
 
 export interface TeacherNavAttrs {
 	/** What this screen is about — the lesson's own name, not the screen's */
@@ -45,12 +43,12 @@ export interface TeacherNavAttrs {
 	 * so the console hands them over here instead of dropping them.
 	 */
 	menuItems?: readonly TeacherNavMenuItem[];
-}
-
-export interface TeacherNavMenuItem {
-	icon: IconName;
-	label: string;
-	onSelect: () => void;
+	/**
+	 * `false` keeps the desktop side bar away: a gate (sign-in, no access) has
+	 * no menu to show, and must not fetch a teacher's lessons. The top bar then
+	 * behaves as it does on a phone.
+	 */
+	sidebar?: boolean;
 }
 
 /** How long the pill says "copied" before it says the code again */
@@ -75,6 +73,10 @@ const MENU_ID = 'teacher-nav-menu';
 
 export function TeacherNav(): m.Component<TeacherNavAttrs> {
 	let open = false;
+	// Wide enough for the side bar: the menu is then on screen all the time, so
+	// the ≡ button and the house go and the menu rows move to the bar
+	let desktop = isDesktop();
+	let stopWatching: (() => void) | undefined;
 	let copied = false;
 	let signOutFailed = false;
 	let copiedTimer: number | undefined;
@@ -183,78 +185,34 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 		return m.route.get().split('?')[0];
 	}
 
-	function row(attrs: {
-		key?: string;
-		icon: IconName;
-		label: string;
-		meta?: m.Children;
-		/** A count waiting behind this row; zero shows nothing */
-		badge?: { count: number; label: string };
-		route: string;
-		/** A page outside Agora: opened in its own tab, never "you are here" */
-		external?: boolean;
-	}): m.Children {
-		const current = !attrs.external && here() === attrs.route;
+	function row(item: NavItem, current: string | null): m.Children {
+		const isCurrent = !item.external && item.key === current;
 
 		return m(
 			'button.teacher-nav__item',
 			{
-				key: attrs.key,
+				key: item.key,
 				type: 'button',
-				class: current ? 'teacher-nav__item--current' : undefined,
-				'aria-current': current ? 'page' : undefined,
+				class: isCurrent ? 'teacher-nav__item--current' : undefined,
+				'aria-current': isCurrent ? 'page' : undefined,
 				onclick: () => {
-					if (!attrs.external) {
-						go(attrs.route);
+					if (!item.external) {
+						go(item.route);
 
 						return;
 					}
 					open = false;
-					window.open(attrs.route, '_blank', 'noopener');
+					window.open(item.route, '_blank', 'noopener');
 				},
 			},
-			[
-				m('span.teacher-nav__item-icon', m(Icon, { name: attrs.icon, size: 20 })),
-				m('span.teacher-nav__item-text', [
-					m('span.teacher-nav__item-label', attrs.label),
-					attrs.meta ? m('span.teacher-nav__item-meta', attrs.meta) : null,
-				]),
-				attrs.badge && attrs.badge.count > 0
-					? m(
-							'span.teacher-nav__item-badge',
-							{ 'aria-label': attrs.badge.label, title: attrs.badge.label },
-							String(attrs.badge.count),
-						)
-					: null,
-			],
+			navItemBody(item),
 		);
 	}
 
-	/** A lesson running now: whose class it is, and where the room has got to */
-	function lessonRow(session: AgoraSession): m.Children {
-		const agoraClass = navClass(session.classId);
-		const label = session.classId
-			? agoraClass
-				? classLabel(agoraClass)
-				: t('dashboard.class_gone')
-			: t('startGame.guest_game');
-
-		return row({
-			key: session.sessionId,
-			icon: 'square',
-			label,
-			meta: [
-				m('span.teacher-nav__live', t('dashboard.game_live')),
-				m('span', t(`stage.${session.stage}`)),
-			],
-			route: `/teach/session/${session.sessionId}`,
-		});
-	}
-
 	function menu(menuItems: readonly TeacherNavMenuItem[]): m.Children[] {
-		const { classes, loading, loaded, failed } = getTeacherNavState();
-		const live = liveSessions();
+		const model = buildNavModel(m.route.get());
 		const email = getUserState().user?.email;
+		const { currentKey } = model;
 
 		return [
 			// The scrim: a tap anywhere off the panel closes it, which is what
@@ -302,99 +260,30 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 
 					// Lessons running now come first, on every teacher screen: the
 					// second, always-there way back into a lesson
-					loading && !loaded
+					model.loading
 						? m('.spinner')
-						: live.length > 0
-							? [m('p.teacher-nav__section', t('nav.live_now')), live.map(lessonRow)]
+						: model.live.length > 0
+							? [
+									m('p.teacher-nav__section', t('nav.live_now')),
+									model.live.map((item) => row(item, currentKey)),
+								]
 							: null,
 
 					// Places
-					row({ icon: 'home', label: t('teacher.title'), route: '/teach' }),
-					row({
-						icon: 'proposal',
-						label: t('scenlib.seg_mine'),
-						route: '/teach/scenarios',
-					}),
-					getLibraryStore().access === 'approved'
-						? row({
-								icon: 'search',
-								label: t('scenlib.nav'),
-								route: '/teach/library',
-							})
-						: null,
-					row({
-						icon: 'new',
-						label: t('dashboard.start_game'),
-						route: '/teach/start',
-					}),
+					model.places.map((item) => row(item, currentKey)),
 
 					m('p.teacher-nav__section', t('dashboard.my_classes')),
-					classes.length > 0
-						? classes.map((agoraClass) =>
-								row({
-									key: agoraClass.classId,
-									icon: 'people',
-									label: classLabel(agoraClass),
-									meta: t('dashboard.members', { count: String(agoraClass.memberCount) }),
-									route: `/teach/class/${agoraClass.classId}`,
-								}),
-							)
-						: loading && !loaded
+					model.classes.length > 0
+						? model.classes.map((item) => row(item, currentKey))
+						: model.loading
 							? null
 							: m('p.teacher-nav__empty', t('nav.no_classes')),
 
-					failed ? m('p.teacher-nav__empty.join__error', t('nav.load_failed')) : null,
+					model.failed ? m('p.teacher-nav__empty.join__error', t('nav.load_failed')) : null,
 
 					// Everything a teacher uses less often than the above
 					m('p.teacher-nav__section', t('nav.more')),
-					row({
-						icon: 'watch',
-						label: t('dashboard.my_games'),
-						route: '/teach/lessons',
-					}),
-					row({
-						icon: 'chart',
-						label: t('supervise.myActivity'),
-						route: '/teach/activity',
-					}),
-					row({
-						icon: 'talk',
-						label: t('nav.banned_words'),
-						route: '/teach/words',
-					}),
-					studioOverviewUrl()
-						? row({
-								icon: 'chart',
-								label: t('nav.my_overview'),
-								route: studioOverviewUrl(),
-								external: true,
-							})
-						: null,
-					getTeacherNavState().canSupervise
-						? row({
-								icon: 'people',
-								label: t('supervise.title'),
-								route: '/supervise',
-							})
-						: null,
-					getLibraryStore().isAdmin
-						? row({
-								icon: 'cog',
-								label: t('scenlib.adm_link'),
-								badge: {
-									count: getLibraryStore().openReports,
-									label: t('scenlib.adm_badge', {
-										n: String(getLibraryStore().openReports),
-									}),
-								},
-								route: '/teach/library/admin',
-							})
-						: null,
-					row({
-						icon: 'idea',
-						label: t('nav.how_to_run'),
-						route: '/teach?help=1',
-					}),
+					model.more.map((item) => row(item, currentKey)),
 
 					// The account: who is signed in, and the way out. Last, and quiet —
 					// it is for the shared classroom computer, not for every lesson.
@@ -413,72 +302,90 @@ export function TeacherNav(): m.Component<TeacherNavAttrs> {
 	}
 
 	return {
+		oninit() {
+			stopWatching = watchDesktop((matches) => {
+				desktop = matches;
+				// Crossing the line either way starts the ≡ panel closed
+				open = false;
+				m.redraw();
+			});
+		},
+
 		onremove() {
 			window.clearTimeout(copiedTimer);
+			stopWatching?.();
 		},
 
 		view({ attrs }) {
 			const { title, subtitle, onBack, trailing, code, onCodeTap, segment, menuItems = [] } = attrs;
+			const barOn = desktop && attrs.sidebar !== false;
 			const atHome = here() === '/teach';
 
-			return m(
-				'nav.teacher-nav',
-				{
-					'aria-label': t('nav.aria'),
-					// Lifted over the toast and modal layers only while the menu is
-					// open: the bar itself must stay under them.
-					class: open ? 'teacher-nav--open' : undefined,
-					onkeydown: (event: KeyboardEvent) => {
-						if (event.key === 'Escape') close();
+			return [
+				m(
+					'nav.teacher-nav',
+					{
+						'aria-label': t('nav.aria'),
+						// Lifted over the toast and modal layers only while the menu is
+						// open: the bar itself must stay under them.
+						class: open ? 'teacher-nav--open' : undefined,
+						onkeydown: (event: KeyboardEvent) => {
+							if (event.key === 'Escape') close();
+						},
 					},
-				},
-				[
-					m(
-						'button.teacher-nav__back',
-						{
-							type: 'button',
-							'aria-label': t('common.back'),
-							title: t('common.back'),
-							onclick: onBack,
-						},
-						m(Icon, { name: 'arrow', size: 20 }),
-					),
-					// On /teach itself the house would lead to the screen it sits on
-					atHome
-						? null
-						: m(
-								'button.teacher-nav__home',
-								{
-									type: 'button',
-									'aria-label': t('teacher.title'),
-									title: t('teacher.title'),
-									onclick: () => go('/teach'),
-								},
-								m(Icon, { name: 'home', size: 20 }),
-							),
-					m('.teacher-nav__titles', [
-						m('span.teacher-nav__title', title),
-						subtitle ? m('span.teacher-nav__subtitle', subtitle) : null,
-					]),
-					segment ? m('.teacher-nav__segment', segment) : null,
-					code || trailing
-						? m('.teacher-nav__trailing', [code ? codePill(code, onCodeTap) : null, trailing])
-						: null,
-					m(
-						'button.teacher-nav__switch',
-						{
-							type: 'button',
-							'aria-label': t('nav.menu'),
-							title: t('nav.menu'),
-							'aria-expanded': String(open),
-							'aria-controls': MENU_ID,
-							onclick: toggle,
-						},
-						m(Icon, { name: 'menu', size: 20 }),
-					),
-					open ? menu(menuItems) : null,
-				],
-			);
+					[
+						m(
+							'button.teacher-nav__back',
+							{
+								type: 'button',
+								'aria-label': t('common.back'),
+								title: t('common.back'),
+								onclick: onBack,
+							},
+							m(Icon, { name: 'arrow', size: 20 }),
+						),
+						// On /teach itself the house would lead to the screen it sits on; on
+						// a desktop the side bar has the teachers' room as its first row
+						atHome || barOn
+							? null
+							: m(
+									'button.teacher-nav__home',
+									{
+										type: 'button',
+										'aria-label': t('teacher.title'),
+										title: t('teacher.title'),
+										onclick: () => go('/teach'),
+									},
+									m(Icon, { name: 'home', size: 20 }),
+								),
+						m('.teacher-nav__titles', [
+							m('span.teacher-nav__title', title),
+							subtitle ? m('span.teacher-nav__subtitle', subtitle) : null,
+						]),
+						segment ? m('.teacher-nav__segment', segment) : null,
+						code || trailing
+							? m('.teacher-nav__trailing', [code ? codePill(code, onCodeTap) : null, trailing])
+							: null,
+						barOn
+							? null
+							: m(
+									'button.teacher-nav__switch',
+									{
+										type: 'button',
+										'aria-label': t('nav.menu'),
+										title: t('nav.menu'),
+										'aria-expanded': String(open),
+										'aria-controls': MENU_ID,
+										onclick: toggle,
+									},
+									m(Icon, { name: 'menu', size: 20 }),
+								),
+						open && !barOn ? menu(menuItems) : null,
+					],
+				),
+				// After the top bar and before the page in tab order
+				barOn ? m(TeacherSidebar, { menuItems }) : null,
+			];
 		},
 	};
 }

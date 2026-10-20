@@ -5,7 +5,7 @@ import { httpsCallable } from 'firebase/functions';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { authedFetch } from '@/lib/api/authedFetch';
-import { functions } from '@/lib/firebase/client';
+import { functions } from '@/lib/firebase/functionsClient';
 import { logError } from '@/lib/utils/errorHandling';
 import type { Survey } from '@/types/survey';
 import SynthesisStatusBadge from './SynthesisStatusBadge';

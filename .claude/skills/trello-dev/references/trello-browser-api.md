@@ -74,7 +74,7 @@ for (const [card, list, text] of moves) {
 moves.map(m => m[0] + ' → ' + m[1])
 ```
 
-Same snippet for **done** with the done-comment from SKILL.md Step 6. Use a template
+Same snippet for **done** with the done-comment from SKILL.md Step 4. Use a template
 literal for multi-line comments; Trello renders Markdown.
 
 ## Other writes you may need

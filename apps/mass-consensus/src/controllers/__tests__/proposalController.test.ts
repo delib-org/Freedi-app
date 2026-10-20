@@ -4,9 +4,8 @@
  */
 
 // Mock Firebase client before importing controller
-jest.mock('@/lib/firebase/client', () => ({
+jest.mock('@/lib/firebase/firestoreClient', () => ({
   db: {},
-  auth: {},
 }));
 
 // Mock Firestore functions

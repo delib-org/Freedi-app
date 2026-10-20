@@ -8,7 +8,7 @@ import {
 	pdfObjectName,
 	questionsLeft,
 } from '../flows/materialsFlow';
-import { translations } from '../i18n';
+import { translations } from '../locales/all';
 
 describe('materialsFlow', () => {
 	it('counts questions left, never below zero', () => {

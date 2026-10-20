@@ -31,6 +31,18 @@ export function LibraryShell(): m.Component<LibraryShellAttrs> {
 			});
 	}
 
+	/** Is the teacher through the gates below? Mirrors the order in body() */
+	function isOpenToTeacher(): boolean {
+		const user = getUserState();
+
+		return (
+			!user.loading &&
+			!!user.user &&
+			!user.user.isAnonymous &&
+			getLibraryStore().access === 'approved'
+		);
+	}
+
 	function body(attrs: LibraryShellAttrs, children: m.Children): m.Children {
 		const user = getUserState();
 		const store = getLibraryStore();
@@ -107,6 +119,8 @@ export function LibraryShell(): m.Component<LibraryShellAttrs> {
 					subtitle: attrs.subtitle,
 					onBack: attrs.onBack,
 					trailing: m(LanguagePicker),
+					// No menu on a gate: signed out, denied, checking or failed
+					sidebar: isOpenToTeacher(),
 				}),
 				m('.shell__content.scn', body(attrs, children)),
 			]);

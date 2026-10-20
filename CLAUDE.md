@@ -879,6 +879,7 @@ worktree that wants the solo suite by default — for every vite run, not only
 - **Port conflicts**: If running apps from both worktrees, use different ports for the worktree version — e.g. the main app with `npm run dev -- --port 5273`. Vite silently picks the next free port otherwise, which is how you end up reading someone else's app.
 - **List worktrees**: `git worktree list`
 - **Remove worktree**: `git worktree remove <path>`
+- **Several tasks at once with agents**: use the `parallel-work` skill. It creates one worktree per lane, runs the agents, merges every green branch into local `dev`, removes the worktrees, and asks once before any deploy.
 
 ---
 

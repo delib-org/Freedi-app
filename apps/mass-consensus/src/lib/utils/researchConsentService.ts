@@ -7,8 +7,7 @@
  * given in one app is respected in all apps.
  */
 
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
+import { loadFirestore } from '@/lib/firebase/lazyFirestore';
 import { Collections, getResearchConsentId } from '@freedi/shared-types';
 import type { ResearchConsent } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
@@ -31,8 +30,9 @@ export async function getResearchConsent(
 	}
 
 	try {
-		const docRef = doc(db, Collections.researchConsent, consentId);
-		const snapshot = await getDoc(docRef);
+		const { sdk, db } = await loadFirestore();
+		const docRef = sdk.doc(db, Collections.researchConsent, consentId);
+		const snapshot = await sdk.getDoc(docRef);
 
 		if (!snapshot.exists()) return null;
 
@@ -69,8 +69,9 @@ export async function saveResearchConsent(
 			timestamp: Date.now(),
 		};
 
-		const docRef = doc(db, Collections.researchConsent, consentId);
-		await setDoc(docRef, consent);
+		const { sdk, db } = await loadFirestore();
+		const docRef = sdk.doc(db, Collections.researchConsent, consentId);
+		await sdk.setDoc(docRef, consent);
 
 		consentCache.set(consentId, consented);
 

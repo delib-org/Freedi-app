@@ -11,7 +11,7 @@
 import { setDoc, doc } from 'firebase/firestore';
 import { Statement, StatementType, Collections } from '@freedi/shared-types';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
-import { db } from '@/lib/firebase/client';
+import { db } from '@/lib/firebase/firestoreClient';
 import { VALIDATION } from '@/constants/common';
 
 /**
