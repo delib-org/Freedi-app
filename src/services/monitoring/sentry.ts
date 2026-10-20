@@ -28,6 +28,12 @@ export function initSentry() {
 	// `.env` copied from prod, both leave PROD true while the page is served
 	// from localhost.
 	const override = import.meta.env.VITE_SENTRY_ENABLE_IN_LOCAL === 'true';
+	const environment = import.meta.env.VITE_ENVIRONMENT || 'production';
+
+	// A bundle that declares itself "development" must never report, even when
+	// the host looks deployed. Only the explicit local override can bypass this.
+	if (environment === 'development' && !override) return;
+
 	if (
 		!isLocalRuntime(override) &&
 		import.meta.env.PROD &&
@@ -37,7 +43,7 @@ export function initSentry() {
 	) {
 		Sentry.init({
 			dsn: sentryDsn,
-			environment: import.meta.env.VITE_ENVIRONMENT || 'production',
+			environment,
 			// Until each app has its own project, this tag is what separates them.
 			initialScope: { tags: { app: 'main' } },
 			integrations: [Sentry.browserTracingIntegration()],
