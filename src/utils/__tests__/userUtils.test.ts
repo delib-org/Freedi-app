@@ -3,7 +3,14 @@ import { convertFirebaseUserToCreator } from '../userUtils';
 import { getAnonymousName } from '../temporalNameGenerator';
 
 const asUser = (partial: Partial<User>): User =>
-	({ uid: 'uid-1', displayName: null, photoURL: null, email: null, isAnonymous: false, ...partial }) as User;
+	({
+		uid: 'uid-1',
+		displayName: null,
+		photoURL: null,
+		email: null,
+		isAnonymous: false,
+		...partial,
+	}) as User;
 
 describe('convertFirebaseUserToCreator', () => {
 	beforeEach(() => {

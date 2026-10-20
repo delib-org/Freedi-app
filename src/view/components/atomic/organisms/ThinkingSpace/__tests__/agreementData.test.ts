@@ -1,5 +1,6 @@
 import { Statement } from '@freedi/shared-types';
 import { agreementCandidates, proposalEvidence } from '../agreementData';
+
 const option = (id: string, createdAt: number, score: number): Statement =>
 	({
 		statementId: id,

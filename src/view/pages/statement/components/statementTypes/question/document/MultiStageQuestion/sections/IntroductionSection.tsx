@@ -13,6 +13,7 @@ interface IntroductionSectionProps {
 
 export const IntroductionSection: FC<IntroductionSectionProps> = ({ statement }) => {
 	const { t } = useTranslation();
+
 	return (
 		<div className={styles.stageCard} id="introduction">
 			<div className={styles.imgContainer}>
