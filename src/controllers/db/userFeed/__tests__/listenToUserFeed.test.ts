@@ -104,6 +104,36 @@ describe('listenToUserFeed', () => {
 		expect(stopB).toHaveBeenCalled();
 	});
 
+	it('stops the legacy fallback as soon as the feed gets entries, and never restarts it', () => {
+		const stopLegacy = jest.fn();
+		mockLegacyListener.mockReturnValue(stopLegacy);
+		listenToUserFeed('alice', 30);
+
+		feedHandler()(snapshot([])); // not yet backfilled → fallback starts
+		expect(mockLegacyListener).toHaveBeenCalledTimes(1);
+		expect(stopLegacy).not.toHaveBeenCalled();
+
+		feedHandler()(snapshot([feedDoc('a', 3)])); // backfill / first join landed
+		expect(stopLegacy).toHaveBeenCalledTimes(1);
+		expect(mockDocumentListener).toHaveBeenCalledTimes(1);
+
+		feedHandler()(snapshot([])); // feed emptied later (left the last discussion)
+		feedHandler()(snapshot([feedDoc('b', 4)]));
+		expect(mockLegacyListener).toHaveBeenCalledTimes(1);
+		expect(stopLegacy).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not stop the legacy listener twice on cleanup after the switch', () => {
+		const stopLegacy = jest.fn();
+		mockLegacyListener.mockReturnValue(stopLegacy);
+		const unsubscribe = listenToUserFeed('alice', 30);
+		feedHandler()(snapshot([]));
+		feedHandler()(snapshot([feedDoc('a', 3)]));
+		unsubscribe();
+
+		expect(stopLegacy).toHaveBeenCalledTimes(1);
+	});
+
 	it('falls back to the legacy subscription listener for a user with no feed yet', () => {
 		listenToUserFeed('alice', 30);
 		feedHandler()(snapshot([]));

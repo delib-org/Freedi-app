@@ -46,7 +46,7 @@ flowchart TD
 ```
 
 "Reconcile" reads the subscription's current state and creates the feed entry
-(top-level + role admin/creator/member) or deletes it. It never overwrites an
+(top-level + role admin/creator/member/waiting) or deletes it (banned, unsubscribed, gone). It never overwrites an
 existing entry's `lastActivity`, and it is trigger-order independent (a late
 delete trigger after a quick re-join keeps the entry).
 
@@ -88,7 +88,8 @@ delete trigger after a quick re-join keeps the entry).
   then `getDoc` for exactly those subscriptions. Discussions tab unchanged, but its cursor
   is now tracked from its own query results (`discussionsCursor.ts`) so subscriptions
   pulled in by the feed cannot make it skip pages.
-  Fallback: a user whose feed is empty on first snapshot also gets the legacy listener.
+  Fallback: a user whose feed is empty on first snapshot also gets the legacy listener; it is
+  stopped as soon as the feed has docs (rows it loaded stay in Redux, so nothing flickers).
 
 ### Readers of `statementsSubscribe` ordered by `lastUpdate` (all apps)
 
@@ -154,6 +155,12 @@ Phase 2 (separate commit): `SUBSCRIPTION_ACTIVITY_STAMP_ENABLED = false` in
 `updateParentOnChildUpdate`. Ship only after hosting from step 5 is live and old
 tabs have had time to reload.
 
+Later cleanup (not in this branch): once the backfill reports `"done": true` in
+production, remove the empty-feed fallback from `listenToUserFeed`
+(`legacyUnsubscribe` / `listenToStatementSubscriptions`), together with
+`fetchOlderTopSubscriptions`, which the home page no longer calls. Every
+eligible membership then has a feed entry, kept current by the lifecycle triggers.
+
 Rollback: phase 2 → flip the constant back and redeploy those two functions.
 Phase 1 client → the legacy listener is still in the code (`listenToStatementSubscriptions`);
 point `Home.tsx` back at it. Functions → redeploy the previous build and
@@ -176,8 +183,9 @@ Monitoring: invocations of `handleWaitingRoleSubscriptions` / `validateRoleChang
    parent's bump.
 5. Leading-edge throttle: the first activity in a window fans out; later activity in that minute is
    not re-stamped, so `lastActivity` can lag real activity by up to 60 s.
-6. Feed roles: admin, creator, member. Waiting/banned/unsubscribed members lose the topic from the
-   home topics list (they were listed before). Approval brings it back.
+6. Feed roles (Tal, review): admin, creator, member **and waiting** — a pending member keeps the
+   home row, which opens the waiting-for-approval screen. Banned and unsubscribed members lose the
+   topic from the home topics list (they were listed before); un-banning brings it back.
 7. Member count semantics unchanged (every role counts, Sign-document subs do not), so no update trigger.
 8. Fan-out pages through all members (no 500 cap); a member who leaves mid-fan-out is skipped, never resurrected.
 

@@ -142,16 +142,37 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 		expect(feedOf('alice')).toBeUndefined();
 	});
 
-	it('restores the feed entry when a waiting member is approved, without bumping an existing one', async () => {
+	it('gives a waiting member a feed entry (it leads to the waiting-for-approval screen)', async () => {
+		await joinAs('carol', Role.waiting);
+
+		expect(feedOf('carol')).toMatchObject({ userId: 'carol', statementId: DISCUSSION });
+	});
+
+	it('keeps the same entry, unbumped, when a waiting member is approved (waiting → member → admin)', async () => {
 		const carol = await joinAs('carol', Role.waiting);
-		expect(feedOf('carol')).toBeUndefined();
+		mockDb.seed(Collections.userFeed, carol, { ...feedOf('carol'), lastActivity: 42 });
 
 		await changeRole(carol, Role.member);
-		expect(feedOf('carol')).toBeDefined();
+		expect(feedOf('carol')?.lastActivity).toBe(42);
 
-		mockDb.seed(Collections.userFeed, carol, { ...feedOf('carol'), lastActivity: 42 });
 		await changeRole(carol, Role.admin);
 		expect(feedOf('carol')?.lastActivity).toBe(42);
+	});
+
+	it('deletes the entry on member → banned and recreates it on banned → member', async () => {
+		const alice = await joinAs('alice', Role.member);
+		await changeRole(alice, Role.banned);
+		expect(feedOf('alice')).toBeUndefined();
+
+		await changeRole(alice, Role.member);
+		expect(feedOf('alice')).toMatchObject({ userId: 'alice', subscriptionId: alice });
+	});
+
+	it('deletes the entry when a member unsubscribes by role', async () => {
+		const alice = await joinAs('alice', Role.member);
+		await changeRole(alice, Role.unsubscribed);
+
+		expect(feedOf('alice')).toBeUndefined();
 	});
 
 	it('reverts a ban of an admin and leaves their feed entry in place', async () => {

@@ -128,6 +128,15 @@ export function listenToUserFeed(
 		}
 		isFirstSnapshot = false;
 
+		// As soon as the feed has entries it is the only source of order: stop
+		// the legacy listener so two listeners never disagree. Rows it already
+		// loaded stay in Redux (no flicker); their feed entries and doc
+		// listeners arrive through this snapshot.
+		if (!snapshot.empty && legacyUnsubscribe) {
+			legacyUnsubscribe();
+			legacyUnsubscribe = null;
+		}
+
 		snapshot.docChanges().forEach((change) => {
 			if (change.type === 'removed') {
 				const removed = change.doc.data() as Partial<UserFeedItem>;

@@ -46,7 +46,7 @@ describe('backfillUserFeed', () => {
 		const progress = await backfillUserFeed(firestore(), { pageSize: 3, now: T0 });
 
 		expect(progress.done).toBe(true);
-		expect(db.size(Collections.userFeed)).toBe(8);
+		expect(db.size(Collections.userFeed)).toBe(9);
 		expect(db.read(Collections.userFeed, 'alice--legacy-top')).toMatchObject({
 			userId: 'alice',
 			statementId: 'legacy-top',
@@ -55,7 +55,7 @@ describe('backfillUserFeed', () => {
 		});
 		expect(db.read(Collections.userFeed, 'alice--question-1')).toBeUndefined();
 		expect(db.read(Collections.userFeed, 'bob--top-0')).toBeUndefined();
-		expect(db.read(Collections.userFeed, 'carol--top-0')).toBeUndefined();
+		expect(db.read(Collections.userFeed, 'carol--top-0')).toBeDefined(); // waiting keeps its entry
 	});
 
 	it('is bounded and resumable: maxPages per run, cursor saved between runs', async () => {
@@ -74,7 +74,7 @@ describe('backfillUserFeed', () => {
 			runs++;
 		}
 		expect(runs).toBeGreaterThan(2);
-		expect(db.size(Collections.userFeed)).toBe(8);
+		expect(db.size(Collections.userFeed)).toBe(9);
 	});
 
 	it('is idempotent and never moves an entry backwards', async () => {
@@ -96,7 +96,7 @@ describe('backfillUserFeed', () => {
 	it('dry run writes nothing', async () => {
 		const progress = await backfillUserFeed(firestore(), { dryRun: true, now: T0 });
 
-		expect(progress.created).toBe(8);
+		expect(progress.created).toBe(9);
 		expect(db.writes).toBe(0);
 	});
 });

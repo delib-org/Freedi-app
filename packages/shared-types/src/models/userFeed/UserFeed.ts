@@ -32,8 +32,17 @@ export const UserFeedThrottleSchema = object({
 
 export type UserFeedThrottle = InferOutput<typeof UserFeedThrottleSchema>;
 
-/** Roles whose top-level subscriptions get a userFeed entry. */
-export const USER_FEED_ROLES: readonly Role[] = [Role.admin, Role.creator, Role.member];
+/**
+ * Roles whose top-level subscriptions get a userFeed entry. `waiting` keeps its
+ * entry: the home row leads a pending member to the waiting-for-approval screen.
+ * Banned and unsubscribed members are hidden.
+ */
+export const USER_FEED_ROLES: readonly Role[] = [
+	Role.admin,
+	Role.creator,
+	Role.member,
+	Role.waiting,
+];
 
 export function getUserFeedId(userId: string, statementId: string): string {
 	return `${userId}--${statementId}`;
