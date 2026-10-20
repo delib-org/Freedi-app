@@ -14,6 +14,7 @@ import { updateUserDemographicEvaluation } from '../fn_polarizationIndex';
 import { ActionTypes } from './evaluationTypes';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
+import { recordEvaluatorParticipation } from './evaluatorParticipation';
 import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
 import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
@@ -74,6 +75,8 @@ export async function updateEvaluation(
 			throw new Error('Failed to update statement');
 		}
 
+		// Counts the user once per question (1 read when already counted, no parent write)
+		await recordEvaluatorParticipation(statement.parentId, userId);
 		await updateParentStatementWithChosenOptions(statement.parentId);
 
 		// Update demographic evaluation (it will check if demographic question exists later on)

@@ -14,6 +14,7 @@ import { updateUserDemographicEvaluation } from '../fn_polarizationIndex';
 import { ActionTypes } from './evaluationTypes';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
+import { recordEvaluatorParticipation } from './evaluatorParticipation';
 import { trackEvaluationEngagement } from '../engagement/credits/trackEngagement';
 import { checkSocialProofMilestone } from '../engagement/notifications/socialProofTrigger';
 import { onEvaluationCreatedStats } from '../fn_adminStats';
@@ -96,6 +97,8 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 			throw new Error('Failed to update statement');
 		}
 
+		// Counts the user once per question (1 read when already counted, no parent write)
+		await recordEvaluatorParticipation(statement.parentId, userId);
 		await updateParentStatementWithChosenOptions(statement.parentId);
 
 		// Update demographic evaluation (it will check if demographic question exists later on)
