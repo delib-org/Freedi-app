@@ -7,10 +7,9 @@
  * - Types from @freedi/shared-types
  */
 
-import { query, where, getDocs, limit as firestoreLimit, orderBy, collection } from 'firebase/firestore';
 import { Statement } from '@freedi/shared-types';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
-import { db } from '@/lib/firebase/client';
+import { loadFirestore } from '@/lib/firebase/lazyFirestore';
 import { SWIPE } from '@/constants/common';
 import { Collections, isValidEvaluationValue } from '@freedi/shared-types';
 
@@ -98,15 +97,16 @@ export async function loadCardBatch(
     }
 
     // Query statements that are children of this question
-    const statementsRef = collection(db, Collections.statements);
-    const q = query(
+    const { sdk, db } = await loadFirestore();
+    const statementsRef = sdk.collection(db, Collections.statements);
+    const q = sdk.query(
       statementsRef,
-      where('parentId', '==', questionId),
-      orderBy('createdAt', 'desc'),
-      firestoreLimit(limit)
+      sdk.where('parentId', '==', questionId),
+      sdk.orderBy('createdAt', 'desc'),
+      sdk.limit(limit)
     );
 
-    const snapshot = await getDocs(q);
+    const snapshot = await sdk.getDocs(q);
     const statements: Statement[] = [];
 
     snapshot.forEach((doc) => {
