@@ -1,4 +1,12 @@
-import { updateDoc, setDoc, getDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import {
+	updateDoc,
+	setDoc,
+	getDoc,
+	arrayUnion,
+	arrayRemove,
+	runTransaction,
+} from 'firebase/firestore';
+import { FireStore } from '@/controllers/db/config';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import {
 	Statement,
@@ -136,31 +144,38 @@ export async function setStatementSubscriptionToDB({
 	}
 }
 
-export async function updateLastReadTimestamp(statementId: string, userId: string) {
+/**
+ * Marks a discussion as read for a user. Runs in a transaction that only writes
+ * when the new time is later than the stored one, so a stale tab or device can
+ * never move lastReadTimestamp backwards. A missing subscription is left alone.
+ */
+export async function updateLastReadTimestamp(statementId: string, userId: string): Promise<void> {
 	try {
 		if (!statementId || !userId) throw new Error('statementId and userId are required');
-		const statementsSubscribeId = `${userId}--${statementId}`;
+		const statementsSubscribeRef = createSubscriptionRef(`${userId}--${statementId}`);
 
-		const statementsSubscribeRef = createSubscriptionRef(statementsSubscribeId);
+		await runTransaction(FireStore, async (transaction) => {
+			const docSnap = await transaction.get(statementsSubscribeRef);
+			// Don't create the doc - the user must be subscribed first
+			if (!docSnap.exists()) return;
 
-		// Check if subscription exists first
-		const docSnap = await getDoc(statementsSubscribeRef);
+			const stored = Number(docSnap.data()?.lastReadTimestamp ?? 0);
+			const now = Date.now();
+			if (now <= stored) return;
 
-		if (docSnap.exists()) {
-			// Document exists, update it
-			await updateDoc(statementsSubscribeRef, {
-				lastReadTimestamp: Date.now(),
+			transaction.update(statementsSubscribeRef, {
+				lastReadTimestamp: now,
 				statementId: statementId, // Include statementId to satisfy Firebase rules
 			});
-		}
-		// If document doesn't exist, don't create it - user should be subscribed first
-		// This prevents creating incomplete subscription objects
+		});
 	} catch (error) {
 		// Only log non-permission errors
 		const err = error as { code?: string };
 		if (err?.code !== 'permission-denied') {
 			logError(error, {
 				operation: 'subscriptions.setSubscriptions.updateLastReadTimestamp',
+				userId,
+				statementId,
 				metadata: { message: 'Error updating last read timestamp:' },
 			});
 		}
