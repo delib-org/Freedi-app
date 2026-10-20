@@ -37,6 +37,7 @@ import {
 import { setRatingScale } from '@/controllers/db/evaluation/setEvaluation';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import ManualOrderModal from './ManualOrderModal';
+import EvaluationModeRows from './EvaluationModeRows';
 import styles from './TopAnswersPanel.module.scss';
 
 /**
@@ -420,6 +421,8 @@ const TopAnswersPanel: FC<TopAnswersPanelProps> = ({ statement }) => {
 						<X size={18} />
 					</button>
 				</header>
+
+				<EvaluationModeRows statement={statement} />
 
 				{/* How people rate — the scale participants actually tap */}
 				<section className="admin-drawer__section">
