@@ -24,6 +24,7 @@ jest.mock('../evaluation/topAnswerSync', () => ({
 }));
 
 import { updateParentOnChildUpdate, updateParentOnChildDelete } from '../fn_statement_updates';
+import { SUBSCRIPTION_ACTIVITY_STAMP_ENABLED } from '../userFeed/userFeedConfig';
 
 /**
  * The real onDocumentUpdated / onDocumentDeleted handlers (the v2 trigger
@@ -136,6 +137,8 @@ describe('fn_statement_updates → activity classification', () => {
 		await update(option(), option({ statement: 'Plant more trees' }));
 
 		expect(feedWrites()).toBe(MEMBERS);
+		// phase 1 also stamps the legacy subscription; phase 2 writes userFeed only
+		expect(subscriptionWrites()).toBe(SUBSCRIPTION_ACTIVITY_STAMP_ENABLED ? MEMBERS : 0);
 		expect(mockDb.read(Collections.statements, QUESTION)?.lastSubStatements).toBeDefined();
 	});
 
