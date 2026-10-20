@@ -33,4 +33,4 @@ export const USER_FEED_FANOUT_PAGE_SIZE = 500;
  * Rollback of phase 2: set back to true and redeploy the functions that
  * import it (onStatementCreated, updateParentOnChildUpdate).
  */
-export const SUBSCRIPTION_ACTIVITY_STAMP_ENABLED = true;
+export const SUBSCRIPTION_ACTIVITY_STAMP_ENABLED = false;
