@@ -631,6 +631,20 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() &&
                                (resource.data.creatorId == request.auth.uid ||
                                 request.auth.uid in resource.data.adminUids);
+
+      // One doc per language (en, ar): the display overlay on the Hebrew
+      // game. Public read like the game itself — a player reads it before
+      // login, and most games have none, so a missing doc must resolve
+      // cleanly (no resource.data here). Written by the odysseyTranslateGame
+      // callable (Admin SDK); the client rule lets the game's own admins
+      // hand-fix a line. The parent get() is what proves they are admins.
+      match /translations/{lang} {
+        allow read;
+        allow write: if isAuthenticated() &&
+                        exists(/databases/$(database)/documents/odysseyGames/$(gameId)) &&
+                        (get(/databases/$(database)/documents/odysseyGames/$(gameId)).data.creatorId == request.auth.uid ||
+                         request.auth.uid in get(/databases/$(database)/documents/odysseyGames/$(gameId)).data.adminUids);
+      }
     }
 
     // Personal voyage state (compass answers, chosen islands, captain's log).

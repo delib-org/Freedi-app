@@ -3,10 +3,13 @@ import {
 	Statement,
 	StatementType,
 	OdysseyGame,
+	OdysseyGameTranslation,
 	OdysseyIsland,
 	ODYSSEY_DEFAULT_GAME_ID,
+	odysseyTranslationsPath,
 } from '@freedi/shared-types';
 import { collection, db, doc, getDoc, getDocs, query, where } from './firebase';
+import type { Lang } from '../i18n/i18n';
 
 /**
  * Loading the game = the config doc + the statement tree.
@@ -59,6 +62,30 @@ export async function loadGame(
 	}
 
 	return { game, islands };
+}
+
+/**
+ * The overlay that turns the Hebrew game into `lang`.
+ *
+ * Hebrew is the source and needs none, so it costs a Hebrew player no read.
+ * For any other language this is one document, and it is never allowed to
+ * stand between the player and the sea: missing, forbidden or offline all
+ * resolve to null, and null means "show the Hebrew" (localizeGame.ts).
+ */
+export async function loadTranslation(
+	gameId: string,
+	lang: Lang,
+): Promise<OdysseyGameTranslation | null> {
+	if (lang === 'he') return null;
+	try {
+		const snap = await getDoc(doc(db, odysseyTranslationsPath(gameId), lang));
+
+		return snap.exists() ? (snap.data() as OdysseyGameTranslation) : null;
+	} catch (error) {
+		console.error('[Odyssey] translation load failed, showing Hebrew:', error, { gameId, lang });
+
+		return null;
+	}
 }
 
 /** Convenience: all visible islands, respecting the enabled flag. */

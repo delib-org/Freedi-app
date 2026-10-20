@@ -7,6 +7,7 @@ import {
 	crewIsFull,
 	crewLimits,
 	rankEldersByWinds,
+	withDisplayElders,
 } from '../crew';
 
 function elder(elderId: string, labels: string[], sortOrder: number): OdysseyElder {
@@ -99,5 +100,30 @@ describe('rankEldersByWinds', () => {
 
 	it('offers every sailor — ordering never drops anyone', () => {
 		expect(rankEldersByWinds(roster, ['ביטחון'])).toHaveLength(roster.length);
+	});
+});
+
+describe('withDisplayElders', () => {
+	it('swaps each ranked elder for its localized twin by id and keeps the order and flags', () => {
+		const roster = rankEldersByWinds(
+			[elder('a', ['חירות'], 1), elder('b', ['שוויון'], 2)],
+			['שוויון'],
+		);
+		const display = [
+			{ ...elder('a', ['Liberty'], 1), name: 'Elder A' },
+			{ ...elder('b', ['Equality'], 2), name: 'Elder B' },
+		];
+
+		const shown = withDisplayElders(roster, display);
+
+		expect(shown.map((entry) => entry.elder.name)).toEqual(['Elder B', 'Elder A']);
+		expect(shown.map((entry) => entry.matchesWinds)).toEqual([true, false]);
+	});
+
+	it('keeps the ranked elder when no twin exists and the roster when nothing is displayed', () => {
+		const roster = rankEldersByWinds([elder('a', [], 1)], []);
+
+		expect(withDisplayElders(roster, [elder('zzz', [], 9)])[0].elder.elderId).toBe('a');
+		expect(withDisplayElders(roster, [])).toBe(roster);
 	});
 });

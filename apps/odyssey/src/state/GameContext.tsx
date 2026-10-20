@@ -4,10 +4,16 @@ import {
 	useContext,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 	ReactNode,
 } from 'react';
-import { ODYSSEY_DEFAULT_GAME_ID, OdysseyAttitudeKey, OdysseyJourney } from '@freedi/shared-types';
+import {
+	ODYSSEY_DEFAULT_GAME_ID,
+	OdysseyAttitudeKey,
+	OdysseyGameTranslation,
+	OdysseyJourney,
+} from '@freedi/shared-types';
 
 /**
  * Which game this browser is playing.
@@ -48,12 +54,14 @@ export function currentGameId(): string {
 		return ODYSSEY_DEFAULT_GAME_ID;
 	}
 }
-import { GameContent, loadGame } from '../lib/game';
+import { GameContent, loadGame, loadTranslation } from '../lib/game';
 import { attitudeValue, loadGameEvaluations, myAttitudes, rateStance } from '../lib/evaluations';
 import { loadJourney, saveJourney } from '../lib/journey';
+import { localizeGame, siblingChip } from '../lib/localizeGame';
 import type { AttitudeMap } from '../lib/distance';
 import { toFreediUser, useUser } from '../lib/user';
 import { DEFAULT_TEXTS } from '../lib/defaultTexts';
+import { getLang, onLangChange, type Lang } from '../i18n/i18n';
 
 interface GameState {
 	/** true while auth or the initial game load is in flight */
@@ -67,8 +75,12 @@ interface GameState {
 	 * answers mean the same thing in every language.
 	 */
 	canonicalContent: GameContent | null;
+	/** The language `content` is displayed in. */
+	lang: Lang;
 	/** The canonical (Hebrew) chip at the same index as a displayed chip. */
 	canonicalChip(questionId: string, displayedChip: string): string;
+	/** The displayed chip at the same index as a stored (Hebrew) chip. */
+	displayChip(questionId: string, canonicalChip: string): string;
 	journey: OdysseyJourney | null;
 	/** stance statementId → my evaluation value (-1..1) */
 	attitudes: AttitudeMap;
@@ -87,14 +99,33 @@ const GameContext = createContext<GameState | null>(null);
 export function GameProvider({ children }: { children: ReactNode }) {
 	const { user, loading: authLoading } = useUser();
 	const [loading, setLoading] = useState(true);
-	const [content, setContent] = useState<GameContent | null>(null);
+	const [canonicalContent, setCanonicalContent] = useState<GameContent | null>(null);
+	const [translation, setTranslation] = useState<OdysseyGameTranslation | null>(null);
+	const [lang, setLang] = useState<Lang>(getLang);
 	const [journey, setJourney] = useState<OdysseyJourney | null>(null);
+	const [journeyPersisted, setJourneyPersisted] = useState(false);
 	const [attitudes, setAttitudes] = useState<AttitudeMap>({});
+	// The language listener outlives any render; it reads the latest journey
+	// from here rather than from a closure that saw an older one.
+	const journeyRef = useRef<{ journey: OdysseyJourney | null; persisted: boolean }>({
+		journey: null,
+		persisted: false,
+	});
+	journeyRef.current = { journey, persisted: journeyPersisted };
+	// A slow translation download must never overwrite a newer language choice.
+	const translationRequest = useRef(0);
+
+	const content = useMemo(
+		() => (canonicalContent ? localizeGame(canonicalContent, translation) : null),
+		[canonicalContent, translation],
+	);
 
 	const reload = useCallback(async () => {
 		if (!user) {
-			setContent(null);
+			setCanonicalContent(null);
+			setTranslation(null);
 			setJourney(null);
+			setJourneyPersisted(false);
 			setAttitudes({});
 			setLoading(false);
 
@@ -103,17 +134,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
 		setLoading(true);
 		try {
 			const gameId = currentGameId();
-			const [loadedContent, loadedJourney, evaluations] = await Promise.all([
+			const requestId = ++translationRequest.current;
+			const [loadedContent, loadedJourney, evaluations, loadedTranslation] = await Promise.all([
 				loadGame(gameId),
 				loadJourney(user.uid, gameId),
 				loadGameEvaluations(gameId),
+				loadTranslation(gameId, getLang()),
 			]);
-			setContent(loadedContent);
-			setJourney(loadedJourney);
+			setCanonicalContent(loadedContent);
+			if (requestId === translationRequest.current) setTranslation(loadedTranslation);
+			setJourney(loadedJourney.journey);
+			setJourneyPersisted(loadedJourney.persisted);
 			setAttitudes(myAttitudes(evaluations, user.uid));
 		} catch (error) {
 			console.error('[Odyssey] load failed:', error);
-			setContent(null);
+			setCanonicalContent(null);
 		} finally {
 			setLoading(false);
 		}
@@ -123,14 +158,43 @@ export function GameProvider({ children }: { children: ReactNode }) {
 		if (!authLoading) void reload();
 	}, [authLoading, reload]);
 
+	// Switching language reloads ONLY the overlay — the sea, the journey and
+	// the evaluations are the same in every language.
+	useEffect(
+		() =>
+			onLangChange(async (next) => {
+				setLang(next);
+				const requestId = ++translationRequest.current;
+				const loaded = await loadTranslation(currentGameId(), next);
+				if (requestId !== translationRequest.current) return;
+				setTranslation(loaded);
+
+				const { journey: current, persisted } = journeyRef.current;
+				if (!current || !persisted || current.lang === next) return;
+				const stamped = { ...current, lang: next };
+				setJourney(stamped);
+				try {
+					await saveJourney(stamped);
+				} catch (error) {
+					console.error('[Odyssey] could not record the reading language:', error, {
+						lang: next,
+					});
+				}
+			}),
+		[],
+	);
+
 	const value = useMemo<GameState>(
 		() => ({
 			loading: authLoading || loading,
 			content,
-			// Same object until content translation lands (localizeGame.ts).
-			canonicalContent: content,
-			canonicalChip(_questionId: string, displayedChip: string): string {
-				return displayedChip;
+			canonicalContent,
+			lang,
+			canonicalChip(questionId: string, displayedChip: string): string {
+				return siblingChip(content, canonicalContent, questionId, displayedChip);
+			},
+			displayChip(questionId: string, canonicalChip: string): string {
+				return siblingChip(canonicalContent, content, questionId, canonicalChip);
 			},
 			journey,
 			attitudes,
@@ -142,9 +206,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
 				const next = {
 					...journey,
 					...patch,
+					// The reading language rides along on every save — so the first
+					// save records it, and a player who switched is caught up on the
+					// next one even if the switch itself could not be written.
+					lang: getLang(),
 					displayName: user?.displayName?.split(' ')[0] ?? journey.displayName,
 				};
 				setJourney(next);
+				setJourneyPersisted(true);
 				await saveJourney(next);
 			},
 			async setAttitude(
@@ -152,7 +221,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 				stanceStatementId: string,
 				attitude: OdysseyAttitudeKey,
 			): Promise<void> {
-				if (!user || !content) return;
+				if (!user || !canonicalContent) return;
 				// Optimistic mark — but remember what stood before, so a failed
 				// write can put it back instead of leaving a lie on the screen.
 				const previous = attitudes[stanceStatementId];
@@ -162,7 +231,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 				}));
 				try {
 					await rateStance({
-						gameId: content.game.gameId,
+						gameId: canonicalContent.game.gameId,
 						islandStatementId,
 						stanceStatementId,
 						attitude,
@@ -184,7 +253,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 			},
 			reload,
 		}),
-		[authLoading, loading, content, journey, attitudes, user, reload],
+		[authLoading, loading, content, canonicalContent, lang, journey, attitudes, user, reload],
 	);
 
 	return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

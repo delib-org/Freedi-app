@@ -90,3 +90,25 @@ export function rankEldersByWinds(
 		.sort((a, b) => b.score - a.score || a.index - b.index)
 		.map(({ elder, score }) => ({ elder, matchesWinds: score > 0 }));
 }
+
+/**
+ * The same roster, carrying the elders the screen should SHOW.
+ *
+ * Ranking matches labels, and labels are matched in Hebrew — the canonical
+ * content — while an English or Arabic reader must see their own copy. So a
+ * page ranks the canonical elders and then swaps each one, by id, for its
+ * localized twin. An elder with no twin (never happens for one game, but the
+ * screen must not vanish if it does) keeps the one it was ranked with.
+ */
+export function withDisplayElders(
+	roster: RankedElder[],
+	displayElders: OdysseyElder[],
+): RankedElder[] {
+	if (displayElders.length === 0) return roster;
+	const byId = new Map(displayElders.map((elder) => [elder.elderId, elder]));
+
+	return roster.map((ranked) => ({
+		...ranked,
+		elder: byId.get(ranked.elder.elderId) ?? ranked.elder,
+	}));
+}

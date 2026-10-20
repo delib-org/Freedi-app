@@ -1353,6 +1353,7 @@ export {
 	odysseyDigestUnsubscribe,
 	sendOdysseyDigests,
 	odysseyFeedbackSubmit,
+	odysseyTranslateGame,
 } from './odyssey';
 
 export { covenantWorkflow } from './fn_covenant';
