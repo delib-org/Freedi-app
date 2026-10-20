@@ -12,6 +12,7 @@ import Summary from './pages/Summary';
 import Privacy from './pages/Privacy';
 import Parties from './pages/Parties';
 import Elders from './pages/Elders';
+import { useT } from './i18n/useT';
 
 // Admin is lazy: it pulls in seed.ts and with it every default island, elder,
 // counsel line and the party-stance research — none of which a player needs.
@@ -21,11 +22,12 @@ const Admin = lazy(() => import('./pages/Admin'));
 function Protected({ children }: { children: ReactElement }) {
 	const { user, loading } = useUser();
 	const game = useGame();
+	const { t } = useT();
 
 	if (loading || game.loading) {
 		return (
 			<div className="page justify-center">
-				<p className="panel">מרימים את המפרשים…</p>
+				<p className="panel">{t('app.loading')}</p>
 			</div>
 		);
 	}
@@ -35,9 +37,11 @@ function Protected({ children }: { children: ReactElement }) {
 }
 
 export default function App() {
+	const { dir } = useT();
+
 	return (
 		<GameProvider>
-			<main dir="rtl">
+			<main dir={dir}>
 				<div className="ocean-bg" />
 				<SeaStage />
 				<div className="vignette" />

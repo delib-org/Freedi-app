@@ -15,6 +15,8 @@
 		<meta property="og:type" content="website" />
 		<meta property="og:site_name" content="אודיסיאה ישראלית" />
 		<meta property="og:locale" content="he_IL" />
+		<meta property="og:locale:alternate" content="en_US" />
+		<meta property="og:locale:alternate" content="ar_AR" />
 		<meta property="og:url" content="https://odyssey.democracynowanew.com/" />
 		<meta property="og:title" content="אודיסיאה ישראלית" />
 		<meta
@@ -45,6 +47,28 @@
 
 		<link rel="icon" href="/assets/favicon.svg" />
 		<title>אודיסיאה ישראלית — מסע ומשא לארץ ישנה-חדשה</title>
+		<!-- Language before first paint: same order as detectLang() in
+		     src/i18n/i18n.ts (?lang=, saved choice, browser, Hebrew). Without it an
+		     English visitor sees the page laid out right-to-left until React mounts. -->
+		<script>
+			(function () {
+				var langs = ['he', 'en', 'ar'];
+				var lang = new URLSearchParams(location.search).get('lang');
+				if (langs.indexOf(lang) < 0) {
+					try { lang = localStorage.getItem('odyssey_lang'); } catch (e) { lang = null; }
+				}
+				if (langs.indexOf(lang) < 0) {
+					lang = 'he';
+					var tags = navigator.languages || [navigator.language];
+					for (var i = 0; i < tags.length; i++) {
+						var p = String(tags[i]).slice(0, 2).toLowerCase();
+						if (langs.indexOf(p) >= 0) { lang = p; break; }
+					}
+				}
+				document.documentElement.lang = lang;
+				document.documentElement.dir = lang === 'en' ? 'ltr' : 'rtl';
+			})();
+		</script>
 	</head>
 	<body>
 		<div id="root"></div>
