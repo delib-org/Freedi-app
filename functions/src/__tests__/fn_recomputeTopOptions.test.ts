@@ -137,7 +137,11 @@ describe('applyRecomputeTopOptions', () => {
 		const failing = {
 			collection: jest.fn((name: string) =>
 				name === 'statements'
-					? { doc: jest.fn(() => ({ get: jest.fn(async () => ({ exists: true, data: () => ({}) })) })) }
+					? {
+							doc: jest.fn(() => ({
+								get: jest.fn(async () => ({ exists: true, data: () => ({}) })),
+							})),
+						}
 					: {
 							where: jest.fn().mockReturnThis(),
 							limit: jest.fn().mockReturnThis(),
