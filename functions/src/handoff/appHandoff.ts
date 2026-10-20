@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'crypto';
+import { Timestamp } from 'firebase-admin/firestore';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { AGORA_STATION_LINK, Collections, type AgoraLinkedApp } from '@freedi/shared-types';
 import { db } from '../db';
@@ -10,8 +11,9 @@ import { db } from '../db';
  *
  * Only the SHA-256 of a code is stored, as the doc id: a database read never
  * yields a usable code. A code is redeemed once (get + delete in one
- * transaction) and dies after `HANDOFF_TTL_MS` (a TTL policy on `expiresAt`
- * sweeps the ones nobody redeemed).
+ * transaction) and dies after `HANDOFF_TTL_MS`. A TTL policy on `expireAt`
+ * sweeps the ones nobody redeemed — TTL reads only Timestamp values, so that
+ * field is a Timestamp twin of the ms `expiresAt` the logic checks.
  */
 
 export interface AppHandoffRecord {
@@ -47,7 +49,12 @@ export async function storeAppHandoff(
 ): Promise<{ code: string; expiresAt: number }> {
 	const code = mintHandoffCode();
 	const expiresAt = now + AGORA_STATION_LINK.HANDOFF_TTL_MS;
-	await handoffRef(code).create({ ...record, expiresAt, createdAt: now });
+	await handoffRef(code).create({
+		...record,
+		expiresAt,
+		expireAt: Timestamp.fromMillis(expiresAt),
+		createdAt: now,
+	});
 
 	return { code, expiresAt };
 }

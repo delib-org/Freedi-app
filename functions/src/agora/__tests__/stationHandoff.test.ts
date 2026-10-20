@@ -44,6 +44,7 @@ import {
 	type AgoraStagePlan,
 	type AgoraStagePlanItem,
 } from '@freedi/shared-types';
+import { Timestamp } from 'firebase-admin/firestore';
 import { store } from './helpers/fakeFirestore';
 import { sanitizeStagePlan } from '../stagePlanInput';
 import { checkStationLink, verifyPlanLinks } from '../stationLink';
@@ -211,6 +212,9 @@ describe('appHandoff codes', () => {
 		expect(expiresAt).toBe(NOW + AGORA_STATION_LINK.HANDOFF_TTL_MS);
 		expect(store.has(`appHandoffs/${code}`)).toBe(false);
 		expect(store.get(`appHandoffs/${digestHandoffCode(code)}`)).toMatchObject(record);
+		// The TTL policy sweeps on a Timestamp; the ms field alone would never expire
+		expect(Timestamp.fromMillis).toHaveBeenCalledWith(expiresAt);
+		expect(store.get(`appHandoffs/${digestHandoffCode(code)}`)).toHaveProperty('expireAt');
 
 		await expect(consumeAppHandoff(code, 'main', NOW + 1)).resolves.toMatchObject(record);
 		expect(store.has(`appHandoffs/${digestHandoffCode(code)}`)).toBe(false);
