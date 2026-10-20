@@ -1,6 +1,6 @@
 # Agora: Stations in another app (linked stations) — IA spec + implementation plan
 
-Status: draft (planning only, nothing built)
+Status: Phase 1 built 2026-10-20 (main-app question, end to end; local dev, not deployed). Phases 2–3 planned.
 Date: 2026-10-20
 Builds on: `agora-lesson-builder.md` (step labels, add-step sheet), `agora-student-clarity.md` (station / note / village vocabulary, plural address)
 Size note: this file holds the IA and the technical plan together, as asked. If Phase 2/3 grow, split the plan out to `agora-linked-app-stations-plan.md`.
@@ -138,7 +138,7 @@ All apps share one Firebase project per environment (`wizcol-app` prod, `freedi-
 - `stagePlan.ts`: `AgoraStagePlanItemSchema.link: optional(AgoraStationLinkSchema)`; add `linked` to `AGORA_PLANNABLE_STAGES` (multi-instance); `validateStagePlan` error `linked_needs_link`.
 - `agoraParticipant.ts`: `stationVisits: optional(record(string(), object({ openedAt: number(), returnedAt: optional(number()) })))`.
 - Callable types: `MintStationHandoffRequest {sessionId, itemId}` / `Response {url}`; `RedeemAppHandoffRequest {code, app}` / `Response {token, displayName}`; `CheckStationLinkRequest {url}` / `Response {app, statementId, title}`.
-- Strict-parse trap: every Agora client `parse`s `AgoraSessionSchema`; a stale PWA bundle meeting `stage: 'linked'` fails to parse. Deploy order in 9.6 and a short flag (Q5) handle it.
+- Strict-parse trap: every Agora client `parse`s `AgoraSessionSchema`; a stale PWA bundle meeting `stage: 'linked'` fails to parse. Deploy order (main hosting before Agora hosting) and the stale-client handling in §11.5 cover it; no flag (Tal, Q5).
 
 ### 9.3 Callables (all `functionConfig.region` = me-west1)
 - `agoraCheckStationLink({url})` — teacher (or co-teacher) only; parse, load statement, require `statementType === question`, require caller is its admin (creator or admin subscription on it/its top parent); return title.
@@ -188,14 +188,27 @@ All apps share one Firebase project per environment (`wizcol-app` prod, `freedi-
 3. Rules (whole file) + gcloud TTL on `appHandoffs.expiresAt`.
 4. Main hosting first (the gate must exist before any link is minted), then Agora hosting (the option appears). Join hosting in Phase 2.
 
-## 11. Open questions and assumptions (for Tal)
-1. Names: "Task in another app / משימה באפליקציה אחרת", "Back to the village / חזרה לכפר" — OK? Hebrew marked (?) above needs checking.
-2. Private questions: may redeem add the student as a member of the teacher's question, or must the teacher link only open questions? (Assumed: add membership.)
-3. A device already signed in to WizCol with a real account: switch to the class guest after a confirm (assumed), or use option (c) instead?
-4. Public questions: minors writing beside adults under pseudonyms. Allow, warn the teacher, or refuse non-private questions?
-5. Hold the builder option behind a flag for a day after the Agora deploy, so stale PWAs update before any session holds a `linked` step?
-6. Should a linked step ever carry results back (Phase 3), or is it a side trip only?
-Assumed: the teacher is an admin of the linked question; Join's prod origin is listed in the host allow-list; window.open is allowed from the station tap.
+## 11. Decisions (Tal, 2026-10-20) and assumptions
+1. Names approved: "Task in another app / משימה באפליקציה אחרת", "Back to the village / חזרה לכפר".
+2. Private questions: yes — redeem adds the student as a **member** of the question's governing statement (the question when it overrides access, else its top parent) unless access is open or the uid already holds a role there (admin stays admin, banned stays banned).
+3. A device signed in to WizCol with a real account: switch to the class guest **after a confirm** (the gate asks before redeeming, so the code is not spent on "no").
+4. Minors writing in public questions under pseudonyms: **allowed**. The guest's name is their Agora pseudonym (`participant.anonName`); in a `named` session a fresh generated pseudonym — never the typed or real name.
+5. **No flag, no delay** — the builder option ships at once. Stale clients are handled instead:
+   - The shared plan schema is still strict (`enum_(AgoraStage)`), so an Agora bundle built before `linked` cannot parse a session whose plan holds one. Those already-deployed bundles show their generic error screen (they cannot be changed); their service worker (`registerType: autoUpdate`, update check on entry) picks up the new bundle on the next launch/reload and reloads itself.
+   - From this release on: `lib/session.ts` treats an unknown `stage` ANYWHERE in the doc (`stagePlan[i].stage` included, not only the top-level `stage`) as "outdated" — the calm "refresh" screen instead of the error — and asks the service worker for the new bundle at once (`lib/appUpdate.ts`); `index.ts` also re-checks for a deploy every time the tab comes back to the front, so long-lived phone tabs update before the session they watch changes.
+   - Residual risk: a tab opened BEFORE this deploy, on a session whose plan the teacher edits to add a linked step mid-lesson, shows the old error screen until reloaded.
+6. Linked stations will carry results back into the lesson (Phase 3). Not built; not designed out: the visit lives on `stationVisits[itemId]`, the link carries `app` + `statementId`, and Phase 2's server-side counts (`agoraStationProgress`) are the seam a Phase 3 `AgoraCarriedAnswer` carry would read from. `closedQuestionItems` deliberately still ignores `linked` until then.
+
+Assumed: the teacher is an admin of the linked question (enforced: `agoraCheckStationLink` and every plan save refuse otherwise); Join's prod origin is listed in the host allow-list; window.open is allowed from the station tap (prefetched code, synchronous open; same-tab fallback when blocked).
+
+### Phase 1 as built (deviations from §9–10)
+- The step editor has no "Where" radio: only `main` is linkable until the Join gate exists (`AGORA_LINKABLE_APPS`); a Join link is refused as `bad_link`.
+- The guest claim carries the linked question too: `agora: { s, i, q }` — the main app pins its homes (`/`, `/home`, `/start`, `/login`, `/my`) to `/statement/<q>`.
+- The return origin is the constant `VITE_AGORA_ORIGIN` (default `https://agora.wizcol.com`). A student who opened Agora on `agora-wizcol.web.app` returns to `agora.wizcol.com`, a different origin with its own storage. Keep students on the canonical domain (the invite emails already are).
+- The 3D world's pavilion look for `linked` is not drawn yet: the world falls back to the open-question booth (sign shows the station title; no desk bubble). The station card opens in the booth panel.
+- Guest mode also hides the main app's install / notification prompts (`PWAWrapper`) and the first-run terms flow (`FirstRunGate`).
+- The main app opens in its own saved language (default English); it does not inherit Agora's language yet.
+- Strings: Agora keys live in `apps/agora/src/lib/linkedStationStrings.ts` (merged through `planBuilderStrings`), main-app keys in shared-i18n ×7.
 
 ## 12. Handoff to UX
 Fixed by this spec: the step type and its labels; one action at the station; the guest's world is one question deep with one exit on every screen; return lands at the same station; progress says only "opened / came back" until Phase 2.
