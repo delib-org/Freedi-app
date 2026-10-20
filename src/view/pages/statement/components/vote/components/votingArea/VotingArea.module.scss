@@ -12,7 +12,10 @@
     display: flex;
     direction: rtl;
     margin: 0 auto;
-    height: 100%;
+    // Fill what .statementVote leaves under the vote counter; the option
+    // columns need a definite height to bottom-pack their buttons.
+    flex: 1 1 0;
+    min-height: 0;
     position: relative;
     overflow-x: auto;
     padding: 0 20px;
