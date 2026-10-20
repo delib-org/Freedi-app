@@ -121,6 +121,66 @@ describe('functions Sentry', () => {
 			expect(filterClientFaultEvents(event, {})).toBe(event);
 		});
 
+		describe('OTel-shaped events (auto.firebase.otel.functions)', () => {
+			const otelEvent = {
+				event_id: 'e2',
+				level: 'error',
+				exception: {
+					values: [
+						{
+							type: 'HttpsError',
+							value: 'no-goal-proposals',
+							mechanism: { type: 'auto.firebase.otel.functions', handled: false },
+						},
+					],
+				},
+			};
+
+			it('drops it when the original exception is an HttpsError from another class copy', () => {
+				// Same shape as HttpsError, but not an Error subclass instance.
+				const lookalike = { code: 'failed-precondition', message: 'no-goal-proposals' };
+
+				expect(filterClientFaultEvents(otelEvent, { originalException: lookalike })).toBeNull();
+			});
+
+			it('drops it when the HttpsError is wrapped as a cause', () => {
+				const wrapper = Object.assign(new Error('wrapped'), {
+					cause: new HttpsError('failed-precondition', 'no-goal-proposals'),
+				});
+
+				expect(filterClientFaultEvents(otelEvent, { originalException: wrapper })).toBeNull();
+			});
+
+			it('drops it when only httpErrorCode survives', () => {
+				const err = { httpErrorCode: { status: 400, canonicalName: 'FAILED_PRECONDITION' } };
+
+				expect(filterClientFaultEvents(otelEvent, { originalException: err })).toBeNull();
+			});
+
+			it('drops it when the hint is empty but the event carries the code', () => {
+				const withCode = { ...otelEvent, extra: { code: 'failed-precondition' } };
+
+				expect(filterClientFaultEvents(withCode, {})).toBeNull();
+				expect(filterClientFaultEvents(withCode, undefined)).toBeNull();
+			});
+
+			it('keeps a server fault in the same shape', () => {
+				const internal = new HttpsError('internal', 'no-goal-proposals');
+
+				expect(filterClientFaultEvents(otelEvent, { originalException: internal })).toBe(otelEvent);
+				expect(
+					filterClientFaultEvents(
+						{ ...otelEvent, extra: { code: 'internal' } },
+						{ originalException: { httpErrorCode: { status: 500 } } },
+					),
+				).not.toBeNull();
+			});
+
+			it('keeps an HttpsError event whose code cannot be read', () => {
+				expect(filterClientFaultEvents(otelEvent, {})).toBe(otelEvent);
+			});
+		});
+
 		it('ignores a non-HttpsError whose code happens to be a string', () => {
 			const err = Object.assign(new Error('fs'), { code: 'ENOENT' });
 

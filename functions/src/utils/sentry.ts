@@ -83,12 +83,91 @@ const CLIENT_FAULT_CODES: ReadonlySet<string> = new Set([
 	'aborted',
 ]);
 
-/** Duck-typed: HttpsError carries a string `code`; checked here without importing firebase-functions. */
-function isClientFaultHttpsError(error: unknown): boolean {
-	if (!(error instanceof Error)) return false;
-	const code = (error as Error & { code?: unknown }).code;
+/** Highest HTTP status that still describes the caller's request, not a server fault. */
+const MAX_CLIENT_FAULT_HTTP_STATUS = 499;
+const MIN_CLIENT_FAULT_HTTP_STATUS = 400;
 
-	return typeof code === 'string' && CLIENT_FAULT_CODES.has(code);
+interface ErrorLike {
+	code?: unknown;
+	httpErrorCode?: { status?: unknown; canonicalName?: unknown };
+}
+
+function isClientFaultCode(code: unknown): boolean {
+	if (typeof code !== 'string') return false;
+	const normalized = code
+		.replace(/^functions\//, '')
+		.toLowerCase()
+		.replace(/_/g, '-');
+
+	return CLIENT_FAULT_CODES.has(normalized);
+}
+
+/**
+ * Duck-typed: HttpsError carries a string `code` (and `httpErrorCode`). Checked
+ * without `instanceof` so a different copy of the class, or a wrapper that
+ * kept the fields but not the prototype chain, is still recognised.
+ */
+function isClientFaultHttpsError(error: unknown): boolean {
+	if (typeof error !== 'object' || error === null) return false;
+	const candidate = error as ErrorLike;
+
+	if (isClientFaultCode(candidate.code)) return true;
+	if (isClientFaultCode(candidate.httpErrorCode?.canonicalName)) return true;
+
+	const status = candidate.httpErrorCode?.status;
+
+	return (
+		typeof status === 'number' &&
+		status >= MIN_CLIENT_FAULT_HTTP_STATUS &&
+		status <= MAX_CLIENT_FAULT_HTTP_STATUS
+	);
+}
+
+interface SentryExceptionValue {
+	type?: string;
+	value?: string;
+	mechanism?: { data?: Record<string, unknown> };
+}
+
+interface EventLike {
+	exception?: { values?: SentryExceptionValue[] };
+	extra?: Record<string, unknown>;
+	contexts?: Record<string, Record<string, unknown> | undefined>;
+}
+
+/**
+ * Fallback for when `hint.originalException` is missing or is not the error
+ * (the OTel Firebase instrumentation can capture after the error was wrapped).
+ * Only an HttpsError exception whose code can be read from the event is
+ * dropped; anything unreadable is kept so real faults are never hidden.
+ */
+function eventDescribesClientFault(event: EventLike): boolean {
+	const values = event.exception?.values ?? [];
+
+	return values.some((entry) => {
+		if (isClientFaultCode(entry.mechanism?.data?.code)) return true;
+		if (entry.type !== 'HttpsError') return false;
+
+		return (
+			isClientFaultCode(event.extra?.code) ||
+			isClientFaultCode(event.contexts?.error?.code) ||
+			isClientFaultCode(event.contexts?.HttpsError?.code)
+		);
+	});
+}
+
+/** Walk `cause` so a wrapper around an HttpsError is still seen. */
+function chainHasClientFault(error: unknown): boolean {
+	const seen = new Set<unknown>();
+	let current: unknown = error;
+
+	while (typeof current === 'object' && current !== null && !seen.has(current)) {
+		if (isClientFaultHttpsError(current)) return true;
+		seen.add(current);
+		current = (current as { cause?: unknown }).cause;
+	}
+
+	return false;
 }
 
 /**
@@ -97,9 +176,14 @@ function isClientFaultHttpsError(error: unknown): boolean {
  */
 export function filterClientFaultEvents<E>(
 	event: E,
-	hint: { originalException?: unknown },
+	hint: { originalException?: unknown } | undefined,
 ): E | null {
-	return isClientFaultHttpsError(hint.originalException) ? null : event;
+	if (chainHasClientFault(hint?.originalException)) return null;
+	if (event && typeof event === 'object' && eventDescribesClientFault(event as EventLike)) {
+		return null;
+	}
+
+	return event;
 }
 
 /**
