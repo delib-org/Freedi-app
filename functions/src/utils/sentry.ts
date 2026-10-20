@@ -83,49 +83,68 @@ const CLIENT_FAULT_CODES: ReadonlySet<string> = new Set([
 	'aborted',
 ]);
 
-/** Highest HTTP status that still describes the caller's request, not a server fault. */
-const MAX_CLIENT_FAULT_HTTP_STATUS = 499;
+/** HTTP status range an HttpsError with a client-fault code must agree with. */
 const MIN_CLIENT_FAULT_HTTP_STATUS = 400;
+const MAX_CLIENT_FAULT_HTTP_STATUS = 499;
 
 interface ErrorLike {
+	name?: unknown;
 	code?: unknown;
+	constructor?: { name?: unknown };
 	httpErrorCode?: { status?: unknown; canonicalName?: unknown };
 }
 
-function isClientFaultCode(code: unknown): boolean {
-	if (typeof code !== 'string') return false;
-	const normalized = code
+type FaultClass = 'client' | 'server' | 'unknown';
+
+function normalizeCode(code: unknown): string | null {
+	if (typeof code !== 'string') return null;
+
+	return code
 		.replace(/^functions\//, '')
 		.toLowerCase()
 		.replace(/_/g, '-');
-
-	return CLIENT_FAULT_CODES.has(normalized);
 }
 
 /**
- * Duck-typed: HttpsError carries a string `code` (and `httpErrorCode`). Checked
- * without `instanceof` so a different copy of the class, or a wrapper that
- * kept the fields but not the prototype chain, is still recognised.
+ * Only an HttpsError is trusted to carry a Firebase code. A third-party SDK
+ * error with `code: 'RESOURCE_EXHAUSTED'` or a plain object with `.status: 429`
+ * is OUR failure talking to an upstream, so it must still be reported.
  */
-function isClientFaultHttpsError(error: unknown): boolean {
-	if (typeof error !== 'object' || error === null) return false;
-	const candidate = error as ErrorLike;
+function isIdentifiedHttpsError(error: ErrorLike): boolean {
+	return (
+		(typeof error.httpErrorCode === 'object' && error.httpErrorCode !== null) ||
+		error.name === 'HttpsError' ||
+		error.constructor?.name === 'HttpsError'
+	);
+}
 
-	if (isClientFaultCode(candidate.code)) return true;
-	if (isClientFaultCode(candidate.httpErrorCode?.canonicalName)) return true;
+/**
+ * Classify the hint's exception. Server wins on any doubt: an unreadable code,
+ * or a client-fault code whose HTTP status says 5xx, is never dropped.
+ */
+function classifyException(error: unknown): FaultClass {
+	if (typeof error !== 'object' || error === null) return 'unknown';
+	const candidate = error as ErrorLike;
+	if (!isIdentifiedHttpsError(candidate)) return 'unknown';
+
+	const code =
+		normalizeCode(candidate.code) ?? normalizeCode(candidate.httpErrorCode?.canonicalName);
+	if (code === null) return 'unknown';
+	if (!CLIENT_FAULT_CODES.has(code)) return 'server';
 
 	const status = candidate.httpErrorCode?.status;
-
-	return (
+	if (
 		typeof status === 'number' &&
-		status >= MIN_CLIENT_FAULT_HTTP_STATUS &&
-		status <= MAX_CLIENT_FAULT_HTTP_STATUS
-	);
+		(status < MIN_CLIENT_FAULT_HTTP_STATUS || status > MAX_CLIENT_FAULT_HTTP_STATUS)
+	) {
+		return 'server';
+	}
+
+	return 'client';
 }
 
 interface SentryExceptionValue {
 	type?: string;
-	value?: string;
 	mechanism?: { data?: Record<string, unknown> };
 }
 
@@ -135,20 +154,25 @@ interface EventLike {
 	contexts?: Record<string, Record<string, unknown> | undefined>;
 }
 
+function isClientFaultCode(code: unknown): boolean {
+	const normalized = normalizeCode(code);
+
+	return normalized !== null && CLIENT_FAULT_CODES.has(normalized);
+}
+
 /**
- * Fallback for when `hint.originalException` is missing or is not the error
- * (the OTel Firebase instrumentation can capture after the error was wrapped).
- * Only an HttpsError exception whose code can be read from the event is
- * dropped; anything unreadable is kept so real faults are never hidden.
+ * Fallback for when there is no `hint.originalException` at all. Only an
+ * exception entry typed HttpsError, with a readable client-fault code, is
+ * dropped; anything else is kept so real faults are never hidden.
  */
 function eventDescribesClientFault(event: EventLike): boolean {
 	const values = event.exception?.values ?? [];
 
 	return values.some((entry) => {
-		if (isClientFaultCode(entry.mechanism?.data?.code)) return true;
 		if (entry.type !== 'HttpsError') return false;
 
 		return (
+			isClientFaultCode(entry.mechanism?.data?.code) ||
 			isClientFaultCode(event.extra?.code) ||
 			isClientFaultCode(event.contexts?.error?.code) ||
 			isClientFaultCode(event.contexts?.HttpsError?.code)
@@ -156,29 +180,22 @@ function eventDescribesClientFault(event: EventLike): boolean {
 	});
 }
 
-/** Walk `cause` so a wrapper around an HttpsError is still seen. */
-function chainHasClientFault(error: unknown): boolean {
-	const seen = new Set<unknown>();
-	let current: unknown = error;
-
-	while (typeof current === 'object' && current !== null && !seen.has(current)) {
-		if (isClientFaultHttpsError(current)) return true;
-		seen.add(current);
-		current = (current as { cause?: unknown }).cause;
-	}
-
-	return false;
-}
-
 /**
  * `beforeSend` hook: drop events whose original exception is a client-fault
- * HttpsError. Exported so the filter is testable without initializing Sentry.
+ * HttpsError. A readable hint always decides; the event-only fallback runs
+ * solely when the hint carries no exception. Exported so the filter is
+ * testable without initializing Sentry.
  */
 export function filterClientFaultEvents<E>(
 	event: E,
 	hint: { originalException?: unknown } | undefined,
 ): E | null {
-	if (chainHasClientFault(hint?.originalException)) return null;
+	const original = hint?.originalException;
+
+	if (original !== undefined && original !== null) {
+		return classifyException(original) === 'client' ? null : event;
+	}
+
 	if (event && typeof event === 'object' && eventDescribesClientFault(event as EventLike)) {
 		return null;
 	}
