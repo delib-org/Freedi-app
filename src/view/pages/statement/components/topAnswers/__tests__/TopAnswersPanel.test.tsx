@@ -11,6 +11,7 @@ import {
 	ResultsBy,
 	SortType,
 	Statement,
+	StatementType,
 	evaluationType,
 } from '@freedi/shared-types';
 import TopAnswersPanel from '../TopAnswersPanel';
@@ -21,7 +22,7 @@ import {
 	setRankBy,
 	setResultsBy,
 } from '@/controllers/db/statements/setTopAnswersSettings';
-import { setRatingScale } from '@/controllers/db/evaluation/setEvaluation';
+import { setParticipationMode, setRatingScale } from '@/controllers/db/evaluation/setEvaluation';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 
 jest.mock('@/controllers/hooks/useTranslation', () => ({
@@ -37,6 +38,7 @@ jest.mock('../ManualOrderModal', () => ({
 
 jest.mock('@/controllers/db/evaluation/setEvaluation', () => ({
 	setRatingScale: jest.fn(),
+	setParticipationMode: jest.fn(),
 }));
 
 jest.mock('@/controllers/db/statementSettings/setStatementSettings', () => ({
@@ -62,11 +64,13 @@ const mockSetCutoffMethod = setCutoffMethod as jest.Mock;
 const mockSetCutoffValue = setCutoffValue as jest.Mock;
 const mockRecompute = requestTopOptionsRecompute as jest.Mock;
 const mockSetRatingScale = setRatingScale as jest.Mock;
+const mockSetMode = setParticipationMode as jest.Mock;
 const mockSetSetting = setStatementSettingToDB as jest.Mock;
 
 function question(overrides: Partial<Statement> = {}): Statement {
 	return {
 		statementId: 'q-1',
+		statementType: StatementType.question,
 		statement: 'Where should the new park go?',
 		resultsSettings: {
 			resultsBy: ResultsBy.consensus,
@@ -377,6 +381,75 @@ describe('TopAnswersPanel', () => {
 			expect(
 				screen.getByText('Rating scale is set automatically for this mode'),
 			).toBeInTheDocument();
+		});
+	});
+
+	describe('evaluation method', () => {
+		const votingQuestion = (): Statement =>
+			question({ evaluationSettings: { evaluationUI: EvaluationUI.voting } });
+
+		it('offers card stacks and voting, marking card stacks by default', () => {
+			render(<TopAnswersPanel statement={question()} />);
+			openPanel();
+
+			expect(screen.getByRole('radio', { name: 'Card stacks' })).toHaveAttribute(
+				'aria-checked',
+				'true',
+			);
+			expect(screen.getByRole('radio', { name: 'Voting' })).toHaveAttribute(
+				'aria-checked',
+				'false',
+			);
+		});
+
+		it('switches to voting through setParticipationMode', () => {
+			render(<TopAnswersPanel statement={question()} />);
+			openPanel();
+
+			fireEvent.click(screen.getByRole('radio', { name: 'Voting' }));
+
+			expect(mockSetMode).toHaveBeenCalledWith(
+				expect.objectContaining({ statementId: 'q-1' }),
+				EvaluationUI.voting,
+			);
+		});
+
+		it('is not offered on a non-question statement', () => {
+			render(<TopAnswersPanel statement={question({ statementType: StatementType.option })} />);
+			openPanel();
+
+			expect(screen.queryByRole('radio', { name: 'Card stacks' })).not.toBeInTheDocument();
+		});
+
+		it('shows the options-source row only in voting mode', () => {
+			const { rerender } = render(<TopAnswersPanel statement={question()} />);
+			openPanel();
+
+			expect(screen.queryByRole('radio', { name: 'Show all options' })).not.toBeInTheDocument();
+
+			rerender(<TopAnswersPanel statement={votingQuestion()} />);
+
+			expect(screen.getByRole('radio', { name: 'Show all options' })).toHaveAttribute(
+				'aria-checked',
+				'true',
+			);
+		});
+
+		it('writes votingOptionsSource when only the selected options are chosen', () => {
+			render(<TopAnswersPanel statement={votingQuestion()} />);
+			openPanel();
+
+			fireEvent.click(
+				screen.getByRole('radio', { name: 'Only options selected in the card-stack evaluation' }),
+			);
+
+			expect(mockSetSetting).toHaveBeenCalledWith(
+				expect.objectContaining({
+					property: 'votingOptionsSource',
+					newValue: 'positivelyEvaluated',
+					settingsSection: 'statementSettings',
+				}),
+			);
 		});
 	});
 
