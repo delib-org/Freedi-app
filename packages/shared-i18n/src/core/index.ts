@@ -23,3 +23,5 @@ export {
   createTranslator,
   type TranslationDictionary,
 } from './translator';
+
+export { pickTranslations } from './pickTranslations';

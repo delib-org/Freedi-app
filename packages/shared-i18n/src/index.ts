@@ -13,6 +13,7 @@ export {
   translate,
   translateWithParams,
   createTranslator,
+  pickTranslations,
   type Direction,
   type RowDirection,
   type TranslationDictionary,
