@@ -104,6 +104,13 @@ export {
   EvaluationUI
 } from "./models/evaluation/Evaluation";
 
+// Per-question participation marker (server-only; backs the evaluator count)
+export type { EvaluationParticipant } from "./models/evaluation/EvaluationParticipant";
+export {
+  EvaluationParticipantSchema,
+  getEvaluationParticipantId,
+} from "./models/evaluation/EvaluationParticipant";
+
 // Invitation models
 export type { Invitation } from "./models/invitation/Invitation";
 export { InvitationSchema } from "./models/invitation/Invitation";

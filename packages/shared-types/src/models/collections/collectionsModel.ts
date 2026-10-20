@@ -18,6 +18,7 @@ export enum Collections {
     roomParticipants = 'roomParticipants',
     roomsSettings = 'roomsSettings',
     evaluations = 'evaluations',
+    evaluationParticipants = 'evaluationParticipants', // server-only: one doc per (question,user) already counted in the question's evaluator total
     votes = 'votes',
     users = 'usersV2',
     usersData = 'usersData',

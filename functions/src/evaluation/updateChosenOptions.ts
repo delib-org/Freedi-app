@@ -11,9 +11,7 @@ import { DocumentSnapshot, FieldValue, getFirestore } from 'firebase-admin/fires
 import type { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import {
 	Collections,
-	Evaluation,
 	Statement,
-	StatementEvaluation,
 	StatementType,
 	statementToSimpleStatement,
 	ResultsSettings,
@@ -55,8 +53,8 @@ export async function updateChosenOptions(
 }
 
 /**
- * Updates a parent statement's chosen options and total evaluator count
- * based on its child options' evaluations.
+ * Updates a parent statement's chosen options based on its child options'
+ * evaluations. The evaluator count lives in evaluatorParticipation.ts.
  *
  * Called after any evaluation change to refresh the parent's results.
  *
@@ -85,75 +83,8 @@ export async function updateParentStatementWithChosenOptions(
 			await updateParentWithResults(parentId, []);
 		}
 
-		// Update parent's total evaluator count
-		await updateParentTotalEvaluators(parentId);
 	} catch (error) {
 		logger.error('Error updating parent statement:', error);
-	}
-}
-
-// ============================================================================
-// PARENT EVALUATOR TRACKING
-// ============================================================================
-
-/**
- * Counts unique evaluators across all child options and updates
- * the parent statement's total evaluator count.
- */
-export async function updateParentTotalEvaluators(parentId: string): Promise<void> {
-	try {
-		// Get all evaluations for child options
-		const evaluationsSnapshot = await db
-			.collection(Collections.evaluations)
-			.where('parentId', '==', parentId)
-			.get();
-
-		// Count unique evaluators (all participants, including neutral/zero evaluations)
-		const uniqueEvaluators = new Set<string>();
-		evaluationsSnapshot.forEach((doc) => {
-			const evaluation = doc.data() as Evaluation;
-			if (evaluation.evaluator?.uid) {
-				uniqueEvaluators.add(evaluation.evaluator.uid);
-			}
-		});
-
-		const totalUniqueEvaluators = uniqueEvaluators.size;
-
-		// Update parent statement with the total count
-		const parentRef = db.collection(Collections.statements).doc(parentId);
-		const parentDoc = await parentRef.get();
-
-		if (!parentDoc.exists) {
-			logger.warn(`Parent statement ${parentId} not found`);
-
-			return;
-		}
-
-		const parentData = parentDoc.data() as Statement;
-		const parentEvaluation: StatementEvaluation = parentData.evaluation || {
-			agreement: 0,
-			sumEvaluations: 0,
-			numberOfEvaluators: 0,
-			sumPro: 0,
-			sumCon: 0,
-			numberOfProEvaluators: 0,
-			numberOfConEvaluators: 0,
-			sumSquaredEvaluations: 0,
-			averageEvaluation: 0,
-			evaluationRandomNumber: Math.random(),
-			viewed: 0,
-		};
-
-		// Update asParentTotalEvaluators field
-		parentEvaluation.asParentTotalEvaluators = totalUniqueEvaluators;
-
-		await parentRef.update({
-			evaluation: parentEvaluation,
-			totalEvaluators: totalUniqueEvaluators, // Also update the legacy field for compatibility
-			lastUpdate: Date.now(),
-		});
-	} catch (error) {
-		logger.error('Error updating parent total evaluators:', error);
 	}
 }
 

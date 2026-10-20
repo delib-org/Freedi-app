@@ -2092,6 +2092,9 @@ service cloud.firestore {
     match /synthesisSweepState/{document=**} { allow read, write: if false; }
     match /agreementHandoffs/{document=**} { allow read, write: if false; }
     match /deliberationBudgets/{id=**} { allow read, write: if false; }
+    // One marker per (question, user) already counted in the question's evaluator
+    // total. Written only by the evaluation triggers / backfill (Admin SDK).
+    match /evaluationParticipants/{document=**} { allow read, write: if false; }
     match /questionDeliberations/{document=**} {
       allow read, write: if false;
     }

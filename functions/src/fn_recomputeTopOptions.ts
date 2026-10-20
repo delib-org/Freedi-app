@@ -36,7 +36,7 @@ export interface RecomputeTopOptionsResult {
  * held at the top-parent level, so the subscription lookup resolves against
  * `topParentId`, falling back to the statement itself when it *is* the root.
  */
-async function assertAdmin(
+export async function assertAdmin(
 	firestore: Firestore,
 	statementId: string,
 	userId: string,
