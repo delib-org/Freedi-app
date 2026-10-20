@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import type { SurveyExplanationPage } from '@freedi/shared-types';
 import MarkdownRenderer from '../shared/MarkdownRenderer';
+import { HERO_IMAGE_SIZES, isOptimizableImageUrl } from '@/lib/utils/imageOptimization';
 import styles from './Survey.module.scss';
 
 interface ExplanationPageBodyProps {
@@ -22,7 +23,8 @@ export default function ExplanationPageBody({ page }: ExplanationPageBodyProps) 
             fill
             className={styles.explanationHero}
             role="presentation"
-            unoptimized
+            sizes={HERO_IMAGE_SIZES}
+            unoptimized={!isOptimizableImageUrl(page.heroImageUrl)}
           />
         </div>
       )}
