@@ -17,12 +17,21 @@ import ValuesTab from './admin/ValuesTab';
 import IslandsTab from './admin/IslandsTab';
 import PartiesTab from './admin/PartiesTab';
 import AgoraTab from './admin/AgoraTab';
+import TranslationsTab from './admin/TranslationsTab';
 
 // Admin is its own chunk, so its strings ride with it instead of with every
 // player. Registered once, when the chunk loads.
 extendDictionaries({ he: adminHe, en: adminEn, ar: adminAr });
 
-const TAB_KEYS = ['texts', 'compass', 'values', 'islands', 'parties', 'agora'] as const;
+const TAB_KEYS = [
+	'texts',
+	'compass',
+	'values',
+	'islands',
+	'parties',
+	'agora',
+	'translations',
+] as const;
 
 type TabKey = (typeof TAB_KEYS)[number];
 
@@ -192,6 +201,9 @@ export default function Admin() {
 							gameId={gameId}
 							run={run}
 						/>
+					) : null}
+					{tab === 'translations' ? (
+						<TranslationsTab gameId={gameId} flash={flash} onTranslated={reload} />
 					) : null}
 				</div>
 			</div>
