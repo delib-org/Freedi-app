@@ -7,9 +7,12 @@ import {
 	NARROW_STAGE_WIDTH,
 	PARTICLES_ARRIVAL,
 	PARTICLES_SPARKLE,
+	STAGE_FONT,
 	STAGGER_FLAGS_MS,
 	STAGGER_LANTERN_MS,
 	TWEEN_SHIP_MS,
+	mirrorSign,
+	mirrorX,
 } from '../lib/stageConstants';
 import {
 	type FanFrame,
@@ -41,6 +44,13 @@ const HOMECOMING_FAN: FanFrame = { berth: 0.6, horizon: 0.27 };
 /** The band of the frame the visited islands are drawn in. */
 const ISLANDS_TOP = 0.04;
 const ISLANDS_HEIGHT = 0.2;
+/** Where the islands' band starts, leaving the lighthouse its corner. */
+const ISLANDS_INSET = 0.18;
+const ISLANDS_SQUEEZE = 0.7;
+/** The lighthouse corner, as composed (the far side from the harbor). */
+const LIGHTHOUSE_X = 0.06;
+/** How far the beam reaches from the lighthouse. */
+const BEAM_REACH = 260;
 export class HomecomingScene extends SeaScene {
 	private boat?: Phaser.GameObjects.Container;
 	private wake?: Phaser.GameObjects.Graphics;
@@ -84,8 +94,8 @@ export class HomecomingScene extends SeaScene {
 			const fan = seaFan(this.W, this.H, HOMECOMING_FAN);
 			this.moveBoat(this.boat, fan.cx, fan.cy);
 		}
-		this.lighthouse?.setPosition(this.W * 0.06, this.H * 0.3);
-		this.beam?.setPosition(this.W * 0.06, this.H * 0.26);
+		this.lighthouse?.setPosition(this.lighthouseX(), this.H * 0.3);
+		this.beam?.setPosition(this.lighthouseX(), this.H * 0.26);
 		this.positionIslands();
 		this.positionSailors();
 		this.applyShipLayout(false);
@@ -140,7 +150,7 @@ export class HomecomingScene extends SeaScene {
 				const lantern = this.add.image(0, -6, 'glow').setScale(0).setAlpha(0);
 				const label = this.add
 					.text(0, labelY, island.title, {
-						fontFamily: 'Arial',
+						fontFamily: STAGE_FONT,
 						fontSize: '12px',
 						color: '#fff4d3',
 						backgroundColor: 'rgba(6,26,48,0.85)',
@@ -183,10 +193,12 @@ export class HomecomingScene extends SeaScene {
 		visited.forEach((island, index) => {
 			const node = this.islandNodes[index];
 			if (!node) return;
-			const base = islandPosition(island.posX, island.posY, this.W, this.H);
+			// Laid out in the chart's own (RTL) frame and mirrored as a whole, so
+			// the band keeps clear of the lighthouse whichever corner it is in.
+			const base = islandPosition(island.posX, island.posY, this.W, this.H, 'rtl');
 			// compress the chart into the upper band so the DOM sections scroll below
 			node.setPosition(
-				this.W * 0.18 + base.x * 0.7,
+				mirrorX(this.W * ISLANDS_INSET + base.x * ISLANDS_SQUEEZE, this.W),
 				this.H * ISLANDS_TOP + (base.y / this.H) * this.H * ISLANDS_HEIGHT,
 			);
 			// same atmospheric perspective as the chart, gentler at tableau size
@@ -304,16 +316,24 @@ export class HomecomingScene extends SeaScene {
 		});
 	}
 
+	private lighthouseX(): number {
+		return mirrorX(this.W * LIGHTHOUSE_X, this.W);
+	}
+
 	private buildLighthouse(): void {
-		this.lighthouse = this.add.image(this.W * 0.06, this.H * 0.3, 'lighthouse').setDepth(25);
+		const x = this.lighthouseX();
+		this.lighthouse = this.add.image(x, this.H * 0.3, 'lighthouse').setDepth(25);
 		this.add
-			.image(this.W * 0.06, this.H * 0.22, 'glow')
+			.image(x, this.H * 0.22, 'glow')
 			.setScale(1.6)
 			.setAlpha(0.9)
 			.setDepth(24);
+		// The beam sweeps inward from its corner: drawn pointing +x, and flipped
+		// about its origin when the lighthouse stands on the other side.
 		this.beam = this.add
-			.triangle(this.W * 0.06, this.H * 0.26, 0, 0, 260, -34, 260, 34, 0xfff4d3, 0.12)
+			.triangle(x, this.H * 0.26, 0, 0, BEAM_REACH, -34, BEAM_REACH, 34, 0xfff4d3, 0.12)
 			.setOrigin(0, 0.5)
+			.setScale(mirrorSign(), 1)
 			.setDepth(23);
 		if (!this.reducedMotion) {
 			this.tweens.add({
@@ -336,7 +356,7 @@ export class HomecomingScene extends SeaScene {
 		const flags = Math.min(islandCount, 8);
 		for (let i = 0; i < flags; i++) {
 			const flag = this.add
-				.image(this.boat.x + 14, this.boat.y - 30, 'flag')
+				.image(this.boat.x + mirrorSign() * 14, this.boat.y - 30, 'flag')
 				.setTint(0xfff4d3)
 				.setAlpha(0)
 				.setDepth(110);
@@ -366,7 +386,7 @@ export class HomecomingScene extends SeaScene {
 		if (this.reducedMotion) return;
 		this.tweens.add({
 			targets: this.boat,
-			x: this.lighthouse.x + 60,
+			x: this.lighthouse.x + mirrorSign() * 60,
 			y: this.lighthouse.y + 60,
 			duration: 1000,
 			ease: 'Sine.inOut',

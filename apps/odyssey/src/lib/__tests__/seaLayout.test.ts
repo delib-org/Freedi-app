@@ -134,12 +134,26 @@ describe('the fan', () => {
 	});
 
 	it('fixes the lane by index, never by distance', () => {
-		expect(fanAngle(1, 3)).toBe(fanAngle(1, 3));
-		expect(fanAngle(0, 3)).toBeGreaterThan(fanAngle(2, 3));
+		expect(fanAngle(1, 3, 'rtl')).toBe(fanAngle(1, 3, 'rtl'));
+		expect(fanAngle(0, 3, 'rtl')).toBeGreaterThan(fanAngle(2, 3, 'rtl'));
 		// lane 0 is the rightmost: a Hebrew reader starts on the right
-		expect(partyShipPlacement(0.5, 0, 3, W, H).x).toBeGreaterThan(
-			partyShipPlacement(0.5, 2, 3, W, H).x,
+		expect(partyShipPlacement(0.5, 0, 3, W, H, {}, 'rtl').x).toBeGreaterThan(
+			partyShipPlacement(0.5, 2, 3, W, H, {}, 'rtl').x,
 		);
+	});
+
+	it('mirrors the lanes for a left-to-right reader, keeping every ring', () => {
+		// lane 0 is the leftmost: an English reader starts on the left
+		expect(partyShipPlacement(0.5, 0, 3, W, H, {}, 'ltr').x).toBeLessThan(
+			partyShipPlacement(0.5, 2, 3, W, H, {}, 'ltr').x,
+		);
+		const rtl = partyShipPlacement(0.5, 0, 3, W, H, {}, 'rtl');
+		const ltr = partyShipPlacement(0.5, 0, 3, W, H, {}, 'ltr');
+		// the same ship, the same distance: mirror image across the berth
+		expect(ltr.x).toBeCloseTo(W - rtl.x, 5);
+		expect(ltr.y).toBeCloseTo(rtl.y, 5);
+		expect(ltr.scale).toBe(rtl.scale);
+		expect(ltr.alpha).toBe(rtl.alpha);
 	});
 
 	it('keeps the whole fan on screen', () => {

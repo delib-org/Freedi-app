@@ -1,7 +1,20 @@
+import { getDir } from '../i18n/i18n';
+
 /**
  * Pure layout math for the sea stage — extracted from PartySea so scenes and
  * tests share one source of truth (docs/phaser-game-design.md §6).
+ *
+ * The sea was composed for a right-to-left reader. Every function that places
+ * something by its horizontal order takes a `dir` and mirrors for 'ltr'; the
+ * default reads the current language, so scenes need pass nothing, and tests
+ * pass it explicitly.
  */
+
+export type StageDir = 'rtl' | 'ltr';
+
+function mirror(x: number, width: number, dir: StageDir): number {
+	return dir === 'ltr' ? width - x : x;
+}
 
 export interface ShipPlacement {
 	x: number;
@@ -46,7 +59,8 @@ function clamp01(value: number): number {
 
 /**
  * Island position on the chart. Admin data stores `posX` as percent from the
- * RIGHT edge (the DOM version used `right: posX%`), so Phaser x flips it.
+ * RIGHT edge (the DOM version used `right: posX%`), so Phaser x flips it —
+ * and flips it back for a left-to-right reader, whose harbor is on the left.
  * The archipelago is kept together: posY maps into the sea band (never onto
  * the horizon), and far rows pull toward the center like a receding seascape.
  */
@@ -55,13 +69,14 @@ export function islandPosition(
 	posY: number,
 	width: number,
 	height: number,
+	dir: StageDir = getDir(),
 ): { x: number; y: number } {
 	const t = clamp01(posY / 100);
 	const xRaw = width * (1 - posX / 100);
 	const squeeze = FAR_SQUEEZE + (1 - FAR_SQUEEZE) * t;
 
 	return {
-		x: width / 2 + (xRaw - width / 2) * squeeze,
+		x: mirror(width / 2 + (xRaw - width / 2) * squeeze, width, dir),
 		y: height * (CHART_TOP + (CHART_BOTTOM - CHART_TOP) * t),
 	};
 }
@@ -90,18 +105,20 @@ export function dayPhaseForIsland(index: number, count: number): number {
 	return 0.45 + 0.35 * t;
 }
 
-/** Fellow-sailor glyph placement: even x spread, y by distance band. */
+/** Fellow-sailor glyph placement: even x spread in reading order, y by
+ *  distance band. */
 export function sailorPlacement(
 	distance: number,
 	index: number,
 	count: number,
 	width: number,
 	height: number,
+	dir: StageDir = getDir(),
 ): { x: number; y: number } {
 	const safeCount = Math.max(1, count);
 
 	return {
-		x: width * (0.15 + (0.7 * (index + 0.5)) / safeCount),
+		x: mirror(width * (0.15 + (0.7 * (index + 0.5)) / safeCount), width, dir),
 		y: height * (0.2 + 0.5 * (1 - Math.min(1, Math.max(0, distance)))),
 	};
 }
@@ -152,12 +169,13 @@ export function seaFan(width: number, height: number, frame: FanFrame = {}): Sea
 	return { cx: width / 2, cy, rx: width * 0.4, ry: cy - height * (frame.horizon ?? FAN_HORIZON) };
 }
 
-/** A ship's lane, by index only. Lane 0 is the rightmost — this is a Hebrew
- *  game and the eye starts on the right. */
-export function fanAngle(index: number, count: number): number {
+/** A ship's lane, by index only. Lane 0 is where the eye starts: the
+ *  rightmost for a Hebrew or Arabic reader, the leftmost in English. */
+export function fanAngle(index: number, count: number, dir: StageDir = getDir()): number {
 	const safeCount = Math.max(1, count);
+	const angle = FAN_SPREAD / 2 - (FAN_SPREAD * (index + 0.5)) / safeCount;
 
-	return FAN_SPREAD / 2 - (FAN_SPREAD * (index + 0.5)) / safeCount;
+	return dir === 'ltr' ? -angle : angle;
 }
 
 /** The ring a distance sits on, as a fraction of the outermost ring. */
@@ -177,11 +195,12 @@ export function partyShipPlacement(
 	width: number,
 	height: number,
 	frame: FanFrame = {},
+	dir: StageDir = getDir(),
 ): ShipPlacement {
 	const value = distance ?? 0.9;
 	const fan = seaFan(width, height, frame);
 	const ring = ringOf(value);
-	const angle = fanAngle(index, count);
+	const angle = fanAngle(index, count, dir);
 
 	return {
 		x: fan.cx + Math.sin(angle) * fan.rx * ring,

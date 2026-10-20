@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
-import { COLOR_CREAM, COLOR_CYAN, COLOR_GOLD } from '../lib/stageConstants';
+import { COLOR_CREAM, COLOR_CYAN, COLOR_GOLD, STAGE_FONT, mirrorX } from '../lib/stageConstants';
 import { islandDepth, islandPosition } from '../lib/seaLayout';
 import { stageBus, type StageCommand, type StageIsland } from '../lib/stageBus';
+import { t } from '../i18n/i18n';
 import { stageState } from './stageState';
 import { SeaScene } from './SeaScene';
 
@@ -56,9 +57,9 @@ export class ChartScene extends SeaScene {
 		this.nodes = [];
 		this.frame = this.add.graphics().setDepth(-10);
 		this.route = this.add.graphics().setDepth(20);
-		this.castle = this.glyph(this.W * 0.08, this.H * 0.12, '🏰', 28).setDepth(30);
-		this.castleLabel = this.hebrewLabel(this.W * 0.08, this.H * 0.12 + 30, 'ממלכת ההגעה', 13);
-		this.boat = this.spawnBoat(this.W * 0.9, this.H * 0.86, 0.1);
+		this.castle = this.glyph(this.castleX(), this.H * 0.12, '🏰', 28).setDepth(30);
+		this.castleLabel = this.textLabel(this.castleX(), this.H * 0.12 + 30, t('stage.castle'), 13);
+		this.boat = this.spawnBoat(this.harborX(), this.harborY(), 0.1);
 		this.drawFrame();
 		this.buildIslands();
 		this.drawRoute();
@@ -78,9 +79,9 @@ export class ChartScene extends SeaScene {
 
 	protected layout(): void {
 		this.drawFrame();
-		this.castle?.setPosition(this.W * 0.08, this.H * 0.12);
-		this.castleLabel?.setPosition(this.W * 0.08, this.H * 0.12 + 30);
-		if (this.boat) this.moveBoat(this.boat, this.W * 0.9, this.H * 0.86);
+		this.castle?.setPosition(this.castleX(), this.H * 0.12);
+		this.castleLabel?.setPosition(this.castleX(), this.H * 0.12 + 30);
+		if (this.boat) this.moveBoat(this.boat, this.harborX(), this.harborY());
 		for (const node of this.nodes) {
 			const { x, y } = islandPosition(node.island.posX, node.island.posY, this.W, this.H);
 			node.container.setPosition(x, y);
@@ -106,6 +107,20 @@ export class ChartScene extends SeaScene {
 		}
 	}
 
+	/** The harbor corner the voyage leaves from — bottom right as composed,
+	 *  bottom left for a left-to-right reader; the castle sits across from it. */
+	private harborX(): number {
+		return mirrorX(this.W * 0.9, this.W);
+	}
+
+	private harborY(): number {
+		return this.H * 0.86;
+	}
+
+	private castleX(): number {
+		return mirrorX(this.W * 0.08, this.W);
+	}
+
 	private drawFrame(): void {
 		if (!this.frame) return;
 		this.frame.clear();
@@ -120,7 +135,7 @@ export class ChartScene extends SeaScene {
 			{ x: 0, y: this.H * 0.5 },
 			{ x: this.W * 0.25, y: 0 },
 		]) {
-			this.frame.lineBetween(this.W * 0.9, this.H * 0.86, target.x, target.y);
+			this.frame.lineBetween(this.harborX(), this.harborY(), mirrorX(target.x, this.W), target.y);
 		}
 	}
 
@@ -151,7 +166,7 @@ export class ChartScene extends SeaScene {
 				const disc = this.add.image(0, 0, 'disc');
 				const indexText = this.add
 					.text(0, 0, String(index + 1), {
-						fontFamily: 'Arial',
+						fontFamily: STAGE_FONT,
 						fontSize: '22px',
 						color: '#fff4d3',
 						fontStyle: 'bold',
@@ -191,7 +206,7 @@ export class ChartScene extends SeaScene {
 			 */
 			const title = this.add
 				.text(0, 0, island.title, {
-					fontFamily: 'Arial',
+					fontFamily: STAGE_FONT,
 					fontSize: '13px',
 					color: '#fff4d3',
 					backgroundColor: 'rgba(6,26,48,0.92)',
@@ -201,7 +216,7 @@ export class ChartScene extends SeaScene {
 				.setOrigin(0.5, 0);
 			const subtitle = this.add
 				.text(0, title.height + 2, island.issue, {
-					fontFamily: 'Arial',
+					fontFamily: STAGE_FONT,
 					fontSize: '11px',
 					color: '#cfe6f5',
 					backgroundColor: 'rgba(6,26,48,0.92)',
@@ -303,8 +318,8 @@ export class ChartScene extends SeaScene {
 					},
 				});
 				const angle = Phaser.Math.Angle.Between(
-					this.W * 0.9,
-					this.H * 0.86,
+					this.harborX(),
+					this.harborY(),
 					node.container.x,
 					node.container.y,
 				);
@@ -348,7 +363,7 @@ export class ChartScene extends SeaScene {
 	private drawRoute(): void {
 		if (!this.route) return;
 		this.route.clear();
-		const points: Phaser.Math.Vector2[] = [new Phaser.Math.Vector2(this.W * 0.9, this.H * 0.86)];
+		const points: Phaser.Math.Vector2[] = [new Phaser.Math.Vector2(this.harborX(), this.harborY())];
 		for (const id of stageState.selection) {
 			const node = this.nodes.find((candidate) => candidate.island.id === id);
 			if (node) points.push(new Phaser.Math.Vector2(node.container.x, node.container.y));

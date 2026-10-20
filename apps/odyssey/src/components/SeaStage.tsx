@@ -31,8 +31,10 @@ export default function SeaStage() {
 		let cancelled = false;
 		let game: Phaser.Game | undefined;
 
-		void import('../game/createStage')
-			.then(({ createStage }) => {
+		// Canvas text is painted once, at create(): a web font (Noto Sans Arabic)
+		// that lands afterwards would never reach it, so the fonts come first.
+		void Promise.all([import('../game/createStage'), document.fonts.ready])
+			.then(([{ createStage }]) => {
 				if (cancelled || !host.current) return;
 				game = createStage(host.current);
 			})
