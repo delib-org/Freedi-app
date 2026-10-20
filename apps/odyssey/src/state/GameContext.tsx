@@ -53,7 +53,7 @@ import { attitudeValue, loadGameEvaluations, myAttitudes, rateStance } from '../
 import { loadJourney, saveJourney } from '../lib/journey';
 import type { AttitudeMap } from '../lib/distance';
 import { toFreediUser, useUser } from '../lib/user';
-import { DEFAULT_TEXTS } from '../lib/defaults';
+import { DEFAULT_TEXTS } from '../lib/defaultTexts';
 
 interface GameState {
 	/** true while auth or the initial game load is in flight */
