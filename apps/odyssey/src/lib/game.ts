@@ -31,6 +31,18 @@ export interface GameContent {
 	islands: IslandContent[];
 }
 
+/**
+ * Only the game's screen texts — what a signed-out visitor needs for the
+ * intro, in one document read instead of the whole statement tree.
+ */
+export async function loadGameTexts(
+	gameId: string = ODYSSEY_DEFAULT_GAME_ID,
+): Promise<Record<string, string> | null> {
+	const gameSnap = await getDoc(doc(db, Collections.odysseyGames, gameId));
+
+	return gameSnap.exists() ? (gameSnap.data() as OdysseyGame).texts : null;
+}
+
 export async function loadGame(
 	gameId: string = ODYSSEY_DEFAULT_GAME_ID,
 ): Promise<GameContent | null> {

@@ -11,6 +11,8 @@ const he: Record<string, string> = {
 	'lang.switch': 'שפה',
 	'app.loading': 'מרימים את המפרשים…',
 
+	// Joins short lists (chips, values). Arabic takes its own comma.
+	'common.listSeparator': ', ',
 	'common.close': 'סגירה',
 	'common.saving': 'שומר…',
 	'common.sailing': 'מפליגים…',

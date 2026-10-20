@@ -54,10 +54,10 @@ export function currentGameId(): string {
 		return ODYSSEY_DEFAULT_GAME_ID;
 	}
 }
-import { GameContent, loadGame, loadTranslation } from '../lib/game';
+import { GameContent, loadGame, loadGameTexts, loadTranslation } from '../lib/game';
 import { attitudeValue, loadGameEvaluations, myAttitudes, rateStance } from '../lib/evaluations';
 import { loadJourney, saveJourney } from '../lib/journey';
-import { localizeGame, siblingChip } from '../lib/localizeGame';
+import { localizeGame, localizeTexts, siblingChip } from '../lib/localizeGame';
 import type { AttitudeMap } from '../lib/distance';
 import { toFreediUser, useUser } from '../lib/user';
 import { DEFAULT_TEXTS } from '../lib/defaultTexts';
@@ -105,6 +105,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
 	const [journey, setJourney] = useState<OdysseyJourney | null>(null);
 	const [journeyPersisted, setJourneyPersisted] = useState(false);
 	const [attitudes, setAttitudes] = useState<AttitudeMap>({});
+	/** Screen texts for a signed-out visitor (the intro), from the game doc. */
+	const [guestTexts, setGuestTexts] = useState<Record<string, string> | null>(null);
 	// The language listener outlives any render; it reads the latest journey
 	// from here rather than from a closure that saw an older one.
 	const journeyRef = useRef<{ journey: OdysseyJourney | null; persisted: boolean }>({
@@ -120,14 +122,35 @@ export function GameProvider({ children }: { children: ReactNode }) {
 		[canonicalContent, translation],
 	);
 
+	// What text() reads: the full localized game once signed in; before that,
+	// just the game's texts with their overlay — so an English or Arabic
+	// visitor's intro is not in Hebrew.
+	const screenTexts = useMemo(
+		() =>
+			content?.game.texts ?? (guestTexts ? localizeTexts(guestTexts, translation?.texts) : null),
+		[content, guestTexts, translation],
+	);
+
 	const reload = useCallback(async () => {
 		if (!user) {
 			setCanonicalContent(null);
-			setTranslation(null);
 			setJourney(null);
 			setJourneyPersisted(false);
 			setAttitudes({});
 			setLoading(false);
+			try {
+				const gameId = currentGameId();
+				const requestId = ++translationRequest.current;
+				const [texts, loadedTranslation] = await Promise.all([
+					loadGameTexts(gameId),
+					loadTranslation(gameId, getLang()),
+				]);
+				setGuestTexts(texts);
+				if (requestId === translationRequest.current) setTranslation(loadedTranslation);
+			} catch (error) {
+				// The intro still reads, from DEFAULT_TEXTS.
+				console.error('[Odyssey] could not load the intro texts:', error);
+			}
 
 			return;
 		}
@@ -199,7 +222,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 			journey,
 			attitudes,
 			text(key: string): string {
-				return content?.game.texts[key] ?? DEFAULT_TEXTS[key] ?? '';
+				return screenTexts?.[key] ?? DEFAULT_TEXTS[key] ?? '';
 			},
 			async updateJourney(patch: Partial<OdysseyJourney>): Promise<void> {
 				if (!journey) return;
@@ -253,7 +276,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
 			},
 			reload,
 		}),
-		[authLoading, loading, content, canonicalContent, lang, journey, attitudes, user, reload],
+		[
+			authLoading,
+			loading,
+			content,
+			canonicalContent,
+			lang,
+			journey,
+			attitudes,
+			user,
+			reload,
+			screenTexts,
+		],
 	);
 
 	return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

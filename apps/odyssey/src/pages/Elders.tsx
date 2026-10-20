@@ -145,7 +145,7 @@ export default function Elders() {
 
 	/** The three keywords under the name — the elder's own values, verbatim. */
 	function keywords(elder: OdysseyElder): string {
-		return elder.values.map((value) => value.label).join(', ');
+		return elder.values.map((value) => value.label).join(t('common.listSeparator'));
 	}
 
 	const rangeText = limits.min === limits.max ? `${limits.min}` : `${limits.min}–${limits.max}`;

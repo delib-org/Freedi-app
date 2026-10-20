@@ -36,7 +36,7 @@ function pickList(
 	return canonical.map((item, index) => pick(translated?.[index], item));
 }
 
-function localizeTexts(
+export function localizeTexts(
 	texts: Record<string, string>,
 	translation: Record<string, string> | undefined,
 ): Record<string, string> {

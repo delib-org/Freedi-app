@@ -374,7 +374,9 @@ export default function Summary() {
 									{/* chips are stored canonical (Hebrew); shown in the reader's language */}
 									{[
 										entry.answer,
-										entry.chips.map((chip) => displayChip(question.questionId, chip)).join(', '),
+										entry.chips
+											.map((chip) => displayChip(question.questionId, chip))
+											.join(t('common.listSeparator')),
 									]
 										.filter(Boolean)
 										.join(' · ')}
