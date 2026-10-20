@@ -94,9 +94,11 @@ export async function updateParentStatementWithChosenOptions(
 		const nextResults = chosen.map(statementToSimpleStatement);
 		if (resultsUnchanged(parentStatement, nextResults)) return;
 
+		// lastUpdate moves with a real results change so delta listeners deliver it.
 		await db.collection(Collections.statements).doc(parentId).update({
 			totalResults: nextResults.length,
 			results: nextResults,
+			lastUpdate: Date.now(),
 		});
 	} catch (error) {
 		logError(error, {
@@ -129,6 +131,7 @@ async function loadCurrentlyChosenIds(parentId: string): Promise<string[]> {
 
 async function applyChosenDiff({ toUnchoose, toChoose }: ChosenDiff): Promise<void> {
 	const statementsRef = db.collection(Collections.statements);
+	const lastUpdate = Date.now();
 	const writes: Array<{ id: string; isChosen: boolean }> = [
 		...toUnchoose.map((id) => ({ id, isChosen: false })),
 		...toChoose.map((id) => ({ id, isChosen: true })),
@@ -137,7 +140,7 @@ async function applyChosenDiff({ toUnchoose, toChoose }: ChosenDiff): Promise<vo
 	for (let start = 0; start < writes.length; start += BATCH_WRITE_LIMIT) {
 		const batch = db.batch();
 		writes.slice(start, start + BATCH_WRITE_LIMIT).forEach(({ id, isChosen }) => {
-			batch.update(statementsRef.doc(id), { isChosen });
+			batch.update(statementsRef.doc(id), { isChosen, lastUpdate });
 		});
 		await batch.commit();
 	}

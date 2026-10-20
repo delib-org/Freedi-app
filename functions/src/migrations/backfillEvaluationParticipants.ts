@@ -21,8 +21,8 @@ import { Collections, Evaluation, Statement } from '@freedi/shared-types';
 import type { EvaluationParticipant } from '@freedi/shared-types';
 import {
 	PARTICIPANT_PAGE_SIZE,
-	buildCounterPatch,
 	participantRef,
+	syncCountFromMarkers,
 } from '../evaluation/evaluatorParticipationCore';
 
 /** gRPC code for ALREADY_EXISTS - the marker is already there, which is the goal. */
@@ -108,23 +108,25 @@ export async function syncParentCountsPage(
 
 	let parentsUpdated = 0;
 	for (const parentId of parentIds) {
-		const parentRef = firestore.collection(Collections.statements).doc(parentId);
-		const parentDoc = await parentRef.get();
+		if (execute) {
+			const { changed } = await syncCountFromMarkers(firestore, parentId);
+			if (changed) parentsUpdated++;
+			continue;
+		}
+
+		// Dry run: report what would change, write nothing.
+		const parentDoc = await firestore.collection(Collections.statements).doc(parentId).get();
 		if (!parentDoc.exists) continue;
 		const parent = parentDoc.data() as Statement;
-
 		const countSnapshot = await firestore
 			.collection(Collections.evaluationParticipants)
 			.where('parentId', '==', parentId)
 			.count()
 			.get();
 		const count = countSnapshot.data().count;
-
-		const inSync =
-			parent.evaluation?.asParentTotalEvaluators === count && parent.totalEvaluators === count;
-		if (inSync) continue;
-		parentsUpdated++;
-		if (execute) await parentRef.update(buildCounterPatch(parent, count));
+		if (parent.evaluation?.asParentTotalEvaluators !== count || parent.totalEvaluators !== count) {
+			parentsUpdated++;
+		}
 	}
 
 	return {

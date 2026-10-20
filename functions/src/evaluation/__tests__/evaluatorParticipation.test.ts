@@ -64,10 +64,19 @@ describe('recordEvaluatorParticipation', () => {
 		});
 	});
 
-	it('does not bump the question lastUpdate (no statement-update fan-out for a counter)', async () => {
+	it('advances the question lastUpdate when the count changes (delta listeners see it)', async () => {
 		await recordEvaluatorParticipation(QUESTION, 'alice', fsAny);
 
-		expect(mockFake.peek(`statements/${QUESTION}`)?.lastUpdate).toBe(111);
+		expect(mockFake.peek(`statements/${QUESTION}`)?.lastUpdate).toBeGreaterThan(111);
+	});
+
+	it('leaves lastUpdate untouched when the user was already counted', async () => {
+		await recordEvaluatorParticipation(QUESTION, 'alice', fsAny);
+		const stamped = mockFake.peek(`statements/${QUESTION}`)?.lastUpdate;
+
+		await recordEvaluatorParticipation(QUESTION, 'alice', fsAny);
+
+		expect(mockFake.peek(`statements/${QUESTION}`)?.lastUpdate).toBe(stamped);
 	});
 
 	it('counts a user once however many times the event repeats (duplicate / out-of-order)', async () => {
@@ -163,6 +172,24 @@ describe('reconcileParentEvaluators', () => {
 		await reconcileParentEvaluators(QUESTION, fsAny);
 
 		expect(mockFake.writeLog).toEqual([]);
+	});
+
+	it('stamps lastUpdate when the recount changes the count, and only then', async () => {
+		seedEvaluation('e1', 'alice');
+		await reconcileParentEvaluators(QUESTION, fsAny);
+		expect(mockFake.peek(`statements/${QUESTION}`)?.lastUpdate).toBeGreaterThan(111);
+	});
+
+	it('does not clobber a first evaluation that lands during the final count write', async () => {
+		seedEvaluation('e1', 'alice');
+		const [, recorded] = await Promise.all([
+			reconcileParentEvaluators(QUESTION, fsAny),
+			recordEvaluatorParticipation(QUESTION, 'bob', fsAny),
+		]);
+
+		expect(recorded).toBe(true);
+		expect(mockFake.list('evaluationParticipants')).toHaveLength(2);
+		expect(countOf()).toBe(2);
 	});
 
 	it('throws for an unknown question', async () => {

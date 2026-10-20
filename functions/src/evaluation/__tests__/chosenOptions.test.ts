@@ -273,6 +273,30 @@ describe('diff writes', () => {
 		expect(mockFake.writeLog).toEqual([`update statements/${Q}`]);
 	});
 
+	it('advances lastUpdate on the question and on flipped options only, never otherwise', async () => {
+		let clock = 1_800_000_000_000;
+		const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => (clock += 10));
+		await updateParentStatementWithChosenOptions(Q);
+		const stamp = (id: string): unknown => mockFake.peek(`statements/${id}`)?.lastUpdate;
+		const before = { q: stamp(Q), o001: stamp('o001'), o002: stamp('o002'), o003: stamp('o003') };
+
+		// nothing changed: nothing moves
+		await updateParentStatementWithChosenOptions(Q);
+		expect(stamp(Q)).toBe(before.q);
+		expect(stamp('o003')).toBe(before.o003);
+
+		// o003 overtakes o002: question results change, o002 and o003 flip, o001 untouched
+		mockFake.seed('statements/o003', optionDoc(3, { consensus: 0.95 }));
+		const o003Seeded = stamp('o003');
+		await updateParentStatementWithChosenOptions(Q);
+
+		expect(stamp(Q) as number).toBeGreaterThan(before.q as number);
+		expect(stamp('o003') as number).toBeGreaterThan(o003Seeded as number);
+		expect(stamp('o002') as number).toBeGreaterThan(before.o002 as number);
+		expect(stamp('o001')).toBe(before.o001);
+		nowSpy.mockRestore();
+	});
+
 	it('ignores a bare lastUpdate bump on a chosen option', async () => {
 		await updateParentStatementWithChosenOptions(Q);
 		mockFake.seed(

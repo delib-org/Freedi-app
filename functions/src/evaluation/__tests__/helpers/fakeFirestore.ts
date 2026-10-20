@@ -186,6 +186,12 @@ export class FakeDocRef {
 	}
 }
 
+export interface AggregateQuery {
+	isAggregate: true;
+	run: () => { data: () => { count: number } };
+	get: () => Promise<{ data: () => { count: number } }>;
+}
+
 type Filter = { field: string; value: unknown };
 
 class FakeCollection {
@@ -268,8 +274,16 @@ class FakeCollection {
 		};
 	}
 
-	count(): { get: () => Promise<{ data: () => { count: number } }> } {
+	count(): AggregateQuery {
 		return {
+			isAggregate: true,
+			run: () => {
+				this.fs.counts.queries++;
+				const total = this.matching().length;
+				this.fs.counts.reads += Math.max(1, Math.ceil(total / COUNT_READS_PER));
+
+				return { data: () => ({ count: total }) };
+			},
 			get: async () => {
 				this.fs.counts.queries++;
 				const total = this.matching().length;
@@ -326,7 +340,10 @@ export class FakeTransaction {
 
 	constructor(private readonly fs: FakeFirestore) {}
 
-	async get(ref: FakeDocRef): Promise<FakeSnapshot> {
+	async get(
+		ref: FakeDocRef | AggregateQuery,
+	): Promise<FakeSnapshot | { data: () => { count: number } }> {
+		if ('isAggregate' in ref) return ref.run();
 		const stored = this.fs.rawGet(ref.path);
 		this.fs.counts.reads++;
 		this.reads.set(ref.path, stored?.version ?? 0);

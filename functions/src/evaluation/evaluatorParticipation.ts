@@ -15,9 +15,9 @@
  * - A neutral evaluation (value 0) is participation and counts.
  * - Once counted a participant stays counted: deleting evaluations never
  *   decrements (agreed behaviour change vs. the old scan).
- * - The question's `lastUpdate` is deliberately NOT bumped: it is a content
- *   timestamp, and bumping it would fire the statement-update fan-out for a
- *   counter change that no listener needs ordered by lastUpdate.
+ * - A real count change also stamps the question's `lastUpdate` (same write),
+ *   because delta listeners (`lastUpdate > watermark`) are the only live
+ *   channel for bulk-loaded scopes. No change, no write, no stamp.
  *
  * `reconcileParentEvaluators` is the explicit, on-demand full recount. Full
  * scans never run in ordinary evaluation processing.
@@ -34,6 +34,7 @@ import {
 	PARTICIPANT_PAGE_SIZE,
 	buildCounterPatch,
 	participantRef,
+	syncCountFromMarkers,
 } from './evaluatorParticipationCore';
 
 export interface ReconcileResult {
@@ -175,11 +176,9 @@ export async function reconcileParentEvaluators(
 	});
 	await commitInChunks(firestore, operations);
 
-	const count = evaluatorIds.size;
+	// Markers now mirror the evaluations; set the count from them atomically.
+	const { count } = await syncCountFromMarkers(firestore, parentId);
 	const previousCount = parent.evaluation?.asParentTotalEvaluators ?? parent.totalEvaluators ?? 0;
-	const inSync =
-		parent.evaluation?.asParentTotalEvaluators === count && parent.totalEvaluators === count;
-	if (!inSync) await parentRef.update(buildCounterPatch(parent, count));
 
 	logger.info(
 		`reconcileParentEvaluators ${parentId}: ${previousCount} -> ${count} (+${created} / -${removed} markers)`,

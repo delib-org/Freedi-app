@@ -34,14 +34,20 @@ export function buildEmptyStatementEvaluation(): StatementEvaluation {
 
 /**
  * The parent patch for "count is now `count`" (absolute number) or "+1"
- * (FieldValue.increment). Never touches `lastUpdate`.
+ * (FieldValue.increment). Always stamps `lastUpdate`: callers write it only
+ * when the count really changes.
  */
 export function buildCounterPatch(
 	parent: Statement,
 	count: number | FieldValue,
 ): Record<string, unknown> {
+	// `lastUpdate` moves with a real count change so delta listeners
+	// (`where lastUpdate > watermark`, the only live channel for bulk-loaded
+	// scopes) deliver the new count.
+	const lastUpdate = Date.now();
+
 	if (parent.evaluation) {
-		return { 'evaluation.asParentTotalEvaluators': count, totalEvaluators: count };
+		return { 'evaluation.asParentTotalEvaluators': count, totalEvaluators: count, lastUpdate };
 	}
 
 	// No evaluation map yet: create a complete one so strict parsers still accept it.
@@ -50,6 +56,7 @@ export function buildCounterPatch(
 	return {
 		evaluation: { ...buildEmptyStatementEvaluation(), asParentTotalEvaluators: asNumber },
 		totalEvaluators: count,
+		lastUpdate,
 	};
 }
 
@@ -61,4 +68,35 @@ export function participantRef(
 	return firestore
 		.collection(Collections.evaluationParticipants)
 		.doc(getEvaluationParticipantId(parentId, userId));
+}
+
+/**
+ * Sets a question's counters to the number of its markers, atomically: the
+ * marker count and the question are read inside one transaction, so a
+ * concurrent first evaluation (which writes the question) cannot be
+ * overwritten with a stale count. Writes only if the stored count differs.
+ */
+export async function syncCountFromMarkers(
+	firestore: Firestore,
+	parentId: string,
+): Promise<{ count: number; changed: boolean }> {
+	const parentRef = firestore.collection(Collections.statements).doc(parentId);
+	const markers = firestore
+		.collection(Collections.evaluationParticipants)
+		.where('parentId', '==', parentId);
+
+	return firestore.runTransaction(async (transaction) => {
+		const parentDoc = await transaction.get(parentRef);
+		const countSnapshot = await transaction.get(markers.count());
+		const count = countSnapshot.data().count;
+		if (!parentDoc.exists) return { count, changed: false };
+		const parent = parentDoc.data() as Statement;
+
+		const inSync =
+			parent.evaluation?.asParentTotalEvaluators === count && parent.totalEvaluators === count;
+		if (inSync) return { count, changed: false };
+		transaction.update(parentRef, buildCounterPatch(parent, count));
+
+		return { count, changed: true };
+	});
 }
