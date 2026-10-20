@@ -56,6 +56,11 @@ const he: Record<string, string> = {
 	'intro.privacyNote':
 		'תשובות המצפן ויומן הקברניט פרטיים לכם. העמדות שתסמנו נראות למפליגים אחרים לצד השם הפרטי בלבד — לעולם לא המייל.',
 	'intro.privacyLink': 'מה נשמר ומי רואה מה',
+	'intro.signInFailed': 'ההתחברות לא הושלמה, ולכן עוד לא נכנסתם.',
+	'intro.signInRetry': 'לנסות שוב',
+	'intro.signInOrAnonymous': 'אפשר גם להמשיך בלי חשבון בלחיצה על הכפתור שלמעלה.',
+	'intro.signInInApp':
+		'נראה שהקישור נפתח בתוך דפדפן של אפליקציה אחרת. פתחו אותו ב-Safari או ב-Chrome ונסו שוב.',
 
 	// ---- compass ----
 	'compass.windCounter': 'רוח {{index}} מתוך {{total}}',

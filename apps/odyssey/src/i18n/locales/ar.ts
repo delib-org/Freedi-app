@@ -58,6 +58,11 @@ const ar: Record<string, string> = {
 	'intro.privacyNote':
 		'إجابات البوصلة ويوميّات الربّان خاصّة بكم. المواقف التي تحدّدونها تظهر للبحّارة الآخرين إلى جانب الاسم الأوّل فقط — لا البريد الإلكتروني أبدًا.',
 	'intro.privacyLink': 'ما الذي يُحفظ ومن يرى ماذا',
+	'intro.signInFailed': 'لم يكتمل تسجيل الدخول، لذا لم تدخلوا بعد.',
+	'intro.signInRetry': 'حاولوا مرة أخرى',
+	'intro.signInOrAnonymous': 'ويمكنكم أيضًا المتابعة بلا حساب بالضغط على الزرّ أعلاه.',
+	'intro.signInInApp':
+		'يبدو أنّ الرابط فُتح داخل متصفّح تطبيق آخر. افتحوه في Safari أو Chrome وحاولوا مرة أخرى.',
 
 	// ---- compass ----
 	'compass.windCounter': 'الريح {{index}} من {{total}}',

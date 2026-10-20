@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import GameChrome from '../components/GameChrome';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { logError } from '@freedi/shared-utils';
+import { classifySignInError, getErrorCode, isInAppBrowser } from '../lib/signInError';
 import { signInAnonymous, signInWithGoogle, useUser } from '../lib/user';
 import { useGame } from '../state/GameContext';
 import { useT } from '../i18n/useT';
@@ -20,13 +22,26 @@ export default function Intro() {
 	const { text } = useGame();
 	const { t } = useT();
 	const [boarding, setBoarding] = useState(false);
+	const [signInFailed, setSignInFailed] = useState(false);
 
 	async function board(method: 'google' | 'anonymous'): Promise<void> {
 		setBoarding(true);
+		setSignInFailed(false);
 		try {
 			await (method === 'google' ? signInWithGoogle() : signInAnonymous());
 		} catch (error) {
-			console.error('[Odyssey] Sign-in failed:', error);
+			// Closing the popup is the player's own choice; anything else leaves
+			// them on this screen with no account, so they are told what to do.
+			if (classifySignInError(error) === 'failed') {
+				setSignInFailed(true);
+				logError(error, {
+					operation: `odyssey.intro.signIn.${method}`,
+					metadata: {
+						code: getErrorCode(error),
+						inAppBrowser: isInAppBrowser(navigator.userAgent),
+					},
+				});
+			}
 		} finally {
 			setBoarding(false);
 		}
@@ -90,6 +105,27 @@ export default function Intro() {
 								{t('intro.anonymousButton')}
 							</button>
 							<p className="text-[13px] opacity-80 m-0 text-center">{t('intro.anonymousHint')}</p>
+
+							{signInFailed ? (
+								<div
+									role="alert"
+									className="flex flex-col items-center gap-2 w-full rounded-lg border border-[var(--gold-strong)] p-3 text-[14px] text-center"
+								>
+									<p className="m-0 text-[var(--cream)]">{t('intro.signInFailed')}</p>
+									{isInAppBrowser(navigator.userAgent) ? (
+										<p className="m-0">{t('intro.signInInApp')}</p>
+									) : null}
+									<p className="m-0 opacity-85">{t('intro.signInOrAnonymous')}</p>
+									<button
+										type="button"
+										className="btn-outline"
+										disabled={boarding}
+										onClick={() => void board('google')}
+									>
+										{t('intro.signInRetry')}
+									</button>
+								</div>
+							) : null}
 
 							<p className="text-[13px] opacity-85 m-0 text-center mt-1">
 								{t('intro.privacyNote')}{' '}
