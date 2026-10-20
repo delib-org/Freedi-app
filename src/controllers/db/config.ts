@@ -2,7 +2,6 @@
 import { initializeApp } from 'firebase/app';
 import {
 	browserLocalPersistence,
-	browserPopupRedirectResolver,
 	browserSessionPersistence,
 	connectAuthEmulator,
 	getAuth,
@@ -26,6 +25,7 @@ import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import firebaseConfig from './configKey';
 import { initializeFirebaseAppCheck } from './appCheck';
 import { hasPersistedFirebaseUser } from '@/utils/persistedAuthUser';
+import { warmPopupResolver } from '@/controllers/auth/popupResolver';
 import { logError } from '@/utils/errorHandling';
 import { TIME } from '@/constants/common';
 import {
@@ -169,39 +169,23 @@ export function handleFirestoreAssertionError(error: Error): void {
 }
 
 /**
- * Whether the auth instance was created with the popup/redirect resolver.
+ * Auth without a default popup/redirect resolver.
  *
- * `getAuth()` always attaches `browserPopupRedirectResolver`. On mobile
- * browsers and Safari that makes Auth load Google's gapi iframe (iframe.js,
- * ~93 KB, plus the /__/auth/iframe page) and WAIT for it before it even reads
- * the saved user, so a signed-in student on a phone waited for it before
- * onAuthStateChanged, and therefore before any Firestore listener.
- *
- * A signed-in visitor does not need the resolver to start, so it is left out
- * for them and passed explicitly to signInWithPopup() instead. A signed-out
- * visitor is about to sign in, and on mobile/Safari the popup must open within
- * the tap, which only works if the iframe is already warm - they keep the
- * default resolver, exactly as before.
+ * `getAuth()` attaches `browserPopupRedirectResolver`, and on mobile browsers
+ * and Safari Auth then loads Google's gapi iframe (iframe.js ~93 KB plus the
+ * /__/auth/iframe page) and WAITS for it before it even reads the saved user,
+ * i.e. before onAuthStateChanged and every Firestore listener. Popup sign-ins
+ * pass `popupResolver` explicitly instead, and the iframe is warmed beside
+ * startup rather than in front of it (see warmPopupIframe below).
  */
-let authHasPopupResolver = true;
-
-export function authNeedsReloadToSignInAgain(): boolean {
-	return !authHasPopupResolver;
-}
-
 function createAuth(firebaseApp: ReturnType<typeof initializeApp>): Auth {
-	const signedIn = hasPersistedFirebaseUser();
 	try {
-		const created = initializeAuth(firebaseApp, {
+		return initializeAuth(firebaseApp, {
 			// localStorage first: main.tsx reads it synchronously to route a
 			// returning user, and it is what setPersistence() used to migrate to.
 			// The rest match getAuth()'s defaults so any older session is found.
 			persistence: [browserLocalPersistence, indexedDBLocalPersistence, browserSessionPersistence],
-			popupRedirectResolver: signedIn ? undefined : browserPopupRedirectResolver,
 		});
-		authHasPopupResolver = !signedIn;
-
-		return created;
 	} catch (error) {
 		// Already initialized elsewhere (e.g. a getAuth() that ran first): reuse it.
 		logError(error, {
@@ -298,6 +282,20 @@ if (isProduction) {
 }
 
 /**
+ * Warm the popup iframe so a Google sign-in tap can open its popup at once
+ * (iOS Safari blocks popups opened after an await). A signed-out visitor is
+ * here to sign in: start now, in parallel - Auth no longer waits for it. A
+ * signed-in visitor (anonymous students may still tap "Sign in with Google")
+ * gets it after load + idle, off the path to their data.
+ */
+function warmPopupIframe(): void {
+	if (typeof window === 'undefined') return;
+	const warm = () => void warmPopupResolver(auth);
+	if (hasPersistedFirebaseUser()) afterLoadWhenIdle(warm);
+	else warm();
+}
+
+/**
  * Emulator ports.
  *
  * Hardcoded for years, which was fine until two checkouts wanted emulators at
@@ -365,6 +363,9 @@ if (!isProduction) {
 		});
 	}
 }
+
+// After the emulator hookup above: the iframe URL depends on it.
+warmPopupIframe();
 
 /**
  * Get the Firebase Functions URL based on the environment

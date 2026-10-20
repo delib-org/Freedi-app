@@ -1,10 +1,6 @@
-import {
-	GoogleAuthProvider,
-	browserPopupRedirectResolver,
-	signInWithPopup,
-	signInAnonymously,
-} from 'firebase/auth';
-import { auth, authNeedsReloadToSignInAgain } from './config';
+import { GoogleAuthProvider, signInWithPopup, signInAnonymously } from 'firebase/auth';
+import { auth } from './config';
+import { popupResolver, warmPopupResolver } from '@/controllers/auth/popupResolver';
 import { notificationService } from '@/services/notificationService';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
@@ -20,8 +16,8 @@ const CANCELLED_SIGN_IN_CODES = new Set([
 
 export function googleLogin() {
 	const provider = new GoogleAuthProvider();
-	// Explicit resolver: a session that started signed in has none by default.
-	signInWithPopup(auth, provider, browserPopupRedirectResolver)
+	// Auth has no default resolver (see config.ts); pass the warmed one.
+	signInWithPopup(auth, provider, popupResolver)
 		.then((result) => {
 			logger.info('User signed in with Google', { userId: result.user.uid });
 
@@ -67,19 +63,14 @@ export const logOut = async () => {
 		await auth.signOut();
 
 		// Clean up notifications in the background (non-blocking)
-		const cleanup = notificationService.cleanup().catch((error) => {
+		notificationService.cleanup().catch((error) => {
 			logger.error('Error cleaning up notifications', error);
 		});
 
 		logger.info('User logged out successfully');
 
-		// This page started signed in, so Auth was created without the popup
-		// resolver (see config.ts). On mobile/Safari the next Google sign-in
-		// popup would then be blocked, because the iframe it needs loads only
-		// after the tap. A fresh load starts signed out, with the resolver warm.
-		if (authNeedsReloadToSignInAgain()) {
-			void cleanup.finally(() => window.location.reload());
-		}
+		// The login screen comes next: make sure its Google popup is warm.
+		void warmPopupResolver(auth);
 	} catch (error) {
 		logger.error('Error during logout', error);
 	}

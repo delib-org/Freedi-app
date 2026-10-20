@@ -5,7 +5,6 @@
  */
 
 import {
-	browserPopupRedirectResolver,
 	signInAnonymously,
 	signInWithPopup,
 	GoogleAuthProvider,
@@ -15,6 +14,7 @@ import {
 	AuthCredential,
 } from 'firebase/auth';
 import { auth } from '@/controllers/db/config';
+import { popupResolver } from '@/controllers/auth/popupResolver';
 import { getAnonymousName } from '@/utils/temporalNameGenerator';
 import { setUserToDB } from '@/controllers/db/user/setUser';
 import { convertFirebaseUserToCreator } from '@/utils/userUtils';
@@ -42,7 +42,7 @@ async function trySilentGoogleSignIn(): Promise<boolean> {
 			login_hint: localStorage.getItem('lastGoogleEmail') || undefined,
 		});
 
-		const result = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
+		const result = await signInWithPopup(auth, provider, popupResolver);
 
 		// Store successful login info
 		localStorage.setItem('lastAuthProvider', 'google.com');
