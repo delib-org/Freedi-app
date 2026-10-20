@@ -9,10 +9,9 @@ import { Outlet, useLocation, useParams } from 'react-router';
 // Redux Store
 import HomeHeader from './HomeHeader';
 import AppThinkingSpace from '@/view/components/atomic/organisms/ThinkingSpace/AppThinkingSpace';
-import {
-	getNewStatementsFromSubscriptions,
-	listenToStatementSubscriptions,
-} from '@/controllers/db/subscriptions/getSubscriptions';
+import { getNewStatementsFromSubscriptions } from '@/controllers/db/subscriptions/getSubscriptions';
+import { resetDiscussionsCursor } from '@/controllers/db/subscriptions/discussionsCursor';
+import { listenToUserFeed } from '@/controllers/db/userFeed/listenToUserFeed';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { HOME } from '@/constants/common';
 import {
@@ -65,8 +64,11 @@ export default function Home() {
 			try {
 				if (!user) return;
 
-				// Set up first listener (initial page; older pages load on scroll)
-				unsubscribe = listenToStatementSubscriptions(user.uid, HOME.INITIAL_SUBSCRIPTIONS_LIMIT);
+				// First listener: topics by activity from userFeed (initial page;
+				// older pages load on scroll). Falls back to the legacy
+				// subscription-ordered listener for users without feed entries.
+				resetDiscussionsCursor();
+				unsubscribe = listenToUserFeed(user.uid, HOME.INITIAL_SUBSCRIPTIONS_LIMIT);
 
 				// Brief pause between listeners for iOS Safari IndexedDB compatibility
 				await new Promise((resolve) => setTimeout(resolve, 100));
