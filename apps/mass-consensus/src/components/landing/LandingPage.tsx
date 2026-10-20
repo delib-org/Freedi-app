@@ -2,6 +2,7 @@
 
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useWarmGoogleSignIn } from '@/hooks/useWarmGoogleSignIn';
 import { isPopupBlockedAuthError } from '@/lib/firebase/authErrors';
 import { logError } from '@/lib/utils/errorHandling';
 import styles from './LandingPage.module.scss';
@@ -16,6 +17,7 @@ interface LandingPageProps {
 export default function LandingPage({ onGetStarted }: LandingPageProps) {
   const { t } = useTranslation();
   const { signIn, isLoading } = useAuth();
+  useWarmGoogleSignIn();
 
   const handleSignIn = async () => {
     try {

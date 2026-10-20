@@ -10,7 +10,6 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   getAuth,
   initializeAuth,
-  browserPopupRedirectResolver,
   Auth,
   GoogleAuthProvider,
   signInWithPopup,
@@ -23,6 +22,7 @@ import {
 import { logError } from '../utils/errorHandling';
 import { isUserCancelledAuthError, isPopupBlockedAuthError } from './authErrors';
 import { CLIENT_EMULATORS, isClientEmulatorMode } from './clientEmulators';
+import { popupResolver, warmPopupResolver } from './popupResolver';
 
 // Firebase client configuration from environment variables
 const firebaseConfig = {
@@ -43,7 +43,8 @@ const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
  * getAuth() wires in browserPopupRedirectResolver, which downloads Google's
  * auth iframe + gapi (~100KB) on every page load just to check for a redirect
  * result. MC only signs in with a popup, so the resolver is handed to
- * signInWithPopup() instead and loads only when someone actually signs in.
+ * signInWithPopup() instead, and warmGoogleSignIn() loads it ahead of the tap
+ * only on screens that show a Google sign-in button (see popupResolver.ts).
  * Persistence stays browserLocalPersistence, as before, so existing sessions
  * are kept.
  */
@@ -77,6 +78,15 @@ googleProvider.setCustomParameters({
 });
 
 /**
+ * Load Google's sign-in iframe before the user taps "Sign in with Google".
+ * signInWithPopup() waits for it before opening the window, and iOS Safari
+ * blocks a popup opened that late. Call only where a Google button is shown.
+ */
+export function warmGoogleSignIn(): Promise<unknown> {
+  return warmPopupResolver(auth);
+}
+
+/**
  * Sign in with Google using popup.
  *
  * Resolves to `null` when the user backed out (closed the popup, or opened a
@@ -86,7 +96,7 @@ googleProvider.setCustomParameters({
  */
 export async function signInWithGoogle(): Promise<User | null> {
   try {
-    const result = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+    const result = await signInWithPopup(auth, googleProvider, popupResolver);
     console.info('[Firebase] Sign in successful:', result.user.email);
     return result.user;
   } catch (error) {
