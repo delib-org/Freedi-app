@@ -390,3 +390,13 @@ Character circle = the scenario's character portrait when the package has one (�
 3. The shared-draft mirror in "תשובה אחת לשולחן" goes through Realtime Database with Join's `liveDrafts` pattern (resolved by the parent review: one RTDB path per table per turn, throttled to one write per 2 s, no Firestore writes). The spec's §2.2 should mention the path when the engine is next touched.
 4. Portraits on the slider depend on the scenario package carrying two small character images; the fallback (initial on colour) is designed, the field is not.
 5. The room-mirroring layout is deferred by design (§6); its home is the class, not the lesson, so it belongs to the teacher-home spec.
+
+## 11. Revision after Tal's simulation review (2026-10-21)
+Applied in the simulation (https://claude.ai/artifact/YUK4XD19ZBvEv6pMCPXw5w) and binding on the screens above; IA spec §11 has the decisions.
+- **Step rail**: each step is a `<button>`; press = jump the class there. Same look as §5; `aria-label` "שלב n: שם, הסתיים/נוכחי/הבא".
+- **Talk screen**: line "הדוברת: דנה · זמן נותר: 34 שניות" (20 px 700) above the digits; digits 96 px to make room; under the bar a row of speaker chips (44 px, paper outline on ink; selected = paper fill; spoken = ✓ at 50 %), enabled for the asker always and for everyone once the minute is over; a hint line "בחרו את הדובר הבא" / "השואל בוחר את הדובר הבא". Before the first pick the digits read "1:00" in ink-faint and the line reads "מי מדבר ראשון?".
+- **Write (Table talk)**: the answer box, then "הצעה לפתרון (לא חובה)" box, then the broadcast checkbox with a teal line showing what the class sees. "שליחה" enables when either box has text.
+- **Rate list**: a dashed "● שולחן 5 כותבים עכשיו" live-draft card on top (Join's LiveDraftBanner), then answer and proposal cards mixed, each with the 5 faces and a −1 … +1 scale line under them. The header control is now "הכיתה כותבת".
+- **Console**: a compact "הצעות מול השער" card under the table cards at Proposals (and at Table talk once a proposal exists): row = text (ellipsis) · track with a terracotta gate line · score · note. Teal fill past the gate. The gate is a Tweak in the simulation; in the product it is the lesson's `votingSettings` threshold.
+- **Projector**: the same bars at 28 px before the plenum.
+- **Summary**: the decision card, then "עד כמה אתם תומכים בהצעה?" with the 5 faces, then three bars (קרובים ליונתן / באמצע / קרובים לנועה) of mean support with the count, and one verdict line in teal or terracotta. The side-shift drawing of §7 is retired.
