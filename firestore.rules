@@ -725,7 +725,8 @@ service cloud.firestore {
                request.resource.data.createdAt is number;
       }
 
-      allow read: if request.auth.uid != null;
+      // get only: a code can be resolved, never enumerated.
+      allow get: if request.auth.uid != null;
       allow create: if request.auth.uid != null &&
                        isValidClassCode() &&
                        isClassCodeAdmin(request.resource.data.mainId);

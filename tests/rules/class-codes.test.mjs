@@ -1,6 +1,16 @@
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { deleteDoc, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import {
+	collection,
+	deleteDoc,
+	doc,
+	getDoc,
+	getDocs,
+	query,
+	setDoc,
+	updateDoc,
+	where,
+} from 'firebase/firestore';
 import { makeEnv, seed } from './helpers.mjs';
 
 /**
@@ -49,6 +59,12 @@ describe('classCodes', () => {
 
 	it('lets any signed-in user resolve a code', async () => {
 		await assertSucceeds(getDoc(doc(env.authenticatedContext(STUDENT).firestore(), 'classCodes', CODE)));
+	});
+
+	it('refuses listing the collection, even when signed in', async () => {
+		const db = env.authenticatedContext(STUDENT).firestore();
+		await assertFails(getDocs(collection(db, 'classCodes')));
+		await assertFails(getDocs(query(collection(db, 'classCodes'), where('mainId', '==', MAIN))));
 	});
 
 	it('refuses an unauthenticated read', async () => {
