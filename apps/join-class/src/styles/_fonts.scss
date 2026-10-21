@@ -1,0 +1,50 @@
+// Assistant — self-hosted variable font.
+//
+// Previously pulled from fonts.googleapis.com via `@import url(...)` inside
+// the bundled CSS. That cost, on a cold cache: DNS+TLS to fonts.googleapis.com,
+// then a stylesheet, then DNS+TLS to fonts.gstatic.com, then the woff2 —
+// four serial round trips on top of index.css, all before the first glyph
+// paints. Self-hosting collapses that to one same-origin request that the
+// preload in index.html kicks off immediately.
+//
+// Only the weights the design tokens actually use are covered (400/500/600),
+// which is why the axis is clamped to `400 600` instead of Assistant's full
+// 200–800 range. Three subsets, requested by unicode-range so a Latin-only
+// visitor never downloads the Hebrew glyphs (and vice versa).
+//
+// To refresh these files, re-fetch the URLs behind:
+//   https://fonts.googleapis.com/css2?family=Assistant:wght@400..600&display=swap
+
+/* hebrew */
+@font-face {
+  font-family: 'Assistant';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/assistant-hebrew.woff2') format('woff2');
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Assistant';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/assistant-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0,
+    U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Assistant';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/assistant-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}

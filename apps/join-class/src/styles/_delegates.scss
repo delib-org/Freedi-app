@@ -1,0 +1,482 @@
+// =============================================================================
+// Delegates — per-question solution-editing delegation
+//
+// Two surfaces:
+//   1. `.facilitator-panel__delegates*` — admin section nested in the
+//      facilitator panel drawer. Mirrors the JoinForm accordion.
+//   2. `.invite__*` — public /invite page. Lives inside the existing
+//      `.login` chrome so the look is identical to the sign-in surface.
+//
+// Tokens only — no hardcoded colours/spacing. Indigo for organizer scope,
+// teal for participant scope, matching the rest of the join app.
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Manage Delegates accordion (inside FacilitatorPanel)
+// -----------------------------------------------------------------------------
+.facilitator-panel__delegates-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.facilitator-panel__delegates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--paper-soft);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-xs);
+}
+
+.delegates {
+  // Form ----------------------------------------------------------------
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  &__label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary);
+  }
+
+  &__email {
+    width: 100%;
+    padding: 12px var(--space-md);
+    font-size: var(--font-size-base);
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--bg-input);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    transition: border-color var(--dur-quick) var(--ease-out, ease-out);
+
+    &:focus {
+      outline: none;
+      border-color: var(--terra-600);
+      box-shadow: 0 0 0 3px var(--terra-50);
+    }
+
+    &[aria-invalid='true'] {
+      border-color: var(--danger);
+    }
+  }
+
+  &__validation {
+    color: var(--danger);
+    font-size: var(--font-size-sm);
+  }
+
+  &__form-error {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--terra-50);
+    color: var(--danger);
+    border: 1px solid var(--terra-100);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+  }
+
+  &__perms {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  &__perms-heading {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary);
+  }
+
+  &__perm {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: flex-start;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-card);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color var(--dur-quick) var(--ease-out, ease-out),
+      background-color var(--dur-quick) var(--ease-out, ease-out);
+
+    input[type='checkbox'] {
+      flex: 0 0 auto;
+      margin-top: 2px;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--terra-600);
+      cursor: pointer;
+    }
+
+    &--checked {
+      border-color: var(--terra-500);
+      background: var(--terra-50);
+    }
+
+    &:hover {
+      border-color: var(--border-medium);
+    }
+  }
+
+  &__perm-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__perm-label {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+  }
+
+  &__perm-help {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    line-height: var(--line-height-base, 1.45);
+  }
+
+  &__summary {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--paper-deep);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+  }
+
+  &__submit {
+    width: 100%;
+  }
+
+  // Lists ---------------------------------------------------------------
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  &__list-heading {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  // The row is always rendered inside the FacilitatorPanel drawer
+  // (max ~300px wide). A horizontal row + side-actions layout collapses the
+  // email column to a few characters wide and breaks every glyph onto its own
+  // line under `word-break: break-all` — so we always stack vertically here.
+  &__row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--paper-soft);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius-md);
+    transition: opacity var(--dur-base) var(--ease-out, ease-out);
+
+    &--active {
+      background: var(--bg-card);
+    }
+
+    &--confirming {
+      border-color: var(--terra-500);
+      background: var(--terra-50);
+    }
+  }
+
+  &__row-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  &__row-email {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--ink);
+    // Use `anywhere` rather than `break-all`: long, unbroken email strings
+    // wrap to the next line when needed (~`tal.yaron@`/`gmail.com`), but
+    // ordinary text isn't shredded character-by-character. `min-width: 0`
+    // upstream lets flexbox actually shrink to make room for wrapping.
+    overflow-wrap: anywhere;
+    word-break: normal;
+    line-height: var(--line-height-base, 1.45);
+  }
+
+  &__row-name {
+    font-weight: var(--font-weight-semibold);
+    color: var(--ink);
+  }
+
+  &__row-email-secondary {
+    color: var(--text-muted);
+    font-weight: var(--font-weight-normal);
+    font-size: var(--font-size-sm);
+  }
+
+  &__row-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+  }
+
+  &__row-expiry,
+  &__row-joined {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+  }
+
+  &__row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-xs);
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  &__confirm-prompt {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    margin-inline-end: var(--space-xs);
+  }
+
+  &__revoke {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: var(--space-xs) var(--space-md);
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition:
+      color var(--dur-quick) var(--ease-out, ease-out),
+      background-color var(--dur-quick) var(--ease-out, ease-out);
+
+    &:hover {
+      color: var(--terra-700);
+      background: var(--terra-50);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--terra-600);
+      outline-offset: 2px;
+    }
+  }
+
+  // Badges --------------------------------------------------------------
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px var(--space-xs);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    &--organizer {
+      background: var(--indigo-50);
+      color: var(--indigo-700);
+      border: 1px solid var(--indigo-100);
+    }
+
+    &--participant {
+      background: var(--teal-50);
+      color: var(--teal-700);
+      border: 1px solid var(--teal-100);
+    }
+  }
+
+  // Empty state ---------------------------------------------------------
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xl) var(--space-md);
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    border: 1px dashed var(--paper-line);
+    border-radius: var(--radius-md);
+  }
+
+  &__empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: var(--paper-soft);
+    font-size: 1.5rem;
+  }
+
+  &__empty-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+  }
+
+  &__empty-body {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// /invite — accept page
+// -----------------------------------------------------------------------------
+.invite {
+  &__title {
+    margin-top: var(--space-md);
+    text-align: center;
+  }
+
+  &__inviter {
+    margin: var(--space-sm) 0 var(--space-md);
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base, 1.45);
+  }
+
+  &__context {
+    padding: var(--space-md);
+    background: var(--paper-soft);
+    border-inline-start: 3px solid var(--terra-500);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    margin: var(--space-md) 0;
+  }
+
+  &__perms {
+    list-style: none;
+    margin: var(--space-md) 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  &__perm {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+
+    &::before {
+      content: '✓';
+      flex: 0 0 auto;
+      color: var(--teal-600);
+      font-weight: var(--font-weight-bold);
+    }
+  }
+
+  &__perms-summary {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    margin: 0 0 var(--space-md);
+  }
+
+  &__notice {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--terra-50);
+    border: 1px solid var(--terra-100);
+    border-radius: var(--radius-sm);
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+    font-style: italic;
+    margin: var(--space-md) 0;
+  }
+
+  &__expiry {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-md);
+  }
+
+  &__error {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--terra-50);
+    color: var(--danger);
+    border: 1px solid var(--terra-100);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+  }
+
+  &__success-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    margin: 0 auto;
+    border-radius: var(--radius-full);
+    background: var(--teal-100);
+    color: var(--teal-700);
+    font-size: 2rem;
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__redirect-line {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-sm);
+  }
+
+  &__spinner {
+    width: 28px;
+    height: 28px;
+    margin: var(--space-md) auto;
+    border: 3px solid var(--paper-line);
+    border-top-color: var(--terra-600);
+    border-radius: var(--radius-full);
+    animation: invite-spin 0.9s linear infinite;
+  }
+}
+
+@keyframes invite-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .invite__spinner {
+    animation: none;
+  }
+}

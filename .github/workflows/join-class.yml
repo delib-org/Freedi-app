@@ -1,0 +1,61 @@
+name: Join Class
+
+# WizCol Class (apps/join-class) is a copy of apps/join, and Join has no CI of
+# its own, so this is the gate for the copy: lint, typecheck, unit tests, build.
+
+on:
+  pull_request:
+    paths:
+      - 'apps/join-class/**'
+      - 'packages/shared-types/**'
+      - '.github/workflows/join-class.yml'
+  push:
+    branches: [main, dev]
+    paths:
+      - 'apps/join-class/**'
+      - 'packages/shared-types/**'
+      - '.github/workflows/join-class.yml'
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      # Root install first (workspaces link packages/*), then build shared-types,
+      # which the app consumes as a file: dependency compiled to dist/. Same order
+      # as mass-consensus.yml. @freedi/shared-utils is aliased to its source in
+      # vite.config.ts and needs no build. eslint also lives at the repo root.
+      - name: Install workspace dependencies
+        run: npm install
+
+      - name: Build shared-types
+        working-directory: ./packages/shared-types
+        run: npm run build
+
+      # `npm ci` against the lockfile (force-added: the root .gitignore ignores package-lock.json). apps/join-class/.npmrc sets
+      # legacy-peer-deps because a plain resolve dies in npm's arborist
+      # ("Cannot read properties of null (reading 'edgesOut')") on vitest's peer set.
+      - name: Install Join Class
+        working-directory: ./apps/join-class
+        run: npm ci
+
+      - name: Lint
+        working-directory: ./apps/join-class
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: ./apps/join-class
+        run: npm run typecheck
+
+      - name: Unit tests
+        working-directory: ./apps/join-class
+        run: npm test
+
+      - name: Build
+        working-directory: ./apps/join-class
+        run: npm run build
