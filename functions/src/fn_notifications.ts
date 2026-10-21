@@ -12,6 +12,8 @@ import { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import * as admin from 'firebase-admin';
 import { getDefaultQuestionType } from './model/questionTypeDefaults';
+import { logError } from './utils/errorHandling';
+import { removeTokensFromUserSubscriptions } from './utils/removeSubscriptionTokens';
 
 export interface FcmSubscriber {
 	userId: string;
@@ -362,55 +364,21 @@ async function removeTokensFromSubscriptions(invalidTokens: FcmSubscriber[]): Pr
 }
 
 /**
- * Removes specific tokens from all of a user's statement subscriptions.
+ * Removes specific tokens from the user's statement subscriptions that contain them.
+ * Touches only affected documents and never writes `lastUpdate`.
  */
 async function removeUserTokensFromSubscriptions(userId: string, tokens: string[]): Promise<void> {
 	try {
-		// Query all subscriptions for this user that have tokens
-		const subscriptionsSnapshot = await db
-			.collection(Collections.statementsSubscribe)
-			.where('userId', '==', userId)
-			.get();
-
-		if (subscriptionsSnapshot.empty) return;
-
-		// Batch update to remove tokens
-		const batchSize = 500;
-		let batch = db.batch();
-		let operationCount = 0;
-
-		for (const docSnapshot of subscriptionsSnapshot.docs) {
-			const subscription = docSnapshot.data();
-			const currentTokens: string[] = subscription.tokens || [];
-
-			// Filter out invalid tokens
-			const updatedTokens = currentTokens.filter((t) => !tokens.includes(t));
-
-			// Only update if tokens changed
-			if (updatedTokens.length !== currentTokens.length) {
-				batch.update(docSnapshot.ref, {
-					tokens: updatedTokens,
-					lastUpdate: Date.now(),
-				});
-				operationCount++;
-
-				// Commit batch if we hit the limit
-				if (operationCount >= batchSize) {
-					await batch.commit();
-					batch = db.batch();
-					operationCount = 0;
-				}
-			}
-		}
-
-		// Commit remaining operations
-		if (operationCount > 0) {
-			await batch.commit();
-		}
-
-		logger.info(`Removed ${tokens.length} invalid tokens from ${userId}'s subscriptions`);
+		const updated = await removeTokensFromUserSubscriptions(db, userId, tokens);
+		logger.info(
+			`Removed ${tokens.length} invalid tokens from ${updated} of ${userId}'s subscriptions`,
+		);
 	} catch (error) {
-		logger.error(`Error removing tokens from user ${userId} subscriptions:`, error);
+		logError(error, {
+			operation: 'notifications.removeUserTokensFromSubscriptions',
+			userId,
+			metadata: { tokenCount: tokens.length },
+		});
 	}
 }
 
