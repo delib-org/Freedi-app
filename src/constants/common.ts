@@ -45,6 +45,7 @@ export const NOTIFICATION = {
 	TOKEN_CHECK_INTERVAL: 24 * TIME.HOUR,
 	SERVICE_WORKER_TIMEOUT: 10 * TIME.SECOND,
 	CHECK_INTERVAL: 500,
+	TOKEN_RESYNC_INTERVAL: TIME.WEEK,
 } as const;
 
 /**
@@ -133,6 +134,7 @@ export const STORAGE_KEYS = {
 	PWA_INSTALL_TRIGGER_DATA: 'pwa-install-trigger-data',
 	PWA_INSTALL_SOFT_PROMPT_DISMISSED_AT: 'pwa-install-soft-prompt-dismissed-at',
 	NOTIFICATION_SOFT_PROMPT_DISMISSED_AT: 'notification-soft-prompt-dismissed-at',
+	FCM_TOKEN_SYNC: 'freedi_fcm_token_sync',
 	SHOW_HIDDEN_CARDS: 'freedi_showHiddenCards',
 	MAP_DETAIL_LEVEL: 'freedi_map_detail_level',
 	SIDEBAR_WIDTH: 'freedi_sidebar_width',

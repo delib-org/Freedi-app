@@ -330,6 +330,60 @@ describe('setSubscriptions', () => {
 
 			expect(mockSetDoc).not.toHaveBeenCalled();
 		});
+
+		describe('device push token', () => {
+			const otherUser: Creator = {
+				uid: 'different-user-789',
+				displayName: 'Different User',
+				email: 'different@example.com',
+			};
+
+			beforeEach(() => {
+				mockGetDoc.mockResolvedValue({
+					exists: () => false,
+				} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+			});
+
+			it('writes the token with the new push-enabled subscription', async () => {
+				await setStatementSubscriptionToDB({
+					statement: mockStatement,
+					creator: otherUser,
+					getPushNotification: true,
+					pushToken: 'tok-1',
+				});
+
+				expect(mockSetDoc).toHaveBeenCalledWith(
+					expect.anything(),
+					expect.objectContaining({ getPushNotification: true, tokens: { _arrayUnion: 'tok-1' } }),
+					{ merge: true },
+				);
+			});
+
+			it('creates the subscription without tokens when no token is held', async () => {
+				await setStatementSubscriptionToDB({
+					statement: mockStatement,
+					creator: otherUser,
+					getPushNotification: true,
+					pushToken: null,
+				});
+
+				expect(mockSetDoc).toHaveBeenCalledTimes(1);
+				const data = mockSetDoc.mock.calls[0][1] as Record<string, unknown>;
+				expect(data).not.toHaveProperty('tokens');
+			});
+
+			it('ignores the token when push is not enabled', async () => {
+				await setStatementSubscriptionToDB({
+					statement: mockStatement,
+					creator: otherUser,
+					getPushNotification: false,
+					pushToken: 'tok-1',
+				});
+
+				const data = mockSetDoc.mock.calls[0][1] as Record<string, unknown>;
+				expect(data).not.toHaveProperty('tokens');
+			});
+		});
 	});
 
 	describe('updateLastReadTimestamp', () => {
