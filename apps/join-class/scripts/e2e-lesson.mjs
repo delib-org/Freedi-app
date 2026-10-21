@@ -21,7 +21,7 @@
 import { chromium } from '@playwright/test';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
-import { ENGINE_PHASES } from './e2e-lesson-engine.mjs';
+import { ENGINE_PHASES, prepareEngineLesson } from './e2e-lesson-engine.mjs';
 import { BASE_URL as BASE, PROJECT_ID } from './e2e-env.mjs';
 
 const ENGINE_ON = process.env.E2E_LESSON_ENGINE === '1';
@@ -363,18 +363,23 @@ async function phaseEngine() {
 
 		return;
 	}
-	// back to the start of the lesson, with no tables / proposals left over from phase 3
-	for (const collection of ['classTables']) {
-		const snap = await admin.collection(collection).where('mainId', '==', mid).get();
-		await Promise.all(snap.docs.map((d) => d.ref.delete()));
-	}
-	await setStep(0).catch(() => undefined);
+	// back to a clean start of the lesson (no tables / proposals / ballot left from the projector phase)
+	// with the teacher on the console
+	await prepareEngineLesson({ admin, teacher, mid, challengeId, setPlan, baseUrl: BASE });
 	for (const phase of ENGINE_PHASES) {
 		try {
-			await phase.run({ teacher, students, check, admin, mid, code });
+			await phase.run({ teacher, students, check, admin, mid, code, challengeId });
 			check(`engine: ${phase.name}`, true);
 		} catch (err) {
 			check(`engine: ${phase.name}`, false, String(err).split('\n')[0]);
+			// leave what the phones and the tables looked like at the failure
+			const stamp = phase.name.replace(/\W+/g, '-').slice(0, 24);
+			await teacher.screenshot({ path: `e2e-lesson-fail-${stamp}-teacher.png` }).catch(() => undefined);
+			for (const student of students) {
+				await student.page.screenshot({ path: `e2e-lesson-fail-${stamp}-s${student.index + 1}.png` }).catch(() => undefined);
+			}
+			const tables = await admin.collection('classTables').where('mainId', '==', mid).get();
+			for (const d of tables.docs) console.info('  table', d.id, JSON.stringify(d.data()));
 		}
 	}
 }

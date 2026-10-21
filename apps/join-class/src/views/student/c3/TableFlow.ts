@@ -215,7 +215,12 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 			action = isAsker
 				? m(
 						'button.btn.btn--secondary',
-						{ type: 'button', disabled: self.busy, onclick: () => act({ action: 'toRate' }) },
+						{
+							type: 'button',
+							'data-testid': 'table-to-rate',
+							disabled: self.busy,
+							onclick: () => act({ action: 'toRate' }),
+						},
 						t('turn.to_rate'),
 					)
 				: null;
