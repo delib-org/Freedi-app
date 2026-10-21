@@ -96,6 +96,11 @@ const he: Record<string, string> = {
 	'elders.matchHint':
 		'🧭 המלחים שמסומנים ב"מתאים לרוחות שלך" מדברים על ערכים שדירגתם במצפן. זה סדר בלבד — הבחירה כולה שלכם.',
 	'elders.matchBadge': '🧭 מתאים לרוחות שלך',
+	'elders.matchBasisBoth':
+		'🧭 סידרנו את המלחים לפי מה שבחרתם בהתחלה: {{chips}} — ולפי הערכים שדירגתם. זה סדר בלבד — הבחירה כולה שלכם.',
+	'elders.matchBasisChips':
+		'🧭 סידרנו את המלחים לפי מה שבחרתם בהתחלה: {{chips}}. זה סדר בלבד — הבחירה כולה שלכם.',
+	'elders.matchEchoes': 'מדבר על: {{chips}}',
 	'elders.aboard': '⚓ על הסיפון',
 	'elders.whoIs': 'מי זה {{name}}?',
 	'elders.aboardCount': 'על הסיפון: {{chosen}} מתוך {{max}}',
