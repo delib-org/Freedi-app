@@ -9,8 +9,12 @@
 
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v1';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 import { Collections, functionConfig } from '@freedi/shared-types';
+import {
+	removeTokensFromUserSubscriptions,
+	SUBSCRIPTION_TOKEN_BATCH_SIZE,
+} from './utils/removeSubscriptionTokens';
 
 const db = getFirestore();
 
@@ -104,7 +108,7 @@ export async function performTokenCleanup(): Promise<TokenCleanupResult> {
 		}
 
 		// Step 3: Delete from pushNotifications collection (batch of 500)
-		const batchSize = 500;
+		const batchSize = SUBSCRIPTION_TOKEN_BATCH_SIZE;
 		for (let i = 0; i < staleTokensSnapshot.docs.length; i += batchSize) {
 			const batch = db.batch();
 			const batchDocs = staleTokensSnapshot.docs.slice(i, i + batchSize);
@@ -124,7 +128,7 @@ export async function performTokenCleanup(): Promise<TokenCleanupResult> {
 		// Step 4: Remove stale tokens from statementsSubscribe.tokens[] arrays
 		for (const [userId, tokens] of tokensByUser) {
 			try {
-				const removed = await removeTokensFromUserSubscriptions(userId, tokens);
+				const removed = await removeTokensFromUserSubscriptions(db, userId, tokens);
 				result.tokensRemovedFromSubscriptions += removed;
 			} catch (error) {
 				const errorMsg = `Error removing tokens for user ${userId}: ${error}`;
@@ -167,59 +171,4 @@ export async function performTokenCleanup(): Promise<TokenCleanupResult> {
 
 		return result;
 	}
-}
-
-/**
- * Removes stale tokens from all subscriptions for a specific user.
- * Returns the number of subscriptions updated.
- */
-async function removeTokensFromUserSubscriptions(
-	userId: string,
-	tokens: string[],
-): Promise<number> {
-	const subscriptionsSnapshot = await db
-		.collection(Collections.statementsSubscribe)
-		.where('userId', '==', userId)
-		.get();
-
-	if (subscriptionsSnapshot.empty) {
-		return 0;
-	}
-
-	let updatedCount = 0;
-	const batchSize = 500;
-	let batch = db.batch();
-	let operationCount = 0;
-
-	for (const docSnapshot of subscriptionsSnapshot.docs) {
-		const subscription = docSnapshot.data();
-		const currentTokens: string[] = subscription.tokens || [];
-
-		// Check if any of the stale tokens are in this subscription
-		const hasStaleTokens = tokens.some((token) => currentTokens.includes(token));
-
-		if (hasStaleTokens) {
-			// Use FieldValue.arrayRemove to remove multiple tokens
-			batch.update(docSnapshot.ref, {
-				tokens: FieldValue.arrayRemove(...tokens),
-				lastUpdate: Date.now(),
-			});
-			operationCount++;
-			updatedCount++;
-
-			// Commit batch if we hit the limit
-			if (operationCount >= batchSize) {
-				await batch.commit();
-				batch = db.batch();
-				operationCount = 0;
-			}
-		}
-	}
-
-	// Commit remaining operations
-	if (operationCount > 0) {
-		await batch.commit();
-	}
-
-	return updatedCount;
 }
