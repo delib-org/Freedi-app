@@ -1,0 +1,145 @@
+import m from 'mithril';
+import { t } from '@/lib/i18n';
+import { ErrorLine } from './ErrorLine';
+
+export interface PickQuestion {
+	id: string;
+	text: string;
+	/** The teacher's one-line hint, if any. */
+	hint?: string;
+	/** Added by a student of this table ("our own question"). */
+	own: boolean;
+	/** Already asked at this table: greyed, last. */
+	used: boolean;
+}
+
+export interface QuestionPickAttrs {
+	questions: PickQuestion[];
+	chosenId: string | null;
+	/** Only the asker chooses. */
+	canChoose: boolean;
+	onPick: (id: string) => void;
+	/** Creates a table-owned sub-question; rejects when the rules refuse. */
+	onAddOwn: (text: string) => Promise<void>;
+}
+
+class PickState {
+	adding = false;
+	text = '';
+	busy = false;
+	error: string | null = null;
+}
+
+/**
+ * "Pick a question" (UX §2.6.1): a radio list of the teacher's questions with
+ * the ones already asked here greyed and last, and "+ our own question" for
+ * anyone at the table. Non-askers see the same list read-only.
+ */
+export const QuestionPick: m.ClassComponent<QuestionPickAttrs> = {
+	oninit(vnode) {
+		(vnode.state as { self?: PickState }).self = new PickState();
+	},
+
+	view(vnode) {
+		const self = (vnode.state as { self?: PickState }).self as PickState;
+		const { questions, chosenId, canChoose, onPick, onAddOwn } = vnode.attrs;
+		const ordered = [...questions.filter((q) => !q.used), ...questions.filter((q) => q.used)];
+		const allUsed = questions.length > 0 && questions.every((q) => q.used);
+		const submit = (): void => {
+			const text = self.text.trim();
+			if (!text || self.busy) return;
+			self.busy = true;
+			self.error = null;
+			onAddOwn(text)
+				.then(() => {
+					self.text = '';
+					self.adding = false;
+				})
+				.catch(() => {
+					self.error = t('question.add_failed');
+				})
+				.finally(() => {
+					self.busy = false;
+					m.redraw();
+				});
+		};
+
+		return m('.pick', [
+			allUsed ? m('p.pick__all-used', t('question.all_asked')) : null,
+			ordered.length > 0
+				? [
+						m('p.pick__title', t('question.teacher_list')),
+						m(
+							'.pick__list',
+							{ role: 'radiogroup', 'aria-label': t('question.teacher_list') },
+							ordered.map((q) =>
+								m(
+									'button.pick__item',
+									{
+										key: q.id,
+										'data-testid': 'table-pick-question',
+										type: 'button',
+										role: 'radio',
+										'aria-checked': chosenId === q.id ? 'true' : 'false',
+										disabled: !canChoose || q.used ? true : undefined,
+										class: [
+											q.used ? 'pick__item--used' : '',
+											chosenId === q.id ? 'pick__item--on' : '',
+										]
+											.filter(Boolean)
+											.join(' '),
+										onclick: () => onPick(q.id),
+									},
+									[
+										q.own ? m('span.pick__eyebrow', t('question.add_own')) : null,
+										m('span.pick__text', { dir: 'auto' }, q.text),
+										q.hint && !q.used ? m('span.pick__hint', { dir: 'auto' }, q.hint) : null,
+										q.used ? m('span.pick__used', t('question.asked')) : null,
+									],
+								),
+							),
+						),
+					]
+				: m('p.pick__empty', t('question.none')),
+			self.adding
+				? m(
+						'form.pick__add',
+						{
+							onsubmit: (event: Event) => {
+								event.preventDefault();
+								submit();
+							},
+						},
+						[
+							m('input.pick__input', {
+								type: 'text',
+								dir: 'auto',
+								maxlength: 200,
+								'aria-label': t('question.add_own'),
+								placeholder: t('question.add_placeholder'),
+								value: self.text,
+								oninput: (event: Event) => {
+									self.text = (event.target as HTMLInputElement).value;
+								},
+							}),
+							m(
+								'button.btn.btn--secondary',
+								{ type: 'submit', disabled: self.busy || !self.text.trim() },
+								t('question.add_confirm'),
+							),
+							m(ErrorLine, { message: self.error }),
+						],
+					)
+				: m(
+						'button.btn.btn--secondary.pick__add',
+						{
+							type: 'button',
+							onclick: () => {
+								self.adding = true;
+							},
+						},
+						`+ ${t('question.add_own')}`,
+					),
+		]);
+	},
+};
