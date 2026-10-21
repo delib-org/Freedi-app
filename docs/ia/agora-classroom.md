@@ -249,3 +249,35 @@ Tal played the interactive simulation and asked for five changes. They override 
 4. **The gate on the teacher's screen and the projector.** At Proposals (and at Table talk once proposals exist) the console shows "הצעות מול השער": one bar per proposal with its consensus score and a gate line at the lesson's threshold (`votingSettings`, as Agora's gate works today), with "עברה את השער" / "עוד 0.12" per row. The projector shows the same bars before the plenum.
 5. **The summary asks for support of the decision, not a side.** "עד כמה אתם תומכים בהצעה?" on the 5-face −1..+1 scale. The system groups the support by the side each student picked in Phase 1 (קרובים ליונתן / באמצע / קרובים לנועה) and states whether the sides came closer: both sides' mean support ≥ the gate → "הצדדים התקרבו", else "הצדדים עוד לא התקרבו". `campPositionEnd` and the side-shift drawing are dropped; the new participant field is `decisionSupport` (−1..+1).
 6. **A student may move between the screens of the current step.** Inside Table talk and Proposals the phone carries a strip of the step's screens (שאלה · מדברים · כותבים · מדרגים); tapping one shows that screen without changing the table's official step (the table doc still moves only by the asker or the teacher). This replaces "nothing else goes back" in §5 for the table steps; the class-level step is still the teacher's alone.
+
+## 12. Host decision revised: `apps/join-class`, a copy of Join (Tal, 2026-10-21)
+Tal's decision, overriding the "keep Agora's engine" premise in the header: **copy `apps/join` to a new app `apps/join-class` and build the classroom there.** Join's code is the one that has run the most lessons with adults and is the most tested; the classroom becomes a sibling app with its own hosting target, port and env, and Join itself is never changed. Nothing in sections 1-11 about objects, labels, step order, screens or Tal's decisions changes; only where things live:
+
+| Spec object | In join-class |
+|---|---|
+| Lesson | Join **workspace** (main statement). The teacher's "lesson" = one workspace per class per scenario; the join code is a Join share link / QR (`/m/:mid`), plus a short code route if 13-year-olds must type it |
+| Step (class-level) | the workspace's **follow-me** path (`joinFollowMe`), one route per step; the teacher's step rail writes it; the 8-step order is a `lessonPlan` array on the main statement's settings |
+| Guiding question | a **sub-question** of the workspace (`createSubQuestion`), authored in the new planning screen (§12.1); a student-added question is a sub-question with `creatorId` = the student and the table id |
+| Answer / Proposal | an **option** under its question (Join's `createSuggestion`), with `agoraTable: {tableId, shared, coAuthors}` → renamed `classTable` in join-class; proposals written at Table talk are options under the lesson's challenge question |
+| Rating | Join's 5-face **evaluation**, unchanged (already −1..+1 → consensus via the shared Cloud Function) |
+| Live broadcast of writing | Join's **liveDrafts** (RTDB), unchanged |
+| Side | new field on the student's workspace subscription (`statementsSubscribe`): `side` 0..100 and `camp` |
+| Table, table step, turn, speaking time | new collection `classTables/{mainId}--{n}` (fields as §2.2); the student's table id on their subscription; three callables `classAssignTables`, `classMoveStudent`, `classTableStep` |
+| Ballot / vote / decision | new: a `vote` on the challenge question (Join has none today; port the main app's `vote/` semantics as a small callable `classCastVote` + `voting` frozen list on the challenge question) |
+| Gate | the challenge question's `votingSettings.threshold`; the console's gate bars read each option's `consensus` |
+| Decision support | new subscription field `decisionSupport` −1..+1; `supportBySide()` in shared-types |
+| Teacher console / projector | new routes in join-class: `/t/:mid` (console), `/t/:mid/screen` (projector), `/t/:mid/plan` (§12.1); Join's `FacilitatorPanel` stays for the knobs behind the cog |
+
+What this costs versus Agora's engine (stated once, decided): the lesson/session, join code, table, timer, ballot and teacher-console layers are written new on Join's model instead of reused from `functions/src/agora`; the gain is one small, trusted codebase and no deletion work.
+
+### 12.1 Teacher screen: plan the questions
+- **Audience**: the teacher, before the lesson (laptop or phone). One job: write and order the guiding questions the tables will pick from, and the one challenge question for proposals, then save.
+- **Object**: the lesson plan = the workspace's sub-questions in order + one sub-question flagged `role: 'challenge'`. Saving = the sub-questions exist on the workspace (Join's model; no separate "plan" document). A question has: text (≤ 140 chars), optional one-line hint for the table ("מה מחפשים"), order, `role: 'guiding' | 'challenge'`.
+- **Labels**: screen "תכנון השאלות" (EN "Plan the questions", key `plan.*` NEW); "שאלה מנחה" appears here only, in the section title "השאלות לשולחנות"; "השאלה לפתרון" for the challenge; "שמירה" / "נשמר"; "סדר" by drag (Join's `ManualReorder`).
+- **Route**: `/t/:mid/plan`, reached from the console's cog and from the lesson row on the teacher home; back = the console.
+- **Hierarchy (teacher)**: 0 `/t` teacher home (my lessons, + new lesson) → 1 `/t/:mid` console → 2 `/t/:mid/plan` | `/t/:mid/screen`. Depth 2.
+- **Task flow, plan a lesson (5 steps)**: 1. `/t` → "+ שיעור חדש" → title (the dilemma's name). 2. `/t/:mid/plan`: "השאלה לפתרון" box, type it. 3. "+ שאלה" under "השאלות לשולחנות", type, Enter adds the next (3-8 questions). 4. Drag to order. 5. "שמירה" → "נשמר" → "לקונסולה". Saving is per field on blur as well (Join's `EditableTitle` pattern), so "שמירה" is a confirmation, never a gate.
+- **Screen inventory row**: | Plan the questions | `/t/:mid/plan` | write and order the questions | "עוד אין שאלות. הוסיפו את הראשונה" | skeleton | save failed inline + retry | not the workspace admin → console | "נשמר" |
+- **Findability**: ≤ 8 guiding questions, no search; the challenge question is always pinned on top.
+- **Reuse from Join**: `createSubQuestion`, `EditableTitle`, `ManualReorder`/`dragReorder`, `MainHub` admin affordances, `setQuestionSetting` for `role` and hint.
+- **Open**: can the teacher pick from a shared library of questions (Agora's scenario library)? Not in phase 1; the screen gets a "מהספרייה" button later if Tal wants it.
