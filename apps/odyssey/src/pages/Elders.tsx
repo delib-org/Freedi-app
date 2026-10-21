@@ -86,14 +86,20 @@ export default function Elders() {
 	 */
 	const windChips = useMemo(() => {
 		const seen = new Map<string, string>();
+		const enabledIds = new Set(
+			(content?.game.compassQuestions ?? [])
+				.filter((question) => question.enabled)
+				.map((question) => question.questionId),
+		);
 		for (const [questionId, answer] of Object.entries(journey?.compassAnswers ?? {})) {
+			if (!enabledIds.has(questionId)) continue;
 			for (const chip of answer.chips) {
 				if (!seen.has(chip)) seen.set(chip, questionId);
 			}
 		}
 
 		return [...seen.entries()].map(([chip, questionId]) => ({ chip, questionId }));
-	}, [journey]);
+	}, [journey, content]);
 
 	// Ranked in Hebrew, shown in the player's language.
 	const roster = useMemo(

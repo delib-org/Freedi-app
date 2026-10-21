@@ -65,17 +65,17 @@ export const CHIP_IN_TEXT_WEIGHT = 4;
  * compass; "נשים" already finds "לנשים", the table adds "אישה", "נשות".
  */
 export const CHIP_KEYWORDS: Record<string, string[]> = {
-	נשים: ['נשים', 'אישה', 'נשות', 'נערות', 'בנות'],
+	נשים: ['נשים', 'אישה', 'נשות', 'נערות'],
 	צעירים: ['צעירים', 'נוער'],
 	עולים: ['עולים', 'עלייה', 'עליה', 'מהגרים'],
 	חרדים: ['חרדים', 'חרדי'],
 	חילונים: ['חילונים', 'חילוני'],
-	'ערבים אזרחי ישראל': ['ערבים', 'ערבי', 'מיעוטים', 'מיעוט'],
+	'ערבים אזרחי ישראל': ['ערבים', 'ערביות', 'ערביים', 'מיעוטים', 'מיעוט'],
 	'משפחות חטופים': ['חטופים', 'חטוף'],
 	מילואימניקים: ['מילואים', 'מילואימניקים', 'לוחמים'],
 	'אנשים בעוני': ['עוני', 'עניים', 'נזקקים'],
-	'תושבי הצפון': ['צפון', 'גליל'],
-	'תושבי הדרום': ['דרום', 'נגב'],
+	'תושבי הצפון': ['הצפון', 'הגליל'],
+	'תושבי הדרום': ['הדרום', 'הנגב'],
 	'עברית ותרבות': ['עברית', 'תרבות'],
 	'חיים משותפים': ['חיים משותפים', 'שותפות', 'דו-קיום'],
 	'ערבות הדדית': ['ערבות', 'סולידריות'],
@@ -106,8 +106,26 @@ function keywordsOf(chip: string): string[] {
 	return (listed ?? [chip]).filter((word) => word.length >= MIN_PARTIAL_MATCH);
 }
 
+/** One or two Hebrew prefix letters (ו ה ל ב מ ש כ) may glue onto a word: "לנשים", "והאישה". */
+const HEBREW_PREFIXES = '\\u05D5\\u05D4\\u05DC\\u05D1\\u05DE\\u05E9\\u05DB';
+const HEBREW_LETTER = '\\u05D0-\\u05EA';
+
+function wholeWordPattern(keyword: string): RegExp {
+	const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+	return new RegExp(
+		`(?:^|[^${HEBREW_LETTER}])[${HEBREW_PREFIXES}]{0,2}${escaped}(?![${HEBREW_LETTER}])`,
+	);
+}
+
+/**
+ * Whole-word match, so "לבנות" (to build) is not "בנות" (girls), "מצפון"
+ * (conscience) is not "צפון", "מערבי" is not "ערבי", "אנשים" is not "נשים".
+ * Keywords must therefore never be words that a prefix letter turns into
+ * another common word.
+ */
 function containsAny(text: string, keywords: string[]): boolean {
-	return keywords.some((word) => text.includes(word));
+	return keywords.some((word) => wholeWordPattern(word).test(text));
 }
 
 /** How strongly one chip echoes one sailor: 0, CHIP_IN_TEXT_WEIGHT or CHIP_IN_VALUES_WEIGHT. */

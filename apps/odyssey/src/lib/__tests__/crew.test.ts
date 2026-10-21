@@ -114,6 +114,17 @@ describe('rankEldersByWinds', () => {
 		expect(CHIP_IN_VALUES_WEIGHT).toBeGreaterThan(CHIP_IN_TEXT_WEIGHT);
 	});
 
+	it('matches whole words only — no false hits from prefixed look-alikes', () => {
+		const bios = ['לבנות את המדינה', 'קול של מצפון', 'הגדה המערבית', 'אנשים רבים'];
+		const decoys = bios.map((bio, i) => ({ ...elder(`d${i}`, ['מדינה'], i), bio }));
+		const ranked = rankEldersByWinds(decoys, [], ['נשים', 'תושבי הצפון', 'ערבים אזרחי ישראל']);
+
+		expect(ranked.every((entry) => !entry.matchesWinds)).toBe(true);
+
+		const real = { ...elder('real', ['מדינה'], 9), bio: 'עזרה לאישה בשדה' };
+		expect(rankEldersByWinds([real], [], ['נשים'])[0].echoedChips).toEqual(['נשים']);
+	});
+
 	it('adds chips to the value ranking instead of replacing it', () => {
 		const ranked = rankEldersByWinds(
 			[elder('a', ['חירות'], 1), { ...elder('b', ['מדינה'], 2), bio: 'דאג לנשים' }],
