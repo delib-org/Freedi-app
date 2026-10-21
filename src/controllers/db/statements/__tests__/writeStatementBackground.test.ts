@@ -45,7 +45,9 @@ jest.mock('@/controllers/db/subscriptions/setSubscriptions', () => ({
 	setStatementSubscriptionToDB: (...args: unknown[]) => mockSetSubscription(...args),
 }));
 jest.mock('@/services/notificationService', () => ({
-	notificationService: { isInitialized: () => false, safeGetPermission: () => 'default' },
+	notificationService: {
+		getPushSubscriptionFields: () => ({ getPushNotification: false, pushToken: null }),
+	},
 }));
 jest.mock('@/controllers/general/helpers', () => ({
 	validateStatementTypeHierarchy: () => ({ allowed: true }),

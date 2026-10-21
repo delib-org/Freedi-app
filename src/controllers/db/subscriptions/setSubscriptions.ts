@@ -35,6 +35,8 @@ interface SetSubscriptionProps {
 	getInAppNotification?: boolean;
 	getEmailNotification?: boolean;
 	getPushNotification?: boolean;
+	/** FCM token already held by this device; stored so push works before any later token sync */
+	pushToken?: string | null;
 }
 
 export async function setStatementSubscriptionToDB({
@@ -44,6 +46,7 @@ export async function setStatementSubscriptionToDB({
 	getInAppNotification = true,
 	getEmailNotification = false,
 	getPushNotification = false,
+	pushToken = null,
 }: SetSubscriptionProps): Promise<void> {
 	try {
 		// Validate inputs
@@ -92,13 +95,17 @@ export async function setStatementSubscriptionToDB({
 
 		const parsedStatementSubscription = parse(StatementSubscriptionSchema, subscriptionData);
 
-		await setDoc(statementsSubscribeRef, parsedStatementSubscription, {
-			merge: true,
-		});
+		// The backend reads subscription.tokens[] for push, so a push-enabled subscription
+		// must carry this device's token from the start (no extra read: the doc is new here)
+		const tokenFields = getPushNotification && pushToken ? { tokens: arrayUnion(pushToken) } : {};
 
-		// Token is stored centrally in pushNotifications collection
-		// Backend should look it up there when sending notifications
-		// No need to duplicate token in each subscription
+		await setDoc(
+			statementsSubscribeRef,
+			{ ...parsedStatementSubscription, ...tokenFields },
+			{
+				merge: true,
+			},
+		);
 
 		// Check for group-level demographic questions when subscribing to a top-level group
 		const isTopParent = statement.parentId === 'top';
