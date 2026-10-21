@@ -1,0 +1,124 @@
+// Teacher console partial: gate panel and what they wrote. See console.scss for the shared tokens.
+
+// ---- gate panel -------------------------------------------------------------
+.gate-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gate-panel__row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(120px, 3fr) 48px 96px;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.gate-panel__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gate-panel__track {
+  position: relative;
+  height: 14px;
+  overflow: visible;
+  background: var(--paper-deep);
+  border-radius: var(--radius-full);
+}
+
+.gate-panel__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--ink-soft);
+  border-radius: inherit;
+  transform: scaleX(var(--fill, 0));
+  transform-origin: inline-start;
+
+  .gate-panel__row--passed & {
+    background: var(--teal-600);
+  }
+}
+
+.gate-panel__line {
+  position: absolute;
+  inset-block: -4px;
+  inset-inline-start: calc(var(--gate, 0) * 100%);
+  width: 3px;
+  background: var(--terra-600);
+  border-radius: var(--radius-full);
+}
+
+.gate-panel__score {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.gate-panel__note {
+  font-size: var(--font-size-sm);
+  color: var(--ink-muted);
+
+  .gate-panel__row--passed & {
+    color: var(--teal-700);
+    font-weight: var(--font-weight-bold);
+  }
+}
+
+// ---- what they wrote --------------------------------------------------------
+.written__question-title {
+  margin: var(--space-lg) 0 var(--space-sm);
+  font-size: var(--font-size-lg);
+}
+
+.written__group-title {
+  position: sticky;
+  inset-block-start: 0;
+  margin: var(--space-md) 0 var(--space-xs);
+  padding: var(--space-xs) 0;
+  font-size: var(--font-size-base);
+  color: var(--ink-muted);
+  background: var(--paper-soft);
+}
+
+.written__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.written-card {
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md);
+
+  &--hidden {
+    opacity: 0.6;
+    border-style: dashed;
+  }
+}
+
+.written-card__text {
+  margin: 0 0 var(--space-xs);
+}
+
+.written-card__meta {
+  display: flex;
+  gap: var(--space-md);
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--ink-muted);
+}
+
+.written-card__actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-block-start: var(--space-xs);
+}

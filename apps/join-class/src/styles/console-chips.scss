@@ -1,0 +1,111 @@
+// Teacher console partial: member chips and focus ring. See console.scss for the shared tokens.
+
+// ---- member chip ------------------------------------------------------------
+.member-chip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.member-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  position: relative;
+  min-height: 32px;
+  padding: 0 var(--space-sm);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--ink);
+  background: var(--paper-soft);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-full);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+
+  // 48 px hit area without growing the 32 px pill.
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: -8px;
+    inset-inline: 0;
+  }
+
+  &--a .member-chip__mark {
+    color: var(--side-a);
+  }
+
+  &--b .member-chip__mark {
+    color: var(--side-b);
+  }
+
+  &--center .member-chip__mark {
+    color: var(--side-center);
+  }
+
+  &--no-device {
+    background: transparent;
+    border: 1.5px dashed var(--ink-soft);
+    cursor: default;
+  }
+
+  &--active {
+    border-color: var(--terra-500);
+    opacity: 0.6;
+  }
+
+  &[aria-pressed='true'] {
+    opacity: 1;
+    background: var(--terra-50);
+  }
+}
+
+.member-chip__tag {
+  font-size: var(--font-size-xs);
+  color: var(--ink-muted);
+}
+
+.member-chip__menu {
+  min-width: 24px;
+  min-height: 32px;
+  padding: 0;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.member-chip__select {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline-start: 0;
+  z-index: 5;
+}
+
+.chip-ghost {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 9600;
+  padding: var(--space-xs) var(--space-md);
+  color: var(--ink);
+  background: var(--paper-soft);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  opacity: 0.9;
+  pointer-events: none;
+  transform: translate(var(--x), var(--y));
+}
+
+// ---- focus (keyboard users must see it) ------------------------------------
+.console {
+  button:focus-visible,
+  select:focus-visible,
+  input:focus-visible,
+  a:focus-visible {
+    outline: 3px solid var(--indigo-500);
+    outline-offset: 2px;
+  }
+}
