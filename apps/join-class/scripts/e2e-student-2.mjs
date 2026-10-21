@@ -145,6 +145,10 @@ try {
 		spokenUids: [],
 	});
 	await a.page.waitForSelector('.frame--down [role=timer]', { timeout: TIMEOUT });
+	// the minute may render idle ("1:00") for a moment before the table doc with speakerEndsAt arrives
+	await a.page
+		.waitForFunction(() => /^0:3\d$/.test((document.querySelector('[role=timer]')?.textContent ?? '').trim()), null, { timeout: TIMEOUT })
+		.catch(() => undefined);
 	const digits = (await a.page.locator('[role=timer]').innerText()).trim();
 	check('screens-down countdown reads about 0:3x', /^0:3\d$/.test(digits), digits);
 	const size = await a.page.locator('.count__num').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
