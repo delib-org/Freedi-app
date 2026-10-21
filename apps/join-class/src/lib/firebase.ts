@@ -137,12 +137,20 @@ function init(): void {
 	functions = getFunctions(app, FUNCTIONS_REGION);
 
 	const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+	// Emulator ports default to the repo's main suite; a worktree running its own
+	// suite (npm run emulators:solo) points the bundle at it with these.
+	const emuPort = (name: string, fallback: number): number => {
+		const raw = (import.meta.env as Record<string, string | undefined>)[name];
+		const parsed = raw ? Number(raw) : NaN;
+
+		return Number.isFinite(parsed) ? parsed : fallback;
+	};
 
 	if (import.meta.env.VITE_FIREBASE_DATABASE_URL) {
 		rtdb = getDatabase(app);
 		if (isLocalhost) {
 			try {
-				connectDatabaseEmulator(rtdb, 'localhost', 9000);
+				connectDatabaseEmulator(rtdb, 'localhost', emuPort('VITE_EMULATOR_DATABASE_PORT', 9000));
 			} catch (error) {
 				console.error('[Firebase] Database emulator connection failed:', error);
 			}
@@ -151,19 +159,23 @@ function init(): void {
 
 	if (isLocalhost) {
 		try {
-			connectAuthEmulator(auth, 'http://localhost:9099', {
+			connectAuthEmulator(auth, `http://localhost:${emuPort('VITE_EMULATOR_AUTH_PORT', 9099)}`, {
 				disableWarnings: true,
 			});
 		} catch (error) {
 			console.error('[Firebase] Auth emulator connection failed:', error);
 		}
 		try {
-			connectFirestoreEmulator(db, 'localhost', 8081);
+			connectFirestoreEmulator(db, 'localhost', emuPort('VITE_EMULATOR_FIRESTORE_PORT', 8081));
 		} catch (error) {
 			console.error('[Firebase] Firestore emulator connection failed:', error);
 		}
 		try {
-			connectFunctionsEmulator(functions, 'localhost', 5001);
+			connectFunctionsEmulator(
+				functions,
+				'localhost',
+				emuPort('VITE_EMULATOR_FUNCTIONS_PORT', 5001),
+			);
 		} catch (error) {
 			console.error('[Firebase] Functions emulator connection failed:', error);
 		}

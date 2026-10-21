@@ -66,6 +66,24 @@ function requireAuth(component: m.Component): m.RouteResolver {
 	};
 }
 
+/** Teacher routes: same auth guard, and the screen's code is fetched only when
+ *  a teacher opens it, so the student's first screen carries none of it. */
+function teacherRoute(load: () => Promise<m.Component>): m.RouteResolver {
+	return {
+		onmatch(_args, requestedPath: string) {
+			return waitForAuthReady().then(() => {
+				if (!isSignedIn()) {
+					m.route.set('/login', { next: requestedPath });
+
+					return { view: () => null };
+				}
+
+				return load();
+			});
+		},
+	};
+}
+
 const root = document.getElementById('app');
 
 // Mount once the active language's dictionary is in hand. Every view calls
@@ -97,5 +115,16 @@ i18nReady.then(() => {
 		'/m/:mid': MainHub,
 		'/m/:mid/q/:qid': Solutions,
 		'/m/:mid/q/:qid/s/:sid': Chat,
+		// Teacher routes (classroom). Lazy, so students never download them.
+		'/t': teacherRoute(() => import('@/views/teacher/TeacherHome').then((mod) => mod.TeacherHome)),
+		'/t/:mid': teacherRoute(() =>
+			import('@/views/teacher/TeacherConsole').then((mod) => mod.TeacherConsole),
+		),
+		'/t/:mid/plan': teacherRoute(() =>
+			import('@/views/teacher/PlanScreen').then((mod) => mod.PlanScreen),
+		),
+		'/t/:mid/screen': teacherRoute(() =>
+			import('@/views/teacher/TeacherProjector').then((mod) => mod.TeacherProjector),
+		),
 	});
 });
