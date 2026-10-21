@@ -15,6 +15,7 @@ import {
 	statementToSimpleStatement,
 	functionConfig,
 } from '@freedi/shared-types';
+import { HOT_TRIGGER_MEMORY } from './utils/createFirestoreFunction';
 import { generateDescriptionFromChildren } from './helpers';
 import { classifyChildUpdate } from './userFeed/classifyChildUpdate';
 import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
@@ -60,6 +61,7 @@ export const updateParentOnChildUpdate = onDocumentUpdated(
 	{
 		document: `${Collections.statements}/{statementId}`,
 		region: functionConfig.region,
+		memory: HOT_TRIGGER_MEMORY,
 	},
 	async (event) => {
 		try {
