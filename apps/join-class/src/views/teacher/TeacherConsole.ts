@@ -4,6 +4,7 @@ import { t } from '@/lib/i18n';
 import { ensureUser } from '@/lib/user';
 import { loadMainStatement, getMainStatement } from '@/lib/store';
 import { checkAdminStatus, isAdmin } from '@/lib/admin';
+import { ensureClassCode } from '@/lib/lesson';
 import { QRShare } from '@/components/QRShare';
 import { WizColFooter } from '@/components/WizColFooter';
 import { readClassCode, studentJoinUrl } from './planHelpers';
@@ -35,6 +36,12 @@ async function open(mid: string): Promise<void> {
 
 			return;
 		}
+		// Admins get the join code on open (a no-op when it already exists);
+		// the main statement listener-less read below then shows it.
+		await ensureClassCode(mid).catch((err: unknown) => {
+			console.error('[TeacherConsole] ensureClassCode failed:', err);
+		});
+		await loadMainStatement(mid);
 	} catch (err) {
 		console.error('[TeacherConsole] load failed:', err);
 		failed = true;

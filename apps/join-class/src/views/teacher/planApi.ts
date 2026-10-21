@@ -13,11 +13,9 @@ import type { ClassRole } from './planHelpers';
  *  Every function throws on failure; the screen turns that into an inline
  *  error with a retry. */
 
-/** `classRole` and `hint` are not in the shared `StatementSettings` type yet,
- *  so the patch is cast once, here. Firestore deep-merges the map, so the
- *  question's other settings are untouched. */
-function settingsPatch(settings: Record<string, string>): Partial<Statement> {
-	return { statementSettings: settings } as unknown as Partial<Statement>;
+/** Firestore deep-merges the map, so the question's other settings are untouched. */
+function settingsPatch(settings: { classRole?: ClassRole; hint?: string }): Partial<Statement> {
+	return { statementSettings: settings };
 }
 
 export async function saveQuestionText(statementId: string, text: string): Promise<void> {

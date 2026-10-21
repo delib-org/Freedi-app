@@ -118,3 +118,4 @@ firebase.e2e.json
 .emulator-data-solo/
 
 functions/lib-covenant/
+apps/join-class/scripts/.seed-output.json
