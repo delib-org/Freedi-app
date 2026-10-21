@@ -519,6 +519,35 @@ const ar: Record<string, string> = {
 	// all 7 locale files). Do not touch another lane's block.
 	// ---------------------------------------------------------------------
 	// >>> C2 BEGIN  namespaces: opening.* side.* table.*
+	'opening.eyebrow': 'سؤال الدرس',
+	'opening.watch': 'نشاهد معًا',
+	'opening.play': 'شاهدوا هنا',
+	'opening.video_title': 'فيديو المعضلة',
+	'opening.video_failed': 'المعلم يعرض',
+	'opening.name_prompt': 'ما اسمك؟',
+	'opening.name_hint': 'المعلم فقط يرى اسمك',
+	'opening.name_join': 'انضمام',
+	'opening.name_saving': 'جارٍ الانضمام…',
+	'opening.name_failed': 'لم يُحفظ. حاولوا مرة أخرى',
+	'opening.waiting_count': '{{n}} في الصف',
+	'side.title': 'إلى أي جانب أنتم أقرب؟',
+	'side.aria': 'إلى أي جانب أنتم أقرب؟ {{a}} في جانب و{{b}} في الجانب الآخر',
+	'side.name_a': 'يونتان',
+	'side.name_b': 'نوعا',
+	'side.near_a': 'قريب من {{name}}',
+	'side.middle': 'في المنتصف',
+	'side.near_b': 'قريب من {{name}}',
+	'side.confirm': 'تأكيد',
+	'side.saving': 'جارٍ الحفظ…',
+	'side.saved': 'تم الحفظ',
+	'side.failed': 'لم يُحفظ. حاولوا مرة أخرى',
+	'table.header': 'الطاولة',
+	'table.number': 'الطاولة {{n}}',
+	'table.members': 'من على طاولتي',
+	'table.go_sit': 'اذهبوا واجلسوا عند الطاولة',
+	'table.not_placed': 'ليس لديكم طاولة بعد. انتظروا المعلم',
+	'table.you': '(أنتم)',
+	'table.unnamed': 'شخص ما',
 	// <<< C2 END
 	// ---------------------------------------------------------------------
 	// >>> C3 BEGIN  namespaces: turn.* question.* answer.* proposal.* rate.* voting.* summary.*

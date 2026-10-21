@@ -531,6 +531,35 @@ const de: Record<string, string> = {
 	// all 7 locale files). Do not touch another lane's block.
 	// ---------------------------------------------------------------------
 	// >>> C2 BEGIN  namespaces: opening.* side.* table.*
+	'opening.eyebrow': 'Die Frage der Stunde',
+	'opening.watch': 'Gemeinsam ansehen',
+	'opening.play': 'Hier ansehen',
+	'opening.video_title': 'Dilemma-Video',
+	'opening.video_failed': 'Die Lehrkraft zeigt es',
+	'opening.name_prompt': 'Wie heißt du?',
+	'opening.name_hint': 'Nur die Lehrkraft sieht deinen Namen',
+	'opening.name_join': 'Beitreten',
+	'opening.name_saving': 'Beitritt läuft…',
+	'opening.name_failed': 'Nicht gespeichert. Noch einmal versuchen',
+	'opening.waiting_count': '{{n}} in der Klasse',
+	'side.title': 'Welcher Seite stehst du näher?',
+	'side.aria': 'Welcher Seite stehst du näher? {{a}} auf der einen, {{b}} auf der anderen Seite',
+	'side.name_a': 'Jonathan',
+	'side.name_b': 'Noa',
+	'side.near_a': 'Nah bei {{name}}',
+	'side.middle': 'In der Mitte',
+	'side.near_b': 'Nah bei {{name}}',
+	'side.confirm': 'Bestätigen',
+	'side.saving': 'Speichern…',
+	'side.saved': 'Gespeichert',
+	'side.failed': 'Nicht gespeichert. Noch einmal versuchen',
+	'table.header': 'Tisch',
+	'table.number': 'Tisch {{n}}',
+	'table.members': 'Wer an meinem Tisch sitzt',
+	'table.go_sit': 'Setzt euch an den Tisch',
+	'table.not_placed': 'Du hast noch keinen Tisch. Warte auf die Lehrkraft',
+	'table.you': '(du)',
+	'table.unnamed': 'Jemand',
 	// <<< C2 END
 	// ---------------------------------------------------------------------
 	// >>> C3 BEGIN  namespaces: turn.* question.* answer.* proposal.* rate.* voting.* summary.*

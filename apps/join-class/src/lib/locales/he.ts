@@ -549,6 +549,35 @@ const he: Record<string, string> = {
 	// all 7 locale files). Do not touch another lane's block.
 	// ---------------------------------------------------------------------
 	// >>> C2 BEGIN  namespaces: opening.* side.* table.*
+	'opening.eyebrow': 'השאלה של השיעור',
+	'opening.watch': 'צופים ביחד',
+	'opening.play': 'לצפות כאן',
+	'opening.video_title': 'סרטון הדילמה',
+	'opening.video_failed': 'המורה מקרין',
+	'opening.name_prompt': 'איך קוראים לכם?',
+	'opening.name_hint': 'רק המורה רואה את השם',
+	'opening.name_join': 'הצטרפות',
+	'opening.name_saving': 'מצטרפים…',
+	'opening.name_failed': 'לא נשמר. לנסות שוב',
+	'opening.waiting_count': '{{n}} בכיתה',
+	'side.title': 'לאיזה צד אתם קרובים?',
+	'side.aria': 'לאיזה צד אתם קרובים? {{a}} בצד אחד, {{b}} בצד השני',
+	'side.name_a': 'יונתן',
+	'side.name_b': 'נועה',
+	'side.near_a': 'קרוב ל{{name}}',
+	'side.middle': 'באמצע',
+	'side.near_b': 'קרוב ל{{name}}',
+	'side.confirm': 'אישור',
+	'side.saving': 'שומרים…',
+	'side.saved': 'נשמר',
+	'side.failed': 'לא נשמר. לנסות שוב',
+	'table.header': 'שולחן',
+	'table.number': 'שולחן {{n}}',
+	'table.members': 'מי בשולחן שלי',
+	'table.go_sit': 'לכו לשבת ליד השולחן',
+	'table.not_placed': 'עוד אין לכם שולחן. חכו למורה',
+	'table.you': '(אתם)',
+	'table.unnamed': 'מישהו',
 	// <<< C2 END
 	// ---------------------------------------------------------------------
 	// >>> C3 BEGIN  namespaces: turn.* question.* answer.* proposal.* rate.* voting.* summary.*

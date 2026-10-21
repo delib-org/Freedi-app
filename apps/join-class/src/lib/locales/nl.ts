@@ -518,6 +518,35 @@ const nl: Record<string, string> = {
 	// all 7 locale files). Do not touch another lane's block.
 	// ---------------------------------------------------------------------
 	// >>> C2 BEGIN  namespaces: opening.* side.* table.*
+	'opening.eyebrow': 'De vraag van de les',
+	'opening.watch': 'Samen kijken',
+	'opening.play': 'Hier kijken',
+	'opening.video_title': 'Dilemmavideo',
+	'opening.video_failed': 'De leraar projecteert',
+	'opening.name_prompt': 'Hoe heet je?',
+	'opening.name_hint': 'Alleen de leraar ziet je naam',
+	'opening.name_join': 'Meedoen',
+	'opening.name_saving': 'Bezig met meedoen…',
+	'opening.name_failed': 'Niet opgeslagen. Probeer het opnieuw',
+	'opening.waiting_count': '{{n}} in de klas',
+	'side.title': 'Bij welke kant sta je dichter?',
+	'side.aria': 'Bij welke kant sta je dichter? {{a}} aan de ene kant, {{b}} aan de andere',
+	'side.name_a': 'Jonathan',
+	'side.name_b': 'Noa',
+	'side.near_a': 'Dicht bij {{name}}',
+	'side.middle': 'In het midden',
+	'side.near_b': 'Dicht bij {{name}}',
+	'side.confirm': 'Bevestigen',
+	'side.saving': 'Opslaan…',
+	'side.saved': 'Opgeslagen',
+	'side.failed': 'Niet opgeslagen. Probeer het opnieuw',
+	'table.header': 'Tafel',
+	'table.number': 'Tafel {{n}}',
+	'table.members': 'Wie zit aan mijn tafel',
+	'table.go_sit': 'Ga aan de tafel zitten',
+	'table.not_placed': 'Je hebt nog geen tafel. Wacht op de leraar',
+	'table.you': '(jij)',
+	'table.unnamed': 'Iemand',
 	// <<< C2 END
 	// ---------------------------------------------------------------------
 	// >>> C3 BEGIN  namespaces: turn.* question.* answer.* proposal.* rate.* voting.* summary.*

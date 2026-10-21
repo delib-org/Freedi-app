@@ -1,4 +1,4 @@
-// Slot owned by lane C2 (waiting). Replace the placeholder; keep the export name.
-import { placeholderStep } from './stepSlot';
+// Slot owned by lane C2 (waiting). The screen lives in views/student/c2/WaitingView.ts (lazy chunk).
+import { lazyStep } from '../c2/lazyStep';
 
-export const WaitingStep = placeholderStep('waiting');
+export const WaitingStep = lazyStep('WaitingView', 'waiting');

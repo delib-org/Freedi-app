@@ -488,6 +488,35 @@ const fa: Record<string, string> = {
 	// all 7 locale files). Do not touch another lane's block.
 	// ---------------------------------------------------------------------
 	// >>> C2 BEGIN  namespaces: opening.* side.* table.*
+	'opening.eyebrow': 'پرسش درس',
+	'opening.watch': 'با هم تماشا کنیم',
+	'opening.play': 'اینجا تماشا کنید',
+	'opening.video_title': 'ویدیوی دوراهی',
+	'opening.video_failed': 'معلم نمایش می‌دهد',
+	'opening.name_prompt': 'اسمتان چیست؟',
+	'opening.name_hint': 'فقط معلم اسم شما را می‌بیند',
+	'opening.name_join': 'پیوستن',
+	'opening.name_saving': 'در حال پیوستن…',
+	'opening.name_failed': 'ذخیره نشد. دوباره تلاش کنید',
+	'opening.waiting_count': '{{n}} نفر در کلاس',
+	'side.title': 'به کدام طرف نزدیک‌ترید؟',
+	'side.aria': 'به کدام طرف نزدیک‌ترید؟ {{a}} در یک طرف، {{b}} در طرف دیگر',
+	'side.name_a': 'یوناتان',
+	'side.name_b': 'نوآ',
+	'side.near_a': 'نزدیک به {{name}}',
+	'side.middle': 'وسط',
+	'side.near_b': 'نزدیک به {{name}}',
+	'side.confirm': 'تأیید',
+	'side.saving': 'در حال ذخیره…',
+	'side.saved': 'ذخیره شد',
+	'side.failed': 'ذخیره نشد. دوباره تلاش کنید',
+	'table.header': 'میز',
+	'table.number': 'میز {{n}}',
+	'table.members': 'چه کسانی سر میز من هستند',
+	'table.go_sit': 'بروید سر میز بنشینید',
+	'table.not_placed': 'هنوز میزی ندارید. منتظر معلم بمانید',
+	'table.you': '(شما)',
+	'table.unnamed': 'کسی',
 	// <<< C2 END
 	// ---------------------------------------------------------------------
 	// >>> C3 BEGIN  namespaces: turn.* question.* answer.* proposal.* rate.* voting.* summary.*
