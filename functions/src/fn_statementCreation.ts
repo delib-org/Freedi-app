@@ -26,6 +26,8 @@ import { onStatementCreatedStats } from './fn_adminStats';
 import { recordSuggestionProgress } from './progress/statementCreationHook';
 import { generateDescriptionFromChildren } from './helpers';
 import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
+import { onClassOptionCreated } from './classroom/autoEvaluations';
+import { logError } from './utils/errorHandling';
 import {
 	computeHybridVector,
 	isHybridClusteringEnabled,
@@ -115,6 +117,22 @@ export async function onStatementCreated(
 				logger.warn('Question progress tracking failed:', err),
 			),
 		);
+
+		// Task 11: join-class — auto +1 by the author (and table co-authors) of an
+		// option written at a table, and lock that table's writing mode
+		if (statement.classTable) {
+			tasks.push(
+				onClassOptionCreated(db, statement)
+					.then(() => undefined)
+					.catch((err) =>
+						logError(err, {
+							operation: 'onStatementCreated.classAutoEvaluation',
+							statementId: statement.statementId,
+							metadata: { tableId: statement.classTable?.tableId },
+						}),
+					),
+			);
+		}
 
 		// Execute all tasks in parallel
 		await Promise.all(tasks);

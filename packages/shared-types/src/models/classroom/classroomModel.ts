@@ -118,7 +118,12 @@ export const ClassTableMarkerSchema = object({
 	tableId: string(),
 	/** True when one answer was written for the whole table. */
 	shared: boolean(),
-	/** memberUids at send time; each gets an auto +1 (id `auto_<uid>_<optionId>`). */
+	/**
+	 * memberUids at send time; each gets an auto +1, written by the server with
+	 * Join's own evaluation id `${uid}--${optionId}` (one doc per evaluator, so a
+	 * later hand rating updates it instead of counting twice). Only uids that
+	 * really sit at `tableId` are honoured.
+	 */
 	coAuthors: array(string()),
 });
 export type ClassTableMarker = InferOutput<typeof ClassTableMarkerSchema>;
