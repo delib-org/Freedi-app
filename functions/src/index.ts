@@ -15,6 +15,13 @@ import { Collections, functionConfig } from '@freedi/shared-types';
 
 // Structured error handling
 import { logError } from './utils/errorHandling';
+import {
+	createFirestoreFunction,
+	getTimestamp,
+	HOT_TRIGGER_MEMORY,
+} from './utils/createFirestoreFunction';
+
+export { getTimestamp };
 import { initFunctionsSentry } from './utils/sentry';
 
 // Before anything else, so a crash during cold start is reported too.
@@ -307,15 +314,6 @@ const isProduction =
 /**
  * Gets current timestamp in HH:MM:SS.mmm format
  */
-export const getTimestamp = (): string => {
-	const now = new Date();
-	const hours = String(now.getHours()).padStart(2, '0');
-	const minutes = String(now.getMinutes()).padStart(2, '0');
-	const seconds = String(now.getSeconds()).padStart(2, '0');
-	const ms = String(now.getMilliseconds()).padStart(3, '0');
-
-	return `${hours}:${minutes}:${seconds}.${ms}`;
-};
 
 console.info(`[${getTimestamp()}] Environment:`, isProduction ? 'Production' : 'Development');
 
@@ -470,65 +468,6 @@ const wrapAdminHttpFunction = (
 	);
 };
 
-/**
- * Creates a wrapper for Firestore triggers with standardized error handling.
- *
- * Note: Firebase trigger types (onDocumentCreated, onDocumentUpdated, onDocumentWritten,
- * onDocumentDeleted) have different event structures and incompatible generic parameters.
- * The callback's event type is preserved through the generic T, but we use a broad
- * function type for triggerType because the Firebase SDK types can't be unified.
- *
- * @param path - Document path pattern (e.g., '/statements/{statementId}')
- * @param triggerType - Firebase trigger function (onDocumentCreated, etc.)
- * @param callback - Handler function that receives the typed event
- * @param functionName - Name for logging purposes
- * @returns Configured Firebase Cloud Function
- */
-function createFirestoreFunction<T>(
-	path: string,
-	triggerType:
-		| typeof onDocumentCreated
-		| typeof onDocumentUpdated
-		| typeof onDocumentWritten
-		| typeof onDocumentDeleted,
-	callback: (event: T) => Promise<unknown>,
-	functionName: string,
-): ReturnType<typeof onDocumentCreated> {
-	// Cast to unknown first, then to a compatible function signature
-	// This is required because Firebase's trigger types have incompatible generic structures
-	const trigger = triggerType as unknown as (
-		opts: { document: string } & typeof functionConfig,
-		handler: (event: T) => Promise<void>,
-	) => ReturnType<typeof onDocumentCreated>;
-
-	return trigger(
-		{
-			document: path,
-			...functionConfig,
-		},
-		async (event: T) => {
-			const startTime = Date.now();
-			const startTimestamp = getTimestamp();
-			console.info(`[${startTimestamp}] ▶ Starting ${functionName}`);
-
-			try {
-				await callback(event);
-				const duration = Date.now() - startTime;
-				const endTimestamp = getTimestamp();
-				console.info(`[${endTimestamp}] ✓ Completed ${functionName} in ${duration}ms`);
-			} catch (error) {
-				const duration = Date.now() - startTime;
-				const endTimestamp = getTimestamp();
-				logError(error, {
-					operation: `firestoreTrigger.${functionName}`,
-					metadata: { duration, endTimestamp, path },
-				});
-				throw error;
-			}
-		},
-	);
-}
-
 // --------------------------
 // HTTP FUNCTIONS
 // --------------------------
@@ -603,6 +542,7 @@ exports.onStatementCreated = createFirestoreFunction(
 	onDocumentCreated,
 	onStatementCreated,
 	'onStatementCreated',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 // ============================================
@@ -719,6 +659,7 @@ exports.handleWaitingRoleSubscriptions = createFirestoreFunction(
 	onDocumentWritten,
 	onNewSubscription,
 	'handleWaitingRoleSubscriptions',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 // Subscription updates: revert bans of admins/creators, then keep the user's
@@ -728,6 +669,7 @@ exports.validateRoleChange = createFirestoreFunction(
 	onDocumentUpdated,
 	onSubscriptionUpdated,
 	'validateRoleChange',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 // Membership lifecycle: numberOfMembers + userFeed entry. Split from the old
@@ -792,6 +734,7 @@ exports.newEvaluation = createFirestoreFunction(
 	onDocumentCreated,
 	newEvaluation,
 	'newEvaluation',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 exports.deleteEvaluation = createFirestoreFunction(
@@ -799,6 +742,7 @@ exports.deleteEvaluation = createFirestoreFunction(
 	onDocumentDeleted,
 	deleteEvaluation,
 	'deleteEvaluation',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 exports.updateEvaluation = createFirestoreFunction(
@@ -806,6 +750,7 @@ exports.updateEvaluation = createFirestoreFunction(
 	onDocumentUpdated,
 	updateEvaluation,
 	'updateEvaluation',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 // Results functions
