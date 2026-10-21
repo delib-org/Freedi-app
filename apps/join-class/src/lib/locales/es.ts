@@ -521,6 +521,7 @@ const es: Record<string, string> = {
 	// all 7 locale files). Do not touch another lane's block.
 	// ---------------------------------------------------------------------
 	// >>> C2 BEGIN  namespaces: opening.* side.* table.*
+	'opening.name_placeholder': 'Tu nombre',
 	'opening.eyebrow': 'La pregunta de la clase',
 	'opening.watch': 'Mirar juntos',
 	'opening.play': 'Ver aquí',

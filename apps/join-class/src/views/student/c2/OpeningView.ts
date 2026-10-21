@@ -25,7 +25,8 @@ function player(url: string, state: OpeningState): m.Vnode {
 		return m('iframe.opening__player', {
 			src: embed,
 			title: t('opening.video_title'),
-			allow: 'autoplay; encrypted-media; picture-in-picture',
+			allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
+			referrerpolicy: 'strict-origin-when-cross-origin',
 			allowfullscreen: true,
 		});
 	}

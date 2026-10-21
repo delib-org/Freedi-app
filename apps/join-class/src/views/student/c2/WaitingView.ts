@@ -93,7 +93,7 @@ function nameForm(state: WaitingState, mainId: string): m.Children {
 					type: 'text',
 					autocomplete: 'off',
 					value: state.name,
-					placeholder: t('chat.name_placeholder'),
+					placeholder: t('opening.name_placeholder'),
 					'aria-label': t('opening.name_prompt'),
 					oninput: (e: Event) => {
 						state.name = (e.target as HTMLInputElement).value;

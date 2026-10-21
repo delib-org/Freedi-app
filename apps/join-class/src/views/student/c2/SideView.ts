@@ -28,10 +28,13 @@ interface SideState {
 	timer?: ReturnType<typeof setTimeout>;
 	/** Latest write wins when several are in flight. */
 	writeSeq: number;
+	/** A thumb move waits for its debounced write. */
+	pending: boolean;
 }
 
 async function save(state: SideState, mainId: string): Promise<void> {
 	clearTimeout(state.timer);
+	state.pending = false;
 	const seq = ++state.writeSeq;
 	state.status = 'saving';
 	m.redraw();
@@ -68,10 +71,19 @@ export const SideView: m.Component<StepAttrs> = {
 		state.value = state.touched ? (saved as number) : SIDE_CENTER;
 		state.status = state.touched ? 'saved' : 'idle';
 		state.writeSeq = 0;
+		state.pending = false;
 	},
 
 	onremove(vnode) {
-		clearTimeout((vnode.state as unknown as SideState).timer);
+		const state = vnode.state as unknown as SideState;
+		clearTimeout(state.timer);
+		// the teacher may advance within the debounce: do not lose the last move
+		if (state.pending) {
+			state.pending = false;
+			setMySide(vnode.attrs.main.statementId, state.value).catch((error: unknown) => {
+				console.error('[SideStep] flush on leave failed:', error);
+			});
+		}
 	},
 
 	view(vnode) {
@@ -105,6 +117,7 @@ export const SideView: m.Component<StepAttrs> = {
 					state.value = value;
 					state.touched = true;
 					state.status = 'idle';
+					state.pending = true;
 					clearTimeout(state.timer);
 					state.timer = setTimeout(() => void save(state, mainId), SIDE_SAVE_DEBOUNCE_MS);
 				},
