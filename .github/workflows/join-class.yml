@@ -26,17 +26,18 @@ jobs:
           node-version: '22.x'
           cache: 'npm'
 
-      # shared-types is a file: dependency compiled to dist/.
+      # Root install first (workspaces link packages/*), then build shared-types,
+      # which the app consumes as a file: dependency compiled to dist/. Same order
+      # as mass-consensus.yml. @freedi/shared-utils is aliased to its source in
+      # vite.config.ts and needs no build. eslint also lives at the repo root.
+      - name: Install workspace dependencies
+        run: npm install
+
       - name: Build shared-types
         working-directory: ./packages/shared-types
-        run: npm ci && npm run build
+        run: npm run build
 
-      # eslint and its config live at the repo root; the app finds them by
-      # walking up the tree.
-      - name: Install root toolchain
-        run: npm ci
-
-      # `npm ci` against the committed lockfile. apps/join-class/.npmrc sets
+      # `npm ci` against the lockfile (force-added: the root .gitignore ignores package-lock.json). apps/join-class/.npmrc sets
       # legacy-peer-deps because a plain resolve dies in npm's arborist
       # ("Cannot read properties of null (reading 'edgesOut')") on vitest's peer set.
       - name: Install Join Class
