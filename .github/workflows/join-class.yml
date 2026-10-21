@@ -1,7 +1,15 @@
 name: Join Class
 
 # WizCol Class (apps/join-class) is a copy of apps/join, and Join has no CI of
-# its own, so this is the gate for the copy: lint, typecheck, unit tests, build.
+# its own, so this is the gate for the copy: lint, typecheck, unit tests, build,
+# the student-entry perf gate, and (when enabled) the full-lesson e2e.
+#
+# TO ENABLE THE FULL-LESSON E2E JOB once the classroom lanes (C1-C4) are merged:
+#   GitHub -> Settings -> Secrets and variables -> Actions -> Variables ->
+#   New repository variable  JOIN_CLASS_E2E_LESSON = true
+# (or: gh variable set JOIN_CLASS_E2E_LESSON --body true). Nothing else to flip:
+# the job always runs the engine phases (E2E_LESSON_ENGINE=1). Until then the job
+# is skipped, not failed.
 
 on:
   pull_request:
@@ -59,3 +67,102 @@ jobs:
       - name: Build
         working-directory: ./apps/join-class
         run: npm run build
+
+      # Student-entry weight, one font family, no autoplay (IA 9b). The budget is
+      # a ratchet set to today's measurement; the target is 300 kB gzipped. See
+      # BUDGET_GZIP_BYTES in scripts/perf-gate.mjs and docs/performance/join-class.md.
+      - name: Perf gate
+        working-directory: ./apps/join-class
+        run: npm run perf:gate
+
+  # Full lesson on the emulators: plan, join by code, seating, two table turns,
+  # proposals, plenum, ballot, summary. Skipped until JOIN_CLASS_E2E_LESSON=true.
+  e2e-lesson:
+    if: ${{ vars.JOIN_CLASS_E2E_LESSON == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_PROJECT_ID: freedi-test
+      E2E_AUTH_PORT: '9099'
+      E2E_FIRESTORE_PORT: '8081'
+      E2E_LESSON_ENGINE: '1'
+      JOIN_CLASS_URL: http://localhost:3035
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install workspace dependencies
+        run: npm install
+
+      - name: Build shared-types
+        working-directory: ./packages/shared-types
+        run: npm run build
+
+      - name: Install and build functions
+        working-directory: ./functions
+        run: |
+          npm install
+          npm run build
+
+      - name: Install Join Class
+        working-directory: ./apps/join-class
+        run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      # Placeholder web config: with the emulators nothing here is a secret.
+      - name: Write emulator env
+        working-directory: ./apps/join-class
+        run: |
+          cat > .env.local <<'ENV'
+          VITE_FIREBASE_API_KEY=ci-emulator-key
+          VITE_FIREBASE_AUTH_DOMAIN=localhost
+          VITE_FIREBASE_PROJECT_ID=freedi-test
+          VITE_FIREBASE_APP_ID=ci-emulator-app
+          VITE_FIREBASE_DATABASE_URL=http://localhost:9000?ns=freedi-test
+          ENV
+
+      - name: Start emulators (auth, firestore, functions, database)
+        run: |
+          npx firebase emulators:start --project freedi-test \
+            --only auth,firestore,functions,database > emulators.log 2>&1 &
+          for i in $(seq 1 90); do
+            curl -sf http://localhost:8081 > /dev/null && curl -sf http://localhost:9099 > /dev/null && exit 0
+            sleep 2
+          done
+          cat emulators.log
+          exit 1
+        env:
+          FUNCTIONS_DISCOVERY_TIMEOUT: '90'
+
+      - name: Start the app (clock at 20x)
+        working-directory: ./apps/join-class
+        run: |
+          VITE_EMULATOR_AUTH_PORT=9099 VITE_EMULATOR_FIRESTORE_PORT=8081 \
+          VITE_EMULATOR_DATABASE_PORT=9000 VITE_EMULATOR_FUNCTIONS_PORT=5001 \
+          VITE_CLASS_CLOCK_SPEED=20 npx vite --port 3035 --strictPort > vite.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3035 > /dev/null && exit 0
+            sleep 1
+          done
+          cat vite.log
+          exit 1
+
+      - name: Full-lesson e2e
+        working-directory: ./apps/join-class
+        run: npm run e2e:lesson
+
+      - name: Upload failure screenshots and logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-lesson-failure
+          path: |
+            apps/join-class/e2e-lesson-*.png
+            emulators.log
+            apps/join-class/vite.log
+
