@@ -1,6 +1,10 @@
 import m from 'mithril';
 import '@/styles/teacher.scss';
 import '@/styles/console.scss';
+import '@/styles/console-board.scss';
+import '@/styles/console-chips.scss';
+import '@/styles/console-panels.scss';
+import '@/styles/console-sheet.scss';
 import { t } from '@/lib/i18n';
 import { getMainStatement, getSubQuestions } from '@/lib/store';
 import {
@@ -31,9 +35,10 @@ import {
 	goToStep,
 	startPlenum,
 } from './consoleActions';
-import { closeConsole, openConsole, session } from './consoleSession';
+import { releaseConsole, retainConsole, session } from './consoleSession';
 import { consoleState, dismissFailure, watchOptions } from './consoleState';
 import type { ConsoleView } from './consoleState';
+import { abortDrag } from './dragController';
 import { GatePanel } from './GatePanel';
 import { StepRail } from './StepRail';
 import { SwitchBand } from './SwitchBand';
@@ -150,7 +155,7 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 }
 
 export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
-	oninit() {
+	oninit(vnode) {
 		const mid = m.route.param('mid');
 		if (!mid) {
 			m.route.set('/t');
@@ -158,11 +163,13 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 			return;
 		}
 		showQr = false;
-		void openConsole(mid);
+		(vnode.state as { held?: boolean }).held = true;
+		retainConsole(mid);
 	},
 
-	onremove() {
-		closeConsole();
+	onremove(vnode) {
+		abortDrag();
+		if ((vnode.state as { held?: boolean }).held) releaseConsole();
 	},
 
 	view({ attrs }) {
@@ -253,7 +260,10 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 						students: rosterStudents(classState.roster),
 						questions,
 						plenum: isPlenum(challenge),
-						onClose: () => m.route.set(`/t/${mid}`),
+						onClose: () => {
+							consoleState.focusTableN = attrs.sheetN ?? null;
+							m.route.set(`/t/${mid}`);
+						},
 					})
 				: null,
 			m(FacilitatorPanel),

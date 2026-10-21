@@ -57,41 +57,24 @@ export function formatSpeakerTime(ms: number): string {
 	return `${Math.floor(total / SECONDS_PER_MINUTE)}:${String(total % SECONDS_PER_MINUTE).padStart(2, '0')}`;
 }
 
-// ---- class settings read off a Statement (not in the typed settings yet) -----
-
-interface ClassSettingsView {
-	roundPhase?: unknown;
-	ballot?: { frozenAt?: unknown; closedAt?: unknown } | null;
-}
-
-interface VotingSettingsView {
-	threshold?: unknown;
-}
-
 /** The gate: `votingSettings.threshold`, else DEFAULT_GATE. */
 export function gateOf(challenge: Statement | null | undefined): number {
-	const settings = (challenge as unknown as { votingSettings?: VotingSettingsView } | null)
-		?.votingSettings;
-	const value = settings?.threshold;
+	const value = challenge?.votingSettings?.threshold;
 
 	return typeof value === 'number' && Number.isFinite(value) ? value : DEFAULT_GATE;
 }
 
-function classSettings(challenge: Statement | null | undefined): ClassSettingsView | undefined {
-	return challenge?.statementSettings as unknown as ClassSettingsView | undefined;
-}
-
 /** Plenum is on when the challenge question's roundPhase is 'improve'. */
 export function isPlenum(challenge: Statement | null | undefined): boolean {
-	return classSettings(challenge)?.roundPhase === 'improve';
+	return challenge?.statementSettings?.roundPhase === 'improve';
 }
 
 export function isBallotFrozen(challenge: Statement | null | undefined): boolean {
-	return typeof classSettings(challenge)?.ballot?.frozenAt === 'number';
+	return typeof challenge?.statementSettings?.ballot?.frozenAt === 'number';
 }
 
 export function isBallotClosed(challenge: Statement | null | undefined): boolean {
-	return typeof classSettings(challenge)?.ballot?.closedAt === 'number';
+	return typeof challenge?.statementSettings?.ballot?.closedAt === 'number';
 }
 
 // ---- gate rows -------------------------------------------------------------

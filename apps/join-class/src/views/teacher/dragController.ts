@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { t } from '@/lib/i18n';
-import { arrowDelta, dragReducer } from '@/lib/classroom/dragReducer';
+import { IDLE, arrowDelta, dragReducer } from '@/lib/classroom/dragReducer';
 import type { DragAction, DropTarget } from '@/lib/classroom/dragReducer';
 import { moveStudent } from './consoleActions';
 import { consoleState } from './consoleState';
@@ -49,6 +49,16 @@ export function dropAttrs(target: DropTarget): Record<string, string> {
 	return { [DROP_ATTR]: target === null ? DROP_NONE : String(target) };
 }
 
+let removeWindowListeners: (() => void) | null = null;
+
+/** Drop any in-flight drag and its window listeners (console unmounting). */
+export function abortDrag(): void {
+	removeWindowListeners?.();
+	removeWindowListeners = null;
+	consoleState.drag = IDLE;
+	consoleState.ghost = null;
+}
+
 export function pressChip(event: PointerEvent, chip: ChipRef): void {
 	if (event.button !== PRIMARY_BUTTON || consoleState.drag.mode === 'keyboard') return;
 	dispatch({ type: 'press', uid: chip.uid, from: chip.from, x: event.clientX, y: event.clientY });
@@ -60,14 +70,19 @@ export function pressChip(event: PointerEvent, chip: ChipRef): void {
 			consoleState.ghost = { name: chip.name, x: e.clientX, y: e.clientY };
 		}
 	};
-	const finish = (type: 'drop' | 'cancel'): void => {
+	const detach = (): void => {
 		window.removeEventListener('pointermove', onMove);
 		window.removeEventListener('pointerup', onUp);
 		window.removeEventListener('pointercancel', onCancel);
+		removeWindowListeners = null;
+	};
+	const finish = (type: 'drop' | 'cancel'): void => {
+		detach();
 		dispatch({ type });
 	};
 	const onUp = (): void => finish('drop');
 	const onCancel = (): void => finish('cancel');
+	removeWindowListeners = detach;
 	window.addEventListener('pointermove', onMove);
 	window.addEventListener('pointerup', onUp);
 	window.addEventListener('pointercancel', onCancel);

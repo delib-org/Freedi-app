@@ -36,6 +36,8 @@ export interface ConsoleState {
 	noDeviceFor: number | null;
 	/** Chip to refocus after a redraw (keyboard path). */
 	focusUid: string | null;
+	/** Table whose title link gets focus back after its sheet closes. */
+	focusTableN: number | null;
 	/** Polite live-region text (moves, strip appearing). */
 	announce: string;
 	/** Options per question id (challenge for the gate, all for "what they wrote"). */
@@ -51,6 +53,7 @@ export const consoleState: ConsoleState = {
 	menuUid: null,
 	noDeviceFor: null,
 	focusUid: null,
+	focusTableN: null,
 	announce: '',
 	options: new Map<string, Statement[]>(),
 };

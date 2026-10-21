@@ -20,10 +20,9 @@ import { act, consoleState } from './consoleState';
  * retry and never a crash.
  */
 
-/** roundPhase is a class-only key, not in the typed StatementSettings yet. */
 const PLENUM_PATCH = {
 	statementSettings: { roundPhase: 'improve' },
-} as unknown as Partial<Statement>;
+} as Partial<Statement>;
 
 export function goToStep(mainId: string, index: number): Promise<boolean> {
 	return act(`step:${index}`, t('console.act_step'), () => setLessonStep(mainId, index));

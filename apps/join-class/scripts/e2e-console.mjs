@@ -137,6 +137,7 @@ try {
 	const splitSeed = seed(['--step=3', '--id=c4split']);
 	{
 		const { context, page, calls } = await openConsole(splitSeed);
+		await page.waitForFunction((n) => document.querySelectorAll('.roster-card .member-chip').length === n, splitSeed.students.length, { timeout: TIMEOUT });
 		check('roster card lists the joined students', (await page.locator('.roster-card .member-chip').count()) === splitSeed.students.length);
 		await page.locator('[data-action="assign"]').click();
 		await page.waitForTimeout(1500);
@@ -222,6 +223,27 @@ try {
 		await page.waitForSelector('.written-card', { timeout: TIMEOUT });
 		check('"what they wrote" shows cards', (await page.locator('.written-card').count()) > 0);
 		check('view is carried in the URL', page.url().includes('view=texts'));
+		await context.close();
+	}
+
+	// ---- 3b. toggling the sheet keeps the console session (no skeleton, focus returns) ----
+	{
+		const { context, page } = await openConsole(seated);
+		await page.waitForSelector('.table-card', { timeout: TIMEOUT });
+		await page.evaluate(() => {
+			window.__skeleton = false;
+			new MutationObserver(() => {
+				if (document.querySelector('.plan__skeleton')) window.__skeleton = true;
+			}).observe(document.body, { childList: true, subtree: true });
+		});
+		await page.locator('.table-card__title').first().click();
+		await page.waitForSelector('.table-sheet', { timeout: TIMEOUT });
+		await page.keyboard.press('Escape');
+		await page.waitForSelector('.table-sheet', { state: 'detached', timeout: TIMEOUT });
+		await page.waitForSelector('.table-card', { timeout: TIMEOUT });
+		check('sheet toggle never shows the loading skeleton', (await page.evaluate(() => window.__skeleton)) === false);
+		const focused = await page.evaluate(() => document.activeElement?.className ?? '');
+		check('focus returns to the opener when the sheet closes', String(focused).includes('table-card__title'), String(focused));
 		await context.close();
 	}
 

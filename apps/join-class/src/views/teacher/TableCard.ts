@@ -123,13 +123,21 @@ export const TableCard: m.Component<TableCardAttrs> = {
 				class: targetClass,
 				'data-table': table.n,
 				...dropAttrs(table.n),
+				oncreate: (v: m.VnodeDOM) => {
+					if (consoleState.focusTableN !== table.n) return;
+					consoleState.focusTableN = null;
+					(v.dom.querySelector('.table-card__title') as HTMLElement | null)?.focus();
+				},
 				'aria-label': t('console.table_n', { n: table.n }),
 			},
 			[
 				m('h3.table-card__head', [
 					m(
 						m.route.Link,
-						{ class: 'table-card__title', href: `/t/${mainId}/table/${table.n}` },
+						{
+							class: 'table-card__title',
+							href: `/t/${mainId}/table/${table.n}`,
+						},
 						t('console.table_n', { n: table.n }),
 					),
 					m('span.table-card__turn', t('console.turn_n', { n: table.turn })),

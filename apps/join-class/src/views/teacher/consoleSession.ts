@@ -51,7 +51,7 @@ function readStartedAt(mainId: string): number {
 	return now;
 }
 
-export function closeConsole(): void {
+function closeConsole(): void {
 	generation += 1;
 	for (const stop of stops) stop();
 	stops = [];
@@ -64,7 +64,43 @@ export function closeConsole(): void {
 	}
 }
 
-export async function openConsole(mainId: string): Promise<void> {
+/** Delay before an unreferenced session is torn down (covers a route swap). */
+const CLOSE_GRACE_MS = 400;
+
+let refs = 0;
+let closeTimer: number | null = null;
+let openedFor = '';
+
+/**
+ * A console view mounts: keep the session for `mainId` alive. `/t/:mid` and
+ * `/t/:mid/table/:n` are different route components, so a sheet toggle unmounts
+ * one console and mounts another; the session survives that swap and is only
+ * torn down once no view holds it (after a short grace period).
+ */
+export function retainConsole(mainId: string): void {
+	refs += 1;
+	if (closeTimer !== null) {
+		window.clearTimeout(closeTimer);
+		closeTimer = null;
+	}
+	if (openedFor === mainId && session.status !== 'failed') return;
+	openedFor = mainId;
+	void openConsole(mainId);
+}
+
+export function releaseConsole(): void {
+	refs = Math.max(0, refs - 1);
+	if (refs > 0 || closeTimer !== null) return;
+	closeTimer = window.setTimeout(() => {
+		closeTimer = null;
+		if (refs === 0) {
+			openedFor = '';
+			closeConsole();
+		}
+	}, CLOSE_GRACE_MS);
+}
+
+async function openConsole(mainId: string): Promise<void> {
 	closeConsole();
 	const mine = generation;
 	resetConsoleState(mainId);

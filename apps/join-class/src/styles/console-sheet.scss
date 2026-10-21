@@ -1,0 +1,118 @@
+// Teacher console partial: table sheet. See console.scss for the shared tokens.
+
+// ---- table sheet ------------------------------------------------------------
+.table-sheet-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+}
+
+.table-sheet__scrim {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  background: var(--bg-overlay);
+  border: 0;
+  animation: console-fade var(--dur-base) var(--ease-out);
+}
+
+.table-sheet {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: min(420px, 100vw);
+  padding: var(--space-md);
+  overflow-y: auto;
+  background: var(--bg-paper);
+  box-shadow: var(--shadow-lg);
+  animation: console-sheet-in var(--dur-base) var(--ease-out);
+}
+
+.table-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.table-sheet__title {
+  margin: 0;
+}
+
+.table-sheet__now,
+.table-sheet__question,
+.table-sheet__timer,
+.table-sheet__asker {
+  margin: 0;
+}
+
+.table-sheet__timer--over {
+  color: var(--terra-600);
+  font-weight: var(--font-weight-bold);
+}
+
+.table-sheet__actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.table-sheet__section {
+  margin: var(--space-sm) 0 0;
+}
+
+.table-sheet__members {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.table-sheet__member {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  border-block-end: 1px solid var(--paper-line);
+}
+
+.table-sheet__member-name {
+  flex: 1;
+  font-weight: var(--font-weight-bold);
+}
+
+.table-sheet__member-side {
+  font-size: var(--font-size-sm);
+  color: var(--ink-muted);
+}
+
+@keyframes console-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes console-sheet-in {
+  from {
+    transform: translateX(var(--sheet-from, 100%));
+  }
+}
+
+[dir='rtl'] .table-sheet {
+  --sheet-from: -100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table-sheet,
+  .table-sheet__scrim {
+    animation: none;
+  }
+
+  .table-card__bar-fill {
+    transition: none;
+  }
+}
