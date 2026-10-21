@@ -223,4 +223,45 @@ describe('join-class engine rules', () => {
 			await assertFails(setDoc(doc(as(S2), 'votes', `${S1}--${CH}`), vote(S1, CH, 'p2')));
 		});
 	});
+	describe("a table's own question (+ our own question)", () => {
+		const ownQuestion = (uid, id, tableId) => ({
+			statementId: id,
+			parentId: MAIN,
+			topParentId: MAIN,
+			parents: [MAIN],
+			statementType: 'question',
+			creatorId: uid,
+			creator: { uid, displayName: 'S' },
+			statement: 'Our own question?',
+			statementSettings: { classRole: 'guiding' },
+			classTable: { tableId, shared: false, coAuthors: [] },
+			createdAt: T0,
+			lastUpdate: T0,
+		});
+
+		it('lets a seated student create a question under the lesson as themselves', async () => {
+			await assertSucceeds(setDoc(doc(as(S1), 'statements', 'own-q1'), ownQuestion(S1, 'own-q1', T1)));
+		});
+
+		it('denies creating it in the name of a classmate', async () => {
+			await assertFails(setDoc(doc(as(S2), 'statements', 'own-q2'), ownQuestion(S1, 'own-q2', T1)));
+		});
+
+		it('denies an anonymous visitor', async () => {
+			await assertFails(
+				setDoc(doc(env.unauthenticatedContext().firestore(), 'statements', 'own-q3'), ownQuestion(S1, 'own-q3', T1)),
+			);
+		});
+
+		it('denies stamping an admin-only field (creatorRole) on it', async () => {
+			await assertFails(
+				setDoc(doc(as(S1), 'statements', 'own-q4'), { ...ownQuestion(S1, 'own-q4', T1), creatorRole: 'admin' }),
+			);
+		});
+
+		it('denies a classmate rewriting its text afterwards', async () => {
+			await assertSucceeds(setDoc(doc(as(S1), 'statements', 'own-q5'), ownQuestion(S1, 'own-q5', T1)));
+			await assertFails(updateDoc(doc(as(S2), 'statements', 'own-q5'), { statement: 'hijacked' }));
+		});
+	});
 });

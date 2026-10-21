@@ -8,7 +8,7 @@
 //   # apps/join-class:
 //   node scripts/e2e-console.mjs
 //
-// Env: JOIN_CLASS_URL (default http://localhost:3034), FS_PORT (8134), AUTH_PORT (9134),
+// Env: JOIN_CLASS_URL (default http://localhost:3034), E2E_FIRESTORE_PORT, E2E_AUTH_PORT (see e2e-env.mjs),
 //      E2E_ENGINE=1 once the classroom callables (C1) are emulated: the callable-backed
 //      steps then assert their effect in Firestore instead of the inline error + retry.
 // No `networkidle` anywhere (the app keeps listeners open).
@@ -22,15 +22,14 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..', '..', '..');
-const BASE = process.env.JOIN_CLASS_URL ?? 'http://localhost:3034';
-const FS_PORT = process.env.FS_PORT ?? '8134';
-const AUTH_PORT = process.env.AUTH_PORT ?? '9134';
+import { BASE_URL as BASE, PROJECT_ID } from './e2e-env.mjs';
+
 const ENGINE = process.env.E2E_ENGINE === '1';
 const TIMEOUT = 20000;
+// a fresh workspace id per run: students get new random uids every seed, so re-using an id would pile up rosters
+const RUN = Date.now();
 
-process.env.FIRESTORE_EMULATOR_HOST = `localhost:${FS_PORT}`;
-process.env.FIREBASE_AUTH_EMULATOR_HOST = `localhost:${AUTH_PORT}`;
-if (getApps().length === 0) initializeApp({ projectId: 'freedi-test' });
+if (getApps().length === 0) initializeApp({ projectId: PROJECT_ID });
 const adminDb = getFirestore();
 
 let failures = 0;
@@ -98,7 +97,7 @@ async function openConsole(seedOut, path = '') {
 
 try {
 	// ---- 1. a whole lesson with the one forward control -----------------------
-	const lesson = seed(['--step=0', '--id=c4lesson']);
+	const lesson = seed(['--step=0', `--id=c4lesson-${RUN}`]);
 	{
 		const { context, page } = await openConsole(lesson);
 		check('rail has 8 step buttons in an ordered list', (await page.locator('ol[aria-label] button.step-rail__step').count()) === 8);
@@ -134,7 +133,7 @@ try {
 	}
 
 	// ---- 2. split into tables (callable) --------------------------------------
-	const splitSeed = seed(['--step=3', '--id=c4split']);
+	const splitSeed = seed(['--step=3', `--id=c4split-${RUN}`]);
 	{
 		const { context, page, calls } = await openConsole(splitSeed);
 		await page.waitForFunction((n) => document.querySelectorAll('.roster-card .member-chip').length === n, splitSeed.students.length, { timeout: TIMEOUT });
@@ -152,7 +151,7 @@ try {
 	}
 
 	// ---- 3. seated class: keyboard move, pointer move, menu, sheet, gate, texts -
-	const seated = seed(['--step=5', '--seated', '--proposals', '--id=c4seat']);
+	const seated = seed(['--step=5', '--seated', '--proposals', `--id=c4seat-${RUN}`]);
 	{
 		const { context, page, calls } = await openConsole(seated);
 		await page.waitForSelector('.table-card', { timeout: TIMEOUT });
@@ -214,6 +213,29 @@ try {
 		// gate panel
 		check('gate panel lists one row per proposal', (await page.locator('.gate-panel__row').count()) === seated.proposalIds.length);
 		check('gate rows carry a verdict in words', (await page.locator('.gate-panel__note').first().innerText()).trim().length > 0);
+
+		// the cog's gate slider moves the gate the console, projector and engine read
+		await page.click('.facilitator-panel__handle');
+		await page.waitForSelector('[data-testid=gate-slider]', { timeout: TIMEOUT });
+		await page.locator('[data-testid=gate-slider]').fill('0.8');
+		const gateWritten = await (async () => {
+			const end = Date.now() + TIMEOUT;
+			while (Date.now() < end) {
+				const snap = await adminDb.collection('statements').doc(seated.mainId).get();
+				if (snap.data()?.votingSettings?.threshold === 0.8) return true;
+				await new Promise((r) => setTimeout(r, 250));
+			}
+
+			return false;
+		})();
+		check('the cog gate slider writes votingSettings.threshold on the lesson', gateWritten);
+		await page.keyboard.press('Escape');
+		await page.waitForFunction(
+			() => (document.querySelector('.gate-panel__gate')?.textContent ?? '').includes('0.80'),
+			null,
+			{ timeout: TIMEOUT },
+		);
+		check('the gate line on the console moved to 0.80', true);
 
 		// switch band at proposals
 		check('plenum button is offered at proposals', (await page.locator('[data-action="plenum"]').count()) === 1);

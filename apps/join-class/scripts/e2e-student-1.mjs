@@ -18,18 +18,11 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
+import { BASE_URL as BASE, PROJECT_ID as PROJECT } from './e2e-env.mjs';
 
-const AUTH_PORT = process.env.E2E_AUTH_PORT ?? '9132';
-const FS_PORT = process.env.E2E_FS_PORT ?? '8132';
-const BASE = process.env.JOIN_CLASS_URL ?? 'http://localhost:3032';
-const PROJECT = 'freedi-test';
 const TIMEOUT = 15000;
 const STUDENT_NAME = 'Dana E2E';
 const VIDEO_URL = 'https://example.test/dilemma.mp4';
-
-process.env.FIRESTORE_EMULATOR_HOST = `localhost:${FS_PORT}`;
-process.env.FIREBASE_AUTH_EMULATOR_HOST = `localhost:${AUTH_PORT}`;
-process.env.GCLOUD_PROJECT = PROJECT;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, '..', '..', '..');

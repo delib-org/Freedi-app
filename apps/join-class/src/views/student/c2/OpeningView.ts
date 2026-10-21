@@ -4,13 +4,14 @@ import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
 import { stepLabel } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
-import { challengeOf, videoUrlOf, youtubeEmbedUrl } from '../c2/c2Helpers';
+import { challengeOf, youtubeEmbedUrl } from '../c2/c2Helpers';
+import { videoUrlOf } from '@/lib/classroom/classSettings';
 import type { StepAttrs } from '../steps/stepSlot';
 
 /**
  * Step 1, Opening (UX §2.3): the lesson question on a card under "Watch
  * together". A dilemma video exists only when the workspace has a `videoUrl`;
- * it never autoplays: nothing is loaded until the student taps play. No
+ * it never plays by itself: nothing is loaded until the student taps play. No
  * button, the teacher opens the next step.
  */
 
@@ -25,7 +26,7 @@ function player(url: string, state: OpeningState): m.Vnode {
 		return m('iframe.opening__player', {
 			src: embed,
 			title: t('opening.video_title'),
-			allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
+			allow: 'encrypted-media; picture-in-picture; fullscreen',
 			referrerpolicy: 'strict-origin-when-cross-origin',
 			allowfullscreen: true,
 		});
@@ -34,7 +35,6 @@ function player(url: string, state: OpeningState): m.Vnode {
 	return m('video.opening__player', {
 		src: url,
 		controls: true,
-		autoplay: true,
 		playsinline: true,
 		'aria-label': t('opening.video_title'),
 		onerror: () => {

@@ -1197,7 +1197,12 @@ export function getActiveLanguageScope(): {
  *  the schema validation fails. Mirrors `createSimpleQuestion` but parents the
  *  result under the main statement instead of `'top'`, and uses the main's
  *  topParent so descendants stay reachable from the workspace root. */
-export async function createSubQuestion(mainId: string, title: string): Promise<string | null> {
+export async function createSubQuestion(
+	mainId: string,
+	title: string,
+	/** Written WITH the statement, in the one create, so no later patch can race a reorder. */
+	initial?: { classRole?: 'guiding' | 'challenge'; order?: number },
+): Promise<string | null> {
 	if (!isAdmin()) return null;
 	const trimmed = title.trim();
 	if (!trimmed) return null;
@@ -1224,12 +1229,16 @@ export async function createSubQuestion(mainId: string, title: string): Promise<
 			enableAddVotingOption: true,
 			enableSimilaritiesSearch: true,
 			enableNavigationalElements: true,
+			...(initial?.classRole ? { classRole: initial.classRole } : {}),
 		},
 	});
 
 	if (!newQuestion) return null;
 
-	await setDoc(doc(db, Collections.statements, newQuestion.statementId), newQuestion);
+	await setDoc(doc(db, Collections.statements, newQuestion.statementId), {
+		...newQuestion,
+		...(initial?.order !== undefined ? { order: initial.order } : {}),
+	});
 
 	return newQuestion.statementId;
 }

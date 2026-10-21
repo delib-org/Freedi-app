@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_GATE } from '@freedi/shared-types';
 import type { ClassTable, Statement, StatementSubscription } from '@freedi/shared-types';
 import {
 	allTablesRating,
@@ -7,7 +6,6 @@ import {
 	embedUrlOf,
 	gateBars,
 	readBallot,
-	readGate,
 	readRoundPhase,
 	supportPercent,
 	tableTiles,
@@ -93,7 +91,6 @@ describe('gateBars / topProposals', () => {
 
 describe('challenge settings readers', () => {
 	it('falls back to the default gate and the write phase', () => {
-		expect(readGate(null)).toBe(DEFAULT_GATE);
 		expect(readRoundPhase(undefined)).toBe('write');
 		expect(readBallot({} as Statement)).toBeNull();
 	});
@@ -106,7 +103,6 @@ describe('challenge settings readers', () => {
 				ballot: { candidateIds: ['x'], frozenAt: 5, decisionId: 'x' },
 			},
 		} as unknown as Statement;
-		expect(readGate(q)).toBe(0.4);
 		expect(readRoundPhase(q)).toBe('improve');
 		expect(readBallot(q)).toMatchObject({ candidateIds: ['x'], decisionId: 'x' });
 	});

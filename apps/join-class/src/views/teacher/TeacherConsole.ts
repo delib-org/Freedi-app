@@ -14,8 +14,8 @@ import {
 	getLessonStep,
 } from '@/lib/lesson';
 import { classState } from '@/lib/classroom/classState';
+import { gateOf } from '@/lib/classroom/classSettings';
 import {
-	gateOf,
 	gateRows,
 	isBallotClosed,
 	isBallotFrozen,
@@ -136,6 +136,7 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 		});
 	}
 	const proposals = challenge ? (consoleState.options.get(challenge.statementId) ?? []) : [];
+	const gate = gateOf(challenge, getMainStatement());
 	const showGate =
 		challenge !== null &&
 		(stepKey === 'proposals' || (stepKey === 'tableTalk' && proposals.length > 0));
@@ -148,9 +149,7 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 			plenum,
 			showSides: stepIndex >= SIDE_STEP_INDEX,
 		}),
-		showGate
-			? m(GatePanel, { rows: gateRows(proposals, gateOf(challenge)), gate: gateOf(challenge) })
-			: null,
+		showGate ? m(GatePanel, { rows: gateRows(proposals, gate), gate }) : null,
 	];
 }
 

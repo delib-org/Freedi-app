@@ -42,20 +42,13 @@ export function challengeOf(subQuestions: readonly Statement[]): Statement | nul
 	return found ?? null;
 }
 
-/** Optional dilemma video of the lesson (a plain https URL on the workspace settings). */
-export function videoUrlOf(main: Statement): string | null {
-	const url = (main.statementSettings as { videoUrl?: unknown } | undefined)?.videoUrl;
-
-	return typeof url === 'string' && /^https:\/\//.test(url) ? url : null;
-}
-
 const YOUTUBE_ID = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,20})/;
 
-/** Embed URL for a YouTube link (autoplay: it is only built after a tap), else null. */
+/** Embed URL for a YouTube link (only built after a tap), else null. */
 export function youtubeEmbedUrl(url: string): string | null {
 	const id = YOUTUBE_ID.exec(url)?.[1];
 
-	return id ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0` : null;
+	return id ? `https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0` : null;
 }
 
 /** Table number from a table doc id `{mainId}--{n}`; null if it does not parse. */

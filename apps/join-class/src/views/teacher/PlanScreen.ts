@@ -36,6 +36,20 @@ import {
 	type NewCard,
 } from './planController';
 import { MAX_HINT_LENGTH, MAX_QUESTION_LENGTH, hintOf } from './planHelpers';
+import { SIDE_NAME_MAX_LENGTH } from '@/lib/classroom/classSettings';
+import {
+	MAX_VIDEO_URL_LENGTH,
+	SIDE_A_KEY,
+	SIDE_B_KEY,
+	VIDEO_KEY,
+	commitSideName,
+	commitVideoUrl,
+	defaultSideName,
+	isInvalid,
+	onDetailInput,
+	savedSideName,
+	savedVideoUrl,
+} from './planDetails';
 
 interface FieldAttrs {
 	key: string;
@@ -278,6 +292,48 @@ function renderChallenge(challenge: Statement | undefined): m.Vnode {
 	]);
 }
 
+function sideNameField(key: string, labelKey: string): m.Vnode {
+	return field({
+		key,
+		label: t(labelKey),
+		value: fieldValue(key, savedSideName(key)),
+		placeholder: defaultSideName(key),
+		max: SIDE_NAME_MAX_LENGTH,
+		className: 'plan-card__text plan-details__name',
+		onValue: (v) => onDetailInput(key, v, SIDE_NAME_MAX_LENGTH),
+		onCommit: () => commitSideName(key),
+	});
+}
+
+/** "Lesson details": the opening video link and the two character names. */
+function renderDetails(): m.Vnode {
+	return m('section.plan__details', { 'aria-labelledby': 'plan-details-title' }, [
+		m('h2.plan__section-title', { id: 'plan-details-title' }, t('plan.details.title')),
+		m('.plan-card.plan-details', [
+			m('.plan-card__main', [
+				field({
+					key: VIDEO_KEY,
+					label: t('plan.details.video'),
+					value: fieldValue(VIDEO_KEY, savedVideoUrl()),
+					placeholder: t('plan.details.video.placeholder'),
+					max: MAX_VIDEO_URL_LENGTH,
+					className: 'plan-card__text plan-details__video',
+					onValue: (v) => onDetailInput(VIDEO_KEY, v, MAX_VIDEO_URL_LENGTH),
+					onCommit: commitVideoUrl,
+				}),
+				isInvalid(VIDEO_KEY)
+					? m('.plan-card__error', { role: 'alert' }, t('plan.details.video.invalid'))
+					: null,
+				fieldError(VIDEO_KEY),
+				sideNameField(SIDE_A_KEY, 'plan.details.side_a'),
+				sideNameField(SIDE_B_KEY, 'plan.details.side_b'),
+				fieldError(SIDE_A_KEY),
+				fieldError(SIDE_B_KEY),
+			]),
+		]),
+	]);
+}
+
 function renderTables(guiding: Statement[]): m.Vnode {
 	const ids = guiding.map((g) => g.statementId);
 	const extra = getVisibleNewCards(guiding);
@@ -368,7 +424,7 @@ function renderBody(mainId: string): m.Children {
 	}
 	const { challenge, guiding } = getPlan();
 
-	return [renderChallenge(challenge), renderTables(guiding)];
+	return [renderDetails(), renderChallenge(challenge), renderTables(guiding)];
 }
 
 export const PlanScreen: m.Component = {

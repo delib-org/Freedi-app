@@ -3,6 +3,7 @@ import { supportBySide } from '@freedi/shared-types';
 import type { LessonStepKey } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { classState } from '@/lib/classroom/classState';
+import { gateOf, sideNamesOf, videoUrlOf } from '@/lib/classroom/classSettings';
 import { projectorData } from '@/lib/classroom/projectorData';
 import { ProjectorQr, QR_WAITING_SIZE } from './ProjectorBand';
 import {
@@ -11,10 +12,7 @@ import {
 	embedUrlOf,
 	gateBars,
 	readBallot,
-	readGate,
 	readRoundPhase,
-	readSideNames,
-	readVideoUrl,
 	studentsOf,
 	supportPercent,
 	tableTiles,
@@ -22,7 +20,6 @@ import {
 	topProposals,
 	unseatedNames,
 	visibleProposals,
-	type SideNames,
 } from './projectorLogic';
 
 /** One renderer per lesson step: the ONE thing the class needs to see (UX section 6). */
@@ -36,10 +33,6 @@ let videoShown = false;
 
 function barStyle(percent: number): Record<string, string> {
 	return { '--bar': `${percent}%` };
-}
-
-function sideLabels(names: SideNames): { a: string; b: string } {
-	return { a: names.a ?? t('projector.sideA'), b: names.b ?? t('projector.sideB') };
 }
 
 function initialOf(name: string): string {
@@ -60,7 +53,7 @@ function waiting(ctx: StepContext): m.Vnode {
 
 function opening(): m.Vnode {
 	const question = projectorData.challenge?.statement ?? projectorData.main?.statement ?? '';
-	const videoUrl = readVideoUrl(projectorData.main);
+	const videoUrl = videoUrlOf(projectorData.main);
 	const embed = videoUrl ? embedUrlOf(videoUrl) : null;
 
 	return m('section.projector-step.projector-step--opening', [
@@ -89,7 +82,7 @@ function opening(): m.Vnode {
 }
 
 function side(): m.Vnode {
-	const names = sideLabels(readSideNames(projectorData.main));
+	const names = sideNamesOf(projectorData.main);
 	const character = (key: 'a' | 'b'): m.Vnode =>
 		m(`.projector-character.projector-character--${key}`, [
 			m('span.projector-character__circle', { 'aria-hidden': 'true' }, initialOf(names[key])),
@@ -153,7 +146,7 @@ function proposals(): m.Vnode {
 	const challenge = projectorData.challenge;
 	const options = visibleProposals(projectorData.proposals);
 	if (readRoundPhase(challenge) === 'improve') return plenum(options);
-	const gate = readGate(challenge);
+	const gate = gateOf(challenge, projectorData.main);
 
 	return m('section.projector-step.projector-step--proposals', [
 		m('h1.projector-instruction', t('projector.proposalsSent', { n: options.length })),
@@ -226,10 +219,10 @@ function summary(): m.Vnode {
 	const challenge = projectorData.challenge;
 	const ballot = readBallot(challenge);
 	const decision = projectorData.proposals.find((o) => o.statementId === ballot?.decisionId);
-	const names = sideLabels(readSideNames(projectorData.main));
+	const names = sideNamesOf(projectorData.main);
 	const support = supportBySide(
 		studentsOf(classState.roster, projectorData.main?.creatorId),
-		readGate(challenge),
+		gateOf(challenge, projectorData.main),
 	);
 	const rows = [
 		{ key: 'a', label: names.a, camp: support.a },

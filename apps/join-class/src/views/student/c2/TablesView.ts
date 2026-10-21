@@ -1,10 +1,12 @@
 import m from 'mithril';
 import { SIDE_MAX, SIDE_MIN } from '@freedi/shared-types';
 import type { Camp } from '@freedi/shared-types';
+import type { SideNames } from '@/lib/classroom/classSettings';
 import '@/styles/student-c2.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { classState } from '@/lib/classroom/classState';
 import { getUserState } from '@/lib/user';
+import { sideNamesOf } from '@/lib/classroom/classSettings';
 import { t } from '@/lib/i18n';
 import { watchRoster } from '../c2/rosterWatch';
 import type { RosterWatch } from '../c2/rosterWatch';
@@ -25,10 +27,10 @@ interface TablesState {
 const CAMP_REPRESENTATIVE: Record<Camp, number> = { a: SIDE_MIN, center: SIDE_CENTER, b: SIDE_MAX };
 
 /** Spoken side of a camp: "close to Jonathan" / "in the middle" / "close to Noa". */
-function campWord(camp: Camp): string {
+function campWord(camp: Camp, names: SideNames): string {
 	const key = sideWordKey(CAMP_REPRESENTATIVE[camp]);
 
-	return t(key, { name: t(camp === 'a' ? 'side.name_a' : 'side.name_b') });
+	return t(key, { name: camp === 'b' ? names.b : names.a });
 }
 
 function chip(c: TableChip): m.Vnode {
@@ -61,19 +63,24 @@ export const TablesView: m.Component<StepAttrs> = {
 			]);
 		}
 		const n = classState.table?.n ?? tableNumberOf(tableId);
+		const names = sideNamesOf(vnode.attrs.main);
 		const chips = tableChips(classState.table, state.roster?.subs ?? [], {
 			myUid: getUserState().user?.uid,
-			labelOf: (name, camp) => (camp ? `${name}, ${campWord(camp)}` : name),
+			labelOf: (name, camp) => (camp ? `${name}, ${campWord(camp, names)}` : name),
 			fallbackName: t('table.unnamed'),
 		});
 
 		return m(StudentFrame, { headerLine: header, instruction: t('table.go_sit') }, [
 			m('.table-step', [
-				m('p.table-step__number', { 'aria-live': 'polite' }, t('table.number', { n: n ?? '' })),
+				m(
+					'p.table-step__number',
+					{ 'aria-live': 'polite', 'data-testid': 'table-number' },
+					t('table.number', { n: n ?? '' }),
+				),
 				chips.length > 0
 					? m('section.table-step__card', { 'aria-labelledby': 'table-members-title' }, [
 							m('h2.table-step__members-title#table-members-title', t('table.members')),
-							m('ul.table-step__chips', chips.map(chip)),
+							m('ul.table-step__chips', { 'data-testid': 'table-mates' }, chips.map(chip)),
 						])
 					: null,
 			]),

@@ -20,13 +20,14 @@ const BYTES_PER_KB = 1000;
 /** The product target (IA section 9b): first screen <= 300 kB gzipped. */
 export const TARGET_GZIP_BYTES = 300 * BYTES_PER_KB;
 /**
- * RATCHET, not the target. Measured 2026-10-21 on the C5 branch: 334.4 kB
- * gzipped (firebase chunk 172.8 kB is the bulk). Set to the measured value + 2 %
- * so CI does not fail on day one but any growth does. Lower this number as the
- * chunk-splitting ideas in docs/performance/join-class.md land, until it
- * reaches TARGET_GZIP_BYTES (300 kB).
+ * RATCHET, not the target. Measured 2026-10-21 after the integration pass:
+ * 329.4 kB gzipped (firebase chunk 172.8 kB is the bulk; the English fallback is
+ * now a lazy chunk, which took the entry from 134.9 to 124.3 kB). Set to the
+ * measured value + 2 % so CI does not fail on day one but any growth does. Lower
+ * this number as the chunk-splitting ideas in docs/performance/join-class.md
+ * land, until it reaches TARGET_GZIP_BYTES (300 kB).
  */
-export const BUDGET_GZIP_BYTES = 341100;
+export const BUDGET_GZIP_BYTES = 336000;
 /** Locale whose chunk counts as "the default locale chunk" (Hebrew first). */
 const DEFAULT_LOCALE = process.env.PERF_GATE_LOCALE ?? 'he';
 const ALLOWED_FONT_FAMILIES = 1;

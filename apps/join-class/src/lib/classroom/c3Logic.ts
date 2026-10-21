@@ -1,5 +1,4 @@
 import {
-	DEFAULT_GATE,
 	SUPPORT_MAX,
 	SUPPORT_MIN,
 	type ClassTable,
@@ -255,10 +254,6 @@ export function supportBars(result: SupportBySide): SupportBar[] {
 
 		return { camp, mean, n, m, percent: n > 0 ? supportPercent(mean) : 0 };
 	});
-}
-
-export function gateOf(question: Statement | null | undefined): number {
-	return question?.votingSettings?.threshold ?? DEFAULT_GATE;
 }
 
 // ---- labels ------------------------------------------------------------------

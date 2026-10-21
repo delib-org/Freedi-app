@@ -42,10 +42,11 @@ function authorOf(option: Statement): string | undefined {
 
 /**
  * Who gets an auto +1: the author, plus the marker's co-authors who really
- * sit at that table. `coAuthors` is written by the client, so it is never
- * trusted on its own: without the intersection a student could stamp +1s on
- * behalf of any classmate. A table that is not this workspace's, or an author
- * not seated at it, earns only the author's own +1.
+ * sit at that table. The marker is written by the client, so none of it is
+ * trusted on its own: the table must exist, belong to this workspace and have
+ * the author seated, or nobody gets a +1 (a forged marker on one's own option
+ * must not earn a self +1); and `coAuthors` is intersected with the seated
+ * members so a student cannot stamp +1s on behalf of any classmate.
  */
 export function autoEvaluatorUids(option: Statement, table: ClassTable | undefined): string[] {
 	const marker = option.classTable;
@@ -53,10 +54,11 @@ export function autoEvaluatorUids(option: Statement, table: ClassTable | undefin
 	if (!marker || !author) return [];
 	const validTable =
 		!!table && table.tableId === marker.tableId && table.mainId === option.topParentId;
-	const members = validTable ? table.memberUids : [];
-	const coAuthors = members.includes(author)
-		? (marker.coAuthors ?? []).filter((uid) => typeof uid === 'string' && members.includes(uid))
-		: [];
+	if (!validTable || !table.memberUids.includes(author)) return [];
+	const members = table.memberUids;
+	const coAuthors = (marker.coAuthors ?? []).filter(
+		(uid) => typeof uid === 'string' && members.includes(uid),
+	);
 
 	return [...new Set([author, ...coAuthors])];
 }

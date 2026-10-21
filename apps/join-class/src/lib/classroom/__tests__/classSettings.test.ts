@@ -1,0 +1,67 @@
+import { describe, expect, it } from 'vitest';
+import { DEFAULT_GATE } from '@freedi/shared-types';
+import type { Statement } from '@freedi/shared-types';
+import {
+	SIDE_NAME_MAX_LENGTH,
+	gateOf,
+	isHttpsUrl,
+	sideNamesOf,
+	videoUrlOf,
+} from '../classSettings';
+
+function stmt(partial: Record<string, unknown>): Statement {
+	return partial as unknown as Statement;
+}
+
+describe('gateOf', () => {
+	it('defaults to DEFAULT_GATE', () => {
+		expect(gateOf(null)).toBe(DEFAULT_GATE);
+		expect(gateOf(undefined, null)).toBe(DEFAULT_GATE);
+	});
+
+	it('reads the challenge first, then the main statement', () => {
+		const challenge = stmt({ votingSettings: { threshold: 0.5 } });
+		const main = stmt({ votingSettings: { threshold: 0.3 } });
+		expect(gateOf(challenge, main)).toBe(0.5);
+		expect(gateOf(stmt({}), main)).toBe(0.3);
+		expect(gateOf(null, main)).toBe(0.3);
+	});
+
+	it('ignores values that are not finite numbers', () => {
+		expect(gateOf(stmt({ votingSettings: { threshold: 'x' } }))).toBe(DEFAULT_GATE);
+		expect(gateOf(stmt({ votingSettings: { threshold: Number.NaN } }))).toBe(DEFAULT_GATE);
+	});
+});
+
+describe('videoUrlOf', () => {
+	it('accepts only https urls', () => {
+		expect(videoUrlOf(stmt({ statementSettings: { videoUrl: 'https://x.test/a.mp4' } }))).toBe(
+			'https://x.test/a.mp4',
+		);
+		expect(videoUrlOf(stmt({ statementSettings: { videoUrl: 'http://x.test/a.mp4' } }))).toBeNull();
+		expect(videoUrlOf(stmt({ statementSettings: { videoUrl: 'javascript:alert(1)' } }))).toBeNull();
+		expect(videoUrlOf(stmt({}))).toBeNull();
+		expect(videoUrlOf(null)).toBeNull();
+	});
+
+	it('isHttpsUrl rejects garbage', () => {
+		expect(isHttpsUrl('not a url')).toBe(false);
+		expect(isHttpsUrl('https://youtu.be/abc')).toBe(true);
+	});
+});
+
+describe('sideNamesOf', () => {
+	it('uses the lesson names, trimmed and capped', () => {
+		const long = 'x'.repeat(SIDE_NAME_MAX_LENGTH + 5);
+		const names = sideNamesOf(stmt({ statementSettings: { sideNames: { a: '  Dan ', b: long } } }));
+		expect(names.a).toBe('Dan');
+		expect(names.b).toHaveLength(SIDE_NAME_MAX_LENGTH);
+	});
+
+	it('falls back to the translated defaults', () => {
+		const names = sideNamesOf(stmt({}));
+		expect(names.a).not.toBe('');
+		expect(names.b).not.toBe('');
+		expect(names.a).not.toBe(names.b);
+	});
+});

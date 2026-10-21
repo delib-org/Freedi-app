@@ -7,7 +7,6 @@ import {
 	sideWordKey,
 	tableChips,
 	tableNumberOf,
-	videoUrlOf,
 	youtubeEmbedUrl,
 } from '../c2Helpers';
 
@@ -49,12 +48,7 @@ describe('challengeOf', () => {
 	});
 });
 
-describe('videoUrlOf / youtubeEmbedUrl', () => {
-	it('accepts only https urls', () => {
-		expect(videoUrlOf(stmt({ videoUrl: 'https://x.test/a.mp4' }))).toBe('https://x.test/a.mp4');
-		expect(videoUrlOf(stmt({ videoUrl: 'javascript:alert(1)' }))).toBeNull();
-		expect(videoUrlOf(stmt({}))).toBeNull();
-	});
+describe('youtubeEmbedUrl', () => {
 	it('builds a youtube embed', () => {
 		expect(youtubeEmbedUrl('https://youtu.be/abcDEF12345')).toContain('/embed/abcDEF12345');
 		expect(youtubeEmbedUrl('https://x.test/a.mp4')).toBeNull();

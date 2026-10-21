@@ -30,8 +30,8 @@ import type { OutputBundle, OutputChunk } from 'rollup';
  * i18n.ts remains the sole authority on what actually gets applied.
  */
 
-/** Locales with their own chunk. English is inlined in the entry chunk. */
-const LOCALES = ['ar', 'de', 'es', 'fa', 'he', 'nl'];
+/** Locales with their own chunk (English too: it is a lazily loaded fallback). */
+const LOCALES = ['ar', 'de', 'en', 'es', 'fa', 'he', 'nl'];
 const RTL = ['ar', 'fa', 'he'];
 
 function findLocaleChunks(bundle: OutputBundle): Record<string, string> {

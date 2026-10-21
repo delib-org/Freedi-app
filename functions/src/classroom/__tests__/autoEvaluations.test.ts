@@ -61,15 +61,16 @@ describe('autoEvaluatorUids', () => {
 		expect(autoEvaluatorUids(forged, table())).toEqual(['s1', 's2']);
 	});
 
-	it('gives only the author when the author is not seated there or the table is foreign', () => {
+	it('gives nobody when the author is not seated there, or the table is foreign or missing', () => {
 		expect(
 			autoEvaluatorUids(
 				option({ creatorId: 'outsider', creator: { uid: 'outsider', displayName: 'x' } }),
 				table(),
 			),
-		).toEqual(['outsider']);
-		expect(autoEvaluatorUids(option(), table({ mainId: 'other' }))).toEqual(['s1']);
-		expect(autoEvaluatorUids(option(), undefined)).toEqual(['s1']);
+		).toEqual([]);
+		expect(autoEvaluatorUids(option(), table({ mainId: 'other' }))).toEqual([]);
+		expect(autoEvaluatorUids(option(), table({ tableId: 'main1--9' }))).toEqual([]);
+		expect(autoEvaluatorUids(option(), undefined)).toEqual([]);
 	});
 
 	it('gives nobody for an option without a marker', () => {
@@ -150,6 +151,22 @@ describe('onClassOptionCreated', () => {
 		});
 		expect(await onClassOptionCreated(fake.asFirestore(), proposal)).toBe(1);
 		expect(fake.read(`classTables/${TABLE_ID}`)).toMatchObject({ writingLocked: false });
+	});
+
+	it('writes no +1 for a forged marker: a table that does not exist or does not seat the author', async () => {
+		const db = fake.asFirestore();
+		const forgedTable = option({
+			statementId: 'forged1',
+			classTable: { tableId: `${MAIN}--7`, shared: true, coAuthors: [] },
+		});
+		expect(await onClassOptionCreated(db, forgedTable)).toBe(0);
+		const strangerAtTable = option({
+			statementId: 'forged2',
+			creatorId: 'stranger',
+			creator: { uid: 'stranger', displayName: 'S', isAnonymous: true },
+		});
+		expect(await onClassOptionCreated(db, strangerAtTable)).toBe(0);
+		expect(fake.list('evaluations')).toHaveLength(0);
 	});
 
 	it('ignores options without a marker, non-options and malformed table ids', async () => {

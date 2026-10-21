@@ -8,7 +8,7 @@ import { getSubQuestions } from '@/lib/store';
 import { classState } from '@/lib/classroom/classState';
 import { listenRoster } from '@/lib/classroom/listeners';
 import { setMyDecisionSupport } from '@/lib/classroom/studentWrites';
-import { gateOf } from '@/lib/classroom/c3Logic';
+import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
 import type { Unsubscribe } from '@/lib/firebase';
 import { DecisionCard } from './DecisionCard';
 import { ErrorLine } from './ErrorLine';
@@ -63,7 +63,7 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 			? self.feed.options.find((o) => o.statementId === decisionId)
 			: undefined;
 		const mine = self.pending ?? classState.mySubscription?.decisionSupport;
-		const result = supportBySide(self.roster, gateOf(challenge));
+		const result = supportBySide(self.roster, gateOf(challenge, main));
 		const rate = (score: number): void => {
 			self.pending = score;
 			self.error = null;
@@ -85,7 +85,7 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 				testPrefix: 'support-face',
 			}),
 			m(ErrorLine, { message: self.error }),
-			m(SupportBySide, { result, gate: gateOf(challenge) }),
+			m(SupportBySide, { result, gate: gateOf(challenge, main), names: sideNamesOf(main) }),
 		]);
 	},
 };

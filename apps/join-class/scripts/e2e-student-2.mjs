@@ -12,6 +12,7 @@
 //   (apps/join-class) VITE_EMULATOR_AUTH_PORT=9133 VITE_EMULATOR_FIRESTORE_PORT=8133 \
 //     VITE_EMULATOR_DATABASE_PORT=9033 VITE_EMULATOR_FUNCTIONS_PORT=5033 npx vite --port 3033 --strictPort
 //   node scripts/e2e-student-2.mjs
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,14 +21,17 @@ import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
-const FS = process.env.FIRESTORE_EMULATOR_HOST ?? 'localhost:8133';
-const AUTH = process.env.FIREBASE_AUTH_EMULATOR_HOST ?? 'localhost:9133';
-process.env.FIRESTORE_EMULATOR_HOST = FS;
-process.env.FIREBASE_AUTH_EMULATOR_HOST = AUTH;
-const PROJECT = 'freedi-test';
-const BASE = process.env.JOIN_CLASS_URL ?? 'http://localhost:3033';
+import { BASE_URL as BASE, PROJECT_ID as PROJECT } from './e2e-env.mjs';
+
 const TIMEOUT = 20000;
 const here = dirname(fileURLToPath(import.meta.url));
+const ENGINE = process.env.E2E_ENGINE === '1';
+// seed a class at step 4 (tables talking) with proposals and support, like the engine would leave it
+execFileSync(
+	'npx',
+	['tsx', 'apps/join-class/scripts/seed-classroom.ts', '--step=4', '--seated', '--proposals', '--support', `--id=c3-${Date.now()}`],
+	{ cwd: join(here, '..', '..', '..'), env: process.env, stdio: 'ignore' },
+);
 const seed = JSON.parse(readFileSync(join(here, '.seed-output.json'), 'utf8'));
 const { mainId, challengeId, guidingIds, proposalIds } = seed;
 const tableId = `${mainId}--1`;
@@ -119,8 +123,18 @@ try {
 	check('non-asker cannot choose', await b.page.locator('[data-testid=table-pick-question]').first().isDisabled());
 	await picks.first().click();
 	await a.page.click('[data-testid=table-start]');
-	await a.page.waitForSelector('.c3-error', { timeout: TIMEOUT });
-	check('failed callable shows an inline error with retry, no crash', (await a.page.locator('.c3-error__retry').count()) === 1);
+	if (ENGINE) {
+		// the real callable answers: the table leaves "pick" (or, if it refuses, the inline error shows)
+		await until(async () => {
+			const step = (await tableRef.get()).data()?.step;
+
+			return step !== 'pick' || (await a.page.locator('.c3-error').count()) > 0;
+		}, 'classTableStep answered');
+		check('the real classTableStep callable answered (engine on)', true);
+	} else {
+		await a.page.waitForSelector('.c3-error', { timeout: TIMEOUT });
+		check('failed callable shows an inline error with retry, no crash', (await a.page.locator('.c3-error__retry').count()) === 1);
+	}
 
 	// 2. talk (screens down) ---------------------------------------------------
 	await setTable({
@@ -131,6 +145,10 @@ try {
 		spokenUids: [],
 	});
 	await a.page.waitForSelector('.frame--down [role=timer]', { timeout: TIMEOUT });
+	// the minute may render idle ("1:00") for a moment before the table doc with speakerEndsAt arrives
+	await a.page
+		.waitForFunction(() => /^0:3\d$/.test((document.querySelector('[role=timer]')?.textContent ?? '').trim()), null, { timeout: TIMEOUT })
+		.catch(() => undefined);
 	const digits = (await a.page.locator('[role=timer]').innerText()).trim();
 	check('screens-down countdown reads about 0:3x', /^0:3\d$/.test(digits), digits);
 	const size = await a.page.locator('.count__num').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
