@@ -69,6 +69,8 @@ async function tableNumberOf(student) {
 
 /** Who sits where, read off the phones while they show "my table" (the next steps replace that screen). */
 const seating = new Map();
+/** Table 1's asker of its last turn: after "next turn" the mark moves, but a phone can show the old one for a moment. */
+let tableOneStaleAsker;
 
 async function tablemates(students, number) {
 	const mates = [];
@@ -171,7 +173,12 @@ export const ENGINE_PHASES = [
 			seating.set(1, one);
 			seating.set(2, two);
 			check('two tables of three', one.length === 3 && two.length === 3, `${one.length} + ${two.length}`);
-			check('the table card lists the tablemates', (await one[0].page.getByTestId('table-mates').locator('li').count()) === 3);
+			const mateCount = await until(async () => {
+				const count = await one[0].page.getByTestId('table-mates').locator('li').count();
+
+				return count === 3 ? count : null;
+			}, 'the table card lists the three tablemates').catch(() => 0);
+			check('the table card lists the tablemates', mateCount === 3, `${mateCount}`);
 		},
 	},
 	{
@@ -201,6 +208,7 @@ export const ENGINE_PHASES = [
 				await (await byId(asker.page, 'table-to-rate')).click();
 				await (await byId(asker.page, 'table-next-turn')).click();
 			}
+			tableOneStaleAsker = previous;
 			check('the asker rotated between the turns', askers[0] !== askers[1], askers.join(' -> '));
 			const answers = await until(async () => {
 				const snap = await admin.collection('statements').where('topParentId', '==', mid).where('statementType', '==', 'option').get();
@@ -223,7 +231,7 @@ export const ENGINE_PHASES = [
 			await teacherForward(teacher, 'proposals');
 			// each table's asker leaves the table-time screen for writing
 			for (const number of [1, 2]) {
-				const asker = await askerOf(tableOf(number));
+				const asker = await askerOf(tableOf(number), number === 1 ? tableOneStaleAsker : undefined);
 				await (await byId(asker.page, 'table-to-write')).click();
 			}
 			for (const student of students) {
@@ -248,7 +256,7 @@ export const ENGINE_PHASES = [
 	},
 	{
 		name: 'ballot, vote and summary with support by side',
-		async run({ teacher, students, check, admin, challengeId }) {
+		async run({ teacher, students, check, admin, mid, challengeId }) {
 			await teacherForward(teacher, 'vote');
 			await (await byId(teacher, 'console-freeze-vote')).click();
 			const ballot = await until(async () => (await admin.collection('statements').doc(challengeId).get()).data()?.statementSettings?.ballot, 'ballot frozen');
@@ -276,11 +284,21 @@ export const ENGINE_PHASES = [
 			for (const student of students) {
 				await (await byId(student.page, 'support-face-5')).click();
 			}
+			await until(async () => {
+				const snap = await admin.collection('statementsSubscribe').where('statementId', '==', mid).get();
+				const pupils = snap.docs.filter((d) => d.data().role !== 'admin');
+
+				return pupils.length === students.length && pupils.every((d) => d.data().decisionSupport === 1);
+			}, 'every student support was written');
 			await teacher.goto(`${new URL(teacher.url()).origin}/t/${new URL(teacher.url()).pathname.split('/')[2]}/screen`);
 			await teacher.locator('.projector-verdict').waitFor({ timeout: TURN_TIMEOUT });
 			check('projector shows three support bars by side', (await teacher.locator('.projector-support__row').count()) === 3);
-			const verdict = (await teacher.locator('.projector-verdict').getAttribute('class')) ?? '';
-			check('projector shows a verdict', /projector-verdict--(closer|apart|wait)/.test(verdict), verdict);
+			const verdictClass = await until(async () => {
+				const cls = (await teacher.locator('.projector-verdict').getAttribute('class')) ?? '';
+
+				return cls.includes('--insufficient') ? null : cls;
+			}, 'the verdict leaves "insufficient" once every side has rated');
+			check('projector shows the verdict: everyone gave +1, so the sides came closer', verdictClass.includes('--closer'), verdictClass);
 		},
 	},
 ];
