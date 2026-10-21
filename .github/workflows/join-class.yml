@@ -16,12 +16,16 @@ on:
     paths:
       - 'apps/join-class/**'
       - 'packages/shared-types/**'
+      - 'functions/src/classroom/**'
+      - 'firestore.rules'
       - '.github/workflows/join-class.yml'
   push:
     branches: [main, dev]
     paths:
       - 'apps/join-class/**'
       - 'packages/shared-types/**'
+      - 'functions/src/classroom/**'
+      - 'firestore.rules'
       - '.github/workflows/join-class.yml'
 
 jobs:
@@ -111,6 +115,13 @@ jobs:
         working-directory: ./apps/join-class
         run: npm ci
 
+      # The Firestore and Functions emulators need a recent JDK / Node; ubuntu-latest
+      # ships one, but the version moves, so pin it.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Install Chromium for Playwright
         run: npx playwright install --with-deps chromium
 
@@ -130,8 +141,10 @@ jobs:
         run: |
           npx firebase emulators:start --project freedi-test \
             --only auth,firestore,functions,database > emulators.log 2>&1 &
-          for i in $(seq 1 90); do
-            curl -sf http://localhost:8081 > /dev/null && curl -sf http://localhost:9099 > /dev/null && exit 0
+          # "All emulators ready" is printed once the functions are loaded too;
+          # the ports alone open earlier and the callables would still 404.
+          for i in $(seq 1 120); do
+            grep -q 'All emulators ready' emulators.log && exit 0
             sleep 2
           done
           cat emulators.log
