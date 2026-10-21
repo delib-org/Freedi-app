@@ -737,6 +737,31 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // join-class: one doc per table, classTables/{mainId}--{n}. Written only by
+    // the classroom callables (Admin SDK). Read by a student seated at the
+    // table (memberUids, no extra read) or by an admin of the workspace (one
+    // get of their subscription). The teacher's list query filters on
+    // mainId == X, which is what lets the rule resolve resource.data.mainId.
+    match /classTables/{tableId} {
+      function isClassTableAdmin(mainId) {
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(mainId)));
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+
+      function mayReadClassTable() {
+        return request.auth.uid in resource.data.get('memberUids', []) ||
+               isClassTableAdmin(resource.data.mainId);
+      }
+
+      // A get of a table that no longer exists (re-seated) answers "missing"
+      // instead of permission-denied, so a student's listener settles quietly;
+      // it reveals nothing but the absence of a guessable id.
+      allow get: if request.auth != null && (resource == null || mayReadClassTable());
+      allow list: if request.auth != null && mayReadClassTable();
+      allow write: if false;
+    }
+
     match /statements/{statementId} {
       function isAdmin() {
         let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
@@ -1247,6 +1272,29 @@ service cloud.firestore {
                (isTargetAdmin() || isTargetStatementCreator());
       }
 
+      // join-class fields on a workspace subscription. The student writes
+      // side (0..100), camp ('a'|'center'|'b') and decisionSupport (-1..+1)
+      // on their own doc; tableId is server-written only (classAssignTables /
+      // classMoveStudent), so no non-admin client may set, change or clear it.
+      // Each check is a no-op for a doc that does not carry the field, so the
+      // main app's own subscription writes are untouched.
+      function classFieldValuesOk() {
+        let d = request.resource.data;
+        return (!('side' in d) || (d.side is number && d.side >= 0 && d.side <= 100)) &&
+               (!('camp' in d) || d.camp in ['a', 'center', 'b']) &&
+               (!('decisionSupport' in d) ||
+                 (d.decisionSupport is number && d.decisionSupport >= -1 && d.decisionSupport <= 1));
+      }
+
+      function classCreateOk() {
+        return classFieldValuesOk() && !('tableId' in request.resource.data);
+      }
+
+      function classUpdateOk() {
+        return classFieldValuesOk() &&
+               !request.resource.data.diff(resource.data).affectedKeys().hasAny(['tableId']);
+      }
+
       allow read: if request.auth.uid != null;
 
       // For create
@@ -1264,6 +1312,7 @@ service cloud.firestore {
                       (request.resource.data.role != 'admin' &&
                        request.resource.data.role != 'statement-creator' &&
                        request.resource.data.role != 'banned' &&
+                       classCreateOk() &&
                        (isPublic() ||
                         isOpenToAll() ||
                         isOpenForRegistered() ||
@@ -1274,6 +1323,7 @@ service cloud.firestore {
                      !isTryingToBanProtectedUser() &&
                      (isAdminOrCreator() ||
                       (isSubscriber() &&
+                        classUpdateOk() &&
                         (isRoleUnchanged() ||
                           (!isBanned() &&
                             ((isModerated() && isWaitingRole()) ||
@@ -1544,10 +1594,25 @@ service cloud.firestore {
                get(path).data.get('agoraSessionId', null) == null ||
                !agoraRemovedFrom(get(path).data.agoraSessionId);
       }
+      // join-class: a challenge question that carries statementSettings.ballot
+      // takes votes only while that ballot is frozen and not closed, and only
+      // for one of its candidates (or 'none' to withdraw). Questions without a
+      // ballot (every main-app vote) pass untouched. Same parent get() as the
+      // two checks above, billed once.
+      function classBallotOpen(parentId, optionId) {
+        let path = /databases/$(database)/documents/statements/$(parentId);
+        let ballot = exists(path)
+          ? get(path).data.get('statementSettings', {}).get('ballot', null)
+          : null;
+        return ballot == null ||
+               (ballot.get('closedAt', null) == null &&
+                (optionId == 'none' || optionId in ballot.get('candidateIds', [])));
+      }
       allow read: if request.auth.uid != null;
       allow create, update: if request.auth.uid != null &&
                                agreementBallotOpen(request.resource.data.parentId, request.resource.data.statementId) &&
                                notRemovedAgoraVoter(request.resource.data.parentId) &&
+                               classBallotOpen(request.resource.data.parentId, request.resource.data.statementId) &&
                                request.resource.data.userId == request.auth.uid &&
                                voteId == (request.auth.uid + '--' +
                                           request.resource.data.parentId);

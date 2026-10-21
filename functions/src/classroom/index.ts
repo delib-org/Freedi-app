@@ -1,13 +1,17 @@
 /**
- * join-class (hybrid classroom lesson) engine — owned by lane C1.
+ * join-class (hybrid classroom lesson) engine — lane C1.
  *
- * Callables (region me-west1, App Check), contracts in
- * @freedi/shared-types (models/classroom/classroomCallables.ts):
- *   classAssignTables, classMoveStudent, classAddNoDevice, classTableStep,
- *   classAllTablesTo, classFreezeBallot, classCloseBallot
+ * Callables (region me-west1, signed-in only), contracts in
+ * @freedi/shared-types (models/classroom/classroomCallables.ts).
+ * functions/src/index.ts re-exports everything here with
+ * `export * from './classroom'`.
  *
- * C1 adds each function in its own file here and exports it from this
- * index; functions/src/index.ts already re-exports everything with
- * `export * from './classroom'`, so nothing outside this folder needs to change.
+ * The auto +1 on options written at a table is not a separate trigger: it
+ * runs inside the consolidated `onStatementCreated` (see autoEvaluations.ts).
  */
-export {};
+export { classAssignTables } from './fn_classAssignTables';
+export { classMoveStudent } from './fn_classMoveStudent';
+export { classAddNoDevice } from './fn_classAddNoDevice';
+export { classTableStep } from './fn_classTableStep';
+export { classAllTablesTo } from './fn_classAllTablesTo';
+export { classFreezeBallot, classCloseBallot } from './fn_classBallot';

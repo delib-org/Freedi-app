@@ -20,6 +20,7 @@
  * Flags: --step=<0..7> lessonPlan.stepIndex (default 0)   --students=<n> (default 24)
  *        --id=<mainId> fixed workspace id (default: random; re-running with the same
  *        id overwrites the same docs)
+ *        --tokens      (C1) add a `customToken` to every student in the output
  * Output: JSON summary on stdout and in apps/join-class/scripts/.seed-output.json
  *   { projectId, mainId, classCode, stepIndex, teacher: {uid, email, password, customToken},
  *     students: [{uid, name, side, camp, tableId?}], guidingIds[], challengeId,
@@ -362,13 +363,14 @@ async function main(): Promise<void> {
 
 	// ---- output ---------------------------------------------------------------
 	const customToken = await auth.createCustomToken(teacherUid);
+	const studentsOut = flag('tokens') ? await withStudentTokens(students) : students;
 	const summary = {
 		projectId: PROJECT_ID,
 		mainId,
 		classCode,
 		stepIndex,
 		teacher: { uid: teacherUid, email: teacherEmail, password: teacherPassword, customToken },
-		students,
+		students: studentsOut,
 		guidingIds,
 		challengeId,
 		tables: tables.map((t) => ({ tableId: t.tableId, n: t.n, memberUids: t.memberUids })),
@@ -381,6 +383,22 @@ async function main(): Promise<void> {
 	console.info(json);
 	console.info(`[seed-classroom] wrote ${outPath}`);
 }
+
+// ============================================================================
+// C1 (engine) additions — `--tokens`
+// Adds `customToken` to every student in the output so e2e scripts and the
+// engine smoke test (scripts/smoke-classroom-engine.ts) can act as a student:
+// signInWithCustomToken(auth, token) in a browser context, or the Auth
+// emulator's accounts:signInWithCustomToken REST call from node.
+// ============================================================================
+async function withStudentTokens(
+	students: SeedStudent[],
+): Promise<(SeedStudent & { customToken: string })[]> {
+	return Promise.all(
+		students.map(async (s) => ({ ...s, customToken: await auth.createCustomToken(s.uid) })),
+	);
+}
+// ======================== end of C1 additions ===============================
 
 /** Mixed support: the poles lean toward the decision, the centre is split. */
 function supportFor(camp: Camp, i: number): number {
