@@ -99,12 +99,6 @@ try {
 	);
 	check('three table questions in the order typed', (await texts()).join('|') === 'Question A|Question B|Question C');
 
-	// let the three creations settle (each one patches its class role and order
-	// after the create round-trip) before reordering, so a late create patch cannot
-	// overwrite the reorder under a loaded emulator
-	await page.click('.plan__save');
-	await page.waitForSelector('.plan__save--saved', { timeout: TIMEOUT });
-
 	// 5. hint on the second question
 	const hintB = page.locator('li.plan-card').nth(1).locator('.plan-card__hint');
 	await hintB.fill('look for needs');

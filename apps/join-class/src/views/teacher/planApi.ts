@@ -44,12 +44,11 @@ export async function createPlanQuestion(
 	order: number | undefined,
 	onCreated?: (statementId: string) => void,
 ): Promise<string> {
-	const id = await createSubQuestion(mainId, text);
+	// role and order go in the create itself: a second patch after the create's ack
+	// could land after the teacher's first reorder and overwrite it
+	const id = await createSubQuestion(mainId, text, { classRole: role, order });
 	if (!id) throw new Error('createSubQuestion returned no id');
 	onCreated?.(id);
-	const patch: Partial<Statement> = settingsPatch({ classRole: role });
-	if (order !== undefined) patch.order = order;
-	await setQuestionSetting(id, patch);
 
 	return id;
 }
