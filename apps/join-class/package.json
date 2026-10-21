@@ -12,7 +12,10 @@
     "lint": "eslint \"src/**/*.ts\"",
     "check-all": "npm run lint && npm run typecheck && npm run build",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e:lesson": "node scripts/e2e-lesson.mjs",
+    "perf:gate": "node scripts/perf-gate.mjs",
+    "perf:throttle": "node scripts/perf-throttle.mjs"
   },
   "dependencies": {
     "@freedi/shared-types": "file:../../packages/shared-types",
