@@ -51,15 +51,28 @@ async function save(state: SideState, mainId: string): Promise<void> {
 
 function actionButton(state: SideState, mainId: string): m.Vnode {
 	if (state.status === 'saved') {
-		return m('button.btn.btn--agree', { type: 'button', disabled: true }, t('side.saved'));
+		return m(
+			'button.btn.btn--agree',
+			{ type: 'button', disabled: true, 'data-testid': 'side-confirm' },
+			t('side.saved'),
+		);
 	}
 	if (state.status === 'saving') {
-		return m('button.btn.btn--primary', { type: 'button', disabled: true }, t('side.saving'));
+		return m(
+			'button.btn.btn--primary',
+			{ type: 'button', disabled: true, 'data-testid': 'side-confirm' },
+			t('side.saving'),
+		);
 	}
 
 	return m(
 		'button.btn.btn--primary',
-		{ type: 'button', disabled: !state.touched, onclick: () => void save(state, mainId) },
+		{
+			type: 'button',
+			disabled: !state.touched,
+			'data-testid': 'side-confirm',
+			onclick: () => void save(state, mainId),
+		},
 		t('side.confirm'),
 	);
 }

@@ -40,6 +40,7 @@ export const SideSlider: m.Component<SideSliderAttrs> = {
 				]),
 				m('input.side-slider__input', {
 					type: 'range',
+					'data-testid': 'side-slider',
 					min: SIDE_MIN,
 					max: SIDE_MAX,
 					step: 1,

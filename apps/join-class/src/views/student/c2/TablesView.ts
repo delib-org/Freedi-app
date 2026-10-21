@@ -72,11 +72,15 @@ export const TablesView: m.Component<StepAttrs> = {
 
 		return m(StudentFrame, { headerLine: header, instruction: t('table.go_sit') }, [
 			m('.table-step', [
-				m('p.table-step__number', { 'aria-live': 'polite' }, t('table.number', { n: n ?? '' })),
+				m(
+					'p.table-step__number',
+					{ 'aria-live': 'polite', 'data-testid': 'table-number' },
+					t('table.number', { n: n ?? '' }),
+				),
 				chips.length > 0
 					? m('section.table-step__card', { 'aria-labelledby': 'table-members-title' }, [
 							m('h2.table-step__members-title#table-members-title', t('table.members')),
-							m('ul.table-step__chips', chips.map(chip)),
+							m('ul.table-step__chips', { 'data-testid': 'table-mates' }, chips.map(chip)),
 						])
 					: null,
 			]),
