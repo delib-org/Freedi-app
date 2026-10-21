@@ -7,8 +7,8 @@
 //   - the app on JOIN_CLASS_URL, built/served with the same emulator ports and
 //     VITE_CLASS_CLOCK_SPEED=20 (so a speaker's minute is 3 s on screen)
 // E2E_SHOTS=<dir> also saves a screenshot of every projector step.
-// Ports default to the C5 lane's (auth 9135, firestore 8135, vite 3035); override
-// with E2E_AUTH_PORT / E2E_FIRESTORE_PORT / JOIN_CLASS_URL / E2E_PROJECT_ID.
+// Ports and URL come from e2e-env.mjs (E2E_AUTH_PORT / E2E_FIRESTORE_PORT /
+// JOIN_CLASS_URL / E2E_PROJECT_ID; defaults are CI's: 9099, 8081, 3035).
 //
 // Phases (each prints PASS / FAIL, or PENDING_ENGINE when it needs code from
 // the other classroom lanes):
@@ -22,11 +22,8 @@ import { chromium } from '@playwright/test';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { ENGINE_PHASES } from './e2e-lesson-engine.mjs';
+import { BASE_URL as BASE, PROJECT_ID } from './e2e-env.mjs';
 
-const BASE = process.env.JOIN_CLASS_URL ?? 'http://localhost:3035';
-const PROJECT_ID = process.env.E2E_PROJECT_ID ?? 'freedi-test';
-const AUTH_PORT = process.env.E2E_AUTH_PORT ?? '9135';
-const FIRESTORE_PORT = process.env.E2E_FIRESTORE_PORT ?? '8135';
 const ENGINE_ON = process.env.E2E_LESSON_ENGINE === '1';
 const TIMEOUT = 20000;
 const STUDENTS = 6;
@@ -44,8 +41,6 @@ const PROPOSALS = [
 	{ text: 'No ban, a visible screen timer', consensus: 0.31 },
 ];
 
-process.env.FIRESTORE_EMULATOR_HOST = `localhost:${FIRESTORE_PORT}`;
-process.env.FIREBASE_AUTH_EMULATOR_HOST = `localhost:${AUTH_PORT}`;
 const admin = getFirestore(getApps()[0] ?? initializeApp({ projectId: PROJECT_ID }));
 admin.settings({ ignoreUndefinedProperties: true });
 

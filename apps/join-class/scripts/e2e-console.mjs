@@ -8,7 +8,7 @@
 //   # apps/join-class:
 //   node scripts/e2e-console.mjs
 //
-// Env: JOIN_CLASS_URL (default http://localhost:3034), FS_PORT (8134), AUTH_PORT (9134),
+// Env: JOIN_CLASS_URL (default http://localhost:3034), E2E_FIRESTORE_PORT, E2E_AUTH_PORT (see e2e-env.mjs),
 //      E2E_ENGINE=1 once the classroom callables (C1) are emulated: the callable-backed
 //      steps then assert their effect in Firestore instead of the inline error + retry.
 // No `networkidle` anywhere (the app keeps listeners open).
@@ -22,15 +22,12 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..', '..', '..');
-const BASE = process.env.JOIN_CLASS_URL ?? 'http://localhost:3034';
-const FS_PORT = process.env.FS_PORT ?? '8134';
-const AUTH_PORT = process.env.AUTH_PORT ?? '9134';
+import { BASE_URL as BASE, PROJECT_ID } from './e2e-env.mjs';
+
 const ENGINE = process.env.E2E_ENGINE === '1';
 const TIMEOUT = 20000;
 
-process.env.FIRESTORE_EMULATOR_HOST = `localhost:${FS_PORT}`;
-process.env.FIREBASE_AUTH_EMULATOR_HOST = `localhost:${AUTH_PORT}`;
-if (getApps().length === 0) initializeApp({ projectId: 'freedi-test' });
+if (getApps().length === 0) initializeApp({ projectId: PROJECT_ID });
 const adminDb = getFirestore();
 
 let failures = 0;

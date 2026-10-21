@@ -1,22 +1,18 @@
 // Smoke test for the teacher home + "plan the questions" screen, against the
-// SOLO emulator suite (auth 9119, firestore 8101) with join-class on its own
-// port. Run from apps/join-class:
+// emulators (auth + firestore are enough), with the app on JOIN_CLASS_URL.
+// Ports: see e2e-env.mjs. Run from apps/join-class:
 //
-//   # terminal 1 (repo root): auth + firestore are enough
-//   npx firebase emulators:start -c firebase.solo.json --project freedi-test --only firestore,auth
-//   # terminal 2:
-//   VITE_EMULATOR_AUTH_PORT=9119 VITE_EMULATOR_FIRESTORE_PORT=8101 \
-//     VITE_EMULATOR_FUNCTIONS_PORT=5021 npx vite --port 3027
-//   # terminal 3:
-//   node scripts/e2e-plan.mjs
+//   VITE_EMULATOR_AUTH_PORT=<auth> VITE_EMULATOR_FIRESTORE_PORT=<firestore> \
+//     VITE_EMULATOR_FUNCTIONS_PORT=<functions> npx vite --port 3035 --strictPort
+//   E2E_AUTH_PORT=<auth> E2E_FIRESTORE_PORT=<firestore> node scripts/e2e-plan.mjs
 //
 // Flow: guest sign-in, create a lesson, write the challenge question, add 3
 // table questions (Enter adds the next), reorder by keyboard and by drag, add a
 // hint, press Save, reload, and see everything again. Then the phone layout
 // and the console placeholder.
 import { chromium } from '@playwright/test';
+import { BASE_URL as BASE } from './e2e-env.mjs';
 
-const BASE = process.env.JOIN_CLASS_URL ?? 'http://localhost:3027';
 const TIMEOUT = 15000;
 
 let failures = 0;
@@ -156,6 +152,30 @@ try {
 	const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 	check('phone: no horizontal scroll', !overflow);
 
+	// 10b. lesson details: video link (https only) and the two character names
+	const video = page.locator('.plan-details__video');
+	await video.fill('http://insecure.example/clip.mp4');
+	await video.blur();
+	await page.waitForSelector('.plan-details .plan-card__error[role=alert]', { timeout: TIMEOUT });
+	check('a non-https video link shows the inline error', true);
+	await video.fill('https://example.com/dilemma.mp4');
+	await video.blur();
+	const names = page.locator('.plan-details__name');
+	await names.nth(0).fill('Dana');
+	await names.nth(0).blur();
+	await names.nth(1).fill('Yoav');
+	await names.nth(1).blur();
+	await page.click('.plan__save');
+	await page.waitForSelector('.plan__save--saved', { timeout: TIMEOUT });
+	await page.reload({ waitUntil: 'domcontentloaded' });
+	await page.waitForSelector('.plan-details__video', { timeout: TIMEOUT });
+	check(
+		'after reload: video link and both names are saved',
+		(await page.inputValue('.plan-details__video')) === 'https://example.com/dilemma.mp4' &&
+			(await names.nth(0).inputValue()) === 'Dana' &&
+			(await names.nth(1).inputValue()) === 'Yoav',
+	);
+
 	// 11. delete a question
 	await page.locator('li.plan-card').nth(2).locator('.plan-card__delete').click();
 	await page.waitForFunction(() => document.querySelectorAll('li.plan-card').length === 2, null, {
@@ -163,12 +183,13 @@ try {
 	});
 	check('delete removes the question', true);
 
-	// 12. console placeholder, then the teacher home lists the lesson
+	// 12. the console, then the teacher home lists the lesson
 	await page.click('.plan__console');
 	await page.waitForURL((u) => u.pathname === `/t/${mid}`, { timeout: TIMEOUT });
-	await page.waitForSelector('.teacher-console__soon', { timeout: TIMEOUT });
-	await page.waitForSelector('.teacher-console__share svg', { timeout: TIMEOUT });
-	check('console placeholder shows the QR', true);
+	await page.waitForSelector('.console [data-step-key][aria-current="step"]', { timeout: TIMEOUT });
+	await page.click('.console__qr-btn');
+	await page.waitForSelector('.console__qr svg, .console__qr canvas, .console__qr img', { timeout: TIMEOUT });
+	check('console opens on the step rail and shows the QR', true);
 	await page.goto(`${BASE}/t`, { waitUntil: 'domcontentloaded' });
 	await page.waitForSelector('.teacher-home__row', { timeout: TIMEOUT });
 	const rows = await page.$$eval('.teacher-home__row-title', (els) => els.map((e) => e.textContent));
