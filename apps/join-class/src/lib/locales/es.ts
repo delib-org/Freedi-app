@@ -168,9 +168,6 @@ const es: Record<string, string> = {
 	'facilitator.sort.newest': 'Más recientes',
 	'facilitator.sort.help':
 		'Todos ven las sugerencias en este orden, incluidos los participantes que traes con «Síganme».',
-	'facilitator.toggle.threshold': 'Mostrar solo por encima del umbral',
-	'facilitator.toggle.threshold.help': 'Ocultar opciones cuyo consenso esté por debajo del umbral.',
-	'facilitator.toggle.threshold.value': 'Umbral: {{value}}',
 	'facilitator.toggle.allowAdd': 'Permitir nuevas opciones',
 	'facilitator.toggle.allowAdd.help':
 		'Cuando está desactivado, la lista de opciones queda bloqueada — no se pueden añadir nuevas opciones.',
@@ -481,6 +478,9 @@ const es: Record<string, string> = {
 	'plan.details.video.invalid': 'El enlace debe empezar con https://',
 	'plan.details.side_a': 'Nombre del primer lado',
 	'plan.details.side_b': 'Nombre del segundo lado',
+	'facilitator.gate.label': 'Umbral de acuerdo para la pregunta principal',
+	'facilitator.gate.value': 'Umbral: {{value}}',
+	'facilitator.gate.help': 'Una propuesta pasa cuando su acuerdo llega a este número.',
 	'plan.tables.title': 'Preguntas para las mesas',
 	'plan.tables.help': 'Cada mesa elige una. Añadan de 3 a 8.',
 	'plan.empty': 'Aún no hay preguntas. Añadan la primera',

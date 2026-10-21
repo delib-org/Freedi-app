@@ -1,14 +1,20 @@
 import m from 'mithril';
-import { CutoffBy, ResultsBy, SortType, Statement, ThemeStyle } from '@freedi/shared-types';
+import { SortType, Statement, ThemeStyle } from '@freedi/shared-types';
 import type {
 	JoinFormConfig,
 	JoinFormDestination,
 	JoinFormField,
 	JoinFormFieldType,
 	QuestionStatus,
-	ResultsSettings,
 } from '@freedi/shared-types';
 import { isAdmin } from '@/lib/admin';
+import {
+	GATE_MAX,
+	GATE_MIN,
+	GATE_STEP,
+	readLessonGate,
+	writeLessonGate,
+} from '@/lib/classroom/gateControl';
 import {
 	getQuestion,
 	setQuestionSetting,
@@ -49,14 +55,10 @@ import { JoinDelegateInvitationStatus } from '@freedi/shared-types';
 let isOpen = false;
 let escListenerAttached = false;
 let resizeListenerAttached = false;
-let sliderWriteTimer: number | null = null;
 // `null` means the modal is closed; otherwise the mode tells the modal which
 // list (crowd options vs organizer suggestions) it's editing. Two buttons in
 // the panel set this to either 'options' or 'organizers'.
 let manualReorderMode: ManualReorderMode | null = null;
-
-const DEFAULT_THRESHOLD = 0.5;
-const SLIDER_DEBOUNCE_MS = 300;
 
 // --- Draggable handle position (vertical only) -------------------------------
 // `handleY` is the user's preferred top-px for the handle. `null` means
@@ -266,75 +268,6 @@ async function writeScopeSetting(patch: Partial<Statement>): Promise<void> {
 	const ids = resolveScopeTargets();
 	if (ids.length === 0) return;
 	await setSettingOnQuestions(ids, patch);
-}
-
-function isThresholdOn(question: Statement): boolean {
-	// Threshold is "on" when the admin has explicitly chosen the
-	// above-threshold cutoff method. Any value (including 0) is treated as
-	// an active filter — the user toggled it on, so honor that.
-	return question.resultsSettings?.cutoffBy === CutoffBy.aboveThreshold;
-}
-
-function getThresholdValue(question: Statement): number {
-	// `cutoffNumber` is the source-of-truth field used by the main app's
-	// settings UI and the `updateChosenOptions` Cloud Function. Older builds
-	// wrote `minConsensus` instead, so we fall back to it for back-compat
-	// when reading existing question docs.
-	const rs = question.resultsSettings;
-
-	return rs?.cutoffNumber ?? rs?.minConsensus ?? DEFAULT_THRESHOLD;
-}
-
-/** Build a complete `ResultsSettings` patch by filling in any required fields
- *  the existing question may be missing. `resultsBy` is the only non-optional
- *  field on the schema, so we fall back to the schema-default `consensus`.
- *
- *  In workspace scope the base settings are deliberately *not* carried over:
- *  the patch lands on every sub-question, so copying the reference question's
- *  `numberOfResults` / `deep` / … onto its siblings would silently rewrite
- *  fields the admin never touched. Only the keys being edited travel. */
-function buildResultsSettingsPatch(
-	base: ResultsSettings | undefined,
-	patch: Partial<ResultsSettings>,
-): ResultsSettings {
-	const carried = isWorkspaceScope() ? {} : (base ?? {});
-
-	return {
-		...carried,
-		resultsBy: base?.resultsBy ?? ResultsBy.consensus,
-		...patch,
-	};
-}
-
-async function flipThreshold(question: Statement): Promise<void> {
-	if (isThresholdOn(question)) {
-		await writeScopeSetting({
-			resultsSettings: buildResultsSettingsPatch(question.resultsSettings, {
-				cutoffBy: CutoffBy.topOptions,
-			}),
-		});
-	} else {
-		await writeScopeSetting({
-			resultsSettings: buildResultsSettingsPatch(question.resultsSettings, {
-				cutoffBy: CutoffBy.aboveThreshold,
-				cutoffNumber: getThresholdValue(question),
-			}),
-		});
-	}
-}
-
-function writeThresholdValue(value: number): void {
-	if (sliderWriteTimer !== null) window.clearTimeout(sliderWriteTimer);
-	sliderWriteTimer = window.setTimeout(() => {
-		sliderWriteTimer = null;
-		const reference = getScopeReference();
-		void writeScopeSetting({
-			resultsSettings: buildResultsSettingsPatch(reference?.resultsSettings, {
-				cutoffBy: CutoffBy.aboveThreshold,
-				cutoffNumber: value,
-			}),
-		});
-	}, SLIDER_DEBOUNCE_MS);
 }
 
 /** Path the main app would write to `powerFollowMe` to point participants
@@ -1734,8 +1667,7 @@ export const FacilitatorPanel: m.Component = {
 		// disabled on the hub even though the settings rows below are live.
 		const canLead = !workspaceScope && hasQuestion && Boolean(mainId);
 		const followMeOn = canLead ? isFollowMeOn(question!) : false;
-		const thresholdOn = hasQuestion ? isThresholdOn(question!) : false;
-		const thresholdVal = hasQuestion ? getThresholdValue(question!) : DEFAULT_THRESHOLD;
+		const gateVal = readLessonGate();
 		const allowNewOptionsOn = hasQuestion
 			? (question!.statementSettings?.enableAddEvaluationOption ?? false)
 			: false;
@@ -2029,46 +1961,30 @@ export const FacilitatorPanel: m.Component = {
 								},
 								help: t('facilitator.toggle.showResults.help'),
 							}),
-							renderToggle({
-								icon: '🎚️',
-								label: t('facilitator.toggle.threshold'),
-								on: thresholdOn,
-								disabled: !hasQuestion,
-								onflip: () => {
-									if (!hasQuestion) return;
-									void flipThreshold(question!);
-								},
-								help: t('facilitator.toggle.threshold.help'),
-							}),
-							thresholdOn && hasQuestion
-								? m('.facilitator-panel__slider-row', [
-										m('input.facilitator-panel__slider', {
-											type: 'range',
-											min: '0',
-											max: '1',
-											step: '0.05',
-											value: String(thresholdVal),
-											'aria-label': t('facilitator.toggle.threshold'),
-											oninput: (e: InputEvent) => {
-												const raw = (e.target as HTMLInputElement).value;
-												const v = Number(raw);
-												if (!Number.isFinite(v)) return;
-												// Optimistic local update so the label tracks the drag.
-												if (question!.resultsSettings) {
-													question!.resultsSettings.cutoffNumber = v;
-												}
-												writeThresholdValue(v);
-												m.redraw();
-											},
-										}),
-										m(
-											'span.facilitator-panel__slider-value',
-											t('facilitator.toggle.threshold.value', {
-												value: thresholdVal.toFixed(2),
-											}),
-										),
-									])
-								: null,
+							m('.facilitator-panel__slider-row', [
+								m('label.facilitator-panel__slider-label', { for: 'gate-slider' }, [
+									m('span', { 'aria-hidden': 'true' }, '🎚️ '),
+									t('facilitator.gate.label'),
+								]),
+								m('input.facilitator-panel__slider#gate-slider', {
+									type: 'range',
+									min: String(GATE_MIN),
+									max: String(GATE_MAX),
+									step: String(GATE_STEP),
+									value: String(gateVal),
+									'data-testid': 'gate-slider',
+									'aria-describedby': 'gate-slider-help',
+									oninput: (e: InputEvent) => {
+										writeLessonGate(Number((e.target as HTMLInputElement).value));
+										m.redraw();
+									},
+								}),
+								m(
+									'span.facilitator-panel__slider-value',
+									t('facilitator.gate.value', { value: gateVal.toFixed(2) }),
+								),
+								m('p.facilitator-panel__help#gate-slider-help', t('facilitator.gate.help')),
+							]),
 						],
 					}),
 

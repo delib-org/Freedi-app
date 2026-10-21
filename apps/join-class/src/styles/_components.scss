@@ -3851,9 +3851,17 @@ $facilitator-panel-width: 300px;
 
 .facilitator-panel__slider-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-sm);
   padding: 0 var(--space-xs) var(--space-sm);
+}
+
+.facilitator-panel__slider-label,
+.facilitator-panel__slider-row .facilitator-panel__help {
+  flex: 1 0 100%;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
 
 .facilitator-panel__slider {

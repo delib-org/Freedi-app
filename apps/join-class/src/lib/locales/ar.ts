@@ -186,9 +186,6 @@ const ar: Record<string, string> = {
 	'facilitator.sort.newest': 'الأحدث',
 	'facilitator.sort.help':
 		'يرى الجميع الاقتراحات بهذا الترتيب، بمن فيهم المشاركون الذين تجلبهم بـ "اتبعني".',
-	'facilitator.toggle.threshold': 'عرض الخيارات فوق العتبة فقط',
-	'facilitator.toggle.threshold.help': 'إخفاء الخيارات ذات التوافق الأقل من العتبة.',
-	'facilitator.toggle.threshold.value': 'العتبة: {{value}}',
 	'facilitator.toggle.allowAdd': 'السماح بخيارات جديدة',
 	'facilitator.toggle.allowAdd.help':
 		'عند الإيقاف، تُقفل قائمة الخيارات — ولا يمكن إضافة خيارات جديدة.',
@@ -480,6 +477,9 @@ const ar: Record<string, string> = {
 	'plan.details.video.invalid': 'يجب أن يبدأ الرابط بـ https://',
 	'plan.details.side_a': 'اسم الشخصية في الجانب الأول',
 	'plan.details.side_b': 'اسم الشخصية في الجانب الثاني',
+	'facilitator.gate.label': 'عتبة الموافقة للسؤال الرئيسي',
+	'facilitator.gate.value': 'العتبة: {{value}}',
+	'facilitator.gate.help': 'يجتاز الاقتراح العتبة عندما تصل الموافقة عليه إلى هذا الرقم.',
 	'plan.tables.title': 'أسئلة الطاولات',
 	'plan.tables.help': 'كل طاولة تختار سؤالًا واحدًا. أضيفوا من 3 إلى 8.',
 	'plan.empty': 'لا توجد أسئلة بعد. أضيفوا السؤال الأول',

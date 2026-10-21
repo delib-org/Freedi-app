@@ -149,10 +149,6 @@ const fa: Record<string, string> = {
 	'facilitator.panel.title': 'کنترل‌های میزبان',
 	'facilitator.panel.close': 'بستن پنل میزبان',
 	'facilitator.panel.no_question': 'برای مدیریت تنظیمات، یک پرسش را باز کنید',
-	'facilitator.toggle.threshold': 'فقط بالاتر از حد آستانه را نمایش بده',
-	'facilitator.toggle.threshold.help':
-		'پنهان کردن گزینه‌هایی که اجماع آن‌ها از حد آستانه کمتر است.',
-	'facilitator.toggle.threshold.value': 'حد آستانه: {{value}}',
 	'facilitator.toggle.allowAdd': 'اجازه گزینه‌های جدید',
 	'facilitator.toggle.allowAdd.help':
 		'وقتی خاموش است، فهرست گزینه‌ها قفل می‌شود — نمی‌توان گزینه جدیدی افزود.',
@@ -448,6 +444,9 @@ const fa: Record<string, string> = {
 	'plan.details.video.invalid': 'پیوند باید با https:// شروع شود',
 	'plan.details.side_a': 'نام شخصیت در سمت اول',
 	'plan.details.side_b': 'نام شخصیت در سمت دوم',
+	'facilitator.gate.label': 'آستانهٔ موافقت برای پرسش اصلی',
+	'facilitator.gate.value': 'آستانه: {{value}}',
+	'facilitator.gate.help': 'پیشنهاد وقتی می‌گذرد که موافقت با آن به این عدد برسد.',
 	'plan.tables.title': 'پرسش‌های میزها',
 	'plan.tables.help': 'هر میز یک پرسش انتخاب می‌کند. بین ۳ تا ۸ پرسش اضافه کنید.',
 	'plan.empty': 'هنوز پرسشی نیست. اولین پرسش را اضافه کنید',

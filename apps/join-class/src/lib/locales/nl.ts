@@ -165,9 +165,6 @@ const nl: Record<string, string> = {
 	'facilitator.sort.newest': 'Nieuwste',
 	'facilitator.sort.help':
 		'Iedereen ziet de suggesties in deze volgorde, inclusief deelnemers die je hierheen brengt met "Volg mij".',
-	'facilitator.toggle.threshold': 'Alleen boven de drempel tonen',
-	'facilitator.toggle.threshold.help': 'Verberg opties met een consensus onder de drempel.',
-	'facilitator.toggle.threshold.value': 'Drempel: {{value}}',
 	'facilitator.toggle.allowAdd': 'Nieuwe opties toestaan',
 	'facilitator.toggle.allowAdd.help':
 		'Wanneer uit, is de optielijst vergrendeld — er kunnen geen nieuwe opties worden toegevoegd.',
@@ -478,6 +475,9 @@ const nl: Record<string, string> = {
 	'plan.details.video.invalid': 'De link moet met https:// beginnen',
 	'plan.details.side_a': 'Naam van de eerste kant',
 	'plan.details.side_b': 'Naam van de tweede kant',
+	'facilitator.gate.label': 'Instemmingsdrempel voor de hoofdvraag',
+	'facilitator.gate.value': 'Drempel: {{value}}',
+	'facilitator.gate.help': 'Een voorstel haalt de drempel als de instemming dit getal bereikt.',
 	'plan.tables.title': 'Vragen voor de tafels',
 	'plan.tables.help': 'Elke tafel kiest er één. Voeg 3 tot 8 toe.',
 	'plan.empty': 'Nog geen vragen. Voeg de eerste toe',

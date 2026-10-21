@@ -173,9 +173,6 @@ const de: Record<string, string> = {
 	'facilitator.sort.newest': 'Neueste',
 	'facilitator.sort.help':
 		'Alle sehen die Vorschläge in dieser Reihenfolge, auch die Teilnehmenden, die Sie per „Folgt mir“ hierher holen.',
-	'facilitator.toggle.threshold': 'Nur über dem Schwellenwert anzeigen',
-	'facilitator.toggle.threshold.help': 'Optionen mit Konsens unter dem Schwellenwert ausblenden.',
-	'facilitator.toggle.threshold.value': 'Schwellenwert: {{value}}',
 	'facilitator.toggle.allowAdd': 'Neue Optionen erlauben',
 	'facilitator.toggle.allowAdd.help':
 		'Wenn aus, ist die Optionsliste gesperrt — es können keine neuen Optionen hinzugefügt werden.',
@@ -491,6 +488,9 @@ const de: Record<string, string> = {
 	'plan.details.video.invalid': 'Der Link muss mit https:// beginnen',
 	'plan.details.side_a': 'Name der ersten Seite',
 	'plan.details.side_b': 'Name der zweiten Seite',
+	'facilitator.gate.label': 'Zustimmungsschwelle für die Hauptfrage',
+	'facilitator.gate.value': 'Schwelle: {{value}}',
+	'facilitator.gate.help': 'Ein Vorschlag besteht, wenn seine Zustimmung diese Zahl erreicht.',
 	'plan.tables.title': 'Fragen für die Tische',
 	'plan.tables.help': 'Jeder Tisch wählt eine. Fügt 3 bis 8 hinzu.',
 	'plan.empty': 'Noch keine Fragen. Fügt die erste hinzu',
