@@ -44,6 +44,8 @@ function isSupported(lang: string | null | undefined): lang is LangCode {
 	return !!lang && (lang === 'en' || lang in localeLoaders);
 }
 
+const FALLBACK_LANG = 'en';
+
 const localeRequests = new Map<string, Promise<void>>();
 
 /** Fetch a locale's dictionary, once. Resolves (rather than rejects) on a
@@ -63,15 +65,17 @@ function loadLocale(lang: string): Promise<void> {
 				// A dictionary can land after whoever asked for it gave up
 				// waiting — the boot timeout below, or a facilitator language
 				// push that raced a slow chunk. If it's still the active
-				// language, swap the visible strings now.
-				if (lang === currentLang) {
+				// language, swap the visible strings now. The English fallback
+				// landing late matters too: keys another locale lacks showed as
+				// raw keys until then.
+				if (lang === currentLang || lang === FALLBACK_LANG) {
 					notifyLangChange();
 					m.redraw();
 				}
 			})
 			.catch(() => {
 				// Offline, blocked, or a stale hashed filename after a deploy.
-				// `translate()` falls through to English on its own.
+				// `initI18n` then waits briefly for the English fallback instead.
 			});
 		localeRequests.set(lang, request);
 	}
@@ -84,6 +88,9 @@ function loadLocale(lang: string): Promise<void> {
  *  link — but not unbounded, so a chunk that never arrives degrades to English
  *  instead of pinning the boot splash forever. */
 const LOCALE_BOOT_TIMEOUT_MS = 8000;
+
+/** Extra wait for the English fallback when the visitor's own locale did not arrive. */
+const FALLBACK_BOOT_TIMEOUT_MS = 3000;
 
 let currentLang: LangCode = 'en';
 
@@ -197,9 +204,19 @@ export function initI18n(): Promise<void> {
 		window.setTimeout(resolve, LOCALE_BOOT_TIMEOUT_MS);
 	});
 
-	return Promise.race([loadLocale(lang), timeout]).then(() => {
-		applyLang(lang);
-	});
+	return Promise.race([loadLocale(lang), timeout])
+		.then(() => {
+			// The locale timed out or failed: mount with English, not with raw keys.
+			if (translations[lang]) return undefined;
+			const fallbackTimeout = new Promise<void>((resolve) => {
+				window.setTimeout(resolve, FALLBACK_BOOT_TIMEOUT_MS);
+			});
+
+			return Promise.race([loadLocale(FALLBACK_LANG), fallbackTimeout]);
+		})
+		.then(() => {
+			applyLang(lang);
+		});
 }
 
 export function getLang(): LangCode {
