@@ -1,0 +1,192 @@
+// =============================================================================
+// Student screens, part 2 (lane C3): table talk, proposals, vote, summary.
+// Lazy: imported only by the c3 view modules, so it ships with their chunk.
+// Tokens only, BEM, logical properties (RTL-safe), transform/opacity motion.
+// Screens down = `.frame--down` (student-frame.scss): everything below inherits
+// its colours with `currentColor` so the one inverted screen needs no overrides.
+// =============================================================================
+
+
+body.c3-lock {
+  overflow: hidden;
+}
+
+// ---- shared bits ------------------------------------------------------------
+
+.c3-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-block: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px solid var(--terra-600);
+  border-radius: var(--radius-md);
+  background: var(--terra-50);
+  color: var(--ink);
+  font-size: var(--font-size-sm);
+
+  &__text {
+    flex: 1;
+  }
+}
+
+// ---- table flow bar + sub-step strip -------------------------------------------
+
+.flow {
+  &__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-block-end: var(--space-md);
+  }
+
+  &__asker {
+    margin: 0;
+    color: var(--terra-600);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold, 700);
+
+    .frame--down & {
+      color: var(--terra-300);
+    }
+  }
+
+  &__class {
+    flex: none;
+  }
+
+  &__plenum {
+    margin-block: 0 var(--space-md);
+    color: var(--ink-muted);
+    font-weight: var(--font-weight-bold, 700);
+  }
+}
+
+.substeps {
+  display: flex;
+  gap: var(--space-xs);
+  margin-block-end: var(--space-lg);
+
+  &__pill {
+    flex: 1;
+    min-height: 36px;
+    padding: 0 var(--space-xs);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold, 700);
+    cursor: pointer;
+
+    &--official:not(.substeps__pill--on) {
+      border-color: var(--terra-600);
+    }
+
+    &--on {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+
+      .frame--down & {
+        border-color: var(--paper);
+        background: var(--paper);
+        color: var(--ink);
+      }
+    }
+  }
+}
+
+// ---- pick -------------------------------------------------------------------
+
+.pick {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+
+  &__title,
+  &__all-used,
+  &__empty {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 56px;
+    padding: var(--space-sm) var(--space-md);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    color: var(--ink);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: default;
+    }
+
+    &--on {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    &--used {
+      color: var(--ink-faint);
+      background: var(--paper-soft);
+    }
+  }
+
+  &__eyebrow,
+  &__hint,
+  &__used {
+    font-size: var(--font-size-xs);
+    color: var(--ink-soft);
+  }
+
+  &__item--on &__eyebrow,
+  &__item--on &__hint {
+    color: var(--paper-line);
+  }
+
+  &__text {
+    font-size: var(--font-size-base);
+  }
+
+  &__add {
+    align-self: stretch;
+  }
+
+  &__input {
+    width: 100%;
+    min-height: var(--touch-target);
+    padding: var(--space-sm) var(--space-md);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    color: var(--ink);
+    font: inherit;
+  }
+
+  &__add-form,
+  form.pick__add {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+}
+
