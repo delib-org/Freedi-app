@@ -543,6 +543,23 @@ const he: Record<string, string> = {
 	'teacher.console.share': 'שיתוף לתלמידים',
 	'teacher.screen.title': 'מקרן',
 	'teacher.screen.soon': 'מסך המקרן יגיע בשלב הבא',
+	// ---------------------------------------------------------------------
+	// Classroom lanes. Each lane adds its keys ONLY between its own
+	// BEGIN and END marker lines (one 'key': 'value', per line; every key in
+	// all 7 locale files). Do not touch another lane's block.
+	// ---------------------------------------------------------------------
+	// >>> C2 BEGIN  namespaces: opening.* side.* table.*
+	// <<< C2 END
+	// ---------------------------------------------------------------------
+	// >>> C3 BEGIN  namespaces: turn.* question.* answer.* proposal.* rate.* voting.* summary.*
+	// <<< C3 END
+	// ---------------------------------------------------------------------
+	// >>> C4 BEGIN  namespace: console.*
+	// <<< C4 END
+	// ---------------------------------------------------------------------
+	// >>> C5 BEGIN  namespace: projector.*
+	// <<< C5 END
+	// ---------------------------------------------------------------------
 };
 
 export default he;

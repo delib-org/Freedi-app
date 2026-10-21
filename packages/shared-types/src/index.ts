@@ -1009,3 +1009,65 @@ export {
   isUserFeedRole,
   isTopLevelSubscription,
 } from './models/userFeed/UserFeed';
+
+// join-class: classroom lesson model, callables contract, pure logic
+export {
+  CLASS_TABLES_COLLECTION,
+  SPEAK_SECONDS,
+  DEFAULT_GATE,
+  SIDE_MIN,
+  SIDE_MAX,
+  CAMP_A_BELOW,
+  CAMP_B_ABOVE,
+  SUPPORT_MIN,
+  SUPPORT_MAX,
+  TABLE_SIZES,
+  DEFAULT_TABLE_SIZE,
+  TableStepSchema,
+  WritingModeSchema,
+  CampSchema,
+  RoundPhaseSchema,
+  NoDeviceMemberSchema,
+  ClassTableSchema,
+  ClassTableMarkerSchema,
+  ClassBallotSchema,
+  ClassSubscriptionFieldsSchema,
+  SideValueSchema,
+  DecisionSupportSchema,
+  classTableId,
+} from './models/classroom/classroomModel';
+export type {
+  TableStep,
+  WritingMode,
+  Camp,
+  RoundPhase,
+  NoDeviceMember,
+  ClassTable,
+  ClassTableMarker,
+  ClassBallot,
+} from './models/classroom/classroomModel';
+export { campOf, supportBySide, decideBallot } from './models/classroom/classroomLogic';
+export type {
+  SupportSubscription,
+  CampSupport,
+  SupportVerdict,
+  SupportBySide,
+} from './models/classroom/classroomLogic';
+export type {
+  ClassTableSize,
+  ClassAssignTablesRequest,
+  ClassAssignTablesResponse,
+  ClassMoveStudentRequest,
+  ClassMoveStudentResponse,
+  ClassAddNoDeviceRequest,
+  ClassAddNoDeviceResponse,
+  ClassTableAction,
+  ClassTableStepRequest,
+  ClassTableStepResponse,
+  ClassAllTablesToRequest,
+  ClassAllTablesToResponse,
+  ClassFreezeBallotRequest,
+  ClassFreezeBallotResponse,
+  ClassCloseBallotRequest,
+  ClassCloseBallotResponse,
+} from './models/classroom/classroomCallables';

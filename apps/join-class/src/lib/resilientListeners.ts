@@ -218,6 +218,14 @@ export function resilientOnSnapshot(
 	};
 }
 
+/** Listener names of the classroom (lib/classroom/listeners.ts); they appear in the logs. */
+export const CLASS_LISTENER_KINDS = {
+	table: 'classTable',
+	tables: 'classTables',
+	mySubscription: 'classMySubscription',
+	roster: 'classRoster',
+} as const;
+
 /** Test-only: number of live listeners in the registry. */
 export function _registrySize(): number {
 	return registry.size;

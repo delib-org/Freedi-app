@@ -20,6 +20,8 @@ export function getVoteId(userId: string, parentId: string) {
 export const VotingSettingsSchema = object({
 	showPercentages: optional(boolean()),
 	showHighetRelativeToViewedOptions: optional(boolean()),
+	/** join-class: the gate a proposal's consensus must pass (default DEFAULT_GATE = 0.6). */
+	threshold: optional(number()),
 });
 
 export type VotingSettings = InferOutput<typeof VotingSettingsSchema>;

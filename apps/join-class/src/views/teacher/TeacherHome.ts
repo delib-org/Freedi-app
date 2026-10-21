@@ -7,6 +7,7 @@ import { BrandLogo } from '@/components/BrandLogo';
 import { subscribeToJoinMain, markOpenedInJoin, type JoinMainEntry } from '@/lib/joinSubscriptions';
 import type { Unsubscribe } from '@/lib/firebase';
 import { createSimpleQuestion, loadQuestion, getQuestion } from '@/lib/store';
+import { ensureClassCode } from '@/lib/lesson';
 import { normalizeQuestionText } from './planHelpers';
 
 const MAX_LESSON_TITLE = 200;
@@ -49,6 +50,10 @@ async function handleCreate(e: Event): Promise<void> {
 				});
 			}
 		}
+		// The join code exists from the first minute, so the plan/console show it.
+		await ensureClassCode(id).catch((err: unknown) => {
+			console.error('[TeacherHome] ensureClassCode failed:', err);
+		});
 		titleInput = '';
 		formOpen = false;
 		m.route.set(`/t/${id}/plan`);

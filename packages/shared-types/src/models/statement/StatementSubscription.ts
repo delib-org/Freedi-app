@@ -16,6 +16,7 @@ import { NotificationFrequency } from '../engagement/NotificationFrequency';
 import { BranchPreferenceSchema } from '../engagement/EngagementModel';
 import { StatementSchema } from './StatementTypes';
 import { SimpleStatementSchema } from './SimpleStatement';
+import { ClassSubscriptionFieldsSchema } from '../classroom/classroomModel';
 
 export const StatementSubscriptionSchema = object({
 	role: enum_(Role),
@@ -61,6 +62,9 @@ export const StatementSubscriptionSchema = object({
 	// onto materialized org-admin subscriptions so an org's roster can be
 	// queried without joining through /statements.
 	organizationId: optional(string()),
+
+	// join-class: side / camp / decisionSupport (student-written), tableId (server-written)
+	...ClassSubscriptionFieldsSchema,
 });
  
 export type StatementSubscription = InferOutput<

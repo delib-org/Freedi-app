@@ -123,6 +123,9 @@ i18nReady.then(() => {
 		'/t/:mid/plan': teacherRoute(() =>
 			import('@/views/teacher/PlanScreen').then((mod) => mod.PlanScreen),
 		),
+		'/t/:mid/table/:n': teacherRoute(() =>
+			import('@/views/teacher/TableSheet').then((mod) => mod.TableSheet),
+		),
 		'/t/:mid/screen': teacherRoute(() =>
 			import('@/views/teacher/TeacherProjector').then((mod) => mod.TeacherProjector),
 		),

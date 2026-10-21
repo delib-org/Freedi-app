@@ -22,6 +22,8 @@ import { QRShare } from '@/components/QRShare';
 import { SummarySection } from '@/components/SummarySection';
 import { EditableTitle } from '@/components/EditableTitle';
 import { SplashLoader } from '@/views/Splash';
+import { StudentStage } from '@/views/student/StudentStage';
+import { useStudentStage } from '@/views/student/useStudentStage';
 import { createDragReorder } from '@/lib/dragReorder';
 import { BrandLogo } from '@/components/BrandLogo';
 import type { Unsubscribe } from '@/lib/firebase';
@@ -150,6 +152,11 @@ export const MainHub: m.Component = {
 		const main = getMainStatement();
 		if (!main) {
 			return m('.main-hub', m('.main-hub__empty', t('solutions.error.not_found')));
+		}
+
+		// Lesson workspaces (join-class) render the student stage instead of the hub.
+		if (useStudentStage(main, isAdmin(), m.route.param('student'))) {
+			return m(StudentStage, { main, key: main.statementId });
 		}
 
 		// `applyOrder` returns the optimistic post-drop ordering when a commit

@@ -24,6 +24,8 @@
     "emulators:solo": "npm run env:dev && JAVA_TOOL_OPTIONS=-Xmx4g FUNCTIONS_DISCOVERY_TIMEOUT=90 firebase emulators:start -c firebase.solo.json --project freedi-test --only firestore,auth,functions,storage,database --export-on-exit .emulator-data-solo",
     "emulators:solo:resume": "npm run env:dev && JAVA_TOOL_OPTIONS=-Xmx4g FUNCTIONS_DISCOVERY_TIMEOUT=90 firebase emulators:start -c firebase.solo.json --project freedi-test --only firestore,auth,functions,storage,database --import .emulator-data-solo --export-on-exit .emulator-data-solo",
     "solo": "bash scripts/solo.sh",
+    "seed:classroom": "npx tsx apps/join-class/scripts/seed-classroom.ts",
+    "seed:classroom:solo": "bash scripts/solo.sh npx tsx apps/join-class/scripts/seed-classroom.ts",
     "build": "tsc && vite build",
     "build:dev": "tsc && vite build --mode development",
     "build:test": "tsc && vite build --mode testing",
