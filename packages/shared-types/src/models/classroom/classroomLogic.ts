@@ -38,16 +38,13 @@ export interface SupportBySide {
  *
  * Verdict:
  *  - 'insufficient' when either pole camp (a or b) has n = 0 (nobody rated);
- *  - 'closer' when BOTH a.mean > 0 and b.mean > 0 (both poles lean toward the
- *    decision);
+ *  - 'closer' when BOTH a.mean >= gate and b.mean >= gate (IA spec: the sides
+ *    came closer);
  *  - 'apart' otherwise.
- * `gate` is accepted for the contract (callers pass votingSettings.threshold)
- * but deliberately does not enter the verdict: mapping a consensus gate onto a
- * mean-of-faces scale is not intuitive. The parameter stays so a later rule can
- * use it without changing callers.
+ * Callers pass `votingSettings.threshold ?? DEFAULT_GATE`; the gate is compared
+ * directly with the mean support (-1..+1).
  */
 export function supportBySide(subs: SupportSubscription[], gate: number): SupportBySide {
-	void gate;
 	const camps: Camp[] = ['a', 'center', 'b'];
 	const sums: Record<Camp, { total: number; n: number; m: number }> = {
 		a: { total: 0, n: 0, m: 0 },
@@ -74,7 +71,7 @@ export function supportBySide(subs: SupportSubscription[], gate: number): Suppor
 	}
 	let verdict: SupportVerdict;
 	if (out.a.n === 0 || out.b.n === 0) verdict = 'insufficient';
-	else if (out.a.mean > 0 && out.b.mean > 0) verdict = 'closer';
+	else if (out.a.mean >= gate && out.b.mean >= gate) verdict = 'closer';
 	else verdict = 'apart';
 
 	return { a: out.a, center: out.center, b: out.b, verdict };

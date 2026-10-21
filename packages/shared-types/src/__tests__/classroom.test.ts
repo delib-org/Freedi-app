@@ -23,27 +23,37 @@ describe('supportBySide', () => {
 		expect(r.verdict).toBe('insufficient');
 		expect(r.b).toEqual({ mean: 0, n: 0, m: 1 });
 	});
-	it('is closer when both poles lean positive', () => {
+	it('is closer when both poles are at or above the gate', () => {
 		const r = supportBySide(
 			[
 				{ camp: 'a', decisionSupport: 0.5 },
-				{ camp: 'a', decisionSupport: 0 },
+				{ camp: 'a', decisionSupport: 1 },
 				{ camp: 'b', decisionSupport: 1 },
 				{ camp: 'center', decisionSupport: -1 },
 			],
 			0.6,
 		);
-		expect(r.a).toEqual({ mean: 0.25, n: 2, m: 2 });
+		expect(r.a).toEqual({ mean: 0.75, n: 2, m: 2 });
 		expect(r.center.mean).toBe(-1);
 		expect(r.verdict).toBe('closer');
 	});
-	it('is apart when a pole is not positive', () => {
+	it('is closer exactly at the gate', () => {
 		const r = supportBySide(
 			[
-				{ camp: 'a', decisionSupport: 0 },
+				{ camp: 'a', decisionSupport: 0.5 },
+				{ camp: 'b', decisionSupport: 0.5 },
+			],
+			0.5,
+		);
+		expect(r.verdict).toBe('closer');
+	});
+	it('is apart just below the gate on one side', () => {
+		const r = supportBySide(
+			[
+				{ camp: 'a', decisionSupport: 0.49 },
 				{ camp: 'b', decisionSupport: 1 },
 			],
-			0.6,
+			0.5,
 		);
 		expect(r.verdict).toBe('apart');
 	});
