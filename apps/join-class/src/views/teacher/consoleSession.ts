@@ -110,7 +110,9 @@ async function openConsole(mainId: string): Promise<void> {
 	m.redraw();
 	try {
 		await ensureUser();
+		if (mine !== generation) return;
 		if (getMainStatement()?.statementId !== mainId) await loadMainStatement(mainId);
+		if (mine !== generation) return;
 		const main = getMainStatement();
 		if (!main || main.statementId !== mainId) {
 			session.status = 'failed';
@@ -118,6 +120,7 @@ async function openConsole(mainId: string): Promise<void> {
 			return;
 		}
 		await checkAdminStatus(mainId, main.creatorId);
+		if (mine !== generation) return;
 		if (!isAdmin()) {
 			session.status = 'redirected';
 			m.route.set(`/m/${mainId}`);
@@ -128,6 +131,7 @@ async function openConsole(mainId: string): Promise<void> {
 		await ensureClassCode(mainId).catch((err: unknown) => {
 			console.error('[TeacherConsole] ensureClassCode failed:', err);
 		});
+		if (mine !== generation) return;
 		await loadMainStatement(mainId);
 		if (mine !== generation) return;
 		stops = [subscribeMainStatement(mainId), subscribeSubQuestions(mainId)];
@@ -136,7 +140,8 @@ async function openConsole(mainId: string): Promise<void> {
 		session.status = 'ready';
 	} catch (err) {
 		console.error('[TeacherConsole] load failed:', err);
-		session.status = 'failed';
+		// a stale open (the teacher switched lessons meanwhile) must not mark the new one failed
+		if (mine === generation) session.status = 'failed';
 	} finally {
 		m.redraw();
 	}

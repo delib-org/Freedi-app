@@ -67,6 +67,7 @@ export function resetConsoleState(mainId: string): void {
 	consoleState.menuUid = null;
 	consoleState.noDeviceFor = null;
 	consoleState.focusUid = null;
+	consoleState.focusTableN = null;
 	consoleState.announce = '';
 	consoleState.options = new Map<string, Statement[]>();
 }
