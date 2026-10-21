@@ -4,6 +4,21 @@
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
 const he: Record<string, string> = {
+	'step.waiting': 'ממתינים למורה',
+	'step.opening': 'פתיחה',
+	'step.side': 'צד',
+	'step.tables': 'שולחנות',
+	'step.tableTalk': 'שיחת שולחן',
+	'step.proposals': 'הצעות',
+	'step.vote': 'הצבעה',
+	'step.summary': 'סיכום',
+	'lesson.step_of': 'שלב {{n}} מתוך {{total}}',
+	'lesson.code.label': 'קוד',
+	'lesson.code.unknown.title': 'לא מצאנו את הכיתה הזאת',
+	'lesson.code.unknown.body': 'בדקו את ששת הספרות עם המורה ונסו שוב.',
+	'lesson.role.guiding': 'שאלה מנחה',
+	'lesson.role.challenge': 'האתגר',
+	'lesson.hint.label': 'רמז',
 	'splash.title': 'WizCol',
 	'splash.tagline': 'מעצימים קבלת החלטות משותפת',
 	'splash.status': 'טוען את סביבת העבודה...',

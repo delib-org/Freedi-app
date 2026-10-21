@@ -707,6 +707,35 @@ service cloud.firestore {
 		allow write: if request.auth.uid != null && isAdmin();
 	}
 
+    // join-class: the six-digit class code -> workspace lookup behind /c/:code.
+    // Any signed-in user (anonymous students included) resolves a code; only an
+    // admin of the workspace the code points at may create or re-point it.
+    // Codes are never deleted from a client.
+    match /classCodes/{code} {
+      function isClassCodeAdmin(mainId) {
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(mainId)));
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+
+      function isValidClassCode() {
+        return code.matches('^[0-9]{6}$') &&
+               request.resource.data.keys().hasOnly(['mainId', 'createdAt']) &&
+               request.resource.data.mainId is string &&
+               request.resource.data.createdAt is number;
+      }
+
+      allow read: if request.auth.uid != null;
+      allow create: if request.auth.uid != null &&
+                       isValidClassCode() &&
+                       isClassCodeAdmin(request.resource.data.mainId);
+      allow update: if request.auth.uid != null &&
+                       isValidClassCode() &&
+                       resource.data.mainId == request.resource.data.mainId &&
+                       isClassCodeAdmin(resource.data.mainId);
+      allow delete: if false;
+    }
+
     match /statements/{statementId} {
       function isAdmin() {
         let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));

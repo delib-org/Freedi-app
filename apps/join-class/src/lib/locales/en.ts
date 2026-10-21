@@ -4,6 +4,21 @@
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
 const en: Record<string, string> = {
+	'step.waiting': 'Waiting for the teacher',
+	'step.opening': 'Opening',
+	'step.side': 'Side',
+	'step.tables': 'Tables',
+	'step.tableTalk': 'Table talk',
+	'step.proposals': 'Proposals',
+	'step.vote': 'Vote',
+	'step.summary': 'Summary',
+	'lesson.step_of': 'Step {{n}} of {{total}}',
+	'lesson.code.label': 'Code',
+	'lesson.code.unknown.title': 'We could not find this class',
+	'lesson.code.unknown.body': 'Check the six digits with your teacher and try again.',
+	'lesson.role.guiding': 'Guiding question',
+	'lesson.role.challenge': 'Challenge',
+	'lesson.hint.label': 'Hint',
 	'splash.title': 'WizCol',
 	'splash.tagline': 'Empowering collective decisions',
 	'splash.status': 'Loading your workspace...',

@@ -4,6 +4,21 @@
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
 const nl: Record<string, string> = {
+	'step.waiting': 'Wachten op de docent',
+	'step.opening': 'Opening',
+	'step.side': 'Kant',
+	'step.tables': 'Tafels',
+	'step.tableTalk': 'Tafelgesprek',
+	'step.proposals': 'Voorstellen',
+	'step.vote': 'Stemmen',
+	'step.summary': 'Samenvatting',
+	'lesson.step_of': 'Stap {{n}} van {{total}}',
+	'lesson.code.label': 'Code',
+	'lesson.code.unknown.title': 'We konden deze klas niet vinden',
+	'lesson.code.unknown.body': 'Controleer de zes cijfers met je docent en probeer het opnieuw.',
+	'lesson.role.guiding': 'Leidende vraag',
+	'lesson.role.challenge': 'Uitdaging',
+	'lesson.hint.label': 'Hint',
 	'solutions.loading': 'Laden...',
 	'solutions.error.not_found': 'Vraag niet gevonden',
 	'solutions.error.no_options': 'Nog geen oplossingen beschikbaar',
