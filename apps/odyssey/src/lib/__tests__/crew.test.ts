@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { OdysseyElder } from '@freedi/shared-types';
 import {
+	CHIP_IN_TEXT_WEIGHT,
+	CHIP_IN_VALUES_WEIGHT,
 	CREW_MAX,
 	CREW_MIN,
 	crewIsComplete,
@@ -96,6 +98,39 @@ describe('rankEldersByWinds', () => {
 		expect(ranked.slice(0, 2).map((entry) => entry.elder.elderId)).toEqual(['jabotinsky', 'herzl']);
 		// "אב" is inside "אומץ"? No — and even a real fragment this short must not count.
 		expect(rankEldersByWinds(roster, ['אב']).every((entry) => !entry.matchesWinds)).toBe(true);
+	});
+
+	it('floats a sailor whose values or bio echo a wind chip, and names the chip', () => {
+		const women = {
+			...elder('henrietta', ['חינוך', 'שוויון האישה', 'חלוציות'], 5),
+			bio: 'פתחה משק לימוד',
+		};
+		const bioOnly = { ...elder('ben', ['מדינה'], 6), bio: 'נאבק למען זכות הבחירה לנשים' };
+		const ranked = rankEldersByWinds([...roster, bioOnly, women], [], ['נשים']);
+
+		expect(ranked.slice(0, 2).map((entry) => entry.elder.elderId)).toEqual(['henrietta', 'ben']);
+		expect(ranked[0].echoedChips).toEqual(['נשים']);
+		expect(ranked[2].echoedChips).toEqual([]);
+		expect(CHIP_IN_VALUES_WEIGHT).toBeGreaterThan(CHIP_IN_TEXT_WEIGHT);
+	});
+
+	it('adds chips to the value ranking instead of replacing it', () => {
+		const ranked = rankEldersByWinds(
+			[elder('a', ['חירות'], 1), { ...elder('b', ['מדינה'], 2), bio: 'דאג לנשים' }],
+			['חירות'],
+			['נשים'],
+		);
+
+		expect(ranked.map((entry) => entry.elder.elderId)).toEqual(['b', 'a']);
+		expect(ranked.every((entry) => entry.matchesWinds)).toBe(true);
+	});
+
+	it('counts a repeated chip once and ignores chips nobody echoes', () => {
+		const ranked = rankEldersByWinds(roster, [], ['נשים', 'נשים', ' ', 'מילואימניקים']);
+
+		expect(ranked.every((entry) => !entry.matchesWinds && entry.echoedChips.length === 0)).toBe(
+			true,
+		);
 	});
 
 	it('offers every sailor — ordering never drops anyone', () => {

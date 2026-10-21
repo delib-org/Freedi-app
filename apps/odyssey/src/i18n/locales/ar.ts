@@ -100,6 +100,11 @@ const ar: Record<string, string> = {
 	'elders.matchHint':
 		'🧭 البحّارة الموسومون بـ«يناسب رياحكم» يتحدّثون عن قيم رتّبتموها في البوصلة. هذا ترتيب فحسب — الخيار كلّه لكم.',
 	'elders.matchBadge': '🧭 يناسب رياحكم',
+	'elders.matchBasisBoth':
+		'🧭 رتّبنا البحّارة بحسب ما اخترتموه في البداية: {{chips}} — وبحسب القيم التي رتّبتموها. هذا ترتيب فحسب — الخيار كلّه لكم.',
+	'elders.matchBasisChips':
+		'🧭 رتّبنا البحّارة بحسب ما اخترتموه في البداية: {{chips}}. هذا ترتيب فحسب — الخيار كلّه لكم.',
+	'elders.matchEchoes': 'يتحدّث عن: {{chips}}',
 	'elders.aboard': '⚓ على متن السفينة',
 	'elders.whoIs': 'من هو {{name}}؟',
 	'elders.aboardCount': 'على المتن: {{chosen}} من {{max}}',

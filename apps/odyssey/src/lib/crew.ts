@@ -44,12 +44,51 @@ export function crewIsFull(chosenCount: number, elderCount: number): boolean {
 
 export interface RankedElder {
 	elder: OdysseyElder;
-	/** true when one of the sailor's values echoes a value the player ranked */
+	/** true when the sailor echoes a ranked value or a wind chip the player picked */
 	matchesWinds: boolean;
+	/** the player's wind chips (canonical Hebrew) this sailor echoes, in the player's order */
+	echoedChips: string[];
 }
 
 /** Labels shorter than this match only exactly — "רוח" must not match "רוחב". */
 const MIN_PARTIAL_MATCH = 3;
+
+/** A chip echoed in a sailor's declared values — the strongest sign that it is their cause. */
+export const CHIP_IN_VALUES_WEIGHT = 6;
+/** A chip echoed only in the sailor's needs, role or biography. */
+export const CHIP_IN_TEXT_WEIGHT = 4;
+
+/**
+ * Chips whose Hebrew words rarely appear verbatim in a biography: the other
+ * words a sailor's text would use for the same people. A chip not listed is
+ * searched as it is written. Keys are the canonical chips of the default
+ * compass; "נשים" already finds "לנשים", the table adds "אישה", "נשות".
+ */
+export const CHIP_KEYWORDS: Record<string, string[]> = {
+	נשים: ['נשים', 'אישה', 'נשות', 'נערות', 'בנות'],
+	צעירים: ['צעירים', 'נוער'],
+	עולים: ['עולים', 'עלייה', 'עליה', 'מהגרים'],
+	חרדים: ['חרדים', 'חרדי'],
+	חילונים: ['חילונים', 'חילוני'],
+	'ערבים אזרחי ישראל': ['ערבים', 'ערבי', 'מיעוטים', 'מיעוט'],
+	'משפחות חטופים': ['חטופים', 'חטוף'],
+	מילואימניקים: ['מילואים', 'מילואימניקים', 'לוחמים'],
+	'אנשים בעוני': ['עוני', 'עניים', 'נזקקים'],
+	'תושבי הצפון': ['צפון', 'גליל'],
+	'תושבי הדרום': ['דרום', 'נגב'],
+	'עברית ותרבות': ['עברית', 'תרבות'],
+	'חיים משותפים': ['חיים משותפים', 'שותפות', 'דו-קיום'],
+	'ערבות הדדית': ['ערבות', 'סולידריות'],
+	'יכולת תיקון': ['תיקון'],
+	'טבע ונוף': ['טבע', 'נוף', 'אדמה'],
+	'קרע פנימי': ['קרע', 'פילוג', 'שסע'],
+	'אובדן דמוקרטיה': ['דמוקרטיה'],
+	'אובדן זהות': ['זהות'],
+	'יוקר מחיה': ['יוקר', 'מחיה'],
+	'בידוד בינלאומי': ['בידוד'],
+	'אי-שוויון': ['שוויון'],
+	'עתיד הילדים': ['ילדים'],
+};
 
 function labelsMatch(a: string, b: string): boolean {
 	const left = a.trim();
@@ -61,34 +100,74 @@ function labelsMatch(a: string, b: string): boolean {
 	return left.includes(right) || right.includes(left);
 }
 
+function keywordsOf(chip: string): string[] {
+	const listed = CHIP_KEYWORDS[chip];
+
+	return (listed ?? [chip]).filter((word) => word.length >= MIN_PARTIAL_MATCH);
+}
+
+function containsAny(text: string, keywords: string[]): boolean {
+	return keywords.some((word) => text.includes(word));
+}
+
+/** How strongly one chip echoes one sailor: 0, CHIP_IN_TEXT_WEIGHT or CHIP_IN_VALUES_WEIGHT. */
+function chipScore(elder: OdysseyElder, chip: string): number {
+	const keywords = keywordsOf(chip);
+	if (keywords.length === 0) return 0;
+	const valuesText = elder.values.map((value) => `${value.label} ${value.description}`).join(' ');
+	if (containsAny(valuesText, keywords)) return CHIP_IN_VALUES_WEIGHT;
+	const otherText = [elder.role, elder.bio, ...elder.needs].join(' ');
+
+	return containsAny(otherText, keywords) ? CHIP_IN_TEXT_WEIGHT : 0;
+}
+
 /**
  * The roster, ordered by closeness to the player's compass.
  *
  * Ordering is not choosing: every sailor is still offered and none is
- * ticked. Sailors whose declared values echo the values the player ranked on
- * רוח ההכרעה float to the top (the better the echo, the higher), and are
- * flagged so the screen can say why. Everyone else keeps the organizer's
- * order. Values are compared by label — the sailors' value ids are their own
- * ("mamlachtiut"), the game's are positional ("value-3") — exactly or as a
- * contained word, so "כבוד" meets "כבוד האדם" and "עתיד" meets "עתיד משותף".
+ * ticked. Two signals float a sailor up, and are summed:
+ *
+ * 1. Ranked values (רוח ההכרעה): each of the sailor's declared values that
+ *    echoes a value the player ranked adds `rankedCount - rank` (the better
+ *    the echo, the more). Compared by label — exactly or as a contained word,
+ *    so "כבוד" meets "כבוד האדם".
+ * 2. Wind chips (רוח האהבה / הדאגה / ההקשבה): each chip the player ticked adds
+ *    CHIP_IN_VALUES_WEIGHT if the chip's words (see CHIP_KEYWORDS) appear in
+ *    the sailor's declared values, else CHIP_IN_TEXT_WEIGHT if they appear in
+ *    the sailor's needs, role or bio, else nothing. A chip counts once per
+ *    sailor. Chips must be the canonical Hebrew ones, like the elders.
+ *
+ * Sailors with a score above zero are flagged and carry the chips they echo
+ * so the screen can say why. Ties keep the organizer's order. The free-text
+ * answers are not matched: a sentence has no reliable key to a biography.
  */
 export function rankEldersByWinds(
 	elders: OdysseyElder[],
 	rankedValueLabels: string[],
+	windChips: string[] = [],
 ): RankedElder[] {
+	const chips = [...new Set(windChips.map((chip) => chip.trim()).filter(Boolean))];
 	const scored = elders.map((elder, index) => {
 		let score = 0;
 		for (const value of elder.values) {
 			const rank = rankedValueLabels.findIndex((label) => labelsMatch(label, value.label));
 			if (rank !== -1) score += rankedValueLabels.length - rank;
 		}
+		const echoedChips: string[] = [];
+		for (const chip of chips) {
+			const weight = chipScore(elder, chip);
+			if (weight > 0) {
+				score += weight;
+				echoedChips.push(chip);
+			}
+		}
 
-		return { elder, score, index };
+		return { elder, score, index, echoedChips };
 	});
 
 	return scored
 		.sort((a, b) => b.score - a.score || a.index - b.index)
-		.map(({ elder, score }) => ({ elder, matchesWinds: score > 0 }));
+		.map(({ elder, score, echoedChips }) => ({ elder, matchesWinds: score > 0, echoedChips }));
 }
 
 /**

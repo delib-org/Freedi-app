@@ -92,6 +92,11 @@ const en: Record<string, string> = {
 	'elders.matchHint':
 		'🧭 Sailors marked “matches your winds” speak about values you ranked on the compass. That is only an order — the choice is entirely yours.',
 	'elders.matchBadge': '🧭 Matches your winds',
+	'elders.matchBasisBoth':
+		'🧭 We ordered the sailors by what you chose at the start: {{chips}} — and by the values you ranked. That is only an order — the choice is entirely yours.',
+	'elders.matchBasisChips':
+		'🧭 We ordered the sailors by what you chose at the start: {{chips}}. That is only an order — the choice is entirely yours.',
+	'elders.matchEchoes': 'Speaks about: {{chips}}',
 	'elders.aboard': '⚓ Aboard',
 	'elders.whoIs': 'Who is {{name}}?',
 	'elders.aboardCount': 'Aboard: {{chosen}} of {{max}}',

@@ -35,7 +35,7 @@ import { useT } from '../i18n/useT';
  */
 export default function Elders() {
 	const navigate = useNavigate();
-	const { content, canonicalContent, journey, updateJourney } = useGame();
+	const { content, canonicalContent, journey, updateJourney, displayChip } = useGame();
 	const { t } = useT();
 	/** The crew as shown — in the player's language. */
 	const elders = useMemo(() => activeElders(content?.game), [content]);
@@ -79,11 +79,53 @@ export default function Elders() {
 			.filter((label): label is string => Boolean(label));
 	}, [canonicalContent, journey]);
 
+	/**
+	 * The chips the player ticked on the three question winds, canonical Hebrew
+	 * (that is how they are stored), each with the wind it came from so it can
+	 * be shown back in the player's language.
+	 */
+	const windChips = useMemo(() => {
+		const seen = new Map<string, string>();
+		for (const [questionId, answer] of Object.entries(journey?.compassAnswers ?? {})) {
+			for (const chip of answer.chips) {
+				if (!seen.has(chip)) seen.set(chip, questionId);
+			}
+		}
+
+		return [...seen.entries()].map(([chip, questionId]) => ({ chip, questionId }));
+	}, [journey]);
+
 	// Ranked in Hebrew, shown in the player's language.
 	const roster = useMemo(
-		() => withDisplayElders(rankEldersByWinds(canonicalElders, rankedLabels), elders),
-		[canonicalElders, rankedLabels, elders],
+		() =>
+			withDisplayElders(
+				rankEldersByWinds(
+					canonicalElders,
+					rankedLabels,
+					windChips.map(({ chip }) => chip),
+				),
+				elders,
+			),
+		[canonicalElders, rankedLabels, windChips, elders],
 	);
+	/** The player's chips that really moved a sailor. */
+	const usedChips = useMemo(() => {
+		const echoed = new Set(roster.flatMap((entry) => entry.echoedChips));
+
+		return windChips.filter(({ chip }) => echoed.has(chip)).map(({ chip }) => chip);
+	}, [roster, windChips]);
+
+	/** Canonical chips, written back in the player's language. */
+	function shownChips(chips: string[]): string {
+		return chips
+			.map((chip) => {
+				const source = windChips.find((entry) => entry.chip === chip);
+
+				return source ? displayChip(source.questionId, chip) : chip;
+			})
+			.join(t('common.listSeparator'));
+	}
+
 	const matchingCount = roster.filter((entry) => entry.matchesWinds).length;
 
 	// A bubble over the board closes the way every overlay does: Escape, or a
@@ -177,12 +219,16 @@ export default function Elders() {
 
 					{matchingCount > 0 ? (
 						<p className="text-[13px] text-center opacity-80 m-0 fade-in" aria-live="polite">
-							{t('elders.matchHint')}
+							{usedChips.length === 0
+								? t('elders.matchHint')
+								: t(rankedLabels.length > 0 ? 'elders.matchBasisBoth' : 'elders.matchBasisChips', {
+										chips: shownChips(usedChips),
+									})}
 						</p>
 					) : null}
 
 					<div className="crew-grid fade-in">
-						{roster.map(({ elder, matchesWinds }) => {
+						{roster.map(({ elder, matchesWinds, echoedChips }) => {
 							const active = chosen.has(elder.elderId);
 							const blocked = !active && full;
 
@@ -210,6 +256,11 @@ export default function Elders() {
 										<span className="crew-values">{keywords(elder)}</span>
 										{matchesWinds ? (
 											<span className="crew-winds">{t('elders.matchBadge')}</span>
+										) : null}
+										{echoedChips.length > 0 ? (
+											<span className="crew-winds">
+												{t('elders.matchEchoes', { chips: shownChips(echoedChips) })}
+											</span>
 										) : null}
 										{/* Only the berth that was taken says so. An empty card invites the
 										    click by being a card on a board that asked you to choose. */}
