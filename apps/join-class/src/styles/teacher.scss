@@ -1,0 +1,487 @@
+// =============================================================================
+// Teacher screens — home, plan the questions, console placeholder.
+// Tokens only (see _tokens.scss), BEM, logical properties so RTL needs no
+// overrides. Imported by the lazy teacher views (like ManualReorder.css), not
+// from global.scss, so a student's first load never downloads it.
+// =============================================================================
+
+// ---- shared page frame ------------------------------------------------------
+.plan,
+.teacher-home,
+.teacher-console {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding: var(--space-md) var(--space-md) 0;
+  background: var(--paper-soft);
+}
+
+.plan__header,
+.teacher-console__header,
+.teacher-home__header {
+  width: 100%;
+  max-width: var(--teacher-width, 720px);
+  margin-inline: auto;
+  padding-block: var(--space-sm);
+}
+
+.plan__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: var(--touch-target);
+  padding-inline-end: var(--space-md);
+  color: var(--teal-700);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.plan__back-chevron {
+  font-size: var(--font-size-xl);
+  line-height: 1;
+  unicode-bidi: isolate;
+
+  [dir='rtl'] & {
+    transform: scaleX(-1);
+  }
+}
+
+.plan__title,
+.teacher-console__title,
+.teacher-home__title {
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+}
+
+.plan__lesson {
+  margin-block-start: var(--space-xs);
+  color: var(--text-secondary);
+}
+
+.plan__body,
+.teacher-console__body,
+.teacher-home__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  width: 100%;
+  max-width: var(--teacher-width, 720px);
+  margin-inline: auto;
+  padding-block: var(--space-md);
+}
+
+.plan__body {
+  // Room for the fixed bottom bar so the last card is never hidden behind it.
+  padding-block-end: calc(var(--touch-target) + var(--space-2xl));
+}
+
+.plan__section-title {
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+}
+
+.plan__help {
+  margin-block: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.plan__empty {
+  padding: var(--space-md);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+// ---- cards ------------------------------------------------------------------
+.plan__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  list-style: none;
+}
+
+.plan-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  transition:
+    border-color var(--dur-quick) var(--ease-out),
+    opacity var(--dur-quick) var(--ease-out);
+
+  &:focus-within {
+    border-color: var(--teal-500);
+  }
+
+  &--challenge {
+    border-inline-start: 4px solid var(--terra-500);
+    background: var(--bg-card);
+  }
+
+  &--dragging {
+    opacity: 0.5;
+  }
+
+  &--drop-target {
+    border-color: var(--teal-600);
+    border-style: dashed;
+  }
+
+  &__main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  &__text,
+  &__hint {
+    width: 100%;
+    min-height: var(--touch-target);
+    padding: var(--space-xs) var(--space-sm);
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    background: var(--bg-input);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+
+    &:hover:not(:disabled) {
+      border-color: var(--border-light);
+    }
+
+    &:focus-visible {
+      border-color: var(--teal-600);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &[aria-invalid='true'] {
+      border-color: var(--danger);
+    }
+  }
+
+  &__text {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+
+    &--challenge {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+    }
+  }
+
+  &__hint {
+    min-height: 40px;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+  }
+
+  &__handle {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: stretch;
+    min-width: 32px;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+
+    &:hover {
+      background: var(--paper-soft);
+    }
+
+    &--idle {
+      cursor: default;
+      opacity: 0.4;
+    }
+
+    .plan-card--dragging & {
+      cursor: grabbing;
+    }
+  }
+
+  &__handle-dots {
+    letter-spacing: -1px;
+  }
+
+  &__delete {
+    flex: 0 0 auto;
+    align-self: center;
+    color: var(--danger);
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    font-size: var(--font-size-sm);
+    color: var(--danger);
+  }
+}
+
+// ---- "+ question" dashed card -------------------------------------------------
+.plan__add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--touch-target);
+  margin-block-start: var(--space-sm);
+  padding: var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--teal-700);
+  background: transparent;
+  border: 2px dashed var(--border-medium);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-quick) var(--ease-out),
+    border-color var(--dur-quick) var(--ease-out);
+
+  &:hover {
+    background: var(--bg-card);
+    border-color: var(--teal-600);
+  }
+}
+
+// ---- sticky bottom bar --------------------------------------------------------
+.plan__bar {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 20;
+  padding: var(--space-sm) var(--space-md);
+  padding-block-end: max(var(--space-sm), env(safe-area-inset-bottom));
+  background: var(--bg-card);
+  border-block-start: 1px solid var(--border-light);
+  box-shadow: var(--shadow-md);
+}
+
+.plan__bar-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: var(--teacher-width, 720px);
+  margin-inline: auto;
+}
+
+.plan__save {
+  flex: 1 1 auto;
+  max-width: 240px;
+}
+
+.plan__console {
+  flex: 0 1 auto;
+}
+
+.plan__bar-error {
+  font-size: var(--font-size-sm);
+  color: var(--danger);
+}
+
+// ---- loading + load error -----------------------------------------------------
+.plan__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.plan__skeleton-block,
+.teacher-home__skeleton {
+  height: 72px;
+  background: linear-gradient(
+    90deg,
+    var(--paper-deep) 0%,
+    var(--paper-soft) 50%,
+    var(--paper-deep) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-md);
+  animation: teacher-shimmer 1.4s linear infinite;
+
+  &--tall {
+    height: 104px;
+  }
+}
+
+.teacher-home__skeleton {
+  height: 96px;
+}
+
+@keyframes teacher-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.plan__load-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  color: var(--danger);
+}
+
+// ---- teacher home --------------------------------------------------------------
+.teacher-home__new {
+  align-self: flex-start;
+}
+
+.teacher-home__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+}
+
+.teacher-home__label {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.teacher-home__input {
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+
+  &[aria-invalid='true'] {
+    border-color: var(--danger);
+  }
+}
+
+.teacher-home__form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.teacher-home__error {
+  font-size: var(--font-size-sm);
+  color: var(--danger);
+}
+
+.teacher-home__empty {
+  color: var(--text-secondary);
+}
+
+.teacher-home__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  list-style: none;
+}
+
+.teacher-home__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm) var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-inline-start: 4px solid var(--q-accent, var(--terra-500));
+  border-radius: var(--radius-md);
+}
+
+.teacher-home__row-title {
+  flex: 1 1 200px;
+  min-width: 0;
+  font-size: var(--font-size-base);
+  overflow-wrap: anywhere;
+}
+
+.teacher-home__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+// ---- console placeholder --------------------------------------------------------
+.teacher-console__soon {
+  padding: var(--space-lg);
+  text-align: center;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 2px dashed var(--border-medium);
+  border-radius: var(--radius-md);
+}
+
+.teacher-console__code {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+
+.teacher-console__code-label {
+  color: var(--text-secondary);
+}
+
+.teacher-console__code-value {
+  font-size: var(--font-size-2xl);
+  letter-spacing: 0.12em;
+}
+
+.teacher-console__plan {
+  align-self: flex-start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan__skeleton-block,
+  .teacher-home__skeleton {
+    animation: none;
+  }
+
+  .plan-card,
+  .plan__add {
+    transition: none;
+  }
+}
+
+// Phone: tighter frame, the bar stays pinned and the buttons share the width.
+@media (max-width: 480px) {
+  .plan__save {
+    max-width: none;
+  }
+
+  .plan-card {
+    padding: var(--space-sm);
+  }
+}
