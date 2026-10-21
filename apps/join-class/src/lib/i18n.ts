@@ -1,9 +1,9 @@
 import m from 'mithril';
-import en from '@/lib/locales/en';
+import { afterLoad } from '@/lib/deferWork';
 
 /** Runtime i18n for the join app.
  *
- *  Only English is bundled into the entry chunk. The other six locales live in
+ *  No dictionary is bundled into the entry chunk: all seven locales live in
  *  `lib/locales/` and are fetched individually — all seven inline came to
  *  172 kB raw / 44 kB gzipped, of which a given visitor read exactly one.
  *
@@ -12,16 +12,18 @@ import en from '@/lib/locales/en';
  *  the matching chunk, so the browser starts it from the preload scanner at the
  *  same moment as the entry bundle rather than a round trip later. Boot then
  *  waits for the dictionary before the first mount, which is why there is no
- *  flash of English and no LTR→RTL flip. English stays inline as the
- *  synchronous fallback for missing keys and for a failed locale fetch. */
+ *  flash of another language and no LTR→RTL flip. English is the fallback for
+ *  keys a locale lacks: it is fetched once the page is idle (or at boot, when
+ *  it is the visitor's own language), and until then a missing key shows the
+ *  key itself rather than costing the entry bundle ~30 kB for a rare case. */
 
 type LangCode = string;
 
 /** Locale chunks, keyed by code. The `import()` specifiers must stay literal —
  *  a computed specifier would leave Vite unable to see the dependency and it
- *  would fall back to bundling nothing at all. English is absent by design:
- *  it is statically imported above. */
+ *  would fall back to bundling nothing at all. */
 const localeLoaders: Record<string, () => Promise<{ default: Record<string, string> }>> = {
+	en: () => import('@/lib/locales/en'),
 	ar: () => import('@/lib/locales/ar'),
 	de: () => import('@/lib/locales/de'),
 	es: () => import('@/lib/locales/es'),
@@ -31,7 +33,7 @@ const localeLoaders: Record<string, () => Promise<{ default: Record<string, stri
 };
 
 /** Dictionaries available right now. Grows as locale chunks land. */
-const translations: Record<string, Record<string, string>> = { en };
+const translations: Record<string, Record<string, string>> = {};
 
 /** Codes with RTL script. `ar`/`fa` are here even though the bundled Assistant
  *  webfont has no Arabic coverage — direction still has to flip; the glyphs
@@ -188,11 +190,8 @@ export function initI18n(): Promise<void> {
 	userExplicitLang = explicit;
 	applyDocumentLocale(lang);
 
-	if (lang === 'en') {
-		applyLang(lang);
-
-		return Promise.resolve();
-	}
+	// English is the fallback dictionary: fetch it once the page is idle.
+	if (lang !== 'en') afterLoad(() => void loadLocale('en'));
 
 	const timeout = new Promise<void>((resolve) => {
 		window.setTimeout(resolve, LOCALE_BOOT_TIMEOUT_MS);
@@ -298,8 +297,9 @@ export function translate(
 	params?: Record<string, string | number>,
 ): string {
 	const override = lang ? translations[lang] : undefined;
-	const active = translations[currentLang] ?? translations.en;
-	let text = override?.[key] ?? active[key] ?? translations.en[key] ?? key;
+	const english = translations.en;
+	const active = translations[currentLang] ?? english;
+	let text = override?.[key] ?? active?.[key] ?? english?.[key] ?? key;
 
 	if (params) {
 		for (const [k, v] of Object.entries(params)) {
