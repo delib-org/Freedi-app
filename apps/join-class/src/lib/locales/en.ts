@@ -579,6 +579,36 @@ const en: Record<string, string> = {
 	// all 7 locale files). Do not touch another lane's block.
 	// ---------------------------------------------------------------------
 	// >>> C2 BEGIN  namespaces: opening.* side.* table.*
+	'opening.name_placeholder': 'Your name',
+	'opening.eyebrow': 'The lesson question',
+	'opening.watch': 'Watch together',
+	'opening.play': 'Watch here',
+	'opening.video_title': 'Dilemma video',
+	'opening.video_failed': 'The teacher is projecting',
+	'opening.name_prompt': 'What is your name?',
+	'opening.name_hint': 'Only the teacher sees your name',
+	'opening.name_join': 'Join',
+	'opening.name_saving': 'Joining…',
+	'opening.name_failed': 'Not saved. Try again',
+	'opening.waiting_count': '{{n}} in the class',
+	'side.title': 'Which side are you closer to?',
+	'side.aria': 'Which side are you closer to? {{a}} on one side, {{b}} on the other',
+	'side.name_a': 'Jonathan',
+	'side.name_b': 'Noa',
+	'side.near_a': 'Close to {{name}}',
+	'side.middle': 'In the middle',
+	'side.near_b': 'Close to {{name}}',
+	'side.confirm': 'Confirm',
+	'side.saving': 'Saving…',
+	'side.saved': 'Saved',
+	'side.failed': 'Not saved. Try again',
+	'table.header': 'Table',
+	'table.number': 'Table {{n}}',
+	'table.members': 'Who is at my table',
+	'table.go_sit': 'Go sit at the table',
+	'table.not_placed': 'You have no table yet. Wait for the teacher',
+	'table.you': '(you)',
+	'table.unnamed': 'Someone',
 	// <<< C2 END
 	// ---------------------------------------------------------------------
 	// >>> C3 BEGIN  namespaces: turn.* question.* answer.* proposal.* rate.* voting.* summary.*

@@ -1,4 +1,4 @@
-// Slot owned by lane C2 (tables: "my table"). Replace the placeholder; keep the export name.
-import { placeholderStep } from './stepSlot';
+// Slot owned by lane C2 (tables). The screen lives in views/student/c2/TablesView.ts (lazy chunk).
+import { lazyStep } from '../c2/lazyStep';
 
-export const TablesStep = placeholderStep('tables');
+export const TablesStep = lazyStep('TablesView', 'tables');
