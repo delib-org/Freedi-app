@@ -33,6 +33,7 @@ function stepButton(step: RailStep, attrs: StepRailAttrs): m.Vnode {
 			{
 				type: 'button',
 				'data-step': step.index,
+				'data-step-key': step.key,
 				'aria-current': step.state === 'current' ? 'step' : undefined,
 				'aria-label': t('console.rail_step', { n: step.index + 1, name, state }),
 				disabled: isBusy(`step:${step.index}`),
@@ -75,6 +76,7 @@ export const StepRail: m.Component<StepRailAttrs> = {
 					'button.btn.step-rail__next',
 					{
 						type: 'button',
+						'data-testid': 'console-forward',
 						class: forward.kind === 'end' ? 'btn--danger-outline' : 'btn--primary',
 						disabled: busy,
 						onclick: () => {

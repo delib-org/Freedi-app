@@ -83,16 +83,16 @@ export function keyChip(
 	if (!mine) {
 		if (event.key === ' ' && drag.mode === 'idle') {
 			event.preventDefault();
-			dispatch({ type: 'pickUp', uid: chip.uid, from: chip.from });
 			consoleState.announce = t('console.picked_up', { name: chip.name });
+			dispatch({ type: 'pickUp', uid: chip.uid, from: chip.from });
 		}
 
 		return;
 	}
 	if (event.key === 'Escape') {
 		event.preventDefault();
-		dispatch({ type: 'cancel' });
 		consoleState.announce = t('console.move_cancelled');
+		dispatch({ type: 'cancel' });
 
 		return;
 	}
@@ -110,6 +110,7 @@ export function keyChip(
 		consoleState.announce = t('console.over_target', {
 			target: targetName(consoleState.drag.over),
 		});
+		m.redraw();
 	}
 }
 

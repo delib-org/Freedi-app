@@ -27,10 +27,24 @@ export interface SwitchBandAttrs {
 	onCloseVote: () => void;
 }
 
+const TEST_IDS: Record<string, string> = {
+	assign: 'console-assign-tables',
+	'all:rate': 'console-all-rate',
+	plenum: 'console-plenum',
+	freeze: 'console-freeze-vote',
+	close: 'console-close-vote',
+};
+
 function action(label: string, key: string, onclick: () => void, disabled = false): m.Vnode {
 	return m(
 		'button.btn.btn--secondary.switch-band__action',
-		{ type: 'button', 'data-action': key, disabled: disabled || isBusy(key), onclick },
+		{
+			type: 'button',
+			'data-action': key,
+			'data-testid': TEST_IDS[key],
+			disabled: disabled || isBusy(key),
+			onclick,
+		},
 		label,
 	);
 }
@@ -53,7 +67,12 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 			attrs.plenum
 				? m(
 						'button.btn.switch-band__action.switch-band__action--on',
-						{ type: 'button', disabled: true, 'data-action': 'plenum' },
+						{
+							type: 'button',
+							disabled: true,
+							'data-action': 'plenum',
+							'data-testid': TEST_IDS.plenum,
+						},
 						t('console.plenum_on'),
 					)
 				: action(t('console.plenum'), 'plenum', attrs.onPlenum, !attrs.hasChallenge),

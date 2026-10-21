@@ -505,6 +505,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
+  position: relative;
   min-height: 32px;
   padding: 0 var(--space-sm);
   font: inherit;
