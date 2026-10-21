@@ -1,5 +1,4 @@
 import {
-	DEFAULT_GATE,
 	SUPPORT_MAX,
 	SUPPORT_MIN,
 	type ClassBallot,
@@ -23,8 +22,6 @@ const SUPPORT_SPAN = SUPPORT_MAX - SUPPORT_MIN;
 interface ClassSettingsView {
 	ballot?: Partial<ClassBallot>;
 	roundPhase?: unknown;
-	sideNames?: { a?: unknown; b?: unknown };
-	openingVideoUrl?: unknown;
 }
 
 function settingsOf(statement: Statement | null | undefined): ClassSettingsView {
@@ -45,33 +42,6 @@ export function readBallot(challenge: Statement | null | undefined): ClassBallot
 
 export function readRoundPhase(challenge: Statement | null | undefined): RoundPhase {
 	return settingsOf(challenge).roundPhase === 'improve' ? 'improve' : 'write';
-}
-
-/** Gate = votingSettings.threshold ?? DEFAULT_GATE (on the challenge question). */
-export function readGate(challenge: Statement | null | undefined): number {
-	const threshold = challenge?.votingSettings?.threshold;
-
-	return typeof threshold === 'number' && Number.isFinite(threshold) ? threshold : DEFAULT_GATE;
-}
-
-export interface SideNames {
-	a: string | null;
-	b: string | null;
-}
-
-/** Character names of the two sides, when the lesson carries them; null = use the generic label. */
-export function readSideNames(main: Statement | null | undefined): SideNames {
-	const names = settingsOf(main).sideNames;
-	const pick = (value: unknown): string | null =>
-		typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
-
-	return { a: pick(names?.a), b: pick(names?.b) };
-}
-
-export function readVideoUrl(main: Statement | null | undefined): string | null {
-	const url = settingsOf(main).openingVideoUrl;
-
-	return typeof url === 'string' && url.trim() !== '' ? url.trim() : null;
 }
 
 /** YouTube watch / share / embed link -> the privacy-friendly embed URL, else null. */

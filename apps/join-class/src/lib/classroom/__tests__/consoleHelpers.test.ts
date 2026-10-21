@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_GATE, LessonStepKey, Role } from '@freedi/shared-types';
+import { LessonStepKey, Role } from '@freedi/shared-types';
 import type { ClassTable, Statement, StatementSubscription } from '@freedi/shared-types';
 import {
 	forwardControl,
 	formatClock,
 	formatSpeakerTime,
-	gateOf,
 	gateRows,
 	isBallotClosed,
 	isBallotFrozen,
@@ -81,14 +80,6 @@ describe('rail state', () => {
 });
 
 describe('gate maths', () => {
-	it('defaults to DEFAULT_GATE and reads votingSettings.threshold', () => {
-		expect(gateOf(null)).toBe(DEFAULT_GATE);
-		expect(gateOf({ votingSettings: { threshold: 0.5 } } as unknown as Statement)).toBe(0.5);
-		expect(gateOf({ votingSettings: { threshold: 'x' } } as unknown as Statement)).toBe(
-			DEFAULT_GATE,
-		);
-	});
-
 	it('sorts by consensus, marks passed and gives the remaining gap', () => {
 		const rows = gateRows([opt('a', 0.48), opt('b', 0.7), opt('c', undefined)], 0.6);
 		expect(rows.map((r) => r.id)).toEqual(['b', 'a', 'c']);

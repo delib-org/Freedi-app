@@ -167,7 +167,7 @@ function isDirtyIgnoringDrafts(): boolean {
 	);
 }
 
-function runSave(key: string, label: string, task: () => Promise<void>): void {
+export function runSave(key: string, label: string, task: () => Promise<void>): void {
 	fieldErrors.delete(key);
 	savingKeys.add(key);
 	const promise = task()
@@ -184,6 +184,15 @@ function runSave(key: string, label: string, task: () => Promise<void>): void {
 	track(promise);
 	m.redraw();
 }
+
+/** Draft access for the "lesson details" fields (planDetails.ts). */
+export const getDraft = (key: string): string | undefined => drafts.get(key);
+export const setDraft = (key: string, value: string): void => {
+	drafts.set(key, value);
+};
+export const dropDraft = (key: string): void => {
+	drafts.delete(key);
+};
 
 export function onInput(key: string, value: string, max: number): void {
 	drafts.set(key, value.slice(0, max));

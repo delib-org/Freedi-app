@@ -3,6 +3,7 @@ import { db, doc, deleteDoc } from '@/lib/firebase';
 import { isAdmin } from '@/lib/admin';
 import {
 	createSubQuestion,
+	setMainStatementSetting,
 	setQuestionSetting,
 	setSubQuestionsOrder,
 	updateQuestionTitle,
@@ -16,6 +17,14 @@ import type { ClassRole } from './planHelpers';
 /** Firestore deep-merges the map, so the question's other settings are untouched. */
 function settingsPatch(settings: { classRole?: ClassRole; hint?: string }): Partial<Statement> {
 	return { statementSettings: settings };
+}
+
+/** Lesson-level details on the main statement (deep-merged into statementSettings). */
+export async function saveLessonDetails(
+	mainId: string,
+	details: { videoUrl?: string; sideNames?: { a: string; b: string } },
+): Promise<void> {
+	await setMainStatementSetting(mainId, { statementSettings: details });
 }
 
 export async function saveQuestionText(statementId: string, text: string): Promise<void> {

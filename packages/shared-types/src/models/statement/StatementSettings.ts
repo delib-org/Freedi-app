@@ -415,6 +415,10 @@ export const StatementSettingsSchema = object({
 	ballot: optional(ClassBallotSchema),
 	// join-class: plenum phase on the challenge question.
 	roundPhase: optional(RoundPhaseSchema),
+	// join-class: https link of the dilemma video shown on the opening screen. Main statement only.
+	videoUrl: optional(string()),
+	// join-class: character names of side A and side B. Main statement only.
+	sideNames: optional(object({ a: string(), b: string() })),
 });
 
 

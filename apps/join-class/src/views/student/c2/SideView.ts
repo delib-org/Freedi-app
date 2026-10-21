@@ -4,6 +4,7 @@ import { StudentFrame } from '@/components/StudentFrame';
 import { SideSlider } from '@/components/SideSlider';
 import { classState } from '@/lib/classroom/classState';
 import { setMySide } from '@/lib/classroom/studentWrites';
+import { sideNamesOf } from '@/lib/classroom/classSettings';
 import { t } from '@/lib/i18n';
 import { stepLabel } from '@/lib/lesson';
 import { SIDE_CENTER } from '../c2/c2Helpers';
@@ -89,6 +90,7 @@ export const SideView: m.Component<StepAttrs> = {
 	view(vnode) {
 		const state = vnode.state as unknown as SideState;
 		const mainId = vnode.attrs.main.statementId;
+		const names = sideNamesOf(vnode.attrs.main);
 		// a refreshed phone: the saved side arrives after the first render
 		const saved = classState.mySubscription?.side;
 		if (!state.touched && typeof saved === 'number') {
@@ -111,8 +113,8 @@ export const SideView: m.Component<StepAttrs> = {
 			},
 			m(SideSlider, {
 				value: state.value,
-				nameA: t('side.name_a'),
-				nameB: t('side.name_b'),
+				nameA: names.a,
+				nameB: names.b,
 				onInput: (value: number) => {
 					state.value = value;
 					state.touched = true;

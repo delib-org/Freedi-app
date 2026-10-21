@@ -4,7 +4,8 @@ import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
 import { stepLabel } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
-import { challengeOf, videoUrlOf, youtubeEmbedUrl } from '../c2/c2Helpers';
+import { challengeOf, youtubeEmbedUrl } from '../c2/c2Helpers';
+import { videoUrlOf } from '@/lib/classroom/classSettings';
 import type { StepAttrs } from '../steps/stepSlot';
 
 /**

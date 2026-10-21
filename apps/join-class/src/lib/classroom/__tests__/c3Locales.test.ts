@@ -42,8 +42,8 @@ describe('C3 locale keys', () => {
 					expect(dictionary[`${prefix}${step}`]).toBeTruthy();
 				}
 			}
-			for (const camp of ['a', 'center', 'b'])
-				expect(dictionary[`summary.side_${camp}`]).toBeTruthy();
+			for (const key of ['summary.side_center', 'summary.near_side'])
+				expect(dictionary[key]).toBeTruthy();
 			for (const mode of ['each', 'table']) expect(dictionary[`answer.mode_${mode}`]).toBeTruthy();
 		}
 	});

@@ -2,11 +2,14 @@ import m from 'mithril';
 import type { SupportBySide as SupportResult } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { supportBars, supportPercent } from '@/lib/classroom/c3Logic';
+import type { SideNames } from '@/lib/classroom/classSettings';
 
 export interface SupportBySideAttrs {
 	result: SupportResult;
 	/** The gate (-1..+1 mean support) both sides must reach. */
 	gate: number;
+	/** Character names of the two sides (statementSettings.sideNames or the defaults). */
+	names: SideNames;
 }
 
 /**
@@ -16,7 +19,9 @@ export interface SupportBySideAttrs {
  */
 export const SupportBySide: m.Component<SupportBySideAttrs> = {
 	view({ attrs }) {
-		const { result, gate } = attrs;
+		const { result, gate, names } = attrs;
+		const labelOf = (camp: 'a' | 'center' | 'b'): string =>
+			camp === 'center' ? t('summary.side_center') : t('summary.near_side', { name: names[camp] });
 		const bars = supportBars(result);
 		const gatePct = supportPercent(gate);
 
@@ -25,13 +30,13 @@ export const SupportBySide: m.Component<SupportBySideAttrs> = {
 				'ul.support__bars',
 				bars.map((bar) =>
 					m('li.support__row', { key: bar.camp }, [
-						m('p.support__label', t(`summary.side_${bar.camp}`)),
+						m('p.support__label', labelOf(bar.camp)),
 						m(
 							'div.support__track',
 							{
 								role: 'img',
 								'aria-label': t('summary.bar_label', {
-									side: t(`summary.side_${bar.camp}`),
+									side: labelOf(bar.camp),
 									n: bar.n,
 									m: bar.m,
 								}),

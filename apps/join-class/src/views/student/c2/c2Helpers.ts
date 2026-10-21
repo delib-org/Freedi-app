@@ -42,13 +42,6 @@ export function challengeOf(subQuestions: readonly Statement[]): Statement | nul
 	return found ?? null;
 }
 
-/** Optional dilemma video of the lesson (a plain https URL on the workspace settings). */
-export function videoUrlOf(main: Statement): string | null {
-	const url = (main.statementSettings as { videoUrl?: unknown } | undefined)?.videoUrl;
-
-	return typeof url === 'string' && /^https:\/\//.test(url) ? url : null;
-}
-
 const YOUTUBE_ID = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,20})/;
 
 /** Embed URL for a YouTube link (only built after a tap), else null. */

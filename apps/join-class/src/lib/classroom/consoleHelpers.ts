@@ -1,4 +1,4 @@
-import { DEFAULT_GATE, LessonStepKey, Role, campOf } from '@freedi/shared-types';
+import { LessonStepKey, Role, campOf } from '@freedi/shared-types';
 import type { Camp, ClassTable, Statement, StatementSubscription } from '@freedi/shared-types';
 
 /**
@@ -55,13 +55,6 @@ export function formatSpeakerTime(ms: number): string {
 	const total = Math.ceil(Math.max(0, ms) / MS_PER_SECOND);
 
 	return `${Math.floor(total / SECONDS_PER_MINUTE)}:${String(total % SECONDS_PER_MINUTE).padStart(2, '0')}`;
-}
-
-/** The gate: `votingSettings.threshold`, else DEFAULT_GATE. */
-export function gateOf(challenge: Statement | null | undefined): number {
-	const value = challenge?.votingSettings?.threshold;
-
-	return typeof value === 'number' && Number.isFinite(value) ? value : DEFAULT_GATE;
 }
 
 /** Plenum is on when the challenge question's roundPhase is 'improve'. */
