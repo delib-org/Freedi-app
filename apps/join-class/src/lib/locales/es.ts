@@ -4,6 +4,21 @@
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
 const es: Record<string, string> = {
+	'step.waiting': 'Esperando al docente',
+	'step.opening': 'Apertura',
+	'step.side': 'Postura',
+	'step.tables': 'Mesas',
+	'step.tableTalk': 'Charla de mesa',
+	'step.proposals': 'Propuestas',
+	'step.vote': 'Votación',
+	'step.summary': 'Resumen',
+	'lesson.step_of': 'Paso {{n}} de {{total}}',
+	'lesson.code.label': 'Código',
+	'lesson.code.unknown.title': 'No encontramos esta clase',
+	'lesson.code.unknown.body': 'Revisa los seis dígitos con tu docente e inténtalo de nuevo.',
+	'lesson.role.guiding': 'Pregunta guía',
+	'lesson.role.challenge': 'Desafío',
+	'lesson.hint.label': 'Pista',
 	'solutions.loading': 'Cargando...',
 	'solutions.error.not_found': 'Pregunta no encontrada',
 	'solutions.error.no_options': 'Aún no hay soluciones disponibles',

@@ -12,6 +12,7 @@ import { MainHub } from '@/views/MainHub';
 import { Login } from '@/views/Login';
 import { Main } from '@/views/Main';
 import { Invite } from '@/views/Invite';
+import { ClassCode } from '@/views/ClassCode';
 
 initSentry();
 // Kicked off before the i18n await below so the auth handshake and the locale
@@ -81,6 +82,7 @@ i18nReady.then(() => {
 	if (!root) return;
 
 	m.route(root, '/', {
+		'/c/:code': ClassCode,
 		'/': requireAuth(Main),
 		'/login': Login,
 		'/invite': Invite,

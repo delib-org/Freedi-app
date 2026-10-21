@@ -4,6 +4,21 @@
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
 const ar: Record<string, string> = {
+	'step.waiting': 'في انتظار المعلم',
+	'step.opening': 'البداية',
+	'step.side': 'الجانب',
+	'step.tables': 'الطاولات',
+	'step.tableTalk': 'حديث الطاولة',
+	'step.proposals': 'الاقتراحات',
+	'step.vote': 'التصويت',
+	'step.summary': 'الملخص',
+	'lesson.step_of': 'الخطوة {{n}} من {{total}}',
+	'lesson.code.label': 'الرمز',
+	'lesson.code.unknown.title': 'لم نجد هذا الصف',
+	'lesson.code.unknown.body': 'تحقق من الأرقام الستة مع معلمك وحاول مرة أخرى.',
+	'lesson.role.guiding': 'سؤال موجّه',
+	'lesson.role.challenge': 'التحدي',
+	'lesson.hint.label': 'تلميح',
 	'splash.title': 'WizCol',
 	'splash.tagline': 'تمكين القرارات الجماعية',
 	'splash.status': 'جارٍ تحميل مساحة العمل...',

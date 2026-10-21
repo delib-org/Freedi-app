@@ -298,7 +298,10 @@ export type {
   MapDetailLevel,
   MapFilterMetric,
   RatingMode,
-  VotingOptionsSource
+  VotingOptionsSource,
+  LessonStepKey,
+  LessonPlan,
+  ClassRole
 } from "./models/statement/StatementSettings";
 
 export {
@@ -322,7 +325,10 @@ export {
   MapSettingsSchema,
   MapSynthVisibilitySchema,
   MapDetailLevelSchema,
-  MapFilterMetricSchema
+  MapFilterMetricSchema,
+  LessonStepKeySchema,
+  LessonPlanSchema,
+  ClassRoleSchema
 } from "./models/statement/StatementSettings";
 
 export type {

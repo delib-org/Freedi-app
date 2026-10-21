@@ -257,6 +257,32 @@ export const VotingOptionsSourceSchema = picklist(['all', 'positivelyEvaluated']
 export type VotingOptionsSource = InferOutput<typeof VotingOptionsSourceSchema>;
 
 
+/**
+ * join-class (classroom): the eight fixed steps of a lesson, in order. The
+ * teacher opens them by index; `stepIndex` points into this list.
+ */
+export const LessonStepKeySchema = picklist([
+	'waiting',
+	'opening',
+	'side',
+	'tables',
+	'tableTalk',
+	'proposals',
+	'vote',
+	'summary',
+]);
+export type LessonStepKey = InferOutput<typeof LessonStepKeySchema>;
+
+export const LessonPlanSchema = object({
+	steps: array(LessonStepKeySchema),
+	stepIndex: number(),
+});
+export type LessonPlan = InferOutput<typeof LessonPlanSchema>;
+
+/** join-class: a sub-question is either a guiding question or the one challenge. */
+export const ClassRoleSchema = picklist(['guiding', 'challenge']);
+export type ClassRole = InferOutput<typeof ClassRoleSchema>;
+
 export const StatementSettingsSchema = object({
 	subScreens: optional(array(string())),
 	enableAddEvaluationOption: optional(boolean()),
@@ -376,6 +402,14 @@ export const StatementSettingsSchema = object({
 	// facilitator-led flow where `powerFollowMe` is the only way to move.
 	// Hub-scoped — only honoured on the main (top-parent) statement.
 	allowParticipantNavigation: optional(boolean()),
+	// join-class: the lesson's step plan + current step. Main (workspace) statement only.
+	lessonPlan: optional(LessonPlanSchema),
+	// join-class: 6-digit join code of the workspace (classCodes/{code}). Main statement only.
+	classCode: optional(string()),
+	// join-class: role of a sub-question in the lesson (guiding | challenge).
+	classRole: optional(ClassRoleSchema),
+	// join-class: one-line hint shown under a sub-question.
+	hint: optional(string()),
 });
 
 

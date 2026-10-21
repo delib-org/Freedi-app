@@ -4,6 +4,21 @@
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
 const fa: Record<string, string> = {
+	'step.waiting': 'در انتظار معلم',
+	'step.opening': 'شروع',
+	'step.side': 'جانب',
+	'step.tables': 'میزها',
+	'step.tableTalk': 'گفتگوی میز',
+	'step.proposals': 'پیشنهادها',
+	'step.vote': 'رأی‌گیری',
+	'step.summary': 'خلاصه',
+	'lesson.step_of': 'مرحله {{n}} از {{total}}',
+	'lesson.code.label': 'کد',
+	'lesson.code.unknown.title': 'این کلاس را پیدا نکردیم',
+	'lesson.code.unknown.body': 'شش رقم را با معلم‌تان بررسی کنید و دوباره تلاش کنید.',
+	'lesson.role.guiding': 'پرسش راهنما',
+	'lesson.role.challenge': 'چالش',
+	'lesson.hint.label': 'راهنمایی',
 	'solutions.loading': 'در حال بارگذاری...',
 	'solutions.error.not_found': 'سؤال یافت نشد',
 	'solutions.error.no_options': 'هنوز راه‌حلی موجود نیست',
