@@ -61,7 +61,13 @@ const StagePage = ({ showBottomNav = true }: Props) => {
 	return (
 		<>
 			{hasSubStatements ? (
-				<div className={`${styles['stage-page']} wrapper`}>
+				<div
+					className={`${styles['stage-page']} ${
+						statement?.evaluationSettings?.evaluationUI === EvaluationUI.voting
+							? styles['stage-page--voting']
+							: ''
+					} wrapper`}
+				>
 					<StagePageSwitch statement={statement} />
 				</div>
 			) : (
