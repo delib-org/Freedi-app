@@ -120,7 +120,12 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 				try {
 					await op();
 					self.retry = null;
-				} catch {
+				} catch (error) {
+					console.error(
+						'[TableFlow] classTableStep failed',
+						{ tableId: table.tableId, uid },
+						error,
+					);
 					self.error = t('turn.action_failed');
 				} finally {
 					self.busy = false;
@@ -137,7 +142,7 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 		const askerLine = isAsker
 			? t('turn.asker_me')
 			: t('turn.asker', { name: asker?.name ?? t('turn.someone') });
-		const stepName = t(`turn.now_${step}`);
+		const stepName = t(`turn.now_${view.official}`);
 		const headerLine =
 			kind === 'tableTalk'
 				? t('turn.header', { n: table.n, turn: table.turn, step: stepName })
