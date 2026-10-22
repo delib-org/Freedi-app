@@ -257,6 +257,89 @@
   font-size: var(--font-size-sm);
 }
 
+// ---- projector menu (IA 15.4, UX 15.A) ---------------------------------------
+.projector-menu {
+  position: relative;
+
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  &__chevron {
+    inline-size: 8px;
+    block-size: 8px;
+    border-inline-end: 2px solid currentColor;
+    border-block-end: 2px solid currentColor;
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform var(--dur-quick) var(--ease-out, ease-out);
+  }
+
+  &[open] &__chevron {
+    transform: translateY(2px) rotate(225deg);
+  }
+
+  &__panel {
+    position: absolute;
+    inset-block-start: calc(100% + var(--space-xs));
+    inset-inline-start: 0;
+    z-index: var(--z-dropdown, 10);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    inline-size: min(340px, calc(100vw - 2 * var(--space-md)));
+    padding: var(--space-md);
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &__item {
+    inline-size: 100%;
+    min-block-size: 48px;
+    justify-content: flex-start;
+    gap: var(--space-sm);
+  }
+
+  &__glyph {
+    flex: none;
+    inline-size: 16px;
+    block-size: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &__help {
+    margin: 0 0 var(--space-sm);
+    padding-inline-start: var(--space-md);
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  // an instruction, not a lesson failure: ink text, not the danger colour
+  &__blocked {
+    margin: 0 0 var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--terra-50);
+    border-inline-start: 3px solid var(--terra-300);
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+  }
+}
+
 // ---- lesson status (IA 13.6, UX 13.E) ---------------------------------------
 .console__status {
   display: flex;

@@ -276,7 +276,9 @@ const en: Record<string, string> = {
 	'console.step_of': 'Step {{n}} of {{total}}',
 	'console.next': 'Open the next step: {{name}}',
 	'console.end': 'End the lesson',
-	'console.opening': 'Opening…',
+	'console.busy_opening': 'Opening…',
+	'console.busy_pausing': 'Pausing…',
+	'console.busy_resuming': 'Resuming…',
 	'console.end_confirm': 'End the lesson?',
 	'console.view_label': 'View',
 	'console.tables': 'Tables',
@@ -425,6 +427,19 @@ const en: Record<string, string> = {
 	'console.opening.show': 'On the projector:',
 	'console.opening.text': 'Text',
 	'projector.video_failed': '{{title}} · did not load',
+	'teacher.screen.open_window': 'Projector in a new window',
+	'teacher.screen.open_window_help': 'For two screens: drag the window to the class screen',
+	'teacher.screen.show_here': 'Show on this screen',
+	'teacher.screen.show_here_help':
+		'For one computer connected to the projector. Esc brings you back.',
+	'teacher.screen.blocked':
+		'The browser blocked the window. Allow pop-ups for this site, or use "Show on this screen".',
+	'projector.controls': 'Projector buttons',
+	'projector.fullscreen': 'Full screen',
+	'projector.fullscreen_exit': 'Exit full screen',
+	'projector.back': 'Back to the lesson',
+	'projector.close': 'Close the projector',
+	'projector.window_hint': 'Drag this window to the class screen, then press "Full screen"',
 };
 
 export default en;

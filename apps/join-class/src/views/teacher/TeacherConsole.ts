@@ -46,6 +46,7 @@ import { EndChoice, openEndChoice } from './EndChoice';
 import { LessonBanner } from './LessonBanner';
 import { NotYourLesson } from './NotYourLesson';
 import { ConsoleSettings } from './ConsoleSettings';
+import { ProjectorMenu } from './ProjectorMenu';
 import { GatePanel } from './GatePanel';
 import { StepRail } from './StepRail';
 import { SwitchBand } from './SwitchBand';
@@ -90,7 +91,7 @@ function statusGroup(mid: string, status: LessonStatus | null): m.Children {
 			},
 			[
 				m('span.status-mark.status-mark--paused', { 'aria-hidden': 'true' }),
-				m('span', pausing ? t('console.opening') : t('console.pause')),
+				m('span', pausing ? t('console.busy_pausing') : t('console.pause')),
 			],
 		),
 		// An open lesson keeps its "End the lesson" in the banner below.
@@ -133,11 +134,7 @@ function header(
 			},
 			t('console.qr'),
 		),
-		m(
-			m.route.Link,
-			{ class: 'console__link', href: `/t/${mid}/screen` },
-			t('teacher.screen.title'),
-		),
+		m(ProjectorMenu, { mid }),
 		m(m.route.Link, { class: 'console__link', href: `/t/${mid}/plan` }, t('teacher.row.plan')),
 		m(ConsoleSettings),
 		statusGroup(mid, status),

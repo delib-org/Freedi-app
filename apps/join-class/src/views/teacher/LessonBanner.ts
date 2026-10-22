@@ -41,7 +41,7 @@ function action(attrs: LessonBannerAttrs): m.Vnode {
 				// The button the teacher pressed is gone: the next one gets focus.
 				oncreate: (vnode: m.VnodeDOM) => (vnode.dom as HTMLElement).focus(),
 			},
-			busy ? t('console.opening') : t('console.resume'),
+			busy ? t('console.busy_resuming') : t('console.resume'),
 		);
 	}
 	if (attrs.status === 'open') {
@@ -62,7 +62,7 @@ function action(attrs: LessonBannerAttrs): m.Vnode {
 			'aria-busy': busy ? 'true' : undefined,
 			onclick: attrs.onReopen,
 		},
-		busy ? t('console.opening') : t('teacher.row.reopen'),
+		busy ? t('console.busy_opening') : t('teacher.row.reopen'),
 	);
 }
 

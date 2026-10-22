@@ -1149,9 +1149,9 @@ Its place in the page is fixed by IA 14.4: פרטי השיעור → השאלה 
 │ פתיחה                                                  קוד 482913 [QR]   │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
-- **Size:** the player takes the largest 16:9 box the stage allows: `inline-size: min(100%, calc((100dvh - 64px band - 2 × var(--space-xl) - 32px eyebrow - 56px title - 2 × var(--space-md)) * 16 / 9))`. On 1280 × 720 that is about 860 × 484.
-  - "Full screen" is the player's own fullscreen button (`allowfullscreen`). The app adds no control of its own (§6, IA 14.6).
-- **Loaded, never playing:** the same embed URL as the phone, no `autoplay`. The teacher clicks the player's play on the projector window. A file uses `<video controls preload="none">`.
+- ~~**Size:** the player takes the largest 16:9 box the stage allows: `inline-size: min(100%, calc((100dvh - 64px band - 2 × var(--space-xl) - 32px eyebrow - 56px title - 2 × var(--space-md)) * 16 / 9))`. On 1280 × 720 that is about 860 × 484.~~ Superseded by §15.C (the player fills the window above a 64 px strip; the "Video n" wireframe above, with its eyebrow, is replaced by the layouts in §15.C).
+  - ~~"Full screen" is the player's own fullscreen button (`allowfullscreen`). The app adds no control of its own (§6, IA 14.6).~~ Superseded by §15.C: the projector document has its own full screen and control.
+- **Loaded, never playing:** the same embed URL as the phone, no `autoplay`. The teacher clicks the player's play on the projector window. A file uses `<video controls preload="none">` on the phone; on the projector it is `preload="metadata"` (§15.C).
 - **The title stays during play** (decision in 14.0). It sits outside the iframe, so it never covers the picture.
 - **Video failed (file `onerror`):** the text layout comes back, and the video's label shows above the eyebrow at 32 px `--ink-muted`. The IA gives no words for the failure itself (14.J-5).
 
@@ -1252,3 +1252,344 @@ Tokens only. The pill and the "on" item use `--ink` / `--paper` (16:1). `--dange
 8. **Field names to check against the model.** IA 14.2 writes `blockType: paragraph | li` and `doc.listType`. The shared `ParagraphSchema` uses `type` (`ParagraphType.paragraph | li`) and `listType`, and its `contentHtml` also allows `<em>`. The renderer here keeps `<strong>` only (as the IA says), and drops `<em>` to plain text. The build lane should write whatever `createParagraphChildStatement` actually emits.
 9. **Plain-text placeholder may be shorter than the final text** (IA 14.12 E): `description` can be a three-paragraph preview. Swapping in the formatted text then grows the block. That is accepted: it happens once, within a second, with no animation.
 10. **Console band wraps below 1280 px.** This is an exception to §5's "nothing in the first two bands ever moves", and it is limited to narrower screens. It never scrolls sideways.
+
+## 15. Projector: one screen or two, full-screen video
+
+> **Decisions of the orchestrator (2026-10-22), applied while building:**
+> - The `<details>` "מקרן" menu stays (UX 15.A); "show control on arrival" in `here` mode is accepted (UX 15.K-2).
+> - The IA rule "no button on the projector window ever navigates it to the console" is narrowed to: **a window the console opened never navigates to the console.** If `window.close()` is refused in a window the console did not open, "סגירת המקרן" becomes "חזרה לשיעור".
+> - The 64 px video strip stays (UX 15.K-4). The hint is hidden where Fullscreen is unsupported (UX 15.K-7).
+> - §14.D's text "player's own full screen only; the app adds no control" is struck: the projector document has its own full screen and control (15.5).
+> - Projector-only `preload="metadata"` for file videos; the control's aria label is "כפתורי המקרן"; the projector root is `role="region"`.
+
+Designed against IA §15 (`ia-join-class-projector.md`, Tal 2026-10-22). Open questions A-G use their defaults. Routes, labels and behaviour are the IA's. This section decides only what IA 15.12 hands to UX: the form of the bar group, where and how the teacher control looks, the window size, letterboxing, and the title before play. It also covers the busy-label fix.
+
+### 15.0 Decisions in one place
+| Question (IA 15.12) | Decision | Why, in one line |
+|---|---|---|
+| Bar group: two buttons or a menu | **A small menu**: `details.projector-menu`, with the summary "מקרן" and a panel holding the two actions, each with its help line under it | Two buttons push the bar past 1280 px and the help lines have nowhere to go. The menu costs one extra click (reported in 15.K-1). |
+| Where the teacher control sits | **The start corner of the bottom band** (bottom-right in Hebrew), over the step name. The step name fades out while the control shows. | It is the one corner that never covers the stage, and the code and QR stay in the band's end corner. Slideshow controls sit in a bottom corner, so teachers already know the place. |
+| How it reads on a 4 m wall | An inverted pill pair (`--ink` fill and `--paper` text), 48 px tall, 24 px text, with a 2 px ring. The ring keeps it visible on paper and on black. It fades in over 140 ms and out over 220 ms. The pointer is hidden while the control is hidden. | It is visible to the teacher who woke it, and it is gone 3 s later, before the class has a reason to look at it. |
+| Window opening size | 1280 × 720, `popup`, named `projector-<mid>` | The projector type is designed for 1280 × 720 (UX §6, 14.D), it matches most projectors at 16:9, and it gets dragged and made full screen anyway. |
+| Video letterboxing | Video mode is a **black screen**. The player is the largest box that fits above a 64 px **video strip** (the dark twin of the code band), centred, with black bars. | The iframe swallows pointer and key events, so the strip is the one place where a mouse move still reaches the page. It also carries the title. |
+| Title before play | The video's label in the strip's start corner: 32 px, one line, ellipsis. It stays during play. | Keeps the 14.0 decision ("the title stays during play"). It never covers the picture, and the app cannot detect a YouTube play without the IFrame API anyway. |
+| IA question: show in the console that a window is open? | **No, in phase 1.** Pressing "מקרן בחלון נפרד" again brings the same window forward. | No new string, no polling. Revisit if teachers lose the window. |
+| IA question: does the hint need a drawing? | Words, plus a 64 × 32 inline SVG glyph (a laptop, an arrow, a big screen) before them, `aria-hidden` | About 300 bytes, and it says "the other screen" before the teacher has read a word. |
+
+### 15.A Console bar: the "מקרן" menu (`/t/:mid`)
+Bar at 1280, closed. The single `console__link` "מקרן" is replaced by the menu, in the same place:
+```
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ ‹ השיעורים שלי   האיסור על טלפונים…   קוד: 482913  קוד QR  [מקרן ▾]  תכנון השאלות  הגדרות │[▮▮ השהיית השיעור] סיום השיעור│
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+Open (the panel hangs under the summary and grows toward the bar's end, which is left in RTL):
+```
+                                   [מקרן ▴]
+                 ┌──────────────────────────────────────┐
+                 │ ┌──────────────────────────────────┐ │
+                 │ │ ⧉  מקרן בחלון נפרד               │ │ .btn--secondary, full width, 48px, text start
+                 │ └──────────────────────────────────┘ │
+                 │  לשני מסכים: גררו את החלון למסך       │ 14px --ink-muted (teacher.screen.open_window_help)
+                 │  של הכיתה                             │
+                 │ ┌──────────────────────────────────┐ │
+                 │ │ ▣  הצגה במסך הזה                 │ │ .btn--secondary, full width, 48px
+                 │ └──────────────────────────────────┘ │
+                 │  למחשב אחד שמחובר למקרן. Esc מחזיר     │ 14px --ink-muted (teacher.screen.show_here_help)
+                 │  לשיעור.                              │
+                 └──────────────────────────────────────┘
+                   340px, --paper, 1.5px --ink border, --radius-lg, --shadow-sm
+```
+Window blocked (the panel stays open; the message sits between the two actions, so the alternative is right under it):
+```
+                 │ ┌──────────────────────────────────┐ │
+                 │ │ ⧉  מקרן בחלון נפרד               │ │
+                 │ └──────────────────────────────────┘ │
+                 │  לשני מסכים: גררו את החלון למסך…      │
+                 │ ┃ הדפדפן חסם את החלון. אפשרו חלונות   │ .projector-menu__blocked, role="alert"
+                 │ ┃ קופצים לאתר, או בחרו "הצגה במסך     │ --terra-50 fill, 3px --terra-300 inline-start
+                 │ ┃ הזה".                               │ rule, --ink text 14px 700 (teacher.screen.blocked)
+                 │ ┌──────────────────────────────────┐ │
+                 │ │ ▣  הצגה במסך הזה                 │ │
+```
+
+**Why a menu, not two buttons.** I measured the bar at 1280 with today's items (back, code, "קוד QR", "תכנון השאלות", "הגדרות", pause, end): about 935 px before the title. Two small buttons plus a group label add about 330 px, which leaves the lesson title about 15 px, so it disappears. The menu adds about 70 px, and the title keeps about 260 px. The help lines are what tell a teacher which action is theirs (IA 15.4). In a menu they can sit, readable, under each action. In a bar they could only be tooltips, which a first-time teacher never sees. The menu is also the bar's existing pattern (`ConsoleSettings`, a native `<details>`), so it opens, closes and handles Escape the way the teacher already knows.
+
+**Block `.projector-menu`** (NEW, `console.scss`, bar section). `views/teacher/ProjectorMenu.ts`:
+- `details.projector-menu`, `position: relative`.
+- `summary.btn.btn--tertiary.btn--small.projector-menu__toggle`: the text "מקרן" (`teacher.screen.title`) and `span.projector-menu__chevron` (a CSS border-chevron, 8 px, `aria-hidden`, which turns 180° with `transform` when `[open]`). It drops the marker the same way `.console__settings-toggle` does. The native `<details>` gives the summary its expanded state for screen readers.
+- `div.projector-menu__panel`: absolute, `inset-block-start: calc(100% + var(--space-xs))`, `inset-inline-start: 0`, `inline-size: min(340px, calc(100vw - 2 * var(--space-md)))`, `padding: var(--space-md)`, flex column, `gap: var(--space-xs)`, `z-index: var(--z-dropdown, 10)`. It uses the look of `.console__settings-panel`.
+- `button.btn.btn--secondary.projector-menu__item` × 2: `inline-size: 100%`, `justify-content: flex-start`, `min-block-size: 48px`, with `aria-describedby` = its help line's id. Inside: `svg.projector-menu__glyph` (16 px, `aria-hidden`; ⧉ = two overlapping windows for the window action, ▣ = one screen with corner marks for this screen) and the label.
+- `p.projector-menu__help`: `--font-size-sm`, `--ink-muted`, `margin: 0 0 var(--space-sm)`, `padding-inline-start: var(--space-md)`. Its ids are `projector-help-window` and `projector-help-here`.
+- `p.projector-menu__blocked`: shown only after a blocked open. `role="alert"`, `--terra-50`, `border-inline-start: 3px solid var(--terra-300)`, `padding: var(--space-sm) var(--space-md)`, `--radius-sm`, 14 px 700 `--ink`. This is an instruction, not a lesson failure, so it uses ink text, not `--danger`.
+
+**Behaviour.**
+| Press | What happens |
+|---|---|
+| "מקרן בחלון נפרד" (`teacher.screen.open_window`) | If the module still holds a live reference (`win && !win.closed`), it calls `win.focus()`. Otherwise it calls `window.open('', 'projector-<mid>', 'popup,width=1280,height=720')`. If that returns a window whose `location.href` is `about:blank`, it sets the location to `/t/<mid>/screen?mode=window`. If the window already shows the projector, it is **not** reloaded, so its full screen survives. Then `focus()`. The panel closes and focus returns to the summary. Never `noopener`: the console needs the reference, and `window.close()` needs a script-opened window. |
+| …returns `null` (blocked) | No navigation. The panel stays open and `.projector-menu__blocked` appears (announced once). Focus stays on the pressed item, so the next Tab lands on "הצגה במסך הזה". The message clears when the panel closes or the next open succeeds. |
+| "הצגה במסך הזה" (`teacher.screen.show_here`) | In the same click handler, **first** `requestFullscreen()` on `document.documentElement` (the gesture belongs to this document), **then** `m.route.set('/t/<mid>/screen', {}, { state: { fromConsole: true } })`. A full-screen refusal is swallowed: the projector then opens windowed and shows "מסך מלא" (15.B). |
+| Escape, or a click outside | Closes the panel. Escape returns focus to the summary (same code as `ConsoleSettings`). |
+
+Paused, open or ended lesson: the menu stays usable. Looking is fine while held (13.E).
+
+Clean-code note: `ConsoleSettings` and `ProjectorMenu` share "details + Escape + click outside". Extract it once as `barPopover(vnode)` (oncreate/onremove helpers) rather than copying it.
+
+Keyboard order (replaces 13.E's): bar (back, title, code, QR, **מקרן** → [panel: מקרן בחלון נפרד → הצגה במסך הזה], תכנון השאלות, הגדרות, השהיית השיעור, סיום השיעור) → banner action → rail → forward → switch band → board.
+
+### 15.B The teacher control on the projector (`/t/:mid/screen`, both modes)
+**Place.** Fixed in the **start corner of the bottom band**: `position: fixed; inset-block-end: var(--space-sm); inset-inline-start: var(--space-xl)`, which matches the band's own padding. While the control shows, the band's step name (`.projector-band__step`, or in video mode the strip's title) fades to `opacity: 0`, so the control replaces it rather than lying over it. The code and the QR in the band's end corner are never covered. It is fixed, not inside the band's DOM, so it is in the same place on loading and load-error screens, which have no band.
+
+`here` mode, shown (1280 × 720, Opening, text):
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                          השאלה של השיעור                                 │
+│                     לאסור טלפונים בבית הספר?                             │
+│      השבוע הנהלת בית הספר שוקלת לאסור טלפונים בכל שעות היום…             │
+│                                                                          │
+├──────────────────────────────────────────────────────────────────────────┤
+│ [מסך מלא] [‹ חזרה לשיעור]                             קוד 482913 [QR]    │ band 64px: control at the start
+└──────────────────────────────────────────────────────────────────────────┘   corner, "פתיחה" faded out under it
+   (drawn RTL: "חזרה לשיעור" is first, at the right edge; "מסך מלא" only while not full screen)
+```
+`here` mode, hidden (the normal state on the wall): the band as in UX §6, "פתיחה" at the start corner, no pointer.
+
+`window` mode, first load (the hint, 15.D):
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                     לאסור טלפונים בבית הספר?                             │
+│                                                                          │
+│                         ┌─────────────────────────────────────────────┐  │
+│                         │ [💻→▭]  גררו את החלון הזה למסך של הכיתה      │  │ .projector-hint, 32px
+│                         │         ולחצו "מסך מלא"                     │  │
+│                         └──────────────────────────────────────▼──────┘  │ arrow over "מסך מלא"
+├──────────────────────────────────────────────────────────────────────────┤
+│ [סגירת המקרן] [■ מסך מלא]                             קוד 482913 [QR]    │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+`window` mode, full screen, shown: `[סגירת המקרן] [יציאה ממסך מלא]` in the same place.
+
+**Contents per mode** (IA 15.4, in reading order from the start corner):
+| Mode | Buttons | Filled (`--on`) |
+|---|---|---|
+| `here`, full screen | "חזרה לשיעור" (`projector.back`) | "חזרה לשיעור" |
+| `here`, not full screen, and full screen is supported | "חזרה לשיעור", "מסך מלא" (`projector.fullscreen`) | "חזרה לשיעור" |
+| `window`, not full screen | "מסך מלא", "סגירת המקרן" (`projector.close`) | "מסך מלא" |
+| `window`, full screen | "יציאה ממסך מלא" (`projector.fullscreen_exit`), "סגירת המקרן" | none |
+| `window`, close refused | "מסך מלא" / "יציאה ממסך מלא", "חזרה לשיעור" (15.K-3) | as above |
+| Full screen unsupported (`fullscreenEnabled` false, e.g. iPhone) | no full-screen button in either mode | — |
+
+"חזרה לשיעור" carries the bar's back chevron (`‹`, the same character and spacing as `.plan__back-chevron`), so "back" looks the same in the console and on the projector.
+
+**Block `.projector-controls`** (NEW, `projector.scss`). `views/teacher/projector/ProjectorControls.ts`:
+- `div.projector-controls`, `role="group"`, `aria-label` = `projector.controls` "פקדי המקרן" (?). `display: flex; gap: var(--space-sm); z-index: 2`. Hidden = `opacity: 0; pointer-events: none`. It stays in the tab order on purpose (see Focus).
+- Custom properties set on the block and re-pointed in video mode:
+  - `--pc-bg: var(--ink); --pc-fg: var(--paper)` on paper. These flip together in dark mode, so the pair always contrasts (16:1 light, 13:1 dark).
+  - `.projector--video .projector-controls { --pc-bg: var(--video-ink); --pc-fg: var(--video-letterbox) }` on the black strip.
+- `button.projector-controls__btn`: `min-block-size: 48px`, `padding: 0 var(--space-lg)`, `font-size: 24px`, 700, `--radius-full`, `color: var(--pc-bg)`, `background: var(--pc-fg)`, `border: 2px solid var(--pc-bg)`. On paper this reads as an ink-outlined paper pill. On black, the pill is black with a light outline.
+- `.projector-controls__btn--on`: `background: var(--pc-bg); color: var(--pc-fg); box-shadow: 0 0 0 2px var(--pc-fg)`. The outer ring is what keeps a filled ink pill visible against the black video strip, and a filled light pill visible against a light page.
+- `:focus-visible`: `outline: var(--focus-ring-width) solid var(--pc-bg); outline-offset: var(--focus-ring-offset)`. It uses the inverse colour, not terra, because terra-600 on black falls to about 3:1.
+- `span.projector-controls__chevron` inside the back button, `aria-hidden`.
+- Below 1100 px wide: `font-size: 20px; min-block-size: 44px`. Then the widest set (window mode, about 370 px) plus the band's code group (about 440 px) still fit a 1024 px projector with no overlap.
+- Root state: `.projector[data-controls='on'|'off']`. `[data-controls='off'] { cursor: none }`. `[data-controls='on'] .projector-band__step, [data-controls='on'] .intro-stage__title { opacity: 0 }`.
+
+**Showing and hiding.** One module, `projectorControls` state + `wake()` / `sleep()`. Listeners go on `document` from `oncreate` and are removed in `onremove`:
+| Input on that device | Effect |
+|---|---|
+| `pointermove` that moved ≥ 4 px from the last position (`POINTER_WAKE_PX`) | show, restart the 3 s idle timer. The distance check drops the synthetic `mousemove` Chrome fires when the page re-renders under a still pointer, so a step change never wakes the control on the wall. |
+| `pointerdown` (a tap, a click on the stage) | show, restart |
+| `keydown` Tab / Shift+Tab | show and move focus into the control (first button, or last for Shift+Tab). `preventDefault` only when it was hidden. |
+| `focusin` inside the control (Tab arriving from the YouTube iframe) | show |
+| Pointer over the control (`pointerenter` … `pointerleave`) | the idle timer pauses. It never hides under a resting cursor. |
+| Any other key (arrows, PageUp/PageDown, B, F5: what presentation clickers send) | nothing. A clicker press must not flash the control on the wall. |
+| 3 s with none of the above (`PROJECTOR_CONTROLS_IDLE_MS`) | hide. If focus was inside, move it to the root (`.projector`, `tabindex="-1"`) so focus never sits on something invisible. |
+
+On arrival in `here` mode, the control shows for one idle period (the teacher has just clicked), so the way back is seen once (15.K-2). In `window` mode it shows with the hint (15.D).
+
+**Focus.**
+- `here`, arrival: `focus({ preventScroll: true })` on "חזרה לשיעור". A screen-reader user hears "פקדי המקרן, חזרה לשיעור, כפתור". Because the last input was a mouse click, `:focus-visible` draws no ring on the wall.
+- `window`, first load: focus on "מסך מלא", so Enter makes the window full screen.
+- Hidden = transparent, not `visibility: hidden`. It stays reachable: a keyboard user's Tab from anywhere, including out of the iframe, lands on it, and `focusin` shows it in the same frame.
+- Fullscreen toggle: the label swaps and focus stays on the same button. No `aria-pressed`, because the label already names the action.
+
+**Esc, per mode** (IA 15.4):
+| | `here` | `window` |
+|---|---|---|
+| Esc while full screen | The browser leaves full screen (the page may never see the key). `fullscreenchange` / `webkitfullscreenchange` with no fullscreen element → **leave** (below). | The browser leaves full screen. The page stays; the control label becomes "מסך מלא". |
+| Esc while not full screen | `keydown` Escape → **leave** | Hides the control and blurs it. Never navigates. |
+| Esc with focus inside the YouTube iframe, not full screen | The key never reaches the page (iframe). The way back is the strip: a mouse move or tap there shows the control (15.K-6). | — |
+| Player's own fullscreen, exited by its own button | Chrome pops back to document full screen, so nothing happens. A full exit (Esc) → leave (IA G). | — |
+
+**Leave (`here`):** a `leaving` flag makes it run once, because Safari can deliver both the key and the fullscreen change. If still full screen, `exitFullscreen()` first. Then, if `history.state?.fromConsole`, `history.back()`, which keeps the console's `?view=` exactly as it was. Otherwise `m.route.set('/t/<mid>', {}, { replace: true })`. Browser back does the same through the router.
+
+**Close (`window`):** `window.close()`, then on the next tick, if `!window.closed`, the button swaps to "חזרה לשיעור" (IA 15.4; see 15.K-3).
+
+### 15.C Video mode fills the window
+At Opening with a `projectorVideoId`, `TeacherProjector` adds `.projector--video` to the root and **does not render the code band** (IA 15.5: no band, no question line). The stage becomes a black screen with a 64 px strip at the bottom, in the same place and at the same height as the band, so the control has one home on every screen.
+
+```
+1920 × 1080 (16:9)                                   1024 × 768 (4:3 projector)
+┌────────────────────────────────────────────┐       ┌──────────────────────────────┐
+│▌┌────────────────────────────────────────┐▐│       │██████████ 68px █████████████│
+│▌│                                        │▐│       │┌────────────────────────────┐│
+│▌│     YouTube 16:9, 1806 × 1016          │▐│ 49px  ││  16:9 player, 1024 × 576   ││
+│▌│     (YouTube's thumbnail + its play)   │▐│ bars  │└────────────────────────────┘│
+│▌└────────────────────────────────────────┘▐│       │██████████ 68px █████████████│
+├────────────────────────────────────────────┤       ├──────────────────────────────┤
+│ 1. איך זה נראה בכיתה בלי טלפונים             │ 64px  │ 1. איך זה נראה בכיתה…         │
+└────────────────────────────────────────────┘ strip └──────────────────────────────┘
+
+2560 × 1080 (21:9 ultrawide)                         1280 × 800 (16:10, common projector)
+┌──────────────────────────────────────────────────┐ ┌──────────────────────────────┐
+│███ 377px ███┌──────────────────────┐███ 377px ███│ │█████████ 8px ███████████████│
+│█████████████│  16:9, 1806 × 1016   │█████████████│ │  16:9 player, 1280 × 720     │
+│█████████████└──────────────────────┘█████████████│ │█████████ 8px ███████████████│
+├──────────────────────────────────────────────────┤ ├──────────────────────────────┤
+│ 1. איך זה נראה בכיתה בלי טלפונים                   │ │ 1. איך זה נראה בכיתה…         │
+└──────────────────────────────────────────────────┘ └──────────────────────────────┘
+```
+
+**Layout (`.intro-stage`, changed; `projector.scss`):**
+- `.projector--video .projector__stage { padding: 0; }`
+- `.intro-stage`: `display: grid; grid-template-rows: minmax(0, 1fr) $projector-band-height; block-size: 100vh; block-size: 100dvh;` (the `vh` line is the fallback for Safari before 15.4). `background: var(--video-letterbox)`. The 220 ms `projector-fade` stays.
+- `.intro-stage__screen` (NEW element): `display: grid; place-items: center; min-block-size: 0; overflow: hidden`.
+- `.intro-stage__player`:
+  - **YouTube iframe:** `inline-size: min(100vw, calc((100dvh - #{$projector-band-height}) * 16 / 9)); aspect-ratio: 16 / 9; border: 0; border-radius: 0;`. YouTube letterboxes a 4:3 or vertical upload inside its own 16:9 frame.
+  - **File `<video>`:** `inline-size: 100%; block-size: 100%; object-fit: contain`. The browser letterboxes to the file's own ratio (16:9, 4:3, or a vertical phone video), so the box never forces 16:9 on a file.
+- `.intro-stage__strip` (NEW element): `display: flex; align-items: center; padding: 0 var(--space-xl); color: var(--video-ink); border-block-start: 1px solid var(--video-rule)`.
+- `.intro-stage__title`: 32 px (the projector floor), 700, one line, ellipsis, `max-inline-size: 100%`. It fades to 0 while the control shows (15.B).
+- Retired: `.intro-stage__eyebrow` and the old `calc(100dvh - band - …)` width formula (14.D's "Video n" wireframe and its Size bullet).
+
+**New tokens** (shared `_tokens.scss`, **not** overridden by dark mode or the playful themes: a letterbox is black on any theme, the same physical rule as the QR's white quiet zone):
+```scss
+--video-letterbox: #000000;
+--video-ink: #f4ece0;            // = dark-mode --ink, 17.6:1 on black
+--video-rule: rgba(244, 236, 224, 0.16);
+```
+High contrast (`[data-high-contrast]`, `prefers-contrast: more`): `--video-ink: #ffffff`, `--video-rule: #ffffff`.
+
+**What shows before play:**
+- YouTube: its own thumbnail and big play button (no `autoplay`, as §14), plus our title in the strip.
+- File: `<video controls playsinline preload="metadata">` on the projector only, so the first frame and the duration show instead of a black box. The phone keeps `preload="none"` (15.K-9).
+
+**Entering and leaving full screen with video:**
+- Full screen belongs to the document, not the player (IA 15.2). A video chosen while full screen just fills the full-screen window. Another video swaps the iframe inside the same document, so full screen stays. "הטקסט" or the next step brings back the band and the text, and full screen stays.
+- The player's own fullscreen button still works (`allowfullscreen` stays). The teacher never needs it, and it ends with its player.
+- `here` mode, the one-screen video flow:
+  1. Console: "על המקרן: 1. …".
+  2. "מקרן ▾" → "הצגה במסך הזה": full screen, video mode.
+  3. Click the player's play. The pointer is now over the iframe, and YouTube hides its own cursor.
+  4. Esc: full screen ends, back to the console. The iframe is removed with the page, so the sound stops.
+- Swap motion: the step section stays keyed by `projectorVideoId ?? 'text'`, with the 220 ms `projector-fade`. The band and strip swap with it: there is no separate animation, and the fade covers both.
+
+### 15.D The first-open window hint (`window` mode)
+**Block `.projector-hint`** (NEW, `projector.scss`):
+- `p.projector-hint`, `role="status"`, so it is read once, politely.
+- Position: fixed, `inset-block-end: calc(#{$projector-band-height} + var(--space-md))`, `inset-inline-start: var(--space-xl)`, `max-inline-size: min(18em, calc(100vw - 2 * var(--space-xl)))`.
+- Look: 32 px, 700, `background: var(--pc-bg); color: var(--pc-fg)`, `padding: var(--space-md) var(--space-lg)`, `--radius-lg`, flex with `gap: var(--space-md)`.
+- `svg.projector-hint__glyph`: 64 × 32, `currentColor` strokes, a small laptop, an arrow, and a larger screen. `aria-hidden`.
+- `::after`: a 12 px CSS triangle on the block-end edge, `inset-inline-start: var(--space-xl)`, pointing down at the first control button ("מסך מלא").
+- Copy: "גררו את החלון הזה למסך של הכיתה ולחצו "מסך מלא"" (`projector.window_hint`).
+- Shown on every load in `window` mode while not full screen, together with the control. The idle timer is suspended while the hint shows.
+- Leaves on `fullscreenchange` into full screen, or after 10 s (`PROJECTOR_HINT_MS`): 220 ms opacity out, and the control then follows the normal idle rule.
+- Not shown in `here` mode. Not shown when full screen is unsupported either: its words ask for "מסך מלא", which would not exist; the console help line already says to drag, and a drag-only hint would need a new string (15.K-7).
+
+### 15.E Busy labels (IA 15.3, "found while reading")
+| Where | Today | Key after | HE | EN |
+|---|---|---|---|---|
+| `StepRail` forward ("פתיחת השלב הבא") | `console.opening` | `console.busy_opening` (renamed) | פותחים… | Opening… |
+| `LessonBanner` "פתיחה מחדש", `TeacherHome` row reopen | `console.opening` | `console.busy_opening` | פותחים… | Opening… |
+| `TeacherConsole` `statusGroup` "השהיית השיעור" | `console.opening` (reads "פותחים…" while pausing) | NEW `console.busy_pausing` | משהים… (?) | Pausing… |
+| `LessonBanner` "המשך השיעור" | `console.opening` | NEW `console.busy_resuming` | ממשיכים… | Resuming… |
+
+Same look as today: the pressed button keeps its width and shows the busy words with `aria-busy="true"` after the 400 ms rule. Delete `console.opening` from all seven locale files in the same commit, so nothing is left in the `console.opening.*` family except the Opening step's `show` / `text`. The four call sites are the only users (checked: `StepRail.ts`, `LessonBanner.ts` ×2, `TeacherHome.ts`, `TeacherConsole.ts`).
+
+### 15.F States
+| Screen | State | What shows |
+|---|---|---|
+| Console menu | closed / open / blocked | 15.A. "Blocked" persists until the panel closes. |
+| Projector `here` | arrival | screen + control (one idle period), focus on "חזרה לשיעור" |
+| | idle | screen only, no pointer |
+| | full screen refused / unsupported | windowed. The control adds "מסך מלא" when supported. |
+| | loading / load error | `projector.loading` / `projector.error` + the control at the same corner |
+| | paused / ended | 13.F frames + band + control |
+| | video mode | 15.C + control over the strip's title |
+| Projector `window` | first load | screen + hint + control, focus on "מסך מלא" |
+| | full screen | screen only; the control on wake shows "יציאה ממסך מלא", "סגירת המקרן" |
+| | close refused | "סגירת המקרן" becomes "חזרה לשיעור" |
+| | left open after the lesson | follows to "השיעור הסתיים" by itself (IA 15.9) |
+| Not your lesson | — | no control (its own links, §13.G) |
+
+### 15.G Motion and reduced motion
+| Where | Motion | Reduced motion |
+|---|---|---|
+| Control in | `opacity` 0 → 1, 140 ms `--dur-quick` `--ease-out`; the step name / title out over the same time | instant |
+| Control out (idle) | `opacity` 1 → 0, 220 ms `--dur-base` | instant |
+| Hint out | `opacity`, 220 ms | instant |
+| Menu chevron | `transform: rotate(180deg)`, 140 ms | instant |
+| Text ↔ video | the existing `projector-fade` 220 ms on remount | instant (`--dur-base: 0`) |
+| Full screen enter/exit | the browser's own | the browser's own |
+Opacity and transform only. Nothing slides and nothing loops. The `--dur-*` tokens are already 0 under `prefers-reduced-motion`. `.projector-controls` and `.projector-hint` declare `transition: opacity var(--dur-*)` only, so they need no extra media query.
+
+### 15.H Accessibility
+- **Targets:** control buttons 48 px tall (44 px below 1100 px wide) and at least 120 px wide. Menu items 48 px.
+- **Names:**
+  - The menu summary is "מקרן", and the details element gives it its expanded state.
+  - Each menu item is named by its visible label and described by its help line (`aria-describedby`). The help is outside the button, so the name stays short (the pattern of 13.E's end choice).
+  - The control is `role="group"` "פקדי המקרן".
+  - The hint is `role="status"`. "Blocked" is `role="alert"`.
+- **Never hidden from assistive tech:** the control is transparent, not `display: none` or `visibility: hidden` and not `aria-hidden`, so a screen reader can always reach "חזרה לשיעור" / "סגירת המקרן".
+- **No focus on invisible things:** idle-hide moves focus to the root (`tabindex="-1"`).
+- **Contrast:**
+  - Control pair 16:1 (light) / 13:1 (dark).
+  - Video strip title 17.6:1.
+  - Ring and outline ≥ 3:1 against both paper and black, by using the inverse colour.
+  - The blocked message is ink on terra-50, about 15:1.
+- **Colour is never the only cue:** filled vs outline is also weight and position (first). Full-screen state is in the words.
+- **Keyboard path, `here` mode:** Tab → "חזרה לשיעור" → Enter. Or Esc.
+- **Keyboard path, `window` mode:** Tab → "מסך מלא" → Enter → Tab → "סגירת המקרן".
+- **Fix in the same lane:** `TeacherProjector`'s root `div.projector` has `aria-label` but no role, so the label is dropped. Give it `role="region"`. The stage is already a `main`.
+
+### 15.I Weight notes
+- **No libraries.** New code: `lib/fullscreen.ts` (about 40 lines), `lib/classroom/projectorScreen.ts` (mode parsing, the window opener, constants; about 60 lines, pure, unit-tested), `ProjectorControls.ts` (about 120 lines), `ProjectorMenu.ts` (about 90 lines). Roughly 2.5 kB min+gz across two lazy teacher chunks. Students download none of it.
+- **`lib/fullscreen.ts`**: typed, no `any`. It extends `Document` / `HTMLElement` with optional `webkitFullscreenEnabled`, `webkitFullscreenElement`, `webkitExitFullscreen`, `webkitRequestFullscreen`:
+  - `fullscreenSupported()`: `document.fullscreenEnabled ?? document.webkitFullscreenEnabled ?? false`.
+  - `isFullscreen()`: `!!(document.fullscreenElement ?? document.webkitFullscreenElement)`.
+  - `enterFullscreen(el = document.documentElement)`: calls `requestFullscreen?.({ navigationUI: 'hide' })` or `webkitRequestFullscreen?.()`. The webkit call returns `undefined`, not a promise (old Safari and iPad), so wrap it in `Promise.resolve`. Rejections are caught and logged with `console.info` (a refusal is expected, not an error).
+  - `exitFullscreen()`, the same pair.
+  - `onFullscreenChange(fn)`: listens to both `fullscreenchange` and `webkitfullscreenchange`, and returns its unsubscribe.
+- **Constants** (in `projectorScreen.ts`, beside their use): `PROJECTOR_CONTROLS_IDLE_MS = 3 * TIME.SECOND`, `PROJECTOR_HINT_MS = 10 * TIME.SECOND`, `POINTER_WAKE_PX = 4`, `PROJECTOR_WINDOW_SIZE = { width: 1280, height: 720 }`, `projectorWindowName(mid) = 'projector-' + mid`. `projectorMode(param): 'window' | 'here'` treats any value other than `window` as `here`.
+- **One timer**, cleared and restarted, never an interval. Listeners are passive, added once in `oncreate` and removed in `onremove`. `m.redraw()` runs only when the control's on/off state flips, never per pointer move.
+- **iPad / old Safari:** `requestFullscreen` on the document element works from iPadOS 12 with the webkit prefix, and is missing on iPhone, where the button is hidden. `window.open` with features opens a tab on iPad. It cannot be dragged, but an iPad mirrored by AirPlay is the `here` case anyway.
+- **Chrome's "Press Esc to exit full screen" toast** shows at the top for about 3 s on entry. It cannot be suppressed, and it does not clash with the control at the bottom.
+
+### 15.J Build order
+1. **Busy labels** (15.E): rename and add the keys in all 7 locales, and update the four call sites. Independent, so it ships first.
+2. **`lib/fullscreen.ts` + `lib/classroom/projectorScreen.ts`**, with unit tests: mode parsing, the webkit fallback, the opener's reuse-without-reload, blocked → `null`.
+3. **Tokens:** `--video-letterbox`, `--video-ink`, `--video-rule` (+ high-contrast values) in `_tokens.scss`.
+4. **Console `ProjectorMenu`** (15.A) replacing the `console__link` in `TeacherConsole.header()`. Extract the shared popover helper from `ConsoleSettings`.
+5. **`ProjectorControls` + `.projector-controls`** in `TeacherProjector` (every state but denied): wake/sleep, the step-name fade, focus, Esc per mode, leave/close, `role="region"` on the root.
+6. **Video mode** (15.C): `.projector--video`, no band, `.intro-stage__screen` / `__strip`, the iframe vs file sizing, `preload="metadata"` on the projector. Remove `.intro-stage__eyebrow`.
+7. **Hint** (15.D).
+8. **i18n:** every NEW key in IA 15.3 in all 7 locales (Hebrew (?) marks need a native read).
+9. **Docs:** strike 14.D's "Video n" wireframe, the Size bullet and the "player's own fullscreen; the app adds no control" bullet. Point them to 15.C. Update 13.E's bar wireframe and keyboard order.
+10. **Playwright:**
+    - console at 1280 in `he` and `en`: menu open/closed, the title still visible. Blocked: stub `window.open` to return `null`.
+    - projector at 1280 × 720, 1024 × 768, 1280 × 800, 2560 × 1080: text and video. The control never intersects `.projector-band__join` (bounding-box test). A 60-character title ellipsises.
+    - `here`: arrival focus, idle hide after 3 s (fake timers), Esc → `/t/:mid` with `?view=texts` kept, browser back.
+    - `window` (opened via `context.waitForEvent('page')`): hint, full-screen toggle label, close.
+    - a still pointer + a step change does not wake the control.
+    - reduced motion; axe on the console, the projector, and video mode.
+
+### 15.K IA gaps and conflicts found (reported, not changed)
+1. **The menu adds one click to every switch.** IA 15.9 counts "הצגה במסך הזה" as one action. With the menu it is two ("מקרן ▾", then the item). The one-screen intro flow goes 9 → 12 actions, the shortcut 7 → 9, and the two-screen setup 3 → 4. The decision stands on width and on help-line visibility (15.A). **A/B test:** menu vs a two-button group with the help lines moved to `title`, on one-screen teachers' time from "פתיחת השלב הבא" to the wall. If the round trip hurts, the cheapest fix is IA D's per-device hint: the last used action as a third, direct button beside the summary.
+2. **The control shows on arrival in `here` mode** for one idle period. IA 15.4 lists only pointer move, tap and Tab as triggers. I add arrival because the teacher has just clicked and must learn where the way back is. With keyboard or screen reader, focus lands on "חזרה לשיעור" anyway. If Tal wants the wall clean from the first frame, drop it; the pointer move after the click will usually show it within a second.
+3. **"Close refused → חזרה לשיעור" contradicts "no button on the projector window ever navigates it to the console"** (IA 15.4, `window` column vs the "must never see" paragraph). Browsers refuse `window.close()` only when the tab was not script-opened **and** has navigated (history > 1). That is a pasted or bookmarked link, which is not the wall window. Recommendation: keep the IA's fallback and narrow the rule to "…in a window the console opened".
+4. **Video mode keeps a 64 px strip, so it is not literally "the whole window".** IA 15.5 says "the player takes the whole projector window". The strip exists because a full-window iframe swallows every pointer move and key, so the teacher control could never wake by mouse in video mode. It also holds the title (14.0). Cost on a 16:9 screen: 49 px pillar bars at 1080p. If Tal wants edge-to-edge, the alternative is a transparent 24 px wake edge over the iframe's top. It is less discoverable, and it eats YouTube's title-bar clicks.
+5. **"The code band and the question line are not shown"** is kept. The strip carries the video's label only, no code, so late joiners still wait for "הטקסט" (IA B default).
+6. **Esc returns `here` mode to the console "when not full screen" (IA 15.4)**, except when focus is inside the YouTube iframe, because the key never reaches the page. That case only happens when full screen was refused. The way back is then a pointer move onto the strip. No IA change is needed; the behaviour should be known.
+7. **No full screen means no hint.** IA 15.4 shows `projector.window_hint` on first load in `window` mode, but its text tells the teacher to press "מסך מלא". Where full screen is unsupported, I hide the hint rather than show a wrong instruction. The console's help line already says to drag. A drag-only hint would need a new string.
+8. **14.D still reads "Full screen is the player's own fullscreen button … the app adds no control of its own"**, and has the eyebrow and title layout for video. IA 15 already overrides both. 15.C replaces them, and step 9 of the build order edits 14.D.
+9. **`preload="metadata"` for file videos on the projector** changes 14.D's "`preload="none"`" for the projector only. One small range request on a laptop buys a visible first frame instead of a black box. The phone is unchanged.
+10. **`projector.controls` "פקדי המקרן" (?)** is only heard, never seen. A native reader should confirm it. "פקדים" is formal; "כפתורי המקרן" is the plainer alternative.
+11. **IA's question on a "window open" indicator** is answered no (15.0). If added later, it needs one string (for example `teacher.screen.window_open`) and a `visibilitychange` check of `win.closed`, with no polling.

@@ -66,7 +66,7 @@ export const StepRail: m.Component<StepRailAttrs> = {
 			forward.kind === 'end'
 				? t('console.end')
 				: busy
-					? t('console.opening')
+					? t('console.busy_opening')
 					: t('console.next', { name: stepLabel(attrs.keys[forward.nextIndex]) });
 
 		return m('div.step-rail', { class: attrs.held ? 'step-rail--held' : '' }, [

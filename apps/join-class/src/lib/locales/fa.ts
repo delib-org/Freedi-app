@@ -265,7 +265,9 @@ const fa: Record<string, string> = {
 	'console.step_of': 'مرحله {{n}} از {{total}}',
 	'console.next': 'باز کردن مرحله بعد: {{name}}',
 	'console.end': 'پایان درس',
-	'console.opening': 'در حال باز کردن…',
+	'console.busy_opening': 'در حال باز کردن…',
+	'console.busy_pausing': 'در حال مکث…',
+	'console.busy_resuming': 'در حال ادامه…',
 	'console.end_confirm': 'درس پایان یابد؟',
 	'console.view_label': 'نما',
 	'console.tables': 'میزها',
@@ -414,6 +416,19 @@ const fa: Record<string, string> = {
 	'console.opening.show': 'روی پرده:',
 	'console.opening.text': 'متن',
 	'projector.video_failed': '{{title}} · بارگذاری نشد',
+	'teacher.screen.open_window': 'پروژکتور در پنجرهٔ جدا',
+	'teacher.screen.open_window_help': 'برای دو صفحه‌نمایش: پنجره را به صفحه‌نمایش کلاس بکشید',
+	'teacher.screen.show_here': 'نمایش روی همین صفحه',
+	'teacher.screen.show_here_help':
+		'برای یک رایانه که به پروژکتور وصل است. کلید Esc شما را به درس برمی‌گرداند.',
+	'teacher.screen.blocked':
+		'مرورگر پنجره را مسدود کرد. پنجره‌های بازشو را برای این سایت مجاز کنید، یا «نمایش روی همین صفحه» را انتخاب کنید.',
+	'projector.controls': 'دکمه‌های پروژکتور',
+	'projector.fullscreen': 'تمام‌صفحه',
+	'projector.fullscreen_exit': 'خروج از تمام‌صفحه',
+	'projector.back': 'بازگشت به درس',
+	'projector.close': 'بستن پروژکتور',
+	'projector.window_hint': 'این پنجره را به صفحه‌نمایش کلاس بکشید و «تمام‌صفحه» را بزنید',
 };
 
 export default fa;

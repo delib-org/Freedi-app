@@ -18,6 +18,13 @@
   --ink-soft: #6b6259;       // tertiary/muted — ~5.3:1 ✓ AA
   --ink-faint: #9a8f82;      // labels only, non-essential — 3:1 ✓ AA large
 
+  // ---- VIDEO (projector video mode) ----
+  // A letterbox is black on any theme, the same physical rule as the QR's white
+  // quiet zone: dark mode and the playful themes do not override these.
+  --video-letterbox: #000000;
+  --video-ink: #f4ece0;      // 17.6:1 on black ✓ AAA
+  --video-rule: rgba(244, 236, 224, 0.16);
+
   // ---- ACCENT: terracotta (primary, hot) ----
   --terra-50: #fbece4;
   --terra-100: #f4cfbd;
@@ -599,6 +606,9 @@
   --ink-muted: #000000;
   --ink-soft: #1a1a1a;       // 18.1:1 ✓ AAA
   --ink-faint: #3d3d3d;      // 10.5:1 ✓ AAA
+
+  --video-ink: #ffffff;
+  --video-rule: #ffffff;
 
   --terra-50: #ffd6c0;
   --terra-100: #ffb899;
