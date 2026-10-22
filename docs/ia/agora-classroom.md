@@ -281,3 +281,331 @@ What this costs versus Agora's engine (stated once, decided): the lesson/session
 - **Findability**: ≤ 8 guiding questions, no search; the challenge question is always pinned on top.
 - **Reuse from Join**: `createSubQuestion`, `EditableTitle`, `ManualReorder`/`dragReorder`, `MainHub` admin affordances, `setQuestionSetting` for `role` and hint.
 - **Open**: can the teacher pick from a shared library of questions (Agora's scenario library)? Not in phase 1; the screen gets a "מהספרייה" button later if Tal wants it.
+
+## 13. Front door, teacher entry and lesson status (Tal, 2026-10-22)
+
+Status: agreed (Tal answered Q1-Q6 on 2026-10-22)
+
+Tal, running join-class locally: "I do not see how the teacher can create classes, and I do not see a teacher screen at enter." Cause: `/` still rendered Join's own home (a workspace list) behind a login, and nothing linked to `/t`. Tal's decisions the same day:
+- Delete Join's leftover screens; the app is only the screens in 13.1 ("we need the app as light as possible").
+- Teachers sign in with Google only.
+- The front door leads with the code.
+- The lesson has a language, chosen on the plan screen.
+- A lesson can be paused, ended, kept open after class and reopened.
+
+What this section overrides:
+- §12's table row "join code is a Join share link". Both entry points are kept: the class code at `/c/:code` and the QR to `/m/:mid`.
+- §12.1's "לקונסולה", now "לשיעור" (13.3).
+- §2.1's Lesson lifecycle "open → live → ended", now the status model in 13.6.
+
+### 13.1 The app, whole
+| Route | Screen | Who |
+|---|---|---|
+| `/` | Front door: type the code; "אני מורה" | everyone; a Google-signed-in teacher is sent to `/t` |
+| `/login` | Teacher sign-in | teachers only (from teacher routes and "אני מורה") |
+| `/c/:code` | resolves the code; no screen of its own | students (typed or QR) |
+| `/m/:mid` | the lesson, student side (StudentStage: name → waiting → steps; paused / ended screens) | students; the lesson's teacher is sent to `/t/:mid` unless `?student=1` |
+| `/t` | Teacher home "השיעורים שלי" | teacher |
+| `/t/:mid/plan` | תכנון השאלות (§12.1) + פרטי השיעור (incl. שפת השיעור) | teacher |
+| `/t/:mid` | the console "השיעור" | teacher |
+| `/t/:mid/table/:n` | table sheet | teacher |
+| `/t/:mid/screen` | מקרן | teacher (own window) |
+
+Nothing else is routed. `/q/*`, `/m/:mid/q/*`, `/invite` and any unknown path go to `/`.
+
+### 13.2 Who lands where on `/`
+- Signed in with Google → `/t` at once; the front door is not shown.
+- Signed out, or anonymous (every student is anonymous via `ensureUser`) → the front door.
+- The front door's single job is the code: "הקלידו את הקוד", 6 digits, "כניסה" → `/c/:code`.
+- The second door is on the same first screen, without scrolling: "אני מורה" → `/t`, which asks for sign-in when needed.
+- A student who tapped "אני מורה" by mistake: the sign-in screen carries "תלמידים לא צריכים להתחבר." and "יש לי קוד" → `/`.
+- Unknown code (`/c/:code` finds nothing) → `/` with the code filled in, plus "לא מצאנו שיעור עם הקוד הזה" and "בדקו את ששת הספרות עם המורה ונסו שוב." Focus stays in the input. There is no dead-end screen.
+- `/c` with no code → `/`.
+- A code of a paused or ended lesson still resolves; the student lands on the paused or ended screen (13.6).
+
+### 13.3 Labels
+One name per concept. Every key goes in all seven locale files in `apps/join-class/src/lib/locales`.
+
+| Concept | EN | HE | i18n key | Route | Code type | Retire |
+|---|---|---|---|---|---|---|
+| Lesson | Lesson | שיעור | teacher.* (kept) | /t/:mid, /m/:mid | main Statement + lessonPlan | כיתה (as the thing created or entered), סביבת עבודה, שאלה (for the lesson), workspace in UI |
+| Front door instruction | Type the code | הקלידו את הקוד | NEW door.code.title | / | — | — |
+| Enter | Enter | כניסה | NEW door.code.enter | — | — | — |
+| Unknown code | We found no lesson with this code | לא מצאנו שיעור עם הקוד הזה | lesson.code.unknown.title (value changes) | — | — | "לא מצאנו את הכיתה הזאת" |
+| Unknown code, help | Check the six digits with your teacher and try again. | בדקו את ששת הספרות עם המורה ונסו שוב. | lesson.code.unknown.body (kept) | — | — | — |
+| Teacher door | I'm a teacher | אני מורה | NEW door.teacher | → /t | — | — |
+| Teacher sign-in | Teacher sign-in | כניסת מורים | login.title (value changes) | /login | — | "ברוכים הבאים ל-WizCol" |
+| Sign-in reason | Sign in with Google to create lessons and find them on any computer. | התחברו עם Google כדי ליצור שיעורים ולמצוא אותם בכל מחשב. | login.tagline (value changes) | — | — | "התחברו כדי לקבל החלטות ביחד" |
+| Google | Continue with Google | המשך עם Google | login.google (kept) | — | — | — |
+| Students don't sign in | Students don't need to sign in. | תלמידים לא צריכים להתחבר. | login.hint (value changes) | — | — | the guest hint |
+| I have a code | I have a code | יש לי קוד | NEW login.have_code | → / | — | — |
+| Guest sign-in | — | — | delete login.guest, login.or | — | delete signInAsGuest | כניסה כאורח/ת |
+| Teacher home | My lessons | השיעורים שלי | teacher.home.title (kept) | /t | — | השאלות שלי |
+| New lesson | + New lesson | + שיעור חדש | teacher.new (kept) | — | — | יצירת שאלה חדשה |
+| How it works | 1. Name the lesson · 2. Plan the questions · 3. Open the lesson and show the class the code | 1. שם לשיעור · 2. תכנון השאלות · 3. פותחים את השיעור ומראים לכיתה את הקוד | NEW teacher.home.how | — | — | — |
+| Empty home | No lessons yet. Name your first one: | עוד אין שיעורים. תנו שם לשיעור הראשון: | teacher.home.empty (value changes) | — | — | — |
+| Open the console | Open the lesson | לשיעור | teacher.row.open (kept); plan.to_console value → "לשיעור" | /t/:mid | TeacherConsole | לקונסולה, קונסולה |
+| Challenge question | The question to solve | השאלה לפתרון | plan.challenge.title (kept) | — | role 'challenge' | האתגר (lesson.role.challenge is unused: delete) |
+| Lesson language | Lesson language | שפת השיעור | NEW plan.details.language | /t/:mid/plan | statementSettings language field (Join's existing one) | — |
+| Account | Signed in as {{name}} | מחוברים כ־{{name}} (?) | NEW teacher.account | — | — | — |
+| Sign out | Sign out | התנתקות | NEW teacher.signout (value of main.signout) | → / | signOut | — |
+| Not your lesson | This lesson belongs to another account | השיעור הזה שייך לחשבון אחר | NEW teacher.denied.title | /t/:mid* | — | — |
+| Switch account | Switch account | החלפת חשבון | NEW teacher.denied.switch | → /login?next=… | — | — |
+| Not a lesson link | This link doesn't lead to a lesson | הקישור הזה לא מוביל לשיעור | NEW lesson.not_lesson | /m/:mid | — | Join's "not found" copy |
+
+The status labels are in 13.6.
+
+Key families to delete once nothing reads them: main.*, invite.*, facilitator.*, delegates.*, joinForm.*, chat.*, and any solutions.* or mainHub.* keys no surviving view reads. Check each key before deleting it; MainHub's loader still uses a not-found line and a failed line.
+
+### 13.4 Teacher sign-in: Google only (decided)
+- Teachers sign in with Google. There is no guest path.
+- Reason: a lesson belongs to the account that created it. A guest account lives in one browser, so a teacher who plans at home and teaches at school would find no lessons and no permission.
+- Students never sign in; they stay anonymous, as today.
+- An anonymous user who reaches `/t` (a student device, or an old guest teacher) gets `/login`. Two cases on sign-in:
+  - The anonymous account already owns lessons (from before this change): Google sign-in links it (`linkWithPopup`), keeping the uid and the lessons.
+  - The anonymous account owns no lessons: sign-in replaces it with the Google account instead of linking. A student's anonymous identity on a shared computer therefore never becomes a teacher's.
+
+### 13.5 Teacher home (`/t`)
+- **Header:** logo; "מחוברים כ־<name>"; "התנתקות" (→ `/`). Required, because school computers are shared.
+- **Primary task:** "+ שיעור חדש", always first. It opens the name field inline: label "שם השיעור (הדילמה)", then "יצירה" / "ביטול".
+- **Empty state (first-time teacher):** the name field is already open and focused, under "עוד אין שיעורים. תנו שם לשיעור הראשון:". The three-step line "1. שם לשיעור · 2. תכנון השאלות · 3. פותחים את השיעור ומראים לכיתה את הקוד" sits above it.
+- **List:** lessons only, meaning statements this teacher created in join-class and marked `openedInClass`; never Join's `openedInJoin`. Ordered most recently opened first.
+- **Each row:** the lesson name; the status label (13.6); "תכנון השאלות" (→ `/t/:mid/plan`); and one primary action by status: "לשיעור" (→ `/t/:mid`), or "פתיחה מחדש" on an ended lesson (13.6).
+- **What "יצירה" does, in one go:**
+  1. Create the main statement.
+  2. Write `lessonPlan` with stepIndex 0 (Waiting) and status `live`, so `/m/:mid` is a lesson from its first second.
+  3. Create the class code.
+  4. Mark `openedInClass`.
+  5. Go to `/t/:mid/plan`.
+- **Lesson language:** "שפת השיעור" is one select in "פרטי השיעור" on the plan screen. Student screens and the projector follow the lesson language; a student's device language applies only when the lesson language is unset. The cog's language choice on a student phone does not override a set lesson language.
+
+### 13.6 Lesson status (Tal's Q4)
+Tal: "By default the class is ended, but the teacher can set it to let the lesson go on... or reopen previous lessons, and the teacher can also pause the lesson."
+
+Reading: ending is the default outcome of "סיום השיעור". The alternative offered at the same moment is to keep it open for students after class, so they can go on writing and rating on their own. An ended lesson can be reopened. A live lesson can be paused and resumed.
+
+| Status | Meaning | Students and projector see | Writes |
+|---|---|---|---|
+| `live` | the teacher runs the lesson (also before the first step) | the current step (§4) | yes |
+| `paused` | the teacher stopped the room for a moment | phone: "השיעור בהפסקה" + "חכו למורה", calm, no controls; projector: "השיעור בהפסקה" + the code | no; an unsent draft stays on the phone and is sent after "המשך" |
+| `open` | kept open after class; no teacher driving | the current step, as in `live` | yes |
+| `ended` | over | phone: "השיעור הסתיים" + the decision when there is one; projector: the same | no |
+
+Transitions (teacher only, from the console or a home row):
+- **live → paused:** "השהיית השיעור" (console bar).
+- **paused → live:** "המשך השיעור". Table timers resume where they stopped: the server shifts `speakerEndsAt` and `stepEndsAt` by the pause length.
+- **live, paused or open → ended or open:** "סיום השיעור" opens a choice. The default, which has focus, is "סיום". The alternative is "להשאיר פתוח לתלמידים", with the help line "התלמידים יוכלו להמשיך לכתוב ולדרג אחרי השיעור". Then "ביטול". After either choice the teacher goes to `/t`, where the row shows the new status. When the lesson is already `open`, the choice offers only "סיום".
+- **ended → live:** "פתיחה מחדש" on the home row, or on the ended console. It returns to the step the lesson ended on (`stepIndex` unchanged) and goes to `/t/:mid`. From there the teacher may move steps as usual (§11.1).
+- **open → live:** nothing to press. When the teacher opens the console of an open lesson and moves any step or presses "השהיית השיעור", the status becomes `live` again. The console shows the banner "השיעור פתוח לתלמידים" with "סיום השיעור".
+
+What is fixed:
+- While `paused` or `ended`, the step rail and the forward control are disabled. The paused console shows one primary control, "המשך השיעור". The ended console shows the banner "השיעור הסתיים" and "פתיחה מחדש".
+- The callables (`classTableStep`, `classAssignTables`, `classMoveStudent`, `classCastVote`) refuse when the status is `paused` or `ended`. The client hides writing on those screens.
+- A walk-away lesson (the teacher never pressed "סיום השיעור") stays as it is; there is no automatic end in phase 1.
+
+Data, on `statementSettings.lessonPlan` (all moments in ms):
+- `status: 'live' | 'paused' | 'open' | 'ended'`. Absent means `live`, for lessons created before this change.
+- `statusAt`: when the status last changed.
+- `pausedAt`: set while paused; cleared on resume, after the timers are shifted.
+- `endedAt`: the last time it was ended or left open.
+
+If `lessonPlan` is parsed by a shared-types schema, add `status` as an optional field and deploy shared-types to functions and rules before any client writes it (the strict-parse trap).
+
+Status labels:
+| Concept | EN | HE | i18n key |
+|---|---|---|---|
+| Row: not started (live, step 0) | Not started | עוד לא התחיל | NEW teacher.row.not_started |
+| Row: live | Step n of 8 | שלב n מתוך 8 | lesson.step_of (kept) |
+| Row: paused | Paused · step n | בהפסקה · שלב n | NEW teacher.row.paused |
+| Row: open | Open to students | פתוח לתלמידים | NEW teacher.row.open_after |
+| Row: ended | Ended | הסתיים | NEW teacher.row.ended |
+| Reopen | Reopen | פתיחה מחדש | NEW teacher.row.reopen (row and ended console) |
+| Pause | Pause the lesson | השהיית השיעור | NEW console.pause |
+| Resume | Resume the lesson | המשך השיעור | NEW console.resume |
+| End | End the lesson | סיום השיעור | console.end (kept) |
+| End choice, title | End the lesson? | לסיים את השיעור? | console.end_confirm (kept, now the title of a choice, not a browser confirm) |
+| End choice, default | End | סיום | NEW console.end_now |
+| End choice, keep open | Keep open for students | להשאיר פתוח לתלמידים | NEW console.keep_open |
+| Keep open, help | Students can keep writing and rating after class | התלמידים יוכלו להמשיך לכתוב ולדרג אחרי השיעור | NEW console.keep_open_help |
+| Cancel | Cancel | ביטול | teacher.new.cancel value, NEW key common.cancel if not present |
+| Console banner: open | Open to students | השיעור פתוח לתלמידים | NEW console.open_banner |
+| Console banner: ended | The lesson has ended | השיעור הסתיים | NEW console.ended_banner |
+| Paused (student, projector) | The lesson is paused | השיעור בהפסקה | NEW lesson.paused.title |
+| Paused, line | Wait for the teacher | חכו למורה | NEW lesson.paused.body |
+| Ended (student, projector) | The lesson has ended | השיעור הסתיים | NEW lesson.ended.title |
+| Ended, line | Thank you for taking part | תודה שהשתתפתם | NEW lesson.ended.body |
+
+Retire: "השיעור נגמר", "סגור" and "מושהה" (if anyone proposes them).
+
+### 13.7 Hierarchy
+Teacher (home `/t`, max depth 2):
+```
+0 /t                      השיעורים שלי
+1   /t/:mid/plan          תכנון השאלות (+ פרטי השיעור, שפת השיעור)
+1   /t/:mid               השיעור (console; live | paused | open | ended state)
+2     /t/:mid/table/:n    שולחן n
+1   /t/:mid/screen        מקרן (own window)
+```
+
+Student (no home; entry by code or QR, max depth 1):
+```
+0 /                       הקלידו את הקוד
+0 /c/:code                (resolver) → /m/:mid
+1   /m/:mid               name → ממתינים למורה → the current step (§4) | השיעור בהפסקה | השיעור הסתיים
+```
+
+Signed out: `/` → (אני מורה) → `/login` → back to the path asked for (`?next=`, default `/t`).
+
+### 13.8 Back paths
+- `/login`: "יש לי קוד" → `/`; browser back → `/`.
+- `/t`: the home; nothing above it. "התנתקות" → `/`.
+- `/t/:mid/plan`: "‹ השיעור" → `/t/:mid`; "לשיעור" in the save bar → `/t/:mid`.
+- `/t/:mid`: "‹ השיעורים שלי" → `/t`. After "סיום השיעור" (either choice) → `/t`.
+- `/t/:mid/table/:n`: close → `/t/:mid`.
+- `/t/:mid/screen`: its own window; no navigation (§5). It follows the status by itself.
+- Not your lesson: "החלפת חשבון" → `/login?next=<same path>`; "השיעורים שלי" → `/t`; "יש לי קוד" → `/`.
+- `/m/:mid` as the lesson's teacher → `/t/:mid` (except with `?student=1`).
+- Paused or ended student screen: no navigation. It changes by itself when the teacher resumes or reopens.
+
+### 13.9 Task flows
+- **Teacher, first time, from opening the site to the first lesson planned (4):**
+  1. `/`: "אני מורה".
+  2. `/login`: "המשך עם Google" → `/t`, with the name field open.
+  3. Type the name, "יצירה" → `/t/:mid/plan`.
+  4. Type "השאלה לפתרון" and 3-8 questions (saved on blur), then "שמירה" → "נשמר". Optional next: "לשיעור".
+- **Teacher, returning, from opening the site to the console (1):** `/` goes to `/t` on its own (the Google session is kept); "לשיעור" on the row. If the session expired, add "המשך עם Google" (2).
+- **Teacher, pause and resume (1 + 1):** "השהיית השיעור"; "המשך השיעור".
+- **Teacher, end (2):** "סיום השיעור" → "סיום" → `/t`, row "הסתיים".
+- **Teacher, keep open after class (2):** "סיום השיעור" → "להשאיר פתוח לתלמידים" → `/t`, row "פתוח לתלמידים". Later: open the row's "לשיעור" → "סיום השיעור" → "סיום".
+- **Teacher, reopen a past lesson (1):** row "פתיחה מחדש" → console at the step it ended on.
+- **Student by QR (2):** scan → `/m/:mid` → name, "הצטרפות" → "ממתינים למורה".
+- **Student by typing (3):** `/` type 6 digits, "כניסה" → name, "הצטרפות" → waiting.
+- **Student who tapped "אני מורה" by mistake (+1):** "יש לי קוד" → `/`.
+- **Teacher on a second computer, signed in with another account (2):** the not-your-lesson screen → "החלפת חשבון" → Google → the same lesson.
+
+### 13.10 Screen inventory
+| Screen | Route | Single job | Empty | Loading | Error | No permission | Done |
+|---|---|---|---|---|---|---|---|
+| Front door | / | type the code | — | — | unknown code: inline line, code kept | — | → /c/:code → /m/:mid |
+| Code resolver | /c/:code | turn a code into a lesson | — | splash | unknown → / with the error | — | → /m/:mid (replace) |
+| Teacher sign-in | /login | sign a teacher in | — | "מתחבר…" | "ההתחברות נכשלה. נסו שוב." | — | → ?next or /t |
+| Teacher home | /t | start, open or reopen a lesson | name field open + three-step line | skeleton | create or reopen failed inline + retry | anonymous → /login | → /t/:mid/plan or /t/:mid |
+| Console, paused | /t/:mid | stop the room, then resume | — | — | resume failed inline + retry | not your lesson | "המשך השיעור" → live |
+| Console, open | /t/:mid | see the lesson students still use; end it | — | — | — | not your lesson | "סיום השיעור" |
+| Console, ended | /t/:mid | look back; reopen | — | — | reopen failed inline + retry | not your lesson | "פתיחה מחדש" → live |
+| End choice | on /t/:mid | end, or keep open | — | — | write failed inline + retry | — | → /t |
+| Not your lesson | state of /t/:mid, /plan, /screen, /table/:n | explain and offer the way out | — | — | — | (this state is it) | — |
+| Lesson, student side | /m/:mid | §7 student rows | — | splash | not found or not a lesson: "הקישור הזה לא מוביל לשיעור" + "יש לי קוד" | — | §7 |
+| Paused (student) | /m/:mid | wait calmly | — | — | — | — | returns to the step on "המשך" |
+| Ended (student) | /m/:mid | know it is over; see the decision | no decision: the two lines only | — | — | — | returns to the step on "פתיחה מחדש" |
+| Projector, paused / ended | /t/:mid/screen | tell the room | — | — | — | — | follows the status |
+
+### 13.11 Findability
+- Teacher home: most recently opened first.
+- A name filter appears at more than 10 lessons; a teacher with several classes passes that within a term.
+- The status is on every row, so a paused or open lesson is visible without opening it.
+- No archive in phase 1 (13.12).
+
+### 13.12 Decisions (Tal, 2026-10-22) and what is left
+Decided:
+1. Teachers sign in with Google only.
+2. The front door leads with the code box, with "אני מורה" beside it.
+3. Removing a lesson from the list: not in phase 1; later "הסתרה מהרשימה", never delete.
+4. Lesson status: live / paused / open / ended as in 13.6.
+5. Brand: keep the WizCol logo; titles name the task.
+6. "שפת השיעור" lives in "פרטי השיעור" on the plan screen; students follow it, and their device language applies only when it is unset.
+7. Join leftovers are deleted, not hidden (13.13).
+
+Still open, each with a default:
+- **A.** A lesson left `live` or `open` with nobody pressing anything: should it end on its own (for example, `live` after 12 hours, `open` after 14 days)? [Default: no automatic end in phase 1; the row's status shows it.]
+- **B.** While `paused`, may the teacher move steps on the rail (to prepare the next step) before resuming? [Default: no; one control, "המשך השיעור", while paused.]
+- **C.** In an `ended` lesson, may students still read the class's answers and proposals (read-only)? [Default: no; the ended screen shows the decision only.]
+
+### 13.13 What the lesson flow still needs from Join (build lane)
+This list comes from a static import-graph trace of `index.ts` → the nine routes in 13.1. Run typecheck after each cut.
+
+**Must stay:**
+- **Data and engine:**
+  - `lib/store.ts`: the main statement load, sub-questions and options listeners. Trim it as listed under "Safe to delete".
+  - `lib/firebase.ts` and `lib/popupResolver.ts`
+  - `lib/resilientListeners.ts`
+  - `lib/user.ts`: drop `signInAsGuest` and add the link-only-if-owns-lessons rule from 13.4.
+  - `lib/admin.ts`
+  - `lib/i18n.ts` and the locales
+  - `lib/sentry.ts` and `lib/sentryClient.ts`
+  - `lib/deferWork.ts`
+  - `lib/timeFormat.ts`
+  - `lib/lesson.ts`, `lib/lessonCore.ts` (gains status), and all of `lib/classroom/*`
+- **Rating and live writing:**
+  - `components/Evaluation.ts`: RateFaces imports `evaluationThumbs`, and `c3Data` and `userEvaluations` read it. It may be cut down to the faces alone.
+  - `lib/userEvaluations.ts`, and `lib/newSolutionsBuffer.ts`, which it imports.
+  - `lib/liveDrafts.ts`: TableFlow, WritePanel, LiveWritersCard and serverClock use it.
+- **Teacher screens:**
+  - `components/QRShare.ts` (console and projector)
+  - `lib/dragReorder.ts` (plan screen)
+  - `lib/joinSubscriptions.ts`, re-scoped to `openedInClass` (teacher home and planController)
+  - `components/BrandLogo.ts`, `components/WizColFooter.ts`, `components/AccessibilityWidget.ts`, `views/Splash.ts`
+- **Student screens:** `components/StudentFrame.ts`, `components/SideSlider.ts`, and all of `views/student/**`. Add the paused and ended screens there.
+- **MainHub:** keep only as the `/m/:mid` loader. It loads main, checks admin, sends the teacher to `/t/:mid`, shows "not a lesson" for a non-lesson, and otherwise renders StudentStage. Delete its Join hub body: the sub-question list, create form, hide toggles, SummarySection and EditableTitle header.
+
+**Safe to delete:**
+- **Views:** `views/Main.ts`, `views/Invite.ts`, `views/Solutions.ts`, `views/Chat.ts`
+- **Components:** `components/SolutionCard.ts`, `AddSuggestionModal.ts`, `EditSuggestionModal.ts`, `LimitReachedModal.ts`, `JoinFormModal.ts`, `ChatMessage.ts`, `LiveDraftBanner.ts`, `LiveDraftWatch.ts`
+- **Lib, unused:** `lib/myWorkspaces.ts`, `lib/nameGenerator.ts`, `lib/celebrate.ts`, `lib/pointsToast.ts`, `lib/helperPoints.ts`, `lib/improveSuggestion.ts`, `lib/commentVerdicts.ts`, `lib/flipAnimate.ts`, `lib/formatText.ts`, `lib/linkify.ts`
+- **Lib, used only by Solutions/Chat:** `lib/facilitator.ts`
+- **FacilitatorPanel and its pieces:**
+  - `components/FacilitatorPanel.ts` (2108 lines): unmount it from `TeacherConsole.ts`.
+  - `components/ManualReorder.ts`, `DelegateActiveList.ts`, `DelegateInviteForm.ts`, `DelegateInviteList.ts`, `lib/facilitatorToast.ts`
+  - The console already owns the gate (`gateControl.ts`). The plan screen owns the video and side names (`classSettings.ts`), and now the lesson language.
+- **Join hub, after MainHub shrinks:** `components/SummarySection.ts`, `lib/summarize.ts`, `lib/summaryMarkdown.ts`, `components/EditableTitle.ts`, `components/BackButton.ts`
+- **Cut out of `lib/store.ts`, then delete:**
+  - `lib/delegates/*`
+  - `lib/join/joinCallables.ts` and `lib/join/joinFormCache.ts` (join form and Google Sheets sync)
+  - `lib/chat/*` (`setMyOptionIds`)
+  - `lib/optionDeletion.ts`
+  - store.ts's follow-me, allowNavigation and showQR readers, unless a surviving file reads them.
+- **Routes:** `/invite`, `/q/:qid`, `/q/:qid/s/:sid`, `/m/:mid/q/:qid`, `/m/:mid/q/:qid/s/:sid`. `/` stops using `requireAuth(Main)` and becomes the front door.
+- **Do not touch:** the Cloud Functions that apps/join still uses (join form sync, delegates, invites). Delete only client code inside apps/join-class.
+
+**Other build items from this section:**
+- write `lessonPlan` (step 0, `live`) when a lesson is created
+- the `openedInClass` marker
+- send the teacher from `/m/:mid` to `/t/:mid`
+- teacher routes show the not-your-lesson state instead of redirecting to `/m`
+- `plan.to_console` → "לשיעור"
+- status field, transitions and callable refusals (13.6)
+- the timer shift on resume
+- the lesson-language select and the rule that students follow it
+
+### 13.14 Handoff to UX
+Screens to design:
+1. **Front door `/`** (phone first, also laptop): the 6-digit input as the primary task, the inline unknown-code line, and "אני מורה" visible without scrolling.
+2. **Teacher sign-in `/login`:** "כניסת מורים", the reason line, one Google button, then "תלמידים לא צריכים להתחבר." and "יש לי קוד".
+3. **Teacher home `/t`:**
+   - header: account line, "התנתקות"
+   - "+ שיעור חדש" with the inline name field
+   - the first-time empty state: field open, three-step line
+   - the lesson row: name, status label, "תכנון השאלות", and "לשיעור" or "פתיחה מחדש"
+   - the name filter at more than 10 lessons
+4. **Console status states:**
+   - "השהיית השיעור" in the console bar
+   - the paused console with "המשך השיעור" and a disabled rail
+   - the open banner with "סיום השיעור"
+   - the ended banner with "פתיחה מחדש"
+   - the end choice: "סיום" as default, "להשאיר פתוח לתלמידים" with its help line, "ביטול"
+5. **Student paused and ended screens:** calm, no controls; the ended screen shows the decision when there is one.
+6. **Projector paused and ended frames.**
+7. **The not-your-lesson state,** shared by the four `/t/:mid*` routes, with three ways out.
+8. **The "not a lesson" state** on `/m/:mid`.
+9. **"שפת השיעור"** in "פרטי השיעור" on the plan screen.
+
+Fixed by this spec: the routes, the labels, who sees which screen first, the four statuses and their transitions, "סיום" as the default end, and the step counts.
+
+Yours to decide:
+- layout and the visual weight of "אני מורה"
+- how a paused screen reads as calm, not as an error
+- how the end choice is presented
+- how the row status reads without colour alone
+- motion, colour, type and spacing
+
+Hebrew marked (?) needs a native read.

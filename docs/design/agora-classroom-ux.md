@@ -405,3 +405,468 @@ Applied in the simulation (https://claude.ai/artifact/YUK4XD19ZBvEv6pMCPXw5w) an
 ## 12. Host revised to `apps/join-class` (Tal, 2026-10-21)
 Everything above still applies to the screens; the components in §10 are now built inside a copy of Join (`apps/join-class`), so the "shared package" step becomes unnecessary: the copy already carries Join's tokens, `.btn`, `.evaluation`, `resilientOnSnapshot`, `liveDrafts`, `QRShare`, `Sheet` pattern. The Agora survivors list in §10 is void; `Segment`, `Collapsible` and `Icon` are re-made in join-class from Join's primitives.
 **New screen: plan the questions** (`/t/:mid/plan`, IA §12.1). Join's `MainHub` admin layout at `--max-width`: a pinned card "השאלה לפתרון" (one `EditableTitle`, 20 px 700), then the section "השאלות לשולחנות" as a list of cards (text as `EditableTitle`, a 14 px hint field under it, a drag handle at the start edge, "מחיקה" tertiary at the end), "+ שאלה" as a dashed full-width card at the bottom, and a sticky bottom bar with "שמירה" (primary) that turns teal "נשמר" and a secondary "לקונסולה". Phone: same list, drag by handle, bar fixed at the bottom. Empty state: the dashed "+ שאלה" card with "עוד אין שאלות. הוסיפו את הראשונה" above it.
+
+## 13. Front door, teacher entry and lesson status
+
+Status: draft · Date: 2026-10-22 · Designs against `../ia/agora-classroom.md` §13 (routes, labels, flows, the four statuses and their transitions are fixed there; this section decides layout, weight, presentation, motion and accessibility). Tal's defaults for §13.12 A/B/C hold: no automatic end, no rail moves while paused, ended shows the decision only.
+
+Frames: phone 390 px (checked again at 360 × 640 with the keyboard open, the old-phone worst case), laptop 1280 px. RTL: the **right edge is the start edge**; wireframes are drawn as the user sees them. Strings are the IA's values. A string the IA does not have is marked **NEW** and is listed under 13.J as a gap; nothing below renames an IA label. Hebrew marked (?) needs a native read. The writing rules of §1 and the icon policy still bind: no emoji, no arrow glyphs in strings, nothing loops, `transform`/`opacity` only.
+
+### 13.0 What every screen here shares
+- **Weight.** No new font (Assistant 400/700 as in §8), no image except `BrandLogo` (the existing webp/png), no icon font, no new JS dependency. The four status marks are CSS-only shapes (13.A). The end choice uses the native `<dialog>` element (focus trap and Escape for free). The front door and the not-a-lesson state are the only screens here on a student's first load; their CSS is one small block (`.door`, ≤ 2.5 kB unminified) that replaces `.login*` in `_components.scss`. Everything teacher-side goes in the lazy `teacher.scss` / `console.scss`; the student paused and ended screens go in a new lazy `student-state.scss` imported by their view.
+- **Tokens only.** Paper `--paper` / `--paper-soft` / `--paper-deep`, ink `--ink` / `--ink-muted` / `--ink-soft` / `--ink-faint`, `--terra-*` for the one action, `--teal-*` for "open" and links, `--danger` for errors only, `--space-*`, `--font-size-*`, `--radius-*`, `--dur-*`, `--ease-out`, `--touch-target`, `--focus-ring-*`.
+- **Buttons.** Existing `.btn` + `--primary` (terracotta, one per screen), `--secondary` (paper with ink border), `--tertiary` (teal text). `--danger` is not used anywhere in this section: nothing here destroys data (an ended lesson can be reopened).
+- **Motion.** One kind: a state swap (paused, ended, banner in or out) is a 220 ms opacity fade (`--dur-base`, `--ease-out`). Nothing slides, nothing pulses, no spinner loops (busy is a label change, §10 #2). `prefers-reduced-motion: reduce` already zeroes `--dur-*` (§8), so every swap becomes instant and nothing is lost, because no state is carried by motion.
+- **Busy.** A button that writes swaps its label to the busy label after 400 ms (§10 #2 rule) and gets `aria-busy="true"` and `disabled`; on a slow 3G round trip the teacher sees one change, not a flicker.
+
+### 13.A New atom: the status mark (`.status-mark`)
+One tiny CSS-only shape, sized in `em` so the same atom serves the row chip (14 px), the console banner (18 px), the student screen (48 px) and the projector (96 px). It is never the only cue: it always sits next to the status words.
+
+| Modifier | Shape (pseudo-elements, no SVG) | Colour | Used for |
+|---|---|---|---|
+| `--not-started` | hollow circle, 2 px **dashed** border | `--ink-soft` | row "עוד לא התחיל" |
+| `--live` | filled circle | `--terra-600` | row "שלב n מתוך 8" |
+| `--paused` | two vertical bars (`::before`, `::after`, 0.28em × 1em, gap 0.22em) | `--ink-muted` | row, banner, student, projector |
+| `--open` | hollow circle, 2 px **solid** border, filled centre dot | `--teal-600` | row, banner |
+| `--ended` | check (rotated L of two borders) | `--ink` | row, banner, student, projector |
+
+Shapes differ by form, not only colour (dashed ring / dot / bars / ring+dot / check), so the five read in greyscale and for colour-blind teachers. `aria-hidden="true"` always; the words carry the meaning. ~0.5 kB of CSS, lives in `_components.scss` (both sides need it). No animation, ever (a "live" pulse would break §1.3).
+
+### 13.B Front door `/`
+
+**Job:** type 6 digits. **Second door:** "אני מורה", visible without scrolling, clearly secondary.
+
+Phone 390 × 844 (keyboard closed):
+```
+┌────────────────────────────────────────┐
+│                               [logo 32]│ header 56px: logo at start, nothing else
+├────────────────────────────────────────┤ (the a11y widget floats at the start edge as today)
+│                                        │
+│                       הקלידו את הקוד   │ h1, 22px 700, ink        (door.code.title)
+│  ┌──────────────────────────────────┐  │
+│  │          4 8 2 9 1 3             │  │ one input, 64px tall, 32px 700 tabular, ltr,
+│  └──────────────────────────────────┘  │ letter-spacing .3em, centred
+│                                        │
+│  ┌──────────────────────────────────┐  │
+│  │              כניסה               │  │ .btn--primary, full width, 56px (door.code.enter)
+│  └──────────────────────────────────┘  │
+│                                        │
+│  ────────────────────────────────────  │ 1px --paper-line, 24px above and below
+│                 אני מורה               │ .btn--tertiary, 48px, teal text (door.teacher)
+│                                        │
+└────────────────────────────────────────┘
+```
+
+Phone, unknown code (back from `/c/:code`):
+```
+│                       הקלידו את הקוד   │
+│  ┌══════════════════════════════════┐  │ border 2px --danger, aria-invalid
+│  ║          4 8 2 9 1 4             ║  │ code kept, all digits selected, focus here
+│  └══════════════════════════════════┘  │
+│        לא מצאנו שיעור עם הקוד הזה      │ 16px 700, --danger      (lesson.code.unknown.title)
+│   בדקו את ששת הספרות עם המורה ונסו שוב. │ 14px, --ink-muted       (lesson.code.unknown.body)
+│  ┌──────────────────────────────────┐  │
+│  │              כניסה               │  │
+```
+
+360 × 640 with the numeric keyboard open (≈ 360 px visible): header 56 + gap 24 + title 29 + gap 16 + input 64 + error (2 lines) 44 + gap 16 + button 56 + divider gap 24 + "אני מורה" 48 ≈ 377 px. To keep "אני מורה" in view on the smallest phone: on screens shorter than 700 px the header drops to 48 px and the logo to 24 px, and the divider gap to 16 px (≈ 353 px). The form is **not** pinned to the bottom (unlike §2.1's first sketch): a bottom-pinned button is the part the keyboard hides.
+
+Laptop 1280: the same column, centred, `max-width: 400px`, starting at 20vh from the top, logo 48 px above the title instead of a header bar. One look serves both; teachers on a laptop see the two doors in one glance.
+
+**Components**
+| Element | Class | Notes |
+|---|---|---|
+| page | `.door` (NEW block) | flex column, `min-height: 100dvh`, `--paper`, gutter `--space-md` |
+| header | `.door__header` | logo only (`BrandLogo size 32`, class `door__logo`) |
+| form | `form.door__form` | `novalidate`; `onsubmit` → submit |
+| title | `h1.door__title` | `id="door-title"` |
+| input | `input.door__code` | see behaviour |
+| error | `.door__error` (`__error-title`, `__error-body`) | `id="door-error"`, `role="alert"`, only when unknown |
+| enter | `button.btn.btn--primary.door__enter` | type submit |
+| divider + teacher | `.door__alt` containing `a.btn.btn--tertiary` | `m.route.Link` to `/t` |
+
+**Input behaviour (one input, not six boxes: six boxes break paste, autofill and screen readers on old Android)**
+- `type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocapitalize="off" spellcheck="false" dir="ltr"`, `aria-labelledby="door-title"`, `aria-describedby="door-error"` when the error shows.
+- **No `maxlength`.** A pasted "482 913", "482-913" or a whole join URL would be cut by `maxlength=6`. On every `input` event: keep digits only (`\d`, including Arabic-Indic digits mapped to 0-9: Arabic and Farsi keyboards send them), slice to 6, write back.
+- **Auto-submit** the moment the value becomes 6 digits by typing or pasting: navigate to `/c/:code` (its splash is the loading state; the front door needs no busy label). Not on prefill: when the door opens with a returned unknown code, it waits until the value changes and reaches 6 again, so a wrong code is never re-sent in a loop.
+- "כניסה" submits the same way; with fewer than 6 digits it does not navigate, it keeps focus in the input and sets `aria-invalid` with no message (the 6 slots in the placeholder already say how many). It is never `disabled`, because a disabled primary on a student's only screen reads as "broken".
+- **Placeholder:** six `·` (middle dot) in `--ink-faint`, ltr, same letter-spacing, so the count of digits is visible before typing. Visually only; the accessible name is the title.
+- **Focus:** `autofocus` on load (the single job). Android opens the keyboard, iOS does not; both layouts fit (above). On return with an unknown code: focus in the input with all digits selected, so the first new digit replaces them.
+- **Focus ring:** the global `--focus-ring-*` (3 px terracotta, offset 3) on the input and both buttons.
+
+**States**
+| State | Look |
+|---|---|
+| empty | placeholder dots, "כניסה" enabled |
+| typing | digits; nothing else changes |
+| 6 digits | navigates at once (no button flash) |
+| unknown code | input border 2 px `--danger`, the two lines under the input, focus + selection in input |
+| offline / resolver failed | see 13.J gap 2 (the IA has one message for both today) |
+| signed-in Google teacher | never sees the door (`/` → `/t` before first paint; show `SplashLoader` until auth is known, max one frame on a warm session) |
+
+**Screen reader:** heading "הקלידו את הקוד", edit field, then button "כניסה", then link "אני מורה". The error is `role="alert"` so it is read on arrival; the input's description repeats it on focus.
+
+**Why "אני מורה" looks like this.** Tertiary teal text under a hairline: findable by a teacher reading top-down (it is the only other words on the page), yet no student mistakes it for the way in, because the way in is the terracotta button right above the field they are typing in. **A/B test:** this placement vs. a small "אני מורה" in the header's end corner (the web's usual sign-in spot). Measure: teacher time-to-`/login` on first visit, and student taps on "אני מורה" (mistakes).
+
+### 13.C Teacher sign-in `/login`
+
+Phone:
+```
+┌────────────────────────────────────────┐
+│                                        │
+│                [logo 56]               │
+│               כניסת מורים              │ h1 22px 700            (login.title)
+│     התחברו עם Google כדי ליצור שיעורים │ 16px, --ink-muted      (login.tagline)
+│          ולמצוא אותם בכל מחשב.         │
+│  ┌──────────────────────────────────┐  │
+│  │  [G]       המשך עם Google        │  │ ink fill, paper text, 56px (login.google)
+│  └──────────────────────────────────┘  │
+│                                        │
+│  ────────────────────────────────────  │ hairline
+│         תלמידים לא צריכים להתחבר.      │ 14px --ink-soft        (login.hint)
+│                 יש לי קוד              │ .btn--tertiary 48px    (login.have_code)
+└────────────────────────────────────────┘
+```
+Laptop: the same column centred, `max-width: 400px`, 20vh from the top. No card frame or shadow: the screen has one thing on it, a card around it adds nothing (and the old `.login__card` shadow is not a token).
+
+**Components:** the same `.door` block (`.door__logo`, `.door__title`, `.door__line` for the reason, `.door__alt` for hint + link). The Google button keeps its look under a new name `button.door__google` (ink fill, paper text, 56 px, `--radius-full` like every `.btn`; the "G" stays the existing letter in a 24 px paper circle, `aria-hidden`). Delete `.login__btn--guest`, `.login__divider` and the guest handler with `login.guest` / `login.or`.
+
+**States**
+| State | Look |
+|---|---|
+| booting (auth unknown) | `SplashLoader`, as today |
+| ready | as drawn; Google button gets focus on desktop (Enter signs in), no autofocus on touch |
+| busy | button label "מתחבר…" (`login.signing_in`), `aria-busy`, disabled; the popup is open |
+| failed / popup closed | `.door__error` above the button: "ההתחברות נכשלה. נסו שוב." (`login.error.failed`), `role="alert"`, button re-enabled and focused |
+| already signed in with Google | redirect to `?next` or `/t` before paint |
+
+**Keyboard / SR:** heading, reason paragraph, button, hint paragraph, link. "יש לי קוד" is a real link to `/` (middle-click, back button behave as expected). Browser back also lands on `/` (IA 13.8).
+
+### 13.D Teacher home `/t`
+
+Laptop 1280 (content column `--teacher-width` 720 px, centred):
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│ [logo 40]                         מחוברים כ־טל ירון (?)   התנתקות          │ header 56px
+├────────────────────────────────────────────────────────────────────────────┤
+│                                                     השיעורים שלי           │ h1 28px
+│                                                  [ + שיעור חדש ]           │ .btn--primary
+│                                                                            │
+│  ┌──────────────────────────────────────────────────────────────────────┐ │
+│  ┃ האיסור על טלפונים בבית הספר                                          │ │ row: name 18px 700
+│  ┃ ● שלב 3 מתוך 8                                                       │ │ chip (live)
+│  ┃                                   [ תכנון השאלות ]   [  לשיעור  ]     │ │ secondary · primary
+│  └──────────────────────────────────────────────────────────────────────┘ │
+│  ┌──────────────────────────────────────────────────────────────────────┐ │
+│  ┃ שעות הלימודים                                                        │ │
+│  ┃ ▮▮ בהפסקה · שלב 5                                                    │ │ chip (paused)
+│  ┃                                   [ תכנון השאלות ]   [  לשיעור  ]     │ │
+│  └──────────────────────────────────────────────────────────────────────┘ │
+│  ┌──────────────────────────────────────────────────────────────────────┐ │
+│  ┃ תלבושת אחידה                                                         │ │
+│  ┃ ◎ פתוח לתלמידים                                                      │ │ chip (open)
+│  ┃                                   [ תכנון השאלות ]   [  לשיעור  ]     │ │
+│  └──────────────────────────────────────────────────────────────────────┘ │
+│  ┌──────────────────────────────────────────────────────────────────────┐ │
+│  ┃ מבחנים בסוף שבוע                                                     │ │
+│  ┃ ✓ הסתיים                                                             │ │ chip (ended), muted row
+│  ┃                                   [ תכנון השאלות ]   [ פתיחה מחדש ]   │ │
+│  └──────────────────────────────────────────────────────────────────────┘ │
+│  ┌──────────────────────────────────────────────────────────────────────┐ │
+│  ┃ טיול שנתי                                                            │ │
+│  ┃ ◌ עוד לא התחיל                                                       │ │ chip (not started)
+│  ┃                                   [ תכנון השאלות ]   [  לשיעור  ]     │ │
+│  └──────────────────────────────────────────────────────────────────────┘ │
+│                                                     WizColFooter           │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+On a laptop wider than 600 px the actions sit on the row's end side on the same line as the chip (the existing `flex-wrap` row does this already); on a phone they drop to their own line, each `flex: 1`, primary at the end (left, the last thing read).
+
+Phone 390, first-time teacher (empty state):
+```
+┌────────────────────────────────────────┐
+│ [logo 32]                    התנתקות   │ header; account line moves under it:
+│                  מחוברים כ־טל ירון (?) │ 14px --ink-soft, one line, ellipsis
+├────────────────────────────────────────┤
+│                           השיעורים שלי │ h1
+│ 1. שם לשיעור · 2. תכנון השאלות ·       │ 14px --ink-muted, wraps (teacher.home.how)
+│ 3. פותחים את השיעור ומראים לכיתה את הקוד│
+│  ┌──────────────────────────────────┐  │
+│  │      עוד אין שיעורים. תנו שם     │  │ card .teacher-home__form
+│  │               לשיעור הראשון:     │  │ (teacher.home.empty) as the form's lead line
+│  │ שם השיעור (הדילמה)               │  │ label 16px 700 (teacher.new.title_label)
+│  │ ┌──────────────────────────────┐ │  │
+│  │ │למשל: האיסור על טלפונים בבית ה│ │  │ input, focused
+│  │ └──────────────────────────────┘ │  │
+│  │ [   יצירה   ]                    │  │ primary; NO "ביטול" in the empty state
+│  └──────────────────────────────────┘  │ (nothing to go back to)
+└────────────────────────────────────────┘
+```
+
+**Header** (`.teacher-home__header`, now a flex row): `BrandLogo 40` at the start; `p.teacher-home__account` "מחוברים כ־{{name}}" (`teacher.account`, name = Google displayName, else the email) in `--ink-soft` 14 px; `button.btn.btn--tertiary.btn--small.teacher-home__signout` "התנתקות" (`teacher.signout`) at the end. On < 480 px the account line wraps under the row. Sign-out is a plain button, no confirm (undo = sign in again; shared school computers need it fast). After sign-out → `/`.
+
+**"+ שיעור חדש"** (`teacher.new`): stays exactly where it is, first under the title, `.btn--primary`. Pressed → the same place becomes the inline form (button replaced by the form card, focus in the input). "יצירה" primary, "ביטול" tertiary (`teacher.new.cancel`); Escape in the input = "ביטול" and returns focus to "+ שיעור חדש". Enter submits. While a row list exists, the form pushes the list down; no overlay.
+
+**Create states**
+| State | Look |
+|---|---|
+| empty name + "יצירה" | `aria-invalid`, line "כתבו שם לשיעור" (`teacher.new.invalid`), focus stays |
+| busy | "יוצרים..." on the button, input and buttons disabled. The five writes (13.5) can take seconds on 3G; the label must say something is happening |
+| failed | "לא הצלחנו ליצור את השיעור. נסו שוב." under the buttons, `role="alert"`, "יצירה" enabled again (retry = press again; the typed name is kept) |
+| done | → `/t/:mid/plan` |
+
+**Row** (`li.teacher-home__row`, existing): name `h2.teacher-home__row-title` (18 px 700, wraps, `dir="auto"`); `p.status-chip.status-chip--{status}` (NEW block): `.status-mark` + words, 14 px 700, 28 px tall pill, `--paper-soft` fill (ended: `--paper-deep`), `--radius-full`, `--space-sm` inline padding; actions in `.teacher-home__row-actions`: "תכנון השאלות" (`.btn--secondary.btn--small`, `teacher.row.plan`) and the primary by status (`.btn--primary.btn--small`): "לשיעור" (`teacher.row.open`) or, on `ended`, "פתיחה מחדש" (`teacher.row.reopen`).
+
+The row's start border (existing `--q-accent`, Join's per-question colour) now carries the status, so a list scans by edge: live `--terra-600`, paused `--ink-muted`, open `--teal-600`, ended `--paper-line`, not started `--border-medium`. Ended rows also drop the name to `--ink-muted`; still ≥ 8:1.
+
+| Status (data) | Chip words | Mark |
+|---|---|---|
+| live, stepIndex 0 | עוד לא התחיל (`teacher.row.not_started`) | `--not-started` |
+| live, step n > 0 | שלב n מתוך 8 (`lesson.step_of`) | `--live` |
+| paused | בהפסקה · שלב n (`teacher.row.paused`) | `--paused` |
+| open | פתוח לתלמידים (`teacher.row.open_after`) | `--open` |
+| ended | הסתיים (`teacher.row.ended`) | `--ended` |
+
+**"פתיחה מחדש" on a row:** busy label "פותחים…" (`console.opening`, existing), then → `/t/:mid`. Failure: the IA line "create or reopen failed inline + retry": the row gets `.teacher-home__error` under its actions, reusing `console.failed` / `console.retry` wording (see 13.J gap 4).
+
+**Filter** (only when lessons > 10): `input[type=search].teacher-home__filter` directly under "+ שיעור חדש", full width, 48 px, the `.teacher-home__input` look with no icon (the label is the placeholder). Filters by name as you type (no debounce needed below a few hundred rows), case- and niqqud-insensitive. Escape clears. A polite live region (`.visually-hidden`, `role="status"`) says how many rows match. Label and no-match line are IA gaps (13.J gap 3).
+
+**Loading:** two `.teacher-home__skeleton` blocks (existing shimmer; reduced motion already stops it). **Anonymous user:** never renders; `/t` → `/login?next=/t`.
+
+**Keyboard / SR:** header (logo alt, account text, sign-out) → h1 → "+ שיעור חדש" → (filter) → rows. Each row is a list item with an `h2`, so a screen-reader user jumps lesson to lesson by heading; the chip is a plain paragraph read after the name ("האיסור על טלפונים בבית הספר, שלב 3 מתוך 8"). Each action's accessible name includes the lesson: `aria-label="לשיעור: {name}"` / `"תכנון השאלות: {name}"` / `"פתיחה מחדש: {name}"` (visible text unchanged), otherwise ten identical "לשיעור" links are indistinguishable in a links list.
+
+### 13.E Console additions (`/t/:mid`, laptop 1280)
+
+**Where the controls go, and why.** The step rail and its one forward control stay exactly as §5/§11 (rail band, forward at the rail's end). The status controls go in the **console bar**, at its end corner, as a group `.console__status` (NEW element), after "מקרן" and "תכנון השאלות":
+- "השהיית השיעור" (`console.pause`): `.btn--secondary.btn--small` with a `--paused` mark before the words.
+- "סיום השיעור" (`console.end`): `.btn--tertiary.btn--small`, `--ink` text (not danger: ending is reversible).
+
+They are in a different band from the forward control and a different style (secondary/tertiary vs. the one primary), so pausing is never a mis-hit for "פתיחת השלב הבא". The forward control at the last step still reads "סיום השיעור" (as today) and opens the same choice, so the natural end and the early end are one dialog.
+
+Live:
+```
+┌────────────────────────────────────────────────────────────────────────────────────────────┐
+│ ‹ השיעורים שלי   האיסור על טלפונים…   קוד: 482913  קוד QR  מקרן  תכנון השאלות │[▮▮ השהיית השיעור] סיום השיעור│ bar
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│ (8)──(7)──(6)──(5)──[4]══(✓3)══(✓2)══(✓1)                 ┌ פתיחת השלב הבא: הצעות ┐       │ rail (unchanged)
+│                                                            שלב 4 מתוך 8 · 00:12:40         │
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│ switch band · board (unchanged)                                                            │
+```
+(Drawn with the bar's start at the right, end group at the left; the separator `│` is a 1 px `--paper-line` inline-start border on `.console__status`.)
+
+Paused:
+```
+┌────────────────────────────────────────────────────────────────────────────────────────────┐
+│ ‹ השיעורים שלי   האיסור על טלפונים…   קוד: 482913  קוד QR  מקרן  תכנון השאלות │            │ bar: status group empty
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│ ▮▮  השיעור בהפסקה                                              [   המשך השיעור   ]          │ .lesson-banner--paused, 64px
+├────────────────────────────────────────────────────────────────────────────────────────────┤  --paper-deep, ink text
+│ (8)──(7)──(6)──(5)──[4]══(✓3)══(✓2)══(✓1)                 ┌ פתיחת השלב הבא: הצעות ┐ 50%   │ rail held: opacity .5,
+│                                                            השיעור בהפסקה · 00:12:40        │ disabled, not-allowed
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│ switch band: step actions disabled · board: chips not draggable, quick actions disabled    │
+```
+- **One primary while paused: "המשך השיעור"** (`console.resume`), `.btn--primary`, 56 px, in the banner's end corner, directly under the spot where "השהיית השיעור" was, so the eye that pressed pause finds resume one band lower. It gets focus when the pause lands (the button the teacher pressed is gone).
+- The banner text reuses "השיעור בהפסקה" (`lesson.paused.title`): the same words the room sees; one name per concept.
+- Rail: new modifier `.step-rail--held` → every step button and the forward control `disabled`, `opacity: .5`, `cursor: not-allowed` (today's `:disabled` uses `cursor: wait`, which means "busy", not "held"). The status line under the forward control replaces "שלב 4 מתוך 8" with "השיעור בהפסקה"; the clock keeps its value but stops (it is lesson time, not wall time).
+- Switch band step actions, table quick actions, "+ בלי מכשיר" and chip drag are disabled (the callables refuse anyway). The "שולחנות | מה כתבו" switch, table sheets (read) and the projector link stay usable: looking is fine while paused.
+- Table timers on cards freeze at their value (the server shifts them on resume).
+
+Open (kept open after class, teacher came back):
+```
+│ bar: [▮▮ השהיית השיעור]  (no "סיום השיעור" here: it is in the banner)                      │
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│ ◎  השיעור פתוח לתלמידים                                        [   סיום השיעור   ]          │ .lesson-banner--open, 64px
+├────────────────────────────────────────────────────────────────────────────────────────────┤  --teal-50, 2px --teal-600 block-end rule
+│ rail: fully enabled (moving a step makes the lesson live; the banner then fades out)        │
+```
+"סיום השיעור" here is `.btn--secondary` (the open lesson is fine as it is; ending is a choice, not the expected next press). It opens the end choice with "סיום" only (IA 13.6).
+
+Ended:
+```
+│ bar: status group empty                                                                    │
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│ ✓  השיעור הסתיים                                                [   פתיחה מחדש   ]          │ .lesson-banner--ended, 64px
+├────────────────────────────────────────────────────────────────────────────────────────────┤  --paper-deep
+│ rail held (as paused); status line "השיעור הסתיים"; board read-only (look back)             │
+```
+"פתיחה מחדש" (`teacher.row.reopen`) `.btn--primary`, busy "פותחים…", then the banner fades out and the rail unlocks at the step it ended on. Failure: the existing `.console__failure` band with `console.retry`.
+
+**New block `.lesson-banner`** (console.scss): full width, 64 px min, flex, `--space-md` gutter, `.status-mark` 18 px + `__text` 18 px 700 at the start, `__action` at the end; modifiers `--paused` / `--open` / `--ended` set only the fill and rule. It is a `role="status"` region, so its text is announced once when it appears (polite). Appears and leaves with the 220 ms opacity fade; layout shift is accepted because it happens only on the teacher's own press (or on reopen).
+
+**The end choice** (`dialog.end-choice`, NEW block on the native `<dialog>` opened with `showModal()`; visual from `.modal__body`: `--paper`, 1.5 px ink border, `--radius-lg`, 440 px wide; `::backdrop` = `--bg-overlay`, **no blur**: `.modal__overlay`'s `backdrop-filter` is costly on old laptops and §1.4 forbids it):
+```
+        ┌──────────────────────────────────────────────┐
+        │ לסיים את השיעור?                             │ h2 22px 700 (console.end_confirm)
+        │                                              │
+        │ ┌──────────────────────────────────────────┐ │
+        │ │                  סיום                    │ │ .btn--primary, full width, 56px,
+        │ └──────────────────────────────────────────┘ │ autofocus             (console.end_now)
+        │ ┌──────────────────────────────────────────┐ │
+        │ │          להשאיר פתוח לתלמידים            │ │ .btn--secondary, full width, 56px
+        │ └──────────────────────────────────────────┘ │                       (console.keep_open)
+        │  התלמידים יוכלו להמשיך לכתוב ולדרג אחרי השיעור │ 14px --ink-muted, under its button
+        │                                              │                 (console.keep_open_help)
+        │                                     ביטול    │ .btn--tertiary, end corner (teacher.new.cancel / common.cancel)
+        └──────────────────────────────────────────────┘
+```
+- Stacked full-width buttons, not a side-by-side pair: each option is a sentence, and the default is the first thing in reading order and the only filled one. The help line is tied to its button with `aria-describedby`.
+- Already `open`: the dialog shows "סיום" and "ביטול" only.
+- **Keyboard:** focus lands on "סיום" (Enter ends; this is the IA default). Tab: סיום → להשאיר פתוח לתלמידים → ביטול, trapped by `showModal`. Escape = "ביטול". Focus returns to the control that opened it.
+- **Busy:** the pressed button keeps its own label with `aria-busy` and all three disabled (no new string); on success → `/t`. **Failed:** a line above the buttons reusing `console.failed` with `{label}` = the pressed option, and the buttons re-enabled (IA: "write failed inline + retry"; retry = press again).
+- `aria-labelledby` = the title. No `role="alertdialog"`: nothing is destroyed.
+- Phone fallback (a teacher on a phone): the same dialog at `width: calc(100% - 32px)`.
+
+**Pause/resume busy and failure:** "השהיית השיעור" → busy (400 ms rule) → the paused layout. Resume failure: the `.console__failure` band with `console.retry` (IA: "resume failed inline + retry"); the banner stays.
+
+**Keyboard order (console):** bar (back, title, code, QR, מקרן, תכנון השאלות, השהיית השיעור, סיום השיעור) → banner action when present → rail → forward → switch band → board. Shortcut: none (a single-key pause invites accidents with a projector remote).
+
+### 13.F Student and projector: paused and ended
+
+**Student paused** (`/m/:mid`, inside `StudentFrame`):
+```
+┌────────────────────────────────────────┐
+│                    שולחן 5 · שיחה      │ header: the frame's usual line (step, table)
+├────────────────────────────────────────┤
+│                                        │
+│                                        │
+│                   ▮ ▮                  │ .status-mark--paused, 48px, --ink-soft
+│              השיעור בהפסקה             │ 22px 700 ink            (lesson.paused.title)
+│                חכו למורה               │ 18px --ink-muted        (lesson.paused.body)
+│                                        │
+│                                        │
+└────────────────────────────────────────┘   no action footer, no cog change, nothing moves
+```
+**Student ended:**
+```
+┌────────────────────────────────────────┐
+│          האיסור על טלפונים בבית הספר   │ header: the lesson name (there is no step any more)
+├────────────────────────────────────────┤
+│                    ✓                   │ .status-mark--ended, 48px, --ink
+│              השיעור הסתיים             │ 22px 700                (lesson.ended.title)
+│              תודה שהשתתפתם             │ 18px --ink-muted        (lesson.ended.body)
+│  ┌──────────────────────────────────┐  │
+│  │ ההחלטה                           │  │ existing DecisionCard (.decision), teal
+│  │ טלפונים בתיק בזמן השיעור, בהפסקה  │  │ only when a decision exists; no dashed
+│  │ מותר                              │  │ "waiting" variant here (no decision = two lines only)
+│  └──────────────────────────────────┘  │
+└────────────────────────────────────────┘
+```
+**How "paused" reads as calm, not as an error:** the same paper, ink and centred composition as "ממתינים למורה" (the screen every student has already seen calmly); the mark is ink-soft, never terracotta or danger; no exclamation, no countdown, no spinner; the words are about the teacher, not about a problem. The header line stays, so the student knows they have not been thrown out of their table.
+
+**Components:** new block `.lesson-state` (`student-state.scss`, lazy, ≈ 1 kB): `__mark` (wraps `.status-mark`), `__title`, `__body`, modifiers `--paused`, `--ended`; layout copies `.waiting` (centred, `min-block-size: 50dvh`). The view is one component `LessonStateScreen({ status, headerLine, decision? })` rendered by `StudentStage` before the step slot.
+
+**Draft:** the paused screen replaces the step's view, so WriteBox unmounts. The draft must be held in the step's controller state (or `liveDrafts`' local copy) and put back when "המשך" arrives (IA 13.6); the student sees their text exactly as left, cursor at the end.
+
+**SR / focus:** the `.lesson-state` container is `role="status"` (polite), so "השיעור בהפסקה. חכו למורה." is read once on arrival. If focus was inside the removed step, move it to the `h1` (`tabindex="-1"`) so it is not lost on `<body>`. On resume, focus goes to the step's instruction heading the same way.
+
+**Motion:** 220 ms opacity in, nothing else; instant under reduced motion. The phone does not vibrate or sound (§1.3).
+
+**Projector paused** (`/t/:mid/screen`):
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                                                                          │
+│                                  ▮ ▮                                     │ .status-mark 96px, --ink-soft
+│                             השיעור בהפסקה                                │ .projector-instruction 64px
+│                                                                          │
+│                              4 8 2 9 1 3                                 │ .projector-code (160px), so late
+│                                                                          │ joiners can join during the pause
+├──────────────────────────────────────────────────────────────────────────┤
+│ שיחה בשולחנות                                          קוד 482913 [QR]   │ .projector-band unchanged
+└──────────────────────────────────────────────────────────────────────────┘
+```
+"חכו למורה" is not shown on the projector: the teacher is in the room; the IA gives the projector the title and the code only.
+
+**Projector ended:**
+```
+│                                   ✓                                      │ mark 96px, --ink
+│                             השיעור הסתיים                                │ 64px
+│                             תודה שהשתתפתם                                │ 48px --ink-muted
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │ ההחלטה                                                             │  │ existing .projector-decision
+│  │ טלפונים בתיק בזמן השיעור, בהפסקה מותר                               │  │ (72px), only when decided
+│  └────────────────────────────────────────────────────────────────────┘  │
+├──────────────────────────────────────────────────────────────────────────┤
+│ השיעור הסתיים                                                           │ band: no code, no QR (an ended
+└──────────────────────────────────────────────────────────────────────────┘ lesson does not invite joining)
+```
+**Components:** existing `.projector-step`, `.projector-instruction`, `.projector-empty` (for the body line), `.projector-code`, `.projector-decision`, `.projector-band`; one modifier `.projector-band--ended` hides `__join`. The projector's existing 220 ms `projector-fade` covers the swap.
+
+### 13.G Not your lesson, and not a lesson
+
+**Not your lesson** (state of `/t/:mid`, `/t/:mid/plan`, `/t/:mid/table/:n`, `/t/:mid/screen`), the `.door` layout:
+```
+┌────────────────────────────────────────┐
+│                [logo 48]               │
+│      השיעור הזה שייך לחשבון אחר        │ h1 22px 700             (teacher.denied.title)
+│        מחוברים כ־טל ירון (?)           │ 14px --ink-soft         (teacher.account)
+│  ┌──────────────────────────────────┐  │
+│  │           החלפת חשבון            │  │ .btn--primary, full     (teacher.denied.switch)
+│  └──────────────────────────────────┘  │   → /login?next=<same path>
+│  ┌──────────────────────────────────┐  │
+│  │           השיעורים שלי           │  │ .btn--secondary, full   (teacher.home.title) → /t
+│  └──────────────────────────────────┘  │
+│                 יש לי קוד              │ .btn--tertiary          (login.have_code) → /
+└────────────────────────────────────────┘
+```
+Same on a laptop, centred column 400 px. The account line is what makes the screen understandable: the teacher sees *which* account they are in. "החלפת חשבון" is primary because the IA's main case is "signed in with another account on a second computer". It signs out and goes to `/login?next=…`; after Google the same path loads. On the projector route the state is shown at normal size (the teacher sees it on the laptop before dragging the window).
+
+**Not a lesson** (`/m/:mid` for a statement that is not a lesson, or not found), also `.door`:
+```
+│                [logo 48]               │
+│      הקישור הזה לא מוביל לשיעור        │ h1                      (lesson.not_lesson)
+│  ┌──────────────────────────────────┐  │
+│  │             יש לי קוד            │  │ .btn--primary (the only way on) → /
+│  └──────────────────────────────────┘  │
+```
+**Both:** `h1` gets focus on render (`tabindex="-1"`), so a screen reader starts with the reason. No `role="alert"` (it is the page, not an interruption). No retry button: neither is a network error. Loading before either: `SplashLoader`.
+
+### 13.H Plan screen: "שפת השיעור" in "פרטי השיעור"
+
+```
+│ פרטי השיעור                                 │ h2 (plan.details.title)
+│ ┌──────────────────────────────────────────┐ │ .plan-card.plan-details
+│ │ שפת השיעור                               │ │ label 14px 700, visible  (plan.details.language)
+│ │ ┌──────────────────────────────── ▾ ┐   │ │ native <select>, 48px, .plan-card__text look
+│ │ │ עברית                              │   │ │
+│ │ └────────────────────────────────────┘   │ │
+│ │ ─────────────────────────────────────── │ │
+│ │ [ סרטון פתיחה (קישור https, לא חובה) ]   │ │ existing fields, unchanged order
+│ │ [ שם הדמות בצד הראשון ]                  │ │
+│ │ [ שם הדמות בצד השני ]                    │ │
+│ └──────────────────────────────────────────┘ │
+```
+- **First field of the card.** It changes every student screen and the projector, so it sits before the optional video and the names. One select, saved on `change` (the plan screen's save-on-blur rule, for a select), through the existing `runSave` / `fieldError` (inline "שמירה נכשלה" + retry) path.
+- Options: the 7 languages of `getAvailableLanguages()`, each in its own native name with `dir="auto"` (as the a11y widget does), plus a first "unset" option (13.J gap 5). Default for a new lesson: the teacher's current UI language, written at creation, so a Hebrew teacher's lesson is Hebrew without touching the field.
+- **Visible label**, unlike the other fields here (which use `aria-label` + placeholder only): a select has no placeholder, so without a visible label the teacher sees just "עברית" with no clue what it controls. New element `.plan-details__label` (`<label for>`), 14 px 700 `--ink-muted`.
+- The teacher's own screens (home, plan, console) stay in the teacher's UI language; only the student side and the projector follow the lesson language. The plan screen does not re-render in the chosen language.
+- On a student phone with a set lesson language, the a11y widget's language row shows its existing lock chip (13.J item 6 on its wording).
+
+### 13.I Build order for the implementer
+1. **Tokens/atoms:** `.status-mark` (+5 modifiers) in `_components.scss`; `.door` block replacing `.login*` (delete `.login__btn--guest`, `.login__divider`, `.login__card` shadow).
+2. **Front door** `views/FrontDoor.ts` on `/` (replaces `requireAuth(Main)`): digit-only input, paste, auto-submit, prefill + error from the resolver; signed-in Google → `/t`. `ClassCode` stops rendering its own unknown screen and replaces to `/` with the code and the error flag.
+3. **Login** restyle on `.door`, guest path removed, "יש לי קוד", `?next` default `/t`.
+4. **Teacher home:** header account + sign-out, empty state (form open, no "ביטול", how-line), `.status-chip` rows, status-coloured row edge, reopen action, filter at > 10, per-row `aria-label`s.
+5. **Lesson status read path** (`lessonCore` `status`, absent = live) wired into StudentStage, projector and console, before any write path, so old lessons render unchanged.
+6. **Student** `LessonStateScreen` + `student-state.scss` (paused, ended + DecisionCard), focus/live-region handling, draft hold.
+7. **Projector** paused and ended frames, `.projector-band--ended`.
+8. **Console:** `.console__status` group (pause, end) in the bar; `.lesson-banner` (paused/open/ended); `.step-rail--held`; disabled board actions; `dialog.end-choice` replacing `window.confirm` in `confirmEnd`; last-step forward opens the same dialog.
+9. **Not-your-lesson** state on the four `/t/:mid*` routes; **not-a-lesson** on `/m/:mid` (MainHub loader).
+10. **Plan:** "שפת השיעור" select first in "פרטי השיעור".
+11. **i18n:** every NEW key in all 7 locale files; delete `login.guest`, `login.or`.
+12. **Verify** with Playwright at 360 × 640 (keyboard-open height ≈ 360 px: "אני מורה" in view), 390 × 844 and 1280 × 720, `dir=rtl` and `en`, `prefers-reduced-motion`, 200 % zoom; axe on each screen.
+
+### 13.J IA gaps and conflicts found (reported, not changed)
+1. **Teacher banner while paused has no own label.** The design reuses "השיעור בהפסקה" (`lesson.paused.title`) on the console banner, as the IA does for open/ended with `console.open_banner` / `console.ended_banner`. If the IA wants a separate `console.paused_banner` key for symmetry, the value should be the same words.
+2. **Offline vs unknown code.** `/c/:code` today shows "unknown" when the lookup itself fails (no network). On slow school Wi-Fi a correct code would read as wrong and students would retype it. Proposed **NEW** `lesson.code.offline`: "אין חיבור. נסו שוב בעוד רגע." (?), shown in the same inline slot, code kept.
+3. **Filter field has no label, and no "no match" line.** Proposed **NEW** `teacher.home.filter`: "חיפוש לפי שם" (?) (visually hidden label + placeholder) and `teacher.home.filter_none`: "אין שיעור בשם הזה" (?).
+4. **Row reopen failure copy.** The IA says "create or reopen failed inline + retry" but names no string for reopen. The design reuses `console.failed` ("{label}") + `console.retry`; an IA-owned `teacher.row.reopen_failed` would be cleaner.
+5. **"Unset" option of "שפת השיעור".** The IA rule "device language applies only when unset" needs a way to unset. Proposed **NEW** `plan.details.language.device`: "לפי השפה של כל תלמיד" (?). Also: the IA's code-type column says "statementSettings language field (Join's existing one)", but Join's existing fields are top-level `statement.defaultLanguage` + `statement.forceLanguage` (`lib/store.ts` ~l.1159, read by `applyStatementLanguage`). "Set" should map to `defaultLanguage = x, forceLanguage = true`; "unset" to `forceLanguage = false`.
+6. **Lock chip wording on student phones.** The a11y widget's lock reads "נקבע על־ידי המנחה" (`a11y.language.locked`) with a 🔒 emoji, and its label has 🌐. In this app the concept is "המורה" (one name per concept) and the icon policy bans emoji. Proposed value: "נקבע על־ידי המורה"; drop both emoji.
+7. **Ended console has no entry from the home.** The ended row offers "פתיחה מחדש" only, yet the IA lists "Console, ended: look back; reopen". The only way in without reopening is the plan screen's "‹ השיעור". Either accept (looking back = reopen, then end again) or make the row's lesson name a link to `/t/:mid`. Not designed in; IA's call.
+8. **Early end location.** The IA puts "סיום השיעור" on the console but only "השהיית השיעור" is placed ("console bar"). §5 had the end only on the forward control at the last step, which makes ending at step 4 impossible. This design adds "סיום השיעור" to the bar (live) and to the open banner, and keeps it on the last-step forward; all open the same choice.
+9. **Not-your-lesson "השיעורים שלי".** The IA uses `teacher.home.title` as a button label there; fine, noted only so nobody adds a synonym ("חזרה לשיעורים").
+10. **`teacher.home.empty` with a colon** ("…לשיעור הראשון:") is now the lead line of the open form, which is how the colon reads correctly. The old value "עוד אין שיעורים. התחילו בשיעור חדש." must be replaced in all 7 locales, not appended.
+11. **(?) items for a native read:** "מחוברים כ־{{name}}" (gender-plural address to one person is the app's register, but "מחובר/ת" is the alternative), and all proposed NEW strings above.
+12. **Busy label for the end choice.** No IA string; the design avoids one (button keeps its label, `aria-busy`, disabled). If a visible busy word is wanted, `console.opening` ("פותחים…") does not fit; a NEW `console.ending` would be needed.
