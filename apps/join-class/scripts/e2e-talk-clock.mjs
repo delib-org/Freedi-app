@@ -1,6 +1,7 @@
 // E2E: the Table talk clock. Real callables (functions emulator on).
 //  A. the asker views the "talking" pill while the table is still at "pick": the header keeps
-//     naming the OFFICIAL step, the names are disabled and a line says what to do first.
+//     naming the OFFICIAL step, every control of the peeked screen is disabled, a line says what the
+//     table is doing now and "back to now" returns (UX 16: the strip is a peek).
 //  B. the asker picks a question, starts, taps a name: the big digits count down on the asker's
 //     phone and on a tablemate's phone.
 //
@@ -89,13 +90,16 @@ try {
 	await a.page.waitForSelector('[data-testid=table-next-speaker]', { timeout: TIMEOUT });
 	const header = (await a.page.locator('.frame__header, header').first().innerText()).replace(/\s+/g, ' ');
 	check('header names the official step (choosing a question), not the viewed one', /בוחרים שאלה|choosing a question/.test(header), header);
-	// the server refuses nextSpeaker at pick: the asker must see an inline error, never nothing
-	await a.page.locator('[data-testid=table-next-speaker]').nth(1).click();
-	await a.page.waitForSelector('.c3-error', { timeout: TIMEOUT });
-	check('a refused tap shows the inline error with retry', (await a.page.locator('.c3-error__retry').count()) === 1);
+	// the peeked talk screen is not live: every control is disabled, a line says what is happening now
+	const live = await a.page.locator('[data-testid=peek-body] :is(button,input,textarea,select):not(:disabled)').count();
+	check('every control of the peeked screen is disabled', live === 0 && (await a.page.locator('[data-testid=table-next-speaker]:disabled').count()) > 0, `${live} enabled`);
+	const why = (await a.page.locator('.frame__instruction').innerText()).replace(/\s+/g, ' ');
+	check('a line says what the table is doing now', /עדיין בשלב השאלה|still on the question/i.test(why), why);
+	check('no inline error: the peek cannot send a refused tap', (await a.page.locator('.c3-error').count()) === 0);
+	await a.page.click('[data-testid=peek-back]');
+	await a.page.waitForFunction(() => !document.querySelector('[data-testid=peek-body]'));
 
 	// B. official talk, asker taps a name --------------------------------------
-	await a.page.locator('.substeps__pill').nth(0).click();
 	await a.page.locator('[data-testid=table-pick-question]').first().click();
 	await a.page.click('[data-testid=table-start]');
 	await until(async () => (await tableRef.get()).data()?.step === 'talk', 'table at talk');
