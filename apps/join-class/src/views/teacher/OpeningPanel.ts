@@ -98,7 +98,9 @@ export const OpeningPanel: m.Component<OpeningPanelAttrs> = {
 		if (description !== '' && state.fetchedFor !== description) {
 			fetchBlocks(state, mid, description);
 		}
-		const blocks = description === '' ? [] : (state.blocks ?? blocksFromPlainText(description));
+		// an empty fetch (no paragraph children yet) keeps the plain `description` on screen
+		const saved = state.blocks !== null && state.blocks.length > 0 ? state.blocks : null;
+		const blocks = description === '' ? [] : (saved ?? blocksFromPlainText(description));
 		const none = blocks.length === 0 && videos.length === 0;
 
 		return m('section.opening-panel', { 'aria-labelledby': 'opening-panel-title' }, [
