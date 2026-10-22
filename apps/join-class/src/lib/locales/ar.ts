@@ -427,7 +427,8 @@ const ar: Record<string, string> = {
 	'teacher.screen.open_window_help': 'لشاشتين: اسحبوا النافذة إلى شاشة الصف',
 	'teacher.screen.show_here': 'العرض على هذه الشاشة',
 	'teacher.screen.show_here_help': 'لحاسوب واحد متصل بجهاز العرض. مفتاح Esc يعيدكم إلى الدرس.',
-	'teacher.screen.blocked': 'حظر المتصفح النافذة. اسمحوا بالنوافذ المنبثقة لهذا الموقع، أو اختاروا "العرض على هذه الشاشة".',
+	'teacher.screen.blocked':
+		'حظر المتصفح النافذة. اسمحوا بالنوافذ المنبثقة لهذا الموقع، أو اختاروا "العرض على هذه الشاشة".',
 	'projector.controls': 'أزرار جهاز العرض',
 	'projector.fullscreen': 'ملء الشاشة',
 	'projector.fullscreen_exit': 'الخروج من ملء الشاشة',

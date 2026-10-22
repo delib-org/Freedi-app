@@ -427,7 +427,8 @@ const he: Record<string, string> = {
 	'teacher.screen.open_window_help': 'לשני מסכים: גררו את החלון למסך של הכיתה',
 	'teacher.screen.show_here': 'הצגה במסך הזה',
 	'teacher.screen.show_here_help': 'למחשב אחד שמחובר למקרן. Esc מחזיר לשיעור.',
-	'teacher.screen.blocked': 'הדפדפן חסם את החלון. אפשרו חלונות קופצים לאתר, או בחרו "הצגה במסך הזה".',
+	'teacher.screen.blocked':
+		'הדפדפן חסם את החלון. אפשרו חלונות קופצים לאתר, או בחרו "הצגה במסך הזה".',
 	'projector.controls': 'כפתורי המקרן',
 	'projector.fullscreen': 'מסך מלא',
 	'projector.fullscreen_exit': 'יציאה ממסך מלא',

@@ -430,8 +430,10 @@ const en: Record<string, string> = {
 	'teacher.screen.open_window': 'Projector in a new window',
 	'teacher.screen.open_window_help': 'For two screens: drag the window to the class screen',
 	'teacher.screen.show_here': 'Show on this screen',
-	'teacher.screen.show_here_help': 'For one computer connected to the projector. Esc brings you back.',
-	'teacher.screen.blocked': 'The browser blocked the window. Allow pop-ups for this site, or use "Show on this screen".',
+	'teacher.screen.show_here_help':
+		'For one computer connected to the projector. Esc brings you back.',
+	'teacher.screen.blocked':
+		'The browser blocked the window. Allow pop-ups for this site, or use "Show on this screen".',
 	'projector.controls': 'Projector buttons',
 	'projector.fullscreen': 'Full screen',
 	'projector.fullscreen_exit': 'Exit full screen',

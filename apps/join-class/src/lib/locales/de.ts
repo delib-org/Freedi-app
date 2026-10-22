@@ -428,16 +428,20 @@ const de: Record<string, string> = {
 	'console.opening.text': 'Der Text',
 	'projector.video_failed': '{{title}} · nicht geladen',
 	'teacher.screen.open_window': 'Beamer in neuem Fenster',
-	'teacher.screen.open_window_help': 'Für zwei Bildschirme: Ziehen Sie das Fenster auf den Bildschirm der Klasse',
+	'teacher.screen.open_window_help':
+		'Für zwei Bildschirme: Ziehen Sie das Fenster auf den Bildschirm der Klasse',
 	'teacher.screen.show_here': 'Auf diesem Bildschirm zeigen',
-	'teacher.screen.show_here_help': 'Für einen Computer, der am Beamer hängt. Esc bringt Sie zurück zur Stunde.',
-	'teacher.screen.blocked': 'Der Browser hat das Fenster blockiert. Erlauben Sie Pop-ups für diese Seite oder wählen Sie "Auf diesem Bildschirm zeigen".',
+	'teacher.screen.show_here_help':
+		'Für einen Computer, der am Beamer hängt. Esc bringt Sie zurück zur Stunde.',
+	'teacher.screen.blocked':
+		'Der Browser hat das Fenster blockiert. Erlauben Sie Pop-ups für diese Seite oder wählen Sie "Auf diesem Bildschirm zeigen".',
 	'projector.controls': 'Beamer-Schaltflächen',
 	'projector.fullscreen': 'Vollbild',
 	'projector.fullscreen_exit': 'Vollbild beenden',
 	'projector.back': 'Zurück zur Stunde',
 	'projector.close': 'Beamer schließen',
-	'projector.window_hint': 'Ziehen Sie dieses Fenster auf den Bildschirm der Klasse und drücken Sie "Vollbild"',
+	'projector.window_hint':
+		'Ziehen Sie dieses Fenster auf den Bildschirm der Klasse und drücken Sie "Vollbild"',
 };
 
 export default de;
