@@ -12,6 +12,8 @@ import type { ConsoleView } from './consoleState';
  */
 
 export interface SwitchBandAttrs {
+	/** Paused or ended: the step actions are disabled (looking stays possible). */
+	held?: boolean;
 	stepKey: LessonStepKey;
 	view: ConsoleView;
 	hasTables: boolean;
@@ -35,6 +37,9 @@ const TEST_IDS: Record<string, string> = {
 	close: 'console-close-vote',
 };
 
+/** Set by the view before it draws the actions below. */
+let heldNow = false;
+
 function action(label: string, key: string, onclick: () => void, disabled = false): m.Vnode {
 	return m(
 		'button.btn.btn--secondary.switch-band__action',
@@ -42,7 +47,7 @@ function action(label: string, key: string, onclick: () => void, disabled = fals
 			type: 'button',
 			'data-action': key,
 			'data-testid': TEST_IDS[key],
-			disabled: disabled || isBusy(key),
+			disabled: disabled || heldNow || isBusy(key),
 			onclick,
 		},
 		label,
@@ -120,6 +125,8 @@ function segment(attrs: SwitchBandAttrs): m.Vnode {
 
 export const SwitchBand: m.Component<SwitchBandAttrs> = {
 	view({ attrs }) {
+		heldNow = attrs.held === true;
+
 		return m('div.switch-band', [
 			m('div.switch-band__actions', stepActions(attrs)),
 			segment(attrs),

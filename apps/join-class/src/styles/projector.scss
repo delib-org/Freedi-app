@@ -472,3 +472,18 @@ $projector-band-height: 64px;
   .projector-step { animation: none; }
   .projector-tally__fill { transition: none; }
 }
+
+// ---- paused / ended frames (IA 13.6, UX 13.F) -------------------------------
+.projector-mark {
+  font-size: 96px;
+  line-height: 1;
+}
+
+.projector-step--paused .status-mark--paused::before,
+.projector-step--paused .status-mark--paused::after {
+  background: var(--ink-soft);
+}
+
+.projector-step--state .projector-empty {
+  font-size: 48px;
+}

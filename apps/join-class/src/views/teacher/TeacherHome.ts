@@ -2,6 +2,7 @@ import m from 'mithril';
 import '@/styles/teacher.scss';
 import { getUserState, signOut } from '@/lib/user';
 import { t } from '@/lib/i18n';
+import { setFollowLessonLanguage } from '@/lib/store';
 import { WizColFooter } from '@/components/WizColFooter';
 import { BrandLogo } from '@/components/BrandLogo';
 import { subscribeToClassLessons, type ClassLessonEntry } from '@/lib/joinSubscriptions';
@@ -233,6 +234,8 @@ function renderList(): m.Children {
 
 export const TeacherHome: m.Component = {
 	oninit() {
+		// The teacher's own screens keep the teacher's language, whatever the lesson's is.
+		setFollowLessonLanguage(false);
 		listReady = false;
 		formOpen = false;
 		createError = null;

@@ -134,7 +134,13 @@ try {
 		check('the lesson is live at step 0 from its first second', plan?.stepIndex === 0 && plan?.status === 'live');
 		check('the lesson has a six-digit class code', /^\d{6}$/.test(code), code);
 		check('the lesson carries a lesson language', main?.forceLanguage === true && typeof main?.defaultLanguage === 'string', String(main?.defaultLanguage));
-		const sub = (await db.doc(`statementsSubscribe/${main.creatorId}--${mid}`).get()).data();
+		// The server's own subscription write (getInAppNotification is its signature) may replace the
+		// doc after the client's marker; the app writes the marker again, so wait for both.
+		const sub = await waitFor(
+			async () => (await db.doc(`statementsSubscribe/${main.creatorId}--${mid}`).get()).data(),
+			(d) => d?.getInAppNotification === true && typeof d?.openedInClass === 'number',
+			40000,
+		);
 		check('the lesson is marked openedInClass, never openedInJoin', typeof sub?.openedInClass === 'number' && sub?.openedInJoin === undefined);
 
 		await teacher.goto(`${BASE}/t`, { waitUntil: 'domcontentloaded' });

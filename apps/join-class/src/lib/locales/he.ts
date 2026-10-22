@@ -54,7 +54,7 @@ const he: Record<string, string> = {
 	'a11y.high_contrast': 'ניגודיות גבוהה',
 	'a11y.light_contrast': 'ניגודיות רגילה',
 	'a11y.language': 'שפה',
-	'a11y.language.locked': 'נקבע על־ידי המנחה',
+	'a11y.language.locked': 'נקבע על־ידי המורה',
 	// Delegates
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
@@ -384,6 +384,20 @@ const he: Record<string, string> = {
 	'teacher.home.filter': 'חיפוש לפי שם',
 	'teacher.home.filter_none': 'אין שיעור בשם הזה',
 	'teacher.home.filter_count': 'מוצגים {{n}} שיעורים',
+	'console.pause': 'השהיית השיעור',
+	'console.resume': 'המשך השיעור',
+	'console.end_now': 'סיום',
+	'console.keep_open': 'להשאיר פתוח לתלמידים',
+	'console.keep_open_help': 'התלמידים יוכלו להמשיך לכתוב ולדרג אחרי השיעור',
+	'console.open_banner': 'השיעור פתוח לתלמידים',
+	'console.ended_banner': 'השיעור הסתיים',
+	'lesson.paused.title': 'השיעור בהפסקה',
+	'lesson.paused.body': 'חכו למורה',
+	'lesson.ended.title': 'השיעור הסתיים',
+	'lesson.ended.body': 'תודה שהשתתפתם',
+	'common.cancel': 'ביטול',
+	'plan.details.language': 'שפת השיעור',
+	'plan.details.language.device': 'לפי השפה של כל תלמיד',
 };
 
 export default he;

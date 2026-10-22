@@ -53,7 +53,7 @@ const de: Record<string, string> = {
 	'a11y.high_contrast': 'Hoher Kontrast',
 	'a11y.light_contrast': 'Normaler Kontrast',
 	'a11y.language': 'Sprache',
-	'a11y.language.locked': 'Vom Moderator festgelegt',
+	'a11y.language.locked': 'Von der Lehrkraft festgelegt',
 	// Delegates
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
@@ -386,6 +386,20 @@ const de: Record<string, string> = {
 	'teacher.home.filter': 'Nach Name suchen',
 	'teacher.home.filter_none': 'Keine Stunde mit diesem Namen',
 	'teacher.home.filter_count': '{{n}} Stunden angezeigt',
+	'console.pause': 'Stunde pausieren',
+	'console.resume': 'Stunde fortsetzen',
+	'console.end_now': 'Beenden',
+	'console.keep_open': 'Für Lernende geöffnet lassen',
+	'console.keep_open_help': 'Lernende können nach dem Unterricht weiterschreiben und bewerten',
+	'console.open_banner': 'Die Stunde ist für Lernende geöffnet',
+	'console.ended_banner': 'Die Stunde ist beendet',
+	'lesson.paused.title': 'Die Stunde ist pausiert',
+	'lesson.paused.body': 'Wartet auf die Lehrkraft',
+	'lesson.ended.title': 'Die Stunde ist beendet',
+	'lesson.ended.body': 'Danke fürs Mitmachen',
+	'common.cancel': 'Abbrechen',
+	'plan.details.language': 'Sprache der Stunde',
+	'plan.details.language.device': 'Sprache der einzelnen Lernenden',
 };
 
 export default de;

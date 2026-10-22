@@ -51,7 +51,7 @@ const es: Record<string, string> = {
 	'a11y.high_contrast': 'Alto contraste',
 	'a11y.light_contrast': 'Contraste normal',
 	'a11y.language': 'Idioma',
-	'a11y.language.locked': 'Establecido por el facilitador',
+	'a11y.language.locked': 'Lo decidió el docente',
 	// Delegates
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
@@ -384,6 +384,21 @@ const es: Record<string, string> = {
 	'teacher.home.filter': 'Buscar por nombre',
 	'teacher.home.filter_none': 'Ninguna clase con ese nombre',
 	'teacher.home.filter_count': '{{n}} clases mostradas',
+	'console.pause': 'Pausar la clase',
+	'console.resume': 'Reanudar la clase',
+	'console.end_now': 'Terminar',
+	'console.keep_open': 'Dejar abierta para los estudiantes',
+	'console.keep_open_help':
+		'Los estudiantes podrán seguir escribiendo y valorando después de la clase',
+	'console.open_banner': 'La clase está abierta a los estudiantes',
+	'console.ended_banner': 'La clase ha terminado',
+	'lesson.paused.title': 'La clase está en pausa',
+	'lesson.paused.body': 'Esperen al docente',
+	'lesson.ended.title': 'La clase ha terminado',
+	'lesson.ended.body': 'Gracias por participar',
+	'common.cancel': 'Cancelar',
+	'plan.details.language': 'Idioma de la clase',
+	'plan.details.language.device': 'El idioma de cada estudiante',
 };
 
 export default es;

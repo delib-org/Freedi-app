@@ -544,3 +544,22 @@
     padding: var(--space-sm);
   }
 }
+
+// ---- lesson language select, first in "lesson details" ------------------------
+.plan-details__language {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-block-end: var(--space-sm);
+  border-block-end: 1px solid var(--paper-line);
+}
+
+.plan-details__label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--ink-muted);
+}
+
+.plan-details__select {
+  min-block-size: var(--touch-target);
+}

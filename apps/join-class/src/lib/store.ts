@@ -9,11 +9,12 @@ import {
 	query,
 	where,
 	writeBatch,
+	deleteField,
 	Unsubscribe,
 } from './firebase';
 import { resilientOnSnapshot } from './resilientListeners';
 import { getUserState, ensureUser } from './user';
-import { applyStatementLanguage } from './i18n';
+import { applyStatementLanguage, releaseForcedLanguage } from './i18n';
 import {
 	Access,
 	Collections,
@@ -289,9 +290,22 @@ export async function createSimpleQuestion(
 	return finalQuestion.statementId;
 }
 
+/**
+ * Whether the loaded statement's language is applied to the screen. Students and
+ * the projector follow the lesson language; the teacher's own screens (home,
+ * plan, console) stay in the teacher's language and turn this off.
+ */
+let followLessonLanguage = true;
+
+export function setFollowLessonLanguage(follow: boolean): void {
+	followLessonLanguage = follow;
+	if (!follow) releaseForcedLanguage();
+}
+
 function syncQuestionLanguage(): void {
 	if (!question) return;
-	applyStatementLanguage(question.defaultLanguage, question.forceLanguage);
+	if (followLessonLanguage)
+		applyStatementLanguage(question.defaultLanguage, question.forceLanguage);
 	applyThemeStyleToDOM();
 }
 
@@ -362,22 +376,31 @@ export async function loadMainStatement(mainId: string): Promise<void> {
 
 function syncMainStatementLanguage(): void {
 	if (!mainStatement) return;
-	applyStatementLanguage(mainStatement.defaultLanguage, mainStatement.forceLanguage);
+	if (followLessonLanguage) {
+		// A lesson without a language leaves each student on their own device language,
+		// and lifts a lock the teacher has just removed.
+		if (!mainStatement.defaultLanguage) releaseForcedLanguage();
+		else applyStatementLanguage(mainStatement.defaultLanguage, mainStatement.forceLanguage);
+	}
 	applyThemeStyleToDOM();
 }
 
-/** Admin write: set the room's default language and (optionally) the
- *  forceLanguage flag on the main statement. Mirrors the Theme picker's
- *  hub-scoped pattern — falls back to writing the question doc on legacy
- *  non-facilitated routes (`/q/:qid`) where there's no main statement.
- *  Both fields are top-level on Statement, not under `statementSettings`. */
+/**
+ * Admin write: the lesson's language. A language code sets `defaultLanguage` and
+ * forces it for every student (`forceLanguage`); `null` clears both, so each
+ * student keeps their own device language. Both fields are top-level on
+ * Statement, not under `statementSettings`.
+ */
 export async function setStatementLanguage(
 	statementId: string,
-	defaultLanguage: string,
-	forceLanguage: boolean,
+	language: string | null,
 ): Promise<void> {
 	const ref = doc(db, Collections.statements, statementId);
-	await setDoc(ref, { defaultLanguage, forceLanguage, lastUpdate: Date.now() }, { merge: true });
+	const patch =
+		language === null
+			? { defaultLanguage: deleteField(), forceLanguage: false, lastUpdate: Date.now() }
+			: { defaultLanguage: language, forceLanguage: true, lastUpdate: Date.now() };
+	await setDoc(ref, patch, { merge: true });
 }
 
 /** Admin-only: append a new sub-question under the current main statement. The

@@ -74,7 +74,7 @@ function memberRow(
 			{
 				type: 'button',
 				'aria-label': `${t('console.remove')}: ${name}`,
-				disabled: isBusy(`move:${uid}`),
+				disabled: consoleState.held || isBusy(`move:${uid}`),
 				onclick: () => void moveStudent(consoleState.mainId, uid, null),
 			},
 			t('console.remove'),
@@ -169,7 +169,7 @@ export const TableSheetPanel: m.Component<TableSheetPanelAttrs> = {
 												{
 													type: 'button',
 													'data-quick': 'write',
-													disabled: isBusy(`table:${table.tableId}:toWrite`),
+													disabled: consoleState.held || isBusy(`table:${table.tableId}:toWrite`),
 													onclick: () => void tableAction(table.tableId, { action: 'toWrite' }),
 												},
 												t('console.quick_write'),
@@ -179,7 +179,7 @@ export const TableSheetPanel: m.Component<TableSheetPanelAttrs> = {
 										{
 											type: 'button',
 											'data-quick': 'rate',
-											disabled: isBusy(`table:${table.tableId}:toRate`),
+											disabled: consoleState.held || isBusy(`table:${table.tableId}:toRate`),
 											onclick: () => void tableAction(table.tableId, { action: 'toRate' }),
 										},
 										t('console.quick_rate'),
@@ -203,6 +203,7 @@ export const TableSheetPanel: m.Component<TableSheetPanelAttrs> = {
 											'button.btn.btn--tertiary',
 											{
 												type: 'button',
+												disabled: consoleState.held,
 												onclick: () => {
 													showNoDevice = true;
 												},

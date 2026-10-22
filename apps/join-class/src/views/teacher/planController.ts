@@ -5,6 +5,7 @@ import {
 	loadMainStatement,
 	getMainStatement,
 	getSubQuestions,
+	subscribeMainStatement,
 	subscribeSubQuestions,
 } from '@/lib/store';
 import { checkAdminStatus, isAdmin } from '@/lib/admin';
@@ -49,6 +50,7 @@ export const CHALLENGE_NEW_KEY = 'challenge:new';
 let mainId = '';
 let load: PlanLoad = 'loading';
 let subUnsub: Unsubscribe | null = null;
+let mainUnsub: Unsubscribe | null = null;
 let newCardCounter = 0;
 
 const drafts = new Map<string, string>();
@@ -427,6 +429,9 @@ export async function openPlan(id: string): Promise<void> {
 				console.error('[PlanScreen] markOpenedInClass failed:', err);
 			});
 		}
+		// Live main statement too: the details fields (video, names, language) compare
+		// against what is saved, and what is saved changes under a second tab or a callable.
+		mainUnsub = subscribeMainStatement(id);
 		subUnsub = subscribeSubQuestions(id);
 		load = 'ready';
 	} catch (err) {
@@ -438,6 +443,10 @@ export async function openPlan(id: string): Promise<void> {
 }
 
 export function teardownPlan(): void {
+	if (mainUnsub) {
+		mainUnsub();
+		mainUnsub = null;
+	}
 	if (subUnsub) {
 		subUnsub();
 		subUnsub = null;

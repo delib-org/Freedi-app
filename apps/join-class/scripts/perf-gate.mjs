@@ -21,12 +21,13 @@ const BYTES_PER_KB = 1000;
 export const TARGET_GZIP_BYTES = 300 * BYTES_PER_KB;
 /**
  * RATCHET, not the target. Measured 2026-10-22 after deleting Join's leftover
- * screens (Main, Invite, Solutions, Chat, FacilitatorPanel and their libs):
- * 267.8 kB gzipped (329.4 kB before; firebase chunk 172.5 kB is the bulk, the
- * entry went from 124.3 to 81.8 kB). Set to the measured value + 2 % so any
- * growth fails. Lower it again whenever the entry shrinks.
+ * screens (Main, Invite, Solutions, Chat, FacilitatorPanel and their libs) and
+ * adding the front door, teacher home and lesson status: 270.8 kB gzipped
+ * (329.4 kB before; firebase chunk 172.7 kB is the bulk, the entry went from
+ * 124.3 to 83.9 kB). Set to the measured value + 2 % so any growth fails. Lower
+ * it again whenever the entry shrinks.
  */
-export const BUDGET_GZIP_BYTES = 273200;
+export const BUDGET_GZIP_BYTES = 276200;
 /** Locale whose chunk counts as "the default locale chunk" (Hebrew first). */
 const DEFAULT_LOCALE = process.env.PERF_GATE_LOCALE ?? 'he';
 const ALLOWED_FONT_FAMILIES = 1;

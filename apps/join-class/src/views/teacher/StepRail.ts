@@ -16,6 +16,10 @@ export interface StepRailAttrs {
 	keys: readonly LessonStepKey[];
 	currentIndex: number;
 	elapsedMs: number;
+	/** Paused or ended: every step button and the forward control are held. */
+	held?: boolean;
+	/** i18n key of the words that replace "step n of 8" while held. */
+	heldKey?: string;
 	onGo: (index: number) => void;
 	onEnd: () => void;
 }
@@ -36,7 +40,7 @@ function stepButton(step: RailStep, attrs: StepRailAttrs): m.Vnode {
 				'data-step-key': step.key,
 				'aria-current': step.state === 'current' ? 'step' : undefined,
 				'aria-label': t('console.rail_step', { n: step.index + 1, name, state }),
-				disabled: isBusy(`step:${step.index}`),
+				disabled: attrs.held === true || isBusy(`step:${step.index}`),
 				onclick: () => {
 					if (step.state !== 'current') attrs.onGo(step.index);
 				},
@@ -65,7 +69,7 @@ export const StepRail: m.Component<StepRailAttrs> = {
 					? t('console.opening')
 					: t('console.next', { name: stepLabel(attrs.keys[forward.nextIndex]) });
 
-		return m('div.step-rail', [
+		return m('div.step-rail', { class: attrs.held ? 'step-rail--held' : '' }, [
 			m(
 				'ol.step-rail__list',
 				{ 'aria-label': t('console.rail_label') },
@@ -78,7 +82,7 @@ export const StepRail: m.Component<StepRailAttrs> = {
 						type: 'button',
 						'data-testid': 'console-forward',
 						class: forward.kind === 'end' ? 'btn--danger-outline' : 'btn--primary',
-						disabled: busy,
+						disabled: busy || attrs.held === true,
 						onclick: () => {
 							if (forward.kind === 'end') attrs.onEnd();
 							else attrs.onGo(forward.nextIndex);
@@ -87,7 +91,12 @@ export const StepRail: m.Component<StepRailAttrs> = {
 					label,
 				),
 				m('p.step-rail__status', [
-					m('span', t('console.step_of', { n: attrs.currentIndex + 1, total: attrs.keys.length })),
+					m(
+						'span',
+						attrs.held && attrs.heldKey
+							? t(attrs.heldKey)
+							: t('console.step_of', { n: attrs.currentIndex + 1, total: attrs.keys.length }),
+					),
 					m('span.step-rail__clock', { dir: 'ltr' }, formatClock(attrs.elapsedMs)),
 				]),
 			]),

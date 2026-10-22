@@ -44,7 +44,7 @@ const fa: Record<string, string> = {
 	'a11y.high_contrast': 'تضاد بالا',
 	'a11y.light_contrast': 'تضاد معمولی',
 	'a11y.language': 'زبان',
-	'a11y.language.locked': 'توسط تسهیل‌گر تنظیم شده',
+	'a11y.language.locked': 'توسط معلم تعیین شده',
 	// Delegates
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
@@ -377,6 +377,20 @@ const fa: Record<string, string> = {
 	'teacher.home.filter': 'جستجو بر اساس نام',
 	'teacher.home.filter_none': 'درسی با این نام نیست',
 	'teacher.home.filter_count': '{{n}} درس نمایش داده می‌شود',
+	'console.pause': 'توقف موقت درس',
+	'console.resume': 'ادامهٔ درس',
+	'console.end_now': 'پایان',
+	'console.keep_open': 'باز نگه داشتن برای دانش‌آموزان',
+	'console.keep_open_help': 'دانش‌آموزان می‌توانند بعد از درس هم بنویسند و امتیاز بدهند',
+	'console.open_banner': 'درس برای دانش‌آموزان باز است',
+	'console.ended_banner': 'درس پایان یافته است',
+	'lesson.paused.title': 'درس در وقفه است',
+	'lesson.paused.body': 'منتظر معلم باشید',
+	'lesson.ended.title': 'درس پایان یافته است',
+	'lesson.ended.body': 'از مشارکت شما سپاسگزاریم',
+	'common.cancel': 'لغو',
+	'plan.details.language': 'زبان درس',
+	'plan.details.language.device': 'به زبان هر دانش‌آموز',
 };
 
 export default fa;

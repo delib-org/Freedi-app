@@ -54,7 +54,7 @@ const en: Record<string, string> = {
 	'a11y.high_contrast': 'High contrast',
 	'a11y.light_contrast': 'Light contrast',
 	'a11y.language': 'Language',
-	'a11y.language.locked': 'Set by facilitator',
+	'a11y.language.locked': 'Set by the teacher',
 	// Delegates — per-question solution-editing delegation
 	// /invite accept page
 	// Compact time tokens used by formatRemaining
@@ -388,6 +388,20 @@ const en: Record<string, string> = {
 	'teacher.home.filter': 'Search by name',
 	'teacher.home.filter_none': 'No lesson with this name',
 	'teacher.home.filter_count': '{{n}} lessons shown',
+	'console.pause': 'Pause the lesson',
+	'console.resume': 'Resume the lesson',
+	'console.end_now': 'End',
+	'console.keep_open': 'Keep open for students',
+	'console.keep_open_help': 'Students can keep writing and rating after class',
+	'console.open_banner': 'Open to students',
+	'console.ended_banner': 'The lesson has ended',
+	'lesson.paused.title': 'The lesson is paused',
+	'lesson.paused.body': 'Wait for the teacher',
+	'lesson.ended.title': 'The lesson has ended',
+	'lesson.ended.body': 'Thank you for taking part',
+	'common.cancel': 'Cancel',
+	'plan.details.language': 'Lesson language',
+	'plan.details.language.device': "Each student's own language",
 };
 
 export default en;

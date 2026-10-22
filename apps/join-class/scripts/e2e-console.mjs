@@ -127,6 +127,9 @@ try {
 		check('forward again to the last step', await waitStep(lesson.mainId, 7));
 		await page.waitForSelector('.step-rail__step[data-step="7"][aria-current="step"]', { timeout: TIMEOUT });
 		await page.locator('.step-rail__next').click();
+		// the last step's forward control opens the end choice (a native dialog, not window.confirm)
+		await page.waitForSelector('dialog.end-choice[open]', { timeout: TIMEOUT });
+		await page.click('[data-choice=end]');
 		await page.waitForURL((u) => u.pathname === '/t', { timeout: TIMEOUT });
 		check('end the lesson returns to the lesson list', true);
 		await context.close();

@@ -60,7 +60,8 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 		const drag = consoleState.drag;
 		const active = uid !== undefined && drag.mode !== 'idle' && 'uid' in drag && drag.uid === uid;
 		const label = noDevice ? `${name}, ${t('console.no_device')}` : `${name}, ${sideLabel(camp)}`;
-		const ref = uid !== undefined ? { uid, name, from: attrs.from } : null;
+		// While the lesson is held nobody moves: no drag, no move menu.
+		const ref = uid !== undefined && !consoleState.held ? { uid, name, from: attrs.from } : null;
 		const mod = camp ? `member-chip--${camp}` : '';
 
 		return m('span.member-chip-wrap', { key: uid ?? `nd:${name}` }, [
@@ -94,7 +95,7 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 					noDevice ? m('span.member-chip__tag', t('console.no_device')) : null,
 				],
 			),
-			uid !== undefined
+			uid !== undefined && !consoleState.held
 				? m(
 						'button.member-chip__menu',
 						{
@@ -108,7 +109,9 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 						'▾',
 					)
 				: null,
-			uid !== undefined && consoleState.menuUid === uid ? moveMenu(attrs, uid) : null,
+			uid !== undefined && !consoleState.held && consoleState.menuUid === uid
+				? moveMenu(attrs, uid)
+				: null,
 		]);
 	},
 };

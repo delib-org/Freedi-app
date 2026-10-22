@@ -26,7 +26,7 @@ import {
 	setPowerFollowMe,
 	setQuestionSetting,
 } from './store';
-import { markOpenedInClass } from './joinSubscriptions';
+import { markOpenedInClass, waitForCreatorSubscription } from './joinSubscriptions';
 import { getUserState } from './user';
 import {
 	CLASS_CODES_COLLECTION,
@@ -186,13 +186,39 @@ export async function resolveClassCode(code: string): Promise<string | null> {
 }
 
 /**
+ * `onStatementCreated` (a Cloud Function shared by every app) writes the
+ * creator's admin subscription with a plain `set`, which replaces the doc and
+ * drops the `openedInClass` marker if the marker was written first. So the
+ * marker waits for that subscription (bounded; the function is normally done
+ * in a second or two). If it does not show up in time the client writes the
+ * subscription itself and writes the marker again later; opening the plan or
+ * the console writes it too.
+ */
+const SUBSCRIPTION_WAIT_MS = 8_000;
+const SUBSCRIPTION_POLL_MS = 300;
+const REMARK_DELAYS_MS: readonly number[] = [5_000, 15_000];
+
+function remarkLater(statement: Statement): void {
+	for (const delay of REMARK_DELAYS_MS) {
+		window.setTimeout(() => {
+			const user = getUserState().user;
+			if (!user) return;
+			markOpenedInClass(statement, user.uid, user.displayName ?? '').catch((err: unknown) => {
+				console.error('[createLesson] re-marking the lesson failed:', err);
+			});
+		}, delay);
+	}
+}
+
+/**
  * The teacher's "create" (IA 13.5), in one go: the main statement with its
  * lesson plan (step 0, live, so `/m/:mid` is a lesson from its first second)
  * and the teacher's current language as the lesson language, then the
- * `openedInClass` marker that lists it on the teacher's home, then the class code.
- * Returns the new lesson's id; throws when any step fails (the caller shows
- * "try again"; pressing create again makes a fresh lesson, never a duplicate
- * of a half-made one that the list would show).
+ * `openedInClass` marker that lists it on the teacher's home, then the class code
+ * (whose rule needs the teacher's admin subscription, which the marker's write
+ * or the server's has created by then).
+ * Returns the new lesson's id; throws when a step fails (the caller shows "try
+ * again"; the typed name is kept).
  */
 export async function createLesson(title: string): Promise<string> {
 	const id = await createSimpleQuestion(title, {
@@ -201,16 +227,21 @@ export async function createLesson(title: string): Promise<string> {
 		forceLanguage: true,
 	});
 	if (!id) throw new Error('createLesson: the statement was not created');
-	// The marker comes before the code on purpose: it writes the teacher's admin
-	// subscription, which is what the class-code rule checks (the server-side
-	// fan-out of that subscription is asynchronous and may not have landed yet).
 	const user = getUserState().user;
+	await loadQuestion(id);
+	const statement = getQuestion();
+	let serverSubscription = false;
 	if (user) {
-		await loadQuestion(id);
-		const statement = getQuestion();
+		serverSubscription = await waitForCreatorSubscription(
+			id,
+			user.uid,
+			SUBSCRIPTION_WAIT_MS,
+			SUBSCRIPTION_POLL_MS,
+		);
 		if (statement) await markOpenedInClass(statement, user.uid, user.displayName ?? '');
 	}
 	await ensureClassCode(id);
+	if (statement && !serverSubscription) remarkLater(statement);
 
 	return id;
 }

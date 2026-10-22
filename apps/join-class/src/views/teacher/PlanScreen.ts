@@ -1,7 +1,8 @@
 import m from 'mithril';
 import '@/styles/teacher.scss';
 import type { Statement } from '@freedi/shared-types';
-import { t } from '@/lib/i18n';
+import { getAvailableLanguages, t } from '@/lib/i18n';
+import { setFollowLessonLanguage } from '@/lib/store';
 import { NotYourLesson } from './NotYourLesson';
 import { WizColFooter } from '@/components/WizColFooter';
 import {
@@ -39,15 +40,18 @@ import {
 import { MAX_HINT_LENGTH, MAX_QUESTION_LENGTH, hintOf } from './planHelpers';
 import { SIDE_NAME_MAX_LENGTH } from '@/lib/classroom/classSettings';
 import {
+	LANGUAGE_KEY,
 	MAX_VIDEO_URL_LENGTH,
 	SIDE_A_KEY,
 	SIDE_B_KEY,
 	VIDEO_KEY,
+	commitLanguage,
 	commitSideName,
 	commitVideoUrl,
 	defaultSideName,
 	isInvalid,
 	onDetailInput,
+	savedLessonLanguage,
 	savedSideName,
 	savedVideoUrl,
 } from './planDetails';
@@ -307,11 +311,36 @@ function sideNameField(key: string, labelKey: string): m.Vnode {
 }
 
 /** "Lesson details": the opening video link and the two character names. */
+function languageField(): m.Vnode {
+	const value = fieldValue(LANGUAGE_KEY, savedLessonLanguage());
+
+	return m('.plan-details__language', [
+		m('label.plan-details__label', { for: 'lesson-language' }, t('plan.details.language')),
+		m(
+			'select.plan-card__text.plan-details__select',
+			{
+				id: 'lesson-language',
+				value,
+				onchange: (e: Event) => commitLanguage((e.target as HTMLSelectElement).value),
+			},
+			[
+				m('option', { value: '' }, t('plan.details.language.device')),
+				getAvailableLanguages().map((lang) =>
+					m('option', { key: lang.code, value: lang.code, dir: 'auto' }, lang.name),
+				),
+			],
+		),
+		fieldError(LANGUAGE_KEY),
+	]);
+}
+
 function renderDetails(): m.Vnode {
 	return m('section.plan__details', { 'aria-labelledby': 'plan-details-title' }, [
 		m('h2.plan__section-title', { id: 'plan-details-title' }, t('plan.details.title')),
 		m('.plan-card.plan-details', [
 			m('.plan-card__main', [
+				// First: it changes every student screen and the projector.
+				languageField(),
 				field({
 					key: VIDEO_KEY,
 					label: t('plan.details.video'),
@@ -430,6 +459,7 @@ function renderBody(mainId: string): m.Children {
 
 export const PlanScreen: m.Component = {
 	oninit() {
+		setFollowLessonLanguage(false);
 		const mid = m.route.param('mid');
 		if (!mid) {
 			m.route.set('/t');

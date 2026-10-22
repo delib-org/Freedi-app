@@ -212,7 +212,7 @@ export class AccessibilityWidget {
 
 		const langLabel = document.createElement('span');
 		langLabel.className = 'a11y-widget__lang-label';
-		langLabel.textContent = `🌐 ${t('a11y.language')}`;
+		langLabel.textContent = t('a11y.language');
 		this.langRowLabel = langLabel;
 
 		const langSelect = document.createElement('select');
@@ -238,7 +238,7 @@ export class AccessibilityWidget {
 		const lockChip = document.createElement('span');
 		lockChip.className = 'a11y-widget__lang-lock';
 		lockChip.setAttribute('role', 'note');
-		lockChip.textContent = `🔒 ${t('a11y.language.locked')}`;
+		lockChip.textContent = t('a11y.language.locked');
 		lockChip.hidden = true;
 		this.langLockChip = lockChip;
 
@@ -308,10 +308,10 @@ export class AccessibilityWidget {
 			this.langSelect.setAttribute('aria-label', t('a11y.language'));
 		}
 		if (this.langRowLabel) {
-			this.langRowLabel.textContent = `🌐 ${t('a11y.language')}`;
+			this.langRowLabel.textContent = t('a11y.language');
 		}
 		if (this.langLockChip) {
-			this.langLockChip.textContent = `🔒 ${t('a11y.language.locked')}`;
+			this.langLockChip.textContent = t('a11y.language.locked');
 			this.langLockChip.hidden = !forced;
 		}
 		// Trigger button aria-label may include "language" — refresh on each

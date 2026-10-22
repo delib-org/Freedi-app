@@ -2,9 +2,11 @@ import m from 'mithril';
 import '@/styles/projector.scss';
 import { t } from '@/lib/i18n';
 import { ensureUser } from '@/lib/user';
-import { loadMainStatement, getMainStatement } from '@/lib/store';
+import { loadMainStatement, getMainStatement, setFollowLessonLanguage } from '@/lib/store';
 import { checkAdminStatus, isAdmin } from '@/lib/admin';
 import { ensureClassCode, lessonStepOf, stepLabel } from '@/lib/lesson';
+import { lessonStatusOfMain } from '@/lib/lessonCore';
+import { readBallot } from './projector/projectorLogic';
 import { watchClass } from '@/lib/classroom/classState';
 import { projectorData, watchProjector } from '@/lib/classroom/projectorData';
 import { NotYourLesson } from './NotYourLesson';
@@ -63,6 +65,28 @@ async function open(mid: string): Promise<void> {
 	}
 }
 
+/** Paused: the words and the code (late joiners can still join). Ended: the words and the decision. */
+function stateFrame(status: 'paused' | 'ended', code: string | undefined): m.Vnode {
+	const ended = status === 'ended';
+	const ballot = readBallot(projectorData.challenge);
+	const decision = projectorData.proposals.find((o) => o.statementId === ballot?.decisionId);
+
+	return m('section.projector-step.projector-step--state', { class: `projector-step--${status}` }, [
+		m('span.projector-mark', [
+			m('span.status-mark', { class: `status-mark--${status}`, 'aria-hidden': 'true' }),
+		]),
+		m('h1.projector-instruction', t(ended ? 'lesson.ended.title' : 'lesson.paused.title')),
+		ended ? m('p.projector-empty', t('lesson.ended.body')) : null,
+		ended && decision
+			? m('.projector-decision', [
+					m('p.projector-eyebrow', t('projector.decision')),
+					m('p.projector-decision__text', decision.statement),
+				])
+			: null,
+		!ended && code ? m('p.projector-code', { dir: 'ltr' }, code) : null,
+	]);
+}
+
 function body(): m.Children {
 	if (load === 'loading') return m('p.projector__status', t('projector.loading'));
 	if (load === 'error') return m('p.projector__status', t('projector.error'));
@@ -70,6 +94,25 @@ function body(): m.Children {
 	const code = readClassCode(main);
 	const joinUrl = code ? `${window.location.origin}/c/${code}` : undefined;
 	const step = lessonStepOf(main?.statementSettings?.lessonPlan);
+	const status = lessonStatusOfMain(main);
+
+	if (status === 'paused' || status === 'ended') {
+		const ended = status === 'ended';
+
+		return [
+			m(
+				'main.projector__stage',
+				{ 'data-step': step.key, 'data-status': status },
+				stateFrame(status, code),
+			),
+			// An ended lesson does not invite joining: no code, no QR in the band.
+			m(ProjectorBand, {
+				stepName: t(ended ? 'lesson.ended.title' : 'lesson.paused.title'),
+				code: ended ? undefined : code,
+				joinUrl: ended ? undefined : joinUrl,
+			}),
+		];
+	}
 
 	return [
 		m('main.projector__stage', { 'data-step': step.key }, renderStep(step.key, { code, joinUrl })),
@@ -79,6 +122,8 @@ function body(): m.Children {
 
 export const TeacherProjector: m.Component = {
 	oninit() {
+		// The projector speaks the lesson's language, like the students' phones.
+		setFollowLessonLanguage(true);
 		const mid = m.route.param('mid');
 		if (!mid) {
 			m.route.set('/t');

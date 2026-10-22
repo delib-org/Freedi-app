@@ -6,6 +6,7 @@ import {
 	getMainStatement,
 	subscribeMainStatement,
 	subscribeSubQuestions,
+	setFollowLessonLanguage,
 } from '@/lib/store';
 import { checkAdminStatus, isAdmin } from '@/lib/admin';
 import { t } from '@/lib/i18n';
@@ -59,6 +60,7 @@ function focusHeading(vnode: m.VnodeDOM): void {
 
 export const MainHub: m.Component = {
 	async oninit() {
+		setFollowLessonLanguage(true);
 		failed = false;
 		const mainId = m.route.param('mid');
 		if (!mainId) {

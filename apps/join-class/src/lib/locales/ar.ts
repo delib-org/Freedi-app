@@ -54,7 +54,7 @@ const ar: Record<string, string> = {
 	'a11y.high_contrast': 'تباين عالٍ',
 	'a11y.light_contrast': 'تباين عادي',
 	'a11y.language': 'اللغة',
-	'a11y.language.locked': 'تم التعيين من قِبل الميسّر',
+	'a11y.language.locked': 'حدّدها المعلّم',
 	// Delegates
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
@@ -384,6 +384,20 @@ const ar: Record<string, string> = {
 	'teacher.home.filter': 'ابحث بالاسم',
 	'teacher.home.filter_none': 'لا يوجد درس بهذا الاسم',
 	'teacher.home.filter_count': '{{n}} دروس معروضة',
+	'console.pause': 'إيقاف الدرس مؤقتًا',
+	'console.resume': 'استئناف الدرس',
+	'console.end_now': 'إنهاء',
+	'console.keep_open': 'إبقاؤه مفتوحًا للطلاب',
+	'console.keep_open_help': 'يمكن للطلاب مواصلة الكتابة والتقييم بعد الدرس',
+	'console.open_banner': 'الدرس مفتوح للطلاب',
+	'console.ended_banner': 'انتهى الدرس',
+	'lesson.paused.title': 'الدرس في استراحة',
+	'lesson.paused.body': 'انتظروا المعلّم',
+	'lesson.ended.title': 'انتهى الدرس',
+	'lesson.ended.body': 'شكرًا لمشاركتكم',
+	'common.cancel': 'إلغاء',
+	'plan.details.language': 'لغة الدرس',
+	'plan.details.language.device': 'حسب لغة كل طالب',
 };
 
 export default ar;

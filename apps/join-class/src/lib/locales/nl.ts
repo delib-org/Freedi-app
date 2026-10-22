@@ -50,7 +50,7 @@ const nl: Record<string, string> = {
 	'a11y.high_contrast': 'Hoog contrast',
 	'a11y.light_contrast': 'Normaal contrast',
 	'a11y.language': 'Taal',
-	'a11y.language.locked': 'Ingesteld door facilitator',
+	'a11y.language.locked': 'Bepaald door de leraar',
 	// Delegates
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
@@ -383,6 +383,20 @@ const nl: Record<string, string> = {
 	'teacher.home.filter': 'Zoek op naam',
 	'teacher.home.filter_none': 'Geen les met deze naam',
 	'teacher.home.filter_count': '{{n}} lessen getoond',
+	'console.pause': 'Les pauzeren',
+	'console.resume': 'Les hervatten',
+	'console.end_now': 'Afsluiten',
+	'console.keep_open': 'Open laten voor leerlingen',
+	'console.keep_open_help': 'Leerlingen kunnen na de les blijven schrijven en beoordelen',
+	'console.open_banner': 'De les is open voor leerlingen',
+	'console.ended_banner': 'De les is afgelopen',
+	'lesson.paused.title': 'De les is gepauzeerd',
+	'lesson.paused.body': 'Wacht op de leraar',
+	'lesson.ended.title': 'De les is afgelopen',
+	'lesson.ended.body': 'Bedankt voor het meedoen',
+	'common.cancel': 'Annuleren',
+	'plan.details.language': 'Taal van de les',
+	'plan.details.language.device': 'Taal van elke leerling',
 };
 
 export default nl;

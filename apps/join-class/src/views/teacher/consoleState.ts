@@ -42,6 +42,8 @@ export interface ConsoleState {
 	announce: string;
 	/** Options per question id (challenge for the gate, all for "what they wrote"). */
 	options: Map<string, Statement[]>;
+	/** The lesson is paused or ended: steps, seats and tables stand still (IA 13.6). */
+	held: boolean;
 }
 
 export const consoleState: ConsoleState = {
@@ -56,6 +58,7 @@ export const consoleState: ConsoleState = {
 	focusTableN: null,
 	announce: '',
 	options: new Map<string, Statement[]>(),
+	held: false,
 };
 
 export function resetConsoleState(mainId: string): void {
@@ -70,6 +73,7 @@ export function resetConsoleState(mainId: string): void {
 	consoleState.focusTableN = null;
 	consoleState.announce = '';
 	consoleState.options = new Map<string, Statement[]>();
+	consoleState.held = false;
 }
 
 export function isBusy(key: string): boolean {

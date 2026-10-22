@@ -68,6 +68,7 @@ function unplacedStrip(
 					'select.unplaced__select',
 					{
 						'aria-label': `${t('console.to_table')}: ${s.name}`,
+						disabled: consoleState.held,
 						onchange: (e: Event) => {
 							const el = e.target as HTMLSelectElement;
 							const n = Number(el.value);

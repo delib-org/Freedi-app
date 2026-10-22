@@ -94,6 +94,32 @@ export async function markOpenedInClass(
 	await setDoc(ref, sub, { merge: true });
 }
 
+/**
+ * Wait until the creator's own subscription to a brand-new statement exists.
+ * `onStatementCreated` writes it with a plain `set` (replacing whatever is there),
+ * so a marker written before it lands is lost; writing the marker after it is
+ * safe. Resolves true when the subscription showed up, false on timeout.
+ */
+export async function waitForCreatorSubscription(
+	statementId: string,
+	userId: string,
+	timeoutMs: number,
+	pollMs: number,
+): Promise<boolean> {
+	const ref = doc(db, Collections.statementsSubscribe, buildSubId(userId, statementId));
+	const end = Date.now() + timeoutMs;
+	while (Date.now() < end) {
+		try {
+			if ((await getDoc(ref)).exists()) return true;
+		} catch (error) {
+			console.error('[joinSubscriptions] waiting for the creator subscription failed:', error);
+		}
+		await new Promise((resolve) => window.setTimeout(resolve, pollMs));
+	}
+
+	return false;
+}
+
 /** True when this account already has at least one lesson listed (decides link-vs-replace at sign-in). */
 export async function ownsClassLessons(userId: string): Promise<boolean> {
 	try {
@@ -149,8 +175,13 @@ export function subscribeToClassLessons(
 	const statements = new Map<string, Statement>();
 	let statementStops: Unsubscribe[] = [];
 	let watchedKey = '';
+	/** The list waits for every chunk's first snapshot: the subscription's own copy of the
+	 *  statement is not reliable (no lesson plan), so rows built early would be missing. */
+	let chunksExpected = 0;
+	let chunksLoaded = 0;
 
 	const emit = (): void => {
+		if (chunksLoaded < chunksExpected) return;
 		const entries = subs
 			.map((sub) => entryOf(sub, statements))
 			.filter((entry): entry is ClassLessonEntry => entry !== null)
@@ -165,17 +196,30 @@ export function subscribeToClassLessons(
 		for (const stop of statementStops) stop();
 		statementStops = [];
 		statements.clear();
+		chunksExpected = Math.ceil(ids.length / IN_QUERY_MAX);
+		chunksLoaded = 0;
 		for (let i = 0; i < ids.length; i += IN_QUERY_MAX) {
 			const chunk = ids.slice(i, i + IN_QUERY_MAX);
+			let loaded = false;
+			const markLoaded = (): void => {
+				if (loaded) return;
+				loaded = true;
+				chunksLoaded += 1;
+			};
 			statementStops.push(
 				resilientOnSnapshot(
 					'classLessonStatements',
 					query(collection(db, Collections.statements), where(documentId(), 'in', chunk)),
 					(snap) => {
 						snap.forEach((d) => statements.set(d.id, d.data() as Statement));
+						markLoaded();
 						emit();
 					},
-					(err) => console.error('[joinSubscriptions] lesson statements failed:', err),
+					(err) => {
+						console.error('[joinSubscriptions] lesson statements failed:', err);
+						markLoaded();
+						emit();
+					},
 				),
 			);
 		}
