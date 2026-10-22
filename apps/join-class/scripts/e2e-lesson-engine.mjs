@@ -7,8 +7,8 @@
 // data-testid used (all exist in src):
 //   student  side-slider, side-confirm, table-number, table-mates,
 //            table-pick-question, table-start, table-next-speaker, table-to-write,
-//            table-to-rate, table-claim, asker-mark, time-over, answer-box,
-//            answer-send, proposal-box, proposal-send, rate-face-1..5,
+//            table-to-rate, table-claim, asker-mark, time-over, proposal-box,
+//            proposal-send, rate-face-1..5,
 //            vote-option, vote-send, support-face-1..5
 //   console  [data-step-key] (aria-current="step" on the current one),
 //            console-forward, console-assign-tables, console-all-rate,
@@ -69,8 +69,8 @@ async function tableNumberOf(student) {
 
 /** Who sits where, read off the phones while they show "my table" (the next steps replace that screen). */
 const seating = new Map();
-/** Table 1's asker of its last turn: after "next turn" the mark moves, but a phone can show the old one for a moment. */
-let tableOneStaleAsker;
+/** Table 1's asker of its last turn: it stays the table's asker when the lesson moves on to Proposals. */
+let tableOneLastAsker;
 
 async function tablemates(students, number) {
 	const mates = [];
@@ -182,13 +182,16 @@ export const ENGINE_PHASES = [
 		},
 	},
 	{
-		name: 'table 1 runs two turns (asker, then a non-asker)',
-		async run({ teacher, students, check, admin, mid }) {
+		name: 'table 1 runs two turns (a volunteer asks, then another volunteer)',
+		async run({ teacher, check }) {
 			await teacherForward(teacher, 'tableTalk');
 			const table = tableOf(1);
 			const askers = [];
 			let previous;
 			for (let turn = 1; turn <= TURNS; turn += 1) {
+				// a volunteer: the first tablemate who has not asked taps "אני אשאל" (V1, then V2)
+				const claimer = table.find((s) => s !== previous && !askers.includes(s.index));
+				await (await byId(claimer.page, 'table-claim')).click();
 				const asker = await askerOf(table, previous);
 				previous = asker;
 				askers.push(asker.index);
@@ -197,48 +200,35 @@ export const ENGINE_PHASES = [
 				check(`turn ${turn}: non-asker has no start control`, !(await hasTestId(others[0], 'table-start')));
 				await asker.page.locator('[data-testid=table-pick-question]:not([disabled])').first().click({ timeout: TURN_TIMEOUT });
 				await (await byId(asker.page, 'table-start')).click();
-				// talk: the asker gives the floor to the first chip; the minute runs at 20x
-				await (await byId(asker.page, 'table-next-speaker')).click();
-				await byId(asker.page, 'time-over', TURN_TIMEOUT);
-				await (await byId(asker.page, 'table-to-write')).click();
-				const box = await byId(others[0].page, 'answer-box');
-				await box.fill(`Turn ${turn}: an answer from the table`);
-				await (await byId(others[0].page, 'answer-send')).click();
-				await others[0].page.locator('.write__sent').first().waitFor({ timeout: TURN_TIMEOUT });
-				await (await byId(asker.page, 'table-to-rate')).click();
-				// the hand-off: a tablemate who has not asked yet claims the next turn (the asker cannot)
-				const claimer = await until(async () => {
-					for (const student of others) if (await hasTestId(student, 'table-claim')) return student;
-
-					return null;
-				}, 'a tablemate with the claim button');
-				await (await byId(claimer.page, 'table-claim')).click();
+				// talk: everyone speaks, the asker too. The engine counts real seconds (the 20x clock only speeds the
+				// display), so the asker taps each name and passes the last minute to reach "everyone spoke".
+				const allEnabled = () =>
+					asker.page.waitForFunction(
+						() => [...document.querySelectorAll('[data-testid=table-next-speaker]')].every((b) => !b.disabled),
+						null,
+						{ timeout: TURN_TIMEOUT },
+					);
+				for (let seat = 0; seat < table.length; seat += 1) {
+					await allEnabled();
+					await asker.page.locator('[data-testid=table-next-speaker]').nth(seat).click({ timeout: TURN_TIMEOUT });
+				}
+				const pass = asker.page.locator('[data-testid=pass-for],[data-testid=pass-speak]').first();
+				await pass.waitFor({ state: 'visible', timeout: TURN_TIMEOUT });
+				await pass.click();
+				check(`turn ${turn}: nobody writes at Table talk`, !(await hasTestId(asker, 'table-to-write')) && !(await hasTestId(others[0], 'answer-box')));
 			}
-			tableOneStaleAsker = previous;
-			check('the asker rotated between the turns', askers[0] !== askers[1], askers.join(' -> '));
-			const answers = await until(async () => {
-				const snap = await admin.collection('statements').where('topParentId', '==', mid).where('statementType', '==', 'option').get();
-				const found = snap.docs.filter((d) => d.data().classTable);
-
-				return found.length >= TURNS ? found : null;
-			}, 'the table answers exist', SLOW_TIMEOUT);
-			check('two answers carry the classTable marker', answers.length >= TURNS, `${answers.length}`);
-			const autoPlusOne = await until(async () => {
-				const snap = await admin.collection('evaluations').where('statementId', 'in', answers.map((d) => d.id)).get();
-
-				return snap.size >= TURNS ? snap : null;
-			}, 'the engine wrote the authors auto +1', SLOW_TIMEOUT);
-			check('the engine wrote an auto +1 for each answer author', autoPlusOne.size >= TURNS, `${autoPlusOne.size}`);
+			tableOneLastAsker = previous;
+			check('the turn went to a different volunteer the second time', askers[0] !== askers[1], askers.join(' -> '));
 		},
 	},
 	{
 		name: 'proposals, rating and plenum',
 		async run({ teacher, students, check, admin, challengeId }) {
 			await teacherForward(teacher, 'proposals');
-			// each table's asker leaves the table-time screen for writing
-			for (const number of [1, 2]) {
-				const asker = await askerOf(tableOf(number), number === 1 ? tableOneStaleAsker : undefined);
-				await (await byId(asker.page, 'table-to-write')).click();
+			// table 1 leaves the talk screen for writing through its last asker; table 2 had no turn, so nobody asks
+			// there and any tablemate may do it
+			for (const finisher of [tableOneLastAsker, tableOf(2)[0]]) {
+				await (await byId(finisher.page, 'table-to-write')).click();
 			}
 			for (const student of students) {
 				await (await byId(student.page, 'proposal-box')).fill(`Proposal by student ${student.index + 1}`);

@@ -394,6 +394,14 @@ describe('askerless fallback (the asker left)', () => {
 		expect(run(write, { action: 'toRate' }, as('c')).step).toBe('rate');
 	});
 
+	it('lets a tablemate leave an askerless pick for writing (a table that reaches Proposals with no turn)', () => {
+		expect(run(table(), { action: 'toWrite' }, as('c')).step).toBe('write');
+		expect(refusal(table(), { action: 'toRate' }, as('c')).code).toBe('permission-denied');
+		expect(refusal(table({ askerUid: 'a' }), { action: 'toWrite' }, as('c')).code).toBe(
+			'permission-denied',
+		);
+	});
+
 	it('still refuses a tablemate at a table that has an asker', () => {
 		expect(
 			refusal(table({ step: 'talk', askerUid: 'a' }), { action: 'nextSpeaker', uid: 'b' }, as('c'))

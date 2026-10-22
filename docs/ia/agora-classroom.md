@@ -1265,7 +1265,7 @@ One concept per word: **"ויתור"** (pass) for both passes: "ויתרתי ע�
 
 **E8. Askerless fallback** (one clause in `assertMayAct`).
 - When `askerUid` is null at `talk` or `write`, any tablemate may run the asker's moves: `nextSpeaker`, `toWrite`, `toRate`.
-- At `pick` an askerless table accepts only a claim, a pass or a teacher action.
+- At `pick` an askerless table accepts only a claim, a pass, a teacher action and `toWrite` (built 2026-10-22: a table that reaches Proposals without a turn, because everyone passed or none started, sits at `pick` with nobody asking and its tablemates must still be able to leave for writing).
 - This also covers a Proposals table whose members all passed on asking.
 
 **E9. Not changed.**

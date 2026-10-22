@@ -175,6 +175,9 @@ function assertMayAct(
 		if (action.action === 'toWrite' && table.step === 'talk' && everyoneSpoke(table, now)) return;
 		const askerless = table.askerUid === null && (table.step === 'talk' || table.step === 'write');
 		if (askerless && ASKERLESS_MEMBER_MOVES.has(action.action)) return;
+		// A table that reaches Proposals without a turn (everyone passed, or none started) sits at pick with
+		// nobody asking: its tablemates must still be able to leave for writing.
+		if (table.askerUid === null && table.step === 'pick' && action.action === 'toWrite') return;
 	}
 	throw new ClassroomError('permission-denied', "Only the table's asker or a teacher can do this");
 }

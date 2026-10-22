@@ -1,5 +1,6 @@
-// E2E of the student table screens part 2 (lane C3): screens-down talk, write +
-// send, rate, vote, summary. Two phones (asker + non-asker) at the same table.
+// E2E of the student table screens part 2 (lane C3): screens-down talk, then (at Proposals, since
+// nobody writes or rates at Table talk) write + send, rate, vote, summary. Two phones (asker +
+// non-asker) at the same table.
 // The engine (lane C1 callables) is not on this branch, so the script writes the
 // table state with the admin SDK exactly as the engine would, and asserts that a
 // failing callable shows an inline error instead of crashing.
@@ -151,7 +152,7 @@ try {
 	check('screens-down countdown reads about 0:3x', /^0:3\d$/.test(digits), digits);
 	const size = await a.page.locator('.count__num').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
 	check('digits are 96px or larger', size >= 96, `${size}px`);
-	check('asker has "we are done, write"; the mate does not', (await a.page.locator('[data-testid=table-to-write]').count()) === 1 && (await b.page.locator('[data-testid=table-to-write]').count()) === 0);
+	check('nobody has "we are done, write" at Table talk', (await a.page.locator('[data-testid=table-to-write]').count()) === 0 && (await b.page.locator('[data-testid=table-to-write]').count()) === 0);
 	check('speaker chips for both tablemates', (await a.page.locator('[data-testid=table-next-speaker]').count()) === 2);
 	check('mate chips disabled during the minute', await b.page.locator('[data-testid=table-next-speaker]').first().isDisabled());
 	await setTable({ speakerEndsAt: Date.now() - 1000 });
@@ -164,21 +165,19 @@ try {
 	);
 	check('mate may pick the next speaker once the minute is over', true);
 
-	// 3. write -----------------------------------------------------------------
+	// 3. write (Proposals: Table talk has no write or rate screen) ---------------------------
+	await db.doc(`statements/${mainId}`).update({ 'statementSettings.lessonPlan.stepIndex': 5 });
 	await setTable({ step: 'write' });
-	const answerText = `Answer from Dana ${Date.now()}`;
 	const proposalText = `Proposal from Dana ${Date.now()}`;
-	await a.page.waitForSelector('[data-testid=answer-box]', { timeout: TIMEOUT });
-	await a.page.fill('[data-testid=answer-box]', answerText);
+	await a.page.waitForSelector('[data-testid=proposal-box]', { timeout: TIMEOUT });
+	check('no answer box at Proposals', (await a.page.locator('[data-testid=answer-box]').count()) === 0);
 	await a.page.fill('[data-testid=proposal-box]', proposalText);
-	await a.page.click('[data-testid=answer-send]');
+	await a.page.click('[data-testid=proposal-send]');
 	const sent = await until(async () => {
-		const answers = await db.collection('statements').where('parentId', '==', guidingIds[0]).where('creatorId', '==', a.uid).get();
 		const proposals = await db.collection('statements').where('parentId', '==', challengeId).where('creatorId', '==', a.uid).get();
 
-		return answers.size === 1 && proposals.size === 1 ? { answer: answers.docs[0].data(), proposal: proposals.docs[0].data() } : null;
-	}, 'answer + proposal written');
-	check('send creates an option with the classTable marker', sent.answer.classTable?.tableId === tableId && sent.answer.statement === answerText);
+		return proposals.size === 1 ? { proposal: proposals.docs[0].data() } : null;
+	}, 'proposal written');
 	check('the proposal goes under the challenge question', sent.proposal.statement === proposalText);
 	await a.page.waitForSelector('.write__sent', { timeout: TIMEOUT });
 	check('"Sent" shown after sending', true);
@@ -186,11 +185,9 @@ try {
 	// 4. rate ------------------------------------------------------------------
 	await setTable({ step: 'rate' });
 	await a.page.waitForSelector('.text-card', { timeout: TIMEOUT });
-	// "my answer" sits above the list as its own card (UX 16.C): the LIST never holds own items
 	const cards = await a.page.locator('.text-card:not(.text-card--mine) .text-card__body').allInnerTexts();
-	check('"my answer" card shows what I sent', (await a.page.locator('.text-card--mine .text-card__body').allInnerTexts()).includes(answerText));
 	check('rate list is not empty', cards.length > 0, `${cards.length} cards`);
-	check('own items are never listed', !cards.includes(answerText) && !cards.includes(proposalText));
+	check('own items are never listed', !cards.includes(proposalText));
 	await a.page.locator('[data-testid=rate-face-5]').first().click();
 	const rated = await until(async () => {
 		const snap = await db.collection('evaluations').where('evaluatorId', '==', a.uid).get();

@@ -156,11 +156,14 @@ async function main(): Promise<void> {
 	// ---- one turn at table 1 ------------------------------------------------
 	console.info('\n== classTableStep at table 1');
 	const t1 = tables[0];
-	const asker = t1.askerUid as string;
-	const mate = t1.memberUids.find((u) => u !== asker) as string;
+	check(t1.askerUid === null, 'a seated table has no asker: the first volunteer asks');
+	const asker = t1.memberUids[0];
+	const mate = t1.memberUids[1];
 	const askerToken = await tokenOf(asker);
 	const mateToken = await tokenOf(mate);
 	const tid = t1.tableId;
+	await mustCall('classTableStep', askerToken, { tableId: tid, action: 'nextTurn', fromTurn: 1 });
+	check((await readTable(tid)).askerUid === asker, 'the volunteer became the asker');
 
 	const notAsker = await call('classTableStep', mateToken, { tableId: tid, action: 'toTalk' });
 	check(!notAsker.ok && notAsker.status === 'PERMISSION_DENIED', 'a tablemate cannot drive the table');
@@ -208,10 +211,11 @@ async function main(): Promise<void> {
 	check(answer?.evaluation?.numberOfEvaluators === t1.memberUids.length, 'the consensus pipeline counted the auto +1s once each');
 
 	await mustCall('classTableStep', askerToken, { tableId: tid, action: 'toRate' });
-	const next = await mustCall<{ step: string; turn: number }>('classTableStep', askerToken, { tableId: tid, action: 'nextTurn' });
+	// a table left at rate (before table turn v2) still lets a tablemate who has not asked claim the next turn
+	const next = await mustCall<{ step: string; turn: number }>('classTableStep', mateToken, { tableId: tid, action: 'nextTurn' });
 	const after = await readTable(tid);
 	console.info(`  ${brief(after)}`);
-	check(next.turn === 2 && after.askerUid !== asker && !after.writingLocked, 'nextTurn rotates the asker and resets');
+	check(next.turn === 2 && after.askerUid === mate && !after.writingLocked, 'a claim from rate starts the next turn and resets');
 
 	// ---- teacher moves ----------------------------------------------------
 	console.info('\n== classMoveStudent / classAddNoDevice / classAllTablesTo');
