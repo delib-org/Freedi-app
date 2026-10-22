@@ -870,3 +870,385 @@ Same on a laptop, centred column 400 px. The account line is what makes the scre
 10. **`teacher.home.empty` with a colon** ("…לשיעור הראשון:") is now the lead line of the open form, which is how the colon reads correctly. The old value "עוד אין שיעורים. התחילו בשיעור חדש." must be replaced in all 7 locales, not appended.
 11. **(?) items for a native read:** "מחוברים כ־{{name}}" (gender-plural address to one person is the app's register, but "מחובר/ת" is the alternative), and all proposed NEW strings above.
 12. **Busy label for the end choice.** No IA string; the design avoids one (button keeps its label, `aria-busy`, disabled). If a visible busy word is wanted, `console.opening` ("פותחים…") does not fit; a NEW `console.ending` would be needed.
+
+## 14. Lesson introduction
+
+> **Decisions at build time (2026-10-22), they override the text below where they differ.**
+> - **The text limit is 600 characters** (`INTRO_TEXT_MAX = 600`), not 800. Every "800" below reads 600. At 600 the projector keeps the question at 72 px, so the "shrink the question to 48 px" last step (UX 14.D, 14.J-4) is **dropped**: the text steps 48 -> 40 -> 32 px and stops there.
+> - **Editor:** one textarea holding markdown-lite, with the three-button toolbar (UX 14.A / 14.B).
+> - **Stored fields** (UX 14.J-8): paragraph children exactly as `createParagraphChildStatement` writes them: top-level `order` and `blockType` (`paragraph` | `li`), and `doc.listType`, `doc.contentHtml`, `doc.paragraphType`. The plain text is `statement`.
+> - **"Video failed"** applies only to direct mp4 / webm files (a YouTube embed's own error is invisible to the page). On the phone it reads "המורה מקרין"; on the projector the text comes back with `projector.video_failed`.
+> - **Firestore rules (IA 14.12 F):** checked, no change needed. The creator, or an admin of the lesson, may create, update and delete the paragraph children (`tests/rules/join-class-intro.test.mjs`).
+> - **One embed reader** is `introVideoEmbed()` in `lib/classroom/introVideos.ts` (not `classSettings.ts`, so the student entry chunk does not carry it).
+
+Status: draft · Date: 2026-10-22 · Designs against `../ia/agora-classroom.md` §14. The IA fixes the storage (paragraph children of the main statement + `statementSettings.introVideos` + `lessonPlan.projectorVideoId`), the limits (800 characters, 12 blocks, 5 videos, 60-character titles, 500-character links), the section order on the plan screen, the student order (question card, text, videos), the console as the only thing that drives the projector, no autoplay, no thumbnails, one player at a time, the labels of 14.3 and the states of 14.10. Open questions A-D take their defaults: the screen stays "תכנון השאלות", only YouTube and direct https `.mp4` / `.webm`, the introduction appears at Opening only, and the title is optional ("סרטון n").
+
+This section decides layout, the editor's form, weight, motion and accessibility. Frames: phone 390 px (checked at 360 × 640), laptop 1280 px, projector 1280 × 720 (the worst real case) and 1920 × 1080. RTL: the **right edge is the start edge**, and wireframes are drawn as the user sees them. Strings come from IA 14.3. A string the IA does not have is marked **NEW** and listed in 14.J; nothing here renames an IA label. The rules of §1, §8 and §13.0 still bind: Assistant 400/700 only, tokens only, `transform` / `opacity` only, nothing loops, no emoji, no arrow glyphs in strings, busy after 400 ms.
+
+### 14.0 Decisions in one place
+| Question the IA left to UX (14.13) | Decision | Why, in one line |
+|---|---|---|
+| Editor form | **One `<textarea>` holding markdown-lite**, a 3-button toolbar above it that writes the markers, and a preview that appears once the text has formatting | Native IME, undo, autocorrect and RTL on every old phone and laptop. Zero dependencies. About 1.5 kB of teacher-only JS |
+| Video row on the plan screen | A `.plan-card` like the question cards: handle, number, link, title, "מחיקה" | Same reorder code and keyboard, so a teacher who has ordered questions already knows how to order videos |
+| Video row on the phone | A flat row: number and title, "לצפות כאן" at the end, and the "על המקרן עכשיו" tag under the title. Tapping the button opens the player in place inside the row | No poster, no sheet. The student never leaves the scroll |
+| "על המקרן עכשיו" without colour alone | An inverted pill (paper text on ink), a CSS screen shape, and a 3 px ink start rule on the row | It still reads in greyscale and to a colour-blind student. A screen reader reads it as part of the row text |
+| Projector text size | Measured fit: **48 → 40 → 32 px**, and a last step that shrinks the question (see 14.J-4) | 800 characters do not fit at 40 px under a 72 px question on 1280 × 720 |
+| Text to video switch on the projector | A remount with the existing 220 ms `projector-fade`. The text is not kept behind the player | One thing per step (§6) |
+| Console chooser | A labelled button group in the switch band's start side: "על המקרן:" then "הטקסט · 1. … · 2. …", with `aria-pressed` | The same pattern as the band's existing segment. Nothing to learn |
+| Should the phone's open player stick while scrolling? | **No.** | `position: sticky` on an iframe repaints on every scroll frame on old Android. With at most 5 rows, the player is never far away |
+| Should the projector show the title during play? | **Yes, always.** | A YouTube iframe gives no play event without the IFrame API (≈ 30 kB more). The title stays at 40 px, above the player and outside it |
+
+### 14.A The text format (markdown-lite), and why not a rich editor
+**What the teacher types** (one line = one block):
+| Typed line | Block written | Shown as |
+|---|---|---|
+| `כמה משפטים…` | `paragraph` | a paragraph |
+| `- דבר ראשון` (also `• ` or `* ` followed by a space) | `li`, `listType: ul` | a bullet item |
+| `1. דבר ראשון` (any number, then `.` or `)`, then a space) | `li`, `listType: ol` | a numbered item. The renderer numbers each run 1, 2, 3, so the typed number never matters |
+| `**מילה**` anywhere in a line | `contentHtml` gets `<strong>מילה</strong>`. `content` keeps the plain text without the stars | bold |
+| an empty line | nothing (it only spaces the textarea) | — |
+
+- **Count:** the counter counts the plain `content` of all blocks: no stars, no list markers, no line breaks. This is the same number the projector has to fit, and the same number the save refuses beyond.
+- **Round trip:** loading the plan turns the children back into lines. A `paragraph` becomes its `content`, with `**` around each `<strong>` run. A `ul` item becomes `- ` plus its text. An `ol` run becomes `1. `, `2. ` and so on.
+- **Rendering (phone, projector, preview):** one function `introNodes(blocks)` in `components/IntroText.ts`. It splits `contentHtml` on `<strong>` / `</strong>` with one regex and toggles bold. Every other tag is dropped, and the five HTML entities are decoded to text. The output is Mithril nodes, so nothing is injected as HTML (IA 14.2 "Video safety"). Consecutive `li` blocks with the same `listType` share one `<ul>` / `<ol>`.
+
+**Why not `contenteditable` with Bold / List buttons (rejected):**
+1. **Weight.** A usable one needs `execCommand` (deprecated, and it behaves differently per browser) and a paste sanitizer. In practice that means a library, which breaks Tal's "no editor library" rule.
+2. **Unpredictable output.** Chrome writes `<div>`, Safari `<br>`, and pasted Word text brings `<span style="font-weight:700">`. Each would need mapping back into paragraph children.
+3. **IME and bidi.** Hebrew and Arabic composition inside a `contenteditable` list item has known caret bugs on old Android WebViews. A textarea has none.
+4. **What students see is unchanged:** they never see a star, because the renderer turns the markers into formatting. Only the teacher sees them, the preview shows the result, and the toolbar means the teacher never needs to learn the syntax.
+
+### 14.B Plan screen, section "הקדמה" (`/t/:mid/plan`)
+Its place in the page is fixed by IA 14.4: פרטי השיעור → השאלה לפתרון → **הקדמה** → השאלות לשולחנות. The video field leaves "פרטי השיעור" (`plan.details.video*` keys are retired).
+
+**Laptop (720 px column, inside the existing `.plan__body`):**
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ הקדמה                                                                   │ h2.plan__section-title (plan.intro.title)
+│ מוצגת בשלב הפתיחה: גדול על המקרן ובטלפונים של התלמידים.                   │ p.plan__help (plan.intro.help)
+│ ┌────────────────────────────────────────────────────────────────────┐ │ .plan-card.intro-editor
+│ │ טקסט                                                                │ │ label 14px 700 ink-muted (plan.intro.text.label)
+│ │ [ מודגש ] [ רשימה ] [ רשימה ממוספרת ]                                 │ │ .intro-editor__tools, role=toolbar, 40px
+│ │ ┌────────────────────────────────────────────────────────────────┐ │ │
+│ │ │ השבוע הנהלת בית הספר שוקלת **לאסור טלפונים** בכל שעות היום.     │ │ │ textarea.intro-editor__input
+│ │ │ לפני שמחליטים, נשמע את שני הצדדים:                               │ │ │ rows=6, 16px 400, line-height 1.5
+│ │ │ - יונתן חושב שהטלפון מפריע ללמידה                                │ │ │ dir=auto, resize: vertical
+│ │ │ - נועה חושבת שהטלפון עוזר בחירום                                 │ │ │
+│ │ └────────────────────────────────────────────────────────────────┘ │ │
+│ │                                                       214 מתוך 800 │ │ .intro-editor__count, end side, tabular
+│ │ ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐ │ │ .intro-editor__preview (only when the
+│ │   כך זה ייראה NEW                                                   │ │ text has ** or a list line)
+│ │   השבוע הנהלת בית הספר שוקלת לאסור טלפונים בכל שעות היום.            │ │ the shared .intro-text block at 16px
+│ │   לפני שמחליטים, נשמע את שני הצדדים:                                │ │ ("לאסור טלפונים" in 700)
+│ │    • יונתן חושב שהטלפון מפריע ללמידה                                 │ │
+│ │    • נועה חושבת שהטלפון עוזר בחירום                                  │ │
+│ │ └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘ │ │
+│ └────────────────────────────────────────────────────────────────────┘ │
+│                                                                        │
+│ סרטונים                                                                 │ h3.intro-videos__title 16px 700 (plan.intro.videos)
+│ ┌────────────────────────────────────────────────────────────────────┐ │ li.plan-card.intro-video
+│ │ ⋮⋮  1   [ https://youtu.be/abc123                          ]  מחיקה │ │ handle · number · link (ltr) · delete
+│ │         [ איך זה נראה בכיתה בלי טלפונים                     ]        │ │ title field (plan.intro.video.title)
+│ └────────────────────────────────────────────────────────────────────┘ │
+│ ┌────────────────────────────────────────────────────────────────────┐ │
+│ │ ⋮⋮  2   [ https://vimeo.com/123                             ]  מחיקה │ │ aria-invalid → --danger border
+│ │         אפשר קישור YouTube או קובץ וידאו שמתחיל ב־https://           │ │ .plan-card__error (plan.intro.video.invalid)
+│ │         [ שם הסרטון                                         ]        │ │ placeholder = label
+│ └────────────────────────────────────────────────────────────────────┘ │
+│ ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐ │
+│                               + סרטון                                  │ button.plan__add (plan.intro.video.add)
+│ └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘ │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+**Phone (390 px):** the same column. The toolbar's three buttons fit on one row (≈ 250 px at 14 px). The textarea is full width with `rows=6`. In each video row, the link field takes the full width and "מחיקה" drops under the title field at the end side:
+```
+┌──────────────────────────────────────┐
+│ ⋮⋮ 1 [ https://youtu.be/abc123     ] │
+│      [ איך זה נראה בכיתה בלי טל…   ] │
+│                              מחיקה  │
+└──────────────────────────────────────┘
+```
+
+**Toolbar (`.intro-editor__tools`, `role="toolbar"`, `aria-label` = "טקסט", `aria-controls` = the textarea):**
+- **Three text buttons**, `button.intro-editor__tool`, 40 px tall with a 48 px hit area through padding, paper fill and a 1 px `--border-light` border, `--radius-full`, 14 px, in this order: "מודגש" (`plan.intro.bold`, drawn in 700 so the button shows what it does), "רשימה" (`plan.intro.list`), "רשימה ממוספרת" (`plan.intro.numbered`).
+- **Words, not glyphs:** a "B" or a list icon would need an icon the set does not have, and a teacher reads words faster.
+- **They are actions, not toggles:** no `aria-pressed`. Each button wraps or unwraps; it does not hold a state.
+  - **מודגש:** wraps the selection in `**…**`. If the selection is already wrapped, the stars are removed. With no selection it inserts `****` and puts the caret in the middle.
+  - **רשימה / רשימה ממוספרת:** adds `- ` or `1. ` to every non-empty line the selection touches. If all of those lines already carry that marker, the markers are removed. Switching from one list type to the other replaces the marker.
+- **Each button calls `preventDefault()` on `pointerdown`.** The textarea therefore keeps its focus and selection, and **blur, and with it the save, does not fire on a toolbar press.** This is the detail that makes save-on-blur and a toolbar work together.
+- **Inserts go through `document.execCommand('insertText')`, with `setRangeText` as the fallback**, so that Ctrl+Z undoes a toolbar action. `setRangeText` alone bypasses the browser's undo stack.
+
+**Keyboard in the textarea:**
+- `Ctrl` / `Cmd` + `B` toggles bold. It matches `e.code === 'KeyB'`, not `e.key`, because on a Hebrew layout `e.key` is "נ".
+- **Enter on a list line** continues the list: `- ` is copied, and `n. ` becomes `n+1. `. Enter on a list line that has only its marker removes the marker, which ends the list (the behaviour of every word processor).
+- Tab is not captured, so focus leaves the textarea as usual (no keyboard trap). Shift+Enter is a plain newline.
+
+**Counter and limits (`p.intro-editor__count`, 14 px, `--ink-soft`, `tabular-nums`, end side):**
+- It reads "214 מתוך 800" (`plan.intro.text.count`) and is tied to the textarea by `aria-describedby`, so a screen reader hears it on focus. It is **not** a live region: it would announce every keystroke.
+- **Over 800:**
+  - the count turns `--danger` in 700;
+  - the textarea gets `aria-invalid="true"` and a `--danger` border;
+  - `p.plan-card__error` "ארוך מדי. קצרו ל־800 תווים." (`plan.intro.text.too_long`) appears at the start side, `role="alert"`, so it is announced once, when the limit is crossed.
+  - Blur does not save. "שמירה" in the bar moves focus to the textarea and does not save the text (the other fields still save).
+  - There is **no `maxlength`:** a pasted long text would otherwise be cut without a word. The teacher sees the overflow and shortens it.
+- **Over 12 blocks:** the same treatment, with the line **NEW** "אפשר עד 12 שורות" (?) (14.J-2).
+
+**Preview (`.intro-editor__preview`):**
+- It appears only when the text contains `**` or a list line. Plain paragraphs look the same in the textarea, so a preview of them would only take space.
+- The look is a dashed 1 px `--border-medium` box with an `--paper-soft` fill, the label **NEW** "כך זה ייראה" (?) at 14 px `--ink-muted`, then the shared `.intro-text` at 16 px.
+- It is rendered by the same `introNodes()` the phone uses, so it costs no extra code. It updates on input, throttled to one `requestAnimationFrame`.
+- It is `aria-hidden="true"`: it repeats the textarea, and a screen-reader user already gets the structure from the markers.
+
+**Saving the text (IA 14.4):**
+- **On blur of the textarea, save the whole text, through the existing `runSave(key 'intro:text')` / `fieldError` path.** "שמירה נכשלה" + "נסו שוב" appear under the textarea.
+  - The controller parses the lines into blocks and diffs them against the loaded children by position.
+  - It creates, updates or deletes only the blocks that changed, through `createParagraphChildStatement` (create) and the existing update and delete helpers, in one batch.
+  - So one edited sentence is still one write. See 14.J-1 for how this reads the IA's "per block".
+- **Saved:** the bar's "שמירה" turns to the teal "נשמר" (existing). The section has no saved mark of its own: one place says "saved".
+
+**Video rows (`li.plan-card.intro-video` inside `ul.plan__list.intro-videos__list`):**
+- **Handle `span.plan-card__handle`**, the existing element. A second `createDragReorder` instance (`introReorder`) is used, because its ids are video ids. Drag works by the handle; on the handle, ArrowUp / ArrowDown move the row, and focus stays on the moved handle (the existing `focusHandleAfterMove`).
+  - The handle's `aria-label` is `plan.reorder.aria` with `{name}` = the title, or "סרטון n".
+  - The move announcement needs a masculine form (14.J-3).
+- **Number `span.intro-video__n`**, 16 px 700 `--ink-soft`, `tabular-nums`, 24 px wide. It is the same number the console and the phone show, so "video 2" means the same row everywhere. It is `aria-hidden`, since the labels already carry the position.
+- **Link field:** `input.plan-card__text.intro-video__url`, `type="url"`, `inputmode="url"`, `dir="ltr"`, `autocomplete="off"`, `spellcheck="false"`, `maxlength` 500.
+  - Placeholder "https://…"; `aria-label` "קישור" + the number (`plan.intro.video.url`).
+  - Weight 400, not the question card's 600: a URL is not a heading.
+- **Title field:** `input.plan-card__hint.intro-video__title`, `maxlength` 60, `dir="auto"`. Its placeholder and `aria-label` are "שם הסרטון" (`plan.intro.video.title`), and the `aria-label` adds the number.
+  - Enter in the link field commits and moves focus to the title field. Enter in the title field blurs (saves).
+- **Delete:** `button.btn.btn--tertiary.btn--small.plan-card__delete` "מחיקה" (`plan.delete`).
+  - `aria-label` uses `plan.delete.aria` with `{name}` = the title, or "סרטון n".
+  - There is no confirm, the same as for the questions.
+  - If the deleted video is the one on the projector, readers fall back to the text, because the id no longer resolves.
+
+**Video validation and saving:**
+- **On blur of the link:** an empty link in a row that was never saved does nothing; the row stays a draft.
+  - An invalid link (not https, or not YouTube / `.mp4` / `.webm`, checked by `introVideoEmbed()`) gives `aria-invalid`, a `--danger` border, and the line "אפשר קישור YouTube או קובץ וידאו שמתחיל ב־https://" (`plan.intro.video.invalid`, `role="alert"`) under the field. Nothing is saved.
+  - **The error is shown on blur, never while typing. Once shown, it is re-checked on every input and clears the moment the link is valid,** so the teacher sees the fix land.
+- **Valid link:** the row is saved through `runSave('intro:video:<id>')`. One write sends the whole `introVideos` array (order and titles travel together, IA 14.2), and on the first such write it also deletes `videoUrl`.
+- **Title:** saved on blur. An empty title saves too and shows as "סרטון n".
+- **A draft row** (no valid link yet) is drawn with the idle handle (`.plan-card__handle--idle`, the existing new-card look). It cannot be dragged and is not sent. "שמירה" drops empty draft rows silently, and draft rows with an invalid link keep their error.
+- **"+ סרטון"** (`button.plan__add`, existing dashed card) adds a draft row at the end and focuses its link field.
+  - At 5 rows the button is replaced by `p.plan__help` "אפשר עד 5 סרטונים" (`plan.intro.video.max`). The text is not a disabled button, because a disabled button hides why.
+- **Legacy lesson:** `introVideosOf(main)` returns the old `videoUrl` as row 1 with an empty title. The teacher sees one row and changes nothing to keep it.
+
+**Empty state:** the section title, the help line, the toolbar and the empty textarea with the placeholder "כמה משפטים על הדילמה ועל מה שמחכה לכיתה" (`plan.intro.text.placeholder`), the count "0 מתוך 800", then "סרטונים" and the dashed "+ סרטון". No "empty" message is needed: the dashed button and the placeholder are the invitation.
+
+**Loading:** the existing `.plan__skeleton`, with one extra `--tall` block for this section.
+
+**Focus order:** h2 → toolbar (3 buttons) → textarea → (error line is read through `aria-describedby`, not as a tab stop) → for each row: handle → link → title → "מחיקה" → "+ סרטון".
+
+### 14.C Student Opening (`/m/:mid`, step 1, 390 px)
+```
+┌──────────────────────────────────────┐
+│                                פתיחה │ header (stepLabel)
+│                         צופים ביחד   │ instruction: opening.watch, or opening.read with no videos
+│ ┌──────────────────────────────────┐ │
+│ │ השאלה של השיעור                  │ │ .opening__card (existing)
+│ │ לאסור טלפונים בבית הספר?         │ │ 22px 700
+│ └──────────────────────────────────┘ │
+│                                      │ 24px
+│ השבוע הנהלת בית הספר שוקלת **לאסור   │ .intro-text, 18px 400, line-height 1.55
+│ טלפונים** בכל שעות היום. לפני        │ on paper, no card (§1.4: the card is
+│ שמחליטים, נשמע את שני הצדדים:        │ the question; the text is reading matter)
+│   • יונתן חושב שהטלפון מפריע ללמידה  │ ul, markers at the start (right)
+│   • נועה חושבת שהטלפון עוזר בחירום   │
+│                                      │ 24px
+│ סרטונים                              │ h2.intro-videos__title 14px 700 ink-muted (opening.videos)
+│ ┌──────────────────────────────────┐ │ ol.intro-videos > li.intro-video-row
+│ ┃ 1. איך זה נראה בכיתה בלי טלפונים │ │ 3px ink start rule = on the projector
+│ ┃ [▭ על המקרן עכשיו]               │ │ .intro-video-row__live (ink pill, paper text)
+│ ┃                    [▶ לצפות כאן] │ │ .btn--secondary 48px (opening.play)
+│ ├──────────────────────────────────┤ │
+│ │ סרטון 2                          │ │ untitled: "סרטון n", no number prefix
+│ │                    [▶ לצפות כאן] │ │
+│ └──────────────────────────────────┘ │
+│ (no primary; the teacher opens Side) │
+└──────────────────────────────────────┘
+```
+**Row open** (after "לצפות כאן" on row 2; row 1, if it was open, closes):
+```
+│ ├──────────────────────────────────┤ │
+│ │ סרטון 2                          │ │
+│ │ ┌──────────────────────────────┐ │ │ .intro-video-row__player, 16:9, radius-md
+│ │ │       (YouTube player)       │ │ │ iframe created now, not before; no autoplay
+│ │ └──────────────────────────────┘ │ │ the student presses the player's own play
+│ └──────────────────────────────────┘ │
+```
+
+**Layout and components:**
+- `.opening` (existing) keeps the card. Then come `div.intro-text.intro-text--phone`, a new shared block (14.G), and `section.intro-videos` (new, in `student-c2.scss`).
+- With no text and no videos, `.opening--centered` is kept: exactly today's screen (IA 14.8 Empty).
+- **Row `li.intro-video-row`:**
+  - a grid with two columns: `1fr` for the title and the tag, `auto` for the button;
+  - 12 px block and 16 px inline padding, `--bg-card`, a 1 px `--paper-line` divider between rows; the list sits in one `--radius-lg` box, like a settings list;
+  - a minimum height of 64 px.
+- **Title `.intro-video-row__title`:** 18 px 700, wraps (never ellipsis on the phone), `dir="auto"`. The label is "n. title". Untitled rows show "סרטון n" with no prefix, the same rule as the console (14.J-6).
+- **Button `.intro-video-row__play`:** `.btn.btn--secondary`, 48 px, with the existing `.opening__play-icon` CSS triangle and "לצפות כאן". It is the only interactive control in a closed row; the row itself is not a button, so it is one clear target.
+- **On the projector, `.intro-video-row--live`:**
+  - a 3 px `--ink` `border-inline-start`;
+  - under the title, `span.intro-video-row__live`: a 24 px pill, `--ink` fill, `--paper` text, 14 px 700, `--radius-full`, holding a 10 × 7 px CSS screen shape (`::before`: a 1.5 px paper outline box) and "על המקרן עכשיו" (`opening.on_projector`).
+  - That makes three cues besides colour: words, a shape, and a heavier edge. The pill is part of the row's text, so a screen reader reads "1. איך זה נראה…, על המקרן עכשיו, לצפות כאן".
+  - **No live region:** the students are looking at the wall, and an announcement every time the teacher switches would be noise.
+- **Open player:** the button is replaced in place by the player (`iframe` or `video`, `.intro-video-row__player`, `inline-size: 100%`, `aspect-ratio: 16 / 9`), spanning both grid columns.
+  - Focus moves to the player, so a keyboard or screen-reader user can press play.
+  - The row is scrolled into view with `scrollIntoView({ block: 'nearest' })`: `behavior: 'smooth'` normally, `'auto'` under reduced motion.
+  - **There is no close button.** Opening another row closes this one, and the teacher opening Side closes it too (IA 14.6). Each extra control is one more thing on a screen that should be put down.
+  - The iframe is `youtube-nocookie.com/embed/<id>?playsinline=1&rel=0`, `allow="encrypted-media; picture-in-picture; fullscreen"`, `allowfullscreen`, `referrerpolicy="strict-origin-when-cross-origin"`, `title` = the row's label. A file is `<video controls playsinline preload="none">`.
+- **Video failed (file `onerror`):** "המורה מקרין" (`opening.video_failed`) replaces that row's button or player, as `p.intro-video-row__note`, 16 px `--ink-muted`, `role="status"`. A YouTube embed error shows inside the player itself; the app cannot see it (14.J-5).
+
+**States (IA 14.8):**
+| State | Look |
+|---|---|
+| Empty | today's centred card |
+| Loading text | `main.description` split on line breaks, as plain `<p>`s, in the same `.intro-text` block. When the `get` returns, the formatted nodes replace them **with no fade** (a fade would draw the eye to a change that carries no meaning). The block keeps its size where it can: same font, same line height |
+| Text fetch failed | the plain `description` stays. No error |
+| Video failed | "המורה מקרין" in that row |
+| Done | the teacher opens Side; any player unmounts with the view |
+
+**Focus order:** header → instruction → card → text (not focusable; read in order) → the "סרטונים" heading → each row's button (or player). There is no bottom action.
+
+**Weight (phone):** no image, no poster, no iframe until a tap. The new CSS is about 1.4 kB unminified in the lazy `student-c2.scss`, plus `intro-text.scss` at about 0.5 kB. The JS is `IntroText.ts` (the renderer, about 0.6 kB) and the row logic inside `OpeningView`. There is one extra `get`, and only when `description` is non-empty.
+
+### 14.D Projector Opening (`/t/:mid/screen`)
+**Text (default, `projectorVideoId` absent or null), 1280 × 720:**
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                          השאלה של השיעור                                 │ .projector-eyebrow 32px ink-muted
+│                     לאסור טלפונים בבית הספר?                             │ .projector-question 72px 700
+│                                                                          │ 32px gap
+│      השבוע הנהלת בית הספר שוקלת לאסור טלפונים בכל שעות היום.             │ .intro-text.intro-text--projector
+│      לפני שמחליטים, נשמע את שני הצדדים:                                  │ 48 / 40 / 32px by fit, line-height 1.4
+│        •  יונתן חושב שהטלפון מפריע ללמידה                                │ text-align: start (right), the column
+│        •  נועה חושבת שהטלפון עוזר בחירום                                 │ centred, max-inline-size 30em
+│                                                                          │
+├──────────────────────────────────────────────────────────────────────────┤
+│ פתיחה                                                  קוד 482913 [QR]   │ .projector-band (unchanged)
+└──────────────────────────────────────────────────────────────────────────┘
+```
+- **The text column is start-aligned, not centred.** Centred multi-line paragraphs and centred list markers are hard to read from the back row. The column itself sits in the centre of the stage, under the centred question.
+- **Fit:**
+  - `.intro-text--projector` starts with `data-fit="48"`.
+  - After render and on `resize`, and when the text changes, the view checks `stage.scrollHeight > stage.clientHeight`. If it overflows, it steps to 40, then to 32. That is at most two re-measures, on a laptop.
+  - If the text still overflows at 32, `.projector-step--opening-long` sets the question to 48 px (14.J-4). On 1280 × 720 that fits about 800 characters at a 30em measure; at 1920 × 1080 it never comes to that.
+  - The stage never scrolls: the projector is not interactive.
+- **Empty text:** today's projector, the eyebrow and the question, without the old "להפעיל את הסרטון" button (removed, together with `.projector-video-play` and `projector.playVideo`).
+
+**Video n (`projectorVideoId` = an id):**
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                     לאסור טלפונים בבית הספר?                             │ the question as the eyebrow: 32px ink-muted,
+│                  1. איך זה נראה בכיתה בלי טלפונים                        │ one line, ellipsis · the title: 40px 700
+│      ┌──────────────────────────────────────────────────────────────┐    │
+│      │                                                              │    │ .intro-stage__player 16:9
+│      │                  (YouTube player, not playing)               │    │ width = min(100%, (free height) × 16/9)
+│      │                                                              │    │ radius-md, no border, no shadow
+│      └──────────────────────────────────────────────────────────────┘    │
+├──────────────────────────────────────────────────────────────────────────┤
+│ פתיחה                                                  קוד 482913 [QR]   │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+- **Size:** the player takes the largest 16:9 box the stage allows: `inline-size: min(100%, calc((100dvh - 64px band - 2 × var(--space-xl) - 32px eyebrow - 56px title - 2 × var(--space-md)) * 16 / 9))`. On 1280 × 720 that is about 860 × 484.
+  - "Full screen" is the player's own fullscreen button (`allowfullscreen`). The app adds no control of its own (§6, IA 14.6).
+- **Loaded, never playing:** the same embed URL as the phone, no `autoplay`. The teacher clicks the player's play on the projector window. A file uses `<video controls preload="none">`.
+- **The title stays during play** (decision in 14.0). It sits outside the iframe, so it never covers the picture.
+- **Video failed (file `onerror`):** the text layout comes back, and the video's label shows above the eyebrow at 32 px `--ink-muted`. The IA gives no words for the failure itself (14.J-5).
+
+**Switch:** the step section is keyed by `projectorVideoId ?? 'text'`, so any change remounts it with the existing `projector-fade` (220 ms opacity). Under reduced motion `--dur-base` is 0, so the swap is instant. The old iframe is removed on the swap, which stops its sound: a video never keeps playing behind the text.
+
+**Live text:** the projector listens to the paragraph children (IA 14.2), so a typo fixed on the plan screen reaches the wall. That change re-runs the fit check, with no fade (it is the same item).
+
+**SR:** the projector is not a reading surface, but the iframe still gets `title` = the video label, and the text is real headings and lists.
+
+### 14.E Console switch band at Opening (`/t/:mid`, 1280)
+```
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+│ על המקרן:  [▭ הטקסט] [1. איך זה נראה בכיתה…] [2. ראיון עם המנהלת] [סרטון 3]   │ שולחנות│מה כתבו│ │ 48px band
+├────────────────────────────────────────────────────────────────────────────────────────────┤
+          ▲ on = ink fill, paper text, the screen shape before the words
+```
+- **Block `.projector-pick`** (NEW, `console-board.scss`), in `.switch-band__actions`, as the Opening step's only action:
+  - `span.projector-pick__label` "על המקרן:" (`console.opening.show`), 14 px 700 `--ink-muted`, with an `id`;
+  - `div.projector-pick__group`, `role="group"`, `aria-labelledby` = that label;
+  - one `button.projector-pick__item` per choice: first "הטקסט" (`console.opening.text`), then each video as "n. title", or "סרטון n" when it has no title.
+- **Item:**
+  - 40 px tall, `0 var(--space-md)` padding, 14 px, `--radius-full`, a 1 px `--border-medium` outline on paper;
+  - `max-inline-size: 14ch` with ellipsis, the full label in `title` and in the accessible name. Five long titles fit on 1280 next to the "שולחנות | מה כתבו" segment (≈ 1160 px).
+- **On, `.projector-pick__item--on` + `aria-pressed="true"`:**
+  - `--ink` fill, `--paper` text, 700;
+  - the CSS screen shape (`.projector-pick__mark`, 12 × 8 px, the same drawing as the phone's tag) before the words.
+  - Off items carry `aria-pressed="false"`. This is the band's own segment pattern (`.switch-band__segment-btn` with `aria-pressed`), drawn heavier, because this one changes what the room sees, not what the teacher sees.
+- **Why buttons with `aria-pressed`, not a `radiogroup`:** in a radio group, the arrow keys select as they move. Every arrow press would write `projectorVideoId` and flash the projector. With buttons, Tab moves between them and Enter or Space chooses one.
+- **Press:**
+  - The chooser writes `lessonPlan.projectorVideoId` (null for "הטקסט").
+  - The **on** state follows the lesson doc (the truth the projector also follows), not the click.
+  - If the snapshot has not confirmed within 400 ms, the pressed item gets `aria-busy="true"` and a 1.5 px dashed `--ink` outline, and the group is disabled until the confirmation (no new string).
+  - **Failed:** the existing `.console__failure` band shows `console.failed` with `{label}` = the item's label, plus `console.retry`, and the on-state stays where the doc says.
+- **Shown when** the step is Opening **and** the lesson has at least 1 video. With no videos the row is not drawn (IA 14.6), and the band holds only the segment. With no text, "הטקסט" stays, and the projector then shows the question alone.
+- **Held (paused or ended):** disabled with the other step actions (`heldNow`), since the projector shows the paused screen anyway.
+- **Next step:** the server clears `projectorVideoId` on every step change (IA 14.2), and the row leaves with the step.
+- **Below 1280** (a small laptop, or a teacher on a tablet): `.switch-band` gets `flex-wrap: wrap`, and the chooser takes its own line above the segment. This is an exception to §5's "the band never moves", accepted because it only happens on a screen narrower than the one §5 designs for. It never scrolls sideways.
+- **Keyboard order:** rail → forward control → "על המקרן:" items → segment → board, which is the reading order of the band.
+
+### 14.F Motion and reduced motion
+| Where | Motion | Reduced motion |
+|---|---|---|
+| Preview appearing on the plan screen | none (it simply appears; it is below the caret) | none |
+| Video row added or removed on the plan screen | 140 ms opacity in (`--dur-quick`); removal is instant | instant |
+| Reorder | the existing `dragReorder` behaviour (no new motion) | as it is |
+| Phone: a player opening | none, then `scrollIntoView` `smooth` | `auto` |
+| Phone: the "על המקרן עכשיו" tag moving | 140 ms opacity on the new tag | instant |
+| Phone: plain text swapped for formatted | none | none |
+| Projector: text to video and back | `projector-fade` 220 ms on remount | instant (`--dur-base: 0`) |
+| Console: on-state change | none (fill swap) | none |
+Nothing loops, and nothing moves by itself on a phone.
+
+### 14.G New and changed blocks
+| Block | File | Notes |
+|---|---|---|
+| `.intro-text` (`--phone`, `--preview`, `--projector`; `[data-fit]`) | NEW `styles/intro-text.scss`, imported by `components/IntroText.ts`, so Vite puts it once in the shared lazy chunk | `--intro-size` per modifier (phone `--font-size-lg`, preview `--font-size-base`, projector 48/40/32 px); `p + p` 0.6em; `ul`/`ol` `padding-inline-start: 1.4em`, `disc` / `decimal`; `li + li` 0.25em; `strong` 700; `dir="auto"` on each block, so an Arabic or English lesson reads correctly |
+| `.intro-editor` (`__tools`, `__tool`, `__input`, `__count`, `__count--over`, `__preview`, `__preview-label`) | `teacher.scss` | `__input` copies the `.plan-card__text` field look at weight 400, `min-block-size: 9em`, `resize: vertical` |
+| `.intro-video` (`__n`, `__url`, `__title`) | `teacher.scss` | a modifier on `.plan-card`, reusing `__handle`, `__delete`, `__error` |
+| `.intro-videos` (`__title`, `__list`) | `teacher.scss` + `student-c2.scss` | the plan list and the phone list share the name; each lazy file styles its own context |
+| `.intro-video-row` (`--live`, `--open`, `__title`, `__live`, `__play`, `__player`, `__note`) | `student-c2.scss` | the phone row |
+| `.intro-stage` (`__eyebrow`, `__title`, `__player`) + `.projector-step--opening-long` | `projector.scss` | replaces `.projector-video` and `.projector-video-play` |
+| `.projector-pick` (`__label`, `__group`, `__item`, `__item--on`, `__mark`) | `console-board.scss` | the console chooser |
+| Removed | — | `.projector-video-play`, `projector.playVideo`, `plan-details__video`, `plan.details.video*`, `opening.video_title`, `projector.videoTitle` |
+
+Tokens only. The pill and the "on" item use `--ink` / `--paper` (16:1). `--danger` appears on errors only. Dark mode and high contrast follow Join's existing overrides; nothing here hardcodes a colour (the projector QR's `#fff` is untouched).
+
+### 14.H Accessibility summary
+- **Targets:** toolbar buttons 40 px tall with 48 px hit areas (mouse-first teacher surface, as §9 allows for the console); every phone control is 48 px or more.
+- **Labels:** the textarea has a visible `<label>` "טקסט". The toolbar has `role="toolbar"` and a name. Link and title fields have `aria-label`s with the row number. Each delete and handle names its video.
+- **Errors:** `aria-invalid` plus a `role="alert"` line, announced once. The counter is described, not live.
+- **No keyboard traps:** Tab leaves the textarea. Reorder works with arrows on the handle. The console chooser works with Tab and Enter.
+- **Language:** `dir="auto"` on the textarea, the titles and each rendered block. Links are `dir="ltr"`.
+- **Zoom 200 %:** the plan column reflows (the toolbar wraps to two rows). Phone rows stack the button under the title. On the projector, zoom is not a concern.
+
+### 14.I Build order
+1. **Shared types first:** `introVideos`, `lessonPlan.projectorVideoId`, and `videoUrl` marked `@deprecated`. Repack them to functions and deploy rules before any client writes them (IA 14.2, the strict-parse trap). Check the rules for paragraph children (IA 14.12 F).
+2. **`lib/classroom`:** the `INTRO_*` constants, `introVideosOf(main)`, `introVideoEmbed(url)` (replaces `youtubeEmbedUrl` and `embedUrlOf`; `videoUrlOf` is deleted), and the markdown-lite `parseIntro(text) → blocks` / `introToText(blocks)`, with unit tests: lists, bold, entity escaping, limits, round trip.
+3. **`components/IntroText.ts` + `intro-text.scss`:** the safe renderer, with tests showing that only `<strong>` survives.
+4. **Plan screen:** the "הקדמה" section (`planIntro.ts` + `PlanIntro.ts`, so `PlanScreen.ts` stays under 500 lines): the editor, the toolbar, keys, the counter, the preview, the diff save, video rows with `introReorder`, the max line, the legacy migration on first save. Remove the video field from "פרטי השיעור".
+5. **Student Opening:** the text (description first, then one `get`), the rows, one player at a time, the live tag, "קוראים ביחד".
+6. **Projector:** the paragraph listener, the text with fit, the video stage keyed by `projectorVideoId`, removal of the play button.
+7. **Console:** `.projector-pick` in `SwitchBand` (new attrs `introVideos`, `projectorVideoId`, `onProject`), the write, busy and failure. The server clears `projectorVideoId` on step change.
+8. **i18n:** every 14.3 key and the NEW keys of 14.J in all 7 locales; delete the retired keys.
+9. **Verify with Playwright:**
+   - phone at 390 × 844 and 360 × 640, in `he` and `en`: 0, 1 and 5 videos; a 60-character title; text at 800 characters;
+   - projector at 1280 × 720 and 1920 × 1080 with 800 characters (no overflow), and on a video;
+   - console at 1280 with 5 long titles (no overflow);
+   - reduced motion, 200 % zoom, and axe on each screen.
+
+### 14.J IA gaps and conflicts found (reported, not changed)
+1. **"Saved per block on blur" vs. one textarea.** The design saves on the textarea's blur and writes only the changed blocks (create / update / delete by position, in one batch). Writes stay per block, but the blur belongs to the whole text. If the IA means one input per block, the editor becomes a list of inputs, and lists and bold get much harder to type. I recommend that the IA adopt the textarea reading.
+2. **No string for "more than 12 blocks".** `INTRO_BLOCKS_MAX` has no message. Proposed **NEW** `plan.intro.text.too_many`: "אפשר עד 12 שורות" (?). It is shown and blocks the save the same way as `too_long`.
+3. **`plan.reorder.moved` is feminine** ("הועברה", for שאלה). For a video (סרטון) it must be masculine. Proposed **NEW** `plan.intro.video.moved`: "הועבר למקום {{n}} מתוך {{total}}". `plan.reorder.aria` has no gendered verb and can be reused.
+4. **800 characters do not fit at 40 px on 1280 × 720 under a 72 px question.** About 670 characters fit at 32 px with a 2-line 72 px question. The design measures and steps the text 48 → 40 → 32, and as a last step shows the question at 48 px (`.projector-step--opening-long`). That conflicts with IA 14.9's "the question … at 72 px" for long texts only. The alternative is to lower `INTRO_TEXT_MAX` to about 600.
+5. **Projector "video failed" has no words, and YouTube failures are invisible.** IA 14.10 says "the text comes back, with the video's title" but gives no string. The design shows the label alone, which reads as a heading rather than as a failure. Proposed **NEW** `projector.video_failed`: "{{title}} · לא נטען" (?). Also, a YouTube embed that fails (removed, private, embedding disabled) shows YouTube's own error inside the iframe. Detecting it needs the YouTube IFrame API, about 30 kB, which is not worth it. So "video failed" on the phone and on the projector applies only to direct files.
+6. **"1. <title>" with no title** would read "1. סרטון 1". The design drops the number prefix for untitled videos on the console, the phone and the projector ("סרטון 1"). The IA's wording "1. <title>" should note this.
+7. **Preview label.** The plan screen's preview needs a label. Proposed **NEW** `plan.intro.preview`: "כך זה ייראה" (?). If the IA prefers no preview, the toolbar alone still works, but teachers will see the stars with nothing to explain them.
+8. **Field names to check against the model.** IA 14.2 writes `blockType: paragraph | li` and `doc.listType`. The shared `ParagraphSchema` uses `type` (`ParagraphType.paragraph | li`) and `listType`, and its `contentHtml` also allows `<em>`. The renderer here keeps `<strong>` only (as the IA says), and drops `<em>` to plain text. The build lane should write whatever `createParagraphChildStatement` actually emits.
+9. **Plain-text placeholder may be shorter than the final text** (IA 14.12 E): `description` can be a three-paragraph preview. Swapping in the formatted text then grows the block. That is accepted: it happens once, within a second, with no animation.
+10. **Console band wraps below 1280 px.** This is an exception to §5's "nothing in the first two bands ever moves", and it is limited to narrower screens. It never scrolls sideways.
