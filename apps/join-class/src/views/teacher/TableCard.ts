@@ -1,10 +1,20 @@
 import m from 'mithril';
 import { SPEAK_SECONDS } from '@freedi/shared-types';
 import type { ClassTable } from '@freedi/shared-types';
-import { t } from '@/lib/i18n';
+import { getLang, t } from '@/lib/i18n';
 import { getServerOffset, remainingMs } from '@/lib/classroom/serverClock';
 import { formatSpeakerTime, tableStepKey, timerLine } from '@/lib/classroom/consoleHelpers';
 import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
+import { joinNames } from '@/lib/classroom/listNames';
+import {
+	QUICK_KEYS,
+	everyoneAsked,
+	memberMark,
+	quickActionFor,
+	statusLine,
+	type QuickAction,
+	type TableMode,
+} from '@/lib/classroom/tableTurnConsole';
 import { addNoDevice, tableAction } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
 import { MemberChip } from './MemberChip';
@@ -20,6 +30,7 @@ export interface TableCardAttrs {
 	table: ClassTable;
 	students: ReadonlyMap<string, RosterStudent>;
 	plenum: boolean;
+	tableTalk: boolean;
 	mainId: string;
 	tableNumbers: readonly number[];
 }
@@ -34,6 +45,50 @@ function nameOf(
 	return uid ? (students.get(uid)?.name ?? uid.slice(0, 4)) : '';
 }
 
+export function tableModeOf(attrs: { plenum: boolean; tableTalk: boolean }): TableMode {
+	return attrs.plenum ? 'plenum' : attrs.tableTalk ? 'tableTalk' : 'proposals';
+}
+
+/** The table's max turns: one per tablemate with a device (never below the turn it is on). */
+export function turnLine(table: ClassTable): string {
+	return t('console.turn_n', {
+		n: table.turn,
+		max: Math.max(table.memberUids.length, table.turn),
+	});
+}
+
+/** The engine action behind each next-step verb. */
+export function quickActionName(quick: QuickAction): 'toTalk' | 'toWrite' | 'toRate' | 'nextTurn' {
+	if (quick.kind === 'turn') return 'nextTurn';
+
+	return quick.kind === 'talk' ? 'toTalk' : quick.kind === 'write' ? 'toWrite' : 'toRate';
+}
+
+/** The one next-step action of a table, as the verb the students' buttons end with. */
+export function quickRun(table: ClassTable, quick: QuickAction): Promise<boolean> {
+	return tableAction(table.tableId, { action: quickActionName(quick) });
+}
+
+export function quickLabel(quick: QuickAction): string {
+	return t(QUICK_KEYS[quick.kind], { n: quick.n ?? 0 });
+}
+
+function waitRows(attrs: TableCardAttrs): m.Children {
+	const { table, students } = attrs;
+	const options = table.questionId ? (consoleState.options.get(table.questionId) ?? []) : [];
+	const line = statusLine(table, tableModeOf(attrs), options);
+	if (!line) return null;
+	const names = (line.nameUids ?? []).map((uid) => nameOf(uid, students));
+	const params: Record<string, string | number> = { ...(line.params ?? {}) };
+	if (names.length > 1) params.names = joinNames(names, getLang());
+	else if (names.length === 1) {
+		params.name = names[0];
+		params.names = names[0];
+	}
+
+	return m('p.table-card__wait', { 'data-testid': 'table-wait' }, t(line.key, params));
+}
+
 function timerRows(attrs: TableCardAttrs): m.Children {
 	const { table, students } = attrs;
 	const remaining =
@@ -43,7 +98,8 @@ function timerRows(attrs: TableCardAttrs): m.Children {
 					totalMs: SPEAK_SECONDS * MS_PER_SECOND,
 				});
 	const line = timerLine(table, remaining, SPEAK_SECONDS * MS_PER_SECOND);
-	if (line.kind === 'none') return m('p.table-card__timer.table-card__timer--none', '—');
+	if (line.kind === 'none')
+		return waitRows(attrs) ?? m('p.table-card__timer.table-card__timer--none', '—');
 	const who = nameOf(line.speakerUid, students);
 
 	return [
@@ -140,9 +196,14 @@ export const TableCard: m.Component<TableCardAttrs> = {
 						},
 						t('console.table_n', { n: table.n }),
 					),
-					m('span.table-card__turn', t('console.turn_n', { n: table.turn })),
+					m('span.table-card__turn', turnLine(table)),
 				]),
-				m('p.table-card__now', t(tableStepKey(table, plenum))),
+				m(
+					'p.table-card__now',
+					everyoneAsked(table, tableModeOf(attrs))
+						? `${t(tableStepKey(table, plenum))} · ${t('console.all_asked')}`
+						: t(tableStepKey(table, plenum)),
+				),
 				timerRows(attrs),
 				m(
 					'p.table-card__asker',
@@ -159,6 +220,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 							camp: students.get(uid)?.camp ?? null,
 							from: table.n,
 							tableNumbers: attrs.tableNumbers,
+							turnMark: attrs.tableTalk ? memberMark(table, uid) : undefined,
 						}),
 					),
 					table.noDeviceMembers.map((nd) =>
@@ -185,30 +247,26 @@ export const TableCard: m.Component<TableCardAttrs> = {
 							},
 							`+ ${t('console.no_device')}`,
 						),
-				m('div.table-card__actions', [
-					plenum
-						? null
-						: m(
-								'button.btn.btn--tertiary.table-card__quick',
-								{
-									type: 'button',
-									'data-quick': 'write',
-									disabled: consoleState.held || isBusy(`table:${table.tableId}:toWrite`),
-									onclick: () => void tableAction(table.tableId, { action: 'toWrite' }),
-								},
-								t('console.quick_write'),
-							),
-					m(
-						'button.btn.btn--tertiary.table-card__quick',
-						{
-							type: 'button',
-							'data-quick': 'rate',
-							disabled: consoleState.held || isBusy(`table:${table.tableId}:toRate`),
-							onclick: () => void tableAction(table.tableId, { action: 'toRate' }),
-						},
-						t('console.quick_rate'),
-					),
-				]),
+				(() => {
+					const quick = quickActionFor(table, tableModeOf(attrs));
+					if (!quick) return null;
+					const label = quickLabel(quick);
+
+					return m('div.table-card__actions', [
+						m(
+							'button.btn.btn--tertiary.table-card__quick',
+							{
+								type: 'button',
+								'data-quick': quick.kind,
+								'aria-label': `${t('console.table_n', { n: table.n })}: ${label}`,
+								disabled:
+									consoleState.held || isBusy(`table:${table.tableId}:${quickActionName(quick)}`),
+								onclick: () => void quickRun(table, quick),
+							},
+							label,
+						),
+					]);
+				})(),
 			],
 		);
 	},

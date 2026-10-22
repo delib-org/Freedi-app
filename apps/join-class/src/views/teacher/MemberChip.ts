@@ -21,6 +21,8 @@ export interface MemberChipAttrs {
 	/** Where the chip sits now: table number, or null = unplaced. */
 	from: DropTarget;
 	tableNumbers: readonly number[];
+	/** Table talk: ✓ has asked, ? asking now (the same marks as the students' askers row). */
+	turnMark?: '✓' | '?' | '';
 }
 
 function sideLabel(camp: Camp | null): string {
@@ -59,7 +61,14 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 		const { uid, name, camp, noDevice } = attrs;
 		const drag = consoleState.drag;
 		const active = uid !== undefined && drag.mode !== 'idle' && 'uid' in drag && drag.uid === uid;
-		const label = noDevice ? `${name}, ${t('console.no_device')}` : `${name}, ${sideLabel(camp)}`;
+		const turnWord =
+			attrs.turnMark === '✓'
+				? `, ${t('turn.asker_done', { name })}`
+				: attrs.turnMark === '?'
+					? `, ${t('turn.asker_now', { name })}`
+					: '';
+		const label =
+			(noDevice ? `${name}, ${t('console.no_device')}` : `${name}, ${sideLabel(camp)}`) + turnWord;
 		// While the lesson is held nobody moves: no drag, no move menu.
 		const ref = uid !== undefined && !consoleState.held ? { uid, name, from: attrs.from } : null;
 		const mod = camp ? `member-chip--${camp}` : '';
@@ -92,6 +101,9 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 				[
 					m('span.member-chip__mark', { 'aria-hidden': 'true' }, camp ? CAMP_MARK[camp] : '○'),
 					m('span.member-chip__name', name),
+					attrs.turnMark
+						? m('span.member-chip__turn', { 'aria-hidden': 'true' }, attrs.turnMark)
+						: null,
 					noDevice ? m('span.member-chip__tag', t('console.no_device')) : null,
 				],
 			),
