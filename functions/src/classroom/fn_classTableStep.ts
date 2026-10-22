@@ -34,6 +34,8 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 	switch (req?.action) {
 		case 'pickQuestion':
 			return { action: 'pickQuestion', questionId: requireId(req.questionId, 'questionId') };
+		case 'passAsker':
+			return { action: 'passAsker', uid: requireId(req.uid, 'uid') };
 		case 'nextSpeaker':
 			return { action: 'nextSpeaker', uid: requireId(req.uid, 'uid') };
 		case 'setWritingMode': {

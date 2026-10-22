@@ -48,7 +48,8 @@ export type ClassTableAction =
 	| { action: 'toWrite' }
 	| { action: 'setWritingMode'; mode: WritingMode }
 	| { action: 'toRate' }
-	| { action: 'nextTurn' };
+	| { action: 'nextTurn' }
+	| { action: 'passAsker'; uid: string };
 
 export type ClassTableStepRequest = { tableId: string } & ClassTableAction;
 export interface ClassTableStepResponse {

@@ -88,6 +88,11 @@ export const ClassTableSchema = object({
 	spokenUids: array(string()),
 	/** Guiding questions already asked at this table. */
 	usedQuestionIds: array(string()),
+	/**
+	 * Tablemates who have had their turn to ask (the current asker is added when
+	 * the turn moves on). Optional, read as [] when missing; server-written only.
+	 */
+	askedUids: optional(array(string())),
 	updatedAt: number(),
 });
 export type ClassTable = InferOutput<typeof ClassTableSchema>;

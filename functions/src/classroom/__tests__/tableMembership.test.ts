@@ -23,6 +23,23 @@ function table(overrides: Partial<ClassTable> = {}): ClassTable {
 }
 
 describe('removeMember', () => {
+	it('takes the leaver out of askedUids and passes the asker role to the next one who has not asked', () => {
+		const next = removeMember(table({ askedUids: ['a', 'b'], askerUid: 'a' }), 'a', NOW);
+		expect(next.askedUids).toEqual(['b']);
+		expect(next.askerUid).toBe('c');
+	});
+
+	it('skips tablemates who already asked when the asker leaves', () => {
+		const next = removeMember(table({ askedUids: ['b'], askerUid: 'a' }), 'a', NOW);
+		expect(next.askerUid).toBe('c');
+		expect(next.askedUids).toEqual(['b']);
+	});
+
+	it('falls back to the next seated when everyone left has asked', () => {
+		const next = removeMember(table({ askedUids: ['b', 'c'], askerUid: 'a' }), 'a', NOW);
+		expect(next.askerUid).toBe('b');
+	});
+
 	it('passes the asker role to the next tablemate when the asker leaves', () => {
 		const next = removeMember(table(), 'a', NOW);
 		expect(next).toMatchObject({

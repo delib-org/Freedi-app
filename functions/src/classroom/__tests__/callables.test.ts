@@ -5,7 +5,7 @@ import { addNoDevice, cleanNoDeviceName } from '../fn_classAddNoDevice';
 import { parseAction, tableStep } from '../fn_classTableStep';
 import { allTablesTo } from '../fn_classAllTablesTo';
 import { closeBallot, freezeBallot } from '../fn_classBallot';
-import { ClassroomError } from '../classroomErrors';
+import { ClassroomError, toHttpsError } from '../classroomErrors';
 import { FakeFirestore } from './fakeFirestore';
 
 const MAIN = 'main1';
@@ -235,10 +235,26 @@ describe('classTableStep + classAllTablesTo', () => {
 		await tableStep(db, asker, { tableId: table.tableId, action: 'toWrite' }, clock);
 		expect(fake.read(`classTables/${table.tableId}`)?.speakerUid).toBeUndefined();
 		await tableStep(db, asker, { tableId: table.tableId, action: 'toRate' }, clock);
+		await expectCode(
+			tableStep(db, asker, { tableId: table.tableId, action: 'nextTurn' }, clock),
+			'permission-denied',
+		);
 		expect(
-			await tableStep(db, asker, { tableId: table.tableId, action: 'nextTurn' }, clock),
+			await tableStep(db, mate, { tableId: table.tableId, action: 'nextTurn' }, clock),
 		).toEqual({ step: 'pick', turn: 2 });
-		expect(fake.read(`classTables/${table.tableId}`)?.askerUid).not.toBe(asker);
+		expect(fake.read(`classTables/${table.tableId}`)).toMatchObject({
+			askerUid: mate,
+			askedUids: [asker],
+		});
+		// the loser of a race sees the step moved, with the reason the client reads
+		const other = table.memberUids.find((u) => u !== asker && u !== mate) as string;
+		const lost = await tableStep(
+			db,
+			other,
+			{ tableId: table.tableId, action: 'nextTurn' },
+			clock,
+		).catch((e: unknown) => e);
+		expect(toHttpsError(lost, { operation: 'test' }).details).toEqual({ reason: 'turn-claimed' });
 	});
 
 	it("only accepts this lesson's non-challenge questions", async () => {

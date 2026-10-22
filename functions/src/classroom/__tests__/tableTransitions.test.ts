@@ -53,7 +53,7 @@ describe('applyTableAction — actors', () => {
 		for (const action of [
 			{ action: 'pickQuestion', questionId: 'q1' },
 			{ action: 'toTalk' },
-			{ action: 'nextTurn' },
+			{ action: 'passAsker', uid: 'c' },
 			{ action: 'setWritingMode', mode: 'table' },
 		] as ClassTableAction[]) {
 			expectRefusal(
@@ -134,11 +134,17 @@ describe('applyTableAction — a whole turn by the asker', () => {
 		t = applyTableAction(t, { action: 'toRate' }, asker);
 		expect(t.step).toBe('rate');
 
-		t = applyTableAction({ ...t, writingLocked: true }, { action: 'nextTurn' }, asker);
+		// the asker cannot hand the turn on; the first tablemate to tap claims it
+		expectRefusal(
+			() => applyTableAction({ ...t, writingLocked: true }, { action: 'nextTurn' }, asker),
+			'permission-denied',
+		);
+		t = applyTableAction({ ...t, writingLocked: true }, { action: 'nextTurn' }, member);
 		expect(t).toMatchObject({
 			step: 'pick',
 			turn: 2,
 			askerUid: 'b',
+			askedUids: ['ask'],
 			writingMode: 'each',
 			writingLocked: false,
 			spokenUids: [],
@@ -171,10 +177,6 @@ describe('applyTableAction — preconditions', () => {
 		);
 		expectRefusal(
 			() => applyTableAction(table({ step: 'pick' }), { action: 'toRate' }, asker),
-			'failed-precondition',
-		);
-		expectRefusal(
-			() => applyTableAction(table({ step: 'pick' }), { action: 'nextTurn' }, asker),
 			'failed-precondition',
 		);
 		expectRefusal(
@@ -265,5 +267,111 @@ describe('helpers', () => {
 		expect(everyoneSpoke(t, NOW)).toBe(false);
 		expect(everyoneSpoke(t, NOW + 1)).toBe(true);
 		expect(everyoneSpoke(table({ memberUids: [] }), NOW)).toBe(false);
+	});
+});
+
+function reasonOf(fn: () => unknown): string | undefined {
+	try {
+		fn();
+	} catch (error) {
+		return (error as ClassroomError).reason;
+	}
+
+	return undefined;
+}
+
+describe('applyTableAction — every tablemate asks once (the claim)', () => {
+	const c: TransitionContext = { actorUid: 'c', isAdmin: false, now: NOW };
+
+	it('lets any not-yet tablemate claim from rate; the claimer asks, the old asker is marked', () => {
+		const t = table({ step: 'rate', turn: 1, questionId: 'q1', spokenUids: ['ask', 'b', 'c'] });
+		const next = applyTableAction(t, { action: 'nextTurn' }, c);
+		expect(next).toMatchObject({ step: 'pick', turn: 2, askerUid: 'c', askedUids: ['ask'] });
+		expect(next.questionId).toBeUndefined();
+		expect(next.speakerUid).toBeUndefined();
+		expect(next.spokenUids).toEqual([]);
+	});
+
+	it('keeps first-tap-wins: the second claim finds the step moved (turn-claimed, no permission error)', () => {
+		const rate = table({ step: 'rate' });
+		const won = applyTableAction(rate, { action: 'nextTurn' }, member);
+		const run = () => applyTableAction(won, { action: 'nextTurn' }, c);
+		expectRefusal(run, 'failed-precondition');
+		expect(reasonOf(run)).toBe('turn-claimed');
+	});
+
+	it('refuses a claim by someone who already asked (already-asked), at any step', () => {
+		const asked = table({ step: 'rate', askerUid: 'b', askedUids: ['ask'] });
+		const forged = () => applyTableAction(asked, { action: 'nextTurn' }, asker);
+		expectRefusal(forged, 'permission-denied');
+		expect(reasonOf(forged)).toBe('already-asked');
+		const later = table({ step: 'pick', askerUid: 'b', askedUids: ['ask'] });
+		expect(reasonOf(() => applyTableAction(later, { action: 'nextTurn' }, asker))).toBe(
+			'already-asked',
+		);
+	});
+
+	it('refuses a claim from any step but rate, and by the current asker', () => {
+		for (const step of ['pick', 'talk', 'write'] as const) {
+			const run = () => applyTableAction(table({ step }), { action: 'nextTurn' }, member);
+			expectRefusal(run, 'failed-precondition');
+			expect(reasonOf(run)).toBe('turn-claimed');
+		}
+		expectRefusal(
+			() => applyTableAction(table({ step: 'rate' }), { action: 'nextTurn' }, asker),
+			'permission-denied',
+		);
+	});
+
+	it('lets the last tablemate claim, then the table is out of askers for a teacher', () => {
+		const t = table({ step: 'rate', askerUid: 'b', askedUids: ['ask'] });
+		const last = applyTableAction(t, { action: 'nextTurn' }, c);
+		expect(last).toMatchObject({ askerUid: 'c', askedUids: ['ask', 'b'], turn: 2 });
+		const end = { ...last, step: 'rate' as const };
+		const run = () => applyTableAction(end, { action: 'nextTurn' }, admin);
+		expectRefusal(run, 'failed-precondition');
+		expect(reasonOf(run)).toBe('all-asked');
+	});
+
+	it("gives a teacher's next turn to the first tablemate who has not asked, in seating order", () => {
+		const t = table({ memberUids: ['ask', 'b', 'c', 'd'], step: 'rate', askedUids: ['b'] });
+		expect(applyTableAction(t, { action: 'nextTurn' }, admin)).toMatchObject({
+			askerUid: 'c',
+			askedUids: ['b', 'ask'],
+			turn: 2,
+		});
+	});
+
+	it('reads a missing askedUids as empty', () => {
+		expect(table().askedUids).toBeUndefined();
+		const next = applyTableAction(table({ step: 'rate' }), { action: 'nextTurn' }, admin);
+		expect(next.askedUids).toEqual(['ask']);
+	});
+
+	it('passAsker: teacher only, at pick, to a not-yet tablemate, without spending a turn', () => {
+		const t = table({ askedUids: ['b'], usedQuestionIds: ['q1'] });
+		const passed = applyTableAction(t, { action: 'passAsker', uid: 'c' }, admin);
+		expect(passed).toMatchObject({
+			askerUid: 'c',
+			turn: 1,
+			askedUids: ['b'],
+			usedQuestionIds: ['q1'],
+		});
+		expectRefusal(
+			() => applyTableAction(t, { action: 'passAsker', uid: 'b' }, admin),
+			'invalid-argument',
+		);
+		expectRefusal(
+			() => applyTableAction(t, { action: 'passAsker', uid: 'zz' }, admin),
+			'invalid-argument',
+		);
+		expectRefusal(
+			() => applyTableAction(table({ step: 'talk' }), { action: 'passAsker', uid: 'c' }, admin),
+			'failed-precondition',
+		);
+		expectRefusal(
+			() => applyTableAction(t, { action: 'passAsker', uid: 'c' }, asker),
+			'permission-denied',
+		);
 	});
 });
