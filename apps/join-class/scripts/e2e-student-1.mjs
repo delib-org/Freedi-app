@@ -107,23 +107,25 @@ try {
 	await page.locator('.opening__question').waitFor({ timeout: TIMEOUT });
 	const challenge = (await db.doc(`statements/${challengeId}`).get()).data();
 	check(
-		'opening shows "Watch together" and the challenge question',
-		(await main.innerText()).includes('צופים ביחד') &&
+		'opening shows "Read together" (no videos) and the challenge question',
+		(await main.innerText()).includes('קוראים ביחד') &&
 			(await page.locator('.opening__question').innerText()).includes(challenge.statement),
 	);
 	check(
 		'no video without a video url',
-		(await page.locator('.opening video, .opening iframe, .opening__play').count()) === 0,
+		(await page.locator('.opening video, .opening iframe, .intro-video-row').count()) === 0,
 	);
+	// the retired single videoUrl still reads as one untitled video
 	await db.doc(`statements/${mainId}`).update({ 'statementSettings.videoUrl': VIDEO_URL });
-	await page.locator('.opening__play').waitFor({ timeout: TIMEOUT });
-	check('video never autoplays: only a play button before the tap', (await page.locator('video').count()) === 0);
-	await page.click('.opening__play');
+	await page.locator('.intro-video-row__play').waitFor({ timeout: TIMEOUT });
+	check('a legacy videoUrl is one video row and the instruction becomes "Watch together"', (await main.innerText()).includes('צופים ביחד'));
+	check('video never plays by itself: only a play button before the tap', (await page.locator('video').count()) === 0);
+	await page.click('.intro-video-row__play');
 	// example.test never serves a real file: the player appears, then fails to the
 	// "teacher is projecting" note. Either way the play button is gone.
 	check(
 		'tap starts the video (player or the failed note)',
-		Boolean(await until(async () => (await page.locator('.opening__play').count()) === 0)),
+		Boolean(await until(async () => (await page.locator('.intro-video-row__play').count()) === 0)),
 	);
 
 	// 2. side
