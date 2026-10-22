@@ -1,4 +1,5 @@
 import m from 'mithril';
+import '@/styles/intro-videos.scss';
 import { t } from '@/lib/i18n';
 import { introVideoEmbed, introVideoLabel, type IntroVideo } from '@/lib/classroom/introVideos';
 
@@ -18,9 +19,24 @@ export interface IntroVideoRowsAttrs {
 	failedIds: ReadonlySet<string>;
 	onOpen: (id: string) => void;
 	onFailed: (id: string) => void;
+	/** What a failed file video says. Default: the phone's "the teacher is projecting". */
+	failedText?: string;
+	/**
+	 * Teacher console only (UX 15.L): when set, an open row shows a "full screen" button
+	 * that hands the row's player frame to this callback. The phone passes nothing, so it
+	 * never loads the Fullscreen helper.
+	 */
+	onFullscreen?: (frame: HTMLElement) => void;
+	/** Files on a laptop can preload their metadata; the phone keeps 'none'. */
+	preload?: 'none' | 'metadata';
 }
 
-function player(video: IntroVideo, label: string, onFailed: () => void): m.Vnode | null {
+function player(
+	video: IntroVideo,
+	label: string,
+	preload: 'none' | 'metadata',
+	onFailed: () => void,
+): m.Vnode | null {
 	const embed = introVideoEmbed(video.url);
 	if (!embed) return null;
 	const focusAndShow = (vnode: m.VnodeDOM): void => {
@@ -47,7 +63,7 @@ function player(video: IntroVideo, label: string, onFailed: () => void): m.Vnode
 		src: embed.src,
 		controls: true,
 		playsinline: true,
-		preload: 'none',
+		preload,
 		tabindex: '-1',
 		'aria-label': label,
 		oncreate: focusAndShow,
@@ -58,6 +74,24 @@ function player(video: IntroVideo, label: string, onFailed: () => void): m.Vnode
 	});
 }
 
+function fullscreenButton(attrs: IntroVideoRowsAttrs, id: string, label: string): m.Vnode {
+	return m(
+		'button.btn.btn--secondary.btn--small.intro-video-row__fullscreen',
+		{
+			type: 'button',
+			'data-video-id': id,
+			'aria-label': `${t('projector.fullscreen')}: ${label}`,
+			onclick: (event: Event) => {
+				const frame = (event.currentTarget as HTMLElement)
+					.closest('.intro-video-row')
+					?.querySelector<HTMLElement>('.intro-video-row__frame');
+				if (frame && attrs.onFullscreen) attrs.onFullscreen(frame);
+			},
+		},
+		t('projector.fullscreen'),
+	);
+}
+
 function row(attrs: IntroVideoRowsAttrs, video: IntroVideo, index: number): m.Vnode {
 	const position = index + 1;
 	const label = introVideoLabel(video, position);
@@ -66,13 +100,24 @@ function row(attrs: IntroVideoRowsAttrs, video: IntroVideo, index: number): m.Vn
 	const failed = attrs.failedIds.has(video.id);
 	let action: m.Children;
 	if (failed) {
-		action = m('p.intro-video-row__note', { role: 'status' }, t('opening.video_failed'));
+		action = m(
+			'p.intro-video-row__note',
+			{ role: 'status' },
+			attrs.failedText ?? t('opening.video_failed'),
+		);
 	} else if (open) {
-		action = player(video, label, () => attrs.onFailed(video.id));
+		action = m(
+			'.intro-video-row__frame',
+			player(video, label, attrs.preload ?? 'none', () => attrs.onFailed(video.id)),
+		);
 	} else {
 		action = m(
 			'button.btn.btn--secondary.intro-video-row__play',
-			{ type: 'button', onclick: () => attrs.onOpen(video.id) },
+			{
+				type: 'button',
+				'aria-describedby': `intro-video-title-${video.id}`,
+				onclick: () => attrs.onOpen(video.id),
+			},
 			[m('span.opening__play-icon', { 'aria-hidden': 'true' }), t('opening.play')],
 		);
 	}
@@ -84,13 +129,14 @@ function row(attrs: IntroVideoRowsAttrs, video: IntroVideo, index: number): m.Vn
 			class: `${live ? 'intro-video-row--live' : ''} ${open && !failed ? 'intro-video-row--open' : ''}`,
 		},
 		[
-			m('span.intro-video-row__title', { dir: 'auto' }, label),
+			m('span.intro-video-row__title', { id: `intro-video-title-${video.id}`, dir: 'auto' }, label),
 			live
 				? m('span.intro-video-row__live', [
 						m('span.intro-video-row__mark', { 'aria-hidden': 'true' }),
 						t('opening.on_projector'),
 					])
 				: null,
+			open && !failed && attrs.onFullscreen ? fullscreenButton(attrs, video.id, label) : null,
 			m('.intro-video-row__action', action),
 		],
 	);
