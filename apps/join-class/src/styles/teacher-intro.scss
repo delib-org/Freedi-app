@@ -1,0 +1,158 @@
+// =============================================================================
+// Plan screen, section "הקדמה" (UX 14.B / 14.G). Imported by the plan view only.
+// Tokens only, BEM, logical properties (RTL-safe).
+// =============================================================================
+
+.plan__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+// ---- the text editor ----------------------------------------------------------
+.intro-editor {
+  &__label {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  &__tool {
+    // 40 px tall with a 48 px hit area (mouse-first teacher surface, UX 14.H)
+    min-block-size: 40px;
+    padding: 0 var(--space-md);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-full);
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--teal-600);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    &--bold {
+      font-weight: var(--font-weight-bold);
+    }
+  }
+
+  &__input {
+    inline-size: 100%;
+    min-block-size: 9em;
+    padding: var(--space-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+    resize: vertical;
+
+    &:focus-visible {
+      border-color: var(--teal-600);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &[aria-invalid='true'] {
+      border-color: var(--danger);
+    }
+  }
+
+  &__count {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: var(--font-size-sm);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+
+    &--over {
+      color: var(--danger);
+      font-weight: var(--font-weight-bold);
+    }
+  }
+
+  &__preview {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px dashed var(--border-medium);
+    border-radius: var(--radius-sm);
+    background: var(--paper-soft);
+  }
+
+  &__preview-label {
+    margin: 0 0 var(--space-xs);
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+  }
+}
+
+// ---- the videos ----------------------------------------------------------------
+.intro-videos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-block-start: var(--space-md);
+
+  &__title {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+  }
+}
+
+.intro-video {
+  animation: intro-video-in var(--dur-quick) var(--ease-out);
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  &__n {
+    flex: 0 0 24px;
+    color: var(--ink-soft);
+    font-weight: var(--font-weight-bold);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  &__url {
+    font-weight: var(--font-weight-normal);
+    // a URL reads left to right whatever the page direction
+    text-align: start;
+  }
+}
+
+@keyframes intro-video-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-video {
+    animation: none;
+  }
+}

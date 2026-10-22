@@ -1,25 +1,15 @@
-import m from 'mithril';
-import { SIDE_NAME_MAX_LENGTH, isHttpsUrl, sideNamesOf } from '@/lib/classroom/classSettings';
+import { SIDE_NAME_MAX_LENGTH, sideNamesOf } from '@/lib/classroom/classSettings';
 import { getMainStatement, setStatementLanguage } from '@/lib/store';
 import { dropDraft, getDraft, getMainId, runSave, setDraft } from './planController';
 import { saveLessonDetails } from './planApi';
 
-/** The "lesson details" fields of the plan screen: opening video link and the
- *  two character names. Saved on blur like the other plan fields. */
+/** The "lesson details" fields of the plan screen: the lesson language and the
+ *  two character names. Saved on blur like the other plan fields. (The video
+ *  link moved to the "הקדמה" section, planIntroController.ts.) */
 
-export const VIDEO_KEY = 'lesson:video';
 export const SIDE_A_KEY = 'lesson:sideA';
 export const SIDE_B_KEY = 'lesson:sideB';
 export const LANGUAGE_KEY = 'lesson:language';
-export const MAX_VIDEO_URL_LENGTH = 500;
-
-const invalid = new Set<string>();
-
-export const isInvalid = (key: string): boolean => invalid.has(key);
-
-export function savedVideoUrl(): string {
-	return getMainStatement()?.statementSettings?.videoUrl ?? '';
-}
 
 /** What is saved for a name; empty when the lesson uses the translated default. */
 export function savedSideName(key: string): string {
@@ -30,28 +20,6 @@ export function savedSideName(key: string): string {
 
 export function onDetailInput(key: string, value: string, max: number): void {
 	setDraft(key, value.slice(0, max));
-	invalid.delete(key);
-}
-
-export function commitVideoUrl(): void {
-	const draft = getDraft(VIDEO_KEY);
-	if (draft === undefined) return;
-	const url = draft.trim();
-	if (url === savedVideoUrl()) {
-		dropDraft(VIDEO_KEY);
-		invalid.delete(VIDEO_KEY);
-
-		return;
-	}
-	if (url !== '' && !isHttpsUrl(url)) {
-		invalid.add(VIDEO_KEY);
-		m.redraw();
-
-		return;
-	}
-	invalid.delete(VIDEO_KEY);
-	setDraft(VIDEO_KEY, url);
-	runSave(VIDEO_KEY, 'save video link', () => saveLessonDetails(getMainId(), { videoUrl: url }));
 }
 
 export function commitSideName(key: string): void {
