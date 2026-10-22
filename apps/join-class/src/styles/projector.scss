@@ -135,6 +135,26 @@ $projector-band-height: 64px;
 
 // ---- opening -----------------------------------------------------------------
 
+// The introduction text shares the stage with the 72 px question: keep the
+// spacing tight so 600 characters fit on a 1280 x 720 projector (UX 14.D).
+.projector__stage[data-step='opening'] {
+  padding-block: var(--space-lg);
+}
+
+.projector-step--opening {
+  gap: var(--space-md);
+
+  .intro-text__p + .intro-text__p,
+  .intro-text__p + .intro-text__list,
+  .intro-text__list + .intro-text__p {
+    margin-block-start: 0.4em;
+  }
+
+  .intro-text__item + .intro-text__item {
+    margin-block-start: 0.1em;
+  }
+}
+
 .projector-question {
   margin: 0;
   max-width: 24ch;
