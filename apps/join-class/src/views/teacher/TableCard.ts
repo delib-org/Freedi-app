@@ -178,6 +178,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 							'button.btn.btn--tertiary.table-card__nd-open',
 							{
 								type: 'button',
+								disabled: consoleState.held,
 								onclick: () => {
 									consoleState.noDeviceFor = table.n;
 								},
@@ -192,7 +193,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 								{
 									type: 'button',
 									'data-quick': 'write',
-									disabled: isBusy(`table:${table.tableId}:toWrite`),
+									disabled: consoleState.held || isBusy(`table:${table.tableId}:toWrite`),
 									onclick: () => void tableAction(table.tableId, { action: 'toWrite' }),
 								},
 								t('console.quick_write'),
@@ -202,7 +203,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 						{
 							type: 'button',
 							'data-quick': 'rate',
-							disabled: isBusy(`table:${table.tableId}:toRate`),
+							disabled: consoleState.held || isBusy(`table:${table.tableId}:toRate`),
 							onclick: () => void tableAction(table.tableId, { action: 'toRate' }),
 						},
 						t('console.quick_rate'),

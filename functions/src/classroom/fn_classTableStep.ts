@@ -18,6 +18,7 @@ import {
 	tableRef,
 } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
+import { assertLessonRunning } from './lessonStatusGuard';
 import { applyTableAction } from './tableTransitions';
 
 /**
@@ -79,9 +80,13 @@ export async function tableStep(
 		}
 	}
 
+	const mainRef = firestore.collection(Collections.statements).doc(mainId);
+
 	return firestore.runTransaction(async (tx) => {
-		const snap = await tx.get(ref);
+		const [snap, mainSnap] = await Promise.all([tx.get(ref), tx.get(mainRef)]);
 		if (!snap.exists) throw new ClassroomError('not-found', 'Table not found');
+		// Read in the same transaction, so a pause landing between two taps is seen.
+		assertLessonRunning(mainSnap.exists ? (mainSnap.data() as Statement) : null);
 		const next = applyTableAction(snap.data() as ClassTable, action, {
 			actorUid,
 			isAdmin,

@@ -6,9 +6,7 @@
 // =============================================================================
 
 // ---- shared page frame ------------------------------------------------------
-.plan,
-.teacher-home,
-.teacher-console {
+.plan, .teacher-home {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
@@ -16,9 +14,7 @@
   background: var(--paper-soft);
 }
 
-.plan__header,
-.teacher-console__header,
-.teacher-home__header {
+.plan__header, .teacher-home__header {
   width: 100%;
   max-width: var(--teacher-width, 720px);
   margin-inline: auto;
@@ -50,9 +46,7 @@
   }
 }
 
-.plan__title,
-.teacher-console__title,
-.teacher-home__title {
+.plan__title, .teacher-home__title {
   font-size: var(--font-size-2xl);
   line-height: var(--line-height-tight);
   color: var(--text-primary);
@@ -63,9 +57,7 @@
   color: var(--text-secondary);
 }
 
-.plan__body,
-.teacher-console__body,
-.teacher-home__body {
+.plan__body, .teacher-home__body {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -434,33 +426,100 @@
   gap: var(--space-sm);
 }
 
-// ---- console placeholder --------------------------------------------------------
-.teacher-console__soon {
-  padding: var(--space-lg);
-  text-align: center;
-  color: var(--text-secondary);
-  background: var(--bg-card);
-  border: 2px dashed var(--border-medium);
-  border-radius: var(--radius-md);
+// The row's start edge carries the status, so a long list scans by edge as
+// well as by chip (the chip still says it in words and shape).
+.teacher-home__row {
+  --q-accent: var(--border-medium);
+
+  &--live {
+    --q-accent: var(--terra-600);
+  }
+
+  &--paused {
+    --q-accent: var(--ink-muted);
+  }
+
+  &--open {
+    --q-accent: var(--teal-600);
+  }
+
+  &--ended {
+    --q-accent: var(--paper-line);
+  }
+
+  &--ended &-title {
+    color: var(--ink-muted);
+  }
 }
 
-.teacher-console__code {
+.teacher-home__row > .teacher-home__error {
+  flex: 1 1 100%;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-sm);
 }
 
-.teacher-console__code-label {
-  color: var(--text-secondary);
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-block-size: 28px;
+  margin: 0;
+  padding-inline: var(--space-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--ink);
+  background: var(--paper-soft);
+  border-radius: var(--radius-full);
+
+  &--ended {
+    background: var(--paper-deep);
+  }
 }
 
-.teacher-console__code-value {
-  font-size: var(--font-size-2xl);
-  letter-spacing: 0.12em;
+.teacher-home__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
 }
 
-.teacher-console__plan {
-  align-self: flex-start;
+.teacher-home__account {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teacher-home__how,
+.teacher-home__lead {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.teacher-home__how {
+  font-size: var(--font-size-sm);
+}
+
+.teacher-home__lead {
+  font-weight: var(--font-weight-semibold);
+  color: var(--ink);
+}
+
+.teacher-home__filter {
+  inline-size: 100%;
+  min-block-size: var(--touch-target);
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -484,4 +543,23 @@
   .plan-card {
     padding: var(--space-sm);
   }
+}
+
+// ---- lesson language select, first in "lesson details" ------------------------
+.plan-details__language {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-block-end: var(--space-sm);
+  border-block-end: 1px solid var(--paper-line);
+}
+
+.plan-details__label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--ink-muted);
+}
+
+.plan-details__select {
+  min-block-size: var(--touch-target);
 }

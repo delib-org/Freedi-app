@@ -6,13 +6,15 @@ import '@/styles/console-chips.scss';
 import '@/styles/console-panels.scss';
 import '@/styles/console-sheet.scss';
 import { t } from '@/lib/i18n';
-import { getMainStatement, getSubQuestions } from '@/lib/store';
+import { getMainStatement, getSubQuestions, setFollowLessonLanguage } from '@/lib/store';
 import {
 	LESSON_STEP_KEYS,
 	getChallengeQuestion,
 	getGuidingQuestions,
 	getLessonStep,
 } from '@/lib/lesson';
+import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
+import type { LessonStatus } from '@freedi/shared-types';
 import { classState } from '@/lib/classroom/classState';
 import { gateOf } from '@/lib/classroom/classSettings';
 import {
@@ -23,22 +25,26 @@ import {
 	rosterStudents,
 } from '@/lib/classroom/consoleHelpers';
 import { groupWrittenTexts } from '@/lib/classroom/textsHelpers';
-import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { QRShare } from '@/components/QRShare';
 import { WizColFooter } from '@/components/WizColFooter';
 import { readClassCode, studentJoinUrl } from './planHelpers';
 import {
 	allTablesTo,
 	assignTables,
+	changeLessonStatus,
 	closeBallot,
 	freezeBallot,
 	goToStep,
 	startPlenum,
 } from './consoleActions';
 import { releaseConsole, retainConsole, session } from './consoleSession';
-import { consoleState, dismissFailure, watchOptions } from './consoleState';
+import { consoleState, dismissFailure, isBusy, watchOptions } from './consoleState';
 import type { ConsoleView } from './consoleState';
 import { abortDrag } from './dragController';
+import { EndChoice, openEndChoice } from './EndChoice';
+import { LessonBanner } from './LessonBanner';
+import { NotYourLesson } from './NotYourLesson';
+import { ConsoleSettings } from './ConsoleSettings';
 import { GatePanel } from './GatePanel';
 import { StepRail } from './StepRail';
 import { SwitchBand } from './SwitchBand';
@@ -65,11 +71,43 @@ function currentView(): ConsoleView {
 	return m.route.param('view') === 'texts' ? 'texts' : 'tables';
 }
 
-function confirmEnd(): void {
-	if (window.confirm(t('console.end_confirm'))) m.route.set('/t');
+/** "Pause the lesson" and "End the lesson" (UX 13.E): the status group at the bar's end. */
+function statusGroup(mid: string, status: LessonStatus | null): m.Children {
+	if (status !== 'live' && status !== 'open') return null;
+	const pausing = isBusy('status:pause');
+
+	return m('div.console__status', [
+		m(
+			'button.btn.btn--secondary.btn--small.console__pause',
+			{
+				type: 'button',
+				'data-testid': 'console-pause',
+				disabled: pausing,
+				'aria-busy': pausing ? 'true' : undefined,
+				onclick: () => void changeLessonStatus(mid, 'pause'),
+			},
+			[
+				m('span.status-mark.status-mark--paused', { 'aria-hidden': 'true' }),
+				m('span', pausing ? t('console.opening') : t('console.pause')),
+			],
+		),
+		// An open lesson keeps its "End the lesson" in the banner below.
+		status === 'live'
+			? m(
+					'button.btn.btn--tertiary.btn--small.console__end',
+					{ type: 'button', 'data-testid': 'console-end', onclick: openEndChoice },
+					t('console.end'),
+				)
+			: null,
+	]);
 }
 
-function header(mid: string, lessonName: string | undefined, code: string | undefined): m.Vnode {
+function header(
+	mid: string,
+	lessonName: string | undefined,
+	code: string | undefined,
+	status: LessonStatus | null,
+): m.Vnode {
 	return m('header.console__bar', [
 		m(m.route.Link, { class: 'plan__back', href: '/t' }, [
 			m('span.plan__back-chevron', { 'aria-hidden': 'true' }, '‹'),
@@ -99,6 +137,8 @@ function header(mid: string, lessonName: string | undefined, code: string | unde
 			t('teacher.screen.title'),
 		),
 		m(m.route.Link, { class: 'console__link', href: `/t/${mid}/plan` }, t('teacher.row.plan')),
+		m(ConsoleSettings),
+		statusGroup(mid, status),
 	]);
 }
 
@@ -155,6 +195,7 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 
 export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 	oninit(vnode) {
+		setFollowLessonLanguage(false);
 		const mid = m.route.param('mid');
 		if (!mid) {
 			m.route.set('/t');
@@ -177,9 +218,11 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		const ready = session.status === 'ready' && main !== null;
 		const view = currentView();
 
+		if (session.status === 'denied') return m(NotYourLesson);
+
 		if (!ready) {
 			return m('.console', [
-				header(mid, main?.statement, undefined),
+				header(mid, main?.statement, undefined, null),
 				m(
 					'main.console__board',
 					session.status === 'failed'
@@ -193,6 +236,12 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		}
 
 		const step = getLessonStep();
+		const status = lessonStatusOfMain(main);
+		const held = isLessonStanding(status);
+		consoleState.held = held;
+		const plan = main.statementSettings?.lessonPlan;
+		// The lesson clock stops while the room is held.
+		const clockEnd = held ? (plan?.pausedAt ?? plan?.endedAt ?? Date.now()) : Date.now();
 		const questions = getSubQuestions();
 		const challenge = getChallengeQuestion(questions);
 		const guiding = getGuidingQuestions(questions);
@@ -203,20 +252,29 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		const code = readClassCode(main);
 
 		return m('.console', { 'data-step': step.key }, [
-			header(mid, main.statement, code),
+			header(mid, main.statement, code, status),
 			showQr
 				? m('section.console__qr', [
 						m(QRShare, { url: studentJoinUrl(window.location.origin, mid), title: main.statement }),
 					])
 				: null,
+			m(LessonBanner, {
+				status,
+				onResume: () => void changeLessonStatus(mid, 'resume'),
+				onEnd: openEndChoice,
+				onReopen: () => void changeLessonStatus(mid, 'reopen'),
+			}),
 			m(StepRail, {
 				keys: LESSON_STEP_KEYS,
 				currentIndex: step.index,
-				elapsedMs: Date.now() - session.startedAt,
+				elapsedMs: clockEnd - session.startedAt,
+				held,
+				heldKey: status === 'ended' ? 'console.ended_banner' : 'lesson.paused.title',
 				onGo: (index: number) => void goToStep(mid, index),
-				onEnd: confirmEnd,
+				onEnd: openEndChoice,
 			}),
 			m(SwitchBand, {
+				held,
 				stepKey: step.key,
 				view,
 				hasTables: classState.tables.length > 0,
@@ -265,7 +323,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 						},
 					})
 				: null,
-			m(FacilitatorPanel),
+			m(EndChoice, { mainId: mid, status }),
 		]);
 	},
 };

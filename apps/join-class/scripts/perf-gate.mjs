@@ -20,14 +20,14 @@ const BYTES_PER_KB = 1000;
 /** The product target (IA section 9b): first screen <= 300 kB gzipped. */
 export const TARGET_GZIP_BYTES = 300 * BYTES_PER_KB;
 /**
- * RATCHET, not the target. Measured 2026-10-21 after the integration pass:
- * 329.4 kB gzipped (firebase chunk 172.8 kB is the bulk; the English fallback is
- * now a lazy chunk, which took the entry from 134.9 to 124.3 kB). Set to the
- * measured value + 2 % so CI does not fail on day one but any growth does. Lower
- * this number as the chunk-splitting ideas in docs/performance/join-class.md
- * land, until it reaches TARGET_GZIP_BYTES (300 kB).
+ * RATCHET, not the target. Measured 2026-10-22 after deleting Join's leftover
+ * screens (Main, Invite, Solutions, Chat, FacilitatorPanel and their libs) and
+ * adding the front door, teacher home and lesson status: 270.8 kB gzipped
+ * (329.4 kB before; firebase chunk 172.7 kB is the bulk, the entry went from
+ * 124.3 to 83.9 kB). Set to the measured value + 2 % so any growth fails. Lower
+ * it again whenever the entry shrinks.
  */
-export const BUDGET_GZIP_BYTES = 336000;
+export const BUDGET_GZIP_BYTES = 276200;
 /** Locale whose chunk counts as "the default locale chunk" (Hebrew first). */
 const DEFAULT_LOCALE = process.env.PERF_GATE_LOCALE ?? 'he';
 const ALLOWED_FONT_FAMILIES = 1;

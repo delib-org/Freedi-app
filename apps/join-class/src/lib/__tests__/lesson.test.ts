@@ -5,6 +5,10 @@ import {
 	HINT_MAX_LENGTH,
 	LESSON_STEP_KEYS,
 	buildLessonPlan,
+	buildNewLessonPlan,
+	isLessonStanding,
+	lessonStatusOfMain,
+	planStepMove,
 	generateClassCode,
 	getChallengeQuestion,
 	getClassRole,
@@ -18,6 +22,7 @@ import {
 	planChallengeWrites,
 	stepFollowMePath,
 	stepLabelKey,
+	toCodeDigits,
 } from '../lessonCore';
 
 function q(id: string, extra: Partial<Statement> = {}, role?: 'guiding' | 'challenge'): Statement {
@@ -165,5 +170,58 @@ describe('class code', () => {
 		expect(normalizeClassCode('1234567')).toBeNull();
 		expect(normalizeClassCode('12a456')).toBeNull();
 		expect(normalizeClassCode('')).toBeNull();
+	});
+});
+
+describe('lesson status helpers', () => {
+	it('a new lesson starts at Waiting, live', () => {
+		expect(buildNewLessonPlan(1234)).toMatchObject({
+			stepIndex: 0,
+			status: 'live',
+			statusAt: 1234,
+		});
+	});
+
+	it('a main without a plan or a status is live', () => {
+		expect(lessonStatusOfMain(null)).toBe('live');
+		expect(lessonStatusOfMain(q('m'))).toBe('live');
+		expect(
+			lessonStatusOfMain({
+				statementSettings: { lessonPlan: { ...buildLessonPlan(1), status: 'ended' } },
+			} as Statement),
+		).toBe('ended');
+	});
+
+	it('paused and ended stand still; live and open do not', () => {
+		expect(isLessonStanding('paused')).toBe(true);
+		expect(isLessonStanding('ended')).toBe(true);
+		expect(isLessonStanding('live')).toBe(false);
+		expect(isLessonStanding('open')).toBe(false);
+	});
+
+	it('a step move on an open lesson writes live; otherwise only the step', () => {
+		expect(planStepMove(3, 'open', 99)).toMatchObject({
+			stepIndex: 3,
+			status: 'live',
+			statusAt: 99,
+		});
+		expect(planStepMove(3, 'live', 99).status).toBeUndefined();
+	});
+});
+
+describe('toCodeDigits (the front door input)', () => {
+	it('keeps digits only and at most six', () => {
+		expect(toCodeDigits('48a2 91-3x7')).toBe('482913');
+		expect(toCodeDigits('')).toBe('');
+	});
+
+	it('maps Arabic-Indic and Persian digits', () => {
+		expect(toCodeDigits('٤٨٢٩١٣')).toBe('482913');
+		expect(toCodeDigits('۴۸۲۹۱۳')).toBe('482913');
+	});
+
+	it('takes the code out of a pasted join link', () => {
+		expect(toCodeDigits('https://class.example.com/c/482913')).toBe('482913');
+		expect(toCodeDigits('http://localhost:3035/c/123456?x=1')).toBe('123456');
 	});
 });

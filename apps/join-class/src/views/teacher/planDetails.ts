@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { SIDE_NAME_MAX_LENGTH, isHttpsUrl, sideNamesOf } from '@/lib/classroom/classSettings';
-import { getMainStatement } from '@/lib/store';
+import { getMainStatement, setStatementLanguage } from '@/lib/store';
 import { dropDraft, getDraft, getMainId, runSave, setDraft } from './planController';
 import { saveLessonDetails } from './planApi';
 
@@ -10,6 +10,7 @@ import { saveLessonDetails } from './planApi';
 export const VIDEO_KEY = 'lesson:video';
 export const SIDE_A_KEY = 'lesson:sideA';
 export const SIDE_B_KEY = 'lesson:sideB';
+export const LANGUAGE_KEY = 'lesson:language';
 export const MAX_VIDEO_URL_LENGTH = 500;
 
 const invalid = new Set<string>();
@@ -76,4 +77,24 @@ export function defaultSideName(key: string): string {
 	const names = sideNamesOf(null);
 
 	return key === SIDE_A_KEY ? names.a : names.b;
+}
+
+/** The lesson language that students follow; empty = unset (each student's own device language). */
+export function savedLessonLanguage(): string {
+	const main = getMainStatement();
+
+	return main?.forceLanguage === true && main.defaultLanguage ? main.defaultLanguage : '';
+}
+
+/** Saved on change (a select has no blur to wait for), through the same save path as the other fields. */
+export function commitLanguage(value: string): void {
+	if (value === savedLessonLanguage()) {
+		dropDraft(LANGUAGE_KEY);
+
+		return;
+	}
+	setDraft(LANGUAGE_KEY, value);
+	runSave(LANGUAGE_KEY, 'save lesson language', () =>
+		setStatementLanguage(getMainId(), value === '' ? null : value),
+	);
 }

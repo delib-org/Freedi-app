@@ -23,6 +23,7 @@ import { getApps, initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { ENGINE_PHASES, prepareEngineLesson } from './e2e-lesson-engine.mjs';
 import { BASE_URL as BASE, PROJECT_ID } from './e2e-env.mjs';
+import { signInTeacher } from './e2e-auth.mjs';
 
 const ENGINE_ON = process.env.E2E_LESSON_ENGINE === '1';
 const TIMEOUT = 20000;
@@ -77,11 +78,9 @@ let challengeId = '';
 
 // ---- 1. plan ------------------------------------------------------------------
 async function phasePlan() {
-	await teacher.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded' });
-	await teacher.click('button.login__btn--guest', { timeout: TIMEOUT });
-	await teacher.waitForURL((u) => u.pathname === '/', { timeout: TIMEOUT });
+	await signInTeacher(teacher, BASE, `teacher-lesson-${Date.now()}`);
 	await teacher.goto(`${BASE}/t`, { waitUntil: 'domcontentloaded' });
-	await teacher.click('.teacher-home__new', { timeout: TIMEOUT });
+	await teacher.waitForSelector('#teacher-new-title', { timeout: TIMEOUT });
 	await teacher.fill('#teacher-new-title', `Full lesson ${Date.now()}`);
 	await teacher.click('.teacher-home__form button[type=submit]');
 	await teacher.waitForURL(/\/t\/[^/]+\/plan$/, { timeout: TIMEOUT });

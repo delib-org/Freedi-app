@@ -6,7 +6,6 @@
 // its colours with `currentColor` so the one inverted screen needs no overrides.
 // =============================================================================
 
-
 body.c3-lock {
   overflow: hidden;
 }
@@ -182,7 +181,6 @@ body.c3-lock {
     font: inherit;
   }
 
-  &__add-form,
   form.pick__add {
     display: flex;
     flex-direction: column;

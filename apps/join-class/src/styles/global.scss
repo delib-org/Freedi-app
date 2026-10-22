@@ -1,7 +1,6 @@
 @use 'fonts';
 @use 'tokens';
 @use 'components';
-@use 'delegates';
 
 *,
 *::before,
@@ -129,14 +128,6 @@ button, input, textarea, select {
 ::selection {
   background: var(--terra-500);
   color: var(--text-inverse);
-}
-
-.confetti-container {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 20;
 }
 
 // Respect user motion preferences. Keep focus/scroll behaviors instant

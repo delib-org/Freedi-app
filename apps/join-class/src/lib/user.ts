@@ -49,17 +49,6 @@ export async function ensureUser(): Promise<User> {
 	return credential.user;
 }
 
-/** Explicit guest sign-in for the login page. Mirrors the auto path used by
- *  public share routes via `ensureUser()`, but is initiated by the user via
- *  a "Continue as guest" CTA so it counts as an explicit choice. */
-export async function signInAsGuest(): Promise<User> {
-	await waitForAuthReady();
-	if (auth.currentUser) return auth.currentUser;
-	const credential = await signInAnonymously(auth);
-
-	return credential.user;
-}
-
 export async function signOut(): Promise<void> {
 	await fbSignOut(auth);
 	state.user = null;
@@ -67,15 +56,23 @@ export async function signOut(): Promise<void> {
 	m.redraw();
 }
 
-/** True once auth has settled and a real user exists. Used by the route
- *  guard to decide whether to redirect to /login. Anonymous users count as
- *  signed-in here — the login page simply offers Guest as one of the two
- *  paths, so once they pick it they're authenticated. */
+/** True once auth has settled and any user (anonymous included) exists. */
 export function isSignedIn(): boolean {
 	return state.user !== null;
 }
 
-export async function signInWithGoogle(): Promise<void> {
+export interface GoogleSignInOptions {
+	/**
+	 * Keep the current anonymous account (and the lessons it owns) by linking
+	 * Google to it. False replaces the anonymous account with the Google one, so
+	 * a student's anonymous identity on a shared computer never becomes a
+	 * teacher's. Decided BEFORE the click (ownsClassLessons) so the popup opens
+	 * inside the user gesture, with no network wait in between.
+	 */
+	linkAnonymous: boolean;
+}
+
+export async function signInWithGoogle(options: GoogleSignInOptions): Promise<void> {
 	if (state.tier === 2) return;
 
 	const provider = new GoogleAuthProvider();
@@ -83,26 +80,25 @@ export async function signInWithGoogle(): Promise<void> {
 
 	const currentUser = auth.currentUser;
 
-	if (currentUser && currentUser.isAnonymous) {
+	if (options.linkAnonymous && currentUser && currentUser.isAnonymous) {
 		try {
 			await linkWithPopup(currentUser, provider);
-			state.tier = 2;
-			m.redraw();
 		} catch (error: unknown) {
 			const firebaseError = error as { code?: string };
-			if (firebaseError.code === 'auth/credential-already-in-use') {
-				await signInWithPopup(auth, provider);
-				state.tier = 2;
-				m.redraw();
-			} else {
-				throw error;
-			}
+			if (firebaseError.code !== 'auth/credential-already-in-use') throw error;
+			// This Google account already exists elsewhere: sign into it.
+			await signInWithPopup(auth, provider);
 		}
 	} else {
 		await signInWithPopup(auth, provider);
-		state.tier = 2;
-		m.redraw();
 	}
+	state.tier = 2;
+	m.redraw();
+}
+
+/** True for a Google-signed-in account: a teacher. Students are always anonymous. */
+export function isGoogleSignedIn(): boolean {
+	return state.user !== null && !state.user.isAnonymous;
 }
 
 export function initAuth(): void {

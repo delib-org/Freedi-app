@@ -9,6 +9,7 @@ import {
 	setDoc,
 	updateDoc,
 	deleteDoc,
+	deleteField,
 	where,
 } from 'firebase/firestore';
 import { makeEnv, seed } from './helpers.mjs';
@@ -223,6 +224,66 @@ describe('join-class engine rules', () => {
 			await assertFails(setDoc(doc(as(S2), 'votes', `${S1}--${CH}`), vote(S1, CH, 'p2')));
 		});
 	});
+	describe('lesson status (paused / ended)', () => {
+		const setStatus = (status) =>
+			seed(env, async (db) => {
+				const patch = { status: status === undefined ? deleteField() : status };
+				await setDoc(
+					doc(db, 'statements', MAIN),
+					{ statementSettings: { lessonPlan: { steps: ['waiting'], stepIndex: 0, ...patch } } },
+					{ merge: true },
+				);
+			});
+
+		after(async () => {
+			await setStatus('live');
+		});
+
+		it('refuses class-field writes and votes while paused or ended', async () => {
+			for (const status of ['paused', 'ended']) {
+				await setStatus(status);
+				const ref = doc(as(S1), 'statementsSubscribe', `${S1}--${MAIN}`);
+				await assertFails(updateDoc(ref, { side: 80, camp: 'b', lastUpdate: T0 + 10 }));
+				await assertFails(updateDoc(ref, { decisionSupport: 0.5, lastUpdate: T0 + 11 }));
+				await assertFails(setDoc(doc(as(S1), 'votes', `${S1}--${CH}`), vote(S1, CH, 'p1')));
+				await assertFails(setDoc(doc(as(S1), 'votes', `${S1}--${CH}`), vote(S1, CH, 'none')));
+			}
+		});
+
+		it('refuses a late joiner writing a side while paused, but lets them join', async () => {
+			await setStatus('paused');
+			const ref = doc(as(S2), 'statementsSubscribe', `${S2}--${MAIN}`);
+			await assertFails(setDoc(ref, sub(S2, 'member', { side: 50 })));
+			await assertSucceeds(setDoc(ref, sub(S2, 'member')));
+		});
+
+		it('still lets non-class subscription updates through while paused', async () => {
+			await setStatus('paused');
+			const ref = doc(as(S1), 'statementsSubscribe', `${S1}--${MAIN}`);
+			await assertSucceeds(updateDoc(ref, { getInAppNotification: true, lastUpdate: T0 + 12 }));
+		});
+
+		it('lets the teacher keep writing while paused or ended', async () => {
+			await setStatus('ended');
+			const ref = doc(as(TEACHER), 'statementsSubscribe', `${S1}--${MAIN}`);
+			await assertSucceeds(updateDoc(ref, { side: 30, lastUpdate: T0 + 13 }));
+		});
+
+		it('treats live, open and a missing status as writable', async () => {
+			for (const status of ['live', 'open', undefined]) {
+				await setStatus(status);
+				const ref = doc(as(S1), 'statementsSubscribe', `${S1}--${MAIN}`);
+				await assertSucceeds(updateDoc(ref, { side: 55, lastUpdate: T0 + 14 }));
+				await assertSucceeds(setDoc(doc(as(S1), 'votes', `${S1}--${CH}`), vote(S1, CH, 'p2')));
+			}
+		});
+
+		it('never charges the main app: a vote on a question without a ballot ignores the status', async () => {
+			await setStatus('ended');
+			await assertSucceeds(setDoc(doc(as(S2), 'votes', `${S2}--${PLAIN_Q}`), vote(S2, PLAIN_Q, 'x1')));
+		});
+	});
+
 	describe("a table's own question (+ our own question)", () => {
 		const ownQuestion = (uid, id, tableId) => ({
 			statementId: id,

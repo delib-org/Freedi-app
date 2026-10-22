@@ -141,6 +141,17 @@ export function isLanguageForced(): boolean {
 	return forcedByAdmin;
 }
 
+/**
+ * Drop the facilitator's language lock (the lesson no longer has a language, or
+ * this screen is a teacher's own and must not follow it). The language itself
+ * stays as it is; only the lock goes, so the picker works again.
+ */
+export function releaseForcedLanguage(): void {
+	if (!forcedByAdmin) return;
+	forcedByAdmin = false;
+	notifyLangChange();
+}
+
 /** Language detection.
  *
  *  NOTE: the inline boot script in `index.html` reimplements this same

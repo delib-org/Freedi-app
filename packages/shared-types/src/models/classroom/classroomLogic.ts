@@ -1,4 +1,6 @@
 import { CAMP_A_BELOW, CAMP_B_ABOVE, Camp } from './classroomModel';
+import type { LessonPlan, LessonStatus } from '../statement/StatementSettings';
+import type { LessonStatusAction } from './classroomCallables';
 
 /** Camp of a slider value: <40 'a', >60 'b', otherwise 'center'. */
 export function campOf(side: number): Camp {
@@ -98,4 +100,73 @@ export function decideBallot(
 
 		return id < best ? id : best;
 	});
+}
+
+/** The lesson's status; a plan without one is live. */
+export function lessonStatusOf(plan: Pick<LessonPlan, 'status'> | undefined | null): LessonStatus {
+	return plan?.status ?? 'live';
+}
+
+/** What a status move writes. `shiftMs` is the pause length to add to table timers (resume only). */
+export interface LessonStatusChange {
+	status: LessonStatus;
+	statusAt: number;
+	/** true: pausedAt is cleared. */
+	clearPausedAt: boolean;
+	pausedAt?: number;
+	endedAt?: number;
+	shiftMs: number;
+	/** false when the move repeats the current status (nothing to write). */
+	changed: boolean;
+}
+
+const STATUS_TARGET: Record<LessonStatusAction, LessonStatus> = {
+	pause: 'paused',
+	resume: 'live',
+	end: 'ended',
+	keepOpen: 'open',
+	reopen: 'live',
+};
+
+const STATUS_SOURCES: Record<LessonStatusAction, readonly LessonStatus[]> = {
+	pause: ['live', 'open'],
+	resume: ['paused'],
+	end: ['live', 'paused', 'open'],
+	keepOpen: ['live', 'paused', 'open'],
+	reopen: ['ended'],
+};
+
+/**
+ * The lesson status machine (IA 13.6), pure. Throws RangeError for a move the
+ * status does not allow. A move to the status the lesson already has is a
+ * no-op (`changed: false`), so a retry after a lost reply is safe.
+ */
+export function planLessonStatus(
+	plan: Pick<LessonPlan, 'status' | 'pausedAt'> | undefined | null,
+	action: LessonStatusAction,
+	now: number,
+): LessonStatusChange {
+	const current = lessonStatusOf(plan);
+	const target = STATUS_TARGET[action];
+	if (current === target) {
+		return { status: current, statusAt: now, clearPausedAt: false, shiftMs: 0, changed: false };
+	}
+	if (!STATUS_SOURCES[action].includes(current)) {
+		throw new RangeError(`Cannot ${action} a lesson that is ${current}`);
+	}
+	const change: LessonStatusChange = {
+		status: target,
+		statusAt: now,
+		clearPausedAt: current === 'paused',
+		shiftMs: 0,
+		changed: true,
+	};
+	if (target === 'paused') change.pausedAt = now;
+	if (action === 'resume') {
+		const pausedAt = plan?.pausedAt;
+		change.shiftMs = typeof pausedAt === 'number' ? Math.max(0, now - pausedAt) : 0;
+	}
+	if (target === 'ended' || target === 'open') change.endedAt = now;
+
+	return change;
 }

@@ -11,6 +11,7 @@ import { safeParse } from 'valibot';
 import { db } from '../db';
 import { assertWorkspaceAdmin, requireId, requireUid } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
+import { assertLessonRunning } from './lessonStatusGuard';
 
 /**
  * `classAllTablesTo` (admin): put every table of the lesson on one step
@@ -30,7 +31,7 @@ export async function allTablesTo(
 	if (!parsed.success)
 		throw new ClassroomError('invalid-argument', 'step must be pick, talk, write or rate');
 	const step: TableStep = parsed.output;
-	await assertWorkspaceAdmin(firestore, mainId, actorUid);
+	assertLessonRunning(await assertWorkspaceAdmin(firestore, mainId, actorUid));
 
 	const snap = await firestore
 		.collection(CLASS_TABLES_COLLECTION)

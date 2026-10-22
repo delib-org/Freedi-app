@@ -3,16 +3,13 @@ import { registerSW } from 'virtual:pwa-register';
 import './styles/global.scss';
 import { initSentry, setSentryUser } from '@/lib/sentry';
 import { afterLoad } from '@/lib/deferWork';
-import { initAuth, waitForAuthReady, isSignedIn, getUserState } from '@/lib/user';
+import { initAuth, waitForAuthReady, isGoogleSignedIn, getUserState } from '@/lib/user';
 import { initI18n } from '@/lib/i18n';
 import { mountAccessibilityWidget } from '@/components/AccessibilityWidget';
-import { Solutions } from '@/views/Solutions';
-import { Chat } from '@/views/Chat';
 import { MainHub } from '@/views/MainHub';
 import { Login } from '@/views/Login';
-import { Main } from '@/views/Main';
-import { Invite } from '@/views/Invite';
 import { ClassCode } from '@/views/ClassCode';
+import { FrontDoor } from '@/views/FrontDoor';
 
 initSentry();
 // Kicked off before the i18n await below so the auth handshake and the locale
@@ -45,35 +42,31 @@ waitForAuthReady().then(() => {
 });
 m.route.prefix = '';
 
-/** Route guard: wait for auth to settle, then either render the protected
- *  component or bounce to /login carrying the requested path as ?next= so
- *  the user lands back where they meant to go. Used on `/` (the main page);
- *  share-link routes (/q, /m, /q/.../s) keep their public auto-anonymous
- *  behavior via `ensureUser()` inside each view. */
-function requireAuth(component: m.Component): m.RouteResolver {
-	return {
-		onmatch(_args, requestedPath: string) {
-			return waitForAuthReady().then(() => {
-				if (!isSignedIn()) {
-					m.route.set('/login', { next: requestedPath });
+/** The front door: a Google-signed-in teacher never sees it (`/` -> `/t`);
+ *  everyone else, students (anonymous) included, gets the code box. */
+const frontDoor: m.RouteResolver = {
+	onmatch() {
+		return waitForAuthReady().then(() => {
+			if (isGoogleSignedIn()) {
+				m.route.set('/t', undefined, { replace: true });
 
-					return { view: () => null };
-				}
+				return { view: () => null };
+			}
 
-				return component;
-			});
-		},
-	};
-}
+			return FrontDoor;
+		});
+	},
+};
 
-/** Teacher routes: same auth guard, and the screen's code is fetched only when
- *  a teacher opens it, so the student's first screen carries none of it. */
+/** Teacher routes: Google-signed-in only (anonymous goes to /login, which comes
+ *  back to the requested path), and the screen's code is fetched only when a
+ *  teacher opens it, so the student's first screen carries none of it. */
 function teacherRoute(load: () => Promise<m.Component>): m.RouteResolver {
 	return {
 		onmatch(_args, requestedPath: string) {
 			return waitForAuthReady().then(() => {
-				if (!isSignedIn()) {
-					m.route.set('/login', { next: requestedPath });
+				if (!isGoogleSignedIn()) {
+					m.route.set('/login', { next: requestedPath }, { replace: true });
 
 					return { view: () => null };
 				}
@@ -101,20 +94,10 @@ i18nReady.then(() => {
 
 	m.route(root, '/', {
 		'/c/:code': ClassCode,
-		'/': requireAuth(Main),
+		// Unknown paths (the old /q/*, /m/:mid/q/*, /invite) fall to this default route.
+		'/': frontDoor,
 		'/login': Login,
-		'/invite': Invite,
-		// Param changes within the same route shape (e.g. follow-me from
-		// `/m/X/q/A` to `/m/X/q/B`) don't trigger a fresh `oninit` in Mithril
-		// 2 — the components themselves detect a param swap in
-		// `onbeforeupdate` and re-init their subscriptions for the new id.
-		'/q/:qid': Solutions,
-		'/q/:qid/s/:sid': Chat,
-		// Facilitated routes — entry via a main (top-parent) statement. Solutions
-		// and Chat detect facilitated mode via the /m/ prefix on the active route.
 		'/m/:mid': MainHub,
-		'/m/:mid/q/:qid': Solutions,
-		'/m/:mid/q/:qid/s/:sid': Chat,
 		// Teacher routes (classroom). Lazy, so students never download them.
 		'/t': teacherRoute(() => import('@/views/teacher/TeacherHome').then((mod) => mod.TeacherHome)),
 		'/t/:mid': teacherRoute(() =>

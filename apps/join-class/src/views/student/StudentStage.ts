@@ -1,6 +1,7 @@
 import m from 'mithril';
 import type { LessonStepKey, Statement } from '@freedi/shared-types';
 import { lessonStepOf } from '@/lib/lesson';
+import { lessonStatusOfMain } from '@/lib/lessonCore';
 import { watchClass } from '@/lib/classroom/classState';
 import { OpeningStep } from './steps/OpeningStep';
 import { ProposalsStep } from './steps/ProposalsStep';
@@ -11,6 +12,7 @@ import { TablesStep } from './steps/TablesStep';
 import { VoteStep } from './steps/VoteStep';
 import { WaitingStep } from './steps/WaitingStep';
 import type { StepAttrs } from './steps/stepSlot';
+import type { LessonStateAttrs } from './LessonStateScreen';
 
 /**
  * A student's whole screen for a lesson workspace. Renders the step named by
@@ -32,6 +34,33 @@ const STEP_COMPONENTS: Record<LessonStepKey, m.Component<StepAttrs>> = {
 	summary: SummaryStep,
 };
 
+/**
+ * The paused / ended screen is its own lazy chunk (with its small stylesheet):
+ * a student whose lesson never pauses never downloads it.
+ */
+let stateScreen: m.ComponentTypes<LessonStateAttrs> | null = null;
+let stateLoading = false;
+
+function renderState(main: Statement, status: 'paused' | 'ended'): m.Children {
+	if (stateScreen) return m(stateScreen, { main, status });
+	if (!stateLoading) {
+		stateLoading = true;
+		import('./LessonStateScreen')
+			.then((mod) => {
+				stateScreen = mod.LessonStateScreen;
+			})
+			.catch((err: unknown) => {
+				console.error('[StudentStage] loading the lesson-state screen failed:', err);
+			})
+			.finally(() => {
+				stateLoading = false;
+				m.redraw();
+			});
+	}
+
+	return null;
+}
+
 export interface StudentStageAttrs {
 	main: Statement;
 }
@@ -47,6 +76,8 @@ export const StudentStage: m.Component<StudentStageAttrs> = {
 	},
 
 	view({ attrs }) {
+		const status = lessonStatusOfMain(attrs.main);
+		if (status === 'paused' || status === 'ended') return renderState(attrs.main, status);
 		const step = lessonStepOf(attrs.main.statementSettings?.lessonPlan);
 
 		return m(STEP_COMPONENTS[step.key], { main: attrs.main, key: step.key });

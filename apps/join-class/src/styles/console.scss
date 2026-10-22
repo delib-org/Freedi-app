@@ -208,3 +208,169 @@
 .step-rail__clock {
   font-variant-numeric: tabular-nums;
 }
+
+// ---- settings popover (the gate slider) -------------------------------------
+.console__settings {
+  position: relative;
+}
+
+.console__settings-toggle {
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+.console__settings-panel {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline-end: 0;
+  z-index: var(--z-dropdown, 10);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  inline-size: min(320px, 90vw);
+  padding: var(--space-md);
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-lg);
+}
+
+.console__settings-label {
+  font-weight: var(--font-weight-bold);
+}
+
+.console__settings-slider {
+  inline-size: 100%;
+  accent-color: var(--terra-600);
+}
+
+.console__settings-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.console__settings-help {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+}
+
+// ---- lesson status (IA 13.6, UX 13.E) ---------------------------------------
+.console__status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-inline-start: var(--space-md);
+  border-inline-start: 1px solid var(--paper-line);
+}
+
+.console__pause {
+  gap: var(--space-xs);
+}
+
+.lesson-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  min-block-size: 64px;
+  padding: var(--space-sm) var(--space-md);
+  border-block-end: 1px solid var(--paper-line);
+  color: var(--ink);
+  animation: lesson-banner-in var(--dur-base) var(--ease-out);
+
+  &__text {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+
+    .status-mark {
+      font-size: 18px;
+    }
+  }
+
+  &__action {
+    min-block-size: 56px;
+  }
+
+  &--paused,
+  &--ended {
+    background: var(--paper-deep);
+  }
+
+  &--open {
+    background: var(--teal-50);
+    border-block-end: 2px solid var(--teal-600);
+  }
+}
+
+@keyframes lesson-banner-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Held (paused or ended): the rail says "not now", not "busy".
+.step-rail--held {
+  .step-rail__step,
+  .step-rail__next {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.end-choice {
+  inline-size: min(440px, calc(100% - 32px));
+  margin: auto;
+  padding: var(--space-lg);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-lg);
+
+  // No blur: a backdrop filter is costly on the old laptops of a school.
+  &::backdrop {
+    background: var(--bg-overlay);
+  }
+
+  &[open] {
+    display: grid;
+    row-gap: var(--space-sm);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__option {
+    inline-size: 100%;
+    min-block-size: 56px;
+  }
+
+  &__help,
+  &__error {
+    margin: 0;
+    font-size: var(--font-size-sm);
+  }
+
+  &__help {
+    color: var(--ink-muted);
+  }
+
+  &__error {
+    color: var(--danger);
+  }
+
+  &__cancel {
+    justify-self: end;
+  }
+}

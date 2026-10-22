@@ -6,12 +6,13 @@
 //     VITE_EMULATOR_FUNCTIONS_PORT=<functions> npx vite --port 3035 --strictPort
 //   E2E_AUTH_PORT=<auth> E2E_FIRESTORE_PORT=<firestore> node scripts/e2e-plan.mjs
 //
-// Flow: guest sign-in, create a lesson, write the challenge question, add 3
+// Flow: teacher sign-in, create a lesson, write the challenge question, add 3
 // table questions (Enter adds the next), reorder by keyboard and by drag, add a
 // hint, press Save, reload, and see everything again. Then the phone layout
 // and the console placeholder.
 import { chromium } from '@playwright/test';
 import { BASE_URL as BASE } from './e2e-env.mjs';
+import { signInTeacher } from './e2e-auth.mjs';
 
 const TIMEOUT = 15000;
 
@@ -32,14 +33,12 @@ async function texts() {
 }
 
 try {
-	// 1. guest sign-in
-	await page.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded' });
-	await page.click('button.login__btn--guest', { timeout: TIMEOUT });
-	await page.waitForURL((u) => u.pathname === '/', { timeout: TIMEOUT });
+	// 1. teacher sign-in (Google only; a custom token stands in for the popup)
+	await signInTeacher(page, BASE, `teacher-plan-${Date.now()}`);
 
-	// 2. teacher home: create a lesson
+	// 2. teacher home: a first-time teacher has the name field open already
 	await page.goto(`${BASE}/t`, { waitUntil: 'domcontentloaded' });
-	await page.click('.teacher-home__new', { timeout: TIMEOUT });
+	await page.waitForSelector('#teacher-new-title', { timeout: TIMEOUT });
 	const title = `Lesson ${Date.now()}`;
 	await page.fill('#teacher-new-title', title);
 	await page.click('.teacher-home__form button[type=submit]');

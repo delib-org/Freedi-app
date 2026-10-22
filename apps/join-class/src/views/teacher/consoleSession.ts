@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { ensureUser } from '@/lib/user';
+import { ensureUser, getUserState } from '@/lib/user';
 import {
 	getMainStatement,
 	loadMainStatement,
@@ -8,6 +8,7 @@ import {
 } from '@/lib/store';
 import { checkAdminStatus, isAdmin } from '@/lib/admin';
 import { ensureClassCode } from '@/lib/lesson';
+import { markOpenedInClass } from '@/lib/joinSubscriptions';
 import { watchClass } from '@/lib/classroom/classState';
 import type { Unsubscribe } from '@/lib/firebase';
 import { resetConsoleState, stopWatchingOptions } from './consoleState';
@@ -20,7 +21,7 @@ import { resetConsoleState, stopWatchingOptions } from './consoleState';
  * lesson clock and the speaker timers.
  */
 
-export type SessionStatus = 'loading' | 'ready' | 'failed' | 'redirected';
+export type SessionStatus = 'loading' | 'ready' | 'failed' | 'denied';
 
 const TICK_MS = 1000;
 const CLOCK_KEY_PREFIX = 'joinClass.lessonStart.';
@@ -122,10 +123,18 @@ async function openConsole(mainId: string): Promise<void> {
 		await checkAdminStatus(mainId, main.creatorId);
 		if (mine !== generation) return;
 		if (!isAdmin()) {
-			session.status = 'redirected';
-			m.route.set(`/m/${mainId}`);
+			// Not this lesson's teacher: the console shows "not your lesson", never the student view.
+			session.status = 'denied';
 
 			return;
+		}
+		// Opening the console lists the lesson again (and heals a marker the server's
+		// subscription write may have replaced).
+		const user = getUserState().user;
+		if (user) {
+			void markOpenedInClass(main, user.uid, user.displayName ?? '').catch((err: unknown) => {
+				console.error('[TeacherConsole] markOpenedInClass failed:', err);
+			});
 		}
 		// Admins get the join code on open (a no-op when it already exists).
 		await ensureClassCode(mainId).catch((err: unknown) => {

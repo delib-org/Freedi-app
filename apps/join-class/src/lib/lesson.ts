@@ -16,24 +16,32 @@ import {
 	runTransaction,
 	writeBatch,
 } from './firebase';
-import { t } from './i18n';
+import { getLang, t } from './i18n';
 import {
+	createSimpleQuestion,
 	getMainStatement,
+	getQuestion,
+	loadQuestion,
 	setMainStatementSetting,
 	setPowerFollowMe,
 	setQuestionSetting,
 } from './store';
+import { markOpenedInClass, waitForCreatorSubscription } from './joinSubscriptions';
+import { getUserState } from './user';
 import {
 	CLASS_CODES_COLLECTION,
 	LESSON_STEP_KEYS,
 	LessonStep,
-	buildLessonPlan,
+	buildNewLessonPlan,
 	generateClassCode,
+	isLessonStanding,
 	isValidStepIndex,
+	lessonStatusOfMain,
 	lessonStepOf,
 	nextStep as nextStepKey,
 	normalizeHint,
 	planChallengeWrites,
+	planStepMove,
 	stepFollowMePath,
 	stepLabelKey,
 } from './lessonCore';
@@ -84,14 +92,20 @@ export function getLessonStep(): LessonStep {
 
 /**
  * Teacher jumps to a step (forward or back): writes `stepIndex`, then the
- * step's follow-me path so every student device follows. Throws on a bad index.
+ * step's follow-me path so every student device follows. Throws on a bad index,
+ * and while the lesson is paused or ended (the rail is held; reopen or resume
+ * first). A move on an `open` lesson makes it live again.
  */
 export async function setLessonStep(mainId: string, index: number): Promise<void> {
 	if (!isValidStepIndex(index)) {
 		throw new RangeError(`Invalid lesson step index: ${String(index)}`);
 	}
+	const status = lessonStatusOfMain(getMainStatement());
+	if (isLessonStanding(status)) {
+		throw new Error(`The lesson is ${status}: steps do not move`);
+	}
 	await setMainStatementSetting(mainId, {
-		statementSettings: { lessonPlan: buildLessonPlan(index) },
+		statementSettings: { lessonPlan: planStepMove(index, status, Date.now()) },
 	});
 	await setPowerFollowMe(mainId, stepFollowMePath(mainId, LESSON_STEP_KEYS[index]));
 }
@@ -169,4 +183,65 @@ export async function resolveClassCode(code: string): Promise<string | null> {
 	const mainId = snap.exists() ? (snap.data() as { mainId?: string }).mainId : undefined;
 
 	return mainId ?? null;
+}
+
+/**
+ * `onStatementCreated` (a Cloud Function shared by every app) writes the
+ * creator's admin subscription with a plain `set`, which replaces the doc and
+ * drops the `openedInClass` marker if the marker was written first. So the
+ * marker waits for that subscription (bounded; the function is normally done
+ * in a second or two). If it does not show up in time the client writes the
+ * subscription itself and writes the marker again later; opening the plan or
+ * the console writes it too.
+ */
+const SUBSCRIPTION_WAIT_MS = 8_000;
+const SUBSCRIPTION_POLL_MS = 300;
+const REMARK_DELAYS_MS: readonly number[] = [5_000, 15_000];
+
+function remarkLater(statement: Statement): void {
+	for (const delay of REMARK_DELAYS_MS) {
+		window.setTimeout(() => {
+			const user = getUserState().user;
+			if (!user) return;
+			markOpenedInClass(statement, user.uid, user.displayName ?? '').catch((err: unknown) => {
+				console.error('[createLesson] re-marking the lesson failed:', err);
+			});
+		}, delay);
+	}
+}
+
+/**
+ * The teacher's "create" (IA 13.5), in one go: the main statement with its
+ * lesson plan (step 0, live, so `/m/:mid` is a lesson from its first second)
+ * and the teacher's current language as the lesson language, then the
+ * `openedInClass` marker that lists it on the teacher's home, then the class code
+ * (whose rule needs the teacher's admin subscription, which the marker's write
+ * or the server's has created by then).
+ * Returns the new lesson's id; throws when a step fails (the caller shows "try
+ * again"; the typed name is kept).
+ */
+export async function createLesson(title: string): Promise<string> {
+	const id = await createSimpleQuestion(title, {
+		statementSettings: { lessonPlan: buildNewLessonPlan(Date.now()) },
+		defaultLanguage: getLang(),
+		forceLanguage: true,
+	});
+	if (!id) throw new Error('createLesson: the statement was not created');
+	const user = getUserState().user;
+	await loadQuestion(id);
+	const statement = getQuestion();
+	let serverSubscription = false;
+	if (user) {
+		serverSubscription = await waitForCreatorSubscription(
+			id,
+			user.uid,
+			SUBSCRIPTION_WAIT_MS,
+			SUBSCRIPTION_POLL_MS,
+		);
+		if (statement) await markOpenedInClass(statement, user.uid, user.displayName ?? '');
+	}
+	await ensureClassCode(id);
+	if (statement && !serverSubscription) remarkLater(statement);
+
+	return id;
 }

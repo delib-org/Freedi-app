@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e:lesson": "node scripts/e2e-lesson.mjs",
+    "e2e:entry": "node scripts/e2e-entry.mjs",
     "perf:gate": "node scripts/perf-gate.mjs",
     "perf:throttle": "node scripts/perf-throttle.mjs"
   },

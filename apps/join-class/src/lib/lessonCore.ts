@@ -1,4 +1,11 @@
-import { ClassRole, LessonPlan, LessonStepKey, Statement } from '@freedi/shared-types';
+import {
+	ClassRole,
+	LessonPlan,
+	LessonStatus,
+	LessonStepKey,
+	Statement,
+	lessonStatusOf,
+} from '@freedi/shared-types';
 
 /**
  * Pure lesson-model helpers (no Firestore, no DOM): step order, follow-me
@@ -89,6 +96,32 @@ export function buildLessonPlan(stepIndex: number): LessonPlan {
 	return { steps: [...LESSON_STEP_KEYS], stepIndex };
 }
 
+/** A new lesson's plan: step 0 (Waiting), live, so `/m/:mid` is a lesson from its first second. */
+export function buildNewLessonPlan(now: number): LessonPlan {
+	return { ...buildLessonPlan(FIRST_LESSON_STEP_INDEX), status: 'live', statusAt: now };
+}
+
+/** The lesson's status from its main statement; no plan or no status means live. */
+export function lessonStatusOfMain(main: Statement | null | undefined): LessonStatus {
+	return lessonStatusOf(main?.statementSettings?.lessonPlan);
+}
+
+/** Paused and ended lessons stand still: no step moves, no table moves, no writing. */
+export function isLessonStanding(status: LessonStatus): boolean {
+	return status === 'paused' || status === 'ended';
+}
+
+/**
+ * What a step move writes. An `open` lesson (kept open after class) returns to
+ * `live` the moment the teacher moves a step (IA 13.6); other statuses are
+ * left to the status callable.
+ */
+export function planStepMove(stepIndex: number, status: LessonStatus, now: number): LessonPlan {
+	const plan = buildLessonPlan(stepIndex);
+
+	return status === 'open' ? { ...plan, status: 'live', statusAt: now } : plan;
+}
+
 export function getClassRole(question: Statement): ClassRole {
 	return question.statementSettings?.classRole === CLASS_ROLE_CHALLENGE
 		? CLASS_ROLE_CHALLENGE
@@ -154,6 +187,38 @@ export function normalizeClassCode(input: string): string | null {
 	const digits = input.replace(/[\s-]/g, '');
 
 	return CLASS_CODE_PATTERN.test(digits) ? digits : null;
+}
+
+/** Arabic-Indic (U+0660-0669) and Persian (U+06F0-06F9) digits, which Arabic and Farsi keyboards send. */
+const ARABIC_INDIC_ZERO = 0x0660;
+const PERSIAN_ZERO = 0x06f0;
+const DIGIT_COUNT = 10;
+const JOIN_LINK_CODE = /\/c\/([^/?#\s]+)/;
+
+function toAsciiDigits(input: string): string {
+	return Array.from(input, (ch) => {
+		const point = ch.codePointAt(0) ?? 0;
+		if (point >= ARABIC_INDIC_ZERO && point < ARABIC_INDIC_ZERO + DIGIT_COUNT) {
+			return String(point - ARABIC_INDIC_ZERO);
+		}
+		if (point >= PERSIAN_ZERO && point < PERSIAN_ZERO + DIGIT_COUNT) {
+			return String(point - PERSIAN_ZERO);
+		}
+
+		return ch;
+	}).join('');
+}
+
+/**
+ * What the front door's one input keeps: digits only (Arabic-Indic and Persian
+ * digits mapped to 0-9), at most six. A pasted join link ("https://host/c/482913")
+ * yields its code; "482 913" and "482-913" yield 482913.
+ */
+export function toCodeDigits(input: string): string {
+	const link = JOIN_LINK_CODE.exec(input);
+	const source = link ? link[1] : input;
+
+	return toAsciiDigits(source).replace(/\D/g, '').slice(0, CLASS_CODE_LENGTH);
 }
 
 /** Longest hint, in characters: one line on a phone. */

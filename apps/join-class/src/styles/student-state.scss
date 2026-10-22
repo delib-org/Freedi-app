@@ -1,0 +1,52 @@
+// =============================================================================
+// Student paused / ended screen (IA 13.6, UX 13.F). Lazy: imported by
+// LessonStateScreen only, so a lesson that never pauses never downloads it.
+// =============================================================================
+
+.lesson-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  min-block-size: 50dvh;
+  text-align: center;
+  animation: lesson-state-in var(--dur-base) var(--ease-out);
+
+  &__mark {
+    font-size: 48px;
+    line-height: 1;
+  }
+
+  // Calm, never an error: ink-soft, no terracotta, no danger.
+  &--paused .status-mark--paused::before,
+  &--paused .status-mark--paused::after {
+    background: var(--ink-soft);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--ink);
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  &__body {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    color: var(--ink-muted);
+  }
+}
+
+@keyframes lesson-state-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

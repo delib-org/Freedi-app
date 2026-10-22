@@ -1,52 +1,46 @@
 import m from 'mithril';
-import { signInWithGoogle, signInAsGuest, waitForAuthReady, isSignedIn } from '@/lib/user';
+import { getUserState, isGoogleSignedIn, signInWithGoogle, waitForAuthReady } from '@/lib/user';
+import { ownsClassLessons } from '@/lib/joinSubscriptions';
 import { t } from '@/lib/i18n';
 import { SplashLoader } from '@/views/Splash';
 import { BrandLogo } from '@/components/BrandLogo';
 
-let busy: 'google' | 'guest' | null = null;
+/**
+ * `/login` - teacher sign-in. Google only (IA 13.4): a lesson belongs to the
+ * account that created it, and a guest account lives in one browser. Students
+ * never sign in. After sign-in the teacher goes back to `?next=`, default `/t`.
+ */
+
+const DEFAULT_NEXT = '/t';
+
+let busy = false;
 let error: string | null = null;
 let booting = true;
+/** Decided before the click so the popup opens inside the gesture (see user.ts). */
+let linkAnonymous = false;
 
 function nextRoute(): string {
 	const params = new URLSearchParams(window.location.search);
-	const next = params.get('next');
+	const next = params.get('next') ?? m.route.param('next');
 	// Guard against open-redirect: only allow same-origin paths starting with `/`.
-	if (next && next.startsWith('/') && !next.startsWith('//')) return next;
+	if (typeof next === 'string' && next.startsWith('/') && !next.startsWith('//')) return next;
 
-	return '/';
+	return DEFAULT_NEXT;
 }
 
 async function handleGoogle(): Promise<void> {
 	if (busy) return;
-	busy = 'google';
+	busy = true;
 	error = null;
 	m.redraw();
 	try {
-		await signInWithGoogle();
+		await signInWithGoogle({ linkAnonymous });
 		m.route.set(nextRoute());
 	} catch (err) {
 		console.error('[Login] Google sign-in failed:', err);
 		error = t('login.error.failed');
 	} finally {
-		busy = null;
-		m.redraw();
-	}
-}
-
-async function handleGuest(): Promise<void> {
-	if (busy) return;
-	busy = 'guest';
-	error = null;
-	m.redraw();
-	try {
-		await signInAsGuest();
-		m.route.set(nextRoute());
-	} catch (err) {
-		console.error('[Login] Guest sign-in failed:', err);
-		error = t('login.error.failed');
-	} finally {
-		busy = null;
+		busy = false;
 		m.redraw();
 	}
 }
@@ -55,60 +49,45 @@ export const Login: m.Component = {
 	async oninit() {
 		booting = true;
 		error = null;
-		busy = null;
+		busy = false;
+		linkAnonymous = false;
 		await waitForAuthReady();
-		booting = false;
-		// Already signed in? Skip the login surface and bounce to the
-		// intended destination (or the main page).
-		if (isSignedIn()) {
-			m.route.set(nextRoute());
+		if (isGoogleSignedIn()) {
+			booting = false;
+			m.route.set(nextRoute(), undefined, { replace: true });
 
 			return;
 		}
+		const user = getUserState().user;
+		if (user?.isAnonymous) linkAnonymous = await ownsClassLessons(user.uid);
+		booting = false;
 		m.redraw();
 	},
 
 	view() {
-		if (booting) {
-			return m(SplashLoader);
-		}
+		if (booting) return m(SplashLoader);
 
-		return m('.login', [
-			m('.login__card', [
-				m(BrandLogo, { size: 72, className: 'login__logo' }),
-				m('h1.login__title', t('login.title')),
-				m('p.login__tagline', t('login.tagline')),
-				error ? m('.login__error', { role: 'alert' }, error) : null,
-				m('.login__actions', [
-					m(
-						'button.login__btn.login__btn--google',
-						{
-							type: 'button',
-							disabled: busy !== null,
-							'aria-busy': busy === 'google' ? 'true' : undefined,
-							onclick: handleGoogle,
-						},
-						[
-							m('span.login__btn-icon', { 'aria-hidden': 'true' }, 'G'),
-							m(
-								'span.login__btn-label',
-								busy === 'google' ? t('login.signing_in') : t('login.google'),
-							),
-						],
-					),
-					m('.login__divider', m('span', t('login.or'))),
-					m(
-						'button.login__btn.login__btn--guest',
-						{
-							type: 'button',
-							disabled: busy !== null,
-							'aria-busy': busy === 'guest' ? 'true' : undefined,
-							onclick: handleGuest,
-						},
-						busy === 'guest' ? t('login.signing_in') : t('login.guest'),
-					),
-				]),
-				m('p.login__hint', t('login.hint')),
+		return m('main.door', [
+			m('header.door__header', m(BrandLogo, { size: 48, className: 'door__logo' })),
+			m('h1.door__title', t('login.title')),
+			m('p.door__line', t('login.tagline')),
+			error ? m('p.door__error-title', { role: 'alert' }, error) : null,
+			m(
+				'button.door__google',
+				{
+					type: 'button',
+					disabled: busy,
+					'aria-busy': busy ? 'true' : undefined,
+					onclick: handleGoogle,
+				},
+				[
+					m('span.door__google-mark', { 'aria-hidden': 'true' }, 'G'),
+					m('span', busy ? t('login.signing_in') : t('login.google')),
+				],
+			),
+			m('.door__alt', [
+				m('p', t('login.hint')),
+				m(m.route.Link, { class: 'btn btn--tertiary', href: '/' }, t('login.have_code')),
 			]),
 		]);
 	},

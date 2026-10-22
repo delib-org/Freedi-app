@@ -11,6 +11,17 @@ service cloud.firestore {
       return path.split('/').join('_');
     }
 
+    // join-class: the students of a lesson write nothing while the teacher has
+    // it paused or ended (statementSettings.lessonPlan.status; absent = live).
+    // One get() of the main statement. Used ONLY behind a join-class-specific
+    // condition (a class field on a subscription, a vote on a question that
+    // carries a ballot), so the main app's own writes never pay for it.
+    function classLessonWritable(mainId) {
+      let path = /databases/$(database)/documents/statements/$(mainId);
+      return !exists(path) ||
+             !(get(path).data.get('statementSettings', {}).get('lessonPlan', {}).get('status', 'live') in ['paused', 'ended']);
+    }
+
     // WizCol Studio — consultant organizations. Membership lives in
     // `organizationMembers/{orgId}--{uid}` (deterministic id, one exists()
     // per check). These helpers are used ONLY by the org collections and by
@@ -1287,12 +1298,18 @@ service cloud.firestore {
       }
 
       function classCreateOk() {
-        return classFieldValuesOk() && !('tableId' in request.resource.data);
+        let d = request.resource.data;
+        return classFieldValuesOk() && !('tableId' in d) &&
+               (!('side' in d || 'camp' in d || 'decisionSupport' in d) ||
+                classLessonWritable(d.statementId));
       }
 
       function classUpdateOk() {
+        let changed = request.resource.data.diff(resource.data).affectedKeys();
         return classFieldValuesOk() &&
-               !request.resource.data.diff(resource.data).affectedKeys().hasAny(['tableId']);
+               !changed.hasAny(['tableId']) &&
+               (!changed.hasAny(['side', 'camp', 'decisionSupport']) ||
+                classLessonWritable(resource.data.statementId));
       }
 
       allow read: if request.auth.uid != null;
@@ -1606,7 +1623,8 @@ service cloud.firestore {
           : null;
         return ballot == null ||
                (ballot.get('closedAt', null) == null &&
-                (optionId == 'none' || optionId in ballot.get('candidateIds', [])));
+                (optionId == 'none' || optionId in ballot.get('candidateIds', [])) &&
+                classLessonWritable(get(path).data.get('parentId', 'none')));
       }
       allow read: if request.auth.uid != null;
       allow create, update: if request.auth.uid != null &&

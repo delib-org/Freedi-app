@@ -5,10 +5,11 @@ import {
 	loadMainStatement,
 	getMainStatement,
 	getSubQuestions,
+	subscribeMainStatement,
 	subscribeSubQuestions,
 } from '@/lib/store';
 import { checkAdminStatus, isAdmin } from '@/lib/admin';
-import { markOpenedInJoin } from '@/lib/joinSubscriptions';
+import { markOpenedInClass } from '@/lib/joinSubscriptions';
 import { createDragReorder } from '@/lib/dragReorder';
 import type { Unsubscribe } from '@/lib/firebase';
 import {
@@ -34,7 +35,7 @@ import {
  *  from here and calls the actions; every write is tracked so "Save" can wait
  *  for all of them and report honestly. */
 
-export type PlanLoad = 'loading' | 'ready' | 'error';
+export type PlanLoad = 'loading' | 'ready' | 'error' | 'denied';
 
 export interface NewCard {
 	key: string;
@@ -49,6 +50,7 @@ export const CHALLENGE_NEW_KEY = 'challenge:new';
 let mainId = '';
 let load: PlanLoad = 'loading';
 let subUnsub: Unsubscribe | null = null;
+let mainUnsub: Unsubscribe | null = null;
 let newCardCounter = 0;
 
 const drafts = new Map<string, string>();
@@ -399,7 +401,7 @@ function resetState(): void {
 	reorder.reset();
 }
 
-/** Open the screen for a workspace. Non-admins are sent to the student view. */
+/** Open the screen for a workspace. Non-admins get the "not your lesson" state, never a redirect. */
 export async function openPlan(id: string): Promise<void> {
 	teardownPlan();
 	resetState();
@@ -417,16 +419,19 @@ export async function openPlan(id: string): Promise<void> {
 		}
 		await checkAdminStatus(id, main.creatorId);
 		if (!isAdmin()) {
-			m.route.set(`/m/${id}`);
+			load = 'denied';
 
 			return;
 		}
 		const user = getUserState().user;
 		if (user) {
-			void markOpenedInJoin(main, user.uid, user.displayName ?? '').catch((err: unknown) => {
-				console.error('[PlanScreen] markOpenedInJoin failed:', err);
+			void markOpenedInClass(main, user.uid, user.displayName ?? '').catch((err: unknown) => {
+				console.error('[PlanScreen] markOpenedInClass failed:', err);
 			});
 		}
+		// Live main statement too: the details fields (video, names, language) compare
+		// against what is saved, and what is saved changes under a second tab or a callable.
+		mainUnsub = subscribeMainStatement(id);
 		subUnsub = subscribeSubQuestions(id);
 		load = 'ready';
 	} catch (err) {
@@ -438,6 +443,10 @@ export async function openPlan(id: string): Promise<void> {
 }
 
 export function teardownPlan(): void {
+	if (mainUnsub) {
+		mainUnsub();
+		mainUnsub = null;
+	}
 	if (subUnsub) {
 		subUnsub();
 		subUnsub = null;
