@@ -3,13 +3,13 @@ import { supportBySide } from '@freedi/shared-types';
 import type { LessonStepKey } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { classState } from '@/lib/classroom/classState';
-import { gateOf, sideNamesOf, videoUrlOf } from '@/lib/classroom/classSettings';
+import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
 import { projectorData } from '@/lib/classroom/projectorData';
 import { ProjectorQr, QR_WAITING_SIZE } from './ProjectorBand';
+import { openingStage } from './OpeningStage';
 import {
 	allTablesRating,
 	countTables,
-	embedUrlOf,
 	gateBars,
 	readBallot,
 	readRoundPhase,
@@ -28,8 +28,6 @@ export interface StepContext {
 	code: string | undefined;
 	joinUrl: string | undefined;
 }
-
-let videoShown = false;
 
 function barStyle(percent: number): Record<string, string> {
 	return { '--bar': `${percent}%` };
@@ -52,33 +50,7 @@ function waiting(ctx: StepContext): m.Vnode {
 }
 
 function opening(): m.Vnode {
-	const question = projectorData.challenge?.statement ?? projectorData.main?.statement ?? '';
-	const videoUrl = videoUrlOf(projectorData.main);
-	const embed = videoUrl ? embedUrlOf(videoUrl) : null;
-
-	return m('section.projector-step.projector-step--opening', [
-		m('p.projector-eyebrow', t('projector.lessonQuestion')),
-		m('h1.projector-question', question),
-		embed
-			? videoShown
-				? m('iframe.projector-video', {
-						src: embed,
-						title: t('projector.videoTitle'),
-						allow: 'encrypted-media; picture-in-picture',
-						allowfullscreen: true,
-					})
-				: m(
-						'button.projector-video-play',
-						{
-							type: 'button',
-							onclick: () => {
-								videoShown = true;
-							},
-						},
-						t('projector.playVideo'),
-					)
-			: null,
-	]);
+	return openingStage();
 }
 
 function side(): m.Vnode {

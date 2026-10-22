@@ -3,7 +3,6 @@ import type { ClassTable, Statement, StatementSubscription } from '@freedi/share
 import {
 	allTablesRating,
 	countTables,
-	embedUrlOf,
 	gateBars,
 	readBallot,
 	readRoundPhase,
@@ -114,15 +113,5 @@ describe('tableTiles / unseatedNames', () => {
 		const tiles = tableTiles([table(1, 'pick', ['u1'])], roster);
 		expect(tiles).toEqual([{ n: 1, names: ['Dana'] }]);
 		expect(unseatedNames(roster, 't')).toEqual(['Noa']);
-	});
-});
-
-describe('embedUrlOf', () => {
-	it('accepts YouTube links only', () => {
-		expect(embedUrlOf('https://youtu.be/abcDEF12345')).toContain('/embed/abcDEF12345');
-		expect(embedUrlOf('https://www.youtube.com/watch?v=abcDEF12345')).toContain(
-			'/embed/abcDEF12345',
-		);
-		expect(embedUrlOf('https://evil.example/x')).toBeNull();
 	});
 });

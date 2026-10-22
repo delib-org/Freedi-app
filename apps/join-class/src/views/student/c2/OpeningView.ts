@@ -1,95 +1,104 @@
 import m from 'mithril';
 import '@/styles/student-c2.scss';
 import { StudentFrame } from '@/components/StudentFrame';
+import { IntroText, blocksFromPlainText } from '@/components/IntroText';
 import { t } from '@/lib/i18n';
 import { stepLabel } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
-import { challengeOf, youtubeEmbedUrl } from '../c2/c2Helpers';
-import { videoUrlOf } from '@/lib/classroom/classSettings';
+import { fetchIntroBlocks } from '@/lib/classroom/introData';
+import type { IntroBlock } from '@/lib/classroom/introText';
+import { introVideosOf, projectorVideoOf } from '@/lib/classroom/introVideos';
+import { challengeOf } from '../c2/c2Helpers';
+import { IntroVideoRows } from './IntroVideoRows';
 import type { StepAttrs } from '../steps/stepSlot';
 
 /**
- * Step 1, Opening (UX §2.3): the lesson question on a card under "Watch
- * together". A dilemma video exists only when the workspace has a `videoUrl`;
- * it never plays by itself: nothing is loaded until the student taps play. No
- * button, the teacher opens the next step.
+ * Step 1, Opening (UX 14.C): the lesson question on a card, then the teacher's
+ * introduction text, then its videos. The text shows `description` as plain
+ * paragraphs at once and swaps in the formatted version after one `get` of the
+ * paragraph children (a failed get keeps the plain text and shows no error).
+ * No video loads until the student taps it. No button: the teacher opens the
+ * next step.
  */
 
 interface OpeningState {
-	playing: boolean;
-	failed: boolean;
+	/** Formatted blocks once fetched; null while loading or after a failed get. */
+	blocks: IntroBlock[] | null;
+	/** The `description` the current fetch (or result) belongs to. */
+	fetchedFor: string | null;
+	openId: string | null;
+	failedIds: Set<string>;
+	alive: boolean;
 }
 
-function player(url: string, state: OpeningState): m.Vnode {
-	const embed = youtubeEmbedUrl(url);
-	if (embed) {
-		return m('iframe.opening__player', {
-			src: embed,
-			title: t('opening.video_title'),
-			allow: 'encrypted-media; picture-in-picture; fullscreen',
-			referrerpolicy: 'strict-origin-when-cross-origin',
-			allowfullscreen: true,
-		});
-	}
-
-	return m('video.opening__player', {
-		src: url,
-		controls: true,
-		playsinline: true,
-		'aria-label': t('opening.video_title'),
-		onerror: () => {
-			state.failed = true;
-			state.playing = false;
+function fetchBlocks(state: OpeningState, mainId: string, description: string): void {
+	state.fetchedFor = description;
+	void fetchIntroBlocks(mainId)
+		.then((saved) => {
+			if (!state.alive || state.fetchedFor !== description) return;
+			state.blocks = saved;
 			m.redraw();
-		},
-	});
-}
-
-function videoCard(url: string, state: OpeningState): m.Vnode {
-	if (state.failed) {
-		return m(
-			'.opening__video',
-			m('p.opening__video-note', { role: 'status' }, t('opening.video_failed')),
-		);
-	}
-	if (state.playing) return m('.opening__video', player(url, state));
-
-	return m(
-		'.opening__video',
-		m(
-			'button.btn.btn--secondary.opening__play',
-			{
-				type: 'button',
-				onclick: () => {
-					state.playing = true;
-				},
-			},
-			[m('span.opening__play-icon', { 'aria-hidden': 'true' }), t('opening.play')],
-		),
-	);
+		})
+		.catch((error: unknown) => {
+			console.error('[Opening] introduction text fetch failed:', error);
+		});
 }
 
 export const OpeningView: m.Component<StepAttrs> = {
 	oninit(vnode) {
 		const state = vnode.state as unknown as OpeningState;
-		state.playing = false;
-		state.failed = false;
+		state.blocks = null;
+		state.fetchedFor = null;
+		state.openId = null;
+		state.failedIds = new Set<string>();
+		state.alive = true;
+	},
+
+	onremove(vnode) {
+		(vnode.state as unknown as OpeningState).alive = false;
 	},
 
 	view(vnode) {
 		const state = vnode.state as unknown as OpeningState;
 		const { main } = vnode.attrs;
 		const question = challengeOf(getSubQuestions())?.statement ?? main.statement;
-		const video = videoUrlOf(main);
+		const videos = introVideosOf(main);
+		const description = (main.description ?? '').trim();
+		// A lesson without introduction text never queries for paragraphs
+		if (description !== '' && state.fetchedFor !== description) {
+			fetchBlocks(state, main.statementId, description);
+		}
+		const blocks = description === '' ? [] : (state.blocks ?? blocksFromPlainText(description));
+		const empty = blocks.length === 0 && videos.length === 0;
 
-		return m(StudentFrame, { headerLine: stepLabel('opening'), instruction: t('opening.watch') }, [
-			m('.opening', { class: video ? '' : 'opening--centered' }, [
-				m('article.opening__card', [
-					m('p.opening__eyebrow', t('opening.eyebrow')),
-					m('p.opening__question', question),
+		return m(
+			StudentFrame,
+			{
+				headerLine: stepLabel('opening'),
+				instruction: videos.length > 0 ? t('opening.watch') : t('opening.read'),
+			},
+			[
+				m('.opening', { class: empty ? 'opening--centered' : '' }, [
+					m('article.opening__card', [
+						m('p.opening__eyebrow', t('opening.eyebrow')),
+						m('p.opening__question', question),
+					]),
+					m(IntroText, { blocks, size: 'phone' }),
+					m(IntroVideoRows, {
+						videos,
+						liveId: projectorVideoOf(main)?.id ?? null,
+						openId: state.openId,
+						failedIds: state.failedIds,
+						onOpen: (id: string) => {
+							state.openId = id;
+						},
+						onFailed: (id: string) => {
+							state.failedIds.add(id);
+							if (state.openId === id) state.openId = null;
+						},
+					}),
 				]),
-				video ? videoCard(video, state) : null,
-			]),
-		]);
+			],
+		);
 	},
 };

@@ -42,15 +42,6 @@ export function challengeOf(subQuestions: readonly Statement[]): Statement | nul
 	return found ?? null;
 }
 
-const YOUTUBE_ID = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,20})/;
-
-/** Embed URL for a YouTube link (only built after a tap), else null. */
-export function youtubeEmbedUrl(url: string): string | null {
-	const id = YOUTUBE_ID.exec(url)?.[1];
-
-	return id ? `https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0` : null;
-}
-
 /** Table number from a table doc id `{mainId}--{n}`; null if it does not parse. */
 export function tableNumberOf(tableId: string | undefined): number | null {
 	if (!tableId) return null;

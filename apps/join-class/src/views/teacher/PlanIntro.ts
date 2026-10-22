@@ -199,11 +199,11 @@ function videos(): m.Vnode {
 	const rows = videoRows();
 	const ids = savedVideoIds();
 
-	return m('.intro-videos', [
-		m('h3.intro-videos__title', t('plan.intro.videos')),
+	return m('.plan-videos', [
+		m('h3.plan-videos__title', t('plan.intro.videos')),
 		rows.length > 0
 			? m(
-					'ul.plan__list.intro-videos__list',
+					'ul.plan__list.plan-videos__list',
 					introReorder.listAttrs(),
 					rows.map((row, i) => videoCard(row, i, ids)),
 				)

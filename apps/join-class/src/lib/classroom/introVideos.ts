@@ -53,7 +53,7 @@ function youtubeIdOf(url: URL): string | null {
 
 /**
  * The one reader of a video link. https only; a YouTube link becomes a
- * youtube-nocookie embed (never autoplay), a direct https .mp4 / .webm plays in
+ * youtube-nocookie embed (never set to play by itself), a direct https .mp4 / .webm plays in
  * a video element. Anything else (Vimeo, Drive, a web page, http, javascript:)
  * is refused: null means "never render this".
  */

@@ -1,13 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_GATE } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
-import {
-	SIDE_NAME_MAX_LENGTH,
-	gateOf,
-	isHttpsUrl,
-	sideNamesOf,
-	videoUrlOf,
-} from '../classSettings';
+import { SIDE_NAME_MAX_LENGTH, gateOf, sideNamesOf } from '../classSettings';
 
 function stmt(partial: Record<string, unknown>): Statement {
 	return partial as unknown as Statement;
@@ -30,23 +24,6 @@ describe('gateOf', () => {
 	it('ignores values that are not finite numbers', () => {
 		expect(gateOf(stmt({ votingSettings: { threshold: 'x' } }))).toBe(DEFAULT_GATE);
 		expect(gateOf(stmt({ votingSettings: { threshold: Number.NaN } }))).toBe(DEFAULT_GATE);
-	});
-});
-
-describe('videoUrlOf', () => {
-	it('accepts only https urls', () => {
-		expect(videoUrlOf(stmt({ statementSettings: { videoUrl: 'https://x.test/a.mp4' } }))).toBe(
-			'https://x.test/a.mp4',
-		);
-		expect(videoUrlOf(stmt({ statementSettings: { videoUrl: 'http://x.test/a.mp4' } }))).toBeNull();
-		expect(videoUrlOf(stmt({ statementSettings: { videoUrl: 'javascript:alert(1)' } }))).toBeNull();
-		expect(videoUrlOf(stmt({}))).toBeNull();
-		expect(videoUrlOf(null)).toBeNull();
-	});
-
-	it('isHttpsUrl rejects garbage', () => {
-		expect(isHttpsUrl('not a url')).toBe(false);
-		expect(isHttpsUrl('https://youtu.be/abc')).toBe(true);
 	});
 });
 

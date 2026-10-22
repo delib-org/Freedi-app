@@ -98,36 +98,124 @@
     line-height: 1.3;
   }
 
-  &__video {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    aspect-ratio: 16 / 9;
-    overflow: hidden;
-    border-radius: var(--radius-lg);
-    background: var(--paper-soft);
-  }
-
-  &__player {
-    inline-size: 100%;
-    block-size: 100%;
-    border: 0;
-  }
-
-  &__play {
-    min-block-size: 56px;
-  }
-
   &__play-icon {
     display: inline-block;
     border-block: 8px solid transparent;
     border-inline-start: 13px solid currentColor;
   }
 
-  &__video-note {
-    padding: var(--space-md);
+}
+
+// ---- introduction: text + video rows (UX 14.C) --------------------------------
+.opening > .intro-text {
+  margin-block-start: var(--space-sm);
+}
+
+.intro-videos {
+  margin-block-start: var(--space-sm);
+
+  &__title {
+    margin: 0 0 var(--space-sm);
     color: var(--ink-muted);
-    text-align: center;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    list-style: none;
+  }
+}
+
+.intro-video-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: var(--space-md);
+  row-gap: var(--space-xs);
+  min-block-size: 64px;
+  padding: 12px var(--space-md);
+  // reserved on every row so the live mark never shifts the layout
+  border-inline-start: 3px solid transparent;
+
+  & + & {
+    border-block-start: 1px solid var(--paper-line);
+  }
+
+  // "on the projector now" reads without colour: words, a screen shape and a heavier edge
+  &--live {
+    border-inline-start-color: var(--ink);
+  }
+
+  &__title {
+    grid-column: 1;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    overflow-wrap: anywhere;
+  }
+
+  &__live {
+    display: inline-flex;
+    grid-column: 1;
+    align-items: center;
+    justify-self: start;
+    gap: var(--space-xs);
+    block-size: 24px;
+    padding-inline: var(--space-sm);
+    border-radius: var(--radius-full);
+    background: var(--ink);
+    color: var(--paper);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__mark {
+    display: inline-block;
+    inline-size: 10px;
+    block-size: 7px;
+    border: 1.5px solid currentColor;
+    border-radius: 1px;
+  }
+
+  &__action {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  &--open &__action {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  &__play {
+    min-block-size: var(--touch-target);
+  }
+
+  &__player {
+    display: block;
+    inline-size: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--paper-soft);
+  }
+
+  &__note {
+    margin: 0;
+    color: var(--ink-muted);
+  }
+
+  // 200 % zoom / very narrow phones: the button drops under the title
+  @media (max-width: 22rem) {
+    &__action {
+      grid-column: 1 / -1;
+      grid-row: auto;
+    }
   }
 }
 

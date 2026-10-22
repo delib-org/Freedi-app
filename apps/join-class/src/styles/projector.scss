@@ -143,23 +143,38 @@ $projector-band-height: 64px;
   line-height: var(--line-height-tight, 1.15);
 }
 
-.projector-video {
-  width: min(960px, 100%);
-  aspect-ratio: 16 / 9;
-  border: 0;
-  border-radius: var(--radius-lg);
-}
+// The chosen video fills the stage (UX 14.D): question as a one-line eyebrow, the
+// title above the player, the player the largest 16:9 box the stage allows.
+.intro-stage {
+  min-inline-size: 0;
 
-.projector-video-play {
-  min-height: 96px;
-  padding-inline: var(--space-2xl);
-  border: 3px solid var(--ink);
-  border-radius: var(--radius-full);
-  background: var(--paper);
-  color: var(--ink);
-  font: inherit;
-  font-weight: var(--font-weight-bold, 700);
-  cursor: pointer;
+  &__eyebrow {
+    margin: 0;
+    color: var(--ink-muted);
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 40px;
+    font-weight: var(--font-weight-bold, 700);
+    line-height: var(--line-height-tight, 1.15);
+  }
+
+  &__player {
+    // stage height minus the band, the stage padding, the eyebrow, the title and the gaps
+    inline-size: min(
+      100%,
+      calc((100dvh - #{$projector-band-height} - 2 * var(--space-xl) - 32px - 56px - 2 * var(--space-lg)) * 16 / 9)
+    );
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--ink);
+  }
 }
 
 // ---- side --------------------------------------------------------------------

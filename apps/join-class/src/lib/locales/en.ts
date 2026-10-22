@@ -398,7 +398,7 @@ const en: Record<string, string> = {
 	'plan.details.language.device': "Each student's own language",
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'Introduction',
-	'plan.intro.help': 'Shown at the Opening step: big on the projector and on the students\' phones.',
+	'plan.intro.help': "Shown at the Opening step: big on the projector and on the students' phones.",
 	'plan.intro.text.label': 'Text',
 	'plan.intro.text.placeholder': 'A few sentences about the dilemma and what lies ahead',
 	'plan.intro.text.count': '{{n}} of {{max}}',

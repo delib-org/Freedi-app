@@ -393,7 +393,8 @@ const nl: Record<string, string> = {
 	'plan.details.language.device': 'Taal van elke leerling',
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'Introductie',
-	'plan.intro.help': 'Wordt getoond bij de stap Opening: groot op de beamer en op de telefoons van de leerlingen.',
+	'plan.intro.help':
+		'Wordt getoond bij de stap Opening: groot op de beamer en op de telefoons van de leerlingen.',
 	'plan.intro.text.label': 'Tekst',
 	'plan.intro.text.placeholder': 'Een paar zinnen over het dilemma en wat de klas te wachten staat',
 	'plan.intro.text.count': '{{n}} van {{max}}',
@@ -409,7 +410,8 @@ const nl: Record<string, string> = {
 	'plan.intro.video.url_aria': 'Link van video {{n}}',
 	'plan.intro.video.title': 'Titel van de video',
 	'plan.intro.video.title_aria': 'Titel van video {{n}}',
-	'plan.intro.video.invalid': 'Gebruik een YouTube-link of een videobestand dat met https:// begint',
+	'plan.intro.video.invalid':
+		'Gebruik een YouTube-link of een videobestand dat met https:// begint',
 	'plan.intro.video.max': 'Maximaal {{max}} video’s',
 	'plan.intro.video.moved': 'Verplaatst naar plaats {{n}} van {{total}}',
 	'plan.intro.video.delete_aria': 'Video verwijderen: {{name}}',
