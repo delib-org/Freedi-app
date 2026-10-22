@@ -105,6 +105,21 @@ export const handleWaitingRole = onDocumentWritten(
 );
 ```
 
+### Hot Trigger Memory
+
+Triggers are created through `createFirestoreFunction` (`functions/src/utils/createFirestoreFunction.ts`, moved out of `index.ts`), which accepts `options.memory`. `HOT_TRIGGER_MEMORY = '512MiB'` is applied to `newEvaluation`, `updateEvaluation`, `deleteEvaluation`, `onStatementCreated`, `updateParentOnChildUpdate` (`fn_statement_updates.ts`), `validateRoleChange` and `handleWaitingRoleSubscriptions`. At 256 MiB these ran out of memory on about 17% of runs (`onStatementCreated` 60%), most likely because the large `index.ts` export graph is loaded on every cold start. After the change: 0 out-of-memory errors (2026-10-22).
+
+Every `statementsSubscribe` write wakes two triggers (`validateRoleChange` on update, `handleWaitingRoleSubscriptions` on write), so never loop over subscriptions writing activity stamps or tokens. `updateStatementMemberCount` was deleted; member count lives on create/delete in `fn_subscriptionLifecycle.ts`.
+
+### Cost-bounded Writers
+
+- **`userFeed` fan-out:** `recordDiscussionActivity` (`functions/src/userFeed/`) writes one `userFeed/{subscriptionId}` doc per member, at most once per minute per discussion (`userFeedThrottle/{topParentId}` transaction). Stamping `statementsSubscribe.lastUpdate` is off (`SUBSCRIPTION_ACTIVITY_STAMP_ENABLED = false`).
+- **Participant counter:** `evaluationParticipants/{parentId}--{uid}` markers (`evaluation/evaluatorParticipation.ts`); a participant stays counted, neutral evaluations count.
+- **`isChosen`:** results are written only when the chosen set changes.
+- **Dead FCM tokens:** `utils/removeSubscriptionTokens.ts` (`arrayRemove` only).
+
+Overview: [firebase-cost-2026-10](../docs/architecture/firebase-cost-2026-10/README.md).
+
 ## Function Catalog
 
 ### Statement Operations
@@ -433,6 +448,9 @@ const statement = parse(StatementSchema, event.data?.data());
 |------------|---------|
 | `statements` | Main statement documents |
 | `statementsSubscribe` | User subscriptions |
+| `userFeed` | Server-written home feed, doc id = subscription id |
+| `userFeedThrottle` | Server-only: last feed fan-out per discussion |
+| `evaluationParticipants` | Marker per counted evaluator, `{parentId}--{uid}` |
 | `evaluations` | User evaluations |
 | `userEvaluations` | Aggregated evaluations |
 | `massConsensusMembers` | MC membership |

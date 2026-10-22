@@ -288,6 +288,14 @@ class NotificationService {
 }
 ```
 
+### Home Feed, Read State and Token Sync (cost-bounded)
+
+- **Home feed:** `src/controllers/db/userFeed/listenToUserFeed.ts` listens to the server-written `userFeed` collection (`userId ==`, `orderBy lastActivity desc`, paged) into `userFeedSlice`. A legacy fallback to `statementsSubscribe` ordering remains for users without a feed yet and is to be removed.
+- **Read state:** `useMarkDiscussionRead` writes `lastReadTimestamp` once when a discussion opens, then at most every `UI.READ_MARK_THROTTLE_MS` (30 s) while `lastChildUpdate` is newer. `updateLastReadTimestamp` is a transaction that never moves the value backwards.
+- **FCM token sync:** `syncTokenWithSubscriptions` is skipped for one week by a localStorage marker (`src/services/tokenSyncMarker.ts`) and otherwise adds the token only to subscriptions missing it. New subscriptions get the token at creation via `getPushSubscriptionFields()`.
+
+See [firebase-cost-2026-10](../docs/architecture/firebase-cost-2026-10/README.md).
+
 ### Service Integration Points
 
 | Service | Purpose |

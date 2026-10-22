@@ -12,6 +12,7 @@ This folder contains comprehensive architecture documentation for all components
 | [SIGN_APP_ARCHITECTURE.md](./SIGN_APP_ARCHITECTURE.md) | Sign - document signing & deliberation |
 | [CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md](./CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md) | Clustering & synthesis pipelines, shared data model, admin UI |
 | [PARAGRAPH_MODEL_ARCHITECTURE.md](./PARAGRAPH_MODEL_ARCHITECTURE.md) | Canonical paragraph (rich-body) model & shared CRUD across all apps |
+| [Firebase cost reduction 2026-10](../docs/architecture/firebase-cost-2026-10/README.md) | Feed, counters, read state, token sync, hot-trigger memory, invariants |
 
 > Historical clustering & synthesis documents (UNIFIED, EMBEDDINGS, FRAMING_CLUSTER_AGGREGATION, papers, scaling investigation) now live in [`../docs/clusters and synthesis/`](../docs/clusters%20and%20synthesis/).
 
@@ -71,6 +72,8 @@ All apps share:
 | `statements` | All | Main content (questions, options, documents) |
 | `statementsSubscribe` | Main, Functions | User subscriptions |
 | `evaluations` | All | User evaluations |
+| `userFeed` | Main, Functions | Server-written home feed (one doc per subscription) |
+| `evaluationParticipants` | Functions | Marker per counted evaluator |
 | `signatures` | Sign | Document signatures |
 | `approval` | Sign | Paragraph approvals |
 | `surveys` | MC | Multi-question surveys |

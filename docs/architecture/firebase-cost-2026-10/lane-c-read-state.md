@@ -5,7 +5,7 @@
 1. `StatementMain.tsx` mounts for a discussion.
 2. Before: an effect with deps `[statementId, statement, user?.uid]` called `updateLastReadTimestamp(statementId, uid)` on every change of the `statement` object (consensus, counts, `lastChildUpdate`, ...).
 3. `updateLastReadTimestamp` (`src/controllers/db/subscriptions/setSubscriptions.ts`) did `getDoc` then `updateDoc` on `statementsSubscribe/{uid}--{statementId}` (`lastReadTimestamp`, `statementId`).
-4. Every write to that doc fires 3 Cloud Functions triggers (`functions/src/index.ts` ~l.680-733 on `statementsSubscribe/{subscriptionId}`).
+4. Every write to that doc fired 3 Cloud Functions triggers (2 since `updateStatementMemberCount` was deleted in batch 1) (`functions/src/index.ts` ~l.680-733 on `statementsSubscribe/{subscriptionId}`).
 
 So each avoided write saves 1 read + 1 write + 3 invocations.
 

@@ -114,7 +114,7 @@ interface StatementSubscription {
   createdAt: number;                // Milliseconds
   lastUpdate: number;               // Milliseconds
   lastReadTimestamp?: number;
-  lastTokenUpdate?: number;
+  lastTokenUpdate?: number;         // Set by legacy full-rewrite sync; no longer written on every app open
 
   // Role/Status
   role: 'creator' | 'admin' | 'facilitator' | 'member' | 'waiting';
@@ -314,6 +314,21 @@ enum NotificationEventType {
   NOTIFICATION_ERROR = 'notification_error',
 }
 ```
+
+### Client Token Sync (cost-bounded)
+
+`syncTokenWithSubscriptions` in `src/services/notificationRepository.ts` no longer rewrites every push-enabled subscription on each app open.
+
+- **Skip:** if the localStorage marker (`src/services/tokenSyncMarker.ts`, key `STORAGE_KEYS.FCM_TOKEN_SYNC`) shows the same user and token synced within `NOTIFICATION.TOKEN_RESYNC_INTERVAL` (1 week), it returns without any query.
+- **Otherwise** it writes `arrayUnion(token)` only to subscriptions that do not already contain the token.
+- The marker is written only after a successful sync and cleared by `removeTokenFromAllSubscriptions`.
+- **New subscriptions get the token at creation:** `NotificationService.getPushSubscriptionFields()` supplies `getPushNotification` and `pushToken`, passed to `setStatementSubscriptionToDB` (used by `createStatementWithSubscription.ts` and `useAuthorization.ts`). The backend reads `sub.tokens` (`notifyStatementSubscribers.ts`, `fn_notifications.ts`), so a subscription without the token would silently get no push.
+
+Each write to a `statementsSubscribe` doc wakes two triggers (`validateRoleChange`, `handleWaitingRoleSubscriptions`), which is why bulk token writes are expensive. See [firebase-cost-2026-10](../docs/architecture/firebase-cost-2026-10/README.md).
+
+### Dead Token Removal (server)
+
+`removeTokensFromUserSubscriptions(db, userId, tokens)` in `functions/src/utils/removeSubscriptionTokens.ts` is used by `fn_notifications.ts` (invalid token on send) and `fn_tokenCleanup.ts`. It queries `userId ==` plus `tokens array-contains-any` (chunks of 30 tokens, `limit` 500 per pass), commits each batch before reading the next, and writes only `arrayRemove`, with no `lastUpdate`. The earlier code loaded all of a user's subscriptions (4,580 for one user), stamped `lastUpdate` and ran out of memory after 500, causing bursts of 500 writes. One-off clean-up: `functions/scripts/removeDeadSubscriptionTokens.ts` (dry run by default, `--execute` to write).
 
 ### Scheduled Token Cleanup
 
@@ -691,6 +706,8 @@ The following improvements have been implemented:
 |---------|--------|-------------|
 | Token sync cleanup | Completed | Removes invalid tokens from `statementsSubscribe.tokens[]` when detected server-side |
 | Legacy migration | Completed | Uses `statementsSubscribe.tokens[]` as primary, maintains legacy for compatibility |
+| Bounded token sync (2026-10-21) | Completed | Client sync skipped by a one-week marker, `arrayUnion` only where missing; tokens written at subscription create |
+| Bounded dead-token removal (2026-10-21) | Completed | Targeted query + `arrayRemove`, no `lastUpdate` |
 | Scheduled cleanup job | Completed | Daily job at 3 AM UTC removes tokens unused for 60+ days |
 | iOS PWA guidance | Completed | Shows contextual instructions for iOS Safari users |
 | Analytics tracking | Completed | Comprehensive event tracking via Firebase Analytics |
