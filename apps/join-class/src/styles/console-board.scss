@@ -3,6 +3,7 @@
 // ---- band 2: switch ---------------------------------------------------------
 .switch-band {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
@@ -14,6 +15,7 @@
 
 .switch-band__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-sm);
 }
 
@@ -25,6 +27,74 @@
     background: var(--teal-600);
     border-color: var(--teal-600);
     opacity: 1;
+  }
+}
+
+// ---- "on the projector": the Opening step's choice (UX 14.E) -----------------
+.projector-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-inline-size: 0;
+
+  &__label {
+    flex: 0 0 auto;
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    min-inline-size: 0;
+  }
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    min-block-size: 40px;
+    max-inline-size: 14ch;
+    padding: 0 var(--space-md);
+    overflow: hidden;
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-full);
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--font-size-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    // on = ink fill and the screen shape before the words, so it reads without colour
+    &--on {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      font-weight: var(--font-weight-bold);
+      opacity: 1;
+    }
+
+    &--busy[aria-busy='true'] {
+      outline: 1.5px dashed var(--ink);
+      outline-offset: 2px;
+    }
+  }
+
+  &__mark {
+    flex: 0 0 auto;
+    inline-size: 12px;
+    block-size: 8px;
+    border: 1.5px solid currentColor;
+    border-radius: 1px;
   }
 }
 

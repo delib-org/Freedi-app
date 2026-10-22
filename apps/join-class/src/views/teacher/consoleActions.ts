@@ -15,7 +15,7 @@ import {
 	classTableStep,
 } from '@/lib/classroom/api';
 import type { DropTarget } from '@/lib/classroom/dragReducer';
-import { setLessonStep } from '@/lib/lesson';
+import { setLessonStep, setProjectorVideo } from '@/lib/lesson';
 import { setOptionFlag, setQuestionSetting } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { act, consoleState } from './consoleState';
@@ -42,6 +42,13 @@ const PLENUM_PATCH = {
 
 export function goToStep(mainId: string, index: number): Promise<boolean> {
 	return guardedAct(`step:${index}`, t('console.act_step'), () => setLessonStep(mainId, index));
+}
+
+/** The Opening step's "on the projector" choice: a video id, or null for the text. */
+export function pickProjectorVideo(mainId: string, videoId: string | null): Promise<boolean> {
+	return guardedAct('projector:pick', t('console.opening.show'), () =>
+		setProjectorVideo(mainId, videoId),
+	);
 }
 
 export function assignTables(mainId: string, replace: boolean): Promise<boolean> {

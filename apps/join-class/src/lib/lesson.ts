@@ -14,6 +14,7 @@ import {
 	query,
 	where,
 	runTransaction,
+	updateDoc,
 	writeBatch,
 } from './firebase';
 import { getLang, t } from './i18n';
@@ -108,6 +109,22 @@ export async function setLessonStep(mainId: string, index: number): Promise<void
 		statementSettings: { lessonPlan: planStepMove(index, status, Date.now()) },
 	});
 	await setPowerFollowMe(mainId, stepFollowMePath(mainId, LESSON_STEP_KEYS[index]));
+}
+
+/**
+ * The Opening step's projector choice: a video id, or null for the introduction
+ * text. Cleared by every step move (planStepMove), so the next Opening starts
+ * on the text. Refused while the lesson is paused or ended.
+ */
+export async function setProjectorVideo(mainId: string, videoId: string | null): Promise<void> {
+	const status = lessonStatusOfMain(getMainStatement());
+	if (isLessonStanding(status)) {
+		throw new Error(`The lesson is ${status}: the projector does not change`);
+	}
+	await updateDoc(doc(db, Collections.statements, mainId), {
+		'statementSettings.lessonPlan.projectorVideoId': videoId,
+		lastUpdate: Date.now(),
+	});
 }
 
 /** Set one sub-question's role. Prefer `setChallengeQuestion` for the challenge. */
