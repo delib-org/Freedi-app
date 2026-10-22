@@ -90,7 +90,7 @@ function statusGroup(mid: string, status: LessonStatus | null): m.Children {
 			},
 			[
 				m('span.status-mark.status-mark--paused', { 'aria-hidden': 'true' }),
-				m('span', pausing ? t('console.opening') : t('console.pause')),
+				m('span', pausing ? t('console.busy_pausing') : t('console.pause')),
 			],
 		),
 		// An open lesson keeps its "End the lesson" in the banner below.

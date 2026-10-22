@@ -168,7 +168,7 @@ function renderRow(w: ClassLessonEntry): m.Vnode {
 							'aria-label': label(t('teacher.row.reopen')),
 							onclick: () => void handleReopen(w.id),
 						},
-						busy ? t('console.opening') : t('teacher.row.reopen'),
+						busy ? t('console.busy_opening') : t('teacher.row.reopen'),
 					)
 				: m(
 						m.route.Link,
