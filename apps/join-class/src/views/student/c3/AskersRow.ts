@@ -8,17 +8,19 @@ export interface AskersRowAttrs {
 	uid: string;
 }
 
-const MARK: Record<AskerChip['state'], string> = { done: '✓', now: '?', wait: '' };
+const MARK: Record<AskerChip['state'], string> = { done: '✓', now: '?', passed: '–', wait: '' };
 const LABEL_KEY: Record<AskerChip['state'], string> = {
 	done: 'turn.asker_done',
 	now: 'turn.asker_now',
+	passed: 'turn.asker_passed',
 	wait: 'turn.asker_wait',
 };
 
 /**
  * Who asks (UX 16.B): one chip per tablemate with a device, in seating order.
- * Done = filled with a check, asking now = a question mark and bold, not yet =
- * outline only. Not interactive: a list a screen reader reads name by name.
+ * Done = filled with a check, asking now = a question mark and bold, passed =
+ * a dashed outline with a dash, not yet = solid outline only. Not interactive:
+ * a list a screen reader reads name by name.
  */
 export const AskersRow: m.Component<AskersRowAttrs> = {
 	view({ attrs }) {

@@ -2,16 +2,17 @@ import m from 'mithril';
 import { SPEAK_SECONDS } from '@freedi/shared-types';
 import type { ClassTable } from '@freedi/shared-types';
 import { getLang, t } from '@/lib/i18n';
-import { getServerOffset, remainingMs } from '@/lib/classroom/serverClock';
+import { getServerOffset, remainingMs, serverNow } from '@/lib/classroom/serverClock';
+import { maxTurns } from '@/lib/classroom/turnMoment';
 import { formatSpeakerTime, tableStepKey, timerLine } from '@/lib/classroom/consoleHelpers';
 import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
 import { joinNames } from '@/lib/classroom/listNames';
 import {
 	QUICK_KEYS,
-	everyoneAsked,
 	memberMark,
 	quickActionFor,
 	statusLine,
+	tableIsDone,
 	type QuickAction,
 	type TableMode,
 } from '@/lib/classroom/tableTurnConsole';
@@ -49,12 +50,9 @@ export function tableModeOf(attrs: { plenum: boolean; tableTalk: boolean }): Tab
 	return attrs.plenum ? 'plenum' : attrs.tableTalk ? 'tableTalk' : 'proposals';
 }
 
-/** The table's max turns: one per tablemate with a device (never below the turn it is on). */
+/** "Turn n of max": one turn per tablemate with a device who has not passed on asking. */
 export function turnLine(table: ClassTable): string {
-	return t('console.turn_n', {
-		n: table.turn,
-		max: Math.max(table.memberUids.length, table.turn),
-	});
+	return t('console.turn_n', { n: table.turn, max: maxTurns(table) });
 }
 
 /** The engine action behind each next-step verb. */
@@ -75,8 +73,7 @@ export function quickLabel(quick: QuickAction): string {
 
 function waitRows(attrs: TableCardAttrs): m.Children {
 	const { table, students } = attrs;
-	const options = table.questionId ? (consoleState.options.get(table.questionId) ?? []) : [];
-	const line = statusLine(table, tableModeOf(attrs), options);
+	const line = statusLine(table, tableModeOf(attrs), serverNow());
 	if (!line) return null;
 	const names = (line.nameUids ?? []).map((uid) => nameOf(uid, students));
 	const params: Record<string, string | number> = { ...(line.params ?? {}) };
@@ -200,17 +197,17 @@ export const TableCard: m.Component<TableCardAttrs> = {
 				]),
 				m(
 					'p.table-card__now',
-					everyoneAsked(table, tableModeOf(attrs))
-						? `${t(tableStepKey(table, plenum))} · ${t('console.all_asked')}`
+					tableIsDone(table, tableModeOf(attrs), serverNow())
+						? t('console.all_done')
 						: t(tableStepKey(table, plenum)),
 				),
 				timerRows(attrs),
-				m(
-					'p.table-card__asker',
-					table.askerUid
-						? t('console.asker_line', { name: nameOf(table.askerUid, students) })
-						: '—',
-				),
+				table.askerUid
+					? m(
+							'p.table-card__asker',
+							t('console.asker_line', { name: nameOf(table.askerUid, students) }),
+						)
+					: null,
 				m('div.table-card__members', [
 					table.memberUids.map((uid) =>
 						m(MemberChip, {
@@ -220,7 +217,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 							camp: students.get(uid)?.camp ?? null,
 							from: table.n,
 							tableNumbers: attrs.tableNumbers,
-							turnMark: attrs.tableTalk ? memberMark(table, uid) : undefined,
+							turnMark: attrs.tableTalk ? memberMark(table, uid, serverNow()) : undefined,
 						}),
 					),
 					table.noDeviceMembers.map((nd) =>
@@ -248,7 +245,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 							`+ ${t('console.no_device')}`,
 						),
 				(() => {
-					const quick = quickActionFor(table, tableModeOf(attrs));
+					const quick = quickActionFor(table, tableModeOf(attrs), serverNow());
 					if (!quick) return null;
 					const label = quickLabel(quick);
 

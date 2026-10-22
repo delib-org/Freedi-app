@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import type { ClassTable } from '@freedi/shared-types';
-import { answerFixture } from './fixtures';
 import {
 	askerStates,
+	claimMoment,
 	instructionFor,
-	myAnswer,
+	maxTurns,
 	namesOf,
-	rateMoment,
 	refusalReason,
-	sentCount,
+	talkIsOver,
 	type InstructionInput,
 } from '../turnMoment';
+
+const NOW = 1_800_000_000_000;
 
 const MATES = [
 	{ uid: 'dana', name: 'Dana' },
@@ -19,6 +20,7 @@ const MATES = [
 	{ uid: 'lior', name: 'Lior' },
 ];
 
+/** V1 of turn 1: nobody asks yet. */
 function table(overrides: Partial<ClassTable> = {}): ClassTable {
 	return {
 		tableId: 'm--3',
@@ -27,7 +29,7 @@ function table(overrides: Partial<ClassTable> = {}): ClassTable {
 		memberUids: MATES.map((x) => x.uid),
 		noDeviceMembers: [],
 		step: 'pick',
-		askerUid: 'dana',
+		askerUid: null,
 		turn: 1,
 		writingMode: 'each',
 		writingLocked: false,
@@ -38,110 +40,205 @@ function table(overrides: Partial<ClassTable> = {}): ClassTable {
 	};
 }
 
-const answer = answerFixture;
+/** Noa is asking, everyone spoke or passed: V2 of turn 1. */
+function v2(overrides: Partial<ClassTable> = {}): ClassTable {
+	return table({
+		step: 'talk',
+		askerUid: 'noa',
+		questionId: 'q1',
+		askedUids: ['noa'],
+		spokenUids: ['noa', 'dana', 'omri', 'lior'],
+		...overrides,
+	});
+}
 
 function input(
 	over: Partial<InstructionInput> & { table: ClassTable; uid: string },
 ): InstructionInput {
-	return { kind: 'tableTalk', mates: MATES, timeUp: false, ...over };
+	return { kind: 'tableTalk', mates: MATES, timeUp: false, now: NOW, ...over };
 }
 
-describe('askerStates', () => {
-	it('turn 1 at pick: the asker is now, everyone else not yet', () => {
-		const states = askerStates(table(), MATES).map((c) => c.state);
-		expect(states).toEqual(['now', 'wait', 'wait', 'wait']);
+describe('claimMoment (which of the five moments, and what this student may do)', () => {
+	it('V1: nobody asks; every not-yet student may claim or pass', () => {
+		for (const { uid } of MATES) {
+			expect(claimMoment(table(), uid, NOW)).toMatchObject({
+				phase: 'v1',
+				canClaim: true,
+				canPassAsk: true,
+				lastLeft: false,
+			});
+		}
 	});
 
-	it('at rate the current asker counts as done; asked tablemates stay done', () => {
-		const t2 = table({ step: 'rate', askerUid: 'noa', askedUids: ['dana'], turn: 2 });
-		expect(askerStates(t2, MATES).map((c) => c.state)).toEqual(['done', 'done', 'wait', 'wait']);
-	});
-
-	it('turn 2 at pick: the claimer is now, the old asker is done', () => {
-		const t2 = table({ askerUid: 'omri', askedUids: ['dana'], turn: 2 });
-		expect(askerStates(t2, MATES).map((c) => c.state)).toEqual(['done', 'wait', 'now', 'wait']);
-	});
-
-	it('keeps seating order and names; a missing askedUids reads as empty', () => {
-		const chips = askerStates(table(), MATES);
-		expect(chips.map((c) => c.name)).toEqual(['Dana', 'Noa', 'Omri', 'Lior']);
-		expect(table().askedUids).toBeUndefined();
-	});
-
-	it('the last turn at rate is all done', () => {
-		const last = table({
-			step: 'rate',
-			askerUid: 'lior',
-			askedUids: ['dana', 'noa', 'omri'],
-			turn: 4,
+	it('A: the asker may pass (back to V1), nobody may claim', () => {
+		const a = table({ askerUid: 'noa' });
+		expect(claimMoment(a, 'noa', NOW)).toMatchObject({
+			phase: 'a',
+			canClaim: false,
+			canPassAsk: true,
 		});
-		expect(askerStates(last, MATES).every((c) => c.state === 'done')).toBe(true);
+		expect(claimMoment(a, 'omri', NOW)).toMatchObject({ canClaim: false, canPassAsk: false });
+	});
+
+	it('talk: before everyone spoke nobody claims', () => {
+		const talk = table({ step: 'talk', askerUid: 'noa', askedUids: ['noa'], spokenUids: ['noa'] });
+		expect(claimMoment(talk, 'omri', NOW)).toMatchObject({ phase: 'talk', canClaim: false });
+	});
+
+	it('V2: everyone spoke; the not-yet claim, the asked and the passed do not', () => {
+		const t = v2({ passedAskingUids: ['lior'] });
+		expect(claimMoment(t, 'dana', NOW)).toMatchObject({ phase: 'v2', canClaim: true });
+		expect(claimMoment(t, 'omri', NOW)).toMatchObject({ canClaim: true, canPassAsk: true });
+		expect(claimMoment(t, 'noa', NOW)).toMatchObject({ canClaim: false, canPassAsk: false });
+		expect(claimMoment(t, 'lior', NOW)).toMatchObject({ canClaim: false, canPassAsk: false });
+	});
+
+	it('names the last one left, for everyone else to wait for', () => {
+		const last = v2({ askedUids: ['noa', 'dana', 'omri'] });
+		expect(claimMoment(last, 'lior', NOW)).toMatchObject({
+			lastLeft: true,
+			canClaim: true,
+			waitingFor: null,
+		});
+		expect(claimMoment(last, 'dana', NOW)).toMatchObject({ lastLeft: true, waitingFor: 'lior' });
+	});
+
+	it('counts the speaker whose minute ran out; a leftover rate table reads as V2', () => {
+		const lastMinute = v2({
+			spokenUids: ['noa', 'dana', 'omri'],
+			speakerUid: 'lior',
+			speakerEndsAt: NOW - 1,
+		});
+		expect(claimMoment(lastMinute, 'dana', NOW).phase).toBe('v2');
+		expect(claimMoment({ ...lastMinute, speakerEndsAt: NOW + 5000 }, 'dana', NOW).phase).toBe(
+			'talk',
+		);
+		expect(claimMoment(table({ step: 'rate', askerUid: 'noa' }), 'dana', NOW).phase).toBe('v2');
+		expect(talkIsOver(table({ step: 'write' }), NOW)).toBe(true);
+	});
+
+	it('done: everyone asked or passed and the last talk is over', () => {
+		const done = v2({ askedUids: ['noa', 'dana', 'omri'], passedAskingUids: ['lior'] });
+		expect(claimMoment(done, 'dana', NOW)).toMatchObject({ phase: 'done', canClaim: false });
+		const allPassed = table({ passedAskingUids: MATES.map((x) => x.uid) });
+		expect(claimMoment(allPassed, 'dana', NOW).phase).toBe('done');
+		// still talking: not done
+		const talking = v2({
+			askedUids: ['noa', 'dana', 'omri'],
+			passedAskingUids: ['lior'],
+			spokenUids: ['noa'],
+		});
+		expect(claimMoment(talking, 'dana', NOW).phase).toBe('talk');
 	});
 });
 
-describe('rateMoment (the hand-off)', () => {
-	it('F-open: every not-yet student has the card and the open instruction; the asker has neither', () => {
-		const rate = table({ step: 'rate' });
-		for (const uid of ['noa', 'omri', 'lior']) {
-			expect(rateMoment(rate, uid)).toMatchObject({
-				card: 'open',
-				instructionKey: 'turn.instr_rate_open',
-				allAsked: false,
-				nextUids: ['noa', 'omri', 'lior'],
-			});
-		}
-		expect(rateMoment(rate, 'dana')).toMatchObject({
-			card: null,
-			instructionKey: 'turn.instr_rate',
-		});
+describe('askerStates', () => {
+	it('V1: all four are not yet', () => {
+		expect(askerStates(table(), MATES, NOW).map((c) => c.state)).toEqual([
+			'wait',
+			'wait',
+			'wait',
+			'wait',
+		]);
 	});
 
-	it('after one claim the claimed-out students stop being claimers', () => {
-		const rate = table({ step: 'rate', askerUid: 'noa', askedUids: ['dana'], turn: 2 });
-		expect(rateMoment(rate, 'dana')).toMatchObject({ card: null, nextUids: ['omri', 'lior'] });
-		expect(rateMoment(rate, 'omri').card).toBe('open');
+	it('the asker is now until everyone spoke, then done; passed shows its own state', () => {
+		const talking = table({
+			step: 'talk',
+			askerUid: 'noa',
+			askedUids: ['noa'],
+			passedAskingUids: ['lior'],
+			spokenUids: ['noa'],
+		});
+		expect(askerStates(talking, MATES, NOW).map((c) => c.state)).toEqual([
+			'wait',
+			'now',
+			'wait',
+			'passed',
+		]);
+		const over = { ...talking, spokenUids: ['noa', 'dana', 'omri', 'lior'] };
+		expect(askerStates(over, MATES, NOW).map((c) => c.state)).toEqual([
+			'wait',
+			'done',
+			'wait',
+			'passed',
+		]);
 	});
 
-	it('F-one: only the last student left has the card, worded "your turn"', () => {
-		const rate = table({ step: 'rate', askerUid: 'omri', askedUids: ['dana', 'noa'], turn: 3 });
-		expect(rateMoment(rate, 'lior')).toMatchObject({
-			card: 'one',
-			instructionKey: 'turn.instr_rate_next',
-			nextUids: ['lior'],
-		});
-		for (const uid of ['dana', 'noa', 'omri']) expect(rateMoment(rate, uid).card).toBeNull();
+	it('A of turn 2: the old asker is done, the claimer is now', () => {
+		const a2 = table({ askerUid: 'omri', askedUids: ['noa'], turn: 2 });
+		expect(askerStates(a2, MATES, NOW).map((c) => c.state)).toEqual([
+			'wait',
+			'done',
+			'now',
+			'wait',
+		]);
 	});
 
-	it('F-all: nobody has a card; everyone is told to wait for the other tables', () => {
-		const rate = table({
-			step: 'rate',
-			askerUid: 'lior',
-			askedUids: ['dana', 'noa', 'omri'],
-			turn: 4,
-		});
-		for (const m of MATES) {
-			expect(rateMoment(rate, m.uid)).toMatchObject({
-				card: null,
-				allAsked: true,
-				instructionKey: 'turn.wait_others',
-			});
-		}
+	it('keeps seating order and names; a missing list reads as empty', () => {
+		expect(askerStates(table(), MATES, NOW).map((c) => c.name)).toEqual([
+			'Dana',
+			'Noa',
+			'Omri',
+			'Lior',
+		]);
+	});
+});
+
+describe('maxTurns (device members minus those who passed on asking)', () => {
+	it('drops a passer and never goes below the turn it is on', () => {
+		expect(maxTurns(table())).toBe(4);
+		expect(maxTurns(table({ passedAskingUids: ['lior'] }))).toBe(3);
+		expect(maxTurns(table({ passedAskingUids: ['lior', 'omri', 'noa'], turn: 3 }))).toBe(3);
+	});
+
+	it('ignores a leaver who passed before leaving', () => {
+		expect(maxTurns(table({ passedAskingUids: ['gone'] }))).toBe(4);
 	});
 });
 
 describe('instructionFor (one instruction per moment)', () => {
-	it('pick: the asker chooses; the others are told whose turn it is', () => {
-		expect(instructionFor('pick', input({ table: table(), uid: 'dana' }), '?').key).toBe(
+	it('V1: "who wants to ask first" at turn 1, "now" later; the last one left is named', () => {
+		expect(instructionFor('pick', input({ table: table(), uid: 'noa' }), '?').key).toBe(
+			'turn.who_first_asks',
+		);
+		expect(instructionFor('pick', input({ table: table({ turn: 3 }), uid: 'noa' }), '?').key).toBe(
+			'turn.who_asks_again',
+		);
+		const one = table({ askedUids: ['noa', 'dana', 'omri'], turn: 4 });
+		expect(instructionFor('pick', input({ table: one, uid: 'lior' }), '?').key).toBe(
+			'turn.last_to_ask',
+		);
+		expect(instructionFor('pick', input({ table: one, uid: 'dana' }), '?')).toEqual({
+			key: 'turn.waiting_for',
+			params: { name: 'Lior' },
+		});
+	});
+
+	it('A: the asker chooses, the others are told whose turn it is', () => {
+		const a = table({ askerUid: 'dana' });
+		expect(instructionFor('pick', input({ table: a, uid: 'dana' }), '?').key).toBe(
 			'turn.instr_pick',
 		);
-		expect(instructionFor('pick', input({ table: table(), uid: 'noa' }), '?')).toEqual({
+		expect(instructionFor('pick', input({ table: a, uid: 'noa' }), '?')).toEqual({
 			key: 'turn.instr_pick_other',
 			params: { name: 'Dana' },
 		});
 	});
 
+	it('A-own: every teacher question was asked, the asker writes one', () => {
+		const a = table({ askerUid: 'dana' });
+		expect(instructionFor('pick', input({ table: a, uid: 'dana', allUsed: true }), '?').key).toBe(
+			'turn.instr_write_own',
+		);
+		expect(instructionFor('pick', input({ table: a, uid: 'noa', allUsed: true }), '?')).toEqual({
+			key: 'turn.instr_write_own_other',
+			params: { name: 'Dana' },
+		});
+	});
+
 	it('talk before the first speaker: the asker reads aloud, the others listen', () => {
-		const t = table({ step: 'talk' });
+		const t = table({ step: 'talk', askerUid: 'dana', askedUids: ['dana'] });
 		expect(instructionFor('talk', input({ table: t, uid: 'dana' }), '?').key).toBe(
 			'turn.instr_read',
 		);
@@ -150,40 +247,38 @@ describe('instructionFor (one instruction per moment)', () => {
 		);
 	});
 
-	it('talk while a minute runs, when it is over, and when everyone spoke', () => {
-		const running = table({ step: 'talk', speakerUid: 'noa', spokenUids: ['dana'] });
+	it('talk while a minute runs, and when it is over', () => {
+		const running = table({
+			step: 'talk',
+			askerUid: 'dana',
+			askedUids: ['dana'],
+			speakerUid: 'noa',
+			speakerEndsAt: NOW + 30_000,
+			spokenUids: ['dana'],
+		});
 		expect(instructionFor('talk', input({ table: running, uid: 'omri' }), '?').key).toBe(
 			'turn.instr_talk',
 		);
 		expect(
 			instructionFor('talk', input({ table: running, uid: 'omri', timeUp: true }), '?').key,
 		).toBe('turn.time_up');
-		const done = table({ step: 'talk', speakerUid: 'lior', spokenUids: ['dana', 'noa', 'omri'] });
-		expect(instructionFor('talk', input({ table: done, uid: 'omri', timeUp: true }), '?').key).toBe(
-			'turn.all_spoke',
+	});
+
+	it('V2: who asks now; done: wait for the other tables', () => {
+		expect(instructionFor('talk', input({ table: v2(), uid: 'omri' }), '?').key).toBe(
+			'turn.who_asks_now',
+		);
+		const done = v2({ askedUids: ['noa', 'dana', 'omri'], passedAskingUids: ['lior'] });
+		expect(instructionFor('talk', input({ table: done, uid: 'omri' }), '?').key).toBe(
+			'turn.wait_others',
 		);
 	});
 
-	it('write: everyone writes; in one-answer mode the others help out loud', () => {
-		const each = table({ step: 'write' });
-		expect(instructionFor('write', input({ table: each, uid: 'noa' }), '?').key).toBe(
-			'turn.instr_write',
-		);
-		const shared = table({ step: 'write', writingMode: 'table' });
-		expect(instructionFor('write', input({ table: shared, uid: 'dana' }), '?').key).toBe(
-			'turn.instr_write',
-		);
-		expect(instructionFor('write', input({ table: shared, uid: 'noa' }), '?')).toEqual({
-			key: 'turn.instr_help',
-			params: { name: 'Dana' },
-		});
-	});
-
-	it('rate follows the hand-off; proposals keep the terse words', () => {
+	it('proposals keep the terse words', () => {
 		const rate = table({ step: 'rate' });
-		expect(instructionFor('rate', input({ table: rate, uid: 'noa' }), '?').key).toBe(
-			'turn.instr_rate_open',
-		);
+		expect(
+			instructionFor('talk', input({ kind: 'proposals', table: rate, uid: 'noa' }), '?').key,
+		).toBe('turn.instr_talk');
 		expect(
 			instructionFor('write', input({ kind: 'proposals', table: rate, uid: 'noa' }), '?').key,
 		).toBe('turn.instr_write_proposals');
@@ -196,38 +291,6 @@ describe('instructionFor (one instruction per moment)', () => {
 		expect(
 			instructionFor('pick', input({ table: table({ askerUid: 'ghost' }), uid: 'noa' }), 'someone'),
 		).toEqual({ key: 'turn.instr_pick_other', params: { name: 'someone' } });
-	});
-});
-
-describe('sentCount + myAnswer', () => {
-	const asked = table({ step: 'rate', questionId: 'q1' });
-
-	it("counts the tablemates who wrote an answer to this turn's question", () => {
-		const options = [answer('dana'), answer('noa'), answer('x', {}, 'other-question')];
-		expect(sentCount(asked, options)).toEqual({ n: 2, m: 4 });
-	});
-
-	it('counts co-authors of a shared answer and ignores people outside the table', () => {
-		const shared = answer('dana', { shared: true, coAuthors: ['noa', 'omri', 'stranger'] });
-		expect(sentCount(asked, [shared])).toEqual({ n: 3, m: 4 });
-	});
-
-	it('ignores answers of another table and a table without a question', () => {
-		const other = {
-			...answer('dana'),
-			classTable: { tableId: 'm--9', shared: false, coAuthors: [] },
-		};
-		expect(sentCount(asked, [other])).toEqual({ n: 0, m: 4 });
-		expect(sentCount(table(), [answer('dana')])).toEqual({ n: 0, m: 4 });
-	});
-
-	it('myAnswer finds what I wrote or co-wrote, newest first', () => {
-		const mine = answer('noa');
-		const shared = answer('dana', { shared: true, coAuthors: ['noa'] });
-		expect(myAnswer(asked, [shared], 'noa')?.statementId).toBe('a-dana');
-		expect(myAnswer(asked, [shared, { ...mine, createdAt: 9 }], 'noa')?.statementId).toBe('a-noa');
-		expect(myAnswer(asked, [shared], 'lior')).toBeNull();
-		expect(myAnswer(table(), [mine], 'noa')).toBeNull();
 	});
 });
 

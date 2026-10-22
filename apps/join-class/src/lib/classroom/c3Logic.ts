@@ -72,13 +72,17 @@ export function idleCountdownText(totalSeconds: number): string {
 export type FlowKind = 'tableTalk' | 'proposals';
 
 export const TABLE_SUBSTEPS: Record<FlowKind, readonly TableStep[]> = {
-	tableTalk: ['pick', 'talk', 'write', 'rate'],
+	tableTalk: ['pick', 'talk'],
 	proposals: ['talk', 'write', 'rate'],
 };
 
-/** The table's official step as a screen of this flow (Proposals has no pick). */
+/**
+ * The table's official step as a screen of this flow. Proposals has no pick; Table
+ * talk has no write or rate, so a table left there before v2 is drawn as the end of talk.
+ */
 export function officialSubstep(kind: FlowKind, table: ClassTable | null): TableStep {
 	const step = table?.step ?? (kind === 'proposals' ? 'talk' : 'pick');
+	if (kind === 'tableTalk' && (step === 'write' || step === 'rate')) return 'talk';
 
 	return TABLE_SUBSTEPS[kind].includes(step) ? step : TABLE_SUBSTEPS[kind][0];
 }
@@ -115,6 +119,14 @@ export function resolveSubstep(
 
 // ---- speakers -----------------------------------------------------------------
 
+/** "ויתרתי על הדקה" appears this long after a minute starts: the tap that began it cannot land on it. */
+export const PASS_ARM_MS = 3000;
+
+/** The pass-the-minute control is shown: the minute runs and its first PASS_ARM_MS are over. */
+export function passMinuteArmed(remainingMs: number, totalMs: number): boolean {
+	return remainingMs > 0 && totalMs - remainingMs >= PASS_ARM_MS;
+}
+
 export interface Mate {
 	uid: string;
 	name: string;
@@ -123,43 +135,51 @@ export interface Mate {
 export interface SpeakerChip {
 	uid: string;
 	name: string;
+	/** Spoke, or is speaking now (a speaker who passed is `passed`, not `spoken` or `speaking`). */
 	spoken: boolean;
 	speaking: boolean;
+	/** Passed this minute: counts as spoken, drawn "–". */
+	passed: boolean;
 }
 
 export function speakerChips(table: ClassTable, mates: readonly Mate[]): SpeakerChip[] {
-	return mates.map((mate) => ({
-		uid: mate.uid,
-		name: mate.name,
-		spoken: table.spokenUids.includes(mate.uid) || mate.uid === table.speakerUid,
-		speaking: mate.uid === table.speakerUid,
-	}));
+	const passedUids = table.passedSpeakingUids ?? [];
+
+	return mates.map((mate) => {
+		const passed = passedUids.includes(mate.uid);
+		const speaking = mate.uid === table.speakerUid && !passed;
+
+		return {
+			uid: mate.uid,
+			name: mate.name,
+			spoken: !passed && (table.spokenUids.includes(mate.uid) || speaking),
+			speaking,
+			passed,
+		};
+	});
 }
 
-/** Asker always; everyone once the speaker's minute is over. */
+/**
+ * The asker always; everyone once the speaker's minute is over; and any
+ * tablemate when nobody asks (the asker left: IA 16.7 E8).
+ */
 export function canPickNextSpeaker(table: ClassTable, uid: string, timeUp: boolean): boolean {
-	return table.askerUid === uid || (timeUp && !!table.speakerUid);
+	return table.askerUid === uid || table.askerUid === null || (timeUp && !!table.speakerUid);
 }
 
-export function allSpoke(table: ClassTable, mates: readonly Mate[]): boolean {
-	return (
-		mates.length > 0 &&
-		mates.every((mate) => table.spokenUids.includes(mate.uid) || mate.uid === table.speakerUid)
-	);
-}
-
-/** "סיימנו, לכתוב": asker always; everyone once all have spoken (Proposals: after the timer). */
+/**
+ * "סיימנו, לכתוב" (Proposals only: nobody writes at Table talk): the asker always,
+ * any tablemate when nobody asks, everyone after the timer.
+ */
 export function canFinishTalk(
 	kind: FlowKind,
 	table: ClassTable,
 	uid: string,
-	mates: readonly Mate[],
 	timeUp: boolean,
 ): boolean {
-	if (table.askerUid === uid) return true;
-	if (kind === 'proposals') return timeUp;
+	if (kind !== 'proposals') return false;
 
-	return timeUp && allSpoke(table, mates);
+	return table.askerUid === uid || table.askerUid === null || timeUp;
 }
 
 // ---- rate list ---------------------------------------------------------------

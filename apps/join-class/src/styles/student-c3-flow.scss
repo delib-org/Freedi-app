@@ -186,6 +186,35 @@ body.c3-lock {
     flex-direction: column;
     gap: var(--space-sm);
   }
+
+  // A-own: the asker's own-question box is open, no button of its own (the footer saves it).
+  &__add--open {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  // The questions already asked: collapsed, greyed, not tappable.
+  &__used-list {
+    color: var(--ink-faint);
+    font-size: var(--font-size-sm);
+
+    summary {
+      min-height: var(--touch-target);
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+  }
+
+  &__used-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
 }
 
 
@@ -215,7 +244,8 @@ body.c3-lock {
       color: inherit;
     }
 
-    .frame--down & {
+    // On the dark frame the current pill is paper, so only the other pill keeps the light terracotta.
+    .frame--down .substeps__pill:not(.substeps__pill--on) & {
       color: var(--terra-300);
     }
   }
