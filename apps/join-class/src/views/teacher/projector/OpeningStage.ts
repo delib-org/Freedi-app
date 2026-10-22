@@ -3,6 +3,7 @@ import { IntroText, blocksFromPlainText } from '@/components/IntroText';
 import { t } from '@/lib/i18n';
 import { projectorData } from '@/lib/classroom/projectorData';
 import {
+	type IntroVideo,
 	introVideoEmbed,
 	introVideoLabel,
 	introVideosOf,
@@ -67,7 +68,7 @@ function textLayout(failedLabel: string | null): m.Vnode {
 
 function player(src: string, kind: 'youtube' | 'file', label: string, id: string): m.Vnode {
 	if (kind === 'youtube') {
-		return m('iframe.intro-stage__player', {
+		return m('iframe.intro-stage__player.intro-stage__player--youtube', {
 			src,
 			title: label,
 			allow: 'encrypted-media; picture-in-picture; fullscreen',
@@ -76,11 +77,12 @@ function player(src: string, kind: 'youtube' | 'file', label: string, id: string
 		});
 	}
 
-	return m('video.intro-stage__player', {
+	return m('video.intro-stage__player.intro-stage__player--file', {
 		src,
 		controls: true,
 		playsinline: true,
-		preload: 'none',
+		// one small range request buys a visible first frame instead of a black box (the phone keeps "none")
+		preload: 'metadata',
 		'aria-label': label,
 		onerror: () => {
 			failedIds.add(id);
@@ -89,26 +91,52 @@ function player(src: string, kind: 'youtube' | 'file', label: string, id: string
 	});
 }
 
+/**
+ * Video mode (UX 15.C): the player is the largest box that fits above a 64 px
+ * strip, on black. The strip carries the video's label and is where a mouse
+ * move still reaches the page (the iframe swallows pointer events).
+ */
 function videoLayout(id: string, label: string, src: string, kind: 'youtube' | 'file'): m.Vnode {
 	return m('section.projector-step.projector-step--opening.intro-stage', { key: id }, [
-		m('p.intro-stage__eyebrow', question()),
-		m('h1.intro-stage__title', label),
-		player(src, kind, label, id),
+		m('.intro-stage__screen', player(src, kind, label, id)),
+		m('.intro-stage__strip', m('h1.intro-stage__title', label)),
 	]);
 }
 
+interface ActiveVideo {
+	id: string;
+	label: string;
+	src: string;
+	kind: 'youtube' | 'file';
+}
+
+function labelOf(chosen: IntroVideo): string {
+	const position = introVideosOf(projectorData.main).findIndex((v) => v.id === chosen.id) + 1;
+
+	return introVideoLabel(chosen, position);
+}
+
+/** The video the console chose, when it can be shown; null for the text layout. */
+function activeVideo(): ActiveVideo | null {
+	const chosen = projectorVideoOf(projectorData.main);
+	if (!chosen || failedIds.has(chosen.id)) return null;
+	const embed = introVideoEmbed(chosen.url);
+	if (!embed) return null;
+
+	return { id: chosen.id, label: labelOf(chosen), src: embed.src, kind: embed.kind };
+}
+
+/** True while the projector shows a video: no band, no question line (UX 15.C). */
+export function openingVideoActive(): boolean {
+	return activeVideo() !== null;
+}
+
 export function openingStage(): m.Vnode {
-	const main = projectorData.main;
-	const chosen = projectorVideoOf(main);
-	if (chosen) {
-		const position = introVideosOf(main).findIndex((video) => video.id === chosen.id) + 1;
-		const label = introVideoLabel(chosen, position);
-		const embed = introVideoEmbed(chosen.url);
-		if (embed && !failedIds.has(chosen.id))
-			return videoLayout(chosen.id, label, embed.src, embed.kind);
-		if (failedIds.has(chosen.id)) {
-			return textLayout(t('projector.video_failed', { title: label }));
-		}
+	const video = activeVideo();
+	if (video) return videoLayout(video.id, video.label, video.src, video.kind);
+	const chosen = projectorVideoOf(projectorData.main);
+	if (chosen && failedIds.has(chosen.id)) {
+		return textLayout(t('projector.video_failed', { title: labelOf(chosen) }));
 	}
 
 	return textLayout(null);
