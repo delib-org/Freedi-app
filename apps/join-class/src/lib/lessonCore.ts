@@ -117,7 +117,8 @@ export function isLessonStanding(status: LessonStatus): boolean {
  * left to the status callable.
  */
 export function planStepMove(stepIndex: number, status: LessonStatus, now: number): LessonPlan {
-	const plan = buildLessonPlan(stepIndex);
+	// A move always puts the projector back on the introduction text (IA 14.2).
+	const plan: LessonPlan = { ...buildLessonPlan(stepIndex), projectorVideoId: null };
 
 	return status === 'open' ? { ...plan, status: 'live', statusAt: now } : plan;
 }
