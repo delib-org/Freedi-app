@@ -15,8 +15,11 @@ import {
 	classTableStep,
 } from '@/lib/classroom/api';
 import type { DropTarget } from '@/lib/classroom/dragReducer';
-import { setLessonStep, setProjectorVideo } from '@/lib/lesson';
-import { setOptionFlag, setQuestionSetting } from '@/lib/store';
+import { Collections } from '@freedi/shared-types';
+import { db, doc, updateDoc } from '@/lib/firebase';
+import { setLessonStep } from '@/lib/lesson';
+import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
+import { getMainStatement, setOptionFlag, setQuestionSetting } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { act, consoleState } from './consoleState';
 
@@ -44,7 +47,23 @@ export function goToStep(mainId: string, index: number): Promise<boolean> {
 	return guardedAct(`step:${index}`, t('console.act_step'), () => setLessonStep(mainId, index));
 }
 
-/** The Opening step's "on the projector" choice: a video id, or null for the text. */
+/**
+ * The Opening step's projector choice: a video id, or null for the introduction
+ * text. Cleared by every step move (planStepMove), so the next Opening starts on
+ * the text. Refused while the lesson is paused or ended.
+ */
+async function setProjectorVideo(mainId: string, videoId: string | null): Promise<void> {
+	const status = lessonStatusOfMain(getMainStatement());
+	if (isLessonStanding(status)) {
+		throw new Error(`The lesson is ${status}: the projector does not change`);
+	}
+	await updateDoc(doc(db, Collections.statements, mainId), {
+		'statementSettings.lessonPlan.projectorVideoId': videoId,
+		lastUpdate: Date.now(),
+	});
+}
+
+/** The Opening step's "on the projector" choice, through `act` so a failure is an inline retry. */
 export function pickProjectorVideo(mainId: string, videoId: string | null): Promise<boolean> {
 	return guardedAct('projector:pick', t('console.opening.show'), () =>
 		setProjectorVideo(mainId, videoId),
