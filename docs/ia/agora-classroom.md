@@ -832,3 +832,190 @@ Yours to decide:
 Questions for you:
 - Should the phone's open player stick while the student scrolls?
 - Should the projector show the video's title during play, or only before?
+
+## 15. Projector: one screen or two, full-screen video (Tal, 2026-10-22)
+
+> **Decisions of the orchestrator (2026-10-22), applied while building:**
+> - The `<details>` "מקרן" menu stays (UX 15.A); "show control on arrival" in `here` mode is accepted (UX 15.K-2).
+> - The IA rule "no button on the projector window ever navigates it to the console" is narrowed to: **a window the console opened never navigates to the console.** If `window.close()` is refused in a window the console did not open, "סגירת המקרן" becomes "חזרה לשיעור".
+> - The 64 px video strip stays (UX 15.K-4). The hint is hidden where Fullscreen is unsupported (UX 15.K-7).
+> - §14.D's text "player's own full screen only; the app adds no control" is struck: the projector document has its own full screen and control (15.5).
+> - Projector-only `preload="metadata"` for file videos; the control's aria label is "כפתורי המקרן"; the projector root is `role="region"`.
+
+Status: draft (Tal's decision below; open questions in 15.11 have defaults)
+
+Tal, running join-class locally, console at the Opening step: "I need that the teacher will be able to show videos on full screen... also when he shows his screen, he doesn't have a way to go back."
+
+Cause, read from the code:
+- The bar's "מקרן" (`teacher.screen.title`) is an `m.route.Link` to `/t/:mid/screen` in the **same tab** (`TeacherConsole.ts`, `header()`).
+- The projector has no controls by design (§5, §13.8 "own window; no navigation", UX §6). A teacher who mirrors one laptop to the projector lands on a screen with no way back except the browser's back button, which is hidden in a projected browser and unknown to most teachers.
+- A video fills only the projector's stage (`OpeningStage.ts`, `videoLayout`), under the question line and the title, above the code band, inside the browser's chrome. Nothing calls the Fullscreen API.
+
+Tal's decision: design for **both** setups.
+- **(a) Two screens:** the laptop shows the console; the projector shows the projector screen in its own window.
+- **(b) One screen:** one laptop mirrored to the projector. The teacher switches console ↔ projector in one tab and plays videos full screen.
+
+What this section overrides:
+- §5 back paths ("projector is its own window and has 'חזרה ללוח המורה' only as a link") and §13.8 (`/t/:mid/screen`: "its own window; no navigation"). The projector now has a **teacher control** (15.4). "חזרה ללוח המורה" is retired; the console is "השיעור" (§13.3), so the way back is "חזרה לשיעור".
+- §14.1 "must never see: a control on the projector window itself" now reads: no control that **drives the lesson** on the projector. The console stays the only place that moves steps or picks what the projector shows (§14.13 holds).
+- UX 14.D video layout: in video mode the player fills the projector window (15.5). Proportions stay UX's.
+
+### 15.1 Audiences
+| Audience | Goal here | Must never see |
+|---|---|---|
+| Teacher, two screens | Put the projector on the class screen once, full screen, then drive it from the console without touching it again (except the player's play) | A second copy of the console on the wall; a new window per click |
+| Teacher, one mirrored laptop | Show the projector, play a video full screen, come back to the console, move on | A screen with no way back |
+| Class (looking at the wall) | See the one thing of the step, big | The teacher control when the teacher is not using it; the console's moderation ("מה כתבו", hidden texts) unless the teacher chooses to show the console |
+
+### 15.2 Object model
+No new data. Everything here is **per device, per tab**: none of it is written to Firestore, and nothing on the phones changes.
+
+| Object | What it is | Cardinality | Where it lives | Lifecycle |
+|---|---|---|---|---|
+| Projector screen | The view `/t/:mid/screen`, as in §14.9 and UX §6 | 1 route | route | unchanged |
+| Projector mode | How this tab shows the projector: `window` (its own window, opened from the console) or `here` (this tab switched from the console) | 1 per tab | the URL: `?mode=window`, or no parameter = `here` | set when opened; gone when the tab closes or goes back |
+| Teacher control | The projector's own small set of buttons for the person at that device: full screen, and back or close | 1 per projector tab | projector view, hidden until used | hidden → shown on pointer move, tap or Tab → hidden after `PROJECTOR_CONTROLS_IDLE_MS` (3 s) idle |
+| Full screen | The browser's Fullscreen API on the projector document (`document.documentElement`) | 0..1 per tab | browser | entered only by a click on that device; left by Esc, the control, or (in `here` mode) going back |
+| Video mode | The projector at Opening while the lesson doc has a `projectorVideoId` (§14.2): the player fills the window | 0..1 | derived from `lessonPlan.projectorVideoId` | starts and ends with the console's choice; ends on every step change (the server clears the choice) |
+
+Why the mode is in the URL and not guessed from `window.opener`: a refresh, a pasted link or a browser that drops the opener must still give the same controls. The parameter's absence is the safe default: `here` always has a way back.
+
+Fixed rule for the two kinds of full screen:
+- **Document full screen** (the projector tab): kept across step changes, video changes and paused/ended screens, because the route does not change.
+- **Player full screen** (the YouTube player's or `<video>`'s own button): owned by the player. It ends by itself when the player leaves the page: another video chosen, "הטקסט" chosen, or the next step. A new player cannot re-enter it without a new click on that device. That is why video mode fills the window (15.5) and the teacher does not need the player's own button.
+
+### 15.3 Labels
+Every key in all seven files in `apps/join-class/src/lib/locales/{he,en,ar,es,de,nl,fa}.ts`. Hebrew marked (?) needs a native read.
+
+| Concept | EN | HE | i18n key | Route / code | Retire |
+|---|---|---|---|---|---|
+| Projector (the concept; group label in the console bar; the projector's own title) | Projector | מקרן | teacher.screen.title, projector.title (kept) | /t/:mid/screen | — |
+| Open in its own window | Projector in a new window | מקרן בחלון נפרד | NEW teacher.screen.open_window | → /t/:mid/screen?mode=window | the bare same-tab "מקרן" link |
+| Help, own window | For two screens: drag the window to the class screen | לשני מסכים: גררו את החלון למסך של הכיתה | NEW teacher.screen.open_window_help | — | — |
+| Show in this tab | Show on this screen | הצגה במסך הזה | NEW teacher.screen.show_here | → /t/:mid/screen | — |
+| Help, this tab | For one computer connected to the projector. Esc brings you back. | למחשב אחד שמחובר למקרן. Esc מחזיר לשיעור. | NEW teacher.screen.show_here_help | — | — |
+| Window blocked | The browser blocked the window. Allow pop-ups for this site, or use "Show on this screen". | הדפדפן חסם את החלון. אפשרו חלונות קופצים לאתר, או בחרו "הצגה במסך הזה". | NEW teacher.screen.blocked | — | — |
+| Teacher control (region name for assistive tech) | Projector controls | פקדי המקרן (?) | NEW projector.controls | — | — |
+| Full screen | Full screen | מסך מלא | NEW projector.fullscreen | requestFullscreen | — |
+| Leave full screen (window mode only) | Exit full screen | יציאה ממסך מלא | NEW projector.fullscreen_exit | exitFullscreen | — |
+| Back (here mode) | Back to the lesson | חזרה לשיעור | NEW projector.back | → /t/:mid | "חזרה ללוח המורה" (§5 text; no key exists) |
+| Close (window mode) | Close the projector | סגירת המקרן | NEW projector.close | window.close() | — |
+| First-open hint (window mode) | Drag this window to the class screen, then press "Full screen" | גררו את החלון הזה למסך של הכיתה ולחצו "מסך מלא" | NEW projector.window_hint | — | — |
+
+Found while reading (fix in the same lane): `console.opening` ("פותחים…") is the busy text for **five** different actions (`StepRail` opening a step, `TeacherConsole` pausing, `LessonBanner` resuming and reopening, `TeacherHome` reopening). While pausing, the button reads "פותחים…". It also shares its prefix with the Opening-step keys `console.opening.show` / `.text`, so "opening" names two things in one key family. Smallest fix: rename the busy key to `console.busy_opening` (value unchanged, for the step rail and reopen), and add NEW `console.busy_pausing` "משהים…" (?) / "Pausing…" and NEW `console.busy_resuming` "ממשיכים…" / "Resuming…".
+
+### 15.4 How the teacher opens the projector, and gets back
+**In the console bar** (`/t/:mid`): the single "מקרן" link becomes the group "מקרן" with two actions, always both, in this order:
+1. "מקרן בחלון נפרד": opens `/t/:mid/screen?mode=window` as a **separate browser window** (a pop-up window, not a tab, so it can be dragged to the second screen), with a window name per lesson (`projector-<mid>`). Pressing it again brings the same window forward instead of opening a second one. If the browser blocks it: `teacher.screen.blocked` inline in the bar, no navigation.
+2. "הצגה במסך הזה": routes this tab to `/t/:mid/screen` **and, in the same click, asks for full screen** (the click is a user gesture in this document, so the browser allows it). One click from console to a full-screen projector.
+
+The two help lines sit with the actions (form is UX's). They are what tells a teacher which one is theirs.
+
+**On the projector, the teacher control:**
+- Hidden by default. It appears on pointer move, a tap, or Tab focus on **that device**, and hides again after 3 s with no input. The pointer is hidden while the control is hidden.
+- It carries no lesson data and drives nothing: no step, no video choice, no names, no code beyond the band.
+- Present on every projector screen: every step, paused, ended, loading and load error. Not on "not your lesson" (it has its own links, §13.8).
+
+| | `here` (one screen) | `window` (two screens) |
+|---|---|---|
+| Control | "חזרה לשיעור"; "מסך מלא" only while not full screen (refused, unsupported, or left) | "מסך מלא" / "יציאה ממסך מלא" (toggle); "סגירת המקרן" |
+| Esc | Leaving full screen by Esc (or by the browser) **returns to the console**, like leaving a slideshow. Esc when not full screen does the same. | The browser's own: leaves full screen, stays on the projector |
+| Browser back | → `/t/:mid` (the route was pushed) | nothing to go back to |
+| "חזרה לשיעור" / "סגירת המקרן" | leaves full screen and routes to `/t/:mid` | closes the window; the console is untouched. If the browser refuses (`window.close()` only works on a script-opened window), the button becomes "חזרה לשיעור" |
+| First load | already full screen (from the console's click) | the hint `projector.window_hint` shows with the control until full screen is entered or 10 s pass |
+
+What the class must never see: the control while the teacher is not using it; a console shown on the wall in `window` mode (no button on the projector window ever navigates it to the console; "סגירת המקרן" closes it). In `here` mode the wall shows the console whenever the teacher is on it; that is the nature of mirroring (15.11 C).
+
+### 15.5 Full-screen video
+- **Who triggers full screen:** only a click on the device that shows the projector. The console in another window cannot make the projector full screen; browsers forbid it.
+- **Video mode fills the window (fixed):** at Opening with a video chosen, the player takes the whole projector window. The code band and the question line are not shown while a video is chosen; they come back with "הטקסט" or the next step. With the tab in full screen, the video is therefore full screen with no further click, and the console's next choice swaps the video **without losing full screen** (document full screen survives; 15.2). Late joiners get the code back as soon as the video ends and the teacher picks "הטקסט".
+- **Play:** still the player's own play button (§14: no autoplay). In `window` mode this is the one click the teacher makes on the class screen per video.
+- **Step change during a video:** the server clears `projectorVideoId` (§14.2); the player leaves, the next step's screen shows, full screen stays.
+- **Another video picked from the console (window mode):** the new player replaces the old one, loaded but not playing, full screen stays. If the teacher had used the player's own full-screen button, that ends with the old player; the window is still full screen.
+- **The video fails (direct files only, §14):** the text comes back with `projector.video_failed`, as today.
+- **The console never plays a video.** One place plays to the room: the projector. In the one-screen case the teacher picks the video in the console and presses "הצגה במסך הזה". Reasons: no two players with sound on one laptop, no second player in the console's weight budget, and one answer to "where do videos play".
+- **Full screen unavailable** (`document.fullscreenEnabled` false, e.g. iPhone Safari, some kiosk browsers): "מסך מלא" is not shown; video mode still fills the window; `here` mode still has "חזרה לשיעור" and Esc.
+
+### 15.6 Routes and URL
+- `/t/:mid/screen`: projector, `here` mode (the default, always has a way back).
+- `/t/:mid/screen?mode=window`: projector, `window` mode. Written only by "מקרן בחלון נפרד". Any other value of `mode` reads as `here`.
+- No new route. `/t/:mid` and the rest of §13.1 unchanged.
+
+### 15.7 Hierarchy (depth unchanged)
+```
+0 /t                          השיעורים שלי
+1   /t/:mid                   השיעור; bar group "מקרן": מקרן בחלון נפרד | הצגה במסך הזה
+2     /t/:mid/table/:n        שולחן n
+1   /t/:mid/screen            מקרן, here mode  (teacher control: חזרה לשיעור, מסך מלא)  → back to /t/:mid
+1   /t/:mid/screen?mode=window מקרן, own window (teacher control: מסך מלא / יציאה ממסך מלא, סגירת המקרן)
+```
+
+### 15.8 Back paths (replace the `/t/:mid/screen` line of §13.8)
+- `here`: Esc, "חזרה לשיעור", or browser back → `/t/:mid`, same view (`?view=` kept if it was set), full screen left.
+- `window`: "סגירת המקרן" closes the window; the console window is where the teacher already is. No path from the projector window to the console.
+
+### 15.9 Task flows
+**Teacher, one screen: show the introduction, play video 1 full screen, back, next step (9 actions):**
+1. `/t/:mid`: "פתיחת השלב הבא: פתיחה".
+2. "הצגה במסך הזה": the projector, full screen, the question and the text big.
+3. Esc: back to the console.
+4. "על המקרן: 1. <title>".
+5. "הצגה במסך הזה": the video fills the screen.
+6. The player's play.
+7. Esc: back to the console (full screen left, the video stops with the page).
+8. "פתיחת השלב הבא: צד".
+9. "הצגה במסך הזה": the two sides on the wall.
+Shortcut: a teacher who starts with the video picks it at step 1½ and skips 3-4 (7 actions).
+
+**Teacher, two screens: set up once (3 actions):**
+1. `/t/:mid`: "מקרן בחלון נפרד": a window opens with the hint.
+2. Drag it to the class screen.
+3. On it: "מסך מלא". From now on the console drives it.
+
+**Teacher, two screens: introduction and video 1 (5 actions, one of them on the class screen):**
+1. "פתיחת השלב הבא: פתיחה": the wall shows the text.
+2. "על המקרן: 1. <title>": the video fills the wall.
+3. On the class screen: the player's play.
+4. "על המקרן: הטקסט": the text and the band come back.
+5. "פתיחת השלב הבא: צד".
+
+**Teacher, two screens: done (1 action):** "סגירת המקרן" on the projector window, or close it; or leave it: it follows the lesson to "השיעור הסתיים" by itself.
+
+### 15.10 Screen inventory (rows added or changed)
+| Screen | Route | Single job | Empty | Loading | Error | No permission | Done |
+|---|---|---|---|---|---|---|---|
+| Console bar, "מקרן" group (changed) | /t/:mid | open the projector the way this room needs | — | — | window blocked: `teacher.screen.blocked` inline | not your lesson (§13) | the projector opens (window) or this tab switches (here) |
+| Projector, `here` mode (new) | /t/:mid/screen | show the step to the class from this tab, and give the teacher a way back | as §14.9 / UX §6 per step | `projector.loading` + control (back) | `projector.error` + control (back); full screen refused: shown windowed with "מסך מלא" | NotYourLesson (its own links) | back to `/t/:mid` |
+| Projector, `window` mode (changed) | /t/:mid/screen?mode=window | show the step on the second screen, driven from the console | as above; first load: `projector.window_hint` | as above + control (close) | as above + control (close); close refused: "חזרה לשיעור" | NotYourLesson | closed by the teacher, or follows to ended |
+| Projector, video mode (changed) | either | the chosen video fills the window | — | the player's own | direct file failed: text + `projector.video_failed` | — | "הטקסט" or next step |
+
+### 15.11 Open questions, each with a default
+- **A. A forward control on the projector in `here` mode** ("פתיחת השלב הבא: …" inside the teacher control), saving the one-screen teacher 2 actions per step. [Default: no. One forward control, in the console (§5). Revisit if one-screen teachers report the round trip as a burden.]
+- **B. Hide the code band during video mode.** [Default: yes (15.5). Alternative: keep a small band and let the video fill the rest.]
+- **C. The console on the wall in `here` mode.** Students see whatever the console shows when the teacher returns to it, including "מה כתבו" and hidden texts. [Default: accept, with no extra copy; the help line already says this is one mirrored computer. Add a warning only if teachers raise it. A "hide names" console option would be a separate spec.]
+- **D. Remember the setup per device** (put the last used action first, or open it straight away). [Default: no; both actions always shown, same order. A `localStorage` hint is a per-device convenience UX may add.]
+- **E. Play from the console** (the console starts the video on the projector). Needs the YouTube IFrame API (rejected in UX 14.J-5) and autoplay with sound, which browsers allow only after a click in the projector document. [Default: no in phase 1; the player's own play.]
+- **F. Place the window on the second screen automatically** (Window Management API, Chrome only, permission prompt). [Default: no; drag by hand, the hint says so.]
+- **G. Esc in `here` mode goes back** even when the teacher used the player's own full-screen button (Esc then leaves both). [Default: yes; with video mode filling the window the player's own button is not needed.]
+
+What would change if wrong: if Tal wants the projector to be able to drive steps (A), the teacher control gains one button and §5's "one forward control" needs an exception. If Tal wants no full screen in `here` mode by default, "הצגה במסך הזה" just routes and "מסך מלא" is always shown; nothing else moves.
+
+### 15.12 Handoff to UX
+Fixed here:
+- the two console actions, their order, their labels and help lines
+- `?mode=window` vs no parameter; window, not tab; one window per lesson
+- "הצגה במסך הזה" enters full screen in the same click; Esc and "חזרה לשיעור" leave it and go back
+- the teacher control's contents per mode, its show/hide triggers, its 3 s idle, and that it drives nothing
+- video mode fills the window and hides the band; document full screen survives video and step changes
+- the console never plays a video
+- every state in 15.10
+
+Yours to decide:
+- the form of the "מקרן" group in the bar (a menu with two items, or two buttons), and where the help lines show
+- the teacher control's position and form on the projector, and how it reads on a 4 m wall without catching the class's eye
+- the window's opening size
+- how video mode handles letterboxing and the title before play (§14.13's question still open)
+
+Questions for you:
+- Should the console show that a projector window is open (and offer to bring it forward), or is pressing "מקרן בחלון נפרד" again enough?
+- Does the first-open hint need a drawing of "drag to the other screen", or are words enough for teachers?
