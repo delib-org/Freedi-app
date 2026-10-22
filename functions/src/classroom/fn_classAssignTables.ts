@@ -25,6 +25,7 @@ import {
 	tableRef,
 } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
+import { assertLessonRunning } from './lessonStatusGuard';
 import { Rng, SeatableStudent, assignStudents } from './assignTables';
 
 /**
@@ -79,7 +80,7 @@ export async function assignTables(
 	const mainId = requireId(req?.mainId, 'mainId');
 	const size = validTableSize(req?.tableSize);
 	const replace = req?.replace === true;
-	await assertWorkspaceAdmin(firestore, mainId, uid);
+	assertLessonRunning(await assertWorkspaceAdmin(firestore, mainId, uid));
 
 	const subsQuery = firestore
 		.collection(Collections.statementsSubscribe)

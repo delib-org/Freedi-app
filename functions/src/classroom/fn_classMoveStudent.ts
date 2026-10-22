@@ -17,6 +17,7 @@ import {
 	tableRef,
 } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
+import { assertLessonRunning } from './lessonStatusGuard';
 import { addMember, removeMember } from './tableMembership';
 
 /**
@@ -50,7 +51,7 @@ export async function moveStudent(
 	const mainId = requireId(req?.mainId, 'mainId');
 	const uid = requireId(req?.uid, 'uid');
 	const toTable = validTarget(req?.toTable);
-	await assertWorkspaceAdmin(firestore, mainId, actorUid);
+	assertLessonRunning(await assertWorkspaceAdmin(firestore, mainId, actorUid));
 
 	const subRef = subscriptionRef(firestore, mainId, uid);
 	await firestore.runTransaction(async (tx) => {

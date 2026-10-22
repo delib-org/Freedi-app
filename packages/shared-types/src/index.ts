@@ -301,6 +301,7 @@ export type {
   VotingOptionsSource,
   LessonStepKey,
   LessonPlan,
+  LessonStatus,
   ClassRole
 } from "./models/statement/StatementSettings";
 
@@ -328,6 +329,7 @@ export {
   MapFilterMetricSchema,
   LessonStepKeySchema,
   LessonPlanSchema,
+  LessonStatusSchema,
   ClassRoleSchema
 } from "./models/statement/StatementSettings";
 
@@ -1046,12 +1048,19 @@ export type {
   ClassTableMarker,
   ClassBallot,
 } from './models/classroom/classroomModel';
-export { campOf, supportBySide, decideBallot } from './models/classroom/classroomLogic';
+export {
+  campOf,
+  supportBySide,
+  decideBallot,
+  lessonStatusOf,
+  planLessonStatus,
+} from './models/classroom/classroomLogic';
 export type {
   SupportSubscription,
   CampSupport,
   SupportVerdict,
   SupportBySide,
+  LessonStatusChange,
 } from './models/classroom/classroomLogic';
 export type {
   ClassTableSize,
@@ -1070,4 +1079,7 @@ export type {
   ClassFreezeBallotResponse,
   ClassCloseBallotRequest,
   ClassCloseBallotResponse,
+  ClassSetLessonStatusRequest,
+  ClassSetLessonStatusResponse,
+  LessonStatusAction,
 } from './models/classroom/classroomCallables';

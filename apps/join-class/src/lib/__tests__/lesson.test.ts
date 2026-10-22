@@ -5,6 +5,10 @@ import {
 	HINT_MAX_LENGTH,
 	LESSON_STEP_KEYS,
 	buildLessonPlan,
+	buildNewLessonPlan,
+	isLessonStanding,
+	lessonStatusOfMain,
+	planStepMove,
 	generateClassCode,
 	getChallengeQuestion,
 	getClassRole,
@@ -165,5 +169,41 @@ describe('class code', () => {
 		expect(normalizeClassCode('1234567')).toBeNull();
 		expect(normalizeClassCode('12a456')).toBeNull();
 		expect(normalizeClassCode('')).toBeNull();
+	});
+});
+
+describe('lesson status helpers', () => {
+	it('a new lesson starts at Waiting, live', () => {
+		expect(buildNewLessonPlan(1234)).toMatchObject({
+			stepIndex: 0,
+			status: 'live',
+			statusAt: 1234,
+		});
+	});
+
+	it('a main without a plan or a status is live', () => {
+		expect(lessonStatusOfMain(null)).toBe('live');
+		expect(lessonStatusOfMain(q('m'))).toBe('live');
+		expect(
+			lessonStatusOfMain({
+				statementSettings: { lessonPlan: { ...buildLessonPlan(1), status: 'ended' } },
+			} as Statement),
+		).toBe('ended');
+	});
+
+	it('paused and ended stand still; live and open do not', () => {
+		expect(isLessonStanding('paused')).toBe(true);
+		expect(isLessonStanding('ended')).toBe(true);
+		expect(isLessonStanding('live')).toBe(false);
+		expect(isLessonStanding('open')).toBe(false);
+	});
+
+	it('a step move on an open lesson writes live; otherwise only the step', () => {
+		expect(planStepMove(3, 'open', 99)).toMatchObject({
+			stepIndex: 3,
+			status: 'live',
+			statusAt: 99,
+		});
+		expect(planStepMove(3, 'live', 99).status).toBeUndefined();
 	});
 });

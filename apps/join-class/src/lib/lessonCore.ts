@@ -1,4 +1,11 @@
-import { ClassRole, LessonPlan, LessonStepKey, Statement } from '@freedi/shared-types';
+import {
+	ClassRole,
+	LessonPlan,
+	LessonStatus,
+	LessonStepKey,
+	Statement,
+	lessonStatusOf,
+} from '@freedi/shared-types';
 
 /**
  * Pure lesson-model helpers (no Firestore, no DOM): step order, follow-me
@@ -87,6 +94,32 @@ export function lessonStepOf(plan: LessonPlan | undefined): LessonStep {
 
 export function buildLessonPlan(stepIndex: number): LessonPlan {
 	return { steps: [...LESSON_STEP_KEYS], stepIndex };
+}
+
+/** A new lesson's plan: step 0 (Waiting), live, so `/m/:mid` is a lesson from its first second. */
+export function buildNewLessonPlan(now: number): LessonPlan {
+	return { ...buildLessonPlan(FIRST_LESSON_STEP_INDEX), status: 'live', statusAt: now };
+}
+
+/** The lesson's status from its main statement; no plan or no status means live. */
+export function lessonStatusOfMain(main: Statement | null | undefined): LessonStatus {
+	return lessonStatusOf(main?.statementSettings?.lessonPlan);
+}
+
+/** Paused and ended lessons stand still: no step moves, no table moves, no writing. */
+export function isLessonStanding(status: LessonStatus): boolean {
+	return status === 'paused' || status === 'ended';
+}
+
+/**
+ * What a step move writes. An `open` lesson (kept open after class) returns to
+ * `live` the moment the teacher moves a step (IA 13.6); other statuses are
+ * left to the status callable.
+ */
+export function planStepMove(stepIndex: number, status: LessonStatus, now: number): LessonPlan {
+	const plan = buildLessonPlan(stepIndex);
+
+	return status === 'open' ? { ...plan, status: 'live', statusAt: now } : plan;
 }
 
 export function getClassRole(question: Statement): ClassRole {

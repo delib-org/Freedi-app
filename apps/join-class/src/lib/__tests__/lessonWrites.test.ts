@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockSetMainSetting = vi.fn();
+const mockGetMain = vi.fn();
 const mockSetFollowMe = vi.fn();
 const mockRunTransaction = vi.fn();
 const mockGetDocs = vi.fn();
@@ -22,7 +23,7 @@ vi.mock('../firebase', () => ({
 vi.mock('../i18n', () => ({ t: (key: string) => key }));
 
 vi.mock('../store', () => ({
-	getMainStatement: vi.fn(() => null),
+	getMainStatement: () => mockGetMain(),
 	setMainStatementSetting: (...args: unknown[]) => mockSetMainSetting(...args),
 	setPowerFollowMe: (...args: unknown[]) => mockSetFollowMe(...args),
 	setQuestionSetting: vi.fn(),
@@ -36,10 +37,46 @@ import {
 	CLASS_CODE_MAX_ATTEMPTS,
 } from '../lesson';
 
+function mainWith(status?: string): unknown {
+	return { statementSettings: { lessonPlan: { steps: [], stepIndex: 0, status } } };
+}
+
 describe('setLessonStep', () => {
 	beforeEach(() => {
 		mockSetMainSetting.mockReset();
 		mockSetFollowMe.mockReset();
+		mockGetMain.mockReset();
+		mockGetMain.mockReturnValue(null);
+	});
+
+	it('refuses to move a step while the lesson is paused or ended', async () => {
+		for (const status of ['paused', 'ended']) {
+			mockGetMain.mockReturnValue(mainWith(status));
+			await expect(setLessonStep('m1', 2)).rejects.toThrow(status);
+		}
+		expect(mockSetMainSetting).not.toHaveBeenCalled();
+		expect(mockSetFollowMe).not.toHaveBeenCalled();
+	});
+
+	it('makes an open lesson live again when a step moves', async () => {
+		mockGetMain.mockReturnValue(mainWith('open'));
+		await setLessonStep('m1', 5);
+		expect(mockSetMainSetting).toHaveBeenCalledWith('m1', {
+			statementSettings: {
+				lessonPlan: expect.objectContaining({
+					stepIndex: 5,
+					status: 'live',
+					statusAt: expect.any(Number),
+				}),
+			},
+		});
+	});
+
+	it('leaves the status alone when a live lesson moves', async () => {
+		mockGetMain.mockReturnValue(mainWith('live'));
+		await setLessonStep('m1', 4);
+		const plan = mockSetMainSetting.mock.calls[0][1].statementSettings.lessonPlan;
+		expect(plan.status).toBeUndefined();
 	});
 
 	it('writes stepIndex and then the step follow-me path', async () => {

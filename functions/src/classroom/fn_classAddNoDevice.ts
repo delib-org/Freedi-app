@@ -11,6 +11,7 @@ import type {
 import { db } from '../db';
 import { assertWorkspaceAdmin, requireId, requireUid, tableRef } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
+import { assertLessonRunning } from './lessonStatusGuard';
 
 /**
  * `classAddNoDevice` (admin): put a named student who has no phone on table
@@ -40,7 +41,7 @@ export async function addNoDevice(
 		throw new ClassroomError('invalid-argument', 'n must be a table number');
 	}
 	const name = cleanNoDeviceName(req?.name);
-	await assertWorkspaceAdmin(firestore, mainId, actorUid);
+	assertLessonRunning(await assertWorkspaceAdmin(firestore, mainId, actorUid));
 
 	const ref = tableRef(firestore, classTableId(mainId, n));
 	const member: NoDeviceMember = { id: `nd_${randomUUID()}`, name };

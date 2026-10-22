@@ -11,6 +11,8 @@ import type {
 	ClassFreezeBallotResponse,
 	ClassMoveStudentRequest,
 	ClassMoveStudentResponse,
+	ClassSetLessonStatusRequest,
+	ClassSetLessonStatusResponse,
 	ClassTableStepRequest,
 	ClassTableStepResponse,
 } from '@freedi/shared-types';
@@ -73,4 +75,11 @@ export function classFreezeBallot(
 /** Admin: close the ballot and record the decision. */
 export function classCloseBallot(req: ClassCloseBallotRequest): Promise<ClassCloseBallotResponse> {
 	return call('classCloseBallot', req);
+}
+
+/** Admin: pause, resume, end, keep open or reopen the lesson (IA 13.6). */
+export function classSetLessonStatus(
+	req: ClassSetLessonStatusRequest,
+): Promise<ClassSetLessonStatusResponse> {
+	return call('classSetLessonStatus', req);
 }

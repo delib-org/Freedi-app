@@ -83,3 +83,20 @@ export interface ClassCloseBallotResponse {
 	decisionId: string | null;
 	closedAt: number;
 }
+
+/**
+ * `classSetLessonStatus` (admin). The lesson's status moves live <-> paused,
+ * live/paused/open -> ended or open, ended -> live. Same-target repeats are
+ * no-ops (a retry after a dropped reply is safe); any other move answers
+ * failed-precondition. 'resume' shifts every table's speakerEndsAt by the
+ * pause length.
+ */
+export type LessonStatusAction = 'pause' | 'resume' | 'end' | 'keepOpen' | 'reopen';
+export interface ClassSetLessonStatusRequest {
+	mainId: string;
+	action: LessonStatusAction;
+}
+export interface ClassSetLessonStatusResponse {
+	status: 'live' | 'paused' | 'open' | 'ended';
+	statusAt: number;
+}

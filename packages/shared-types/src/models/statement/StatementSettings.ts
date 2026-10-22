@@ -274,9 +274,20 @@ export const LessonStepKeySchema = picklist([
 ]);
 export type LessonStepKey = InferOutput<typeof LessonStepKeySchema>;
 
+/** join-class lesson status. Absent = 'live' (lessons created before status existed). */
+export const LessonStatusSchema = picklist(['live', 'paused', 'open', 'ended']);
+export type LessonStatus = InferOutput<typeof LessonStatusSchema>;
+
 export const LessonPlanSchema = object({
 	steps: array(LessonStepKeySchema),
 	stepIndex: number(),
+	/** Added optionally: a strict parse of an older lesson must keep working. All moments in ms. */
+	status: optional(LessonStatusSchema),
+	statusAt: optional(number()),
+	/** Set while paused, cleared on resume (after the table timers are shifted). */
+	pausedAt: optional(number()),
+	/** The last time the lesson was ended or kept open. */
+	endedAt: optional(number()),
 });
 export type LessonPlan = InferOutput<typeof LessonPlanSchema>;
 

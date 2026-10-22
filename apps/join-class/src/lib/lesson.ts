@@ -27,13 +27,15 @@ import {
 	CLASS_CODES_COLLECTION,
 	LESSON_STEP_KEYS,
 	LessonStep,
-	buildLessonPlan,
 	generateClassCode,
+	isLessonStanding,
 	isValidStepIndex,
+	lessonStatusOfMain,
 	lessonStepOf,
 	nextStep as nextStepKey,
 	normalizeHint,
 	planChallengeWrites,
+	planStepMove,
 	stepFollowMePath,
 	stepLabelKey,
 } from './lessonCore';
@@ -84,14 +86,20 @@ export function getLessonStep(): LessonStep {
 
 /**
  * Teacher jumps to a step (forward or back): writes `stepIndex`, then the
- * step's follow-me path so every student device follows. Throws on a bad index.
+ * step's follow-me path so every student device follows. Throws on a bad index,
+ * and while the lesson is paused or ended (the rail is held; reopen or resume
+ * first). A move on an `open` lesson makes it live again.
  */
 export async function setLessonStep(mainId: string, index: number): Promise<void> {
 	if (!isValidStepIndex(index)) {
 		throw new RangeError(`Invalid lesson step index: ${String(index)}`);
 	}
+	const status = lessonStatusOfMain(getMainStatement());
+	if (isLessonStanding(status)) {
+		throw new Error(`The lesson is ${status}: steps do not move`);
+	}
 	await setMainStatementSetting(mainId, {
-		statementSettings: { lessonPlan: buildLessonPlan(index) },
+		statementSettings: { lessonPlan: planStepMove(index, status, Date.now()) },
 	});
 	await setPowerFollowMe(mainId, stepFollowMePath(mainId, LESSON_STEP_KEYS[index]));
 }
