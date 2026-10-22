@@ -423,6 +423,17 @@ const ar: Record<string, string> = {
 	'console.opening.show': 'على جهاز العرض:',
 	'console.opening.text': 'النص',
 	'projector.video_failed': '{{title}} · لم يتم التحميل',
+	'teacher.screen.open_window': 'جهاز العرض في نافذة منفصلة',
+	'teacher.screen.open_window_help': 'لشاشتين: اسحبوا النافذة إلى شاشة الصف',
+	'teacher.screen.show_here': 'العرض على هذه الشاشة',
+	'teacher.screen.show_here_help': 'لحاسوب واحد متصل بجهاز العرض. مفتاح Esc يعيدكم إلى الدرس.',
+	'teacher.screen.blocked': 'حظر المتصفح النافذة. اسمحوا بالنوافذ المنبثقة لهذا الموقع، أو اختاروا "العرض على هذه الشاشة".',
+	'projector.controls': 'أزرار جهاز العرض',
+	'projector.fullscreen': 'ملء الشاشة',
+	'projector.fullscreen_exit': 'الخروج من ملء الشاشة',
+	'projector.back': 'العودة إلى الدرس',
+	'projector.close': 'إغلاق جهاز العرض',
+	'projector.window_hint': 'اسحبوا هذه النافذة إلى شاشة الصف ثم اضغطوا "ملء الشاشة"',
 };
 
 export default ar;

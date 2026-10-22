@@ -423,6 +423,17 @@ const he: Record<string, string> = {
 	'console.opening.show': 'על המקרן:',
 	'console.opening.text': 'הטקסט',
 	'projector.video_failed': '{{title}} · לא נטען',
+	'teacher.screen.open_window': 'מקרן בחלון נפרד',
+	'teacher.screen.open_window_help': 'לשני מסכים: גררו את החלון למסך של הכיתה',
+	'teacher.screen.show_here': 'הצגה במסך הזה',
+	'teacher.screen.show_here_help': 'למחשב אחד שמחובר למקרן. Esc מחזיר לשיעור.',
+	'teacher.screen.blocked': 'הדפדפן חסם את החלון. אפשרו חלונות קופצים לאתר, או בחרו "הצגה במסך הזה".',
+	'projector.controls': 'כפתורי המקרן',
+	'projector.fullscreen': 'מסך מלא',
+	'projector.fullscreen_exit': 'יציאה ממסך מלא',
+	'projector.back': 'חזרה לשיעור',
+	'projector.close': 'סגירת המקרן',
+	'projector.window_hint': 'גררו את החלון הזה למסך של הכיתה ולחצו "מסך מלא"',
 };
 
 export default he;

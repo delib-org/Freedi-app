@@ -424,6 +424,17 @@ const nl: Record<string, string> = {
 	'console.opening.show': 'Op de beamer:',
 	'console.opening.text': 'De tekst',
 	'projector.video_failed': '{{title}} · niet geladen',
+	'teacher.screen.open_window': 'Beamer in een nieuw venster',
+	'teacher.screen.open_window_help': 'Voor twee schermen: sleep het venster naar het scherm van de klas',
+	'teacher.screen.show_here': 'Tonen op dit scherm',
+	'teacher.screen.show_here_help': 'Voor één computer die op de beamer is aangesloten. Esc brengt je terug naar de les.',
+	'teacher.screen.blocked': 'De browser heeft het venster geblokkeerd. Sta pop-ups toe voor deze site, of kies "Tonen op dit scherm".',
+	'projector.controls': 'Beamerknoppen',
+	'projector.fullscreen': 'Volledig scherm',
+	'projector.fullscreen_exit': 'Volledig scherm verlaten',
+	'projector.back': 'Terug naar de les',
+	'projector.close': 'Beamer sluiten',
+	'projector.window_hint': 'Sleep dit venster naar het scherm van de klas en druk op "Volledig scherm"',
 };
 
 export default nl;

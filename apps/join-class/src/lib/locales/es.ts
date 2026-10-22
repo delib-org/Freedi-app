@@ -426,6 +426,17 @@ const es: Record<string, string> = {
 	'console.opening.show': 'En el proyector:',
 	'console.opening.text': 'El texto',
 	'projector.video_failed': '{{title}} · no se cargó',
+	'teacher.screen.open_window': 'Proyector en otra ventana',
+	'teacher.screen.open_window_help': 'Para dos pantallas: arrastra la ventana a la pantalla de la clase',
+	'teacher.screen.show_here': 'Mostrar en esta pantalla',
+	'teacher.screen.show_here_help': 'Para un solo ordenador conectado al proyector. Esc te devuelve a la lección.',
+	'teacher.screen.blocked': 'El navegador bloqueó la ventana. Permite las ventanas emergentes para este sitio o elige "Mostrar en esta pantalla".',
+	'projector.controls': 'Botones del proyector',
+	'projector.fullscreen': 'Pantalla completa',
+	'projector.fullscreen_exit': 'Salir de pantalla completa',
+	'projector.back': 'Volver a la lección',
+	'projector.close': 'Cerrar el proyector',
+	'projector.window_hint': 'Arrastra esta ventana a la pantalla de la clase y pulsa "Pantalla completa"',
 };
 
 export default es;
