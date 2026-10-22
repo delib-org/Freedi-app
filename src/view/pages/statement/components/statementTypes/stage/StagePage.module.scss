@@ -7,6 +7,14 @@
 	}
 }
 
+// Voting bars: the shell already pads the content above its floating nav, so
+// only the "Add an answer" button (48px + 16px offset) needs clearing. The full
+// page clearance left ~100px of dead space under the columns.
+.stage-page--voting {
+	margin-top: 0.5rem;
+	padding-bottom: 4rem;
+}
+
 .stage {
 
 	display: flex;
