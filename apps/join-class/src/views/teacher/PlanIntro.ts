@@ -220,6 +220,42 @@ function videos(): m.Vnode {
 	]);
 }
 
+/**
+ * `/t/:mid/plan?focus=intro` (the console's "add / edit the introduction" links,
+ * UX 15.L): bring the section into view and put the cursor in the text box. When
+ * the text box is not there yet, the section heading takes focus instead.
+ */
+/** The text box is disabled until the lesson's paragraphs have loaded: wait up to ~4 s for it. */
+const FOCUS_RETRY_MS = 100;
+const FOCUS_RETRIES = 40;
+
+function focusIntroSection(section: HTMLElement): void {
+	if (m.route.param('focus') !== 'intro') return;
+	const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	section.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+	let tries = 0;
+	const focusWhenReady = (): void => {
+		const input = section.querySelector<HTMLTextAreaElement>('.intro-editor__input');
+		if (input && !input.disabled) {
+			input.focus({ preventScroll: true });
+
+			return;
+		}
+		tries += 1;
+		if (tries < FOCUS_RETRIES && section.isConnected) {
+			window.setTimeout(focusWhenReady, FOCUS_RETRY_MS);
+
+			return;
+		}
+		const heading = section.querySelector<HTMLElement>('#plan-intro-title');
+		if (heading) {
+			heading.tabIndex = -1;
+			heading.focus({ preventScroll: true });
+		}
+	};
+	focusWhenReady();
+}
+
 export const PlanIntro: m.Component = {
 	oninit() {
 		void openIntro(getMainId());
@@ -230,11 +266,18 @@ export const PlanIntro: m.Component = {
 	},
 
 	view() {
-		return m('section.plan__intro', { 'aria-labelledby': 'plan-intro-title' }, [
-			m('h2.plan__section-title', { id: 'plan-intro-title' }, t('plan.intro.title')),
-			m('p.plan__help', t('plan.intro.help')),
-			m(IntroEditor),
-			videos(),
-		]);
+		return m(
+			'section.plan__intro',
+			{
+				'aria-labelledby': 'plan-intro-title',
+				oncreate: (vnode: m.VnodeDOM) => focusIntroSection(vnode.dom as HTMLElement),
+			},
+			[
+				m('h2.plan__section-title', { id: 'plan-intro-title' }, t('plan.intro.title')),
+				m('p.plan__help', t('plan.intro.help')),
+				m(IntroEditor),
+				videos(),
+			],
+		);
 	},
 };
