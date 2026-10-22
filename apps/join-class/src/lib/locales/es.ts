@@ -300,6 +300,10 @@ const es: Record<string, string> = {
 	'console.quick_rate': 'A valorar',
 	'console.roster_title': 'La clase',
 	'console.roster_empty': 'Nadie se ha unido aún',
+	'console.intro.edit': 'Editar la introducción',
+	'console.intro.empty': 'Esta lección no tiene introducción.',
+	'console.intro.add': 'Añadir una introducción',
+	'console.intro.video_failed': 'El vídeo no se cargó. Revisa el enlace en la planificación.',
 	'console.to_table': 'A la mesa',
 	'console.unplaced_live': '{{count}} sin mesa',
 	'console.picked_up':

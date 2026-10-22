@@ -293,6 +293,10 @@ const fa: Record<string, string> = {
 	'console.quick_rate': 'به امتیازدهی',
 	'console.roster_title': 'کلاس',
 	'console.roster_empty': 'هنوز کسی نپیوسته است',
+	'console.intro.edit': 'ویرایش مقدمه',
+	'console.intro.empty': 'این درس مقدمه‌ای ندارد.',
+	'console.intro.add': 'افزودن مقدمه',
+	'console.intro.video_failed': 'ویدیو بارگذاری نشد. پیوند را در برنامه‌ریزی بررسی کنید.',
 	'console.to_table': 'به میز',
 	'console.unplaced_live': '{{count}} بدون میز',
 	'console.picked_up':
