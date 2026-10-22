@@ -6,6 +6,7 @@
 //   E2E_AUTH_PORT         auth emulator port       (default: FIREBASE_AUTH_EMULATOR_HOST, else 9099)
 //   E2E_FIRESTORE_PORT    firestore emulator port  (alias E2E_FS_PORT; default:
 //                         FIRESTORE_EMULATOR_HOST, else 8081)
+//   E2E_FUNCTIONS_PORT    functions emulator port  (default 5001; only scripts that call a callable directly)
 //
 // Importing this module also exports FIRESTORE_EMULATOR_HOST / FIREBASE_AUTH_EMULATOR_HOST
 // / GCLOUD_PROJECT into process.env, so firebase-admin and the tsx seed script
@@ -21,6 +22,8 @@ export const FIRESTORE_PORT =
 	process.env.E2E_FIRESTORE_PORT ??
 	process.env.E2E_FS_PORT ??
 	portOf(process.env.FIRESTORE_EMULATOR_HOST, '8081');
+
+export const FUNCTIONS_PORT = process.env.E2E_FUNCTIONS_PORT ?? '5001';
 
 process.env.FIRESTORE_EMULATOR_HOST = `localhost:${FIRESTORE_PORT}`;
 process.env.FIREBASE_AUTH_EMULATOR_HOST = `localhost:${AUTH_PORT}`;

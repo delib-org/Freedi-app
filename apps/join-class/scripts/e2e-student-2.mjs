@@ -186,7 +186,9 @@ try {
 	// 4. rate ------------------------------------------------------------------
 	await setTable({ step: 'rate' });
 	await a.page.waitForSelector('.text-card', { timeout: TIMEOUT });
-	const cards = await a.page.locator('.text-card__body').allInnerTexts();
+	// "my answer" sits above the list as its own card (UX 16.C): the LIST never holds own items
+	const cards = await a.page.locator('.text-card:not(.text-card--mine) .text-card__body').allInnerTexts();
+	check('"my answer" card shows what I sent', (await a.page.locator('.text-card--mine .text-card__body').allInnerTexts()).includes(answerText));
 	check('rate list is not empty', cards.length > 0, `${cards.length} cards`);
 	check('own items are never listed', !cards.includes(answerText) && !cards.includes(proposalText));
 	await a.page.locator('[data-testid=rate-face-5]').first().click();

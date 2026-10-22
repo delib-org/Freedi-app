@@ -1,5 +1,8 @@
 import type { ClassTable } from '@freedi/shared-types';
+import { notAskedUids } from '@freedi/shared-types';
+import { ClassroomError } from '../classroomErrors';
 import { addMember, removeMember } from '../tableMembership';
+import { applyTableAction } from '../tableTransitions';
 
 const NOW = 1_800_000_000_000;
 
@@ -23,6 +26,35 @@ function table(overrides: Partial<ClassTable> = {}): ClassTable {
 }
 
 describe('removeMember', () => {
+	it('keeps the leaver in askedUids, and the asker role skips tablemates who asked', () => {
+		const next = removeMember(table({ askedUids: ['a', 'b'], askerUid: 'a' }), 'a', NOW);
+		expect(next.askedUids).toEqual(['a', 'b']);
+		expect(next.askerUid).toBe('c');
+	});
+
+	it('a student who asked, left and was seated again cannot claim another turn', () => {
+		const rate = table({ step: 'rate', askerUid: 'b', askedUids: ['a'] });
+		const back = addMember(removeMember(rate, 'a', NOW), 'a', NOW);
+		expect(notAskedUids(back)).toEqual(['c']);
+		try {
+			applyTableAction(back, { action: 'nextTurn' }, { actorUid: 'a', isAdmin: false, now: NOW });
+			throw new Error('expected a refusal');
+		} catch (error) {
+			expect((error as ClassroomError).reason).toBe('already-asked');
+		}
+	});
+
+	it('skips tablemates who already asked when the asker leaves', () => {
+		const next = removeMember(table({ askedUids: ['b'], askerUid: 'a' }), 'a', NOW);
+		expect(next.askerUid).toBe('c');
+		expect(next.askedUids).toEqual(['b']);
+	});
+
+	it('falls back to the next seated when everyone left has asked', () => {
+		const next = removeMember(table({ askedUids: ['b', 'c'], askerUid: 'a' }), 'a', NOW);
+		expect(next.askerUid).toBe('b');
+	});
+
 	it('passes the asker role to the next tablemate when the asker leaves', () => {
 		const next = removeMember(table(), 'a', NOW);
 		expect(next).toMatchObject({

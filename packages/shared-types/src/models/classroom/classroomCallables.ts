@@ -48,7 +48,9 @@ export type ClassTableAction =
 	| { action: 'toWrite' }
 	| { action: 'setWritingMode'; mode: WritingMode }
 	| { action: 'toRate' }
-	| { action: 'nextTurn' };
+	/** `fromTurn`: the turn the claimer saw; a claim that arrives after the table moved on is refused. */
+	| { action: 'nextTurn'; fromTurn?: number }
+	| { action: 'passAsker'; uid: string };
 
 export type ClassTableStepRequest = { tableId: string } & ClassTableAction;
 export interface ClassTableStepResponse {

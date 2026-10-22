@@ -188,3 +188,45 @@ body.c3-lock {
   }
 }
 
+
+// ---- strip: the official pill says "now" in words (not by colour alone) --------
+
+.substeps {
+  &__pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding-block: var(--space-2xs, 4px);
+    line-height: 1.1;
+
+    &--official {
+      border-width: 2.5px;
+    }
+  }
+
+  &__now {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold, 700);
+    color: var(--terra-600);
+
+    .substeps__pill--on & {
+      color: inherit;
+    }
+
+    .frame--down & {
+      color: var(--terra-300);
+    }
+  }
+}
+
+// ---- peek: every control of a non-official screen is off ------------------------
+
+.flow__peek {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0.55;
+}

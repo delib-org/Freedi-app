@@ -1,4 +1,17 @@
-import { campOf, classTableId, decideBallot, supportBySide } from '../index';
+import { campOf, classTableId, decideBallot, notAskedUids, supportBySide } from '../index';
+
+describe('notAskedUids', () => {
+	it('lists tablemates in seating order who have not asked and are not the asker', () => {
+		expect(
+			notAskedUids({ memberUids: ['a', 'b', 'c', 'd'], askerUid: 'b', askedUids: ['a'] }),
+		).toEqual(['c', 'd']);
+	});
+
+	it('reads a missing askedUids as empty and is empty when everyone has asked', () => {
+		expect(notAskedUids({ memberUids: ['a', 'b'], askerUid: 'a' })).toEqual(['b']);
+		expect(notAskedUids({ memberUids: ['a', 'b'], askerUid: 'b', askedUids: ['a'] })).toEqual([]);
+	});
+});
 
 describe('campOf', () => {
 	it('uses thresholds 40 and 60, edges are centre', () => {

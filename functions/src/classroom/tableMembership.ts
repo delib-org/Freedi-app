@@ -7,19 +7,38 @@ import { nextAsker } from './tableTransitions';
  * the results of these in one transaction.
  */
 
+/** First member who has not asked, scanning seats from `start` (the seat the leaver held) and wrapping. */
+function nextNotAskedFrom(
+	memberUids: string[],
+	askedUids: string[] | undefined,
+	start: number,
+): string {
+	const asked = new Set(askedUids ?? []);
+	for (let k = 0; k < memberUids.length; k++) {
+		const uid = memberUids[(start + k) % memberUids.length];
+		if (!asked.has(uid)) return uid;
+	}
+
+	return memberUids[start % memberUids.length];
+}
+
 /**
  * Take `uid` off a table. When the asker leaves, the asker role passes to the
- * next tablemate in seating order (null when the table empties); a speaker who
- * leaves loses the floor.
+ * next tablemate who has not asked yet, in seating order from the leaver's seat
+ * (the next one seated when everyone has asked; null when the table empties);
+ * a speaker who leaves loses the floor. The leaver stays in `askedUids`
+ * (the record is per table doc): rejoining this table cannot give them a second turn,
+ * while a table they move to starts them as not yet asked. Every derivation reads
+ * `askedUids` through the current `memberUids`.
  */
 export function removeMember(table: ClassTable, uid: string, now: number): ClassTable {
 	if (!table.memberUids.includes(uid)) return table;
 	const i = table.memberUids.indexOf(uid);
 	const memberUids = table.memberUids.filter((m) => m !== uid);
+	const { askedUids } = table;
 	let askerUid = table.askerUid;
 	if (askerUid === uid) {
-		// The member seated after the leaver now sits at index i.
-		askerUid = memberUids.length === 0 ? null : memberUids[i % memberUids.length];
+		askerUid = memberUids.length === 0 ? null : nextNotAskedFrom(memberUids, askedUids, i);
 	}
 	const next: ClassTable = {
 		...table,

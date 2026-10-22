@@ -7,7 +7,7 @@
 // data-testid used (all exist in src):
 //   student  side-slider, side-confirm, table-number, table-mates,
 //            table-pick-question, table-start, table-next-speaker, table-to-write,
-//            table-to-rate, table-next-turn, asker-mark, time-over, answer-box,
+//            table-to-rate, table-claim, asker-mark, time-over, answer-box,
 //            answer-send, proposal-box, proposal-send, rate-face-1..5,
 //            vote-option, vote-send, support-face-1..5
 //   console  [data-step-key] (aria-current="step" on the current one),
@@ -206,7 +206,13 @@ export const ENGINE_PHASES = [
 				await (await byId(others[0].page, 'answer-send')).click();
 				await others[0].page.locator('.write__sent').first().waitFor({ timeout: TURN_TIMEOUT });
 				await (await byId(asker.page, 'table-to-rate')).click();
-				await (await byId(asker.page, 'table-next-turn')).click();
+				// the hand-off: a tablemate who has not asked yet claims the next turn (the asker cannot)
+				const claimer = await until(async () => {
+					for (const student of others) if (await hasTestId(student, 'table-claim')) return student;
+
+					return null;
+				}, 'a tablemate with the claim button');
+				await (await byId(claimer.page, 'table-claim')).click();
 			}
 			tableOneStaleAsker = previous;
 			check('the asker rotated between the turns', askers[0] !== askers[1], askers.join(' -> '));

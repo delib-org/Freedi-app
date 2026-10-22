@@ -1723,3 +1723,321 @@ Console call: `onFullscreen: (frame) => void enterFullscreen(frame)` from `lib/f
 **Check during the build:** no `fullscreenchange` listener may exist outside `ProjectorControls` (checked: it is the only one) that could navigate the console when the frame leaves full screen.
 
 **As built (2026-10-22):** the `?focus=intro` handling lives in `PlanIntro` (the `.plan__intro` section itself), not `PlanScreen`, because the section only exists once the plan has loaded; it waits up to 4 s for the text box to be enabled, then falls back to the section heading. The panel keeps the plain `description` on screen when the paragraph fetch returns no blocks. The Playwright run is `apps/join-class/scripts/e2e-opening-panel.mjs` (`npm run e2e:opening-panel`).
+
+## 16. The table turn: screens per role (UX, 2026-10-22)
+
+Status: decided and built (Tal, 2026-10-22) · Designs against IA §16 (`ia-join-class-table-turn.md`), **as overridden by Tal's decisions of 2026-10-22**:
+- (T1) Every tablemate with a device asks once. The number of turns at a table = the number of device members. There is no "2 turns" default and no "סבב נוסף".
+- (T2) Every phone at the table always shows whose turn it is to ask: the name, and "התור שלכם" on that student's own phone.
+- (T3) A student who has asked is marked done (✓) and cannot take a turn again.
+- (T4) At the hand-off, any tablemate who has not asked yet may take the next turn, and the first tap claims it. When only one is left, it is simply their turn.
+
+Still fixed by the IA: one forward control per moment; the hand-off lives at `rate`; only the asker starts the first speaker.
+
+**Tal's decision 4 overrides this document's read-only recommendation: the strip stays a tappable peek.** Everything that says "read-only", "not buttons" or "progress line" below is replaced by 16.B2 (the peek). Where a different answer would change a screen, a "Variant" line says how. Tokens, type and motion follow §8. Frames are 360 px wide and RTL. **NEW** marks a new string; (?) marks Hebrew that needs a native read.
+
+### Decisions of Tal, 2026-10-22 (final; they override anything below that differs)
+1. **Every tablemate with a device asks once.** Whose turn it is to ask is visible on every phone (the askers row: asked / asking now / not yet; the asker's own phone says "התור שלכם לשאול"). A student who has asked cannot ask again: the server enforces it with the optional `askedUids` on `ClassTable`.
+2. **The next asker is the first to tap.** At the rate step every student who has not asked sees the hand-off card ("אחרי הדירוג: אפשר לשאול" and "להתחיל את התור שלי"); the first claim wins; a lost race shows no error, only whose turn it is. When one student is left it reads "התור שלכם לשאול" and only they have the button. When everyone has asked: "דרגו, ואז חכו לשאר השולחנות" and no button. "Table done" is derived (all device members in `askedUids` or the current asker at rate): no stored `finished`, no `turnsPerTable`.
+3. **The first speaker is chosen by the asker only** (as built). After a minute ends any tablemate may tap the next name (as built).
+4. **The strip (שאלה · מדברים · כותבים · מדרגים) stays a tappable peek, not read-only.** The phone defaults to the official step and returns to it; the official pill is marked "עכשיו" in words (not by colour alone); on a non-official screen EVERY control is disabled (chips, buttons, editors' send, the claim) and one short line says what the table is doing now ("השולחן עדיין בשלב השאלה") with the one live control "חזרה לעכשיו"; when the official step changes the phone jumps to it.
+5. **Teacher:** the Tables card shows "סבב n מתוך max", who the table waits for and one next-step button (infinitive verbs); the table sheet has every step verb, "לדבר עכשיו" per member at talk and "להעביר את התור ל…" per not-yet member at pick (built as `passAsker`, E3).
+6. **Gender-neutral strings** ("התור של {{name}} ל…"), no slash forms.
+
+### 16.A Decisions in one place
+| Question | Decision | Why, in one line |
+|---|---|---|
+| How whose turn it is reads on every phone (T2, T3) | An **askers row** under the header: one name chip per device member, in seating order. ✓ = has asked, "?" = asking now, plain outline = not yet. The own phone also keeps the line "התור שלכם לשאול" | One row answers "who asks now, who is done, who is left" without a tap. The glyph, the fill and the weight each tell the state |
+| The strip (DECIDED: a peek, not read-only) | The four pills stay tappable. The official pill carries the word "עכשיו" and a thicker border. A non-official screen is dimmed with every control disabled, its instruction becomes the one line "השולחן עדיין בשלב השאלה", and its bottom control is "חזרה לעכשיו" | Tal wants children to look back; the disabled screen plus one reason plus one way back stops a refused tap |
+| Done, now and next without colour (both rows) | done = filled with ✓ · now = larger and filled, name in 700 (the askers row adds "?") · next = hollow with a dotted ring | Shape, size, symbol and weight each carry the state |
+| The hand-off's attention | A **hand-off card** at the top of the rate screen, on every phone that may claim. Plus the only filled bottom buttons at the table. It slides in once (8 px, 380 ms); under reduced motion it simply shows | It is the first thing on the screen, it carries a glyph, a thick edge and words, and it is the only terracotta bar on the table |
+| Two students tap at once | The server keeps the first claim. The second phone redraws to frame A with the winner's name in the asker line, and shows **no** error | The winner's name on the screen is the explanation. "זה לא עבד" would read as a fault |
+| "n מתוך m שלחו" as text or dots | Text, numbers first | Dots invite checking; text reads once, and a screen reader says it |
+| "התשובה שלי" on the rate screen | A `TextCard` (mine) above the list, with "עריכה" that opens the write box inline (the plenum branch of `rateBody`) | One pattern that is already built |
+| A notice when the teacher moves a table | None. A 220 ms cross-fade and the new header. The unsent-draft confirm stays | There is no local view left to lose |
+| One form for the teacher's quick actions | **The infinitive**, the same verb the students' controls end with: "לדבר", "לכתוב", "לדרג", "להתחיל סבב {{n}}" | "בחרנו, לדבר", "סיימנו, לכתוב", "שלחנו, לדרג": one verb per step for both roles |
+
+### 16.B The two rows under the header
+```
+ askers row (who asks)          [ ✓ דנה ]  [ ? נועה ]  ( עומרי )  ( ליאור )
+ progress line (where the turn is)   ●━━━━━━━◉┄┄┄┄┄┄┄③┄┄┄┄┄┄┄④
+                                     ✓    מדברים    כותבים   מדרגים
+```
+**Askers row** (`.askers`, NEW block)
+- Chips are 32 px tall and 14 px, with `--radius-full`, and wrap to 2 lines at most.
+- done: `--paper-deep` fill, a ✓ glyph before the name, `--ink-muted`.
+- now: `--rail-current` fill, paper text in 700, a "?" glyph before the name.
+- not yet: transparent, 1.5 px `--border-medium`, `--ink`.
+- In `.frame--down` the same marks are drawn paper on ink, and now uses `--down-warn`.
+- Not buttons. It is a `<ul aria-label="מי שואל">`, and each `<li>` reads "דנה, אחרי התור" / "נועה, התור עכשיו" / "עומרי, לפני התור".
+- Students without a device are not in the row: they never ask.
+- The own chip adds "(אני)" after the name. The phone's own state is still said in words by the asker line and the instruction.
+
+**The strip as a peek** (`.substeps`, kept; 16.B2)
+- Four pills, tappable, in the order the table takes them. The official pill carries the word "עכשיו" under its name and a 2.5 px border; the viewed pill is filled (`aria-current="step"`). Words and shape carry the state, not colour alone.
+- The phone defaults to the official step. When the official step changes (or the turn changes) a lapsed peek returns to it by itself: the phone jumps.
+- A peeked screen (`.flow__peek`, a `<fieldset disabled>`) is dimmed to 55% and every control inside it is disabled: question chips, "+ שאלה משלנו", speaker chips, the editors and their send, rating faces and the claim. The class-list button stays live (it opens a sheet and writes nothing).
+- The instruction line becomes the why-line for the OFFICIAL step: `turn.peek_why_pick` "השולחן עדיין בשלב השאלה" · `_talk` "השולחן עכשיו בשלב הדיבור" · `_write` "השולחן עכשיו בשלב הכתיבה" · `_rate` "השולחן עכשיו בשלב הדירוג" (all at most 6 words).
+- The bottom control is the only live button: `turn.peek_back` "חזרה לעכשיו" (primary, full width, `data-testid=peek-back`). One tap returns to the official screen.
+- The header still reads "עכשיו: {{official step}}", never the viewed one (D2).
+
+### 16.C The frames (one per moment; role differences in the margin)
+Every frame starts with:
+- The header: "שולחן 3 · סבב {{turn}} מתוך {{max}} · עכשיו: {{step}}". `max` is the number of device members, so it updates when the teacher moves a student.
+- The row of the asker line and the class-list button. The asker's phone reads "התור שלכם לשאול" in terra 700; every other phone reads "התור של נועה לשאול".
+- The askers row, the progress line, and the instruction (22 px).
+
+**A. Choose** (`pick`). Turn 1's asker = earliest `joinedAt` (as built).
+```
+│ שולחן 3 · סבב 1 מתוך 4 · עכשיו: בוחרים שאלה │
+│ התור שלכם לשאול          [12 · התשובות של הכיתה] │ others: התור של דנה לשאול
+│ [? דנה (אני)] ( נועה ) ( עומרי ) ( ליאור )    │ askers row
+│ ◉┄┄┄┄┄┄┄②┄┄┄┄┄┄┄③┄┄┄┄┄┄┄④                     │
+│                      בחרו שאלה לשולחן         │ others: התור של דנה לבחור שאלה
+│ │ ◉ למה קשה לסרב לחבר?                       │ asker: radio; a tap WRITES pickQuestion,
+│ │ ○ מה היה קורה אם כולם היו משקרים?           │ so the others see the choice live.
+│ │ ○ מה זה חבר טוב?                   נשאלה   │ others: the same list, not buttons
+│ [ + שאלה משלנו ]                             │ secondary, everyone
+│ [            בחרנו, לדבר            ]        │ primary, asker only, after a choice
+```
+**B. Before the first speaker** (`talk`, nobody speaking): the dark screen
+```
+│ [✓…] [? דנה] ( … )         ●━━━◉┄┄┄③┄┄┄④     │ both rows, paper on ink
+│ למה קשה לסרב לחבר?                            │
+│             קראו בקול. בחרו מי ראשון.        │ others: מקשיבים לשאלה. מסכים למטה.
+│                    1:00                      │ --ink-faint: not running
+│   ( דנה )  ( נועה )  ( עומרי )  ( ליאור )     │ asker: chips enabled, 48 px
+│          התור של דנה לבחור מי הבא             │ others only; their chips are disabled
+```
+Variant (any tablemate may start the first speaker): every phone gets enabled chips and the asker's instruction, and the hint line goes.
+
+**C. Speaking** and **C′. Minute over** (`talk`)
+```
+│ למה קשה לסרב לחבר?                            │
+│                  מסכים למטה. מדברים.         │ C′, every phone: הזמן נגמר. מי הבא בתור?
+│               התור של נועה לדבר               │ the speaker's own phone: התור שלכם לדבר
+│                    0:42                      │ last 10 s: "09" in --down-warn; C′: the words
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━░░░░░░░░░░░░       │
+│   (✓ דנה)  [ נועה ]  ( עומרי )  ( ליאור )     │ asker: enabled all minute; C′: everyone
+```
+**D. Everyone spoke**: every phone shows the instruction "כולם דיברו" and the primary "סיימנו, לכתוב". The asker has had it as a secondary since B, so a silent tablemate never locks the table.
+
+**E. Write** (`write`): as §2.6.3. Instruction "כתבו תשובה לשאלה" (in table mode, the others read "עוזרים בקול לדנה"). "שליחה" is the primary on every phone. After a send, "נשלח" shows as teal text above the slot, and on the asker's phone the primary becomes "שלחנו, לדרג".
+
+**F. Rate and the hand-off** (`rate`, someone has not asked yet). The current asker (Dana) is now counted as asked: her chip shows ✓ from here on.
+```
+ F-open: Noa, Omri, Lior (not asked yet)       Dana (asked)
+│ [✓ דנה] ( נועה ) ( עומרי ) ( ליאור (אני) )   │ │ … same rows …                           │
+│ ●━━━━━━●━━━━━━●━━━━━━◉                        │ │       דרגו את התשובות של הכיתה          │
+│        דרגו, ואז אחד מכם מתחיל לשאול         │ │ בסבב הבא שואלים: נועה, עומרי או ליאור   │
+│ ┃┌───────────────────────────────────────┐   │ │ 3 מתוך 4 שלחו                            │
+│ ┃│ (?)  אחרי הדירוג: אפשר לשאול           │   │ │ ┌ התשובה שלי ─────────── [עריכה] ┐      │
+│ ┃│      מי שלוחץ ראשון מתחיל               │   │ │ … class answers, 5 faces …              │
+│ ┃│      3 מתוך 4 שלחו                       │   │ │ (empty bottom slot)                     │
+│ ┃└───────────────────────────────────────┘   │
+│ ┌ התשובה שלי ─────────── [עריכה] ┐           │
+│ … class answers, 5 faces …                   │
+│ [         להתחיל את התור שלי          ]      │ primary on every not-yet phone
+```
+- **F-one** (exactly one student has not asked, e.g. Lior): Lior's card reads "אחרי הדירוג: התור שלכם לשאול". His instruction is "דרגו, ואז התחילו לשאול", and he has the same primary. Everyone else reads "בסבב הבא: התור של ליאור לשאול".
+- **F-all** (everyone has asked: the last turn): there is no card and no forward control on any phone.
+  - The askers row is all ✓.
+  - The instruction is "דרגו, ואז חכו לשאר השולחנות".
+  - The line above the list reads "כולם שאלו · 4 מתוך 4 שלחו".
+  - The list stays ratable until the teacher opens the next lesson step.
+- Variant (fixed rotation instead of T4): F-open does not exist. Every turn's rate screen is F-one, for the next not-yet student in seating order.
+
+### 16.D The hand-off card (`.handoff`, NEW block)
+- Card: `--terra-50` fill, a 1.5 px `--terra-600` border, and a 6 px `--terra-600` bar on the inline-start edge. Inside: the "?" in a 32 px ring (the asker glyph), the words at 22 px 700, and the sent count at 14 px `--ink-soft`.
+- Cues without colour:
+  - its place: first in the body
+  - the "?" glyph
+  - the thick edge
+  - 22 px words
+  - its own instruction line
+  - a filled bottom button that only claimers have
+- Motion: on entry, once: `translateY(8px)` to 0 and `opacity` 0 to 1, `--dur-slow`, `--ease-out`. No loop and no pulse. Under `prefers-reduced-motion` the duration tokens are 0, so the card is simply there.
+- Screen reader: the card's words go to the screen's polite live region once. Focus does not jump.
+- The claim tap:
+  - The button becomes "שומרים…" (disabled).
+  - If the claim wins, every phone cross-fades to frame A: the header's סבב +1, the progress line reset, the claimer's chip turns "?" and the old asker's chip ✓.
+  - If someone else claimed first, the phone shows frame A with "התור של עומרי לשאול" and no error line.
+- A/B option, not default: one 60 ms `navigator.vibrate` when F opens on a claimer's phone (Android only). Measure the time to the claim, and check that the buzz is not heard at the table.
+
+### 16.E Storyboards (one row per phone screen; ✋ = the primary control is on this phone)
+**Asker, turn 1 (Dana)**
+| # | Frame | Instruction | Primary | Other phones, live |
+|---|---|---|---|---|
+| 1 | A | בחרו שאלה לשולחן | ✋ בחרנו, לדבר (after a tap on a question) | the choice fills; card "ממתינים לדנה" |
+| 2 | B | קראו בקול. בחרו מי ראשון. | ✋ a name chip | dark, "מקשיבים לשאלה" |
+| 3 | C | מסכים למטה. מדברים. | ✋ chips (secondary: סיימנו, לכתוב) | the speaker's phone: "התור שלכם לדבר" |
+| 4 | C′ | הזמן נגמר. מי הבא בתור? | chips, on every phone | — |
+| 5 | D | כולם דיברו | סיימנו, לכתוב (every phone) | — |
+| 6 | E | כתבו תשובה לשאלה | שליחה, then ✋ שלחנו, לדרג | "n מתוך 4 שלחו" on the card |
+| 7 | F | דרגו את התשובות של הכיתה; her chip ✓ | none, ever again this lesson | 3 phones: the card + ✋ |
+| 8 | A, turn 2 | התור של עומרי לבחור שאלה | none | — |
+
+**Tablemate who claims (Omri)**
+- Rows 1-6 as a non-asker: A "התור של דנה לבחור שאלה" → B "מקשיבים לשאלה. מסכים למטה." → C (his own minute: "התור שלכם לדבר") → C′ chips → D "סיימנו, לכתוב" → E "שליחה".
+- F-open: the card, and ✋ "להתחיל את התור שלי". He taps first.
+- Turn 2, A: "התור שלכם לשאול", "בחרו שאלה לשולחן", ✋ "בחרנו, לדבר". Then B-E as the asker.
+- F of turn 2: his chip ✓, and he sees "בסבב הבא שואלים: נועה או ליאור".
+
+**Tablemate who loses the race (Noa)**
+- F-open: she taps "להתחיל את התור שלי" a moment after Omri. Her button shows "שומרים…", then frame A of turn 2 with "התור של עומרי לשאול", and no error.
+- At F of turn 2 she has the card again.
+
+**Last asker (Lior)**
+- F-open twice. On turn 3 he is the only one not asked, so he gets F-one: "אחרי הדירוג: התור שלכם לשאול" and ✋.
+- Turn 4 as the asker.
+- Its F is F-all: "דרגו, ואז חכו לשאר השולחנות", with no control on any phone.
+
+**Teacher, table card** (the one quick action is the next step's)
+| Table at | "now" line | Second line | Quick action |
+|---|---|---|---|
+| pick, no question | בוחרים שאלה | ממתינים לדנה | (none; sheet: להעביר את התור ל…) |
+| pick, question chosen | בוחרים שאלה | ממתינים לדנה | לדבר |
+| talk, no speaker | מדברים | ממתינים לדנה | לכתוב (sheet: "לדבר עכשיו" per member) |
+| talk, speaking | מדברים | נועה · 0:42 (existing) | לכתוב |
+| write | כותבים | 3 מתוך 4 שלחו | לדרג |
+| rate, several not asked | מדרגים | עוד לא שאלו: נועה, עומרי, ליאור | להתחיל סבב 2 |
+| rate, one not asked | מדרגים | הבא בתור לשאול: ליאור | להתחיל סבב 4 |
+| rate, everyone asked | מדרגים · כולם שאלו | 4 מתוך 4 שלחו | none |
+- Card head: "שולחן 3" and "סבב 2 מתוך 4".
+- The member chips on the card carry the same ✓ / "?" marks as the askers row.
+- The teacher's "להתחיל סבב {{n}}" gives the turn to the first not-yet student in seating order.
+- Quick actions are `.btn--tertiary`, 40 px × ≥ 72 px, with `aria-label` "שולחן 3: לדבר".
+
+### 16.F Stuck states and the teacher's fallbacks
+| Stuck | Students see | Card | Sheet (`/t/:mid/table/:n`) |
+|---|---|---|---|
+| Asker not choosing (A) | "התור של דנה לבחור שאלה" | ממתינים לדנה | **להעביר את התור ל{{name}}** per not-yet member (E3: moves the turn, Dana stays not-yet); "הסרה" for a student who left |
+| Asker chose, does not confirm | the choice, no control | לדבר | לדבר |
+| Nobody starts a speaker (B) | dark, "1:00" faint | ממתינים לדנה · לכתוב | "לדבר עכשיו" on member rows (admin `nextSpeaker`, the engine allows it today) |
+| A tablemate never speaks | the asker has the secondary "סיימנו, לכתוב" | לכתוב | לכתוב |
+| The asker does not send or move on (E) | "3 מתוך 4 שלחו" | לדרג | לדרג |
+| Nobody claims at F | the cards stay on the not-yet phones | להתחיל סבב n | להתחיל סבב n, or "להעביר את התור ל{{name}}" to choose who |
+| Everyone has asked | "חכו לשאר השולחנות" | none | none; the class moves on with "פתיחת השלב הבא" |
+| A stale tap is refused (not a lost claim) | the existing inline "זה לא עבד. לנסות שוב", and a redraw to the real step | — | — |
+
+The sheet's row uses the same form as the card: **לדבר · לכתוב · לדרג · להתחיל סבב {{n}}**. The action that matches the current step is disabled. Member rows show ✓ / "?" / nothing. An all-tables bar, if one is shown, reads "כל השולחנות: לדרג".
+
+### 16.G Strings (all 7 join-class locales; one name per concept)
+| Key | HE | EN | Note |
+|---|---|---|---|
+| `turn.header` | שולחן {{n}} · סבב {{turn}} מתוך {{max}} · עכשיו: {{step}} | Table {{n}} · turn {{turn}} of {{max}} · now: {{step}} | changed; max = device members |
+| `turn.askers_label` NEW | מי שואל | Who asks | sr label of the askers row |
+| `turn.asker_done` / `_now` / `_wait` NEW | {{name}}, אחרי התור · {{name}}, התור עכשיו · {{name}}, לפני התור | {{name}}, has asked · asking now · not yet | sr per chip, neutral |
+| `turn.me` NEW | (אני) | (me) | after the own name |
+| `turn.strip_label` | איפה השולחן עכשיו | Where the table is now | changed |
+| `turn.pill_now` NEW | עכשיו | Now | the word on the official pill |
+| `turn.peek_why_pick` / `_talk` / `_write` / `_rate` NEW | השולחן עדיין בשלב השאלה · השולחן עכשיו בשלב הדיבור · השולחן עכשיו בשלב הכתיבה · השולחן עכשיו בשלב הדירוג | The table is still on the question · is now talking · writing · rating | the why-line of a peeked screen (≤ 6 words) |
+| `turn.peek_back` NEW | חזרה לעכשיו | Back to now | the one live control of a peek |
+| `turn.instr_write_proposals` / `turn.instr_rate_proposals` NEW | כותבים · מדרגים | Write · Rate | Proposals keep the old terse words (no question, no turns) |
+| `turn.time_over` NEW | הזמן נגמר | Time is up | the countdown's words; the instruction carries `turn.time_up` |
+| `turn.asker_me` / `turn.asker` | התור שלכם לשאול · התור של {{name}} לשאול | Your turn to ask · {{name}}'s turn to ask | kept |
+| `turn.to_talk` (was `question.read_start`) | בחרנו, לדבר | We chose, let's talk | |
+| `turn.to_rate` | שלחנו, לדרג | We sent, let's rate | changed |
+| `turn.finish_talk` | סיימנו, לכתוב | We're done, let's write | kept |
+| `turn.start_mine` NEW | להתחיל את התור שלי | Start my turn | the claim |
+| `turn.saving` NEW | שומרים… | Saving… | the claim button while busy |
+| `turn.next_open` NEW | אחרי הדירוג: אפשר לשאול | After rating: you can ask | card line 1, F-open |
+| `turn.first_tap` NEW | מי שלוחץ ראשון מתחיל | First to tap starts | card line 2; generic masc. (?) |
+| `turn.next_is_you` NEW | אחרי הדירוג: התור שלכם לשאול | After rating: your turn to ask | card, F-one |
+| `turn.next_one_of` NEW | בסבב הבא שואלים: {{names}} | Next turn: {{names}} can ask | names joined with "," and "או" |
+| `turn.next_is` NEW | בסבב הבא: התור של {{name}} לשאול | Next turn: {{name}} asks | neutral |
+| `turn.all_asked` NEW | כולם שאלו | Everyone has asked | |
+| `turn.sent_count` NEW | {{n}} מתוך {{m}} שלחו | {{n}} of {{m}} sent | numbers first |
+| `turn.instr_pick` | בחרו שאלה לשולחן | Choose a question for the table | changed |
+| `turn.instr_pick_other` NEW | התור של {{name}} לבחור שאלה | It's {{name}}'s turn to choose | |
+| `turn.instr_read` NEW (absorbs `turn.who_first`) | קראו בקול. בחרו מי ראשון. | Read it aloud. Choose who goes first. | "מי ראשון" generic masc. (?) |
+| `turn.instr_listen` NEW | מקשיבים לשאלה. מסכים למטה. | Listen to the question. Screens down. | |
+| `turn.instr_talk` | מסכים למטה. מדברים. | Screens down. Talking. | kept |
+| `turn.speaker` | התור של {{name}} לדבר | {{name}}'s turn to speak | replaces the slash form "הדוברת/הדובר" |
+| `turn.speak_mine` NEW | התור שלכם לדבר | Your turn to speak | |
+| `turn.asker_picks_next` | התור של {{name}} לבחור מי הבא | {{name}} chooses who's next | changed; the IA's "בוחר/ת" breaks the no-slash rule |
+| `turn.time_up` | הזמן נגמר. מי הבא בתור? | Time's up. Who's next? | |
+| `turn.all_spoke` NEW | כולם דיברו | Everyone spoke | |
+| `turn.instr_write` | כתבו תשובה לשאלה | Write an answer to the question | changed |
+| `turn.instr_help` NEW | עוזרים בקול ל{{name}} | Help {{name}} out loud | |
+| `turn.instr_rate` | דרגו את התשובות של הכיתה | Rate the class's answers | changed |
+| `turn.instr_rate_open` NEW | דרגו, ואז אחד מכם מתחיל לשאול | Rate, then one of you starts asking | F-open; "אחד" generic masc. (?) |
+| `turn.instr_rate_next` NEW | דרגו, ואז התחילו לשאול | Rate, then start asking | F-one |
+| `turn.wait_others` NEW | דרגו, ואז חכו לשאר השולחנות | Rate, then wait for the other tables | F-all |
+| `answer.mine` NEW | התשובה שלי | My answer | table mode: "התשובה של השולחן" |
+| `console.turn_n` | סבב {{n}} מתוך {{max}} | Turn {{n}} of {{max}} | changed |
+| `console.waiting_for` NEW | ממתינים ל{{name}} | Waiting for {{name}} | |
+| `console.not_asked` NEW | עוד לא שאלו: {{names}} | Not asked yet: {{names}} | |
+| `console.next_asker` NEW | הבא בתור לשאול: {{name}} | Next to ask: {{name}} | generic masc. (?) |
+| `console.all_asked` NEW | כולם שאלו | Everyone has asked | |
+| `console.quick_talk` NEW · `quick_write` · `quick_rate` | לדבר · לכתוב · לדרג | Talk · Write · Rate | changed from "לכתיבה" / "לדירוג" |
+| `console.quick_turn` NEW | להתחיל סבב {{n}} | Start turn {{n}} | replaces "סבב הבא" |
+| `console.speak_now` NEW | לדבר עכשיו | Speak now | sheet, per member |
+| `console.pass_asker` NEW | להעביר את התור ל{{name}} | Give the turn to {{name}} | E3 |
+
+Retired (removed from all 7 locales):
+- `turn.next_turn`, `turn.who_first`, `turn.pick_next`, `question.read_start`.
+- `answer.writing_for_table` lost its slash form in Hebrew: "כותבים לשולחן: {{name}}".
+- The IA's `turn.last_turn`, `turn.finish_turns`, `console.extra_turn`, `console.turns_done` and `plan.turns_per_table` (T1).
+- `turn.pill_*` stay, but only as the names in the progress line.
+
+### 16.H Where this differs from the IA (after Tal's T1-T4)
+1. **The turn limit is "everyone asked", derived, not stored.** The table is done when every device member is in `askedUids` or is the current asker at `rate`. There is no `finished` field, no `turnsPerTable` setting, no "סיימנו" tap and no "סבב נוסף". The teacher has no extra turn once everyone has asked (T3); the class moves on through the lesson's next step.
+2. **The hand-off is a claim by any not-yet student (T4),** not a heads-up for one next asker. A lost race shows no error.
+3. **The askers row is NEW** (T2, T3). The IA has only the one asker line.
+4. **The quick-action form is the infinitive** ("לדבר · לכתוב · לדרג · להתחיל סבב {{n}}"), not nouns. **The card shows one quick action**; the full row lives in the sheet.
+5. **Strings:** "{{name}} בוחר/ת מי הבא", "בסבב הבא שואלת" and the existing "הדוברת/הדובר" become "התור של {{name}} ל…", which is neutral and has no slash.
+6. **The students' header gains "מתוך {{max}}" too.**
+7. **D2** (the header followed the viewed step) is already fixed in `71982fae3`.
+
+### 16.I Build notes
+**Student (`apps/join-class/src`)**
+- `views/student/c3/TableFlow.ts` (the peek stays, so `override`, `setLocal` and `resolveSubstep` stay): a peeked body is wrapped in `fieldset.flow__peek[disabled]`, the instruction is the why-line and the action is `peek-back`. A tap on a question writes `pickQuestion` at once, and "בחרנו, לדבר" sends only `toTalk`. The rate screen gets `HandOffCard`, the sent line and the "התשובה שלי" card. The `run` helper swallows the claim-taken refusal (`failed-precondition` with reason `turn-claimed`) and does not set `error`.
+- `lib/classroom/c3Logic.ts`: delete `SubstepOverride`, `resolveSubstep` and their tests. Add these pure functions, and unit-test every storyboard row:
+  - `askerStates(table)` gives done / now / wait per uid.
+  - `claimers(table)` gives the members not in `askedUids` who are not the asker.
+  - `turnMoment(table, uid, mates, now)` gives `{ instructionKey, params, control, handoff: 'open' | 'one' | null, allAsked }`.
+  - `sentCount(...)`.
+- `views/student/c3/SubStepStrip.ts` stays (it gains the "עכשיו" mark). Add `AskersRow.ts`, `HandOffCard.ts` and `RateScreen.ts` (props in, vnodes out); the pure rules are in `lib/classroom/turnMoment.ts` and, for the teacher, `lib/classroom/tableTurnConsole.ts`. `TalkScreen.ts` gets the instructions by role and the new speaker and hint keys.
+- `styles/student-c3-flow.scss`: `.substeps` becomes `.progress-line`, and `.askers` and `.handoff` are added. `--rail-*` moves to `_tokens.scss`.
+- `lib/locales/*.ts` ×7 (he, en, ar, es, de, nl, fa), per 16.G.
+
+**Teacher**
+- `views/teacher/TableCard.ts`: "סבב n מתוך max", the second line, the ✓ / "?" on member chips, and one quick action from a pure `quickActionFor(table)` in `lib/classroom/consoleHelpers.ts`.
+- `views/teacher/TableSheetPanel.ts`: the four-verb row, "לדבר עכשיו" at talk with no speaker, "להעביר את התור ל…" per not-yet member (E3).
+
+**Engine (`@freedi/shared-types`, `functions/src/classroom/tableTransitions.ts`)**
+- Schema: `askedUids?: string[]` on `ClassTableSchema` (optional; read as `[]` when it is missing). Repack shared-types for functions.
+- E1′, the claim. Who may run `nextTurn`:
+  - A **member** may run it from `rate` only, when `uid !== askerUid` and `!askedUids.includes(uid)`.
+  - The effect: `askedUids += askerUid`, `askerUid = uid`, `turn + 1`, `step: 'pick'`, turn fields cleared.
+  - A claim by someone who already asked is refused (`permission-denied`, reason `already-asked`).
+  - A claim when the step is no longer `rate` (somebody won) is refused (`failed-precondition`, reason `turn-claimed`).
+  - The transaction makes the first tap win.
+- E1′, the asker and the admin:
+  - The asker's own `nextTurn` (allowed today from talk, write and rate) is removed. The asker cannot pick who is next.
+  - An admin's `nextTurn` runs from any step and picks the first not-yet member in seating order (`nextNotAsked`). When nobody is left it is refused (`failed-precondition`, `all-asked`).
+- E3 (admin, `pick`): `passAsker { uid }` sets `askerUid = uid` only when that uid is not in `askedUids`. It touches neither `turn` nor `askedUids`.
+- `tableMembership`: on removal, take the uid out of `askedUids`. If the removed student was the asker, the turn passes to `nextNotAsked`.
+- Fixed-rotation variant: the member clause becomes `uid === nextNotAsked(memberUids, askedUids, askerUid)`. Everything else stays.
+
+**E2E** (`apps/join-class/scripts/e2e-table-turn.mjs`, solo emulators, one teacher and 4 students at one table):
+1. Peek: a click on "מדברים" at `pick` shows a dimmed screen with every control disabled, the why-line and "חזרה לעכשיו"; back returns; only the official pill says "עכשיו"; the phone jumps when the official step changes (D1 regression).
+2. The asker taps a question, and a tablemate's list shows it chosen within one snapshot; the card shows "לדבר".
+3. At B only the asker's chips are enabled; the others read "התור של דנה לבחור מי הבא".
+4. After the minute, chips are enabled for everyone; when all have spoken, "סיימנו, לכתוב" is on every phone.
+5. After "שליחה", the asker's primary is "שלחנו, לדרג", and the card shows the sent count.
+6. At F of turn 1, 3 phones have `.handoff` and "להתחיל את התור שלי"; Dana has neither, and her chip shows ✓ on every phone.
+7. Two students claim at once: exactly one turn starts (turn = 2), and the loser sees "התור של עומרי לשאול" and no `.c3-error`.
+8. A forged `nextTurn` by Dana (already asked) is refused with `already-asked`.
+9. At F of turn 3, only Lior has the card, and it reads "התור שלכם לשאול".
+10. At F of turn 4 every chip is ✓, no phone has a forward control, the screens show "חכו לשאר השולחנות", and the card has no quick action.
+11. The teacher's "להתחיל סבב 2" at F of turn 1 gives the turn to the first not-yet student in seating order.
+12. The teacher's "לכתוב" while a student has an unsent draft: the screen follows, and the draft confirm appears.
+13. Under `prefers-reduced-motion: reduce`, `.handoff` runs no animation, and axe finds no violations on frames A, B, F-open and F-all.
+
+### 16.J What was built, and what was left (2026-10-22)
+- Engine: `nextTurn` by a tablemate is the claim (from `rate` only; `already-asked`, `turn-claimed`, `all-asked` come back as `HttpsError.details.reason`); the asker can no longer run it; a teacher's `nextTurn` gives the turn to the first tablemate who has not asked, in seating order, and is refused when all have; `passAsker` (teacher, at pick) is built as E3. Removing a student takes them out of `askedUids`.
+- Teacher: the card shows "סבב n מתוך max" (max = device members), the second line (ממתינים ל… · n מתוך m שלחו · עוד לא שאלו · הבא בתור לשאול · כולם שאלו), ✓ / ? on member chips and one next-step button; the sheet has talk / write / rate / start turn, "לדבר עכשיו" per member at talk and "להעביר את התור ל…" per not-yet member at pick.
+- Known edge, not handled here: a table of four with three guiding questions has no unused question for the fourth asker (they use "+ שאלה משלנו"). Whether a question may be asked twice at one table when the list runs out is a product decision.
+- Variants not built: fixed rotation; any tablemate starting the first speaker; the optional vibration A/B.

@@ -34,6 +34,8 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 	switch (req?.action) {
 		case 'pickQuestion':
 			return { action: 'pickQuestion', questionId: requireId(req.questionId, 'questionId') };
+		case 'passAsker':
+			return { action: 'passAsker', uid: requireId(req.uid, 'uid') };
 		case 'nextSpeaker':
 			return { action: 'nextSpeaker', uid: requireId(req.uid, 'uid') };
 		case 'setWritingMode': {
@@ -45,8 +47,11 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 		case 'toTalk':
 		case 'toWrite':
 		case 'toRate':
-		case 'nextTurn':
 			return { action: req.action };
+		case 'nextTurn':
+			return typeof req.fromTurn === 'number'
+				? { action: 'nextTurn', fromTurn: req.fromTurn }
+				: { action: 'nextTurn' };
 		default:
 			throw new ClassroomError('invalid-argument', 'Unknown table action');
 	}

@@ -11,9 +11,11 @@ export interface SubStepStripAttrs {
 }
 
 /**
- * Question · Talk · Write · Rate pills under the asker line (UX §11 last
- * bullet). The table's official step is marked; `aria-current="step"` is the
- * screen the student is on.
+ * Question · Talk · Write · Rate pills under the askers row (UX §11 last
+ * bullet). They stay a tappable peek (Tal, 2026-10-22): the table's official
+ * step carries the word "now" (not colour alone), `aria-current="step"` is the
+ * screen the student is on, and TableFlow disables every control of a peeked
+ * screen and offers "back to now".
  */
 export const SubStepStrip: m.Component<SubStepStripAttrs> = {
 	view({ attrs }) {
@@ -35,9 +37,15 @@ export const SubStepStrip: m.Component<SubStepStripAttrs> = {
 						]
 							.filter(Boolean)
 							.join(' '),
+						'data-step': step,
 						onclick: () => attrs.onSelect(step),
 					},
-					t(`turn.pill_${step}`),
+					[
+						t(`turn.pill_${step}`),
+						view.official === step
+							? m('span.substeps__now', { 'data-testid': 'pill-now' }, t('turn.pill_now'))
+							: null,
+					],
 				),
 			),
 		);

@@ -1,4 +1,4 @@
-import { CAMP_A_BELOW, CAMP_B_ABOVE, Camp } from './classroomModel';
+import { CAMP_A_BELOW, CAMP_B_ABOVE, Camp, ClassTable } from './classroomModel';
 import type { LessonPlan, LessonStatus } from '../statement/StatementSettings';
 import type { LessonStatusAction } from './classroomCallables';
 
@@ -169,4 +169,17 @@ export function planLessonStatus(
 	if (target === 'ended' || target === 'open') change.endedAt = now;
 
 	return change;
+}
+
+/**
+ * Tablemates who may still ask: in seating order, not yet in `askedUids`, and
+ * not the current asker (whose turn is the one being finished). An empty list
+ * at `rate` means the table has been through everyone.
+ */
+export function notAskedUids(
+	table: Pick<ClassTable, 'memberUids' | 'askerUid' | 'askedUids'>,
+): string[] {
+	const asked = new Set(table.askedUids ?? []);
+
+	return table.memberUids.filter((uid) => !asked.has(uid) && uid !== table.askerUid);
 }

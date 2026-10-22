@@ -80,7 +80,7 @@ export const Countdown: m.ClassComponent<CountdownAttrs> = {
 
 		return m('div', { class: classes }, [
 			over
-				? m('p.count__over', { 'data-testid': 'time-over' }, t('turn.time_up'))
+				? m('p.count__over', { 'data-testid': 'time-over' }, t('turn.time_over'))
 				: m(
 						'p.count__num',
 						{
@@ -95,7 +95,7 @@ export const Countdown: m.ClassComponent<CountdownAttrs> = {
 			m('span.count__bar', { 'aria-hidden': 'true' }, [
 				m('span.count__fill', { style: `transform: scaleX(${started ? view.fraction : 1})` }),
 			]),
-			m('p.visually-hidden', { 'aria-live': 'polite' }, over ? t('turn.time_up') : ''),
+			m('p.visually-hidden', { 'aria-live': 'polite' }, over ? t('turn.time_over') : ''),
 		]);
 	},
 };

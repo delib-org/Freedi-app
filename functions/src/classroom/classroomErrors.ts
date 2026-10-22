@@ -1,6 +1,9 @@
 import { HttpsError, FunctionsErrorCode } from 'firebase-functions/v2/https';
 import { logError } from '../utils/errorHandling';
 
+/** Refusals the client treats specially instead of showing a generic error. */
+export type ClassroomErrorReason = 'already-asked' | 'turn-claimed' | 'all-asked';
+
 /**
  * A refusal the engine's pure logic raises. It carries the callable error code
  * so the pure modules stay free of the firebase-functions runtime (testable in
@@ -8,11 +11,14 @@ import { logError } from '../utils/errorHandling';
  */
 export class ClassroomError extends Error {
 	readonly code: FunctionsErrorCode;
+	/** Machine-readable cause the client can branch on (e.g. 'turn-claimed'). */
+	readonly reason?: ClassroomErrorReason;
 
-	constructor(code: FunctionsErrorCode, message: string) {
+	constructor(code: FunctionsErrorCode, message: string, reason?: ClassroomErrorReason) {
 		super(message);
 		this.name = 'ClassroomError';
 		this.code = code;
+		this.reason = reason;
 	}
 }
 
@@ -30,7 +36,11 @@ interface FailureContext {
  */
 export function toHttpsError(error: unknown, context: FailureContext): HttpsError {
 	if (error instanceof HttpsError) return error;
-	if (error instanceof ClassroomError) return new HttpsError(error.code, error.message);
+	if (error instanceof ClassroomError) {
+		return error.reason
+			? new HttpsError(error.code, error.message, { reason: error.reason })
+			: new HttpsError(error.code, error.message);
+	}
 	logError(error, context);
 
 	return new HttpsError('internal', 'The classroom request failed');

@@ -188,6 +188,7 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 			tables: classState.tables,
 			students,
 			plenum,
+			tableTalk: stepKey === 'tableTalk',
 			showSides: stepIndex >= SIDE_STEP_INDEX,
 			opening: stepKey === 'opening' && main ? m(OpeningPanel, { main }) : undefined,
 		}),
@@ -322,6 +323,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 						students: rosterStudents(classState.roster),
 						questions,
 						plenum: isPlenum(challenge),
+						tableTalk: step.key === 'tableTalk',
 						onClose: () => {
 							consoleState.focusTableN = attrs.sheetN ?? null;
 							m.route.set(`/t/${mid}`);

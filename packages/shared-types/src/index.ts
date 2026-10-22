@@ -1054,6 +1054,7 @@ export {
   decideBallot,
   lessonStatusOf,
   planLessonStatus,
+  notAskedUids,
 } from './models/classroom/classroomLogic';
 export type {
   SupportSubscription,

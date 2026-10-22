@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { SPEAK_SECONDS } from '@freedi/shared-types';
+import { notAskedUids } from '@freedi/shared-types';
 import type { ClassTable, Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import {
@@ -12,7 +13,14 @@ import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
 import { getServerOffset, remainingMs } from '@/lib/classroom/serverClock';
 import { moveStudent, tableAction } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
-import { noDeviceForm } from './TableCard';
+import {
+	QUICK_KEYS,
+	memberMark,
+	quickActionFor,
+	type QuickKind,
+	type TableMode,
+} from '@/lib/classroom/tableTurnConsole';
+import { noDeviceForm, quickActionName, tableModeOf, turnLine } from './TableCard';
 import { targetName } from './dragController';
 
 /**
@@ -32,24 +40,53 @@ export interface TableSheetPanelAttrs {
 	students: readonly RosterStudent[];
 	questions: readonly Statement[];
 	plenum: boolean;
+	tableTalk: boolean;
 	onClose: () => void;
 }
 
 const MS_PER_SECOND = 1000;
 let showNoDevice = false;
 
+/** A teacher's per-member turn fallback: speak now at talk, give the turn at pick (UX 16.F). */
+function turnButton(table: ClassTable, uid: string, name: string, mode: TableMode): m.Children {
+	if (mode !== 'tableTalk') return null;
+	const speak = table.step === 'talk';
+	const pass = table.step === 'pick' && notAskedUids(table).includes(uid);
+	if (!speak && !pass) return null;
+	const label = t(speak ? 'console.speak_now' : 'console.pass_asker', { name });
+	const action = speak
+		? ({ action: 'nextSpeaker', uid } as const)
+		: ({ action: 'passAsker', uid } as const);
+
+	return m(
+		'button.btn.btn--tertiary.table-sheet__turn',
+		{
+			type: 'button',
+			'data-testid': speak ? 'sheet-speak-now' : 'sheet-pass-asker',
+			'aria-label': speak ? `${label}: ${name}` : label,
+			disabled: consoleState.held || isBusy(`table:${table.tableId}:${action.action}`),
+			onclick: () => void tableAction(table.tableId, action),
+		},
+		label,
+	);
+}
+
 function memberRow(
 	student: RosterStudent | undefined,
 	uid: string,
 	table: ClassTable,
 	tableNumbers: readonly number[],
+	mode: TableMode,
 ): m.Vnode {
 	const name = student?.name ?? uid.slice(0, 4);
 	const camp = student?.camp ?? null;
+	const turnMark = mode === 'tableTalk' ? memberMark(table, uid) : '';
 
 	return m('li.table-sheet__member', { key: uid }, [
 		m('span.table-sheet__member-mark', { 'aria-hidden': 'true' }, camp ? CAMP_MARK[camp] : '○'),
 		m('span.table-sheet__member-name', name),
+		turnMark ? m('span.table-sheet__member-turn', { 'aria-hidden': 'true' }, turnMark) : null,
+		turnButton(table, uid, name, mode),
 		m('span.table-sheet__member-side', t(camp ? `console.side_${camp}` : 'console.side_none')),
 		m(
 			'select.table-sheet__select',
@@ -97,7 +134,7 @@ function currentLine(attrs: TableSheetPanelAttrs, table: ClassTable): m.Children
 	return [
 		m('p.table-sheet__now', [
 			m('strong', t(tableStepKey(table, attrs.plenum))),
-			` · ${t('console.turn_n', { n: table.turn })}`,
+			` · ${turnLine(table)}`,
 		]),
 		m('p.table-sheet__question', question ? question.statement : t('console.no_question_yet')),
 		timer.kind === 'running'
@@ -115,6 +152,40 @@ function currentLine(attrs: TableSheetPanelAttrs, table: ClassTable): m.Children
 			? m('p.table-sheet__asker', t('console.asker_line', { name: speakerName(table.askerUid) }))
 			: null,
 	];
+}
+
+/** The sheet's whole row of step verbs; the one that matches the table's step is disabled. */
+function stepButtons(table: ClassTable, mode: TableMode): m.Children {
+	const kinds: QuickKind[] =
+		mode === 'plenum'
+			? ['rate']
+			: mode === 'tableTalk'
+				? ['talk', 'write', 'rate', 'turn']
+				: ['talk', 'write', 'rate'];
+	const own = quickActionFor(table, mode);
+
+	return kinds.map((kind) => {
+		const quick = kind === 'turn' ? { kind, n: table.turn + 1 } : { kind };
+		const sameStep =
+			(kind === 'talk' && table.step === 'talk') ||
+			(kind === 'write' && table.step === 'write') ||
+			(kind === 'rate' && table.step === 'rate');
+		const noTurnLeft = kind === 'turn' && notAskedUids(table).length === 0;
+		const name = quickActionName(quick);
+
+		return m(
+			'button.btn.btn--secondary',
+			{
+				type: 'button',
+				'data-quick': kind,
+				'data-next': own?.kind === kind ? 'true' : undefined,
+				disabled:
+					consoleState.held || sameStep || noTurnLeft || isBusy(`table:${table.tableId}:${name}`),
+				onclick: () => void tableAction(table.tableId, { action: name }),
+			},
+			t(QUICK_KEYS[kind], { n: quick.n ?? 0 }),
+		);
+	});
 }
 
 export const TableSheetPanel: m.Component<TableSheetPanelAttrs> = {
@@ -161,34 +232,11 @@ export const TableSheetPanel: m.Component<TableSheetPanelAttrs> = {
 						? m('p.table-sheet__missing', t('console.table_missing'))
 						: [
 								currentLine(attrs, table),
-								m('div.table-sheet__actions', [
-									attrs.plenum
-										? null
-										: m(
-												'button.btn.btn--secondary',
-												{
-													type: 'button',
-													'data-quick': 'write',
-													disabled: consoleState.held || isBusy(`table:${table.tableId}:toWrite`),
-													onclick: () => void tableAction(table.tableId, { action: 'toWrite' }),
-												},
-												t('console.quick_write'),
-											),
-									m(
-										'button.btn.btn--secondary',
-										{
-											type: 'button',
-											'data-quick': 'rate',
-											disabled: consoleState.held || isBusy(`table:${table.tableId}:toRate`),
-											onclick: () => void tableAction(table.tableId, { action: 'toRate' }),
-										},
-										t('console.quick_rate'),
-									),
-								]),
+								m('div.table-sheet__actions', stepButtons(table, tableModeOf(attrs))),
 								m('h3.table-sheet__section', t('console.members')),
 								m('ul.table-sheet__members', [
 									table.memberUids.map((uid) =>
-										memberRow(byUid.get(uid), uid, table, tableNumbers),
+										memberRow(byUid.get(uid), uid, table, tableNumbers, tableModeOf(attrs)),
 									),
 									table.noDeviceMembers.map((nd) =>
 										m('li.table-sheet__member.table-sheet__member--nd', { key: `nd:${nd.id}` }, [

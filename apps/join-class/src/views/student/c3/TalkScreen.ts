@@ -91,18 +91,20 @@ export const TalkScreen: m.ClassComponent<TalkScreenAttrs> = {
 		return m('.talk', [
 			m('p.talk__prompt', { dir: 'auto' }, prompt),
 			withSpeakers
-				? m('p.talk__speaker', [
-						m(
-							'span',
-							{ 'aria-live': 'polite' },
-							table.speakerUid
-								? t('turn.speaker', { name: nameOf(mates, table.speakerUid) })
-								: t('turn.who_first'),
-						),
-						table.speakerUid && seconds !== null && seconds > 0
-							? m('span', { 'aria-hidden': 'true' }, ` · ${t('turn.time_left', { seconds })}`)
-							: null,
-					])
+				? table.speakerUid
+					? m('p.talk__speaker', [
+							m(
+								'span',
+								{ 'aria-live': 'polite' },
+								table.speakerUid === uid
+									? t('turn.speak_mine')
+									: t('turn.speaker', { name: nameOf(mates, table.speakerUid) }),
+							),
+							seconds !== null && seconds > 0
+								? m('span', { 'aria-hidden': 'true' }, ` · ${t('turn.time_left', { seconds })}`)
+								: null,
+						])
+					: null
 				: m('p.talk__speaker', t('turn.table_time')),
 			m(Countdown, { endsAt, totalMs: self.totalMs }),
 			withSpeakers
@@ -134,7 +136,12 @@ export const TalkScreen: m.ClassComponent<TalkScreenAttrs> = {
 								),
 							),
 						),
-						m('p.talk__hint', canPick ? t('turn.pick_next') : t('turn.asker_picks_next')),
+						table.askerUid !== uid && !canPick
+							? m(
+									'p.talk__hint',
+									t('turn.asker_picks_next', { name: nameOf(mates, table.askerUid ?? undefined) }),
+								)
+							: null,
 					]
 				: null,
 		]);
