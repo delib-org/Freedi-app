@@ -1,4 +1,4 @@
-import { CSSProperties, FC, memo, useCallback } from 'react';
+import { CSSProperties, FC, memo, useCallback, useId } from 'react';
 
 import InfoIcon from '@/assets/icons/infoCircleIcon.svg?react';
 import HandIcon from '@/assets/icons/handIcon.svg?react';
@@ -10,11 +10,11 @@ import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { getOptionColor } from '@/controllers/utils/colorUtils';
 
 /**
- * Above this share of the vote the bar is dark enough to carry a white info
- * icon. Only relevant in the vertical layout, where the button still overlaps
- * the fill — the sided layout parks it past the percentage, clear of the bar.
+ * Below this share of the vote a vertical bar is too short to hold the count
+ * chip without it spilling over the bar's clipped edge, so the count moves up
+ * next to the percentage instead.
  */
-const WHITE_INFO_ICON_THRESHOLD = 10;
+const MIN_BAR_HEIGHT_FOR_COUNT = 14;
 
 const OptionBarComponent: FC<OptionBarProps> = ({
 	option,
@@ -30,6 +30,7 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 	screenWidth,
 }) => {
 	// * Variables * //
+	const titleId = useId();
 	const _optionOrder = option.order || 0;
 	const optionColor = getOptionColor(option);
 
@@ -81,9 +82,7 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 				setShowInfo(true);
 			}}
 		>
-			<InfoIcon
-				style={isVertical && barHeight > WHITE_INFO_ICON_THRESHOLD ? { color: 'white' } : undefined}
-			/>
+			<InfoIcon />
 		</button>
 	);
 
@@ -102,15 +101,22 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 				 * start measuring from the column instead of the whole bar.
 				 */}
 				{!isVertical && infoButton}
-				{shouldShowStat && <div className={styles.percentageText}>{barHeight}%</div>}
+				{shouldShowStat && (
+					<div className={styles.percentageText}>
+						{barHeight}%{isVertical && barHeight < MIN_BAR_HEIGHT_FOR_COUNT && ` · ${selections}`}
+					</div>
+				)}
 				<div className={`${styles.bar} ${styles.dropShadow}`} style={barStyle}>
-					<div className={styles.numberOfSelections}>{selections}</div>
+					{(!isVertical || barHeight >= MIN_BAR_HEIGHT_FOR_COUNT) && (
+						<div className={styles.numberOfSelections}>{selections}</div>
+					)}
 				</div>
 			</div>
 			<div className={`${styles.voteButtonContainer} ${styles.dropShadow}`}>
 				<button
 					onClick={handleVotePress}
 					aria-label="Vote button"
+					aria-describedby={titleId}
 					aria-pressed={isSelected}
 					style={voteButtonStyle}
 					className={`${styles.voteButton} ${isSelected ? styles.selected : ''}`}
@@ -119,8 +125,11 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 				</button>
 			</div>
 			{isVertical && infoButton}
-			<div className={`${styles.title} ${barWidth < 90 ? styles.isBarSmall : ''}`}>
-				<span className={styles.titleText}>{shortVersion}</span>
+			<div className={styles.title}>
+				{/* Full text on hover/long-press and for screen readers; the chip may clamp. */}
+				<span id={titleId} className={styles.titleText} title={option.statement}>
+					<span className={styles.titleClamp}>{shortVersion}</span>
+				</span>
 			</div>
 		</div>
 	);
