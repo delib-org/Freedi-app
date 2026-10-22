@@ -49,17 +49,6 @@ export async function ensureUser(): Promise<User> {
 	return credential.user;
 }
 
-/** Explicit guest sign-in for the login page. Mirrors the auto path used by
- *  public share routes via `ensureUser()`, but is initiated by the user via
- *  a "Continue as guest" CTA so it counts as an explicit choice. */
-export async function signInAsGuest(): Promise<User> {
-	await waitForAuthReady();
-	if (auth.currentUser) return auth.currentUser;
-	const credential = await signInAnonymously(auth);
-
-	return credential.user;
-}
-
 export async function signOut(): Promise<void> {
 	await fbSignOut(auth);
 	state.user = null;

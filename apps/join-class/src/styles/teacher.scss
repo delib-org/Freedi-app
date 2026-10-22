@@ -6,9 +6,7 @@
 // =============================================================================
 
 // ---- shared page frame ------------------------------------------------------
-.plan,
-.teacher-home,
-.teacher-console {
+.plan, .teacher-home {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
@@ -16,9 +14,7 @@
   background: var(--paper-soft);
 }
 
-.plan__header,
-.teacher-console__header,
-.teacher-home__header {
+.plan__header, .teacher-home__header {
   width: 100%;
   max-width: var(--teacher-width, 720px);
   margin-inline: auto;
@@ -50,9 +46,7 @@
   }
 }
 
-.plan__title,
-.teacher-console__title,
-.teacher-home__title {
+.plan__title, .teacher-home__title {
   font-size: var(--font-size-2xl);
   line-height: var(--line-height-tight);
   color: var(--text-primary);
@@ -63,9 +57,7 @@
   color: var(--text-secondary);
 }
 
-.plan__body,
-.teacher-console__body,
-.teacher-home__body {
+.plan__body, .teacher-home__body {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -432,35 +424,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
-}
-
-// ---- console placeholder --------------------------------------------------------
-.teacher-console__soon {
-  padding: var(--space-lg);
-  text-align: center;
-  color: var(--text-secondary);
-  background: var(--bg-card);
-  border: 2px dashed var(--border-medium);
-  border-radius: var(--radius-md);
-}
-
-.teacher-console__code {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-sm);
-}
-
-.teacher-console__code-label {
-  color: var(--text-secondary);
-}
-
-.teacher-console__code-value {
-  font-size: var(--font-size-2xl);
-  letter-spacing: 0.12em;
-}
-
-.teacher-console__plan {
-  align-self: flex-start;
 }
 
 @media (prefers-reduced-motion: reduce) {

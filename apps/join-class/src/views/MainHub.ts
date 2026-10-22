@@ -1,128 +1,90 @@
 import m from 'mithril';
-import { Statement } from '@freedi/shared-types';
-import { ensureUser, getUserState } from '@/lib/user';
+import type { Statement } from '@freedi/shared-types';
+import { ensureUser } from '@/lib/user';
 import {
 	loadMainStatement,
 	getMainStatement,
-	getSubQuestions,
 	subscribeMainStatement,
 	subscribeSubQuestions,
-	createSubQuestion,
-	setSubQuestionsOrder,
-	setSubQuestionHidden,
-	isParticipantNavigationAllowed,
 } from '@/lib/store';
 import { checkAdminStatus, isAdmin } from '@/lib/admin';
-import { markOpenedInJoin } from '@/lib/joinSubscriptions';
 import { t } from '@/lib/i18n';
-import { WizColFooter } from '@/components/WizColFooter';
-import { FacilitatorPanel } from '@/components/FacilitatorPanel';
-import { BackButton } from '@/components/BackButton';
-import { QRShare } from '@/components/QRShare';
-import { SummarySection } from '@/components/SummarySection';
-import { EditableTitle } from '@/components/EditableTitle';
 import { SplashLoader } from '@/views/Splash';
 import { StudentStage } from '@/views/student/StudentStage';
 import { useStudentStage } from '@/views/student/useStudentStage';
-import { createDragReorder } from '@/lib/dragReorder';
 import { BrandLogo } from '@/components/BrandLogo';
 import type { Unsubscribe } from '@/lib/firebase';
 
-function getStatementBody(s: Statement): string | null {
-	// `description` is the cloud-function-cached preview built from child
-	// paragraph sub-statements (`statementType === paragraph`), capped at
-	// ~200 chars. Using it here is intentional — it saves an extra Firestore
-	// query on the hub. `brief` is the admin-authored tagline fallback.
-	// The legacy embedded `paragraphs[]` array is no longer the source of truth.
-	if (s.description) return s.description;
-	if (s.brief) return s.brief;
-
-	return null;
-}
+/**
+ * `/m/:mid` - the lesson, student side. Only a loader: it fetches the main
+ * statement, sends the lesson's teacher to the console (`/t/:mid`, unless
+ * `?student=1`), shows "not a lesson" for any other statement, and otherwise
+ * renders the student stage.
+ */
 
 let loading = true;
-let error: string | null = null;
+let failed = false;
 let mainUnsub: Unsubscribe | null = null;
 let subUnsub: Unsubscribe | null = null;
 
-// --- Admin-only sub-question creation form -----------------------------------
-let createInput = '';
-let creating = false;
-let createError: string | null = null;
+function teardown(): void {
+	if (mainUnsub) {
+		mainUnsub();
+		mainUnsub = null;
+	}
+	if (subUnsub) {
+		subUnsub();
+		subUnsub = null;
+	}
+}
 
-// --- Admin-only drag-and-drop reorder ---------------------------------------
-// The controller owns the draggingId / dropTargetId / pendingOrder state and
-// the event-handler bundles. It's a module-level singleton so the live drag
-// state survives intra-route redraws; `oninit()` resets it on every fresh
-// hub mount so a leftover drop-target highlight from a previous visit can't
-// linger across navigations.
-const subQuestionReorder = createDragReorder({
-	onCommit: (orderedIds) => setSubQuestionsOrder(orderedIds),
-	enabled: () => isAdmin(),
-});
+/** The lesson's own teacher belongs on the console, unless previewing as a student. */
+function sendsToConsole(main: Statement): boolean {
+	return (
+		isAdmin() && m.route.param('student') !== '1' && Boolean(main.statementSettings?.lessonPlan)
+	);
+}
+
+function notALesson(): m.Vnode {
+	return m('.login', [
+		m('.login__card', [
+			m(BrandLogo, { size: 72, className: 'login__logo' }),
+			m('h1.login__title', t('lesson.not_lesson')),
+			m(m.route.Link, { class: 'btn btn--primary', href: '/' }, t('login.have_code')),
+		]),
+	]);
+}
 
 export const MainHub: m.Component = {
 	async oninit() {
-		error = null;
-		createInput = '';
-		creating = false;
-		createError = null;
-		subQuestionReorder.reset();
-
+		failed = false;
 		const mainId = m.route.param('mid');
 		if (!mainId) {
-			error = t('solutions.error.no_id');
 			loading = false;
-			m.redraw();
+			m.route.set('/', undefined, { replace: true });
 
 			return;
 		}
-
-		// Returning from `/m/:mid/q/:qid` to `/m/:mid` — the store still holds
-		// `mainStatement` and `subQuestions[]` from the first hub visit, since
-		// Solutions only writes to `question`/`allOptions`. When the cached
-		// `mainStatement` matches the requested mainId, render immediately and
-		// re-attach subscriptions in the background so the view stays live.
-		// Cold opens (deep link, refresh) take the original async path.
-		const cachedMain = getMainStatement();
-		const primed = cachedMain?.statementId === mainId;
-		loading = !primed;
-		if (primed) m.redraw();
-
+		// A repeat visit finds the same statement in the store: render at once and
+		// re-attach the listeners behind it.
+		loading = getMainStatement()?.statementId !== mainId;
+		if (!loading) m.redraw();
 		try {
 			await ensureUser();
-			if (!primed) {
-				await loadMainStatement(mainId);
-			}
-			// Resolve admin status against the main statement so the facilitator
-			// panel handle is visible to admins even on the hub (where no specific
-			// question is in scope yet). Per-question status is re-resolved on
-			// navigation into Solutions. On a primed return visit, `isAdmin()`
-			// is already cached from the first hub visit — calling
-			// `checkAdminStatus` again is a cheap re-confirm that doesn't block
-			// the first paint.
+			if (loading) await loadMainStatement(mainId);
 			const main = getMainStatement();
-			if (main) {
-				await checkAdminStatus(mainId, main.creatorId);
-				// Once admin is confirmed, mark this workspace in Firestore so it
-				// shows up on the Main page list (per-user, cross-device).
-				// Non-admin visitors don't get their visit persisted — the list is
-				// "workspaces I run", not "workspaces I've seen". Fire-and-forget;
-				// a failure here shouldn't block the hub from rendering.
-				if (isAdmin()) {
-					const user = getUserState().user;
-					if (user) {
-						void markOpenedInJoin(main, user.uid, user.displayName ?? '').catch((err) => {
-							console.error('[MainHub] markOpenedInJoin failed:', err);
-						});
-					}
-				}
+			if (main) await checkAdminStatus(mainId, main.creatorId);
+			if (main && sendsToConsole(main)) {
+				m.route.set(`/t/${mainId}`, undefined, { replace: true });
+
+				return;
 			}
+			teardown();
 			mainUnsub = subscribeMainStatement(mainId);
 			subUnsub = subscribeSubQuestions(mainId);
 		} catch (err) {
 			console.error('[MainHub] Failed to load:', err);
-			error = t('solutions.error.failed');
+			failed = true;
 		} finally {
 			loading = false;
 			m.redraw();
@@ -130,342 +92,21 @@ export const MainHub: m.Component = {
 	},
 
 	onremove() {
-		if (mainUnsub) {
-			mainUnsub();
-			mainUnsub = null;
-		}
-		if (subUnsub) {
-			subUnsub();
-			subUnsub = null;
-		}
+		teardown();
 	},
 
 	view() {
-		if (loading) {
-			return m(SplashLoader);
-		}
-
-		if (error) {
-			return m('.main-hub', m('.main-hub__empty', error));
-		}
+		if (loading) return m(SplashLoader);
+		if (failed) return m('.main-hub', m('.main-hub__empty', t('solutions.error.failed')));
 
 		const main = getMainStatement();
-		if (!main) {
-			return m('.main-hub', m('.main-hub__empty', t('solutions.error.not_found')));
-		}
+		if (!main?.statementSettings?.lessonPlan) return notALesson();
 
-		// Lesson workspaces (join-class) render the student stage instead of the hub.
+		if (sendsToConsole(main)) return m(SplashLoader);
 		if (useStudentStage(main, isAdmin(), m.route.param('student'))) {
 			return m(StudentStage, { main, key: main.statementId });
 		}
 
-		// `applyOrder` returns the optimistic post-drop ordering when a commit
-		// is in flight; otherwise it returns the live snapshot untouched.
-		const subsRaw = getSubQuestions();
-		const subs = subQuestionReorder.applyOrder(subsRaw, (s) => s.statementId);
-		const currentIds = subs.map((s) => s.statementId);
-		const accentColor = main.color || 'var(--terra-500)';
-		const admin = isAdmin();
-		// Participants can open a sub-question only when the facilitator has
-		// switched on hub navigation; otherwise the cards stay inert and
-		// `powerFollowMe` remains the only way into a question.
-		const canNavigate = admin || isParticipantNavigationAllowed();
-		const mainId = main.statementId;
-
-		return m('.main-hub', { style: `--q-accent: ${accentColor}` }, [
-			// Admin-only return path to /. The BackButton self-gates on
-			// `isAdmin()`, so participants visiting via a share link never see it.
-			m(BackButton, { to: '/' }),
-			m('.main-hub__brand', [m(BrandLogo, { size: 64, className: 'main-hub__logo' })]),
-			m(EditableTitle, {
-				statementId: main.statementId,
-				value: main.statement,
-				canEdit: admin,
-				as: 'h1',
-				className: 'main-hub__title',
-			}),
-			(() => {
-				const body = getStatementBody(main);
-
-				return body ? m('.main-hub__description', body) : null;
-			})(),
-			m('.main-hub__scroll', [
-				main.statementSettings?.showQR
-					? m(QRShare, {
-							url: window.location.href,
-							title: main.statement,
-						})
-					: null,
-				m('h2.main-hub__questions-heading', t('mainHub.questionsHeading')),
-				admin ? renderCreateSubQuestionForm(mainId) : null,
-				subs.length === 0
-					? m('.main-hub__empty', t('mainHub.empty'))
-					: [
-							m(
-								'.main-hub__question-list',
-								subQuestionReorder.listAttrs(),
-								// Each card is rendered with a key (q.statementId). Mithril
-								// requires all children of a fragment to either be keyed or
-								// unkeyed — so the drop-end zone is rendered as a sibling
-								// outside this list, never mixed in.
-								subs.map((q: Statement) =>
-									renderQuestionCard(q, mainId, admin, canNavigate, currentIds),
-								),
-							),
-							admin && subQuestionReorder.isActive()
-								? m('.main-hub__question-drop-end', {
-										'aria-hidden': 'true',
-										...subQuestionReorder.endDropAttrs(currentIds),
-									})
-								: null,
-						],
-				m(SummarySection, { statement: main, admin }),
-				m(WizColFooter),
-			]),
-			m(FacilitatorPanel),
-		]);
+		return notALesson();
 	},
 };
-
-function renderCreateSubQuestionForm(mainId: string): m.Vnode {
-	return m(
-		'form.main-hub__create-question',
-		{ onsubmit: (e: Event) => handleCreateSubmit(e, mainId) },
-		[
-			m(
-				'label.main-hub__create-question-label',
-				{ for: 'main-hub-create-input' },
-				t('mainHub.create.label'),
-			),
-			m('.main-hub__create-question-row', [
-				m('input.main-hub__create-question-input', {
-					id: 'main-hub-create-input',
-					type: 'text',
-					value: createInput,
-					placeholder: t('mainHub.create.placeholder'),
-					disabled: creating,
-					maxlength: 200,
-					oninput: (e: Event) => {
-						createInput = (e.target as HTMLInputElement).value;
-						if (createError) createError = null;
-					},
-				}),
-				m(
-					'button.btn.btn--primary.btn--small.main-hub__create-question-submit',
-					{
-						type: 'submit',
-						disabled: creating || createInput.trim().length === 0,
-						'aria-busy': creating ? 'true' : undefined,
-					},
-					creating ? t('mainHub.create.busy') : t('mainHub.create.submit'),
-				),
-			]),
-			createError ? m('.main-hub__create-question-error', { role: 'alert' }, createError) : null,
-		],
-	);
-}
-
-async function handleCreateSubmit(e: Event, mainId: string): Promise<void> {
-	e.preventDefault();
-	if (creating) return;
-	const title = createInput.trim();
-	if (!title) {
-		createError = t('mainHub.create.invalid');
-		m.redraw();
-
-		return;
-	}
-	creating = true;
-	createError = null;
-	m.redraw();
-	try {
-		const id = await createSubQuestion(mainId, title);
-		if (!id) {
-			createError = t('mainHub.create.failed');
-
-			return;
-		}
-		createInput = '';
-	} catch (err) {
-		console.error('[MainHub] Create sub-question failed:', err);
-		createError = t('mainHub.create.failed');
-	} finally {
-		creating = false;
-		m.redraw();
-	}
-}
-
-// --- Inline SVG icons --------------------------------------------------------
-// Inlined (rather than imported assets) so they inherit `currentColor` from
-// the surrounding BEM class and follow every theme without an extra request.
-
-// Leading badge on a sub-question card: a white question mark inside a filled
-// round disc. The disc takes its colour from `currentColor` (set on the
-// wrapper class) and the glyph is painted in the paper colour so it reads as
-// white on the blue disc across themes.
-const QuestionMarkIcon = () =>
-	m(
-		'svg',
-		{
-			viewBox: '0 0 24 24',
-			'aria-hidden': 'true',
-			focusable: 'false',
-		},
-		[
-			m('circle', { cx: '12', cy: '12', r: '12', fill: 'currentColor' }),
-			m('path', {
-				d: 'M9.1 9.2a3 3 0 0 1 5.83 1c0 2-3 3-3 3',
-				fill: 'none',
-				stroke: 'var(--text-inverse, #fff)',
-				'stroke-width': '2',
-				'stroke-linecap': 'round',
-				'stroke-linejoin': 'round',
-			}),
-			m('path', {
-				d: 'M12 17.2h.01',
-				fill: 'none',
-				stroke: 'var(--text-inverse, #fff)',
-				'stroke-width': '2.4',
-				'stroke-linecap': 'round',
-			}),
-		],
-	);
-
-// Hide / unhide toggle icons (admin only). Replaces the previous 🙈 / 👁️
-// emoji, which rendered as a monkey face and read as decoration rather than
-// as a control.
-const EyeIcon = () =>
-	m(
-		'svg',
-		{
-			viewBox: '0 0 24 24',
-			fill: 'none',
-			stroke: 'currentColor',
-			'stroke-width': '2',
-			'stroke-linecap': 'round',
-			'stroke-linejoin': 'round',
-			'aria-hidden': 'true',
-			focusable: 'false',
-		},
-		[
-			m('path', { d: 'M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z' }),
-			m('circle', { cx: '12', cy: '12', r: '3' }),
-		],
-	);
-
-const EyeOffIcon = () =>
-	m(
-		'svg',
-		{
-			viewBox: '0 0 24 24',
-			fill: 'none',
-			stroke: 'currentColor',
-			'stroke-width': '2',
-			'stroke-linecap': 'round',
-			'stroke-linejoin': 'round',
-			'aria-hidden': 'true',
-			focusable: 'false',
-		},
-		[
-			m('path', {
-				d: 'M10.6 6.2A9.9 9.9 0 0 1 12 6c6.4 0 10 6 10 6a17 17 0 0 1-2.5 3.2M6.3 7.8A17 17 0 0 0 2 12s3.6 6 10 6a9.7 9.7 0 0 0 3.4-.6',
-			}),
-			m('path', { d: 'M9.9 9.9a3 3 0 0 0 4.2 4.2' }),
-			m('path', { d: 'M3 3l18 18' }),
-		],
-	);
-
-function renderQuestionCard(
-	q: Statement,
-	mainId: string,
-	admin: boolean,
-	canNavigate: boolean,
-	currentIds: string[],
-): m.Vnode {
-	const isHidden = q.hide === true;
-	const dragging = admin && subQuestionReorder.isDragging(q.statementId);
-	const isDropTarget = admin && subQuestionReorder.isDropTarget(q.statementId);
-
-	const classes = [
-		'main-hub__question-card',
-		admin ? 'main-hub__question-card--admin' : null,
-		canNavigate ? 'main-hub__question-card--interactive' : null,
-		isHidden ? 'main-hub__question-card--hidden' : null,
-		dragging ? 'main-hub__question-card--dragging' : null,
-		isDropTarget ? 'main-hub__question-card--drop-target' : null,
-	].filter(Boolean);
-
-	return m(
-		'div',
-		{
-			key: q.statementId,
-			class: classes.join(' '),
-			role: canNavigate ? 'button' : undefined,
-			tabindex: canNavigate ? '0' : undefined,
-			'aria-disabled': canNavigate ? undefined : 'true',
-			...subQuestionReorder.cardAttrs(q.statementId, currentIds),
-			onclick: canNavigate
-				? (e: MouseEvent) => {
-						// Don't navigate when the click came from a control inside
-						// the card (drag handle, hide button) — those handlers stop
-						// propagation, but be defensive in case a child forgets.
-						const target = e.target as HTMLElement;
-						if (target.closest('.main-hub__question-card-control')) return;
-						m.route.set(`/m/${mainId}/q/${q.statementId}`);
-					}
-				: undefined,
-			onkeydown: canNavigate
-				? (e: KeyboardEvent) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							e.preventDefault();
-							m.route.set(`/m/${mainId}/q/${q.statementId}`);
-						}
-					}
-				: undefined,
-		},
-		[
-			admin
-				? m(
-						'span.main-hub__question-card-handle.main-hub__question-card-control',
-						{
-							'aria-hidden': 'true',
-							title: t('mainHub.reorder.handle'),
-							// Stop click bubbling so the card's onclick doesn't
-							// navigate when the user clicks the handle area.
-							onclick: (e: MouseEvent) => {
-								e.stopPropagation();
-							},
-						},
-						'⋮⋮',
-					)
-				: null,
-			m('span.main-hub__question-card-icon', { 'aria-hidden': 'true' }, QuestionMarkIcon()),
-			m('.main-hub__question-card-body', [
-				m('.main-hub__question-title', q.statement),
-				(() => {
-					const body = getStatementBody(q);
-
-					return body ? m('.main-hub__question-description', body) : null;
-				})(),
-				isHidden ? m('span.main-hub__question-card-hidden-tag', t('mainHub.hidden.tag')) : null,
-			]),
-			admin
-				? m(
-						'button.main-hub__question-card-hide.main-hub__question-card-control',
-						{
-							type: 'button',
-							'aria-label': isHidden
-								? t('mainHub.hidden.unhideAria', { name: q.statement })
-								: t('mainHub.hidden.hideAria', { name: q.statement }),
-							title: isHidden ? t('mainHub.hidden.unhide') : t('mainHub.hidden.hide'),
-							onclick: (e: MouseEvent) => {
-								e.stopPropagation();
-								void setSubQuestionHidden(q.statementId, !isHidden);
-							},
-						},
-						isHidden ? EyeIcon() : EyeOffIcon(),
-					)
-				: null,
-		],
-	);
-}

@@ -23,7 +23,6 @@ import {
 	rosterStudents,
 } from '@/lib/classroom/consoleHelpers';
 import { groupWrittenTexts } from '@/lib/classroom/textsHelpers';
-import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { QRShare } from '@/components/QRShare';
 import { WizColFooter } from '@/components/WizColFooter';
 import { readClassCode, studentJoinUrl } from './planHelpers';
@@ -39,6 +38,7 @@ import { releaseConsole, retainConsole, session } from './consoleSession';
 import { consoleState, dismissFailure, watchOptions } from './consoleState';
 import type { ConsoleView } from './consoleState';
 import { abortDrag } from './dragController';
+import { ConsoleSettings } from './ConsoleSettings';
 import { GatePanel } from './GatePanel';
 import { StepRail } from './StepRail';
 import { SwitchBand } from './SwitchBand';
@@ -99,6 +99,7 @@ function header(mid: string, lessonName: string | undefined, code: string | unde
 			t('teacher.screen.title'),
 		),
 		m(m.route.Link, { class: 'console__link', href: `/t/${mid}/plan` }, t('teacher.row.plan')),
+		m(ConsoleSettings),
 	]);
 }
 
@@ -265,7 +266,6 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 						},
 					})
 				: null,
-			m(FacilitatorPanel),
 		]);
 	},
 };
