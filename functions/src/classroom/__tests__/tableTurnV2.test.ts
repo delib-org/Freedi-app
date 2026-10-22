@@ -34,6 +34,11 @@ const as = (actorUid: string, isAdmin = false): TransitionContext => ({
 	actorUid,
 	isAdmin,
 	now: NOW,
+	lessonStep: 'tableTalk',
+});
+const atProposals = (actorUid: string): TransitionContext => ({
+	...as(actorUid),
+	lessonStep: 'proposals',
 });
 const teacher = as('teacher', true);
 
@@ -91,7 +96,7 @@ describe('claim at V1 (pick, nobody asks)', () => {
 
 	it('refuses the asker at A (they have claimed) as turn-claimed', () => {
 		const a = table({ askerUid: 'b' });
-		expect(refusal(a, { action: 'nextTurn' }, as('b')).reason).toBe('turn-claimed');
+		expect(refusal(a, { action: 'nextTurn', fromTurn: 1 }, as('b')).reason).toBe('turn-claimed');
 	});
 
 	it('refuses a delayed claim that names an earlier turn', () => {
@@ -133,15 +138,21 @@ describe('claim at V2 (talk, everyone spoke or passed)', () => {
 			speakerUid: 'd',
 			speakerEndsAt: NOW - 1,
 		});
-		expect(run(lastMinute, { action: 'nextTurn' }, as('b')).turn).toBe(2);
+		expect(run(lastMinute, { action: 'nextTurn', fromTurn: 1 }, as('b')).turn).toBe(2);
 	});
 
 	it('refuses a student who already asked, and one who passed (already-asked first)', () => {
-		expect(refusal(v2(), { action: 'nextTurn' }, as('a')).reason).toBe('already-asked');
+		expect(refusal(v2(), { action: 'nextTurn', fromTurn: 1 }, as('a')).reason).toBe(
+			'already-asked',
+		);
 		const passed = v2({ passedAskingUids: ['d'] });
-		expect(refusal(passed, { action: 'nextTurn' }, as('d')).reason).toBe('already-passed');
+		expect(refusal(passed, { action: 'nextTurn', fromTurn: 1 }, as('d')).reason).toBe(
+			'already-passed',
+		);
 		const both = v2({ passedAskingUids: ['a'] });
-		expect(refusal(both, { action: 'nextTurn' }, as('a')).reason).toBe('already-asked');
+		expect(refusal(both, { action: 'nextTurn', fromTurn: 1 }, as('a')).reason).toBe(
+			'already-asked',
+		);
 	});
 
 	it('still allows a claim from rate for a table that was mid-turn, and marks the old asker', () => {
@@ -156,7 +167,11 @@ describe('claim at V2 (talk, everyone spoke or passed)', () => {
 
 	it('refuses a claim at write', () => {
 		expect(
-			refusal(table({ step: 'write', askerUid: 'a' }), { action: 'nextTurn' }, as('b')),
+			refusal(
+				table({ step: 'write', askerUid: 'a' }),
+				{ action: 'nextTurn', fromTurn: 1 },
+				as('b'),
+			),
 		).toEqual({ code: 'failed-precondition', reason: undefined });
 	});
 });
@@ -229,7 +244,9 @@ describe('passAsking', () => {
 		let t = table();
 		for (const uid of ['a', 'b', 'c', 'd']) t = run(t, { action: 'passAsking' }, as(uid));
 		expect(tableDone(t, NOW)).toBe(true);
-		expect(refusal(t, { action: 'nextTurn' }, teacher)).toMatchObject({ reason: 'all-asked' });
+		expect(refusal(t, { action: 'nextTurn', fromTurn: 1 }, teacher)).toMatchObject({
+			reason: 'all-asked',
+		});
 	});
 });
 
@@ -297,7 +314,7 @@ describe('passSpeaking', () => {
 	it('a passed last minute puts the table at V2: the claim is allowed', () => {
 		const last = talking({ spokenUids: ['a', 'c', 'd'] });
 		const passed = run(last, { action: 'passSpeaking' }, as('b'));
-		expect(run(passed, { action: 'nextTurn' }, as('c')).turn).toBe(2);
+		expect(run(passed, { action: 'nextTurn', fromTurn: 1 }, as('c')).turn).toBe(2);
 	});
 });
 
@@ -344,7 +361,7 @@ describe('toTalk needs a question and records the asker', () => {
 
 describe("teacher's next turn opens a volunteer moment", () => {
 	it('goes to V1: no asker, turn + 1, the old asker marked, the turn fields cleared', () => {
-		const next = run(v2(), { action: 'nextTurn' }, teacher);
+		const next = run(v2(), { action: 'nextTurn', fromTurn: 1 }, teacher);
 		expect(next).toMatchObject({
 			step: 'pick',
 			turn: 2,
@@ -358,13 +375,13 @@ describe("teacher's next turn opens a volunteer moment", () => {
 
 	it('does not spend the turn of an asker who is still choosing', () => {
 		const picking = table({ askerUid: 'b', askedUids: ['a'] });
-		const next = run(picking, { action: 'nextTurn' }, teacher);
+		const next = run(picking, { action: 'nextTurn', fromTurn: 1 }, teacher);
 		expect(next).toMatchObject({ askerUid: null, askedUids: ['a'], turn: 2 });
 	});
 
 	it('is refused when nobody is left to ask (all-asked)', () => {
 		const end = v2({ askedUids: ['a', 'b', 'd'], passedAskingUids: ['c'] });
-		expect(refusal(end, { action: 'nextTurn' }, teacher)).toEqual({
+		expect(refusal(end, { action: 'nextTurn', fromTurn: 1 }, teacher)).toEqual({
 			code: 'failed-precondition',
 			reason: 'all-asked',
 		});
@@ -395,9 +412,16 @@ describe('askerless fallback (the asker left)', () => {
 	});
 
 	it('lets a tablemate leave an askerless pick for writing (a table that reaches Proposals with no turn)', () => {
-		expect(run(table(), { action: 'toWrite' }, as('c')).step).toBe('write');
-		expect(refusal(table(), { action: 'toRate' }, as('c')).code).toBe('permission-denied');
-		expect(refusal(table({ askerUid: 'a' }), { action: 'toWrite' }, as('c')).code).toBe(
+		expect(run(table(), { action: 'toWrite' }, atProposals('c')).step).toBe('write');
+		expect(refusal(table(), { action: 'toRate' }, atProposals('c')).code).toBe('permission-denied');
+		expect(refusal(table({ askerUid: 'a' }), { action: 'toWrite' }, atProposals('c')).code).toBe(
+			'permission-denied',
+		);
+	});
+
+	it('refuses that escape during Table talk, where an askerless pick is the normal wait for a volunteer', () => {
+		expect(refusal(table(), { action: 'toWrite' }, as('c')).code).toBe('permission-denied');
+		expect(refusal(table(), { action: 'toWrite' }, { ...as('c'), lessonStep: null }).code).toBe(
 			'permission-denied',
 		);
 	});
@@ -416,5 +440,33 @@ describe('table done is derived', () => {
 		expect(tableDone(end, NOW)).toBe(true);
 		expect(tableDone({ ...end, spokenUids: ['a'] }, NOW)).toBe(false);
 		expect(tableDone(v2(), NOW)).toBe(false);
+	});
+});
+
+describe('claims are gated by the lesson step and by fromTurn', () => {
+	it('refuses a member claim from talk at Proposals, or at an unknown step, or with no question', () => {
+		expect(refusal(v2(), { action: 'nextTurn', fromTurn: 1 }, atProposals('b')).code).toBe(
+			'failed-precondition',
+		);
+		expect(
+			refusal(v2(), { action: 'nextTurn', fromTurn: 1 }, { ...as('b'), lessonStep: null }).code,
+		).toBe('failed-precondition');
+		const noQuestion = v2({ questionId: undefined });
+		expect(refusal(noQuestion, { action: 'nextTurn', fromTurn: 1 }, as('b')).code).toBe(
+			'failed-precondition',
+		);
+		expect(run(v2(), { action: 'nextTurn', fromTurn: 1 }, as('b')).turn).toBe(2);
+	});
+
+	it('requires a member claim to name fromTurn; a teacher need not', () => {
+		expect(refusal(table(), { action: 'nextTurn' }, as('b')).code).toBe('invalid-argument');
+		expect(run(v2(), { action: 'nextTurn' }, teacher).turn).toBe(2);
+	});
+
+	it('frees the question of an asker who is still choosing when a teacher opens the next turn', () => {
+		const picking = table({ askerUid: 'b', questionId: 'q2', usedQuestionIds: ['q1', 'q2'] });
+		const next = run(picking, { action: 'nextTurn' }, teacher);
+		expect(next.usedQuestionIds).toEqual(['q1']);
+		expect(next.questionId).toBeUndefined();
 	});
 });

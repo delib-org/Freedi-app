@@ -373,18 +373,18 @@ try {
 
 	// 14. forged and paused ---------------------------------------------------------------------------------------------------------------------------
 	await setTable(v2({ passedAskingUids: [dana.uid], askedUids: [noa.uid] }));
-	const asked = await callStep(noa.uid, { action: 'nextTurn' });
+	const asked = await callStep(noa.uid, { action: 'nextTurn', fromTurn: 1 });
 	check('14 a claim by someone who asked: already-asked', asked.status === 'PERMISSION_DENIED' && asked.reason === 'already-asked', JSON.stringify(asked));
-	const passedClaim = await callStep(dana.uid, { action: 'nextTurn' });
+	const passedClaim = await callStep(dana.uid, { action: 'nextTurn', fromTurn: 1 });
 	check('14 a claim by someone who passed: already-passed', passedClaim.status === 'PERMISSION_DENIED' && passedClaim.reason === 'already-passed', JSON.stringify(passedClaim));
 	await setTable({ ...v2({ spokenUids: [noa.uid] }), speakerUid: omri.uid, speakerEndsAt: Date.now() + 30000 });
-	const early = await callStep(lior.uid, { action: 'nextTurn' });
+	const early = await callStep(lior.uid, { action: 'nextTurn', fromTurn: 1 });
 	check('14 a claim at talk before everyone spoke: talk-not-over', early.status === 'FAILED_PRECONDITION' && early.reason === 'talk-not-over', JSON.stringify(early));
 	const notSpeaker = await callStep(lior.uid, { action: 'passSpeaking' });
 	check('14 passSpeaking by a tablemate: not-speaker', notSpeaker.status === 'PERMISSION_DENIED' && notSpeaker.reason === 'not-speaker', JSON.stringify(notSpeaker));
 	await setTable();
 	await mainRef.update({ 'statementSettings.lessonPlan.status': 'paused' });
-	const pausedClaim = await callStep(dana.uid, { action: 'nextTurn' });
+	const pausedClaim = await callStep(dana.uid, { action: 'nextTurn', fromTurn: 1 });
 	const pausedPass = await callStep(dana.uid, { action: 'passAsking' });
 	await setTable({ ...v2({ spokenUids: [noa.uid] }), speakerUid: omri.uid, speakerEndsAt: Date.now() + 30000 });
 	const pausedMinute = await callStep(omri.uid, { action: 'passSpeaking' });

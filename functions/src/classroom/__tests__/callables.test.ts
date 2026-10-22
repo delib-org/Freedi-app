@@ -31,6 +31,21 @@ function seedLesson(fake: FakeFirestore, students = 12): string[] {
 		statementType: 'question',
 		creatorId: TEACHER,
 		creator: { uid: TEACHER, displayName: 'T' },
+		statementSettings: {
+			lessonPlan: {
+				steps: [
+					'waiting',
+					'opening',
+					'side',
+					'tables',
+					'tableTalk',
+					'proposals',
+					'vote',
+					'summary',
+				],
+				stepIndex: 4,
+			},
+		},
 	});
 	fake.seed(`statementsSubscribe/${TEACHER}--${MAIN}`, {
 		userId: TEACHER,

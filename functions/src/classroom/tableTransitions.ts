@@ -1,5 +1,5 @@
 import { SPEAK_SECONDS, everyoneSpoke, notAskedUids, speakerTimeOver } from '@freedi/shared-types';
-import type { ClassTable, ClassTableAction, TableStep } from '@freedi/shared-types';
+import type { ClassTable, ClassTableAction, LessonStepKey, TableStep } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
 
 export { everyoneSpoke, speakerTimeOver };
@@ -31,6 +31,8 @@ export interface TransitionContext {
 	isAdmin: boolean;
 	/** Server clock, epoch ms. */
 	now: number;
+	/** The lesson's current step (lessonPlan.steps[stepIndex]), read with the table; null/absent when unknown. */
+	lessonStep?: LessonStepKey | null;
 }
 
 /** From which steps the asker (or a tablemate, where allowed) may run each action. */
@@ -94,6 +96,7 @@ function assertMayClaimTurn(
 	actorUid: string,
 	fromTurn: number | undefined,
 	now: number,
+	lessonStep: LessonStepKey | null | undefined,
 ): void {
 	if (listOf(table.askedUids).includes(actorUid)) {
 		throw new ClassroomError('permission-denied', 'You have already asked', 'already-asked');
@@ -101,7 +104,11 @@ function assertMayClaimTurn(
 	if (listOf(table.passedAskingUids).includes(actorUid)) {
 		throw new ClassroomError('permission-denied', 'You passed on asking', 'already-passed');
 	}
-	const tableMovedOn = fromTurn !== undefined && fromTurn !== table.turn;
+	// A claim names the turn it saw: without it a delayed tap could take a later hand-off.
+	if (fromTurn === undefined) {
+		throw new ClassroomError('invalid-argument', 'A claim must name the turn it saw (fromTurn)');
+	}
+	const tableMovedOn = fromTurn !== table.turn;
 	const alreadyClaimed = table.step === 'pick' && table.askerUid !== null;
 	if (tableMovedOn || alreadyClaimed) {
 		throw new ClassroomError(
@@ -109,6 +116,10 @@ function assertMayClaimTurn(
 			'Another tablemate already took the turn',
 			'turn-claimed',
 		);
+	}
+	// V2 belongs to Table talk with a question asked; at Proposals the same `talk` step must not turn into a new turn.
+	if (table.step === 'talk' && (lessonStep !== 'tableTalk' || !table.questionId)) {
+		throw new ClassroomError('failed-precondition', 'No turn can be claimed at this step');
 	}
 	if (table.step === 'talk' && !everyoneSpoke(table, now)) {
 		throw new ClassroomError(
@@ -148,6 +159,7 @@ function assertMayAct(
 	table: ClassTable,
 	now: number,
 	actorUid: string,
+	lessonStep: LessonStepKey | null | undefined,
 ): void {
 	if (role === 'admin') return;
 	if (ADMIN_ONLY.has(action.action)) {
@@ -155,7 +167,7 @@ function assertMayAct(
 	}
 	switch (action.action) {
 		case 'nextTurn':
-			assertMayClaimTurn(table, actorUid, action.fromTurn, now);
+			assertMayClaimTurn(table, actorUid, action.fromTurn, now, lessonStep);
 
 			return;
 		case 'passAsking':
@@ -177,7 +189,15 @@ function assertMayAct(
 		if (askerless && ASKERLESS_MEMBER_MOVES.has(action.action)) return;
 		// A table that reaches Proposals without a turn (everyone passed, or none started) sits at pick with
 		// nobody asking: its tablemates must still be able to leave for writing.
-		if (table.askerUid === null && table.step === 'pick' && action.action === 'toWrite') return;
+		// Only while the lesson is at Proposals: at Table talk the same state is the normal wait for a volunteer.
+		if (
+			table.askerUid === null &&
+			table.step === 'pick' &&
+			action.action === 'toWrite' &&
+			lessonStep === 'proposals'
+		) {
+			return;
+		}
 	}
 	throw new ClassroomError('permission-denied', "Only the table's asker or a teacher can do this");
 }
@@ -192,36 +212,27 @@ function assertFromStep(role: ActorRole | null, action: ClassTableAction, table:
 	}
 }
 
+/** A copy of `table` without the given optional keys. */
+function omit(table: ClassTable, keys: readonly (keyof ClassTable)[]): ClassTable {
+	const copy: ClassTable = { ...table };
+	for (const key of keys) delete copy[key as 'questionId'];
+
+	return copy;
+}
+
 /** Strip the per-speaker / per-question fields; used when a turn resets. */
 function withoutTurnFields(table: ClassTable): ClassTable {
-	const {
-		questionId: _q,
-		speakerUid: _s,
-		speakerEndsAt: _e,
-		passedSpeakingUids: _p,
-		...rest
-	} = table;
-	void _q;
-	void _s;
-	void _e;
-	void _p;
+	const rest = omit(table, ['questionId', 'speakerUid', 'speakerEndsAt', 'passedSpeakingUids']);
 
 	return { ...rest, spokenUids: [], writingLocked: false };
 }
 
 function withoutSpeaker(table: ClassTable): ClassTable {
-	const { speakerUid: _s, speakerEndsAt: _e, ...rest } = table;
-	void _s;
-	void _e;
-
-	return rest;
+	return omit(table, ['speakerUid', 'speakerEndsAt']);
 }
 
 function withoutPassedSpeaking(table: ClassTable): ClassTable {
-	const { passedSpeakingUids: _p, ...rest } = table;
-	void _p;
-
-	return rest;
+	return omit(table, ['passedSpeakingUids']);
 }
 
 /** `askedUids` with the current asker added (a table left mid-turn before v2 never added them at toTalk). */
@@ -240,6 +251,11 @@ function startedTurn(base: ClassTable, table: ClassTable, askerUid: string | nul
 		askerUid,
 		// An asker still choosing has not asked: leaving pick does not count as their turn.
 		askedUids: table.step === 'pick' ? listOf(table.askedUids) : withAsker(table),
+		// A question picked by an asker who never asked is free again.
+		usedQuestionIds:
+			table.step === 'pick' && table.questionId
+				? table.usedQuestionIds.filter((id) => id !== table.questionId)
+				: table.usedQuestionIds,
 		writingMode: 'each',
 	};
 }
@@ -294,11 +310,9 @@ function passAsking(
 		throw new ClassroomError('failed-precondition', 'The asker can only pass while choosing');
 	}
 	// The asker passes while choosing: back to a volunteer moment, their question is free again.
-	const { questionId: _q, ...rest } = base;
-	void _q;
 
 	return {
-		...rest,
+		...omit(base, ['questionId']),
 		askerUid: null,
 		passedAskingUids,
 		usedQuestionIds: table.usedQuestionIds.filter((id) => id !== table.questionId),
@@ -335,7 +349,7 @@ export function applyTableAction(
 	if (role === null) {
 		throw new ClassroomError('permission-denied', 'You are not seated at this table');
 	}
-	assertMayAct(role, action, table, ctx.now, ctx.actorUid);
+	assertMayAct(role, action, table, ctx.now, ctx.actorUid, ctx.lessonStep);
 	assertFromStep(role, action, table);
 
 	const base: ClassTable = { ...table, updatedAt: ctx.now };

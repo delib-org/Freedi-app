@@ -212,7 +212,7 @@ async function main(): Promise<void> {
 
 	await mustCall('classTableStep', askerToken, { tableId: tid, action: 'toRate' });
 	// a table left at rate (before table turn v2) still lets a tablemate who has not asked claim the next turn
-	const next = await mustCall<{ step: string; turn: number }>('classTableStep', mateToken, { tableId: tid, action: 'nextTurn' });
+	const next = await mustCall<{ step: string; turn: number }>('classTableStep', mateToken, { tableId: tid, action: 'nextTurn', fromTurn: 1 });
 	const after = await readTable(tid);
 	console.info(`  ${brief(after)}`);
 	check(next.turn === 2 && after.askerUid === mate && !after.writingLocked, 'a claim from rate starts the next turn and resets');
