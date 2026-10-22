@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { ClassTable, Statement } from '@freedi/shared-types';
+import type { ClassTable } from '@freedi/shared-types';
+import { answerFixture } from './fixtures';
 import {
 	askerStates,
 	instructionFor,
@@ -37,20 +38,7 @@ function table(overrides: Partial<ClassTable> = {}): ClassTable {
 	};
 }
 
-function answer(
-	by: string,
-	extra: Partial<Statement['classTable']> = {},
-	parentId = 'q1',
-): Statement {
-	return {
-		statementId: `a-${by}`,
-		parentId,
-		creatorId: by,
-		statement: `by ${by}`,
-		createdAt: 1,
-		classTable: { tableId: 'm--3', shared: false, coAuthors: [], ...extra },
-	} as Statement;
-}
+const answer = answerFixture;
 
 function input(
 	over: Partial<InstructionInput> & { table: ClassTable; uid: string },
@@ -229,7 +217,7 @@ describe('sentCount + myAnswer', () => {
 			...answer('dana'),
 			classTable: { tableId: 'm--9', shared: false, coAuthors: [] },
 		};
-		expect(sentCount(asked, [other as Statement])).toEqual({ n: 0, m: 4 });
+		expect(sentCount(asked, [other])).toEqual({ n: 0, m: 4 });
 		expect(sentCount(table(), [answer('dana')])).toEqual({ n: 0, m: 4 });
 	});
 

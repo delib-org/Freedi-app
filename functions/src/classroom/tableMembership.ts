@@ -26,13 +26,16 @@ function nextNotAskedFrom(
  * Take `uid` off a table. When the asker leaves, the asker role passes to the
  * next tablemate who has not asked yet, in seating order from the leaver's seat
  * (the next one seated when everyone has asked; null when the table empties);
- * a speaker who leaves loses the floor. The leaver also leaves `askedUids`.
+ * a speaker who leaves loses the floor. The leaver stays in `askedUids`
+ * (the record is per table doc): rejoining this table cannot give them a second turn,
+ * while a table they move to starts them as not yet asked. Every derivation reads
+ * `askedUids` through the current `memberUids`.
  */
 export function removeMember(table: ClassTable, uid: string, now: number): ClassTable {
 	if (!table.memberUids.includes(uid)) return table;
 	const i = table.memberUids.indexOf(uid);
 	const memberUids = table.memberUids.filter((m) => m !== uid);
-	const askedUids = table.askedUids?.filter((m) => m !== uid);
+	const { askedUids } = table;
 	let askerUid = table.askerUid;
 	if (askerUid === uid) {
 		askerUid = memberUids.length === 0 ? null : nextNotAskedFrom(memberUids, askedUids, i);
@@ -44,7 +47,6 @@ export function removeMember(table: ClassTable, uid: string, now: number): Class
 		spokenUids: table.spokenUids.filter((m) => m !== uid),
 		updatedAt: now,
 	};
-	if (askedUids) next.askedUids = askedUids;
 	if (next.speakerUid === uid) {
 		delete next.speakerUid;
 		delete next.speakerEndsAt;

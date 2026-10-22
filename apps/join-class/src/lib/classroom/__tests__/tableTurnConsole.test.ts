@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ClassTable, Statement } from '@freedi/shared-types';
 import { everyoneAsked, memberMark, quickActionFor, statusLine } from '../tableTurnConsole';
+import { answerFixture } from './fixtures';
 import { joinNames } from '../listNames';
 
 function table(overrides: Partial<ClassTable> = {}): ClassTable {
@@ -62,16 +63,7 @@ describe('quickActionFor (one next-step button, UX 16.E)', () => {
 });
 
 describe('statusLine (who the table waits for)', () => {
-	const answers = (by: string[]): Statement[] =>
-		by.map(
-			(uid) =>
-				({
-					statementId: `a-${uid}`,
-					parentId: 'q',
-					creatorId: uid,
-					classTable: { tableId: 'm--3', shared: false, coAuthors: [] },
-				}) as unknown as Statement,
-		);
+	const answers = (by: string[]): Statement[] => by.map((uid) => answerFixture(uid, {}, 'q'));
 
 	it('pick and talk-without-speaker wait for the asker', () => {
 		expect(statusLine(table(), 'tableTalk', [])).toEqual({

@@ -160,7 +160,11 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 		const claimTurn = (): void => {
 			run(async () => {
 				try {
-					await classTableStep({ tableId: table.tableId, action: 'nextTurn' });
+					await classTableStep({
+						tableId: table.tableId,
+						action: 'nextTurn',
+						fromTurn: table.turn,
+					});
 				} catch (error) {
 					if (refusalReason(error) !== 'turn-claimed') throw error;
 				}

@@ -311,6 +311,14 @@ describe('applyTableAction — every tablemate asks once (the claim)', () => {
 		);
 	});
 
+	it('refuses a claim that names an earlier turn (a delayed tap) as turn-claimed', () => {
+		const rate = table({ step: 'rate', turn: 2, askerUid: 'b', askedUids: ['ask'] });
+		const stale = () => applyTableAction(rate, { action: 'nextTurn', fromTurn: 1 }, c);
+		expectRefusal(stale, 'failed-precondition');
+		expect(reasonOf(stale)).toBe('turn-claimed');
+		expect(applyTableAction(rate, { action: 'nextTurn', fromTurn: 2 }, c).turn).toBe(3);
+	});
+
 	it('refuses a claim from any step but rate, and by the current asker', () => {
 		for (const step of ['pick', 'talk', 'write'] as const) {
 			const run = () => applyTableAction(table({ step }), { action: 'nextTurn' }, member);

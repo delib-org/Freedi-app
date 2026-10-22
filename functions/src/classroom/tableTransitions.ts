@@ -100,7 +100,7 @@ function assertMayAct(
 		throw new ClassroomError('permission-denied', 'Only a teacher can do this');
 	}
 	if (action.action === 'nextTurn') {
-		assertMayClaimTurn(role, table, actorUid);
+		assertMayClaimTurn(role, table, actorUid, action.fromTurn);
 
 		return;
 	}
@@ -117,14 +117,19 @@ function assertMayAct(
  * they have not asked yet. Checked in this order so a forged or stale tap gets
  * the most telling refusal: already asked, then step moved (someone won).
  */
-function assertMayClaimTurn(role: ActorRole | null, table: ClassTable, actorUid: string): void {
+function assertMayClaimTurn(
+	role: ActorRole | null,
+	table: ClassTable,
+	actorUid: string,
+	fromTurn: number | undefined,
+): void {
 	if (role === 'asker') {
 		throw new ClassroomError('permission-denied', 'The asker cannot hand the turn on');
 	}
 	if ((table.askedUids ?? []).includes(actorUid)) {
 		throw new ClassroomError('permission-denied', 'You have already asked', 'already-asked');
 	}
-	if (table.step !== 'rate') {
+	if (table.step !== 'rate' || (fromTurn !== undefined && fromTurn !== table.turn)) {
 		throw new ClassroomError(
 			'failed-precondition',
 			'Another tablemate already started the next turn',

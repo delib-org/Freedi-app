@@ -251,7 +251,12 @@ try {
 		await asker.page.click(tid('table-to-write'));
 		await until(async () => (await tableDoc()).step === 'write', 'write');
 		await asker.page.click(tid('table-to-rate'));
-		await until(async () => (await tableDoc()).step === 'rate', 'rate');
+		await until(async () => (await tableDoc()).step === 'rate', 'rate').catch(async (e) => {
+			const doc = await tableDoc();
+			console.info('DEBUG table at timeout', doc.step, doc.turn, JSON.stringify(doc.askedUids));
+			console.info('DEBUG', asker.name, (await asker.page.locator('body').innerText()).replace(/\s+/g, ' ').slice(0, 400));
+			throw e;
+		});
 	}
 	await runToRate(winner);
 	for (const s of [loser, lior]) await s.page.waitForSelector(tid('table-claim'), { timeout: TIMEOUT });
