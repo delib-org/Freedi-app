@@ -1,0 +1,145 @@
+// =============================================================================
+// The table turn (UX 16): the askers row and the hand-off card.
+// Tokens only, BEM, logical properties (RTL-safe), transform/opacity motion.
+// =============================================================================
+
+// ---- askers row: who has asked, who asks now ---------------------------------
+
+.askers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-md);
+  padding: 0;
+  list-style: none;
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs, 4px);
+    min-height: 32px;
+    padding-inline: var(--space-sm);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-full);
+    color: var(--ink);
+    font-size: var(--font-size-sm);
+
+    // Shape, fill, glyph and weight each carry the state: never colour alone.
+    &--done {
+      border-color: var(--paper-deep);
+      background: var(--paper-deep);
+      color: var(--ink-muted);
+    }
+
+    &--now {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      font-weight: var(--font-weight-bold, 700);
+    }
+
+    .frame--down & {
+      border-color: var(--paper-line);
+      color: var(--paper);
+
+      &.askers__chip--done {
+        background: transparent;
+        color: var(--paper-line);
+      }
+
+      &.askers__chip--now {
+        border-color: var(--paper);
+        background: var(--paper);
+        color: var(--ink);
+      }
+    }
+  }
+
+  &__mark {
+    font-weight: var(--font-weight-bold, 700);
+  }
+
+  &__me {
+    font-weight: var(--font-weight-regular, 400);
+  }
+}
+
+// ---- hand-off card: the one terracotta card at the table ---------------------
+
+.handoff {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  margin-block-end: var(--space-md);
+  padding: var(--space-md);
+  border: 1.5px solid var(--terra-600);
+  border-inline-start-width: 6px;
+  border-radius: var(--radius-lg);
+  background: var(--terra-50);
+  color: var(--ink);
+  animation: handoff-in var(--dur-slow) var(--ease-out) both;
+
+  &__glyph {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--terra-600);
+    border-radius: var(--radius-full);
+    color: var(--terra-600);
+    font-weight: var(--font-weight-bold, 700);
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold, 700);
+    line-height: 1.3;
+  }
+
+  &__line {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: var(--font-size-sm);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes handoff-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ---- who asks next, and how many sent (rate screen, phones without the card) --
+
+.flow {
+  &__next {
+    margin: 0 0 var(--space-xs);
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold, 700);
+  }
+
+  &__sent {
+    margin: 0 0 var(--space-md);
+    color: var(--ink-soft);
+    font-size: var(--font-size-sm);
+  }
+}

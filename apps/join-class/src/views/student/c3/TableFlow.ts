@@ -11,20 +11,27 @@ import { classTableStep } from '@/lib/classroom/api';
 import { createTableQuestion, currentUid } from '@/lib/classroom/c3Data';
 import {
 	listableItems,
-	myProposal,
 	resolveSubstep,
 	type FlowKind,
 	type SubstepOverride,
 } from '@/lib/classroom/c3Logic';
+import {
+	askerStates,
+	instructionFor,
+	myAnswer,
+	rateMoment,
+	refusalReason,
+	sentCount,
+} from '@/lib/classroom/turnMoment';
+import { AskersRow } from './AskersRow';
 import { FlowFeed } from './FlowFeed';
 import { ErrorLine } from './ErrorLine';
-import { LiveWritersCard } from './LiveWritersCard';
 import { QuestionPick, type PickQuestion } from './QuestionPick';
+import { rateBody } from './RateScreen';
 import { RatedList } from './RatedList';
 import { Sheet } from './Sheet';
 import { SubStepStrip } from './SubStepStrip';
-import { TalkScreen, talkFinishAction } from './TalkScreen';
-import { TextCard } from './TextCard';
+import { TalkScreen, isTimeUp, talkFinishAction } from './TalkScreen';
 import { WritePanel } from './WritePanel';
 
 export interface TableFlowAttrs {
@@ -40,7 +47,8 @@ class FlowState {
 	error: string | null = null;
 	retry: (() => Promise<void>) | null = null;
 	chosenId: string | null = null;
-	editingProposal = false;
+	chosenTurn = 0;
+	editing = false;
 	liveFor: string | null = null;
 }
 
@@ -50,11 +58,13 @@ function stateOf(vnode: m.Vnode<TableFlowAttrs>): FlowState {
 
 /**
  * One table's whole student experience at Table talk and at Proposals (UX
- * §2.6, §2.7, §3, §11): header line, asker line, the four-pill sub-step strip,
- * and the screen of the table's step (pick, talk, write, rate). The table doc
- * (listener started by StudentStage) decides the default screen; the pills
- * only change what THIS phone shows. Every callable shows an inline error with
- * a retry; none of them can crash the screen.
+ * §2.6, §2.7, §3, §11, §16): header line, asker line, the askers row (who has
+ * asked, who asks now), the four-pill strip and the screen of the table's
+ * step. The table doc (listener started by StudentStage) decides the screen.
+ * The pills stay a peek: a screen that is not the official step is drawn with
+ * every control disabled, a line saying what the table is doing now and a
+ * one-tap "back to now". Every callable shows an inline error with a retry,
+ * except a lost race for the next turn, which just shows whose turn it is.
  */
 export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 	oninit(vnode) {
@@ -89,9 +99,16 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 			self.liveFor = liveId;
 			initLiveDrafts(liveId);
 		}
+		if (self.chosenTurn !== table.turn) {
+			self.chosenTurn = table.turn;
+			self.chosenId = null;
+		}
 		const feed = self.feed;
 		// Only the people the table doc seats (a stale tableId on a subscription must not add a chip).
-		const seated = feed.mates.filter((x) => table.memberUids.includes(x.uid));
+		// In seating order (the table doc's), so the askers row and the chips read the same on every phone.
+		const seated = feed.mates
+			.filter((x) => table.memberUids.includes(x.uid))
+			.sort((a, b) => table.memberUids.indexOf(a.uid) - table.memberUids.indexOf(b.uid));
 		const mates =
 			seated.length > 0
 				? seated
@@ -99,6 +116,8 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 		const isAsker = table.askerUid === uid;
 		const view = resolveSubstep(kind, table, self.override);
 		const step = view.current;
+		const peek = view.detached;
+		const tableTalk = kind === 'tableTalk';
 		const challengeId = challenge?.statementId ?? null;
 		const ballotFrozen = !!challenge?.statementSettings?.ballot;
 		const plenum = kind === 'proposals' && challenge?.statementSettings?.roundPhase === 'improve';
@@ -137,16 +156,42 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 		const act = (action: ClassTableAction): void => {
 			run(() => classTableStep({ tableId: table.tableId, ...action }));
 		};
+		// First tap wins: a lost race is not an error, the table doc already shows who won.
+		const claimTurn = (): void => {
+			run(async () => {
+				try {
+					await classTableStep({ tableId: table.tableId, action: 'nextTurn' });
+				} catch (error) {
+					if (refusalReason(error) !== 'turn-claimed') throw error;
+				}
+			});
+		};
+		const pickQuestion = (id: string): void => {
+			self.chosenId = id;
+			run(async () => {
+				try {
+					await classTableStep({ tableId: table.tableId, action: 'pickQuestion', questionId: id });
+				} catch (error) {
+					self.chosenId = null;
+					throw error;
+				}
+			});
+		};
 
+		const someone = t('turn.someone');
 		const asker = mates.find((x) => x.uid === table.askerUid);
 		const askerLine = isAsker
 			? t('turn.asker_me')
-			: t('turn.asker', { name: asker?.name ?? t('turn.someone') });
+			: t('turn.asker', { name: asker?.name ?? someone });
 		const stepName = t(`turn.now_${view.official}`);
-		const headerLine =
-			kind === 'tableTalk'
-				? t('turn.header', { n: table.n, turn: table.turn, step: stepName })
-				: t('turn.header_proposals', { n: table.n, step: stepName });
+		const headerLine = tableTalk
+			? t('turn.header', {
+					n: table.n,
+					turn: table.turn,
+					max: Math.max(table.memberUids.length, table.turn),
+					step: stepName,
+				})
+			: t('turn.header_proposals', { n: table.n, step: stepName });
 		const prompt =
 			kind === 'proposals' ? (challenge?.statement ?? '') : (tableQuestion?.statement ?? '');
 
@@ -163,6 +208,24 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 			? (self.chosenId ?? table.questionId ?? null)
 			: (table.questionId ?? null);
 
+		const editor = self.editing
+			? m(WritePanel, {
+					main,
+					kind,
+					table,
+					feed,
+					uid,
+					mates,
+					question: tableQuestion,
+					challenge,
+					locked: ballotFrozen,
+					busy: self.busy,
+					onAction: act,
+				})
+			: null;
+		// The hand-off belongs to the table's own rate step, not to a peek at it.
+		const moment = tableTalk && table.step === 'rate' ? rateMoment(table, uid) : null;
+
 		let body: m.Children = null;
 		let action: m.Children = null;
 		if (step === 'pick') {
@@ -170,9 +233,7 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 				questions: pickQuestions,
 				chosenId,
 				canChoose: isAsker,
-				onPick: (id: string) => {
-					self.chosenId = id;
-				},
+				onPick: pickQuestion,
 				onAddOwn: async (text: string) => {
 					await createTableQuestion(main, text, table.tableId);
 				},
@@ -184,20 +245,9 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 							type: 'button',
 							'data-testid': 'table-start',
 							disabled: !chosenId || self.busy,
-							onclick: () =>
-								run(async () => {
-									if (!chosenId) return;
-									if (chosenId !== table.questionId) {
-										await classTableStep({
-											tableId: table.tableId,
-											action: 'pickQuestion',
-											questionId: chosenId,
-										});
-									}
-									await classTableStep({ tableId: table.tableId, action: 'toTalk' });
-								}),
+							onclick: () => act({ action: 'toTalk' }),
 						},
-						t('question.read_start'),
+						t('turn.to_talk'),
 					)
 				: null;
 		} else if (step === 'talk') {
@@ -230,38 +280,68 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 					)
 				: null;
 		} else {
-			const editor =
-				plenum && self.editingProposal
-					? m(WritePanel, {
-							main,
-							kind,
-							table,
-							feed,
-							uid,
-							mates,
-							question: tableQuestion,
-							challenge,
-							locked: ballotFrozen,
-							busy: self.busy,
-							onAction: act,
-						})
-					: null;
-			body = rateBody(self, vnode.attrs, items, challengeId, plenum, uid, editor);
-			action =
-				isAsker && kind === 'tableTalk'
-					? m(
-							'button.btn.btn--primary',
-							{
-								type: 'button',
-								'data-testid': 'table-next-turn',
-								disabled: self.busy,
-								onclick: () => act({ action: 'nextTurn' }),
-							},
-							t('turn.next_turn'),
-						)
-					: null;
+			body = rateBody({
+				feed,
+				items,
+				challengeId,
+				uid,
+				mates,
+				plenum,
+				proposals: kind === 'proposals',
+				moment,
+				sent: tableTalk ? sentCount(table, feed.options) : null,
+				mineAnswer: tableTalk ? myAnswer(table, feed.options, uid) : null,
+				editor,
+				editing: self.editing,
+				onToggleEdit: () => {
+					self.editing = !self.editing;
+				},
+				onError: (message: string) => {
+					self.error = message;
+				},
+				someone,
+			});
+			action = moment?.card
+				? m(
+						'button.btn.btn--primary',
+						{
+							type: 'button',
+							'data-testid': 'table-claim',
+							disabled: self.busy,
+							onclick: claimTurn,
+						},
+						t(self.busy ? 'turn.saving' : 'turn.start_mine'),
+					)
+				: null;
 		}
 
+		const official: TableStep = view.official;
+		const instruction = peek
+			? t(`turn.peek_why_${official}`)
+			: (() => {
+					const line = instructionFor(
+						official,
+						{ kind, table, uid, mates, timeUp: isTimeUp(table) },
+						someone,
+					);
+
+					return t(line.key, line.params);
+				})();
+		if (peek) {
+			// Off the official step nothing on the screen may act; the one live control leads back.
+			body = m('fieldset.flow__peek', { disabled: true, 'data-testid': 'peek-body' }, body);
+			action = m(
+				'button.btn.btn--primary',
+				{
+					type: 'button',
+					'data-testid': 'peek-back',
+					onclick: () => {
+						self.override = null;
+					},
+				},
+				t('turn.peek_back'),
+			);
+		}
 		const setLocal = (next: TableStep): void => {
 			self.override = { step: next, officialAtPick: view.official, turnAtPick: table.turn };
 		};
@@ -275,22 +355,27 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 			},
 			[unrated > 0 ? m('span.flow__count', `${unrated} · `) : null, t('rate.class_writing')],
 		);
+		// At rate the asker's turn is over: the askers row and the card say who is next.
+		const showAskerLine = !tableTalk || table.step !== 'rate';
 
 		return [
 			m(
 				StudentFrame,
 				{
 					headerLine,
-					askerMark: isAsker ? '?' : undefined,
-					instruction: t(`turn.instr_${step}`),
+					askerMark: isAsker && showAskerLine ? '?' : undefined,
+					instruction,
 					action,
 					down: step === 'talk',
 				},
 				[
 					m('.flow__bar', [
-						m('p.flow__asker', { 'data-testid': isAsker ? 'asker-mark' : undefined }, askerLine),
+						showAskerLine
+							? m('p.flow__asker', { 'data-testid': isAsker ? 'asker-mark' : undefined }, askerLine)
+							: m('span'),
 						classButton,
 					]),
+					tableTalk ? m(AskersRow, { chips: askerStates(table, mates), uid }) : null,
 					m(SubStepStrip, { kind, view, onSelect: setLocal }),
 					m(ErrorLine, {
 						message: self.error,
@@ -322,67 +407,3 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 		];
 	},
 };
-
-/** The rate screen: live writers, the list, and in the plenum the pinned own proposal. */
-function rateBody(
-	self: FlowState,
-	attrs: TableFlowAttrs,
-	items: Statement[],
-	challengeId: string | null,
-	plenum: boolean,
-	uid: string,
-	editor: m.Children,
-): m.Children {
-	const mine = plenum
-		? myProposal(
-				self.feed.options.filter((o) => o.parentId === challengeId),
-				uid,
-			)
-		: null;
-	const list = m(RatedList, {
-		items,
-		feed: self.feed,
-		challengeId,
-		plenum,
-		emptyText: t(attrs.kind === 'proposals' ? 'proposal.none_yet' : 'answer.none_yet'),
-		onError: (message: string) => {
-			self.error = message;
-		},
-	});
-	if (!plenum) return [m(LiveWritersCard), list];
-
-	return [
-		m('p.flow__plenum', t('proposal.plenum_line')),
-		editor,
-		editor
-			? m(
-					'button.btn.btn--secondary.btn--small',
-					{
-						type: 'button',
-						onclick: () => {
-							self.editingProposal = false;
-						},
-					},
-					t('proposal.edit_done'),
-				)
-			: null,
-		mine && !editor
-			? m(TextCard, {
-					mine: true,
-					eyebrow: t('proposal.mine'),
-					text: mine.statement,
-					footer: m(
-						'button.btn.btn--secondary.btn--small',
-						{
-							type: 'button',
-							onclick: () => {
-								self.editingProposal = !self.editingProposal;
-							},
-						},
-						t('proposal.edit'),
-					),
-				})
-			: null,
-		list,
-	];
-}
