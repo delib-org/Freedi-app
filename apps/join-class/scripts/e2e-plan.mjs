@@ -192,7 +192,11 @@ try {
 	check('Ctrl+B wraps the selection in bold', (await intro.inputValue()) === '**מילה**', await intro.inputValue());
 	const introText = 'השבוע שוקלים **לאסור טלפונים** בבית הספר\n- יונתן חושב שזה מפריע\n- נועה חושבת שזה עוזר';
 	await intro.fill(introText);
-	await page.waitForSelector('.intro-editor__preview strong', { timeout: TIMEOUT });
+	await page.waitForFunction(
+		() => document.querySelector('.intro-editor__preview strong')?.textContent === 'לאסור טלפונים',
+		null,
+		{ timeout: TIMEOUT },
+	);
 	check('the preview shows the bold run', (await page.locator('.intro-editor__preview strong').innerText()) === 'לאסור טלפונים');
 	check('the preview shows the bullets', (await page.locator('.intro-editor__preview li').count()) === 2);
 	await intro.blur();
