@@ -2,7 +2,15 @@ import { HttpsError, FunctionsErrorCode } from 'firebase-functions/v2/https';
 import { logError } from '../utils/errorHandling';
 
 /** Refusals the client treats specially instead of showing a generic error. */
-export type ClassroomErrorReason = 'already-asked' | 'turn-claimed' | 'all-asked';
+export type ClassroomErrorReason =
+	| 'already-asked'
+	| 'already-passed'
+	| 'turn-claimed'
+	| 'talk-not-over'
+	| 'all-asked'
+	| 'not-speaker'
+	| 'minute-over'
+	| 'no-question';
 
 /**
  * A refusal the engine's pure logic raises. It carries the callable error code

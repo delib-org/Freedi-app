@@ -21,7 +21,7 @@ function makeClass(a: number, center: number, b: number, unknown = 0): SeatableS
 		tag: string,
 	): void => {
 		for (let i = 0; i < count; i++) {
-			out.push({ uid: `${tag}${i}`, camp, side, joinedAt: 1000 + out.length });
+			out.push({ uid: `${tag}${i}`, camp, side });
 		}
 	};
 	push('a', 10, a, 'a');
@@ -101,20 +101,15 @@ describe('assignStudents', () => {
 		expect(Math.max(...centreCounts) - Math.min(...centreCounts)).toBeLessThanOrEqual(1);
 	});
 
-	it('numbers tables from 1 and picks the earliest joiner as asker', () => {
-		const students = makeClass(4, 4, 4);
-		const tables = assignStudents(students, 4, seededRng());
+	it('numbers tables from 1 and seats nobody as asker', () => {
+		const tables = assignStudents(makeClass(4, 4, 4), 4, seededRng());
 		expect(tables.map((t) => t.n)).toEqual([1, 2, 3]);
-		for (const t of tables) {
-			const joined = students.filter((s) => t.memberUids.includes(s.uid));
-			const earliest = joined.sort((x, y) => x.joinedAt - y.joinedAt)[0];
-			expect(t.askerUid).toBe(earliest.uid);
-		}
+		for (const t of tables) expect(t).not.toHaveProperty('askerUid');
 	});
 
 	it('ignores duplicate uids and returns nothing for an empty class', () => {
 		expect(assignStudents([], 4)).toEqual([]);
-		const one: SeatableStudent = { uid: 'x', camp: 'a', side: 1, joinedAt: 1 };
+		const one: SeatableStudent = { uid: 'x', camp: 'a', side: 1 };
 		const tables = assignStudents([one, one, { ...one, uid: 'y' }], 4);
 		expect(tables).toHaveLength(1);
 		expect(tables[0].memberUids.sort()).toEqual(['x', 'y']);

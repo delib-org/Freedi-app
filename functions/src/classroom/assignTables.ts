@@ -21,15 +21,12 @@ export interface SeatableStudent {
 	camp?: Camp;
 	/** Slider value 0..100, orders students inside a camp (extremes first). */
 	side?: number;
-	/** Subscription createdAt: the earliest joiner of a table is its first asker. */
-	joinedAt: number;
 }
 
 export interface SeatedTable {
 	/** 1-based table number */
 	n: number;
 	memberUids: string[];
-	askerUid: string | null;
 }
 
 /** Random source in [0, 1); injectable so tests are deterministic. */
@@ -96,15 +93,6 @@ export function assignStudents(
 	const buckets: SeatableStudent[][] = Array.from({ length: tableCount }, () => []);
 	deck.forEach((student, i) => buckets[i % tableCount].push(student));
 
-	return buckets.map((members, k) => {
-		const earliest = [...members].sort(
-			(x, y) => x.joinedAt - y.joinedAt || (x.uid < y.uid ? -1 : 1),
-		)[0];
-
-		return {
-			n: k + 1,
-			memberUids: members.map((s) => s.uid),
-			askerUid: earliest?.uid ?? null,
-		};
-	});
+	// Nobody asks first by seating: the first student who taps "אני אשאל" does.
+	return buckets.map((members, k) => ({ n: k + 1, memberUids: members.map((s) => s.uid) }));
 }

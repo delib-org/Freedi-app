@@ -1,10 +1,10 @@
-import { notAskedUids, type ClassTable, type Statement } from '@freedi/shared-types';
-import { sentCount } from './turnMoment';
+import { notAskedUids, type ClassTable } from '@freedi/shared-types';
+import { claimMoment, talkIsOver } from './turnMoment';
 
 /**
  * Pure rules of the teacher's table card and sheet at Table talk (UX 16.E,
  * 16.F): the one next-step button, the second line (who the table waits for),
- * and the marks on member chips. No Firebase, no DOM.
+ * and the marks on member chips. No Firebase, no DOM. `now` is the server clock.
  */
 
 /** Which family of steps the board is showing. */
@@ -27,12 +27,16 @@ export const QUICK_KEYS: Record<QuickKind, string> = {
 };
 
 /**
- * The ONE next-step button of a table card. Table talk follows the turn:
- * pick (once a question is chosen) -> talk -> write -> rate -> start the next
- * turn, which gives it to the first tablemate who has not asked; nothing once
- * everyone has. Proposals walk talk -> write -> rate; the plenum only rates.
+ * The ONE next-step button of a table card. Table talk: "לדבר" once the asker
+ * chose a question; "להתחיל סבב n" (opens a volunteer moment) when everyone has
+ * spoken; nothing else, nobody writes or rates there. Proposals walk talk ->
+ * write -> rate; the plenum only rates.
  */
-export function quickActionFor(table: ClassTable, mode: TableMode): QuickAction | null {
+export function quickActionFor(
+	table: ClassTable,
+	mode: TableMode,
+	now: number,
+): QuickAction | null {
 	if (mode === 'plenum') return table.step === 'rate' ? null : { kind: 'rate' };
 	if (mode === 'proposals') {
 		if (table.step === 'pick') return { kind: 'talk' };
@@ -41,16 +45,10 @@ export function quickActionFor(table: ClassTable, mode: TableMode): QuickAction 
 
 		return null;
 	}
-	switch (table.step) {
-		case 'pick':
-			return table.questionId ? { kind: 'talk' } : null;
-		case 'talk':
-			return { kind: 'write' };
-		case 'write':
-			return { kind: 'rate' };
-		default:
-			return notAskedUids(table).length > 0 ? { kind: 'turn', n: table.turn + 1 } : null;
-	}
+	const { phase } = claimMoment(table, '', now);
+	if (phase === 'a') return table.questionId ? { kind: 'talk' } : null;
+
+	return phase === 'v2' ? { kind: 'turn', n: table.turn + 1 } : null;
 }
 
 export interface StatusLine {
@@ -60,46 +58,58 @@ export interface StatusLine {
 	nameUids?: string[];
 }
 
+/** Members who asked, and members who passed on asking (leavers are not counted). */
+export function askedPassedCounts(table: ClassTable): { a: number; p: number } {
+	const asked = new Set(table.askedUids ?? []);
+	const passed = new Set(table.passedAskingUids ?? []);
+	const members = new Set(table.memberUids);
+
+	return {
+		a: [...asked].filter((uid) => members.has(uid)).length,
+		p: [...passed].filter((uid) => members.has(uid) && !asked.has(uid)).length,
+	};
+}
+
 /**
- * The card's second line at Table talk: who the table waits for, "n of m
- * sent", who has not asked, or who is next. null while someone is speaking
- * (the timer rows say it) and outside Table talk.
+ * The card's second line at Table talk: waiting for a volunteer, for the asker,
+ * who has not asked, or "asked n, passed p". null while someone is speaking (the
+ * timer rows say it) and outside Table talk.
  */
-export function statusLine(
-	table: ClassTable,
-	mode: TableMode,
-	options: readonly Statement[],
-): StatusLine | null {
+export function statusLine(table: ClassTable, mode: TableMode, now: number): StatusLine | null {
 	if (mode !== 'tableTalk') return null;
+	const { phase } = claimMoment(table, '', now);
 	const waiting: StatusLine = { key: 'console.waiting_for', nameUids: [table.askerUid ?? ''] };
-	if (table.step === 'pick') return table.askerUid ? waiting : null;
-	if (table.step === 'talk') return table.speakerUid || !table.askerUid ? null : waiting;
-	if (table.step === 'write') {
-		const { n, m } = sentCount(table, options);
+	switch (phase) {
+		case 'v1':
+			return { key: 'console.waiting_volunteer' };
+		case 'a':
+			return waiting;
+		case 'talk':
+			return table.speakerUid || !table.askerUid ? null : waiting;
+		case 'v2': {
+			const left = notAskedUids(table);
 
-		return { key: 'turn.sent_count', params: { n, m } };
+			return left.length === 1
+				? { key: 'console.waiting_for', nameUids: left }
+				: { key: 'console.not_asked', nameUids: left };
+		}
+		default: {
+			const { a, p } = askedPassedCounts(table);
+
+			return { key: 'console.asked_passed', params: { a, p } };
+		}
 	}
-	const next = notAskedUids(table);
-	if (next.length === 0) {
-		const { n, m } = sentCount(table, options);
-
-		return { key: 'turn.sent_count', params: { n, m }, nameUids: [] };
-	}
-
-	return next.length === 1
-		? { key: 'console.next_asker', nameUids: next }
-		: { key: 'console.not_asked', nameUids: next };
 }
 
-/** Mark on a member chip: asked (check), asking now (question mark) or none. */
-export function memberMark(table: ClassTable, uid: string): '✓' | '?' | '' {
+/** Mark on a member chip: asked (check), asking now (question mark), passed (dash) or none. */
+export function memberMark(table: ClassTable, uid: string, now: number): '✓' | '?' | '–' | '' {
+	if (table.askerUid === uid) return table.step !== 'pick' && talkIsOver(table, now) ? '✓' : '?';
 	if ((table.askedUids ?? []).includes(uid)) return '✓';
-	if (table.askerUid !== uid) return '';
 
-	return table.step === 'rate' ? '✓' : '?';
+	return (table.passedAskingUids ?? []).includes(uid) ? '–' : '';
 }
 
-/** The table's "now" line gains "everyone asked" at the last rate. */
-export function everyoneAsked(table: ClassTable, mode: TableMode): boolean {
-	return mode === 'tableTalk' && table.step === 'rate' && notAskedUids(table).length === 0;
+/** Every device member asked or passed and the last talk is over: the card's "now" says so. */
+export function tableIsDone(table: ClassTable, mode: TableMode, now: number): boolean {
+	return mode === 'tableTalk' && claimMoment(table, '', now).phase === 'done';
 }

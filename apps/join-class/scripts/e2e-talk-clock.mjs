@@ -1,4 +1,4 @@
-// E2E: the Table talk clock. Real callables (functions emulator on).
+// E2E: the Table talk clock (table turn v2: two pills, no write or rate). Real callables (functions emulator on).
 //  A. the asker views the "talking" pill while the table is still at "pick": the header keeps
 //     naming the OFFICIAL step, every control of the peeked screen is disabled, a line says what the
 //     table is doing now and "back to now" returns (UX 16: the strip is a peek).
@@ -86,6 +86,7 @@ try {
 
 	// A. viewed talk screen while the table is at pick -------------------------
 	await a.page.waitForSelector('[data-testid=asker-mark]', { timeout: TIMEOUT });
+	check('the strip has exactly two pills at Table talk (שאלה · מדברים)', (await a.page.locator('.substeps__pill').count()) === 2);
 	await a.page.locator('.substeps__pill').nth(1).click();
 	await a.page.waitForSelector('[data-testid=table-next-speaker]', { timeout: TIMEOUT });
 	const header = (await a.page.locator('.frame__header, header').first().innerText()).replace(/\s+/g, ' ');

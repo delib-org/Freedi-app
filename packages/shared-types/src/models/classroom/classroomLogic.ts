@@ -172,14 +172,52 @@ export function planLessonStatus(
 }
 
 /**
- * Tablemates who may still ask: in seating order, not yet in `askedUids`, and
- * not the current asker (whose turn is the one being finished). An empty list
- * at `rate` means the table has been through everyone.
+ * Tablemates who may still ask: in seating order, not yet in `askedUids`, not
+ * passed on asking, and not the current asker (whose turn is the one being
+ * run). Empty = nobody is left to volunteer.
  */
 export function notAskedUids(
-	table: Pick<ClassTable, 'memberUids' | 'askerUid' | 'askedUids'>,
+	table: Pick<ClassTable, 'memberUids' | 'askerUid' | 'askedUids' | 'passedAskingUids'>,
 ): string[] {
-	const asked = new Set(table.askedUids ?? []);
+	const done = new Set([...(table.askedUids ?? []), ...(table.passedAskingUids ?? [])]);
 
-	return table.memberUids.filter((uid) => !asked.has(uid) && uid !== table.askerUid);
+	return table.memberUids.filter((uid) => !done.has(uid) && uid !== table.askerUid);
+}
+
+/** The current speaker's minute is over (or nobody holds the floor yet). */
+export function speakerTimeOver(table: Pick<ClassTable, 'speakerEndsAt'>, now: number): boolean {
+	return typeof table.speakerEndsAt !== 'number' || table.speakerEndsAt <= now;
+}
+
+/** Everyone at the table has spoken or passed (the current speaker counts once their minute is over). */
+export function everyoneSpoke(
+	table: Pick<ClassTable, 'memberUids' | 'spokenUids' | 'speakerUid' | 'speakerEndsAt'>,
+	now: number,
+): boolean {
+	const spoken = new Set(table.spokenUids);
+	if (table.speakerUid && typeof table.speakerEndsAt === 'number' && table.speakerEndsAt <= now) {
+		spoken.add(table.speakerUid);
+	}
+
+	return table.memberUids.length > 0 && table.memberUids.every((uid) => spoken.has(uid));
+}
+
+/**
+ * Table talk is done for this table: every device member has asked or passed
+ * on asking, and either nobody is asking or the current talk is over.
+ */
+export function tableDone(
+	table: Pick<
+		ClassTable,
+		| 'memberUids'
+		| 'askerUid'
+		| 'askedUids'
+		| 'passedAskingUids'
+		| 'spokenUids'
+		| 'speakerUid'
+		| 'speakerEndsAt'
+	>,
+	now: number,
+): boolean {
+	return notAskedUids(table).length === 0 && (table.askerUid === null || everyoneSpoke(table, now));
 }

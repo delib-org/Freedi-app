@@ -1055,6 +1055,9 @@ export {
   lessonStatusOf,
   planLessonStatus,
   notAskedUids,
+  speakerTimeOver,
+  everyoneSpoke,
+  tableDone,
 } from './models/classroom/classroomLogic';
 export type {
   SupportSubscription,

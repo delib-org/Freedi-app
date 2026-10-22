@@ -22,7 +22,7 @@ export interface MemberChipAttrs {
 	from: DropTarget;
 	tableNumbers: readonly number[];
 	/** Table talk: ✓ has asked, ? asking now (the same marks as the students' askers row). */
-	turnMark?: '✓' | '?' | '';
+	turnMark?: '✓' | '?' | '–' | '';
 }
 
 function sideLabel(camp: Camp | null): string {
@@ -66,7 +66,9 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 				? `, ${t('turn.asker_done', { name })}`
 				: attrs.turnMark === '?'
 					? `, ${t('turn.asker_now', { name })}`
-					: '';
+					: attrs.turnMark === '–'
+						? `, ${t('turn.asker_passed', { name })}`
+						: '';
 		const label =
 			(noDevice ? `${name}, ${t('console.no_device')}` : `${name}, ${sideLabel(camp)}`) + turnWord;
 		// While the lesson is held nobody moves: no drag, no move menu.

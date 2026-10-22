@@ -75,8 +75,9 @@ export const ClassTableSchema = object({
 	memberUids: array(string()),
 	noDeviceMembers: array(NoDeviceMemberSchema),
 	step: TableStepSchema,
+	/** null = nobody asks yet (a volunteer moment) or an askerless turn. */
 	askerUid: nullable(string()),
-	/** Round counter; `nextTurn` increments it and rotates the asker. */
+	/** Round counter; claiming the next turn increments it. */
 	turn: number(),
 	questionId: optional(string()),
 	writingMode: WritingModeSchema,
@@ -89,10 +90,14 @@ export const ClassTableSchema = object({
 	/** Guiding questions already asked at this table. */
 	usedQuestionIds: array(string()),
 	/**
-	 * Tablemates who have had their turn to ask (the current asker is added when
-	 * the turn moves on). Optional, read as [] when missing; server-written only.
+	 * Tablemates who have asked: added when their turn reaches `talk` (`toTalk`).
+	 * Optional, read as [] when missing; server-written only; kept all lesson.
 	 */
 	askedUids: optional(array(string())),
+	/** Passed on asking ("ויתרתי על התור"): count as done, may not ask. Kept all lesson. */
+	passedAskingUids: optional(array(string())),
+	/** Passed this turn's minute (also in `spokenUids`); cleared with the turn fields. */
+	passedSpeakingUids: optional(array(string())),
 	updatedAt: number(),
 });
 export type ClassTable = InferOutput<typeof ClassTableSchema>;

@@ -48,9 +48,16 @@ export type ClassTableAction =
 	| { action: 'toWrite' }
 	| { action: 'setWritingMode'; mode: WritingMode }
 	| { action: 'toRate' }
-	/** `fromTurn`: the turn the claimer saw; a claim that arrives after the table moved on is refused. */
+	/**
+	 * `fromTurn`: the turn the claimer saw; a claim that arrives after the table moved on is refused.
+	 * Required for a member's claim (the engine refuses one without it); a teacher's need not send it.
+	 */
 	| { action: 'nextTurn'; fromTurn?: number }
-	| { action: 'passAsker'; uid: string };
+	| { action: 'passAsker'; uid: string }
+	/** Pass on asking: a member for themselves, or an admin naming `uid`. */
+	| { action: 'passAsking'; uid?: string }
+	/** Pass the running minute: the speaker, the asker or an admin. */
+	| { action: 'passSpeaking' };
 
 export type ClassTableStepRequest = { tableId: string } & ClassTableAction;
 export interface ClassTableStepResponse {

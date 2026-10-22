@@ -10,6 +10,7 @@ import nl from '@/lib/locales/nl';
 const LOCALES: Record<string, Record<string, string>> = { en, he, ar, fa, de, es, nl };
 const NAMESPACES = ['turn.', 'question.', 'answer.', 'proposal.', 'rate.', 'voting.', 'summary.'];
 const STEPS = ['pick', 'talk', 'write', 'rate'];
+const INSTRUCTION_STEPS = ['pick', 'talk'];
 
 function c3Keys(dictionary: Record<string, string>): string[] {
 	return Object.keys(dictionary)
@@ -38,10 +39,11 @@ describe('C3 locale keys', () => {
 	it('cover the four table steps used by dynamic keys', () => {
 		for (const dictionary of Object.values(LOCALES)) {
 			for (const step of STEPS) {
-				for (const prefix of ['turn.now_', 'turn.instr_', 'turn.pill_']) {
+				for (const prefix of ['turn.now_', 'turn.pill_']) {
 					expect(dictionary[`${prefix}${step}`]).toBeTruthy();
 				}
 			}
+			for (const step of INSTRUCTION_STEPS) expect(dictionary[`turn.instr_${step}`]).toBeTruthy();
 			for (const key of ['summary.side_center', 'summary.near_side'])
 				expect(dictionary[key]).toBeTruthy();
 			for (const mode of ['each', 'table']) expect(dictionary[`answer.mode_${mode}`]).toBeTruthy();

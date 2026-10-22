@@ -18,7 +18,7 @@ import {
 	tableRef,
 } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
-import { assertLessonRunning } from './lessonStatusGuard';
+import { assertLessonRunning, lessonStepOf } from './lessonStatusGuard';
 import { applyTableAction } from './tableTransitions';
 
 /**
@@ -36,6 +36,10 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 			return { action: 'pickQuestion', questionId: requireId(req.questionId, 'questionId') };
 		case 'passAsker':
 			return { action: 'passAsker', uid: requireId(req.uid, 'uid') };
+		case 'passAsking':
+			return typeof req.uid === 'string' && req.uid !== ''
+				? { action: 'passAsking', uid: req.uid }
+				: { action: 'passAsking' };
 		case 'nextSpeaker':
 			return { action: 'nextSpeaker', uid: requireId(req.uid, 'uid') };
 		case 'setWritingMode': {
@@ -47,6 +51,7 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 		case 'toTalk':
 		case 'toWrite':
 		case 'toRate':
+		case 'passSpeaking':
 			return { action: req.action };
 		case 'nextTurn':
 			return typeof req.fromTurn === 'number'
@@ -91,8 +96,10 @@ export async function tableStep(
 		const [snap, mainSnap] = await Promise.all([tx.get(ref), tx.get(mainRef)]);
 		if (!snap.exists) throw new ClassroomError('not-found', 'Table not found');
 		// Read in the same transaction, so a pause landing between two taps is seen.
-		assertLessonRunning(mainSnap.exists ? (mainSnap.data() as Statement) : null);
+		const main = mainSnap.exists ? (mainSnap.data() as Statement) : null;
+		assertLessonRunning(main);
 		const next = applyTableAction(snap.data() as ClassTable, action, {
+			lessonStep: lessonStepOf(main),
 			actorUid,
 			isAdmin,
 			now: now(),

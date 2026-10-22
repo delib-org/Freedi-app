@@ -54,6 +54,19 @@ $c3-count-size: clamp(6rem, 30vw, 8rem); // 96-128px, readable from 60cm
       opacity: 0.6;
     }
 
+    // Passed the minute: dashed border and a dash, still counts as spoken.
+    &--passed {
+      border-style: dashed;
+      opacity: 0.6;
+    }
+
+    // V2: a reference list only, smaller and never pressable.
+    &--ref {
+      min-height: 32px;
+      padding-inline: var(--space-sm);
+      font-size: var(--font-size-sm);
+    }
+
     &--on {
       background: var(--paper);
       color: var(--ink);
@@ -65,6 +78,60 @@ $c3-count-size: clamp(6rem, 30vw, 8rem); // 96-128px, readable from 60cm
     margin: 0;
     color: var(--paper-line);
     font-size: var(--font-size-sm);
+  }
+
+  // V2 (UX 16.C): the words take the countdown's place. Opacity only; no motion under reduced motion.
+  &__over {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 100%;
+    margin-block: var(--space-md);
+    animation: talk-over-in var(--dur-base) var(--ease-out) both;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  &__over-words {
+    margin: 0;
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold, 700);
+    line-height: 1.15;
+  }
+
+  &__over-ask {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold, 600);
+  }
+
+  // "ויתרתי על הדקה": a paper outline on the ink frame, never filled.
+  &__pass {
+    width: 100%;
+    animation: talk-over-in var(--dur-base) var(--ease-out) both;
+    background: transparent;
+    border-color: var(--paper);
+    color: var(--paper);
+
+    &:hover:not(:disabled) {
+      background: transparent;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+}
+
+@keyframes talk-over-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }
 

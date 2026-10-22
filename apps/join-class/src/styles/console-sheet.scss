@@ -116,3 +116,12 @@
     transition: none;
   }
 }
+
+// "Pass asking for {{name}}": the one inline confirm in the member row.
+.table-sheet__confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+}

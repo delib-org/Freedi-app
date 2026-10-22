@@ -12,8 +12,8 @@ const SECONDS_PER_MINUTE = 60;
 const SECONDS_PER_HOUR = 3600;
 const GATE_ROUNDING = 100;
 
-/** Steps at which every table can be sent to the rate step at once. */
-export const ALL_TABLES_RATE_STEPS: readonly LessonStepKey[] = ['tableTalk', 'proposals'];
+/** Steps at which every table can be sent to the rate step at once (not Table talk: nobody rates there). */
+export const ALL_TABLES_RATE_STEPS: readonly LessonStepKey[] = ['proposals'];
 
 export type RailState = 'done' | 'current' | 'upcoming';
 

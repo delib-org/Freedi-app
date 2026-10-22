@@ -47,13 +47,7 @@ function validTableSize(value: unknown): number {
 	return value as number;
 }
 
-export function newTable(
-	mainId: string,
-	n: number,
-	memberUids: string[],
-	askerUid: string | null,
-	now: number,
-): ClassTable {
+export function newTable(mainId: string, n: number, memberUids: string[], now: number): ClassTable {
 	return {
 		tableId: classTableId(mainId, n),
 		mainId,
@@ -61,7 +55,7 @@ export function newTable(
 		memberUids,
 		noDeviceMembers: [],
 		step: 'pick',
-		askerUid,
+		askerUid: null,
 		turn: 1,
 		writingMode: 'each',
 		writingLocked: false,
@@ -102,7 +96,6 @@ export async function assignTables(
 			uid: s.userId,
 			camp: s.camp,
 			side: s.side,
-			joinedAt: s.createdAt ?? 0,
 		}));
 		const seated = assignStudents(students, size, rng);
 		const placedUids = new Set(seated.flatMap((t) => t.memberUids));
@@ -128,7 +121,7 @@ export async function assignTables(
 		seated.forEach((t) => {
 			tx.set(
 				tableRef(firestore, classTableId(mainId, t.n)),
-				newTable(mainId, t.n, t.memberUids, t.askerUid, now),
+				newTable(mainId, t.n, t.memberUids, now),
 			);
 		});
 		subsSnap.docs.forEach((d) => {

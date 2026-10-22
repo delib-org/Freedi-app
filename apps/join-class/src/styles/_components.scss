@@ -106,6 +106,23 @@
     }
   }
 
+  // Text — a link-like control (UX 16.D "ויתרתי…"): no fill, no border, 14 px,
+  // underline on hover and focus. Keeps the 44 px touch target.
+  &--text {
+    background: transparent;
+    color: var(--ink-soft);
+    border-color: transparent;
+    box-shadow: none;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-regular, 400);
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+
   // Small variant
   &--small {
     padding: 10px var(--space-md);

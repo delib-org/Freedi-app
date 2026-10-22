@@ -81,6 +81,11 @@ function sentProposalOf(a: WritePanelAttrs): Statement | null {
  * solution (optional)" box at Table talk (proposal box alone at Proposals), the
  * writing-mode switch for the asker, the broadcast checkbox and "Send". A send
  * that fails keeps the draft (localStorage) and shows an inline retry.
+ *
+ * TODO(UX 16, table turn v2): Proposals is the only caller now (nobody writes at
+ * Table talk), so every `kind === 'tableTalk'` branch below, the answer box and
+ * the writing-mode switch are dead. Remove them with their `answer.*` keys and
+ * the `question` prop in a focused follow-up.
  */
 export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 	oninit(vnode) {

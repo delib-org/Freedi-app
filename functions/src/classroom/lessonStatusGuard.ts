@@ -1,5 +1,5 @@
 import { lessonStatusOf } from '@freedi/shared-types';
-import type { Statement } from '@freedi/shared-types';
+import type { LessonStepKey, Statement } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
 
 /**
@@ -17,4 +17,11 @@ export function assertLessonRunning(main: Statement | null | undefined): void {
 	if (status === 'ended') {
 		throw new ClassroomError('failed-precondition', 'The lesson has ended');
 	}
+}
+
+/** The lesson's current step key (`steps[stepIndex]`), or null when the workspace has no plan. */
+export function lessonStepOf(main: Statement | null | undefined): LessonStepKey | null {
+	const plan = main?.statementSettings?.lessonPlan;
+
+	return plan?.steps?.[plan.stepIndex] ?? null;
 }

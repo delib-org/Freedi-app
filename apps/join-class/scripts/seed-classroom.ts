@@ -286,7 +286,7 @@ async function main(): Promise<void> {
 				memberUids: members.map((s) => s.uid),
 				noDeviceMembers: [],
 				step: 'pick',
-				askerUid: members[0]?.uid ?? null,
+				askerUid: null,
 				turn: 1,
 				writingMode: 'each',
 				writingLocked: false,

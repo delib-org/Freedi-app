@@ -1,4 +1,13 @@
-import { campOf, classTableId, decideBallot, notAskedUids, supportBySide } from '../index';
+import {
+	campOf,
+	classTableId,
+	decideBallot,
+	everyoneSpoke,
+	notAskedUids,
+	speakerTimeOver,
+	supportBySide,
+	tableDone,
+} from '../index';
 
 describe('notAskedUids', () => {
 	it('lists tablemates in seating order who have not asked and are not the asker', () => {
@@ -10,6 +19,72 @@ describe('notAskedUids', () => {
 	it('reads a missing askedUids as empty and is empty when everyone has asked', () => {
 		expect(notAskedUids({ memberUids: ['a', 'b'], askerUid: 'a' })).toEqual(['b']);
 		expect(notAskedUids({ memberUids: ['a', 'b'], askerUid: 'b', askedUids: ['a'] })).toEqual([]);
+	});
+});
+
+describe('notAskedUids with passes', () => {
+	it('leaves out members who passed on asking', () => {
+		expect(
+			notAskedUids({
+				memberUids: ['a', 'b', 'c', 'd'],
+				askerUid: null,
+				askedUids: ['a'],
+				passedAskingUids: ['c'],
+			}),
+		).toEqual(['b', 'd']);
+	});
+});
+
+describe('speakerTimeOver / everyoneSpoke', () => {
+	const base = { memberUids: ['a', 'b'], spokenUids: ['a'] };
+
+	it('counts the speaker only once their minute is over', () => {
+		const running = { ...base, speakerUid: 'b', speakerEndsAt: 2000 };
+		expect(everyoneSpoke(running, 1000)).toBe(false);
+		expect(everyoneSpoke(running, 2000)).toBe(true);
+		expect(speakerTimeOver(running, 1999)).toBe(false);
+		expect(speakerTimeOver(running, 2000)).toBe(true);
+		expect(speakerTimeOver({}, 0)).toBe(true);
+	});
+
+	it('is false for an empty table', () => {
+		expect(everyoneSpoke({ memberUids: [], spokenUids: [] }, 0)).toBe(false);
+	});
+});
+
+describe('tableDone', () => {
+	const spokeAll = { spokenUids: ['a', 'b'] };
+
+	it('is done when everyone asked or passed and nobody is asking', () => {
+		expect(
+			tableDone(
+				{
+					memberUids: ['a', 'b'],
+					askerUid: null,
+					askedUids: ['a'],
+					passedAskingUids: ['b'],
+					spokenUids: [],
+				},
+				0,
+			),
+		).toBe(true);
+	});
+
+	it('waits for the current talk to be over', () => {
+		const table = {
+			memberUids: ['a', 'b'],
+			askerUid: 'b',
+			askedUids: ['a', 'b'],
+			spokenUids: ['a'],
+		};
+		expect(tableDone(table, 0)).toBe(false);
+		expect(tableDone({ ...table, ...spokeAll }, 0)).toBe(true);
+	});
+
+	it('is not done while somebody can still ask', () => {
+		expect(
+			tableDone({ memberUids: ['a', 'b'], askerUid: 'a', askedUids: ['a'], ...spokeAll }, 0),
+		).toBe(false);
 	});
 });
 
