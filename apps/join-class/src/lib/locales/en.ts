@@ -304,6 +304,10 @@ const en: Record<string, string> = {
 	'console.quick_rate': 'To rating',
 	'console.roster_title': 'The class',
 	'console.roster_empty': 'No one has joined yet',
+	'console.intro.edit': 'Edit the introduction',
+	'console.intro.empty': 'This lesson has no introduction.',
+	'console.intro.add': 'Add an introduction',
+	'console.intro.video_failed': 'This video did not load. Check the link in the plan.',
 	'console.to_table': 'To table',
 	'console.unplaced_live': '{{count}} without a table',
 	'console.picked_up':

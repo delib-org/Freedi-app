@@ -299,6 +299,10 @@ const nl: Record<string, string> = {
 	'console.quick_rate': 'Naar beoordelen',
 	'console.roster_title': 'De klas',
 	'console.roster_empty': 'Nog niemand toegetreden',
+	'console.intro.edit': 'Inleiding bewerken',
+	'console.intro.empty': 'Deze les heeft geen inleiding.',
+	'console.intro.add': 'Inleiding toevoegen',
+	'console.intro.video_failed': 'De video is niet geladen. Controleer de link in de planning.',
 	'console.to_table': 'Naar tafel',
 	'console.unplaced_live': '{{count}} zonder tafel',
 	'console.picked_up':

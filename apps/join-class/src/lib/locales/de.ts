@@ -302,6 +302,11 @@ const de: Record<string, string> = {
 	'console.quick_rate': 'Zum Bewerten',
 	'console.roster_title': 'Die Klasse',
 	'console.roster_empty': 'Noch niemand beigetreten',
+	'console.intro.edit': 'Einleitung bearbeiten',
+	'console.intro.empty': 'Diese Stunde hat keine Einleitung.',
+	'console.intro.add': 'Einleitung hinzufügen',
+	'console.intro.video_failed':
+		'Das Video wurde nicht geladen. Prüfen Sie den Link in der Planung.',
 	'console.to_table': 'An Tisch',
 	'console.unplaced_live': '{{count}} ohne Tisch',
 	'console.picked_up':

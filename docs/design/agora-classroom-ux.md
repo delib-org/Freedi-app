@@ -1593,3 +1593,133 @@ Opacity and transform only. Nothing slides and nothing loops. The `--dur-*` toke
 9. **`preload="metadata"` for file videos on the projector** changes 14.D's "`preload="none"`" for the projector only. One small range request on a laptop buys a visible first frame instead of a black box. The phone is unchanged.
 10. **`projector.controls` "פקדי המקרן" (?)** is only heard, never seen. A native reader should confirm it. "פקדים" is formal; "כפתורי המקרן" is the plainer alternative.
 11. **IA's question on a "window open" indicator** is answered no (15.0). If added later, it needs one string (for example `teacher.screen.window_open`) and a `visibilitychange` check of `win.closed`, with no polling.
+
+### 15.L Opening panel on the console (`/t/:mid`, Opening step, "שולחנות" view)
+
+#### 15.L.0 Decisions in one place
+| Question | Decision | Why |
+|---|---|---|
+| Where | In `main.console__board`, replacing the lone roster card's full width: a 2-column grid, with the panel in the main column and the roster in a 320 px side column | It is the "bottom part" Tal looked at. The roster stays visible. |
+| Reuse | `IntroText` (as is, new size `console`) and `IntroVideoRows`, moved to `components/` with two new attributes | One row pattern on the phone and on the console. No second player code. |
+| Full screen target | The open row's `.intro-video-row__frame` (a new wrapper around the player) | Our letterbox and sizing apply on every player type. Esc exits through the browser. The document full screen is untouched, so the projector's `here` rules never fire. |
+| Fullscreen button form | `.btn--secondary` 40 px, beside the row title, shown only when the row is open and `fullscreenSupported()` | It is reached by Tab before the iframe (iframes swallow focus and pointer) and is visible without hovering. |
+| Band chooser | Unchanged ("על המקרן:") | It is for the two-screen case. It never touches the console player. |
+
+#### 15.L.1 Wireframe, 1280 (the board area is 1248 px wide after the 16 px padding)
+```
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ על המקרן:  [▭ הטקסט] [1. איך זה נראה בכיתה…] [2. ראיון עם המנהלת]          │ שולחנות■│מה כתבו│ │ switch band (unchanged)
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ ┌───────────────────────────────────────────────────────────────┐  ┌──────────────────────┐ │
+│ │ הקדמה                                         עריכת ההקדמה ↗ │  │ הכיתה · 2             │ │ .opening-panel (1fr) | .roster-card (320px)
+│ │                                                               │  │ [●דנה] [■עומר]        │ │
+│ │ בשבוע שעבר המועצה החליטה לאסור טלפונים בהפסקות. חלק מהתלמידים │  │                      │ │ IntroText --console
+│ │ שמחו, חלק כעסו. היום נחליט יחד מה אנחנו ממליצים.              │  └──────────────────────┘ │ max-inline-size 68ch
+│ │  • מה טוב בהחלטה?                                             │                           │
+│ │  • מה עלול להשתבש?                                            │                           │
+│ │                                                               │                           │
+│ │ סרטונים                                                       │                           │ .intro-videos
+│ │ ┌───────────────────────────────────────────────────────────┐ │                           │
+│ │ ┃ 1. איך זה נראה בכיתה בלי טלפונים       [▭ על המקרן עכשיו] │ │                           │ row--live (ink edge + tag)
+│ │ ┃                                       [ ▶ לצפות כאן ]     │ │                           │
+│ │ ├───────────────────────────────────────────────────────────┤ │                           │
+│ │ │ 2. ראיון עם המנהלת                          [ ⛶ מסך מלא ] │ │                           │ row--open
+│ │ │ ┌───────────────────────────────────────────────────────┐ │ │                           │
+│ │ │ │                                                       │ │ │                           │ __frame, 16:9, max 720px wide
+│ │ │ │             YouTube player (its own ▶)                │ │ │                           │
+│ │ │ │                                                       │ │ │                           │
+│ │ │ └───────────────────────────────────────────────────────┘ │ │                           │
+│ │ └───────────────────────────────────────────────────────────┘ │                           │
+│ └───────────────────────────────────────────────────────────────┘                           │
+```
+**1024-1279:** the same grid with the side column at 280 px. **Below 1024:** one column, the panel, then the roster (`.console-opening` grid becomes a single column).
+
+**No introduction** (no blocks, no description, no videos):
+```
+│ ┌───────────────────────────────────────────────────────────────┐  ┌──────────────────────┐ │
+│ │ הקדמה                                                         │  │ הכיתה · 2             │ │
+│ │ לשיעור הזה אין הקדמה.  להוספת הקדמה ↗                         │  │ [●דנה] [■עומר]        │ │
+│ └───────────────────────────────────────────────────────────────┘  └──────────────────────┘ │
+```
+The panel is about 96 px tall, so the board no longer looks broken, and the link is the next step.
+
+#### 15.L.2 Components and blocks
+| Piece | File | What |
+|---|---|---|
+| `OpeningPanel` (NEW) | `views/teacher/OpeningPanel.ts` (about 110 lines) | `section.opening-panel[aria-labelledby=opening-panel-title]`: the `h2.opening-panel__title` "הקדמה", the `m.route.Link a.opening-panel__edit` (tertiary link style), `IntroText {size:'console'}`, `IntroVideoRows`, or the empty line `p.opening-panel__empty` + `a.opening-panel__add`. Module state per mid: `blocks`, `openId`, `failedIds`, the same shape as `OpeningView` on the phone. |
+| `.console-opening` (NEW) | `styles/console-opening.scss`, imported by `TeacherConsole.ts` | The grid wrapper: `display:grid; grid-template-columns: minmax(0,1fr) 320px; gap: var(--space-md); align-items:start`; at `max-width: 1279px` the column is 280px; at `max-width: 1023px` there is one column. |
+| `.opening-panel` (NEW) | same file | Card look shared with `.roster-card` (`--bg-card`, 1px `--paper-line`, `--radius-lg`, `padding: var(--space-lg)`). `__head` is flex, space-between. `__title` uses `--font-size-lg` 700, the same as `.roster-card__title`. `> .intro-text { max-inline-size: 68ch }`. `__empty` uses `--ink-soft`. |
+| `IntroText` | `components/IntroText.ts` | Add `'console'` to `IntroTextSize`. It needs no CSS, because the base `--intro-size` is already `--font-size-lg`. |
+| `IntroVideoRows` (MOVED) | `views/student/c2/` → `components/IntroVideoRows.ts`. The row CSS moves from `student-c2.scss` to NEW `styles/intro-videos.scss`, imported by the component (the `IntroText` / `intro-text.scss` pattern, so Vite puts it in one shared lazy chunk). | New optional attributes: `failedText?: string` (default `t('opening.video_failed')`), and `onFullscreen?: (frame: HTMLElement) => void`. When the second is set and the row is open, the row shows `button.btn.btn--secondary.btn--small.intro-video-row__fullscreen`. The phone passes neither, so it is unchanged and does not import `lib/fullscreen.ts`. |
+| `.intro-video-row__frame` (NEW element) | `intro-videos.scss` | It wraps the player. `:fullscreen, :-webkit-full-screen` → `background: var(--video-letterbox); display:grid; place-items:center;` iframe `inline-size: min(100vw, 100dvh * 16/9); aspect-ratio:16/9`; file `<video>` `100%/100%; object-fit: contain`. The same sizing as `.intro-stage__player` (15.C), with the `--video-*` tokens reused. In the console it is not full screen, so `max-inline-size: 720px`. |
+| `.intro-video-row__fullscreen` (NEW element) | `intro-videos.scss` | `grid-column: 2; grid-row: 1` when the row is `--open`, so it sits beside the title, before the player in Tab order. |
+| `TablesBoard` | changed | New attribute `opening: m.Children` (or `beside`). When the board is in roster mode and it is given, the board renders `div.console-opening` with the panel and then `rosterCard`. `TeacherConsole.board()` passes `m(OpeningPanel, …)` only when `stepKey === 'opening'`. |
+| `PlanScreen` | small change | When `m.route.param('focus') === 'intro'`, `oncreate` calls `scrollIntoView` on `.plan__intro` and focuses its textarea. |
+
+Console call: `onFullscreen: (frame) => void enterFullscreen(frame)` from `lib/fullscreen.ts`. It is already teacher-only, so no new code is needed.
+
+#### 15.L.3 States
+| State | What shows |
+|---|---|
+| Text + videos | heading, edit link, text, the list of videos |
+| Text only | heading, edit link, text; no "סרטונים" (`IntroVideoRows` returns null at 0) |
+| Videos only | heading, edit link, the list of videos |
+| No introduction | heading, `console.intro.empty` + `console.intro.add` |
+| Text loading | `description` as plain text (`blocksFromPlainText`), then one `fetchIntroBlocks(mid)` swaps it in. There is no listener (the console is not the wall). It is fetched again when the panel mounts. |
+| Text fetch failed | plain `description` stays; `logError` with `operation: 'console.openingPanel.fetchIntro'`; nothing shown to the teacher |
+| Row closed | title, optional "על המקרן עכשיו" tag, "▶ לצפות כאן" |
+| Row open (loaded, not playing) | title, "⛶ מסך מלא" (when supported), player; focus moves to the player (existing `focusAndShow`) |
+| Another row opened | the first player is removed (its sound stops) and the second opens |
+| Full screen | the frame fills the screen on `--video-letterbox`; the player's own controls; Esc exits through the browser; focus returns to the row's "מסך מלא" (listen with `onFullscreenChange` while a row is open) |
+| Full screen unsupported | no button; the player's own full screen button (`allowfullscreen`) still works |
+| File video failed | `console.intro.video_failed` replaces the button (`role="status"`) |
+| Projector on the same video | the tag "על המקרן עכשיו" in the row; nothing synced |
+| Paused / ended | the panel is fully usable; only the band's chooser is disabled (existing `heldNow`) |
+| Next step | the panel unmounts and its player goes with it; the board shows today's board for that step |
+| "מה כתבו" view | no panel (today's `WhatTheyWrote`) |
+
+#### 15.L.4 Keyboard and accessibility
+- **Tab order:** band → panel heading link "עריכת ההקדמה" → text (not focusable) → for each row: "לצפות כאן" or, when open, "מסך מלא" then the player → roster chips.
+- **Names:**
+  - The panel is a `section` named by its `h2`.
+  - The full screen button's `aria-label` is "מסך מלא: {label}".
+  - The play button keeps its visible text, with the row title as `aria-describedby` (row title `id = intro-video-title-{id}`).
+- **Not colour alone:** the live row has an ink edge, a tag with words and a screen mark (existing).
+- **Targets:** 40 px buttons with 48 px hit areas (the console is a mouse-first surface, §9). The play button uses `--touch-target`, as it does today.
+- **Esc:**
+  - In full screen, the browser leaves full screen.
+  - Outside full screen, Esc does nothing here. It must not close the player, so it stays free for `barPopover`.
+- **Reduced motion:** the existing `scrollIntoView` rule (`auto`). No new motion.
+- **Contrast:** tokens only; the full screen letterbox uses the 15.C tokens, including the high contrast values.
+- **Language:** `dir="auto"` on titles and blocks (existing).
+
+#### 15.L.5 Weight
+- Teacher console chunk only. It adds `OpeningPanel` (about 110 lines) and `console-opening.scss` (about 40 lines). `IntroText` and `IntroVideoRows` are shared lazy chunks that the phone already loads.
+- No libraries, no YouTube IFrame API, no `autoplay`. The phone keeps `preload="none"`. The console player uses `preload="metadata"` for files (a laptop, the same reasoning as the projector, 15.K-9) through the existing `preload` choice, made an attribute: `preload?: 'none' | 'metadata'`, default `'none'`.
+- The phone's bundle is unchanged apart from the move: it gains no `lib/fullscreen.ts`, because full screen comes in through a callback.
+
+#### 15.L.6 Build steps (one lane)
+1. **Move** `IntroVideoRows.ts` to `components/` and the `.intro-videos` / `.intro-video-row` CSS to `styles/intro-videos.scss`, imported by the component. Update the `OpeningView` import. Add the `failedText`, `onFullscreen` and `preload` attributes, the `__frame` wrapper and the `__fullscreen` button. Existing phone tests must stay green; add a test that the phone renders no full screen button.
+2. **`IntroText`:** add the `'console'` size.
+3. **`OpeningPanel.ts` + `console-opening.scss`:** fetch with a `description` fallback and `logError`, one open player, failed ids, the empty state with the plan link, `enterFullscreen(frame)`, and focus returning to the button on `fullscreenchange` out.
+4. **`TablesBoard`:** the `opening` attribute and the `.console-opening` grid. **`TeacherConsole.board()`:** pass the panel when `stepKey === 'opening'` and the view is "tables".
+5. **`PlanScreen`:** handle `?focus=intro`.
+6. **i18n:** NEW `console.intro.edit`, `console.intro.empty`, `console.intro.add`, `console.intro.video_failed` in all 7 locales.
+7. **Docs:** strike the IA 15.5 "console never plays" bullet and its 15.12 line, and point them to 15.13. Add this section as UX 15.L.
+8. **Tests:**
+   - Unit (`views/teacher/__tests__/OpeningPanel.test.ts`): empty, text-only, video-only, one player at a time, the failed text, and that the full screen callback gets the frame.
+   - Playwright `e2e-opening-panel`, console at 1280 × 720 and 1024 × 768 in `he` and `en`:
+     - the panel sits beside the roster;
+     - no horizontal scroll;
+     - "לצפות כאן" → iframe present;
+     - "מסך מלא" → `document.fullscreenElement` is the frame;
+     - Esc → back, still on `/t/:mid`;
+     - picking "על המקרן: 2" does not open or close the console player;
+     - opening a console player does not change `projectorVideoId`;
+     - paused lesson → the play button is enabled and the chooser is disabled;
+     - no introduction → the add link goes to `/t/:mid/plan?focus=intro`;
+     - axe on the board.
+
+**Check during the build:** no `fullscreenchange` listener may exist outside `ProjectorControls` (checked: it is the only one) that could navigate the console when the frame leaves full screen.
+
+**As built (2026-10-22):** the `?focus=intro` handling lives in `PlanIntro` (the `.plan__intro` section itself), not `PlanScreen`, because the section only exists once the plan has loaded; it waits up to 4 s for the text box to be enabled, then falls back to the section heading. The panel keeps the plain `description` on screen when the paragraph fetch returns no blocks. The Playwright run is `apps/join-class/scripts/e2e-opening-panel.mjs` (`npm run e2e:opening-panel`).

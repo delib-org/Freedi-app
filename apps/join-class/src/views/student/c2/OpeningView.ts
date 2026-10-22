@@ -9,7 +9,7 @@ import { fetchIntroBlocks } from '@/lib/classroom/introData';
 import type { IntroBlock } from '@/lib/classroom/introText';
 import { introVideosOf, projectorVideoOf } from '@/lib/classroom/introVideos';
 import { challengeOf } from '../c2/c2Helpers';
-import { IntroVideoRows } from './IntroVideoRows';
+import { IntroVideoRows } from '@/components/IntroVideoRows';
 import type { StepAttrs } from '../steps/stepSlot';
 
 /**

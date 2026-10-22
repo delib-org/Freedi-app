@@ -1,0 +1,151 @@
+// =============================================================================
+// Introduction video rows (UX 14.C, 15.L): shared by the student Opening and the
+// teacher console panel. Imported by components/IntroVideoRows.ts.
+// =============================================================================
+
+.intro-videos {
+  margin-block-start: var(--space-sm);
+
+  &__title {
+    margin: 0 0 var(--space-sm);
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    list-style: none;
+  }
+}
+
+.intro-video-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: var(--space-md);
+  row-gap: var(--space-xs);
+  min-block-size: 64px;
+  padding: 12px var(--space-md);
+  // reserved on every row so the live mark never shifts the layout
+  border-inline-start: 3px solid transparent;
+
+  & + & {
+    border-block-start: 1px solid var(--paper-line);
+  }
+
+  // "on the projector now" reads without colour: words, a screen shape and a heavier edge
+  &--live {
+    border-inline-start-color: var(--ink);
+  }
+
+  &__title {
+    grid-column: 1;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    overflow-wrap: anywhere;
+  }
+
+  &__live {
+    display: inline-flex;
+    grid-column: 1;
+    align-items: center;
+    justify-self: start;
+    gap: var(--space-xs);
+    block-size: 24px;
+    padding-inline: var(--space-sm);
+    border-radius: var(--radius-full);
+    background: var(--ink);
+    color: var(--paper);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__mark {
+    display: inline-block;
+    inline-size: 10px;
+    block-size: 7px;
+    border: 1.5px solid currentColor;
+    border-radius: 1px;
+  }
+
+  &__action {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  &--open &__action {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  &__play {
+    min-block-size: var(--touch-target);
+  }
+
+  // wraps the player: the element the console puts full screen (UX 15.L)
+  &__frame {
+    inline-size: 100%;
+    max-inline-size: 720px;
+  }
+
+  &__frame:fullscreen,
+  &__frame:-webkit-full-screen {
+    display: grid;
+    place-items: center;
+    max-inline-size: none;
+    background: var(--video-letterbox);
+  }
+
+  &__frame:fullscreen &__player,
+  &__frame:-webkit-full-screen &__player {
+    border-radius: 0;
+    background: var(--video-letterbox);
+  }
+
+  &__frame:fullscreen iframe#{&}__player,
+  &__frame:-webkit-full-screen iframe#{&}__player {
+    inline-size: min(100vw, calc(100dvh * 16 / 9));
+  }
+
+  &__frame:fullscreen video#{&}__player,
+  &__frame:-webkit-full-screen video#{&}__player {
+    block-size: 100%;
+    object-fit: contain;
+  }
+
+  // beside the title, before the player in Tab order
+  &__fullscreen {
+    grid-column: 2;
+    grid-row: 1;
+    min-block-size: 40px;
+    padding-block: var(--space-xs);
+  }
+
+  &__player {
+    display: block;
+    inline-size: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--paper-soft);
+  }
+
+  &__note {
+    margin: 0;
+    color: var(--ink-muted);
+  }
+
+  // 200 % zoom / very narrow phones: the button drops under the title
+  @media (max-width: 22rem) {
+    &__action {
+      grid-column: 1 / -1;
+      grid-row: auto;
+    }
+  }
+}

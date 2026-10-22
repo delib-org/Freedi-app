@@ -10,7 +10,7 @@ import { decodeEntities, type IntroBlock } from '@/lib/classroom/introText';
  * the plan screen's preview, the student Opening and the projector.
  */
 
-export type IntroTextSize = 'phone' | 'preview' | 'projector';
+export type IntroTextSize = 'phone' | 'preview' | 'projector' | 'console';
 
 export interface IntroRun {
 	text: string;

@@ -933,7 +933,7 @@ What the class must never see: the control while the teacher is not using it; a 
 - **Step change during a video:** the server clears `projectorVideoId` (§14.2); the player leaves, the next step's screen shows, full screen stays.
 - **Another video picked from the console (window mode):** the new player replaces the old one, loaded but not playing, full screen stays. If the teacher had used the player's own full-screen button, that ends with the old player; the window is still full screen.
 - **The video fails (direct files only, §14):** the text comes back with `projector.video_failed`, as today.
-- **The console never plays a video.** One place plays to the room: the projector. In the one-screen case the teacher picks the video in the console and presses "הצגה במסך הזה". Reasons: no two players with sound on one laptop, no second player in the console's weight budget, and one answer to "where do videos play".
+- **~~The console never plays a video.~~ Reversed by 15.13: the console plays the introduction videos for the teacher, on the teacher's own computer.** (The original rule follows.) One place plays to the room: the projector. In the one-screen case the teacher picks the video in the console and presses "הצגה במסך הזה". Reasons: no two players with sound on one laptop, no second player in the console's weight budget, and one answer to "where do videos play".
 - **Full screen unavailable** (`document.fullscreenEnabled` false, e.g. iPhone Safari, some kiosk browsers): "מסך מלא" is not shown; video mode still fills the window; `here` mode still has "חזרה לשיעור" and Esc.
 
 ### 15.6 Routes and URL
@@ -1007,7 +1007,7 @@ Fixed here:
 - "הצגה במסך הזה" enters full screen in the same click; Esc and "חזרה לשיעור" leave it and go back
 - the teacher control's contents per mode, its show/hide triggers, its 3 s idle, and that it drives nothing
 - video mode fills the window and hides the band; document full screen survives video and step changes
-- the console never plays a video
+- ~~the console never plays a video~~ (reversed, see 15.13)
 - every state in 15.10
 
 Yours to decide:
@@ -1019,3 +1019,72 @@ Yours to decide:
 Questions for you:
 - Should the console show that a projector window is open (and offer to bring it forward), or is pressing "מקרן בחלון נפרד" again enough?
 - Does the first-open hint need a drawing of "drag to the other screen", or are words enough for teachers?
+
+### 15.13 The introduction on the console board (Tal, 2026-10-22, second request)
+
+Tal, at the Opening step of the console, said: "Again, I want to show the videos FROM THE TEACHER'S COMPUTER, and I don't see how... I would expect them to appear in the bottom part."
+
+What he saw: the board under the switch band showed only the roster card "הכיתה · 2" and a large empty area. The videos could be reached only through "על המקרן:" in the band, which drives the projector and never plays anything on the console.
+
+**What this overrides:**
+- **§15.5 "The console never plays a video" is reversed.** The console now plays the introduction's videos for the teacher on the teacher's own computer, and can show one full screen. Delete that bullet from 15.5 and the matching line in 15.12 ("the console never plays a video").
+- **§15.9, one-screen flow:** the teacher no longer needs the projector route to play a video. The projector (`here` mode) is still how the text is shown big.
+- **§14.13 "the console as the only way to drive the projector" still holds.** Playing a video on the console drives nothing: it writes no field and changes nothing on the projector or on the phones.
+
+#### 15.13.1 Object
+There is no new data and nothing is written to Firestore. Everything below is per tab.
+
+| Object | What it is | Cardinality | Where it lives | Lifecycle |
+|---|---|---|---|---|
+| Opening panel | The console board's view of the introduction at Opening: the text, then the videos | 0..1, only while the step is Opening and the view is "שולחנות" | console board | shows on entering Opening and leaves on the next step |
+| Console player | One video playing on the teacher's computer | 0..1 per console tab (opening another closes the first, the same rule as the phone) | inside its row in the panel | closed → open (loaded, not playing) → played by the player's own button → closed by opening another video, leaving Opening, or leaving the route |
+| Console full screen | The Fullscreen API on the **row's player frame**, not on the document | 0..1 | browser | starts only with the teacher's click; ends with Esc or the browser |
+
+#### 15.13.2 Rules
+1. **Two players, two places.** "לצפות כאן" on the console opens the console player only. It never writes `projectorVideoId`. "על המקרן:" in the band moves the projector only, and never opens or closes the console player.
+2. **The same video on both.** If the projector window shows the video the teacher opens on the console, both stay as they are: the app does not pause, mute or sync either one. The row's tag "על המקרן עכשיו" already tells the teacher that the projector is on the same video. With two screens, the projector is what the class watches. The console player is for the one-screen teacher, or for a preview.
+3. **One screen.** The teacher plays the video on the console and presses "מסך מלא". The mirrored wall shows the video full screen. Esc returns to the console with the panel exactly as it was. No route change, no projector.
+4. **Paused or ended lesson:** the panel and its players stay usable, because they drive nothing. A teacher may pause the lesson in order to show a video. Only "על המקרן:" is disabled while the lesson is held (UX 14.E).
+5. **No autoplay.** Opening a row loads the player; the teacher presses the player's own play (the §14 rule, unchanged).
+6. **Full screen is the player frame's, not the document's.** The console document never goes full screen. That keeps it separate from the projector's `here` mode, where leaving full screen navigates back (15.4). Leaving the frame's full screen just returns to the panel.
+
+#### 15.13.3 How the roster and the panel share the board at Opening
+- The **panel comes first**, in the main column (the start side, right in RTL), because it holds the step's content.
+- The **roster card "הכיתה · n"** moves to a narrow side column (the end side). It keeps its chips and its count, so late joiners can still be watched.
+- Below 1024 px the two stack: the panel first, then the roster.
+- The roster is never collapsed. It is small, and the teacher watches arrivals during Opening.
+- In the "מה כתבו" view the panel is not shown. There is nothing written at Opening, and the view stays what it is today.
+
+#### 15.13.4 Labels (all 7 locales; (?) = needs a native read)
+| Concept | EN | HE | i18n key | Note |
+|---|---|---|---|---|
+| Panel heading | Introduction | הקדמה | `plan.intro.title` (reused) | The teacher's name for this content, the same as on the plan screen. Students and the projector still never see the word. |
+| Edit link | Edit the introduction | עריכת ההקדמה | NEW `console.intro.edit` | → `/t/:mid/plan?focus=intro` |
+| No introduction | This lesson has no introduction. | לשיעור הזה אין הקדמה. | NEW `console.intro.empty` | |
+| Add link | Add an introduction | להוספת הקדמה | NEW `console.intro.add` | → `/t/:mid/plan?focus=intro` |
+| Videos heading | Videos | סרטונים | `opening.videos` (reused) | |
+| Play on this computer | Watch here | לצפות כאן | `opening.play` (reused) | "Here" means this device for both the student and the teacher, so one name. |
+| Untitled video | Video {{n}} | סרטון {{n}} | `opening.video_n` (reused) | |
+| Projector tag | On the projector now | על המקרן עכשיו | `opening.on_projector` (reused) | |
+| Full screen | Full screen | מסך מלא | `projector.fullscreen` (reused) | One concept, one key. The accessible name is "מסך מלא: {label}", composed with no new key. |
+| File video failed (console) | This video did not load. Check the link in the plan. | הסרטון לא נטען. בדקו את הקישור בתכנון. | NEW `console.intro.video_failed` | The phone's "המורה מקרין" is wrong for the teacher. |
+
+#### 15.13.5 Screen inventory (row added)
+| Screen | Route | Single job | Empty | Loading | Error | No permission | Done |
+|---|---|---|---|---|---|---|---|
+| Console board at Opening (changed) | /t/:mid | read the introduction, play a video here, full screen | `console.intro.empty` + `console.intro.add` | `description` as plain text until the blocks arrive | text fetch failed: plain `description`, no error; file video failed: `console.intro.video_failed` in its row | not your lesson (§13) | the next step replaces the panel with the table board |
+
+#### 15.13.6 Task flows
+**One screen: show the text, then play video 1 full screen (6 actions, was 12 with the menu):**
+1. "פתיחת השלב הבא: פתיחה". The board shows the panel.
+2. "מקרן ▾" → "הצגה במסך הזה": the wall shows the text big. Esc returns to the console. This step is optional: the teacher can read from the panel.
+3. On the panel, video 1: "לצפות כאן".
+4. "מסך מלא".
+5. The player's play.
+6. Esc, then "פתיחת השלב הבא: צד".
+
+**Two screens:** unchanged (15.9). The console player is optional, a preview.
+
+#### 15.13.7 Open questions, each with a default
+- **A. Pause the projector's copy when the console plays the same video?** [Default: no. That needs the YouTube IFrame API (rejected in 14.J-5), and the tag already warns.]
+- **B. Show the challenge question in the panel?** [Default: no. The bar carries the lesson name and the teacher knows the question. Add it only if teachers read the panel aloud as a script.]
