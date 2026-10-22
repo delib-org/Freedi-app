@@ -1,4 +1,4 @@
-import type { ClassTable } from '@freedi/shared-types';
+import type { ClassTable, ClassTableAction } from '@freedi/shared-types';
 import { assignTables } from '../fn_classAssignTables';
 import { moveStudent } from '../fn_classMoveStudent';
 import { addNoDevice, cleanNoDeviceName } from '../fn_classAddNoDevice';
@@ -135,20 +135,21 @@ describe('classAssignTables', () => {
 });
 
 describe('classMoveStudent + classAddNoDevice', () => {
-	it('moves a student, keeps both tables and the subscription consistent, fixes the asker', async () => {
+	it('moves a student, keeps both tables and the subscription consistent', async () => {
 		const fake = new FakeFirestore();
 		seedLesson(fake, 12);
 		const db = fake.asFirestore();
 		await assignTables(db, TEACHER, { mainId: MAIN }, fixedRng());
 		const t1 = fake.read(`classTables/${MAIN}--1`) as unknown as ClassTable;
-		const asker = t1.askerUid as string;
+		expect(t1.askerUid).toBeNull();
+		const asker = t1.memberUids[0];
 
 		await moveStudent(db, TEACHER, { mainId: MAIN, uid: asker, toTable: 2 });
 		const from = fake.read(`classTables/${MAIN}--1`) as unknown as ClassTable;
 		const to = fake.read(`classTables/${MAIN}--2`) as unknown as ClassTable;
 		expect(from.memberUids).not.toContain(asker);
-		expect(from.askerUid).not.toBe(asker);
-		expect(from.memberUids).toContain(from.askerUid);
+		expect(from.askerUid).toBeNull();
+		expect(to.askerUid).toBeNull();
 		expect(to.memberUids).toContain(asker);
 		expect(fake.read(`statementsSubscribe/${asker}--${MAIN}`)?.tableId).toBe(`${MAIN}--2`);
 
@@ -207,54 +208,77 @@ describe('classTableStep + classAllTablesTo', () => {
 		return { fake, table: fake.read(`classTables/${MAIN}--1`) as unknown as ClassTable };
 	}
 
-	it('runs a turn for the asker and refuses a tablemate', async () => {
+	it('runs a turn: a volunteer claims, picks, talks, the next claims at V2', async () => {
 		const { fake, table } = await seated();
 		const db = fake.asFirestore();
-		const asker = table.askerUid as string;
-		const mate = table.memberUids.find((u) => u !== asker) as string;
+		const [asker, mate, other] = table.memberUids;
 		const clock = () => NOW;
+		const step = (uid: string, action: ClassTableAction) =>
+			tableStep(db, uid, { tableId: table.tableId, ...action }, clock);
 
-		expect(
-			await tableStep(
-				db,
-				asker,
-				{ tableId: table.tableId, action: 'pickQuestion', questionId: 'q1' },
-				clock,
-			),
-		).toEqual({ step: 'pick', turn: 1 });
-		await expectCode(
-			tableStep(db, mate, { tableId: table.tableId, action: 'toTalk' }, clock),
-			'permission-denied',
-		);
-		await tableStep(db, asker, { tableId: table.tableId, action: 'toTalk' }, clock);
-		await tableStep(db, asker, { tableId: table.tableId, action: 'nextSpeaker', uid: mate }, clock);
+		expect(table.askerUid).toBeNull();
+		// nobody asks yet: a tablemate cannot pick, anyone not yet asked can claim
+		await expectCode(step(mate, { action: 'pickQuestion', questionId: 'q1' }), 'permission-denied');
+		expect(await step(asker, { action: 'nextTurn', fromTurn: 1 })).toEqual({
+			step: 'pick',
+			turn: 1,
+		});
+		// the loser of the race sees the reason the client swallows
+		const lost = await step(other, { action: 'nextTurn', fromTurn: 1 }).catch((e: unknown) => e);
+		expect(toHttpsError(lost, { operation: 'test' }).details).toEqual({ reason: 'turn-claimed' });
+
+		await step(asker, { action: 'pickQuestion', questionId: 'q1' });
+		await expectCode(step(mate, { action: 'toTalk' }), 'permission-denied');
+		await step(asker, { action: 'toTalk' });
+		expect(fake.read(`classTables/${table.tableId}`)).toMatchObject({
+			step: 'talk',
+			askedUids: [asker],
+		});
+		await step(asker, { action: 'nextSpeaker', uid: mate });
 		expect(fake.read(`classTables/${table.tableId}`)).toMatchObject({
 			speakerUid: mate,
 			speakerEndsAt: NOW + 60_000,
 		});
-		await tableStep(db, asker, { tableId: table.tableId, action: 'toWrite' }, clock);
-		expect(fake.read(`classTables/${table.tableId}`)?.speakerUid).toBeUndefined();
-		await tableStep(db, asker, { tableId: table.tableId, action: 'toRate' }, clock);
-		await expectCode(
-			tableStep(db, asker, { tableId: table.tableId, action: 'nextTurn' }, clock),
-			'permission-denied',
-		);
+		await step(mate, { action: 'passSpeaking' });
+		expect(fake.read(`classTables/${table.tableId}`)).toMatchObject({
+			passedSpeakingUids: [mate],
+			speakerEndsAt: NOW,
+		});
+		await expectCode(step(other, { action: 'nextTurn', fromTurn: 1 }), 'failed-precondition');
+		for (const uid of table.memberUids.filter((u) => u !== mate)) {
+			await step(asker, { action: 'nextSpeaker', uid });
+		}
+		const closing = (): number => NOW + 61_000;
 		expect(
-			await tableStep(db, mate, { tableId: table.tableId, action: 'nextTurn' }, clock),
+			await tableStep(
+				db,
+				other,
+				{ tableId: table.tableId, action: 'nextTurn', fromTurn: 1 },
+				closing,
+			),
 		).toEqual({ step: 'pick', turn: 2 });
 		expect(fake.read(`classTables/${table.tableId}`)).toMatchObject({
-			askerUid: mate,
+			askerUid: other,
 			askedUids: [asker],
 		});
-		// the loser of a race sees the step moved, with the reason the client reads
-		const other = table.memberUids.find((u) => u !== asker && u !== mate) as string;
-		const lost = await tableStep(
-			db,
-			other,
-			{ tableId: table.tableId, action: 'nextTurn' },
-			clock,
-		).catch((e: unknown) => e);
-		expect(toHttpsError(lost, { operation: 'test' }).details).toEqual({ reason: 'turn-claimed' });
+	});
+
+	it('refuses every table move while the lesson is paused', async () => {
+		const { fake, table } = await seated();
+		fake.seed(`statements/${MAIN}`, {
+			...(fake.read(`statements/${MAIN}`) ?? {}),
+			statementSettings: { lessonPlan: { status: 'paused' } },
+		});
+		const [first] = table.memberUids;
+		for (const action of [
+			{ action: 'nextTurn' },
+			{ action: 'passAsking' },
+			{ action: 'passSpeaking' },
+		] as const) {
+			await expect(
+				tableStep(fake.asFirestore(), first, { tableId: table.tableId, ...action }),
+			).rejects.toBeInstanceOf(ClassroomError);
+		}
 	});
 
 	it("only accepts this lesson's non-challenge questions", async () => {

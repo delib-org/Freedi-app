@@ -1,20 +1,22 @@
-import { SPEAK_SECONDS, notAskedUids } from '@freedi/shared-types';
+import { SPEAK_SECONDS, everyoneSpoke, notAskedUids, speakerTimeOver } from '@freedi/shared-types';
 import type { ClassTable, ClassTableAction, TableStep } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
+
+export { everyoneSpoke, speakerTimeOver };
 
 /**
  * Pure state machine of one table (`classTableStep`). Given the table, the
  * action and who asks, returns the table's next state (a whole document: the
  * callable writes it with `set`, so optional fields that reset simply vanish).
  *
- * A turn: pick (asker picks a question) -> talk (each tablemate speaks for
- * SPEAK_SECONDS) -> write -> rate -> the next turn (back to pick). Every
- * tablemate with a device asks once (`askedUids`). At `rate` the first
- * tablemate who has not asked taps to claim the next turn (`nextTurn` by a
- * member: first tap wins, the transaction refuses the second); the asker
- * cannot hand the turn on, and a teacher's `nextTurn` gives it to the first
- * tablemate who has not asked. The Proposals step reuses talk -> write ->
- * rate with no question.
+ * Table talk turn (IA 16 rev 2): nobody asks until a student who has not asked
+ * claims the turn ("אני אשאל": `nextTurn` by a member, first transaction wins)
+ * -> pick (the asker chooses a question) -> talk (every tablemate speaks for
+ * SPEAK_SECONDS, the asker too; a minute can be passed) -> the next claim.
+ * `askedUids` gains the asker at `toTalk`; a student may pass on asking
+ * (`passedAskingUids`, kept all lesson) or on a minute (`passedSpeakingUids`,
+ * cleared per turn). A teacher's `nextTurn` opens a volunteer moment (no asker).
+ * The Proposals step reuses talk -> write -> rate with no question.
  *
  * A timer ending never advances anything: `speakerEndsAt` is only a moment
  * the devices count down to. It changes WHO may act (any tablemate once the
@@ -39,8 +41,11 @@ export const ALLOWED_FROM: Record<ClassTableAction['action'], readonly TableStep
 	toWrite: ['pick', 'talk'],
 	setWritingMode: ['pick', 'talk', 'write'],
 	toRate: ['talk', 'write'],
-	nextTurn: ['rate'],
+	// pick: V1 (nobody asks); talk: V2 (everyone spoke); rate: a table that was mid-turn before v2.
+	nextTurn: ['pick', 'talk', 'rate'],
 	passAsker: ['pick'],
+	passAsking: ['pick', 'talk', 'write', 'rate'],
+	passSpeaking: ['talk'],
 };
 
 /**
@@ -59,6 +64,13 @@ const ADMIN_FROM_ANY_STEP: ReadonlySet<ClassTableAction['action']> = new Set([
 /** Teacher-only actions: the asker and tablemates never run them. */
 const ADMIN_ONLY: ReadonlySet<ClassTableAction['action']> = new Set(['passAsker']);
 
+/** Moves a plain tablemate may run when nobody asks (the asker left): IA 16.7 E8. */
+const ASKERLESS_MEMBER_MOVES: ReadonlySet<ClassTableAction['action']> = new Set([
+	'nextSpeaker',
+	'toWrite',
+	'toRate',
+]);
+
 export function actorRole(table: ClassTable, ctx: TransitionContext): ActorRole | null {
 	if (ctx.isAdmin) return 'admin';
 	if (table.askerUid && table.askerUid === ctx.actorUid) return 'asker';
@@ -67,26 +79,68 @@ export function actorRole(table: ClassTable, ctx: TransitionContext): ActorRole 
 	return null;
 }
 
-/** The current speaker's minute is over (or nobody holds the floor yet). */
-export function speakerTimeOver(table: ClassTable, now: number): boolean {
-	return typeof table.speakerEndsAt !== 'number' || table.speakerEndsAt <= now;
+function listOf(uids: string[] | undefined): string[] {
+	return uids ?? [];
 }
 
-/** Everyone at the table has spoken (the current speaker counts once their minute is over). */
-export function everyoneSpoke(table: ClassTable, now: number): boolean {
-	const spoken = new Set(table.spokenUids);
-	if (table.speakerUid && typeof table.speakerEndsAt === 'number' && table.speakerEndsAt <= now) {
-		spoken.add(table.speakerUid);
+/**
+ * A tablemate may claim the turn ("אני אשאל") at two moments, once, if they
+ * have not asked or passed: V1 (`pick`, nobody asks) and V2 (`talk`, everyone
+ * spoke); a table left at `rate` before v2 still allows it. Checked in this
+ * order so a forged or stale tap gets the most telling refusal.
+ */
+function assertMayClaimTurn(
+	table: ClassTable,
+	actorUid: string,
+	fromTurn: number | undefined,
+	now: number,
+): void {
+	if (listOf(table.askedUids).includes(actorUid)) {
+		throw new ClassroomError('permission-denied', 'You have already asked', 'already-asked');
 	}
+	if (listOf(table.passedAskingUids).includes(actorUid)) {
+		throw new ClassroomError('permission-denied', 'You passed on asking', 'already-passed');
+	}
+	const tableMovedOn = fromTurn !== undefined && fromTurn !== table.turn;
+	const alreadyClaimed = table.step === 'pick' && table.askerUid !== null;
+	if (tableMovedOn || alreadyClaimed) {
+		throw new ClassroomError(
+			'failed-precondition',
+			'Another tablemate already took the turn',
+			'turn-claimed',
+		);
+	}
+	if (table.step === 'talk' && !everyoneSpoke(table, now)) {
+		throw new ClassroomError(
+			'failed-precondition',
+			'The table has not finished talking',
+			'talk-not-over',
+		);
+	}
+}
 
-	return table.memberUids.length > 0 && table.memberUids.every((uid) => spoken.has(uid));
+/** A member passes only for themselves; the target checks need the table, so they run in the transition. */
+function assertMayPassAsking(action: ClassTableAction, actorUid: string): void {
+	if (action.action === 'passAsking' && action.uid !== undefined && action.uid !== actorUid) {
+		throw new ClassroomError('permission-denied', 'Only a teacher can pass for someone else');
+	}
+}
+
+/** The speaker passes their own minute; the asker passes on their behalf. */
+function assertMayPassSpeaking(role: ActorRole | null, table: ClassTable, actorUid: string): void {
+	if (role === 'asker' || actorUid === table.speakerUid) return;
+	throw new ClassroomError(
+		'permission-denied',
+		'Only the speaker, the asker or a teacher can pass a minute',
+		'not-speaker',
+	);
 }
 
 /**
  * May this actor run this action now? The asker holds the table's controls;
  * a plain tablemate may pick the next speaker once the current minute is over
- * ("הבא בתור", so a table is never stuck on a missing asker) and may leave
- * talk for write once everyone has spoken ("סיימנו, לכתוב").
+ * ("הבא בתור", so a table is never stuck) and, at a table nobody asks at (the
+ * asker left), run the asker's moves.
  */
 function assertMayAct(
 	role: ActorRole | null,
@@ -99,43 +153,30 @@ function assertMayAct(
 	if (ADMIN_ONLY.has(action.action)) {
 		throw new ClassroomError('permission-denied', 'Only a teacher can do this');
 	}
-	if (action.action === 'nextTurn') {
-		assertMayClaimTurn(role, table, actorUid, action.fromTurn);
+	switch (action.action) {
+		case 'nextTurn':
+			assertMayClaimTurn(table, actorUid, action.fromTurn, now);
 
-		return;
+			return;
+		case 'passAsking':
+			assertMayPassAsking(action, actorUid);
+
+			return;
+		case 'passSpeaking':
+			assertMayPassSpeaking(role, table, actorUid);
+
+			return;
+		default:
+			break;
 	}
 	if (role === 'asker') return;
 	if (role === 'member') {
 		if (action.action === 'nextSpeaker' && table.speakerUid && speakerTimeOver(table, now)) return;
 		if (action.action === 'toWrite' && table.step === 'talk' && everyoneSpoke(table, now)) return;
+		const askerless = table.askerUid === null && (table.step === 'talk' || table.step === 'write');
+		if (askerless && ASKERLESS_MEMBER_MOVES.has(action.action)) return;
 	}
 	throw new ClassroomError('permission-denied', "Only the table's asker or a teacher can do this");
-}
-
-/**
- * A tablemate (never the asker) may claim the next turn from `rate`, once, if
- * they have not asked yet. Checked in this order so a forged or stale tap gets
- * the most telling refusal: already asked, then step moved (someone won).
- */
-function assertMayClaimTurn(
-	role: ActorRole | null,
-	table: ClassTable,
-	actorUid: string,
-	fromTurn: number | undefined,
-): void {
-	if (role === 'asker') {
-		throw new ClassroomError('permission-denied', 'The asker cannot hand the turn on');
-	}
-	if ((table.askedUids ?? []).includes(actorUid)) {
-		throw new ClassroomError('permission-denied', 'You have already asked', 'already-asked');
-	}
-	if (table.step !== 'rate' || (fromTurn !== undefined && fromTurn !== table.turn)) {
-		throw new ClassroomError(
-			'failed-precondition',
-			'Another tablemate already started the next turn',
-			'turn-claimed',
-		);
-	}
 }
 
 function assertFromStep(role: ActorRole | null, action: ClassTableAction, table: ClassTable): void {
@@ -150,10 +191,17 @@ function assertFromStep(role: ActorRole | null, action: ClassTableAction, table:
 
 /** Strip the per-speaker / per-question fields; used when a turn resets. */
 function withoutTurnFields(table: ClassTable): ClassTable {
-	const { questionId: _q, speakerUid: _s, speakerEndsAt: _e, ...rest } = table;
+	const {
+		questionId: _q,
+		speakerUid: _s,
+		speakerEndsAt: _e,
+		passedSpeakingUids: _p,
+		...rest
+	} = table;
 	void _q;
 	void _s;
 	void _e;
+	void _p;
 
 	return { ...rest, spokenUids: [], writingLocked: false };
 }
@@ -166,19 +214,108 @@ function withoutSpeaker(table: ClassTable): ClassTable {
 	return rest;
 }
 
-/** `askedUids` with the current asker added: their turn is over once the table moves on. */
+function withoutPassedSpeaking(table: ClassTable): ClassTable {
+	const { passedSpeakingUids: _p, ...rest } = table;
+	void _p;
+
+	return rest;
+}
+
+/** `askedUids` with the current asker added (a table left mid-turn before v2 never added them at toTalk). */
 function withAsker(table: ClassTable): string[] {
-	const asked = table.askedUids ?? [];
+	const asked = listOf(table.askedUids);
 
 	return table.askerUid && !asked.includes(table.askerUid) ? [...asked, table.askerUid] : asked;
 }
 
-/** Next asker after `current` in seating order; the first member when there is no current one. */
-export function nextAsker(memberUids: string[], current: string | null): string | null {
-	if (memberUids.length === 0) return null;
-	const i = current ? memberUids.indexOf(current) : -1;
+/** A turn that starts: step pick, turn + 1, the turn fields cleared. */
+function startedTurn(base: ClassTable, table: ClassTable, askerUid: string | null): ClassTable {
+	return {
+		...withoutTurnFields(base),
+		step: 'pick',
+		turn: table.turn + 1,
+		askerUid,
+		// An asker still choosing has not asked: leaving pick does not count as their turn.
+		askedUids: table.step === 'pick' ? listOf(table.askedUids) : withAsker(table),
+		writingMode: 'each',
+	};
+}
 
-	return memberUids[(i + 1) % memberUids.length];
+function nextTurn(
+	table: ClassTable,
+	base: ClassTable,
+	role: ActorRole | null,
+	actorUid: string,
+): ClassTable {
+	if (role !== 'admin') {
+		// V1: the claimer becomes the asker and the turn stays; V2 (or a leftover rate): a new turn.
+		return table.step === 'pick'
+			? { ...base, askerUid: actorUid }
+			: startedTurn(base, table, actorUid);
+	}
+	// A teacher opens a volunteer moment. An asker still at pick has not asked, so they stay eligible.
+	const eligible = notAskedUids({
+		...table,
+		askerUid: table.step === 'pick' ? null : table.askerUid,
+	});
+	if (eligible.length === 0) {
+		throw new ClassroomError('failed-precondition', 'Everyone has already asked', 'all-asked');
+	}
+
+	return startedTurn(base, table, null);
+}
+
+function passAsking(
+	table: ClassTable,
+	base: ClassTable,
+	action: ClassTableAction,
+	ctx: TransitionContext,
+): ClassTable {
+	const named = action.action === 'passAsking' ? action.uid : undefined;
+	if (ctx.isAdmin && !named) {
+		throw new ClassroomError('invalid-argument', 'Name the tablemate who passes');
+	}
+	const target = named ?? ctx.actorUid;
+	if (!table.memberUids.includes(target)) {
+		throw new ClassroomError('invalid-argument', 'Only a tablemate can pass on asking');
+	}
+	if (listOf(table.askedUids).includes(target)) {
+		throw new ClassroomError('permission-denied', 'Already asked', 'already-asked');
+	}
+	if (listOf(table.passedAskingUids).includes(target)) {
+		throw new ClassroomError('permission-denied', 'Already passed on asking', 'already-passed');
+	}
+	const passedAskingUids = [...listOf(table.passedAskingUids), target];
+	if (target !== table.askerUid) return { ...base, passedAskingUids };
+	if (table.step !== 'pick') {
+		throw new ClassroomError('failed-precondition', 'The asker can only pass while choosing');
+	}
+	// The asker passes while choosing: back to a volunteer moment, their question is free again.
+	const { questionId: _q, ...rest } = base;
+	void _q;
+
+	return {
+		...rest,
+		askerUid: null,
+		passedAskingUids,
+		usedQuestionIds: table.usedQuestionIds.filter((id) => id !== table.questionId),
+	};
+}
+
+function passSpeaking(table: ClassTable, base: ClassTable, now: number): ClassTable {
+	const { speakerUid } = table;
+	if (!speakerUid || speakerTimeOver(table, now)) {
+		throw new ClassroomError('failed-precondition', 'The minute is over', 'minute-over');
+	}
+	const withSpeaker = (uids: string[] | undefined): string[] =>
+		listOf(uids).includes(speakerUid) ? listOf(uids) : [...listOf(uids), speakerUid];
+
+	return {
+		...base,
+		spokenUids: withSpeaker(table.spokenUids),
+		passedSpeakingUids: withSpeaker(table.passedSpeakingUids),
+		speakerEndsAt: now,
+	};
 }
 
 /**
@@ -214,8 +351,19 @@ export function applyTableAction(
 
 			return { ...base, questionId, usedQuestionIds: [...used, questionId] };
 		}
-		case 'toTalk':
-			return { ...withoutSpeaker(base), step: 'talk', spokenUids: [] };
+		case 'toTalk': {
+			if (role !== 'admin' && !table.questionId) {
+				throw new ClassroomError('failed-precondition', 'Choose a question first', 'no-question');
+			}
+			const talk: ClassTable = {
+				...withoutPassedSpeaking(withoutSpeaker(base)),
+				step: 'talk',
+				spokenUids: [],
+			};
+
+			// The asker has asked once their turn reaches talk (a teacher's jump with no question is no turn).
+			return table.questionId ? { ...talk, askedUids: withAsker(table) } : talk;
+		}
 		case 'nextSpeaker': {
 			const { uid } = action;
 			if (!table.memberUids.includes(uid)) {
@@ -225,13 +373,18 @@ export function applyTableAction(
 				table.speakerUid && !table.spokenUids.includes(table.speakerUid)
 					? [...table.spokenUids, table.speakerUid]
 					: table.spokenUids;
-
-			return {
+			const next: ClassTable = {
 				...base,
 				speakerUid: uid,
 				speakerEndsAt: ctx.now + SPEAK_SECONDS * 1000,
 				spokenUids: spoken,
 			};
+			// A speaker who passed and is called again: the chip reads spoken, not passed.
+			if (listOf(table.passedSpeakingUids).includes(uid)) {
+				next.passedSpeakingUids = listOf(table.passedSpeakingUids).filter((m) => m !== uid);
+			}
+
+			return next;
 		}
 		case 'toWrite': {
 			// The last speaker is done once the table moves on.
@@ -253,23 +406,12 @@ export function applyTableAction(
 			return { ...base, writingMode: action.mode };
 		case 'toRate':
 			return { ...withoutSpeaker(base), step: 'rate' };
-		case 'nextTurn': {
-			// A tablemate claims the turn for themselves; a teacher gives it to the
-			// first tablemate who has not asked (nobody left: the table is done).
-			const claimed = role === 'admin' ? notAskedUids(table)[0] : ctx.actorUid;
-			if (!claimed) {
-				throw new ClassroomError('failed-precondition', 'Everyone has already asked', 'all-asked');
-			}
-
-			return {
-				...withoutTurnFields(base),
-				step: 'pick',
-				turn: table.turn + 1,
-				askerUid: claimed,
-				askedUids: withAsker(table),
-				writingMode: 'each',
-			};
-		}
+		case 'nextTurn':
+			return nextTurn(table, base, role, ctx.actorUid);
+		case 'passAsking':
+			return passAsking(table, base, action, ctx);
+		case 'passSpeaking':
+			return passSpeaking(table, base, ctx.now);
 		case 'passAsker': {
 			const { uid } = action;
 			if (!notAskedUids(table).includes(uid)) {

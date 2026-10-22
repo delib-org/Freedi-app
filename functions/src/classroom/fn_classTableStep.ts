@@ -36,6 +36,10 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 			return { action: 'pickQuestion', questionId: requireId(req.questionId, 'questionId') };
 		case 'passAsker':
 			return { action: 'passAsker', uid: requireId(req.uid, 'uid') };
+		case 'passAsking':
+			return typeof req.uid === 'string' && req.uid !== ''
+				? { action: 'passAsking', uid: req.uid }
+				: { action: 'passAsking' };
 		case 'nextSpeaker':
 			return { action: 'nextSpeaker', uid: requireId(req.uid, 'uid') };
 		case 'setWritingMode': {
@@ -47,6 +51,7 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 		case 'toTalk':
 		case 'toWrite':
 		case 'toRate':
+		case 'passSpeaking':
 			return { action: req.action };
 		case 'nextTurn':
 			return typeof req.fromTurn === 'number'

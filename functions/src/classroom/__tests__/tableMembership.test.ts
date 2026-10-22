@@ -26,15 +26,25 @@ function table(overrides: Partial<ClassTable> = {}): ClassTable {
 }
 
 describe('removeMember', () => {
-	it('keeps the leaver in askedUids, and the asker role skips tablemates who asked', () => {
-		const next = removeMember(table({ askedUids: ['a', 'b'], askerUid: 'a' }), 'a', NOW);
+	it('keeps the leaver in askedUids and passedAskingUids; the asker leaving means nobody asks', () => {
+		const next = removeMember(
+			table({ askedUids: ['a', 'b'], passedAskingUids: ['c'], askerUid: 'a' }),
+			'a',
+			NOW,
+		);
 		expect(next.askedUids).toEqual(['a', 'b']);
-		expect(next.askerUid).toBe('c');
+		expect(next.passedAskingUids).toEqual(['c']);
+		expect(next.askerUid).toBeNull();
 	});
 
 	it('a student who asked, left and was seated again cannot claim another turn', () => {
-		const rate = table({ step: 'rate', askerUid: 'b', askedUids: ['a'] });
-		const back = addMember(removeMember(rate, 'a', NOW), 'a', NOW);
+		const v2 = table({
+			step: 'talk',
+			askerUid: 'b',
+			askedUids: ['a', 'b'],
+			spokenUids: ['a', 'b', 'c'],
+		});
+		const back = addMember(removeMember(v2, 'a', NOW), 'a', NOW);
 		expect(notAskedUids(back)).toEqual(['c']);
 		try {
 			applyTableAction(back, { action: 'nextTurn' }, { actorUid: 'a', isAdmin: false, now: NOW });
@@ -44,32 +54,46 @@ describe('removeMember', () => {
 		}
 	});
 
-	it('skips tablemates who already asked when the asker leaves', () => {
-		const next = removeMember(table({ askedUids: ['b'], askerUid: 'a' }), 'a', NOW);
-		expect(next.askerUid).toBe('c');
-		expect(next.askedUids).toEqual(['b']);
+	it('a student who passed, left and was seated again stays passed', () => {
+		const t = table({ passedAskingUids: ['c'], askerUid: null, step: 'pick' });
+		const back = addMember(removeMember(t, 'c', NOW), 'c', NOW);
+		expect(notAskedUids(back)).toEqual(['a', 'b']);
 	});
 
-	it('falls back to the next seated when everyone left has asked', () => {
-		const next = removeMember(table({ askedUids: ['b', 'c'], askerUid: 'a' }), 'a', NOW);
-		expect(next.askerUid).toBe('b');
+	it('at pick the leaving asker frees the question they chose (V1 again)', () => {
+		const next = removeMember(
+			table({ step: 'pick', askerUid: 'a', questionId: 'q1', usedQuestionIds: ['q0', 'q1'] }),
+			'a',
+			NOW,
+		);
+		expect(next.askerUid).toBeNull();
+		expect(next.questionId).toBeUndefined();
+		expect(next.usedQuestionIds).toEqual(['q0']);
 	});
 
-	it('passes the asker role to the next tablemate when the asker leaves', () => {
-		const next = removeMember(table(), 'a', NOW);
+	it('at talk the turn continues askerless and the question stays', () => {
+		const next = removeMember(table({ questionId: 'q1', usedQuestionIds: ['q1'] }), 'a', NOW);
 		expect(next).toMatchObject({
 			memberUids: ['b', 'c'],
-			askerUid: 'b',
+			askerUid: null,
+			questionId: 'q1',
+			usedQuestionIds: ['q1'],
 			spokenUids: [],
 			updatedAt: NOW,
 		});
 	});
 
-	it('wraps to the first member when the last-seated asker leaves', () => {
-		expect(removeMember(table({ askerUid: 'c' }), 'c', NOW).askerUid).toBe('a');
+	it('removes the leaver from this turn passed minutes', () => {
+		const next = removeMember(
+			table({ spokenUids: ['a', 'b'], passedSpeakingUids: ['b'] }),
+			'b',
+			NOW,
+		);
+		expect(next.spokenUids).toEqual(['a']);
+		expect(next.passedSpeakingUids).toEqual([]);
 	});
 
-	it('leaves the asker alone when someone else leaves, and empties to null', () => {
+	it('leaves the asker alone when someone else leaves, and empties to no asker', () => {
 		expect(removeMember(table(), 'b', NOW).askerUid).toBe('a');
 		const last = removeMember(table({ memberUids: ['a'] }), 'a', NOW);
 		expect(last).toMatchObject({ memberUids: [], askerUid: null });
@@ -95,8 +119,8 @@ describe('addMember', () => {
 		});
 	});
 
-	it('makes the newcomer asker of an askerless table', () => {
-		expect(addMember(table({ memberUids: [], askerUid: null }), 'd', NOW).askerUid).toBe('d');
+	it('does not make the newcomer asker of an askerless table', () => {
+		expect(addMember(table({ memberUids: [], askerUid: null }), 'd', NOW).askerUid).toBeNull();
 	});
 
 	it('does not seat someone twice', () => {
