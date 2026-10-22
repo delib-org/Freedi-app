@@ -288,6 +288,8 @@ export const LessonPlanSchema = object({
 	pausedAt: optional(number()),
 	/** The last time the lesson was ended or kept open. */
 	endedAt: optional(number()),
+	/** Opening step: id of the introduction video the projector shows. Absent or null = the text. Cleared on every step change. */
+	projectorVideoId: optional(nullable(string())),
 });
 export type LessonPlan = InferOutput<typeof LessonPlanSchema>;
 
@@ -427,7 +429,10 @@ export const StatementSettingsSchema = object({
 	// join-class: plenum phase on the challenge question.
 	roundPhase: optional(RoundPhaseSchema),
 	// join-class: https link of the dilemma video shown on the opening screen. Main statement only.
+	// @deprecated Superseded by `introVideos`; readers fall back to it until no lesson carries it.
 	videoUrl: optional(string()),
+	// join-class: the lesson introduction's ordered videos (0-5). Main statement only.
+	introVideos: optional(array(object({ id: string(), title: string(), url: string() }))),
 	// join-class: character names of side A and side B. Main statement only.
 	sideNames: optional(object({ a: string(), b: string() })),
 });

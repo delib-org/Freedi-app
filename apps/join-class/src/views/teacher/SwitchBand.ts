@@ -2,6 +2,8 @@ import m from 'mithril';
 import type { LessonStepKey } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { ALL_TABLES_RATE_STEPS } from '@/lib/classroom/consoleHelpers';
+import type { IntroVideo } from '@/lib/classroom/introVideos';
+import { ProjectorPick } from './ProjectorPick';
 import { isBusy } from './consoleState';
 import type { ConsoleView } from './consoleState';
 
@@ -21,12 +23,16 @@ export interface SwitchBandAttrs {
 	plenum: boolean;
 	ballotFrozen: boolean;
 	ballotClosed: boolean;
+	/** The lesson's introduction videos and the one the projector shows (Opening step). */
+	introVideos: readonly IntroVideo[];
+	projectorVideoId: string | null;
 	onView: (view: ConsoleView) => void;
 	onSplit: (replace: boolean) => void;
 	onAllToRate: () => void;
 	onPlenum: () => void;
 	onFreeze: () => void;
 	onCloseVote: () => void;
+	onProject: (id: string | null) => void;
 }
 
 const TEST_IDS: Record<string, string> = {
@@ -57,6 +63,16 @@ function action(label: string, key: string, onclick: () => void, disabled = fals
 function stepActions(attrs: SwitchBandAttrs): m.Children {
 	const { stepKey } = attrs;
 	const actions: m.Children[] = [];
+	if (stepKey === 'opening' && attrs.introVideos.length > 0) {
+		actions.push(
+			m(ProjectorPick, {
+				videos: attrs.introVideos,
+				projectorVideoId: attrs.projectorVideoId,
+				held: heldNow,
+				onPick: attrs.onProject,
+			}),
+		);
+	}
 	if (stepKey === 'tables') {
 		actions.push(
 			attrs.hasTables

@@ -41,20 +41,16 @@ import { MAX_HINT_LENGTH, MAX_QUESTION_LENGTH, hintOf } from './planHelpers';
 import { SIDE_NAME_MAX_LENGTH } from '@/lib/classroom/classSettings';
 import {
 	LANGUAGE_KEY,
-	MAX_VIDEO_URL_LENGTH,
 	SIDE_A_KEY,
 	SIDE_B_KEY,
-	VIDEO_KEY,
 	commitLanguage,
 	commitSideName,
-	commitVideoUrl,
 	defaultSideName,
-	isInvalid,
 	onDetailInput,
 	savedLessonLanguage,
 	savedSideName,
-	savedVideoUrl,
 } from './planDetails';
+import { PlanIntro } from './PlanIntro';
 
 interface FieldAttrs {
 	key: string;
@@ -310,7 +306,6 @@ function sideNameField(key: string, labelKey: string): m.Vnode {
 	});
 }
 
-/** "Lesson details": the opening video link and the two character names. */
 function languageField(): m.Vnode {
 	const value = fieldValue(LANGUAGE_KEY, savedLessonLanguage());
 
@@ -341,20 +336,6 @@ function renderDetails(): m.Vnode {
 			m('.plan-card__main', [
 				// First: it changes every student screen and the projector.
 				languageField(),
-				field({
-					key: VIDEO_KEY,
-					label: t('plan.details.video'),
-					value: fieldValue(VIDEO_KEY, savedVideoUrl()),
-					placeholder: t('plan.details.video.placeholder'),
-					max: MAX_VIDEO_URL_LENGTH,
-					className: 'plan-card__text plan-details__video',
-					onValue: (v) => onDetailInput(VIDEO_KEY, v, MAX_VIDEO_URL_LENGTH),
-					onCommit: commitVideoUrl,
-				}),
-				isInvalid(VIDEO_KEY)
-					? m('.plan-card__error', { role: 'alert' }, t('plan.details.video.invalid'))
-					: null,
-				fieldError(VIDEO_KEY),
 				sideNameField(SIDE_A_KEY, 'plan.details.side_a'),
 				sideNameField(SIDE_B_KEY, 'plan.details.side_b'),
 				fieldError(SIDE_A_KEY),
@@ -454,7 +435,7 @@ function renderBody(mainId: string): m.Children {
 	}
 	const { challenge, guiding } = getPlan();
 
-	return [renderDetails(), renderChallenge(challenge), renderTables(guiding)];
+	return [renderDetails(), renderChallenge(challenge), m(PlanIntro), renderTables(guiding)];
 }
 
 export const PlanScreen: m.Component = {

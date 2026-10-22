@@ -97,7 +97,7 @@ async function phasePlan() {
 	);
 
 	const focusedNew = 'li.plan-card--new .plan-card__text:focus';
-	await teacher.click('.plan__add');
+	await teacher.click('.plan__tables .plan__add');
 	for (const [index, text] of TABLE_QUESTIONS.entries()) {
 		await teacher.waitForSelector(focusedNew, { timeout: TIMEOUT });
 		await teacher.keyboard.type(text);
@@ -215,6 +215,149 @@ async function studentSubs() {
 	return snap.docs.filter((d) => d.data().role !== 'admin');
 }
 
+// ---- 3b. the introduction at Opening ------------------------------------------------
+const INTRO_BLOCKS = [
+	{ type: 'paragraph', text: 'This week the school considers banning phones all day.', html: 'This week the school considers <strong>banning phones</strong> all day.' },
+	{ type: 'li', listType: 'ul', text: 'Jonathan thinks they get in the way' },
+	{ type: 'li', listType: 'ul', text: 'Noa thinks they help in an emergency' },
+];
+const INTRO_VIDEOS = [
+	{ id: 'v-one', title: 'First video', url: 'https://youtu.be/dQw4w9WgXcQ' },
+	{ id: 'v-two', title: 'Second video', url: 'https://example.com/second.mp4' },
+];
+
+async function seedIntro(creatorId) {
+	for (const [order, block] of INTRO_BLOCKS.entries()) {
+		const id = `${mid}-intro-${order}`;
+		await admin.collection('statements').doc(id).set({
+			statementId: id,
+			statement: block.text,
+			statementType: 'paragraph',
+			parentId: mid,
+			topParentId: mid,
+			creatorId: creatorId ?? 'teacher',
+			order,
+			blockType: block.type,
+			doc: {
+				order,
+				paragraphType: block.type,
+				...(block.listType ? { listType: block.listType } : {}),
+				...(block.html ? { contentHtml: block.html } : {}),
+			},
+			createdAt: Date.now(),
+			lastUpdate: Date.now(),
+		});
+	}
+	await admin
+		.collection('statements')
+		.doc(mid)
+		.update({
+			description: INTRO_BLOCKS.map((b) => b.text).join('\n\n'),
+			'statementSettings.introVideos': INTRO_VIDEOS,
+			lastUpdate: Date.now(),
+		});
+}
+
+async function phaseIntroOpening(creatorId) {
+	await seedIntro(creatorId);
+	const phone = students[0].page;
+
+	// projector: the text by default, big, and the question still at 72 px
+	await teacher.waitForSelector('.intro-text--projector strong', { timeout: TIMEOUT });
+	check('intro projector: the text is shown with its bold run', true);
+	check('intro projector: both bullets', (await teacher.locator('.intro-text--projector li').count()) === 2);
+	const introSize = await teacher.locator('.intro-text--projector').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+	check(`intro projector: text is between ${MIN_TEXT_PX} and 48 px`, introSize >= MIN_TEXT_PX && introSize <= 48, `${introSize}px`);
+	const q = await teacher.locator('.projector-question').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+	check(`intro projector: question stays ${OPENING_QUESTION_PX} px`, q >= OPENING_QUESTION_PX, `${q}px`);
+	check('intro projector: no player before the teacher chooses a video', (await teacher.locator('.projector iframe, .projector video').count()) === 0);
+
+	// the longest allowed text (600 characters) on the smallest real projector: no scrolling, question still 72 px
+	const longText = 'שלום עולם והחלטה משותפת '.repeat(20).trim().slice(0, 480);
+	await admin.collection('statements').doc(`${mid}-intro-0`).update({
+		statement: longText,
+		'doc.contentHtml': FieldValue.delete(),
+		lastUpdate: Date.now(),
+	});
+	await teacher.setViewportSize({ width: 1280, height: 720 });
+	await teacher.waitForFunction((t) => document.querySelector('.intro-text--projector p')?.textContent === t, longText, { timeout: TIMEOUT });
+	await sleep(400);
+	const over = await teacher.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+	const fits = over <= 0;
+	const longSize = await teacher.locator('.intro-text--projector').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+	const longQuestion = await teacher.locator('.projector-question').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+	check('intro projector 1280x720: 600 characters fit without scrolling', fits, `${longSize}px text, ${over}px over`);
+	check('intro projector 1280x720: text never below 32 px, question 72 px', longSize >= MIN_TEXT_PX && longQuestion >= OPENING_QUESTION_PX, `${longSize}px / ${longQuestion}px`);
+	await teacher.setViewportSize(PROJECTOR_VIEWPORT);
+	await admin.collection('statements').doc(`${mid}-intro-0`).update({
+		statement: INTRO_BLOCKS[0].text,
+		'doc.contentHtml': INTRO_BLOCKS[0].html,
+		lastUpdate: Date.now(),
+	});
+	await teacher.waitForSelector('.intro-text--projector strong', { timeout: TIMEOUT });
+
+	// phone: question card, the text (formatted once fetched), two video rows, nothing loaded
+	await phone.waitForSelector('.opening .intro-text strong', { timeout: TIMEOUT });
+	check('intro phone: text with bold and bullets', (await phone.locator('.opening .intro-text li').count()) === 2);
+	check('intro phone: two video rows', (await phone.locator('.intro-video-row').count()) === 2);
+	check('intro phone: nothing loaded before a tap', (await phone.locator('.intro-video-row iframe, .intro-video-row video').count()) === 0);
+	check('intro phone: "read/watch together" instruction', (await phone.locator('.frame__instruction').count()) === 1);
+	await phone.locator('.intro-video-row').nth(0).locator('.intro-video-row__play').click();
+	await phone.waitForSelector('.intro-video-row iframe', { timeout: TIMEOUT });
+	const yt = await phone.locator('.intro-video-row iframe').getAttribute('src');
+	check('intro phone: tap opens one player, youtube-nocookie, never set to play itself', /youtube-nocookie\.com\/embed\/dQw4w9WgXcQ/.test(yt ?? '') && !/auto/i.test(yt ?? ''), yt ?? '');
+	await phone.locator('.intro-video-row').nth(1).locator('.intro-video-row__play').click();
+	await phone.waitForSelector('.intro-video-row video', { timeout: TIMEOUT });
+	check('intro phone: opening another row closes the first (one player at a time)', (await phone.locator('.intro-video-row iframe').count()) === 0 && (await phone.locator('.intro-video-row video').count()) === 1);
+	check('intro phone: the file player waits (preload none)', (await phone.locator('.intro-video-row video').getAttribute('preload')) === 'none');
+	check('intro phone: no row is marked "on the projector" yet', (await phone.locator('.intro-video-row--live').count()) === 0);
+
+	// console: choose video 2 for the projector
+	const consolePage = await teacherContext.newPage();
+	consolePage.on('pageerror', (e) => pageErrors.push(`console: ${e.message}`));
+	await consolePage.goto(`${BASE}/t/${mid}`, { waitUntil: 'domcontentloaded' });
+	await consolePage.waitForSelector('.projector-pick', { timeout: TIMEOUT });
+	check('intro console: the chooser has the text and both videos', (await consolePage.locator('.projector-pick__item').count()) === 3);
+	check('intro console: the text is the pressed item at first', (await consolePage.locator('[data-testid=projector-pick-text]').getAttribute('aria-pressed')) === 'true');
+	await consolePage.locator('[data-testid=projector-pick-2]').click();
+	await consolePage.waitForFunction(() => document.querySelector('[data-testid=projector-pick-2]')?.getAttribute('aria-pressed') === 'true', null, { timeout: TIMEOUT });
+	await teacher.waitForSelector('.projector video.intro-stage__player', { timeout: TIMEOUT });
+	check('intro projector: the chosen video fills the stage, loaded and not playing', (await teacher.locator('.projector video').first().evaluate((el) => el.paused && !el.autoplay)) === true);
+	check('intro projector: the title sits above the player', ((await teacher.locator('.intro-stage__title').textContent()) ?? '').includes('Second video'));
+	check('intro projector: the text is gone behind the video', (await teacher.locator('.intro-text--projector').count()) === 0);
+	await teacher.setViewportSize({ width: 1280, height: 720 });
+	await sleep(300);
+	const videoOver = await teacher.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+	check('intro projector 1280x720: the video stage fits without scrolling', videoOver <= 0, `${videoOver}px over`);
+	await teacher.setViewportSize(PROJECTOR_VIEWPORT);
+	await phone.waitForSelector('.intro-video-row--live', { timeout: TIMEOUT });
+	check('intro phone: video 2 is marked "on the projector now"', (await phone.locator('.intro-video-row').nth(1).evaluate((el) => el.classList.contains('intro-video-row--live'))) === true);
+	check('intro phone: the open player stays open', (await phone.locator('.intro-video-row video').count()) === 1);
+	const stored = (await admin.collection('statements').doc(mid).get()).data()?.statementSettings?.lessonPlan?.projectorVideoId;
+	check('intro console: lessonPlan.projectorVideoId is written', stored === 'v-two', String(stored));
+
+	// back to the text from the console
+	await consolePage.locator('[data-testid=projector-pick-text]').click();
+	await teacher.waitForSelector('.intro-text--projector', { timeout: TIMEOUT });
+	check('intro projector: "the text" brings the text back', (await teacher.locator('.projector video').count()) === 0);
+	await consolePage.locator('[data-testid=projector-pick-2]').click();
+	await teacher.waitForSelector('.projector video.intro-stage__player', { timeout: TIMEOUT });
+
+	// a step change clears the choice (the client's step move writes projectorVideoId: null)
+	await consolePage.locator('[data-testid=console-forward]').click();
+	await teacher.waitForFunction(() => document.querySelector('.projector__stage')?.getAttribute('data-step') === 'side', null, { timeout: TIMEOUT });
+	const cleared = (await admin.collection('statements').doc(mid).get()).data()?.statementSettings?.lessonPlan?.projectorVideoId;
+	check('intro: moving to the next step clears the projector choice', cleared === null || cleared === undefined, String(cleared));
+	await consolePage.close();
+	await setStep(1);
+	await teacher.waitForSelector('.intro-text--projector', { timeout: TIMEOUT });
+	check('intro projector: coming back to Opening starts on the text', (await teacher.locator('.projector video').count()) === 0);
+	await phone.waitForFunction(() => document.querySelectorAll('.intro-video-row--live').length === 0, null, { timeout: TIMEOUT });
+	check('intro phone: the "on the projector now" mark is gone', true);
+	await admin.collection('statements').doc(mid).update({ 'statementSettings.introVideos': [], description: '' });
+	for (const [order] of INTRO_BLOCKS.entries()) await admin.collection('statements').doc(`${mid}-intro-${order}`).delete();
+}
+
 async function phaseProjector() {
 	const subs = await studentSubs();
 	check('projector: six student subscriptions exist', subs.length === STUDENTS, `${subs.length}`);
@@ -238,6 +381,7 @@ async function phaseProjector() {
 	check(`opening: question is ${OPENING_QUESTION_PX} px`, questionSize >= OPENING_QUESTION_PX, `${questionSize}px`);
 	check('opening: no video element before the teacher presses play', (await teacher.locator('.projector iframe, .projector video').count()) === 0);
 	await checkBand('opening');
+	await phaseIntroOpening(creatorId);
 
 	// side: the two characters, no counts
 	await setStep(2);

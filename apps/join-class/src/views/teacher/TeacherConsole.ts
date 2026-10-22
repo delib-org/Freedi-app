@@ -35,6 +35,7 @@ import {
 	closeBallot,
 	freezeBallot,
 	goToStep,
+	pickProjectorVideo,
 	startPlenum,
 } from './consoleActions';
 import { releaseConsole, retainConsole, session } from './consoleSession';
@@ -48,6 +49,7 @@ import { ConsoleSettings } from './ConsoleSettings';
 import { GatePanel } from './GatePanel';
 import { StepRail } from './StepRail';
 import { SwitchBand } from './SwitchBand';
+import { introVideosOf, projectorVideoOf } from '@/lib/classroom/introVideos';
 import { TableSheetPanel } from './TableSheetPanel';
 import { TablesBoard } from './TablesBoard';
 import { WhatTheyWrote } from './WhatTheyWrote';
@@ -282,6 +284,9 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				plenum: isPlenum(challenge),
 				ballotFrozen: isBallotFrozen(challenge),
 				ballotClosed: isBallotClosed(challenge),
+				introVideos: introVideosOf(main),
+				projectorVideoId: projectorVideoOf(main)?.id ?? null,
+				onProject: (id: string | null) => void pickProjectorVideo(mid, id),
 				onView: (next: ConsoleView) =>
 					m.route.set(m.route.get().split('?')[0], next === 'tables' ? {} : { view: next }, {
 						replace: true,

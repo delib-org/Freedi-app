@@ -207,6 +207,11 @@ describe('lesson status helpers', () => {
 		});
 		expect(planStepMove(3, 'live', 99).status).toBeUndefined();
 	});
+
+	it('every step move clears the projector video choice', () => {
+		expect(planStepMove(3, 'live', 99).projectorVideoId).toBeNull();
+		expect(planStepMove(1, 'open', 99).projectorVideoId).toBeNull();
+	});
 });
 
 describe('toCodeDigits (the front door input)', () => {

@@ -7,7 +7,6 @@ import {
 	sideWordKey,
 	tableChips,
 	tableNumberOf,
-	youtubeEmbedUrl,
 } from '../c2Helpers';
 
 const sub = (role: string): StatementSubscription => ({ role }) as unknown as StatementSubscription;
@@ -45,13 +44,6 @@ describe('challengeOf', () => {
 		const ch = stmt({ classRole: 'challenge' });
 		expect(challengeOf([stmt({}), ch])).toBe(ch);
 		expect(challengeOf([stmt({})])).toBeNull();
-	});
-});
-
-describe('youtubeEmbedUrl', () => {
-	it('builds a youtube embed', () => {
-		expect(youtubeEmbedUrl('https://youtu.be/abcDEF12345')).toContain('/embed/abcDEF12345');
-		expect(youtubeEmbedUrl('https://x.test/a.mp4')).toBeNull();
 	});
 });
 

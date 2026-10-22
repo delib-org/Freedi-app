@@ -5,6 +5,8 @@ import { db, doc, collection, query, where } from '../firebase';
 import type { Unsubscribe } from '../firebase';
 import { resilientOnSnapshot } from '../resilientListeners';
 import { getChallengeQuestion } from '../lessonCore';
+import { listenIntroBlocks } from './introData';
+import type { SavedBlock } from './introText';
 
 /**
  * Live data of the projector that `watchClass` does not carry: the workspace
@@ -20,6 +22,8 @@ export interface ProjectorData {
 	challenge: Statement | null;
 	/** Options of the challenge question (proposals). */
 	proposals: Statement[];
+	/** The introduction text (paragraph children of the main statement); null until the first delivery. */
+	intro: SavedBlock[] | null;
 }
 
 export const projectorData: ProjectorData = {
@@ -27,6 +31,7 @@ export const projectorData: ProjectorData = {
 	questions: [],
 	challenge: null,
 	proposals: [],
+	intro: null,
 };
 
 const LISTENER_MAIN = 'projectorMain';
@@ -38,6 +43,7 @@ function reset(): void {
 	projectorData.questions = [];
 	projectorData.challenge = null;
 	projectorData.proposals = [];
+	projectorData.intro = null;
 }
 
 /** Start the projector listeners; returns the stop function. */
@@ -99,8 +105,14 @@ export function watchProjector(mainId: string): () => void {
 		onError('questions'),
 	);
 
+	const introStop = listenIntroBlocks(mainId, (blocks) => {
+		projectorData.intro = blocks;
+		m.redraw();
+	});
+
 	return () => {
 		stopped = true;
+		introStop();
 		mainStop();
 		questionsStop();
 		proposalsStop?.();

@@ -609,3 +609,226 @@ Yours to decide:
 - motion, colour, type and spacing
 
 Hebrew marked (?) needs a native read.
+
+## 14. Lesson introduction (Tal, 2026-10-22)
+
+> **Decisions at build time (2026-10-22), they override the text below where they differ.**
+> - **The text limit is 600 characters** (`INTRO_TEXT_MAX = 600`), not 800. Every "800" below reads 600. At 600 the projector keeps the question at 72 px, so the "shrink the question to 48 px" last step (UX 14.D, 14.J-4) is **dropped**: the text steps 48 -> 40 -> 32 px and stops there.
+> - **Editor:** one textarea holding markdown-lite, with the three-button toolbar (UX 14.A / 14.B).
+> - **Stored fields** (UX 14.J-8): paragraph children exactly as `createParagraphChildStatement` writes them: top-level `order` and `blockType` (`paragraph` | `li`), and `doc.listType`, `doc.contentHtml`, `doc.paragraphType`. The plain text is `statement`.
+> - **"Video failed"** applies only to direct mp4 / webm files (a YouTube embed's own error is invisible to the page). On the phone it reads "המורה מקרין"; on the projector the text comes back with `projector.video_failed`.
+> - **Firestore rules (IA 14.12 F):** checked, no change needed. The creator, or an admin of the lesson, may create, update and delete the paragraph children (`tests/rules/join-class-intro.test.mjs`).
+> - **One embed reader** is `introVideoEmbed()` in `lib/classroom/introVideos.ts` (not `classSettings.ts`, so the student entry chunk does not carry it).
+
+Status: draft (Tal's decisions below; open questions in 14.12 have defaults)
+
+Tal, on `/t/:mid/plan`: "I am missing the introduction, with the text of introduction and maybe some videos about the challenge ahead." His decisions:
+- The introduction appears at the Opening step on the projector and on phones. The projector shows it big, and the teacher plays the videos there for the class. During Opening, students can reread the text and replay the videos on their own phones.
+- The content is formatted text (paragraphs, bold, bulleted and numbered lists) plus an ordered list of videos, each with a short title. No images.
+
+What this section overrides:
+- §2.3: the framing step showed the question plus one dilemma video. It now shows the question, the introduction text and 0-5 videos.
+- §7 Opening row and §13.13: "the plan screen owns the video" now means the introduction owns the videos.
+- The single `statementSettings.videoUrl` is retired. There is one concept, the introduction's videos (14.2).
+
+### 14.1 Audiences
+| Audience | Goal at this feature | Must never see |
+|---|---|---|
+| Teacher, before class (plan screen) | Write a short introduction and attach the 1-3 videos the class will watch | Raw embed URLs, ids, an editor with more tools than the 3 asked for |
+| Teacher, in class (console) | Choose what the projector shows during Opening: the text, or video n | A control on the projector window itself (UX §6) |
+| Student (phone, Opening) | Read the question, reread the introduction, replay a video if I want | A video that plays by itself; a page heavier than the 9b budget |
+| Projector | Show the introduction big, or the chosen video | Anything that needs a tap other than the player's own play button |
+
+### 14.2 Object model
+| Object | What it is | Cardinality | Where it lives | Lifecycle |
+|---|---|---|---|---|
+| Introduction | The lesson's opening content: text + videos. Belongs to the **lesson**, not to the challenge question | 0..1 per lesson | (container only; see the two rows below) | empty → written → edited (also during the lesson) |
+| Introduction text | Formatted blocks: paragraph, bullet item, numbered item; inline bold only | 0-12 blocks, ≤ 800 characters in total | **Paragraph child Statements of the main statement** (`statementType: paragraph`, `parentId: mid`, `order`, `blockType: paragraph \| li`, `doc.listType: ul \| ol`, `doc.contentHtml` with `<strong>` only), written through `createParagraphChildStatement` | block created → edited → deleted |
+| Video | One link with a short title | 0-5 per lesson, ordered | `statementSettings.introVideos: [{ id, title, url }]` on the main statement | added → titled → reordered → deleted |
+| On the projector | Which Opening item the projector shows: the text, or one video | 1 per lesson | `statementSettings.lessonPlan.projectorVideoId` (absent or null = the text). Cleared on every step change | text → video n → text |
+
+Why the text is paragraph children and not a settings field:
+- The repo rule says a statement's rich body is paragraph child Statements, and `description` is the preview derived from them by `fn_syncParagraphChildrenToDescription`.
+- Using children keeps the lesson readable by every other Freedi surface (the main app, the cross-app router, exports) with no join-class special case.
+- Bold and lists already have a home on paragraph children (`contentHtml`, `listType`). A settings field would invent a second rich-text format.
+
+Why the children hang on the main statement and not on the challenge question:
+- The introduction is about the lesson (the dilemma), and the lesson is the main statement (§12).
+- The challenge question's own body stays free for later use at Proposals.
+- The plan's sub-question listeners filter on `statementType == question`, so paragraph children never leak into the question lists.
+
+Why the videos are a settings array and not child Statements:
+- Nobody rates, answers or moves a video. It is a lesson setting, like `sideNames`.
+- The main statement is already listened to by every phone, so the videos cost zero extra reads.
+- Order and title travel together in one write.
+
+Reading cost on a phone (9b):
+- `main.description` is non-empty only when paragraph children exist. A lesson with no introduction text therefore never queries for paragraphs.
+- When it is non-empty, the phone renders `description` as plain text at once. It then makes one `get` of the paragraph children (`parentId == mid`, `statementType == paragraph`, ordered by `order`) and swaps in the formatted version.
+- The phone has no listener on the paragraphs. The projector does listen, so a typo the teacher fixes mid-lesson reaches the wall.
+- If the `get` fails, the plain `description` stays on screen. The failure is never shown as an error.
+
+Retiring `videoUrl` (one concept, not two):
+- **Read:** `introVideosOf(main)` returns `introVideos` when present. Otherwise, a valid `videoUrl` becomes `[{ id: 'legacy', title: '', url }]`. Every reader (phone, projector, console, plan screen) goes through it; `videoUrlOf` is deleted.
+- **Write:** the plan screen's first save of the video list writes `introVideos` and deletes `videoUrl` (`deleteField`) in the same write.
+- **Schema:** add `introVideos` (optional array) and `lessonPlan.projectorVideoId` (optional), and deploy shared-types to functions and rules before any client writes them (the strict-parse trap). Keep `videoUrl` as optional and `@deprecated` until a one-off count finds no lesson carrying it, then remove it. Agora's `agoraTopicPackage` scene `videoUrl` is a different object and is not touched.
+- **One embed reader:** today `youtubeEmbedUrl` (c2Helpers) and `embedUrlOf` (projectorLogic) parse links differently and add different parameters. Both become one `introVideoEmbed(url)` in `classSettings.ts`.
+
+Limits (constants in `lib/classroom`, never magic numbers):
+- `INTRO_TEXT_MAX = 800` characters over all blocks. At 40 px on a 1280 × 720 projector this is about one screen. The plan screen shows a live count and refuses to save beyond the limit.
+- `INTRO_BLOCKS_MAX = 12`.
+- `INTRO_VIDEOS_MAX = 5`. "+ סרטון" disappears at 5 and is replaced by the line "אפשר עד 5 סרטונים".
+- `INTRO_VIDEO_TITLE_MAX = 60` characters.
+- The URL length stays at today's 500 (`MAX_VIDEO_URL_LENGTH`).
+
+Video safety:
+- **https only.**
+- **Accepted links:** YouTube (watch, youtu.be, shorts, embed) is embedded through `youtube-nocookie.com/embed/<id>?playsinline=1&rel=0`. A direct https file ending in `.mp4` or `.webm` plays in `<video controls preload="none">`. Anything else (Vimeo, Drive, a web page) is refused at input with an inline line, never saved, and never rendered.
+- **No `autoplay`** parameter anywhere.
+- **Phone:** no iframe or video element is created until the student taps "לצפות כאן". At most one player is open at a time; opening another closes the first. No thumbnails or posters, because Tal said no images and because of the 9b budget.
+- **Projector:** the player for the chosen video loads when the console selects it. The teacher presses the player's own play.
+- `referrerpolicy="strict-origin-when-cross-origin"`.
+- **Text:** the text is never injected as HTML. The renderer turns `contentHtml` into Mithril nodes and keeps only `<strong>`. Anything else is dropped to plain text.
+
+### 14.3 Labels
+"פתיחה" is the step (§3). The content shown at that step is "הקדמה". The plan screen ties the two names together in one help line, and the student and projector never see the word "הקדמה", so the two never compete. "רקע" was rejected because in code "background video" means an autoplaying banner.
+
+Keys go into all seven files in `apps/join-class/src/lib/locales/{he,en,ar,es,de,nl,fa}.ts`.
+
+| Concept | EN | HE | i18n key | Code type | Retire |
+|---|---|---|---|---|---|
+| Introduction (plan section) | Introduction | הקדמה | NEW plan.intro.title | introduction (paragraph children + introVideos) | — |
+| Introduction, help | Shown at the Opening step: big on the projector and on the students' phones. | מוצגת בשלב הפתיחה: גדול על המקרן ובטלפונים של התלמידים. | NEW plan.intro.help | — | — |
+| Introduction text | Text | טקסט | NEW plan.intro.text.label | paragraph Statement | — |
+| Text placeholder | A few sentences about the dilemma and what lies ahead | כמה משפטים על הדילמה ועל מה שמחכה לכיתה | NEW plan.intro.text.placeholder | — | — |
+| Text count | {{n}} of 800 | {{n}} מתוך 800 | NEW plan.intro.text.count | INTRO_TEXT_MAX | — |
+| Text too long | Too long. Shorten to 800 characters. | ארוך מדי. קצרו ל־800 תווים. | NEW plan.intro.text.too_long | — | — |
+| Bold / list / numbered list (if UX uses a toolbar) | Bold · List · Numbered list | מודגש · רשימה · רשימה ממוספרת | NEW plan.intro.bold, plan.intro.list, plan.intro.numbered | blockType li, listType ul/ol | — |
+| Videos | Videos | סרטונים | NEW plan.intro.videos (plan); NEW opening.videos (phone) | introVideos | "סרטון פתיחה" (plan.details.video) |
+| Add a video | + Video | + סרטון | NEW plan.intro.video.add | — | — |
+| Video link | Link | קישור | NEW plan.intro.video.url (placeholder keeps "https://…") | ClassIntroVideo.url | plan.details.video.placeholder |
+| Video title | Video title | שם הסרטון | NEW plan.intro.video.title | ClassIntroVideo.title | — |
+| Invalid link | Use a YouTube link or a video file starting with https:// | אפשר קישור YouTube או קובץ וידאו שמתחיל ב־https:// | NEW plan.intro.video.invalid | introVideoEmbed() | plan.details.video.invalid |
+| Max videos | Up to 5 videos | אפשר עד 5 סרטונים | NEW plan.intro.video.max | INTRO_VIDEOS_MAX | — |
+| Untitled video | Video {{n}} | סרטון {{n}} | NEW opening.video_n (also the iframe title) | — | opening.video_title "סרטון הדילמה", projector.videoTitle "סרטון השיעור" |
+| Delete / reorder | Delete · Move | מחיקה · סדר | plan.delete, plan.reorder.* (kept, reused) | — | — |
+| Instruction with videos | Watch together | צופים ביחד | opening.watch (kept) | — | — |
+| Instruction without videos | Read together | קוראים ביחד | NEW opening.read | — | — |
+| Play on my phone | Watch here | לצפות כאן | opening.play (kept) | — | — |
+| Video failed | The teacher is projecting it | המורה מקרין | opening.video_failed (kept) | — | — |
+| On the projector now (phone tag) | On the projector now | על המקרן עכשיו | NEW opening.on_projector | projectorVideoId | — |
+| Console chooser | On the projector: | על המקרן: | NEW console.opening.show | projectorVideoId | — |
+| Console chooser: the text | Text | הטקסט | NEW console.opening.text | projectorVideoId = null | — |
+| Projector play button | — | — | delete projector.playVideo | — | "להפעיל את הסרטון" |
+
+Changed: `opening.video_failed` stays. The three old names for one video ("סרטון פתיחה", "סרטון הדילמה", "סרטון השיעור") become one, "סרטון", and the teacher's title names each video.
+
+### 14.4 Where it sits on the plan screen
+Order of the sections on `/t/:mid/plan` (§12.1, 13.H), top to bottom:
+1. פרטי השיעור: lesson language, side names. The video field leaves this card.
+2. השאלה לפתרון: pinned, as in §12.1.
+3. **הקדמה: text, then סרטונים.** NEW.
+4. השאלות לשולחנות.
+
+Reason: sections 2 and 3 mirror the Opening screen from top to bottom (question card, then text, then videos). The teacher therefore writes the Opening in the order the class will see it. The table questions follow because they belong to step 5.
+
+Saving: on blur, per block and per video row, through the existing `runSave` and `fieldError` path (inline "שמירה נכשלה" + retry). "שמירה" in the bar stays a confirmation, never a gate. A video row is saved when its link is valid. An empty title saves too and shows as "סרטון n".
+
+### 14.5 Hierarchy (unchanged depth)
+```
+0 /t                    השיעורים שלי
+1   /t/:mid/plan        תכנון השאלות: פרטי השיעור · השאלה לפתרון · הקדמה (טקסט, סרטונים) · השאלות לשולחנות
+1   /t/:mid             השיעור; at Opening the switch band carries "על המקרן: הטקסט · 1 · 2 …"
+1   /t/:mid/screen      מקרן; Opening shows the text or the chosen video
+student
+1   /m/:mid → Opening   question card · text · videos (one level, a scroll; no sub-screen)
+```
+No new route.
+
+### 14.6 Navigation
+- **Teacher:** the console's Opening step actions live in the switch band (UX 13.E) as one single-choice row: "על המקרן:" then "הטקסט", "1. <title>", "2. <title>" and so on.
+  - Choosing an item writes `projectorVideoId`.
+  - The current item is marked, and so is the projector.
+  - With no text, "הטקסט" reads as the question alone. With no videos, the row is not shown.
+  - Opening the next step clears the choice.
+- **Projector:** no Freedi controls (UX §6). The only interactive thing is the embedded player's own play button, which UX §6 already allows ("the teacher presses play"). Today's "להפעיל את הסרטון" button is removed.
+- **Student:** no navigation. The Opening screen scrolls. A video opens in place (no sheet) and closes when another opens. Leaving Opening (the teacher opens Side) closes any open player.
+- **Deep link:** none new. A refreshed phone lands on Opening with every player closed.
+
+### 14.7 Task flows
+- **Teacher, write the introduction and attach two videos (6 steps):**
+  1. `/t/:mid/plan`, section "הקדמה": type the text (bold and lists through UX's tools); blur saves it.
+  2. "+ סרטון": paste a link; blur checks and saves it.
+  3. Type "שם הסרטון"; blur saves it.
+  4. "+ סרטון": link and title for the second video.
+  5. Drag a video's handle to reorder (the same `dragReorder` as the questions, with keyboard moves).
+  6. "שמירה" → "נשמר".
+- **Teacher, see it at Opening (2 taps per video):**
+  1. "פתיחת השלב הבא: פתיחה". The projector shows the question and the text, and the phones show the same.
+  2. "על המקרן: 1. <title>". The projector loads video 1; the teacher presses play in the player. Then "2. <title>", then "הטקסט" when the class discusses.
+  3. "פתיחת השלב הבא: צד".
+- **Student, reread and replay (0-1 taps):** the screen already shows the question, the text and the list. "לצפות כאן" on a video plays it on the phone; the video now on the projector carries "על המקרן עכשיו".
+
+### 14.8 Student Opening screen (`/m/:mid`, step 1), in order
+1. **Header and instruction:** "פתיחה". Then "צופים ביחד" when the lesson has videos, otherwise "קוראים ביחד".
+2. **Question card**, as today: "השאלה של השיעור" + the challenge question (else the lesson name).
+3. **Introduction text:** paragraphs, bold, bulleted and numbered lists. No heading of its own; the card above names the lesson.
+4. **"סרטונים":** one row per video, in the teacher's order. Each row has its title (or "סרטון n"), "לצפות כאן", and "על המקרן עכשיו" when it is the projector's current video. A tapped row expands into the player.
+
+States:
+- **Empty:** no text and no videos gives exactly today's screen, the question card alone and centred.
+- **Loading:** `description` is shown as plain text until the formatted text arrives.
+- **Error:** paragraph fetch failed: keep `description`, show no error. A video failed: "המורה מקרין" replaces that row's button.
+- **Done:** the teacher opens Side.
+
+### 14.9 Projector Opening (`/t/:mid/screen`)
+- **Text (default):**
+  - The question at the top, at 72 px (UX §6).
+  - The introduction text below it, big. UX sets the size between 32 and 48 px; the 800-character limit is what makes it fit on one screen without scrolling.
+  - No video list.
+- **Video n:** the question shrinks to the eyebrow line and the player fills the stage, loaded but not playing. The video's title sits above it.
+- **No introduction:** today's projector (the question), minus the old play button.
+- The projector listens to the paragraph children and to `projectorVideoId`, so the teacher's choice and any fix appear at once.
+
+### 14.10 Screen inventory (rows added or changed)
+| Screen | Route | Single job | Empty | Loading | Error | No permission | Done |
+|---|---|---|---|---|---|---|---|
+| Plan: introduction section | /t/:mid/plan | write the text, add and order the videos | text box with placeholder; "+ סרטון" | skeleton (existing) | save failed inline + retry; invalid link inline, not saved; over 800 characters inline, not saved | not your lesson (13) | "נשמר" |
+| Opening (student), changed | /m/:mid | read the question and the introduction; replay a video | question card alone, centred (today) | `description` as plain text | video failed: "המורה מקרין"; text fetch failed: plain `description` | — | teacher opens Side |
+| Console, Opening step actions | /t/:mid | choose what the projector shows | no videos: row hidden | — | write failed inline + retry | not your lesson | next step clears it |
+| Projector Opening, changed | /t/:mid/screen | show the text, or the chosen video | question only | player loading (the player's own) | video failed: the text comes back, with the video's title | — | follows the step |
+
+### 14.11 Findability
+At most 5 videos and 12 short blocks. No search, filter or grouping. Order is the teacher's.
+
+### 14.12 Open questions, each with a default
+- **A. Screen title.** With the introduction, the plan screen holds more than questions. Should "תכנון השאלות" become "תכנון השיעור" (`plan.title`, the home row action, `teacher.home.how` step 2)? [Default: keep "תכנון השאלות" in phase 1; rename only if teachers miss the introduction there.]
+- **B. Other video hosts** (Vimeo, Drive). [Default: refused; YouTube and direct https mp4/webm only.]
+- **C. Read-only introduction after Opening.** Should students reach it from later steps, for example a "הקדמה" link in the header? [Default: no; it lives at Opening only, as the step model says (§5).]
+- **D. Title required?** [Default: optional, falls back to "סרטון n", with the placeholder nudging a title.]
+- **E. Two writers of `description`.** `fn_statement_updates` rewrites the parent's `description` from its last three paragraphs whenever any child is created, including a sub-question. That can shorten the preview that `fn_syncParagraphChildrenToDescription` wrote in full. The phone only uses `description` as a placeholder, so nothing breaks. The build lane should still confirm which one wins, and it should not rely on `description` holding the whole text.
+- **F. Firestore rules:** confirm the lesson's creator may create, update and delete paragraph children under their main statement from join-class. [Default: assumed by the existing statement rules; check before building.]
+
+What would change if wrong: if Tal wants the introduction on the challenge question instead (A/C), only `parentId` changes and every label stays. If he wants longer texts, the projector needs paging, which needs a console control. That is a new spec item, not a limit change.
+
+### 14.13 Handoff to UX
+Fixed here:
+- the content (text blocks + 0-5 titled videos)
+- the limits
+- the section order on the plan screen
+- the student order (question card → text → videos)
+- the console as the only way to drive the projector
+- no autoplay, no thumbnails, one player at a time on the phone
+- the labels in 14.3
+- every state in 14.10
+
+Yours to decide:
+- the text editor's form on the plan screen: a three-button toolbar, or typing "- " / "1. " / "**" shortcuts, with keyboard and RTL behaviour
+- the video row layout on the plan screen and on the phone
+- how "על המקרן עכשיו" reads without colour alone
+- the projector's text size within 32-48 px and the switch from text to video
+- the console chooser's form inside the switch band
+
+Questions for you:
+- Should the phone's open player stick while the student scrolls?
+- Should the projector show the video's title during play, or only before?

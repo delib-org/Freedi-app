@@ -44,15 +44,6 @@ export function readRoundPhase(challenge: Statement | null | undefined): RoundPh
 	return settingsOf(challenge).roundPhase === 'improve' ? 'improve' : 'write';
 }
 
-/** YouTube watch / share / embed link -> the privacy-friendly embed URL, else null. */
-export function embedUrlOf(videoUrl: string): string | null {
-	const match = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{6,20})/.exec(
-		videoUrl,
-	);
-
-	return match ? `https://www.youtube-nocookie.com/embed/${match[1]}` : null;
-}
-
 // ---- counts -----------------------------------------------------------------
 
 export interface TableCounts {
