@@ -46,6 +46,7 @@ import { EndChoice, openEndChoice } from './EndChoice';
 import { LessonBanner } from './LessonBanner';
 import { NotYourLesson } from './NotYourLesson';
 import { ConsoleSettings } from './ConsoleSettings';
+import { ProjectorMenu } from './ProjectorMenu';
 import { GatePanel } from './GatePanel';
 import { StepRail } from './StepRail';
 import { SwitchBand } from './SwitchBand';
@@ -133,11 +134,7 @@ function header(
 			},
 			t('console.qr'),
 		),
-		m(
-			m.route.Link,
-			{ class: 'console__link', href: `/t/${mid}/screen` },
-			t('teacher.screen.title'),
-		),
+		m(ProjectorMenu, { mid }),
 		m(m.route.Link, { class: 'console__link', href: `/t/${mid}/plan` }, t('teacher.row.plan')),
 		m(ConsoleSettings),
 		statusGroup(mid, status),
