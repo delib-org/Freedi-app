@@ -52,6 +52,7 @@ import { StepRail } from './StepRail';
 import { SwitchBand } from './SwitchBand';
 import { introVideosOf, projectorVideoOf } from '@/lib/classroom/introVideos';
 import { TableSheetPanel } from './TableSheetPanel';
+import { OpeningPanel } from './OpeningPanel';
 import { TablesBoard } from './TablesBoard';
 import { WhatTheyWrote } from './WhatTheyWrote';
 
@@ -163,6 +164,7 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 	const guiding = getGuidingQuestions(questions);
 	const plenum = isPlenum(challenge);
 	const stepKey = LESSON_STEP_KEYS[stepIndex];
+	const main = getMainStatement();
 
 	if (view === 'texts') {
 		const inputs = [
@@ -175,7 +177,7 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 		});
 	}
 	const proposals = challenge ? (consoleState.options.get(challenge.statementId) ?? []) : [];
-	const gate = gateOf(challenge, getMainStatement());
+	const gate = gateOf(challenge, main);
 	const showGate =
 		challenge !== null &&
 		(stepKey === 'proposals' || (stepKey === 'tableTalk' && proposals.length > 0));
@@ -187,6 +189,7 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 			students,
 			plenum,
 			showSides: stepIndex >= SIDE_STEP_INDEX,
+			opening: stepKey === 'opening' && main ? m(OpeningPanel, { main }) : undefined,
 		}),
 		showGate ? m(GatePanel, { rows: gateRows(proposals, gate), gate }) : null,
 	];

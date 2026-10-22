@@ -1,0 +1,65 @@
+// =============================================================================
+// Opening panel on the console board (IA 15.13, UX 15.L). Imported by
+// views/teacher/OpeningPanel.ts and TablesBoard.ts (teacher console chunk only).
+// =============================================================================
+
+$roster-column: 320px;
+$roster-column-narrow: 280px;
+
+// the panel (main column) beside the roster card (side column)
+.console-opening {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) $roster-column;
+  gap: var(--space-md);
+  align-items: start;
+
+  @media (max-width: 1279px) {
+    grid-template-columns: minmax(0, 1fr) $roster-column-narrow;
+  }
+
+  @media (max-width: 1023px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.opening-panel {
+  min-inline-size: 0;
+  padding: var(--space-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-lg);
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-md);
+    margin-block-end: var(--space-sm);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__edit,
+  &__add {
+    color: var(--ink);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    // a 24 px target with room around it (WCAG 2.5.8)
+    padding-block: var(--space-xs);
+  }
+
+  &__empty {
+    margin: 0 0 var(--space-xs);
+    color: var(--ink-soft);
+  }
+
+  > .intro-text {
+    max-inline-size: 68ch;
+  }
+}

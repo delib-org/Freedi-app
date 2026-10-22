@@ -1,4 +1,5 @@
 import m from 'mithril';
+import '@/styles/console-opening.scss';
 import type { ClassTable } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { unplacedStudents } from '@/lib/classroom/consoleHelpers';
@@ -23,6 +24,8 @@ export interface TablesBoardAttrs {
 	plenum: boolean;
 	/** Side marks appear after the Side step. */
 	showSides: boolean;
+	/** The Opening panel (UX 15.L): while the class is unseated it takes the main column and the roster the side one. */
+	opening?: m.Children;
 }
 
 function rosterCard(attrs: TablesBoardAttrs): m.Vnode {
@@ -100,7 +103,9 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 					: '',
 			]),
 			attrs.tables.length === 0
-				? rosterCard(attrs)
+				? attrs.opening
+					? m('div.console-opening', [attrs.opening, rosterCard(attrs)])
+					: rosterCard(attrs)
 				: [
 						unplaced.length > 0 ? unplacedStrip(unplaced, tableNumbers, attrs.mainId) : null,
 						m(
