@@ -426,6 +426,102 @@
   gap: var(--space-sm);
 }
 
+// The row's start edge carries the status, so a long list scans by edge as
+// well as by chip (the chip still says it in words and shape).
+.teacher-home__row {
+  --q-accent: var(--border-medium);
+
+  &--live {
+    --q-accent: var(--terra-600);
+  }
+
+  &--paused {
+    --q-accent: var(--ink-muted);
+  }
+
+  &--open {
+    --q-accent: var(--teal-600);
+  }
+
+  &--ended {
+    --q-accent: var(--paper-line);
+  }
+
+  &--ended &-title {
+    color: var(--ink-muted);
+  }
+}
+
+.teacher-home__row > .teacher-home__error {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-block-size: 28px;
+  margin: 0;
+  padding-inline: var(--space-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--ink);
+  background: var(--paper-soft);
+  border-radius: var(--radius-full);
+
+  &--ended {
+    background: var(--paper-deep);
+  }
+}
+
+.teacher-home__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+}
+
+.teacher-home__account {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teacher-home__how,
+.teacher-home__lead {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.teacher-home__how {
+  font-size: var(--font-size-sm);
+}
+
+.teacher-home__lead {
+  font-weight: var(--font-weight-semibold);
+  color: var(--ink);
+}
+
+.teacher-home__filter {
+  inline-size: 100%;
+  min-block-size: var(--touch-target);
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .plan__skeleton-block,
   .teacher-home__skeleton {

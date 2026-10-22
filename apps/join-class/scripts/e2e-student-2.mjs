@@ -73,15 +73,13 @@ async function newStudent(name) {
 	const context = await browser.newContext({ viewport: { width: 390, height: 800 } });
 	const page = await context.newPage();
 	page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`));
-	await page.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded' });
-	await page.click('button.login__btn--guest', { timeout: TIMEOUT });
-	await page.waitForURL((u) => u.pathname === '/', { timeout: TIMEOUT });
+	// A student is anonymous: the lesson link signs them in by itself.
+	await page.goto(`${BASE}/m/${mainId}`, { waitUntil: 'domcontentloaded' });
 	const uid = await until(async () => {
 		const now = await authUids();
 
 		return [...now].find((id) => !before.has(id));
 	}, `${name} auth uid`);
-	await page.goto(`${BASE}/m/${mainId}`, { waitUntil: 'domcontentloaded' });
 	const subRef = db.doc(`statementsSubscribe/${uid}--${mainId}`);
 	await until(async () => (await subRef.get()).exists, `${name} subscription`);
 	await subRef.update({ tableId, side: 20, camp: 'a', lastUpdate: Date.now() });

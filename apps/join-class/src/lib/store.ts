@@ -223,7 +223,17 @@ export function getCreator(): Creator | null {
  *
  *  Returns the new statementId on success, or null if there's no signed-in
  *  user or the schema validation fails. */
-export async function createSimpleQuestion(title: string): Promise<string | null> {
+export interface NewQuestionExtras {
+	/** Merged into the statement's settings in the one create (e.g. the lesson plan). */
+	statementSettings?: Statement['statementSettings'];
+	defaultLanguage?: string;
+	forceLanguage?: boolean;
+}
+
+export async function createSimpleQuestion(
+	title: string,
+	extras?: NewQuestionExtras,
+): Promise<string | null> {
 	const trimmed = title.trim();
 	if (!trimmed) return null;
 
@@ -245,6 +255,7 @@ export async function createSimpleQuestion(title: string): Promise<string | null
 			enableAddVotingOption: true,
 			enableSimilaritiesSearch: true,
 			enableNavigationalElements: true,
+			...(extras?.statementSettings ?? {}),
 		},
 	});
 
@@ -268,6 +279,9 @@ export async function createSimpleQuestion(title: string): Promise<string | null
 			...(newQuestion.membership ?? {}),
 			access: Access.openToAll,
 		},
+		...(extras?.defaultLanguage
+			? { defaultLanguage: extras.defaultLanguage, forceLanguage: extras.forceLanguage === true }
+			: {}),
 	};
 
 	await setDoc(doc(db, Collections.statements, finalQuestion.statementId), finalQuestion);

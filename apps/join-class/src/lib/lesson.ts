@@ -16,17 +16,23 @@ import {
 	runTransaction,
 	writeBatch,
 } from './firebase';
-import { t } from './i18n';
+import { getLang, t } from './i18n';
 import {
+	createSimpleQuestion,
 	getMainStatement,
+	getQuestion,
+	loadQuestion,
 	setMainStatementSetting,
 	setPowerFollowMe,
 	setQuestionSetting,
 } from './store';
+import { markOpenedInClass } from './joinSubscriptions';
+import { getUserState } from './user';
 import {
 	CLASS_CODES_COLLECTION,
 	LESSON_STEP_KEYS,
 	LessonStep,
+	buildNewLessonPlan,
 	generateClassCode,
 	isLessonStanding,
 	isValidStepIndex,
@@ -177,4 +183,34 @@ export async function resolveClassCode(code: string): Promise<string | null> {
 	const mainId = snap.exists() ? (snap.data() as { mainId?: string }).mainId : undefined;
 
 	return mainId ?? null;
+}
+
+/**
+ * The teacher's "create" (IA 13.5), in one go: the main statement with its
+ * lesson plan (step 0, live, so `/m/:mid` is a lesson from its first second)
+ * and the teacher's current language as the lesson language, then the
+ * `openedInClass` marker that lists it on the teacher's home, then the class code.
+ * Returns the new lesson's id; throws when any step fails (the caller shows
+ * "try again"; pressing create again makes a fresh lesson, never a duplicate
+ * of a half-made one that the list would show).
+ */
+export async function createLesson(title: string): Promise<string> {
+	const id = await createSimpleQuestion(title, {
+		statementSettings: { lessonPlan: buildNewLessonPlan(Date.now()) },
+		defaultLanguage: getLang(),
+		forceLanguage: true,
+	});
+	if (!id) throw new Error('createLesson: the statement was not created');
+	// The marker comes before the code on purpose: it writes the teacher's admin
+	// subscription, which is what the class-code rule checks (the server-side
+	// fan-out of that subscription is asynchronous and may not have landed yet).
+	const user = getUserState().user;
+	if (user) {
+		await loadQuestion(id);
+		const statement = getQuestion();
+		if (statement) await markOpenedInClass(statement, user.uid, user.displayName ?? '');
+	}
+	await ensureClassCode(id);
+
+	return id;
 }

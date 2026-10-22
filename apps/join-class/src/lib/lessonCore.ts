@@ -189,6 +189,38 @@ export function normalizeClassCode(input: string): string | null {
 	return CLASS_CODE_PATTERN.test(digits) ? digits : null;
 }
 
+/** Arabic-Indic (U+0660-0669) and Persian (U+06F0-06F9) digits, which Arabic and Farsi keyboards send. */
+const ARABIC_INDIC_ZERO = 0x0660;
+const PERSIAN_ZERO = 0x06f0;
+const DIGIT_COUNT = 10;
+const JOIN_LINK_CODE = /\/c\/([^/?#\s]+)/;
+
+function toAsciiDigits(input: string): string {
+	return Array.from(input, (ch) => {
+		const point = ch.codePointAt(0) ?? 0;
+		if (point >= ARABIC_INDIC_ZERO && point < ARABIC_INDIC_ZERO + DIGIT_COUNT) {
+			return String(point - ARABIC_INDIC_ZERO);
+		}
+		if (point >= PERSIAN_ZERO && point < PERSIAN_ZERO + DIGIT_COUNT) {
+			return String(point - PERSIAN_ZERO);
+		}
+
+		return ch;
+	}).join('');
+}
+
+/**
+ * What the front door's one input keeps: digits only (Arabic-Indic and Persian
+ * digits mapped to 0-9), at most six. A pasted join link ("https://host/c/482913")
+ * yields its code; "482 913" and "482-913" yield 482913.
+ */
+export function toCodeDigits(input: string): string {
+	const link = JOIN_LINK_CODE.exec(input);
+	const source = link ? link[1] : input;
+
+	return toAsciiDigits(source).replace(/\D/g, '').slice(0, CLASS_CODE_LENGTH);
+}
+
 /** Longest hint, in characters: one line on a phone. */
 export const HINT_MAX_LENGTH = 90;
 

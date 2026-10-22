@@ -46,13 +46,15 @@ function sendsToConsole(main: Statement): boolean {
 }
 
 function notALesson(): m.Vnode {
-	return m('.login', [
-		m('.login__card', [
-			m(BrandLogo, { size: 72, className: 'login__logo' }),
-			m('h1.login__title', t('lesson.not_lesson')),
-			m(m.route.Link, { class: 'btn btn--primary', href: '/' }, t('login.have_code')),
-		]),
+	return m('main.door', [
+		m('header.door__header', m(BrandLogo, { size: 48, className: 'door__logo' })),
+		m('h1.door__title', { tabindex: '-1', oncreate: focusHeading }, t('lesson.not_lesson')),
+		m(m.route.Link, { class: 'btn btn--primary door__enter', href: '/' }, t('login.have_code')),
 	]);
+}
+
+function focusHeading(vnode: m.VnodeDOM): void {
+	(vnode.dom as HTMLElement).focus();
 }
 
 export const MainHub: m.Component = {

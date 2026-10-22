@@ -2,6 +2,7 @@ import m from 'mithril';
 import '@/styles/teacher.scss';
 import type { Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
+import { NotYourLesson } from './NotYourLesson';
 import { WizColFooter } from '@/components/WizColFooter';
 import {
 	CHALLENGE_NEW_KEY,
@@ -444,6 +445,7 @@ export const PlanScreen: m.Component = {
 
 	view() {
 		const mid = m.route.param('mid') ?? getMainId();
+		if (getLoad() === 'denied') return m(NotYourLesson);
 		const ready = getLoad() === 'ready';
 
 		return m('.plan', [

@@ -22,6 +22,7 @@ import {
 	planChallengeWrites,
 	stepFollowMePath,
 	stepLabelKey,
+	toCodeDigits,
 } from '../lessonCore';
 
 function q(id: string, extra: Partial<Statement> = {}, role?: 'guiding' | 'challenge'): Statement {
@@ -205,5 +206,22 @@ describe('lesson status helpers', () => {
 			statusAt: 99,
 		});
 		expect(planStepMove(3, 'live', 99).status).toBeUndefined();
+	});
+});
+
+describe('toCodeDigits (the front door input)', () => {
+	it('keeps digits only and at most six', () => {
+		expect(toCodeDigits('48a2 91-3x7')).toBe('482913');
+		expect(toCodeDigits('')).toBe('');
+	});
+
+	it('maps Arabic-Indic and Persian digits', () => {
+		expect(toCodeDigits('٤٨٢٩١٣')).toBe('482913');
+		expect(toCodeDigits('۴۸۲۹۱۳')).toBe('482913');
+	});
+
+	it('takes the code out of a pasted join link', () => {
+		expect(toCodeDigits('https://class.example.com/c/482913')).toBe('482913');
+		expect(toCodeDigits('http://localhost:3035/c/123456?x=1')).toBe('123456');
 	});
 });

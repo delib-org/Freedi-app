@@ -1,23 +1,26 @@
 import m from 'mithril';
 import { ensureUser } from '@/lib/user';
 import { normalizeClassCode, resolveClassCode } from '@/lib/lesson';
-import { t } from '@/lib/i18n';
 import { SplashLoader } from '@/views/Splash';
-import { BrandLogo } from '@/components/BrandLogo';
+import type { DoorError } from '@/views/FrontDoor';
 
-type CodeState = 'resolving' | 'unknown';
+/**
+ * `/c/:code` - a student types the six digits (or scans the QR); the code is
+ * resolved and this route is replaced with the lesson `/m/:mid`. It has no
+ * screen of its own: an unknown code (or a lookup that failed, e.g. no network)
+ * goes back to the front door with the code filled in and the reason flagged,
+ * so there is never a dead end.
+ */
 
-let state: CodeState = 'resolving';
+function backToDoor(code: string | null, error: DoorError): void {
+	m.route.set('/', code ? { code, error } : { error }, { replace: true });
+}
 
-/** `/c/:code` - a student types the six digits (or scans the QR); we resolve
- *  the code and replace this route with the workspace hub `/m/:mid`. */
 async function resolve(): Promise<void> {
-	state = 'resolving';
 	const raw = m.route.param('code');
 	const code = typeof raw === 'string' ? normalizeClassCode(raw) : null;
 	if (!code) {
-		state = 'unknown';
-		m.redraw();
+		backToDoor(null, 'unknown');
 
 		return;
 	}
@@ -29,11 +32,11 @@ async function resolve(): Promise<void> {
 
 			return;
 		}
+		backToDoor(code, 'unknown');
 	} catch (err) {
 		console.error('[ClassCode] resolve failed:', err);
+		backToDoor(code, 'offline');
 	}
-	state = 'unknown';
-	m.redraw();
 }
 
 export const ClassCode: m.Component = {
@@ -42,14 +45,6 @@ export const ClassCode: m.Component = {
 	},
 
 	view() {
-		if (state === 'resolving') return m(SplashLoader);
-
-		return m('.login', [
-			m('.login__card', { role: 'alert' }, [
-				m(BrandLogo, { size: 72, className: 'login__logo' }),
-				m('h1.login__title', t('lesson.code.unknown.title')),
-				m('p', t('lesson.code.unknown.body')),
-			]),
-		]);
+		return m(SplashLoader);
 	},
 };

@@ -7,6 +7,7 @@ import { checkAdminStatus, isAdmin } from '@/lib/admin';
 import { ensureClassCode, lessonStepOf, stepLabel } from '@/lib/lesson';
 import { watchClass } from '@/lib/classroom/classState';
 import { projectorData, watchProjector } from '@/lib/classroom/projectorData';
+import { NotYourLesson } from './NotYourLesson';
 import { ProjectorBand } from './projector/ProjectorBand';
 import { renderStep } from './projector/steps';
 import { readClassCode } from './planHelpers';
@@ -17,7 +18,7 @@ import { readClassCode } from './planHelpers';
  * carries the join code and QR on every step. Grid, not a room map.
  */
 
-type Load = 'loading' | 'ready' | 'error';
+type Load = 'loading' | 'ready' | 'error' | 'denied';
 
 let load: Load = 'loading';
 let stops: Array<() => void> = [];
@@ -43,7 +44,7 @@ async function open(mid: string): Promise<void> {
 		}
 		await checkAdminStatus(mid, main.creatorId);
 		if (!isAdmin()) {
-			m.route.set(`/m/${mid}`);
+			load = 'denied';
 
 			return;
 		}
@@ -91,6 +92,8 @@ export const TeacherProjector: m.Component = {
 		stopAll();
 	},
 	view() {
+		if (load === 'denied') return m(NotYourLesson);
+
 		return m('.projector', { 'aria-label': t('projector.title') }, body());
 	},
 };

@@ -20,7 +20,7 @@ import { resetConsoleState, stopWatchingOptions } from './consoleState';
  * lesson clock and the speaker timers.
  */
 
-export type SessionStatus = 'loading' | 'ready' | 'failed' | 'redirected';
+export type SessionStatus = 'loading' | 'ready' | 'failed' | 'denied';
 
 const TICK_MS = 1000;
 const CLOCK_KEY_PREFIX = 'joinClass.lessonStart.';
@@ -122,8 +122,8 @@ async function openConsole(mainId: string): Promise<void> {
 		await checkAdminStatus(mainId, main.creatorId);
 		if (mine !== generation) return;
 		if (!isAdmin()) {
-			session.status = 'redirected';
-			m.route.set(`/m/${mainId}`);
+			// Not this lesson's teacher: the console shows "not your lesson", never the student view.
+			session.status = 'denied';
 
 			return;
 		}

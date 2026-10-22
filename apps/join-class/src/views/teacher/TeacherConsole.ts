@@ -38,6 +38,7 @@ import { releaseConsole, retainConsole, session } from './consoleSession';
 import { consoleState, dismissFailure, watchOptions } from './consoleState';
 import type { ConsoleView } from './consoleState';
 import { abortDrag } from './dragController';
+import { NotYourLesson } from './NotYourLesson';
 import { ConsoleSettings } from './ConsoleSettings';
 import { GatePanel } from './GatePanel';
 import { StepRail } from './StepRail';
@@ -177,6 +178,8 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		const main = getMainStatement();
 		const ready = session.status === 'ready' && main !== null;
 		const view = currentView();
+
+		if (session.status === 'denied') return m(NotYourLesson);
 
 		if (!ready) {
 			return m('.console', [

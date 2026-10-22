@@ -3,12 +3,13 @@ import { registerSW } from 'virtual:pwa-register';
 import './styles/global.scss';
 import { initSentry, setSentryUser } from '@/lib/sentry';
 import { afterLoad } from '@/lib/deferWork';
-import { initAuth, waitForAuthReady, isSignedIn, getUserState } from '@/lib/user';
+import { initAuth, waitForAuthReady, isGoogleSignedIn, getUserState } from '@/lib/user';
 import { initI18n } from '@/lib/i18n';
 import { mountAccessibilityWidget } from '@/components/AccessibilityWidget';
 import { MainHub } from '@/views/MainHub';
 import { Login } from '@/views/Login';
 import { ClassCode } from '@/views/ClassCode';
+import { FrontDoor } from '@/views/FrontDoor';
 
 initSentry();
 // Kicked off before the i18n await below so the auth handshake and the locale
@@ -41,14 +42,31 @@ waitForAuthReady().then(() => {
 });
 m.route.prefix = '';
 
-/** Teacher routes: same auth guard, and the screen's code is fetched only when
- *  a teacher opens it, so the student's first screen carries none of it. */
+/** The front door: a Google-signed-in teacher never sees it (`/` -> `/t`);
+ *  everyone else, students (anonymous) included, gets the code box. */
+const frontDoor: m.RouteResolver = {
+	onmatch() {
+		return waitForAuthReady().then(() => {
+			if (isGoogleSignedIn()) {
+				m.route.set('/t', undefined, { replace: true });
+
+				return { view: () => null };
+			}
+
+			return FrontDoor;
+		});
+	},
+};
+
+/** Teacher routes: Google-signed-in only (anonymous goes to /login, which comes
+ *  back to the requested path), and the screen's code is fetched only when a
+ *  teacher opens it, so the student's first screen carries none of it. */
 function teacherRoute(load: () => Promise<m.Component>): m.RouteResolver {
 	return {
 		onmatch(_args, requestedPath: string) {
 			return waitForAuthReady().then(() => {
-				if (!isSignedIn()) {
-					m.route.set('/login', { next: requestedPath });
+				if (!isGoogleSignedIn()) {
+					m.route.set('/login', { next: requestedPath }, { replace: true });
 
 					return { view: () => null };
 				}
@@ -77,8 +95,7 @@ i18nReady.then(() => {
 	m.route(root, '/', {
 		'/c/:code': ClassCode,
 		// Unknown paths (the old /q/*, /m/:mid/q/*, /invite) fall to this default route.
-		// The front door (task T3 replaces this placeholder with the code box).
-		'/': Login,
+		'/': frontDoor,
 		'/login': Login,
 		'/m/:mid': MainHub,
 		// Teacher routes (classroom). Lazy, so students never download them.

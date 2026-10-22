@@ -57,6 +57,11 @@ export const StatementSubscriptionSchema = object({
 	// back to `openedInJoin` desc.
 	openedInJoin: optional(number()),
 	joinOrder: optional(number()),
+	// join-class — the same idea for the classroom app: epoch-ms when the
+	// teacher last created/opened this lesson there. Kept apart from
+	// `openedInJoin` so a Join workspace never shows up as a lesson (and the
+	// other way round). Presence (>0) lists the lesson on the teacher's home.
+	openedInClass: optional(number()),
 
 	// WizCol Studio — consultant tenant of the subscribed statement, copied
 	// onto materialized org-admin subscriptions so an org's roster can be
