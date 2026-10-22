@@ -1,5 +1,7 @@
 import m from 'mithril';
 import '@/styles/projector.scss';
+import '@/styles/projector-video.scss';
+import '@/styles/projector-controls.scss';
 import { t } from '@/lib/i18n';
 import { ensureUser } from '@/lib/user';
 import { loadMainStatement, getMainStatement, setFollowLessonLanguage } from '@/lib/store';
@@ -12,6 +14,14 @@ import { projectorData, watchProjector } from '@/lib/classroom/projectorData';
 import { NotYourLesson } from './NotYourLesson';
 import { ProjectorBand } from './projector/ProjectorBand';
 import { renderStep } from './projector/steps';
+import { openingVideoActive } from './projector/OpeningStage';
+import {
+	ProjectorControls,
+	ProjectorHint,
+	controlsVisible,
+	resetControls,
+} from './projector/ProjectorControls';
+import { projectorMode } from '@/lib/classroom/projectorScreen';
 import { readClassCode } from './planHelpers';
 
 /**
@@ -114,10 +124,25 @@ function body(): m.Children {
 		];
 	}
 
+	const video = step.key === 'opening' && openingVideoActive();
+
 	return [
 		m('main.projector__stage', { 'data-step': step.key }, renderStep(step.key, { code, joinUrl })),
-		m(ProjectorBand, { stepName: stepLabel(step.key), code, joinUrl }),
+		// video mode has its own strip instead of the code band (UX 15.C)
+		video ? null : m(ProjectorBand, { stepName: stepLabel(step.key), code, joinUrl }),
 	];
+}
+
+/** True when the ready, live projector shows a video (the root takes the black video look). */
+function videoMode(): boolean {
+	if (load !== 'ready') return false;
+	const main = projectorData.main ?? getMainStatement();
+	const status = lessonStatusOfMain(main);
+	if (status === 'paused' || status === 'ended') return false;
+
+	return (
+		lessonStepOf(main?.statementSettings?.lessonPlan).key === 'opening' && openingVideoActive()
+	);
 }
 
 export const TeacherProjector: m.Component = {
@@ -130,6 +155,7 @@ export const TeacherProjector: m.Component = {
 
 			return;
 		}
+		resetControls(projectorMode(m.route.param('mode')), mid);
 		void open(mid);
 	},
 	onremove() {
@@ -138,7 +164,22 @@ export const TeacherProjector: m.Component = {
 	},
 	view() {
 		if (load === 'denied') return m(NotYourLesson);
+		const mid = m.route.param('mid') ?? openedFor;
 
-		return m('.projector', { 'aria-label': t('projector.title') }, body());
+		return m(
+			'.projector',
+			{
+				role: 'region',
+				tabindex: '-1',
+				'aria-label': t('projector.title'),
+				'data-controls': controlsVisible() ? 'on' : 'off',
+				class: videoMode() ? 'projector--video' : undefined,
+			},
+			[
+				body(),
+				m(ProjectorHint),
+				m(ProjectorControls, { mid, mode: projectorMode(m.route.param('mode')) }),
+			],
+		);
 	},
 };
