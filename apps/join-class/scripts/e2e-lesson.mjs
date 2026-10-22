@@ -190,7 +190,8 @@ async function smallestText() {
 		let smallest = Infinity;
 		for (const el of document.querySelectorAll('.projector *')) {
 			const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim() !== '');
-			if (!own || el.closest('svg')) continue;
+			// the teacher's own control (24 px, hidden from the class) is not projected content
+			if (!own || el.closest('svg') || el.closest('.projector-controls')) continue;
 			smallest = Math.min(smallest, parseFloat(getComputedStyle(el).fontSize));
 		}
 
@@ -313,6 +314,8 @@ async function phaseIntroOpening(creatorId) {
 	check('intro phone: no row is marked "on the projector" yet', (await phone.locator('.intro-video-row--live').count()) === 0);
 
 	// console: choose video 2 for the projector
+	// the projector asks the file for its metadata (UX 15.C): hold that request open so the sandbox's unreachable link does not read as a failed video
+	await teacherContext.route('https://example.com/second.mp4', () => undefined);
 	const consolePage = await teacherContext.newPage();
 	consolePage.on('pageerror', (e) => pageErrors.push(`console: ${e.message}`));
 	await consolePage.goto(`${BASE}/t/${mid}`, { waitUntil: 'domcontentloaded' });
