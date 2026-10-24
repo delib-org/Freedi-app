@@ -1,0 +1,673 @@
+diff --git a/functions/src/services/integration-ai-service.ts b/functions/src/services/integration-ai-service.ts
+index 96c2ad80a..e5833295a 100644
+--- a/functions/src/services/integration-ai-service.ts
++++ b/functions/src/services/integration-ai-service.ts
+@@ -814,6 +814,13 @@ export interface ThemeOption {
+ 	 * merges WORSE (RESULTS.md Finding 13).
+ 	 */
+ 	contents?: string[];
++	/**
++	 * How many proposals the theme holds. Shown to `groupEquivalentThemes` (a
++	 * count, never the proposals) so it can tell a premature one-idea heading from
++	 * an established one — see the fragmentation study in
++	 * `scientific-research/2026-10-24-merge-judge-fragmentation/`.
++	 */
++	ideaCount?: number;
+ }
+ 
+ /** Proposals shown per theme when contents are rendered into a prompt. */
+@@ -1059,6 +1066,20 @@ export interface ThemeMergeGroup {
+  * view, so an unmerged duplicate is much the cheaper error, which is precisely
+  * what the reverted version got wrong.
+  */
++/**
++ * Why the judge is told about small headings. Measured on the 8 benchmark end
++ * states: 25 of the 27 pairs of headings that share a true topic involve a heading
++ * holding a single synthesis, and the heading-only prompt grouped 3 of them
++ * (pair recall 0.06). With idea counts and this rule the same judge finds about
++ * half, and every group still has to pass `verifyThemeAbsorption`.
++ */
++const SMALL_TOPIC_RULE = `A topic holding only one or two ideas is almost always a heading that was
++created because the first idea to arrive had nowhere to go. If a broader topic
++covers the same area of life or domain of city activity, absorb the small one
++into it. Do NOT group two well-populated topics with each other.
++
++`;
++
+ export async function groupEquivalentThemes(input: {
+ 	themes: ThemeOption[];
+ 	questionContext: string;
+@@ -1066,9 +1087,16 @@ export async function groupEquivalentThemes(input: {
+ 	const { themes, questionContext } = input;
+ 	if (themes.length < 3) return [];
+ 
++	const hasCounts = themes.some((t) => t.ideaCount !== undefined);
+ 	const themeLines = themes
+-		.map((t, i) => `${i + 1}. [${t.id}] ${t.title}${t.description ? ` — ${t.description}` : ''}`)
++		.map((t, i) => {
++			const count =
++				t.ideaCount === undefined ? '' : ` (${t.ideaCount} idea${t.ideaCount === 1 ? '' : 's'})`;
++
++			return `${i + 1}. [${t.id}] ${t.title}${t.description ? ` — ${t.description}` : ''}${count}`;
++		})
+ 		.join('\n');
++	const smallTopicRule = hasCounts ? SMALL_TOPIC_RULE : '';
+ 
+ 	const prompt = `You are tidying the topic headings of a community consultation.
+ 
+@@ -1096,7 +1124,7 @@ that name the same specific sub-area (domain, lever, mechanism, or actor). Never
+ give a merged group a heading that restates or paraphrases the question — such a
+ heading fits every answer and would swallow every other topic.
+ 
+-Leave a topic out of every group when it genuinely stands alone. Returning no
++${smallTopicRule}Leave a topic out of every group when it genuinely stands alone. Returning no
+ groups at all is a valid answer.
+ 
+ Return JSON:
+@@ -1147,6 +1175,79 @@ Return JSON:
+ 	}
+ }
+ 
++export interface ThemeAbsorptionInput {
++	donor: { title: string; description?: string; contents: string[] };
++	survivor: { title: string; description?: string; contents: string[]; ideaCount: number };
++	questionContext: string;
++}
++
++/** Proposals of each heading shown to the absorption check. */
++const ABSORPTION_CONTENTS_SHOWN = 4;
++
++/**
++ * Second opinion on one proposed merge: would a participant browsing the broader
++ * topic expect to find the small topic's ideas there?
++ *
++ * The grouping call is deliberately permissive about small headings, which buys
++ * recall and costs precision (wrong merges such as "Public Wi-Fi" into
++ * "Neighborhood library access"). This call SEES the ideas under both headings,
++ * which the grouping call must not (Finding 13: contents in the grouping prompt
++ * produced a catch-all). Asked of a single donor against a single survivor it
++ * cannot build one. Replayed on the benchmark end states (2 samples), the
++ * grouping stage alone proposed 30 right and 13 wrong pairs; after this check
++ * 6 right and 2 wrong were left. It is strict on purpose: the shipped judge
++ * proposed 5 right and 4 wrong pairs in 3 samples.
++ *
++ * Fail-closed: any error or unparseable answer is "does not fit". A merge that
++ * is not made is cheap; one that is made hides a heading from every reader.
++ */
++export async function verifyThemeAbsorption(input: ThemeAbsorptionInput): Promise<boolean> {
++	const { donor, survivor, questionContext } = input;
++	const list = (items: string[]): string =>
++		items
++			.slice(0, ABSORPTION_CONTENTS_SHOWN)
++			.map((c) => `     - ${c}`)
++			.join('\n');
++
++	const prompt = `A community consultation has these two topic headings.
++
++QUESTION: "${questionContext}"
++
++SMALL TOPIC: ${donor.title}${donor.description ? ` - ${donor.description}` : ''}
++  its ideas:
++${list(donor.contents)}
++
++BROADER TOPIC: ${survivor.title}${survivor.description ? ` - ${survivor.description}` : ''}  (${survivor.ideaCount} ideas)
++  some of its ideas:
++${list(survivor.contents)}
++
++Would a participant browsing the BROADER TOPIC reasonably expect to find the SMALL
++TOPIC's ideas there? Say yes only when those ideas address the same area of
++concern as the broader topic's ideas (even through different actions). Sharing
++the question's subject, or merely both being about the city, is not enough.
++
++Return JSON: { "fits": true or false }`;
++
++	try {
++		const model = getThemeAssignmentModel();
++		const result = await model.generateContent(prompt);
++		const responseText = result.response
++			.text()
++			.replace(/```json\s*/gi, '')
++			.replace(/```\s*/g, '')
++			.trim();
++		const parsed = JSON.parse(responseText);
++
++		return parsed.fits === true;
++	} catch (error) {
++		logger.warn('verifyThemeAbsorption: error, treating as does-not-fit', {
++			error: error instanceof Error ? error.message : String(error),
++		});
++
++		return false;
++	}
++}
++
+ export interface ThemeSplitMember {
+ 	id: string;
+ 	title: string;
+diff --git a/functions/src/synthesis/__tests__/consolidateThemes.test.ts b/functions/src/synthesis/__tests__/consolidateThemes.test.ts
+index 4e3cfd223..09a845fbc 100644
+--- a/functions/src/synthesis/__tests__/consolidateThemes.test.ts
++++ b/functions/src/synthesis/__tests__/consolidateThemes.test.ts
+@@ -56,14 +56,17 @@ jest.mock('firebase-functions', () => ({
+ }));
+ 
+ const groupEquivalentThemesMock = jest.fn();
++const verifyThemeAbsorptionMock = jest.fn();
+ jest.mock('../../services/integration-ai-service', () => ({
+ 	groupEquivalentThemes: (...args: unknown[]) => groupEquivalentThemesMock(...args),
++	verifyThemeAbsorption: (...args: unknown[]) => verifyThemeAbsorptionMock(...args),
+ }));
+ 
+ jest.mock('../liveSynth/auditLog', () => ({ recordLiveSynthEvent: jest.fn() }));
+ jest.mock('../liveSynth/clusterRecompute', () => ({ enqueueClusterRecompute: jest.fn() }));
+ 
+ import { consolidateThemes } from '../pipeline/consolidateThemes';
++import { MERGE_PROPOSAL_VOTES } from '../pipeline/themeMergePlanner';
+ 
+ const PARENT = 'q1';
+ 
+@@ -111,13 +114,14 @@ beforeEach(() => {
+ 	committed.length = 0;
+ 	seedThreeThemes();
+ 	groupEquivalentThemesMock.mockResolvedValue([]);
++	verifyThemeAbsorptionMock.mockResolvedValue(true);
+ });
+ 
+ describe('consolidateThemes — what the judge is shown', () => {
+ 	it('offers every visible theme, by heading', async () => {
+ 		await consolidateThemes(PARENT, 'How do we improve the city?', 'test');
+ 
+-		expect(groupEquivalentThemesMock).toHaveBeenCalledTimes(1);
++		expect(groupEquivalentThemesMock).toHaveBeenCalledTimes(MERGE_PROPOSAL_VOTES);
+ 		const { themes, questionContext } = groupEquivalentThemesMock.mock.calls[0][0];
+ 		expect(themes.map((t: { id: string }) => t.id).sort()).toEqual(['t1', 't2', 't3']);
+ 		expect(themes.find((t: { id: string }) => t.id === 't1').title).toBe(
+@@ -131,11 +135,24 @@ describe('consolidateThemes — what the judge is shown', () => {
+ 	 * more but less accurately, taking seed 42 from 0.910 to 0.865 by producing a
+ 	 * catch-all heading. RESULTS.md Finding 13.
+ 	 */
+-	it('does NOT send member proposals — that variant was measured and reverted', async () => {
++	it('does NOT send member proposals to the proposal call — that variant was measured and reverted', async () => {
++		await consolidateThemes(PARENT, 'q', 'test');
++
++		for (const call of groupEquivalentThemesMock.mock.calls) {
++			for (const t of call[0].themes) expect(t.contents).toBeUndefined();
++		}
++	});
++
++	it('tells the proposal call how many ideas each heading holds', async () => {
++		statementDocs.set('t1', theme('t1', 'Household recycling services', ['s1', 'sX']));
++
+ 		await consolidateThemes(PARENT, 'q', 'test');
+ 
+ 		const { themes } = groupEquivalentThemesMock.mock.calls[0][0];
+-		for (const t of themes) expect(t.contents).toBeUndefined();
++		const counts = Object.fromEntries(
++			themes.map((t: { id: string; ideaCount: number }) => [t.id, t.ideaCount]),
++		);
++		expect(counts).toEqual({ t1: 2, t2: 1, t3: 1 });
+ 	});
+ });
+ 
+@@ -143,11 +160,11 @@ describe('consolidateThemes — each theme set is judged once', () => {
+ 	it('does not re-ask the judge about an unchanged set', async () => {
+ 		const first = await consolidateThemes(PARENT, 'q', 'test');
+ 		expect(first.skipped).toBeUndefined();
+-		expect(groupEquivalentThemesMock).toHaveBeenCalledTimes(1);
++		expect(groupEquivalentThemesMock).toHaveBeenCalledTimes(MERGE_PROPOSAL_VOTES);
+ 
+ 		const second = await consolidateThemes(PARENT, 'q', 'test');
+ 		expect(second.skipped).toBe(true);
+-		expect(groupEquivalentThemesMock).toHaveBeenCalledTimes(1);
++		expect(groupEquivalentThemesMock).toHaveBeenCalledTimes(MERGE_PROPOSAL_VOTES);
+ 	});
+ 
+ 	it('judges again once a heading gains a proposal', async () => {
+@@ -157,7 +174,7 @@ describe('consolidateThemes — each theme set is judged once', () => {
+ 		const again = await consolidateThemes(PARENT, 'q', 'test');
+ 
+ 		expect(again.skipped).toBeUndefined();
+-		expect(groupEquivalentThemesMock).toHaveBeenCalledTimes(2);
++		expect(groupEquivalentThemesMock).toHaveBeenCalledTimes(MERGE_PROPOSAL_VOTES * 2);
+ 	});
+ 
+ 	it('judges again after a merge, so a merge that opens another is still found', async () => {
+@@ -166,9 +183,10 @@ describe('consolidateThemes — each theme set is judged once', () => {
+ 		// would be what stopped the second call.
+ 		statementDocs.set('t4', theme('t4', 'Community gardens', ['s4']));
+ 		statementDocs.set('s4', synth('s4', 'Turn vacant lots into gardens'));
+-		groupEquivalentThemesMock.mockResolvedValueOnce([
+-			{ ids: ['t1', 't2'], title: 'Environment and waste' },
+-		]);
++		const group = [{ ids: ['t1', 't2'], title: 'Environment and waste' }];
++		for (let vote = 0; vote < MERGE_PROPOSAL_VOTES; vote++) {
++			groupEquivalentThemesMock.mockResolvedValueOnce(group);
++		}
+ 
+ 		const merged = await consolidateThemes(PARENT, 'q', 'test');
+ 		expect(merged.merges).toBe(1);
+@@ -178,7 +196,7 @@ describe('consolidateThemes — each theme set is judged once', () => {
+ 		statementDocs.set('t1', theme('t1', 'Environment and waste', ['s1', 's2']));
+ 		await consolidateThemes(PARENT, 'q', 'test');
+ 
+-		expect(groupEquivalentThemesMock).toHaveBeenCalledTimes(2);
++		expect(groupEquivalentThemesMock).toHaveBeenCalledTimes(MERGE_PROPOSAL_VOTES * 2);
+ 	});
+ 
+ 	it('judges anyway when the sweep-state read fails, rather than never tidying', async () => {
+@@ -216,7 +234,7 @@ describe('consolidateThemes — merge mechanics', () => {
+ 		expect(result.merges).toBe(1);
+ 		const survivor = committed.find((c) => c.id === 't1');
+ 		const donor = committed.find((c) => c.id === 't2');
+-		expect(survivor?.data.statement).toBe('Environment and waste');
++		expect(survivor?.data.statement).toBe('Household recycling services');
+ 		expect(survivor?.data.integratedOptions).toEqual(expect.arrayContaining(['s1', 'sX', 's2']));
+ 		expect(donor?.data.hide).toBe(true);
+ 		expect(donor?.data.mergedInto).toBe('t1');
+@@ -243,6 +261,20 @@ describe('consolidateThemes — merge mechanics', () => {
+ 		expect(committed).toHaveLength(0);
+ 	});
+ 
++	it('refuses the just-split pair even when the verification would approve it', async () => {
++		statementDocs.set('t1', { ...theme('t1', 'Funding', ['s1']), splitFrom: 'old' } as Statement);
++		statementDocs.set('t2', {
++			...theme('t2', 'Partnerships', ['s2']),
++			splitFrom: 'old',
++		} as Statement);
++		groupEquivalentThemesMock.mockResolvedValue([{ ids: ['t1', 't2'], title: 'x' }]);
++		verifyThemeAbsorptionMock.mockResolvedValue(true);
++
++		await consolidateThemes(PARENT, 'q', 'test');
++
++		expect(committed).toHaveLength(0);
++	});
++
+ 	it('still lets a sub-topic merge into an unrelated heading', async () => {
+ 		statementDocs.set('t1', { ...theme('t1', 'Funding', ['s1']), splitFrom: 'old' } as Statement);
+ 		groupEquivalentThemesMock.mockResolvedValue([
+diff --git a/functions/src/synthesis/__tests__/themeMergePlanner.test.ts b/functions/src/synthesis/__tests__/themeMergePlanner.test.ts
+new file mode 100644
+index 000000000..9e01fd693
+--- /dev/null
++++ b/functions/src/synthesis/__tests__/themeMergePlanner.test.ts
+@@ -0,0 +1,142 @@
++import type { ThemeMergeGroup } from '../../services/integration-ai-service';
++import {
++	MERGE_PROPOSAL_VOTES,
++	SMALL_THEME_MAX_IDEAS,
++	planThemeMerges,
++	shuffledForVote,
++	type MergePlannerDeps,
++	type PlannerTheme,
++} from '../pipeline/themeMergePlanner';
++
++const theme = (id: string, ideaCount: number): PlannerTheme => ({
++	id,
++	title: `Heading ${id}`,
++	ideaCount,
++});
++
++const BIG = SMALL_THEME_MAX_IDEAS + 3;
++
++function deps(overrides: Partial<MergePlannerDeps> = {}): MergePlannerDeps {
++	return {
++		propose: jest.fn(async () => [] as ThemeMergeGroup[]),
++		verifyAbsorption: jest.fn(async () => true),
++		loadContents: jest.fn(async (id: string) => [`idea of ${id}`]),
++		...overrides,
++	};
++}
++
++/** The judge answers the same group on the listed votes only (0-based call order). */
++function proposeOnVotes(votes: number[], group: ThemeMergeGroup): MergePlannerDeps['propose'] {
++	let call = -1;
++
++	return jest.fn(async () => {
++		call++;
++
++		return votes.includes(call) ? [group] : [];
++	});
++}
++
++describe('shuffledForVote', () => {
++	it('is deterministic and does not mutate its input', () => {
++		const list = ['a', 'b', 'c', 'd', 'e'];
++
++		expect(shuffledForVote(list, 1)).toEqual(shuffledForVote(list, 1));
++		expect(list).toEqual(['a', 'b', 'c', 'd', 'e']);
++		expect([...shuffledForVote(list, 2)].sort()).toEqual(list);
++	});
++
++	it('changes the order for different votes', () => {
++		const list = Array.from({ length: 12 }, (_, i) => String(i));
++
++		expect(shuffledForVote(list, 1)).not.toEqual(shuffledForVote(list, 2));
++	});
++});
++
++describe('planThemeMerges — proposals', () => {
++	const themes = [theme('big', BIG), theme('small', 1), theme('other', BIG)];
++
++	it('asks the judge once per vote, each time in a different order', async () => {
++		const d = deps();
++
++		await planThemeMerges(themes, 'q', d);
++
++		const calls = (d.propose as jest.Mock).mock.calls;
++		expect(calls).toHaveLength(MERGE_PROPOSAL_VOTES);
++		expect(calls[0][0].themes.map((t: PlannerTheme) => t.id)).toEqual(['big', 'small', 'other']);
++		expect(calls[1][0].themes.map((t: PlannerTheme) => t.id)).not.toEqual([
++			'big',
++			'small',
++			'other',
++		]);
++	});
++
++	it('keeps a pair that two of three proposals agree on', async () => {
++		const d = deps({ propose: proposeOnVotes([0, 2], { ids: ['small', 'big'], title: 'x' }) });
++
++		const groups = await planThemeMerges(themes, 'q', d);
++
++		expect(groups).toEqual([{ ids: ['big', 'small'], title: 'Heading big' }]);
++	});
++
++	it('drops a pair only one proposal suggested', async () => {
++		const d = deps({ propose: proposeOnVotes([1], { ids: ['small', 'big'], title: 'x' }) });
++
++		expect(await planThemeMerges(themes, 'q', d)).toEqual([]);
++		expect(d.verifyAbsorption).not.toHaveBeenCalled();
++	});
++
++	it('refuses to merge two established headings', async () => {
++		const d = deps({ propose: proposeOnVotes([0, 1, 2], { ids: ['big', 'other'], title: 'x' }) });
++
++		expect(await planThemeMerges(themes, 'q', d)).toEqual([]);
++		expect(d.verifyAbsorption).not.toHaveBeenCalled();
++	});
++
++	it('lets several small headings join one established heading', async () => {
++		const list = [theme('big', BIG), theme('s1', 1), theme('s2', 2)];
++		const d = deps({
++			propose: proposeOnVotes([0, 1, 2], { ids: ['s1', 'big', 's2'], title: 'x' }),
++		});
++
++		const groups = await planThemeMerges(list, 'q', d);
++
++		expect(groups).toHaveLength(1);
++		expect(groups[0].ids).toEqual(['big', 's2', 's1']);
++	});
++});
++
++describe('planThemeMerges — verification', () => {
++	const themes = [theme('big', BIG), theme('small', 1), theme('other', BIG)];
++	const agreed = (): MergePlannerDeps['propose'] =>
++		proposeOnVotes([0, 1, 2], { ids: ['small', 'big'], title: 'x' });
++
++	it('shows the verifier the ideas of both headings', async () => {
++		const d = deps({ propose: agreed() });
++
++		await planThemeMerges(themes, 'q', d);
++
++		const input = (d.verifyAbsorption as jest.Mock).mock.calls[0][0];
++		expect(input.donor.contents).toEqual(['idea of small']);
++		expect(input.survivor.contents).toEqual(['idea of big']);
++		expect(input.survivor.ideaCount).toBe(BIG);
++		expect(input.questionContext).toBe('q');
++	});
++
++	it('drops a group the verifier rejects', async () => {
++		const d = deps({ propose: agreed(), verifyAbsorption: jest.fn(async () => false) });
++
++		expect(await planThemeMerges(themes, 'q', d)).toEqual([]);
++	});
++
++	it('keeps only the donors the verifier approves', async () => {
++		const list = [theme('big', BIG), theme('s1', 1), theme('s2', 1)];
++		const d = deps({
++			propose: proposeOnVotes([0, 1, 2], { ids: ['big', 's1', 's2'], title: 'x' }),
++			verifyAbsorption: jest.fn(async ({ donor }) => donor.title === 'Heading s1'),
++		});
++
++		const groups = await planThemeMerges(list, 'q', d);
++
++		expect(groups[0].ids).toEqual(['big', 's1']);
++	});
++});
+diff --git a/functions/src/synthesis/pipeline/consolidateThemes.ts b/functions/src/synthesis/pipeline/consolidateThemes.ts
+index a17d68e58..716479119 100644
+--- a/functions/src/synthesis/pipeline/consolidateThemes.ts
++++ b/functions/src/synthesis/pipeline/consolidateThemes.ts
+@@ -1,7 +1,11 @@
+ import { getFirestore } from 'firebase-admin/firestore';
+ import { logger } from 'firebase-functions';
+ import { Collections, StatementType, type Statement } from '@freedi/shared-types';
+-import { groupEquivalentThemes, type ThemeOption } from '../../services/integration-ai-service';
++import {
++	groupEquivalentThemes,
++	verifyThemeAbsorption,
++} from '../../services/integration-ai-service';
++import { planThemeMerges, type PlannerTheme } from './themeMergePlanner';
+ import { recordLiveSynthEvent } from '../liveSynth/auditLog';
+ import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
+ import { isTopicCluster } from './clusterOps';
+@@ -160,6 +164,30 @@ function containsSplitSiblings(members: Statement[]): boolean {
+ 	return false;
+ }
+ 
++/** Ideas of a heading shown to the verification step (it shows at most four). */
++const CONTENTS_TO_LOAD = 4;
++
++/** Titles of a heading's first few ideas; unreadable ideas are skipped, not fatal. */
++async function loadMemberTitles(theme: Statement | undefined): Promise<string[]> {
++	const ids = (theme?.integratedOptions ?? []).slice(0, CONTENTS_TO_LOAD);
++	const titles: string[] = [];
++	for (const id of ids) {
++		try {
++			const snap = await db().collection(Collections.statements).doc(id).get();
++			const title = snap.exists ? (snap.data() as Statement).statement : undefined;
++			if (title) titles.push(title);
++		} catch (error) {
++			logger.warn('synthesis.consolidateThemes: member title read failed', {
++				themeId: theme?.statementId,
++				memberId: id,
++				error: error instanceof Error ? error.message : String(error),
++			});
++		}
++	}
++
++	return titles;
++}
++
+ export interface ConsolidateResult {
+ 	merges: number;
+ 	themesBefore: number;
+@@ -202,12 +230,21 @@ export async function consolidateThemes(
+ 		return { merges: 0, themesBefore, themesAfter: themesBefore, skipped: true };
+ 	}
+ 
+-	const options: ThemeOption[] = themes.map((t) => ({
++	// The proposal call sees headings and idea COUNTS, never the proposals — that
++	// variant was measured and reverted (Finding 13). The ideas are read only for
++	// the headings of a candidate group, by the verification step.
++	const options: PlannerTheme[] = themes.map((t) => ({
+ 		id: t.statementId,
+ 		title: t.statement ?? '',
+ 		description: t.description,
++		ideaCount: (t.integratedOptions ?? []).length,
+ 	}));
+-	const groups = await groupEquivalentThemes({ themes: options, questionContext });
++	const themeById = new Map(themes.map((t) => [t.statementId, t]));
++	const groups = await planThemeMerges(options, questionContext, {
++		propose: groupEquivalentThemes,
++		verifyAbsorption: verifyThemeAbsorption,
++		loadContents: (themeId) => loadMemberTitles(themeById.get(themeId)),
++	});
+ 	if (groups.length === 0) {
+ 		// Nothing to merge is a real answer about THIS set — record it, so the
+ 		// next sweep does not put the same question to the model again.
+diff --git a/functions/src/synthesis/pipeline/themeMergePlanner.ts b/functions/src/synthesis/pipeline/themeMergePlanner.ts
+new file mode 100644
+index 000000000..04ef0c8b1
+--- /dev/null
++++ b/functions/src/synthesis/pipeline/themeMergePlanner.ts
+@@ -0,0 +1,160 @@
++import type {
++	ThemeAbsorptionInput,
++	ThemeMergeGroup,
++	ThemeOption,
++} from '../../services/integration-ai-service';
++
++/**
++ * Plans which theme headings to merge: propose permissively, then verify.
++ *
++ * Why two stages. Measured on the 8 benchmark end states
++ * (`scientific-research/2026-10-24-merge-judge-fragmentation/`), the single
++ * heading-only call refused 24 of 27 pairs of headings that share a true topic,
++ * and 25 of the 27 involve a heading holding a single synthesis — a heading that
++ * exists only because the first idea to arrive had nowhere to go. Telling the
++ * judge how many ideas each heading holds fixes the refusals but admits wrong
++ * merges; asking a second question that SEES the ideas removes most of those.
++ *
++ *   1. Three proposals, the headings in a different order each time. A pair is
++ *      kept only when two of the three put it together (order effects and
++ *      sampling noise are what made single calls disagree).
++ *   2. A group may hold at most one established heading. Two well-populated
++ *      headings merging is how a catch-all forms; small headings joining one
++ *      established heading is the case the data supports. The established one
++ *      survives, so the heading readers have seen stays.
++ *   3. Each small heading is checked against the survivor with both headings'
++ *      ideas in view (`verifyAbsorption`). Fail-closed.
++ *
++ * Pure of Firestore: the judge calls are injected so this can be tested alone.
++ */
++
++/** A heading holding at most this many ideas is "small" (one synthesis, or a pair). */
++export const SMALL_THEME_MAX_IDEAS = 2;
++
++/** Independent proposals per sweep, each with the headings in a different order. */
++export const MERGE_PROPOSAL_VOTES = 3;
++
++/** Proposals that must put a pair together for it to be kept. */
++export const MERGE_VOTES_REQUIRED = 2;
++
++/**
++ * Deterministic shuffle: a plain LCG (Numerical Recipes constants), not
++ * security-relevant. Modulus 2^32 with a 1.6M multiplier keeps every product
++ * under 2^53, so the arithmetic stays exact in a JS number.
++ */
++const SHUFFLE_MODULUS = 4294967296;
++const SHUFFLE_MULTIPLIER = 1664525;
++const SHUFFLE_INCREMENT = 1013904223;
++const SHUFFLE_SEED_SPREAD = 40503;
++
++export interface PlannerTheme extends ThemeOption {
++	ideaCount: number;
++}
++
++export interface MergePlannerDeps {
++	propose: (input: {
++		themes: ThemeOption[];
++		questionContext: string;
++	}) => Promise<ThemeMergeGroup[]>;
++	verifyAbsorption: (input: ThemeAbsorptionInput) => Promise<boolean>;
++	/** Titles of the ideas under a heading; called only for headings in a candidate group. */
++	loadContents: (themeId: string) => Promise<string[]>;
++}
++
++/** Same input, same order — so a replay or a test is reproducible. */
++export function shuffledForVote<T>(list: T[], vote: number): T[] {
++	const out = [...list];
++	let x = (vote * SHUFFLE_SEED_SPREAD) % SHUFFLE_MODULUS;
++	for (let i = out.length - 1; i > 0; i--) {
++		x = (x * SHUFFLE_MULTIPLIER + SHUFFLE_INCREMENT) % SHUFFLE_MODULUS;
++		const j = x % (i + 1);
++		[out[i], out[j]] = [out[j], out[i]];
++	}
++
++	return out;
++}
++
++function pairKey(a: string, b: string): string {
++	return a < b ? `${a}|${b}` : `${b}|${a}`;
++}
++
++/** Connected components of the pairs that reached the vote threshold. */
++function agreedComponents(themes: PlannerTheme[], tally: Map<string, number>): string[][] {
++	const parent = new Map<string, string>();
++	const find = (x: string): string => {
++		let root = x;
++		while ((parent.get(root) ?? root) !== root) root = parent.get(root) as string;
++
++		return root;
++	};
++	for (const [key, votes] of tally) {
++		if (votes < MERGE_VOTES_REQUIRED) continue;
++		const [a, b] = key.split('|');
++		parent.set(find(a), find(b));
++	}
++	const components = new Map<string, string[]>();
++	for (const t of themes) {
++		const root = find(t.id);
++		components.set(root, [...(components.get(root) ?? []), t.id]);
++	}
++
++	return [...components.values()].filter((ids) => ids.length > 1);
++}
++
++export async function planThemeMerges(
++	themes: PlannerTheme[],
++	questionContext: string,
++	deps: MergePlannerDeps,
++): Promise<ThemeMergeGroup[]> {
++	const tally = new Map<string, number>();
++	for (let vote = 0; vote < MERGE_PROPOSAL_VOTES; vote++) {
++		const ordered = vote === 0 ? themes : shuffledForVote(themes, vote);
++		const groups = await deps.propose({ themes: ordered, questionContext });
++		const counted = new Set<string>();
++		for (const group of groups) {
++			for (let i = 0; i < group.ids.length; i++) {
++				for (let j = i + 1; j < group.ids.length; j++) {
++					counted.add(pairKey(group.ids[i], group.ids[j]));
++				}
++			}
++		}
++		for (const key of counted) tally.set(key, (tally.get(key) ?? 0) + 1);
++	}
++
++	const byId = new Map(themes.map((t) => [t.id, t]));
++	const rank = new Map(themes.map((t, i) => [t.id, i]));
++	const planned: ThemeMergeGroup[] = [];
++
++	for (const ids of agreedComponents(themes, tally)) {
++		const members = ids
++			.map((id) => byId.get(id))
++			.filter((t): t is PlannerTheme => Boolean(t))
++			.sort((a, b) => b.ideaCount - a.ideaCount || (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0));
++		const established = members.filter((t) => t.ideaCount > SMALL_THEME_MAX_IDEAS);
++		if (established.length > 1) continue;
++
++		const [survivor, ...donors] = members;
++		const survivorContents = await deps.loadContents(survivor.id);
++		const accepted: string[] = [survivor.id];
++		for (const donor of donors) {
++			const fits = await deps.verifyAbsorption({
++				donor: {
++					title: donor.title,
++					description: donor.description,
++					contents: await deps.loadContents(donor.id),
++				},
++				survivor: {
++					title: survivor.title,
++					description: survivor.description,
++					contents: survivorContents,
++					ideaCount: survivor.ideaCount,
++				},
++				questionContext,
++			});
++			if (fits) accepted.push(donor.id);
++		}
++		if (accepted.length > 1) planned.push({ ids: accepted, title: survivor.title });
++	}
++
++	return planned;
++}
