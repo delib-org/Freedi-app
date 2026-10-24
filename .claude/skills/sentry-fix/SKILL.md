@@ -26,11 +26,17 @@ Sentry is reached through the `mcp__sentry__*` tools (deferred: load
   functions project; Cloud Functions report into `freedi-app` via `functions/src/utils/sentry.ts`.
   Re-run `find_projects` if a slug fails - Tal may have split projects since.
 
-Default sweep, one `search_issues` per project, `limit: 25`, `sort: freq`:
+Default sweep, **one org-wide** `search_issues` (no project), `limit: 25`, `sort: freq`,
+`period: 14d`:
 
 ```
-is:unresolved environment:production
+is:unresolved
 ```
+
+Do **not** add `environment:production`: the test project (`freedi-test`) reports as
+`environment:testing`, and on 2026-10-24 that filter hid the loudest issue (1,248 events
+of a missing test index). Note each issue's environment in the bucket table instead -
+test-only issues still matter, they are usually "not deployed to test".
 
 If Tal names an issue id or link, fetch just that with `get_sentry_resource`. If he says
 "new" or "today", use `firstSeen:-24h` / `period: 24h`. Drop issues with `lastSeen` older
