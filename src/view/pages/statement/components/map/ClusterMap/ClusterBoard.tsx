@@ -354,7 +354,8 @@ const ClusterBoard: FC<Props> = ({
 		// Other ideas fold with the themes: at "themes" they are a count. With no
 		// theme on the board the group has no heading — its cards just sit there.
 		if (loose.length > 0) {
-			const collapsed = level === 'themes';
+			// With no theme there is nothing to fold into: show the cards.
+			const collapsed = hasTheme && level === 'themes';
 			containers.push({
 				id: OTHER_IDEAS_ID,
 				label: hasTheme ? t('Other ideas') : '',
@@ -1029,175 +1030,180 @@ const ClusterBoard: FC<Props> = ({
 								onDragOver={(e) => e.preventDefault()}
 								onDrop={(e) => handleDrop(e, l.id)}
 							>
-								<div
-									className={`${styles.pill} ${l.isSynth ? styles.pillSynth : styles.pillTopic} ${
-										l.collapsed ? styles.pillCollapsed : ''
-									}`}
-									style={{ background: l.color.line }}
-									// Keep the pill clickable (open/color/delete) — don't let a press
-									// on it start a canvas pan, which would swallow the click.
-									data-no-pan
-									onClick={(e) => {
-										if (!l.clusterStatement) return;
-										if ((e.target as HTMLElement).closest('button, input, textarea')) return;
-										setPillFocus({ id: l.id, rect: e.currentTarget.getBoundingClientRect() });
-									}}
-									onPointerEnter={(e) => {
-										if (e.pointerType !== 'touch') setFocusedId(l.id);
-									}}
-									onPointerLeave={(e) => {
-										if (e.pointerType !== 'touch') {
-											setFocusedId((id) => (id === l.id ? null : id));
-										}
-									}}
-									onPointerUp={(e) => {
-										// Touch has no hover: a tap on the title toggles the focus
-										// (but not a tap on one of its buttons).
-										if (e.pointerType !== 'touch') return;
-										if ((e.target as HTMLElement).closest('button')) return;
-										setFocusedId((id) => (id === l.id ? null : l.id));
-									}}
-								>
-									{l.clusterStatement && (
-										<span className={styles.pillGlyph} aria-hidden>
-											{l.isSynth ? '⧉' : '#'}
-										</span>
-									)}
-									{l.label}
+								{(l.clusterStatement || l.label) && (
+									<div
+										className={`${styles.pill} ${l.isSynth ? styles.pillSynth : styles.pillTopic} ${
+											l.collapsed ? styles.pillCollapsed : ''
+										}`}
+										style={{ background: l.color.line }}
+										// Keep the pill clickable (open/color/delete) — don't let a press
+										// on it start a canvas pan, which would swallow the click.
+										data-no-pan
+										onClick={(e) => {
+											if (!l.clusterStatement) return;
+											if ((e.target as HTMLElement).closest('button, input, textarea')) return;
+											setPillFocus({ id: l.id, rect: e.currentTarget.getBoundingClientRect() });
+										}}
+										onPointerEnter={(e) => {
+											if (e.pointerType !== 'touch') setFocusedId(l.id);
+										}}
+										onPointerLeave={(e) => {
+											if (e.pointerType !== 'touch') {
+												setFocusedId((id) => (id === l.id ? null : id));
+											}
+										}}
+										onPointerUp={(e) => {
+											// Touch has no hover: a tap on the title toggles the focus
+											// (but not a tap on one of its buttons).
+											if (e.pointerType !== 'touch') return;
+											if ((e.target as HTMLElement).closest('button')) return;
+											setFocusedId((id) => (id === l.id ? null : l.id));
+										}}
+									>
+										{l.clusterStatement && (
+											<span className={styles.pillGlyph} aria-hidden>
+												{l.isSynth ? '⧉' : '#'}
+											</span>
+										)}
+										{l.label}
 
-									{editingId !== l.id && (l.collapsed || l.isSynth) && (
-										<span className={styles.pillCount}>
-											{l.isSynth
-												? t('{n} voices').replace('{n}', String(l.counts.voices))
-												: [
-														l.counts.ideas > 0 &&
-															t('{n} ideas').replace('{n}', String(l.counts.ideas)),
-														l.counts.merged > 0 &&
-															t('{n} merged').replace('{n}', String(l.counts.merged)),
-													]
-														.filter(Boolean)
-														.join(' · ')}
-										</span>
-									)}
-
-									{editingId !== l.id &&
-										(l.clusterStatement
-											? mine?.synthsContainingMine.has(l.clusterStatement.statementId)
-											: l.id === OTHER_IDEAS_ID &&
-												l.members.some((m) =>
-													mine?.synthsContainingMine.has(m.top.statementId),
-												)) && (
-											<span className={styles.pillMine} title={t('includes yours')}>
-												<span className={styles.pillMineDot} aria-hidden />
-												{t('includes yours')}
+										{editingId !== l.id && (l.collapsed || l.isSynth) && (
+											<span className={styles.pillCount}>
+												{l.isSynth
+													? t('{n} voices').replace('{n}', String(l.counts.voices))
+													: [
+															l.counts.ideas > 0 &&
+																t('{n} ideas').replace('{n}', String(l.counts.ideas)),
+															l.counts.merged > 0 &&
+																t('{n} merged').replace('{n}', String(l.counts.merged)),
+														]
+															.filter(Boolean)
+															.join(' · ')}
 											</span>
 										)}
 
-									{l.collapsed && allowExpand && l.clusterStatement && editingId !== l.id && (
-										<button
-											type="button"
-											className={styles.pillExpand}
-											aria-expanded={false}
-											aria-label={t('Show sources')}
-											title={t('Show sources')}
-											onClick={(e) => {
-												e.stopPropagation();
-												toggleExpanded((l.clusterStatement as Statement).statementId, true);
-											}}
-										>
-											▾
-										</button>
-									)}
+										{editingId !== l.id &&
+											(l.clusterStatement
+												? mine?.synthsContainingMine.has(l.clusterStatement.statementId)
+												: l.id === OTHER_IDEAS_ID &&
+													l.members.some((m) =>
+														mine?.synthsContainingMine.has(m.top.statementId),
+													)) && (
+												<span className={styles.pillMine} title={t('includes yours')}>
+													<span className={styles.pillMineDot} aria-hidden />
+													{t('includes yours')}
+												</span>
+											)}
 
-									{/* Any open container folds back down to its count — whether the
-									    level or a hand-expand opened it. */}
-									{!l.collapsed &&
-										allowExpand &&
-										l.clusterStatement &&
-										editingId !== l.id &&
-										l.sourceCount > 0 && (
+										{l.collapsed && allowExpand && l.clusterStatement && editingId !== l.id && (
 											<button
 												type="button"
 												className={styles.pillExpand}
-												aria-expanded
-												aria-label={t('Hide sources')}
-												title={t('Hide sources')}
+												aria-expanded={false}
+												aria-label={t('Show sources')}
+												title={t('Show sources')}
 												onClick={(e) => {
 													e.stopPropagation();
-													toggleExpanded((l.clusterStatement as Statement).statementId, false);
+													toggleExpanded((l.clusterStatement as Statement).statementId, true);
 												}}
 											>
-												▴
+												▾
 											</button>
 										)}
 
-									{showProvenance &&
-										l.clusterStatement &&
-										editingId !== l.id &&
-										l.sourceCount > 0 && (
-											<span
-												className={styles.provenance}
-												title={t('This cluster was made from these responses')}
-											>
-												{t('made from {count} responses').replace('{count}', String(l.sourceCount))}
-											</span>
+										{/* Any open container folds back down to its count — whether the
+									    level or a hand-expand opened it. */}
+										{!l.collapsed &&
+											allowExpand &&
+											l.clusterStatement &&
+											editingId !== l.id &&
+											l.sourceCount > 0 && (
+												<button
+													type="button"
+													className={styles.pillExpand}
+													aria-expanded
+													aria-label={t('Hide sources')}
+													title={t('Hide sources')}
+													onClick={(e) => {
+														e.stopPropagation();
+														toggleExpanded((l.clusterStatement as Statement).statementId, false);
+													}}
+												>
+													▴
+												</button>
+											)}
+
+										{showProvenance &&
+											l.clusterStatement &&
+											editingId !== l.id &&
+											l.sourceCount > 0 && (
+												<span
+													className={styles.provenance}
+													title={t('This cluster was made from these responses')}
+												>
+													{t('made from {count} responses').replace(
+														'{count}',
+														String(l.sourceCount),
+													)}
+												</span>
+											)}
+
+										{canEditPill && editingId !== l.id && (
+											<button
+												type="button"
+												className={styles.colorDot}
+												aria-label={t('Change color')}
+												title={t('Change color')}
+												onClick={(e) => {
+													e.stopPropagation();
+													setColorPickerId((id) => (id === l.id ? null : l.id));
+												}}
+											/>
 										)}
 
-									{canEditPill && editingId !== l.id && (
-										<button
-											type="button"
-											className={styles.colorDot}
-											aria-label={t('Change color')}
-											title={t('Change color')}
-											onClick={(e) => {
-												e.stopPropagation();
-												setColorPickerId((id) => (id === l.id ? null : l.id));
-											}}
-										/>
-									)}
+										{canEditPill && editingId !== l.id && (
+											<button
+												type="button"
+												className={styles.deleteDot}
+												aria-label={t('Delete cluster')}
+												title={t('Delete cluster')}
+												disabled={busy}
+												onClick={(e) => {
+													e.stopPropagation();
+													removeCluster(l);
+												}}
+											>
+												×
+											</button>
+										)}
 
-									{canEditPill && editingId !== l.id && (
-										<button
-											type="button"
-											className={styles.deleteDot}
-											aria-label={t('Delete cluster')}
-											title={t('Delete cluster')}
-											disabled={busy}
-											onClick={(e) => {
-												e.stopPropagation();
-												removeCluster(l);
-											}}
-										>
-											×
-										</button>
-									)}
-
-									{colorPickerId === l.id && l.clusterStatement && (
-										<div className={styles.colorPopover}>
-											{CLUSTER_PALETTE.map((entry) => (
-												<button
-													key={entry.line}
-													type="button"
-													className={styles.swatch}
-													style={{ background: entry.line }}
-													aria-label={entry.line}
-													onClick={() =>
-														setClusterColor(l.clusterStatement as Statement, entry.line)
+										{colorPickerId === l.id && l.clusterStatement && (
+											<div className={styles.colorPopover}>
+												{CLUSTER_PALETTE.map((entry) => (
+													<button
+														key={entry.line}
+														type="button"
+														className={styles.swatch}
+														style={{ background: entry.line }}
+														aria-label={entry.line}
+														onClick={() =>
+															setClusterColor(l.clusterStatement as Statement, entry.line)
+														}
+													/>
+												))}
+												<input
+													type="color"
+													className={styles.colorInput}
+													defaultValue={l.color.line}
+													aria-label={t('Custom color')}
+													onChange={(e) =>
+														setClusterColor(l.clusterStatement as Statement, e.target.value)
 													}
 												/>
-											))}
-											<input
-												type="color"
-												className={styles.colorInput}
-												defaultValue={l.color.line}
-												aria-label={t('Custom color')}
-												onChange={(e) =>
-													setClusterColor(l.clusterStatement as Statement, e.target.value)
-												}
-											/>
-										</div>
-									)}
-								</div>
+											</div>
+										)}
+									</div>
+								)}
 
 								{!l.collapsed && (
 									<div
