@@ -7,17 +7,22 @@ import { useSelector } from 'react-redux';
 import { ArrowUpRight, FileText } from 'lucide-react';
 import { EvaluationUI, Screen, SortType, Statement, StatementType } from '@freedi/shared-types';
 import { statementsSelector, fullyLoadedScopeSelector } from '@/redux/statements/statementsSlice';
-import { createGroupedViewSelector } from '@/redux/statements/condensationSelectors';
+import {
+	createGroupedViewSelector,
+	createOtherIdeasSelector,
+} from '@/redux/statements/condensationSelectors';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SynthesisPanel from '@/view/pages/statement/components/settings/components/synthesisPanel/SynthesisPanel';
 import { agreementCandidates, proposalEvidence } from './agreementData';
+import OtherIdeasSection from './OtherIdeasSection';
 import styles from './Agreement.module.scss';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
 
 /** Views AgreementHub still renders full-width: the covenant (under Results) and themes (under Maps). */
 export const AGREEMENT_VIEWS = ['covenant', 'themes'];
 const selectGrouped = createGroupedViewSelector(statementsSelector);
+const selectOtherIdeas = createOtherIdeasSelector(statementsSelector);
 const percent = (n?: number): string => (n === undefined ? '—' : `${Math.round(n * 100)}%`);
 
 export default function AgreementHub({
@@ -50,6 +55,11 @@ export default function AgreementHub({
 		[statement.statementId],
 	);
 	const grouped = useSelector(groupedSelector);
+	const otherIdeasSelector = useMemo(
+		() => selectOtherIdeas(statement.statementId),
+		[statement.statementId],
+	);
+	const otherIdeas = useSelector(otherIdeasSelector);
 	const showResults = statement.statementSettings?.showEvaluation === true;
 	const { isAutoLoading } = useAutoLoadAllForSort(
 		compact || !['overview', 'themes'].includes(view) ? undefined : statement.statementId,
@@ -127,6 +137,62 @@ export default function AgreementHub({
 			</div>
 		</article>
 	);
+
+	// Themes view: once a theme exists, syntheses live inside their theme or under
+	// Other ideas, never as a second top-level card. With no theme they keep their own cards.
+	const themesViewGroups = otherIdeas.hasThemes
+		? otherIdeas.themes
+		: grouped.groupedSuggestions.filter((group) => group.derivedByPipeline === 'synthesis');
+	const showOtherIdeas = otherIdeas.hasThemes && !!fullyLoaded && otherIdeas.otherAtoms.length > 0;
+	const groupDrawerIds = (group: Statement): string[] => {
+		const nestedSyntheses = otherIdeas.atoms
+			.filter(
+				(atom) =>
+					atom.isCluster === true &&
+					otherIdeas.themeIdByAtomId.get(atom.statementId) === group.statementId,
+			)
+			.map((atom) => atom.statementId);
+
+		return [...new Set([...(group.integratedOptions ?? []), ...nestedSyntheses])];
+	};
+	const groupCard = (group: Statement): React.ReactNode => {
+		const isCluster = group.isCluster === true;
+		const drawerIds = isCluster ? groupDrawerIds(group) : [];
+
+		return (
+			<section className={styles.journey__card} data-tone="lilac" key={group.statementId}>
+				{isCluster && (
+					<span className={styles.journey__eyebrow}>
+						{group.derivedByPipeline === 'synthesis'
+							? t('Equivalent proposals synthesized')
+							: t('Theme · distinct positions')}
+					</span>
+				)}
+				<h3>{group.statement}</h3>
+				{isCluster && grouped.allowDrillToOriginals && (
+					<details>
+						<summary>
+							{t('Inspect original proposals')} ({drawerIds.length})
+						</summary>
+						{drawerIds.map((id) => {
+							const p = all.find((x) => x.statementId === id && !x.hide);
+
+							return p ? (
+								<div className={styles.journey__actions} key={id}>
+									<button onClick={() => open(id)}>{p.statement} ↗</button>
+								</div>
+							) : null;
+						})}
+					</details>
+				)}
+				<div className={styles.journey__actions}>
+					<button onClick={() => open(group.statementId)}>
+						{isCluster ? t('Open this group') : t('Explore & improve')}
+					</button>
+				</div>
+			</section>
+		);
+	};
 
 	if (!compact && (view === 'summary' || view === 'covenant'))
 		return (
@@ -311,39 +377,14 @@ export default function AgreementHub({
 									'Themes organize related positions. Synthesis combines equivalent proposals. New compromises need fresh evaluation.',
 								)}
 							</p>
-							{grouped.groupedSuggestions.map((group) => (
-								<section className={styles.journey__card} data-tone="lilac" key={group.statementId}>
-									<span className={styles.journey__eyebrow}>
-										{group.derivedByPipeline === 'synthesis'
-											? t('Equivalent proposals synthesized')
-											: t('Theme · distinct positions')}
-									</span>
-									<h3>{group.statement}</h3>
-									{grouped.allowDrillToOriginals && (
-										<details>
-											<summary>
-												{t('Inspect original proposals')} ({group.integratedOptions?.length ?? 0})
-											</summary>
-											{(group.integratedOptions ?? []).map((id) => {
-												const p = all.find((x) => x.statementId === id && !x.hide);
-
-												return p ? (
-													<div className={styles.journey__actions} key={id}>
-														<button onClick={() => open(id)}>{p.statement} ↗</button>
-													</div>
-												) : null;
-											})}
-										</details>
-									)}
-									<div className={styles.journey__actions}>
-										<button onClick={() => open(group.statementId)}>{t('Open this group')}</button>
-									</div>
-								</section>
-							))}
-							{!grouped.groupedSuggestions.length && (
+							{themesViewGroups.map(groupCard)}
+							{!themesViewGroups.length && (
 								<div className={styles.journey__empty}>
 									{t('No themes or syntheses have been created yet.')}
 								</div>
+							)}
+							{showOtherIdeas && (
+								<OtherIdeasSection atoms={otherIdeas.otherAtoms} renderAtom={groupCard} />
 							)}
 							<div className={styles.journey__actions}>
 								<button onClick={() => go('options')}>{t('Explore all options')}</button>

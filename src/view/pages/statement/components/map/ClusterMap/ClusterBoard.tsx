@@ -31,6 +31,7 @@ import {
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { TIME } from '@/constants/common';
+import { computeOtherIdeas, OTHER_IDEAS_ID } from '@/helpers/otherIdeas';
 import {
 	CLUSTER_PALETTE,
 	UNGROUPED_PALETTE,
@@ -105,8 +106,21 @@ const TRAY_PAD_Y = 55;
 // A stack's sheets peek out below the card (2 × --cluster-stack-offset).
 const STACK_EXTRA = 8;
 
-const UNGROUPED_ID = '__ungrouped__';
-const UNGROUPED_COLOR: ClusterColor = withFrame(UNGROUPED_PALETTE);
+const OTHER_IDEAS_COLOR: ClusterColor = withFrame(UNGROUPED_PALETTE);
+
+/** Every distinct statement in a results tree, root excluded. */
+function flattenStatements(results: Results): Statement[] {
+	const byId = new Map<string, Statement>();
+	const walk = (node: Results): void => {
+		for (const child of node.sub) {
+			byId.set(child.top.statementId, child.top);
+			walk(child);
+		}
+	};
+	walk(results);
+
+	return [...byId.values()];
+}
 const DRAG_MIME = 'application/x-freedi-statement-id';
 
 // Default map typography (rem). Admins override these per question via
@@ -134,7 +148,7 @@ function clampFont(value: number | undefined, fallback: number): number {
  * A normalized cluster ready to render. Clusters and their members all live
  * FLAT under the question; membership is the cluster's `integratedOptions[]`
  * (resolved into `members` by resultsByParentId), so notes stay visible in the
- * main app's option list. The synthetic "Ungrouped" group holds options not in
+ * main app's option list. The synthetic "Other ideas" group holds options not in
  * any cluster.
  */
 interface BoardCluster {
@@ -149,7 +163,7 @@ interface BoardCluster {
 	collapsed: boolean;
 	/** The container itself is a merged idea (its members are the originals). */
 	isSynth: boolean;
-	/** The cluster statement (isCluster option) — null for the synthetic "Ungrouped" group. */
+	/** The cluster statement (isCluster option) — null for the synthetic "Other ideas" group. */
 	clusterStatement: Statement | null;
 	/**
 	 * Member count BEFORE the map filter hides any — so the "made from N
@@ -298,15 +312,23 @@ const ClusterBoard: FC<Props> = ({
 	);
 
 	// Split the question's children into containers (themes and top-level merged
-	// ideas → a pill + grid each) and loose originals (the "Ungrouped" block).
+	// ideas → a pill + grid each) and loose originals (the "Other ideas" block).
 	// resultsByParentId already nested each cluster's members under it via
 	// integratedOptions; applyDetailLevel folded whatever the altitude hides.
 	const boardClusters = useMemo(() => {
 		const containers: BoardCluster[] = [];
 		const loose: DetailResults[] = [];
+		// Other ideas only exists beside a theme. A top-level merged idea no
+		// theme holds is one of its atoms (the shared rule decides which).
+		const hasTheme = children.some((child) => child.kind === 'topic' && !child.top.hide);
+		const otherAtomIds = hasTheme
+			? new Set(computeOtherIdeas(flattenStatements(results)).otherAtoms.map((s) => s.statementId))
+			: new Set<string>();
 
 		children.forEach((child) => {
-			if (child.kind !== 'raw') {
+			if (child.kind === 'synth' && otherAtomIds.has(child.top.statementId)) {
+				if (passesFilter(child.top)) loose.push(child);
+			} else if (child.kind !== 'raw') {
 				const allMembers = child.sub;
 				const visibleMembers = allMembers.filter((member) => passesFilter(member.top));
 				// Drop a cluster only when the filter hid ALL of its members. A
@@ -316,7 +338,7 @@ const ClusterBoard: FC<Props> = ({
 				containers.push({
 					id: child.top.statementId,
 					label: child.top.statement,
-					color: UNGROUPED_COLOR, // assigned below, once all clusters are known
+					color: OTHER_IDEAS_COLOR, // assigned below, once all clusters are known
 					members: child.collapsed ? [] : visibleMembers,
 					counts: countsFor(child),
 					collapsed: child.collapsed,
@@ -329,15 +351,16 @@ const ClusterBoard: FC<Props> = ({
 			}
 		});
 
-		// Ungrouped originals fold with the themes: at "themes" they are a count.
+		// Other ideas fold with the themes: at "themes" they are a count. With no
+		// theme on the board the group has no heading — its cards just sit there.
 		if (loose.length > 0) {
 			const collapsed = level === 'themes';
 			containers.push({
-				id: UNGROUPED_ID,
-				label: t('Ungrouped'),
-				color: UNGROUPED_COLOR,
+				id: OTHER_IDEAS_ID,
+				label: hasTheme ? t('Other ideas') : '',
+				color: OTHER_IDEAS_COLOR,
 				members: collapsed ? [] : loose,
-				counts: { ideas: loose.length, merged: 0, voices: loose.length },
+				counts: countsFor({ top: subject, sub: loose }),
 				collapsed,
 				isSynth: false,
 				clusterStatement: null,
@@ -346,7 +369,7 @@ const ClusterBoard: FC<Props> = ({
 		}
 
 		// Colour the real clusters together so no two share a palette slot while
-		// slots remain; "Ungrouped" keeps its own grey outside the palette.
+		// slots remain; "Other ideas" keeps its own grey outside the palette.
 		const colors = assignClusterColors(
 			containers
 				.filter((c) => c.clusterStatement)
@@ -358,7 +381,7 @@ const ClusterBoard: FC<Props> = ({
 
 			return color ? { ...c, color } : c;
 		});
-	}, [children, t, level, passesFilter]);
+	}, [children, results, subject, t, level, passesFilter]);
 
 	// Drop the focus if that cluster leaves the board (deleted, filtered out).
 	useEffect(() => {
@@ -832,10 +855,10 @@ const ClusterBoard: FC<Props> = ({
 
 	// Delete a cluster: the cluster statement is removed and any overrides that
 	// pointed at it are cleared. Its notes are plain options under the question,
-	// so they survive and reappear in the "Ungrouped" block.
+	// so they survive and reappear in the "Other ideas" block.
 	const removeCluster = async (cluster: BoardCluster) => {
 		if (!cluster.clusterStatement || busy) return;
-		const confirmed = window.confirm(t('Delete this cluster? Its notes will move to Ungrouped.'));
+		const confirmed = window.confirm(t('Delete this cluster? Its notes will move to Other ideas.'));
 		if (!confirmed) return;
 		setBusy(true);
 		try {
@@ -1057,9 +1080,13 @@ const ClusterBoard: FC<Props> = ({
 										</span>
 									)}
 
-									{l.clusterStatement &&
-										editingId !== l.id &&
-										mine?.synthsContainingMine.has(l.clusterStatement.statementId) && (
+									{editingId !== l.id &&
+										(l.clusterStatement
+											? mine?.synthsContainingMine.has(l.clusterStatement.statementId)
+											: l.id === OTHER_IDEAS_ID &&
+												l.members.some((m) =>
+													mine?.synthsContainingMine.has(m.top.statementId),
+												)) && (
 											<span className={styles.pillMine} title={t('includes yours')}>
 												<span className={styles.pillMineDot} aria-hidden />
 												{t('includes yours')}

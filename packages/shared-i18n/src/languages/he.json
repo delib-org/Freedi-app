@@ -3576,7 +3576,7 @@
   "Add cluster": "הוספת אשכול",
   "Signing you in…": "מתחבר…",
   "Delete cluster": "מחיקת אשכול",
-  "Delete this cluster? Its notes will move to Ungrouped.": "למחוק את האשכול? הפתקים שלו יעברו ל\"לא מקובצים\".",
+  "Delete this cluster? Its notes will move to Other ideas.": "למחוק את האשכול? הפתקים שלו יעברו לרעיונות אחרים.",
   "Add statement": "הוספת היגד",
   "Duplicate": "שכפול",
   "New cluster": "אשכול חדש",
@@ -5196,5 +5196,9 @@
   "Opening your task...": "פותחים את המשימה...",
   "Could not open the task. Go back to the village and try again": "לא הצלחנו לפתוח את המשימה. חזרו לכפר ונסו שוב",
   "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.": "המכשיר הזה מחובר ל־WizCol בתור {{name}}. כדי לעשות את המשימה של הכיתה, עוברים לאורח הכיתה.",
-  "Switch to the class task": "מעבר למשימה של הכיתה"
+  "Switch to the class task": "מעבר למשימה של הכיתה",
+  "Other ideas": "רעיונות אחרים",
+  "Ideas that stand on their own.": "רעיונות שעומדים בפני עצמם.",
+  "{n} other ideas are not in a theme": "{n} רעיונות אחרים אינם באף אשכול",
+  "Show all {n}": "הצג את כל {n}"
 }
