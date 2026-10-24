@@ -1,0 +1,122 @@
+{
+ "en-3small/atoms agg k=5": {
+  "p": 1.0,
+  "r": 0.5,
+  "f1": 0.667,
+  "ari": 0.647
+ },
+ "en-3small/atoms agg k=10": {
+  "p": 1.0,
+  "r": 0.72,
+  "f1": 0.837,
+  "ari": 0.825
+ },
+ "en-3small/atoms agg k=15": {
+  "p": 1.0,
+  "r": 0.76,
+  "f1": 0.864,
+  "ari": 0.853
+ },
+ "en-3small/atoms agg k=20": {
+  "p": 1.0,
+  "r": 0.57,
+  "f1": 0.726,
+  "ari": 0.709
+ },
+ "en-3small/atoms agg k=25": {
+  "p": 1.0,
+  "r": 0.44,
+  "f1": 0.611,
+  "ari": 0.591
+ },
+ "en-3large/atoms agg k=5": {
+  "p": 1.0,
+  "r": 0.5,
+  "f1": 0.667,
+  "ari": 0.647
+ },
+ "en-3large/atoms agg k=10": {
+  "p": 1.0,
+  "r": 0.7,
+  "f1": 0.824,
+  "ari": 0.811
+ },
+ "en-3large/atoms agg k=15": {
+  "p": 1.0,
+  "r": 0.76,
+  "f1": 0.864,
+  "ari": 0.853
+ },
+ "en-3large/atoms agg k=20": {
+  "p": 1.0,
+  "r": 0.6,
+  "f1": 0.75,
+  "ari": 0.734
+ },
+ "en-3large/atoms agg k=25": {
+  "p": 1.0,
+  "r": 0.44,
+  "f1": 0.611,
+  "ari": 0.591
+ },
+ "he-3small/atoms agg k=5": {
+  "p": 1.0,
+  "r": 0.5,
+  "f1": 0.667,
+  "ari": 0.647
+ },
+ "he-3small/atoms agg k=10": {
+  "p": 1.0,
+  "r": 0.86,
+  "f1": 0.925,
+  "ari": 0.919
+ },
+ "he-3small/atoms agg k=15": {
+  "p": 1.0,
+  "r": 0.81,
+  "f1": 0.895,
+  "ari": 0.887
+ },
+ "he-3small/atoms agg k=20": {
+  "p": 1.0,
+  "r": 0.65,
+  "f1": 0.788,
+  "ari": 0.773
+ },
+ "he-3small/atoms agg k=25": {
+  "p": 1.0,
+  "r": 0.5,
+  "f1": 0.667,
+  "ari": 0.647
+ },
+ "he-3large/atoms agg k=5": {
+  "p": 1.0,
+  "r": 0.5,
+  "f1": 0.667,
+  "ari": 0.647
+ },
+ "he-3large/atoms agg k=10": {
+  "p": 1.0,
+  "r": 0.86,
+  "f1": 0.925,
+  "ari": 0.919
+ },
+ "he-3large/atoms agg k=15": {
+  "p": 1.0,
+  "r": 0.66,
+  "f1": 0.795,
+  "ari": 0.781
+ },
+ "he-3large/atoms agg k=20": {
+  "p": 1.0,
+  "r": 0.63,
+  "f1": 0.773,
+  "ari": 0.758
+ },
+ "he-3large/atoms agg k=25": {
+  "p": 1.0,
+  "r": 0.45,
+  "f1": 0.621,
+  "ari": 0.6
+ }
+}
