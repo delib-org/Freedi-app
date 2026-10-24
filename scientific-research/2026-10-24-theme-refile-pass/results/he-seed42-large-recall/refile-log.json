@@ -1,0 +1,174 @@
+{
+ "input": "scientific-research/2026-08-18-live-synth-accuracy/runs/he-seed42-large-recall",
+ "passes": [
+  {
+   "pass": 1,
+   "calls": 58,
+   "keep": {
+    "moved": 1,
+    "filed": 7,
+    "themesEmptied": 0,
+    "themes": 12,
+    "sizes": [
+     7,
+     7,
+     6,
+     6,
+     6,
+     5,
+     5,
+     5,
+     5,
+     4,
+     1,
+     1
+    ],
+    "unthemedAtoms": 0,
+    "atoms": 58
+   },
+   "evict": {
+    "moved": 1,
+    "filed": 7,
+    "evicted": 0,
+    "themes": 12,
+    "sizes": [
+     7,
+     7,
+     6,
+     6,
+     6,
+     5,
+     5,
+     5,
+     5,
+     4,
+     1,
+     1
+    ],
+    "unthemedAtoms": 0,
+    "atoms": 58
+   },
+   "moves": [
+    {
+     "atomId": "SQN2qq4FrVol",
+     "from": "r3Hc6H95ermE",
+     "to": "T4mAYJUoJBEP"
+    },
+    {
+     "atomId": "UVzyU0a1v-zL",
+     "from": null,
+     "to": "3hyiO3mlTcuV"
+    },
+    {
+     "atomId": "V7JgstDJ7laa",
+     "from": null,
+     "to": "Rd-QZcMYix08"
+    },
+    {
+     "atomId": "XOTE4V4KIu8S",
+     "from": null,
+     "to": "r3Hc6H95ermE"
+    },
+    {
+     "atomId": "9o-cBrxRflB1",
+     "from": null,
+     "to": "0ITMoGlRGyRU"
+    },
+    {
+     "atomId": "Gupgvu9aPkGh",
+     "from": null,
+     "to": "SheiSkXIcH5S"
+    },
+    {
+     "atomId": "DZtqcEDTzV0G",
+     "from": null,
+     "to": "SheiSkXIcH5S"
+    },
+    {
+     "atomId": "FvMzbRw3h7on",
+     "from": null,
+     "to": "0ITMoGlRGyRU"
+    }
+   ]
+  },
+  {
+   "pass": 2,
+   "calls": 58,
+   "keep": {
+    "moved": 1,
+    "filed": 0,
+    "themesEmptied": 0,
+    "themes": 12,
+    "sizes": [
+     7,
+     7,
+     6,
+     6,
+     6,
+     5,
+     5,
+     5,
+     5,
+     4,
+     1,
+     1
+    ],
+    "unthemedAtoms": 0,
+    "atoms": 58
+   },
+   "moves": [
+    {
+     "atomId": "SQN2qq4FrVol",
+     "from": "T4mAYJUoJBEP",
+     "to": "r3Hc6H95ermE"
+    }
+   ]
+  },
+  {
+   "pass": 3,
+   "calls": 58,
+   "keep": {
+    "moved": 0,
+    "filed": 0,
+    "themesEmptied": 0,
+    "themes": 12,
+    "sizes": [
+     7,
+     7,
+     6,
+     6,
+     6,
+     5,
+     5,
+     5,
+     5,
+     4,
+     1,
+     1
+    ],
+    "unthemedAtoms": 0,
+    "atoms": 58
+   },
+   "moves": []
+  }
+ ],
+ "start": {
+  "themes": 12,
+  "sizes": [
+   6,
+   6,
+   5,
+   5,
+   5,
+   5,
+   5,
+   4,
+   4,
+   4,
+   1,
+   1
+  ],
+  "unthemedAtoms": 7,
+  "atoms": 58
+ }
+}

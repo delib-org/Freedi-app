@@ -1,0 +1,180 @@
+{
+ "input": "scientific-research/2026-08-18-live-synth-accuracy/runs/en-seed42-themefix",
+ "passes": [
+  {
+   "pass": 1,
+   "calls": 50,
+   "keep": {
+    "moved": 2,
+    "filed": 1,
+    "themesEmptied": 0,
+    "themes": 16,
+    "sizes": [
+     9,
+     5,
+     5,
+     4,
+     4,
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ],
+    "unthemedAtoms": 2,
+    "atoms": 50
+   },
+   "evict": {
+    "moved": 2,
+    "filed": 1,
+    "evicted": 3,
+    "themes": 16,
+    "sizes": [
+     7,
+     5,
+     5,
+     4,
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ],
+    "unthemedAtoms": 5,
+    "atoms": 50
+   },
+   "moves": [
+    {
+     "atomId": "Nr4KebE5Skvc",
+     "from": null,
+     "to": "ALrsoasmE0Ih"
+    },
+    {
+     "atomId": "ckBue2hZsfxr",
+     "from": "qXDlNoPI80XE",
+     "to": "ALrsoasmE0Ih"
+    },
+    {
+     "atomId": "mBxKre2vs9fY",
+     "from": "5mhCfgj1KElO",
+     "to": "uZr8gtvpsW38"
+    }
+   ]
+  },
+  {
+   "pass": 2,
+   "calls": 50,
+   "keep": {
+    "moved": 2,
+    "filed": 0,
+    "themesEmptied": 0,
+    "themes": 16,
+    "sizes": [
+     7,
+     6,
+     5,
+     4,
+     4,
+     4,
+     4,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ],
+    "unthemedAtoms": 2,
+    "atoms": 50
+   },
+   "moves": [
+    {
+     "atomId": "ckBue2hZsfxr",
+     "from": "ALrsoasmE0Ih",
+     "to": "qXDlNoPI80XE"
+    },
+    {
+     "atomId": "sgakw8CLbbiF",
+     "from": "ALrsoasmE0Ih",
+     "to": "eWPV4dg6LZuQ"
+    }
+   ]
+  },
+  {
+   "pass": 3,
+   "calls": 50,
+   "keep": {
+    "moved": 1,
+    "filed": 0,
+    "themesEmptied": 0,
+    "themes": 16,
+    "sizes": [
+     8,
+     6,
+     5,
+     4,
+     4,
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ],
+    "unthemedAtoms": 2,
+    "atoms": 50
+   },
+   "moves": [
+    {
+     "atomId": "sgakw8CLbbiF",
+     "from": "eWPV4dg6LZuQ",
+     "to": "ALrsoasmE0Ih"
+    }
+   ]
+  }
+ ],
+ "start": {
+  "themes": 16,
+  "sizes": [
+   7,
+   6,
+   5,
+   5,
+   4,
+   4,
+   3,
+   3,
+   2,
+   2,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "unthemedAtoms": 3,
+  "atoms": 50
+ }
+}

@@ -1,0 +1,141 @@
+{
+ "input": "scientific-research/2026-08-18-live-synth-accuracy/runs/en-seed1234-consolidated",
+ "passes": [
+  {
+   "pass": 1,
+   "calls": 50,
+   "keep": {
+    "moved": 4,
+    "filed": 0,
+    "themesEmptied": 0,
+    "themes": 17,
+    "sizes": [
+     6,
+     5,
+     5,
+     5,
+     4,
+     4,
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ],
+    "unthemedAtoms": 0,
+    "atoms": 50
+   },
+   "evict": {
+    "moved": 4,
+    "filed": 0,
+    "evicted": 3,
+    "themes": 17,
+    "sizes": [
+     5,
+     5,
+     5,
+     4,
+     4,
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ],
+    "unthemedAtoms": 3,
+    "atoms": 50
+   },
+   "moves": [
+    {
+     "atomId": "1Wccb4Ew2cK9",
+     "from": "wbUIP1oqiXoY",
+     "to": "nxxn0AhKtl9z"
+    },
+    {
+     "atomId": "cDNpCZpXSUON",
+     "from": "asbRFuepyg08",
+     "to": "K6F9Cautia7C"
+    },
+    {
+     "atomId": "vibmhLLhZNrJ",
+     "from": "c0SoWa13JB5D",
+     "to": "K6F9Cautia7C"
+    },
+    {
+     "atomId": "xJ1bI7IrFxrh",
+     "from": "OkBpRP-MMHb5",
+     "to": "c0SoWa13JB5D"
+    }
+   ]
+  },
+  {
+   "pass": 2,
+   "calls": 50,
+   "keep": {
+    "moved": 0,
+    "filed": 0,
+    "themesEmptied": 0,
+    "themes": 17,
+    "sizes": [
+     6,
+     5,
+     5,
+     5,
+     4,
+     4,
+     4,
+     3,
+     3,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ],
+    "unthemedAtoms": 0,
+    "atoms": 50
+   },
+   "moves": []
+  }
+ ],
+ "start": {
+  "themes": 17,
+  "sizes": [
+   6,
+   6,
+   5,
+   5,
+   5,
+   4,
+   4,
+   3,
+   3,
+   2,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "unthemedAtoms": 0,
+  "atoms": 50
+ }
+}

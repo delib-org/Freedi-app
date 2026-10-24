@@ -1,0 +1,149 @@
+{
+ "input": "scientific-research/2026-08-18-live-synth-accuracy/runs/en-seed42-consolidated",
+ "passes": [
+  {
+   "pass": 1,
+   "calls": 50,
+   "keep": {
+    "moved": 3,
+    "filed": 0,
+    "themesEmptied": 0,
+    "themes": 11,
+    "sizes": [
+     7,
+     7,
+     6,
+     5,
+     5,
+     5,
+     4,
+     3,
+     3,
+     3,
+     1
+    ],
+    "unthemedAtoms": 1,
+    "atoms": 50
+   },
+   "evict": {
+    "moved": 3,
+    "filed": 0,
+    "evicted": 5,
+    "themes": 11,
+    "sizes": [
+     7,
+     7,
+     5,
+     5,
+     4,
+     4,
+     4,
+     3,
+     2,
+     2,
+     1
+    ],
+    "unthemedAtoms": 6,
+    "atoms": 50
+   },
+   "moves": [
+    {
+     "atomId": "U1lCnMBNOTmM",
+     "from": "BhlvOClpWxlU",
+     "to": "adb3-hIN52s0"
+    },
+    {
+     "atomId": "csyzA4UPofde",
+     "from": "wPnITPtPMRO2",
+     "to": "ynMhQbpgzaS9"
+    },
+    {
+     "atomId": "jdFw9fMEXTnu",
+     "from": "nWe7kWQByKK3",
+     "to": "ynMhQbpgzaS9"
+    }
+   ]
+  },
+  {
+   "pass": 2,
+   "calls": 50,
+   "keep": {
+    "moved": 2,
+    "filed": 0,
+    "themesEmptied": 0,
+    "themes": 11,
+    "sizes": [
+     7,
+     6,
+     6,
+     5,
+     5,
+     5,
+     4,
+     4,
+     3,
+     3,
+     1
+    ],
+    "unthemedAtoms": 1,
+    "atoms": 50
+   },
+   "moves": [
+    {
+     "atomId": "c9NZO8qNUMCa",
+     "from": "wPnITPtPMRO2",
+     "to": "huSKzxbq2gBJ"
+    },
+    {
+     "atomId": "csyzA4UPofde",
+     "from": "ynMhQbpgzaS9",
+     "to": "wPnITPtPMRO2"
+    }
+   ]
+  },
+  {
+   "pass": 3,
+   "calls": 50,
+   "keep": {
+    "moved": 0,
+    "filed": 0,
+    "themesEmptied": 0,
+    "themes": 11,
+    "sizes": [
+     7,
+     6,
+     6,
+     5,
+     5,
+     5,
+     4,
+     4,
+     3,
+     3,
+     1
+    ],
+    "unthemedAtoms": 1,
+    "atoms": 50
+   },
+   "moves": []
+  }
+ ],
+ "start": {
+  "themes": 11,
+  "sizes": [
+   8,
+   7,
+   5,
+   5,
+   5,
+   5,
+   5,
+   3,
+   3,
+   2,
+   1
+  ],
+  "unthemedAtoms": 1,
+  "atoms": 50
+ }
+}
