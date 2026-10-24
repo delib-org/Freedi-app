@@ -35,7 +35,7 @@ This document specifies the output shape, the source data, the filters, and the 
   "summary": {
     "totalOptions": 102,             // visible options under the question (excludes hide=true)
     "totalEvaluators": 287,          // unique evaluator uids across all options
-    "topicCount": 8,                 // topics produced by the topic-cluster pipeline
+    "topicCount": 8,                 // themes produced by the topic-cluster pipeline (excludes the other-ideas block)
     "synthesizedSolutionCount": 12,  // sum across all topics
     "standaloneAboveFloorCount": 18, // sum across all topics
     "filteredOutCount": 70           // standalones below 0.35
@@ -64,8 +64,10 @@ This document specifies the output shape, the source data, the filters, and the 
     ]
   },
 
-  "topics": [ /* see §2 */ ],
+  "topics": [ /* see §2; the last block is `other-ideas` when it applies */ ],
 
+  // schemaVersion 2.0.0: `byReason.unassigned` is gone. Ideas no visible theme
+  // holds are not "filtered out"; they are exported in the final `other-ideas` block (§2).
   "filteredOut": {
     "count": 70,
     "byReason": {
@@ -80,6 +82,31 @@ This document specifies the output shape, the source data, the filters, and the 
 ```
 
 ## 2. Per-topic block
+
+### 2.1 The final `other-ideas` block
+
+After the theme blocks, one more block holds the ideas that no visible theme holds
+(spec: `docs/ia/main-app-theme-other.md`):
+
+```jsonc
+{
+  "topicId": "other-ideas",
+  "topicTitle": "Other ideas",
+  "isOtherIdeas": true,      // only on this block
+  "memberCount": 9,          // ideas (atoms) no visible theme holds
+  "displayedCount": 4,       // synthesizedSolutions.length + standaloneSolutions.length
+  "agreement": { /* same shape */ },
+  "synthesizedSolutions": [ /* syntheses in no theme */ ],
+  "standaloneSolutions": [ /* options in no synthesis and no theme, above the floor */ ]
+}
+```
+
+- An idea (atom) is a visible synthesis, or a visible option that is in no synthesis. A synthesis's members are never ideas of their own. One shared function (`src/helpers/otherIdeas.ts`) decides which ideas no theme holds, for the app screens and this export alike.
+- Same inclusion rules as theme blocks (syntheses always, standalones above the floor with enough evaluators). Ideas dropped by those rules count in `filteredOut`.
+- Emitted whenever such ideas exist, **including when the question has zero themes** (then `summary.topicCount` is 0 and this is the only block). The export never drops an idea for lack of a theme.
+- Always the last entry of `topics[]`; not counted in `summary.topicCount`.
+
+### 2.2 Theme blocks
 
 ```jsonc
 {

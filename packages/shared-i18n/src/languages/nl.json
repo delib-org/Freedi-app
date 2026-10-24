@@ -2820,7 +2820,7 @@
   "Add cluster": "Cluster toevoegen",
   "Signing you in…": "Je wordt aangemeld…",
   "Delete cluster": "Cluster verwijderen",
-  "Delete this cluster? Its notes will move to Ungrouped.": "Dit cluster verwijderen? De notities gaan naar «Niet-gegroepeerd».",
+  "Delete this cluster? Its notes will move to Other ideas.": "Dit cluster verwijderen? De notities gaan naar «Andere ideeën».",
   "Add statement": "Stelling toevoegen",
   "Duplicate": "Dupliceren",
   "New cluster": "Nieuw cluster",
@@ -4478,5 +4478,9 @@
   "Opening your task...": "Je taak wordt geopend...",
   "Could not open the task. Go back to the village and try again": "De taak kon niet worden geopend. Ga terug naar het dorp en probeer het opnieuw",
   "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.": "Dit apparaat is bij WizCol aangemeld als {{name}}. Wissel naar de klasgast om de klastaak te doen.",
-  "Switch to the class task": "Naar de klastaak"
+  "Switch to the class task": "Naar de klastaak",
+  "Other ideas": "Andere ideeën",
+  "Ideas that stand on their own.": "Ideeën die op zichzelf staan.",
+  "{n} other ideas are not in a theme": "{n} andere ideeën horen bij geen thema",
+  "Show all {n}": "Toon alle {n}"
 }

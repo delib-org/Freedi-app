@@ -2820,7 +2820,7 @@
   "Add cluster": "Añadir grupo",
   "Signing you in…": "Iniciando sesión…",
   "Delete cluster": "Eliminar grupo",
-  "Delete this cluster? Its notes will move to Ungrouped.": "¿Eliminar este grupo? Sus notas pasarán a «Sin agrupar».",
+  "Delete this cluster? Its notes will move to Other ideas.": "¿Eliminar este grupo? Sus notas pasarán a «Otras ideas».",
   "Add statement": "Añadir declaración",
   "Duplicate": "Duplicar",
   "New cluster": "Nuevo grupo",
@@ -4478,5 +4478,9 @@
   "Opening your task...": "Abriendo tu tarea...",
   "Could not open the task. Go back to the village and try again": "No se pudo abrir la tarea. Vuelve al pueblo e inténtalo de nuevo",
   "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.": "Este dispositivo tiene la sesión de WizCol iniciada como {{name}}. Para hacer la tarea de clase, cambia al invitado de la clase.",
-  "Switch to the class task": "Cambiar a la tarea de clase"
+  "Switch to the class task": "Cambiar a la tarea de clase",
+  "Other ideas": "Otras ideas",
+  "Ideas that stand on their own.": "Ideas que se sostienen por sí solas.",
+  "{n} other ideas are not in a theme": "{n} otras ideas no están en ningún tema",
+  "Show all {n}": "Mostrar las {n}"
 }

@@ -3345,7 +3345,7 @@
   "Add cluster": "افزودن خوشه",
   "Signing you in…": "در حال ورود…",
   "Delete cluster": "حذف خوشه",
-  "Delete this cluster? Its notes will move to Ungrouped.": "این خوشه حذف شود؟ یادداشت‌های آن به «دسته‌بندی‌نشده» منتقل می‌شوند.",
+  "Delete this cluster? Its notes will move to Other ideas.": "این خوشه حذف شود؟ یادداشت‌های آن به «ایده‌های دیگر» منتقل می‌شوند.",
   "Add statement": "افزودن گزاره",
   "Duplicate": "تکثیر",
   "New cluster": "خوشه جدید",
@@ -4956,5 +4956,9 @@
   "Opening your task...": "در حال باز کردن تکلیف...",
   "Could not open the task. Go back to the village and try again": "باز کردن تکلیف ممکن نشد. به روستا برگرد و دوباره امتحان کن",
   "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.": "این دستگاه با نام {{name}} وارد WizCol شده است. برای انجام تکلیف کلاس، به مهمان کلاس تغییر بده.",
-  "Switch to the class task": "رفتن به تکلیف کلاس"
+  "Switch to the class task": "رفتن به تکلیف کلاس",
+  "Other ideas": "ایده‌های دیگر",
+  "Ideas that stand on their own.": "ایده‌هایی که مستقل‌اند.",
+  "{n} other ideas are not in a theme": "{n} ایده دیگر در هیچ موضوعی نیستند",
+  "Show all {n}": "نمایش همه {n}"
 }

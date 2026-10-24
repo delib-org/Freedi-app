@@ -2942,7 +2942,7 @@
   "Add cluster": "إضافة عنقود",
   "Signing you in…": "جارٍ تسجيل دخولك…",
   "Delete cluster": "حذف العنقود",
-  "Delete this cluster? Its notes will move to Ungrouped.": "حذف هذا العنقود؟ ستنتقل ملاحظاته إلى \"غير مصنّف\".",
+  "Delete this cluster? Its notes will move to Other ideas.": "حذف هذا العنقود؟ ستنتقل ملاحظاته إلى \"أفكار أخرى\".",
   "Add statement": "إضافة عبارة",
   "Duplicate": "تكرار",
   "New cluster": "عنقود جديد",
@@ -4598,5 +4598,9 @@
   "Opening your task...": "نفتح مهمتك...",
   "Could not open the task. Go back to the village and try again": "تعذر فتح المهمة. عودوا إلى القرية وحاولوا مرة أخرى",
   "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.": "هذا الجهاز مسجّل في WizCol باسم {{name}}. لأداء مهمة الصف، انتقلوا إلى ضيف الصف.",
-  "Switch to the class task": "الانتقال إلى مهمة الصف"
+  "Switch to the class task": "الانتقال إلى مهمة الصف",
+  "Other ideas": "أفكار أخرى",
+  "Ideas that stand on their own.": "أفكار قائمة بذاتها.",
+  "{n} other ideas are not in a theme": "{n} أفكار أخرى ليست ضمن أي موضوع",
+  "Show all {n}": "عرض كل {n}"
 }

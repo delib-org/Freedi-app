@@ -8,9 +8,11 @@ import { Statement } from '@freedi/shared-types';
 import {
 	ExportData,
 	ExportFormat,
+	ExportableStatementData,
 	PropertyDocumentation,
 	extractExportableData,
 } from '@/types/export';
+import { computeOtherIdeas, OTHER_IDEAS_EXPORT_ID } from '@/helpers/otherIdeas';
 import { logError } from '@/utils/errorHandling';
 
 /**
@@ -175,12 +177,44 @@ export const PROPERTY_DOCUMENTATION: PropertyDocumentation = {
 		description:
 			'Statement IDs of the participant submissions merged into this generated statement, present only when isDerived is true',
 	},
+	themeId: {
+		type: 'string',
+		description:
+			"The theme an idea sits in (the theme's statementId), or 'other-ideas' for an idea no theme holds. Empty for theme rows, for originals merged into a synthesis, and for every row when the question has no themes",
+		example: 'other-ideas',
+	},
 };
+
+/**
+ * Export rows with their `themeId` column. Only ideas (atoms) directly under the
+ * exported statement get a value; the shared "Other ideas" rule decides which.
+ */
+function withThemeIds(
+	mainStatement: Statement,
+	subStatements: Statement[],
+): { main: ExportableStatementData; subs: ExportableStatementData[] } {
+	const children = subStatements.filter((s) => s.parentId === mainStatement.statementId);
+	const { hasThemes, themeIdByAtomId, otherAtoms } = computeOtherIdeas(children);
+	const otherIds = new Set(otherAtoms.map((atom) => atom.statementId));
+	const themeIdFor = (statementId: string): string => {
+		if (!hasThemes) return '';
+		if (otherIds.has(statementId)) return OTHER_IDEAS_EXPORT_ID;
+
+		return themeIdByAtomId.get(statementId) ?? '';
+	};
+	const toRow = (statement: Statement): ExportableStatementData => ({
+		...extractExportableData(statement),
+		themeId: themeIdFor(statement.statementId),
+	});
+
+	return { main: toRow(mainStatement), subs: subStatements.map(toRow) };
+}
 
 /**
  * Create JSON export with schema documentation (NOT flattened - keeps nested structure)
  */
 export function createJSONExport(mainStatement: Statement, subStatements: Statement[]): string {
+	const rows = withThemeIds(mainStatement, subStatements);
 	const exportData: ExportData = {
 		_schema: PROPERTY_DOCUMENTATION,
 		exportMetadata: {
@@ -189,8 +223,8 @@ export function createJSONExport(mainStatement: Statement, subStatements: Statem
 			appVersion: '1.0.0',
 			totalRecords: 1 + subStatements.length,
 		},
-		mainStatement: extractExportableData(mainStatement),
-		subStatements: subStatements.map(extractExportableData),
+		mainStatement: rows.main,
+		subStatements: rows.subs,
 	};
 
 	return JSON.stringify(exportData, null, 2);
@@ -270,9 +304,9 @@ function generateCSVCommentHeader(): string {
  */
 export function createCSVExport(mainStatement: Statement, subStatements: Statement[]): string {
 	try {
-		const allStatements = [mainStatement, ...subStatements];
-		const flattenedData = allStatements.map((stmt) =>
-			flattenObject(extractExportableData(stmt) as unknown as Record<string, unknown>),
+		const rows = withThemeIds(mainStatement, subStatements);
+		const flattenedData = [rows.main, ...rows.subs].map((row) =>
+			flattenObject(row as unknown as Record<string, unknown>),
 		);
 
 		// Get all unique keys

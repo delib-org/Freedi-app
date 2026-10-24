@@ -83,6 +83,11 @@ export interface ExportableStatementData {
 	derivedByPipeline?: 'topic-cluster' | 'synthesis' | 'unknown-cluster';
 	/** IDs of the source statements merged into this one, when derived */
 	integratedOptions?: string[];
+	/**
+	 * Theme the idea sits in (theme statementId), or 'other-ideas' for an idea no theme holds.
+	 * Empty for theme rows, synthesis members, and every row when the question has no theme.
+	 */
+	themeId?: string;
 }
 
 /**

@@ -7,12 +7,17 @@ import StatementBottomNav from '@/view/pages/statement/components/nav/bottom/Sta
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { bookmarkedStatementIdsSelector } from '@/redux/statements/statementsSlice';
+import {
+	bookmarkedStatementIdsSelector,
+	statementsSelector,
+} from '@/redux/statements/statementsSlice';
+import { createOtherIdeasSelector } from '@/redux/statements/condensationSelectors';
 import { useTreeData, TreeDataOptions } from './hooks/useTreeData';
 import { useTreeState } from './hooks/useTreeState';
 import { useTreeFilter } from './TreeFilterContext';
 import { TreeFilterMode } from './TreeFilterMode';
 import { useNewSolutionsBuffer, MAX_DISPLAY_COUNT } from './hooks/useNewSolutionsBuffer';
+import OtherIdeasFooter from './components/OtherIdeasFooter/OtherIdeasFooter';
 import NewSolutionsPill from './components/NewSolutionsPill/NewSolutionsPill';
 import TreeNode from './components/TreeNode/TreeNode';
 import PruningBanner from '@/view/pages/statement/components/joining/PruningBanner';
@@ -27,6 +32,7 @@ interface TreeViewProps {
 	defaultCollapsed?: boolean;
 }
 
+const selectOtherIdeas = createOtherIdeasSelector(statementsSelector);
 const FLIP_SPRING = { stiffness: 300, damping: 30 };
 
 const TreeView: FC<TreeViewProps> = ({
@@ -41,8 +47,21 @@ const TreeView: FC<TreeViewProps> = ({
 	const { t } = useTranslation();
 	const { user } = useAuthentication();
 	const bookmarkedIds = useAppSelector(bookmarkedStatementIdsSelector);
-	const { filterMode, registerCollapseAll, registerExpandAll, registerHasExpandedNodes } =
-		useTreeFilter();
+	const {
+		filterMode,
+		setFilterMode,
+		registerCollapseAll,
+		registerExpandAll,
+		registerHasExpandedNodes,
+	} = useTreeFilter();
+	const otherIdeasSelector = useMemo(() => selectOtherIdeas(statementId), [statementId]);
+	const otherIdeas = useAppSelector(otherIdeasSelector);
+	// The Grouped filter lists clusters only, so the raw ideas no theme holds drop
+	// out of it. Say how many, once a theme exists to be "not in".
+	const hiddenOtherCount =
+		filterMode === TreeFilterMode.grouped && otherIdeas.hasThemes
+			? otherIdeas.otherAtoms.filter((atom) => atom.isCluster !== true).length
+			: 0;
 	const treeViewRef = useRef<HTMLDivElement>(null);
 	const prevCountRef = useRef(0);
 	const isFirstRenderRef = useRef(true);
@@ -263,6 +282,10 @@ const TreeView: FC<TreeViewProps> = ({
 						))}
 					</>
 				)}
+				<OtherIdeasFooter
+					count={hiddenOtherCount}
+					onShowAll={() => setFilterMode(TreeFilterMode.all)}
+				/>
 			</div>
 
 			{showSortNav ? (

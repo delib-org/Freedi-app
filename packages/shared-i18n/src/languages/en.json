@@ -3551,7 +3551,7 @@
   "Add cluster": "Add cluster",
   "Signing you in…": "Signing you in…",
   "Delete cluster": "Delete cluster",
-  "Delete this cluster? Its notes will move to Ungrouped.": "Delete this cluster? Its notes will move to Ungrouped.",
+  "Delete this cluster? Its notes will move to Other ideas.": "Delete this cluster? Its notes will move to Other ideas.",
   "Add statement": "Add statement",
   "Duplicate": "Duplicate",
   "New cluster": "New cluster",
@@ -5158,5 +5158,9 @@
   "Opening your task...": "Opening your task...",
   "Could not open the task. Go back to the village and try again": "Could not open the task. Go back to the village and try again",
   "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.": "This device is signed in to WizCol as {{name}}. To do the class task, switch to the class guest.",
-  "Switch to the class task": "Switch to the class task"
+  "Switch to the class task": "Switch to the class task",
+  "Other ideas": "Other ideas",
+  "Ideas that stand on their own.": "Ideas that stand on their own.",
+  "{n} other ideas are not in a theme": "{n} other ideas are not in a theme",
+  "Show all {n}": "Show all {n}"
 }

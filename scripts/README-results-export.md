@@ -51,10 +51,14 @@ Provide either `--input` or `--question-id`, not both.
 - **`agreement.questionLevel`** — average consensus / like-mindedness / polarization
   across all surviving solutions, plus average solutions evaluated per user.
 - **`agreement.coalitions`** — empty in v1 (deferred per plan §5.4).
-- **`topics[]`** — one block per topic, with synthesized cluster(s) and surviving
-  standalones, plus per-topic agreement aggregates.
+- **`topics[]`** — one block per theme, with synthesized cluster(s) and surviving
+  standalones, plus per-topic agreement aggregates. The **last** block, when
+  present, is `other-ideas` (`isOtherIdeas: true`): the ideas no visible theme
+  holds. It is emitted even when the question has no themes, and is not counted
+  in `summary.topicCount`.
 - **`filteredOut`** — count of solutions dropped, broken down by reason
-  (below floor, low evaluators, hidden, unassigned to any topic).
+  (below floor, low evaluators, hidden). Ideas no theme holds are not filtered
+  out; they are in the `other-ideas` block (schema 2.0.0 removed `byReason.unassigned`).
 
 Each solution carries:
 
@@ -85,5 +89,6 @@ npx tsx scripts/exportQuestionResults.ts \
   --input test-data/wizcol-e4Rvr.json \
   --out out/results-e4Rvr.json
 # Expect: 39 topics, 39 synthesized, 18 standalones above floor,
-#         749 filtered out (660 below floor + 25 low-evaluators + 56 hidden + 8 unassigned).
+#         (1.0.0 figures: 749 filtered out = 660 below floor + 25 low-evaluators + 56 hidden + 8 unassigned.
+#          From 2.0.0 the 8 unassigned ideas are in the other-ideas block instead.)
 ```
