@@ -9,6 +9,7 @@ import { generateSynthesizedProposal } from '../../services/integration-ai-servi
 import { judgeSemanticEquivalenceCachedDetailed } from '../../services/verdict-cache-service';
 import { consolidateThemes } from '../pipeline/consolidateThemes';
 import { splitOversizedThemes } from '../pipeline/splitThemes';
+import { fileUnthemedAtoms } from '../pipeline/fileUnthemed';
 import { loadSynthesisSettingsFromStatement } from '../pipeline/loadSynthesisSettings';
 import { enqueueItem, ensureQueueRun } from '../queue/enqueue';
 import {
@@ -541,6 +542,21 @@ export async function reJudgeProcessParent(
 		}
 	} catch (error) {
 		logger.warn('synthesis.reJudge: theme split failed (non-fatal)', {
+			parentId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
+
+	// Last: re-offer atoms no theme claims (NONE at arrival, arrived before any
+	// theme existed, no neighbours). File-only: never creates a theme, never
+	// moves an atom that has one. Runs after split so it sees the final themes.
+	try {
+		const fileResult = await fileUnthemedAtoms(parentId, questionContext, 'reJudge');
+		if (fileResult.filed > 0 || fileResult.errors > 0) {
+			logger.info('synthesis.reJudge.unthemedFiled', { parentId, ...fileResult });
+		}
+	} catch (error) {
+		logger.warn('synthesis.reJudge: filing unthemed atoms failed (non-fatal)', {
 			parentId,
 			error: error instanceof Error ? error.message : String(error),
 		});
