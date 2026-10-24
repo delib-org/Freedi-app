@@ -455,6 +455,24 @@ async function executePipeline(
 			}
 		}
 
+		// No neighbours is not "no theme": the theme judge reads meaning, not
+		// cosine, and this path used to return before it was ever asked. With
+		// the judge on, offer the option to the existing themes (filing only;
+		// an option never creates a theme). On NONE it stays unthemed and the
+		// cron's file-unthemed step re-offers it when the theme list changes.
+		if (settings.llmThemeAssignment) {
+			const themed = await assignOptionToTheme({ option, parent, triggerSource });
+			if (themed.themeId) {
+				return {
+					action: 'attached',
+					reason: `option filed under theme by judge (${themed.reason})`,
+					clusterId: themed.themeId,
+					llmCalled: true,
+					durationMs: Date.now() - startedAt,
+				};
+			}
+		}
+
 		return {
 			action: 'seeded-singleton',
 			reason: 'no-neighbors-above-review-lower-bound',
