@@ -1,0 +1,702 @@
+{
+ "variant": "small-verify",
+ "samples": 2,
+ "runs": {
+  "en-seed42-themefix": {
+   "before": {
+    "precision": 0.7401129943502824,
+    "recall": 0.5822222222222222,
+    "f1": 0.6517412935323382,
+    "themes": 16,
+    "synthF1": 1,
+    "falseMerges": 0,
+    "largestShare": 0.14893617021276595
+   },
+   "pairs": [
+    {
+     "a": "GlWmJwfHNxcB",
+     "b": "uZr8gtvpsW38",
+     "topic": "digital-services",
+     "aTitle": "Public Wi-Fi access",
+     "bTitle": "Government transparency and open data",
+     "aN": 2,
+     "bN": 4,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "GlWmJwfHNxcB",
+     "b": "wn2cY8wHXhgI",
+     "topic": "digital-services",
+     "aTitle": "Public Wi-Fi access",
+     "bTitle": "Municipal service request systems",
+     "aN": 2,
+     "bN": 8,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "Mn1943-FHC9d",
+     "b": "q4LLs0ifgoLU",
+     "topic": "public-safety",
+     "aTitle": "Street lighting improvements",
+     "bTitle": "Community safety and policing",
+     "aN": 2,
+     "bN": 4,
+     "proposedInRound1": 2
+    },
+    {
+     "a": "WARZFMyKOgaz",
+     "b": "ka38hIkcrDax",
+     "topic": "health",
+     "aTitle": "In-home support for seniors",
+     "bTitle": "Healthcare access and services",
+     "aN": 2,
+     "bN": 8,
+     "proposedInRound1": 2
+    },
+    {
+     "a": "eWPV4dg6LZuQ",
+     "b": "kl6HzTVUYazz",
+     "topic": "culture",
+     "aTitle": "Arts and cultural life",
+     "bTitle": "Neighborhood library access",
+     "aN": 6,
+     "bN": 2,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "mPywNQphF63-",
+     "b": "ruBOtHu5sb8o",
+     "topic": "environment-and-waste",
+     "aTitle": "Public building solar energy",
+     "bTitle": "Waste reduction programs",
+     "aN": 2,
+     "bN": 6,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "uZr8gtvpsW38",
+     "b": "wn2cY8wHXhgI",
+     "topic": "digital-services",
+     "aTitle": "Government transparency and open data",
+     "bTitle": "Municipal service request systems",
+     "aN": 4,
+     "bN": 8,
+     "proposedInRound1": 0
+    }
+   ],
+   "samples": [
+    {
+     "k": 0,
+     "rounds": [
+      [
+       {
+        "ids": [
+         "q4LLs0ifgoLU",
+         "Mn1943-FHC9d"
+        ],
+        "title": "Community safety and policing"
+       },
+       {
+        "ids": [
+         "ka38hIkcrDax",
+         "WARZFMyKOgaz"
+        ],
+        "title": "Healthcare access and services"
+       }
+      ],
+      []
+     ],
+     "after": {
+      "precision": 0.7566137566137566,
+      "recall": 0.6355555555555555,
+      "f1": 0.6908212560386473,
+      "themes": 16,
+      "synthF1": 1,
+      "falseMerges": 0,
+      "largestShare": 0.14893617021276595
+     }
+    },
+    {
+     "k": 1,
+     "rounds": [
+      [
+       {
+        "ids": [
+         "q4LLs0ifgoLU",
+         "Mn1943-FHC9d"
+        ],
+        "title": "Community safety and policing"
+       },
+       {
+        "ids": [
+         "ka38hIkcrDax",
+         "WARZFMyKOgaz"
+        ],
+        "title": "Healthcare access and services"
+       }
+      ],
+      []
+     ],
+     "after": {
+      "precision": 0.7566137566137566,
+      "recall": 0.6355555555555555,
+      "f1": 0.6908212560386473,
+      "themes": 16,
+      "synthF1": 1,
+      "falseMerges": 0,
+      "largestShare": 0.14893617021276595
+     }
+    }
+   ]
+  },
+  "en-seed42-consolidated": {
+   "before": {
+    "precision": 0.7552742616033755,
+    "recall": 0.7955555555555556,
+    "f1": 0.774891774891775,
+    "themes": 11,
+    "synthF1": 1,
+    "falseMerges": 0,
+    "largestShare": 0.16326530612244897
+   },
+   "pairs": [
+    {
+     "a": "tktf-TvUPaL9",
+     "b": "y7PmlD8ABNXi",
+     "topic": "digital-services",
+     "aTitle": "City service request access",
+     "bTitle": "Public internet access",
+     "aN": 10,
+     "bN": 2,
+     "proposedInRound1": 0
+    }
+   ],
+   "samples": [
+    {
+     "k": 0,
+     "rounds": [
+      []
+     ],
+     "after": {
+      "precision": 0.7552742616033755,
+      "recall": 0.7955555555555556,
+      "f1": 0.774891774891775,
+      "themes": 11,
+      "synthF1": 1,
+      "falseMerges": 0,
+      "largestShare": 0.16326530612244897
+     }
+    },
+    {
+     "k": 1,
+     "rounds": [
+      []
+     ],
+     "after": {
+      "precision": 0.7552742616033755,
+      "recall": 0.7955555555555556,
+      "f1": 0.774891774891775,
+      "themes": 11,
+      "synthF1": 1,
+      "falseMerges": 0,
+      "largestShare": 0.16326530612244897
+     }
+    }
+   ]
+  },
+  "en-seed7-consolidated": {
+   "before": {
+    "precision": 0.6868327402135231,
+    "recall": 0.8577777777777778,
+    "f1": 0.7628458498023715,
+    "themes": 10,
+    "synthF1": 1,
+    "falseMerges": 0,
+    "largestShare": 0.2
+   },
+   "pairs": [],
+   "samples": [
+    {
+     "k": 0,
+     "rounds": [
+      [
+       {
+        "ids": [
+         "ZrhQ3jepeh54",
+         "j38oFXu7h764"
+        ],
+        "title": "Recreation and Community Life"
+       }
+      ],
+      []
+     ],
+     "after": {
+      "precision": 0.6677740863787376,
+      "recall": 0.8933333333333333,
+      "f1": 0.7642585551330799,
+      "themes": 10,
+      "synthF1": 1,
+      "falseMerges": 0,
+      "largestShare": 0.22
+     }
+    },
+    {
+     "k": 1,
+     "rounds": [
+      [
+       {
+        "ids": [
+         "ZrhQ3jepeh54",
+         "j38oFXu7h764"
+        ],
+        "title": "Recreation and Community Life"
+       }
+      ],
+      []
+     ],
+     "after": {
+      "precision": 0.6677740863787376,
+      "recall": 0.8933333333333333,
+      "f1": 0.7642585551330799,
+      "themes": 10,
+      "synthF1": 1,
+      "falseMerges": 0,
+      "largestShare": 0.22
+     }
+    }
+   ]
+  },
+  "en-seed1234-consolidated": {
+   "before": {
+    "precision": 0.7923497267759563,
+    "recall": 0.6444444444444445,
+    "f1": 0.7107843137254901,
+    "themes": 17,
+    "synthF1": 1,
+    "falseMerges": 0,
+    "largestShare": 0.12
+   },
+   "pairs": [
+    {
+     "a": "-3O3F7aUbz8K",
+     "b": "wbUIP1oqiXoY",
+     "topic": "public-safety",
+     "aTitle": "Neighborhood emergency response access",
+     "bTitle": "Street lighting and safety",
+     "aN": 2,
+     "bN": 12,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "2AF479Wh7D5s",
+     "b": "K6F9Cautia7C",
+     "topic": "housing",
+     "aTitle": "Affordable student housing",
+     "bTitle": "Affordable housing development",
+     "aN": 2,
+     "bN": 2,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "2AF479Wh7D5s",
+     "b": "asbRFuepyg08",
+     "topic": "housing",
+     "aTitle": "Affordable student housing",
+     "bTitle": "Clean and efficient energy",
+     "aN": 2,
+     "bN": 6,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "4b2PsIsRDfzJ",
+     "b": "G4armrHtSJty",
+     "topic": "culture",
+     "aTitle": "Public Art and Cultural Spaces",
+     "bTitle": "Neighborhood library access",
+     "aN": 8,
+     "bN": 2,
+     "proposedInRound1": 2
+    },
+    {
+     "a": "K6F9Cautia7C",
+     "b": "asbRFuepyg08",
+     "topic": "housing",
+     "aTitle": "Affordable housing development",
+     "bTitle": "Clean and efficient energy",
+     "aN": 2,
+     "bN": 6,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "c0SoWa13JB5D",
+     "b": "rdlRfBd42PvF",
+     "topic": "digital-services",
+     "aTitle": "Digital municipal services",
+     "bTitle": "Public digital connectivity",
+     "aN": 10,
+     "bN": 2,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "ePUOi2ZOrRfW",
+     "b": "ykkcdO81Yu10",
+     "topic": "environment-and-waste",
+     "aTitle": "Household recycling services",
+     "bTitle": "Air quality monitoring",
+     "aN": 6,
+     "bN": 2,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "nxxn0AhKtl9z",
+     "b": "nzd2vfy-PXQl",
+     "topic": "parks-and-green-space",
+     "aTitle": "Accessible playgrounds and recreation",
+     "bTitle": "Community gardens and urban agriculture",
+     "aN": 4,
+     "bN": 2,
+     "proposedInRound1": 0
+    }
+   ],
+   "samples": [
+    {
+     "k": 0,
+     "rounds": [
+      [
+       {
+        "ids": [
+         "4b2PsIsRDfzJ",
+         "G4armrHtSJty"
+        ],
+        "title": "Public Art and Cultural Spaces"
+       }
+      ],
+      []
+     ],
+     "after": {
+      "precision": 0.8010471204188482,
+      "recall": 0.68,
+      "f1": 0.7355769230769231,
+      "themes": 17,
+      "synthF1": 1,
+      "falseMerges": 0,
+      "largestShare": 0.12
+     }
+    },
+    {
+     "k": 1,
+     "rounds": [
+      [
+       {
+        "ids": [
+         "4b2PsIsRDfzJ",
+         "G4armrHtSJty"
+        ],
+        "title": "Public Art and Cultural Spaces"
+       }
+      ],
+      []
+     ],
+     "after": {
+      "precision": 0.8010471204188482,
+      "recall": 0.68,
+      "f1": 0.7355769230769231,
+      "themes": 17,
+      "synthF1": 1,
+      "falseMerges": 0,
+      "largestShare": 0.12
+     }
+    }
+   ]
+  },
+  "en-seed42-filingfix": {
+   "before": {
+    "precision": 0.7929411764705883,
+    "recall": 0.7488888888888889,
+    "f1": 0.7702857142857144,
+    "themes": 14,
+    "synthF1": 0.98989898989899,
+    "falseMerges": 0,
+    "largestShare": 0.16161616161616163
+   },
+   "pairs": [
+    {
+     "a": "7NKoV5kO4Zai",
+     "b": "jVa68VmkyCS0",
+     "topic": "environment-and-waste",
+     "aTitle": "Urban Food Sustainability",
+     "bTitle": "Municipal renewable energy",
+     "aN": 8,
+     "bN": 2,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "7NKoV5kO4Zai",
+     "b": "pqzMDkAMWsRA",
+     "topic": "environment-and-waste",
+     "aTitle": "Urban Food Sustainability",
+     "bTitle": "Air quality monitoring",
+     "aN": 8,
+     "bN": 2,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "DP6xjV0HiCt8",
+     "b": "FH4k6SS6UC1q",
+     "topic": "digital-services",
+     "aTitle": "Accessible and transparent government",
+     "bTitle": "Public internet access",
+     "aN": 10,
+     "bN": 2,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "Faf5shBkRJFi",
+     "b": "Z5nhS-I5xXmc",
+     "topic": "public-safety",
+     "aTitle": "Street lighting and safety",
+     "bTitle": "Neighborhood Emergency Services",
+     "aN": 8,
+     "bN": 2,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "jVa68VmkyCS0",
+     "b": "pqzMDkAMWsRA",
+     "topic": "environment-and-waste",
+     "aTitle": "Municipal renewable energy",
+     "bTitle": "Air quality monitoring",
+     "aN": 2,
+     "bN": 2,
+     "proposedInRound1": 0
+    }
+   ],
+   "samples": [
+    {
+     "k": 0,
+     "rounds": [
+      []
+     ],
+     "after": {
+      "precision": 0.7929411764705883,
+      "recall": 0.7488888888888889,
+      "f1": 0.7702857142857144,
+      "themes": 14,
+      "synthF1": 0.98989898989899,
+      "falseMerges": 0,
+      "largestShare": 0.16161616161616163
+     }
+    },
+    {
+     "k": 1,
+     "rounds": [
+      []
+     ],
+     "after": {
+      "precision": 0.7929411764705883,
+      "recall": 0.7488888888888889,
+      "f1": 0.7702857142857144,
+      "themes": 14,
+      "synthF1": 0.98989898989899,
+      "falseMerges": 0,
+      "largestShare": 0.16161616161616163
+     }
+    }
+   ]
+  },
+  "he-seed42-large-formulation": {
+   "before": {
+    "precision": 0.6577777777777778,
+    "recall": 0.6577777777777778,
+    "f1": 0.6577777777777778,
+    "themes": 11,
+    "synthF1": 0.8571428571428572,
+    "falseMerges": 6,
+    "largestShare": 0.18085106382978725
+   },
+   "pairs": [
+    {
+     "a": "GbmBjysP568g",
+     "b": "jJwectVSG9ht",
+     "topic": "digital-services",
+     "aTitle": "קישוריות דיגיטלית ציבורית",
+     "bTitle": "שקיפות עירונית ותקציבית",
+     "aN": 2,
+     "bN": 3,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "GbmBjysP568g",
+     "b": "nK7nq7WfbDeq",
+     "topic": "digital-services",
+     "aTitle": "קישוריות דיגיטלית ציבורית",
+     "bTitle": "שירותים עירוניים ופניות תושבים",
+     "aN": 2,
+     "bN": 8,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "jJwectVSG9ht",
+     "b": "nK7nq7WfbDeq",
+     "topic": "digital-services",
+     "aTitle": "שקיפות עירונית ותקציבית",
+     "bTitle": "שירותים עירוניים ופניות תושבים",
+     "aN": 3,
+     "bN": 8,
+     "proposedInRound1": 0
+    }
+   ],
+   "samples": [
+    {
+     "k": 0,
+     "rounds": [
+      []
+     ],
+     "after": {
+      "precision": 0.6577777777777778,
+      "recall": 0.6577777777777778,
+      "f1": 0.6577777777777778,
+      "themes": 11,
+      "synthF1": 0.8571428571428572,
+      "falseMerges": 6,
+      "largestShare": 0.18085106382978725
+     }
+    },
+    {
+     "k": 1,
+     "rounds": [
+      []
+     ],
+     "after": {
+      "precision": 0.6577777777777778,
+      "recall": 0.6577777777777778,
+      "f1": 0.6577777777777778,
+      "themes": 11,
+      "synthF1": 0.8571428571428572,
+      "falseMerges": 6,
+      "largestShare": 0.18085106382978725
+     }
+    }
+   ]
+  },
+  "he-seed42-large-judgedattach": {
+   "before": {
+    "precision": 0.9344262295081968,
+    "recall": 0.8866666666666667,
+    "f1": 0.909920182440137,
+    "themes": 10,
+    "synthF1": 0.9473684210526316,
+    "falseMerges": 0,
+    "largestShare": 0.1134020618556701
+   },
+   "pairs": [],
+   "samples": [
+    {
+     "k": 0,
+     "rounds": [
+      []
+     ],
+     "after": {
+      "precision": 0.9344262295081968,
+      "recall": 0.8866666666666667,
+      "f1": 0.909920182440137,
+      "themes": 10,
+      "synthF1": 0.9473684210526316,
+      "falseMerges": 0,
+      "largestShare": 0.1134020618556701
+     }
+    },
+    {
+     "k": 1,
+     "rounds": [
+      []
+     ],
+     "after": {
+      "precision": 0.9344262295081968,
+      "recall": 0.8866666666666667,
+      "f1": 0.909920182440137,
+      "themes": 10,
+      "synthF1": 0.9473684210526316,
+      "falseMerges": 0,
+      "largestShare": 0.1134020618556701
+     }
+    }
+   ]
+  },
+  "he-seed42-large-recall": {
+   "before": {
+    "precision": 0.9168975069252078,
+    "recall": 0.7355555555555555,
+    "f1": 0.816276202219482,
+    "themes": 12,
+    "synthF1": 0.8817204301075269,
+    "falseMerges": 2,
+    "largestShare": 0.11827956989247312
+   },
+   "pairs": [
+    {
+     "a": "8TnL8OcNgLxn",
+     "b": "m2lPgODun761",
+     "topic": "digital-services",
+     "aTitle": "קישוריות דיגיטלית ציבורית",
+     "bTitle": "שקיפות עירונית ונתונים פתוחים",
+     "aN": 2,
+     "bN": 2,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "8TnL8OcNgLxn",
+     "b": "oD6HQ3HKnhqw",
+     "topic": "digital-services",
+     "aTitle": "קישוריות דיגיטלית ציבורית",
+     "bTitle": "שירותים עירוניים ופניות תושבים",
+     "aN": 2,
+     "bN": 8,
+     "proposedInRound1": 0
+    },
+    {
+     "a": "m2lPgODun761",
+     "b": "oD6HQ3HKnhqw",
+     "topic": "digital-services",
+     "aTitle": "שקיפות עירונית ונתונים פתוחים",
+     "bTitle": "שירותים עירוניים ופניות תושבים",
+     "aN": 2,
+     "bN": 8,
+     "proposedInRound1": 0
+    }
+   ],
+   "samples": [
+    {
+     "k": 0,
+     "rounds": [
+      []
+     ],
+     "after": {
+      "precision": 0.9168975069252078,
+      "recall": 0.7355555555555555,
+      "f1": 0.816276202219482,
+      "themes": 12,
+      "synthF1": 0.8817204301075269,
+      "falseMerges": 2,
+      "largestShare": 0.11827956989247312
+     }
+    },
+    {
+     "k": 1,
+     "rounds": [
+      []
+     ],
+     "after": {
+      "precision": 0.9168975069252078,
+      "recall": 0.7355555555555555,
+      "f1": 0.816276202219482,
+      "themes": 12,
+      "synthF1": 0.8817204301075269,
+      "falseMerges": 2,
+      "largestShare": 0.11827956989247312
+     }
+    }
+   ]
+  }
+ }
+}

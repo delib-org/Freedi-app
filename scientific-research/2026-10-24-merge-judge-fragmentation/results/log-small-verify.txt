@@ -1,0 +1,9 @@
+en-seed42-themefix               themes 16->16.0  P 0.740->0.757  R 0.582->0.636  F1 0.652->0.691  pairsProposed 2/7
+en-seed42-consolidated           themes 11->11.0  P 0.755->0.755  R 0.796->0.796  F1 0.775->0.775  pairsProposed 0/1
+en-seed7-consolidated            themes 10->10.0  P 0.687->0.668  R 0.858->0.893  F1 0.763->0.764  pairsProposed 0/0
+en-seed1234-consolidated         themes 17->17.0  P 0.792->0.801  R 0.644->0.680  F1 0.711->0.736  pairsProposed 1/8
+en-seed42-filingfix              themes 14->14.0  P 0.793->0.793  R 0.749->0.749  F1 0.770->0.770  pairsProposed 0/5
+he-seed42-large-formulation      themes 11->11.0  P 0.658->0.658  R 0.658->0.658  F1 0.658->0.658  pairsProposed 0/3
+he-seed42-large-judgedattach     themes 10->10.0  P 0.934->0.934  R 0.887->0.887  F1 0.910->0.910  pairsProposed 0/0
+he-seed42-large-recall           themes 12->12.0  P 0.917->0.917  R 0.736->0.736  F1 0.816->0.816  pairsProposed 0/3
+new judge calls: 22
