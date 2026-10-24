@@ -93,9 +93,12 @@ export interface NestResult {
  * compression of whatever proposal arrived first, and broad-sounding titles
  * act as attractors. See `assignToTheme` for the numbers.
  */
-async function liveThemes(
-	parentId: string,
-): Promise<{ themes: Statement[]; titleById: Map<string, string> }> {
+export async function liveThemes(parentId: string): Promise<{
+	themes: Statement[];
+	titleById: Map<string, string>;
+	/** Every option-type doc under the question, themed or not (one snapshot). */
+	all: Statement[];
+}> {
 	const snap = await db()
 		.collection(Collections.statements)
 		.where('parentId', '==', parentId)
@@ -109,11 +112,11 @@ async function liveThemes(
 		.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0))
 		.slice(0, MAX_THEMES_IN_PROMPT);
 
-	return { themes, titleById };
+	return { themes, titleById, all };
 }
 
 /** A theme as the filing judge sees it: heading, description, and contents. */
-function toThemeOption(theme: Statement, titleById: Map<string, string>): ThemeOption {
+export function toThemeOption(theme: Statement, titleById: Map<string, string>): ThemeOption {
 	return {
 		id: theme.statementId,
 		title: theme.statement ?? '',
