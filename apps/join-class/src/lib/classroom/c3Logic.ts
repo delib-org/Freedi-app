@@ -95,10 +95,8 @@ export interface SubstepOverride {
 export interface SubstepView {
 	/** The screen the student is looking at. */
 	current: TableStep;
-	/** The table's official step (marked in the strip). */
+	/** The table's step: where the phone lands, and the teacher's last call (Proposals: free sub-steps). */
 	official: TableStep;
-	/** True when the student looked away from the official step. */
-	detached: boolean;
 }
 
 /** `override` is the student's own pick; it lapses when the table moves on. */
@@ -112,29 +110,14 @@ export function resolveSubstep(
 		override !== null && override.officialAtPick === official && override.turnAtPick === turn;
 	const current = live && override ? override.step : official;
 
-	return { current, official, detached: current !== official };
+	return { current, official };
 }
 
-// ---- mates and finishing talk ---------------------------------------------------
+// ---- mates ------------------------------------------------------------
 
 export interface Mate {
 	uid: string;
 	name: string;
-}
-
-/**
- * "סיימנו, לכתוב" (Proposals only: nobody writes at Table talk): the asker always,
- * any tablemate when nobody asks, everyone after the timer.
- */
-export function canFinishTalk(
-	kind: FlowKind,
-	table: ClassTable,
-	uid: string,
-	timeUp: boolean,
-): boolean {
-	if (kind !== 'proposals') return false;
-
-	return table.askerUid === uid || table.askerUid === null || timeUp;
 }
 
 // ---- rate list ---------------------------------------------------------------

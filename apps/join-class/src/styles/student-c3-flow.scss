@@ -41,17 +41,6 @@ body.c3-lock {
     margin-block-end: var(--space-md);
   }
 
-  &__asker {
-    margin: 0;
-    color: var(--terra-600);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-bold, 700);
-
-    .frame--down & {
-      color: var(--terra-300);
-    }
-  }
-
   &__class {
     flex: none;
   }
@@ -80,10 +69,6 @@ body.c3-lock {
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-bold, 700);
     cursor: pointer;
-
-    &--official:not(.substeps__pill--on) {
-      border-color: var(--terra-600);
-    }
 
     &--on {
       border-color: var(--ink);
@@ -238,46 +223,160 @@ body.c3-lock {
   }
 }
 
+// ---- live line: "דן כותב/ת עכשיו", under the strip (IA 17, UX 1) --------------------
 
-// ---- strip: the official pill says "now" in words (not by colour alone) --------
+.live-line-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  margin-block-end: var(--space-md);
+  animation: c3-line-in var(--dur-base) var(--ease-out);
 
-.substeps {
-  &__pill {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    padding-block: var(--space-2xs, 4px);
-    line-height: 1.1;
-
-    &--official {
-      border-width: 2.5px;
-    }
+  &__inner {
+    min-height: 0;
+    overflow: hidden;
   }
 
-  &__now {
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-bold, 700);
-    color: var(--terra-600);
+  // The wait is over: the row folds away (grid rows, no layout reads in JS).
+  &--leaving {
+    grid-template-rows: 0fr;
+    margin-block-end: 0;
+    opacity: 0;
+    transition:
+      grid-template-rows var(--dur-quick) var(--ease-out),
+      margin-block-end var(--dur-quick) var(--ease-out),
+      opacity var(--dur-quick) var(--ease-out);
+  }
 
-    .substeps__pill--on & {
-      color: inherit;
-    }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
 
-    // On the dark frame the current pill is paper, so only the other pill keeps the light terracotta.
-    .frame--down .substeps__pill:not(.substeps__pill--on) & {
-      color: var(--terra-300);
+    &--leaving {
+      transition: none;
     }
   }
 }
 
-// ---- peek: every control of a non-official screen is off ------------------------
+.live-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px dashed var(--teal-500);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
 
-.flow__peek {
-  min-inline-size: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  opacity: 0.55;
+  &:hover,
+  &:active {
+    background: var(--teal-50);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: calc(-1 * var(--focus-ring-width));
+  }
+
+  &__dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--teal-500);
+    animation: c3-live-pulse 1.6s ease-in-out infinite;
+  }
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold, 700);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Points toward the reading end: left in RTL, mirrored in LTR.
+  &__chevron {
+    flex: none;
+    color: var(--ink-soft);
+    font-size: var(--font-size-lg);
+    line-height: 1;
+  }
+
+  html[dir='ltr'] &__chevron {
+    transform: scaleX(-1);
+  }
+
+  .frame--down & {
+    border-color: var(--paper-line);
+
+    &:hover,
+    &:active {
+      background: var(--ink-muted);
+    }
+  }
+
+  .frame--down &__dot {
+    background: currentcolor;
+  }
+
+  .frame--down &__chevron {
+    color: currentcolor;
+  }
+
+  :root[data-high-contrast] & {
+    border-width: 2px;
+    border-color: var(--border-strong);
+  }
+
+  :root[data-high-contrast] &__dot {
+    background: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__dot {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    border-color: CanvasText;
+    color: ButtonText;
+    background: ButtonFace;
+
+    &__dot {
+      background: CanvasText;
+    }
+  }
+}
+
+@keyframes c3-line-in {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+@keyframes c3-live-pulse {
+  from {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+
+  to {
+    opacity: 1;
+  }
 }

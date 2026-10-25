@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ClassTable, Statement, SupportBySide } from '@freedi/shared-types';
 import {
-	canFinishTalk,
 	countdownView,
 	idleCountdownText,
 	isOwnItem,
@@ -113,32 +112,25 @@ describe('sub-step strip state (Proposals only)', () => {
 	it('follows a local pick while the table stays on its step', () => {
 		const t = table({ step: 'talk' });
 		const view = resolveSubstep(t, { step: 'write', officialAtPick: 'talk', turnAtPick: 1 });
-		expect(view).toEqual({ current: 'write', official: 'talk', detached: true });
+		expect(view).toEqual({ current: 'write', official: 'talk' });
 	});
 
 	it('lapses the local pick when the table moves on or the turn changes', () => {
 		const pick = { step: 'write' as const, officialAtPick: 'talk' as const, turnAtPick: 1 };
-		expect(resolveSubstep(table({ step: 'write' }), pick).detached).toBe(false);
+		expect(resolveSubstep(table({ step: 'write' }), pick).current).toBe('write');
+		expect(resolveSubstep(table({ step: 'rate' }), pick).current).toBe('rate');
 		expect(resolveSubstep(table({ step: 'talk', turn: 2 }), pick).current).toBe('talk');
 	});
 
-	it('is not detached without a local pick', () => {
-		expect(resolveSubstep(table(), null).detached).toBe(false);
+	it('lands on the table step without a local pick', () => {
+		expect(resolveSubstep(table({ step: 'rate' }), null)).toEqual({
+			current: 'rate',
+			official: 'rate',
+		});
 	});
 
 	it('Table talk has no strip: its sub-steps are Proposals only', () => {
 		expect(Object.keys(TABLE_SUBSTEPS)).toEqual(['proposals']);
-	});
-});
-
-describe('finishing talk', () => {
-	it('"we are done, write" is Proposals only: the asker or anyone once nobody asks / the timer is over', () => {
-		const partial = table({ speakerUid: 'b', spokenUids: ['a'] });
-		expect(canFinishTalk('tableTalk', partial, 'a', true)).toBe(false);
-		expect(canFinishTalk('proposals', partial, 'a', false)).toBe(true);
-		expect(canFinishTalk('proposals', partial, 'c', true)).toBe(true);
-		expect(canFinishTalk('proposals', partial, 'c', false)).toBe(false);
-		expect(canFinishTalk('proposals', table({ askerUid: null }), 'c', false)).toBe(true);
 	});
 });
 

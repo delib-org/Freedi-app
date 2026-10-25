@@ -14,6 +14,7 @@ import { refusalReason } from '@/lib/classroom/turnMoment';
 import { serverNow } from '@/lib/classroom/serverClock';
 import { ErrorLine } from './ErrorLine';
 import { FlowError, FlowState, type FlowCtx, type FlowParts } from './flowTypes';
+import { liveWritingParts } from './liveWritingParts';
 import { proposalsParts } from './proposalsParts';
 import { SubStepStrip } from './SubStepStrip';
 import { tableTalkParts } from './tableTalkParts';
@@ -44,10 +45,9 @@ function stateOf(vnode: m.Vnode<TableFlowAttrs>): FlowState {
  * One table's whole student experience at Table talk and at Proposals. The table
  * doc (listener started by StudentStage) decides the screen. Table talk (UX 16
  * rev 3) is one calm screen per state, built by tableTalkParts. Proposals keeps
- * its step strip and peek: a screen that is not the official step is drawn with
- * every control disabled, a line saying what the table is doing and a one-tap
- * "back to now". Every callable shows an inline error with a retry; a lost
- * race just shows what the table is doing.
+ * its step strip: each phone moves between talk, write and rate freely (IA 17.13),
+ * and the table step only says where phones land. Every callable shows an inline
+ * error with a retry; a lost race just shows what the table is doing.
  */
 export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 	oninit(vnode) {
@@ -58,6 +58,7 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 		const self = stateOf(vnode);
 		self.feed.stop();
 		if (self.redrawTimer) clearTimeout(self.redrawTimer);
+		if (self.lineTimer) clearTimeout(self.lineTimer);
 		teardownLiveDrafts();
 	},
 
@@ -99,11 +100,13 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 			seated.length > 0 ? seated : table.memberUids.map((id) => ({ uid: id, name: someone }));
 		const now = serverNow();
 		const tableTalk = kind === 'tableTalk';
-		// Table talk has one screen per state: no sub-steps, no peek.
+		// Table talk has one screen per state: no sub-steps. Proposals: the phone's own sub-step.
 		const view = tableTalk
-			? { current: table.step, official: table.step, detached: false }
+			? { current: table.step, official: table.step }
 			: resolveSubstep(table, self.override);
-		const peek = view.detached;
+		const setLocal = (next: TableStep): void => {
+			self.override = { step: next, officialAtPick: view.official, turnAtPick: table.turn };
+		};
 
 		const run = (op: () => Promise<unknown>): void => {
 			if (self.busy) return;
@@ -147,32 +150,29 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 			challenge,
 			now,
 			someone,
+			goto: setLocal,
 			run,
 			act,
 		};
 		const parts: FlowParts = tableTalk ? tableTalkParts(ctx) : proposalsParts(ctx);
 
-		let { body, action } = parts;
-		const instruction = peek ? t(`turn.peek_why_${view.official}`) : parts.instruction;
-		if (peek) {
-			// Off the official step nothing on the screen may act; the one live control leads back.
-			body = m('fieldset.flow__peek', { disabled: true, 'data-testid': 'peek-body' }, body);
-			action = m(
-				'button.btn.btn--primary',
-				{
-					type: 'button',
-					'data-testid': 'peek-back',
-					onclick: () => {
-						self.override = null;
-					},
-				},
-				t('turn.peek_back'),
-			);
+		const { body, action, instruction } = parts;
+		if (tableTalk) {
+			// no watch view here: a hidden one would reopen (and push history) on the way back to Proposals
+			self.watch = null;
+
+			return tableTalkFrame(self, parts, instruction, action);
 		}
-		const setLocal = (next: TableStep): void => {
-			self.override = { step: next, officialAtPick: view.official, turnAtPick: table.turn };
-		};
-		if (tableTalk) return tableTalkFrame(self, parts, instruction, action);
+		const live = liveWritingParts({
+			self,
+			table,
+			uid,
+			mates,
+			someone,
+			feed,
+			challengeId: challenge?.statementId ?? null,
+			plenum: challenge?.statementSettings?.roundPhase === 'improve',
+		});
 
 		return [
 			m(
@@ -197,7 +197,9 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 								parts.barExtra,
 							])
 						: null,
+					live.status,
 					parts.showStrip ? m(SubStepStrip, { view, onSelect: setLocal }) : null,
+					live.line,
 					m(ErrorLine, {
 						message: self.error,
 						onRetry: self.retry ? () => void self.retry?.() : undefined,
@@ -206,6 +208,7 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 				],
 			),
 			parts.overlay,
+			live.overlay,
 		];
 	},
 };

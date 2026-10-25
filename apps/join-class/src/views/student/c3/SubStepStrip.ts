@@ -10,11 +10,9 @@ export interface SubStepStripAttrs {
 }
 
 /**
- * Question · Talk · Write · Rate pills under the askers row (UX §11 last
- * bullet). They stay a tappable peek (Tal, 2026-10-22): the table's official
- * step carries the word "now" (not colour alone), `aria-current="step"` is the
- * screen the student is on, and TableFlow disables every control of a peeked
- * screen and offers "back to now".
+ * Talk · Write · Rate pills (UX §11 last bullet, free sub-steps, Tal 2026-10-25):
+ * a per-phone selector. The selected pill is `.substeps__pill--on` with
+ * `aria-current="true"`; nothing is ever greyed out.
  */
 export const SubStepStrip: m.Component<SubStepStripAttrs> = {
 	view({ attrs }) {
@@ -29,22 +27,12 @@ export const SubStepStrip: m.Component<SubStepStripAttrs> = {
 					{
 						key: step,
 						type: 'button',
-						'aria-current': view.current === step ? 'step' : undefined,
-						class: [
-							view.current === step ? 'substeps__pill--on' : '',
-							view.official === step ? 'substeps__pill--official' : '',
-						]
-							.filter(Boolean)
-							.join(' '),
+						'aria-current': view.current === step ? 'true' : undefined,
+						class: view.current === step ? 'substeps__pill--on' : '',
 						'data-step': step,
 						onclick: () => attrs.onSelect(step),
 					},
-					[
-						t(`turn.pill_${step}`),
-						view.official === step
-							? m('span.substeps__now', { 'data-testid': 'pill-now' }, t('turn.pill_now'))
-							: null,
-					],
+					t(`turn.pill_${step}`),
 				),
 			),
 		);
