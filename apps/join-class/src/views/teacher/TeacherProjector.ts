@@ -1,5 +1,6 @@
 import m from 'mithril';
 import '@/styles/projector.scss';
+import '@/styles/projector-gate.scss';
 import '@/styles/projector-video.scss';
 import '@/styles/projector-controls.scss';
 import { t } from '@/lib/i18n';
