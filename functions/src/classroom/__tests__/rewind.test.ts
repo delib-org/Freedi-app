@@ -193,6 +193,22 @@ describe('classResetVote', () => {
 		});
 	});
 
+	it('allows a reset of a paused ballot on the Vote step and leaves it unpaused', async () => {
+		const fake = new FakeFirestore();
+		seedVote(fake, 6, { candidateIds: ['p1', 'p2'], frozenAt: 10, pausedAt: 20 });
+		await expect(resetVote(fake.asFirestore(), TEACHER, { mainId: MAIN })).resolves.toEqual({
+			votesDeleted: 2,
+		});
+		const ballot = (fake.read('statements/ch')?.statementSettings as { ballot: object }).ballot;
+		expect(ballot).not.toHaveProperty('pausedAt');
+	});
+
+	it('still refuses a running (open, unpaused) ballot on the Vote step', async () => {
+		const fake = new FakeFirestore();
+		seedVote(fake, 6, { candidateIds: ['p1', 'p2'], frozenAt: 10 });
+		await expectReason(resetVote(fake.asFirestore(), TEACHER, { mainId: MAIN }), 'vote-running');
+	});
+
 	it('pure helpers', () => {
 		expect(
 			ballotAfterReset({ candidateIds: ['a'], frozenAt: 1, closedAt: 2, decisionId: 'a' }),
@@ -201,6 +217,9 @@ describe('classResetVote', () => {
 			frozenAt: 1,
 		});
 		expect(isVoteRunning(undefined, null)).toBe(false);
+		expect(
+			ballotAfterReset({ candidateIds: ['a'], frozenAt: 1, pausedAt: 3 }),
+		).not.toHaveProperty('pausedAt');
 	});
 });
 

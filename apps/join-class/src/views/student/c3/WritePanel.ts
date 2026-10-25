@@ -268,6 +268,7 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 						testId: 'proposal-box',
 					})
 				: m('p.write-panel__note', t('proposal.none')),
+			sentProposal?.hide ? m('p.write-panel__note', t('proposal.hidden_mine')) : null,
 			m('label.write-panel__broadcast', [
 				m('input', {
 					type: 'checkbox',

@@ -7,17 +7,16 @@ import { lessonStepOf } from './lessonStatusGuard';
  */
 
 /**
- * Whether the class may still be voting right now: the ballot is open and the
- * lesson stands on the Vote step.
- *
- * The vote lane's PAUSE will add one clause here: `&& ballot.pausedAt === undefined`
- * (a paused vote is not running, so the teacher may reset it).
+ * Whether the class may still be voting right now: the ballot is open, not
+ * paused, and the lesson stands on the Vote step. A paused vote is not running,
+ * so the teacher may reset it.
  */
 export function isVoteRunning(
 	ballot: ClassBallot | undefined,
 	main: Statement | null | undefined,
 ): boolean {
 	if (!ballot || typeof ballot.closedAt === 'number') return false;
+	if (typeof ballot.pausedAt === 'number') return false;
 
 	return lessonStepOf(main) === 'vote';
 }

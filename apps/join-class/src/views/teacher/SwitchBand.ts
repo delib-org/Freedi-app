@@ -150,8 +150,13 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 				attrs.onCloseVote,
 				!attrs.ballotFrozen || attrs.ballotClosed,
 			),
-			// A running vote is closed first; a closed one can be wiped and voted again.
-			resetAction(t('console.reset_vote'), 'reset:vote', attrs.onResetVote, !attrs.ballotClosed),
+			// A running vote is closed or paused first; then it can be wiped and voted again.
+			resetAction(
+				t('console.reset_vote'),
+				'reset:vote',
+				attrs.onResetVote,
+				!(attrs.ballotClosed || attrs.ballotPaused),
+			),
 		);
 	}
 
