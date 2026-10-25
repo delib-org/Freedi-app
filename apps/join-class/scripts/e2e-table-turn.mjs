@@ -203,6 +203,24 @@ try {
 	await screen(noa.page, /אני רוצה לענות/, 'noa may answer');
 	check('2 a tablemate may answer or pass; the stage and the question are on the screen', (await has(noa.page, 'table-answer')) && (await has(noa.page, 'pass-answer')) && /שיחת שולחן/.test(await frameText(noa.page)));
 	await screen(loser.page, /אני רוצה לענות/, 'loser may answer');
+	// E2E_SHOTS_DIR=<dir>: 375x812 screenshots of the talk screens (the question in the top third).
+	const shot = async (page, name) => {
+		if (!process.env.E2E_SHOTS_DIR) return;
+		await page.setViewportSize({ width: 375, height: 812 });
+		await page.screenshot({ path: `${process.env.E2E_SHOTS_DIR}/${name}.png` });
+		await page.setViewportSize({ width: 390, height: 900 });
+	};
+	await shot(noa.page, 't3-state-A');
+	const headingOf = async (page) => (await page.locator('.frame__instruction').first().innerText()).trim();
+	const q1Text = (await db.doc(`statements/${claimed.questionId}`).get()).data().statement;
+	const seen = await noa.page.evaluate(() => {
+		const h = document.querySelector('.frame__instruction');
+		const bg = getComputedStyle(document.querySelector('.frame')).backgroundColor;
+		const r = h.getBoundingClientRect();
+		return { same: getComputedStyle(h).color === bg, top: r.top, h: r.height, vh: innerHeight };
+	});
+	check('2 the question is readable (not the frame colour) and fills the top third', !seen.same && seen.h >= seen.vh * 0.33 - 1, JSON.stringify(seen));
+	check('2 the h1 of every talk screen is the chosen question', (await headingOf(noa.page)) === q1Text && (await headingOf(winner.page)) === q1Text, q1Text);
 	check('2 the loser sees no error', (await count(loser.page, '.c3-error')) === 0);
 	check('2 a forged answer by the asker is refused (others-first)', (await callStep(winner.uid, { action: 'claimSpeaker' })).reason === 'others-first');
 
@@ -214,6 +232,7 @@ try {
 	check('3 the answerer sees "your minute", the clock and Finish', (await count(answerer.page, '[role=timer]')) === 1 && (await has(answerer.page, 'table-finish')) && (await isDown(answerer.page)));
 	check('3 Finish is drawn off for the first second', await answerer.page.locator(tid('table-finish')).isDisabled());
 	await screen(winner.page, /עונה/, 'others see who answers');
+	await shot(loser.page, 't3-state-L');
 	check('3 the others see the same clock and the name', (await count(winner.page, '[role=timer]')) === 1 && (await count(loser.page, '[role=timer]')) === 1 && /Noa.*עונה|עונה/.test(await textOf(loser.page, tid('answering'))), await textOf(loser.page, tid('answering')));
 	check('3 nobody else has a button during a minute', !(await has(loser.page, 'table-answer')) && !(await has(winner.page, 'table-answer')));
 	check('3 a second tap on the floor is refused (floor-taken)', (await callStep(loser.uid, { action: 'claimSpeaker' })).reason === 'floor-taken');
@@ -263,6 +282,7 @@ try {
 	check('6 the question is this table\'s own', ownDoc.exists && ownDoc.data().classTable?.tableId === tableId && ownDoc.data().statement === 'מי מחליט מה מצחיק?');
 	await screen(third.page, /אני רוצה לענות/, 'third may answer');
 	await screen(second.page, /תנו לאחרים לענות קודם/, 'second waits');
+	check('6 the own question is the h1 on the tablemate phone and on the asker phone', (await headingOf(third.page)) === 'מי מחליט מה מצחיק?' && (await headingOf(second.page)) === 'מי מחליט מה מצחיק?', await headingOf(third.page));
 	await tpage.waitForFunction(() => /עוד לא ענו/.test(document.querySelector('.table-card')?.textContent ?? ''), null, { timeout: TIMEOUT });
 	check('9 the card names who has not answered yet', /עוד לא ענו/.test(await cardText()), await cardText());
 

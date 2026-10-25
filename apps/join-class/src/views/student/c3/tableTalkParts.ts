@@ -4,6 +4,8 @@ import { t } from '@/lib/i18n';
 import { getGuidingQuestions } from '@/lib/lesson';
 import { classTableStep } from '@/lib/classroom/api';
 import { createTableQuestion } from '@/lib/classroom/c3Data';
+import { questionTextFrom } from '@/lib/classroom/questionLookup';
+import { getFetchedQuestionTexts, requestQuestionText } from '@/lib/classroom/questionText';
 import { SPEAK_MS, Countdown, msLeft } from './Countdown';
 import { isRaceRefusal, maxTurns, refusalReason } from '@/lib/classroom/turnMoment';
 import { passedAnswer, tableTalkState, type TableTalkState } from '@/lib/classroom/tableTalkState';
@@ -252,13 +254,20 @@ interface Screen {
 	down: boolean;
 	/** The h1: the question at talk states, the status at pick/done. */
 	heading: string;
+	/** The heading is the chosen question: drawn big, in the top third. */
+	questionHeading?: boolean;
 }
 
 function talkScreen(ctx: FlowCtx, state: TableTalkState, question: string): Screen {
 	const { table, uid } = ctx;
 	const first = wasFirstLine(ctx);
 	const firstNote = first ? m('p.tt__quiet', { 'data-testid': 'was-first' }, first) : null;
-	const base = { heading: question, down: true, action: null as m.Children };
+	const base = {
+		heading: question,
+		questionHeading: true,
+		down: true,
+		action: null as m.Children,
+	};
 	switch (state) {
 		case 'S': {
 			const status = t('turn.answer_mine');
@@ -366,7 +375,12 @@ export function tableTalkParts(ctx: FlowCtx): FlowParts {
 	}
 	const teacher = pickQuestions(ctx).filter((q) => !q.own);
 	const teacherUsedUp = teacher.every((q) => q.used);
-	const question = questions.find((q) => q.statementId === table.questionId)?.statement ?? '';
+	let question = questionTextFrom(questions, getFetchedQuestionTexts(), table.questionId);
+	if (question === null) {
+		// Not in the live list (yet): read that one statement; the heading stays empty meanwhile.
+		if (table.questionId) requestQuestionText(table.questionId);
+		question = '';
+	}
 	let screen: Screen;
 	if (state === 'D') {
 		const status = t('turn.wait_others');
@@ -386,6 +400,7 @@ export function tableTalkParts(ctx: FlowCtx): FlowParts {
 		status: screen.status,
 		stateKey: `${state}:${table.turn}`,
 		instruction: screen.heading,
+		questionHeading: screen.questionHeading,
 		body: m('.tt', { key: `${state}:${table.turn}` }, screen.body),
 		action: screen.action
 			? m('.tt__footer', { key: `${state}:${table.turn}` }, screen.action)

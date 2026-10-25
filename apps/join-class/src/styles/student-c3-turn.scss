@@ -15,7 +15,7 @@
     animation: none;
   }
 
-  // The big thing of a state without a clock: centred in the free space.
+  // The status line under the question: smaller than the question (frame__instruction--question).
   &__status {
     margin: 0;
     font-size: var(--font-size-xl);
@@ -24,8 +24,8 @@
     text-align: center;
 
     &--big {
-      margin-block: var(--space-xl);
-      font-size: var(--font-size-2xl, var(--font-size-xl));
+      margin-block: var(--space-lg);
+      font-size: var(--font-size-xl);
     }
   }
 
