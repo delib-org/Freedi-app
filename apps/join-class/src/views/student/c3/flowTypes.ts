@@ -57,8 +57,6 @@ export class FlowState {
 /** What the shared frame needs from the screen of one flow (Table talk or Proposals). */
 export interface FlowParts {
 	headerLine: string;
-	/** Table talk: the stage name above the header line. */
-	stageName?: string;
 	/** Table talk: the state's status line for the screen reader's live region, and the state id. */
 	status?: string;
 	stateKey?: string;

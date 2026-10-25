@@ -36,7 +36,11 @@
     gap: 0;
   }
 
+  // The stage name: one line, first on every student screen. An h2 (the
+  // instruction is the h1); colour is set here so a global h2 rule never wins.
   &__stage {
+    margin: 0;
+    line-height: 1.3;
     color: var(--ink);
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-semibold, 600);
