@@ -181,7 +181,6 @@ const nl: Record<string, string> = {
 	'turn.action_failed': 'Dat lukte niet. Probeer opnieuw',
 	'turn.finish_talk': 'Klaar, schrijven',
 	'turn.to_rate': 'Verstuurd, we beoordelen',
-	'turn.table_time': 'Tijd van de tafel',
 	'turn.time_over': 'De tijd is om',
 	'turn.timer_label': 'Nog {{seconds}} seconden',
 	'turn.instr_write_proposals': 'Schrijf',

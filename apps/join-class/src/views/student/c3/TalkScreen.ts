@@ -1,17 +1,22 @@
 import m from 'mithril';
+import { speakerTimeOver } from '@freedi/shared-types';
 import type { ClassTable } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import { Countdown, MS_PER_SECOND, SPEAK_MS, realMsLeft } from './Countdown';
+import { serverNow } from '@/lib/classroom/serverClock';
+import { Countdown, SPEAK_MS } from './Countdown';
 
 export interface TalkScreenAttrs {
 	table: ClassTable;
 	/** The prompt: the challenge (Proposals). */
 	prompt: string;
-}
-
-class TalkState {
-	endsAt: number | undefined;
-	totalMs = SPEAK_MS;
+	uid: string;
+	/** The name shown for the tablemate who holds the floor. */
+	speakerName: string;
+	busy: boolean;
+	/** "I want to answer": take a fresh minute. */
+	onClaim: () => void;
+	/** "I'm done": end my own minute early. */
+	onFinish: () => void;
 }
 
 /** "סיימנו, לכתוב": every phone at Proposals talk has it; it only switches this phone's sub-step. */
@@ -30,31 +35,47 @@ export function talkFinishAction(busy: boolean, onGo: () => void): m.Children {
 
 /**
  * The content of the Proposals talk screen (screens down), drawn inside the
- * inverted StudentFrame: the prompt, "Table time" and the big Countdown. Table
- * talk has its own screens (tableTalkParts.ts), one per state.
+ * inverted StudentFrame: the prompt, then a fresh minute for whoever volunteers
+ * (the same speaker mechanics as Table talk, IA 17.14). Nobody speaking: an idle
+ * 1:00 and "I want to answer". Table talk has its own screens (tableTalkParts.ts).
  */
 export const TalkScreen: m.ClassComponent<TalkScreenAttrs> = {
-	oninit(vnode) {
-		(vnode.state as { self?: TalkState }).self = new TalkState();
-	},
-
 	view(vnode) {
-		const self = (vnode.state as { self?: TalkState }).self as TalkState;
-		const { table, prompt } = vnode.attrs;
-		const endsAt = table.speakerEndsAt;
-		if (endsAt !== self.endsAt) {
-			// The first look at a new minute tells how long it is (a proposals timer may be longer).
-			self.endsAt = endsAt;
-			self.totalMs =
-				endsAt === undefined
-					? SPEAK_MS
-					: Math.max(SPEAK_MS, Math.ceil(realMsLeft(endsAt) / MS_PER_SECOND) * MS_PER_SECOND);
-		}
+		const { table, prompt, uid, speakerName, busy, onClaim, onFinish } = vnode.attrs;
+		const speaking = !!table.speakerUid && !speakerTimeOver(table, serverNow());
+		const mine = speaking && table.speakerUid === uid;
 
 		return m('.talk', [
 			m('p.talk__prompt', { dir: 'auto' }, prompt),
-			m('p.talk__speaker', t('turn.table_time')),
-			m(Countdown, { endsAt, totalMs: self.totalMs }),
+			m('.tt__clock', [
+				speaking
+					? m(
+							'p.tt__status',
+							{ 'data-testid': 'speaking' },
+							mine ? t('turn.answer_mine') : t('turn.answering', { name: speakerName }),
+						)
+					: null,
+				m(Countdown, {
+					endsAt: speaking ? table.speakerEndsAt : undefined,
+					totalMs: SPEAK_MS,
+					quietEnd: true,
+				}),
+				mine ? speakerButton('table-finish', t('turn.finish'), busy, onFinish) : null,
+				speaking ? null : speakerButton('table-speak', t('turn.answer'), busy, onClaim),
+			]),
 		]);
 	},
 };
+
+function speakerButton(
+	testId: string,
+	label: string,
+	busy: boolean,
+	onclick: () => void,
+): m.Children {
+	return m(
+		'button.btn.btn--secondary.tt__finish',
+		{ type: 'button', 'data-testid': testId, disabled: busy, onclick },
+		label,
+	);
+}

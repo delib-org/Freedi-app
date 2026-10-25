@@ -181,7 +181,6 @@ const he: Record<string, string> = {
 	'turn.action_failed': 'זה לא עבד. לנסות שוב',
 	'turn.finish_talk': 'סיימנו, לכתוב',
 	'turn.to_rate': 'שלחנו, לדרג',
-	'turn.table_time': 'זמן השולחן',
 	'turn.time_over': 'הזמן נגמר',
 	'turn.timer_label': 'נותרו {{seconds}} שניות',
 	'turn.instr_write_proposals': 'כותבים',

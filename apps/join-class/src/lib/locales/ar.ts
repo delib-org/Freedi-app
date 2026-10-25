@@ -182,7 +182,6 @@ const ar: Record<string, string> = {
 	'turn.action_failed': 'لم ينجح ذلك. حاولوا مرة أخرى',
 	'turn.finish_talk': 'انتهينا، لنكتب',
 	'turn.to_rate': 'أرسلنا، لنقيّم',
-	'turn.table_time': 'وقت الطاولة',
 	'turn.time_over': 'انتهى الوقت',
 	'turn.timer_label': 'متبقٍ {{seconds}} ثانية',
 	'turn.instr_write_proposals': 'اكتبوا',

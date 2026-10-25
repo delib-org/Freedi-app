@@ -186,7 +186,6 @@ const en: Record<string, string> = {
 	'turn.action_failed': 'That did not work. Try again',
 	'turn.finish_talk': 'We are done, write',
 	'turn.to_rate': "We sent, let's rate",
-	'turn.table_time': 'Table time',
 	'turn.time_over': 'Time is up',
 	'turn.timer_label': '{{seconds}} seconds left',
 	'turn.instr_write_proposals': 'Write',

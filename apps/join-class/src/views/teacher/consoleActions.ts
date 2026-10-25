@@ -22,8 +22,9 @@ import {
 import type { DropTarget } from '@/lib/classroom/dragReducer';
 import { Collections } from '@freedi/shared-types';
 import { db, doc, updateDoc } from '@/lib/firebase';
-import { setLessonStep } from '@/lib/lesson';
-import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
+import { getLessonStep, setLessonStep } from '@/lib/lesson';
+import { LESSON_STEP_KEYS, isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
+import { clearsTableClocksOnEnter } from '@/lib/classroom/consoleHelpers';
 import { getMainStatement, setQuestionSetting } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { act, consoleState } from './consoleState';
@@ -56,7 +57,21 @@ const PLENUM_PATCH = {
 } as Partial<Statement>;
 
 export function goToStep(mainId: string, index: number): Promise<boolean> {
-	return guardedAct(`step:${index}`, t('console.act_step'), () => setLessonStep(mainId, index));
+	return guardedAct(`step:${index}`, t('console.act_step'), async () => {
+		const from = getLessonStep().index;
+		await setLessonStep(mainId, index);
+		if (!clearsTableClocksOnEnter(from, index, LESSON_STEP_KEYS)) return;
+		// The step has moved; a failure here only leaves the old clock on the tables, so it must not undo the move.
+		try {
+			await classAllTablesTo({ mainId, step: 'talk' });
+		} catch (error) {
+			console.error(
+				'[Console] clearing the table clocks failed',
+				{ operation: 'goToStep', mainId },
+				error,
+			);
+		}
+	});
 }
 
 /**

@@ -173,7 +173,6 @@ const fa: Record<string, string> = {
 	'turn.action_failed': 'انجام نشد. دوباره تلاش کنید',
 	'turn.finish_talk': 'تمام شد، بنویسیم',
 	'turn.to_rate': 'فرستادیم، امتیاز بدهیم',
-	'turn.table_time': 'زمان میز',
 	'turn.time_over': 'زمان تمام شد',
 	'turn.timer_label': '{{seconds}} ثانیه باقی مانده',
 	'turn.instr_write_proposals': 'بنویسید',

@@ -184,7 +184,6 @@ const de: Record<string, string> = {
 	'turn.action_failed': 'Das hat nicht geklappt. Nochmal versuchen',
 	'turn.finish_talk': 'Fertig, schreiben',
 	'turn.to_rate': 'Gesendet, wir bewerten',
-	'turn.table_time': 'Tischzeit',
 	'turn.time_over': 'Die Zeit ist um',
 	'turn.timer_label': 'Noch {{seconds}} Sekunden',
 	'turn.instr_write_proposals': 'Schreibt',

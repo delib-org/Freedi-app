@@ -144,7 +144,28 @@ export function answeredUids(table: ClassTable, now: number): Set<string> {
 	return done;
 }
 
-function assertMayClaimSpeaker(table: ClassTable, actorUid: string, now: number): void {
+/**
+ * Proposals / talk (Tal, 2026-10-25): every speaker gets a fresh minute, any
+ * number of times, with no question on the table. Only the floor is guarded.
+ */
+function assertMayClaimProposalsSpeaker(table: ClassTable, actorUid: string, now: number): void {
+	assertSeated(table, actorUid);
+	if (!speakerTimeOver(table, now)) {
+		throw new ClassroomError('failed-precondition', 'Someone is speaking', 'floor-taken');
+	}
+}
+
+function assertMayClaimSpeaker(
+	table: ClassTable,
+	actorUid: string,
+	now: number,
+	lessonStep: LessonStepKey | null | undefined,
+): void {
+	if (lessonStep === 'proposals') {
+		assertMayClaimProposalsSpeaker(table, actorUid, now);
+
+		return;
+	}
 	assertSeated(table, actorUid);
 	if (!table.questionId) {
 		throw new ClassroomError('failed-precondition', 'No question is being answered');
@@ -240,7 +261,7 @@ export function assertMayAct(
 
 			return;
 		case 'claimSpeaker':
-			assertMayClaimSpeaker(table, actorUid, now);
+			assertMayClaimSpeaker(table, actorUid, now, lessonStep);
 
 			return;
 		case 'finishSpeaking':
@@ -301,11 +322,19 @@ export function assertMayAct(
 	throw new ClassroomError('permission-denied', "Only the table's asker or a teacher can do this");
 }
 
+/** The speaker minute at Proposals/talk is a per-phone sub-step: it runs whatever step the table doc is at. */
+const PROPOSALS_ANY_STEP: ReadonlySet<ClassTableAction['action']> = new Set([
+	'claimSpeaker',
+	'finishSpeaking',
+]);
+
 export function assertFromStep(
 	role: ActorRole | null,
 	action: ClassTableAction,
 	table: ClassTable,
+	lessonStep?: LessonStepKey | null,
 ): void {
+	if (lessonStep === 'proposals' && PROPOSALS_ANY_STEP.has(action.action)) return;
 	if (role === 'admin' && ADMIN_FROM_ANY_STEP.has(action.action)) return;
 	if (!ALLOWED_FROM[action.action].includes(table.step)) {
 		throw new ClassroomError(

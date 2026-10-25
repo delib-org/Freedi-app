@@ -182,7 +182,6 @@ const es: Record<string, string> = {
 	'turn.action_failed': 'No ha funcionado. Intentad de nuevo',
 	'turn.finish_talk': 'Hemos terminado, escribir',
 	'turn.to_rate': 'Enviamos, a valorar',
-	'turn.table_time': 'Tiempo de la mesa',
 	'turn.time_over': 'Se acabó el tiempo',
 	'turn.timer_label': 'Quedan {{seconds}} segundos',
 	'turn.instr_write_proposals': 'Escribid',
