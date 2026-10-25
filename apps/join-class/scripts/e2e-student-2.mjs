@@ -103,7 +103,7 @@ try {
 			memberUids: [a.uid, b.uid],
 			noDeviceMembers: [],
 			step: 'pick',
-			askerUid: a.uid,
+			askerUid: null,
 			turn: 1,
 			writingMode: 'each',
 			writingLocked: false,
@@ -113,15 +113,15 @@ try {
 		},
 	);
 
-	// 1. pick (asker) --------------------------------------------------------
-	await a.page.waitForSelector('[data-testid=asker-mark]', { timeout: TIMEOUT });
-	check('asker line shown on the asker device only', (await b.page.locator('[data-testid=asker-mark]').count()) === 0);
+	// 1. pick (every student who has not asked) --------------------------------
+	await a.page.waitForSelector('[data-testid=table-claim]', { timeout: TIMEOUT });
+	check('no asker line and no strip at Table talk', (await a.page.locator('[data-testid=asker-mark], .substeps').count()) === 0);
 	const picks = a.page.locator('[data-testid=table-pick-question]');
 	await picks.first().waitFor({ timeout: TIMEOUT });
 	check('pick list shows the teacher\'s questions', (await picks.count()) >= 2, `${await picks.count()}`);
-	check('non-asker cannot choose', await b.page.locator('[data-testid=table-pick-question]').first().isDisabled());
+	check('a tablemate sees the same list and may choose too', !(await b.page.locator('[data-testid=table-pick-question]').first().isDisabled()));
 	await picks.first().click();
-	await a.page.click('[data-testid=table-start]');
+	await a.page.click('[data-testid=table-claim]');
 	if (ENGINE) {
 		// the real callable answers: the table leaves "pick" (or, if it refuses, the inline error shows)
 		await until(async () => {
@@ -138,7 +138,10 @@ try {
 	// 2. talk (screens down) ---------------------------------------------------
 	await setTable({
 		step: 'talk',
+		askerUid: a.uid,
+		askedUids: [a.uid],
 		questionId: guidingIds[0],
+		usedQuestionIds: [guidingIds[0]],
 		speakerUid: b.uid,
 		speakerEndsAt: Date.now() + 34_000,
 		spokenUids: [],
@@ -153,17 +156,10 @@ try {
 	const size = await a.page.locator('.count__num').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
 	check('digits are 96px or larger', size >= 96, `${size}px`);
 	check('nobody has "we are done, write" at Table talk', (await a.page.locator('[data-testid=table-to-write]').count()) === 0 && (await b.page.locator('[data-testid=table-to-write]').count()) === 0);
-	check('speaker chips for both tablemates', (await a.page.locator('[data-testid=table-next-speaker]').count()) === 2);
-	check('mate chips disabled during the minute', await b.page.locator('[data-testid=table-next-speaker]').first().isDisabled());
+	check('the speaker has Finish, the asker has no button during a minute', (await b.page.locator('[data-testid=table-finish]').count()) === 1 && (await a.page.locator('[data-testid=table-answer]').count()) === 0);
 	await setTable({ speakerEndsAt: Date.now() - 1000 });
-	await a.page.waitForSelector('[data-testid=time-over]', { timeout: TIMEOUT });
-	check('"time is up" replaces the digits', (await a.page.locator('[role=timer]').count()) === 0);
-	await b.page.waitForFunction(
-		() => !document.querySelector('[data-testid=table-next-speaker]')?.disabled,
-		null,
-		{ timeout: TIMEOUT },
-	);
-	check('mate may pick the next speaker once the minute is over', true);
+	await a.page.waitForSelector('[data-testid=table-answer]', { timeout: TIMEOUT });
+	check('no "time is up" words: the screen moves on, the asker may answer now', (await a.page.locator('[data-testid=time-over]').count()) === 0);
 
 	// 3. write (Proposals: Table talk has no write or rate screen) ---------------------------
 	await db.doc(`statements/${mainId}`).update({ 'statementSettings.lessonPlan.stepIndex': 5 });

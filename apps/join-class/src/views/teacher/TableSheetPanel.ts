@@ -12,9 +12,9 @@ import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
 import { getServerOffset, remainingMs, serverNow } from '@/lib/classroom/serverClock';
 import { moveStudent } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
-import { memberMark, type TableMode } from '@/lib/classroom/tableTurnConsole';
+import { answerMark, askMark, type TableMode } from '@/lib/classroom/tableTurnConsole';
 import { noDeviceForm, tableModeOf, turnLine } from './TableCard';
-import { stepButtons, turnButtons } from './tableSheetTurn';
+import { noDeviceButtons, stepButtons, turnButtons } from './tableSheetTurn';
 import { targetName } from './dragController';
 
 /**
@@ -51,12 +51,14 @@ function memberRow(
 	const name = student?.name ?? uid.slice(0, 4);
 	const camp = student?.camp ?? null;
 	const now = serverNow();
-	const turnMark = mode === 'tableTalk' ? memberMark(table, uid, now) : '';
+	const ask = mode === 'tableTalk' ? askMark(table, uid, now) : '';
+	const answer = mode === 'tableTalk' ? answerMark(table, uid, now) : '';
 
 	return m('li.table-sheet__member', { key: uid }, [
 		m('span.table-sheet__member-mark', { 'aria-hidden': 'true' }, camp ? CAMP_MARK[camp] : '○'),
+		ask ? m('span.table-sheet__member-turn', { 'aria-hidden': 'true' }, ask) : null,
 		m('span.table-sheet__member-name', name),
-		turnMark ? m('span.table-sheet__member-turn', { 'aria-hidden': 'true' }, turnMark) : null,
+		answer ? m('span.table-sheet__member-turn', { 'aria-hidden': 'true' }, answer) : null,
 		turnButtons(table, uid, name, mode, now),
 		m('span.table-sheet__member-side', t(camp ? `console.side_${camp}` : 'console.side_none')),
 		m(
@@ -100,7 +102,10 @@ function currentLine(attrs: TableSheetPanelAttrs, table: ClassTable): m.Children
 					totalMs: SPEAK_SECONDS * MS_PER_SECOND,
 				});
 	const timer = timerLine(table, remaining, SPEAK_SECONDS * MS_PER_SECOND);
-	const speakerName = (uid: string): string => students.get(uid)?.name ?? uid.slice(0, 4);
+	const speakerName = (uid: string): string =>
+		table.noDeviceMembers.find((member) => member.id === uid)?.name ??
+		students.get(uid)?.name ??
+		uid.slice(0, 4);
 
 	return [
 		m('p.table-sheet__now', [
@@ -111,12 +116,9 @@ function currentLine(attrs: TableSheetPanelAttrs, table: ClassTable): m.Children
 		timer.kind === 'running'
 			? m(
 					'p.table-sheet__timer',
-					t('console.speaker_line', {
-						name: speakerName(timer.speakerUid),
-						time: formatSpeakerTime(timer.ms),
-					}),
+					`${t('turn.answering', { name: speakerName(timer.speakerUid) })} · ${formatSpeakerTime(timer.ms)}`,
 				)
-			: timer.kind === 'over'
+			: timer.kind === 'over' && !attrs.tableTalk
 				? m('p.table-sheet__timer.table-sheet__timer--over', t('console.time_over'))
 				: null,
 		table.askerUid
@@ -178,6 +180,7 @@ export const TableSheetPanel: m.Component<TableSheetPanelAttrs> = {
 									table.noDeviceMembers.map((nd) =>
 										m('li.table-sheet__member.table-sheet__member--nd', { key: `nd:${nd.id}` }, [
 											m('span.table-sheet__member-name', nd.name),
+											noDeviceButtons(table, nd.id, nd.name, tableModeOf(attrs), serverNow()),
 											m('span.table-sheet__member-side', t('console.no_device')),
 										]),
 									),

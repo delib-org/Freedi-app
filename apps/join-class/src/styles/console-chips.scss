@@ -62,6 +62,25 @@
   }
 }
 
+// Table talk marks: before the name = asking, after it = answering. A glyph, a position and a
+// full aria-label carry the meaning; the chip outline and fill only reinforce it.
+.member-chip__turn {
+  font-weight: var(--font-weight-bold);
+}
+
+.member-chip--asking {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+.member-chip--passed-ask {
+  border-style: dashed;
+}
+
+.member-chip--answering {
+  background: var(--teal-50);
+}
+
 .member-chip__tag {
   font-size: var(--font-size-xs);
   color: var(--ink-muted);

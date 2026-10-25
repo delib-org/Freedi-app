@@ -6,7 +6,7 @@ import type { FlowCtx, FlowParts } from './flowTypes';
 import { rateBody } from './RateScreen';
 import { RatedList } from './RatedList';
 import { Sheet } from './Sheet';
-import { TalkScreen, isTimeUp, talkFinishAction } from './TalkScreen';
+import { TalkScreen, talkFinishAction } from './TalkScreen';
 import { WritePanel } from './WritePanel';
 
 /**
@@ -16,8 +16,7 @@ import { WritePanel } from './WritePanel';
  */
 
 export function proposalsParts(ctx: FlowCtx): FlowParts {
-	const { main, kind, table, uid, mates, self, feed, step, official, challenge, now, someone } =
-		ctx;
+	const { main, kind, table, uid, mates, self, feed, step, official, challenge, someone } = ctx;
 	const challengeId = challenge?.statementId ?? null;
 	const ballotFrozen = !!challenge?.statementSettings?.ballot;
 	const plenum = challenge?.statementSettings?.roundPhase === 'improve';
@@ -47,15 +46,7 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 	let body: m.Children;
 	let action: m.Children = null;
 	if (step === 'talk') {
-		body = m(TalkScreen, {
-			kind,
-			table,
-			uid,
-			mates,
-			prompt: challenge?.statement ?? '',
-			busy: self.busy,
-			onAction: ctx.act,
-		});
+		body = m(TalkScreen, { table, prompt: challenge?.statement ?? '' });
 		action = talkFinishAction(kind, table, uid, self.busy, ctx.act);
 	} else if (step === 'write') {
 		body = writePanel();
@@ -86,11 +77,7 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 			onError,
 		});
 	}
-	const line = instructionFor(
-		official,
-		{ kind, table, uid, mates, timeUp: isTimeUp(table), now },
-		someone,
-	);
+	const line = instructionFor(official);
 	const asker = mates.find((x) => x.uid === table.askerUid);
 	const classButton = m(
 		'button.btn.btn--secondary.btn--small.flow__class',

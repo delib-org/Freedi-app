@@ -1,16 +1,17 @@
-import { notAskedUids, type ClassTable } from '@freedi/shared-types';
-import { claimMoment, talkIsOver } from './turnMoment';
+import { choosing, tableDone, type ClassTable } from '@freedi/shared-types';
+import { hasAnswered, passedAnswer } from './tableTalkState';
 
 /**
- * Pure rules of the teacher's table card and sheet at Table talk (UX 16.E,
- * 16.F): the one next-step button, the second line (who the table waits for),
- * and the marks on member chips. No Firebase, no DOM. `now` is the server clock.
+ * Pure rules of the teacher's table card and sheet at Table talk (UX 16.L rev
+ * 3): the one quick button, the card's second row (who the table waits for and
+ * for how long), and the two marks on a member chip (asking, answering). No
+ * Firebase, no DOM. `now` is the server clock.
  */
 
 /** Which family of steps the board is showing. */
 export type TableMode = 'tableTalk' | 'proposals' | 'plenum';
 
-export type QuickKind = 'talk' | 'write' | 'rate' | 'turn';
+export type QuickKind = 'talk' | 'write' | 'rate' | 'turn' | 'finish';
 
 export interface QuickAction {
 	kind: QuickKind;
@@ -24,13 +25,18 @@ export const QUICK_KEYS: Record<QuickKind, string> = {
 	write: 'console.quick_write',
 	rate: 'console.quick_rate',
 	turn: 'console.quick_turn',
+	finish: 'console.finish_minute',
 };
 
+/** A minute is running (somebody holds the floor). */
+export function minuteRunning(table: ClassTable, now: number): boolean {
+	return !!table.speakerUid && table.speakerEndsAt !== undefined && table.speakerEndsAt > now;
+}
+
 /**
- * The ONE next-step button of a table card. Table talk: "לדבר" once the asker
- * chose a question; "להתחיל סבב n" (opens a volunteer moment) when everyone has
- * spoken; nothing else, nobody writes or rates there. Proposals walk talk ->
- * write -> rate; the plenum only rates.
+ * The ONE quick button of a table card. Table talk: "end the minute" while one
+ * runs, nothing else (students start the next turn themselves). Proposals walk
+ * talk -> write -> rate; the plenum only rates.
  */
 export function quickActionFor(
 	table: ClassTable,
@@ -45,18 +51,21 @@ export function quickActionFor(
 
 		return null;
 	}
-	const { phase } = claimMoment(table, '', now);
-	if (phase === 'a') return table.questionId ? { kind: 'talk' } : null;
 
-	return phase === 'v2' ? { kind: 'turn', n: table.turn + 1 } : null;
+	return minuteRunning(table, now) ? { kind: 'finish' } : null;
 }
 
 export interface StatusLine {
 	key: string;
 	params?: Record<string, string | number>;
-	/** uids to name in `params.names` / `params.name`, in order. */
+	/** uids to name in `params.names`, in order. */
 	nameUids?: string[];
+	/** Time since the table last changed (a stuck table shows how long). */
+	elapsedMs?: number;
 }
+
+/** From this long on a waiting table is drawn as stuck (a clock glyph, not colour alone). */
+export const STUCK_AFTER_MS = 120_000;
 
 /** Members who asked, and members who passed on asking (leavers are not counted). */
 export function askedPassedCounts(table: ClassTable): { a: number; p: number } {
@@ -70,46 +79,65 @@ export function askedPassedCounts(table: ClassTable): { a: number; p: number } {
 	};
 }
 
+/** Milliseconds since the table last changed: its doc, or the end of the last minute. */
+export function elapsedSinceChange(table: ClassTable, now: number): number {
+	return Math.max(0, now - Math.max(table.updatedAt, table.speakerEndsAt ?? 0));
+}
+
+/** Device members who have not answered or passed this question yet, in seating order. */
+export function notAnsweredUids(table: ClassTable, now: number): string[] {
+	return table.memberUids.filter((uid) => !hasAnswered(table, uid, now));
+}
+
 /**
- * The card's second line at Table talk: waiting for a volunteer, for the asker,
- * who has not asked, or "asked n, passed p". null while someone is speaking (the
- * timer rows say it) and outside Table talk.
+ * The card's second row at Table talk when no minute runs: waiting for someone
+ * to start, who has not answered, or "asked n, passed p". null while a minute
+ * runs (the timer row says it) and outside Table talk.
  */
 export function statusLine(table: ClassTable, mode: TableMode, now: number): StatusLine | null {
 	if (mode !== 'tableTalk') return null;
-	const { phase } = claimMoment(table, '', now);
-	const waiting: StatusLine = { key: 'console.waiting_for', nameUids: [table.askerUid ?? ''] };
-	switch (phase) {
-		case 'v1':
-			return { key: 'console.waiting_volunteer' };
-		case 'a':
-			return waiting;
-		case 'talk':
-			return table.speakerUid || !table.askerUid ? null : waiting;
-		case 'v2': {
-			const left = notAskedUids(table);
+	if (tableDone(table, now)) {
+		const { a, p } = askedPassedCounts(table);
 
-			return left.length === 1
-				? { key: 'console.waiting_for', nameUids: left }
-				: { key: 'console.not_asked', nameUids: left };
-		}
-		default: {
-			const { a, p } = askedPassedCounts(table);
-
-			return { key: 'console.asked_passed', params: { a, p } };
-		}
+		return { key: 'console.asked_passed', params: { a, p } };
 	}
+	if (minuteRunning(table, now)) return null;
+	const elapsedMs = elapsedSinceChange(table, now);
+	if (choosing(table, now) || table.step === 'write' || table.step === 'rate') {
+		return { key: 'console.waiting_start', elapsedMs };
+	}
+
+	return { key: 'console.not_answered', nameUids: notAnsweredUids(table, now), elapsedMs };
 }
 
-/** Mark on a member chip: asked (check), asking now (question mark), passed (dash) or none. */
-export function memberMark(table: ClassTable, uid: string, now: number): '✓' | '?' | '–' | '' {
-	if (table.askerUid === uid) return table.step !== 'pick' && talkIsOver(table, now) ? '✓' : '?';
-	if ((table.askedUids ?? []).includes(uid)) return '✓';
+/** The asking mark on a member chip: asked (check), asking now (question mark), passed asking (dash). */
+export type AskMark = '✓' | '?' | '–' | '';
+/** The answering mark: answered (check), answering now (dot), passed this question (dash). */
+export type AnswerMark = '✓' | '●' | '–' | '';
+
+/** True while a question is on the table and not everyone has answered (the turn is running). */
+function turnRunning(table: ClassTable, now: number): boolean {
+	return (
+		table.step === 'talk' && !!table.questionId && !choosing(table, now) && !tableDone(table, now)
+	);
+}
+
+export function askMark(table: ClassTable, uid: string, now: number): AskMark {
+	if (table.askerUid === uid && turnRunning(table, now)) return '?';
+	if ((table.askedUids ?? []).includes(uid) || table.askerUid === uid) return '✓';
 
 	return (table.passedAskingUids ?? []).includes(uid) ? '–' : '';
 }
 
+export function answerMark(table: ClassTable, uid: string, now: number): AnswerMark {
+	if (table.step !== 'talk' || !table.questionId || choosing(table, now)) return '';
+	if (table.speakerUid === uid && minuteRunning(table, now)) return '●';
+	if (passedAnswer(table, uid)) return '–';
+
+	return hasAnswered(table, uid, now) ? '✓' : '';
+}
+
 /** Every device member asked or passed and the last talk is over: the card's "now" says so. */
 export function tableIsDone(table: ClassTable, mode: TableMode, now: number): boolean {
-	return mode === 'tableTalk' && claimMoment(table, '', now).phase === 'done';
+	return mode === 'tableTalk' && tableDone(table, now);
 }

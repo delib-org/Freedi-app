@@ -9,7 +9,7 @@ import {
 
 /**
  * Pure rules of the student table screens (lane C3): countdown text, the
- * sub-step strip, speaker chips, the rate list order, the plenum order and the
+ * Proposals sub-step strip, the rate list order, the plenum order and the
  * support bars. No Firebase, no DOM: tested in plain vitest.
  */
 
@@ -71,20 +71,19 @@ export function idleCountdownText(totalSeconds: number): string {
 
 export type FlowKind = 'tableTalk' | 'proposals';
 
-export const TABLE_SUBSTEPS: Record<FlowKind, readonly TableStep[]> = {
-	tableTalk: ['pick', 'talk'],
+export const TABLE_SUBSTEPS: Record<'proposals', readonly TableStep[]> = {
 	proposals: ['talk', 'write', 'rate'],
 };
 
 /**
- * The table's official step as a screen of this flow. Proposals has no pick; Table
- * talk has no write or rate, so a table left there before v2 is drawn as the end of talk.
+ * The table's official step as a screen of Proposals (no pick: a table that
+ * still sits at pick is drawn at talk). Table talk has no sub-steps: one screen per
+ * state (tableTalkState.ts).
  */
-export function officialSubstep(kind: FlowKind, table: ClassTable | null): TableStep {
-	const step = table?.step ?? (kind === 'proposals' ? 'talk' : 'pick');
-	if (kind === 'tableTalk' && (step === 'write' || step === 'rate')) return 'talk';
+export function officialSubstep(table: ClassTable | null): TableStep {
+	const step = table?.step ?? 'talk';
 
-	return TABLE_SUBSTEPS[kind].includes(step) ? step : TABLE_SUBSTEPS[kind][0];
+	return TABLE_SUBSTEPS.proposals.includes(step) ? step : TABLE_SUBSTEPS.proposals[0];
 }
 
 export interface SubstepOverride {
@@ -104,11 +103,10 @@ export interface SubstepView {
 
 /** `override` is the student's own pick; it lapses when the table moves on. */
 export function resolveSubstep(
-	kind: FlowKind,
 	table: ClassTable | null,
 	override: SubstepOverride | null,
 ): SubstepView {
-	const official = officialSubstep(kind, table);
+	const official = officialSubstep(table);
 	const turn = table?.turn ?? 0;
 	const live =
 		override !== null && override.officialAtPick === official && override.turnAtPick === turn;
@@ -117,54 +115,11 @@ export function resolveSubstep(
 	return { current, official, detached: current !== official };
 }
 
-// ---- speakers -----------------------------------------------------------------
-
-/** "ויתרתי על הדקה" appears this long after a minute starts: the tap that began it cannot land on it. */
-export const PASS_ARM_MS = 3000;
-
-/** The pass-the-minute control is shown: the minute runs and its first PASS_ARM_MS are over. */
-export function passMinuteArmed(remainingMs: number, totalMs: number): boolean {
-	return remainingMs > 0 && totalMs - remainingMs >= PASS_ARM_MS;
-}
+// ---- mates and finishing talk ---------------------------------------------------
 
 export interface Mate {
 	uid: string;
 	name: string;
-}
-
-export interface SpeakerChip {
-	uid: string;
-	name: string;
-	/** Spoke, or is speaking now (a speaker who passed is `passed`, not `spoken` or `speaking`). */
-	spoken: boolean;
-	speaking: boolean;
-	/** Passed this minute: counts as spoken, drawn "–". */
-	passed: boolean;
-}
-
-export function speakerChips(table: ClassTable, mates: readonly Mate[]): SpeakerChip[] {
-	const passedUids = table.passedSpeakingUids ?? [];
-
-	return mates.map((mate) => {
-		const passed = passedUids.includes(mate.uid);
-		const speaking = mate.uid === table.speakerUid && !passed;
-
-		return {
-			uid: mate.uid,
-			name: mate.name,
-			spoken: !passed && (table.spokenUids.includes(mate.uid) || speaking),
-			speaking,
-			passed,
-		};
-	});
-}
-
-/**
- * The asker always; everyone once the speaker's minute is over; and any
- * tablemate when nobody asks (the asker left: IA 16.7 E8).
- */
-export function canPickNextSpeaker(table: ClassTable, uid: string, timeUp: boolean): boolean {
-	return table.askerUid === uid || table.askerUid === null || (timeUp && !!table.speakerUid);
 }
 
 /**

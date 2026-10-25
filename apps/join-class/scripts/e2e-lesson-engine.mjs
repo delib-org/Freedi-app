@@ -6,8 +6,8 @@
 //
 // data-testid used (all exist in src):
 //   student  side-slider, side-confirm, table-number, table-mates,
-//            table-pick-question, table-start, table-next-speaker, table-to-write,
-//            table-to-rate, table-claim, asker-mark, time-over, proposal-box,
+//            table-pick-question, table-claim, table-answer, table-finish, table-to-write,
+//            table-to-rate, asker-mark (Proposals), proposal-box,
 //            proposal-send, rate-face-1..5,
 //            vote-option, vote-send, support-face-1..5
 //   console  [data-step-key] (aria-current="step" on the current one),
@@ -88,16 +88,6 @@ function tableOf(number) {
 
 async function hasTestId(student, id) {
 	return (await student.page.getByTestId(id).count()) > 0;
-}
-
-/** The one device at `table` that shows the asker mark (and is not `except`, the previous turn's asker). */
-async function askerOf(table, except) {
-	return until(async () => {
-		const askers = [];
-		for (const student of table) if (await hasTestId(student, 'asker-mark')) askers.push(student);
-
-		return askers.length === 1 && askers[0] !== except ? askers[0] : null;
-	}, 'exactly one asker at the table');
 }
 
 async function clearLessonLeftovers({ admin, mid, challengeId }) {
@@ -182,39 +172,36 @@ export const ENGINE_PHASES = [
 		},
 	},
 	{
-		name: 'table 1 runs two turns (a volunteer asks, then another volunteer)',
+		name: 'table 1 runs two turns (a volunteer asks, everyone else answers, then another volunteer)',
 		async run({ teacher, check }) {
 			await teacherForward(teacher, 'tableTalk');
 			const table = tableOf(1);
 			const askers = [];
 			let previous;
 			for (let turn = 1; turn <= TURNS; turn += 1) {
-				// a volunteer: the first tablemate who has not asked taps "אני אשאל" (V1, then V2)
-				const claimer = table.find((s) => s !== previous && !askers.includes(s.index));
-				await (await byId(claimer.page, 'table-claim')).click();
-				const asker = await askerOf(table, previous);
+				// a volunteer: the first tablemate who has not asked picks a question and taps "אני רוצה להתחיל"
+				const asker = table.find((s) => s !== previous && !askers.includes(s.index));
+				await asker.page.locator('[data-testid=table-pick-question]:not([disabled])').first().click({ timeout: TURN_TIMEOUT });
+				await (await byId(asker.page, 'table-claim')).click();
 				previous = asker;
 				askers.push(asker.index);
 				const others = table.filter((s) => s !== asker);
-				check(`turn ${turn}: asker device shows the mark`, await hasTestId(asker, 'asker-mark'));
-				check(`turn ${turn}: non-asker has no start control`, !(await hasTestId(others[0], 'table-start')));
-				await asker.page.locator('[data-testid=table-pick-question]:not([disabled])').first().click({ timeout: TURN_TIMEOUT });
-				await (await byId(asker.page, 'table-start')).click();
-				// talk: everyone speaks, the asker too. The engine counts real seconds (the 20x clock only speeds the
-				// display), so the asker taps each name and passes the last minute to reach "everyone spoke".
-				const allEnabled = () =>
-					asker.page.waitForFunction(
-						() => [...document.querySelectorAll('[data-testid=table-next-speaker]')].every((b) => !b.disabled),
+				check(`turn ${turn}: the asker waits and has no answer control`, !(await hasTestId(asker, 'table-answer')));
+				// everyone else volunteers one by one and finishes early (Finish is off for the first second);
+				// the asker answers once another tablemate did, so the asker is last.
+				for (const speaker of [...others, asker]) {
+					await (await byId(speaker.page, 'table-answer', TURN_TIMEOUT)).click();
+					await speaker.page.waitForFunction(
+						() => {
+							const finish = document.querySelector('[data-testid=table-finish]');
+
+							return finish !== null && !finish.disabled;
+						},
 						null,
 						{ timeout: TURN_TIMEOUT },
 					);
-				for (let seat = 0; seat < table.length; seat += 1) {
-					await allEnabled();
-					await asker.page.locator('[data-testid=table-next-speaker]').nth(seat).click({ timeout: TURN_TIMEOUT });
+					await (await byId(speaker.page, 'table-finish')).click();
 				}
-				const pass = asker.page.locator('[data-testid=pass-for],[data-testid=pass-speak]').first();
-				await pass.waitFor({ state: 'visible', timeout: TURN_TIMEOUT });
-				await pass.click();
 				check(`turn ${turn}: nobody writes at Table talk`, !(await hasTestId(asker, 'table-to-write')) && !(await hasTestId(others[0], 'answer-box')));
 			}
 			tableOneLastAsker = previous;

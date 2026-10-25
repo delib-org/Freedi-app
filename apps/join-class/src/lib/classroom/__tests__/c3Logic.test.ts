@@ -2,9 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { ClassTable, Statement, SupportBySide } from '@freedi/shared-types';
 import {
 	canFinishTalk,
-	PASS_ARM_MS,
-	canPickNextSpeaker,
-	passMinuteArmed,
 	countdownView,
 	idleCountdownText,
 	isOwnItem,
@@ -15,11 +12,10 @@ import {
 	plenumOrder,
 	resolveSubstep,
 	shouldAnnounce,
-	speakerChips,
 	supportBars,
 	supportPercent,
+	TABLE_SUBSTEPS,
 	tableNumberOf,
-	type Mate,
 } from '../c3Logic';
 import { remainingMs } from '../clockMath';
 
@@ -55,12 +51,6 @@ function item(id: string, patch: Partial<Statement> = {}): Statement {
 		...patch,
 	} as Statement;
 }
-
-const mates: Mate[] = [
-	{ uid: 'a', name: 'Dana' },
-	{ uid: 'b', name: 'Omer' },
-	{ uid: 'c', name: 'Li' },
-];
 
 describe('countdown maths', () => {
 	it('shows m:ss above ten seconds', () => {
@@ -112,91 +102,36 @@ describe('countdown maths', () => {
 	});
 });
 
-describe('sub-step strip state', () => {
+describe('sub-step strip state (Proposals only)', () => {
 	it('defaults to the table step; Proposals has no pick screen', () => {
-		expect(officialSubstep('tableTalk', table({ step: 'talk' }))).toBe('talk');
-		expect(officialSubstep('proposals', table({ step: 'write' }))).toBe('write');
-		expect(officialSubstep('proposals', table({ step: 'pick' }))).toBe('talk');
-		// Table talk has no write or rate: a table left there before v2 is the end of talk
-		expect(officialSubstep('tableTalk', table({ step: 'write' }))).toBe('talk');
-		expect(officialSubstep('tableTalk', table({ step: 'rate' }))).toBe('talk');
-		expect(officialSubstep('tableTalk', null)).toBe('pick');
-		expect(officialSubstep('proposals', null)).toBe('talk');
+		expect(officialSubstep(table({ step: 'talk' }))).toBe('talk');
+		expect(officialSubstep(table({ step: 'write' }))).toBe('write');
+		expect(officialSubstep(table({ step: 'pick' }))).toBe('talk');
+		expect(officialSubstep(null)).toBe('talk');
 	});
 
 	it('follows a local pick while the table stays on its step', () => {
 		const t = table({ step: 'talk' });
-		const view = resolveSubstep('tableTalk', t, {
-			step: 'pick',
-			officialAtPick: 'talk',
-			turnAtPick: 1,
-		});
-		expect(view).toEqual({ current: 'pick', official: 'talk', detached: true });
+		const view = resolveSubstep(t, { step: 'write', officialAtPick: 'talk', turnAtPick: 1 });
+		expect(view).toEqual({ current: 'write', official: 'talk', detached: true });
 	});
 
 	it('lapses the local pick when the table moves on or the turn changes', () => {
-		const pick = { step: 'pick' as const, officialAtPick: 'talk' as const, turnAtPick: 1 };
-		expect(resolveSubstep('tableTalk', table({ step: 'pick' }), pick).current).toBe('pick');
-		expect(resolveSubstep('tableTalk', table({ step: 'pick' }), pick).detached).toBe(false);
-		expect(resolveSubstep('tableTalk', table({ step: 'talk', turn: 2 }), pick).current).toBe(
-			'talk',
-		);
+		const pick = { step: 'write' as const, officialAtPick: 'talk' as const, turnAtPick: 1 };
+		expect(resolveSubstep(table({ step: 'write' }), pick).detached).toBe(false);
+		expect(resolveSubstep(table({ step: 'talk', turn: 2 }), pick).current).toBe('talk');
 	});
 
 	it('is not detached without a local pick', () => {
-		expect(resolveSubstep('tableTalk', table(), null).detached).toBe(false);
+		expect(resolveSubstep(table(), null).detached).toBe(false);
+	});
+
+	it('Table talk has no strip: its sub-steps are Proposals only', () => {
+		expect(Object.keys(TABLE_SUBSTEPS)).toEqual(['proposals']);
 	});
 });
 
-describe('speakers', () => {
-	it('marks the speaker and those who spoke', () => {
-		const chips = speakerChips(table({ speakerUid: 'b', spokenUids: ['a'] }), mates);
-		expect(chips.map((c) => [c.uid, c.spoken, c.speaking, c.passed])).toEqual([
-			['a', true, false, false],
-			['b', true, true, false],
-			['c', false, false, false],
-		]);
-	});
-
-	it('draws a speaker who passed as passed, not spoken or speaking; calling them again clears it', () => {
-		const passed = table({
-			speakerUid: 'b',
-			spokenUids: ['a', 'b'],
-			passedSpeakingUids: ['b'],
-			speakerEndsAt: 1,
-		});
-		expect(speakerChips({ ...passed, speakerUid: 'a' }, mates).map((c) => c.passed)).toEqual([
-			false,
-			true,
-			false,
-		]);
-		// the passed speaker still holds the floor until someone is called, but reads passed
-		expect(speakerChips(passed, mates)[1]).toMatchObject({ passed: true, speaking: false });
-		expect(speakerChips({ ...passed, passedSpeakingUids: [] }, mates)[1]).toMatchObject({
-			spoken: true,
-			passed: false,
-		});
-	});
-
-	it('lets the asker pick always and everyone once the minute is over', () => {
-		const t = table({ speakerUid: 'b' });
-		expect(canPickNextSpeaker(t, 'a', false)).toBe(true);
-		expect(canPickNextSpeaker(t, 'c', false)).toBe(false);
-		expect(canPickNextSpeaker(t, 'c', true)).toBe(true);
-		expect(canPickNextSpeaker(table(), 'c', true)).toBe(false);
-	});
-
-	it('lets any tablemate pick when nobody asks (the asker left)', () => {
-		expect(canPickNextSpeaker(table({ askerUid: null }), 'c', false)).toBe(true);
-	});
-
-	it('arms "I pass my minute" only after the first three seconds of a running minute', () => {
-		expect(passMinuteArmed(MINUTE, MINUTE)).toBe(false);
-		expect(passMinuteArmed(MINUTE - PASS_ARM_MS + 1, MINUTE)).toBe(false);
-		expect(passMinuteArmed(MINUTE - PASS_ARM_MS, MINUTE)).toBe(true);
-		expect(passMinuteArmed(0, MINUTE)).toBe(false);
-	});
-
+describe('finishing talk', () => {
 	it('"we are done, write" is Proposals only: the asker or anyone once nobody asks / the timer is over', () => {
 		const partial = table({ speakerUid: 'b', spokenUids: ['a'] });
 		expect(canFinishTalk('tableTalk', partial, 'a', true)).toBe(false);

@@ -10,11 +10,10 @@ import { classState } from '@/lib/classroom/classState';
 import { classTableStep } from '@/lib/classroom/api';
 import { currentUid } from '@/lib/classroom/c3Data';
 import { resolveSubstep, type FlowKind } from '@/lib/classroom/c3Logic';
+import { refusalReason } from '@/lib/classroom/turnMoment';
 import { serverNow } from '@/lib/classroom/serverClock';
-import { claimMoment, askerStates } from '@/lib/classroom/turnMoment';
-import { AskersRow } from './AskersRow';
 import { ErrorLine } from './ErrorLine';
-import { FlowState, type FlowCtx, type FlowParts } from './flowTypes';
+import { FlowError, FlowState, type FlowCtx, type FlowParts } from './flowTypes';
 import { proposalsParts } from './proposalsParts';
 import { SubStepStrip } from './SubStepStrip';
 import { tableTalkParts } from './tableTalkParts';
@@ -26,21 +25,29 @@ export interface TableFlowAttrs {
 
 /** A second look just after a minute ends: the server clock may be a hair behind the table doc. */
 const REDRAW_AFTER_MINUTE_MS = 350;
+/** A state change within this long of the student's own tap is the effect of that tap: focus stays. */
+const TAP_FOCUS_WINDOW_MS = 1500;
+
+/** What the inline error says: a named message, "already asked" for a used question, or the generic one. */
+function failureText(error: unknown): string {
+	if (error instanceof FlowError) return t(error.key);
+	if (refusalReason(error) === 'question-used') return t('turn.question_taken');
+
+	return t('turn.action_failed');
+}
 
 function stateOf(vnode: m.Vnode<TableFlowAttrs>): FlowState {
 	return (vnode.state as { self?: FlowState }).self as FlowState;
 }
 
 /**
- * One table's whole student experience at Table talk and at Proposals (UX
- * §2.6, §2.7, §3, §11, §16): header line, asker line, the askers row (Table
- * talk), the strip and the screen of the table's step. The table doc (listener
- * started by StudentStage) decides the screen; tableTalkParts / proposalsParts
- * build what each flow shows. The pills stay a peek: a screen that is not the
- * official step is drawn with every control disabled, a line saying what the
- * table is doing now and a one-tap "back to now". Every callable shows an
- * inline error with a retry, except a lost race for the next turn, which just
- * shows whose turn it is.
+ * One table's whole student experience at Table talk and at Proposals. The table
+ * doc (listener started by StudentStage) decides the screen. Table talk (UX 16
+ * rev 3) is one calm screen per state, built by tableTalkParts. Proposals keeps
+ * its step strip and peek: a screen that is not the official step is drawn with
+ * every control disabled, a line saying what the table is doing and a one-tap
+ * "back to now". Every callable shows an inline error with a retry; a lost
+ * race just shows what the table is doing.
  */
 export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 	oninit(vnode) {
@@ -75,10 +82,6 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 			self.liveFor = liveId;
 			initLiveDrafts(liveId);
 		}
-		if (self.chosenTurn !== table.turn) {
-			self.chosenTurn = table.turn;
-			self.chosenId = null;
-		}
 		if (table.speakerEndsAt !== undefined && self.redrawFor !== table.speakerEndsAt) {
 			self.redrawFor = table.speakerEndsAt;
 			const wait = table.speakerEndsAt - serverNow() + REDRAW_AFTER_MINUTE_MS;
@@ -96,13 +99,15 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 			seated.length > 0 ? seated : table.memberUids.map((id) => ({ uid: id, name: someone }));
 		const now = serverNow();
 		const tableTalk = kind === 'tableTalk';
-		// A finished table has nothing to peek at: any pill the student chose lapses.
-		if (tableTalk && claimMoment(table, uid, now).phase === 'done') self.override = null;
-		const view = resolveSubstep(kind, table, self.override);
+		// Table talk has one screen per state: no sub-steps, no peek.
+		const view = tableTalk
+			? { current: table.step, official: table.step, detached: false }
+			: resolveSubstep(table, self.override);
 		const peek = view.detached;
 
 		const run = (op: () => Promise<unknown>): void => {
 			if (self.busy) return;
+			self.lastTapAt = Date.now();
 			const attempt = async (): Promise<void> => {
 				self.busy = true;
 				self.error = null;
@@ -117,7 +122,7 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 						{ tableId: table.tableId, uid },
 						error,
 					);
-					self.error = t('turn.action_failed');
+					self.error = failureText(error);
 				} finally {
 					self.busy = false;
 					m.redraw();
@@ -167,7 +172,7 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 		const setLocal = (next: TableStep): void => {
 			self.override = { step: next, officialAtPick: view.official, turnAtPick: table.turn };
 		};
-		const passedMe = (table.passedAskingUids ?? []).includes(uid);
+		if (tableTalk) return tableTalkFrame(self, parts, instruction, action);
 
 		return [
 			m(
@@ -192,19 +197,11 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 								parts.barExtra,
 							])
 						: null,
-					tableTalk ? m(AskersRow, { chips: askerStates(table, mates, now), uid }) : null,
-					parts.showStrip ? m(SubStepStrip, { kind, view, onSelect: setLocal }) : null,
+					parts.showStrip ? m(SubStepStrip, { view, onSelect: setLocal }) : null,
 					m(ErrorLine, {
 						message: self.error,
 						onRetry: self.retry ? () => void self.retry?.() : undefined,
 					}),
-					tableTalk
-						? m(
-								'p.visually-hidden',
-								{ 'aria-live': 'polite' },
-								passedMe ? t('turn.passed_ask_done') : '',
-							)
-						: null,
 					body,
 				],
 			),
@@ -212,3 +209,46 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 		];
 	},
 };
+
+/**
+ * The Table talk frame: stage name over the table line, the state's heading, its
+ * body and footer, and one polite live region that says the new state once. Errors
+ * sit inside the footer under the button that failed (tableTalkParts), never here.
+ * When the state changes by someone else's move, focus goes to the new heading.
+ */
+function tableTalkFrame(
+	self: FlowState,
+	parts: FlowParts,
+	instruction: string | undefined,
+	action: m.Children,
+): m.Children {
+	const key = parts.stateKey ?? '';
+	if (key !== self.stateKey) {
+		self.stateKey = key;
+		const own = Date.now() - self.lastTapAt < TAP_FOCUS_WINDOW_MS;
+		if (!own) {
+			requestAnimationFrame(() =>
+				document.querySelector<HTMLElement>('.frame__instruction')?.focus({ preventScroll: true }),
+			);
+		}
+	}
+
+	return m(
+		StudentFrame,
+		{
+			headerLine: parts.headerLine,
+			stageName: parts.stageName,
+			instruction,
+			action,
+			down: parts.down,
+		},
+		[
+			m(
+				'p.visually-hidden',
+				{ key: 'live', 'aria-live': 'polite', 'data-testid': 'state-status' },
+				parts.status ?? '',
+			),
+			parts.body,
+		],
+	);
+}

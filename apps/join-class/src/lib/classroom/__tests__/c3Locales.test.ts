@@ -9,7 +9,7 @@ import nl from '@/lib/locales/nl';
 
 const LOCALES: Record<string, Record<string, string>> = { en, he, ar, fa, de, es, nl };
 const NAMESPACES = ['turn.', 'question.', 'answer.', 'proposal.', 'rate.', 'voting.', 'summary.'];
-const STEPS = ['pick', 'talk', 'write', 'rate'];
+const STEPS = ['talk', 'write', 'rate'];
 const INSTRUCTION_STEPS = ['pick', 'talk'];
 
 function c3Keys(dictionary: Record<string, string>): string[] {
