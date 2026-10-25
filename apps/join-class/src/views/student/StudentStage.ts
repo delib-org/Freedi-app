@@ -2,6 +2,7 @@ import m from 'mithril';
 import type { LessonStepKey, Statement } from '@freedi/shared-types';
 import { lessonStepOf } from '@/lib/lesson';
 import { lessonStatusOfMain } from '@/lib/lessonCore';
+import { setStudentStage } from '@/lib/studentStage';
 import { watchClass } from '@/lib/classroom/classState';
 import { OpeningStep } from './steps/OpeningStep';
 import { ProposalsStep } from './steps/ProposalsStep';
@@ -77,8 +78,13 @@ export const StudentStage: m.Component<StudentStageAttrs> = {
 
 	view({ attrs }) {
 		const status = lessonStatusOfMain(attrs.main);
-		if (status === 'paused' || status === 'ended') return renderState(attrs.main, status);
+		if (status === 'paused' || status === 'ended') {
+			setStudentStage(null);
+
+			return renderState(attrs.main, status);
+		}
 		const step = lessonStepOf(attrs.main.statementSettings?.lessonPlan);
+		setStudentStage(step.key);
 
 		return m(STEP_COMPONENTS[step.key], { main: attrs.main, key: step.key });
 	},

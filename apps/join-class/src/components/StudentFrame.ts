@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { studentStageTitle } from '@/lib/studentStage';
 import '@/styles/student-frame.scss';
 
 /**
@@ -6,7 +7,8 @@ import '@/styles/student-frame.scss';
  * Props in, vnodes out: no store reads, no writes.
  *
  *   headerLine   one status line, e.g. "Table 5 · round 2"
- *   stageName    Table talk: the stage on its own line above headerLine
+ *   stageName    optional override of the stage heading; by default the current
+ *                lesson step's name (lib/studentStage), shown on every stage
  *   askerMark    optional leading mark in the header (e.g. "?" for the asker)
  *   instruction  the single instruction of this screen
  *   questionHeading  the instruction is a chosen question: big, in the top third
@@ -27,13 +29,16 @@ export interface StudentFrameAttrs {
 
 export const StudentFrame: m.Component<StudentFrameAttrs> = {
 	view({ attrs, children }) {
-		const { headerLine, stageName, askerMark, instruction, questionHeading, action, down } = attrs;
+		const { headerLine, askerMark, instruction, questionHeading, action, down } = attrs;
+		const stageName = attrs.stageName ?? studentStageTitle();
+		// the status line is dropped when it only repeats the stage name
+		const showLine = Boolean(headerLine) && headerLine !== stageName;
 
 		return m('section.frame', { class: down ? 'frame--down' : '' }, [
-			m('header.frame__header', { class: stageName ? 'frame__header--stacked' : '' }, [
+			m('header.frame__header', { class: stageName && showLine ? 'frame__header--stacked' : '' }, [
 				askerMark ? m('span.frame__mark', { 'aria-hidden': 'true' }, askerMark) : null,
-				stageName ? m('span.frame__stage', stageName) : null,
-				m('span.frame__line', headerLine),
+				stageName ? m('h2.frame__stage', stageName) : null,
+				showLine ? m('span.frame__line', headerLine) : null,
 			]),
 			m('main.frame__content', [
 				instruction

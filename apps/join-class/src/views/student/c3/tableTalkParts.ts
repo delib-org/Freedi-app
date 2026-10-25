@@ -396,7 +396,6 @@ export function tableTalkParts(ctx: FlowCtx): FlowParts {
 			state === 'D'
 				? t('turn.header_done', { n: table.n })
 				: t('turn.header', { n: table.n, turn: table.turn, max: maxTurns(table) }),
-		stageName: t('step.tableTalk'),
 		status: screen.status,
 		stateKey: `${state}:${table.turn}`,
 		instruction: screen.heading,

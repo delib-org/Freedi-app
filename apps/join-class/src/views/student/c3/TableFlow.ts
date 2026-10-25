@@ -240,7 +240,6 @@ function tableTalkFrame(
 		StudentFrame,
 		{
 			headerLine: parts.headerLine,
-			stageName: parts.stageName,
 			instruction,
 			questionHeading: parts.questionHeading,
 			action,
