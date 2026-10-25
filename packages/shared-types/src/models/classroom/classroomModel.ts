@@ -162,5 +162,7 @@ export type ClassBallot = InferOutput<typeof ClassBallotSchema>;
 export const ClassVoteDisplaySchema = object({
 	/** Students see each proposal's share of the votes, live. Absent = on. */
 	liveResults: optional(boolean()),
+	/** The proposals re-order live by votes, most supported on top. Absent = off. */
+	sortBySupport: optional(boolean()),
 });
 export type ClassVoteDisplay = InferOutput<typeof ClassVoteDisplaySchema>;

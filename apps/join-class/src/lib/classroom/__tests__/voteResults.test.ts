@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { Statement } from '@freedi/shared-types';
-import { liveResultsOn, voteResults } from '../voteResults';
+import { liveResultsOn, orderBySupport, sortBySupportOn, voteResults } from '../voteResults';
 
-function challenge(voteDisplay?: { liveResults?: boolean }): Statement {
+function challenge(voteDisplay?: { liveResults?: boolean; sortBySupport?: boolean }): Statement {
 	return {
 		statementId: 'ch',
 		statementSettings: voteDisplay ? { voteDisplay } : {},
@@ -16,6 +16,55 @@ describe('liveResultsOn', () => {
 		expect(liveResultsOn(challenge({}))).toBe(true);
 		expect(liveResultsOn(challenge({ liveResults: true }))).toBe(true);
 		expect(liveResultsOn(challenge({ liveResults: false }))).toBe(false);
+	});
+});
+
+describe('sortBySupportOn', () => {
+	it('is off by default and on only when the teacher switched it on', () => {
+		expect(sortBySupportOn(null)).toBe(false);
+		expect(sortBySupportOn(challenge())).toBe(false);
+		expect(sortBySupportOn(challenge({ sortBySupport: false }))).toBe(false);
+		expect(sortBySupportOn(challenge({ sortBySupport: true }))).toBe(true);
+	});
+});
+
+describe('orderBySupport', () => {
+	const ballot = ['a', 'b', 'c', 'd'];
+
+	it('puts the most voted on top', () => {
+		const results = voteResults(ballot, { c: 4, a: 1, d: 2 });
+		expect(orderBySupport(ballot, results, [])).toEqual(['c', 'd', 'a', 'b']);
+	});
+
+	it('keeps the ballot order for ties when nothing was shown yet', () => {
+		expect(orderBySupport(ballot, voteResults(ballot, {}), [])).toEqual(ballot);
+		expect(orderBySupport(ballot, voteResults(ballot, { b: 1, c: 1 }), [])).toEqual([
+			'b',
+			'c',
+			'a',
+			'd',
+		]);
+	});
+
+	it('moves a card only when it overtakes: equal counts keep the order on screen', () => {
+		const shown = ['c', 'b', 'a', 'd'];
+		expect(orderBySupport(ballot, voteResults(ballot, { a: 2, b: 2, c: 2 }), shown)).toEqual([
+			'c',
+			'b',
+			'a',
+			'd',
+		]);
+		expect(orderBySupport(ballot, voteResults(ballot, { a: 3, b: 2, c: 2 }), shown)).toEqual([
+			'a',
+			'c',
+			'b',
+			'd',
+		]);
+	});
+
+	it('drops ids that left the ballot and appends new ones in ballot order', () => {
+		const shown = ['x', 'b', 'a'];
+		expect(orderBySupport(ballot, voteResults(ballot, {}), shown)).toEqual(['b', 'a', 'c', 'd']);
 	});
 });
 

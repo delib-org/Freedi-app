@@ -24,6 +24,9 @@ const vote: Record<string, string> = {
 	'console.vote_live_results_help': 'عدد الأصوات لكل اقتراح، دون إظهار من صوّت لأي اقتراح.',
 	'voting.result_votes': '{{percent}}% · {{n}} أصوات',
 	'voting.result_one_vote': '{{percent}}% · صوت واحد',
+	'console.vote_sort_by_support': 'ترتيب الاقتراحات حسب التأييد',
+	'console.vote_sort_by_support_help':
+		'أثناء التصويت، يصعد الاقتراح الأكثر أصواتًا إلى أعلى شاشات الطلاب.',
 };
 
 export default vote;

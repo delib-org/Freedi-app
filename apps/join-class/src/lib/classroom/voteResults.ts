@@ -24,6 +24,31 @@ export function liveResultsOn(challenge: Statement | null | undefined): boolean 
 	return displayOf(challenge).liveResults !== false;
 }
 
+/** The teacher's "order the proposals by support" switch. Off unless switched on. */
+export function sortBySupportOn(challenge: Statement | null | undefined): boolean {
+	return displayOf(challenge).sortBySupport === true;
+}
+
+/**
+ * The ballot ordered by votes, most on top. Ties keep the order the student
+ * already sees (`previous`; the ballot's own order for ids not in it), so a
+ * card moves only when it really overtakes another, never on an equal count.
+ */
+export function orderBySupport(
+	candidateIds: readonly string[],
+	results: Record<string, VoteResult>,
+	previous: readonly string[],
+): string[] {
+	const wanted = new Set(candidateIds);
+	const seen = previous.filter((id) => wanted.has(id));
+	const known = new Set(seen);
+	const base = [...seen, ...candidateIds.filter((id) => !known.has(id))];
+	const rank = new Map(base.map((id, index) => [id, index]));
+	const votes = (id: string): number => results[id]?.count ?? 0;
+
+	return [...base].sort((a, b) => votes(b) - votes(a) || (rank.get(a) ?? 0) - (rank.get(b) ?? 0));
+}
+
 function countOf(selections: Record<string, number> | undefined, id: string): number {
 	const value = selections?.[id];
 

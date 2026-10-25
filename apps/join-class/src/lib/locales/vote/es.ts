@@ -24,6 +24,9 @@ const vote: Record<string, string> = {
 	'console.vote_live_results_help': 'Cuántos votos tiene cada propuesta. Nunca quién votó qué.',
 	'voting.result_votes': '{{percent}} % · {{n}} votos',
 	'voting.result_one_vote': '{{percent}} % · 1 voto',
+	'console.vote_sort_by_support': 'Ordenar las propuestas por apoyo',
+	'console.vote_sort_by_support_help':
+		'Durante la votación, la propuesta con más votos sube al principio en las pantallas de los estudiantes.',
 };
 
 export default vote;

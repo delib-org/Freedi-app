@@ -24,6 +24,9 @@ const vote: Record<string, string> = {
 	'console.vote_live_results_help': 'Hoeveel stemmen elk voorstel heeft. Nooit wie waarop stemde.',
 	'voting.result_votes': '{{percent}}% · {{n}} stemmen',
 	'voting.result_one_vote': '{{percent}}% · 1 stem',
+	'console.vote_sort_by_support': 'Voorstellen ordenen op steun',
+	'console.vote_sort_by_support_help':
+		'Tijdens de stemming schuift het voorstel met de meeste stemmen bovenaan op de schermen van de leerlingen.',
 };
 
 export default vote;

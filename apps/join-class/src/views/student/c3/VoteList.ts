@@ -2,6 +2,8 @@ import m from 'mithril';
 import type { Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import type { VoteResult } from '@/lib/classroom/voteResults';
+import { playFlip, recordPositions } from '@/lib/flipReorder';
+import type { Positions } from '@/lib/flipReorder';
 
 export interface VoteListAttrs {
 	candidates: Statement[];
@@ -10,6 +12,8 @@ export interface VoteListAttrs {
 	locked: boolean;
 	/** Live results per proposal (the teacher's switch); null = no numbers. */
 	results: Record<string, VoteResult> | null;
+	/** The cards re-order by support: glide them to their new place (FLIP). */
+	animateReorder: boolean;
 	onSelect: (id: string) => void;
 }
 
@@ -36,8 +40,24 @@ function resultView(result: VoteResult | undefined): m.Children {
  * The ballot (UX §2.8): one radio card per proposal, full text, no author, no
  * table. A tap selects; "Vote" (a second tap) casts. With live results on,
  * each card also shows its share of the votes (counts only, never who).
+ * When the teacher orders the cards by support they glide to their new place.
  */
+const before = new WeakMap<Element, Positions>();
+
 export const VoteList: m.Component<VoteListAttrs> = {
+	onbeforeupdate(vnode, old) {
+		if (vnode.attrs.animateReorder && old.dom) {
+			before.set(old.dom, recordPositions(old.dom));
+		}
+	},
+
+	onupdate(vnode: m.VnodeDOM<VoteListAttrs>) {
+		const positions = before.get(vnode.dom);
+		if (!positions) return;
+		before.delete(vnode.dom);
+		playFlip(vnode.dom, positions);
+	},
+
 	view({ attrs }) {
 		const { candidates, selectedId, locked, results } = attrs;
 

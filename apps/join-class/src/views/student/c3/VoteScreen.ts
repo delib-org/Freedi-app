@@ -7,7 +7,12 @@ import { getChallengeQuestion } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
 import { castVote } from '@/lib/classroom/studentWrites';
 import { listenMyVote } from '@/lib/classroom/c3Data';
-import { liveResultsOn, voteResults } from '@/lib/classroom/voteResults';
+import {
+	liveResultsOn,
+	orderBySupport,
+	sortBySupportOn,
+	voteResults,
+} from '@/lib/classroom/voteResults';
 import type { Unsubscribe } from '@/lib/firebase';
 import { ErrorLine } from './ErrorLine';
 import { FlowFeed } from './FlowFeed';
@@ -35,6 +40,8 @@ class VoteState {
 	voteFor: string | null = null;
 	saving = false;
 	error: string | null = null;
+	/** The order the cards were last shown in (ties keep it when sorting by support). */
+	order: string[] = [];
 }
 
 /**
@@ -42,7 +49,8 @@ class VoteState {
  * taps), "You voted" in teal; a different card turns the button into "Change
  * vote" until the ballot closes. While the teacher has the vote paused the
  * cards are locked and the button says so; the vote already cast is kept.
- * Live results (on unless the teacher hides them) add each proposal's share.
+ * Live results (on unless the teacher hides them) add each proposal's share;
+ * ordering by support (off unless switched on) puts the most voted on top.
  */
 export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 	oninit(vnode) {
@@ -76,12 +84,14 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 		}
 		const closed = !!ballot?.closedAt;
 		const paused = !closed && typeof ballot?.pausedAt === 'number';
-		const candidates = (ballot?.candidateIds ?? [])
+		const ballotIds = ballot?.candidateIds ?? [];
+		const tally = voteResults(ballotIds, challenge?.selections);
+		const sorted = sortBySupportOn(challenge);
+		self.order = sorted ? orderBySupport(ballotIds, tally, self.order) : [...ballotIds];
+		const candidates = self.order
 			.map((id) => self.feed.options.find((o) => o.statementId === id))
 			.filter((o): o is Statement => !!o);
-		const results = liveResultsOn(challenge)
-			? voteResults(ballot?.candidateIds ?? [], challenge?.selections)
-			: null;
+		const results = liveResultsOn(challenge) ? tally : null;
 		const selected = self.selectedId ?? self.votedId;
 		const changed = !!selected && selected !== self.votedId;
 
@@ -149,6 +159,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 									selectedId: selected,
 									locked: closed || paused,
 									results,
+									animateReorder: sorted,
 									onSelect: (id: string) => {
 										self.selectedId = id;
 									},

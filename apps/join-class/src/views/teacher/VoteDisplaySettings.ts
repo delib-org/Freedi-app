@@ -1,7 +1,7 @@
 import m from 'mithril';
 import type { ClassVoteDisplay, Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import { liveResultsOn } from '@/lib/classroom/voteResults';
+import { liveResultsOn, sortBySupportOn } from '@/lib/classroom/voteResults';
 import { setVoteDisplay } from './consoleActions';
 import { isBusy } from './consoleState';
 
@@ -29,6 +29,12 @@ const SWITCHES: readonly SwitchSpec[] = [
 		labelKey: 'console.vote_live_results',
 		helpKey: 'console.vote_live_results_help',
 		isOn: liveResultsOn,
+	},
+	{
+		field: 'sortBySupport',
+		labelKey: 'console.vote_sort_by_support',
+		helpKey: 'console.vote_sort_by_support_help',
+		isOn: sortBySupportOn,
 	},
 ];
 
