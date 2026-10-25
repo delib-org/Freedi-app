@@ -48,10 +48,29 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 
 			return { action: 'setWritingMode', mode: mode.output };
 		}
+		case 'claimTurn': {
+			if (typeof req.fromTurn !== 'number') {
+				throw new ClassroomError(
+					'invalid-argument',
+					'A claim must name the turn it saw (fromTurn)',
+				);
+			}
+
+			return {
+				action: 'claimTurn',
+				fromTurn: req.fromTurn,
+				questionId: requireId(req.questionId, 'questionId'),
+			};
+		}
+		case 'passSpeaking':
+			return typeof req.uid === 'string' && req.uid !== ''
+				? { action: 'passSpeaking', uid: req.uid }
+				: { action: 'passSpeaking' };
 		case 'toTalk':
 		case 'toWrite':
 		case 'toRate':
-		case 'passSpeaking':
+		case 'claimSpeaker':
+		case 'finishSpeaking':
 			return { action: req.action };
 		case 'nextTurn':
 			return typeof req.fromTurn === 'number'
@@ -79,12 +98,15 @@ export async function tableStep(
 	const { mainId } = first.data() as ClassTable;
 	const isAdmin = await isWorkspaceAdmin(firestore, mainId, actorUid);
 
-	if (action.action === 'pickQuestion') {
+	if (action.action === 'pickQuestion' || action.action === 'claimTurn') {
 		const qSnap = await firestore.collection(Collections.statements).doc(action.questionId).get();
 		const question = qSnap.exists ? (qSnap.data() as Statement) : undefined;
+		const ownerTable = question?.classTable?.tableId;
 		if (
 			!isSubQuestionOf(question, mainId) ||
-			question?.statementSettings?.classRole === 'challenge'
+			question?.statementSettings?.classRole === 'challenge' ||
+			// A table's own question belongs to that table alone.
+			(ownerTable !== undefined && ownerTable !== tableId)
 		) {
 			throw new ClassroomError('invalid-argument', "Pick one of this lesson's questions");
 		}

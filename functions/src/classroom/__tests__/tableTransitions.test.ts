@@ -25,6 +25,7 @@ function table(overrides: Partial<ClassTable> = {}): ClassTable {
 }
 
 const asker: TransitionContext = { actorUid: 'ask', isAdmin: false, now: NOW };
+const atProposals: TransitionContext = { ...asker, lessonStep: 'proposals' };
 const member: TransitionContext = { actorUid: 'b', isAdmin: false, now: NOW };
 const admin: TransitionContext = { actorUid: 'teacher', isAdmin: true, now: NOW };
 const stranger: TransitionContext = { actorUid: 'zz', isAdmin: false, now: NOW };
@@ -115,14 +116,18 @@ describe('applyTableAction — a whole turn by the asker', () => {
 		t = applyTableAction(t, { action: 'toTalk' }, asker);
 		expect(t.step).toBe('talk');
 
-		t = applyTableAction(t, { action: 'nextSpeaker', uid: 'b' }, asker);
+		t = applyTableAction(t, { action: 'nextSpeaker', uid: 'b' }, atProposals);
 		expect(t).toMatchObject({
 			speakerUid: 'b',
 			speakerEndsAt: NOW + SPEAK_SECONDS * 1000,
 			spokenUids: [],
 		});
 
-		t = applyTableAction(t, { action: 'nextSpeaker', uid: 'c' }, { ...asker, now: NOW + 1000 });
+		t = applyTableAction(
+			t,
+			{ action: 'nextSpeaker', uid: 'c' },
+			{ ...atProposals, now: NOW + 1000 },
+		);
 		expect(t).toMatchObject({ speakerUid: 'c', spokenUids: ['b'] });
 
 		t = applyTableAction(t, { action: 'setWritingMode', mode: 'table' }, asker);
