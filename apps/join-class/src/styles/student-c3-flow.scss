@@ -120,10 +120,11 @@ body.c3-lock {
     gap: var(--space-xs);
   }
 
-  &__item {
+  // A radio row: the choice is local to this phone until "I want to start".
+  &__item,
+  &__own {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    gap: var(--space-sm);
     min-height: 56px;
     padding: var(--space-sm) var(--space-md);
     border: 1.5px solid var(--border-medium);
@@ -132,6 +133,10 @@ body.c3-lock {
     color: var(--ink);
     font: inherit;
     text-align: start;
+  }
+
+  &__item {
+    align-items: center;
     cursor: pointer;
 
     &:disabled {
@@ -139,15 +144,53 @@ body.c3-lock {
     }
 
     &--on {
-      border-color: var(--ink);
-      background: var(--ink);
-      color: var(--paper);
+      border: 2px solid var(--ink);
+      background: var(--paper-soft);
     }
 
     &--used {
-      color: var(--ink-faint);
+      border-color: var(--border-medium);
+      background: var(--paper-soft);
+      color: var(--ink-soft);
+      cursor: default;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__radio {
+    flex: none;
+    color: var(--ink);
+  }
+
+  // "+ our own question": dashed, always last of the free group; opens its own field.
+  &__own {
+    flex-direction: column;
+    border-style: dashed;
+
+    &.pick__item--on {
+      border: 2px solid var(--ink);
       background: var(--paper-soft);
     }
+  }
+
+  &__own-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-height: var(--touch-target, 48px);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
   }
 
   &__eyebrow,
@@ -157,17 +200,8 @@ body.c3-lock {
     color: var(--ink-soft);
   }
 
-  &__item--on &__eyebrow,
-  &__item--on &__hint {
-    color: var(--paper-line);
-  }
-
   &__text {
     font-size: var(--font-size-base);
-  }
-
-  &__add {
-    align-self: stretch;
   }
 
   &__input {
@@ -179,19 +213,6 @@ body.c3-lock {
     background: var(--bg-card);
     color: var(--ink);
     font: inherit;
-  }
-
-  form.pick__add {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-  }
-
-  // A-own: the asker's own-question box is open, no button of its own (the footer saves it).
-  &__add--open {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
   }
 
   // The questions already asked: collapsed, greyed, not tappable.

@@ -189,6 +189,7 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 			students,
 			plenum,
 			tableTalk: stepKey === 'tableTalk',
+			questions,
 			showSides: stepIndex >= SIDE_STEP_INDEX,
 			opening: stepKey === 'opening' && main ? m(OpeningPanel, { main }) : undefined,
 		}),

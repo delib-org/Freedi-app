@@ -1,102 +1,142 @@
 // =============================================================================
-// The table turn (UX 16 rev 2): the askers row and the claim footer.
-// Tokens only, BEM, logical properties (RTL-safe), transform/opacity motion.
+// Table talk (UX 16 rev 3): one calm screen per state, and its footer.
+// Tokens only, BEM, logical properties (RTL-safe), opacity-only motion.
 // =============================================================================
 
-// ---- askers row: who has asked, who asks now ---------------------------------
+// ---- one state body: the whole body fades in when the state changes ----------
 
-.askers {
+.tt {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-  margin: 0 0 var(--space-md);
-  padding: 0;
-  list-style: none;
+  flex-direction: column;
+  gap: var(--space-md);
+  animation: tt-in var(--dur-base) var(--ease-out) both;
 
-  &__chip {
-    display: inline-flex;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  // The big thing of a state without a clock: centred in the free space.
+  &__status {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold, 600);
+    line-height: 1.3;
+    text-align: center;
+
+    &--big {
+      margin-block: var(--space-xl);
+      font-size: var(--font-size-2xl, var(--font-size-xl));
+    }
+  }
+
+  // The clock states (S, L): status, digits, bar, then Finish or my footnote.
+  &__clock {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: var(--space-2xs, 4px);
-    min-height: 32px;
-    padding-inline: var(--space-sm);
-    border: 1.5px solid var(--border-medium);
-    border-radius: var(--radius-full);
-    color: var(--ink);
-    font-size: var(--font-size-sm);
+    gap: var(--space-md);
+    text-align: center;
+  }
 
-    // Shape, fill, glyph and weight each carry the state: never colour alone.
-    &--done {
-      border-color: var(--paper-deep);
-      background: var(--paper-deep);
-      color: var(--ink-muted);
-    }
+  // My own status under the clock: a footnote, never louder than the clock.
+  &__note {
+    margin: 0;
+    color: var(--paper-line);
+    font-size: var(--font-size-base);
+    text-align: center;
 
-    &--now {
-      border-color: var(--ink);
-      background: var(--ink);
-      color: var(--paper);
-      font-weight: var(--font-weight-bold, 700);
-    }
-
-    // Passed on asking: a dashed outline, a dash glyph and a softer name. Three cues, none of them hue.
-    &--passed {
-      border-style: dashed;
+    .frame:not(.frame--down) & {
       color: var(--ink-soft);
     }
+  }
 
-    .frame--down & {
-      border-color: var(--paper-line);
-      color: var(--paper);
+  // "{{name}} was first": quiet, no error styling.
+  &__quiet {
+    margin: 0;
+    color: var(--paper-line);
+    font-size: var(--font-size-sm);
+    text-align: center;
 
-      &.askers__chip--done {
-        background: transparent;
-        color: var(--paper-line);
-      }
-
-      &.askers__chip--now {
-        border-color: var(--paper);
-        background: var(--paper);
-        color: var(--ink);
-      }
-
-      &.askers__chip--passed {
-        color: var(--paper-line);
-      }
+    .frame:not(.frame--down) & {
+      color: var(--ink-muted);
     }
   }
 
-  &__mark {
-    font-weight: var(--font-weight-bold, 700);
+  // Finish: outline paper on the ink frame, at least 160 px wide, right under the clock.
+  &__finish {
+    min-width: 160px;
+    min-height: var(--touch-target, 48px);
+    border-color: var(--paper);
+    background: transparent;
+    color: var(--paper);
+
+    &:hover:not(:disabled) {
+      background: transparent;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+    }
   }
 
-  &__me {
-    font-weight: var(--font-weight-regular, 400);
+  // The footer fades in with its state (the Pick footer sits on paper, the others on ink).
+  &__footer {
+    animation: tt-in var(--dur-base) var(--ease-out) both;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
   }
 }
 
-// ---- claim footer: "אני אשאל" and the small "ויתרתי על התור" above it -----------
-
-.claim-footer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-
-  // The text button sits at the inline end, 24 px above the primary, so a thumb
-  // aimed at the primary never lands on it.
-  &__pass {
-    align-self: flex-end;
-
-    .frame--down & {
-      color: var(--paper-line);
-    }
+@keyframes tt-in {
+  from {
+    opacity: 0;
   }
 
-  &__primary {
+  to {
+    opacity: 1;
+  }
+}
+
+// ---- footer: one primary and one real secondary under it --------------------------
+
+.turn-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+
+  &__primary,
+  &__secondary {
     width: 100%;
     min-height: var(--touch-target, 48px);
   }
 
-  // One inline confirm in place of the text button (never a modal).
+  // Looks off, stays tappable: a tap explains why (turn.pick_first).
+  &__primary--dimmed {
+    opacity: 0.6;
+  }
+
+  // The secondary is an outline, never filled; on the ink frame it is paper-outlined.
+  &__secondary {
+    .frame--down & {
+      border-color: var(--paper);
+      background: transparent;
+      color: var(--paper);
+
+      &:hover:not(:disabled) {
+        background: transparent;
+      }
+    }
+  }
+
+  &__hint {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  // One inline confirm in place of the secondary (never a modal).
   &__confirm {
     display: flex;
     flex-wrap: wrap;
@@ -108,17 +148,6 @@
   &__ask {
     flex: 1 1 100%;
     margin: 0;
-    font-size: var(--font-size-sm);
-    color: var(--ink-soft);
-
-    .frame--down & {
-      color: var(--paper-line);
-    }
-  }
-
-  &__no {
-    .frame--down & {
-      color: var(--paper-line);
-    }
+    color: var(--ink-muted);
   }
 }

@@ -1,25 +1,27 @@
 import m from 'mithril';
+import type { ClassTable, ClassTableAction } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { getGuidingQuestions } from '@/lib/lesson';
 import { classTableStep } from '@/lib/classroom/api';
 import { createTableQuestion } from '@/lib/classroom/c3Data';
-import {
-	claimMoment,
-	instructionFor,
-	maxTurns,
-	refusalReason,
-	type ClaimMoment,
-} from '@/lib/classroom/turnMoment';
-import { ClaimFooter, type ClaimPrimary } from './ClaimFooter';
-import type { FlowCtx, FlowParts } from './flowTypes';
+import { SPEAK_MS, Countdown, msLeft } from './Countdown';
+import { isRaceRefusal, maxTurns, refusalReason } from '@/lib/classroom/turnMoment';
+import { passedAnswer, tableTalkState, type TableTalkState } from '@/lib/classroom/tableTalkState';
+import { FlowError, type FlowCtx, type FlowParts } from './flowTypes';
 import { QuestionPick, type PickQuestion } from './QuestionPick';
-import { TalkScreen, isTimeUp, passMinuteAction } from './TalkScreen';
+import { TurnActions } from './TurnActions';
+import { ErrorLine } from './ErrorLine';
 
 /**
- * The Table talk half of TableFlow (UX 16 rev 2): V1 (nobody asks, "אני אשאל"),
- * A (the asker picks), B/C (everyone speaks a minute, the asker too), V2 (everyone
- * spoke: the next volunteer) and Done. Nobody writes or rates here. Props in, vnodes out.
+ * The Table talk half of TableFlow (UX 16 rev 3): one calm screen per state,
+ * D, P1, P2, S, L, W, A, H (tableTalkState.ts). No strip, no pills, no askers
+ * row, no speaker chips. Props in, vnodes out.
  */
+
+/** "Finish" ignores taps (and is drawn disabled) for the first second of a minute. */
+export const FINISH_GUARD_MS = 1000;
+/** How long the quiet "who was first" line stays. */
+export const WAS_FIRST_MS = 4000;
 
 function pickQuestions(ctx: FlowCtx): PickQuestion[] {
 	const { table, questions } = ctx;
@@ -35,172 +37,364 @@ function pickQuestions(ctx: FlowCtx): PickQuestion[] {
 		}));
 }
 
-/** First tap wins: a lost race is not an error, the table doc already shows who won. */
-function claimTurn(ctx: FlowCtx): void {
+function nameOf(ctx: FlowCtx, uid: string | undefined): string {
+	if (!uid) return ctx.someone;
+	const nd = ctx.table.noDeviceMembers.find((member) => member.id === uid);
+
+	return nd?.name ?? ctx.mates.find((mate) => mate.uid === uid)?.name ?? ctx.someone;
+}
+
+/** Runs one table step; a lost race is not an error: the table doc already shows who won. */
+function step(
+	ctx: FlowCtx,
+	action: ClassTableAction,
+	onRace?: (reason: string | null) => void,
+): void {
 	const { table } = ctx;
 	ctx.run(async () => {
 		try {
-			await classTableStep({ tableId: table.tableId, action: 'nextTurn', fromTurn: table.turn });
+			await classTableStep({ tableId: table.tableId, ...action });
 		} catch (error) {
-			if (refusalReason(error) !== 'turn-claimed') throw error;
+			if (!isRaceRefusal(error)) throw error;
+			onRace?.(refusalReason(error));
 		}
 	});
 }
 
-function pickQuestion(ctx: FlowCtx, id: string): void {
-	const { self, table } = ctx;
-	self.chosenId = id;
-	ctx.run(async () => {
-		try {
-			await classTableStep({ tableId: table.tableId, action: 'pickQuestion', questionId: id });
-		} catch (error) {
-			self.chosenId = null;
-			throw error;
-		}
-	});
+function noteWasFirst(ctx: FlowCtx, kind: 'turn' | 'floor'): void {
+	const { self } = ctx;
+	self.wasFirst = { kind, until: Date.now() + WAS_FIRST_MS };
+	setTimeout(() => m.redraw(), WAS_FIRST_MS + 50);
 }
 
-/**
- * A-own: one tap saves the asker's own question, picks it and starts the talk. One
- * retry on a failed step (the question is created once; the typed text is kept).
- */
-function chooseOwnAndTalk(ctx: FlowCtx): void {
+function hasChoice(ctx: FlowCtx, teacherUsedUp: boolean): boolean {
+	const { self } = ctx;
+	const ownOn = self.ownSelected || (teacherUsedUp && self.chosenId === null);
+
+	return ownOn ? self.ownText.trim() !== '' : self.chosenId !== null;
+}
+
+/** "I want to start": create the own question once if that is the choice, then claim the turn. */
+function startTurn(ctx: FlowCtx, teacherUsedUp: boolean): void {
 	const { self, table, main } = ctx;
-	const text = self.ownText.trim();
-	if (!text) return;
-	const chain = async (): Promise<void> => {
-		if (!self.ownCreatedId)
-			self.ownCreatedId = await createTableQuestion(main, text, table.tableId);
-		await classTableStep({
-			tableId: table.tableId,
-			action: 'pickQuestion',
-			questionId: self.ownCreatedId,
-		});
-		await classTableStep({ tableId: table.tableId, action: 'toTalk' });
-	};
+	if (!hasChoice(ctx, teacherUsedUp)) {
+		self.pickFirst = true;
+		document.querySelector<HTMLElement>('[data-testid="table-pick-question"]')?.focus();
+		m.redraw();
+
+		return;
+	}
+	const ownOn = self.ownSelected || (teacherUsedUp && self.chosenId === null);
 	ctx.run(async () => {
-		try {
-			await chain();
-		} catch (error) {
-			console.error('[TableFlow] own question chain failed, retrying once', error);
-			await chain();
+		let questionId = self.chosenId;
+		if (ownOn) {
+			if (!self.ownCreatedId) {
+				try {
+					self.ownCreatedId = await createTableQuestion(main, self.ownText.trim(), table.tableId);
+				} catch {
+					throw new FlowError('question.add_failed');
+				}
+			}
+			questionId = self.ownCreatedId;
 		}
-		self.ownText = '';
-		self.ownCreatedId = null;
+		if (!questionId) return;
+		try {
+			await classTableStep({
+				tableId: table.tableId,
+				action: 'claimTurn',
+				fromTurn: table.turn,
+				questionId,
+			});
+			self.ownText = '';
+			self.ownCreatedId = null;
+			self.ownSelected = false;
+			self.chosenId = null;
+		} catch (error) {
+			if (refusalReason(error) === 'question-used') {
+				self.chosenId = null;
+				throw error;
+			}
+			if (!isRaceRefusal(error)) throw error;
+			if (refusalReason(error) === 'turn-claimed') noteWasFirst(ctx, 'turn');
+		}
 	});
 }
 
-function primaryFor(ctx: FlowCtx, moment: ClaimMoment, allUsed: boolean): ClaimPrimary | null {
-	const { self, table, uid } = ctx;
-	if (moment.canClaim) {
-		return {
+function pickBody(ctx: FlowCtx, teacherUsedUp: boolean, noTeacher: boolean): m.Children {
+	const { self } = ctx;
+	const ownOn = self.ownSelected || (teacherUsedUp && self.chosenId === null);
+
+	return m(QuestionPick, {
+		questions: pickQuestions(ctx),
+		selectedId: self.chosenId,
+		ownSelected: ownOn,
+		ownText: self.ownText,
+		teacherUsedUp,
+		noTeacherQuestions: noTeacher,
+		disabled: self.busy,
+		onSelect: (id: string) => {
+			self.chosenId = id;
+			self.ownSelected = false;
+			self.pickFirst = false;
+		},
+		onSelectOwn: () => {
+			self.ownSelected = true;
+			self.chosenId = null;
+			self.pickFirst = false;
+		},
+		onOwnText: (text: string) => {
+			self.ownText = text;
+			// A new text is a new question: never reuse the id created for the old one.
+			self.ownCreatedId = null;
+			self.pickFirst = false;
+		},
+	});
+}
+
+function pickActions(ctx: FlowCtx, teacherUsedUp: boolean): m.Children {
+	const { self, table } = ctx;
+	const ready = hasChoice(ctx, teacherUsedUp);
+
+	return m(TurnActions, {
+		primary: {
 			label: t(self.busy ? 'turn.saving' : 'turn.claim'),
 			testId: 'table-claim',
 			disabled: self.busy,
-			onclick: () => claimTurn(ctx),
+			dimmed: !ready && !self.busy,
+			describedBy: self.pickFirst ? 'turn-pick-first' : undefined,
+			onclick: () => startTurn(ctx, teacherUsedUp),
+		},
+		secondary: {
+			label: t('turn.pass_ask'),
+			testId: 'pass-ask',
+			disabled: self.busy,
+			onclick: () => undefined,
+		},
+		confirm: {
+			text: t('turn.pass_ask_confirm'),
+			yesLabel: t('turn.pass_ask_yes'),
+			yesTestId: 'pass-ask-yes',
+			cancelTestId: 'pass-ask-cancel',
+			onYes: () => step(ctx, { action: 'passAsking' }),
+		},
+		resetKey: `${table.turn}:${table.step}:${table.askerUid ?? ''}`,
+		busy: self.busy,
+		hint: self.pickFirst && !ready ? { id: 'turn-pick-first', text: t('turn.pick_first') } : null,
+		below: m(ErrorLine, {
+			message: self.error,
+			onRetry: self.retry ? () => void self.retry?.() : undefined,
+		}),
+	});
+}
+
+function answerActions(ctx: FlowCtx): m.Children {
+	const { self, table } = ctx;
+
+	return m(TurnActions, {
+		primary: {
+			label: t(self.busy ? 'turn.saving' : 'turn.answer'),
+			testId: 'table-answer',
+			disabled: self.busy,
+			onclick: () =>
+				step(ctx, { action: 'claimSpeaker' }, (reason) => {
+					if (reason === 'floor-taken') noteWasFirst(ctx, 'floor');
+				}),
+		},
+		secondary: {
+			label: t('turn.pass_answer'),
+			testId: 'pass-answer',
+			disabled: self.busy,
+			onclick: () => step(ctx, { action: 'passSpeaking' }),
+		},
+		resetKey: `${table.turn}:${table.spokenUids.length}:${table.speakerUid ?? ''}`,
+		busy: self.busy,
+		below: m(ErrorLine, {
+			message: self.error,
+			onRetry: self.retry ? () => void self.retry?.() : undefined,
+		}),
+	});
+}
+
+/** The quiet "{{name}} was first" line (not an error), for a few seconds. */
+function wasFirstLine(ctx: FlowCtx): string | null {
+	const { self, table } = ctx;
+	if (!self.wasFirst || Date.now() >= self.wasFirst.until) return null;
+	const who = self.wasFirst.kind === 'turn' ? table.askerUid : table.speakerUid;
+
+	return who && who !== ctx.uid ? t('turn.was_first', { name: nameOf(ctx, who) }) : null;
+}
+
+function clock(table: ClassTable): m.Children {
+	return m(Countdown, { endsAt: table.speakerEndsAt, totalMs: SPEAK_MS, quietEnd: true });
+}
+
+function finishButton(ctx: FlowCtx): m.Children {
+	const { self, table } = ctx;
+	const guarded =
+		table.speakerEndsAt !== undefined && msLeft(table.speakerEndsAt) > SPEAK_MS - FINISH_GUARD_MS;
+
+	return m(
+		'button.btn.btn--secondary.tt__finish',
+		{
+			type: 'button',
+			'data-testid': 'table-finish',
+			disabled: self.busy || guarded ? true : undefined,
+			onclick: () => step(ctx, { action: 'finishSpeaking' }),
+		},
+		t('turn.finish'),
+	);
+}
+
+interface Screen {
+	status: string;
+	body: m.Children;
+	action: m.Children;
+	down: boolean;
+	/** The h1: the question at talk states, the status at pick/done. */
+	heading: string;
+}
+
+function talkScreen(ctx: FlowCtx, state: TableTalkState, question: string): Screen {
+	const { table, uid } = ctx;
+	const first = wasFirstLine(ctx);
+	const firstNote = first ? m('p.tt__quiet', { 'data-testid': 'was-first' }, first) : null;
+	const base = { heading: question, down: true, action: null as m.Children };
+	switch (state) {
+		case 'S': {
+			const status = t('turn.answer_mine');
+
+			return {
+				...base,
+				status,
+				body: m('.tt__clock', [m('p.tt__status', status), clock(table), finishButton(ctx)]),
+			};
+		}
+		case 'L': {
+			const status = t('turn.answering', { name: nameOf(ctx, table.speakerUid) });
+			const mine = table.spokenUids.includes(uid);
+			const note = passedAnswer(table, uid)
+				? `– ${t('turn.passed_answer_me')}`
+				: mine
+					? `✓ ${t('turn.answered_me')}`
+					: null;
+
+			return {
+				...base,
+				status,
+				body: m('.tt__clock', [
+					m('p.tt__status', { 'data-testid': 'answering' }, status),
+					clock(table),
+					note ? m('p.tt__note', note) : null,
+					firstNote,
+				]),
+			};
+		}
+		case 'W': {
+			const status = t('turn.others_first');
+
+			return { ...base, status, body: m('p.tt__status.tt__status--big', status) };
+		}
+		case 'A': {
+			const status = t('turn.who_answers');
+
+			return {
+				...base,
+				status,
+				body: [m('p.tt__status.tt__status--big', status), firstNote],
+				action: answerActions(ctx),
+			};
+		}
+		default: {
+			const passed = passedAnswer(table, uid);
+			const status = passed ? `– ${t('turn.passed_answer_me')}` : `✓ ${t('turn.answered_me')}`;
+
+			return {
+				...base,
+				status,
+				body: [
+					m('p.tt__status.tt__status--big', { 'data-testid': 'answered' }, status),
+					m('p.tt__note', t('turn.who_answers')),
+				],
+			};
+		}
+	}
+}
+
+function pickScreen(
+	ctx: FlowCtx,
+	state: TableTalkState,
+	teacherUsedUp: boolean,
+	noTeacher: boolean,
+): Screen {
+	const { uid, table } = ctx;
+	if (state === 'P2') {
+		const passed = (table.passedAskingUids ?? []).includes(uid);
+		const status = t('turn.wait_pick');
+
+		return {
+			status,
+			heading: status,
+			down: false,
+			action: null,
+			body: passed ? m('p.tt__note', t('turn.passed_ask_done')) : null,
 		};
 	}
-	if (moment.phase !== 'a' || table.askerUid !== uid) return null;
-	const chosen = self.chosenId ?? table.questionId ?? null;
+	const first = wasFirstLine(ctx);
 
 	return {
-		label: t('turn.to_talk'),
-		testId: 'table-start',
-		disabled: self.busy || (allUsed ? !self.ownText.trim() : !chosen),
-		onclick: () => (allUsed ? chooseOwnAndTalk(ctx) : ctx.act({ action: 'toTalk' })),
+		status: t('turn.instr_pick'),
+		heading: t('turn.instr_pick'),
+		down: false,
+		body: [
+			pickBody(ctx, teacherUsedUp, noTeacher),
+			first ? m('p.tt__quiet', { 'data-testid': 'was-first' }, first) : null,
+		],
+		action: pickActions(ctx, teacherUsedUp),
 	};
-}
-
-function footerFor(ctx: FlowCtx, moment: ClaimMoment, allUsed: boolean): m.Children {
-	const { self, table, mates, uid } = ctx;
-	if (moment.phase === 'talk') return passMinuteAction(table, uid, mates, self.busy, ctx.act);
-	const primary = primaryFor(ctx, moment, allUsed);
-	if (!primary && !moment.canPassAsk) return null;
-
-	return m(ClaimFooter, {
-		primary,
-		canPass: moment.canPassAsk,
-		busy: self.busy,
-		resetKey: `${table.turn}:${table.step}:${table.askerUid ?? ''}`,
-		onPass: () => ctx.act({ action: 'passAsking' }),
-	});
-}
-
-function bodyFor(ctx: FlowCtx, moment: ClaimMoment, allUsed: boolean, askLine: string): m.Children {
-	const { self, table, uid, mates, main, step } = ctx;
-	if (moment.phase === 'done' && step === ctx.official) return null;
-	const tableQuestion = ctx.questions.find((q) => q.statementId === table.questionId) ?? null;
-	if (step === 'pick') {
-		const isAsker = table.askerUid === uid;
-		const chosenId = isAsker
-			? (self.chosenId ?? table.questionId ?? null)
-			: (table.questionId ?? null);
-
-		return m(QuestionPick, {
-			questions: pickQuestions(ctx),
-			chosenId,
-			canChoose: isAsker && moment.phase === 'a',
-			onPick: (id: string) => pickQuestion(ctx, id),
-			onAddOwn: async (text: string) => {
-				await createTableQuestion(main, text, table.tableId);
-			},
-			allUsed,
-			ownText: self.ownText,
-			onOwnText: (text: string) => {
-				self.ownText = text;
-				self.ownCreatedId = null;
-			},
-		});
-	}
-
-	return m(TalkScreen, {
-		kind: 'tableTalk',
-		table,
-		uid,
-		mates,
-		prompt: tableQuestion?.statement ?? '',
-		busy: self.busy,
-		onAction: ctx.act,
-		over: moment.phase === 'v2' ? { askLine } : undefined,
-	});
 }
 
 /** The parts of the Table talk screen for this phone, this redraw. */
 export function tableTalkParts(ctx: FlowCtx): FlowParts {
-	const { table, uid, mates, kind, now, someone, official } = ctx;
-	const moment = claimMoment(table, uid, now);
-	const pickable = pickQuestions(ctx);
-	const allUsed = pickable.length > 0 && pickable.every((q) => q.used);
-	const done = moment.phase === 'done';
-	const line = instructionFor(
-		official,
-		{ kind, table, uid, mates, timeUp: isTimeUp(table), now, allUsed },
-		someone,
-	);
-	const instruction = t(line.key, line.params);
-	const isAsker = table.askerUid === uid;
-	const asker = mates.find((x) => x.uid === table.askerUid);
-	const stepName = t(`turn.now_${official}`);
-	// The asker line belongs to the moments with an asker at work (A and talk).
-	const showAsker = (moment.phase === 'a' || moment.phase === 'talk') && table.askerUid !== null;
+	const { table, uid, now, questions, self } = ctx;
+	const state = tableTalkState(table, uid, now);
+	// A new turn clears a half-made choice: nothing carries over from the last pick.
+	if (self.chosenTurn !== table.turn) {
+		self.chosenTurn = table.turn;
+		self.chosenId = null;
+		self.ownSelected = false;
+		self.pickFirst = false;
+	}
+	const teacher = pickQuestions(ctx).filter((q) => !q.own);
+	const teacherUsedUp = teacher.every((q) => q.used);
+	const question = questions.find((q) => q.statementId === table.questionId)?.statement ?? '';
+	let screen: Screen;
+	if (state === 'D') {
+		const status = t('turn.wait_others');
+		screen = { status, heading: status, body: null, action: null, down: false };
+	} else if (state === 'P1' || state === 'P2') {
+		screen = pickScreen(ctx, state, teacherUsedUp, teacher.length === 0);
+	} else {
+		screen = talkScreen(ctx, state, question);
+	}
 
 	return {
-		headerLine: done
-			? t('turn.header_done', { n: table.n })
-			: t('turn.header', { n: table.n, turn: table.turn, max: maxTurns(table), step: stepName }),
-		instruction: moment.phase === 'v2' ? undefined : instruction,
-		body: bodyFor(ctx, moment, allUsed, instruction),
-		action: footerFor(ctx, moment, allUsed),
-		// Dark follows the table's OFFICIAL step, never a peek: dark = talking.
-		down: official === 'talk' && !done,
-		askerLine: showAsker
-			? isAsker
-				? t('turn.asker_me')
-				: t('turn.asker', { name: asker?.name ?? someone })
+		headerLine:
+			state === 'D'
+				? t('turn.header_done', { n: table.n })
+				: t('turn.header', { n: table.n, turn: table.turn, max: maxTurns(table) }),
+		stageName: t('step.tableTalk'),
+		status: screen.status,
+		stateKey: `${state}:${table.turn}`,
+		instruction: screen.heading,
+		body: m('.tt', { key: `${state}:${table.turn}` }, screen.body),
+		action: screen.action
+			? m('.tt__footer', { key: `${state}:${table.turn}` }, screen.action)
 			: null,
-		askerMark: isAsker && showAsker,
+		down: screen.down,
+		askerLine: null,
+		askerMark: false,
 		barExtra: null,
 		overlay: null,
-		showStrip: !done,
+		showStrip: false,
 	};
 }

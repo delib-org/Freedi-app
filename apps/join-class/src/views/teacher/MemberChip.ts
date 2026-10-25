@@ -3,6 +3,7 @@ import type { Camp } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { CAMP_MARK } from '@/lib/classroom/consoleHelpers';
 import type { DropTarget } from '@/lib/classroom/dragReducer';
+import type { AnswerMark, AskMark } from '@/lib/classroom/tableTurnConsole';
 import { moveStudent } from './consoleActions';
 import { blurChip, keyChip, pressChip, targetName } from './dragController';
 import { consoleState } from './consoleState';
@@ -21,8 +22,10 @@ export interface MemberChipAttrs {
 	/** Where the chip sits now: table number, or null = unplaced. */
 	from: DropTarget;
 	tableNumbers: readonly number[];
-	/** Table talk: ✓ has asked, ? asking now (the same marks as the students' askers row). */
-	turnMark?: '✓' | '?' | '–' | '';
+	/** Table talk, before the name: ✓ has asked, ? asking now, – passed asking. */
+	askMark?: AskMark;
+	/** Table talk, after the name: ✓ answered, ● answering now, – passed this question. */
+	answerMark?: AnswerMark;
 }
 
 function sideLabel(camp: Camp | null): string {
@@ -61,14 +64,25 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 		const { uid, name, camp, noDevice } = attrs;
 		const drag = consoleState.drag;
 		const active = uid !== undefined && drag.mode !== 'idle' && 'uid' in drag && drag.uid === uid;
-		const turnWord =
-			attrs.turnMark === '✓'
-				? `, ${t('turn.asker_done', { name })}`
-				: attrs.turnMark === '?'
-					? `, ${t('turn.asker_now', { name })}`
-					: attrs.turnMark === '–'
-						? `, ${t('turn.asker_passed', { name })}`
-						: '';
+		const askWord: Record<AskMark, string> = {
+			'✓': 'console.mark_asked',
+			'?': 'console.mark_asking',
+			'–': 'console.mark_passed_ask',
+			'': '',
+		};
+		const answerWord: Record<AnswerMark, string> = {
+			'✓': 'console.mark_answered',
+			'●': 'turn.answering',
+			'–': 'console.mark_passed_answer',
+			'': '',
+		};
+		const turnWord = [
+			attrs.askMark ? askWord[attrs.askMark] : '',
+			attrs.answerMark ? answerWord[attrs.answerMark] : '',
+		]
+			.filter(Boolean)
+			.map((key) => `, ${t(key, { name })}`)
+			.join('');
 		const label =
 			(noDevice ? `${name}, ${t('console.no_device')}` : `${name}, ${sideLabel(camp)}`) + turnWord;
 		// While the lesson is held nobody moves: no drag, no move menu.
@@ -84,6 +98,9 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 						mod,
 						noDevice ? 'member-chip--no-device' : '',
 						active ? 'member-chip--active' : '',
+						attrs.askMark === '?' ? 'member-chip--asking' : '',
+						attrs.askMark === '–' ? 'member-chip--passed-ask' : '',
+						attrs.answerMark === '●' ? 'member-chip--answering' : '',
 					].join(' '),
 					title: label,
 					'aria-label': label,
@@ -102,9 +119,20 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 				},
 				[
 					m('span.member-chip__mark', { 'aria-hidden': 'true' }, camp ? CAMP_MARK[camp] : '○'),
+					attrs.askMark
+						? m(
+								'span.member-chip__turn.member-chip__turn--ask',
+								{ 'aria-hidden': 'true' },
+								attrs.askMark,
+							)
+						: null,
 					m('span.member-chip__name', name),
-					attrs.turnMark
-						? m('span.member-chip__turn', { 'aria-hidden': 'true' }, attrs.turnMark)
+					attrs.answerMark
+						? m(
+								'span.member-chip__turn.member-chip__turn--answer',
+								{ 'aria-hidden': 'true' },
+								attrs.answerMark,
+							)
 						: null,
 					noDevice ? m('span.member-chip__tag', t('console.no_device')) : null,
 				],

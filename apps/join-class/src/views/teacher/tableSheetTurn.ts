@@ -1,9 +1,16 @@
 import m from 'mithril';
-import { notAskedUids, type ClassTable, type ClassTableAction } from '@freedi/shared-types';
+import {
+	choosing,
+	notAskedUids,
+	tableDone,
+	type ClassTable,
+	type ClassTableAction,
+} from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import { claimMoment } from '@/lib/classroom/turnMoment';
+import { hasAnswered } from '@/lib/classroom/tableTalkState';
 import {
 	QUICK_KEYS,
+	minuteRunning,
 	quickActionFor,
 	type QuickKind,
 	type TableMode,
@@ -14,10 +21,10 @@ import { quickActionName } from './TableCard';
 
 /**
  * The teacher's per-member turn fallbacks and the step verbs of the table sheet
- * (UX 16.E, 16.F). All verbs are infinitives. At Table talk:
- *   V1 / A   per not-yet member: "להעביר את התור ל…" and "לוותר על התור בשם …" (one inline confirm)
- *   B / C    per member: "לדבר עכשיו"; on the speaker: "לוותר בשם …" while the minute runs
- *   V2       per not-yet member: "לוותר על התור בשם …"
+ * (UX 16.L rev 3). All verbs are infinitives. At Table talk:
+ *   Pick   per member who has not asked: "לוותר על התור בשם …" (one inline confirm)
+ *   Talk   per member who has not answered: "לענות עכשיו", "לוותר בשם …";
+ *          on the one answering: "לסיים את הדקה"; a no-device member: "לענות עכשיו" only
  */
 
 /** The member whose "pass asking for them" is waiting for its one confirm. */
@@ -90,6 +97,13 @@ function passAskingFor(table: ClassTable, uid: string, name: string): m.Vnode {
 	]);
 }
 
+/** A question is on the table and not everyone has answered: a turn is running. */
+function turnRunning(table: ClassTable, now: number): boolean {
+	return (
+		table.step === 'talk' && !!table.questionId && !choosing(table, now) && !tableDone(table, now)
+	);
+}
+
 /** The turn buttons of one member row at Table talk (empty at Proposals and the plenum). */
 export function turnButtons(
 	table: ClassTable,
@@ -99,55 +113,63 @@ export function turnButtons(
 	now: number,
 ): m.Children {
 	if (mode !== 'tableTalk') return null;
-	const { phase } = claimMoment(table, uid, now);
-	const notYet = notAskedUids(table).includes(uid);
-	const out: m.Children[] = [];
-	if (phase === 'v1' || phase === 'a') {
-		if (notYet) {
-			out.push(
-				plain(table, {
-					label: t('console.pass_asker', { name }),
-					testId: 'sheet-pass-asker',
-					action: { action: 'passAsker', uid },
-				}),
-				passAskingFor(table, uid, name),
-			);
+	if (turnRunning(table, now)) {
+		if (minuteRunning(table, now) && table.speakerUid === uid) {
+			return plain(table, {
+				label: t('console.finish_minute'),
+				testId: 'sheet-finish',
+				action: { action: 'finishSpeaking' },
+			});
 		}
-	} else if (phase === 'v2') {
-		if (notYet) out.push(passAskingFor(table, uid, name));
-	} else if (phase === 'talk') {
-		out.push(
+		if (hasAnswered(table, uid, now)) return null;
+
+		return [
 			plain(table, {
 				label: t('console.speak_now', { name }),
 				testId: 'sheet-speak-now',
 				action: { action: 'nextSpeaker', uid },
 			}),
-		);
-		const running = table.speakerEndsAt !== undefined && table.speakerEndsAt > now;
-		if (table.speakerUid === uid && running) {
-			out.push(
-				plain(table, {
-					label: t('turn.pass_for', { name }),
-					testId: 'sheet-pass-speak',
-					action: { action: 'passSpeaking' },
-				}),
-			);
-		}
+			plain(table, {
+				label: t('turn.pass_for', { name }),
+				testId: 'sheet-pass-answer',
+				action: { action: 'passSpeaking', uid },
+			}),
+		];
+	}
+	if (choosing(table, now) && notAskedUids({ ...table, askerUid: null }).includes(uid)) {
+		return passAskingFor(table, uid, name);
 	}
 
-	return out;
+	return null;
 }
 
-/** The sheet's whole row of step verbs; the one that matches the table's step is disabled. */
+/** A no-device member: "answer now" only (the teacher puts their minute on the phones). */
+export function noDeviceButtons(
+	table: ClassTable,
+	id: string,
+	name: string,
+	mode: TableMode,
+	now: number,
+): m.Children {
+	if (mode !== 'tableTalk' || !turnRunning(table, now)) return null;
+	if (table.speakerUid === id && minuteRunning(table, now)) return null;
+
+	return plain(table, {
+		label: t('console.speak_now', { name }),
+		testId: 'sheet-speak-now-nd',
+		action: { action: 'nextSpeaker', uid: id },
+	});
+}
+
+/**
+ * The sheet's row of step verbs. Table talk has one: "start turn n" (the last
+ * resort: it opens the next pick, the asker counts as asked); it is off when
+ * nobody is left to ask. Proposals walk talk, write, rate; the plenum rates.
+ */
 export function stepButtons(table: ClassTable, mode: TableMode, now: number): m.Children {
 	const kinds: QuickKind[] =
-		mode === 'plenum'
-			? ['rate']
-			: mode === 'tableTalk'
-				? ['talk', 'turn']
-				: ['talk', 'write', 'rate'];
+		mode === 'plenum' ? ['rate'] : mode === 'tableTalk' ? ['turn'] : ['talk', 'write', 'rate'];
 	const own = quickActionFor(table, mode, now);
-	const phase = claimMoment(table, '', now).phase;
 
 	return kinds.map((kind) => {
 		const quick = kind === 'turn' ? { kind, n: table.turn + 1 } : { kind };
@@ -155,7 +177,11 @@ export function stepButtons(table: ClassTable, mode: TableMode, now: number): m.
 			(kind === 'talk' && table.step === 'talk') ||
 			(kind === 'write' && table.step === 'write') ||
 			(kind === 'rate' && table.step === 'rate');
-		const noTurnLeft = kind === 'turn' && notAskedUids(table).length === 0 && phase !== 'a';
+		const eligible = notAskedUids({
+			...table,
+			askerUid: table.step === 'pick' ? null : table.askerUid,
+		});
+		const noTurnLeft = kind === 'turn' && eligible.length === 0;
 		const name = quickActionName(quick);
 
 		return m(

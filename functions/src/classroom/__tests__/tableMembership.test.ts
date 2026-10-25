@@ -47,7 +47,11 @@ describe('removeMember', () => {
 		const back = addMember(removeMember(v2, 'a', NOW), 'a', NOW);
 		expect(notAskedUids(back)).toEqual(['c']);
 		try {
-			applyTableAction(back, { action: 'nextTurn' }, { actorUid: 'a', isAdmin: false, now: NOW });
+			applyTableAction(
+				back,
+				{ action: 'claimTurn', fromTurn: 1, questionId: 'q9' },
+				{ actorUid: 'a', isAdmin: false, now: NOW, lessonStep: 'tableTalk' },
+			);
 			throw new Error('expected a refusal');
 		} catch (error) {
 			expect((error as ClassroomError).reason).toBe('already-asked');

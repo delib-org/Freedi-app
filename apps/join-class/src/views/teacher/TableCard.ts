@@ -9,7 +9,9 @@ import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
 import { joinNames } from '@/lib/classroom/listNames';
 import {
 	QUICK_KEYS,
-	memberMark,
+	STUCK_AFTER_MS,
+	answerMark,
+	askMark,
 	quickActionFor,
 	statusLine,
 	tableIsDone,
@@ -32,6 +34,8 @@ export interface TableCardAttrs {
 	students: ReadonlyMap<string, RosterStudent>;
 	plenum: boolean;
 	tableTalk: boolean;
+	/** Table talk: the question this table is answering, one line. */
+	questionText?: string;
 	mainId: string;
 	tableNumbers: readonly number[];
 }
@@ -42,8 +46,12 @@ let noDeviceName = '';
 function nameOf(
 	uid: string | null | undefined,
 	students: ReadonlyMap<string, RosterStudent>,
+	table?: ClassTable,
 ): string {
-	return uid ? (students.get(uid)?.name ?? uid.slice(0, 4)) : '';
+	if (!uid) return '';
+	const noDevice = table?.noDeviceMembers.find((member) => member.id === uid);
+
+	return noDevice?.name ?? students.get(uid)?.name ?? uid.slice(0, 4);
 }
 
 export function tableModeOf(attrs: { plenum: boolean; tableTalk: boolean }): TableMode {
@@ -56,8 +64,11 @@ export function turnLine(table: ClassTable): string {
 }
 
 /** The engine action behind each next-step verb. */
-export function quickActionName(quick: QuickAction): 'toTalk' | 'toWrite' | 'toRate' | 'nextTurn' {
+export function quickActionName(
+	quick: QuickAction,
+): 'toTalk' | 'toWrite' | 'toRate' | 'nextTurn' | 'finishSpeaking' {
 	if (quick.kind === 'turn') return 'nextTurn';
+	if (quick.kind === 'finish') return 'finishSpeaking';
 
 	return quick.kind === 'talk' ? 'toTalk' : quick.kind === 'write' ? 'toWrite' : 'toRate';
 }
@@ -83,7 +94,14 @@ function waitRows(attrs: TableCardAttrs): m.Children {
 		params.names = names[0];
 	}
 
-	return m('p.table-card__wait', { 'data-testid': 'table-wait' }, t(line.key, params));
+	const stuck = line.elapsedMs !== undefined && line.elapsedMs >= STUCK_AFTER_MS;
+	const elapsed = line.elapsedMs === undefined ? '' : ` · ${formatSpeakerTime(line.elapsedMs)}`;
+
+	return m(
+		'p.table-card__wait',
+		{ 'data-testid': 'table-wait', class: stuck ? 'table-card__wait--stuck' : '' },
+		`${stuck ? '⏱ ' : ''}${t(line.key, params)}${elapsed}`,
+	);
 }
 
 function timerRows(attrs: TableCardAttrs): m.Children {
@@ -95,9 +113,10 @@ function timerRows(attrs: TableCardAttrs): m.Children {
 					totalMs: SPEAK_SECONDS * MS_PER_SECOND,
 				});
 	const line = timerLine(table, remaining, SPEAK_SECONDS * MS_PER_SECOND);
-	if (line.kind === 'none')
+	// At Table talk an ended minute is not announced: the row says who the table waits for.
+	if (line.kind === 'none' || (attrs.tableTalk && line.kind === 'over'))
 		return waitRows(attrs) ?? m('p.table-card__timer.table-card__timer--none', '—');
-	const who = nameOf(line.speakerUid, students);
+	const who = nameOf(line.speakerUid, students, table);
 
 	return [
 		m(
@@ -105,7 +124,7 @@ function timerRows(attrs: TableCardAttrs): m.Children {
 			{ class: line.kind === 'over' ? 'table-card__timer--over' : '' },
 			line.kind === 'over'
 				? t('console.time_over')
-				: t('console.speaker_line', { name: who, time: formatSpeakerTime(line.ms) }),
+				: `${t('turn.answering', { name: who })} · ${formatSpeakerTime(line.ms)}`,
 		),
 		m('div.table-card__bar', { 'aria-hidden': 'true' }, [
 			m('span.table-card__bar-fill', {
@@ -201,6 +220,9 @@ export const TableCard: m.Component<TableCardAttrs> = {
 						? t('console.all_done')
 						: t(tableStepKey(table, plenum)),
 				),
+				attrs.tableTalk && attrs.questionText && table.questionId
+					? m('p.table-card__question', { dir: 'auto' }, attrs.questionText)
+					: null,
 				timerRows(attrs),
 				table.askerUid
 					? m(
@@ -217,7 +239,8 @@ export const TableCard: m.Component<TableCardAttrs> = {
 							camp: students.get(uid)?.camp ?? null,
 							from: table.n,
 							tableNumbers: attrs.tableNumbers,
-							turnMark: attrs.tableTalk ? memberMark(table, uid, serverNow()) : undefined,
+							askMark: attrs.tableTalk ? askMark(table, uid, serverNow()) : undefined,
+							answerMark: attrs.tableTalk ? answerMark(table, uid, serverNow()) : undefined,
 						}),
 					),
 					table.noDeviceMembers.map((nd) =>

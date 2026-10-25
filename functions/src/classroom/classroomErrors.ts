@@ -10,7 +10,11 @@ export type ClassroomErrorReason =
 	| 'all-asked'
 	| 'not-speaker'
 	| 'minute-over'
-	| 'no-question';
+	| 'no-question'
+	| 'question-used'
+	| 'floor-taken'
+	| 'already-answered'
+	| 'others-first';
 
 /**
  * A refusal the engine's pure logic raises. It carries the callable error code

@@ -1089,215 +1089,242 @@ There is no new data and nothing is written to Firestore. Everything below is pe
 - **A. Pause the projector's copy when the console plays the same video?** [Default: no. That needs the YouTube IFrame API (rejected in 14.J-5), and the tag already warns.]
 - **B. Show the challenge question in the panel?** [Default: no. The bar carries the lesson name and the teacher knows the question. Add it only if teachers read the panel aloud as a script.]
 
-## 16. The table turn, one path per role (Tal, 2026-10-22, revision 2)
+## 16. The table turn, one screen per moment (Tal, 2026-10-25, revision 3)
 
-Status: Tal's four decisions of 2026-10-22 (evening) are final. This text replaces §16 (revision 1) as a whole.
-Scope: the student phone at **Table talk** (`TableFlow`, `kind: 'tableTalk'`) and the teacher's table card and sheet. **Proposals is unchanged** (talk → write → rate, `kind: 'proposals'`); its one new rule is the askerless fallback in 16.7 (E8).
-Overrides: §2.4 "the first asker is the student with the earliest `joinedAt`" and "the asker rotates per turn"; §2.4 "Writing mode (Table talk only)" (gone: nobody writes at Table talk); §3 rule "תשובה at the Table talk step" (no written thing at Table talk any more); UX §16.C frames E and F and §16.D (the hand-off card) for Table talk. §2.4 "Rating … from every table step" now applies to Proposals only.
-Method: read `TableFlow.ts`, `TalkScreen.ts`, `QuestionPick.ts`, `SubStepStrip.ts`, `AskersRow.ts`, `HandOffCard.ts`, `RatedList.ts`, `c3Logic.ts`, `turnMoment.ts`, `tableTurnConsole.ts`, `tableTransitions.ts`, `tableMembership.ts`, `fn_classTableStep.ts`, `fn_classAllTablesTo.ts`, `assignTables.ts`, `classroomModel.ts`, `classroomLogic.ts`, `locales/he.ts`.
+Status: built 2026-10-25 (t1: shared-types, functions engine, join-class student and teacher screens). Replaces §16 (revision 2) as a whole.
+Source: Tal's drawing `tal-table-turn-flow-v3.png` (Dan and Tal, six time steps), his reading of it, his decisions of 2026-10-25 and his addition "users can create their own question".
+Scope: the student phone at **Table talk** (`TableFlow`, `kind: 'tableTalk'`) and the teacher's table card and sheet. **Proposals is unchanged**: it keeps talk → write → rate, its step strip (מדברים · כותבים · מדרגים), the asker's speaker chips and the askerless fallback (rev 2 E8). Nothing in this section changes a Proposals screen or action meaning.
+Overrides: rev 2 16.1 (strip, askers row, speaker chips at Table talk), 16.2 (V1/A/B/C/C′/V2), 16.3, 16.4, 16.5, 16.7 E1, E3, E4 as they apply to Table talk; UX §16.A-K for Table talk (the UX agent redoes it against this text).
+Method: read `classroomModel.ts`, `classroomLogic.ts`, `classroomCallables.ts`, `tableTransitions.ts`, `fn_classTableStep.ts`, `tableTalkParts.ts`, `QuestionPick.ts`, `c3Data.ts` (`createTableQuestion`), `c3Logic.ts`, `locales/he.ts` + `en.ts`, §3 glossary.
 
-### Decisions of Tal, 2026-10-22 (final; they override anything else in this document)
-1. **Turn 1 starts with a volunteer.** Nobody asks until a student who has not asked taps "אני אשאל". The first tap wins: the same claim as every later turn. There is no first asker by seating order or `joinedAt`. The teacher can still give the turn to a named student (`passAsker`).
-2. **Everyone answers for one minute, the asker included.** The asker picks the question, reads it aloud and taps who speaks. Every tablemate with a device gets a minute, and so does the asker. Confirmed in code: the speaker chips are all of `memberUids`, and `everyoneSpoke` needs all of them.
-3. **No writing and no rating at Table talk.** A turn is pick → talk → the next volunteer. The hand-off is at the END of talk, once everyone has spoken or passed. Writing and rating stay in Proposals, untouched.
-4. **Passing.** A student may pass on asking. They are then marked as passed, which counts as done, and they cannot ask later. A student may pass on their minute; it counts as spoken. The table is done when every device member has asked or passed on asking.
+### Decisions of Tal (fixed, not reopened here)
+1. The next asker is the first to tap "I want to start" among those who have not asked. Nobody asks twice. No question is asked twice at a table.
+2. Answer order is volunteering: "I want to answer", first tap wins. The asker does not choose. The asker answers only after at least one other tablemate has answered.
+3. "Finish" ends one's own minute early, visible from the first second.
+4. "I want to pass" is a real secondary button, at answering (skip this question; counts as spoken) and at asking (give up asking for the lesson).
+5. One state per screen. The step strip, the peek and the sub-step pills leave the student Table talk screen. The teacher console keeps the full picture.
+6. Students without a device never need a screen; the teacher acts for them.
+7. One minute = `SPEAK_SECONDS` (60), on server time (`speakerEndsAt`).
+8. (Addition) Every student who has not asked can always write their own question in the pick list, not only when the teacher's questions run out. When they run out, it becomes the main choice. An own question is a turn like any other: locked for the table, same answers, and it enters the no-repeat rule.
 
-### 16.1 What changes, in one view
-- Table steps at Table talk: `pick` → `talk` → (the next turn's `pick`). `write` and `rate` are never reached at Table talk, and no student or console control leads there.
-- Two volunteer moments, one control, "אני אשאל":
-  - (V1) `pick` with no asker: turn 1, after an asker passes, after a teacher's "להתחיל סבב n", or after the asker leaves.
-  - (V2) `talk` once everyone has spoken or passed: the end of every turn.
-- **Strip** at Table talk: two pills, **שאלה · מדברים**. The peek rule of revision 1 stays for both pills: the phone defaults to the official step, the official pill says "עכשיו", every control on a peeked screen is disabled, and the one live control is "חזרה לעכשיו". Proposals keeps **מדברים · כותבים · מדרגים**.
-- **"The class's answers" sheet** ("הכיתה כותבת" button, `answer.class_list`): removed at Table talk, because nothing is written there. It stays at Proposals ("ההצעות של הכיתה"). Off-step reference at Table talk is the question on top of the talk screen and the used questions in the pick list.
-- **Askers row**, four marks: ✓ asked · "?" asking now · "–" passed · outline: not yet. Each mark has a word for screen readers.
-- **Speaker chips**, four marks: ✓ spoke · filled: speaking now · "–" passed (counts as spoken) · outline: not yet.
-- **Done**: derived, not stored. Every device member is in `askedUids` ∪ `passedAskingUids`, AND either there is no asker or the current turn's talk is over (everyone spoke or passed).
-
-### 16.2 Who moves the table: one finger per moment
-| Moment (official step) | The one forward control | On whose phone | Fallback |
+### 16.1 Objects and states
+| Object | What it is | Code (kept) | Lifecycle |
 |---|---|---|---|
-| V1. No asker yet (`pick`, `askerUid` null) | "אני אשאל" | every not-yet student; first tap wins | teacher sheet: "להעביר את התור ל{{name}}" |
-| A. Choose (`pick`, asker set) | "בחרנו, לדבר" (after a question is tapped) | asker | teacher card "לדבר" |
-| B. Before the first speaker (`talk`, nobody speaking) | a name chip | asker | teacher sheet "לדבר עכשיו" per member |
-| C. Speaking (`talk`, minute running) | a name chip (next speaker); secondary: pass | asker; the speaker has "ויתרתי על הדקה"; the asker has "לוותר בשם {{name}}" | when the minute is over, any tablemate taps a chip (as built) |
-| C′. Minute over, someone has not spoken | a name chip | every phone | — |
-| V2. Everyone spoke or passed (`talk`) | "אני אשאל" | every not-yet student; first tap wins | teacher card "להתחיל סבב {{n}}" → V1, or the sheet's pass-to |
-| Done | none | — | the class moves on with "פתיחת השלב הבא" |
+| Table | 3-5 students, one doc | `ClassTable` | per lesson |
+| Turn (סבב) | one asker's question, answered by everyone | `turn` (counter), `step: 'pick' \| 'talk'` | choosing → answering → over |
+| Asker (שואל/ת, never shown as a noun) | the student who started this turn | `askerUid` | null while choosing; set by "I want to start" |
+| Question | a teacher's guiding question, or the table's own question | Statement `question`, `classRole: 'guiding'`; own = has `classTable.tableId` | free → used at this table (`usedQuestionIds`) |
+| Answerer (עונה) | the student holding the floor for one minute | `speakerUid`, `speakerEndsAt` | none → answering → answered |
+| Answered | spoke or passed this turn | `spokenUids` (passes also in `passedSpeakingUids`) | cleared each turn |
+| Asked / passed asking | done with asking for the lesson | `askedUids`, `passedAskingUids` | whole lesson |
+| No-device member | a student with no phone, by name | `noDeviceMembers[]` | never asks; never gates the table (default, 16.9) |
 
-The secondary "ויתרתי על התור" sits beside "אני אשאל" on every not-yet phone at V1 and V2. It is also on the asker's phone at A, before "בחרנו, לדבר". "+ שאלה משלנו" stays open to everyone at `pick`, both A and V1.
+Derived, per table (shared-types `classroomLogic`, pure):
+- `floorOpen(t, now)` = `speakerTimeOver(t, now)` (nobody holds a running minute).
+- `othersAnswered(t)` = some uid in `spokenUids`, not in `passedSpeakingUids`, ≠ `askerUid`. NEW.
+- `askerMayAnswer(t)` = `othersAnswered(t)` OR every member except the asker is in `spokenUids` (all others passed). NEW. Default: a pass does not unlock the asker on its own, but a table where everyone else passed cannot stall.
+- `choosing(t, now)` = (`step == 'pick'`) OR (`step == 'talk'` AND `everyoneSpoke(t, now)`), and not `tableDone`. The end of a turn needs no write: the pick screen appears when the last minute ends.
+- `tableDone(t, now)`: unchanged (`notAskedUids` empty AND (no asker OR everyone spoke)).
+- Retired at Table talk: `askerStates`, the V1/V2 vocabulary, `claimMoment.phase` values `a`, `v2`.
 
-### 16.3 The path, per role
-Format: phone shows · instruction (≤7 words) · forward control. Example table: Dana, Noa, Omri, Lior, all with devices.
+### 16.2 Labels and names (one name per concept)
+Canonical verbs: **to start** (a turn), **to answer** (one minute), **to finish** (one's minute), **to pass** (לוותר). "Speak/לדבר" leaves student Table talk text; code keeps `speaker*` (schema rename not worth a migration: accepted deviation, listed here so nobody reads it as a second concept). "Turn" in EN stays reserved for סבב (§3); one person's minute is "{{name}} is answering", never "{{name}}'s turn".
+Stage name on top of every screen: `step.tableTalk` = "שיחת שולחן" / "Table talk" (kept; the brief's "שיחה בשולחן" is not the app's label).
 
-**Volunteer-asker (Noa, turn 1)**
-1. V1 `pick`, no asker. Header "שולחן 3 · סבב 1 מתוך 4 · עכשיו: בוחרים שאלה". The askers row is all outline, and the teacher's questions show read-only · "מי רוצה לשאול ראשון?" · ✋ "אני אשאל" (secondary "ויתרתי על התור").
-2. Noa taps first. All phones redraw: her chip shows "?", and her phone reads "התור שלכם לשאול".
-3. A `pick`. The questions are tappable; a tap writes `pickQuestion`, and the choice fills on every phone · "בחרו שאלה לשולחן" · ✋ "בחרנו, לדבר" (secondary "ויתרתי על התור").
-4. B `talk`. The screen goes dark with the question on top and a faint "1:00". Noa reads aloud · "קראו בקול. בחרו מי ראשון." · ✋ a name chip. She may tap her own name.
-5. C `talk`. Each minute: "מסכים למטה. מדברים." She may tap the next chip at any time. When a speaker says "pass", she taps "לוותר בשם {{name}}".
-6. V2 `talk`, all ✓ or "–". Her own chip in the askers row turns ✓ · "כולם דיברו. מי שואל עכשיו?" · no control: she has asked.
-Step count: 3 taps (אני אשאל, a question, בחרנו לדבר) + 1 per speaker (≥1). Revision 1 had 4 + 1 per speaker + send.
-
-**Tablemate (Omri)**
-1. V1 · "מי רוצה לשאול ראשון?" · ✋ "אני אשאל". If Noa wins the race, the button shows "שומרים…" and then Noa's name. **No error is shown.**
-2. A · "התור של נועה לבחור שאלה" · none ("+ שאלה משלנו" is open)
-3. B · "מקשיבים לשאלה. מסכים למטה." · none (his chips are disabled; hint "התור של נועה לבחור מי הבא")
-4. His minute: "התור שלכם לדבר" · secondary "ויתרתי על הדקה" (his chip turns "–", and the floor opens to C′)
-5. C′ · "הזמן נגמר. מי הבא בתור?" · ✋ a chip (every phone)
-6. V2 · "כולם דיברו. מי שואל עכשיו?" · ✋ "אני אשאל" / "ויתרתי על התור"
-7. **Last not-yet student** (Lior, everyone else ✓ or "–"): V2 reads "כולם דיברו. התור שלכם לשאול" · ✋ "אני אשאל" / "ויתרתי על התור". Every other phone reads "ממתינים לליאור".
-8. **Done** (Lior's talk is over, or he passed): every phone shows the header "שולחן 3 · סיימתם את הסבבים", the instruction "חכו לשאר השולחנות" and no control. The askers row is all ✓ or "–".
-9. **Everyone passes**: at V1 each student taps "ויתרתי על התור". When the last one does, the table is done at once: the askers row is all "–", the instruction is "חכו לשאר השולחנות", and the teacher card shows "שאלו 0 · ויתרו 4".
-
-**Teacher (table card · sheet)**
-| Table state | Card: now line · second line | Card quick action | Sheet adds |
-|---|---|---|---|
-| V1 | בוחרים שאלה · ממתינים למי שישאל | none | "להעביר את התור ל{{name}}" per not-yet member; "לוותר על התור בשם {{name}}" |
-| A, no question yet | בוחרים שאלה · ממתינים ל{{asker}} | none | pass-to (replaces the asker; they stay not-yet) |
-| A, question chosen | בוחרים שאלה · ממתינים ל{{asker}} | לדבר | לדבר |
-| B / C | מדברים · {{speaker}} · 0:42 | none | "לדבר עכשיו" per member; "לוותר בשם {{speaker}}" |
-| V2 | מדברים · עוד לא שאלו: {{names}} | להתחיל סבב {{n}} | להתחיל סבב {{n}} |
-| Done | כולם סיימו · שאלו {{a}} · ויתרו {{p}} | none | none |
-- Card head: "שולחן 3 · סבב n מתוך max". `max` = device members − members who passed on asking.
-- At Table talk the console offers no "לכתוב", "לדרג" or "כל השולחנות: לדרג".
-- **Stuck table**, step by step:
-  - At V2 nobody claims: "להתחיל סבב {{n}}" returns the table to V1. If still nobody volunteers, the sheet's "להעביר את התור ל{{name}}" names someone.
-  - At B the asker is frozen: "לדבר עכשיו" on a member.
-  - At C nobody taps a chip: wait for C′, when anyone may tap.
-  - A student has left the room: "הסרה" (16.7, E7).
-
-### 16.4 Edge moments, fixed
-| Case | What phones show | Engine |
-|---|---|---|
-| Two volunteers tap together (V1 or V2) | the winner's chip "?" and their name in the asker line; the loser's button "שומרים…" → gone; no error line | first transaction wins; the second gets `turn-claimed`, swallowed by the client (as built) |
-| Asker passes at A after claiming by mistake | back to V1 for everyone; their chip "–" | 16.7 E2: asker → null, their picked question freed |
-| A not-yet student passes at V1 while others still can volunteer | their chip "–"; their buttons vanish | E2 |
-| A speaker passes | their chip "–", the floor opens: "הזמן נגמר. מי הבא בתור?" | E3 sets the minute's end to now |
-| A newcomer is seated mid-talk | a new outline chip in both rows; V2 waits until they speak or pass | `everyoneSpoke` reads `memberUids` |
-| Asker leaves mid-talk | the turn continues; any tablemate may tap chips (askerless) | E7, E8 |
-| Lesson paused | every control refused (as built); the frame keeps its state | unchanged |
-| A table at `write`/`rate` at Table talk (a table that was mid-turn when this ships) | drawn as V2 | the claim is still allowed from `rate` |
-
-### 16.5 Labels (new or changed; join-class `locales/*.ts`, all 7: he, en, ar, es, de, nl, fa)
-One concept per word: **"ויתור"** (pass) for both passes: "ויתרתי על התור" (asking), "ויתרתי על הדקה" (speaking). "עברתי" is not used. **"אני אשאל"** is the one claim label, at turn 1 and at every later turn.
-| Concept | HE | EN | i18n key | Change |
+| Concept | EN | HE | i18n key | Change |
 |---|---|---|---|---|
-| Claim the turn | אני אשאל | I'll ask | `turn.claim` NEW | replaces `turn.start_mine` |
-| Pass on asking (own) | ויתרתי על התור | I'll pass on asking | `turn.pass_ask` NEW | |
-| Pass on my minute (own) | ויתרתי על הדקה | I'll pass my minute | `turn.pass_speak` NEW | |
-| Pass on someone's minute (asker, teacher) | לוותר בשם {{name}} | Pass for {{name}} | `turn.pass_for` NEW | the console reuses this key |
-| Teacher: pass asking for someone | לוותר על התור בשם {{name}} | Pass asking for {{name}} | `console.pass_ask_for` NEW | sheet only |
-| V1 instruction | מי רוצה לשאול ראשון? | Who wants to ask first? | `turn.who_first_asks` NEW | |
-| V2 instruction | כולם דיברו. מי שואל עכשיו? | Everyone spoke. Who asks now? | `turn.who_asks_now` NEW | for everyone at V2 |
-| V2, last not-yet student | כולם דיברו. התור שלכם לשאול | Everyone spoke. Your turn to ask | `turn.last_to_ask` NEW | |
-| V2, others when one is left | ממתינים ל{{name}} | Waiting for {{name}} | `turn.waiting_for` NEW | same words as `console.waiting_for` |
-| Done, wait | חכו לשאר השולחנות | Wait for the other tables | `turn.wait_others` | value changed (drops "דרגו, ואז") |
-| Header when done | שולחן {{n}} · סיימתם את הסבבים | Table {{n}} · all turns done | `turn.header_done` NEW | |
-| Askers row, passed (screen reader) | {{name}}, ויתור על התור | {{name}}, passed | `turn.asker_passed` NEW | glyph "–" |
-| Speaker chip, passed (screen reader) | {{name}}, ויתור על הדקה | {{name}}, passed the minute | `turn.speaker_passed` NEW | glyph "–" |
-| Teacher: waiting for a volunteer | ממתינים למי שישאל | Waiting for someone to ask | `console.waiting_volunteer` NEW | avoids "מתנדב" (masculine) and "השואל" (retired, §3) |
-| Teacher: asked/passed count | שאלו {{a}} · ויתרו {{p}} | Asked {{a}} · passed {{p}} | `console.asked_passed` NEW | |
-| Teacher: table done | כולם סיימו | All done | `console.all_done` NEW | replaces `console.all_asked` (passers did not ask) |
-| Teacher: next turn | להתחיל סבב {{n}} | Start turn {{n}} | `console.quick_turn` | value kept; meaning: opens V1 |
-- Kept: `turn.asker_me`, `turn.asker`, `turn.instr_pick`, `turn.instr_pick_other`, `turn.to_talk`, `turn.instr_read`, `turn.instr_listen`, `turn.speak_mine`, `turn.time_up`, `turn.all_spoke` (now only the teacher sheet uses it), `turn.peek_*` (pick/talk at Table talk; talk/write/rate at Proposals), `console.pass_asker`, `console.speak_now`.
-- Retired at Table talk (keys deleted where nothing else uses them): the rate-step hand-off `turn.start_mine`, `turn.next_open`, `turn.first_tap`, `turn.next_is_you`, `turn.next_one_of`, `turn.next_is`, `turn.instr_rate_open`, `turn.instr_rate_next`, `turn.all_asked`; write/rate at this step `turn.sent_count`, `turn.instr_write`, `turn.instr_help`, `turn.instr_rate`, `answer.mode_table`, `answer.mode_each`; the `HandOffCard` component (UX may reuse its shape for V2).
-- Kept for Proposals only: `turn.finish_talk`, `turn.to_rate`, `rate.class_writing`, `proposal.*`.
-- §3 rows "Answer", "One answer for the table" and "Everyone writes" no longer have a Table talk screen. Mark them "Proposals / teacher only", or retire them in the §3 table.
+| Stage name (top line) | Table talk | שיחת שולחן | `step.tableTalk` | kept |
+| Table line (under stage) | Table {{n}} · Turn {{turn}} of {{max}} | שולחן {{n}} · סבב {{turn}} מתוך {{max}} | `turn.header` | value: drops "· עכשיו: {{step}}" |
+| Pick list title | Pick a question | בחרו שאלה | `turn.instr_pick` | value changed (was "בחרו שאלה לשולחן") |
+| Teacher's questions group | The teacher's questions | השאלות של המורה | `question.teacher_list` | kept |
+| Write own question (entry) | + Our own question | + שאלה משלנו | `question.add_own` | kept; now always shown at Pick |
+| Own question placeholder | Write the question | כתבו את השאלה | `question.add_placeholder` | kept |
+| Own question tag on a list item | Our own question | שאלה משלנו | `question.add_own` | kept (same concept) |
+| Teacher's questions used up | The teacher's questions were all asked. Write your own | השאלות של המורה נשאלו. כתבו שאלה משלכם | `turn.questions_used` | value extended |
+| Used question tag | Asked | נשאלה | `question.asked` | kept |
+| Start a turn (primary) | I want to start | אני רוצה להתחיל | `turn.claim` | value (was "אני אשאל") |
+| Pass asking (secondary) | I want to pass | אני רוצה לוותר | `turn.pass_ask` | value (was "ויתרתי על התור") |
+| Pass asking, confirm text | You will not ask in this lesson | לא תשאלו בשיעור הזה | `turn.pass_ask_confirm` | kept |
+| Pass asking, confirm button | Yes, pass | כן, לוותר | `turn.pass_ask_yes` | value |
+| Choose first (hint when start tapped with nothing chosen) | Pick a question first | קודם בוחרים שאלה | `turn.pick_first` | NEW |
+| Wait (already asked/passed) | Wait for others to pick a question | חכו שאחרים יבחרו שאלה | `turn.wait_pick` | NEW |
+| Asker waits | Let others answer first | תנו לאחרים לענות קודם | `turn.others_first` | NEW |
+| Answer (primary) | I want to answer | אני רוצה לענות | `turn.answer` | NEW (replaces chips at Table talk) |
+| Pass answering (secondary) | I want to pass | אני רוצה לוותר | `turn.pass_answer` | NEW (replaces `turn.pass_speak` at Table talk) |
+| Finish own minute | Finish | סיימתי | `turn.finish` | NEW |
+| My minute, status | Your minute | הדקה שלכם | `turn.answer_mine` | NEW (replaces `turn.speak_mine` at Table talk) |
+| Someone answers | {{name}} is answering | {{name}} עונה | `turn.answering` | NEW (replaces `turn.speaker` at Table talk) |
+| I already answered | You had your turn | כבר עניתם | `turn.answered_me` | NEW |
+| I passed this question | You passed this question | ויתרתם על השאלה הזאת | `turn.passed_answer_me` | NEW |
+| Floor open, nobody answering (my status secondary) | Who answers next? | מי עונה עכשיו? | `turn.who_answers` | NEW |
+| Passed asking, own status at Pick | You passed on asking | ויתרתם על התור לשאול | `turn.passed_ask_done` | value |
+| Countdown, screen reader | {{seconds}} seconds left | נותרו {{seconds}} שניות | `turn.timer_label` | kept key, value |
+| Done header | Table {{n}} · all turns done | שולחן {{n}} · סיימתם את הסבבים | `turn.header_done` | kept |
+| Done instruction | Wait for the other tables | חכו לשאר השולחנות | `turn.wait_others` | kept |
+| Lost race, quiet line (after start or answer) | {{name}} was first | {{name}} הקדימו (?) | `turn.was_first` | NEW; not an error |
+| Action failed (network) | That did not work. Try again | זה לא עבד. לנסות שוב | `turn.action_failed` | kept |
+| Teacher: waiting to start | Waiting for someone to start | ממתינים למי שיתחיל | `console.waiting_start` | NEW (replaces `console.waiting_volunteer`) |
+| Teacher: not answered yet | Not answered yet: {{names}} | עוד לא ענו: {{names}} | `console.not_answered` | NEW |
+| Teacher: give the floor | Answer now | לענות עכשיו | `console.speak_now` | value (was "לדבר עכשיו") |
+| Teacher: end a minute | End the minute | לסיים את הדקה | `console.finish_minute` | NEW |
+| Teacher: pass answering for | Pass for {{name}} | לוותר בשם {{name}} | `turn.pass_for` | kept (console only now) |
+| Teacher: pass asking for | Pass asking for {{name}} | לוותר על התור בשם {{name}} | `console.pass_ask_for` | kept |
+| Teacher: next turn | Start turn {{n}} | להתחיל סבב {{n}} | `console.quick_turn` | kept |
+| Teacher: counts | Asked {{a}} · passed {{p}} | שאלו {{a}} · ויתרו {{p}} | `console.asked_passed` | kept |
 
-### 16.6 Object model delta (`ClassTable`, shared-types; optional fields only, no new picklist value)
-| Field | Meaning | Life |
+Same visible words, two keys: "I want to pass" (`turn.pass_ask`, `turn.pass_answer`) is Tal's wording for both. They never appear on the same screen; the asking one has a confirm that states the lesson-long consequence. Flagged, not blocking.
+Retired at Table talk (delete keys nothing else reads; build agent greps): `turn.to_talk`, `turn.instr_pick_other`, `turn.instr_read`, `turn.instr_listen`, `turn.instr_talk`, `turn.time_up`, `turn.next_speaker`, `turn.asker_picks_next`, `turn.who_first_asks`, `turn.who_asks_again`, `turn.who_asks_now`, `turn.last_to_ask`, `turn.waiting_for`, `turn.asker_me`, `turn.asker`, `turn.askers_label`, `turn.asker_done|now|wait|passed`, `turn.speaker_passed`, `turn.pill_*`, `turn.pill_now`, `turn.strip_label`, `turn.peek_*`, `turn.now_pick|talk`, `turn.instr_write_own_other`, `console.pass_asker`, `console.quick_talk`. Proposals still reads `turn.pill_talk|write|rate`, `turn.peek_why_*`, `turn.now_*`, `turn.speaker`, `turn.next_speaker`, `turn.pass_speak`, `turn.time_up`: keep those.
+All 7 locale files (`apps/join-class/src/lib/locales/{he,en,ar,es,de,nl,fa}.ts`) get every NEW/value row.
+
+### 16.3 Screen frame (every Table talk screen)
+1. `step.tableTalk` (stage name).
+2. The question text, once the turn has one (`questionId` set and step `talk`). Absent at Pick.
+3. `turn.header` (table, turn n of max): secondary.
+4. One state body (16.4). One primary control at most, one secondary at most.
+No strip, no pills, no askers row, no speaker chips, no "class's answers" sheet.
+
+### 16.4 The state machine per student
+Evaluated top to bottom; the first match wins. `me` = this device's uid. `now` = server-corrected clock.
+| # | State | Server truth | Shown | Primary | Secondary |
+|---|---|---|---|---|---|
+| D | Table done | `tableDone(t, now)` | `turn.header_done`, `turn.wait_others` | — | — |
+| P1 | Pick (may start) | `choosing` AND me ∉ `askedUids` ∪ `passedAskingUids` | `turn.instr_pick`; list = teacher's questions + this table's own questions, unused first, used greyed last with `question.asked`; "+ שאלה משלנו" always last in the list (when all used: `turn.questions_used`, own box open and first) | `turn.claim` (enabled once a question is selected or own text is typed; tapped with nothing: `turn.pick_first`) | `turn.pass_ask` → confirm |
+| P2 | Pick (wait) | `choosing` AND me ∈ `askedUids` ∪ `passedAskingUids` | `turn.wait_pick`; if passed: `turn.passed_ask_done` | — | — |
+| S | My minute | `step=='talk'` AND `speakerUid==me` AND `speakerEndsAt > now` | question, countdown from 0:59, `turn.answer_mine` | `turn.finish` | — |
+| L | Someone answers | `step=='talk'` AND `speakerUid≠me` AND `speakerEndsAt > now` | question, countdown, `turn.answering` {name}; under it my status: `turn.answered_me` / `turn.passed_answer_me` if me ∈ `spokenUids` | — | — |
+| W | Asker waits | `talk`, `floorOpen`, `askerUid==me`, me ∉ `spokenUids`, NOT `askerMayAnswer` | question, `turn.others_first` | — | — |
+| A | May answer | `talk`, `floorOpen`, me ∉ `spokenUids`, (me ≠ asker OR `askerMayAnswer`) | question, `turn.who_answers` | `turn.answer` | `turn.pass_answer` |
+| H | Had my turn | `talk`, `floorOpen`, me ∈ `spokenUids` | question, `turn.answered_me` (or `turn.passed_answer_me`), `turn.who_answers` | — | — |
+Mapping to Tal's drawing: col 1 = P1 both; col 2 = Dan A, Tal W; col 3 = Dan S, Tal L; col 4 = Dan H, Tal A (unlocked: Dan answered); col 5 = Dan L (with "had my turn"), Tal S; col 6 = Dan P1, Tal P2.
+- A student not seated at a table sees the existing `turn.no_table` screen (unchanged).
+- Lesson paused: the frame keeps its state; every control is disabled (as built).
+- Legacy table at `write`/`rate`/`pick`+asker when this ships: drawn as P1/P2; `claimTurn` accepts it (16.6).
+
+### 16.5 Task flows
+Example table: Dan, Tal, Noa (devices), Yossi (no device). Step counts are taps by that student.
+
+F1. Happy path (Tal's drawing), turn 1, Tal asks (Tal: 2 taps to ask + 1 to answer; others 1 per question)
+1. P1 on all. Tal taps a question, then `turn.claim`. Server `claimTurn` → Tal asker, question locked, step `talk`.
+2. Dan, Noa: A. Tal: W.
+3. Dan taps `turn.answer` → `claimSpeaker`. Dan: S (0:59, Finish). Tal, Noa: L "Dan is answering".
+4. Minute ends (time up or Dan taps Finish). Dan: H. Noa: A. Tal: A (Dan answered, so `askerMayAnswer`).
+5. Tal taps `turn.answer`: S. Then Noa answers (asker need not be last).
+6. Noa's minute ends → `everyoneSpoke` → `choosing`: Dan, Noa P1; Tal P2. Repeat until D.
+
+F2. Asks an own question (2 taps + typing)
+1. P1. Noa taps "+ שאלה משלנו", types the question.
+2. Noa taps `turn.claim`. The client creates the question (`createTableQuestion`, own Statement with `classTable.tableId`), then calls `claimTurn { questionId: <new id> }`.
+3. Same as F1 from step 2. The own question joins `usedQuestionIds`; on later P1 screens at this table it shows greyed "נשאלה".
+4. If Noa loses the race at step 2, her question stays on this table's list as an unused own question, selectable by any later starter (default). Her screen moves to A with the winner's question; quiet line `turn.was_first`.
+
+F3. Passes answering (1 tap)
+1. Noa in A taps `turn.pass_answer` → `passSpeaking {}`. Noa: H with `turn.passed_answer_me`. She counts as answered for "everyone answered"; she does not unlock the asker.
+
+F4. Passes asking (2 taps: pass + confirm)
+1. Dan in P1 taps `turn.pass_ask`; confirm `turn.pass_ask_confirm` → `turn.pass_ask_yes` → `passAsking {}`.
+2. Dan: P2 for the rest of the lesson at every Pick; he still answers every question (A/S/H). `max` in the header drops by one.
+
+F5. Asker answers after one other: covered in F1 steps 2-5. If every other tablemate passes, the asker unlocks too (`askerMayAnswer`, default).
+
+F6. Time runs out vs Finish
+- Time out: no write happens. Every phone redraws when `speakerEndsAt <= now`; `everyoneSpoke` and `floorOpen` already count the speaker. The next `claimSpeaker` records the previous speaker into `spokenUids`.
+- Finish: `finishSpeaking` → `speakerEndsAt = now`, speaker into `spokenUids`. Same next state as time out.
+
+F7. A tablemate never taps (no answer, no pass) → **recommendation: the teacher unblocks; no automatic timeout.**
+- The table waits in A (holdout) / H (others). The teacher card shows `console.not_answered` {Lior} and the time since the floor opened. The sheet offers `turn.pass_for` {Lior} (→ `passSpeaking { uid }`) or `console.speak_now` (→ `nextSpeaker { uid }`).
+- Why not the asker: rev 3 takes the floor-control power away from the asker on purpose (Tal decision 2). Why not a timeout: 12-15-year-olds who are thinking or shy would be skipped silently; tablemates nudging in the room is the first remedy, the teacher the second.
+- Same at Pick: nobody taps "I want to start" → card shows `console.waiting_start` with elapsed time; the teacher talks to the table or passes asking for a named holdout (`console.pass_ask_for`). `passAsker` is not offered at Table talk any more (default).
+
+F8. Joining / leaving mid-turn
+- Newcomer seated at `talk`: not in `spokenUids` → A (may answer this question); not asked → P1 at the next Pick. "Everyone answered" waits for them (as built: `memberUids`).
+- Leaver: removed from `memberUids`, `spokenUids`, `passedSpeakingUids`; if they held the floor, the floor opens. If they were the asker at `talk`, the turn continues askerless (`askerMayAnswer` not needed). They stay in `askedUids` / `passedAskingUids`; rejoining gives no second turn (rev 2 E7, kept).
+
+F9. Teacher acts for a no-device student (Yossi)
+- Yossi never gates `everyoneSpoke` or `tableDone` (default; today only `memberUids` count).
+- To give Yossi a minute on everyone's screen, the teacher taps `console.speak_now` on Yossi in the sheet → `nextSpeaker { uid: <noDevice id> }`: all phones show L "Yossi is answering". Optional; he can also just speak in the room.
+- No-device members never ask (§2.4).
+
+### 16.6 Server actions (`ClassTableAction`, `tableTransitions.ts`)
+Every action keeps `assertLessonRunning` (refused while paused) and runs in one transaction (first write wins).
+
+| Action | Status | Who | From | Effect |
+|---|---|---|---|---|
+| `claimTurn { fromTurn, questionId }` | NEW (member path of `nextTurn` moves here) | a seated member not asked/passed | `choosing` (pick; or talk with everyone spoken; legacy write/rate) | if talk/write/rate: new turn (`turn+1`, turn fields cleared, previous asker into `askedUids`); then `askerUid = me`, `questionId`, `usedQuestionIds += questionId`, `askedUids += me`, `step = 'talk'`, `spokenUids = []` |
+| `claimSpeaker {}` | NEW | a seated member, for self | talk | previous speaker (if any) into `spokenUids`; `speakerUid = me`, `speakerEndsAt = now + 60s` |
+| `finishSpeaking {}` | NEW | the speaker; admin | talk, minute running | `speakerEndsAt = now`, speaker into `spokenUids` |
+| `passSpeaking { uid? }` | CHANGED (extended) | member for self; admin names `uid`; at Proposals the asker as before | talk | if target holds a running minute: as rev 2 (end it as passed); else target into `spokenUids` + `passedSpeakingUids` |
+| `passAsking { uid? }` | kept | member for self; admin names `uid` | any | `passedAskingUids += uid`. The "asker passes while choosing" branch is unreachable at Table talk (no choosing asker) |
+| `nextTurn` | CHANGED: admin only | admin | any | as rev 2 E5: new turn, `step = 'pick'`, `askerUid = null` (opens Pick). Member calls → refused |
+| `nextSpeaker { uid }` | CHANGED at Table talk: admin only; `uid` may be a `noDeviceMembers` id | admin (Table talk); asker/member as before (Proposals) | talk | as built |
+| `pickQuestion`, `toTalk` | not used at Table talk (folded into `claimTurn`); kept for compatibility | — | — | — |
+| `passAsker` | kept in engine, not offered at Table talk | admin | pick | as built |
+| `toWrite`, `setWritingMode`, `toRate` | Proposals only | as built | as built | as built |
+
+Refusals the server must guard (machine codes; the client swallows the race ones):
+| Case | Action | Code |
 |---|---|---|
-| `askerUid: string \| null` | null = a volunteer moment (V1), or an askerless turn | null on a new table (no `joinedAt` rule) |
-| `askedUids?: string[]` | asked = their turn reached `talk` (**moved:** added at `toTalk`, not at the next claim) | whole lesson, per table doc |
-| `passedAskingUids?: string[]` NEW | passed on asking: counts as done, may not claim | whole lesson, per table doc |
-| `passedSpeakingUids?: string[]` NEW | passed this turn's minute (also in `spokenUids`) | cleared with the turn fields |
-| `writingMode`, `writingLocked` | unused at Table talk; Proposals is "everyone writes" | left in the schema; not read at Table talk |
-- Derived (shared-types `classroomLogic`): `notAskedUids` excludes `askedUids`, `passedAskingUids` and the current asker. `tableDone(table, now)` = `notAskedUids` is empty AND (`askerUid` is null OR `everyoneSpoke`).
-- `askerStates` → `done` | `now` | `passed` | `wait`. The asker is `now` until V2, then `done`.
+| Already asked / already passed asking | `claimTurn` | `already-asked` / `already-passed` |
+| Two starters tap together; stale `fromTurn` | `claimTurn` | `turn-claimed` (swallowed; show `turn.was_first`) |
+| Claim while the current turn is still being answered | `claimTurn` | `talk-not-over` |
+| Question already used at this table (guiding or own) | `claimTurn` | `question-used` NEW |
+| Question not of this lesson, a challenge, or an own question of another table | `claimTurn` (callable reads it) | `invalid-argument` (extend the existing read with the `classTable.tableId` check) |
+| Claim at Proposals | `claimTurn` | `failed-precondition` (lesson step must be `tableTalk`) |
+| Someone holds a running minute (double tap) | `claimSpeaker` | `floor-taken` NEW (swallowed; show `turn.was_first`) |
+| Already answered or passed this question | `claimSpeaker`, `passSpeaking` | `already-answered` NEW |
+| Asker before `askerMayAnswer` | `claimSpeaker` | `others-first` NEW |
+| Not at talk / no question | `claimSpeaker` | `failed-precondition` |
+| Finish by someone else / minute already over | `finishSpeaking` | `not-speaker` / `minute-over` |
+| Not seated | all | `permission-denied` (as built) |
+Own question creation stays a client write (`createTableQuestion`). Build check: Firestore rules must let any seated student create it at Pick, not only an asker (today's UI only opened it for the asker).
+Schema: no new `ClassTable` field; `ClassTableAction` gains three members (`claimTurn`, `claimSpeaker`, `finishSpeaking`) and `passSpeaking` gains `uid?`. shared-types → functions .tgz repack applies.
 
-### 16.7 Engine changes (`tableTransitions.ts`, `tableMembership.ts`, `assignTables.ts`), minimal
-**E1. The claim** (`nextTurn` by a member; `fromTurn` required from the client).
-- Allowed in exactly two states:
-  - V1, `pick` with `askerUid` null. Effect: `askerUid = me`, and `turn` is unchanged.
-  - V2, `talk` with `everyoneSpoke`. Effect: `step: 'pick'`, `turn + 1`, `askerUid = me`, and the turn fields are cleared (questionId, speaker, spokenUids, passedSpeakingUids).
-  - Also from `rate`, for tables that were mid-turn when this ships.
-- Refusals, checked in this order:
-  1. In `askedUids` → `already-asked`.
-  2. In `passedAskingUids` → `already-passed`.
-  3. `fromTurn` ≠ `turn`, or (`pick` and an asker is set) → `turn-claimed` (a lost race; the client swallows it).
-  4. `talk` and not `everyoneSpoke` → `talk-not-over`.
-- The current asker is already in `askedUids` (from E4), so they cannot claim. No special clause is needed.
+### 16.7 Screen inventory
+| Screen (student, `/m/:mid`, Table talk) | Single job | Empty | Loading | Error | No permission | Done |
+|---|---|---|---|---|---|---|
+| P1 Pick | choose a question and start, or pass asking | no teacher questions: own box is the main choice | list skeleton | inline `turn.action_failed` + retry; own-question create fail `question.add_failed` | not seated: `turn.no_table` | → A/W/L on claim |
+| P2 Wait to pick | know someone else is choosing | — | — | — | — | → A/L when a turn starts |
+| S My minute | answer, finish early | — | — | finish fails: retry inline; the clock still ends it | — | → H |
+| L Someone answers | listen; know who and how long | — | — | — | — | → A/W/H/P |
+| W Asker waits | know you answer after others | — | — | — | — | → A |
+| A May answer | take the floor or skip | — | — | `turn.action_failed`; races swallowed | — | → S/H |
+| H Had my turn | know you are done for this question | — | — | — | — | → P1/P2/D |
+| D Table done | wait for the class | — | — | — | — | the teacher opens the next step |
 
-**E2. `passAsking { uid? }`** NEW.
-- A member, for themselves: allowed at any step while they are not yet done.
-  - The current asker may pass only at `pick`. Effect: `askerUid → null` (back to V1), and their picked question leaves `usedQuestionIds`.
-- An admin may name any not-yet `uid`.
-- Effect: `passedAskingUids += uid`.
-- Refusals: already asked → `already-asked`; already passed → `already-passed`; the asker after `pick` → `failed-precondition`.
-
-**E3. `passSpeaking`** NEW (no args; acts on `speakerUid`).
-- Who: the speaker, the asker, or an admin.
-- From `talk`, only while the minute is running.
-- Effect: `spokenUids += speaker`, `passedSpeakingUids += speaker`, `speakerEndsAt = now`. The floor opens to C′; if this was the last speaker, the table is at V2.
-- Refusals: anyone else → `permission-denied` (`not-speaker`); no speaker, or the minute already over → `minute-over`.
-
-**E4. `toTalk`.**
-- The asker, from `pick`, with a question chosen (new guard: `no-question`). An admin may run it from any step.
-- Effect: also adds the asker to `askedUids`.
-
-**E5. Admin `nextTurn`** ("להתחיל סבב {{n}}").
-- From any step: `step: 'pick'`, `turn + 1`, `askerUid: null`, turn fields cleared. This opens V1; the volunteer rule holds for the teacher too.
-- Refused when `notAskedUids` is empty (`all-asked`).
-
-**E6. `passAsker { uid }`** (admin).
-- At `pick` only, as built. It now also fills an empty seat (V1).
-- `uid` must be not-yet: not asked, not passed.
-- It touches neither `turn` nor `askedUids`.
-
-**E7. Membership.**
-- `removeMember` of the asker → `askerUid = null` (no automatic pass to the next seat).
-  - At `pick` this gives V1.
-  - At `talk` the turn continues askerless.
-- The leaver stays in `askedUids` and `passedAskingUids`, as decided today, so rejoining gives no second turn.
-- The leaver is removed from `spokenUids` and `passedSpeakingUids`, and loses the floor if they hold it.
-- `addMember` no longer makes the newcomer the asker.
-- `assignTables` / `newTable`: `askerUid: null`; the `joinedAt` sort goes.
-
-**E8. Askerless fallback** (one clause in `assertMayAct`).
-- When `askerUid` is null at `talk` or `write`, any tablemate may run the asker's moves: `nextSpeaker`, `toWrite`, `toRate`.
-- At `pick` an askerless table accepts only a claim, a pass, a teacher action and `toWrite` (built 2026-10-22: a table that reaches Proposals without a turn, because everyone passed or none started, sits at `pick` with nobody asking and its tablemates must still be able to leave for writing).
-- This also covers a Proposals table whose members all passed on asking.
-
-**E9. Not changed.**
-- `nextSpeaker` (any tablemate once the minute is over).
-- `everyoneSpoke` (it reads `spokenUids`, which now includes passes).
-- `classAllTablesTo` (Proposals opens with `talk`).
-- `assertLessonRunning`: every action, including E1-E3, is refused while the lesson is paused, read in the same transaction.
-- Not added: a guard that refuses `toWrite` / `toRate` at Table talk. No client offers them; it can follow by reading the lesson's current step in the callable, which already reads the main doc.
-
-### 16.8 Screen inventory (rows changed)
-| Screen | Route | Single job | States |
+Teacher, minimal deltas (`TableCard`, `TableSheetPanel`, `tableSheetTurn`):
+| Table state | Card now line | Card quick action | Sheet adds (per member) |
 |---|---|---|---|
-| Table talk, student | `/m/:mid` | do the table's official step: choose, talk, hand on | V1, A, B, C, C′, V2, V2-last, done, all-passed, peek (2 pills), refusal (inline retry, except `turn-claimed`) |
-| Table card / sheet, teacher | `/t/:mid`, sheet | see and unstick one table | per 16.3 table; no write or rate actions at Table talk |
-| Proposals, student | `/m/:mid` | unchanged (talk → write → rate) | + askerless fallback (E8) |
+| Pick | `turn.instr_pick` · `console.waiting_start` · elapsed | — | `console.pass_ask_for` (not-yet members) |
+| Talk, minute running | question (short) · `turn.answering` {name} · 0:42 | `console.finish_minute` | `turn.pass_for`, `console.speak_now` (not-yet answered, incl. no-device) |
+| Talk, floor open | question · `console.not_answered` {names} · elapsed | — | same |
+| Done | `console.all_done` · `console.asked_passed` | — | — |
+- Card head and member marks: who asked (✓), who passed asking (–), the current asker, who answered (✓), who passed answering (–), who is answering now. The teacher keeps the full picture; the UX agent decides the marks.
+- `console.quick_turn` ("להתחיל סבב n") stays in the sheet as the last resort to abandon a turn: it opens Pick; the asker counts as asked.
+- Removed at Table talk: `console.quick_talk`, `console.pass_asker`, any write/rate control.
 
-### 16.9 Clear path (plain words)
-1. The teacher's questions are on every phone. Nobody is asking yet.
-2. Anyone who wants to ask taps "אני אשאל". The first tap wins, and nobody sees an error.
-3. That student taps a question, then "בחרנו, לדבר".
-4. The phones go dark. They read the question aloud and tap who speaks first.
-5. Each person speaks for one minute, the asker too. "ויתרתי על הדקה" skips your minute.
-6. After a minute, anyone may tap the next name.
-7. When everyone has spoken or passed, every student who has not asked sees "אני אשאל".
-8. "ויתרתי על התור" means you will not ask this lesson. You count as done.
-9. When everyone has asked or passed, the phones say "חכו לשאר השולחנות".
-10. A table that gets stuck is moved by the teacher, who can start the next turn or give the turn to a named student. Nobody writes or rates until Proposals.
+### 16.8 Hierarchy and navigation (unchanged depth)
+Student: 0 `/m/:mid` lesson → 1 current step (Table talk) → one state body. No local navigation inside Table talk (the strip is gone); back = the lesson shell as built. Teacher: 0 `/t/:mid` console → 1 table card → 2 table sheet. No new routes.
 
-### 16.10 Open questions for Tal (max 3, each with a recommendation)
-1. **When the teacher's questions run out at a table** (4 askers, 3 questions), may a used question be asked again? Recommended: **yes, only once every question has been used.** Used questions stay greyed and last, and become tappable then. The engine refuses a repeat only while an unused question exists; the callable already reads the question, plus one count query. "+ שאלה משלנו" stays the other way out.
-2. **Teacher's "להתחיל סבב {{n}}"**: should it open a volunteer moment (V1, as specified, matching decision 1), or give the turn straight to the first not-yet student in seating order (as built today)? Recommended: **V1.** The sheet's "להעביר את התור ל{{name}}" already covers "I choose who".
-3. **Students without a device**: should they get a speaker chip, so that "everyone answers" includes them and the asker can call them? Today only `memberUids` get chips. Recommended: **yes, later.** `nextSpeaker` would accept a `noDeviceMembers` id, and they never ask (§2.4 low priority). Until then the asker lets them speak without a chip.
+### 16.9 Defaults taken (Tal may overturn; none blocks the build)
+1. A pass does not unlock the asker; "everyone else passed" does (`askerMayAnswer`).
+2. A stuck table is unblocked by the teacher (pass for / answer now / finish minute). No auto timeout, no peer skip.
+3. "I want to pass" at answering is offered only while the floor is open (one state per screen), not during someone else's minute.
+4. A losing starter's own question stays on the table list, free for later starters. Duplicate wording of own questions is not checked; only ids are.
+5. No-device members do not gate "everyone answered"; the teacher may give them a minute on screen (`nextSpeaker` with their id).
+6. `passAsker` is no longer offered at Table talk; the teacher passes asking for a holdout instead.
+7. EN keeps "Turn" for סבב (§3); a person's minute reads "{{name}} is answering", not "{{name}}'s turn".
+8. Hebrew `turn.was_first` "{{name}} הקדימו (?)": plural-neutral; UX/HE review may prefer "{{name}} היו ראשונים".
 
-Handoff to UX. Fixed here: the two volunteer moments and "אני אשאל" as their one control; two pills at Table talk with the peek rule; the four marks of each row; no class sheet at Table talk; the labels in 16.5.
-Yours to decide: how "–" (passed) differs from outline (not yet) without colour; where the secondary "ויתרתי…" controls sit so they are not tapped by mistake; how V2 draws attention inside the dark talk frame; whether "done" keeps the dark frame or returns to paper.
+### 16.10 Glossary rows changed (§3)
+| Concept | EN | HE | i18n | Code | Retire |
+|---|---|---|---|---|---|
+| Start a turn | I want to start | אני רוצה להתחיל | `turn.claim` | `claimTurn` | "אני אשאל", I'll ask |
+| Answerer (was Speaker) | {{name}} is answering | {{name}} עונה | `turn.answering` | `speakerUid` (kept) | דובר/ת, מדבר/ת at Table talk |
+| Answer (spoken, one minute) | I want to answer | אני רוצה לענות | `turn.answer` | `claimSpeaker`, `spokenUids` | "הבא בתור", speaker chips at Table talk |
+| Finish | Finish | סיימתי | `turn.finish` | `finishSpeaking` | — |
+| Pass answering | I want to pass | אני רוצה לוותר | `turn.pass_answer` | `passSpeaking`, `passedSpeakingUids` | "ויתרתי על הדקה" at Table talk |
+| Pass asking | I want to pass | אני רוצה לוותר | `turn.pass_ask` | `passAsking`, `passedAskingUids` | "ויתרתי על התור" |
+| Next speaker (teacher/Proposals only) | Next speaker | הבא בתור | `turn.next_speaker` | `nextSpeaker` | not at student Table talk |
+Note: §3 "Answer" (תשובה, a written option Statement) has no Table talk screen since rev 2; the spoken answer here is the same idea in speech. No screen shows both.
+
+Handoff to UX. Fixed here: the eight states and their order (16.4), one primary + one secondary control per state, the frame (stage name, question, table line), no strip/pills/chips/askers row on the student screen, own question always in the pick list, the labels in 16.2, the teacher's card lines and actions.
+Yours to decide: how a selected question looks and where the own-question entry sits in the list; how the countdown and Finish are drawn; how H/L show "you already answered" without competing with the countdown; how the race loser's quiet line appears; whether Pass looks clearly secondary but not hidden; the teacher's marks for asked/answered/passed without colour alone.

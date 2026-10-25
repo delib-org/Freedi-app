@@ -44,6 +44,7 @@ export interface ClassAddNoDeviceResponse {
 export type ClassTableAction =
 	| { action: 'pickQuestion'; questionId: string }
 	| { action: 'toTalk' }
+	/** Table talk: the teacher only; `uid` may be a no-device member id. Proposals: asker/member as before. */
 	| { action: 'nextSpeaker'; uid: string }
 	| { action: 'toWrite' }
 	| { action: 'setWritingMode'; mode: WritingMode }
@@ -53,11 +54,24 @@ export type ClassTableAction =
 	 * Required for a member's claim (the engine refuses one without it); a teacher's need not send it.
 	 */
 	| { action: 'nextTurn'; fromTurn?: number }
+	/**
+	 * Table talk (IA 16 rev 3): "I want to start". One transaction: the caller becomes the asker,
+	 * `questionId` is locked for the table and the step moves to talk. `fromTurn` is the turn the
+	 * claimer saw (required). First write wins.
+	 */
+	| { action: 'claimTurn'; fromTurn: number; questionId: string }
+	/** Table talk: "I want to answer". Takes the floor for SPEAK_SECONDS when nobody holds it. */
+	| { action: 'claimSpeaker' }
+	/** Table talk: end one's own minute early (the speaker, or an admin). */
+	| { action: 'finishSpeaking' }
 	| { action: 'passAsker'; uid: string }
 	/** Pass on asking: a member for themselves, or an admin naming `uid`. */
 	| { action: 'passAsking'; uid?: string }
-	/** Pass the running minute: the speaker, the asker or an admin. */
-	| { action: 'passSpeaking' };
+	/**
+	 * Pass answering. Table talk: a member for themselves before speaking, or an admin naming `uid`
+	 * (also ends a running minute as passed). Proposals: the speaker, the asker or an admin end the running minute.
+	 */
+	| { action: 'passSpeaking'; uid?: string };
 
 export type ClassTableStepRequest = { tableId: string } & ClassTableAction;
 export interface ClassTableStepResponse {

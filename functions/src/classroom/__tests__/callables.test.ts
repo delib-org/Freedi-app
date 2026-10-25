@@ -223,59 +223,76 @@ describe('classTableStep + classAllTablesTo', () => {
 		return { fake, table: fake.read(`classTables/${MAIN}--1`) as unknown as ClassTable };
 	}
 
-	it('runs a turn: a volunteer claims, picks, talks, the next claims at V2', async () => {
+	it('runs a turn: a student claims with a question, tablemates answer, the next claims', async () => {
 		const { fake, table } = await seated();
 		const db = fake.asFirestore();
 		const [asker, mate, other] = table.memberUids;
-		const clock = () => NOW;
+		let now = NOW;
+		const clock = () => now;
 		const step = (uid: string, action: ClassTableAction) =>
 			tableStep(db, uid, { tableId: table.tableId, ...action }, clock);
+		const read = () => fake.read(`classTables/${table.tableId}`);
+		fake.seed('statements/q1', {
+			statementId: 'q1',
+			parentId: MAIN,
+			statementType: 'question',
+		});
+		fake.seed('statements/q2', {
+			statementId: 'q2',
+			parentId: MAIN,
+			statementType: 'question',
+		});
+		fake.seed('statements/elsewhere', {
+			statementId: 'elsewhere',
+			parentId: MAIN,
+			statementType: 'question',
+			classTable: { tableId: `${MAIN}--9`, shared: false, coAuthors: [] },
+		});
 
 		expect(table.askerUid).toBeNull();
-		// nobody asks yet: a tablemate cannot pick, anyone not yet asked can claim
 		await expectCode(step(mate, { action: 'pickQuestion', questionId: 'q1' }), 'permission-denied');
-		expect(await step(asker, { action: 'nextTurn', fromTurn: 1 })).toEqual({
-			step: 'pick',
+		// a table's own question belongs to that table alone
+		await expectCode(
+			step(asker, { action: 'claimTurn', fromTurn: 1, questionId: 'elsewhere' }),
+			'invalid-argument',
+		);
+		expect(await step(asker, { action: 'claimTurn', fromTurn: 1, questionId: 'q1' })).toEqual({
+			step: 'talk',
 			turn: 1,
 		});
 		// the loser of the race sees the reason the client swallows
-		const lost = await step(other, { action: 'nextTurn', fromTurn: 1 }).catch((e: unknown) => e);
+		const lost = await step(other, { action: 'claimTurn', fromTurn: 1, questionId: 'q2' }).catch(
+			(e: unknown) => e,
+		);
 		expect(toHttpsError(lost, { operation: 'test' }).details).toEqual({ reason: 'turn-claimed' });
+		expect(read()).toMatchObject({ askerUid: asker, questionId: 'q1', askedUids: [asker] });
 
-		await step(asker, { action: 'pickQuestion', questionId: 'q1' });
-		await expectCode(step(mate, { action: 'toTalk' }), 'permission-denied');
-		await step(asker, { action: 'toTalk' });
-		expect(fake.read(`classTables/${table.tableId}`)).toMatchObject({
+		// the asker waits, a tablemate answers and finishes
+		const others = toHttpsError(
+			await step(asker, { action: 'claimSpeaker' }).catch((e: unknown) => e),
+			{ operation: 'test' },
+		);
+		expect(others.details).toEqual({ reason: 'others-first' });
+		await step(mate, { action: 'claimSpeaker' });
+		expect(read()).toMatchObject({ speakerUid: mate, speakerEndsAt: NOW + 60_000 });
+		const taken = toHttpsError(
+			await step(other, { action: 'claimSpeaker' }).catch((e: unknown) => e),
+			{ operation: 'test' },
+		);
+		expect(taken.details).toEqual({ reason: 'floor-taken' });
+		now += 5000;
+		await step(mate, { action: 'finishSpeaking' });
+		expect(read()).toMatchObject({ speakerEndsAt: now, spokenUids: [mate] });
+		await step(other, { action: 'passSpeaking' });
+		await step(asker, { action: 'claimSpeaker' });
+		now += 61_000;
+		expect(await step(other, { action: 'claimTurn', fromTurn: 1, questionId: 'q2' })).toEqual({
 			step: 'talk',
-			askedUids: [asker],
+			turn: 2,
 		});
-		await step(asker, { action: 'nextSpeaker', uid: mate });
-		expect(fake.read(`classTables/${table.tableId}`)).toMatchObject({
-			speakerUid: mate,
-			speakerEndsAt: NOW + 60_000,
-		});
-		await step(mate, { action: 'passSpeaking' });
-		expect(fake.read(`classTables/${table.tableId}`)).toMatchObject({
-			passedSpeakingUids: [mate],
-			speakerEndsAt: NOW,
-		});
-		await expectCode(step(other, { action: 'nextTurn', fromTurn: 1 }), 'failed-precondition');
-		for (const uid of table.memberUids.filter((u) => u !== mate)) {
-			await step(asker, { action: 'nextSpeaker', uid });
-		}
-		const closing = (): number => NOW + 61_000;
-		expect(
-			await tableStep(
-				db,
-				other,
-				{ tableId: table.tableId, action: 'nextTurn', fromTurn: 1 },
-				closing,
-			),
-		).toEqual({ step: 'pick', turn: 2 });
-		expect(fake.read(`classTables/${table.tableId}`)).toMatchObject({
-			askerUid: other,
-			askedUids: [asker],
-		});
+		expect(read()).toMatchObject({ askerUid: other, askedUids: [asker, other] });
+		// a member cannot open the pick; a teacher can
+		await expectCode(step(mate, { action: 'nextTurn', fromTurn: 2 }), 'permission-denied');
 	});
 
 	it('refuses every table move while the lesson is paused', async () => {

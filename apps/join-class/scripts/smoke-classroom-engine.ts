@@ -5,7 +5,7 @@
  * and students, and prints the resulting documents. Prerequisites:
  *   1. emulators up (auth + firestore + functions) with functions built;
  *   2. the seed run with tokens:
- *        npx tsx apps/join-class/scripts/seed-classroom.ts --step=3 --proposals --tokens
+ *        npx tsx apps/join-class/scripts/seed-classroom.ts --step=4 --proposals --tokens
  *
  * Usage (repo root):
  *   GCLOUD_PROJECT=<project> FIRESTORE_EMULATOR_HOST=localhost:<fs> \
@@ -162,14 +162,21 @@ async function main(): Promise<void> {
 	const askerToken = await tokenOf(asker);
 	const mateToken = await tokenOf(mate);
 	const tid = t1.tableId;
-	await mustCall('classTableStep', askerToken, { tableId: tid, action: 'nextTurn', fromTurn: 1 });
-	check((await readTable(tid)).askerUid === asker, 'the volunteer became the asker');
+	await mustCall('classTableStep', askerToken, {
+		tableId: tid,
+		action: 'claimTurn',
+		fromTurn: 1,
+		questionId: seed.guidingIds[1],
+	});
+	const claimed = await readTable(tid);
+	check(
+		claimed.askerUid === asker && claimed.step === 'talk' && claimed.questionId === seed.guidingIds[1],
+		'the volunteer became the asker, the question is locked and the table talks',
+	);
 
 	const notAsker = await call('classTableStep', mateToken, { tableId: tid, action: 'toTalk' });
 	check(!notAsker.ok && notAsker.status === 'PERMISSION_DENIED', 'a tablemate cannot drive the table');
-	await mustCall('classTableStep', askerToken, { tableId: tid, action: 'pickQuestion', questionId: seed.guidingIds[1] });
-	await mustCall('classTableStep', askerToken, { tableId: tid, action: 'toTalk' });
-	await mustCall('classTableStep', askerToken, { tableId: tid, action: 'nextSpeaker', uid: mate });
+	await mustCall('classTableStep', mateToken, { tableId: tid, action: 'claimSpeaker' });
 	const talking = await readTable(tid);
 	console.info(`  ${brief(talking)} endsIn=${Math.round(((talking.speakerEndsAt ?? 0) - Date.now()) / 1000)}s`);
 	check(talking.speakerUid === mate && (talking.speakerEndsAt ?? 0) > Date.now(), 'speaker + speakerEndsAt written');
@@ -212,7 +219,12 @@ async function main(): Promise<void> {
 
 	await mustCall('classTableStep', askerToken, { tableId: tid, action: 'toRate' });
 	// a table left at rate (before table turn v2) still lets a tablemate who has not asked claim the next turn
-	const next = await mustCall<{ step: string; turn: number }>('classTableStep', mateToken, { tableId: tid, action: 'nextTurn', fromTurn: 1 });
+	const next = await mustCall<{ step: string; turn: number }>('classTableStep', mateToken, {
+		tableId: tid,
+		action: 'claimTurn',
+		fromTurn: 1,
+		questionId: seed.guidingIds[0],
+	});
 	const after = await readTable(tid);
 	console.info(`  ${brief(after)}`);
 	check(next.turn === 2 && after.askerUid === mate && !after.writingLocked, 'a claim from rate starts the next turn and resets');

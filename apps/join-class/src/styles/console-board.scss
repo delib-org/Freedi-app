@@ -315,6 +315,28 @@
   color: var(--ink-muted);
 }
 
+// Table talk: the question being answered, one line.
+.table-card__question {
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// "Waiting for ..." with the time since the table last changed; a stuck table gets a clock glyph and a warning colour.
+.table-card__wait {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+
+  &--stuck {
+    color: var(--warning);
+    font-weight: var(--font-weight-bold);
+  }
+}
+
 .table-card__members {
   display: flex;
   flex: 1;

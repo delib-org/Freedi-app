@@ -1,10 +1,9 @@
 import m from 'mithril';
 import type { TableStep } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import { TABLE_SUBSTEPS, type FlowKind, type SubstepView } from '@/lib/classroom/c3Logic';
+import { TABLE_SUBSTEPS, type SubstepView } from '@/lib/classroom/c3Logic';
 
 export interface SubStepStripAttrs {
-	kind: FlowKind;
 	view: SubstepView;
 	/** Switches the LOCAL view only; the table doc never changes. */
 	onSelect: (step: TableStep) => void;
@@ -19,12 +18,12 @@ export interface SubStepStripAttrs {
  */
 export const SubStepStrip: m.Component<SubStepStripAttrs> = {
 	view({ attrs }) {
-		const { kind, view } = attrs;
+		const { view } = attrs;
 
 		return m(
 			'nav.substeps',
 			{ 'aria-label': t('turn.strip_label') },
-			TABLE_SUBSTEPS[kind].map((step) =>
+			TABLE_SUBSTEPS.proposals.map((step) =>
 				m(
 					'button.substeps__pill',
 					{

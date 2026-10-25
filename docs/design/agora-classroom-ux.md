@@ -1724,293 +1724,353 @@ Console call: `onFullscreen: (frame) => void enterFullscreen(frame)` from `lib/f
 
 **As built (2026-10-22):** the `?focus=intro` handling lives in `PlanIntro` (the `.plan__intro` section itself), not `PlanScreen`, because the section only exists once the plan has loaded; it waits up to 4 s for the text box to be enabled, then falls back to the section heading. The panel keeps the plain `description` on screen when the paragraph fetch returns no blocks. The Playwright run is `apps/join-class/scripts/e2e-opening-panel.mjs` (`npm run e2e:opening-panel`).
 
-## 16. The table turn: screens per role (UX, 2026-10-22, revision 2)
+## 16. The table turn, one screen per state (UX, 2026-10-25, revision 3)
 
-Status: replaces §16.A–J (revision 1) as a whole. Designs against IA §16 revision 2 (`ia-join-class-table-turn-v2.md`) and Tal's final decisions of 2026-10-22 (evening):
-- (D1) Turn 1 starts with a volunteer: "אני אשאל", first tap wins, the same claim at every turn.
-- (D2) Everyone speaks one minute, the asker included.
-- (D3) No writing and no rating at Table talk: pick → talk → the next volunteer. Proposals is untouched.
-- (D4) A student may pass asking ("ויתרתי על התור": done, may not ask later) or pass their minute ("ויתרתי על הדקה": counts as spoken).
-- (D5) Strip = **שאלה · מדברים** with the peek rule. Teacher card "סבב n מתוך max" + one next-step button; sheet "להעביר את התור ל…".
+Status: built 2026-10-25 (t1). Replaces UX §16.A-K (revision 2) for **Table talk** as a whole. Proposals screens are untouched.
+Authority: IA §16 rev 3 (`ia-join-class-table-turn-v3.md`), states D, P1, P2, S, L, W, A, H (IA 16.4), labels (IA 16.2), refusal codes (IA 16.6). Picture: Tal's drawing `tal-table-turn-flow-v3.png`.
+Frames are 360 px, RTL, tokens from `apps/join-class/src/styles/_tokens.scss` only, 8-pt spacing (`--space-*`). Example table: Dan, Tal, Noa (phones), Yossi (no phone).
 
-Frames are 360 px, RTL. Tokens, type and motion follow §8 and `_tokens.scss`. **NEW** marks a new string. Example table: Dana, Noa, Omri, Lior, all with devices, in seating order.
-
-### 16.A Decisions in one place
-| Question (IA "yours to decide") | Decision | Why, in one line |
+### 16.A Decisions in one place (the IA's "yours to decide")
+| Question | Decision | Why |
 |---|---|---|
-| "–" (passed) vs outline (not yet), without colour | passed = **dashed** border, a "–" glyph, name in `--ink-soft` (dark frame: `--paper-line`); not yet = **solid** border, no glyph, name in `--ink` | Glyph + border style + weight: three cues, none of them hue |
-| Where "ויתרתי על התור" sits | A **text button** above the footer primary, inline-end aligned, 14 px, 44 px target, 24 px gap from the primary. **One inline confirm** (16.D) | It is irreversible for the lesson, so it costs one more tap; the primary stays the only filled control |
-| Where "ויתרתי על הדקה" sits | The talk screen's footer slot, a paper-outline secondary, on the **speaker's** phone; the asker's phone has "לוותר בשם {{name}}" in the same slot. **Armed 3 s after the minute starts**, no confirm | Far from the chips; the arming kills the double-tap that started the minute; the asker can re-call a passed speaker, so one tap is enough |
-| How V2 reads inside the dark screen | The countdown slot (the biggest thing on the screen) becomes the words "כולם דיברו" at 36 px; under it "מי שואל עכשיו?" at 22 px; the footer gets the **only terracotta fill at the table**: "אני אשאל" | Same place the eye already watches; one colour change, one new control |
-| Dark or paper at V2 and at Done | V2 stays **dark** (it is the end of talk); Done returns to **paper** | No white flash between "everyone spoke" and the next claim; from across the room dark = talking, paper = not talking |
-| The frame's darkness during a peek | Follows the **official** step, not the viewed one | A student peeking at the question list during talk keeps a dark phone; the teacher's "dark = talking" read stays true |
-| Strip at Done; "הכיתה כותבת" at Table talk | Both removed | Nothing left to look back to; nothing is written at Table talk (IA 16.1) |
-| Lost race for "אני אשאל" | Button "שומרים…" → the screen redraws with the winner's "?" chip; **no error** (as built) | The winner's name is the explanation |
-| Teacher form | Infinitive everywhere: "לדבר", "להתחיל סבב {{n}}", "להעביר את התור ל{{name}}", "לוותר על התור בשם {{name}}", "לוותר בשם {{name}}", "לדבר עכשיו" | One verb form for every teacher control |
+| Frame layout | Header = stage name (16 px, 600, `--ink`) with the table line under it (14 px, `--ink-soft`). Then the question (22 px, 600) as the screen's heading. Then one big thing, then the footer. | Matches the drawing (stage on top, question under it). The table line is secondary, so it rides in the header and never pushes the question down. |
+| Paper or dark | Pick (P1, P2) and Done (D) are **paper**. Every state of a running turn (S, L, W, A, H) is **dark** (`.frame--down`). | Keeps the teacher's across-the-room read "dark = the table is talking", and the student sees at once that the turn has started. One colour change per turn, no flicker inside a turn. |
+| Used questions | **Greyed and last**, not tappable, tag "נשאלה". When every teacher question is used they fold into a closed `<details>` "השאלות שכבר נשאלו (n)". | Students see what was already asked, so they do not write the same thing as their own question. Hiding them would make a short list look broken. |
+| Selecting a question | A local radio choice on this phone only. No server write until "אני רוצה להתחיל". | First tap wins the turn, not the first choice. Nobody else sees half-made choices. |
+| Start with nothing chosen | The button looks dimmed (`aria-disabled="true"`) but stays tappable; a tap shows `turn.pick_first` under it and moves focus to the list. | A truly disabled button gives a 12-year-old no reason. This one explains itself. |
+| Where Finish sits | In the body, right under the countdown (as drawn), **not** in the footer. Outline paper button (`btn--secondary`), 48 px tall, at least 160 px wide. It is shown from the first second but **ignores taps for the first 1 s** (`FINISH_GUARD_MS = 1000`, drawn disabled for that second). | "I want to answer" lives in the footer; putting Finish elsewhere stops the same thumb from ending a minute it just started. Outline, not filled: the clock is the hero, and ending early is a choice, not the expected path. |
+| "You already answered" next to a clock (L) | One 16 px line **under** the name line, `--paper-line`, with a ✓ or – glyph. Never inside the clock area. | The clock and the name stay the loudest; my own status is a footnote. |
+| Race loser line | `turn.was_first` as a quiet 14 px line under the status line of the next screen, for 4 s or until the next state, whichever comes first. No error styling, no `role="alert"`. | The new screen already shows who won. The line only explains why the screen changed under your finger. |
+| Pass buttons | A real `btn--secondary` (outline) full width, under the primary, with 16 px between them. Pass asking has one inline confirm. Pass answering has none (IA F3: 1 tap). | Clearly a second choice, never hidden, never filled. The irreversible one (the whole lesson) costs one more tap. |
+| Teacher marks | Two marks per member chip: the asking mark before the name (✓ asked, ? asking now, – passed asking), the answering mark after it (✓ answered, ● answering now, – passed this question). Each has a full `aria-label`. | Glyph + position + text. No meaning in colour alone. |
 
-### 16.B The rows under the header
+### 16.B The frame (every Table talk screen)
 ```
- asker line            התור של נועה לשאול                       (no class button at Table talk)
- askers row (who asks) [✓ דנה]  [? נועה]  ( עומרי )  ⁅– ליאור⁆
- strip (2 pills)       ( שאלה )  [ מדברים · עכשיו ]
+┌──────────────────────────────────────┐
+│                          שיחת שולחן │ header: step.tableTalk, 16 px 600
+│         שולחן 3 · סבב 2 מתוך 3       │ turn.header, 14 px --ink-soft
+├──────────────────────────────────────┤
+│        למה קשה לסרב לחבר?           │ question (talk states only), 22 px, h1
+│                                      │
+│          [ the one big thing ]       │ countdown or status line, centred
+│                                      │
+├──────────────────────────────────────┤
+│ [          primary (if any)       ]  │ footer: StudentFrame.action
+│ [         secondary (if any)      ]  │
+└──────────────────────────────────────┘
 ```
-**Askers row** (`.askers`, built; one state added)
-| State | Glyph | Border | Fill / text | sr label (`aria-label` per `<li>`) |
-|---|---|---|---|---|
-| asked (done) | ✓ | none | `--paper-deep` / `--ink-muted` | `turn.asker_done` "{{name}}, אחרי התור" |
-| asking now | ? | 1.5 px `--ink` | `--ink` / `--paper`, 700 | `turn.asker_now` "{{name}}, התור עכשיו" (nobody at V1) |
-| passed **NEW** | – | 1.5 px **dashed** `--border-medium` | transparent / `--ink-soft` | `turn.asker_passed` "{{name}}, ויתור על התור" |
-| not yet | — | 1.5 px solid `--border-medium` | transparent / `--ink` | `turn.asker_wait` "{{name}}, לפני התור" |
+- `StudentFrame` gains one prop, `stageName`; `headerLine` keeps the table line. No `askerMark` at Table talk.
+- Paper frame (P1, P2, D): `--paper` / `--ink`. Dark frame: `--ink` background, `--paper` text, header line `--paper-line`.
+- Errors: `ErrorLine` (`p.c3-error`, `role="alert"`, retry button `turn.retry`) sits **directly under the button that failed**, inside the footer, never at the top of the screen.
+- Transition between states: the body (heading + big thing + footer) fades in with `opacity` 0 to 1 over `--dur-base` (220 ms, `--ease-out`). No slide, no scale. Under `prefers-reduced-motion: reduce` there is no animation. The countdown never animates its digits.
+- Lesson paused: the same screen stays, every button disabled (as built).
 
-**Speaker chips** (`.talk__chip`, buttons; one state added): spoke = "✓ " + name · speaking = paper fill, ink text (`aria-pressed`) · passed **NEW** = "– " + name, dashed paper border · not yet = solid paper outline. sr: `turn.speaker_passed` "{{name}}, ויתור על הדקה".
-
-**Strip** (`.substeps`, built): Table talk shows two pills, **שאלה · מדברים**; Proposals keeps three. The peek rule is unchanged from revision 1 (B2): official pill carries "עכשיו" + 2.5 px border; a peeked body is `fieldset.flow__peek[disabled]` at 55%; the instruction becomes `turn.peek_why_pick` / `_talk`; the only live control is "חזרה לעכשיו"; the phone jumps when the official step or the turn changes. New here: the **claim and both passes are inside the fieldset**, so a peek can never claim or pass.
-
-### 16.C The frames (one per moment; role differences in the margin)
-Header: "שולחן 3 · סבב {{turn}} מתוך {{max}} · עכשיו: {{step}}", `max` = device members − passed askers (IA 16.3). Instruction 22 px. Footer = `StudentFrame.action`.
-
-**V1. Nobody asks yet** (`pick`, `askerUid` null) — paper
+### 16.C P1. Pick, may start (paper)
 ```
-│ שולחן 3 · סבב 1 מתוך 4 · עכשיו: בוחרים שאלה │
-│ ( דנה )  ( נועה )  ( עומרי )  ( ליאור (אני) ) │ askers row, all outline
-│ [ שאלה · עכשיו ]  ( מדברים )                  │
-│                 מי רוצה לשאול ראשון?         │ turn>1: מי רוצה לשאול עכשיו?
-│ │ ○ למה קשה לסרב לחבר?                       │ read-only for everyone (no asker)
-│ │ ○ מה זה חבר טוב?                   נשאלה   │ used: greyed, last
-│ [ + שאלה משלנו ]                             │ secondary, everyone
-│                              ויתרתי על התור │ text button, inline-end, 14 px
-│ [             אני אשאל              ]        │ ✋ primary, every not-yet phone
+│                          שיחת שולחן │
+│         שולחן 3 · סבב 2 מתוך 3       │
+├──────────────────────────────────────┤
+│                         בחרו שאלה   │ turn.instr_pick, 22 px h1
+│                  השאלות של המורה    │ question.teacher_list, 14 px label
+│ ┌──────────────────────────────────┐ │
+│ │ ◉  למה קשה לסרב לחבר?            │ │ selected: 2 px --ink border, --paper-soft fill
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │ ○  מה עושים כשחבר טועה?          │ │ radio row, min 56 px tall
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │ ○  שאלה משלנו                    │ │ an own question of this table (eyebrow tag)
+│ │    מי מחליט מה מצחיק?            │ │
+│ └──────────────────────────────────┘ │
+│ ┌─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┐ │
+│ │ +  שאלה משלנו                    │ │ question.add_own, dashed border, always last
+│ └─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┘ │ of the unused group
+│ │ מה זה חבר טוב?            נשאלה  │ │ used: --ink-soft, no radio, last
+├──────────────────────────────────────┤
+│ [        אני רוצה להתחיל          ]  │ primary, terracotta (turn.claim)
+│ [         אני רוצה לוותר          ]  │ secondary, outline (turn.pass_ask)
 ```
-- Asked or passed students: no footer. **V1-last** (one not-yet left): that phone reads "התור שלכם לשאול", others "ממתינים לליאור".
+**Own question, inline composer.** Tapping "+ שאלה משלנו" selects that row (radio on) and opens a text field inside it, focused, `placeholder` `question.add_placeholder` "כתבו את השאלה", `maxlength` 200, `dir="auto"`. No separate save button: the question is created when the student taps "אני רוצה להתחיל". Tapping another question deselects the own row but keeps the typed text.
+```
+│ ┌──────────────────────────────────┐ │
+│ │ ◉  שאלה משלנו                    │ │ row selected
+│ │ ┌──────────────────────────────┐ │ │
+│ │ │ כתבו את השאלה                │ │ │ input, 48 px, --bg-input
+│ │ └──────────────────────────────┘ │ │
+│ └──────────────────────────────────┘ │
+```
+**All teacher questions used.** Under the heading, `turn.questions_used` (16 px, `--ink-muted`) "השאלות של המורה נשאלו. כתבו שאלה משלכם". The own row is **first, open and focused**. Unused own questions of this table (from a race loser, IA F2.4) follow as radio rows. Used ones fold into `<details>` `turn.used_questions`.
+**No teacher questions at all** (IA 16.7 empty): same as "all used" without the note.
+- Primary `turn.claim`: visually enabled when a question is selected, or the own row is selected with text. Otherwise `aria-disabled="true"` (60% opacity) and a tap shows `turn.pick_first` "קודם בוחרים שאלה" under it (14 px, `--ink-muted`, not an alert) and focuses the first radio.
+- Tap with a question: label becomes `turn.saving` "שומרים…", both buttons disabled, then `claimTurn { fromTurn, questionId }`. With own text: `createTableQuestion` first, then `claimTurn` with the new id (the created id is kept, so a retry does not create it twice).
+- Secondary `turn.pass_ask` "אני רוצה לוותר": opens the inline confirm (16.K). 
 
-**A. Choose** (`pick`, asker set) — paper
-```
-│ התור שלכם לשאול                               │ others: התור של נועה לשאול
-│ ( דנה )  [? נועה (אני)]  ( עומרי )  ( ליאור )  │
-│                      בחרו שאלה לשולחן         │ others: התור של נועה לבחור שאלה
-│ │ ◉ למה קשה לסרב לחבר?                       │ asker: a tap writes pickQuestion; live on all
-│ [ + שאלה משלנו ]                             │
-│                              ויתרתי על התור │ asker only (returns the table to V1)
-│ [            בחרנו, לדבר            ]        │ ✋ asker, enabled after a choice
-```
-**A-own. The teacher's questions are all asked** (Tal: no repeats). The own-question box becomes the main thing:
-```
-│                      כתבו שאלה לשולחן         │ others: התור של נועה לכתוב שאלה
-│ השאלות של המורה כבר נשאלו                    │ 14 px --ink-soft, one line
-│ [ השאלה שלנו: ________________________ ]    │ the "+ שאלה משלנו" box OPEN + focused (asker)
-│ ▸ השאלות שכבר נשאלו (3)                      │ collapsed <details>, greyed, not tappable
-│ [            בחרנו, לדבר            ]        │ ✋ asker: saves the question, picks it, toTalk
-```
-- One tap after typing: "בחרנו, לדבר" saves the own question, writes `pickQuestion` with it and runs `toTalk`, so the asker never has to "choose" the question they just wrote. Disabled while the box is empty.
-- V1 at a table with no unused teacher question shows the same one-line note under the instruction, so a volunteer knows they will write.
+**Refusals (P1)**
+| Code | What the student sees |
+|---|---|
+| `turn-claimed` | Nothing red. The table doc already moved: the phone shows A (or W) with the winner's question, plus `turn.was_first` "הפעם זה {{name}}" (name = the new asker). |
+| `question-used` | Inline under the button: `turn.question_taken` "השאלה הזאת כבר נשאלה. בחרו אחרת". The row turns greyed "נשאלה"; the selection clears. |
+| `talk-not-over` | Not shown (cannot happen from P1 except a stale doc); the next snapshot redraws. Swallowed. |
+| `already-asked` / `already-passed` | Swallowed; the snapshot moves the phone to P2. |
+| own create failed | Inline under the button: `question.add_failed`, retry. The typed text stays. |
+| network, anything else | `turn.action_failed` "זה לא עבד. לנסות שוב" + retry. |
 
-**B. Before the first speaker / C. Speaking / C′. Minute over** (`talk`) — dark
+### 16.D P2. Pick, wait (paper)
 ```
-│ שולחן 3 · סבב 1 מתוך 4 · עכשיו: מדברים       │ paper on ink
-│ התור של נועה לשאול                            │
-│ [✓…] [? נועה] ( עומרי ) ( ליאור )  · ( שאלה ) [מדברים·עכשיו]
-│ למה קשה לסרב לחבר?                            │
-│                  מסכים למטה. מדברים.         │ B: asker instr_read · others instr_listen
-│               התור של עומרי לדבר              │ speaker's own: התור שלכם לדבר
-│                    0:42                      │ B: "1:00" --ink-faint · C′: הזמן נגמר
-│ ━━━━━━━━━━━━━━━━━━━━━━━━━━░░░░░░░░░░          │
-│  (✓ דנה) (– נועה) [ עומרי ] ( ליאור )         │ asker: enabled all minute; C′: everyone
-│        התור של נועה לבחור מי הבא              │ hint, phones whose chips are disabled
-│ [          ויתרתי על הדקה           ]        │ footer, paper outline 48 px; asker: לוותר בשם עומרי
+│                          שיחת שולחן │
+│         שולחן 3 · סבב 2 מתוך 3       │
+├──────────────────────────────────────┤
+│                                      │
+│                                      │
+│       חכו שאחרים יבחרו שאלה          │ turn.wait_pick, 22 px 600, centred
+│                                      │
+│       ויתרתם על התור לשאול           │ only if I passed: turn.passed_ask_done, 16 px --ink-soft
+│                                      │
 ```
-- The footer is empty in B, in C′ and on every other phone; no "סיימנו, לכתוב" at Table talk (D3). A pass ends the minute now: C′ on every phone, the chip "–".
+- No list, no buttons, no footer. The student is not asked to look at choices they cannot make.
+- When a turn starts: fade to A (or L if a minute already runs).
 
-**V2. Everyone spoke or passed** (`talk`) — still dark
+### 16.E The countdown (S and L)
+- Digits: `font-variant-numeric: tabular-nums`, `clamp(6rem, 30vw, 8rem)` (96-128 px, the existing `$c3-count-size`), 700, centred, `--paper` on `--ink`. Format "0:59" ... "0:11", then two digits "10" ... "01".
+- Last 10 seconds: digits and the bar switch to `--terra-300` (≈ 6:1 on `--ink`). Colour only plus the format change (two digits): no pulse, no shake.
+- Bar: 6 px under the digits, full width, drains toward the inline end (`transform: scaleX`, linear 1 s steps; no transition under reduced motion).
+- Speaker (S) and listeners (L) see **the same clock** at the same size. Only the line under it differs (16.F, 16.G) and only S has Finish.
+- Starts at `speakerEndsAt - serverNow()`: the clock reads the server-corrected time (`serverClock.ts`), so every phone at the table shows the same second; first frame shows 0:59 or less, never 1:00.
+- When time ends: **no "time over" words**. The state machine already says the minute is over, so the whole body fades to the next state (H for the speaker, A / W / H / P1 / P2 for the others). The existing 350 ms redraw after `speakerEndsAt` (`TableFlow`) stays. `Countdown` gets a prop `quietEnd` that drops `turn.time_over` at Table talk (Proposals keeps it).
+- Finish (S only): `finishSpeaking {}` sets `speakerEndsAt = now`; same next screen as time out.
+
+### 16.F S. My minute (dark)
 ```
-│ שולחן 3 · סבב 1 מתוך 4 · עכשיו: מדברים       │
-│ [✓ דנה] [✓ נועה] ( עומרי ) ( ליאור (אני) )    │ the asker's chip turns ✓ now
-│ למה קשה לסרב לחבר?                            │ 18 px, stays as reference
-│                  כולם דיברו                  │ 36 px 700, in the countdown's place
-│                מי שואל עכשיו?                │ 22 px; last one: התור שלכם לשאול
-│  (✓ דנה) (– נועה) (✓ עומרי) (✓ ליאור)          │ chips 32 px, disabled, reference only
-│                              ויתרתי על התור │ paper text button
-│ [             אני אשאל              ]        │ ✋ terracotta, every not-yet phone
+│                          שיחת שולחן │
+│         שולחן 3 · סבב 2 מתוך 3       │
+├──────────────────────────────────────┤
+│        למה קשה לסרב לחבר?           │ question
+│                                      │
+│              הדקה שלכם               │ turn.answer_mine, 22 px 600
+│                0:42                  │ countdown
+│   ━━━━━━━━━━━━━━━━━━━━━━░░░░░░░░░    │
+│                                      │
+│          [    סיימתי    ]            │ turn.finish, outline paper, in the body
+│                                      │
+│ (no footer)                          │
 ```
+- Finish tap: the label stays `turn.finish` (no "שומרים…": the clock jumping to the next state is the feedback); the button is disabled while the call is in flight.
+- Refusals: `minute-over` swallowed (the clock beat the tap; the screen moves to H). `not-speaker` swallowed. Network: `turn.action_failed` + retry under Finish; the clock still ends the minute (IA 16.7).
 
-**Done** (every device member asked or passed, current talk over) — paper
+### 16.G L. Someone answers (dark)
 ```
-│ שולחן 3 · סיימתם את הסבבים                   │ turn.header_done
-│ [✓ דנה] [✓ נועה] [✓ עומרי] ⁅– ליאור⁆           │ no strip
-│                 חכו לשאר השולחנות            │ no footer on any phone
+│        למה קשה לסרב לחבר?           │
+│                                      │
+│               דן עונה                │ turn.answering {name}, 22 px 600
+│                0:42                  │ countdown, same size as S
+│   ━━━━━━━━━━━━━━━━━━━━━━░░░░░░░░░    │
+│            ✓ כבר עניתם               │ only if me ∈ spokenUids: turn.answered_me
+│                                      │ (– ויתרתם על השאלה הזאת if passed), 16 px --paper-line
+│ (no footer)                          │
 ```
-**All passed**: the same Done frame, every chip "–". It appears the moment the last V1 pass lands.
+- No buttons (IA default 3: no pass during someone else's minute).
+- A no-device member's minute (teacher's `nextSpeaker` with Yossi's id) reads "יוסי עונה" the same way.
 
-### 16.D The two passes, and the hand-off in the dark
-**"ויתרתי על התור" (pass asking)**: V1 and V2 on every not-yet phone; A on the asker's phone.
-- Look: `.btn--text` (no fill, no border, underline on focus/hover), 14 px, `--ink-soft` (dark frame: `--paper-line`), 44 px tall target, inline-end. 24 px above the primary, so a thumb aimed at "אני אשאל" lands on the primary.
-- **One inline confirm, no modal.** Tap → the text button's row becomes: "לא תשאלו בשיעור הזה" + [ביטול] (text) + [כן, ויתרתי] (`.btn--secondary.btn--small`). The primary "אני אשאל" stays enabled; tapping it cancels the confirm and claims. The confirm closes by itself when the table's step or turn changes. Focus moves to "ביטול".
-- Why: the one irreversible tap a student owns; inline, so it never covers the primary. After the pass: the chip turns "–" on every phone; the footer disappears; a polite live region says "ויתרתם על התור" once.
+### 16.H W. Asker waits (dark)
+```
+│        למה קשה לסרב לחבר?           │
+│                                      │
+│                                      │
+│        תנו לאחרים לענות קודם         │ turn.others_first, 22 px 600, in the big slot
+│                                      │
+│ (no footer)                          │
+```
+- No disabled "I want to answer" button: the drawing has none, and a dead button invites taps.
+- Unlocks to A when one tablemate has answered (or all others passed). The fade is the only signal plus the live region (16.M).
 
-**"ויתרתי על הדקה" / "לוותר בשם {{name}}" (pass the minute)**: talk, minute running only.
-- Speaker's phone: "ויתרתי על הדקה". Asker's phone (when the asker is not the speaker): "לוותר בשם {{name}}". Teacher sheet: the same `turn.pass_for`. Nobody else.
-- Hard to hit by accident: in the footer, far from the chips; **not shown for the first 3 s** of a minute (`PASS_ARM_MS`), so the tap that started the minute or a palm lifting the phone cannot land on it (220 ms opacity fade in, instant under reduced motion); paper outline, never filled, 48 px.
-- No confirm: the asker can call a passed speaker again (the chip stays enabled, and the engine allows it; see 16.I E3′).
+### 16.I A. May answer (dark)
+```
+│        למה קשה לסרב לחבר?           │
+│                                      │
+│                                      │
+│           מי עונה עכשיו?             │ turn.who_answers, 22 px 600
+│                                      │
+├──────────────────────────────────────┤
+│ [        אני רוצה לענות           ]  │ primary terracotta (turn.answer)
+│ [         אני רוצה לוותר          ]  │ secondary outline paper (turn.pass_answer)
+```
+- "אני רוצה לענות": `claimSpeaker {}`; label `turn.saving`, both disabled; success → S.
+- "אני רוצה לוותר": `passSpeaking {}`, no confirm (IA F3); success → H with `turn.passed_answer_me`.
+- The 16 px gap + different words make the two hard to confuse; pass is never filled.
 
-**V2 inside the dark screen** (replaces the `.handoff` card):
-- Reads on a dim phone: the words take the countdown's slot, so the eye goes where it has gone all minute. 36 px paper on ink ≈ 16:1. The terracotta "אני אשאל" is the only filled colour at the table. The question stays on top for the next asker to see what was asked.
-- Motion: the countdown cross-fades to the words, `opacity` only, `--dur-base`. No slide, no pulse. Under `prefers-reduced-motion` the duration tokens are 0: the words are simply there.
-- Screen reader: one polite announcement, "כולם דיברו. מי שואל עכשיו?" (or the last-one line). Focus does not jump.
-- The claim tap: "שומרים…" (disabled) → the winner's phone goes to A on paper, every other phone goes to A with "התור של {{name}} לשאול", the header's סבב +1. A lost race shows no error.
+**Refusals (A)**
+| Code | What the student sees |
+|---|---|
+| `floor-taken` | Swallowed. The phone is already at L "{{name}} עונה"; add `turn.was_first` "הפעם זה {{name}}" under the name line for 4 s. |
+| `already-answered` | Swallowed; the snapshot moves the phone to H. |
+| `others-first` | Swallowed; the snapshot moves the phone to W. |
+| `failed-precondition` | Swallowed; the next snapshot redraws. |
+| network | `turn.action_failed` + retry, under the button that was tapped. |
 
-### 16.E Storyboards (one row per phone screen; ✋ = the one primary control is on this phone)
-**Volunteer-asker (Noa, turn 1)**
-| # | Moment | Strip | Askers row | Instruction | Control | Other phones, live |
-|---|---|---|---|---|---|---|
-| 1 | V1 | שאלה·עכשיו | all outline | מי רוצה לשאול ראשון? | ✋ אני אשאל (+ ויתרתי על התור) | same, every phone |
-| 2 | A | שאלה·עכשיו | ? נועה | בחרו שאלה לשולחן | ✋ בחרנו, לדבר (after a tap) | "התור של נועה לבחור שאלה"; the choice fills |
-| 3 | B | מדברים·עכשיו | ? נועה | קראו בקול. בחרו מי ראשון. | ✋ a name chip (her own too) | dark, "מקשיבים לשאלה. מסכים למטה." |
-| 4 | C, her minute | מדברים·עכשיו | ? נועה | מסכים למטה. מדברים. / התור שלכם לדבר | chips; footer: ויתרתי על הדקה (after 3 s) | "התור של נועה לדבר" |
-| 5 | C, Omri's | מדברים·עכשיו | ? נועה | מסכים למטה. מדברים. | chips; footer: לוותר בשם עומרי | Omri: ויתרתי על הדקה |
-| 6 | V2 | מדברים·עכשיו | ✓ נועה | כולם דיברו · מי שואל עכשיו? | none (she has asked) | 3 phones: ✋ אני אשאל |
+### 16.J H. Had my turn (dark)
+```
+│        למה קשה לסרב לחבר?           │
+│                                      │
+│             ✓ כבר עניתם              │ turn.answered_me, 22 px 600
+│                                      │ (– ויתרתם על השאלה הזאת: turn.passed_answer_me)
+│           מי עונה עכשיו?             │ turn.who_answers, 16 px --paper-line
+│ (no footer)                          │
+```
+- Next: L when someone takes the floor; P1 / P2 when the last one answered; D when the table is done.
 
-**Tablemate (Omri)**
-| # | Moment | Askers row | Instruction | Control |
-|---|---|---|---|---|
-| 1 | V1 | all outline | מי רוצה לשאול ראשון? | ✋ אני אשאל; loses → "שומרים…" → step 2, no error |
-| 2 | A | ? נועה | התור של נועה לבחור שאלה | none ("+ שאלה משלנו" open) |
-| 3 | B | ? נועה | מקשיבים לשאלה. מסכים למטה. | none; hint "התור של נועה לבחור מי הבא" |
-| 4 | C, his minute | ? נועה | התור שלכם לדבר | footer ויתרתי על הדקה (after 3 s) → chip "–", C′ on all |
-| 5 | C′ | ? נועה | הזמן נגמר. מי הבא בתור? | ✋ a chip (every phone) |
-| 6 | V2 | ✓ נועה | כולם דיברו · מי שואל עכשיו? | ✋ אני אשאל (+ ויתרתי על התור) |
-| 7 | A turn 2 (he won) | ✓ נועה · ? עומרי | בחרו שאלה לשולחן | ✋ בחרנו, לדבר; then rows 3-6 of the asker |
+### 16.K Pass handling
+**Pass asking** (P1 only). Tap `turn.pass_ask` → the secondary button's slot becomes the confirm row; the primary stays where it was:
+```
+│ [        אני רוצה להתחיל          ]  │ primary still enabled; tapping it closes the confirm
+│   לא תשאלו בשיעור הזה                │ turn.pass_ask_confirm, 16 px
+│   [ ביטול ]        [ כן, לוותר ]     │ common.cancel (btn--text) · turn.pass_ask_yes (btn--secondary)
+```
+- Focus moves to "ביטול". Esc = cancel. The confirm closes by itself when the turn or step changes.
+- "כן, לוותר" → `passAsking {}` → P2 with `turn.passed_ask_done`. Header `max` drops by one. If this was the last student who had not asked and no turn runs, the phone goes to D.
+- Refusal `already-passed` swallowed; network `turn.action_failed` under the confirm row.
 
-**Last student (Lior; Dana ✓, Noa ✓, Omri ✓)**
-| # | Moment | Lior's phone | Every other phone |
+**Pass answering** (A only): one tap, see 16.I. A passed student lives the rest of the turn in H (or L with the "– ויתרתם על השאלה הזאת" footnote) and is back to normal at the next question.
+**Passed asking, for the lesson**: P2 at every Pick, A / S / L / H as everyone else during turns. They still answer every question.
+
+### 16.L Teacher (minimal deltas; structure as built)
+**Table card** (`TableCard.ts`): head, "now" line, timer row, members, "+ ללא מכשיר", one quick button. Changes only:
+```
+┌ שולחן 3 ─────────────── סבב 2 מתוך 3 ┐
+│ שיחת שולחן                            │ now line (unchanged)
+│ למה קשה לסרב לחבר?                    │ NEW: question, 1 line, ellipsis (talk only)
+│ דן עונה · 0:42                        │ timer row: turn.answering + time (was console.speaker_line)
+│ ━━━━━━━━━━━━━━━━━━░░░░░░              │
+│ (✓ דן ●) (? טל) (נועה) (יוסי ⌀)       │ marks: before = asking, after = answering
+│ [ לסיים את הדקה ]                     │ quick button: console.finish_minute
+└───────────────────────────────────────┘
+```
+| Table state | Second row (replaces the timer when no minute runs) | Quick button |
+|---|---|---|
+| Pick | `console.waiting_start` "ממתינים למי שיתחיל" · m:ss | none |
+| Minute running | `turn.answering` {name} · 0:42 + bar | `console.finish_minute` → `finishSpeaking {}` |
+| Floor open | `console.not_answered` "עוד לא ענו: טל, נועה" · m:ss | none |
+| Done | `console.all_done` · `console.asked_passed` | none |
+- m:ss = elapsed since the table last changed: `serverNow() - max(updatedAt, speakerEndsAt ?? 0)` (no new field). Shown in `--ink-soft`; from 2:00 on in `--warning` with the prefix "⏱" so a stuck table stands out without colour alone.
+- The `console.asker_line` row stays during talk (who asked this question). The "?" mark goes ✓ when the turn ends.
+- Removed: the `talk` quick button (`console.quick_talk`), and `quickActionFor` returning `turn` at V2 (the students start the next turn themselves).
+
+**Member marks** (`memberMark` splits into `askMark` + `answerMark`):
+| Mark | Glyph, position | `aria-label` |
+|---|---|---|
+| asked | ✓ before the name | `console.mark_asked` |
+| asking now | ? before, chip outline 2 px `--ink` | `console.mark_asking` |
+| passed asking | – before, dashed border | `console.mark_passed_ask` |
+| answered this question | ✓ after the name | `console.mark_answered` |
+| answering now | ● after, chip fill `--teal-50` | `turn.answering` |
+| passed this question | – after | `console.mark_passed_answer` |
+| no device | ⌀ after (as built), never an asking mark | as built |
+Answer marks show only while a turn is in talk; they clear at Pick.
+
+**Table sheet** (`TableSheetPanel.ts`, `tableSheetTurn.ts`): step row keeps one verb, `console.quick_turn` "להתחיל סבב {{n}}" (last resort, opens Pick). Per member row:
+```
+│ טל   ? –            [ לענות עכשיו ] [ לוותר בשם טל ]          │ talk, not yet answered
+│ דן   ✓ ●            [ לסיים את הדקה ]                          │ the one answering
+│ נועה – ✓                                                      │ answered: no buttons
+│ יוסי ⌀              [ לענות עכשיו ]                            │ no device: speak now only
+│ ── Pick ──                                                    │
+│ נועה                [ לוותר על התור בשם נועה ]  (inline confirm, as built)
+```
+| State | Not-yet member (device) | The speaker | No-device member |
 |---|---|---|---|
-| 1 | V2 of turn 3 | "כולם דיברו" · "התור שלכם לשאול" · ✋ אני אשאל (+ ויתרתי על התור) | "כולם דיברו" · "ממתינים לליאור" · no control |
-| 2 | claims → A…V2 of turn 4; or passes (confirm) → Done at once | | his chip "?" then ✓, or "–" |
-| 3 | V2 of turn 4 → Done | paper, "שולחן 3 · סיימתם את הסבבים", "חכו לשאר השולחנות" | same; no control anywhere |
+| Pick | `console.pass_ask_for` (inline confirm `console.pass_ask_confirm`) | — | — |
+| Talk | `console.speak_now` (`nextSpeaker {uid}`), `turn.pass_for` (`passSpeaking {uid}`) | `console.finish_minute` | `console.speak_now` |
+- Removed: `console.pass_asker` ("להעביר את התור ל…").
+- "Mark a no-device member as answered" is **not added**: no-device members never gate "everyone answered" (IA F9, default 5), so there is nothing to unblock. `console.speak_now` on Yossi is the only control, and only to put his minute on the phones.
 
-**Teacher, table card** (head "שולחן 3 · סבב n מתוך max"; member chips carry ✓ / ? / – like the askers row)
-| Table at | "now" line | Second line | The one button |
-|---|---|---|---|
-| V1 | בוחרים שאלה | ממתינים למי שישאל | none (tap the card: the sheet) |
-| A, no question | בוחרים שאלה | ממתינים לנועה | none |
-| A, question chosen | בוחרים שאלה | ממתינים לנועה | לדבר |
-| B | מדברים | ממתינים לנועה | none (sheet: לדבר עכשיו) |
-| C / C′ | מדברים | עומרי · 0:42 / הזמן נגמר | none |
-| V2 | מדברים | עוד לא שאלו: עומרי, ליאור | להתחיל סבב 2 |
-| V2, one left | מדברים | ממתינים לליאור | להתחיל סבב 4 |
-| Done | כולם סיימו | שאלו 3 · ויתרו 1 | none |
-- No "לכתוב", "לדרג" or "כל השולחנות: לדרג" at Table talk. Quick button: `.btn--tertiary`, 40 px × ≥72 px, `aria-label` "שולחן 3: להתחיל סבב 2".
+### 16.M Accessibility
+- Focus order on every screen: header → question heading → big status → Finish (S) → footer primary → footer secondary → error retry. On a state change focus goes to the new `h1` (question at talk states, status at P2/D) with `tabindex="-1"`, **except** when the student's own tap caused it and the button still exists.
+- One `aria-live="polite"` region per frame (`p.visually-hidden`) carries the new state's status line once on every state change: "דן עונה", "הדקה שלכם", "תנו לאחרים לענות קודם", "מי עונה עכשיו?", "כבר עניתם", "חכו שאחרים יבחרו שאלה", "חכו לשאר השולחנות". `turn.was_first` goes into the same region.
+- Clock: `role="timer"`, `aria-live="off"`, `aria-label` `turn.timer_label` updated every 10 s. The live region adds two spoken alerts only, at 30 s and 10 s left (`turn.timer_label`). The end of time is announced by the next state's line, not by the clock.
+- Pick list: `role="radiogroup"` with `aria-labelledby` the heading; rows are `role="radio"`, arrow keys move, Space selects. Used rows: `aria-disabled="true"`, label adds "נשאלה". The own row's input has `aria-label` `question.add_own`.
+- Aria-disabled start: `aria-describedby` points at the `turn.pick_first` line once shown.
+- Touch: all buttons ≥ 48 px tall (`--touch-target`), full width in the footer, 16 px between primary and secondary. Radio rows ≥ 56 px.
+- Contrast: terracotta primary `--terra-600` + white (6.4:1); paper on ink ≈ 16:1; `--terra-300` digits on ink ≥ 3:1 for 96 px text; `--paper-line` lines on ink ≥ 4.5:1 at 16 px.
+- Reduced motion: no fade, no bar transition; the state is just there.
+- RTL: logical properties only (`margin-inline`, `inset-inline`); the bar drains toward inline end; digits stay LTR (`dir="ltr"` on `.count__num`).
 
-**Teacher, table sheet** (`/t/:mid/table/:n`): step row **לדבר · להתחיל סבב {{n}}** (the one matching the state disabled, as built). Member rows, per state:
-| State | Per not-yet member | Per member | Speaker row |
-|---|---|---|---|
-| V1 / A | להעביר את התור ל{{name}} · לוותר על התור בשם {{name}} (inline confirm) | — | — |
-| B / C / C′ | — | לדבר עכשיו | לוותר בשם {{name}} (minute running) |
-| V2 | לוותר על התור בשם {{name}} | — | — |
+### 16.N Delete list (remove, do not hide)
+| File / piece | Why dead |
+|---|---|
+| `views/student/c3/AskersRow.ts` + `.askers*` in `styles/student-c3-turn.scss` | askers row removed (IA 16.3) |
+| `views/student/c3/ClaimFooter.ts` + `.claim-footer*` | replaced by `TurnActions.ts` (primary + real secondary + optional inline confirm), shared by P1 and A |
+| `TalkScreen.ts`: `over` prop, `passMinuteAction`, the `withSpeakers` chips branch, `talk__hint` | no chips, no V2 words, no pass-for at student Table talk. The chips render only at `kind === 'tableTalk'` today, so Proposals loses nothing (note: the IA says Proposals keeps speaker chips; the code shows none there). TalkScreen keeps prompt + `turn.table_time` + Countdown for Proposals |
+| `styles/student-c3-talk.scss`: `.talk__chips`, `.talk__chip*`, `.talk__over*`, `.talk__pass`, `.talk__hint` | same |
+| `lib/classroom/c3Logic.ts`: `speakerChips`, `SpeakerChip`, `canPickNextSpeaker`, `passMinuteArmed`, `PASS_ARM_MS`, `TABLE_SUBSTEPS.tableTalk` | chips, arm delay and the Table talk strip are gone (Proposals keeps `TABLE_SUBSTEPS.proposals`, `resolveSubstep`) |
+| `lib/classroom/turnMoment.ts`: `claimMoment`, `ClaimMoment`, `TurnPhase`, `askerStates`, `AskerChip`, `AskerState`, Table talk branches of `instructionFor` (`talkInstruction` etc.) | replaced by `tableTalkState(table, uid, now)` → `'D'\|'P1'\|'P2'\|'S'\|'L'\|'W'\|'A'\|'H'` (new `lib/classroom/tableTalkState.ts`, built on shared-types `choosing`, `askerMayAnswer`, `floorOpen`, `tableDone`). Keep `maxTurns`, `refusalReason`, `namesOf`, Proposals' `instructionFor` |
+| `tableTalkParts.ts`: `claimTurn` via `nextTurn`, `pickQuestion`, `chooseOwnAndTalk`, `primaryFor`, `footerFor`, the asker line, `showStrip` | rewritten around the 8 states |
+| `TableFlow.ts`: `AskersRow`, `SubStepStrip` and the peek (`flow__peek`, `peek-back`, `self.override`) **at Table talk only**; `.flow__bar` asker line at Table talk | one state per screen; Proposals keeps strip and peek |
+| `QuestionPick.ts`: `canChoose` (always true at P1), `onPick` server write, `onAddOwn` + its own `form.pick__add` submit, `ownBox` asker-only branch | local selection + inline own row (16.C) |
+| `tableTurnConsole.ts`: `quickActionFor` Table talk branch (`talk`, `turn`), `statusLine` V1/A/V2 keys, `memberMark` | replaced by 16.L rules (`askMark`, `answerMark`, `finish` quick kind) |
+| `tableSheetTurn.ts`: the `console.pass_asker` button | removed at Table talk (IA default 6) |
+| Tests: the matching cases in `lib/classroom/__tests__/c3Logic.test.ts`, `turnMoment.test.ts` | rewrite for `tableTalkState`, not skip |
+| Locale keys retired in IA 16.2 (list there), plus `turn.asker_passed`, `turn.speaker_passed`, `turn.all_spoke`, `turn.who_asks_now`, `console.waiting_volunteer` | grep all 7 locales; keep what Proposals reads |
+`SubStepStrip.ts`, `Countdown.ts`, `ErrorLine.ts`, `Sheet.ts` stay (Proposals or shared).
 
-### 16.F Stuck states and the teacher's fallbacks
-| Stuck | Students see | Card | Sheet |
-|---|---|---|---|
-| Nobody volunteers (V1) | "מי רוצה לשאול…?" | ממתינים למי שישאל | להעביר את התור ל{{name}} |
-| Asker not choosing (A) | "התור של נועה לבחור שאלה" | ממתינים לנועה | להעביר את התור ל{{name}} (Noa stays not-yet) |
-| Nobody starts a speaker (B) | dark, "1:00" faint | ממתינים לנועה | לדבר עכשיו on any member |
-| A silent student will not speak | the asker taps "לוותר בשם {{name}}" | — | לוותר בשם {{name}} |
-| Nobody claims at V2 | the words stay; the claimers keep the button | להתחיל סבב n (→ V1 on paper) | להעביר את התור ל{{name}} |
-| A student left the room | their chip vanishes | — | הסרה (E7); the turn continues askerless |
-
-### 16.G Strings (join-class `locales/*.ts`, all 7; aligned with IA 16.5)
-One concept per word: **ויתור** for both passes; **אני אשאל** is the one claim. All forms are first person ("ויתרתי") or plural ("חכו", "תשאלו"): no gendered singular, no slash.
+### 16.O Locale keys (he + en; the other 5 machine translated)
 | Key | HE | EN | Change |
 |---|---|---|---|
-| `turn.claim` | אני אשאל | I'll ask | NEW (replaces `turn.start_mine`) |
-| `turn.pass_ask` | ויתרתי על התור | I'll pass on asking | NEW |
-| `turn.pass_ask_confirm` · `turn.pass_ask_yes` | לא תשאלו בשיעור הזה · כן, ויתרתי | You won't ask this lesson · Yes, pass | NEW (UX; + reused `common.cancel` ביטול) |
-| `turn.passed_ask_done` | ויתרתם על התור | You passed on asking | NEW (UX; live region only) |
-| `turn.questions_used` | השאלות של המורה כבר נשאלו | All the teacher's questions were asked | NEW (Tal's answer 1) |
-| `turn.instr_write_own` · `_other` | כתבו שאלה לשולחן · התור של {{name}} לכתוב שאלה | Write a question for the table · It's {{name}}'s turn to write a question | NEW (A-own) |
-| `turn.used_questions` | השאלות שכבר נשאלו ({{n}}) | Questions already asked ({{n}}) | NEW (collapsed list) |
-| `turn.pass_speak` | ויתרתי על הדקה | I'll pass my minute | NEW |
-| `turn.pass_for` | לוותר בשם {{name}} | Pass for {{name}} | NEW (asker + sheet) |
-| `turn.who_first_asks` | מי רוצה לשאול ראשון? | Who wants to ask first? | NEW (V1, turn 1) |
-| `turn.who_asks_again` | מי רוצה לשאול עכשיו? | Who wants to ask now? | NEW (UX; V1 at turn > 1) |
-| `turn.all_spoke` | כולם דיברו | Everyone spoke | kept; now the V2 big words |
-| `turn.who_asks_now` | מי שואל עכשיו? | Who asks now? | NEW; IA's "כולם דיברו. מי שואל עכשיו?" split in two lines (16.H) |
-| `turn.last_to_ask` | התור שלכם לשאול | Your turn to ask | NEW; = `turn.asker_me` value, separate key for V2 |
-| `turn.waiting_for` | ממתינים ל{{name}} | Waiting for {{name}} | NEW |
-| `turn.wait_others` | חכו לשאר השולחנות | Wait for the other tables | value changed |
-| `turn.header_done` | שולחן {{n}} · סיימתם את הסבבים | Table {{n}} · all turns done | NEW |
-| `turn.asker_passed` · `turn.speaker_passed` | {{name}}, ויתור על התור · {{name}}, ויתור על הדקה | {{name}}, passed · {{name}}, passed the minute | NEW (sr) |
-| `console.waiting_volunteer` | ממתינים למי שישאל | Waiting for someone to ask | NEW |
-| `console.asked_passed` | שאלו {{a}} · ויתרו {{p}} | Asked {{a}} · passed {{p}} | NEW |
-| `console.all_done` | כולם סיימו | All done | NEW (replaces `console.all_asked`) |
-| `console.pass_ask_for` · `_confirm` | לוותר על התור בשם {{name}} · {{name}} לא ישאלו בשיעור הזה | Pass asking for {{name}} · {{name}} won't ask this lesson | NEW (confirm: UX) |
-| `console.quick_turn` | להתחיל סבב {{n}} | Start turn {{n}} | kept; opens V1 |
-- Kept: `turn.asker_me`, `turn.asker`, `turn.instr_pick`, `turn.instr_pick_other`, `turn.to_talk`, `turn.instr_read`, `turn.instr_listen`, `turn.instr_talk`, `turn.speak_mine`, `turn.speaker`, `turn.asker_picks_next`, `turn.time_up`, `turn.time_over`, `turn.asker_done/_now/_wait`, `turn.saving`, `turn.me`, `turn.pill_*`, `turn.pill_now`, `turn.peek_*`, `turn.peek_back`, `console.turn_n`, `console.waiting_for`, `console.not_asked`, `console.quick_talk`, `console.speak_now`, `console.pass_asker`.
-- Retired (deleted from all 7 where nothing else reads them): `turn.start_mine`, `turn.next_open`, `turn.first_tap`, `turn.next_is_you`, `turn.next_one_of`, `turn.next_is`, `turn.instr_rate_open`, `turn.instr_rate_next`, `turn.all_asked`, `turn.sent_count`, `turn.instr_write`, `turn.instr_help`, `turn.instr_rate`, `answer.mode_table`, `answer.mode_each`, `console.all_asked`, `console.next_asker` (V2-one-left now uses `console.waiting_for`). Kept for Proposals only: `turn.finish_talk`, `turn.to_rate`, `rate.class_writing`, `proposal.*`, `answer.class_list` (check Proposals' sheet title before deleting).
+| `step.tableTalk` | שיחת שולחן | Table talk | kept |
+| `turn.header` | שולחן {{n}} · סבב {{turn}} מתוך {{max}} | Table {{n}} · Turn {{turn}} of {{max}} | value |
+| `turn.header_done` | שולחן {{n}} · סיימתם את הסבבים | Table {{n}} · all turns done | kept |
+| `turn.wait_others` | חכו לשאר השולחנות | Wait for the other tables | kept |
+| `turn.instr_pick` | בחרו שאלה | Pick a question | value |
+| `question.teacher_list` | השאלות של המורה | The teacher's questions | kept |
+| `question.add_own` | שאלה משלנו | Our own question | kept (the "+" is drawn by the row) |
+| `question.add_placeholder` | כתבו את השאלה | Write the question | kept |
+| `question.asked` | נשאלה | Asked | kept |
+| `question.add_failed` | השאלה לא נוספה. לנסות שוב | The question was not added. Try again | kept |
+| `turn.questions_used` | השאלות של המורה נשאלו. כתבו שאלה משלכם | The teacher's questions were all asked. Write your own | value |
+| `turn.used_questions` | השאלות שכבר נשאלו ({{n}}) | Questions already asked ({{n}}) | kept |
+| `turn.claim` | אני רוצה להתחיל | I want to start | value |
+| `turn.pick_first` | קודם בוחרים שאלה | Pick a question first | NEW |
+| `turn.question_taken` | השאלה הזאת כבר נשאלה. בחרו אחרת | This question was already asked. Pick another | NEW (UX, for `question-used`) |
+| `turn.pass_ask` | אני רוצה לוותר | I want to pass | value |
+| `turn.pass_ask_confirm` | לא תשאלו בשיעור הזה | You will not ask in this lesson | kept |
+| `turn.pass_ask_yes` | כן, לוותר | Yes, pass | value |
+| `turn.passed_ask_done` | ויתרתם על התור לשאול | You passed on asking | value |
+| `turn.wait_pick` | חכו שאחרים יבחרו שאלה | Wait for others to pick a question | NEW |
+| `turn.others_first` | תנו לאחרים לענות קודם | Let others answer first | NEW |
+| `turn.who_answers` | מי עונה עכשיו? | Who answers next? | NEW |
+| `turn.answer` | אני רוצה לענות | I want to answer | NEW |
+| `turn.pass_answer` | אני רוצה לוותר | I want to pass | NEW |
+| `turn.answer_mine` | הדקה שלכם | Your minute | NEW |
+| `turn.finish` | סיימתי | Finish | NEW |
+| `turn.answering` | {{name}} עונה | {{name}} is answering | NEW |
+| `turn.answered_me` | כבר עניתם | You had your turn | NEW |
+| `turn.passed_answer_me` | ויתרתם על השאלה הזאת | You passed this question | NEW |
+| `turn.timer_label` | נותרו {{seconds}} שניות | {{seconds}} seconds left | value |
+| `turn.was_first` | הפעם זה {{name}} | {{name}} was first | NEW (HE value chosen, see report) |
+| `turn.saving` | שומרים… | Saving… | kept |
+| `turn.action_failed` | זה לא עבד. לנסות שוב | That did not work. Try again | kept |
+| `turn.retry` | לנסות שוב | Try again | kept |
+| `common.cancel` | ביטול | Cancel | kept |
+| `console.waiting_start` | ממתינים למי שיתחיל | Waiting for someone to start | NEW |
+| `console.not_answered` | עוד לא ענו: {{names}} | Not answered yet: {{names}} | NEW |
+| `console.speak_now` | לענות עכשיו | Answer now | value |
+| `console.finish_minute` | לסיים את הדקה | End the minute | NEW |
+| `turn.pass_for` | לוותר בשם {{name}} | Pass for {{name}} | kept |
+| `console.pass_ask_for` | לוותר על התור בשם {{name}} | Pass asking for {{name}} | kept |
+| `console.pass_ask_confirm` | {{name}} לא ישאלו בשיעור הזה | {{name}} won't ask this lesson | kept |
+| `console.quick_turn` | להתחיל סבב {{n}} | Start turn {{n}} | kept |
+| `console.asked_passed` | שאלו {{a}} · ויתרו {{p}} | Asked {{a}} · passed {{p}} | kept |
+| `console.all_done` | כולם סיימו | All done | kept |
+| `console.mark_asked` | {{name}}, אחרי התור לשאול | {{name}}, asked | NEW (sr) |
+| `console.mark_asking` | {{name}}, שואלים עכשיו | {{name}}, asking now | NEW (sr) |
+| `console.mark_passed_ask` | {{name}}, ויתור על התור לשאול | {{name}}, passed asking | NEW (sr) |
+| `console.mark_answered` | {{name}}, אחרי הדקה | {{name}}, answered | NEW (sr) |
+| `console.mark_passed_answer` | {{name}}, ויתור על השאלה | {{name}}, passed this question | NEW (sr) |
 
-### 16.H Where this differs from the IA (reported; nothing in the IA changed)
-1. **V1 after turn 1** says "מי רוצה לשאול עכשיו?" (`turn.who_asks_again`, one key added). "ראשון" is wrong at turn 3.
-2. **V2 words are split** into `turn.all_spoke` (36 px, in the countdown slot) + `turn.who_asks_now` (22 px). The IA's one-line key would put a 7-word sentence at 36 px. Same words, two keys.
-3. **Pass-asking confirm** (3 student strings, 1 teacher string): the IA leaves the guard to UX; these are the added keys. The teacher's "לוותר על התור בשם {{name}}" gets the same inline confirm (irreversible for the student).
-4. **Card V2-one-left** uses `console.waiting_for` (the same words the students see) instead of the IA-kept `console.next_asker` ("הבא בתור" is generic masculine); `console.next_asker` retires.
-5. **Engine, one clause the IA misses (E3′)**: `nextSpeaker` on a uid in `passedSpeakingUids` removes it from that list, so a re-called speaker's chip reads ✓, not "–".
-6. **Asker passing at A** costs the whole lesson's turn (IA E2). A student who tapped "אני אשאל" by mistake and then passes loses their turn. Kept as specified (one concept of "pass"); the confirm line says so. Tal may prefer a free "release" at A within 10 s; not designed here.
-7. **Tal's answers to IA 16.10** (folded in): (1) no repeated question; when no unused teacher question is left the pick screen is A-own (16.C), and the engine refuses `pickQuestion` on a used id; (2) "להתחיל סבב n" opens V1, as designed; (3) no speaker chips for students without a device.
-
-### 16.I Build notes
-**Student (`apps/join-class/src`)**
-- `views/student/c3/TableFlow.ts`:
-  - At `kind: 'tableTalk'` the `write` and `rate` branches go (`WritePanel`, `rateBody`, `editor`, `editing`, `moment`, `sentCount`, `myAnswer` uses). Proposals keeps them.
-  - The class button and the `Sheet` + `RatedList` render only at Proposals; at Table talk `.flow__bar` holds the asker line alone, hidden at V1, V2 and Done.
-  - Pick footer: V1 → `ClaimFooter` (claim + pass); A → asker's "בחרנו, לדבר" + pass. Talk footer: V2 → `ClaimFooter`; C → `PassMinute`. `claimTurn` keeps swallowing `turn-claimed`.
-  - `down` = **official** step is talk (not the viewed one) and not Done. Done hides `SubStepStrip` and uses `turn.header_done`.
-- `views/student/c3/HandOffCard.ts`: **delete**; `.handoff` and `@keyframes handoff-in` leave `student-c3-turn.scss`.
-- `views/student/c3/ClaimFooter.ts` **NEW** (props in, vnodes out): primary claim, text-button pass, inline confirm state (`confirming`, reset on turn/step change), `data-testid` `table-claim`, `pass-ask`, `pass-ask-yes`, `pass-ask-cancel`.
-- `views/student/c3/TalkScreen.ts`: the V2 body (words in the countdown slot, chips disabled 32 px); passed chip state; `PassMinute` footer (`data-testid` `pass-speak` / `pass-for`, shown when `now ≥ speakerEndsAt − SPEAK_MS + PASS_ARM_MS`); `talkFinishAction` returns null at Table talk.
-- `AskersRow.ts`: `passed` state ("–", `askers__chip--passed`). `c3Logic.ts`: `TABLE_SUBSTEPS.tableTalk = ['pick', 'talk']` (SubStepStrip itself unchanged). `locales/*.ts` ×7 per 16.G.
-- `views/student/c3/QuestionPick.ts`: `canChoose` false at V1; new `allUsed` prop (every teacher question in `usedQuestionIds`) draws A-own: the note, the own box open and focused for the asker, used questions in a collapsed `<details>`. `TableFlow`'s A-own primary chains `createTableQuestion` → `pickQuestion` → `toTalk` in one `run` (one retry on failure, the typed text kept).
-- `lib/classroom/turnMoment.ts`: `askerStates` adds `passed` and reads "now" until V2; replace `rateMoment` with `claimMoment(table, uid, now)` → `{ phase: 'v1'|'a'|'talk'|'v2'|'done', canClaim, canPassAsk, lastLeft, waitingFor }`; `instructionFor` drops write/rate at Table talk; delete `sentCount`/`myAnswer` if Proposals does not read them. `c3Logic.ts`: `speakerChips` adds `passed`; `canFinishTalk` is Proposals-only.
-- `lib/classroom/tableTurnConsole.ts`: `quickActionFor` tableTalk = A-chosen → talk, V2 → turn, else null; `statusLine` adds V1 `console.waiting_volunteer`, Done `console.asked_passed`; `memberMark` adds "–"; `everyoneAsked` → `tableDone`.
-- `views/teacher/TableCard.ts`, `TableSheetPanel.ts` (and `TablesBoard.ts`, `TableSheet.ts` only for the bulk bar): step row `['talk', 'turn']` at Table talk; member buttons per 16.E sheet table; no "כל השולחנות: לדרג" at Table talk.
-- `styles/student-c3-turn.scss`: `askers__chip--passed`, `.claim-footer`, `.claim-footer__pass`, `.claim-footer__confirm`; `student-c3-talk.scss`: `talk__chip--passed`, `.talk__over` (V2 words), `.talk__pass`. `--ink-soft`, `--paper-line`, `--terra-600`, `--dur-base` only; logical properties.
-
-**Engine** (`@freedi/shared-types` `classroomLogic`, `functions/src/classroom/tableTransitions.ts`, `tableMembership.ts`, `assignTables.ts`): IA 16.6 fields (`passedAskingUids?`, `passedSpeakingUids?`) and 16.7 E1–E8 as written, plus E3′ (16.H 5). `STEP_PRECONDITIONS.nextTurn` becomes `['pick', 'talk', 'rate']` with E1's state checks; add `passAsking: ['pick', 'talk']` and `passSpeaking: ['talk']`. Shared `tableDone(table, now)` and `notAskedUids` (excluding passers) used by the client and the console. Repack shared-types for functions.
-
-**E2E** (`apps/join-class/scripts/e2e-table-turn.mjs`, rewrite; solo emulators, 1 teacher + 4 students at one table)
-1. Fresh table: every phone shows V1 "מי רוצה לשאול ראשון?", all chips outline, 4 `table-claim`, no `asker-mark`, the strip has exactly 2 pills.
-2. Simultaneous volunteers: 2 phones claim in the same tick → exactly one `askerUid`, `turn` stays 1, the loser shows A with the winner's name and no `.c3-error`.
-3. The asker taps a question → tablemates see it within one snapshot; the card shows "לדבר". At B only the asker's chips are enabled; she may call herself.
-4. Pass minute: `pass-speak` absent for the first 3 s, then present; a tap gives "–" on all phones and C′ on every phone (all chips enabled); the asker's `pass-for` does the same; re-calling a passed speaker turns the chip ✓ (E3′).
-5. All spoke → V2 still in `.frame--down`: "כולם דיברו", the asker's chip ✓, 3 `table-claim`, none on the asker's phone.
-6. Pass asking: `pass-ask` → confirm → `pass-ask-cancel` keeps everything; `pass-ask-yes` gives "–", removes the footer, header max −1.
-7. The asker passes at A: V1 for all, her question freed, chip "–".
-8. Last student: only Lior has `table-claim` with "התור שלכם לשאול"; others and the card read "ממתינים לליאור".
-9. Done: paper, `turn.header_done`, no strip, no footer anywhere; the card "כולם סיימו · שאלו 3 · ויתרו 1", no quick button.
-10. All passed at V1: Done at once, every chip "–", the card "שאלו 0 · ויתרו 4".
-11. Teacher opens V1: "להתחיל סבב 2" at V2 → V1 on paper, `askerUid` null, turn 2; then "להעביר את התור לליאור" makes Lior the asker.
-12. Peek: at `talk`, tapping "שאלה" shows the dimmed list, the frame stays dark, claim/pass disabled, "חזרה לעכשיו" returns; the phone jumps when the official step changes.
-13. Questions run out (3 teacher questions, 4th asker): A-own note + open box; "בחרנו, לדבר" disabled while empty, then one tap reaches B with the own question on every phone; a forged `pickQuestion` on a used id is refused.
-14. Forged and paused: claim by an asked/passed uid → `already-asked`/`already-passed`; claim at `talk` before all spoke → `talk-not-over`; `passSpeaking` by a tablemate → `not-speaker`; while paused, claim, passes and chips are refused.
-15. Reduced motion + axe on V1, A, C, V2, Done: no animation, no violations; passed states announced.
-
-### 16.J Clear path (for Tal)
-1. Every phone shows the questions and "מי רוצה לשאול ראשון?" with one button: "אני אשאל".
-2. The first tap wins; the others just see that student's "?" chip, no error.
-3. That student taps a question, then "בחרנו, לדבר". The phones go dark.
-4. They read the question aloud and tap who speaks; everyone gets a minute, the asker too.
-5. "ויתרתי על הדקה" sits at the bottom of the speaker's phone, three seconds after their minute starts.
-6. After a minute anyone may tap the next name.
-7. When everyone has spoken, the big clock becomes "כולם דיברו · מי שואל עכשיו?" and "אני אשאל" lights up.
-8. "ויתרתי על התור" is a small link above the button, with one "בטוח?" step: you will not ask this lesson.
-9. When everyone has asked or passed, the phones turn light: "חכו לשאר השולחנות". Nobody writes or rates at the table.
-10. When the teacher's questions run out, the asker writes their own: the box opens by itself.
-11. The teacher's card says "סבב n מתוך max" and offers one button: "לדבר" or "להתחיל סבב n".
-12. A stuck table: the sheet's "להעביר את התור ל…" names who asks.
-
-### 16.K What was built (2026-10-22), and where the build differs
-1. **V2 words are an `h1` inside the talk body** (`.talk__over-words`, with `.talk__over-ask` under it, in a polite `role="status"`), not the frame's instruction: the frame instruction is empty at V2 so the page keeps exactly one heading.
-2. **The own-question placeholder reuses `question.add_placeholder`** ("כתבו את השאלה"); no `turn.own_question_placeholder` key was added.
-3. **`answer.mode_each` / `answer.mode_table` and the other `answer.*` keys stay**: `WriteBox` (Proposals) still reads them. Only `answer.class_list` was deleted (nothing reads it any more).
-4. **A passed speaker holds the floor until someone is called**, so the chip reads "–" (passed) even though `speakerUid` still names them; calling them again removes the pass (E3-prime).
-5. **The teacher's "להתחיל סבב n" is available in every state except "nobody left to ask"**, as the engine allows an admin `nextTurn` from any step. The V2 card button is the one the UX names.
-6. **The peek lapses at Done**: the strip is gone, so a pill chosen earlier is dropped.
-7. **The V2 and Done frames re-measure after colour transitions end** in the e2e (axe), because a transition caught half-way reads as low contrast; no transition was added or removed.
-
+### 16.P Storyboard against the drawing (Dan / Tal)
+| Col | Dan | Tal |
+|---|---|---|
+| 1 | P1: list, ✋ אני רוצה להתחיל, אני רוצה לוותר | P1: same; Tal picks and taps first |
+| 2 | A: מי עונה עכשיו? · ✋ אני רוצה לענות | W: תנו לאחרים לענות קודם |
+| 3 | S: הדקה שלכם · 0:59 · סיימתי | L: דן עונה · 0:59 |
+| 4 | H: ✓ כבר עניתם · מי עונה עכשיו? | A: ✋ אני רוצה לענות |
+| 5 | L: טל עונה · 0:59 · ✓ כבר עניתם | S: הדקה שלכם · 0:59 · סיימתי |
+| 6 | P1 (paper again) | P2: חכו שאחרים יבחרו שאלה |

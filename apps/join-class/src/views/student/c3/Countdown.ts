@@ -9,6 +9,8 @@ export interface CountdownAttrs {
 	endsAt?: number;
 	/** Length of the whole interval (the bar's 100%). Default: one speaking minute. */
 	totalMs?: number;
+	/** Table talk: no "time is up" words; the screen fades to the next state instead. */
+	quietEnd?: boolean;
 }
 
 const TICK_MS = 250;
@@ -68,7 +70,8 @@ export const Countdown: m.ClassComponent<CountdownAttrs> = {
 		const view = countdownView(msLeft(endsAt, totalMs), totalMs);
 		self.shownSeconds = view.seconds;
 		if (started && shouldAnnounce(view.seconds)) self.announced = view.seconds;
-		const over = started && view.over;
+		const quiet = vnode.attrs.quietEnd === true;
+		const over = started && view.over && !quiet;
 		const classes = [
 			'count',
 			started ? '' : 'count--idle',
@@ -84,13 +87,14 @@ export const Countdown: m.ClassComponent<CountdownAttrs> = {
 				: m(
 						'p.count__num',
 						{
+							dir: 'ltr',
 							role: 'timer',
 							'aria-live': 'off',
 							'aria-label': started
 								? t('turn.timer_label', { seconds: String(self.announced ?? view.seconds) })
 								: undefined,
 						},
-						started ? view.text : idleCountdownText(Math.round(totalMs / MS_PER_SECOND)),
+						started ? view.text || '0:00' : idleCountdownText(Math.round(totalMs / MS_PER_SECOND)),
 					),
 			m('span.count__bar', { 'aria-hidden': 'true' }, [
 				m('span.count__fill', { style: `transform: scaleX(${started ? view.fraction : 1})` }),

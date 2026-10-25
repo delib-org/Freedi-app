@@ -1,12 +1,13 @@
-// E2E: the Table talk clock (table turn v2: two pills, no write or rate). Real callables (functions emulator on).
-//  A. the asker views the "talking" pill while the table is still at "pick": the header keeps
-//     naming the OFFICIAL step, every control of the peeked screen is disabled, a line says what the
-//     table is doing now and "back to now" returns (UX 16: the strip is a peek).
-//  B. the asker picks a question, starts, taps a name: the big digits count down on the asker's
-//     phone and on a tablemate's phone.
+// E2E: the Table talk clock (table turn v3: one screen per state, no strip, no peek). Real callables
+// (functions emulator on), three phones at one table.
+//  A. at pick the screen has no clock and no strip; a student picks a question and taps "I want to start":
+//     the asker waits, a tablemate sees "I want to answer".
+//  B. a tablemate taps "I want to answer": the big digits count down on the answerer's phone and on both
+//     others' phones, the same second; only the answerer has Finish and it is off for the first second.
+//  C. Finish ends the minute early: no "time over" words, the answerer moves to "you had your turn".
 //
-// Setup: see e2e-student-2.mjs (emulators with functions + vite). Example ports:
-//   JOIN_CLASS_URL=http://localhost:3037 E2E_AUTH_PORT=9137 E2E_FIRESTORE_PORT=8137 \
+// Setup: see e2e-table-turn.mjs (emulators with functions + vite). Example ports:
+//   JOIN_CLASS_URL=http://localhost:3040 E2E_AUTH_PORT=9140 E2E_FIRESTORE_PORT=8140 \
 //     node scripts/e2e-talk-clock.mjs
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -56,7 +57,7 @@ const browser = await chromium.launch();
 const errors = [];
 async function newStudent(name) {
 	const before = await authUids();
-	const context = await browser.newContext({ viewport: { width: 390, height: 800 } });
+	const context = await browser.newContext({ viewport: { width: 390, height: 800 }, locale: 'he-IL' });
 	const page = await context.newPage();
 	page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`));
 	await page.goto(`${BASE}/m/${mainId}`, { waitUntil: 'domcontentloaded' });
@@ -73,50 +74,49 @@ const toSeconds = (text) => {
 
 	return mm * 60 + ss;
 };
+const has = async (page, id) => (await page.locator(`[data-testid=${id}]`).count()) > 0;
 
 try {
 	const a = await newStudent('Dana');
 	const b = await newStudent('Omer');
+	const c = await newStudent('Noa');
 	const tableRef = db.doc(`classTables/${tableId}`);
 	await tableRef.set({
-		tableId, mainId, n: 1, memberUids: [a.uid, b.uid], noDeviceMembers: [], step: 'pick',
-		askerUid: a.uid, turn: 1, writingMode: 'each', writingLocked: false, spokenUids: [],
+		tableId, mainId, n: 1, memberUids: [a.uid, b.uid, c.uid], noDeviceMembers: [], step: 'pick',
+		askerUid: null, turn: 1, writingMode: 'each', writingLocked: false, spokenUids: [],
 		usedQuestionIds: [], updatedAt: Date.now(),
 	});
 
-	// A. viewed talk screen while the table is at pick -------------------------
-	await a.page.waitForSelector('[data-testid=asker-mark]', { timeout: TIMEOUT });
-	check('the strip has exactly two pills at Table talk (שאלה · מדברים)', (await a.page.locator('.substeps__pill').count()) === 2);
-	await a.page.locator('.substeps__pill').nth(1).click();
-	await a.page.waitForSelector('[data-testid=table-next-speaker]', { timeout: TIMEOUT });
-	const header = (await a.page.locator('.frame__header, header').first().innerText()).replace(/\s+/g, ' ');
-	check('header names the official step (choosing a question), not the viewed one', /בוחרים שאלה|choosing a question/.test(header), header);
-	// the peeked talk screen is not live: every control is disabled, a line says what is happening now
-	const live = await a.page.locator('[data-testid=peek-body] :is(button,input,textarea,select):not(:disabled)').count();
-	check('every control of the peeked screen is disabled', live === 0 && (await a.page.locator('[data-testid=table-next-speaker]:disabled').count()) > 0, `${live} enabled`);
-	const why = (await a.page.locator('.frame__instruction').innerText()).replace(/\s+/g, ' ');
-	check('a line says what the table is doing now', /עדיין בשלב השאלה|still on the question/i.test(why), why);
-	check('no inline error: the peek cannot send a refused tap', (await a.page.locator('.c3-error').count()) === 0);
-	await a.page.click('[data-testid=peek-back]');
-	await a.page.waitForFunction(() => !document.querySelector('[data-testid=peek-body]'));
-
-	// B. official talk, asker taps a name --------------------------------------
+	// A. pick, then start ------------------------------------------------------
+	await a.page.waitForSelector('[data-testid=table-claim]', { timeout: TIMEOUT });
+	check('no clock and no strip at pick', (await a.page.locator('[role=timer], .substeps').count()) === 0);
 	await a.page.locator('[data-testid=table-pick-question]').first().click();
-	await a.page.click('[data-testid=table-start]');
+	await a.page.click('[data-testid=table-claim]');
 	await until(async () => (await tableRef.get()).data()?.step === 'talk', 'table at talk');
-	await a.page.waitForSelector('[data-testid=table-next-speaker]:not([disabled])', { timeout: TIMEOUT });
-	await b.page.waitForSelector('[role=timer]', { timeout: TIMEOUT });
-	const idle = await timerText(a.page);
-	check('before the tap the digits read 1:00', idle === '1:00', idle);
-	await a.page.locator('[data-testid=table-next-speaker]').nth(1).click();
+	await b.page.waitForSelector('[data-testid=table-answer]', { timeout: TIMEOUT });
+	check('the asker waits: no answer button, no clock', !(await has(a.page, 'table-answer')) && (await a.page.locator('[role=timer]').count()) === 0);
+	check('a tablemate sees "I want to answer" and no clock before anyone answers', (await has(b.page, 'table-answer')) && (await b.page.locator('[role=timer]').count()) === 0);
+
+	// B. the minute --------------------------------------------------------------
+	await b.page.click('[data-testid=table-answer]');
 	await until(async () => typeof (await tableRef.get()).data()?.speakerEndsAt === 'number', 'speakerEndsAt written');
+	for (const s of [a, b, c]) await s.page.waitForSelector('[role=timer]', { timeout: TIMEOUT });
+	const idle = await timerText(b.page);
+	check('the digits start at the top of the minute', toSeconds(idle) >= 55 && toSeconds(idle) <= 60, idle);
+	check('only the answerer has Finish, off for the first second', (await has(b.page, 'table-finish')) && !(await has(a.page, 'table-finish')) && !(await has(c.page, 'table-finish')) && (await b.page.locator('[data-testid=table-finish]').isDisabled()));
 	await new Promise((r) => setTimeout(r, 3500));
-	const da = await timerText(a.page);
-	const db2 = await timerText(b.page);
-	check('asker digits count down below 1:00', toSeconds(da) < 60 && toSeconds(da) > 40, da);
-	check('tablemate digits count down below 1:00', toSeconds(db2) < 60 && toSeconds(db2) > 40, db2);
-	check('no inline error on the asker phone', (await a.page.locator('.c3-error').count()) === 0);
-	check('no page errors', errors.length === 0, errors.join(' | '));
+	const texts = [await timerText(a.page), await timerText(b.page), await timerText(c.page)];
+	check('all three phones count down below the top, on the same clock', texts.every((x) => toSeconds(x) < 60 && toSeconds(x) > 40) && Math.max(...texts.map(toSeconds)) - Math.min(...texts.map(toSeconds)) <= 1, texts.join(' '));
+	check('Finish is on after the first second', !(await b.page.locator('[data-testid=table-finish]').isDisabled()));
+
+	// C. Finish ---------------------------------------------------------------------
+	await b.page.click('[data-testid=table-finish]');
+	await until(async () => { const d = (await tableRef.get()).data(); return d.speakerEndsAt <= Date.now() && d.spokenUids.includes(b.uid); }, 'finish written');
+	await b.page.waitForFunction(() => /כבר עניתם/.test(document.body.innerText));
+	check('no "time over" words and no clock after Finish', (await b.page.locator('[role=timer], [data-testid=time-over]').count()) === 0);
+	await a.page.waitForSelector('[data-testid=table-answer]', { timeout: TIMEOUT });
+	check('the asker may answer once one tablemate did', true);
+	check('no inline errors, no page errors', (await a.page.locator('.c3-error').count()) === 0 && errors.length === 0, errors.join(' | '));
 } catch (e) {
 	console.error('e2e-talk-clock aborted', e);
 	failures += 1;

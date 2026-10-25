@@ -1,6 +1,6 @@
 import m from 'mithril';
 import '@/styles/console-opening.scss';
-import type { ClassTable } from '@freedi/shared-types';
+import type { ClassTable, Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { unplacedStudents } from '@/lib/classroom/consoleHelpers';
 import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
@@ -24,6 +24,8 @@ export interface TablesBoardAttrs {
 	plenum: boolean;
 	/** The lesson is at Table talk: cards show the turn, who asked and the next-turn button. */
 	tableTalk: boolean;
+	/** The lesson's sub-questions: a card at Table talk shows the question being answered. */
+	questions?: readonly Statement[];
 	/** Side marks appear after the Side step. */
 	showSides: boolean;
 	/** The Opening panel (UX 15.L): while the class is unseated it takes the main column and the roster the side one. */
@@ -119,6 +121,8 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 									students: byUid,
 									plenum: attrs.plenum,
 									tableTalk: attrs.tableTalk,
+									questionText: attrs.questions?.find((q) => q.statementId === table.questionId)
+										?.statement,
 									mainId: attrs.mainId,
 									tableNumbers,
 								}),

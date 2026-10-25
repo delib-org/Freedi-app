@@ -1,189 +1,179 @@
 import m from 'mithril';
 import { t } from '@/lib/i18n';
-import { ErrorLine } from './ErrorLine';
 
 export interface PickQuestion {
 	id: string;
 	text: string;
 	/** The teacher's one-line hint, if any. */
 	hint?: string;
-	/** Added by a student of this table ("our own question"). */
+	/** Written by a student of this table ("our own question"). */
 	own: boolean;
-	/** Already asked at this table: greyed, last. */
+	/** Already asked at this table: greyed, last, not tappable. */
 	used: boolean;
 }
 
 export interface QuestionPickAttrs {
 	questions: PickQuestion[];
-	chosenId: string | null;
-	/** Only the asker chooses (never at V1: nobody asks yet). */
-	canChoose: boolean;
-	onPick: (id: string) => void;
-	/** Creates a table-owned sub-question; rejects when the rules refuse. */
-	onAddOwn: (text: string) => Promise<void>;
-	/** Every question was asked here: the own-question box is the main thing (UX 16.C A-own). */
-	allUsed: boolean;
-	/** The asker's open own-question box (A-own only): the parent keeps the text. */
+	/** The question chosen on this phone only (nothing is written until "I want to start"). */
+	selectedId: string | null;
+	/** The own-question row is the chosen one. */
+	ownSelected: boolean;
 	ownText: string;
+	/** Every teacher question was asked here (or there are none): the own row comes first and open. */
+	teacherUsedUp: boolean;
+	/** There are no teacher questions at all (no "all asked" note). */
+	noTeacherQuestions: boolean;
+	disabled: boolean;
+	onSelect: (id: string) => void;
+	onSelectOwn: () => void;
 	onOwnText: (text: string) => void;
 }
 
-class PickState {
-	adding = false;
-	text = '';
-	busy = false;
-	error: string | null = null;
+/** Arrow keys move the choice, Space/Enter selects (the buttons already do): a radio group. */
+function moveWithArrows(event: KeyboardEvent): void {
+	const keys: Record<string, number> = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 };
+	const step = keys[event.key];
+	if (!step) return;
+	const group = event.currentTarget as HTMLElement;
+	const radios = Array.from(
+		group.querySelectorAll<HTMLElement>('[role="radio"]:not([aria-disabled="true"])'),
+	);
+	const at = radios.indexOf(document.activeElement as HTMLElement);
+	if (radios.length === 0) return;
+	event.preventDefault();
+	const next = radios[(Math.max(at, 0) + step + radios.length) % radios.length];
+	next.focus();
+	next.click();
 }
 
-function usedList(questions: readonly PickQuestion[]): m.Children {
-	if (questions.length === 0) return null;
+function questionRow(q: PickQuestion, attrs: QuestionPickAttrs): m.Vnode {
+	const on = !attrs.ownSelected && attrs.selectedId === q.id;
+
+	return m(
+		'button.pick__item',
+		{
+			key: q.id,
+			'data-testid': 'table-pick-question',
+			type: 'button',
+			role: 'radio',
+			'aria-checked': on ? 'true' : 'false',
+			disabled: attrs.disabled ? true : undefined,
+			class: on ? 'pick__item--on' : '',
+			onclick: () => attrs.onSelect(q.id),
+		},
+		[
+			m('span.pick__radio', { 'aria-hidden': 'true' }, on ? '◉' : '○'),
+			m('span.pick__body', [
+				q.own ? m('span.pick__eyebrow', t('question.add_own')) : null,
+				m('span.pick__text', { dir: 'auto' }, q.text),
+				q.hint ? m('span.pick__hint', { dir: 'auto' }, q.hint) : null,
+			]),
+		],
+	);
+}
+
+/** "+ our own question": a radio row that opens its own text field (no save button of its own). */
+function ownRow(attrs: QuestionPickAttrs): m.Vnode {
+	const on = attrs.ownSelected;
+
+	return m('.pick__own', { key: 'own', class: on ? 'pick__item--on' : '' }, [
+		m(
+			'button.pick__own-head',
+			{
+				type: 'button',
+				role: 'radio',
+				'data-testid': 'table-pick-own',
+				'aria-checked': on ? 'true' : 'false',
+				disabled: attrs.disabled ? true : undefined,
+				onclick: attrs.onSelectOwn,
+			},
+			[
+				m('span.pick__radio', { 'aria-hidden': 'true' }, on ? '◉' : '+'),
+				m('span.pick__text', t('question.add_own')),
+			],
+		),
+		on
+			? m('input.pick__input', {
+					type: 'text',
+					dir: 'auto',
+					maxlength: 200,
+					'data-testid': 'own-question-input',
+					'aria-label': t('question.add_own'),
+					placeholder: t('question.add_placeholder'),
+					value: attrs.ownText,
+					disabled: attrs.disabled ? true : undefined,
+					oncreate: (node: m.VnodeDOM) => (node.dom as HTMLInputElement).focus(),
+					oninput: (event: Event) => attrs.onOwnText((event.target as HTMLInputElement).value),
+				})
+			: null,
+	]);
+}
+
+function usedRow(q: PickQuestion): m.Vnode {
+	return m(
+		'.pick__item.pick__item--used',
+		{ key: q.id, role: 'radio', 'aria-checked': 'false', 'aria-disabled': 'true' },
+		[
+			m('span.pick__body', [
+				q.own ? m('span.pick__eyebrow', t('question.add_own')) : null,
+				m('span.pick__text', { dir: 'auto' }, q.text),
+			]),
+			m('span.pick__used', t('question.asked')),
+		],
+	);
+}
+
+function usedFolded(used: readonly PickQuestion[]): m.Children {
+	if (used.length === 0) return null;
 
 	return m('details.pick__used-list', { 'data-testid': 'used-questions' }, [
-		m('summary', t('turn.used_questions', { n: questions.length })),
+		m('summary', t('turn.used_questions', { n: used.length })),
 		m(
 			'ul.pick__used-items',
-			questions.map((q) => m('li.pick__item.pick__item--used', { key: q.id }, q.text)),
+			used.map((q) => m('li.pick__item.pick__item--used', { key: q.id }, q.text)),
 		),
 	]);
 }
 
-function ownBox(attrs: QuestionPickAttrs): m.Children {
-	return m('.pick__add.pick__add--open', [
-		m('input.pick__input', {
-			type: 'text',
-			dir: 'auto',
-			maxlength: 200,
-			'data-testid': 'own-question-input',
-			'aria-label': t('question.add_own'),
-			placeholder: t('question.add_placeholder'),
-			value: attrs.ownText,
-			oncreate: (node: m.VnodeDOM) => (node.dom as HTMLInputElement).focus(),
-			oninput: (event: Event) => attrs.onOwnText((event.target as HTMLInputElement).value),
-		}),
-	]);
-}
-
 /**
- * "Pick a question" (UX §2.6.1, 16.C): a radio list of the teacher's questions with
- * the ones already asked here greyed and last, and "+ our own question" for
- * anyone at the table. Everyone else sees the same list read-only. At V1 nobody
- * asks, so nobody chooses. When every question was asked, the list gives way to
- * the asker's own-question box and a collapsed list of what was asked (no repeats).
+ * "Pick a question" (UX 16.C): a radio list of the teacher's questions and this
+ * table's own, the used ones greyed and last (folded away once the teacher's
+ * questions are used up), and "+ our own question" always in the list. Choosing
+ * is local to this phone; "I want to start" is what writes. When the teacher's
+ * questions are used up the own row is first and open.
  */
 export const QuestionPick: m.ClassComponent<QuestionPickAttrs> = {
-	oninit(vnode) {
-		(vnode.state as { self?: PickState }).self = new PickState();
-	},
-
 	view(vnode) {
-		const self = (vnode.state as { self?: PickState }).self as PickState;
-		const { questions, chosenId, canChoose, onPick, onAddOwn, allUsed } = vnode.attrs;
-		const ordered = allUsed
-			? []
-			: [...questions.filter((q) => !q.used), ...questions.filter((q) => q.used)];
-		const submit = (): void => {
-			const text = self.text.trim();
-			if (!text || self.busy) return;
-			self.busy = true;
-			self.error = null;
-			onAddOwn(text)
-				.then(() => {
-					self.text = '';
-					self.adding = false;
-				})
-				.catch(() => {
-					self.error = t('question.add_failed');
-				})
-				.finally(() => {
-					self.busy = false;
-					m.redraw();
-				});
-		};
-		const askerWrites = allUsed && canChoose;
+		const attrs = vnode.attrs;
+		const { questions, teacherUsedUp, noTeacherQuestions } = attrs;
+		const free = questions.filter((q) => !q.used);
+		const used = questions.filter((q) => q.used);
+		const teacher = free.filter((q) => !q.own);
+		const ownFree = free.filter((q) => q.own);
+
+		// Keyed rows only (no null, no nested array): mithril refuses a keyed list with holes.
+		const rows: m.Vnode[] = teacherUsedUp
+			? [ownRow(attrs), ...ownFree.map((q) => questionRow(q, attrs))]
+			: [
+					...(teacher.length > 0
+						? [m('p.pick__title', { key: 'title' }, t('question.teacher_list'))]
+						: []),
+					...teacher.map((q) => questionRow(q, attrs)),
+					...ownFree.map((q) => questionRow(q, attrs)),
+					ownRow(attrs),
+					...used.map(usedRow),
+				];
 
 		return m('.pick', [
-			allUsed
+			teacherUsedUp && !noTeacherQuestions
 				? m('p.pick__all-used', { 'data-testid': 'questions-used' }, t('turn.questions_used'))
 				: null,
-			ordered.length > 0
-				? [
-						m('p.pick__title', t('question.teacher_list')),
-						m(
-							'.pick__list',
-							{ role: 'radiogroup', 'aria-label': t('question.teacher_list') },
-							ordered.map((q) =>
-								m(
-									'button.pick__item',
-									{
-										key: q.id,
-										'data-testid': 'table-pick-question',
-										type: 'button',
-										role: 'radio',
-										'aria-checked': chosenId === q.id ? 'true' : 'false',
-										disabled: !canChoose || q.used ? true : undefined,
-										class: [
-											q.used ? 'pick__item--used' : '',
-											chosenId === q.id ? 'pick__item--on' : '',
-										]
-											.filter(Boolean)
-											.join(' '),
-										onclick: () => onPick(q.id),
-									},
-									[
-										q.own ? m('span.pick__eyebrow', t('question.add_own')) : null,
-										m('span.pick__text', { dir: 'auto' }, q.text),
-										q.hint && !q.used ? m('span.pick__hint', { dir: 'auto' }, q.hint) : null,
-										q.used ? m('span.pick__used', t('question.asked')) : null,
-									],
-								),
-							),
-						),
-					]
-				: allUsed
-					? null
-					: m('p.pick__empty', t('question.none')),
-			askerWrites
-				? ownBox(vnode.attrs)
-				: self.adding
-					? m(
-							'form.pick__add',
-							{
-								onsubmit: (event: Event) => {
-									event.preventDefault();
-									submit();
-								},
-							},
-							[
-								m('input.pick__input', {
-									type: 'text',
-									dir: 'auto',
-									maxlength: 200,
-									'aria-label': t('question.add_own'),
-									placeholder: t('question.add_placeholder'),
-									value: self.text,
-									oninput: (event: Event) => {
-										self.text = (event.target as HTMLInputElement).value;
-									},
-								}),
-								m(
-									'button.btn.btn--secondary',
-									{ type: 'submit', disabled: self.busy || !self.text.trim() },
-									t('question.add_confirm'),
-								),
-								m(ErrorLine, { message: self.error }),
-							],
-						)
-					: m(
-							'button.btn.btn--secondary.pick__add',
-							{
-								type: 'button',
-								onclick: () => {
-									self.adding = true;
-								},
-							},
-							`+ ${t('question.add_own')}`,
-						),
-			allUsed ? usedList(questions.filter((q) => q.used)) : null,
+			m(
+				'.pick__list',
+				{ role: 'radiogroup', 'aria-label': t('turn.instr_pick'), onkeydown: moveWithArrows },
+				rows,
+			),
+			teacherUsedUp ? usedFolded(used) : null,
 		]);
 	},
 };

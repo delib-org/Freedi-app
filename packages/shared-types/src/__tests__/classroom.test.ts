@@ -1,9 +1,13 @@
 import {
+	askerMayAnswer,
 	campOf,
+	choosing,
 	classTableId,
 	decideBallot,
 	everyoneSpoke,
+	floorOpen,
 	notAskedUids,
+	othersAnswered,
 	speakerTimeOver,
 	supportBySide,
 	tableDone,
@@ -162,5 +166,50 @@ describe('decideBallot', () => {
 	});
 	it('throws on an empty tally', () => {
 		expect(() => decideBallot({}, {})).toThrow();
+	});
+});
+
+describe('table turn v3 derived states', () => {
+	const NOW = 1_000_000;
+	const base = {
+		step: 'talk' as const,
+		memberUids: ['a', 'b', 'c'],
+		askerUid: 'a',
+		askedUids: ['a'],
+		spokenUids: [] as string[],
+	};
+
+	it('floorOpen: nobody holds a running minute', () => {
+		expect(floorOpen({}, NOW)).toBe(true);
+		expect(floorOpen({ speakerEndsAt: NOW + 1 }, NOW)).toBe(false);
+		expect(floorOpen({ speakerEndsAt: NOW }, NOW)).toBe(true);
+	});
+
+	it('othersAnswered ignores the asker and passes, and counts a minute that ran out', () => {
+		expect(othersAnswered({ ...base, spokenUids: ['a'] }, NOW)).toBe(false);
+		expect(othersAnswered({ ...base, spokenUids: ['b'], passedSpeakingUids: ['b'] }, NOW)).toBe(
+			false,
+		);
+		expect(othersAnswered({ ...base, speakerUid: 'b', speakerEndsAt: NOW - 1 }, NOW)).toBe(true);
+		expect(othersAnswered({ ...base, speakerUid: 'b', speakerEndsAt: NOW + 1 }, NOW)).toBe(false);
+	});
+
+	it('askerMayAnswer: one other answered, or every other tablemate answered or passed', () => {
+		expect(askerMayAnswer(base, NOW)).toBe(false);
+		expect(askerMayAnswer({ ...base, spokenUids: ['c'] }, NOW)).toBe(true);
+		expect(
+			askerMayAnswer(
+				{ ...base, spokenUids: ['b', 'c'], passedSpeakingUids: ['b', 'c'] },
+				NOW,
+			),
+		).toBe(true);
+	});
+
+	it('choosing: at pick, or at talk once everyone spoke; never once the table is done', () => {
+		expect(choosing({ ...base, step: 'pick', askerUid: null, askedUids: [] }, NOW)).toBe(true);
+		expect(choosing(base, NOW)).toBe(false);
+		const over = { ...base, spokenUids: ['a', 'b', 'c'] };
+		expect(choosing(over, NOW)).toBe(true);
+		expect(choosing({ ...over, askedUids: ['a', 'b'], passedAskingUids: ['c'] }, NOW)).toBe(false);
 	});
 });
