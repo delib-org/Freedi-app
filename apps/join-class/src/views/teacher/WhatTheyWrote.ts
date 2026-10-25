@@ -46,6 +46,26 @@ function card(text: WrittenText, noDeviceNames: readonly string[]): m.Vnode {
 	]);
 }
 
+/** The title row of a question; a table's own question carries hide / restore. */
+function questionHead(group: QuestionGroup): m.Vnode {
+	return m('div.written__question-head', [
+		m('h3.written__question-title', group.title),
+		group.hidden ? m('span.written-card__flag', t('console.hidden_flag')) : null,
+		group.ownQuestion
+			? m(
+					'button.btn.btn--tertiary',
+					{
+						type: 'button',
+						'data-testid': 'written-question-hide',
+						disabled: isBusy(`hide:${group.questionId}`),
+						onclick: () => void setHidden(group.questionId, !group.hidden),
+					},
+					t(group.hidden ? 'console.restore' : 'console.hide'),
+				)
+			: null,
+	]);
+}
+
 export const WhatTheyWrote: m.Component<WhatTheyWroteAttrs> = {
 	view({ attrs }) {
 		const total = attrs.groups.reduce(
@@ -59,21 +79,25 @@ export const WhatTheyWrote: m.Component<WhatTheyWroteAttrs> = {
 			attrs.groups
 				.filter((g) => g.groups.length > 0)
 				.map((g) =>
-					m('section.written__question', { key: g.questionId }, [
-						m('h3.written__question-title', g.title),
-						g.groups.map((tg) =>
-							m('div.written__group', { key: tg.tableId ?? 'none' }, [
-								m(
-									'h4.written__group-title',
-									tg.n === null ? t('console.unplaced_name') : t('console.table_n', { n: tg.n }),
-								),
-								m(
-									'ul.written__list',
-									tg.texts.map((text) => card(text, tg.noDeviceNames)),
-								),
-							]),
-						),
-					]),
+					m(
+						'section.written__question',
+						{ key: g.questionId, class: g.hidden ? 'written__question--hidden' : '' },
+						[
+							questionHead(g),
+							g.groups.map((tg) =>
+								m('div.written__group', { key: tg.tableId ?? 'none' }, [
+									m(
+										'h4.written__group-title',
+										tg.n === null ? t('console.unplaced_name') : t('console.table_n', { n: tg.n }),
+									),
+									m(
+										'ul.written__list',
+										tg.texts.map((text) => card(text, tg.noDeviceNames)),
+									),
+								]),
+							),
+						],
+					),
 				),
 		);
 	},

@@ -12,6 +12,7 @@ import {
 	getChallengeQuestion,
 	getGuidingQuestions,
 	getLessonStep,
+	stepLabel,
 } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
 import type { LessonStatus } from '@freedi/shared-types';
@@ -46,6 +47,8 @@ import type { ConsoleView } from './consoleState';
 import { abortDrag } from './dragController';
 import { EndChoice, openEndChoice } from './EndChoice';
 import { LessonBanner } from './LessonBanner';
+import { ConfirmDialog } from './ConfirmDialog';
+import { confirmGoBack, confirmResetTurns, confirmResetVote } from './consoleConfirms';
 import { NotYourLesson } from './NotYourLesson';
 import { ConsoleSettings } from './ConsoleSettings';
 import { ProjectorMenu } from './ProjectorMenu';
@@ -149,7 +152,7 @@ function failureBanner(): m.Children {
 	if (!failure) return null;
 
 	return m('div.console__failure', { role: 'alert' }, [
-		m('span', t('console.failed', { label: failure.label })),
+		m('span', failure.message ?? t('console.failed', { label: failure.label })),
 		m('button.btn.btn--secondary', { type: 'button', onclick: failure.retry }, t('console.retry')),
 		m(
 			'button.btn.btn--tertiary',
@@ -276,11 +279,16 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				elapsedMs: clockEnd - session.startedAt,
 				held,
 				heldKey: status === 'ended' ? 'console.ended_banner' : 'lesson.paused.title',
-				onGo: (index: number) => void goToStep(mid, index),
+				onGo: (index: number) => {
+					// Going back keeps all work but asks first; forward is one tap.
+					if (index < step.index) confirmGoBack(mid, index, stepLabel(LESSON_STEP_KEYS[index]));
+					else void goToStep(mid, index);
+				},
 				onEnd: openEndChoice,
 			}),
 			m(SwitchBand, {
 				held,
+				ended: status === 'ended',
 				stepKey: step.key,
 				view,
 				hasTables: classState.tables.length > 0,
@@ -307,6 +315,8 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				onFreeze: () => void freezeBallot(mid),
 				onPauseVote: (paused: boolean) => void pauseBallot(mid, paused),
 				onCloseVote: () => void closeBallot(mid),
+				onResetTurns: () => confirmResetTurns(mid),
+				onResetVote: () => confirmResetVote(mid),
 			}),
 			failureBanner(),
 			m('main.console__board', board(mid, view, step.index)),
@@ -336,6 +346,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 					})
 				: null,
 			m(EndChoice, { mainId: mid, status }),
+			m(ConfirmDialog),
 		]);
 	},
 };

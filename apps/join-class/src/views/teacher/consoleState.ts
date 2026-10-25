@@ -15,6 +15,8 @@ export type ConsoleView = 'tables' | 'texts';
 export interface ActionFailure {
 	/** Plain-words label of what failed ("חלוקה לשולחנות"). */
 	label: string;
+	/** Plain-words explanation that replaces the generic "failed" line (a known refusal). */
+	message?: string;
 	retry: () => void;
 }
 
@@ -89,6 +91,7 @@ export async function act(
 	key: string,
 	label: string,
 	run: () => Promise<unknown>,
+	explain?: (error: unknown) => string | undefined,
 ): Promise<boolean> {
 	if (consoleState.busy.has(key)) return false;
 	consoleState.busy.add(key);
@@ -100,7 +103,11 @@ export async function act(
 		return true;
 	} catch (err) {
 		console.error(`[TeacherConsole] ${label} failed:`, err);
-		consoleState.failure = { label, retry: () => void act(key, label, run) };
+		consoleState.failure = {
+			label,
+			message: explain?.(err),
+			retry: () => void act(key, label, run, explain),
+		};
 
 		return false;
 	} finally {

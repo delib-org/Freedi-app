@@ -428,6 +428,26 @@ const fa: Record<string, string> = {
 	'lesson.ended.title': 'درس پایان یافته است',
 	'lesson.ended.body': 'از مشارکت شما سپاسگزاریم',
 	'common.cancel': 'لغو',
+	'console.back_title': 'بازگشت به مرحله: {{name}}؟',
+	'console.back_keep': 'هرچه دانش‌آموزان نوشته، امتیاز داده و انتخاب کرده‌اند حفظ می‌شود.',
+	'console.back_yes': 'بازگشت',
+	'console.reset_turns_all': 'بازنشانی نوبت‌ها در همه میزها',
+	'console.reset_turns_table': 'بازنشانی نوبت‌های این میز',
+	'console.reset_turns_title': 'نوبت‌ها بازنشانی شوند؟',
+	'console.reset_turns_body':
+		'همه می‌توانند دوباره بپرسند و همه پرسش‌ها دوباره آزاد می‌شوند. پاسخ‌ها حفظ می‌شوند. این کار قابل بازگشت نیست.',
+	'console.reset_vote': 'بازنشانی رأی‌گیری',
+	'console.reset_vote_title': 'رأی‌گیری بازنشانی شود؟',
+	'console.reset_vote_body':
+		'همه رأی‌ها حذف و تصمیم لغو می‌شود. کلاس دوباره روی همان پیشنهادها رأی می‌دهد. این کار قابل بازگشت نیست.',
+	'console.reset_yes': 'بازنشانی',
+	'console.hide_vote_closed':
+		'این پیشنهاد در رأی‌گیری بسته‌شده است. ابتدا رأی‌گیری را بازنشانی کنید',
+	'lesson.back_line': 'به مرحله {{name}} برگشتیم',
+	'turn.restarted': 'نوبت‌ها از نو شروع شد',
+	'vote.restarted': 'رأی‌گیری از نو شروع شد. دوباره انتخاب کنید',
+	'proposal.hidden_mine': 'معلم این پیشنهاد را از فهرست کلاس پنهان کرد',
+	'vote.choice_removed': 'پیشنهادی که انتخاب کرده بودید حذف شد. دوباره انتخاب کنید',
 	'plan.details.language': 'زبان درس',
 	'plan.details.language.device': 'به زبان هر دانش‌آموز',
 	// Lesson introduction (IA 14, UX 14.J)

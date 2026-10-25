@@ -436,6 +436,26 @@ const nl: Record<string, string> = {
 	'lesson.ended.title': 'De les is afgelopen',
 	'lesson.ended.body': 'Bedankt voor het meedoen',
 	'common.cancel': 'Annuleren',
+	'console.back_title': 'Terug naar: {{name}}?',
+	'console.back_keep': 'Alles wat de leerlingen schreven, beoordeelden en kozen blijft bewaard.',
+	'console.back_yes': 'Terug',
+	'console.reset_turns_all': 'Beurten aan alle tafels resetten',
+	'console.reset_turns_table': 'Beurten van deze tafel resetten',
+	'console.reset_turns_title': 'Beurten resetten?',
+	'console.reset_turns_body':
+		'Iedereen kan weer vragen stellen en elke vraag is weer vrij. Antwoorden blijven bewaard. Dit kan niet ongedaan worden gemaakt.',
+	'console.reset_vote': 'Stemming resetten',
+	'console.reset_vote_title': 'Stemming resetten?',
+	'console.reset_vote_body':
+		'Alle stemmen worden verwijderd en het besluit vervalt. De klas stemt opnieuw over dezelfde voorstellen. Dit kan niet ongedaan worden gemaakt.',
+	'console.reset_yes': 'Resetten',
+	'console.hide_vote_closed':
+		'Dit voorstel staat in een gesloten stemming. Reset eerst de stemming',
+	'lesson.back_line': 'We zijn terug bij: {{name}}',
+	'turn.restarted': 'De beurten zijn opnieuw begonnen',
+	'vote.restarted': 'De stemming is opnieuw begonnen. Kies opnieuw',
+	'proposal.hidden_mine': 'De docent heeft dit voorstel uit de klaslijst verborgen',
+	'vote.choice_removed': 'Het voorstel dat je koos is verwijderd. Kies opnieuw',
 	'plan.details.language': 'Taal van de les',
 	'plan.details.language.device': 'Taal van elke leerling',
 	// Lesson introduction (IA 14, UX 14.J)

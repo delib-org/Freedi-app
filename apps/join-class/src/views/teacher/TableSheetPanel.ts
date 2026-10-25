@@ -16,6 +16,7 @@ import { answerMark, askMark, type TableMode } from '@/lib/classroom/tableTurnCo
 import { noDeviceForm, tableModeOf, turnLine } from './TableCard';
 import { noDeviceButtons, stepButtons, turnButtons } from './tableSheetTurn';
 import { targetName } from './dragController';
+import { confirmResetTurns } from './consoleConfirms';
 
 /**
  * The table sheet (UX section 5): a 420 px side sheet from the end edge over a
@@ -171,7 +172,21 @@ export const TableSheetPanel: m.Component<TableSheetPanelAttrs> = {
 						? m('p.table-sheet__missing', t('console.table_missing'))
 						: [
 								currentLine(attrs, table),
-								m('div.table-sheet__actions', stepButtons(table, tableModeOf(attrs), serverNow())),
+								m('div.table-sheet__actions', [
+									stepButtons(table, tableModeOf(attrs), serverNow()),
+									attrs.tableTalk
+										? m(
+												'button.btn.btn--danger-outline.table-sheet__reset',
+												{
+													type: 'button',
+													'data-testid': 'sheet-reset-turns',
+													disabled: isBusy(`reset:turns:${table.n}`),
+													onclick: () => confirmResetTurns(attrs.mainId, table.n),
+												},
+												t('console.reset_turns_table'),
+											)
+										: null,
+								]),
 								m('h3.table-sheet__section', t('console.members')),
 								m('ul.table-sheet__members', [
 									table.memberUids.map((uid) =>

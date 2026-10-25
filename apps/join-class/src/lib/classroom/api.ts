@@ -15,6 +15,12 @@ import type {
 	ClassPauseBallotRequest,
 	ClassPauseBallotResponse,
 	ClassMoveStudentResponse,
+	ClassResetTurnsRequest,
+	ClassResetTurnsResponse,
+	ClassResetVoteRequest,
+	ClassResetVoteResponse,
+	ClassSetItemHiddenRequest,
+	ClassSetItemHiddenResponse,
 	ClassSetLessonStatusRequest,
 	ClassSetLessonStatusResponse,
 	ClassTableStepRequest,
@@ -96,4 +102,21 @@ export function classSetLessonStatus(
 /** Admin of the source: a new lesson with the same plan (IA 13.15). Safe to repeat with the same `newMainId`. */
 export function classCloneLesson(req: ClassCloneLessonRequest): Promise<ClassCloneLessonResponse> {
 	return call('classCloneLesson', req);
+}
+
+/** Admin, at Table talk: give the turns back to every table, or to table `n` (IA 18.4). */
+export function classResetTurns(req: ClassResetTurnsRequest): Promise<ClassResetTurnsResponse> {
+	return call('classResetTurns', req);
+}
+
+/** Admin: delete every vote and the decision; the same proposals stay on the ballot (IA 18.4). */
+export function classResetVote(req: ClassResetVoteRequest): Promise<ClassResetVoteResponse> {
+	return call('classResetVote', req);
+}
+
+/** Admin: hide or restore one answer, proposal or table question (IA 18.4). */
+export function classSetItemHidden(
+	req: ClassSetItemHiddenRequest,
+): Promise<ClassSetItemHiddenResponse> {
+	return call('classSetItemHidden', req);
 }

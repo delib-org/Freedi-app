@@ -16,6 +16,8 @@ import type { ConsoleView } from './consoleState';
 export interface SwitchBandAttrs {
 	/** Paused or ended: the step actions are disabled (looking stays possible). */
 	held?: boolean;
+	/** The lesson is over: the resets (which work while paused) are held too. */
+	ended?: boolean;
 	stepKey: LessonStepKey;
 	view: ConsoleView;
 	hasTables: boolean;
@@ -34,6 +36,8 @@ export interface SwitchBandAttrs {
 	onFreeze: () => void;
 	onPauseVote: (paused: boolean) => void;
 	onCloseVote: () => void;
+	onResetTurns: () => void;
+	onResetVote: () => void;
 	onProject: (id: string | null) => void;
 }
 
@@ -44,10 +48,13 @@ const TEST_IDS: Record<string, string> = {
 	freeze: 'console-freeze-vote',
 	pauseVote: 'console-pause-vote',
 	close: 'console-close-vote',
+	'reset:turns:all': 'console-reset-turns',
+	'reset:vote': 'console-reset-vote',
 };
 
 /** Set by the view before it draws the actions below. */
 let heldNow = false;
+let endedNow = false;
 
 function action(label: string, key: string, onclick: () => void, disabled = false): m.Vnode {
 	return m(
@@ -57,6 +64,24 @@ function action(label: string, key: string, onclick: () => void, disabled = fals
 			'data-action': key,
 			'data-testid': TEST_IDS[key],
 			disabled: disabled || heldNow || isBusy(key),
+			onclick,
+		},
+		label,
+	);
+}
+
+/**
+ * A reset: destructive-outline, never primary. Unlike the step actions it
+ * works while the lesson is paused (the server refuses only an ended lesson).
+ */
+function resetAction(label: string, key: string, onclick: () => void, disabled = false): m.Vnode {
+	return m(
+		'button.btn.btn--danger-outline.switch-band__action.switch-band__action--reset',
+		{
+			type: 'button',
+			'data-action': key,
+			'data-testid': TEST_IDS[key],
+			disabled: disabled || endedNow || isBusy(key),
 			onclick,
 		},
 		label,
@@ -82,6 +107,9 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 				? action(t('console.resplit'), 'assign', () => attrs.onSplit(true))
 				: action(t('console.split'), 'assign', () => attrs.onSplit(false)),
 		);
+	}
+	if (stepKey === 'tableTalk' && attrs.hasTables) {
+		actions.push(resetAction(t('console.reset_turns_all'), 'reset:turns:all', attrs.onResetTurns));
 	}
 	if (ALL_TABLES_RATE_STEPS.includes(stepKey)) {
 		actions.push(action(t('console.all_tables_rate'), 'all:rate', attrs.onAllToRate));
@@ -122,6 +150,8 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 				attrs.onCloseVote,
 				!attrs.ballotFrozen || attrs.ballotClosed,
 			),
+			// A running vote is closed first; a closed one can be wiped and voted again.
+			resetAction(t('console.reset_vote'), 'reset:vote', attrs.onResetVote, !attrs.ballotClosed),
 		);
 	}
 
@@ -151,6 +181,7 @@ function segment(attrs: SwitchBandAttrs): m.Vnode {
 export const SwitchBand: m.Component<SwitchBandAttrs> = {
 	view({ attrs }) {
 		heldNow = attrs.held === true;
+		endedNow = attrs.ended === true;
 
 		return m('div.switch-band', [
 			m('div.switch-band__actions', stepActions(attrs)),

@@ -1,0 +1,41 @@
+// =============================================================================
+// The phone's one-time line (IA 18.2): "we're back at ...", "the turns have
+// started again". Calm ink on paper, never an error colour.
+// =============================================================================
+
+.student-notice {
+	position: fixed;
+	inset-inline: var(--space-md);
+	inset-block-end: var(--space-lg);
+	z-index: 50;
+	margin-inline: auto;
+	max-inline-size: 420px;
+	padding: var(--space-sm) var(--space-md);
+	font-size: var(--font-size-base);
+	color: var(--ink);
+	text-align: center;
+	background: var(--paper);
+	border: 1.5px solid var(--ink);
+	border-radius: var(--radius-lg);
+	animation: student-notice-in var(--dur-base) var(--ease-out);
+	pointer-events: none;
+
+	// An empty live region stays in the page for screen readers but takes no space.
+	&:empty {
+		display: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
+}
+
+@keyframes student-notice-in {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}

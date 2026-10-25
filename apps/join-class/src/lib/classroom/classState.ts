@@ -3,6 +3,10 @@ import type { ClassTable, StatementSubscription } from '@freedi/shared-types';
 import type { Unsubscribe } from '../firebase';
 import { ensureMemberSubscription } from './studentWrites';
 import { initServerClock } from './serverClock';
+import { getMainStatement, getSubQuestions } from '../store';
+import { getChallengeQuestion, lessonStepOf } from '../lessonCore';
+import { startStudentNotices } from './studentNotices';
+import type { NoticeSnapshot } from './noticeLogic';
 import { listenMySubscription, listenRoster, listenTable, listenTables } from './listeners';
 
 /**
@@ -41,6 +45,26 @@ export function resetClassState(mainId: string | null = null): void {
 	classState.tables = [];
 	classState.mySubscription = null;
 	classState.roster = [];
+}
+
+/** What the phone sees now, for its one-time lines (IA 18.2); null before the lesson loads. */
+function readNoticeSnapshot(): NoticeSnapshot | null {
+	const main = getMainStatement();
+	if (!main) return null;
+	const step = lessonStepOf(main.statementSettings?.lessonPlan);
+	const table = classState.table;
+	const ballot = getChallengeQuestion(getSubQuestions())?.statementSettings?.ballot;
+
+	return {
+		stepIndex: step.index,
+		stepKey: step.key,
+		tableTurn: table?.turn ?? null,
+		tableStep: table?.step ?? null,
+		tableAsked: table?.askedUids?.length ?? 0,
+		tableUsed: table?.usedQuestionIds.length ?? 0,
+		ballotFrozenAt: ballot?.frozenAt ?? null,
+		ballotClosedAt: ballot?.closedAt ?? null,
+	};
 }
 
 export type ClassWatchRole = 'student' | 'teacher';
@@ -84,6 +108,7 @@ export function watchClass(mainId: string, role: ClassWatchRole): () => void {
 	} else {
 		void ensureMemberSubscription(mainId).catch(() => undefined);
 		stops.push(
+			startStudentNotices(readNoticeSnapshot),
 			listenMySubscription(
 				mainId,
 				(sub) => {

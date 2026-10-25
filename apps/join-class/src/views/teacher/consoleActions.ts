@@ -13,6 +13,9 @@ import {
 	classFreezeBallot,
 	classMoveStudent,
 	classPauseBallot,
+	classResetTurns,
+	classResetVote,
+	classSetItemHidden,
 	classSetLessonStatus,
 	classTableStep,
 } from '@/lib/classroom/api';
@@ -21,9 +24,16 @@ import { Collections } from '@freedi/shared-types';
 import { db, doc, updateDoc } from '@/lib/firebase';
 import { setLessonStep } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
-import { getMainStatement, setOptionFlag, setQuestionSetting } from '@/lib/store';
+import { getMainStatement, setQuestionSetting } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { act, consoleState } from './consoleState';
+
+/** The machine-readable cause a classroom callable attached to its refusal, if any. */
+function refusalReason(error: unknown): string | undefined {
+	const details = (error as { details?: { reason?: unknown } } | null)?.details;
+
+	return typeof details?.reason === 'string' ? details.reason : undefined;
+}
 
 /**
  * Every teacher action of the console, each through `act` so a failure (the
@@ -140,10 +150,34 @@ export function tableAction(tableId: string, action: ClassTableAction): Promise<
 	);
 }
 
-export function setHidden(optionId: string, hidden: boolean): Promise<boolean> {
-	return guardedAct(`hide:${optionId}`, t(hidden ? 'console.hide' : 'console.restore'), () =>
-		setOptionFlag(optionId, 'hide', hidden),
+/**
+ * Hide or restore one result ("מה כתבו"). Server-side, so a proposal on an
+ * open ballot leaves the ballot with it. Works while the lesson is paused.
+ */
+export function setHidden(statementId: string, hidden: boolean): Promise<boolean> {
+	return act(
+		`hide:${statementId}`,
+		t(hidden ? 'console.hide' : 'console.restore'),
+		() => classSetItemHidden({ mainId: consoleState.mainId, statementId, hidden }),
+		(error) => (refusalReason(error) === 'vote-closed' ? t('console.hide_vote_closed') : undefined),
 	);
+}
+
+/**
+ * Give the turns back at Table talk: one table (`n`) or all. Works while the
+ * lesson is paused; the server refuses an ended lesson.
+ */
+export function resetTurns(mainId: string, n?: number): Promise<boolean> {
+	return act(
+		`reset:turns:${n ?? 'all'}`,
+		t(n === undefined ? 'console.reset_turns_all' : 'console.reset_turns_table'),
+		() => classResetTurns({ mainId, ...(n === undefined ? {} : { n }) }),
+	);
+}
+
+/** Delete every vote and the decision; the class votes again on the same proposals. */
+export function resetVote(mainId: string): Promise<boolean> {
+	return act('reset:vote', t('console.reset_vote'), () => classResetVote({ mainId }));
 }
 
 /**
