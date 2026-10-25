@@ -6,7 +6,7 @@ import {
 	reactionEvaluationsThumbs,
 	EnhancedEvaluationThumb,
 } from './EnhancedEvaluationModel';
-import { buildFaceScale, FaceTone } from './faceScaleModel';
+import { buildFaceScale, FaceTone, shouldShowFaceLabels } from './faceScaleModel';
 import ConsensusBar from './ConsensusBar';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -69,8 +69,13 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	// Explicit low→high order, selection and per-face tone live in the model.
 	const options = useMemo(() => buildFaceScale(thumbs, optimisticScore), [thumbs, optimisticScore]);
 
+	// Presses on this statement's faces, this session only. Re-taps count.
+	const [pressCount, setPressCount] = useState(0);
+	const showLabels = shouldShowFaceLabels(pressCount);
+
 	const handleEvaluate = useCallback((score: number) => {
 		setOptimisticScore(score);
+		setPressCount((count) => count + 1);
 	}, []);
 
 	const isCard = variant === 'card';
@@ -108,6 +113,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 							isActive={option.isSelected}
 							tone={option.tone}
 							labelKey={option.labelKey}
+							showLabel={showLabels}
 							statement={statement}
 							enableEvaluation={enableEvaluation}
 							onEvaluate={handleEvaluate}
@@ -140,6 +146,8 @@ export interface EvaluationThumbProps {
 	tone?: FaceTone;
 	/** Visible label key. Defaults to the thumb's label, then its alt. */
 	labelKey?: string;
+	/** Render the visible text label. The aria-label is always kept. */
+	showLabel?: boolean;
 }
 
 export const EvaluationThumb: FC<EvaluationThumbProps> = ({
@@ -150,6 +158,7 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	onEvaluate,
 	tone,
 	labelKey,
+	showLabel = true,
 }) => {
 	const { creator } = useAuthentication();
 	const { t } = useUserConfig();
@@ -178,6 +187,7 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 			className={clsx(
 				styles.face,
 				styles[`face--${effectiveTone}`],
+				!showLabel && styles['face--compact'],
 				!enableEvaluation && styles['face--disabled'],
 			)}
 			style={faceStyle}
@@ -197,9 +207,11 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 					<img src={evaluationThumb.svg} alt="" />
 				)}
 			</span>
-			<span className={styles['face__label']} aria-hidden="true">
-				{label}
-			</span>
+			{showLabel && (
+				<span className={styles['face__label']} aria-hidden="true">
+					{label}
+				</span>
+			)}
 		</button>
 	);
 

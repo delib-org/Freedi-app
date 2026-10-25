@@ -78,3 +78,14 @@ export function buildFaceScale(
 		};
 	});
 }
+
+/** After this many face presses on a statement, the visible labels are hidden. */
+export const LABEL_HIDE_AFTER_PRESSES = 2;
+
+/**
+ * The user has learned the scale once they have pressed a face this many
+ * times (re-tapping the same face counts), so the text labels can go.
+ */
+export function shouldShowFaceLabels(pressCount: number): boolean {
+	return pressCount < LABEL_HIDE_AFTER_PRESSES;
+}
