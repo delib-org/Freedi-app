@@ -11,6 +11,7 @@ import {
 	tallyBars,
 	topProposals,
 	unseatedNames,
+	voteStatus,
 } from '../projectorLogic';
 
 function option(id: string, consensus: number, text = id): Statement {
@@ -104,6 +105,29 @@ describe('challenge settings readers', () => {
 		} as unknown as Statement;
 		expect(readRoundPhase(q)).toBe('improve');
 		expect(readBallot(q)).toMatchObject({ candidateIds: ['x'], decisionId: 'x' });
+	});
+});
+
+describe('voteStatus (what the wall says about the vote)', () => {
+	const open = { candidateIds: ['a'], frozenAt: 5 };
+
+	it('keeps pausedAt when it reads the ballot', () => {
+		const q = { statementSettings: { ballot: { ...open, pausedAt: 9 } } } as unknown as Statement;
+		expect(readBallot(q)?.pausedAt).toBe(9);
+	});
+
+	it('is open for no ballot yet and for a running ballot', () => {
+		expect(voteStatus(null)).toBe('open');
+		expect(voteStatus(open)).toBe('open');
+	});
+
+	it('is paused while pausedAt is set and the vote is not closed', () => {
+		expect(voteStatus({ ...open, pausedAt: 9 })).toBe('paused');
+	});
+
+	it('is closed once closedAt is set, even if it was paused first', () => {
+		expect(voteStatus({ ...open, closedAt: 12 })).toBe('closed');
+		expect(voteStatus({ ...open, pausedAt: 9, closedAt: 12 })).toBe('closed');
 	});
 });
 

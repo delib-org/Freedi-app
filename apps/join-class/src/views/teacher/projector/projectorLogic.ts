@@ -36,8 +36,19 @@ export function readBallot(challenge: Statement | null | undefined): ClassBallot
 		candidateIds: ballot.candidateIds.filter((id): id is string => typeof id === 'string'),
 		frozenAt: typeof ballot.frozenAt === 'number' ? ballot.frozenAt : 0,
 		closedAt: ballot.closedAt,
+		pausedAt: ballot.pausedAt,
 		decisionId: ballot.decisionId,
 	};
+}
+
+export type VoteStatus = 'open' | 'paused' | 'closed';
+
+/** What the wall says about the vote: closed wins over paused (a closed vote is no longer held). */
+export function voteStatus(ballot: ClassBallot | null): VoteStatus {
+	if (typeof ballot?.closedAt === 'number') return 'closed';
+	if (typeof ballot?.pausedAt === 'number') return 'paused';
+
+	return 'open';
 }
 
 export function readRoundPhase(challenge: Statement | null | undefined): RoundPhase {
