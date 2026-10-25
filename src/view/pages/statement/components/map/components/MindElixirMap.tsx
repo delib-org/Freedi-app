@@ -531,6 +531,9 @@ function MindElixirMap({
 		// Store reference
 		mindRef.current = mind;
 
+		let lastWidth = rect.width;
+		let lastHeight = rect.height;
+
 		// SIDE layout, but every first-level branch carries an explicit side (see
 		// `toMindElixirData`), so a map nobody has arranged still draws entirely
 		// to the right — SIDE's auto-balancing never gets a say. Then scale the
@@ -541,8 +544,35 @@ function MindElixirMap({
 				mindRef.current.initSide();
 				mindRef.current.scaleFit();
 				setMapScale(mindRef.current.scaleVal);
+				// The fit just used the current size; measure resizes from here.
+				const fitted = container.getBoundingClientRect();
+				lastWidth = fitted.width;
+				lastHeight = fitted.height;
 			}
 		}, 100);
+
+		// The canvas can change size after the first fit (side panel opening, the
+		// page below settling). Shift the map by half the size change so whatever
+		// the viewer is looking at stays centered, instead of sliding out of view.
+		const resizeObserver =
+			typeof ResizeObserver === 'undefined'
+				? undefined
+				: new ResizeObserver(() => {
+						const canvas = mindRef.current?.map;
+						if (!canvas) return;
+						const next = container.getBoundingClientRect();
+						const dx = (next.width - lastWidth) / 2;
+						const dy = (next.height - lastHeight) / 2;
+						lastWidth = next.width;
+						lastHeight = next.height;
+						if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+						canvas.style.transform = canvas.style.transform.replace(
+							/translate3d\(([-\d.]+)px,\s*([-\d.]+)px/,
+							(_match, x: string, y: string) =>
+								`translate3d(${parseFloat(x) + dx}px, ${parseFloat(y) + dy}px`,
+						);
+					});
+		resizeObserver?.observe(container);
 
 		// Event: Node selected
 		mind.bus.addListener('selectNewNode', (nodeObj: NodeObj) => {
@@ -1026,6 +1056,7 @@ function MindElixirMap({
 			container.removeEventListener('touchmove', handleTouchMove);
 			container.removeEventListener('touchend', handleTouchEnd);
 			removeNodeButtons();
+			resizeObserver?.disconnect();
 			mind.destroy();
 			mindRef.current = null;
 		};
