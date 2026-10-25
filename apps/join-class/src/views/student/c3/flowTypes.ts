@@ -1,7 +1,18 @@
 import type m from 'mithril';
 import type { ClassTable, ClassTableAction, Statement, TableStep } from '@freedi/shared-types';
 import type { FlowKind, Mate, SubstepOverride } from '@/lib/classroom/c3Logic';
+import { LineHold } from '@/lib/classroom/liveWriting';
 import { FlowFeed } from './FlowFeed';
+
+/** The tablemate whose text the watch view shows (IA 17): their last known draft, kept after they end. */
+export interface WatchTarget {
+	uid: string;
+	name: string;
+	text: string;
+	lastUpdate: number;
+	/** The "sent" / "stopped" line already announced for this ending. */
+	endAnnounced: 'sent' | 'stopped' | null;
+}
 
 /** The state one TableFlow keeps across redraws (no store: it dies with the screen). */
 export class FlowState {
@@ -31,6 +42,13 @@ export class FlowState {
 	stateKey = '';
 	/** When this student last tapped a control (their own tap must not steal focus). */
 	lastTapAt = 0;
+	/** Live writing: the line's hold timer, the watch view's target, and what was announced. */
+	lineHold = new LineHold();
+	lineTimer: ReturnType<typeof setTimeout> | null = null;
+	lineTimerAt: number | null = null;
+	watch: WatchTarget | null = null;
+	announced = new Set<string>();
+	liveMessage = '';
 	redrawTimer: ReturnType<typeof setTimeout> | null = null;
 	/** The minute end the timer above was set for. */
 	redrawFor: number | null = null;

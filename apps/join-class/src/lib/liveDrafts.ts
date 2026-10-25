@@ -39,6 +39,8 @@ const HEARTBEAT_MS = 45_000;
 // Viewers hide drafts whose lastUpdate is older than this (covers crashed
 // clients whose onDisconnect never fired, before the server sweep runs).
 const STALE_MS = 120_000;
+/** Exported so a screen can redraw at the moment a draft goes stale (no snapshot says so). */
+export const LIVE_DRAFT_STALE_MS = STALE_MS;
 const REACTION_FRESH_MS = 15_000;
 const REACTION_THROTTLE_MS = 1_000;
 const MAX_TEXT = 10_000;

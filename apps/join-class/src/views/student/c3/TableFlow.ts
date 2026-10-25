@@ -14,6 +14,7 @@ import { refusalReason } from '@/lib/classroom/turnMoment';
 import { serverNow } from '@/lib/classroom/serverClock';
 import { ErrorLine } from './ErrorLine';
 import { FlowError, FlowState, type FlowCtx, type FlowParts } from './flowTypes';
+import { liveWritingParts } from './liveWritingParts';
 import { proposalsParts } from './proposalsParts';
 import { SubStepStrip } from './SubStepStrip';
 import { tableTalkParts } from './tableTalkParts';
@@ -57,6 +58,7 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 		const self = stateOf(vnode);
 		self.feed.stop();
 		if (self.redrawTimer) clearTimeout(self.redrawTimer);
+		if (self.lineTimer) clearTimeout(self.lineTimer);
 		teardownLiveDrafts();
 	},
 
@@ -156,6 +158,16 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 
 		const { body, action, instruction } = parts;
 		if (tableTalk) return tableTalkFrame(self, parts, instruction, action);
+		const live = liveWritingParts({
+			self,
+			table,
+			uid,
+			mates,
+			someone,
+			feed,
+			challengeId: challenge?.statementId ?? null,
+			plenum: challenge?.statementSettings?.roundPhase === 'improve',
+		});
 
 		return [
 			m(
@@ -180,7 +192,9 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 								parts.barExtra,
 							])
 						: null,
+					live.status,
 					parts.showStrip ? m(SubStepStrip, { view, onSelect: setLocal }) : null,
+					live.line,
 					m(ErrorLine, {
 						message: self.error,
 						onRetry: self.retry ? () => void self.retry?.() : undefined,
@@ -189,6 +203,7 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 				],
 			),
 			parts.overlay,
+			live.overlay,
 		];
 	},
 };

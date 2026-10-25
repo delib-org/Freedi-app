@@ -68,19 +68,6 @@ $c3-face-size: 48px;
   }
 }
 
-.live-writers {
-  margin: 0 0 var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  border: 1.5px dashed var(--teal-600);
-  border-radius: var(--radius-lg);
-  color: var(--teal-700);
-  font-weight: var(--font-weight-bold, 700);
-
-  &__dot {
-    color: var(--terra-600);
-  }
-}
-
 // ---- sheet ------------------------------------------------------------------------
 
 .sheet {
@@ -287,5 +274,186 @@ $c3-face-size: 48px;
     &--apart {
       color: var(--terra-600);
     }
+  }
+}
+
+// ---- watch view: a tablemate's text, live (IA 17, UX 2) -------------------------------
+
+.sheet--compact {
+  .sheet__panel--compact {
+    height: 70vh;
+    height: 70dvh;
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sheet__panel--compact {
+      animation: none;
+    }
+  }
+
+  .sheet__body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+}
+
+.watch {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-height: 0;
+
+  &__title {
+    margin: 0;
+    color: inherit;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold, 700);
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  &__text {
+    flex: 1;
+    min-height: 0;
+    padding: var(--space-md);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1.5px dashed var(--teal-500);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    color: var(--ink);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-normal, 400);
+    line-height: var(--line-height-normal);
+    overflow-wrap: anywhere;
+    text-align: start;
+    white-space: pre-wrap;
+    animation: c3-watch-fade var(--dur-quick) var(--ease-out);
+
+    &--sent {
+      border-style: solid;
+      border-color: var(--teal-500);
+    }
+
+    &--ended {
+      border-style: solid;
+      border-color: var(--paper-line);
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+    }
+
+    :root[data-high-contrast] & {
+      border-width: 2px;
+      border-style: solid;
+      border-color: var(--border-strong);
+    }
+
+    @media (forced-colors: active) {
+      border-color: CanvasText;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  // The soft caret: its own node, so a text update never restarts the pulse.
+  &__caret {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    margin-inline-start: 1px;
+    background: var(--teal-500);
+    vertical-align: text-bottom;
+    animation: c3-caret-pulse 1.2s ease-in-out infinite;
+
+    :root[data-high-contrast] & {
+      background: var(--ink);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+
+    @media (forced-colors: active) {
+      background: CanvasText;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    padding-block-end: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
+    border-block-start: 1px solid var(--paper-line);
+  }
+
+  &__close {
+    width: 100%;
+    min-height: var(--touch-target);
+  }
+
+  &__writers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  &__writer {
+    min-height: var(--touch-target);
+    padding-inline: var(--space-md);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold, 700);
+    cursor: pointer;
+
+    &--on {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+
+      @media (forced-colors: active) {
+        background: Highlight;
+        color: HighlightText;
+      }
+    }
+  }
+}
+
+@keyframes c3-watch-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes c3-caret-pulse {
+  from {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+
+  to {
+    opacity: 1;
   }
 }

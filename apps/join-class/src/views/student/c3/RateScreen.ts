@@ -3,7 +3,6 @@ import type { Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { myProposal } from '@/lib/classroom/c3Logic';
 import type { FlowFeed } from './FlowFeed';
-import { LiveWritersCard } from './LiveWritersCard';
 import { RatedList } from './RatedList';
 import { TextCard } from './TextCard';
 
@@ -49,7 +48,7 @@ export function rateBody(input: RateScreenInput): m.Children {
 		emptyText: t('proposal.none_yet'),
 		onError: input.onError,
 	});
-	if (!plenum) return [m(LiveWritersCard), list];
+	if (!plenum) return list;
 	const mine = myProposal(
 		feed.options.filter((o) => o.parentId === challengeId),
 		uid,

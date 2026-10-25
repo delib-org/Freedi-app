@@ -222,3 +222,161 @@ body.c3-lock {
     list-style: none;
   }
 }
+
+// ---- live line: "דן כותב/ת עכשיו", under the strip (IA 17, UX 1) --------------------
+
+.live-line-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  margin-block-end: var(--space-md);
+  animation: c3-line-in var(--dur-base) var(--ease-out);
+
+  &__inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  // The wait is over: the row folds away (grid rows, no layout reads in JS).
+  &--leaving {
+    grid-template-rows: 0fr;
+    margin-block-end: 0;
+    opacity: 0;
+    transition:
+      grid-template-rows var(--dur-quick) var(--ease-out),
+      margin-block-end var(--dur-quick) var(--ease-out),
+      opacity var(--dur-quick) var(--ease-out);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+
+    &--leaving {
+      transition: none;
+    }
+  }
+}
+
+.live-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px dashed var(--teal-500);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover,
+  &:active {
+    background: var(--teal-50);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: calc(-1 * var(--focus-ring-width));
+  }
+
+  &__dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--teal-500);
+    animation: c3-live-pulse 1.6s ease-in-out infinite;
+  }
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold, 700);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Points toward the reading end: left in RTL, mirrored in LTR.
+  &__chevron {
+    flex: none;
+    color: var(--ink-soft);
+    font-size: var(--font-size-lg);
+    line-height: 1;
+  }
+
+  html[dir='ltr'] &__chevron {
+    transform: scaleX(-1);
+  }
+
+  .frame--down & {
+    border-color: var(--paper-line);
+
+    &:hover,
+    &:active {
+      background: var(--ink-muted);
+    }
+  }
+
+  .frame--down &__dot {
+    background: currentcolor;
+  }
+
+  .frame--down &__chevron {
+    color: currentcolor;
+  }
+
+  :root[data-high-contrast] & {
+    border-width: 2px;
+    border-color: var(--border-strong);
+  }
+
+  :root[data-high-contrast] &__dot {
+    background: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__dot {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    border-color: CanvasText;
+    color: ButtonText;
+    background: ButtonFace;
+
+    &__dot {
+      background: CanvasText;
+    }
+  }
+}
+
+@keyframes c3-line-in {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+@keyframes c3-live-pulse {
+  from {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
