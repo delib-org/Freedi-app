@@ -15,5 +15,8 @@ export { classAddNoDevice } from './fn_classAddNoDevice';
 export { classTableStep } from './fn_classTableStep';
 export { classAllTablesTo } from './fn_classAllTablesTo';
 export { classFreezeBallot, classCloseBallot, classPauseBallot } from './fn_classBallot';
+export { classResetTurns } from './fn_classResetTurns';
+export { classResetVote } from './fn_classResetVote';
+export { classSetItemHidden } from './fn_classSetItemHidden';
 export { classSetLessonStatus } from './fn_classSetLessonStatus';
 export { classCloneLesson } from './fn_classCloneLesson';
