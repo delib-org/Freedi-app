@@ -4,6 +4,7 @@ import { createCollectionRef } from '@/utils/firebaseUtils';
 import { store } from '@/redux/store';
 import { replaceForCluster } from '@/redux/clusterEvaluationLinks/clusterEvaluationLinksSlice';
 import { logError } from '@/utils/errorHandling';
+import { guardUnsubscribe } from '@/utils/firestorePersistenceFallback';
 
 /**
  * Subscribe to every provenance link doc for a single cluster. Each snapshot
@@ -16,7 +17,7 @@ export function listenToClusterEvaluationLinks(clusterId: string | undefined): U
 		const ref = createCollectionRef(Collections.clusterEvaluationLinks);
 		const q = query(ref, where('clusterId', '==', clusterId));
 
-		return onSnapshot(
+		const unsubscribe = onSnapshot(
 			q,
 			(snap) => {
 				const links: ClusterEvaluationLink[] = [];
@@ -32,6 +33,8 @@ export function listenToClusterEvaluationLinks(clusterId: string | undefined): U
 				});
 			},
 		);
+
+		return guardUnsubscribe(unsubscribe, 'listenToClusterEvaluationLinks.unsubscribe');
 	} catch (error) {
 		logError(error, {
 			operation: 'listenToClusterEvaluationLinks',
