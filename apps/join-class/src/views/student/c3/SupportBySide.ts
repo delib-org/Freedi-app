@@ -26,6 +26,7 @@ export const SupportBySide: m.Component<SupportBySideAttrs> = {
 		const gatePct = supportPercent(gate);
 
 		return m('section.support', { 'aria-label': t('summary.by_side') }, [
+			m('p.support__explain', t('summary.by_side_explain')),
 			m(
 				'ul.support__bars',
 				bars.map((bar) =>

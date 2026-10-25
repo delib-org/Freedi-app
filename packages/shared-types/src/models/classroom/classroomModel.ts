@@ -159,10 +159,24 @@ export type ClassBallot = InferOutput<typeof ClassBallotSchema>;
  * per-lesson setting). Students only ever see aggregates: the vote counts in
  * the challenge question's `selections{}`, never who voted for what.
  */
+// >>> voteSummary BEGIN
+/**
+ * How the proposals are ordered on the vote screen, one setting for every
+ * phone and the projector: 'consensus' (C_p, the default), 'votes' (live) or
+ * 'random' (one shared order, seeded by the challenge id).
+ */
+export const ClassVoteOrderSchema = picklist(['consensus', 'votes', 'random']);
+export type ClassVoteOrder = InferOutput<typeof ClassVoteOrderSchema>;
+// >>> voteSummary END
+
 export const ClassVoteDisplaySchema = object({
 	/** Students see each proposal's share of the votes, live. Absent = on. */
 	liveResults: optional(boolean()),
-	/** The proposals re-order live by votes, most supported on top. Absent = off. */
+	/** Deprecated: old docs only, nobody reads it. Replaced by `order`. */
 	sortBySupport: optional(boolean()),
+	// >>> voteSummary BEGIN
+	/** The order of the proposals for everybody. Absent = 'consensus'. */
+	order: optional(ClassVoteOrderSchema),
+	// >>> voteSummary END
 });
 export type ClassVoteDisplay = InferOutput<typeof ClassVoteDisplaySchema>;

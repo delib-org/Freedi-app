@@ -15,7 +15,7 @@ import {
 	stepLabel,
 } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
-import type { LessonStatus } from '@freedi/shared-types';
+import type { LessonStatus, Statement } from '@freedi/shared-types';
 import { classState } from '@/lib/classroom/classState';
 import { gateOf } from '@/lib/classroom/classSettings';
 import {
@@ -27,6 +27,8 @@ import {
 	rosterStudents,
 	tablesAreDone,
 } from '@/lib/classroom/consoleHelpers';
+import { voteResults } from '@/lib/classroom/voteResults';
+import { everyoneVoted } from '@/lib/classroom/voteSummary';
 import { groupWrittenTexts } from '@/lib/classroom/textsHelpers';
 import { QRShare } from '@/components/QRShare';
 import { WizColFooter } from '@/components/WizColFooter';
@@ -49,7 +51,12 @@ import { abortDrag } from './dragController';
 import { EndChoice, openEndChoice } from './EndChoice';
 import { LessonBanner } from './LessonBanner';
 import { ConfirmDialog } from './ConfirmDialog';
-import { confirmGoBack, confirmResetTurns, confirmResetVote } from './consoleConfirms';
+import {
+	confirmCloseAndGo,
+	confirmGoBack,
+	confirmResetTurns,
+	confirmResetVote,
+} from './consoleConfirms';
 import { NotYourLesson } from './NotYourLesson';
 import { ConsoleSettings } from './ConsoleSettings';
 import { ProjectorMenu } from './ProjectorMenu';
@@ -76,6 +83,21 @@ export interface TeacherConsoleAttrs {
 const SIDE_STEP_INDEX = 2;
 
 let showQr = false;
+
+// >>> voteSummary BEGIN
+/** Every student in the room has a vote on the running ballot. */
+function allVotedOn(challenge: Statement | null): boolean {
+	const ids = challenge?.statementSettings?.ballot?.candidateIds ?? [];
+	const voted = Object.values(voteResults(ids, challenge?.selections)).reduce(
+		(sum, result) => sum + result.count,
+		0,
+	);
+
+	return (
+		isBallotFrozen(challenge) && everyoneVoted(voted, rosterStudents(classState.roster).length)
+	);
+}
+// >>> voteSummary END
 
 function currentView(): ConsoleView {
 	return m.route.param('view') === 'texts' ? 'texts' : 'tables';
@@ -284,6 +306,11 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				onGo: (index: number) => {
 					// Going back keeps all work but asks first; forward is one tap.
 					if (index < step.index) confirmGoBack(mid, index, stepLabel(LESSON_STEP_KEYS[index]));
+					// >>> voteSummary BEGIN
+					// An open or paused vote has no decision yet: ask, close it, then move on.
+					else if (step.key === 'vote' && isBallotFrozen(challenge) && !isBallotClosed(challenge))
+						confirmCloseAndGo(mid, index);
+					// >>> voteSummary END
 					else void goToStep(mid, index);
 				},
 				onEnd: openEndChoice,
@@ -299,6 +326,9 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				ballotFrozen: isBallotFrozen(challenge),
 				ballotPaused: isBallotPaused(challenge),
 				ballotClosed: isBallotClosed(challenge),
+				// >>> voteSummary BEGIN
+				allVoted: allVotedOn(challenge),
+				// >>> voteSummary END
 				introVideos: introVideosOf(main),
 				projectorVideoId: projectorVideoOf(main)?.id ?? null,
 				onProject: (id: string | null) => void pickProjectorVideo(mid, id),

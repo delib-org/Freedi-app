@@ -265,9 +265,9 @@ const he: Record<string, string> = {
 	'summary.side_center': 'באמצע',
 	'summary.bar_label': '{{side}}: {{n}} מתוך {{m}} דירגו',
 	'summary.n_of_m': '{{n}} מתוך {{m}} דירגו',
-	'summary.verdict_wait': 'עוד אין מספיק דירוגים',
-	'summary.verdict_closer': '✓ הצדדים התקרבו',
-	'summary.verdict_apart': 'הצדדים עוד לא התקרבו',
+	'summary.verdict_wait': 'מחכים לדירוגים משני הצדדים',
+	'summary.verdict_closer': '✓ שני הצדדים תומכים בהחלטה',
+	'summary.verdict_apart': 'צד אחד עוד לא תומך מספיק',
 	// <<< C3 END
 	// ---------------------------------------------------------------------
 	// >>> C4 BEGIN  namespace: console.*

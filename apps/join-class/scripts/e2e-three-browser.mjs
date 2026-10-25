@@ -412,6 +412,14 @@ const toggleSetting = async (field, on) => {
 	await teacher.page.locator('summary.console__settings-toggle').click();
 };
 
+const chooseOrder = async (value) => {
+	const radio = teacher.page.getByTestId(`vote-order-${value}`);
+	if ((await radio.count()) === 0 || !(await radio.isVisible())) await teacher.page.locator('summary.console__settings-toggle').click();
+	await radio.waitFor({ state: 'visible', timeout: TIMEOUT });
+	if (!(await radio.isChecked())) await radio.check();
+	await teacher.page.locator('summary.console__settings-toggle').click();
+};
+
 async function phaseVote() {
 	await teacherForward('vote');
 	await sleep(800);
@@ -482,8 +490,8 @@ async function phaseVote() {
 	);
 	check("vote: B's vote moves A's bars to 50 / 50", /50/.test(aLine), aLine);
 	await snapAll('vote-both-voted');
-	// sort by support on
-	await toggleSetting('sortBySupport', true);
+	// order by votes
+	await chooseOrder('votes');
 	await toggleSetting('liveResults', false);
 	await sleep(800);
 	check('vote: switching live results off hides the bars on both phones', (await A.page.locator('.vote-list__count').count()) === 0 && (await B.page.locator('.vote-list__count').count()) === 0);
@@ -519,6 +527,8 @@ async function phaseSummary() {
 	await sleep(800);
 	await snapAll('summary');
 	check('summary: the projector shows the verdict', (await projector.page.locator('.projector-verdict').count()) === 1);
+	check('summary: the phones show the votes per proposal', (await A.page.getByTestId('vote-result-row').count()) === 2 && (await B.page.getByTestId('vote-result-row').count()) === 2);
+	check('summary: the projector shows the votes per proposal', (await projector.page.locator('.projector-results__row').count()) === 2);
 }
 
 // ---- 8. go back, reset the vote, hide, reset turns ----------------------------------
@@ -566,8 +576,9 @@ async function phaseBackAndResets() {
 	await snapAll('reset-vote-done');
 
 	// both vote for the first card, then the teacher hides that proposal
-	// by id, not by position: with "sort by support" on, each phone keeps its own order for ties
+	// by id, not by position: with the order by votes, each phone keeps its own order for ties
 	const firstId = (await challengeData()).statementSettings.ballot.candidateIds[0];
+	await sleep(900); // a re-order glide ignores taps until it ends (IA 21.3)
 	for (const phone of phones) {
 		await phone.page.locator(`[data-testid=vote-option][data-key="${firstId}"]`).click();
 		await (await byId(phone.page, 'vote-send')).click();
@@ -689,7 +700,7 @@ try {
 	await phaseBackAndResets();
 	await phasePassPauseReloadDark();
 } catch (error) {
-	check('the walk finished without an exception', false, String(error?.message ?? error).split('\n')[0]);
+	check('the walk finished without an exception', false, String(error?.message ?? error).split('\n').slice(0, 8).join(' | '));
 	await snapAll('failure');
 }
 

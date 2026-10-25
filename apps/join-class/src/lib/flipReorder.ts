@@ -48,21 +48,29 @@ export function recordPositions(container: Element | null | undefined): Position
 	return positions;
 }
 
-/** Slide each child that moved from where it was to where it is now. */
-export function playFlip(container: Element | null | undefined, before: Positions): void {
-	if (!container || before.size === 0 || reducedMotion()) return;
+/**
+ * Slide each child that moved from where it was to where it is now. Returns
+ * how long the glide runs in ms (0 when nothing moved or motion is reduced),
+ * so a caller can ignore taps until it ends.
+ */
+export function playFlip(container: Element | null | undefined, before: Positions): number {
+	if (!container || before.size === 0 || reducedMotion()) return 0;
 	const style = getComputedStyle(container);
 	const duration = parseCssTime(style.getPropertyValue('--dur-reorder')) ?? FALLBACK_DURATION_MS;
-	if (duration <= 0) return;
+	if (duration <= 0) return 0;
+	let moved = false;
 	const easing = style.getPropertyValue('--ease-out').trim() || FALLBACK_EASING;
 	for (const child of keyedChildren(container)) {
 		const was = before.get(child.dataset.key as string);
 		if (was === undefined || typeof child.animate !== 'function') continue;
 		const delta = was - child.getBoundingClientRect().top;
 		if (Math.abs(delta) < MIN_MOVE_PX) continue;
+		moved = true;
 		child.animate([{ transform: `translateY(${delta}px)` }, { transform: 'translateY(0)' }], {
 			duration,
 			easing,
 		});
 	}
+
+	return moved ? duration : 0;
 }

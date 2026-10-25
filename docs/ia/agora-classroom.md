@@ -1698,3 +1698,103 @@ classSetItemHidden { mainId, statementId, hidden } — replaces client setOption
 
 ### 18.7 Handoff
 Fixed here: control placement, labels, confirm only for backward moves and resets, one-time student lines. UX to decide: visual weight of reset controls (destructive, secondary), how confirm conveys "cannot be undone", how a hidden item looks in "מה כתבו".
+
+---
+
+## 20. Summary shows the vote result (Tal, 2026-10-25, card C68AENG3)
+
+### 20.1 Finding: why "ההחלטה עוד לא התקבלה" shows after everyone voted
+- `ballot.decisionId` is written **only** by `classCloseBallot`, the teacher's "סגירת ההצבעה" at the Vote step band.
+- Opening Summary (`setLessonStep`, a client write) does not close the ballot.
+- `SummaryScreen` and the projector's `summary()` read only `decisionId`.
+
+So if the teacher moves on without pressing close, the vote is still open, there is no decision, and the support bars measure support for nothing.
+
+### 20.2 Fix
+1. **Console:** the forward control at Vote, while the ballot is open or paused, opens a confirm:
+   - "ההצבעה עדיין פתוחה. לסגור אותה ולעבור לסיכום?"
+   - Buttons: "לסגור ולעבור" / "ביטול".
+   - On yes, `classCloseBallot` runs first, then the step move.
+   - When every present student has voted, the band shows "כולם הצביעו". There is no automatic close: students may still change their vote.
+2. **Summary states.** The phone and the projector draw the same states from the same data.
+
+| Ballot | Top section | Support question + side bars |
+|---|---|---|
+| none (no vote held) | "לא הייתה הצבעה". The decision = the most agreed proposal (highest C_p), with the line "ההצעה שהכי הסכימו עליה" (§2.1) | shown |
+| open | "ההצבעה עוד פתוחה" + live votes per proposal; the leader marked "מובילה כרגע" | hidden; line "המורה תסגור את ההצבעה" |
+| paused | "ההצבעה מושהית" + the same tally | hidden |
+| closed | "ההחלטה" card with the winner, then votes per proposal (by votes, winner first) and "{{n}} מתוך {{m}} הצביעו". On a tie decided by ratings: "תיקו. הוכרע לפי הדירוגים" | shown |
+
+3. **Side bars:** keep them and add one sentence above them. Change the verdict lines, because "התקרבו" claims a movement that the data (support only) does not measure.
+
+### 20.3 Labels
+| Concept | HE | EN | i18n key |
+|---|---|---|---|
+| Section: vote results | תוצאות ההצבעה | Vote results | `summary.vote_results` (NEW) |
+| Votes per proposal | {{n}} קולות / קול אחד | {{n}} votes / 1 vote | reuse `voting.result_votes`, `voting.result_one_vote` |
+| Turnout | {{n}} מתוך {{m}} הצביעו | {{n}} of {{m}} voted | `summary.turnout` (NEW) |
+| Leader, open vote | מובילה כרגע | Leading now | `summary.leading` (NEW) |
+| Open / paused | ההצבעה עוד פתוחה / ההצבעה מושהית | The vote is still open / The vote is paused | `summary.vote_open`, `voting.paused` (kept) |
+| Wait line | המורה תסגור את ההצבעה | The teacher will close the vote | `summary.wait_close` (NEW) |
+| No vote | לא הייתה הצבעה · ההצעה שהכי הסכימו עליה | No vote was held · the most agreed proposal | `summary.no_vote` (NEW) |
+| Tie | תיקו. הוכרע לפי הדירוגים | A tie, decided by the ratings | `summary.tie_by_ratings` (NEW) |
+| Side bars explainer | כמה כל צד תומך בהחלטה, לפי הצד שבחרתם בתחילת השיעור | How much each side supports the decision, by the side you picked at the start | `summary.by_side_explain` (NEW) |
+| Verdict, closer | שני הצדדים תומכים בהחלטה | Both sides support the decision | `summary.verdict_closer` (value changed) |
+| Verdict, apart | צד אחד עוד לא תומך מספיק | One side does not support it enough yet | `summary.verdict_apart` (value changed) |
+| Verdict, wait | מחכים לדירוגים משני הצדדים | Waiting for ratings from both sides | `summary.verdict_wait` (value changed) |
+| Retire | ההחלטה עוד לא התקבלה | — | `summary.waiting`: replaced by the states above (still used by `LessonStateScreen`: check) |
+| Close-and-go confirm | ההצבעה עדיין פתוחה. לסגור אותה ולעבור לסיכום? / לסגור ולעבור | The vote is still open. Close it and go to the summary? / Close and go | `console.close_and_go_title`, `console.close_and_go_yes` (NEW) |
+| All voted (band) | כולם הצביעו | Everyone has voted | `console.all_voted` (NEW) |
+
+Projector: the same keys under `projector.*`, or reuse `summary.*`. Default: reuse `summary.*`, so there is one string.
+
+### 20.4 Hierarchy (Summary phone, top to bottom)
+header → vote results (state block) → "עד כמה אתם תומכים בהצעה?" + faces (only when decided) → explainer sentence → three bars → verdict line.
+
+### 20.5 Decisions taken at build time
+- The close is still the teacher's: no automatic close when everyone voted (open question 5). The band says "כולם הצביעו" and the forward control asks "לסגור ולעבור" while the ballot is open or paused.
+- A ballot that carries a `decisionId` but no `closedAt` (old test data) reads as closed, so the Summary never contradicts the decision it has.
+- The winner is marked with the tag "ההצעה שנבחרה" on the phone (Vote screen after close and Summary) and on the projector; "מובילה כרגע" marks only a single proposal ahead (never on a tie or at zero votes).
+- Turnout counts votes cast on the ballot over students in the room (the teacher excluded).
+- The projector reuses the `summary.*` keys, so the phone and the wall say the same words. The old `projector.verdict.*` keys are no longer read.
+
+---
+
+## 21. Order of proposals during the vote (Tal, 2026-10-25, card UM5Z8zj0)
+
+### 21.1 What exists
+`statementSettings.voteDisplay` on the challenge question had two switches in the console settings popover: `liveResults` (absent = on) and `sortBySupport` (absent = off, a live sort by votes on the phones only). The projector's tally always followed ballot order.
+
+### 21.2 Change (Tal's words: "you can sort by C_p, by Random, and by most voted. The teacher can choose, and it will affect everybody. By default C_p is presented, because these are the options most wanted by the people.")
+- Replace `sortBySupport` with `order: 'consensus' | 'votes' | 'random'`. Absent means `consensus`. One setting for every phone AND the projector.
+  - `sortBySupport` stays in the schema as an optional field that nobody reads (old docs), then is removed.
+- **consensus (default):** ordered by `statement.consensus` (C_p), highest first, live from the options listener. Ties keep the order already shown, then fall back to id.
+- **votes:** most votes first, re-ordering live as votes come in. Ties keep the order already shown (a card moves only when it really overtakes another).
+- **random:** ONE shared order for every phone and the projector, a seeded shuffle with the challenge id as the seed (the ids are sorted first, so the ballot's own order never matters). It does not change while the vote runs.
+- **Closed ballot:** ordered by votes on every surface, with the winner first (votes, then C_p, then id: the `decideBallot` rule).
+- The vote bars stay live whenever `liveResults` is on, unchanged.
+- One pure function serves the phone, the projector Vote and the Summary: `orderBallot(ids, mode, {consensus, votes}, previous, seed)` in `lib/classroom/voteResults.ts` (mode `'result'` is the closed ballot).
+
+### 21.3 Avoiding mis-taps (phone)
+1. While a card is selected but not yet voted for, the order is frozen. The new order applies after "הצבעה", or when the selection is cleared.
+2. A re-order glides with FLIP (instant under `prefers-reduced-motion`). Taps are ignored until the glide ends.
+3. Selection is keyed by statementId, never by position.
+4. Ties never move a card.
+
+### 21.4 Labels (console settings, "ההצבעה" group, a radio group)
+| Concept | HE | EN | i18n key |
+|---|---|---|---|
+| Group | סדר ההצעות | Order of the proposals | `console.vote_order` (NEW) |
+| Option, default | לפי הדירוגים | By the ratings | `console.vote_order_consensus` |
+| Help | ההצעות שהכיתה הכי הסכימה עליהן למעלה, אצל התלמידים ובמקרן | The proposals the class agreed on most are on top, on phones and the projector | `console.vote_order_consensus_help` |
+| Option | לפי מספר הקולות | By the number of votes | `console.vote_order_votes` |
+| Help | ההצעה עם הכי הרבה קולות עולה למעלה בזמן ההצבעה, אצל התלמידים ובמקרן | The proposal with the most votes moves to the top during the vote, on phones and the projector | `console.vote_order_votes_help` |
+| Option | סדר אקראי | Random order | `console.vote_order_random` |
+| Help | כולם רואים אותו סדר, והוא לא משתנה בזמן ההצבעה | Everyone sees the same order, and it does not change during the vote | `console.vote_order_random_help` |
+| Retire | ההצעות מסתדרות לפי התמיכה | — | `console.vote_sort_by_support(_help)` |
+
+### 21.5 Shared by Summary and Vote
+The tally (`selections{}` to `voteResults`, one function), C_p (`statement.consensus`) and the tie rule (votes, then C_p, then id) are used by Vote (phone + projector) and Summary (phone + projector).
+
+### 21.6 Open question 1, resolved
+Tal chose three modes instead of two: C_p, random and by votes. Random is one shared order (seed = challenge id), not one per phone as the first draft said.

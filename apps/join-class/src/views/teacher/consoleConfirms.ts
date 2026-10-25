@@ -1,6 +1,6 @@
 import { t } from '@/lib/i18n';
 import { askConfirm } from './ConfirmDialog';
-import { goToStep, resetTurns, resetVote } from './consoleActions';
+import { closeBallot, goToStep, resetTurns, resetVote } from './consoleActions';
 
 /**
  * The three questions the console asks before it does something it cannot
@@ -39,3 +39,24 @@ export function confirmResetVote(mainId: string): void {
 		run: () => void resetVote(mainId),
 	});
 }
+
+// >>> voteSummary BEGIN
+/**
+ * Moving on from the Vote while the ballot is still open or paused (IA 20.2):
+ * the decision is only written when the ballot closes, so closing comes first
+ * and the step move follows only if it worked.
+ */
+export function confirmCloseAndGo(mainId: string, index: number): void {
+	askConfirm({
+		title: t('console.close_and_go_title'),
+		body: t('console.close_and_go_body'),
+		yesLabel: t('console.close_and_go_yes'),
+		destructive: false,
+		run: () => {
+			void closeBallot(mainId).then((closed) => {
+				if (closed) void goToStep(mainId, index);
+			});
+		},
+	});
+}
+// >>> voteSummary END

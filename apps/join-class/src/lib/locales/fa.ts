@@ -257,9 +257,9 @@ const fa: Record<string, string> = {
 	'summary.side_center': 'در میانه',
 	'summary.bar_label': '{{side}}: {{n}} از {{m}} امتیاز دادند',
 	'summary.n_of_m': '{{n}} از {{m}} امتیاز دادند',
-	'summary.verdict_wait': 'هنوز امتیاز کافی نیست',
-	'summary.verdict_closer': '✓ دو طرف به هم نزدیک شدند',
-	'summary.verdict_apart': 'دو طرف هنوز به هم نزدیک نشده‌اند',
+	'summary.verdict_wait': 'منتظر امتیاز از هر دو طرف',
+	'summary.verdict_closer': '✓ هر دو طرف از تصمیم حمایت می‌کنند',
+	'summary.verdict_apart': 'یک طرف هنوز به اندازه کافی حمایت نمی‌کند',
 	// <<< C3 END
 	// ---------------------------------------------------------------------
 	// >>> C4 BEGIN  namespace: console.*

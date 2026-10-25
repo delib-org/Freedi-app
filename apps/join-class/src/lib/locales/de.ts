@@ -268,9 +268,9 @@ const de: Record<string, string> = {
 	'summary.side_center': 'In der Mitte',
 	'summary.bar_label': '{{side}}: {{n}} von {{m}} haben bewertet',
 	'summary.n_of_m': '{{n}} von {{m}} haben bewertet',
-	'summary.verdict_wait': 'Noch nicht genug Bewertungen',
-	'summary.verdict_closer': '✓ Die Seiten sind näher gekommen',
-	'summary.verdict_apart': 'Die Seiten sind sich noch nicht nähergekommen',
+	'summary.verdict_wait': 'Warten auf Bewertungen von beiden Seiten',
+	'summary.verdict_closer': '✓ Beide Seiten unterstützen die Entscheidung',
+	'summary.verdict_apart': 'Eine Seite unterstützt sie noch nicht genug',
 	// <<< C3 END
 	// ---------------------------------------------------------------------
 	// >>> C4 BEGIN  namespace: console.*

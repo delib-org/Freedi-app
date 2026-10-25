@@ -270,9 +270,9 @@ const en: Record<string, string> = {
 	'summary.side_center': 'In the middle',
 	'summary.bar_label': '{{side}}: {{n}} of {{m}} rated',
 	'summary.n_of_m': '{{n}} of {{m}} rated',
-	'summary.verdict_wait': 'Not enough ratings yet',
-	'summary.verdict_closer': '✓ The sides came closer',
-	'summary.verdict_apart': 'The sides have not come closer yet',
+	'summary.verdict_wait': 'Waiting for ratings from both sides',
+	'summary.verdict_closer': '✓ Both sides support the decision',
+	'summary.verdict_apart': 'One side does not support it enough yet',
 	// <<< C3 END
 	// ---------------------------------------------------------------------
 	// >>> C4 BEGIN  namespace: console.*
