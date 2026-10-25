@@ -1,5 +1,6 @@
 import { FC, memo, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { getAtomStatements } from '@/utils/atomStatements';
 import Dot from './dot/Dot';
 import styles from './Triangle.module.scss';
 import { statementOptionsSelector, statementSelector } from '@/redux/statements/statementsSlice';
@@ -27,11 +28,13 @@ const Triangle: FC = () => {
 
 	const statementsFromStore = useSelector(statementOptionsSelector(statement?.statementId));
 
-	// Filter out hidden options - agreement map should only show visible options
+	// Visible atoms only (synths and un-synthed originals) - the map is too busy otherwise
 	const subStatements: Statement[] = useMemo(
 		() =>
-			statementsFromStore.filter(
-				(s: Statement) => s.evaluation?.sumCon !== undefined && s.hide !== true,
+			getAtomStatements(
+				statementsFromStore.filter(
+					(s: Statement) => s.evaluation?.sumCon !== undefined && s.hide !== true,
+				),
 			),
 		[statementsFromStore],
 	);
