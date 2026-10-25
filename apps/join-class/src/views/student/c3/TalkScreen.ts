@@ -1,8 +1,7 @@
 import m from 'mithril';
-import type { ClassTable, ClassTableAction } from '@freedi/shared-types';
+import type { ClassTable } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import { canFinishTalk, type FlowKind } from '@/lib/classroom/c3Logic';
-import { Countdown, MS_PER_SECOND, SPEAK_MS, msLeft, realMsLeft } from './Countdown';
+import { Countdown, MS_PER_SECOND, SPEAK_MS, realMsLeft } from './Countdown';
 
 export interface TalkScreenAttrs {
 	table: ClassTable;
@@ -15,28 +14,15 @@ class TalkState {
 	totalMs = SPEAK_MS;
 }
 
-/** Is the current minute over (server clock)? */
-export function isTimeUp(table: ClassTable): boolean {
-	return table.speakerEndsAt !== undefined && msLeft(table.speakerEndsAt) <= 0;
-}
-
-/** The bottom control of the Proposals talk screen, or null when this device has none. */
-export function talkFinishAction(
-	kind: FlowKind,
-	table: ClassTable,
-	uid: string,
-	busy: boolean,
-	onAction: (action: ClassTableAction) => void,
-): m.Children {
-	if (!canFinishTalk(kind, table, uid, isTimeUp(table))) return null;
-
+/** "סיימנו, לכתוב": every phone at Proposals talk has it; it only switches this phone's sub-step. */
+export function talkFinishAction(busy: boolean, onGo: () => void): m.Children {
 	return m(
 		'button.btn.btn--primary',
 		{
 			type: 'button',
 			'data-testid': 'table-to-write',
 			disabled: busy,
-			onclick: () => onAction({ action: 'toWrite' }),
+			onclick: onGo,
 		},
 		t('turn.finish_talk'),
 	);

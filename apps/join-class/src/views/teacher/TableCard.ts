@@ -212,7 +212,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 						},
 						t('console.table_n', { n: table.n }),
 					),
-					m('span.table-card__turn', turnLine(table)),
+					attrs.tableTalk ? m('span.table-card__turn', turnLine(table)) : null,
 				]),
 				m(
 					'p.table-card__now',
@@ -224,7 +224,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 					? m('p.table-card__question', { dir: 'auto' }, attrs.questionText)
 					: null,
 				timerRows(attrs),
-				table.askerUid
+				attrs.tableTalk && table.askerUid
 					? m(
 							'p.table-card__asker',
 							t('console.asker_line', { name: nameOf(table.askerUid, students) }),

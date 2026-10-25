@@ -10,13 +10,13 @@ import { TalkScreen, talkFinishAction } from './TalkScreen';
 import { WritePanel } from './WritePanel';
 
 /**
- * The Proposals half of TableFlow (talk -> write -> rate, unchanged by the
- * table turn v2): the challenge question's proposals, the class sheet and the
- * plenum list. Props in, vnodes out.
+ * The Proposals half of TableFlow: three sub-steps (talk, write, rate) that every
+ * phone moves between freely (IA 17.13), the challenge question's proposals, the
+ * class sheet and the plenum list. Props in, vnodes out.
  */
 
 export function proposalsParts(ctx: FlowCtx): FlowParts {
-	const { main, kind, table, uid, mates, self, feed, step, official, challenge, someone } = ctx;
+	const { main, kind, table, uid, mates, self, feed, step, challenge } = ctx;
 	const challengeId = challenge?.statementId ?? null;
 	const ballotFrozen = !!challenge?.statementSettings?.ballot;
 	const plenum = challenge?.statementSettings?.roundPhase === 'improve';
@@ -42,26 +42,23 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 			busy: self.busy,
 			onAction: ctx.act,
 		});
-	const isAsker = table.askerUid === uid;
 	let body: m.Children;
 	let action: m.Children = null;
 	if (step === 'talk') {
 		body = m(TalkScreen, { table, prompt: challenge?.statement ?? '' });
-		action = talkFinishAction(kind, table, uid, self.busy, ctx.act);
+		action = talkFinishAction(self.busy, () => ctx.goto('write'));
 	} else if (step === 'write') {
 		body = writePanel();
-		action = isAsker
-			? m(
-					'button.btn.btn--secondary',
-					{
-						type: 'button',
-						'data-testid': 'table-to-rate',
-						disabled: self.busy,
-						onclick: () => ctx.act({ action: 'toRate' }),
-					},
-					t('turn.to_rate'),
-				)
-			: null;
+		action = m(
+			'button.btn.btn--secondary',
+			{
+				type: 'button',
+				'data-testid': 'table-to-rate',
+				disabled: self.busy,
+				onclick: () => ctx.goto('rate'),
+			},
+			t('turn.to_rate'),
+		);
 	} else {
 		body = rateBody({
 			feed,
@@ -77,8 +74,7 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 			onError,
 		});
 	}
-	const line = instructionFor(official);
-	const asker = mates.find((x) => x.uid === table.askerUid);
+	const line = instructionFor(step);
 	const classButton = m(
 		'button.btn.btn--secondary.btn--small.flow__class',
 		{
@@ -91,13 +87,13 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 	);
 
 	return {
-		headerLine: t('turn.header_proposals', { n: table.n, step: t(`turn.now_${official}`) }),
+		headerLine: t('turn.header_proposals', { n: table.n, step: t(`turn.now_${step}`) }),
 		instruction: t(line.key, line.params),
 		body,
 		action,
 		down: step === 'talk',
-		askerLine: isAsker ? t('turn.asker_me') : t('turn.asker', { name: asker?.name ?? someone }),
-		askerMark: isAsker,
+		askerLine: null,
+		askerMark: false,
 		barExtra: classButton,
 		overlay: self.sheetOpen
 			? m(

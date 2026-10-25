@@ -82,6 +82,8 @@ export interface FlowCtx {
 	/** Server clock, epoch ms, at this redraw. */
 	now: number;
 	someone: string;
+	/** Switches THIS phone's sub-step (Proposals); never calls the table. */
+	goto: (step: TableStep) => void;
 	run: (op: () => Promise<unknown>) => void;
 	act: (action: ClassTableAction) => void;
 }

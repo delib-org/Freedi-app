@@ -41,17 +41,6 @@ body.c3-lock {
     margin-block-end: var(--space-md);
   }
 
-  &__asker {
-    margin: 0;
-    color: var(--terra-600);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-bold, 700);
-
-    .frame--down & {
-      color: var(--terra-300);
-    }
-  }
-
   &__class {
     flex: none;
   }
@@ -80,10 +69,6 @@ body.c3-lock {
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-bold, 700);
     cursor: pointer;
-
-    &--official:not(.substeps__pill--on) {
-      border-color: var(--terra-600);
-    }
 
     &--on {
       border-color: var(--ink);
@@ -236,48 +221,4 @@ body.c3-lock {
     padding: 0;
     list-style: none;
   }
-}
-
-
-// ---- strip: the official pill says "now" in words (not by colour alone) --------
-
-.substeps {
-  &__pill {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    padding-block: var(--space-2xs, 4px);
-    line-height: 1.1;
-
-    &--official {
-      border-width: 2.5px;
-    }
-  }
-
-  &__now {
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-bold, 700);
-    color: var(--terra-600);
-
-    .substeps__pill--on & {
-      color: inherit;
-    }
-
-    // On the dark frame the current pill is paper, so only the other pill keeps the light terracotta.
-    .frame--down .substeps__pill:not(.substeps__pill--on) & {
-      color: var(--terra-300);
-    }
-  }
-}
-
-// ---- peek: every control of a non-official screen is off ------------------------
-
-.flow__peek {
-  min-inline-size: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  opacity: 0.55;
 }

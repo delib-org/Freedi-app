@@ -110,7 +110,7 @@ function currentLine(attrs: TableSheetPanelAttrs, table: ClassTable): m.Children
 	return [
 		m('p.table-sheet__now', [
 			m('strong', t(tableStepKey(table, attrs.plenum))),
-			` · ${turnLine(table)}`,
+			attrs.tableTalk ? ` · ${turnLine(table)}` : null,
 		]),
 		m('p.table-sheet__question', question ? question.statement : t('console.no_question_yet')),
 		timer.kind === 'running'
@@ -121,7 +121,7 @@ function currentLine(attrs: TableSheetPanelAttrs, table: ClassTable): m.Children
 			: timer.kind === 'over' && !attrs.tableTalk
 				? m('p.table-sheet__timer.table-sheet__timer--over', t('console.time_over'))
 				: null,
-		table.askerUid
+		attrs.tableTalk && table.askerUid
 			? m('p.table-sheet__asker', t('console.asker_line', { name: speakerName(table.askerUid) }))
 			: null,
 	];
