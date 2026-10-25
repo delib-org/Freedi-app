@@ -34,6 +34,11 @@
   }
 }
 
+// "ביטול" under the question / the pick lead sits at the start edge, not stretched.
+.teacher-home__form > .btn--tertiary {
+  align-self: flex-start;
+}
+
 .teacher-home__help,
 .teacher-home__hint {
   margin: 0;
