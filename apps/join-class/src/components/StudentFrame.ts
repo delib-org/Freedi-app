@@ -9,6 +9,7 @@ import '@/styles/student-frame.scss';
  *   stageName    Table talk: the stage on its own line above headerLine
  *   askerMark    optional leading mark in the header (e.g. "?" for the asker)
  *   instruction  the single instruction of this screen
+ *   questionHeading  the instruction is a chosen question: big, in the top third
  *   action       the primary action (a `.btn.btn--primary`), pinned at the bottom
  *   down         the inverted "screens down" talk screen (`.frame--down`)
  *
@@ -19,13 +20,14 @@ export interface StudentFrameAttrs {
 	stageName?: string;
 	askerMark?: string;
 	instruction?: string;
+	questionHeading?: boolean;
 	action?: m.Children;
 	down?: boolean;
 }
 
 export const StudentFrame: m.Component<StudentFrameAttrs> = {
 	view({ attrs, children }) {
-		const { headerLine, stageName, askerMark, instruction, action, down } = attrs;
+		const { headerLine, stageName, askerMark, instruction, questionHeading, action, down } = attrs;
 
 		return m('section.frame', { class: down ? 'frame--down' : '' }, [
 			m('header.frame__header', { class: stageName ? 'frame__header--stacked' : '' }, [
@@ -34,7 +36,17 @@ export const StudentFrame: m.Component<StudentFrameAttrs> = {
 				m('span.frame__line', headerLine),
 			]),
 			m('main.frame__content', [
-				instruction ? m('h1.frame__instruction', { tabindex: -1 }, instruction) : null,
+				instruction
+					? m(
+							'h1.frame__instruction',
+							{
+								tabindex: -1,
+								dir: questionHeading ? 'auto' : undefined,
+								class: questionHeading ? 'frame__instruction--question' : '',
+							},
+							instruction,
+						)
+					: null,
 				children,
 			]),
 			action ? m('footer.frame__action', action) : null,

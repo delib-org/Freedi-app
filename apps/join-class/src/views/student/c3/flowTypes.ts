@@ -46,6 +46,8 @@ export interface FlowParts {
 	stateKey?: string;
 	/** The instruction of the official step; undefined when the body carries it (V2). */
 	instruction: string | undefined;
+	/** Table talk: the instruction is the chosen question (big, top third). */
+	questionHeading?: boolean;
 	/** The body of the VIEWED step. */
 	body: m.Children;
 	action: m.Children;

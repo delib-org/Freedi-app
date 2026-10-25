@@ -254,13 +254,20 @@ interface Screen {
 	down: boolean;
 	/** The h1: the question at talk states, the status at pick/done. */
 	heading: string;
+	/** The heading is the chosen question: drawn big, in the top third. */
+	questionHeading?: boolean;
 }
 
 function talkScreen(ctx: FlowCtx, state: TableTalkState, question: string): Screen {
 	const { table, uid } = ctx;
 	const first = wasFirstLine(ctx);
 	const firstNote = first ? m('p.tt__quiet', { 'data-testid': 'was-first' }, first) : null;
-	const base = { heading: question, down: true, action: null as m.Children };
+	const base = {
+		heading: question,
+		questionHeading: true,
+		down: true,
+		action: null as m.Children,
+	};
 	switch (state) {
 		case 'S': {
 			const status = t('turn.answer_mine');
@@ -393,6 +400,7 @@ export function tableTalkParts(ctx: FlowCtx): FlowParts {
 		status: screen.status,
 		stateKey: `${state}:${table.turn}`,
 		instruction: screen.heading,
+		questionHeading: screen.questionHeading,
 		body: m('.tt', { key: `${state}:${table.turn}` }, screen.body),
 		action: screen.action
 			? m('.tt__footer', { key: `${state}:${table.turn}` }, screen.action)

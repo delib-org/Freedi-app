@@ -239,6 +239,7 @@ function tableTalkFrame(
 			headerLine: parts.headerLine,
 			stageName: parts.stageName,
 			instruction,
+			questionHeading: parts.questionHeading,
 			action,
 			down: parts.down,
 		},

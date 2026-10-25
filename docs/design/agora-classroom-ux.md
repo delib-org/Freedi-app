@@ -1916,6 +1916,8 @@ Frames are 360 px, RTL, tokens from `apps/join-class/src/styles/_tokens.scss` on
 | Pass buttons | A real `btn--secondary` (outline) full width, under the primary, with 16 px between them. Pass asking has one inline confirm. Pass answering has none (IA F3: 1 tap). | Clearly a second choice, never hidden, never filled. The irreversible one (the whole lesson) costs one more tap. |
 | Teacher marks | Two marks per member chip: the asking mark before the name (✓ asked, ? asking now, – passed asking), the answering mark after it (✓ answered, ● answering now, – passed this question). Each has a full `aria-label`. | Glyph + position + text. No meaning in colour alone. |
 
+**The question is the screen (t3, 2026-10-25).** On every talk state (S, L, W, A, H) the chosen question is the h1 and the big text: `--font-size-2xl`, bold, centred, wrapped, in a block at least a third of the screen high (`33dvh`) with the text centred in it, so it sits in the top third. The status line ("מי עונה עכשיו?", "<name> עונה", "✓ עניתי") is `--font-size-xl` under it. The h1 inherits the frame colour (global `h1` is dark; on the ink frame it was invisible). Pick and Done are unchanged.
+
 ### 16.B The frame (every Table talk screen)
 ```
 ┌──────────────────────────────────────┐
