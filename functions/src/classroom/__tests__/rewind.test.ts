@@ -217,9 +217,9 @@ describe('classResetVote', () => {
 			frozenAt: 1,
 		});
 		expect(isVoteRunning(undefined, null)).toBe(false);
-		expect(
-			ballotAfterReset({ candidateIds: ['a'], frozenAt: 1, pausedAt: 3 }),
-		).not.toHaveProperty('pausedAt');
+		expect(ballotAfterReset({ candidateIds: ['a'], frozenAt: 1, pausedAt: 3 })).not.toHaveProperty(
+			'pausedAt',
+		);
 	});
 });
 

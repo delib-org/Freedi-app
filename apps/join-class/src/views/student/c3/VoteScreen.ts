@@ -163,9 +163,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			},
 			ballot
 				? [
-						choiceRemoved
-							? m('p.vote__empty', { role: 'status' }, t('vote.choice_removed'))
-							: null,
+						choiceRemoved ? m('p.vote__empty', { role: 'status' }, t('vote.choice_removed')) : null,
 						candidates.length === 0
 							? m('p.vote__empty', t('voting.empty'))
 							: m(VoteList, {
