@@ -7,6 +7,7 @@ import { getChallengeQuestion } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
 import { castVote } from '@/lib/classroom/studentWrites';
 import { listenMyVote } from '@/lib/classroom/c3Data';
+import { liveResultsOn, voteResults } from '@/lib/classroom/voteResults';
 import type { Unsubscribe } from '@/lib/firebase';
 import { ErrorLine } from './ErrorLine';
 import { FlowFeed } from './FlowFeed';
@@ -41,6 +42,7 @@ class VoteState {
  * taps), "You voted" in teal; a different card turns the button into "Change
  * vote" until the ballot closes. While the teacher has the vote paused the
  * cards are locked and the button says so; the vote already cast is kept.
+ * Live results (on unless the teacher hides them) add each proposal's share.
  */
 export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 	oninit(vnode) {
@@ -77,6 +79,9 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 		const candidates = (ballot?.candidateIds ?? [])
 			.map((id) => self.feed.options.find((o) => o.statementId === id))
 			.filter((o): o is Statement => !!o);
+		const results = liveResultsOn(challenge)
+			? voteResults(ballot?.candidateIds ?? [], challenge?.selections)
+			: null;
 		const selected = self.selectedId ?? self.votedId;
 		const changed = !!selected && selected !== self.votedId;
 
@@ -143,6 +148,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 									candidates,
 									selectedId: selected,
 									locked: closed || paused,
+									results,
 									onSelect: (id: string) => {
 										self.selectedId = id;
 									},

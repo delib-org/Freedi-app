@@ -19,6 +19,11 @@ const vote: Record<string, string> = {
 	'voting.failed': 'ההצבעה לא נשמרה. לנסות שוב',
 	'voting.paused': 'ההצבעה מושהית',
 	'voting.paused_hint': 'המורה עצרה את ההצבעה לרגע. ההצבעה שלכם נשמרה.',
+	'console.vote_settings': 'ההצבעה',
+	'console.vote_live_results': 'התלמידים רואים את התוצאות בזמן אמת',
+	'console.vote_live_results_help': 'כמה קולות קיבלה כל הצעה. אף פעם לא מי הצביע למה.',
+	'voting.result_votes': '{{percent}}% · {{n}} קולות',
+	'voting.result_one_vote': '{{percent}}% · קול אחד',
 };
 
 export default vote;

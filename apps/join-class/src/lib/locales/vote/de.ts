@@ -20,6 +20,12 @@ const vote: Record<string, string> = {
 	'voting.paused': 'Die Abstimmung ist pausiert',
 	'voting.paused_hint':
 		'Die Lehrkraft hat die Abstimmung kurz pausiert. Deine Stimme bleibt erhalten.',
+	'console.vote_settings': 'Die Abstimmung',
+	'console.vote_live_results': 'Die Lernenden sehen die Ergebnisse live',
+	'console.vote_live_results_help':
+		'Wie viele Stimmen jeder Vorschlag hat. Nie, wer wofür gestimmt hat.',
+	'voting.result_votes': '{{percent}} % · {{n}} Stimmen',
+	'voting.result_one_vote': '{{percent}} % · 1 Stimme',
 };
 
 export default vote;

@@ -1,4 +1,4 @@
-// Student C3: rate, sheet, vote, summary. See student-c3.scss.
+// Student C3: rate, sheet, summary. See student-c3.scss (the vote: student-c3-vote).
 $c3-face-size: 48px;
 
 // ---- rate -------------------------------------------------------------------------
@@ -128,44 +128,6 @@ $c3-face-size: 48px;
   to {
     transform: translateY(0);
   }
-}
-
-// ---- vote ---------------------------------------------------------------------------
-
-.vote-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-
-  &__item {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-sm);
-    min-height: 56px;
-    padding: var(--space-md);
-    border: 1.5px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    background: var(--bg-card);
-    color: var(--ink);
-    font: inherit;
-    font-size: var(--font-size-base);
-    text-align: start;
-    cursor: pointer;
-
-    &--on {
-      border-color: var(--ink);
-      background: var(--ink);
-      color: var(--paper);
-    }
-  }
-
-  &__text {
-    flex: 1;
-  }
-}
-
-.vote__empty {
-  color: var(--ink-muted);
 }
 
 // ---- summary ------------------------------------------------------------------------

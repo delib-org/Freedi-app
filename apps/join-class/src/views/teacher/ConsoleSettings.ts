@@ -7,11 +7,14 @@ import {
 	readLessonGate,
 	writeLessonGate,
 } from '@/lib/classroom/gateControl';
+import { getChallengeQuestion } from '@/lib/lessonCore';
+import { getSubQuestions } from '@/lib/store';
 import { bindOutsideClose, popoverKeydown, unbindOutsideClose } from './barPopover';
+import { VoteDisplaySettings } from './VoteDisplaySettings';
 
 /**
- * The console's small settings popover: the lesson's agreement gate, the one
- * setting a teacher moves mid-lesson. A native <details> (opens and closes with
+ * The console's small settings popover: the lesson's agreement gate and the
+ * vote switches (what the students' vote screen shows). A native <details> (opens and closes with
  * the keyboard); Escape and a click elsewhere close it too.
  */
 
@@ -46,6 +49,7 @@ export const ConsoleSettings: m.Component = {
 					t('console.gate.value', { value: gate.toFixed(GATE_DECIMALS) }),
 				),
 				m('p.console__settings-help#gate-slider-help', t('console.gate.help')),
+				m(VoteDisplaySettings, { challenge: getChallengeQuestion(getSubQuestions()) }),
 			]),
 		]);
 	},
