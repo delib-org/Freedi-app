@@ -4,6 +4,7 @@ import {
 	LessonStepKey,
 	Statement,
 	StatementType,
+	getRandomUID,
 } from '@freedi/shared-types';
 import {
 	db,
@@ -28,6 +29,7 @@ import {
 } from './store';
 import { markOpenedInClass, waitForCreatorSubscription } from './joinSubscriptions';
 import { getUserState } from './user';
+import { classCloneLesson } from './classroom/api';
 import {
 	CLASS_CODES_COLLECTION,
 	LESSON_STEP_KEYS,
@@ -227,6 +229,22 @@ export async function createLesson(title: string): Promise<string> {
 		forceLanguage: true,
 	});
 	if (!id) throw new Error('createLesson: the statement was not created');
+	await settleNewLesson(id, () => ensureClassCode(id).then(() => undefined));
+
+	return id;
+}
+
+/**
+ * What every new lesson goes through once its statement exists: load it, wait
+ * for the server's creator subscription, write the `openedInClass` marker that
+ * lists it on the teacher's home, then (if the server was slow) mark it again
+ * later. `beforeRemark` runs after the marker (createLesson makes its class
+ * code there; a copy already has one).
+ */
+export async function settleNewLesson(
+	id: string,
+	beforeRemark?: () => Promise<void>,
+): Promise<void> {
 	const user = getUserState().user;
 	await loadQuestion(id);
 	const statement = getQuestion();
@@ -240,8 +258,25 @@ export async function createLesson(title: string): Promise<string> {
 		);
 		if (statement) await markOpenedInClass(statement, user.uid, user.displayName ?? '');
 	}
-	await ensureClassCode(id);
+	if (beforeRemark) await beforeRemark();
 	if (statement && !serverSubscription) remarkLater(statement);
+}
 
-	return id;
+/**
+ * "New lesson with the same questions" (IA 13.15): the server copies the
+ * source's plan into a new lesson (its own class code, no class work), then
+ * the same settling as `createLesson`. `newMainId` is the id this attempt
+ * owns: pass the same one on a retry and the server returns the lesson it
+ * already made instead of a second one. Returns the new lesson's id; throws
+ * when a step fails (the caller keeps the typed name and offers a retry).
+ */
+export async function cloneLesson(
+	sourceId: string,
+	title: string,
+	newMainId: string = getRandomUID(),
+): Promise<string> {
+	const res = await classCloneLesson({ sourceMainId: sourceId, newMainId, title });
+	await settleNewLesson(res.mainId);
+
+	return res.mainId;
 }

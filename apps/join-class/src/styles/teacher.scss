@@ -5,6 +5,8 @@
 // from global.scss, so a student's first load never downloads it.
 // =============================================================================
 
+@use 'teacher-home-create';
+
 // ---- shared page frame ------------------------------------------------------
 .plan, .teacher-home {
   display: flex;

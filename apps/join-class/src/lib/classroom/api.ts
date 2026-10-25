@@ -5,6 +5,8 @@ import type {
 	ClassAllTablesToResponse,
 	ClassAssignTablesRequest,
 	ClassAssignTablesResponse,
+	ClassCloneLessonRequest,
+	ClassCloneLessonResponse,
 	ClassCloseBallotRequest,
 	ClassCloseBallotResponse,
 	ClassFreezeBallotRequest,
@@ -82,4 +84,9 @@ export function classSetLessonStatus(
 	req: ClassSetLessonStatusRequest,
 ): Promise<ClassSetLessonStatusResponse> {
 	return call('classSetLessonStatus', req);
+}
+
+/** Admin of the source: a new lesson with the same plan (IA 13.15). Safe to repeat with the same `newMainId`. */
+export function classCloneLesson(req: ClassCloneLessonRequest): Promise<ClassCloneLessonResponse> {
+	return call('classCloneLesson', req);
 }

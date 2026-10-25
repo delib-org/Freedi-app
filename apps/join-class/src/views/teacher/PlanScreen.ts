@@ -2,7 +2,7 @@ import m from 'mithril';
 import '@/styles/teacher.scss';
 import type { Statement } from '@freedi/shared-types';
 import { getAvailableLanguages, t } from '@/lib/i18n';
-import { setFollowLessonLanguage } from '@/lib/store';
+import { getMainStatement, setFollowLessonLanguage } from '@/lib/store';
 import { NotYourLesson } from './NotYourLesson';
 import { WizColFooter } from '@/components/WizColFooter';
 import {
@@ -342,7 +342,17 @@ function renderDetails(): m.Vnode {
 				fieldError(SIDE_B_KEY),
 			]),
 		]),
+		renderCopiedFrom(),
 	]);
+}
+
+/** One muted line on a lesson made from another: where its plan came from (plain text, not a link). */
+function renderCopiedFrom(): m.Children {
+	const source = getMainStatement()?.sourceLessonTitle;
+	if (!source) return null;
+	const [before, after = ''] = t('plan.copied_from', { name: '\u0001' }).split('\u0001');
+
+	return m('p.plan__help.plan__copied-from', [before, m('bdi', { dir: 'auto' }, source), after]);
 }
 
 function renderTables(guiding: Statement[]): m.Vnode {
