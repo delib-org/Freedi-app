@@ -16,3 +16,4 @@ export { classTableStep } from './fn_classTableStep';
 export { classAllTablesTo } from './fn_classAllTablesTo';
 export { classFreezeBallot, classCloseBallot } from './fn_classBallot';
 export { classSetLessonStatus } from './fn_classSetLessonStatus';
+export { classCloneLesson } from './fn_classCloneLesson';
