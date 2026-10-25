@@ -112,7 +112,12 @@ function tableTalk(): m.Vnode {
 			];
 
 	return m('section.projector-step.projector-step--table-talk', [
-		m('h1.projector-instruction', t(counts.tables === 1 ? 'projector.tablesCountOne' : 'projector.tablesCount', { n: counts.tables })),
+		m(
+			'h1.projector-instruction',
+			t(counts.tables === 1 ? 'projector.tablesCountOne' : 'projector.tablesCount', {
+				n: counts.tables,
+			}),
+		),
 		m('ul.projector-count-tiles', tiles),
 	]);
 }
@@ -124,9 +129,12 @@ function proposals(): m.Vnode {
 	const gate = gateOf(challenge, projectorData.main);
 
 	return m('section.projector-step.projector-step--proposals', [
-		m('h1.projector-instruction', t(options.length === 1 ? 'projector.proposalsSentOne' : 'projector.proposalsSent', {
+		m(
+			'h1.projector-instruction',
+			t(options.length === 1 ? 'projector.proposalsSentOne' : 'projector.proposalsSent', {
 				n: options.length,
-			})),
+			}),
+		),
 		m(GateStage, { view: gateView(options, gate), showWaiting: false }),
 		m(
 			'ul.projector-gate-bars',

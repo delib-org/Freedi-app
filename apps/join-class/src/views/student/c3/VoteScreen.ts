@@ -147,7 +147,9 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			StudentFrame,
 			{
 				headerLine: t('voting.title'),
-				instruction: instructionOf(ballot ? (closed ? 'closed' : paused ? 'paused' : 'open') : 'waiting'),
+				instruction: instructionOf(
+					ballot ? (closed ? 'closed' : paused ? 'paused' : 'open') : 'waiting',
+				),
 				action: ballot
 					? m(
 							'button.btn',
