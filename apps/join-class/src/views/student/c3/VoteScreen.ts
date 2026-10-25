@@ -22,6 +22,7 @@ const INSTRUCTION_KEY = {
 	waiting: 'voting.waiting',
 	open: 'voting.pick_one',
 	paused: 'voting.paused_hint',
+	closed: 'voting.closed_hint',
 } as const;
 
 function instructionOf(state: keyof typeof INSTRUCTION_KEY): string {
@@ -146,7 +147,9 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			StudentFrame,
 			{
 				headerLine: t('voting.title'),
-				instruction: instructionOf(ballot ? (paused ? 'paused' : 'open') : 'waiting'),
+				instruction: instructionOf(
+					ballot ? (closed ? 'closed' : paused ? 'paused' : 'open') : 'waiting',
+				),
 				action: ballot
 					? m(
 							'button.btn',

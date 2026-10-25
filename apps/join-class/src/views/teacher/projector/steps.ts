@@ -22,6 +22,7 @@ import {
 	topProposals,
 	unseatedNames,
 	visibleProposals,
+	voteStatus,
 } from './projectorLogic';
 
 /** One renderer per lesson step: the ONE thing the class needs to see (UX section 6). */
@@ -111,7 +112,12 @@ function tableTalk(): m.Vnode {
 			];
 
 	return m('section.projector-step.projector-step--table-talk', [
-		m('h1.projector-instruction', t('projector.tablesCount', { n: counts.tables })),
+		m(
+			'h1.projector-instruction',
+			t(counts.tables === 1 ? 'projector.tablesCountOne' : 'projector.tablesCount', {
+				n: counts.tables,
+			}),
+		),
 		m('ul.projector-count-tiles', tiles),
 	]);
 }
@@ -123,7 +129,12 @@ function proposals(): m.Vnode {
 	const gate = gateOf(challenge, projectorData.main);
 
 	return m('section.projector-step.projector-step--proposals', [
-		m('h1.projector-instruction', t('projector.proposalsSent', { n: options.length })),
+		m(
+			'h1.projector-instruction',
+			t(options.length === 1 ? 'projector.proposalsSentOne' : 'projector.proposalsSent', {
+				n: options.length,
+			}),
+		),
 		m(GateStage, { view: gateView(options, gate), showWaiting: false }),
 		m(
 			'ul.projector-gate-bars',
@@ -173,9 +184,17 @@ function vote(): m.Vnode {
 
 	const candidates = ballot ? ballotOptions(ballot.candidateIds, projectorData.proposals) : [];
 	const gate = gateOf(challenge, projectorData.main);
+	const status = voteStatus(ballot);
 
 	return m('section.projector-step.projector-step--vote', [
 		m('h1.projector-instruction', t('projector.voteTitle')),
+		status === 'open'
+			? null
+			: m(
+					'p.projector-vote-status',
+					{ role: 'status', 'data-status': status },
+					t(status === 'paused' ? 'voting.paused' : 'voting.closed'),
+				),
 		candidates.length > 0
 			? m(GateStage, { view: gateView(candidates, gate), showWaiting: true })
 			: null,

@@ -20,6 +20,7 @@ const vote: Record<string, string> = {
 	'voting.paused': 'Die Abstimmung ist pausiert',
 	'voting.paused_hint':
 		'Die Lehrkraft hat die Abstimmung kurz pausiert. Deine Stimme bleibt erhalten.',
+	'voting.closed_hint': 'Die Abstimmung ist geschlossen. Wir warten auf die Zusammenfassung',
 	'console.vote_settings': 'Die Abstimmung',
 	'console.vote_live_results': 'Die Lernenden sehen die Ergebnisse live',
 	'console.vote_live_results_help':

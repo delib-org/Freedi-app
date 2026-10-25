@@ -288,8 +288,9 @@
     font-weight: var(--font-weight-bold);
   }
 
+  // --ink-faint is page-background only (tokens): inside a card it fails contrast in dark mode.
   &--none {
-    color: var(--ink-faint);
+    color: var(--ink-soft);
   }
 }
 

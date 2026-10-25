@@ -6,7 +6,8 @@
 .student-notice {
 	position: fixed;
 	inset-inline: var(--space-md);
-	inset-block-end: var(--space-lg);
+	// At the top, over the header line: the bottom is where the screen's one action sits.
+	inset-block-start: var(--space-sm);
 	z-index: 50;
 	margin-inline: auto;
 	max-inline-size: 420px;

@@ -19,6 +19,7 @@ const vote: Record<string, string> = {
 	'voting.failed': 'No se guardó el voto. Intentad de nuevo',
 	'voting.paused': 'La votación está en pausa',
 	'voting.paused_hint': 'El docente pausó la votación por ahora. Tu voto se conserva.',
+	'voting.closed_hint': 'La votación está cerrada. Esperamos el resumen',
 	'console.vote_settings': 'La votación',
 	'console.vote_live_results': 'Los estudiantes ven los resultados en vivo',
 	'console.vote_live_results_help': 'Cuántos votos tiene cada propuesta. Nunca quién votó qué.',

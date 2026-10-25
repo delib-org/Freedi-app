@@ -19,6 +19,7 @@ const vote: Record<string, string> = {
 	'voting.failed': 'لم يُحفظ التصويت. حاولوا مرة أخرى',
 	'voting.paused': 'التصويت متوقف مؤقتًا',
 	'voting.paused_hint': 'أوقف المعلّم التصويت مؤقتًا. صوتك محفوظ.',
+	'voting.closed_hint': 'أُغلق التصويت. بانتظار الملخص',
 	'console.vote_settings': 'التصويت',
 	'console.vote_live_results': 'يرى الطلاب النتائج مباشرة',
 	'console.vote_live_results_help': 'عدد الأصوات لكل اقتراح، دون إظهار من صوّت لأي اقتراح.',

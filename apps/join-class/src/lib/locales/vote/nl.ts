@@ -19,6 +19,7 @@ const vote: Record<string, string> = {
 	'voting.failed': 'De stem is niet opgeslagen. Probeer opnieuw',
 	'voting.paused': 'De stemming is gepauzeerd',
 	'voting.paused_hint': 'De docent heeft de stemming even gepauzeerd. Je stem blijft bewaard.',
+	'voting.closed_hint': 'De stemming is gesloten. We wachten op de samenvatting',
 	'console.vote_settings': 'De stemming',
 	'console.vote_live_results': 'Leerlingen zien de uitslag live',
 	'console.vote_live_results_help': 'Hoeveel stemmen elk voorstel heeft. Nooit wie waarop stemde.',

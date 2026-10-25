@@ -116,6 +116,17 @@ $projector-band-height: 64px;
   color: var(--ink-muted);
 }
 
+// The vote is held (paused) or over (closed): the wall says so, like the phones do.
+.projector-vote-status {
+  margin: 0;
+  padding: var(--space-xs) var(--space-lg);
+  font-size: 48px;
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-lg);
+}
+
 // ---- waiting -----------------------------------------------------------------
 
 .projector-code {

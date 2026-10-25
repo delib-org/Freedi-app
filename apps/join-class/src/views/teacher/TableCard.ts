@@ -34,6 +34,8 @@ export interface TableCardAttrs {
 	students: ReadonlyMap<string, RosterStudent>;
 	plenum: boolean;
 	tableTalk: boolean;
+	/** The class is past the tables' work (vote, summary): members only, no step line, timer or action. */
+	done?: boolean;
 	/** Table talk: the question this table is answering, one line. */
 	questionText?: string;
 	mainId: string;
@@ -214,16 +216,18 @@ export const TableCard: m.Component<TableCardAttrs> = {
 					),
 					attrs.tableTalk ? m('span.table-card__turn', turnLine(table)) : null,
 				]),
-				m(
-					'p.table-card__now',
-					tableIsDone(table, tableModeOf(attrs), serverNow())
-						? t('console.all_done')
-						: t(tableStepKey(table, plenum)),
-				),
+				attrs.done
+					? null
+					: m(
+							'p.table-card__now',
+							tableIsDone(table, tableModeOf(attrs), serverNow())
+								? t('console.all_done')
+								: t(tableStepKey(table, plenum)),
+						),
 				attrs.tableTalk && attrs.questionText && table.questionId
 					? m('p.table-card__question', { dir: 'auto' }, attrs.questionText)
 					: null,
-				timerRows(attrs),
+				attrs.done ? null : timerRows(attrs),
 				attrs.tableTalk && table.askerUid
 					? m(
 							'p.table-card__asker',
@@ -254,21 +258,23 @@ export const TableCard: m.Component<TableCardAttrs> = {
 						}),
 					),
 				]),
-				consoleState.noDeviceFor === table.n
-					? noDeviceForm(mainId, table.n)
-					: m(
-							'button.btn.btn--tertiary.table-card__nd-open',
-							{
-								type: 'button',
-								disabled: consoleState.held,
-								onclick: () => {
-									consoleState.noDeviceFor = table.n;
+				attrs.done
+					? null
+					: consoleState.noDeviceFor === table.n
+						? noDeviceForm(mainId, table.n)
+						: m(
+								'button.btn.btn--tertiary.table-card__nd-open',
+								{
+									type: 'button',
+									disabled: consoleState.held,
+									onclick: () => {
+										consoleState.noDeviceFor = table.n;
+									},
 								},
-							},
-							`+ ${t('console.no_device')}`,
-						),
+								`+ ${t('console.no_device')}`,
+							),
 				(() => {
-					const quick = quickActionFor(table, tableModeOf(attrs), serverNow());
+					const quick = attrs.done ? null : quickActionFor(table, tableModeOf(attrs), serverNow());
 					if (!quick) return null;
 					const label = quickLabel(quick);
 

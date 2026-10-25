@@ -19,6 +19,7 @@ const vote: Record<string, string> = {
 	'voting.failed': 'رأی ذخیره نشد. دوباره تلاش کنید',
 	'voting.paused': 'رأی‌گیری موقتاً متوقف است',
 	'voting.paused_hint': 'معلم رأی‌گیری را موقتاً متوقف کرد. رأی شما حفظ شده است.',
+	'voting.closed_hint': 'رأی‌گیری بسته شد. منتظر جمع‌بندی هستیم',
 	'console.vote_settings': 'رأی‌گیری',
 	'console.vote_live_results': 'دانش‌آموزان نتایج را زنده می‌بینند',
 	'console.vote_live_results_help':

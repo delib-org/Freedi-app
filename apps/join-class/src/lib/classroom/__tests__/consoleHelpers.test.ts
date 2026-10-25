@@ -13,6 +13,7 @@ import {
 	railSteps,
 	rosterStudents,
 	tableStepKey,
+	tablesAreDone,
 	timerLine,
 	unplacedStudents,
 } from '../consoleHelpers';
@@ -104,6 +105,16 @@ describe('gate maths', () => {
 		expect(isBallotClosed(q({ ballot: { frozenAt: 1, closedAt: 2 } }))).toBe(true);
 		expect(isBallotPaused(q({ ballot: { frozenAt: 1 } }))).toBe(false);
 		expect(isBallotPaused(q({ ballot: { frozenAt: 1, pausedAt: 2 } }))).toBe(true);
+	});
+});
+
+describe('tablesAreDone', () => {
+	it('is true once the class votes or reads the summary, false while the tables still work', () => {
+		expect(tablesAreDone('vote')).toBe(true);
+		expect(tablesAreDone('summary')).toBe(true);
+		for (const key of ['waiting', 'opening', 'side', 'tables', 'tableTalk', 'proposals'] as const) {
+			expect(tablesAreDone(key)).toBe(false);
+		}
 	});
 });
 
