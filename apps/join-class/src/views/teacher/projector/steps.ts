@@ -7,6 +7,8 @@ import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
 import { projectorData } from '@/lib/classroom/projectorData';
 import { ProjectorQr, QR_WAITING_SIZE } from './ProjectorBand';
 import { openingStage } from './OpeningStage';
+import { GateStage } from './GateStage';
+import { ballotOptions, gateView } from './gateLogic';
 import {
 	allTablesRating,
 	countTables,
@@ -122,6 +124,7 @@ function proposals(): m.Vnode {
 
 	return m('section.projector-step.projector-step--proposals', [
 		m('h1.projector-instruction', t('projector.proposalsSent', { n: options.length })),
+		m(GateStage, { view: gateView(options, gate), showWaiting: false }),
 		m(
 			'ul.projector-gate-bars',
 			gateBars(options, gate).map((bar) =>
@@ -168,8 +171,14 @@ function vote(): m.Vnode {
 	const selections = challenge?.selections as Record<string, number> | undefined;
 	const bars = ballot ? tallyBars(ballot.candidateIds, selections, projectorData.proposals) : [];
 
+	const candidates = ballot ? ballotOptions(ballot.candidateIds, projectorData.proposals) : [];
+	const gate = gateOf(challenge, projectorData.main);
+
 	return m('section.projector-step.projector-step--vote', [
 		m('h1.projector-instruction', t('projector.voteTitle')),
+		candidates.length > 0
+			? m(GateStage, { view: gateView(candidates, gate), showWaiting: true })
+			: null,
 		bars.length === 0
 			? m('p.projector-empty', t('projector.noBallot'))
 			: m(
