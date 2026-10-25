@@ -22,8 +22,8 @@ import {
 import type { DropTarget } from '@/lib/classroom/dragReducer';
 import { Collections } from '@freedi/shared-types';
 import { db, doc, updateDoc } from '@/lib/firebase';
-import { getLessonStep, setLessonStep } from '@/lib/lesson';
-import { LESSON_STEP_KEYS, isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
+import { getLessonStep, getLessonSteps, setLessonStep } from '@/lib/lesson';
+import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
 import { clearsTableClocksOnEnter } from '@/lib/classroom/consoleHelpers';
 import { getMainStatement, setQuestionSetting } from '@/lib/store';
 import { t } from '@/lib/i18n';
@@ -60,7 +60,7 @@ export function goToStep(mainId: string, index: number): Promise<boolean> {
 	return guardedAct(`step:${index}`, t('console.act_step'), async () => {
 		const from = getLessonStep().index;
 		await setLessonStep(mainId, index);
-		if (!clearsTableClocksOnEnter(from, index, LESSON_STEP_KEYS)) return;
+		if (!clearsTableClocksOnEnter(from, index, getLessonSteps())) return;
 		// The step has moved; a failure here only leaves the old clock on the tables, so it must not undo the move.
 		try {
 			await classAllTablesTo({ mainId, step: 'talk' });
