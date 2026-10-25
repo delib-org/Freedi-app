@@ -506,11 +506,9 @@ function MindElixirMap({
 				const targetScale = currentScale * (1 + delta);
 				const clampedScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, targetScale));
 				if (Math.abs(clampedScale - currentScale) < 0.001) return;
-				const containerRect = container.getBoundingClientRect();
-				mindRef.current.scale(clampedScale, {
-					x: e.clientX - containerRect.left,
-					y: e.clientY - containerRect.top,
-				});
+				// scale() wants viewport coordinates and subtracts the container
+				// offset itself.
+				mindRef.current.scale(clampedScale, { x: e.clientX, y: e.clientY });
 				setMapScale(clampedScale);
 			},
 			// Intercept operations before they happen
@@ -996,13 +994,10 @@ function MindElixirMap({
 
 			const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
 			const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-			const rect = container.getBoundingClientRect();
 
-			// scale() takes an ABSOLUTE target, zooming toward the pinch midpoint.
-			mindRef.current.scale(newScale, {
-				x: midX - rect.left,
-				y: midY - rect.top,
-			});
+			// scale() takes an ABSOLUTE target and viewport coordinates, zooming
+			// toward the pinch midpoint.
+			mindRef.current.scale(newScale, { x: midX, y: midY });
 			setMapScale(newScale);
 		};
 
@@ -1246,8 +1241,12 @@ function MindElixirMap({
 		const target = Math.min(SCALE_MAX, Math.max(SCALE_MIN, current * step));
 		if (Math.abs(target - current) < 0.001) return;
 		const rect = containerRef.current?.getBoundingClientRect();
-		// scale() takes an ABSOLUTE target; zoom around the viewport center.
-		mind.scale(target, rect ? { x: rect.width / 2, y: rect.height / 2 } : { x: 0, y: 0 });
+		// scale() takes an ABSOLUTE target and viewport coordinates (it subtracts
+		// the container offset itself); zoom around the container center.
+		mind.scale(
+			target,
+			rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : { x: 0, y: 0 },
+		);
 		setMapScale(target);
 	}, []);
 
