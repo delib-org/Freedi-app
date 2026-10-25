@@ -7,7 +7,7 @@
 // data-testid used (all exist in src):
 //   student  side-slider, side-confirm, table-number, table-mates,
 //            table-pick-question, table-claim, table-answer, table-finish, table-to-write,
-//            table-to-rate, asker-mark (Proposals), proposal-box,
+//            table-to-rate, proposal-box,
 //            proposal-send, rate-face-1..5,
 //            vote-option, vote-send, support-face-1..5
 //   console  [data-step-key] (aria-current="step" on the current one),
@@ -69,8 +69,6 @@ async function tableNumberOf(student) {
 
 /** Who sits where, read off the phones while they show "my table" (the next steps replace that screen). */
 const seating = new Map();
-/** Table 1's asker of its last turn: it stays the table's asker when the lesson moves on to Proposals. */
-let tableOneLastAsker;
 
 async function tablemates(students, number) {
 	const mates = [];
@@ -204,7 +202,6 @@ export const ENGINE_PHASES = [
 				}
 				check(`turn ${turn}: nobody writes at Table talk`, !(await hasTestId(asker, 'table-to-write')) && !(await hasTestId(others[0], 'answer-box')));
 			}
-			tableOneLastAsker = previous;
 			check('the turn went to a different volunteer the second time', askers[0] !== askers[1], askers.join(' -> '));
 		},
 	},
@@ -212,10 +209,9 @@ export const ENGINE_PHASES = [
 		name: 'proposals, rating and plenum',
 		async run({ teacher, students, check, admin, challengeId }) {
 			await teacherForward(teacher, 'proposals');
-			// table 1 leaves the talk screen for writing through its last asker; table 2 had no turn, so nobody asks
-			// there and any tablemate may do it
-			for (const finisher of [tableOneLastAsker, tableOf(2)[0]]) {
-				await (await byId(finisher.page, 'table-to-write')).click();
+			// free sub-steps (IA 17.13): "סיימנו, לכתוב" is a local shortcut, so every phone taps its own
+			for (const student of students) {
+				await (await byId(student.page, 'table-to-write')).click();
 			}
 			for (const student of students) {
 				await (await byId(student.page, 'proposal-box')).fill(`Proposal by student ${student.index + 1}`);

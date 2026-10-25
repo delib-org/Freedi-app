@@ -26,12 +26,13 @@ Least expert reader: a 13-year-old on a phone with the teacher talking. Every st
 | Student (`AgoraParticipant`) | One person on one device; or a roster-only member without a device (`noDevice: true`, no uid), added by the teacher to a table | 25-35 per lesson | joined → placed at a table → (removed) |
 | Side (`AgoraCamp` via `campPosition`) | Which of the two characters the student feels closer to; center allowed | 1 per student, picked at the Side step; picked again at the Summary | none → chosen → chosen again (end) |
 | Table (`AgoraTable`, NEW) | 3-5 students at one physical table, mixed sides | 6-10 per lesson | proposed → set → (changed by teacher) |
-| Table step (`AgoraTableStep`, NEW) | What one table is doing inside the Table talk and Proposals steps: `pick` → `talk` → `write` → `rate` | 1 per table | moves at the table's own pace; the teacher can move it |
+| Table step (`AgoraTableStep`, NEW) | What one table is doing inside the Table talk and Proposals steps: `pick` → `talk` → `write` → `rate`. At Proposals it is the teacher's call: phones land there, and each phone moves between the three sub-steps freely (§17.13) | 1 per table | moves at the table's own pace; the teacher can move it |
 | Turn (`AgoraTableTurn`, NEW) | One pass of the loop at one table: one asker, one question, every tablemate speaks, the table writes | 1-3 per table per Table talk step | current → done |
 | Speaking time (on the table doc) | The current speaker and the moment their minute ends | 1 per table | running → over → next speaker |
 | Question (guiding question) | A question the table talks about: the teacher's, or added by a student | 3-8 from the teacher + any number by students | teacher-written → used at table n (greyed at that table) |
 | Answer | What a table writes to a question: one for the table, or one per student | 1 per table per turn, or 1 per student per turn | sending → sent → changed → rated |
 | Proposal | What a student writes at the Proposals step | at most 1 per student | sending → sent → changed → rated → (on the ballot) → (decided) |
+| Live draft | The text a student is typing, shown to the tablemates only while they broadcast (RTDB `liveDrafts/{challengeId}/{uid}`, keyed by the challenge question; the table filter `draft.userId ∈ table.memberUids` runs on the phone). Not a Statement (§17) | 0-5 per table at a time | appears at the first keystroke → gone on send, untick, leaving the write box, 120 s of silence or disconnect |
 | Rating | One student's reaction to an answer or a proposal, 5 faces, -1..+1. A student's own proposal and their own table's answers are not in their list: the server writes a +1 rating by them for each (every co-author of a shared answer) | at most 1 per student per item | none → saved (or auto +1) → changed |
 | Vote | One pick on the ballot | 1 per student | none → cast → changed (until closed) |
 | Ballot (`session.voting`) | The proposals the class votes on, frozen when the Vote step opens | 1 | frozen |
@@ -71,6 +72,7 @@ New kinds: one stage kind, `tables`; one question kind, `inquiry`. Both are pick
 - Table steps and turns: the **asker** (the student whose turn it is to pick the question) holds the table's forward control on their own device; the teacher can move any table or all tables from the console. Not any tablemate: one finger per table keeps the room calm, and the asker already reads the question aloud. Exception: when the speaking minute is over, any tablemate's device shows "הבא בתור" so a table is never stuck on a missing asker. The first asker of a table is the student with the earliest `joinedAt`; the asker rotates per turn.
 - Speaking timer: 60 s per speaker (`AGORA_TABLE.SPEAK_MS`, teacher-adjustable per lesson); the table's step timer for `talk` = speakers × 60 s; the `talk` step of Proposals has one table timer (default 4 min) and no speaker order. Timers are moments (`speakerEndsAt`, `stepEndsAt`) written once on the table doc; every device counts down from the same clock. The end of a timer never advances anything on its own: it shows "הזמן נגמר" and the forward control.
 - Writing mode (Table talk only): at the `write` step the asker chooses once per turn: "תשובה אחת לשולחן" (this device writes for the table; the others see the draft read-only and help aloud) or "כולם כותבים" (each writes their own, tablemates help aloud). Default: everyone writes. Proposals: everyone writes, always (Tal 3.2). A choice can be changed before the first send of that turn, not after.
+- Proposals sub-steps (Tal, 2026-10-25, §17.13): the strip "מדברים / כותבים / מדרגים" is a local selector on each phone; tapping it never moves the table, no sub-step is greyed out, and "סיימנו, לכתוב" / "שלחנו, לדרג" only switch the phone's own sub-step. Only the teacher moves the table step at Proposals; a teacher move resets every phone at that table once.
 - Rating: the class's answers (and, at Proposals, the class's proposals) are reachable from every table step through a sheet, at any time during the step; a student rates whenever they want. The table's `rate` step only moves the table's attention there, it is not a gate. The list is whole-class and keeps growing while other tables write. The teacher's "כל השולחנות: מדרגים" moves every table there.
 - "שאלה משלנו": anyone at the table may add one at the `pick` step; the asker still picks which question the turn uses.
 - A student without a device: the teacher adds them to a table from the Tables board ("בלי מכשיר"); they speak in turn like everyone; tablemates write for them (a shared answer, or a tablemate typing their answer); the teacher's console can rate on their behalf ("לדרג בשם …") from the What they wrote view. Low priority: build after the first lesson runs without it.
@@ -133,6 +135,8 @@ One name per concept across UI, i18n, routes and code. HE is primary and gender-
 | Waiting for the teacher | Waiting for the teacher | ממתינים למורה | lobby.waiting (kept) | — | AgoraStage.lobby | lobby in UI |
 | End the lesson | End the lesson | סיום השיעור | teacher.end_game (kept, value unchanged) | — | status ended | — |
 
+Live writing (§17.5, Tal 2026-10-25): NEW `answer.live_one`, `answer.live_many` (moved from `rate.live_one|many`), `answer.watch_open`, `answer.watch_close`, `answer.watch_sent`, `answer.watch_stopped`, `answer.live_started`. CHANGED values: `answer.broadcast` "משדרים את הכתיבה לשולחן", `answer.broadcast_on` "השולחן רואה את מה שאתם כותבים". Retired: `rate.live_one`, `rate.live_many`, `turn.peek_back`, `turn.peek_why_*`, `turn.pill_now`; `turn.asker` / `turn.asker_me` are not read at Proposals any more.
+
 Rule: the word for the written thing is תשובה at the Table talk step and הצעה at the Proposals step, and never anything else; the kind is the screen's title, never a tag on the card.
 
 ## 4. Hierarchy (per role)
@@ -147,7 +151,7 @@ Role: student. Home = `/play/:id`, which always shows the current class step and
 1   My table             (tables: "שולחן 3", who sits with me, "go and sit")
 1   Table talk           (question/inquiry: table step pick → talk → write → rate; turns)
 2     The class's answers   (rate: whole-class list; sheet from the rate step)
-1   Proposals            (deliberation: table step talk → write → rate; then plenum)
+1   Proposals            (deliberation: three sub-steps talk · write · rate, free for each phone; live line + watch view; then plenum)
 2     The class's proposals (rate: whole-class list)
 1   Vote                 (voting: the ballot)
 1   Summary              (results: side again → decision → what changed)
@@ -198,7 +202,7 @@ Student: one route, `/play/:id`; the row is the step. Teacher rows are routes.
 | Side | /play/:id | pick a side | — | sending | save failed + retry | — | "נשמר" |
 | My table | /play/:id | know my table and go sit | not placed yet: "עוד אין לכם שולחן. חכו למורה" | — | — | — | table number + names |
 | Table talk | /play/:id (table step inside) | pick / talk / write / rate, per the table step | pick: no questions left → "שאלה משלנו"; rate: "עוד אין תשובות" | sending | send failed + retry; language gate refusal (existing) | not the asker: no forward control (by design, not an error) | turn done → next turn or "חכו לשאר השולחנות"; the class's answers sheet is open at every table step |
-| Proposals | /play/:id (table step inside) | talk / write / rate; plenum | rate: "עוד אין הצעות" | sending | same as above | — | plenum: "ההצעות המובילות על המקרן" |
+| Proposals | /play/:id (table step inside) | talk / write / rate, free per phone, no peek; live line + watch view of tablemates' writing; plenum | rate: "עוד אין הצעות" | sending | same as above | — | plenum: "ההצעות המובילות על המקרן" |
 | Vote | /play/:id | one vote | empty ballot: "אין מה להצביע" (existing) | saving | save failed + retry | closed | "הצבעתם" |
 | Summary | /play/:id | decision, side again (optional), what changed | no vote held: most agreed proposal; nobody re-picked yet: "עוד אף אחד לא בחר שוב" | computing (existing) | — | — | ended |
 | Console | /teach/session/:id | move the class; see every table | before Tables: roster only; no students: "עוד לא הצטרפו" (existing) | skeleton | advance failed (existing) | not my lesson → /teach | last step: "סיום השיעור" |
@@ -244,7 +248,7 @@ Yours to decide: how the step rail looks and how the current step stands out; th
 ## 11. Revision after Tal's simulation review (2026-10-21)
 Tal played the interactive simulation and asked for five changes. They override the sections above where they conflict.
 1. **The step rail is also a control.** Every step on the teacher's rail is a button; pressing one moves the whole class to that step (forward or back). The one forward control stays as the primary path; the rail is the shortcut. `agoraAdvanceStage` therefore needs a `toIndex` (today it is forward-only).
-2. **Proposals are written during Table talk too, Join-style.** At the `write` step of Table talk a student writes the table's answer AND may write a proposal for a solution ("הצעה לפתרון", optional). Writing is broadcast live to the class as in Join's `liveDrafts` (RTDB, opt-out checkbox "משדרים את הכתיבה לכיתה"), and the class list at the `rate` step shows answers and proposals together, each rated on the same 5-face −1..+1 scale. Phase 3 (Proposals) keeps its own write step; proposals from phase 2 carry into it.
+2. **Proposals are written during Table talk too, Join-style.** At the `write` step of Table talk a student writes the table's answer AND may write a proposal for a solution ("הצעה לפתרון", optional). Writing is broadcast live to the class as in Join's `liveDrafts` (RTDB, opt-out checkbox "משדרים את הכתיבה לשולחן"; changed from "לכיתה" by §17: only the table sees the draft), and the class list at the `rate` step shows answers and proposals together, each rated on the same 5-face −1..+1 scale. Phase 3 (Proposals) keeps its own write step; proposals from phase 2 carry into it.
 3. **The countdown is per person in both phases, and the next speaker is chosen, not ordered.** The talk screen reads "הדוברת: דנה · זמן נותר: 34 שניות" above the large digits. Under the countdown, chips of the tablemates: the asker (or anyone once the minute is over) taps who speaks next; a tablemate who spoke is marked ✓. "סיימנו, לכתוב" is the asker's exit at any time and everyone's once all have spoken. This replaces the fixed speaker order in §2.4 and the table-wide timer at Proposals.
 4. **The gate on the teacher's screen and the projector.** At Proposals (and at Table talk once proposals exist) the console shows "הצעות מול השער": one bar per proposal with its consensus score and a gate line at the lesson's threshold (`votingSettings`, as Agora's gate works today), with "עברה את השער" / "עוד 0.12" per row. The projector shows the same bars before the plenum.
 5. **The summary asks for support of the decision, not a side.** "עד כמה אתם תומכים בהצעה?" on the 5-face −1..+1 scale. The system groups the support by the side each student picked in Phase 1 (קרובים ליונתן / באמצע / קרובים לנועה) and states whether the sides came closer: both sides' mean support ≥ the gate → "הצדדים התקרבו", else "הצדדים עוד לא התקרבו". `campPositionEnd` and the side-shift drawing are dropped; the new participant field is `decisionSupport` (−1..+1).
@@ -1279,7 +1283,7 @@ Stage name on top of every screen: `step.tableTalk` = "שיחת שולחן" / "T
 | Teacher: counts | Asked {{a}} · passed {{p}} | שאלו {{a}} · ויתרו {{p}} | `console.asked_passed` | kept |
 
 Same visible words, two keys: "I want to pass" (`turn.pass_ask`, `turn.pass_answer`) is Tal's wording for both. They never appear on the same screen; the asking one has a confirm that states the lesson-long consequence. Flagged, not blocking.
-Retired at Table talk (delete keys nothing else reads; build agent greps): `turn.to_talk`, `turn.instr_pick_other`, `turn.instr_read`, `turn.instr_listen`, `turn.instr_talk`, `turn.time_up`, `turn.next_speaker`, `turn.asker_picks_next`, `turn.who_first_asks`, `turn.who_asks_again`, `turn.who_asks_now`, `turn.last_to_ask`, `turn.waiting_for`, `turn.asker_me`, `turn.asker`, `turn.askers_label`, `turn.asker_done|now|wait|passed`, `turn.speaker_passed`, `turn.pill_*`, `turn.pill_now`, `turn.strip_label`, `turn.peek_*`, `turn.now_pick|talk`, `turn.instr_write_own_other`, `console.pass_asker`, `console.quick_talk`. Proposals still reads `turn.pill_talk|write|rate`, `turn.peek_why_*`, `turn.now_*`, `turn.speaker`, `turn.next_speaker`, `turn.pass_speak`, `turn.time_up`: keep those.
+Retired at Table talk (delete keys nothing else reads; build agent greps): `turn.to_talk`, `turn.instr_pick_other`, `turn.instr_read`, `turn.instr_listen`, `turn.instr_talk`, `turn.time_up`, `turn.next_speaker`, `turn.asker_picks_next`, `turn.who_first_asks`, `turn.who_asks_again`, `turn.who_asks_now`, `turn.last_to_ask`, `turn.waiting_for`, `turn.asker_me`, `turn.asker`, `turn.askers_label`, `turn.asker_done|now|wait|passed`, `turn.speaker_passed`, `turn.pill_*`, `turn.pill_now`, `turn.strip_label`, `turn.peek_*`, `turn.now_pick|talk`, `turn.instr_write_own_other`, `console.pass_asker`, `console.quick_talk`. Proposals still reads `turn.pill_talk|write|rate`, `turn.now_*` (`turn.peek_why_*` and `turn.pill_now` retired by §17.13), `turn.speaker`, `turn.next_speaker`, `turn.pass_speak`, `turn.time_up`: keep those.
 All 7 locale files (`apps/join-class/src/lib/locales/{he,en,ar,es,de,nl,fa}.ts`) get every NEW/value row.
 
 ### 16.3 Screen frame (every Table talk screen)
@@ -1434,3 +1438,152 @@ Note: §3 "Answer" (תשובה, a written option Statement) has no Table talk sc
 
 Handoff to UX. Fixed here: the eight states and their order (16.4), one primary + one secondary control per state, the frame (stage name, question, table line), no strip/pills/chips/askers row on the student screen, own question always in the pick list, the labels in 16.2, the teacher's card lines and actions.
 Yours to decide: how a selected question looks and where the own-question entry sits in the list; how the countdown and Finish are drawn; how H/L show "you already answered" without competing with the countdown; how the race loser's quiet line appears; whether Pass looks clearly secondary but not hidden; the teacher's marks for asked/answered/passed without colour alone.
+
+## 17. Live writing at the table (Tal, 2026-10-25)
+
+Target: `apps/join-class`, Proposals step, all three table sub-steps. Brief (Tal): "במסך הכתיבה, צריך לראות שמישהו כותב ומשדר, ואז האחרים יכולים לראות מה הוא כותב".
+The gap: the checkbox promised "הכיתה רואה את מה שאתם כותבים", but no screen showed another student's draft. The only viewer was the rate-list card, which showed the whole class's writers as a name or a count and never the text. Built 2026-10-25 (lane t4 + t5); the UX is in `docs/design/agora-classroom-ux.md` §17.
+
+### 17.0 Decisions (Tal, 2026-10-25)
+1. **Scope: tablemates only.** A phone shows the live drafts of its own table and nothing from other tables. (Not chosen: the whole class, or tablemates first and then the class.)
+2. **Form: one line, tap to watch.** A one-line indicator "דן כותב/ת עכשיו". Tapping it opens a watch view of that writer's text, which updates as they type and has a clear way back. (Not chosen: live cards inline under my box.)
+3. **The Proposals sub-steps are free movement.** "מדברים / כותבים / מדרגים" are three buttons the student moves between freely. A tablemate may be on any of them while someone writes.
+
+### 17.1 Audiences
+- **Writer** (student on כותבים, broadcast on): wants the table to help shape the proposal while they type.
+- **Tablemate viewer** (same table, on any of the three sub-steps): wants to notice that someone is writing and read along, to help aloud.
+- **Teacher / projector**: out of scope (17.7).
+
+### 17.2 Objects (all exist in code; none are added)
+| Object | Fields | Source | Notes |
+|---|---|---|---|
+| Live draft | `userId, displayName, color, text, lastUpdate, ttl, reactions?` | RTDB `liveDrafts/{challengeId}/{uid}` (`src/lib/liveDrafts.ts`) | keyed by the challenge question, so the listener holds the whole class. There is no `tableId` on the record. |
+| Table | `memberUids`, `writingMode` | `ClassTable` doc | tablemate = `draft.userId ∈ table.memberUids`. This filter runs on the phone, so the record, the rules and the callables stay as they are. |
+| Writer | the draft's `userId` | — | the name comes from the table roster (`mates`, the same names as the chips), with `displayName` as a fallback |
+| Viewer | the current uid | — | never sees their own draft (`excludeSelf`) |
+| Watch view | which writer is open; the sub-step it was opened from | view state only | no route and no stored state |
+| Proposal | the sent option under the challenge | Firestore | the live draft's end state |
+
+**Appears:** a tablemate has broadcast on (the default, `PanelState.broadcast = true`) and the text is not empty.
+**Disappears** when any of these happens:
+1. the writer unticks the checkbox;
+2. the writer presses "שליחה" (send stops the broadcast; editing a sent proposal brings the draft back while they type);
+3. the writer leaves the כותבים sub-step (`WritePanel.onremove`) or the challenge changes;
+4. there is no update for 120 s (`STALE_MS`; the heartbeat keeps a writer who pauses visible) or the connection drops (`onDisconnect`);
+5. the text is emptied (hidden, not removed);
+6. the writer moves to another table (they fall out of `memberUids`).
+
+### 17.3 Where the indicator lives
+- It shows on **all three sub-steps** of Proposals, always in the same place: directly under the step strip, above that sub-step's content. One place, so it is learned once.
+- The existing rate-list card (`LiveWritersCard`) **becomes this same component**. It moves out of the class list into the table frame, and it now counts tablemates only. The whole-class line "{{count}} כותבים עכשיו" on the rate list is retired, since Tal's scope removes other tables.
+- Not shown: during Table talk, the plenum, the vote and the summary.
+- When no tablemate is broadcasting, the line is absent. There is no empty-state text.
+
+### 17.4 Hierarchy (Proposals, at the table)
+```
+1 header "שולחן n · עכשיו: …" / title / asker line
+1 step strip: מדברים / כותבים / מדרגים        (free movement)
+1 live line "דן כותב/ת עכשיו" | "{{count}} כותבים עכשיו"   (NEW, only when ≥1 tablemate broadcasts)
+  2 watch view (opens over the current sub-step)
+    3 writer name + their text, updating live (read only)
+    3 writer picker: one entry per broadcasting tablemate (only when ≥2)
+    3 close "סגירה" → back to the sub-step I was on
+1 sub-step content
+  כותבים: my box "ההצעה שלי" → broadcast checkbox + line → error + "שליחה"
+  מדרגים / מדברים: unchanged
+1 footer "שלחנו, לדרג" / "הכיתה כותבת"            (unchanged)
+```
+- **I am broadcasting:** I am never counted and never listed. If I am the only writer, I see no line.
+- **Writing mode `each`** (the only mode at Proposals, §2.4): the tree above.
+- **Writing mode `table`** (Table talk only; that branch of `WritePanel` is dead, see its TODO): the asker's draft is already mirrored in the read-only box, so the asker is left out of the line and the view. Other tablemates show as in `each`. Table talk does not show the line anyway (17.3), so this only matters if the line is ever extended there.
+- **Several writers:** the line counts them ("3 כותבים עכשיו"). The view opens on the first writer in seating order (`memberUids`) and the picker moves between them. The order is stable, so entries do not jump while people type. With one writer, the line names them and there is no picker.
+- **Back path:** "סגירה", the device back gesture and Escape all close the view and return to **the sub-step the viewer was on**, scrolled where it was. Watching never moves the viewer to כותבים.
+- **The writer stops while being watched:** the view keeps the last text and adds one line saying they sent it or stopped. If other tablemates are still writing, the picker stays. Otherwise "סגירה" is the only thing left to do. The view never closes itself, so a reader is not interrupted.
+- **Peek:** Tal retired it (17.13), so the live line and the watch view never have to work inside a disabled screen.
+
+### 17.5 Labels (one name per concept)
+Concept **live draft**: the act is "משדרים", the person and their text are "{{name}} כותב/ת עכשיו".
+| Concept | HE | EN | i18n key |
+|---|---|---|---|
+| one writer (the line, and the view heading) | {{name}} כותב/ת עכשיו | {{name}} is writing now | `answer.live_one` (moved from `rate.live_one`, same value) |
+| several writers | {{count}} כותבים עכשיו | {{count}} are writing now | `answer.live_many` (moved from `rate.live_many`, same value) |
+| a11y name of the line | לצפות בכתיבה (?) | Watch the writing | NEW `answer.watch_open` |
+| close the watch view | סגירה | Close | NEW `answer.watch_close` (same word as `rate.close`) |
+| writer sent, view stays | {{name}} שלח/ה את ההצעה (?) | {{name}} sent the proposal | NEW `answer.watch_sent` |
+| writer stopped broadcasting | {{name}} הפסיק/ה לשדר (?) | {{name}} stopped broadcasting | NEW `answer.watch_stopped` |
+| a11y: a writer started (announced once) | {{name}} התחיל/ה לשדר (?) | {{name}} started broadcasting | NEW `answer.live_started` |
+| broadcast checkbox (CHANGED value) | משדרים את הכתיבה **לשולחן** | Broadcast my writing to my table | `answer.broadcast` |
+| broadcast on line (CHANGED value) | **השולחן** רואה את מה שאתם כותבים | Your table sees what you write | `answer.broadcast_on` |
+- **The label overstated, and a one-word fix exists:** "לכיתה" becomes "לשולחן" and "הכיתה" becomes "השולחן", because only the table can see the draft now. The key names stay the same, and the values change in all 7 locales.
+- `rate.live_one` and `rate.live_many` are deleted once their one user moves. Every key above goes into all 7 files (`he, en, ar, de, es, fa, nl`) in `apps/join-class/src/lib/locales/`. Hebrew marked (?) needs a native read.
+- **Synonym watch:** the sub-step is called "כותבים" (`turn.now_write`). The strip must not render it as "כותבים עכשיו", or one phrase names both the sub-step and a live draft. Use the header form "עכשיו: כותבים".
+- **A11y:** the line is a button whose name is "{{name}} כותב/ת עכשיו, לצפות בכתיבה". The text in the watch view is **not** a live region, so it is never announced letter by letter; a reader re-reads it on focus. Only "{{name}} התחיל/ה לשדר" is announced, politely and once per writer per table visit. The send and stop lines are announced once, politely, only while the view is open.
+
+### 17.6 Task flows
+1. **Writer (3 steps, unchanged):** open כותבים → type in "ההצעה שלי" (the broadcast starts on the first keystroke because the box is ticked) → "שליחה" (the broadcast stops and the proposal is sent).
+2. **Tablemate on מדרגים watches (2 taps):** the line "דן כותב/ת עכשיו" appears above the rate content → tap → the watch view shows Dan's text updating → "סגירה" → back on מדרגים where they were.
+3. **Tablemate on מדברים, three writers (3 taps):** "3 כותבים עכשיו" → tap (opens on the first writer in seating order) → pick another writer → "סגירה" → back on מדברים.
+4. **Writer sends while watched:** the view shows "דן שלח/ה את ההצעה" with the last text. The viewer closes it, and the proposal is in the class list behind "הכיתה כותבת".
+
+### 17.7 Screen inventory delta
+| Screen | Route | Change | States |
+|---|---|---|---|
+| Proposals table frame (all 3 sub-steps) | `/m/:mid` | + live line under the strip | absent when no tablemate is writing, before the first RTDB snapshot, or when RTDB is off (degrades silently) |
+| Watch view (NEW layer, no route) | same | one writer's text + picker + close | live · sent · stopped · writer moved table (shown as stopped) |
+| Class list sheet (`RateScreen`) | same | `LiveWritersCard` removed from its top | otherwise unchanged |
+| Teacher console / projector | `/t/:mid`, `/t/:mid/screen` | none (recommended out of scope) | the projector must never show unsent student text |
+
+### 17.8 Findability
+A table has at most 6 seats, so at most 5 writers. The picker needs no search or filter.
+
+### 17.9 Constraints (fixed)
+- RTDB reads only, on the listener `TableFlow` already opens (`initLiveDrafts(challengeId)`). No new callable, no new path, no rules change, no Firestore writes.
+- Light on the bundle (budget 276.2 kB gz, `node scripts/perf-gate.mjs`): no emoji reactions (`sendReaction` stays unused), no co-editing, no watcher presence (`startWatching` stays unused), and Join's watch overlay is not brought back. Reuse `getLiveDrafts` and the existing `Sheet` pattern.
+- RTL first, 375 px phones, writer text with `dir="auto"`.
+- `data-testid`s stay: `proposal-box`, `proposal-send`, `table-to-rate`, `table-to-write` (17.13 retires `peek-body`, `peek-back`, `pill-now`). New ones: `live-line`, `watch-view`, `watch-writer` (one per picker entry), `watch-close`.
+
+### 17.10 Assumptions, and what changes if they are wrong
+- Tables have at most 6 seats. With bigger tables the picker would need paging.
+- `displayName` and the roster names are what classmates already see. Nothing is shown to a tablemate that the chips do not already show.
+- The broadcast stays on by default (§11.2). With the scope at table level, that is at most 5 streams per phone.
+
+### 17.11 Docs to update
+- `docs/ia/agora-classroom.md`: add §17. In §2.1 add a "Live draft" row (RTDB, keyed by the challenge, table filter on the phone). In §3 add the labels above, mark `answer.broadcast*` as changed and `rate.live_*` as retired. In §2.4 and §4 replace the table-step order at Proposals with "three sub-steps, free movement" (Tal). In §7 update the Proposals row (live line + watch view). In §11.2 change "broadcast live to the class" to "to the table".
+- `docs/design/agora-classroom-ux.md` ~l.399: the "● שולחן 5 כותבים עכשיו" card on the rate list is retired. It becomes the table-scoped live line under the strip.
+
+### 17.12 Handoff to ux-ui-architect
+Fixed here: tablemates-only scope, the line under the strip on all three sub-steps, tap to watch, return to the sub-step the viewer was on, picker only with 2 or more writers, the view never closes itself, the labels, the a11y policy and the testids.
+Theirs to decide: what the line and the view look like, the picker form (tabs, arrows or a list), a typing cue, whether `draft.color` is used, and the motion when the view opens and closes.
+
+### 17.13 Free sub-steps at Proposals (Tal, 2026-10-25)
+Decision: at Proposals each phone talks, writes or rates whenever it wants. No sub-step is ever greyed out. The table step "only tells the teacher where most people are".
+**1. The strip is a local selector.** "מדברים / כותבים / מדרגים" switch this phone's view only (`self.override`, view state). Tapping a button never calls `classTableStep` (already true: `SubStepStrip.onSelect` sets the override only).
+- **On arrival** the phone shows `ClassTable.step` (`officialSubstep`).
+- **A teacher move** (table sheet or "כל השולחנות: …") resets every phone at that table to the new step once. That is today's lapse rule in `resolveSubstep` (the override is dropped when the official step or the turn changes), so it is kept. It is how a teacher calls "everyone rate now".
+- **Peek is retired.** Remove `detached`, the disabled `fieldset.flow__peek` (`peek-body`), the "חזרה לעכשיו" button (`peek-back`, `turn.peek_back`) and `turn.peek_why_*`, with the `.flow__peek` styles. Proposals was the only stage with peek (Table talk has none, see `TableFlow`), so nothing is kept at other stages.
+- **The asker's buttons become local shortcuts for everyone.** "סיימנו, לכתוב" (`table-to-write`, `turn.finish_talk`) and "שלחנו, לדרג" (`table-to-rate`, `turn.to_rate`) only switch the phone's own sub-step. They stop sending `toWrite` / `toRate`, and their testids stay.
+- **The asker line goes at Proposals.** "התור של … לשאול" (`turn.asker`, `asker-mark`) has no role once nobody moves the table, so it is removed there. It stays at Table talk.
+**2. What the table step means at Proposals.** `ClassTable.step` is the **teacher's call**. It is where the phones land, and nothing more.
+- **Who moves it: the teacher only** (table card, table sheet, `classAllTablesTo`). Recommended, because it needs no server change: the student client simply stops sending the actions. (Not chosen: frozen at `write`. That would also have to hide the teacher's quick buttons, and the teacher would lose "everyone rate now".)
+- **Stale on the teacher's table card at Proposals:**
+  - "סבב {{n}} מתוך {{max}}" (`console.turn_n`): turns are a Table talk idea, so hide it at Proposals.
+  - The asker line (`console.asker_line`): hide it at Proposals.
+  - "עכשיו: כותבים" (`console.now_*`): keep it, but read it as the teacher's last call, not a count of where students are.
+- **A true "where most people are"** needs each phone to publish its sub-step (an RTDB presence node per table). That is a separate lane and is not proposed here.
+**3. Server guards.** Proposals (`createClassOption` / `updateClassOption`) and ratings are client Firestore writes. Neither `firestore.rules` nor any function reads `ClassTable.step` for them. `shouldLockWriting` (`autoEvaluations.ts`) only locks the table's answer mode and ignores proposals. **No server change.**
+- The only step guards are on table actions: `ALLOWED_FROM` in `tableGuards.ts` (`toWrite: pick|talk`, `toRate: talk|write`, `setWritingMode: pick|talk|write`) and the asker/member checks in the same file. Students no longer send these at Proposals. An asker's old client could still send `toWrite` / `toRate`; that is harmless and can be tightened later (refuse non-admin `toWrite` / `toRate` when `lessonStep === 'proposals'`), but it is not required.
+**4. Labels.**
+- **Strip buttons:** `turn.pill_talk` "מדברים", `turn.pill_write` "כותבים", `turn.pill_rate` "מדרגים" (not `turn.now_*`).
+- **Header "שולחן {{n}} · עכשיו: {{step}}"** (`turn.header_proposals`) now shows **the phone's own sub-step**: `turn.now_${view.current}` instead of `official`. The instruction line likewise follows the phone's own sub-step (`instructionFor(view.current)`).
+- **Remove the strip's "עכשיו" mark** (`turn.pill_now`, `pill-now`). Otherwise "עכשיו" would mean "mine" in the header and "the table's" in the strip: one word for two concepts.
+**5. Live line and watch view:** unchanged (17.3, 17.4). "Works in peek" is no longer needed.
+**6. Docs and test ids.**
+- **`docs/ia/agora-classroom.md`:**
+  - §2.1: Table step row. At Proposals it is "the teacher's call; phones land there".
+  - §2.4 and §5: local navigation at Proposals is the strip, free; only the teacher moves the table step.
+  - §4: Proposals reads "three sub-steps, free".
+  - §6: the teacher's "unstick a table" stays.
+  - §7: the Proposals row loses peek.
+  - §3 / §16.2: retire `turn.peek_back`, `turn.peek_why_*`, `turn.pill_now`; `turn.asker` becomes Table talk only.
+- **`docs/design/agora-classroom-ux.md`:** the strip section (§11, last bullet: "tappable peek", Tal 2026-10-22) is superseded.
+- **Test ids:** retired `peek-body`, `peek-back`, `pill-now`, and `asker-mark` at Proposals. Kept (now local) `table-to-write`, `table-to-rate`. No e2e spec in `apps/join-class` references the retired ones (grep 2026-10-25).

@@ -396,11 +396,11 @@ Applied in the simulation (https://claude.ai/artifact/YUK4XD19ZBvEv6pMCPXw5w) an
 - **Step rail**: each step is a `<button>`; press = jump the class there. Same look as §5; `aria-label` "שלב n: שם, הסתיים/נוכחי/הבא".
 - **Talk screen**: line "הדוברת: דנה · זמן נותר: 34 שניות" (20 px 700) above the digits; digits 96 px to make room; under the bar a row of speaker chips (44 px, paper outline on ink; selected = paper fill; spoken = ✓ at 50 %), enabled for the asker always and for everyone once the minute is over; a hint line "בחרו את הדובר הבא" / "השואל בוחר את הדובר הבא". Before the first pick the digits read "1:00" in ink-faint and the line reads "מי מדבר ראשון?".
 - **Write (Table talk)**: the answer box, then "הצעה לפתרון (לא חובה)" box, then the broadcast checkbox with a teal line showing what the class sees. "שליחה" enables when either box has text.
-- **Rate list**: a dashed "● שולחן 5 כותבים עכשיו" live-draft card on top (Join's LiveDraftBanner), then answer and proposal cards mixed, each with the 5 faces and a −1 … +1 scale line under them. The header control is now "הכיתה כותבת".
+- **Rate list**: ~~a dashed "● שולחן 5 כותבים עכשיו" live-draft card on top~~ (retired 2026-10-25: the card is now the table-scoped live line under the strip, §17), then answer and proposal cards mixed, each with the 5 faces and a −1 … +1 scale line under them. The header control is now "הכיתה כותבת".
 - **Console**: a compact "הצעות מול השער" card under the table cards at Proposals (and at Table talk once a proposal exists): row = text (ellipsis) · track with a terracotta gate line · score · note. Teal fill past the gate. The gate is a Tweak in the simulation; in the product it is the lesson's `votingSettings` threshold.
 - **Projector**: the same bars at 28 px before the plenum.
 - **Summary**: the decision card, then "עד כמה אתם תומכים בהצעה?" with the 5 faces, then three bars (קרובים ליונתן / באמצע / קרובים לנועה) of mean support with the count, and one verdict line in teal or terracotta. The side-shift drawing of §7 is retired.
-- **Sub-step strip (2nd review)**: under the asker line, four pills (36 px, flex 1, 14 px 700; current = ink fill / paper text, inverted on the dark talk screen) that switch the local view between שאלה · מדברים · כותבים · מדרגים. They never write to the table doc.
+- **Sub-step strip (2nd review)**: ~~tappable peek~~ superseded 2026-10-25 (§17.1b): the strip is a free per-phone selector, no peek, no "עכשיו" mark. Original: under the asker line, four pills (36 px, flex 1, 14 px 700; current = ink fill / paper text, inverted on the dark talk screen) that switch the local view between שאלה · מדברים · כותבים · מדרגים. They never write to the table doc.
 
 ## 12. Host revised to `apps/join-class` (Tal, 2026-10-21)
 Everything above still applies to the screens; the components in §10 are now built inside a copy of Join (`apps/join-class`), so the "shared package" step becomes unnecessary: the copy already carries Join's tokens, `.btn`, `.evaluation`, `resilientOnSnapshot`, `liveDrafts`, `QRShare`, `Sheet` pattern. The Agora survivors list in §10 is void; `Segment`, `Collapsible` and `Icon` are re-made in join-class from Join's primitives.
@@ -2177,7 +2177,7 @@ Answer marks show only while a turn is in talk; they clear at Pick.
 | `lib/classroom/c3Logic.ts`: `speakerChips`, `SpeakerChip`, `canPickNextSpeaker`, `passMinuteArmed`, `PASS_ARM_MS`, `TABLE_SUBSTEPS.tableTalk` | chips, arm delay and the Table talk strip are gone (Proposals keeps `TABLE_SUBSTEPS.proposals`, `resolveSubstep`) |
 | `lib/classroom/turnMoment.ts`: `claimMoment`, `ClaimMoment`, `TurnPhase`, `askerStates`, `AskerChip`, `AskerState`, Table talk branches of `instructionFor` (`talkInstruction` etc.) | replaced by `tableTalkState(table, uid, now)` → `'D'\|'P1'\|'P2'\|'S'\|'L'\|'W'\|'A'\|'H'` (new `lib/classroom/tableTalkState.ts`, built on shared-types `choosing`, `askerMayAnswer`, `floorOpen`, `tableDone`). Keep `maxTurns`, `refusalReason`, `namesOf`, Proposals' `instructionFor` |
 | `tableTalkParts.ts`: `claimTurn` via `nextTurn`, `pickQuestion`, `chooseOwnAndTalk`, `primaryFor`, `footerFor`, the asker line, `showStrip` | rewritten around the 8 states |
-| `TableFlow.ts`: `AskersRow`, `SubStepStrip` and the peek (`flow__peek`, `peek-back`, `self.override`) **at Table talk only**; `.flow__bar` asker line at Table talk | one state per screen; Proposals keeps strip and peek |
+| `TableFlow.ts`: `AskersRow`, `SubStepStrip` and the peek (`flow__peek`, `peek-back`, `self.override`) **at Table talk only**; `.flow__bar` asker line at Table talk | one state per screen; Proposals keeps the strip (a free selector since 2026-10-25: the peek is retired too) |
 | `QuestionPick.ts`: `canChoose` (always true at P1), `onPick` server write, `onAddOwn` + its own `form.pick__add` submit, `ownBox` asker-only branch | local selection + inline own row (16.C) |
 | `tableTurnConsole.ts`: `quickActionFor` Table talk branch (`talk`, `turn`), `statusLine` V1/A/V2 keys, `memberMark` | replaced by 16.L rules (`askMark`, `answerMark`, `finish` quick kind) |
 | `tableSheetTurn.ts`: the `console.pass_asker` button | removed at Table talk (IA default 6) |
@@ -2248,3 +2248,134 @@ Answer marks show only while a turn is in talk; they clear at Pick.
 | 4 | H: ✓ כבר עניתם · מי עונה עכשיו? | A: ✋ אני רוצה לענות |
 | 5 | L: טל עונה · 0:59 · ✓ כבר עניתם | S: הדקה שלכם · 0:59 · סיימתי |
 | 6 | P1 (paper again) | P2: חכו שאחרים יבחרו שאלה |
+
+## 17. Live writing at the table and free sub-steps (UX, 2026-10-25)
+
+Designed against IA §17 (`docs/ia/agora-classroom.md`, Tal 2026-10-25). App `apps/join-class`, Proposals step, phone 375 px, Hebrew RTL, light, dark and high contrast. Built as lanes t4 (free sub-steps) and t5 (line and watch view). Code anchors: `TableFlow.ts` (strip, `parts.overlay`), `liveWritingParts.ts` (line, overlay, announcements), `WatchView.ts`, `Sheet.ts` (`compact`), `lib/classroom/liveWriting.ts` (pure rules), `student-c3-flow.scss` (`.live-line`), `student-c3-rate.scss` (`.watch`).
+Built notes: the sub-section numbers below are the spec's (17.1 = Line, 17.1b = Strip, 17.2 = Watch view ... 17.11 = Rate list). The chevron is a text glyph (U+2039) mirrored in LTR; the line's grid-row fold is a CSS keyframe in, a class on leave (`LINE_HOLD_MS` 1500, `LINE_LEAVE_MS` 140 in `liveWriting.ts`); the polite region sits first in the Proposals frame.
+
+### 17.1 Line
+- **What:** one full-width `<button type="button">` row. `TableFlow` draws it right after `SubStepStrip`, before `ErrorLine` and the body. It sits outside the sub-step body, so the strip never moves.
+- **Anatomy (inline-start to inline-end, RTL-correct by logical properties):** dot, text, chevron.
+  - Dot: 8 px circle, `--teal-500`. The same teal as the writer's own line "השולחן רואה את מה שאתם כותבים", so writer and viewer learn one colour for "live". Decorative (`aria-hidden`).
+  - Text: `answer.live_one` or `answer.live_many`, `--font-size-base`, `--font-weight-bold`, one line, ellipsis. Long names truncate; the row never grows to two lines.
+  - Chevron: a forward chevron at the inline end (points left in RTL, mirrors in LTR). Says "this opens". `aria-hidden`.
+- **Box:** min-height `--touch-target` (48 px). Padding `--space-sm` block, `--space-md` inline. Gap `--space-sm`. Border 1.5 px dashed `--teal-500` (keeps Join's dashed "live draft" look from `.live-writers`; dashed = not sent yet, the same code as the watch text, §2). Radius `--radius-lg`. Background transparent. Text `color: inherit`.
+- **Spacing:** the strip keeps its `margin-block-end: --space-lg`. The line takes `margin-block-end: --space-md`. Total push of the content below: 64 px (48 + 16), on the 8-point grid.
+- **States:** hover and pressed: background `--teal-50`. Focus-visible: ring `--focus-ring-width` solid `--focus-ring-color`, offset `--focus-ring-offset`. No disabled state.
+- **No `draft.color`.** `getUserColor` returns fixed palette colours that are not theme-aware and not checked for contrast on the dark frame. The name already carries identity. The field stays in the record, unused here.
+- **Retire `role="status"`** from the old card. A status role would announce every count change. Announcement policy is in §7.
+- **Where it shows:** Proposals, all three sub-steps, when ≥1 tablemate (not me) broadcasts non-empty text. Hidden at the plenum (`roundPhase === 'improve'`, IA §17.3), in Table talk, vote and summary.
+
+### 17.1b Strip: the phone's own sub-step (Tal, free sub-steps, no peek)
+- The strip is a per-phone selector. A tap switches this phone's sub-step at once; no greyed screen, no "back to now".
+- Selected pill: the existing `.substeps__pill--on` (`--ink` fill, `--paper` text, inverted on `.frame--down`) with `aria-current="true"`. It already reads as a selector; no new style.
+- The table-step mark (terracotta border, "עכשיו" word) must not look like a second selection; whether it stays is IA §17.13. The header "שולחן n · עכשיו: …" keeps saying the table's step.
+- The live line is one keyed node drawn by `TableFlow` under the strip, outside the sub-step body. Switching sub-steps swaps only the body: the line keeps its place, does not re-animate, and its open/closed state is the same on all three.
+
+### 17.2 Watch view
+- **Form: the existing `Sheet`, with one small variant (`compact`).** Same scrim, same rise, same focus trap, Escape and focus return. Why a variant and not a full-screen layer: the viewer is talking to a tablemate at the same table; a shorter sheet keeps the moment light and puts every control in thumb reach. Why not plain `Sheet`: its 92 dvh panel with the close at the top is out of one-thumb reach on a 375 px phone and leaves a 3-line text floating in a tall empty panel.
+- **The `compact` variant (three changes, nothing else):** panel height 70 dvh (fixed, so it never grows on keystrokes); close moves to a footer at the bottom; first focus goes to the heading, not to close. Plus: a tap on the scrim closes (30 % of the screen above the panel, an easy target).
+- **Heading** (`h2.watch__title`, `--font-size-lg`, bold, `color: inherit`): `answer.live_one` with the watched writer's name. `tabindex="-1"` so it can take focus.
+- **Text block** (`.watch__text`): a card. Background `--bg-card`, border 1.5 px dashed `--teal-500`, radius `--radius-md`, padding `--space-md`. Text `--font-size-lg` (18 px), `--line-height-normal`, `--font-weight-normal`, `color: --ink`. `dir="auto"`, `text-align: start`, `white-space: pre-wrap`, `overflow-wrap: anywhere` (a 280-char text with a long URL or no spaces still wraps). About 10 lines at 343 px; the block scrolls inside itself (`overflow-y: auto`, `overscroll-behavior: contain`) past the panel's free height.
+- **Follow the writer:** if the reader is at the bottom of the block, new text keeps it scrolled to the end. If the reader scrolled up to re-read, the block does not jump.
+- **Typing cue:** a soft caret after the last character: 2 px wide, 1 em tall, `--teal-500`, a slow opacity pulse (1 → 0.35 over 1.2 s, ease-in-out). It is a separate keyed element after the text node, so the 300 ms text updates replace only the text and never restart the pulse. No "כותב/ת…" word: the heading already says it. The text itself gets no transition.
+- **Sent / stopped:** the heading text is replaced by the end line (`answer.watch_sent` / `answer.watch_stopped`). That is the "one line" of IA §17.4, placed where the eye already is, so no heading says "writing now" about someone who stopped. The last text stays. Caret removed. Border turns solid (`--paper-line` for stopped, `--teal-500` for sent): solid = no longer live.
+- **Footer** (`.watch__footer`): picker (§3) then "סגירה" as a full-width `.btn.btn--secondary`, height 48 px. Padding `--space-md`, plus `env(safe-area-inset-bottom)`. Top hairline `--paper-line`.
+- **Back gesture:** the layer has no route. On open, push one history entry; `popstate` closes; "סגירה", Escape and scrim pop it. The viewer stays on their sub-step, scroll untouched (the page is locked under the sheet by `c3-lock`).
+- **Mount:** through `parts.overlay` in `TableFlow`, outside the frame. Only one layer at a time: the class sheet and the watch view never stack.
+
+### 17.3 Picker
+- **Form: a wrapping row of pill toggle buttons**, not a list. A list would stack under the text and push the close out of reach; tabs at fixed width would truncate five Hebrew names at 343 px. Pills wrap to a second row at 4–5 writers.
+- **Shown only with 2+ entries.** Placed in the footer, above "סגירה": the reading flows top-down (who → what they write → switch → close) and both controls sit in the thumb zone.
+- **Each pill** (`.watch__writer`): the writer's roster name, min-height `--touch-target`, padding-inline `--space-md`, radius `--radius-full`, border 1.5 px `--border-medium`, `--font-size-sm` bold. Selected: `aria-pressed="true"`, fill `--ink`, text `--paper` (the same "current" look as `.substeps__pill--on`, so it is already learned). Gap `--space-sm`.
+- **Group:** `role="group"`, `aria-label` = `answer.live_many` with the live count. No new key.
+- **Order:** seating order (`table.memberUids`), never activity. A new writer's pill appears at their seat position; existing pills do not reorder while people type.
+- **A writer who ended:** their pill stays while I am viewing them, so my pill under my thumb does not vanish. Once I switch away it goes. If only one entry is left, the picker disappears.
+- **Switching:** swaps heading and text in place (crossfade `--dur-quick`), scroll to top of the text, focus stays on the pressed pill.
+
+### 17.4 States
+| State | Line | Watch view |
+|---|---|---|
+| None | absent, no empty text | not reachable; an open view keeps its last writer in the ended state |
+| One writer, live | "דן כותב/ת עכשיו" | heading live_one, dashed text, caret, no picker |
+| Several writers | "3 כותבים עכשיו" | opens on the first in seating order; picker |
+| Sent | leaves (or recounts) | heading watch_sent, solid teal border, no caret |
+| Stopped (unticked, left כותבים, 120 s stale, disconnect) | leaves (or recounts) | heading watch_stopped, solid hairline border |
+| Writer moved table | leaves (or recounts) | shown as stopped (IA §17.7) |
+| Text emptied | counts as not writing | keeps the last non-empty text, still live (caret on); empty text is a pause, not an end |
+| Before the first RTDB snapshot / RTDB off | absent | not reachable |
+- **Sent vs stopped (build note):** the draft vanishes in both. Call it "sent" when the feed has a proposal by that `userId` under the challenge updated at or after the draft's last `lastUpdate`; else "stopped".
+- The view never closes itself (IA). The line is the only thing that comes and goes on its own.
+
+### 17.5 Motion and reduced motion
+- **Line in:** height opens from 0 (grid-rows 0fr → 1fr) with opacity, `--dur-base`, `--ease-out`. The content below glides 64 px instead of jumping.
+- **Line out:** it waits 1.5 s after the last writer ends, then closes the same way at `--dur-quick`. The wait stops the line flashing when a writer clears and retypes or the count goes 1 → 0 → 1. Count and name changes are text swaps only: no height change.
+- **Dot:** opacity pulse 1 → 0.4, 1.6 s, infinite. **Caret:** §2.
+- **Sheet:** the existing `c3-sheet-up` at `--dur-base`.
+- **`prefers-reduced-motion: reduce`:** line appears and leaves without animation (the 1.5 s wait stays, it is not motion); dot and caret static and solid; sheet without the rise; picker switch without the crossfade.
+- Transform and opacity only (the height glide uses grid rows, no layout reads in JS).
+
+### 17.6 Dark mode and high contrast
+- **Paper frame, light:** text `--ink` (inherited), dot and dashed border `--teal-500` (5.4:1 on paper), pressed `--teal-50`.
+- **Paper frame, dark mode:** the same tokens flip: `--ink` light, `--teal-500` lifted (5.2:1), `--teal-50` a translucent tint. Nothing extra to write.
+- **Dark talk frame (`.frame--down`, מדברים):** text inherits the frame's `--paper`. Dot `currentColor`, border `--paper-line`, pressed background `--ink-muted` at the frame. These pairs hold in both schemes because the frame swaps `--ink` and `--paper` with the mode.
+- **Watch sheet:** always `--paper` panel and `--ink` text (set by `.sheet__panel`). Title and text say `color: inherit` explicitly, so the global `h1, h2, h3 { color: --text-primary }` rule can never win on a dark frame (the earlier bug).
+- **High contrast (`[data-high-contrast]`, `prefers-contrast: more`):** border 2 px solid `--border-strong` on the line and the text block (dashed stays as the live cue on the line only), dot and caret `--ink`, selected pill `--ink` fill. Focus ring takes the 4 px HC token.
+- **`forced-colors: active`:** the line is a button (ButtonText / ButtonFace); dot, caret and borders use `CanvasText`; selected pill gets `Highlight` / `HighlightText`.
+
+### 17.7 Accessibility
+- **Line:** a button. Accessible name "{{line text}}, {{answer.watch_open}}", e.g. "דן כותב/ת עכשיו, לצפות בכתיבה". `aria-haspopup="dialog"`.
+- **Focus order:** line → heading (gets focus on open) → text block (`tabindex="0"`, `role="region"`, `aria-labelledby` the heading, so it can be scrolled and re-read) → picker pills → "סגירה". Tab is trapped in the sheet.
+- **Close:** "סגירה", Escape, scrim, back gesture. Focus returns to the line. If the line is gone by then, focus goes to the strip's `aria-current` pill.
+- **No live region on the text.** It is read on focus, never letter by letter.
+- **One polite region** (visually hidden) in the Proposals frame: says `answer.live_started` once per writer per table visit. While the view is open the same region says `answer.watch_sent` / `answer.watch_stopped` once for the watched writer.
+- Touch targets 48 px. All text pairs AA or better (§6).
+- Watching never changes the phone's sub-step (`self.override`).
+
+### 17.8 BEM classes and tokens
+| Class | Tokens |
+|---|---|
+| `.live-line` | min-height `--touch-target`; padding `--space-sm` `--space-md`; gap `--space-sm`; border 1.5 px dashed `--teal-500`; radius `--radius-lg`; `color: inherit`; margin-end `--space-md` |
+| `.live-line:hover`, `:active` | background `--teal-50` |
+| `.live-line:focus-visible` | `--focus-ring-width` `--focus-ring-color` `--focus-ring-offset` |
+| `.live-line__dot` | 8 px, `--radius-full`, `--teal-500`; pulse `--dur-*` free (1.6 s) |
+| `.live-line__text` | `--font-size-base`, `--font-weight-bold`, one line ellipsis, flex 1 |
+| `.live-line__chevron` | `--ink-soft` on paper, `currentColor` on `.frame--down`; mirrored in LTR |
+| `.live-line--leaving` | collapse `--dur-quick` `--ease-out` |
+| `.frame--down .live-line` | border `--paper-line`; dot `currentColor` |
+| `.sheet--compact` / `.sheet__panel--compact` | height 70 dvh; footer slot |
+| `.watch` (sheet body) | gap `--space-md` |
+| `.watch__title` | `--font-size-lg`, bold, `color: inherit` |
+| `.watch__text` | `--bg-card`, 1.5 px dashed `--teal-500`, `--radius-md`, padding `--space-md`, `--font-size-lg`, `--line-height-normal`, `color: --ink` |
+| `.watch__text--ended` / `--sent` | border solid `--paper-line` / `--teal-500` |
+| `.watch__caret` | 2 px × 1 em, `--teal-500` |
+| `.watch__footer` | padding `--space-md` + safe area; border-top `--paper-line`; gap `--space-sm` |
+| `.watch__writers` | flex wrap, gap `--space-sm` |
+| `.watch__writer` / `--on` | `--touch-target`, `--radius-full`, `--border-medium`, `--font-size-sm`; on: `--ink` fill, `--paper` text |
+Retire `.live-writers` and `.live-writers__dot` with `LiveWritersCard`. Styles live in `student-c3-flow.scss` (line) and `student-c3-rate.scss` next to `.sheet` (watch).
+
+### 17.9 Labels
+| Key | HE | EN |
+|---|---|---|
+| `answer.live_one` | {{name}} כותב/ת עכשיו | {{name}} is writing now |
+| `answer.live_many` | {{count}} כותבים עכשיו | {{count}} are writing now |
+| `answer.watch_open` | לצפות בכתיבה (?) | Watch the writing |
+| `answer.watch_close` | סגירה | Close |
+| `answer.watch_sent` | {{name}} שלח/ה את ההצעה | {{name}} sent the proposal |
+| `answer.watch_stopped` | {{name}} הפסיק/ה לשדר (?) | {{name}} stopped broadcasting |
+| `answer.live_started` | {{name}} התחיל/ה לשדר (?) | {{name}} started broadcasting |
+| `answer.broadcast` | משדרים את הכתיבה לשולחן | Broadcast my writing to my table |
+| `answer.broadcast_on` | השולחן רואה את מה שאתם כותבים | Your table sees what you write |
+`rate.live_one` / `rate.live_many` deleted. All keys in the 7 locale files.
+
+### 17.10 Test ids
+`live-line` (the button), `watch-view` (the sheet panel, with `data-state="live|sent|stopped"`), `watch-writer` (each pill, with `data-uid`), `watch-close`. Kept: `proposal-box`, `proposal-send`, `table-to-rate`. `peek-body` and `peek-back` go with peek (IA §17.13).
+
+### 17.11 Rate list without `LiveWritersCard`
+`rateBody` (not plenum) returns the list alone. The list starts right under the line's slot, so when someone writes it sits where the old card put it, and when nobody writes it starts under the strip. The plenum branch, the own card, the edit flow and the class sheet do not change.
+
+### 17.12 Open questions for Tal
+1. When a writer sends or stops, the heading turns into "דן שלח/ה את ההצעה" (instead of a separate line under the text). OK?
+2. The line pushes the content down 64 px (smoothly) when someone starts writing, also under a student who is rating. Accept, or keep an empty slot always (no jump, but a gap when nobody writes)?
+3. The strip still shows at the plenum, but the line is hidden there (IA §17.3). Confirm.
