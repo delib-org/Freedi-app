@@ -7,6 +7,8 @@ import type {
 	ClassCloseBallotResponse,
 	ClassFreezeBallotRequest,
 	ClassFreezeBallotResponse,
+	ClassPauseBallotRequest,
+	ClassPauseBallotResponse,
 	Statement,
 } from '@freedi/shared-types';
 import { db } from '../db';
@@ -15,6 +17,7 @@ import { ClassroomError, toHttpsError } from './classroomErrors';
 import {
 	DEFAULT_BALLOT_TOP_N,
 	decideFromTally,
+	decidePause,
 	resolveGate,
 	selectBallotCandidates,
 	tallyCandidates,
@@ -31,6 +34,10 @@ import {
  * `classCloseBallot` (admin): tallies `selections{}` over the candidates and
  * records the decision (votes, then consensus, then id — decideBallot).
  * Closing twice returns the first result unchanged.
+ *
+ * `classPauseBallot` (admin): pauses (ballot.pausedAt; the votes rule refuses
+ * every vote while it is set, the cast votes are kept) or resumes the vote.
+ * Not reversible closing: a closed ballot is neither paused nor resumed.
  */
 
 async function loadOptions(firestore: Firestore, challengeId: string): Promise<Statement[]> {
@@ -71,7 +78,13 @@ export async function freezeBallot(
 	}
 
 	const frozenAt = Date.now();
-	const ballot: ClassBallot = { candidateIds, frozenAt };
+	// A re-freeze while the vote is paused keeps it paused.
+	const pausedAt = challenge.statementSettings?.ballot?.pausedAt;
+	const ballot: ClassBallot = {
+		candidateIds,
+		frozenAt,
+		...(typeof pausedAt === 'number' ? { pausedAt } : {}),
+	};
 	await firestore
 		.collection(Collections.statements)
 		.doc(challenge.statementId)
@@ -122,6 +135,41 @@ export async function closeBallot(
 	});
 }
 
+const PAUSE_REFUSAL_MESSAGE = {
+	'not-open': 'The vote has not been opened',
+	closed: 'The vote is already closed',
+} as const;
+
+export async function pauseBallot(
+	firestore: Firestore,
+	actorUid: string,
+	req: ClassPauseBallotRequest,
+): Promise<ClassPauseBallotResponse> {
+	const mainId = requireId(req?.mainId, 'mainId');
+	if (typeof req?.paused !== 'boolean') {
+		throw new ClassroomError('invalid-argument', 'paused must be a boolean');
+	}
+	const paused = req.paused;
+	await assertWorkspaceAdmin(firestore, mainId, actorUid);
+	const { statementId: challengeId } = await loadChallenge(firestore, mainId);
+	const ref = firestore.collection(Collections.statements).doc(challengeId);
+
+	return firestore.runTransaction(async (tx) => {
+		const snap = await tx.get(ref);
+		const challenge = snap.data() as Statement;
+		const now = Date.now();
+		const decision = decidePause(challenge.statementSettings?.ballot, paused, now);
+		if (decision.kind === 'refuse') {
+			throw new ClassroomError('failed-precondition', PAUSE_REFUSAL_MESSAGE[decision.reason]);
+		}
+		if (decision.kind === 'write') {
+			tx.update(ref, { 'statementSettings.ballot': decision.ballot, lastUpdate: now });
+		}
+
+		return { pausedAt: decision.pausedAt };
+	});
+}
+
 export const classFreezeBallot = onCall(
 	{ region: functionConfig.region },
 	async (
@@ -156,6 +204,25 @@ export const classCloseBallot = onCall(
 				operation: 'classroom.classCloseBallot',
 				userId: uid,
 				statementId: request.data?.mainId,
+			});
+		}
+	},
+);
+
+export const classPauseBallot = onCall(
+	{ region: functionConfig.region },
+	async (request: CallableRequest<ClassPauseBallotRequest>): Promise<ClassPauseBallotResponse> => {
+		let uid: string | undefined;
+		try {
+			uid = requireUid(request);
+
+			return await pauseBallot(db, uid, request.data);
+		} catch (error) {
+			throw toHttpsError(error, {
+				operation: 'classroom.classPauseBallot',
+				userId: uid,
+				statementId: request.data?.mainId,
+				metadata: { paused: request.data?.paused },
 			});
 		}
 	},

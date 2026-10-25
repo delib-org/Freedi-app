@@ -12,6 +12,8 @@ import type {
 	ClassFreezeBallotRequest,
 	ClassFreezeBallotResponse,
 	ClassMoveStudentRequest,
+	ClassPauseBallotRequest,
+	ClassPauseBallotResponse,
 	ClassMoveStudentResponse,
 	ClassSetLessonStatusRequest,
 	ClassSetLessonStatusResponse,
@@ -72,6 +74,11 @@ export function classFreezeBallot(
 	req: ClassFreezeBallotRequest,
 ): Promise<ClassFreezeBallotResponse> {
 	return call('classFreezeBallot', req);
+}
+
+/** Admin: pause the vote (votes locked, kept) or resume it. */
+export function classPauseBallot(req: ClassPauseBallotRequest): Promise<ClassPauseBallotResponse> {
+	return call('classPauseBallot', req);
 }
 
 /** Admin: close the ballot and record the decision. */

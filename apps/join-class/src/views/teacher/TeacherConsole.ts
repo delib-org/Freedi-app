@@ -21,6 +21,7 @@ import {
 	gateRows,
 	isBallotClosed,
 	isBallotFrozen,
+	isBallotPaused,
 	isPlenum,
 	rosterStudents,
 } from '@/lib/classroom/consoleHelpers';
@@ -35,6 +36,7 @@ import {
 	closeBallot,
 	freezeBallot,
 	goToStep,
+	pauseBallot,
 	pickProjectorVideo,
 	startPlenum,
 } from './consoleActions';
@@ -285,6 +287,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				hasChallenge: challenge !== null,
 				plenum: isPlenum(challenge),
 				ballotFrozen: isBallotFrozen(challenge),
+				ballotPaused: isBallotPaused(challenge),
 				ballotClosed: isBallotClosed(challenge),
 				introVideos: introVideosOf(main),
 				projectorVideoId: projectorVideoOf(main)?.id ?? null,
@@ -302,6 +305,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 					if (challenge) void startPlenum(challenge.statementId);
 				},
 				onFreeze: () => void freezeBallot(mid),
+				onPauseVote: (paused: boolean) => void pauseBallot(mid, paused),
 				onCloseVote: () => void closeBallot(mid),
 			}),
 			failureBanner(),

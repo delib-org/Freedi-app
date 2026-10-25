@@ -142,6 +142,12 @@ export type ClassTableMarker = InferOutput<typeof ClassTableMarkerSchema>;
 export const ClassBallotSchema = object({
 	candidateIds: array(string()),
 	frozenAt: number(),
+	/**
+	 * Set while the teacher has paused the vote: no vote is cast or changed
+	 * (rules + client), the votes already cast are kept, and resuming clears it.
+	 * Not the same as closing (closedAt), which is final.
+	 */
+	pausedAt: optional(number()),
 	closedAt: optional(number()),
 	decisionId: optional(string()),
 });

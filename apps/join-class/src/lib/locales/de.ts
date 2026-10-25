@@ -3,7 +3,10 @@
 // Split out of lib/i18n.ts so a visitor downloads only the language they
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
+import vote from './vote/de';
+
 const de: Record<string, string> = {
+	...vote,
 	'step.waiting': 'Warten auf die Lehrkraft',
 	'step.opening': 'Einstieg',
 	'step.side': 'Seite',
@@ -255,16 +258,6 @@ const de: Record<string, string> = {
 	'rate.rated_group': 'Bewertet: {{n}}',
 	'rate.failed': 'Die Bewertung wurde nicht gespeichert. Nochmal versuchen',
 	'rate.class_writing': 'Die Klasse schreibt',
-	'voting.title': 'Abstimmung',
-	'voting.pick_one': 'Wählt einen Vorschlag',
-	'voting.waiting': 'Wir warten, bis die Lehrkraft die Abstimmung öffnet',
-	'voting.empty': 'Nichts zur Abstimmung',
-	'voting.vote': 'Abstimmen',
-	'voting.voted': 'Ihr habt abgestimmt',
-	'voting.change': 'Stimme ändern',
-	'voting.saving': 'Wird gespeichert…',
-	'voting.closed': 'Die Abstimmung ist geschlossen',
-	'voting.failed': 'Die Stimme wurde nicht gespeichert. Nochmal versuchen',
 	'summary.title': 'Zusammenfassung',
 	'summary.decision': 'Die Entscheidung',
 	'summary.waiting': 'Die Entscheidung ist noch nicht gefallen',
@@ -288,8 +281,6 @@ const de: Record<string, string> = {
 	'console.all_tables_rate': 'Alle Tische: bewerten',
 	'console.plenum': 'Alle zusammen',
 	'console.plenum_on': 'Alle zusammen · aktiv',
-	'console.freeze': 'Abstimmung einfrieren',
-	'console.close_vote': 'Abstimmung schließen',
 	'console.move': 'An einen anderen Tisch',
 	'console.moved': 'Verschoben zu {{table}}',
 	'console.unplaced_name': 'Ohne Tisch',

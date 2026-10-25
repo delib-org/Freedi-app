@@ -8,6 +8,7 @@ import {
 	gateRows,
 	isBallotClosed,
 	isBallotFrozen,
+	isBallotPaused,
 	isPlenum,
 	railSteps,
 	rosterStudents,
@@ -101,6 +102,8 @@ describe('gate maths', () => {
 		expect(isBallotFrozen(q({ ballot: { frozenAt: 1 } }))).toBe(true);
 		expect(isBallotClosed(q({ ballot: { frozenAt: 1 } }))).toBe(false);
 		expect(isBallotClosed(q({ ballot: { frozenAt: 1, closedAt: 2 } }))).toBe(true);
+		expect(isBallotPaused(q({ ballot: { frozenAt: 1 } }))).toBe(false);
+		expect(isBallotPaused(q({ ballot: { frozenAt: 1, pausedAt: 2 } }))).toBe(true);
 	});
 });
 

@@ -121,6 +121,9 @@ One name per concept across UI, i18n, routes and code. HE is primary and gender-
 | Plenum | Everyone together | כולם ביחד | NEW console.plenum, projector.plenum | — | AgoraRoundPhase.improve | מליאה (teacher may say it; UI does not), open_floor |
 | Top proposals | Top proposals | ההצעות המובילות | projector.top | — | agoraScores C_p order | leaders, הלוח |
 | Vote | Vote | הצבעה | voting.* (kept; title "בחרו הצעה אחת") | — | AgoraStage.voting | ballot in UI, בחירות |
+| Open the vote | Open the vote | פתיחת ההצבעה | console.open_vote | — | classFreezeBallot (ballot.frozenAt: the shortlist is fixed) | הקפאת ההצבעה (freeze now means nothing in UI) |
+| Pause the vote | Pause / resume the vote | השהיית ההצבעה / המשך ההצבעה | console.pause_vote, console.resume_vote, voting.paused | — | classPauseBallot (ballot.pausedAt: votes locked, kept) | הקפאה, freeze, stop |
+| Close the vote | Close the vote | סגירת ההצבעה | console.close_vote | — | classCloseBallot (ballot.closedAt, final) | end, סיום |
 | Decision | The decision | ההחלטה | results.agreement_decision (kept) | — | voteWinnerStatementId | winner, המנצח |
 | No device | No device | בלי מכשיר | table.no_device | — | participant.noDevice | — |
 | Rate on behalf of | Rate for … | לדרג בשם … | console.rate_for | — | evaluation by proxy (teacher) | — |

@@ -3,7 +3,10 @@
 // Split out of lib/i18n.ts so a visitor downloads only the language they
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
+import vote from './vote/he';
+
 const he: Record<string, string> = {
+	...vote,
 	'step.waiting': 'ממתינים למורה',
 	'step.opening': 'פתיחה',
 	'step.side': 'צד',
@@ -252,16 +255,6 @@ const he: Record<string, string> = {
 	'rate.rated_group': 'דירגתם {{n}}',
 	'rate.failed': 'הדירוג לא נשמר. לנסות שוב',
 	'rate.class_writing': 'הכיתה כותבת',
-	'voting.title': 'הצבעה',
-	'voting.pick_one': 'בחרו הצעה אחת',
-	'voting.waiting': 'ממתינים שהמורה תפתח את ההצבעה',
-	'voting.empty': 'אין מה להצביע',
-	'voting.vote': 'הצבעה',
-	'voting.voted': 'הצבעתם',
-	'voting.change': 'לשנות הצבעה',
-	'voting.saving': 'שומרים…',
-	'voting.closed': 'ההצבעה נסגרה',
-	'voting.failed': 'ההצבעה לא נשמרה. לנסות שוב',
 	'summary.title': 'סיכום',
 	'summary.decision': 'ההחלטה',
 	'summary.waiting': 'ההחלטה עוד לא התקבלה',
@@ -285,8 +278,6 @@ const he: Record<string, string> = {
 	'console.all_tables_rate': 'כל השולחנות: מדרגים',
 	'console.plenum': 'כולם ביחד',
 	'console.plenum_on': 'כולם ביחד · פעיל',
-	'console.freeze': 'הקפאת ההצבעה',
-	'console.close_vote': 'סגירת ההצבעה',
 	'console.move': 'העברה לשולחן אחר',
 	'console.moved': 'הועבר ל{{table}}',
 	'console.unplaced_name': 'ללא שולחן',

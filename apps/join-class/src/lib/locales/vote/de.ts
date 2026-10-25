@@ -1,0 +1,25 @@
+// German strings of the vote: the student's ballot screen (voting.*) and
+// the teacher's vote controls (console.*_vote). Spread into ../de.ts, so they
+// ship in the same locale chunk; split out only to keep each file small.
+
+const vote: Record<string, string> = {
+	'console.open_vote': 'Abstimmung öffnen',
+	'console.pause_vote': 'Abstimmung pausieren',
+	'console.resume_vote': 'Abstimmung fortsetzen',
+	'console.close_vote': 'Abstimmung schließen',
+	'voting.title': 'Abstimmung',
+	'voting.pick_one': 'Wählt einen Vorschlag',
+	'voting.waiting': 'Wir warten, bis die Lehrkraft die Abstimmung öffnet',
+	'voting.empty': 'Nichts zur Abstimmung',
+	'voting.vote': 'Abstimmen',
+	'voting.voted': 'Ihr habt abgestimmt',
+	'voting.change': 'Stimme ändern',
+	'voting.saving': 'Wird gespeichert…',
+	'voting.closed': 'Die Abstimmung ist geschlossen',
+	'voting.failed': 'Die Stimme wurde nicht gespeichert. Nochmal versuchen',
+	'voting.paused': 'Die Abstimmung ist pausiert',
+	'voting.paused_hint':
+		'Die Lehrkraft hat die Abstimmung kurz pausiert. Deine Stimme bleibt erhalten.',
+};
+
+export default vote;

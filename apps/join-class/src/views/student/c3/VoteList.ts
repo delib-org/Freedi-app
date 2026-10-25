@@ -5,8 +5,8 @@ import { t } from '@/lib/i18n';
 export interface VoteListAttrs {
 	candidates: Statement[];
 	selectedId: string | null;
-	/** The ballot is closed: no radio semantics, nothing to tap. */
-	closed: boolean;
+	/** The ballot is closed or paused: no radio semantics, nothing to tap. */
+	locked: boolean;
 	onSelect: (id: string) => void;
 }
 
@@ -16,14 +16,14 @@ export interface VoteListAttrs {
  */
 export const VoteList: m.Component<VoteListAttrs> = {
 	view({ attrs }) {
-		const { candidates, selectedId, closed } = attrs;
+		const { candidates, selectedId, locked } = attrs;
 
 		return m(
 			'.vote-list',
-			{ role: closed ? 'list' : 'radiogroup', 'aria-label': t('voting.pick_one') },
+			{ role: locked ? 'list' : 'radiogroup', 'aria-label': t('voting.pick_one') },
 			candidates.map((option) => {
 				const on = selectedId === option.statementId;
-				const attributes = closed
+				const attributes = locked
 					? { role: 'listitem' }
 					: {
 							role: 'radio',
@@ -32,11 +32,11 @@ export const VoteList: m.Component<VoteListAttrs> = {
 						};
 
 				return m(
-					closed ? 'div.vote-list__item' : 'button.vote-list__item',
+					locked ? 'div.vote-list__item' : 'button.vote-list__item',
 					{
 						key: option.statementId,
 						'data-testid': 'vote-option',
-						type: closed ? undefined : 'button',
+						type: locked ? undefined : 'button',
 						class: on ? 'vote-list__item--on' : '',
 						...attributes,
 					},

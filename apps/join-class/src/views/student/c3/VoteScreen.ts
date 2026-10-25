@@ -12,6 +12,16 @@ import { ErrorLine } from './ErrorLine';
 import { FlowFeed } from './FlowFeed';
 import { VoteList } from './VoteList';
 
+const INSTRUCTION_KEY = {
+	waiting: 'voting.waiting',
+	open: 'voting.pick_one',
+	paused: 'voting.paused_hint',
+} as const;
+
+function instructionOf(state: keyof typeof INSTRUCTION_KEY): string {
+	return t(INSTRUCTION_KEY[state]);
+}
+
 export interface VoteScreenAttrs {
 	main: Statement;
 }
@@ -29,7 +39,8 @@ class VoteState {
 /**
  * The vote (UX §2.8): radio cards of the frozen ballot, "Vote" casts (two
  * taps), "You voted" in teal; a different card turns the button into "Change
- * vote" until the ballot closes.
+ * vote" until the ballot closes. While the teacher has the vote paused the
+ * cards are locked and the button says so; the vote already cast is kept.
  */
 export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 	oninit(vnode) {
@@ -62,6 +73,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			);
 		}
 		const closed = !!ballot?.closedAt;
+		const paused = !closed && typeof ballot?.pausedAt === 'number';
 		const candidates = (ballot?.candidateIds ?? [])
 			.map((id) => self.feed.options.find((o) => o.statementId === id))
 			.filter((o): o is Statement => !!o);
@@ -69,7 +81,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 		const changed = !!selected && selected !== self.votedId;
 
 		const cast = (): void => {
-			if (!challengeId || !selected || self.saving) return;
+			if (!challengeId || !selected || self.saving || paused || closed) return;
 			self.saving = true;
 			self.error = null;
 			castVote(main.statementId, challengeId, selected)
@@ -89,6 +101,10 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			label = t('voting.closed');
 			disabled = true;
 			variant = 'btn--secondary';
+		} else if (paused) {
+			label = t('voting.paused');
+			disabled = true;
+			variant = 'btn--secondary';
 		} else if (self.saving) {
 			label = t('voting.saving');
 			disabled = true;
@@ -104,7 +120,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			StudentFrame,
 			{
 				headerLine: t('voting.title'),
-				instruction: ballot ? t('voting.pick_one') : t('voting.waiting'),
+				instruction: instructionOf(ballot ? (paused ? 'paused' : 'open') : 'waiting'),
 				action: ballot
 					? m(
 							'button.btn',
@@ -126,7 +142,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 							: m(VoteList, {
 									candidates,
 									selectedId: selected,
-									closed,
+									locked: closed || paused,
 									onSelect: (id: string) => {
 										self.selectedId = id;
 									},
