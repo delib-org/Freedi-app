@@ -4,6 +4,8 @@ import { t } from '@/lib/i18n';
 import { getGuidingQuestions } from '@/lib/lesson';
 import { classTableStep } from '@/lib/classroom/api';
 import { createTableQuestion } from '@/lib/classroom/c3Data';
+import { questionTextFrom } from '@/lib/classroom/questionLookup';
+import { getFetchedQuestionTexts, requestQuestionText } from '@/lib/classroom/questionText';
 import { SPEAK_MS, Countdown, msLeft } from './Countdown';
 import { isRaceRefusal, maxTurns, refusalReason } from '@/lib/classroom/turnMoment';
 import { passedAnswer, tableTalkState, type TableTalkState } from '@/lib/classroom/tableTalkState';
@@ -366,7 +368,12 @@ export function tableTalkParts(ctx: FlowCtx): FlowParts {
 	}
 	const teacher = pickQuestions(ctx).filter((q) => !q.own);
 	const teacherUsedUp = teacher.every((q) => q.used);
-	const question = questions.find((q) => q.statementId === table.questionId)?.statement ?? '';
+	let question = questionTextFrom(questions, getFetchedQuestionTexts(), table.questionId);
+	if (question === null) {
+		// Not in the live list (yet): read that one statement; the heading stays empty meanwhile.
+		if (table.questionId) requestQuestionText(table.questionId);
+		question = '';
+	}
 	let screen: Screen;
 	if (state === 'D') {
 		const status = t('turn.wait_others');

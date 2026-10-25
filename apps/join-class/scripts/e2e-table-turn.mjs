@@ -203,6 +203,9 @@ try {
 	await screen(noa.page, /אני רוצה לענות/, 'noa may answer');
 	check('2 a tablemate may answer or pass; the stage and the question are on the screen', (await has(noa.page, 'table-answer')) && (await has(noa.page, 'pass-answer')) && /שיחת שולחן/.test(await frameText(noa.page)));
 	await screen(loser.page, /אני רוצה לענות/, 'loser may answer');
+	const headingOf = async (page) => (await page.locator('.frame__instruction').first().innerText()).trim();
+	const q1Text = (await db.doc(`statements/${claimed.questionId}`).get()).data().statement;
+	check('2 the h1 of every talk screen is the chosen question', (await headingOf(noa.page)) === q1Text && (await headingOf(winner.page)) === q1Text, q1Text);
 	check('2 the loser sees no error', (await count(loser.page, '.c3-error')) === 0);
 	check('2 a forged answer by the asker is refused (others-first)', (await callStep(winner.uid, { action: 'claimSpeaker' })).reason === 'others-first');
 
@@ -263,6 +266,7 @@ try {
 	check('6 the question is this table\'s own', ownDoc.exists && ownDoc.data().classTable?.tableId === tableId && ownDoc.data().statement === 'מי מחליט מה מצחיק?');
 	await screen(third.page, /אני רוצה לענות/, 'third may answer');
 	await screen(second.page, /תנו לאחרים לענות קודם/, 'second waits');
+	check('6 the own question is the h1 on the tablemate phone and on the asker phone', (await headingOf(third.page)) === 'מי מחליט מה מצחיק?' && (await headingOf(second.page)) === 'מי מחליט מה מצחיק?', await headingOf(third.page));
 	await tpage.waitForFunction(() => /עוד לא ענו/.test(document.querySelector('.table-card')?.textContent ?? ''), null, { timeout: TIMEOUT });
 	check('9 the card names who has not answered yet', /עוד לא ענו/.test(await cardText()), await cardText());
 

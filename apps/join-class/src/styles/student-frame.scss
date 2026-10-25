@@ -52,6 +52,8 @@
     font-size: var(--font-size-xl);
     font-weight: var(--font-weight-semibold, 600);
     line-height: 1.3;
+    // global.scss paints every h1 --text-primary (dark): on the ink frame that was dark on dark.
+    color: inherit;
   }
 
   &__content {
