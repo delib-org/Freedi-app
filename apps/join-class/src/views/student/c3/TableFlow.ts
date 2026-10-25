@@ -157,7 +157,12 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 		const parts: FlowParts = tableTalk ? tableTalkParts(ctx) : proposalsParts(ctx);
 
 		const { body, action, instruction } = parts;
-		if (tableTalk) return tableTalkFrame(self, parts, instruction, action);
+		if (tableTalk) {
+			// no watch view here: a hidden one would reopen (and push history) on the way back to Proposals
+			self.watch = null;
+
+			return tableTalkFrame(self, parts, instruction, action);
+		}
 		const live = liveWritingParts({
 			self,
 			table,

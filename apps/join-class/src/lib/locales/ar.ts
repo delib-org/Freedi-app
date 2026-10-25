@@ -176,8 +176,6 @@ const ar: Record<string, string> = {
 	'turn.pill_write': 'نكتب',
 	'turn.pill_rate': 'نقيّم',
 	'turn.strip_label': 'أين الطاولة الآن',
-	'turn.asker_me': 'دوركم لتسألوا',
-	'turn.asker': 'دور {{name}} ليسأل',
 	'turn.action_failed': 'لم ينجح ذلك. حاولوا مرة أخرى',
 	'turn.finish_talk': 'انتهينا، لنكتب',
 	'turn.to_rate': 'أرسلنا، لنقيّم',

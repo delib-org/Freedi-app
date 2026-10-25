@@ -132,6 +132,7 @@ try {
 	check('1 the strip has no "now" mark', await noneOf(dana.page, '[data-testid=pill-now], .substeps__now'));
 	await pill(dana.page, 'write').click();
 	await pill(tal.page, 'rate').click();
+	await until(async () => (await current(dana.page)) === 'write' && (await current(tal.page)) === 'rate', 'pills switched').catch(() => null);
 	check('1 Dana is on כותבים, Tal on מדרגים, Noa still on מדברים', (await current(dana.page)) === 'write' && (await current(tal.page)) === 'rate' && (await current(noa.page)) === 'talk');
 	await dana.page.waitForSelector(tid('proposal-box'), { timeout: TIMEOUT });
 	check('1 the write box is live for Dana (not read-only, not in a disabled fieldset)', !(await dana.page.locator(tid('proposal-box')).isDisabled()) && !(await dana.page.locator(tid('proposal-box')).evaluate((el) => el.readOnly)) && (await count(dana.page, 'fieldset[disabled]')) === 0);

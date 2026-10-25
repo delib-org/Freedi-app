@@ -8,6 +8,8 @@ import {
 	focusReturnTarget,
 	liveLineLabel,
 	pickerUids,
+	shouldPopHistory,
+	watchHistoryState,
 	resolveEnd,
 	tablemateWriters,
 	writerName,
@@ -154,5 +156,24 @@ describe('LineHold (the 1.5 s leave timer)', () => {
 		// the wait starts over after the next end
 		hold.view([], 1000);
 		expect(hold.view([], 1000 + LINE_HOLD_MS - 1)?.leaving).toBe(false);
+	});
+});
+
+describe('watch history entry', () => {
+	it('pops only while the pushed entry is still current', () => {
+		expect(shouldPopHistory(watchHistoryState('a'), 'a')).toBe(true);
+		expect(shouldPopHistory(watchHistoryState('b'), 'a')).toBe(false);
+		expect(shouldPopHistory(null, 'a')).toBe(false);
+		expect(shouldPopHistory({ other: 1 }, 'a')).toBe(false);
+	});
+});
+
+describe('LineHold.reset', () => {
+	it('drops the held line at once', () => {
+		const hold = new LineHold();
+		hold.view([writer('dan')], 0);
+		hold.view([], 100);
+		hold.reset();
+		expect(hold.view([], 200)).toBeNull();
 	});
 });

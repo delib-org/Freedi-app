@@ -156,6 +156,7 @@ export function liveWritingParts(input: LiveWritingInput): LiveWritingParts {
 		});
 	}
 
+	if (plenum) self.lineHold.reset();
 	const held = self.lineHold.view(plenum ? [] : writers, now);
 	const staleAt = writers.length
 		? Math.min(...writers.map((w) => w.lastUpdate)) + LIVE_DRAFT_STALE_MS + STALE_REDRAW_SLACK_MS

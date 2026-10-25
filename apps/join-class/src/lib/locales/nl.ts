@@ -175,8 +175,6 @@ const nl: Record<string, string> = {
 	'turn.pill_write': 'Schrijven',
 	'turn.pill_rate': 'Beoordelen',
 	'turn.strip_label': 'Waar de tafel nu is',
-	'turn.asker_me': 'Jullie zijn aan de beurt om te vragen',
-	'turn.asker': '{{name}} is aan de beurt om te vragen',
 	'turn.action_failed': 'Dat lukte niet. Probeer opnieuw',
 	'turn.finish_talk': 'Klaar, schrijven',
 	'turn.to_rate': 'Verstuurd, we beoordelen',

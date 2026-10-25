@@ -167,8 +167,6 @@ const fa: Record<string, string> = {
 	'turn.pill_write': 'نوشتن',
 	'turn.pill_rate': 'امتیاز',
 	'turn.strip_label': 'میز اکنون کجاست',
-	'turn.asker_me': 'نوبت شما برای پرسیدن است',
-	'turn.asker': 'نوبت {{name}} برای پرسیدن است',
 	'turn.action_failed': 'انجام نشد. دوباره تلاش کنید',
 	'turn.finish_talk': 'تمام شد، بنویسیم',
 	'turn.to_rate': 'فرستادیم، امتیاز بدهیم',

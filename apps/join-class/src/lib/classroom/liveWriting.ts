@@ -104,6 +104,18 @@ export function focusReturnTarget(lineInPage: boolean): 'line' | 'pill' {
 	return lineInPage ? 'line' : 'pill';
 }
 
+/** The marker the watch view writes into `history.state` when it pushes its entry. */
+export function watchHistoryState(token: string): { watch: string } {
+	return { watch: token };
+}
+
+/** Pop only when the entry we pushed is still the current one (a route change may have moved on). */
+export function shouldPopHistory(state: unknown, token: string): boolean {
+	return (
+		typeof state === 'object' && state !== null && (state as { watch?: unknown }).watch === token
+	);
+}
+
 export interface HeldLine {
 	writers: Writer[];
 	/** The last writer ended and the wait is over: the line is collapsing. */
@@ -117,6 +129,12 @@ export interface HeldLine {
 export class LineHold {
 	private last: Writer[] = [];
 	private emptySince: number | null = null;
+
+	/** Forget the held line at once (the plenum starts). */
+	reset(): void {
+		this.last = [];
+		this.emptySince = null;
+	}
 
 	/** What the line shows at `now`, or null when it is gone. */
 	view(writers: readonly Writer[], now: number): HeldLine | null {

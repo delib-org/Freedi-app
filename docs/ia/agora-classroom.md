@@ -135,7 +135,7 @@ One name per concept across UI, i18n, routes and code. HE is primary and gender-
 | Waiting for the teacher | Waiting for the teacher | ממתינים למורה | lobby.waiting (kept) | — | AgoraStage.lobby | lobby in UI |
 | End the lesson | End the lesson | סיום השיעור | teacher.end_game (kept, value unchanged) | — | status ended | — |
 
-Live writing (§17.5, Tal 2026-10-25): NEW `answer.live_one`, `answer.live_many` (moved from `rate.live_one|many`), `answer.watch_open`, `answer.watch_close`, `answer.watch_sent`, `answer.watch_stopped`, `answer.live_started`. CHANGED values: `answer.broadcast` "משדרים את הכתיבה לשולחן", `answer.broadcast_on` "השולחן רואה את מה שאתם כותבים". Retired: `rate.live_one`, `rate.live_many`, `turn.peek_back`, `turn.peek_why_*`, `turn.pill_now`; `turn.asker` / `turn.asker_me` are not read at Proposals any more.
+Live writing (§17.5, Tal 2026-10-25): NEW `answer.live_one`, `answer.live_many` (moved from `rate.live_one|many`), `answer.watch_open`, `answer.watch_close`, `answer.watch_sent`, `answer.watch_stopped`, `answer.live_started`. CHANGED values: `answer.broadcast` "משדרים את הכתיבה לשולחן", `answer.broadcast_on` "השולחן רואה את מה שאתם כותבים". Retired: `rate.live_one`, `rate.live_many`, `turn.peek_back`, `turn.peek_why_*`, `turn.pill_now`; `turn.asker` / `turn.asker_me` are deleted (nothing reads them: Table talk has no asker line either).
 
 Rule: the word for the written thing is תשובה at the Table talk step and הצעה at the Proposals step, and never anything else; the kind is the screen's title, never a tag on the card.
 
@@ -1584,6 +1584,6 @@ Decision: at Proposals each phone talks, writes or rates whenever it wants. No s
   - §4: Proposals reads "three sub-steps, free".
   - §6: the teacher's "unstick a table" stays.
   - §7: the Proposals row loses peek.
-  - §3 / §16.2: retire `turn.peek_back`, `turn.peek_why_*`, `turn.pill_now`; `turn.asker` becomes Table talk only.
+  - §3 / §16.2: retire `turn.peek_back`, `turn.peek_why_*`, `turn.pill_now`; `turn.asker` / `turn.asker_me` were deleted afterwards (dead keys).
 - **`docs/design/agora-classroom-ux.md`:** the strip section (§11, last bullet: "tappable peek", Tal 2026-10-22) is superseded.
 - **Test ids:** retired `peek-body`, `peek-back`, `pill-now`, and `asker-mark` at Proposals. Kept (now local) `table-to-write`, `table-to-rate`. No e2e spec in `apps/join-class` references the retired ones (grep 2026-10-25).

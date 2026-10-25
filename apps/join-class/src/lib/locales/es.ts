@@ -176,8 +176,6 @@ const es: Record<string, string> = {
 	'turn.pill_write': 'Escribir',
 	'turn.pill_rate': 'Valorar',
 	'turn.strip_label': 'Dónde está la mesa ahora',
-	'turn.asker_me': 'Os toca preguntar',
-	'turn.asker': 'Le toca preguntar a {{name}}',
 	'turn.action_failed': 'No ha funcionado. Intentad de nuevo',
 	'turn.finish_talk': 'Hemos terminado, escribir',
 	'turn.to_rate': 'Enviamos, a valorar',

@@ -1,6 +1,10 @@
 import m from 'mithril';
 import { t } from '@/lib/i18n';
-import { focusReturnTarget } from '@/lib/classroom/liveWriting';
+import {
+	focusReturnTarget,
+	shouldPopHistory,
+	watchHistoryState,
+} from '@/lib/classroom/liveWriting';
 import { Sheet } from './Sheet';
 
 export interface WatchPick {
@@ -24,6 +28,7 @@ const TITLE_ID = 'watch-title';
 const BOTTOM_SLACK_PX = 6;
 
 interface WatchState {
+	token: string;
 	pushed: boolean;
 	poppedByUser: boolean;
 	onPop: (() => void) | null;
@@ -48,10 +53,16 @@ function returnFocus(): HTMLElement | null {
  */
 export const WatchView: m.ClassComponent<WatchViewAttrs> = {
 	oninit(vnode) {
-		const self: WatchState = { pushed: false, poppedByUser: false, onPop: null, follow: true };
+		const self: WatchState = {
+			token: String(Date.now()),
+			pushed: false,
+			poppedByUser: false,
+			onPop: null,
+			follow: true,
+		};
 		(vnode.state as { self?: WatchState }).self = self;
 		try {
-			history.pushState(history.state, '', location.href);
+			history.pushState(watchHistoryState(self.token), '', location.href);
 			self.pushed = true;
 		} catch (error) {
 			console.error('[WatchView] history push failed:', error);
@@ -68,7 +79,8 @@ export const WatchView: m.ClassComponent<WatchViewAttrs> = {
 		const self = (vnode.state as { self?: WatchState }).self as WatchState;
 		if (self.onPop) window.removeEventListener('popstate', self.onPop);
 		// closed by a button, Escape or the scrim: take our own history entry back off
-		if (self.pushed && !self.poppedByUser) history.back();
+		if (self.pushed && !self.poppedByUser && shouldPopHistory(history.state, self.token))
+			history.back();
 	},
 
 	view(vnode) {

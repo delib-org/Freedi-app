@@ -175,8 +175,6 @@ const he: Record<string, string> = {
 	'turn.pill_write': 'כותבים',
 	'turn.pill_rate': 'מדרגים',
 	'turn.strip_label': 'איפה השולחן עכשיו',
-	'turn.asker_me': 'התור שלכם לשאול',
-	'turn.asker': 'התור של {{name}} לשאול',
 	'turn.action_failed': 'זה לא עבד. לנסות שוב',
 	'turn.finish_talk': 'סיימנו, לכתוב',
 	'turn.to_rate': 'שלחנו, לדרג',

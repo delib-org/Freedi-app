@@ -180,8 +180,6 @@ const en: Record<string, string> = {
 	'turn.pill_write': 'Write',
 	'turn.pill_rate': 'Rate',
 	'turn.strip_label': 'Where the table is now',
-	'turn.asker_me': 'It is your turn to ask',
-	'turn.asker': "It is {{name}}'s turn to ask",
 	'turn.action_failed': 'That did not work. Try again',
 	'turn.finish_talk': 'We are done, write',
 	'turn.to_rate': "We sent, let's rate",

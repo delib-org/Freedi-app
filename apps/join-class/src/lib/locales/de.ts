@@ -178,8 +178,6 @@ const de: Record<string, string> = {
 	'turn.pill_write': 'Schreiben',
 	'turn.pill_rate': 'Bewerten',
 	'turn.strip_label': 'Wo der Tisch gerade ist',
-	'turn.asker_me': 'Ihr seid mit Fragen dran',
-	'turn.asker': '{{name}} ist mit Fragen dran',
 	'turn.action_failed': 'Das hat nicht geklappt. Nochmal versuchen',
 	'turn.finish_talk': 'Fertig, schreiben',
 	'turn.to_rate': 'Gesendet, wir bewerten',
