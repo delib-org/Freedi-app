@@ -1,0 +1,97 @@
+// =============================================================================
+// Teacher home: the create area and the row's copy action (UX 13.D / IA 13.15).
+// One create area holds one step at a time: the question, the name form, the
+// pick lead, the copy form. Tokens only, BEM, logical properties (RTL for free).
+// Used from teacher.scss.
+// =============================================================================
+
+.teacher-home__create {
+  display: flex;
+  flex-direction: column;
+
+  // each step fades in as it mounts (keyed, so a new step is a new element)
+  > * {
+    animation: teacher-home-step-in var(--dur-quick) var(--ease-out);
+  }
+}
+
+// ---- "עם אילו שאלות?": two answers side by side, stacked on a phone ---------
+.teacher-home__choices {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+  align-items: start;
+}
+
+.teacher-home__choice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+
+  .btn {
+    inline-size: 100%;
+    white-space: normal;
+  }
+}
+
+// "ביטול" under the question / the pick lead sits at the start edge, not stretched.
+.teacher-home__form > .btn--tertiary {
+  align-self: flex-start;
+}
+
+.teacher-home__help,
+.teacher-home__hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--ink-muted);
+}
+
+// ---- row: the reopen hint and the tertiary copy action ------------------------
+.teacher-home__hint {
+  flex: 1 1 100%;
+  text-align: start;
+}
+
+.teacher-home__row-foot {
+  display: flex;
+  flex: 1 1 100%;
+  justify-content: flex-start;
+}
+
+// Its text lines up with the row title, not with the button's own padding.
+.teacher-home__row-copy {
+  margin-inline-start: calc(-1 * var(--space-md));
+  white-space: normal;
+  text-align: start;
+}
+
+.teacher-home__pick-lead:focus-visible {
+  outline: 2px solid var(--teal-600);
+  outline-offset: 2px;
+}
+
+@media (min-width: 600px) {
+  .teacher-home__choices {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .teacher-home__hint {
+    text-align: end;
+  }
+}
+
+@keyframes teacher-home-step-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teacher-home__create > * {
+    animation: none;
+  }
+}

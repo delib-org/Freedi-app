@@ -123,3 +123,22 @@ export interface ClassSetLessonStatusResponse {
 	status: 'live' | 'paused' | 'open' | 'ended';
 	statusAt: number;
 }
+
+/**
+ * `classCloneLesson` (admin of the source). A new lesson with the source's plan:
+ * questions (text, role, hint, order), intro paragraphs, intro videos, side
+ * names, lesson language. Never the class work (students, tables, answers,
+ * ballot, progress). `newMainId` is made by the client and kept while its form
+ * is open: a repeat with the same id returns the same lesson (`reused: true`).
+ */
+export interface ClassCloneLessonRequest {
+	sourceMainId: string;
+	newMainId: string;
+	/** Name of the new lesson; the source's title when omitted. */
+	title?: string;
+}
+export interface ClassCloneLessonResponse {
+	mainId: string;
+	classCode: string;
+	reused: boolean;
+}

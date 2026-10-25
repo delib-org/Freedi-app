@@ -635,6 +635,178 @@ The row's start border (existing `--q-accent`, Join's per-question colour) now c
 
 **Keyboard / SR:** header (logo alt, account text, sign-out) → h1 → "+ שיעור חדש" → (filter) → rows. Each row is a list item with an `h2`, so a screen-reader user jumps lesson to lesson by heading; the chip is a plain paragraph read after the name ("האיסור על טלפונים בבית הספר, שלב 3 מתוך 8"). Each action's accessible name includes the lesson: `aria-label="לשיעור: {name}"` / `"תכנון השאלות: {name}"` / `"פתיחה מחדש: {name}"` (visible text unchanged), otherwise ten identical "לשיעור" links are indistinguishable in a links list.
 
+#### 13.D+ A new lesson from a previous one (teacher home `/t`, delta, 2026-10-25)
+Designed against IA 13.5 and 13.15. Everything else in 13.D (header, chip, row edge colours, filter, skeleton) is unchanged.
+Designed against IA §13.5 (A) and §13.15 (`ia-join-class-new-from-previous.md`). Lands in `docs/design/agora-classroom-ux.md` after §13.D. Everything else in §13.D (header, chip, row edge colours, filter, skeleton) is unchanged. All classes below exist in `apps/join-class/src/styles/teacher.scss` / `_components.scss` unless marked NEW.
+
+#### 13.D.1 Decisions in one place
+- **Row third action = a tertiary text button on its own line at the row's start edge** (`.btn.btn--tertiary.btn--small`, teal text, no fill, 44 px tall). Not an "עוד" overflow: a menu hides the only door to this feature from the place teachers already look, adds a popup with its own focus trap and Escape rule (Escape already means "one step back" here), and costs two taps for one action. Not a third button in the cluster: the IA forbids three equal buttons. A text button on a separate line, on the opposite side from the buttons cluster, reads as "a different kind of action" without hiding it.
+- **"פתיחה מחדש" hint = visible sub-line, linked by `aria-describedby`.** Not `title`: hover is unreliable on a shared school laptop with a touchpad or touch screen, and `title` is never read by touch screen readers. The line is 14 px `--ink-muted`, under the buttons cluster, ended rows only.
+- **One create area.** Every step replaces "+ שיעור חדש" in place, inside the existing card `.teacher-home__form`. No dialog, no new route.
+- **During nameCopy the list shows normal rows** (both paths). Pick mode lasts only while picking.
+
+#### 13.D.2 Wireframes (RTL; right = start)
+
+**Idle, laptop 1280** (column 720 px). Rows now have a third line.
+```
+│                                                     השיעורים שלי           │ h1
+│                                                  [ + שיעור חדש ]           │ .btn--primary .teacher-home__new
+│  ┌──────────────────────────────────────────────────────────────────────┐ │
+│  ┃ האיסור על טלפונים בבית הספר        [ תכנון השאלות ]   [  לשיעור  ]    │ │ title · secondary · PRIMARY
+│  ┃ ● שלב 3 מתוך 8                                                       │ │ chip
+│  ┃ שיעור חדש עם אותן שאלות                                              │ │ tertiary text btn, start edge
+│  └──────────────────────────────────────────────────────────────────────┘ │
+│  ┌──────────────────────────────────────────────────────────────────────┐ │
+│  ┃ מבחנים בסוף שבוע                   [ תכנון השאלות ]  [ פתיחה מחדש ]   │ │ ended row (muted title)
+│  ┃ ✓ הסתיים          ממשיכים מהשלב שבו עצרתם, עם מה שהתלמידים כבר כתבו  │ │ chip · hint (end-aligned, under buttons)
+│  ┃ שיעור חדש עם אותן שאלות                                              │ │
+│  └──────────────────────────────────────────────────────────────────────┘ │
+```
+**Idle, phone 375** (row actions drop to their own line, `flex: 1`, primary at the end = left).
+```
+┌───────────────────────────────────────┐
+│ מבחנים בסוף שבוע                       │
+│ ✓ הסתיים                               │
+│ [ תכנון השאלות ] [   פתיחה מחדש   ]    │ 44 px each
+│   ממשיכים מהשלב שבו עצרתם, עם מה       │ hint wraps, 14 px muted
+│               שהתלמידים כבר כתבו       │
+│ שיעור חדש עם אותן שאלות                │ tertiary, 44 px tall, start edge
+└───────────────────────────────────────┘
+```
+**Choose** (replaces "+ שיעור חדש"; laptop: two items side by side, 375: stacked, full width).
+```
+┌─ .teacher-home__form (role=group, aria-labelledby=lead) ───────────────┐
+│                                                  עם אילו שאלות?        │ lead, semibold
+│  [      שאלות חדשות      ]   [    שאלות משיעור קודם    ]               │ two .btn--secondary, equal
+│                              השאלות, ההקדמה והסרטונים של שיעור שכבר    │ help under its button
+│                              הכנתם                                     │ 14 px muted
+│  ביטול                                                                 │ .btn--tertiary
+└────────────────────────────────────────────────────────────────────────┘
+375:  [ שאלות חדשות ]  /  [ שאלות משיעור קודם ] + help  /  ביטול   (one column)
+```
+**Pick mode** (create area = lead card; list keeps order and filter; each row one button).
+```
+┌─ .teacher-home__form ──────────────────────────────────────────────────┐
+│                         בחרו שיעור. נעתיק את השאלות וההקדמה.           │ lead (id=pick-lead, tabindex -1)
+│  ביטול                                                                 │ .btn--tertiary
+└────────────────────────────────────────────────────────────────────────┘
+  [ חיפוש לפי שם ...                                              ]        (only > 10 lessons)
+  ┃ האיסור על טלפונים בבית הספר                          [  בחירה  ]       .btn--primary.btn--small
+  ┃ ● שלב 3 מתוך 8                                                         no plan / copy / hint lines
+  ┃ מבחנים בסוף שבוע                                     [  בחירה  ]
+  ┃ ✓ הסתיים
+375: same, "בחירה" drops under the chip, full width.
+```
+**Copy name form** (from pick or from a row; same card, list back to normal rows).
+```
+┌─ form.teacher-home__form ──────────────────────────────────────────────┐
+│                       השאלות מתוך „מבחנים בסוף שבוע”                   │ lead, name in <bdi>
+│                                                      שם השיעור החדש    │ label
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │                                        ▓▓מבחנים בסוף שבוע▓▓      │  │ prefilled, all selected, focused
+│  └──────────────────────────────────────────────────────────────────┘  │
+│   נעתיק את השאלות, ההקדמה והסרטונים. קוד חדש, בלי התשובות של הכיתה    │ help, 14 px muted
+│                                                            הקודמת.     │ (aria-describedby of input)
+│                                               [  יצירה  ]   ביטול      │ primary · tertiary
+└────────────────────────────────────────────────────────────────────────┘
+```
+**Busy**: `[ מכינים את השיעור... ]` on the primary, input + both buttons disabled, form `aria-busy="true"`.
+**Error**: under the buttons, `role=alert`, 14 px `--danger`: "לא הצלחנו להכין את השיעור. נסו שוב." (or "אפשר להעתיק רק שיעורים שלכם"); typed name kept; "יצירה" enabled; focus back in the input.
+**Empty state**: unchanged from §13.D (name form open, focused, no "ביטול", no choice).
+
+#### 13.D.3 Components and variants
+| Element | Markup / class | Variant |
+|---|---|---|
+| "+ שיעור חדש" | `button.btn.btn--primary.teacher-home__new` | unchanged |
+| Create area wrapper | `.teacher-home__create` NEW, `aria-live` none, holds one step | fade in (13.D.6) |
+| Step card | `.teacher-home__form` (existing card) | form element only for nameNew / nameCopy |
+| Lead line | `p.teacher-home__lead` | existing |
+| Choice buttons | `.teacher-home__choices` NEW (grid: 2 cols ≥ 600 px, 1 col below); each `.teacher-home__choice` NEW = button + optional help | `.btn.btn--secondary` (full width of its cell) |
+| Help lines (choice, copy form) | `p.teacher-home__help` NEW: 14 px, `--ink-muted`, margin 0 | |
+| "ביטול" | `button.btn.btn--tertiary` | as today |
+| Label / input / actions / error | `.teacher-home__label`, `.teacher-home__input`, `.teacher-home__form-actions`, `.teacher-home__error` | existing |
+| Row primary | "לשיעור" link / "פתיחה מחדש" button | `.btn--primary.btn--small` (unchanged) |
+| Row secondary | "תכנון השאלות" | `.btn--secondary.btn--small` (unchanged) |
+| Reopen hint | `p.teacher-home__hint` NEW, `id="reopen-hint-{id}"`, `flex: 1 1 100%`, `text-align: end`, 14 px `--ink-muted`; on < 600 px `text-align: start` under the stretched buttons | ended rows only |
+| Row tertiary | `button.btn.btn--tertiary.btn--small.teacher-home__row-copy` NEW element, `data-action="copy"`, on a full-width line (`flex: 1 1 100%` wrapper `.teacher-home__row-foot` NEW, `justify-content: flex-start`); the button itself is content-width, `margin-inline-start: calc(-1 * var(--space-md))` so its text aligns with the title | 44 px min (`.btn--small`) |
+| Pick button | `button.btn.btn--primary.btn--small`, `data-action="pick"`, in `.teacher-home__row-actions` | replaces both row actions |
+| Status chip | `p.status-chip` | unchanged in every mode |
+
+Row DOM order (= reading and Tab order): title, chip, actions (secondary, primary), hint, foot (copy), row error. Visual order on laptop matches because the actions wrap onto the title line only by flex flow, not by `order`.
+
+#### 13.D.4 Pick mode details
+- **Rows shown:** all lessons, same order, any status (IA 13.15.5). Ended rows keep their muted title and edge colour.
+- **Row look:** title, chip, one "בחירה" in the primary slot (end side). No "תכנון השאלות", no hint, no copy line, no reopen error line. Rows get shorter; that is the one layout change of the mode switch (no height animation).
+- **Filter:** shown under the lead card when lessons > 10, same input and live count. Its text carries over from the home into pick mode and back (it is one list). Escape in the filter with text clears it; Escape with an empty filter goes back to choose.
+- **Leaving:** "ביטול" under the lead, or Escape anywhere on the page → choose, focus on "שאלות משיעור קודם". "בחירה" → nameCopy. A row deleted elsewhere disappears from the live list; if the teacher had already chosen it the server call fails with the usual message.
+- **Exactly one lesson:** pick mode still shows (IA 13.15.6).
+
+#### 13.D.5 The copy name form
+- Lead `p.teacher-home__lead`: `teacher.copy.source`; the name sits in `<bdi dir="auto">` so English titles and the Hebrew quote marks stay in order.
+- Label `teacher.copy.title_label`, `for` the input. Input `id="teacher-copy-title"`, value = source title, `maxlength` 200; on create: `focus()` then `select()` so typing replaces and Enter keeps it.
+- Help `p.teacher-home__help#teacher-copy-help` under the input; input `aria-describedby="teacher-copy-help"` (plus the error id when shown).
+- Actions: "יצירה" `.btn--primary` (submit) then "ביטול" `.btn--tertiary`, same as the new-name form. Empty name → `teacher.new.invalid`, `aria-invalid`, focus stays.
+- **From a row far down the list:** the form renders at the top; call `scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' })` on the create area before focusing, so the teacher sees where the step went.
+- Pressing another row's copy action while a copy form is open replaces the source and drops the old form's lesson id (IA: closing the form drops the id).
+
+#### 13.D.6 Motion
+- Create area: each step mounts with `opacity 0 → 1`, `var(--dur-quick)` `var(--ease-out)`. No height, slide or scale animation; the list below moves once, instantly, as content changes height.
+- Row action cluster in pick mode: same fade on the new buttons. Rows are never re-ordered or animated.
+- Busy: no spinner; the label change is the feedback (as §13.D create states).
+- `prefers-reduced-motion: reduce`: no fade (`animation: none`), `scrollIntoView` uses `behavior: 'auto'`.
+
+#### 13.D.7 Accessibility
+**Focus after each transition** (IA 13.15.2 back table, plus forward moves):
+| Transition | Focus goes to |
+|---|---|
+| idle → choose | "שאלות חדשות" (group name "עם אילו שאלות?" is read with it) |
+| choose → nameNew | the name input (as today) |
+| choose → pick | the pick lead (`tabindex="-1"`), so the instruction is read; next Tab = "ביטול", then filter, then first "בחירה" |
+| pick → nameCopy | copy input, text selected |
+| row copy → nameCopy | copy input, text selected (after scroll) |
+| back: choose → idle | "+ שיעור חדש" |
+| back: nameNew → choose | "שאלות חדשות" |
+| back: pick → choose | "שאלות משיעור קודם" |
+| back: nameCopy (pick) → pick | the chosen row's "בחירה" (matched by lesson id; if the row is gone, the pick lead) |
+| back: nameCopy (row) → idle | that row's "שיעור חדש עם אותן שאלות" (if gone, "+ שיעור חדש") |
+| error | the input (refocus after re-enabling; disabled fields drop focus to `body`) |
+| success | route change to `/t/:new/plan` (plan screen owns focus) |
+
+- **Escape:** one keydown handler on `.teacher-home` while the flow is not idle; ignored while busy; in the filter, clears text first. In the empty state there is no back step.
+- **Live regions:** busy: a `.visually-hidden` `role="status"` inside the create area says `teacher.copy.busy` (the button label change alone is not announced); `aria-busy="true"` on the form and on "יצירה". Error: `.teacher-home__error` `role="alert"`, id linked from the input's `aria-describedby`.
+- **List in pick mode:** stays a `ul` of `li` with `h2` titles (heading navigation still works). It gains `aria-labelledby="pick-lead"` so entering the list announces the instruction. No `listbox`: the rows contain real buttons, and listbox would hide them and need arrow-key handling.
+- **Accessible names** via the existing `teacher.row.for` (`{{action}}: {{name}}`): "בחירה: {name}" (`teacher.row.pick`), "שיעור חדש עם אותן שאלות: {name}" (`teacher.row.copy`). Visible text unchanged.
+- **Reopen hint:** "פתיחה מחדש" gets `aria-describedby="reopen-hint-{id}"`; name stays "פתיחה מחדש: {name}".
+- **Choice help:** "שאלות משיעור קודם" gets `aria-describedby` → its help line.
+- **Targets:** every control ≥ 44 px tall (`.btn--small` min-height 44, inputs `--touch-target` 48); tertiary copy button has ≥ 8 px gap from the buttons line above.
+- **Contrast:** tertiary `--teal-700` on `--bg-card` and help/hint `--ink-muted` already pass AA in §13.D; no new colours.
+
+#### 13.D.8 Strings (copied from IA §13.15.4; no rewording)
+| Key | HE | EN |
+|---|---|---|
+| teacher.new (kept) | + שיעור חדש | + New lesson |
+| teacher.new.choose | עם אילו שאלות? | Which questions? |
+| teacher.new.from_scratch | שאלות חדשות | New questions |
+| teacher.new.from_previous | שאלות משיעור קודם | Questions from a previous lesson |
+| teacher.new.from_previous_help | השאלות, ההקדמה והסרטונים של שיעור שכבר הכנתם | The questions, intro and videos of a lesson you already planned |
+| teacher.new.pick_lead | בחרו שיעור. נעתיק את השאלות וההקדמה. | Choose a lesson. We'll copy its questions and intro. |
+| teacher.row.pick | בחירה | Choose |
+| teacher.row.copy | שיעור חדש עם אותן שאלות | New lesson, same questions |
+| teacher.copy.source | השאלות מתוך „{{name}}” | Questions from "{{name}}" |
+| teacher.copy.title_label | שם השיעור החדש | Name of the new lesson |
+| teacher.copy.help | נעתיק את השאלות, ההקדמה והסרטונים. קוד חדש, בלי התשובות של הכיתה הקודמת. | We'll copy the questions, intro and videos. New code, none of the last class's answers. |
+| teacher.copy.busy | מכינים את השיעור... | Preparing the lesson... |
+| teacher.copy.failed | לא הצלחנו להכין את השיעור. נסו שוב. | Couldn't prepare the lesson. Try again. |
+| teacher.copy.not_yours | אפשר להעתיק רק שיעורים שלכם | You can only copy your own lessons |
+| teacher.row.reopen_hint | ממשיכים מהשלב שבו עצרתם, עם מה שהתלמידים כבר כתבו | Carry on from the step where you stopped, with what students already wrote |
+| plan.copied_from | הועתק מהשיעור „{{name}}” | Copied from the lesson "{{name}}" |
+| teacher.new.create / .cancel / .invalid (kept) | יצירה / ביטול / כתבו שם לשיעור | Create / Cancel / Write a name for the lesson |
+
+Fit at 375 px: nothing needs a shorter variant. The longest button labels ("שיעור חדש עם אותן שאלות", "Questions from a previous lesson", "מכינים את השיעור...") sit in full-width or own-line buttons; `.btn` text may wrap to two lines (min-height, not fixed height). Question for the orchestrator only if a translator's DE/NL/ES "teacher.row.copy" exceeds ~32 characters: it would wrap to two lines inside its own row line, which is acceptable; no shorter key proposed.
+
+#### 13.D.9 Not in this delta
+`plan.copied_from` placement on the plan screen ("פרטי השיעור", one muted line, plain text) follows IA 13.15.2; it uses the existing muted paragraph style of §13.H.
+
 ### 13.E Console additions (`/t/:mid`, laptop 1280)
 
 **Where the controls go, and why.** The step rail and its one forward control stay exactly as §5/§11 (rail band, forward at the rail's end). The status controls go in the **console bar**, at its end corner, as a group `.console__status` (NEW element), after "מקרן" and "תכנון השאלות":

@@ -367,10 +367,14 @@ Key families to delete once nothing reads them: main.*, invite.*, facilitator.*,
 
 ### 13.5 Teacher home (`/t`)
 - **Header:** logo; "מחוברים כ־<name>"; "התנתקות" (→ `/`). Required, because school computers are shared.
-- **Primary task:** "+ שיעור חדש", always first. It opens the name field inline: label "שם השיעור (הדילמה)", then "יצירה" / "ביטול".
+- **Primary task:** "+ שיעור חדש", always first. With at least one lesson in the list it asks one question in place, "עם אילו שאלות?", with two answers: "שאלות חדשות" (opens the name field: "שם השיעור (הדילמה)", "יצירה" / "ביטול") and "שאלות משיעור קודם" (help: "השאלות, ההקדמה והסרטונים של שיעור שכבר הכנתם"; opens the pick list, §13.15). The empty state is unchanged: nothing to copy, so no question; the name field is open and focused.
 - **Empty state (first-time teacher):** the name field is already open and focused, under "עוד אין שיעורים. תנו שם לשיעור הראשון:". The three-step line "1. שם לשיעור · 2. תכנון השאלות · 3. פותחים את השיעור ומראים לכיתה את הקוד" sits above it.
 - **List:** lessons only, meaning statements this teacher created in join-class and marked `openedInClass`; never Join's `openedInJoin`. Ordered most recently opened first.
-- **Each row:** the lesson name; the status label (13.6); "תכנון השאלות" (→ `/t/:mid/plan`); and one primary action by status: "לשיעור" (→ `/t/:mid`), or "פתיחה מחדש" on an ended lesson (13.6).
+- **Each row:** the lesson name; the status label (13.6); three actions in a fixed rank on every row:
+  1. primary, by status: "לשיעור" (→ `/t/:mid`), or "פתיחה מחדש" on an ended lesson (13.6), with the line "ממשיכים מהשלב שבו עצרתם, עם מה שהתלמידים כבר כתבו";
+  2. secondary: "תכנון השאלות" (→ `/t/:mid/plan`);
+  3. tertiary: "שיעור חדש עם אותן שאלות" (→ the copy name form, §13.15).
+  The first two act on this lesson; the third makes another one, which is why its label starts with "שיעור חדש", like the button at the top.
 - **What "יצירה" does, in one go:**
   1. Create the main statement.
   2. Write `lessonPlan` with stepIndex 0 (Waiting) and status `live`, so `/m/:mid` is a lesson from its first second.
@@ -609,6 +613,108 @@ Yours to decide:
 - motion, colour, type and spacing
 
 Hebrew marked (?) needs a native read.
+
+### 13.15 New lesson from a previous one (Tal, 2026-10-25)
+Re-opening stays a resume. A copy carries the plan and nothing the class did. Build: callable `classCloneLesson`
+(functions/src/classroom/fn_classCloneLesson.ts), screens in `apps/join-class/src/views/teacher/HomeCreate.ts`.
+
+#### 13.15.1 Objects
+| Object | What it is | Statement tree |
+|---|---|---|
+| Lesson | one run with one class | main Statement, `parentId 'top'`, `statementSettings.lessonPlan` |
+| Plan ("תכנון השאלות") | what the teacher prepared: guiding + challenge questions (text, hint, role, order), intro paragraphs ("הקדמה"), intro videos, side names, lesson language | sub-question children (`classRole`, `hint`, `order`), paragraph children, main `statementSettings` |
+| Source lesson | the lesson a copy was made from | new optional fields on the copy's main: `sourceLessonId`, `sourceLessonTitle` (title at copy time; survives renames and deletes) |
+| Class code | 6 digits that lead students in | `classCodes/{code}`; each lesson has its own; the old code keeps leading to the old lesson |
+| Class work | students, tables, answers, votes, ballot, progress | never copied |
+
+Three concepts, side by side. Each has one name and one place.
+| | Continue: "פתיחה מחדש" | Copy the plan: "שיעור חדש עם אותן שאלות" | New plan: "שאלות חדשות" |
+|---|---|---|---|
+| Lesson | the same one | a new one | a new one |
+| Plan | kept | copied | empty |
+| Class work | kept | none | none |
+| Step / status | the step it ended on / `live` | Waiting (step 0) / `live` | Waiting (step 0) / `live` |
+| Class code | the same | new | new |
+| Triggered from | an ended row; the ended console | "+ שיעור חדש" → "שאלות משיעור קודם" → pick; or a row's tertiary action | "+ שיעור חדש" → "שאלות חדשות"; the empty state |
+| Lands on | `/t/:mid` (the console) | `/t/:new/plan` | `/t/:new/plan` |
+
+#### 13.15.2 Navigation and task flows
+The whole flow lives in the create area at the top of `/t`; no new route, no dialog. While it runs, "+ שיעור חדש" is replaced by the current step. States: idle → choose → (nameNew | pick → nameCopy). A row's tertiary action goes idle → nameCopy directly; the create area shows it and receives focus.
+
+Tasks (taps, typing excluded):
+1. Copy from the top: "+ שיעור חדש" → "שאלות משיעור קודם" → "בחירה" on a row → "יצירה" (name prefilled) → `/t/:new/plan`. 4 taps.
+2. Copy from a row: "שיעור חדש עם אותן שאלות" → "יצירה" → `/t/:new/plan`. 2 taps.
+3. New questions: "+ שיעור חדש" → "שאלות חדשות" → type → "יצירה". 3 taps (was 2). The added tap is the price of one entry point for both kinds of new lesson; first-time teachers (empty state) still need 1.
+4. Continue: "פתיחה מחדש". 1 tap, unchanged.
+
+Pick list: the same lessons, order and filter (filter above 10 lessons, 13.11) as the home list. Lead line above it; each row shows name and status only; its actions are replaced by one "בחירה" (accessible name "בחירה: <name>"). "ביטול" under the lead.
+
+Back paths: Escape and "ביטול" go one step back; focus returns to the control that opened the step.
+| From | Back to | Focus on |
+|---|---|---|
+| choose | idle | "+ שיעור חדש" |
+| nameNew | choose | "שאלות חדשות" |
+| pick | choose | "שאלות משיעור קודם" |
+| nameCopy (via pick) | pick | the chosen row's "בחירה" |
+| nameCopy (via a row) | idle | that row's "שיעור חדש עם אותן שאלות" |
+Escape in the pick filter clears the filter first (as on the home); a second Escape goes back. In the empty state there is no "ביטול" (nothing to go back to).
+
+After success: `/t/:new/plan`. From there "‹ השיעור" → `/t/:new` → "‹ השיעורים שלי" → `/t`, where the copy is the first row, "עוד לא התחיל". The source row is untouched.
+
+Busy, error, double tap:
+- Busy: "יצירה" reads "מכינים את השיעור..." with aria-busy; the field, "יצירה" and "ביטול" are disabled; Escape does nothing.
+- Double tap / retry: the form owns one new lesson id from the moment it opens; every submit of that form reuses it, so at most one lesson and one code are made. Closing the form drops the id.
+- Error: inline `role=alert` under the buttons, typed name kept, focus stays in the field. Text "לא הצלחנו להכין את השיעור. נסו שוב."; on permission refusal "אפשר להעתיק רק שיעורים שלכם" (the UI never offers another teacher's lesson; this covers a switched account in another tab).
+- Source deleted while picking: same failed message; the pick list updates from the live subscription.
+
+On the new lesson's plan screen, "פרטי השיעור" carries one muted line: "הועתק מהשיעור „<name>”" (from `sourceLessonTitle`). Not a link: the source is one tap away on `/t`, and a link would add an exit from the plan screen.
+
+#### 13.15.3 The copy name form
+- Lead: "השאלות מתוך „<source name>”" [added], so the teacher sees what is copied even after editing the name.
+- Label: "שם השיעור החדש".
+- Prefill: the source title, fully selected, so typing replaces it and "יצירה" keeps it. No "(2)" suffix (plan default). Two rows with one name stay apart by status ("עוד לא התחיל") and order (newest first).
+- Help: "נעתיק את השאלות, ההקדמה והסרטונים. קוד חדש, בלי התשובות של הכיתה הקודמת." [changed]
+- Buttons: "יצירה" (primary) / "ביטול". Empty name → "כתבו שם לשיעור" (existing key).
+
+#### 13.15.4 Labels (all 7 locales; (?) = needs a native read)
+| Concept | EN | HE | i18n key |
+|---|---|---|---|
+| New lesson (unchanged) | + New lesson | + שיעור חדש | teacher.new (kept) |
+| The question | Which questions? | עם אילו שאלות? [changed] | NEW teacher.new.choose |
+| New plan | New questions | שאלות חדשות | NEW teacher.new.from_scratch |
+| Copy, at the top | Questions from a previous lesson | שאלות משיעור קודם [changed] | NEW teacher.new.from_previous |
+| Copy, help | The questions, intro and videos of a lesson you already planned | השאלות, ההקדמה והסרטונים של שיעור שכבר הכנתם [changed] | NEW teacher.new.from_previous_help |
+| Pick lead | Choose a lesson. We'll copy its questions and intro. | בחרו שיעור. נעתיק את השאלות וההקדמה. | NEW teacher.new.pick_lead |
+| Pick | Choose | בחירה | NEW teacher.row.pick |
+| Copy, on a row | New lesson, same questions | שיעור חדש עם אותן שאלות [changed] | NEW teacher.row.copy |
+| Copy form, source | Questions from "{{name}}" | השאלות מתוך „{{name}}” [added] | NEW teacher.copy.source |
+| Copy form, label | Name of the new lesson | שם השיעור החדש | NEW teacher.copy.title_label |
+| Copy form, help | We'll copy the questions, intro and videos. New code, none of the last class's answers. | נעתיק את השאלות, ההקדמה והסרטונים. קוד חדש, בלי התשובות של הכיתה הקודמת. [changed] | NEW teacher.copy.help [added; the plan had the text, no key] |
+| Busy | Preparing the lesson... | מכינים את השיעור... | NEW teacher.copy.busy |
+| Failed | Couldn't prepare the lesson. Try again. | לא הצלחנו להכין את השיעור. נסו שוב. | NEW teacher.copy.failed |
+| Not yours | You can only copy your own lessons | אפשר להעתיק רק שיעורים שלכם [changed] | NEW teacher.copy.not_yours |
+| Reopen, hint | Carry on from the step where you stopped, with what students already wrote | ממשיכים מהשלב שבו עצרתם, עם מה שהתלמידים כבר כתבו [changed] | NEW teacher.row.reopen_hint |
+| Copied from | Copied from the lesson "{{name}}" | הועתק מהשיעור „{{name}}” [changed] | NEW plan.copied_from |
+| Create / Cancel / empty name | Create / Cancel / Write a name for the lesson | יצירה / ביטול / כתבו שם לשיעור | teacher.new.create, teacher.new.cancel, teacher.new.invalid (kept) |
+
+Why the Hebrew changed:
+- "מתוך שיעור קודם" → "שאלות משיעור קודם": the two answers to "עם אילו שאלות?" become parallel nouns ("שאלות חדשות" / "שאלות משיעור קודם"); "מתוך..." alone does not say what is taken.
+- "שיעור חדש עם השאלות האלה" → "...עם אותן שאלות": the row does not show its questions, so "האלה" points at nothing; "אותן" matches the help line and reads right in the screen-reader name "<action>: <lesson>".
+- Copy help: "תלמידים, תשובות וקוד כיתה חדשים" said "new students" (the class may be the same one) and broke agreement; the new line names what is copied, then what is not.
+- "שיעור שלכם" → "שיעורים שלכם": a rule, so plural. Reopen hint: "מאיפה שעצרתם" is spoken register; "מהשלב" also names the step model.
+- "הועתקו מ־{{name}}": a prefix glued to a variable breaks with English or quoted titles and in RTL; "מהשיעור „{{name}}”" keeps the prefix on a fixed word. Subject is the lesson, not only the questions (intro and videos came too).
+
+Retire (never in UI): שכפול, העתק שיעור, שיעור חוזר, Duplicate, Clone. "Clone" stays internal to code (`classCloneLesson`); no user sees it.
+
+#### 13.15.5 IA defects to avoid
+- **Three equal buttons on a row.** Rank is fixed (A, "Each row"): primary = the status action, because opening or resuming a lesson is the daily task and the one that changes with status; secondary = "תכנון השאלות", because it edits this lesson; tertiary = the copy, because it is used about once per class per term and creates another object. Same rank on every row, ended ones included, so the position of each action is learned once. Visual weight is the UX agent's.
+- **Copy mistaken for continue.** "פתיחה מחדש" carries its hint; the copy carries "שיעור חדש" in its name. The two never share a word.
+- **Pick list: all lessons, not ended only (confirmed).** The common case is one plan taught to two classes the same week: the source is often not started or live, and hiding it would force a fake "end". Copying reads only the plan, never class work, so a live source is safe.
+
+#### 13.15.6 Defaults taken (Tal may overturn; none blocks the build)
+- With exactly one lesson, the pick list is still shown (no auto-pick): the step stays predictable and shows what is copied.
+- A copy started from a row is shown in the top create area, not inside the row: one place for all lesson creation.
+- The copied-from line is plain text, not a link.
 
 ## 14. Lesson introduction (Tal, 2026-10-22)
 

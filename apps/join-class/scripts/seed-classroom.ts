@@ -10,6 +10,9 @@
  *   - --proposals 4 proposals under the challenge + 2 answers under guiding question 1,
  *                 each with a `classTable` marker and a `consensus` value
  *   - --support   decisionSupport on 16 of the students (for the summary screen)
+ *   - --played    an ENDED lesson that was taught: 2 intro blocks (a paragraph and a list), 2 intro
+ *                 videos, side names, the lesson language, a closed ballot on the challenge and
+ *                 proposals (implies --proposals). The lesson a teacher copies from.
  *
  * Usage (from repo root; emulators on the host in env, default alt ports shown):
  *   FIRESTORE_EMULATOR_HOST=localhost:8091 FIREBASE_AUTH_EMULATOR_HOST=localhost:9109 \
@@ -37,10 +40,12 @@ import { getFirestore } from 'firebase-admin/firestore';
 import {
 	Access,
 	CLASS_TABLES_COLLECTION,
+	ParagraphType,
 	Role,
 	StatementType,
 	campOf,
 	classTableId,
+	createParagraphChildStatement,
 	createStatementObject,
 } from '@freedi/shared-types';
 import type { Camp, ClassTable, Statement, StatementSubscription } from '@freedi/shared-types';
@@ -80,6 +85,15 @@ const ANSWER_TEXTS = [
 	'Students who need the phone for health are left out.',
 ];
 const ANSWER_CONSENSUS = [0.55, 0.4];
+const INTRO_BLOCKS: { content: string; list?: 'ul' | 'ol' }[] = [
+	{ content: 'Phones are everywhere. Should the school set one rule for all of them?' },
+	{ content: 'Think about breaks, lessons and emergencies', list: 'ul' },
+];
+const INTRO_VIDEOS = [
+	{ id: 'seed-v1', title: 'The story', url: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ' },
+	{ id: 'seed-v2', title: 'Two sides', url: 'https://www.youtube.com/watch?v=ysz5S6PUM-U' },
+];
+const SIDE_NAMES = { a: 'Dana', b: 'Omer' };
 
 const flag = (name: string): boolean => process.argv.includes(`--${name}`);
 const numArg = (name: string, fallback: number): number => {
@@ -166,6 +180,8 @@ function subscriptionOf(
 		lastUpdate: now,
 		createdAt: now,
 		openedInJoin: role === Role.admin ? now : undefined,
+		// what lists a lesson on the teacher's home (join-class marker)
+		...(role === Role.admin ? { openedInClass: now } : {}),
 		...extra,
 	};
 }
@@ -180,7 +196,8 @@ async function main(): Promise<void> {
 	const stepIndex = Math.min(STEP_KEYS.length - 1, Math.max(0, numArg('step', 0)));
 	const studentCount = numArg('students', DEFAULT_STUDENTS);
 	const seated = flag('seated');
-	const withProposals = flag('proposals');
+	const played = flag('played');
+	const withProposals = flag('proposals') || played;
 	const withSupport = flag('support');
 	const mainId = strArg('id') ?? `class-${randomDigits(8)}`;
 	const classCode = randomDigits(CLASS_CODE_LENGTH);
@@ -222,8 +239,14 @@ async function main(): Promise<void> {
 			creator: teacherCreator,
 			statementSettings: {
 				...baseSettings,
-				lessonPlan: { steps: [...STEP_KEYS], stepIndex },
+				lessonPlan: {
+					steps: [...STEP_KEYS],
+					stepIndex,
+					...(played ? { projectorVideoId: 'seed-v1' } : {}),
+					...(played ? { status: 'ended' as const, statusAt: Date.now(), endedAt: Date.now() } : {}),
+				},
 				classCode,
+				...(played ? { introVideos: INTRO_VIDEOS, sideNames: SIDE_NAMES } : {}),
 			},
 		}),
 		'main',
@@ -232,9 +255,29 @@ async function main(): Promise<void> {
 		...mainDraft,
 		topParentId: mainId,
 		membership: { access: Access.openToAll },
+		...(played ? { defaultLanguage: 'he', forceLanguage: true, lastChildUpdate: Date.now() } : {}),
 	};
 	await db.doc(`statements/${mainId}`).set(mainStatement);
 	await db.doc(`classCodes/${classCode}`).set({ mainId, createdAt: Date.now() });
+
+	const introIds: string[] = [];
+	if (played) {
+		for (let i = 0; i < INTRO_BLOCKS.length; i++) {
+			const block = INTRO_BLOCKS[i];
+			const paragraph = mustCreate(
+				createParagraphChildStatement({
+					content: block.content,
+					host: mainStatement,
+					creator: teacherCreator,
+					order: i,
+					...(block.list ? { blockType: ParagraphType.li, listType: block.list } : {}),
+				}),
+				'intro paragraph',
+			);
+			await db.doc(`statements/${paragraph.statementId}`).set(paragraph);
+			introIds.push(paragraph.statementId);
+		}
+	}
 
 	const makeQuestion = async (
 		title: string,
@@ -359,6 +402,19 @@ async function main(): Promise<void> {
 		for (let i = 0; i < ANSWER_TEXTS.length; i++) {
 			answerIds.push(await write(ANSWER_TEXTS[i], guidingIds[0], i * 7, ANSWER_CONSENSUS[i], i === 0));
 		}
+		if (played) {
+			// the ballot the class voted on, closed with the leading proposal as the decision
+			const closedAt = Date.now();
+			await db.doc(`statements/${challengeId}`).update({
+				'statementSettings.roundPhase': 'improve',
+				'statementSettings.ballot': {
+					candidateIds: proposalIds,
+					frozenAt: closedAt - 1000,
+					closedAt,
+					decisionId: proposalIds[0],
+				},
+			});
+		}
 	}
 
 	// ---- output ---------------------------------------------------------------
@@ -376,6 +432,8 @@ async function main(): Promise<void> {
 		tables: tables.map((t) => ({ tableId: t.tableId, n: t.n, memberUids: t.memberUids })),
 		proposalIds,
 		answerIds,
+		introIds,
+		played,
 	};
 	const json = JSON.stringify(summary, null, 2);
 	const outPath = join(dirname(fileURLToPath(import.meta.url)), '.seed-output.json');

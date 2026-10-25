@@ -1087,6 +1087,8 @@ export type {
   ClassFreezeBallotResponse,
   ClassCloseBallotRequest,
   ClassCloseBallotResponse,
+  ClassCloneLessonRequest,
+  ClassCloneLessonResponse,
   ClassSetLessonStatusRequest,
   ClassSetLessonStatusResponse,
   LessonStatusAction,
