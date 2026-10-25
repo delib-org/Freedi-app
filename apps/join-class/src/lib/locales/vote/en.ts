@@ -19,6 +19,7 @@ const vote: Record<string, string> = {
 	'voting.failed': 'The vote was not saved. Try again',
 	'voting.paused': 'Voting is paused',
 	'voting.paused_hint': 'The teacher paused the vote for now. Your vote is kept.',
+	'voting.closed_hint': 'The vote is closed. Waiting for the summary',
 	'console.vote_settings': 'The vote',
 	'console.vote_live_results': 'Students see the results live',
 	'console.vote_live_results_help': 'How many votes each proposal has. Never who voted for what.',
