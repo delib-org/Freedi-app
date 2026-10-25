@@ -2,6 +2,7 @@ import m from 'mithril';
 import type { LessonStepKey, Statement } from '@freedi/shared-types';
 import { lessonStepOf } from '@/lib/lesson';
 import { lessonStatusOfMain } from '@/lib/lessonCore';
+import { AllProposalsStep } from './steps/AllProposalsStep';
 import { setStudentStage } from '@/lib/studentStage';
 import { watchClass } from '@/lib/classroom/classState';
 import { OpeningStep } from './steps/OpeningStep';
@@ -20,7 +21,8 @@ import type { LessonStateAttrs } from './LessonStateScreen';
  * `lessonPlan.stepIndex` (the main statement is kept live by MainHub's
  * subscription, so a teacher's step change and a phone refresh both land here)
  * and delegates to ONE slot file per step (views/student/steps/):
- *   C2: Waiting, Opening, Side, Tables       C3: TableTalk, Proposals, Vote, Summary
+ *   C2: Waiting, Opening, Side, Tables
+ *   C3: TableTalk, Proposals, All proposals (IA 19), Vote, Summary
  * Also starts the classroom listeners (`watchClass`) for the student role.
  */
 
@@ -31,6 +33,7 @@ const STEP_COMPONENTS: Record<LessonStepKey, m.Component<StepAttrs>> = {
 	tables: TablesStep,
 	tableTalk: TableTalkStep,
 	proposals: ProposalsStep,
+	allProposals: AllProposalsStep,
 	vote: VoteStep,
 	summary: SummaryStep,
 };

@@ -4,15 +4,17 @@
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
 import vote from './vote/nl';
+import allProposals from './allProposals/nl'; // >>> allProposals
 
 const nl: Record<string, string> = {
 	...vote,
+	...allProposals, // >>> allProposals
 	'step.waiting': 'Wachten op de docent',
 	'step.opening': 'Opening',
 	'step.side': 'Kies een kant',
 	'step.tables': 'Verdeling in tafels',
 	'step.tableTalk': 'Onderzoeksvragen',
-	'step.proposals': 'Voorstellen voor oplossingen',
+	'step.proposals': 'Voorstellen',
 	'step.vote': 'Stemmen',
 	'step.summary': 'Samenvatting',
 	'lesson.step_of': 'Stap {{n}} van {{total}}',
@@ -245,7 +247,7 @@ const nl: Record<string, string> = {
 	'proposal.placeholder': 'Schrijf een voorstel',
 	'proposal.none': 'Er is nog geen vraag voor voorstellen',
 	'proposal.send': 'Versturen',
-	'proposal.class_list': 'De voorstellen van de klas',
+	'proposal.class_list': 'Alle voorstellen',
 	'proposal.none_yet': 'Nog geen voorstellen',
 	'proposal.plenum_line': 'De beste voorstellen staan op de beamer',
 	'proposal.edit': 'Bewerken',

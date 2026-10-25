@@ -36,7 +36,16 @@ function q(id: string, extra: Partial<Statement> = {}, role?: 'guiding' | 'chall
 	} as Statement;
 }
 
-const OLD_STEPS = ['waiting', 'opening', 'side', 'tables', 'tableTalk', 'proposals', 'vote', 'summary'] as const;
+const OLD_STEPS = [
+	'waiting',
+	'opening',
+	'side',
+	'tables',
+	'tableTalk',
+	'proposals',
+	'vote',
+	'summary',
+] as const;
 
 describe('lesson steps', () => {
 	it('a new lesson has nine steps, All proposals between Proposals and Vote', () => {

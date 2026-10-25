@@ -11,6 +11,9 @@ import { gateView } from './gateLogic';
 // >>> voteSummary BEGIN
 import { summaryStage, voteStage } from './VoteStage';
 // >>> voteSummary END
+// >>> allProposals BEGIN
+import { allProposalsStage } from './AllProposalsStage';
+// >>> allProposals END
 import {
 	allTablesRating,
 	countTables,
@@ -193,6 +196,9 @@ const RENDERERS: Record<LessonStepKey, (ctx: StepContext) => m.Vnode> = {
 	vote: voteStage,
 	summary: summaryStage,
 	// >>> voteSummary END
+	// >>> allProposals BEGIN
+	allProposals: allProposalsStage,
+	// >>> allProposals END
 };
 
 export function renderStep(key: LessonStepKey, ctx: StepContext): m.Vnode {

@@ -107,7 +107,16 @@ describe('setLessonStep', () => {
 });
 
 describe('setLessonStep on an old 8-step lesson (IA 19.8)', () => {
-	const OLD_STEPS = ['waiting', 'opening', 'side', 'tables', 'tableTalk', 'proposals', 'vote', 'summary'];
+	const OLD_STEPS = [
+		'waiting',
+		'opening',
+		'side',
+		'tables',
+		'tableTalk',
+		'proposals',
+		'vote',
+		'summary',
+	];
 	const oldMain = (stepIndex: number): unknown => ({
 		statementSettings: { lessonPlan: { steps: OLD_STEPS, stepIndex, status: 'live' } },
 	});

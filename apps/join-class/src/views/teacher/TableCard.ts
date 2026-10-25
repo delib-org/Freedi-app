@@ -40,6 +40,10 @@ export interface TableCardAttrs {
 	questionText?: string;
 	mainId: string;
 	tableNumbers: readonly number[];
+	// >>> allProposals BEGIN
+	/** "כל ההצעות": "n/m rated everything" for this table. */
+	ratedLine?: string;
+	// >>> allProposals END
 }
 
 const MS_PER_SECOND = 1000;
@@ -216,6 +220,9 @@ export const TableCard: m.Component<TableCardAttrs> = {
 					),
 					attrs.tableTalk ? m('span.table-card__turn', turnLine(table)) : null,
 				]),
+				attrs.ratedLine // >>> allProposals
+					? m('p.table-card__now', { 'data-testid': 'table-rated' }, attrs.ratedLine)
+					: null,
 				attrs.done
 					? null
 					: m(

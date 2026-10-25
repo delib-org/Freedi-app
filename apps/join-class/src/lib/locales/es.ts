@@ -4,15 +4,17 @@
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
 import vote from './vote/es';
+import allProposals from './allProposals/es'; // >>> allProposals
 
 const es: Record<string, string> = {
 	...vote,
+	...allProposals, // >>> allProposals
 	'step.waiting': 'Esperando al docente',
 	'step.opening': 'Apertura',
 	'step.side': 'Elegir postura',
 	'step.tables': 'División en mesas',
 	'step.tableTalk': 'Preguntas de exploración',
-	'step.proposals': 'Propuestas de solución',
+	'step.proposals': 'Propuestas',
 	'step.vote': 'Votación',
 	'step.summary': 'Resumen',
 	'lesson.step_of': 'Paso {{n}} de {{total}}',
@@ -246,7 +248,7 @@ const es: Record<string, string> = {
 	'proposal.placeholder': 'Escribid una propuesta',
 	'proposal.none': 'Aún no hay pregunta para propuestas',
 	'proposal.send': 'Enviar',
-	'proposal.class_list': 'Las propuestas de la clase',
+	'proposal.class_list': 'Todas las propuestas',
 	'proposal.none_yet': 'Aún no hay propuestas',
 	'proposal.plenum_line': 'Las mejores propuestas están en el proyector',
 	'proposal.edit': 'Editar',

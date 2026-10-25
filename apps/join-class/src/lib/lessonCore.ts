@@ -58,7 +58,9 @@ export function isLessonStepKey(value: unknown): value is LessonStepKey {
  * its 8 stored steps (an old lesson sitting at Vote, index 6, must not jump to
  * the new step); a plan with no usable list gets the current one.
  */
-export function planStepKeys(plan: Pick<LessonPlan, 'steps'> | undefined | null): readonly LessonStepKey[] {
+export function planStepKeys(
+	plan: Pick<LessonPlan, 'steps'> | undefined | null,
+): readonly LessonStepKey[] {
 	const steps = plan?.steps;
 
 	return Array.isArray(steps) && steps.length > 0 && steps.every(isLessonStepKey)

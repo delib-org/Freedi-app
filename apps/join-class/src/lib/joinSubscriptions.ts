@@ -33,6 +33,7 @@ import {
 } from './firebase';
 import type { Unsubscribe } from './firebase';
 import { resilientOnSnapshot } from './resilientListeners';
+import { planStepKeys } from './lessonCore';
 
 export interface ClassLessonEntry {
 	id: string;
@@ -41,6 +42,8 @@ export interface ClassLessonEntry {
 	openedInClass: number;
 	status: LessonStatus;
 	stepIndex: number;
+	/** The lesson's own step count (8 for a lesson made before "כל ההצעות", else 9). */
+	stepCount: number;
 }
 
 /** Firestore `in` queries take at most 30 ids; a teacher rarely has more than one chunk. */
@@ -159,6 +162,7 @@ function entryOf(
 		openedInClass: opened,
 		status: lessonStatusOf(plan),
 		stepIndex: typeof plan.stepIndex === 'number' ? plan.stepIndex : 0,
+		stepCount: planStepKeys(plan).length,
 	};
 }
 
