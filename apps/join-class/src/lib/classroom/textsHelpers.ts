@@ -28,6 +28,9 @@ export interface QuestionGroup {
 	questionId: string;
 	title: string;
 	challenge: boolean;
+	/** A question one table wrote for itself: the teacher may hide it (IA 18). */
+	ownQuestion: boolean;
+	hidden: boolean;
 	groups: TextGroup[];
 }
 
@@ -76,6 +79,13 @@ export function groupWrittenTexts(
 			})
 			.sort((a, b) => (a.n ?? Number.MAX_SAFE_INTEGER) - (b.n ?? Number.MAX_SAFE_INTEGER));
 
-		return { questionId: question.statementId, title: question.statement, challenge, groups };
+		return {
+			questionId: question.statementId,
+			title: question.statement,
+			challenge,
+			ownQuestion: question.classTable !== undefined,
+			hidden: question.hide === true,
+			groups,
+		};
 	});
 }

@@ -69,9 +69,26 @@
 }
 
 // ---- what they wrote --------------------------------------------------------
-.written__question-title {
+.written__question-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   margin: var(--space-lg) 0 var(--space-sm);
+}
+
+.written__question--hidden .written__question-title {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.written__question-title {
+  margin: 0;
   font-size: var(--font-size-lg);
+}
+
+.written-card__flag {
+  font-size: var(--font-size-sm);
+  color: var(--ink-muted);
 }
 
 .written__group-title {

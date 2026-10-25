@@ -35,6 +35,8 @@ export interface VoteScreenAttrs {
 class VoteState {
 	feed = new FlowFeed();
 	votedId: string | null = null;
+	/** The last proposal this phone had voted for (to tell "removed" from "never voted"). */
+	lastVotedId: string | null = null;
 	selectedId: string | null = null;
 	voteStop: Unsubscribe | null = null;
 	voteFor: string | null = null;
@@ -92,7 +94,16 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			.map((id) => self.feed.options.find((o) => o.statementId === id))
 			.filter((o): o is Statement => !!o);
 		const results = liveResultsOn(challenge) ? tally : null;
-		const selected = self.selectedId ?? self.votedId;
+		if (self.votedId) self.lastVotedId = self.votedId;
+		// The teacher hid the proposal this phone voted for: its vote is withdrawn.
+		const choiceRemoved =
+			!!ballot &&
+			!closed &&
+			!self.votedId &&
+			!!self.lastVotedId &&
+			!ballotIds.includes(self.lastVotedId);
+		const stillCandidate = (id: string | null): boolean => !!id && ballotIds.includes(id);
+		const selected = stillCandidate(self.selectedId) ? self.selectedId : self.votedId;
 		const changed = !!selected && selected !== self.votedId;
 
 		const cast = (): void => {
@@ -152,6 +163,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			},
 			ballot
 				? [
+						choiceRemoved ? m('p.vote__empty', { role: 'status' }, t('vote.choice_removed')) : null,
 						candidates.length === 0
 							? m('p.vote__empty', t('voting.empty'))
 							: m(VoteList, {

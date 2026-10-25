@@ -1590,3 +1590,104 @@ Decision: at Proposals each phone talks, writes or rates whenever it wants. No s
   - §3 / §16.2: retire `turn.peek_back`, `turn.peek_why_*`, `turn.pill_now`; `turn.asker` / `turn.asker_me` were deleted afterwards (dead keys).
 - **`docs/design/agora-classroom-ux.md`:** the strip section (§11, last bullet: "tappable peek", Tal 2026-10-22) is superseded.
 - **Test ids:** retired `peek-body`, `peek-back`, `pill-now`, and `asker-mark` at Proposals. Kept (now local) `table-to-write`, `table-to-rate`. No e2e spec in `apps/join-class` references the retired ones (grep 2026-10-25).
+
+## 18. Go back, reset, hide (Tal, 2026-10-25, card ACxcFNmD)
+
+Brief: the teacher can return the class to any step, and if needed reset the turns, the vote results, or delete one result. Tal decided: going back keeps everything; reset and delete are separate, explicitly confirmed actions.
+Method: read StepRail.ts, SwitchBand.ts, consoleActions.ts, WhatTheyWrote.ts, lesson.ts/lessonCore.ts, tableTransitions.ts, fn_classAllTablesTo.ts, fn_classBallot.ts, ballotLogic.ts, fn_vote.ts, lessonStatusGuard.ts, classroomModel.ts. Out of scope: vote pause/resume and live results (concurrent vote lane).
+
+Findings from code:
+- Going back ALREADY works: the rail moves the class backward too (StepRail.onGo → setLessonStep in apps/join-class/src/lib/lesson.ts, a client write of stepIndex + follow-me), §11.1. This spec adds only a confirm before a backward move + a one-time line on phones.
+- A deleted vote is never subtracted from the tally: functions/src/fn_vote.ts (updateVote, onDocumentWritten) parses after.data(), so deleting a vote doc throws and is logged; it never subtracts from `selections`. So reset-the-vote clears `selections` itself, and updateVote needs a guard `if (!event.data.after.exists) return`.
+- Deleting one item already exists as a hide: "מה כתבו" has הסתרה / החזרה (setOptionFlag hide); ballot freeze already skips hidden options. Reuse it as the single-item delete; needs a server path only because of the ballot.
+
+### 18.1 Objects: what "a result" is at each step
+| Step | What students leave | Teacher may remove one? | Undo |
+|---|---|---|---|
+| Side | side/camp on the subscription | No — going back to Side lets each student pick again | — |
+| Tables | seating (ClassTable.memberUids) | No — "חלוקה מחדש"/"העברה לשולחן אחר" exist | — |
+| Table talk | answers, own questions (Statements) | Yes: hide | restore |
+| Table talk | turn state (asked/passed/answered) | No single item; Reset the turns (18.4) | none |
+| Proposals | proposals (options under the challenge) | Yes: hide | restore |
+| Proposals | ratings | No; a rating on a hidden item stays, not shown | — |
+| Vote | votes (votes/{uid}--{challengeId}), selections, ballot.decisionId | No single vote (secret ballot); Reset the vote (18.4) | none |
+| Summary | decisionSupport | No; cleared by Reset the vote | none |
+
+"Delete one result" = hide (existing concept/labels הסתרה / החזרה), always undoable. Consequences:
+- Hidden item leaves every student list, projector, gate bars, later ballot freezes (already true).
+- Hidden own question leaves the pick list; its answers are hidden with it (on read, nothing extra written).
+- Hidden proposal that is a candidate on an OPEN ballot leaves candidateIds; every vote on it becomes `none` so fn_vote moves the count. Restoring does not re-add it to the ballot; teacher freezes again (allowed while open).
+- On a CLOSED ballot, hiding a candidate is refused; teacher resets the vote first.
+
+### 18.2 Where controls live (no new routes)
+- Go back: step rail as built; pressing an EARLIER step opens a confirm; forward stays one tap.
+- Reset turns, all tables: step band (SwitchBand) at Table talk, after "כל השולחנות: …".
+- Reset turns, one table: table sheet at Table talk, after "להתחיל סבב n".
+- Reset the vote: step band at Vote, after "סגירת ההצבעה".
+- Hide/restore: "מה כתבו" only (one home), as built, now also for own questions.
+
+| Concept | HE | EN | i18n key |
+|---|---|---|---|
+| Back confirm title | לחזור לשלב: {{name}}? | Go back to: {{name}}? | console.back_title |
+| Back confirm line | מה שהתלמידים כתבו, דירגו ובחרו נשמר. | Everything students wrote, rated and chose is kept. | console.back_keep |
+| Back confirm yes | לחזור | Go back | console.back_yes |
+| Reset turns all | איפוס הסבבים בכל השולחנות | Reset the turns at all tables | console.reset_turns_all |
+| Reset turns one | איפוס הסבבים בשולחן | Reset this table's turns | console.reset_turns_table |
+| Reset turns title | לאפס את הסבבים? | Reset the turns? | console.reset_turns_title |
+| Reset turns line | כולם יוכלו לשאול שוב וכל השאלות יחזרו להיות פנויות. התשובות נשמרות. אי אפשר לבטל. | Everyone can ask again and every question is free again. Answers are kept. This cannot be undone. | console.reset_turns_body |
+| Reset vote | איפוס ההצבעה | Reset the vote | console.reset_vote |
+| Reset vote title | לאפס את ההצבעה? | Reset the vote? | console.reset_vote_title |
+| Reset vote line | כל הקולות יימחקו וההחלטה תבוטל. מצביעים מחדש על אותן הצעות. אי אפשר לבטל. | All votes are deleted and the decision is cancelled. The class votes again on the same proposals. This cannot be undone. | console.reset_vote_body |
+| Confirm yes (resets) | איפוס | Reset | console.reset_yes |
+| Cancel | ביטול | Cancel | common.cancel (existing) |
+| Hide/restore | הסתרה / החזרה | Hide / Restore | console.hide / console.restore (kept) |
+| Hide refused closed vote | ההצעה בהצבעה שנסגרה. אפסו את ההצבעה קודם | This proposal is on a closed vote. Reset the vote first | console.hide_vote_closed |
+| Student moved back (once) | חזרנו לשלב: {{name}} | We're back at: {{name}} | lesson.back_line |
+| Student turns reset (once) | הסבבים התחילו מחדש | The turns have started again | turn.restarted |
+| Student vote reset | ההצבעה התחילה מחדש. בחרו שוב | The vote has started again. Choose again | vote.restarted |
+| Student own proposal hidden | המורה הסתירו את ההצעה מהרשימה של הכיתה (?) | The teacher hid this proposal from the class list | proposal.hidden_mine |
+| Student chosen proposal removed | ההצעה שבחרתם הוסרה. בחרו שוב | The proposal you chose was removed. Choose again | vote.choice_removed |
+
+Naming: "turns" = סבבים (§3 Turn = סבב); "תורים" not used. "Reset the vote" avoids "תוצאות" (retired by §3). All 7 locale files get every key.
+
+Phones: after a backward move, the earlier step with the student's own earlier work (Side shows previous side, Proposals shows sent proposal, Table talk shows table state) + lesson.back_line once until the next move. After a reset, each phone redraws from the server with the one-time line.
+
+### 18.3 Task flows
+1. Go back to X (2 taps): rail X → console.back_yes. Nothing deleted. Forward again is 1 tap.
+2. Reset turns whole class (2 taps): at Table talk, band console.reset_turns_all → console.reset_yes. Every phone shows P1 with "סבב 1 מתוך max".
+3. Reset turns one table (3 taps): table card → sheet console.reset_turns_table → console.reset_yes.
+4. Reset the vote: at Vote, close the vote if open (or the vote lane's pause) → console.reset_vote → console.reset_yes. Ballot reopens with same candidates, no votes; Summary shows no-decision state.
+5. Hide one result (1 tap): "מה כתבו" → console.hide; "החזרה" undoes. Hide undoable; resets not (confirm says so, nothing archived).
+
+### 18.4 Server contract
+All three callables: admin-only (assertWorkspaceAdmin else permission-denied); new assertLessonNotEnded (allowed live/paused/open, refused ended with `lesson-ended`); the console's guardedAct lets them through while paused (as status actions). Step moves stay as built (setLessonStep; refused paused/ended).
+
+classResetTurns { mainId, n?: number } — no n = every table; one batch.
+- Refusals: lesson step not tableTalk → not-table-talk; no table n → not-found.
+- Writes per table: step:'pick', turn:1, askerUid:null, askedUids:[], passedAskingUids:[], usedQuestionIds:[], spokenUids:[], writingMode:'each', writingLocked:false, updatedAt.
+- Deletes per table: questionId, speakerUid, speakerEndsAt, passedSpeakingUids.
+- Kept: members, no-device members, every Statement and rating.
+
+classResetVote { mainId }
+- Refusals: no ballot → no-ballot; ballot open while lesson step is vote and the vote is not paused → vote-running.
+- Writes in order: 1) delete every vote with parentId == challengeId (batches); 2) isVoted:false on every option; 3) clear decisionSupport on every subscription of the lesson; 4) last, write the challenge: delete selections and topVotedOption, ballot = {candidateIds, frozenAt} (no closedAt/decisionId; vote-lane flags back to their at-freeze values).
+- Add guard `if (!event.data.after.exists) return` to updateVote in fn_vote.ts.
+
+classSetItemHidden { mainId, statementId, hidden } — replaces client setOptionFlag for console hide/restore.
+- Accepted: an answer, proposal or own question of this lesson; else invalid-argument.
+- If it is a ballot candidate: ballot closed → vote-closed; last candidate → last-candidate; ballot open → in one transaction remove from candidateIds and set every vote on it to statementId:'none'.
+
+### 18.5 Edge cases
+- Back from Proposals to Table talk: tables keep their Proposals step; Table talk draws them as P1/P2 (§16.4 legacy rule); finished tables show D until turns reset.
+- Back to Side or earlier: tables stay; re-seat with "חלוקה מחדש".
+- Back from Vote to Proposals with ballot open: new proposals not on the ballot; teacher freezes again on returning to Vote. Back from Summary with ballot closed: closed result shows; Reset the vote re-runs it.
+- Reset turns during someone's minute: the minute ends at once.
+- A stale claimTurn after reset is a valid claim in the new round — harmless.
+
+### 18.6 Open questions (defaults taken)
+1. Delete = undoable hide (default) vs real delete.
+2. Reset the vote also clears Summary decisionSupport answers (default yes).
+3. Answers written in reset turns stay (default yes).
+
+### 18.7 Handoff
+Fixed here: control placement, labels, confirm only for backward moves and resets, one-time student lines. UX to decide: visual weight of reset controls (destructive, secondary), how confirm conveys "cannot be undone", how a hidden item looks in "מה כתבו".

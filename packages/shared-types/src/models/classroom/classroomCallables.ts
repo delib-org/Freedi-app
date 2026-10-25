@@ -122,6 +122,47 @@ export interface ClassCloseBallotResponse {
 }
 
 /**
+ * `classResetTurns` (admin, IA 18.4). Table talk only. No `n` = every table of the
+ * lesson. Gives the turns back (asker, asked, passed, used questions, speaker);
+ * members, answers and ratings stay.
+ */
+export interface ClassResetTurnsRequest {
+	mainId: string;
+	n?: number;
+}
+export interface ClassResetTurnsResponse {
+	reset: number;
+}
+
+/**
+ * `classResetVote` (admin, IA 18.4). Deletes every vote, the tally and the decision;
+ * the same candidates stay on the ballot, ready to vote again. Refused while the
+ * vote is running.
+ */
+export interface ClassResetVoteRequest {
+	mainId: string;
+}
+export interface ClassResetVoteResponse {
+	votesDeleted: number;
+}
+
+/**
+ * `classSetItemHidden` (admin, IA 18.4). Hides or restores one answer, proposal or
+ * table question. Hiding a candidate on an open ballot also takes it off the
+ * ballot and turns its votes into `none`.
+ */
+export interface ClassSetItemHiddenRequest {
+	mainId: string;
+	statementId: string;
+	hidden: boolean;
+}
+export interface ClassSetItemHiddenResponse {
+	hidden: boolean;
+	/** Votes turned into `none` because the item left an open ballot. */
+	votesWithdrawn: number;
+}
+
+/**
  * `classSetLessonStatus` (admin). The lesson's status moves live <-> paused,
  * live/paused/open -> ended or open, ended -> live. Same-target repeats are
  * no-ops (a retry after a dropped reply is safe); any other move answers

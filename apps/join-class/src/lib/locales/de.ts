@@ -440,6 +440,27 @@ const de: Record<string, string> = {
 	'lesson.ended.title': 'Die Stunde ist beendet',
 	'lesson.ended.body': 'Danke fürs Mitmachen',
 	'common.cancel': 'Abbrechen',
+	'console.back_title': 'Zurück zu: {{name}}?',
+	'console.back_keep':
+		'Alles, was die Schüler geschrieben, bewertet und gewählt haben, bleibt erhalten.',
+	'console.back_yes': 'Zurück',
+	'console.reset_turns_all': 'Runden an allen Tischen zurücksetzen',
+	'console.reset_turns_table': 'Runden dieses Tisches zurücksetzen',
+	'console.reset_turns_title': 'Runden zurücksetzen?',
+	'console.reset_turns_body':
+		'Alle können wieder fragen und jede Frage ist wieder frei. Antworten bleiben erhalten. Das lässt sich nicht rückgängig machen.',
+	'console.reset_vote': 'Abstimmung zurücksetzen',
+	'console.reset_vote_title': 'Abstimmung zurücksetzen?',
+	'console.reset_vote_body':
+		'Alle Stimmen werden gelöscht und die Entscheidung wird aufgehoben. Die Klasse stimmt erneut über dieselben Vorschläge ab. Das lässt sich nicht rückgängig machen.',
+	'console.reset_yes': 'Zurücksetzen',
+	'console.hide_vote_closed':
+		'Dieser Vorschlag steht in einer beendeten Abstimmung. Setzt zuerst die Abstimmung zurück',
+	'lesson.back_line': 'Wir sind zurück bei: {{name}}',
+	'turn.restarted': 'Die Runden beginnen von vorn',
+	'vote.restarted': 'Die Abstimmung beginnt von vorn. Wählt noch einmal',
+	'proposal.hidden_mine': 'Die Lehrkraft hat diesen Vorschlag aus der Klassenliste ausgeblendet',
+	'vote.choice_removed': 'Der Vorschlag, den ihr gewählt habt, wurde entfernt. Wählt noch einmal',
 	'plan.details.language': 'Sprache der Stunde',
 	'plan.details.language.device': 'Sprache der einzelnen Lernenden',
 	// Lesson introduction (IA 14, UX 14.J)

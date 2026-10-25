@@ -438,6 +438,26 @@ const es: Record<string, string> = {
 	'lesson.ended.title': 'La clase ha terminado',
 	'lesson.ended.body': 'Gracias por participar',
 	'common.cancel': 'Cancelar',
+	'console.back_title': '¿Volver a: {{name}}?',
+	'console.back_keep': 'Se conserva todo lo que los alumnos escribieron, valoraron y eligieron.',
+	'console.back_yes': 'Volver',
+	'console.reset_turns_all': 'Reiniciar los turnos en todas las mesas',
+	'console.reset_turns_table': 'Reiniciar los turnos de esta mesa',
+	'console.reset_turns_title': '¿Reiniciar los turnos?',
+	'console.reset_turns_body':
+		'Todos podrán preguntar de nuevo y cada pregunta queda libre otra vez. Las respuestas se conservan. No se puede deshacer.',
+	'console.reset_vote': 'Reiniciar la votación',
+	'console.reset_vote_title': '¿Reiniciar la votación?',
+	'console.reset_vote_body':
+		'Se borran todos los votos y se cancela la decisión. La clase vota de nuevo las mismas propuestas. No se puede deshacer.',
+	'console.reset_yes': 'Reiniciar',
+	'console.hide_vote_closed':
+		'Esta propuesta está en una votación cerrada. Reinicien primero la votación',
+	'lesson.back_line': 'Volvimos a: {{name}}',
+	'turn.restarted': 'Los turnos empezaron de nuevo',
+	'vote.restarted': 'La votación empezó de nuevo. Elijan otra vez',
+	'proposal.hidden_mine': 'El docente ocultó esta propuesta de la lista de la clase',
+	'vote.choice_removed': 'La propuesta que eligieron fue retirada. Elijan otra vez',
 	'plan.details.language': 'Idioma de la clase',
 	'plan.details.language.device': 'El idioma de cada estudiante',
 	// Lesson introduction (IA 14, UX 14.J)

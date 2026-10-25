@@ -19,6 +19,16 @@ export function assertLessonRunning(main: Statement | null | undefined): void {
 	}
 }
 
+/**
+ * The reset and hide callables (IA 18.4) work live, paused and open; only an
+ * ended lesson is closed to them.
+ */
+export function assertLessonNotEnded(main: Statement | null | undefined): void {
+	if (lessonStatusOf(main?.statementSettings?.lessonPlan) === 'ended') {
+		throw new ClassroomError('failed-precondition', 'The lesson has ended', 'lesson-ended');
+	}
+}
+
 /** The lesson's current step key (`steps[stepIndex]`), or null when the workspace has no plan. */
 export function lessonStepOf(main: Statement | null | undefined): LessonStepKey | null {
 	const plan = main?.statementSettings?.lessonPlan;

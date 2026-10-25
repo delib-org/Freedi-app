@@ -457,3 +457,54 @@
     justify-self: end;
   }
 }
+
+// Confirm before going back or resetting (IA 18): same look as .end-choice.
+.confirm-dialog {
+  inline-size: min(440px, calc(100% - 32px));
+  margin: auto;
+  padding: var(--space-lg);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-lg);
+
+  &::backdrop {
+    background: var(--bg-overlay);
+  }
+
+  &[open] {
+    display: grid;
+    row-gap: var(--space-sm);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__body {
+    margin: 0;
+    font-size: var(--font-size-base);
+    color: var(--ink-muted);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+  }
+
+  &__cancel,
+  &__yes {
+    min-block-size: 48px;
+  }
+}
+
+// A reset or other destructive control: outlined, never filled (primary is the rail forward control).
+.btn--danger-outline {
+  color: var(--danger);
+  background: var(--bg-card);
+  border: 1.5px solid var(--danger);
+}
