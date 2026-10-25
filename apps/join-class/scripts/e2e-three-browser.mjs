@@ -424,7 +424,10 @@ async function phaseVote() {
 	check('vote: console: pause and close are disabled before opening', (await teacher.page.getByTestId('console-pause-vote').isDisabled()) && (await teacher.page.getByTestId('console-close-vote').isDisabled()));
 	await (await byId(teacher.page, 'console-freeze-vote')).click();
 	for (const phone of phones) await byId(phone.page, 'vote-send');
-	check('vote: after opening, the open button is disabled and pause is enabled', (await teacher.page.getByTestId('console-freeze-vote').isDisabled()) && !(await teacher.page.getByTestId('console-pause-vote').isDisabled()));
+	const buttonsOk = await eventually(
+		async () => (await teacher.page.getByTestId('console-freeze-vote').isDisabled()) && !(await teacher.page.getByTestId('console-pause-vote').isDisabled()),
+	);
+	check('vote: after opening, the open button is disabled and pause is enabled', buttonsOk === true);
 	await snapAll('vote-open');
 	check('vote: the projector shows the open gate once the vote is open', (await projector.page.locator('.gate-stage--open').count()) === 1);
 	const ballot = (await challengeData()).statementSettings.ballot;
