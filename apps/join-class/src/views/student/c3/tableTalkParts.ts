@@ -39,7 +39,7 @@ function pickQuestions(ctx: FlowCtx): PickQuestion[] {
 		}));
 }
 
-function nameOf(ctx: FlowCtx, uid: string | undefined): string {
+export function nameOf(ctx: FlowCtx, uid: string | undefined): string {
 	if (!uid) return ctx.someone;
 	const nd = ctx.table.noDeviceMembers.find((member) => member.id === uid);
 
@@ -47,7 +47,7 @@ function nameOf(ctx: FlowCtx, uid: string | undefined): string {
 }
 
 /** Runs one table step; a lost race is not an error: the table doc already shows who won. */
-function step(
+export function step(
 	ctx: FlowCtx,
 	action: ClassTableAction,
 	onRace?: (reason: string | null) => void,

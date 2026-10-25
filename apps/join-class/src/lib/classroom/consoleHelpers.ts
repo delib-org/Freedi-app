@@ -26,6 +26,19 @@ export function tablesAreDone(stepKey: LessonStepKey): boolean {
 	return TABLES_DONE_STEPS.includes(stepKey);
 }
 
+/**
+ * Arriving at Proposals from an earlier step: the table clocks of Table talk are
+ * stale there ("time over" before anyone spoke). Every table is cleared once, so
+ * each speaker's minute at Proposals starts from the beginning (IA 17.14).
+ */
+export function clearsTableClocksOnEnter(
+	fromIndex: number,
+	toIndex: number,
+	steps: readonly LessonStepKey[],
+): boolean {
+	return steps[toIndex] === 'proposals' && fromIndex < toIndex;
+}
+
 export type RailState = 'done' | 'current' | 'upcoming';
 
 export interface RailStep {

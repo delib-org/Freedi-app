@@ -51,6 +51,16 @@
     color: var(--terra-500);
   }
 
+  // The lesson's question in large type above the instruction (Proposals): "Propose a solution to ...".
+  &__ask {
+    margin: 0 0 var(--space-md);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold, 700);
+    line-height: 1.3;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
   &__instruction {
     margin-block-end: var(--space-md);
     font-size: var(--font-size-xl);

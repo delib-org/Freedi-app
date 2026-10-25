@@ -244,7 +244,7 @@ export function applyTableAction(
 		throw new ClassroomError('permission-denied', 'You are not seated at this table');
 	}
 	assertMayAct(role, action, table, ctx.now, ctx.actorUid, ctx.lessonStep);
-	assertFromStep(role, action, table);
+	assertFromStep(role, action, table, ctx.lessonStep);
 
 	const base: ClassTable = { ...table, updatedAt: ctx.now };
 

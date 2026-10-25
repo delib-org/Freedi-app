@@ -350,6 +350,45 @@ describe('passSpeaking at Proposals keeps its meaning', () => {
 	});
 });
 
+describe('claimSpeaker at Proposals (a fresh minute for every speaker)', () => {
+	// No question, any table step, a clock left over from Table talk.
+	const open = (overrides: Partial<ClassTable> = {}): ClassTable =>
+		table({ step: 'write', spokenUids: ['b'], ...overrides });
+
+	it('gives a fresh minute with no question on the table, from any step', () => {
+		const next = run(open(), { action: 'claimSpeaker' }, atProposals('c'));
+		expect(next.speakerUid).toBe('c');
+		expect(next.speakerEndsAt).toBe(NOW + MINUTE);
+	});
+
+	it('lets the same tablemate speak again and takes over a minute that is over', () => {
+		const stale = open({ speakerUid: 'b', speakerEndsAt: NOW - 1 });
+		const next = run(stale, { action: 'claimSpeaker' }, atProposals('b'));
+		expect(next).toMatchObject({ speakerUid: 'b', speakerEndsAt: NOW + MINUTE });
+	});
+
+	it('refuses while someone else holds the floor, and a stranger', () => {
+		const running = open({ speakerUid: 'b', speakerEndsAt: NOW + 30_000 });
+		expect(refusal(running, { action: 'claimSpeaker' }, atProposals('c')).reason).toBe(
+			'floor-taken',
+		);
+		expect(refusal(open(), { action: 'claimSpeaker' }, atProposals('zed')).code).toBe(
+			'permission-denied',
+		);
+	});
+
+	it('lets the speaker end the minute early', () => {
+		const running = open({ speakerUid: 'b', speakerEndsAt: NOW + 30_000 });
+		expect(run(running, { action: 'finishSpeaking' }, atProposals('b')).speakerEndsAt).toBe(NOW);
+	});
+
+	it('still needs a question at Table talk', () => {
+		expect(refusal(table({ step: 'talk' }), { action: 'claimSpeaker' }, as('b')).code).toBe(
+			'failed-precondition',
+		);
+	});
+});
+
 describe('teacher-only moves at Table talk', () => {
 	it('refuses a member nextTurn and opens the next pick for a teacher', () => {
 		expect(refusal(over(), { action: 'nextTurn', fromTurn: 1 }, as('b')).code).toBe(

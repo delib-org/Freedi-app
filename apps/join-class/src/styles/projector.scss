@@ -111,6 +111,14 @@ $projector-band-height: 64px;
   font-weight: var(--font-weight-bold, 700);
 }
 
+.projector-ask {
+  margin: 0;
+  font-size: 72px;
+  font-weight: var(--font-weight-bold, 700);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
 .projector-empty {
   margin: 0;
   color: var(--ink-muted);

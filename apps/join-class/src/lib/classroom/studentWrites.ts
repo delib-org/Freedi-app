@@ -14,8 +14,9 @@ import {
 	getVoteId,
 } from '@freedi/shared-types';
 import { db, doc, getDoc, setDoc, updateDoc } from '../firebase';
-import { getMainStatement } from '../store';
+import { getCustomDisplayName, getMainStatement } from '../store';
 import { getUserState } from '../user';
+import { resolveSubscriptionName } from './subscriptionName';
 
 /**
  * What a student device writes in the classroom (all on its own docs).
@@ -67,7 +68,17 @@ export async function ensureMemberSubscription(
 		const uid = requireUid('ensureMemberSubscription');
 		const subId = subscriptionId(mainId, uid);
 		const ref = doc(db, Collections.statementsSubscribe, subId);
-		if ((await getDoc(ref)).exists()) return;
+		const name = resolveSubscriptionName(user, getCustomDisplayName());
+		const existing = await getDoc(ref);
+		if (existing.exists()) {
+			// A sub made before the name was known (or by another app) shows as "someone" at the table.
+			const stored = (existing.data() as StatementSubscription).user?.displayName?.trim();
+			if (name && !stored) {
+				await updateDoc(ref, { 'user.displayName': name, lastUpdate: Date.now() });
+			}
+
+			return;
+		}
 		if (!main || main.statementId !== mainId) {
 			throw new Error('main statement not loaded');
 		}
@@ -79,7 +90,7 @@ export async function ensureMemberSubscription(
 			statement: main,
 			user: {
 				uid,
-				displayName: user?.displayName ?? '',
+				displayName: name,
 				photoURL: null,
 				isAnonymous: user?.isAnonymous ?? true,
 			},

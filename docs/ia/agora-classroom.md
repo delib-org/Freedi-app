@@ -1591,6 +1591,13 @@ Decision: at Proposals each phone talks, writes or rates whenever it wants. No s
 - **`docs/design/agora-classroom-ux.md`:** the strip section (§11, last bullet: "tappable peek", Tal 2026-10-22) is superseded.
 - **Test ids:** retired `peek-body`, `peek-back`, `pill-now`, and `asker-mark` at Proposals. Kept (now local) `table-to-write`, `table-to-rate`. No e2e spec in `apps/join-class` references the retired ones (grep 2026-10-25).
 
+### 17.14 A fresh minute for every speaker at Proposals / מדברים (Tal, 2026-10-25, card g9Jke79a)
+Decision: the Table talk clock must not carry into Proposals. It is dedicated time for proposing solutions, and each speaker gets their own minute.
+- **Same speaker mechanics as Table talk.** The Proposals "מדברים" screen shows the challenge, then: nobody speaking = an idle 1:00 and "אני רוצה לענות" (`turn.answer`, `claimSpeaker`); someone speaking = "{{name}} עונה" (`turn.answering`) with the running minute; me speaking = "הדקה שלכם" (`turn.answer_mine`) and "סיימתי" (`turn.finish`, `finishSpeaking`). A minute that ends fades back to the idle clock, quietly. "הזמן נגמר" and "זמן השולחן" (`turn.table_time`, deleted) no longer appear here.
+- **Looser than Table talk.** No question on the table, any table step, and the same tablemate may speak again. The only guard is the floor (`floor-taken`). `tableGuards.ts` applies this when `lessonStep === 'proposals'`.
+- **Entering Proposals clears the old clock.** The teacher's step move to Proposals from an earlier step also calls `classAllTablesTo(mainId, 'talk')`, which clears every table's speaker and clock and lands every phone on מדברים once. Coming back from Vote does not.
+- **Heading (card soAlRYCG).** Every Proposals sub-step shows "הציעו פתרון לשאלה ״{{question}}״" in large type (`proposals.heading`).
+
 ## 18. Go back, reset, hide (Tal, 2026-10-25, card ACxcFNmD)
 
 Brief: the teacher can return the class to any step, and if needed reset the turns, the vote results, or delete one result. Tal decided: going back keeps everything; reset and delete are separate, explicitly confirmed actions.

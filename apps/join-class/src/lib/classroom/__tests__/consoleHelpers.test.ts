@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { LessonStepKey, Role } from '@freedi/shared-types';
 import type { ClassTable, Statement, StatementSubscription } from '@freedi/shared-types';
 import {
+	clearsTableClocksOnEnter,
 	forwardControl,
 	formatClock,
 	formatSpeakerTime,
@@ -150,5 +151,18 @@ describe('table timer line', () => {
 	it('names the now line, plenum overrides', () => {
 		expect(tableStepKey(table({ step: 'rate' }), false)).toBe('console.now_rate');
 		expect(tableStepKey(table({ step: 'rate' }), true)).toBe('console.now_plenum');
+	});
+});
+
+describe('clearsTableClocksOnEnter', () => {
+	const proposals = KEYS.indexOf('proposals');
+
+	it('clears the table clocks when Proposals opens from an earlier step', () => {
+		expect(clearsTableClocksOnEnter(KEYS.indexOf('tableTalk'), proposals, KEYS)).toBe(true);
+	});
+
+	it('leaves the tables alone when coming back from Vote or moving elsewhere', () => {
+		expect(clearsTableClocksOnEnter(KEYS.indexOf('vote'), proposals, KEYS)).toBe(false);
+		expect(clearsTableClocksOnEnter(proposals, KEYS.indexOf('vote'), KEYS)).toBe(false);
 	});
 });

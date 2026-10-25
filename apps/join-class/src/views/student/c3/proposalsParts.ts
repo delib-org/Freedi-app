@@ -6,6 +6,7 @@ import type { FlowCtx, FlowParts } from './flowTypes';
 import { rateBody } from './RateScreen';
 import { RatedList } from './RatedList';
 import { Sheet } from './Sheet';
+import { nameOf, step as tableStep } from './tableTalkParts';
 import { TalkScreen, talkFinishAction } from './TalkScreen';
 import { WritePanel } from './WritePanel';
 
@@ -45,7 +46,15 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 	let body: m.Children;
 	let action: m.Children = null;
 	if (step === 'talk') {
-		body = m(TalkScreen, { table, prompt: challenge?.statement ?? '' });
+		body = m(TalkScreen, {
+			table,
+			uid,
+			speakerName: nameOf(ctx, table.speakerUid),
+			busy: self.busy,
+			// A lost race is not an error: the table doc already shows who has the floor.
+			onClaim: () => tableStep(ctx, { action: 'claimSpeaker' }),
+			onFinish: () => tableStep(ctx, { action: 'finishSpeaking' }),
+		});
 		action = talkFinishAction(self.busy, () => ctx.goto('write'));
 	} else if (step === 'write') {
 		body = writePanel();
@@ -94,6 +103,9 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 		down: step === 'talk',
 		askerLine: null,
 		askerMark: false,
+		ask: challenge?.statement
+			? t('proposals.heading', { question: challenge.statement })
+			: undefined,
 		barExtra: classButton,
 		overlay: self.sheetOpen
 			? m(
