@@ -3,7 +3,10 @@
 // Split out of lib/i18n.ts so a visitor downloads only the language they
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
+import vote from './vote/en';
+
 const en: Record<string, string> = {
+	...vote,
 	'step.waiting': 'Waiting for the teacher',
 	'step.opening': 'Opening',
 	'step.side': 'Choose a side',
@@ -257,16 +260,6 @@ const en: Record<string, string> = {
 	'rate.rated_group': 'Rated {{n}}',
 	'rate.failed': 'The rating was not saved. Try again',
 	'rate.class_writing': 'The class is writing',
-	'voting.title': 'Vote',
-	'voting.pick_one': 'Choose one proposal',
-	'voting.waiting': 'Waiting for the teacher to open the vote',
-	'voting.empty': 'Nothing to vote on',
-	'voting.vote': 'Vote',
-	'voting.voted': 'You voted',
-	'voting.change': 'Change vote',
-	'voting.saving': 'Saving…',
-	'voting.closed': 'The vote is closed',
-	'voting.failed': 'The vote was not saved. Try again',
 	'summary.title': 'Summary',
 	'summary.decision': 'The decision',
 	'summary.waiting': 'The decision is not made yet',
@@ -290,8 +283,6 @@ const en: Record<string, string> = {
 	'console.all_tables_rate': 'All tables: rate',
 	'console.plenum': 'Everyone together',
 	'console.plenum_on': 'Everyone together · on',
-	'console.freeze': 'Freeze the vote',
-	'console.close_vote': 'Close the vote',
 	'console.move': 'Move to another table',
 	'console.moved': 'Moved to {{table}}',
 	'console.unplaced_name': 'No table',

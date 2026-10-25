@@ -3,7 +3,10 @@
 // Split out of lib/i18n.ts so a visitor downloads only the language they
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
+import vote from './vote/fa';
+
 const fa: Record<string, string> = {
+	...vote,
 	'step.waiting': 'در انتظار معلم',
 	'step.opening': 'شروع',
 	'step.side': 'انتخاب جانب',
@@ -244,16 +247,6 @@ const fa: Record<string, string> = {
 	'rate.rated_group': 'امتیاز دادید {{n}}',
 	'rate.failed': 'امتیاز ذخیره نشد. دوباره تلاش کنید',
 	'rate.class_writing': 'کلاس می‌نویسد',
-	'voting.title': 'رأی‌گیری',
-	'voting.pick_one': 'یک پیشنهاد انتخاب کنید',
-	'voting.waiting': 'منتظر بمانید تا معلم رأی‌گیری را باز کند',
-	'voting.empty': 'چیزی برای رأی دادن نیست',
-	'voting.vote': 'رأی بدهید',
-	'voting.voted': 'رأی دادید',
-	'voting.change': 'تغییر رأی',
-	'voting.saving': 'در حال ذخیره…',
-	'voting.closed': 'رأی‌گیری بسته شد',
-	'voting.failed': 'رأی ذخیره نشد. دوباره تلاش کنید',
 	'summary.title': 'خلاصه',
 	'summary.decision': 'تصمیم',
 	'summary.waiting': 'هنوز تصمیمی گرفته نشده',
@@ -277,8 +270,6 @@ const fa: Record<string, string> = {
 	'console.all_tables_rate': 'همه میزها: امتیازدهی',
 	'console.plenum': 'همه با هم',
 	'console.plenum_on': 'همه با هم · فعال',
-	'console.freeze': 'ثابت کردن رأی‌گیری',
-	'console.close_vote': 'بستن رأی‌گیری',
 	'console.move': 'انتقال به میز دیگر',
 	'console.moved': 'به {{table}} منتقل شد',
 	'console.unplaced_name': 'بدون میز',

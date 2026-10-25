@@ -14,6 +14,6 @@ export { classMoveStudent } from './fn_classMoveStudent';
 export { classAddNoDevice } from './fn_classAddNoDevice';
 export { classTableStep } from './fn_classTableStep';
 export { classAllTablesTo } from './fn_classAllTablesTo';
-export { classFreezeBallot, classCloseBallot } from './fn_classBallot';
+export { classFreezeBallot, classCloseBallot, classPauseBallot } from './fn_classBallot';
 export { classSetLessonStatus } from './fn_classSetLessonStatus';
 export { classCloneLesson } from './fn_classCloneLesson';

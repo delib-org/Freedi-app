@@ -3,7 +3,10 @@
 // Split out of lib/i18n.ts so a visitor downloads only the language they
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
+import vote from './vote/ar';
+
 const ar: Record<string, string> = {
+	...vote,
 	'step.waiting': 'في انتظار المعلم',
 	'step.opening': 'البداية',
 	'step.side': 'اختيار الجانب',
@@ -253,16 +256,6 @@ const ar: Record<string, string> = {
 	'rate.rated_group': 'قيّمتم {{n}}',
 	'rate.failed': 'لم يُحفظ التقييم. حاولوا مرة أخرى',
 	'rate.class_writing': 'الصف يكتب',
-	'voting.title': 'التصويت',
-	'voting.pick_one': 'اختاروا اقتراحاً واحداً',
-	'voting.waiting': 'ننتظر أن يفتح المعلم التصويت',
-	'voting.empty': 'لا شيء للتصويت عليه',
-	'voting.vote': 'صوّتوا',
-	'voting.voted': 'لقد صوّتم',
-	'voting.change': 'تغيير التصويت',
-	'voting.saving': 'جارٍ الحفظ…',
-	'voting.closed': 'أُغلق التصويت',
-	'voting.failed': 'لم يُحفظ التصويت. حاولوا مرة أخرى',
 	'summary.title': 'الملخص',
 	'summary.decision': 'القرار',
 	'summary.waiting': 'لم يُتخذ القرار بعد',
@@ -286,8 +279,6 @@ const ar: Record<string, string> = {
 	'console.all_tables_rate': 'كل الطاولات: تقييم',
 	'console.plenum': 'الجميع معًا',
 	'console.plenum_on': 'الجميع معًا · مفعّل',
-	'console.freeze': 'تجميد التصويت',
-	'console.close_vote': 'إغلاق التصويت',
 	'console.move': 'النقل إلى طاولة أخرى',
 	'console.moved': 'تم النقل إلى {{table}}',
 	'console.unplaced_name': 'بلا طاولة',

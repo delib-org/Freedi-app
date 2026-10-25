@@ -7,10 +7,26 @@ import { getChallengeQuestion } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
 import { castVote } from '@/lib/classroom/studentWrites';
 import { listenMyVote } from '@/lib/classroom/c3Data';
+import {
+	liveResultsOn,
+	orderBySupport,
+	sortBySupportOn,
+	voteResults,
+} from '@/lib/classroom/voteResults';
 import type { Unsubscribe } from '@/lib/firebase';
 import { ErrorLine } from './ErrorLine';
 import { FlowFeed } from './FlowFeed';
 import { VoteList } from './VoteList';
+
+const INSTRUCTION_KEY = {
+	waiting: 'voting.waiting',
+	open: 'voting.pick_one',
+	paused: 'voting.paused_hint',
+} as const;
+
+function instructionOf(state: keyof typeof INSTRUCTION_KEY): string {
+	return t(INSTRUCTION_KEY[state]);
+}
 
 export interface VoteScreenAttrs {
 	main: Statement;
@@ -24,12 +40,17 @@ class VoteState {
 	voteFor: string | null = null;
 	saving = false;
 	error: string | null = null;
+	/** The order the cards were last shown in (ties keep it when sorting by support). */
+	order: string[] = [];
 }
 
 /**
  * The vote (UX §2.8): radio cards of the frozen ballot, "Vote" casts (two
  * taps), "You voted" in teal; a different card turns the button into "Change
- * vote" until the ballot closes.
+ * vote" until the ballot closes. While the teacher has the vote paused the
+ * cards are locked and the button says so; the vote already cast is kept.
+ * Live results (on unless the teacher hides them) add each proposal's share;
+ * ordering by support (off unless switched on) puts the most voted on top.
  */
 export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 	oninit(vnode) {
@@ -62,14 +83,20 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			);
 		}
 		const closed = !!ballot?.closedAt;
-		const candidates = (ballot?.candidateIds ?? [])
+		const paused = !closed && typeof ballot?.pausedAt === 'number';
+		const ballotIds = ballot?.candidateIds ?? [];
+		const tally = voteResults(ballotIds, challenge?.selections);
+		const sorted = sortBySupportOn(challenge);
+		self.order = sorted ? orderBySupport(ballotIds, tally, self.order) : [...ballotIds];
+		const candidates = self.order
 			.map((id) => self.feed.options.find((o) => o.statementId === id))
 			.filter((o): o is Statement => !!o);
+		const results = liveResultsOn(challenge) ? tally : null;
 		const selected = self.selectedId ?? self.votedId;
 		const changed = !!selected && selected !== self.votedId;
 
 		const cast = (): void => {
-			if (!challengeId || !selected || self.saving) return;
+			if (!challengeId || !selected || self.saving || paused || closed) return;
 			self.saving = true;
 			self.error = null;
 			castVote(main.statementId, challengeId, selected)
@@ -89,6 +116,10 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			label = t('voting.closed');
 			disabled = true;
 			variant = 'btn--secondary';
+		} else if (paused) {
+			label = t('voting.paused');
+			disabled = true;
+			variant = 'btn--secondary';
 		} else if (self.saving) {
 			label = t('voting.saving');
 			disabled = true;
@@ -104,7 +135,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			StudentFrame,
 			{
 				headerLine: t('voting.title'),
-				instruction: ballot ? t('voting.pick_one') : t('voting.waiting'),
+				instruction: instructionOf(ballot ? (paused ? 'paused' : 'open') : 'waiting'),
 				action: ballot
 					? m(
 							'button.btn',
@@ -126,7 +157,9 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 							: m(VoteList, {
 									candidates,
 									selectedId: selected,
-									closed,
+									locked: closed || paused,
+									results,
+									animateReorder: sorted,
 									onSelect: (id: string) => {
 										self.selectedId = id;
 									},

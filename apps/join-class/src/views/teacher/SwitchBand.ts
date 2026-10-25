@@ -22,6 +22,7 @@ export interface SwitchBandAttrs {
 	hasChallenge: boolean;
 	plenum: boolean;
 	ballotFrozen: boolean;
+	ballotPaused: boolean;
 	ballotClosed: boolean;
 	/** The lesson's introduction videos and the one the projector shows (Opening step). */
 	introVideos: readonly IntroVideo[];
@@ -31,6 +32,7 @@ export interface SwitchBandAttrs {
 	onAllToRate: () => void;
 	onPlenum: () => void;
 	onFreeze: () => void;
+	onPauseVote: (paused: boolean) => void;
 	onCloseVote: () => void;
 	onProject: (id: string | null) => void;
 }
@@ -40,6 +42,7 @@ const TEST_IDS: Record<string, string> = {
 	'all:rate': 'console-all-rate',
 	plenum: 'console-plenum',
 	freeze: 'console-freeze-vote',
+	pauseVote: 'console-pause-vote',
 	close: 'console-close-vote',
 };
 
@@ -102,10 +105,16 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 	if (stepKey === 'vote') {
 		actions.push(
 			action(
-				t('console.freeze'),
+				t('console.open_vote'),
 				'freeze',
 				attrs.onFreeze,
 				attrs.ballotFrozen || attrs.ballotClosed,
+			),
+			action(
+				t(attrs.ballotPaused ? 'console.resume_vote' : 'console.pause_vote'),
+				'pauseVote',
+				() => attrs.onPauseVote(!attrs.ballotPaused),
+				!attrs.ballotFrozen || attrs.ballotClosed,
 			),
 			action(
 				t('console.close_vote'),

@@ -3,7 +3,10 @@
 // Split out of lib/i18n.ts so a visitor downloads only the language they
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
+import vote from './vote/nl';
+
 const nl: Record<string, string> = {
+	...vote,
 	'step.waiting': 'Wachten op de docent',
 	'step.opening': 'Opening',
 	'step.side': 'Kies een kant',
@@ -252,16 +255,6 @@ const nl: Record<string, string> = {
 	'rate.rated_group': 'Beoordeeld: {{n}}',
 	'rate.failed': 'De beoordeling is niet opgeslagen. Probeer opnieuw',
 	'rate.class_writing': 'De klas schrijft',
-	'voting.title': 'Stemming',
-	'voting.pick_one': 'Kies één voorstel',
-	'voting.waiting': 'Wachten tot de leraar de stemming opent',
-	'voting.empty': 'Niets om op te stemmen',
-	'voting.vote': 'Stemmen',
-	'voting.voted': 'Jullie hebben gestemd',
-	'voting.change': 'Stem wijzigen',
-	'voting.saving': 'Opslaan…',
-	'voting.closed': 'De stemming is gesloten',
-	'voting.failed': 'De stem is niet opgeslagen. Probeer opnieuw',
 	'summary.title': 'Samenvatting',
 	'summary.decision': 'De beslissing',
 	'summary.waiting': 'De beslissing is nog niet genomen',
@@ -285,8 +278,6 @@ const nl: Record<string, string> = {
 	'console.all_tables_rate': 'Alle tafels: beoordelen',
 	'console.plenum': 'Allemaal samen',
 	'console.plenum_on': 'Allemaal samen · aan',
-	'console.freeze': 'Stemming bevriezen',
-	'console.close_vote': 'Stemming sluiten',
 	'console.move': 'Naar een andere tafel',
 	'console.moved': 'Verplaatst naar {{table}}',
 	'console.unplaced_name': 'Zonder tafel',

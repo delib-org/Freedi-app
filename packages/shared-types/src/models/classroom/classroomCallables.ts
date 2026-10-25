@@ -98,6 +98,20 @@ export interface ClassFreezeBallotResponse {
 	frozenAt: number;
 }
 
+/**
+ * `classPauseBallot` (admin). `paused: true` sets ballot.pausedAt (votes are
+ * locked, nobody votes or changes a vote); `false` clears it and voting goes
+ * on with the same votes. Refused before the ballot is open and after it is
+ * closed. Same-target repeats are no-ops.
+ */
+export interface ClassPauseBallotRequest {
+	mainId: string;
+	paused: boolean;
+}
+export interface ClassPauseBallotResponse {
+	pausedAt: number | null;
+}
+
 /** `classCloseBallot` (admin). Writes ballot.closedAt and ballot.decisionId (see decideBallot). */
 export interface ClassCloseBallotRequest {
 	mainId: string;

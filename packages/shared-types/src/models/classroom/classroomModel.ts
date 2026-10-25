@@ -142,7 +142,27 @@ export type ClassTableMarker = InferOutput<typeof ClassTableMarkerSchema>;
 export const ClassBallotSchema = object({
 	candidateIds: array(string()),
 	frozenAt: number(),
+	/**
+	 * Set while the teacher has paused the vote: no vote is cast or changed
+	 * (rules + client), the votes already cast are kept, and resuming clears it.
+	 * Not the same as closing (closedAt), which is final.
+	 */
+	pausedAt: optional(number()),
 	closedAt: optional(number()),
 	decisionId: optional(string()),
 });
 export type ClassBallot = InferOutput<typeof ClassBallotSchema>;
+
+/**
+ * How the students' vote screen shows the ballot; the teacher's switches, on
+ * the challenge question's statementSettings (one challenge per lesson, so a
+ * per-lesson setting). Students only ever see aggregates: the vote counts in
+ * the challenge question's `selections{}`, never who voted for what.
+ */
+export const ClassVoteDisplaySchema = object({
+	/** Students see each proposal's share of the votes, live. Absent = on. */
+	liveResults: optional(boolean()),
+	/** The proposals re-order live by votes, most supported on top. Absent = off. */
+	sortBySupport: optional(boolean()),
+});
+export type ClassVoteDisplay = InferOutput<typeof ClassVoteDisplaySchema>;

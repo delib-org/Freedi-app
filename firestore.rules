@@ -1612,10 +1612,11 @@ service cloud.firestore {
                !agoraRemovedFrom(get(path).data.agoraSessionId);
       }
       // join-class: a challenge question that carries statementSettings.ballot
-      // takes votes only while that ballot is frozen and not closed, and only
-      // for one of its candidates (or 'none' to withdraw). Questions without a
-      // ballot (every main-app vote) pass untouched. Same parent get() as the
-      // two checks above, billed once.
+      // takes votes only while that ballot is frozen, not paused (pausedAt:
+      // the teacher locked the votes for now) and not closed, and only for one
+      // of its candidates (or 'none' to withdraw). Questions without a ballot
+      // (every main-app vote) pass untouched. Same parent get() as the two
+      // checks above, billed once.
       function classBallotOpen(parentId, optionId) {
         let path = /databases/$(database)/documents/statements/$(parentId);
         let ballot = exists(path)
@@ -1623,6 +1624,7 @@ service cloud.firestore {
           : null;
         return ballot == null ||
                (ballot.get('closedAt', null) == null &&
+                ballot.get('pausedAt', null) == null &&
                 (optionId == 'none' || optionId in ballot.get('candidateIds', [])) &&
                 classLessonWritable(get(path).data.get('parentId', 'none')));
       }
@@ -1634,8 +1636,13 @@ service cloud.firestore {
                                request.resource.data.userId == request.auth.uid &&
                                voteId == (request.auth.uid + '--' +
                                           request.resource.data.parentId);
+      // A delete is a withdrawal too, so on a class ballot it follows the same
+      // gate as writing 'none': refused while the vote is paused or closed (or
+      // the lesson is held). Votes on questions without a ballot are unchanged.
       allow delete: if request.auth.uid != null &&
-                       resource.data.userId == request.auth.uid;
+                       resource != null &&
+                       resource.data.userId == request.auth.uid &&
+                       classBallotOpen(resource.data.get('parentId', 'none'), 'none');
     }
     
     match /posts/{postId=**} {

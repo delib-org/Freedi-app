@@ -3,7 +3,10 @@
 // Split out of lib/i18n.ts so a visitor downloads only the language they
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
+import vote from './vote/es';
+
 const es: Record<string, string> = {
+	...vote,
 	'step.waiting': 'Esperando al docente',
 	'step.opening': 'Apertura',
 	'step.side': 'Elegir postura',
@@ -253,16 +256,6 @@ const es: Record<string, string> = {
 	'rate.rated_group': 'Valorado: {{n}}',
 	'rate.failed': 'No se guardó la valoración. Intentad de nuevo',
 	'rate.class_writing': 'La clase escribe',
-	'voting.title': 'Votación',
-	'voting.pick_one': 'Elegid una propuesta',
-	'voting.waiting': 'Esperando a que el profesor abra la votación',
-	'voting.empty': 'Nada que votar',
-	'voting.vote': 'Votar',
-	'voting.voted': 'Habéis votado',
-	'voting.change': 'Cambiar el voto',
-	'voting.saving': 'Guardando…',
-	'voting.closed': 'La votación está cerrada',
-	'voting.failed': 'No se guardó el voto. Intentad de nuevo',
 	'summary.title': 'Resumen',
 	'summary.decision': 'La decisión',
 	'summary.waiting': 'La decisión aún no está tomada',
@@ -286,8 +279,6 @@ const es: Record<string, string> = {
 	'console.all_tables_rate': 'Todas las mesas: valorar',
 	'console.plenum': 'Todos juntos',
 	'console.plenum_on': 'Todos juntos · activo',
-	'console.freeze': 'Congelar la votación',
-	'console.close_vote': 'Cerrar la votación',
 	'console.move': 'Pasar a otra mesa',
 	'console.moved': 'Movido a {{table}}',
 	'console.unplaced_name': 'Sin mesa',

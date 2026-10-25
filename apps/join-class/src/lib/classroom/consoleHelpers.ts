@@ -66,6 +66,11 @@ export function isBallotFrozen(challenge: Statement | null | undefined): boolean
 	return typeof challenge?.statementSettings?.ballot?.frozenAt === 'number';
 }
 
+/** The teacher paused the vote: nobody votes or changes a vote until it resumes. */
+export function isBallotPaused(challenge: Statement | null | undefined): boolean {
+	return typeof challenge?.statementSettings?.ballot?.pausedAt === 'number';
+}
+
 export function isBallotClosed(challenge: Statement | null | undefined): boolean {
 	return typeof challenge?.statementSettings?.ballot?.closedAt === 'number';
 }

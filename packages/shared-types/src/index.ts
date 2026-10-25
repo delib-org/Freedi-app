@@ -1033,6 +1033,7 @@ export {
   ClassTableSchema,
   ClassTableMarkerSchema,
   ClassBallotSchema,
+  ClassVoteDisplaySchema,
   ClassSubscriptionFieldsSchema,
   SideValueSchema,
   DecisionSupportSchema,
@@ -1047,6 +1048,7 @@ export type {
   ClassTable,
   ClassTableMarker,
   ClassBallot,
+  ClassVoteDisplay,
 } from './models/classroom/classroomModel';
 export {
   campOf,
@@ -1087,6 +1089,8 @@ export type {
   ClassFreezeBallotResponse,
   ClassCloseBallotRequest,
   ClassCloseBallotResponse,
+  ClassPauseBallotRequest,
+  ClassPauseBallotResponse,
   ClassCloneLessonRequest,
   ClassCloneLessonResponse,
   ClassSetLessonStatusRequest,

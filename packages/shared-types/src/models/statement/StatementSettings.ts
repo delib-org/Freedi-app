@@ -11,7 +11,11 @@ import {
 	number,
 } from 'valibot';
 import { DeliberationType, SortType, ThemeStyle } from '../TypeEnums';
-import { ClassBallotSchema, RoundPhaseSchema } from '../classroom/classroomModel';
+import {
+	ClassBallotSchema,
+	ClassVoteDisplaySchema,
+	RoundPhaseSchema,
+} from '../classroom/classroomModel';
 
 /**
  * Join form — admin-defined contact form shown the first time a user joins
@@ -426,6 +430,8 @@ export const StatementSettingsSchema = object({
 	hint: optional(string()),
 	// join-class: frozen vote shortlist, on the challenge question.
 	ballot: optional(ClassBallotSchema),
+	// join-class: the teacher's switches for the students' vote screen, on the challenge question.
+	voteDisplay: optional(ClassVoteDisplaySchema),
 	// join-class: plenum phase on the challenge question.
 	roundPhase: optional(RoundPhaseSchema),
 	// join-class: https link of the dilemma video shown on the opening screen. Main statement only.

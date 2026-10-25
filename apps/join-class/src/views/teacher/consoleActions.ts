@@ -1,5 +1,6 @@
 import type {
 	ClassTableAction,
+	ClassVoteDisplay,
 	LessonStatusAction,
 	Statement,
 	TableStep,
@@ -11,6 +12,7 @@ import {
 	classCloseBallot,
 	classFreezeBallot,
 	classMoveStudent,
+	classPauseBallot,
 	classSetLessonStatus,
 	classTableStep,
 } from '@/lib/classroom/api';
@@ -89,11 +91,34 @@ export function startPlenum(challengeId: string): Promise<boolean> {
 }
 
 export function freezeBallot(mainId: string): Promise<boolean> {
-	return guardedAct('freeze', t('console.freeze'), () => classFreezeBallot({ mainId }));
+	return guardedAct('freeze', t('console.open_vote'), () => classFreezeBallot({ mainId }));
+}
+
+/** Pause the vote (votes locked, kept) or resume it; closing stays the one final end. */
+export function pauseBallot(mainId: string, paused: boolean): Promise<boolean> {
+	return guardedAct('pauseVote', t(paused ? 'console.pause_vote' : 'console.resume_vote'), () =>
+		classPauseBallot({ mainId, paused }),
+	);
 }
 
 export function closeBallot(mainId: string): Promise<boolean> {
 	return guardedAct('close', t('console.close_vote'), () => classCloseBallot({ mainId }));
+}
+
+/**
+ * One of the lesson's vote switches (what the students' vote screen shows).
+ * A display choice, so it works while the lesson is held too.
+ */
+export function setVoteDisplay(
+	challengeId: string,
+	field: keyof ClassVoteDisplay,
+	value: boolean,
+): Promise<boolean> {
+	const patch = { statementSettings: { voteDisplay: { [field]: value } } } as Partial<Statement>;
+
+	return act(`voteDisplay:${field}`, t('console.vote_settings'), () =>
+		setQuestionSetting(challengeId, patch),
+	);
 }
 
 export function moveStudent(mainId: string, uid: string, toTable: DropTarget): Promise<boolean> {
