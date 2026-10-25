@@ -48,7 +48,6 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 	if (step === 'talk') {
 		body = m(TalkScreen, {
 			table,
-			prompt: challenge?.statement ?? '',
 			uid,
 			speakerName: nameOf(ctx, table.speakerUid),
 			busy: self.busy,
@@ -104,6 +103,9 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 		down: step === 'talk',
 		askerLine: null,
 		askerMark: false,
+		ask: challenge?.statement
+			? t('proposals.heading', { question: challenge.statement })
+			: undefined,
 		barExtra: classButton,
 		overlay: self.sheetOpen
 			? m(

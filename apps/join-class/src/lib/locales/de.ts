@@ -242,6 +242,7 @@ const de: Record<string, string> = {
 	'answer.send_failed': 'Nicht gesendet. Nochmal versuchen',
 	'answer.none_yet': 'Noch keine Antworten',
 	'proposal.title': 'Vorschlag',
+	'proposals.heading': 'Schlagt eine Lösung für die Frage „{{question}}“ vor',
 	'proposal.optional': 'Ein Lösungsvorschlag (freiwillig)',
 	'proposal.mine': 'Mein Vorschlag',
 	'proposal.placeholder': 'Schreibt einen Vorschlag',

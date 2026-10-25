@@ -239,6 +239,7 @@ const nl: Record<string, string> = {
 	'answer.send_failed': 'Niet verzonden. Probeer opnieuw',
 	'answer.none_yet': 'Nog geen antwoorden',
 	'proposal.title': 'Voorstel',
+	'proposals.heading': 'Stel een oplossing voor bij de vraag „{{question}}”',
 	'proposal.optional': 'Een oplossingsvoorstel (niet verplicht)',
 	'proposal.mine': 'Mijn voorstel',
 	'proposal.placeholder': 'Schrijf een voorstel',

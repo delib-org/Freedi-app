@@ -12,6 +12,7 @@ import '@/styles/student-frame.scss';
  *   askerMark    optional leading mark in the header (e.g. "?" for the asker)
  *   instruction  the single instruction of this screen
  *   questionHeading  the instruction is a chosen question: big, in the top third
+ *   ask          the lesson's question as a big heading above the instruction (Proposals)
  *   action       the primary action (a `.btn.btn--primary`), pinned at the bottom
  *   down         the inverted "screens down" talk screen (`.frame--down`)
  *
@@ -23,13 +24,14 @@ export interface StudentFrameAttrs {
 	askerMark?: string;
 	instruction?: string;
 	questionHeading?: boolean;
+	ask?: string;
 	action?: m.Children;
 	down?: boolean;
 }
 
 export const StudentFrame: m.Component<StudentFrameAttrs> = {
 	view({ attrs, children }) {
-		const { headerLine, askerMark, instruction, questionHeading, action, down } = attrs;
+		const { headerLine, askerMark, instruction, questionHeading, ask, action, down } = attrs;
 		const stageName = attrs.stageName ?? studentStageTitle();
 		// the status line is dropped when it only repeats the stage name
 		const showLine = Boolean(headerLine) && headerLine !== stageName;
@@ -41,6 +43,7 @@ export const StudentFrame: m.Component<StudentFrameAttrs> = {
 				showLine ? m('span.frame__line', headerLine) : null,
 			]),
 			m('main.frame__content', [
+				ask ? m('p.frame__ask', { dir: 'auto', 'data-testid': 'proposals-ask' }, ask) : null,
 				instruction
 					? m(
 							'h1.frame__instruction',

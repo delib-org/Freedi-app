@@ -240,6 +240,7 @@ const ar: Record<string, string> = {
 	'answer.send_failed': 'لم يُرسل. حاولوا مرة أخرى',
 	'answer.none_yet': 'لا توجد إجابات بعد',
 	'proposal.title': 'اقتراح',
+	'proposals.heading': 'اقترحوا حلاً للسؤال «{{question}}»',
 	'proposal.optional': 'اقتراح لحل (اختياري)',
 	'proposal.mine': 'اقتراحي',
 	'proposal.placeholder': 'اكتبوا اقتراحاً',

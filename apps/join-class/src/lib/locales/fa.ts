@@ -231,6 +231,7 @@ const fa: Record<string, string> = {
 	'answer.send_failed': 'ارسال نشد. دوباره تلاش کنید',
 	'answer.none_yet': 'هنوز پاسخی نیست',
 	'proposal.title': 'پیشنهاد',
+	'proposals.heading': 'برای پرسش «{{question}}» راه‌حل پیشنهاد دهید',
 	'proposal.optional': 'پیشنهاد برای راه‌حل (اختیاری)',
 	'proposal.mine': 'پیشنهاد من',
 	'proposal.placeholder': 'یک پیشنهاد بنویسید',

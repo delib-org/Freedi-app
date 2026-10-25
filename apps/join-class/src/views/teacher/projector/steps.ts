@@ -129,6 +129,13 @@ function proposals(): m.Vnode {
 	const gate = gateOf(challenge, projectorData.main);
 
 	return m('section.projector-step.projector-step--proposals', [
+		challenge?.statement
+			? m(
+					'h2.projector-ask',
+					{ dir: 'auto', 'data-testid': 'projector-ask' },
+					t('proposals.heading', { question: challenge.statement }),
+				)
+			: null,
 		m(
 			'h1.projector-instruction',
 			t(options.length === 1 ? 'projector.proposalsSentOne' : 'projector.proposalsSent', {

@@ -7,8 +7,6 @@ import { Countdown, SPEAK_MS } from './Countdown';
 
 export interface TalkScreenAttrs {
 	table: ClassTable;
-	/** The prompt: the challenge (Proposals). */
-	prompt: string;
 	uid: string;
 	/** The name shown for the tablemate who holds the floor. */
 	speakerName: string;
@@ -35,18 +33,17 @@ export function talkFinishAction(busy: boolean, onGo: () => void): m.Children {
 
 /**
  * The content of the Proposals talk screen (screens down), drawn inside the
- * inverted StudentFrame: the prompt, then a fresh minute for whoever volunteers
+ * inverted StudentFrame (the question sits above, in the frame's big heading), then a fresh minute for whoever volunteers
  * (the same speaker mechanics as Table talk, IA 17.14). Nobody speaking: an idle
  * 1:00 and "I want to answer". Table talk has its own screens (tableTalkParts.ts).
  */
 export const TalkScreen: m.ClassComponent<TalkScreenAttrs> = {
 	view(vnode) {
-		const { table, prompt, uid, speakerName, busy, onClaim, onFinish } = vnode.attrs;
+		const { table, uid, speakerName, busy, onClaim, onFinish } = vnode.attrs;
 		const speaking = !!table.speakerUid && !speakerTimeOver(table, serverNow());
 		const mine = speaking && table.speakerUid === uid;
 
 		return m('.talk', [
-			m('p.talk__prompt', { dir: 'auto' }, prompt),
 			m('.tt__clock', [
 				speaking
 					? m(

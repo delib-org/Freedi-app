@@ -239,6 +239,7 @@ const he: Record<string, string> = {
 	'answer.send_failed': 'לא נשלח. לנסות שוב',
 	'answer.none_yet': 'עוד אין תשובות',
 	'proposal.title': 'הצעה',
+	'proposals.heading': 'הציעו פתרון לשאלה ״{{question}}״',
 	'proposal.optional': 'הצעה לפתרון (לא חובה)',
 	'proposal.mine': 'ההצעה שלי',
 	'proposal.placeholder': 'כתבו הצעה',

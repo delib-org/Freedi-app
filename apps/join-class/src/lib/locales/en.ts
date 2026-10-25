@@ -244,6 +244,7 @@ const en: Record<string, string> = {
 	'answer.send_failed': 'Not sent. Try again',
 	'answer.none_yet': 'No answers yet',
 	'proposal.title': 'Proposal',
+	'proposals.heading': 'Propose a solution to the question “{{question}}”',
 	'proposal.optional': 'A proposal for a solution (optional)',
 	'proposal.mine': 'My proposal',
 	'proposal.placeholder': 'Write a proposal',

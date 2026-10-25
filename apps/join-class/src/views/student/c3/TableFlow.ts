@@ -181,6 +181,7 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 					headerLine: parts.headerLine,
 					askerMark: parts.askerMark ? '?' : undefined,
 					instruction,
+					ask: parts.ask,
 					action,
 					down: parts.down,
 				},

@@ -64,6 +64,8 @@ export interface FlowParts {
 	instruction: string | undefined;
 	/** Table talk: the instruction is the chosen question (big, top third). */
 	questionHeading?: boolean;
+	/** Proposals: the challenge as a big heading above the instruction ("Propose a solution to ..."). */
+	ask?: string;
 	/** The body of the VIEWED step. */
 	body: m.Children;
 	action: m.Children;

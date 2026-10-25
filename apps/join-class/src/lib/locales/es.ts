@@ -240,6 +240,7 @@ const es: Record<string, string> = {
 	'answer.send_failed': 'No se envió. Intentad de nuevo',
 	'answer.none_yet': 'Aún no hay respuestas',
 	'proposal.title': 'Propuesta',
+	'proposals.heading': 'Proponed una solución a la pregunta «{{question}}»',
 	'proposal.optional': 'Una propuesta de solución (opcional)',
 	'proposal.mine': 'Mi propuesta',
 	'proposal.placeholder': 'Escribid una propuesta',
