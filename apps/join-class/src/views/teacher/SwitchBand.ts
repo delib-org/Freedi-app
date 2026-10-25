@@ -26,6 +26,10 @@ export interface SwitchBandAttrs {
 	ballotFrozen: boolean;
 	ballotPaused: boolean;
 	ballotClosed: boolean;
+	// >>> voteSummary BEGIN
+	/** Every student present has voted (the ballot is still the teacher's to close). */
+	allVoted?: boolean;
+	// >>> voteSummary END
 	/** The lesson's introduction videos and the one the projector shows (Opening step). */
 	introVideos: readonly IntroVideo[];
 	projectorVideoId: string | null;
@@ -150,6 +154,15 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 				attrs.onCloseVote,
 				!attrs.ballotFrozen || attrs.ballotClosed,
 			),
+			// >>> voteSummary BEGIN
+			attrs.allVoted && !attrs.ballotClosed
+				? m(
+						'p.switch-band__note',
+						{ role: 'status', 'data-testid': 'console-all-voted' },
+						t('console.all_voted'),
+					)
+				: null,
+			// >>> voteSummary END
 			// A running vote is closed or paused first; then it can be wiped and voted again.
 			resetAction(
 				t('console.reset_vote'),

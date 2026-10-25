@@ -28,6 +28,30 @@ const vote: Record<string, string> = {
 	'console.vote_sort_by_support': 'ההצעות מסתדרות לפי התמיכה',
 	'console.vote_sort_by_support_help':
 		'בזמן ההצבעה ההצעה עם הכי הרבה קולות עולה למעלה אצל התלמידים.',
+	// >>> voteSummary BEGIN
+	'summary.vote_results': 'תוצאות ההצבעה',
+	'summary.turnout': '{{n}} מתוך {{m}} הצביעו',
+	'summary.leading': 'מובילה כרגע',
+	'summary.vote_open': 'ההצבעה עוד פתוחה',
+	'summary.wait_close': 'המורה תסגור את ההצבעה',
+	'summary.no_vote': 'לא הייתה הצבעה',
+	'summary.most_agreed': 'ההצעה שהכי הסכימו עליה',
+	'summary.tie_by_ratings': 'תיקו. הוכרע לפי הדירוגים',
+	'summary.by_side_explain': 'כמה כל צד תומך בהחלטה, לפי הצד שבחרתם בתחילת השיעור',
+	'summary.winner': 'ההצעה שנבחרה',
+	'console.close_and_go_title': 'ההצבעה עדיין פתוחה. לסגור אותה ולעבור לסיכום?',
+	'console.close_and_go_body': 'אחרי הסגירה אי אפשר לשנות הצבעה.',
+	'console.close_and_go_yes': 'לסגור ולעבור',
+	'console.all_voted': 'כולם הצביעו',
+	'console.vote_order': 'סדר ההצעות',
+	'console.vote_order_consensus': 'לפי הדירוגים',
+	'console.vote_order_consensus_help': 'ההצעות שהכיתה הכי הסכימה עליהן למעלה, אצל התלמידים ובמקרן',
+	'console.vote_order_votes': 'לפי מספר הקולות',
+	'console.vote_order_votes_help':
+		'ההצעה עם הכי הרבה קולות עולה למעלה בזמן ההצבעה, אצל התלמידים ובמקרן',
+	'console.vote_order_random': 'סדר אקראי',
+	'console.vote_order_random_help': 'כולם רואים אותו סדר, והוא לא משתנה בזמן ההצבעה',
+	// >>> voteSummary END
 };
 
 export default vote;

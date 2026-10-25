@@ -266,9 +266,9 @@ const es: Record<string, string> = {
 	'summary.side_center': 'En el medio',
 	'summary.bar_label': '{{side}}: {{n}} de {{m}} valoraron',
 	'summary.n_of_m': '{{n}} de {{m}} valoraron',
-	'summary.verdict_wait': 'Aún no hay suficientes valoraciones',
-	'summary.verdict_closer': '✓ Los lados se acercaron',
-	'summary.verdict_apart': 'Los lados aún no se han acercado',
+	'summary.verdict_wait': 'Esperando valoraciones de los dos lados',
+	'summary.verdict_closer': '✓ Los dos lados apoyan la decisión',
+	'summary.verdict_apart': 'Un lado aún no la apoya lo suficiente',
 	// <<< C3 END
 	// ---------------------------------------------------------------------
 	// >>> C4 BEGIN  namespace: console.*

@@ -1,5 +1,4 @@
 import m from 'mithril';
-import { supportBySide } from '@freedi/shared-types';
 import type { LessonStepKey } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { classState } from '@/lib/classroom/classState';
@@ -8,21 +7,21 @@ import { projectorData } from '@/lib/classroom/projectorData';
 import { ProjectorQr, QR_WAITING_SIZE } from './ProjectorBand';
 import { openingStage } from './OpeningStage';
 import { GateStage } from './GateStage';
-import { ballotOptions, gateView } from './gateLogic';
+import { gateView } from './gateLogic';
+// >>> voteSummary BEGIN
+import { summaryStage, voteStage } from './VoteStage';
+// >>> voteSummary END
 import {
 	allTablesRating,
 	countTables,
 	gateBars,
-	readBallot,
 	readRoundPhase,
 	studentsOf,
 	supportPercent,
 	tableTiles,
-	tallyBars,
 	topProposals,
 	unseatedNames,
 	visibleProposals,
-	voteStatus,
 } from './projectorLogic';
 
 /** One renderer per lesson step: the ONE thing the class needs to see (UX section 6). */
@@ -176,91 +175,6 @@ function plenum(options: ReturnType<typeof visibleProposals>): m.Vnode {
 	]);
 }
 
-function vote(): m.Vnode {
-	const challenge = projectorData.challenge;
-	const ballot = readBallot(challenge);
-	const selections = challenge?.selections as Record<string, number> | undefined;
-	const bars = ballot ? tallyBars(ballot.candidateIds, selections, projectorData.proposals) : [];
-
-	const candidates = ballot ? ballotOptions(ballot.candidateIds, projectorData.proposals) : [];
-	const gate = gateOf(challenge, projectorData.main);
-	const status = voteStatus(ballot);
-
-	return m('section.projector-step.projector-step--vote', [
-		m('h1.projector-instruction', t('projector.voteTitle')),
-		status === 'open'
-			? null
-			: m(
-					'p.projector-vote-status',
-					{ role: 'status', 'data-status': status },
-					t(status === 'paused' ? 'voting.paused' : 'voting.closed'),
-				),
-		candidates.length > 0
-			? m(GateStage, { view: gateView(candidates, gate), showWaiting: true })
-			: null,
-		bars.length === 0
-			? m('p.projector-empty', t('projector.noBallot'))
-			: m(
-					'ul.projector-tally',
-					bars.map((bar) =>
-						m('li.projector-tally__row', { key: bar.id }, [
-							m('span.projector-tally__text', bar.text),
-							m('span.projector-tally__track', { style: barStyle(bar.percent) }, [
-								m('span.projector-tally__fill'),
-							]),
-							m('span.projector-tally__count', bar.count),
-						]),
-					),
-				),
-	]);
-}
-
-function summary(): m.Vnode {
-	const challenge = projectorData.challenge;
-	const ballot = readBallot(challenge);
-	const decision = projectorData.proposals.find((o) => o.statementId === ballot?.decisionId);
-	const names = sideNamesOf(projectorData.main);
-	const support = supportBySide(
-		studentsOf(classState.roster, projectorData.main?.creatorId),
-		gateOf(challenge, projectorData.main),
-	);
-	const rows = [
-		{ key: 'a', label: names.a, camp: support.a },
-		{ key: 'center', label: t('projector.center'), camp: support.center },
-		{ key: 'b', label: names.b, camp: support.b },
-	];
-
-	return m('section.projector-step.projector-step--summary', [
-		m('.projector-decision', [
-			m('p.projector-eyebrow', t('projector.decision')),
-			m('p.projector-decision__text', decision?.statement ?? t('projector.noDecision')),
-		]),
-		m(
-			'ul.projector-support',
-			{ 'aria-label': t('projector.supportTitle') },
-			rows.map((row) =>
-				m(`li.projector-support__row.projector-support__row--${row.key}`, { key: row.key }, [
-					m('span.projector-support__label', row.label),
-					m(
-						'span.projector-support__track',
-						{ style: barStyle(supportBarPercent(row.camp.mean, row.camp.n)) },
-						[m('span.projector-support__fill')],
-					),
-					m('span.projector-support__n', t('projector.rated', { n: row.camp.n, m: row.camp.m })),
-				]),
-			),
-		),
-		m(
-			`p.projector-verdict.projector-verdict--${support.verdict}`,
-			t(`projector.verdict.${support.verdict}`),
-		),
-	]);
-}
-
-function supportBarPercent(mean: number, n: number): number {
-	return n === 0 ? 0 : supportPercent(mean);
-}
-
 const RENDERERS: Record<LessonStepKey, (ctx: StepContext) => m.Vnode> = {
 	waiting,
 	opening,
@@ -268,8 +182,10 @@ const RENDERERS: Record<LessonStepKey, (ctx: StepContext) => m.Vnode> = {
 	tables,
 	tableTalk,
 	proposals,
-	vote,
-	summary,
+	// >>> voteSummary BEGIN
+	vote: voteStage,
+	summary: summaryStage,
+	// >>> voteSummary END
 };
 
 export function renderStep(key: LessonStepKey, ctx: StepContext): m.Vnode {

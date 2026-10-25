@@ -28,6 +28,33 @@ const vote: Record<string, string> = {
 	'console.vote_sort_by_support': 'Voorstellen ordenen op steun',
 	'console.vote_sort_by_support_help':
 		'Tijdens de stemming schuift het voorstel met de meeste stemmen bovenaan op de schermen van de leerlingen.',
+	// >>> voteSummary BEGIN
+	'summary.vote_results': 'Uitslag van de stemming',
+	'summary.turnout': '{{n}} van {{m}} hebben gestemd',
+	'summary.leading': 'Staat nu voorop',
+	'summary.vote_open': 'De stemming is nog open',
+	'summary.wait_close': 'De docent sluit de stemming',
+	'summary.no_vote': 'Er was geen stemming',
+	'summary.most_agreed': 'Het voorstel met de meeste overeenstemming',
+	'summary.tie_by_ratings': 'Gelijkspel, beslist op basis van de beoordelingen',
+	'summary.by_side_explain':
+		'Hoeveel elke kant de beslissing steunt, volgens de kant die je aan het begin van de les koos',
+	'summary.winner': 'Het gekozen voorstel',
+	'console.close_and_go_title': 'De stemming is nog open. Sluiten en naar de samenvatting?',
+	'console.close_and_go_body': 'Na het sluiten kan niemand zijn stem nog wijzigen.',
+	'console.close_and_go_yes': 'Sluiten en verder',
+	'console.all_voted': 'Iedereen heeft gestemd',
+	'console.vote_order': 'Volgorde van de voorstellen',
+	'console.vote_order_consensus': 'Op beoordeling',
+	'console.vote_order_consensus_help':
+		'De voorstellen waar de klas het meest over eens is staan bovenaan, op telefoons en de beamer',
+	'console.vote_order_votes': 'Op aantal stemmen',
+	'console.vote_order_votes_help':
+		'Het voorstel met de meeste stemmen schuift tijdens de stemming naar boven, op telefoons en de beamer',
+	'console.vote_order_random': 'Willekeurige volgorde',
+	'console.vote_order_random_help':
+		'Iedereen ziet dezelfde volgorde en die verandert niet tijdens de stemming',
+	// >>> voteSummary END
 };
 
 export default vote;

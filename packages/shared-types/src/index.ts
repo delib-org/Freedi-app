@@ -1034,6 +1034,7 @@ export {
   ClassTableMarkerSchema,
   ClassBallotSchema,
   ClassVoteDisplaySchema,
+  ClassVoteOrderSchema,
   ClassSubscriptionFieldsSchema,
   SideValueSchema,
   DecisionSupportSchema,
@@ -1049,6 +1050,7 @@ export type {
   ClassTableMarker,
   ClassBallot,
   ClassVoteDisplay,
+  ClassVoteOrder,
 } from './models/classroom/classroomModel';
 export {
   campOf,

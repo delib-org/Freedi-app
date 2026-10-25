@@ -266,9 +266,9 @@ const ar: Record<string, string> = {
 	'summary.side_center': 'في المنتصف',
 	'summary.bar_label': '{{side}}: قيّم {{n}} من {{m}}',
 	'summary.n_of_m': '{{n}} من {{m}} قيّموا',
-	'summary.verdict_wait': 'لا توجد تقييمات كافية بعد',
-	'summary.verdict_closer': '✓ اقترب الطرفان',
-	'summary.verdict_apart': 'لم يقترب الطرفان بعد',
+	'summary.verdict_wait': 'بانتظار تقييمات من الطرفين',
+	'summary.verdict_closer': '✓ كلا الطرفين يؤيد القرار',
+	'summary.verdict_apart': 'أحد الطرفين لا يؤيده بما يكفي بعد',
 	// <<< C3 END
 	// ---------------------------------------------------------------------
 	// >>> C4 BEGIN  namespace: console.*

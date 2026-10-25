@@ -79,6 +79,23 @@
     color: var(--paper);
   }
 
+  // Closed ballot: the decided proposal is marked.
+  &__item--winner {
+    border-color: var(--teal-600);
+    background: var(--teal-50);
+    color: var(--ink);
+  }
+
+  &__winner {
+    align-self: flex-start;
+    padding: 0 var(--space-sm);
+    border-radius: var(--radius-full);
+    background: var(--teal-600);
+    color: var(--paper);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold, 700);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     &__fill {
       transition: none;
@@ -87,5 +104,94 @@
 }
 
 .vote__empty {
+  color: var(--ink-muted);
+}
+
+// ---- summary: the vote's result (IA 20) ------------------------------------------------
+
+.summary__no-vote {
+  margin: 0 0 var(--space-sm);
+  color: var(--ink-muted);
+  font-weight: var(--font-weight-bold, 700);
+}
+
+.vote-result {
+  margin-block-end: var(--space-lg);
+
+  &__title {
+    margin: 0 0 var(--space-sm);
+    font-size: var(--font-size-lg);
+  }
+
+  &__rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+
+    &--winner {
+      border-color: var(--teal-600);
+      background: var(--teal-50);
+    }
+  }
+
+  &__tag {
+    align-self: flex-start;
+    padding: 0 var(--space-sm);
+    border-radius: var(--radius-full);
+    background: var(--teal-600);
+    color: var(--paper);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold, 700);
+  }
+
+  &__bar {
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--paper-deep);
+    overflow: hidden;
+  }
+
+  &__fill {
+    display: block;
+    height: 100%;
+    width: var(--bar);
+    background: var(--teal-500);
+  }
+
+  &__count {
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__turnout,
+  &__tie,
+  &__wait {
+    margin: var(--space-sm) 0 0;
+    color: var(--ink-muted);
+  }
+}
+
+.decision__note {
+  margin: var(--space-xs) 0 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+}
+
+.support__explain {
+  margin: 0 0 var(--space-md);
   color: var(--ink-muted);
 }

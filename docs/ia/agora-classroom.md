@@ -1691,3 +1691,62 @@ classSetItemHidden { mainId, statementId, hidden } — replaces client setOption
 
 ### 18.7 Handoff
 Fixed here: control placement, labels, confirm only for backward moves and resets, one-time student lines. UX to decide: visual weight of reset controls (destructive, secondary), how confirm conveys "cannot be undone", how a hidden item looks in "מה כתבו".
+
+---
+
+## 20. Summary shows the vote result (Tal, 2026-10-25, card C68AENG3)
+
+### 20.1 Finding: why "ההחלטה עוד לא התקבלה" shows after everyone voted
+- `ballot.decisionId` is written **only** by `classCloseBallot`, the teacher's "סגירת ההצבעה" at the Vote step band.
+- Opening Summary (`setLessonStep`, a client write) does not close the ballot.
+- `SummaryScreen` and the projector's `summary()` read only `decisionId`.
+
+So if the teacher moves on without pressing close, the vote is still open, there is no decision, and the support bars measure support for nothing.
+
+### 20.2 Fix
+1. **Console:** the forward control at Vote, while the ballot is open or paused, opens a confirm:
+   - "ההצבעה עדיין פתוחה. לסגור אותה ולעבור לסיכום?"
+   - Buttons: "לסגור ולעבור" / "ביטול".
+   - On yes, `classCloseBallot` runs first, then the step move.
+   - When every present student has voted, the band shows "כולם הצביעו". There is no automatic close: students may still change their vote.
+2. **Summary states.** The phone and the projector draw the same states from the same data.
+
+| Ballot | Top section | Support question + side bars |
+|---|---|---|
+| none (no vote held) | "לא הייתה הצבעה". The decision = the most agreed proposal (highest C_p), with the line "ההצעה שהכי הסכימו עליה" (§2.1) | shown |
+| open | "ההצבעה עוד פתוחה" + live votes per proposal; the leader marked "מובילה כרגע" | hidden; line "המורה תסגור את ההצבעה" |
+| paused | "ההצבעה מושהית" + the same tally | hidden |
+| closed | "ההחלטה" card with the winner, then votes per proposal (by votes, winner first) and "{{n}} מתוך {{m}} הצביעו". On a tie decided by ratings: "תיקו. הוכרע לפי הדירוגים" | shown |
+
+3. **Side bars:** keep them and add one sentence above them. Change the verdict lines, because "התקרבו" claims a movement that the data (support only) does not measure.
+
+### 20.3 Labels
+| Concept | HE | EN | i18n key |
+|---|---|---|---|
+| Section: vote results | תוצאות ההצבעה | Vote results | `summary.vote_results` (NEW) |
+| Votes per proposal | {{n}} קולות / קול אחד | {{n}} votes / 1 vote | reuse `voting.result_votes`, `voting.result_one_vote` |
+| Turnout | {{n}} מתוך {{m}} הצביעו | {{n}} of {{m}} voted | `summary.turnout` (NEW) |
+| Leader, open vote | מובילה כרגע | Leading now | `summary.leading` (NEW) |
+| Open / paused | ההצבעה עוד פתוחה / ההצבעה מושהית | The vote is still open / The vote is paused | `summary.vote_open`, `voting.paused` (kept) |
+| Wait line | המורה תסגור את ההצבעה | The teacher will close the vote | `summary.wait_close` (NEW) |
+| No vote | לא הייתה הצבעה · ההצעה שהכי הסכימו עליה | No vote was held · the most agreed proposal | `summary.no_vote` (NEW) |
+| Tie | תיקו. הוכרע לפי הדירוגים | A tie, decided by the ratings | `summary.tie_by_ratings` (NEW) |
+| Side bars explainer | כמה כל צד תומך בהחלטה, לפי הצד שבחרתם בתחילת השיעור | How much each side supports the decision, by the side you picked at the start | `summary.by_side_explain` (NEW) |
+| Verdict, closer | שני הצדדים תומכים בהחלטה | Both sides support the decision | `summary.verdict_closer` (value changed) |
+| Verdict, apart | צד אחד עוד לא תומך מספיק | One side does not support it enough yet | `summary.verdict_apart` (value changed) |
+| Verdict, wait | מחכים לדירוגים משני הצדדים | Waiting for ratings from both sides | `summary.verdict_wait` (value changed) |
+| Retire | ההחלטה עוד לא התקבלה | — | `summary.waiting`: replaced by the states above (still used by `LessonStateScreen`: check) |
+| Close-and-go confirm | ההצבעה עדיין פתוחה. לסגור אותה ולעבור לסיכום? / לסגור ולעבור | The vote is still open. Close it and go to the summary? / Close and go | `console.close_and_go_title`, `console.close_and_go_yes` (NEW) |
+| All voted (band) | כולם הצביעו | Everyone has voted | `console.all_voted` (NEW) |
+
+Projector: the same keys under `projector.*`, or reuse `summary.*`. Default: reuse `summary.*`, so there is one string.
+
+### 20.4 Hierarchy (Summary phone, top to bottom)
+header → vote results (state block) → "עד כמה אתם תומכים בהצעה?" + faces (only when decided) → explainer sentence → three bars → verdict line.
+
+### 20.5 Decisions taken at build time
+- The close is still the teacher's: no automatic close when everyone voted (open question 5). The band says "כולם הצביעו" and the forward control asks "לסגור ולעבור" while the ballot is open or paused.
+- A ballot that carries a `decisionId` but no `closedAt` (old test data) reads as closed, so the Summary never contradicts the decision it has.
+- The winner is marked with the tag "ההצעה שנבחרה" on the phone (Vote screen after close and Summary) and on the projector; "מובילה כרגע" marks only a single proposal ahead (never on a tie or at zero votes).
+- Turnout counts votes cast on the ballot over students in the room (the teacher excluded).
+- The projector reuses the `summary.*` keys, so the phone and the wall say the same words. The old `projector.verdict.*` keys are no longer read.

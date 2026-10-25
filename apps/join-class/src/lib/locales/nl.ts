@@ -265,9 +265,9 @@ const nl: Record<string, string> = {
 	'summary.side_center': 'In het midden',
 	'summary.bar_label': '{{side}}: {{n}} van {{m}} beoordeelden',
 	'summary.n_of_m': '{{n}} van {{m}} beoordeelden',
-	'summary.verdict_wait': 'Nog niet genoeg beoordelingen',
-	'summary.verdict_closer': '✓ De kanten zijn dichter bij elkaar gekomen',
-	'summary.verdict_apart': 'De kanten zijn nog niet dichter bij elkaar gekomen',
+	'summary.verdict_wait': 'Wachten op beoordelingen van beide kanten',
+	'summary.verdict_closer': '✓ Beide kanten steunen de beslissing',
+	'summary.verdict_apart': 'Eén kant steunt hem nog niet genoeg',
 	// <<< C3 END
 	// ---------------------------------------------------------------------
 	// >>> C4 BEGIN  namespace: console.*

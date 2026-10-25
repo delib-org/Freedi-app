@@ -30,6 +30,33 @@ const vote: Record<string, string> = {
 	'console.vote_sort_by_support': 'Vorschläge nach Zustimmung ordnen',
 	'console.vote_sort_by_support_help':
 		'Während der Abstimmung rückt der Vorschlag mit den meisten Stimmen auf den Bildschirmen der Lernenden nach oben.',
+	// >>> voteSummary BEGIN
+	'summary.vote_results': 'Ergebnis der Abstimmung',
+	'summary.turnout': '{{n}} von {{m}} haben abgestimmt',
+	'summary.leading': 'Liegt vorn',
+	'summary.vote_open': 'Die Abstimmung ist noch offen',
+	'summary.wait_close': 'Die Lehrkraft schließt die Abstimmung',
+	'summary.no_vote': 'Es gab keine Abstimmung',
+	'summary.most_agreed': 'Der Vorschlag mit der meisten Zustimmung',
+	'summary.tie_by_ratings': 'Gleichstand, entschieden nach den Bewertungen',
+	'summary.by_side_explain':
+		'Wie sehr jede Seite die Entscheidung unterstützt, nach der Seite, die ihr zu Beginn gewählt habt',
+	'summary.winner': 'Der gewählte Vorschlag',
+	'console.close_and_go_title': 'Die Abstimmung ist noch offen. Schließen und zur Zusammenfassung?',
+	'console.close_and_go_body': 'Nach dem Schließen kann niemand mehr seine Stimme ändern.',
+	'console.close_and_go_yes': 'Schließen und weiter',
+	'console.all_voted': 'Alle haben abgestimmt',
+	'console.vote_order': 'Reihenfolge der Vorschläge',
+	'console.vote_order_consensus': 'Nach den Bewertungen',
+	'console.vote_order_consensus_help':
+		'Die Vorschläge mit der größten Zustimmung der Klasse stehen oben, auf den Handys und am Beamer',
+	'console.vote_order_votes': 'Nach Anzahl der Stimmen',
+	'console.vote_order_votes_help':
+		'Der Vorschlag mit den meisten Stimmen rückt während der Abstimmung nach oben, auf den Handys und am Beamer',
+	'console.vote_order_random': 'Zufällige Reihenfolge',
+	'console.vote_order_random_help':
+		'Alle sehen dieselbe Reihenfolge, sie ändert sich während der Abstimmung nicht',
+	// >>> voteSummary END
 };
 
 export default vote;

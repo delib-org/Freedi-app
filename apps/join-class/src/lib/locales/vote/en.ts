@@ -28,6 +28,33 @@ const vote: Record<string, string> = {
 	'console.vote_sort_by_support': 'Order the proposals by support',
 	'console.vote_sort_by_support_help':
 		"While the class votes, the proposal with the most votes moves to the top of the students' screens.",
+	// >>> voteSummary BEGIN
+	'summary.vote_results': 'Vote results',
+	'summary.turnout': '{{n}} of {{m}} voted',
+	'summary.leading': 'Leading now',
+	'summary.vote_open': 'The vote is still open',
+	'summary.wait_close': 'The teacher will close the vote',
+	'summary.no_vote': 'No vote was held',
+	'summary.most_agreed': 'The most agreed proposal',
+	'summary.tie_by_ratings': 'A tie, decided by the ratings',
+	'summary.by_side_explain':
+		'How much each side supports the decision, by the side you picked at the start of the lesson',
+	'summary.winner': 'The chosen proposal',
+	'console.close_and_go_title': 'The vote is still open. Close it and go to the summary?',
+	'console.close_and_go_body': 'After closing, votes can no longer be changed.',
+	'console.close_and_go_yes': 'Close and go',
+	'console.all_voted': 'Everyone has voted',
+	'console.vote_order': 'Order of the proposals',
+	'console.vote_order_consensus': 'By the ratings',
+	'console.vote_order_consensus_help':
+		'The proposals the class agreed on most are on top, on phones and the projector',
+	'console.vote_order_votes': 'By the number of votes',
+	'console.vote_order_votes_help':
+		'The proposal with the most votes moves to the top during the vote, on phones and the projector',
+	'console.vote_order_random': 'Random order',
+	'console.vote_order_random_help':
+		'Everyone sees the same order, and it does not change during the vote',
+	// >>> voteSummary END
 };
 
 export default vote;
