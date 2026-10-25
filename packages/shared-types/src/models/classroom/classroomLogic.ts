@@ -221,3 +221,79 @@ export function tableDone(
 ): boolean {
 	return notAskedUids(table).length === 0 && (table.askerUid === null || everyoneSpoke(table, now));
 }
+
+/** Uids that answered or passed this question; the speaker counts once their minute is over. */
+function answeredSet(
+	table: Pick<ClassTable, 'spokenUids' | 'speakerUid' | 'speakerEndsAt'>,
+	now: number,
+): Set<string> {
+	const spoken = new Set(table.spokenUids);
+	if (table.speakerUid && typeof table.speakerEndsAt === 'number' && table.speakerEndsAt <= now) {
+		spoken.add(table.speakerUid);
+	}
+
+	return spoken;
+}
+
+/** Nobody holds a running minute (Table talk "floor open"). */
+export function floorOpen(table: Pick<ClassTable, 'speakerEndsAt'>, now: number): boolean {
+	return speakerTimeOver(table, now);
+}
+
+/** Some tablemate other than the asker actually answered this question (a pass does not count). */
+export function othersAnswered(
+	table: Pick<
+		ClassTable,
+		'askerUid' | 'spokenUids' | 'speakerUid' | 'speakerEndsAt' | 'passedSpeakingUids'
+	>,
+	now: number,
+): boolean {
+	const passed = new Set(table.passedSpeakingUids ?? []);
+
+	return [...answeredSet(table, now)].some((uid) => uid !== table.askerUid && !passed.has(uid));
+}
+
+/**
+ * The asker may answer: one other tablemate answered, or every other tablemate
+ * answered or passed (a table where everyone else passed cannot stall).
+ */
+export function askerMayAnswer(
+	table: Pick<
+		ClassTable,
+		| 'memberUids'
+		| 'askerUid'
+		| 'spokenUids'
+		| 'speakerUid'
+		| 'speakerEndsAt'
+		| 'passedSpeakingUids'
+	>,
+	now: number,
+): boolean {
+	if (othersAnswered(table, now)) return true;
+	const done = answeredSet(table, now);
+
+	return table.memberUids.filter((uid) => uid !== table.askerUid).every((uid) => done.has(uid));
+}
+
+/**
+ * The table is choosing a question: at pick, or at talk once everyone answered
+ * or passed; never once the table is done. The end of a turn needs no write.
+ */
+export function choosing(
+	table: Pick<
+		ClassTable,
+		| 'step'
+		| 'memberUids'
+		| 'askerUid'
+		| 'askedUids'
+		| 'passedAskingUids'
+		| 'spokenUids'
+		| 'speakerUid'
+		| 'speakerEndsAt'
+	>,
+	now: number,
+): boolean {
+	if (tableDone(table, now)) return false;
+
+	return table.step === 'pick' || (table.step === 'talk' && everyoneSpoke(table, now));
+}

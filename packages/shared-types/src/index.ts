@@ -1058,6 +1058,10 @@ export {
   speakerTimeOver,
   everyoneSpoke,
   tableDone,
+  floorOpen,
+  othersAnswered,
+  askerMayAnswer,
+  choosing,
 } from './models/classroom/classroomLogic';
 export type {
   SupportSubscription,
