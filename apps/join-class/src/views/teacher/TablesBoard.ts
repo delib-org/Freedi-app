@@ -24,6 +24,8 @@ export interface TablesBoardAttrs {
 	plenum: boolean;
 	/** The lesson is at Table talk: cards show the turn, who asked and the next-turn button. */
 	tableTalk: boolean;
+	/** Vote or summary: the cards show members only. */
+	done?: boolean;
 	/** The lesson's sub-questions: a card at Table talk shows the question being answered. */
 	questions?: readonly Statement[];
 	/** Side marks appear after the Side step. */
@@ -121,6 +123,7 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 									students: byUid,
 									plenum: attrs.plenum,
 									tableTalk: attrs.tableTalk,
+									done: attrs.done,
 									questionText: attrs.questions?.find((q) => q.statementId === table.questionId)
 										?.statement,
 									mainId: attrs.mainId,

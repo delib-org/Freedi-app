@@ -25,6 +25,7 @@ import {
 	isBallotPaused,
 	isPlenum,
 	rosterStudents,
+	tablesAreDone,
 } from '@/lib/classroom/consoleHelpers';
 import { groupWrittenTexts } from '@/lib/classroom/textsHelpers';
 import { QRShare } from '@/components/QRShare';
@@ -194,6 +195,7 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 			students,
 			plenum,
 			tableTalk: stepKey === 'tableTalk',
+			done: tablesAreDone(stepKey),
 			questions,
 			showSides: stepIndex >= SIDE_STEP_INDEX,
 			opening: stepKey === 'opening' && main ? m(OpeningPanel, { main }) : undefined,
