@@ -7,7 +7,6 @@ import { WizColFooter } from '@/components/WizColFooter';
 import { BrandLogo } from '@/components/BrandLogo';
 import { subscribeToClassLessons, type ClassLessonEntry } from '@/lib/joinSubscriptions';
 import type { Unsubscribe } from '@/lib/firebase';
-import { LESSON_STEP_KEYS } from '@/lib/lesson';
 import { classSetLessonStatus } from '@/lib/classroom/api';
 import { filterLessons, statusChipOf } from './homeHelpers';
 import {
@@ -69,7 +68,7 @@ function renderChip(w: ClassLessonEntry): m.Vnode {
 
 	return m('p.status-chip', { class: `status-chip--${chip.mark}` }, [
 		m('span.status-mark', { class: `status-mark--${chip.mark}`, 'aria-hidden': 'true' }),
-		m('span', t(chip.key, { n: w.stepIndex + 1, total: LESSON_STEP_KEYS.length })),
+		m('span', t(chip.key, { n: w.stepIndex + 1, total: w.stepCount })),
 	]);
 }
 

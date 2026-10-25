@@ -31,6 +31,11 @@ export const SPEAK_SECONDS = 60;
 /** Default gate: a proposal must reach this consensus (`votingSettings.threshold`). */
 export const DEFAULT_GATE = 0.6;
 
+// >>> allProposals BEGIN
+/** "כל ההצעות" (IA 19): proposals a phone gets at a time, picked by Thompson Sampling. */
+export const CLASS_BATCH_SIZE = 6;
+// >>> allProposals END
+
 /** Slider range of a student's initial side. */
 export const SIDE_MIN = 0;
 export const SIDE_MAX = 100;

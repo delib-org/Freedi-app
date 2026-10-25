@@ -43,6 +43,10 @@ export interface SwitchBandAttrs {
 	onResetTurns: () => void;
 	onResetVote: () => void;
 	onProject: (id: string | null) => void;
+	// >>> allProposals BEGIN
+	/** "כל ההצעות": the live "n of m students rated everything · at least k ratings" line. */
+	allRatedLine?: string;
+	// >>> allProposals END
 }
 
 const TEST_IDS: Record<string, string> = {
@@ -134,6 +138,17 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 				: action(t('console.plenum'), 'plenum', attrs.onPlenum, !attrs.hasChallenge),
 		);
 	}
+	// >>> allProposals BEGIN
+	if (stepKey === 'allProposals' && attrs.allRatedLine) {
+		actions.push(
+			m(
+				'p.switch-band__line',
+				{ role: 'status', 'aria-live': 'polite', 'data-testid': 'console-all-rated' },
+				attrs.allRatedLine,
+			),
+		);
+	}
+	// >>> allProposals END
 	if (stepKey === 'vote') {
 		actions.push(
 			action(

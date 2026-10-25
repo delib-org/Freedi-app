@@ -4,15 +4,17 @@
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
 import vote from './vote/fa';
+import allProposals from './allProposals/fa'; // >>> allProposals
 
 const fa: Record<string, string> = {
 	...vote,
+	...allProposals, // >>> allProposals
 	'step.waiting': 'در انتظار معلم',
 	'step.opening': 'شروع',
 	'step.side': 'انتخاب جانب',
 	'step.tables': 'تقسیم به میزها',
 	'step.tableTalk': 'پرسش‌های کاوشی',
-	'step.proposals': 'پیشنهاد راه‌حل‌ها',
+	'step.proposals': 'پیشنهادها',
 	'step.vote': 'رأی‌گیری',
 	'step.summary': 'خلاصه',
 	'lesson.step_of': 'مرحله {{n}} از {{total}}',
@@ -237,7 +239,7 @@ const fa: Record<string, string> = {
 	'proposal.placeholder': 'یک پیشنهاد بنویسید',
 	'proposal.none': 'هنوز سؤالی برای پیشنهادها نیست',
 	'proposal.send': 'ارسال',
-	'proposal.class_list': 'پیشنهادهای کلاس',
+	'proposal.class_list': 'همهٔ پیشنهادها',
 	'proposal.none_yet': 'هنوز پیشنهادی نیست',
 	'proposal.plenum_line': 'پیشنهادهای برتر روی پروژکتور است',
 	'proposal.edit': 'ویرایش',

@@ -16,11 +16,12 @@ const GATE_ROUNDING = 100;
 export const ALL_TABLES_RATE_STEPS: readonly LessonStepKey[] = ['proposals'];
 
 /**
- * Steps after the tables' work (the class votes, then reads the summary): a table card
- * then only shows who sits there. Its "now" line, timer and next-step button are the
- * state of the LAST table step (often "talking, time over"), which the class has left.
+ * Steps after the tables' work (the class rates every proposal, votes, then reads the
+ * summary): a table card then only shows who sits there. Its "now" line, timer and
+ * next-step button are the state of the LAST table step (often "talking, time over"),
+ * which the class has left.
  */
-export const TABLES_DONE_STEPS: readonly LessonStepKey[] = ['vote', 'summary'];
+export const TABLES_DONE_STEPS: readonly LessonStepKey[] = ['allProposals', 'vote', 'summary'];
 
 export function tablesAreDone(stepKey: LessonStepKey): boolean {
 	return TABLES_DONE_STEPS.includes(stepKey);

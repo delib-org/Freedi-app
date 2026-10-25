@@ -34,6 +34,8 @@ const WAITING_CODE_PX = 160;
 const OPENING_QUESTION_PX = 72;
 const CHALLENGE_TEXT = 'Should the school ban phones during lessons?';
 const TABLE_QUESTIONS = ['What do you gain?', 'What does it cost someone?', 'Who is not heard?'];
+// An OLD 8-step plan on purpose: this walk also proves lessons stored before
+// "כל ההצעות" (IA 19.8) still render every step by their own stored list.
 const STEP_KEYS = ['waiting', 'opening', 'side', 'tables', 'tableTalk', 'proposals', 'vote', 'summary'];
 const PROPOSALS = [
 	{ text: 'Phones stay in a box during lessons', consensus: 0.72 },

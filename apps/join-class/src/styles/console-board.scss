@@ -30,6 +30,16 @@
   }
 }
 
+// >>> allProposals BEGIN
+// "כל ההצעות": the live rated-everything line (IA 19.6).
+.switch-band__line {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+// >>> allProposals END
+
 // ---- "on the projector": the Opening step's choice (UX 14.E) -----------------
 .projector-pick {
   display: flex;

@@ -93,9 +93,54 @@ describe('setLessonStep', () => {
 	});
 
 	it('rejects an out-of-range index without writing', async () => {
-		await expect(setLessonStep('m1', 8)).rejects.toThrow(RangeError);
+		await expect(setLessonStep('m1', 9)).rejects.toThrow(RangeError);
 		expect(mockSetMainSetting).not.toHaveBeenCalled();
 		expect(mockSetFollowMe).not.toHaveBeenCalled();
+	});
+
+	it('a new lesson moves from Proposals to All proposals (index 6)', async () => {
+		await setLessonStep('m1', 6);
+		const plan = mockSetMainSetting.mock.calls[0][1].statementSettings.lessonPlan;
+		expect(plan.steps).toHaveLength(9);
+		expect(mockSetFollowMe).toHaveBeenCalledWith('m1', '/statement/m1?step=allProposals');
+	});
+});
+
+describe('setLessonStep on an old 8-step lesson (IA 19.8)', () => {
+	const OLD_STEPS = [
+		'waiting',
+		'opening',
+		'side',
+		'tables',
+		'tableTalk',
+		'proposals',
+		'vote',
+		'summary',
+	];
+	const oldMain = (stepIndex: number): unknown => ({
+		statementSettings: { lessonPlan: { steps: OLD_STEPS, stepIndex, status: 'live' } },
+	});
+
+	beforeEach(() => {
+		mockSetMainSetting.mockReset();
+		mockSetFollowMe.mockReset();
+		mockGetMain.mockReset();
+	});
+
+	it('keeps the stored 8 steps when it moves, so index 6 stays Vote', async () => {
+		mockGetMain.mockReturnValue(oldMain(5));
+		await setLessonStep('m1', 6);
+		const plan = mockSetMainSetting.mock.calls[0][1].statementSettings.lessonPlan;
+		expect(plan.steps).toEqual(OLD_STEPS);
+		expect(plan.stepIndex).toBe(6);
+		expect(mockSetFollowMe).toHaveBeenCalledWith('m1', '/statement/m1?step=vote');
+	});
+
+	it('reaches Summary at index 7 and refuses index 8', async () => {
+		mockGetMain.mockReturnValue(oldMain(6));
+		await setLessonStep('m1', 7);
+		expect(mockSetFollowMe).toHaveBeenCalledWith('m1', '/statement/m1?step=summary');
+		await expect(setLessonStep('m1', 8)).rejects.toThrow(RangeError);
 	});
 });
 

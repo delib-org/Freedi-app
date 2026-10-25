@@ -111,6 +111,7 @@ describe('gate maths', () => {
 
 describe('tablesAreDone', () => {
 	it('is true once the class votes or reads the summary, false while the tables still work', () => {
+		expect(tablesAreDone('allProposals')).toBe(true);
 		expect(tablesAreDone('vote')).toBe(true);
 		expect(tablesAreDone('summary')).toBe(true);
 		for (const key of ['waiting', 'opening', 'side', 'tables', 'tableTalk', 'proposals'] as const) {

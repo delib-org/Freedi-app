@@ -263,8 +263,11 @@ export type VotingOptionsSource = InferOutput<typeof VotingOptionsSourceSchema>;
 
 
 /**
- * join-class (classroom): the eight fixed steps of a lesson, in order. The
- * teacher opens them by index; `stepIndex` points into this list.
+ * join-class (classroom): the step keys of a lesson. A lesson stores its own
+ * ordered list in `LessonPlan.steps` and `stepIndex` points into THAT list:
+ * lessons created before 'allProposals' existed keep their 8 stored steps, new
+ * ones get 9. Readers index `steps[stepIndex]`, never a fixed list.
+ * 'allProposals' (IA 19) sits between 'proposals' and 'vote'.
  */
 export const LessonStepKeySchema = picklist([
 	'waiting',
@@ -273,6 +276,7 @@ export const LessonStepKeySchema = picklist([
 	'tables',
 	'tableTalk',
 	'proposals',
+	'allProposals',
 	'vote',
 	'summary',
 ]);

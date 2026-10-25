@@ -32,6 +32,10 @@ export interface TablesBoardAttrs {
 	showSides: boolean;
 	/** The Opening panel (UX 15.L): while the class is unseated it takes the main column and the roster the side one. */
 	opening?: m.Children;
+	// >>> allProposals BEGIN
+	/** "כל ההצעות": each card's "n/m rated everything" line. */
+	ratedLineOf?: (table: ClassTable) => string;
+	// >>> allProposals END
 }
 
 function rosterCard(attrs: TablesBoardAttrs): m.Vnode {
@@ -128,6 +132,7 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 										?.statement,
 									mainId: attrs.mainId,
 									tableNumbers,
+									ratedLine: attrs.ratedLineOf?.(table), // >>> allProposals
 								}),
 							),
 						),

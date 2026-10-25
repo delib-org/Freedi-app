@@ -1,0 +1,89 @@
+// Student C3: "כל ההצעות" (IA 19.4): the board of served batches, the
+// "n new proposals" divider and the arrival animation. Cards themselves are
+// .text-card (student-c3-rate.scss).
+
+$arrive-distance: 16px;
+$arrive-stagger: 70ms;
+$skeleton-height: 112px;
+
+.all-proposals {
+  &__progress {
+    margin: 0 0 var(--space-md);
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__own {
+    margin-block-end: var(--space-md);
+  }
+
+  &__write {
+    margin-block-end: var(--space-md);
+  }
+
+  &__divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin: var(--space-lg) 0 var(--space-md);
+    color: var(--teal-500);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    scroll-margin-block-start: var(--space-lg);
+
+    &::before,
+    &::after {
+      flex: 1;
+      height: 2px;
+      border-radius: 1px;
+      background: currentColor;
+      content: '';
+    }
+  }
+
+  &__divider-text {
+    flex: none;
+  }
+
+  &__card--arriving {
+    animation: all-proposals-arrive var(--dur-slow) var(--ease-out) both;
+    animation-delay: calc(var(--arrive-order, 0) * #{$arrive-stagger});
+  }
+
+  &__done {
+    margin: var(--space-lg) 0;
+    padding: var(--space-md);
+    border: 1.5px solid var(--teal-500);
+    border-radius: var(--radius-lg);
+    background: var(--bg-subtle);
+    color: var(--ink);
+    font-weight: var(--font-weight-bold);
+    text-align: center;
+  }
+
+  &__skeleton-card {
+    height: $skeleton-height;
+    margin-block-end: var(--space-md);
+    border-radius: var(--radius-lg);
+    background: var(--bg-muted);
+  }
+}
+
+@keyframes all-proposals-arrive {
+  from {
+    opacity: 0;
+    transform: translateY($arrive-distance);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .all-proposals__card--arriving {
+    animation: none;
+  }
+}

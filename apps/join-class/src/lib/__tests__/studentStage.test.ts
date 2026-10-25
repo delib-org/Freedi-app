@@ -30,7 +30,10 @@ describe('stage title', () => {
 		expect(he['step.side']).toBe('בחירת צד');
 		expect(he['step.tables']).toBe('חלוקה לשולחנות');
 		expect(he['step.tableTalk']).toBe('שאלות חקירה');
-		expect(he['step.proposals']).toBe('הצעות לפתרונות');
+		expect(he['step.proposals']).toBe('הצעות');
+		expect(he['step.allProposals']).toBe('כל ההצעות');
+		// one name per concept (IA 19.3): the class sheet and the step share "כל ההצעות"
+		expect(he['proposal.class_list']).toBe(he['step.allProposals']);
 		expect(he['step.vote']).toBe('הצבעה');
 		expect(he['step.summary']).toBe('סיכום');
 	});

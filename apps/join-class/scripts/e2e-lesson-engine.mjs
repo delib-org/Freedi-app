@@ -236,6 +236,8 @@ export const ENGINE_PHASES = [
 	{
 		name: 'ballot, vote and summary with support by side',
 		async run({ teacher, students, check, admin, mid, challengeId }) {
+			// a new lesson has "כל ההצעות" between Proposals and Vote (IA 19)
+			await teacherForward(teacher, 'allProposals');
 			await teacherForward(teacher, 'vote');
 			await (await byId(teacher, 'console-freeze-vote')).click();
 			const ballot = await until(async () => (await admin.collection('statements').doc(challengeId).get()).data()?.statementSettings?.ballot, 'ballot frozen');

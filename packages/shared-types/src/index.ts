@@ -1015,6 +1015,7 @@ export {
 // join-class: classroom lesson model, callables contract, pure logic
 export {
   CLASS_TABLES_COLLECTION,
+  CLASS_BATCH_SIZE,
   SPEAK_SECONDS,
   DEFAULT_GATE,
   SIDE_MIN,

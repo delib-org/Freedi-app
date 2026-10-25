@@ -8,10 +8,10 @@ import '@/styles/console-sheet.scss';
 import { t } from '@/lib/i18n';
 import { getMainStatement, getSubQuestions, setFollowLessonLanguage } from '@/lib/store';
 import {
-	LESSON_STEP_KEYS,
 	getChallengeQuestion,
 	getGuidingQuestions,
 	getLessonStep,
+	getLessonSteps,
 	stepLabel,
 } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
@@ -68,6 +68,14 @@ import { TableSheetPanel } from './TableSheetPanel';
 import { OpeningPanel } from './OpeningPanel';
 import { TablesBoard } from './TablesBoard';
 import { WhatTheyWrote } from './WhatTheyWrote';
+// >>> allProposals BEGIN
+import {
+	allRatedBandLine,
+	stopAllProposalsRatings,
+	tableRatedText,
+	watchAllProposalsRatings,
+} from './allProposalsRatings';
+// >>> allProposals END
 
 /**
  * The teacher console (route /t/:mid): three fixed bands (step rail 96 px,
@@ -191,7 +199,8 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 	const challenge = getChallengeQuestion(questions);
 	const guiding = getGuidingQuestions(questions);
 	const plenum = isPlenum(challenge);
-	const stepKey = LESSON_STEP_KEYS[stepIndex];
+	// The lesson's OWN steps: an old 8-step lesson has no "כל ההצעות" (IA 19.8).
+	const stepKey = getLessonSteps()[stepIndex] ?? getLessonStep().key;
 	const main = getMainStatement();
 
 	if (view === 'texts') {
@@ -208,7 +217,9 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 	const gate = gateOf(challenge, main);
 	const showGate =
 		challenge !== null &&
-		(stepKey === 'proposals' || (stepKey === 'tableTalk' && proposals.length > 0));
+		(stepKey === 'proposals' ||
+			stepKey === 'allProposals' ||
+			(stepKey === 'tableTalk' && proposals.length > 0));
 
 	return [
 		m(TablesBoard, {
@@ -221,6 +232,8 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 			questions,
 			showSides: stepIndex >= SIDE_STEP_INDEX,
 			opening: stepKey === 'opening' && main ? m(OpeningPanel, { main }) : undefined,
+			ratedLineOf:
+				stepKey === 'allProposals' ? (table) => tableRatedText(table, challenge) : undefined, // >>> allProposals
 		}),
 		showGate ? m(GatePanel, { rows: gateRows(proposals, gate), gate }) : null,
 	];
@@ -242,6 +255,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 
 	onremove(vnode) {
 		abortDrag();
+		stopAllProposalsRatings(); // >>> allProposals
 		if ((vnode.state as { held?: boolean }).held) releaseConsole();
 	},
 
@@ -283,6 +297,11 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 			...(view === 'texts' ? guiding.map((q) => q.statementId) : []),
 		]);
 		const code = readClassCode(main);
+		const steps = getLessonSteps();
+		// >>> allProposals BEGIN
+		const atAllProposals = step.key === 'allProposals';
+		watchAllProposalsRatings(atAllProposals ? (challenge?.statementId ?? null) : null);
+		// >>> allProposals END
 
 		return m('.console', { 'data-step': step.key }, [
 			header(mid, main.statement, code, status),
@@ -298,14 +317,14 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				onReopen: () => void changeLessonStatus(mid, 'reopen'),
 			}),
 			m(StepRail, {
-				keys: LESSON_STEP_KEYS,
+				keys: steps,
 				currentIndex: step.index,
 				elapsedMs: clockEnd - session.startedAt,
 				held,
 				heldKey: status === 'ended' ? 'console.ended_banner' : 'lesson.paused.title',
 				onGo: (index: number) => {
 					// Going back keeps all work but asks first; forward is one tap.
-					if (index < step.index) confirmGoBack(mid, index, stepLabel(LESSON_STEP_KEYS[index]));
+					if (index < step.index) confirmGoBack(mid, index, stepLabel(steps[index]));
 					// >>> voteSummary BEGIN
 					// An open or paused vote has no decision yet: ask, close it, then move on.
 					else if (step.key === 'vote' && isBallotFrozen(challenge) && !isBallotClosed(challenge))
@@ -349,6 +368,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				onCloseVote: () => void closeBallot(mid),
 				onResetTurns: () => confirmResetTurns(mid),
 				onResetVote: () => confirmResetVote(mid),
+				allRatedLine: atAllProposals ? allRatedBandLine(challenge) : undefined, // >>> allProposals
 			}),
 			failureBanner(),
 			m('main.console__board', board(mid, view, step.index)),

@@ -4,15 +4,17 @@
 // actually read. See lib/i18n.ts for how a locale is selected and loaded.
 
 import vote from './vote/he';
+import allProposals from './allProposals/he'; // >>> allProposals
 
 const he: Record<string, string> = {
 	...vote,
+	...allProposals, // >>> allProposals
 	'step.waiting': 'ממתינים למורה',
 	'step.opening': 'פתיחה',
 	'step.side': 'בחירת צד',
 	'step.tables': 'חלוקה לשולחנות',
 	'step.tableTalk': 'שאלות חקירה',
-	'step.proposals': 'הצעות לפתרונות',
+	'step.proposals': 'הצעות',
 	'step.vote': 'הצבעה',
 	'step.summary': 'סיכום',
 	'lesson.step_of': 'שלב {{n}} מתוך {{total}}',
@@ -245,7 +247,7 @@ const he: Record<string, string> = {
 	'proposal.placeholder': 'כתבו הצעה',
 	'proposal.none': 'עוד אין שאלה להצעות',
 	'proposal.send': 'שליחה',
-	'proposal.class_list': 'ההצעות של הכיתה',
+	'proposal.class_list': 'כל ההצעות',
 	'proposal.none_yet': 'עוד אין הצעות',
 	'proposal.plenum_line': 'ההצעות המובילות על המקרן',
 	'proposal.edit': 'עריכה',
