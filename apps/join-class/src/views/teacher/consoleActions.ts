@@ -1,6 +1,6 @@
 import type {
 	ClassTableAction,
-	ClassVoteDisplay,
+	ClassVoteOrder,
 	LessonStatusAction,
 	Statement,
 	TableStep,
@@ -121,7 +121,7 @@ export function closeBallot(mainId: string): Promise<boolean> {
  */
 export function setVoteDisplay(
 	challengeId: string,
-	field: keyof ClassVoteDisplay,
+	field: 'liveResults',
 	value: boolean,
 ): Promise<boolean> {
 	const patch = { statementSettings: { voteDisplay: { [field]: value } } } as Partial<Statement>;
@@ -130,6 +130,17 @@ export function setVoteDisplay(
 		setQuestionSetting(challengeId, patch),
 	);
 }
+
+// >>> voteSummary BEGIN
+/** The order of the proposals for every phone and the projector (IA 21). */
+export function setVoteOrder(challengeId: string, order: ClassVoteOrder): Promise<boolean> {
+	const patch = { statementSettings: { voteDisplay: { order } } } as Partial<Statement>;
+
+	return act('voteDisplay:order', t('console.vote_order'), () =>
+		setQuestionSetting(challengeId, patch),
+	);
+}
+// >>> voteSummary END
 
 export function moveStudent(mainId: string, uid: string, toTable: DropTarget): Promise<boolean> {
 	return guardedAct(`move:${uid}`, t('console.move'), async () => {

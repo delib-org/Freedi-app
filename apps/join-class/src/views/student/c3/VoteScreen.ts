@@ -8,9 +8,12 @@ import { getSubQuestions } from '@/lib/store';
 import { castVote } from '@/lib/classroom/studentWrites';
 import { listenMyVote } from '@/lib/classroom/c3Data';
 import {
+	consensusOf,
+	countsOf,
+	keepOrder,
 	liveResultsOn,
-	orderBySupport,
-	sortBySupportOn,
+	orderBallot,
+	voteOrderOf,
 	voteResults,
 } from '@/lib/classroom/voteResults';
 import type { Unsubscribe } from '@/lib/firebase';
@@ -43,7 +46,7 @@ class VoteState {
 	voteFor: string | null = null;
 	saving = false;
 	error: string | null = null;
-	/** The order the cards were last shown in (ties keep it when sorting by support). */
+	/** The order the cards were last shown in (ties keep it; frozen while a pick is pending). */
 	order: string[] = [];
 }
 
@@ -52,8 +55,10 @@ class VoteState {
  * taps), "You voted" in teal; a different card turns the button into "Change
  * vote" until the ballot closes. While the teacher has the vote paused the
  * cards are locked and the button says so; the vote already cast is kept.
- * Live results (on unless the teacher hides them) add each proposal's share;
- * ordering by support (off unless switched on) puts the most voted on top.
+ * Live results (on unless the teacher hides them) add each proposal's share.
+ * The cards follow the teacher's order (C_p by default, votes, or one shared
+ * random order); a closed ballot is ordered by votes, winner first. While a
+ * card is picked but not yet voted for the order is frozen (IA 21.3).
  */
 export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 	oninit(vnode) {
@@ -89,8 +94,17 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 		const paused = !closed && typeof ballot?.pausedAt === 'number';
 		const ballotIds = ballot?.candidateIds ?? [];
 		const tally = voteResults(ballotIds, challenge?.selections);
-		const sorted = sortBySupportOn(challenge);
-		self.order = sorted ? orderBySupport(ballotIds, tally, self.order) : [...ballotIds];
+		const mode = voteOrderOf(challenge);
+		const pending = !closed && !!self.selectedId && self.selectedId !== self.votedId;
+		self.order = pending
+			? keepOrder(ballotIds, self.order)
+			: orderBallot(
+					ballotIds,
+					closed ? 'result' : mode,
+					{ consensus: consensusOf(self.feed.options), votes: countsOf(tally) },
+					self.order,
+					challengeId ?? '',
+				);
 		const candidates = self.order
 			.map((id) => self.feed.options.find((o) => o.statementId === id))
 			.filter((o): o is Statement => !!o);
@@ -174,7 +188,8 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 									selectedId: selected,
 									locked: closed || paused,
 									results,
-									animateReorder: sorted,
+									animateReorder: mode !== 'random' || closed,
+									winnerId: closed ? (ballot?.decisionId ?? null) : null,
 									onSelect: (id: string) => {
 										self.selectedId = id;
 									},

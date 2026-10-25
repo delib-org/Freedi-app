@@ -25,9 +25,6 @@ const vote: Record<string, string> = {
 	'console.vote_live_results_help': 'כמה קולות קיבלה כל הצעה. אף פעם לא מי הצביע למה.',
 	'voting.result_votes': '{{percent}}% · {{n}} קולות',
 	'voting.result_one_vote': '{{percent}}% · קול אחד',
-	'console.vote_sort_by_support': 'ההצעות מסתדרות לפי התמיכה',
-	'console.vote_sort_by_support_help':
-		'בזמן ההצבעה ההצעה עם הכי הרבה קולות עולה למעלה אצל התלמידים.',
 	// >>> voteSummary BEGIN
 	'summary.vote_results': 'תוצאות ההצבעה',
 	'summary.turnout': '{{n}} מתוך {{m}} הצביעו',

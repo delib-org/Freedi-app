@@ -25,9 +25,6 @@ const vote: Record<string, string> = {
 	'console.vote_live_results_help': 'How many votes each proposal has. Never who voted for what.',
 	'voting.result_votes': '{{percent}}% · {{n}} votes',
 	'voting.result_one_vote': '{{percent}}% · 1 vote',
-	'console.vote_sort_by_support': 'Order the proposals by support',
-	'console.vote_sort_by_support_help':
-		"While the class votes, the proposal with the most votes moves to the top of the students' screens.",
 	// >>> voteSummary BEGIN
 	'summary.vote_results': 'Vote results',
 	'summary.turnout': '{{n}} of {{m}} voted',

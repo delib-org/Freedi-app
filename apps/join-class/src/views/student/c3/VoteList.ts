@@ -14,6 +14,8 @@ export interface VoteListAttrs {
 	results: Record<string, VoteResult> | null;
 	/** The cards re-order by support: glide them to their new place (FLIP). */
 	animateReorder: boolean;
+	/** Closed ballot: the decided proposal, marked. */
+	winnerId?: string | null;
 	onSelect: (id: string) => void;
 }
 
@@ -40,9 +42,16 @@ function resultView(result: VoteResult | undefined): m.Children {
  * The ballot (UX §2.8): one radio card per proposal, full text, no author, no
  * table. A tap selects; "Vote" (a second tap) casts. With live results on,
  * each card also shows its share of the votes (counts only, never who).
- * When the teacher orders the cards by support they glide to their new place.
+ * When the cards re-order (C_p or votes moved) they glide to their new place,
+ * and taps are ignored until the glide ends, so a card never lands under a
+ * finger that aimed at another one.
  */
 const before = new WeakMap<Element, Positions>();
+const glideEnd = new WeakMap<Element, number>();
+
+function gliding(list: Element | null): boolean {
+	return !!list && Date.now() < (glideEnd.get(list) ?? 0);
+}
 
 export const VoteList: m.Component<VoteListAttrs> = {
 	onbeforeupdate(vnode, old) {
@@ -55,7 +64,8 @@ export const VoteList: m.Component<VoteListAttrs> = {
 		const positions = before.get(vnode.dom);
 		if (!positions) return;
 		before.delete(vnode.dom);
-		playFlip(vnode.dom, positions);
+		const duration = playFlip(vnode.dom, positions);
+		if (duration > 0) glideEnd.set(vnode.dom, Date.now() + duration);
 	},
 
 	view({ attrs }) {
@@ -66,12 +76,16 @@ export const VoteList: m.Component<VoteListAttrs> = {
 			{ role: locked ? 'list' : 'radiogroup', 'aria-label': t('voting.pick_one') },
 			candidates.map((option) => {
 				const on = selectedId === option.statementId;
+				const won = attrs.winnerId === option.statementId;
 				const attributes = locked
 					? { role: 'listitem' }
 					: {
 							role: 'radio',
 							'aria-checked': on ? 'true' : 'false',
-							onclick: () => attrs.onSelect(option.statementId),
+							onclick: (e: Event) => {
+								if (gliding((e.currentTarget as Element).parentElement)) return;
+								attrs.onSelect(option.statementId);
+							},
 						};
 
 				return m(
@@ -81,12 +95,15 @@ export const VoteList: m.Component<VoteListAttrs> = {
 						'data-testid': 'vote-option',
 						'data-key': option.statementId,
 						type: locked ? undefined : 'button',
-						class: on ? 'vote-list__item--on' : '',
+						class: [on ? 'vote-list__item--on' : '', won ? 'vote-list__item--winner' : '']
+							.filter(Boolean)
+							.join(' '),
 						...attributes,
 					},
 					[
 						m('span.vote-list__mark', { 'aria-hidden': 'true' }, on ? '◉' : '○'),
 						m('span.vote-list__body', [
+							won ? m('span.vote-list__winner', t('summary.winner')) : null,
 							m('span.vote-list__text', { dir: 'auto' }, option.statement),
 							results ? resultView(results[option.statementId]) : null,
 						]),

@@ -26,9 +26,6 @@ const vote: Record<string, string> = {
 		'هر پیشنهاد چند رأی دارد. هرگز نشان نمی‌دهد چه کسی به چه چیزی رأی داده است.',
 	'voting.result_votes': '{{percent}}٪ · {{n}} رأی',
 	'voting.result_one_vote': '{{percent}}٪ · ۱ رأی',
-	'console.vote_sort_by_support': 'مرتب‌سازی پیشنهادها بر اساس حمایت',
-	'console.vote_sort_by_support_help':
-		'در طول رأی‌گیری، پیشنهادی که بیشترین رأی را دارد در صفحهٔ دانش‌آموزان به بالا می‌رود.',
 	// >>> voteSummary BEGIN
 	'summary.vote_results': 'نتیجه رأی‌گیری',
 	'summary.turnout': '{{n}} از {{m}} رأی دادند',

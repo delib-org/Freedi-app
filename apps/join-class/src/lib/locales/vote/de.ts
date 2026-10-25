@@ -27,9 +27,6 @@ const vote: Record<string, string> = {
 		'Wie viele Stimmen jeder Vorschlag hat. Nie, wer wofür gestimmt hat.',
 	'voting.result_votes': '{{percent}} % · {{n}} Stimmen',
 	'voting.result_one_vote': '{{percent}} % · 1 Stimme',
-	'console.vote_sort_by_support': 'Vorschläge nach Zustimmung ordnen',
-	'console.vote_sort_by_support_help':
-		'Während der Abstimmung rückt der Vorschlag mit den meisten Stimmen auf den Bildschirmen der Lernenden nach oben.',
 	// >>> voteSummary BEGIN
 	'summary.vote_results': 'Ergebnis der Abstimmung',
 	'summary.turnout': '{{n}} von {{m}} haben abgestimmt',

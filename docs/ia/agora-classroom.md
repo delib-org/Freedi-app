@@ -1750,3 +1750,44 @@ header → vote results (state block) → "עד כמה אתם תומכים בה�
 - The winner is marked with the tag "ההצעה שנבחרה" on the phone (Vote screen after close and Summary) and on the projector; "מובילה כרגע" marks only a single proposal ahead (never on a tie or at zero votes).
 - Turnout counts votes cast on the ballot over students in the room (the teacher excluded).
 - The projector reuses the `summary.*` keys, so the phone and the wall say the same words. The old `projector.verdict.*` keys are no longer read.
+
+---
+
+## 21. Order of proposals during the vote (Tal, 2026-10-25, card UM5Z8zj0)
+
+### 21.1 What exists
+`statementSettings.voteDisplay` on the challenge question had two switches in the console settings popover: `liveResults` (absent = on) and `sortBySupport` (absent = off, a live sort by votes on the phones only). The projector's tally always followed ballot order.
+
+### 21.2 Change (Tal's words: "you can sort by C_p, by Random, and by most voted. The teacher can choose, and it will affect everybody. By default C_p is presented, because these are the options most wanted by the people.")
+- Replace `sortBySupport` with `order: 'consensus' | 'votes' | 'random'`. Absent means `consensus`. One setting for every phone AND the projector.
+  - `sortBySupport` stays in the schema as an optional field that nobody reads (old docs), then is removed.
+- **consensus (default):** ordered by `statement.consensus` (C_p), highest first, live from the options listener. Ties keep the order already shown, then fall back to id.
+- **votes:** most votes first, re-ordering live as votes come in. Ties keep the order already shown (a card moves only when it really overtakes another).
+- **random:** ONE shared order for every phone and the projector, a seeded shuffle with the challenge id as the seed (the ids are sorted first, so the ballot's own order never matters). It does not change while the vote runs.
+- **Closed ballot:** ordered by votes on every surface, with the winner first (votes, then C_p, then id: the `decideBallot` rule).
+- The vote bars stay live whenever `liveResults` is on, unchanged.
+- One pure function serves the phone, the projector Vote and the Summary: `orderBallot(ids, mode, {consensus, votes}, previous, seed)` in `lib/classroom/voteResults.ts` (mode `'result'` is the closed ballot).
+
+### 21.3 Avoiding mis-taps (phone)
+1. While a card is selected but not yet voted for, the order is frozen. The new order applies after "הצבעה", or when the selection is cleared.
+2. A re-order glides with FLIP (instant under `prefers-reduced-motion`). Taps are ignored until the glide ends.
+3. Selection is keyed by statementId, never by position.
+4. Ties never move a card.
+
+### 21.4 Labels (console settings, "ההצבעה" group, a radio group)
+| Concept | HE | EN | i18n key |
+|---|---|---|---|
+| Group | סדר ההצעות | Order of the proposals | `console.vote_order` (NEW) |
+| Option, default | לפי הדירוגים | By the ratings | `console.vote_order_consensus` |
+| Help | ההצעות שהכיתה הכי הסכימה עליהן למעלה, אצל התלמידים ובמקרן | The proposals the class agreed on most are on top, on phones and the projector | `console.vote_order_consensus_help` |
+| Option | לפי מספר הקולות | By the number of votes | `console.vote_order_votes` |
+| Help | ההצעה עם הכי הרבה קולות עולה למעלה בזמן ההצבעה, אצל התלמידים ובמקרן | The proposal with the most votes moves to the top during the vote, on phones and the projector | `console.vote_order_votes_help` |
+| Option | סדר אקראי | Random order | `console.vote_order_random` |
+| Help | כולם רואים אותו סדר, והוא לא משתנה בזמן ההצבעה | Everyone sees the same order, and it does not change during the vote | `console.vote_order_random_help` |
+| Retire | ההצעות מסתדרות לפי התמיכה | — | `console.vote_sort_by_support(_help)` |
+
+### 21.5 Shared by Summary and Vote
+The tally (`selections{}` to `voteResults`, one function), C_p (`statement.consensus`) and the tie rule (votes, then C_p, then id) are used by Vote (phone + projector) and Summary (phone + projector).
+
+### 21.6 Open question 1, resolved
+Tal chose three modes instead of two: C_p, random and by votes. Random is one shared order (seed = challenge id), not one per phone as the first draft said.
