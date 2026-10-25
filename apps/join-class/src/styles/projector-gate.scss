@@ -104,6 +104,7 @@ $gate-swing: 0.28;
     display: flex;
     flex-direction: column;
     gap: var(--space-xs);
+    min-width: 0;
     max-width: 44%;
     padding: var(--space-sm) var(--space-lg);
     border: 4px solid var(--paper-line);
@@ -116,9 +117,16 @@ $gate-swing: 0.28;
       background: var(--teal-50);
       animation: gate-through var(--dur-slow, 900ms) var(--ease-out, ease-out) both;
     }
+
+    &--more {
+      justify-content: center;
+      border-style: dashed;
+      color: var(--ink-muted);
+    }
   }
 
   &__chip-text {
+    min-width: 0;
     font-size: 48px;
     overflow: hidden;
     text-overflow: ellipsis;

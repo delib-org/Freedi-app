@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Statement } from '@freedi/shared-types';
-import { ballotOptions, gateView } from '../gateLogic';
+import type { GateItem } from '../gateLogic';
+import { GATE_CHIP_LIMIT, ballotOptions, capChips, gateView } from '../gateLogic';
 
 function option(id: string, consensus?: number): Statement {
 	return { statementId: id, statement: id, consensus } as Statement;
@@ -56,5 +57,40 @@ describe('ballotOptions', () => {
 		const result = ballotOptions(['b', 'x', 'a'], [option('a'), option('b')]);
 
 		expect(result.map((o) => o.statementId)).toEqual(['b', 'a']);
+	});
+});
+
+describe('capChips', () => {
+	function items(prefix: string, n: number, passed: boolean): GateItem[] {
+		const view = gateView(
+			Array.from({ length: n }, (_, i) => option(`${prefix}${i}`, passed ? 0.9 : 0.1)),
+			0.5,
+		);
+
+		return passed ? view.through : view.waiting;
+	}
+
+	it('shows everything under the cap with nothing hidden', () => {
+		const result = capChips(items('t', 2, true), items('w', 1, false));
+
+		expect(result.through).toHaveLength(2);
+		expect(result.waiting).toHaveLength(1);
+		expect(result.hidden).toBe(0);
+	});
+
+	it('caps the total at the limit and counts the rest as hidden', () => {
+		const result = capChips(items('t', 3, true), items('w', 5, false));
+
+		expect(result.through).toHaveLength(3);
+		expect(result.waiting).toHaveLength(GATE_CHIP_LIMIT - 3);
+		expect(result.hidden).toBe(8 - GATE_CHIP_LIMIT);
+	});
+
+	it('gives the options that got through priority over waiting ones', () => {
+		const result = capChips(items('t', 6, true), items('w', 2, false));
+
+		expect(result.through).toHaveLength(GATE_CHIP_LIMIT);
+		expect(result.waiting).toEqual([]);
+		expect(result.hidden).toBe(4);
 	});
 });

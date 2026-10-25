@@ -404,6 +404,7 @@ const en: Record<string, string> = {
 	'projector.gateClosed': 'No proposal has passed the gate yet',
 	'projector.gateOpenOne': 'One proposal passed the gate',
 	'projector.gateOpenMany': '{{n}} proposals passed the gate',
+	'projector.gateMore': '+{{n}} more',
 	'projector.topProposals': 'Top proposals',
 	'projector.voteTitle': 'Vote now',
 	'projector.noBallot': 'The ballot is not open yet',

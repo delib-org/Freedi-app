@@ -403,6 +403,7 @@ const de: Record<string, string> = {
 	'projector.gateClosed': 'Noch kein Vorschlag hat das Tor erreicht',
 	'projector.gateOpenOne': 'Ein Vorschlag hat das Tor erreicht',
 	'projector.gateOpenMany': '{{n}} Vorschläge haben das Tor erreicht',
+	'projector.gateMore': '+{{n}} weitere',
 	'projector.topProposals': 'Die besten Vorschläge',
 	'projector.voteTitle': 'Jetzt abstimmen',
 	'projector.noBallot': 'Die Abstimmung ist noch nicht offen',

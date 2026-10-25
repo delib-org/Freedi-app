@@ -398,6 +398,7 @@ const he: Record<string, string> = {
 	'projector.gateClosed': 'עוד אין הצעה שעברה את השער',
 	'projector.gateOpenOne': 'הצעה אחת עברה את השער',
 	'projector.gateOpenMany': '{{n}} הצעות עברו את השער',
+	'projector.gateMore': 'ועוד {{n}}',
 	'projector.topProposals': 'ההצעות המובילות',
 	'projector.voteTitle': 'מצביעים',
 	'projector.noBallot': 'ההצבעה עוד לא נפתחה',

@@ -399,6 +399,7 @@ const ar: Record<string, string> = {
 	'projector.gateClosed': 'لم يتجاوز أي اقتراح العتبة بعد',
 	'projector.gateOpenOne': 'اقتراح واحد تجاوز العتبة',
 	'projector.gateOpenMany': '{{n}} اقتراحات تجاوزت العتبة',
+	'projector.gateMore': 'و{{n}} أخرى',
 	'projector.topProposals': 'أفضل الاقتراحات',
 	'projector.voteTitle': 'صوّتوا الآن',
 	'projector.noBallot': 'التصويت لم يبدأ بعد',

@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { t } from '@/lib/i18n';
+import { GAP_DECIMALS, capChips } from './gateLogic';
 import type { GateItem, GateView } from './gateLogic';
 
 /**
@@ -9,8 +10,6 @@ import type { GateItem, GateView } from './gateLogic';
  * their way with the distance they have left. Presentation only; the rules
  * live in gateLogic.ts.
  */
-
-const SCORE_DECIMALS = 2;
 
 export interface GateStageProps {
 	view: GateView;
@@ -48,17 +47,20 @@ function throughChip(item: GateItem): m.Vnode {
 function waitingChip(item: GateItem): m.Vnode {
 	return m('li.gate-stage__chip.gate-stage__chip--waiting', { key: item.id }, [
 		m('span.gate-stage__chip-text', item.text),
-		m(
-			'span.gate-stage__chip-note',
-			t('console.gate_gap', { gap: item.gap.toFixed(SCORE_DECIMALS) }),
-		),
+		m('span.gate-stage__chip-note', t('console.gate_gap', { gap: item.gap.toFixed(GAP_DECIMALS) })),
+	]);
+}
+
+function moreChip(hidden: number): m.Vnode {
+	return m('li.gate-stage__chip.gate-stage__chip--more', { key: 'more' }, [
+		m('span.gate-stage__chip-text', t('projector.gateMore', { n: hidden })),
 	]);
 }
 
 export const GateStage: m.Component<GateStageProps> = {
 	view({ attrs }) {
 		const { view, showWaiting } = attrs;
-		const waiting = showWaiting ? view.waiting : [];
+		const chips = capChips(view.through, showWaiting ? view.waiting : []);
 
 		return m(
 			'section.gate-stage',
@@ -69,10 +71,11 @@ export const GateStage: m.Component<GateStageProps> = {
 			[
 				frame(view.open),
 				m('p.gate-stage__status', { 'aria-live': 'polite' }, statusText(view)),
-				view.through.length + waiting.length > 0
+				chips.through.length + chips.waiting.length > 0
 					? m('ul.gate-stage__chips', [
-							...view.through.map(throughChip),
-							...waiting.map(waitingChip),
+							...chips.through.map(throughChip),
+							...chips.waiting.map(waitingChip),
+							...(chips.hidden > 0 ? [moreChip(chips.hidden)] : []),
 						])
 					: null,
 			],

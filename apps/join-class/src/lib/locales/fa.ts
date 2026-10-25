@@ -391,6 +391,7 @@ const fa: Record<string, string> = {
 	'projector.gateClosed': 'هنوز هیچ پیشنهادی از آستانه نگذشته است',
 	'projector.gateOpenOne': 'یک پیشنهاد از آستانه گذشت',
 	'projector.gateOpenMany': '{{n}} پیشنهاد از آستانه گذشتند',
+	'projector.gateMore': 'و {{n}} مورد دیگر',
 	'projector.topProposals': 'برترین پیشنهادها',
 	'projector.voteTitle': 'حالا رأی بدهید',
 	'projector.noBallot': 'رأی‌گیری هنوز باز نشده است',

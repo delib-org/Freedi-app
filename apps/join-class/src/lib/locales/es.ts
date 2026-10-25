@@ -400,6 +400,7 @@ const es: Record<string, string> = {
 	'projector.gateClosed': 'Ninguna propuesta ha superado el umbral aún',
 	'projector.gateOpenOne': 'Una propuesta superó el umbral',
 	'projector.gateOpenMany': '{{n}} propuestas superaron el umbral',
+	'projector.gateMore': '+{{n}} más',
 	'projector.topProposals': 'Propuestas principales',
 	'projector.voteTitle': 'Votad ahora',
 	'projector.noBallot': 'La votación aún no está abierta',

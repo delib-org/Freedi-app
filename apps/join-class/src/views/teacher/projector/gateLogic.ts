@@ -7,7 +7,9 @@ import { gateBars } from './projectorLogic';
  * each option reports whether it is through, or how far it still has to go.
  */
 
-const GAP_DECIMALS = 2;
+export const GAP_DECIMALS = 2;
+/** Chips shown under the gate at most, so it never pushes the wall past one screen. */
+export const GATE_CHIP_LIMIT = 4;
 const GAP_SCALE = 10 ** GAP_DECIMALS;
 
 export interface GateItem {
@@ -61,5 +63,28 @@ export function gateView(options: readonly Statement[], gate: number): GateView 
 		passedCount: through.length,
 		through,
 		waiting: items.filter((item) => !item.passed),
+	};
+}
+
+export interface CappedChips {
+	through: GateItem[];
+	waiting: GateItem[];
+	/** Options left out of the chips (the "+N" chip). */
+	hidden: number;
+}
+
+/** At most `limit` chips in all: options that got through first, the rest fill what is left. */
+export function capChips(
+	through: readonly GateItem[],
+	waiting: readonly GateItem[],
+	limit: number = GATE_CHIP_LIMIT,
+): CappedChips {
+	const shownThrough = through.slice(0, limit);
+	const shownWaiting = waiting.slice(0, Math.max(0, limit - shownThrough.length));
+
+	return {
+		through: shownThrough,
+		waiting: shownWaiting,
+		hidden: through.length + waiting.length - shownThrough.length - shownWaiting.length,
 	};
 }
