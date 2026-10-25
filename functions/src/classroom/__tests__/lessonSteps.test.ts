@@ -10,11 +10,22 @@ import { LESSON_STEPS } from '../cloneLesson';
  * at "כל ההצעות".
  */
 
-const OLD_STEPS = ['waiting', 'opening', 'side', 'tables', 'tableTalk', 'proposals', 'vote', 'summary'];
+const OLD_STEPS = [
+	'waiting',
+	'opening',
+	'side',
+	'tables',
+	'tableTalk',
+	'proposals',
+	'vote',
+	'summary',
+];
 const OPEN_BALLOT = { candidateIds: ['p1'], frozenAt: 1 };
 
 function mainAt(steps: readonly string[], stepIndex: number): Statement {
-	return { statementSettings: { lessonPlan: { steps: [...steps], stepIndex } } } as unknown as Statement;
+	return {
+		statementSettings: { lessonPlan: { steps: [...steps], stepIndex } },
+	} as unknown as Statement;
 }
 
 describe('lesson steps in the engine', () => {

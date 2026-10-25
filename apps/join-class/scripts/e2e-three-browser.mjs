@@ -386,6 +386,35 @@ async function phaseProposals() {
 	await snapAll('proposals-rated');
 }
 
+// ---- 5b. all proposals (IA 19): every phone rates every proposal ---------------------
+async function phaseAllProposals() {
+	await teacherForward('allProposals');
+	await sleep(800);
+	for (const phone of phones) {
+		check(`all proposals: ${phone.name} shows the stage heading`, (await stageName(phone.page)) === 'כל ההצעות', await stageName(phone.page));
+		await byId(phone.page, 'all-proposals-card', SLOW);
+		check(`all proposals: ${phone.name} gets the other proposal, not their own`, (await phone.page.getByTestId('all-proposals-card').count()) === 1);
+		const progress = await eventually(() => text(phone.page, '[data-testid=all-proposals-progress]'), (v) => v.includes('1 מתוך 1'), 8000);
+		check(`all proposals: ${phone.name} counts the rating made at Proposals`, progress.includes('1 מתוך 1'), progress);
+		check(`all proposals: ${phone.name} sees the done line`, await has(phone.page, 'all-proposals-done'));
+	}
+	// a rated card stays on the board and can be rated again
+	await (await byId(A.page, 'all-proposals-face-4')).click();
+	const reRated = await eventually(
+		() => A.page.getByTestId('all-proposals-face-4').getAttribute('aria-checked'),
+		(v) => v === 'true',
+		8000,
+	);
+	check('all proposals: A re-rates a card that stays on the board', reRated === 'true' && (await A.page.getByTestId('all-proposals-card').count()) === 1);
+	const band = await eventually(() => text(teacher.page, '[data-testid=console-all-rated]'), (v) => v.includes('2 מתוך 2'), SLOW);
+	check('all proposals: the console says both students rated everything', band.includes('2 מתוך 2'), band);
+	check('all proposals: table cards show who rated everything', (await teacher.page.getByTestId('table-rated').count()) > 0);
+	const title = await eventually(() => text(projector.page, '.projector-step--all-proposals h1'), (v) => v.includes('כל ההצעות'), 8000);
+	check('all proposals: the projector shows the title with the count', title.includes('2'), title);
+	check('all proposals: the projector lists the top proposals', (await projector.page.locator('.projector-step--all-proposals .projector-top__card').count()) === 2);
+	await snapAll('all-proposals');
+}
+
 // ---- 6. vote ------------------------------------------------------------------------
 const votesCount = async () => (await admin.collection('votes').where('parentId', '==', challengeId).get()).size;
 const voteLabel = (phone) => text(phone.page, '[data-testid=vote-send]');
@@ -548,14 +577,14 @@ async function phaseBackAndResets() {
 	await snapAll('back-confirm');
 	await teacher.page.getByTestId('console-confirm-yes').click();
 	await teacher.page.waitForFunction(() => document.querySelector('[data-step-key][aria-current="step"]')?.getAttribute('data-step-key') === 'proposals', null, { timeout: TIMEOUT });
-	await noticeBoth('חזרנו לשלב: הצעות לפתרונות', 'go back');
+	await noticeBoth('חזרנו לשלב: הצעות', 'go back');
 	const noticeTop = await A.page.locator('.student-notice').evaluate((el) => el.getBoundingClientRect().top);
 	check('go back: the notice sits at the top, not over the bottom action', noticeTop < 100, `${Math.round(noticeTop)}px from the top`);
 	await snapAll('back-proposals');
 	check('go back: both proposals are still there', (await admin.collection('statements').where('parentId', '==', challengeId).get()).size === 2);
 	check('go back: the vote is kept (2 votes)', (await votesCount()) === 2);
 	for (const phone of phones) {
-		check(`go back: ${phone.name} shows the Proposals stage heading`, (await stageName(phone.page)) === 'הצעות לפתרונות', await stageName(phone.page));
+		check(`go back: ${phone.name} shows the Proposals stage heading`, (await stageName(phone.page)) === 'הצעות', await stageName(phone.page));
 	}
 	await sleep(7000);
 	check('go back: the notice shows once and then goes away', (await noticeOf(A)) === '' && (await noticeOf(B)) === '');
@@ -673,7 +702,7 @@ async function phasePassPauseReloadDark() {
 	for (const mode of ['light', 'dark']) {
 		for (const role of roles) await role.page.emulateMedia({ colorScheme: mode });
 		await sleep(500);
-		for (const step of ['tableTalk', 'vote', 'summary']) {
+		for (const step of ['tableTalk', 'allProposals', 'vote', 'summary']) {
 			await teacher.page.locator(`[data-step-key=${step}]`).click();
 			await sleep(400);
 			if (await has(teacher.page, 'console-confirm-yes')) await confirmDialog();
@@ -695,6 +724,7 @@ try {
 	await phaseOpeningSideTables();
 	await phaseTableTalk();
 	await phaseProposals();
+	await phaseAllProposals();
 	await phaseVote();
 	await phaseSummary();
 	await phaseBackAndResets();

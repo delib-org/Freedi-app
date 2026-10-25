@@ -62,10 +62,13 @@ Not Statements: Lesson, Step, Student, Side, Table, Table step, Turn, Ballot, De
 | 1.4 tables | `tables` (NEW kind) | — | `agoraAssignTables` proposes mixed tables from `camp`; the teacher moves students; students see their table |
 | 2 table inquiry loop | `question` with `kind: 'inquiry'` (NEW question kind) | question Statement, answers as options, ratings, `selection` carries the top answers forward as context | guiding questions as child QUESTION Statements; table steps and turns; speaking timer; shared vs each writing |
 | 3 proposals | `deliberation` | proposals under `challengeQuestionId`, ratings → C_p, bridging across sides, `votingTrigger` | table steps `talk` (screens down) → `write` → `rate`; `roundPhase` reused: `propose` = tables working, `improve` = plenum (4.1) |
+| 3b all proposals (IA 19) | join-class step `allProposals` | ratings → C_p (existing pipeline) | every phone rates every proposal, 6 at a time (Thompson Sampling), rated cards stay, the next batch arrives by itself; the teacher opens and leaves it like any step |
 | 4.2 ballot | `voting` | ballot frozen by `prepareVotingStage`, votes, win threshold | nothing |
 | 4.3 reflection + decision | `results` | decision, tally, ranked proposals written once | the Summary opens with "pick a side again" (`campPositionEnd`, new participant field, optional) and shows the decision at once and the side shift as soon as anyone picked again, with "n מתוך m בחרו שוב" (a shared-types function over participants) |
 
 New kinds: one stage kind, `tables`; one question kind, `inquiry`. Both are picklist values in shared-types: deploy shared-types to functions and rules before any client writes them (the strict-parse trap). Retired from the classroom template (kept in the enum for old sessions and other tracks): `perspectives`, `needs`, `valueIdentification`, `linked`, question kinds `story`/`needs`/`vision`, `AgoraRoundPhase.rate`, `votingGame`, `stageProgress`, `whereabouts`, `villageCall`, `villageNavigation`, `world`, `theme`. The classroom template (`AgoraStagePlanPreset`, new value `classroom`) is exactly: lobby → framing → positioning → tables → question(inquiry) → deliberation → voting → results. `validateStagePlan` gains: `tables` requires a `positioning` before it; `inquiry` requires `tables` before it.
+
+join-class step keys (IA 12, 19): waiting → opening → side → tables → tableTalk → proposals → **allProposals** → vote → summary (9 steps). A lesson keeps the list it was created with in `lessonPlan.steps`; a lesson stored before §19 keeps its 8 steps and is read as `steps[stepIndex]`.
 
 ### 2.4 Who moves what (fixed)
 - Class-level steps: only the teacher, through `agoraAdvanceStage` (server transaction, forward only). One control, always the same place on the console.
@@ -83,7 +86,7 @@ One name per concept across UI, i18n, routes and code. HE is primary and gender-
 | Concept | EN | HE | i18n key | Route segment | Code type | Synonyms to retire |
 |---|---|---|---|---|---|---|
 | Lesson | Lesson | שיעור | teacher.title, dashboard.* (kept) | /teach/session/:id | AgoraSession | משחק, מסע, game, journey (`teacher.start_journey` → `console.start`) |
-| Step (class-level) | Step n of 8 | שלב n מתוך 8 | teacher.step_of (kept) | — | AgoraStagePlanItem | stage, station, תחנה, ביתן |
+| Step (class-level) | Step n of N (N = the lesson's own `plan.steps.length`: 9, or 8 for a lesson made before §19) | שלב n מתוך N | teacher.step_of (kept) | — | AgoraStagePlanItem | stage, station, תחנה, ביתן |
 | Open next step | Open the next step | פתיחת השלב הבא | teacher.open_next (kept) | — | agoraAdvanceStage | advance, skip_to_next |
 | Opening | Opening | פתיחה | NEW opening.* | — | AgoraStage.framing | framing, scene, film, intro, מנהרת הזמן |
 | Dilemma video | Watch together | צופים ביחד | opening.watch | — | libraryVideo | film.* |
@@ -117,7 +120,8 @@ One name per concept across UI, i18n, routes and code. HE is primary and gender-
 | Class answers | The class's answers | התשובות של הכיתה | answer.class_list | — | — | הלוח, הכיכר, כל הפתקים |
 | Proposal | Proposal | הצעה | NEW proposal.* | — | Statement (option) under challengeQuestionId; code already says `proposal` (`AgoraProposalScore`, `fn_onAgoraProposal`), so UI, i18n and code agree | פתרון, solution, פתק, בית המלאכה |
 | My proposal | My proposal | ההצעה שלי | proposal.mine | — | — | הפתרון שלי, בית המלאכה |
-| Class proposals | The class's proposals | ההצעות של הכיתה | proposal.class_list | — | — | הכיכר, כל ההצעות |
+| All proposals (step and the class sheet) | All proposals | כל ההצעות | step.allProposals; proposal.class_list (same value, §19.3) | — | LessonStepKey 'allProposals' | ההצעות של הכיתה, הכיכר |
+| Proposals (step) | Proposals | הצעות | step.proposals (value changed §19.3) | — | LessonStepKey 'proposals' | הצעות לפתרונות, פתרון |
 | Plenum | Everyone together | כולם ביחד | NEW console.plenum, projector.plenum | — | AgoraRoundPhase.improve | מליאה (teacher may say it; UI does not), open_floor |
 | Top proposals | Top proposals | ההצעות המובילות | projector.top | — | agoraScores C_p order | leaders, הלוח |
 | Vote | Vote | הצבעה | voting.* (kept; title "בחרו הצעה אחת") | — | AgoraStage.voting | ballot in UI, בחירות |
@@ -1698,6 +1702,102 @@ classSetItemHidden { mainId, statementId, hidden } — replaces client setOption
 
 ### 18.7 Handoff
 Fixed here: control placement, labels, confirm only for backward moves and resets, one-time student lines. UX to decide: visual weight of reset controls (destructive, secondary), how confirm conveys "cannot be undone", how a hidden item looks in "מה כתבו".
+
+## 19. "כל ההצעות", a new step between Proposals and Vote (Tal, 2026-10-25, card wpsQzLsg)
+
+**Decisions (Tal):** the new step is a class-level step that the teacher opens. Each phone gets up to 6 proposals at a time, picked by Thompson Sampling as in MC. Rated cards stay on the board, and new cards arrive with an animation. Ratings use the same 5 faces as elsewhere and feed C_p, the sampler and the Vote order (§21).
+
+### 19.1 Objects
+| Object | What it is | Cardinality | Lifecycle |
+|---|---|---|---|
+| Step `allProposals` (NEW `LessonStepKey`) | The class reads and rates every proposal | 1 per lesson, index 6 of 9 | upcoming → current → done |
+| Pool | The proposals this student may rate: visible options under the challenge, minus their own (it already gets an automatic +1, §9.1), minus hidden ones. Tablemates' proposals are **in** the pool, because proposals are individual (`shared:false`) | 0–34 | grows while classmates still send |
+| Batch (view state, not stored) | Up to 6 unrated proposals from the pool, picked by the sampler | 1 open at a time | served → all rated → the next batch is served |
+| Board (view state) | Every proposal served to this phone in this step, in serving order. Rated cards stay on it and can be rated again | 1 per phone | rebuilt on reload: rated items plus a newly sampled open batch |
+| Rating | As in §2.1 (5 faces, -1..+1). It is written through the existing pipeline, so `statement.consensus` (C_p) and `evaluation.*` update | ≤1 per student per proposal | — |
+
+Statement tree: nothing new. Ratings are evaluation docs on the proposal options under `challengeQuestionId`.
+
+**Sampler rules for the classroom** (they differ from MC):
+- Batch size = `CLASS_BATCH_SIZE = 6`. If the pool has 6 or fewer, the phone shows all of them and has no batches.
+- Stability **never removes** a proposal: "everyone sees everything". A stable proposal is only served later.
+- The sampler runs on the phone, from the options feed it already has (each option carries its `evaluation` stats).
+- A new proposal that arrives mid-step joins the pool and is served in a later batch. It is never inserted into the open batch.
+
+### 19.2 Who moves the class
+Only the teacher moves the class, as at every other step:
+- In: "פתיחת השלב הבא: כל ההצעות" (the rail's forward control).
+- Out: "פתיחת השלב הבא: הצבעה".
+
+Table steps are irrelevant here. The table docs keep their state, and the phone shows no table strip.
+
+Writing stays open until the Vote opens. An author can still send or edit their own proposal from this step (a pinned "ההצעה שלי" card, as at the plenum).
+
+### 19.3 Labels
+| Concept | HE | EN | i18n key | Code |
+|---|---|---|---|---|
+| Step name (rail, header) | כל ההצעות | All proposals | `step.allProposals` (NEW) | `'allProposals'` |
+| Phone instruction | דרגו כל הצעה | Rate each proposal | `allProposals.instruction` (NEW) | — |
+| Arrival divider | {{n}} הצעות חדשות / הצעה חדשה | {{n}} new proposals / One new proposal | `allProposals.new_n`, `allProposals.new_one` | — |
+| Progress (phone) | דירגתם {{n}} מתוך {{m}} | You rated {{n}} of {{m}} | `allProposals.progress` | — |
+| All rated | דירגתם את כל ההצעות. חכו למורה | You rated every proposal. Wait for the teacher | `allProposals.done` | — |
+| Empty pool | עוד אין הצעות לדרג | No proposals to rate yet | `proposal.none_yet` (kept) | — |
+| Console line | {{n}} מתוך {{m}} תלמידים דירגו הכול · לכל הצעה לפחות {{k}} דירוגים | {{n}} of {{m}} students rated everything · every proposal has at least {{k}} ratings | `console.all_rated_line` (NEW) | — |
+| Projector title | כל ההצעות · {{n}} הצעות | All proposals · {{n}} proposals | `projector.allProposals` (NEW) | — |
+
+**One name per concept:**
+- `proposal.class_list` ("ההצעות של הכיתה") is a synonym for the same object. Change its value to "כל ההצעות" in all 7 locale files.
+- Separate defect: `step.proposals` is "הצעות לפתרונות", which uses the retired פתרון (§9.5). Change it to "הצעות".
+
+### 19.4 Phone (`/m/:mid`, step 6)
+1. Header: "כל ההצעות". Instruction: "דרגו כל הצעה". Progress line.
+2. Own proposal card ("ההצעה שלי", "עריכה"), if the student has one.
+3. Board: the served cards in serving order, each with the faces. No author, no table. Rated cards stay expanded (no "דירגתם n" collapse at this step).
+4. When every card on the board is rated, the next batch arrives about 1 s after the last tap:
+   - a divider "6 הצעות חדשות" is appended below the board;
+   - the cards enter with an animation;
+   - the phone scrolls to the divider.
+
+   There is no "next" button and no skipping.
+5. When the pool is exhausted, the phone shows "דירגתם את כל ההצעות. חכו למורה". A later arrival is served as a batch of 1 or more with the same divider.
+
+**States:**
+| State | What the phone shows |
+|---|---|
+| Loading | Skeleton |
+| Empty | `proposal.none_yet` |
+| Rating failed | `rate.failed` plus retry (existing) |
+| Paused or ended | §13.6 frames |
+| Done | `allProposals.done` |
+
+### 19.5 Projector
+The projector reuses the plenum list: the top `TOP_PROPOSALS_LIMIT` proposals by C_p, re-ordering live with the existing FLIP glide. Above the list sit the title with the count and the line "לכל הצעה לפחות {{k}} דירוגים". It shows no per-student data.
+
+### 19.6 Teacher console
+- **Band:** `console.all_rated_line` (live).
+- **Table cards:** each card shows "{{n}}/{{m}} דירגו הכול". The table step and the turn are hidden at this step.
+- **Ratings source:** one listener on the evaluations of the challenge's options, teacher only. That is about 34 × 34 docs at most, acceptable on a laptop.
+- **Plenum:** "כולם ביחד" at Proposals stays as built (open question 4).
+
+### 19.7 Task flows
+- **Student (1 action, repeated):** rate the cards on the board. Batches arrive by themselves.
+- **Teacher (2 taps):** "פתיחת השלב הבא: כל ההצעות", watch the line, then "פתיחת השלב הבא: הצבעה". "פתיחת ההצבעה" freezes the ballot from C_p, which now includes this step's ratings.
+
+### 19.8 Step list, rail, cloning, back moves
+- `LESSON_STEP_KEYS` gets 9 entries. `LessonStepKeySchema` gains `'allProposals'`.
+  - **Strict-parse trap:** deploy shared-types to functions before any client writes the new value.
+- The rail shows 9 steps, and "שלב n מתוך 9" comes from `plan.steps.length`.
+- **Old lessons** keep their stored 8-step `plan.steps`. Every reader must index `plan.steps[stepIndex]`, not `LESSON_STEP_KEYS[index]`. Every step write must keep `plan.steps` and not rebuild it. Otherwise an old lesson sitting at Vote (index 6) would jump to the new step.
+- **Cloning** (`classCloneLesson`) always creates the current 9-step plan. No ratings are copied.
+- **Back moves (§18):** going back from Vote to this step keeps the ballot. New ratings change C_p, and the teacher re-freezes if they want.
+
+### 19.9 As built (2026-10-25, branch feat/class-all-proposals)
+- Sampler: a pure port of MC's Thompson/UCB maths in `apps/join-class/src/lib/classroom/{samplingMath,proposalSampler}.ts` (MC untouched; a shared package can come later). Classroom rule: unstable proposals first, stable ones after, never dropped. MC's weights; the recency window is one lesson hour.
+- Board: `lib/classroom/allProposalsBoard.ts` (pure). Phone: `views/student/c3/AllProposalsScreen.ts` (own lazy chunk). The arrival divider and animation are its own (`student-c3-all-proposals.scss`), not `newSolutionsBuffer` (a global tied to Join's single-question store).
+- The pinned own proposal can be edited, and a student with no proposal gets "+ הצעה משלי", while a table and an unfrozen ballot exist (§19.2, open question 6).
+- Console: band line + per-table "n/m דירגו הכול" from one evaluations listener (`views/teacher/allProposalsRatings.ts`), started only at this step; table cards show members only (`TABLES_DONE_STEPS`); the gate panel is shown at this step too.
+- Projector: `views/teacher/projector/AllProposalsStage.ts`; k = the fewest `evaluation.numberOfEvaluators` on any visible proposal.
+- Old lessons: `planStepKeys(plan)` everywhere a step is read; `planStepMove` writes the stored steps back; `classCloneLesson` gives copies the 9 steps.
 
 ---
 
