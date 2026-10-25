@@ -4482,5 +4482,8 @@
   "Other ideas": "Andere ideeën",
   "Ideas that stand on their own.": "Ideeën die op zichzelf staan.",
   "{n} other ideas are not in a theme": "{n} andere ideeën horen bij geen thema",
-  "Show all {n}": "Toon alle {n}"
+  "Show all {n}": "Toon alle {n}",
+  "Totals": "Totalen",
+  "Map scale": "Kaartschaal",
+  "Fuller dot = more evaluators": "Vollere stip = meer beoordelaars"
 }

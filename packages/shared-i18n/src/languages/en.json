@@ -5162,5 +5162,8 @@
   "Other ideas": "Other ideas",
   "Ideas that stand on their own.": "Ideas that stand on their own.",
   "{n} other ideas are not in a theme": "{n} other ideas are not in a theme",
-  "Show all {n}": "Show all {n}"
+  "Show all {n}": "Show all {n}",
+  "Totals": "Totals",
+  "Map scale": "Map scale",
+  "Fuller dot = more evaluators": "Fuller dot = more evaluators"
 }

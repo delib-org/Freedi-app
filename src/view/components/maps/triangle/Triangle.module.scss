@@ -10,6 +10,21 @@
   padding-top: 0.5rem;
 }
 
+.scaleBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+  padding-inline: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.scaleHint {
+  font-size: 0.85rem;
+  color: var(--text-caption);
+}
+
 .triangleCanvas {
   position: relative;
   flex: 1;

@@ -5200,5 +5200,8 @@
   "Other ideas": "רעיונות אחרים",
   "Ideas that stand on their own.": "רעיונות שעומדים בפני עצמם.",
   "{n} other ideas are not in a theme": "{n} רעיונות אחרים אינם באף אשכול",
-  "Show all {n}": "הצג את כל {n}"
+  "Show all {n}": "הצג את כל {n}",
+  "Totals": "סכומים",
+  "Map scale": "קנה מידה של המפה",
+  "Fuller dot = more evaluators": "נקודה מלאה יותר = יותר מעריכים"
 }

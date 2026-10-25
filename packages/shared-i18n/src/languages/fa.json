@@ -4960,5 +4960,8 @@
   "Other ideas": "ایده‌های دیگر",
   "Ideas that stand on their own.": "ایده‌هایی که مستقل‌اند.",
   "{n} other ideas are not in a theme": "{n} ایده دیگر در هیچ موضوعی نیستند",
-  "Show all {n}": "نمایش همه {n}"
+  "Show all {n}": "نمایش همه {n}",
+  "Totals": "مجموع‌ها",
+  "Map scale": "مقیاس نقشه",
+  "Fuller dot = more evaluators": "نقطهٔ پررنگ‌تر = ارزیابان بیشتر"
 }

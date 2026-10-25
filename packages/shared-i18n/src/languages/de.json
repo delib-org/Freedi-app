@@ -4482,5 +4482,8 @@
   "Other ideas": "Weitere Ideen",
   "Ideas that stand on their own.": "Ideen, die für sich stehen.",
   "{n} other ideas are not in a theme": "{n} weitere Ideen gehören zu keinem Thema",
-  "Show all {n}": "Alle {n} anzeigen"
+  "Show all {n}": "Alle {n} anzeigen",
+  "Totals": "Summen",
+  "Map scale": "Kartenmaßstab",
+  "Fuller dot = more evaluators": "Vollerer Punkt = mehr Bewerter"
 }

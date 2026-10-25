@@ -4602,5 +4602,8 @@
   "Other ideas": "أفكار أخرى",
   "Ideas that stand on their own.": "أفكار قائمة بذاتها.",
   "{n} other ideas are not in a theme": "{n} أفكار أخرى ليست ضمن أي موضوع",
-  "Show all {n}": "عرض كل {n}"
+  "Show all {n}": "عرض كل {n}",
+  "Totals": "المجاميع",
+  "Map scale": "مقياس الخريطة",
+  "Fuller dot = more evaluators": "نقطة أكثر امتلاءً = مقيّمون أكثر"
 }
