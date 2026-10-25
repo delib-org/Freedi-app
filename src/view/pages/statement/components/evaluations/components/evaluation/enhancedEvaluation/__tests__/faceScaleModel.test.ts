@@ -1,4 +1,11 @@
-import { buildFaceScale, getFaceTone, getSelectedThumbId, orderLowToHigh } from '../faceScaleModel';
+import {
+	buildFaceScale,
+	getFaceTone,
+	getSelectedThumbId,
+	orderLowToHigh,
+	shouldShowFaceLabels,
+	LABEL_HIDE_AFTER_PRESSES,
+} from '../faceScaleModel';
 import { enhancedEvaluationsThumbs, reactionEvaluationsThumbs } from '../EnhancedEvaluationModel';
 
 describe('faceScaleModel', () => {
@@ -85,5 +92,17 @@ describe('faceScaleModel', () => {
 			expect(getFaceTone(false, true)).toBe('idle');
 			expect(getFaceTone(false, false)).toBe('own');
 		});
+	});
+});
+
+describe('shouldShowFaceLabels', () => {
+	it('shows labels with 0 and 1 presses', () => {
+		expect(shouldShowFaceLabels(0)).toBe(true);
+		expect(shouldShowFaceLabels(1)).toBe(true);
+	});
+
+	it('hides labels from the second press on, re-taps included', () => {
+		expect(shouldShowFaceLabels(LABEL_HIDE_AFTER_PRESSES)).toBe(false);
+		expect(shouldShowFaceLabels(5)).toBe(false);
 	});
 });
