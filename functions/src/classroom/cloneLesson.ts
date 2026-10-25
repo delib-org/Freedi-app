@@ -45,13 +45,15 @@ const DEFAULT_FLAGS: Pick<
 	enableNavigationalElements: true,
 };
 
-const LESSON_STEPS = [
+/** A copy always gets the CURRENT steps (9, with "כל ההצעות"), whatever the source had (IA 19.8). */
+export const LESSON_STEPS = [
 	'waiting',
 	'opening',
 	'side',
 	'tables',
 	'tableTalk',
 	'proposals',
+	'allProposals',
 	'vote',
 	'summary',
 ] as const;

@@ -32,7 +32,6 @@ import { getUserState } from './user';
 import { classCloneLesson } from './classroom/api';
 import {
 	CLASS_CODES_COLLECTION,
-	LESSON_STEP_KEYS,
 	LessonStep,
 	buildNewLessonPlan,
 	generateClassCode,
@@ -43,6 +42,7 @@ import {
 	nextStep as nextStepKey,
 	normalizeHint,
 	planChallengeWrites,
+	planStepKeys,
 	planStepMove,
 	stepFollowMePath,
 	stepLabelKey,
@@ -71,6 +71,7 @@ export {
 	getChallengeQuestion,
 	stepFollowMePath,
 	lessonStepOf,
+	planStepKeys,
 } from './lessonCore';
 export type { LessonStep } from './lessonCore';
 
@@ -82,9 +83,14 @@ export function stepLabel(key: LessonStepKey): string {
 	return t(stepLabelKey(key));
 }
 
-/** The step after `key`, or null at the last one. */
+/** The step after `key` in the current lesson's own steps, or null at the last one. */
 export function nextStep(key: LessonStepKey): LessonStepKey | null {
-	return nextStepKey(key);
+	return nextStepKey(key, getLessonSteps());
+}
+
+/** The current lesson's own ordered steps (8 for a lesson made before "כל ההצעות", else 9). */
+export function getLessonSteps(): readonly LessonStepKey[] {
+	return planStepKeys(getMainStatement()?.statementSettings?.lessonPlan);
 }
 
 /** Current step of the subscribed workspace (first step if no plan yet). */
@@ -99,7 +105,8 @@ export function getLessonStep(): LessonStep {
  * first). A move on an `open` lesson makes it live again.
  */
 export async function setLessonStep(mainId: string, index: number): Promise<void> {
-	if (!isValidStepIndex(index)) {
+	const steps = getLessonSteps();
+	if (!isValidStepIndex(index, steps)) {
 		throw new RangeError(`Invalid lesson step index: ${String(index)}`);
 	}
 	const status = lessonStatusOfMain(getMainStatement());
@@ -107,9 +114,9 @@ export async function setLessonStep(mainId: string, index: number): Promise<void
 		throw new Error(`The lesson is ${status}: steps do not move`);
 	}
 	await setMainStatementSetting(mainId, {
-		statementSettings: { lessonPlan: planStepMove(index, status, Date.now()) },
+		statementSettings: { lessonPlan: planStepMove(index, status, Date.now(), steps) },
 	});
-	await setPowerFollowMe(mainId, stepFollowMePath(mainId, LESSON_STEP_KEYS[index]));
+	await setPowerFollowMe(mainId, stepFollowMePath(mainId, steps[index]));
 }
 
 /** Set one sub-question's role. Prefer `setChallengeQuestion` for the challenge. */

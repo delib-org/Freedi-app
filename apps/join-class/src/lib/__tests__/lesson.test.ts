@@ -20,6 +20,7 @@ import {
 	normalizeClassCode,
 	normalizeHint,
 	planChallengeWrites,
+	planStepKeys,
 	stepFollowMePath,
 	stepLabelKey,
 	toCodeDigits,
@@ -35,8 +36,10 @@ function q(id: string, extra: Partial<Statement> = {}, role?: 'guiding' | 'chall
 	} as Statement;
 }
 
+const OLD_STEPS = ['waiting', 'opening', 'side', 'tables', 'tableTalk', 'proposals', 'vote', 'summary'] as const;
+
 describe('lesson steps', () => {
-	it('has the eight steps in the fixed order', () => {
+	it('a new lesson has nine steps, All proposals between Proposals and Vote', () => {
 		expect([...LESSON_STEP_KEYS]).toEqual([
 			'waiting',
 			'opening',
@@ -44,6 +47,7 @@ describe('lesson steps', () => {
 			'tables',
 			'tableTalk',
 			'proposals',
+			'allProposals',
 			'vote',
 			'summary',
 		]);
@@ -51,6 +55,8 @@ describe('lesson steps', () => {
 
 	it('nextStep walks forward and ends at summary', () => {
 		expect(nextStep('waiting')).toBe('opening');
+		expect(nextStep('proposals')).toBe('allProposals');
+		expect(nextStep('allProposals')).toBe('vote');
 		expect(nextStep('vote')).toBe('summary');
 		expect(nextStep('summary')).toBeNull();
 	});
@@ -59,8 +65,9 @@ describe('lesson steps', () => {
 		expect(isLessonStepKey('tables')).toBe(true);
 		expect(isLessonStepKey('nope')).toBe(false);
 		expect(isValidStepIndex(0)).toBe(true);
-		expect(isValidStepIndex(7)).toBe(true);
-		expect(isValidStepIndex(8)).toBe(false);
+		expect(isValidStepIndex(8)).toBe(true);
+		expect(isValidStepIndex(9)).toBe(false);
+		expect(isValidStepIndex(8, OLD_STEPS)).toBe(false);
 		expect(isValidStepIndex(-1)).toBe(false);
 		expect(isValidStepIndex(1.5)).toBe(false);
 	});
@@ -71,9 +78,9 @@ describe('lesson steps', () => {
 		expect(lessonStepOf({ steps: [], stepIndex: 99 })).toEqual({ index: 0, key: 'waiting' });
 	});
 
-	it('buildLessonPlan carries all eight steps and the index', () => {
+	it('buildLessonPlan carries all nine steps and the index', () => {
 		const plan = buildLessonPlan(2);
-		expect(plan.steps).toHaveLength(8);
+		expect(plan.steps).toHaveLength(9);
 		expect(plan.stepIndex).toBe(2);
 	});
 
@@ -85,6 +92,40 @@ describe('lesson steps', () => {
 
 	it('builds the i18n key of a step label', () => {
 		expect(stepLabelKey('tableTalk')).toBe('step.tableTalk');
+	});
+});
+
+describe('an old 8-step lesson (IA 19.8)', () => {
+	const oldPlan = (stepIndex: number) => ({ steps: [...OLD_STEPS], stepIndex });
+
+	it('reads its own stored steps, so index 6 is still Vote', () => {
+		expect(planStepKeys(oldPlan(6))).toEqual(OLD_STEPS);
+		expect(lessonStepOf(oldPlan(6))).toEqual({ index: 6, key: 'vote' });
+		expect(lessonStepOf(oldPlan(7))).toEqual({ index: 7, key: 'summary' });
+	});
+
+	it('index 8 is out of range for it and falls back to the first step', () => {
+		expect(lessonStepOf(oldPlan(8))).toEqual({ index: 0, key: 'waiting' });
+	});
+
+	it('nextStep follows its stored order: Proposals → Vote', () => {
+		expect(nextStep('proposals', OLD_STEPS)).toBe('vote');
+		expect(nextStep('allProposals', OLD_STEPS)).toBeNull();
+	});
+
+	it('a step move keeps the stored 8 steps', () => {
+		const plan = planStepMove(6, 'live', 1, OLD_STEPS);
+		expect(plan.steps).toEqual(OLD_STEPS);
+		expect(plan.steps[plan.stepIndex]).toBe('vote');
+	});
+
+	it('a plan with no usable steps gets the current nine', () => {
+		expect(planStepKeys(undefined)).toBe(LESSON_STEP_KEYS);
+		expect(planStepKeys({ steps: [] })).toBe(LESSON_STEP_KEYS);
+	});
+
+	it('a new lesson at index 6 is at All proposals', () => {
+		expect(lessonStepOf(buildLessonPlan(6))).toEqual({ index: 6, key: 'allProposals' });
 	});
 });
 

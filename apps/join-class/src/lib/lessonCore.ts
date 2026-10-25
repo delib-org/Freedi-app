@@ -13,7 +13,12 @@ import {
  * with the writes. Docs: docs/ia/agora-classroom.md section 2.3 and 11.
  */
 
-/** The eight steps of a lesson, in the fixed order the teacher opens them. */
+/**
+ * The steps of a NEW lesson, in the order the teacher opens them (9 since
+ * "כל ההצעות", IA 19). A lesson keeps the list it was created with in
+ * `lessonPlan.steps`: read the current lesson's steps with `planStepKeys`,
+ * never index this list with a stored `stepIndex`.
+ */
 export const LESSON_STEP_KEYS: readonly LessonStepKey[] = [
 	'waiting',
 	'opening',
@@ -21,6 +26,7 @@ export const LESSON_STEP_KEYS: readonly LessonStepKey[] = [
 	'tables',
 	'tableTalk',
 	'proposals',
+	'allProposals',
 	'vote',
 	'summary',
 ];
@@ -47,20 +53,39 @@ export function isLessonStepKey(value: unknown): value is LessonStepKey {
 	return typeof value === 'string' && (LESSON_STEP_KEYS as readonly string[]).includes(value);
 }
 
-export function isValidStepIndex(index: unknown): index is number {
+/**
+ * The ordered steps of a stored plan. A lesson created before "כל ההצעות" keeps
+ * its 8 stored steps (an old lesson sitting at Vote, index 6, must not jump to
+ * the new step); a plan with no usable list gets the current one.
+ */
+export function planStepKeys(plan: Pick<LessonPlan, 'steps'> | undefined | null): readonly LessonStepKey[] {
+	const steps = plan?.steps;
+
+	return Array.isArray(steps) && steps.length > 0 && steps.every(isLessonStepKey)
+		? steps
+		: LESSON_STEP_KEYS;
+}
+
+export function isValidStepIndex(
+	index: unknown,
+	steps: readonly LessonStepKey[] = LESSON_STEP_KEYS,
+): index is number {
 	return (
 		typeof index === 'number' &&
 		Number.isInteger(index) &&
 		index >= FIRST_LESSON_STEP_INDEX &&
-		index < LESSON_STEP_KEYS.length
+		index < steps.length
 	);
 }
 
-/** The step after `key`, or null at the last step (summary). */
-export function nextStep(key: LessonStepKey): LessonStepKey | null {
-	const next = LESSON_STEP_KEYS.indexOf(key) + 1;
+/** The step after `key` in `steps`, or null at the last step (summary). */
+export function nextStep(
+	key: LessonStepKey,
+	steps: readonly LessonStepKey[] = LESSON_STEP_KEYS,
+): LessonStepKey | null {
+	const next = steps.indexOf(key) + 1;
 
-	return next < LESSON_STEP_KEYS.length ? LESSON_STEP_KEYS[next] : null;
+	return next > 0 && next < steps.length ? steps[next] : null;
 }
 
 /** i18n key of a step's label (`step.<key>`); `stepLabel` in lesson.ts translates it. */
@@ -85,15 +110,24 @@ export function stepFollowMePath(mainId: string, key: LessonStepKey): string {
 	return `/statement/${mainId}?step=${key}`;
 }
 
-/** The current step of a lesson plan; a workspace with no plan sits at the first step. */
+/**
+ * The current step of a lesson plan, read from the plan's OWN steps
+ * (`steps[stepIndex]`); a workspace with no plan sits at the first step.
+ */
 export function lessonStepOf(plan: LessonPlan | undefined): LessonStep {
-	const index = plan && isValidStepIndex(plan.stepIndex) ? plan.stepIndex : FIRST_LESSON_STEP_INDEX;
+	const steps = planStepKeys(plan);
+	const index =
+		plan && isValidStepIndex(plan.stepIndex, steps) ? plan.stepIndex : FIRST_LESSON_STEP_INDEX;
 
-	return { index, key: LESSON_STEP_KEYS[index] };
+	return { index, key: steps[index] };
 }
 
-export function buildLessonPlan(stepIndex: number): LessonPlan {
-	return { steps: [...LESSON_STEP_KEYS], stepIndex };
+/** A plan at `stepIndex` of `steps` (default: a new lesson's steps). */
+export function buildLessonPlan(
+	stepIndex: number,
+	steps: readonly LessonStepKey[] = LESSON_STEP_KEYS,
+): LessonPlan {
+	return { steps: [...steps], stepIndex };
 }
 
 /** A new lesson's plan: step 0 (Waiting), live, so `/m/:mid` is a lesson from its first second. */
@@ -116,9 +150,15 @@ export function isLessonStanding(status: LessonStatus): boolean {
  * `live` the moment the teacher moves a step (IA 13.6); other statuses are
  * left to the status callable.
  */
-export function planStepMove(stepIndex: number, status: LessonStatus, now: number): LessonPlan {
-	// A move always puts the projector back on the introduction text (IA 14.2).
-	const plan: LessonPlan = { ...buildLessonPlan(stepIndex), projectorVideoId: null };
+export function planStepMove(
+	stepIndex: number,
+	status: LessonStatus,
+	now: number,
+	steps: readonly LessonStepKey[] = LESSON_STEP_KEYS,
+): LessonPlan {
+	// A move keeps the lesson's stored steps (an old 8-step lesson stays 8-step), and
+	// always puts the projector back on the introduction text (IA 14.2).
+	const plan: LessonPlan = { ...buildLessonPlan(stepIndex, steps), projectorVideoId: null };
 
 	return status === 'open' ? { ...plan, status: 'live', statusAt: now } : plan;
 }

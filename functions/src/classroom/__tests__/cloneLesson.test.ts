@@ -161,6 +161,18 @@ describe('buildLessonCopy (allowlist mapper)', () => {
 		expect(settings?.classCode).toBe('424242');
 		expect(settings?.lessonPlan).toMatchObject({ stepIndex: 0, status: 'live', statusAt: NOW });
 		expect(settings?.lessonPlan).not.toHaveProperty('endedAt');
+		// an old 8-step (here: 1-step) source still gives the copy the current 9 steps (IA 19.8)
+		expect(settings?.lessonPlan?.steps).toEqual([
+			'waiting',
+			'opening',
+			'side',
+			'tables',
+			'tableTalk',
+			'proposals',
+			'allProposals',
+			'vote',
+			'summary',
+		]);
 		expect(settings?.introVideos).toEqual([{ id: 'v1', title: 'Clip', url: 'https://youtu.be/x' }]);
 		expect(settings?.videoUrl).toBe('https://youtu.be/legacy');
 		expect(settings?.sideNames).toEqual({ a: 'Dana', b: 'Omer' });
