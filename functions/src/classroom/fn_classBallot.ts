@@ -77,20 +77,28 @@ export async function freezeBallot(
 		throw new ClassroomError('failed-precondition', 'There are no proposals to vote on');
 	}
 
-	const frozenAt = Date.now();
-	// A re-freeze while the vote is paused keeps it paused.
-	const pausedAt = challenge.statementSettings?.ballot?.pausedAt;
-	const ballot: ClassBallot = {
-		candidateIds,
-		frozenAt,
-		...(typeof pausedAt === 'number' ? { pausedAt } : {}),
-	};
-	await firestore
-		.collection(Collections.statements)
-		.doc(challenge.statementId)
-		.update({ 'statementSettings.ballot': ballot, lastUpdate: frozenAt });
+	const ref = firestore.collection(Collections.statements).doc(challenge.statementId);
 
-	return { candidateIds, frozenAt };
+	return firestore.runTransaction(async (tx) => {
+		// Re-read the ballot inside the transaction: a close or a pause that
+		// lands between the shortlist read and this write is not lost.
+		const current = ((await tx.get(ref)).data() as Statement | undefined)?.statementSettings
+			?.ballot;
+		if (typeof current?.closedAt === 'number') {
+			throw new ClassroomError('failed-precondition', 'The vote is already closed');
+		}
+		const frozenAt = Date.now();
+		// A re-freeze while the vote is paused keeps it paused.
+		const pausedAt = current?.pausedAt;
+		const ballot: ClassBallot = {
+			candidateIds,
+			frozenAt,
+			...(typeof pausedAt === 'number' ? { pausedAt } : {}),
+		};
+		tx.update(ref, { 'statementSettings.ballot': ballot, lastUpdate: frozenAt });
+
+		return { candidateIds, frozenAt };
+	});
 }
 
 export async function closeBallot(

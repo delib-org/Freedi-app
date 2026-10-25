@@ -228,13 +228,54 @@ describe('join-class engine rules', () => {
 			await assertFails(setDoc(doc(as(S1), 'votes', `${S1}--paused-ch`), vote(S1, 'paused-ch', 'none')));
 		});
 
-		it('takes votes again once the ballot is resumed', async () => {
+		it('denies deleting (withdrawing) your own vote while the ballot is paused or closed', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'votes', `${S1}--paused-ch`), vote(S1, 'paused-ch', 'p1'));
+				await setDoc(doc(db, 'votes', `${S1}--closed-ch`), vote(S1, 'closed-ch', 'p1'));
+			});
+			await assertFails(deleteDoc(doc(as(S1), 'votes', `${S1}--paused-ch`)));
+			await assertFails(deleteDoc(doc(as(S1), 'votes', `${S1}--closed-ch`)));
+		});
+
+		it('takes votes again once the ballot is resumed, and lets you delete your own', async () => {
 			await seed(env, async (db) => {
 				await updateDoc(doc(db, 'statements', 'paused-ch'), {
 					'statementSettings.ballot.pausedAt': deleteField(),
 				});
 			});
 			await assertSucceeds(setDoc(doc(as(S2), 'votes', `${S2}--paused-ch`), vote(S2, 'paused-ch', 'p1')));
+			await assertSucceeds(deleteDoc(doc(as(S1), 'votes', `${S1}--paused-ch`)));
+		});
+
+		it('lets you delete your own vote on an open ballot and on a question without one', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'votes', `${S1}--${CH}`), vote(S1, CH, 'p1'));
+				await setDoc(doc(db, 'votes', `${S1}--${PLAIN_Q}`), vote(S1, PLAIN_Q, 'x1'));
+			});
+			await assertSucceeds(deleteDoc(doc(as(S1), 'votes', `${S1}--${CH}`)));
+			await assertSucceeds(deleteDoc(doc(as(S1), 'votes', `${S1}--${PLAIN_Q}`)));
+		});
+
+		it("still denies deleting someone else's vote", async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'votes', `${S2}--${CH}`), vote(S2, CH, 'p1'));
+			});
+			await assertFails(deleteDoc(doc(as(S1), 'votes', `${S2}--${CH}`)));
+		});
+
+		it("denies a student switching the vote display (statementSettings.voteDisplay)", async () => {
+			await assertFails(
+				updateDoc(doc(as(S1), 'statements', CH), {
+					'statementSettings.voteDisplay.liveResults': false,
+				}),
+			);
+			await assertFails(
+				setDoc(
+					doc(as(S1), 'statements', CH),
+					{ statementSettings: { voteDisplay: { sortBySupport: true } } },
+					{ merge: true },
+				),
+			);
 		});
 
 		it('leaves votes on questions without a ballot unchanged', async () => {
