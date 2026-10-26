@@ -337,6 +337,23 @@
 	font-size: 0.84rem;
 	cursor: pointer;
 	@include focus-ring;
+
+	// Pinned variant: opaque so the list never shows through it.
+	&--solid {
+		width: 100%;
+		background: var(--bg-page);
+	}
+}
+
+// "+ New space" stays at the bottom of the scrolling Home while the Spaces
+// list is long. Sticky (not fixed) keeps it inside the list's column, above the
+// PIN button, and the shell's own bottom padding keeps it clear of the floating nav.
+.stickyAction {
+	position: sticky;
+	inset-block-end: calc(var(--space-xs) + env(safe-area-inset-bottom, 0px));
+	z-index: 1;
+	padding-block: var(--space-xs);
+	background: linear-gradient(to bottom, transparent, var(--bg-page) 35%);
 }
 
 .primaryButton {
