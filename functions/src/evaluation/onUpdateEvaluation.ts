@@ -23,7 +23,7 @@ import { isResearchEnabledForTopParent } from '../statements/history/isResearchE
 import { synthesisFlags } from '../synthesis/featureFlags';
 import {
 	enqueueClusterRecompute,
-	findClustersContainingMember,
+	findClustersAffectedByVote,
 } from '../synthesis/liveSynth/clusterRecompute';
 
 export async function updateEvaluation(
@@ -91,7 +91,7 @@ export async function updateEvaluation(
 		// any synth cluster. Same pattern as onCreateEvaluation. Behind
 		// `clusterAwarePolarization` flag — when OFF, no cluster work happens.
 		if (synthesisFlags.clusterAwarePolarization) {
-			findClustersContainingMember(statement.statementId)
+			findClustersAffectedByVote(statement.statementId)
 				.then(async (containingClusters) => {
 					await Promise.all(
 						containingClusters.map((c) =>

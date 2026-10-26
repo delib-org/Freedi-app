@@ -192,6 +192,14 @@ export const StatementSchema = object({
 	isSelected: optional(boolean()), // if true, the statement is selected
 	isCluster: optional(boolean()),
 	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
+	/**
+	 * Cluster statement IDs that were merged INTO this cluster and are now hidden.
+	 * Their direct votes keep counting for this cluster (one vote per user: this
+	 * cluster's own direct vote wins, then absorbed direct votes, then the member
+	 * average). NOT members: the UI must not treat these as `integratedOptions`.
+	 * Transitive: includes the absorbed cluster's own absorbedClusterIds.
+	 */
+	absorbedClusterIds: optional(array(string())),
 	integratedInto: optional(string()), // cluster statement ID this original was merged into (set with hide:true by performIntegration; cleared on reverse)
 	derivedFromStatementId: optional(string()), // origin statement when this option was synthesized by a pipeline (e.g. compound-response decomposition)
 	derivedByPipeline: optional(picklist(['topic-cluster', 'synthesis'])), // identifies the pipeline that created this synthetic option (used for idempotent rerun)

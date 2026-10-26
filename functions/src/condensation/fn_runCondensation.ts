@@ -12,7 +12,7 @@ import {
 import { logError } from '../utils/errorHandling';
 import { runCondensationPipeline } from './pipeline';
 import { notifyAuthorsOfGrouping } from './authorNotifications';
-import { findClustersAffectedByEvaluation, recomputeClusterEvaluation } from './aggregation';
+import { recomputeAffectedClusters } from './recomputeAffectedClusters';
 
 const db = getFirestore();
 
@@ -186,19 +186,7 @@ export const onEvaluationChangeRecomputeCondensationClusters = onDocumentWritten
 			const statementId = after?.statementId ?? before?.statementId;
 			if (!statementId) return;
 
-			const affected = await findClustersAffectedByEvaluation(statementId);
-			if (affected.length === 0) return;
-
-			for (const clusterId of affected) {
-				try {
-					await recomputeClusterEvaluation(clusterId);
-				} catch (error) {
-					logError(error, {
-						operation: 'onEvaluationChangeRecomputeCondensationClusters.recompute',
-						statementId: clusterId,
-					});
-				}
-			}
+			await recomputeAffectedClusters(statementId);
 		} catch (error) {
 			logger.error('condensation.onEvaluationChangeRecomputeCondensationClusters error', error);
 		}

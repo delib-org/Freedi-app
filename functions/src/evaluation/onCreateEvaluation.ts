@@ -29,7 +29,7 @@ import { recordParticipation } from '../progress/questionProgressWriter';
 import { synthesisFlags } from '../synthesis/featureFlags';
 import {
 	enqueueClusterRecompute,
-	findClustersContainingMember,
+	findClustersAffectedByVote,
 } from '../synthesis/liveSynth/clusterRecompute';
 
 export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
@@ -119,7 +119,7 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		// Fail-open: any error here is logged and swallowed; the directly-
 		// evaluated statement's polarization compute above still happens.
 		if (synthesisFlags.clusterAwarePolarization) {
-			findClustersContainingMember(statement.statementId)
+			findClustersAffectedByVote(statement.statementId)
 				.then(async (containingClusters) => {
 					await Promise.all(
 						containingClusters.map((c) =>

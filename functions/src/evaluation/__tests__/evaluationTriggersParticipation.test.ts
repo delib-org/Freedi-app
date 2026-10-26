@@ -43,6 +43,7 @@ jest.mock('../../synthesis/featureFlags', () => ({
 jest.mock('../../synthesis/liveSynth/clusterRecompute', () => ({
 	enqueueClusterRecompute: jest.fn(),
 	findClustersContainingMember: jest.fn(),
+	findClustersAffectedByVote: jest.fn(),
 }));
 
 import { newEvaluation } from '../onCreateEvaluation';
