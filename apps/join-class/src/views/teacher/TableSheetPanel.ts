@@ -1,5 +1,4 @@
 import m from 'mithril';
-import { SPEAK_SECONDS } from '@freedi/shared-types';
 import type { ClassTable, Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import {
@@ -13,7 +12,9 @@ import { getServerOffset, remainingMs, serverNow } from '@/lib/classroom/serverC
 import { moveStudent } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
 import { answerMark, askMark, type TableMode } from '@/lib/classroom/tableTurnConsole';
-import { noDeviceForm, tableModeOf, turnLine } from './TableCard';
+import { noDeviceForm, proposalsTurnLine, tableModeOf, turnLine } from './TableCard';
+import { tableSpeakMs } from '@/lib/classroom/speakTime';
+import { getMainStatement } from '@/lib/store';
 import { noDeviceButtons, stepButtons, turnButtons } from './tableSheetTurn';
 import { targetName } from './dragController';
 import { confirmResetTurns } from './consoleConfirms';
@@ -39,7 +40,6 @@ export interface TableSheetPanelAttrs {
 	onClose: () => void;
 }
 
-const MS_PER_SECOND = 1000;
 let showNoDevice = false;
 
 function memberRow(
@@ -96,13 +96,12 @@ function memberRow(
 function currentLine(attrs: TableSheetPanelAttrs, table: ClassTable): m.Children {
 	const question = attrs.questions.find((q) => q.statementId === table.questionId);
 	const students = new Map(attrs.students.map((s) => [s.uid, s]));
+	const totalMs = tableSpeakMs(table, getMainStatement());
 	const remaining =
 		table.speakerEndsAt === undefined
 			? null
-			: remainingMs(table.speakerEndsAt, Date.now(), getServerOffset(), {
-					totalMs: SPEAK_SECONDS * MS_PER_SECOND,
-				});
-	const timer = timerLine(table, remaining, SPEAK_SECONDS * MS_PER_SECOND);
+			: remainingMs(table.speakerEndsAt, Date.now(), getServerOffset(), { totalMs });
+	const timer = timerLine(table, remaining, totalMs);
 	const speakerName = (uid: string): string =>
 		table.noDeviceMembers.find((member) => member.id === uid)?.name ??
 		students.get(uid)?.name ??
@@ -112,6 +111,7 @@ function currentLine(attrs: TableSheetPanelAttrs, table: ClassTable): m.Children
 		m('p.table-sheet__now', [
 			m('strong', t(tableStepKey(table, attrs.plenum))),
 			attrs.tableTalk ? ` · ${turnLine(table)}` : null,
+			tableModeOf(attrs) === 'proposals' ? ` · ${proposalsTurnLine(table)}` : null,
 		]),
 		m('p.table-sheet__question', question ? question.statement : t('console.no_question_yet')),
 		timer.kind === 'running'

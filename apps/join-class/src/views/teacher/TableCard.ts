@@ -1,15 +1,19 @@
 import m from 'mithril';
-import { SPEAK_SECONDS } from '@freedi/shared-types';
+import { proposalsDone, proposalsMaxTurns, proposalsTurnOf } from '@freedi/shared-types';
 import type { ClassTable } from '@freedi/shared-types';
 import { getLang, t } from '@/lib/i18n';
 import { getServerOffset, remainingMs, serverNow } from '@/lib/classroom/serverClock';
 import { maxTurns } from '@/lib/classroom/turnMoment';
+import { noneLeftNow, questionCapNow } from '@/lib/classroom/ownQuestions';
+import { tableSpeakMs } from '@/lib/classroom/speakTime';
+import { getMainStatement } from '@/lib/store';
 import { formatSpeakerTime, tableStepKey, timerLine } from '@/lib/classroom/consoleHelpers';
 import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
 import { joinNames } from '@/lib/classroom/listNames';
 import {
 	QUICK_KEYS,
 	STUCK_AFTER_MS,
+	anotherTurnFor,
 	answerMark,
 	askMark,
 	quickActionFor,
@@ -46,7 +50,6 @@ export interface TableCardAttrs {
 	// >>> allProposals END
 }
 
-const MS_PER_SECOND = 1000;
 let noDeviceName = '';
 
 function nameOf(
@@ -66,22 +69,64 @@ export function tableModeOf(attrs: { plenum: boolean; tableTalk: boolean }): Tab
 
 /** "Turn n of max": one turn per tablemate with a device who has not passed on asking. */
 export function turnLine(table: ClassTable): string {
-	return t('console.turn_n', { n: table.turn, max: maxTurns(table) });
+	return t('console.turn_n', { n: table.turn, max: maxTurns(table, questionCapNow()) });
+}
+
+/** Proposals (IA 25.6): "Turn n of max", everyone speaks once per turn. */
+export function proposalsTurnLine(table: ClassTable): string {
+	return t('console.turn_n', {
+		n: proposalsTurnOf(table),
+		max: proposalsMaxTurns(table, getMainStatement()),
+	});
+}
+
+/** Proposals: the table talks and every turn is spoken (read from the live lesson). */
+export function proposalsDoneNow(table: ClassTable, mode: TableMode): boolean {
+	return (
+		mode === 'proposals' &&
+		table.step === 'talk' &&
+		proposalsDone(table, getMainStatement(), serverNow())
+	);
 }
 
 /** The engine action behind each next-step verb. */
 export function quickActionName(
 	quick: QuickAction,
-): 'toTalk' | 'toWrite' | 'toRate' | 'nextTurn' | 'finishSpeaking' {
+): 'toTalk' | 'toWrite' | 'toRate' | 'nextTurn' | 'finishSpeaking' | 'nextProposalsTurn' {
 	if (quick.kind === 'turn') return 'nextTurn';
 	if (quick.kind === 'finish') return 'finishSpeaking';
+	if (quick.kind === 'anotherTurn') return 'nextProposalsTurn';
 
 	return quick.kind === 'talk' ? 'toTalk' : quick.kind === 'write' ? 'toWrite' : 'toRate';
 }
 
-/** The one next-step action of a table, as the verb the students' buttons end with. */
+/** The next-step action of a table, as the verb the students' buttons end with. "Another turn" names the turn seen. */
 export function quickRun(table: ClassTable, quick: QuickAction): Promise<boolean> {
+	if (quick.kind === 'anotherTurn') {
+		return tableAction(table.tableId, {
+			action: 'nextProposalsTurn',
+			fromTurn: proposalsTurnOf(table),
+		});
+	}
+
 	return tableAction(table.tableId, { action: quickActionName(quick) });
+}
+
+/** One quick button of the card (step forward, or "another turn"). */
+function quickButton(table: ClassTable, quick: QuickAction): m.Vnode {
+	const label = quickLabel(quick);
+
+	return m(
+		'button.btn.btn--tertiary.table-card__quick',
+		{
+			type: 'button',
+			'data-quick': quick.kind,
+			'aria-label': `${t('console.table_n', { n: table.n })}: ${label}`,
+			disabled: consoleState.held || isBusy(`table:${table.tableId}:${quickActionName(quick)}`),
+			onclick: () => void quickRun(table, quick),
+		},
+		label,
+	);
 }
 
 export function quickLabel(quick: QuickAction): string {
@@ -90,7 +135,7 @@ export function quickLabel(quick: QuickAction): string {
 
 function waitRows(attrs: TableCardAttrs): m.Children {
 	const { table, students } = attrs;
-	const line = statusLine(table, tableModeOf(attrs), serverNow());
+	const line = statusLine(table, tableModeOf(attrs), serverNow(), noneLeftNow(table));
 	if (!line) return null;
 	const names = (line.nameUids ?? []).map((uid) => nameOf(uid, students));
 	const params: Record<string, string | number> = { ...(line.params ?? {}) };
@@ -112,13 +157,12 @@ function waitRows(attrs: TableCardAttrs): m.Children {
 
 function timerRows(attrs: TableCardAttrs): m.Children {
 	const { table, students } = attrs;
+	const totalMs = tableSpeakMs(table, getMainStatement());
 	const remaining =
 		table.speakerEndsAt === undefined
 			? null
-			: remainingMs(table.speakerEndsAt, Date.now(), getServerOffset(), {
-					totalMs: SPEAK_SECONDS * MS_PER_SECOND,
-				});
-	const line = timerLine(table, remaining, SPEAK_SECONDS * MS_PER_SECOND);
+			: remainingMs(table.speakerEndsAt, Date.now(), getServerOffset(), { totalMs });
+	const line = timerLine(table, remaining, totalMs);
 	// At Table talk an ended minute is not announced: the row says who the table waits for.
 	if (line.kind === 'none' || (attrs.tableTalk && line.kind === 'over'))
 		return waitRows(attrs) ?? m('p.table-card__timer.table-card__timer--none', '—');
@@ -186,6 +230,8 @@ export function noDeviceForm(mainId: string, n: number): m.Vnode {
 export const TableCard: m.Component<TableCardAttrs> = {
 	view({ attrs }) {
 		const { table, students, plenum, mainId } = attrs;
+		const mode = tableModeOf(attrs);
+		const propDone = proposalsDoneNow(table, mode);
 		const drag = consoleState.drag;
 		const dragging = drag.mode === 'pointer' || drag.mode === 'keyboard';
 		const isSource = dragging && drag.from === table.n;
@@ -219,6 +265,13 @@ export const TableCard: m.Component<TableCardAttrs> = {
 						t('console.table_n', { n: table.n }),
 					),
 					attrs.tableTalk ? m('span.table-card__turn', turnLine(table)) : null,
+					mode === 'proposals' && !attrs.done
+						? m(
+								'span.table-card__turn',
+								{ 'data-testid': 'table-proposals-turn' },
+								proposalsTurnLine(table),
+							)
+						: null,
 				]),
 				attrs.ratedLine // >>> allProposals
 					? m('p.table-card__now', { 'data-testid': 'table-rated' }, attrs.ratedLine)
@@ -227,7 +280,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 					? null
 					: m(
 							'p.table-card__now',
-							tableIsDone(table, tableModeOf(attrs), serverNow())
+							tableIsDone(table, mode, serverNow(), noneLeftNow(table), propDone)
 								? t('console.all_done')
 								: t(tableStepKey(table, plenum)),
 						),
@@ -281,24 +334,16 @@ export const TableCard: m.Component<TableCardAttrs> = {
 								`+ ${t('console.no_device')}`,
 							),
 				(() => {
-					const quick = attrs.done ? null : quickActionFor(table, tableModeOf(attrs), serverNow());
-					if (!quick) return null;
-					const label = quickLabel(quick);
+					const quicks = attrs.done
+						? []
+						: [quickActionFor(table, mode, serverNow()), anotherTurnFor(table, mode, propDone)];
+					const shown = quicks.filter((quick): quick is QuickAction => quick !== null);
+					if (shown.length === 0) return null;
 
-					return m('div.table-card__actions', [
-						m(
-							'button.btn.btn--tertiary.table-card__quick',
-							{
-								type: 'button',
-								'data-quick': quick.kind,
-								'aria-label': `${t('console.table_n', { n: table.n })}: ${label}`,
-								disabled:
-									consoleState.held || isBusy(`table:${table.tableId}:${quickActionName(quick)}`),
-								onclick: () => void quickRun(table, quick),
-							},
-							label,
-						),
-					]);
+					return m(
+						'div.table-card__actions',
+						shown.map((quick) => quickButton(table, quick)),
+					);
 				})(),
 			],
 		);

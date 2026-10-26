@@ -20,12 +20,13 @@ import {
 	classTableStep,
 } from '@/lib/classroom/api';
 import type { DropTarget } from '@/lib/classroom/dragReducer';
-import { Collections } from '@freedi/shared-types';
+import { Collections, proposalsTurnOf } from '@freedi/shared-types';
 import { db, doc, updateDoc } from '@/lib/firebase';
 import { getLessonStep, getLessonSteps, setLessonStep } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
-import { clearsTableClocksOnEnter } from '@/lib/classroom/consoleHelpers';
-import { getMainStatement, setQuestionSetting } from '@/lib/store';
+import { clearsTableClocksOnEnter, splitsTablesOnEnter } from '@/lib/classroom/consoleHelpers';
+import { classState } from '@/lib/classroom/classState';
+import { getMainStatement, setMainStatementSetting, setQuestionSetting } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { act, consoleState } from './consoleState';
 
@@ -56,9 +57,34 @@ const PLENUM_PATCH = {
 	statementSettings: { roundPhase: 'improve' },
 } as Partial<Statement>;
 
-export function goToStep(mainId: string, index: number): Promise<boolean> {
-	return guardedAct(`step:${index}`, t('console.act_step'), async () => {
+/** Tables already exist: the callable refuses a split without `replace` (a race with another tab). */
+function isAlreadySplit(error: unknown): boolean {
+	return (error as { code?: unknown } | null)?.code === 'functions/already-exists';
+}
+
+/**
+ * Seat the class when a step opens and it has no tables (IA 25.3). The step has
+ * moved already; a failure leaves the manual "חלוקה לשולחנות" button to retry
+ * and never undoes the move.
+ */
+async function splitOnEnter(mainId: string): Promise<void> {
+	try {
+		await classAssignTables({ mainId, replace: false });
+	} catch (error) {
+		if (isAlreadySplit(error)) return;
+		consoleState.failure = {
+			label: t('console.split'),
+			retry: () => void assignTables(mainId, false),
+		};
+		console.error('[Console] automatic split failed', { operation: 'goToStep', mainId }, error);
+	}
+}
+
+export async function goToStep(mainId: string, index: number): Promise<boolean> {
+	let splits = false;
+	const moved = await guardedAct(`step:${index}`, t('console.act_step'), async () => {
 		const from = getLessonStep().index;
+		splits = splitsTablesOnEnter(from, index, getLessonSteps(), classState.tables.length > 0);
 		await setLessonStep(mainId, index);
 		if (!clearsTableClocksOnEnter(from, index, getLessonSteps())) return;
 		// The step has moved; a failure here only leaves the old clock on the tables, so it must not undo the move.
@@ -72,6 +98,10 @@ export function goToStep(mainId: string, index: number): Promise<boolean> {
 			);
 		}
 	});
+	// After `act`, which clears the failure line on success: a failed split shows its own retry.
+	if (moved && splits) await splitOnEnter(mainId);
+
+	return moved;
 }
 
 /**
@@ -106,6 +136,40 @@ export function assignTables(mainId: string, replace: boolean): Promise<boolean>
 export function allTablesTo(mainId: string, step: TableStep): Promise<boolean> {
 	return guardedAct(`all:${step}`, t('console.all_tables_rate'), () =>
 		classAllTablesTo({ mainId, step }),
+	);
+}
+
+/**
+ * Proposals (IA 25.6): "another turn, all tables": the next turn at every table,
+ * speakers afresh. Sends the turn the console sees at each table, so a double
+ * tap or a second console advances each table once.
+ */
+export function allTablesNewTurn(mainId: string): Promise<boolean> {
+	const fromTurns = Object.fromEntries(
+		classState.tables.map((table) => [table.tableId, proposalsTurnOf(table)]),
+	);
+
+	return guardedAct('all:newTurn', t('console.another_turn_all'), () =>
+		classAllTablesTo({ mainId, step: 'talk', newTurn: true, fromTurns }),
+	);
+}
+
+/**
+ * One of the lesson's table-talk settings (IA 25), from the settings popover.
+ * A setting, not a move of the room, so it works while the lesson is held too.
+ */
+export type TableSettingsPatch =
+	| { allowOwnQuestions: boolean }
+	| { speakSeconds: number }
+	| { proposalsTurns: number };
+
+export function setTableSetting(patch: TableSettingsPatch): Promise<boolean> {
+	const field = Object.keys(patch)[0];
+
+	return act(`tableSetting:${field}`, t('console.tables_group'), () =>
+		setMainStatementSetting(consoleState.mainId, {
+			statementSettings: patch,
+		} as Partial<Statement>),
 	);
 }
 

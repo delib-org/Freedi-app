@@ -23,7 +23,9 @@ export type ClassroomErrorReason =
 	| 'last-candidate'
 	| 'reply-too-long'
 	| 'proposal-too-long'
-	| 'already-proposed';
+	| 'already-proposed'
+	| 'own-questions-off'
+	| 'turns-done';
 
 /**
  * A refusal the engine's pure logic raises. It carries the callable error code

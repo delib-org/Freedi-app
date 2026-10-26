@@ -37,6 +37,7 @@ import { QRShare } from '@/components/QRShare';
 import { WizColFooter } from '@/components/WizColFooter';
 import { readClassCode, studentJoinUrl } from './planHelpers';
 import {
+	allTablesNewTurn,
 	allTablesTo,
 	assignTables,
 	changeLessonStatus,
@@ -376,6 +377,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 					void assignTables(mid, replace);
 				},
 				onAllToRate: () => void allTablesTo(mid, 'rate'),
+				onAnotherTurnAll: () => void allTablesNewTurn(mid),
 				onPlenum: () => {
 					if (challenge) void startPlenum(challenge.statementId);
 				},

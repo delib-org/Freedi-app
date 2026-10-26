@@ -42,6 +42,8 @@ export interface SwitchBandAttrs {
 	onView: (view: ConsoleView) => void;
 	onSplit: (replace: boolean) => void;
 	onAllToRate: () => void;
+	/** Proposals (IA 25.6): the next turn at every table. */
+	onAnotherTurnAll: () => void;
 	onPlenum: () => void;
 	onFreeze: () => void;
 	/** The order of the proposals on every phone and the projector (Vote step). */
@@ -61,6 +63,7 @@ export interface SwitchBandAttrs {
 const TEST_IDS: Record<string, string> = {
 	assign: 'console-assign-tables',
 	'all:rate': 'console-all-rate',
+	'all:newTurn': 'console-all-new-turn',
 	plenum: 'console-plenum',
 	freeze: 'console-freeze-vote',
 	pauseVote: 'console-pause-vote',
@@ -132,6 +135,14 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 		actions.push(action(t('console.all_tables_rate'), 'all:rate', attrs.onAllToRate));
 	}
 	if (stepKey === 'proposals') {
+		actions.push(
+			action(
+				t('console.another_turn_all'),
+				'all:newTurn',
+				attrs.onAnotherTurnAll,
+				!attrs.hasTables,
+			),
+		);
 		actions.push(
 			attrs.plenum
 				? m(

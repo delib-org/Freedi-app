@@ -1,4 +1,4 @@
-import { SPEAK_SECONDS } from '@freedi/shared-types';
+import { DEFAULT_SPEAK_SECONDS } from '@freedi/shared-types';
 
 /**
  * Pure countdown maths (no Firebase import, so it tests in plain vitest).
@@ -20,7 +20,7 @@ function readSpeed(): number {
 export const CLOCK_SPEED = readSpeed();
 
 export interface RemainingOptions {
-	/** Length of the whole interval; only used when speed != 1. Default SPEAK_SECONDS. */
+	/** Length of the whole interval; only used when speed != 1. Default DEFAULT_SPEAK_SECONDS. */
 	totalMs?: number;
 	/** Display speed factor. Default CLOCK_SPEED. */
 	speed?: number;
@@ -41,7 +41,7 @@ export function remainingMs(
 	const speed = options.speed ?? CLOCK_SPEED;
 	const real = endsAt - (now + offset);
 	if (speed === 1) return Math.max(0, real);
-	const total = options.totalMs ?? SPEAK_SECONDS * MS_PER_SECOND;
+	const total = options.totalMs ?? DEFAULT_SPEAK_SECONDS * MS_PER_SECOND;
 	const elapsed = Math.min(total, Math.max(0, total - real));
 
 	return Math.max(0, total - elapsed * speed);

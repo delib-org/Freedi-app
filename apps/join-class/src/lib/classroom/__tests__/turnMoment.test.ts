@@ -70,3 +70,18 @@ describe('isRaceRefusal (the lost races the screen swallows)', () => {
 		expect(isRaceRefusal(new Error('network'))).toBe(false);
 	});
 });
+
+describe('maxTurns with own questions off', () => {
+	it('is capped by the number of teacher questions', () => {
+		expect(maxTurns(table(), 2)).toBe(2);
+		expect(maxTurns(table(), 9)).toBe(4);
+	});
+
+	it('is not capped while own questions are allowed (null cap)', () => {
+		expect(maxTurns(table(), null)).toBe(4);
+	});
+
+	it('never reads lower than the current turn', () => {
+		expect(maxTurns(table({ turn: 3 }), 1)).toBe(3);
+	});
+});

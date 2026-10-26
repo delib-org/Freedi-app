@@ -37,6 +37,7 @@ export function removeMember(table: ClassTable, uid: string, now: number): Class
 	if (next.speakerUid === uid) {
 		delete next.speakerUid;
 		delete next.speakerEndsAt;
+		delete next.speakerMs;
 	}
 
 	return next;

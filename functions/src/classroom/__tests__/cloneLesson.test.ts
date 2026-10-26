@@ -43,6 +43,9 @@ function seedSource(fake: FakeFirestore): void {
 			introVideos: [{ id: 'v1', title: 'Clip', url: 'https://youtu.be/x' }],
 			videoUrl: 'https://youtu.be/legacy',
 			sideNames: { a: 'Dana', b: 'Omer' },
+			allowOwnQuestions: false,
+			speakSeconds: 90,
+			proposalsTurns: 2,
 			ballot: { closedAt: 1 },
 			projectorVideoId: 'v1',
 		},
@@ -176,6 +179,9 @@ describe('buildLessonCopy (allowlist mapper)', () => {
 		expect(settings?.introVideos).toEqual([{ id: 'v1', title: 'Clip', url: 'https://youtu.be/x' }]);
 		expect(settings?.videoUrl).toBe('https://youtu.be/legacy');
 		expect(settings?.sideNames).toEqual({ a: 'Dana', b: 'Omer' });
+		expect(settings?.allowOwnQuestions).toBe(false);
+		expect(settings?.speakSeconds).toBe(90);
+		expect(settings?.proposalsTurns).toBe(2);
 		// the source's own showEvaluation:false is not copied; the defaults are
 		expect(settings?.showEvaluation).toBe(true);
 	});

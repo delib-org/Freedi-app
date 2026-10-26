@@ -2,6 +2,8 @@ import m from 'mithril';
 import { t } from '@/lib/i18n';
 import { listableItems } from '@/lib/classroom/c3Logic';
 import { setImproveHandler } from '@/lib/classroom/replyUi';
+import { proposalsTalkState } from '@/lib/classroom/proposalsTurn';
+import { serverNow } from '@/lib/classroom/serverClock';
 import { instructionFor } from '@/lib/classroom/turnMoment';
 import type { FlowCtx, FlowParts } from './flowTypes';
 import { rateBody } from './RateScreen';
@@ -66,6 +68,7 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 			// A lost race is not an error: the table doc already shows who has the floor.
 			onClaim: () => tableStep(ctx, { action: 'claimSpeaker' }),
 			onFinish: () => tableStep(ctx, { action: 'finishSpeaking' }),
+			onPass: () => tableStep(ctx, { action: 'passSpeaking' }),
 		});
 		action = talkFinishAction(self.busy, () => ctx.goto('write'));
 	} else if (step === 'write') {
@@ -107,8 +110,13 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 		[unrated > 0 ? m('span.flow__count', `${unrated} · `) : null, t('rate.class_writing')],
 	);
 
+	// Talking: "Turn n of max" (IA 25.6, everyone speaks once per turn); writing and rating name the step.
+	const talkState = step === 'talk' ? proposalsTalkState(table, uid, main, serverNow()) : null;
+
 	return {
-		headerLine: t('turn.header_proposals', { n: table.n, step: t(`turn.now_${step}`) }),
+		headerLine: talkState
+			? t('turn.header', { n: table.n, turn: talkState.turn, max: talkState.max })
+			: t('turn.header_proposals', { n: table.n, step: t(`turn.now_${step}`) }),
 		instruction: t(line.key, line.params),
 		body,
 		action,

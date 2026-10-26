@@ -42,6 +42,7 @@ const as = (actorUid: string, now = NOW): TransitionContext => ({
 	isAdmin: false,
 	now,
 	lessonStep: 'tableTalk',
+	speakMs: MINUTE,
 });
 const atProposals = (actorUid: string): TransitionContext => ({
 	...as(actorUid),
@@ -199,7 +200,7 @@ describe('claimTurn ("I want to start")', () => {
 });
 
 describe('claimSpeaker ("I want to answer")', () => {
-	it('gives the floor for SPEAK_SECONDS to the first tapper', () => {
+	it('gives the floor for the lesson speaking time to the first tapper', () => {
 		const next = run(talking(), { action: 'claimSpeaker' }, as('b'));
 		expect(next).toMatchObject({ speakerUid: 'b', speakerEndsAt: NOW + MINUTE, spokenUids: [] });
 	});
@@ -341,12 +342,14 @@ describe('passSpeaking at Proposals keeps its meaning', () => {
 		).toEqual(['b']);
 	});
 
-	it('refuses another tablemate (not-speaker) and a minute that is over', () => {
+	it('refuses another tablemate (not-speaker) and a speaker whose minute is over (they spoke)', () => {
 		expect(refusal(proposals(), { action: 'passSpeaking' }, atProposals('c')).reason).toBe(
 			'not-speaker',
 		);
 		const done = table({ step: 'talk', askerUid: 'a', speakerUid: 'b', speakerEndsAt: NOW - 1 });
-		expect(refusal(done, { action: 'passSpeaking' }, atProposals('b')).reason).toBe('minute-over');
+		expect(refusal(done, { action: 'passSpeaking' }, atProposals('b')).reason).toBe(
+			'already-answered',
+		);
 	});
 });
 
@@ -361,10 +364,13 @@ describe('claimSpeaker at Proposals (a fresh minute for every speaker)', () => {
 		expect(next.speakerEndsAt).toBe(NOW + MINUTE);
 	});
 
-	it('lets the same tablemate speak again and takes over a minute that is over', () => {
-		const stale = open({ speakerUid: 'b', speakerEndsAt: NOW - 1 });
-		const next = run(stale, { action: 'claimSpeaker' }, atProposals('b'));
-		expect(next).toMatchObject({ speakerUid: 'b', speakerEndsAt: NOW + MINUTE });
+	it('refuses the same tablemate twice in a turn (IA 25.6); another takes over a minute that is over', () => {
+		const stale = open({ spokenUids: [], speakerUid: 'b', speakerEndsAt: NOW - 1 });
+		expect(refusal(stale, { action: 'claimSpeaker' }, atProposals('b')).reason).toBe(
+			'already-answered',
+		);
+		const next = run(stale, { action: 'claimSpeaker' }, atProposals('c'));
+		expect(next).toMatchObject({ speakerUid: 'c', speakerEndsAt: NOW + MINUTE, spokenUids: ['b'] });
 	});
 
 	it('refuses while someone else holds the floor, and a stranger', () => {

@@ -2,6 +2,7 @@ import m from 'mithril';
 import {
 	choosing,
 	notAskedUids,
+	proposalsTurnOf,
 	tableDone,
 	type ClassTable,
 	type ClassTableAction,
@@ -10,6 +11,7 @@ import { t } from '@/lib/i18n';
 import { hasAnswered } from '@/lib/classroom/tableTalkState';
 import {
 	QUICK_KEYS,
+	anotherTurnFor,
 	minuteRunning,
 	quickActionFor,
 	type QuickKind,
@@ -17,7 +19,7 @@ import {
 } from '@/lib/classroom/tableTurnConsole';
 import { tableAction } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
-import { quickActionName } from './TableCard';
+import { proposalsDoneNow, quickActionName } from './TableCard';
 
 /**
  * The teacher's per-member turn fallbacks and the step verbs of the table sheet
@@ -164,12 +166,18 @@ export function noDeviceButtons(
 /**
  * The sheet's row of step verbs. Table talk has one: "start turn n" (the last
  * resort: it opens the next pick, the asker counts as asked); it is off when
- * nobody is left to ask. Proposals walk talk, write, rate; the plenum rates.
+ * nobody is left to ask. Proposals walk talk, write, rate and give "another
+ * turn" (IA 25.6); the plenum rates.
  */
 export function stepButtons(table: ClassTable, mode: TableMode, now: number): m.Children {
 	const kinds: QuickKind[] =
-		mode === 'plenum' ? ['rate'] : mode === 'tableTalk' ? ['turn'] : ['talk', 'write', 'rate'];
+		mode === 'plenum'
+			? ['rate']
+			: mode === 'tableTalk'
+				? ['turn']
+				: ['talk', 'write', 'rate', 'anotherTurn'];
 	const own = quickActionFor(table, mode, now);
+	const another = anotherTurnFor(table, mode, proposalsDoneNow(table, mode));
 
 	return kinds.map((kind) => {
 		const quick = kind === 'turn' ? { kind, n: table.turn + 1 } : { kind };
@@ -182,17 +190,27 @@ export function stepButtons(table: ClassTable, mode: TableMode, now: number): m.
 			askerUid: table.step === 'pick' ? null : table.askerUid,
 		});
 		const noTurnLeft = kind === 'turn' && eligible.length === 0;
+		// "Another turn" only while the table talks (the server refuses otherwise); it names the turn seen.
+		const notTalking = kind === 'anotherTurn' && table.step !== 'talk';
 		const name = quickActionName(quick);
+		const action: ClassTableAction =
+			kind === 'anotherTurn'
+				? { action: 'nextProposalsTurn', fromTurn: proposalsTurnOf(table) }
+				: { action: name };
 
 		return m(
 			'button.btn.btn--secondary',
 			{
 				type: 'button',
 				'data-quick': kind,
-				'data-next': own?.kind === kind ? 'true' : undefined,
+				'data-next': own?.kind === kind || another?.kind === kind ? 'true' : undefined,
 				disabled:
-					consoleState.held || sameStep || noTurnLeft || isBusy(`table:${table.tableId}:${name}`),
-				onclick: () => void tableAction(table.tableId, { action: name }),
+					consoleState.held ||
+					sameStep ||
+					noTurnLeft ||
+					notTalking ||
+					isBusy(`table:${table.tableId}:${name}`),
+				onclick: () => void tableAction(table.tableId, action),
 			},
 			t(QUICK_KEYS[kind], { n: quick.n ?? 0 }),
 		);

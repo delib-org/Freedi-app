@@ -11,7 +11,7 @@ import { hasAnswered, passedAnswer } from './tableTalkState';
 /** Which family of steps the board is showing. */
 export type TableMode = 'tableTalk' | 'proposals' | 'plenum';
 
-export type QuickKind = 'talk' | 'write' | 'rate' | 'turn' | 'finish';
+export type QuickKind = 'talk' | 'write' | 'rate' | 'turn' | 'finish' | 'anotherTurn';
 
 export interface QuickAction {
 	kind: QuickKind;
@@ -26,6 +26,7 @@ export const QUICK_KEYS: Record<QuickKind, string> = {
 	rate: 'console.quick_rate',
 	turn: 'console.quick_turn',
 	finish: 'console.finish_minute',
+	anotherTurn: 'console.another_turn',
 };
 
 /** A minute is running (somebody holds the floor). */
@@ -34,9 +35,9 @@ export function minuteRunning(table: ClassTable, now: number): boolean {
 }
 
 /**
- * The ONE quick button of a table card. Table talk: "end the minute" while one
- * runs, nothing else (students start the next turn themselves). Proposals walk
- * talk -> write -> rate; the plenum only rates.
+ * The step-forward quick button of a table card. Table talk: "end the minute"
+ * while one runs, nothing else (students start the next turn themselves).
+ * Proposals walk talk -> write -> rate; the plenum only rates.
  */
 export function quickActionFor(
 	table: ClassTable,
@@ -53,6 +54,27 @@ export function quickActionFor(
 	}
 
 	return minuteRunning(table, now) ? { kind: 'finish' } : null;
+}
+
+/** Proposals: the table talks and every turn is spoken (`proposalsDone`); a table that moved on keeps its turn. */
+export function proposalsTalkDone(
+	table: Pick<ClassTable, 'step'>,
+	mode: TableMode,
+	proposalsDone: boolean,
+): boolean {
+	return mode === 'proposals' && table.step === 'talk' && proposalsDone;
+}
+
+/**
+ * "Another turn" (IA 25.6), beside the step-forward button: only on a talking
+ * table whose every turn is spoken. Sends the turn the teacher saw.
+ */
+export function anotherTurnFor(
+	table: Pick<ClassTable, 'step'>,
+	mode: TableMode,
+	proposalsDone: boolean,
+): QuickAction | null {
+	return proposalsTalkDone(table, mode, proposalsDone) ? { kind: 'anotherTurn' } : null;
 }
 
 export interface StatusLine {
@@ -94,16 +116,21 @@ export function notAnsweredUids(table: ClassTable, now: number): string[] {
  * to start, who has not answered, or "asked n, passed p". null while a minute
  * runs (the timer row says it) and outside Table talk.
  */
-export function statusLine(table: ClassTable, mode: TableMode, now: number): StatusLine | null {
+export function statusLine(
+	table: ClassTable,
+	mode: TableMode,
+	now: number,
+	noneLeft = false,
+): StatusLine | null {
 	if (mode !== 'tableTalk') return null;
-	if (tableDone(table, now)) {
+	if (tableDone(table, now, noneLeft)) {
 		const { a, p } = askedPassedCounts(table);
 
 		return { key: 'console.asked_passed', params: { a, p } };
 	}
 	if (minuteRunning(table, now)) return null;
 	const elapsedMs = elapsedSinceChange(table, now);
-	if (choosing(table, now) || table.step === 'write' || table.step === 'rate') {
+	if (choosing(table, now, noneLeft) || table.step === 'write' || table.step === 'rate') {
 		return { key: 'console.waiting_start', elapsedMs };
 	}
 
@@ -137,7 +164,19 @@ export function answerMark(table: ClassTable, uid: string, now: number): AnswerM
 	return hasAnswered(table, uid, now) ? '✓' : '';
 }
 
-/** Every device member asked or passed and the last talk is over: the card's "now" says so. */
-export function tableIsDone(table: ClassTable, mode: TableMode, now: number): boolean {
-	return mode === 'tableTalk' && tableDone(table, now);
+/**
+ * The card's "now" says done: at Table talk every device member asked or passed
+ * and the last talk is over; at Proposals the table talks and every turn is
+ * spoken (`proposalsDone`).
+ */
+export function tableIsDone(
+	table: ClassTable,
+	mode: TableMode,
+	now: number,
+	noneLeft = false,
+	proposalsDone = false,
+): boolean {
+	if (mode === 'proposals') return proposalsTalkDone(table, mode, proposalsDone);
+
+	return mode === 'tableTalk' && tableDone(table, now, noneLeft);
 }

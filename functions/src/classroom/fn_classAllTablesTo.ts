@@ -1,13 +1,19 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import { FieldValue } from 'firebase-admin/firestore';
 import type { Firestore } from 'firebase-admin/firestore';
-import { CLASS_TABLES_COLLECTION, TableStepSchema, functionConfig } from '@freedi/shared-types';
+import {
+	CLASS_TABLES_COLLECTION,
+	TableStepSchema,
+	functionConfig,
+	proposalsTurnOf,
+} from '@freedi/shared-types';
 import type {
 	ClassAllTablesToRequest,
 	ClassAllTablesToResponse,
+	ClassTable,
 	TableStep,
 } from '@freedi/shared-types';
-import { safeParse } from 'valibot';
+import { number, record, safeParse, string } from 'valibot';
 import { db } from '../db';
 import { assertWorkspaceAdmin, requireId, requireUid } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
@@ -18,8 +24,31 @@ import { assertLessonRunning } from './lessonStatusGuard';
  * ("כל השולחנות: מדרגים", or talk when the Proposals step opens). Only the
  * step moves; the turn, the asker and the question stay. The speaker is
  * always cleared (no stale countdown keeps showing), and a move to 'talk'
- * starts the round of speakers afresh.
+ * starts the speakers afresh: at the first turn of Proposals (`proposalsTurn =
+ * 1`), or with `newTurn` at the next turn of every table (IA 25.6).
  */
+
+const FromTurnsSchema = record(string(), number());
+
+/**
+ * The fields of a table that start speaking afresh at `talk`, or null when the
+ * table is left alone: a new turn is given only to a table still at the turn
+ * the console saw (`fromTurns`), so a repeated tap advances it once.
+ */
+function freshTalkPatch(
+	table: ClassTable,
+	newTurn: boolean,
+	fromTurns: Record<string, number> | undefined,
+): Record<string, unknown> | null {
+	const seen = fromTurns?.[table.tableId];
+	if (newTurn && seen !== undefined && seen !== proposalsTurnOf(table)) return null;
+
+	return {
+		spokenUids: [],
+		passedSpeakingUids: FieldValue.delete(),
+		proposalsTurn: newTurn ? proposalsTurnOf(table) + 1 : 1,
+	};
+}
 
 export async function allTablesTo(
 	firestore: Firestore,
@@ -31,6 +60,18 @@ export async function allTablesTo(
 	if (!parsed.success)
 		throw new ClassroomError('invalid-argument', 'step must be pick, talk, write or rate');
 	const step: TableStep = parsed.output;
+	const newTurn = req?.newTurn === true;
+	if (newTurn && step !== 'talk') {
+		throw new ClassroomError('invalid-argument', 'A new turn is a move to talk');
+	}
+	let fromTurns: Record<string, number> | undefined;
+	if (req?.fromTurns !== undefined) {
+		const turns = safeParse(FromTurnsSchema, req.fromTurns);
+		if (!turns.success) {
+			throw new ClassroomError('invalid-argument', 'fromTurns must map table ids to turns');
+		}
+		fromTurns = turns.output;
+	}
 	assertLessonRunning(await assertWorkspaceAdmin(firestore, mainId, actorUid));
 
 	const snap = await firestore
@@ -40,20 +81,27 @@ export async function allTablesTo(
 	if (snap.empty) return { updated: 0 };
 	const now = Date.now();
 	const batch = firestore.batch();
+	let updated = 0;
 	snap.docs.forEach((d) => {
 		const patch: Record<string, unknown> = {
 			step,
 			updatedAt: now,
 			speakerUid: FieldValue.delete(),
 			speakerEndsAt: FieldValue.delete(),
+			speakerMs: FieldValue.delete(),
 		};
-		if (step === 'talk') patch.spokenUids = [];
+		if (step === 'talk') {
+			const fresh = freshTalkPatch(d.data() as ClassTable, newTurn, fromTurns);
+			if (!fresh) return;
+			Object.assign(patch, fresh);
+		}
+		updated += 1;
 		batch.update(d.ref, patch);
 	});
 	// One batch: a lesson has ~10 tables, far below the 500-write limit.
-	await batch.commit();
+	if (updated > 0) await batch.commit();
 
-	return { updated: snap.size };
+	return { updated };
 }
 
 export const classAllTablesTo = onCall(
@@ -69,7 +117,7 @@ export const classAllTablesTo = onCall(
 				operation: 'classroom.classAllTablesTo',
 				userId: uid,
 				statementId: request.data?.mainId,
-				metadata: { step: request.data?.step },
+				metadata: { step: request.data?.step, newTurn: request.data?.newTurn },
 			});
 		}
 	},

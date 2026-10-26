@@ -25,8 +25,20 @@ import {
 /** Collection holding one doc per table: `classTables/{mainId}--{n}`. */
 export const CLASS_TABLES_COLLECTION = 'classTables';
 
-/** Seconds a speaker holds the floor; the server writes `speakerEndsAt = now + this`. */
-export const SPEAK_SECONDS = 60;
+/**
+ * Seconds a speaker holds the floor when the lesson sets nothing (IA 25.2):
+ * the server writes `speakerEndsAt = now + speakMs` and `speakerMs = speakMs`.
+ */
+export const DEFAULT_SPEAK_SECONDS = 120;
+
+/** The speaking times the teacher can choose from (plan screen and console). */
+export const SPEAK_SECONDS_CHOICES = [30, 60, 90, 120, 180, 240, 300] as const;
+
+/** Turns at Proposals when the lesson sets nothing (IA 25.6): everyone speaks once. */
+export const DEFAULT_PROPOSALS_TURNS = 1;
+
+/** The turn counts the teacher can choose from; "another turn" can go past the last. */
+export const PROPOSALS_TURNS_CHOICES = [1, 2, 3] as const;
 
 /** Default gate: a proposal must reach this consensus (`votingSettings.threshold`). */
 export const DEFAULT_GATE = 0.6;
@@ -91,6 +103,18 @@ export const ClassTableSchema = object({
 	speakerUid: optional(string()),
 	/** Server-clock epoch ms at which the current speaker's minute ends. */
 	speakerEndsAt: optional(number()),
+	/**
+	 * Length (ms) of the speaking time now running, written with `speakerEndsAt`
+	 * so every device draws the countdown from it and a live change of the
+	 * lesson setting never distorts a running turn. Server-written.
+	 */
+	speakerMs: optional(number()),
+	/**
+	 * Proposals (IA 25.6): the turn number, 1-based; absent = 1. Kept apart from
+	 * `turn` so a back move to Table talk keeps that step's state. At Proposals
+	 * `spokenUids` holds who spoke or passed in this turn. Server-written.
+	 */
+	proposalsTurn: optional(number()),
 	spokenUids: array(string()),
 	/** Guiding questions already asked at this table. */
 	usedQuestionIds: array(string()),

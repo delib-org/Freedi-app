@@ -60,7 +60,7 @@ export type ClassTableAction =
 	 * claimer saw (required). First write wins.
 	 */
 	| { action: 'claimTurn'; fromTurn: number; questionId: string }
-	/** Table talk: "I want to answer". Takes the floor for SPEAK_SECONDS when nobody holds it. */
+	/** Table talk: "I want to answer". Takes the floor for the lesson's speaking time when nobody holds it. */
 	| { action: 'claimSpeaker' }
 	/** Table talk: end one's own minute early (the speaker, or an admin). */
 	| { action: 'finishSpeaking' }
@@ -69,9 +69,17 @@ export type ClassTableAction =
 	| { action: 'passAsking'; uid?: string }
 	/**
 	 * Pass answering. Table talk: a member for themselves before speaking, or an admin naming `uid`
-	 * (also ends a running minute as passed). Proposals: the speaker, the asker or an admin end the running minute.
+	 * (also ends a running minute as passed). Proposals: the speaker, the asker or an admin end the
+	 * running minute; a seated member who has not spoken this turn passes their turn (IA 25.6).
 	 */
-	| { action: 'passSpeaking'; uid?: string };
+	| { action: 'passSpeaking'; uid?: string }
+	/**
+	 * Proposals (IA 25.6, admin only), while the table talks: open the next turn now:
+	 * `proposalsTurn + 1`, `spokenUids = []`, the speaker cleared. The table's maximum grows
+	 * with it, so a done table re-opens. `fromTurn` is the turn the teacher saw: a tap that
+	 * arrives after the table already moved on is a no-op (a double tap advances once).
+	 */
+	| { action: 'nextProposalsTurn'; fromTurn?: number };
 
 export type ClassTableStepRequest = { tableId: string } & ClassTableAction;
 export interface ClassTableStepResponse {
@@ -79,10 +87,19 @@ export interface ClassTableStepResponse {
 	turn: number;
 }
 
-/** `classAllTablesTo` (admin). */
+/**
+ * `classAllTablesTo` (admin). A move to `talk` starts the speakers afresh: at
+ * Proposals it sets `proposalsTurn = 1` (entering the step), or with `newTurn`
+ * opens the next turn at every table ("another turn, all tables", IA 25.6).
+ * `fromTurns` (tableId -> the turn the console saw) makes `newTurn` idempotent:
+ * a table whose turn moved on since is skipped, so a double tap or two consoles
+ * advance each table once. `updated` counts the tables advanced.
+ */
 export interface ClassAllTablesToRequest {
 	mainId: string;
 	step: TableStep;
+	newTurn?: boolean;
+	fromTurns?: Record<string, number>;
 }
 export interface ClassAllTablesToResponse {
 	updated: number;
