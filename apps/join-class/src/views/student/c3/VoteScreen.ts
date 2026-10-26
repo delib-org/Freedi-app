@@ -6,7 +6,7 @@ import { t } from '@/lib/i18n';
 import { getChallengeQuestion } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
 import { castVote } from '@/lib/classroom/studentWrites';
-import { listenMyVote } from '@/lib/classroom/c3Data';
+import { currentUid, listenMyVote } from '@/lib/classroom/c3Data';
 import { VoteCaster } from '@/lib/classroom/voteCaster';
 import {
 	consensusOf,
@@ -21,6 +21,7 @@ import type { Unsubscribe } from '@/lib/firebase';
 import { ErrorLine } from './ErrorLine';
 import { FlowFeed } from './FlowFeed';
 import { VoteList } from './VoteList';
+import { ReplyEntry } from '../replies/ReplyEntry';
 
 const INSTRUCTION_KEY = {
 	waiting: 'voting.waiting',
@@ -92,6 +93,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 		const { main } = vnode.attrs;
 		const challenge = getChallengeQuestion(getSubQuestions());
 		const ballot = challenge?.statementSettings?.ballot;
+		const uid = currentUid();
 		self.feed.sync(main, main.statementId, null, [], false);
 		const challengeId = challenge?.statementId ?? null;
 		if (challengeId && challengeId !== self.voteFor) {
@@ -183,6 +185,9 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 									onSelect: (id: string) => {
 										if (open) caster.pick(id);
 									},
+									// IA 22: replies on each card, a separate control that never casts a vote.
+									beside: (option: Statement) =>
+										m(ReplyEntry, { proposal: option, own: option.creatorId === uid, uid }),
 								}),
 						m(ErrorLine, {
 							message: caster.failed && open ? t('voting.failed') : null,

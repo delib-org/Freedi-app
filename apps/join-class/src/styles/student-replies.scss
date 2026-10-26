@@ -48,6 +48,17 @@
   }
 }
 
+// A ballot card with its replies entry beside it (the entry never casts a vote).
+.vote-list__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.vote-list__beside {
+  align-self: flex-start;
+}
+
 // ---- the sheet ---------------------------------------------------------------
 
 .replies {

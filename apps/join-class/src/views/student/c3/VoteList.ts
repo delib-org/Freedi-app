@@ -17,6 +17,11 @@ export interface VoteListAttrs {
 	/** Closed ballot: the decided proposal, marked. */
 	winnerId?: string | null;
 	onSelect: (id: string) => void;
+	/**
+	 * A control drawn beside each card, outside its pick target (IA 22: the
+	 * replies entry). The card and the control then share one keyed row.
+	 */
+	beside?: (option: Statement) => m.Children;
 }
 
 function resultLine(result: VoteResult): string {
@@ -49,7 +54,7 @@ function resultView(result: VoteResult | undefined): m.Children {
 const before = new WeakMap<Element, Positions>();
 const glideEnd = new WeakMap<Element, number>();
 
-function gliding(list: Element | null): boolean {
+function gliding(list: Element | null | undefined): boolean {
 	return !!list && Date.now() < (glideEnd.get(list) ?? 0);
 }
 
@@ -83,17 +88,18 @@ export const VoteList: m.Component<VoteListAttrs> = {
 							role: 'radio',
 							'aria-checked': on ? 'true' : 'false',
 							onclick: (e: Event) => {
-								if (gliding((e.currentTarget as Element).parentElement)) return;
+								if (gliding((e.currentTarget as Element).closest('.vote-list'))) return;
 								attrs.onSelect(option.statementId);
 							},
 						};
 
-				return m(
+				const besideControl = attrs.beside?.(option);
+				const card = m(
 					locked ? 'div.vote-list__item' : 'button.vote-list__item',
 					{
-						key: option.statementId,
+						key: besideControl ? undefined : option.statementId,
 						'data-testid': 'vote-option',
-						'data-key': option.statementId,
+						'data-key': besideControl ? undefined : option.statementId,
 						type: locked ? undefined : 'button',
 						class: [on ? 'vote-list__item--on' : '', won ? 'vote-list__item--winner' : '']
 							.filter(Boolean)
@@ -108,6 +114,13 @@ export const VoteList: m.Component<VoteListAttrs> = {
 							results ? resultView(results[option.statementId]) : null,
 						]),
 					],
+				);
+				if (!besideControl) return card;
+
+				return m(
+					'div.vote-list__row',
+					{ key: option.statementId, 'data-key': option.statementId },
+					[card, m('div.vote-list__beside', besideControl)],
 				);
 			}),
 		);
