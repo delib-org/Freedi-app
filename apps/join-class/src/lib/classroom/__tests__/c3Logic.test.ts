@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ClassTable, Statement, SupportBySide } from '@freedi/shared-types';
 import {
+	claimLabelKey,
 	countdownView,
 	idleCountdownText,
 	isOwnItem,
@@ -224,5 +225,15 @@ describe('support bars', () => {
 		expect(bars.map((b) => b.percent)).toEqual([100, 50, 0]);
 		expect(bars[0]).toMatchObject({ n: 4, m: 5 });
 		expect(bars[2]).toMatchObject({ n: 0, m: 3 });
+	});
+});
+
+describe('claimLabelKey', () => {
+	it('keeps I want to answer at Table talk', () => {
+		expect(claimLabelKey('tableTalk')).toBe('turn.answer');
+	});
+
+	it('says I want to propose a solution in Proposals', () => {
+		expect(claimLabelKey('proposals')).toBe('turn.propose');
 	});
 });

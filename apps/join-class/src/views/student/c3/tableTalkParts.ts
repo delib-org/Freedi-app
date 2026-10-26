@@ -8,6 +8,7 @@ import { questionTextFrom } from '@/lib/classroom/questionLookup';
 import { getFetchedQuestionTexts, requestQuestionText } from '@/lib/classroom/questionText';
 import { SPEAK_MS, Countdown, msLeft } from './Countdown';
 import { isRaceRefusal, maxTurns, refusalReason } from '@/lib/classroom/turnMoment';
+import { claimLabelKey } from '@/lib/classroom/c3Logic';
 import { passedAnswer, tableTalkState, type TableTalkState } from '@/lib/classroom/tableTalkState';
 import { FlowError, type FlowCtx, type FlowParts } from './flowTypes';
 import { QuestionPick, type PickQuestion } from './QuestionPick';
@@ -194,7 +195,7 @@ function answerActions(ctx: FlowCtx): m.Children {
 
 	return m(TurnActions, {
 		primary: {
-			label: t(self.busy ? 'turn.saving' : 'turn.answer'),
+			label: t(self.busy ? 'turn.saving' : claimLabelKey(ctx.kind)),
 			testId: 'table-answer',
 			disabled: self.busy,
 			onclick: () =>

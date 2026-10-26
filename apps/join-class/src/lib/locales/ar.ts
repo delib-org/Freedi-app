@@ -200,6 +200,7 @@ const ar: Record<string, string> = {
 	'turn.others_first': 'دعوا الآخرين يجيبون أولاً',
 	'turn.who_answers': 'من يجيب الآن؟',
 	'turn.answer': 'أريد أن أجيب',
+	'turn.propose': 'أريد أن أقترح حلاً',
 	'turn.pass_answer': 'أريد أن أتنازل',
 	'turn.answer_mine': 'دقيقتكم',
 	'turn.finish': 'انتهيت',

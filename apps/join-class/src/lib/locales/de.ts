@@ -202,6 +202,7 @@ const de: Record<string, string> = {
 	'turn.others_first': 'Lasst zuerst die anderen antworten',
 	'turn.who_answers': 'Wer antwortet als Nächstes?',
 	'turn.answer': 'Ich möchte antworten',
+	'turn.propose': 'Ich möchte eine Lösung vorschlagen',
 	'turn.pass_answer': 'Ich möchte verzichten',
 	'turn.answer_mine': 'Eure Minute',
 	'turn.finish': 'Fertig',

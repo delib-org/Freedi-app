@@ -204,6 +204,7 @@ const en: Record<string, string> = {
 	'turn.others_first': 'Let others answer first',
 	'turn.who_answers': 'Who answers next?',
 	'turn.answer': 'I want to answer',
+	'turn.propose': 'I want to propose a solution',
 	'turn.pass_answer': 'I want to pass',
 	'turn.answer_mine': 'Your minute',
 	'turn.finish': 'Finish',
