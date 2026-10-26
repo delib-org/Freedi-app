@@ -12,11 +12,16 @@
 // role at every step: NN-<step>-<teacher|projector|A|B>.png. Students are
 // 375x812 phones; the teacher is a laptop; the projector is 1920x1080.
 //
+// E2E_LOOK=solid switches the lesson to the solid look from the console's
+// settings popover right after the console opens (and checks that the projector
+// and the phones follow it); default is the game look. E2E_HTML=1 also saves
+// each role's DOM next to its screenshot (NN-<step>-<role>.html).
+//
 // Walk: join by code, opening, side, tables, table talk, proposals (talk, write,
 // rate, live writing), vote (open, vote, pause, resume, live bars, sort, close),
 // the projector gate, summary; then go back, reset the vote, hide a proposal,
 // reset turns. Every state is checked on all the screens that show it.
-import { mkdirSync, rmSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from '@playwright/test';
 import { getApps, initializeApp } from 'firebase-admin/app';
@@ -31,6 +36,8 @@ const PHONE = { width: 375, height: 812 };
 const LAPTOP = { width: 1280, height: 800 };
 const PROJECTOR = { width: 1920, height: 1080 };
 const SHOTS = process.env.E2E_SHOTS ?? join(process.cwd(), 'test-results', 'three-browser');
+const LOOK = process.env.E2E_LOOK === 'solid' ? 'solid' : 'game';
+const SAVE_HTML = process.env.E2E_HTML === '1';
 const CHALLENGE_TEXT = 'Should the school ban phones during lessons?';
 const TABLE_QUESTIONS = ['What do you gain?', 'What does it cost someone?', 'Who is not heard?'];
 const SIDE_A = 10;
@@ -90,6 +97,10 @@ async function snapAll(step) {
 		await role.page
 			.screenshot({ path: join(SHOTS, `${n}-${step}-${role.name}.png`), fullPage: role.name !== 'projector' })
 			.catch(() => undefined);
+		if (SAVE_HTML) {
+			const html = await role.page.content().catch(() => '');
+			writeFileSync(join(SHOTS, `${n}-${step}-${role.name}.html`), html);
+		}
 	}
 }
 
@@ -226,6 +237,20 @@ async function phasePlan() {
 	await snapAll('plan');
 }
 
+/** The teacher picks the solid look in the settings popover; every screen must follow. */
+async function chooseSolidLook() {
+	await teacher.page.locator('summary.console__settings-toggle').click();
+	await (await byId(teacher.page, 'lesson-look-solid')).check();
+	await teacher.page.locator('summary.console__settings-toggle').click();
+	for (const role of [projector, ...phones]) {
+		const look = await eventually(
+			() => role.page.evaluate(() => document.documentElement.getAttribute('data-look')),
+			(value) => value === 'solid',
+		);
+		check(`look: ${role.name} follows the solid look`, look === 'solid', String(look));
+	}
+}
+
 // ---- 2. the teacher opens the console and the projector; students join by code ----
 async function phaseJoin() {
 	await teacher.page.goto(`${BASE}/t/${mid}`, { waitUntil: 'domcontentloaded' });
@@ -239,6 +264,7 @@ async function phaseJoin() {
 		await phone.page.waitForURL((u) => u.pathname === `/m/${mid}`, { timeout: TIMEOUT });
 	}
 	check('join: both students landed on the lesson', true);
+	if (LOOK === 'solid') await chooseSolidLook();
 	for (const [phone, name] of [[A, 'Alice'], [B, 'Bob']]) {
 		await phone.page.locator('input').first().fill(name);
 		await phone.page.locator('footer.frame__action button, button.btn--primary').first().click();

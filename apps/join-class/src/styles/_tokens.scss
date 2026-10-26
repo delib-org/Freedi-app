@@ -245,6 +245,33 @@
   --emoji-neutral: #ffd324;
   --emoji-thinking: #f29173;
   --emoji-sad: #f86d6f;
+
+  // ---- GAME LAYER (the default "game" look; see _game.scss) ----
+  // Read only by _game.scss, whose rules are all scoped to
+  // :root:not([data-look="solid"]), so the solid look never sees them.
+  // An edge is the pressed-key bottom of a button or card: a solid shadow one
+  // or two shades darker than the fill.
+  --edge-size: 5px;
+  --edge-size-sm: 3px;
+  --edge-size-lg: 10px;           // projector
+  --edge-terra: #6e2814;          // under --terra-600
+  --edge-teal: var(--teal-600);   // under a selected teal-50 card
+  --edge-teal-strong: var(--teal-700); // under a --teal-600 fill
+  --edge-indigo: var(--indigo-700);
+  --edge-side-a: var(--terra-700); // under the side-A mark (--terra-500)
+  --edge-ink: var(--ink-muted);
+  --edge-face: rgba(28, 25, 23, 0.26); // under a rating face (its fill is inline)
+  --card-line: #e3d6c0;           // card border + edge (cards are not controls)
+  --edge-control: var(--border-medium); // a control's border + edge, 3.2:1 ✓ AA non-text
+  --edge-deep: #c9b99c;           // under --paper-deep tiles
+  --indigo-300: #9c93d6;          // chip border of side B
+  --teal-ink: var(--teal-700);    // teal text on paper / teal-50, ~10:1 ✓ AAA
+  // Win stamps only: one-shot moments on done states. Ink on sun ~10:1 ✓ AAA.
+  --sun: #f6b73c;
+  --sun-edge: #b7791f;
+  --sun-soft: #fff4db;            // ink on it ~17:1 ✓ AAA
+  --dur-stamp: 600ms;
+  --qr-quiet: #ffffff;            // a QR's quiet zone is white on any theme
 }
 
 // =============================================================================
@@ -337,6 +364,22 @@
     --shadow-stamp: 3px 3px 0 var(--ink-faint);
 
     --focus-ring-color: var(--terra-500);
+
+    // Game layer: an edge darker than the page would vanish, so card edges use
+    // the 3:1 border step and fills sit on their own deeper shade.
+    --edge-terra: #7a3a20;
+    --edge-teal: var(--teal-700);
+    --edge-teal-strong: #0f4a42;
+    --edge-indigo: #3f357f;
+    --edge-side-a: #8a4529;
+    --edge-ink: #8a7f72;
+    --edge-face: rgba(0, 0, 0, 0.55);
+    --card-line: var(--border-medium);
+    --edge-control: var(--border-medium);
+    --edge-deep: var(--border-medium);
+    --indigo-300: #6e63c4;
+    --teal-ink: var(--teal-500);  // ~5.2:1 on the page and the teal tint ✓ AA
+    --sun-soft: rgba(246, 183, 60, 0.16); // paper text on it ~11:1 ✓ AAA
   }
 }
 
@@ -580,6 +623,9 @@
 // =============================================================================
 @media (forced-colors: active) {
   :root {
+    --edge-size: 0px;
+    --edge-size-sm: 0px;
+    --edge-size-lg: 0px;
     --focus-ring-color: Highlight;
     --border-medium: CanvasText;
     --border-strong: CanvasText;
@@ -660,6 +706,14 @@
   --shadow-md: 0 0 0 2px #000;
   --shadow-lg: 0 0 0 2px #000;
   --shadow-stamp: 3px 3px 0 #000;
+
+  // Game layer: no edges in high contrast; borders carry the shape in black.
+  --edge-size: 0px;
+  --edge-size-sm: 0px;
+  --edge-size-lg: 0px;
+  --card-line: #000000;
+  --edge-control: #000000;
+  --sun-soft: #ffffff;
 }
 
 // Manual toggle (JS-driven via AccessibilityWidget / a11yStore)

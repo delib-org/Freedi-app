@@ -1,0 +1,143 @@
+// =============================================================================
+// Game look — the projector (route /t/:mid/screen), "a scoreboard": bigger
+// type, solid number tiles, cards with an edge and a dark footer bar. Imported
+// by the lazy projector view next to projector.scss. Scoped by $game: the solid
+// look keeps the projector exactly as it was. See _game.scss.
+// =============================================================================
+
+@use 'game-scope' as *;
+
+#{$game} .projector-instruction {
+  font-size: 88px;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+#{$game} .projector-ask {
+  font-size: 80px;
+  font-weight: 800;
+}
+
+#{$game} .projector-empty,
+#{$game} .projector-eyebrow {
+  font-size: 44px;
+  font-weight: 700;
+}
+
+#{$game} .projector-code,
+#{$game} .projector-count {
+  font-weight: 800;
+}
+
+// ---- the bottom band becomes a dark footer bar --------------------------------------
+#{$game} .projector-band {
+  min-height: 96px;
+  padding-inline: 64px;
+  border-block-start: 0;
+  background: var(--ink);
+  color: var(--paper); // ~16:1 ✓ AAA (both flip together in dark mode)
+}
+
+#{$game} .projector-band__step {
+  font-size: 36px;
+  font-weight: 800;
+}
+
+#{$game} .projector-band__label {
+  color: var(--paper-line); // ~11:1 on ink ✓ AAA
+  font-size: 30px;
+  font-weight: 700;
+}
+
+#{$game} .projector-band__code {
+  font-size: 48px;
+  font-weight: 800;
+}
+
+#{$game} .projector-band .projector-qr:not(.projector-qr--waiting) {
+  inline-size: 72px;
+  block-size: 72px;
+  border: 6px solid var(--qr-quiet); // the QR's white quiet zone
+  border-radius: 10px;
+}
+
+// ---- cards with an edge, solid number tiles --------------------------------------------
+#{$game} :is(.projector-top__card, .projector-tile, .projector-count-tile) {
+  border: 4px solid var(--card-line);
+  border-radius: 36px;
+  background: var(--bg-card);
+  @include edge(var(--card-line), var(--edge-size-lg));
+}
+
+#{$game} :is(.projector-top, .projector-grid, .projector-count-tiles) {
+  gap: 28px;
+}
+
+#{$game} .projector-top__card {
+  min-block-size: 150px;
+  gap: 40px;
+  padding: var(--space-md) 40px;
+}
+
+#{$game} .projector-top__rank {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 110px;
+  block-size: 110px;
+  border-radius: 32px;
+  background: var(--paper-deep);
+  color: var(--ink);
+  font-size: 72px;
+  font-weight: 800;
+  @include edge(var(--edge-deep), 8px);
+}
+
+// The first place is the solid terra tile.
+#{$game} .projector-top__card:first-child .projector-top__rank {
+  background: var(--terra-600);
+  color: var(--text-inverse); // ~6.4:1 ✓ AA (72 px)
+  @include edge(var(--edge-terra), 8px);
+}
+
+#{$game} .projector-top__text {
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+#{$game} .projector-tile__title,
+#{$game} .projector-count-tile__value {
+  font-weight: 800;
+}
+
+// ---- bars --------------------------------------------------------------------------------
+#{$game} .projector-gate-bar__track {
+  block-size: 36px;
+}
+
+#{$game} .projector-gate-bar__gate {
+  inline-size: 6px;
+  border-radius: 3px;
+  background: var(--ink);
+}
+
+#{$game} .projector-gate-bar--passed .projector-gate-bar__state {
+  font-weight: 800;
+}
+
+#{$game} .projector-tally__text {
+  font-size: 48px;
+  font-weight: 700;
+}
+
+#{$game} .projector-tally__count {
+  font-weight: 800;
+}
+
+#{$game} .projector-vote-status {
+  border-width: 4px;
+  border-radius: 28px;
+  font-weight: 800;
+  @include edge(var(--ink), 8px);
+}

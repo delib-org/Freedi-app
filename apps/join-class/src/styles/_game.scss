@@ -1,0 +1,218 @@
+// =============================================================================
+// Game look — the teen game layer on top of "Civic warmth" (brief §4,
+// docs/design/join-class-style-brief.md). Same palette and labels; what changes
+// is weight, depth (a 5 px pressed-key edge on buttons and cards), visible
+// progress and one-shot win stamps. Scoped to :root:not([data-look="solid"])
+// (see _game-scope.scss), so the solid look is today's CSS, untouched.
+//
+// This partial (type, buttons, the student frame, cards) and _game-student.scss
+// (side marks, team chips, inputs) ship in the entry CSS. The lesson-part-2
+// screens' rules (choices, faces, win stamps) are in game-c3.scss, loaded with
+// student-c3.scss; the console and the projector have game-console.scss and
+// game-projector.scss, loaded with them.
+// The console and the projector have their own partials, loaded with them:
+// game-console.scss, game-projector.scss.
+// =============================================================================
+
+@use 'game-scope' as *;
+
+// ---- type: heavier weights -----------------------------------------------------
+#{$game} {
+  --font-weight-semibold: 700;
+  --font-weight-bold: 800;
+}
+
+// The self-hosted Assistant now declares 400–800 (_fonts.scss). Before, it
+// stopped at 600, so these literal-700 and UA-bold texts drew at 600; the solid
+// look keeps them there so it stays pixel-identical to the old look.
+:root[data-look='solid'] {
+  :is(strong, b, th),
+  .reply-entry__new,
+  .replies__hint,
+  .reply__tag,
+  .student-notice__action,
+  .reply-notice,
+  .switch-band__badge,
+  .chip-hidden,
+  .proposal-block__eyebrow,
+  .flags__line,
+  .plan-card__text--challenge,
+  .teacher-reply__tag {
+    font-weight: 600;
+  }
+}
+
+// ---- buttons ---------------------------------------------------------------------
+#{$game} .btn {
+  border-width: 2px;
+  border-radius: 18px;
+  font-weight: 800;
+  @include no-motion;
+}
+
+#{$game} .btn--primary,
+#{$game} .btn--primary:hover:not(:disabled) {
+  background: var(--terra-600);
+  border-color: var(--terra-600);
+  @include edge(var(--edge-terra));
+}
+
+#{$game} .btn--agree,
+#{$game} .btn--agree:hover:not(:disabled) {
+  @include edge(var(--edge-teal-strong));
+}
+
+#{$game} .btn--secondary,
+#{$game} .btn--secondary:hover:not(:disabled) {
+  border-color: var(--edge-control);
+  @include edge(var(--edge-control));
+}
+
+#{$game} .btn--danger,
+#{$game} .btn--danger:hover:not(:disabled) {
+  @include edge(var(--terra-700));
+}
+
+#{$game} .btn--small {
+  border-radius: 14px;
+}
+
+#{$game} .btn--small.btn--secondary {
+  @include edge(var(--edge-control), var(--edge-size-sm));
+}
+
+#{$game} .btn--tertiary,
+#{$game} .btn--text {
+  border-radius: var(--radius-md);
+}
+
+#{$game} .btn--text {
+  font-weight: 700;
+}
+
+// The press: the button sinks onto its edge.
+#{$game} :is(.btn--primary, .btn--agree, .btn--secondary, .btn--danger):active:not(:disabled) {
+  @include press;
+}
+
+#{$game} .btn--small.btn--secondary:active:not(:disabled) {
+  @include press(var(--edge-size-sm));
+}
+
+// A disabled button has no edge to press; the saved side ("agree") stays a filled block.
+#{$game} .btn:disabled:not(.btn--agree) {
+  box-shadow: none;
+}
+
+// The phone's one action: 60 px tall, full width (brief §5 asks ≥ 56).
+#{$game} .frame__action > .btn,
+#{$game} .frame__action .turn-actions__primary,
+#{$game} .door__enter {
+  min-height: 60px;
+  font-size: 1.3125rem; // 21 px
+}
+
+#{$game} .frame__action .turn-actions__secondary {
+  min-height: 56px;
+  font-size: var(--font-size-lg);
+}
+
+// ---- student frame: header, step meter, instruction ------------------------------
+// The step meter exists in the markup on every look; only the game look draws it.
+.frame__progress {
+  display: none;
+}
+
+#{$game} .frame__header,
+#{$game} .frame__header--stacked {
+  flex-flow: row wrap;
+  align-items: center;
+  row-gap: var(--space-sm);
+  padding-block: var(--space-md) 12px;
+  background: var(--bg-card);
+  border-block-end: 2px solid var(--card-line);
+}
+
+#{$game} .frame__stage {
+  flex: 1;
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+}
+
+#{$game} .frame__header--stacked .frame__stage {
+  flex-basis: 50%;
+}
+
+#{$game} .frame__line {
+  order: 3;
+  flex-basis: 100%;
+  color: var(--ink-soft);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+#{$game} .frame__progress {
+  display: contents;
+}
+
+#{$game} .frame__step-of {
+  order: 2;
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 30px;
+  padding-inline: 12px;
+  border-radius: var(--radius-full);
+  background: var(--terra-50);
+  color: var(--terra-600); // ~5.9:1 on terra-50 ✓ AA
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+#{$game} .frame__meter {
+  order: 4;
+  flex-basis: 100%;
+  display: flex;
+  gap: var(--space-xs);
+}
+
+#{$game} .frame__meter-segment {
+  flex: 1;
+  block-size: 8px;
+  border-radius: var(--radius-full);
+  background: var(--paper-deep);
+
+  &--done {
+    background: var(--teal-500);
+  }
+
+  &--current {
+    background: var(--terra-500);
+  }
+}
+
+#{$game} .frame--down .frame__header {
+  background: transparent;
+  border-block-end-color: var(--ink-muted);
+}
+
+#{$game} .frame__instruction {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  line-height: var(--line-height-tight);
+}
+
+#{$game} .frame__ask {
+  font-weight: 800;
+}
+
+#{$game} .frame__action {
+  border-block-start-color: transparent;
+}
+
+// ---- cards -----------------------------------------------------------------------
+#{$game} :is(.table-step__card, .opening__card) {
+  border: 2px solid var(--card-line);
+  border-radius: 20px;
+  @include edge(var(--card-line));
+}

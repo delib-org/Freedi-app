@@ -7,19 +7,21 @@
 // paints. Self-hosting collapses that to one same-origin request that the
 // preload in index.html kicks off immediately.
 //
-// Only the weights the design tokens actually use are covered (400/500/600),
-// which is why the axis is clamped to `400 600` instead of Assistant's full
-// 200–800 range. Three subsets, requested by unicode-range so a Latin-only
-// visitor never downloads the Hebrew glyphs (and vice versa).
+// The files are Google's variable Assistant, whose `wght` axis already runs
+// 200–800 (checked with fontTools, 2026-10-26), so the range below is only a
+// descriptor: 400–800 covers the body (400), the solid look (500/600) and the
+// game look's heavy weights (700/800) at no extra bytes. Three subsets,
+// requested by unicode-range so a Latin-only visitor never downloads the Hebrew
+// glyphs (and vice versa).
 //
 // To refresh these files, re-fetch the URLs behind:
-//   https://fonts.googleapis.com/css2?family=Assistant:wght@400..600&display=swap
+//   https://fonts.googleapis.com/css2?family=Assistant:wght@400..800&display=swap
 
 /* hebrew */
 @font-face {
   font-family: 'Assistant';
   font-style: normal;
-  font-weight: 400 600;
+  font-weight: 400 800;
   font-display: swap;
   src: url('/fonts/assistant-hebrew.woff2') format('woff2');
   unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
@@ -29,7 +31,7 @@
 @font-face {
   font-family: 'Assistant';
   font-style: normal;
-  font-weight: 400 600;
+  font-weight: 400 800;
   font-display: swap;
   src: url('/fonts/assistant-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
@@ -41,7 +43,7 @@
 @font-face {
   font-family: 'Assistant';
   font-style: normal;
-  font-weight: 400 600;
+  font-weight: 400 800;
   font-display: swap;
   src: url('/fonts/assistant-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,

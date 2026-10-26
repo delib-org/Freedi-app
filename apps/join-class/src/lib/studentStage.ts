@@ -11,8 +11,34 @@ import { t } from './i18n';
  */
 let currentStage: LessonStepKey | null = null;
 
-export function setStudentStage(key: LessonStepKey | null): void {
+/** Where the current step sits in the lesson's own steps: 1-based `n` of `total`. */
+export interface StageProgress {
+	n: number;
+	total: number;
+}
+
+let currentProgress: StageProgress | null = null;
+
+/** `position` is the step's 0-based index in a lesson of `total` steps; omit it to show no progress. */
+export function setStudentStage(
+	key: LessonStepKey | null,
+	position?: { index: number; total: number },
+): void {
 	currentStage = key;
+	currentProgress = key && position ? progressOf(position.index, position.total) : null;
+}
+
+/** A sane 1-based progress, or null when the numbers cannot be shown. */
+export function progressOf(index: number, total: number): StageProgress | null {
+	if (!Number.isInteger(index) || !Number.isInteger(total) || total < 1) return null;
+	if (index < 0 || index >= total) return null;
+
+	return { n: index + 1, total };
+}
+
+/** The current step's place in the lesson ("step n of total"), or null. */
+export function studentStageProgress(): StageProgress | null {
+	return currentProgress;
 }
 
 /** i18n key of the stage heading, or null when no stage is set. */

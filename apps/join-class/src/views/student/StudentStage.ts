@@ -1,6 +1,6 @@
 import m from 'mithril';
 import type { LessonStepKey, Statement } from '@freedi/shared-types';
-import { lessonStepOf } from '@/lib/lesson';
+import { lessonStepOf, planStepKeys } from '@/lib/lesson';
 import { lessonStatusOfMain } from '@/lib/lessonCore';
 import { AllProposalsStep } from './steps/AllProposalsStep';
 import { setStudentStage } from '@/lib/studentStage';
@@ -105,8 +105,9 @@ export const StudentStage: m.Component<StudentStageAttrs> = {
 
 			return renderState(attrs.main, status);
 		}
-		const step = lessonStepOf(attrs.main.statementSettings?.lessonPlan);
-		setStudentStage(step.key);
+		const plan = attrs.main.statementSettings?.lessonPlan;
+		const step = lessonStepOf(plan);
+		setStudentStage(step.key, { index: step.index, total: planStepKeys(plan).length });
 
 		return m(STEP_COMPONENTS[step.key], { main: attrs.main, key: step.key });
 	},

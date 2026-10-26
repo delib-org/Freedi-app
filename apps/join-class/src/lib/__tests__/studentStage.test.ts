@@ -1,6 +1,12 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { LESSON_STEP_KEYS } from '../lessonCore';
-import { setStudentStage, stageTitleKey, studentStageTitle } from '../studentStage';
+import {
+	progressOf,
+	setStudentStage,
+	stageTitleKey,
+	studentStageProgress,
+	studentStageTitle,
+} from '../studentStage';
 import he from '../locales/he';
 import en from '../locales/en';
 import ar from '../locales/ar';
@@ -42,5 +48,29 @@ describe('stage title', () => {
 		for (const locale of [he, en, ar, de, es, fa, nl]) {
 			for (const key of LESSON_STEP_KEYS) expect(locale[`step.${key}`]).toBeTruthy();
 		}
+	});
+});
+
+describe('stage progress', () => {
+	afterEach(() => setStudentStage(null));
+
+	it('is 1-based n of the lesson total', () => {
+		setStudentStage('side', { index: 2, total: 9 });
+		expect(studentStageProgress()).toEqual({ n: 3, total: 9 });
+	});
+
+	it('has no progress without a position, or when no stage is set', () => {
+		setStudentStage('side');
+		expect(studentStageProgress()).toBeNull();
+		setStudentStage(null, { index: 2, total: 9 });
+		expect(studentStageProgress()).toBeNull();
+	});
+
+	it('refuses numbers it cannot show', () => {
+		expect(progressOf(-1, 9)).toBeNull();
+		expect(progressOf(9, 9)).toBeNull();
+		expect(progressOf(0, 0)).toBeNull();
+		expect(progressOf(1.5, 9)).toBeNull();
+		expect(progressOf(8, 9)).toEqual({ n: 9, total: 9 });
 	});
 });

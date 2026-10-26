@@ -1,0 +1,112 @@
+// =============================================================================
+// Game look — the entry's student controls: side marks, team chips, the
+// code / name inputs and the notice line. Scoped by $game (see
+// _game-scope.scss); the overview is in _game.scss.
+// =============================================================================
+
+@use 'game-scope' as *;
+
+// ---- side marks: A = circle, B = rounded square, centre = diamond -------------------
+#{$game} .side-slider__face {
+  inline-size: 88px;
+  block-size: 88px;
+  font-size: 2.5rem;
+  font-weight: 800;
+}
+
+#{$game} .side-slider__character--a .side-slider__face {
+  border-radius: var(--radius-full);
+  @include edge(var(--edge-side-a), 6px);
+}
+
+#{$game} .side-slider__character--b .side-slider__face {
+  border-radius: 26px;
+  @include edge(var(--edge-indigo), 6px);
+}
+
+#{$game} .side-slider__character {
+  gap: 10px;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+#{$game} .side-slider__ends {
+  margin-block-end: var(--space-sm);
+}
+
+#{$game} .side-slider {
+  --track-h: 16px;
+}
+
+#{$game} .side-slider__tick {
+  inline-size: 4px;
+  block-size: 28px;
+  border-radius: 2px;
+}
+
+#{$game} .side-slider__input::-webkit-slider-thumb {
+  border-width: 4px;
+  box-shadow: 0 4px 0 var(--ink);
+}
+
+#{$game} .side-slider__input::-moz-range-thumb {
+  border-width: 4px;
+  box-shadow: 0 4px 0 var(--ink);
+}
+
+#{$game} .side-slider__word {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 40px;
+  padding-inline: 18px;
+  border: 2px solid var(--edge-control);
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  font-weight: 800;
+}
+
+// Team chips: the side's tint, a 2px border, the mark already carries the shape.
+#{$game} .table-chip {
+  min-block-size: 40px;
+  border-width: 2px;
+  font-weight: 700;
+
+  &--a {
+    border-color: var(--terra-300);
+    background: var(--terra-50);
+  }
+
+  &--b {
+    border-color: var(--indigo-300);
+    background: var(--indigo-50);
+  }
+
+  &--center {
+    border-color: var(--edge-deep);
+    background: var(--paper-soft);
+  }
+
+  &--me {
+    border-color: var(--ink);
+    font-weight: 800;
+  }
+}
+
+#{$game} .table-step__number {
+  font-weight: 800;
+}
+
+// ---- inputs and the notice line ------------------------------------------------------
+#{$game} :is(.door__code, .name-entry__input) {
+  border-width: 2px;
+  border-radius: 18px;
+  font-weight: 700;
+}
+
+#{$game} .student-notice {
+  border-width: 2px;
+  border-radius: 18px;
+  font-weight: 700;
+  @include edge(var(--ink), 4px);
+}

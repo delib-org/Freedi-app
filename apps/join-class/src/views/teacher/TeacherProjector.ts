@@ -6,6 +6,7 @@ import '@/styles/projector-results.scss';
 // >>> voteSummary END
 import '@/styles/projector-video.scss';
 import '@/styles/projector-controls.scss';
+import '@/styles/game-projector.scss';
 import { t } from '@/lib/i18n';
 import { ensureUser } from '@/lib/user';
 import { loadMainStatement, getMainStatement, setFollowLessonLanguage } from '@/lib/store';

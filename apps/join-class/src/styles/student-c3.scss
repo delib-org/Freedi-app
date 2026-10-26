@@ -8,3 +8,5 @@
 @use 'student-c3-rate';
 @use 'student-c3-vote';
 @use 'student-c3-turn';
+// The game look's rules for these screens (scoped; the solid look ignores them).
+@use 'game-c3';

@@ -1,6 +1,9 @@
 @use 'fonts';
 @use 'tokens';
 @use 'components';
+// Last: the game look's overlay (scoped, see _game-scope.scss).
+@use 'game';
+@use 'game-student';
 
 *,
 *::before,

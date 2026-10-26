@@ -1,0 +1,198 @@
+// =============================================================================
+// Game look — the teacher console (route /t/:mid). Imported by the lazy console
+// view next to console.scss, so a student never downloads it. Scoped by $game:
+// the solid look keeps the console exactly as it was. See _game.scss.
+// =============================================================================
+
+@use 'game-scope' as *;
+
+#{$game} .console {
+  --rail-done: var(--teal-600);
+  --rail-upcoming: var(--border-medium);
+}
+
+#{$game} .console__bar {
+  border-block-end-width: 2px;
+}
+
+#{$game} .console__title,
+#{$game} .console__code-value {
+  font-weight: 800;
+}
+
+// ---- the step rail as a path: done = teal + check, current = a big terra
+// circle with a soft halo, upcoming = outlined --------------------------------------
+#{$game} .step-rail {
+  border-block-end: 2px solid var(--card-line);
+}
+
+#{$game} .step-rail__item:not(:last-child)::after {
+  inset-block-start: 17px;
+  inset-inline: calc(50% + 26px) calc(-50% + 26px);
+  border-block-start-width: 3px;
+}
+
+#{$game} .step-rail__dot {
+  inline-size: 36px;
+  block-size: 36px;
+  border-width: 3px;
+  font-weight: 800;
+  @include no-motion;
+}
+
+#{$game} .step-rail__step--done .step-rail__dot {
+  @include edge(var(--edge-teal-strong), var(--edge-size-sm));
+}
+
+#{$game} .step-rail__step--current .step-rail__dot {
+  inline-size: 50px;
+  block-size: 50px;
+  margin-block: -7px;
+  font-size: var(--font-size-xl);
+  box-shadow:
+    0 4px 0 var(--edge-terra),
+    0 0 0 5px var(--terra-50);
+}
+
+#{$game} .step-rail__step--current {
+  color: var(--terra-600);
+  font-weight: 800;
+}
+
+#{$game} .step-rail__name {
+  margin-block-start: 2px;
+  font-weight: 700;
+}
+
+#{$game} .step-rail__next {
+  min-height: 60px;
+  font-size: var(--font-size-lg);
+}
+
+#{$game} .step-rail__status {
+  font-weight: 700;
+}
+
+// ---- the switch band: a segmented tab with a raised "on" ---------------------------
+#{$game} .switch-band {
+  border-block-end-width: 2px;
+}
+
+#{$game} .switch-band__line {
+  color: var(--teal-ink);
+  font-size: var(--font-size-base);
+  font-weight: 800;
+}
+
+#{$game} .switch-band__segment {
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  border-radius: 16px;
+  background: var(--paper-deep);
+}
+
+#{$game} .switch-band__segment-btn {
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+#{$game} .switch-band__segment-btn--on {
+  font-weight: 800;
+  @include edge(var(--edge-deep), var(--edge-size-sm));
+}
+
+// ---- table cards and member chips ---------------------------------------------------
+#{$game} .table-card,
+#{$game} .roster-card,
+#{$game} .gate-panel {
+  border: 2px solid var(--card-line);
+  border-radius: 20px;
+  @include edge(var(--card-line));
+}
+
+#{$game} .table-card--target {
+  border: 2px dashed var(--terra-500);
+}
+
+#{$game} .table-card__head {
+  font-weight: 800;
+}
+
+#{$game} .tables-board__grid {
+  gap: 20px;
+}
+
+#{$game} .member-chip {
+  min-height: 34px;
+  border-width: 2px;
+  font-weight: 700;
+}
+
+#{$game} .member-chip--a {
+  border-color: var(--terra-300);
+  background: var(--terra-50);
+}
+
+#{$game} .member-chip--b {
+  border-color: var(--indigo-300);
+  background: var(--indigo-50);
+}
+
+#{$game} .member-chip--center {
+  border-color: var(--edge-deep);
+  background: var(--paper-soft);
+}
+
+// The chip's states win over its side tint, as before.
+#{$game} .member-chip--answering {
+  background: var(--teal-50);
+}
+
+#{$game} .member-chip--no-device {
+  background: transparent;
+  border: 2px dashed var(--ink-soft);
+}
+
+#{$game} .member-chip--active {
+  border-color: var(--terra-500);
+}
+
+#{$game} .member-chip[aria-pressed='true'] {
+  background: var(--terra-50);
+}
+
+// ---- the threshold (gate) panel -------------------------------------------------------
+#{$game} .gate-panel__title {
+  font-weight: 800;
+}
+
+#{$game} .gate-panel__track {
+  block-size: 18px;
+}
+
+#{$game} .gate-panel__line {
+  inset-block: -5px;
+  inline-size: 4px;
+  background: var(--ink);
+}
+
+#{$game} .gate-panel__row--passed .gate-panel__fill {
+  background: var(--teal-500);
+}
+
+#{$game} .gate-panel__score {
+  font-weight: 800;
+}
+
+#{$game} .gate-panel__note {
+  font-weight: 700;
+}
+
+#{$game} .gate-panel__row--passed .gate-panel__note {
+  font-weight: 800;
+}
+
+// ---- the vote bar ----------------------------------------------------------------------
+#{$game} .vote-bar__progress--done {
+  font-weight: 800;
+}
