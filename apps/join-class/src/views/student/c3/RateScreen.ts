@@ -26,7 +26,7 @@ function ownCard(input: RateScreenInput, mine: Statement): m.Children {
 		mine: true,
 		eyebrow: t('proposal.mine'),
 		text: mine.statement,
-		replies: m(ReplyEntry, { proposal: mine, own: true, uid: input.uid }),
+		replies: m(ReplyEntry, { proposal: mine, uid: input.uid }),
 		footer: m(
 			'button.btn.btn--secondary.btn--small',
 			{ type: 'button', onclick: input.onToggleEdit },

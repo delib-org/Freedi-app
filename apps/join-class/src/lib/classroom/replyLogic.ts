@@ -2,12 +2,9 @@ import type { ClassReplyRole, Statement } from '@freedi/shared-types';
 
 /**
  * Pure side of the replies on a proposal (IA 22): which replies a phone shows,
- * how each is tagged, how many are unread for the author, and when the
- * author's toast may speak. No Firestore, no DOM.
+ * how each is tagged and how many are unread for the author (the lasting
+ * notice line, IA 23). No Firestore, no DOM.
  */
-
-/** At most one "new reply" toast per this window (IA 22.7). */
-export const REPLY_TOAST_GAP_MS = 60_000;
 
 /** A reply is a statement carrying the server's `classReply` marker. */
 export function isReply(statement: Statement): boolean {
@@ -61,29 +58,45 @@ export function firstUnreadId(
 	return unread[0]?.statementId ?? null;
 }
 
-export interface ToastInput {
-	now: number;
-	/** When the last toast was shown; null = never. */
-	lastToastAt: number | null;
-	/** Reply ids already announced (or present at the first delivery). */
-	seen: ReadonlySet<string>;
-	/** Unread replies now. */
-	unread: readonly Statement[];
-	/** The author is looking at their replies right now. */
-	sheetOpen: boolean;
+export interface ReplyNotice {
+	/** Unread replies on the viewer's own proposals (hidden ones and hidden proposals excluded). */
+	count: number;
+	/** The proposal the notice opens: the one with the oldest unread reply. */
+	proposalId: string | null;
 }
 
 /**
- * Whether a new reply makes the author's phone say "New reply to your
- * proposal": something unread that was not announced yet, the replies not
- * already open, and no toast in the last REPLY_TOAST_GAP_MS.
+ * The lasting "someone replied to you" line (IA 23.1): unread replies by
+ * others, not hidden, newer than the read mark, and not under a proposal the
+ * teacher hid (a hidden proposal takes its replies out of reach, IA 24.2).
  */
-export function shouldToast(input: ToastInput): boolean {
-	if (input.sheetOpen) return false;
-	const fresh = input.unread.some((r) => !input.seen.has(r.statementId));
-	if (!fresh) return false;
+export function replyNotice(
+	replies: readonly Statement[],
+	authorUid: string,
+	readAt: number | undefined,
+	hiddenProposalIds: ReadonlySet<string> = new Set(),
+): ReplyNotice {
+	const unread = unreadReplies(replies, authorUid, readAt)
+		.filter((r) => !hiddenProposalIds.has(r.parentId))
+		.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
 
-	return input.lastToastAt === null || input.now - input.lastToastAt >= REPLY_TOAST_GAP_MS;
+	return { count: unread.length, proposalId: unread[0]?.parentId ?? null };
+}
+
+/** Ids of the replies that carry the "new" tag when the author opens their sheet. */
+export function newReplyIds(
+	replies: readonly Statement[],
+	authorUid: string,
+	readAt: number | undefined,
+): ReadonlySet<string> {
+	return new Set(unreadReplies(replies, authorUid, readAt).map((r) => r.statementId));
+}
+
+/** The notice line's text key: "1 new reply" or "n new replies"; null when nothing is unread. */
+export function noticeKey(n: number): { key: string; params?: Record<string, number> } | null {
+	if (n <= 0) return null;
+
+	return n === 1 ? { key: 'reply.notice_one' } : { key: 'reply.notice_n', params: { n } };
 }
 
 /** The count line on the own card: "2 new replies" / "1 new reply"; empty when none. */

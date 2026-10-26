@@ -13,8 +13,6 @@ const reply: Record<string, string> = {
 	'reply.by_teacher': 'معلم',
 	'reply.new_n': '{{n}} نظر تازه',
 	'reply.new_one': 'یک نظر تازه',
-	'reply.toast': 'نظر تازه دربارهٔ پیشنهاد شما',
-	'reply.toast_open': 'خواندن',
 	'reply.improve': 'بهتر کردن پیشنهادم',
 	'reply.improve_closed': 'پیشنهادها تا باز شدن رأی‌گیری قابل بهتر شدن بودند',
 	'reply.refused': 'به نظر می‌رسد در نظر شما واژه‌ای آزاردهنده هست. طور دیگری بنویسید',
@@ -29,6 +27,10 @@ const reply: Record<string, string> = {
 	'reply.push_blocked': 'مرورگر اعلان‌ها را مسدود کرده است. نظرها همین‌جا در برنامه دیده می‌شوند',
 	'console.replies': 'نظرها ({{n}})',
 	'console.reply_placeholder': 'نظر معلم',
+	'reply.notice_one': 'یک نظر تازه دربارهٔ پیشنهاد شما رسیده · خواندن',
+	'reply.notice_n': '{{n}} نظر تازه دربارهٔ پیشنهاد شما رسیده · خواندن',
+	'reply.new_tag': 'جدید',
+	'reply.author_hint': 'می‌توانید پاسخ بدهید یا پیشنهادتان را بهتر کنید',
 };
 
 export default reply;

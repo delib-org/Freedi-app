@@ -13,8 +13,6 @@ const reply: Record<string, string> = {
 	'reply.by_teacher': 'Teacher',
 	'reply.new_n': '{{n}} new replies',
 	'reply.new_one': '1 new reply',
-	'reply.toast': 'New reply to your proposal',
-	'reply.toast_open': 'Read',
 	'reply.improve': 'Improve my proposal',
 	'reply.improve_closed': 'Proposals could be improved until the vote opened',
 	'reply.refused': 'Your reply seems to contain hurtful words. Try rephrasing.',
@@ -29,6 +27,10 @@ const reply: Record<string, string> = {
 	'reply.push_blocked': 'The browser blocks notifications. Replies still show here in the app',
 	'console.replies': 'Replies ({{n}})',
 	'console.reply_placeholder': "The teacher's reply",
+	'reply.notice_one': 'There is a new reply to your proposal · Read',
+	'reply.notice_n': '{{n}} new replies to your proposal · Read',
+	'reply.new_tag': 'New',
+	'reply.author_hint': 'You can reply back, or improve your proposal',
 };
 
 export default reply;

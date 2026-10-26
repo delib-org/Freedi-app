@@ -13,8 +13,6 @@ const reply: Record<string, string> = {
 	'reply.by_teacher': 'המורה',
 	'reply.new_n': '{{n}} תגובות חדשות',
 	'reply.new_one': 'תגובה חדשה',
-	'reply.toast': 'תגובה חדשה להצעה שלכם',
-	'reply.toast_open': 'לקריאה',
 	'reply.improve': 'לשפר את ההצעה',
 	'reply.improve_closed': 'אפשר היה לשפר עד שההצבעה נפתחה',
 	'reply.refused': 'נראה שיש בתגובה מילה פוגענית. נסו לנסח אחרת',
@@ -29,6 +27,10 @@ const reply: Record<string, string> = {
 	'reply.push_blocked': 'הדפדפן חוסם הודעות. אפשר לראות תגובות כאן באפליקציה',
 	'console.replies': 'תגובות ({{n}})',
 	'console.reply_placeholder': 'תגובה של המורה',
+	'reply.notice_one': 'יש תגובה חדשה להצעה שלכם · לקריאה',
+	'reply.notice_n': '{{n}} תגובות חדשות להצעה שלכם · לקריאה',
+	'reply.new_tag': 'חדש',
+	'reply.author_hint': 'אפשר להגיב בחזרה, או לשפר את ההצעה',
 };
 
 export default reply;

@@ -13,8 +13,6 @@ const reply: Record<string, string> = {
 	'reply.by_teacher': 'Docente',
 	'reply.new_n': '{{n}} comentarios nuevos',
 	'reply.new_one': '1 comentario nuevo',
-	'reply.toast': 'Nuevo comentario a vuestra propuesta',
-	'reply.toast_open': 'Leer',
 	'reply.improve': 'Mejorar mi propuesta',
 	'reply.improve_closed': 'Las propuestas se podían mejorar hasta que se abrió la votación',
 	'reply.refused':
@@ -31,6 +29,10 @@ const reply: Record<string, string> = {
 		'El navegador bloquea las notificaciones. Los comentarios siguen apareciendo aquí en la app',
 	'console.replies': 'Comentarios ({{n}})',
 	'console.reply_placeholder': 'Comentario del docente',
+	'reply.notice_one': 'Hay un comentario nuevo a vuestra propuesta · Leer',
+	'reply.notice_n': '{{n}} comentarios nuevos a vuestra propuesta · Leer',
+	'reply.new_tag': 'Nuevo',
+	'reply.author_hint': 'Podéis responder o mejorar vuestra propuesta',
 };
 
 export default reply;

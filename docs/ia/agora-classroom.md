@@ -2015,3 +2015,94 @@ The card stays anonymous (§19.4). A reply shows the replier's class name; the a
 
 ### 22.9 Deferred
 An "the proposal was edited" marker inside replies; marking replies helpful / an AI redraft; replies on Table talk answers.
+
+## 23. "Someone replied to you" must be seen (Tal, 2026-10-26, card 4vXla9IW)
+
+Gap: §22.7 tells the author only through a pill on the own card and a toast that disappears. The own card is often off screen, the student may be on another sub-step (מדברים / כותבים / מדרגים), and in the class sheet the own card is drawn without `own`, so it shows no new count (`RatedList.ts:79`, `allProposalsParts.ts:74`).
+
+### 23.1 One lasting notice line (replaces the toast)
+- **Where:** one line at the top of the student stage `/m/:mid`, under the step title and above the sub-step buttons. Shows on every step and sub-step, since replies never close (§22.5). Never on the projector.
+- **When it shows:** while unread > 0. Unread as in §22.7: replies by others (incl. teacher), not hidden, newer than `proposalRepliesReadAt`.
+- **Wording:**
+
+| key | HE | EN |
+|---|---|---|
+| reply.notice_one | יש תגובה חדשה להצעה שלכם · לקריאה | There is a new reply to your proposal · Read |
+| reply.notice_n | {{n}} תגובות חדשות להצעה שלכם · לקריאה | {{n}} new replies to your proposal · Read |
+
+- **Tap:** the whole line opens the author's Replies, scrolls to the first new reply; each new one carries `reply.new_tag` חדש / New until the sheet closes.
+- **Clears:** only when the author opens their Replies (writes the read mark; existing per-user seen state on the lesson subscription, survives device change). A reply hidden by the teacher drops out of the count at once.
+- **Toast:** `reply.toast` / `reply.toast_open` retired. The pill on the own card stays.
+- **Fix:** every `ReplyEntry` gets `own: proposal.creatorId === uid`, including RatedList and the class sheet.
+- Verify the author's listener (filters `topParentId` + `classReply.proposalCreatorId`) actually works; if it needs a composite index add it to firestore.indexes.json; its error must go through logError, not bare console.error.
+
+### 23.2 Answering
+The author's sheet opens with one guidance line `reply.author_hint`: "אפשר להגיב בחזרה, או לשפר את ההצעה" / "You can reply back, or improve your proposal". Actions: the composer (posts as `reply.by_author`) and `reply.improve` as in §22.
+Steps: notice line → read → write → שליחה.
+
+### 23.3 Out of scope
+Telling a replier that the author replied back (needs a read mark per replier).
+
+## 24. Teacher reply threads, hiding, and the language check before sending (Tal, 2026-10-26, card NFOEJXMy)
+
+### 24.1 Thread hierarchy in "מה כתבו"
+Each proposal is one block with two levels; never a flat list.
+1. **Proposal (parent):** eyebrow `console.proposal_label` הצעה / Proposal; the text; meta: real name · `console.ratings_n` · `console.replies_n` "{{n}} תגובות" / "{{n}} replies"; status; hide control.
+2. **Replies (children, visually indented under the parent, e.g. inline-start rule):** expander keeps `console.replies`; opens by default when the proposal has replies the teacher has not seen this session (view-only state). Each reply: role tag (real name / "name · מי שכתבו את ההצעה" / המורה), text, status, own hide control.
+3. **Teacher composer:** last, inside the open thread; `console.reply_placeholder` unchanged.
+Hiding a proposal leaves its replies visible to the teacher, under a hidden parent.
+
+### 24.2 Hide / restore as a labelled control with a stated state
+A real button (not a text link), with an eye-off / eye icon. Same keys, new text, one concept across answers, own questions, proposals and replies:
+
+| key | HE | EN |
+|---|---|---|
+| console.hide | הסתרה מהתלמידים | Hide from students |
+| console.restore | החזרה לתלמידים | Show to students again |
+| console.hidden_flag | מוסתר מהתלמידים | Hidden from students |
+
+Hidden items are shown greyed to the teacher with the `console.hidden_flag` chip. No confirm (always undoable, §18.1).
+Students: a hidden item leaves every list, count, unread count and the projector, no stand-in. Only its writer still sees it greyed with `reply.hidden_mine` / `proposal.hidden_mine`. A hidden proposal takes its replies out of reach.
+
+### 24.3 Language check before sending (students only)
+Rule (Tal): the AI checks every student proposal, proposal edit and reply before publishing. If problematic it is NOT published: text stays in the box, student asked to write again. Teacher is flagged. AI never rewrites. Teacher text not checked.
+Detector: `containsBadLanguage` (Gemini, functions/src/fn_profanityChecker.ts / fn_containsBadLanguage.ts), passes text when the service is down — a failure must never accuse a child.
+Server path: replies already go through `classPostReply` (`reason: 'language'`). Proposals move to new callables `classPostProposal` / `classEditProposal` (region me-west1, same pattern as other classroom callables), built with `createStatementObject`, writing the same fields as `createClassOption` / `updateClassOption` in apps/join-class/src/lib/classroom/c3Data.ts. Firestore rules refuse a client create or text update of an option whose parent is the challenge (proposal), so the check cannot be skipped. Table-talk answers keep their client path (out of scope).
+
+Student wording (replaces `reply.refused`; adds `proposal.refused`):
+
+| key | HE | EN |
+|---|---|---|
+| reply.refused | התגובה לא נשלחה: יש בה מילים שעלולות לפגוע. כתבו אותה מחדש, במילים אחרות. | Your reply was not sent: it has words that could hurt. Please write it again in other words. |
+| proposal.refused | ההצעה לא נשלחה: יש בה מילים שעלולות לפגוע. כתבו אותה מחדש, במילים אחרות. | Your proposal was not sent: it has words that could hurt. Please write it again in other words. |
+| text.checking | בודקים… | Checking… |
+
+Steps: שליחה → בודקים… → sent, or the refused line (role=alert) with the text kept.
+Known limit: a live draft (§17) is shown to tablemates before any check.
+
+### 24.4 Teacher flag
+New object flag (סימון): one refused attempt. Not a Statement. Collection `classLanguageFlags/{flagId}`, server-written only:
+
+| field | type | note |
+|---|---|---|
+| mainId | string | the lesson |
+| uid | string | the student |
+| kind | 'proposal' \| 'reply' | |
+| targetId? | string | the proposal replied to |
+| text | string | attempted text, capped at the item's max length |
+| createdAt | number | ms |
+| expireAt | number | createdAt + 30 days (Firestore TTL policy) |
+| seenAt? | number | set when teacher marks seen |
+
+Rules: read only by the lesson's admins; no client write except an admin setting `seenAt` (or do it through a callable). Students never read flags. Only the last 3 texts kept per student per lesson (server trims older ones).
+Where: top of "מה כתבו": line `console.flags_n` "{{n}} ניסיונות לפרסם מילים פוגעניות" / "{{n}} attempts to post hurtful words" while unseen > 0; same count as a badge on the שולחנות / מה כתבו switch.
+Expanded, one row per student: real name and table, `console.flag_count` "{{n}} ניסיונות" / "{{n}} attempts", last time, kind, target proposal; attempted text hidden by default behind `console.flag_show` "להצגת הטקסט" / "Show the text"; `console.flag_seen` "ראיתי" / "Seen" writes `seenAt`.
+Never on the projector, student phones, push, exports or Sentry payloads (don't put the text in logError metadata).
+
+Types (`@freedi/shared-types`): `ClassLanguageFlag`, `ClassPostProposalRequest/Response` (`{ ok: false, reason: 'language' }`), `Collections.classLanguageFlags` (check how Collections is defined/extended for classroom collections).
+i18n: every key into all files in apps/join-class/src/lib/locales and lib/locales/reply.
+
+### 24.5 Open questions (defaults used)
+1. Refused line does NOT say "the teacher will see this attempt" (Tal to decide).
+2. Table-talk answers not checked.
+3. Flag text TTL 30 days.

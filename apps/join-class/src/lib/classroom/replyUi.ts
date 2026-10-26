@@ -23,6 +23,10 @@ export interface ReplyUiState {
 	/** The read mark the unread count is measured from (ms). */
 	readAt: number | undefined;
 	improve: (() => void) | null;
+	/** Own proposals the teacher hid: their replies leave the unread count (IA 24.2). */
+	hiddenProposals: ReadonlySet<string>;
+	/** Opens the replies of a proposal by id; set by the reply host once it is running. */
+	openById: ((proposalId: string) => void) | null;
 }
 
 let improveOwner: object | null = null;
@@ -32,6 +36,8 @@ export const replyUi: ReplyUiState = {
 	toMe: [],
 	readAt: undefined,
 	improve: null,
+	hiddenProposals: new Set<string>(),
+	openById: null,
 };
 
 export function openReplies(target: ReplyTarget): void {
@@ -81,4 +87,6 @@ export function resetReplyUi(): void {
 	replyUi.toMe = [];
 	replyUi.readAt = undefined;
 	replyUi.improve = null;
+	replyUi.hiddenProposals = new Set<string>();
+	replyUi.openById = null;
 }

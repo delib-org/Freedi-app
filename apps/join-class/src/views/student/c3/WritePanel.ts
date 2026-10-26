@@ -273,7 +273,7 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 			sentProposal?.hide ? m('p.write-panel__note', t('proposal.hidden_mine')) : null,
 			sentProposal && a.kind === 'proposals' && !sentProposal.hide
 				? [
-						m(ReplyEntry, { proposal: sentProposal, own: true, uid: a.uid }),
+						m(ReplyEntry, { proposal: sentProposal, uid: a.uid }),
 						m(PushAsk, { mainId: a.main.statementId }),
 					]
 				: null,

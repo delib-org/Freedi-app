@@ -88,6 +88,13 @@
     color: var(--ink-soft);
   }
 
+  // The author's one guidance line (IA 23.2).
+  &__hint {
+    margin: 0;
+    color: var(--ink);
+    font-weight: 700;
+  }
+
   &__list {
     display: flex;
     flex-direction: column;
@@ -117,10 +124,21 @@
   background: var(--bg-card);
 
   &__tag {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
     margin: 0;
     color: var(--ink-soft);
     font-size: var(--font-size-sm);
     font-weight: 700;
+  }
+
+  // "New" until the sheet closes (IA 23.1).
+  &__new-tag {
+    padding-inline: var(--space-sm);
+    border-radius: var(--radius-lg);
+    background: var(--teal-600);
+    color: var(--text-inverse);
   }
 
   &__text {
@@ -151,7 +169,7 @@
   }
 }
 
-// The first reply the author has not read yet (the sheet scrolls to it).
+// Replies the author has not read yet (the sheet scrolls to the first).
 .reply--new {
   outline: 2px solid var(--teal-600);
   outline-offset: 2px;

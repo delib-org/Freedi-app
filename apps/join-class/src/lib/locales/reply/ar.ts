@@ -13,8 +13,6 @@ const reply: Record<string, string> = {
 	'reply.by_teacher': 'المعلم',
 	'reply.new_n': '{{n}} تعليقات جديدة',
 	'reply.new_one': 'تعليق جديد',
-	'reply.toast': 'تعليق جديد على اقتراحكم',
-	'reply.toast_open': 'قراءة',
 	'reply.improve': 'تحسين اقتراحي',
 	'reply.improve_closed': 'كان يمكن تحسين الاقتراحات حتى فتح التصويت',
 	'reply.refused': 'يبدو أن في التعليق كلمة جارحة. حاولوا الصياغة بشكل آخر',
@@ -29,6 +27,10 @@ const reply: Record<string, string> = {
 	'reply.push_blocked': 'المتصفح يحظر الإشعارات. التعليقات تظهر هنا في التطبيق',
 	'console.replies': 'التعليقات ({{n}})',
 	'console.reply_placeholder': 'تعليق المعلم',
+	'reply.notice_one': 'يوجد تعليق جديد على اقتراحكم · للقراءة',
+	'reply.notice_n': '{{n}} تعليقات جديدة على اقتراحكم · للقراءة',
+	'reply.new_tag': 'جديد',
+	'reply.author_hint': 'يمكنكم الرد، أو تحسين اقتراحكم',
 };
 
 export default reply;

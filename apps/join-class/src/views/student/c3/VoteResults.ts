@@ -31,9 +31,7 @@ function rowView(row: SummaryRow, attrs: VoteResultsAttrs): m.Vnode {
 			m('span.vote-result__fill'),
 		]),
 		m('span.vote-result__count', votesLine(row)),
-		proposal
-			? m(ReplyEntry, { proposal, own: proposal.creatorId === attrs.uid, uid: attrs.uid })
-			: null,
+		proposal ? m(ReplyEntry, { proposal, uid: attrs.uid }) : null,
 	]);
 }
 

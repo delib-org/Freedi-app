@@ -186,8 +186,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 										if (open) caster.pick(id);
 									},
 									// IA 22: replies on each card, a separate control that never casts a vote.
-									beside: (option: Statement) =>
-										m(ReplyEntry, { proposal: option, own: option.creatorId === uid, uid }),
+									beside: (option: Statement) => m(ReplyEntry, { proposal: option, uid }),
 								}),
 						m(ErrorLine, {
 							message: caster.failed && open ? t('voting.failed') : null,

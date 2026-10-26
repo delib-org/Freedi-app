@@ -1,27 +1,25 @@
 import m from 'mithril';
 import type { Statement } from '@freedi/shared-types';
-import { t } from '@/lib/i18n';
 import { getChallengeQuestion } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
 import { classState } from '@/lib/classroom/classState';
 import { currentUid } from '@/lib/classroom/c3Data';
-import { listenRepliesToMe, loadProposal } from '@/lib/classroom/replies';
-import { shouldToast, unreadReplies } from '@/lib/classroom/replyLogic';
+import { listenProposalDoc, listenRepliesToMe, loadProposal } from '@/lib/classroom/replies';
 import { openReplies, replyUi, resetReplyUi } from '@/lib/classroom/replyUi';
-import { showStudentNotice } from '@/lib/classroom/studentNotices';
 import { refreshReplyPush } from '@/lib/classroom/replyPush';
 import { afterLoad } from '@/lib/deferWork';
 import { RepliesSheet } from './RepliesSheet';
 
 /**
- * The student's replies layer for one lesson (IA 22), started beside the step
- * screens by StudentStage:
+ * The student's replies layer for one lesson (IA 22, 23), started beside the
+ * step screens by StudentStage:
  *  - draws the one open replies sheet over whatever step is showing;
- *  - keeps the author's ONE listener (replies to my proposal) and the unread
- *    count the own card shows;
- *  - says "New reply to your proposal" (tappable) at most once a minute, and
- *    never while those replies are open;
- *  - opens the author's replies from a push tap (`?replies=<proposalId>`).
+ *  - keeps the author's ONE listener (replies to my proposal) in `replyUi`: the
+ *    lasting notice line (ReplyNotice) and the count on the own card read it;
+ *  - watches whether the teacher hid my proposal (its replies then drop out of
+ *    the count);
+ *  - opens the author's replies from the notice line and from a push tap
+ *    (`?replies=<proposalId>`).
  */
 
 /** The query parameter a push tap carries. */
@@ -51,37 +49,62 @@ function syncReadMark(): void {
 	}
 }
 
+/** One watcher per proposal of mine that has replies; keeps `replyUi.hiddenProposals` current. */
+function startHiddenWatch(uid: string): {
+	sync: (replies: readonly Statement[]) => void;
+	stop: () => void;
+} {
+	const stops = new Map<string, () => void>();
+	const hidden = new Set<string>();
+	const publish = (): void => {
+		replyUi.hiddenProposals = new Set(hidden);
+		m.redraw();
+	};
+
+	return {
+		sync(replies) {
+			for (const id of new Set(replies.map((r) => r.parentId))) {
+				if (stops.has(id)) continue;
+				stops.set(
+					id,
+					listenProposalDoc(
+						id,
+						(proposal) => {
+							const isHidden = proposal?.hide === true || proposal === null;
+							if (isHidden === hidden.has(id)) return;
+							if (isHidden) hidden.add(id);
+							else hidden.delete(id);
+							publish();
+						},
+						(error) =>
+							console.error(
+								'[Replies] own proposal listener error',
+								{ operation: 'replyHost.watchProposal', uid, statementId: id },
+								error,
+							),
+					),
+				);
+			}
+		},
+		stop() {
+			stops.forEach((stop) => stop());
+			stops.clear();
+		},
+	};
+}
+
 export function startReplyHost(main: Statement): () => void {
 	resetReplyUi();
 	const uid = currentUid();
 	const host = document.createElement('div');
 	document.body.appendChild(host);
-	const seen = new Set<string>();
-	let firstDelivery = true;
-	let lastToastAt: number | null = null;
+	const hiddenWatch = uid ? startHiddenWatch(uid) : null;
+	replyUi.openById = (proposalId: string): void => void openById(proposalId);
 
 	const onReplies = (list: Statement[]): void => {
 		replyUi.toMe = list;
 		syncReadMark();
-		if (!uid) return;
-		const unread = unreadReplies(list, uid, replyUi.readAt);
-		if (firstDelivery) {
-			firstDelivery = false;
-			list.forEach((r) => seen.add(r.statementId));
-		}
-		const sheetOpen = replyUi.open?.proposal.creatorId === uid;
-		const now = Date.now();
-		if (shouldToast({ now, lastToastAt, seen, unread, sheetOpen })) {
-			lastToastAt = now;
-			const proposalId = unread[unread.length - 1]?.parentId;
-			showStudentNotice(t('reply.toast'), {
-				label: t('reply.toast_open'),
-				run: () => {
-					if (proposalId) void openById(proposalId);
-				},
-			});
-		}
-		unread.forEach((r) => seen.add(r.statementId));
+		hiddenWatch?.sync(list);
 		m.redraw();
 	};
 
@@ -89,7 +112,7 @@ export function startReplyHost(main: Statement): () => void {
 		? listenRepliesToMe(main.topParentId || main.statementId, uid, onReplies, (error) =>
 				console.error(
 					'[Replies] author listener error',
-					{ operation: 'replyHost.listen', uid },
+					{ operation: 'replyHost.listen', uid, statementId: main.statementId },
 					error,
 				),
 			)
@@ -132,6 +155,7 @@ export function startReplyHost(main: Statement): () => void {
 	return () => {
 		navigator.serviceWorker?.removeEventListener('message', onWorkerMessage);
 		stop();
+		hiddenWatch?.stop();
 		m.mount(host, null);
 		host.remove();
 		resetReplyUi();

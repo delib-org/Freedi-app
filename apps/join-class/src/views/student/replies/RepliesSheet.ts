@@ -4,7 +4,7 @@ import '@/styles/student-c3.scss';
 import '@/styles/student-replies.scss';
 import { t } from '@/lib/i18n';
 import type { Unsubscribe } from '@/lib/firebase';
-import { firstUnreadId, replyRole, visibleReplies } from '@/lib/classroom/replyLogic';
+import { firstUnreadId, newReplyIds, replyRole, visibleReplies } from '@/lib/classroom/replyLogic';
 import {
 	listenProposalReplies,
 	markRepliesRead,
@@ -57,28 +57,37 @@ function tagOf(reply: Statement): string {
 	return reply.creator?.displayName?.trim() || t('turn.someone');
 }
 
-function replyView(reply: Statement, uid: string, newId: string | null): m.Vnode {
+function replyView(
+	reply: Statement,
+	uid: string,
+	newIds: ReadonlySet<string>,
+	firstNewId: string | null,
+): m.Vnode {
 	const hidden = reply.hide === true;
 	const role = replyRole(reply);
+	const isNew = newIds.has(reply.statementId);
 
 	return m(
 		'li.reply',
 		{
 			key: reply.statementId,
 			'data-testid': 'reply-item',
-			id: reply.statementId === newId ? 'reply-first-new' : undefined,
+			id: reply.statementId === firstNewId ? 'reply-first-new' : undefined,
 			class: [
 				hidden ? 'reply--hidden' : '',
 				role === 'teacher' ? 'reply--teacher' : '',
 				role === 'author' ? 'reply--author' : '',
 				reply.creatorId === uid ? 'reply--mine' : '',
-				reply.statementId === newId ? 'reply--new' : '',
+				isNew ? 'reply--new' : '',
 			]
 				.filter(Boolean)
 				.join(' '),
 		},
 		[
-			m('p.reply__tag', tagOf(reply)),
+			m('p.reply__tag', [
+				m('span', tagOf(reply)),
+				isNew ? m('span.reply__new-tag', t('reply.new_tag')) : null,
+			]),
 			m('p.reply__text', { dir: 'auto' }, reply.statement),
 			hidden ? m('p.reply__hidden', t('reply.hidden_mine')) : null,
 		],
@@ -218,7 +227,10 @@ export const RepliesSheet: m.ClassComponent<RepliesSheetAttrs> = {
 		const { proposal, uid } = vnode.attrs;
 		const own = proposal.creatorId === uid;
 		const list = visibleReplies(self.replies, uid);
-		const newId = own ? firstUnreadId(self.replies, uid, self.openedReadAt) : null;
+		const firstNewId = own ? firstUnreadId(self.replies, uid, self.openedReadAt) : null;
+		const newIds = own
+			? newReplyIds(visibleReplies(self.replies, uid), uid, self.openedReadAt)
+			: new Set<string>();
 		let body: m.Children;
 		if (!self.loaded) {
 			body = m('.replies__skeleton', { 'aria-busy': 'true', 'aria-label': t('plan.loading') }, [
@@ -230,7 +242,7 @@ export const RepliesSheet: m.ClassComponent<RepliesSheetAttrs> = {
 		} else {
 			body = m(
 				'ol.replies__list',
-				list.map((r) => replyView(r, uid, newId)),
+				list.map((r) => replyView(r, uid, newIds, firstNewId)),
 			);
 		}
 
@@ -246,6 +258,7 @@ export const RepliesSheet: m.ClassComponent<RepliesSheetAttrs> = {
 						)
 					: null,
 				m('blockquote.replies__proposal', { dir: 'auto' }, proposal.statement),
+				own ? m('p.replies__hint', t('reply.author_hint')) : null,
 				own ? authorFooter(vnode.attrs) : null,
 				body,
 				composer(self, vnode.attrs),

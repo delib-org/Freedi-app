@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { Statement } from '@freedi/shared-types';
 import {
-	REPLY_TOAST_GAP_MS,
 	firstUnreadId,
+	newReplyIds,
+	noticeKey,
+	replyNotice,
 	replyRole,
-	shouldToast,
 	unreadLineKey,
 	unreadReplies,
 	visibleReplies,
@@ -93,25 +94,51 @@ describe('replyRole', () => {
 	});
 });
 
-describe('shouldToast', () => {
-	const fresh = [reply('r1', { createdAt: 10 })];
-	const base = {
-		now: 1_000_000,
-		lastToastAt: null,
-		seen: new Set<string>(),
-		unread: fresh,
-		sheetOpen: false,
-	};
+describe('replyNotice', () => {
+	const r1 = reply('r1', { createdAt: 10 });
+	const r2 = reply('r2', { createdAt: 20, parentId: 'p2' });
 
-	it('speaks for a reply not announced yet', () => {
-		expect(shouldToast(base)).toBe(true);
+	it('counts unread replies by others and names the proposal of the oldest', () => {
+		expect(replyNotice([r2, r1], AUTHOR, undefined)).toEqual({ count: 2, proposalId: 'p1' });
 	});
 
-	it('stays quiet when nothing is new, the replies are open, or within the minute', () => {
-		expect(shouldToast({ ...base, seen: new Set(['r1']) })).toBe(false);
-		expect(shouldToast({ ...base, unread: [] })).toBe(false);
-		expect(shouldToast({ ...base, sheetOpen: true })).toBe(false);
-		expect(shouldToast({ ...base, lastToastAt: base.now - REPLY_TOAST_GAP_MS + 1 })).toBe(false);
-		expect(shouldToast({ ...base, lastToastAt: base.now - REPLY_TOAST_GAP_MS })).toBe(true);
+	it("skips replies at or before the read mark, hidden ones, and the author's own", () => {
+		expect(replyNotice([r1, r2], AUTHOR, 10)).toEqual({ count: 1, proposalId: 'p2' });
+		expect(replyNotice([reply('h', { createdAt: 5, hide: true })], AUTHOR, 0).count).toBe(0);
+		expect(replyNotice([reply('own', { createdAt: 5, creatorId: AUTHOR })], AUTHOR, 0).count).toBe(
+			0,
+		);
+	});
+
+	it('drops a reply the teacher hid at once, and replies under a hidden proposal', () => {
+		expect(replyNotice([{ ...r1, hide: true }, r2], AUTHOR, undefined).count).toBe(1);
+		expect(replyNotice([r1, r2], AUTHOR, undefined, new Set(['p1']))).toEqual({
+			count: 1,
+			proposalId: 'p2',
+		});
+	});
+
+	it('is empty when there is nothing', () => {
+		expect(replyNotice([], AUTHOR, undefined)).toEqual({ count: 0, proposalId: null });
+	});
+});
+
+describe('newReplyIds', () => {
+	it('tags every reply newer than the read mark, not only the first', () => {
+		const list = [
+			reply('a', { createdAt: 1 }),
+			reply('b', { createdAt: 30 }),
+			reply('c', { createdAt: 40 }),
+		];
+
+		expect([...newReplyIds(list, AUTHOR, 10)]).toEqual(['b', 'c']);
+	});
+});
+
+describe('noticeKey', () => {
+	it('picks the singular, the plural, or nothing', () => {
+		expect(noticeKey(0)).toBeNull();
+		expect(noticeKey(1)).toEqual({ key: 'reply.notice_one' });
+		expect(noticeKey(3)).toEqual({ key: 'reply.notice_n', params: { n: 3 } });
 	});
 });

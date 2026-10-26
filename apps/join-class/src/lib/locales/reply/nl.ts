@@ -13,8 +13,6 @@ const reply: Record<string, string> = {
 	'reply.by_teacher': 'Docent',
 	'reply.new_n': '{{n}} nieuwe reacties',
 	'reply.new_one': '1 nieuwe reactie',
-	'reply.toast': 'Nieuwe reactie op jullie voorstel',
-	'reply.toast_open': 'Lezen',
 	'reply.improve': 'Mijn voorstel verbeteren',
 	'reply.improve_closed': 'Voorstellen konden worden verbeterd tot de stemming openging',
 	'reply.refused': 'Je reactie lijkt kwetsende woorden te bevatten. Probeer het anders te zeggen.',
@@ -30,6 +28,10 @@ const reply: Record<string, string> = {
 		'De browser blokkeert meldingen. Reacties verschijnen nog steeds hier in de app',
 	'console.replies': 'Reacties ({{n}})',
 	'console.reply_placeholder': 'Reactie van de docent',
+	'reply.notice_one': 'Er is een nieuwe reactie op jullie voorstel · Lezen',
+	'reply.notice_n': '{{n}} nieuwe reacties op jullie voorstel · Lezen',
+	'reply.new_tag': 'Nieuw',
+	'reply.author_hint': 'Jullie kunnen terugreageren of jullie voorstel verbeteren',
 };
 
 export default reply;

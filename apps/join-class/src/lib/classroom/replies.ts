@@ -24,6 +24,7 @@ const LISTENER = {
 	proposal: 'classRepliesOfProposal',
 	mine: 'classRepliesToMe',
 	lesson: 'classRepliesOfLesson',
+	ownProposal: 'classOwnProposal',
 } as const;
 
 function replies(snapDocs: readonly { data: () => unknown }[]): Statement[] {
@@ -83,7 +84,24 @@ export function listenLessonReplies(
 	);
 }
 
-/** One proposal by id (a push tap or a toast opens its replies); null when gone. */
+/**
+ * One proposal of mine, live: the host watches whether the teacher hid it (its
+ * replies then leave the unread count, IA 24.2). `null` when the doc is gone.
+ */
+export function listenProposalDoc(
+	proposalId: string,
+	onData: (proposal: Statement | null) => void,
+	onError?: (error: Error) => void,
+): Unsubscribe {
+	return resilientOnSnapshot(
+		`${LISTENER.ownProposal}:${proposalId}`,
+		doc(db, Collections.statements, proposalId),
+		(snap) => onData(snap.exists() ? (snap.data() as Statement) : null),
+		(err) => onError?.(err),
+	);
+}
+
+/** One proposal by id (a push tap or the notice line opens its replies); null when gone. */
 export async function loadProposal(proposalId: string): Promise<Statement | null> {
 	try {
 		const snap = await getDoc(doc(db, Collections.statements, proposalId));
