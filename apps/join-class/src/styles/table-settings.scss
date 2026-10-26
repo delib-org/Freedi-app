@@ -1,0 +1,74 @@
+// =============================================================================
+// Table-talk lesson settings (views/teacher/TableSettingsControls.ts): the
+// "own questions" switch and the speaking-time / turns selects. Used on the plan
+// screen and in the console's settings popover.
+// =============================================================================
+
+.table-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: var(--space-sm) 0 0;
+  border: 0;
+
+  &__legend {
+    padding: 0;
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: var(--space-sm);
+    row-gap: var(--space-xs);
+    min-block-size: var(--touch-target);
+  }
+
+  &__switch {
+    inline-size: 24px;
+    block-size: 24px;
+    margin: 0;
+    accent-color: var(--terra-600);
+  }
+
+  &__label {
+    cursor: pointer;
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__help {
+    grid-column: 2;
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  &__warning {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: var(--space-sm);
+    color: var(--ink);
+    background: var(--bg-muted);
+    border-inline-start: 4px solid var(--terra-600);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+  }
+
+  &__select-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  &__select-label {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__select {
+    min-block-size: var(--touch-target);
+    padding-inline: var(--space-sm);
+    font: inherit;
+  }
+}

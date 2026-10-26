@@ -4,6 +4,7 @@ import type { ClassTable } from '@freedi/shared-types';
 import { getLang, t } from '@/lib/i18n';
 import { getServerOffset, remainingMs, serverNow } from '@/lib/classroom/serverClock';
 import { maxTurns } from '@/lib/classroom/turnMoment';
+import { noneLeftNow, questionCapNow } from '@/lib/classroom/ownQuestions';
 import { formatSpeakerTime, tableStepKey, timerLine } from '@/lib/classroom/consoleHelpers';
 import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
 import { joinNames } from '@/lib/classroom/listNames';
@@ -66,7 +67,7 @@ export function tableModeOf(attrs: { plenum: boolean; tableTalk: boolean }): Tab
 
 /** "Turn n of max": one turn per tablemate with a device who has not passed on asking. */
 export function turnLine(table: ClassTable): string {
-	return t('console.turn_n', { n: table.turn, max: maxTurns(table) });
+	return t('console.turn_n', { n: table.turn, max: maxTurns(table, questionCapNow()) });
 }
 
 /** The engine action behind each next-step verb. */
@@ -90,7 +91,7 @@ export function quickLabel(quick: QuickAction): string {
 
 function waitRows(attrs: TableCardAttrs): m.Children {
 	const { table, students } = attrs;
-	const line = statusLine(table, tableModeOf(attrs), serverNow());
+	const line = statusLine(table, tableModeOf(attrs), serverNow(), noneLeftNow(table));
 	if (!line) return null;
 	const names = (line.nameUids ?? []).map((uid) => nameOf(uid, students));
 	const params: Record<string, string | number> = { ...(line.params ?? {}) };
@@ -227,7 +228,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 					? null
 					: m(
 							'p.table-card__now',
-							tableIsDone(table, tableModeOf(attrs), serverNow())
+							tableIsDone(table, tableModeOf(attrs), serverNow(), noneLeftNow(table))
 								? t('console.all_done')
 								: t(tableStepKey(table, plenum)),
 						),

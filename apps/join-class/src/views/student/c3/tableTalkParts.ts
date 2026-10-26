@@ -9,6 +9,8 @@ import { getFetchedQuestionTexts, requestQuestionText } from '@/lib/classroom/qu
 import { SPEAK_MS, Countdown, msLeft } from './Countdown';
 import { isRaceRefusal, maxTurns, refusalReason } from '@/lib/classroom/turnMoment';
 import { claimLabelKey } from '@/lib/classroom/c3Logic';
+import { questionCapOf } from '@/lib/classroom/ownQuestions';
+import { allowOwnQuestionsOf, noQuestionsLeft } from '@freedi/shared-types';
 import { passedAnswer, tableTalkState, type TableTalkState } from '@/lib/classroom/tableTalkState';
 import { FlowError, type FlowCtx, type FlowParts } from './flowTypes';
 import { QuestionPick, type PickQuestion } from './QuestionPick';
@@ -27,10 +29,11 @@ export const FINISH_GUARD_MS = 1000;
 export const WAS_FIRST_MS = 4000;
 
 function pickQuestions(ctx: FlowCtx): PickQuestion[] {
-	const { table, questions } = ctx;
+	const { table, questions, main } = ctx;
+	const ownAllowed = allowOwnQuestionsOf(main);
 
 	return getGuidingQuestions(questions)
-		.filter((q) => !q.classTable || q.classTable.tableId === table.tableId)
+		.filter((q) => !q.classTable || (ownAllowed && q.classTable.tableId === table.tableId))
 		.map((q) => ({
 			id: q.statementId,
 			text: q.statement,
@@ -72,7 +75,9 @@ function noteWasFirst(ctx: FlowCtx, kind: 'turn' | 'floor'): void {
 
 function hasChoice(ctx: FlowCtx, teacherUsedUp: boolean): boolean {
 	const { self } = ctx;
-	const ownOn = self.ownSelected || (teacherUsedUp && self.chosenId === null);
+	const ownOn =
+		allowOwnQuestionsOf(ctx.main) &&
+		(self.ownSelected || (teacherUsedUp && self.chosenId === null));
 
 	return ownOn ? self.ownText.trim() !== '' : self.chosenId !== null;
 }
@@ -87,7 +92,9 @@ function startTurn(ctx: FlowCtx, teacherUsedUp: boolean): void {
 
 		return;
 	}
-	const ownOn = self.ownSelected || (teacherUsedUp && self.chosenId === null);
+	const ownOn =
+		allowOwnQuestionsOf(ctx.main) &&
+		(self.ownSelected || (teacherUsedUp && self.chosenId === null));
 	ctx.run(async () => {
 		let questionId = self.chosenId;
 		if (ownOn) {
@@ -123,9 +130,14 @@ function startTurn(ctx: FlowCtx, teacherUsedUp: boolean): void {
 	});
 }
 
-function pickBody(ctx: FlowCtx, teacherUsedUp: boolean, noTeacher: boolean): m.Children {
+function pickBody(
+	ctx: FlowCtx,
+	teacherUsedUp: boolean,
+	noTeacher: boolean,
+	allowOwn: boolean,
+): m.Children {
 	const { self } = ctx;
-	const ownOn = self.ownSelected || (teacherUsedUp && self.chosenId === null);
+	const ownOn = allowOwn && (self.ownSelected || (teacherUsedUp && self.chosenId === null));
 
 	return m(QuestionPick, {
 		questions: pickQuestions(ctx),
@@ -134,6 +146,7 @@ function pickBody(ctx: FlowCtx, teacherUsedUp: boolean, noTeacher: boolean): m.C
 		ownText: self.ownText,
 		teacherUsedUp,
 		noTeacherQuestions: noTeacher,
+		allowOwn,
 		disabled: self.busy,
 		onSelect: (id: string) => {
 			self.chosenId = id;
@@ -335,6 +348,7 @@ function pickScreen(
 	state: TableTalkState,
 	teacherUsedUp: boolean,
 	noTeacher: boolean,
+	allowOwn: boolean,
 ): Screen {
 	const { uid, table } = ctx;
 	if (state === 'P2') {
@@ -356,7 +370,7 @@ function pickScreen(
 		heading: t('turn.instr_pick'),
 		down: false,
 		body: [
-			pickBody(ctx, teacherUsedUp, noTeacher),
+			pickBody(ctx, teacherUsedUp, noTeacher, allowOwn),
 			first ? m('p.tt__quiet', { 'data-testid': 'was-first' }, first) : null,
 		],
 		action: pickActions(ctx, teacherUsedUp),
@@ -365,8 +379,15 @@ function pickScreen(
 
 /** The parts of the Table talk screen for this phone, this redraw. */
 export function tableTalkParts(ctx: FlowCtx): FlowParts {
-	const { table, uid, now, questions, self } = ctx;
-	const state = tableTalkState(table, uid, now);
+	const { table, uid, now, questions, self, main } = ctx;
+	const noneLeft = noQuestionsLeft(
+		table,
+		pickQuestions(ctx)
+			.filter((q) => !q.own)
+			.map((q) => q.id),
+		allowOwnQuestionsOf(main),
+	);
+	const state = tableTalkState(table, uid, now, noneLeft);
 	// A new turn clears a half-made choice: nothing carries over from the last pick.
 	if (self.chosenTurn !== table.turn) {
 		self.chosenTurn = table.turn;
@@ -387,7 +408,7 @@ export function tableTalkParts(ctx: FlowCtx): FlowParts {
 		const status = t('turn.wait_others');
 		screen = { status, heading: status, body: null, action: null, down: false };
 	} else if (state === 'P1' || state === 'P2') {
-		screen = pickScreen(ctx, state, teacherUsedUp, teacher.length === 0);
+		screen = pickScreen(ctx, state, teacherUsedUp, teacher.length === 0, allowOwnQuestionsOf(main));
 	} else {
 		screen = talkScreen(ctx, state, question);
 	}
@@ -396,7 +417,11 @@ export function tableTalkParts(ctx: FlowCtx): FlowParts {
 		headerLine:
 			state === 'D'
 				? t('turn.header_done', { n: table.n })
-				: t('turn.header', { n: table.n, turn: table.turn, max: maxTurns(table) }),
+				: t('turn.header', {
+						n: table.n,
+						turn: table.turn,
+						max: maxTurns(table, questionCapOf(main, questions)),
+					}),
 		status: screen.status,
 		stateKey: `${state}:${table.turn}`,
 		instruction: screen.heading,

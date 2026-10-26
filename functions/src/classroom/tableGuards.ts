@@ -17,6 +17,10 @@ export interface TransitionContext {
 	now: number;
 	/** The lesson's current step (lessonPlan.steps[stepIndex]), read with the table; null/absent when unknown. */
 	lessonStep?: LessonStepKey | null;
+	/** The picked question is a table's own question (it has a `classTable`); set for pickQuestion / claimTurn. */
+	questionIsOwn?: boolean;
+	/** The lesson lets students add their own question (`allowOwnQuestionsOf(main)`); absent = yes. */
+	allowOwnQuestions?: boolean;
 }
 
 /** From which steps the asker (or a tablemate, where allowed) may run each action. */
@@ -130,6 +134,21 @@ function assertMayClaimTurn(
 			'failed-precondition',
 			'This question was already asked at this table',
 			'question-used',
+		);
+	}
+}
+
+/**
+ * With own questions off (IA 25.4) a table cannot ask a question a student
+ * wrote: refused as `own-questions-off`, so the phone redraws without the row.
+ */
+export function assertOwnQuestionAllowed(action: ClassTableAction, ctx: TransitionContext): void {
+	if (action.action !== 'pickQuestion' && action.action !== 'claimTurn') return;
+	if (ctx.questionIsOwn === true && ctx.allowOwnQuestions === false) {
+		throw new ClassroomError(
+			'failed-precondition',
+			'Students cannot ask their own questions in this lesson',
+			'own-questions-off',
 		);
 	}
 }

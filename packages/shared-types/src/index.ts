@@ -1073,7 +1073,10 @@ export {
   othersAnswered,
   askerMayAnswer,
   choosing,
+  allowOwnQuestionsOf,
+  noQuestionsLeft,
 } from './models/classroom/classroomLogic';
+export type { LessonSettingsHolder } from './models/classroom/classroomLogic';
 export type {
   SupportSubscription,
   CampSupport,

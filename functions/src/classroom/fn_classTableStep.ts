@@ -1,6 +1,11 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import type { Firestore } from 'firebase-admin/firestore';
-import { Collections, WritingModeSchema, functionConfig } from '@freedi/shared-types';
+import {
+	Collections,
+	WritingModeSchema,
+	allowOwnQuestionsOf,
+	functionConfig,
+} from '@freedi/shared-types';
 import type {
 	ClassTable,
 	ClassTableAction,
@@ -97,11 +102,13 @@ export async function tableStep(
 	if (!first.exists) throw new ClassroomError('not-found', 'Table not found');
 	const { mainId } = first.data() as ClassTable;
 	const isAdmin = await isWorkspaceAdmin(firestore, mainId, actorUid);
+	let questionIsOwn = false;
 
 	if (action.action === 'pickQuestion' || action.action === 'claimTurn') {
 		const qSnap = await firestore.collection(Collections.statements).doc(action.questionId).get();
 		const question = qSnap.exists ? (qSnap.data() as Statement) : undefined;
 		const ownerTable = question?.classTable?.tableId;
+		questionIsOwn = ownerTable !== undefined;
 		if (
 			!isSubQuestionOf(question, mainId) ||
 			question?.statementSettings?.classRole === 'challenge' ||
@@ -125,6 +132,8 @@ export async function tableStep(
 			actorUid,
 			isAdmin,
 			now: now(),
+			questionIsOwn,
+			allowOwnQuestions: allowOwnQuestionsOf(main),
 		});
 		tx.set(ref, next);
 

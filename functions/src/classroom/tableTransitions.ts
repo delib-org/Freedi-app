@@ -7,6 +7,7 @@ import {
 	answeredUids,
 	assertFromStep,
 	assertMayAct,
+	assertOwnQuestionAllowed,
 	isTableTalk,
 	listOf,
 } from './tableGuards';
@@ -243,6 +244,7 @@ export function applyTableAction(
 	if (role === null) {
 		throw new ClassroomError('permission-denied', 'You are not seated at this table');
 	}
+	assertOwnQuestionAllowed(action, ctx);
 	assertMayAct(role, action, table, ctx.now, ctx.actorUid, ctx.lessonStep);
 	assertFromStep(role, action, table, ctx.lessonStep);
 

@@ -445,6 +445,8 @@ export const StatementSettingsSchema = object({
 	introVideos: optional(array(object({ id: string(), title: string(), url: string() }))),
 	// join-class: character names of side A and side B. Main statement only.
 	sideNames: optional(object({ a: string(), b: string() })),
+	// join-class: may students add a question of their own at Table talk? Absent = yes. Main statement only.
+	allowOwnQuestions: optional(boolean()),
 });
 
 

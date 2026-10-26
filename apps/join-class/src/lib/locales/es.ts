@@ -76,6 +76,10 @@ const es: Record<string, string> = {
 	'console.gate.help': 'Una propuesta pasa cuando su acuerdo llega a este número.',
 	'plan.tables.title': 'Preguntas para las mesas',
 	'plan.tables.help': 'Cada mesa elige una. Añadan de 3 a 8.',
+	'plan.own_questions': 'Los estudiantes pueden añadir su propia pregunta',
+	'plan.own_questions_help': 'Si está desactivado, las mesas eligen solo entre vuestras preguntas',
+	'plan.own_questions_none':
+		'No hay preguntas para las mesas y los estudiantes no pueden añadir ninguna. Añadan una pregunta o activen la opción',
 	'plan.empty': 'Aún no hay preguntas. Añadan la primera',
 	'plan.add': '+ Pregunta',
 	'plan.question.label': 'Pregunta {{n}}',
@@ -414,6 +418,10 @@ const es: Record<string, string> = {
 	'lesson.not_lesson': 'Este enlace no lleva a ninguna clase',
 	'login.have_code': 'Tengo un código',
 	'console.settings': 'Ajustes de la clase',
+	'console.tables_group': 'Mesas',
+	'console.own_questions': 'Los estudiantes pueden añadir su propia pregunta',
+	'console.own_questions_help':
+		'Si está desactivado, las mesas eligen solo entre vuestras preguntas',
 	'door.code.title': 'Escribe el código',
 	'door.code.enter': 'Entrar',
 	'door.teacher': 'Soy docente',

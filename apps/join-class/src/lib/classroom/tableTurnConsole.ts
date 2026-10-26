@@ -94,16 +94,21 @@ export function notAnsweredUids(table: ClassTable, now: number): string[] {
  * to start, who has not answered, or "asked n, passed p". null while a minute
  * runs (the timer row says it) and outside Table talk.
  */
-export function statusLine(table: ClassTable, mode: TableMode, now: number): StatusLine | null {
+export function statusLine(
+	table: ClassTable,
+	mode: TableMode,
+	now: number,
+	noneLeft = false,
+): StatusLine | null {
 	if (mode !== 'tableTalk') return null;
-	if (tableDone(table, now)) {
+	if (tableDone(table, now, noneLeft)) {
 		const { a, p } = askedPassedCounts(table);
 
 		return { key: 'console.asked_passed', params: { a, p } };
 	}
 	if (minuteRunning(table, now)) return null;
 	const elapsedMs = elapsedSinceChange(table, now);
-	if (choosing(table, now) || table.step === 'write' || table.step === 'rate') {
+	if (choosing(table, now, noneLeft) || table.step === 'write' || table.step === 'rate') {
 		return { key: 'console.waiting_start', elapsedMs };
 	}
 
@@ -138,6 +143,11 @@ export function answerMark(table: ClassTable, uid: string, now: number): AnswerM
 }
 
 /** Every device member asked or passed and the last talk is over: the card's "now" says so. */
-export function tableIsDone(table: ClassTable, mode: TableMode, now: number): boolean {
-	return mode === 'tableTalk' && tableDone(table, now);
+export function tableIsDone(
+	table: ClassTable,
+	mode: TableMode,
+	now: number,
+	noneLeft = false,
+): boolean {
+	return mode === 'tableTalk' && tableDone(table, now, noneLeft);
 }

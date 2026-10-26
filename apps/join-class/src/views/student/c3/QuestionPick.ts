@@ -23,6 +23,8 @@ export interface QuestionPickAttrs {
 	teacherUsedUp: boolean;
 	/** There are no teacher questions at all (no "all asked" note). */
 	noTeacherQuestions: boolean;
+	/** Students may add their own question (IA 25.4); off: no own row, no own questions, no "all asked" note. */
+	allowOwn: boolean;
 	disabled: boolean;
 	onSelect: (id: string) => void;
 	onSelectOwn: () => void;
@@ -152,20 +154,21 @@ export const QuestionPick: m.ClassComponent<QuestionPickAttrs> = {
 		const ownFree = free.filter((q) => q.own);
 
 		// Keyed rows only (no null, no nested array): mithril refuses a keyed list with holes.
+		const own: m.Vnode[] = attrs.allowOwn ? [ownRow(attrs)] : [];
 		const rows: m.Vnode[] = teacherUsedUp
-			? [ownRow(attrs), ...ownFree.map((q) => questionRow(q, attrs))]
+			? [...own, ...ownFree.map((q) => questionRow(q, attrs))]
 			: [
 					...(teacher.length > 0
 						? [m('p.pick__title', { key: 'title' }, t('question.teacher_list'))]
 						: []),
 					...teacher.map((q) => questionRow(q, attrs)),
 					...ownFree.map((q) => questionRow(q, attrs)),
-					ownRow(attrs),
+					...own,
 					...used.map(usedRow),
 				];
 
 		return m('.pick', [
-			teacherUsedUp && !noTeacherQuestions
+			attrs.allowOwn && teacherUsedUp && !noTeacherQuestions
 				? m('p.pick__all-used', { 'data-testid': 'questions-used' }, t('turn.questions_used'))
 				: null,
 			m(

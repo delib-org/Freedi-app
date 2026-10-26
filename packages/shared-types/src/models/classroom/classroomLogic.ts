@@ -1,6 +1,29 @@
 import { CAMP_A_BELOW, CAMP_B_ABOVE, Camp, ClassTable } from './classroomModel';
-import type { LessonPlan, LessonStatus } from '../statement/StatementSettings';
+import type { LessonPlan, LessonStatus, StatementSettings } from '../statement/StatementSettings';
 import type { LessonStatusAction } from './classroomCallables';
+
+/** What the lesson-setting readers need of the main statement (a `Statement` fits). */
+export interface LessonSettingsHolder {
+	statementSettings?: Pick<StatementSettings, 'allowOwnQuestions'> | null;
+}
+
+/** May students add a question of their own at Table talk? Absent = yes (IA 25.2). */
+export function allowOwnQuestionsOf(main: LessonSettingsHolder | null | undefined): boolean {
+	return main?.statementSettings?.allowOwnQuestions !== false;
+}
+
+/**
+ * Own questions are off and every teacher question was already asked at this
+ * table: nothing is left to pick (IA 25.4). `teacherQuestionIds` are the
+ * lesson's guiding questions without a table of their own.
+ */
+export function noQuestionsLeft(
+	table: Pick<ClassTable, 'usedQuestionIds'>,
+	teacherQuestionIds: readonly string[],
+	allowOwnQuestions: boolean,
+): boolean {
+	return !allowOwnQuestions && teacherQuestionIds.every((id) => table.usedQuestionIds.includes(id));
+}
 
 /** Camp of a slider value: <40 'a', >60 'b', otherwise 'center'. */
 export function campOf(side: number): Camp {
@@ -204,7 +227,9 @@ export function everyoneSpoke(
 
 /**
  * Table talk is done for this table: every device member has asked or passed
- * on asking, and either nobody is asking or the current talk is over.
+ * on asking, and either nobody is asking or the current talk is over. With
+ * own questions off (`noneLeft`, see `noQuestionsLeft`) it is also done once no
+ * question is left to ask and the table is not mid-talk (IA 25.2).
  */
 export function tableDone(
 	table: Pick<
@@ -218,8 +243,11 @@ export function tableDone(
 		| 'speakerEndsAt'
 	>,
 	now: number,
+	noneLeft = false,
 ): boolean {
-	return notAskedUids(table).length === 0 && (table.askerUid === null || everyoneSpoke(table, now));
+	const talkOver = table.askerUid === null || everyoneSpoke(table, now);
+
+	return (notAskedUids(table).length === 0 || noneLeft) && talkOver;
 }
 
 /** Uids that answered or passed this question; the speaker counts once their minute is over. */
@@ -292,8 +320,9 @@ export function choosing(
 		| 'speakerEndsAt'
 	>,
 	now: number,
+	noneLeft = false,
 ): boolean {
-	if (tableDone(table, now)) return false;
+	if (tableDone(table, now, noneLeft)) return false;
 
 	return table.step === 'pick' || (table.step === 'talk' && everyoneSpoke(table, now));
 }

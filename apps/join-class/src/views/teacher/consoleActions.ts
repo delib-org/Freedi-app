@@ -26,7 +26,7 @@ import { getLessonStep, getLessonSteps, setLessonStep } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
 import { clearsTableClocksOnEnter, splitsTablesOnEnter } from '@/lib/classroom/consoleHelpers';
 import { classState } from '@/lib/classroom/classState';
-import { getMainStatement, setQuestionSetting } from '@/lib/store';
+import { getMainStatement, setMainStatementSetting, setQuestionSetting } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { act, consoleState } from './consoleState';
 
@@ -136,6 +136,22 @@ export function assignTables(mainId: string, replace: boolean): Promise<boolean>
 export function allTablesTo(mainId: string, step: TableStep): Promise<boolean> {
 	return guardedAct(`all:${step}`, t('console.all_tables_rate'), () =>
 		classAllTablesTo({ mainId, step }),
+	);
+}
+
+/**
+ * One of the lesson's table-talk settings (IA 25), from the settings popover.
+ * A setting, not a move of the room, so it works while the lesson is held too.
+ */
+export type TableSettingsPatch = { allowOwnQuestions: boolean };
+
+export function setTableSetting(patch: TableSettingsPatch): Promise<boolean> {
+	const field = Object.keys(patch)[0];
+
+	return act(`tableSetting:${field}`, t('console.tables_group'), () =>
+		setMainStatementSetting(consoleState.mainId, {
+			statementSettings: patch,
+		} as Partial<Statement>),
 	);
 }
 

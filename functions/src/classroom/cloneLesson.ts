@@ -149,6 +149,9 @@ function mainSettings(source: Statement, classCode: string, now: number): Statem
 		...(sideNames && typeof sideNames.a === 'string' && typeof sideNames.b === 'string'
 			? { sideNames: { a: sideNames.a, b: sideNames.b } }
 			: {}),
+		...(typeof s?.allowOwnQuestions === 'boolean'
+			? { allowOwnQuestions: s.allowOwnQuestions }
+			: {}),
 	} as StatementSettings;
 }
 

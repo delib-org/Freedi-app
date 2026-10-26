@@ -51,6 +51,7 @@ import {
 	savedSideName,
 } from './planDetails';
 import { PlanIntro } from './PlanIntro';
+import { OWN_QUESTIONS_KEY, ownQuestionsControl } from './planLessonSettings';
 
 interface FieldAttrs {
 	key: string;
@@ -373,6 +374,8 @@ function renderTables(guiding: Statement[]): m.Vnode {
 			{ type: 'button', onclick: addNewCard },
 			m('span.plan__add-label', t('plan.add')),
 		),
+		ownQuestionsControl(total),
+		fieldError(OWN_QUESTIONS_KEY),
 		getFieldError('order')
 			? m('.plan-card__error', { role: 'alert' }, [
 					m('span', t('plan.error.save')),
