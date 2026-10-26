@@ -11,10 +11,8 @@ const vote: Record<string, string> = {
 	'voting.pick_one': 'בחרו הצעה אחת',
 	'voting.waiting': 'ממתינים שהמורה תפתח את ההצבעה',
 	'voting.empty': 'אין מה להצביע',
-	'voting.vote': 'הצבעה',
-	'voting.voted': 'הצבעתם',
-	'voting.change': 'לשנות הצבעה',
 	'voting.saving': 'שומרים…',
+	'voting.counted': 'ההצבעה נקלטה',
 	'voting.closed': 'ההצבעה נסגרה',
 	'voting.failed': 'ההצבעה לא נשמרה. לנסות שוב',
 	'voting.paused': 'ההצבעה מושהית',
@@ -42,12 +40,8 @@ const vote: Record<string, string> = {
 	'console.all_voted': 'כולם הצביעו',
 	'console.vote_order': 'סדר ההצעות',
 	'console.vote_order_consensus': 'לפי הדירוגים',
-	'console.vote_order_consensus_help': 'ההצעות שהכיתה הכי הסכימה עליהן למעלה, אצל התלמידים ובמקרן',
 	'console.vote_order_votes': 'לפי מספר הקולות',
-	'console.vote_order_votes_help':
-		'ההצעה עם הכי הרבה קולות עולה למעלה בזמן ההצבעה, אצל התלמידים ובמקרן',
 	'console.vote_order_random': 'סדר אקראי',
-	'console.vote_order_random_help': 'כולם רואים אותו סדר, והוא לא משתנה בזמן ההצבעה',
 	// >>> voteSummary END
 };
 

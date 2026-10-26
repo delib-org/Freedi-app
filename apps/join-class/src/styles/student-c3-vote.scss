@@ -107,6 +107,20 @@
   color: var(--ink-muted);
 }
 
+// ---- pick = vote: the quiet "your vote counted" line in the footer -----------------------
+
+.vote__status {
+  min-block-size: 1.5em;
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+  color: var(--ink-muted);
+
+  &--counted {
+    color: var(--agree);
+  }
+}
+
 // ---- summary: the vote's result (IA 20) ------------------------------------------------
 
 .summary__no-vote {

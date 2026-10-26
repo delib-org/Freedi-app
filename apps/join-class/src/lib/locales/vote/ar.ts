@@ -11,10 +11,8 @@ const vote: Record<string, string> = {
 	'voting.pick_one': 'اختاروا اقتراحاً واحداً',
 	'voting.waiting': 'ننتظر أن يفتح المعلم التصويت',
 	'voting.empty': 'لا شيء للتصويت عليه',
-	'voting.vote': 'صوّتوا',
-	'voting.voted': 'لقد صوّتم',
-	'voting.change': 'تغيير التصويت',
 	'voting.saving': 'جارٍ الحفظ…',
+	'voting.counted': 'تم احتساب صوتكم',
 	'voting.closed': 'أُغلق التصويت',
 	'voting.failed': 'لم يُحفظ التصويت. حاولوا مرة أخرى',
 	'voting.paused': 'التصويت متوقف مؤقتًا',
@@ -42,13 +40,8 @@ const vote: Record<string, string> = {
 	'console.all_voted': 'صوّت الجميع',
 	'console.vote_order': 'ترتيب الاقتراحات',
 	'console.vote_order_consensus': 'حسب التقييمات',
-	'console.vote_order_consensus_help':
-		'الاقتراحات التي اتفق عليها الصف أكثر في الأعلى، على الهواتف وعلى شاشة العرض',
 	'console.vote_order_votes': 'حسب عدد الأصوات',
-	'console.vote_order_votes_help':
-		'الاقتراح الأكثر أصواتًا يصعد إلى الأعلى أثناء التصويت، على الهواتف وعلى شاشة العرض',
 	'console.vote_order_random': 'ترتيب عشوائي',
-	'console.vote_order_random_help': 'الجميع يرون الترتيب نفسه ولا يتغير أثناء التصويت',
 	// >>> voteSummary END
 };
 

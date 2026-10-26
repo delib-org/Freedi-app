@@ -7,6 +7,7 @@ import { getChallengeQuestion } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
 import { castVote } from '@/lib/classroom/studentWrites';
 import { listenMyVote } from '@/lib/classroom/c3Data';
+import { VoteCaster } from '@/lib/classroom/voteCaster';
 import {
 	consensusOf,
 	countsOf,
@@ -41,28 +42,40 @@ class VoteState {
 	votedId: string | null = null;
 	/** The last proposal this phone had voted for (to tell "removed" from "never voted"). */
 	lastVotedId: string | null = null;
-	selectedId: string | null = null;
 	voteStop: Unsubscribe | null = null;
 	voteFor: string | null = null;
-	saving = false;
-	error: string | null = null;
+	/** Pick = vote: every tap is written at once, the latest pick wins. */
+	caster: VoteCaster | null = null;
 	/** The order the cards were last shown in (ties keep it; frozen while a pick is pending). */
 	order: string[] = [];
 }
 
 /**
- * The vote (UX §2.8): radio cards of the frozen ballot, "Vote" casts (two
- * taps), "You voted" in teal; a different card turns the button into "Change
- * vote" until the ballot closes. While the teacher has the vote paused the
- * cards are locked and the button says so; the vote already cast is kept.
- * Live results (on unless the teacher hides them) add each proposal's share.
- * The cards follow the teacher's order (C_p by default, votes, or one shared
- * random order); a closed ballot is ordered by votes, winner first. While a
- * card is picked but not yet voted for the order is frozen (IA 21.3).
+ * The vote (UX §2.8): radio cards of the frozen ballot. Picking a card IS the
+ * vote (no submit button): it is written at once, a different card moves the
+ * vote until the ballot closes, and "Your vote was counted" confirms it. While
+ * the teacher has the vote paused the cards are locked; the vote already cast
+ * is kept. Live results (on unless the teacher hides them) add each
+ * proposal's share. The cards follow the teacher's order (C_p by default,
+ * votes, or one shared random order); a closed ballot is ordered by votes,
+ * winner first. While a pick is being written the order is frozen (IA 21.3).
  */
 export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 	oninit(vnode) {
-		(vnode.state as { self?: VoteState }).self = new VoteState();
+		const self = new VoteState();
+		(vnode.state as { self?: VoteState }).self = self;
+		self.caster = new VoteCaster({
+			write: (optionId) => {
+				const { main } = vnode.attrs;
+				const challengeId = getChallengeQuestion(getSubQuestions())?.statementId;
+				if (!challengeId) return Promise.reject(new Error('no challenge'));
+
+				return castVote(main.statementId, challengeId, optionId);
+			},
+			onChange: () => m.redraw(),
+			onError: (error) =>
+				console.error('[C3] vote write failed:', vnode.attrs.main.statementId, error),
+		});
 	},
 
 	onremove(vnode) {
@@ -85,6 +98,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 				challengeId,
 				(optionId) => {
 					self.votedId = optionId;
+					self.caster?.sync(optionId);
 					m.redraw();
 				},
 				(error) => console.error('[C3] vote listener error:', error),
@@ -95,7 +109,9 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 		const ballotIds = ballot?.candidateIds ?? [];
 		const tally = voteResults(ballotIds, challenge?.selections);
 		const mode = voteOrderOf(challenge);
-		const pending = !closed && !!self.selectedId && self.selectedId !== self.votedId;
+		const caster = self.caster as VoteCaster;
+		const stillCandidate = (id: string | null): boolean => !!id && ballotIds.includes(id);
+		const pending = !closed && caster.pending && stillCandidate(caster.wanted);
 		self.order = pending
 			? keepOrder(ballotIds, self.order)
 			: orderBallot(
@@ -117,45 +133,15 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			!self.votedId &&
 			!!self.lastVotedId &&
 			!ballotIds.includes(self.lastVotedId);
-		const stillCandidate = (id: string | null): boolean => !!id && ballotIds.includes(id);
-		const selected = stillCandidate(self.selectedId) ? self.selectedId : self.votedId;
-		const changed = !!selected && selected !== self.votedId;
-
-		const cast = (): void => {
-			if (!challengeId || !selected || self.saving || paused || closed) return;
-			self.saving = true;
-			self.error = null;
-			castVote(main.statementId, challengeId, selected)
-				.catch(() => {
-					self.error = t('voting.failed');
-				})
-				.finally(() => {
-					self.saving = false;
-					m.redraw();
-				});
-		};
-
-		let label = t('voting.vote');
-		let disabled = !selected;
-		let variant = 'btn--primary';
-		if (closed) {
-			label = t('voting.closed');
-			disabled = true;
-			variant = 'btn--secondary';
-		} else if (paused) {
-			label = t('voting.paused');
-			disabled = true;
-			variant = 'btn--secondary';
-		} else if (self.saving) {
-			label = t('voting.saving');
-			disabled = true;
-		} else if (self.votedId && !changed) {
-			label = t('voting.voted');
-			disabled = true;
-			variant = 'btn--agree';
-		} else if (self.votedId && changed) {
-			label = t('voting.change');
-		}
+		const selected = pending || caster.failed ? caster.wanted : self.votedId;
+		const open = !closed && !paused;
+		const writing = pending && !caster.failed;
+		const counted = open && !writing && !!selected && selected === self.votedId;
+		let statusKey: string | null = null;
+		if (closed) statusKey = 'voting.closed';
+		else if (paused) statusKey = 'voting.paused';
+		else if (writing) statusKey = 'voting.saving';
+		else if (counted) statusKey = 'voting.counted';
 
 		return m(
 			StudentFrame,
@@ -166,15 +152,14 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 				),
 				action: ballot
 					? m(
-							'button.btn',
+							'p.vote__status',
 							{
-								class: variant,
-								type: 'button',
-								'data-testid': 'vote-send',
-								disabled: disabled || undefined,
-								onclick: cast,
+								class: counted ? 'vote__status--counted' : '',
+								role: 'status',
+								'aria-live': 'polite',
+								'data-testid': 'vote-status',
 							},
-							label,
+							statusKey ? t(statusKey) : '',
 						)
 					: null,
 			},
@@ -191,10 +176,13 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 									animateReorder: mode !== 'random' || closed,
 									winnerId: closed ? (ballot?.decisionId ?? null) : null,
 									onSelect: (id: string) => {
-										self.selectedId = id;
+										if (open) caster.pick(id);
 									},
 								}),
-						m(ErrorLine, { message: self.error, onRetry: cast }),
+						m(ErrorLine, {
+							message: caster.failed ? t('voting.failed') : null,
+							onRetry: () => caster.retry(),
+						}),
 					]
 				: null,
 		);

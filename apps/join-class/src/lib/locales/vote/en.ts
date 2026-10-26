@@ -11,10 +11,8 @@ const vote: Record<string, string> = {
 	'voting.pick_one': 'Choose one proposal',
 	'voting.waiting': 'Waiting for the teacher to open the vote',
 	'voting.empty': 'Nothing to vote on',
-	'voting.vote': 'Vote',
-	'voting.voted': 'You voted',
-	'voting.change': 'Change vote',
 	'voting.saving': 'Saving…',
+	'voting.counted': 'Your vote was counted',
 	'voting.closed': 'The vote is closed',
 	'voting.failed': 'The vote was not saved. Try again',
 	'voting.paused': 'Voting is paused',
@@ -43,14 +41,8 @@ const vote: Record<string, string> = {
 	'console.all_voted': 'Everyone has voted',
 	'console.vote_order': 'Order of the proposals',
 	'console.vote_order_consensus': 'By the ratings',
-	'console.vote_order_consensus_help':
-		'The proposals the class agreed on most are on top, on phones and the projector',
 	'console.vote_order_votes': 'By the number of votes',
-	'console.vote_order_votes_help':
-		'The proposal with the most votes moves to the top during the vote, on phones and the projector',
 	'console.vote_order_random': 'Random order',
-	'console.vote_order_random_help':
-		'Everyone sees the same order, and it does not change during the vote',
 	// >>> voteSummary END
 };
 

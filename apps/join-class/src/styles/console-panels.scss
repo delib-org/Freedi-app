@@ -180,18 +180,3 @@
     font-size: var(--font-size-sm);
   }
 }
-
-// ---- vote order (IA 21): one radio group, applies to every phone and the projector ----
-.vote-display__group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  margin: 0;
-  padding: var(--space-sm) 0 0;
-  border: 0;
-}
-
-.vote-display__subtitle {
-  padding: 0;
-  font-weight: var(--font-weight-bold);
-}

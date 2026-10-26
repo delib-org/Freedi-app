@@ -11,10 +11,8 @@ const vote: Record<string, string> = {
 	'voting.pick_one': 'یک پیشنهاد انتخاب کنید',
 	'voting.waiting': 'منتظر بمانید تا معلم رأی‌گیری را باز کند',
 	'voting.empty': 'چیزی برای رأی دادن نیست',
-	'voting.vote': 'رأی بدهید',
-	'voting.voted': 'رأی دادید',
-	'voting.change': 'تغییر رأی',
 	'voting.saving': 'در حال ذخیره…',
+	'voting.counted': 'رأی شما ثبت شد',
 	'voting.closed': 'رأی‌گیری بسته شد',
 	'voting.failed': 'رأی ذخیره نشد. دوباره تلاش کنید',
 	'voting.paused': 'رأی‌گیری موقتاً متوقف است',
@@ -44,13 +42,8 @@ const vote: Record<string, string> = {
 	'console.all_voted': 'همه رأی دادند',
 	'console.vote_order': 'ترتیب پیشنهادها',
 	'console.vote_order_consensus': 'بر اساس امتیازها',
-	'console.vote_order_consensus_help':
-		'پیشنهادهایی که کلاس بیشترین توافق را روی آن‌ها دارد بالا هستند، روی تلفن‌ها و پروژکتور',
 	'console.vote_order_votes': 'بر اساس تعداد رأی',
-	'console.vote_order_votes_help':
-		'پیشنهاد با بیشترین رأی در طول رأی‌گیری بالا می‌آید، روی تلفن‌ها و پروژکتور',
 	'console.vote_order_random': 'ترتیب تصادفی',
-	'console.vote_order_random_help': 'همه ترتیب یکسانی می‌بینند و در طول رأی‌گیری تغییر نمی‌کند',
 	// >>> voteSummary END
 };
 

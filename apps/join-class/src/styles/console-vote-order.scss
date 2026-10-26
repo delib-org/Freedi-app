@@ -1,0 +1,68 @@
+// =============================================================================
+// Vote order switch: the 3-way segmented control on the Vote step's control row
+// (views/teacher/VoteOrderSwitch.ts). Wraps at narrow widths.
+// =============================================================================
+
+.vote-order {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+
+  &__label {
+    font-weight: var(--font-weight-semibold);
+    color: var(--ink-muted);
+  }
+
+  &__group {
+    display: inline-flex;
+    flex-wrap: wrap;
+    padding: 2px;
+    background: var(--bg-muted);
+    border-radius: var(--radius-full);
+  }
+
+  &__option {
+    position: relative;
+    display: inline-flex;
+  }
+
+  // visually hidden, still focusable: arrow keys move the choice natively
+  &__input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  &__text {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 var(--space-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--ink-muted);
+    border-radius: var(--radius-full);
+    pointer-events: none;
+  }
+
+  &__input:checked + &__text {
+    color: var(--ink);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-xs);
+  }
+
+  &__input:focus-visible + &__text {
+    outline: 2px solid var(--terra-600);
+    outline-offset: 1px;
+  }
+
+  &__input:disabled + &__text {
+    opacity: 0.6;
+  }
+}
