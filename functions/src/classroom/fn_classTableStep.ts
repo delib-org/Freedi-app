@@ -1,6 +1,13 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import type { Firestore } from 'firebase-admin/firestore';
-import { Collections, WritingModeSchema, functionConfig } from '@freedi/shared-types';
+import {
+	Collections,
+	WritingModeSchema,
+	allowOwnQuestionsOf,
+	proposalsTurnsOf,
+	speakSecondsOf,
+	functionConfig,
+} from '@freedi/shared-types';
 import type {
 	ClassTable,
 	ClassTableAction,
@@ -28,6 +35,8 @@ import { applyTableAction } from './tableTransitions';
  * machine cannot (admin role, the picked question) and writes the result in a
  * transaction so two taps never interleave.
  */
+
+const MS_PER_SECOND = 1000;
 
 /** Rebuild the action from the raw request: unknown keys never reach the machine. */
 export function parseAction(req: ClassTableStepRequest): ClassTableAction {
@@ -76,6 +85,10 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 			return typeof req.fromTurn === 'number'
 				? { action: 'nextTurn', fromTurn: req.fromTurn }
 				: { action: 'nextTurn' };
+		case 'nextProposalsTurn':
+			return typeof req.fromTurn === 'number'
+				? { action: 'nextProposalsTurn', fromTurn: req.fromTurn }
+				: { action: 'nextProposalsTurn' };
 		default:
 			throw new ClassroomError('invalid-argument', 'Unknown table action');
 	}
@@ -97,11 +110,13 @@ export async function tableStep(
 	if (!first.exists) throw new ClassroomError('not-found', 'Table not found');
 	const { mainId } = first.data() as ClassTable;
 	const isAdmin = await isWorkspaceAdmin(firestore, mainId, actorUid);
+	let questionIsOwn = false;
 
 	if (action.action === 'pickQuestion' || action.action === 'claimTurn') {
 		const qSnap = await firestore.collection(Collections.statements).doc(action.questionId).get();
 		const question = qSnap.exists ? (qSnap.data() as Statement) : undefined;
 		const ownerTable = question?.classTable?.tableId;
+		questionIsOwn = ownerTable !== undefined;
 		if (
 			!isSubQuestionOf(question, mainId) ||
 			question?.statementSettings?.classRole === 'challenge' ||
@@ -125,6 +140,10 @@ export async function tableStep(
 			actorUid,
 			isAdmin,
 			now: now(),
+			questionIsOwn,
+			allowOwnQuestions: allowOwnQuestionsOf(main),
+			speakMs: speakSecondsOf(main) * MS_PER_SECOND,
+			proposalsTurns: proposalsTurnsOf(main),
 		});
 		tx.set(ref, next);
 

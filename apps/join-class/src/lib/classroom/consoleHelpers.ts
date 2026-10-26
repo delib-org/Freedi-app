@@ -15,6 +15,50 @@ const GATE_ROUNDING = 100;
 /** Steps at which every table can be sent to the rate step at once (not Table talk: nobody rates there). */
 export const ALL_TABLES_RATE_STEPS: readonly LessonStepKey[] = ['proposals'];
 
+/**
+ * Steps after the tables' work (the class rates every proposal, votes, then reads the
+ * summary): a table card then only shows who sits there. Its "now" line, timer and
+ * next-step button are the state of the LAST table step (often "talking, time over"),
+ * which the class has left.
+ */
+export const TABLES_DONE_STEPS: readonly LessonStepKey[] = ['allProposals', 'vote', 'summary'];
+
+export function tablesAreDone(stepKey: LessonStepKey): boolean {
+	return TABLES_DONE_STEPS.includes(stepKey);
+}
+
+/**
+ * Arriving at Proposals from an earlier step: the table clocks of Table talk are
+ * stale there ("time over" before anyone spoke). Every table is cleared once, so
+ * each speaker's minute at Proposals starts from the beginning (IA 17.14).
+ */
+export function clearsTableClocksOnEnter(
+	fromIndex: number,
+	toIndex: number,
+	steps: readonly LessonStepKey[],
+): boolean {
+	return steps[toIndex] === 'proposals' && fromIndex < toIndex;
+}
+
+/** Steps whose opening seats the class at tables when it has no tables yet (IA 25.3). */
+const SPLIT_ON_ENTER_STEPS: readonly LessonStepKey[] = ['tables', 'tableTalk'];
+
+/**
+ * A forward move into the tables step or Table talk with no tables yet: the
+ * class is split automatically. A back move, or a class that already has
+ * tables (a manual split, "חלוקה מחדש"), is left alone.
+ */
+export function splitsTablesOnEnter(
+	fromIndex: number,
+	toIndex: number,
+	steps: readonly LessonStepKey[],
+	hasTables: boolean,
+): boolean {
+	const target = steps[toIndex];
+
+	return !hasTables && fromIndex < toIndex && !!target && SPLIT_ON_ENTER_STEPS.includes(target);
+}
+
 export type RailState = 'done' | 'current' | 'upcoming';
 
 export interface RailStep {
@@ -64,6 +108,11 @@ export function isPlenum(challenge: Statement | null | undefined): boolean {
 
 export function isBallotFrozen(challenge: Statement | null | undefined): boolean {
 	return typeof challenge?.statementSettings?.ballot?.frozenAt === 'number';
+}
+
+/** The teacher paused the vote: nobody votes or changes a vote until it resumes. */
+export function isBallotPaused(challenge: Statement | null | undefined): boolean {
+	return typeof challenge?.statementSettings?.ballot?.pausedAt === 'number';
 }
 
 export function isBallotClosed(challenge: Statement | null | undefined): boolean {

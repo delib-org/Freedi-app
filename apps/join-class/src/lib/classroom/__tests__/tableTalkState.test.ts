@@ -138,3 +138,17 @@ describe('tableTalkState: passes and edge cases', () => {
 		expect(tableTalkState(over, 'dan', NOW)).toBe('P1');
 	});
 });
+
+describe('tableTalkState with no question left (own questions off)', () => {
+	it('is done at pick when every teacher question was asked', () => {
+		expect(tableTalkState(table({ usedQuestionIds: ['q1'] }), 'dan', NOW, true)).toBe('D');
+	});
+
+	it('is not done by default (own questions on)', () => {
+		expect(tableTalkState(table({ usedQuestionIds: ['q1'] }), 'dan', NOW)).toBe('P1');
+	});
+
+	it('keeps the talk running while the last question is being answered', () => {
+		expect(tableTalkState(talking(), 'dan', NOW, true)).not.toBe('D');
+	});
+});

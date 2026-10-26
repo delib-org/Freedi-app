@@ -14,7 +14,18 @@ export type ClassroomErrorReason =
 	| 'question-used'
 	| 'floor-taken'
 	| 'already-answered'
-	| 'others-first';
+	| 'others-first'
+	| 'lesson-ended'
+	| 'not-table-talk'
+	| 'no-ballot'
+	| 'vote-running'
+	| 'vote-closed'
+	| 'last-candidate'
+	| 'reply-too-long'
+	| 'proposal-too-long'
+	| 'already-proposed'
+	| 'own-questions-off'
+	| 'turns-done';
 
 /**
  * A refusal the engine's pure logic raises. It carries the callable error code

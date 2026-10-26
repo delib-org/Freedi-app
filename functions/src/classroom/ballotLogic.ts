@@ -1,4 +1,5 @@
 import { DEFAULT_GATE, decideBallot } from '@freedi/shared-types';
+import type { ClassBallot } from '@freedi/shared-types';
 
 /**
  * Pure ballot logic behind `classFreezeBallot` / `classCloseBallot`.
@@ -76,4 +77,32 @@ export function decideFromTally(
 	if (Object.keys(tally).length === 0) return null;
 
 	return decideBallot(tally, consensus);
+}
+
+export type PauseRefusal = 'not-open' | 'closed';
+
+export type PauseDecision =
+	| { kind: 'refuse'; reason: PauseRefusal }
+	| { kind: 'unchanged'; pausedAt: number | null }
+	| { kind: 'write'; ballot: ClassBallot; pausedAt: number | null };
+
+/**
+ * Pause (votes locked, kept) or resume the ballot. Closing stays final: a
+ * closed ballot is neither paused nor resumed. A repeat of the current state
+ * writes nothing.
+ */
+export function decidePause(
+	ballot: ClassBallot | undefined,
+	paused: boolean,
+	now: number,
+): PauseDecision {
+	if (!ballot) return { kind: 'refuse', reason: 'not-open' };
+	if (typeof ballot.closedAt === 'number') return { kind: 'refuse', reason: 'closed' };
+	const isPaused = typeof ballot.pausedAt === 'number';
+	if (isPaused === paused) return { kind: 'unchanged', pausedAt: ballot.pausedAt ?? null };
+	if (paused) return { kind: 'write', ballot: { ...ballot, pausedAt: now }, pausedAt: now };
+	const open: ClassBallot = { ...ballot };
+	delete open.pausedAt;
+
+	return { kind: 'write', ballot: open, pausedAt: null };
 }

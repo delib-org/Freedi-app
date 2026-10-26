@@ -30,6 +30,16 @@
   }
 }
 
+// >>> allProposals BEGIN
+// "כל ההצעות": the live rated-everything line (IA 19.6).
+.switch-band__line {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+// >>> allProposals END
+
 // ---- "on the projector": the Opening step's choice (UX 14.E) -----------------
 .projector-pick {
   display: flex;
@@ -121,6 +131,22 @@
     background: var(--bg-card);
     box-shadow: var(--shadow-xs);
   }
+}
+
+// ---- the count on the "what they wrote" switch (IA 24.4) ---------------------------------------------
+
+.switch-band__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--space-lg);
+  margin-inline-start: var(--space-xs);
+  padding-inline: var(--space-xs);
+  border-radius: var(--radius-full);
+  background: var(--warning);
+  color: var(--text-inverse);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
 }
 
 // ---- failure ----------------------------------------------------------------
@@ -288,8 +314,9 @@
     font-weight: var(--font-weight-bold);
   }
 
+  // --ink-faint is page-background only (tokens): inside a card it fails contrast in dark mode.
   &--none {
-    color: var(--ink-faint);
+    color: var(--ink-soft);
   }
 }
 
@@ -375,4 +402,11 @@
   background: var(--bg-input);
   border: 1.5px solid var(--border-medium);
   border-radius: var(--radius-md);
+}
+
+// "Everyone has voted": a quiet status next to the vote actions (the teacher still closes).
+.switch-band__note {
+  margin: 0;
+  color: var(--teal-700);
+  font-weight: var(--font-weight-bold, 700);
 }

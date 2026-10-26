@@ -7,12 +7,17 @@ import type { Mate } from './c3Logic';
  * eight states of Table talk live in tableTalkState.ts. No Firebase, no DOM.
  */
 
-/** "Turn n of max": one turn per device member who has not passed on asking. */
-export function maxTurns(table: ClassTable): number {
+/**
+ * "Turn n of max": one turn per device member who has not passed on asking.
+ * With own questions off, `questionCap` (the number of teacher questions) caps
+ * it too: a table cannot have more turns than questions (IA 25.2).
+ */
+export function maxTurns(table: ClassTable, questionCap: number | null = null): number {
 	const passed = new Set(table.passedAskingUids ?? []);
 	const kept = table.memberUids.filter((uid) => !passed.has(uid)).length;
+	const capped = questionCap === null ? kept : Math.min(kept, questionCap);
 
-	return Math.max(kept, table.turn);
+	return Math.max(capped, table.turn);
 }
 
 export interface Instruction {
@@ -60,6 +65,7 @@ export const RACE_REASONS: ReadonlySet<string> = new Set([
 	'others-first',
 	'minute-over',
 	'not-speaker',
+	'turns-done',
 ]);
 
 /** Is this refusal one the screen swallows? */

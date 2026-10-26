@@ -25,11 +25,28 @@ import {
 /** Collection holding one doc per table: `classTables/{mainId}--{n}`. */
 export const CLASS_TABLES_COLLECTION = 'classTables';
 
-/** Seconds a speaker holds the floor; the server writes `speakerEndsAt = now + this`. */
-export const SPEAK_SECONDS = 60;
+/**
+ * Seconds a speaker holds the floor when the lesson sets nothing (IA 25.2):
+ * the server writes `speakerEndsAt = now + speakMs` and `speakerMs = speakMs`.
+ */
+export const DEFAULT_SPEAK_SECONDS = 120;
+
+/** The speaking times the teacher can choose from (plan screen and console). */
+export const SPEAK_SECONDS_CHOICES = [30, 60, 90, 120, 180, 240, 300] as const;
+
+/** Turns at Proposals when the lesson sets nothing (IA 25.6): everyone speaks once. */
+export const DEFAULT_PROPOSALS_TURNS = 1;
+
+/** The turn counts the teacher can choose from; "another turn" can go past the last. */
+export const PROPOSALS_TURNS_CHOICES = [1, 2, 3] as const;
 
 /** Default gate: a proposal must reach this consensus (`votingSettings.threshold`). */
 export const DEFAULT_GATE = 0.6;
+
+// >>> allProposals BEGIN
+/** "כל ההצעות" (IA 19): proposals a phone gets at a time, picked by Thompson Sampling. */
+export const CLASS_BATCH_SIZE = 6;
+// >>> allProposals END
 
 /** Slider range of a student's initial side. */
 export const SIDE_MIN = 0;
@@ -86,6 +103,18 @@ export const ClassTableSchema = object({
 	speakerUid: optional(string()),
 	/** Server-clock epoch ms at which the current speaker's minute ends. */
 	speakerEndsAt: optional(number()),
+	/**
+	 * Length (ms) of the speaking time now running, written with `speakerEndsAt`
+	 * so every device draws the countdown from it and a live change of the
+	 * lesson setting never distorts a running turn. Server-written.
+	 */
+	speakerMs: optional(number()),
+	/**
+	 * Proposals (IA 25.6): the turn number, 1-based; absent = 1. Kept apart from
+	 * `turn` so a back move to Table talk keeps that step's state. At Proposals
+	 * `spokenUids` holds who spoke or passed in this turn. Server-written.
+	 */
+	proposalsTurn: optional(number()),
 	spokenUids: array(string()),
 	/** Guiding questions already asked at this table. */
 	usedQuestionIds: array(string()),
@@ -121,7 +150,87 @@ export const ClassSubscriptionFieldsSchema = {
 	camp: optional(CampSchema),
 	decisionSupport: optional(DecisionSupportSchema),
 	tableId: optional(string()),
+	/** IA 22: when the student last opened the replies on their own proposal (ms). Student-written. */
+	proposalRepliesReadAt: optional(number()),
 };
+
+/** IA 22: the longest reply on a proposal, in characters (callable + phone). */
+export const CLASS_REPLY_MAX_LENGTH = 200;
+
+/** Who wrote a reply on a proposal: a classmate, the proposal's own author, or the teacher. */
+export const ClassReplyRoleSchema = picklist(['class', 'author', 'teacher']);
+export type ClassReplyRole = InferOutput<typeof ClassReplyRoleSchema>;
+
+/**
+ * Marker on a reply to a proposal (IA 22): a `statement` under the proposal,
+ * written ONLY by the `classPostReply` callable (rules refuse a client create).
+ * `proposalCreatorId` lets the author's phone keep one listener for every
+ * reply to them (the proposal doc already carries the same id).
+ */
+export const ClassReplyMarkerSchema = object({
+	role: ClassReplyRoleSchema,
+	proposalCreatorId: string(),
+});
+export type ClassReplyMarker = InferOutput<typeof ClassReplyMarkerSchema>;
+
+/**
+ * Reply fields on a statement (IA 22), spread into StatementSchema. All
+ * optional and all server-written (classPostReply / classSetItemHidden):
+ * `classReply` on a reply; the counters on the proposal it answers.
+ */
+export const ClassReplyStatementFieldsSchema = {
+	classReply: optional(ClassReplyMarkerSchema),
+	/** Visible (not hidden) replies on this proposal. */
+	replyCount: optional(number()),
+	lastReplyAt: optional(number()),
+	/** When the author was last pushed about a reply (dedupe window). */
+	replyPushAt: optional(number()),
+	/** Pushes sent to the author about this proposal (cap per lesson). */
+	replyPushCount: optional(number()),
+};
+
+/** IA 24.3: the longest proposal a student sends, in characters (callables + phone). */
+export const CLASS_PROPOSAL_MAX_LENGTH = 280;
+
+/** Collection of the teacher's language flags: `classLanguageFlags/{flagId}` (IA 24.4). */
+export const CLASS_LANGUAGE_FLAGS_COLLECTION = 'classLanguageFlags';
+
+/** IA 24.4: refused attempts kept per student per lesson (older ones are trimmed by the server). */
+export const CLASS_LANGUAGE_FLAGS_KEPT = 3;
+
+/** IA 24.4: how long a flag (and the attempted text in it) lives, in days (Firestore TTL on `expireAt`). */
+export const CLASS_LANGUAGE_FLAG_TTL_DAYS = 30;
+
+/** What a refused attempt was: a proposal (new or edited) or a reply. */
+export const ClassLanguageFlagKindSchema = picklist(['proposal', 'reply']);
+export type ClassLanguageFlagKind = InferOutput<typeof ClassLanguageFlagKindSchema>;
+
+/**
+ * One refused attempt (IA 24.4), a flag for the teacher: NOT a statement. Written
+ * ONLY by the classroom callables (Admin SDK); read only by the lesson's admins,
+ * who may set `seenAt` and nothing else. `text` is a child's words: never on a
+ * projector, a phone, a push, an export or in a log.
+ */
+export const ClassLanguageFlagSchema = object({
+	flagId: string(),
+	/** The lesson. */
+	mainId: string(),
+	/** The student. */
+	uid: string(),
+	kind: ClassLanguageFlagKindSchema,
+	/** The proposal replied to (kind 'reply'), or the proposal being edited. */
+	targetId: optional(string()),
+	/** The attempted text, capped at the item's maximum length. */
+	text: string(),
+	/** Which refused attempt of this student in this lesson this is (1, 2, 3, ...). */
+	attempt: number(),
+	createdAt: number(),
+	/** createdAt + CLASS_LANGUAGE_FLAG_TTL_DAYS (the TTL policy deletes the doc). */
+	expireAt: number(),
+	/** Set by the teacher's "seen". */
+	seenAt: optional(number()),
+});
+export type ClassLanguageFlag = InferOutput<typeof ClassLanguageFlagSchema>;
 
 /** Marker on an option (answer / proposal) written from a table. */
 export const ClassTableMarkerSchema = object({
@@ -142,7 +251,41 @@ export type ClassTableMarker = InferOutput<typeof ClassTableMarkerSchema>;
 export const ClassBallotSchema = object({
 	candidateIds: array(string()),
 	frozenAt: number(),
+	/**
+	 * Set while the teacher has paused the vote: no vote is cast or changed
+	 * (rules + client), the votes already cast are kept, and resuming clears it.
+	 * Not the same as closing (closedAt), which is final.
+	 */
+	pausedAt: optional(number()),
 	closedAt: optional(number()),
 	decisionId: optional(string()),
 });
 export type ClassBallot = InferOutput<typeof ClassBallotSchema>;
+
+/**
+ * How the students' vote screen shows the ballot; the teacher's switches, on
+ * the challenge question's statementSettings (one challenge per lesson, so a
+ * per-lesson setting). Students only ever see aggregates: the vote counts in
+ * the challenge question's `selections{}`, never who voted for what.
+ */
+// >>> voteSummary BEGIN
+/**
+ * How the proposals are ordered on the vote screen, one setting for every
+ * phone and the projector: 'consensus' (C_p, the default), 'votes' (live) or
+ * 'random' (one shared order, seeded by the challenge id).
+ */
+export const ClassVoteOrderSchema = picklist(['consensus', 'votes', 'random']);
+export type ClassVoteOrder = InferOutput<typeof ClassVoteOrderSchema>;
+// >>> voteSummary END
+
+export const ClassVoteDisplaySchema = object({
+	/** Students see each proposal's share of the votes, live. Absent = on. */
+	liveResults: optional(boolean()),
+	/** Deprecated: old docs only, nobody reads it. Replaced by `order`. */
+	sortBySupport: optional(boolean()),
+	// >>> voteSummary BEGIN
+	/** The order of the proposals for everybody. Absent = 'consensus'. */
+	order: optional(ClassVoteOrderSchema),
+	// >>> voteSummary END
+});
+export type ClassVoteDisplay = InferOutput<typeof ClassVoteDisplaySchema>;

@@ -3,6 +3,8 @@ import {
 	StatementType,
 	createParagraphChildStatement,
 	createStatementObject,
+	proposalsTurnsOf,
+	speakSecondsOf,
 } from '@freedi/shared-types';
 import type {
 	ListType,
@@ -45,13 +47,15 @@ const DEFAULT_FLAGS: Pick<
 	enableNavigationalElements: true,
 };
 
-const LESSON_STEPS = [
+/** A copy always gets the CURRENT steps (9, with "כל ההצעות"), whatever the source had (IA 19.8). */
+export const LESSON_STEPS = [
 	'waiting',
 	'opening',
 	'side',
 	'tables',
 	'tableTalk',
 	'proposals',
+	'allProposals',
 	'vote',
 	'summary',
 ] as const;
@@ -146,6 +150,15 @@ function mainSettings(source: Statement, classCode: string, now: number): Statem
 		...(typeof s?.videoUrl === 'string' && s.videoUrl ? { videoUrl: s.videoUrl } : {}),
 		...(sideNames && typeof sideNames.a === 'string' && typeof sideNames.b === 'string'
 			? { sideNames: { a: sideNames.a, b: sideNames.b } }
+			: {}),
+		...(s?.speakSeconds !== undefined
+			? { speakSeconds: speakSecondsOf({ statementSettings: s }) }
+			: {}),
+		...(s?.proposalsTurns !== undefined
+			? { proposalsTurns: proposalsTurnsOf({ statementSettings: s }) }
+			: {}),
+		...(typeof s?.allowOwnQuestions === 'boolean'
+			? { allowOwnQuestions: s.allowOwnQuestions }
 			: {}),
 	} as StatementSettings;
 }

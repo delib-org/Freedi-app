@@ -1,0 +1,95 @@
+// =============================================================================
+// Vote order switch: the 3-way segmented control on the Vote step's control row
+// (views/teacher/VoteOrderSwitch.ts). Wraps at narrow widths.
+// =============================================================================
+
+.vote-order {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--ink-muted);
+  }
+
+  &__group {
+    display: inline-flex;
+    flex-wrap: wrap;
+    padding: 2px;
+    background: var(--bg-muted);
+    border-radius: var(--radius-full);
+  }
+
+  &__option {
+    position: relative;
+    display: inline-flex;
+  }
+
+  // visually hidden, still focusable: arrow keys move the choice natively
+  &__input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  &__text {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    gap: var(--space-xs);
+    padding: 0 var(--space-md);
+    border-block-end: 2px solid transparent;
+    font-weight: var(--font-weight-semibold);
+    color: var(--ink-muted);
+    border-radius: var(--radius-full);
+    pointer-events: none;
+  }
+
+  &__input:checked + &__text {
+    color: var(--ink);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-xs);
+    border-block-end-color: var(--teal-600);
+  }
+
+  &__input:focus-visible + &__text {
+    outline: 2px solid var(--terra-600);
+    outline-offset: 1px;
+  }
+
+  &__input:disabled + &__text {
+    opacity: 0.6;
+  }
+}
+
+// phones: 44 px tap targets, the group takes the full row
+@media (max-width: 767px) {
+  .vote-order {
+    inline-size: 100%;
+
+    &__group {
+      inline-size: 100%;
+    }
+
+    &__option {
+      flex: 1 1 auto;
+    }
+
+    &__text {
+      justify-content: center;
+      inline-size: 100%;
+      min-height: 44px;
+    }
+  }
+}

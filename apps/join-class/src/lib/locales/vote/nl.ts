@@ -1,0 +1,55 @@
+// Dutch strings of the vote: the student's ballot screen (voting.*) and
+// the teacher's vote controls (console.*_vote). Spread into ../nl.ts, so they
+// ship in the same locale chunk; split out only to keep each file small.
+
+const vote: Record<string, string> = {
+	'console.open_vote': 'Stemming openen',
+	'console.pause_vote': 'Stemming pauzeren',
+	'console.resume_vote': 'Stemming hervatten',
+	'console.close_vote': 'Stemming sluiten',
+	'voting.title': 'Stemming',
+	'voting.pick_one': 'Kies één voorstel',
+	'voting.waiting': 'Wachten tot de leraar de stemming opent',
+	'voting.empty': 'Niets om op te stemmen',
+	'voting.saving': 'Opslaan…',
+	'voting.counted': 'Jullie stem is geteld',
+	'voting.closed': 'De stemming is gesloten',
+	'voting.failed': 'De stem is niet opgeslagen. Probeer opnieuw',
+	'voting.paused': 'De stemming is gepauzeerd',
+	'voting.paused_hint': 'De docent heeft de stemming even gepauzeerd. Je stem blijft bewaard.',
+	'voting.closed_hint': 'De stemming is gesloten. We wachten op de samenvatting',
+	'console.vote_settings': 'De stemming',
+	'console.vote_live_results': 'Leerlingen zien de uitslag live',
+	'console.vote_live_results_help': 'Hoeveel stemmen elk voorstel heeft. Nooit wie waarop stemde.',
+	'voting.result_votes': '{{percent}}% · {{n}} stemmen',
+	'voting.result_one_vote': '{{percent}}% · 1 stem',
+	// >>> voteSummary BEGIN
+	'summary.vote_results': 'Uitslag van de stemming',
+	'summary.turnout': '{{n}} van {{m}} hebben gestemd',
+	'summary.leading': 'Staat nu voorop',
+	'summary.vote_open': 'De stemming is nog open',
+	'summary.wait_close': 'De docent sluit de stemming',
+	'summary.no_vote': 'Er was geen stemming',
+	'summary.most_agreed': 'Het voorstel met de meeste overeenstemming',
+	'summary.tie_by_ratings': 'Gelijkspel, beslist op basis van de beoordelingen',
+	'summary.by_side_explain':
+		'Hoeveel elke kant de beslissing steunt, volgens de kant die je aan het begin van de les koos',
+	'summary.winner': 'Het gekozen voorstel',
+	'console.close_and_go_title': 'De stemming is nog open. Sluiten en naar de samenvatting?',
+	'console.close_and_go_body': 'Na het sluiten kan niemand zijn stem nog wijzigen.',
+	'console.close_and_go_yes': 'Sluiten en verder',
+	'console.all_voted': 'Iedereen heeft gestemd',
+	'console.vote_order': 'Volgorde van de voorstellen',
+	'console.vote_order_consensus': 'Op beoordeling',
+	'console.vote_order_votes': 'Op aantal stemmen',
+	'console.vote_order_random': 'Willekeurige volgorde',
+	'console.vote_status_not_open': 'Nog niet open',
+	'console.vote_status_open': 'Stemmen is open',
+	'console.vote_status_paused': 'Stemmen is gepauzeerd',
+	'console.vote_status_closed': 'Stemmen is gesloten',
+	'console.vote_progress': '{{voted}} van {{present}} hebben gestemd',
+	'console.vote_reset_hint': 'Sluit of pauzeer eerst de stemronde',
+	// >>> voteSummary END
+};
+
+export default vote;

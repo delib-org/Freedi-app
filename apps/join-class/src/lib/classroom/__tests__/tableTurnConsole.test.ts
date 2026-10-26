@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ClassTable } from '@freedi/shared-types';
 import {
+	anotherTurnFor,
 	askedPassedCounts,
 	answerMark,
 	askMark,
@@ -69,6 +70,33 @@ describe('quickActionFor (one quick button, UX 16.L rev 3)', () => {
 		expect(quickActionFor(table({ step: 'rate' }), 'proposals', NOW)).toBeNull();
 		expect(quickActionFor(table({ step: 'write' }), 'plenum', NOW)).toEqual({ kind: 'rate' });
 		expect(quickActionFor(table({ step: 'rate' }), 'plenum', NOW)).toBeNull();
+	});
+
+	it('a done table at Proposals keeps its step-forward button ("to write")', () => {
+		expect(quickActionFor(table({ step: 'talk' }), 'proposals', NOW)).toEqual({ kind: 'write' });
+	});
+});
+
+describe('anotherTurnFor (IA 25.6)', () => {
+	it('offers "another turn" only on a talking table whose every turn is spoken', () => {
+		expect(anotherTurnFor(table({ step: 'talk' }), 'proposals', true)).toEqual({
+			kind: 'anotherTurn',
+		});
+		expect(anotherTurnFor(table({ step: 'talk' }), 'proposals', false)).toBeNull();
+		expect(anotherTurnFor(table({ step: 'write' }), 'proposals', true)).toBeNull();
+		expect(anotherTurnFor(table({ step: 'rate' }), 'proposals', true)).toBeNull();
+		expect(anotherTurnFor(table({ step: 'talk' }), 'plenum', true)).toBeNull();
+		expect(anotherTurnFor(table({ step: 'talk' }), 'tableTalk', true)).toBeNull();
+	});
+});
+
+describe('tableIsDone', () => {
+	it('Proposals: done only while the table talks; Table talk its own rule', () => {
+		expect(tableIsDone(table({ step: 'talk' }), 'proposals', NOW, false, true)).toBe(true);
+		expect(tableIsDone(table({ step: 'write' }), 'proposals', NOW, false, true)).toBe(false);
+		expect(tableIsDone(table({ step: 'talk' }), 'proposals', NOW, false, false)).toBe(false);
+		expect(tableIsDone(table({ step: 'talk' }), 'plenum', NOW, false, true)).toBe(false);
+		expect(tableIsDone(table(), 'tableTalk', NOW)).toBe(false);
 	});
 });
 

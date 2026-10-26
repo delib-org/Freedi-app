@@ -22,7 +22,13 @@ function settingsPatch(settings: { classRole?: ClassRole; hint?: string }): Part
 /** Lesson-level details on the main statement (deep-merged into statementSettings). */
 export async function saveLessonDetails(
 	mainId: string,
-	details: { videoUrl?: string; sideNames?: { a: string; b: string } },
+	details: {
+		videoUrl?: string;
+		sideNames?: { a: string; b: string };
+		allowOwnQuestions?: boolean;
+		speakSeconds?: number;
+		proposalsTurns?: number;
+	},
 ): Promise<void> {
 	await setMainStatementSetting(mainId, { statementSettings: details });
 }

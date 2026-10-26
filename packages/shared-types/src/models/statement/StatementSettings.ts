@@ -11,7 +11,11 @@ import {
 	number,
 } from 'valibot';
 import { DeliberationType, SortType, ThemeStyle } from '../TypeEnums';
-import { ClassBallotSchema, RoundPhaseSchema } from '../classroom/classroomModel';
+import {
+	ClassBallotSchema,
+	ClassVoteDisplaySchema,
+	RoundPhaseSchema,
+} from '../classroom/classroomModel';
 
 /**
  * Join form — admin-defined contact form shown the first time a user joins
@@ -259,8 +263,11 @@ export type VotingOptionsSource = InferOutput<typeof VotingOptionsSourceSchema>;
 
 
 /**
- * join-class (classroom): the eight fixed steps of a lesson, in order. The
- * teacher opens them by index; `stepIndex` points into this list.
+ * join-class (classroom): the step keys of a lesson. A lesson stores its own
+ * ordered list in `LessonPlan.steps` and `stepIndex` points into THAT list:
+ * lessons created before 'allProposals' existed keep their 8 stored steps, new
+ * ones get 9. Readers index `steps[stepIndex]`, never a fixed list.
+ * 'allProposals' (IA 19) sits between 'proposals' and 'vote'.
  */
 export const LessonStepKeySchema = picklist([
 	'waiting',
@@ -269,6 +276,7 @@ export const LessonStepKeySchema = picklist([
 	'tables',
 	'tableTalk',
 	'proposals',
+	'allProposals',
 	'vote',
 	'summary',
 ]);
@@ -426,6 +434,8 @@ export const StatementSettingsSchema = object({
 	hint: optional(string()),
 	// join-class: frozen vote shortlist, on the challenge question.
 	ballot: optional(ClassBallotSchema),
+	// join-class: the teacher's switches for the students' vote screen, on the challenge question.
+	voteDisplay: optional(ClassVoteDisplaySchema),
 	// join-class: plenum phase on the challenge question.
 	roundPhase: optional(RoundPhaseSchema),
 	// join-class: https link of the dilemma video shown on the opening screen. Main statement only.
@@ -435,6 +445,12 @@ export const StatementSettingsSchema = object({
 	introVideos: optional(array(object({ id: string(), title: string(), url: string() }))),
 	// join-class: character names of side A and side B. Main statement only.
 	sideNames: optional(object({ a: string(), b: string() })),
+	// join-class: may students add a question of their own at Table talk? Absent = yes. Main statement only.
+	allowOwnQuestions: optional(boolean()),
+	// join-class: seconds each person speaks when answering or proposing (one of SPEAK_SECONDS_CHOICES). Absent = DEFAULT_SPEAK_SECONDS. Main statement only.
+	speakSeconds: optional(number()),
+	// join-class: turns at Proposals, everyone speaks once per turn (one of PROPOSALS_TURNS_CHOICES). Absent = DEFAULT_PROPOSALS_TURNS. Main statement only.
+	proposalsTurns: optional(number()),
 });
 
 

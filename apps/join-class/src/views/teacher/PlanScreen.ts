@@ -33,7 +33,6 @@ import {
 	removeNewCard,
 	reorder,
 	setNewCardText,
-	takeFocus,
 	teardownPlan,
 	type NewCard,
 } from './planController';
@@ -51,70 +50,15 @@ import {
 	savedSideName,
 } from './planDetails';
 import { PlanIntro } from './PlanIntro';
-
-interface FieldAttrs {
-	key: string;
-	label: string;
-	value: string;
-	placeholder: string;
-	max: number;
-	className: string;
-	disabled?: boolean;
-	onValue: (value: string) => void;
-	onCommit: () => void;
-	onEnter?: () => void;
-}
-
-/** One always-visible text field that saves on blur. Labelled for screen
- *  readers; the placeholder is a hint, never the label. */
-function field(a: FieldAttrs): m.Vnode {
-	return m('input', {
-		type: 'text',
-		class: a.className,
-		value: a.value,
-		maxlength: a.max,
-		placeholder: a.placeholder,
-		disabled: a.disabled,
-		'aria-label': a.label,
-		'aria-invalid': getFieldError(a.key) ? 'true' : undefined,
-		oncreate: (vn: m.VnodeDOM) => {
-			if (takeFocus(a.key)) (vn.dom as HTMLInputElement).focus();
-		},
-		onupdate: (vn: m.VnodeDOM) => {
-			if (takeFocus(a.key)) (vn.dom as HTMLInputElement).focus();
-		},
-		oninput: (e: Event) => a.onValue((e.target as HTMLInputElement).value),
-		onblur: a.onCommit,
-		onkeydown: (e: KeyboardEvent) => {
-			if (e.key === 'Enter' && !e.isComposing) {
-				e.preventDefault();
-				if (a.onEnter) a.onEnter();
-				else (e.target as HTMLInputElement).blur();
-			}
-		},
-	});
-}
-
-function fieldError(key: string): m.Vnode | null {
-	const retry = getFieldError(key);
-	if (!retry) return null;
-
-	return m('.plan-card__error', { role: 'alert' }, [
-		m('span', t('plan.error.save')),
-		m(
-			'button.btn.btn--tertiary.btn--small',
-			{ type: 'button', onclick: retry },
-			t('plan.error.retry'),
-		),
-	]);
-}
-
-function enterAddsNext(blurTarget: () => void): () => void {
-	return () => {
-		blurTarget();
-		addNewCard();
-	};
-}
+import { enterAddsNext, field, fieldError } from './planFields';
+import {
+	OWN_QUESTIONS_KEY,
+	PROPOSALS_TURNS_KEY,
+	SPEAK_SECONDS_KEY,
+	ownQuestionsControl,
+	proposalsTurnsControl,
+	speakTimeControl,
+} from './planLessonSettings';
 
 function focusHandleAfterMove(statementId: string): void {
 	m.redraw.sync();
@@ -340,6 +284,10 @@ function renderDetails(): m.Vnode {
 				sideNameField(SIDE_B_KEY, 'plan.details.side_b'),
 				fieldError(SIDE_A_KEY),
 				fieldError(SIDE_B_KEY),
+				speakTimeControl(),
+				fieldError(SPEAK_SECONDS_KEY),
+				proposalsTurnsControl(),
+				fieldError(PROPOSALS_TURNS_KEY),
 			]),
 		]),
 		renderCopiedFrom(),
@@ -373,6 +321,8 @@ function renderTables(guiding: Statement[]): m.Vnode {
 			{ type: 'button', onclick: addNewCard },
 			m('span.plan__add-label', t('plan.add')),
 		),
+		ownQuestionsControl(total),
+		fieldError(OWN_QUESTIONS_KEY),
 		getFieldError('order')
 			? m('.plan-card__error', { role: 'alert' }, [
 					m('span', t('plan.error.save')),

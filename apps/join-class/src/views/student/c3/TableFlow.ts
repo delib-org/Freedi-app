@@ -12,6 +12,7 @@ import { currentUid } from '@/lib/classroom/c3Data';
 import { resolveSubstep, type FlowKind } from '@/lib/classroom/c3Logic';
 import { refusalReason } from '@/lib/classroom/turnMoment';
 import { serverNow } from '@/lib/classroom/serverClock';
+import { clearImproveHandler } from '@/lib/classroom/replyUi';
 import { ErrorLine } from './ErrorLine';
 import { FlowError, FlowState, type FlowCtx, type FlowParts } from './flowTypes';
 import { liveWritingParts } from './liveWritingParts';
@@ -56,6 +57,7 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 
 	onremove(vnode) {
 		const self = stateOf(vnode);
+		clearImproveHandler(self);
 		self.feed.stop();
 		if (self.redrawTimer) clearTimeout(self.redrawTimer);
 		if (self.lineTimer) clearTimeout(self.lineTimer);
@@ -181,6 +183,7 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 					headerLine: parts.headerLine,
 					askerMark: parts.askerMark ? '?' : undefined,
 					instruction,
+					ask: parts.ask,
 					action,
 					down: parts.down,
 				},
@@ -240,7 +243,6 @@ function tableTalkFrame(
 		StudentFrame,
 		{
 			headerLine: parts.headerLine,
-			stageName: parts.stageName,
 			instruction,
 			questionHeading: parts.questionHeading,
 			action,

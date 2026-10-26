@@ -71,6 +71,11 @@ export function idleCountdownText(totalSeconds: number): string {
 
 export type FlowKind = 'tableTalk' | 'proposals';
 
+/** The speak button: Table talk answers a question, Proposals offers a solution. */
+export function claimLabelKey(kind: FlowKind): 'turn.answer' | 'turn.propose' {
+	return kind === 'proposals' ? 'turn.propose' : 'turn.answer';
+}
+
 export const TABLE_SUBSTEPS: Record<'proposals', readonly TableStep[]> = {
 	proposals: ['talk', 'write', 'rate'],
 };

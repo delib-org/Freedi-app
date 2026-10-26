@@ -37,9 +37,15 @@ export function hasAnswered(table: ClassTable, uid: string, now: number): boolea
 	);
 }
 
-export function tableTalkState(table: ClassTable, uid: string, now: number): TableTalkState {
-	if (tableDone(table, now)) return 'D';
-	if (isLegacyTail(table) || choosing(table, now)) return doneAsking(table, uid) ? 'P2' : 'P1';
+export function tableTalkState(
+	table: ClassTable,
+	uid: string,
+	now: number,
+	noneLeft = false,
+): TableTalkState {
+	if (tableDone(table, now, noneLeft)) return 'D';
+	if (isLegacyTail(table) || choosing(table, now, noneLeft))
+		return doneAsking(table, uid) ? 'P2' : 'P1';
 	if (!speakerTimeOver(table, now)) return table.speakerUid === uid ? 'S' : 'L';
 	if (hasAnswered(table, uid, now)) return 'H';
 	if (table.askerUid === uid && !askerMayAnswer(table, now)) return 'W';

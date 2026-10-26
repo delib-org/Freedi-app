@@ -24,12 +24,18 @@ export interface TablesBoardAttrs {
 	plenum: boolean;
 	/** The lesson is at Table talk: cards show the turn, who asked and the next-turn button. */
 	tableTalk: boolean;
+	/** Vote or summary: the cards show members only. */
+	done?: boolean;
 	/** The lesson's sub-questions: a card at Table talk shows the question being answered. */
 	questions?: readonly Statement[];
 	/** Side marks appear after the Side step. */
 	showSides: boolean;
 	/** The Opening panel (UX 15.L): while the class is unseated it takes the main column and the roster the side one. */
 	opening?: m.Children;
+	// >>> allProposals BEGIN
+	/** "כל ההצעות": each card's "n/m rated everything" line. */
+	ratedLineOf?: (table: ClassTable) => string;
+	// >>> allProposals END
 }
 
 function rosterCard(attrs: TablesBoardAttrs): m.Vnode {
@@ -121,10 +127,12 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 									students: byUid,
 									plenum: attrs.plenum,
 									tableTalk: attrs.tableTalk,
+									done: attrs.done,
 									questionText: attrs.questions?.find((q) => q.statementId === table.questionId)
 										?.statement,
 									mainId: attrs.mainId,
 									tableNumbers,
+									ratedLine: attrs.ratedLineOf?.(table), // >>> allProposals
 								}),
 							),
 						),

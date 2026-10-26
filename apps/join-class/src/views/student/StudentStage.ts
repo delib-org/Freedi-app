@@ -2,6 +2,8 @@ import m from 'mithril';
 import type { LessonStepKey, Statement } from '@freedi/shared-types';
 import { lessonStepOf } from '@/lib/lesson';
 import { lessonStatusOfMain } from '@/lib/lessonCore';
+import { AllProposalsStep } from './steps/AllProposalsStep';
+import { setStudentStage } from '@/lib/studentStage';
 import { watchClass } from '@/lib/classroom/classState';
 import { OpeningStep } from './steps/OpeningStep';
 import { ProposalsStep } from './steps/ProposalsStep';
@@ -19,7 +21,8 @@ import type { LessonStateAttrs } from './LessonStateScreen';
  * `lessonPlan.stepIndex` (the main statement is kept live by MainHub's
  * subscription, so a teacher's step change and a phone refresh both land here)
  * and delegates to ONE slot file per step (views/student/steps/):
- *   C2: Waiting, Opening, Side, Tables       C3: TableTalk, Proposals, Vote, Summary
+ *   C2: Waiting, Opening, Side, Tables
+ *   C3: TableTalk, Proposals, All proposals (IA 19), Vote, Summary
  * Also starts the classroom listeners (`watchClass`) for the student role.
  */
 
@@ -30,6 +33,7 @@ const STEP_COMPONENTS: Record<LessonStepKey, m.Component<StepAttrs>> = {
 	tables: TablesStep,
 	tableTalk: TableTalkStep,
 	proposals: ProposalsStep,
+	allProposals: AllProposalsStep,
 	vote: VoteStep,
 	summary: SummaryStep,
 };
@@ -61,24 +65,48 @@ function renderState(main: Statement, status: 'paused' | 'ended'): m.Children {
 	return null;
 }
 
+interface StageState {
+	stop?: () => void;
+	stopReplies?: () => void;
+	removed?: boolean;
+}
+
 export interface StudentStageAttrs {
 	main: Statement;
 }
 
 export const StudentStage: m.Component<StudentStageAttrs> = {
 	oninit(vnode) {
-		const state = vnode.state as { stop?: () => void };
+		const state = vnode.state as StageState;
 		state.stop = watchClass(vnode.attrs.main.statementId, 'student');
+		// The replies layer (IA 22) is its own chunk: it is not on the first paint.
+		const main = vnode.attrs.main;
+		import('./replies/replyHost')
+			.then((mod) => {
+				if (state.removed) return;
+				state.stopReplies = mod.startReplyHost(main);
+			})
+			.catch((err: unknown) => {
+				console.error('[StudentStage] loading the replies layer failed:', err);
+			});
 	},
 
 	onremove(vnode) {
-		(vnode.state as { stop?: () => void }).stop?.();
+		const state = vnode.state as StageState;
+		state.removed = true;
+		state.stop?.();
+		state.stopReplies?.();
 	},
 
 	view({ attrs }) {
 		const status = lessonStatusOfMain(attrs.main);
-		if (status === 'paused' || status === 'ended') return renderState(attrs.main, status);
+		if (status === 'paused' || status === 'ended') {
+			setStudentStage(null);
+
+			return renderState(attrs.main, status);
+		}
 		const step = lessonStepOf(attrs.main.statementSettings?.lessonPlan);
+		setStudentStage(step.key);
 
 		return m(STEP_COMPONENTS[step.key], { main: attrs.main, key: step.key });
 	},

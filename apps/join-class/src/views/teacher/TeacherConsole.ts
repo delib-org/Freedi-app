@@ -5,37 +5,48 @@ import '@/styles/console-board.scss';
 import '@/styles/console-chips.scss';
 import '@/styles/console-panels.scss';
 import '@/styles/console-sheet.scss';
+import '@/styles/console-mobile.scss';
 import { t } from '@/lib/i18n';
 import { getMainStatement, getSubQuestions, setFollowLessonLanguage } from '@/lib/store';
 import {
-	LESSON_STEP_KEYS,
 	getChallengeQuestion,
 	getGuidingQuestions,
 	getLessonStep,
+	getLessonSteps,
+	stepLabel,
 } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
-import type { LessonStatus } from '@freedi/shared-types';
+import type { ClassVoteOrder, LessonStatus, Statement } from '@freedi/shared-types';
 import { classState } from '@/lib/classroom/classState';
 import { gateOf } from '@/lib/classroom/classSettings';
 import {
 	gateRows,
 	isBallotClosed,
 	isBallotFrozen,
+	isBallotPaused,
 	isPlenum,
 	rosterStudents,
+	tablesAreDone,
 } from '@/lib/classroom/consoleHelpers';
+import { voteOrderOf, voteResults } from '@/lib/classroom/voteResults';
+import { everyoneVoted } from '@/lib/classroom/voteSummary';
 import { groupWrittenTexts } from '@/lib/classroom/textsHelpers';
+import { flagState } from '@/lib/classroom/languageFlags';
+import { unseenFlagCount } from '@/lib/classroom/flagLogic';
 import { QRShare } from '@/components/QRShare';
 import { WizColFooter } from '@/components/WizColFooter';
 import { readClassCode, studentJoinUrl } from './planHelpers';
 import {
+	allTablesNewTurn,
 	allTablesTo,
 	assignTables,
 	changeLessonStatus,
 	closeBallot,
 	freezeBallot,
 	goToStep,
+	pauseBallot,
 	pickProjectorVideo,
+	setVoteOrder,
 	startPlenum,
 } from './consoleActions';
 import { releaseConsole, retainConsole, session } from './consoleSession';
@@ -44,6 +55,13 @@ import type { ConsoleView } from './consoleState';
 import { abortDrag } from './dragController';
 import { EndChoice, openEndChoice } from './EndChoice';
 import { LessonBanner } from './LessonBanner';
+import { ConfirmDialog } from './ConfirmDialog';
+import {
+	confirmCloseAndGo,
+	confirmGoBack,
+	confirmResetTurns,
+	confirmResetVote,
+} from './consoleConfirms';
 import { NotYourLesson } from './NotYourLesson';
 import { ConsoleSettings } from './ConsoleSettings';
 import { ProjectorMenu } from './ProjectorMenu';
@@ -55,6 +73,14 @@ import { TableSheetPanel } from './TableSheetPanel';
 import { OpeningPanel } from './OpeningPanel';
 import { TablesBoard } from './TablesBoard';
 import { WhatTheyWrote } from './WhatTheyWrote';
+// >>> allProposals BEGIN
+import {
+	allRatedBandLine,
+	stopAllProposalsRatings,
+	tableRatedText,
+	watchAllProposalsRatings,
+} from './allProposalsRatings';
+// >>> allProposals END
 
 /**
  * The teacher console (route /t/:mid): three fixed bands (step rail 96 px,
@@ -70,6 +96,26 @@ export interface TeacherConsoleAttrs {
 const SIDE_STEP_INDEX = 2;
 
 let showQr = false;
+
+// >>> voteSummary BEGIN
+/** Votes cast on the running ballot, and the students in the room. */
+function voteCountsOn(challenge: Statement | null): { voted: number; present: number } {
+	const ids = challenge?.statementSettings?.ballot?.candidateIds ?? [];
+	const voted = Object.values(voteResults(ids, challenge?.selections)).reduce(
+		(sum, result) => sum + result.count,
+		0,
+	);
+
+	return { voted, present: rosterStudents(classState.roster).length };
+}
+
+/** Every student in the room has a vote on the running ballot. */
+function allVotedOn(challenge: Statement | null): boolean {
+	const { voted, present } = voteCountsOn(challenge);
+
+	return isBallotFrozen(challenge) && everyoneVoted(voted, present);
+}
+// >>> voteSummary END
 
 function currentView(): ConsoleView {
 	return m.route.param('view') === 'texts' ? 'texts' : 'tables';
@@ -147,7 +193,7 @@ function failureBanner(): m.Children {
 	if (!failure) return null;
 
 	return m('div.console__failure', { role: 'alert' }, [
-		m('span', t('console.failed', { label: failure.label })),
+		m('span', failure.message ?? t('console.failed', { label: failure.label })),
 		m('button.btn.btn--secondary', { type: 'button', onclick: failure.retry }, t('console.retry')),
 		m(
 			'button.btn.btn--tertiary',
@@ -163,7 +209,8 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 	const challenge = getChallengeQuestion(questions);
 	const guiding = getGuidingQuestions(questions);
 	const plenum = isPlenum(challenge);
-	const stepKey = LESSON_STEP_KEYS[stepIndex];
+	// The lesson's OWN steps: an old 8-step lesson has no "כל ההצעות" (IA 19.8).
+	const stepKey = getLessonSteps()[stepIndex] ?? getLessonStep().key;
 	const main = getMainStatement();
 
 	if (view === 'texts') {
@@ -180,7 +227,9 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 	const gate = gateOf(challenge, main);
 	const showGate =
 		challenge !== null &&
-		(stepKey === 'proposals' || (stepKey === 'tableTalk' && proposals.length > 0));
+		(stepKey === 'proposals' ||
+			stepKey === 'allProposals' ||
+			(stepKey === 'tableTalk' && proposals.length > 0));
 
 	return [
 		m(TablesBoard, {
@@ -189,9 +238,12 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 			students,
 			plenum,
 			tableTalk: stepKey === 'tableTalk',
+			done: tablesAreDone(stepKey),
 			questions,
 			showSides: stepIndex >= SIDE_STEP_INDEX,
 			opening: stepKey === 'opening' && main ? m(OpeningPanel, { main }) : undefined,
+			ratedLineOf:
+				stepKey === 'allProposals' ? (table) => tableRatedText(table, challenge) : undefined, // >>> allProposals
 		}),
 		showGate ? m(GatePanel, { rows: gateRows(proposals, gate), gate }) : null,
 	];
@@ -213,6 +265,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 
 	onremove(vnode) {
 		abortDrag();
+		stopAllProposalsRatings(); // >>> allProposals
 		if ((vnode.state as { held?: boolean }).held) releaseConsole();
 	},
 
@@ -254,6 +307,11 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 			...(view === 'texts' ? guiding.map((q) => q.statementId) : []),
 		]);
 		const code = readClassCode(main);
+		const steps = getLessonSteps();
+		// >>> allProposals BEGIN
+		const atAllProposals = step.key === 'allProposals';
+		watchAllProposalsRatings(atAllProposals ? (challenge?.statementId ?? null) : null);
+		// >>> allProposals END
 
 		return m('.console', { 'data-step': step.key }, [
 			header(mid, main.statement, code, status),
@@ -269,23 +327,44 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				onReopen: () => void changeLessonStatus(mid, 'reopen'),
 			}),
 			m(StepRail, {
-				keys: LESSON_STEP_KEYS,
+				keys: steps,
 				currentIndex: step.index,
 				elapsedMs: clockEnd - session.startedAt,
 				held,
 				heldKey: status === 'ended' ? 'console.ended_banner' : 'lesson.paused.title',
-				onGo: (index: number) => void goToStep(mid, index),
+				onGo: (index: number) => {
+					// Going back keeps all work but asks first; forward is one tap.
+					if (index < step.index) confirmGoBack(mid, index, stepLabel(steps[index]));
+					// >>> voteSummary BEGIN
+					// An open or paused vote has no decision yet: ask, close it, then move on.
+					else if (step.key === 'vote' && isBallotFrozen(challenge) && !isBallotClosed(challenge))
+						confirmCloseAndGo(mid, index);
+					// >>> voteSummary END
+					else void goToStep(mid, index);
+				},
 				onEnd: openEndChoice,
 			}),
 			m(SwitchBand, {
 				held,
+				ended: status === 'ended',
 				stepKey: step.key,
 				view,
 				hasTables: classState.tables.length > 0,
 				hasChallenge: challenge !== null,
+				flagCount: unseenFlagCount(flagState.flags),
 				plenum: isPlenum(challenge),
 				ballotFrozen: isBallotFrozen(challenge),
+				ballotPaused: isBallotPaused(challenge),
 				ballotClosed: isBallotClosed(challenge),
+				voteOrder: voteOrderOf(challenge),
+				onVoteOrder: (order: ClassVoteOrder) => {
+					if (challenge) void setVoteOrder(challenge.statementId, order);
+				},
+				// >>> voteSummary BEGIN
+				allVoted: allVotedOn(challenge),
+				votedCount: voteCountsOn(challenge).voted,
+				presentCount: voteCountsOn(challenge).present,
+				// >>> voteSummary END
 				introVideos: introVideosOf(main),
 				projectorVideoId: projectorVideoOf(main)?.id ?? null,
 				onProject: (id: string | null) => void pickProjectorVideo(mid, id),
@@ -298,11 +377,16 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 					void assignTables(mid, replace);
 				},
 				onAllToRate: () => void allTablesTo(mid, 'rate'),
+				onAnotherTurnAll: () => void allTablesNewTurn(mid),
 				onPlenum: () => {
 					if (challenge) void startPlenum(challenge.statementId);
 				},
 				onFreeze: () => void freezeBallot(mid),
+				onPauseVote: (paused: boolean) => void pauseBallot(mid, paused),
 				onCloseVote: () => void closeBallot(mid),
+				onResetTurns: () => confirmResetTurns(mid),
+				onResetVote: () => confirmResetVote(mid),
+				allRatedLine: atAllProposals ? allRatedBandLine(challenge) : undefined, // >>> allProposals
 			}),
 			failureBanner(),
 			m('main.console__board', board(mid, view, step.index)),
@@ -332,6 +416,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 					})
 				: null,
 			m(EndChoice, { mainId: mid, status }),
+			m(ConfirmDialog),
 		]);
 	},
 };

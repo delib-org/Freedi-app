@@ -5165,5 +5165,6 @@
   "Show all {n}": "Show all {n}",
   "Totals": "Totals",
   "Map scale": "Map scale",
-  "Fuller dot = more evaluators": "Fuller dot = more evaluators"
+  "Fuller dot = more evaluators": "Fuller dot = more evaluators",
+  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked."
 }

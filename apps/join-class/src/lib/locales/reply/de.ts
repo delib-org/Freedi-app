@@ -1,0 +1,53 @@
+// German strings of the replies on a proposal (IA 22): the reply sheet,
+// the author's notice, the push question and the teacher's replies group.
+// Spread into ../de.ts, so they ship in the same locale chunk.
+
+const reply: Record<string, string> = {
+	'reply.open': 'Kommentare · {{n}}',
+	'reply.title': 'Kommentare zum Vorschlag',
+	'reply.empty': 'Noch keine Kommentare. Was könnte besser werden?',
+	'reply.placeholder': 'Kommentar schreiben',
+	'reply.send': 'Senden',
+	'reply.sending': 'Wird gesendet…',
+	'reply.by_author': 'Die Verfasser des Vorschlags',
+	'reply.by_teacher': 'Lehrkraft',
+	'reply.new_n': '{{n}} neue Kommentare',
+	'reply.new_one': '1 neuer Kommentar',
+	'reply.improve': 'Meinen Vorschlag verbessern',
+	'reply.improve_closed': 'Vorschläge konnten bis zum Start der Abstimmung verbessert werden',
+	'reply.refused':
+		'Der Kommentar wurde nicht gesendet: Er enthält Wörter, die verletzen könnten. Schreibt ihn bitte neu, mit anderen Worten.',
+	'reply.failed': 'Der Kommentar wurde nicht gesendet. Erneut versuchen',
+	'reply.too_long': 'Bis zu {{max}} Zeichen',
+	'reply.hidden_mine': 'Die Lehrkraft hat diesen Kommentar ausgeblendet',
+	'reply.back': 'Zurück',
+	'reply.count_left': 'Noch {{n}} Zeichen',
+	'reply.push_ask': 'Möchtest du erfahren, wenn jemand deinen Vorschlag kommentiert?',
+	'reply.push_yes': 'Ja, Bescheid geben',
+	'reply.push_no': 'Jetzt nicht',
+	'reply.push_blocked':
+		'Der Browser blockiert Benachrichtigungen. Kommentare erscheinen weiterhin hier in der App',
+	'console.replies': 'Kommentare ({{n}})',
+	'console.reply_placeholder': 'Kommentar der Lehrkraft',
+	'reply.notice_one': 'Es gibt einen neuen Kommentar zu eurem Vorschlag · Lesen',
+	'reply.notice_n': '{{n}} neue Kommentare zu eurem Vorschlag · Lesen',
+	'reply.new_tag': 'Neu',
+	'reply.author_hint': 'Ihr könnt zurückantworten oder euren Vorschlag verbessern',
+	'console.proposal_label': 'Vorschlag',
+	'console.reply_label': 'Kommentar',
+	'console.replies_n': '{{n}} Kommentare',
+	'console.replies_one': '1 Kommentar',
+	'console.flags_n': '{{n}} Versuche, verletzende Wörter zu posten',
+	'console.flags_one': '1 Versuch, verletzende Wörter zu posten',
+	'console.flag_count': '{{n}} Versuche',
+	'console.flag_count_one': '1 Versuch',
+	'console.flag_show': 'Text anzeigen',
+	'console.flag_hide_text': 'Text verbergen',
+	'console.flag_seen': 'Gesehen',
+	'console.flag_target': 'Zum Vorschlag: {{text}}',
+	'proposal.refused':
+		'Der Vorschlag wurde nicht gesendet: Er enthält Wörter, die verletzen könnten. Schreibt ihn bitte neu, mit anderen Worten.',
+	'text.checking': 'Wird geprüft…',
+};
+
+export default reply;

@@ -12,7 +12,21 @@ import type {
 	ClassFreezeBallotRequest,
 	ClassFreezeBallotResponse,
 	ClassMoveStudentRequest,
+	ClassPauseBallotRequest,
+	ClassPauseBallotResponse,
+	ClassEditProposalRequest,
+	ClassEditProposalResponse,
+	ClassPostProposalRequest,
+	ClassPostProposalResponse,
+	ClassPostReplyRequest,
+	ClassPostReplyResponse,
 	ClassMoveStudentResponse,
+	ClassResetTurnsRequest,
+	ClassResetTurnsResponse,
+	ClassResetVoteRequest,
+	ClassResetVoteResponse,
+	ClassSetItemHiddenRequest,
+	ClassSetItemHiddenResponse,
 	ClassSetLessonStatusRequest,
 	ClassSetLessonStatusResponse,
 	ClassTableStepRequest,
@@ -74,6 +88,11 @@ export function classFreezeBallot(
 	return call('classFreezeBallot', req);
 }
 
+/** Admin: pause the vote (votes locked, kept) or resume it. */
+export function classPauseBallot(req: ClassPauseBallotRequest): Promise<ClassPauseBallotResponse> {
+	return call('classPauseBallot', req);
+}
+
 /** Admin: close the ballot and record the decision. */
 export function classCloseBallot(req: ClassCloseBallotRequest): Promise<ClassCloseBallotResponse> {
 	return call('classCloseBallot', req);
@@ -89,4 +108,40 @@ export function classSetLessonStatus(
 /** Admin of the source: a new lesson with the same plan (IA 13.15). Safe to repeat with the same `newMainId`. */
 export function classCloneLesson(req: ClassCloneLessonRequest): Promise<ClassCloneLessonResponse> {
 	return call('classCloneLesson', req);
+}
+
+/** Admin, at Table talk: give the turns back to every table, or to table `n` (IA 18.4). */
+export function classResetTurns(req: ClassResetTurnsRequest): Promise<ClassResetTurnsResponse> {
+	return call('classResetTurns', req);
+}
+
+/** Admin: delete every vote and the decision; the same proposals stay on the ballot (IA 18.4). */
+export function classResetVote(req: ClassResetVoteRequest): Promise<ClassResetVoteResponse> {
+	return call('classResetVote', req);
+}
+
+/** Admin: hide or restore one answer, proposal or table question (IA 18.4). */
+export function classSetItemHidden(
+	req: ClassSetItemHiddenRequest,
+): Promise<ClassSetItemHiddenResponse> {
+	return call('classSetItemHidden', req);
+}
+
+/** A member or the teacher: one reply on a proposal (IA 22); hurtful words answer { ok: false }. */
+export function classPostReply(req: ClassPostReplyRequest): Promise<ClassPostReplyResponse> {
+	return call('classPostReply', req);
+}
+
+/** A student: their one proposal, after the language check (IA 24.3); hurtful words answer { ok: false }. */
+export function classPostProposal(
+	req: ClassPostProposalRequest,
+): Promise<ClassPostProposalResponse> {
+	return call('classPostProposal', req);
+}
+
+/** The proposal's writer: new text, same check, until the vote opens (IA 24.3). */
+export function classEditProposal(
+	req: ClassEditProposalRequest,
+): Promise<ClassEditProposalResponse> {
+	return call('classEditProposal', req);
 }

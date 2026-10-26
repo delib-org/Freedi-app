@@ -2,16 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { LessonStepKey, Role } from '@freedi/shared-types';
 import type { ClassTable, Statement, StatementSubscription } from '@freedi/shared-types';
 import {
+	clearsTableClocksOnEnter,
 	forwardControl,
 	formatClock,
 	formatSpeakerTime,
 	gateRows,
 	isBallotClosed,
 	isBallotFrozen,
+	isBallotPaused,
 	isPlenum,
 	railSteps,
+	splitsTablesOnEnter,
 	rosterStudents,
 	tableStepKey,
+	tablesAreDone,
 	timerLine,
 	unplacedStudents,
 } from '../consoleHelpers';
@@ -101,6 +105,19 @@ describe('gate maths', () => {
 		expect(isBallotFrozen(q({ ballot: { frozenAt: 1 } }))).toBe(true);
 		expect(isBallotClosed(q({ ballot: { frozenAt: 1 } }))).toBe(false);
 		expect(isBallotClosed(q({ ballot: { frozenAt: 1, closedAt: 2 } }))).toBe(true);
+		expect(isBallotPaused(q({ ballot: { frozenAt: 1 } }))).toBe(false);
+		expect(isBallotPaused(q({ ballot: { frozenAt: 1, pausedAt: 2 } }))).toBe(true);
+	});
+});
+
+describe('tablesAreDone', () => {
+	it('is true once the class votes or reads the summary, false while the tables still work', () => {
+		expect(tablesAreDone('allProposals')).toBe(true);
+		expect(tablesAreDone('vote')).toBe(true);
+		expect(tablesAreDone('summary')).toBe(true);
+		for (const key of ['waiting', 'opening', 'side', 'tables', 'tableTalk', 'proposals'] as const) {
+			expect(tablesAreDone(key)).toBe(false);
+		}
 	});
 });
 
@@ -136,5 +153,40 @@ describe('table timer line', () => {
 	it('names the now line, plenum overrides', () => {
 		expect(tableStepKey(table({ step: 'rate' }), false)).toBe('console.now_rate');
 		expect(tableStepKey(table({ step: 'rate' }), true)).toBe('console.now_plenum');
+	});
+});
+
+describe('clearsTableClocksOnEnter', () => {
+	const proposals = KEYS.indexOf('proposals');
+
+	it('clears the table clocks when Proposals opens from an earlier step', () => {
+		expect(clearsTableClocksOnEnter(KEYS.indexOf('tableTalk'), proposals, KEYS)).toBe(true);
+	});
+
+	it('leaves the tables alone when coming back from Vote or moving elsewhere', () => {
+		expect(clearsTableClocksOnEnter(KEYS.indexOf('vote'), proposals, KEYS)).toBe(false);
+		expect(clearsTableClocksOnEnter(proposals, KEYS.indexOf('vote'), KEYS)).toBe(false);
+	});
+});
+
+describe('splitsTablesOnEnter', () => {
+	const tables = KEYS.indexOf('tables');
+	const tableTalk = KEYS.indexOf('tableTalk');
+	const side = KEYS.indexOf('side');
+
+	it('splits when the tables step or Table talk opens forward and there are no tables', () => {
+		expect(splitsTablesOnEnter(side, tables, KEYS, false)).toBe(true);
+		expect(splitsTablesOnEnter(side, tableTalk, KEYS, false)).toBe(true);
+	});
+
+	it('leaves existing tables alone (the manual re-split stays manual)', () => {
+		expect(splitsTablesOnEnter(side, tables, KEYS, true)).toBe(false);
+		expect(splitsTablesOnEnter(tables, tableTalk, KEYS, true)).toBe(false);
+	});
+
+	it('does not split on a back move or on another step', () => {
+		expect(splitsTablesOnEnter(tableTalk, tables, KEYS, false)).toBe(false);
+		expect(splitsTablesOnEnter(tables, KEYS.indexOf('proposals'), KEYS, false)).toBe(false);
+		expect(splitsTablesOnEnter(side, 99, KEYS, false)).toBe(false);
 	});
 });

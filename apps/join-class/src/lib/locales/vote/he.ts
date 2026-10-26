@@ -1,0 +1,54 @@
+// Hebrew strings of the vote: the student's ballot screen (voting.*) and
+// the teacher's vote controls (console.*_vote). Spread into ../he.ts, so they
+// ship in the same locale chunk; split out only to keep each file small.
+
+const vote: Record<string, string> = {
+	'console.open_vote': 'פתיחת ההצבעה',
+	'console.pause_vote': 'השהיית ההצבעה',
+	'console.resume_vote': 'המשך ההצבעה',
+	'console.close_vote': 'סגירת ההצבעה',
+	'voting.title': 'הצבעה',
+	'voting.pick_one': 'בחרו הצעה אחת',
+	'voting.waiting': 'ממתינים שהמורה תפתח את ההצבעה',
+	'voting.empty': 'אין מה להצביע',
+	'voting.saving': 'שומרים…',
+	'voting.counted': 'ההצבעה נקלטה',
+	'voting.closed': 'ההצבעה נסגרה',
+	'voting.failed': 'ההצבעה לא נשמרה. לנסות שוב',
+	'voting.paused': 'ההצבעה מושהית',
+	'voting.paused_hint': 'המורה עצרה את ההצבעה לרגע. ההצבעה שלכם נשמרה.',
+	'voting.closed_hint': 'ההצבעה נסגרה. ממתינים לסיכום',
+	'console.vote_settings': 'ההצבעה',
+	'console.vote_live_results': 'התלמידים רואים את התוצאות בזמן אמת',
+	'console.vote_live_results_help': 'כמה קולות קיבלה כל הצעה. אף פעם לא מי הצביע למה.',
+	'voting.result_votes': '{{percent}}% · {{n}} קולות',
+	'voting.result_one_vote': '{{percent}}% · קול אחד',
+	// >>> voteSummary BEGIN
+	'summary.vote_results': 'תוצאות ההצבעה',
+	'summary.turnout': '{{n}} מתוך {{m}} הצביעו',
+	'summary.leading': 'מובילה כרגע',
+	'summary.vote_open': 'ההצבעה עוד פתוחה',
+	'summary.wait_close': 'המורה תסגור את ההצבעה',
+	'summary.no_vote': 'לא הייתה הצבעה',
+	'summary.most_agreed': 'ההצעה שהכי הסכימו עליה',
+	'summary.tie_by_ratings': 'תיקו. הוכרע לפי הדירוגים',
+	'summary.by_side_explain': 'כמה כל צד תומך בהחלטה, לפי הצד שבחרתם בתחילת השיעור',
+	'summary.winner': 'ההצעה שנבחרה',
+	'console.close_and_go_title': 'ההצבעה עדיין פתוחה. לסגור אותה ולעבור לסיכום?',
+	'console.close_and_go_body': 'אחרי הסגירה אי אפשר לשנות הצבעה.',
+	'console.close_and_go_yes': 'לסגור ולעבור',
+	'console.all_voted': 'כולם הצביעו',
+	'console.vote_order': 'סדר ההצעות',
+	'console.vote_order_consensus': 'לפי הדירוגים',
+	'console.vote_order_votes': 'לפי מספר הקולות',
+	'console.vote_order_random': 'סדר אקראי',
+	'console.vote_status_not_open': 'ההצבעה טרם נפתחה',
+	'console.vote_status_open': 'ההצבעה פתוחה',
+	'console.vote_status_paused': 'ההצבעה מושהית',
+	'console.vote_status_closed': 'ההצבעה נסגרה',
+	'console.vote_progress': '{{voted}} מתוך {{present}} הצביעו',
+	'console.vote_reset_hint': 'יש לסגור או להשהות קודם',
+	// >>> voteSummary END
+};
+
+export default vote;

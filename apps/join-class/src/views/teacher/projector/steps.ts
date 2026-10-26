@@ -1,5 +1,4 @@
 import m from 'mithril';
-import { supportBySide } from '@freedi/shared-types';
 import type { LessonStepKey } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { classState } from '@/lib/classroom/classState';
@@ -7,16 +6,22 @@ import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
 import { projectorData } from '@/lib/classroom/projectorData';
 import { ProjectorQr, QR_WAITING_SIZE } from './ProjectorBand';
 import { openingStage } from './OpeningStage';
+import { GateStage } from './GateStage';
+import { gateView } from './gateLogic';
+// >>> voteSummary BEGIN
+import { summaryStage, voteStage } from './VoteStage';
+// >>> voteSummary END
+// >>> allProposals BEGIN
+import { allProposalsStage } from './AllProposalsStage';
+// >>> allProposals END
 import {
 	allTablesRating,
 	countTables,
 	gateBars,
-	readBallot,
 	readRoundPhase,
 	studentsOf,
 	supportPercent,
 	tableTiles,
-	tallyBars,
 	topProposals,
 	unseatedNames,
 	visibleProposals,
@@ -109,7 +114,12 @@ function tableTalk(): m.Vnode {
 			];
 
 	return m('section.projector-step.projector-step--table-talk', [
-		m('h1.projector-instruction', t('projector.tablesCount', { n: counts.tables })),
+		m(
+			'h1.projector-instruction',
+			t(counts.tables === 1 ? 'projector.tablesCountOne' : 'projector.tablesCount', {
+				n: counts.tables,
+			}),
+		),
 		m('ul.projector-count-tiles', tiles),
 	]);
 }
@@ -121,7 +131,20 @@ function proposals(): m.Vnode {
 	const gate = gateOf(challenge, projectorData.main);
 
 	return m('section.projector-step.projector-step--proposals', [
-		m('h1.projector-instruction', t('projector.proposalsSent', { n: options.length })),
+		challenge?.statement
+			? m(
+					'h2.projector-ask',
+					{ dir: 'auto', 'data-testid': 'projector-ask' },
+					t('proposals.heading', { question: challenge.statement }),
+				)
+			: null,
+		m(
+			'h1.projector-instruction',
+			t(options.length === 1 ? 'projector.proposalsSentOne' : 'projector.proposalsSent', {
+				n: options.length,
+			}),
+		),
+		m(GateStage, { view: gateView(options, gate), showWaiting: false }),
 		m(
 			'ul.projector-gate-bars',
 			gateBars(options, gate).map((bar) =>
@@ -162,77 +185,6 @@ function plenum(options: ReturnType<typeof visibleProposals>): m.Vnode {
 	]);
 }
 
-function vote(): m.Vnode {
-	const challenge = projectorData.challenge;
-	const ballot = readBallot(challenge);
-	const selections = challenge?.selections as Record<string, number> | undefined;
-	const bars = ballot ? tallyBars(ballot.candidateIds, selections, projectorData.proposals) : [];
-
-	return m('section.projector-step.projector-step--vote', [
-		m('h1.projector-instruction', t('projector.voteTitle')),
-		bars.length === 0
-			? m('p.projector-empty', t('projector.noBallot'))
-			: m(
-					'ul.projector-tally',
-					bars.map((bar) =>
-						m('li.projector-tally__row', { key: bar.id }, [
-							m('span.projector-tally__text', bar.text),
-							m('span.projector-tally__track', { style: barStyle(bar.percent) }, [
-								m('span.projector-tally__fill'),
-							]),
-							m('span.projector-tally__count', bar.count),
-						]),
-					),
-				),
-	]);
-}
-
-function summary(): m.Vnode {
-	const challenge = projectorData.challenge;
-	const ballot = readBallot(challenge);
-	const decision = projectorData.proposals.find((o) => o.statementId === ballot?.decisionId);
-	const names = sideNamesOf(projectorData.main);
-	const support = supportBySide(
-		studentsOf(classState.roster, projectorData.main?.creatorId),
-		gateOf(challenge, projectorData.main),
-	);
-	const rows = [
-		{ key: 'a', label: names.a, camp: support.a },
-		{ key: 'center', label: t('projector.center'), camp: support.center },
-		{ key: 'b', label: names.b, camp: support.b },
-	];
-
-	return m('section.projector-step.projector-step--summary', [
-		m('.projector-decision', [
-			m('p.projector-eyebrow', t('projector.decision')),
-			m('p.projector-decision__text', decision?.statement ?? t('projector.noDecision')),
-		]),
-		m(
-			'ul.projector-support',
-			{ 'aria-label': t('projector.supportTitle') },
-			rows.map((row) =>
-				m(`li.projector-support__row.projector-support__row--${row.key}`, { key: row.key }, [
-					m('span.projector-support__label', row.label),
-					m(
-						'span.projector-support__track',
-						{ style: barStyle(supportBarPercent(row.camp.mean, row.camp.n)) },
-						[m('span.projector-support__fill')],
-					),
-					m('span.projector-support__n', t('projector.rated', { n: row.camp.n, m: row.camp.m })),
-				]),
-			),
-		),
-		m(
-			`p.projector-verdict.projector-verdict--${support.verdict}`,
-			t(`projector.verdict.${support.verdict}`),
-		),
-	]);
-}
-
-function supportBarPercent(mean: number, n: number): number {
-	return n === 0 ? 0 : supportPercent(mean);
-}
-
 const RENDERERS: Record<LessonStepKey, (ctx: StepContext) => m.Vnode> = {
 	waiting,
 	opening,
@@ -240,8 +192,13 @@ const RENDERERS: Record<LessonStepKey, (ctx: StepContext) => m.Vnode> = {
 	tables,
 	tableTalk,
 	proposals,
-	vote,
-	summary,
+	// >>> voteSummary BEGIN
+	vote: voteStage,
+	summary: summaryStage,
+	// >>> voteSummary END
+	// >>> allProposals BEGIN
+	allProposals: allProposalsStage,
+	// >>> allProposals END
 };
 
 export function renderStep(key: LessonStepKey, ctx: StepContext): m.Vnode {

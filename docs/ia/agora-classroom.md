@@ -41,6 +41,8 @@ Least expert reader: a 13-year-old on a phone with the teacher talking. Every st
 
 Deleted from the classroom UI (the engine keeps the fields; no screen reads them): village and world, booths, looks and themes, points, coins, inbox, notifications, toasts, celebrations, notes lottery (`agoraHands`), ideas and conversations on a note, cast and opening film, challenge round (`votingGame`), civic track, supervision links from the lesson, stage catch-up (`stageNav`: a student always sees the current step; the Table talk and Proposals steps are reached by table step, not by stepping back).
 
+Exception (§22, 2026-10-26): replies on a **proposal**, the author's unread count and toast, and a push when someone replied, came back for proposals only.
+
 ### 2.2 Mapping onto the Statement tree
 ```
 root question Statement (session.rootStatementId)
@@ -62,10 +64,13 @@ Not Statements: Lesson, Step, Student, Side, Table, Table step, Turn, Ballot, De
 | 1.4 tables | `tables` (NEW kind) | — | `agoraAssignTables` proposes mixed tables from `camp`; the teacher moves students; students see their table |
 | 2 table inquiry loop | `question` with `kind: 'inquiry'` (NEW question kind) | question Statement, answers as options, ratings, `selection` carries the top answers forward as context | guiding questions as child QUESTION Statements; table steps and turns; speaking timer; shared vs each writing |
 | 3 proposals | `deliberation` | proposals under `challengeQuestionId`, ratings → C_p, bridging across sides, `votingTrigger` | table steps `talk` (screens down) → `write` → `rate`; `roundPhase` reused: `propose` = tables working, `improve` = plenum (4.1) |
+| 3b all proposals (IA 19) | join-class step `allProposals` | ratings → C_p (existing pipeline) | every phone rates every proposal, 6 at a time (Thompson Sampling), rated cards stay, the next batch arrives by itself; the teacher opens and leaves it like any step |
 | 4.2 ballot | `voting` | ballot frozen by `prepareVotingStage`, votes, win threshold | nothing |
 | 4.3 reflection + decision | `results` | decision, tally, ranked proposals written once | the Summary opens with "pick a side again" (`campPositionEnd`, new participant field, optional) and shows the decision at once and the side shift as soon as anyone picked again, with "n מתוך m בחרו שוב" (a shared-types function over participants) |
 
 New kinds: one stage kind, `tables`; one question kind, `inquiry`. Both are picklist values in shared-types: deploy shared-types to functions and rules before any client writes them (the strict-parse trap). Retired from the classroom template (kept in the enum for old sessions and other tracks): `perspectives`, `needs`, `valueIdentification`, `linked`, question kinds `story`/`needs`/`vision`, `AgoraRoundPhase.rate`, `votingGame`, `stageProgress`, `whereabouts`, `villageCall`, `villageNavigation`, `world`, `theme`. The classroom template (`AgoraStagePlanPreset`, new value `classroom`) is exactly: lobby → framing → positioning → tables → question(inquiry) → deliberation → voting → results. `validateStagePlan` gains: `tables` requires a `positioning` before it; `inquiry` requires `tables` before it.
+
+join-class step keys (IA 12, 19): waiting → opening → side → tables → tableTalk → proposals → **allProposals** → vote → summary (9 steps). A lesson keeps the list it was created with in `lessonPlan.steps`; a lesson stored before §19 keeps its 8 steps and is read as `steps[stepIndex]`.
 
 ### 2.4 Who moves what (fixed)
 - Class-level steps: only the teacher, through `agoraAdvanceStage` (server transaction, forward only). One control, always the same place on the console.
@@ -83,7 +88,7 @@ One name per concept across UI, i18n, routes and code. HE is primary and gender-
 | Concept | EN | HE | i18n key | Route segment | Code type | Synonyms to retire |
 |---|---|---|---|---|---|---|
 | Lesson | Lesson | שיעור | teacher.title, dashboard.* (kept) | /teach/session/:id | AgoraSession | משחק, מסע, game, journey (`teacher.start_journey` → `console.start`) |
-| Step (class-level) | Step n of 8 | שלב n מתוך 8 | teacher.step_of (kept) | — | AgoraStagePlanItem | stage, station, תחנה, ביתן |
+| Step (class-level) | Step n of N (N = the lesson's own `plan.steps.length`: 9, or 8 for a lesson made before §19) | שלב n מתוך N | teacher.step_of (kept) | — | AgoraStagePlanItem | stage, station, תחנה, ביתן |
 | Open next step | Open the next step | פתיחת השלב הבא | teacher.open_next (kept) | — | agoraAdvanceStage | advance, skip_to_next |
 | Opening | Opening | פתיחה | NEW opening.* | — | AgoraStage.framing | framing, scene, film, intro, מנהרת הזמן |
 | Dilemma video | Watch together | צופים ביחד | opening.watch | — | libraryVideo | film.* |
@@ -117,10 +122,14 @@ One name per concept across UI, i18n, routes and code. HE is primary and gender-
 | Class answers | The class's answers | התשובות של הכיתה | answer.class_list | — | — | הלוח, הכיכר, כל הפתקים |
 | Proposal | Proposal | הצעה | NEW proposal.* | — | Statement (option) under challengeQuestionId; code already says `proposal` (`AgoraProposalScore`, `fn_onAgoraProposal`), so UI, i18n and code agree | פתרון, solution, פתק, בית המלאכה |
 | My proposal | My proposal | ההצעה שלי | proposal.mine | — | — | הפתרון שלי, בית המלאכה |
-| Class proposals | The class's proposals | ההצעות של הכיתה | proposal.class_list | — | — | הכיכר, כל ההצעות |
+| All proposals (step and the class sheet) | All proposals | כל ההצעות | step.allProposals; proposal.class_list (same value, §19.3) | — | LessonStepKey 'allProposals' | ההצעות של הכיתה, הכיכר |
+| Proposals (step) | Proposals | הצעות | step.proposals (value changed §19.3) | — | LessonStepKey 'proposals' | הצעות לפתרונות, פתרון |
 | Plenum | Everyone together | כולם ביחד | NEW console.plenum, projector.plenum | — | AgoraRoundPhase.improve | מליאה (teacher may say it; UI does not), open_floor |
 | Top proposals | Top proposals | ההצעות המובילות | projector.top | — | agoraScores C_p order | leaders, הלוח |
 | Vote | Vote | הצבעה | voting.* (kept; title "בחרו הצעה אחת") | — | AgoraStage.voting | ballot in UI, בחירות |
+| Open the vote | Open the vote | פתיחת ההצבעה | console.open_vote | — | classFreezeBallot (ballot.frozenAt: the shortlist is fixed) | הקפאת ההצבעה (freeze now means nothing in UI) |
+| Pause the vote | Pause / resume the vote | השהיית ההצבעה / המשך ההצבעה | console.pause_vote, console.resume_vote, voting.paused | — | classPauseBallot (ballot.pausedAt: votes locked, kept) | הקפאה, freeze, stop |
+| Close the vote | Close the vote | סגירת ההצבעה | console.close_vote | — | classCloseBallot (ballot.closedAt, final) | end, סיום |
 | Decision | The decision | ההחלטה | results.agreement_decision (kept) | — | voteWinnerStatementId | winner, המנצח |
 | No device | No device | בלי מכשיר | table.no_device | — | participant.noDevice | — |
 | Rate on behalf of | Rate for … | לדרג בשם … | console.rate_for | — | evaluation by proxy (teacher) | — |
@@ -136,6 +145,8 @@ One name per concept across UI, i18n, routes and code. HE is primary and gender-
 | End the lesson | End the lesson | סיום השיעור | teacher.end_game (kept, value unchanged) | — | status ended | — |
 
 Live writing (§17.5, Tal 2026-10-25): NEW `answer.live_one`, `answer.live_many` (moved from `rate.live_one|many`), `answer.watch_open`, `answer.watch_close`, `answer.watch_sent`, `answer.watch_stopped`, `answer.live_started`. CHANGED values: `answer.broadcast` "משדרים את הכתיבה לשולחן", `answer.broadcast_on` "השולחן רואה את מה שאתם כותבים". Retired: `rate.live_one`, `rate.live_many`, `turn.peek_back`, `turn.peek_why_*`, `turn.pill_now`; `turn.asker` / `turn.asker_me` are deleted (nothing reads them: Table talk has no asker line either).
+
+Step label (§25): `step.tableTalk` = "שאלות חקירה" (replaces "שיחת שולחן" in this glossary).
 
 Rule: the word for the written thing is תשובה at the Table talk step and הצעה at the Proposals step, and never anything else; the kind is the screen's title, never a tag on the card.
 
@@ -1214,7 +1225,7 @@ Method: read `classroomModel.ts`, `classroomLogic.ts`, `classroomCallables.ts`, 
 4. "I want to pass" is a real secondary button, at answering (skip this question; counts as spoken) and at asking (give up asking for the lesson).
 5. One state per screen. The step strip, the peek and the sub-step pills leave the student Table talk screen. The teacher console keeps the full picture.
 6. Students without a device never need a screen; the teacher acts for them.
-7. One minute = `SPEAK_SECONDS` (60), on server time (`speakerEndsAt`).
+7. ~~One minute = `SPEAK_SECONDS` (60)~~ **Superseded by §25.1/25.5:** the speaking time is the lesson setting `speakSeconds` (default 120 s), on server time (`speakerEndsAt`, with `speakerMs`).
 8. (Addition) Every student who has not asked can always write their own question in the pick list, not only when the teacher's questions run out. When they run out, it becomes the main choice. An own question is a turn like any other: locked for the table, same answers, and it enters the no-repeat rule.
 
 ### 16.1 Objects and states
@@ -1239,11 +1250,11 @@ Derived, per table (shared-types `classroomLogic`, pure):
 
 ### 16.2 Labels and names (one name per concept)
 Canonical verbs: **to start** (a turn), **to answer** (one minute), **to finish** (one's minute), **to pass** (לוותר). "Speak/לדבר" leaves student Table talk text; code keeps `speaker*` (schema rename not worth a migration: accepted deviation, listed here so nobody reads it as a second concept). "Turn" in EN stays reserved for סבב (§3); one person's minute is "{{name}} is answering", never "{{name}}'s turn".
-Stage name on top of every screen: `step.tableTalk` = "שיחת שולחן" / "Table talk" (kept; the brief's "שיחה בשולחן" is not the app's label).
+Stage name on top of every screen: `step.tableTalk` = "שאלות חקירה" (glossary fixed in §25; was "שיחת שולחן" / "Table talk";  the brief's "שיחה בשולחן" is not the app's label).
 
 | Concept | EN | HE | i18n key | Change |
 |---|---|---|---|---|
-| Stage name (top line) | Table talk | שיחת שולחן | `step.tableTalk` | kept |
+| Stage name (top line) | Exploration questions | שאלות חקירה | `step.tableTalk` | label per the app (§25) |
 | Table line (under stage) | Table {{n}} · Turn {{turn}} of {{max}} | שולחן {{n}} · סבב {{turn}} מתוך {{max}} | `turn.header` | value: drops "· עכשיו: {{step}}" |
 | Pick list title | Pick a question | בחרו שאלה | `turn.instr_pick` | value changed (was "בחרו שאלה לשולחן") |
 | Teacher's questions group | The teacher's questions | השאלות של המורה | `question.teacher_list` | kept |
@@ -1587,3 +1598,652 @@ Decision: at Proposals each phone talks, writes or rates whenever it wants. No s
   - §3 / §16.2: retire `turn.peek_back`, `turn.peek_why_*`, `turn.pill_now`; `turn.asker` / `turn.asker_me` were deleted afterwards (dead keys).
 - **`docs/design/agora-classroom-ux.md`:** the strip section (§11, last bullet: "tappable peek", Tal 2026-10-22) is superseded.
 - **Test ids:** retired `peek-body`, `peek-back`, `pill-now`, and `asker-mark` at Proposals. Kept (now local) `table-to-write`, `table-to-rate`. No e2e spec in `apps/join-class` references the retired ones (grep 2026-10-25).
+
+### 17.14 A fresh minute for every speaker at Proposals / מדברים (Tal, 2026-10-25, card g9Jke79a)
+Decision: the Table talk clock must not carry into Proposals. It is dedicated time for proposing solutions, and each speaker gets their own minute.
+- **Same speaker mechanics as Table talk.** The Proposals "מדברים" screen shows the challenge, then: nobody speaking = an idle 1:00 and "אני רוצה לענות" (`turn.answer`, `claimSpeaker`); someone speaking = "{{name}} עונה" (`turn.answering`) with the running minute; me speaking = "הדקה שלכם" (`turn.answer_mine`) and "סיימתי" (`turn.finish`, `finishSpeaking`). A minute that ends fades back to the idle clock, quietly. "הזמן נגמר" and "זמן השולחן" (`turn.table_time`, deleted) no longer appear here.
+- **Looser than Table talk.** No question on the table, any table step, and the same tablemate may speak again. The only guard is the floor (`floor-taken`). `tableGuards.ts` applies this when `lessonStep === 'proposals'`.
+- **Entering Proposals clears the old clock.** The teacher's step move to Proposals from an earlier step also calls `classAllTablesTo(mainId, 'talk')`, which clears every table's speaker and clock and lands every phone on מדברים once. Coming back from Vote does not.
+- **Heading (card soAlRYCG).** Every Proposals sub-step shows "הציעו פתרון לשאלה ״{{question}}״" in large type (`proposals.heading`).
+
+## 18. Go back, reset, hide (Tal, 2026-10-25, card ACxcFNmD)
+
+Brief: the teacher can return the class to any step, and if needed reset the turns, the vote results, or delete one result. Tal decided: going back keeps everything; reset and delete are separate, explicitly confirmed actions.
+Method: read StepRail.ts, SwitchBand.ts, consoleActions.ts, WhatTheyWrote.ts, lesson.ts/lessonCore.ts, tableTransitions.ts, fn_classAllTablesTo.ts, fn_classBallot.ts, ballotLogic.ts, fn_vote.ts, lessonStatusGuard.ts, classroomModel.ts. Out of scope: vote pause/resume and live results (concurrent vote lane).
+
+Findings from code:
+- Going back ALREADY works: the rail moves the class backward too (StepRail.onGo → setLessonStep in apps/join-class/src/lib/lesson.ts, a client write of stepIndex + follow-me), §11.1. This spec adds only a confirm before a backward move + a one-time line on phones.
+- A deleted vote is never subtracted from the tally: functions/src/fn_vote.ts (updateVote, onDocumentWritten) parses after.data(), so deleting a vote doc throws and is logged; it never subtracts from `selections`. So reset-the-vote clears `selections` itself, and updateVote needs a guard `if (!event.data.after.exists) return`.
+- Deleting one item already exists as a hide: "מה כתבו" has הסתרה / החזרה (setOptionFlag hide); ballot freeze already skips hidden options. Reuse it as the single-item delete; needs a server path only because of the ballot.
+
+### 18.1 Objects: what "a result" is at each step
+| Step | What students leave | Teacher may remove one? | Undo |
+|---|---|---|---|
+| Side | side/camp on the subscription | No — going back to Side lets each student pick again | — |
+| Tables | seating (ClassTable.memberUids) | No — "חלוקה מחדש"/"העברה לשולחן אחר" exist | — |
+| Table talk | answers, own questions (Statements) | Yes: hide | restore |
+| Table talk | turn state (asked/passed/answered) | No single item; Reset the turns (18.4) | none |
+| Proposals | proposals (options under the challenge) | Yes: hide | restore |
+| Proposals | ratings | No; a rating on a hidden item stays, not shown | — |
+| Vote | votes (votes/{uid}--{challengeId}), selections, ballot.decisionId | No single vote (secret ballot); Reset the vote (18.4) | none |
+| Summary | decisionSupport | No; cleared by Reset the vote | none |
+
+"Delete one result" = hide (existing concept/labels הסתרה / החזרה), always undoable. Consequences:
+- Hidden item leaves every student list, projector, gate bars, later ballot freezes (already true).
+- Hidden own question leaves the pick list; its answers are hidden with it (on read, nothing extra written).
+- Hidden proposal that is a candidate on an OPEN ballot leaves candidateIds; every vote on it becomes `none` so fn_vote moves the count. Restoring does not re-add it to the ballot; teacher freezes again (allowed while open).
+- On a CLOSED ballot, hiding a candidate is refused; teacher resets the vote first.
+
+### 18.2 Where controls live (no new routes)
+- Go back: step rail as built; pressing an EARLIER step opens a confirm; forward stays one tap.
+- Reset turns, all tables: step band (SwitchBand) at Table talk, after "כל השולחנות: …".
+- Reset turns, one table: table sheet at Table talk, after "להתחיל סבב n".
+- Reset the vote: step band at Vote, after "סגירת ההצבעה".
+- Hide/restore: "מה כתבו" only (one home), as built, now also for own questions.
+
+| Concept | HE | EN | i18n key |
+|---|---|---|---|
+| Back confirm title | לחזור לשלב: {{name}}? | Go back to: {{name}}? | console.back_title |
+| Back confirm line | מה שהתלמידים כתבו, דירגו ובחרו נשמר. | Everything students wrote, rated and chose is kept. | console.back_keep |
+| Back confirm yes | לחזור | Go back | console.back_yes |
+| Reset turns all | איפוס הסבבים בכל השולחנות | Reset the turns at all tables | console.reset_turns_all |
+| Reset turns one | איפוס הסבבים בשולחן | Reset this table's turns | console.reset_turns_table |
+| Reset turns title | לאפס את הסבבים? | Reset the turns? | console.reset_turns_title |
+| Reset turns line | כולם יוכלו לשאול שוב וכל השאלות יחזרו להיות פנויות. התשובות נשמרות. אי אפשר לבטל. | Everyone can ask again and every question is free again. Answers are kept. This cannot be undone. | console.reset_turns_body |
+| Reset vote | איפוס ההצבעה | Reset the vote | console.reset_vote |
+| Reset vote title | לאפס את ההצבעה? | Reset the vote? | console.reset_vote_title |
+| Reset vote line | כל הקולות יימחקו וההחלטה תבוטל. מצביעים מחדש על אותן הצעות. אי אפשר לבטל. | All votes are deleted and the decision is cancelled. The class votes again on the same proposals. This cannot be undone. | console.reset_vote_body |
+| Confirm yes (resets) | איפוס | Reset | console.reset_yes |
+| Cancel | ביטול | Cancel | common.cancel (existing) |
+| Hide/restore | הסתרה / החזרה | Hide / Restore | console.hide / console.restore (kept) |
+| Hide refused closed vote | ההצעה בהצבעה שנסגרה. אפסו את ההצבעה קודם | This proposal is on a closed vote. Reset the vote first | console.hide_vote_closed |
+| Student moved back (once) | חזרנו לשלב: {{name}} | We're back at: {{name}} | lesson.back_line |
+| Student turns reset (once) | הסבבים התחילו מחדש | The turns have started again | turn.restarted |
+| Student vote reset | ההצבעה התחילה מחדש. בחרו שוב | The vote has started again. Choose again | vote.restarted |
+| Student own proposal hidden | המורה הסתירו את ההצעה מהרשימה של הכיתה (?) | The teacher hid this proposal from the class list | proposal.hidden_mine |
+| Student chosen proposal removed | ההצעה שבחרתם הוסרה. בחרו שוב | The proposal you chose was removed. Choose again | vote.choice_removed |
+
+Naming: "turns" = סבבים (§3 Turn = סבב); "תורים" not used. "Reset the vote" avoids "תוצאות" (retired by §3). All 7 locale files get every key.
+
+Phones: after a backward move, the earlier step with the student's own earlier work (Side shows previous side, Proposals shows sent proposal, Table talk shows table state) + lesson.back_line once until the next move. After a reset, each phone redraws from the server with the one-time line.
+
+### 18.3 Task flows
+1. Go back to X (2 taps): rail X → console.back_yes. Nothing deleted. Forward again is 1 tap.
+2. Reset turns whole class (2 taps): at Table talk, band console.reset_turns_all → console.reset_yes. Every phone shows P1 with "סבב 1 מתוך max".
+3. Reset turns one table (3 taps): table card → sheet console.reset_turns_table → console.reset_yes.
+4. Reset the vote: at Vote, close the vote if open (or the vote lane's pause) → console.reset_vote → console.reset_yes. Ballot reopens with same candidates, no votes; Summary shows no-decision state.
+5. Hide one result (1 tap): "מה כתבו" → console.hide; "החזרה" undoes. Hide undoable; resets not (confirm says so, nothing archived).
+
+### 18.4 Server contract
+All three callables: admin-only (assertWorkspaceAdmin else permission-denied); new assertLessonNotEnded (allowed live/paused/open, refused ended with `lesson-ended`); the console's guardedAct lets them through while paused (as status actions). Step moves stay as built (setLessonStep; refused paused/ended).
+
+classResetTurns { mainId, n?: number } — no n = every table; one batch.
+- Refusals: lesson step not tableTalk → not-table-talk; no table n → not-found.
+- Writes per table: step:'pick', turn:1, askerUid:null, askedUids:[], passedAskingUids:[], usedQuestionIds:[], spokenUids:[], writingMode:'each', writingLocked:false, updatedAt.
+- Deletes per table: questionId, speakerUid, speakerEndsAt, passedSpeakingUids.
+- Kept: members, no-device members, every Statement and rating.
+
+classResetVote { mainId }
+- Refusals: no ballot → no-ballot; ballot open while lesson step is vote and the vote is not paused → vote-running.
+- Writes in order: 1) delete every vote with parentId == challengeId (batches); 2) isVoted:false on every option; 3) clear decisionSupport on every subscription of the lesson; 4) last, write the challenge: delete selections and topVotedOption, ballot = {candidateIds, frozenAt} (no closedAt/decisionId; vote-lane flags back to their at-freeze values).
+- Add guard `if (!event.data.after.exists) return` to updateVote in fn_vote.ts.
+
+classSetItemHidden { mainId, statementId, hidden } — replaces client setOptionFlag for console hide/restore.
+- Accepted: an answer, proposal or own question of this lesson; else invalid-argument.
+- If it is a ballot candidate: ballot closed → vote-closed; last candidate → last-candidate; ballot open → in one transaction remove from candidateIds and set every vote on it to statementId:'none'.
+
+### 18.5 Edge cases
+- Back from Proposals to Table talk: tables keep their Proposals step; Table talk draws them as P1/P2 (§16.4 legacy rule); finished tables show D until turns reset.
+- Back to Side or earlier: tables stay; re-seat with "חלוקה מחדש".
+- Back from Vote to Proposals with ballot open: new proposals not on the ballot; teacher freezes again on returning to Vote. Back from Summary with ballot closed: closed result shows; Reset the vote re-runs it.
+- Reset turns during someone's minute: the minute ends at once.
+- A stale claimTurn after reset is a valid claim in the new round — harmless.
+
+### 18.6 Open questions (defaults taken)
+1. Delete = undoable hide (default) vs real delete.
+2. Reset the vote also clears Summary decisionSupport answers (default yes).
+3. Answers written in reset turns stay (default yes).
+
+### 18.7 Handoff
+Fixed here: control placement, labels, confirm only for backward moves and resets, one-time student lines. UX to decide: visual weight of reset controls (destructive, secondary), how confirm conveys "cannot be undone", how a hidden item looks in "מה כתבו".
+
+## 19. "כל ההצעות", a new step between Proposals and Vote (Tal, 2026-10-25, card wpsQzLsg)
+
+**Decisions (Tal):** the new step is a class-level step that the teacher opens. Each phone gets up to 6 proposals at a time, picked by Thompson Sampling as in MC. Rated cards stay on the board, and new cards arrive with an animation. Ratings use the same 5 faces as elsewhere and feed C_p, the sampler and the Vote order (§21).
+
+### 19.1 Objects
+| Object | What it is | Cardinality | Lifecycle |
+|---|---|---|---|
+| Step `allProposals` (NEW `LessonStepKey`) | The class reads and rates every proposal | 1 per lesson, index 6 of 9 | upcoming → current → done |
+| Pool | The proposals this student may rate: visible options under the challenge, minus their own (it already gets an automatic +1, §9.1), minus hidden ones. Tablemates' proposals are **in** the pool, because proposals are individual (`shared:false`) | 0–34 | grows while classmates still send |
+| Batch (view state, not stored) | Up to 6 unrated proposals from the pool, picked by the sampler | 1 open at a time | served → all rated → the next batch is served |
+| Board (view state) | Every proposal served to this phone in this step, in serving order. Rated cards stay on it and can be rated again | 1 per phone | rebuilt on reload: rated items plus a newly sampled open batch |
+| Rating | As in §2.1 (5 faces, -1..+1). It is written through the existing pipeline, so `statement.consensus` (C_p) and `evaluation.*` update | ≤1 per student per proposal | — |
+
+Statement tree: nothing new. Ratings are evaluation docs on the proposal options under `challengeQuestionId`.
+
+**Sampler rules for the classroom** (they differ from MC):
+- Batch size = `CLASS_BATCH_SIZE = 6`. If the pool has 6 or fewer, the phone shows all of them and has no batches.
+- Stability **never removes** a proposal: "everyone sees everything". A stable proposal is only served later.
+- The sampler runs on the phone, from the options feed it already has (each option carries its `evaluation` stats).
+- A new proposal that arrives mid-step joins the pool and is served in a later batch. It is never inserted into the open batch.
+
+### 19.2 Who moves the class
+Only the teacher moves the class, as at every other step:
+- In: "פתיחת השלב הבא: כל ההצעות" (the rail's forward control).
+- Out: "פתיחת השלב הבא: הצבעה".
+
+Table steps are irrelevant here. The table docs keep their state, and the phone shows no table strip.
+
+Writing stays open until the Vote opens. An author can still send or edit their own proposal from this step (a pinned "ההצעה שלי" card, as at the plenum).
+
+### 19.3 Labels
+| Concept | HE | EN | i18n key | Code |
+|---|---|---|---|---|
+| Step name (rail, header) | כל ההצעות | All proposals | `step.allProposals` (NEW) | `'allProposals'` |
+| Phone instruction | דרגו כל הצעה | Rate each proposal | `allProposals.instruction` (NEW) | — |
+| Arrival divider | {{n}} הצעות חדשות / הצעה חדשה | {{n}} new proposals / One new proposal | `allProposals.new_n`, `allProposals.new_one` | — |
+| Progress (phone) | דירגתם {{n}} מתוך {{m}} | You rated {{n}} of {{m}} | `allProposals.progress` | — |
+| All rated | דירגתם את כל ההצעות. חכו למורה | You rated every proposal. Wait for the teacher | `allProposals.done` | — |
+| Empty pool | עוד אין הצעות לדרג | No proposals to rate yet | `proposal.none_yet` (kept) | — |
+| Console line | {{n}} מתוך {{m}} תלמידים דירגו הכול · לכל הצעה לפחות {{k}} דירוגים | {{n}} of {{m}} students rated everything · every proposal has at least {{k}} ratings | `console.all_rated_line` (NEW) | — |
+| Projector title | כל ההצעות · {{n}} הצעות | All proposals · {{n}} proposals | `projector.allProposals` (NEW) | — |
+
+**One name per concept:**
+- `proposal.class_list` ("ההצעות של הכיתה") is a synonym for the same object. Change its value to "כל ההצעות" in all 7 locale files.
+- Separate defect: `step.proposals` is "הצעות לפתרונות", which uses the retired פתרון (§9.5). Change it to "הצעות".
+
+### 19.4 Phone (`/m/:mid`, step 6)
+1. Header: "כל ההצעות". Instruction: "דרגו כל הצעה". Progress line.
+2. Own proposal card ("ההצעה שלי", "עריכה"), if the student has one.
+3. Board: the served cards in serving order, each with the faces. No author, no table. Rated cards stay expanded (no "דירגתם n" collapse at this step).
+4. When every card on the board is rated, the next batch arrives about 1 s after the last tap:
+   - a divider "6 הצעות חדשות" is appended below the board;
+   - the cards enter with an animation;
+   - the phone scrolls to the divider.
+
+   There is no "next" button and no skipping.
+5. When the pool is exhausted, the phone shows "דירגתם את כל ההצעות. חכו למורה". A later arrival is served as a batch of 1 or more with the same divider.
+
+**States:**
+| State | What the phone shows |
+|---|---|
+| Loading | Skeleton |
+| Empty | `proposal.none_yet` |
+| Rating failed | `rate.failed` plus retry (existing) |
+| Paused or ended | §13.6 frames |
+| Done | `allProposals.done` |
+
+### 19.5 Projector
+The projector reuses the plenum list: the top `TOP_PROPOSALS_LIMIT` proposals by C_p, re-ordering live with the existing FLIP glide. Above the list sit the title with the count and the line "לכל הצעה לפחות {{k}} דירוגים". It shows no per-student data.
+
+### 19.6 Teacher console
+- **Band:** `console.all_rated_line` (live).
+- **Table cards:** each card shows "{{n}}/{{m}} דירגו הכול". The table step and the turn are hidden at this step.
+- **Ratings source:** one listener on the evaluations of the challenge's options, teacher only. That is about 34 × 34 docs at most, acceptable on a laptop.
+- **Plenum:** "כולם ביחד" at Proposals stays as built (open question 4).
+
+### 19.7 Task flows
+- **Student (1 action, repeated):** rate the cards on the board. Batches arrive by themselves.
+- **Teacher (2 taps):** "פתיחת השלב הבא: כל ההצעות", watch the line, then "פתיחת השלב הבא: הצבעה". "פתיחת ההצבעה" freezes the ballot from C_p, which now includes this step's ratings.
+
+### 19.8 Step list, rail, cloning, back moves
+- `LESSON_STEP_KEYS` gets 9 entries. `LessonStepKeySchema` gains `'allProposals'`.
+  - **Strict-parse trap:** deploy shared-types to functions before any client writes the new value.
+- The rail shows 9 steps, and "שלב n מתוך 9" comes from `plan.steps.length`.
+- **Old lessons** keep their stored 8-step `plan.steps`. Every reader must index `plan.steps[stepIndex]`, not `LESSON_STEP_KEYS[index]`. Every step write must keep `plan.steps` and not rebuild it. Otherwise an old lesson sitting at Vote (index 6) would jump to the new step.
+- **Cloning** (`classCloneLesson`) always creates the current 9-step plan. No ratings are copied.
+- **Back moves (§18):** going back from Vote to this step keeps the ballot. New ratings change C_p, and the teacher re-freezes if they want.
+
+### 19.9 As built (2026-10-25, branch feat/class-all-proposals)
+- Sampler: a pure port of MC's Thompson/UCB maths in `apps/join-class/src/lib/classroom/{samplingMath,proposalSampler}.ts` (MC untouched; a shared package can come later). Classroom rule: unstable proposals first, stable ones after, never dropped. MC's weights; the recency window is one lesson hour.
+- Board: `lib/classroom/allProposalsBoard.ts` (pure). Phone: `views/student/c3/AllProposalsScreen.ts` (own lazy chunk). The arrival divider and animation are its own (`student-c3-all-proposals.scss`), not `newSolutionsBuffer` (a global tied to Join's single-question store).
+- The pinned own proposal can be edited, and a student with no proposal gets "+ הצעה משלי", while a table and an unfrozen ballot exist (§19.2, open question 6).
+- Console: band line + per-table "n/m דירגו הכול" from one evaluations listener (`views/teacher/allProposalsRatings.ts`), started only at this step; table cards show members only (`TABLES_DONE_STEPS`); the gate panel is shown at this step too.
+- Projector: `views/teacher/projector/AllProposalsStage.ts`; k = the fewest `evaluation.numberOfEvaluators` on any visible proposal.
+- Old lessons: `planStepKeys(plan)` everywhere a step is read; `planStepMove` writes the stored steps back; `classCloneLesson` gives copies the 9 steps.
+
+---
+
+## 20. Summary shows the vote result (Tal, 2026-10-25, card C68AENG3)
+
+### 20.1 Finding: why "ההחלטה עוד לא התקבלה" shows after everyone voted
+- `ballot.decisionId` is written **only** by `classCloseBallot`, the teacher's "סגירת ההצבעה" at the Vote step band.
+- Opening Summary (`setLessonStep`, a client write) does not close the ballot.
+- `SummaryScreen` and the projector's `summary()` read only `decisionId`.
+
+So if the teacher moves on without pressing close, the vote is still open, there is no decision, and the support bars measure support for nothing.
+
+### 20.2 Fix
+1. **Console:** the forward control at Vote, while the ballot is open or paused, opens a confirm:
+   - "ההצבעה עדיין פתוחה. לסגור אותה ולעבור לסיכום?"
+   - Buttons: "לסגור ולעבור" / "ביטול".
+   - On yes, `classCloseBallot` runs first, then the step move.
+   - When every present student has voted, the band shows "כולם הצביעו". There is no automatic close: students may still change their vote.
+2. **Summary states.** The phone and the projector draw the same states from the same data.
+
+| Ballot | Top section | Support question + side bars |
+|---|---|---|
+| none (no vote held) | "לא הייתה הצבעה". The decision = the most agreed proposal (highest C_p), with the line "ההצעה שהכי הסכימו עליה" (§2.1) | shown |
+| open | "ההצבעה עוד פתוחה" + live votes per proposal; the leader marked "מובילה כרגע" | hidden; line "המורה תסגור את ההצבעה" |
+| paused | "ההצבעה מושהית" + the same tally | hidden |
+| closed | "ההחלטה" card with the winner, then votes per proposal (by votes, winner first) and "{{n}} מתוך {{m}} הצביעו". On a tie decided by ratings: "תיקו. הוכרע לפי הדירוגים" | shown |
+
+3. **Side bars:** keep them and add one sentence above them. Change the verdict lines, because "התקרבו" claims a movement that the data (support only) does not measure.
+
+### 20.3 Labels
+| Concept | HE | EN | i18n key |
+|---|---|---|---|
+| Section: vote results | תוצאות ההצבעה | Vote results | `summary.vote_results` (NEW) |
+| Votes per proposal | {{n}} קולות / קול אחד | {{n}} votes / 1 vote | reuse `voting.result_votes`, `voting.result_one_vote` |
+| Turnout | {{n}} מתוך {{m}} הצביעו | {{n}} of {{m}} voted | `summary.turnout` (NEW) |
+| Leader, open vote | מובילה כרגע | Leading now | `summary.leading` (NEW) |
+| Open / paused | ההצבעה עוד פתוחה / ההצבעה מושהית | The vote is still open / The vote is paused | `summary.vote_open`, `voting.paused` (kept) |
+| Wait line | המורה תסגור את ההצבעה | The teacher will close the vote | `summary.wait_close` (NEW) |
+| No vote | לא הייתה הצבעה · ההצעה שהכי הסכימו עליה | No vote was held · the most agreed proposal | `summary.no_vote` (NEW) |
+| Tie | תיקו. הוכרע לפי הדירוגים | A tie, decided by the ratings | `summary.tie_by_ratings` (NEW) |
+| Side bars explainer | כמה כל צד תומך בהחלטה, לפי הצד שבחרתם בתחילת השיעור | How much each side supports the decision, by the side you picked at the start | `summary.by_side_explain` (NEW) |
+| Verdict, closer | שני הצדדים תומכים בהחלטה | Both sides support the decision | `summary.verdict_closer` (value changed) |
+| Verdict, apart | צד אחד עוד לא תומך מספיק | One side does not support it enough yet | `summary.verdict_apart` (value changed) |
+| Verdict, wait | מחכים לדירוגים משני הצדדים | Waiting for ratings from both sides | `summary.verdict_wait` (value changed) |
+| Retire | ההחלטה עוד לא התקבלה | — | `summary.waiting`: replaced by the states above (still used by `LessonStateScreen`: check) |
+| Close-and-go confirm | ההצבעה עדיין פתוחה. לסגור אותה ולעבור לסיכום? / לסגור ולעבור | The vote is still open. Close it and go to the summary? / Close and go | `console.close_and_go_title`, `console.close_and_go_yes` (NEW) |
+| All voted (band) | כולם הצביעו | Everyone has voted | `console.all_voted` (NEW) |
+
+Projector: the same keys under `projector.*`, or reuse `summary.*`. Default: reuse `summary.*`, so there is one string.
+
+### 20.4 Hierarchy (Summary phone, top to bottom)
+header → vote results (state block) → "עד כמה אתם תומכים בהצעה?" + faces (only when decided) → explainer sentence → three bars → verdict line.
+
+### 20.5 Decisions taken at build time
+- The close is still the teacher's: no automatic close when everyone voted (open question 5). The band says "כולם הצביעו" and the forward control asks "לסגור ולעבור" while the ballot is open or paused.
+- A ballot that carries a `decisionId` but no `closedAt` (old test data) reads as closed, so the Summary never contradicts the decision it has.
+- The winner is marked with the tag "ההצעה שנבחרה" on the phone (Vote screen after close and Summary) and on the projector; "מובילה כרגע" marks only a single proposal ahead (never on a tie or at zero votes).
+- Turnout counts votes cast on the ballot over students in the room (the teacher excluded).
+- The projector reuses the `summary.*` keys, so the phone and the wall say the same words. The old `projector.verdict.*` keys are no longer read.
+
+---
+
+## 21. Order of proposals during the vote (Tal, 2026-10-25, card UM5Z8zj0)
+
+### 21.1 What exists
+`statementSettings.voteDisplay` on the challenge question had two switches in the console settings popover: `liveResults` (absent = on) and `sortBySupport` (absent = off, a live sort by votes on the phones only). The projector's tally always followed ballot order.
+
+### 21.2 Change (Tal's words: "you can sort by C_p, by Random, and by most voted. The teacher can choose, and it will affect everybody. By default C_p is presented, because these are the options most wanted by the people.")
+- Replace `sortBySupport` with `order: 'consensus' | 'votes' | 'random'`. Absent means `consensus`. One setting for every phone AND the projector.
+  - `sortBySupport` stays in the schema as an optional field that nobody reads (old docs), then is removed.
+- **consensus (default):** ordered by `statement.consensus` (C_p), highest first, live from the options listener. Ties keep the order already shown, then fall back to id.
+- **votes:** most votes first, re-ordering live as votes come in. Ties keep the order already shown (a card moves only when it really overtakes another).
+- **random:** ONE shared order for every phone and the projector, a seeded shuffle with the challenge id as the seed (the ids are sorted first, so the ballot's own order never matters). It does not change while the vote runs.
+- **Closed ballot:** ordered by votes on every surface, with the winner first (votes, then C_p, then id: the `decideBallot` rule).
+- The vote bars stay live whenever `liveResults` is on, unchanged.
+- One pure function serves the phone, the projector Vote and the Summary: `orderBallot(ids, mode, {consensus, votes}, previous, seed)` in `lib/classroom/voteResults.ts` (mode `'result'` is the closed ballot).
+
+### 21.3 Avoiding mis-taps (phone)
+1. While a card is selected but not yet voted for, the order is frozen. The new order applies after "הצבעה", or when the selection is cleared.
+2. A re-order glides with FLIP (instant under `prefers-reduced-motion`). Taps are ignored until the glide ends.
+3. Selection is keyed by statementId, never by position.
+4. Ties never move a card.
+
+### 21.4 Labels (console settings, "ההצבעה" group, a radio group)
+| Concept | HE | EN | i18n key |
+|---|---|---|---|
+| Group | סדר ההצעות | Order of the proposals | `console.vote_order` (NEW) |
+| Option, default | לפי הדירוגים | By the ratings | `console.vote_order_consensus` |
+| Help | ההצעות שהכיתה הכי הסכימה עליהן למעלה, אצל התלמידים ובמקרן | The proposals the class agreed on most are on top, on phones and the projector | `console.vote_order_consensus_help` |
+| Option | לפי מספר הקולות | By the number of votes | `console.vote_order_votes` |
+| Help | ההצעה עם הכי הרבה קולות עולה למעלה בזמן ההצבעה, אצל התלמידים ובמקרן | The proposal with the most votes moves to the top during the vote, on phones and the projector | `console.vote_order_votes_help` |
+| Option | סדר אקראי | Random order | `console.vote_order_random` |
+| Help | כולם רואים אותו סדר, והוא לא משתנה בזמן ההצבעה | Everyone sees the same order, and it does not change during the vote | `console.vote_order_random_help` |
+| Retire | ההצעות מסתדרות לפי התמיכה | — | `console.vote_sort_by_support(_help)` |
+
+### 21.5 Shared by Summary and Vote
+The tally (`selections{}` to `voteResults`, one function), C_p (`statement.consensus`) and the tie rule (votes, then C_p, then id) are used by Vote (phone + projector) and Summary (phone + projector).
+
+### 21.6 Open question 1, resolved
+Tal chose three modes instead of two: C_p, random and by votes. Random is one shared order (seed = challenge id), not one per phone as the first draft said.
+
+## 22. Replies on a proposal, and "someone replied" (Tal, 2026-10-26, card m02TCW7L)
+
+Every proposal card can take replies, as in Join, and the author is told that someone replied so they can improve the proposal. §2.1 deleted inbox, notifications, toasts and conversations on a note; this section brings replies and their notices back **for proposals only**. Answers at Table talk get no replies.
+
+Tal's decisions (2026-10-26), merged into the body below:
+1. The whole class can reply to any proposal card they can see; the teacher sees every reply.
+2. The author is told both ways: in the app (count on the own card + a toast) and by a phone push when out of the app.
+3. A reply shows the replier's class name. The proposal's own author replies as "מי שכתבו את ההצעה", never by name, so the thread never reveals who wrote the proposal. The teacher sees real names.
+4. Moderation: an AI language check runs before a reply is posted (the Agora gate's detector), and the teacher can hide / restore after. No pre-approval.
+5. Replies never close: readable and writable wherever a proposal card is shown, while the lesson exists. Editing the proposal itself still closes when the ballot freezes.
+6. The teacher can reply from the console; the reply is tagged "המורה" and notifies the author.
+7. A reply is at most 200 characters (`CLASS_REPLY_MAX_LENGTH`).
+
+### 22.1 Objects
+| Object | What | Cardinality | Lifecycle |
+|---|---|---|---|
+| Proposal (§2.1) | unchanged + server-written `replyCount?` (visible replies), `lastReplyAt?` | ≤1 per student | as §2.1, editable until the ballot is frozen |
+| Reply (new) | short text by one person on one proposal | 0–n per proposal | sending → sent → (hidden by teacher ↔ restored) |
+| Replies (list) | the visible replies on one proposal, oldest first | 1 per proposal | always open |
+| Read mark (new) | when the author last opened the replies on their proposal | 1 per student per lesson | written each time the author opens them |
+| Reply notice (view) | the author's unread count: replies by others, not hidden, newer than the read mark | 1 per author | 0 → n → 0 on open |
+| Push device (new use) | a device's FCM token, saved after the student says yes | 0–1 per device | asked → allowed / declined → removed when invalid |
+
+Statement tree:
+```
+challenge question
+  proposal (option)                  + replyCount?, lastReplyAt?, replyPushAt?, replyPushCount? (server only)
+    reply (StatementType.statement)  parentId = proposal, topParentId = lesson,
+                                     creator.displayName = class name, hide?,
+                                     classReply: { role: 'class' | 'author' | 'teacher', proposalCreatorId }
+```
+- Replies are written only by the `classPostReply` callable (me-west1), which builds them with `createStatementObject`; the rules refuse a client create, and nobody edits or deletes a reply from a browser (a hidden one would come back).
+- Read mark: `proposalRepliesReadAt?: number` on the author's lesson subscription (`statementsSubscribe/{uid}--{mainId}`). One proposal per student per lesson, so one field is enough, and it survives a change of device.
+- All new fields are optional (no new picklist value on an existing schema).
+
+### 22.2 Where replies open (never closed)
+| Place | Others' cards | Own card |
+|---|---|---|
+| Proposals, rating list | open + write | open + "לשפר את ההצעה" |
+| Proposals, the class sheet | open + write; the replies replace the sheet, with a back control (no sheet on a sheet) | same |
+| Proposals, writing (after sending) | — | the entry under the sent proposal |
+| All proposals board / pinned own card | open + write | open + improve |
+| Vote cards / Summary result rows | open + write via a small separate control (never the pick target) | open; improve-closed line |
+| Projector | never | — |
+| Teacher "מה כתבו" | every reply, hide / restore, teacher composer | — |
+
+### 22.3 Labels (all 7 locale files)
+| Concept | HE | EN | key |
+|---|---|---|---|
+| Entry on a card | תגובות · {{n}} | Replies · {{n}} | reply.open |
+| Sheet title | תגובות להצעה | Replies to the proposal | reply.title |
+| Empty | עוד אין תגובות. מה אפשר לשפר? | No replies yet. What could be better? | reply.empty |
+| Placeholder | כתבו תגובה | Write a reply | reply.placeholder |
+| Send | שליחה | Send | reply.send |
+| Author tag | מי שכתבו את ההצעה | The proposal's author | reply.by_author |
+| Teacher tag | המורה | Teacher | reply.by_teacher |
+| Unread on own card | {{n}} תגובות חדשות / תגובה חדשה | {{n}} new replies / 1 new reply | reply.new_n, reply.new_one |
+| Toast | תגובה חדשה להצעה שלכם · לקריאה | New reply to your proposal · Read | reply.toast, reply.toast_open |
+| Improve | לשפר את ההצעה | Improve my proposal | reply.improve (opens the existing edit box) |
+| Improve closed | אפשר היה לשפר עד שההצבעה נפתחה | Proposals could be improved until the vote opened | reply.improve_closed |
+| Language refused | נראה שיש בתגובה מילה פוגענית. נסו לנסח אחרת | Your reply seems to contain hurtful words. Try rephrasing. | reply.refused |
+| Own reply hidden | המורה הסתירו את התגובה | The teacher hid this reply | reply.hidden_mine |
+| Push ask | רוצים לדעת כשמגיבים להצעה שלכם? | Want to know when someone replies to your proposal? | reply.push_ask |
+| Push yes / no | כן, להודיע לי / לא עכשיו | Yes, tell me / Not now | reply.push_yes, reply.push_no |
+| Push body | יש תגובה חדשה להצעה שלכם / {{n}} תגובות חדשות להצעה שלכם | There is a new reply… / {{n}} new replies… | in functions (classroom/replyPushText.ts), 7 languages |
+| Teacher, per proposal | תגובות ({{n}}) | Replies ({{n}}) | console.replies |
+
+One name for the concept: תגובה / reply. Not צ'אט, הודעה, שיחה, chat or message, and never תשובה / ענה (those belong to the Table talk answer and the speaking minute). Fixed while here: Hebrew `proposal.hidden_mine` is now plural ("המורה הסתירו", as §18).
+
+### 22.4 Hierarchy (student `/m/:mid`, no new route)
+```
+Proposals: rating list → card → Replies; class sheet → card → Replies (in place, back to the sheet); own card → Replies (author) → edit box
+All proposals: card → Replies; pinned own card → Replies (author) → edit box
+Vote / Summary: the card's small "תגובות" control → Replies
+```
+Deep link (push tap): `/m/:mid?replies=<proposalId>` opens the current step, then the author's Replies (any step: replies never close). Back from Replies = the screen it came from.
+
+### 22.5 Task flows
+1. Reply to a classmate (3 actions): "תגובות · n" → write → שליחה. The language check runs first; the reply appears at once, or the gentle refused line shows and the text stays in the box.
+2. Author in the app: toast + "2 תגובות חדשות" on the own card → tap → Replies (writes the read mark, count → 0, scrolls to the first new reply) → "לשפר את ההצעה" → the sheet closes and the existing edit box opens (the plenum's own card, the write screen, or the pinned card on All proposals). Replies and ratings stay on the edited proposal.
+3. Author from a push: tap → the app opens with `?replies=` → flow 2.
+4. Allow push (1 tap): asked once per lesson, inline, under the sent proposal. "לא עכשיו" is remembered on the device for that lesson.
+5. Teacher hides a reply: "מה כתבו" → proposal → "תגובות (n)" → הסתרה / החזרה (`classSetItemHidden` accepts a reply of the lesson and moves `replyCount`). A hidden reply leaves lists, counts and the unread count; its writer still sees it greyed with reply.hidden_mine.
+6. Teacher replies: same group → composer → shown with "המורה"; notifies the author.
+
+### 22.6 Screen inventory (sheets only)
+| View | Job | Empty | Loading | Error | Closed | Done |
+|---|---|---|---|---|---|---|
+| Replies, reader | read + add | reply.empty | skeleton | failed line + retry on send; refused line | — | reply shown |
+| Replies, author | read, go improve | reply.empty | skeleton | same | improve_closed instead of the button | read mark written |
+| Push ask (inline) | one yes / no | — | — | browser blocks → one plain line, then gone | API missing → never shown | gone after the answer |
+| Teacher replies group | see, hide, reply | "(0)", composer only | — | failed line | teacher only | — |
+Oldest first; the author view scrolls to the first unread reply.
+
+### 22.7 Notice rules
+In the app:
+- Unread = replies with creator ≠ me, not hidden, created after `proposalRepliesReadAt`.
+- The author's phone keeps ONE listener: replies whose `classReply.proposalCreatorId` is me, in this lesson. Other cards read `replyCount` (no listener per card).
+- The toast goes through the existing student-notice host (lib/classroom/studentNotices.ts), is tappable, at most once per 60 s, and never while the author's Replies are open.
+
+Push:
+- Decided inside `classPostReply`, in the same transaction as the reply (so two replies in the same second cannot both buzz).
+- Sent only if the lesson is not paused or ended, the replier is not the author, and the author has a join-class device.
+- Dedupe: at most one push per proposal per 3 minutes (`replyPushAt`), at most 5 per author per lesson (`replyPushCount`), `tag` = the proposal so a newer push replaces the older.
+- The push worker (`/class-push-sw.js`, its own scope) does not show a push while a join-class window is visible.
+- Title = the lesson's title; the body never contains reply text or a name (minors, shared lock screens). The language is the one stored with the token.
+- Tokens: `pushNotifications/{token}` with `userId`, `app: 'join-class'`, `language`. They are NOT added to the lesson subscription's `tokens[]`: the main app's fan-out would then buzz every phone for every statement of the lesson. The generic fan-out (`createNotificationsForStatement`) also skips replies.
+- Permission is asked only after the first proposal is sent, only where Notification, PushManager and service workers exist, and on iOS only in the home-screen app (Safari in a tab gets the in-app notice only).
+
+### 22.8 Names and privacy
+The card stays anonymous (§19.4). A reply shows the replier's class name; the author's own replies show reply.by_author; teacher replies show reply.by_teacher; the teacher console shows real names, as in the roster.
+
+### 22.9 Deferred
+An "the proposal was edited" marker inside replies; marking replies helpful / an AI redraft; replies on Table talk answers.
+
+## 23. "Someone replied to you" must be seen (Tal, 2026-10-26, card 4vXla9IW)
+
+Gap: §22.7 tells the author only through a pill on the own card and a toast that disappears. The own card is often off screen, the student may be on another sub-step (מדברים / כותבים / מדרגים), and in the class sheet the own card is drawn without `own`, so it shows no new count (`RatedList.ts:79`, `allProposalsParts.ts:74`).
+
+### 23.1 One lasting notice line (replaces the toast)
+- **Where:** one line at the top of the student stage `/m/:mid`, under the step title and above the sub-step buttons. Shows on every step and sub-step, since replies never close (§22.5). Never on the projector.
+- **When it shows:** while unread > 0. Unread as in §22.7: replies by others (incl. teacher), not hidden, newer than `proposalRepliesReadAt`.
+- **Wording:**
+
+| key | HE | EN |
+|---|---|---|
+| reply.notice_one | יש תגובה חדשה להצעה שלכם · לקריאה | There is a new reply to your proposal · Read |
+| reply.notice_n | {{n}} תגובות חדשות להצעה שלכם · לקריאה | {{n}} new replies to your proposal · Read |
+
+- **Tap:** the whole line opens the author's Replies, scrolls to the first new reply; each new one carries `reply.new_tag` חדש / New until the sheet closes.
+- **Clears:** only when the author opens their Replies (writes the read mark; existing per-user seen state on the lesson subscription, survives device change). A reply hidden by the teacher drops out of the count at once.
+- **Toast:** `reply.toast` / `reply.toast_open` retired. The pill on the own card stays.
+- **Fix:** every `ReplyEntry` gets `own: proposal.creatorId === uid`, including RatedList and the class sheet.
+- Verify the author's listener (filters `topParentId` + `classReply.proposalCreatorId`) actually works; if it needs a composite index add it to firestore.indexes.json; its error must go through logError, not bare console.error.
+
+### 23.2 Answering
+The author's sheet opens with one guidance line `reply.author_hint`: "אפשר להגיב בחזרה, או לשפר את ההצעה" / "You can reply back, or improve your proposal". Actions: the composer (posts as `reply.by_author`) and `reply.improve` as in §22.
+Steps: notice line → read → write → שליחה.
+
+### 23.3 Out of scope
+Telling a replier that the author replied back (needs a read mark per replier).
+
+## 24. Teacher reply threads, hiding, and the language check before sending (Tal, 2026-10-26, card NFOEJXMy)
+
+### 24.1 Thread hierarchy in "מה כתבו"
+Each proposal is one block with two levels; never a flat list.
+1. **Proposal (parent):** eyebrow `console.proposal_label` הצעה / Proposal; the text; meta: real name · `console.ratings_n` · `console.replies_n` "{{n}} תגובות" / "{{n}} replies"; status; hide control.
+2. **Replies (children, visually indented under the parent, e.g. inline-start rule):** expander keeps `console.replies`; opens by default when the proposal has replies the teacher has not seen this session (view-only state). Each reply: role tag (real name / "name · מי שכתבו את ההצעה" / המורה), text, status, own hide control.
+3. **Teacher composer:** last, inside the open thread; `console.reply_placeholder` unchanged.
+Hiding a proposal leaves its replies visible to the teacher, under a hidden parent.
+
+### 24.2 Hide / restore as a labelled control with a stated state
+A real button (not a text link), with an eye-off / eye icon. Same keys, new text, one concept across answers, own questions, proposals and replies:
+
+| key | HE | EN |
+|---|---|---|
+| console.hide | הסתרה מהתלמידים | Hide from students |
+| console.restore | החזרה לתלמידים | Show to students again |
+| console.hidden_flag | מוסתר מהתלמידים | Hidden from students |
+
+Hidden items are shown greyed to the teacher with the `console.hidden_flag` chip. No confirm (always undoable, §18.1).
+Students: a hidden item leaves every list, count, unread count and the projector, no stand-in. Only its writer still sees it greyed with `reply.hidden_mine` / `proposal.hidden_mine`. A hidden proposal takes its replies out of reach.
+
+### 24.3 Language check before sending (students only)
+Rule (Tal): the AI checks every student proposal, proposal edit and reply before publishing. If problematic it is NOT published: text stays in the box, student asked to write again. Teacher is flagged. AI never rewrites. Teacher text not checked.
+Detector: `containsBadLanguage` (Gemini, functions/src/fn_profanityChecker.ts / fn_containsBadLanguage.ts), passes text when the service is down — a failure must never accuse a child.
+Server path: replies already go through `classPostReply` (`reason: 'language'`). Proposals move to new callables `classPostProposal` / `classEditProposal` (region me-west1, same pattern as other classroom callables), built with `createStatementObject`, writing the same fields as `createClassOption` / `updateClassOption` in apps/join-class/src/lib/classroom/c3Data.ts. Firestore rules refuse a client create or text update of an option whose parent is the challenge (proposal), so the check cannot be skipped. Table-talk answers keep their client path (out of scope).
+
+Student wording (replaces `reply.refused`; adds `proposal.refused`):
+
+| key | HE | EN |
+|---|---|---|
+| reply.refused | התגובה לא נשלחה: יש בה מילים שעלולות לפגוע. כתבו אותה מחדש, במילים אחרות. | Your reply was not sent: it has words that could hurt. Please write it again in other words. |
+| proposal.refused | ההצעה לא נשלחה: יש בה מילים שעלולות לפגוע. כתבו אותה מחדש, במילים אחרות. | Your proposal was not sent: it has words that could hurt. Please write it again in other words. |
+| text.checking | בודקים… | Checking… |
+
+Steps: שליחה → בודקים… → sent, or the refused line (role=alert) with the text kept.
+Known limit: a live draft (§17) is shown to tablemates before any check.
+
+### 24.4 Teacher flag
+New object flag (סימון): one refused attempt. Not a Statement. Collection `classLanguageFlags/{flagId}`, server-written only:
+
+| field | type | note |
+|---|---|---|
+| mainId | string | the lesson |
+| uid | string | the student |
+| kind | 'proposal' \| 'reply' | |
+| targetId? | string | the proposal replied to |
+| text | string | attempted text, capped at the item's max length |
+| createdAt | number | ms |
+| expireAt | number | createdAt + 30 days (Firestore TTL policy) |
+| seenAt? | number | set when teacher marks seen |
+
+Rules: read only by the lesson's admins; no client write except an admin setting `seenAt` (or do it through a callable). Students never read flags. Only the last 3 texts kept per student per lesson (server trims older ones).
+Where: top of "מה כתבו": line `console.flags_n` "{{n}} ניסיונות לפרסם מילים פוגעניות" / "{{n}} attempts to post hurtful words" while unseen > 0; same count as a badge on the שולחנות / מה כתבו switch.
+Expanded, one row per student: real name and table, `console.flag_count` "{{n}} ניסיונות" / "{{n}} attempts", last time, kind, target proposal; attempted text hidden by default behind `console.flag_show` "להצגת הטקסט" / "Show the text"; `console.flag_seen` "ראיתי" / "Seen" writes `seenAt`.
+Never on the projector, student phones, push, exports or Sentry payloads (don't put the text in logError metadata).
+
+Types (`@freedi/shared-types`): `ClassLanguageFlag`, `ClassPostProposalRequest/Response` (`{ ok: false, reason: 'language' }`), `Collections.classLanguageFlags` (check how Collections is defined/extended for classroom collections).
+i18n: every key into all files in apps/join-class/src/lib/locales and lib/locales/reply.
+
+### 24.5 Open questions (defaults used)
+1. Refused line does NOT say "the teacher will see this attempt" (Tal to decide).
+2. Table-talk answers not checked.
+3. Flag text TTL 30 days.
+
+## 25. Automatic split, own questions, speaking time, one turn each at Proposals (Tal, 2026-10-26, cards T9CbIMJ9, knWzeMNo, DrmJxmVw, 20XgDbFW)
+
+Code facts found by the IA agent:
+1. No separate lesson builder. Lesson settings live on the plan screen `/t/:mid/plan` ("תכנון השאלות"), section "פרטי השיעור" (PlanScreen.ts, planDetails.ts, classSettings.ts). Stored on the main statement's `statementSettings` like `sideNames`; `cloneLesson` (functions/src/classroom/cloneLesson.ts) copies them.
+2. Split button shows only on the `tables` step ("חלוקה לשולחנות"). The "questions stage" is `tableTalk`, label "שאלות חקירה" (§3 glossary still says "שיחת שולחן" — fix the glossary to "שאלות חקירה" as part of this change).
+3. `classAssignTables` with `replace: false` refuses with `already-exists` when tables exist → automatic split is race-safe.
+4. Proposals "מדברים" lets anyone speak any number of times (`assertMayClaimProposalsSpeaker`, §17.14). Card 20XgDbFW reverses this.
+5. Labels that say "minute" (דקה) become wrong: `turn.answer_mine`, `console.finish_minute`, `console.mark_answered`.
+
+Tal's decisions:
+1. Class splits into tables automatically, only when it has no tables yet. "חלוקה מחדש" stays manual.
+2. Teacher writes lesson questions (plan screen, as today). By default students may add their own question; teacher can turn it off.
+3. Speaking time and number of turns at Proposals are set on the plan screen and changeable live in the console. Default speaking time: 2 minutes.
+4. At Proposals each tablemate speaks once per turn. When everyone has spoken in every turn, the table shows "done" and waits. The teacher can give another turn from the console.
+
+### 25.1 One speaking time, not two
+One setting `speakSeconds` for both answers (Table talk) and proposals (Proposals): same mechanism (`claimSpeaker`, "אני רוצה לענות", "סיימתי"). A later `proposalsSpeakSeconds?` could fall back to it.
+
+### 25.2 Objects and fields
+"Turn" (סבב) keeps its §3 meaning: one pass in which every tablemate speaks once.
+
+Lesson settings on the main statement `statementSettings`, next to `sideNames`. All optional, copied by `cloneLesson`, readers in shared-types (`classroomLogic`) so clients and functions agree:
+
+| Field | Type | Absent means | Allowed |
+|---|---|---|---|
+| `allowOwnQuestions` | boolean | true | — |
+| `speakSeconds` | number | `DEFAULT_SPEAK_SECONDS` = 120 (new constant; retire `SPEAK_SECONDS` = 60) | `SPEAK_SECONDS_CHOICES` = 30, 60, 90, 120, 180, 240, 300 |
+| `proposalsTurns` | number | 1 | 1, 2, 3 |
+
+Readers: `allowOwnQuestionsOf(main)`, `speakSecondsOf(main)`, `proposalsTurnsOf(main)`.
+NOTE (repo memory): adding a new picklist value to the Statement valibot schema breaks strict parse — add these as optional fields, not new picklist values.
+
+On `ClassTable` (optional, server-written):
+
+| Field | Meaning |
+|---|---|
+| `speakerMs` | length of the speaking time now running, written with `speakerEndsAt`. Every device draws the countdown from it, so a live change never distorts a running turn. |
+| `proposalsTurn` | turn number at Proposals (1-based; absent = 1), kept apart from `turn` so a back move to Table talk keeps that step's state. |
+
+At Proposals, `spokenUids` holds who has spoken in the current turn.
+
+Derived rules (pure, shared-types, unit-tested):
+- `proposalsMaxTurns(t, main)` = max(`proposalsTurnsOf(main)`, `proposalsTurn`) (mirrors `maxTurns`).
+- `proposalsTurnOver(t, now)`: every `memberUids` entry spoke or passed this turn. No-device members do not gate (§16.9.5).
+- `proposalsDone(t, now)` = `proposalsTurnOver` AND `proposalsTurn` ≥ `proposalsMaxTurns`.
+- When own questions are off, `maxTurns` = min(kept askers, number of guiding questions). `tableDone` also becomes true when there is no unused guiding question and the table is not mid-talk.
+
+### 25.3 Automatic split (T9CbIMJ9)
+- Trigger: a forward step move into `tables` or `tableTalk` when the class has no `classTables` docs. `goToStep` (consoleActions.ts) calls `classAssignTables({ mainId, replace: false })` after the move, next to `clearsTableClocksOnEnter`. New pure helper `splitsTablesOnEnter(from, to, steps, hasTables)`.
+- Refusals: `already-exists` swallowed. Any other failure → inline retry with existing `console.split`; never undoes the step move.
+- Console at `tables`: when tables exist only "חלוקה מחדש" (`console.resplit`, confirm kept). "חלוקה לשולחנות" (`console.split`) shows only after a failed or empty split (no students yet).
+- Students/projector see their seating as soon as the step opens. Late joiner: as today (`turn.no_table`, teacher moves them).
+
+### 25.4 Own questions (knWzeMNo)
+Plan screen, section "השאלות לשולחנות", under the list, a switch (role="switch", aria-checked):
+
+| HE | EN | key |
+|---|---|---|
+| התלמידים יכולים להוסיף שאלה משלהם | Students may add their own question | `plan.own_questions` |
+| כשהאפשרות כבויה, השולחנות בוחרים רק מהשאלות שלכם | When off, tables pick only from your questions | `plan.own_questions_help` |
+| אין שאלות לשולחנות, והתלמידים לא יכולים להוסיף. הוסיפו שאלה או הפעילו את האפשרות | There are no questions for the tables and students cannot add any. Add a question or turn this on | `plan.own_questions_none` (warning when 0 questions and off) |
+
+Console: the "הגדרות השיעור" popover (ConsoleSettings.ts) gets a group "השולחנות" (`console.tables_group`) with the same switch (keys under `console.*`). A change applies at the next Pick.
+Phone (QuestionPick.ts), when off: "+ שאלה משלנו" row not drawn; own questions this table wrote and has not used are hidden; `turn.questions_used` never shown; when guiding questions run out the table goes to done ("סיימתם את הסבבים" / "חכו לשאר השולחנות"). When on, nothing changes.
+Server: `claimTurn` with a question that has a `classTable` while off → refused `own-questions-off` (phone redraws). Rules for createTableQuestion reading the flag: optional.
+Projector unchanged.
+
+### 25.5 Speaking time (DrmJxmVw)
+Plan screen, "פרטי השיעור":
+
+| HE | EN | key |
+|---|---|---|
+| זמן לדבר | Time to talk | `plan.speak_time` |
+| כמה זמן כל אחד מדבר כשהוא עונה או מציע | How long each person speaks when answering or proposing | `plan.speak_time_help` |
+| options: ½ דקה, דקה, דקה וחצי, 2 דקות (default), 3 דקות, 4 דקות, 5 דקות | ½ min … 5 min | `plan.speak_time_{seconds}` |
+
+Console: in the "השולחנות" group the same select (`console.speak_time`). Applies from the next `claimSpeaker`; a running turn keeps its `speakerMs`.
+Server: `TransitionContext` gains `speakMs` from the main statement it already reads. Every `now + SPEAK_SECONDS * 1000` → `now + speakMs`, the same write sets `speakerMs`. Clients (`Countdown`, `clockMath`, `TableCard`, `TableSheetPanel`) read `table.speakerMs`, falling back to `speakSecondsOf(main)`.
+Label changes, all locale files:
+
+| key | HE now | EN now |
+|---|---|---|
+| `turn.answer_mine` | הזמן שלכם | Your time |
+| `console.finish_minute` | לסיים את הזמן | End the time |
+| `console.mark_answered` | {{name}}, אחרי הזמן | {{name}}, after their time |
+
+Code names `speaker*` kept. §16 decision 7 ("one minute = 60") superseded — note it there.
+
+### 25.6 One turn each at Proposals (20XgDbFW)
+Plan screen, "פרטי השיעור":
+
+| HE | EN | key |
+|---|---|---|
+| סבבים בשלב ההצעות | Turns at Proposals | `plan.proposals_turns` |
+| בכל סבב כל אחד בשולחן מדבר פעם אחת | In each turn everyone at the table speaks once | `plan.proposals_turns_help` |
+| 1 (default), 2, 3 | | |
+
+Console: "השולחנות" group same select (`console.proposals_turns`); raising it re-opens done tables. At Proposals the step actions get "סבב נוסף בכל השולחנות" (`console.another_turn_all`, "Another turn, all tables"). A done table's card gets "סבב נוסף" (`console.another_turn`) quick action. The card shows "סבב {{n}} מתוך {{max}}" (`console.turn_n`) at Proposals (reverses §17.13); done line `console.all_done`.
+
+Phone, Proposals "מדברים" (§17.14), first match wins:
+
+| State | Shown | Primary | Secondary |
+|---|---|---|---|
+| Done (`proposalsDone`) | "כולם דיברו. חכו למורה" (`turn.proposals_done`, "Everyone has spoken. Wait for the teacher") — calm, not an error | — | "סיימנו, לכתוב" (kept) |
+| Someone speaking / me speaking | as §17.14, plus `turn.header` with turn=`proposalsTurn`, max=`proposalsMaxTurns` | as §17.14 | — |
+| Already spoke this turn | "כבר עניתם" (`turn.answered_me`) | — | — |
+| May speak | idle clock | "אני רוצה לענות" | "אני רוצה לוותר" (`turn.pass_answer`; counts as spoken; new at Proposals so a turn cannot stall) |
+
+Writing and rating stay free (§17.13).
+Server:
+- `assertMayClaimProposalsSpeaker` adds refusals `already-answered` (actor already spoke/passed this turn) and `turns-done` (`proposalsDone`).
+- When `proposalsTurnOver` and `proposalsTurn` < max, the next `claimSpeaker`/`passSpeaking` first moves to the next turn (`proposalsTurn + 1`, `spokenUids = []`). No timer write.
+- New admin action `nextProposalsTurn` (table sheet / card) does the move unconditionally, so max grows by one.
+- `classAllTablesTo` gains `newTurn?: boolean` for the all-tables control.
+- Entering Proposals (`clearsTableClocksOnEnter`) sets `proposalsTurn = 1`. Coming back from Vote does not.
+Projector unchanged.
+
+### 25.7 Defaults taken (Tal may overturn)
+1. Automatic split fires on `tables` and on `tableTalk` (whichever comes first). If only tableTalk is wanted, drop `tables` from `splitsTablesOnEnter`.
+2. Default 120 s also applies to older lessons that never set `speakSeconds`.
+3. "Pass" added at Proposals so a turn can end.
+4. Proposals turns capped at 3 in the select; "סבב נוסף" can go past the cap.
+
+### 25.8 Visual choices (implementer decides, keep simple)
+Switch for own questions; native select for time and turns; "סבב נוסף" as the done card's quick action; the Done body at Proposals reads calm (not error colours).
+
+## 26. The vote bar: vote status and voted count (Tal, 2026-10-26, card e3EMqQP2)
+
+The Vote step's control bar gets one name per concept:
+
+| Concept | Hebrew | English | Where |
+|---|---|---|---|
+| Vote status | מצב ההצבעה | Vote status | A chip with an icon and a word: not open (טרם נפתחה), open (פתוחה), paused (מושהית), closed (נסגרה). Announced politely to screen readers. |
+| Voted count | "4 מתוך 12 הצביעו" | "4 of 12 voted" | Next to the chip once the vote is open; becomes "כולם הצביעו" with a check when everyone present has voted. Not announced live. |
+
+Bar order: status (chip + count), ballot controls, order of the proposals (§21), reset at the end edge.
+
+**Exception to the band rule.** §5 of the console says the switch band never has a primary button. In the vote bar the next sensible ballot action is primary: "פתיחת ההצבעה" before the vote opens, "סגירת ההצבעה" while it is open, "המשך ההצבעה" while it is paused. The other ballot action is secondary, and there is no ballot control once the vote is closed. Reset stays danger-outline, disabled until the vote is closed or paused ("יש לסגור או להשהות קודם").

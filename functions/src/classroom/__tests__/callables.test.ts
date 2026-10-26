@@ -274,7 +274,11 @@ describe('classTableStep + classAllTablesTo', () => {
 		);
 		expect(others.details).toEqual({ reason: 'others-first' });
 		await step(mate, { action: 'claimSpeaker' });
-		expect(read()).toMatchObject({ speakerUid: mate, speakerEndsAt: NOW + 60_000 });
+		expect(read()).toMatchObject({
+			speakerUid: mate,
+			speakerEndsAt: NOW + 120_000,
+			speakerMs: 120_000,
+		});
 		const taken = toHttpsError(
 			await step(other, { action: 'claimSpeaker' }).catch((e: unknown) => e),
 			{ operation: 'test' },
@@ -285,7 +289,8 @@ describe('classTableStep + classAllTablesTo', () => {
 		expect(read()).toMatchObject({ speakerEndsAt: now, spokenUids: [mate] });
 		await step(other, { action: 'passSpeaking' });
 		await step(asker, { action: 'claimSpeaker' });
-		now += 61_000;
+		// the asker's speaking time (two minutes by default) runs out
+		now += 121_000;
 		expect(await step(other, { action: 'claimTurn', fromTurn: 1, questionId: 'q2' })).toEqual({
 			step: 'talk',
 			turn: 2,
@@ -343,7 +348,16 @@ describe('classTableStep + classAllTablesTo', () => {
 		);
 		expect(await allTablesTo(db, TEACHER, { mainId: MAIN, step: 'talk' })).toEqual({ updated: 2 });
 		for (const t of fake.list('classTables'))
-			expect(t).toMatchObject({ step: 'talk', spokenUids: [] });
+			expect(t).toMatchObject({ step: 'talk', spokenUids: [], proposalsTurn: 1 });
+		// "another turn, all tables" (IA 25.6): the next turn at every table
+		expect(await allTablesTo(db, TEACHER, { mainId: MAIN, step: 'talk', newTurn: true })).toEqual({
+			updated: 2,
+		});
+		for (const t of fake.list('classTables')) expect(t).toMatchObject({ proposalsTurn: 2 });
+		await expectCode(
+			allTablesTo(db, TEACHER, { mainId: MAIN, step: 'rate', newTurn: true }),
+			'invalid-argument',
+		);
 		await expectCode(
 			allTablesTo(db, TEACHER, { mainId: MAIN, step: 'dance' as 'talk' }),
 			'invalid-argument',
@@ -352,6 +366,73 @@ describe('classTableStep + classAllTablesTo', () => {
 			allTablesTo(db, table.memberUids[0], { mainId: MAIN, step: 'rate' }),
 			'permission-denied',
 		);
+	});
+
+	it('"another turn, all tables" with the turns the console saw advances each table once', async () => {
+		const { fake } = await seated();
+		const db = fake.asFirestore();
+		await allTablesTo(db, TEACHER, { mainId: MAIN, step: 'talk' });
+		const [t1, t2] = fake.list('classTables').map((t) => t.tableId as string);
+		// table 1 got a turn on its own: the tables are at different turns
+		await tableStep(db, TEACHER, { tableId: t1, action: 'nextProposalsTurn', fromTurn: 1 });
+		const seen = { [t1]: 2, [t2]: 1 };
+		const give = () =>
+			allTablesTo(db, TEACHER, { mainId: MAIN, step: 'talk', newTurn: true, fromTurns: seen });
+		expect(await give()).toEqual({ updated: 2 });
+		expect(fake.read(`classTables/${t1}`)).toMatchObject({ proposalsTurn: 3 });
+		expect(fake.read(`classTables/${t2}`)).toMatchObject({ proposalsTurn: 2 });
+		// the same tap again (a double tap, a second console): nothing moves
+		expect(await give()).toEqual({ updated: 0 });
+		expect(fake.read(`classTables/${t1}`)).toMatchObject({ proposalsTurn: 3 });
+		expect(fake.read(`classTables/${t2}`)).toMatchObject({ proposalsTurn: 2 });
+		await expectCode(
+			allTablesTo(db, TEACHER, {
+				mainId: MAIN,
+				step: 'talk',
+				newTurn: true,
+				fromTurns: { x: 'no' } as unknown as Record<string, number>,
+			}),
+			'invalid-argument',
+		);
+	});
+
+	it('nextProposalsTurn through the callable: parsed, teacher-only, talk-only, idempotent', async () => {
+		const { fake, table } = await seated();
+		const db = fake.asFirestore();
+		const main = fake.read(`statements/${MAIN}`) as {
+			statementSettings: { lessonPlan: { stepIndex: number } };
+		};
+		main.statementSettings.lessonPlan.stepIndex = 5; // proposals
+		fake.seed(`statements/${MAIN}`, main);
+		await allTablesTo(db, TEACHER, { mainId: MAIN, step: 'talk' });
+		const read = () => fake.read(`classTables/${table.tableId}`);
+		const step = (uid: string, action: ClassTableAction) =>
+			tableStep(db, uid, { tableId: table.tableId, ...action });
+
+		expect(parseAction({ tableId: 't', action: 'nextProposalsTurn', fromTurn: 1 })).toEqual({
+			action: 'nextProposalsTurn',
+			fromTurn: 1,
+		});
+		expect(parseAction({ tableId: 't', action: 'nextProposalsTurn' })).toEqual({
+			action: 'nextProposalsTurn',
+		});
+		await expectCode(
+			step(table.memberUids[0], { action: 'nextProposalsTurn', fromTurn: 1 }),
+			'permission-denied',
+		);
+		expect(read()).toMatchObject({ proposalsTurn: 1 });
+		await step(TEACHER, { action: 'nextProposalsTurn', fromTurn: 1 });
+		expect(read()).toMatchObject({ proposalsTurn: 2, spokenUids: [] });
+		// the same tap again is a no-op
+		await step(TEACHER, { action: 'nextProposalsTurn', fromTurn: 1 });
+		expect(read()).toMatchObject({ proposalsTurn: 2 });
+		// a table that moved on to writing keeps its turn
+		await step(TEACHER, { action: 'toWrite' });
+		await expectCode(
+			step(TEACHER, { action: 'nextProposalsTurn', fromTurn: 2 }),
+			'failed-precondition',
+		);
+		expect(read()).toMatchObject({ proposalsTurn: 2, step: 'write' });
 	});
 
 	it('parseAction drops unknown keys and rejects unknown actions', () => {

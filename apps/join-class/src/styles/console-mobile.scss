@@ -1,0 +1,275 @@
+// =============================================================================
+// Teacher console on a phone (Trello 2wpEbZ6T). Loaded LAST so it wins on equal
+// specificity; desktop (>= 1024 px) is untouched. Mobile rules are written as
+// max-width overrides because the desktop partials are already shipped; every
+// control reaches 44 px, nothing scrolls the page sideways, wide things scroll
+// inside their own strip. Logical properties only (Hebrew is the main direction).
+// =============================================================================
+
+$console-tablet: 1023px;
+$console-phone: 767px;
+$tap: 44px;
+
+// ---- tablet and down: the rail stacks (steps above, forward control below) ----
+@media (max-width: $console-tablet) {
+  .step-rail {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-sm);
+  }
+
+  .step-rail__side {
+    flex: none;
+  }
+
+  .step-rail__next {
+    inline-size: 100%;
+  }
+}
+
+// ---- phone -------------------------------------------------------------------
+@media (max-width: $console-phone) {
+  // top bar: back link + title on the first rows, controls wrap, all >= 44 px
+  .console__bar {
+    gap: var(--space-xs) var(--space-sm);
+    padding-inline: var(--space-sm);
+
+    > .plan__back,
+    > .console__link,
+    > .btn,
+    > .projector-menu,
+    > .console__settings,
+    > .console__status {
+      min-block-size: $tap;
+    }
+
+    > .plan__back,
+    > .console__link {
+      display: inline-flex;
+      align-items: center;
+    }
+  }
+
+  .console__title {
+    flex: 1 0 100%;
+    order: -1;
+    white-space: normal;
+  }
+
+  .console__status {
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+
+  .console .btn,
+  .console__settings-toggle,
+  .projector-menu__toggle,
+  .confirm-dialog .btn,
+  .end-choice .btn,
+  .table-sheet .btn {
+    min-block-size: $tap;
+  }
+
+  // popovers become bottom sheets so they never run off the screen edge
+  .console__settings-panel,
+  .projector-menu__panel {
+    position: fixed;
+    inset-block: auto 0;
+    inset-inline: 0;
+    z-index: var(--z-modal, 9000);
+    inline-size: auto;
+    max-block-size: 85dvh;
+    overflow-y: auto;
+    border-block-end: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: var(--shadow-lg);
+    padding-block-end: max(var(--space-md), env(safe-area-inset-bottom));
+  }
+
+  .console__settings-slider {
+    block-size: $tap;
+  }
+
+  .vote-display__row {
+    min-block-size: $tap;
+  }
+
+  .vote-display__input {
+    inline-size: 24px;
+    block-size: 24px;
+  }
+
+  // step strip: scrolls inside itself, 72 px per step, current one centred by StepRail.ts
+  .step-rail {
+    padding-inline: var(--space-sm);
+  }
+
+  .step-rail__list {
+    flex: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    padding-block: var(--space-xs);
+  }
+
+  .step-rail__item {
+    flex: 0 0 72px;
+    scroll-snap-align: center;
+  }
+
+  .step-rail__step {
+    min-inline-size: 72px;
+    min-block-size: $tap + var(--space-lg);
+  }
+
+  .step-rail__next {
+    min-block-size: 56px;
+  }
+
+  // band 2: actions share the width, segment control spans it
+  .switch-band {
+    flex-direction: column;
+    align-items: stretch;
+    padding-inline: var(--space-sm);
+  }
+
+  .switch-band__actions > .btn {
+    flex: 1 1 auto;
+  }
+
+  .switch-band__segment {
+    display: flex;
+  }
+
+  .switch-band__segment-btn {
+    flex: 1;
+    min-block-size: $tap;
+    padding-inline: var(--space-sm);
+  }
+
+  .projector-pick {
+    flex-wrap: wrap;
+  }
+
+  .projector-pick__item {
+    min-block-size: $tap;
+  }
+
+  .lesson-banner {
+    flex-wrap: wrap;
+  }
+
+  .lesson-banner__action {
+    flex: 1 0 100%;
+  }
+
+  .console__failure {
+    flex-wrap: wrap;
+  }
+
+  // board: one column of table cards that scroll with the page
+  .console__board {
+    padding-inline: var(--space-sm);
+  }
+
+  .tables-board__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .table-card {
+    min-block-size: 0;
+  }
+
+  .table-card__title {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: $tap;
+  }
+
+  .table-card__actions,
+  .table-card__nd-form {
+    flex-wrap: wrap;
+  }
+
+  .table-card__quick {
+    flex: 1 1 auto;
+  }
+
+  .table-card__nd-input {
+    flex: 1 1 100%;
+  }
+
+  .member-chip {
+    min-block-size: 40px;
+  }
+
+  .member-chip__menu {
+    min-inline-size: $tap;
+    min-block-size: 40px;
+  }
+
+  .unplaced__select,
+  .member-chip__select,
+  .table-sheet__select {
+    min-block-size: $tap;
+  }
+
+  .unplaced__item {
+    flex: 1 1 100%;
+  }
+
+  // gate panel: sentence on its own line, bar + score + note below
+  .gate-panel__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-xs) var(--space-sm);
+  }
+
+  .gate-panel__text {
+    grid-column: 1 / -1;
+    white-space: normal;
+  }
+
+  .gate-panel__note {
+    grid-column: 1 / -1;
+  }
+
+  .written-card__actions .btn {
+    flex: 1 1 auto;
+  }
+
+  // table sheet: full-width bottom sheet
+  .table-sheet {
+    inset-block: auto 0;
+    inset-inline: 0;
+    inline-size: auto;
+    max-block-size: 92dvh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding-block-end: max(var(--space-md), env(safe-area-inset-bottom));
+    animation-name: console-sheet-up;
+  }
+
+  .table-sheet__actions {
+    flex-wrap: wrap;
+  }
+
+  .table-sheet__actions > .btn {
+    flex: 1 1 auto;
+  }
+
+  .confirm-dialog__actions .btn,
+  .end-choice__cancel {
+    flex: 1 1 auto;
+  }
+}
+
+@keyframes console-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (max-width: $console-phone) and (prefers-reduced-motion: reduce) {
+  .table-sheet {
+    animation: none;
+  }
+}

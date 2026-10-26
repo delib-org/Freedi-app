@@ -1,4 +1,4 @@
-// Teacher console partial: gate panel and what they wrote. See console.scss for the shared tokens.
+// Teacher console partial: gate panel, what they wrote, vote switches. See console.scss for the shared tokens.
 
 // ---- gate panel -------------------------------------------------------------
 .gate-panel__list {
@@ -69,9 +69,26 @@
 }
 
 // ---- what they wrote --------------------------------------------------------
-.written__question-title {
+.written__question-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   margin: var(--space-lg) 0 var(--space-sm);
+}
+
+.written__question--hidden .written__question-title {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.written__question-title {
+  margin: 0;
   font-size: var(--font-size-lg);
+}
+
+.written-card__flag {
+  font-size: var(--font-size-sm);
+  color: var(--ink-muted);
 }
 
 .written__group-title {
@@ -121,4 +138,45 @@
   display: flex;
   gap: var(--space-sm);
   margin-block-start: var(--space-xs);
+}
+
+// ---- vote switches (settings popover) ----------------------------------------
+.vote-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: var(--space-sm) 0 0;
+  border: 0;
+  border-block-start: 1px solid var(--border);
+
+  &__legend {
+    padding: 0;
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: var(--space-sm);
+  }
+
+  &__input {
+    inline-size: 20px;
+    block-size: 20px;
+    margin: 0;
+    accent-color: var(--terra-600);
+  }
+
+  &__label {
+    cursor: pointer;
+  }
+
+  &__help {
+    grid-column: 2;
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+  }
 }

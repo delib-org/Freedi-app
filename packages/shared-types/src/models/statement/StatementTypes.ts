@@ -36,7 +36,7 @@ import {
 import { StageSelectionType } from '../stage/stageTypes';
 import { SimpleStatementSchema } from './SimpleStatement';
 import { StatementSettingsSchema } from './StatementSettings';
-import { ClassTableMarkerSchema } from '../classroom/classroomModel';
+import { ClassReplyStatementFieldsSchema, ClassTableMarkerSchema } from '../classroom/classroomModel';
 import { UserDataSchema } from '../user/UserSettings';
 import {
 	StatementEvaluationSchema,
@@ -316,6 +316,8 @@ export const StatementSchema = object({
 	votingSettings: optional(VotingSettingsSchema), // the settings of the voting of the statement
 	/** join-class: set on an answer / proposal written from a table (auto +1 for coAuthors). */
 	classTable: optional(ClassTableMarkerSchema),
+	/** join-class IA 22: replies on a proposal (marker on the reply, counters on the proposal). */
+	...ClassReplyStatementFieldsSchema,
 	questionSettings: optional(QuestionSettingsSchema), // the settings of the question of the statement
 	statementSettings: optional(StatementSettingsSchema), // the settings of the statement
 	/** Activists — users who joined this option to help it happen.

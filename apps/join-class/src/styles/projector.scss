@@ -111,9 +111,28 @@ $projector-band-height: 64px;
   font-weight: var(--font-weight-bold, 700);
 }
 
+.projector-ask {
+  margin: 0;
+  font-size: 72px;
+  font-weight: var(--font-weight-bold, 700);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
 .projector-empty {
   margin: 0;
   color: var(--ink-muted);
+}
+
+// The vote is held (paused) or over (closed): the wall says so, like the phones do.
+.projector-vote-status {
+  margin: 0;
+  padding: var(--space-xs) var(--space-lg);
+  font-size: 48px;
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-lg);
 }
 
 // ---- waiting -----------------------------------------------------------------
@@ -488,3 +507,12 @@ $projector-band-height: 64px;
 .projector-step--state .projector-empty {
   font-size: 48px;
 }
+
+// >>> allProposals BEGIN
+// "כל ההצעות" (IA 19.5): the line under the title; the list is .projector-top.
+.projector-all-min {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 40px;
+}
+// >>> allProposals END

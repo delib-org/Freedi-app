@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { SPEAK_SECONDS } from '@freedi/shared-types';
+import { DEFAULT_SPEAK_SECONDS } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { getServerOffset, remainingMs } from '@/lib/classroom/serverClock';
 import { countdownView, idleCountdownText, shouldAnnounce } from '@/lib/classroom/c3Logic';
@@ -7,7 +7,7 @@ import { countdownView, idleCountdownText, shouldAnnounce } from '@/lib/classroo
 export interface CountdownAttrs {
 	/** Server-clock epoch ms the interval ends; undefined = not started. */
 	endsAt?: number;
-	/** Length of the whole interval (the bar's 100%). Default: one speaking minute. */
+	/** Length of the whole interval (the bar's 100%). Default: the default speaking time. */
 	totalMs?: number;
 	/** Table talk: no "time is up" words; the screen fades to the next state instead. */
 	quietEnd?: boolean;
@@ -15,7 +15,8 @@ export interface CountdownAttrs {
 
 const TICK_MS = 250;
 export const MS_PER_SECOND = 1000;
-export const SPEAK_MS = SPEAK_SECONDS * MS_PER_SECOND;
+/** The interval when a caller names none: the default speaking time. Callers pass the lesson's own (speakTime.ts). */
+export const SPEAK_MS = DEFAULT_SPEAK_SECONDS * MS_PER_SECOND;
 
 /** Milliseconds left right now on the server clock (the whole interval if not started). */
 export function msLeft(endsAt: number | undefined, totalMs: number = SPEAK_MS): number {

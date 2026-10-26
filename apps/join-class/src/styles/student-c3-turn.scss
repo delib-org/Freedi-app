@@ -27,6 +27,12 @@
       margin-block: var(--space-lg);
       font-size: var(--font-size-xl);
     }
+
+    // Proposals, every turn spoken (IA 25.6): a calm wait, never an error colour.
+    &--done {
+      margin-block: var(--space-lg);
+      opacity: 0.85;
+    }
   }
 
   // The clock states (S, L): status, digits, bar, then Finish or my footnote.
@@ -59,6 +65,20 @@
 
     .frame:not(.frame--down) & {
       color: var(--ink-muted);
+    }
+  }
+
+  // "I want to pass" at Proposals (IA 25.6): a quiet text button under "I want to answer".
+  &__pass {
+    min-height: var(--touch-target, 48px);
+    color: var(--paper);
+
+    .frame:not(.frame--down) & {
+      color: var(--ink-soft);
+    }
+
+    &:disabled {
+      opacity: 0.5;
     }
   }
 
