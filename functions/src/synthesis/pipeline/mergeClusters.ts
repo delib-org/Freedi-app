@@ -3,6 +3,7 @@ import { logger } from 'firebase-functions';
 import { Collections, type Statement } from '@freedi/shared-types';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
+import { absorbedClusterIdsUpdate } from '../../condensation/absorbedClusters';
 
 /**
  * Merge `loser` cluster into `winner` cluster.
@@ -64,6 +65,8 @@ export async function mergeClusters(input: MergeInput): Promise<void> {
 
 	batch.update(winnerRef, {
 		integratedOptions: mergedMembers,
+		// The loser's direct votes keep counting for the winner.
+		...absorbedClusterIdsUpdate(winnerId, [loser]),
 		lastUpdate: now,
 	});
 	batch.update(loserRef, {

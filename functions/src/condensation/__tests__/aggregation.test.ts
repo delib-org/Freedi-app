@@ -196,5 +196,26 @@ describe('computeClusterEvaluationFromRawEvals', () => {
 
 			expect(perUserAverages.get('A')).toBeCloseTo(0);
 		});
+
+		it('counts a direct vote on an absorbed cluster, and the own direct vote still wins', () => {
+			// Z was absorbed into Y. A voted only on Z; B voted on both Z and Y; C on member X1.
+			const evals: Evaluation[] = [
+				evalRec({ evaluatorId: 'A', statementId: 'Z', value: 1 }),
+				evalRec({ evaluatorId: 'A', statementId: 'X1', value: -1 }),
+				evalRec({ evaluatorId: 'B', statementId: 'Z', value: -1 }),
+				evalRec({ evaluatorId: 'B', statementId: 'Y', value: 0.5 }),
+				evalRec({ evaluatorId: 'C', statementId: 'X1', value: 0.2 }),
+			];
+
+			const { evaluation, perUserAverages } = computeClusterEvaluationFromRawEvals(evals, {
+				clusterStatementId: 'Y',
+				absorbedClusterIds: ['Z'],
+			});
+
+			expect(evaluation.numberOfEvaluators).toBe(3);
+			expect(perUserAverages.get('A')).toBeCloseTo(1); // absorbed direct beats member average
+			expect(perUserAverages.get('B')).toBeCloseTo(0.5); // own direct beats absorbed direct
+			expect(perUserAverages.get('C')).toBeCloseTo(0.2);
+		});
 	});
 });

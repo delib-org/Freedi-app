@@ -25,6 +25,8 @@ const mockFetchEvaluationsForIds = jest.fn();
 jest.mock('../../../condensation/aggregation', () => ({
 	computeClusterEvaluationFromRawEvals: jest.requireActual('../../../condensation/aggregation')
 		.computeClusterEvaluationFromRawEvals,
+	clusterVoteSourceIds: jest.requireActual('../../../condensation/aggregation')
+		.clusterVoteSourceIds,
 	fetchEvaluationsForIds: (...args: unknown[]) => mockFetchEvaluationsForIds(...args),
 	recomputeClusterEvaluation: (...args: unknown[]) => mockRecomputeClusterEvaluation(...args),
 }));

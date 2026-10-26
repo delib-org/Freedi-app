@@ -3,6 +3,7 @@ import { logger } from 'firebase-functions';
 import { Collections, Statement, type Evaluation } from '@freedi/shared-types';
 import {
 	computeClusterEvaluationFromRawEvals,
+	clusterVoteSourceIds,
 	fetchEvaluationsForIds,
 	recomputeClusterEvaluation,
 } from '../../condensation/aggregation';
@@ -345,8 +346,7 @@ export async function recomputeSynthCluster(clusterId: string): Promise<Recomput
 	//    member), recompute the polarization-index entry for THIS cluster
 	//    with their effective vote. Reuses the standard demographic-aware
 	//    machinery — no new MAD math.
-	const sourceIds = [clusterId, ...integrated];
-	const allEvals = await fetchEvaluationsForIds(sourceIds);
+	const allEvals = await fetchEvaluationsForIds(clusterVoteSourceIds(clusterId, cluster));
 
 	// Group the raw evaluations per evaluator so we can compute the
 	// effective vote ONCE per user.
@@ -360,7 +360,7 @@ export async function recomputeSynthCluster(clusterId: string): Promise<Recomput
 
 	let evaluatorCount = 0;
 	for (const [userId, userEvals] of byUser.entries()) {
-		const effective = computeEffectiveClusterVote(clusterId, userEvals);
+		const effective = computeEffectiveClusterVote(clusterId, userEvals, cluster.absorbedClusterIds);
 		if (effective === null) continue;
 		evaluatorCount += 1;
 		// Find the most recent demographicAnchorId from this user's evals

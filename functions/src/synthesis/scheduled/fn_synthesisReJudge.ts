@@ -5,6 +5,7 @@ import { Collections, functionConfig, StatementType, type Statement } from '@fre
 import { embeddingCache } from '../../services/embedding-cache-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
+import { absorbedClusterIdsUpdate, collectAbsorbedIds } from '../../condensation/absorbedClusters';
 import { generateSynthesizedProposal } from '../../services/integration-ai-service';
 import { judgeSemanticEquivalenceCachedDetailed } from '../../services/verdict-cache-service';
 import { consolidateThemes } from '../pipeline/consolidateThemes';
@@ -124,7 +125,7 @@ const MAX_JUDGE_CALLS_PER_PARENT = 25;
  */
 const MAX_PAIR_EVALUATIONS_PER_PARENT = 200;
 
-interface CandidateSynth {
+export interface CandidateSynth {
 	doc: Statement;
 	members: string[];
 }
@@ -373,7 +374,7 @@ function pickMergePair(
 	return best;
 }
 
-async function mergeSynths(
+export async function mergeSynths(
 	recipient: CandidateSynth,
 	donor: CandidateSynth,
 	bestCosine: number,
@@ -386,6 +387,8 @@ async function mergeSynths(
 
 	await recipientRef.update({
 		integratedOptions: mergedMembers,
+		// The donor's direct votes keep counting for the recipient.
+		...absorbedClusterIdsUpdate(recipient.doc.statementId, [donor.doc]),
 		lastUpdate: now,
 	});
 	await donorRef.update({
@@ -413,6 +416,15 @@ async function mergeSynths(
 
 	// Update local cache so the next iteration sees the merged state.
 	recipient.members = mergedMembers;
+	recipient.doc = {
+		...recipient.doc,
+		absorbedClusterIds: [
+			...new Set([
+				...(recipient.doc.absorbedClusterIds ?? []),
+				...collectAbsorbedIds(recipient.doc.statementId, [donor.doc]),
+			]),
+		],
+	};
 	// Regenerate recipient title now that its membership grew.
 	try {
 		await enqueueClusterRecompute(
