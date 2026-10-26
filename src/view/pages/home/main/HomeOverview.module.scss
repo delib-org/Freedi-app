@@ -255,6 +255,19 @@
 		overflow-wrap: anywhere;
 	}
 
+	// Chat-list style preview of the newest reply, clamped to two lines.
+	&__reply {
+		display: -webkit-box;
+		overflow: hidden;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		color: var(--text-body);
+		font-size: 0.8rem;
+		line-height: 1.35;
+		overflow-wrap: anywhere;
+	}
+
 	&__meta {
 		color: var(--text-meta);
 		font-size: 0.72rem;
@@ -337,6 +350,23 @@
 	font-size: 0.84rem;
 	cursor: pointer;
 	@include focus-ring;
+
+	// Pinned variant: opaque so the list never shows through it.
+	&--solid {
+		width: 100%;
+		background: var(--bg-page);
+	}
+}
+
+// "+ New space" stays at the bottom of the scrolling Home while the Spaces
+// list is long. Sticky (not fixed) keeps it inside the list's column, above the
+// PIN button, and the shell's own bottom padding keeps it clear of the floating nav.
+.stickyAction {
+	position: sticky;
+	inset-block-end: calc(var(--space-xs) + env(safe-area-inset-bottom, 0px));
+	z-index: 1;
+	padding-block: var(--space-xs);
+	background: linear-gradient(to bottom, transparent, var(--bg-page) 35%);
 }
 
 .primaryButton {
