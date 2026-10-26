@@ -146,6 +146,8 @@ One name per concept across UI, i18n, routes and code. HE is primary and gender-
 
 Live writing (§17.5, Tal 2026-10-25): NEW `answer.live_one`, `answer.live_many` (moved from `rate.live_one|many`), `answer.watch_open`, `answer.watch_close`, `answer.watch_sent`, `answer.watch_stopped`, `answer.live_started`. CHANGED values: `answer.broadcast` "משדרים את הכתיבה לשולחן", `answer.broadcast_on` "השולחן רואה את מה שאתם כותבים". Retired: `rate.live_one`, `rate.live_many`, `turn.peek_back`, `turn.peek_why_*`, `turn.pill_now`; `turn.asker` / `turn.asker_me` are deleted (nothing reads them: Table talk has no asker line either).
 
+Step label (§25): `step.tableTalk` = "שאלות חקירה" (replaces "שיחת שולחן" in this glossary).
+
 Rule: the word for the written thing is תשובה at the Table talk step and הצעה at the Proposals step, and never anything else; the kind is the screen's title, never a tag on the card.
 
 ## 4. Hierarchy (per role)
@@ -1223,7 +1225,7 @@ Method: read `classroomModel.ts`, `classroomLogic.ts`, `classroomCallables.ts`, 
 4. "I want to pass" is a real secondary button, at answering (skip this question; counts as spoken) and at asking (give up asking for the lesson).
 5. One state per screen. The step strip, the peek and the sub-step pills leave the student Table talk screen. The teacher console keeps the full picture.
 6. Students without a device never need a screen; the teacher acts for them.
-7. One minute = `SPEAK_SECONDS` (60), on server time (`speakerEndsAt`).
+7. ~~One minute = `SPEAK_SECONDS` (60)~~ **Superseded by §25.1/25.5:** the speaking time is the lesson setting `speakSeconds` (default 120 s), on server time (`speakerEndsAt`, with `speakerMs`).
 8. (Addition) Every student who has not asked can always write their own question in the pick list, not only when the teacher's questions run out. When they run out, it becomes the main choice. An own question is a turn like any other: locked for the table, same answers, and it enters the no-repeat rule.
 
 ### 16.1 Objects and states
@@ -1248,11 +1250,11 @@ Derived, per table (shared-types `classroomLogic`, pure):
 
 ### 16.2 Labels and names (one name per concept)
 Canonical verbs: **to start** (a turn), **to answer** (one minute), **to finish** (one's minute), **to pass** (לוותר). "Speak/לדבר" leaves student Table talk text; code keeps `speaker*` (schema rename not worth a migration: accepted deviation, listed here so nobody reads it as a second concept). "Turn" in EN stays reserved for סבב (§3); one person's minute is "{{name}} is answering", never "{{name}}'s turn".
-Stage name on top of every screen: `step.tableTalk` = "שיחת שולחן" / "Table talk" (kept; the brief's "שיחה בשולחן" is not the app's label).
+Stage name on top of every screen: `step.tableTalk` = "שאלות חקירה" (glossary fixed in §25; was "שיחת שולחן" / "Table talk";  the brief's "שיחה בשולחן" is not the app's label).
 
 | Concept | EN | HE | i18n key | Change |
 |---|---|---|---|---|
-| Stage name (top line) | Table talk | שיחת שולחן | `step.tableTalk` | kept |
+| Stage name (top line) | Exploration questions | שאלות חקירה | `step.tableTalk` | label per the app (§25) |
 | Table line (under stage) | Table {{n}} · Turn {{turn}} of {{max}} | שולחן {{n}} · סבב {{turn}} מתוך {{max}} | `turn.header` | value: drops "· עכשיו: {{step}}" |
 | Pick list title | Pick a question | בחרו שאלה | `turn.instr_pick` | value changed (was "בחרו שאלה לשולחן") |
 | Teacher's questions group | The teacher's questions | השאלות של המורה | `question.teacher_list` | kept |
@@ -2015,3 +2017,131 @@ The card stays anonymous (§19.4). A reply shows the replier's class name; the a
 
 ### 22.9 Deferred
 An "the proposal was edited" marker inside replies; marking replies helpful / an AI redraft; replies on Table talk answers.
+
+## 25. Automatic split, own questions, speaking time, one turn each at Proposals (Tal, 2026-10-26, cards T9CbIMJ9, knWzeMNo, DrmJxmVw, 20XgDbFW)
+
+(Note: §23 and §24 are being added by a parallel branch about replies; this section is §25. Sub-numbers 25.x.)
+
+Code facts found by the IA agent:
+1. No separate lesson builder. Lesson settings live on the plan screen `/t/:mid/plan` ("תכנון השאלות"), section "פרטי השיעור" (PlanScreen.ts, planDetails.ts, classSettings.ts). Stored on the main statement's `statementSettings` like `sideNames`; `cloneLesson` (functions/src/classroom/cloneLesson.ts) copies them.
+2. Split button shows only on the `tables` step ("חלוקה לשולחנות"). The "questions stage" is `tableTalk`, label "שאלות חקירה" (§3 glossary still says "שיחת שולחן" — fix the glossary to "שאלות חקירה" as part of this change).
+3. `classAssignTables` with `replace: false` refuses with `already-exists` when tables exist → automatic split is race-safe.
+4. Proposals "מדברים" lets anyone speak any number of times (`assertMayClaimProposalsSpeaker`, §17.14). Card 20XgDbFW reverses this.
+5. Labels that say "minute" (דקה) become wrong: `turn.answer_mine`, `console.finish_minute`, `console.mark_answered`.
+
+Tal's decisions:
+1. Class splits into tables automatically, only when it has no tables yet. "חלוקה מחדש" stays manual.
+2. Teacher writes lesson questions (plan screen, as today). By default students may add their own question; teacher can turn it off.
+3. Speaking time and number of turns at Proposals are set on the plan screen and changeable live in the console. Default speaking time: 2 minutes.
+4. At Proposals each tablemate speaks once per turn. When everyone has spoken in every turn, the table shows "done" and waits. The teacher can give another turn from the console.
+
+### 25.1 One speaking time, not two
+One setting `speakSeconds` for both answers (Table talk) and proposals (Proposals): same mechanism (`claimSpeaker`, "אני רוצה לענות", "סיימתי"). A later `proposalsSpeakSeconds?` could fall back to it.
+
+### 25.2 Objects and fields
+"Turn" (סבב) keeps its §3 meaning: one pass in which every tablemate speaks once.
+
+Lesson settings on the main statement `statementSettings`, next to `sideNames`. All optional, copied by `cloneLesson`, readers in shared-types (`classroomLogic`) so clients and functions agree:
+
+| Field | Type | Absent means | Allowed |
+|---|---|---|---|
+| `allowOwnQuestions` | boolean | true | — |
+| `speakSeconds` | number | `DEFAULT_SPEAK_SECONDS` = 120 (new constant; retire `SPEAK_SECONDS` = 60) | `SPEAK_SECONDS_CHOICES` = 30, 60, 90, 120, 180, 240, 300 |
+| `proposalsTurns` | number | 1 | 1, 2, 3 |
+
+Readers: `allowOwnQuestionsOf(main)`, `speakSecondsOf(main)`, `proposalsTurnsOf(main)`.
+NOTE (repo memory): adding a new picklist value to the Statement valibot schema breaks strict parse — add these as optional fields, not new picklist values.
+
+On `ClassTable` (optional, server-written):
+
+| Field | Meaning |
+|---|---|
+| `speakerMs` | length of the speaking time now running, written with `speakerEndsAt`. Every device draws the countdown from it, so a live change never distorts a running turn. |
+| `proposalsTurn` | turn number at Proposals (1-based; absent = 1), kept apart from `turn` so a back move to Table talk keeps that step's state. |
+
+At Proposals, `spokenUids` holds who has spoken in the current turn.
+
+Derived rules (pure, shared-types, unit-tested):
+- `proposalsMaxTurns(t, main)` = max(`proposalsTurnsOf(main)`, `proposalsTurn`) (mirrors `maxTurns`).
+- `proposalsTurnOver(t, now)`: every `memberUids` entry spoke or passed this turn. No-device members do not gate (§16.9.5).
+- `proposalsDone(t, now)` = `proposalsTurnOver` AND `proposalsTurn` ≥ `proposalsMaxTurns`.
+- When own questions are off, `maxTurns` = min(kept askers, number of guiding questions). `tableDone` also becomes true when there is no unused guiding question and the table is not mid-talk.
+
+### 25.3 Automatic split (T9CbIMJ9)
+- Trigger: a forward step move into `tables` or `tableTalk` when the class has no `classTables` docs. `goToStep` (consoleActions.ts) calls `classAssignTables({ mainId, replace: false })` after the move, next to `clearsTableClocksOnEnter`. New pure helper `splitsTablesOnEnter(from, to, steps, hasTables)`.
+- Refusals: `already-exists` swallowed. Any other failure → inline retry with existing `console.split`; never undoes the step move.
+- Console at `tables`: when tables exist only "חלוקה מחדש" (`console.resplit`, confirm kept). "חלוקה לשולחנות" (`console.split`) shows only after a failed or empty split (no students yet).
+- Students/projector see their seating as soon as the step opens. Late joiner: as today (`turn.no_table`, teacher moves them).
+
+### 25.4 Own questions (knWzeMNo)
+Plan screen, section "השאלות לשולחנות", under the list, a switch (role="switch", aria-checked):
+
+| HE | EN | key |
+|---|---|---|
+| התלמידים יכולים להוסיף שאלה משלהם | Students may add their own question | `plan.own_questions` |
+| כשהאפשרות כבויה, השולחנות בוחרים רק מהשאלות שלכם | When off, tables pick only from your questions | `plan.own_questions_help` |
+| אין שאלות לשולחנות, והתלמידים לא יכולים להוסיף. הוסיפו שאלה או הפעילו את האפשרות | There are no questions for the tables and students cannot add any. Add a question or turn this on | `plan.own_questions_none` (warning when 0 questions and off) |
+
+Console: the "הגדרות השיעור" popover (ConsoleSettings.ts) gets a group "השולחנות" (`console.tables_group`) with the same switch (keys under `console.*`). A change applies at the next Pick.
+Phone (QuestionPick.ts), when off: "+ שאלה משלנו" row not drawn; own questions this table wrote and has not used are hidden; `turn.questions_used` never shown; when guiding questions run out the table goes to done ("סיימתם את הסבבים" / "חכו לשאר השולחנות"). When on, nothing changes.
+Server: `claimTurn` with a question that has a `classTable` while off → refused `own-questions-off` (phone redraws). Rules for createTableQuestion reading the flag: optional.
+Projector unchanged.
+
+### 25.5 Speaking time (DrmJxmVw)
+Plan screen, "פרטי השיעור":
+
+| HE | EN | key |
+|---|---|---|
+| זמן לדבר | Time to talk | `plan.speak_time` |
+| כמה זמן כל אחד מדבר כשהוא עונה או מציע | How long each person speaks when answering or proposing | `plan.speak_time_help` |
+| options: ½ דקה, דקה, דקה וחצי, 2 דקות (default), 3 דקות, 4 דקות, 5 דקות | ½ min … 5 min | `plan.speak_time_{seconds}` |
+
+Console: in the "השולחנות" group the same select (`console.speak_time`). Applies from the next `claimSpeaker`; a running turn keeps its `speakerMs`.
+Server: `TransitionContext` gains `speakMs` from the main statement it already reads. Every `now + SPEAK_SECONDS * 1000` → `now + speakMs`, the same write sets `speakerMs`. Clients (`Countdown`, `clockMath`, `TableCard`, `TableSheetPanel`) read `table.speakerMs`, falling back to `speakSecondsOf(main)`.
+Label changes, all locale files:
+
+| key | HE now | EN now |
+|---|---|---|
+| `turn.answer_mine` | הזמן שלכם | Your time |
+| `console.finish_minute` | לסיים את הזמן | End the time |
+| `console.mark_answered` | {{name}}, אחרי הזמן | {{name}}, after their time |
+
+Code names `speaker*` kept. §16 decision 7 ("one minute = 60") superseded — note it there.
+
+### 25.6 One turn each at Proposals (20XgDbFW)
+Plan screen, "פרטי השיעור":
+
+| HE | EN | key |
+|---|---|---|
+| סבבים בשלב ההצעות | Turns at Proposals | `plan.proposals_turns` |
+| בכל סבב כל אחד בשולחן מדבר פעם אחת | In each turn everyone at the table speaks once | `plan.proposals_turns_help` |
+| 1 (default), 2, 3 | | |
+
+Console: "השולחנות" group same select (`console.proposals_turns`); raising it re-opens done tables. At Proposals the step actions get "סבב נוסף בכל השולחנות" (`console.another_turn_all`, "Another turn, all tables"). A done table's card gets "סבב נוסף" (`console.another_turn`) quick action. The card shows "סבב {{n}} מתוך {{max}}" (`console.turn_n`) at Proposals (reverses §17.13); done line `console.all_done`.
+
+Phone, Proposals "מדברים" (§17.14), first match wins:
+
+| State | Shown | Primary | Secondary |
+|---|---|---|---|
+| Done (`proposalsDone`) | "כולם דיברו. חכו למורה" (`turn.proposals_done`, "Everyone has spoken. Wait for the teacher") — calm, not an error | — | "סיימנו, לכתוב" (kept) |
+| Someone speaking / me speaking | as §17.14, plus `turn.header` with turn=`proposalsTurn`, max=`proposalsMaxTurns` | as §17.14 | — |
+| Already spoke this turn | "כבר עניתם" (`turn.answered_me`) | — | — |
+| May speak | idle clock | "אני רוצה לענות" | "אני רוצה לוותר" (`turn.pass_answer`; counts as spoken; new at Proposals so a turn cannot stall) |
+
+Writing and rating stay free (§17.13).
+Server:
+- `assertMayClaimProposalsSpeaker` adds refusals `already-answered` (actor already spoke/passed this turn) and `turns-done` (`proposalsDone`).
+- When `proposalsTurnOver` and `proposalsTurn` < max, the next `claimSpeaker`/`passSpeaking` first moves to the next turn (`proposalsTurn + 1`, `spokenUids = []`). No timer write.
+- New admin action `nextProposalsTurn` (table sheet / card) does the move unconditionally, so max grows by one.
+- `classAllTablesTo` gains `newTurn?: boolean` for the all-tables control.
+- Entering Proposals (`clearsTableClocksOnEnter`) sets `proposalsTurn = 1`. Coming back from Vote does not.
+Projector unchanged.
+
+### 25.7 Defaults taken (Tal may overturn)
+1. Automatic split fires on `tables` and on `tableTalk` (whichever comes first). If only tableTalk is wanted, drop `tables` from `splitsTablesOnEnter`.
+2. Default 120 s also applies to older lessons that never set `speakSeconds`.
+3. "Pass" added at Proposals so a turn can end.
+4. Proposals turns capped at 3 in the select; "סבב נוסף" can go past the cap.
+
+### 25.8 Visual choices (implementer decides, keep simple)
+Switch for own questions; native select for time and turns; "סבב נוסף" as the done card's quick action; the Done body at Proposals reads calm (not error colours).

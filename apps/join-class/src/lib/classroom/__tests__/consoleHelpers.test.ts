@@ -12,6 +12,7 @@ import {
 	isBallotPaused,
 	isPlenum,
 	railSteps,
+	splitsTablesOnEnter,
 	rosterStudents,
 	tableStepKey,
 	tablesAreDone,
@@ -165,5 +166,27 @@ describe('clearsTableClocksOnEnter', () => {
 	it('leaves the tables alone when coming back from Vote or moving elsewhere', () => {
 		expect(clearsTableClocksOnEnter(KEYS.indexOf('vote'), proposals, KEYS)).toBe(false);
 		expect(clearsTableClocksOnEnter(proposals, KEYS.indexOf('vote'), KEYS)).toBe(false);
+	});
+});
+
+describe('splitsTablesOnEnter', () => {
+	const tables = KEYS.indexOf('tables');
+	const tableTalk = KEYS.indexOf('tableTalk');
+	const side = KEYS.indexOf('side');
+
+	it('splits when the tables step or Table talk opens forward and there are no tables', () => {
+		expect(splitsTablesOnEnter(side, tables, KEYS, false)).toBe(true);
+		expect(splitsTablesOnEnter(side, tableTalk, KEYS, false)).toBe(true);
+	});
+
+	it('leaves existing tables alone (the manual re-split stays manual)', () => {
+		expect(splitsTablesOnEnter(side, tables, KEYS, true)).toBe(false);
+		expect(splitsTablesOnEnter(tables, tableTalk, KEYS, true)).toBe(false);
+	});
+
+	it('does not split on a back move or on another step', () => {
+		expect(splitsTablesOnEnter(tableTalk, tables, KEYS, false)).toBe(false);
+		expect(splitsTablesOnEnter(tables, KEYS.indexOf('proposals'), KEYS, false)).toBe(false);
+		expect(splitsTablesOnEnter(side, 99, KEYS, false)).toBe(false);
 	});
 });

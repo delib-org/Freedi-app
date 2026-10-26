@@ -40,6 +40,25 @@ export function clearsTableClocksOnEnter(
 	return steps[toIndex] === 'proposals' && fromIndex < toIndex;
 }
 
+/** Steps whose opening seats the class at tables when it has no tables yet (IA 25.3). */
+const SPLIT_ON_ENTER_STEPS: readonly LessonStepKey[] = ['tables', 'tableTalk'];
+
+/**
+ * A forward move into the tables step or Table talk with no tables yet: the
+ * class is split automatically. A back move, or a class that already has
+ * tables (a manual split, "חלוקה מחדש"), is left alone.
+ */
+export function splitsTablesOnEnter(
+	fromIndex: number,
+	toIndex: number,
+	steps: readonly LessonStepKey[],
+	hasTables: boolean,
+): boolean {
+	const target = steps[toIndex];
+
+	return !hasTables && fromIndex < toIndex && !!target && SPLIT_ON_ENTER_STEPS.includes(target);
+}
+
 export type RailState = 'done' | 'current' | 'upcoming';
 
 export interface RailStep {
