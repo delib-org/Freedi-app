@@ -17,15 +17,30 @@ WizCol's classroom product (logo: `apps/join-class/src/components/BrandLogo.ts`)
 | Projector | the whole room | 1920×1080, seen from the back row (~8 m) | huge type, high contrast, one message, readable in a lit room |
 
 ## 3. What feels wrong today
-<!-- Tal to fill in: which screens look worst, what bothers you (too plain? too beige? cramped? the
-teacher console busy? the projector flat?). Screenshots are in the pack (§6). -->
-_TBD (Tal)_
+Tal, 2026-10-26: it should look **more gamified, for kids**, but the users are **grades 7–9**. Today
+it reads like a calm civic form: flat beige surfaces, thin outlines, quiet buttons, and no sense of
+progress or reward. That's fine for adults and dull for a 13-year-old.
 
 ## 4. Direction
-<!-- Tal to fill in: keep "Civic warmth" (paper, ink, terracotta, teal, indigo) and refine it, or a
-new direction? Any apps or sites whose look you like? Words for the mood (e.g. warm, playful,
-serious, bold)? -->
-_TBD (Tal)_
+**Keep "Civic warmth" and polish it** (Tal, 2026-10-26). The palette stays: paper, ink, terracotta,
+teal, indigo. Add a **game layer** on top of it, pitched at teens, not at little children:
+- **Chunky and tactile.** Thicker strokes and solid colour blocks. Buttons have a pressed 3D edge (a
+  bottom border or shadow that collapses on press). Rounder, friendlier shapes. More saturation in
+  the accents, still within AA.
+- **Visible progress.** The lesson as a journey or level track (the step rail becomes a path). The
+  student always sees "where am I / how far to go". Counters ("דירגתם 1 מתוך 1") become small
+  progress meters.
+- **Small wins.** A short, one-shot moment when you submit a proposal, finish rating, or cast a vote:
+  a stamp, a burst or a badge. No loops, off under reduced motion, never blocks the next tap.
+- **Identity.** Your side (A / B / centre) and your table have a colour + shape mark that follows you,
+  like a team badge.
+- **Projector as scoreboard.** Big numbers, bold bars and the room's progress, like a game show
+  screen, still one message per step.
+- **Not childish:** no cartoon mascots, no baby pastels, no comic fonts, no points/leaderboards
+  ranking classmates (collaboration, not competition). Think Duolingo / Kahoot polish, aged up.
+
+The existing `playful-teen` theme (pink/plum, `_tokens.scss`) is **not** the direction: it only
+recolours. The game layer is shape, depth, progress and feedback, applied to the default theme.
 
 ## 5. Hard constraints (non-negotiable)
 - **Visual layer only.** No new screens, labels, steps or controls. Every BEM class name already in
