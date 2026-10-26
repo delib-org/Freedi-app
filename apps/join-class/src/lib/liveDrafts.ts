@@ -9,7 +9,7 @@ import {
 	rtdbOnDisconnect,
 	OnDisconnect,
 	RtdbUnsubscribe,
-} from '@/lib/firebase';
+} from '@/lib/rtdb';
 import { getCreator } from '@/lib/store';
 
 /**

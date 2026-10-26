@@ -48,20 +48,6 @@ import {
 	connectFunctionsEmulator,
 	httpsCallable,
 } from 'firebase/functions';
-import {
-	getDatabase,
-	connectDatabaseEmulator,
-	Database,
-	ref as rtdbRef,
-	set as rtdbSet,
-	update as rtdbUpdate,
-	remove as rtdbRemove,
-	onValue as rtdbOnValue,
-	onDisconnect as rtdbOnDisconnect,
-	OnDisconnect,
-	DatabaseReference,
-	Unsubscribe as RtdbUnsubscribe,
-} from 'firebase/database';
 
 // Functions deploy to me-west1 (Tel Aviv) — never rely on the us-central1 default.
 const FUNCTIONS_REGION = 'me-west1';
@@ -81,9 +67,7 @@ let app: FirebaseApp;
 let db: Firestore;
 let auth: Auth;
 let functions: Functions;
-// Realtime Database powers keystroke-rate features (live draft broadcast).
-// Null when VITE_FIREBASE_DATABASE_URL is absent — those features no-op.
-let rtdb: Database | null = null;
+// Realtime Database lives in lib/rtdb.ts, outside the student entry.
 
 /**
  * Auth WITHOUT a default popup/redirect resolver.
@@ -126,6 +110,22 @@ export function linkWithPopup(user: User, provider: AuthProvider): Promise<UserC
 	return fbLinkWithPopup(user, provider, popupResolver);
 }
 
+/** The local dev / e2e host, where every Firebase service talks to the emulators. */
+export function isLocalhost(): boolean {
+	return typeof window !== 'undefined' && window.location.hostname === 'localhost';
+}
+
+/**
+ * An emulator port. Defaults to the repo's main suite; a worktree running its own
+ * suite (npm run emulators:solo) points the bundle at it with these env vars.
+ */
+export function emulatorPort(name: string, fallback: number): number {
+	const raw = (import.meta.env as Record<string, string | undefined>)[name];
+	const parsed = raw ? Number(raw) : NaN;
+
+	return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 function init(): void {
 	if (getApps().length > 0) {
 		app = getApp();
@@ -137,37 +137,20 @@ function init(): void {
 	auth = createAuth(app);
 	functions = getFunctions(app, FUNCTIONS_REGION);
 
-	const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-	// Emulator ports default to the repo's main suite; a worktree running its own
-	// suite (npm run emulators:solo) points the bundle at it with these.
-	const emuPort = (name: string, fallback: number): number => {
-		const raw = (import.meta.env as Record<string, string | undefined>)[name];
-		const parsed = raw ? Number(raw) : NaN;
-
-		return Number.isFinite(parsed) ? parsed : fallback;
-	};
-
-	if (import.meta.env.VITE_FIREBASE_DATABASE_URL) {
-		rtdb = getDatabase(app);
-		if (isLocalhost) {
-			try {
-				connectDatabaseEmulator(rtdb, 'localhost', emuPort('VITE_EMULATOR_DATABASE_PORT', 9000));
-			} catch (error) {
-				console.error('[Firebase] Database emulator connection failed:', error);
-			}
-		}
-	}
-
-	if (isLocalhost) {
+	if (isLocalhost()) {
 		try {
-			connectAuthEmulator(auth, `http://localhost:${emuPort('VITE_EMULATOR_AUTH_PORT', 9099)}`, {
-				disableWarnings: true,
-			});
+			connectAuthEmulator(
+				auth,
+				`http://localhost:${emulatorPort('VITE_EMULATOR_AUTH_PORT', 9099)}`,
+				{
+					disableWarnings: true,
+				},
+			);
 		} catch (error) {
 			console.error('[Firebase] Auth emulator connection failed:', error);
 		}
 		try {
-			connectFirestoreEmulator(db, 'localhost', emuPort('VITE_EMULATOR_FIRESTORE_PORT', 8081));
+			connectFirestoreEmulator(db, 'localhost', emulatorPort('VITE_EMULATOR_FIRESTORE_PORT', 8081));
 		} catch (error) {
 			console.error('[Firebase] Firestore emulator connection failed:', error);
 		}
@@ -175,7 +158,7 @@ function init(): void {
 			connectFunctionsEmulator(
 				functions,
 				'localhost',
-				emuPort('VITE_EMULATOR_FUNCTIONS_PORT', 5001),
+				emulatorPort('VITE_EMULATOR_FUNCTIONS_PORT', 5001),
 			);
 		} catch (error) {
 			console.error('[Firebase] Functions emulator connection failed:', error);
@@ -211,26 +194,6 @@ export {
 	signInAnonymously,
 	GoogleAuthProvider,
 	onAuthStateChanged,
-	rtdbRef,
-	rtdbSet,
-	rtdbUpdate,
-	rtdbRemove,
-	rtdbOnValue,
-	rtdbOnDisconnect,
 };
 
-export function getRtdb(): Database | null {
-	return rtdb;
-}
-
-export type {
-	User,
-	DocumentReference,
-	CollectionReference,
-	QueryConstraint,
-	Unsubscribe,
-	Database,
-	DatabaseReference,
-	OnDisconnect,
-	RtdbUnsubscribe,
-};
+export type { User, DocumentReference, CollectionReference, QueryConstraint, Unsubscribe };

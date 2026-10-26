@@ -1,5 +1,3 @@
-import { getRtdb, rtdbOnValue, rtdbRef } from '../firebase';
-
 /**
  * Server clock for timers. Table timers are server moments (`speakerEndsAt`,
  * epoch ms on the SERVER clock); a phone's own clock can be minutes off, so
@@ -7,7 +5,8 @@ import { getRtdb, rtdbOnValue, rtdbRef } from '../firebase';
  *
  * Offset source: Realtime Database `.info/serverTimeOffset` (exact, free, one
  * subscription that is dropped after the first value). Join already uses RTDB
- * for liveDrafts, so it is normally available. Without RTDB we fall back to the
+ * for liveDrafts, so it is normally available. The RTDB SDK is loaded here with
+ * a dynamic import, so it stays out of the student entry (see lib/rtdb.ts). Without RTDB we fall back to the
  * HTTP `Date` header of our own origin (1 s resolution, midpoint-corrected);
  * on any failure the offset stays 0.
  *
@@ -59,38 +58,47 @@ async function offsetFromDateHeader(): Promise<number | null> {
 	return null;
 }
 
-/** Estimate the offset once per page load. Safe to call repeatedly. */
-export function initServerClock(): Promise<number> {
-	if (initStarted) return Promise.resolve(offsetMs);
-	initStarted = true;
+/** Read `.info/serverTimeOffset` once; resolves the offset (unchanged on failure). */
+async function offsetFromRtdb(): Promise<number | null> {
+	const { getRtdb, rtdbOnValue, rtdbRef } = await import('../rtdb');
+	const rtdb = getRtdb();
+	if (!rtdb) return offsetFromDateHeader();
 
-	return new Promise<number>((resolve) => {
-		const rtdb = getRtdb();
-		if (!rtdb) {
-			void offsetFromDateHeader().then((value) => {
-				if (value !== null) offsetMs = value;
-				resolve(offsetMs);
-			});
-
-			return;
-		}
+	return new Promise<number | null>((resolve) => {
 		try {
 			const stop = rtdbOnValue(
 				rtdbRef(rtdb, '.info/serverTimeOffset'),
 				(snap) => {
 					const value = snap.val();
-					if (typeof value === 'number') offsetMs = value;
 					stop();
-					resolve(offsetMs);
+					resolve(typeof value === 'number' ? value : null);
 				},
 				(error) => {
 					console.error('[Classroom] serverTimeOffset failed:', error);
-					resolve(offsetMs);
+					resolve(null);
 				},
 			);
 		} catch (error) {
 			console.error('[Classroom] serverTimeOffset subscribe failed:', error);
-			resolve(offsetMs);
+			resolve(null);
 		}
 	});
+}
+
+/** Estimate the offset once per page load. Safe to call repeatedly. */
+export function initServerClock(): Promise<number> {
+	if (initStarted) return Promise.resolve(offsetMs);
+	initStarted = true;
+
+	return offsetFromRtdb()
+		.catch((error: unknown) => {
+			console.error('[Classroom] loading the realtime database failed:', error);
+
+			return offsetFromDateHeader();
+		})
+		.then((value) => {
+			if (value !== null) offsetMs = value;
+
+			return offsetMs;
+		});
 }

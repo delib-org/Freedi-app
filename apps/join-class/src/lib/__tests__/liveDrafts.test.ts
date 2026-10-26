@@ -21,7 +21,7 @@ const disconnects: Array<{
 const valueListeners = new Map<string, (snap: { val: () => unknown }) => void>();
 const unsubscribeListener = vi.fn();
 
-vi.mock('@/lib/firebase', () => ({
+vi.mock('@/lib/rtdb', () => ({
 	getRtdb: () => (rtdbAvailable ? {} : null),
 	rtdbRef: (_db: unknown, path: string): FakeRef => ({ path }),
 	rtdbSet: vi.fn((ref: FakeRef, data: unknown) => {
