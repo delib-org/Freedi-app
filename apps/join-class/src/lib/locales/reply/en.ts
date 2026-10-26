@@ -15,7 +15,8 @@ const reply: Record<string, string> = {
 	'reply.new_one': '1 new reply',
 	'reply.improve': 'Improve my proposal',
 	'reply.improve_closed': 'Proposals could be improved until the vote opened',
-	'reply.refused': 'Your reply seems to contain hurtful words. Try rephrasing.',
+	'reply.refused':
+		'Your reply was not sent: it has words that could hurt. Please write it again in other words.',
 	'reply.failed': 'The reply was not sent. Try again',
 	'reply.too_long': 'Up to {{max}} characters',
 	'reply.hidden_mine': 'The teacher hid this reply',
@@ -31,6 +32,21 @@ const reply: Record<string, string> = {
 	'reply.notice_n': '{{n}} new replies to your proposal · Read',
 	'reply.new_tag': 'New',
 	'reply.author_hint': 'You can reply back, or improve your proposal',
+	'console.proposal_label': 'Proposal',
+	'console.reply_label': 'Reply',
+	'console.replies_n': '{{n}} replies',
+	'console.replies_one': '1 reply',
+	'console.flags_n': '{{n}} attempts to post hurtful words',
+	'console.flags_one': '1 attempt to post hurtful words',
+	'console.flag_count': '{{n}} attempts',
+	'console.flag_count_one': '1 attempt',
+	'console.flag_show': 'Show the text',
+	'console.flag_hide_text': 'Hide the text',
+	'console.flag_seen': 'Seen',
+	'console.flag_target': 'On the proposal: {{text}}',
+	'proposal.refused':
+		'Your proposal was not sent: it has words that could hurt. Please write it again in other words.',
+	'text.checking': 'Checking…',
 };
 
 export default reply;

@@ -181,6 +181,34 @@ export type ClassPostReplyResponse =
 	| { ok: false; reason: 'language' };
 
 /**
+ * `classPostProposal` (a student of the lesson; IA 24.3): the student's one
+ * proposal under the challenge question, written by the server after the AI
+ * language check, so the check cannot be skipped. `proposalId` is chosen by
+ * the client so a retry after a dropped answer never posts twice. Refused
+ * words answer `{ ok: false, reason: 'language' }` (no error): nothing is
+ * written and the teacher is flagged. A student with a proposal edits it with
+ * `classEditProposal`.
+ */
+export interface ClassPostProposalRequest {
+	mainId: string;
+	proposalId: string;
+	text: string;
+}
+export type ClassPostProposalResponse =
+	| { ok: true; proposalId: string }
+	| { ok: false; reason: 'language' };
+
+/** `classEditProposal` (the proposal's writer, until the ballot is frozen; IA 24.3). Same check as a new proposal. */
+export interface ClassEditProposalRequest {
+	mainId: string;
+	proposalId: string;
+	text: string;
+}
+export type ClassEditProposalResponse =
+	| { ok: true; proposalId: string }
+	| { ok: false; reason: 'language' };
+
+/**
  * `classSetLessonStatus` (admin). The lesson's status moves live <-> paused,
  * live/paused/open -> ended or open, ended -> live. Same-target repeats are
  * no-ops (a retry after a dropped reply is safe); any other move answers

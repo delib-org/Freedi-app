@@ -105,3 +105,19 @@ export function unreadLineKey(n: number): { key: string; params?: Record<string,
 
 	return n === 1 ? { key: 'reply.new_one' } : { key: 'reply.new_n', params: { n } };
 }
+
+/**
+ * Which reply threads open by themselves in the teacher's "what they wrote"
+ * (IA 24.1): those with more replies than the teacher has seen this session.
+ */
+export function threadsToOpen(
+	byProposal: ReadonlyMap<string, readonly Statement[]>,
+	known: ReadonlyMap<string, number>,
+): string[] {
+	const opening: string[] = [];
+	for (const [proposalId, list] of byProposal) {
+		if (list.length > (known.get(proposalId) ?? 0)) opening.push(proposalId);
+	}
+
+	return opening;
+}

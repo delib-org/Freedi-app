@@ -15,7 +15,8 @@ const reply: Record<string, string> = {
 	'reply.new_one': 'یک نظر تازه',
 	'reply.improve': 'بهتر کردن پیشنهادم',
 	'reply.improve_closed': 'پیشنهادها تا باز شدن رأی‌گیری قابل بهتر شدن بودند',
-	'reply.refused': 'به نظر می‌رسد در نظر شما واژه‌ای آزاردهنده هست. طور دیگری بنویسید',
+	'reply.refused':
+		'نظر ارسال نشد: واژه‌هایی دارد که ممکن است آزار بدهد. آن را دوباره و با واژه‌های دیگر بنویسید.',
 	'reply.failed': 'نظر فرستاده نشد. دوباره تلاش کنید',
 	'reply.too_long': 'تا {{max}} نویسه',
 	'reply.hidden_mine': 'معلم این نظر را پنهان کرد',
@@ -31,6 +32,21 @@ const reply: Record<string, string> = {
 	'reply.notice_n': '{{n}} نظر تازه دربارهٔ پیشنهاد شما رسیده · خواندن',
 	'reply.new_tag': 'جدید',
 	'reply.author_hint': 'می‌توانید پاسخ بدهید یا پیشنهادتان را بهتر کنید',
+	'console.proposal_label': 'پیشنهاد',
+	'console.reply_label': 'نظر',
+	'console.replies_n': '{{n}} نظر',
+	'console.replies_one': 'یک نظر',
+	'console.flags_n': '{{n}} تلاش برای ارسال واژه‌های آزاردهنده',
+	'console.flags_one': 'یک تلاش برای ارسال واژه‌های آزاردهنده',
+	'console.flag_count': '{{n}} تلاش',
+	'console.flag_count_one': 'یک تلاش',
+	'console.flag_show': 'نمایش متن',
+	'console.flag_hide_text': 'پنهان کردن متن',
+	'console.flag_seen': 'دیدم',
+	'console.flag_target': 'دربارهٔ پیشنهاد: {{text}}',
+	'proposal.refused':
+		'پیشنهاد ارسال نشد: واژه‌هایی دارد که ممکن است آزار بدهد. آن را دوباره و با واژه‌های دیگر بنویسید.',
+	'text.checking': 'در حال بررسی…',
 };
 
 export default reply;

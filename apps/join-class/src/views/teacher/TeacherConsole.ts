@@ -31,6 +31,8 @@ import {
 import { voteOrderOf, voteResults } from '@/lib/classroom/voteResults';
 import { everyoneVoted } from '@/lib/classroom/voteSummary';
 import { groupWrittenTexts } from '@/lib/classroom/textsHelpers';
+import { flagState } from '@/lib/classroom/languageFlags';
+import { unseenFlagCount } from '@/lib/classroom/flagLogic';
 import { QRShare } from '@/components/QRShare';
 import { WizColFooter } from '@/components/WizColFooter';
 import { readClassCode, studentJoinUrl } from './planHelpers';
@@ -343,6 +345,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				view,
 				hasTables: classState.tables.length > 0,
 				hasChallenge: challenge !== null,
+				flagCount: unseenFlagCount(flagState.flags),
 				plenum: isPlenum(challenge),
 				ballotFrozen: isBallotFrozen(challenge),
 				ballotPaused: isBallotPaused(challenge),

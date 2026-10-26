@@ -19,5 +19,7 @@ export { classResetTurns } from './fn_classResetTurns';
 export { classResetVote } from './fn_classResetVote';
 export { classSetItemHidden } from './fn_classSetItemHidden';
 export { classPostReply } from './fn_classPostReply';
+export { classPostProposal } from './fn_classPostProposal';
+export { classEditProposal } from './fn_classEditProposal';
 export { classSetLessonStatus } from './fn_classSetLessonStatus';
 export { classCloneLesson } from './fn_classCloneLesson';

@@ -15,7 +15,8 @@ const reply: Record<string, string> = {
 	'reply.new_one': '1 nieuwe reactie',
 	'reply.improve': 'Mijn voorstel verbeteren',
 	'reply.improve_closed': 'Voorstellen konden worden verbeterd tot de stemming openging',
-	'reply.refused': 'Je reactie lijkt kwetsende woorden te bevatten. Probeer het anders te zeggen.',
+	'reply.refused':
+		'De reactie is niet verstuurd: er staan woorden in die kunnen kwetsen. Schrijf hem opnieuw, in andere woorden.',
 	'reply.failed': 'De reactie is niet verstuurd. Probeer opnieuw',
 	'reply.too_long': 'Maximaal {{max}} tekens',
 	'reply.hidden_mine': 'De docent heeft deze reactie verborgen',
@@ -32,6 +33,21 @@ const reply: Record<string, string> = {
 	'reply.notice_n': '{{n}} nieuwe reacties op jullie voorstel · Lezen',
 	'reply.new_tag': 'Nieuw',
 	'reply.author_hint': 'Jullie kunnen terugreageren of jullie voorstel verbeteren',
+	'console.proposal_label': 'Voorstel',
+	'console.reply_label': 'Reactie',
+	'console.replies_n': '{{n}} reacties',
+	'console.replies_one': '1 reactie',
+	'console.flags_n': '{{n}} pogingen om kwetsende woorden te plaatsen',
+	'console.flags_one': '1 poging om kwetsende woorden te plaatsen',
+	'console.flag_count': '{{n}} pogingen',
+	'console.flag_count_one': '1 poging',
+	'console.flag_show': 'Tekst tonen',
+	'console.flag_hide_text': 'Tekst verbergen',
+	'console.flag_seen': 'Gezien',
+	'console.flag_target': 'Bij het voorstel: {{text}}',
+	'proposal.refused':
+		'Het voorstel is niet verstuurd: er staan woorden in die kunnen kwetsen. Schrijf het opnieuw, in andere woorden.',
+	'text.checking': 'Controleren…',
 };
 
 export default reply;

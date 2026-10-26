@@ -2,7 +2,7 @@ import m from 'mithril';
 import type { WritingMode } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 
-export type WriteState = 'idle' | 'sending' | 'sent' | 'failed';
+export type WriteState = 'idle' | 'sending' | 'sent' | 'failed' | 'refused';
 
 export const WRITE_MAX_CHARS = 280;
 
@@ -46,6 +46,8 @@ export const WriteBox: m.Component<WriteBoxAttrs> = {
 						t('answer.counter', { n: value.length, max: WRITE_MAX_CHARS }),
 					),
 			state === 'sent' ? m('p.write__sent', t('answer.sent')) : null,
+			// The language check refused the words (IA 24.3): the text stays, the student rewrites it.
+			state === 'refused' ? m('p.write__refused', { role: 'alert' }, t('proposal.refused')) : null,
 		]);
 	},
 };

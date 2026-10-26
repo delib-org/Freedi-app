@@ -165,6 +165,49 @@ export const ClassReplyStatementFieldsSchema = {
 	replyPushCount: optional(number()),
 };
 
+/** IA 24.3: the longest proposal a student sends, in characters (callables + phone). */
+export const CLASS_PROPOSAL_MAX_LENGTH = 280;
+
+/** Collection of the teacher's language flags: `classLanguageFlags/{flagId}` (IA 24.4). */
+export const CLASS_LANGUAGE_FLAGS_COLLECTION = 'classLanguageFlags';
+
+/** IA 24.4: refused attempts kept per student per lesson (older ones are trimmed by the server). */
+export const CLASS_LANGUAGE_FLAGS_KEPT = 3;
+
+/** IA 24.4: how long a flag (and the attempted text in it) lives, in days (Firestore TTL on `expireAt`). */
+export const CLASS_LANGUAGE_FLAG_TTL_DAYS = 30;
+
+/** What a refused attempt was: a proposal (new or edited) or a reply. */
+export const ClassLanguageFlagKindSchema = picklist(['proposal', 'reply']);
+export type ClassLanguageFlagKind = InferOutput<typeof ClassLanguageFlagKindSchema>;
+
+/**
+ * One refused attempt (IA 24.4), a flag for the teacher: NOT a statement. Written
+ * ONLY by the classroom callables (Admin SDK); read only by the lesson's admins,
+ * who may set `seenAt` and nothing else. `text` is a child's words: never on a
+ * projector, a phone, a push, an export or in a log.
+ */
+export const ClassLanguageFlagSchema = object({
+	flagId: string(),
+	/** The lesson. */
+	mainId: string(),
+	/** The student. */
+	uid: string(),
+	kind: ClassLanguageFlagKindSchema,
+	/** The proposal replied to (kind 'reply'), or the proposal being edited. */
+	targetId: optional(string()),
+	/** The attempted text, capped at the item's maximum length. */
+	text: string(),
+	/** Which refused attempt of this student in this lesson this is (1, 2, 3, ...). */
+	attempt: number(),
+	createdAt: number(),
+	/** createdAt + CLASS_LANGUAGE_FLAG_TTL_DAYS (the TTL policy deletes the doc). */
+	expireAt: number(),
+	/** Set by the teacher's "seen". */
+	seenAt: optional(number()),
+});
+export type ClassLanguageFlag = InferOutput<typeof ClassLanguageFlagSchema>;
+
 /** Marker on an option (answer / proposal) written from a table. */
 export const ClassTableMarkerSchema = object({
 	tableId: string(),

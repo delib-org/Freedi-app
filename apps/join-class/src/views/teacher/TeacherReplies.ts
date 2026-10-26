@@ -1,24 +1,28 @@
 import m from 'mithril';
 import { CLASS_REPLY_MAX_LENGTH, type Statement } from '@freedi/shared-types';
 import '@/styles/teacher-replies.scss';
+import '@/styles/teacher-threads.scss';
 import { t } from '@/lib/i18n';
 import type { Unsubscribe } from '@/lib/firebase';
 import { listenLessonReplies, newReplyId, postReply } from '@/lib/classroom/replies';
-import { replyRole, visibleReplies } from '@/lib/classroom/replyLogic';
-import { setHidden } from './consoleActions';
-import { isBusy } from './consoleState';
+import { replyRole, threadsToOpen, visibleReplies } from '@/lib/classroom/replyLogic';
+import { HideControl } from './HideControl';
 
 /**
- * The teacher's replies on each proposal in "מה כתבו" (IA 22.5): "Replies (n)"
- * opens every reply with the writer's real name (hidden ones too), hide /
- * restore on each, and a composer whose reply shows to the class as "Teacher"
- * and notifies the author. One listener for the whole lesson while the view is
- * open.
+ * The reply thread under a proposal in "מה כתבו" (IA 24.1): the children of the
+ * proposal block, indented under it. "Replies (n)" opens every reply with the
+ * writer's real name (hidden ones too, greyed, each with its own hide control)
+ * and, last, the teacher's composer, whose reply shows to the class as
+ * "Teacher" and notifies the author. A thread opens by itself when it has
+ * replies the teacher has not seen this session (view state only). One
+ * listener for the whole lesson while the view is open.
  */
 
 interface TeacherRepliesState {
 	byProposal: Map<string, Statement[]>;
 	open: Set<string>;
+	/** Replies each thread had when the teacher last saw it (this session). */
+	known: Map<string, number>;
 	drafts: Map<string, string>;
 	/** Reply id of a send in flight, per proposal (reused on retry). */
 	pending: Map<string, string>;
@@ -30,6 +34,7 @@ interface TeacherRepliesState {
 const state: TeacherRepliesState = {
 	byProposal: new Map(),
 	open: new Set(),
+	known: new Map(),
 	drafts: new Map(),
 	pending: new Map(),
 	failed: new Set(),
@@ -48,6 +53,8 @@ export function watchTeacherReplies(topParentId: string): void {
 			const next = new Map<string, Statement[]>();
 			for (const reply of list)
 				next.set(reply.parentId, [...(next.get(reply.parentId) ?? []), reply]);
+			for (const proposalId of threadsToOpen(next, state.known)) state.open.add(proposalId);
+			for (const [proposalId, replies] of next) state.known.set(proposalId, replies.length);
 			state.byProposal = next;
 			m.redraw();
 		},
@@ -65,6 +72,13 @@ export function stopTeacherReplies(): void {
 	state.stop = null;
 	state.topParentId = null;
 	state.byProposal = new Map();
+	state.known = new Map();
+	state.open = new Set();
+}
+
+/** Replies the class can see under one proposal (hidden ones not counted). */
+export function visibleReplyCount(proposalId: string): number {
+	return (state.byProposal.get(proposalId) ?? []).filter((r) => r.hide !== true).length;
 }
 
 async function send(mainId: string, proposalId: string): Promise<void> {
@@ -103,19 +117,15 @@ function replyRow(reply: Statement): m.Vnode {
 		[
 			m('p.teacher-reply__tag', [
 				m('span', tagOf(reply)),
-				hidden ? m('span.written-card__flag', t('console.hidden_flag')) : null,
+				hidden ? m('span.written-card__flag.chip-hidden', t('console.hidden_flag')) : null,
 			]),
 			m('p.teacher-reply__text', { dir: 'auto' }, reply.statement),
-			m(
-				'button.btn.btn--tertiary.btn--small',
-				{
-					type: 'button',
-					'data-testid': 'teacher-reply-hide',
-					disabled: isBusy(`hide:${reply.statementId}`),
-					onclick: () => void setHidden(reply.statementId, !hidden),
-				},
-				t(hidden ? 'console.restore' : 'console.hide'),
-			),
+			m(HideControl, {
+				statementId: reply.statementId,
+				hidden,
+				small: true,
+				testId: 'teacher-reply-hide',
+			}),
 		],
 	);
 }
@@ -125,19 +135,18 @@ export interface TeacherRepliesAttrs {
 	proposalId: string;
 }
 
-/** "Replies (n)" under one proposal card of "מה כתבו". */
+/** The thread under one proposal block of "מה כתבו". */
 export const TeacherReplies: m.Component<TeacherRepliesAttrs> = {
 	view({ attrs }) {
 		const { proposalId, mainId } = attrs;
 		const list = visibleReplies(state.byProposal.get(proposalId) ?? [], '', true);
-		const shown = list.filter((r) => r.hide !== true).length;
 		const open = state.open.has(proposalId);
 		const draft = state.drafts.get(proposalId) ?? '';
 		const sending = state.pending.has(proposalId);
 
-		return m('div.teacher-replies', [
+		return m('div.thread', { 'data-testid': 'teacher-thread' }, [
 			m(
-				'button.btn.btn--tertiary.btn--small.teacher-replies__toggle',
+				'button.btn.btn--tertiary.btn--small.thread__toggle',
 				{
 					type: 'button',
 					'aria-expanded': open ? 'true' : 'false',
@@ -149,11 +158,11 @@ export const TeacherReplies: m.Component<TeacherRepliesAttrs> = {
 				},
 				[
 					m('span', { 'aria-hidden': 'true' }, open ? '▾ ' : '▸ '),
-					t('console.replies', { n: shown }),
+					t('console.replies', { n: visibleReplyCount(proposalId) }),
 				],
 			),
 			open
-				? [
+				? m('div.thread__body', [
 						list.length > 0 ? m('ol.teacher-replies__list', list.map(replyRow)) : null,
 						m('div.teacher-replies__composer', [
 							m('label.teacher-replies__label', [
@@ -183,7 +192,7 @@ export const TeacherReplies: m.Component<TeacherRepliesAttrs> = {
 								sending ? t('reply.sending') : t('reply.send'),
 							),
 						]),
-					]
+					])
 				: null,
 		]);
 	},

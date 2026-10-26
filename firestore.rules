@@ -773,6 +773,29 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // join-class language flags (IA 24.4): one doc per refused proposal / edit /
+    // reply, classLanguageFlags/{flagId}. Written only by the classroom
+    // callables (Admin SDK). Read only by an admin of the lesson (a get of their
+    // subscription); a student never reads one. The teacher's list query filters
+    // on mainId == X, which is what lets the rule resolve resource.data.mainId.
+    // The one client write is the admin's "seen": seenAt, a number, nothing else.
+    match /classLanguageFlags/{flagId} {
+      function isFlagAdmin(mainId) {
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(mainId)));
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+
+      allow get: if request.auth != null && resource != null && isFlagAdmin(resource.data.mainId);
+      allow list: if request.auth != null && isFlagAdmin(resource.data.mainId);
+      allow create: if false;
+      allow update: if request.auth != null &&
+                       isFlagAdmin(resource.data.mainId) &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenAt']) &&
+                       request.resource.data.seenAt is number;
+      allow delete: if false;
+    }
+
     match /statements/{statementId} {
       function isAdmin() {
         let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
@@ -1012,6 +1035,30 @@ service cloud.firestore {
       function isClassReply() {
         return resource != null && resource.data.get('classReply', null) != null;
       }
+      // join-class proposals (IA 24.3): an option whose parent is the lesson's
+      // challenge question. Created and re-worded ONLY by classPostProposal /
+      // classEditProposal (Admin SDK), which run the AI language check, so no
+      // client may create one or change its text. Everything else about an
+      // option (joining, the evaluation counters) is untouched. Table-talk
+      // answers (options under a guiding question) keep their client path.
+      function isClassChallenge(parentId) {
+        let challengePath = /databases/$(database)/documents/statements/$(cleanPath(string(parentId)));
+        return exists(challengePath) &&
+               get(challengePath).data.get('statementSettings', {}).get('classRole', '') == 'challenge';
+      }
+      function createsClassProposal() {
+        return request.resource.data.get('statementType', '') == 'option' &&
+               request.resource.data.get('parentId', null) != null &&
+               isClassChallenge(request.resource.data.parentId);
+      }
+      function rewordsClassProposal() {
+        return resource != null &&
+               resource.data.get('statementType', '') == 'option' &&
+               resource.data.get('parentId', null) != null &&
+               request.resource.data.diff(resource.data).affectedKeys().hasAny(['statement', 'statementType', 'parentId']) &&
+               isClassChallenge(resource.data.parentId);
+      }
+
       function changesClassReplyFields() {
         return request.resource.data.diff(resource.data).affectedKeys().hasAny(classReplyServerFields());
       }
@@ -1058,6 +1105,7 @@ service cloud.firestore {
                        !setsCreatorRoleOnCreate() &&
                        !setsOrganizationIdOnCreate() &&
                        !createsClassReplyFields() &&
+                       !createsClassProposal() &&
                        request.resource.data.creatorId == request.auth.uid &&
                        // A student the teacher removed writes nothing more
                        // into that lesson (see agoraRemovedFrom)
@@ -1071,6 +1119,7 @@ service cloud.firestore {
                        !changesOrganizationId() &&
                        !isClassReply() &&
                        !changesClassReplyFields() &&
+                       !rewordsClassProposal() &&
                        (isAgoraStatement()
                           ? (isCreator() && agoraServerFieldsUnchanged() &&
                              !agoraRemovedFrom(resource.data.agoraSessionId))

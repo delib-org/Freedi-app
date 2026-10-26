@@ -6,6 +6,7 @@ import {
 	noticeKey,
 	replyNotice,
 	replyRole,
+	threadsToOpen,
 	unreadLineKey,
 	unreadReplies,
 	visibleReplies,
@@ -140,5 +141,25 @@ describe('noticeKey', () => {
 		expect(noticeKey(0)).toBeNull();
 		expect(noticeKey(1)).toEqual({ key: 'reply.notice_one' });
 		expect(noticeKey(3)).toEqual({ key: 'reply.notice_n', params: { n: 3 } });
+	});
+});
+
+describe('threadsToOpen', () => {
+	const a = [reply('a1'), reply('a2')];
+	const b = [reply('b1', { parentId: 'p2' })];
+
+	it('opens a thread whose replies the teacher has not seen this session', () => {
+		const byProposal = new Map([
+			['p1', a],
+			['p2', b],
+		]);
+
+		expect(threadsToOpen(byProposal, new Map())).toEqual(['p1', 'p2']);
+		expect(threadsToOpen(byProposal, new Map([['p1', 2]]))).toEqual(['p2']);
+	});
+
+	it('opens a thread again when a new reply arrives, and ignores empty ones', () => {
+		expect(threadsToOpen(new Map([['p1', a]]), new Map([['p1', 1]]))).toEqual(['p1']);
+		expect(threadsToOpen(new Map([['p1', []]]), new Map())).toEqual([]);
 	});
 });

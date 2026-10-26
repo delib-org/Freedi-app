@@ -15,7 +15,8 @@ const reply: Record<string, string> = {
 	'reply.new_one': '1 neuer Kommentar',
 	'reply.improve': 'Meinen Vorschlag verbessern',
 	'reply.improve_closed': 'Vorschläge konnten bis zum Start der Abstimmung verbessert werden',
-	'reply.refused': 'Dein Kommentar scheint verletzende Wörter zu enthalten. Formuliere ihn anders.',
+	'reply.refused':
+		'Der Kommentar wurde nicht gesendet: Er enthält Wörter, die verletzen könnten. Schreibt ihn bitte neu, mit anderen Worten.',
 	'reply.failed': 'Der Kommentar wurde nicht gesendet. Erneut versuchen',
 	'reply.too_long': 'Bis zu {{max}} Zeichen',
 	'reply.hidden_mine': 'Die Lehrkraft hat diesen Kommentar ausgeblendet',
@@ -32,6 +33,21 @@ const reply: Record<string, string> = {
 	'reply.notice_n': '{{n}} neue Kommentare zu eurem Vorschlag · Lesen',
 	'reply.new_tag': 'Neu',
 	'reply.author_hint': 'Ihr könnt zurückantworten oder euren Vorschlag verbessern',
+	'console.proposal_label': 'Vorschlag',
+	'console.reply_label': 'Kommentar',
+	'console.replies_n': '{{n}} Kommentare',
+	'console.replies_one': '1 Kommentar',
+	'console.flags_n': '{{n}} Versuche, verletzende Wörter zu posten',
+	'console.flags_one': '1 Versuch, verletzende Wörter zu posten',
+	'console.flag_count': '{{n}} Versuche',
+	'console.flag_count_one': '1 Versuch',
+	'console.flag_show': 'Text anzeigen',
+	'console.flag_hide_text': 'Text verbergen',
+	'console.flag_seen': 'Gesehen',
+	'console.flag_target': 'Zum Vorschlag: {{text}}',
+	'proposal.refused':
+		'Der Vorschlag wurde nicht gesendet: Er enthält Wörter, die verletzen könnten. Schreibt ihn bitte neu, mit anderen Worten.',
+	'text.checking': 'Wird geprüft…',
 };
 
 export default reply;

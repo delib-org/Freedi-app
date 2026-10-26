@@ -34,6 +34,8 @@ export interface SwitchBandAttrs {
 	/** The lesson's introduction videos and the one the projector shows (Opening step). */
 	introVideos: readonly IntroVideo[];
 	projectorVideoId: string | null;
+	/** Unseen language flags (IA 24.4): a count on the "what they wrote" switch. */
+	flagCount?: number;
 	onView: (view: ConsoleView) => void;
 	onSplit: (replace: boolean) => void;
 	onAllToRate: () => void;
@@ -211,7 +213,12 @@ function segment(attrs: SwitchBandAttrs): m.Vnode {
 				class: attrs.view === view ? 'switch-band__segment-btn--on' : '',
 				onclick: () => attrs.onView(view),
 			},
-			t(labelKey),
+			[
+				t(labelKey),
+				view === 'texts' && (attrs.flagCount ?? 0) > 0
+					? m('span.switch-band__badge', { 'data-testid': 'flags-badge' }, String(attrs.flagCount))
+					: null,
+			],
 		);
 
 	return m('div.switch-band__segment', { role: 'group', 'aria-label': t('console.view_label') }, [
