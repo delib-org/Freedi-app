@@ -11,7 +11,12 @@ import { cosineSimilarity } from '../bulkCluster';
 import { pairKey } from '../completeLinkage';
 import { isLiveSynthEnabledForQuestion } from './featureGate';
 import { runSinglePipeline } from '../pipeline/runSinglePipeline';
-import { ORPHANED_VOTES_COLLECTION, restoreDissolvedVotes } from './restoreDissolvedVotes';
+import {
+	ORPHANED_VOTES_COLLECTION,
+	RestoreSummary,
+	restoreDissolvedVotes,
+} from './restoreDissolvedVotes';
+import { logError } from '../../utils/errorHandling';
 
 /**
  * Live-synth edit invalidation.
@@ -120,11 +125,27 @@ async function dissolveCluster(ctx: DissolveContext): Promise<void> {
 		if (!directEvalsSnap.empty) {
 			// Give the votes back to the single surviving option first (idempotent,
 			// never overrides a user's own vote), then archive with the outcome.
-			const summary = await restoreDissolvedVotes({
+			// A failed restore must never cost the audit trail: fall back to an
+			// empty summary (every vote archived as 'failed') and archive anyway.
+			let summary: RestoreSummary = {
 				clusterId,
-				memberIds: remainingMembers,
-				votes: directEvalsSnap.docs.map((d) => ({ id: d.id, data: d.data() })),
-			});
+				survivorId: null,
+				memberOptionIds: remainingMembers,
+				outcomes: new Map(),
+			};
+			try {
+				summary = await restoreDissolvedVotes({
+					clusterId,
+					memberIds: remainingMembers,
+					votes: directEvalsSnap.docs.map((d) => ({ id: d.id, data: d.data() })),
+				});
+			} catch (error) {
+				logError(error, {
+					operation: 'liveSynth.dissolveCluster.restoreVotes',
+					statementId: clusterId,
+					metadata: { memberIds: remainingMembers, voteCount: directEvalsSnap.size },
+				});
+			}
 			const archiveBatch = db().batch();
 			directEvalsSnap.docs.forEach((doc) => {
 				const outcome = summary.outcomes.get(doc.id);

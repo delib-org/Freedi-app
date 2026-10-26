@@ -42,6 +42,20 @@ jest.mock('../auditLog', () => ({
 	recordLiveSynthEvent: (...args: unknown[]) => mockRecordLiveSynthEvent(...args),
 }));
 
+// Real restore by default; a test can make it throw to prove the archive and
+// delete still run.
+type RestoreModule = typeof import('../restoreDissolvedVotes');
+const actualRestore = jest.requireActual<RestoreModule>('../restoreDissolvedVotes');
+const mockRestoreDissolvedVotes = jest.fn<
+	ReturnType<RestoreModule['restoreDissolvedVotes']>,
+	Parameters<RestoreModule['restoreDissolvedVotes']>
+>();
+jest.mock('../restoreDissolvedVotes', () => ({
+	...jest.requireActual<RestoreModule>('../restoreDissolvedVotes'),
+	restoreDissolvedVotes: (...args: Parameters<RestoreModule['restoreDissolvedVotes']>) =>
+		mockRestoreDissolvedVotes(...args),
+}));
+
 import {
 	liveSynthOnOptionUpdate,
 	diffEditEvent,
@@ -60,6 +74,8 @@ beforeEach(() => {
 	mockFindClustersContainingMember.mockReset();
 	mockEnqueueClusterRecompute.mockReset();
 	mockRecordLiveSynthEvent.mockReset();
+	mockRestoreDissolvedVotes.mockReset();
+	mockRestoreDissolvedVotes.mockImplementation(actualRestore.restoreDissolvedVotes);
 	process.env.SYNTHESIS_LIVE_SYNTH_ENABLED = 'true';
 	mockSaveEmbedding.mockResolvedValue(undefined);
 });
@@ -353,6 +369,37 @@ describe('liveSynthOnOptionUpdate', () => {
 			memberOptionIdsAtDissolve: ['opt2'],
 		});
 		expect(fs.deleteMock).toHaveBeenCalledTimes(1);
+	});
+
+	it('still archives and deletes when the restore itself throws', async () => {
+		const [before, after] = makeBeforeAfter({}, {});
+		const fs = setupFirestore();
+		fs.evalsGet.mockResolvedValue({
+			empty: false,
+			docs: [{ id: 'u1--cluster1', data: () => ({ evaluatorId: 'u1', evaluation: 1 }) }],
+		});
+		mockFindClustersContainingMember.mockResolvedValue([
+			{ statementId: 'cluster1', integratedOptions: ['opt1', 'opt2'], parentId: 'q1' },
+		]);
+		mockGenerateEmbedding.mockResolvedValue({ embedding: [1, 0, 0] });
+		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0, 1, 0]]]));
+		mockJudgeCached.mockResolvedValue([{ pairId: 'p', verdict: 'different', reason: 'mocked' }]);
+		mockRestoreDissolvedVotes.mockRejectedValue(new Error('restore exploded'));
+		const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+		await liveSynthOnOptionUpdate(before, after);
+
+		expect(mockRestoreDissolvedVotes).toHaveBeenCalledTimes(1);
+		expect(fs.archiveSet).toHaveBeenCalledTimes(1);
+		expect(fs.archiveSet.mock.calls[0][1]).toMatchObject({
+			reason: 'cluster-dissolved',
+			restored: false,
+			restoreOutcome: 'failed',
+			restoredToStatementId: null,
+			memberOptionIdsAtDissolve: ['opt2'],
+		});
+		expect(fs.deleteMock).toHaveBeenCalledTimes(1);
+		errorSpy.mockRestore();
 	});
 
 	it('keeps a member in a manual cluster (titleLockedByCreator) despite a "different" verdict', async () => {

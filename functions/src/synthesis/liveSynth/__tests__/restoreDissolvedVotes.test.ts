@@ -158,9 +158,9 @@ describe('restoreDissolvedVotes', () => {
 		expect(store.evaluations['u1--opt1']).toEqual(firstDoc);
 	});
 
-	it('skips neutral and malformed votes', async () => {
-		const { createSpy } = makeFakeDb({ statements: { opt1: option('opt1') }, evaluations: {} });
-		const votes = [vote('u1', 0), { id: 'x', data: { evaluation: 1 } }];
+	it('restores a neutral (0) vote like any other value', async () => {
+		const { store } = makeFakeDb({ statements: { opt1: option('opt1') }, evaluations: {} });
+		const votes = [vote('u1', 0)];
 
 		const summary = await restoreDissolvedVotes({
 			clusterId: CLUSTER,
@@ -168,8 +168,82 @@ describe('restoreDissolvedVotes', () => {
 			votes,
 		});
 
-		expect(summary.outcomes.get(votes[0].id)).toBe('empty-vote');
-		expect(summary.outcomes.get('x')).toBe('empty-vote');
+		expect(summary.outcomes.get(votes[0].id)).toBe('restored');
+		expect(store.evaluations['u1--opt1']).toMatchObject({ evaluation: 0, evaluatorId: 'u1' });
+	});
+
+	it('always writes an evaluator, falling back to the voter id', async () => {
+		const { store } = makeFakeDb({ statements: { opt1: option('opt1') }, evaluations: {} });
+		const votes = [{ id: 'u3--cluster1', data: { evaluatorId: 'u3', evaluation: 1 } }];
+
+		await restoreDissolvedVotes({ clusterId: CLUSTER, memberIds: ['opt1'], votes });
+
+		expect(store.evaluations['u3--opt1'].evaluator).toEqual({ uid: 'u3', displayName: '' });
+	});
+
+	it('takes the uid from evaluator when evaluatorId is missing', async () => {
+		const { store } = makeFakeDb({ statements: { opt1: option('opt1') }, evaluations: {} });
+		const votes = [
+			{
+				id: 'u4--cluster1',
+				data: { evaluator: { uid: 'u4', displayName: 'Dana' }, evaluation: -1 },
+			},
+		];
+
+		await restoreDissolvedVotes({ clusterId: CLUSTER, memberIds: ['opt1'], votes });
+
+		expect(store.evaluations['u4--opt1']).toMatchObject({
+			evaluatorId: 'u4',
+			evaluator: { uid: 'u4', displayName: 'Dana' },
+		});
+	});
+
+	it('skips votes with no user or no numeric value, with distinct outcomes', async () => {
+		const { createSpy } = makeFakeDb({ statements: { opt1: option('opt1') }, evaluations: {} });
+		const votes = [
+			{ id: 'nouser', data: { evaluation: 1, evaluator: { displayName: 'x' } } },
+			{ id: 'novalue', data: { evaluatorId: 'u5' } },
+		];
+
+		const summary = await restoreDissolvedVotes({
+			clusterId: CLUSTER,
+			memberIds: ['opt1'],
+			votes,
+		});
+
+		expect(summary.outcomes.get('nouser')).toBe('no-user');
+		expect(summary.outcomes.get('novalue')).toBe('empty-vote');
 		expect(createSpy).not.toHaveBeenCalled();
+	});
+
+	it('reports failed when create() fails for a reason other than already-exists', async () => {
+		makeFakeDb({ statements: { opt1: option('opt1') }, evaluations: {} });
+		const fakeDb = mockGetFirestore() as { collection: (n: string) => unknown };
+		mockGetFirestore.mockReturnValue({
+			collection: (name: string) => {
+				const real = fakeDb.collection(name) as { doc: (id: string) => object };
+				if (name !== 'evaluations') return real;
+
+				return {
+					doc: (id: string) => ({
+						...real.doc(id),
+						create: async () => {
+							throw Object.assign(new Error('unavailable'), { code: 14 });
+						},
+					}),
+				};
+			},
+		});
+		const votes = [vote('u1', 1), vote('u2', 1)];
+
+		const summary = await restoreDissolvedVotes({
+			clusterId: CLUSTER,
+			memberIds: ['opt1'],
+			votes,
+		});
+
+		expect(summary.survivorId).toBe('opt1');
+		expect(summary.outcomes.get(votes[0].id)).toBe('failed');
+		expect(summary.outcomes.get(votes[1].id)).toBe('failed');
 	});
 });

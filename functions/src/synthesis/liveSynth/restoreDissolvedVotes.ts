@@ -1,6 +1,6 @@
 import { logger } from 'firebase-functions';
 import { getFirestore, DocumentData } from 'firebase-admin/firestore';
-import { Collections, Evaluation, Statement } from '@freedi/shared-types';
+import { Collections, Evaluation, Statement, User } from '@freedi/shared-types';
 
 /**
  * Give a dissolved synthesis's direct votes back to its surviving option.
@@ -38,6 +38,7 @@ export type RestoreOutcome =
 	| 'no-single-survivor'
 	| 'survivor-unavailable'
 	| 'empty-vote'
+	| 'no-user'
 	| 'failed';
 
 export interface RestoreSummary {
@@ -81,6 +82,30 @@ async function loadVisibleMembers(memberIds: string[]): Promise<Statement[]> {
 		.filter((s) => s.hide !== true);
 }
 
+function nonEmptyString(value: unknown): string | undefined {
+	return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+/** The voter's uid: `evaluatorId` first, then `evaluator.uid`. */
+function voterId(vote: DocumentData): string | undefined {
+	return nonEmptyString(vote.evaluatorId) ?? nonEmptyString(vote.evaluator?.uid);
+}
+
+/**
+ * `newEvaluation` reads the user from `evaluator.uid` and throws without it,
+ * so the restored vote always carries an evaluator whose uid is the voter.
+ */
+function buildEvaluator(vote: DocumentData, userId: string): User {
+	const old = vote.evaluator;
+	const base: Partial<User> = old && typeof old === 'object' ? (old as Partial<User>) : {};
+
+	return {
+		...base,
+		uid: userId,
+		displayName: typeof base.displayName === 'string' ? base.displayName : '',
+	};
+}
+
 function buildRestoredEvaluation(
 	vote: DocumentData,
 	survivor: Statement,
@@ -96,8 +121,8 @@ function buildRestoredEvaluation(
 		evaluation: vote.evaluation as number,
 		updatedAt: Date.now(),
 		restoredFromClusterId: clusterId,
+		evaluator: buildEvaluator(vote, userId),
 	};
-	if (vote.evaluator) restored.evaluator = vote.evaluator;
 	if (typeof vote.demographicAnchorId === 'string') {
 		restored.demographicAnchorId = vote.demographicAnchorId;
 	}
@@ -111,9 +136,10 @@ async function restoreOne(
 	survivor: Statement,
 	clusterId: string,
 ): Promise<RestoreOutcome> {
-	const userId =
-		(vote.evaluatorId as string | undefined) ?? (vote.evaluator?.uid as string | undefined);
-	if (!userId || typeof vote.evaluation !== 'number' || vote.evaluation === 0) {
+	const userId = voterId(vote);
+	if (!userId) return 'no-user';
+	// 0 is a real neutral vote and is restored like any other value.
+	if (typeof vote.evaluation !== 'number' || Number.isNaN(vote.evaluation)) {
 		return 'empty-vote';
 	}
 
