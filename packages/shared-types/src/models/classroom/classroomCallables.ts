@@ -69,9 +69,16 @@ export type ClassTableAction =
 	| { action: 'passAsking'; uid?: string }
 	/**
 	 * Pass answering. Table talk: a member for themselves before speaking, or an admin naming `uid`
-	 * (also ends a running minute as passed). Proposals: the speaker, the asker or an admin end the running minute.
+	 * (also ends a running minute as passed). Proposals: the speaker, the asker or an admin end the
+	 * running minute; a seated member who has not spoken this turn passes their turn (IA 25.6).
 	 */
-	| { action: 'passSpeaking'; uid?: string };
+	| { action: 'passSpeaking'; uid?: string }
+	/**
+	 * Proposals (IA 25.6, admin only): open the next turn at this table now, whatever its
+	 * state: `proposalsTurn + 1`, `spokenUids = []`, the speaker cleared. The table's maximum
+	 * grows with it, so a done table re-opens.
+	 */
+	| { action: 'nextProposalsTurn' };
 
 export type ClassTableStepRequest = { tableId: string } & ClassTableAction;
 export interface ClassTableStepResponse {
@@ -79,10 +86,15 @@ export interface ClassTableStepResponse {
 	turn: number;
 }
 
-/** `classAllTablesTo` (admin). */
+/**
+ * `classAllTablesTo` (admin). A move to `talk` starts the speakers afresh: at
+ * Proposals it sets `proposalsTurn = 1` (entering the step), or with `newTurn`
+ * opens the next turn at every table ("another turn, all tables", IA 25.6).
+ */
 export interface ClassAllTablesToRequest {
 	mainId: string;
 	step: TableStep;
+	newTurn?: boolean;
 }
 export interface ClassAllTablesToResponse {
 	updated: number;

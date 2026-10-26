@@ -27,6 +27,7 @@ export async function saveLessonDetails(
 		sideNames?: { a: string; b: string };
 		allowOwnQuestions?: boolean;
 		speakSeconds?: number;
+		proposalsTurns?: number;
 	},
 ): Promise<void> {
 	await setMainStatementSetting(mainId, { statementSettings: details });

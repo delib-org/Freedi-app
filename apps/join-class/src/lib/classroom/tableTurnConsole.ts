@@ -11,7 +11,7 @@ import { hasAnswered, passedAnswer } from './tableTalkState';
 /** Which family of steps the board is showing. */
 export type TableMode = 'tableTalk' | 'proposals' | 'plenum';
 
-export type QuickKind = 'talk' | 'write' | 'rate' | 'turn' | 'finish';
+export type QuickKind = 'talk' | 'write' | 'rate' | 'turn' | 'finish' | 'anotherTurn';
 
 export interface QuickAction {
 	kind: QuickKind;
@@ -26,6 +26,7 @@ export const QUICK_KEYS: Record<QuickKind, string> = {
 	rate: 'console.quick_rate',
 	turn: 'console.quick_turn',
 	finish: 'console.finish_minute',
+	anotherTurn: 'console.another_turn',
 };
 
 /** A minute is running (somebody holds the floor). */
@@ -36,15 +37,18 @@ export function minuteRunning(table: ClassTable, now: number): boolean {
 /**
  * The ONE quick button of a table card. Table talk: "end the minute" while one
  * runs, nothing else (students start the next turn themselves). Proposals walk
- * talk -> write -> rate; the plenum only rates.
+ * talk -> write -> rate, and a done table (`proposalsDone`, every turn spoken)
+ * offers "another turn" (IA 25.6); the plenum only rates.
  */
 export function quickActionFor(
 	table: ClassTable,
 	mode: TableMode,
 	now: number,
+	proposalsDone = false,
 ): QuickAction | null {
 	if (mode === 'plenum') return table.step === 'rate' ? null : { kind: 'rate' };
 	if (mode === 'proposals') {
+		if (proposalsDone) return { kind: 'anotherTurn' };
 		if (table.step === 'pick') return { kind: 'talk' };
 		if (table.step === 'talk') return { kind: 'write' };
 		if (table.step === 'write') return { kind: 'rate' };
@@ -142,12 +146,18 @@ export function answerMark(table: ClassTable, uid: string, now: number): AnswerM
 	return hasAnswered(table, uid, now) ? '✓' : '';
 }
 
-/** Every device member asked or passed and the last talk is over: the card's "now" says so. */
+/**
+ * The card's "now" says done: at Table talk every device member asked or passed
+ * and the last talk is over; at Proposals every turn is spoken (`proposalsDone`).
+ */
 export function tableIsDone(
 	table: ClassTable,
 	mode: TableMode,
 	now: number,
 	noneLeft = false,
+	proposalsDone = false,
 ): boolean {
+	if (mode === 'proposals') return proposalsDone;
+
 	return mode === 'tableTalk' && tableDone(table, now, noneLeft);
 }

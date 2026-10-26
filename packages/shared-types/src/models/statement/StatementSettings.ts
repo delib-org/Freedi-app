@@ -449,6 +449,8 @@ export const StatementSettingsSchema = object({
 	allowOwnQuestions: optional(boolean()),
 	// join-class: seconds each person speaks when answering or proposing (one of SPEAK_SECONDS_CHOICES). Absent = DEFAULT_SPEAK_SECONDS. Main statement only.
 	speakSeconds: optional(number()),
+	// join-class: turns at Proposals, everyone speaks once per turn (one of PROPOSALS_TURNS_CHOICES). Absent = DEFAULT_PROPOSALS_TURNS. Main statement only.
+	proposalsTurns: optional(number()),
 });
 
 

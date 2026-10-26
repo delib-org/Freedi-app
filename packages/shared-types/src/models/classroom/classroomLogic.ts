@@ -1,7 +1,9 @@
 import {
 	CAMP_A_BELOW,
 	CAMP_B_ABOVE,
+	DEFAULT_PROPOSALS_TURNS,
 	DEFAULT_SPEAK_SECONDS,
+	PROPOSALS_TURNS_CHOICES,
 	SPEAK_SECONDS_CHOICES,
 	Camp,
 	ClassTable,
@@ -11,7 +13,10 @@ import type { LessonStatusAction } from './classroomCallables';
 
 /** What the lesson-setting readers need of the main statement (a `Statement` fits). */
 export interface LessonSettingsHolder {
-	statementSettings?: Pick<StatementSettings, 'allowOwnQuestions' | 'speakSeconds'> | null;
+	statementSettings?: Pick<
+		StatementSettings,
+		'allowOwnQuestions' | 'speakSeconds' | 'proposalsTurns'
+	> | null;
 }
 
 /** May students add a question of their own at Table talk? Absent = yes (IA 25.2). */
@@ -26,6 +31,67 @@ export function speakSecondsOf(main: LessonSettingsHolder | null | undefined): n
 	return typeof own === 'number' && (SPEAK_SECONDS_CHOICES as readonly number[]).includes(own)
 		? own
 		: DEFAULT_SPEAK_SECONDS;
+}
+
+/** Turns at Proposals (IA 25.6): the lesson's choice, else one. */
+export function proposalsTurnsOf(main: LessonSettingsHolder | null | undefined): number {
+	const own = main?.statementSettings?.proposalsTurns;
+
+	return typeof own === 'number' && (PROPOSALS_TURNS_CHOICES as readonly number[]).includes(own)
+		? own
+		: DEFAULT_PROPOSALS_TURNS;
+}
+
+/** The table's current turn at Proposals, 1-based; absent = the first. */
+export function proposalsTurnOf(table: Pick<ClassTable, 'proposalsTurn'>): number {
+	return typeof table.proposalsTurn === 'number' && table.proposalsTurn >= 1
+		? Math.floor(table.proposalsTurn)
+		: 1;
+}
+
+/**
+ * How many turns this table gets at Proposals: the lesson setting, or the turn
+ * it is already at when a teacher gave it more ("another turn"). Mirrors `maxTurns`.
+ */
+export function proposalsMaxTurns(
+	table: Pick<ClassTable, 'proposalsTurn'>,
+	main: LessonSettingsHolder | null | undefined,
+): number {
+	return Math.max(proposalsTurnsOf(main), proposalsTurnOf(table));
+}
+
+type SpokenFields = Pick<ClassTable, 'memberUids' | 'spokenUids' | 'speakerUid' | 'speakerEndsAt'>;
+
+/** This tablemate spoke or passed in the current turn (the speaker counts once their time is over). */
+export function spokeThisTurn(
+	table: Pick<ClassTable, 'spokenUids' | 'speakerUid' | 'speakerEndsAt'>,
+	uid: string,
+	now: number,
+): boolean {
+	if (table.spokenUids.includes(uid)) return true;
+
+	return (
+		table.speakerUid === uid &&
+		typeof table.speakerEndsAt === 'number' &&
+		table.speakerEndsAt <= now
+	);
+}
+
+/**
+ * Proposals: every device member spoke or passed this turn (no-device members
+ * never gate, IA 16.9.5). The end of a turn needs no write.
+ */
+export function proposalsTurnOver(table: SpokenFields, now: number): boolean {
+	return everyoneSpoke(table, now);
+}
+
+/** Proposals: the turn is over and no turn is left. The table waits for the teacher. */
+export function proposalsDone(
+	table: SpokenFields & Pick<ClassTable, 'proposalsTurn'>,
+	main: LessonSettingsHolder | null | undefined,
+	now: number,
+): boolean {
+	return proposalsTurnOver(table, now) && proposalsTurnOf(table) >= proposalsMaxTurns(table, main);
 }
 
 /**
@@ -304,12 +370,7 @@ export function othersAnswered(
 export function askerMayAnswer(
 	table: Pick<
 		ClassTable,
-		| 'memberUids'
-		| 'askerUid'
-		| 'spokenUids'
-		| 'speakerUid'
-		| 'speakerEndsAt'
-		| 'passedSpeakingUids'
+		'memberUids' | 'askerUid' | 'spokenUids' | 'speakerUid' | 'speakerEndsAt' | 'passedSpeakingUids'
 	>,
 	now: number,
 ): boolean {

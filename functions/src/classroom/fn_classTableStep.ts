@@ -4,6 +4,7 @@ import {
 	Collections,
 	WritingModeSchema,
 	allowOwnQuestionsOf,
+	proposalsTurnsOf,
 	speakSecondsOf,
 	functionConfig,
 } from '@freedi/shared-types';
@@ -138,6 +139,7 @@ export async function tableStep(
 			questionIsOwn,
 			allowOwnQuestions: allowOwnQuestionsOf(main),
 			speakMs: speakSecondsOf(main) * MS_PER_SECOND,
+			proposalsTurns: proposalsTurnsOf(main),
 		});
 		tx.set(ref, next);
 

@@ -139,11 +139,21 @@ export function allTablesTo(mainId: string, step: TableStep): Promise<boolean> {
 	);
 }
 
+/** Proposals (IA 25.6): "another turn, all tables": the next turn at every table, speakers afresh. */
+export function allTablesNewTurn(mainId: string): Promise<boolean> {
+	return guardedAct('all:newTurn', t('console.another_turn_all'), () =>
+		classAllTablesTo({ mainId, step: 'talk', newTurn: true }),
+	);
+}
+
 /**
  * One of the lesson's table-talk settings (IA 25), from the settings popover.
  * A setting, not a move of the room, so it works while the lesson is held too.
  */
-export type TableSettingsPatch = { allowOwnQuestions: boolean } | { speakSeconds: number };
+export type TableSettingsPatch =
+	| { allowOwnQuestions: boolean }
+	| { speakSeconds: number }
+	| { proposalsTurns: number };
 
 export function setTableSetting(patch: TableSettingsPatch): Promise<boolean> {
 	const field = Object.keys(patch)[0];

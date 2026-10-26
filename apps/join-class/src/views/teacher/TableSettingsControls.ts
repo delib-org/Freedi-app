@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { SPEAK_SECONDS_CHOICES } from '@freedi/shared-types';
+import { PROPOSALS_TURNS_CHOICES, SPEAK_SECONDS_CHOICES } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import '@/styles/table-settings.scss';
 
@@ -53,6 +53,53 @@ export const OwnQuestionsSwitch: m.Component<OwnQuestionsAttrs> = {
 	},
 };
 
+interface SelectOption {
+	value: number;
+	label: string;
+}
+
+interface SettingsSelectAttrs {
+	id: string;
+	label: string;
+	help: string;
+	value: number;
+	options: readonly SelectOption[];
+	disabled?: boolean;
+	onChange: (value: number) => void;
+}
+
+/** A labelled native select with its help line (44 px tall, described by the help). */
+function settingsSelect(attrs: SettingsSelectAttrs): m.Children {
+	const { id } = attrs;
+
+	return m('.table-settings__select-row', [
+		m('label.table-settings__select-label', { for: id }, attrs.label),
+		m(
+			'select.table-settings__select',
+			{
+				id,
+				value: String(attrs.value),
+				disabled: attrs.disabled,
+				'aria-describedby': `${id}-help`,
+				'data-testid': id,
+				onchange: (e: Event) => attrs.onChange(Number((e.target as HTMLSelectElement).value)),
+			},
+			attrs.options.map((option) =>
+				m(
+					'option',
+					{
+						key: option.value,
+						value: String(option.value),
+						selected: option.value === attrs.value,
+					},
+					option.label,
+				),
+			),
+		),
+		m('p.table-settings__help', { id: `${id}-help` }, attrs.help),
+	]);
+}
+
 export interface SpeakTimeAttrs {
 	scope: SettingsScope;
 	seconds: number;
@@ -60,32 +107,42 @@ export interface SpeakTimeAttrs {
 	onChange: (seconds: number) => void;
 }
 
-/** "Time to talk": a native select over SPEAK_SECONDS_CHOICES (half a minute to 5 minutes), with its help line. */
+/** "Time to talk" (IA 25.5): SPEAK_SECONDS_CHOICES, half a minute to 5 minutes. */
 export const SpeakTimeSelect: m.Component<SpeakTimeAttrs> = {
 	view({ attrs }) {
-		const id = `table-settings-speak-${attrs.scope}`;
+		return settingsSelect({
+			id: `table-settings-speak-${attrs.scope}`,
+			label: t(`${attrs.scope}.speak_time`),
+			help: t(`${attrs.scope}.speak_time_help`),
+			value: attrs.seconds,
+			options: SPEAK_SECONDS_CHOICES.map((seconds) => ({
+				value: seconds,
+				label: t(`plan.speak_time_${seconds}`),
+			})),
+			disabled: attrs.disabled,
+			onChange: attrs.onChange,
+		});
+	},
+};
 
-		return m('.table-settings__select-row', [
-			m('label.table-settings__select-label', { for: id }, t(`${attrs.scope}.speak_time`)),
-			m(
-				'select.table-settings__select',
-				{
-					id,
-					value: String(attrs.seconds),
-					disabled: attrs.disabled,
-					'aria-describedby': `${id}-help`,
-					'data-testid': id,
-					onchange: (e: Event) => attrs.onChange(Number((e.target as HTMLSelectElement).value)),
-				},
-				SPEAK_SECONDS_CHOICES.map((seconds) =>
-					m(
-						'option',
-						{ key: seconds, value: String(seconds), selected: seconds === attrs.seconds },
-						t(`plan.speak_time_${seconds}`),
-					),
-				),
-			),
-			m('p.table-settings__help', { id: `${id}-help` }, t(`${attrs.scope}.speak_time_help`)),
-		]);
+export interface ProposalsTurnsAttrs {
+	scope: SettingsScope;
+	turns: number;
+	disabled?: boolean;
+	onChange: (turns: number) => void;
+}
+
+/** "Turns at Proposals" (IA 25.6): PROPOSALS_TURNS_CHOICES, 1 to 3; "another turn" can go past them. */
+export const ProposalsTurnsSelect: m.Component<ProposalsTurnsAttrs> = {
+	view({ attrs }) {
+		return settingsSelect({
+			id: `table-settings-turns-${attrs.scope}`,
+			label: t(`${attrs.scope}.proposals_turns`),
+			help: t(`${attrs.scope}.proposals_turns_help`),
+			value: attrs.turns,
+			options: PROPOSALS_TURNS_CHOICES.map((turns) => ({ value: turns, label: String(turns) })),
+			disabled: attrs.disabled,
+			onChange: attrs.onChange,
+		});
 	},
 };

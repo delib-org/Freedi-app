@@ -1018,6 +1018,8 @@ export {
   CLASS_BATCH_SIZE,
   DEFAULT_SPEAK_SECONDS,
   SPEAK_SECONDS_CHOICES,
+  DEFAULT_PROPOSALS_TURNS,
+  PROPOSALS_TURNS_CHOICES,
   DEFAULT_GATE,
   SIDE_MIN,
   SIDE_MAX,
@@ -1077,6 +1079,12 @@ export {
   allowOwnQuestionsOf,
   noQuestionsLeft,
   speakSecondsOf,
+  proposalsTurnsOf,
+  proposalsTurnOf,
+  proposalsMaxTurns,
+  proposalsTurnOver,
+  proposalsDone,
+  spokeThisTurn,
 } from './models/classroom/classroomLogic';
 export type { LessonSettingsHolder } from './models/classroom/classroomLogic';
 export type {

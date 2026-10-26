@@ -1,4 +1,11 @@
-import { askerMayAnswer, everyoneSpoke, speakerTimeOver } from '@freedi/shared-types';
+import {
+	askerMayAnswer,
+	everyoneSpoke,
+	proposalsDone,
+	proposalsTurnOver,
+	speakerTimeOver,
+	spokeThisTurn,
+} from '@freedi/shared-types';
 import type { ClassTable, ClassTableAction, LessonStepKey, TableStep } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
 
@@ -23,6 +30,15 @@ export interface TransitionContext {
 	allowOwnQuestions?: boolean;
 	/** Length of a speaking time in ms (`speakSecondsOf(main) * 1000`); absent = the default. */
 	speakMs?: number;
+	/** Turns at Proposals (`proposalsTurnsOf(main)`); absent = one. */
+	proposalsTurns?: number;
+}
+
+/** The lesson settings the guards and transitions read, as a `LessonSettingsHolder`. */
+export function lessonOf(ctx: Pick<TransitionContext, 'proposalsTurns'>): {
+	statementSettings: { proposalsTurns?: number };
+} {
+	return { statementSettings: { proposalsTurns: ctx.proposalsTurns } };
 }
 
 /** From which steps the asker (or a tablemate, where allowed) may run each action. */
@@ -42,6 +58,7 @@ export const ALLOWED_FROM: Record<ClassTableAction['action'], readonly TableStep
 	claimTurn: ['pick', 'talk', 'write', 'rate'],
 	claimSpeaker: ['talk'],
 	finishSpeaking: ['talk'],
+	nextProposalsTurn: ['pick', 'talk', 'write', 'rate'],
 };
 
 /**
@@ -55,10 +72,14 @@ const ADMIN_FROM_ANY_STEP: ReadonlySet<ClassTableAction['action']> = new Set([
 	'toWrite',
 	'toRate',
 	'nextTurn',
+	'nextProposalsTurn',
 ]);
 
 /** Teacher-only actions: the asker and tablemates never run them. */
-const ADMIN_ONLY: ReadonlySet<ClassTableAction['action']> = new Set(['passAsker']);
+const ADMIN_ONLY: ReadonlySet<ClassTableAction['action']> = new Set([
+	'passAsker',
+	'nextProposalsTurn',
+]);
 
 /** Moves a plain tablemate may run when nobody asks (the asker left): IA 16.7 E8. */
 const ASKERLESS_MEMBER_MOVES: ReadonlySet<ClassTableAction['action']> = new Set([
@@ -166,24 +187,42 @@ export function answeredUids(table: ClassTable, now: number): Set<string> {
 }
 
 /**
- * Proposals / talk (Tal, 2026-10-25): every speaker gets a fresh minute, any
- * number of times, with no question on the table. Only the floor is guarded.
+ * Proposals (IA 25.6): each tablemate speaks once per turn, with no question on
+ * the table. A turn that is over with a turn still to come is not refused: the
+ * transition opens the next turn first. Once every turn is spoken the table is
+ * done and waits for the teacher (`turns-done`).
  */
-function assertMayClaimProposalsSpeaker(table: ClassTable, actorUid: string, now: number): void {
+function assertMayClaimProposalsSpeaker(
+	table: ClassTable,
+	actorUid: string,
+	ctx: TransitionContext,
+): void {
 	assertSeated(table, actorUid);
-	if (!speakerTimeOver(table, now)) {
+	if (!speakerTimeOver(table, ctx.now)) {
 		throw new ClassroomError('failed-precondition', 'Someone is speaking', 'floor-taken');
+	}
+	assertProposalsTurnOpen(table, actorUid, ctx);
+}
+
+/** Proposals: the actor may still speak or pass this turn (or the next turn opens for them). */
+function assertProposalsTurnOpen(
+	table: ClassTable,
+	actorUid: string,
+	ctx: TransitionContext,
+): void {
+	if (proposalsDone(table, lessonOf(ctx), ctx.now)) {
+		throw new ClassroomError('failed-precondition', 'Every turn is spoken', 'turns-done');
+	}
+	if (proposalsTurnOver(table, ctx.now)) return;
+	if (spokeThisTurn(table, actorUid, ctx.now)) {
+		throw new ClassroomError('failed-precondition', 'You already spoke', 'already-answered');
 	}
 }
 
-function assertMayClaimSpeaker(
-	table: ClassTable,
-	actorUid: string,
-	now: number,
-	lessonStep: LessonStepKey | null | undefined,
-): void {
+function assertMayClaimSpeaker(table: ClassTable, actorUid: string, ctx: TransitionContext): void {
+	const { now, lessonStep } = ctx;
 	if (lessonStep === 'proposals') {
-		assertMayClaimProposalsSpeaker(table, actorUid, now);
+		assertMayClaimProposalsSpeaker(table, actorUid, ctx);
 
 		return;
 	}
@@ -235,15 +274,16 @@ export function isTableTalk(
 /**
  * Table talk (a question is on the table): a member passes only for themselves,
  * an admin names `uid`. Proposals: the speaker passes their own minute, the
- * asker on their behalf.
+ * asker on their behalf; while the floor is open a seated tablemate passes
+ * their own turn ("I want to pass", IA 25.6) so a turn can never stall.
  */
 function assertMayPassSpeaking(
 	role: ActorRole | null,
 	table: ClassTable,
 	action: Extract<ClassTableAction, { action: 'passSpeaking' }>,
-	actorUid: string,
-	lessonStep: LessonStepKey | null | undefined,
+	ctx: TransitionContext,
 ): void {
+	const { actorUid, now, lessonStep } = ctx;
 	if (role === 'admin') return;
 	if (isTableTalk(table, lessonStep)) {
 		assertSeated(table, actorUid);
@@ -253,12 +293,20 @@ function assertMayPassSpeaking(
 
 		return;
 	}
-	if (role === 'asker' || actorUid === table.speakerUid) return;
-	throw new ClassroomError(
-		'permission-denied',
-		'Only the speaker, the asker or a teacher can pass a minute',
-		'not-speaker',
-	);
+	if (!speakerTimeOver(table, now)) {
+		if (role === 'asker' || actorUid === table.speakerUid) return;
+		throw new ClassroomError(
+			'permission-denied',
+			'Only the speaker, the asker or a teacher can pass a minute',
+			'not-speaker',
+		);
+	}
+	// The floor is open: a tablemate passes their own turn.
+	if (action.uid !== undefined && action.uid !== actorUid) {
+		throw new ClassroomError('permission-denied', 'Only a teacher can pass for someone else');
+	}
+	assertSeated(table, actorUid);
+	assertProposalsTurnOpen(table, actorUid, ctx);
 }
 
 /**
@@ -271,10 +319,9 @@ export function assertMayAct(
 	role: ActorRole | null,
 	action: ClassTableAction,
 	table: ClassTable,
-	now: number,
-	actorUid: string,
-	lessonStep: LessonStepKey | null | undefined,
+	ctx: TransitionContext,
 ): void {
+	const { now, actorUid, lessonStep } = ctx;
 	// The student actions of Table talk: seated tablemates for themselves, whatever the role.
 	switch (action.action) {
 		case 'claimTurn':
@@ -282,7 +329,7 @@ export function assertMayAct(
 
 			return;
 		case 'claimSpeaker':
-			assertMayClaimSpeaker(table, actorUid, now, lessonStep);
+			assertMayClaimSpeaker(table, actorUid, ctx);
 
 			return;
 		case 'finishSpeaking':
@@ -294,7 +341,7 @@ export function assertMayAct(
 	}
 	if (role === 'admin') {
 		if (action.action === 'passSpeaking') {
-			assertMayPassSpeaking(role, table, action, actorUid, lessonStep);
+			assertMayPassSpeaking(role, table, action, ctx);
 		}
 
 		return;
@@ -311,7 +358,7 @@ export function assertMayAct(
 
 			return;
 		case 'passSpeaking':
-			assertMayPassSpeaking(role, table, action, actorUid, lessonStep);
+			assertMayPassSpeaking(role, table, action, ctx);
 
 			return;
 		case 'nextSpeaker':

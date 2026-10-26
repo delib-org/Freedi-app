@@ -17,7 +17,7 @@ import {
 } from '@/lib/classroom/tableTurnConsole';
 import { tableAction } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
-import { quickActionName } from './TableCard';
+import { proposalsDoneNow, quickActionName } from './TableCard';
 
 /**
  * The teacher's per-member turn fallbacks and the step verbs of the table sheet
@@ -164,12 +164,17 @@ export function noDeviceButtons(
 /**
  * The sheet's row of step verbs. Table talk has one: "start turn n" (the last
  * resort: it opens the next pick, the asker counts as asked); it is off when
- * nobody is left to ask. Proposals walk talk, write, rate; the plenum rates.
+ * nobody is left to ask. Proposals walk talk, write, rate and give "another
+ * turn" (IA 25.6); the plenum rates.
  */
 export function stepButtons(table: ClassTable, mode: TableMode, now: number): m.Children {
 	const kinds: QuickKind[] =
-		mode === 'plenum' ? ['rate'] : mode === 'tableTalk' ? ['turn'] : ['talk', 'write', 'rate'];
-	const own = quickActionFor(table, mode, now);
+		mode === 'plenum'
+			? ['rate']
+			: mode === 'tableTalk'
+				? ['turn']
+				: ['talk', 'write', 'rate', 'anotherTurn'];
+	const own = quickActionFor(table, mode, now, proposalsDoneNow(table, mode));
 
 	return kinds.map((kind) => {
 		const quick = kind === 'turn' ? { kind, n: table.turn + 1 } : { kind };

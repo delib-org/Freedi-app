@@ -348,7 +348,16 @@ describe('classTableStep + classAllTablesTo', () => {
 		);
 		expect(await allTablesTo(db, TEACHER, { mainId: MAIN, step: 'talk' })).toEqual({ updated: 2 });
 		for (const t of fake.list('classTables'))
-			expect(t).toMatchObject({ step: 'talk', spokenUids: [] });
+			expect(t).toMatchObject({ step: 'talk', spokenUids: [], proposalsTurn: 1 });
+		// "another turn, all tables" (IA 25.6): the next turn at every table
+		expect(await allTablesTo(db, TEACHER, { mainId: MAIN, step: 'talk', newTurn: true })).toEqual({
+			updated: 2,
+		});
+		for (const t of fake.list('classTables')) expect(t).toMatchObject({ proposalsTurn: 2 });
+		await expectCode(
+			allTablesTo(db, TEACHER, { mainId: MAIN, step: 'rate', newTurn: true }),
+			'invalid-argument',
+		);
 		await expectCode(
 			allTablesTo(db, TEACHER, { mainId: MAIN, step: 'dance' as 'talk' }),
 			'invalid-argument',

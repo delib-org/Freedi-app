@@ -70,6 +70,25 @@ describe('quickActionFor (one quick button, UX 16.L rev 3)', () => {
 		expect(quickActionFor(table({ step: 'write' }), 'plenum', NOW)).toEqual({ kind: 'rate' });
 		expect(quickActionFor(table({ step: 'rate' }), 'plenum', NOW)).toBeNull();
 	});
+
+	it('a done table at Proposals offers "another turn" (IA 25.6); the plenum never does', () => {
+		expect(quickActionFor(table({ step: 'rate' }), 'proposals', NOW, true)).toEqual({
+			kind: 'anotherTurn',
+		});
+		expect(quickActionFor(table({ step: 'talk' }), 'proposals', NOW, true)).toEqual({
+			kind: 'anotherTurn',
+		});
+		expect(quickActionFor(table({ step: 'write' }), 'plenum', NOW, true)).toEqual({ kind: 'rate' });
+	});
+});
+
+describe('tableIsDone', () => {
+	it('Proposals follows the proposalsDone flag; Table talk its own rule', () => {
+		expect(tableIsDone(table(), 'proposals', NOW, false, true)).toBe(true);
+		expect(tableIsDone(table(), 'proposals', NOW, false, false)).toBe(false);
+		expect(tableIsDone(table(), 'plenum', NOW, false, true)).toBe(false);
+		expect(tableIsDone(table(), 'tableTalk', NOW)).toBe(false);
+	});
 });
 
 describe('statusLine (the card second row)', () => {

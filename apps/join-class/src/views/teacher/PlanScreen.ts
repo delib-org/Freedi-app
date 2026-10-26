@@ -53,8 +53,10 @@ import {
 import { PlanIntro } from './PlanIntro';
 import {
 	OWN_QUESTIONS_KEY,
+	PROPOSALS_TURNS_KEY,
 	SPEAK_SECONDS_KEY,
 	ownQuestionsControl,
+	proposalsTurnsControl,
 	speakTimeControl,
 } from './planLessonSettings';
 
@@ -348,6 +350,8 @@ function renderDetails(): m.Vnode {
 				fieldError(SIDE_B_KEY),
 				speakTimeControl(),
 				fieldError(SPEAK_SECONDS_KEY),
+				proposalsTurnsControl(),
+				fieldError(PROPOSALS_TURNS_KEY),
 			]),
 		]),
 		renderCopiedFrom(),

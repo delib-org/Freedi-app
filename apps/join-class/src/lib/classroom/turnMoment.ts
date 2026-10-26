@@ -65,6 +65,7 @@ export const RACE_REASONS: ReadonlySet<string> = new Set([
 	'others-first',
 	'minute-over',
 	'not-speaker',
+	'turns-done',
 ]);
 
 /** Is this refusal one the screen swallows? */

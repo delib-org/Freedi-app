@@ -2,7 +2,11 @@ import {
 	DEFAULT_SPEAK_SECONDS,
 	everyoneSpoke,
 	notAskedUids,
+	proposalsMaxTurns,
+	proposalsTurnOf,
+	proposalsTurnOver,
 	speakerTimeOver,
+	spokeThisTurn,
 } from '@freedi/shared-types';
 import type { ClassTable, ClassTableAction } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
@@ -15,6 +19,7 @@ import {
 	assertOwnQuestionAllowed,
 	isTableTalk,
 	listOf,
+	lessonOf,
 } from './tableGuards';
 import type { ActorRole, TransitionContext } from './tableGuards';
 
@@ -78,6 +83,34 @@ function withoutSpeaker(table: ClassTable): ClassTable {
 
 function withoutPassedSpeaking(table: ClassTable): ClassTable {
 	return omit(table, ['passedSpeakingUids']);
+}
+
+/** Proposals (IA 25.6): the next turn opens: `proposalsTurn + 1`, nobody has spoken, no speaker. No timer write. */
+function nextProposalsTurn(table: ClassTable): ClassTable {
+	return {
+		...withoutPassedSpeaking(withoutSpeaker(table)),
+		spokenUids: [],
+		proposalsTurn: proposalsTurnOf(table) + 1,
+	};
+}
+
+/**
+ * Proposals: a claim or a pass that lands after everyone spoke, with a turn
+ * still to come, first moves the table to the next turn (the end of a turn
+ * needs no write of its own). A done table is left alone: the guard refuses.
+ */
+function startsNextProposalsTurn(
+	table: ClassTable,
+	action: ClassTableAction,
+	ctx: TransitionContext,
+): boolean {
+	if (ctx.lessonStep !== 'proposals') return false;
+	if (action.action !== 'claimSpeaker' && action.action !== 'passSpeaking') return false;
+
+	return (
+		proposalsTurnOver(table, ctx.now) &&
+		proposalsTurnOf(table) < proposalsMaxTurns(table, lessonOf(ctx))
+	);
 }
 
 /** `askedUids` with the current asker added (a table left mid-turn before v2 never added them at toTalk). */
@@ -222,6 +255,36 @@ function passRunningMinute(table: ClassTable, base: ClassTable, now: number): Cl
 	};
 }
 
+/**
+ * Proposals: a running minute ends as passed (the speaker, the asker or a
+ * teacher); with the floor open a seated tablemate passes their own turn, which
+ * counts as spoken (IA 25.6). A teacher may name `uid`.
+ */
+function passAtProposals(
+	table: ClassTable,
+	base: ClassTable,
+	action: Extract<ClassTableAction, { action: 'passSpeaking' }>,
+	ctx: TransitionContext,
+): ClassTable {
+	if (table.speakerUid && !speakerTimeOver(table, ctx.now)) {
+		return passRunningMinute(table, base, ctx.now);
+	}
+	const target = action.uid ?? ctx.actorUid;
+	if (!table.memberUids.includes(target)) {
+		throw new ClassroomError('invalid-argument', 'Only a tablemate can pass');
+	}
+	if (spokeThisTurn(table, target, ctx.now)) {
+		throw new ClassroomError('failed-precondition', 'Already spoke', 'already-answered');
+	}
+	const add = (uids: string[] | undefined): string[] => [...listOf(uids), target];
+
+	return {
+		...base,
+		spokenUids: add(table.spokenUids),
+		passedSpeakingUids: add(table.passedSpeakingUids),
+	};
+}
+
 /** Table talk: pass this question (before speaking) for oneself, or for `uid` when a teacher names one. */
 function passSpeaking(
 	table: ClassTable,
@@ -229,7 +292,7 @@ function passSpeaking(
 	action: Extract<ClassTableAction, { action: 'passSpeaking' }>,
 	ctx: TransitionContext,
 ): ClassTable {
-	if (!isTableTalk(table, ctx.lessonStep)) return passRunningMinute(table, base, ctx.now);
+	if (!isTableTalk(table, ctx.lessonStep)) return passAtProposals(table, base, action, ctx);
 	if (ctx.isAdmin && !action.uid) {
 		throw new ClassroomError('invalid-argument', 'Name the tablemate who passes');
 	}
@@ -257,16 +320,18 @@ function passSpeaking(
  * before calling this; here only the table's own state is consulted.
  */
 export function applyTableAction(
-	table: ClassTable,
+	stored: ClassTable,
 	action: ClassTableAction,
 	ctx: TransitionContext,
 ): ClassTable {
-	const role = actorRole(table, ctx);
+	const role = actorRole(stored, ctx);
 	if (role === null) {
 		throw new ClassroomError('permission-denied', 'You are not seated at this table');
 	}
+	// Proposals: the table as the action meets it, the next turn already open when this tap starts it.
+	const table = startsNextProposalsTurn(stored, action, ctx) ? nextProposalsTurn(stored) : stored;
 	assertOwnQuestionAllowed(action, ctx);
-	assertMayAct(role, action, table, ctx.now, ctx.actorUid, ctx.lessonStep);
+	assertMayAct(role, action, table, ctx);
 	assertFromStep(role, action, table, ctx.lessonStep);
 
 	const base: ClassTable = { ...table, updatedAt: ctx.now };
@@ -354,6 +419,8 @@ export function applyTableAction(
 			return passAsking(table, base, action, ctx);
 		case 'passSpeaking':
 			return passSpeaking(table, base, action, ctx);
+		case 'nextProposalsTurn':
+			return nextProposalsTurn(base);
 		case 'passAsker': {
 			const { uid } = action;
 			if (!notAskedUids(table).includes(uid)) {

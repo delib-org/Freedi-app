@@ -1,10 +1,10 @@
 import m from 'mithril';
-import { allowOwnQuestionsOf, speakSecondsOf } from '@freedi/shared-types';
+import { allowOwnQuestionsOf, proposalsTurnsOf, speakSecondsOf } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { getMainStatement } from '@/lib/store';
 import { setTableSetting } from './consoleActions';
 import { isBusy } from './consoleState';
-import { OwnQuestionsSwitch, SpeakTimeSelect } from './TableSettingsControls';
+import { OwnQuestionsSwitch, ProposalsTurnsSelect, SpeakTimeSelect } from './TableSettingsControls';
 
 /**
  * "השולחנות" group of the console's settings popover (IA 25.4): the lesson's
@@ -29,6 +29,12 @@ export const ConsoleTableSettings: m.Component = {
 				seconds: speakSecondsOf(main),
 				disabled: !main || isBusy('tableSetting:speakSeconds'),
 				onChange: (seconds: number) => void setTableSetting({ speakSeconds: seconds }),
+			}),
+			m(ProposalsTurnsSelect, {
+				scope: 'console',
+				turns: proposalsTurnsOf(main),
+				disabled: !main || isBusy('tableSetting:proposalsTurns'),
+				onChange: (turns: number) => void setTableSetting({ proposalsTurns: turns }),
 			}),
 		]);
 	},

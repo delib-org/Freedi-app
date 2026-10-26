@@ -3,6 +3,7 @@ import {
 	StatementType,
 	createParagraphChildStatement,
 	createStatementObject,
+	proposalsTurnsOf,
 	speakSecondsOf,
 } from '@freedi/shared-types';
 import type {
@@ -152,6 +153,9 @@ function mainSettings(source: Statement, classCode: string, now: number): Statem
 			: {}),
 		...(s?.speakSeconds !== undefined
 			? { speakSeconds: speakSecondsOf({ statementSettings: s }) }
+			: {}),
+		...(s?.proposalsTurns !== undefined
+			? { proposalsTurns: proposalsTurnsOf({ statementSettings: s }) }
 			: {}),
 		...(typeof s?.allowOwnQuestions === 'boolean'
 			? { allowOwnQuestions: s.allowOwnQuestions }

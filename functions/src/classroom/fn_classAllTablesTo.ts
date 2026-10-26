@@ -1,10 +1,16 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import { FieldValue } from 'firebase-admin/firestore';
 import type { Firestore } from 'firebase-admin/firestore';
-import { CLASS_TABLES_COLLECTION, TableStepSchema, functionConfig } from '@freedi/shared-types';
+import {
+	CLASS_TABLES_COLLECTION,
+	TableStepSchema,
+	functionConfig,
+	proposalsTurnOf,
+} from '@freedi/shared-types';
 import type {
 	ClassAllTablesToRequest,
 	ClassAllTablesToResponse,
+	ClassTable,
 	TableStep,
 } from '@freedi/shared-types';
 import { safeParse } from 'valibot';
@@ -18,8 +24,18 @@ import { assertLessonRunning } from './lessonStatusGuard';
  * ("כל השולחנות: מדרגים", or talk when the Proposals step opens). Only the
  * step moves; the turn, the asker and the question stay. The speaker is
  * always cleared (no stale countdown keeps showing), and a move to 'talk'
- * starts the round of speakers afresh.
+ * starts the speakers afresh: at the first turn of Proposals (`proposalsTurn =
+ * 1`), or with `newTurn` at the next turn of every table (IA 25.6).
  */
+
+/** The fields of a table that start speaking afresh at `talk`. */
+function freshTalkPatch(table: ClassTable, newTurn: boolean): Record<string, unknown> {
+	return {
+		spokenUids: [],
+		passedSpeakingUids: FieldValue.delete(),
+		proposalsTurn: newTurn ? proposalsTurnOf(table) + 1 : 1,
+	};
+}
 
 export async function allTablesTo(
 	firestore: Firestore,
@@ -31,6 +47,10 @@ export async function allTablesTo(
 	if (!parsed.success)
 		throw new ClassroomError('invalid-argument', 'step must be pick, talk, write or rate');
 	const step: TableStep = parsed.output;
+	const newTurn = req?.newTurn === true;
+	if (newTurn && step !== 'talk') {
+		throw new ClassroomError('invalid-argument', 'A new turn is a move to talk');
+	}
 	assertLessonRunning(await assertWorkspaceAdmin(firestore, mainId, actorUid));
 
 	const snap = await firestore
@@ -48,7 +68,7 @@ export async function allTablesTo(
 			speakerEndsAt: FieldValue.delete(),
 			speakerMs: FieldValue.delete(),
 		};
-		if (step === 'talk') patch.spokenUids = [];
+		if (step === 'talk') Object.assign(patch, freshTalkPatch(d.data() as ClassTable, newTurn));
 		batch.update(d.ref, patch);
 	});
 	// One batch: a lesson has ~10 tables, far below the 500-write limit.
@@ -70,7 +90,7 @@ export const classAllTablesTo = onCall(
 				operation: 'classroom.classAllTablesTo',
 				userId: uid,
 				statementId: request.data?.mainId,
-				metadata: { step: request.data?.step },
+				metadata: { step: request.data?.step, newTurn: request.data?.newTurn },
 			});
 		}
 	},

@@ -12,7 +12,7 @@ import { getServerOffset, remainingMs, serverNow } from '@/lib/classroom/serverC
 import { moveStudent } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
 import { answerMark, askMark, type TableMode } from '@/lib/classroom/tableTurnConsole';
-import { noDeviceForm, tableModeOf, turnLine } from './TableCard';
+import { noDeviceForm, proposalsTurnLine, tableModeOf, turnLine } from './TableCard';
 import { tableSpeakMs } from '@/lib/classroom/speakTime';
 import { getMainStatement } from '@/lib/store';
 import { noDeviceButtons, stepButtons, turnButtons } from './tableSheetTurn';
@@ -111,6 +111,7 @@ function currentLine(attrs: TableSheetPanelAttrs, table: ClassTable): m.Children
 		m('p.table-sheet__now', [
 			m('strong', t(tableStepKey(table, attrs.plenum))),
 			attrs.tableTalk ? ` · ${turnLine(table)}` : null,
+			tableModeOf(attrs) === 'proposals' ? ` · ${proposalsTurnLine(table)}` : null,
 		]),
 		m('p.table-sheet__question', question ? question.statement : t('console.no_question_yet')),
 		timer.kind === 'running'

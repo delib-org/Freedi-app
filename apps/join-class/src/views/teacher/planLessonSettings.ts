@@ -1,9 +1,9 @@
 import m from 'mithril';
-import { allowOwnQuestionsOf, speakSecondsOf } from '@freedi/shared-types';
+import { allowOwnQuestionsOf, proposalsTurnsOf, speakSecondsOf } from '@freedi/shared-types';
 import { getMainStatement } from '@/lib/store';
 import { dropDraft, getDraft, getMainId, isSaving, runSave, setDraft } from './planController';
 import { saveLessonDetails } from './planApi';
-import { OwnQuestionsSwitch, SpeakTimeSelect } from './TableSettingsControls';
+import { OwnQuestionsSwitch, ProposalsTurnsSelect, SpeakTimeSelect } from './TableSettingsControls';
 
 /**
  * The plan screen's table-talk settings (IA 25): saved on the main statement
@@ -46,19 +46,24 @@ export function ownQuestionsControl(questionCount: number): m.Children {
 }
 
 export const SPEAK_SECONDS_KEY = 'lesson:speakSeconds';
+export const PROPOSALS_TURNS_KEY = 'lesson:proposalsTurns';
 
-/** The select as drawn: the teacher's pending choice, else what is saved (default 2 minutes). */
-export function speakSecondsShown(): number {
-	const saved = speakSecondsOf(getMainStatement());
-	const draft = getDraft(SPEAK_SECONDS_KEY);
+/** A numeric select as drawn: the teacher's pending choice, else what is saved. */
+function numberShown(key: string, saved: number): number {
+	const draft = getDraft(key);
 	if (draft === undefined) return saved;
-	if (Number(draft) === saved && !isSaving(SPEAK_SECONDS_KEY)) {
-		dropDraft(SPEAK_SECONDS_KEY);
+	if (Number(draft) === saved && !isSaving(key)) {
+		dropDraft(key);
 
 		return saved;
 	}
 
 	return Number(draft);
+}
+
+/** The speaking time as drawn (default 2 minutes). */
+export function speakSecondsShown(): number {
+	return numberShown(SPEAK_SECONDS_KEY, speakSecondsOf(getMainStatement()));
 }
 
 export function commitSpeakSeconds(seconds: number): void {
@@ -74,5 +79,26 @@ export function speakTimeControl(): m.Children {
 		scope: 'plan',
 		seconds: speakSecondsShown(),
 		onChange: commitSpeakSeconds,
+	});
+}
+
+/** The turns at Proposals as drawn (default 1). */
+export function proposalsTurnsShown(): number {
+	return numberShown(PROPOSALS_TURNS_KEY, proposalsTurnsOf(getMainStatement()));
+}
+
+export function commitProposalsTurns(turns: number): void {
+	setDraft(PROPOSALS_TURNS_KEY, String(turns));
+	runSave(PROPOSALS_TURNS_KEY, 'save proposals turns', () =>
+		saveLessonDetails(getMainId(), { proposalsTurns: turns }),
+	);
+}
+
+/** "Turns at Proposals", in the lesson details (IA 25.6). */
+export function proposalsTurnsControl(): m.Children {
+	return m(ProposalsTurnsSelect, {
+		scope: 'plan',
+		turns: proposalsTurnsShown(),
+		onChange: commitProposalsTurns,
 	});
 }
