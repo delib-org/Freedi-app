@@ -6,11 +6,13 @@
 import vote from './vote/de';
 import allProposals from './allProposals/de'; // >>> allProposals
 import reply from './reply/de';
+import look from './look/de';
 
 const de: Record<string, string> = {
 	...vote,
 	...allProposals, // >>> allProposals
 	...reply,
+	...look,
 	'step.waiting': 'Warten auf die Lehrkraft',
 	'step.opening': 'Einstieg',
 	'step.side': 'Seite wählen',

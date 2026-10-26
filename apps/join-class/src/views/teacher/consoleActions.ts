@@ -1,6 +1,7 @@
 import type {
 	ClassTableAction,
 	ClassVoteOrder,
+	LessonLook,
 	LessonStatusAction,
 	Statement,
 	TableStep,
@@ -175,6 +176,15 @@ export function setTableSetting(patch: TableSettingsPatch): Promise<boolean> {
 	return act(`tableSetting:${field}`, t('console.tables_group'), () =>
 		setMainStatementSetting(consoleState.mainId, {
 			statementSettings: patch,
+		} as Partial<Statement>),
+	);
+}
+
+/** The lesson's look (game / solid); students and the projector follow it live. */
+export function setLessonLook(look: LessonLook): Promise<boolean> {
+	return act('lessonLook', t('console.look.label'), () =>
+		setMainStatementSetting(consoleState.mainId, {
+			statementSettings: { lessonLook: look },
 		} as Partial<Statement>),
 	);
 }

@@ -86,3 +86,33 @@
     font: inherit;
   }
 }
+
+// The lesson look (views/teacher/LessonLookSettings.ts): a two-option radio group.
+.table-settings__choices {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--space-lg);
+}
+
+.table-settings__choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.table-settings__radio {
+  inline-size: 24px;
+  block-size: 24px;
+  margin: 0;
+  accent-color: var(--terra-600);
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+// Under a fieldset with no grid, the help line runs the full width.
+.table-settings__help--block {
+  grid-column: auto;
+}

@@ -286,6 +286,15 @@ export type LessonStepKey = InferOutput<typeof LessonStepKeySchema>;
 export const LessonStatusSchema = picklist(['live', 'paused', 'open', 'ended']);
 export type LessonStatus = InferOutput<typeof LessonStatusSchema>;
 
+/**
+ * join-class lesson look. 'game' (the default, absent) = chunky edges, a progress
+ * path and one-shot win stamps; 'solid' = the calm look the app had before.
+ * A field of its own rather than a new ThemeStyle value: a new picklist value
+ * would break the strict parse of apps already deployed.
+ */
+export const LessonLookSchema = picklist(['game', 'solid']);
+export type LessonLook = InferOutput<typeof LessonLookSchema>;
+
 export const LessonPlanSchema = object({
 	steps: array(LessonStepKeySchema),
 	stepIndex: number(),
@@ -451,6 +460,8 @@ export const StatementSettingsSchema = object({
 	speakSeconds: optional(number()),
 	// join-class: turns at Proposals, everyone speaks once per turn (one of PROPOSALS_TURNS_CHOICES). Absent = DEFAULT_PROPOSALS_TURNS. Main statement only.
 	proposalsTurns: optional(number()),
+	// join-class: the lesson's look, followed live by students and the projector. Absent = 'game'. Main statement only.
+	lessonLook: optional(LessonLookSchema),
 });
 
 

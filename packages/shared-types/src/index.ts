@@ -302,6 +302,7 @@ export type {
   LessonStepKey,
   LessonPlan,
   LessonStatus,
+  LessonLook,
   ClassRole
 } from "./models/statement/StatementSettings";
 
@@ -330,6 +331,7 @@ export {
   LessonStepKeySchema,
   LessonPlanSchema,
   LessonStatusSchema,
+  LessonLookSchema,
   ClassRoleSchema
 } from "./models/statement/StatementSettings";
 
@@ -1085,6 +1087,7 @@ export {
   askerMayAnswer,
   choosing,
   allowOwnQuestionsOf,
+  lessonLookOf,
   noQuestionsLeft,
   speakSecondsOf,
   proposalsTurnsOf,

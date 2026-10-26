@@ -6,11 +6,13 @@
 import vote from './vote/he';
 import allProposals from './allProposals/he'; // >>> allProposals
 import reply from './reply/he';
+import look from './look/he';
 
 const he: Record<string, string> = {
 	...vote,
 	...allProposals, // >>> allProposals
 	...reply,
+	...look,
 	'step.waiting': 'ממתינים למורה',
 	'step.opening': 'פתיחה',
 	'step.side': 'בחירת צד',

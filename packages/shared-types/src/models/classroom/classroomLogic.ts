@@ -8,15 +8,25 @@ import {
 	Camp,
 	ClassTable,
 } from './classroomModel';
-import type { LessonPlan, LessonStatus, StatementSettings } from '../statement/StatementSettings';
+import type {
+	LessonLook,
+	LessonPlan,
+	LessonStatus,
+	StatementSettings,
+} from '../statement/StatementSettings';
 import type { LessonStatusAction } from './classroomCallables';
 
 /** What the lesson-setting readers need of the main statement (a `Statement` fits). */
 export interface LessonSettingsHolder {
 	statementSettings?: Pick<
 		StatementSettings,
-		'allowOwnQuestions' | 'speakSeconds' | 'proposalsTurns'
+		'allowOwnQuestions' | 'speakSeconds' | 'proposalsTurns' | 'lessonLook'
 	> | null;
+}
+
+/** The lesson's look: 'solid' only when the teacher chose it; absent or unknown = 'game'. */
+export function lessonLookOf(main: LessonSettingsHolder | null | undefined): LessonLook {
+	return main?.statementSettings?.lessonLook === 'solid' ? 'solid' : 'game';
 }
 
 /** May students add a question of their own at Table talk? Absent = yes (IA 25.2). */

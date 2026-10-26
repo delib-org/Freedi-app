@@ -25,6 +25,7 @@ import {
 	createStatementObject,
 } from '@freedi/shared-types';
 import { checkAdminStatus, isAdmin } from './admin';
+import { applyLessonLookOf } from './lessonLook';
 import {
 	getEffectiveEvaluation as _getEffectiveEvaluation,
 	setEvaluation as _setEvaluation,
@@ -172,6 +173,9 @@ export function applyThemeStyleToDOM(): void {
 	} else {
 		root.removeAttribute('data-theme');
 	}
+	// The look is lesson-wide, so it is read from the main statement; a screen that
+	// loaded only one question falls back to it.
+	applyLessonLookOf(root, mainStatement ?? question);
 }
 
 /** Admin "lead the session" from inside the Join app: writes

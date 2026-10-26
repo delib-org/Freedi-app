@@ -5,6 +5,7 @@ import { db, doc, collection, query, where } from '../firebase';
 import type { Unsubscribe } from '../firebase';
 import { resilientOnSnapshot } from '../resilientListeners';
 import { getChallengeQuestion } from '../lessonCore';
+import { applyLessonLookOf } from '../lessonLook';
 import { listenIntroBlocks } from './introData';
 import type { SavedBlock } from './introText';
 
@@ -84,6 +85,8 @@ export function watchProjector(mainId: string): () => void {
 		doc(db, Collections.statements, mainId),
 		(snap) => {
 			projectorData.main = snap.exists() ? (snap.data() as Statement) : null;
+			// The projector has its own listener on the lesson, so it follows the look here.
+			applyLessonLookOf(document.documentElement, projectorData.main);
 			m.redraw();
 		},
 		onError('main'),
