@@ -2015,3 +2015,16 @@ The card stays anonymous (§19.4). A reply shows the replier's class name; the a
 
 ### 22.9 Deferred
 An "the proposal was edited" marker inside replies; marking replies helpful / an AI redraft; replies on Table talk answers.
+
+## 26. The vote bar: vote status and voted count (Tal, 2026-10-26, card e3EMqQP2)
+
+The Vote step's control bar gets one name per concept:
+
+| Concept | Hebrew | English | Where |
+|---|---|---|---|
+| Vote status | מצב ההצבעה | Vote status | A chip with an icon and a word: not open (טרם נפתחה), open (פתוחה), paused (מושהית), closed (נסגרה). Announced politely to screen readers. |
+| Voted count | "4 מתוך 12 הצביעו" | "4 of 12 voted" | Next to the chip once the vote is open; becomes "כולם הצביעו" with a check when everyone present has voted. Not announced live. |
+
+Bar order: status (chip + count), ballot controls, order of the proposals (§21), reset at the end edge.
+
+**Exception to the band rule.** §5 of the console says the switch band never has a primary button. In the vote bar the next sensible ballot action is primary: "פתיחת ההצבעה" before the vote opens, "סגירת ההצבעה" while it is open, "המשך ההצבעה" while it is paused. The other ballot action is secondary, and there is no ballot control once the vote is closed. Reset stays danger-outline, disabled until the vote is closed or paused ("יש לסגור או להשהות קודם").

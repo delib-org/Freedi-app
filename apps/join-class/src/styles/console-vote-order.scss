@@ -10,6 +10,9 @@
   gap: var(--space-sm);
 
   &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
     font-weight: var(--font-weight-semibold);
     color: var(--ink-muted);
   }
@@ -44,7 +47,9 @@
     display: inline-flex;
     align-items: center;
     min-height: 40px;
-    padding: 0 var(--space-lg);
+    gap: var(--space-xs);
+    padding: 0 var(--space-md);
+    border-block-end: 2px solid transparent;
     font-weight: var(--font-weight-semibold);
     color: var(--ink-muted);
     border-radius: var(--radius-full);
@@ -55,6 +60,7 @@
     color: var(--ink);
     background: var(--bg-card);
     box-shadow: var(--shadow-xs);
+    border-block-end-color: var(--teal-600);
   }
 
   &__input:focus-visible + &__text {

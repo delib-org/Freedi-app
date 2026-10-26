@@ -4,7 +4,7 @@ import { t } from '@/lib/i18n';
 import { ALL_TABLES_RATE_STEPS } from '@/lib/classroom/consoleHelpers';
 import type { IntroVideo } from '@/lib/classroom/introVideos';
 import { ProjectorPick } from './ProjectorPick';
-import { VoteOrderSwitch } from './VoteOrderSwitch';
+import { VoteBar } from './VoteBar';
 import { isBusy } from './consoleState';
 import type { ConsoleView } from './consoleState';
 
@@ -30,6 +30,9 @@ export interface SwitchBandAttrs {
 	// >>> voteSummary BEGIN
 	/** Every student present has voted (the ballot is still the teacher's to close). */
 	allVoted?: boolean;
+	/** Students with a vote on the running ballot, and students in the room. */
+	votedCount?: number;
+	presentCount?: number;
 	// >>> voteSummary END
 	/** The lesson's introduction videos and the one the projector shows (Opening step). */
 	introVideos: readonly IntroVideo[];
@@ -155,45 +158,23 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 	// >>> allProposals END
 	if (stepKey === 'vote') {
 		actions.push(
-			action(
-				t('console.open_vote'),
-				'freeze',
-				attrs.onFreeze,
-				attrs.ballotFrozen || attrs.ballotClosed,
-			),
-			action(
-				t(attrs.ballotPaused ? 'console.resume_vote' : 'console.pause_vote'),
-				'pauseVote',
-				() => attrs.onPauseVote(!attrs.ballotPaused),
-				!attrs.ballotFrozen || attrs.ballotClosed,
-			),
-			action(
-				t('console.close_vote'),
-				'close',
-				attrs.onCloseVote,
-				!attrs.ballotFrozen || attrs.ballotClosed,
-			),
-			m(VoteOrderSwitch, {
-				value: attrs.voteOrder,
-				disabled: !attrs.hasChallenge || isBusy('voteDisplay:order'),
-				onChange: attrs.onVoteOrder,
+			m(VoteBar, {
+				held: heldNow,
+				ended: endedNow,
+				ballotFrozen: attrs.ballotFrozen,
+				ballotPaused: attrs.ballotPaused,
+				ballotClosed: attrs.ballotClosed,
+				votedCount: attrs.votedCount ?? 0,
+				presentCount: attrs.presentCount ?? 0,
+				allVoted: attrs.allVoted === true,
+				hasChallenge: attrs.hasChallenge,
+				voteOrder: attrs.voteOrder,
+				onVoteOrder: attrs.onVoteOrder,
+				onFreeze: attrs.onFreeze,
+				onPauseVote: attrs.onPauseVote,
+				onCloseVote: attrs.onCloseVote,
+				onResetVote: attrs.onResetVote,
 			}),
-			// >>> voteSummary BEGIN
-			attrs.allVoted && !attrs.ballotClosed
-				? m(
-						'p.switch-band__note',
-						{ role: 'status', 'data-testid': 'console-all-voted' },
-						t('console.all_voted'),
-					)
-				: null,
-			// >>> voteSummary END
-			// A running vote is closed or paused first; then it can be wiped and voted again.
-			resetAction(
-				t('console.reset_vote'),
-				'reset:vote',
-				attrs.onResetVote,
-				!(attrs.ballotClosed || attrs.ballotPaused),
-			),
 		);
 	}
 
