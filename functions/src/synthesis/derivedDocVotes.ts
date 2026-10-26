@@ -1,4 +1,4 @@
-import { getFirestore, type Firestore } from 'firebase-admin/firestore';
+import { getFirestore, type Firestore, type DocumentSnapshot } from 'firebase-admin/firestore';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { Collections, StatementType, type Statement } from '@freedi/shared-types';
@@ -6,93 +6,87 @@ import { isDerived, isManualCluster } from './derivedDocs';
 
 /** Firestore `in` queries accept at most 30 values. */
 export const VOTE_CHECK_IN_BATCH_SIZE = 30;
-/** How many `in` batches run at once. */
-export const VOTE_CHECK_PARALLEL_BATCHES = 5;
+/** Evaluations read per page while looking for the first real vote. */
+export const VOTE_CHECK_PAGE_SIZE = 200;
 /** Machine-readable reason carried in `HttpsError.details`. */
 export const DERIVED_DOCS_HAVE_VOTES_REASON = 'derived-docs-have-votes';
 
-export interface DerivedDocVoteSummary {
-	/** Derived docs that carry at least one direct vote. */
-	votedDocCount: number;
-	/** Total direct votes across those docs. */
-	voteCount: number;
-}
-
-export interface DerivedDocsHaveVotesDetails extends DerivedDocVoteSummary {
+export interface DerivedDocsHaveVotesDetails {
 	reason: typeof DERIVED_DOCS_HAVE_VOTES_REASON;
+	hasVotes: true;
 }
 
-/**
- * Counts direct votes on the synthesis output (synth, topic, claim cluster;
- * visible or hidden) under a question.
- *
- * A direct vote is an evaluation whose `statementId` is the derived doc's id and
- * that was cast by a participant. Evaluations carrying `migratedAt` are copies
- * made when a synth absorbed its members' votes: the originals keep their own, so
- * dissolving loses nothing and they are not counted. Manual clusters are
- * preserved by the dissolve and are skipped too.
- */
-export async function countDirectVotesOnDerivedDocs(
-	questionId: string,
-	db: Firestore = getFirestore(),
-): Promise<DerivedDocVoteSummary> {
+/** Ids of the synthesis output (synth, topic, claim cluster; visible or hidden) the dissolve would delete. */
+async function loadDissolvableDerivedIds(questionId: string, db: Firestore): Promise<string[]> {
 	const optionsSnap = await db
 		.collection(Collections.statements)
 		.where('parentId', '==', questionId)
 		.where('statementType', '==', StatementType.option)
 		.get();
-	const derivedIds = optionsSnap.docs
+
+	return optionsSnap.docs
 		.map((d) => d.data() as Statement)
 		.filter((s) => isDerived(s) && !isManualCluster(s))
 		.map((s) => s.statementId);
-
-	const batches: string[][] = [];
-	for (let i = 0; i < derivedIds.length; i += VOTE_CHECK_IN_BATCH_SIZE) {
-		batches.push(derivedIds.slice(i, i + VOTE_CHECK_IN_BATCH_SIZE));
-	}
-
-	const votesByDoc = new Map<string, number>();
-	for (let i = 0; i < batches.length; i += VOTE_CHECK_PARALLEL_BATCHES) {
-		const slice = batches.slice(i, i + VOTE_CHECK_PARALLEL_BATCHES);
-		const snaps = await Promise.all(
-			slice.map((ids) =>
-				db
-					.collection(Collections.evaluations)
-					.where('statementId', 'in', ids)
-					.select('statementId', 'migratedAt')
-					.get(),
-			),
-		);
-		for (const snap of snaps) {
-			for (const doc of snap.docs) {
-				const data = doc.data() as { statementId: string; migratedAt?: number };
-				if (typeof data.migratedAt === 'number') continue;
-				votesByDoc.set(data.statementId, (votesByDoc.get(data.statementId) ?? 0) + 1);
-			}
-		}
-	}
-
-	let voteCount = 0;
-	votesByDoc.forEach((n) => {
-		voteCount += n;
-	});
-
-	return { votedDocCount: votesByDoc.size, voteCount };
 }
 
-/** Throws `failed-precondition` (reason `derived-docs-have-votes`) when any derived doc has direct votes. */
+/** Pages through the evaluations of up to 30 docs; true at the first non-migrated one. */
+async function batchHasDirectVote(db: Firestore, ids: string[]): Promise<boolean> {
+	let cursor: DocumentSnapshot | undefined;
+	for (;;) {
+		let query = db
+			.collection(Collections.evaluations)
+			.where('statementId', 'in', ids)
+			.select('migratedAt')
+			.limit(VOTE_CHECK_PAGE_SIZE);
+		if (cursor) query = query.startAfter(cursor);
+		const snap = await query.get();
+
+		const found = snap.docs.some(
+			(doc) => typeof (doc.data() as { migratedAt?: unknown }).migratedAt !== 'number',
+		);
+		if (found) return true;
+		if (snap.docs.length < VOTE_CHECK_PAGE_SIZE) return false;
+		cursor = snap.docs[snap.docs.length - 1];
+	}
+}
+
+/**
+ * True when any derived doc under the question holds at least one direct vote:
+ * an evaluation whose `statementId` is the derived doc's id, cast by a
+ * participant. Evaluations carrying `migratedAt` are copies made when a synth
+ * absorbed its members' votes; the originals keep their own, so dissolving
+ * loses nothing and they are skipped. Manual clusters survive the dissolve and
+ * are skipped too.
+ *
+ * Stops reading at the first real vote, so a question with votes costs a page,
+ * not every evaluation on every synth.
+ */
+export async function hasDirectVotesOnDerivedDocs(
+	questionId: string,
+	db: Firestore = getFirestore(),
+): Promise<boolean> {
+	const derivedIds = await loadDissolvableDerivedIds(questionId, db);
+	for (let i = 0; i < derivedIds.length; i += VOTE_CHECK_IN_BATCH_SIZE) {
+		const ids = derivedIds.slice(i, i + VOTE_CHECK_IN_BATCH_SIZE);
+		if (await batchHasDirectVote(db, ids)) return true;
+	}
+
+	return false;
+}
+
+/** Throws `failed-precondition` (reason `derived-docs-have-votes`) when any derived doc has a direct vote. */
 export async function assertNoDirectVotesOnDerivedDocs(
 	questionId: string,
 	db: Firestore = getFirestore(),
 ): Promise<void> {
-	const summary = await countDirectVotesOnDerivedDocs(questionId, db);
-	if (summary.votedDocCount === 0) return;
+	if (!(await hasDirectVotesOnDerivedDocs(questionId, db))) return;
 
-	logger.info('derivedDocVotes.rebuildRefused', { questionId, ...summary });
+	logger.info('derivedDocVotes.rebuildRefused', { questionId });
 
 	const details: DerivedDocsHaveVotesDetails = {
 		reason: DERIVED_DOCS_HAVE_VOTES_REASON,
-		...summary,
+		hasVotes: true,
 	};
 	throw new HttpsError(
 		'failed-precondition',

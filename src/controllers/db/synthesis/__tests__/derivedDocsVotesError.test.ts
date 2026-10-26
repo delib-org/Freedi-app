@@ -5,7 +5,7 @@ describe('isDerivedDocsHaveVotesError', () => {
 		expect(
 			isDerivedDocsHaveVotesError({
 				code: 'functions/failed-precondition',
-				details: { reason: 'derived-docs-have-votes', votedDocCount: 2, voteCount: 5 },
+				details: { reason: 'derived-docs-have-votes', hasVotes: true },
 			}),
 		).toBe(true);
 	});

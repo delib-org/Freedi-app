@@ -1,6 +1,8 @@
 /**
- * Both rebuild callables (reCluster, globalCluster) must refuse BEFORE
- * dissolving when the question's merged ideas carry direct votes.
+ * Both rebuild callables (reCluster, globalCluster) rely on the single vote
+ * guard inside dissolveQuestionSynthesis (which refuses before any write): they
+ * must not run a second, duplicate check, and the refusal must reach the client
+ * unchanged.
  */
 
 class MockHttpsError extends Error {
@@ -34,7 +36,10 @@ jest.mock('../../pipeline/loadSynthesisSettings', () => ({
 }));
 jest.mock('../../queue/enqueue', () => ({ enqueueItem: jest.fn(), initProgressDoc: jest.fn() }));
 jest.mock('../../derivedDocs', () => ({ dissolveQuestionSynthesis: jest.fn() }));
-jest.mock('../../derivedDocVotes', () => ({ assertNoDirectVotesOnDerivedDocs: jest.fn() }));
+jest.mock('../../derivedDocVotes', () => ({
+	assertNoDirectVotesOnDerivedDocs: jest.fn(),
+	hasDirectVotesOnDerivedDocs: jest.fn(),
+}));
 jest.mock('../../bulkCluster', () => ({ cosineSimilarity: jest.fn(), meanVector: jest.fn() }));
 jest.mock('../../completeLinkage', () => ({ refineComponent: jest.fn() }));
 jest.mock('../../../services/verdict-cache-service', () => ({
@@ -49,7 +54,10 @@ jest.mock('../../../integrate/performIntegration', () => ({ performIntegration: 
 jest.mock('../../../condensation/aggregation', () => ({ recomputeClusterEvaluation: jest.fn() }));
 
 import { dissolveQuestionSynthesis } from '../../derivedDocs';
-import { assertNoDirectVotesOnDerivedDocs } from '../../derivedDocVotes';
+import {
+	assertNoDirectVotesOnDerivedDocs,
+	hasDirectVotesOnDerivedDocs,
+} from '../../derivedDocVotes';
 import { reCluster } from '../fn_reCluster';
 import { globalCluster } from '../fn_globalCluster';
 
@@ -67,8 +75,7 @@ const STOP = new Error('stop-after-dissolve');
 
 const refusal = new MockHttpsError('failed-precondition', 'blocked', {
 	reason: 'derived-docs-have-votes',
-	votedDocCount: 2,
-	voteCount: 7,
+	hasVotes: true,
 });
 
 describe.each(callables)('%s vote guard', (_name, handler) => {
@@ -76,22 +83,21 @@ describe.each(callables)('%s vote guard', (_name, handler) => {
 		jest.clearAllMocks();
 	});
 
-	it('refuses before dissolving when merged ideas have votes', async () => {
-		(assertNoDirectVotesOnDerivedDocs as jest.Mock).mockRejectedValueOnce(refusal);
+	it('passes the dissolve refusal to the client unchanged', async () => {
+		(dissolveQuestionSynthesis as jest.Mock).mockRejectedValueOnce(refusal);
 
 		await expect(handler(request)).rejects.toMatchObject({
 			code: 'failed-precondition',
-			details: { reason: 'derived-docs-have-votes', votedDocCount: 2, voteCount: 7 },
+			details: { reason: 'derived-docs-have-votes', hasVotes: true },
 		});
-		expect(assertNoDirectVotesOnDerivedDocs).toHaveBeenCalledWith('q1');
-		expect(dissolveQuestionSynthesis).not.toHaveBeenCalled();
 	});
 
-	it('goes on to dissolve when there are no votes', async () => {
-		(assertNoDirectVotesOnDerivedDocs as jest.Mock).mockResolvedValueOnce(undefined);
+	it('does not run its own vote check on top of the dissolve guard', async () => {
 		(dissolveQuestionSynthesis as jest.Mock).mockRejectedValueOnce(STOP);
 
 		await expect(handler(request)).rejects.toBe(STOP);
 		expect(dissolveQuestionSynthesis).toHaveBeenCalledWith('q1', { reversedByUserId: 'admin1' });
+		expect(assertNoDirectVotesOnDerivedDocs).not.toHaveBeenCalled();
+		expect(hasDirectVotesOnDerivedDocs).not.toHaveBeenCalled();
 	});
 });
