@@ -199,6 +199,7 @@ const he: Record<string, string> = {
 	'turn.others_first': 'תנו לאחרים לענות קודם',
 	'turn.who_answers': 'מי עונה עכשיו?',
 	'turn.answer': 'אני רוצה לענות',
+	'turn.propose': 'אני רוצה להציע פתרון',
 	'turn.pass_answer': 'אני רוצה לוותר',
 	'turn.answer_mine': 'הדקה שלכם',
 	'turn.finish': 'סיימתי',

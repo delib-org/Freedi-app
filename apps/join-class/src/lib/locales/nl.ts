@@ -199,6 +199,7 @@ const nl: Record<string, string> = {
 	'turn.others_first': 'Laat eerst de anderen antwoorden',
 	'turn.who_answers': 'Wie antwoordt nu?',
 	'turn.answer': 'Ik wil antwoorden',
+	'turn.propose': 'Ik wil een oplossing voorstellen',
 	'turn.pass_answer': 'Ik wil overslaan',
 	'turn.answer_mine': 'Jullie minuut',
 	'turn.finish': 'Klaar',

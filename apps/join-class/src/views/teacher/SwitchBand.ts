@@ -1,9 +1,10 @@
 import m from 'mithril';
-import type { LessonStepKey } from '@freedi/shared-types';
+import type { ClassVoteOrder, LessonStepKey } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { ALL_TABLES_RATE_STEPS } from '@/lib/classroom/consoleHelpers';
 import type { IntroVideo } from '@/lib/classroom/introVideos';
 import { ProjectorPick } from './ProjectorPick';
+import { VoteOrderSwitch } from './VoteOrderSwitch';
 import { isBusy } from './consoleState';
 import type { ConsoleView } from './consoleState';
 
@@ -38,6 +39,9 @@ export interface SwitchBandAttrs {
 	onAllToRate: () => void;
 	onPlenum: () => void;
 	onFreeze: () => void;
+	/** The order of the proposals on every phone and the projector (Vote step). */
+	voteOrder: ClassVoteOrder;
+	onVoteOrder: (order: ClassVoteOrder) => void;
 	onPauseVote: (paused: boolean) => void;
 	onCloseVote: () => void;
 	onResetTurns: () => void;
@@ -169,6 +173,11 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 				attrs.onCloseVote,
 				!attrs.ballotFrozen || attrs.ballotClosed,
 			),
+			m(VoteOrderSwitch, {
+				value: attrs.voteOrder,
+				disabled: !attrs.hasChallenge || isBusy('voteDisplay:order'),
+				onChange: attrs.onVoteOrder,
+			}),
 			// >>> voteSummary BEGIN
 			attrs.allVoted && !attrs.ballotClosed
 				? m(

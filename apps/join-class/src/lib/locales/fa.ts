@@ -191,6 +191,7 @@ const fa: Record<string, string> = {
 	'turn.others_first': 'بگذارید اول دیگران پاسخ دهند',
 	'turn.who_answers': 'چه کسی پاسخ می‌دهد؟',
 	'turn.answer': 'می‌خواهم پاسخ بدهم',
+	'turn.propose': 'می‌خواهم یک راه‌حل پیشنهاد بدهم',
 	'turn.pass_answer': 'می‌خواهم صرف‌نظر کنم',
 	'turn.answer_mine': 'دقیقهٔ شما',
 	'turn.finish': 'تمام شد',

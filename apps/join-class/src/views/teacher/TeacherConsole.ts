@@ -16,7 +16,7 @@ import {
 	stepLabel,
 } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
-import type { LessonStatus, Statement } from '@freedi/shared-types';
+import type { ClassVoteOrder, LessonStatus, Statement } from '@freedi/shared-types';
 import { classState } from '@/lib/classroom/classState';
 import { gateOf } from '@/lib/classroom/classSettings';
 import {
@@ -28,7 +28,7 @@ import {
 	rosterStudents,
 	tablesAreDone,
 } from '@/lib/classroom/consoleHelpers';
-import { voteResults } from '@/lib/classroom/voteResults';
+import { voteOrderOf, voteResults } from '@/lib/classroom/voteResults';
 import { everyoneVoted } from '@/lib/classroom/voteSummary';
 import { groupWrittenTexts } from '@/lib/classroom/textsHelpers';
 import { QRShare } from '@/components/QRShare';
@@ -43,6 +43,7 @@ import {
 	goToStep,
 	pauseBallot,
 	pickProjectorVideo,
+	setVoteOrder,
 	startPlenum,
 } from './consoleActions';
 import { releaseConsole, retainConsole, session } from './consoleSession';
@@ -346,6 +347,10 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				ballotFrozen: isBallotFrozen(challenge),
 				ballotPaused: isBallotPaused(challenge),
 				ballotClosed: isBallotClosed(challenge),
+				voteOrder: voteOrderOf(challenge),
+				onVoteOrder: (order: ClassVoteOrder) => {
+					if (challenge) void setVoteOrder(challenge.statementId, order);
+				},
 				// >>> voteSummary BEGIN
 				allVoted: allVotedOn(challenge),
 				// >>> voteSummary END

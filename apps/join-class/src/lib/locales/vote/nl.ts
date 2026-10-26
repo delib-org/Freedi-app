@@ -11,10 +11,8 @@ const vote: Record<string, string> = {
 	'voting.pick_one': 'Kies één voorstel',
 	'voting.waiting': 'Wachten tot de leraar de stemming opent',
 	'voting.empty': 'Niets om op te stemmen',
-	'voting.vote': 'Stemmen',
-	'voting.voted': 'Jullie hebben gestemd',
-	'voting.change': 'Stem wijzigen',
 	'voting.saving': 'Opslaan…',
+	'voting.counted': 'Jullie stem is geteld',
 	'voting.closed': 'De stemming is gesloten',
 	'voting.failed': 'De stem is niet opgeslagen. Probeer opnieuw',
 	'voting.paused': 'De stemming is gepauzeerd',
@@ -43,14 +41,8 @@ const vote: Record<string, string> = {
 	'console.all_voted': 'Iedereen heeft gestemd',
 	'console.vote_order': 'Volgorde van de voorstellen',
 	'console.vote_order_consensus': 'Op beoordeling',
-	'console.vote_order_consensus_help':
-		'De voorstellen waar de klas het meest over eens is staan bovenaan, op telefoons en de beamer',
 	'console.vote_order_votes': 'Op aantal stemmen',
-	'console.vote_order_votes_help':
-		'Het voorstel met de meeste stemmen schuift tijdens de stemming naar boven, op telefoons en de beamer',
 	'console.vote_order_random': 'Willekeurige volgorde',
-	'console.vote_order_random_help':
-		'Iedereen ziet dezelfde volgorde en die verandert niet tijdens de stemming',
 	// >>> voteSummary END
 };
 
