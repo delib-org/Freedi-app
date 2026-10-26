@@ -42,6 +42,12 @@ const vote: Record<string, string> = {
 	'console.vote_order_consensus': 'לפי הדירוגים',
 	'console.vote_order_votes': 'לפי מספר הקולות',
 	'console.vote_order_random': 'סדר אקראי',
+	'console.vote_status_not_open': 'ההצבעה טרם נפתחה',
+	'console.vote_status_open': 'ההצבעה פתוחה',
+	'console.vote_status_paused': 'ההצבעה מושהית',
+	'console.vote_status_closed': 'ההצבעה נסגרה',
+	'console.vote_progress': '{{voted}} מתוך {{present}} הצביעו',
+	'console.vote_reset_hint': 'יש לסגור או להשהות קודם',
 	// >>> voteSummary END
 };
 

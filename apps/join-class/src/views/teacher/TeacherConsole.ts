@@ -95,17 +95,22 @@ const SIDE_STEP_INDEX = 2;
 let showQr = false;
 
 // >>> voteSummary BEGIN
-/** Every student in the room has a vote on the running ballot. */
-function allVotedOn(challenge: Statement | null): boolean {
+/** Votes cast on the running ballot, and the students in the room. */
+function voteCountsOn(challenge: Statement | null): { voted: number; present: number } {
 	const ids = challenge?.statementSettings?.ballot?.candidateIds ?? [];
 	const voted = Object.values(voteResults(ids, challenge?.selections)).reduce(
 		(sum, result) => sum + result.count,
 		0,
 	);
 
-	return (
-		isBallotFrozen(challenge) && everyoneVoted(voted, rosterStudents(classState.roster).length)
-	);
+	return { voted, present: rosterStudents(classState.roster).length };
+}
+
+/** Every student in the room has a vote on the running ballot. */
+function allVotedOn(challenge: Statement | null): boolean {
+	const { voted, present } = voteCountsOn(challenge);
+
+	return isBallotFrozen(challenge) && everyoneVoted(voted, present);
 }
 // >>> voteSummary END
 
@@ -353,6 +358,8 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				},
 				// >>> voteSummary BEGIN
 				allVoted: allVotedOn(challenge),
+				votedCount: voteCountsOn(challenge).voted,
+				presentCount: voteCountsOn(challenge).present,
 				// >>> voteSummary END
 				introVideos: introVideosOf(main),
 				projectorVideoId: projectorVideoOf(main)?.id ?? null,

@@ -43,6 +43,12 @@ const vote: Record<string, string> = {
 	'console.vote_order_consensus': 'By the ratings',
 	'console.vote_order_votes': 'By the number of votes',
 	'console.vote_order_random': 'Random order',
+	'console.vote_status_not_open': 'Not open',
+	'console.vote_status_open': 'Voting is open',
+	'console.vote_status_paused': 'Voting is paused',
+	'console.vote_status_closed': 'Voting is closed',
+	'console.vote_progress': '{{voted}} of {{present}} voted',
+	'console.vote_reset_hint': 'Close or pause the vote first',
 	// >>> voteSummary END
 };
 

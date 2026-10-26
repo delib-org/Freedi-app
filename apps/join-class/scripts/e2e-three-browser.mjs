@@ -458,13 +458,13 @@ async function phaseVote() {
 		check(`vote: ${phone.name} has no vote cards before the teacher opens the vote`, !(await has(phone.page, 'vote-option')));
 	}
 	check('vote: before the vote opens the projector says it is not open yet', (await text(projector.page, '.projector-empty')).length > 0);
-	check('vote: console: pause and close are disabled before opening', (await teacher.page.getByTestId('console-pause-vote').isDisabled()) && (await teacher.page.getByTestId('console-close-vote').isDisabled()));
+	check('vote: console: only "open the vote" is offered before opening (no pause, no close)', (await teacher.page.getByTestId('console-pause-vote').count()) === 0 && (await teacher.page.getByTestId('console-close-vote').count()) === 0);
 	await (await byId(teacher.page, 'console-freeze-vote')).click();
 	for (const phone of phones) await byId(phone.page, 'vote-status');
 	const buttonsOk = await eventually(
-		async () => (await teacher.page.getByTestId('console-freeze-vote').isDisabled()) && !(await teacher.page.getByTestId('console-pause-vote').isDisabled()),
+		async () => (await teacher.page.getByTestId('console-freeze-vote').count()) === 0 && !(await teacher.page.getByTestId('console-pause-vote').isDisabled()),
 	);
-	check('vote: after opening, the open button is disabled and pause is enabled', buttonsOk === true);
+	check('vote: after opening, the open button is gone and pause is enabled', buttonsOk === true);
 	await snapAll('vote-open');
 	check('vote: the projector shows the open gate once the vote is open', (await projector.page.locator('.gate-stage--open').count()) === 1);
 	const ballot = (await challengeData()).statementSettings.ballot;
@@ -535,7 +535,7 @@ async function phaseVote() {
 	check('vote: closed: the rules refuse a vote', refusedClosed === 'permission-denied', refusedClosed);
 	check('vote: closed: the instruction no longer says "choose one proposal"', !(await bodyText(A.page)).includes('בחרו הצעה אחת') && (await bodyText(A.page)).includes('ההצבעה נסגרה. ממתינים לסיכום'), await text(A.page, 'h1.frame__instruction'));
 	check('vote: closed: the projector says the vote is closed', (await text(projector.page, '.projector-vote-status')) === 'ההצבעה נסגרה', await text(projector.page, '.projector-vote-status'));
-	check('vote: closed: the teacher buttons are all off', (await teacher.page.getByTestId('console-freeze-vote').isDisabled()) && (await teacher.page.getByTestId('console-pause-vote').isDisabled()) && (await teacher.page.getByTestId('console-close-vote').isDisabled()));
+	check('vote: closed: the teacher has no ballot buttons left', (await teacher.page.getByTestId('console-freeze-vote').count()) === 0 && (await teacher.page.getByTestId('console-pause-vote').count()) === 0 && (await teacher.page.getByTestId('console-close-vote').count()) === 0);
 	await snapAll('vote-closed');
 }
 

@@ -45,6 +45,12 @@ const vote: Record<string, string> = {
 	'console.vote_order_consensus': 'Nach den Bewertungen',
 	'console.vote_order_votes': 'Nach Anzahl der Stimmen',
 	'console.vote_order_random': 'Zufällige Reihenfolge',
+	'console.vote_status_not_open': 'Noch nicht geöffnet',
+	'console.vote_status_open': 'Abstimmung offen',
+	'console.vote_status_paused': 'Abstimmung pausiert',
+	'console.vote_status_closed': 'Abstimmung geschlossen',
+	'console.vote_progress': '{{voted}} von {{present}} haben abgestimmt',
+	'console.vote_reset_hint': 'Zuerst die Abstimmung schließen oder pausieren',
 	// >>> voteSummary END
 };
 
