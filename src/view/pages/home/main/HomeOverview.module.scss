@@ -255,6 +255,19 @@
 		overflow-wrap: anywhere;
 	}
 
+	// Chat-list style preview of the newest reply, clamped to two lines.
+	&__reply {
+		display: -webkit-box;
+		overflow: hidden;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		color: var(--text-body);
+		font-size: 0.8rem;
+		line-height: 1.35;
+		overflow-wrap: anywhere;
+	}
+
 	&__meta {
 		color: var(--text-meta);
 		font-size: 0.72rem;
