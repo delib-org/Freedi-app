@@ -183,5 +183,12 @@ $c3-count-size: clamp(6rem, 30vw, 8rem); // 96-128px, readable from 60cm
     color: var(--teal-700);
     font-weight: var(--font-weight-bold, 700);
   }
+
+  // The language check refused the words (IA 24.3).
+  &__refused {
+    margin: var(--space-xs) 0 0;
+    color: var(--warning);
+    font-weight: var(--font-weight-bold, 700);
+  }
 }
 

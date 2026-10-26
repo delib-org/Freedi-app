@@ -1,10 +1,12 @@
 import m from 'mithril';
 import { studentStageTitle } from '@/lib/studentStage';
 import '@/styles/student-frame.scss';
+import { ReplyNotice } from '@/views/student/replies/ReplyNotice';
 
 /**
  * The shared phone frame of every student classroom screen (UX §10 #1).
- * Props in, vnodes out: no store reads, no writes.
+ * Props in, vnodes out, apart from the reply notice line (IA 23.1), which
+ * reads the replies state itself.
  *
  *   headerLine   one status line, e.g. "Table 5 · round 2"
  *   stageName    optional override of the stage heading; by default the current
@@ -42,6 +44,8 @@ export const StudentFrame: m.Component<StudentFrameAttrs> = {
 				stageName ? m('h2.frame__stage', stageName) : null,
 				showLine ? m('span.frame__line', headerLine) : null,
 			]),
+			// The author's lasting "someone replied" line (IA 23.1); never on the face-down talk screen.
+			down ? null : m(ReplyNotice),
 			m('main.frame__content', [
 				ask ? m('p.frame__ask', { dir: 'auto', 'data-testid': 'proposals-ask' }, ask) : null,
 				instruction

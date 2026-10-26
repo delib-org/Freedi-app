@@ -10,6 +10,7 @@ import { checkAdminStatus, isAdmin } from '@/lib/admin';
 import { ensureClassCode } from '@/lib/lesson';
 import { markOpenedInClass } from '@/lib/joinSubscriptions';
 import { watchClass } from '@/lib/classroom/classState';
+import { watchLanguageFlags } from '@/lib/classroom/languageFlags';
 import type { Unsubscribe } from '@/lib/firebase';
 import { resetConsoleState, stopWatchingOptions } from './consoleState';
 
@@ -143,7 +144,11 @@ async function openConsole(mainId: string): Promise<void> {
 		if (mine !== generation) return;
 		await loadMainStatement(mainId);
 		if (mine !== generation) return;
-		stops = [subscribeMainStatement(mainId), subscribeSubQuestions(mainId)];
+		stops = [
+			subscribeMainStatement(mainId),
+			subscribeSubQuestions(mainId),
+			watchLanguageFlags(mainId),
+		];
 		stopClass = watchClass(mainId, 'teacher');
 		tick = window.setInterval(() => m.redraw(), TICK_MS);
 		session.status = 'ready';

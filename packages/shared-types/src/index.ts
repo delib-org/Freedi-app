@@ -1015,6 +1015,12 @@ export {
 // join-class: classroom lesson model, callables contract, pure logic
 export {
   CLASS_TABLES_COLLECTION,
+  CLASS_PROPOSAL_MAX_LENGTH,
+  CLASS_LANGUAGE_FLAGS_COLLECTION,
+  CLASS_LANGUAGE_FLAGS_KEPT,
+  CLASS_LANGUAGE_FLAG_TTL_DAYS,
+  ClassLanguageFlagKindSchema,
+  ClassLanguageFlagSchema,
   CLASS_BATCH_SIZE,
   SPEAK_SECONDS,
   DEFAULT_GATE,
@@ -1058,6 +1064,8 @@ export type {
   ClassVoteOrder,
   ClassReplyRole,
   ClassReplyMarker,
+  ClassLanguageFlag,
+  ClassLanguageFlagKind,
 } from './models/classroom/classroomModel';
 export {
   campOf,
@@ -1108,6 +1116,10 @@ export type {
   ClassSetItemHiddenResponse,
   ClassPostReplyRequest,
   ClassPostReplyResponse,
+  ClassPostProposalRequest,
+  ClassPostProposalResponse,
+  ClassEditProposalRequest,
+  ClassEditProposalResponse,
   ClassCloneLessonRequest,
   ClassCloneLessonResponse,
   ClassSetLessonStatusRequest,

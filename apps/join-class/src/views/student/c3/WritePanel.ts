@@ -9,6 +9,7 @@ import {
 	updateBroadcastText,
 } from '@/lib/liveDrafts';
 import { createClassOption, updateClassOption } from '@/lib/classroom/c3Data';
+import { changeProposal, newProposalId, sendProposal } from '@/lib/classroom/proposals';
 import { clearDraft, readDraft, writeDraft, type DraftKind } from '@/lib/classroom/c3Draft';
 import { myProposal, type FlowKind, type Mate } from '@/lib/classroom/c3Logic';
 import type { FlowFeed } from './FlowFeed';
@@ -45,6 +46,8 @@ class PanelState {
 	lastTyped: DraftKind = 'answer';
 	sending = false;
 	error: string | null = null;
+	/** The id of the proposal being sent; kept for a retry so it is never written twice. */
+	proposalId: string | null = null;
 }
 
 function answerScope(table: ClassTable): string {
@@ -136,7 +139,11 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 			return sentProposal?.statement ?? '';
 		};
 		const stateOf = (kind: DraftKind): WriteState => {
-			if (self.states[kind] === 'sending' || self.states[kind] === 'failed')
+			if (
+				self.states[kind] === 'sending' ||
+				self.states[kind] === 'failed' ||
+				self.states[kind] === 'refused'
+			)
 				return self.states[kind];
 			const sent = kind === 'answer' ? sentAnswer : sentProposal;
 			const edited = self.edits[kind];
@@ -189,15 +196,20 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 					}
 					clearDraft(answerScope(table), 'answer');
 				} else if (a.challenge) {
-					if (sentProposal) await updateClassOption(sentProposal.statementId, text);
-					else {
-						await createClassOption({
-							main: a.main,
-							parentId: a.challenge.statementId,
-							text,
-							marker: { tableId: table.tableId, shared: false, coAuthors: [] },
-						});
+					// The server checks the words first (IA 24.3): refused text is not published.
+					const mainId = a.main.statementId;
+					if (!self.proposalId) self.proposalId = newProposalId();
+					const result = sentProposal
+						? await changeProposal(mainId, sentProposal.statementId, text)
+						: await sendProposal(mainId, self.proposalId, text);
+					if (!result.ok) {
+						// Not sent: the text stays in the box and the student writes it again.
+						self.states[kind] = 'refused';
+						self.proposalId = null;
+
+						return;
 					}
+					self.proposalId = null;
 					clearDraft(proposalScope(a.main), 'proposal');
 				}
 				self.edits[kind] = undefined;
@@ -273,7 +285,7 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 			sentProposal?.hide ? m('p.write-panel__note', t('proposal.hidden_mine')) : null,
 			sentProposal && a.kind === 'proposals' && !sentProposal.hide
 				? [
-						m(ReplyEntry, { proposal: sentProposal, own: true, uid: a.uid }),
+						m(ReplyEntry, { proposal: sentProposal, uid: a.uid }),
 						m(PushAsk, { mainId: a.main.statementId }),
 					]
 				: null,
@@ -302,7 +314,7 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 							onclick: send,
 						},
 						busySend
-							? t('answer.sending')
+							? t(a.kind === 'tableTalk' ? 'answer.sending' : 'text.checking')
 							: t(a.kind === 'tableTalk' ? 'answer.send' : 'proposal.send'),
 					)
 				: null,

@@ -14,6 +14,10 @@ import type {
 	ClassMoveStudentRequest,
 	ClassPauseBallotRequest,
 	ClassPauseBallotResponse,
+	ClassEditProposalRequest,
+	ClassEditProposalResponse,
+	ClassPostProposalRequest,
+	ClassPostProposalResponse,
 	ClassPostReplyRequest,
 	ClassPostReplyResponse,
 	ClassMoveStudentResponse,
@@ -126,4 +130,18 @@ export function classSetItemHidden(
 /** A member or the teacher: one reply on a proposal (IA 22); hurtful words answer { ok: false }. */
 export function classPostReply(req: ClassPostReplyRequest): Promise<ClassPostReplyResponse> {
 	return call('classPostReply', req);
+}
+
+/** A student: their one proposal, after the language check (IA 24.3); hurtful words answer { ok: false }. */
+export function classPostProposal(
+	req: ClassPostProposalRequest,
+): Promise<ClassPostProposalResponse> {
+	return call('classPostProposal', req);
+}
+
+/** The proposal's writer: new text, same check, until the vote opens (IA 24.3). */
+export function classEditProposal(
+	req: ClassEditProposalRequest,
+): Promise<ClassEditProposalResponse> {
+	return call('classEditProposal', req);
 }

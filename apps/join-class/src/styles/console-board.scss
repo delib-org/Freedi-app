@@ -133,6 +133,22 @@
   }
 }
 
+// ---- the count on the "what they wrote" switch (IA 24.4) ---------------------------------------------
+
+.switch-band__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--space-lg);
+  margin-inline-start: var(--space-xs);
+  padding-inline: var(--space-xs);
+  border-radius: var(--radius-full);
+  background: var(--warning);
+  color: var(--text-inverse);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
 // ---- failure ----------------------------------------------------------------
 .console__failure {
   display: flex;

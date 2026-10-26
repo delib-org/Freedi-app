@@ -126,7 +126,7 @@ export function ownCardView(input: OwnCardInput): m.Children {
 		mine: true,
 		eyebrow: t('proposal.mine'),
 		text: input.mine.statement,
-		replies: m(ReplyEntry, { proposal: input.mine, own: true, uid: input.mine.creatorId }),
+		replies: m(ReplyEntry, { proposal: input.mine, uid: input.mine.creatorId }),
 		footer: input.canWrite
 			? m(
 					'button.btn.btn--secondary.btn--small',

@@ -1,13 +1,13 @@
 import m from 'mithril';
 import type { Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
+import { getUserState } from '@/lib/user';
 import { unreadLineKey, unreadReplies } from '@/lib/classroom/replyLogic';
 import { openReplies, replyUi } from '@/lib/classroom/replyUi';
 
 export interface ReplyEntryAttrs {
 	proposal: Statement;
-	/** The viewer wrote this proposal: the entry also says how many replies are new. */
-	own?: boolean;
+	/** The viewer; defaults to the signed-in user. The entry says how many replies are new on their own proposal. */
 	uid?: string | null;
 	/**
 	 * Opened from inside another sheet ("כל ההצעות"): `leave` closes that sheet
@@ -36,7 +36,11 @@ export function unreadOn(proposalId: string, uid: string | null | undefined): nu
 export const ReplyEntry: m.Component<ReplyEntryAttrs> = {
 	view({ attrs }) {
 		const { proposal } = attrs;
-		const unread = attrs.own ? unreadOn(proposal.statementId, attrs.uid) : 0;
+		// Own is decided here, from the proposal's writer, so every card (the rated list,
+		// the class sheet, the own card) shows the same new count (IA 23.1).
+		const uid = attrs.uid ?? getUserState().user?.uid;
+		const own = !!uid && proposal.creatorId === uid;
+		const unread = own ? unreadOn(proposal.statementId, uid) : 0;
 		const line = unreadLineKey(unread);
 
 		return m(

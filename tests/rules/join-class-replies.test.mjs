@@ -105,7 +105,7 @@ describe('join-class replies rules', () => {
 		);
 	});
 
-	it('still lets a student create a plain proposal', async () => {
+	it('still lets a student create a plain option outside the challenge', async () => {
 		await assertSucceeds(
 			setDoc(doc(as(MATE), 'statements', 'prop-plain'), statementDoc({ statementId: 'prop-plain', uid: MATE })),
 		);
@@ -117,8 +117,11 @@ describe('join-class replies rules', () => {
 		await assertFails(deleteDoc(doc(as(MATE), 'statements', REPLY)));
 	});
 
-	it('lets the author edit the proposal text but not its reply counters', async () => {
+	it('lets the author touch the proposal but not its text (classEditProposal) or its reply counters', async () => {
 		await assertSucceeds(
+			updateDoc(doc(as(AUTHOR), 'statements', PROPOSAL), { lastUpdate: T0 + 1 }),
+		);
+		await assertFails(
 			updateDoc(doc(as(AUTHOR), 'statements', PROPOSAL), { statement: 'better', lastUpdate: T0 + 1 }),
 		);
 		await assertFails(updateDoc(doc(as(AUTHOR), 'statements', PROPOSAL), { replyCount: 0 }));

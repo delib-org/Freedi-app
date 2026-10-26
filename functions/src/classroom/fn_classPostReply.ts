@@ -1,8 +1,8 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import type { Firestore } from 'firebase-admin/firestore';
 import {
+	CLASS_REPLY_MAX_LENGTH,
 	Collections,
-	Role,
 	StatementType,
 	createStatementObject,
 	functionConfig,
@@ -12,19 +12,14 @@ import type {
 	ClassPostReplyRequest,
 	ClassPostReplyResponse,
 	ClassReplyMarker,
-	Creator,
 	Statement,
 	StatementSubscription,
 } from '@freedi/shared-types';
 import { db } from '../db';
 import { containsBadLanguage } from '../fn_profanityChecker';
-import {
-	isWorkspaceAdmin,
-	loadMain,
-	requireId,
-	requireUid,
-	subscriptionRef,
-} from './classroomAccess';
+import { loadMain, requireId, requireUid, subscriptionRef } from './classroomAccess';
+import { creatorOf, loadMembership } from './classroomMembers';
+import { writeLanguageFlag } from './languageFlags';
 import { ClassroomError, toHttpsError } from './classroomErrors';
 import { assertLessonNotEnded, assertLessonRunning } from './lessonStatusGuard';
 import {
@@ -60,35 +55,6 @@ export interface PostReplyDeps {
 
 function statementRef(firestore: Firestore, id: string) {
 	return firestore.collection(Collections.statements).doc(id);
-}
-
-/** The replier as the reply's creator: the class name for a student, the account name for the teacher. */
-function creatorOf(uid: string, sub: StatementSubscription | undefined, main: Statement): Creator {
-	const fromSub = sub?.user;
-	const teacher = main.creatorId === uid ? main.creator : undefined;
-
-	return {
-		uid,
-		displayName: fromSub?.displayName?.trim() || teacher?.displayName || '',
-		photoURL: null,
-		isAnonymous: fromSub?.isAnonymous ?? teacher?.isAnonymous ?? true,
-	};
-}
-
-async function loadMembership(
-	firestore: Firestore,
-	mainId: string,
-	uid: string,
-	main: Statement,
-): Promise<{ teacher: boolean; sub: StatementSubscription | undefined }> {
-	const snap = await subscriptionRef(firestore, mainId, uid).get();
-	const sub = snap.exists ? (snap.data() as StatementSubscription) : undefined;
-	const teacher = await isWorkspaceAdmin(firestore, mainId, uid, main);
-	if (!teacher && (!sub || sub.role === Role.banned)) {
-		throw new ClassroomError('permission-denied', 'Join the lesson first');
-	}
-
-	return { teacher, sub };
 }
 
 async function unreadCount(
@@ -132,7 +98,20 @@ export async function postReply(
 	const question = questionSnap?.exists ? (questionSnap.data() as Statement) : undefined;
 	assertReplyTarget(proposal, question, mainId);
 
-	if (!teacher && (await deps.detect(text))) return { ok: false, reason: 'language' };
+	if (!teacher && (await deps.detect(text))) {
+		// Not published; the teacher is flagged (IA 24.4). The flag never fails the refusal.
+		await writeLanguageFlag(firestore, {
+			mainId,
+			uid: actorUid,
+			kind: 'reply',
+			targetId: proposalId,
+			text,
+			maxLength: CLASS_REPLY_MAX_LENGTH,
+			now: (deps.now ?? Date.now)(),
+		});
+
+		return { ok: false, reason: 'language' };
+	}
 
 	const authorUid = proposal.creatorId;
 	const devices: ReplyDevice[] =
