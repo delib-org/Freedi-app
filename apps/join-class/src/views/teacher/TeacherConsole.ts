@@ -5,6 +5,7 @@ import '@/styles/console-board.scss';
 import '@/styles/console-chips.scss';
 import '@/styles/console-panels.scss';
 import '@/styles/console-sheet.scss';
+import '@/styles/console-mobile.scss';
 import { t } from '@/lib/i18n';
 import { getMainStatement, getSubQuestions, setFollowLessonLanguage } from '@/lib/store';
 import {
