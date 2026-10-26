@@ -12,6 +12,8 @@ export interface VoteCasterOptions {
 	onChange: () => void;
 	/** Called with the error of a failed write. */
 	onError: (error: unknown) => void;
+	/** False when the picked card cannot be voted for now (hidden, paused, closed): do not re-send it. */
+	canCast: (optionId: string) => boolean;
 }
 
 export class VoteCaster {
@@ -36,7 +38,11 @@ export class VoteCaster {
 	sync(votedId: string | null): void {
 		if (this.busy) return;
 		this.written = votedId;
-		if (!this.failed) this.wanted = votedId;
+		if (this.failed) return;
+		// A stale echo of an older vote must not strand a newer pick: write it again.
+		if (this.wanted !== null && this.wanted !== votedId && this.options.canCast(this.wanted))
+			void this.drain();
+		else this.wanted = votedId;
 	}
 
 	pick(optionId: string): void {

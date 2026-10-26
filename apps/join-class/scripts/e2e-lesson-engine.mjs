@@ -9,7 +9,7 @@
 //            table-pick-question, table-claim, table-answer, table-finish, table-to-write,
 //            table-to-rate, proposal-box,
 //            proposal-send, rate-face-1..5,
-//            vote-option, vote-send, support-face-1..5
+//            vote-option, vote-status, support-face-1..5
 //   console  [data-step-key] (aria-current="step" on the current one),
 //            console-forward, console-assign-tables, console-all-rate,
 //            console-plenum, console-freeze-vote, console-close-vote
@@ -246,7 +246,7 @@ export const ENGINE_PHASES = [
 				const options = student.page.getByTestId('vote-option');
 				await options.first().waitFor({ state: 'visible', timeout: TURN_TIMEOUT });
 				await options.nth(index % ballot.candidateIds.length).click();
-				await (await byId(student.page, 'vote-send')).click();
+				await student.page.locator('[data-testid=vote-status]', { hasText: 'ההצבעה נקלטה' }).waitFor({ timeout: TURN_TIMEOUT });
 			}
 			await until(async () => {
 				const snap = await admin.collection('votes').where('parentId', '==', challengeId).get();

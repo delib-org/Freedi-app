@@ -18,6 +18,7 @@ function setup(): { caster: VoteCaster; calls: Deferred[]; sent: string[]; error
 				calls.push({ id, resolve, reject });
 			}),
 		onChange: vi.fn(),
+		canCast: () => true,
 		onError: (error) => errors.push(error),
 	});
 
@@ -105,5 +106,22 @@ describe('VoteCaster', () => {
 		calls[0].resolve();
 		await flush();
 		expect(caster.written).toBe('b');
+	});
+
+	it('re-sends the newer pick when a stale echo of an older vote arrives after the last write', async () => {
+		const { caster, calls, sent } = setup();
+		caster.sync('a');
+		caster.pick('b');
+		await flush();
+		calls[0].resolve();
+		await flush();
+		expect(caster.written).toBe('b');
+		caster.sync('a');
+		await flush();
+		expect(sent).toEqual(['b', 'b']);
+		calls[1].resolve();
+		await flush();
+		expect(caster.written).toBe('b');
+		expect(caster.pending).toBe(false);
 	});
 });

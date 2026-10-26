@@ -417,7 +417,7 @@ async function phaseAllProposals() {
 
 // ---- 6. vote ------------------------------------------------------------------------
 const votesCount = async () => (await admin.collection('votes').where('parentId', '==', challengeId).get()).size;
-const voteLabel = (phone) => text(phone.page, '[data-testid=vote-send]');
+const voteLabel = (phone) => text(phone.page, '[data-testid=vote-status]');
 /** Write a vote the way the app does, from this phone's own page: 'written' or the Firestore error code. */
 const tryCastVote = (phone, optionId) =>
 	phone.page.evaluate(
@@ -455,12 +455,12 @@ async function phaseVote() {
 	await snapAll('vote-before-open');
 	for (const phone of phones) {
 		check(`vote: ${phone.name} sees the stage heading before the vote opens`, (await stageName(phone.page)) !== '', await stageName(phone.page));
-		check(`vote: ${phone.name} has no vote button before the teacher opens the vote`, !(await has(phone.page, 'vote-send')));
+		check(`vote: ${phone.name} has no vote cards before the teacher opens the vote`, !(await has(phone.page, 'vote-option')));
 	}
 	check('vote: before the vote opens the projector says it is not open yet', (await text(projector.page, '.projector-empty')).length > 0);
 	check('vote: console: pause and close are disabled before opening', (await teacher.page.getByTestId('console-pause-vote').isDisabled()) && (await teacher.page.getByTestId('console-close-vote').isDisabled()));
 	await (await byId(teacher.page, 'console-freeze-vote')).click();
-	for (const phone of phones) await byId(phone.page, 'vote-send');
+	for (const phone of phones) await byId(phone.page, 'vote-status');
 	const buttonsOk = await eventually(
 		async () => (await teacher.page.getByTestId('console-freeze-vote').isDisabled()) && !(await teacher.page.getByTestId('console-pause-vote').isDisabled()),
 	);
@@ -473,10 +473,10 @@ async function phaseVote() {
 	// A votes for the first card
 	const votedFor = await A.page.getByTestId('vote-option').first().getAttribute('data-key');
 	await A.page.getByTestId('vote-option').first().click();
-	await (await byId(A.page, 'vote-send')).click();
 	await eventually(async () => (await votesCount()) === 1);
 	check('vote: A voted once', (await votesCount()) === 1);
-	check('vote: A button says voted', (await voteLabel(A)) === 'הצבעתם', await voteLabel(A));
+	const aCounted = await eventually(() => voteLabel(A), (value) => value === 'ההצבעה נקלטה');
+	check('vote: A status says the vote was counted', aCounted === 'ההצבעה נקלטה', await voteLabel(A));
 	const bLine = await eventually(
 		() => text(B.page, '.vote-list__count'),
 		(value) => /100/.test(value),
@@ -487,14 +487,13 @@ async function phaseVote() {
 	await teacher.page.getByTestId('console-pause-vote').click();
 	await eventually(async () => typeof (await challengeData()).statementSettings.ballot.pausedAt === 'number');
 	await sleep(600);
-	check('vote: paused: B button says paused and is disabled', (await voteLabel(B)) === 'ההצבעה מושהית' && (await B.page.getByTestId('vote-send').isDisabled()), await voteLabel(B));
+	check('vote: paused: B status says paused', (await voteLabel(B)) === 'ההצבעה מושהית', await voteLabel(B));
 	check('vote: paused: the projector says the vote is paused', (await text(projector.page, '.projector-vote-status')) === 'ההצבעה מושהית', await text(projector.page, '.projector-vote-status'));
 	check('vote: paused: B sees the pause line', (await bodyText(B.page)).includes('המורה עצרה את ההצבעה'));
 	check('vote: paused: the cards are locked (not radios)', (await B.page.locator('[role=radio]').count()) === 0);
 	check("vote: paused: A's vote is kept and the screen says paused too", (await voteLabel(A)) === 'ההצבעה מושהית');
 	check('vote: the teacher button now says resume', (await text(teacher.page, '[data-testid=console-pause-vote]')) === 'המשך ההצבעה');
 	await B.page.getByTestId('vote-option').nth(1).click({ force: true }).catch(() => undefined);
-	await B.page.getByTestId('vote-send').click({ force: true, timeout: 1500 }).catch(() => undefined);
 	await sleep(800);
 	check('vote: paused: B cannot vote (no vote was written)', (await votesCount()) === 1);
 	const otherId = (await challengeData()).statementSettings.ballot.candidateIds.find((id) => id !== votedFor);
@@ -508,9 +507,8 @@ async function phaseVote() {
 	await teacher.page.getByTestId('console-pause-vote').click();
 	await eventually(async () => (await challengeData()).statementSettings.ballot.pausedAt == null);
 	await sleep(600);
-	check('vote: resumed: B can pick again', (await B.page.locator('[role=radio]').count()) === 2 && !(await B.page.getByTestId('vote-send').isDisabled()) === false);
+	check('vote: resumed: B can pick again', (await B.page.locator('[role=radio]').count()) === 2);
 	await B.page.getByTestId('vote-option').nth(1).click();
-	await (await byId(B.page, 'vote-send')).click();
 	await eventually(async () => (await votesCount()) === 2);
 	check('vote: B voted after the resume', (await votesCount()) === 2);
 	const aLine = await eventually(
@@ -610,7 +608,6 @@ async function phaseBackAndResets() {
 	await sleep(900); // a re-order glide ignores taps until it ends (IA 21.3)
 	for (const phone of phones) {
 		await phone.page.locator(`[data-testid=vote-option][data-key="${firstId}"]`).click();
-		await (await byId(phone.page, 'vote-send')).click();
 	}
 	await eventually(async () => (await votesCount()) === 2);
 	const firstText = (await admin.collection('statements').doc(firstId).get()).data().statement;

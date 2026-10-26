@@ -206,7 +206,7 @@ try {
 	await a.page.waitForSelector('[data-testid=vote-option]', { timeout: TIMEOUT });
 	check('ballot shows the candidates as radio cards', (await a.page.locator('[data-testid=vote-option]').count()) === candidates.length);
 	await a.page.locator('[data-testid=vote-option]').nth(1).click();
-	await a.page.click('[data-testid=vote-send]');
+	await a.page.locator('[data-testid=vote-status]', { hasText: 'ההצבעה נקלטה' }).waitFor({ timeout: TIMEOUT });
 	const vote = await until(async () => {
 		const snap = await db.doc(`votes/${a.uid}--${challengeId}`).get();
 

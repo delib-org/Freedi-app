@@ -66,3 +66,24 @@
     opacity: 0.6;
   }
 }
+
+// phones: 44 px tap targets, the group takes the full row
+@media (max-width: 767px) {
+  .vote-order {
+    inline-size: 100%;
+
+    &__group {
+      inline-size: 100%;
+    }
+
+    &__option {
+      flex: 1 1 auto;
+    }
+
+    &__text {
+      justify-content: center;
+      inline-size: 100%;
+      min-height: 44px;
+    }
+  }
+}

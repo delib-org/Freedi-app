@@ -46,6 +46,8 @@ class VoteState {
 	voteFor: string | null = null;
 	/** Pick = vote: every tap is written at once, the latest pick wins. */
 	caster: VoteCaster | null = null;
+	/** Whether a card can be voted for right now (set at each redraw). */
+	castable: (id: string) => boolean = () => false;
 	/** The order the cards were last shown in (ties keep it; frozen while a pick is pending). */
 	order: string[] = [];
 }
@@ -73,6 +75,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 				return castVote(main.statementId, challengeId, optionId);
 			},
 			onChange: () => m.redraw(),
+			canCast: (id) => self.castable(id),
 			onError: (error) =>
 				console.error('[C3] vote write failed:', vnode.attrs.main.statementId, error),
 		});
@@ -111,7 +114,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 		const mode = voteOrderOf(challenge);
 		const caster = self.caster as VoteCaster;
 		const stillCandidate = (id: string | null): boolean => !!id && ballotIds.includes(id);
-		const pending = !closed && caster.pending && stillCandidate(caster.wanted);
+		const pending = !closed && !paused && caster.pending && stillCandidate(caster.wanted);
 		self.order = pending
 			? keepOrder(ballotIds, self.order)
 			: orderBallot(
@@ -133,8 +136,10 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			!self.votedId &&
 			!!self.lastVotedId &&
 			!ballotIds.includes(self.lastVotedId);
-		const selected = pending || caster.failed ? caster.wanted : self.votedId;
+		const selected =
+			(pending || caster.failed) && !closed && !paused ? caster.wanted : self.votedId;
 		const open = !closed && !paused;
+		self.castable = (id: string) => open && stillCandidate(id);
 		const writing = pending && !caster.failed;
 		const counted = open && !writing && !!selected && selected === self.votedId;
 		let statusKey: string | null = null;
@@ -180,7 +185,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 									},
 								}),
 						m(ErrorLine, {
-							message: caster.failed ? t('voting.failed') : null,
+							message: caster.failed && open ? t('voting.failed') : null,
 							onRetry: () => caster.retry(),
 						}),
 					]
