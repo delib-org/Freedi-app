@@ -1,6 +1,16 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
+  // Transpile only: type checking is `npm run build` / `tsc --noEmit`. With
+  // full type checking every worker held the whole program (~2.3 GB), and
+  // parallel agent lanes running jest at once froze a 24 GB machine.
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }],
+  },
+  // Default is cores - 1 (9 here); keep a single run from taking the machine.
+  maxWorkers: '50%',
+  // Recycle a worker once it grows past this, so a long run cannot creep up.
+  workerIdleMemoryLimit: '1GB',
   testMatch: ['**/__tests__/**/*.test.ts'],
   collectCoverageFrom: [
     'src/**/*.ts',
