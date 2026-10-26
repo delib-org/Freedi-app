@@ -1,0 +1,262 @@
+// =============================================================================
+// Replies on a proposal (IA 22): the "Replies · n" entry on a card, the replies
+// sheet (reader / author view) and its composer, and the action on the
+// student-notice line. Paper and ink; teal marks what is new or the author's.
+// =============================================================================
+
+// ---- entry on a card ---------------------------------------------------------
+
+.text-card__replies {
+  margin-block-start: var(--space-sm);
+}
+
+.reply-entry {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+  min-height: var(--touch-target, 44px);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-card-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  &--new {
+    border-color: var(--teal-600);
+    color: var(--ink);
+  }
+
+  &__new {
+    padding-inline: var(--space-sm);
+    border-radius: var(--radius-lg);
+    background: var(--teal-600);
+    color: var(--text-inverse);
+    font-weight: 700;
+  }
+}
+
+// A ballot card with its replies entry beside it (the entry never casts a vote).
+.vote-list__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.vote-list__beside {
+  align-self: flex-start;
+}
+
+// ---- the sheet ---------------------------------------------------------------
+
+.replies {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-height: 100%;
+
+  &__back {
+    align-self: flex-start;
+  }
+
+  &__proposal {
+    margin: 0;
+    padding: var(--space-sm) var(--space-md);
+    border-inline-start: 3px solid var(--border-medium);
+    color: var(--ink-muted);
+  }
+
+  &__improve {
+    align-self: flex-start;
+  }
+
+  &__closed,
+  &__empty {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  &__skeleton-line {
+    height: var(--space-2xl);
+    border-radius: var(--radius-lg);
+    background: var(--paper-soft);
+  }
+}
+
+.reply {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+
+  &__tag {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+  }
+
+  &__text {
+    margin: var(--space-xs) 0 0;
+    color: var(--ink);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  &__hidden {
+    margin: var(--space-xs) 0 0;
+    color: var(--ink-soft);
+    font-size: var(--font-size-sm);
+  }
+
+  &--author {
+    border-color: var(--teal-500);
+    background: var(--teal-50);
+  }
+
+  &--teacher {
+    border-color: var(--indigo-500);
+    background: var(--indigo-50);
+  }
+
+  &--hidden {
+    opacity: 0.6;
+  }
+}
+
+// The first reply the author has not read yet (the sheet scrolls to it).
+.reply--new {
+  outline: 2px solid var(--teal-600);
+  outline-offset: 2px;
+}
+
+// ---- composer: at the bottom of the sheet, above the keyboard ----------------
+
+.reply-composer {
+  position: sticky;
+  inset-block-end: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-block-start: auto;
+  padding-block: var(--space-sm);
+  background: var(--paper);
+
+  &__area {
+    width: 100%;
+    padding: var(--space-sm);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-lg);
+    background: var(--bg-input);
+    color: var(--ink);
+    font: inherit;
+    resize: vertical;
+
+    &:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 1px;
+    }
+  }
+
+  &__row {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__count {
+    color: var(--ink-soft);
+    font-size: var(--font-size-sm);
+  }
+
+  &__refused {
+    margin: 0;
+    color: var(--warning);
+  }
+}
+
+// ---- the notice line's action ("New reply to your proposal · Read") ----------
+
+.student-notice--action {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  justify-content: center;
+}
+
+.student-notice__action {
+  min-height: var(--touch-target, 44px);
+  padding-inline: var(--space-md);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  // The line lets taps through; only its button takes them.
+  pointer-events: auto;
+
+  &:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+}
+
+// ---- the push question under the sent proposal (IA 22.7) ----------------------
+
+.push-ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-block-start: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background: var(--paper-soft);
+
+  &__question {
+    margin: 0;
+    color: var(--ink);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  &__blocked {
+    margin: var(--space-sm) 0 0;
+    color: var(--ink-soft);
+    font-size: var(--font-size-sm);
+  }
+}

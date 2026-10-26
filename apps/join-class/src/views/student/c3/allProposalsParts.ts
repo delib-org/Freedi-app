@@ -5,6 +5,7 @@ import type { Board } from '@/lib/classroom/allProposalsBoard';
 import { boardCards } from '@/lib/classroom/allProposalsBoard';
 import { RateFaces } from './RateFaces';
 import { TextCard } from './TextCard';
+import { ReplyEntry } from '../replies/ReplyEntry';
 
 /**
  * The pieces of the "כל ההצעות" phone screen (IA 19.4): the board of served
@@ -70,6 +71,7 @@ function card(item: Statement, input: BoardInput, arriving: boolean, order: numb
 				testPrefix: 'all-proposals-face',
 				onRate: (score: number) => input.onRate(item, score),
 			}),
+			replies: m(ReplyEntry, { proposal: item }),
 		}),
 	);
 }
@@ -124,6 +126,7 @@ export function ownCardView(input: OwnCardInput): m.Children {
 		mine: true,
 		eyebrow: t('proposal.mine'),
 		text: input.mine.statement,
+		replies: m(ReplyEntry, { proposal: input.mine, own: true, uid: input.mine.creatorId }),
 		footer: input.canWrite
 			? m(
 					'button.btn.btn--secondary.btn--small',

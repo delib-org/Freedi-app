@@ -1037,6 +1037,10 @@ export {
   ClassVoteDisplaySchema,
   ClassVoteOrderSchema,
   ClassSubscriptionFieldsSchema,
+  CLASS_REPLY_MAX_LENGTH,
+  ClassReplyRoleSchema,
+  ClassReplyMarkerSchema,
+  ClassReplyStatementFieldsSchema,
   SideValueSchema,
   DecisionSupportSchema,
   classTableId,
@@ -1052,6 +1056,8 @@ export type {
   ClassBallot,
   ClassVoteDisplay,
   ClassVoteOrder,
+  ClassReplyRole,
+  ClassReplyMarker,
 } from './models/classroom/classroomModel';
 export {
   campOf,
@@ -1100,6 +1106,8 @@ export type {
   ClassResetVoteResponse,
   ClassSetItemHiddenRequest,
   ClassSetItemHiddenResponse,
+  ClassPostReplyRequest,
+  ClassPostReplyResponse,
   ClassCloneLessonRequest,
   ClassCloneLessonResponse,
   ClassSetLessonStatusRequest,

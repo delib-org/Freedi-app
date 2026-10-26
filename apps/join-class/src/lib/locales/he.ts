@@ -5,10 +5,12 @@
 
 import vote from './vote/he';
 import allProposals from './allProposals/he'; // >>> allProposals
+import reply from './reply/he';
 
 const he: Record<string, string> = {
 	...vote,
 	...allProposals, // >>> allProposals
+	...reply,
 	'step.waiting': 'ממתינים למורה',
 	'step.opening': 'פתיחה',
 	'step.side': 'בחירת צד',
@@ -456,7 +458,7 @@ const he: Record<string, string> = {
 	'lesson.back_line': 'חזרנו לשלב: {{name}}',
 	'turn.restarted': 'הסבבים התחילו מחדש',
 	'vote.restarted': 'ההצבעה התחילה מחדש. בחרו שוב',
-	'proposal.hidden_mine': 'המורה הסתיר את ההצעה מהרשימה של הכיתה',
+	'proposal.hidden_mine': 'המורה הסתירו את ההצעה מהרשימה של הכיתה',
 	'vote.choice_removed': 'ההצעה שבחרתם הוסרה. בחרו שוב',
 	'plan.details.language': 'שפת השיעור',
 	'plan.details.language.device': 'לפי השפה של כל תלמיד',

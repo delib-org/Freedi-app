@@ -126,6 +126,43 @@ export const ClassSubscriptionFieldsSchema = {
 	camp: optional(CampSchema),
 	decisionSupport: optional(DecisionSupportSchema),
 	tableId: optional(string()),
+	/** IA 22: when the student last opened the replies on their own proposal (ms). Student-written. */
+	proposalRepliesReadAt: optional(number()),
+};
+
+/** IA 22: the longest reply on a proposal, in characters (callable + phone). */
+export const CLASS_REPLY_MAX_LENGTH = 200;
+
+/** Who wrote a reply on a proposal: a classmate, the proposal's own author, or the teacher. */
+export const ClassReplyRoleSchema = picklist(['class', 'author', 'teacher']);
+export type ClassReplyRole = InferOutput<typeof ClassReplyRoleSchema>;
+
+/**
+ * Marker on a reply to a proposal (IA 22): a `statement` under the proposal,
+ * written ONLY by the `classPostReply` callable (rules refuse a client create).
+ * `proposalCreatorId` lets the author's phone keep one listener for every
+ * reply to them (the proposal doc already carries the same id).
+ */
+export const ClassReplyMarkerSchema = object({
+	role: ClassReplyRoleSchema,
+	proposalCreatorId: string(),
+});
+export type ClassReplyMarker = InferOutput<typeof ClassReplyMarkerSchema>;
+
+/**
+ * Reply fields on a statement (IA 22), spread into StatementSchema. All
+ * optional and all server-written (classPostReply / classSetItemHidden):
+ * `classReply` on a reply; the counters on the proposal it answers.
+ */
+export const ClassReplyStatementFieldsSchema = {
+	classReply: optional(ClassReplyMarkerSchema),
+	/** Visible (not hidden) replies on this proposal. */
+	replyCount: optional(number()),
+	lastReplyAt: optional(number()),
+	/** When the author was last pushed about a reply (dedupe window). */
+	replyPushAt: optional(number()),
+	/** Pushes sent to the author about this proposal (cap per lesson). */
+	replyPushCount: optional(number()),
 };
 
 /** Marker on an option (answer / proposal) written from a table. */

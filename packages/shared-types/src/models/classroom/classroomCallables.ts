@@ -147,8 +147,9 @@ export interface ClassResetVoteResponse {
 }
 
 /**
- * `classSetItemHidden` (admin, IA 18.4). Hides or restores one answer, proposal or
- * table question. Hiding a candidate on an open ballot also takes it off the
+ * `classSetItemHidden` (admin, IA 18.4). Hides or restores one answer, proposal,
+ * table question or reply on a proposal (IA 22: moves the proposal's
+ * replyCount). Hiding a candidate on an open ballot also takes it off the
  * ballot and turns its votes into `none`.
  */
 export interface ClassSetItemHiddenRequest {
@@ -161,6 +162,23 @@ export interface ClassSetItemHiddenResponse {
 	/** Votes turned into `none` because the item left an open ballot. */
 	votesWithdrawn: number;
 }
+
+/**
+ * `classPostReply` (a member of the lesson, or its teacher; IA 22). Writes one
+ * reply under a proposal of the lesson's challenge question, after the AI
+ * language check (skipped for the teacher). `replyId` is chosen by the client
+ * so a retry after a dropped answer never posts twice. A refused text answers
+ * `{ ok: false, reason: 'language' }` (no error) and nothing is written.
+ */
+export interface ClassPostReplyRequest {
+	mainId: string;
+	proposalId: string;
+	replyId: string;
+	text: string;
+}
+export type ClassPostReplyResponse =
+	| { ok: true; replyId: string }
+	| { ok: false; reason: 'language' };
 
 /**
  * `classSetLessonStatus` (admin). The lesson's status moves live <-> paused,

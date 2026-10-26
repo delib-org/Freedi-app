@@ -22,6 +22,7 @@ import {
 	type IsRated,
 } from '@/lib/classroom/allProposalsBoard';
 import { selectBatch } from '@/lib/classroom/proposalSampler';
+import { clearImproveHandler, setImproveHandler } from '@/lib/classroom/replyUi';
 import { ErrorLine } from './ErrorLine';
 import { FlowFeed } from './FlowFeed';
 import { WritePanel } from './WritePanel';
@@ -117,6 +118,7 @@ export const AllProposalsScreen: m.ClassComponent<AllProposalsScreenAttrs> = {
 
 	onremove(vnode) {
 		const self = stateOf(vnode);
+		clearImproveHandler(self);
 		clearArrival(self);
 		self.feed.stop();
 		if (self.liveFor) teardownLiveDrafts();
@@ -157,6 +159,14 @@ export const AllProposalsScreen: m.ClassComponent<AllProposalsScreenAttrs> = {
 			feed.options.filter((o) => o.parentId === challengeId),
 			uid,
 		);
+		// "Improve my proposal" from the replies (IA 22.5) opens the pinned card's edit box.
+		if (canWrite) {
+			setImproveHandler(self, () => {
+				self.editing = true;
+			});
+		} else {
+			clearImproveHandler(self);
+		}
 		const progress = boardProgress(pool, isRated);
 		const done = isBoardDone(self.board, pool, isRated);
 		const act = (action: ClassTableAction): void => {

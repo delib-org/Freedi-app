@@ -16,10 +16,12 @@ import {
 	classifyHideable,
 	isBallotCandidate,
 } from './hideItemLogic';
+import { replyCountAfter } from './replyLogic';
 
 /**
  * `classSetItemHidden` (admin, IA 18.4): the one "delete a result" of the
- * console, an undoable hide. One transaction. Hiding a candidate of an OPEN
+ * console, an undoable hide. A reply on a proposal (IA 22) also moves the
+ * proposal's visible `replyCount`. One transaction. Hiding a candidate of an OPEN
  * ballot also takes it off the ballot and turns every vote on it into `none`
  * (fn_vote then moves the count). A closed ballot refuses; restoring never
  * puts the item back on the ballot.
@@ -48,9 +50,20 @@ export async function setItemHidden(
 		const item = itemSnap.data() as Statement;
 		const parentSnap = await tx.get(statementRef(firestore, item.parentId));
 		const parent = parentSnap.exists ? (parentSnap.data() as Statement) : undefined;
+		const now = Date.now();
+		if (item.classReply !== undefined && parent) {
+			const grandSnap = await tx.get(statementRef(firestore, parent.parentId));
+			const grandparent = grandSnap.exists ? (grandSnap.data() as Statement) : undefined;
+			classifyHideable(item, parent, mainId, grandparent);
+			tx.update(statementRef(firestore, statementId), { hide: hidden, lastUpdate: now });
+			tx.update(statementRef(firestore, item.parentId), {
+				replyCount: replyCountAfter(parent.replyCount, item.hide === true, hidden),
+			});
+
+			return { hidden, votesWithdrawn: 0 };
+		}
 		classifyHideable(item, parent, mainId);
 
-		const now = Date.now();
 		const ballot = parent?.statementSettings?.ballot;
 		if (!hidden || !ballot || !isBallotCandidate(ballot, statementId)) {
 			tx.update(statementRef(firestore, statementId), { hide: hidden, lastUpdate: now });

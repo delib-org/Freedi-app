@@ -80,8 +80,11 @@ export async function onStatementCreated(
 			tasks.push(addStatementToMassConsensus(statement));
 		}
 
-		// Task 5: Create notifications (if not top-level)
-		if (statement.parentId !== 'top') {
+		// Task 5: Create notifications (if not top-level). A join-class reply on a
+		// proposal (IA 22) has its own notice path (classPostReply): the generic
+		// fan-out would copy a child's words and name into lastMessage, the in-app
+		// center and email.
+		if (statement.parentId !== 'top' && statement.classReply === undefined) {
 			tasks.push(createNotificationsForStatement(statement));
 		}
 

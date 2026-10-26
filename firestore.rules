@@ -996,6 +996,26 @@ service cloud.firestore {
                  resource.data.get('agoraModeration', {});
       }
 
+      // join-class replies on a proposal (IA 22). A reply (a statement with a
+      // `classReply` marker) and the proposal's counters (replyCount,
+      // lastReplyAt, replyPushAt, replyPushCount) are written ONLY by the
+      // classPostReply / classSetItemHidden callables (Admin SDK), which run
+      // the AI language check and the push dedupe. No client may create a
+      // reply, set or move those fields, or edit or delete a reply — not even
+      // its writer (a hidden reply would otherwise come back).
+      function classReplyServerFields() {
+        return ['classReply', 'replyCount', 'lastReplyAt', 'replyPushAt', 'replyPushCount'];
+      }
+      function createsClassReplyFields() {
+        return request.resource.data.keys().hasAny(classReplyServerFields());
+      }
+      function isClassReply() {
+        return resource != null && resource.data.get('classReply', null) != null;
+      }
+      function changesClassReplyFields() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasAny(classReplyServerFields());
+      }
+
       // Reading requires a session. Not because statements are secret — most
       // are meant to be shared — but because "world readable" here included
       // classroom writing by minors (Agora proposals live in this collection),
@@ -1037,6 +1057,7 @@ service cloud.firestore {
                        !request.resource.data.keys().hasAny(['agreementBallot', 'agreementMeta', 'deliberationEnabled']) &&
                        !setsCreatorRoleOnCreate() &&
                        !setsOrganizationIdOnCreate() &&
+                       !createsClassReplyFields() &&
                        request.resource.data.creatorId == request.auth.uid &&
                        // A student the teacher removed writes nothing more
                        // into that lesson (see agoraRemovedFrom)
@@ -1048,6 +1069,8 @@ service cloud.firestore {
                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['agreementMeta', 'agreementBallot', 'deliberationEnabled']) &&
                        !changesCreatorRole() &&
                        !changesOrganizationId() &&
+                       !isClassReply() &&
+                       !changesClassReplyFields() &&
                        (isAgoraStatement()
                           ? (isCreator() && agoraServerFieldsUnchanged() &&
                              !agoraRemovedFrom(resource.data.agoraSessionId))
@@ -1057,7 +1080,7 @@ service cloud.firestore {
       // The session teacher inherits an admin subscription on every proposal
       // (setupAdminsForStatement), which used to make isAuthorized() a hard
       // delete with no tombstone and no audit.
-      allow delete: if request.auth.uid != null && !isAgoraStatement() && !resource.data.keys().hasAny(['agreementBallot']) && isAuthorized();
+      allow delete: if request.auth.uid != null && !isAgoraStatement() && !isClassReply() && !resource.data.keys().hasAny(['agreementBallot']) && isAuthorized();
 
       // Civil Activity Hub — join form submissions subcollection.
       // Scoped to the owning question document. Each user owns their own
@@ -1289,9 +1312,13 @@ service cloud.firestore {
       // classMoveStudent), so no non-admin client may set, change or clear it.
       // Each check is a no-op for a doc that does not carry the field, so the
       // main app's own subscription writes are untouched.
+      // proposalRepliesReadAt (IA 22): the student's own read mark on the
+      // replies to their proposal; any number, no lesson gate (reading is not
+      // a write into the lesson).
       function classFieldValuesOk() {
         let d = request.resource.data;
-        return (!('side' in d) || (d.side is number && d.side >= 0 && d.side <= 100)) &&
+        return (!('proposalRepliesReadAt' in d) || d.proposalRepliesReadAt is number) &&
+               (!('side' in d) || (d.side is number && d.side >= 0 && d.side <= 100)) &&
                (!('camp' in d) || d.camp in ['a', 'center', 'b']) &&
                (!('decisionSupport' in d) ||
                  (d.decisionSupport is number && d.decisionSupport >= -1 && d.decisionSupport <= 1));

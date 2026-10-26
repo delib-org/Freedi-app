@@ -18,5 +18,6 @@ export { classFreezeBallot, classCloseBallot, classPauseBallot } from './fn_clas
 export { classResetTurns } from './fn_classResetTurns';
 export { classResetVote } from './fn_classResetVote';
 export { classSetItemHidden } from './fn_classSetItemHidden';
+export { classPostReply } from './fn_classPostReply';
 export { classSetLessonStatus } from './fn_classSetLessonStatus';
 export { classCloneLesson } from './fn_classCloneLesson';

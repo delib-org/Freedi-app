@@ -65,18 +65,37 @@ function renderState(main: Statement, status: 'paused' | 'ended'): m.Children {
 	return null;
 }
 
+interface StageState {
+	stop?: () => void;
+	stopReplies?: () => void;
+	removed?: boolean;
+}
+
 export interface StudentStageAttrs {
 	main: Statement;
 }
 
 export const StudentStage: m.Component<StudentStageAttrs> = {
 	oninit(vnode) {
-		const state = vnode.state as { stop?: () => void };
+		const state = vnode.state as StageState;
 		state.stop = watchClass(vnode.attrs.main.statementId, 'student');
+		// The replies layer (IA 22) is its own chunk: it is not on the first paint.
+		const main = vnode.attrs.main;
+		import('./replies/replyHost')
+			.then((mod) => {
+				if (state.removed) return;
+				state.stopReplies = mod.startReplyHost(main);
+			})
+			.catch((err: unknown) => {
+				console.error('[StudentStage] loading the replies layer failed:', err);
+			});
 	},
 
 	onremove(vnode) {
-		(vnode.state as { stop?: () => void }).stop?.();
+		const state = vnode.state as StageState;
+		state.removed = true;
+		state.stop?.();
+		state.stopReplies?.();
 	},
 
 	view({ attrs }) {

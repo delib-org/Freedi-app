@@ -41,6 +41,8 @@ Least expert reader: a 13-year-old on a phone with the teacher talking. Every st
 
 Deleted from the classroom UI (the engine keeps the fields; no screen reads them): village and world, booths, looks and themes, points, coins, inbox, notifications, toasts, celebrations, notes lottery (`agoraHands`), ideas and conversations on a note, cast and opening film, challenge round (`votingGame`), civic track, supervision links from the lesson, stage catch-up (`stageNav`: a student always sees the current step; the Table talk and Proposals steps are reached by table step, not by stepping back).
 
+Exception (§22, 2026-10-26): replies on a **proposal**, the author's unread count and toast, and a push when someone replied, came back for proposals only.
+
 ### 2.2 Mapping onto the Statement tree
 ```
 root question Statement (session.rootStatementId)
@@ -1898,3 +1900,118 @@ The tally (`selections{}` to `voteResults`, one function), C_p (`statement.conse
 
 ### 21.6 Open question 1, resolved
 Tal chose three modes instead of two: C_p, random and by votes. Random is one shared order (seed = challenge id), not one per phone as the first draft said.
+
+## 22. Replies on a proposal, and "someone replied" (Tal, 2026-10-26, card m02TCW7L)
+
+Every proposal card can take replies, as in Join, and the author is told that someone replied so they can improve the proposal. §2.1 deleted inbox, notifications, toasts and conversations on a note; this section brings replies and their notices back **for proposals only**. Answers at Table talk get no replies.
+
+Tal's decisions (2026-10-26), merged into the body below:
+1. The whole class can reply to any proposal card they can see; the teacher sees every reply.
+2. The author is told both ways: in the app (count on the own card + a toast) and by a phone push when out of the app.
+3. A reply shows the replier's class name. The proposal's own author replies as "מי שכתבו את ההצעה", never by name, so the thread never reveals who wrote the proposal. The teacher sees real names.
+4. Moderation: an AI language check runs before a reply is posted (the Agora gate's detector), and the teacher can hide / restore after. No pre-approval.
+5. Replies never close: readable and writable wherever a proposal card is shown, while the lesson exists. Editing the proposal itself still closes when the ballot freezes.
+6. The teacher can reply from the console; the reply is tagged "המורה" and notifies the author.
+7. A reply is at most 200 characters (`CLASS_REPLY_MAX_LENGTH`).
+
+### 22.1 Objects
+| Object | What | Cardinality | Lifecycle |
+|---|---|---|---|
+| Proposal (§2.1) | unchanged + server-written `replyCount?` (visible replies), `lastReplyAt?` | ≤1 per student | as §2.1, editable until the ballot is frozen |
+| Reply (new) | short text by one person on one proposal | 0–n per proposal | sending → sent → (hidden by teacher ↔ restored) |
+| Replies (list) | the visible replies on one proposal, oldest first | 1 per proposal | always open |
+| Read mark (new) | when the author last opened the replies on their proposal | 1 per student per lesson | written each time the author opens them |
+| Reply notice (view) | the author's unread count: replies by others, not hidden, newer than the read mark | 1 per author | 0 → n → 0 on open |
+| Push device (new use) | a device's FCM token, saved after the student says yes | 0–1 per device | asked → allowed / declined → removed when invalid |
+
+Statement tree:
+```
+challenge question
+  proposal (option)                  + replyCount?, lastReplyAt?, replyPushAt?, replyPushCount? (server only)
+    reply (StatementType.statement)  parentId = proposal, topParentId = lesson,
+                                     creator.displayName = class name, hide?,
+                                     classReply: { role: 'class' | 'author' | 'teacher', proposalCreatorId }
+```
+- Replies are written only by the `classPostReply` callable (me-west1), which builds them with `createStatementObject`; the rules refuse a client create, and nobody edits or deletes a reply from a browser (a hidden one would come back).
+- Read mark: `proposalRepliesReadAt?: number` on the author's lesson subscription (`statementsSubscribe/{uid}--{mainId}`). One proposal per student per lesson, so one field is enough, and it survives a change of device.
+- All new fields are optional (no new picklist value on an existing schema).
+
+### 22.2 Where replies open (never closed)
+| Place | Others' cards | Own card |
+|---|---|---|
+| Proposals, rating list | open + write | open + "לשפר את ההצעה" |
+| Proposals, the class sheet | open + write; the replies replace the sheet, with a back control (no sheet on a sheet) | same |
+| Proposals, writing (after sending) | — | the entry under the sent proposal |
+| All proposals board / pinned own card | open + write | open + improve |
+| Vote cards / Summary result rows | open + write via a small separate control (never the pick target) | open; improve-closed line |
+| Projector | never | — |
+| Teacher "מה כתבו" | every reply, hide / restore, teacher composer | — |
+
+### 22.3 Labels (all 7 locale files)
+| Concept | HE | EN | key |
+|---|---|---|---|
+| Entry on a card | תגובות · {{n}} | Replies · {{n}} | reply.open |
+| Sheet title | תגובות להצעה | Replies to the proposal | reply.title |
+| Empty | עוד אין תגובות. מה אפשר לשפר? | No replies yet. What could be better? | reply.empty |
+| Placeholder | כתבו תגובה | Write a reply | reply.placeholder |
+| Send | שליחה | Send | reply.send |
+| Author tag | מי שכתבו את ההצעה | The proposal's author | reply.by_author |
+| Teacher tag | המורה | Teacher | reply.by_teacher |
+| Unread on own card | {{n}} תגובות חדשות / תגובה חדשה | {{n}} new replies / 1 new reply | reply.new_n, reply.new_one |
+| Toast | תגובה חדשה להצעה שלכם · לקריאה | New reply to your proposal · Read | reply.toast, reply.toast_open |
+| Improve | לשפר את ההצעה | Improve my proposal | reply.improve (opens the existing edit box) |
+| Improve closed | אפשר היה לשפר עד שההצבעה נפתחה | Proposals could be improved until the vote opened | reply.improve_closed |
+| Language refused | נראה שיש בתגובה מילה פוגענית. נסו לנסח אחרת | Your reply seems to contain hurtful words. Try rephrasing. | reply.refused |
+| Own reply hidden | המורה הסתירו את התגובה | The teacher hid this reply | reply.hidden_mine |
+| Push ask | רוצים לדעת כשמגיבים להצעה שלכם? | Want to know when someone replies to your proposal? | reply.push_ask |
+| Push yes / no | כן, להודיע לי / לא עכשיו | Yes, tell me / Not now | reply.push_yes, reply.push_no |
+| Push body | יש תגובה חדשה להצעה שלכם / {{n}} תגובות חדשות להצעה שלכם | There is a new reply… / {{n}} new replies… | in functions (classroom/replyPushText.ts), 7 languages |
+| Teacher, per proposal | תגובות ({{n}}) | Replies ({{n}}) | console.replies |
+
+One name for the concept: תגובה / reply. Not צ'אט, הודעה, שיחה, chat or message, and never תשובה / ענה (those belong to the Table talk answer and the speaking minute). Fixed while here: Hebrew `proposal.hidden_mine` is now plural ("המורה הסתירו", as §18).
+
+### 22.4 Hierarchy (student `/m/:mid`, no new route)
+```
+Proposals: rating list → card → Replies; class sheet → card → Replies (in place, back to the sheet); own card → Replies (author) → edit box
+All proposals: card → Replies; pinned own card → Replies (author) → edit box
+Vote / Summary: the card's small "תגובות" control → Replies
+```
+Deep link (push tap): `/m/:mid?replies=<proposalId>` opens the current step, then the author's Replies (any step: replies never close). Back from Replies = the screen it came from.
+
+### 22.5 Task flows
+1. Reply to a classmate (3 actions): "תגובות · n" → write → שליחה. The language check runs first; the reply appears at once, or the gentle refused line shows and the text stays in the box.
+2. Author in the app: toast + "2 תגובות חדשות" on the own card → tap → Replies (writes the read mark, count → 0, scrolls to the first new reply) → "לשפר את ההצעה" → the sheet closes and the existing edit box opens (the plenum's own card, the write screen, or the pinned card on All proposals). Replies and ratings stay on the edited proposal.
+3. Author from a push: tap → the app opens with `?replies=` → flow 2.
+4. Allow push (1 tap): asked once per lesson, inline, under the sent proposal. "לא עכשיו" is remembered on the device for that lesson.
+5. Teacher hides a reply: "מה כתבו" → proposal → "תגובות (n)" → הסתרה / החזרה (`classSetItemHidden` accepts a reply of the lesson and moves `replyCount`). A hidden reply leaves lists, counts and the unread count; its writer still sees it greyed with reply.hidden_mine.
+6. Teacher replies: same group → composer → shown with "המורה"; notifies the author.
+
+### 22.6 Screen inventory (sheets only)
+| View | Job | Empty | Loading | Error | Closed | Done |
+|---|---|---|---|---|---|---|
+| Replies, reader | read + add | reply.empty | skeleton | failed line + retry on send; refused line | — | reply shown |
+| Replies, author | read, go improve | reply.empty | skeleton | same | improve_closed instead of the button | read mark written |
+| Push ask (inline) | one yes / no | — | — | browser blocks → one plain line, then gone | API missing → never shown | gone after the answer |
+| Teacher replies group | see, hide, reply | "(0)", composer only | — | failed line | teacher only | — |
+Oldest first; the author view scrolls to the first unread reply.
+
+### 22.7 Notice rules
+In the app:
+- Unread = replies with creator ≠ me, not hidden, created after `proposalRepliesReadAt`.
+- The author's phone keeps ONE listener: replies whose `classReply.proposalCreatorId` is me, in this lesson. Other cards read `replyCount` (no listener per card).
+- The toast goes through the existing student-notice host (lib/classroom/studentNotices.ts), is tappable, at most once per 60 s, and never while the author's Replies are open.
+
+Push:
+- Decided inside `classPostReply`, in the same transaction as the reply (so two replies in the same second cannot both buzz).
+- Sent only if the lesson is not paused or ended, the replier is not the author, and the author has a join-class device.
+- Dedupe: at most one push per proposal per 3 minutes (`replyPushAt`), at most 5 per author per lesson (`replyPushCount`), `tag` = the proposal so a newer push replaces the older.
+- The push worker (`/class-push-sw.js`, its own scope) does not show a push while a join-class window is visible.
+- Title = the lesson's title; the body never contains reply text or a name (minors, shared lock screens). The language is the one stored with the token.
+- Tokens: `pushNotifications/{token}` with `userId`, `app: 'join-class'`, `language`. They are NOT added to the lesson subscription's `tokens[]`: the main app's fan-out would then buzz every phone for every statement of the lesson. The generic fan-out (`createNotificationsForStatement`) also skips replies.
+- Permission is asked only after the first proposal is sent, only where Notification, PushManager and service workers exist, and on iOS only in the home-screen app (Safari in a tab gets the in-app notice only).
+
+### 22.8 Names and privacy
+The card stays anonymous (§19.4). A reply shows the replier's class name; the author's own replies show reply.by_author; teacher replies show reply.by_teacher; the teacher console shows real names, as in the roster.
+
+### 22.9 Deferred
+An "the proposal was edited" marker inside replies; marking replies helpful / an AI redraft; replies on Table talk answers.
