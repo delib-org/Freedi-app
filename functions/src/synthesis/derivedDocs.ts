@@ -2,6 +2,7 @@ import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { Collections, Statement } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
 import { reverseIntegration, deleteEvaluationsForStatement } from '../integrate/reverseIntegration';
+import { assertNoDirectVotesOnDerivedDocs } from './derivedDocVotes';
 
 /**
  * Shared helpers for identifying and clearing synthesis-derived documents, so a
@@ -79,6 +80,12 @@ export interface DissolveOptions {
 	reversedByUserId?: string;
 	/** When true, classify and report but write nothing. */
 	dryRun?: boolean;
+	/**
+	 * Delete derived docs even when participants voted on them directly. Refused
+	 * unless running against the Firestore emulator (FIRESTORE_EMULATOR_HOST).
+	 * Defaults to false: dissolving a question whose derived docs have votes throws.
+	 */
+	allowDeletingVotes?: boolean;
 }
 
 /**
@@ -101,6 +108,16 @@ export async function dissolveQuestionSynthesis(
 	const dryRun = options.dryRun ?? false;
 	const db = getFirestore();
 	const now = Date.now();
+
+	if (options.allowDeletingVotes === true) {
+		if (!process.env.FIRESTORE_EMULATOR_HOST) {
+			throw new Error('allowDeletingVotes is only permitted against the Firestore emulator');
+		}
+	} else if (!dryRun) {
+		// Hard guard: every caller (callables, async job, scripts) is refused by
+		// default when the dissolve would destroy direct votes on derived docs.
+		await assertNoDirectVotesOnDerivedDocs(questionId, db);
+	}
 
 	const snap = await db
 		.collection(Collections.statements)
