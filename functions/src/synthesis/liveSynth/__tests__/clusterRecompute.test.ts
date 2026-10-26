@@ -90,7 +90,7 @@ describe('computeEffectiveVote (live-synth direct-wins rule)', () => {
 });
 
 describe('debugAggregatePreview', () => {
-	it('matches computeClusterEvaluationFromRawEvals with directVoteWins=true', () => {
+	it('matches computeClusterEvaluationFromRawEvals under the unified rule', () => {
 		const evals: Evaluation[] = [
 			evalRec({ evaluatorId: 'A', statementId: 'cluster1', value: 1 }),
 			evalRec({ evaluatorId: 'A', statementId: 'X1', value: -1 }),
@@ -253,10 +253,7 @@ describe('recomputeSynthCluster', () => {
 
 		const result = await recomputeSynthCluster('cluster1');
 
-		expect(mockRecomputeClusterEvaluation).toHaveBeenCalledWith('cluster1', {
-			directVoteWins: true,
-			clusterStatementId: 'cluster1',
-		});
+		expect(mockRecomputeClusterEvaluation).toHaveBeenCalledWith('cluster1');
 		expect(mockFetchEvaluationsForIds).toHaveBeenCalledWith(['cluster1', 'X1', 'X2']);
 		// Two distinct evaluators contributed
 		expect(result.evaluatorCount).toBe(2);

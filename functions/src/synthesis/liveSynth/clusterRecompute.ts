@@ -6,6 +6,7 @@ import {
 	fetchEvaluationsForIds,
 	recomputeClusterEvaluation,
 } from '../../condensation/aggregation';
+import { computeEffectiveClusterVote } from '../../condensation/clusterVoteRule';
 import { updateUserDemographicEvaluation } from '../../fn_polarizationIndex';
 import {
 	generateSynthesizedProposal,
@@ -136,20 +137,7 @@ export async function findClustersContainingMember(
  * the polarization recompute should skip them — they don't belong on this
  * cluster's MAD breakdown).
  */
-export function computeEffectiveVote(
-	clusterStatementId: string,
-	userEvaluations: Evaluation[],
-): number | null {
-	if (userEvaluations.length === 0) return null;
-	const direct = userEvaluations.find((e) => e.statementId === clusterStatementId);
-	if (direct) return direct.evaluation;
-	const memberValues = userEvaluations
-		.filter((e) => e.statementId !== clusterStatementId)
-		.map((e) => e.evaluation);
-	if (memberValues.length === 0) return null;
-
-	return memberValues.reduce((a, b) => a + b, 0) / memberValues.length;
-}
+export const computeEffectiveVote = computeEffectiveClusterVote;
 
 interface RecomputeResult {
 	clusterId: string;
@@ -313,8 +301,7 @@ async function maybeRegenerateSynthTitle(cluster: Statement, clusterId: string):
  * breakdown stays current. Reuses existing primitives:
  *
  *   - `recomputeClusterEvaluation` writes `statements/{clusterId}.evaluation`
- *     using `computeClusterEvaluationFromRawEvals` with `directVoteWins:
- *     true`.
+ *     using the unified cluster vote rule (`clusterVoteRule.ts`).
  *   - `updateUserDemographicEvaluation` writes
  *     `polarizationIndex/{clusterId}` with per-group MAD math from
  *     `madCalculation.ts`. We call it once per evaluator, passing the
@@ -338,8 +325,8 @@ export async function recomputeSynthCluster(clusterId: string): Promise<Recomput
 	}
 
 	// 1. Recompute the cluster's denormalized `evaluation.{...}` aggregate.
-	//    This re-uses the existing condensation primitive; we pass directVoteWins
-	//    so the live-synth model applies. Marking it as a cluster (via
+	//    This re-uses the existing condensation primitive, which applies the
+	//    one cluster vote rule shared by every writer. Marking it as a cluster (via
 	//    isCluster=true) is required by `recomputeClusterEvaluation`'s guard,
 	//    so we patch that field if it's missing.
 	if (cluster.isCluster !== true) {
@@ -352,10 +339,7 @@ export async function recomputeSynthCluster(clusterId: string): Promise<Recomput
 			});
 		}
 	}
-	const aggregateEvaluation = await recomputeClusterEvaluation(clusterId, {
-		directVoteWins: true,
-		clusterStatementId: clusterId,
-	});
+	const aggregateEvaluation = await recomputeClusterEvaluation(clusterId);
 
 	// 2. For every evaluator who has touched the cluster (direct or via a
 	//    member), recompute the polarization-index entry for THIS cluster
@@ -376,7 +360,7 @@ export async function recomputeSynthCluster(clusterId: string): Promise<Recomput
 
 	let evaluatorCount = 0;
 	for (const [userId, userEvals] of byUser.entries()) {
-		const effective = computeEffectiveVote(clusterId, userEvals);
+		const effective = computeEffectiveClusterVote(clusterId, userEvals);
 		if (effective === null) continue;
 		evaluatorCount += 1;
 		// Find the most recent demographicAnchorId from this user's evals
@@ -425,7 +409,6 @@ export function debugAggregatePreview(
 	evals: Evaluation[],
 ): { numberOfEvaluators: number; sumEvaluations: number } {
 	const { evaluation } = computeClusterEvaluationFromRawEvals(evals, {
-		directVoteWins: true,
 		clusterStatementId,
 	});
 

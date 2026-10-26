@@ -18,6 +18,7 @@ import {
 	DEFAULT_SAMPLING_QUALITY,
 	BAYESIAN_PRIOR_K,
 } from '@freedi/shared-types';
+import { computeEffectiveClusterVote } from './clusterVoteRule';
 
 // Lazy init to avoid calling getFirestore() before initializeApp()
 const db = () => getFirestore();
@@ -31,8 +32,8 @@ const db = () => getFirestore();
  *   (b) every statement listed in cluster.integratedOptions
  *
  * Deduplicates per evaluator: if a user evaluated the cluster and/or
- * multiple members, they are counted ONCE using the AVERAGE of their
- * evaluations across the full set. This matches `fn_clusterAggregation`'s
+ * multiple members, they are counted ONCE: a direct vote on the cluster
+ * wins, else the AVERAGE of their member votes (see `clusterVoteRule.ts`). This matches `fn_clusterAggregation`'s
  * framing-based dedup semantics but operates on the non-destructive
  * `integratedOptions` model (originals keep their own parentId and
  * independent evaluation).
@@ -48,22 +49,12 @@ interface AggregationOptions {
 	targetPopulation?: number;
 	samplingQuality?: number;
 	/**
-	 * When true, a user's direct vote on the cluster (an Evaluation whose
-	 * statementId equals `clusterStatementId`) takes precedence over the
-	 * average of their member votes. Required by the live-synth path so
-	 * direct synth votes override member-vote rollup per the
-	 * "one vote per evaluator, direct-wins" model. Default false preserves
-	 * the existing condensation-pipeline semantics (per-user average).
-	 *
-	 * Requires `clusterStatementId` to be set; otherwise falls back to
-	 * average behavior.
-	 */
-	directVoteWins?: boolean;
-	/**
-	 * The statementId of the cluster being aggregated. Only used when
-	 * `directVoteWins` is true. The aggregator inspects each user's
-	 * evaluations and uses the one targeting this id (if present)
-	 * instead of the per-user average.
+	 * The statementId of the cluster being aggregated. When set, the unified
+	 * cluster counting rule applies (see `clusterVoteRule.ts`): the user's
+	 * direct vote on the cluster wins, else the average of their member
+	 * votes. When absent
+	 * (member-only snapshots taken before any direct vote can exist) it is a
+	 * plain per-user average.
 	 */
 	clusterStatementId?: string;
 }
@@ -149,26 +140,10 @@ export function computeClusterEvaluationFromRawEvals(
 	let numberOfProEvaluators = 0;
 	let numberOfConEvaluators = 0;
 
-	const directWinsActive = options.directVoteWins === true && !!options.clusterStatementId;
-	const clusterStatementId = options.clusterStatementId;
-
 	byUser.forEach((userEvals, userId) => {
-		// Direct-wins: if the user voted on the cluster itself, use that one
-		// value; ignore their member votes for the rollup. Else average across
-		// whatever they did vote on (the historical condensation behavior).
-		let effective: number;
-		if (directWinsActive) {
-			const directVote = userEvals.find((e) => e.statementId === clusterStatementId);
-			if (directVote) {
-				effective = directVote.evaluation;
-			} else {
-				const values = userEvals.map((e) => e.evaluation);
-				effective = values.reduce((a, b) => a + b, 0) / values.length;
-			}
-		} else {
-			const values = userEvals.map((e) => e.evaluation);
-			effective = values.reduce((a, b) => a + b, 0) / values.length;
-		}
+		const effective = options.clusterStatementId
+			? (computeEffectiveClusterVote(options.clusterStatementId, userEvals) ?? 0)
+			: userEvals.reduce((sum, e) => sum + e.evaluation, 0) / userEvals.length;
 		perUserAverages.set(userId, effective);
 		sumEvaluations += effective;
 		sumSquaredEvaluations += effective * effective;
@@ -254,7 +229,7 @@ export async function recomputeClusterEvaluation(
 
 	const { evaluation, byUser, perUserAverages } = computeClusterEvaluationFromRawEvals(
 		evaluations,
-		options,
+		{ ...options, clusterStatementId: clusterId },
 		existingRandom,
 		existingViewed,
 	);
