@@ -100,10 +100,15 @@ export class MemoryDocRef {
 
 type Filter = (data: DocData) => boolean;
 
+interface OrderBy {
+	field: string;
+	desc: boolean;
+}
+
 interface QueryState {
 	filters: Filter[];
-	order: string | null;
-	after: unknown;
+	order: OrderBy[];
+	after: unknown[] | undefined;
 	max: number | null;
 }
 
@@ -137,7 +142,7 @@ function buildFilter(field: string, op: string, value: unknown): Filter {
 class MemoryQuery {
 	constructor(
 		readonly collection: string,
-		private readonly state: QueryState = { filters: [], order: null, after: undefined, max: null },
+		private readonly state: QueryState = { filters: [], order: [], after: undefined, max: null },
 	) {}
 
 	private next(patch: Partial<QueryState>): MemoryQuery {
@@ -148,15 +153,17 @@ class MemoryQuery {
 		return this.next({ filters: [...this.state.filters, buildFilter(field, op, value)] });
 	}
 
-	orderBy(field: string): MemoryQuery {
-		return this.next({ order: field });
+	orderBy(field: string, direction: 'asc' | 'desc' = 'asc'): MemoryQuery {
+		return this.next({ order: [...this.state.order, { field, desc: direction === 'desc' }] });
 	}
 
-	startAfter(value: unknown): MemoryQuery {
-		const cursor =
+	/** One value per orderBy field (a doc snapshot stands for its id). */
+	startAfter(...values: unknown[]): MemoryQuery {
+		const cursor = values.map((value) =>
 			typeof value === 'object' && value !== null && 'id' in value
 				? (value as { id: string }).id
-				: value;
+				: value,
+		);
 
 		return this.next({ after: cursor });
 	}
@@ -170,11 +177,25 @@ class MemoryQuery {
 			this.state.filters.every((test) => test(data)),
 		);
 		const { order, after, max } = this.state;
-		if (order) {
-			const keyOf = ([id, data]: [string, DocData]): unknown =>
-				order === '__name__' ? id : data[order];
-			rows = rows.sort((a, b) => compare(keyOf(a), keyOf(b)));
-			if (after !== undefined) rows = rows.filter((row) => compare(keyOf(row), after) > 0);
+		if (order.length > 0) {
+			const keyOf = ([id, data]: [string, DocData], field: string): unknown =>
+				field === '__name__' ? id : data[field];
+			const cmp = (row: [string, DocData], values: unknown[]): number => {
+				for (let i = 0; i < values.length; i++) {
+					const { field, desc } = order[i];
+					const diff = compare(keyOf(row, field), values[i]);
+					if (diff !== 0) return desc ? -diff : diff;
+				}
+
+				return 0;
+			};
+			rows = rows.sort((a, b) =>
+				cmp(
+					a,
+					order.map((o) => keyOf(b, o.field)),
+				),
+			);
+			if (after !== undefined) rows = rows.filter((row) => cmp(row, after) > 0);
 		}
 		if (max !== null) rows = rows.slice(0, max);
 		const docs = rows.map(([id, data]) => snapshotOf(this.collection, id, data));
