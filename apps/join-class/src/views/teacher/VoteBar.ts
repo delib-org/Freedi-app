@@ -98,10 +98,14 @@ export const VoteBar: m.Component<VoteBarAttrs> = {
 				progress(attrs),
 			]),
 			state.primary
-				? m('div.vote-bar__group.vote-bar__group--controls', [
-						ballotButton(attrs, state.primary, true),
-						state.secondary ? ballotButton(attrs, state.secondary, false) : null,
-					])
+				? m(
+						'div.vote-bar__group.vote-bar__group--controls',
+						// Keyed buttons: Mithril refuses a null hole beside them, so the list holds only real buttons.
+						[
+							ballotButton(attrs, state.primary, true),
+							...(state.secondary ? [ballotButton(attrs, state.secondary, false)] : []),
+						],
+					)
 				: null,
 			m(VoteOrderSwitch, {
 				value: attrs.voteOrder,
