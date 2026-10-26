@@ -71,7 +71,8 @@ function db() {
  * Failure mode is intentionally fail-open: if the queue write fails, we
  * log and return — a missed enqueue means the cluster's aggregate stays
  * slightly stale until the next vote, which is recoverable by the nightly
- * reconciliation job (Ship 3 §"Reconciliation jobs").
+ * reconciliation job (`fn_nightlyClusterReconcile`, which recomputes every
+ * visible cluster under recently active questions).
  */
 export async function enqueueClusterRecompute(
 	clusterId: string,

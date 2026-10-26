@@ -6,7 +6,8 @@ import { logError } from '../utils/errorHandling';
  * cluster whose score depends on an evaluation of `statementId`.
  *
  * It goes through `recomputeClusterEvaluation`, the same function the
- * live-synth flusher (`recomputeSynthCluster`) calls,
+ * live-synth flusher (`recomputeSynthCluster`) and the nightly reconcile
+ * (`fn_nightlyClusterReconcile`) call,
  * so all writers apply one counting rule (see `clusterVoteRule.ts`).
  *
  * One failing cluster never blocks the others. Returns the cluster ids that

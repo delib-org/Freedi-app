@@ -1106,6 +1106,7 @@ exports.synthesisJobDispatch = createFirestoreFunction(
 // acting). See plans/synthesis-100k-living-synth.md, Ship 3 §"Trigger 3" /
 // "Debounced flusher".
 export { fn_clusterRecomputeFlush } from './synthesis/liveSynth/fn_clusterRecomputeFlush';
+export { fn_nightlyClusterReconcile } from './condensation/fn_nightlyClusterReconcile';
 
 // Ship 3b — live-synth attach/spawn/dissolve triggers.
 // Both are gated by the SYNTHESIS_LIVE_SYNTH_ENABLED flag and exit
