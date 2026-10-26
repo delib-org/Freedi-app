@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { t } from '@/lib/i18n';
 import { listableItems } from '@/lib/classroom/c3Logic';
+import { setImproveHandler } from '@/lib/classroom/replyUi';
 import { instructionFor } from '@/lib/classroom/turnMoment';
 import type { FlowCtx, FlowParts } from './flowTypes';
 import { rateBody } from './RateScreen';
@@ -25,6 +26,17 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 		feed.options.filter((o) => o.parentId === challengeId),
 		{ uid, tableId: table.tableId, challengeId },
 	);
+	// "Improve my proposal" from the replies (IA 22.5): the plenum's edit box on
+	// the rate screen, else the write screen (its box edits the sent proposal).
+	setImproveHandler(self, () => {
+		if (!plenum) {
+			ctx.goto('write');
+
+			return;
+		}
+		self.editing = true;
+		if (step !== 'rate') ctx.goto('rate');
+	});
 	const unrated = items.filter((i) => feed.ratingOf(i.statementId) === undefined).length;
 	const onError = (message: string): void => {
 		self.error = message;
@@ -122,6 +134,12 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 						challengeId,
 						emptyText: t('proposal.none_yet'),
 						onError,
+						replyLeave: () => {
+							self.sheetOpen = false;
+						},
+						replyBack: () => {
+							self.sheetOpen = true;
+						},
 					}),
 				)
 			: null,

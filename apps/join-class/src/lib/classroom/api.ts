@@ -14,6 +14,8 @@ import type {
 	ClassMoveStudentRequest,
 	ClassPauseBallotRequest,
 	ClassPauseBallotResponse,
+	ClassPostReplyRequest,
+	ClassPostReplyResponse,
 	ClassMoveStudentResponse,
 	ClassResetTurnsRequest,
 	ClassResetTurnsResponse,
@@ -119,4 +121,9 @@ export function classSetItemHidden(
 	req: ClassSetItemHiddenRequest,
 ): Promise<ClassSetItemHiddenResponse> {
 	return call('classSetItemHidden', req);
+}
+
+/** A member or the teacher: one reply on a proposal (IA 22); hurtful words answer { ok: false }. */
+export function classPostReply(req: ClassPostReplyRequest): Promise<ClassPostReplyResponse> {
+	return call('classPostReply', req);
 }

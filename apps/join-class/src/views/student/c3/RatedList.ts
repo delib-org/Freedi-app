@@ -5,6 +5,7 @@ import { partitionRateItems, plenumOrder, tableNumberOf } from '@/lib/classroom/
 import type { FlowFeed } from './FlowFeed';
 import { RateFaces } from './RateFaces';
 import { TextCard } from './TextCard';
+import { ReplyEntry } from '../replies/ReplyEntry';
 
 export interface RatedListAttrs {
 	/** Already filtered: no own items, no hidden ones. */
@@ -18,6 +19,9 @@ export interface RatedListAttrs {
 	plenum?: boolean;
 	/** Called with a translated message when a rating could not be saved. */
 	onError: (message: string) => void;
+	/** Inside the class sheet: the replies replace the sheet and come back to it (IA 22.2). */
+	replyLeave?: () => void;
+	replyBack?: () => void;
 }
 
 class RatedListState {
@@ -69,6 +73,15 @@ export const RatedList: m.ClassComponent<RatedListAttrs> = {
 						feed.rate(item, score).catch(() => vnode.attrs.onError(t('rate.failed')));
 					},
 				}),
+				// Replies are on proposals only (IA 22), never on table answers.
+				replies:
+					item.parentId === challengeId
+						? m(ReplyEntry, {
+								proposal: item,
+								leave: vnode.attrs.replyLeave,
+								back: vnode.attrs.replyBack,
+							})
+						: null,
 			});
 		if (items.length === 0) return m('p.rated-list__empty', vnode.attrs.emptyText);
 		// Plenum: one list in rank order (best first), every card re-ratable.

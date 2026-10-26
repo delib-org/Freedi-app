@@ -14,6 +14,7 @@ import { myProposal, type FlowKind, type Mate } from '@/lib/classroom/c3Logic';
 import type { FlowFeed } from './FlowFeed';
 import { ErrorLine } from './ErrorLine';
 import { ModeSwitch, WriteBox, type WriteState } from './WriteBox';
+import { ReplyEntry } from '../replies/ReplyEntry';
 
 export interface WritePanelAttrs {
 	main: Statement;
@@ -269,6 +270,9 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 					})
 				: m('p.write-panel__note', t('proposal.none')),
 			sentProposal?.hide ? m('p.write-panel__note', t('proposal.hidden_mine')) : null,
+			sentProposal && a.kind === 'proposals' && !sentProposal.hide
+				? m(ReplyEntry, { proposal: sentProposal, own: true, uid: a.uid })
+				: null,
 			m('label.write-panel__broadcast', [
 				m('input', {
 					type: 'checkbox',

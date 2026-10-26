@@ -2,7 +2,9 @@ import m from 'mithril';
 import { t } from '@/lib/i18n';
 import type { QuestionGroup, WrittenText } from '@/lib/classroom/textsHelpers';
 import { setHidden } from './consoleActions';
-import { isBusy } from './consoleState';
+import { consoleState, isBusy } from './consoleState';
+import { getMainStatement } from '@/lib/store';
+import { TeacherReplies, stopTeacherReplies, watchTeacherReplies } from './TeacherReplies';
 
 /**
  * "מה כתבו" (?view=texts): display-only cards grouped by question, then table,
@@ -14,7 +16,7 @@ export interface WhatTheyWroteAttrs {
 	groups: readonly QuestionGroup[];
 }
 
-function card(text: WrittenText, noDeviceNames: readonly string[]): m.Vnode {
+function card(text: WrittenText, noDeviceNames: readonly string[], proposal: boolean): m.Vnode {
 	return m('li.written-card', { key: text.id, class: text.hidden ? 'written-card--hidden' : '' }, [
 		m('p.written-card__text', text.text),
 		m('p.written-card__meta', [
@@ -43,6 +45,8 @@ function card(text: WrittenText, noDeviceNames: readonly string[]): m.Vnode {
 					)
 				: null,
 		]),
+		// Replies are on proposals only (IA 22.5).
+		proposal ? m(TeacherReplies, { mainId: consoleState.mainId, proposalId: text.id }) : null,
 	]);
 }
 
@@ -67,6 +71,15 @@ function questionHead(group: QuestionGroup): m.Vnode {
 }
 
 export const WhatTheyWrote: m.Component<WhatTheyWroteAttrs> = {
+	oninit() {
+		const main = getMainStatement();
+		watchTeacherReplies(main?.topParentId || consoleState.mainId);
+	},
+
+	onremove() {
+		stopTeacherReplies();
+	},
+
 	view({ attrs }) {
 		const total = attrs.groups.reduce(
 			(sum, g) => sum + g.groups.reduce((s, tg) => s + tg.texts.length, 0),
@@ -92,7 +105,7 @@ export const WhatTheyWrote: m.Component<WhatTheyWroteAttrs> = {
 									),
 									m(
 										'ul.written__list',
-										tg.texts.map((text) => card(text, tg.noDeviceNames)),
+										tg.texts.map((text) => card(text, tg.noDeviceNames, g.challenge)),
 									),
 								]),
 							),

@@ -1,9 +1,14 @@
 import m from 'mithril';
+import type { Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import type { SummaryRow, VoteSummary } from '@/lib/classroom/voteSummary';
+import { ReplyEntry } from '../replies/ReplyEntry';
 
 export interface VoteResultsAttrs {
 	summary: VoteSummary;
+	/** The proposals behind the rows: each row gets its replies entry (IA 22). */
+	proposals?: readonly Statement[];
+	uid?: string | null;
 }
 
 function votesLine(row: SummaryRow): string {
@@ -12,7 +17,8 @@ function votesLine(row: SummaryRow): string {
 		: t('voting.result_votes', { percent: row.percent, n: row.count });
 }
 
-function rowView(row: SummaryRow): m.Vnode {
+function rowView(row: SummaryRow, attrs: VoteResultsAttrs): m.Vnode {
+	const proposal = attrs.proposals?.find((p) => p.statementId === row.id);
 	const classes = ['vote-result__row'];
 	if (row.winner) classes.push('vote-result__row--winner');
 	if (row.leading) classes.push('vote-result__row--leading');
@@ -25,6 +31,9 @@ function rowView(row: SummaryRow): m.Vnode {
 			m('span.vote-result__fill'),
 		]),
 		m('span.vote-result__count', votesLine(row)),
+		proposal
+			? m(ReplyEntry, { proposal, own: proposal.creatorId === attrs.uid, uid: attrs.uid })
+			: null,
 	]);
 }
 
@@ -46,7 +55,10 @@ export const VoteResults: m.Component<VoteResultsAttrs> = {
 
 		return m('section.vote-result', { 'aria-labelledby': 'vote-result-title' }, [
 			m('h2.vote-result__title', { id: 'vote-result-title' }, title),
-			m('ol.vote-result__rows', summary.rows.map(rowView)),
+			m(
+				'ol.vote-result__rows',
+				summary.rows.map((row) => rowView(row, attrs)),
+			),
 			m('p.vote-result__turnout', t('summary.turnout', { n: summary.voted, m: summary.present })),
 			summary.tie ? m('p.vote-result__tie', t('summary.tie_by_ratings')) : null,
 			summary.kind === 'open' || summary.kind === 'paused'

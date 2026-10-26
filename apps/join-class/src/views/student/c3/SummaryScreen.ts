@@ -7,6 +7,7 @@ import { getChallengeQuestion } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
 import { classState } from '@/lib/classroom/classState';
 import { listenRoster } from '@/lib/classroom/listeners';
+import { currentUid } from '@/lib/classroom/c3Data';
 import { setMyDecisionSupport } from '@/lib/classroom/studentWrites';
 import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
 import { presentCount, summaryOf } from '@/lib/classroom/voteSummary';
@@ -96,7 +97,7 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 						note: summary.kind === 'none' ? note : null,
 					})
 				: null,
-			m(VoteResults, { summary }),
+			m(VoteResults, { summary, proposals: self.feed.options, uid: currentUid() }),
 			summary.showSupport
 				? [
 						m('h2.summary__ask', { id: 'summary-ask' }, t('summary.how_much')),

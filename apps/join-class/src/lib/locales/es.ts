@@ -5,10 +5,12 @@
 
 import vote from './vote/es';
 import allProposals from './allProposals/es'; // >>> allProposals
+import reply from './reply/es';
 
 const es: Record<string, string> = {
 	...vote,
 	...allProposals, // >>> allProposals
+	...reply,
 	'step.waiting': 'Esperando al docente',
 	'step.opening': 'Apertura',
 	'step.side': 'Elegir postura',

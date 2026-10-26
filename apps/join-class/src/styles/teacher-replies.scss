@@ -1,0 +1,81 @@
+// =============================================================================
+// "Replies (n)" under a proposal card in the teacher's "מה כתבו" (IA 22.5):
+// every reply with the writer's real name, hide / restore, and a composer.
+// =============================================================================
+
+.teacher-replies {
+  margin-block-start: var(--space-sm);
+  padding-block-start: var(--space-sm);
+  border-block-start: 1px solid var(--border-light);
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin: var(--space-sm) 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__composer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    align-items: flex-start;
+  }
+
+  &__label {
+    width: 100%;
+  }
+
+  &__area {
+    width: 100%;
+    padding: var(--space-sm);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-lg);
+    background: var(--bg-input);
+    color: var(--ink);
+    font: inherit;
+    resize: vertical;
+
+    &:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 1px;
+    }
+  }
+
+  &__failed {
+    margin: 0;
+    color: var(--danger);
+  }
+}
+
+.teacher-reply {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  align-items: baseline;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-lg);
+  background: var(--paper-soft);
+
+  &__tag {
+    display: flex;
+    gap: var(--space-sm);
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+  }
+
+  &__text {
+    flex-basis: 100%;
+    margin: 0;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  &--hidden {
+    opacity: 0.6;
+  }
+}
