@@ -6,6 +6,7 @@ import { Collections, StatementType, functionConfig, type Statement } from '@fre
 import { ALLOWED_ORIGINS } from '../../config/cors';
 import { loadSynthesisSettings } from '../pipeline/loadSynthesisSettings';
 import { dissolveQuestionSynthesis } from '../derivedDocs';
+import { assertNoDirectVotesOnDerivedDocs } from '../derivedDocVotes';
 import { cosineSimilarity, meanVector } from '../bulkCluster';
 import { refineComponent } from '../completeLinkage';
 import { judgeSemanticEquivalenceCached } from '../../services/verdict-cache-service';
@@ -213,6 +214,10 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 
 		const question = await assertSynthesisAdmin(questionId, uid);
 		const settings = await loadSynthesisSettings(questionId);
+
+		// 0. Refuse when participants already voted on the merged ideas: the
+		// dissolve would delete those votes. No override.
+		await assertNoDirectVotesOnDerivedDocs(questionId);
 
 		// 1. Clean slate: dissolve any prior synthesis output (restores members).
 		const dissolve = await dissolveQuestionSynthesis(questionId, { reversedByUserId: uid });

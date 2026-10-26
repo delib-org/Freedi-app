@@ -4963,5 +4963,6 @@
   "Show all {n}": "نمایش همه {n}",
   "Totals": "مجموع‌ها",
   "Map scale": "مقیاس نقشه",
-  "Fuller dot = more evaluators": "نقطهٔ پررنگ‌تر = ارزیابان بیشتر"
+  "Fuller dot = more evaluators": "نقطهٔ پررنگ‌تر = ارزیابان بیشتر",
+  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "این پرسش از قبل روی ایده‌های ادغام‌شده‌اش رأی دارد. بازسازی آن‌ها را حذف می‌کند، بنابراین مسدود شده است."
 }

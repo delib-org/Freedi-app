@@ -8,6 +8,7 @@ import { enqueueItem, initProgressDoc } from '../queue/enqueue';
 import { QUEUE_COLLECTION, type ProgressDoc } from '../queue/types';
 import { estimateEtaMinutes, isRunInFlight } from '../queue/runState';
 import { dissolveQuestionSynthesis } from '../derivedDocs';
+import { assertNoDirectVotesOnDerivedDocs } from '../derivedDocVotes';
 import { assertSynthesisAdmin } from './assertSynthesisAdmin';
 
 /**
@@ -72,6 +73,11 @@ export const reCluster = onCall<ReClusterRequest>(
 				'A synthesis operation is already running for this question',
 			);
 		}
+
+		// 0. Refuse when participants already voted on the merged ideas: the
+		// dissolve would delete those votes. failed-precondition, reason
+		// 'derived-docs-have-votes'. No override.
+		await assertNoDirectVotesOnDerivedDocs(questionId);
 
 		// 1. Clean: dissolve all prior synthesis output so the rebuild is not
 		// contaminated by stale clusters / drifted membership.

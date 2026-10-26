@@ -4605,5 +4605,6 @@
   "Show all {n}": "عرض كل {n}",
   "Totals": "المجاميع",
   "Map scale": "مقياس الخريطة",
-  "Fuller dot = more evaluators": "نقطة أكثر امتلاءً = مقيّمون أكثر"
+  "Fuller dot = more evaluators": "نقطة أكثر امتلاءً = مقيّمون أكثر",
+  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "لهذا السؤال أصوات مسجلة على أفكاره المدمجة. إعادة البناء ستحذفها، لذلك تم حظرها."
 }

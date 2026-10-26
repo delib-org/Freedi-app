@@ -5203,5 +5203,6 @@
   "Show all {n}": "הצג את כל {n}",
   "Totals": "סכומים",
   "Map scale": "קנה מידה של המפה",
-  "Fuller dot = more evaluators": "נקודה מלאה יותר = יותר מעריכים"
+  "Fuller dot = more evaluators": "נקודה מלאה יותר = יותר מעריכים",
+  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "לשאלה הזו כבר יש הצבעות על ההצעות הממוזגות שלה. בנייה מחדש תמחק אותן, ולכן היא חסומה."
 }

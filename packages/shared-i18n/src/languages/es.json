@@ -4485,5 +4485,6 @@
   "Show all {n}": "Mostrar las {n}",
   "Totals": "Totales",
   "Map scale": "Escala del mapa",
-  "Fuller dot = more evaluators": "Punto más lleno = más evaluadores"
+  "Fuller dot = more evaluators": "Punto más lleno = más evaluadores",
+  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "Esta pregunta ya tiene votos en sus ideas combinadas. Reconstruir los eliminaría, por eso está bloqueado."
 }

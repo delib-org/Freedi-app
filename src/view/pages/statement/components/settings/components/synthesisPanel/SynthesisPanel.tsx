@@ -14,6 +14,7 @@ import {
 	triggerRejudgeGrayBand,
 	triggerSynthesizeNow,
 } from '@/controllers/db/synthesis/synthesisOperations';
+import { isDerivedDocsHaveVotesError } from '@/controllers/db/synthesis/derivedDocsVotesError';
 import {
 	DEFAULT_SYNTHESIS_SETTINGS,
 	type SynthesisProgress,
@@ -277,10 +278,14 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 		try {
 			return await fn();
 		} catch (error) {
-			setToast({
-				tone: 'error',
-				message: error instanceof Error ? error.message : t('Operation failed'),
-			});
+			const message = isDerivedDocsHaveVotesError(error)
+				? t(
+						'This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.',
+					)
+				: error instanceof Error
+					? error.message
+					: t('Operation failed');
+			setToast({ tone: 'error', message });
 
 			return undefined;
 		} finally {
