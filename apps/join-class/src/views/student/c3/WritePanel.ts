@@ -15,6 +15,7 @@ import type { FlowFeed } from './FlowFeed';
 import { ErrorLine } from './ErrorLine';
 import { ModeSwitch, WriteBox, type WriteState } from './WriteBox';
 import { ReplyEntry } from '../replies/ReplyEntry';
+import { PushAsk } from '../replies/PushAsk';
 
 export interface WritePanelAttrs {
 	main: Statement;
@@ -271,7 +272,10 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 				: m('p.write-panel__note', t('proposal.none')),
 			sentProposal?.hide ? m('p.write-panel__note', t('proposal.hidden_mine')) : null,
 			sentProposal && a.kind === 'proposals' && !sentProposal.hide
-				? m(ReplyEntry, { proposal: sentProposal, own: true, uid: a.uid })
+				? [
+						m(ReplyEntry, { proposal: sentProposal, own: true, uid: a.uid }),
+						m(PushAsk, { mainId: a.main.statementId }),
+					]
 				: null,
 			m('label.write-panel__broadcast', [
 				m('input', {

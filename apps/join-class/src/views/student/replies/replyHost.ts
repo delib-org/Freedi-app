@@ -9,6 +9,8 @@ import { listenRepliesToMe, loadProposal } from '@/lib/classroom/replies';
 import { shouldToast, unreadReplies } from '@/lib/classroom/replyLogic';
 import { openReplies, replyUi, resetReplyUi } from '@/lib/classroom/replyUi';
 import { showStudentNotice } from '@/lib/classroom/studentNotices';
+import { refreshReplyPush } from '@/lib/classroom/replyPush';
+import { afterLoad } from '@/lib/deferWork';
 import { RepliesSheet } from './RepliesSheet';
 
 /**
@@ -24,6 +26,8 @@ import { RepliesSheet } from './RepliesSheet';
 
 /** The query parameter a push tap carries. */
 export const REPLIES_PARAM = 'replies';
+/** The push worker's message to an open window (public/class-push-sw.js). */
+const PUSH_OPEN_MESSAGE = 'class-open-url';
 
 async function openById(proposalId: string): Promise<void> {
 	const proposal = await loadProposal(proposalId);
@@ -109,8 +113,24 @@ export function startReplyHost(main: Statement): () => void {
 		},
 	});
 	openFromLink();
+	// A push tapped while the app is open: the worker focuses this window and names the link.
+	const onWorkerMessage = (event: MessageEvent): void => {
+		const data = event.data as { type?: string; url?: string } | null;
+		if (data?.type !== PUSH_OPEN_MESSAGE || typeof data.url !== 'string') return;
+		const url = new URL(data.url, window.location.origin);
+		if (url.pathname !== window.location.pathname) {
+			window.location.assign(url.href);
+
+			return;
+		}
+		const proposalId = url.searchParams.get(REPLIES_PARAM);
+		if (proposalId) void openById(proposalId);
+	};
+	navigator.serviceWorker?.addEventListener('message', onWorkerMessage);
+	afterLoad(refreshReplyPush);
 
 	return () => {
+		navigator.serviceWorker?.removeEventListener('message', onWorkerMessage);
 		stop();
 		m.mount(host, null);
 		host.remove();

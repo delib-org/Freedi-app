@@ -58,6 +58,8 @@ export default defineConfig({
           // so the runtime rule below caches whichever ones actually get used.
           'assets/{ar,de,es,fa,he,nl}-*.js',
           'assets/sentryClient-*.js',
+          // The push worker (IA 22) is registered by itself at /class-push/.
+          'class-push-sw.js',
         ],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
