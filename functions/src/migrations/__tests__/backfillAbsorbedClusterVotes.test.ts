@@ -68,22 +68,35 @@ describe('backfillAbsorbedClusterVotes', () => {
 		seedWorld();
 	});
 
-	it('dry run reports orphaned votes and writes nothing', async () => {
+	it('dry run reports orphaned votes, lists the inferred link, and writes nothing', async () => {
 		const report = await backfillAbsorbedClusterVotes(db, { execute: false });
 
 		expect(report.rows).toHaveLength(1);
 		const row = report.rows[0];
 		expect(row.winnerId).toBe('A');
-		expect([...row.addedAbsorbedIds].sort()).toEqual(['B', 'C', 'D']);
-		expect(row.orphanedDirectVotes).toBe(3);
-		expect(row.evaluatorsAfter).toBe(4);
+		expect([...row.addedAbsorbedIds].sort()).toEqual(['B', 'C']);
+		expect(row.orphanedDirectVotes).toBe(2);
+		expect(row.evaluatorsAfter).toBe(3);
+		expect(report.inferred).toEqual([{ loserId: 'D', winnerId: 'A', applied: false }]);
 		expect(statement('A').absorbedClusterIds).toBeUndefined();
-		expect(statement('D').mergedInto).toBeUndefined();
-		expect(formatBackfillReport(report)).toContain('question q1');
+		const text = formatBackfillReport(report);
+		expect(text).toContain('question q1');
+		expect(text).toContain('inferred D -> A: NOT applied');
 	});
 
-	it('execute writes the field, links claim losers and recomputes the winner', async () => {
+	it('execute applies mergedInto links only; an admin-hidden look-alike is left alone', async () => {
 		await backfillAbsorbedClusterVotes(db, { execute: true });
+
+		const a = statement('A');
+		expect([...(a.absorbedClusterIds ?? [])].sort()).toEqual(['B', 'C']);
+		expect(a.evaluation?.numberOfEvaluators).toBe(3);
+		expect(a.evaluation?.sumEvaluations).toBeCloseTo(1 + 1 - 1);
+		// D could be an admin-hidden cluster: no votes moved, no false mergedInto.
+		expect(statement('D').mergedInto).toBeUndefined();
+	});
+
+	it('--include-inferred also applies the inferred link and writes mergedInto', async () => {
+		await backfillAbsorbedClusterVotes(db, { execute: true, includeInferred: true });
 
 		const a = statement('A');
 		expect([...(a.absorbedClusterIds ?? [])].sort()).toEqual(['B', 'C', 'D']);
@@ -93,17 +106,38 @@ describe('backfillAbsorbedClusterVotes', () => {
 	});
 
 	it('is idempotent: a second run has nothing to add', async () => {
-		await backfillAbsorbedClusterVotes(db, { execute: true });
-		const second = await backfillAbsorbedClusterVotes(db, { execute: false });
+		await backfillAbsorbedClusterVotes(db, { execute: true, includeInferred: true });
+		const second = await backfillAbsorbedClusterVotes(db, {
+			execute: false,
+			includeInferred: true,
+		});
 
 		expect(second.rows).toHaveLength(0);
+		expect(second.inferred).toHaveLength(0);
 	});
 
-	it('skips a claim loser that fits several winners', async () => {
+	it('skips a hidden cluster that fits several winners', async () => {
 		seedCluster('E', ['m1', 'm2']);
 		const report = await backfillAbsorbedClusterVotes(db, { execute: false });
 
 		expect(report.skipped).toEqual([{ loserId: 'D', reason: 'several possible winners' }]);
+	});
+
+	it('never infers a winner of another kind, and lists the no-match', async () => {
+		seedCluster('A', ['m1', 'm2', 'm3'], { derivedByPipeline: 'topic-cluster' });
+		seedCluster('D', ['m1', 'm2'], { hide: true, derivedByPipeline: 'synthesis' });
+
+		const report = await backfillAbsorbedClusterVotes(db, {
+			execute: true,
+			includeInferred: true,
+		});
+
+		expect(report.inferred).toHaveLength(0);
+		expect(report.skipped).toEqual([
+			{ loserId: 'D', reason: 'no mergedInto and no visible winner of the same kind' },
+		]);
+		expect(statement('A').absorbedClusterIds).not.toContain('D');
+		expect(statement('D').mergedInto).toBeUndefined();
 	});
 });
 

@@ -18,12 +18,15 @@ import {
  * winner's `absorbedClusterIds`, so the winner's score counts those votes.
  *
  * Losers are found by `mergedInto`. Claim-consolidation losers never had
- * `mergedInto`; for them the winner is the ONE visible cluster under the same
- * question whose members include all of the loser's members (ambiguous or
- * missing matches are skipped and reported).
+ * `mergedInto`; for them the winner is the ONE visible cluster of the same
+ * kind (synth / theme / claim) under the same question whose members include
+ * all of the loser's members (ambiguous or missing matches are reported).
+ *
+ * Inferred links (no `mergedInto`) are only listed unless `includeInferred`:
+ * an admin-hidden cluster looks exactly like an old claim loser.
  *
  * Dry run by default: it only reads and reports. `execute` writes the field
- * (and `mergedInto` on matched claim losers) and recomputes each winner.
+ * (and, for applied inferred links, `mergedInto`) and recomputes each winner.
  */
 
 export const BACKFILL_PAGE_SIZE = 300;
@@ -45,13 +48,35 @@ export interface BackfillRow {
 export interface BackfillReport {
 	rows: BackfillRow[];
 	skipped: Array<{ loserId: string; reason: string }>;
+	/** Links guessed from membership (no `mergedInto`): applied only with includeInferred. */
+	inferred: Array<{ loserId: string; winnerId: string; applied: boolean }>;
 	executed: boolean;
+}
+
+export interface BackfillOptions {
+	execute: boolean;
+	/**
+	 * Also apply links guessed from membership (hidden cluster without
+	 * `mergedInto`, e.g. old claim-consolidation losers). Off by default:
+	 * an admin-hidden cluster looks the same, and the guess could hand its
+	 * votes to the wrong cluster.
+	 */
+	includeInferred?: boolean;
 }
 
 interface LoserLink {
 	loser: Statement;
 	winnerId: string;
-	needsMergedInto: boolean;
+	inferred: boolean;
+}
+
+type ClaimMarked = Statement & { canonicalClaim?: string };
+
+/** Synth vs theme vs claim cluster: a loser only merges into its own kind. */
+export function clusterKind(cluster: Statement): string {
+	const claim = (cluster as ClaimMarked).canonicalClaim ? 'claim' : 'plain';
+
+	return `${cluster.derivedByPipeline ?? 'none'}:${claim}`;
 }
 
 async function listHiddenClusters(db: Firestore): Promise<Statement[]> {
@@ -94,9 +119,11 @@ async function visibleClustersOf(
 function findSupersetWinner(loser: Statement, visible: Statement[]): string | 'ambiguous' | null {
 	const members = loser.integratedOptions ?? [];
 	if (members.length === 0) return null;
+	const kind = clusterKind(loser);
 	const matches = visible.filter(
 		(c) =>
 			c.statementId !== loser.statementId &&
+			clusterKind(c) === kind &&
 			members.every((m) => (c.integratedOptions ?? []).includes(m)),
 	);
 	if (matches.length > 1) return 'ambiguous';
@@ -135,8 +162,15 @@ async function linkLosers(
 			);
 			if (match === 'ambiguous') {
 				skipped.push({ loserId: loser.statementId, reason: 'several possible winners' });
+				continue;
 			}
-			if (!match || match === 'ambiguous') continue;
+			if (!match) {
+				skipped.push({
+					loserId: loser.statementId,
+					reason: 'no mergedInto and no visible winner of the same kind',
+				});
+				continue;
+			}
 			firstWinnerId = match;
 		}
 		const winner = await resolveFinalWinner(db, firstWinnerId);
@@ -148,7 +182,7 @@ async function linkLosers(
 		links.push({
 			loser,
 			winnerId: winner.statementId,
-			needsMergedInto: !loser.mergedInto,
+			inferred: !loser.mergedInto,
 		});
 	}
 
@@ -181,10 +215,15 @@ async function buildRow(winner: Statement, added: string[]): Promise<BackfillRow
 
 export async function backfillAbsorbedClusterVotes(
 	db: Firestore,
-	options: { execute: boolean },
+	options: BackfillOptions,
 ): Promise<BackfillReport> {
 	const skipped: BackfillReport['skipped'] = [];
-	const { links, winners } = await linkLosers(db, skipped);
+	const { links: allLinks, winners } = await linkLosers(db, skipped);
+	const includeInferred = options.includeInferred === true;
+	const inferred = allLinks
+		.filter((l) => l.inferred)
+		.map((l) => ({ loserId: l.loser.statementId, winnerId: l.winnerId, applied: includeInferred }));
+	const links = allLinks.filter((l) => !l.inferred || includeInferred);
 
 	const addedByWinner = new Map<string, Set<string>>();
 	for (const { loser, winnerId } of links) {
@@ -206,7 +245,7 @@ export async function backfillAbsorbedClusterVotes(
 	rows.sort((a, b) => a.questionId.localeCompare(b.questionId));
 
 	if (options.execute) {
-		for (const link of links.filter((l) => l.needsMergedInto)) {
+		for (const link of links.filter((l) => l.inferred)) {
 			await db
 				.collection(Collections.statements)
 				.doc(link.loser.statementId)
@@ -221,7 +260,7 @@ export async function backfillAbsorbedClusterVotes(
 		}
 	}
 
-	return { rows, skipped, executed: options.execute };
+	return { rows, skipped, inferred, executed: options.execute };
 }
 
 /** Plain-text table, one block per question. */
@@ -247,6 +286,12 @@ export function formatBackfillReport(report: BackfillReport): string {
 			`skipped losers: ${report.skipped.length}, ${report.executed ? 'WRITTEN' : 'DRY RUN (no writes)'}`,
 	);
 	report.skipped.forEach((s) => lines.push(`  skipped ${s.loserId}: ${s.reason}`));
+	report.inferred.forEach((l) =>
+		lines.push(
+			`  inferred ${l.loserId} -> ${l.winnerId}: ` +
+				(l.applied ? 'applied' : 'NOT applied (check it, then pass --include-inferred)'),
+		),
+	);
 
 	return lines.join('\n');
 }

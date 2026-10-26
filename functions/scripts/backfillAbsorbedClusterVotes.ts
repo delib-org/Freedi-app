@@ -11,6 +11,8 @@
  *   GCLOUD_PROJECT=<proj> npx tsx scripts/backfillAbsorbedClusterVotes.ts
  *   # write + recompute each winner:
  *   GCLOUD_PROJECT=<proj> npx tsx scripts/backfillAbsorbedClusterVotes.ts --execute
+ *   # also apply links guessed from membership (listed as "inferred" in the dry run):
+ *   GCLOUD_PROJECT=<proj> npx tsx scripts/backfillAbsorbedClusterVotes.ts --execute --include-inferred
  *   # production additionally needs --confirm-prod:
  *   GCLOUD_PROJECT=synthesistalyaron npx tsx scripts/backfillAbsorbedClusterVotes.ts --execute --confirm-prod
  *   # against the solo emulator:
@@ -36,7 +38,10 @@ async function main(): Promise<void> {
 	}
 	if (getApps().length === 0) initializeApp({ projectId: guard.project });
 
-	const report = await backfillAbsorbedClusterVotes(getFirestore(), { execute: guard.execute });
+	const report = await backfillAbsorbedClusterVotes(getFirestore(), {
+		execute: guard.execute,
+		includeInferred: process.argv.includes('--include-inferred'),
+	});
 	console.info(
 		`# backfill absorbed cluster votes — project=${guard.project} ` +
 			`${guard.execute ? '(EXECUTE)' : '(DRY-RUN)'}` +
