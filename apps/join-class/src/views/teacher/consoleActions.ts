@@ -128,9 +128,15 @@ export function pickProjectorVideo(mainId: string, videoId: string | null): Prom
 }
 
 export function assignTables(mainId: string, replace: boolean): Promise<boolean> {
-	return guardedAct('assign', t(replace ? 'console.resplit' : 'console.split'), () =>
-		classAssignTables({ mainId, replace }),
-	);
+	return guardedAct('assign', t(replace ? 'console.resplit' : 'console.split'), async () => {
+		try {
+			await classAssignTables({ mainId, replace });
+		} catch (error) {
+			// The class is seated already (another tab, or the automatic split): what the teacher asked for.
+			if (!replace && isAlreadySplit(error)) return;
+			throw error;
+		}
+	});
 }
 
 export function allTablesTo(mainId: string, step: TableStep): Promise<boolean> {
