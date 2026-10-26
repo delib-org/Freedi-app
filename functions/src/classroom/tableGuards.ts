@@ -58,7 +58,8 @@ export const ALLOWED_FROM: Record<ClassTableAction['action'], readonly TableStep
 	claimTurn: ['pick', 'talk', 'write', 'rate'],
 	claimSpeaker: ['talk'],
 	finishSpeaking: ['talk'],
-	nextProposalsTurn: ['pick', 'talk', 'write', 'rate'],
+	// Proposals: only while the table talks; a table that moved on to write / rate keeps its turn.
+	nextProposalsTurn: ['talk'],
 };
 
 /**
@@ -72,7 +73,6 @@ const ADMIN_FROM_ANY_STEP: ReadonlySet<ClassTableAction['action']> = new Set([
 	'toWrite',
 	'toRate',
 	'nextTurn',
-	'nextProposalsTurn',
 ]);
 
 /** Teacher-only actions: the asker and tablemates never run them. */

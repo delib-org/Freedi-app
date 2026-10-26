@@ -85,6 +85,10 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 			return typeof req.fromTurn === 'number'
 				? { action: 'nextTurn', fromTurn: req.fromTurn }
 				: { action: 'nextTurn' };
+		case 'nextProposalsTurn':
+			return typeof req.fromTurn === 'number'
+				? { action: 'nextProposalsTurn', fromTurn: req.fromTurn }
+				: { action: 'nextProposalsTurn' };
 		default:
 			throw new ClassroomError('invalid-argument', 'Unknown table action');
 	}

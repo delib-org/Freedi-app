@@ -420,6 +420,9 @@ export function applyTableAction(
 		case 'passSpeaking':
 			return passSpeaking(table, base, action, ctx);
 		case 'nextProposalsTurn':
+			// A tap that names an earlier turn arrived after the table moved on: nothing to do.
+			if (action.fromTurn !== undefined && action.fromTurn !== proposalsTurnOf(table)) return table;
+
 			return nextProposalsTurn(base);
 		case 'passAsker': {
 			const { uid } = action;

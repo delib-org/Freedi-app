@@ -74,11 +74,12 @@ export type ClassTableAction =
 	 */
 	| { action: 'passSpeaking'; uid?: string }
 	/**
-	 * Proposals (IA 25.6, admin only): open the next turn at this table now, whatever its
-	 * state: `proposalsTurn + 1`, `spokenUids = []`, the speaker cleared. The table's maximum
-	 * grows with it, so a done table re-opens.
+	 * Proposals (IA 25.6, admin only), while the table talks: open the next turn now:
+	 * `proposalsTurn + 1`, `spokenUids = []`, the speaker cleared. The table's maximum grows
+	 * with it, so a done table re-opens. `fromTurn` is the turn the teacher saw: a tap that
+	 * arrives after the table already moved on is a no-op (a double tap advances once).
 	 */
-	| { action: 'nextProposalsTurn' };
+	| { action: 'nextProposalsTurn'; fromTurn?: number };
 
 export type ClassTableStepRequest = { tableId: string } & ClassTableAction;
 export interface ClassTableStepResponse {
@@ -90,11 +91,15 @@ export interface ClassTableStepResponse {
  * `classAllTablesTo` (admin). A move to `talk` starts the speakers afresh: at
  * Proposals it sets `proposalsTurn = 1` (entering the step), or with `newTurn`
  * opens the next turn at every table ("another turn, all tables", IA 25.6).
+ * `fromTurns` (tableId -> the turn the console saw) makes `newTurn` idempotent:
+ * a table whose turn moved on since is skipped, so a double tap or two consoles
+ * advance each table once. `updated` counts the tables advanced.
  */
 export interface ClassAllTablesToRequest {
 	mainId: string;
 	step: TableStep;
 	newTurn?: boolean;
+	fromTurns?: Record<string, number>;
 }
 export interface ClassAllTablesToResponse {
 	updated: number;

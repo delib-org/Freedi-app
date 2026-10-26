@@ -13,7 +13,7 @@ import type {
 	ClassTable,
 	TableStep,
 } from '@freedi/shared-types';
-import { safeParse } from 'valibot';
+import { number, record, safeParse, string } from 'valibot';
 import { db } from '../db';
 import { assertWorkspaceAdmin, requireId, requireUid } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
@@ -28,8 +28,21 @@ import { assertLessonRunning } from './lessonStatusGuard';
  * 1`), or with `newTurn` at the next turn of every table (IA 25.6).
  */
 
-/** The fields of a table that start speaking afresh at `talk`. */
-function freshTalkPatch(table: ClassTable, newTurn: boolean): Record<string, unknown> {
+const FromTurnsSchema = record(string(), number());
+
+/**
+ * The fields of a table that start speaking afresh at `talk`, or null when the
+ * table is left alone: a new turn is given only to a table still at the turn
+ * the console saw (`fromTurns`), so a repeated tap advances it once.
+ */
+function freshTalkPatch(
+	table: ClassTable,
+	newTurn: boolean,
+	fromTurns: Record<string, number> | undefined,
+): Record<string, unknown> | null {
+	const seen = fromTurns?.[table.tableId];
+	if (newTurn && seen !== undefined && seen !== proposalsTurnOf(table)) return null;
+
 	return {
 		spokenUids: [],
 		passedSpeakingUids: FieldValue.delete(),
@@ -51,6 +64,14 @@ export async function allTablesTo(
 	if (newTurn && step !== 'talk') {
 		throw new ClassroomError('invalid-argument', 'A new turn is a move to talk');
 	}
+	let fromTurns: Record<string, number> | undefined;
+	if (req?.fromTurns !== undefined) {
+		const turns = safeParse(FromTurnsSchema, req.fromTurns);
+		if (!turns.success) {
+			throw new ClassroomError('invalid-argument', 'fromTurns must map table ids to turns');
+		}
+		fromTurns = turns.output;
+	}
 	assertLessonRunning(await assertWorkspaceAdmin(firestore, mainId, actorUid));
 
 	const snap = await firestore
@@ -60,6 +81,7 @@ export async function allTablesTo(
 	if (snap.empty) return { updated: 0 };
 	const now = Date.now();
 	const batch = firestore.batch();
+	let updated = 0;
 	snap.docs.forEach((d) => {
 		const patch: Record<string, unknown> = {
 			step,
@@ -68,13 +90,18 @@ export async function allTablesTo(
 			speakerEndsAt: FieldValue.delete(),
 			speakerMs: FieldValue.delete(),
 		};
-		if (step === 'talk') Object.assign(patch, freshTalkPatch(d.data() as ClassTable, newTurn));
+		if (step === 'talk') {
+			const fresh = freshTalkPatch(d.data() as ClassTable, newTurn, fromTurns);
+			if (!fresh) return;
+			Object.assign(patch, fresh);
+		}
+		updated += 1;
 		batch.update(d.ref, patch);
 	});
 	// One batch: a lesson has ~10 tables, far below the 500-write limit.
-	await batch.commit();
+	if (updated > 0) await batch.commit();
 
-	return { updated: snap.size };
+	return { updated };
 }
 
 export const classAllTablesTo = onCall(

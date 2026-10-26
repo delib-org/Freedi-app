@@ -167,10 +167,33 @@ describe('nextProposalsTurn (the teacher gives another turn)', () => {
 		expect(next.passedSpeakingUids).toBeUndefined();
 	});
 
-	it('runs mid-turn too, from any table step, and leaves Table talk fields alone', () => {
-		const mid = table({ step: 'write', spokenUids: ['a'], proposalsTurn: 2, turn: 3 });
+	it('runs mid-turn too and leaves Table talk fields alone', () => {
+		const mid = table({ step: 'talk', spokenUids: ['a'], proposalsTurn: 2, turn: 3 });
 		const next = applyTableAction(mid, { action: 'nextProposalsTurn' }, teacher());
-		expect(next).toMatchObject({ proposalsTurn: 3, turn: 3, step: 'write', askerUid: 'a' });
+		expect(next).toMatchObject({ proposalsTurn: 3, turn: 3, step: 'talk', askerUid: 'a' });
+	});
+
+	it('is refused while the table is not talking (write / rate / pick keep their turn)', () => {
+		for (const step of ['pick', 'write', 'rate'] as const) {
+			expect(refusal(table({ step }), { action: 'nextProposalsTurn' }, teacher()).code).toBe(
+				'failed-precondition',
+			);
+		}
+	});
+
+	it('a tap naming the turn it saw advances once; a stale tap is a no-op', () => {
+		const first = applyTableAction(
+			table({ spokenUids: ['a', 'b', 'c'] }),
+			{ action: 'nextProposalsTurn', fromTurn: 1 },
+			teacher(),
+		);
+		expect(first.proposalsTurn).toBe(2);
+		const again = applyTableAction(first, { action: 'nextProposalsTurn', fromTurn: 1 }, teacher());
+		expect(again).toEqual(first);
+		expect(
+			applyTableAction(first, { action: 'nextProposalsTurn', fromTurn: 2 }, teacher())
+				.proposalsTurn,
+		).toBe(3);
 	});
 
 	it('is teacher-only: the asker and tablemates are refused', () => {

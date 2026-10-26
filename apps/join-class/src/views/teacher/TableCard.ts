@@ -13,6 +13,7 @@ import { joinNames } from '@/lib/classroom/listNames';
 import {
 	QUICK_KEYS,
 	STUCK_AFTER_MS,
+	anotherTurnFor,
 	answerMark,
 	askMark,
 	quickActionFor,
@@ -79,9 +80,13 @@ export function proposalsTurnLine(table: ClassTable): string {
 	});
 }
 
-/** Proposals: every turn is spoken at this table (read from the live lesson). */
+/** Proposals: the table talks and every turn is spoken (read from the live lesson). */
 export function proposalsDoneNow(table: ClassTable, mode: TableMode): boolean {
-	return mode === 'proposals' && proposalsDone(table, getMainStatement(), serverNow());
+	return (
+		mode === 'proposals' &&
+		table.step === 'talk' &&
+		proposalsDone(table, getMainStatement(), serverNow())
+	);
 }
 
 /** The engine action behind each next-step verb. */
@@ -95,9 +100,33 @@ export function quickActionName(
 	return quick.kind === 'talk' ? 'toTalk' : quick.kind === 'write' ? 'toWrite' : 'toRate';
 }
 
-/** The one next-step action of a table, as the verb the students' buttons end with. */
+/** The next-step action of a table, as the verb the students' buttons end with. "Another turn" names the turn seen. */
 export function quickRun(table: ClassTable, quick: QuickAction): Promise<boolean> {
+	if (quick.kind === 'anotherTurn') {
+		return tableAction(table.tableId, {
+			action: 'nextProposalsTurn',
+			fromTurn: proposalsTurnOf(table),
+		});
+	}
+
 	return tableAction(table.tableId, { action: quickActionName(quick) });
+}
+
+/** One quick button of the card (step forward, or "another turn"). */
+function quickButton(table: ClassTable, quick: QuickAction): m.Vnode {
+	const label = quickLabel(quick);
+
+	return m(
+		'button.btn.btn--tertiary.table-card__quick',
+		{
+			type: 'button',
+			'data-quick': quick.kind,
+			'aria-label': `${t('console.table_n', { n: table.n })}: ${label}`,
+			disabled: consoleState.held || isBusy(`table:${table.tableId}:${quickActionName(quick)}`),
+			onclick: () => void quickRun(table, quick),
+		},
+		label,
+	);
 }
 
 export function quickLabel(quick: QuickAction): string {
@@ -305,24 +334,16 @@ export const TableCard: m.Component<TableCardAttrs> = {
 								`+ ${t('console.no_device')}`,
 							),
 				(() => {
-					const quick = attrs.done ? null : quickActionFor(table, mode, serverNow(), propDone);
-					if (!quick) return null;
-					const label = quickLabel(quick);
+					const quicks = attrs.done
+						? []
+						: [quickActionFor(table, mode, serverNow()), anotherTurnFor(table, mode, propDone)];
+					const shown = quicks.filter((quick): quick is QuickAction => quick !== null);
+					if (shown.length === 0) return null;
 
-					return m('div.table-card__actions', [
-						m(
-							'button.btn.btn--tertiary.table-card__quick',
-							{
-								type: 'button',
-								'data-quick': quick.kind,
-								'aria-label': `${t('console.table_n', { n: table.n })}: ${label}`,
-								disabled:
-									consoleState.held || isBusy(`table:${table.tableId}:${quickActionName(quick)}`),
-								onclick: () => void quickRun(table, quick),
-							},
-							label,
-						),
-					]);
+					return m(
+						'div.table-card__actions',
+						shown.map((quick) => quickButton(table, quick)),
+					);
 				})(),
 			],
 		);

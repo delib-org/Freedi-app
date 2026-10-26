@@ -33,9 +33,20 @@
     accent-color: var(--terra-600);
   }
 
+  // The label is the switch's touch target (44 px): it toggles through `for`.
   &__label {
+    display: flex;
+    align-items: center;
+    min-block-size: var(--touch-target);
     cursor: pointer;
     font-weight: var(--font-weight-semibold);
+  }
+
+  // Keyboard focus is always visible (the native ring can vanish on a styled select).
+  &__switch:focus-visible,
+  &__select:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
   }
 
   &__help {
@@ -63,6 +74,9 @@
   }
 
   &__select-label {
+    display: flex;
+    align-items: center;
+    min-block-size: var(--touch-target);
     font-weight: var(--font-weight-semibold);
   }
 

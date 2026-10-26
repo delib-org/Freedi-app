@@ -20,7 +20,7 @@ import {
 	classTableStep,
 } from '@/lib/classroom/api';
 import type { DropTarget } from '@/lib/classroom/dragReducer';
-import { Collections } from '@freedi/shared-types';
+import { Collections, proposalsTurnOf } from '@freedi/shared-types';
 import { db, doc, updateDoc } from '@/lib/firebase';
 import { getLessonStep, getLessonSteps, setLessonStep } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
@@ -139,10 +139,18 @@ export function allTablesTo(mainId: string, step: TableStep): Promise<boolean> {
 	);
 }
 
-/** Proposals (IA 25.6): "another turn, all tables": the next turn at every table, speakers afresh. */
+/**
+ * Proposals (IA 25.6): "another turn, all tables": the next turn at every table,
+ * speakers afresh. Sends the turn the console sees at each table, so a double
+ * tap or a second console advances each table once.
+ */
 export function allTablesNewTurn(mainId: string): Promise<boolean> {
+	const fromTurns = Object.fromEntries(
+		classState.tables.map((table) => [table.tableId, proposalsTurnOf(table)]),
+	);
+
 	return guardedAct('all:newTurn', t('console.another_turn_all'), () =>
-		classAllTablesTo({ mainId, step: 'talk', newTurn: true }),
+		classAllTablesTo({ mainId, step: 'talk', newTurn: true, fromTurns }),
 	);
 }
 
