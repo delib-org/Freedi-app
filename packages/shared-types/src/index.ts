@@ -1016,7 +1016,8 @@ export {
 export {
   CLASS_TABLES_COLLECTION,
   CLASS_BATCH_SIZE,
-  SPEAK_SECONDS,
+  DEFAULT_SPEAK_SECONDS,
+  SPEAK_SECONDS_CHOICES,
   DEFAULT_GATE,
   SIDE_MIN,
   SIDE_MAX,
@@ -1075,6 +1076,7 @@ export {
   choosing,
   allowOwnQuestionsOf,
   noQuestionsLeft,
+  speakSecondsOf,
 } from './models/classroom/classroomLogic';
 export type { LessonSettingsHolder } from './models/classroom/classroomLogic';
 export type {

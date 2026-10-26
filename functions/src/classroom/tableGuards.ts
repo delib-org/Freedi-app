@@ -21,6 +21,8 @@ export interface TransitionContext {
 	questionIsOwn?: boolean;
 	/** The lesson lets students add their own question (`allowOwnQuestionsOf(main)`); absent = yes. */
 	allowOwnQuestions?: boolean;
+	/** Length of a speaking time in ms (`speakSecondsOf(main) * 1000`); absent = the default. */
+	speakMs?: number;
 }
 
 /** From which steps the asker (or a tablemate, where allowed) may run each action. */

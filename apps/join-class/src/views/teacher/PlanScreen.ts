@@ -51,7 +51,12 @@ import {
 	savedSideName,
 } from './planDetails';
 import { PlanIntro } from './PlanIntro';
-import { OWN_QUESTIONS_KEY, ownQuestionsControl } from './planLessonSettings';
+import {
+	OWN_QUESTIONS_KEY,
+	SPEAK_SECONDS_KEY,
+	ownQuestionsControl,
+	speakTimeControl,
+} from './planLessonSettings';
 
 interface FieldAttrs {
 	key: string;
@@ -341,6 +346,8 @@ function renderDetails(): m.Vnode {
 				sideNameField(SIDE_B_KEY, 'plan.details.side_b'),
 				fieldError(SIDE_A_KEY),
 				fieldError(SIDE_B_KEY),
+				speakTimeControl(),
+				fieldError(SPEAK_SECONDS_KEY),
 			]),
 		]),
 		renderCopiedFrom(),

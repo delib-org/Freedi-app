@@ -2,8 +2,10 @@ import {
 	allowOwnQuestionsOf,
 	choosing,
 	noQuestionsLeft,
+	speakSecondsOf,
 	tableDone,
 } from '../models/classroom/classroomLogic';
+import { DEFAULT_SPEAK_SECONDS, SPEAK_SECONDS_CHOICES } from '../models/classroom/classroomModel';
 import type { ClassTable } from '../models/classroom/classroomModel';
 
 const NOW = 1_000_000;
@@ -37,6 +39,24 @@ describe('allowOwnQuestionsOf', () => {
 	it('follows an explicit value', () => {
 		expect(allowOwnQuestionsOf({ statementSettings: { allowOwnQuestions: false } })).toBe(false);
 		expect(allowOwnQuestionsOf({ statementSettings: { allowOwnQuestions: true } })).toBe(true);
+	});
+});
+
+describe('speakSecondsOf', () => {
+	it('is two minutes when the lesson sets nothing', () => {
+		expect(speakSecondsOf(null)).toBe(DEFAULT_SPEAK_SECONDS);
+		expect(speakSecondsOf({ statementSettings: {} })).toBe(120);
+	});
+
+	it('follows a choice from the list', () => {
+		for (const seconds of SPEAK_SECONDS_CHOICES) {
+			expect(speakSecondsOf({ statementSettings: { speakSeconds: seconds } })).toBe(seconds);
+		}
+	});
+
+	it('ignores a value outside the list', () => {
+		expect(speakSecondsOf({ statementSettings: { speakSeconds: 45 } })).toBe(DEFAULT_SPEAK_SECONDS);
+		expect(speakSecondsOf({ statementSettings: { speakSeconds: -1 } })).toBe(DEFAULT_SPEAK_SECONDS);
 	});
 });
 

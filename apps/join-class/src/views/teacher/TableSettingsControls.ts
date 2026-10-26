@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { SPEAK_SECONDS_CHOICES } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import '@/styles/table-settings.scss';
 
@@ -48,6 +49,43 @@ export const OwnQuestionsSwitch: m.Component<OwnQuestionsAttrs> = {
 						t('plan.own_questions_none'),
 					)
 				: null,
+		]);
+	},
+};
+
+export interface SpeakTimeAttrs {
+	scope: SettingsScope;
+	seconds: number;
+	disabled?: boolean;
+	onChange: (seconds: number) => void;
+}
+
+/** "Time to talk": a native select over SPEAK_SECONDS_CHOICES (half a minute to 5 minutes), with its help line. */
+export const SpeakTimeSelect: m.Component<SpeakTimeAttrs> = {
+	view({ attrs }) {
+		const id = `table-settings-speak-${attrs.scope}`;
+
+		return m('.table-settings__select-row', [
+			m('label.table-settings__select-label', { for: id }, t(`${attrs.scope}.speak_time`)),
+			m(
+				'select.table-settings__select',
+				{
+					id,
+					value: String(attrs.seconds),
+					disabled: attrs.disabled,
+					'aria-describedby': `${id}-help`,
+					'data-testid': id,
+					onchange: (e: Event) => attrs.onChange(Number((e.target as HTMLSelectElement).value)),
+				},
+				SPEAK_SECONDS_CHOICES.map((seconds) =>
+					m(
+						'option',
+						{ key: seconds, value: String(seconds), selected: seconds === attrs.seconds },
+						t(`plan.speak_time_${seconds}`),
+					),
+				),
+			),
+			m('p.table-settings__help', { id: `${id}-help` }, t(`${attrs.scope}.speak_time_help`)),
 		]);
 	},
 };

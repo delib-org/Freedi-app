@@ -42,6 +42,7 @@ const as = (actorUid: string, now = NOW): TransitionContext => ({
 	isAdmin: false,
 	now,
 	lessonStep: 'tableTalk',
+	speakMs: MINUTE,
 });
 const atProposals = (actorUid: string): TransitionContext => ({
 	...as(actorUid),
@@ -199,7 +200,7 @@ describe('claimTurn ("I want to start")', () => {
 });
 
 describe('claimSpeaker ("I want to answer")', () => {
-	it('gives the floor for SPEAK_SECONDS to the first tapper', () => {
+	it('gives the floor for the lesson speaking time to the first tapper', () => {
 		const next = run(talking(), { action: 'claimSpeaker' }, as('b'));
 		expect(next).toMatchObject({ speakerUid: 'b', speakerEndsAt: NOW + MINUTE, spokenUids: [] });
 	});

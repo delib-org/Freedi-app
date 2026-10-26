@@ -274,7 +274,11 @@ describe('classTableStep + classAllTablesTo', () => {
 		);
 		expect(others.details).toEqual({ reason: 'others-first' });
 		await step(mate, { action: 'claimSpeaker' });
-		expect(read()).toMatchObject({ speakerUid: mate, speakerEndsAt: NOW + 60_000 });
+		expect(read()).toMatchObject({
+			speakerUid: mate,
+			speakerEndsAt: NOW + 120_000,
+			speakerMs: 120_000,
+		});
 		const taken = toHttpsError(
 			await step(other, { action: 'claimSpeaker' }).catch((e: unknown) => e),
 			{ operation: 'test' },
@@ -285,7 +289,8 @@ describe('classTableStep + classAllTablesTo', () => {
 		expect(read()).toMatchObject({ speakerEndsAt: now, spokenUids: [mate] });
 		await step(other, { action: 'passSpeaking' });
 		await step(asker, { action: 'claimSpeaker' });
-		now += 61_000;
+		// the asker's speaking time (two minutes by default) runs out
+		now += 121_000;
 		expect(await step(other, { action: 'claimTurn', fromTurn: 1, questionId: 'q2' })).toEqual({
 			step: 'talk',
 			turn: 2,

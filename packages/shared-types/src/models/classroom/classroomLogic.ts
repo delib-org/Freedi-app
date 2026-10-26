@@ -1,15 +1,31 @@
-import { CAMP_A_BELOW, CAMP_B_ABOVE, Camp, ClassTable } from './classroomModel';
+import {
+	CAMP_A_BELOW,
+	CAMP_B_ABOVE,
+	DEFAULT_SPEAK_SECONDS,
+	SPEAK_SECONDS_CHOICES,
+	Camp,
+	ClassTable,
+} from './classroomModel';
 import type { LessonPlan, LessonStatus, StatementSettings } from '../statement/StatementSettings';
 import type { LessonStatusAction } from './classroomCallables';
 
 /** What the lesson-setting readers need of the main statement (a `Statement` fits). */
 export interface LessonSettingsHolder {
-	statementSettings?: Pick<StatementSettings, 'allowOwnQuestions'> | null;
+	statementSettings?: Pick<StatementSettings, 'allowOwnQuestions' | 'speakSeconds'> | null;
 }
 
 /** May students add a question of their own at Table talk? Absent = yes (IA 25.2). */
 export function allowOwnQuestionsOf(main: LessonSettingsHolder | null | undefined): boolean {
 	return main?.statementSettings?.allowOwnQuestions !== false;
+}
+
+/** Seconds each person speaks (IA 25.5): the lesson's choice, else the default (2 minutes). */
+export function speakSecondsOf(main: LessonSettingsHolder | null | undefined): number {
+	const own = main?.statementSettings?.speakSeconds;
+
+	return typeof own === 'number' && (SPEAK_SECONDS_CHOICES as readonly number[]).includes(own)
+		? own
+		: DEFAULT_SPEAK_SECONDS;
 }
 
 /**

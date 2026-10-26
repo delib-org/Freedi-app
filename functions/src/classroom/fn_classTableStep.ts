@@ -4,6 +4,7 @@ import {
 	Collections,
 	WritingModeSchema,
 	allowOwnQuestionsOf,
+	speakSecondsOf,
 	functionConfig,
 } from '@freedi/shared-types';
 import type {
@@ -33,6 +34,8 @@ import { applyTableAction } from './tableTransitions';
  * machine cannot (admin role, the picked question) and writes the result in a
  * transaction so two taps never interleave.
  */
+
+const MS_PER_SECOND = 1000;
 
 /** Rebuild the action from the raw request: unknown keys never reach the machine. */
 export function parseAction(req: ClassTableStepRequest): ClassTableAction {
@@ -134,6 +137,7 @@ export async function tableStep(
 			now: now(),
 			questionIsOwn,
 			allowOwnQuestions: allowOwnQuestionsOf(main),
+			speakMs: speakSecondsOf(main) * MS_PER_SECOND,
 		});
 		tx.set(ref, next);
 

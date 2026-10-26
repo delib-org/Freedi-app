@@ -46,6 +46,7 @@ export async function allTablesTo(
 			updatedAt: now,
 			speakerUid: FieldValue.delete(),
 			speakerEndsAt: FieldValue.delete(),
+			speakerMs: FieldValue.delete(),
 		};
 		if (step === 'talk') patch.spokenUids = [];
 		batch.update(d.ref, patch);

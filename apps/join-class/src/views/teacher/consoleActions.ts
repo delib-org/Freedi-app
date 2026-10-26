@@ -143,7 +143,7 @@ export function allTablesTo(mainId: string, step: TableStep): Promise<boolean> {
  * One of the lesson's table-talk settings (IA 25), from the settings popover.
  * A setting, not a move of the room, so it works while the lesson is held too.
  */
-export type TableSettingsPatch = { allowOwnQuestions: boolean };
+export type TableSettingsPatch = { allowOwnQuestions: boolean } | { speakSeconds: number };
 
 export function setTableSetting(patch: TableSettingsPatch): Promise<boolean> {
 	const field = Object.keys(patch)[0];

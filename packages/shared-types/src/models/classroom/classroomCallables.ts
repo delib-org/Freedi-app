@@ -60,7 +60,7 @@ export type ClassTableAction =
 	 * claimer saw (required). First write wins.
 	 */
 	| { action: 'claimTurn'; fromTurn: number; questionId: string }
-	/** Table talk: "I want to answer". Takes the floor for SPEAK_SECONDS when nobody holds it. */
+	/** Table talk: "I want to answer". Takes the floor for the lesson's speaking time when nobody holds it. */
 	| { action: 'claimSpeaker' }
 	/** Table talk: end one's own minute early (the speaker, or an admin). */
 	| { action: 'finishSpeaking' }

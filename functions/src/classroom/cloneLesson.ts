@@ -3,6 +3,7 @@ import {
 	StatementType,
 	createParagraphChildStatement,
 	createStatementObject,
+	speakSecondsOf,
 } from '@freedi/shared-types';
 import type {
 	ListType,
@@ -148,6 +149,9 @@ function mainSettings(source: Statement, classCode: string, now: number): Statem
 		...(typeof s?.videoUrl === 'string' && s.videoUrl ? { videoUrl: s.videoUrl } : {}),
 		...(sideNames && typeof sideNames.a === 'string' && typeof sideNames.b === 'string'
 			? { sideNames: { a: sideNames.a, b: sideNames.b } }
+			: {}),
+		...(s?.speakSeconds !== undefined
+			? { speakSeconds: speakSecondsOf({ statementSettings: s }) }
 			: {}),
 		...(typeof s?.allowOwnQuestions === 'boolean'
 			? { allowOwnQuestions: s.allowOwnQuestions }

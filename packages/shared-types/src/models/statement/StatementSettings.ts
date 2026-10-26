@@ -447,6 +447,8 @@ export const StatementSettingsSchema = object({
 	sideNames: optional(object({ a: string(), b: string() })),
 	// join-class: may students add a question of their own at Table talk? Absent = yes. Main statement only.
 	allowOwnQuestions: optional(boolean()),
+	// join-class: seconds each person speaks when answering or proposing (one of SPEAK_SECONDS_CHOICES). Absent = DEFAULT_SPEAK_SECONDS. Main statement only.
+	speakSeconds: optional(number()),
 });
 
 

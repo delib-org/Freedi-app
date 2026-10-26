@@ -1,10 +1,11 @@
 import m from 'mithril';
-import { SPEAK_SECONDS } from '@freedi/shared-types';
 import type { ClassTable } from '@freedi/shared-types';
 import { getLang, t } from '@/lib/i18n';
 import { getServerOffset, remainingMs, serverNow } from '@/lib/classroom/serverClock';
 import { maxTurns } from '@/lib/classroom/turnMoment';
 import { noneLeftNow, questionCapNow } from '@/lib/classroom/ownQuestions';
+import { tableSpeakMs } from '@/lib/classroom/speakTime';
+import { getMainStatement } from '@/lib/store';
 import { formatSpeakerTime, tableStepKey, timerLine } from '@/lib/classroom/consoleHelpers';
 import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
 import { joinNames } from '@/lib/classroom/listNames';
@@ -47,7 +48,6 @@ export interface TableCardAttrs {
 	// >>> allProposals END
 }
 
-const MS_PER_SECOND = 1000;
 let noDeviceName = '';
 
 function nameOf(
@@ -113,13 +113,12 @@ function waitRows(attrs: TableCardAttrs): m.Children {
 
 function timerRows(attrs: TableCardAttrs): m.Children {
 	const { table, students } = attrs;
+	const totalMs = tableSpeakMs(table, getMainStatement());
 	const remaining =
 		table.speakerEndsAt === undefined
 			? null
-			: remainingMs(table.speakerEndsAt, Date.now(), getServerOffset(), {
-					totalMs: SPEAK_SECONDS * MS_PER_SECOND,
-				});
-	const line = timerLine(table, remaining, SPEAK_SECONDS * MS_PER_SECOND);
+			: remainingMs(table.speakerEndsAt, Date.now(), getServerOffset(), { totalMs });
+	const line = timerLine(table, remaining, totalMs);
 	// At Table talk an ended minute is not announced: the row says who the table waits for.
 	if (line.kind === 'none' || (attrs.tableTalk && line.kind === 'over'))
 		return waitRows(attrs) ?? m('p.table-card__timer.table-card__timer--none', '—');

@@ -1,4 +1,4 @@
-import { SPEAK_SECONDS } from '@freedi/shared-types';
+import { DEFAULT_SPEAK_SECONDS } from '@freedi/shared-types';
 import type { ClassTable, ClassTableAction } from '@freedi/shared-types';
 import { applyTableAction, everyoneSpoke, TransitionContext } from '../tableTransitions';
 import { ClassroomError } from '../classroomErrors';
@@ -119,7 +119,8 @@ describe('applyTableAction — a whole turn by the asker', () => {
 		t = applyTableAction(t, { action: 'nextSpeaker', uid: 'b' }, atProposals);
 		expect(t).toMatchObject({
 			speakerUid: 'b',
-			speakerEndsAt: NOW + SPEAK_SECONDS * 1000,
+			speakerEndsAt: NOW + DEFAULT_SPEAK_SECONDS * 1000,
+			speakerMs: DEFAULT_SPEAK_SECONDS * 1000,
 			spokenUids: [],
 		});
 

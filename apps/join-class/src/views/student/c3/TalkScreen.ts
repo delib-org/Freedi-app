@@ -3,7 +3,9 @@ import { speakerTimeOver } from '@freedi/shared-types';
 import type { ClassTable } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { serverNow } from '@/lib/classroom/serverClock';
-import { Countdown, SPEAK_MS } from './Countdown';
+import { getMainStatement } from '@/lib/store';
+import { lessonSpeakMs, tableSpeakMs } from '@/lib/classroom/speakTime';
+import { Countdown } from './Countdown';
 
 export interface TalkScreenAttrs {
 	table: ClassTable;
@@ -35,7 +37,7 @@ export function talkFinishAction(busy: boolean, onGo: () => void): m.Children {
  * The content of the Proposals talk screen (screens down), drawn inside the
  * inverted StudentFrame (the question sits above, in the frame's big heading), then a fresh minute for whoever volunteers
  * (the same speaker mechanics as Table talk, IA 17.14). Nobody speaking: an idle
- * 1:00 and "I want to answer". Table talk has its own screens (tableTalkParts.ts).
+ * clock (the lesson's speaking time) and "I want to answer". Table talk has its own screens (tableTalkParts.ts).
  */
 export const TalkScreen: m.ClassComponent<TalkScreenAttrs> = {
 	view(vnode) {
@@ -54,7 +56,9 @@ export const TalkScreen: m.ClassComponent<TalkScreenAttrs> = {
 					: null,
 				m(Countdown, {
 					endsAt: speaking ? table.speakerEndsAt : undefined,
-					totalMs: SPEAK_MS,
+					totalMs: speaking
+						? tableSpeakMs(table, getMainStatement())
+						: lessonSpeakMs(getMainStatement()),
 					quietEnd: true,
 				}),
 				mine ? speakerButton('table-finish', t('turn.finish'), busy, onFinish) : null,

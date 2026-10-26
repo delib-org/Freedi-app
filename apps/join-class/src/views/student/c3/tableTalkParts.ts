@@ -1,12 +1,13 @@
 import m from 'mithril';
-import type { ClassTable, ClassTableAction } from '@freedi/shared-types';
+import type { ClassTableAction } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { getGuidingQuestions } from '@/lib/lesson';
 import { classTableStep } from '@/lib/classroom/api';
 import { createTableQuestion } from '@/lib/classroom/c3Data';
 import { questionTextFrom } from '@/lib/classroom/questionLookup';
 import { getFetchedQuestionTexts, requestQuestionText } from '@/lib/classroom/questionText';
-import { SPEAK_MS, Countdown, msLeft } from './Countdown';
+import { Countdown, msLeft } from './Countdown';
+import { lessonSpeakMs, tableSpeakMs } from '@/lib/classroom/speakTime';
 import { isRaceRefusal, maxTurns, refusalReason } from '@/lib/classroom/turnMoment';
 import { claimLabelKey } from '@/lib/classroom/c3Logic';
 import { questionCapOf } from '@/lib/classroom/ownQuestions';
@@ -240,14 +241,21 @@ function wasFirstLine(ctx: FlowCtx): string | null {
 	return who && who !== ctx.uid ? t('turn.was_first', { name: nameOf(ctx, who) }) : null;
 }
 
-function clock(table: ClassTable): m.Children {
-	return m(Countdown, { endsAt: table.speakerEndsAt, totalMs: SPEAK_MS, quietEnd: true });
+function clock(ctx: FlowCtx): m.Children {
+	const { table, main } = ctx;
+	// Idle: the time the next speaker gets. Running: the length the server wrote with this minute.
+	const totalMs =
+		table.speakerEndsAt === undefined ? lessonSpeakMs(main) : tableSpeakMs(table, main);
+
+	return m(Countdown, { endsAt: table.speakerEndsAt, totalMs, quietEnd: true });
 }
 
 function finishButton(ctx: FlowCtx): m.Children {
-	const { self, table } = ctx;
+	const { self, table, main } = ctx;
+	const totalMs = tableSpeakMs(table, main);
 	const guarded =
-		table.speakerEndsAt !== undefined && msLeft(table.speakerEndsAt) > SPEAK_MS - FINISH_GUARD_MS;
+		table.speakerEndsAt !== undefined &&
+		msLeft(table.speakerEndsAt, totalMs) > totalMs - FINISH_GUARD_MS;
 
 	return m(
 		'button.btn.btn--secondary.tt__finish',
@@ -289,7 +297,7 @@ function talkScreen(ctx: FlowCtx, state: TableTalkState, question: string): Scre
 			return {
 				...base,
 				status,
-				body: m('.tt__clock', [m('p.tt__status', status), clock(table), finishButton(ctx)]),
+				body: m('.tt__clock', [m('p.tt__status', status), clock(ctx), finishButton(ctx)]),
 			};
 		}
 		case 'L': {
@@ -306,7 +314,7 @@ function talkScreen(ctx: FlowCtx, state: TableTalkState, question: string): Scre
 				status,
 				body: m('.tt__clock', [
 					m('p.tt__status', { 'data-testid': 'answering' }, status),
-					clock(table),
+					clock(ctx),
 					note ? m('p.tt__note', note) : null,
 					firstNote,
 				]),
