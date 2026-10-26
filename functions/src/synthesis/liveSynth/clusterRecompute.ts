@@ -132,6 +132,34 @@ export async function findClustersContainingMember(
 }
 
 /**
+ * Clusters whose score (and polarization breakdown) depends on a vote on
+ * `statementId`: those that hold it as a member, and those that absorbed it
+ * in a merge (`absorbedClusterIds`), whose direct votes keep counting.
+ * Fail-open like `findClustersContainingMember`.
+ */
+export async function findClustersAffectedByVote(statementId: string): Promise<Statement[]> {
+	if (!statementId) return [];
+	const containing = await findClustersContainingMember(statementId);
+	let absorbing: Statement[] = [];
+	try {
+		const snap = await db()
+			.collection(Collections.statements)
+			.where('absorbedClusterIds', 'array-contains', statementId)
+			.get();
+		absorbing = snap.docs.map((d) => d.data() as Statement);
+	} catch (error) {
+		logger.warn('clusterRecompute.findClustersAffectedByVote: absorbed lookup failed', {
+			statementId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
+	const byId = new Map<string, Statement>();
+	for (const cluster of [...containing, ...absorbing]) byId.set(cluster.statementId, cluster);
+
+	return [...byId.values()];
+}
+
+/**
  * Compute one evaluator's effective vote on a cluster, per the live-synth
  * vote-counting model: direct vote wins; otherwise average of member votes.
  *

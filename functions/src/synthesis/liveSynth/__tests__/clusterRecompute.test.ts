@@ -35,6 +35,7 @@ import {
 	computeEffectiveVote,
 	debugAggregatePreview,
 	enqueueClusterRecompute,
+	findClustersAffectedByVote,
 	findClustersContainingMember,
 	recomputeSynthCluster,
 } from '../clusterRecompute';
@@ -141,6 +142,26 @@ describe('enqueueClusterRecompute', () => {
 		mockGetFirestore.mockReturnValue({ collection: collMock });
 		await enqueueClusterRecompute('', 'evaluation:create');
 		expect(collMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('findClustersAffectedByVote', () => {
+	it('returns clusters holding the id as a member and clusters that absorbed it, once each', async () => {
+		const byField: Record<string, Array<{ statementId: string }>> = {
+			integratedOptions: [{ statementId: 'cluster1' }, { statementId: 'cluster2' }],
+			absorbedClusterIds: [{ statementId: 'cluster2' }, { statementId: 'winnerA' }],
+		};
+		const whereMock = jest.fn((field: string) => ({
+			get: jest.fn().mockResolvedValue({
+				docs: (byField[field] ?? []).map((d) => ({ data: () => d })),
+			}),
+		}));
+		mockGetFirestore.mockReturnValue({ collection: jest.fn(() => ({ where: whereMock })) });
+
+		const clusters = await findClustersAffectedByVote('B');
+
+		expect(whereMock).toHaveBeenCalledWith('absorbedClusterIds', 'array-contains', 'B');
+		expect(clusters.map((c) => c.statementId).sort()).toEqual(['cluster1', 'cluster2', 'winnerA']);
 	});
 });
 
