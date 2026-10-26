@@ -61,6 +61,10 @@ Wait for it to finish (it runs npm install; a few minutes). If it fails, stop an
    - `npm run typecheck`
    - `npm run lint`
    - `npm test` (`cd functions && npm test` when functions changed; `npm run test:rules` at the repo root when firestore.rules changed)
+   Other lanes run tests on the same machine at the same time. While iterating, run only your
+   own test files with a worker cap: `npx jest <paths> --maxWorkers=2`. Run the full `npm test`
+   once, at the end. Never leave a test run going in the background. (Uncapped, three lanes
+   of ts-jest workers once took 50+ GB and froze the 24 GB machine twice.)
    A failure that you believe is pre-existing must be shown red on the base commit too
    (check out dev in a throwaway `git worktree add /tmp/base-check dev`, never `git stash`).
 3. One commit per task on feat/<slug> with a conventional message (feat/fix(<app>): ... (<task id>)).
