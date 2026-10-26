@@ -20,7 +20,8 @@ export type ClassroomErrorReason =
 	| 'no-ballot'
 	| 'vote-running'
 	| 'vote-closed'
-	| 'last-candidate';
+	| 'last-candidate'
+	| 'reply-too-long';
 
 /**
  * A refusal the engine's pure logic raises. It carries the callable error code

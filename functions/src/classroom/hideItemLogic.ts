@@ -10,19 +10,30 @@ import { ClassroomError } from './classroomErrors';
 /** The vote value that means "no choice"; fn_vote moves the count off the old option. */
 export const WITHDRAWN_VOTE = 'none';
 
-export type HideableKind = 'option' | 'question';
+export type HideableKind = 'option' | 'question' | 'reply';
 
 /**
- * An answer or proposal (an option under one of the lesson's questions) or a
+ * An answer or proposal (an option under one of the lesson's questions), a
  * table's own question (a question under the lesson that carries a table
- * marker). Anything else is refused.
+ * marker), or a reply on a proposal (IA 22: a marked statement under an option
+ * whose question — `grandparent` — is the lesson's). Anything else is refused.
  */
 export function classifyHideable(
 	item: Statement | undefined,
 	parent: Statement | undefined,
 	mainId: string,
+	grandparent?: Statement,
 ): HideableKind {
-	if (item?.statementType === StatementType.option) {
+	if (item?.statementType === StatementType.statement && item.classReply !== undefined) {
+		if (
+			parent?.statementType === StatementType.option &&
+			grandparent?.statementType === StatementType.question &&
+			grandparent.statementId === parent.parentId &&
+			grandparent.parentId === mainId
+		) {
+			return 'reply';
+		}
+	} else if (item?.statementType === StatementType.option) {
 		if (parent?.statementType === StatementType.question && parent.parentId === mainId) {
 			return 'option';
 		}
@@ -35,7 +46,7 @@ export function classifyHideable(
 	}
 	throw new ClassroomError(
 		'invalid-argument',
-		'Only an answer, a proposal or a table question of this lesson can be hidden',
+		'Only an answer, a proposal, a table question or a reply of this lesson can be hidden',
 	);
 }
 
