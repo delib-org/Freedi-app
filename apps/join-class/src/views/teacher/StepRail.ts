@@ -57,6 +57,20 @@ function stepButton(step: RailStep, attrs: StepRailAttrs): m.Vnode {
 	);
 }
 
+/**
+ * On a phone the step strip scrolls inside itself: keep the current step in the
+ * middle of it. Scrolls the strip only (never the page) and only when it overflows.
+ */
+function centreCurrentStep(vnode: m.VnodeDOM): void {
+	const list = vnode.dom as HTMLElement;
+	if (list.scrollWidth <= list.clientWidth) return;
+	const current = list.querySelector<HTMLElement>('.step-rail__step--current');
+	if (!current) return;
+	const listBox = list.getBoundingClientRect();
+	const box = current.getBoundingClientRect();
+	list.scrollLeft += box.left + box.width / 2 - (listBox.left + listBox.width / 2);
+}
+
 export const StepRail: m.Component<StepRailAttrs> = {
 	view({ attrs }) {
 		const steps = railSteps(attrs.keys, attrs.currentIndex);
@@ -72,7 +86,17 @@ export const StepRail: m.Component<StepRailAttrs> = {
 		return m('div.step-rail', { class: attrs.held ? 'step-rail--held' : '' }, [
 			m(
 				'ol.step-rail__list',
-				{ 'aria-label': t('console.rail_label') },
+				{
+					'aria-label': t('console.rail_label'),
+					oncreate: centreCurrentStep,
+					// only when the step changed: a manual swipe must not be undone by the clock tick
+					onupdate: (v: m.VnodeDOM) => {
+						const key = String(attrs.currentIndex);
+						if ((v.dom as HTMLElement).dataset.centred === key) return;
+						(v.dom as HTMLElement).dataset.centred = key;
+						centreCurrentStep(v);
+					},
+				},
 				steps.map((s) => stepButton(s, attrs)),
 			),
 			m('div.step-rail__side', [
