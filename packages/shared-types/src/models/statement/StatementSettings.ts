@@ -460,6 +460,10 @@ export const StatementSettingsSchema = object({
 	introVideos: optional(array(object({ id: string(), title: string(), url: string() }))),
 	// join-class: character names of side A and side B. Main statement only.
 	sideNames: optional(object({ a: string(), b: string() })),
+	// join-class: the question students answer on the side slider. Absent/empty = the translated default. Main statement only.
+	sideQuestion: optional(string()),
+	// join-class: what side A and side B claim, shown under their names on the slider. Empty = no claim. Main statement only.
+	sideClaims: optional(object({ a: string(), b: string() })),
 	// join-class: may students add a question of their own at Table talk? Absent = yes. Main statement only.
 	allowOwnQuestions: optional(boolean()),
 	// join-class: seconds each person speaks when answering or proposing (one of SPEAK_SECONDS_CHOICES). Absent = DEFAULT_SPEAK_SECONDS. Main statement only.

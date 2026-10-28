@@ -2,7 +2,7 @@ import m from 'mithril';
 import type { LessonStepKey } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { classState } from '@/lib/classroom/classState';
-import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
+import { gateOf, sideClaimsOf, sideNamesOf, sideQuestionOf } from '@/lib/classroom/classSettings';
 import { projectorData } from '@/lib/classroom/projectorData';
 import { ProjectorQr, QR_WAITING_SIZE } from './ProjectorBand';
 import { openingStage } from './OpeningStage';
@@ -60,14 +60,22 @@ function opening(): m.Vnode {
 
 function side(): m.Vnode {
 	const names = sideNamesOf(projectorData.main);
+	const claims = sideClaimsOf(projectorData.main);
+	const own = projectorData.main?.statementSettings?.sideQuestion?.trim();
 	const character = (key: 'a' | 'b'): m.Vnode =>
 		m(`.projector-character.projector-character--${key}`, [
 			m('span.projector-character__circle', { 'aria-hidden': 'true' }, initialOf(names[key])),
 			m('span.projector-character__name', names[key]),
+			claims[key] ? m('p.projector-character__claim', { dir: 'auto' }, claims[key]) : null,
 		]);
 
 	return m('section.projector-step.projector-step--side', [
-		m('h1.projector-instruction', t('projector.sideQuestion')),
+		// the teacher's question, else the projector's own wording of the default
+		m(
+			'h1.projector-instruction',
+			{ dir: 'auto' },
+			own ? sideQuestionOf(projectorData.main) : t('projector.sideQuestion'),
+		),
 		m('.projector-characters', [
 			character('a'),
 			m('span.projector-center', t('projector.center')),

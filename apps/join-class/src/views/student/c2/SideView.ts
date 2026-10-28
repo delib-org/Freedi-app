@@ -4,14 +4,15 @@ import { StudentFrame } from '@/components/StudentFrame';
 import { SideSlider } from '@/components/SideSlider';
 import { classState } from '@/lib/classroom/classState';
 import { setMySide } from '@/lib/classroom/studentWrites';
-import { sideNamesOf } from '@/lib/classroom/classSettings';
+import { sideClaimsOf, sideNamesOf, sideQuestionOf } from '@/lib/classroom/classSettings';
 import { t } from '@/lib/i18n';
 import { stepLabel } from '@/lib/lesson';
 import { SIDE_CENTER } from '../c2/c2Helpers';
 import type { StepAttrs } from '../steps/stepSlot';
 
 /**
- * Step 2, Side (UX §2.4): "Which side are you closer to?" on the side slider.
+ * Step 2, Side (UX §2.4): the teacher's side question (default "Which side are
+ * you closer to?") on the side slider, with each side's claim when written.
  * The first touch of the thumb enables "Confirm"; moving the thumb saves after
  * a short pause (or at once on Confirm). The slider stays live until the
  * teacher opens Tables, so a second pick is allowed.
@@ -104,6 +105,7 @@ export const SideView: m.Component<StepAttrs> = {
 		const state = vnode.state as unknown as SideState;
 		const mainId = vnode.attrs.main.statementId;
 		const names = sideNamesOf(vnode.attrs.main);
+		const claims = sideClaimsOf(vnode.attrs.main);
 		// a refreshed phone: the saved side arrives after the first render
 		const saved = classState.mySubscription?.side;
 		if (!state.touched && typeof saved === 'number') {
@@ -116,7 +118,7 @@ export const SideView: m.Component<StepAttrs> = {
 			StudentFrame,
 			{
 				headerLine: stepLabel('side'),
-				instruction: t('side.title'),
+				instruction: sideQuestionOf(vnode.attrs.main),
 				action: [
 					state.status === 'failed'
 						? m('p.side-step__error', { role: 'alert' }, t('side.failed'))
@@ -128,6 +130,8 @@ export const SideView: m.Component<StepAttrs> = {
 				value: state.value,
 				nameA: names.a,
 				nameB: names.b,
+				claimA: claims.a,
+				claimB: claims.b,
 				onInput: (value: number) => {
 					state.value = value;
 					state.touched = true;

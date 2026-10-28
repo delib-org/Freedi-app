@@ -565,3 +565,39 @@
 .plan-details__select {
   min-block-size: var(--touch-target);
 }
+
+// ---- the side step's dilemma: question, then each side's name + claim ---------
+.plan-details__sides {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-block-end: var(--space-sm);
+  border-block-end: 1px solid var(--paper-line);
+}
+
+.plan-details__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.plan-details__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: var(--space-sm);
+  border: 1px solid var(--paper-line);
+  border-inline-start: 4px solid var(--terra-500);
+  border-radius: var(--radius-sm);
+
+  &--b {
+    border-inline-start-color: var(--indigo-500);
+  }
+}
+
+.plan-details__legend {
+  padding-inline: var(--space-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--ink);
+}

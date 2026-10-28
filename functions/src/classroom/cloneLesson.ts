@@ -140,6 +140,7 @@ function mainSettings(source: Statement, classCode: string, now: number): Statem
 	const s = source.statementSettings;
 	const videos = Array.isArray(s?.introVideos) ? s.introVideos : undefined;
 	const sideNames = s?.sideNames;
+	const sideClaims = s?.sideClaims;
 
 	return {
 		...DEFAULT_FLAGS,
@@ -151,6 +152,12 @@ function mainSettings(source: Statement, classCode: string, now: number): Statem
 		...(typeof s?.videoUrl === 'string' && s.videoUrl ? { videoUrl: s.videoUrl } : {}),
 		...(sideNames && typeof sideNames.a === 'string' && typeof sideNames.b === 'string'
 			? { sideNames: { a: sideNames.a, b: sideNames.b } }
+			: {}),
+		...(typeof s?.sideQuestion === 'string' && s.sideQuestion
+			? { sideQuestion: s.sideQuestion }
+			: {}),
+		...(sideClaims && typeof sideClaims.a === 'string' && typeof sideClaims.b === 'string'
+			? { sideClaims: { a: sideClaims.a, b: sideClaims.b } }
 			: {}),
 		...(s?.speakSeconds !== undefined
 			? { speakSeconds: speakSecondsOf({ statementSettings: s }) }

@@ -37,18 +37,8 @@ import {
 	type NewCard,
 } from './planController';
 import { MAX_HINT_LENGTH, MAX_QUESTION_LENGTH, hintOf } from './planHelpers';
-import { SIDE_NAME_MAX_LENGTH } from '@/lib/classroom/classSettings';
-import {
-	LANGUAGE_KEY,
-	SIDE_A_KEY,
-	SIDE_B_KEY,
-	commitLanguage,
-	commitSideName,
-	defaultSideName,
-	onDetailInput,
-	savedLessonLanguage,
-	savedSideName,
-} from './planDetails';
+import { LANGUAGE_KEY, commitLanguage, savedLessonLanguage } from './planDetails';
+import { renderSides } from './PlanSides';
 import { PlanIntro } from './PlanIntro';
 import { enterAddsNext, field, fieldError } from './planFields';
 import {
@@ -237,19 +227,6 @@ function renderChallenge(challenge: Statement | undefined): m.Vnode {
 	]);
 }
 
-function sideNameField(key: string, labelKey: string): m.Vnode {
-	return field({
-		key,
-		label: t(labelKey),
-		value: fieldValue(key, savedSideName(key)),
-		placeholder: defaultSideName(key),
-		max: SIDE_NAME_MAX_LENGTH,
-		className: 'plan-card__text plan-details__name',
-		onValue: (v) => onDetailInput(key, v, SIDE_NAME_MAX_LENGTH),
-		onCommit: () => commitSideName(key),
-	});
-}
-
 function languageField(): m.Vnode {
 	const value = fieldValue(LANGUAGE_KEY, savedLessonLanguage());
 
@@ -280,10 +257,7 @@ function renderDetails(): m.Vnode {
 			m('.plan-card__main', [
 				// First: it changes every student screen and the projector.
 				languageField(),
-				sideNameField(SIDE_A_KEY, 'plan.details.side_a'),
-				sideNameField(SIDE_B_KEY, 'plan.details.side_b'),
-				fieldError(SIDE_A_KEY),
-				fieldError(SIDE_B_KEY),
+				renderSides(),
 				speakTimeControl(),
 				fieldError(SPEAK_SECONDS_KEY),
 				proposalsTurnsControl(),

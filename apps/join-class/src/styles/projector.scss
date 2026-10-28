@@ -216,6 +216,16 @@ $projector-band-height: 64px;
     font-weight: var(--font-weight-bold, 700);
   }
 
+  &__claim {
+    max-width: 22ch;
+    margin: 0;
+    font-size: 40px;
+    line-height: 1.3;
+    text-align: center;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
   &--a &__circle { background: var(--side-a, var(--terra-500)); }
   &--b &__circle { background: var(--side-b, var(--indigo-500)); }
 }

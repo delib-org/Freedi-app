@@ -43,6 +43,8 @@ function seedSource(fake: FakeFirestore): void {
 			introVideos: [{ id: 'v1', title: 'Clip', url: 'https://youtu.be/x' }],
 			videoUrl: 'https://youtu.be/legacy',
 			sideNames: { a: 'Dana', b: 'Omer' },
+			sideQuestion: 'Must Dana invite Omer?',
+			sideClaims: { a: 'She must', b: 'She may not' },
 			allowOwnQuestions: false,
 			speakSeconds: 90,
 			proposalsTurns: 2,
@@ -180,6 +182,8 @@ describe('buildLessonCopy (allowlist mapper)', () => {
 		expect(settings?.introVideos).toEqual([{ id: 'v1', title: 'Clip', url: 'https://youtu.be/x' }]);
 		expect(settings?.videoUrl).toBe('https://youtu.be/legacy');
 		expect(settings?.sideNames).toEqual({ a: 'Dana', b: 'Omer' });
+		expect(settings?.sideQuestion).toBe('Must Dana invite Omer?');
+		expect(settings?.sideClaims).toEqual({ a: 'She must', b: 'She may not' });
 		expect(settings?.allowOwnQuestions).toBe(false);
 		expect(settings?.speakSeconds).toBe(90);
 		expect(settings?.proposalsTurns).toBe(2);

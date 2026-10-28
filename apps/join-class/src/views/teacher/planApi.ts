@@ -25,6 +25,8 @@ export async function saveLessonDetails(
 	details: {
 		videoUrl?: string;
 		sideNames?: { a: string; b: string };
+		sideQuestion?: string;
+		sideClaims?: { a: string; b: string };
 		allowOwnQuestions?: boolean;
 		speakSeconds?: number;
 		proposalsTurns?: number;

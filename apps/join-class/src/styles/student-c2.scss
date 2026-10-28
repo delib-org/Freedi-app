@@ -123,6 +123,8 @@
   &__ends {
     display: flex;
     justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-md);
   }
 
   &__character {
@@ -130,8 +132,10 @@
     flex-direction: column;
     align-items: center;
     gap: var(--space-xs);
+    max-inline-size: 45%;
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-bold);
+    text-align: center;
 
     &--a {
       color: var(--side-a);
@@ -140,6 +144,16 @@
     &--b {
       color: var(--side-b);
     }
+  }
+
+  // the teacher's sentence for this side, under the name
+  &__claim {
+    margin: 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.35;
+    color: var(--ink);
+    overflow-wrap: anywhere;
   }
 
   &__face {
