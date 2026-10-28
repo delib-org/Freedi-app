@@ -391,8 +391,12 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				allRatedLine: atAllProposals ? allRatedBandLine(challenge) : undefined, // >>> allProposals
 			}),
 			failureBanner(),
-			challenge === null && !held && step.key === 'waiting'
-				? m(ChallengeNeeded, { mainId: mid })
+			challenge === null && !held
+				? m(ChallengeNeeded, {
+						mainId: mid,
+						started: step.key !== 'waiting',
+						candidates: guiding,
+					})
 				: null,
 			m('main.console__board', board(mid, view, step.index)),
 			consoleState.ghost

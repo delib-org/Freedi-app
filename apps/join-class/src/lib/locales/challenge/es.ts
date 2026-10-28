@@ -11,6 +11,13 @@ const challenge: Record<string, string> = {
 	'console.challenge.go_plan': 'Escribirla en el plan',
 	'console.challenge.blocked':
 		'Primero añade la pregunta para las propuestas. Sin ella la clase no puede empezar.',
+	'console.challenge.missing_live':
+		'Los estudiantes en el paso de propuestas no ven ninguna pregunta. Elige una de las preguntas de la clase o escribe una nueva.',
+	'console.challenge.pick_label': 'Elegir la pregunta para las propuestas',
+	'console.challenge.use': 'Usar esta pregunta',
+	'console.challenge.or_write': 'O escribe una pregunta nueva',
+	'console.challenge.write_label': 'Escribir la pregunta para las propuestas',
+	'console.challenge.add': 'Añadir y usar',
 };
 
 export default challenge;

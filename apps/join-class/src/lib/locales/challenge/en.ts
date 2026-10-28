@@ -10,6 +10,13 @@ const challenge: Record<string, string> = {
 	'console.challenge.go_plan': 'Write it in the plan',
 	'console.challenge.blocked':
 		'Add the Proposals question first. The lesson cannot start without it.',
+	'console.challenge.missing_live':
+		'Students on the Proposals step see no question. Choose one of the lesson questions or write a new one.',
+	'console.challenge.pick_label': 'Choose the Proposals question',
+	'console.challenge.use': 'Use this question',
+	'console.challenge.or_write': 'Or write a new question',
+	'console.challenge.write_label': 'Write the Proposals question',
+	'console.challenge.add': 'Add and use',
 };
 
 export default challenge;

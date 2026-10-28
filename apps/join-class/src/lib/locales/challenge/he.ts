@@ -9,6 +9,13 @@ const challenge: Record<string, string> = {
 	'console.challenge.missing_start': 'אי אפשר להתחיל את השיעור לפני שיש בו שאלה להצעות.',
 	'console.challenge.go_plan': 'כתבו אותה בתוכנית',
 	'console.challenge.blocked': 'קודם מוסיפים את השאלה להצעות. בלעדיה אי אפשר להתחיל את השיעור.',
+	'console.challenge.missing_live':
+		'התלמידים בשלב ההצעות לא רואים שאלה. בחרו אחת משאלות השיעור או כתבו שאלה חדשה.',
+	'console.challenge.pick_label': 'בחירת השאלה להצעות',
+	'console.challenge.use': 'להשתמש בשאלה הזאת',
+	'console.challenge.or_write': 'או לכתוב שאלה חדשה',
+	'console.challenge.write_label': 'כתיבת השאלה להצעות',
+	'console.challenge.add': 'הוספה ושימוש',
 };
 
 export default challenge;

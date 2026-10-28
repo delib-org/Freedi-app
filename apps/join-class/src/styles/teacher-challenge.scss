@@ -46,6 +46,38 @@
   &--console {
     margin: var(--space-sm) var(--space-md) 0;
   }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    align-items: center;
+    inline-size: 100%;
+  }
+
+  &__select,
+  &__input {
+    flex: 1 1 14rem;
+    min-inline-size: 0;
+    min-block-size: var(--touch-target);
+    padding-inline: var(--space-sm);
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius-md);
+    font: inherit;
+  }
+
+  &__or {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+  }
+
+  &__plan-link {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+  }
 }
 
 .plan__challenge--missing .plan-card--challenge {
