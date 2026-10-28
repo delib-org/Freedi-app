@@ -1,0 +1,53 @@
+// =============================================================================
+// The "no Proposals question" warning (plan screen) and prompt (console).
+// Imported by views/teacher/PlanChallengeWarning.ts and ChallengeNeeded.ts.
+// =============================================================================
+
+.challenge-warning {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 2px solid var(--warning);
+  border-radius: var(--radius-lg);
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--font-size-lg);
+    color: var(--text-primary);
+  }
+
+  &__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1.5em;
+    block-size: 1.5em;
+    border-radius: 50%;
+    color: var(--bg-card);
+    background: var(--warning);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__text {
+    margin: 0;
+    color: var(--text-secondary);
+  }
+
+  &__action {
+    align-self: flex-start;
+  }
+
+  // the console prompt sits full width above the board
+  &--console {
+    margin: var(--space-sm) var(--space-md) 0;
+  }
+}
+
+.plan__challenge--missing .plan-card--challenge {
+  border-color: var(--warning);
+}
