@@ -5,6 +5,7 @@ import {
 	createStatementObject,
 	proposalsTurnsOf,
 	speakSecondsOf,
+	tableSizeOf,
 } from '@freedi/shared-types';
 import type {
 	ListType,
@@ -157,6 +158,7 @@ function mainSettings(source: Statement, classCode: string, now: number): Statem
 		...(s?.proposalsTurns !== undefined
 			? { proposalsTurns: proposalsTurnsOf({ statementSettings: s }) }
 			: {}),
+		...(s?.tableSize !== undefined ? { tableSize: tableSizeOf({ statementSettings: s }) } : {}),
 		...(typeof s?.allowOwnQuestions === 'boolean'
 			? { allowOwnQuestions: s.allowOwnQuestions }
 			: {}),

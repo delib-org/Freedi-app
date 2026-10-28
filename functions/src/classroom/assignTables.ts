@@ -1,4 +1,4 @@
-import { DEFAULT_TABLE_SIZE, TABLE_SIZES } from '@freedi/shared-types';
+import { DEFAULT_TABLE_SIZE, MAX_TABLE_SIZE, MIN_TABLE_SIZE } from '@freedi/shared-types';
 import type { Camp } from '@freedi/shared-types';
 
 /**
@@ -8,12 +8,11 @@ import type { Camp } from '@freedi/shared-types';
  * with the deal index carried across camps — so the first 'b' student lands on
  * the first table that got no 'a', and the centre (plus students who never
  * picked a side) is spread last over whatever is left. Table sizes differ by
- * at most one and always stay inside 3..5, except for a class of 1-2 students
- * (one small table is the only possible answer).
+ * at most one and always stay inside MIN_TABLE_SIZE..MAX_TABLE_SIZE (2..8), so
+ * no table is ever left with one student, except for a class of 1 student
+ * (one small table is the only possible answer). The size the teacher wants
+ * (default 6) only decides how many tables.
  */
-
-export const MIN_TABLE_SIZE = TABLE_SIZES[0];
-export const MAX_TABLE_SIZE = TABLE_SIZES[TABLE_SIZES.length - 1];
 
 export interface SeatableStudent {
 	uid: string;
@@ -34,7 +33,7 @@ export type Rng = () => number;
 
 /**
  * Number of tables for `count` students aiming at `size` per table: the valid
- * count (every table 3..5) closest to count/size; ties go to fewer tables.
+ * count (every table 2..8) closest to count/size; ties go to fewer tables.
  */
 export function computeTableCount(count: number, size: number = DEFAULT_TABLE_SIZE): number {
 	if (count <= 0) return 0;

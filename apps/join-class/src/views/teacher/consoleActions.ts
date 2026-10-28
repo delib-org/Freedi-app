@@ -168,7 +168,8 @@ export function allTablesNewTurn(mainId: string): Promise<boolean> {
 export type TableSettingsPatch =
 	| { allowOwnQuestions: boolean }
 	| { speakSeconds: number }
-	| { proposalsTurns: number };
+	| { proposalsTurns: number }
+	| { tableSize: number };
 
 export function setTableSetting(patch: TableSettingsPatch): Promise<boolean> {
 	const field = Object.keys(patch)[0];

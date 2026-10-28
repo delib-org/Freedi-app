@@ -1,5 +1,10 @@
 import m from 'mithril';
-import { PROPOSALS_TURNS_CHOICES, SPEAK_SECONDS_CHOICES } from '@freedi/shared-types';
+import {
+	MAX_TABLE_SIZE,
+	MIN_TABLE_SIZE,
+	PROPOSALS_TURNS_CHOICES,
+	SPEAK_SECONDS_CHOICES,
+} from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import '@/styles/table-settings.scss';
 
@@ -141,6 +146,32 @@ export const ProposalsTurnsSelect: m.Component<ProposalsTurnsAttrs> = {
 			help: t(`${attrs.scope}.proposals_turns_help`),
 			value: attrs.turns,
 			options: PROPOSALS_TURNS_CHOICES.map((turns) => ({ value: turns, label: String(turns) })),
+			disabled: attrs.disabled,
+			onChange: attrs.onChange,
+		});
+	},
+};
+
+export interface TableSizeAttrs {
+	size: number;
+	disabled?: boolean;
+	onChange: (size: number) => void;
+}
+
+const TABLE_SIZE_OPTIONS: readonly SelectOption[] = Array.from(
+	{ length: MAX_TABLE_SIZE - MIN_TABLE_SIZE + 1 },
+	(_, i) => ({ value: MIN_TABLE_SIZE + i, label: String(MIN_TABLE_SIZE + i) }),
+);
+
+/** "Group size at the tables": MIN_TABLE_SIZE..MAX_TABLE_SIZE (2 to 8); applies at the next deal. Console only. */
+export const TableSizeSelect: m.Component<TableSizeAttrs> = {
+	view({ attrs }) {
+		return settingsSelect({
+			id: 'table-settings-size-console',
+			label: t('console.table_size'),
+			help: t('console.table_size_help'),
+			value: attrs.size,
+			options: TABLE_SIZE_OPTIONS,
 			disabled: attrs.disabled,
 			onChange: attrs.onChange,
 		});

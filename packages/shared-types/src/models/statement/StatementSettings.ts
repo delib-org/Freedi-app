@@ -9,11 +9,17 @@ import {
 	picklist,
 	InferOutput,
 	number,
+	pipe,
+	integer,
+	minValue,
+	maxValue,
 } from 'valibot';
 import { DeliberationType, SortType, ThemeStyle } from '../TypeEnums';
 import {
 	ClassBallotSchema,
 	ClassVoteDisplaySchema,
+	MAX_TABLE_SIZE,
+	MIN_TABLE_SIZE,
 	RoundPhaseSchema,
 } from '../classroom/classroomModel';
 
@@ -462,6 +468,8 @@ export const StatementSettingsSchema = object({
 	proposalsTurns: optional(number()),
 	// join-class: the lesson's look, followed live by students and the projector. Absent = 'game'. Main statement only.
 	lessonLook: optional(LessonLookSchema),
+	// join-class: group size at the tables, a whole number MIN_TABLE_SIZE..MAX_TABLE_SIZE (2..8). Absent = DEFAULT_TABLE_SIZE (6). Main statement only.
+	tableSize: optional(pipe(number(), integer(), minValue(MIN_TABLE_SIZE), maxValue(MAX_TABLE_SIZE))),
 });
 
 
