@@ -18,13 +18,16 @@ export interface FieldAttrs {
 	onValue: (value: string) => void;
 	onCommit: () => void;
 	onEnter?: () => void;
+	/** A wrapping box of this many rows instead of one line (Enter still commits, no line breaks). */
+	rows?: number;
 }
 
 /** One always-visible text field that saves on blur. Labelled for screen
  *  readers; the placeholder is a hint, never the label. */
 export function field(a: FieldAttrs): m.Vnode {
-	return m('input', {
-		type: 'text',
+	return m(a.rows ? 'textarea' : 'input', {
+		type: a.rows ? undefined : 'text',
+		rows: a.rows,
 		class: a.className,
 		value: a.value,
 		maxlength: a.max,
@@ -33,18 +36,18 @@ export function field(a: FieldAttrs): m.Vnode {
 		'aria-label': a.label,
 		'aria-invalid': getFieldError(a.key) ? 'true' : undefined,
 		oncreate: (vn: m.VnodeDOM) => {
-			if (takeFocus(a.key)) (vn.dom as HTMLInputElement).focus();
+			if (takeFocus(a.key)) (vn.dom as HTMLElement).focus();
 		},
 		onupdate: (vn: m.VnodeDOM) => {
-			if (takeFocus(a.key)) (vn.dom as HTMLInputElement).focus();
+			if (takeFocus(a.key)) (vn.dom as HTMLElement).focus();
 		},
-		oninput: (e: Event) => a.onValue((e.target as HTMLInputElement).value),
+		oninput: (e: Event) => a.onValue((e.target as HTMLInputElement | HTMLTextAreaElement).value),
 		onblur: a.onCommit,
 		onkeydown: (e: KeyboardEvent) => {
 			if (e.key === 'Enter' && !e.isComposing) {
 				e.preventDefault();
 				if (a.onEnter) a.onEnter();
-				else (e.target as HTMLInputElement).blur();
+				else (e.target as HTMLElement).blur();
 			}
 		},
 	});

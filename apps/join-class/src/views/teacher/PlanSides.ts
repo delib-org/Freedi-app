@@ -27,6 +27,9 @@ import { field, fieldError } from './planFields';
  *  per side, its character name and the claim shown under it. Every field is
  *  optional; empty means the translated default (no claim line for a claim). */
 
+/** Enough rows for a claim of SIDE_CLAIM_MAX_LENGTH on a phone. */
+const CLAIM_ROWS = 3;
+
 function labelled(label: string, input: m.Vnode): m.Vnode {
 	return m('label.plan-details__field', [m('span.plan-details__label', label), input]);
 }
@@ -79,7 +82,8 @@ function sideGroup(side: 'a' | 'b'): m.Vnode {
 				value: fieldValue(claimKey, savedSideClaim(claimKey)),
 				placeholder: t('plan.details.claim.placeholder'),
 				max: SIDE_CLAIM_MAX_LENGTH,
-				className: 'plan-card__text',
+				rows: CLAIM_ROWS,
+				className: 'plan-card__text plan-details__claim',
 				onValue: (v) => onDetailInput(claimKey, v, SIDE_CLAIM_MAX_LENGTH),
 				onCommit: () => commitSideClaim(claimKey),
 			}),
