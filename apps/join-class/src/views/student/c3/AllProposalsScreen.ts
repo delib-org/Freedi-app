@@ -1,5 +1,5 @@
 import m from 'mithril';
-import type { ClassTableAction, Statement } from '@freedi/shared-types';
+import { CLASS_BATCH_SIZE, type ClassTableAction, type Statement } from '@freedi/shared-types';
 import '@/styles/student-c3.scss';
 import '@/styles/student-c3-all-proposals.scss';
 import { StudentFrame } from '@/components/StudentFrame';
@@ -18,6 +18,7 @@ import {
 	needsNextBatch,
 	serveNextBatch,
 	startBoard,
+	unservedCount,
 	type Board,
 	type IsRated,
 } from '@/lib/classroom/allProposalsBoard';
@@ -80,6 +81,34 @@ function syncArrival(self: AllProposalsState): void {
 		if (added) self.arrival = arrivalText(added.ids.length);
 		m.redraw();
 	}, ARRIVAL_DELAY_MS);
+}
+
+/** The student asks for another batch now, rated or not; the sampler skips what is already on the board. */
+function showMore(self: AllProposalsState): void {
+	const current = self.board;
+	if (!current) return;
+	const next = serveNextBatch(current, self.pool, (c) => selectBatch(c));
+	if (next === current) return;
+	self.board = next;
+	self.arrival = arrivalText(next.batches[next.batches.length - 1].ids.length);
+	clearArrival(self);
+}
+
+function moreView(self: AllProposalsState, board: Board, pool: readonly Statement[]): m.Children {
+	if (pool.length === 0) return null;
+	if (unservedCount(board, pool) === 0) {
+		return m(
+			'p.all-proposals__seen-all',
+			{ 'data-testid': 'all-proposals-seen-all' },
+			t('allProposals.seen_all'),
+		);
+	}
+
+	return m(
+		'button.btn.btn--secondary.all-proposals__more',
+		{ type: 'button', 'data-testid': 'all-proposals-more', onclick: () => showMore(self) },
+		t('allProposals.more', { n: CLASS_BATCH_SIZE }),
+	);
 }
 
 function rateWithRetry(self: AllProposalsState, item: Statement, score: number): void {
@@ -222,6 +251,7 @@ export const AllProposalsScreen: m.ClassComponent<AllProposalsScreenAttrs> = {
 						ratingOf: (id) => feed.ratingOf(id),
 						onRate: (item, score) => rateWithRetry(self, item, score),
 					}),
+			done ? null : moreView(self, self.board, pool),
 			done
 				? m(
 						'p.all-proposals__done',

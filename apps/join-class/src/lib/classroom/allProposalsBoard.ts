@@ -80,6 +80,11 @@ function unserved(board: Board, pool: readonly Statement[]): Statement[] {
 	return pool.filter((p) => !served.has(p.statementId));
 }
 
+/** How many proposals this phone has not been served yet (the "show more" button's supply). */
+export function unservedCount(board: Board, pool: readonly Statement[]): number {
+	return unserved(board, pool).length;
+}
+
 /** True when every card on the board is rated and the pool still holds proposals not served. */
 export function needsNextBatch(
 	board: Board,

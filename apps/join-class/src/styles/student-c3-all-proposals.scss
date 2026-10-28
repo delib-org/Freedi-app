@@ -51,6 +51,17 @@ $skeleton-height: 112px;
     animation-delay: calc(var(--arrive-order, 0) * #{$arrive-stagger});
   }
 
+  &__more {
+    display: block;
+    margin: var(--space-lg) auto;
+  }
+
+  &__seen-all {
+    margin: var(--space-lg) 0;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+
   &__done {
     margin: var(--space-lg) 0;
     padding: var(--space-md);

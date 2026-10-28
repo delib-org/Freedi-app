@@ -9,6 +9,7 @@ import {
 	serveNextBatch,
 	servedIds,
 	startBoard,
+	unservedCount,
 	type BatchSampler,
 	type Board,
 } from '../allProposalsBoard';
@@ -46,6 +47,28 @@ function ratedSet(ids: string[]): (id: string) => boolean {
 }
 
 const pool = (n: number): Statement[] => Array.from({ length: n }, (_, i) => p(`p${i + 1}`));
+
+describe('show more on demand', () => {
+	it('deals a fresh batch before the current one is rated, with no duplicates', () => {
+		const items = pool(14);
+		const board = startBoard(items, ratedSet([]), firstN());
+		const next = serveNextBatch(board, items, firstN());
+		const [first, second] = next.batches;
+		expect(next.batches).toHaveLength(2);
+		expect(second.ids).toHaveLength(6);
+		expect(second.ids.filter((id) => first.ids.includes(id))).toEqual([]);
+		expect(unservedCount(next, items)).toBe(2);
+	});
+
+	it('keeps dealing the remainder, then reports nothing left and leaves the board alone', () => {
+		const items = pool(8);
+		const first = startBoard(items, ratedSet([]), firstN());
+		const second = serveNextBatch(first, items, firstN());
+		expect(second.batches[1].ids).toHaveLength(2);
+		expect(unservedCount(second, items)).toBe(0);
+		expect(serveNextBatch(second, items, firstN())).toBe(second);
+	});
+});
 
 describe('allProposalsPool', () => {
 	it('keeps visible proposals under the challenge, minus the student own and co-authored ones', () => {
