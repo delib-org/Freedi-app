@@ -9,6 +9,8 @@ const allProposals: Record<string, string> = {
 	'allProposals.new_one': 'Una propuesta nueva',
 	'allProposals.progress': 'Habéis valorado {{n}} de {{m}}',
 	'allProposals.done': 'Habéis valorado todas las propuestas. Esperad al profesor',
+	'allProposals.more': 'Ver {{n}} más',
+	'allProposals.seen_all': 'Habéis visto todas las propuestas',
 	'allProposals.write_mine': '+ Mi propia propuesta',
 	'console.all_rated_line':
 		'{{n}} de {{m}} estudiantes lo valoraron todo · cada propuesta tiene al menos {{k}} valoraciones',

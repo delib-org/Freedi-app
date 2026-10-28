@@ -9,6 +9,8 @@ const allProposals: Record<string, string> = {
 	'allProposals.new_one': 'یک پیشنهاد تازه',
 	'allProposals.progress': 'به {{n}} از {{m}} امتیاز دادید',
 	'allProposals.done': 'به همهٔ پیشنهادها امتیاز دادید. منتظر معلم بمانید',
+	'allProposals.more': '{{n}} پیشنهاد دیگر',
+	'allProposals.seen_all': 'همهٔ پیشنهادها را دیدید',
 	'allProposals.write_mine': '+ پیشنهاد خودم',
 	'console.all_rated_line':
 		'{{n}} از {{m}} دانش‌آموز به همه امتیاز دادند · هر پیشنهاد دست‌کم {{k}} امتیاز دارد',
