@@ -3,6 +3,9 @@ import {
 	CAMP_B_ABOVE,
 	DEFAULT_PROPOSALS_TURNS,
 	DEFAULT_SPEAK_SECONDS,
+	DEFAULT_TABLE_SIZE,
+	MAX_TABLE_SIZE,
+	MIN_TABLE_SIZE,
 	PROPOSALS_TURNS_CHOICES,
 	SPEAK_SECONDS_CHOICES,
 	Camp,
@@ -20,13 +23,25 @@ import type { LessonStatusAction } from './classroomCallables';
 export interface LessonSettingsHolder {
 	statementSettings?: Pick<
 		StatementSettings,
-		'allowOwnQuestions' | 'speakSeconds' | 'proposalsTurns' | 'lessonLook'
+		'allowOwnQuestions' | 'speakSeconds' | 'proposalsTurns' | 'lessonLook' | 'tableSize'
 	> | null;
 }
 
 /** The lesson's look: 'solid' only when the teacher chose it; absent or unknown = 'game'. */
 export function lessonLookOf(main: LessonSettingsHolder | null | undefined): LessonLook {
 	return main?.statementSettings?.lessonLook === 'solid' ? 'solid' : 'game';
+}
+
+/** Group size at the tables: the lesson's whole number in 2..8, else the default (6). */
+export function tableSizeOf(main: LessonSettingsHolder | null | undefined): number {
+	const own = main?.statementSettings?.tableSize;
+
+	return typeof own === 'number' &&
+		Number.isInteger(own) &&
+		own >= MIN_TABLE_SIZE &&
+		own <= MAX_TABLE_SIZE
+		? own
+		: DEFAULT_TABLE_SIZE;
 }
 
 /** May students add a question of their own at Table talk? Absent = yes (IA 25.2). */

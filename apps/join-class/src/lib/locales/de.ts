@@ -443,6 +443,9 @@ const de: Record<string, string> = {
 		'Wie lange jede Person spricht, wenn sie antwortet oder etwas vorschlägt',
 	'console.proposals_turns': 'Runden bei den Vorschlägen',
 	'console.proposals_turns_help': 'In jeder Runde spricht jede Person am Tisch einmal',
+	'console.table_size': 'Gruppengröße an den Tischen',
+	'console.table_size_help':
+		'Wie viele Personen an jedem Tisch sitzen (2 bis 8). Gilt bei der nächsten Verteilung oder Neumischung der Tische',
 	'console.another_turn_all': 'Noch eine Runde, alle Tische',
 	'console.another_turn': 'Noch eine Runde',
 	'door.code.title': 'Gib den Code ein',

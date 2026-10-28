@@ -60,9 +60,10 @@ export const CAMP_B_ABOVE = 60;
 export const SUPPORT_MIN = -1;
 export const SUPPORT_MAX = 1;
 
-/** Table size bounds for classAssignTables. */
-export const TABLE_SIZES = [3, 4, 5] as const;
-export const DEFAULT_TABLE_SIZE = 4;
+/** Table size bounds: the teacher picks the group size at the tables (saved on the lesson). */
+export const MIN_TABLE_SIZE = 2;
+export const MAX_TABLE_SIZE = 8;
+export const DEFAULT_TABLE_SIZE = 6;
 
 export const TableStepSchema = picklist(['pick', 'talk', 'write', 'rate']);
 export type TableStep = InferOutput<typeof TableStepSchema>;

@@ -46,6 +46,7 @@ function seedSource(fake: FakeFirestore): void {
 			allowOwnQuestions: false,
 			speakSeconds: 90,
 			proposalsTurns: 2,
+			tableSize: 4,
 			ballot: { closedAt: 1 },
 			projectorVideoId: 'v1',
 		},
@@ -182,6 +183,7 @@ describe('buildLessonCopy (allowlist mapper)', () => {
 		expect(settings?.allowOwnQuestions).toBe(false);
 		expect(settings?.speakSeconds).toBe(90);
 		expect(settings?.proposalsTurns).toBe(2);
+		expect(settings?.tableSize).toBe(4);
 		// the source's own showEvaluation:false is not copied; the defaults are
 		expect(settings?.showEvaluation).toBe(true);
 	});

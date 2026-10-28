@@ -4,16 +4,18 @@ import type { Firestore } from 'firebase-admin/firestore';
 import {
 	CLASS_TABLES_COLLECTION,
 	Collections,
-	DEFAULT_TABLE_SIZE,
+	MAX_TABLE_SIZE,
+	MIN_TABLE_SIZE,
 	Role,
-	TABLE_SIZES,
 	classTableId,
 	functionConfig,
+	tableSizeOf,
 } from '@freedi/shared-types';
 import type {
 	ClassAssignTablesRequest,
 	ClassAssignTablesResponse,
 	ClassTable,
+	Statement,
 	StatementSubscription,
 } from '@freedi/shared-types';
 import { db } from '../db';
@@ -31,20 +33,41 @@ import { Rng, SeatableStudent, assignStudents } from './assignTables';
 /**
  * `classAssignTables` (admin): seat the class. Students = the workspace's
  * `role: member` subscriptions (admins / creators are not seated). Each table
- * mixes the sides (round-robin by camp, see assignTables.ts), 3-5 per table.
+ * mixes the sides (round-robin by camp, see assignTables.ts), 2-8 per table.
+ *
+ * Group size: the lesson's saved `statementSettings.tableSize` (tableSizeOf,
+ * default 6) ALWAYS wins, so every deal and reshuffle of a lesson uses the one
+ * size the teacher chose. The request's `tableSize` is only a fallback for a
+ * lesson that has none saved; it is validated either way.
  *
  * A second run needs `replace: true` and replaces cleanly in ONE transaction:
  * old tables deleted (no-device members go with them), every old tableId
  * cleared, new tables and tableIds written.
  */
 
-function validTableSize(value: unknown): number {
-	if (value === undefined) return DEFAULT_TABLE_SIZE;
-	if (!(TABLE_SIZES as readonly number[]).includes(value as number)) {
-		throw new ClassroomError('invalid-argument', 'tableSize must be 3, 4 or 5');
+function validTableSize(value: unknown): number | undefined {
+	if (value === undefined) return undefined;
+	if (
+		typeof value !== 'number' ||
+		!Number.isInteger(value) ||
+		value < MIN_TABLE_SIZE ||
+		value > MAX_TABLE_SIZE
+	) {
+		throw new ClassroomError(
+			'invalid-argument',
+			`tableSize must be a whole number from ${MIN_TABLE_SIZE} to ${MAX_TABLE_SIZE}`,
+		);
 	}
 
-	return value as number;
+	return value;
+}
+
+/** The lesson's saved size, else the (validated) request fallback, else the default. */
+function tableSizeFor(main: Statement, requested: number | undefined): number {
+	const saved = main.statementSettings?.tableSize;
+	if (saved !== undefined) return tableSizeOf(main);
+
+	return requested ?? tableSizeOf(main);
 }
 
 export function newTable(mainId: string, n: number, memberUids: string[], now: number): ClassTable {
@@ -72,9 +95,11 @@ export async function assignTables(
 	rng: Rng = Math.random,
 ): Promise<ClassAssignTablesResponse> {
 	const mainId = requireId(req?.mainId, 'mainId');
-	const size = validTableSize(req?.tableSize);
+	const requested = validTableSize(req?.tableSize);
 	const replace = req?.replace === true;
-	assertLessonRunning(await assertWorkspaceAdmin(firestore, mainId, uid));
+	const main = await assertWorkspaceAdmin(firestore, mainId, uid);
+	assertLessonRunning(main);
+	const size = tableSizeFor(main, requested);
 
 	const subsQuery = firestore
 		.collection(Collections.statementsSubscribe)

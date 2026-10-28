@@ -1035,7 +1035,8 @@ export {
   CAMP_B_ABOVE,
   SUPPORT_MIN,
   SUPPORT_MAX,
-  TABLE_SIZES,
+  MIN_TABLE_SIZE,
+  MAX_TABLE_SIZE,
   DEFAULT_TABLE_SIZE,
   TableStepSchema,
   WritingModeSchema,
@@ -1088,6 +1089,7 @@ export {
   choosing,
   allowOwnQuestionsOf,
   lessonLookOf,
+  tableSizeOf,
   noQuestionsLeft,
   speakSecondsOf,
   proposalsTurnsOf,
@@ -1106,7 +1108,6 @@ export type {
   LessonStatusChange,
 } from './models/classroom/classroomLogic';
 export type {
-  ClassTableSize,
   ClassAssignTablesRequest,
   ClassAssignTablesResponse,
   ClassMoveStudentRequest,

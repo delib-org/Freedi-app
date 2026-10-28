@@ -438,6 +438,9 @@ const nl: Record<string, string> = {
 	'console.speak_time_help': 'Hoe lang iedereen spreekt bij het antwoorden of voorstellen',
 	'console.proposals_turns': 'Rondes bij de voorstellen',
 	'console.proposals_turns_help': 'In elke ronde spreekt iedereen aan tafel één keer',
+	'console.table_size': 'Groepsgrootte aan de tafels',
+	'console.table_size_help':
+		'Hoeveel mensen er aan elke tafel zitten (2 tot 8). Geldt bij de volgende indeling of herindeling van de tafels',
 	'console.another_turn_all': 'Nog een ronde, alle tafels',
 	'console.another_turn': 'Nog een ronde',
 	'door.code.title': 'Typ de code',

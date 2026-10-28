@@ -7,12 +7,15 @@ import type { TableStep, WritingMode } from './classroomModel';
  * Actor rules: admin of the workspace unless stated otherwise.
  */
 
-export type ClassTableSize = 3 | 4 | 5;
-
 /** `classAssignTables` (admin). Round-robin by camp; re-running replaces tables only with `replace: true`. */
 export interface ClassAssignTablesRequest {
 	mainId: string;
-	tableSize?: ClassTableSize;
+	/**
+	 * Only a fallback for a lesson that has no saved size: the lesson's own
+	 * `statementSettings.tableSize` always wins (tableSizeOf). Whole number in
+	 * MIN_TABLE_SIZE..MAX_TABLE_SIZE.
+	 */
+	tableSize?: number;
 	replace?: boolean;
 }
 export interface ClassAssignTablesResponse {

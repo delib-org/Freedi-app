@@ -48,3 +48,18 @@ describe('StatementSettingsSchema.lessonLook', () => {
 		expect(safeParse(StatementSettingsSchema, { lessonLook: 'neon' }).success).toBe(false);
 	});
 });
+
+describe('StatementSettingsSchema.tableSize', () => {
+	it('is optional (old lessons parse) and accepts 2..8', () => {
+		expect(safeParse(StatementSettingsSchema, {}).success).toBe(true);
+		expect(safeParse(StatementSettingsSchema, { tableSize: 2 }).success).toBe(true);
+		expect(safeParse(StatementSettingsSchema, { tableSize: 6 }).success).toBe(true);
+		expect(safeParse(StatementSettingsSchema, { tableSize: 8 }).success).toBe(true);
+	});
+
+	it('refuses out-of-range and fractional sizes', () => {
+		expect(safeParse(StatementSettingsSchema, { tableSize: 1 }).success).toBe(false);
+		expect(safeParse(StatementSettingsSchema, { tableSize: 9 }).success).toBe(false);
+		expect(safeParse(StatementSettingsSchema, { tableSize: 3.5 }).success).toBe(false);
+	});
+});

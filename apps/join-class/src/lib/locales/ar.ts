@@ -438,6 +438,9 @@ const ar: Record<string, string> = {
 	'console.speak_time_help': 'كم يتحدث كل شخص عندما يجيب أو يقترح',
 	'console.proposals_turns': 'الجولات في مرحلة المقترحات',
 	'console.proposals_turns_help': 'في كل جولة يتحدث كل شخص على الطاولة مرة واحدة',
+	'console.table_size': 'حجم المجموعة على الطاولات',
+	'console.table_size_help':
+		'كم شخصاً يجلس على كل طاولة (من 2 إلى 8). يسري عند التوزيع التالي أو إعادة الخلط التالية للطاولات',
 	'console.another_turn_all': 'جولة إضافية في كل الطاولات',
 	'console.another_turn': 'جولة إضافية',
 	'door.code.title': 'اكتب الرمز',

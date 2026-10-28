@@ -443,6 +443,9 @@ const en: Record<string, string> = {
 	'console.speak_time_help': 'How long each person speaks when answering or proposing',
 	'console.proposals_turns': 'Turns at Proposals',
 	'console.proposals_turns_help': 'In each turn everyone at the table speaks once',
+	'console.table_size': 'Group size at the tables',
+	'console.table_size_help':
+		'How many people sit at each table (2 to 8). Applies the next time the tables are dealt or reshuffled',
 	'console.another_turn_all': 'Another turn, all tables',
 	'console.another_turn': 'Another turn',
 	'door.code.title': 'Type the code',

@@ -23,7 +23,7 @@ async function expectCode(promise: Promise<unknown>, code: string): Promise<void
 	await expect(promise).rejects.toMatchObject({ code });
 }
 
-function seedLesson(fake: FakeFirestore, students = 12): string[] {
+function seedLesson(fake: FakeFirestore, students = 12, tableSize?: number): string[] {
 	fake.seed(`statements/${MAIN}`, {
 		statementId: MAIN,
 		parentId: 'top',
@@ -32,6 +32,7 @@ function seedLesson(fake: FakeFirestore, students = 12): string[] {
 		creatorId: TEACHER,
 		creator: { uid: TEACHER, displayName: 'T' },
 		statementSettings: {
+			...(tableSize !== undefined ? { tableSize } : {}),
 			lessonPlan: {
 				steps: [
 					'waiting',
@@ -102,9 +103,9 @@ describe('classAssignTables', () => {
 		const fake = new FakeFirestore();
 		const uids = seedLesson(fake, 12);
 		const res = await assignTables(fake.asFirestore(), TEACHER, { mainId: MAIN }, fixedRng());
-		expect(res).toEqual({ tables: 3, placed: 12 });
+		expect(res).toEqual({ tables: 2, placed: 12 }); // default size 6
 		const tables = fake.list('classTables') as unknown as ClassTable[];
-		expect(tables.map((t) => t.n).sort()).toEqual([1, 2, 3]);
+		expect(tables.map((t) => t.n).sort()).toEqual([1, 2]);
 		expect(tables.flatMap((t) => t.memberUids).sort()).toEqual(uids);
 		for (const t of tables) {
 			expect(t).toMatchObject({ step: 'pick', turn: 1, writingLocked: false, mainId: MAIN });
@@ -134,18 +135,50 @@ describe('classAssignTables', () => {
 			{ mainId: MAIN, tableSize: 5, replace: true },
 			fixedRng(),
 		);
-		expect(res).toEqual({ tables: 3, placed: 11 }); // 11 at size 5: 2 tables would need a 6
-		expect(fake.list('classTables')).toHaveLength(3);
+		expect(res).toEqual({ tables: 2, placed: 11 }); // 11 at size 5: 5 + 6
+		expect(fake.list('classTables')).toHaveLength(2);
 		expect(fake.read(`statementsSubscribe/s00--${MAIN}`)?.tableId).toBeUndefined();
 	});
 
 	it('rejects a bad table size', async () => {
 		const fake = new FakeFirestore();
 		seedLesson(fake);
-		await expectCode(
-			assignTables(fake.asFirestore(), TEACHER, { mainId: MAIN, tableSize: 7 as 3 }),
-			'invalid-argument',
-		);
+		for (const tableSize of [1, 9, 4.5, Number.NaN, '5' as unknown as number]) {
+			await expectCode(
+				assignTables(fake.asFirestore(), TEACHER, { mainId: MAIN, tableSize }),
+				'invalid-argument',
+			);
+		}
+	});
+
+	it('accepts any size from 2 to 8 as a fallback', async () => {
+		for (const [tableSize, tables] of [
+			[2, 6],
+			[8, 2],
+		] as const) {
+			const fake = new FakeFirestore();
+			seedLesson(fake, 12);
+			const res = await assignTables(fake.asFirestore(), TEACHER, { mainId: MAIN, tableSize });
+			expect(res.tables).toBe(tables);
+		}
+	});
+
+	it("deals by the lesson's saved size, and the saved size beats the request", async () => {
+		const fake = new FakeFirestore();
+		seedLesson(fake, 12, 3);
+		const db = fake.asFirestore();
+		const res = await assignTables(db, TEACHER, { mainId: MAIN, tableSize: 8 }, fixedRng());
+		expect(res).toEqual({ tables: 4, placed: 12 });
+		// a reshuffle with no size at all keeps the lesson's size
+		const again = await assignTables(db, TEACHER, { mainId: MAIN, replace: true }, fixedRng());
+		expect(again.tables).toBe(4);
+	});
+
+	it('an unusable saved size falls back to the default (6)', async () => {
+		const fake = new FakeFirestore();
+		seedLesson(fake, 12, 99);
+		const res = await assignTables(fake.asFirestore(), TEACHER, { mainId: MAIN }, fixedRng());
+		expect(res.tables).toBe(2);
 	});
 });
 
@@ -177,7 +210,7 @@ describe('classMoveStudent + classAddNoDevice', () => {
 
 	it('refuses a missing table, a stranger and a non-admin', async () => {
 		const fake = new FakeFirestore();
-		const uids = seedLesson(fake, 6);
+		const uids = seedLesson(fake, 6, 3);
 		const db = fake.asFirestore();
 		await assignTables(db, TEACHER, { mainId: MAIN }, fixedRng());
 		await expectCode(
@@ -200,7 +233,7 @@ describe('classMoveStudent + classAddNoDevice', () => {
 
 	it('adds a no-device member with a clean name', async () => {
 		const fake = new FakeFirestore();
-		seedLesson(fake, 6);
+		seedLesson(fake, 6, 3);
 		const db = fake.asFirestore();
 		await assignTables(db, TEACHER, { mainId: MAIN }, fixedRng());
 		const { id } = await addNoDevice(db, TEACHER, { mainId: MAIN, n: 1, name: '  Yoni   Cohen ' });
@@ -217,7 +250,7 @@ describe('classMoveStudent + classAddNoDevice', () => {
 describe('classTableStep + classAllTablesTo', () => {
 	async function seated(): Promise<{ fake: FakeFirestore; table: ClassTable }> {
 		const fake = new FakeFirestore();
-		seedLesson(fake, 6);
+		seedLesson(fake, 6, 3);
 		await assignTables(fake.asFirestore(), TEACHER, { mainId: MAIN }, fixedRng());
 
 		return { fake, table: fake.read(`classTables/${MAIN}--1`) as unknown as ClassTable };
