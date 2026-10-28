@@ -72,6 +72,7 @@ import { SwitchBand } from './SwitchBand';
 import { introVideosOf, projectorVideoOf } from '@/lib/classroom/introVideos';
 import { TableSheetPanel } from './TableSheetPanel';
 import { OpeningPanel } from './OpeningPanel';
+import { ChallengeNeeded } from './ChallengeNeeded';
 import { TablesBoard } from './TablesBoard';
 import { WhatTheyWrote } from './WhatTheyWrote';
 // >>> allProposals BEGIN
@@ -390,6 +391,13 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				allRatedLine: atAllProposals ? allRatedBandLine(challenge) : undefined, // >>> allProposals
 			}),
 			failureBanner(),
+			challenge === null && !held
+				? m(ChallengeNeeded, {
+						mainId: mid,
+						started: step.key !== 'waiting',
+						candidates: guiding,
+					})
+				: null,
 			m('main.console__board', board(mid, view, step.index)),
 			consoleState.ghost
 				? m(

@@ -27,7 +27,13 @@ import { getLessonStep, getLessonSteps, setLessonStep } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
 import { clearsTableClocksOnEnter, splitsTablesOnEnter } from '@/lib/classroom/consoleHelpers';
 import { classState } from '@/lib/classroom/classState';
-import { getMainStatement, setMainStatementSetting, setQuestionSetting } from '@/lib/store';
+import {
+	getMainStatement,
+	getSubQuestions,
+	setMainStatementSetting,
+	setQuestionSetting,
+} from '@/lib/store';
+import { isStartBlockedByMissingChallenge } from '@/lib/challengeGate';
 import { t } from '@/lib/i18n';
 import { act, consoleState } from './consoleState';
 
@@ -82,6 +88,23 @@ async function splitOnEnter(mainId: string): Promise<void> {
 }
 
 export async function goToStep(mainId: string, index: number): Promise<boolean> {
+	// A lesson without a Proposals question can be saved but not started.
+	if (
+		isStartBlockedByMissingChallenge(
+			getSubQuestions(),
+			getLessonSteps(),
+			getLessonStep().index,
+			index,
+		)
+	) {
+		consoleState.failure = {
+			label: t('console.act_step'),
+			message: t('console.challenge.blocked'),
+			retry: () => void goToStep(mainId, index),
+		};
+
+		return false;
+	}
 	let splits = false;
 	const moved = await guardedAct(`step:${index}`, t('console.act_step'), async () => {
 		const from = getLessonStep().index;

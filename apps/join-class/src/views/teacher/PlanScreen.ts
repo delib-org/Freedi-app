@@ -40,6 +40,7 @@ import { MAX_HINT_LENGTH, MAX_QUESTION_LENGTH, hintOf } from './planHelpers';
 import { LANGUAGE_KEY, commitLanguage, savedLessonLanguage } from './planDetails';
 import { renderSides } from './PlanSides';
 import { PlanIntro } from './PlanIntro';
+import { PlanChallengeWarning, focusChallengeFromRoute } from './PlanChallengeWarning';
 import { enterAddsNext, field, fieldError } from './planFields';
 import {
 	OWN_QUESTIONS_KEY,
@@ -220,11 +221,19 @@ function renderChallenge(challenge: Statement | undefined): m.Vnode {
 		});
 	}
 
-	return m('section.plan__challenge', { 'aria-labelledby': 'plan-challenge-title' }, [
-		m('h2.plan__section-title', { id: 'plan-challenge-title' }, label),
-		m('p.plan__help', t('plan.challenge.help')),
-		m('.plan-card.plan-card--challenge', [m('.plan-card__main', [input, fieldError(errorKey)])]),
-	]);
+	return m(
+		'section.plan__challenge',
+		{
+			class: challenge ? '' : 'plan__challenge--missing',
+			'aria-labelledby': 'plan-challenge-title',
+			oncreate: focusChallengeFromRoute,
+		},
+		[
+			m('h2.plan__section-title', { id: 'plan-challenge-title' }, label),
+			m('p.plan__help', t('plan.challenge.help')),
+			m('.plan-card.plan-card--challenge', [m('.plan-card__main', [input, fieldError(errorKey)])]),
+		],
+	);
 }
 
 function languageField(): m.Vnode {
@@ -369,7 +378,16 @@ function renderBody(mainId: string): m.Children {
 	}
 	const { challenge, guiding } = getPlan();
 
-	return [renderDetails(), renderChallenge(challenge), m(PlanIntro), renderTables(guiding)];
+	// A draft may be saved without it, but the lesson cannot start (the console refuses).
+	const missing = !challenge && getCreatingChallenge() === null;
+
+	return [
+		missing ? m(PlanChallengeWarning) : null,
+		renderDetails(),
+		renderChallenge(challenge),
+		m(PlanIntro),
+		renderTables(guiding),
+	];
 }
 
 export const PlanScreen: m.Component = {

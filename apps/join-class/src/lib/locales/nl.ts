@@ -7,12 +7,14 @@ import vote from './vote/nl';
 import allProposals from './allProposals/nl'; // >>> allProposals
 import reply from './reply/nl';
 import look from './look/nl';
+import challenge from './challenge/nl';
 
 const nl: Record<string, string> = {
 	...vote,
 	...allProposals, // >>> allProposals
 	...reply,
 	...look,
+	...challenge,
 	'step.waiting': 'Wachten op de docent',
 	'step.opening': 'Opening',
 	'step.side': 'Kies een kant',

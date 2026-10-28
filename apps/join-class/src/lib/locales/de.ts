@@ -7,12 +7,14 @@ import vote from './vote/de';
 import allProposals from './allProposals/de'; // >>> allProposals
 import reply from './reply/de';
 import look from './look/de';
+import challenge from './challenge/de';
 
 const de: Record<string, string> = {
 	...vote,
 	...allProposals, // >>> allProposals
 	...reply,
 	...look,
+	...challenge,
 	'step.waiting': 'Warten auf die Lehrkraft',
 	'step.opening': 'Einstieg',
 	'step.side': 'Seite wählen',
