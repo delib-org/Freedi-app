@@ -92,7 +92,7 @@ async function submit(planId: string, gameId: string): Promise<void> {
 }
 
 function choice(id: string | null, label: string, value: string): m.Vnode {
-	return m('label.class-form__choice', { key: value }, [
+	return m('label.class-form__choice', [
 		m('input', {
 			type: 'radio',
 			name: 'class-choice',

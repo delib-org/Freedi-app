@@ -71,6 +71,9 @@ const context = await browser.newContext({ viewport: { width: 1100, height: 900 
 const page = await context.newPage();
 const pageErrors = [];
 page.on('pageerror', (e) => pageErrors.push(e.message));
+page.on('console', (m) => {
+	if (m.type() === 'error') console.info(`console.error: ${m.text().slice(0, 240)}`);
+});
 const shots = process.env.E2E_SHOTS;
 const shot = async (p, name) => {
 	if (shots) await p.screenshot({ path: `${shots}/${name}.png` });
@@ -157,6 +160,7 @@ try {
 	check('lesson A has a class code', /^\d{6}$/.test(codeA));
 	await page.waitForSelector('.console__bar', { timeout: TIMEOUT });
 	const back = page.locator('.console__bar .plan__back');
+	await page.waitForFunction((title) => document.querySelector('.console__bar .plan__back')?.textContent?.includes(title), planTitle, { timeout: TIMEOUT });
 	check('console: back link names the plan and goes to the plan screen', (await back.innerText()).includes(planTitle) && (await back.getAttribute('href')) === `/t/plans/${planId}`);
 	await shot(page, '3-console');
 
@@ -172,11 +176,14 @@ try {
 	const lessonB = new URL(page.url()).pathname.split('/')[2];
 	const b = (await db.doc(`statements/${lessonB}`).get()).data();
 	check('lesson B (no class) sits under the teacher home', b.parentId === `jcTeacher_${teacherUid}` && b.statementSettings.classLesson?.classId === null);
-	await page.goto(`${BASE}/t/plans/${planId}`, { waitUntil: 'domcontentloaded' });
+	// stay in the app (no reload): the lesson's marker is re-written a few seconds after the server's own subscription lands
+	await page.waitForSelector('.console__bar .plan__back', { timeout: TIMEOUT });
+	await page.click('.console__bar .plan__back');
 	await page.waitForSelector(`[data-lesson="${lessonB}"]`, { timeout: TIMEOUT });
 	check('plan screen lists both lessons of the game', (await page.locator(`[data-game="${gameId}"] [data-lesson]`).count()) === 2);
 	check('class filter appears at two classes', (await page.locator('.plan-overview__filter select').count()) === 1);
 	await page.selectOption('.plan-overview__filter select', classId);
+	await page.waitForFunction(() => document.querySelectorAll('[data-lesson]').length === 1, null, { timeout: TIMEOUT });
 	check('filtering to the class leaves lesson A', (await page.locator('[data-lesson]').count()) === 1 && (await page.locator(`[data-lesson="${lessonA}"]`).count()) === 1);
 	await page.selectOption('.plan-overview__filter select', '');
 	await shot(page, '4-plan');
@@ -314,6 +321,7 @@ try {
 	check('another teacher gets "not your lesson" on the game screen', (await stranger.locator('.plan__challenge').count()) === 0);
 } catch (err) {
 	console.error(err);
+	await shot(page, 'failed').catch(() => undefined);
 	check('script ran to the end', false, String(err.message ?? err));
 } finally {
 	check('no page errors', pageErrors.length === 0, pageErrors.slice(0, 3).join(' | '));

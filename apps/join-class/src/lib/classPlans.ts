@@ -157,7 +157,11 @@ export async function writePlan(planId: string, title: string, ownerUid: string)
 /** The plan exists already (a retry after a half-finished create): keep it, do not rewrite its dates. */
 export async function ensurePlan(planId: string, title: string, ownerUid: string): Promise<void> {
 	const ref = doc(db, CLASS_PLANS_COLLECTION, planId);
-	if ((await getDoc(ref)).exists()) return;
+	try {
+		if ((await getDoc(ref)).exists()) return;
+	} catch {
+		// the rules answer a read of a missing plan with permission-denied: it is not there yet
+	}
 	await writePlan(planId, title, ownerUid);
 }
 

@@ -7,13 +7,7 @@ import { getLang, t } from '@/lib/i18n';
 import { setFollowLessonLanguage } from '@/lib/store';
 import { WizColFooter } from '@/components/WizColFooter';
 import type { Unsubscribe } from '@/lib/firebase';
-import {
-	loadGames,
-	renamePlan,
-	subscribeToGames,
-	subscribeToPlan,
-	writeGame,
-} from '@/lib/classPlans';
+import { loadGames, renamePlan, subscribeToGames, writeGame } from '@/lib/classPlans';
 import { classSnapshotGame } from '@/lib/classroom/api';
 import { cleaned, emptySnapshot } from '@/lib/classroom/gameSnapshotEdit';
 import { gamePathOf } from '@/lib/lessonLinks';
@@ -294,7 +288,7 @@ function renderClassFilter(all: PlanRow['lessons']): m.Children {
 				...classesOf(all).map((c) =>
 					m(
 						'option',
-						{ key: c.id, value: c.id, dir: 'auto' },
+						{ value: c.id, dir: 'auto' },
 						c.id === FILTER_NO_CLASS ? t('teacher.lesson.class_none') : c.name,
 					),
 				),
@@ -339,38 +333,41 @@ function renderPickList(): m.Children {
 					},
 				})
 			: null,
-		...planIds.map((id) => {
-			const group = shown.filter((s) => s.planId === id);
+		m(
+			'.plan-overview__pick-groups',
+			planIds.map((id) => {
+				const group = shown.filter((s) => s.planId === id);
 
-			return m('section.plan-overview__pick-group', { key: id }, [
-				m('h2.teacher-home__section-title', { dir: 'auto' }, group[0].planTitle),
-				m(
-					'ul.teacher-home__list',
-					{ 'aria-labelledby': 'pick-lead' },
-					group.map((s) =>
-						m('li.teacher-home__row', { key: s.id }, [
-							m('h3.teacher-home__row-title', { dir: 'auto' }, s.title),
-							m('.teacher-home__row-actions', [
-								m(
-									'button.btn.btn--primary.btn--small',
-									{
-										type: 'button',
-										'data-action': 'pick',
-										'data-id': s.id,
-										'aria-label': t('teacher.row.for', {
-											action: t('teacher.row.pick'),
-											name: s.title,
-										}),
-										onclick: () => pickRow(s.id, s.title),
-									},
-									t('teacher.row.pick'),
-								),
+				return m('section.plan-overview__pick-group', { key: id }, [
+					m('h2.teacher-home__section-title', { dir: 'auto' }, group[0].planTitle),
+					m(
+						'ul.teacher-home__list',
+						{ 'aria-labelledby': 'pick-lead' },
+						group.map((s) =>
+							m('li.teacher-home__row', { key: s.id }, [
+								m('h3.teacher-home__row-title', { dir: 'auto' }, s.title),
+								m('.teacher-home__row-actions', [
+									m(
+										'button.btn.btn--primary.btn--small',
+										{
+											type: 'button',
+											'data-action': 'pick',
+											'data-id': s.id,
+											'aria-label': t('teacher.row.for', {
+												action: t('teacher.row.pick'),
+												name: s.title,
+											}),
+											onclick: () => pickRow(s.id, s.title),
+										},
+										t('teacher.row.pick'),
+									),
+								]),
 							]),
-						]),
+						),
 					),
-				),
-			]);
-		}),
+				]);
+			}),
+		),
 	];
 }
 
@@ -409,22 +406,12 @@ export const PlanOverview: m.Component = {
 		stops = [
 			watchLibrary(user, (next) => {
 				library = next;
+				// the plan doc comes from the teacher's own list: a plan that is not theirs (or only an
+				// old lesson) is simply not in it, with no denied read to retry
+				plan = next.plans.find((p) => p.planId === planId) ?? null;
+				planLoaded = next.ready;
 				m.redraw();
 			}),
-			subscribeToPlan(
-				planId,
-				(doc) => {
-					plan = doc;
-					planLoaded = true;
-					m.redraw();
-				},
-				() => {
-					// a plan that is not ours answers with permission-denied: the same as "no doc"
-					plan = null;
-					planLoaded = true;
-					m.redraw();
-				},
-			),
 			subscribeToGames(
 				planId,
 				user,
