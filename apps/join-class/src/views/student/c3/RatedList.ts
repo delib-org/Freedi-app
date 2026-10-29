@@ -3,6 +3,7 @@ import type { Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { partitionRateItems, plenumOrder, tableNumberOf } from '@/lib/classroom/c3Logic';
 import type { FlowFeed } from './FlowFeed';
+import { FlipList } from '@/components/FlipList';
 import { RateFaces } from './RateFaces';
 import { TextCard } from './TextCard';
 import { ReplyEntry } from '../replies/ReplyEntry';
@@ -65,6 +66,7 @@ export const RatedList: m.ClassComponent<RatedListAttrs> = {
 		const card = (item: Statement): m.Children =>
 			m(TextCard, {
 				key: item.statementId,
+				dataKey: item.statementId,
 				eyebrow: eyebrowOf(item, challengeId, feed.ratingOf(item.statementId) !== undefined),
 				text: item.statement,
 				footer: m(RateFaces, {
@@ -85,9 +87,17 @@ export const RatedList: m.ClassComponent<RatedListAttrs> = {
 			});
 		if (items.length === 0) return m('p.rated-list__empty', vnode.attrs.emptyText);
 		// Plenum: one list in rank order (best first), every card re-ratable.
-		if (vnode.attrs.plenum) return m('.rated-list', plenumOrder(items).map(card));
+		if (vnode.attrs.plenum) {
+			const ranked = plenumOrder(items);
 
-		return m('.rated-list', [
+			return m(
+				FlipList,
+				{ selector: '.rated-list', ids: ranked.map((item) => item.statementId) },
+				ranked.map(card),
+			);
+		}
+
+		return m(FlipList, { selector: '.rated-list', ids: open.map((item) => item.statementId) }, [
 			open.map(card),
 			rated.length > 0
 				? m('.rated-list__group', [

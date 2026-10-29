@@ -6,6 +6,7 @@ import { gateOf, sideClaimsOf, sideNamesOf, sideQuestionOf } from '@/lib/classro
 import { projectorData } from '@/lib/classroom/projectorData';
 import { ProjectorQr, QR_WAITING_SIZE } from './ProjectorBand';
 import { openingStage } from './OpeningStage';
+import { FlipList } from '@/components/FlipList';
 import { GoalPitch } from './GoalPitch';
 // >>> voteSummary BEGIN
 import { summaryStage, voteStage } from './VoteStage';
@@ -137,6 +138,8 @@ function proposals(): m.Vnode {
 	if (readRoundPhase(challenge) === 'improve') return plenum(options);
 	const gate = gateOf(challenge, projectorData.main);
 
+	const bars = gateBars(options, gate);
+
 	return m('section.projector-step.projector-step--proposals', [
 		challenge?.statement
 			? m(
@@ -157,11 +160,12 @@ function proposals(): m.Vnode {
 			lessonKey: `${projectorData.main?.statementId ?? ''}/${challenge?.statementId ?? ''}`,
 		}),
 		m(
-			'ul.projector-gate-bars',
-			gateBars(options, gate).map((bar) =>
+			FlipList,
+			{ selector: 'ul.projector-gate-bars', ids: bars.map((bar) => bar.id) },
+			bars.map((bar) =>
 				m(
 					`li.projector-gate-bar${bar.passed ? '.projector-gate-bar--passed' : ''}`,
-					{ key: bar.id },
+					{ key: bar.id, 'data-key': bar.id },
 					[
 						m('span.projector-gate-bar__text', bar.text),
 						m('span.projector-gate-bar__track', { style: { ...barStyle(bar.percent) } }, [

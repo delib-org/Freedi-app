@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { parseCssTime, recordPositions } from '../flipReorder';
+import { orderChanged, parseCssTime, recordPositions } from '../flipReorder';
+
+describe('orderChanged', () => {
+	it('is false for the same keys in the same order', () => {
+		expect(orderChanged(['a', 'b'], ['a', 'b'])).toBe(false);
+		expect(orderChanged([], [])).toBe(false);
+	});
+
+	it('is true when two keys swap (a rating moved a card)', () => {
+		expect(orderChanged(['a', 'b', 'c'], ['b', 'a', 'c'])).toBe(true);
+	});
+
+	it('is true when a key arrives or leaves', () => {
+		expect(orderChanged(['a'], ['a', 'b'])).toBe(true);
+		expect(orderChanged(['a', 'b'], ['b'])).toBe(true);
+	});
+});
 
 describe('parseCssTime', () => {
 	it('reads milliseconds and seconds', () => {
