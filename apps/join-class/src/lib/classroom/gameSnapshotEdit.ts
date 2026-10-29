@@ -1,5 +1,6 @@
 import {
 	CLASS_GAME_MAX_PARAGRAPHS,
+	CLASS_GAME_MAX_TEXT_LENGTH,
 	CLASS_GAME_MAX_QUESTIONS,
 	ParagraphType,
 } from '@freedi/shared-types';
@@ -20,6 +21,21 @@ import type { IntroVideo } from './introVideos';
  *
  * Firestore refuses `undefined`, so every result goes through `cleaned`.
  */
+
+/** A text over the server's cap on a single text (`checkSnapshot`): the edit is refused before it is shown or saved. */
+export class TextTooLongError extends RangeError {
+	constructor(readonly max: number = CLASS_GAME_MAX_TEXT_LENGTH) {
+		super(`A text in a game holds at most ${max} characters`);
+		this.name = 'TextTooLongError';
+	}
+}
+
+/** Throws a `TextTooLongError` when any of the texts is over the cap. Undefined texts are skipped. */
+export function assertTextCap(...texts: ReadonlyArray<string | undefined>): void {
+	if (texts.some((text) => (text?.length ?? 0) > CLASS_GAME_MAX_TEXT_LENGTH)) {
+		throw new TextTooLongError();
+	}
+}
 
 export type GameQuestionRole = 'guiding' | 'challenge';
 
@@ -64,6 +80,8 @@ export function setQuestionText(
 	key: string,
 	text: string,
 ): ClassGameSnapshot {
+	assertTextCap(text);
+
 	return cleaned({
 		...snapshot,
 		questions: snapshot.questions.map((q) => (q.key === key ? { ...q, text } : q)),
@@ -76,6 +94,8 @@ export function setQuestionHint(
 	key: string,
 	hint: string,
 ): ClassGameSnapshot {
+	assertTextCap(hint);
+
 	return cleaned({
 		...snapshot,
 		questions: snapshot.questions.map((q) => {
@@ -93,6 +113,7 @@ export function addQuestion(
 	snapshot: ClassGameSnapshot,
 	input: { key: string; text: string; role: GameQuestionRole; order?: number },
 ): ClassGameSnapshot {
+	assertTextCap(input.text);
 	if (snapshot.questions.some((q) => q.key === input.key)) return snapshot;
 	if (snapshot.questions.length >= CLASS_GAME_MAX_QUESTIONS) {
 		throw new RangeError(`A game holds at most ${CLASS_GAME_MAX_QUESTIONS} questions`);
@@ -135,6 +156,14 @@ export function reorderQuestions(
 /** Merges lesson details: a side pair or a setting replaces the old one, as the lesson's settings do. */
 export function setDetails(snapshot: ClassGameSnapshot, details: GameDetails): ClassGameSnapshot {
 	const { sideNames, sideClaims, ...settings } = details;
+	assertTextCap(
+		sideNames?.a,
+		sideNames?.b,
+		sideClaims?.a,
+		sideClaims?.b,
+		settings.sideQuestion,
+		settings.videoUrl,
+	);
 	const nextSettings = { ...snapshot.settings, ...settings };
 	if (settings.sideQuestion === '') delete nextSettings.sideQuestion;
 
@@ -167,6 +196,7 @@ export function setVideos(
 	snapshot: ClassGameSnapshot,
 	videos: readonly IntroVideo[],
 ): ClassGameSnapshot {
+	assertTextCap(...videos.flatMap((v) => [v.title, v.url]));
 	const settings = { ...snapshot.settings };
 	delete settings.videoUrl;
 
@@ -211,6 +241,8 @@ export function applyIntroDiff(
 	diff: IntroDiff,
 	newKey: () => string,
 ): ClassGameSnapshot {
+	for (const { block } of [...diff.creates, ...diff.updates])
+		assertTextCap(block.content, block.contentHtml);
 	const updates = new Map(diff.updates.map((u) => [u.statementId, u]));
 	const deletes = new Set(diff.deletes);
 	const kept = snapshot.paragraphs

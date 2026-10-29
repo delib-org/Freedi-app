@@ -4,9 +4,21 @@ import {
 	CLASS_PLAN_TITLE_MAX_LENGTH,
 } from '@freedi/shared-types';
 import type { ClassGame, ClassGameSnapshot, ClassPlan } from '@freedi/shared-types';
-import { collection, db, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from './firebase';
+import {
+	collection,
+	db,
+	doc,
+	getDoc,
+	getDocs,
+	query,
+	runTransaction,
+	setDoc,
+	updateDoc,
+	where,
+} from './firebase';
 import type { Unsubscribe } from './firebase';
 import { resilientOnSnapshot } from './resilientListeners';
+import { captureException } from '@/lib/sentry';
 
 /**
  * The teacher's lesson plans and their games (docs/ia/join-class-lesson-plan.md
@@ -71,7 +83,7 @@ export function subscribeToClassPlans(uid: string, cb: (plans: ClassPlan[]) => v
 			);
 		},
 		(err) => {
-			console.error('[classPlans] subscribeToClassPlans failed:', err);
+			captureException(err, { operation: 'classPlans.subscribeToClassPlans', uid });
 			cb([]);
 		},
 	);
@@ -209,15 +221,29 @@ export async function writeGame(game: NewGame): Promise<void> {
 	await touchPlan(game.planId);
 }
 
-/** Replaces a game's snapshot (the game screen's saves). */
-export async function writeGameSnapshot(
+/**
+ * Edits a game's snapshot as one transaction: the CURRENT doc is read and the same pure edit is
+ * applied to it, so two tabs (or a tab and a retry) changing different questions both land
+ * instead of the later write replacing the earlier one's work. The edit may throw (a text over
+ * the cap, a full game): nothing is written then. Returns the snapshot that was saved.
+ */
+export async function updateGameSnapshot(
 	planId: string,
 	gameId: string,
-	snapshot: ClassGameSnapshot,
-): Promise<void> {
-	await updateDoc(doc(db, CLASS_PLANS_COLLECTION, planId, CLASS_GAMES_SUBCOLLECTION, gameId), {
-		snapshot,
-		lastUpdate: Date.now(),
+	edit: (snapshot: ClassGameSnapshot) => ClassGameSnapshot,
+): Promise<ClassGameSnapshot> {
+	const ref = doc(db, CLASS_PLANS_COLLECTION, planId, CLASS_GAMES_SUBCOLLECTION, gameId);
+
+	return runTransaction(db, async (tx) => {
+		const current = await tx.get(ref);
+		const game = current.exists()
+			? gameOf(current.data() as Partial<ClassGame>, planId, gameId)
+			: null;
+		if (!game) throw new Error(`The game ${gameId} is not readable`);
+		const snapshot = edit(game.snapshot);
+		tx.update(ref, { snapshot, lastUpdate: Date.now() });
+
+		return snapshot;
 	});
 }
 
@@ -226,6 +252,6 @@ export async function touchPlan(planId: string): Promise<void> {
 	try {
 		await updateDoc(doc(db, CLASS_PLANS_COLLECTION, planId), { lastUpdate: Date.now() });
 	} catch (err) {
-		console.error('[classPlans] touchPlan failed:', err);
+		captureException(err, { operation: 'classPlans.touchPlan', planId });
 	}
 }

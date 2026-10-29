@@ -20,6 +20,7 @@ import {
 	onIntroTextInput,
 	openIntro,
 } from './planIntroController';
+import { CLASS_GAME_MAX_TEXT_LENGTH } from '@freedi/shared-types';
 
 /** The text half of the "הקדמה" section (UX 14.B): one textarea holding
  *  markdown-lite, a three-button toolbar that writes the markers, the
@@ -130,13 +131,15 @@ export const IntroEditor: m.Component = {
 	view() {
 		const load = getBlocksLoad();
 		const check = introTextCheck();
-		const over = check.tooLong || check.tooMany;
+		const over = check.tooLong || check.tooMany || check.lineTooLong;
 		const formatted = check.blocks.some((b) => b.contentHtml !== undefined || b.type === 'li');
 		const errorText = check.tooLong
 			? t('plan.intro.text.too_long', { max: INTRO_TEXT_MAX })
 			: check.tooMany
 				? t('plan.intro.text.too_many', { max: INTRO_BLOCKS_MAX })
-				: '';
+				: check.lineTooLong
+					? t('plan.intro.text.line_too_long', { max: CLASS_GAME_MAX_TEXT_LENGTH })
+					: '';
 
 		return m('.plan-card.intro-editor', [
 			m('.plan-card__main', [

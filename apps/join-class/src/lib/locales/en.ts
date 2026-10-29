@@ -582,6 +582,7 @@ const en: Record<string, string> = {
 	'plan.lesson_from': 'Game: "{{game}}" · Class: {{class}}',
 	'teacher.lesson.not_approved':
 		"Your teacher account isn't approved yet for classes. You can start without a class.",
+	'plan.intro.text.line_too_long': 'A line is too long. Shorten it to {{max}} characters.',
 };
 
 export default en;

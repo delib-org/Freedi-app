@@ -3,6 +3,7 @@ import { t, getLang } from '@/lib/i18n';
 import { classSetLessonStatus } from '@/lib/classroom/api';
 import type { ClassLessonEntry } from '@/lib/joinSubscriptions';
 import { statusChipOf } from './homeHelpers';
+import { captureException } from '@/lib/sentry';
 
 /**
  * One lesson (a game played with one class) as a row: its status chip and the one
@@ -52,7 +53,7 @@ async function handleReopen(id: string): Promise<void> {
 		await classSetLessonStatus({ mainId: id, action: 'reopen' });
 		m.route.set(`/t/${id}`);
 	} catch (err) {
-		console.error('[LessonRow] reopen failed:', err);
+		captureException(err, { operation: 'lessonRow.reopen', mainId: id });
 		reopenErrors.add(id);
 	} finally {
 		reopening.delete(id);

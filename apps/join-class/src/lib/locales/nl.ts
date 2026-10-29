@@ -585,6 +585,7 @@ const nl: Record<string, string> = {
 	'plan.lesson_from': 'Spel: "{{game}}" · Klas: {{class}}',
 	'teacher.lesson.not_approved':
 		'Je lerarenaccount is nog niet goedgekeurd voor klassen. Je kunt zonder klas beginnen.',
+	'plan.intro.text.line_too_long': 'Een regel is te lang. Kort hem in tot {{max}} tekens.',
 };
 
 export default nl;

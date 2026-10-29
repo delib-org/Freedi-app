@@ -1,7 +1,7 @@
 import { lessonFromSnapshot } from '@freedi/shared-types';
 import type { ClassGame, ClassGameSnapshot, Statement } from '@freedi/shared-types';
 import { getMainStatement, getSubQuestions } from '@/lib/store';
-import { writeGameSnapshot } from '@/lib/classPlans';
+import { updateGameSnapshot } from '@/lib/classPlans';
 import { orderedQuestions } from '@/lib/classroom/gameSnapshotEdit';
 
 /**
@@ -77,16 +77,23 @@ export function getPlanSubQuestions(): Statement[] {
 }
 
 /**
- * Applies an edit to the game's snapshot: the screen sees it at once (the next call to
- * `getPlanMain` rebuilds), then the doc is written. A failed write throws; the doc listener
- * then brings back what the server holds.
+ * Applies an edit to the game's snapshot. The screen sees it at once, built from the copy in
+ * hand (the next call to `getPlanMain` rebuilds); the doc is then edited in a transaction that
+ * applies the same edit to the CURRENT doc (`updateGameSnapshot`), so another tab's changes to
+ * other questions are kept. An edit the cap refuses throws before anything is shown. A failed
+ * write takes the optimistic copy back out and throws.
  */
 export async function editGame(
 	edit: (snapshot: ClassGameSnapshot) => ClassGameSnapshot,
 ): Promise<void> {
 	if (!game) throw new Error('no game is open');
 	const current = game;
-	const snapshot = edit(current.snapshot);
-	game = { ...current, snapshot, lastUpdate: Date.now() };
-	await writeGameSnapshot(current.planId, current.gameId, snapshot);
+	const shown: ClassGame = { ...current, snapshot: edit(current.snapshot), lastUpdate: Date.now() };
+	game = shown;
+	try {
+		await updateGameSnapshot(current.planId, current.gameId, edit);
+	} catch (err) {
+		if (game === shown) game = current;
+		throw err;
+	}
 }

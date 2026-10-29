@@ -590,6 +590,7 @@ const de: Record<string, string> = {
 	'plan.lesson_from': 'Spiel: „{{game}}“ · Klasse: {{class}}',
 	'teacher.lesson.not_approved':
 		'Dein Lehrerkonto ist für Klassen noch nicht freigegeben. Du kannst ohne Klasse starten.',
+	'plan.intro.text.line_too_long': 'Eine Zeile ist zu lang. Kürze sie auf {{max}} Zeichen.',
 };
 
 export default de;

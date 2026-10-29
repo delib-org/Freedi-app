@@ -39,6 +39,7 @@ import {
 	startCreate,
 } from './HomeCreate';
 import { filterLessons } from './homeHelpers';
+import { captureException } from '@/lib/sentry';
 
 /**
  * The lesson plan screen, `/t/:planId` under `/t/plans` (docs/ia/join-class-lesson-plan.md 5, 7):
@@ -143,7 +144,7 @@ async function loadSources(): Promise<void> {
 		sources = hasPlanDoc() ? all : all.filter((s) => s.kind === 'lesson' && s.id === planId);
 		sourcesLoad = 'ready';
 	} catch (err) {
-		console.error('[PlanOverview] loading the copy sources failed:', err);
+		captureException(err, { operation: 'planOverview.loadSources', planId });
 		sourcesLoad = 'error';
 	} finally {
 		m.redraw();
@@ -164,7 +165,7 @@ async function commitRename(): Promise<void> {
 		await renamePlan(planId, title);
 		renaming = false;
 	} catch (err) {
-		console.error('[PlanOverview] rename failed:', err);
+		captureException(err, { operation: 'planOverview.rename', planId });
 		renameFailed = true;
 	} finally {
 		m.redraw();

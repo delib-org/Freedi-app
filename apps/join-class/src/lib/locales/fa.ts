@@ -573,6 +573,7 @@ const fa: Record<string, string> = {
 	'plan.lesson_from': 'بازی: «{{game}}» · کلاس: {{class}}',
 	'teacher.lesson.not_approved':
 		'حساب شما هنوز برای کار با کلاس‌ها تأیید نشده است. می‌توانید بدون کلاس شروع کنید.',
+	'plan.intro.text.line_too_long': 'یک خط خیلی بلند است. آن را به {{max}} نویسه کوتاه کنید.',
 };
 
 export default fa;

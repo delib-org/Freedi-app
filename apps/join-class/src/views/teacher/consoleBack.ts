@@ -4,6 +4,7 @@ import { db, doc, getDoc } from '@/lib/firebase';
 import { getMainStatement } from '@/lib/store';
 import { linkOf, planPathOf } from '@/lib/lessonLinks';
 import { t } from '@/lib/i18n';
+import { captureException } from '@/lib/sentry';
 
 /**
  * The console's way back (docs/ia/join-class-lesson-plan.md 5): up to the lesson's plan
@@ -26,7 +27,7 @@ function fetchTitle(planId: string): void {
 			}
 		})
 		.catch((err: unknown) => {
-			console.error('[consoleBack] reading the plan failed:', err);
+			captureException(err, { operation: 'consoleBack.readPlan', planId });
 		});
 }
 

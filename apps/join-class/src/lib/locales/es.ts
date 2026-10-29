@@ -586,6 +586,7 @@ const es: Record<string, string> = {
 	'plan.lesson_from': 'Juego: «{{game}}» · Grupo: {{class}}',
 	'teacher.lesson.not_approved':
 		'Tu cuenta de docente aún no está aprobada para trabajar con grupos. Puedes empezar sin grupo.',
+	'plan.intro.text.line_too_long': 'Una línea es demasiado larga. Acórtala a {{max}} caracteres.',
 };
 
 export default es;

@@ -5,6 +5,7 @@ import { startLesson } from '@/lib/lesson';
 import { getUserState } from '@/lib/user';
 import { loadTeacherClasses, type TeacherClass } from '@/lib/teacherClasses';
 import { startFailureOf, type StartFailure } from './startFailure';
+import { captureException } from '@/lib/sentry';
 
 /**
  * "+ שיעור עם כיתה" (docs/ia/join-class-lesson-plan.md 5 and 6.4): an inline choice
@@ -45,7 +46,7 @@ async function loadClasses(): Promise<void> {
 		classes = list;
 		classesLoad = 'ready';
 	} catch (err) {
-		console.error('[ClassForm] loading the classes failed:', err);
+		captureException(err, { operation: 'classForm.loadClasses' });
 		classesLoad = 'error';
 	} finally {
 		m.redraw();
@@ -83,7 +84,7 @@ async function submit(planId: string, gameId: string): Promise<void> {
 		closeClassForm();
 		m.route.set(`/t/${id}`);
 	} catch (err) {
-		console.error('[ClassForm] starting the lesson failed:', err);
+		captureException(err, { operation: 'classForm.startLesson', planId, gameId });
 		failure = startFailureOf(err);
 	} finally {
 		busy = false;

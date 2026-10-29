@@ -19,6 +19,7 @@ import {
 	type FlowMove,
 	type FocusTarget,
 } from './homeCreateFlow';
+import { captureException } from '@/lib/sentry';
 
 /**
  * The create area (docs/ia/join-class-lesson-plan.md 6): the same inline machine for two
@@ -189,7 +190,7 @@ async function submit(e: Event): Promise<void> {
 		resetCreate();
 		m.route.set(path);
 	} catch (err) {
-		console.error('[HomeCreate] create failed:', err);
+		captureException(err, { operation: `homeCreate.${hooks.mode}` });
 		flow = failSubmit(flow, failureOf(err));
 		m.redraw.sync();
 		applyFocus({ kind: 'input' });

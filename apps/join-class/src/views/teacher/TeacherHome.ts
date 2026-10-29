@@ -22,6 +22,7 @@ import {
 	resetCreate,
 	startCreate,
 } from './HomeCreate';
+import { captureException } from '@/lib/sentry';
 
 /** A name filter appears above this many plans (IA 8). */
 const FILTER_FROM = 10;
@@ -83,7 +84,7 @@ function refreshCounts(rows: readonly PlanRow[]): void {
 				m.redraw();
 			})
 			.catch((err: unknown) => {
-				console.error('[TeacherHome] counting the games failed:', err);
+				captureException(err, { operation: 'teacherHome.countGames', planId: row.planId });
 			});
 	}
 }

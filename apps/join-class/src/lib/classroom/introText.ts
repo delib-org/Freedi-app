@@ -1,4 +1,4 @@
-import { ParagraphType } from '@freedi/shared-types';
+import { CLASS_GAME_MAX_TEXT_LENGTH, ParagraphType } from '@freedi/shared-types';
 import type { ListType, Paragraph } from '@freedi/shared-types';
 
 /**
@@ -104,6 +104,8 @@ export interface IntroTextCheck {
 	length: number;
 	tooLong: boolean;
 	tooMany: boolean;
+	/** One line (its text, or its markup once bold is applied) is over the server's cap on a single text. */
+	lineTooLong: boolean;
 	/** The save is allowed. */
 	ok: boolean;
 }
@@ -114,7 +116,20 @@ export function checkIntroText(text: string): IntroTextCheck {
 	const tooLong = length > INTRO_TEXT_MAX;
 	const tooMany = blocks.length > INTRO_BLOCKS_MAX;
 
-	return { blocks, length, tooLong, tooMany, ok: !tooLong && !tooMany };
+	const lineTooLong = blocks.some(
+		(b) =>
+			b.content.length > CLASS_GAME_MAX_TEXT_LENGTH ||
+			(b.contentHtml?.length ?? 0) > CLASS_GAME_MAX_TEXT_LENGTH,
+	);
+
+	return {
+		blocks,
+		length,
+		tooLong,
+		tooMany,
+		lineTooLong,
+		ok: !tooLong && !tooMany && !lineTooLong,
+	};
 }
 
 /** `<strong>x</strong>` runs back to `**x**` (everything else is text). */

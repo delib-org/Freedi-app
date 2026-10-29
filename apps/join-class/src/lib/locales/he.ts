@@ -574,6 +574,7 @@ const he: Record<string, string> = {
 	'plan.lesson_only': 'השינויים כאן רק לשיעור הזה',
 	'plan.lesson_from': 'משחק: „{{game}}” · כיתה: {{class}}',
 	'teacher.lesson.not_approved': 'החשבון שלכם עוד לא אושר לעבודה עם כיתות. אפשר להתחיל בלי כיתה.',
+	'plan.intro.text.line_too_long': 'שורה ארוכה מדי. קצרו אותה ל-{{max}} תווים.',
 };
 
 export default he;

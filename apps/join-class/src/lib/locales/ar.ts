@@ -575,6 +575,7 @@ const ar: Record<string, string> = {
 	'plan.lesson_from': 'اللعبة: «{{game}}» · الصف: {{class}}',
 	'teacher.lesson.not_approved':
 		'لم تتم الموافقة بعد على حسابكم للعمل مع الصفوف. يمكنكم البدء بلا صف.',
+	'plan.intro.text.line_too_long': 'السطر طويل جدًا. اختصروه إلى {{max}} حرفًا.',
 };
 
 export default ar;
