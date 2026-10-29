@@ -15,6 +15,7 @@ import { getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { BASE_URL as BASE, PROJECT_ID } from './e2e-env.mjs';
 import { signInTeacher } from './e2e-auth.mjs';
+import { startLessonViaPlan } from './lib/startLessonViaPlan.mjs';
 
 const TIMEOUT = 15000;
 const db = getFirestore(getApps()[0] ?? initializeApp({ projectId: PROJECT_ID }));
@@ -40,14 +41,11 @@ try {
 	await signInTeacher(page, BASE, `teacher-plan-${Date.now()}`);
 
 	// 2. teacher home: a first-time teacher has the name field open already
-	await page.goto(`${BASE}/t`, { waitUntil: 'domcontentloaded' });
-	await page.waitForSelector('#teacher-new-title', { timeout: TIMEOUT });
+	// a lesson now comes from a game of a lesson plan (lib/startLessonViaPlan.mjs); this script
+	// is about the lesson's own "plan the questions" screen, where that helper ends
 	const title = `Lesson ${Date.now()}`;
-	await page.fill('#teacher-new-title', title);
-	await page.click('.teacher-home__form button[type=submit]');
-	await page.waitForURL(/\/t\/[^/]+\/plan$/, { timeout: TIMEOUT });
+	const { mainId: mid } = await startLessonViaPlan(page, BASE, { title });
 	const planUrl = page.url();
-	const mid = planUrl.split('/t/')[1].split('/')[0];
 	check('new lesson opens the plan screen', true, planUrl);
 	await page.waitForSelector('.plan__challenge', { timeout: TIMEOUT });
 	check(
@@ -303,7 +301,7 @@ try {
 	await page.goto(`${BASE}/t`, { waitUntil: 'domcontentloaded' });
 	await page.waitForSelector('.teacher-home__row', { timeout: TIMEOUT });
 	const rows = await page.$$eval('.teacher-home__row-title', (els) => els.map((e) => e.textContent));
-	check('teacher home lists the lesson', rows.includes(title), rows.join(', '));
+	check('teacher home lists the lesson under "פתוחים עכשיו" and its plan', rows.filter((r) => r.includes(title)).length === 2, rows.join(', '));
 } catch (err) {
 	failures += 1;
 	console.error('E2E aborted:', err);

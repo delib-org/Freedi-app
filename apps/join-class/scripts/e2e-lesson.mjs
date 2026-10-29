@@ -24,6 +24,7 @@ import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { ENGINE_PHASES, prepareEngineLesson } from './e2e-lesson-engine.mjs';
 import { BASE_URL as BASE, PROJECT_ID } from './e2e-env.mjs';
 import { signInTeacher } from './e2e-auth.mjs';
+import { startLessonViaPlan } from './lib/startLessonViaPlan.mjs';
 
 const ENGINE_ON = process.env.E2E_LESSON_ENGINE === '1';
 const TIMEOUT = 20000;
@@ -81,12 +82,7 @@ let challengeId = '';
 // ---- 1. plan ------------------------------------------------------------------
 async function phasePlan() {
 	await signInTeacher(teacher, BASE, `teacher-lesson-${Date.now()}`);
-	await teacher.goto(`${BASE}/t`, { waitUntil: 'domcontentloaded' });
-	await teacher.waitForSelector('#teacher-new-title', { timeout: TIMEOUT });
-	await teacher.fill('#teacher-new-title', `Full lesson ${Date.now()}`);
-	await teacher.click('.teacher-home__form button[type=submit]');
-	await teacher.waitForURL(/\/t\/[^/]+\/plan$/, { timeout: TIMEOUT });
-	mid = new URL(teacher.url()).pathname.split('/')[2];
+	({ mainId: mid } = await startLessonViaPlan(teacher, BASE, { title: `Full lesson ${Date.now()}` }));
 
 	const challenge = teacher.locator('.plan-card__text--challenge');
 	await teacher.waitForSelector('.plan__challenge', { timeout: TIMEOUT });
