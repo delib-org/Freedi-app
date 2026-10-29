@@ -209,10 +209,21 @@ export const ENGINE_PHASES = [
 		name: 'proposals, rating and plenum',
 		async run({ teacher, students, check, admin, challengeId }) {
 			await teacherForward(teacher, 'proposals');
-			// free sub-steps (IA 17.13): "סיימנו, לכתוב" is a local shortcut, so every phone taps its own
-			for (const student of students) {
-				await (await byId(student.page, 'table-to-write')).click();
+			// Nobody has spoken: the write shortcut is not offered, the table moves on when 2 tablemates
+			// press "move on" (Trello 1c8jfvA6/GdrAEIF9). Phones then follow the table to writing.
+			await byId(students[0].page, 'move-on');
+			check('before anyone spoke there is no write shortcut, only "move on"', !(await hasTestId(students[0], 'table-to-write')) && (await hasTestId(students[0], 'move-on')));
+			await (await byId(students[0].page, 'move-on')).click();
+			await until(async () => /1\/2|1\/3/.test((await students[0].page.getByTestId('move-on-count').first().textContent().catch(() => '')) ?? ''), 'one press is counted');
+			check('one press does not move the table: still at talk, "1/2 want to move on" shown', !(await hasTestId(students[0], 'proposal-box')));
+			// the first student already pressed (a second tap would take it back)
+			for (const student of students.slice(1)) {
+				if (await hasTestId(student, 'move-on')) {
+					await (await byId(student.page, 'move-on')).click().catch(() => undefined);
+				}
 			}
+			for (const student of students) await byId(student.page, 'proposal-box');
+			check('two presses moved every table on to writing', true);
 			for (const student of students) {
 				await (await byId(student.page, 'proposal-box')).fill(`Proposal by student ${student.index + 1}`);
 				await (await byId(student.page, 'proposal-send')).click();

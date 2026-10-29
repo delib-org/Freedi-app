@@ -137,13 +137,18 @@ try {
 	await dana.page.waitForSelector(tid('proposal-box'), { timeout: TIMEOUT });
 	check('1 the write box is live for Dana (not read-only, not in a disabled fieldset)', !(await dana.page.locator(tid('proposal-box')).isDisabled()) && !(await dana.page.locator(tid('proposal-box')).evaluate((el) => el.readOnly)) && (await count(dana.page, 'fieldset[disabled]')) === 0);
 	check('1 no peek screen, no "back to now", no asker line, anywhere', (await Promise.all(phones.map((s) => noneOf(s.page, '[data-testid=peek-body], [data-testid=peek-back], [data-testid=asker-mark], .flow__peek')))).every(Boolean));
-	check('1 the header follows the phone\'s own sub-step', /עכשיו: כותבים/.test(await text(dana.page, '.frame__header')) && /עכשיו: מדרגים/.test(await text(tal.page, '.frame__header')) && /עכשיו: מדברים/.test(await text(noa.page, '.frame__header')), await text(tal.page, '.frame__header'));
+	check('1 the header follows the phone\'s own sub-step', /עכשיו: כותבים/.test(await text(dana.page, '.frame__header')) && /עכשיו: מדרגים/.test(await text(tal.page, '.frame__header')) && /סבב 1 מתוך 1/.test(await text(noa.page, '.frame__header')), await text(tal.page, '.frame__header'));
 	check('1 the table doc is still at "talk"', (await tableDoc()).step === 'talk');
 	check('1 the shortcut "סיימנו, לכתוב" switches only the phone', await (async () => {
+		// the shortcut is offered once everyone at the table has spoken (before that: "move on")
+		await db.doc(`classTables/${table1}`).update({ spokenUids: [dana.uid, tal.uid, noa.uid] });
+		await noa.page.waitForSelector(tid('table-to-write'), { timeout: TIMEOUT });
 		await noa.page.click(tid('table-to-write'));
 		await until(async () => (await current(noa.page)) === 'write', 'Noa on write');
+		const stillTalk = (await tableDoc()).step === 'talk';
+		await db.doc(`classTables/${table1}`).update({ spokenUids: [] });
 
-		return (await tableDoc()).step === 'talk';
+		return stillTalk;
 	})());
 	await pill(noa.page, 'talk').click();
 
