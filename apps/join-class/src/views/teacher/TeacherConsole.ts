@@ -67,6 +67,7 @@ import { NotYourLesson } from './NotYourLesson';
 import { ConsoleSettings } from './ConsoleSettings';
 import { ProjectorMenu } from './ProjectorMenu';
 import { GatePanel } from './GatePanel';
+import { voteScopeOf } from './voteScopeState';
 import { StepRail } from './StepRail';
 import { SwitchBand } from './SwitchBand';
 import { introVideosOf, projectorVideoOf } from '@/lib/classroom/introVideos';
@@ -362,6 +363,11 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				onVoteOrder: (order: ClassVoteOrder) => {
 					if (challenge) void setVoteOrder(challenge.statementId, order);
 				},
+				voteScope: voteScopeOf(
+					challenge,
+					main,
+					challenge ? (consoleState.options.get(challenge.statementId) ?? []) : [],
+				),
 				// >>> voteSummary BEGIN
 				allVoted: allVotedOn(challenge),
 				votedCount: voteCountsOn(challenge).voted,

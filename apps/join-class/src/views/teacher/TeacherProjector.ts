@@ -1,6 +1,7 @@
 import m from 'mithril';
 import '@/styles/projector.scss';
 import '@/styles/projector-gate.scss';
+import '@/styles/projector-goal.scss';
 // >>> voteSummary BEGIN
 import '@/styles/projector-results.scss';
 // >>> voteSummary END

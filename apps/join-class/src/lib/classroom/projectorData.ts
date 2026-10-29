@@ -23,6 +23,8 @@ export interface ProjectorData {
 	challenge: Statement | null;
 	/** Options of the challenge question (proposals). */
 	proposals: Statement[];
+	/** True once the proposals listener has its first server snapshot (not a partial cache one). */
+	proposalsLoaded: boolean;
 	/** The introduction text (paragraph children of the main statement); null until the first delivery. */
 	intro: SavedBlock[] | null;
 }
@@ -32,6 +34,7 @@ export const projectorData: ProjectorData = {
 	questions: [],
 	challenge: null,
 	proposals: [],
+	proposalsLoaded: false,
 	intro: null,
 };
 
@@ -44,6 +47,7 @@ function reset(): void {
 	projectorData.questions = [];
 	projectorData.challenge = null;
 	projectorData.proposals = [];
+	projectorData.proposalsLoaded = false;
 	projectorData.intro = null;
 }
 
@@ -64,6 +68,7 @@ export function watchProjector(mainId: string): () => void {
 		proposalsStop?.();
 		proposalsStop = null;
 		projectorData.proposals = [];
+		projectorData.proposalsLoaded = false;
 		if (!challengeId || stopped) return;
 		proposalsStop = resilientOnSnapshot(
 			LISTENER_PROPOSALS,
@@ -74,6 +79,7 @@ export function watchProjector(mainId: string): () => void {
 			),
 			(snap) => {
 				projectorData.proposals = snap.docs.map((d) => d.data() as Statement);
+				projectorData.proposalsLoaded = snap.metadata?.fromCache !== true;
 				m.redraw();
 			},
 			onError('proposals'),

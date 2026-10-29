@@ -43,6 +43,13 @@ const vote: Record<string, string> = {
 	'console.vote_order_consensus': 'By the ratings',
 	'console.vote_order_votes': 'By the number of votes',
 	'console.vote_order_random': 'Random order',
+	'console.vote_scope': 'Proposals on the vote',
+	'console.vote_scope_all': 'All proposals',
+	'console.vote_scope_above': 'Only above the goal',
+	'console.vote_scope_count': '{{above}} of {{total}} above the goal',
+	'console.vote_scope_none':
+		'Fewer than two proposals are above the goal, so the vote will hold the top proposals instead',
+	'console.vote_scope_locked': 'Set before opening the vote',
 	'console.vote_status_not_open': 'Not open',
 	'console.vote_status_open': 'Voting is open',
 	'console.vote_status_paused': 'Voting is paused',

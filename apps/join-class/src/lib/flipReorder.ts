@@ -74,3 +74,11 @@ export function playFlip(container: Element | null | undefined, before: Position
 
 	return moved ? duration : 0;
 }
+
+/**
+ * True when the same keys changed order (or a key came or went): the moment a
+ * list should record positions and glide. Equal lists never animate.
+ */
+export function orderChanged(previous: readonly string[], next: readonly string[]): boolean {
+	return previous.length !== next.length || previous.some((id, index) => id !== next[index]);
+}
