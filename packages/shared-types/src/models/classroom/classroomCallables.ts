@@ -270,4 +270,48 @@ export interface ClassCloneLessonResponse {
 	mainId: string;
 	classCode: string;
 	reused: boolean;
+	/** The home the new lesson sits under (the caller's teacher home `jcTeacher_{uid}`). */
+	homeId?: string;
+}
+
+/**
+ * `classStartLesson` (owner of the plan; a teacher of the class when `classId` is set).
+ * Plays a prepared game with a class: ensures the home (`jcClass_{classId}`, or
+ * `jcTeacher_{uid}` when `classId` is null), builds the lesson from the game's snapshot
+ * under it, and gives it a class code, all in one transaction. `newMainId` is made by the
+ * client and kept while its form is open: a repeat with the same id returns the same
+ * lesson (`reused: true`). The lesson starts live at Waiting.
+ */
+export interface ClassStartLessonRequest {
+	planId: string;
+	gameId: string;
+	/** An `agoraClasses` id the caller teaches (active only), or null for "no class". */
+	classId: string | null;
+	newMainId: string;
+}
+export interface ClassStartLessonResponse {
+	mainId: string;
+	classCode: string;
+	homeId: string;
+	reused: boolean;
+}
+
+/**
+ * `classSnapshotGame` (admin of the source lesson, owner of the plan). Turns a
+ * lesson's questions and settings into a new game doc
+ * `classPlans/{planId}/games/{newGameId}`. When `planId === sourceMainId` and the plan
+ * does not exist yet, the plan is created from the lesson (an old lesson becomes a plan
+ * of its own). A repeat with the same `newGameId` returns the same game (`reused: true`).
+ */
+export interface ClassSnapshotGameRequest {
+	sourceMainId: string;
+	planId: string;
+	newGameId: string;
+	/** The game's title; the lesson's title when omitted. */
+	title?: string;
+}
+export interface ClassSnapshotGameResponse {
+	planId: string;
+	gameId: string;
+	reused: boolean;
 }

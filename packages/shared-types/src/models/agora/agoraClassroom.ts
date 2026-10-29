@@ -115,6 +115,12 @@ export const AgoraClassSchema = object({
 	/** Server-maintained count of active roster members */
 	memberCount: number(),
 	status: ActiveArchivedSchema,
+	/**
+	 * join-class: id of this class's home statement (`jcClass_{classId}`), where
+	 * the lessons played with the class live. Written by the server only
+	 * (classStartLesson), the first time a lesson is started with the class.
+	 */
+	joinClassHomeId: optional(string()),
 	/** Sys-admin uid that opened the class */
 	createdBy: string(),
 	createdAt: number(),

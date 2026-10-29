@@ -1101,6 +1101,56 @@ export {
 } from './models/classroom/classroomLogic';
 export type { LessonSettingsHolder } from './models/classroom/classroomLogic';
 export {
+  CLASS_PLANS_COLLECTION,
+  CLASS_GAMES_SUBCOLLECTION,
+  CLASS_HOME_PREFIX,
+  TEACHER_HOME_PREFIX,
+  CLASS_HOME_KIND,
+  CLASS_PLAN_TITLE_MAX_LENGTH,
+  CLASS_NAME_MAX_LENGTH,
+  CLASS_GAME_MAX_QUESTIONS,
+  CLASS_GAME_MAX_PARAGRAPHS,
+  CLASS_GAME_MAX_VIDEOS,
+  CLASS_GAME_MAX_TEXT_LENGTH,
+  ClassPlanSchema,
+  ClassGameSchema,
+  ClassGameSnapshotSchema,
+  ClassGameQuestionSchema,
+  ClassGameParagraphSchema,
+  ClassGameSettingsSchema,
+  classHomeIdOf,
+  teacherHomeIdOf,
+  isHomeId,
+  isClassHome,
+  isClassLesson,
+  cleanClassName,
+} from './models/classroom/classPlanModel';
+export type {
+  ClassPlan,
+  ClassGame,
+  ClassGameSnapshot,
+  ClassGameQuestion,
+  ClassGameParagraph,
+  ClassLessonLink,
+  ClassHomeLink,
+  ClassHomeKind,
+} from './models/classroom/classPlanModel';
+export {
+  LESSON_STEPS,
+  flattenLines,
+  compareByManualOrder,
+  isPlanQuestion,
+  isIntroParagraph,
+  snapshotFromLesson,
+  checkSnapshot,
+  lessonFromSnapshot,
+} from './models/classroom/classGameSnapshot';
+export type {
+  SnapshotProblem,
+  LessonFromSnapshotInput,
+  LessonStatements,
+} from './models/classroom/classGameSnapshot';
+export {
   MOVE_ON_PRESSES,
   MOVE_ON_SMALL_TABLE,
   moveOnNeeded,
@@ -1145,6 +1195,10 @@ export type {
   ClassEditProposalRequest,
   ClassEditProposalResponse,
   ClassCloneLessonRequest,
+  ClassStartLessonRequest,
+  ClassStartLessonResponse,
+  ClassSnapshotGameRequest,
+  ClassSnapshotGameResponse,
   ClassCloneLessonResponse,
   ClassSetLessonStatusRequest,
   ClassSetLessonStatusResponse,
