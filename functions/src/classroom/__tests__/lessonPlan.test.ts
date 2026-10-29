@@ -10,7 +10,8 @@ import { snapshotGame } from '../fn_classSnapshotGame';
 import { setLessonStatus } from '../fn_classSetLessonStatus';
 import { isLesson } from '../cloneLesson';
 import { loadMain, requireId } from '../classroomAccess';
-import { revokeClassHomeTeacher } from '../classHome';
+import { classTargetFromDoc, revokeClassHomeTeacher } from '../classHome';
+import type { AgoraClass } from '@freedi/shared-types';
 import {
 	autoEvaluatorUids,
 	isInLesson,
@@ -18,7 +19,8 @@ import {
 	shouldLockWriting,
 } from '../autoEvaluations';
 import { ClassroomError } from '../classroomErrors';
-import type { StartLessonDeps } from '../startLesson';
+import type { StartLessonCallDeps } from '../fn_classStartLesson';
+import { startLessonUnderHome } from '../startLesson';
 import { FakeFirestore } from './fakeFirestore';
 
 const TEACHER: User = { uid: 'teacher', displayName: 'Tal' };
@@ -48,7 +50,7 @@ async function expectCode(promise: Promise<unknown>, code: string): Promise<void
 	await expect(promise).rejects.toMatchObject({ code });
 }
 
-function deps(prefix = 'id', code = 0.25): StartLessonDeps {
+function deps(prefix = 'id', code = 0.25): StartLessonCallDeps {
 	let i = 0;
 
 	return {
@@ -56,6 +58,7 @@ function deps(prefix = 'id', code = 0.25): StartLessonDeps {
 		random: () => code,
 		newId: () => `${prefix}${++i}`,
 		resolveUsers: async (uids) => uids.map((uid) => ({ uid, displayName: `name-${uid}` })),
+		assertApprovedTeacher: async () => undefined,
 	};
 }
 
@@ -476,6 +479,123 @@ describe('classStartLesson', () => {
 			startLesson(fake.asFirestore(), TEACHER, req({ classId: null }), deps()),
 			'resource-exhausted',
 		);
+	});
+});
+
+describe('class-path hardening', () => {
+	it('applies the approval gate on the class path only, and fails closed without it (6)', async () => {
+		const fake = new FakeFirestore();
+		seedPlanAndGame(fake);
+		seedClass(fake);
+		const refused = async () => {
+			throw new ClassroomError('permission-denied', 'not approved');
+		};
+		await expectCode(
+			startLesson(fake.asFirestore(), TEACHER, req(), {
+				...deps(),
+				assertApprovedTeacher: refused,
+			}),
+			'permission-denied',
+		);
+		await expectCode(
+			startLesson(fake.asFirestore(), TEACHER, req(), {
+				...deps(),
+				assertApprovedTeacher: undefined,
+			}),
+			'permission-denied',
+		);
+		expect(fake.list('statements')).toHaveLength(0);
+		// the teacher home stays open to any signed-in teacher
+		const res = await startLesson(fake.asFirestore(), TEACHER, req({ classId: null }), {
+			...deps(),
+			assertApprovedTeacher: refused,
+		});
+		expect(res.homeId).toBe(TEACHER_HOME);
+	});
+
+	it('re-syncs from the class as read INSIDE the transaction, not a stale list (2)', async () => {
+		const fake = new FakeFirestore();
+		seedPlanAndGame(fake);
+		seedClass(fake, 'active', [TEACHER.uid, CO]);
+		await startLesson(fake.asFirestore(), TEACHER, req(), deps());
+		const cls = fake.read(`agoraClasses/${CLASS}`) as unknown as AgoraClass;
+		const stale = classTargetFromDoc(CLASS, TEACHER.uid, { ...cls, teacherIds: [TEACHER.uid] });
+		const fresh = classTargetFromDoc(CLASS, TEACHER.uid, cls);
+		await startLessonUnderHome(
+			fake.asFirestore(),
+			{
+				actor: TEACHER,
+				target: stale,
+				refreshTarget: async () => fresh,
+				newMainId: 'lesson2',
+				title: 'x',
+				snapshot: SNAPSHOT,
+				isRetryOf: () => false,
+			},
+			deps('second', 0.35),
+		);
+		expect(fake.read(`statementsSubscribe/${CO}--${CLASS_HOME}`)?.role).toBe('admin');
+	});
+
+	it('keeps every teacher past the cap, writing at most 20 new admins per start (3)', async () => {
+		const fake = new FakeFirestore();
+		seedPlanAndGame(fake);
+		const many = Array.from({ length: 25 }, (_, i) => `t${i}`);
+		seedClass(fake, 'active', [TEACHER.uid, ...many]);
+		await startLesson(fake.asFirestore(), TEACHER, req(), deps());
+		const admins = () =>
+			fake
+				.list('statementsSubscribe')
+				.filter((s) => s.statementId === CLASS_HOME && s.role === 'admin');
+		expect(admins()).toHaveLength(20);
+		await startLesson(fake.asFirestore(), TEACHER, req({ newMainId: 'lesson2' }), deps('b', 0.35));
+		expect(admins()).toHaveLength(26);
+		await startLesson(fake.asFirestore(), TEACHER, req({ newMainId: 'lesson3' }), deps('c', 0.45));
+		expect(admins()).toHaveLength(26);
+	});
+
+	it('never revokes a system admin in the re-sync (4)', async () => {
+		const fake = new FakeFirestore();
+		seedPlanAndGame(fake);
+		seedClass(fake, 'active', [TEACHER.uid]);
+		fake.seed(`statementsSubscribe/sys--${CLASS_HOME}`, {
+			userId: 'sys',
+			statementId: CLASS_HOME,
+			role: 'admin',
+		});
+		fake.seed(`statementsSubscribe/stale--${CLASS_HOME}`, {
+			userId: 'stale',
+			statementId: CLASS_HOME,
+			role: 'admin',
+		});
+		fake.seed('usersV2/sys', { uid: 'sys', systemAdmin: true });
+		await startLesson(fake.asFirestore(), TEACHER, req(), deps());
+		expect(fake.read(`statementsSubscribe/sys--${CLASS_HOME}`)?.role).toBe('admin');
+		expect(fake.read(`statementsSubscribe/stale--${CLASS_HOME}`)).toBeUndefined();
+	});
+
+	it('deletes the home subscription last, so a failed revoke can be retried (5)', async () => {
+		const fake = new FakeFirestore();
+		seedPlanAndGame(fake);
+		seedClass(fake, 'active', [TEACHER.uid, CO]);
+		await startLesson(fake.asFirestore(), TEACHER, req(), deps());
+		fake.seed(`statementsSubscribe/${CO}--${NEW}`, {
+			userId: CO,
+			statementId: NEW,
+			topParentId: CLASS_HOME,
+			role: 'admin',
+			statement: { statementId: NEW, creatorId: TEACHER.uid },
+		});
+		const firestore = fake.asFirestore();
+		(firestore as unknown as { batch: () => unknown }).batch = () => ({
+			delete: () => undefined,
+			commit: async () => {
+				throw new Error('unavailable');
+			},
+		});
+		await expect(revokeClassHomeTeacher(firestore, CLASS, CO)).rejects.toThrow('unavailable');
+		expect(fake.read(`statementsSubscribe/${CO}--${CLASS_HOME}`)?.role).toBe('admin');
+		expect(fake.read(`statementsSubscribe/${CO}--${NEW}`)).toBeDefined();
 	});
 });
 

@@ -138,6 +138,9 @@ describe('moveClassLessonsHome helpers', () => {
 		expect(reason({ status: 'live' }, NOW - 1000)).toBe('live');
 		expect(reason({ status: undefined }, NOW - 1000)).toBe('live');
 		expect(reason({ status: 'paused' }, NOW - 1000)).toBe('live');
+		expect(reason({ status: 'paused' }, NOW - 2 * LIVE_WINDOW_MS)).toBe('live');
+		expect(reason({ status: 'paused' }, NOW - OPEN_WINDOW_MS - 1)).toBeNull();
+		expect(reason({ status: 'live' }, NOW - 2 * LIVE_WINDOW_MS)).toBeNull();
 		expect(reason({ status: 'live', stepIndex: 0 }, NOW - 1000)).toBe('live');
 		expect(reason({ status: 'open' }, NOW - 1000)).toBe('open');
 		expect(reason({ status: 'open' }, NOW - OPEN_WINDOW_MS + 1000)).toBe('open');

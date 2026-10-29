@@ -11,7 +11,14 @@ import {
 import type { ClassPlan, Statement, StatementSubscription, User } from '@freedi/shared-types';
 import { commitInBatches } from '../classroom/batchedWrites';
 import type { BatchedWrite } from '../classroom/batchedWrites';
-import { isHomeOf, readHomeAdmins, teacherHomeTarget, writeHome } from '../classroom/classHome';
+import {
+	isHomeOf,
+	readHomeAdmins,
+	readSystemAdmins,
+	revocableAdmins,
+	teacherHomeTarget,
+	writeHome,
+} from '../classroom/classHome';
 import type { HomeTarget } from '../classroom/classHome';
 import { writeGameFromLesson } from '../classroom/gameWrites';
 import { logError } from '../utils/errorHandling';
@@ -51,7 +58,8 @@ export const MIGRATION_BATCH_SIZE = 100;
 
 /**
  * Why a lesson was not moved:
- * - live: live or paused (any step, the waiting room included), touched < 3 h ago;
+ * - live: live (any step, the waiting room included) touched < 3 h ago, or paused
+ *   touched < 7 days ago;
  * - open: kept open for students, touched < 7 days ago;
  * - plan-foreign / game-foreign: `classPlans/{L}` (or its game) exists and belongs
  *   to someone else (a squat made before the rules refused it); fix by hand;
@@ -123,16 +131,19 @@ export interface MoveOptions {
 const realSleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * Why a lesson must not move now, or null: live/paused (any step, the waiting
- * room included) touched within LIVE_WINDOW_MS -> 'live'; open touched within
- * OPEN_WINDOW_MS -> 'open'. Ended lessons, and stale ones, move.
+ * Why a lesson must not move now, or null: live (any step, the waiting room
+ * included) touched within LIVE_WINDOW_MS, or paused touched within
+ * OPEN_WINDOW_MS -> 'live'; open touched within OPEN_WINDOW_MS -> 'open'.
+ * Ended lessons, and stale ones, move.
  */
 export function activeSkipReason(lesson: Statement, now: number): 'live' | 'open' | null {
 	const plan = lesson.statementSettings?.lessonPlan;
 	if (!plan) return null;
 	const status = plan.status ?? 'live';
 	const age = now - (lesson.lastChildUpdate ?? lesson.lastUpdate ?? 0);
-	if ((status === 'live' || status === 'paused') && age < LIVE_WINDOW_MS) return 'live';
+	if (status === 'live' && age < LIVE_WINDOW_MS) return 'live';
+	// A paused lesson is resumed later, like an open one: the long window.
+	if (status === 'paused' && age < OPEN_WINDOW_MS) return 'live';
 	if (status === 'open' && age < OPEN_WINDOW_MS) return 'open';
 
 	return null;
@@ -294,6 +305,7 @@ async function ensureHome(
 	await firestore.runTransaction(async (tx) => {
 		const home = await tx.get(homeRef);
 		const admins = await readHomeAdmins(firestore, tx, target);
+		const systemAdmins = await readSystemAdmins(firestore, tx, revocableAdmins(target, admins));
 		if (home.exists && admins.get(teacher.uid) === Role.admin && admins.size === 1) return;
 		writeHome({
 			firestore,
@@ -301,6 +313,7 @@ async function ensureHome(
 			target,
 			existing: home.exists ? (home.data() as Statement) : undefined,
 			existingAdmins: admins,
+			systemAdmins,
 			creator: teacher,
 			users: [teacher],
 			now,

@@ -1159,6 +1159,15 @@ service cloud.firestore {
       function changesClassHomeOrLesson() {
         return classLinkOf(request.resource.data) != classLinkOf(resource.data);
       }
+      // A HOME is server-only after creation too: its creator (the first teacher
+      // to start a lesson in the class, who may since have been removed from it)
+      // must not keep isCreator() power over it. Only the timestamp bumps any
+      // participant may make on any statement get through; no client deletes it.
+      function homeWriteBlocked() {
+        return isClassHomeData(resource.data) &&
+               !request.resource.data.diff(resource.data).affectedKeys()
+                  .hasOnly(['lastUpdate', 'lastChildUpdate']);
+      }
 
       function changesClassReplyFields() {
         return request.resource.data.diff(resource.data).affectedKeys().hasAny(classReplyServerFields());
@@ -1233,6 +1242,7 @@ service cloud.firestore {
                        !changesClassReplyFields() &&
                        !rewordsClassProposal() &&
                        !changesClassHomeOrLesson() &&
+                       !homeWriteBlocked() &&
                        (isAgoraStatement()
                           ? (isCreator() && agoraServerFieldsUnchanged() &&
                              !agoraRemovedFrom(resource.data.agoraSessionId))
@@ -1242,7 +1252,7 @@ service cloud.firestore {
       // The session teacher inherits an admin subscription on every proposal
       // (setupAdminsForStatement), which used to make isAuthorized() a hard
       // delete with no tombstone and no audit.
-      allow delete: if request.auth.uid != null && !isAgoraStatement() && !isClassReply() && !resource.data.keys().hasAny(['agreementBallot']) && isAuthorized();
+      allow delete: if request.auth.uid != null && !isAgoraStatement() && !isClassReply() && !isClassHomeData(resource.data) && !resource.data.keys().hasAny(['agreementBallot']) && isAuthorized();
 
       // Civil Activity Hub — join form submissions subcollection.
       // Scoped to the owning question document. Each user owns their own
@@ -1440,6 +1450,25 @@ service cloud.firestore {
       function isBanned() {
         return resource != null && resource.data.role == "banned";
       }
+
+      // join-class HOMES: who administers a home is decided only by the server
+      // (classStartLesson re-syncs it to the class's teacherIds; removeClassTeacher
+      // revokes). No client creates or raises an elevated subscription on a home
+      // (not even its creator, via isCreator()), changes anyone's role there, or
+      // touches another person's home subscription. A teacher may still edit or
+      // drop their own (bookmark, read marks) without changing its role.
+      function isHomeSubscription() {
+        return isHomeData(statementDataOf(getStatementId()));
+      }
+      function homeSubscriptionWriteOk() {
+        return !isHomeSubscription() ||
+               (request.resource.data.role != 'admin' &&
+                request.resource.data.role != 'statement-creator' &&
+                request.resource.data.role != 'creator');
+      }
+      function homeSubscriptionUpdateOk() {
+        return !isHomeSubscription() || (isSubscriber() && isRoleUnchanged());
+      }
       
       function isOpenToAll() {
         return getAccess() == "openToAll";
@@ -1534,6 +1563,7 @@ service cloud.firestore {
       // and self-grant statement-admin (edit protected settings, delete, ban).
       allow create: if request.auth.uid != null &&
                      request.resource.data.userId == request.auth.uid &&
+                     homeSubscriptionWriteOk() &&
                      (isAdminOrCreator() ||
                       (request.resource.data.role != 'admin' &&
                        request.resource.data.role != 'statement-creator' &&
@@ -1547,6 +1577,7 @@ service cloud.firestore {
       // For update
       allow update: if request.auth.uid != null &&
                      !isTryingToBanProtectedUser() &&
+                     homeSubscriptionUpdateOk() &&
                      (isAdminOrCreator() ||
                       (isSubscriber() &&
                         classUpdateOk() &&
@@ -1558,7 +1589,8 @@ service cloud.firestore {
                       ));
       
       // For delete
-      allow delete: if request.auth.uid != null && 
+      allow delete: if request.auth.uid != null &&
+                     (!isHomeSubscription() || isSubscriber()) &&
                      (isAdminOrCreator() ||
                       (isSubscriber() && !isBanned()));
     }
