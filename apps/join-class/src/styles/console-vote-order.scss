@@ -93,3 +93,19 @@
     }
   }
 }
+
+// "Proposals on the vote" (VoteScopeSwitch): reuses the segmented radios above.
+.vote-scope {
+  &__count {
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__warn {
+    flex-basis: 100%;
+    color: var(--warning);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+  }
+}

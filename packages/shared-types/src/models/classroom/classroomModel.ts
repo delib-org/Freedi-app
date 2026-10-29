@@ -288,5 +288,10 @@ export const ClassVoteDisplaySchema = object({
 	/** The order of the proposals for everybody. Absent = 'consensus'. */
 	order: optional(ClassVoteOrderSchema),
 	// >>> voteSummary END
+	/**
+	 * Only the proposals whose C_p entered the goal (reached the gate) are on the
+	 * vote screen and the projector. Absent or false = all proposals.
+	 */
+	onlyAboveGate: optional(boolean()),
 });
 export type ClassVoteDisplay = InferOutput<typeof ClassVoteDisplaySchema>;

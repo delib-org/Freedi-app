@@ -8,6 +8,8 @@ import { getSubQuestions } from '@/lib/store';
 import { castVote } from '@/lib/classroom/studentWrites';
 import { currentUid, listenMyVote } from '@/lib/classroom/c3Data';
 import { VoteCaster } from '@/lib/classroom/voteCaster';
+import { gateOf } from '@/lib/classroom/classSettings';
+import { onlyAboveGateOn, scopedIds } from '@/lib/classroom/voteScope';
 import {
 	consensusOf,
 	countsOf,
@@ -111,7 +113,12 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 		}
 		const closed = !!ballot?.closedAt;
 		const paused = !closed && typeof ballot?.pausedAt === 'number';
-		const ballotIds = ballot?.candidateIds ?? [];
+		const ballotIds = scopedIds(
+			ballot?.candidateIds ?? [],
+			self.feed.options,
+			gateOf(challenge, main),
+			onlyAboveGateOn(challenge),
+		).ids;
 		const tally = voteResults(ballotIds, challenge?.selections);
 		const mode = voteOrderOf(challenge);
 		const caster = self.caster as VoteCaster;

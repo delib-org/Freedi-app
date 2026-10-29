@@ -5,6 +5,7 @@ import { ALL_TABLES_RATE_STEPS } from '@/lib/classroom/consoleHelpers';
 import type { IntroVideo } from '@/lib/classroom/introVideos';
 import { ProjectorPick } from './ProjectorPick';
 import { VoteBar } from './VoteBar';
+import type { VoteScopeAttrs } from './VoteScopeSwitch';
 import { isBusy } from './consoleState';
 import type { ConsoleView } from './consoleState';
 
@@ -49,6 +50,8 @@ export interface SwitchBandAttrs {
 	/** The order of the proposals on every phone and the projector (Vote step). */
 	voteOrder: ClassVoteOrder;
 	onVoteOrder: (order: ClassVoteOrder) => void;
+	/** All proposals / only those above the goal (Vote step). */
+	voteScope?: VoteScopeAttrs;
 	onPauseVote: (paused: boolean) => void;
 	onCloseVote: () => void;
 	onResetTurns: () => void;
@@ -183,6 +186,7 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 				hasChallenge: attrs.hasChallenge,
 				voteOrder: attrs.voteOrder,
 				onVoteOrder: attrs.onVoteOrder,
+				scope: attrs.voteScope,
 				onFreeze: attrs.onFreeze,
 				onPauseVote: attrs.onPauseVote,
 				onCloseVote: attrs.onCloseVote,

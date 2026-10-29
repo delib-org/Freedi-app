@@ -5,6 +5,8 @@ import { t } from '@/lib/i18n';
 import { icon } from './ConsoleIcon';
 import { isBusy } from './consoleState';
 import { VoteOrderSwitch } from './VoteOrderSwitch';
+import { VoteScopeSwitch } from './VoteScopeSwitch';
+import type { VoteScopeAttrs } from './VoteScopeSwitch';
 import { voteBarState } from './voteBarState';
 import type { VoteActionKey, VoteBarAction } from './voteBarState';
 
@@ -29,6 +31,8 @@ export interface VoteBarAttrs {
 	hasChallenge: boolean;
 	voteOrder: ClassVoteOrder;
 	onVoteOrder: (order: ClassVoteOrder) => void;
+	/** All proposals / only those above the goal (Trello OaZEhcB7). */
+	scope?: VoteScopeAttrs;
 	onFreeze: () => void;
 	onPauseVote: (paused: boolean) => void;
 	onCloseVote: () => void;
@@ -112,6 +116,12 @@ export const VoteBar: m.Component<VoteBarAttrs> = {
 				disabled: !attrs.hasChallenge || isBusy('voteDisplay:order'),
 				onChange: attrs.onVoteOrder,
 			}),
+			attrs.scope
+				? m(VoteScopeSwitch, {
+						...attrs.scope,
+						disabled: !attrs.hasChallenge || isBusy('voteDisplay:onlyAboveGate'),
+					})
+				: null,
 			m('div.vote-bar__group.vote-bar__group--reset', [
 				m(
 					'button.btn.btn--danger-outline.vote-bar__action.vote-bar__action--reset',
