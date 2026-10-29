@@ -5,6 +5,10 @@
 
 .student-notice {
 	position: fixed;
+	// Physical edges first: Safari < 14.1 and Chrome < 87 ignore the logical inset-* below.
+	left: var(--space-md);
+	right: var(--space-md);
+	top: var(--space-sm);
 	inset-inline: var(--space-md);
 	// At the top, over the header line: the bottom is where the screen's one action sits.
 	inset-block-start: var(--space-sm);
