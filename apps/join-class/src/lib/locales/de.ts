@@ -336,6 +336,12 @@ const de: Record<string, string> = {
 	'console.side_b': 'Seite B',
 	'console.side_center': 'In der Mitte',
 	'console.side_none': 'Noch keine Seite',
+	'console.sides_show': 'Seiten zeigen',
+	'console.sides_hide': 'Seiten verbergen',
+	'console.sides_confirm_title': 'Die Seiten der Schüler zeigen?',
+	'console.sides_confirm_body':
+		'Die Schüler können das sehen, wenn dein Bildschirm geteilt oder projiziert wird.',
+	'console.sides_confirm_yes': 'Zeigen',
 	'console.no_device': 'Ohne Gerät',
 	'console.table_n': 'Tisch {{n}}',
 	'console.turn_n': 'Runde {{n}} von {{max}}',

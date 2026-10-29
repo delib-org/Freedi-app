@@ -325,6 +325,12 @@ const fa: Record<string, string> = {
 	'console.side_b': 'سمت ب',
 	'console.side_center': 'وسط',
 	'console.side_none': 'هنوز سمتی انتخاب نکرده‌اند',
+	'console.sides_show': 'نمایش سمت‌ها',
+	'console.sides_hide': 'پنهان کردن سمت‌ها',
+	'console.sides_confirm_title': 'سمت دانش‌آموزان نمایش داده شود؟',
+	'console.sides_confirm_body':
+		'اگر صفحه‌ات به اشتراک گذاشته یا نمایش داده شود، دانش‌آموزان می‌توانند این را ببینند.',
+	'console.sides_confirm_yes': 'نمایش',
 	'console.no_device': 'بدون دستگاه',
 	'console.table_n': 'میز {{n}}',
 	'console.turn_n': 'دور {{n}} از {{max}}',

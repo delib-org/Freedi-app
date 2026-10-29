@@ -13,6 +13,7 @@ import { TableTalkStep } from './steps/TableTalkStep';
 import { TablesStep } from './steps/TablesStep';
 import { VoteStep } from './steps/VoteStep';
 import { WaitingStep } from './steps/WaitingStep';
+import { prefetchStepChunks } from './prefetchSteps';
 import type { StepAttrs } from './steps/stepSlot';
 import type { LessonStateAttrs } from './LessonStateScreen';
 
@@ -79,6 +80,8 @@ export const StudentStage: m.Component<StudentStageAttrs> = {
 	oninit(vnode) {
 		const state = vnode.state as StageState;
 		state.stop = watchClass(vnode.attrs.main.statementId, 'student');
+		// The later steps' code downloads now, not when the teacher presses the button.
+		prefetchStepChunks();
 		// The replies layer (IA 22) is its own chunk: it is not on the first paint.
 		const main = vnode.attrs.main;
 		import('./replies/replyHost')

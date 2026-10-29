@@ -333,6 +333,12 @@ const nl: Record<string, string> = {
 	'console.side_b': 'Kant B',
 	'console.side_center': 'In het midden',
 	'console.side_none': 'Nog geen kant',
+	'console.sides_show': 'Kanten tonen',
+	'console.sides_hide': 'Kanten verbergen',
+	'console.sides_confirm_title': 'De kanten van de leerlingen tonen?',
+	'console.sides_confirm_body':
+		'Leerlingen kunnen dit zien als je scherm wordt gedeeld of geprojecteerd.',
+	'console.sides_confirm_yes': 'Tonen',
 	'console.no_device': 'Zonder apparaat',
 	'console.table_n': 'Tafel {{n}}',
 	'console.turn_n': 'Ronde {{n}} van {{max}}',

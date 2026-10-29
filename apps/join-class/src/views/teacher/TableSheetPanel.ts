@@ -50,7 +50,7 @@ function memberRow(
 	mode: TableMode,
 ): m.Vnode {
 	const name = student?.name ?? uid.slice(0, 4);
-	const camp = student?.camp ?? null;
+	const camp = consoleState.sidesVisible ? (student?.camp ?? null) : null;
 	const now = serverNow();
 	const ask = mode === 'tableTalk' ? askMark(table, uid, now) : '';
 	const answer = mode === 'tableTalk' ? answerMark(table, uid, now) : '';
@@ -61,7 +61,9 @@ function memberRow(
 		m('span.table-sheet__member-name', name),
 		answer ? m('span.table-sheet__member-turn', { 'aria-hidden': 'true' }, answer) : null,
 		turnButtons(table, uid, name, mode, now),
-		m('span.table-sheet__member-side', t(camp ? `console.side_${camp}` : 'console.side_none')),
+		consoleState.sidesVisible
+			? m('span.table-sheet__member-side', t(camp ? `console.side_${camp}` : 'console.side_none'))
+			: null,
 		m(
 			'select.table-sheet__select',
 			{

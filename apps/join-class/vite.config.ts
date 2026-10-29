@@ -195,6 +195,10 @@ export default defineConfig({
 
   build: {
     target: 'es2020',
+    // Lower modern CSS for the oldest phones the classroom meets (Safari 13/14, Chrome 80):
+    // esbuild rewrites `inset: 0` into top/right/bottom/left, so a fixed rating sheet keeps its
+    // edges. With only the JS target above, `inset` shipped as written and those browsers ignored it.
+    cssTarget: ['chrome80', 'safari13', 'firefox72'],
     outDir: 'dist',
     rollupOptions: {
       output: {
