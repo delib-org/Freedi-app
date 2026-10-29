@@ -71,11 +71,17 @@ export function classifyHomeIdDoc(
 	return squat('not linked from the class and not made by its teacher');
 }
 
+/**
+ * U+F8FF, the last code point of the Private Use Area: `prefix + it` sorts after
+ * every id that starts with `prefix`, so [prefix, prefix + U+F8FF) is a prefix range.
+ */
+const PREFIX_RANGE_END = '\uf8ff';
+
 async function docsWithPrefix(firestore: Firestore, prefix: string): Promise<Statement[]> {
 	const snap = await firestore
 		.collection(Collections.statements)
 		.where(FieldPath.documentId(), '>=', prefix)
-		.where(FieldPath.documentId(), '<', `${prefix}`)
+		.where(FieldPath.documentId(), '<', `${prefix}${PREFIX_RANGE_END}`)
 		.get();
 
 	return snap.docs.map((d) => ({ ...(d.data() as Statement), statementId: d.id }));

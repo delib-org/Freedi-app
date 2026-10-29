@@ -1,4 +1,4 @@
-import type { Firestore } from 'firebase-admin/firestore';
+import type { Firestore, Transaction } from 'firebase-admin/firestore';
 import { Collections, getRandomUID, isHomeId } from '@freedi/shared-types';
 import type { ClassGameSnapshot, ClassLessonLink, Statement, User } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
@@ -6,6 +6,8 @@ import { ClassroomError } from './classroomErrors';
 import { asTopLevelLesson, buildLessonFromSnapshot, generateClassCode } from './cloneLesson';
 import {
 	readHomeAdmins,
+	readSystemAdmins,
+	revocableAdmins,
 	resolveUsersFromAuth,
 	revokeHomeAdminCopies,
 	writeHome,
@@ -51,6 +53,12 @@ export interface StartLessonInput {
 	sourceLesson?: { id: string; title: string };
 	/** True when a lesson already at `newMainId` is this same request, retried. */
 	isRetryOf: (found: Statement) => boolean;
+	/**
+	 * Re-derives the target inside the transaction (a class home: tx.get of the class),
+	 * so the admin re-sync never works from a teacher list read before it. Must keep
+	 * the same homeId.
+	 */
+	refreshTarget?: (tx: Transaction) => Promise<HomeTarget>;
 }
 
 export interface StartLessonResult {
@@ -123,8 +131,16 @@ export async function startLessonUnderHome(
 			throw new ClassroomError('already-exists', 'That lesson id is taken');
 		}
 
-		const homeSnap = target ? await tx.get(statements.doc(target.homeId)) : undefined;
-		const admins = target ? await readHomeAdmins(firestore, tx, target) : undefined;
+		const fresh = target && input.refreshTarget ? await input.refreshTarget(tx) : target;
+		if (fresh && target && fresh.homeId !== target.homeId) {
+			throw new ClassroomError('aborted', 'The class changed, try again');
+		}
+		const homeSnap = fresh ? await tx.get(statements.doc(fresh.homeId)) : undefined;
+		const admins = fresh ? await readHomeAdmins(firestore, tx, fresh) : undefined;
+		const systemAdmins =
+			fresh && admins
+				? await readSystemAdmins(firestore, tx, revocableAdmins(fresh, admins))
+				: undefined;
 		let classCode: string | null = null;
 		for (let attempt = 0; attempt < CLASS_CODE_MAX_ATTEMPTS && !classCode; attempt++) {
 			const candidate = generateClassCode(random);
@@ -138,13 +154,14 @@ export async function startLessonUnderHome(
 
 		// Writes only from here on (a transaction reads everything first).
 		const at = now();
-		if (target && homeSnap && admins) {
+		if (fresh && homeSnap && admins) {
 			revokedUids = writeHome({
 				firestore,
 				tx,
-				target,
+				target: fresh,
 				existing: homeSnap.exists ? (homeSnap.data() as Statement) : undefined,
 				existingAdmins: admins,
+				systemAdmins,
 				creator: input.actor,
 				users,
 				now: at,

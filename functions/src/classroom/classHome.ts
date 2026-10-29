@@ -35,8 +35,15 @@ import { commitInBatches } from './batchedWrites';
  */
 
 export const AGORA_CLASSES_COLLECTION = 'agoraClasses';
-/** Same cap as setupAdminsForStatement's inherited admins. */
-export const CLASS_HOME_MAX_ADMINS = 20;
+/**
+ * Most NEW admin subscriptions one start writes on a home (the caller's always
+ * first). Teachers past it get theirs on a later start; nobody is ever revoked
+ * for being past it (the keep-set is every current teacher).
+ */
+export const CLASS_HOME_MAX_NEW_ADMINS = 20;
+/** Firebase Auth getUsers takes at most this many identifiers. */
+const AUTH_GET_USERS_LIMIT = 100;
+const USERS_V2 = 'usersV2';
 const ACTIVE = 'active';
 /** Roles that make a subscription an admin one (the rules' isAdmin()). */
 const HOME_ADMIN_ROLES: ReadonlySet<string> = new Set([
@@ -51,6 +58,8 @@ export interface HomeTarget {
 	link: ClassHomeLink;
 	/** Teachers who get an admin subscription on the home (the caller first). */
 	adminUids: string[];
+	/** Every current teacher: never revoked by the re-sync (the keep-set). */
+	teacherUids: string[];
 	/** The class, when the home is a class home. */
 	classId: string | null;
 	className: string;
@@ -70,7 +79,9 @@ export type ResolveUsers = (uids: readonly string[]) => Promise<User[]>;
 /** Default resolver: Firebase Auth. Keeps uid + display name only (data minimisation). */
 export const resolveUsersFromAuth: ResolveUsers = async (uids) => {
 	if (uids.length === 0) return [];
-	const found = await getAuth().getUsers(uids.map((uid) => ({ uid })));
+	const found = await getAuth().getUsers(
+		uids.slice(0, AUTH_GET_USERS_LIMIT).map((uid) => ({ uid })),
+	);
 	const byUid = new Map(found.users.map((u) => [u.uid, u.displayName ?? '']));
 
 	return uids.map((uid) => ({ uid, displayName: byUid.get(uid) ?? '', isAnonymous: false }));
@@ -83,6 +94,7 @@ export function teacherHomeTarget(actor: User): HomeTarget {
 		title: actor.displayName?.trim() || actor.uid,
 		link: { kind: CLASS_HOME_KIND.teacher, uid: actor.uid },
 		adminUids: [actor.uid],
+		teacherUids: [actor.uid],
 		classId: null,
 		className: '',
 		trustedCreatorUids: [actor.uid],
@@ -90,36 +102,60 @@ export function teacherHomeTarget(actor: User): HomeTarget {
 	};
 }
 
+export function classRef(firestore: Firestore, classId: string) {
+	return firestore.collection(AGORA_CLASSES_COLLECTION).doc(classId);
+}
+
 /**
- * The class home of an Agora class the actor teaches. Refuses a missing class
- * (not-found), a class the actor does not teach (permission-denied) and an
- * archived class (failed-precondition).
+ * The class home of an Agora class the actor teaches, read before the transaction
+ * (fast refusal, display names). classStartLesson reads the class AGAIN inside its
+ * transaction (classTargetFromDoc) so the re-sync never works from a stale list.
  */
 export async function classHomeTarget(
 	firestore: Firestore,
 	actorUid: string,
 	classId: string,
 ): Promise<HomeTarget> {
-	const snap = await firestore.collection(AGORA_CLASSES_COLLECTION).doc(classId).get();
-	if (!snap.exists) throw new ClassroomError('not-found', 'Class not found');
-	const cls = snap.data() as AgoraClass;
-	const teacherIds = Array.isArray(cls.teacherIds) ? cls.teacherIds : [];
+	const snap = await classRef(firestore, classId).get();
+
+	return classTargetFromDoc(
+		classId,
+		actorUid,
+		snap.exists ? (snap.data() as AgoraClass) : undefined,
+	);
+}
+
+/**
+ * The class home target from a class doc. Refuses a missing class (not-found), a
+ * class the actor does not teach (permission-denied) and an archived class
+ * (failed-precondition).
+ */
+export function classTargetFromDoc(
+	classId: string,
+	actorUid: string,
+	cls: AgoraClass | undefined,
+): HomeTarget {
+	if (!cls) throw new ClassroomError('not-found', 'Class not found');
+	const teacherIds = (Array.isArray(cls.teacherIds) ? cls.teacherIds : []).filter(
+		(uid): uid is string => typeof uid === 'string' && uid.length > 0,
+	);
 	if (!teacherIds.includes(actorUid)) {
 		throw new ClassroomError('permission-denied', 'You do not teach this class');
 	}
 	if (cls.status !== ACTIVE) {
 		throw new ClassroomError('failed-precondition', 'This class is archived');
 	}
-	const others = teacherIds.filter((uid) => typeof uid === 'string' && uid && uid !== actorUid);
+	const others = teacherIds.filter((uid) => uid !== actorUid);
 
 	return {
 		homeId: classHomeIdOf(classId),
 		title: cls.name?.trim() || classId,
 		link: { kind: CLASS_HOME_KIND.class, classId },
-		adminUids: [actorUid, ...others].slice(0, CLASS_HOME_MAX_ADMINS + 1),
+		adminUids: [actorUid, ...others],
+		teacherUids: teacherIds,
 		classId,
 		className: cls.name?.trim() ?? '',
-		trustedCreatorUids: teacherIds.filter((uid) => typeof uid === 'string' && uid),
+		trustedCreatorUids: teacherIds,
 		linkedHomeId: typeof cls.joinClassHomeId === 'string' ? cls.joinClassHomeId : null,
 	};
 }
@@ -219,7 +255,10 @@ export interface EnsureHomeArgs {
 	existing: Statement | undefined;
 	/** Every subscription on the home, by uid -> role, read in this transaction. */
 	existingAdmins: ReadonlyMap<string, string>;
+	/** System admins among the existing admins (readSystemAdmins): never revoked. */
+	systemAdmins?: ReadonlySet<string>;
 	creator: User;
+	/** Known display names; a teacher missing here gets an empty name. */
 	users: readonly User[];
 	now: number;
 }
@@ -249,17 +288,16 @@ export function writeHome(args: EnsureHomeArgs): WrittenHome {
 		tx.create(firestore.collection(Collections.statements).doc(target.homeId), home);
 	}
 	const subs = firestore.collection(Collections.statementsSubscribe);
-	const keep = new Set(target.adminUids);
-	const revokedUids: string[] = [];
-	for (const [uid, role] of args.existingAdmins) {
-		if (keep.has(uid) || !HOME_ADMIN_ROLES.has(role)) continue;
-		tx.delete(subs.doc(subscriptionDocId(target.homeId, uid)));
-		revokedUids.push(uid);
-	}
-	for (const user of args.users) {
-		if (args.existingAdmins.get(user.uid) === Role.admin) continue;
+	const revokedUids = revocableAdmins(target, args.existingAdmins, args.systemAdmins);
+	for (const uid of revokedUids) tx.delete(subs.doc(subscriptionDocId(target.homeId, uid)));
+	const known = new Map(args.users.map((u) => [u.uid, u]));
+	const missing = target.adminUids
+		.filter((uid) => args.existingAdmins.get(uid) !== Role.admin)
+		.slice(0, CLASS_HOME_MAX_NEW_ADMINS);
+	for (const uid of missing) {
+		const user = known.get(uid) ?? { uid, displayName: '', isAnonymous: false };
 		tx.set(
-			subs.doc(subscriptionDocId(target.homeId, user.uid)),
+			subs.doc(subscriptionDocId(target.homeId, uid)),
 			homeAdminSubscription(home, user, now),
 			{ merge: true },
 		);
@@ -273,6 +311,34 @@ export function writeHome(args: EnsureHomeArgs): WrittenHome {
 	}
 
 	return { home, revokedUids };
+}
+
+/**
+ * Admins of the home to take off: an elevated role, not a current teacher (every
+ * one of them, whatever the cap), and not a system admin.
+ */
+export function revocableAdmins(
+	target: HomeTarget,
+	existingAdmins: ReadonlyMap<string, string>,
+	systemAdmins: ReadonlySet<string> = new Set(),
+): string[] {
+	const keep = new Set([...target.teacherUids, ...target.adminUids]);
+
+	return [...existingAdmins]
+		.filter(([uid, role]) => HOME_ADMIN_ROLES.has(role) && !keep.has(uid) && !systemAdmins.has(uid))
+		.map(([uid]) => uid);
+}
+
+/** Reads, inside a transaction (before any write), which of `uids` are system admins. */
+export async function readSystemAdmins(
+	firestore: Firestore,
+	tx: Transaction,
+	uids: readonly string[],
+): Promise<Set<string>> {
+	if (uids.length === 0) return new Set();
+	const snaps = await tx.getAll(...uids.map((uid) => firestore.collection(USERS_V2).doc(uid)));
+
+	return new Set(uids.filter((_, i) => snaps[i].exists && snaps[i].data()?.systemAdmin === true));
 }
 
 /** Reads, inside a transaction, every subscription on the home: uid -> role. */
@@ -317,14 +383,18 @@ export async function revokeHomeAdminCopies(
 			);
 		})
 		.map((d) => d.ref);
+	// The copies first, the home subscription LAST in its own batch: a run that
+	// fails midway leaves the home admin in place, so the re-sync (which sees only
+	// home subscriptions) still finds this teacher and retries the copies.
 	const home = subs.doc(subscriptionDocId(homeId, uid));
-	if (!refs.some((r) => r.path === home.path)) refs.push(home);
+	const copies = refs.filter((r) => r.path !== home.path);
 	await commitInBatches(
 		firestore,
-		refs.map((ref) => ({ kind: 'delete' as const, ref })),
+		copies.map((ref) => ({ kind: 'delete' as const, ref })),
 	);
+	await commitInBatches(firestore, [{ kind: 'delete', ref: home }]);
 
-	return refs.length;
+	return copies.length + 1;
 }
 
 /**

@@ -345,8 +345,93 @@ describe('join-class lesson plans and homes', () => {
 			);
 		});
 
-		it('the owner renames the home in the main app', async () => {
-			await assertSucceeds(updateDoc(doc(as(OWNER), 'statements', HOME), { statement: 'ט׳2 (2026)' }));
+		it('no teacher edits the home itself (server only); a timestamp bump still passes', async () => {
+			await assertFails(updateDoc(doc(as(OWNER), 'statements', HOME), { statement: 'ט׳2 (2026)' }));
+			await assertFails(deleteDoc(doc(as(OWNER), 'statements', HOME)));
+			await assertSucceeds(updateDoc(doc(as(OWNER), 'statements', HOME), { lastChildUpdate: T0 + 9 }));
+		});
+	});
+
+	describe('a creator removed from the class keeps no power over its home', () => {
+		const REMOVED = 'u-removed-creator';
+		const HOME2 = 'jcClass_class-77';
+		const L2 = 'lesson-77';
+
+		before(async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'statements', HOME2), {
+					statementId: HOME2,
+					statement: 'ז׳1',
+					statementType: 'group',
+					parentId: 'top',
+					topParentId: HOME2,
+					parents: [],
+					creatorId: REMOVED,
+					creator: { uid: REMOVED, displayName: 'R' },
+					membership: { access: 'secret' },
+					statementSettings: { classHome: { kind: 'class', classId: 'class-77' } },
+				});
+				// the server already revoked REMOVED; CO is the class's current teacher
+				await setDoc(doc(db, 'statementsSubscribe', `${CO}--${HOME2}`), sub(CO, HOME2, 'admin'));
+				await setDoc(doc(db, 'statements', L2), {
+					statementId: L2,
+					statement: 'a lesson',
+					statementType: 'question',
+					parentId: HOME2,
+					topParentId: HOME2,
+					parents: [HOME2],
+					creatorId: CO,
+					creator: { uid: CO, displayName: 'C' },
+					membership: { access: 'openToAll' },
+					statementSettings: { lessonPlan, classCode: '777777' },
+				});
+			});
+		});
+
+		it('cannot re-subscribe to the home as admin or statement-creator', async () => {
+			const db = as(REMOVED);
+			const ref = doc(db, 'statementsSubscribe', `${REMOVED}--${HOME2}`);
+			await assertFails(setDoc(ref, sub(REMOVED, HOME2, 'admin')));
+			await assertFails(setDoc(ref, sub(REMOVED, HOME2, 'statement-creator')));
+		});
+
+		it('cannot update or delete the home, nor read it', async () => {
+			const db = as(REMOVED);
+			await assertFails(updateDoc(doc(db, 'statements', HOME2), { parentId: 'elsewhere' }));
+			await assertFails(updateDoc(doc(db, 'statements', HOME2), { statement: 'mine' }));
+			await assertFails(deleteDoc(doc(db, 'statements', HOME2)));
+			await assertFails(getDoc(doc(db, 'statements', HOME2)));
+		});
+
+		it('cannot touch a current teacher\'s home subscription; nobody raises a role there', async () => {
+			await assertFails(deleteDoc(doc(as(REMOVED), 'statementsSubscribe', `${CO}--${HOME2}`)));
+			await assertFails(
+				updateDoc(doc(as(REMOVED), 'statementsSubscribe', `${CO}--${HOME2}`), { role: 'banned' }),
+			);
+			await assertFails(
+				updateDoc(doc(as(CO), 'statementsSubscribe', `${CO}--${HOME2}`), { role: 'statement-creator' }),
+			);
+		});
+
+		it('the current teacher reads the home and the lesson, and keeps their own subscription', async () => {
+			const db = as(CO);
+			await assertSucceeds(getDoc(doc(db, 'statements', HOME2)));
+			await assertSucceeds(getDoc(doc(db, 'statements', L2)));
+			await assertSucceeds(
+				updateDoc(doc(db, 'statementsSubscribe', `${CO}--${HOME2}`), { isBookmarked: true }),
+			);
+			await assertSucceeds(
+				updateDoc(doc(db, 'statements', L2), { 'statementSettings.lessonPlan.stepIndex': 1 }),
+			);
+		});
+
+		it('students are unaffected: read and join the lesson, never the home', async () => {
+			const db = as(STUDENT);
+			await assertSucceeds(getDoc(doc(db, 'statements', L2)));
+			await assertSucceeds(
+				setDoc(doc(db, 'statementsSubscribe', `${STUDENT}--${L2}`), sub(STUDENT, L2, 'member')),
+			);
+			await assertFails(getDoc(doc(db, 'statements', HOME2)));
 		});
 	});
 
