@@ -184,6 +184,8 @@ $c3-count-size: clamp(6rem, 30vw, 8rem); // 96-128px, readable from 60cm
     font: inherit;
     font-size: var(--font-size-base);
     resize: vertical;
+    // Focus scrolling keeps the box clear of the pinned send bar (button + padding).
+    scroll-margin-block-end: calc(var(--touch-target, 48px) + var(--space-xl, 32px) + var(--space-md));
 
     &[readonly] {
       background: var(--paper-soft);

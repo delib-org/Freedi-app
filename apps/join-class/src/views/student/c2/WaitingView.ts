@@ -17,7 +17,7 @@ import type { StepAttrs } from '../steps/stepSlot';
  * students who joined. No button while waiting.
  */
 
-interface WaitingState {
+export interface WaitingState {
 	roster?: RosterWatch;
 	name: string;
 	asked: boolean;
@@ -50,7 +50,7 @@ function lockIcon(): m.Vnode {
 	);
 }
 
-async function submitName(state: WaitingState, mainId: string): Promise<void> {
+export async function submitName(state: WaitingState, mainId: string): Promise<void> {
 	if (!state.name.trim() || state.saving) return;
 	state.saving = true;
 	state.failed = false;
@@ -64,7 +64,7 @@ async function submitName(state: WaitingState, mainId: string): Promise<void> {
 	m.redraw();
 }
 
-function nameForm(state: WaitingState, mainId: string): m.Children {
+export function nameForm(state: WaitingState, mainId: string): m.Children {
 	return m(
 		StudentFrame,
 		{

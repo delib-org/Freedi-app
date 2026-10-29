@@ -18,6 +18,7 @@
     "e2e:opening-panel": "node scripts/e2e-opening-panel.mjs",
     "e2e:entry": "node scripts/e2e-entry.mjs",
     "e2e:three": "node scripts/e2e-three-browser.mjs",
+    "e2e:frame-fit": "node scripts/e2e-frame-fit.mjs",
     "perf:gate": "node scripts/perf-gate.mjs",
     "perf:throttle": "node scripts/perf-throttle.mjs"
   },

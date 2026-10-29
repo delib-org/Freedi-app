@@ -155,3 +155,16 @@
     }
   }
 }
+
+// iOS < 15.4 has no dvh: 100vh there is the tall viewport (URL bar hidden), which
+// would hide the footer under the toolbar. -webkit-fill-available is the visible height.
+@supports not (height: 100dvh) {
+  html,
+  body {
+    height: -webkit-fill-available;
+  }
+
+  .frame {
+    height: -webkit-fill-available;
+  }
+}

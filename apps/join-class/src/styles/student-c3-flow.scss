@@ -228,11 +228,12 @@ body.c3-lock {
 .live-toast {
   position: fixed;
   inset-inline: var(--space-md);
-  inset-block-end: calc(96px + env(safe-area-inset-bottom, 0px));
+  // top of the screen, under the header: never on the pinned footer
+  inset-block-start: calc(var(--touch-target, 48px) + var(--space-md));
   z-index: 20;
   margin: 0;
   padding: var(--space-md);
-  border-radius: var(--radius-md, 12px);
+  border-radius: var(--radius-md);
   background: var(--ink);
   color: var(--paper);
   font-size: var(--font-size-base);
