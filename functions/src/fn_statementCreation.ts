@@ -7,11 +7,6 @@ import {
 	Statement,
 	StatementSchema,
 	StatementType,
-	Role,
-	StatementSubscription,
-	StatementSubscriptionSchema,
-	createSubscription,
-	getStatementSubscriptionId,
 	SimpleStatement,
 	SourceApp,
 	statementToSimpleStatement,
@@ -28,6 +23,7 @@ import { generateDescriptionFromChildren } from './helpers';
 import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
 import { onClassOptionCreated } from './classroom/autoEvaluations';
 import { logError } from './utils/errorHandling';
+import { setupAdminsForStatement } from './setupAdminsForStatement';
 import {
 	computeHybridVector,
 	isHybridClusteringEnabled,
@@ -143,129 +139,6 @@ export async function onStatementCreated(
 		logger.info(`Successfully processed creation of statement ${statement.statementId}`);
 	} catch (error) {
 		logger.error('Error in onStatementCreated:', error);
-	}
-}
-
-/**
- * Sets up admin subscriptions for a new statement
- * (Replaces setAdminsToNewStatement)
- */
-async function setupAdminsForStatement(statement: Statement): Promise<void> {
-	try {
-		const adminsToAdd = new Set<string>();
-
-		// Always add the creator as admin
-		adminsToAdd.add(statement.creator.uid);
-
-		// Add top group admins (if applicable)
-		const topParentId = statement.topParentId || statement.parentId;
-		if (topParentId && topParentId !== 'top' && topParentId !== statement.statementId) {
-			const topAdminsDB = await db
-				.collection(Collections.statementsSubscribe)
-				.where('statementId', '==', topParentId)
-				.where('role', '==', Role.admin)
-				.get();
-
-			topAdminsDB.docs.forEach((doc) => {
-				const adminSub = parse(StatementSubscriptionSchema, doc.data());
-				adminsToAdd.add(adminSub.user.uid);
-			});
-		}
-
-		// Add direct parent admins (if applicable)
-		const { parentId } = statement;
-		if (parentId && parentId !== 'top' && parentId !== topParentId) {
-			const parentAdminsDB = await db
-				.collection(Collections.statementsSubscribe)
-				.where('statementId', '==', parentId)
-				.where('role', '==', Role.admin)
-				.get();
-
-			parentAdminsDB.docs.forEach((doc) => {
-				const adminSub = parse(StatementSubscriptionSchema, doc.data());
-				adminsToAdd.add(adminSub.user.uid);
-			});
-		}
-
-		// Batch create all admin subscriptions
-		const MAX_INHERITED_ADMINS = 20;
-		const batch = db.batch();
-		let adminUserIds = Array.from(adminsToAdd);
-
-		// Cap inherited admins to prevent escalation in deep hierarchies
-		const otherAdmins = adminUserIds.filter((uid) => uid !== statement.creator.uid);
-		if (otherAdmins.length > MAX_INHERITED_ADMINS) {
-			logger.warn(
-				`Admin cap hit: ${otherAdmins.length} inherited admins for statement ${statement.statementId}, limiting to ${MAX_INHERITED_ADMINS}`,
-			);
-			adminUserIds = [statement.creator.uid, ...otherAdmins.slice(0, MAX_INHERITED_ADMINS)];
-		}
-
-		// Always add creator subscription first
-		const creatorSubscription = createSubscription({
-			statement,
-			role: Role.admin,
-			user: statement.creator,
-			getEmailNotification: true,
-			getInAppNotification: true,
-			getPushNotification: true,
-		});
-
-		if (creatorSubscription?.statementsSubscribeId) {
-			batch.set(
-				db
-					.collection(Collections.statementsSubscribe)
-					.doc(creatorSubscription.statementsSubscribeId),
-				creatorSubscription,
-			);
-		}
-
-		// Add other admin subscriptions
-		const otherAdminIds = adminUserIds.filter((uid) => uid !== statement.creator.uid);
-		if (otherAdminIds.length > 0) {
-			// Get user data from existing subscriptions
-			const existingSubscriptions = await db
-				.collection(Collections.statementsSubscribe)
-				.where('userId', 'in', otherAdminIds)
-				.where('statementId', 'in', [topParentId, parentId].filter(Boolean))
-				.get();
-
-			const userMap = new Map();
-			existingSubscriptions.docs.forEach((doc) => {
-				const sub = doc.data() as StatementSubscription;
-				userMap.set(sub.user.uid, sub.user);
-			});
-
-			otherAdminIds.forEach((adminId) => {
-				const user = userMap.get(adminId);
-				if (!user) return;
-
-				const statementsSubscribeId = getStatementSubscriptionId(statement.statementId, user);
-
-				if (!statementsSubscribeId) return;
-
-				const newSubscription = createSubscription({
-					statement,
-					role: Role.admin,
-					user: user,
-					getEmailNotification: true,
-					getInAppNotification: true,
-					getPushNotification: true,
-				});
-
-				if (newSubscription) {
-					batch.set(
-						db.collection(Collections.statementsSubscribe).doc(statementsSubscribeId),
-						newSubscription,
-					);
-				}
-			});
-		}
-
-		await batch.commit();
-	} catch (error) {
-		logger.error('Error in setupAdminsForStatement:', error);
-		throw error;
 	}
 }
 

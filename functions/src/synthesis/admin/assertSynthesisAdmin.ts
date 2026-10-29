@@ -1,15 +1,15 @@
 import { HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Collections, Role, type Statement } from '@freedi/shared-types';
+import { Collections, type Statement } from '@freedi/shared-types';
+import { ELEVATED_ROLES, expectedSubscriptionId } from '../../utils/subscriptionIdentity';
 
 /**
- * Shared admin gate for the synthesis callables. Mirrors the pattern used
- * by `synthesisJobStart` (legacy async path) so authorization is consistent
- * across all admin entry points.
+ * Shared admin gate for the synthesis callables.
  *
- * Resolves the topParent of the question and looks for an admin / creator
- * subscription there. Returns the parent statement (often useful to the
- * caller — saves a second Firestore read).
+ * Resolves the topParent of the question and reads the caller's subscription
+ * there by its doc id `{uid}--{topParentId}`; it must hold an elevated role
+ * (admin, statement-creator, creator). Returns the parent statement (often
+ * useful to the caller — saves a second Firestore read).
  */
 export async function assertSynthesisAdmin(questionId: string, userId: string): Promise<Statement> {
 	const db = getFirestore();
@@ -20,15 +20,15 @@ export async function assertSynthesisAdmin(questionId: string, userId: string): 
 	const parent = parentDoc.data() as Statement;
 	const topParentId = parent.topParentId || questionId;
 
-	const membersSnap = await db
+	// By doc id, like every other admin check (the rules' isAdmin): a field query
+	// on statementId would trust a doc whose id names another statement.
+	const subSnap = await db
 		.collection(Collections.statementsSubscribe)
-		.where('statementId', '==', topParentId)
-		.where('userId', '==', userId)
-		.where('role', 'in', [Role.admin, 'creator', 'admin'])
-		.limit(1)
+		.doc(expectedSubscriptionId(userId, topParentId))
 		.get();
+	const role = subSnap.exists ? subSnap.get('role') : undefined;
 
-	if (membersSnap.empty) {
+	if (typeof role !== 'string' || !ELEVATED_ROLES.has(role)) {
 		throw new HttpsError('permission-denied', 'Only admins can run synthesis operations');
 	}
 
