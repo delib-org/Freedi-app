@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { proposalsTurnOf } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { listableItems } from '@/lib/classroom/c3Logic';
 import { setImproveHandler } from '@/lib/classroom/replyUi';
@@ -80,7 +81,12 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 			action = m(MoveOn, {
 				view: moveOnView(table, uid),
 				busy: self.busy,
-				onToggle: () => tableStep(ctx, { action: 'moveOn' }),
+				onToggle: () =>
+					tableStep(ctx, {
+						action: 'moveOn',
+						fromTurn: table.turn,
+						fromProposalsTurn: proposalsTurnOf(table),
+					}),
 			});
 		}
 	} else if (step === 'write') {

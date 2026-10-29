@@ -80,8 +80,15 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 		case 'toRate':
 		case 'claimSpeaker':
 		case 'finishSpeaking':
-		case 'moveOn':
 			return { action: req.action };
+		case 'moveOn':
+			return {
+				action: 'moveOn',
+				...(typeof req.fromTurn === 'number' ? { fromTurn: req.fromTurn } : {}),
+				...(typeof req.fromProposalsTurn === 'number'
+					? { fromProposalsTurn: req.fromProposalsTurn }
+					: {}),
+			};
 		case 'nextTurn':
 			return typeof req.fromTurn === 'number'
 				? { action: 'nextTurn', fromTurn: req.fromTurn }

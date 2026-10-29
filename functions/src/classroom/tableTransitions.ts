@@ -444,7 +444,7 @@ function applyAction(
 		case 'passSpeaking':
 			return passSpeaking(table, base, action, ctx);
 		case 'moveOn':
-			return moveOn(base, ctx);
+			return moveOn(base, ctx, action);
 		case 'nextProposalsTurn':
 			// A tap that names an earlier turn arrived after the table moved on: nothing to do.
 			if (action.fromTurn !== undefined && action.fromTurn !== proposalsTurnOf(table)) return table;

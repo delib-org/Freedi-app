@@ -1,6 +1,7 @@
 import type { ClassTable, ClassTableAction } from '@freedi/shared-types';
 import { everyoneSpoke, moveOnNeeded } from '@freedi/shared-types';
 import { ClassroomError } from '../classroomErrors';
+import { removeMember } from '../tableMembership';
 import { applyTableAction, TransitionContext } from '../tableTransitions';
 
 /**
@@ -147,6 +148,99 @@ describe('move on at Table talk', () => {
 		);
 		const allDone = talking({ spokenUids: ['a', 'b', 'c', 'd'] });
 		expect(refusal(allDone, 'b', 'tableTalk').reason).toBe('not-talking');
+	});
+});
+
+describe('membership shrinks after a press (the stuck table)', () => {
+	it('2-table: A pressed, B leaves -> the table moves on at once', () => {
+		const pair = talking({ memberUids: ['a', 'b'], askerUid: null });
+		const pressed = press(pair, 'a', 'tableTalk');
+		expect(everyoneSpoke(pressed, NOW)).toBe(false);
+		const next = removeMember(pressed, 'b', NOW, 'tableTalk');
+		expect(next.memberUids).toEqual(['a']);
+		expect(everyoneSpoke(next, NOW)).toBe(true);
+		expect(next.moveOnUids).toBeUndefined();
+	});
+
+	it('3 -> 2: two pressed (enough already), the third leaves -> still moves', () => {
+		const trio = talking({ memberUids: ['a', 'b', 'c'], askerUid: null, moveOnUids: ['a'] });
+		const next = removeMember(trio, 'c', NOW, 'tableTalk');
+		expect(everyoneSpoke(next, NOW)).toBe(false);
+		// 3 -> 2 with one press: a 2-table needs both, so it waits for B
+		expect(next.moveOnUids).toEqual(['a']);
+		const moved = removeMember(
+			talking({ memberUids: ['a', 'b', 'c'], askerUid: null, moveOnUids: ['a', 'b'] }),
+			'c',
+			NOW,
+			'tableTalk',
+		);
+		expect(everyoneSpoke(moved, NOW)).toBe(true);
+	});
+
+	it("the leaver's own press is dropped, not counted", () => {
+		const pair = talking({ memberUids: ['a', 'b'], askerUid: null, moveOnUids: ['b'] });
+		const next = removeMember(pair, 'b', NOW, 'tableTalk');
+		// A alone needs one press; B's is gone
+		expect(next.moveOnUids).toEqual([]);
+		expect(everyoneSpoke(next, NOW)).toBe(false);
+	});
+
+	it('Proposals: A pressed, B leaves -> the table goes to write', () => {
+		const pair = talking({
+			memberUids: ['a', 'b'],
+			askerUid: null,
+			questionId: undefined,
+			usedQuestionIds: [],
+		});
+		const pressed = press(pair, 'a', 'proposals');
+		const next = removeMember(pressed, 'b', NOW, 'proposals');
+		expect(next.step).toBe('write');
+		expect(next.moveOnUids).toBeUndefined();
+	});
+
+	it('nothing moves when no one pressed', () => {
+		const pair = talking({ memberUids: ['a', 'b'], askerUid: null });
+		expect(removeMember(pair, 'b', NOW, 'tableTalk').step).toBe('talk');
+		expect(everyoneSpoke(removeMember(pair, 'b', NOW, 'tableTalk'), NOW)).toBe(false);
+	});
+});
+
+describe('a press that finds the threshold already reached', () => {
+	it('moves the table instead of withdrawing the press', () => {
+		const stuck = talking({ memberUids: ['a'], askerUid: null, moveOnUids: ['a'] });
+		const next = press(stuck, 'a', 'tableTalk');
+		expect(everyoneSpoke(next, NOW)).toBe(true);
+		expect(next.moveOnUids).toBeUndefined();
+	});
+});
+
+describe('a late tap from an earlier turn', () => {
+	const tap = (
+		t: ClassTable,
+		uid: string,
+		extra: Partial<{ fromTurn: number; fromProposalsTurn: number }>,
+	) => applyTableAction(t, { action: 'moveOn', ...extra }, ctxOf(uid, 'tableTalk'));
+
+	it('is ignored and not counted in the new turn', () => {
+		const second = talking({ turn: 2 });
+		const next = tap(second, 'b', { fromTurn: 1 });
+		expect(next.moveOnUids).toBeUndefined();
+		expect(tap(second, 'b', { fromTurn: 2 }).moveOnUids).toEqual(['b']);
+	});
+
+	it('at Proposals a tap from the previous proposals turn is ignored', () => {
+		const t2 = talking({
+			questionId: undefined,
+			usedQuestionIds: [],
+			askerUid: null,
+			proposalsTurn: 2,
+		});
+		const ignored = applyTableAction(
+			t2,
+			{ action: 'moveOn', fromTurn: 1, fromProposalsTurn: 1 },
+			ctxOf('b', 'proposals'),
+		);
+		expect(ignored.moveOnUids).toBeUndefined();
 	});
 });
 

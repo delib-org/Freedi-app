@@ -276,7 +276,7 @@ function moveOnControl(ctx: FlowCtx): m.Children {
 	return m(MoveOn, {
 		view: moveOnView(ctx.table, ctx.uid),
 		busy: ctx.self.busy,
-		onToggle: () => step(ctx, { action: 'moveOn' }),
+		onToggle: () => step(ctx, { action: 'moveOn', fromTurn: ctx.table.turn }),
 	});
 }
 

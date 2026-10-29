@@ -208,6 +208,32 @@ describe('classMoveStudent + classAddNoDevice', () => {
 		expect(fake.read(`statementsSubscribe/${asker}--${MAIN}`)?.tableId).toBeUndefined();
 	});
 
+	it('moving a tablemate away moves a table that was waiting on "move on" (Trello 1c8jfvA6)', async () => {
+		const fake = new FakeFirestore();
+		const uids = seedLesson(fake, 4, 2);
+		const db = fake.asFirestore();
+		await assignTables(db, TEACHER, { mainId: MAIN }, fixedRng());
+		const id = `${MAIN}--1`;
+		const t1 = fake.read(`classTables/${id}`) as unknown as ClassTable;
+		const [a, b] = t1.memberUids;
+		expect(t1.memberUids).toHaveLength(2);
+		fake.seed(`classTables/${id}`, {
+			...t1,
+			step: 'talk',
+			questionId: 'q1',
+			askerUid: null,
+			spokenUids: [],
+			moveOnUids: [a],
+		});
+		expect(uids).toContain(b);
+
+		await moveStudent(db, TEACHER, { mainId: MAIN, uid: b, toTable: 2 });
+		const after = fake.read(`classTables/${id}`) as unknown as ClassTable;
+		expect(after.memberUids).toEqual([a]);
+		expect(after.spokenUids).toEqual([a]);
+		expect(after.moveOnUids).toBeUndefined();
+	});
+
 	it('refuses a missing table, a stranger and a non-admin', async () => {
 		const fake = new FakeFirestore();
 		const uids = seedLesson(fake, 6, 3);
