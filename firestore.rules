@@ -748,6 +748,80 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // join-class lesson plans (IA docs/ia/join-class-lesson-plan.md 9.3).
+    // classPlans/{planId}: a teacher's topic. Owner-scoped: only the owner reads,
+    // creates and updates it; the list query must filter ownerUid == uid. Never
+    // deleted from a client. The owner and creation time never change.
+    match /classPlans/{planId} {
+      function isValidClassPlan() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['planId', 'title', 'ownerUid', 'createdAt', 'lastUpdate']) &&
+               d.planId == planId &&
+               d.title is string &&
+               d.title.size() > 0 &&
+               d.title.size() <= 200 &&
+               d.ownerUid is string &&
+               d.createdAt is number &&
+               d.lastUpdate is number;
+      }
+
+      allow read: if request.auth != null &&
+                     resource != null &&
+                     resource.data.ownerUid == request.auth.uid;
+      allow create: if request.auth != null &&
+                       isValidClassPlan() &&
+                       request.resource.data.ownerUid == request.auth.uid;
+      allow update: if request.auth != null &&
+                       resource != null &&
+                       resource.data.ownerUid == request.auth.uid &&
+                       isValidClassPlan() &&
+                       request.resource.data.ownerUid == resource.data.ownerUid &&
+                       request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if false;
+
+      // classPlans/{planId}/games/{gameId}: a prepared game (data, not a
+      // statement; no class code). The same owner test, and on create the plan
+      // must be the caller's. The snapshot is only shape-checked here; the
+      // server re-validates it (checkSnapshot) before a lesson is built from it.
+      match /games/{gameId} {
+        function isValidClassGame() {
+          let d = request.resource.data;
+          return d.keys().hasOnly(['gameId', 'planId', 'ownerUid', 'title', 'order', 'snapshot',
+                                   'sourceMainId', 'createdAt', 'lastUpdate']) &&
+                 d.gameId == gameId &&
+                 d.planId == planId &&
+                 d.title is string &&
+                 d.title.size() > 0 &&
+                 d.title.size() <= 200 &&
+                 d.order is number &&
+                 d.snapshot is map &&
+                 d.ownerUid is string &&
+                 (!('sourceMainId' in d) || d.sourceMainId is string) &&
+                 d.createdAt is number &&
+                 d.lastUpdate is number;
+        }
+        function ownsPlan() {
+          let planPath = /databases/$(database)/documents/classPlans/$(planId);
+          return exists(planPath) && get(planPath).data.ownerUid == request.auth.uid;
+        }
+
+        allow read: if request.auth != null &&
+                       resource != null &&
+                       resource.data.ownerUid == request.auth.uid;
+        allow create: if request.auth != null &&
+                         isValidClassGame() &&
+                         request.resource.data.ownerUid == request.auth.uid &&
+                         ownsPlan();
+        allow update: if request.auth != null &&
+                         resource != null &&
+                         resource.data.ownerUid == request.auth.uid &&
+                         isValidClassGame() &&
+                         request.resource.data.ownerUid == resource.data.ownerUid &&
+                         request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if false;
+      }
+    }
+
     // join-class: one doc per table, classTables/{mainId}--{n}. Written only by
     // the classroom callables (Admin SDK). Read by a student seated at the
     // table (memberUids, no extra read) or by an admin of the workspace (one
@@ -1059,6 +1133,29 @@ service cloud.firestore {
                isClassChallenge(resource.data.parentId);
       }
 
+      // join-class homes and lessons are made only by the server (classStartLesson,
+      // classCloneLesson, the migration): no client creates a statement with a
+      // home id or carrying classHome / classLesson, nor changes those fields.
+      // A squatted jcTeacher_{uid} would otherwise block that teacher's home.
+      function isClassHomeData(data) {
+        return ('statementSettings' in data) &&
+               data.statementSettings is map &&
+               ('classHome' in data.statementSettings) &&
+               data.statementSettings.classHome != null;
+      }
+      function classLinkOf(data) {
+        return ('statementSettings' in data) && data.statementSettings is map
+          ? [data.statementSettings.get('classHome', null), data.statementSettings.get('classLesson', null)]
+          : [null, null];
+      }
+      function createsClassHomeOrLesson() {
+        return statementId.matches('^jc(Class|Teacher)_.*') ||
+               classLinkOf(request.resource.data) != [null, null];
+      }
+      function changesClassHomeOrLesson() {
+        return classLinkOf(request.resource.data) != classLinkOf(resource.data);
+      }
+
       function changesClassReplyFields() {
         return request.resource.data.diff(resource.data).affectedKeys().hasAny(classReplyServerFields());
       }
@@ -1093,7 +1190,17 @@ service cloud.firestore {
       // Flip it back the moment the main app, Sign, Join and Chat are out.
       // tests/rules/statements.test.mjs has the assertion, skipped with the
       // same explanation, so the debt is visible on every run.
-      allow read;
+      //
+      // join-class HOMES (IA docs/ia/join-class-lesson-plan.md 9.3): a class or
+      // teacher home (statementSettings.classHome) is a teachers-only container.
+      // `get` of a home needs an admin subscription on it; every other statement
+      // keeps today's open get. `list` stays open until the staged auth gate
+      // above ships (a home's title is a class name, not student content).
+      allow get: if resource == null ||
+                    !isClassHomeData(resource.data) ||
+                    isAdmin() ||
+                    isSystemAdmin();
+      allow list: if true;
 
       // You may only create a statement as yourself. isCreator() cannot be
       // reused here: it reads `resource`, which is null at create time.
@@ -1106,6 +1213,7 @@ service cloud.firestore {
                        !setsOrganizationIdOnCreate() &&
                        !createsClassReplyFields() &&
                        !createsClassProposal() &&
+                       !createsClassHomeOrLesson() &&
                        request.resource.data.creatorId == request.auth.uid &&
                        // A student the teacher removed writes nothing more
                        // into that lesson (see agoraRemovedFrom)
@@ -1120,6 +1228,7 @@ service cloud.firestore {
                        !isClassReply() &&
                        !changesClassReplyFields() &&
                        !rewordsClassProposal() &&
+                       !changesClassHomeOrLesson() &&
                        (isAgoraStatement()
                           ? (isCreator() && agoraServerFieldsUnchanged() &&
                              !agoraRemovedFrom(resource.data.agoraSessionId))
@@ -1288,22 +1397,42 @@ service cloud.firestore {
         return isAdmin() || isCreator();
       }
       
-      function getAccess() {
-        let statementId = getStatementId();
-        let statement = get(/databases/$(database)/documents/statements/$(statementId)).data;
-        
-        // Check for statement's own access override first, then topParent's access
-        return statement != null && statement.membership != null && statement.membership.access != null 
-          ? statement.membership.access 
-          : (statement != null && statement.topParentId != null 
-            ? (get(/databases/$(database)/documents/statements/$(statement.topParentId)).data != null &&
-               get(/databases/$(database)/documents/statements/$(statement.topParentId)).data.membership != null &&
-               get(/databases/$(database)/documents/statements/$(statement.topParentId)).data.membership.access != null
-                 ? get(/databases/$(database)/documents/statements/$(statement.topParentId)).data.membership.access
-                 : null)
-            : null);
+      // membership.access of a statement doc (null when it has none or is missing).
+      function statementDataOf(id) {
+        let path = /databases/$(database)/documents/statements/$(cleanPath(string(id)));
+        return exists(path) ? get(path).data : null;
       }
-      
+      function accessOf(data) {
+        return data == null
+          ? null
+          : (data.get('membership', null) is map ? data.membership.get('access', null) : null);
+      }
+      function isHomeData(data) {
+        return data != null &&
+               data.get('statementSettings', null) is map &&
+               data.statementSettings.get('classHome', null) != null;
+      }
+
+      // The access that judges a subscription: the statement's own; else, when the
+      // top parent is a join-class HOME (secret, teachers only), the access of the
+      // lesson, parents[1]; else the top parent's (IA join-class-lesson-plan 9.3).
+      // At most three gets: the statement, its top parent, the lesson.
+      function getAccess() {
+        let statement = statementDataOf(getStatementId());
+        let own = accessOf(statement);
+        let topId = statement == null ? null : statement.get('topParentId', null);
+        let top = (own != null || topId == null) ? null : statementDataOf(topId);
+        let topIsHome = isHomeData(top);
+        let parents = statement == null ? [] : statement.get('parents', []);
+        return own != null
+          ? own
+          : (top == null
+              ? null
+              : (topIsHome
+                  ? ((parents is list && parents.size() > 1) ? accessOf(statementDataOf(parents[1])) : null)
+                  : accessOf(top)));
+      }
+
       function isBanned() {
         return resource != null && resource.data.role == "banned";
       }
