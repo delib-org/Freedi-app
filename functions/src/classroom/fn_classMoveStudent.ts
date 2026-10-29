@@ -17,7 +17,7 @@ import {
 	tableRef,
 } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
-import { assertLessonRunning } from './lessonStatusGuard';
+import { assertLessonRunning, lessonStepOf } from './lessonStatusGuard';
 import { addMember, removeMember } from './tableMembership';
 
 /**
@@ -51,7 +51,9 @@ export async function moveStudent(
 	const mainId = requireId(req?.mainId, 'mainId');
 	const uid = requireId(req?.uid, 'uid');
 	const toTable = validTarget(req?.toTable);
-	assertLessonRunning(await assertWorkspaceAdmin(firestore, mainId, actorUid));
+	const main = await assertWorkspaceAdmin(firestore, mainId, actorUid);
+	assertLessonRunning(main);
+	const lessonStep = lessonStepOf(main);
 
 	const subRef = subscriptionRef(firestore, mainId, uid);
 	await firestore.runTransaction(async (tx) => {
@@ -80,7 +82,8 @@ export async function moveStudent(
 		const now = Date.now();
 		if (fromRef && fromSnap?.exists) {
 			const fromTable = fromSnap.data() as ClassTable;
-			if (fromTable.mainId === mainId) tx.set(fromRef, removeMember(fromTable, uid, now));
+			if (fromTable.mainId === mainId)
+				tx.set(fromRef, removeMember(fromTable, uid, now, lessonStep));
 		}
 		if (toRef && toTableDoc) tx.set(toRef, addMember(toTableDoc, uid, now));
 		tx.update(subRef, { tableId: toId ?? FieldValue.delete(), lastUpdate: now });

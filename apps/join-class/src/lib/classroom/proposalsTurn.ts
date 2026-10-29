@@ -43,3 +43,12 @@ export function proposalsTalkState(
 
 	return { kind: 'may', turn: current, max };
 }
+
+/**
+ * The "We are done, write" button of the Proposals talk screen. It sits where a
+ * speaker looks for "I'm done", so it is hidden while that student holds the
+ * floor: ending their minute must never also take them to writing (Trello FgqfUtG2).
+ */
+export function showsWriteButton(kind: ProposalsTalkKind): boolean {
+	return kind !== 'mine';
+}

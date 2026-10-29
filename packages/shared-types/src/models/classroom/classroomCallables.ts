@@ -77,6 +77,14 @@ export type ClassTableAction =
 	 */
 	| { action: 'passSpeaking'; uid?: string }
 	/**
+	 * "Move on" (a seated tablemate): a toggle of the caller's press. When enough tablemates
+	 * pressed (2; all of a table of fewer than 3) the table moves on: Table talk marks everyone
+	 * who has not answered as passed (the table is choosing again); Proposals talk moves the
+	 * table to write. Presses reset when the table moves. `fromTurn` / `fromProposalsTurn` are the
+	 * turns the tapper saw: a tap that arrives after the table moved to another turn is ignored.
+	 */
+	| { action: 'moveOn'; fromTurn?: number; fromProposalsTurn?: number }
+	/**
 	 * Proposals (IA 25.6, admin only), while the table talks: open the next turn now:
 	 * `proposalsTurn + 1`, `spokenUids = []`, the speaker cleared. The table's maximum grows
 	 * with it, so a done table re-opens. `fromTurn` is the turn the teacher saw: a tap that

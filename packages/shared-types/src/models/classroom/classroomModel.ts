@@ -128,6 +128,11 @@ export const ClassTableSchema = object({
 	passedAskingUids: optional(array(string())),
 	/** Passed this turn's minute (also in `spokenUids`); cleared with the turn fields. */
 	passedSpeakingUids: optional(array(string())),
+	/**
+	 * Tablemates who pressed "move on" (the table moves on without the teacher when enough
+	 * did, see moveOnLogic.ts). Cleared when the table moves. Server-written.
+	 */
+	moveOnUids: optional(array(string())),
 	updatedAt: number(),
 });
 export type ClassTable = InferOutput<typeof ClassTableSchema>;

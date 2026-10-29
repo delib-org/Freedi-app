@@ -1,13 +1,16 @@
 import m from 'mithril';
+import { proposalsTurnOf } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { listableItems } from '@/lib/classroom/c3Logic';
 import { setImproveHandler } from '@/lib/classroom/replyUi';
-import { proposalsTalkState } from '@/lib/classroom/proposalsTurn';
+import { proposalsTalkState, showsWriteButton } from '@/lib/classroom/proposalsTurn';
 import { serverNow } from '@/lib/classroom/serverClock';
 import { instructionFor } from '@/lib/classroom/turnMoment';
 import type { FlowCtx, FlowParts } from './flowTypes';
 import { rateBody } from './RateScreen';
 import { RatedList } from './RatedList';
+import { moveOnView } from '@/lib/classroom/moveOn';
+import { MoveOn } from './MoveOn';
 import { Sheet } from './Sheet';
 import { nameOf, step as tableStep } from './tableTalkParts';
 import { TalkScreen, talkFinishAction } from './TalkScreen';
@@ -60,6 +63,7 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 	let body: m.Children;
 	let action: m.Children = null;
 	if (step === 'talk') {
+		const talking = proposalsTalkState(table, uid, main, serverNow());
 		body = m(TalkScreen, {
 			table,
 			uid,
@@ -70,7 +74,21 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 			onFinish: () => tableStep(ctx, { action: 'finishSpeaking' }),
 			onPass: () => tableStep(ctx, { action: 'passSpeaking' }),
 		});
-		action = talkFinishAction(self.busy, () => ctx.goto('write'));
+		// Everyone spoke: write. Otherwise the table moves on when enough tablemates tap "move on".
+		if (talking.kind === 'done') {
+			action = talkFinishAction(self.busy, () => ctx.goto('write'));
+		} else if (showsWriteButton(talking.kind)) {
+			action = m(MoveOn, {
+				view: moveOnView(table, uid),
+				busy: self.busy,
+				onToggle: () =>
+					tableStep(ctx, {
+						action: 'moveOn',
+						fromTurn: table.turn,
+						fromProposalsTurn: proposalsTurnOf(table),
+					}),
+			});
+		}
 	} else if (step === 'write') {
 		body = writePanel();
 		action = m(

@@ -1,4 +1,5 @@
-import type { ClassTable } from '@freedi/shared-types';
+import type { ClassTable, LessonStepKey } from '@freedi/shared-types';
+import { moveOnIfReached } from './tableMoveOn';
 
 /**
  * Pure membership edits behind `classMoveStudent`. The callable keeps the
@@ -16,7 +17,12 @@ import type { ClassTable } from '@freedi/shared-types';
  * leave this turn's `spokenUids` / `passedSpeakingUids`. Every derivation
  * reads these lists through the current `memberUids`.
  */
-export function removeMember(table: ClassTable, uid: string, now: number): ClassTable {
+export function removeMember(
+	table: ClassTable,
+	uid: string,
+	now: number,
+	lessonStep?: LessonStepKey | null,
+): ClassTable {
 	if (!table.memberUids.includes(uid)) return table;
 	const next: ClassTable = {
 		...table,
@@ -39,8 +45,10 @@ export function removeMember(table: ClassTable, uid: string, now: number): Class
 		delete next.speakerEndsAt;
 		delete next.speakerMs;
 	}
+	if (table.moveOnUids) next.moveOnUids = table.moveOnUids.filter((m) => m !== uid);
 
-	return next;
+	// A smaller table needs fewer "move on" presses: it may be enough now, and nobody would tap again.
+	return moveOnIfReached(next, lessonStep, now);
 }
 
 /** Seat `uid` at a table (last in seating order). They are not yet asked and never become the asker by sitting down. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ClassTable } from '@freedi/shared-types';
-import { proposalsTalkState } from '../proposalsTurn';
+import { proposalsTalkState, showsWriteButton } from '../proposalsTurn';
 
 const NOW = 1_800_000_000_000;
 
@@ -64,5 +64,17 @@ describe('proposalsTalkState (IA 25.6)', () => {
 			turn: 3,
 			max: 3,
 		});
+	});
+});
+
+describe('showsWriteButton (Trello FgqfUtG2)', () => {
+	it('is hidden while I hold the floor, so "I\'m done" cannot be mistaken for "write"', () => {
+		expect(showsWriteButton('mine')).toBe(false);
+	});
+
+	it('shows in every other state', () => {
+		for (const kind of ['done', 'speaking', 'spoke', 'may'] as const) {
+			expect(showsWriteButton(kind)).toBe(true);
+		}
 	});
 });

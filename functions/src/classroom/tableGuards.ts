@@ -8,6 +8,7 @@ import {
 } from '@freedi/shared-types';
 import type { ClassTable, ClassTableAction, LessonStepKey, TableStep } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
+import { assertMayMoveOn } from './tableMoveOn';
 
 /**
  * Who may run which table action, from which step (IA 16 rev 3). Pure guards
@@ -60,6 +61,8 @@ export const ALLOWED_FROM: Record<ClassTableAction['action'], readonly TableStep
 	finishSpeaking: ['talk'],
 	// Proposals: only while the table talks; a table that moved on to write / rate keeps its turn.
 	nextProposalsTurn: ['talk'],
+	// Proposals may still sit at pick (nobody asked); the guard checks the rest (tableMoveOn.ts).
+	moveOn: ['pick', 'talk'],
 };
 
 /**
@@ -334,6 +337,10 @@ export function assertMayAct(
 			return;
 		case 'finishSpeaking':
 			assertMayFinish(table, role, actorUid, now);
+
+			return;
+		case 'moveOn':
+			assertMayMoveOn(table, actorUid, ctx);
 
 			return;
 		default:

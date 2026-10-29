@@ -1,0 +1,31 @@
+// "Move on": the quiet control that lets a table move without the teacher.
+.move-on {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+
+  &__count {
+    margin: 0;
+    color: var(--paper-line);
+    font-size: var(--font-size-base);
+    text-align: center;
+
+    .frame:not(.frame--down) & {
+      color: var(--ink-soft);
+    }
+  }
+
+  &__button {
+    min-height: var(--touch-target, 48px);
+    color: var(--paper);
+
+    .frame:not(.frame--down) & {
+      color: var(--ink-soft);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+}
