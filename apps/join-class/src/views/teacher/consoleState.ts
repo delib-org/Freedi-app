@@ -46,6 +46,8 @@ export interface ConsoleState {
 	options: Map<string, Statement[]>;
 	/** The lesson is paused or ended: steps, seats and tables stand still (IA 13.6). */
 	held: boolean;
+	/** Teacher pressed "Show sides": names carry their side. Off by default, never persisted. */
+	sidesVisible: boolean;
 }
 
 export const consoleState: ConsoleState = {
@@ -61,6 +63,7 @@ export const consoleState: ConsoleState = {
 	announce: '',
 	options: new Map<string, Statement[]>(),
 	held: false,
+	sidesVisible: false,
 };
 
 export function resetConsoleState(mainId: string): void {
@@ -76,6 +79,7 @@ export function resetConsoleState(mainId: string): void {
 	consoleState.announce = '';
 	consoleState.options = new Map<string, Statement[]>();
 	consoleState.held = false;
+	consoleState.sidesVisible = false;
 }
 
 export function isBusy(key: string): boolean {

@@ -173,6 +173,10 @@
   color: var(--ink-muted);
 }
 
+.tables-board__sides {
+  margin-block-end: var(--space-sm);
+}
+
 .tables-board__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 1fr));

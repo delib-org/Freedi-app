@@ -5,6 +5,7 @@ import { t } from '@/lib/i18n';
 import { unplacedStudents } from '@/lib/classroom/consoleHelpers';
 import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
 import { moveStudent } from './consoleActions';
+import { askConfirm } from './ConfirmDialog';
 import { consoleState } from './consoleState';
 import { dropAttrs } from './dragController';
 import { MemberChip } from './MemberChip';
@@ -36,6 +37,38 @@ export interface TablesBoardAttrs {
 	/** "כל ההצעות": each card's "n/m rated everything" line. */
 	ratedLineOf?: (table: ClassTable) => string;
 	// >>> allProposals END
+}
+
+/** Sides stay hidden until the teacher asks: she may be sharing her screen. Showing needs a confirm. */
+function sidesToggle(): m.Vnode {
+	const shown = consoleState.sidesVisible;
+
+	return m(
+		'button.btn.btn--secondary.tables-board__sides',
+		{
+			type: 'button',
+			'data-testid': 'console-sides-toggle',
+			'aria-pressed': shown ? 'true' : 'false',
+			onclick: () => {
+				if (shown) {
+					consoleState.sidesVisible = false;
+
+					return;
+				}
+				askConfirm({
+					title: t('console.sides_confirm_title'),
+					body: t('console.sides_confirm_body'),
+					yesLabel: t('console.sides_confirm_yes'),
+					destructive: false,
+					run: () => {
+						consoleState.sidesVisible = true;
+						m.redraw();
+					},
+				});
+			},
+		},
+		t(shown ? 'console.sides_hide' : 'console.sides_show'),
+	);
 }
 
 function rosterCard(attrs: TablesBoardAttrs): m.Vnode {
@@ -112,6 +145,7 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 					? ` ${t('console.unplaced_live', { count: unplaced.length })}`
 					: '',
 			]),
+			attrs.showSides && attrs.students.length > 0 ? sidesToggle() : null,
 			attrs.tables.length === 0
 				? attrs.opening
 					? m('div.console-opening', [attrs.opening, rosterCard(attrs)])

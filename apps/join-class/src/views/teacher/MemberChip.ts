@@ -61,7 +61,9 @@ function moveMenu(attrs: MemberChipAttrs, uid: string): m.Vnode {
 
 export const MemberChip: m.Component<MemberChipAttrs> = {
 	view({ attrs }) {
-		const { uid, name, camp, noDevice } = attrs;
+		const { uid, name, noDevice } = attrs;
+		// A side shows only after the teacher asked for it (sidesVisible); until then a chip is just a name.
+		const camp = consoleState.sidesVisible ? attrs.camp : null;
 		const drag = consoleState.drag;
 		const active = uid !== undefined && drag.mode !== 'idle' && 'uid' in drag && drag.uid === uid;
 		const askWord: Record<AskMark, string> = {
@@ -83,8 +85,8 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 			.filter(Boolean)
 			.map((key) => `, ${t(key, { name })}`)
 			.join('');
-		const label =
-			(noDevice ? `${name}, ${t('console.no_device')}` : `${name}, ${sideLabel(camp)}`) + turnWord;
+		const spoken = consoleState.sidesVisible ? `${name}, ${sideLabel(camp)}` : name;
+		const label = (noDevice ? `${name}, ${t('console.no_device')}` : spoken) + turnWord;
 		// While the lesson is held nobody moves: no drag, no move menu.
 		const ref = uid !== undefined && !consoleState.held ? { uid, name, from: attrs.from } : null;
 		const mod = camp ? `member-chip--${camp}` : '';
