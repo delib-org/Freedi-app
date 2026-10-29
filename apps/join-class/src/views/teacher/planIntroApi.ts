@@ -1,12 +1,24 @@
-import { Collections, createParagraphChildStatement } from '@freedi/shared-types';
+import { Collections, createParagraphChildStatement, getRandomUID } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { db, doc, deleteField, updateDoc, writeBatch } from '@/lib/firebase';
 import { getCreator } from '@/lib/store';
-import type { IntroBlock, IntroDiff } from '@/lib/classroom/introText';
+import { applyIntroDiff, blocksOf, setVideos } from '@/lib/classroom/gameSnapshotEdit';
+import { fetchIntroBlocks } from '@/lib/classroom/introData';
+import type { IntroBlock, IntroDiff, SavedBlock } from '@/lib/classroom/introText';
 import type { IntroVideo } from '@/lib/classroom/introVideos';
+import { editGame, getGame, isGameMode } from './planSource';
 
 /** Firestore writes of the plan screen's "הקדמה" section. Every function throws
- *  on failure; the controller turns that into an inline error with a retry. */
+ *  on failure; the controller turns that into an inline error with a retry.
+ *  On a game the paragraphs and videos live in the game's snapshot (planSource.ts). */
+
+/** The saved intro paragraphs of the lesson or the game. */
+export async function loadIntroBlocks(mainId: string): Promise<SavedBlock[]> {
+	const game = getGame();
+	if (game) return blocksOf(game.snapshot);
+
+	return fetchIntroBlocks(mainId);
+}
 
 /** The `doc` map a paragraph child carries when it has a list kind or bold (the shape createParagraphChildStatement writes). */
 function docFieldOf(block: IntroBlock, order: number): Record<string, unknown> | null {
@@ -25,6 +37,7 @@ function docFieldOf(block: IntroBlock, order: number): Record<string, unknown> |
  * changed ones updated, removed ones deleted. Only changed blocks are touched.
  */
 export async function saveIntroDiff(main: Statement, diff: IntroDiff): Promise<void> {
+	if (isGameMode()) return editGame((s) => applyIntroDiff(s, diff, getRandomUID));
 	const creator = getCreator();
 	if (!creator) throw new Error('no signed-in teacher');
 	const batch = writeBatch(db);
@@ -63,6 +76,7 @@ export async function saveIntroDiff(main: Statement, diff: IntroDiff): Promise<v
  * first write from the plan screen also retires the old single `videoUrl`.
  */
 export async function saveIntroVideos(mainId: string, videos: IntroVideo[]): Promise<void> {
+	if (isGameMode()) return editGame((s) => setVideos(s, videos));
 	await updateDoc(doc(db, Collections.statements, mainId), {
 		'statementSettings.introVideos': videos,
 		'statementSettings.videoUrl': deleteField(),

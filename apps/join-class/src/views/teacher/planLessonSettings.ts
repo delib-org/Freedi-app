@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { allowOwnQuestionsOf, proposalsTurnsOf, speakSecondsOf } from '@freedi/shared-types';
-import { getMainStatement } from '@/lib/store';
+import { getPlanMain } from './planSource';
 import { dropDraft, getDraft, getMainId, isSaving, runSave, setDraft } from './planController';
 import { saveLessonDetails } from './planApi';
 import { OwnQuestionsSwitch, ProposalsTurnsSelect, SpeakTimeSelect } from './TableSettingsControls';
@@ -16,7 +16,7 @@ export const OWN_QUESTIONS_KEY = 'lesson:ownQuestions';
 
 /** The switch as drawn: the teacher's pending choice, else what is saved. */
 export function ownQuestionsOn(): boolean {
-	const saved = allowOwnQuestionsOf(getMainStatement());
+	const saved = allowOwnQuestionsOf(getPlanMain());
 	const draft = getDraft(OWN_QUESTIONS_KEY);
 	if (draft === undefined) return saved;
 	if ((draft === 'on') === saved && !isSaving(OWN_QUESTIONS_KEY)) {
@@ -63,7 +63,7 @@ function numberShown(key: string, saved: number): number {
 
 /** The speaking time as drawn (default 2 minutes). */
 export function speakSecondsShown(): number {
-	return numberShown(SPEAK_SECONDS_KEY, speakSecondsOf(getMainStatement()));
+	return numberShown(SPEAK_SECONDS_KEY, speakSecondsOf(getPlanMain()));
 }
 
 export function commitSpeakSeconds(seconds: number): void {
@@ -84,7 +84,7 @@ export function speakTimeControl(): m.Children {
 
 /** The turns at Proposals as drawn (default 1). */
 export function proposalsTurnsShown(): number {
-	return numberShown(PROPOSALS_TURNS_KEY, proposalsTurnsOf(getMainStatement()));
+	return numberShown(PROPOSALS_TURNS_KEY, proposalsTurnsOf(getPlanMain()));
 }
 
 export function commitProposalsTurns(turns: number): void {

@@ -1,35 +1,38 @@
 import m from 'mithril';
 import '@/styles/teacher.scss';
+import { getRandomUID } from '@freedi/shared-types';
 import { getUserState, signOut } from '@/lib/user';
-import { t } from '@/lib/i18n';
+import { getLang, t } from '@/lib/i18n';
 import { setFollowLessonLanguage } from '@/lib/store';
 import { WizColFooter } from '@/components/WizColFooter';
 import { BrandLogo } from '@/components/BrandLogo';
-import { subscribeToClassLessons, type ClassLessonEntry } from '@/lib/joinSubscriptions';
 import type { Unsubscribe } from '@/lib/firebase';
-import { classSetLessonStatus } from '@/lib/classroom/api';
-import { filterLessons, statusChipOf } from './homeHelpers';
+import { ensurePlan, loadGames, writeGame } from '@/lib/classPlans';
+import { emptySnapshot } from '@/lib/classroom/gameSnapshotEdit';
+import { gamePathOf, planPathOf } from '@/lib/lessonLinks';
+import { buildPlanRows, openNow, type PlanRow } from '@/lib/planTree';
+import { watchLibrary, type TeacherLibrary } from '@/lib/teacherLibrary';
+import { filterLessons } from './homeHelpers';
+import { renderChip, renderLessonActions, classLabelOf } from './LessonRow';
 import {
+	configureCreate,
 	createIdle,
 	onPageEscape,
-	pickRow,
-	picking,
 	renderCreate,
 	resetCreate,
-	startCopyFromRow,
 	startCreate,
 } from './HomeCreate';
 
-/** A name filter appears above this many lessons (IA 13.11). */
+/** A name filter appears above this many plans (IA 8). */
 const FILTER_FROM = 10;
 
-let lessons: ClassLessonEntry[] = [];
+let library: TeacherLibrary = { plans: [], lessons: [], ready: false };
 let unsub: Unsubscribe | null = null;
-let listReady = false;
 let filterText = '';
-/** Row actions that failed or are running, by lesson id. */
-const reopening = new Set<string>();
-const reopenErrors = new Set<string>();
+/** Games per plan, read once per plan change (the plan doc's `lastUpdate` moves when a game is added). */
+const gameCounts = new Map<string, { stamp: number; count: number }>();
+/** Ids of the plan and first game being made; kept until it succeeds so a retry reuses them. */
+let pendingIds: { planId: string; gameId: string } | null = null;
 
 function accountName(): string {
 	const user = getUserState().user;
@@ -46,125 +49,77 @@ async function handleSignOut(): Promise<void> {
 	m.route.set('/');
 }
 
-async function handleReopen(id: string): Promise<void> {
-	if (reopening.has(id)) return;
-	reopening.add(id);
-	reopenErrors.delete(id);
-	m.redraw();
-	try {
-		await classSetLessonStatus({ mainId: id, action: 'reopen' });
-		m.route.set(`/t/${id}`);
-	} catch (err) {
-		console.error('[TeacherHome] reopen failed:', err);
-		reopenErrors.add(id);
-	} finally {
-		reopening.delete(id);
-		m.redraw();
+/** "+ מערך שיעור חדש": the plan doc and a first game named after it, then the game's questions (flow 1). */
+async function createPlan(title: string): Promise<string> {
+	const uid = getUserState().user?.uid;
+	if (!uid) throw new Error('not signed in');
+	const ids = pendingIds ?? { planId: getRandomUID(), gameId: getRandomUID() };
+	pendingIds = ids;
+	await ensurePlan(ids.planId, title, uid);
+	await writeGame({
+		planId: ids.planId,
+		gameId: ids.gameId,
+		title,
+		order: 0,
+		snapshot: emptySnapshot(getLang()),
+		ownerUid: uid,
+	});
+	pendingIds = null;
+
+	return gamePathOf(ids.planId, ids.gameId);
+}
+
+function refreshCounts(rows: readonly PlanRow[]): void {
+	const uid = getUserState().user?.uid;
+	if (!uid) return;
+	for (const row of rows) {
+		if (!row.doc) continue;
+		const stamp = row.doc.lastUpdate;
+		if (gameCounts.get(row.planId)?.stamp === stamp) continue;
+		gameCounts.set(row.planId, { stamp, count: gameCounts.get(row.planId)?.count ?? 0 });
+		loadGames(row.planId, uid)
+			.then((games) => {
+				gameCounts.set(row.planId, { stamp, count: games.length });
+				m.redraw();
+			})
+			.catch((err: unknown) => {
+				console.error('[TeacherHome] counting the games failed:', err);
+			});
 	}
 }
 
-function renderChip(w: ClassLessonEntry): m.Vnode {
-	const chip = statusChipOf(w.status, w.stepIndex);
+function renderOpenRow(w: (typeof library.lessons)[number]): m.Vnode {
+	const name = `${classLabelOf(w)} · ${w.title}`;
 
-	return m('p.status-chip', { class: `status-chip--${chip.mark}` }, [
-		m('span.status-mark', { class: `status-mark--${chip.mark}`, 'aria-hidden': 'true' }),
-		m('span', t(chip.key, { n: w.stepIndex + 1, total: w.stepCount })),
-	]);
-}
-
-/** Pick mode: name, status, one "בחירה" (IA 13.15.2). No plan, copy or reopen here. */
-function renderPickRow(w: ClassLessonEntry): m.Vnode {
-	const chip = statusChipOf(w.status, w.stepIndex);
-
-	return m('li.teacher-home__row', { key: w.id, class: `teacher-home__row--${chip.mark}` }, [
-		m('h2.teacher-home__row-title', { dir: 'auto' }, w.title),
-		renderChip(w),
-		m('.teacher-home__row-actions', [
-			m(
-				'button.btn.btn--primary.btn--small',
-				{
-					type: 'button',
-					'data-action': 'pick',
-					'data-id': w.id,
-					'aria-label': t('teacher.row.for', { action: t('teacher.row.pick'), name: w.title }),
-					onclick: () => pickRow(lessons, w.id),
-				},
-				t('teacher.row.pick'),
-			),
+	return m('li.teacher-home__row', { key: w.id, 'data-open-now': w.id }, [
+		m('h3.teacher-home__row-title', { dir: 'auto' }, [
+			m('bdi', { dir: 'auto' }, classLabelOf(w)),
+			' · ',
+			m('bdi', { dir: 'auto' }, w.title),
 		]),
+		renderChip(w),
+		renderLessonActions(w, name),
 	]);
 }
 
-function renderRow(w: ClassLessonEntry): m.Vnode {
-	const chip = statusChipOf(w.status, w.stepIndex);
-	const label = (action: string): string => t('teacher.row.for', { action, name: w.title });
-	const ended = w.status === 'ended';
-	const busy = reopening.has(w.id);
-	const hintId = `reopen-hint-${w.id}`;
+function renderPlanRow(row: PlanRow): m.Vnode {
+	const games = gameCounts.get(row.planId)?.count ?? 0;
 
-	return m('li.teacher-home__row', { key: w.id, class: `teacher-home__row--${chip.mark}` }, [
-		m('h2.teacher-home__row-title', { dir: 'auto' }, w.title),
-		renderChip(w),
-		m('.teacher-home__row-actions', [
+	return m('li.teacher-home__row', { key: row.planId, 'data-plan': row.planId }, [
+		m(
+			'h3.teacher-home__row-title',
+			{ dir: 'auto' },
 			m(
 				m.route.Link,
 				{
-					class: 'btn btn--secondary btn--small',
-					href: `/t/${w.id}/plan`,
-					'data-action': 'plan',
-					'aria-label': label(t('teacher.row.plan')),
+					class: 'teacher-home__row-link',
+					href: planPathOf(row.planId),
+					'data-action': 'plan-open',
 				},
-				t('teacher.row.plan'),
+				row.title,
 			),
-			ended
-				? m(
-						'button.btn.btn--primary.btn--small',
-						{
-							type: 'button',
-							'data-action': 'reopen',
-							disabled: busy,
-							'aria-busy': busy ? 'true' : undefined,
-							'aria-describedby': hintId,
-							'aria-label': label(t('teacher.row.reopen')),
-							onclick: () => void handleReopen(w.id),
-						},
-						busy ? t('console.busy_opening') : t('teacher.row.reopen'),
-					)
-				: m(
-						m.route.Link,
-						{
-							class: 'btn btn--primary btn--small',
-							href: `/t/${w.id}`,
-							'data-action': 'open',
-							'aria-label': label(t('teacher.row.open')),
-						},
-						t('teacher.row.open'),
-					),
-		]),
-		ended ? m('p.teacher-home__hint', { id: hintId }, t('teacher.row.reopen_hint')) : null,
-		m('.teacher-home__row-foot', [
-			m(
-				'button.btn.btn--tertiary.btn--small.teacher-home__row-copy',
-				{
-					type: 'button',
-					'data-action': 'copy',
-					'data-id': w.id,
-					'aria-label': label(t('teacher.row.copy')),
-					onclick: () => startCopyFromRow(lessons, w.id),
-				},
-				t('teacher.row.copy'),
-			),
-		]),
-		reopenErrors.has(w.id)
-			? m('.teacher-home__error', { role: 'alert' }, [
-					m('span', t('console.failed', { label: t('teacher.row.reopen') })),
-					m(
-						'button.btn.btn--tertiary.btn--small',
-						{ type: 'button', onclick: () => void handleReopen(w.id) },
-						t('console.retry'),
-					),
-				])
-			: null,
+		),
+		m('p.teacher-home__counts', t('classPlan.counts', { games, lessons: row.lessons.length })),
 	]);
 }
 
@@ -194,24 +149,31 @@ function renderFilter(shown: number): m.Children {
 	];
 }
 
-function renderList(): m.Children {
-	if (!listReady) {
+function renderLists(rows: PlanRow[]): m.Children {
+	if (!library.ready) {
 		return m('.teacher-home__skeleton', { 'aria-busy': 'true', 'aria-label': t('plan.loading') });
 	}
-	const filtering = lessons.length > FILTER_FROM;
-	const shown = filtering ? filterLessons(lessons, filterText) : lessons;
-	const pickMode = picking();
+	const filtering = rows.length > FILTER_FROM;
+	const shown = filtering ? filterLessons(rows, filterText) : rows;
+	const running = openNow(library.lessons, Date.now());
 
 	return [
-		filtering ? renderFilter(shown.length) : null,
-		filtering && shown.length === 0
-			? m('p.teacher-home__empty', t('teacher.home.filter_none'))
+		running.length > 0
+			? m('section.teacher-home__open-now', { 'aria-labelledby': 'open-now-title' }, [
+					m('h2.teacher-home__section-title', { id: 'open-now-title' }, t('teacher.home.open_now')),
+					m('ul.teacher-home__list', running.map(renderOpenRow)),
+				])
 			: null,
-		m(
-			'ul.teacher-home__list',
-			pickMode ? { 'aria-labelledby': 'pick-lead' } : {},
-			shown.map(pickMode ? renderPickRow : renderRow),
-		),
+		rows.length > 0
+			? m('section.teacher-home__plans', { 'aria-labelledby': 'plans-title' }, [
+					m('h2.teacher-home__section-title', { id: 'plans-title' }, t('classPlan.list_title')),
+					filtering ? renderFilter(shown.length) : null,
+					filtering && shown.length === 0
+						? m('p.teacher-home__empty', t('teacher.home.filter_none'))
+						: null,
+					m('ul.teacher-home__list', shown.map(renderPlanRow)),
+				])
+			: null,
 	];
 }
 
@@ -219,15 +181,22 @@ export const TeacherHome: m.Component = {
 	oninit() {
 		// The teacher's own screens keep the teacher's language, whatever the lesson's is.
 		setFollowLessonLanguage(false);
-		listReady = false;
+		library = { plans: [], lessons: [], ready: false };
 		resetCreate();
+		configureCreate({
+			mode: 'plan',
+			sourceCount: () => 0,
+			blankAllowed: () => true,
+			createNew: createPlan,
+			createCopy: () => Promise.reject(new Error('a plan has no copy form')),
+		});
 		filterText = '';
 		const uid = getUserState().user?.uid;
 		if (!uid) return;
 		if (unsub) unsub();
-		unsub = subscribeToClassLessons(uid, (entries) => {
-			lessons = entries;
-			listReady = true;
+		unsub = watchLibrary(uid, (next) => {
+			library = next;
+			refreshCounts(buildPlanRows(next.lessons, next.plans));
 			m.redraw();
 		});
 	},
@@ -240,38 +209,35 @@ export const TeacherHome: m.Component = {
 	},
 
 	view() {
-		const emptyState = listReady && lessons.length === 0;
+		const rows = library.ready ? buildPlanRows(library.lessons, library.plans) : [];
+		const emptyState = library.ready && rows.length === 0;
 		const name = accountName();
 
-		return m(
-			'.teacher-home',
-			{ onkeydown: (e: KeyboardEvent) => onPageEscape(e, lessons.length) },
-			[
-				m('header.teacher-home__header', [
-					m(BrandLogo, { size: 40, className: 'teacher-home__logo' }),
-					name ? m('p.teacher-home__account', t('teacher.account', { name })) : null,
-					m(
-						'button.btn.btn--tertiary.btn--small.teacher-home__signout',
-						{ type: 'button', onclick: () => void handleSignOut() },
-						t('teacher.signout'),
-					),
-				]),
-				m('main.teacher-home__body', [
-					m('h1.teacher-home__title', t('teacher.home.title')),
-					emptyState ? m('p.teacher-home__how', t('teacher.home.how')) : null,
-					listReady && !createIdle(emptyState)
-						? renderCreate(emptyState, lessons.length)
-						: listReady
-							? m(
-									'button.btn.btn--primary.teacher-home__new',
-									{ type: 'button', onclick: () => startCreate(lessons.length) },
-									t('teacher.new'),
-								)
-							: null,
-					renderList(),
-				]),
-				m(WizColFooter),
-			],
-		);
+		return m('.teacher-home', { onkeydown: (e: KeyboardEvent) => onPageEscape(e) }, [
+			m('header.teacher-home__header', [
+				m(BrandLogo, { size: 40, className: 'teacher-home__logo' }),
+				name ? m('p.teacher-home__account', t('teacher.account', { name })) : null,
+				m(
+					'button.btn.btn--tertiary.btn--small.teacher-home__signout',
+					{ type: 'button', onclick: () => void handleSignOut() },
+					t('teacher.signout'),
+				),
+			]),
+			m('main.teacher-home__body', [
+				m('h1.teacher-home__title', t('teacher.home.title')),
+				emptyState ? m('p.teacher-home__how', t('teacher.home.how')) : null,
+				library.ready && !createIdle(emptyState)
+					? renderCreate(emptyState)
+					: library.ready
+						? m(
+								'button.btn.btn--primary.teacher-home__new',
+								{ type: 'button', onclick: () => startCreate() },
+								t('teacher.new'),
+							)
+						: null,
+				renderLists(rows),
+			]),
+			m(WizColFooter),
+		]);
 	},
 };

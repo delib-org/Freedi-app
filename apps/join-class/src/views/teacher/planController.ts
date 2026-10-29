@@ -4,11 +4,12 @@ import { ensureUser, getUserState } from '@/lib/user';
 import {
 	loadMainStatement,
 	getMainStatement,
-	getSubQuestions,
 	subscribeMainStatement,
 	subscribeSubQuestions,
 } from '@/lib/store';
-import { checkAdminStatus, isAdmin } from '@/lib/admin';
+import { checkAdminStatus, isAdmin, markAdminOf } from '@/lib/admin';
+import { subscribeToGame, subscribeToPlan } from '@/lib/classPlans';
+import { getPlanMain, getPlanSubQuestions, setGame } from './planSource';
 import { markOpenedInClass } from '@/lib/joinSubscriptions';
 import { createDragReorder } from '@/lib/dragReorder';
 import type { Unsubscribe } from '@/lib/firebase';
@@ -51,6 +52,10 @@ let mainId = '';
 let load: PlanLoad = 'loading';
 let subUnsub: Unsubscribe | null = null;
 let mainUnsub: Unsubscribe | null = null;
+let gameUnsub: Unsubscribe | null = null;
+let planUnsub: Unsubscribe | null = null;
+let gamePlanId = '';
+let gamePlanTitle = '';
 let newCardCounter = 0;
 
 const drafts = new Map<string, string>();
@@ -86,7 +91,10 @@ export const hasAnyError = (): boolean => fieldErrors.size > 0;
 export const isSaving = (key: string): boolean => savingKeys.has(key);
 export const getCreatingChallenge = (): { text: string; startedAt: number } | null =>
 	creatingChallenge;
-export const getTitle = (): string => getMainStatement()?.statement ?? '';
+export const getTitle = (): string => getPlanMain()?.statement ?? '';
+/** On a game: the plan it belongs to (the back link's target and name). */
+export const getGamePlanId = (): string => gamePlanId;
+export const getGamePlanTitle = (): string => gamePlanTitle;
 
 /** The text to show in a field: what the teacher is typing, else what is saved.
  *  A draft that the snapshot has caught up with is dropped here. */
@@ -105,7 +113,7 @@ export function fieldValue(key: string, saved: string): string {
 /** Challenge and ordered guiding questions, hiding the optimistic duplicates
  *  that exist for a moment while a create round-trips. */
 export function getPlan(): PlanSplit {
-	const all = getSubQuestions().filter((s) => !deletedIds.has(s.statementId));
+	const all = getPlanSubQuestions().filter((s) => !deletedIds.has(s.statementId));
 	const split = splitPlan(all, roleOverrides);
 	let guiding = split.guiding;
 	if (creatingChallenge) {
@@ -442,7 +450,61 @@ export async function openPlan(id: string): Promise<void> {
 	}
 }
 
+/**
+ * Open the screen for a prepared game (docs/ia/join-class-lesson-plan.md 7). The game doc is
+ * the owner's alone: a missing or foreign one gets the "not your lesson" state, like a lesson.
+ */
+export async function openGame(planId: string, gameId: string): Promise<void> {
+	teardownPlan();
+	resetState();
+	mainId = gameId;
+	gamePlanId = planId;
+	gamePlanTitle = '';
+	load = 'loading';
+	m.redraw();
+	try {
+		await ensureUser();
+		planUnsub = subscribeToPlan(
+			planId,
+			(plan) => {
+				gamePlanTitle = plan?.title ?? '';
+				m.redraw();
+			},
+			(err) => console.error('[PlanScreen] plan title listener failed:', err),
+		);
+		gameUnsub = subscribeToGame(
+			planId,
+			gameId,
+			(game) => {
+				if (!game || game.ownerUid !== getUserState().user?.uid) {
+					setGame(null);
+					load = 'denied';
+				} else {
+					setGame(game);
+					if (load !== 'ready') markAdminOf(gameId);
+					load = 'ready';
+				}
+				m.redraw();
+			},
+			(err) => {
+				console.error('[PlanScreen] game listener failed:', err);
+				load = (err as { code?: string }).code === 'permission-denied' ? 'denied' : 'error';
+				m.redraw();
+			},
+		);
+	} catch (err) {
+		console.error('[PlanScreen] game load failed:', err);
+		load = 'error';
+		m.redraw();
+	}
+}
+
 export function teardownPlan(): void {
+	gameUnsub?.();
+	gameUnsub = null;
+	planUnsub?.();
+	planUnsub = null;
+	setGame(null);
 	if (mainUnsub) {
 		mainUnsub();
 		mainUnsub = null;

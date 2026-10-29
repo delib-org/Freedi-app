@@ -1,8 +1,6 @@
 import m from 'mithril';
 import { t } from '@/lib/i18n';
-import { cloneLesson, createLesson } from '@/lib/lesson';
 import { getRandomUID } from '@freedi/shared-types';
-import type { ClassLessonEntry } from '@/lib/joinSubscriptions';
 import { normalizeQuestionText } from './planHelpers';
 import {
 	IDLE_FLOW,
@@ -10,7 +8,6 @@ import {
 	chooseNew,
 	choosePrevious,
 	clearInvalid,
-	copyFromRow,
 	failSubmit,
 	failureOf,
 	isPicking,
@@ -24,19 +21,38 @@ import {
 } from './homeCreateFlow';
 
 /**
- * The create area of the teacher home (IA 13.5 / 13.15, UX 13.D): the question
- * "which questions?", the name forms and the pick lead. One step at a time,
- * inline, driven by the pure machine in homeCreateFlow.ts. The list below the
- * area asks `picking()` whether its rows show "בחירה".
+ * The create area (docs/ia/join-class-lesson-plan.md 6): the same inline machine for two
+ * jobs. On the teacher home (`plan` mode) it names a new lesson plan. On the plan screen
+ * (`game` mode) it adds a game: "which questions?", the name forms and the pick lead. One
+ * step at a time, driven by the pure machine in homeCreateFlow.ts. The list around it asks
+ * `picking()` whether its rows show "בחירה".
  */
 
-const MAX_LESSON_TITLE = 200;
+const MAX_TITLE = 200;
 const NAME_SENTINEL = '\u0001';
 
+export type CreateMode = 'plan' | 'game';
+
+/** What the page does with the form: both resolve to the path to go to. */
+export interface CreateHooks {
+	mode: CreateMode;
+	/** The number of games/lessons a new game may copy from (0 = nothing to copy). */
+	sourceCount: () => number;
+	/** A blank game is possible (not on an old lesson that is only a plan so far). */
+	blankAllowed: () => boolean;
+	createNew: (title: string) => Promise<string>;
+	createCopy: (sourceId: string, title: string, newId: string) => Promise<string>;
+}
+
+let hooks: CreateHooks | null = null;
 let flow: CreateFlow = IDLE_FLOW;
 let newTitle = '';
 let copyTitle = '';
 let copySourceTitle = '';
+
+export function configureCreate(next: CreateHooks): void {
+	hooks = next;
+}
 
 export function resetCreate(): void {
 	flow = IDLE_FLOW;
@@ -49,7 +65,14 @@ export function picking(): boolean {
 	return isPicking(flow);
 }
 
-/** The step on screen: with no lessons the name form is open from the start. */
+const isPlanMode = (): boolean => hooks?.mode === 'plan';
+
+/** Plan mode has nothing to choose between; game mode asks when there is something to copy. */
+function copyable(): number {
+	return isPlanMode() ? 0 : (hooks?.sourceCount() ?? 0);
+}
+
+/** The step on screen: with nothing yet the name form is open from the start. */
 function effectiveStep(emptyState: boolean): CreateStep {
 	return emptyState && flow.step.kind === 'idle' ? { kind: 'nameNew' } : flow.step;
 }
@@ -100,50 +123,53 @@ function go(move: FlowMove): void {
 	applyFocus(move.focus);
 }
 
-function sourceTitleOf(lessons: readonly ClassLessonEntry[], id: string): string {
-	return lessons.find((l) => l.id === id)?.title ?? '';
-}
-
 // ---- entry points the page wires up ---------------------------------------------
 
-export function startCreate(lessonCount: number): void {
-	go(openCreate(flow, lessonCount));
+export function startCreate(): void {
+	if (flow.step.kind !== 'idle') return;
+	// An old lesson that is only a plan so far cannot get a blank game (the plan doc may only
+	// be made by the server, from the lesson): the only way in is "questions from another game".
+	if (!isPlanMode() && !(hooks?.blankAllowed() ?? true)) {
+		go(choosePrevious(openCreate(flow, 1).flow));
+
+		return;
+	}
+	go(openCreate(flow, copyable()));
 }
 
 /** Escape anywhere on the page: one step back (ignored while busy and in the empty state's only form). */
-export function onPageEscape(e: KeyboardEvent, lessonCount: number): void {
+export function onPageEscape(e: KeyboardEvent): void {
 	if (e.key !== 'Escape' || flow.step.kind === 'idle') return;
 	e.preventDefault();
-	go(back(flow, lessonCount));
-}
-
-/** A row's "new lesson, same questions". */
-export function startCopyFromRow(lessons: readonly ClassLessonEntry[], id: string): void {
-	copySourceTitle = sourceTitleOf(lessons, id);
-	copyTitle = copySourceTitle;
-	go(copyFromRow(flow, id, getRandomUID()));
+	cancel();
 }
 
 /** "בחירה" on a row in pick mode. */
-export function pickRow(lessons: readonly ClassLessonEntry[], id: string): void {
-	copySourceTitle = sourceTitleOf(lessons, id);
-	copyTitle = copySourceTitle;
+export function pickRow(id: string, title: string): void {
+	copySourceTitle = title;
+	copyTitle = title;
 	go(pickSource(flow, id, getRandomUID()));
 }
 
-function cancel(lessonCount: number): void {
-	go(back(flow, lessonCount));
+function cancel(): void {
+	// a plan's only form goes straight back to the button; a game's goes one step back
+	if (isPlanMode() && !flow.busy) {
+		flow = IDLE_FLOW;
+		m.redraw.sync();
+		applyFocus({ kind: 'newButton' });
+
+		return;
+	}
+	go(back(flow, copyable()));
 }
 
 async function submit(e: Event): Promise<void> {
 	e.preventDefault();
+	if (!hooks) return;
 	// the empty state's form is open without the machine having moved
 	if (flow.step.kind === 'idle') flow = { ...flow, step: { kind: 'nameNew' } };
 	const step = flow.step;
-	const title = normalizeQuestionText(
-		step.kind === 'nameCopy' ? copyTitle : newTitle,
-		MAX_LESSON_TITLE,
-	);
+	const title = normalizeQuestionText(step.kind === 'nameCopy' ? copyTitle : newTitle, MAX_TITLE);
 	if (!title) {
 		flow = failSubmit(flow, 'invalid');
 		m.redraw.sync();
@@ -156,14 +182,14 @@ async function submit(e: Event): Promise<void> {
 	flow = started;
 	m.redraw();
 	try {
-		const id =
+		const path =
 			step.kind === 'nameCopy'
-				? await cloneLesson(step.sourceId, title, flow.copyId ?? undefined)
-				: await createLesson(title);
+				? await hooks.createCopy(step.sourceId, title, flow.copyId ?? getRandomUID())
+				: await hooks.createNew(title);
 		resetCreate();
-		m.route.set(`/t/${id}/plan`);
+		m.route.set(path);
 	} catch (err) {
-		console.error('[TeacherHome] create lesson failed:', err);
+		console.error('[HomeCreate] create failed:', err);
 		flow = failSubmit(flow, failureOf(err));
 		m.redraw.sync();
 		applyFocus({ kind: 'input' });
@@ -185,14 +211,21 @@ function errorText(isCopy: boolean): string | null {
 	}
 }
 
-function renderNameForm(kind: 'new' | 'copy', emptyState: boolean, lessonCount: number): m.Vnode {
+function renderNameForm(kind: 'new' | 'copy', emptyState: boolean): m.Vnode {
 	const isCopy = kind === 'copy';
 	const inputId = isCopy ? 'teacher-copy-title' : 'teacher-new-title';
 	const error = errorText(isCopy);
 	const busy = flow.busy;
+	const plan = isPlanMode();
 	const describedBy = [isCopy ? 'teacher-copy-help' : '', error ? 'create-error' : '']
 		.filter(Boolean)
 		.join(' ');
+	const labelKey = isCopy
+		? 'teacher.copy.title_label'
+		: plan
+			? 'teacher.new.title_label'
+			: 'game.title_label';
+	const placeholderKey = plan ? 'teacher.new.placeholder' : 'game.placeholder';
 
 	return m(
 		'form.teacher-home__form',
@@ -202,19 +235,15 @@ function renderNameForm(kind: 'new' | 'copy', emptyState: boolean, lessonCount: 
 			onsubmit: (e: Event) => void submit(e),
 		},
 		[
-			emptyState ? m('p.teacher-home__lead', t('teacher.home.empty')) : null,
+			emptyState && plan ? m('p.teacher-home__lead', t('teacher.home.empty')) : null,
 			isCopy ? renderCopyLead() : null,
-			m(
-				'label.teacher-home__label',
-				{ for: inputId },
-				t(isCopy ? 'teacher.copy.title_label' : 'teacher.new.title_label'),
-			),
+			m('label.teacher-home__label', { for: inputId }, t(labelKey)),
 			m('input.teacher-home__input', {
 				id: inputId,
 				type: 'text',
 				value: isCopy ? copyTitle : newTitle,
-				maxlength: MAX_LESSON_TITLE,
-				placeholder: isCopy ? undefined : t('teacher.new.placeholder'),
+				maxlength: MAX_TITLE,
+				placeholder: isCopy ? undefined : t(placeholderKey),
 				disabled: busy,
 				'aria-invalid': flow.error === 'invalid' ? 'true' : undefined,
 				'aria-describedby': describedBy || undefined,
@@ -222,10 +251,7 @@ function renderNameForm(kind: 'new' | 'copy', emptyState: boolean, lessonCount: 
 					const input = vn.dom as HTMLInputElement;
 					input.focus();
 					// a copy keeps the source's name unless the teacher types over it
-					if (isCopy) {
-						input.select();
-						scrollToCreateArea();
-					}
+					if (isCopy) input.select();
 				},
 				oninput: (e: Event) => {
 					const value = (e.target as HTMLInputElement).value;
@@ -248,7 +274,7 @@ function renderNameForm(kind: 'new' | 'copy', emptyState: boolean, lessonCount: 
 					? null
 					: m(
 							'button.btn.btn--tertiary',
-							{ type: 'button', disabled: busy, onclick: () => cancel(lessonCount) },
+							{ type: 'button', disabled: busy, onclick: () => cancel() },
 							t('teacher.new.cancel'),
 						),
 			]),
@@ -273,20 +299,22 @@ function renderCopyLead(): m.Vnode {
 	return m('p.teacher-home__lead', [before, m('bdi', { dir: 'auto' }, copySourceTitle), after]);
 }
 
-function renderChoose(lessonCount: number): m.Vnode {
+function renderChoose(): m.Vnode {
 	return m(
 		'.teacher-home__form',
 		{ key: 'choose', role: 'group', 'aria-labelledby': 'create-lead' },
 		[
 			m('p.teacher-home__lead', { id: 'create-lead' }, t('teacher.new.choose')),
 			m('.teacher-home__choices', [
-				m('.teacher-home__choice', [
-					m(
-						'button.btn.btn--secondary',
-						{ type: 'button', 'data-choice': 'new', onclick: () => go(chooseNew(flow)) },
-						t('teacher.new.from_scratch'),
-					),
-				]),
+				hooks?.blankAllowed() === false
+					? null
+					: m('.teacher-home__choice', [
+							m(
+								'button.btn.btn--secondary',
+								{ type: 'button', 'data-choice': 'new', onclick: () => go(chooseNew(flow)) },
+								t('teacher.new.from_scratch'),
+							),
+						]),
 				m('.teacher-home__choice', [
 					m(
 						'button.btn.btn--secondary',
@@ -307,14 +335,14 @@ function renderChoose(lessonCount: number): m.Vnode {
 			]),
 			m(
 				'button.btn.btn--tertiary',
-				{ type: 'button', onclick: () => cancel(lessonCount) },
+				{ type: 'button', onclick: () => cancel() },
 				t('teacher.new.cancel'),
 			),
 		],
 	);
 }
 
-function renderPickLead(lessonCount: number): m.Vnode {
+function renderPickLead(): m.Vnode {
 	return m('.teacher-home__form', { key: 'pick' }, [
 		m(
 			'p.teacher-home__lead',
@@ -323,28 +351,20 @@ function renderPickLead(lessonCount: number): m.Vnode {
 		),
 		m(
 			'button.btn.btn--tertiary',
-			{ type: 'button', onclick: () => cancel(lessonCount) },
+			{ type: 'button', onclick: () => cancel() },
 			t('teacher.new.cancel'),
 		),
 	]);
 }
 
-/** A copy started from a row far down the list: show where the step went. */
-function scrollToCreateArea(): void {
-	const area = document.querySelector<HTMLElement>('.teacher-home__create');
-	if (!area || flow.step.kind !== 'nameCopy' || flow.step.via !== 'row') return;
-	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	area.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
-}
-
-/** The step that replaces "+ שיעור חדש"; the caller shows the button when `createIdle`. */
-export function renderCreate(emptyState: boolean, lessonCount: number): m.Vnode {
+/** The step that replaces the "+" button; the caller shows the button when `createIdle`. */
+export function renderCreate(emptyState: boolean): m.Vnode {
 	const step = effectiveStep(emptyState);
 	let body: m.Vnode;
-	if (step.kind === 'choose') body = renderChoose(lessonCount);
-	else if (step.kind === 'pick') body = renderPickLead(lessonCount);
-	else if (step.kind === 'nameCopy') body = renderNameForm('copy', emptyState, lessonCount);
-	else body = renderNameForm('new', emptyState, lessonCount);
+	if (step.kind === 'choose') body = renderChoose();
+	else if (step.kind === 'pick') body = renderPickLead();
+	else if (step.kind === 'nameCopy') body = renderNameForm('copy', emptyState);
+	else body = renderNameForm('new', emptyState);
 
 	return m('.teacher-home__create', [body]);
 }

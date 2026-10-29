@@ -5,8 +5,10 @@ import type {
 	ClassAllTablesToResponse,
 	ClassAssignTablesRequest,
 	ClassAssignTablesResponse,
-	ClassCloneLessonRequest,
-	ClassCloneLessonResponse,
+	ClassSnapshotGameRequest,
+	ClassSnapshotGameResponse,
+	ClassStartLessonRequest,
+	ClassStartLessonResponse,
 	ClassCloseBallotRequest,
 	ClassCloseBallotResponse,
 	ClassFreezeBallotRequest,
@@ -105,9 +107,16 @@ export function classSetLessonStatus(
 	return call('classSetLessonStatus', req);
 }
 
-/** Admin of the source: a new lesson with the same plan (IA 13.15). Safe to repeat with the same `newMainId`. */
-export function classCloneLesson(req: ClassCloneLessonRequest): Promise<ClassCloneLessonResponse> {
-	return call('classCloneLesson', req);
+/** Owner of the plan: play a prepared game with a class (or none). Safe to repeat with the same `newMainId`. */
+export function classStartLesson(req: ClassStartLessonRequest): Promise<ClassStartLessonResponse> {
+	return call('classStartLesson', req);
+}
+
+/** Admin of an old lesson, owner of the plan: turn the lesson's questions into a game of the plan. Safe to repeat with the same `newGameId`. */
+export function classSnapshotGame(
+	req: ClassSnapshotGameRequest,
+): Promise<ClassSnapshotGameResponse> {
+	return call('classSnapshotGame', req);
 }
 
 /** Admin, at Table talk: give the turns back to every table, or to table `n` (IA 18.4). */

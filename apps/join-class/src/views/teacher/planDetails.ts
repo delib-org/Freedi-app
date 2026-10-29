@@ -4,9 +4,9 @@ import {
 	SIDE_QUESTION_MAX_LENGTH,
 	sideNamesOf,
 } from '@/lib/classroom/classSettings';
-import { getMainStatement, setStatementLanguage } from '@/lib/store';
+import { getPlanMain } from './planSource';
 import { dropDraft, getDraft, getMainId, runSave, setDraft } from './planController';
-import { saveLessonDetails } from './planApi';
+import { saveLessonDetails, saveLessonLanguage } from './planApi';
 
 /** The "lesson details" fields of the plan screen: the lesson language, the
  *  side question and, per side, its character name and claim. Saved on blur like the other plan fields. (The video
@@ -21,7 +21,7 @@ export const CLAIM_B_KEY = 'lesson:claimB';
 
 /** What is saved for a name; empty when the lesson uses the translated default. */
 export function savedSideName(key: string): string {
-	const own = getMainStatement()?.statementSettings?.sideNames;
+	const own = getPlanMain()?.statementSettings?.sideNames;
 
 	return (key === SIDE_A_KEY ? own?.a : own?.b) ?? '';
 }
@@ -50,7 +50,7 @@ export function commitSideName(key: string): void {
 
 /** The saved side question; empty when the lesson uses the translated default. */
 export function savedSideQuestion(): string {
-	return getMainStatement()?.statementSettings?.sideQuestion ?? '';
+	return getPlanMain()?.statementSettings?.sideQuestion ?? '';
 }
 
 export function commitSideQuestion(): void {
@@ -70,7 +70,7 @@ export function commitSideQuestion(): void {
 
 /** What is saved for a side's claim; empty = no claim line under the name. */
 export function savedSideClaim(key: string): string {
-	const own = getMainStatement()?.statementSettings?.sideClaims;
+	const own = getPlanMain()?.statementSettings?.sideClaims;
 
 	return (key === CLAIM_A_KEY ? own?.a : own?.b) ?? '';
 }
@@ -104,7 +104,7 @@ export function defaultSideName(key: string): string {
 
 /** The lesson language that students follow; empty = unset (each student's own device language). */
 export function savedLessonLanguage(): string {
-	const main = getMainStatement();
+	const main = getPlanMain();
 
 	return main?.forceLanguage === true && main.defaultLanguage ? main.defaultLanguage : '';
 }
@@ -118,6 +118,6 @@ export function commitLanguage(value: string): void {
 	}
 	setDraft(LANGUAGE_KEY, value);
 	runSave(LANGUAGE_KEY, 'save lesson language', () =>
-		setStatementLanguage(getMainId(), value === '' ? null : value),
+		saveLessonLanguage(getMainId(), value === '' ? null : value),
 	);
 }

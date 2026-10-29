@@ -15,6 +15,7 @@ import {
 	Statement,
 	StatementSubscription,
 	getStatementSubscriptionId,
+	isClassLesson,
 	lessonStatusOf,
 } from '@freedi/shared-types';
 import type { LessonStatus } from '@freedi/shared-types';
@@ -34,6 +35,7 @@ import {
 import type { Unsubscribe } from './firebase';
 import { resilientOnSnapshot } from './resilientListeners';
 import { planStepKeys } from './lessonCore';
+import { linkOf, type LessonLink } from './lessonLinks';
 
 export interface ClassLessonEntry {
 	id: string;
@@ -44,6 +46,10 @@ export interface ClassLessonEntry {
 	stepIndex: number;
 	/** The lesson's own step count (8 for a lesson made before "כל ההצעות", else 9). */
 	stepCount: number;
+	/** Plan, game and class of the lesson. An old lesson with no link is its own plan (`legacy`). */
+	link: LessonLink;
+	/** When the lesson statement was made (ms); orders a game's lessons, newest first. */
+	createdAt: number;
 }
 
 /** Firestore `in` queries take at most 30 ids; a teacher rarely has more than one chunk. */
@@ -151,9 +157,10 @@ function entryOf(
 	if (typeof opened !== 'number' || opened <= 0) return null;
 	const live = statements.get(sub.statementId);
 	const source = live ?? sub.statement;
-	// Only lessons: a statement the classroom app never planned is not listed.
+	// Only lessons: a statement the classroom app never planned is not listed, and a
+	// class or teacher home (teachers only, never a lesson) is not either.
 	const plan = source?.statementSettings?.lessonPlan;
-	if (!plan) return null;
+	if (!source || !plan || !isClassLesson(source)) return null;
 
 	return {
 		id: sub.statementId,
@@ -163,6 +170,8 @@ function entryOf(
 		status: lessonStatusOf(plan),
 		stepIndex: typeof plan.stepIndex === 'number' ? plan.stepIndex : 0,
 		stepCount: planStepKeys(plan).length,
+		link: linkOf(source),
+		createdAt: source.createdAt ?? opened,
 	};
 }
 
@@ -237,9 +246,9 @@ export function subscribeToClassLessons(
 			where('openedInClass', '>', 0),
 		),
 		(snap) => {
-			subs = snap.docs
-				.map((d) => d.data() as StatementSubscription)
-				.filter((sub) => (sub.parentId ?? sub.statement?.parentId) === 'top');
+			// Lessons sit under a class or teacher home now (or still at the top, if not yet
+			// moved): the tree position says nothing, `entryOf` keeps lessons and drops homes.
+			subs = snap.docs.map((d) => d.data() as StatementSubscription);
 			watchStatements(subs.map((sub) => sub.statementId));
 			emit();
 		},
