@@ -1,3 +1,5 @@
+import { captureException } from '@/lib/sentry';
+
 /**
  * The projector's whistle (ported from Agora's sound.ts, which join-class does
  * not import): one referee's whistle, synthesised with WebAudio so there is
@@ -50,7 +52,7 @@ function audio(): AudioContext | null {
 
 		return context;
 	} catch (error) {
-		console.error('[projectorSound.audio] could not open the audio context:', error);
+		captureException(error, { operation: 'projectorSound.audio' });
 
 		return null;
 	}

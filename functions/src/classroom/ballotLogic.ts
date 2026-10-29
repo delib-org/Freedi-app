@@ -39,15 +39,33 @@ function byConsensus(x: BallotOption, y: BallotOption): number {
 }
 
 /**
+ * The teacher's "proposals on the vote" switch (challenge
+ * statementSettings.voteDisplay.onlyAboveGate). Absent or true = only the
+ * proposals above the goal (today's rule); an explicit false = All proposals.
+ */
+export function wantsAllProposals(challenge: {
+	statementSettings?: { voteDisplay?: unknown };
+}): boolean {
+	const display = challenge.statementSettings?.voteDisplay as
+		| { onlyAboveGate?: unknown }
+		| undefined;
+
+	return display?.onlyAboveGate === false;
+}
+
+/**
  * Candidates: every visible option at or above the gate (highest consensus
- * first) when at least two pass; otherwise the top N visible options.
+ * first) when at least two pass; otherwise the top N visible options. With
+ * `allProposals` (the teacher chose All) every visible option, best first.
  */
 export function selectBallotCandidates(
 	options: BallotOption[],
 	gate: number,
 	topN: number = DEFAULT_BALLOT_TOP_N,
+	allProposals = false,
 ): string[] {
 	const visible = options.filter((o) => !o.hide).sort(byConsensus);
+	if (allProposals) return visible.map((o) => o.statementId);
 	const passing = visible.filter((o) => (o.consensus ?? 0) >= gate);
 	if (passing.length >= MIN_GATED_CANDIDATES) return passing.map((o) => o.statementId);
 	const n = Math.max(1, Math.min(MAX_BALLOT_TOP_N, Math.floor(topN)));

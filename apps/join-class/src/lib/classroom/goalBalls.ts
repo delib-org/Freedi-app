@@ -94,16 +94,17 @@ export function goalLayout(options: readonly Statement[], gate: number): GoalLay
 
 /**
  * Remembers which proposals were in the goal, so only a real crossing is
- * reported - once per proposal. Proposals already in when the pitch first has
- * data (a page load, a reconnect) are the baseline and never whistle.
+ * reported - once per proposal. The baseline is taken once the data is fully
+ * loaded (not on a partial first snapshot): proposals already in the goal then
+ * never whistle. A new watch (a fresh visit to the step) starts from scratch.
  */
 export class GoalWatch {
 	private lessonKey = '';
 	private known: Set<string> | null = null;
 	private readonly reported = new Set<string>();
 
-	/** The ids that crossed the gate since the last call. */
-	update(lessonKey: string, allIds: readonly string[], inGoalIds: readonly string[]): string[] {
+	/** The ids that crossed the gate since the last call. `loaded`: the proposals are fully loaded. */
+	update(lessonKey: string, loaded: boolean, inGoalIds: readonly string[]): string[] {
 		if (lessonKey !== this.lessonKey) {
 			this.lessonKey = lessonKey;
 			this.known = null;
@@ -111,8 +112,7 @@ export class GoalWatch {
 		}
 		const now = new Set(inGoalIds);
 		if (this.known === null) {
-			// wait for the first real data before taking the baseline
-			if (allIds.length === 0) return [];
+			if (!loaded) return [];
 			this.known = now;
 			for (const id of now) this.reported.add(id);
 

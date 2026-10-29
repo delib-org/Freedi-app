@@ -61,36 +61,46 @@ describe('slotsIn', () => {
 });
 
 describe('GoalWatch', () => {
-	it('does not report proposals already in the goal at the first data', () => {
+	it('does not report proposals already in the goal at the first full load', () => {
 		const watch = new GoalWatch();
-		expect(watch.update('l', ['a', 'b'], ['a'])).toEqual([]);
+		expect(watch.update('l', true, ['a'])).toEqual([]);
 	});
 
-	it('waits for data before taking the baseline', () => {
+	it('takes no baseline from a partial first snapshot', () => {
 		const watch = new GoalWatch();
-		expect(watch.update('l', [], [])).toEqual([]);
-		expect(watch.update('l', ['a'], ['a'])).toEqual([]);
-		expect(watch.update('l', ['a', 'b'], ['a', 'b'])).toEqual(['b']);
+		// partial (cache) snapshot: a is in, the rest has not arrived
+		expect(watch.update('l', false, ['a'])).toEqual([]);
+		// the full load adds b, which was already in: no whistle for either
+		expect(watch.update('l', true, ['a', 'b'])).toEqual([]);
+		expect(watch.update('l', true, ['a', 'b', 'c'])).toEqual(['c']);
 	});
 
 	it('reports a proposal once when it crosses the gate', () => {
 		const watch = new GoalWatch();
-		watch.update('l', ['a', 'b'], []);
-		expect(watch.update('l', ['a', 'b'], ['a'])).toEqual(['a']);
-		expect(watch.update('l', ['a', 'b'], ['a'])).toEqual([]);
+		watch.update('l', true, []);
+		expect(watch.update('l', true, ['a'])).toEqual(['a']);
+		expect(watch.update('l', true, ['a'])).toEqual([]);
 	});
 
 	it('does not whistle again when a proposal drops out and comes back', () => {
 		const watch = new GoalWatch();
-		watch.update('l', ['a'], []);
-		expect(watch.update('l', ['a'], ['a'])).toEqual(['a']);
-		expect(watch.update('l', ['a'], [])).toEqual([]);
-		expect(watch.update('l', ['a'], ['a'])).toEqual([]);
+		watch.update('l', true, []);
+		expect(watch.update('l', true, ['a'])).toEqual(['a']);
+		expect(watch.update('l', true, [])).toEqual([]);
+		expect(watch.update('l', true, ['a'])).toEqual([]);
+	});
+
+	it('a new watch (re-entering the step) rebaselines from the current state', () => {
+		const first = new GoalWatch();
+		first.update('l', true, []);
+		expect(first.update('l', true, ['a'])).toEqual(['a']);
+		const second = new GoalWatch();
+		expect(second.update('l', true, ['a'])).toEqual([]);
 	});
 
 	it('starts over for another lesson', () => {
 		const watch = new GoalWatch();
-		watch.update('one', ['a'], ['a']);
-		expect(watch.update('two', ['a'], ['a'])).toEqual([]);
+		watch.update('one', true, ['a']);
+		expect(watch.update('two', true, ['a'])).toEqual([]);
 	});
 });

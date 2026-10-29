@@ -1,6 +1,5 @@
 import m from 'mithril';
 import { supportBySide } from '@freedi/shared-types';
-import type { ClassBallot } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { classState } from '@/lib/classroom/classState';
 import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
@@ -12,7 +11,6 @@ import {
 	voteOrderOf,
 	voteResults,
 } from '@/lib/classroom/voteResults';
-import { onlyAboveGateOn, scopedIds } from '@/lib/classroom/voteScope';
 import { presentCount, summaryOf } from '@/lib/classroom/voteSummary';
 import type { SummaryRow, VoteSummary } from '@/lib/classroom/voteSummary';
 import { playFlip, recordPositions } from '@/lib/flipReorder';
@@ -56,16 +54,6 @@ const GlideList: m.Component<{ class: string }> = {
 	},
 };
 
-/** The ballot's ids the wall shows: all, or only those above the goal (the teacher's switch). */
-function shownCandidateIds(ballot: ClassBallot): string[] {
-	return scopedIds(
-		ballot.candidateIds,
-		projectorData.proposals,
-		gateOf(projectorData.challenge, projectorData.main),
-		onlyAboveGateOn(projectorData.challenge),
-	).ids;
-}
-
 function orderedIds(): string[] {
 	const challenge = projectorData.challenge;
 	const ballot = readBallot(challenge);
@@ -76,9 +64,9 @@ function orderedIds(): string[] {
 		shownOrder = [];
 	}
 	const selections = challenge?.selections as Record<string, number> | undefined;
-	const votes = countsOf(voteResults(shownCandidateIds(ballot), selections));
+	const votes = countsOf(voteResults(ballot.candidateIds, selections));
 	shownOrder = orderBallot(
-		shownCandidateIds(ballot),
+		ballot.candidateIds,
 		typeof ballot.closedAt === 'number' ? 'result' : voteOrderOf(challenge),
 		{ consensus: consensusOf(projectorData.proposals), votes },
 		shownOrder,
@@ -93,9 +81,7 @@ export function voteStage(): m.Vnode {
 	const ballot = readBallot(challenge);
 	const selections = challenge?.selections as Record<string, number> | undefined;
 	const bars = ballot ? tallyBars(orderedIds(), selections, projectorData.proposals) : [];
-	const candidates = ballot
-		? ballotOptions(shownCandidateIds(ballot), projectorData.proposals)
-		: [];
+	const candidates = ballot ? ballotOptions(ballot.candidateIds, projectorData.proposals) : [];
 	const gate = gateOf(challenge, projectorData.main);
 	const status = voteStatus(ballot);
 

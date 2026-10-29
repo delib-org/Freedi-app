@@ -47,7 +47,9 @@ const vote: Record<string, string> = {
 	'console.vote_scope_all': 'Todas las propuestas',
 	'console.vote_scope_above': 'Solo las que superan la meta',
 	'console.vote_scope_count': '{{above}} de {{total}} superan la meta',
-	'console.vote_scope_none': 'Ninguna supera la meta todavía, así que se muestran todas',
+	'console.vote_scope_none':
+		'Menos de dos propuestas superan la meta, así que la votación incluirá las mejores',
+	'console.vote_scope_locked': 'Se define antes de abrir la votación',
 	'console.vote_status_not_open': 'Aún no abierta',
 	'console.vote_status_open': 'Votación abierta',
 	'console.vote_status_paused': 'Votación en pausa',

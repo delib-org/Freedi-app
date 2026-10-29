@@ -48,7 +48,9 @@ const vote: Record<string, string> = {
 	'console.vote_scope_all': 'همه پیشنهادها',
 	'console.vote_scope_above': 'فقط بالاتر از هدف',
 	'console.vote_scope_count': '{{above}} از {{total}} بالاتر از هدف',
-	'console.vote_scope_none': 'هنوز هیچ پیشنهادی بالاتر از هدف نیست، پس همه نمایش داده می‌شوند',
+	'console.vote_scope_none':
+		'کمتر از دو پیشنهاد بالاتر از هدف است، پس رأی‌گیری بهترین پیشنهادها را شامل می‌شود',
+	'console.vote_scope_locked': 'پیش از باز کردن رأی‌گیری تنظیم می‌شود',
 	'console.vote_status_not_open': 'رأی‌گیری هنوز باز نشده',
 	'console.vote_status_open': 'رأی‌گیری باز است',
 	'console.vote_status_paused': 'رأی‌گیری متوقف شده',

@@ -1,13 +1,14 @@
 import m from 'mithril';
 import '@/styles/console-vote-order.scss';
 import { t } from '@/lib/i18n';
+import { MIN_ABOVE_GOAL } from '@/lib/classroom/voteScope';
 import { icon } from './ConsoleIcon';
 
 /**
  * "Proposals on the vote": All proposals / Only above the goal, on the Vote
  * step's own control row (next to the order switch). The goal is the lesson's
  * gate; the count says how many proposals have entered it. One setting for
- * every phone and the projector. Zero above the goal: a warning, and All stays.
+ * every phone and the projector. Fewer than two above the goal: a warning (the vote keeps the top proposals). Locked once the vote is open.
  * (Trello OaZEhcB7.) Reuses the order switch's segmented-radio look.
  */
 
@@ -17,6 +18,8 @@ export interface VoteScopeSwitchAttrs {
 	/** Proposals on the vote, and how many of them are above the goal. */
 	total: number;
 	above: number;
+	/** The vote is open: the set is frozen, so the choice is locked. */
+	locked: boolean;
 	/** No challenge yet, or a write is in flight. */
 	disabled: boolean;
 	onChange: (onlyAbove: boolean) => void;
@@ -35,7 +38,7 @@ function option(attrs: VoteScopeSwitchAttrs, value: boolean, labelKey: string): 
 			name: 'vote-scope',
 			value: value ? 'above' : 'all',
 			checked: attrs.onlyAbove === value,
-			disabled: attrs.disabled,
+			disabled: attrs.disabled || attrs.locked,
 			'data-testid': `vote-scope-${value ? 'above' : 'all'}`,
 			onchange: () => attrs.onChange(value),
 		}),
@@ -45,7 +48,8 @@ function option(attrs: VoteScopeSwitchAttrs, value: boolean, labelKey: string): 
 
 export const VoteScopeSwitch: m.Component<VoteScopeSwitchAttrs> = {
 	view({ attrs }) {
-		const none = attrs.onlyAbove && attrs.total > 0 && attrs.above === 0;
+		const none =
+			!attrs.locked && attrs.onlyAbove && attrs.total > 0 && attrs.above < MIN_ABOVE_GOAL;
 
 		return m('.vote-order.vote-scope', [
 			m(`span.vote-order__label#${GROUP_LABEL_ID}`, [icon('check'), t('console.vote_scope')]),
@@ -67,6 +71,13 @@ export const VoteScopeSwitch: m.Component<VoteScopeSwitchAttrs> = {
 				{ 'data-testid': 'vote-scope-count' },
 				t('console.vote_scope_count', { above: attrs.above, total: attrs.total }),
 			),
+			attrs.locked
+				? m(
+						'span.vote-scope__warn',
+						{ 'data-testid': 'vote-scope-locked' },
+						t('console.vote_scope_locked'),
+					)
+				: null,
 			none
 				? m(
 						`span.vote-scope__warn#${NONE_ID}`,

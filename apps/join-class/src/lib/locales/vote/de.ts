@@ -49,7 +49,9 @@ const vote: Record<string, string> = {
 	'console.vote_scope_all': 'Alle Vorschläge',
 	'console.vote_scope_above': 'Nur über dem Ziel',
 	'console.vote_scope_count': '{{above}} von {{total}} über dem Ziel',
-	'console.vote_scope_none': 'Noch keiner liegt über dem Ziel, daher werden alle gezeigt',
+	'console.vote_scope_none':
+		'Weniger als zwei Vorschläge liegen über dem Ziel, die Abstimmung nimmt daher die besten',
+	'console.vote_scope_locked': 'Vor dem Öffnen der Abstimmung festlegen',
 	'console.vote_status_not_open': 'Noch nicht geöffnet',
 	'console.vote_status_open': 'Abstimmung offen',
 	'console.vote_status_paused': 'Abstimmung pausiert',

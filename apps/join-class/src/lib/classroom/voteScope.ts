@@ -1,8 +1,9 @@
 import type { Statement } from '@freedi/shared-types';
 
 /**
- * "Only proposals above the goal": which of the ballot's proposals the vote
- * screen and the projector show. A proposal has entered the goal when its C_p
+ * "Only proposals above the goal": the teacher's switch for which proposals the
+ * vote opens with (the server freezes ballot.candidateIds from it; phones,
+ * projector and Summary all read that one set). A proposal has entered the goal when its C_p
  * (statement.consensus) reaches the lesson's gate. Pure, so each rule is
  * unit-testable. (Trello OaZEhcB7.)
  */
@@ -11,10 +12,17 @@ function displayOf(challenge: Statement | null | undefined): { onlyAboveGate?: b
 	return challenge?.statementSettings?.voteDisplay ?? {};
 }
 
-/** The teacher's choice; off (all proposals) unless switched on. */
+/**
+ * The teacher's choice, read when the vote opens (the server freezes the
+ * ballot from it). On unless switched to All: only the proposals above the
+ * goal (with the server's top-proposals fallback when fewer than two are).
+ */
 export function onlyAboveGateOn(challenge: Statement | null | undefined): boolean {
-	return displayOf(challenge).onlyAboveGate === true;
+	return displayOf(challenge).onlyAboveGate !== false;
 }
+
+/** Fewer than this many above the goal: the server keeps the top proposals instead. */
+export const MIN_ABOVE_GOAL = 2;
 
 /** True when this proposal's C_p has reached the gate (unrated = not yet). */
 export function enteredGoal(option: Statement | undefined, gate: number): boolean {
@@ -45,24 +53,4 @@ export function scopeCounts(
 	gate: number,
 ): ScopeCounts {
 	return { total: ids.length, above: aboveGateIds(ids, proposals, gate).length };
-}
-
-export interface ScopedIds {
-	ids: string[];
-	/** The teacher asked for "only above the goal" but none is above it: all are kept. */
-	fellBack: boolean;
-}
-
-/** The ids to show. Nothing above the goal keeps All, never an empty vote. */
-export function scopedIds(
-	ids: readonly string[],
-	proposals: readonly Statement[],
-	gate: number,
-	onlyAbove: boolean,
-): ScopedIds {
-	if (!onlyAbove) return { ids: [...ids], fellBack: false };
-	const above = aboveGateIds(ids, proposals, gate);
-	if (above.length === 0) return { ids: [...ids], fellBack: ids.length > 0 };
-
-	return { ids: above, fellBack: false };
 }

@@ -21,6 +21,7 @@ import {
 	resolveGate,
 	selectBallotCandidates,
 	tallyCandidates,
+	wantsAllProposals,
 } from './ballotLogic';
 
 /**
@@ -72,6 +73,7 @@ export async function freezeBallot(
 		options.map((o) => ({ statementId: o.statementId, consensus: o.consensus, hide: o.hide })),
 		resolveGate(challenge, main),
 		topN ?? DEFAULT_BALLOT_TOP_N,
+		wantsAllProposals(challenge),
 	);
 	if (candidateIds.length === 0) {
 		throw new ClassroomError('failed-precondition', 'There are no proposals to vote on');

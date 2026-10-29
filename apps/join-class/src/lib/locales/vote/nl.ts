@@ -47,7 +47,9 @@ const vote: Record<string, string> = {
 	'console.vote_scope_all': 'Alle voorstellen',
 	'console.vote_scope_above': 'Alleen boven het doel',
 	'console.vote_scope_count': '{{above}} van {{total}} boven het doel',
-	'console.vote_scope_none': 'Nog geen enkel voorstel zit boven het doel, dus alle worden getoond',
+	'console.vote_scope_none':
+		'Minder dan twee voorstellen zitten boven het doel, dus de stemming neemt de beste voorstellen',
+	'console.vote_scope_locked': 'Instellen voordat de stemming opent',
 	'console.vote_status_not_open': 'Nog niet open',
 	'console.vote_status_open': 'Stemmen is open',
 	'console.vote_status_paused': 'Stemmen is gepauzeerd',

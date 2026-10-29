@@ -22,6 +22,7 @@ export function voteScopeOf(
 
 	return {
 		onlyAbove: onlyAboveGateOn(challenge),
+		locked: Array.isArray(ballotIds),
 		total,
 		above,
 		onChange: (onlyAbove: boolean) => {

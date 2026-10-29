@@ -1,6 +1,7 @@
 import m from 'mithril';
 import type { Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
+import { projectorData } from '@/lib/classroom/projectorData';
 import { GoalWatch, goalLayout } from '@/lib/classroom/goalBalls';
 import type { GoalBall } from '@/lib/classroom/goalBalls';
 import { isProjectorSoundOn, playWhistle, toggleProjectorSound } from '@/lib/projectorSound';
@@ -25,14 +26,23 @@ export interface GoalPitchAttrs {
 /** How long a ball that just scored keeps its celebration class. */
 const SCORING_MS = 1400;
 
-const watch = new GoalWatch();
+let watch = new GoalWatch();
 const scoringUntil = new Map<string, number>();
 let netBulgeUntil = 0;
+
+/** Entering the step starts from the current state: nothing already in the goal whistles. */
+function resetPitch(): void {
+	watch = new GoalWatch();
+	scoringUntil.clear();
+	netBulgeUntil = 0;
+}
+
+const BALL_STROKE_WIDTH = '1.6';
 
 function noteCrossings(attrs: GoalPitchAttrs, balls: readonly GoalBall[]): void {
 	const crossed = watch.update(
 		attrs.lessonKey,
-		balls.map((ball) => ball.id),
+		projectorData.proposalsLoaded,
 		balls.filter((ball) => ball.inGoal).map((ball) => ball.id),
 	);
 	if (crossed.length === 0) return;
@@ -53,7 +63,7 @@ function ballIcon(): m.Vnode {
 		{
 			viewBox: '0 0 24 24',
 			stroke: 'currentColor',
-			'stroke-width': '1.6',
+			'stroke-width': BALL_STROKE_WIDTH,
 			'stroke-linecap': 'round',
 			'stroke-linejoin': 'round',
 			'aria-hidden': 'true',
@@ -105,6 +115,10 @@ function soundButton(): m.Vnode {
 }
 
 export const GoalPitch: m.Component<GoalPitchAttrs> = {
+	oninit() {
+		resetPitch();
+	},
+
 	view({ attrs }) {
 		const layout = goalLayout(attrs.options, attrs.gate);
 		noteCrossings(attrs, layout.balls);

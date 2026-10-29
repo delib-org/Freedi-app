@@ -4,6 +4,7 @@ import {
 	resolveGate,
 	selectBallotCandidates,
 	tallyCandidates,
+	wantsAllProposals,
 } from '../ballotLogic';
 
 describe('resolveGate', () => {
@@ -73,5 +74,54 @@ describe('tallyCandidates + decideFromTally', () => {
 		expect(decideFromTally({ p1: 0, p2: 0 }, { p1: 0.4, p2: 0.6 })).toBe('p2');
 		expect(decideFromTally({ p2: 1, p1: 1 }, { p1: 0.5, p2: 0.5 })).toBe('p1');
 		expect(decideFromTally({}, {})).toBeNull();
+	});
+});
+
+describe('the proposals-on-the-vote switch', () => {
+	const options = [
+		{ statementId: 'p1', consensus: 0.72 },
+		{ statementId: 'p2', consensus: 0.64 },
+		{ statementId: 'p3', consensus: 0.48 },
+		{ statementId: 'p4', hide: true, consensus: 0.9 },
+	];
+	const withFlag = (onlyAboveGate?: boolean) => ({
+		statementSettings: { voteDisplay: onlyAboveGate === undefined ? {} : { onlyAboveGate } },
+	});
+
+	it('reads only an explicit false as All', () => {
+		expect(wantsAllProposals(withFlag(false))).toBe(true);
+		expect(wantsAllProposals(withFlag(true))).toBe(false);
+		expect(wantsAllProposals(withFlag())).toBe(false);
+		expect(wantsAllProposals({})).toBe(false);
+	});
+
+	it('onlyAboveGate with two or more above: exactly those, no padding', () => {
+		expect(selectBallotCandidates(options, 0.6, 3, wantsAllProposals(withFlag(true)))).toEqual([
+			'p1',
+			'p2',
+		]);
+	});
+
+	it('onlyAboveGate with fewer than two above: today fallback', () => {
+		expect(selectBallotCandidates(options, 0.7, 3, wantsAllProposals(withFlag(true)))).toEqual([
+			'p1',
+			'p2',
+			'p3',
+		]);
+	});
+
+	it('flag absent: unchanged', () => {
+		expect(selectBallotCandidates(options, 0.6, 3, wantsAllProposals(withFlag()))).toEqual([
+			'p1',
+			'p2',
+		]);
+	});
+
+	it('All: every visible proposal, best first', () => {
+		expect(selectBallotCandidates(options, 0.6, 3, wantsAllProposals(withFlag(false)))).toEqual([
+			'p1',
+			'p2',
+			'p3',
+		]);
 	});
 });
