@@ -107,8 +107,26 @@ $c3-count-size: clamp(6rem, 30vw, 8rem); // 96-128px, readable from 60cm
     font-size: var(--font-size-sm);
   }
 
+  // The send button stays pinned to the bottom of the scrolling content, so a long
+  // question can never push it off the screen.
+  &__footer {
+    position: sticky;
+    inset-block-end: calc(-1 * var(--space-lg));
+    z-index: 1;
+    margin-block-end: calc(-1 * var(--space-lg));
+    padding-block: var(--space-sm) var(--space-md);
+    background: var(--paper);
+    border-block-start: 1px solid var(--paper-line);
+  }
+
   &__send {
     width: 100%;
+    min-height: var(--touch-target, 48px);
+    font-weight: var(--font-weight-bold, 700);
+
+    &:disabled {
+      opacity: 0.55;
+    }
   }
 }
 

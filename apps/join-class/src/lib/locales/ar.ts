@@ -540,6 +540,9 @@ const ar: Record<string, string> = {
 	'projector.back': 'العودة إلى الدرس',
 	'projector.close': 'إغلاق جهاز العرض',
 	'projector.window_hint': 'اسحبوا هذه النافذة إلى شاشة الصف ثم اضغطوا "ملء الشاشة"',
+	'common.show_more': 'عرض المزيد',
+	'common.show_less': 'عرض أقل',
+	'proposal.send_mine': 'إرسال اقتراحي',
 };
 
 export default ar;

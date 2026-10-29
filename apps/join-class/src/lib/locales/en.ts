@@ -547,6 +547,9 @@ const en: Record<string, string> = {
 	'projector.back': 'Back to the lesson',
 	'projector.close': 'Close the projector',
 	'projector.window_hint': 'Drag this window to the class screen, then press "Full screen"',
+	'common.show_more': 'Show more',
+	'common.show_less': 'Show less',
+	'proposal.send_mine': 'Send my proposal',
 };
 
 export default en;

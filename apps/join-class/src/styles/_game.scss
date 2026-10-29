@@ -112,6 +112,11 @@
   font-size: 1.3125rem; // 21 px
 }
 
+#{$game} .write-panel__send {
+  min-height: 60px;
+  font-size: 1.3125rem; // 21 px
+}
+
 #{$game} .frame__action .turn-actions__secondary {
   min-height: 56px;
   font-size: var(--font-size-lg);

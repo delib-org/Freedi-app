@@ -3,6 +3,7 @@ import { studentStageProgress, studentStageTitle } from '@/lib/studentStage';
 import type { StageProgress } from '@/lib/studentStage';
 import { t } from '@/lib/i18n';
 import '@/styles/student-frame.scss';
+import { CollapsibleAsk } from './CollapsibleAsk';
 import { ReplyNotice } from '@/views/student/replies/ReplyNotice';
 
 /**
@@ -77,7 +78,7 @@ export const StudentFrame: m.Component<StudentFrameAttrs> = {
 			// The author's lasting "someone replied" line (IA 23.1); never on the face-down talk screen.
 			down ? null : m(ReplyNotice),
 			m('main.frame__content', [
-				ask ? m('p.frame__ask', { dir: 'auto', 'data-testid': 'proposals-ask' }, ask) : null,
+				ask ? m(CollapsibleAsk, { text: ask }) : null,
 				instruction
 					? m(
 							'h1.frame__instruction',

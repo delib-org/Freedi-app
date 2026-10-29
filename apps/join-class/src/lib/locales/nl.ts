@@ -547,6 +547,9 @@ const nl: Record<string, string> = {
 	'projector.close': 'Beamer sluiten',
 	'projector.window_hint':
 		'Sleep dit venster naar het scherm van de klas en druk op "Volledig scherm"',
+	'common.show_more': 'Meer tonen',
+	'common.show_less': 'Minder tonen',
+	'proposal.send_mine': 'Mijn voorstel versturen',
 };
 
 export default nl;

@@ -539,6 +539,9 @@ const he: Record<string, string> = {
 	'projector.back': 'חזרה לשיעור',
 	'projector.close': 'סגירת המקרן',
 	'projector.window_hint': 'גררו את החלון הזה למסך של הכיתה ולחצו "מסך מלא"',
+	'common.show_more': 'הצג עוד',
+	'common.show_less': 'הצג פחות',
+	'proposal.send_mine': 'שליחת ההצעה שלי',
 };
 
 export default he;

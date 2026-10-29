@@ -12,7 +12,9 @@
 .frame {
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+  // Bounded to the screen: the content scrolls between the header and the pinned action.
+  height: 100vh;
+  height: 100dvh;
   background: var(--paper);
   color: var(--ink);
 
@@ -61,6 +63,29 @@
     overflow-wrap: anywhere;
   }
 
+  // A long question folds to three lines; "Show more" opens it (CollapsibleAsk).
+  &__ask-wrap {
+    margin-block-end: var(--space-md);
+
+    .frame__ask {
+      margin-block-end: 0;
+    }
+  }
+
+  &__ask--folded {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+  }
+
+  &__ask-toggle {
+    display: block;
+    min-height: var(--touch-target, 48px);
+    margin-inline: auto;
+  }
+
   &__instruction {
     margin-block-end: var(--space-md);
     font-size: var(--font-size-xl);
@@ -85,6 +110,7 @@
 
   &__content {
     flex: 1;
+    min-block-size: 0;
     overflow-y: auto;
     padding: var(--space-lg) var(--space-md);
   }
@@ -93,6 +119,8 @@
     position: sticky;
     inset-block-end: 0;
     padding: var(--space-md);
+    // clear of the home indicator on notched phones
+    padding-block-end: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
     background: var(--paper);
     border-block-start: 1px solid var(--paper-line);
 
