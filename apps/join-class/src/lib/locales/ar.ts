@@ -573,6 +573,8 @@ const ar: Record<string, string> = {
 	'teacher.lesson.busy': 'جارٍ تحضير الدرس...',
 	'plan.lesson_only': 'التغييرات هنا لهذا الدرس فقط',
 	'plan.lesson_from': 'اللعبة: «{{game}}» · الصف: {{class}}',
+	'teacher.lesson.not_approved':
+		'لم تتم الموافقة بعد على حسابكم للعمل مع الصفوف. يمكنكم البدء بلا صف.',
 };
 
 export default ar;

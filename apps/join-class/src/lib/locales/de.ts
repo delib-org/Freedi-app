@@ -588,6 +588,8 @@ const de: Record<string, string> = {
 	'teacher.lesson.busy': 'Die Stunde wird vorbereitet...',
 	'plan.lesson_only': 'Änderungen hier gelten nur für diese Stunde',
 	'plan.lesson_from': 'Spiel: „{{game}}“ · Klasse: {{class}}',
+	'teacher.lesson.not_approved':
+		'Dein Lehrerkonto ist für Klassen noch nicht freigegeben. Du kannst ohne Klasse starten.',
 };
 
 export default de;

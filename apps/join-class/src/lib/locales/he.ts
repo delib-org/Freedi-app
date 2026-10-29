@@ -573,6 +573,7 @@ const he: Record<string, string> = {
 	'teacher.lesson.busy': 'מכינים את השיעור...',
 	'plan.lesson_only': 'השינויים כאן רק לשיעור הזה',
 	'plan.lesson_from': 'משחק: „{{game}}” · כיתה: {{class}}',
+	'teacher.lesson.not_approved': 'החשבון שלכם עוד לא אושר לעבודה עם כיתות. אפשר להתחיל בלי כיתה.',
 };
 
 export default he;

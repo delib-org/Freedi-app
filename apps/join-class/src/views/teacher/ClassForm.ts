@@ -4,6 +4,7 @@ import { t } from '@/lib/i18n';
 import { startLesson } from '@/lib/lesson';
 import { getUserState } from '@/lib/user';
 import { loadTeacherClasses, type TeacherClass } from '@/lib/teacherClasses';
+import { startFailureOf, type StartFailure } from './startFailure';
 
 /**
  * "+ שיעור עם כיתה" (docs/ia/join-class-lesson-plan.md 5 and 6.4): an inline choice
@@ -25,7 +26,7 @@ let classesLoad: ClassesLoad = 'loading';
 let picked: string | null | undefined;
 let newMainId = '';
 let busy = false;
-let failure: 'failed' | 'not_yours' | null = null;
+let failure: StartFailure | null = null;
 
 export function isClassFormOpen(gameId: string): boolean {
 	return openGameId === gameId;
@@ -83,8 +84,7 @@ async function submit(planId: string, gameId: string): Promise<void> {
 		m.route.set(`/t/${id}`);
 	} catch (err) {
 		console.error('[ClassForm] starting the lesson failed:', err);
-		const code = (err as { code?: string }).code;
-		failure = code === 'functions/permission-denied' ? 'not_yours' : 'failed';
+		failure = startFailureOf(err);
 	} finally {
 		busy = false;
 		m.redraw();
@@ -108,6 +108,12 @@ function choice(id: string | null, label: string, value: string): m.Vnode {
 	]);
 }
 
+function failureText(kind: StartFailure): string {
+	if (kind === 'not_approved') return t('teacher.lesson.not_approved');
+
+	return kind === 'not_yours' ? t('teacher.copy.not_yours') : t('teacher.copy.failed');
+}
+
 export interface ClassFormAttrs {
 	planId: string;
 	gameId: string;
@@ -125,6 +131,14 @@ export const ClassForm: m.Component<ClassFormAttrs> = {
 			'form.class-form',
 			{
 				'aria-busy': busy ? 'true' : undefined,
+				// opened from a button far away (the game screen's fixed bar): bring it into view
+				oncreate: (vn: m.VnodeDOM) => {
+					const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+					(vn.dom as HTMLElement).scrollIntoView({
+						block: 'center',
+						behavior: reduced ? 'auto' : 'smooth',
+					});
+				},
 				onsubmit: (e: Event) => {
 					e.preventDefault();
 					void submit(planId, gameId);
@@ -173,13 +187,7 @@ export const ClassForm: m.Component<ClassFormAttrs> = {
 						t('teacher.new.cancel'),
 					),
 				]),
-				failure
-					? m(
-							'.class-form__error',
-							{ role: 'alert' },
-							failure === 'not_yours' ? t('teacher.copy.not_yours') : t('teacher.copy.failed'),
-						)
-					: null,
+				failure ? m('.class-form__error', { role: 'alert' }, failureText(failure)) : null,
 				busy ? m('.visually-hidden', { role: 'status' }, t('teacher.lesson.busy')) : null,
 			],
 		);

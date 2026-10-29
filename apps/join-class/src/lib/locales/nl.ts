@@ -583,6 +583,8 @@ const nl: Record<string, string> = {
 	'teacher.lesson.busy': 'De les wordt voorbereid...',
 	'plan.lesson_only': 'Wijzigingen hier gelden alleen voor deze les',
 	'plan.lesson_from': 'Spel: "{{game}}" · Klas: {{class}}',
+	'teacher.lesson.not_approved':
+		'Je lerarenaccount is nog niet goedgekeurd voor klassen. Je kunt zonder klas beginnen.',
 };
 
 export default nl;

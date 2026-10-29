@@ -58,9 +58,15 @@ check('seed: an old lesson at the top (no home, no classLesson)', oldDoc.parentI
 await sleep(TRIGGER_SETTLE_MS);
 await db.doc(`statementsSubscribe/${teacherUid}--${oldId}`).set({ openedInClass: Date.now(), lastUpdate: Date.now() }, { merge: true });
 
+// The class path needs an approved Agora teacher (requireApprovedTeacher): an active school the
+// teacher is attached to approves them.
+await db.doc('agoraSchools/s1').set({
+	schoolId: 's1', name: 'בית ספר', status: 'active', teacherMap: { [teacherUid]: true }, teacherIds: [teacherUid],
+	createdAt: Date.now(), lastUpdate: Date.now(),
+});
 const classId = `cls-${Date.now()}`;
-const agoraClass = (id, name, status) => ({
-	classId: id, schoolId: 's1', name, teacherIds: [teacherUid], teacherMap: { [teacherUid]: true },
+const agoraClass = (id, name, status, owner = teacherUid) => ({
+	classId: id, schoolId: 's1', name, teacherIds: [owner], teacherMap: { [owner]: true },
 	classCode: 'ABC123', memberCount: 0, status, createdAt: Date.now(), lastUpdate: Date.now(),
 });
 await db.doc(`agoraClasses/${classId}`).set(agoraClass(classId, 'ט׳2', 'active'));
@@ -309,6 +315,30 @@ try {
 		}
 	}, `jcClass_${classId}`);
 	check('student: the rules refuse a read of the home', homeRead === 'permission-denied', homeRead);
+
+	// ---- 8. a teacher who is not approved for classes ---------------------------------------
+	const loose = `unapproved-${Date.now()}`;
+	await db.doc(`agoraClasses/${classId}-loose`).set(agoraClass(`${classId}-loose`, 'ח׳1', 'active', loose));
+	const ctx3 = await browser.newContext({ viewport: { width: 1100, height: 900 }, locale: 'he-IL' });
+	const teacher3 = await ctx3.newPage();
+	await signInTeacher(teacher3, BASE, loose);
+	await teacher3.goto(`${BASE}/t`, { waitUntil: 'domcontentloaded' });
+	await teacher3.waitForSelector('#teacher-new-title', { timeout: TIMEOUT });
+	await teacher3.fill('#teacher-new-title', 'Unapproved plan');
+	await teacher3.click('.teacher-home__form button[type=submit]');
+	await teacher3.waitForURL(/\/games\//, { timeout: TIMEOUT });
+	await teacher3.waitForSelector('[data-action="new-lesson"]', { timeout: TIMEOUT });
+	await teacher3.click('[data-action="new-lesson"]');
+	await teacher3.waitForSelector(`.class-form [data-class="${classId}-loose"]`, { timeout: TIMEOUT });
+	await teacher3.check(`.class-form [data-class="${classId}-loose"]`);
+	await teacher3.click('.class-form [data-action="start-lesson"]');
+	await teacher3.waitForSelector('.class-form__error', { timeout: TIMEOUT * 2 });
+	check('not approved: the class path says so, in plain words', (await teacher3.locator('.class-form__error').innerText()).includes('לא אושר'));
+	check('not approved: "בלי כיתה" is still there', (await teacher3.locator('.class-form [data-class="__none"]').count()) === 1);
+	await teacher3.check('.class-form [data-class="__none"]');
+	await teacher3.click('.class-form [data-action="start-lesson"]');
+	await teacher3.waitForURL((u) => /^\/t\/[^/]+$/.test(u.pathname) && !u.pathname.startsWith('/t/plans'), { timeout: TIMEOUT * 2 });
+	check('not approved: starting without a class works', true);
 
 	const other = await browser.newContext({ viewport: { width: 1100, height: 900 }, locale: 'he-IL' });
 	const stranger = await other.newPage();

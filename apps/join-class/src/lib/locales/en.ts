@@ -580,6 +580,8 @@ const en: Record<string, string> = {
 	'teacher.lesson.busy': 'Preparing the lesson...',
 	'plan.lesson_only': 'Changes here are for this lesson only',
 	'plan.lesson_from': 'Game: "{{game}}" · Class: {{class}}',
+	'teacher.lesson.not_approved':
+		"Your teacher account isn't approved yet for classes. You can start without a class.",
 };
 
 export default en;

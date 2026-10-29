@@ -571,6 +571,8 @@ const fa: Record<string, string> = {
 	'teacher.lesson.busy': 'در حال آماده‌سازی درس...',
 	'plan.lesson_only': 'تغییرات اینجا فقط برای همین درس است',
 	'plan.lesson_from': 'بازی: «{{game}}» · کلاس: {{class}}',
+	'teacher.lesson.not_approved':
+		'حساب شما هنوز برای کار با کلاس‌ها تأیید نشده است. می‌توانید بدون کلاس شروع کنید.',
 };
 
 export default fa;
