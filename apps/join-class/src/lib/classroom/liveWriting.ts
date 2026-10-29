@@ -87,6 +87,18 @@ export function resolveEnd(
 	return sent ? 'sent' : 'stopped';
 }
 
+/** How long the "<name> sent" notice stays up after the watch view closes by itself. */
+export const SENT_TOAST_MS = 3500;
+
+/**
+ * The watch view closes by itself the moment the watched writer has sent: the
+ * watcher goes back to their own screen. A writer who only stopped (unticked,
+ * left the box) keeps the view open, so the text stays readable.
+ */
+export function closesWatchOn(state: 'live' | 'sent' | 'stopped'): boolean {
+	return state === 'sent';
+}
+
 /** The picker: the live writers plus the one being watched, in seating order; shown from two on. */
 export function pickerUids(
 	writers: readonly Writer[],
