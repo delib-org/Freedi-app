@@ -17,6 +17,7 @@ import {
 } from '@freedi/shared-types';
 import { generateUniqueClassCode } from './joinCodes';
 import { logError } from '../utils/errorHandling';
+import { revokeClassHomeTeacher } from '../classroom/classHome';
 
 /** gRPC status for a missing document */
 const NOT_FOUND = 5;
@@ -202,4 +203,23 @@ export async function removeClassTeacher(classId: string, teacherUid: string): P
 			lastUpdate: Date.now(),
 		});
 	await syncAggregateTeacher(classId, teacherUid, FieldValue.delete());
+	await revokeJoinClassHome(classId, teacherUid);
+}
+
+/**
+ * join-class: the removed teacher loses their admin on the class's lesson home
+ * (`agoraClasses.joinClassHomeId`) and on everything under it. A failure fails the
+ * call so the admin retries; the revoke is idempotent.
+ */
+async function revokeJoinClassHome(classId: string, teacherUid: string): Promise<void> {
+	try {
+		await revokeClassHomeTeacher(db, classId, teacherUid);
+	} catch (error) {
+		logError(error, {
+			operation: 'agora.classes.revokeJoinClassHome',
+			userId: teacherUid,
+			metadata: { classId },
+		});
+		throw error;
+	}
 }

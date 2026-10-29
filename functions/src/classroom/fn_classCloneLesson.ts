@@ -16,13 +16,16 @@ import { actorUserOf } from './classPlanAccess';
 import { isLesson, lessonSnapshot } from './cloneLesson';
 import { loadLessonChildren } from './gameWrites';
 import { startLessonUnderHome } from './startLesson';
+import { CLONE_UNDER_HOME } from './classroomFlags';
 import type { StartLessonDeps } from './startLesson';
 
 /**
  * `classCloneLesson` (admin of the source): a new lesson with the source's plan
  * (see @freedi/shared-types classGameSnapshot.ts for exactly what travels).
  * KEPT FOR OLD CLIENTS during the lesson-plan rollout (IA 9.2): re-implemented
- * as snapshot -> start, under the caller's teacher home `jcTeacher_{uid}`.
+ * as snapshot -> start. While CLONE_UNDER_HOME (classroomFlags.ts) is false the
+ * copy is a TOP-LEVEL lesson exactly as before; once flipped, it goes under the
+ * caller's teacher home `jcTeacher_{uid}`.
  * Remove it once no client calls it (delete the deployed function first).
  *
  * The caller must be an admin of the source (checked before any child is read).
@@ -62,12 +65,18 @@ function actorOf(source: Statement, actor: User): User {
 	return actor;
 }
 
+export interface CloneLessonDeps extends StartLessonDeps {
+	/** Overrides CLONE_UNDER_HOME (tests). */
+	underHome?: boolean;
+}
+
 export async function cloneLesson(
 	firestore: Firestore,
 	actor: User | string,
 	req: ClassCloneLessonRequest,
-	deps: StartLessonDeps = {},
+	deps: CloneLessonDeps = {},
 ): Promise<ClassCloneLessonResponse> {
+	const underHome = deps.underHome ?? CLONE_UNDER_HOME;
 	const actorUser: User = typeof actor === 'string' ? { uid: actor, displayName: '' } : actor;
 	const sourceId = requireId(req?.sourceMainId, 'sourceMainId');
 	const newMainId = requireId(req?.newMainId, 'newMainId');
@@ -89,11 +98,13 @@ export async function cloneLesson(
 		firestore,
 		{
 			actor: creator,
-			target: teacherHomeTarget(creator),
+			target: underHome ? teacherHomeTarget(creator) : null,
 			newMainId,
 			title: title?.trim() ? title : source.statement,
 			snapshot,
-			classLesson: linkOf(source),
+			// A top-level copy stays an OLD lesson (no link), exactly as before; the
+			// migration gives it a plan and a home later.
+			classLesson: underHome ? linkOf(source) : undefined,
 			sourceLesson: { id: sourceId, title: source.statement },
 			isRetryOf: (found: Statement) =>
 				found.creatorId === actorUser.uid && found.sourceLessonId === sourceId,
@@ -101,7 +112,12 @@ export async function cloneLesson(
 		deps,
 	);
 
-	return { mainId: res.mainId, classCode: res.classCode, reused: res.reused, homeId: res.homeId };
+	return {
+		mainId: res.mainId,
+		classCode: res.classCode,
+		reused: res.reused,
+		...(res.homeId ? { homeId: res.homeId } : {}),
+	};
 }
 
 export const classCloneLesson = onCall(

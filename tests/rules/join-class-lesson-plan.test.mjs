@@ -169,6 +169,13 @@ describe('join-class lesson plans and homes', () => {
 			await assertSucceeds(updateDoc(doc(db, 'classPlans', PLAN), { title: 'Cyber', lastUpdate: T0 + 1 }));
 		});
 
+		it('refuses a plan id that is a statement id, its own teacher included (server only)', async () => {
+			await assertFails(setDoc(doc(as(OTHER), 'classPlans', OLD), plan(OLD, OTHER)));
+			await assertFails(setDoc(doc(as(OWNER), 'classPlans', OLD), plan(OLD, OWNER)));
+			await assertFails(setDoc(doc(as(OTHER), 'classPlans', LESSON), plan(LESSON, OTHER)));
+			await assertSucceeds(setDoc(doc(as(OWNER), 'classPlans', 'fresh-plan-id'), plan('fresh-plan-id')));
+		});
+
 		it('refuses another teacher reading, listing, updating; a plan for someone else; every delete', async () => {
 			const other = as(OTHER);
 			await assertFails(getDoc(doc(other, 'classPlans', PLAN)));

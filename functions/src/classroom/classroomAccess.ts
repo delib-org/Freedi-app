@@ -7,6 +7,7 @@ import {
 	StatementType,
 	getStatementSubscriptionId,
 	isClassHome,
+	isHomeId,
 } from '@freedi/shared-types';
 import type { ClassTable, Statement, StatementSubscription } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
@@ -37,6 +38,10 @@ export function requireId(value: unknown, name: string): string {
 	) {
 		throw new ClassroomError('invalid-argument', `${name} is required`);
 	}
+	// Home ids (jcClass_ / jcTeacher_) are made by the server only: a client-chosen
+	// id that became one (a lesson, proposal or reply id) would squat that home, and
+	// a home is never a lesson to act on.
+	if (isHomeId(value)) throw new ClassroomError('invalid-argument', `${name} is not valid`);
 
 	return value;
 }

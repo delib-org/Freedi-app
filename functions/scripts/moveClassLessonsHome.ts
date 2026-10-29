@@ -16,6 +16,8 @@
  *   GCLOUD_PROJECT=<proj> npx tsx scripts/moveClassLessonsHome.ts --only=<lessonId> --execute
  *   # all lessons:
  *   GCLOUD_PROJECT=<proj> npx tsx scripts/moveClassLessonsHome.ts --execute
+ *   # smaller or larger write batches (default 100, max 500):
+ *   GCLOUD_PROJECT=<proj> npx tsx scripts/moveClassLessonsHome.ts --execute --batch-size=50
  *   # the sweep, after the first run (catches children written during the move):
  *   GCLOUD_PROJECT=<proj> npx tsx scripts/moveClassLessonsHome.ts --execute --sweep
  *   # production additionally needs --confirm-prod:
@@ -28,10 +30,17 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { formatMoveReport, moveClassLessonsHome } from '../src/migrations/moveClassLessonsHome';
 import { checkBackfillRun } from '../src/migrations/backfillRunGuard';
 
-function onlyArg(argv: readonly string[]): string | undefined {
-	const arg = argv.find((a) => a.startsWith('--only='));
+function argValue(argv: readonly string[], name: string): string | undefined {
+	const arg = argv.find((a) => a.startsWith(`--${name}=`));
 
-	return arg ? arg.slice('--only='.length) || undefined : undefined;
+	return arg ? arg.slice(name.length + 3) || undefined : undefined;
+}
+
+function batchSizeArg(argv: readonly string[]): number | undefined {
+	const raw = argValue(argv, 'batch-size');
+	const n = raw ? Number(raw) : NaN;
+
+	return Number.isInteger(n) && n > 0 ? n : undefined;
 }
 
 async function main(): Promise<void> {
@@ -49,7 +58,8 @@ async function main(): Promise<void> {
 	const report = await moveClassLessonsHome(getFirestore(), {
 		execute: guard.execute,
 		sweep: process.argv.includes('--sweep'),
-		onlyLessonId: onlyArg(process.argv),
+		onlyLessonId: argValue(process.argv, 'only'),
+		batchSize: batchSizeArg(process.argv),
 	});
 	console.info(
 		`# move class lessons home — project=${guard.project} ` +

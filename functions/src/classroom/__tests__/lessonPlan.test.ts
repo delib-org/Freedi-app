@@ -9,7 +9,8 @@ import { startLesson } from '../fn_classStartLesson';
 import { snapshotGame } from '../fn_classSnapshotGame';
 import { setLessonStatus } from '../fn_classSetLessonStatus';
 import { isLesson } from '../cloneLesson';
-import { loadMain } from '../classroomAccess';
+import { loadMain, requireId } from '../classroomAccess';
+import { revokeClassHomeTeacher } from '../classHome';
 import {
 	autoEvaluatorUids,
 	isInLesson,
@@ -303,6 +304,145 @@ describe('classStartLesson', () => {
 		);
 	});
 
+	it('refuses a home id as the lesson id, so no caller can squat a home (B)', async () => {
+		const fake = new FakeFirestore();
+		seedPlanAndGame(fake);
+		seedClass(fake);
+		for (const id of ['jcTeacher_victim', `jcClass_${CLASS}`, TEACHER_HOME]) {
+			await expectCode(
+				startLesson(fake.asFirestore(), TEACHER, req({ newMainId: id, classId: null }), deps()),
+				'invalid-argument',
+			);
+		}
+		expect(fake.list('statements')).toHaveLength(0);
+		expect(() => requireId('jcClass_x', 'proposalId')).toThrow(ClassroomError);
+		expect(requireId('lesson-1', 'mainId')).toBe('lesson-1');
+	});
+
+	it('refuses a pre-existing home made by someone else, even with a matching classHome (A)', async () => {
+		const fake = new FakeFirestore();
+		seedPlanAndGame(fake);
+		seedClass(fake);
+		const squat = (id: string, link: Record<string, unknown>) =>
+			fake.seed(`statements/${id}`, {
+				statementId: id,
+				parentId: 'top',
+				topParentId: id,
+				creatorId: OTHER,
+				creator: { uid: OTHER, displayName: 'x' },
+				statementSettings: { classHome: link },
+			});
+		squat(TEACHER_HOME, { kind: 'teacher', uid: TEACHER.uid });
+		await expectCode(
+			startLesson(fake.asFirestore(), TEACHER, req({ classId: null }), deps()),
+			'failed-precondition',
+		);
+		squat(CLASS_HOME, { kind: 'class', classId: CLASS });
+		await expectCode(
+			startLesson(fake.asFirestore(), TEACHER, req(), deps()),
+			'failed-precondition',
+		);
+		expect(fake.read(`statements/${NEW}`)).toBeUndefined();
+	});
+
+	it('accepts a genuine class home made by a teacher since removed (the class links it)', async () => {
+		const fake = new FakeFirestore();
+		seedPlanAndGame(fake);
+		seedClass(fake, 'active', [TEACHER.uid, CO]);
+		await startLesson(fake.asFirestore(), TEACHER, req(), deps());
+		// the creator leaves; CO now starts a lesson in the same home
+		seedClass(fake, 'active', [CO]);
+		fake.seed(`agoraClasses/${CLASS}`, {
+			...fake.read(`agoraClasses/${CLASS}`),
+			joinClassHomeId: CLASS_HOME,
+		});
+		fake.seed(`classPlans/p2`, {
+			planId: 'p2',
+			title: 't',
+			ownerUid: CO,
+			createdAt: 1,
+			lastUpdate: 1,
+		});
+		fake.seed(`classPlans/p2/games/g2`, {
+			gameId: 'g2',
+			planId: 'p2',
+			ownerUid: CO,
+			title: 'CO game',
+			order: 0,
+			snapshot: SNAPSHOT,
+			createdAt: 1,
+			lastUpdate: 1,
+		});
+		const res = await startLesson(
+			fake.asFirestore(),
+			{ uid: CO, displayName: 'Co' },
+			{ planId: 'p2', gameId: 'g2', classId: CLASS, newMainId: 'lesson-co' },
+			deps('co', 0.35),
+		);
+		expect(res.homeId).toBe(CLASS_HOME);
+	});
+
+	it('re-syncs the home admins to the class teachers and revokes a removed teacher (D)', async () => {
+		const fake = new FakeFirestore();
+		seedPlanAndGame(fake);
+		seedClass(fake, 'active', [TEACHER.uid, CO]);
+		await startLesson(fake.asFirestore(), TEACHER, req(), deps());
+		expect(fake.read(`statementsSubscribe/${CO}--${CLASS_HOME}`)?.role).toBe('admin');
+		// what setupAdminsForStatement copied onto statements under the home
+		fake.seed(`statementsSubscribe/${CO}--${NEW}`, {
+			userId: CO,
+			statementId: NEW,
+			topParentId: CLASS_HOME,
+			role: 'admin',
+			statement: { statementId: NEW, creatorId: TEACHER.uid },
+		});
+		fake.seed(`statementsSubscribe/${CO}--co-own`, {
+			userId: CO,
+			statementId: 'co-own',
+			topParentId: CLASS_HOME,
+			role: 'admin',
+			statement: { statementId: 'co-own', creatorId: CO },
+		});
+		fake.seed(`statementsSubscribe/s1--${NEW}`, {
+			userId: 's1',
+			statementId: NEW,
+			topParentId: CLASS_HOME,
+			role: 'member',
+		});
+		seedClass(fake, 'active', [TEACHER.uid]);
+		await startLesson(
+			fake.asFirestore(),
+			TEACHER,
+			req({ newMainId: 'lesson2' }),
+			deps('second', 0.35),
+		);
+		expect(fake.read(`statementsSubscribe/${CO}--${CLASS_HOME}`)).toBeUndefined();
+		expect(fake.read(`statementsSubscribe/${CO}--${NEW}`)).toBeUndefined();
+		// their own statement stays theirs; students are never touched
+		expect(fake.read(`statementsSubscribe/${CO}--co-own`)?.role).toBe('admin');
+		expect(fake.read(`statementsSubscribe/s1--${NEW}`)?.role).toBe('member');
+		expect(fake.read(`statementsSubscribe/${TEACHER.uid}--${CLASS_HOME}`)?.role).toBe('admin');
+	});
+
+	it("removeClassTeacher's revoke: drops the home admin and its copies; no home, no-op (D)", async () => {
+		const fake = new FakeFirestore();
+		seedPlanAndGame(fake);
+		seedClass(fake, 'active', [TEACHER.uid, CO]);
+		expect(await revokeClassHomeTeacher(fake.asFirestore(), CLASS, CO)).toBe(0);
+		await startLesson(fake.asFirestore(), TEACHER, req(), deps());
+		fake.seed(`statementsSubscribe/${CO}--${NEW}`, {
+			userId: CO,
+			statementId: NEW,
+			topParentId: CLASS_HOME,
+			role: 'admin',
+			statement: { statementId: NEW, creatorId: TEACHER.uid },
+		});
+		expect(await revokeClassHomeTeacher(fake.asFirestore(), CLASS, CO)).toBe(2);
+		expect(fake.read(`statementsSubscribe/${CO}--${CLASS_HOME}`)).toBeUndefined();
+		expect(fake.read(`statementsSubscribe/${CO}--${NEW}`)).toBeUndefined();
+		expect(await revokeClassHomeTeacher(fake.asFirestore(), CLASS, CO)).toBe(1);
+	});
+
 	it('refuses a broken or oversized game snapshot and bad arguments', async () => {
 		const fake = new FakeFirestore();
 		seedPlanAndGame(fake, TEACHER.uid, { questions: 'nope' });
@@ -347,7 +487,7 @@ describe('homes are never workspaces', () => {
 		await expectCode(loadMain(fake.asFirestore(), TEACHER_HOME), 'failed-precondition');
 		await expectCode(
 			setLessonStatus(fake.asFirestore(), TEACHER.uid, { mainId: TEACHER_HOME, action: 'pause' }),
-			'failed-precondition',
+			'invalid-argument',
 		);
 		const res = await setLessonStatus(
 			fake.asFirestore(),

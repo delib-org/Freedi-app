@@ -1,6 +1,7 @@
 import type { DocumentSnapshot, Firestore, Query } from 'firebase-admin/firestore';
 import {
 	Collections,
+	Role,
 	checkSnapshot,
 	flattenLines,
 	isClassHome,
@@ -10,7 +11,7 @@ import {
 import type { ClassPlan, Statement, StatementSubscription, User } from '@freedi/shared-types';
 import { commitInBatches } from '../classroom/batchedWrites';
 import type { BatchedWrite } from '../classroom/batchedWrites';
-import { readHomeAdmins, teacherHomeTarget, writeHome } from '../classroom/classHome';
+import { isHomeOf, readHomeAdmins, teacherHomeTarget, writeHome } from '../classroom/classHome';
 import type { HomeTarget } from '../classroom/classHome';
 import { writeGameFromLesson } from '../classroom/gameWrites';
 import { logError } from '../utils/errorHandling';
@@ -43,7 +44,29 @@ const MAX_CHAIN_DEPTH = 20;
 const STEP_INDEX_FIELD = 'statementSettings.lessonPlan.stepIndex';
 const PLANS = 'classPlans';
 
-export type SkipReason = 'live' | 'no-teacher' | 'error';
+/** An 'open' lesson (students may still write) touched within this window is left for later. */
+export const OPEN_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+/** Writes per batch: small, so each burst of update triggers stays small. */
+export const MIGRATION_BATCH_SIZE = 100;
+
+/**
+ * Why a lesson was not moved:
+ * - live: live or paused (any step, the waiting room included), touched < 3 h ago;
+ * - open: kept open for students, touched < 7 days ago;
+ * - plan-foreign / game-foreign: `classPlans/{L}` (or its game) exists and belongs
+ *   to someone else (a squat made before the rules refused it); fix by hand;
+ * - home-foreign: `jcTeacher_{uid}` exists but is not that teacher's home (a squat);
+ * - no-teacher: the lesson has no creator;
+ * - error: anything else (see `error`).
+ */
+export type SkipReason =
+	| 'live'
+	| 'open'
+	| 'no-teacher'
+	| 'plan-foreign'
+	| 'game-foreign'
+	| 'home-foreign'
+	| 'error';
 
 export interface LessonMoveReport {
 	lessonId: string;
@@ -72,6 +95,8 @@ export interface MoveReport {
 		moved: number;
 		swept: number;
 		skippedLive: number;
+		skippedOpen: number;
+		skippedForeign: number;
 		skippedOther: number;
 		homesToCreate: number;
 		descendantsToRewrite: number;
@@ -90,23 +115,32 @@ export interface MoveOptions {
 	now?: () => number;
 	pauseMs?: number;
 	pageSize?: number;
+	/** Writes per batch (default MIGRATION_BATCH_SIZE). */
+	batchSize?: number;
 	sleep?: (ms: number) => Promise<void>;
 }
 
 const realSleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** A lesson that is being played right now: live/paused, past Waiting, touched in the window. */
-export function isLiveLesson(lesson: Statement, now: number): boolean {
+/**
+ * Why a lesson must not move now, or null: live/paused (any step, the waiting
+ * room included) touched within LIVE_WINDOW_MS -> 'live'; open touched within
+ * OPEN_WINDOW_MS -> 'open'. Ended lessons, and stale ones, move.
+ */
+export function activeSkipReason(lesson: Statement, now: number): 'live' | 'open' | null {
 	const plan = lesson.statementSettings?.lessonPlan;
-	if (!plan) return false;
+	if (!plan) return null;
 	const status = plan.status ?? 'live';
-	const touched = lesson.lastChildUpdate ?? lesson.lastUpdate ?? 0;
+	const age = now - (lesson.lastChildUpdate ?? lesson.lastUpdate ?? 0);
+	if ((status === 'live' || status === 'paused') && age < LIVE_WINDOW_MS) return 'live';
+	if (status === 'open' && age < OPEN_WINDOW_MS) return 'open';
 
-	return (
-		(status === 'live' || status === 'paused') &&
-		plan.stepIndex > 0 &&
-		now - touched < LIVE_WINDOW_MS
-	);
+	return null;
+}
+
+/** A lesson being played right now (see activeSkipReason). */
+export function isLiveLesson(lesson: Statement, now: number): boolean {
+	return activeSkipReason(lesson, now) === 'live';
 }
 
 /** An old lesson still at the top, or (sweep) one already under a teacher/class home. */
@@ -210,22 +244,29 @@ function descendantWrites(
 	return { writes, placements };
 }
 
+/**
+ * Subscription rewrites. `topParentId` moves to the home everywhere. On L's OWN
+ * subscriptions, `parentId` and the embedded `statement` are left as they are
+ * ('top'): the userFeed trigger (fn_subscriptionLifecycle -> feedRelevantChange /
+ * isTopLevelSubscription) would otherwise see L stop being top-level and delete
+ * every member's userFeed entry for L, against IA 13.7 ("old userFeed entries for
+ * L are left alone; they still open L"). Those two fields are documented as
+ * set-once at creation anyway. Descendants' subscriptions get their embedded
+ * topParentId / parents moved (they are never top-level, so no feed change).
+ */
 function subscriptionWrites(
 	subs: ReadonlyMap<string, { ref: DocumentSnapshot['ref']; data: StatementSubscription }>,
 	placements: ReadonlyMap<string, Placement>,
 	homeId: string,
+	lessonId: string,
 ): BatchedWrite[] {
 	const writes: BatchedWrite[] = [];
 	for (const { ref, data: sub } of subs.values()) {
-		const place = placements.get(sub.statementId);
+		const place = sub.statementId === lessonId ? undefined : placements.get(sub.statementId);
 		const data: Record<string, unknown> = {};
 		if (sub.topParentId !== homeId) data.topParentId = homeId;
-		if (place && sub.parentId !== undefined && sub.parentId !== place.parentId) {
-			data.parentId = place.parentId;
-		}
 		const embedded = sub.statement as Partial<Statement> | undefined;
 		if (place && embedded && typeof embedded === 'object') {
-			if (embedded.parentId !== place.parentId) data['statement.parentId'] = place.parentId;
 			if (embedded.topParentId !== homeId) data['statement.topParentId'] = homeId;
 			if (!sameList(embedded.parents, place.parents)) data['statement.parents'] = place.parents;
 		}
@@ -253,7 +294,7 @@ async function ensureHome(
 	await firestore.runTransaction(async (tx) => {
 		const home = await tx.get(homeRef);
 		const admins = await readHomeAdmins(firestore, tx, target);
-		if (home.exists && admins.has(teacher.uid)) return;
+		if (home.exists && admins.get(teacher.uid) === Role.admin && admins.size === 1) return;
 		writeHome({
 			firestore,
 			tx,
@@ -284,6 +325,12 @@ async function ensurePlanAndGame(
 	]);
 	report.planToCreate = !planSnap.exists;
 	report.gameToCreate = !gameSnap.exists;
+	if (planSnap.exists && (planSnap.data() as ClassPlan).ownerUid !== teacher.uid) {
+		throw new ForeignDoc('plan-foreign');
+	}
+	if (gameSnap.exists && (gameSnap.data() as { ownerUid?: string }).ownerUid !== teacher.uid) {
+		throw new ForeignDoc('game-foreign');
+	}
 	const children = tree.filter((s) => s.parentId === lessonId);
 	const checked = checkSnapshot(snapshotFromLesson(lesson, children));
 	if (!checked.ok) {
@@ -319,6 +366,13 @@ async function ensurePlanAndGame(
 	}
 }
 
+/** A doc at an id the migration needs, owned by someone else: reported, never overwritten. */
+class ForeignDoc extends Error {
+	constructor(readonly reason: 'plan-foreign' | 'game-foreign' | 'home-foreign') {
+		super(reason);
+	}
+}
+
 /** Moves (or, in sweep mode, re-checks) one lesson. Never throws; errors land in the report. */
 export async function moveLesson(
 	firestore: Firestore,
@@ -346,17 +400,23 @@ export async function moveLesson(
 		gameToCreate: false,
 	};
 	if (!teacher) return { ...report, skipped: 'no-teacher' };
-	if (mode === 'move' && isLiveLesson(lesson, now)) return { ...report, skipped: 'live' };
+	const active = mode === 'move' ? activeSkipReason(lesson, now) : null;
+	if (active) return { ...report, skipped: active };
 
 	try {
+		const tree = await loadTree(firestore, lessonId);
 		if (mode === 'move') {
+			// Every check that can refuse the move runs before the first write.
 			const target = teacherHomeTarget(teacher);
 			const home = await firestore.collection(Collections.statements).doc(target.homeId).get();
 			report.homeToCreate = !home.exists;
+			if (home.exists && !isHomeOf(home.data() as Statement, target)) {
+				throw new ForeignDoc('home-foreign');
+			}
+			await ensurePlanAndGame(firestore, lesson, teacher, tree, now, report, false);
 			if (options.execute) await ensureHome(firestore, target, teacher, now);
 		}
 
-		const tree = await loadTree(firestore, lessonId);
 		report.descendants = tree.length;
 		const { writes, placements } = descendantWrites(firestore, tree, lessonId, homeId);
 		placements.set(lessonId, { parentId: homeId, topParentId: homeId, parents: [homeId] });
@@ -364,17 +424,21 @@ export async function moveLesson(
 			.filter((s) => s.statementType === 'question')
 			.map((s) => s.statementId);
 		const subs = await loadSubscriptions(firestore, lessonId, questionIds);
-		const subWrites = subscriptionWrites(subs, placements, homeId);
+		const subWrites = subscriptionWrites(subs, placements, homeId, lessonId);
 		report.descendantsToRewrite = writes.length;
 		report.subscriptions = subs.size;
 		report.subscriptionsToRewrite = subWrites.length;
 
-		if (mode === 'move') {
-			await ensurePlanAndGame(firestore, lesson, teacher, tree, now, report, options.execute);
-		}
 		if (!options.execute) return report;
+		if (mode === 'move') {
+			await ensurePlanAndGame(firestore, lesson, teacher, tree, now, report, true);
+		}
 
-		await commitInBatches(firestore, [...writes, ...subWrites]);
+		await commitInBatches(
+			firestore,
+			[...writes, ...subWrites],
+			options.batchSize ?? MIGRATION_BATCH_SIZE,
+		);
 		if (mode === 'move') {
 			// L last: a run that stops before this line selects L again next time.
 			await firestore
@@ -399,6 +463,7 @@ export async function moveLesson(
 
 		return report;
 	} catch (error) {
+		if (error instanceof ForeignDoc) return { ...report, skipped: error.reason };
 		logError(error, {
 			operation: 'migrations.moveClassLessonsHome',
 			statementId: lessonId,
@@ -447,6 +512,8 @@ function emptyTotals(): MoveReport['totals'] {
 		moved: 0,
 		swept: 0,
 		skippedLive: 0,
+		skippedOpen: 0,
+		skippedForeign: 0,
 		skippedOther: 0,
 		homesToCreate: 0,
 		descendantsToRewrite: 0,
@@ -480,6 +547,8 @@ export async function moveClassLessonsHome(
 			const t = report.totals;
 			t.candidates++;
 			if (one.skipped === 'live') t.skippedLive++;
+			else if (one.skipped === 'open') t.skippedOpen++;
+			else if (one.skipped?.endsWith('-foreign')) t.skippedForeign++;
 			else if (one.skipped) t.skippedOther++;
 			else if (one.mode === 'sweep') t.swept++;
 			else t.moved++;
@@ -519,6 +588,7 @@ export function formatMoveReport(report: MoveReport): string {
 		...lines,
 		'',
 		`Totals: candidates=${t.candidates} ${report.execute ? 'moved' : 'toMove'}=${t.moved} swept=${t.swept} skippedLive=${t.skippedLive}` +
+			` skippedOpen=${t.skippedOpen} skippedForeign=${t.skippedForeign}` +
 			` skippedOther=${t.skippedOther} homesToCreate=${t.homesToCreate}` +
 			` descendantsToRewrite=${t.descendantsToRewrite} subscriptionsToRewrite=${t.subscriptionsToRewrite}` +
 			` plansToCreate=${t.plansToCreate} gamesToCreate=${t.gamesToCreate}`,

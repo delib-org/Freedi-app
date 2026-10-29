@@ -1,4 +1,5 @@
 import { cloneLesson } from '../fn_classCloneLesson';
+import { CLONE_UNDER_HOME } from '../classroomFlags';
 import { buildLessonCopy, flattenLines, generateClassCode } from '../cloneLesson';
 import { ClassroomError } from '../classroomErrors';
 import { FakeFirestore } from './fakeFirestore';
@@ -274,19 +275,52 @@ describe('buildLessonCopy (allowlist mapper)', () => {
 });
 
 describe('classCloneLesson', () => {
-	const run = (fake: FakeFirestore, uid = TEACHER, req = { sourceMainId: SRC, newMainId: NEW }) =>
+	const run = (
+		fake: FakeFirestore,
+		uid = TEACHER,
+		req: { sourceMainId: string; newMainId: string } = { sourceMainId: SRC, newMainId: NEW },
+		underHome?: boolean,
+	) =>
 		cloneLesson(fake.asFirestore(), uid, req, {
 			now: () => NOW,
 			random: () => 0.25,
 			newId: ids(),
 			resolveUsers: async (uids) => uids.map((u) => ({ uid: u, displayName: u })),
+			underHome,
 		});
 
-	it('creates the lesson, its questions, paragraphs and code in one go; nothing else', async () => {
+	it('while CLONE_UNDER_HOME is off: a TOP-LEVEL lesson exactly as before, no home', async () => {
+		expect(CLONE_UNDER_HOME).toBe(false);
 		const fake = new FakeFirestore();
 		seedSource(fake);
 		const before = fake.list('statements').length;
 		const res = await run(fake);
+		expect(res).toEqual({ mainId: NEW, classCode: '222222', reused: false });
+		// main + 3 questions + 2 paragraphs; no home
+		expect(fake.list('statements').length).toBe(before + 6);
+		expect(fake.read(`statements/${HOME}`)).toBeUndefined();
+		const main = fake.read(`statements/${NEW}`);
+		expect(main).toMatchObject({
+			parentId: 'top',
+			topParentId: NEW,
+			parents: [],
+			sourceLessonId: SRC,
+			statementSettings: { classCode: '222222' },
+		});
+		expect(main?.statementSettings).not.toHaveProperty('classLesson');
+		for (const child of fake.list('statements').filter((s) => s.parentId === NEW)) {
+			expect(child.topParentId).toBe(NEW);
+			expect(child.parents).toEqual([NEW]);
+		}
+		expect(fake.read('classCodes/222222')).toEqual({ mainId: NEW, createdAt: NOW });
+		expect(await run(fake)).toEqual({ mainId: NEW, classCode: '222222', reused: true });
+	});
+
+	it('flag on: creates the lesson, its questions, paragraphs and code under the teacher home', async () => {
+		const fake = new FakeFirestore();
+		seedSource(fake);
+		const before = fake.list('statements').length;
+		const res = await run(fake, TEACHER, undefined, true);
 		expect(res).toEqual({ mainId: NEW, classCode: '222222', reused: false, homeId: HOME });
 		expect(fake.read('classCodes/222222')).toEqual({ mainId: NEW, createdAt: NOW });
 		// the teacher home + main + 3 questions + 2 paragraphs
@@ -319,14 +353,30 @@ describe('classCloneLesson', () => {
 		});
 	});
 
-	it('is idempotent on newMainId: the second call returns the same lesson', async () => {
+	it('flag on: is idempotent on newMainId: the second call returns the same lesson', async () => {
 		const fake = new FakeFirestore();
 		seedSource(fake);
-		await run(fake);
+		await run(fake, TEACHER, undefined, true);
 		const count = fake.list('statements').length;
-		const again = await run(fake);
+		const again = await run(fake, TEACHER, undefined, true);
 		expect(again).toEqual({ mainId: NEW, classCode: '222222', reused: true, homeId: HOME });
 		expect(fake.list('statements').length).toBe(count);
+	});
+
+	it("refuses a home id as the new lesson id (squatting a teacher's home)", async () => {
+		const fake = new FakeFirestore();
+		seedSource(fake);
+		for (const underHome of [false, true]) {
+			await expectCode(
+				run(fake, TEACHER, { sourceMainId: SRC, newMainId: 'jcTeacher_victim' }, underHome),
+				'invalid-argument',
+			);
+			await expectCode(
+				run(fake, TEACHER, { sourceMainId: SRC, newMainId: HOME }, underHome),
+				'invalid-argument',
+			);
+		}
+		expect(fake.read('statements/jcTeacher_victim')).toBeUndefined();
 	});
 
 	it('refuses a taken id that is not a copy of this source by this teacher', async () => {

@@ -1,9 +1,13 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
+import { isTopLevelSubscription } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { FakeFirestore } from '../../classroom/__tests__/fakeFirestore';
 import {
 	LIVE_WINDOW_MS,
 	formatMoveReport,
+	MIGRATION_BATCH_SIZE,
+	OPEN_WINDOW_MS,
+	activeSkipReason,
 	isLiveLesson,
 	lessonMode,
 	moveClassLessonsHome,
@@ -123,18 +127,24 @@ function seedWorld(fake: FakeFirestore): void {
 const noSleep = async (): Promise<void> => undefined;
 
 describe('moveClassLessonsHome helpers', () => {
-	it('tells a live lesson from one that can move', () => {
+	it('skips live (waiting room included) and open lessons; moves ended and stale ones', () => {
 		const lesson = (settings: Record<string, unknown>, touched: number) =>
 			({
 				lastUpdate: touched,
 				statementSettings: { lessonPlan: plan(settings) },
 			}) as unknown as Statement;
-		expect(isLiveLesson(lesson({ status: 'live' }, NOW - 1000), NOW)).toBe(true);
-		expect(isLiveLesson(lesson({ status: undefined }, NOW - 1000), NOW)).toBe(true);
-		expect(isLiveLesson(lesson({ status: 'paused' }, NOW - 1000), NOW)).toBe(true);
-		expect(isLiveLesson(lesson({ status: 'open' }, NOW - 1000), NOW)).toBe(false);
-		expect(isLiveLesson(lesson({ status: 'live', stepIndex: 0 }, NOW - 1000), NOW)).toBe(false);
-		expect(isLiveLesson(lesson({ status: 'live' }, NOW - LIVE_WINDOW_MS - 1), NOW)).toBe(false);
+		const reason = (settings: Record<string, unknown>, touched: number) =>
+			activeSkipReason(lesson(settings, touched), NOW);
+		expect(reason({ status: 'live' }, NOW - 1000)).toBe('live');
+		expect(reason({ status: undefined }, NOW - 1000)).toBe('live');
+		expect(reason({ status: 'paused' }, NOW - 1000)).toBe('live');
+		expect(reason({ status: 'live', stepIndex: 0 }, NOW - 1000)).toBe('live');
+		expect(reason({ status: 'open' }, NOW - 1000)).toBe('open');
+		expect(reason({ status: 'open' }, NOW - OPEN_WINDOW_MS + 1000)).toBe('open');
+		expect(reason({ status: 'open' }, NOW - OPEN_WINDOW_MS - 1)).toBeNull();
+		expect(reason({ status: 'live' }, NOW - LIVE_WINDOW_MS - 1)).toBeNull();
+		expect(reason({ status: 'ended' }, NOW - 1000)).toBeNull();
+		expect(isLiveLesson(lesson({ status: 'live', stepIndex: 0 }, NOW - 1000), NOW)).toBe(true);
 	});
 
 	it('selects old lessons to move and home lessons only to sweep', () => {
@@ -245,17 +255,21 @@ describe('moveClassLessonsHome', () => {
 			statementSettings: { classHome: { kind: 'teacher', uid: T } },
 		});
 		expect(fake.read(`statementsSubscribe/${T}--${H}`)).toMatchObject({ role: 'admin' });
+		// L's own subscriptions keep parentId 'top' and their embedded statement, so
+		// isTopLevelSubscription does not flip and the userFeed entries for L survive
 		expect(fake.read(`statementsSubscribe/${T}--${L}`)).toMatchObject({
-			parentId: H,
+			parentId: 'top',
 			topParentId: H,
 			openedInClass: NOW - 5,
-			statement: { parentId: H, topParentId: H, parents: [H] },
+			statement: { parentId: 'top', topParentId: L, parents: [] },
 		});
+		expect(isTopLevelSubscription(fake.read(`statementsSubscribe/${T}--${L}`) ?? {})).toBe(true);
 		expect(fake.read(`statementsSubscribe/s1--${L}`)).toMatchObject({
 			topParentId: H,
 			side: 30,
-			statement: { parentId: H, topParentId: H, parents: [H] },
+			statement: { parentId: 'top', topParentId: L },
 		});
+		expect(isTopLevelSubscription(fake.read(`statementsSubscribe/s1--${L}`) ?? {})).toBe(true);
 		expect(fake.read('statementsSubscribe/s1--q1')).toMatchObject({ parentId: L, topParentId: H });
 		expect(fake.read(`classPlans/${L}`)).toMatchObject({
 			planId: L,
@@ -315,6 +329,59 @@ describe('moveClassLessonsHome', () => {
 		expect(fake.read('statements/q1')?.parents).toEqual([H, L]);
 	});
 
+	it('reports an open lesson and a foreign plan as their own outcomes, writing nothing', async () => {
+		fake.seed(`statements/${L}`, {
+			...fake.read(`statements/${L}`),
+			lastUpdate: NOW - 1000,
+			statementSettings: { lessonPlan: plan({ status: 'open' }) },
+		});
+		const open = await run(true, { onlyLessonId: L });
+		expect(open.lessons[0].skipped).toBe('open');
+		expect(open.totals.skippedOpen).toBe(1);
+
+		const other = new FakeFirestore();
+		seedWorld(other);
+		other.seed(`classPlans/${L}`, { planId: L, title: 'mine now', ownerUid: 'squatter' });
+		const before = JSON.stringify([...other.docs.entries()]);
+		const report = await moveClassLessonsHome(other.asFirestore(), {
+			execute: true,
+			now: () => NOW,
+			sleep: noSleep,
+			onlyLessonId: L,
+		});
+		expect(report.lessons[0].skipped).toBe('plan-foreign');
+		expect(report.totals.skippedForeign).toBe(1);
+		expect(JSON.stringify([...other.docs.entries()])).toBe(before);
+		expect(formatMoveReport(report)).toContain('SKIPPED: plan-foreign');
+	});
+
+	it('writes in batches of the given size (default 100)', async () => {
+		expect(MIGRATION_BATCH_SIZE).toBe(100);
+		const sizes: number[] = [];
+		const firestore = fake.asFirestore();
+		const realBatch = firestore.batch.bind(firestore);
+		(firestore as unknown as { batch: () => unknown }).batch = () => {
+			const b = realBatch() as unknown as { commit: () => Promise<void>; size: number };
+			const commit = b.commit;
+
+			return Object.assign(b, {
+				commit: async () => {
+					sizes.push(b.size);
+					await commit();
+				},
+			});
+		};
+		await moveClassLessonsHome(firestore, {
+			execute: true,
+			now: () => NOW,
+			sleep: noSleep,
+			onlyLessonId: L,
+			batchSize: 2,
+		});
+		expect(sizes.length).toBeGreaterThan(1);
+		expect(Math.max(...sizes)).toBeLessThanOrEqual(2);
+	});
+
 	it('skips a lesson with no teacher and reports a squatted home as an error', async () => {
 		fake.seed(`statements/${L}`, {
 			...fake.read(`statements/${L}`),
@@ -326,14 +393,19 @@ describe('moveClassLessonsHome', () => {
 
 		const other = new FakeFirestore();
 		seedWorld(other);
-		other.seed(`statements/${H}`, { statementId: H, parentId: 'top', creatorId: 'squatter' });
+		other.seed(`statements/${H}`, {
+			statementId: H,
+			parentId: 'top',
+			creatorId: 'squatter',
+			statementSettings: { classHome: { kind: 'teacher', uid: T } },
+		});
 		const report = await moveClassLessonsHome(other.asFirestore(), {
 			execute: true,
 			now: () => NOW,
 			sleep: noSleep,
 			onlyLessonId: L,
 		});
-		expect(report.lessons[0]).toMatchObject({ skipped: 'error' });
+		expect(report.lessons[0]).toMatchObject({ skipped: 'home-foreign' });
 		expect(other.read(`statements/${L}`)?.parentId).toBe('top');
 	});
 });
