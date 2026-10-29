@@ -6,6 +6,7 @@ import {
 	Role,
 	StatementType,
 	getStatementSubscriptionId,
+	isClassHome,
 } from '@freedi/shared-types';
 import type { ClassTable, Statement, StatementSubscription } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
@@ -52,11 +53,17 @@ export function tableRef(db: Firestore, tableId: string) {
 	return db.collection(CLASS_TABLES_COLLECTION).doc(tableId);
 }
 
+/**
+ * The lesson (workspace). A class or teacher HOME is never a workspace: every
+ * classroom callable refuses one (it would key tables, codes and flags on the home).
+ */
 export async function loadMain(db: Firestore, mainId: string): Promise<Statement> {
 	const snap = await db.collection(Collections.statements).doc(mainId).get();
 	if (!snap.exists) throw new ClassroomError('not-found', 'Lesson not found');
+	const main = snap.data() as Statement;
+	if (isClassHome(main)) throw new ClassroomError('failed-precondition', 'This is not a lesson');
 
-	return snap.data() as Statement;
+	return main;
 }
 
 export async function isWorkspaceAdmin(
