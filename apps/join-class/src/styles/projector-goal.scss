@@ -1,0 +1,161 @@
+// =============================================================================
+// Projector goal pitch (Trello syAIyWy3) - the Agora goal and balls, ported to
+// the Proposals step. Coordinates are in cqw (1 = 1% of the pitch width, see
+// lib/classroom/goalBalls.ts: change one, change the other). Balls are placed
+// with --x / --y and glide between the field and the goal with a transition.
+// Type is in px like the rest of the projector (>= 32 px). Tokens only, BEM.
+// =============================================================================
+
+$goal-pitch-height: 38; // PITCH_HEIGHT
+$goal-left: 28; // GOAL_BOX.x
+$goal-width: 44;
+$goal-height: 15;
+$goal-fly: 900ms;
+
+.goal-pitch {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: min(100%, 1100px);
+  margin-inline: auto;
+
+  // the pitch: a pale field with the goal at the top centre
+  &__field {
+    position: relative;
+    height: #{$goal-pitch-height}cqw;
+    overflow: hidden;
+    border: 4px solid var(--paper-line);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--teal-100) 55%, var(--paper));
+  }
+
+  // posts and crossbar are the border; the goal line stays open
+  &__goal {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: #{$goal-left}cqw;
+    width: #{$goal-width}cqw;
+    height: #{$goal-height}cqw;
+    border: 0.7cqw solid var(--paper);
+    border-block-end: 0;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    box-shadow:
+      0 0 0 2px var(--teal-600),
+      inset 0 0 0 2px var(--teal-600);
+  }
+
+  // two crossing hairline grids: a net
+  &__net {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 0;
+    background:
+      repeating-linear-gradient(45deg, var(--teal-600) 0 1px, transparent 1px 1.2cqw),
+      repeating-linear-gradient(-45deg, var(--teal-600) 0 1px, transparent 1px 1.2cqw),
+      color-mix(in srgb, var(--teal-500) 22%, transparent);
+
+    &--bulge {
+      animation: goal-net-bulge 900ms ease-out both;
+    }
+  }
+
+  &__line {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    border-block-start: 2px dashed var(--teal-600);
+  }
+
+  &__ball {
+    position: absolute;
+    inset-block-start: calc(var(--y) * 1cqw - var(--size) * 0.5cqw);
+    inset-inline-start: calc(var(--x) * 1cqw - var(--size) * 0.5cqw);
+    width: calc(var(--size) * 1cqw);
+    height: calc(var(--size) * 1cqw);
+    color: var(--ink);
+    transition:
+      inset-block-start $goal-fly var(--ease-out, ease-out),
+      inset-inline-start $goal-fly var(--ease-out, ease-out),
+      width $goal-fly var(--ease-out, ease-out),
+      height $goal-fly var(--ease-out, ease-out);
+
+    &--scoring {
+      z-index: 1;
+      animation: goal-ball-kick 1200ms var(--ease-out, ease-out) both;
+    }
+  }
+
+  &__ball-icon {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--teal-600);
+  }
+
+  &__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+  }
+
+  &__count {
+    margin: 0;
+    font-size: 48px;
+    font-weight: var(--font-weight-bold, 700);
+    line-height: 1.1;
+    color: var(--ink-muted);
+  }
+
+  // the teacher's one tap that unlocks the whistle
+  &__sound {
+    min-height: 56px;
+    padding: var(--space-xs) var(--space-lg);
+    border: 3px solid var(--paper-line);
+    border-radius: var(--radius-full);
+    background: var(--paper-soft);
+    color: var(--ink);
+    font: inherit;
+    font-size: 32px;
+    font-weight: var(--font-weight-semibold, 600);
+    cursor: pointer;
+
+    &[aria-pressed='true'] {
+      border-color: var(--teal-500);
+      background: var(--teal-50);
+      color: var(--teal-600);
+    }
+
+    &:focus-visible {
+      outline: 4px solid var(--terra-600);
+      outline-offset: 2px;
+    }
+  }
+}
+
+@keyframes goal-ball-kick {
+  0% { transform: scale(1.9); }
+  60% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+@keyframes goal-net-bulge {
+  0% { transform: scaleY(1); }
+  35% { transform: scaleY(1.08); }
+  100% { transform: scaleY(1); }
+}
+
+// No flight, no billow: the ball is simply in the goal
+@media (prefers-reduced-motion: reduce) {
+  .goal-pitch__ball {
+    transition: none;
+  }
+
+  .goal-pitch__ball--scoring,
+  .goal-pitch__net--bulge {
+    animation: none;
+  }
+}

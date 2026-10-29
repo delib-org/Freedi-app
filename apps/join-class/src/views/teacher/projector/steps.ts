@@ -6,8 +6,7 @@ import { gateOf, sideClaimsOf, sideNamesOf, sideQuestionOf } from '@/lib/classro
 import { projectorData } from '@/lib/classroom/projectorData';
 import { ProjectorQr, QR_WAITING_SIZE } from './ProjectorBand';
 import { openingStage } from './OpeningStage';
-import { GateStage } from './GateStage';
-import { gateView } from './gateLogic';
+import { GoalPitch } from './GoalPitch';
 // >>> voteSummary BEGIN
 import { summaryStage, voteStage } from './VoteStage';
 // >>> voteSummary END
@@ -152,7 +151,11 @@ function proposals(): m.Vnode {
 				n: options.length,
 			}),
 		),
-		m(GateStage, { view: gateView(options, gate), showWaiting: false }),
+		m(GoalPitch, {
+			options,
+			gate,
+			lessonKey: `${projectorData.main?.statementId ?? ''}/${challenge?.statementId ?? ''}`,
+		}),
 		m(
 			'ul.projector-gate-bars',
 			gateBars(options, gate).map((bar) =>
