@@ -25,7 +25,9 @@ export type ClassroomErrorReason =
 	| 'proposal-too-long'
 	| 'already-proposed'
 	| 'own-questions-off'
-	| 'turns-done';
+	| 'turns-done'
+	| 'not-talking'
+	| 'already-moved';
 
 /**
  * A refusal the engine's pure logic raises. It carries the callable error code

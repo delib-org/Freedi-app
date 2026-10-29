@@ -8,6 +8,8 @@ import { instructionFor } from '@/lib/classroom/turnMoment';
 import type { FlowCtx, FlowParts } from './flowTypes';
 import { rateBody } from './RateScreen';
 import { RatedList } from './RatedList';
+import { moveOnView } from '@/lib/classroom/moveOn';
+import { MoveOn } from './MoveOn';
 import { Sheet } from './Sheet';
 import { nameOf, step as tableStep } from './tableTalkParts';
 import { TalkScreen, talkFinishAction } from './TalkScreen';
@@ -71,9 +73,16 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 			onFinish: () => tableStep(ctx, { action: 'finishSpeaking' }),
 			onPass: () => tableStep(ctx, { action: 'passSpeaking' }),
 		});
-		action = showsWriteButton(talking.kind)
-			? talkFinishAction(self.busy, () => ctx.goto('write'))
-			: null;
+		// Everyone spoke: write. Otherwise the table moves on when enough tablemates tap "move on".
+		if (talking.kind === 'done') {
+			action = talkFinishAction(self.busy, () => ctx.goto('write'));
+		} else if (showsWriteButton(talking.kind)) {
+			action = m(MoveOn, {
+				view: moveOnView(table, uid),
+				busy: self.busy,
+				onToggle: () => tableStep(ctx, { action: 'moveOn' }),
+			});
+		}
 	} else if (step === 'write') {
 		body = writePanel();
 		action = m(

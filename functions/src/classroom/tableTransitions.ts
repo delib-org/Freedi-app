@@ -22,6 +22,7 @@ import {
 	lessonOf,
 } from './tableGuards';
 import type { ActorRole, TransitionContext } from './tableGuards';
+import { moveOn } from './tableMoveOn';
 
 export { ALLOWED_FROM, actorRole };
 export type { ActorRole, TransitionContext };
@@ -324,6 +325,29 @@ export function applyTableAction(
 	action: ClassTableAction,
 	ctx: TransitionContext,
 ): ClassTable {
+	const next = applyAction(stored, action, ctx);
+	if (action.action === 'moveOn' || !next.moveOnUids) return next;
+
+	// The presses belong to one moment of the table: any move to another step, turn or question drops them.
+	return movedOn(stored, next) ? omit(next, ['moveOnUids']) : next;
+}
+
+/** The table left the moment its "move on" presses were made for. */
+function movedOn(before: ClassTable, after: ClassTable): boolean {
+	return (
+		before.step !== after.step ||
+		before.turn !== after.turn ||
+		before.questionId !== after.questionId ||
+		proposalsTurnOf(before) !== proposalsTurnOf(after) ||
+		before.spokenUids.length > after.spokenUids.length
+	);
+}
+
+function applyAction(
+	stored: ClassTable,
+	action: ClassTableAction,
+	ctx: TransitionContext,
+): ClassTable {
 	const role = actorRole(stored, ctx);
 	if (role === null) {
 		throw new ClassroomError('permission-denied', 'You are not seated at this table');
@@ -419,6 +443,8 @@ export function applyTableAction(
 			return passAsking(table, base, action, ctx);
 		case 'passSpeaking':
 			return passSpeaking(table, base, action, ctx);
+		case 'moveOn':
+			return moveOn(base, ctx);
 		case 'nextProposalsTurn':
 			// A tap that names an earlier turn arrived after the table moved on: nothing to do.
 			if (action.fromTurn !== undefined && action.fromTurn !== proposalsTurnOf(table)) return table;

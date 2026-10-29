@@ -16,6 +16,8 @@ import { passedAnswer, tableTalkState, type TableTalkState } from '@/lib/classro
 import { FlowError, type FlowCtx, type FlowParts } from './flowTypes';
 import { QuestionPick, type PickQuestion } from './QuestionPick';
 import { TurnActions } from './TurnActions';
+import { MoveOn } from './MoveOn';
+import { moveOnView } from '@/lib/classroom/moveOn';
 import { ErrorLine } from './ErrorLine';
 
 /**
@@ -269,6 +271,15 @@ function finishButton(ctx: FlowCtx): m.Children {
 	);
 }
 
+/** "Move on": with a tablemate gone or a phone dead the table moves on when enough of them tap (server-enforced). */
+function moveOnControl(ctx: FlowCtx): m.Children {
+	return m(MoveOn, {
+		view: moveOnView(ctx.table, ctx.uid),
+		busy: ctx.self.busy,
+		onToggle: () => step(ctx, { action: 'moveOn' }),
+	});
+}
+
 interface Screen {
 	status: string;
 	body: m.Children;
@@ -317,13 +328,18 @@ function talkScreen(ctx: FlowCtx, state: TableTalkState, question: string): Scre
 					clock(ctx),
 					note ? m('p.tt__note', note) : null,
 					firstNote,
+					moveOnControl(ctx),
 				]),
 			};
 		}
 		case 'W': {
 			const status = t('turn.others_first');
 
-			return { ...base, status, body: m('p.tt__status.tt__status--big', status) };
+			return {
+				...base,
+				status,
+				body: [m('p.tt__status.tt__status--big', status), moveOnControl(ctx)],
+			};
 		}
 		case 'A': {
 			const status = t('turn.who_answers');
@@ -331,7 +347,7 @@ function talkScreen(ctx: FlowCtx, state: TableTalkState, question: string): Scre
 			return {
 				...base,
 				status,
-				body: [m('p.tt__status.tt__status--big', status), firstNote],
+				body: [m('p.tt__status.tt__status--big', status), firstNote, moveOnControl(ctx)],
 				action: answerActions(ctx),
 			};
 		}
@@ -345,6 +361,7 @@ function talkScreen(ctx: FlowCtx, state: TableTalkState, question: string): Scre
 				body: [
 					m('p.tt__status.tt__status--big', { 'data-testid': 'answered' }, status),
 					m('p.tt__note', t('turn.who_answers')),
+					moveOnControl(ctx),
 				],
 			};
 		}

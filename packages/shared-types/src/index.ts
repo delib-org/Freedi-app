@@ -1100,6 +1100,13 @@ export {
   spokeThisTurn,
 } from './models/classroom/classroomLogic';
 export type { LessonSettingsHolder } from './models/classroom/classroomLogic';
+export {
+  MOVE_ON_PRESSES,
+  MOVE_ON_SMALL_TABLE,
+  moveOnNeeded,
+  moveOnPressers,
+  moveOnReached,
+} from './models/classroom/moveOnLogic';
 export type {
   SupportSubscription,
   CampSupport,

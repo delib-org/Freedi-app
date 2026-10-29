@@ -66,6 +66,9 @@ export const RACE_REASONS: ReadonlySet<string> = new Set([
 	'minute-over',
 	'not-speaker',
 	'turns-done',
+	// "Move on" tapped just after the table moved on without it.
+	'not-talking',
+	'already-moved',
 ]);
 
 /** Is this refusal one the screen swallows? */
