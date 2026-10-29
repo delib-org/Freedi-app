@@ -1388,6 +1388,47 @@ service cloud.firestore {
                 classLessonWritable(resource.data.statementId));
       }
 
+      // IDENTITY OF A SUBSCRIPTION. Every admin check (statements isAdmin(),
+      // checkTopParentAdmin(), this block's isAdmin(), the server's
+      // isWorkspaceAdmin, covenant membership) finds a subscription by its DOC
+      // ID, {uid}--{statementId}; the access checks here read its FIELDS. They
+      // must agree, or a doc judged against one statement grants admin over
+      // another (way A: create {uid}--X holding the fields of a statement the
+      // writer owns; way B: move statementId onto X; way C: promote an old
+      // mismatched member doc). Every client builds the id as
+      // `${uid}--${statementId}` and never moves statementId / userId.
+      function userUidOf(d) {
+        return d.get('user', null) is map ? d.user.get('uid', null) : null;
+      }
+
+      function createIdentityOk() {
+        let d = request.resource.data;
+        return d.get('statementId', null) is string &&
+               statementSubId == request.auth.uid + '--' + d.statementId &&
+               (d.get('user', null) == null || userUidOf(d) == request.auth.uid);
+      }
+
+      // After the write, a doc carrying both userId and statementId must be
+      // exactly {userId}--{statementId}, so a doc whose id already disagrees
+      // (written before this rule) can no longer be updated, e.g. promoted.
+      // statementId / userId never change; a legacy doc missing them may gain
+      // them only together with the other, i.e. only the exact values its id
+      // names. user.uid may stay as it is (server copies store the statement's
+      // creator there) or become userId.
+      function updateIdentityOk() {
+        let before = resource.data;
+        let after = request.resource.data;
+        let beforeStatement = before.get('statementId', null);
+        let afterStatement = after.get('statementId', null);
+        let beforeUser = before.get('userId', null);
+        let afterUser = after.get('userId', null);
+        let complete = afterUser is string && afterStatement is string;
+        return (afterStatement == beforeStatement || (beforeStatement == null && complete)) &&
+               (afterUser == beforeUser || (beforeUser == null && complete)) &&
+               (!complete || statementSubId == afterUser + '--' + afterStatement) &&
+               (userUidOf(after) == userUidOf(before) || userUidOf(after) == afterUser);
+      }
+
       allow read: if request.auth.uid != null;
 
       // For create
@@ -1401,6 +1442,7 @@ service cloud.firestore {
       // and self-grant statement-admin (edit protected settings, delete, ban).
       allow create: if request.auth.uid != null &&
                      request.resource.data.userId == request.auth.uid &&
+                     createIdentityOk() &&
                      (isAdminOrCreator() ||
                       (request.resource.data.role != 'admin' &&
                        request.resource.data.role != 'statement-creator' &&
@@ -1414,6 +1456,7 @@ service cloud.firestore {
       // For update
       allow update: if request.auth.uid != null &&
                      !isTryingToBanProtectedUser() &&
+                     updateIdentityOk() &&
                      (isAdminOrCreator() ||
                       (isSubscriber() &&
                         classUpdateOk() &&
