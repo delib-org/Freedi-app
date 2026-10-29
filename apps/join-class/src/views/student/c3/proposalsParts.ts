@@ -2,7 +2,7 @@ import m from 'mithril';
 import { t } from '@/lib/i18n';
 import { listableItems } from '@/lib/classroom/c3Logic';
 import { setImproveHandler } from '@/lib/classroom/replyUi';
-import { proposalsTalkState } from '@/lib/classroom/proposalsTurn';
+import { proposalsTalkState, showsWriteButton } from '@/lib/classroom/proposalsTurn';
 import { serverNow } from '@/lib/classroom/serverClock';
 import { instructionFor } from '@/lib/classroom/turnMoment';
 import type { FlowCtx, FlowParts } from './flowTypes';
@@ -60,6 +60,7 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 	let body: m.Children;
 	let action: m.Children = null;
 	if (step === 'talk') {
+		const talking = proposalsTalkState(table, uid, main, serverNow());
 		body = m(TalkScreen, {
 			table,
 			uid,
@@ -70,7 +71,9 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 			onFinish: () => tableStep(ctx, { action: 'finishSpeaking' }),
 			onPass: () => tableStep(ctx, { action: 'passSpeaking' }),
 		});
-		action = talkFinishAction(self.busy, () => ctx.goto('write'));
+		action = showsWriteButton(talking.kind)
+			? talkFinishAction(self.busy, () => ctx.goto('write'))
+			: null;
 	} else if (step === 'write') {
 		body = writePanel();
 		action = m(

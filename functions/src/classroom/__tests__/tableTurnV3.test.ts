@@ -388,6 +388,13 @@ describe('claimSpeaker at Proposals (a fresh minute for every speaker)', () => {
 		expect(run(running, { action: 'finishSpeaking' }, atProposals('b')).speakerEndsAt).toBe(NOW);
 	});
 
+	it('"I\'m done" only ends the minute: the table stays at talk, never moves to write (FgqfUtG2)', () => {
+		const running = open({ speakerUid: 'b', speakerEndsAt: NOW + 30_000 });
+		const next = run(running, { action: 'finishSpeaking' }, atProposals('b'));
+		expect(next.step).toBe(running.step);
+		expect(next.spokenUids).toContain('b');
+	});
+
 	it('still needs a question at Table talk', () => {
 		expect(refusal(table({ step: 'talk' }), { action: 'claimSpeaker' }, as('b')).code).toBe(
 			'failed-precondition',
