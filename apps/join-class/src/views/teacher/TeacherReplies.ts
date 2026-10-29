@@ -28,7 +28,7 @@ interface TeacherRepliesState {
 	pending: Map<string, string>;
 	failed: Set<string>;
 	stop: Unsubscribe | null;
-	topParentId: string | null;
+	lessonId: string | null;
 }
 
 const state: TeacherRepliesState = {
@@ -39,16 +39,16 @@ const state: TeacherRepliesState = {
 	pending: new Map(),
 	failed: new Set(),
 	stop: null,
-	topParentId: null,
+	lessonId: null,
 };
 
 /** Start (or keep) the lesson's replies listener. */
-export function watchTeacherReplies(topParentId: string): void {
-	if (state.topParentId === topParentId && state.stop) return;
+export function watchTeacherReplies(lessonId: string): void {
+	if (state.lessonId === lessonId && state.stop) return;
 	stopTeacherReplies();
-	state.topParentId = topParentId;
+	state.lessonId = lessonId;
 	state.stop = listenLessonReplies(
-		topParentId,
+		lessonId,
 		(list) => {
 			const next = new Map<string, Statement[]>();
 			for (const reply of list)
@@ -61,7 +61,7 @@ export function watchTeacherReplies(topParentId: string): void {
 		(error) =>
 			console.error(
 				'[TeacherReplies] listener error',
-				{ operation: 'teacherReplies.listen', topParentId },
+				{ operation: 'teacherReplies.listen', lessonId },
 				error,
 			),
 	);
@@ -70,7 +70,7 @@ export function watchTeacherReplies(topParentId: string): void {
 export function stopTeacherReplies(): void {
 	state.stop?.();
 	state.stop = null;
-	state.topParentId = null;
+	state.lessonId = null;
 	state.byProposal = new Map();
 	state.known = new Map();
 	state.open = new Set();

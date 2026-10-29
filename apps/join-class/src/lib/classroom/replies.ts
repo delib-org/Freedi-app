@@ -49,7 +49,7 @@ export function listenProposalReplies(
 
 /** Every reply to a proposal I wrote in this lesson (one listener per author phone). */
 export function listenRepliesToMe(
-	topParentId: string,
+	lessonId: string,
 	uid: string,
 	onData: (list: Statement[]) => void,
 	onError?: (error: Error) => void,
@@ -58,7 +58,7 @@ export function listenRepliesToMe(
 		LISTENER.mine,
 		query(
 			collection(db, Collections.statements),
-			where('topParentId', '==', topParentId),
+			where('parents', 'array-contains', lessonId),
 			where('classReply.proposalCreatorId', '==', uid),
 		),
 		(snap) => onData(replies(snap.docs)),
@@ -68,7 +68,7 @@ export function listenRepliesToMe(
 
 /** Every reply in the lesson, hidden ones included (the teacher's "what they wrote"). */
 export function listenLessonReplies(
-	topParentId: string,
+	lessonId: string,
 	onData: (list: Statement[]) => void,
 	onError?: (error: Error) => void,
 ): Unsubscribe {
@@ -76,7 +76,7 @@ export function listenLessonReplies(
 		LISTENER.lesson,
 		query(
 			collection(db, Collections.statements),
-			where('topParentId', '==', topParentId),
+			where('parents', 'array-contains', lessonId),
 			where('statementType', '==', StatementType.statement),
 		),
 		(snap) => onData(replies(snap.docs)),

@@ -24,7 +24,7 @@ export class FlowFeed {
 	private optionsStop: Unsubscribe | null = null;
 	private matesStop: Unsubscribe | null = null;
 	private ratingsStop: Unsubscribe | null = null;
-	private topParentId: string | null = null;
+	private lessonId: string | null = null;
 	private tableId: string | null = null;
 	private ratingKey = '';
 
@@ -39,13 +39,12 @@ export class FlowFeed {
 		ratingParents: readonly string[],
 		withMates = true,
 	): void {
-		const top = main.topParentId || mainId;
-		if (top !== this.topParentId) {
+		if (mainId !== this.lessonId) {
 			this.optionsStop?.();
-			this.topParentId = top;
+			this.lessonId = mainId;
 			this.optionsLoaded = false;
 			this.optionsStop = listenClassOptions(
-				top,
+				mainId,
 				(options) => {
 					this.options = options;
 					this.optionsLoaded = true;
@@ -115,7 +114,7 @@ export class FlowFeed {
 		this.optionsStop = null;
 		this.matesStop = null;
 		this.ratingsStop = null;
-		this.topParentId = null;
+		this.lessonId = null;
 		this.tableId = null;
 		this.ratingKey = '';
 	}

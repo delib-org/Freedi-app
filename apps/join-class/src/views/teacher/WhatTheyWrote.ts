@@ -2,7 +2,6 @@ import m from 'mithril';
 import { t } from '@/lib/i18n';
 import type { QuestionGroup, WrittenText } from '@/lib/classroom/textsHelpers';
 import { consoleState } from './consoleState';
-import { getMainStatement } from '@/lib/store';
 import { FlagsPanel } from './FlagsPanel';
 import { HideControl } from './HideControl';
 import { ProposalBlock } from './ProposalBlock';
@@ -61,8 +60,7 @@ function questionHead(group: QuestionGroup): m.Vnode {
 
 export const WhatTheyWrote: m.Component<WhatTheyWroteAttrs> = {
 	oninit() {
-		const main = getMainStatement();
-		watchTeacherReplies(main?.topParentId || consoleState.mainId);
+		watchTeacherReplies(consoleState.mainId);
 	},
 
 	onremove() {

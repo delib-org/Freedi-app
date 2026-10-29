@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { isClassHome, isHomeId } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { ensureUser } from '@/lib/user';
 import {
@@ -25,6 +26,8 @@ import type { Unsubscribe } from '@/lib/firebase';
 
 let loading = true;
 let failed = false;
+/** The id is a class or teacher home (teachers only): never a lesson, never loaded. */
+let homeId = false;
 let mainUnsub: Unsubscribe | null = null;
 let subUnsub: Unsubscribe | null = null;
 
@@ -62,10 +65,19 @@ export const MainHub: m.Component = {
 	async oninit() {
 		setFollowLessonLanguage(true);
 		failed = false;
+		homeId = false;
 		const mainId = m.route.param('mid');
 		if (!mainId) {
 			loading = false;
 			m.route.set('/', undefined, { replace: true });
+
+			return;
+		}
+		if (isHomeId(mainId)) {
+			// the rules refuse a student the home anyway; say "not a lesson" without asking
+			homeId = true;
+			loading = false;
+			m.redraw();
 
 			return;
 		}
@@ -100,11 +112,12 @@ export const MainHub: m.Component = {
 	},
 
 	view() {
+		if (homeId) return notALesson();
 		if (loading) return m(SplashLoader);
 		if (failed) return m('.main-hub', m('.main-hub__empty', t('solutions.error.failed')));
 
 		const main = getMainStatement();
-		if (!main?.statementSettings?.lessonPlan) return notALesson();
+		if (!main?.statementSettings?.lessonPlan || isClassHome(main)) return notALesson();
 
 		if (sendsToConsole(main)) return m(SplashLoader);
 		if (useStudentStage(main, isAdmin(), m.route.param('student'))) {
