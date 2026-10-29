@@ -554,6 +554,30 @@ describe('class-path hardening', () => {
 		expect(admins()).toHaveLength(26);
 	});
 
+	it('ignores a subscription whose id disagrees with its fields (forged admin)', async () => {
+		const fake = new FakeFirestore();
+		seedPlanAndGame(fake);
+		seedClass(fake, 'active', [TEACHER.uid, CO]);
+		// way B: CO's doc of another statement, moved to claim the home
+		fake.seed(`statementsSubscribe/${CO}--other`, {
+			userId: CO,
+			statementId: CLASS_HOME,
+			role: 'admin',
+			user: { uid: CO },
+		});
+		// an outsider's forged doc on the home: not a teacher, but not genuine either
+		fake.seed(`statementsSubscribe/evil--elsewhere`, {
+			userId: 'evil',
+			statementId: CLASS_HOME,
+			role: 'admin',
+		});
+		await startLesson(fake.asFirestore(), TEACHER, req(), deps());
+		// CO's genuine admin doc is written (the forged one did not count)
+		expect(fake.read(`statementsSubscribe/${CO}--${CLASS_HOME}`)?.role).toBe('admin');
+		// nothing was "revoked" at the forged ids' owners' home ids
+		expect(fake.read('statementsSubscribe/evil--elsewhere')).toBeDefined();
+	});
+
 	it('never revokes a system admin in the re-sync (4)', async () => {
 		const fake = new FakeFirestore();
 		seedPlanAndGame(fake);

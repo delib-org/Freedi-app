@@ -22,6 +22,7 @@ import { safeParse } from 'valibot';
 import { ClassroomError } from './classroomErrors';
 import { subscriptionDocId } from './classroomAccess';
 import { commitInBatches } from './batchedWrites';
+import { genuineSubscriberUid } from '../utils/subscriptionIdentity';
 
 /**
  * join-class HOMES (IA docs/ia/join-class-lesson-plan.md section 2): the top-level
@@ -353,7 +354,9 @@ export async function readHomeAdmins(
 	const roles = new Map<string, string>();
 	for (const doc of snap.docs) {
 		const sub = doc.data() as StatementSubscription;
-		const uid = sub.userId || sub.user?.uid;
+		// Only a doc whose id is `${userId}--${homeId}` is that person's (the id is
+		// what every admin check reads); the uid comes from userId, never user.uid.
+		const uid = genuineSubscriberUid(doc.id, sub, target.homeId);
 		if (uid) roles.set(uid, String(sub.role));
 	}
 

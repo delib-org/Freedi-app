@@ -9,7 +9,6 @@ import {
 	StatementType,
 	Role,
 	StatementSubscription,
-	StatementSubscriptionSchema,
 	createSubscription,
 	getStatementSubscriptionId,
 	SimpleStatement,
@@ -28,6 +27,7 @@ import { generateDescriptionFromChildren } from './helpers';
 import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
 import { onClassOptionCreated } from './classroom/autoEvaluations';
 import { logError } from './utils/errorHandling';
+import { genuineSubscriberUid, trustedAdminUids } from './utils/subscriptionIdentity';
 import {
 	computeHybridVector,
 	isHybridClusteringEnabled,
@@ -166,10 +166,8 @@ async function setupAdminsForStatement(statement: Statement): Promise<void> {
 				.where('role', '==', Role.admin)
 				.get();
 
-			topAdminsDB.docs.forEach((doc) => {
-				const adminSub = parse(StatementSubscriptionSchema, doc.data());
-				adminsToAdd.add(adminSub.user.uid);
-			});
+			// Only genuine docs ({userId}--{topParentId}); the uid comes from userId.
+			trustedAdminUids(topAdminsDB.docs, topParentId).forEach((uid) => adminsToAdd.add(uid));
 		}
 
 		// Add direct parent admins (if applicable)
@@ -181,10 +179,7 @@ async function setupAdminsForStatement(statement: Statement): Promise<void> {
 				.where('role', '==', Role.admin)
 				.get();
 
-			parentAdminsDB.docs.forEach((doc) => {
-				const adminSub = parse(StatementSubscriptionSchema, doc.data());
-				adminsToAdd.add(adminSub.user.uid);
-			});
+			trustedAdminUids(parentAdminsDB.docs, parentId).forEach((uid) => adminsToAdd.add(uid));
 		}
 
 		// Batch create all admin subscriptions
@@ -230,10 +225,12 @@ async function setupAdminsForStatement(statement: Statement): Promise<void> {
 				.where('statementId', 'in', [topParentId, parentId].filter(Boolean))
 				.get();
 
-			const userMap = new Map();
+			const userMap = new Map<string, StatementSubscription['user']>();
 			existingSubscriptions.docs.forEach((doc) => {
 				const sub = doc.data() as StatementSubscription;
-				userMap.set(sub.user.uid, sub.user);
+				const uid = genuineSubscriberUid(doc.id, sub, sub.statementId);
+				// Keyed by the genuine userId; the user object gets that uid.
+				if (uid) userMap.set(uid, { ...(sub.user ?? { displayName: '' }), uid });
 			});
 
 			otherAdminIds.forEach((adminId) => {
