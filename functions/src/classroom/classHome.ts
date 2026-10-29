@@ -21,6 +21,7 @@ import type {
 import { safeParse } from 'valibot';
 import { ClassroomError } from './classroomErrors';
 import { subscriptionDocId } from './classroomAccess';
+import { commitInBatches } from './batchedWrites';
 
 /**
  * join-class HOMES (IA docs/ia/join-class-lesson-plan.md section 2): the top-level
@@ -37,6 +38,12 @@ export const AGORA_CLASSES_COLLECTION = 'agoraClasses';
 /** Same cap as setupAdminsForStatement's inherited admins. */
 export const CLASS_HOME_MAX_ADMINS = 20;
 const ACTIVE = 'active';
+/** Roles that make a subscription an admin one (the rules' isAdmin()). */
+const HOME_ADMIN_ROLES: ReadonlySet<string> = new Set([
+	Role.admin,
+	Role.creator,
+	'statement-creator',
+]);
 
 export interface HomeTarget {
 	homeId: string;
@@ -47,6 +54,14 @@ export interface HomeTarget {
 	/** The class, when the home is a class home. */
 	classId: string | null;
 	className: string;
+	/**
+	 * Who may have created a genuine existing home: the teacher (teacher home), or
+	 * the class's current teachers (class home). A pre-existing doc made by anyone
+	 * else is a squat (see isHomeOf).
+	 */
+	trustedCreatorUids: string[];
+	/** agoraClasses.joinClassHomeId as read (server-written only; clients cannot write classes). */
+	linkedHomeId: string | null;
 }
 
 /** Display names of teachers, for the home's admin subscriptions. Injected in tests. */
@@ -70,6 +85,8 @@ export function teacherHomeTarget(actor: User): HomeTarget {
 		adminUids: [actor.uid],
 		classId: null,
 		className: '',
+		trustedCreatorUids: [actor.uid],
+		linkedHomeId: null,
 	};
 }
 
@@ -102,6 +119,8 @@ export async function classHomeTarget(
 		adminUids: [actorUid, ...others].slice(0, CLASS_HOME_MAX_ADMINS + 1),
 		classId,
 		className: cls.name?.trim() ?? '',
+		trustedCreatorUids: teacherIds.filter((uid) => typeof uid === 'string' && uid),
+		linkedHomeId: typeof cls.joinClassHomeId === 'string' ? cls.joinClassHomeId : null,
 	};
 }
 
@@ -128,16 +147,34 @@ export function buildHomeStatement(target: HomeTarget, creator: User, now: numbe
 	};
 }
 
-/** True when an existing statement at a home id really is that home (not a squat). */
+/**
+ * True when an existing statement at a home id really is that home, not a squat.
+ * The link (kind, classId / uid) must match AND the creator must be trusted:
+ * - teacher home: created by that teacher (a client can only create as itself,
+ *   so nobody else can have made `jcTeacher_{uid}` with creatorId = uid);
+ * - class home: the class already points at it (`joinClassHomeId`, written only
+ *   by the server in the same transaction that creates the home), or it was made
+ *   by one of the class's current teachers.
+ * Under the rules in force before the lesson-plan rules ship, a client could
+ * create `jcTeacher_X` / `jcClass_X` with a classHome; these checks refuse it.
+ */
 export function isHomeOf(existing: Statement, target: HomeTarget): boolean {
 	const link = existing.statementSettings?.classHome;
+	const creator = existing.creatorId || existing.creator?.uid || '';
+	const linked = !!target.classId && target.linkedHomeId === target.homeId;
+	const trusted =
+		target.link.kind === CLASS_HOME_KIND.teacher
+			? creator === target.link.uid
+			: linked || target.trustedCreatorUids.includes(creator);
 
 	return (
+		existing.statementId === target.homeId &&
 		existing.parentId === 'top' &&
 		!!link &&
 		link.kind === target.link.kind &&
 		(link.classId ?? null) === (target.link.classId ?? null) &&
-		(link.uid ?? null) === (target.link.uid ?? null)
+		(link.uid ?? null) === (target.link.uid ?? null) &&
+		trusted
 	);
 }
 
@@ -180,19 +217,29 @@ export interface EnsureHomeArgs {
 	target: HomeTarget;
 	/** The home as read in this transaction (undefined = missing). */
 	existing: Statement | undefined;
-	/** Existing subscriptions of the admins on the home, read in this transaction. */
-	existingAdmins: ReadonlySet<string>;
+	/** Every subscription on the home, by uid -> role, read in this transaction. */
+	existingAdmins: ReadonlyMap<string, string>;
 	creator: User;
 	users: readonly User[];
 	now: number;
 }
 
+export interface WrittenHome {
+	home: Statement;
+	/** Admins taken off the home: no longer among its teachers. */
+	revokedUids: string[];
+}
+
 /**
  * Writes (inside the caller's transaction, after all its reads) the home when it is
- * missing, an admin subscription for every teacher who lacks one (upsert: an existing
- * subscription keeps its fields), and the class's `joinClassHomeId`. Returns the home.
+ * missing, and RE-SYNCS its admins to the target's teachers: an admin subscription
+ * for every teacher who lacks one (upsert: an existing one keeps its fields), and
+ * the removal of every admin subscription of someone no longer a teacher (a teacher
+ * taken off the class). Also the class's `joinClassHomeId`. The caller revokes the
+ * removed teachers' copied admin subscriptions under the home afterwards
+ * (revokeHomeAdminCopies), outside the transaction.
  */
-export function writeHome(args: EnsureHomeArgs): Statement {
+export function writeHome(args: EnsureHomeArgs): WrittenHome {
 	const { firestore, tx, target, existing, creator, now } = args;
 	if (existing && !isHomeOf(existing, target)) {
 		throw new ClassroomError('failed-precondition', 'That home id is taken');
@@ -202,15 +249,22 @@ export function writeHome(args: EnsureHomeArgs): Statement {
 		tx.create(firestore.collection(Collections.statements).doc(target.homeId), home);
 	}
 	const subs = firestore.collection(Collections.statementsSubscribe);
+	const keep = new Set(target.adminUids);
+	const revokedUids: string[] = [];
+	for (const [uid, role] of args.existingAdmins) {
+		if (keep.has(uid) || !HOME_ADMIN_ROLES.has(role)) continue;
+		tx.delete(subs.doc(subscriptionDocId(target.homeId, uid)));
+		revokedUids.push(uid);
+	}
 	for (const user of args.users) {
-		if (args.existingAdmins.has(user.uid)) continue;
+		if (args.existingAdmins.get(user.uid) === Role.admin) continue;
 		tx.set(
 			subs.doc(subscriptionDocId(target.homeId, user.uid)),
 			homeAdminSubscription(home, user, now),
 			{ merge: true },
 		);
 	}
-	if (target.classId) {
+	if (target.classId && target.linkedHomeId !== target.homeId) {
 		tx.set(
 			firestore.collection(AGORA_CLASSES_COLLECTION).doc(target.classId),
 			{ joinClassHomeId: target.homeId },
@@ -218,24 +272,75 @@ export function writeHome(args: EnsureHomeArgs): Statement {
 		);
 	}
 
-	return home;
+	return { home, revokedUids };
 }
 
-/** Reads, inside a transaction, which of the target's teachers already are admins of the home. */
+/** Reads, inside a transaction, every subscription on the home: uid -> role. */
 export async function readHomeAdmins(
 	firestore: Firestore,
 	tx: Transaction,
 	target: HomeTarget,
-): Promise<Set<string>> {
-	const subs = firestore.collection(Collections.statementsSubscribe);
-	const snaps = await tx.getAll(
-		...target.adminUids.map((uid) => subs.doc(subscriptionDocId(target.homeId, uid))),
+): Promise<Map<string, string>> {
+	const snap = await tx.get(
+		firestore.collection(Collections.statementsSubscribe).where('statementId', '==', target.homeId),
 	);
-	const admins = new Set<string>();
-	snaps.forEach((snap, i) => {
-		const role = snap.exists ? (snap.data() as StatementSubscription).role : undefined;
-		if (role === Role.admin) admins.add(target.adminUids[i]);
-	});
+	const roles = new Map<string, string>();
+	for (const doc of snap.docs) {
+		const sub = doc.data() as StatementSubscription;
+		const uid = sub.userId || sub.user?.uid;
+		if (uid) roles.set(uid, String(sub.role));
+	}
 
-	return admins;
+	return roles;
+}
+
+/**
+ * Takes a teacher off a home: deletes their admin subscription on the home and the
+ * admin subscriptions setupAdminsForStatement copied onto statements under it
+ * (`topParentId == homeId`), except on statements they created themselves (they
+ * stay that statement's creator). Idempotent; batched. Returns how many were deleted.
+ */
+export async function revokeHomeAdminCopies(
+	firestore: Firestore,
+	homeId: string,
+	uid: string,
+): Promise<number> {
+	const subs = firestore.collection(Collections.statementsSubscribe);
+	const copied = await subs.where('userId', '==', uid).where('topParentId', '==', homeId).get();
+	const refs = copied.docs
+		.filter((d) => {
+			const sub = d.data() as StatementSubscription;
+			const creator = (sub.statement as { creatorId?: string } | undefined)?.creatorId;
+
+			return (
+				HOME_ADMIN_ROLES.has(String(sub.role)) && (sub.statementId === homeId || creator !== uid)
+			);
+		})
+		.map((d) => d.ref);
+	const home = subs.doc(subscriptionDocId(homeId, uid));
+	if (!refs.some((r) => r.path === home.path)) refs.push(home);
+	await commitInBatches(
+		firestore,
+		refs.map((ref) => ({ kind: 'delete' as const, ref })),
+	);
+
+	return refs.length;
+}
+
+/**
+ * A teacher taken off an Agora class (removeClassTeacher): when the class has a
+ * join-class home, revoke their admin there and the admin copies under it, so
+ * they keep no update/delete over the class's lessons (checkTopParentAdmin) and
+ * are no longer copied onto new posts. No home yet: nothing to do. Idempotent.
+ */
+export async function revokeClassHomeTeacher(
+	firestore: Firestore,
+	classId: string,
+	uid: string,
+): Promise<number> {
+	const snap = await firestore.collection(AGORA_CLASSES_COLLECTION).doc(classId).get();
+	const homeId = snap.exists ? (snap.data() as AgoraClass).joinClassHomeId : undefined;
+	if (!homeId) return 0;
+
+	return revokeHomeAdminCopies(firestore, homeId, uid);
 }

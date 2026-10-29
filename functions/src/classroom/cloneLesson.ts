@@ -113,6 +113,22 @@ export function buildLessonFromSnapshot(
 	return built;
 }
 
+/**
+ * The same lesson as an OLD top-level lesson (parentId 'top', topParentId = itself,
+ * its questions and paragraphs `parents [lesson]`): what classCloneLesson made
+ * before lessons moved under homes. Used while CLONE_UNDER_HOME is false.
+ */
+export function asTopLevelLesson(lesson: LessonStatements): LessonStatements {
+	const lessonId = lesson.main.statementId;
+	const child = (s: Statement): Statement => ({ ...s, topParentId: lessonId, parents: [lessonId] });
+
+	return {
+		main: { ...lesson.main, parentId: 'top', topParentId: lessonId, parents: [] },
+		questions: lesson.questions.map(child),
+		paragraphs: lesson.paragraphs.map(child),
+	};
+}
+
 /** A copy of a lesson's plan (snapshot then lesson) under `homeId`. */
 export function buildLessonCopy(input: LessonCopyInput): LessonCopy {
 	const { source } = input;

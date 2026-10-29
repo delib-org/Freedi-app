@@ -768,9 +768,13 @@ service cloud.firestore {
       allow read: if request.auth != null &&
                      resource != null &&
                      resource.data.ownerUid == request.auth.uid;
+      // A plan id that is a statement id (an old lesson's own plan, IA 11.11) is
+      // made only by the server (classSnapshotGame / the migration): otherwise
+      // anyone could take classPlans/{someone's lesson id} first.
       allow create: if request.auth != null &&
                        isValidClassPlan() &&
-                       request.resource.data.ownerUid == request.auth.uid;
+                       request.resource.data.ownerUid == request.auth.uid &&
+                       !exists(/databases/$(database)/documents/statements/$(planId));
       allow update: if request.auth != null &&
                        resource != null &&
                        resource.data.ownerUid == request.auth.uid &&
