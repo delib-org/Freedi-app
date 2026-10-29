@@ -61,8 +61,15 @@ export async function freezeBallot(
 	if (topN !== undefined && (typeof topN !== 'number' || !Number.isFinite(topN) || topN < 1)) {
 		throw new ClassroomError('invalid-argument', 'topN must be a positive number');
 	}
-	const main = await assertWorkspaceAdmin(firestore, mainId, actorUid);
-	const challenge = await loadChallenge(firestore, mainId);
+	// The permission check (main + subscription reads) and the challenge lookup (a query over the
+	// lesson's questions) do not depend on each other: run them side by side so the teacher's
+	// press pays for the slower one, not both. Nothing is written before both have passed, and a
+	// refused caller still gets permission-denied first.
+	const adminCheck = assertWorkspaceAdmin(firestore, mainId, actorUid);
+	const challengeLookup = loadChallenge(firestore, mainId);
+	challengeLookup.catch(() => undefined); // surfaced below, after the admin check
+	const main = await adminCheck;
+	const challenge = await challengeLookup;
 	if (challenge.statementSettings?.ballot?.closedAt) {
 		throw new ClassroomError('failed-precondition', 'The vote is already closed');
 	}
