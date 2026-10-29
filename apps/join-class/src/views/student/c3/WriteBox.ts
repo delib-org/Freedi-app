@@ -19,6 +19,9 @@ export interface WriteBoxAttrs {
 	testId?: string;
 }
 
+/** Waits for the on-screen keyboard to finish rising before the box is centred. */
+const FOCUS_SCROLL_DELAY_MS = 300;
+
 /** A textarea with its counter and, once sent, a teal "Sent" line. */
 export const WriteBox: m.Component<WriteBoxAttrs> = {
 	view({ attrs }) {
@@ -36,6 +39,14 @@ export const WriteBox: m.Component<WriteBoxAttrs> = {
 					readOnly: readOnly ? true : undefined,
 					placeholder: attrs.placeholder,
 					oninput: (event: Event) => attrs.onInput((event.target as HTMLTextAreaElement).value),
+					// The phone keyboard rises over the bottom; bring the box back above the pinned send bar.
+					onfocus: (event: FocusEvent) => {
+						const area = event.target as HTMLTextAreaElement;
+						setTimeout(
+							() => area.scrollIntoView({ block: 'center', behavior: 'auto' }),
+							FOCUS_SCROLL_DELAY_MS,
+						);
+					},
 				}),
 			]),
 			readOnly

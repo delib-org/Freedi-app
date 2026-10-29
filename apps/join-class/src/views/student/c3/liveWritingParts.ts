@@ -3,6 +3,8 @@ import type { ClassTable } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { LIVE_DRAFT_STALE_MS, getLiveDrafts } from '@/lib/liveDrafts';
 import {
+	SENT_TOAST_MS,
+	closesWatchOn,
 	liveLineLabel,
 	pickerUids,
 	resolveEnd,
@@ -130,30 +132,40 @@ export function liveWritingParts(input: LiveWritingInput): LiveWritingParts {
 					watch.lastUpdate,
 					feed.options.filter((o) => o.parentId === challengeId),
 				);
-		if (state !== 'live' && watch.endAnnounced !== state) {
+		if (closesWatchOn(state)) {
+			// The writer sent: every watcher goes back to their own screen.
+			const text = t('answer.watch_sent', { name: watch.name });
+			self.liveMessage = text;
+			self.sentToast = { text, until: now + SENT_TOAST_MS };
+			self.watch = null;
+			setTimeout(() => m.redraw(), SENT_TOAST_MS + STALE_REDRAW_SLACK_MS);
+		} else if (state !== 'live' && watch.endAnnounced !== state) {
 			watch.endAnnounced = state;
 			self.liveMessage = t(state === 'sent' ? 'answer.watch_sent' : 'answer.watch_stopped', {
 				name: watch.name,
 			});
 		}
-		const picks = pickerUids(writers, watch.uid, table.memberUids).map((id) => ({
-			uid: id,
-			name: id === watch.uid ? watch.name : (writers.find((w) => w.uid === id)?.name ?? someone),
-		}));
-		overlay = m(WatchView, {
-			uid: watch.uid,
-			name: watch.name,
-			text: watch.text,
-			state,
-			picks,
-			onPick: (id: string) => {
-				const next = writers.find((w) => w.uid === id);
-				if (next) openWatch(self, next);
-			},
-			onClose: () => {
-				self.watch = null;
-			},
-		});
+		if (self.watch) {
+			const open = self.watch;
+			const picks = pickerUids(writers, open.uid, table.memberUids).map((id) => ({
+				uid: id,
+				name: id === open.uid ? open.name : (writers.find((w) => w.uid === id)?.name ?? someone),
+			}));
+			overlay = m(WatchView, {
+				uid: open.uid,
+				name: open.name,
+				text: open.text,
+				state,
+				picks,
+				onPick: (id: string) => {
+					const next = writers.find((w) => w.uid === id);
+					if (next) openWatch(self, next);
+				},
+				onClose: () => {
+					self.watch = null;
+				},
+			});
+		}
 	}
 
 	if (plenum) self.lineHold.reset();
@@ -170,10 +182,20 @@ export function liveWritingParts(input: LiveWritingInput): LiveWritingParts {
 	return {
 		line: held ? lineButton(self, held.writers, held.leaving) : null,
 		overlay,
-		status: m(
-			'p.visually-hidden',
-			{ 'aria-live': 'polite', 'data-testid': 'live-status' },
-			self.liveMessage,
-		),
+		status: [
+			m(
+				'p.visually-hidden',
+				{ 'aria-live': 'polite', 'data-testid': 'live-status' },
+				self.liveMessage,
+			),
+			// Read out by the region above; the visible copy is for the eyes only.
+			self.sentToast && self.sentToast.until > now
+				? m(
+						'p.live-toast',
+						{ 'aria-hidden': 'true', 'data-testid': 'live-sent-toast' },
+						self.sentToast.text,
+					)
+				: null,
+		],
 	};
 }

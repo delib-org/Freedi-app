@@ -306,16 +306,19 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 			m(ErrorLine, { message: self.error, onRetry: canSend ? send : undefined }),
 			answerEditable || (showProposal && !a.locked)
 				? m(
-						'button.btn.btn--primary.write-panel__send',
-						{
-							type: 'button',
-							'data-testid': showAnswer ? 'answer-send' : 'proposal-send',
-							disabled: !canSend || undefined,
-							onclick: send,
-						},
-						busySend
-							? t(a.kind === 'tableTalk' ? 'answer.sending' : 'text.checking')
-							: t(a.kind === 'tableTalk' ? 'answer.send' : 'proposal.send'),
+						'.write-panel__footer',
+						m(
+							'button.btn.btn--primary.write-panel__send',
+							{
+								type: 'button',
+								'data-testid': showAnswer ? 'answer-send' : 'proposal-send',
+								disabled: !canSend || undefined,
+								onclick: send,
+							},
+							busySend
+								? t(a.kind === 'tableTalk' ? 'answer.sending' : 'text.checking')
+								: t(a.kind === 'tableTalk' ? 'answer.send' : 'proposal.send_mine'),
+						),
 					)
 				: null,
 		]);

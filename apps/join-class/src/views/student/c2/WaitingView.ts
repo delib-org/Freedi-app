@@ -17,7 +17,7 @@ import type { StepAttrs } from '../steps/stepSlot';
  * students who joined. No button while waiting.
  */
 
-interface WaitingState {
+export interface WaitingState {
 	roster?: RosterWatch;
 	name: string;
 	asked: boolean;
@@ -50,7 +50,7 @@ function lockIcon(): m.Vnode {
 	);
 }
 
-async function submitName(state: WaitingState, mainId: string): Promise<void> {
+export async function submitName(state: WaitingState, mainId: string): Promise<void> {
 	if (!state.name.trim() || state.saving) return;
 	state.saving = true;
 	state.failed = false;
@@ -64,21 +64,12 @@ async function submitName(state: WaitingState, mainId: string): Promise<void> {
 	m.redraw();
 }
 
-function nameForm(state: WaitingState, mainId: string): m.Children {
+export function nameForm(state: WaitingState, mainId: string): m.Children {
 	return m(
 		StudentFrame,
 		{
 			headerLine: stepLabel('waiting'),
 			instruction: t('opening.name_prompt'),
-			action: m(
-				'button.btn.btn--primary',
-				{
-					type: 'button',
-					disabled: !state.name.trim() || state.saving,
-					onclick: () => void submitName(state, mainId),
-				},
-				state.saving ? t('opening.name_saving') : t('opening.name_join'),
-			),
 		},
 		m(
 			'form.name-entry',
@@ -89,16 +80,28 @@ function nameForm(state: WaitingState, mainId: string): m.Children {
 				},
 			},
 			[
-				m('input.name-entry__input', {
-					type: 'text',
-					autocomplete: 'off',
-					value: state.name,
-					placeholder: t('opening.name_placeholder'),
-					'aria-label': t('opening.name_prompt'),
-					oninput: (e: Event) => {
-						state.name = (e.target as HTMLInputElement).value;
-					},
-				}),
+				m('.name-entry__row', [
+					m('input.name-entry__input', {
+						type: 'text',
+						autocomplete: 'off',
+						enterkeyhint: 'done',
+						value: state.name,
+						placeholder: t('opening.name_placeholder'),
+						'aria-label': t('opening.name_prompt'),
+						oninput: (e: Event) => {
+							state.name = (e.target as HTMLInputElement).value;
+						},
+					}),
+					m(
+						'button.btn.btn--primary.name-entry__save',
+						{
+							type: 'submit',
+							'data-testid': 'name-save',
+							disabled: !state.name.trim() || state.saving,
+						},
+						state.saving ? t('opening.name_saving_short') : t('opening.name_save'),
+					),
+				]),
 				m('p.name-entry__hint', t('opening.name_hint')),
 				state.failed ? m('p.name-entry__error', { role: 'alert' }, t('opening.name_failed')) : null,
 			],

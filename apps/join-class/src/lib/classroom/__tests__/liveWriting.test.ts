@@ -5,6 +5,7 @@ import {
 	LINE_HOLD_MS,
 	LINE_LEAVE_MS,
 	LineHold,
+	closesWatchOn,
 	focusReturnTarget,
 	liveLineLabel,
 	pickerUids,
@@ -175,5 +176,16 @@ describe('LineHold.reset', () => {
 		hold.view([], 100);
 		hold.reset();
 		expect(hold.view([], 200)).toBeNull();
+	});
+});
+
+describe('closesWatchOn', () => {
+	it('closes the watchers view when the writer sent', () => {
+		expect(closesWatchOn('sent')).toBe(true);
+	});
+
+	it('keeps it open while live or when the writer only stopped', () => {
+		expect(closesWatchOn('live')).toBe(false);
+		expect(closesWatchOn('stopped')).toBe(false);
 	});
 });

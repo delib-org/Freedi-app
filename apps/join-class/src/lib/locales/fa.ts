@@ -535,6 +535,11 @@ const fa: Record<string, string> = {
 	'projector.back': 'بازگشت به درس',
 	'projector.close': 'بستن پروژکتور',
 	'projector.window_hint': 'این پنجره را به صفحه‌نمایش کلاس بکشید و «تمام‌صفحه» را بزنید',
+	'common.show_more': 'نمایش بیشتر',
+	'common.show_less': 'نمایش کمتر',
+	'proposal.send_mine': 'ارسال پیشنهاد من',
+	'opening.name_save': 'ذخیره',
+	'opening.name_saving_short': 'در حال ذخیره…',
 };
 
 export default fa;

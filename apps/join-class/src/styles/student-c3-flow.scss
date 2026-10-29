@@ -223,6 +223,30 @@ body.c3-lock {
   }
 }
 
+// ---- "<name> sent the proposal": a short notice after the watch view closed by itself ----
+
+.live-toast {
+  position: fixed;
+  inset-inline: var(--space-md);
+  // top of the screen, under the header: never on the pinned footer
+  inset-block-start: calc(var(--touch-target, 48px) + var(--space-md));
+  z-index: 20;
+  margin: 0;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold, 600);
+  text-align: center;
+  pointer-events: none;
+  animation: c3-line-in var(--dur-base) var(--ease-out);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 // ---- live line: "דן כותב/ת עכשיו", under the strip (IA 17, UX 1) --------------------
 
 .live-line-wrap {

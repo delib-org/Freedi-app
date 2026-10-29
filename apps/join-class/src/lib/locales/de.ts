@@ -553,6 +553,11 @@ const de: Record<string, string> = {
 	'projector.close': 'Beamer schließen',
 	'projector.window_hint':
 		'Ziehen Sie dieses Fenster auf den Bildschirm der Klasse und drücken Sie "Vollbild"',
+	'common.show_more': 'Mehr anzeigen',
+	'common.show_less': 'Weniger anzeigen',
+	'proposal.send_mine': 'Meinen Vorschlag senden',
+	'opening.name_save': 'Speichern',
+	'opening.name_saving_short': 'Wird gespeichert…',
 };
 
 export default de;

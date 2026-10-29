@@ -49,6 +49,8 @@ export class FlowState {
 	watch: WatchTarget | null = null;
 	announced = new Set<string>();
 	liveMessage = '';
+	/** "<name> sent the proposal", shown briefly after the watch view closed by itself. */
+	sentToast: { text: string; until: number } | null = null;
 	redrawTimer: ReturnType<typeof setTimeout> | null = null;
 	/** The minute end the timer above was set for. */
 	redrawFor: number | null = null;
