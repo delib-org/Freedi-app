@@ -46,7 +46,22 @@
   flex-direction: column;
   gap: var(--space-sm);
 
+  // The input and its Save button side by side; Enter submits the same form.
+  &__row {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-sm);
+  }
+
+  &__save {
+    flex: none;
+    min-block-size: var(--touch-target);
+    padding-inline: var(--space-lg);
+  }
+
   &__input {
+    flex: 1 1 auto;
+    min-inline-size: 0;
     min-block-size: var(--touch-target);
     padding-inline: var(--space-md);
     border: 1.5px solid var(--border-medium);

@@ -543,6 +543,8 @@ const ar: Record<string, string> = {
 	'common.show_more': 'عرض المزيد',
 	'common.show_less': 'عرض أقل',
 	'proposal.send_mine': 'إرسال اقتراحي',
+	'opening.name_save': 'حفظ',
+	'opening.name_saving_short': 'جارٍ الحفظ…',
 };
 
 export default ar;

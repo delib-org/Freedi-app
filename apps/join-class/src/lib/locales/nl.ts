@@ -550,6 +550,8 @@ const nl: Record<string, string> = {
 	'common.show_more': 'Meer tonen',
 	'common.show_less': 'Minder tonen',
 	'proposal.send_mine': 'Mijn voorstel versturen',
+	'opening.name_save': 'Opslaan',
+	'opening.name_saving_short': 'Opslaan…',
 };
 
 export default nl;

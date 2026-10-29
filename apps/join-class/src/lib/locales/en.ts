@@ -550,6 +550,8 @@ const en: Record<string, string> = {
 	'common.show_more': 'Show more',
 	'common.show_less': 'Show less',
 	'proposal.send_mine': 'Send my proposal',
+	'opening.name_save': 'Save',
+	'opening.name_saving_short': 'Saving…',
 };
 
 export default en;

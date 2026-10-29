@@ -542,6 +542,8 @@ const he: Record<string, string> = {
 	'common.show_more': 'הצג עוד',
 	'common.show_less': 'הצג פחות',
 	'proposal.send_mine': 'שליחת ההצעה שלי',
+	'opening.name_save': 'שמירה',
+	'opening.name_saving_short': 'שומרים…',
 };
 
 export default he;

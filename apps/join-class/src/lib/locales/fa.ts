@@ -538,6 +538,8 @@ const fa: Record<string, string> = {
 	'common.show_more': 'نمایش بیشتر',
 	'common.show_less': 'نمایش کمتر',
 	'proposal.send_mine': 'ارسال پیشنهاد من',
+	'opening.name_save': 'ذخیره',
+	'opening.name_saving_short': 'در حال ذخیره…',
 };
 
 export default fa;

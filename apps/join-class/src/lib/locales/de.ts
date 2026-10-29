@@ -556,6 +556,8 @@ const de: Record<string, string> = {
 	'common.show_more': 'Mehr anzeigen',
 	'common.show_less': 'Weniger anzeigen',
 	'proposal.send_mine': 'Meinen Vorschlag senden',
+	'opening.name_save': 'Speichern',
+	'opening.name_saving_short': 'Wird gespeichert…',
 };
 
 export default de;
