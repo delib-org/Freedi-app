@@ -13,7 +13,13 @@ import { gamePathOf, planPathOf } from '@/lib/lessonLinks';
 import { buildPlanRows, openNow, type PlanRow } from '@/lib/planTree';
 import { watchLibrary, type TeacherLibrary } from '@/lib/teacherLibrary';
 import { filterLessons } from './homeHelpers';
-import { renderChip, renderLessonActions, classLabelOf } from './LessonRow';
+import {
+	renderChip,
+	renderLessonActions,
+	classLabelOf,
+	givenNameOf,
+	rowAriaName,
+} from './LessonRow';
 import {
 	configureCreate,
 	createIdle,
@@ -90,14 +96,17 @@ function refreshCounts(rows: readonly PlanRow[]): void {
 }
 
 function renderOpenRow(w: (typeof library.lessons)[number]): m.Vnode {
-	const name = `${classLabelOf(w)} · ${w.title}`;
+	const name = rowAriaName(w);
+	const given = givenNameOf(w);
 
 	return m('li.teacher-home__row', { key: w.id, 'data-open-now': w.id }, [
-		m('h3.teacher-home__row-title', { dir: 'auto' }, [
-			m('bdi', { dir: 'auto' }, classLabelOf(w)),
-			' · ',
-			m('bdi', { dir: 'auto' }, w.title),
-		]),
+		m(
+			'h3.teacher-home__row-title',
+			{ dir: 'auto' },
+			given
+				? m('bdi', { dir: 'auto' }, given)
+				: [m('bdi', { dir: 'auto' }, classLabelOf(w)), ' · ', m('bdi', { dir: 'auto' }, w.title)],
+		),
 		renderChip(w),
 		renderLessonActions(w, name),
 	]);

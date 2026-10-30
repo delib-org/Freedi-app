@@ -26,7 +26,8 @@ import {
 } from '@/lib/planTree';
 import { watchLibrary, type TeacherLibrary } from '@/lib/teacherLibrary';
 import { NotYourLesson } from './NotYourLesson';
-import { renderChip, renderLessonActions, renderLessonName, classLabelOf } from './LessonRow';
+import { renderChip, renderLessonActions, renderLessonName, rowAriaName } from './LessonRow';
+import { TeacherBackBar } from './TeacherBackBar';
 import { ClassForm, closeClassForm, isClassFormOpen, openClassForm } from './ClassForm';
 import {
 	configureCreate,
@@ -226,7 +227,7 @@ function renderTitle(title: string): m.Children {
 // ---- sections ---------------------------------------------------------------------
 
 function renderLesson(l: PlanRow['lessons'][number]): m.Vnode {
-	const name = `${classLabelOf(l)} · ${l.title}`;
+	const name = rowAriaName(l);
 
 	return m('li.teacher-home__row.plan-overview__lesson', { key: l.id, 'data-lesson': l.id }, [
 		m('h3.teacher-home__row-title', { dir: 'auto' }, renderLessonName(l)),
@@ -256,7 +257,7 @@ function renderSection(section: GameSection, filtered: PlanRow['lessons']): m.Vn
 						{
 							type: 'button',
 							'data-action': 'new-lesson',
-							onclick: () => openClassForm(section.gameId),
+							onclick: () => openClassForm(section.gameId, section.title),
 						},
 						t('teacher.lesson.new'),
 					)
@@ -450,12 +451,7 @@ export const PlanOverview: m.Component = {
 		if (isPicking && sourcesLoad === 'idle') void loadSources();
 
 		return m('.teacher-home.plan-overview', { onkeydown: (e: KeyboardEvent) => onPageEscape(e) }, [
-			m('header.teacher-home__header', [
-				m(m.route.Link, { class: 'plan__back', href: '/t' }, [
-					m('span.plan__back-chevron', { 'aria-hidden': 'true' }, '‹'),
-					m('span', t('classPlan.back')),
-				]),
-			]),
+			m(TeacherBackBar, { href: '/t', label: t('classPlan.back') }),
 			m('main.teacher-home__body', [
 				loaded
 					? m('.plan-overview__head', renderTitle(title))

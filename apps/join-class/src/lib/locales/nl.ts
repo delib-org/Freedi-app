@@ -577,6 +577,10 @@ const nl: Record<string, string> = {
 	'teacher.lesson.new': '+ Les met een klas',
 	'teacher.lesson.class_label': 'Welke klas?',
 	'teacher.lesson.class_none': 'Zonder klas',
+	'teacher.lesson.name_label': 'Naam van de les',
+	'teacher.lesson.name_default': '{{game}} met {{class}}',
+	'teacher.back.nav': 'Terug',
+	'teacher.back.to': 'Terug naar {{name}}',
 	'teacher.lesson.no_classes':
 		'Er zijn nog geen klassen aan je toegewezen. De les wordt onder jouw naam bewaard.',
 	'teacher.lesson.row': '{{class}} · {{date}}',

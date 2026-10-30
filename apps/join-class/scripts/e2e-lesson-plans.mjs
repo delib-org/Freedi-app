@@ -116,7 +116,7 @@ try {
 
 	// ---- 2. the game screen -----------------------------------------------------------
 	await page.waitForSelector('.plan__challenge', { timeout: TIMEOUT });
-	check('game screen: back link is the plan title', (await page.locator('.plan__back').innerText()).includes(planTitle));
+	check('game screen: back link is the plan title', (await page.locator('.back-bar__link').innerText()).includes(planTitle));
 	const challenge = page.locator('.plan-card__text--challenge');
 	await challenge.fill('Should we report bullying?');
 	await challenge.blur();
@@ -151,7 +151,30 @@ try {
 	const offered = await page.$$eval('.class-form [data-class]', (els) => els.map((e) => e.getAttribute('data-class')));
 	check('class choice: the active class and "בלי כיתה", not the archived one', offered.length === 2 && offered.includes(classId) && offered.includes('__none'), offered.join(','));
 	check('"יצירה" waits for a choice', await page.locator('.class-form [data-action="start-lesson"]').isDisabled());
+	const nameField = page.locator('.class-form [data-field="lesson-name"]');
+	const customName = 'בריונות עם ט 3';
+	const waitName = (value) => page.waitForFunction((v) => document.querySelector('[data-field="lesson-name"]')?.value === v, value, { timeout: TIMEOUT }).catch(() => undefined);
+	check('lesson name: a field above the class choice, prefilled with the game title', (await nameField.inputValue()) === planTitle &&
+		(await page.evaluate(() => {
+			const name = document.querySelector('[data-field="lesson-name"]');
+			const choices = document.querySelector('.class-form__choices');
+
+			return !!(name.compareDocumentPosition(choices) & Node.DOCUMENT_POSITION_FOLLOWING);
+		})));
 	await page.check(`.class-form [data-class="${classId}"]`);
+	await waitName(`${planTitle} עם ט׳2`);
+	check('lesson name: picking the class re-fills "<game> עם <class>"', (await nameField.inputValue()) === `${planTitle} עם ט׳2`, await nameField.inputValue());
+	await page.check('.class-form [data-class="__none"]');
+	await waitName(planTitle);
+	check('lesson name: "בלי כיתה" re-fills just the game title', (await nameField.inputValue()) === planTitle);
+	await nameField.fill(customName);
+	await page.check('.class-form [data-class="__none"]');
+	await page.check(`.class-form [data-class="${classId}"]`);
+	check('lesson name: once she typed, a new class choice keeps her text', (await nameField.inputValue()) === customName);
+	await nameField.fill('   ');
+	await page.waitForFunction(() => document.querySelector('[data-action="start-lesson"]')?.disabled === true, null, { timeout: TIMEOUT });
+	check('lesson name: a blank name cannot be submitted', await page.locator('.class-form [data-action="start-lesson"]').isDisabled());
+	await nameField.fill(customName);
 	await page.click('.class-form [data-action="start-lesson"]');
 	await page.waitForURL((u) => /^\/t\/[^/]+$/.test(u.pathname) && !u.pathname.startsWith('/t/plans'), { timeout: TIMEOUT * 2 });
 	const lessonA = new URL(page.url()).pathname.split('/')[2];
@@ -164,27 +187,39 @@ try {
 	check('the class home exists, secret, classHome', home?.statementSettings?.classHome?.classId === classId && home.membership?.access === 'secret');
 	const codeA = a.statementSettings.classCode;
 	check('lesson A has a class code', /^\d{6}$/.test(codeA));
+	check('lesson A stores her lesson name; the statement keeps the game title', a.statementSettings.classLesson.lessonName === customName && a.statement === planTitle, `${a.statementSettings.classLesson.lessonName} / ${a.statement}`);
 	await page.waitForSelector('.console__bar', { timeout: TIMEOUT });
-	const back = page.locator('.console__bar .plan__back');
-	await page.waitForFunction((title) => document.querySelector('.console__bar .plan__back')?.textContent?.includes(title), planTitle, { timeout: TIMEOUT });
+	const back = page.locator('.back-bar__link');
+	await page.waitForFunction((title) => document.querySelector('.back-bar__link')?.textContent?.includes(title), planTitle, { timeout: TIMEOUT });
 	check('console: back link names the plan and goes to the plan screen', (await back.innerText()).includes(planTitle) && (await back.getAttribute('href')) === `/t/plans/${planId}`);
+	await page.waitForFunction((n) => document.querySelector('.console__title')?.textContent === n, customName, { timeout: TIMEOUT }).catch(() => undefined);
+	check('console header shows her lesson name', (await page.locator('.console__title').innerText()) === customName);
+	const screen = await context.newPage();
+	await screen.goto(`${BASE}/t/${lessonA}/screen`, { waitUntil: 'domcontentloaded' });
+	await screen.waitForFunction((n) => document.querySelector('.projector-band__step')?.textContent?.includes(n), customName, { timeout: TIMEOUT }).catch(() => undefined);
+	check('projector band shows her lesson name', ((await screen.locator('.projector-band__step').innerText().catch(() => '')) || '').includes(customName));
+	check('projector has no back bar', (await screen.locator('.back-bar').count()) === 0);
+	await screen.close();
 	await shot(page, '3-console');
 
 	// ---- 4. a lesson with no class; the plan screen ------------------------------------
 	await back.click();
 	await page.waitForSelector(`[data-game="${gameId}"]`, { timeout: TIMEOUT });
-	check('plan screen: lesson A listed under the game with the class name', (await page.locator(`[data-lesson="${lessonA}"]`).innerText()).includes('ט׳2'));
+	check('plan screen: lesson A is listed under the game by her lesson name', (await page.locator(`[data-lesson="${lessonA}"]`).innerText()).includes(customName));
 	await page.click(`[data-game="${gameId}"] [data-action="new-lesson"]`);
 	await page.waitForSelector('.class-form [data-class]', { timeout: TIMEOUT });
 	await page.check('.class-form [data-class="__none"]');
+	await page.waitForFunction((v) => document.querySelector('[data-field="lesson-name"]')?.value === v, planTitle, { timeout: TIMEOUT });
+	check('lesson name B: "בלי כיתה" prefill is the game title', (await page.locator('.class-form [data-field="lesson-name"]').inputValue()) === planTitle);
 	await page.click('.class-form [data-action="start-lesson"]');
 	await page.waitForURL((u) => /^\/t\/[^/]+$/.test(u.pathname) && !u.pathname.startsWith('/t/plans') && !u.pathname.endsWith(lessonA), { timeout: TIMEOUT * 2 });
 	const lessonB = new URL(page.url()).pathname.split('/')[2];
 	const b = (await db.doc(`statements/${lessonB}`).get()).data();
 	check('lesson B (no class) sits under the teacher home', b.parentId === `jcTeacher_${teacherUid}` && b.statementSettings.classLesson?.classId === null);
+	check('lesson B stores the prefilled name (the game title)', b.statementSettings.classLesson.lessonName === planTitle);
 	// stay in the app (no reload): the lesson's marker is re-written a few seconds after the server's own subscription lands
-	await page.waitForSelector('.console__bar .plan__back', { timeout: TIMEOUT });
-	await page.click('.console__bar .plan__back');
+	await page.waitForSelector('.back-bar__link', { timeout: TIMEOUT });
+	await page.click('.back-bar__link');
 	await page.waitForSelector(`[data-lesson="${lessonB}"]`, { timeout: TIMEOUT });
 	check('plan screen lists both lessons of the game', (await page.locator(`[data-game="${gameId}"] [data-lesson]`).count()) === 2);
 	check('class filter appears at two classes', (await page.locator('.plan-overview__filter select').count()) === 1);
@@ -195,6 +230,7 @@ try {
 	await shot(page, '4-plan');
 	await page.goto(`${BASE}/t`, { waitUntil: 'domcontentloaded' });
 	await page.waitForSelector('[data-open-now]', { timeout: TIMEOUT });
+	check('home: the open row of lesson A reads her lesson name', (await page.locator(`[data-open-now="${lessonA}"] .teacher-home__row-title`).innerText()).includes(customName));
 	check('home: "פתוחים עכשיו" lists the live lessons', (await page.locator(`[data-open-now="${lessonA}"]`).count()) === 1 && (await page.locator(`[data-open-now="${lessonB}"]`).count()) === 1);
 	const counts = await page.locator(`[data-plan="${planId}"] .teacher-home__counts`).innerText();
 	check('home: plan row counts games and lessons', counts.includes('1') && counts.includes('2'), counts);
@@ -215,7 +251,8 @@ try {
 		(await db.doc(`classPlans/${oldId}`).get()).exists && new URL(page.url()).pathname.includes(`/plans/${oldId}/games/`));
 	await page.goto(`${BASE}/t/${oldId}`, { waitUntil: 'domcontentloaded' });
 	await page.waitForSelector('.console__bar', { timeout: TIMEOUT });
-	check('old lesson: the console opens and goes back to its own plan', (await page.locator('.console__bar .plan__back').getAttribute('href')) === `/t/plans/${oldId}`);
+	await page.waitForFunction((id) => document.querySelector('.back-bar__link')?.getAttribute('href') === `/t/plans/${id}`, oldId, { timeout: TIMEOUT }).catch(() => undefined);
+	check('old lesson: the console opens and goes back to its own plan', (await page.locator('.back-bar__link').getAttribute('href')) === `/t/plans/${oldId}`);
 
 	// ---- 6. a student on a phone ----------------------------------------------------------
 	const phone = await browser.newContext({ viewport: { width: 360, height: 640 }, locale: 'he-IL' });
@@ -265,6 +302,7 @@ try {
 	await student.waitForURL(new RegExp(`/m/${lessonA}`), { timeout: TIMEOUT });
 	await student.waitForFunction(() => document.body.innerText.trim().length > 20, null, { timeout: TIMEOUT });
 	check('student: the code of a home-based lesson opens the lesson', (await student.locator('.door__title').count()) === 0);
+	check('student: still sees the game title, never the teacher\'s lesson name', !(await student.locator('body').innerText()).includes(customName));
 	await shot(student, '6-student');
 	const studentUid = await student.evaluate(async () => (await import('/src/lib/user.ts')).getUserState().user.uid);
 
@@ -349,6 +387,81 @@ try {
 	await stranger.goto(`${BASE}/t/plans/${planId}/games/${gameId}`, { waitUntil: 'domcontentloaded' });
 	await stranger.waitForSelector('.door__title', { timeout: TIMEOUT });
 	check('another teacher gets "not your lesson" on the game screen', (await stranger.locator('.plan__challenge').count()) === 0);
+
+	// ---- 9. the back bar on every teacher screen ------------------------------------------
+	const phoneT = await browser.newContext({ viewport: { width: 360, height: 640 }, locale: 'he-IL' });
+	const t360 = await phoneT.newPage();
+	await signInTeacher(t360, BASE, teacherUid);
+	const backShots = process.env.E2E_NAV_SHOTS;
+	const screens = [
+		{ name: 'plan', path: `/t/plans/${planId}`, label: 'מערכי השיעור שלי', href: '/t' },
+		{ name: 'game', path: `/t/plans/${planId}/games/${gameId}`, label: planTitle, href: `/t/plans/${planId}` },
+		{ name: 'console', path: `/t/${lessonA}`, label: planTitle, href: `/t/plans/${planId}` },
+		{ name: 'lesson-questions', path: `/t/${lessonA}/plan`, label: customName, href: `/t/${lessonA}` },
+		{ name: 'table-sheet', path: `/t/${lessonA}/table/1`, label: customName, href: `/t/${lessonA}` },
+	];
+	for (const sc of screens) {
+		await t360.goto(`${BASE}${sc.path}`, { waitUntil: 'domcontentloaded' });
+		const scope = sc.name === 'table-sheet' ? '.table-sheet ' : '';
+		await t360.waitForFunction(([label, href, sel]) => {
+			const a = document.querySelector(`${sel}.back-bar__link`);
+
+			return !!a && a.textContent.includes(label) && a.getAttribute('href') === href;
+		}, [sc.label, sc.href, scope], { timeout: TIMEOUT }).catch(() => undefined);
+		await sleep(700);
+		const info = await t360.evaluate((sel) => {
+			const bars = document.querySelectorAll(`${sel}.back-bar`);
+			const a = document.querySelector(`${sel}.back-bar__link`);
+			if (!a) return null;
+			const r = a.getBoundingClientRect();
+			const chev = getComputedStyle(a.querySelector('.back-bar__chevron')).transform;
+
+			return {
+				bars: bars.length, text: a.textContent, href: a.getAttribute('href'), aria: a.getAttribute('aria-label'),
+				h: r.height, top: r.top, left: r.left, right: r.right, vw: window.innerWidth,
+				sticky: getComputedStyle(a.closest('.back-bar')).position, chev,
+				sheetTop: document.querySelector('.table-sheet')?.getBoundingClientRect().top ?? 0,
+				overflowX: document.documentElement.scrollWidth > window.innerWidth,
+				focusable: a.tabIndex >= 0,
+			};
+		}, scope);
+		check(`back bar [${sc.name}]: one bar reading "‹ ${sc.label}" going to ${sc.href}`, !!info && info.bars === 1 && info.text.includes(sc.label) && info.href === sc.href, JSON.stringify(info));
+		check(`back bar [${sc.name}]: >= 44px tall, at the top of a 360px phone, inside the width, sticky`, !!info && info.h >= 44 && info.top >= 0 && (sc.name === 'table-sheet' ? info.top - info.sheetTop < 2 : info.top < 64) && info.left >= 0 && info.right <= info.vw && info.sticky === 'sticky' && !info.overflowX, JSON.stringify(info));
+		check(`back bar [${sc.name}]: has an aria-label, is focusable, chevron flipped in RTL`, !!info && /חזרה אל/.test(info.aria ?? '') && info.focusable && info.chev !== 'none' && info.chev.startsWith('matrix(-1'), info?.chev);
+		if (backShots) await t360.screenshot({ path: `${backShots}/back-${sc.name}.png` });
+	}
+	// keyboard: Tab reaches the bar first on the game screen, Enter goes up one level
+	await t360.goto(`${BASE}/t/plans/${planId}/games/${gameId}`, { waitUntil: 'domcontentloaded' });
+	await t360.waitForSelector('.back-bar__link', { timeout: TIMEOUT });
+	check('back bar: the first focusable thing of the screen', await t360.evaluate(() => {
+		const root = document.querySelector('.plan');
+		const first = root.querySelector('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])');
+
+		return first?.classList.contains('back-bar__link') === true;
+	}));
+	await t360.focus('.back-bar__link');
+	check('back bar: takes keyboard focus', await t360.evaluate(() => document.activeElement?.classList.contains('back-bar__link')));
+	await t360.keyboard.press('Enter');
+	await t360.waitForURL(new RegExp(`/t/plans/${planId}$`), { timeout: TIMEOUT });
+	check('back bar: Enter on the game screen goes to the plan screen', true);
+	// each one-level-up click lands where it says
+	const hops = [
+		{ from: `/t/plans/${planId}`, to: '/t' },
+		{ from: `/t/${lessonA}`, to: `/t/plans/${planId}` },
+		{ from: `/t/${lessonA}/plan`, to: `/t/${lessonA}` },
+		{ from: `/t/${lessonA}/table/1`, to: `/t/${lessonA}` },
+	];
+	for (const hop of hops) {
+		await t360.goto(`${BASE}${hop.from}`, { waitUntil: 'domcontentloaded' });
+		await t360.waitForFunction((h) => document.querySelector('.back-bar__link')?.getAttribute('href') === h, hop.to, { timeout: TIMEOUT }).catch(() => undefined);
+		await t360.click(`${hop.from.includes('/table/') ? '.table-sheet ' : ''}.back-bar__link`);
+		await t360.waitForURL((u) => u.pathname === hop.to, { timeout: TIMEOUT }).catch(() => undefined);
+		check(`back bar: ${hop.from.replace(lessonA, '<lesson>').replace(planId, '<plan>')} -> ${hop.to.replace(lessonA, '<lesson>').replace(planId, '<plan>')}`, new URL(t360.url()).pathname === hop.to, new URL(t360.url()).pathname);
+	}
+	// an old lesson goes to its own plan screen
+	await t360.goto(`${BASE}/t/${oldId}`, { waitUntil: 'domcontentloaded' });
+	await t360.waitForFunction((id) => document.querySelector('.back-bar__link')?.getAttribute('href') === `/t/plans/${id}`, oldId, { timeout: TIMEOUT }).catch(() => undefined);
+	check('back bar: an old lesson\'s console goes to its own plan screen', (await t360.locator('.back-bar__link').getAttribute('href')) === `/t/plans/${oldId}`);
 } catch (err) {
 	console.error(err);
 	await shot(page, 'failed').catch(() => undefined);

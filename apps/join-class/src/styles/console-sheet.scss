@@ -24,7 +24,8 @@
   flex-direction: column;
   gap: var(--space-sm);
   width: min(420px, 100vw);
-  padding: var(--space-md);
+  // no top padding: the back bar sits flush at the top and sticks there while the sheet scrolls
+  padding: 0 var(--space-md) var(--space-md);
   overflow-y: auto;
   background: var(--bg-paper);
   box-shadow: var(--shadow-lg);

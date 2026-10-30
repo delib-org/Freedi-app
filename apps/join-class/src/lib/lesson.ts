@@ -260,12 +260,15 @@ export async function startLesson(input: {
 	gameId: string;
 	classId: string | null;
 	newMainId?: string;
+	/** The teacher's name for this lesson; the server falls back to "<game> עם <class>". */
+	lessonName?: string;
 }): Promise<string> {
 	const res = await classStartLesson({
 		planId: input.planId,
 		gameId: input.gameId,
 		classId: input.classId,
 		newMainId: input.newMainId ?? getRandomUID(),
+		...(input.lessonName ? { lessonName: input.lessonName } : {}),
 	});
 	await settleNewLesson(res.mainId);
 

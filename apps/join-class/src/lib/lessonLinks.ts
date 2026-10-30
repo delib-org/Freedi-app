@@ -12,6 +12,8 @@ export interface LessonLink {
 	classId: string | null;
 	/** The class's name when the lesson started; empty for "no class" and for old lessons. */
 	className: string;
+	/** The name the teacher gave the lesson when starting it; '' for old lessons. */
+	lessonName: string;
 	/** True for a lesson with no `classLesson`. */
 	legacy: boolean;
 }
@@ -24,6 +26,7 @@ export function linkOf(lesson: Pick<Statement, 'statementId' | 'statementSetting
 			gameId: lesson.statementId,
 			classId: null,
 			className: '',
+			lessonName: '',
 			legacy: true,
 		};
 	}
@@ -33,8 +36,19 @@ export function linkOf(lesson: Pick<Statement, 'statementId' | 'statementSetting
 		gameId: link.gameId,
 		classId: link.classId ?? null,
 		className: link.className ?? '',
+		lessonName: link.lessonName?.trim() ?? '',
 		legacy: false,
 	};
+}
+
+/**
+ * What the teacher calls this lesson: the name she gave it, else the lesson's own title
+ * (the game's title, which students see). Old lessons have no name and read as today.
+ */
+export function lessonNameOf(
+	lesson: Pick<Statement, 'statementId' | 'statementSettings' | 'statement'>,
+): string {
+	return linkOf(lesson).lessonName || lesson.statement;
 }
 
 /** The plan screen (the console's and the game screen's back target). */

@@ -1,0 +1,81 @@
+// =============================================================================
+// The teacher back bar: one component on every teacher screen (plan, game, lesson
+// console, lesson questions, table sheet). "‹ <parent name>", one level up, sticky
+// at the top, a tap target of at least 44 px. Tokens only, logical properties so
+// Hebrew (RTL) is the default case, not an override.
+// =============================================================================
+
+$back-bar-tap: 44px;
+
+.back-bar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--z-sticky, 20);
+  display: flex;
+  align-items: center;
+  inline-size: 100%;
+  min-block-size: max(#{$back-bar-tap}, var(--touch-target));
+  padding-inline: var(--space-sm);
+  background: var(--paper-soft);
+  border-block-end: 1px solid var(--paper-line);
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    // the whole bar height is the tap target; the name may wrap but never hides
+    min-block-size: max(#{$back-bar-tap}, var(--touch-target));
+    min-inline-size: $back-bar-tap;
+    max-inline-size: 100%;
+    padding-inline-end: var(--space-md);
+    color: var(--teal-ink, var(--teal-700));
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--teal-ink, var(--teal-700));
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+  }
+
+  &__chevron {
+    flex: none;
+    font-size: var(--font-size-xl);
+    line-height: 1;
+    unicode-bidi: isolate;
+
+    // "‹" points left; in Hebrew/Arabic/Persian the way back points right
+    [dir='rtl'] & {
+      transform: scaleX(-1);
+    }
+  }
+
+  &__label {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// Inside a screen that has its own page padding the bar spans edge to edge.
+.plan > .back-bar,
+.teacher-home > .back-bar {
+  margin-inline: calc(-1 * var(--space-md));
+  inline-size: calc(100% + 2 * var(--space-md));
+  margin-block-start: calc(-1 * var(--space-md));
+  padding-inline: var(--space-md);
+}
+
+// The table sheet scrolls on its own and has its own padding.
+.table-sheet > .back-bar {
+  margin-inline: calc(-1 * var(--space-md));
+  inline-size: calc(100% + 2 * var(--space-md));
+  padding-inline: var(--space-md);
+  background: var(--bg-paper);
+}

@@ -1,6 +1,6 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import type { Firestore, Transaction } from 'firebase-admin/firestore';
-import { cleanClassName, functionConfig } from '@freedi/shared-types';
+import { cleanClassName, cleanLessonName, functionConfig } from '@freedi/shared-types';
 import type {
 	AgoraClass,
 	ClassStartLessonRequest,
@@ -26,6 +26,22 @@ import type { StartLessonDeps } from './startLesson';
  * home (`jcTeacher_{uid}`) when `classId` is null. See startLesson.ts for the
  * transaction. A retry with the same `newMainId` returns the same lesson.
  */
+
+/** Joins the game's title and the class's name in the default lesson name ("בריונות עם ט׳3"). */
+const LESSON_NAME_WITH = 'עם';
+
+/**
+ * The name stored on the lesson: the teacher's `lessonName` (one line, trimmed, capped), or,
+ * when an old client sent none (or only blanks), "<game title> עם <class name>" / the game title.
+ */
+export function lessonNameOf(raw: unknown, gameTitle: string, className: string): string {
+	const given = cleanLessonName(raw);
+	if (given) return given;
+	const cls = cleanClassName(className);
+	const title = gameTitle.trim();
+
+	return cleanLessonName(cls ? `${title} ${LESSON_NAME_WITH} ${cls}` : title);
+}
 
 function requireClassId(value: unknown): string | null {
 	if (value === null || value === undefined) return null;
@@ -83,6 +99,7 @@ export async function startLesson(
 				gameId,
 				classId: target.classId,
 				className: cleanClassName(target.className),
+				lessonName: lessonNameOf(req?.lessonName, game.title, target.className),
 			},
 			refreshTarget: classId
 				? async (tx: Transaction) => {

@@ -25,14 +25,27 @@ export function classLabelOf(entry: ClassLessonEntry): string {
 	return entry.link.className.trim() || t('teacher.lesson.class_none');
 }
 
-/** "{{class}} · {{date}}" with the class name isolated, so an English class keeps its place in RTL. */
+/** The name the teacher gave the lesson, or '' for an old lesson (shown as today). */
+export function givenNameOf(entry: ClassLessonEntry): string {
+	return entry.link.lessonName;
+}
+
+/** The row's spoken name: the lesson's name, else "<class> · <game>". */
+export function rowAriaName(entry: ClassLessonEntry): string {
+	return givenNameOf(entry) || `${classLabelOf(entry)} · ${entry.title}`;
+}
+
+/**
+ * "{{name}} · {{date}}" with the name isolated, so an English name keeps its place in RTL.
+ * The name is the one the teacher gave the lesson, else the class ("{{class}} · {{date}}").
+ */
 export function renderLessonName(entry: ClassLessonEntry): m.Children {
 	const [before, after = ''] = t('teacher.lesson.row', {
 		class: SENTINEL,
 		date: shortDate(entry.createdAt),
 	}).split(SENTINEL);
 
-	return [before, m('bdi', { dir: 'auto' }, classLabelOf(entry)), after];
+	return [before, m('bdi', { dir: 'auto' }, givenNameOf(entry) || classLabelOf(entry)), after];
 }
 
 export function renderChip(entry: ClassLessonEntry): m.Vnode {

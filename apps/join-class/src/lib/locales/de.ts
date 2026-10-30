@@ -582,6 +582,10 @@ const de: Record<string, string> = {
 	'teacher.lesson.new': '+ Stunde mit einer Klasse',
 	'teacher.lesson.class_label': 'Welche Klasse?',
 	'teacher.lesson.class_none': 'Ohne Klasse',
+	'teacher.lesson.name_label': 'Name der Stunde',
+	'teacher.lesson.name_default': '{{game}} mit {{class}}',
+	'teacher.back.nav': 'Zurück',
+	'teacher.back.to': 'Zurück zu {{name}}',
 	'teacher.lesson.no_classes':
 		'Dir sind noch keine Klassen zugewiesen. Die Stunde wird unter deinem Namen gespeichert.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
