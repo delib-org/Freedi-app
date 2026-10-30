@@ -101,6 +101,19 @@ describe('Modal', () => {
 
 			expect(screen.getByRole('dialog')).toHaveAttribute('aria-label', 'My Modal');
 		});
+
+		it('should name the dialog by its title through aria-labelledby when titleId is set', () => {
+			render(
+				<Modal {...defaultProps} title="My Modal" titleId="my-modal-title">
+					<p>Content</p>
+				</Modal>,
+			);
+
+			const dialog = screen.getByRole('dialog', { name: 'My Modal' });
+			expect(dialog).toHaveAttribute('aria-labelledby', 'my-modal-title');
+			expect(dialog).not.toHaveAttribute('aria-label');
+			expect(screen.getByText('My Modal')).toHaveAttribute('id', 'my-modal-title');
+		});
 	});
 
 	describe('close button', () => {

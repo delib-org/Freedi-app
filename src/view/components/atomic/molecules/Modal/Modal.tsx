@@ -70,6 +70,10 @@ export interface ModalProps {
 	/** ARIA label override */
 	ariaLabel?: string;
 
+	/** Id for the rendered title. When set, the dialog is named by the visible
+	 *  title through aria-labelledby instead of a duplicated aria-label. */
+	titleId?: string;
+
 	/** Accessible label for the close button. Pass a translated string —
 	 *  the default is English, which is wrong in an RTL locale. */
 	closeButtonLabel?: string;
@@ -96,6 +100,7 @@ const Modal: React.FC<ModalProps> = ({
 	className,
 	id,
 	ariaLabel,
+	titleId,
 	closeButtonLabel = 'Close modal',
 }) => {
 	const modalRef = useRef<HTMLDivElement>(null);
@@ -132,6 +137,8 @@ const Modal: React.FC<ModalProps> = ({
 		return null;
 	}
 
+	const labelledBy = titleId && title && !ariaLabel ? titleId : undefined;
+
 	const modalContent = (
 		<div
 			id={id}
@@ -139,7 +146,8 @@ const Modal: React.FC<ModalProps> = ({
 			onClick={handleBackdropClick}
 			role="dialog"
 			aria-modal="true"
-			aria-label={ariaLabel || title || 'Modal'}
+			aria-labelledby={labelledBy}
+			aria-label={labelledBy ? undefined : ariaLabel || title || 'Modal'}
 		>
 			<div className="modal__backdrop" aria-hidden="true" />
 
@@ -151,7 +159,11 @@ const Modal: React.FC<ModalProps> = ({
 			>
 				{(title || showCloseButton) && (
 					<div className="modal__header">
-						{title && <h3 className="modal__title">{title}</h3>}
+						{title && (
+							<h3 id={titleId} className="modal__title">
+								{title}
+							</h3>
+						)}
 						{showCloseButton && (
 							<button
 								type="button"
