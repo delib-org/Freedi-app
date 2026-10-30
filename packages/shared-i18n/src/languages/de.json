@@ -4486,5 +4486,17 @@
   "Totals": "Summen",
   "Map scale": "Kartenmaßstab",
   "Fuller dot = more evaluators": "Vollerer Punkt = mehr Bewerter",
-  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "Für diese Frage gibt es bereits Stimmen zu den zusammengeführten Ideen. Ein Neuaufbau würde sie löschen und ist deshalb gesperrt."
+  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "Für diese Frage gibt es bereits Stimmen zu den zusammengeführten Ideen. Ein Neuaufbau würde sie löschen und ist deshalb gesperrt.",
+  "Re-theme with AI": "Themen mit KI neu ordnen",
+  "Rebuilds the themes from all ideas at once. Merged ideas are not changed.": "Baut die Themen aus allen Ideen auf einmal neu auf. Zusammengeführte Ideen bleiben unverändert.",
+  "Proposed themes": "Vorgeschlagene Themen",
+  "Review the proposed themes. Nothing changes until you apply.": "Prüfe die vorgeschlagenen Themen. Nichts ändert sich, bevor du sie übernimmst.",
+  "Keeps existing theme": "Behält bestehendes Thema",
+  "Examples": "Beispiele",
+  "Another clustering run is in progress. Try again when it finishes.": "Ein anderer Gruppierungslauf ist im Gange. Versuche es erneut, wenn er abgeschlossen ist.",
+  "This preview expired. Run the preview again.": "Diese Vorschau ist abgelaufen. Erstelle die Vorschau erneut.",
+  "There are no ideas to group yet.": "Es gibt noch keine Ideen zum Gruppieren.",
+  "Themes rebuilt": "Themen neu aufgebaut",
+  "Ideas placed": "Zugeordnete Ideen",
+  "Apply": "Übernehmen"
 }

@@ -4606,5 +4606,16 @@
   "Totals": "المجاميع",
   "Map scale": "مقياس الخريطة",
   "Fuller dot = more evaluators": "نقطة أكثر امتلاءً = مقيّمون أكثر",
-  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "لهذا السؤال أصوات مسجلة على أفكاره المدمجة. إعادة البناء ستحذفها، لذلك تم حظرها."
+  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "لهذا السؤال أصوات مسجلة على أفكاره المدمجة. إعادة البناء ستحذفها، لذلك تم حظرها.",
+  "Re-theme with AI": "إعادة ترتيب المواضيع بالذكاء الاصطناعي",
+  "Rebuilds the themes from all ideas at once. Merged ideas are not changed.": "يعيد بناء المواضيع من جميع الأفكار دفعة واحدة. لا تتغير الأفكار المدمجة.",
+  "Proposed themes": "المواضيع المقترحة",
+  "Review the proposed themes. Nothing changes until you apply.": "راجع المواضيع المقترحة. لن يتغير شيء حتى تطبّقها.",
+  "Keeps existing theme": "يحتفظ بموضوع قائم",
+  "Examples": "أمثلة",
+  "Another clustering run is in progress. Try again when it finishes.": "هناك عملية تجميع أخرى قيد التشغيل. حاول مرة أخرى عند انتهائها.",
+  "This preview expired. Run the preview again.": "انتهت صلاحية هذه المعاينة. شغّل المعاينة مرة أخرى.",
+  "There are no ideas to group yet.": "لا توجد أفكار لتجميعها بعد.",
+  "Themes rebuilt": "تمت إعادة بناء المواضيع",
+  "Ideas placed": "الأفكار الموزعة"
 }

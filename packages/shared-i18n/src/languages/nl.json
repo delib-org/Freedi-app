@@ -4486,5 +4486,17 @@
   "Totals": "Totalen",
   "Map scale": "Kaartschaal",
   "Fuller dot = more evaluators": "Vollere stip = meer beoordelaars",
-  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "Deze vraag heeft al stemmen op de samengevoegde ideeën. Opnieuw opbouwen zou die verwijderen, dus het is geblokkeerd."
+  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "Deze vraag heeft al stemmen op de samengevoegde ideeën. Opnieuw opbouwen zou die verwijderen, dus het is geblokkeerd.",
+  "Re-theme with AI": "Thema's opnieuw indelen met AI",
+  "Rebuilds the themes from all ideas at once. Merged ideas are not changed.": "Bouwt de thema's in één keer opnieuw op uit alle ideeën. Samengevoegde ideeën veranderen niet.",
+  "Proposed themes": "Voorgestelde thema's",
+  "Review the proposed themes. Nothing changes until you apply.": "Bekijk de voorgestelde thema's. Er verandert niets tot je ze toepast.",
+  "Keeps existing theme": "Behoudt bestaand thema",
+  "Examples": "Voorbeelden",
+  "Another clustering run is in progress. Try again when it finishes.": "Er loopt al een andere groeperingsronde. Probeer het opnieuw als die klaar is.",
+  "This preview expired. Run the preview again.": "Deze voorbeeldweergave is verlopen. Maak de voorbeeldweergave opnieuw.",
+  "There are no ideas to group yet.": "Er zijn nog geen ideeën om te groeperen.",
+  "Themes rebuilt": "Thema's opnieuw opgebouwd",
+  "Ideas placed": "Geplaatste ideeën",
+  "Apply": "Toepassen"
 }

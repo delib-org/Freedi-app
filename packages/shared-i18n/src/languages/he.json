@@ -5204,5 +5204,16 @@
   "Totals": "סכומים",
   "Map scale": "קנה מידה של המפה",
   "Fuller dot = more evaluators": "נקודה מלאה יותר = יותר מעריכים",
-  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "לשאלה הזו כבר יש הצבעות על ההצעות הממוזגות שלה. בנייה מחדש תמחק אותן, ולכן היא חסומה."
+  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "לשאלה הזו כבר יש הצבעות על ההצעות הממוזגות שלה. בנייה מחדש תמחק אותן, ולכן היא חסומה.",
+  "Re-theme with AI": "סידור מחדש של הנושאים בעזרת AI",
+  "Rebuilds the themes from all ideas at once. Merged ideas are not changed.": "בונה מחדש את הנושאים מכל הרעיונות בבת אחת. הצעות ממוזגות לא משתנות.",
+  "Proposed themes": "נושאים מוצעים",
+  "Review the proposed themes. Nothing changes until you apply.": "עברו על הנושאים המוצעים. שום דבר לא משתנה עד שתבחרו להחיל.",
+  "Keeps existing theme": "שומר על נושא קיים",
+  "Examples": "דוגמאות",
+  "Another clustering run is in progress. Try again when it finishes.": "תהליך קיבוץ אחר כבר רץ. נסו שוב כשיסתיים.",
+  "This preview expired. Run the preview again.": "התצוגה המקדימה פגה. הריצו אותה שוב.",
+  "There are no ideas to group yet.": "עדיין אין רעיונות לקבץ.",
+  "Themes rebuilt": "הנושאים נבנו מחדש",
+  "Ideas placed": "רעיונות ששובצו"
 }
